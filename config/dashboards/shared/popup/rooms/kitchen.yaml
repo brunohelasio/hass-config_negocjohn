@@ -2,30 +2,143 @@ action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
-    title: Kitchen
+    title: Cozinha
+    size: wide
+    style: >
+      --popup-width: 76vw;
+      --popup-max-width: 1180px;
+      --popup-background-color: rgba(8, 12, 20, 0.62);
+      --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+      --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
+    card_mod:
+      style:
+        .: |
+          ha-dialog {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+          }
+          ha-dialog .mdc-dialog__container {
+            align-items: center !important;
+          }
+          ha-dialog::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+          }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
-      layout: !include ../../snippets/layout_room_popup.yaml
+      layout:
+        grid-template-columns: 18vw 18vw 36vw
+        grid-template-areas: '"col_luzes col_extra col_camera"'
+        justify-content: center
+        align-content: center
+        grid-gap: 1.5vw
+        mediaquery:
+          "(max-width: 800px)":
+            grid-template-columns: 1fr
+            grid-template-areas: |
+              "col_luzes"
+              "col_extra"
+              "col_camera"
       cards:
-        - type: custom:auto-entities
-          filter:
-            include:
-              - group: group.light_kitchen
-                options:
-                  type: custom:button-card
+        - type: vertical-stack
+          view_layout:
+            grid-area: col_luzes
+          cards:
+            - type: grid
+              columns: 2
+              square: true
+              cards:
+                - type: custom:button-card
+                  entity: light.cozinha_switch_2
+                  name: Luz principal 1
                   template:
                     - tpl_popup_light
-              - entity_id: fan.hood_power
-                options: &popup_device_options
-                  type: custom:button-card
+                    - icon_light_flush
+                - type: custom:button-card
+                  entity: light.cozinha_switch_3
+                  name: Luz principal 2
                   template:
-                    - tpl_popup_device
-              - entity_id: switch.mycka_nadobi_power
-                options: *popup_device_options
-              - entity_id: switch.hob_power
-                options: *popup_device_options
-          card:
-            type: grid
-            columns: 3
-          card_param: cards
+                    - tpl_popup_light
+                    - icon_light_flush
+                - type: custom:button-card
+                  entity: light.cozinha_switch_1
+                  name: Área de serviço
+                  template:
+                    - tpl_popup_light
+                    - icon_light_flush
+        - type: vertical-stack
+          view_layout:
+            grid-area: col_extra
+          cards:
+            - type: grid
+              columns: 2
+              square: true
+              cards:
+                - type: custom:button-card
+                  name: Máquina de lavar
+                  template:
+                    - base
+                    - icon_washer
+                  show_icon: false
+                  tap_action:
+                    action: none
+                  hold_action:
+                    action: none
+                  double_tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - opacity: "0.45"
+                      - cursor: "default"
+                - type: custom:button-card
+                  name: Lava-louças
+                  template:
+                    - base
+                    - icon_dishwasher
+                  show_icon: false
+                  tap_action:
+                    action: none
+                  hold_action:
+                    action: none
+                  double_tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - opacity: "0.45"
+                      - cursor: "default"
+                - type: custom:button-card
+                  name: Air Fryer
+                  template:
+                    - base
+                    - icon_pot
+                  show_icon: false
+                  tap_action:
+                    action: none
+                  hold_action:
+                    action: none
+                  double_tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - opacity: "0.45"
+                      - cursor: "default"
+        - type: vertical-stack
+          view_layout:
+            grid-area: col_camera
+          cards:
+            - type: picture-entity
+              entity: camera.cz_camera
+              camera_view: live
+              show_name: false
+              show_state: false
+            - type: picture-entity
+              entity: camera.as_camera
+              camera_view: live
+              show_name: false
+              show_state: false

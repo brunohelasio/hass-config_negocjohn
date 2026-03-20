@@ -1,40 +1,86 @@
+# Original ngocjohn block kept for future reactivation (do not delete):
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Living Room
+#     content:
+#       type: custom:layout-card
+#       layout_type: custom:grid-layout
+#       layout: !include ../../snippets/layout_room_popup.yaml
+#       cards:
+#         - type: custom:auto-entities
+#           filter:
+#             include:
+#               - group: group.light_living_room
+#                 options:
+#                   type: custom:button-card
+#                   template:
+#                     - tpl_popup_light
+#               - entity_id: media_player.living_room_tv
+#                 options:
+#                   type: custom:button-card
+#                   name: Sony ATV
+#                   double_tap_action:
+#                     action: more-info
+#                   hold_action: !include ../../honeycomb/atv.yaml
+#                   template:
+#                     - mediaplayer
+#                     - icon_tv
+#               - entity_id: switch.ps5_power
+#                 options:
+#                   type: custom:button-card
+#                   name: Playstation
+#                   template:
+#                     - base
+#                     - icon_ps5
+#                     - loader
+#           card:
+#             type: grid
+#             columns: 3
+#           card_param: cards
+
+# Previous monolithic 3-column implementation kept in backup file:
+# - config/dashboards/shared/popup/rooms/livingroom_complex_backup.yaml
+
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
-    title: Living Room
+    title: Sala
+    size: wide
+    style: >
+      --popup-max-width: calc(320px + 320px + 460px);
+      --popup-background-color: rgba(8, 12, 20, 0.62);
+      --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+      --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
+    card_mod:
+      style:
+        .: |
+          ha-dialog {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+          }
+          ha-dialog .mdc-dialog__container {
+            align-items: center !important;
+          }
+          ha-dialog::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+          }
     content:
-      type: custom:layout-card
-      layout_type: custom:grid-layout
-      layout: !include ../../snippets/layout_room_popup.yaml
+      type: horizontal-stack
       cards:
-        - type: custom:auto-entities
-          filter:
-            include:
-              - group: group.light_living_room
-                options:
-                  type: custom:button-card
-                  template:
-                    - tpl_popup_light
-              - entity_id: media_player.living_room_tv
-                options:
-                  type: custom:button-card
-                  name: Sony ATV
-                  double_tap_action:
-                    action: more-info
-                  hold_action: !include ../../honeycomb/atv.yaml
-                  template:
-                    - mediaplayer
-                    - icon_tv
-              - entity_id: switch.ps5_power
-                options:
-                  type: custom:button-card
-                  name: Playstation
-                  template:
-                    - base
-                    - icon_ps5
-                    - loader
-          card:
-            type: grid
-            columns: 3
-          card_param: cards
+        - type: vertical-stack
+          cards: !include ../../columns/room-living-lights.yaml
+
+        - type: vertical-stack
+          cards: !include ../../columns/room-living-extras.yaml
+
+        - type: vertical-stack
+          cards: !include ../../columns/room-living-cameras.yaml

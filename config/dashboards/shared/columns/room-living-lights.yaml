@@ -1,0 +1,50 @@
+# Previous version kept for reference:
+# - group button + streamline light_card list.
+# - reverted to tpl_popup_light cards to keep original icon/shape behavior in popup.
+
+- type: grid
+  columns: 2
+  square: true
+  cards:
+    - type: custom:button-card
+      entity: light.sala_switch_2
+      name: Luz Principal
+      template:
+        - tpl_popup_light
+        - icon_light_flush
+    - type: custom:button-card
+      entity: light.sala_switch_1
+      name: LED Direito
+      template:
+        - tpl_popup_light
+        - icon_ledstrip
+    - type: custom:button-card
+      entity: light.sala_switch_3
+      name: LED Esquerdo
+      template:
+        - tpl_popup_light
+        - icon_ledstrip
+    - type: custom:button-card
+      entity: light.sala_2_switch_2
+      name: VR Principal
+      template:
+        - tpl_popup_light
+        - icon_light_flush
+    - type: custom:button-card
+      entity: light.sala_2_switch_3
+      name: VR Cristaleira
+      template:
+        - tpl_popup_light
+        - icon_ledstrip
+    - type: custom:button-card
+      entity: light.varanda_switch_1
+      name: VR Gourmet
+      template:
+        - tpl_popup_light
+        - icon_ledstrip
+    - type: custom:button-card
+      entity: light.varanda_switch_2
+      name: VR Pendente
+      template:
+        - tpl_popup_light
+        - icon_pendant

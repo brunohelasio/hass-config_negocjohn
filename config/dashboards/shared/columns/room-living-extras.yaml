@@ -1,0 +1,99 @@
+- type: grid
+  columns: 2
+  square: false
+  cards:
+    - type: custom:button-card
+      name: Smart TV
+      template:
+        - base
+        - icon_tv
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.60'
+          - cursor: default
+          - height: 150px
+
+    - type: custom:button-card
+      name: Spotify
+      template:
+        - base
+        - icon_spotify
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.60'
+          - cursor: default
+          - height: 150px
+
+    - type: custom:button-card
+      name: PS5
+      template:
+        - base
+        - icon_playstation
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.45'
+          - cursor: default
+          - height: 150px
+
+    - type: custom:button-card
+      name: Pioneer
+      template:
+        - base
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.45'
+          - cursor: default
+          - height: 150px
+        custom_fields:
+          icon:
+            - width: 80%
+            - fill: '#9da0a2'
+      custom_fields:
+        icon: >
+          <svg viewBox="0 0 50 50"><rect x="1" y="10" width="48" height="30" rx="2.5"/><rect x="5" y="14" width="22" height="10" rx="1.5" fill="#202628" opacity="0.9"/><circle cx="39" cy="19" r="5" fill="#202628" opacity="0.9"/><rect x="5" y="28" width="40" height="1.5" rx=".75" opacity=".3"/><rect x="5" y="31.5" width="40" height="1.5" rx=".75" opacity=".3"/><rect x="5" y="35" width="40" height="1.5" rx=".75" opacity=".3"/></svg>
+
+    - type: custom:button-card
+      name: Cortina
+      template:
+        - base
+        - icon_cover
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.35'
+          - cursor: default
+          - height: 150px
+
+    - type: custom:button-card
+      name: Ar Condicionado
+      template:
+        - base
+        - icon_climate
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.35'
+          - cursor: default
+          - height: 150px

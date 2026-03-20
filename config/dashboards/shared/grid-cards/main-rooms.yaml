@@ -5,23 +5,12 @@
   template: grid_living_room
 # OFFICE
 - type: custom:streamline-card
-  template: grid_office
+  # template: grid_office
+  template: grid_lavabo
 # Kitchen
-- type: conditional
-  conditions:
-    - entity: sensor.kitchen_active
-      state_not: 'dishwashing'
-  card:
-    type: custom:streamline-card
-    template: grid_kitchen_normal
-
-- type: conditional
-  conditions:
-    - entity: sensor.kitchen_active
-      state: 'dishwashing'
-  card:
-    type: custom:streamline-card
-    template: grid_kitchen_dishwasing
+- type: custom:streamline-card
+  template: grid_kitchen_normal
 # Bedroom
 - type: custom:streamline-card
-  template: grid_bedroom
+  # template: grid_bedroom
+  template: grid_circulacao

@@ -1,0 +1,29 @@
+action: fire-dom-event
+browser_mod:
+  service: browser_mod.popup
+  data:
+    title: Quarto Marina
+    size: wide
+    content:
+      type: vertical-stack
+      cards:
+        - type: entities
+          title: Iluminação
+          show_header_toggle: false
+          entities:
+            - light.quarto_marina_switch_4
+            - light.quarto_marina_switch_1
+            - light.quarto_marina_switch_2
+            - light.quarto_marina_switch_3
+            - light.suite_marina_switch_2
+            - light.suite_marina_switch_1
+        - type: entities
+          title: Extras
+          show_header_toggle: false
+          entities:
+            - light.grupo_luzes_quarto_marina
+        - type: picture-entity
+          entity: camera.qma_camera
+          camera_view: live
+          show_name: false
+          show_state: false

@@ -1,0 +1,16 @@
+action: fire-dom-event
+browser_mod:
+  service: browser_mod.popup
+  data:
+    title: Lavabo
+    size: wide
+    content:
+      type: entities
+      show_header_toggle: false
+      entities:
+        - entity: light.lavabo_switch_2
+          name: Luz principal
+        - entity: light.lavabo_switch_1
+          name: Luz parede
+        - entity: light.lavabo_switch_3
+          name: Luz espelho

@@ -1,0 +1,31 @@
+action: fire-dom-event
+browser_mod:
+  service: browser_mod.popup
+  data:
+    title: Quarto Casal
+    size: wide
+    content:
+      type: vertical-stack
+      cards:
+        - type: entities
+          title: Iluminação
+          show_header_toggle: false
+          entities:
+            - light.qc_luz_principal
+            - light.quarto_casal_switch_1
+            - light.quarto_casal_2_switch_2
+            - light.quarto_casal_switch_2
+            - light.quarto_casal_2_switch_3
+            - light.suite_casal_switch_1
+            - light.suite_casal_switch_2
+        - type: entities
+          title: Clima / Extras
+          show_header_toggle: false
+          entities:
+            - entity: light.grupo_quarto_casal
+              name: Grupo Quarto Casal
+        - type: picture-entity
+          entity: camera.camera_quarto_casal
+          camera_view: live
+          show_name: false
+          show_state: false

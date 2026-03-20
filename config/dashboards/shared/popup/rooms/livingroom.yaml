@@ -1,40 +1,53 @@
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: Living Room
-    content:
-      type: custom:layout-card
-      layout_type: custom:grid-layout
-      layout: !include ../../snippets/layout_room_popup.yaml
-      cards:
-        - type: custom:auto-entities
-          filter:
-            include:
-              - group: group.light_living_room
-                options:
-                  type: custom:button-card
-                  template:
-                    - tpl_popup_light
-              - entity_id: media_player.living_room_tv
-                options:
-                  type: custom:button-card
-                  name: Sony ATV
-                  double_tap_action:
-                    action: more-info
-                  hold_action: !include ../../honeycomb/atv.yaml
-                  template:
-                    - mediaplayer
-                    - icon_tv
-              - entity_id: switch.ps5_power
-                options:
-                  type: custom:button-card
-                  name: Playstation
-                  template:
-                    - base
-                    - icon_ps5
-                    - loader
-          card:
-            type: grid
-            columns: 3
-          card_param: cards
+action: call-service
+service: browser_mod.popup
+service_data:
+  title: Sala (Teste simples)
+  content:
+    type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          ## Sala — Popup de teste
+          Versão mínima sem `layout-card` para validar abertura e fluxo.
+
+      - type: markdown
+        content: "### Iluminação"
+
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: light.sala_switch_2
+            name: Luz Principal
+          - entity: light.sala_switch_1
+            name: LED Direito
+          - entity: light.sala_switch_3
+            name: LED Esquerdo
+          - entity: light.sala_2_switch_2
+            name: VR Principal
+          - entity: light.sala_2_switch_3
+            name: VR Cristaleira
+          - entity: light.varanda_switch_1
+            name: VR Gourmet
+          - entity: light.varanda_switch_2
+            name: VR Pendente
+
+      - type: markdown
+        content: |
+          ### Mídia / placeholders
+          - Smart TV (placeholder)
+          - Spotify (placeholder)
+          - PS5 (placeholder)
+          - Pioneer (placeholder)
+          - Sensor Presença/Atividade (futuro)
+          - Temperatura/Umidade (futuro)
+
+      - type: markdown
+        content: "### Câmeras"
+
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: camera.sl_camera
+            name: Câmera Sala
+          - entity: camera.vr_camera
+            name: Câmera Varanda

@@ -72,11 +72,11 @@ browser_mod:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 1fr 1fr 1.5fr
+        grid-template-columns: 18vw 18vw 28vw
         grid-template-areas: '"col_luzes col_extra col_camera"'
-        justify-content: stretch
-        align-content: start
-        grid-gap: 1.2rem
+        justify-content: center
+        align-content: center
+        grid-gap: 1.5vw
         mediaquery:
           "(max-width: 800px)":
             grid-template-columns: 1fr

@@ -1,12 +1,16 @@
+# Previous version kept for reference:
+# - used plain mdi icons to bypass template dependency issues.
+# - now restored to tpl_icons-based placeholders (without entity-bound templates that crash).
+
 - type: grid
   columns: 2
-  square: false
+  square: true
   cards:
     - type: custom:button-card
       name: Smart TV
       template:
         - base
-        - icon_tv
+        - icon_shieldtv
       show_icon: false
       tap_action: { action: none }
       hold_action: { action: none }
@@ -15,7 +19,6 @@
         card:
           - opacity: '0.60'
           - cursor: default
-          - height: 150px
 
     - type: custom:button-card
       name: Spotify
@@ -30,7 +33,6 @@
         card:
           - opacity: '0.60'
           - cursor: default
-          - height: 150px
 
     - type: custom:button-card
       name: PS5
@@ -45,12 +47,12 @@
         card:
           - opacity: '0.45'
           - cursor: default
-          - height: 150px
 
     - type: custom:button-card
       name: Pioneer
       template:
         - base
+        - icon_plex
       show_icon: false
       tap_action: { action: none }
       hold_action: { action: none }
@@ -59,20 +61,25 @@
         card:
           - opacity: '0.45'
           - cursor: default
-          - height: 150px
-        custom_fields:
-          icon:
-            - width: 80%
-            - fill: '#9da0a2'
-      custom_fields:
-        icon: >
-          <svg viewBox="0 0 50 50"><rect x="1" y="10" width="48" height="30" rx="2.5"/><rect x="5" y="14" width="22" height="10" rx="1.5" fill="#202628" opacity="0.9"/><circle cx="39" cy="19" r="5" fill="#202628" opacity="0.9"/><rect x="5" y="28" width="40" height="1.5" rx=".75" opacity=".3"/><rect x="5" y="31.5" width="40" height="1.5" rx=".75" opacity=".3"/><rect x="5" y="35" width="40" height="1.5" rx=".75" opacity=".3"/></svg>
 
+- type: custom:button-card
+  color_type: blank-card
+  styles:
+    card:
+      - height: 1px
+      - margin: 8px 12px
+      - background: >
+          linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.15) 50%,rgba(255,255,255,0) 100%)
+
+- type: grid
+  columns: 2
+  square: true
+  cards:
     - type: custom:button-card
       name: Cortina
       template:
         - base
-        - icon_cover
+        - icon_shade
       show_icon: false
       tap_action: { action: none }
       hold_action: { action: none }
@@ -81,7 +88,6 @@
         card:
           - opacity: '0.35'
           - cursor: default
-          - height: 150px
 
     - type: custom:button-card
       name: Ar Condicionado
@@ -96,4 +102,3 @@
         card:
           - opacity: '0.35'
           - cursor: default
-          - height: 150px

@@ -4,6 +4,31 @@ browser_mod:
   data:
     title: Cozinha
     size: wide
+    style: >
+      --popup-width: 76vw;
+      --popup-max-width: 1180px;
+      --popup-background-color: rgba(8, 12, 20, 0.62);
+      --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+      --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
+    card_mod:
+      style:
+        .: |
+          ha-dialog {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+          }
+          ha-dialog .mdc-dialog__container {
+            align-items: center !important;
+          }
+          ha-dialog::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+          }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
@@ -30,12 +55,6 @@ browser_mod:
               square: true
               cards:
                 - type: custom:button-card
-                  entity: light.cz_luz_principal
-                  name: Luz principal
-                  template:
-                    - tpl_popup_light
-                    - icon_light_flush
-                - type: custom:button-card
                   entity: light.cozinha_switch_2
                   name: Luz principal 1
                   template:
@@ -49,7 +68,7 @@ browser_mod:
                     - icon_light_flush
                 - type: custom:button-card
                   entity: light.cozinha_switch_1
-                  name: Lavanderia
+                  name: Área de serviço
                   template:
                     - tpl_popup_light
                     - icon_light_flush
@@ -57,16 +76,58 @@ browser_mod:
           view_layout:
             grid-area: col_extra
           cards:
-            - type: entities
-              title: Eletrodomésticos
-              show_header_toggle: false
-              entities:
-                - entity: switch.washer_dryer_power
+            - type: grid
+              columns: 2
+              square: true
+              cards:
+                - type: custom:button-card
                   name: Máquina de lavar
-                - entity: switch.mycka_nadobi_power
+                  template:
+                    - base
+                    - icon_washer
+                  show_icon: false
+                  tap_action:
+                    action: none
+                  hold_action:
+                    action: none
+                  double_tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - opacity: "0.45"
+                      - cursor: "default"
+                - type: custom:button-card
                   name: Lava-louças
-                - entity: switch.air_fryer_power
+                  template:
+                    - base
+                    - icon_dishwasher
+                  show_icon: false
+                  tap_action:
+                    action: none
+                  hold_action:
+                    action: none
+                  double_tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - opacity: "0.45"
+                      - cursor: "default"
+                - type: custom:button-card
                   name: Air Fryer
+                  template:
+                    - base
+                    - icon_pot
+                  show_icon: false
+                  tap_action:
+                    action: none
+                  hold_action:
+                    action: none
+                  double_tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - opacity: "0.45"
+                      - cursor: "default"
         - type: vertical-stack
           view_layout:
             grid-area: col_camera

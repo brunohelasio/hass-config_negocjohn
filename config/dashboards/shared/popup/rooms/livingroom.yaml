@@ -46,7 +46,8 @@ browser_mod:
     title: Sala
     size: wide
     style: >
-      --popup-max-width: calc(240px + 240px + 420px + 48px);
+      --popup-width: 76vw;
+      --popup-max-width: 1180px;
       --popup-background-color: rgba(8, 12, 20, 0.62);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
@@ -67,70 +68,26 @@ browser_mod:
             box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
           }
         ha-dialog$: |
-          /* ── Centralizar o popup vertical e horizontalmente ── */
           .mdc-dialog__container {
-            display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-          }
-          /* ── Largura adaptativa ao conteudo ── */
-          .mdc-dialog__surface {
-            width: fit-content !important;
-            max-width: 95vw !important;
-            max-height: 92vh !important;
-            margin: auto !important;
-          }
-          /* Desktop (>= 1024px) */
-          @media screen and (min-width: 1024px) {
-            .mdc-dialog__surface {
-              max-width: calc(240px + 240px + 420px + 48px) !important;
-            }
-          }
-          /* Tablet (600–1023px) */
-          @media screen and (min-width: 600px) and (max-width: 1023px) {
-            .mdc-dialog__surface {
-              width: 90vw !important;
-              max-width: 720px !important;
-              max-height: 90vh !important;
-            }
-          }
-          /* Mobile (<600px) */
-          @media screen and (max-width: 599px) {
-            .mdc-dialog__surface {
-              width: 96vw !important;
-              max-width: unset !important;
-              max-height: 94vh !important;
-              margin: 8px auto !important;
-            }
           }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        # Desktop (>= 1024px): 3 colunas com largura fixa em px
-        grid-template-columns: 240px 240px 420px
+        grid-template-columns: 18vw 18vw 36vw
         grid-template-areas: '"col_luzes col_extra col_camera"'
         justify-content: center
         align-content: center
-        grid-gap: 16px
+        grid-gap: 1.5vw
         mediaquery:
-          # Tablet (600–1023px): 2 colunas + camera embaixo
-          "(min-width: 600px) and (max-width: 1023px)":
-            grid-template-columns: 1fr 1fr
-            grid-template-areas: |
-              "col_luzes col_extra"
-              "col_camera col_camera"
-            grid-gap: 12px
-            padding: 8px
-          # Mobile (<600px): tudo empilhado
-          "(max-width: 599px)":
+          "(max-width: 800px)":
             grid-template-columns: 1fr
             grid-template-areas: |
               "col_luzes"
               "col_extra"
               "col_camera"
-            grid-gap: 8px
-            padding: 4px
       cards:
         # ======================================================================
         # COLUNA 1 — ILUMINACAO

@@ -5,9 +5,9 @@
 #################################################
 - type: grid
   # title: Rooms
-  title: ''
+  title: Cômodos 2
   view_layout:
-    grid-area: other
+    grid-area: devices
     show:
       mediaquery: '(min-height: 463px)'
   columns: 2

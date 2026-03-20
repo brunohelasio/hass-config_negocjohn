@@ -45,16 +45,38 @@ browser_mod:
   service: browser_mod.popup
   data:
     title: Sala
-    size: wide
+    style: |
+      --popup-max-width: 68vw;
+      --popup-min-width: 580px;
+      --tablet-popup-content-padding: 1.2em 1.6em 1.4em 1.2em;
+      --ha-dialog-surface-background: rgba(22, 24, 29, 0.78);
+      --dialog-box-shadow: 0 0 30px 6px rgba(60, 130, 220, 0.25),
+                           0 0 80px 20px rgba(60, 130, 220, 0.12),
+                           0 8px 32px 8px rgba(0, 0, 0, 0.4);
+      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.6);
+    card_mod:
+      style:
+        .: |
+          :host {
+            --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.6) !important;
+          }
+        ha-dialog$: |
+          .mdc-dialog__scrim {
+            backdrop-filter: blur(10px) saturate(120%) !important;
+            -webkit-backdrop-filter: blur(10px) saturate(120%) !important;
+          }
+          .mdc-dialog__container {
+            filter: drop-shadow(0 0 40px rgba(60, 130, 220, 0.20));
+          }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 22vw 22vw 36vw
+        grid-template-columns: 18vw 18vw 28vw
         grid-template-areas: '"col_luzes col_extra col_camera"'
         justify-content: center
         align-content: center
-        grid-gap: 2.5vw
+        grid-gap: 1.5vw
         mediaquery:
           "(max-width: 800px)":
             grid-template-columns: 1fr

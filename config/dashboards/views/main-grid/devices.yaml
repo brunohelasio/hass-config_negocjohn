@@ -6,7 +6,7 @@
 - type: grid
   title: Devices
   view_layout:
-    grid-area: devices
+    grid-area: other
     show:
       mediaquery: '(min-height: 463px)'
   columns: 2

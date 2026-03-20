@@ -1,0 +1,104 @@
+# Previous version kept for reference:
+# - used plain mdi icons to bypass template dependency issues.
+# - now restored to tpl_icons-based placeholders (without entity-bound templates that crash).
+
+- type: grid
+  columns: 2
+  square: true
+  cards:
+    - type: custom:button-card
+      name: Smart TV
+      template:
+        - base
+        - icon_shieldtv
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.60'
+          - cursor: default
+
+    - type: custom:button-card
+      name: Spotify
+      template:
+        - base
+        - icon_spotify
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.60'
+          - cursor: default
+
+    - type: custom:button-card
+      name: PS5
+      template:
+        - base
+        - icon_playstation
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.45'
+          - cursor: default
+
+    - type: custom:button-card
+      name: Pioneer
+      template:
+        - base
+        - icon_plex
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.45'
+          - cursor: default
+
+- type: custom:button-card
+  color_type: blank-card
+  styles:
+    card:
+      - height: 1px
+      - margin: 8px 12px
+      - background: >
+          linear-gradient(90deg,rgba(255,255,255,0) 0%,rgba(255,255,255,0.15) 50%,rgba(255,255,255,0) 100%)
+
+- type: grid
+  columns: 2
+  square: true
+  cards:
+    - type: custom:button-card
+      name: Cortina
+      template:
+        - base
+        - icon_shade
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.35'
+          - cursor: default
+
+    - type: custom:button-card
+      name: Ar Condicionado
+      template:
+        - base
+        - icon_climate
+      show_icon: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      double_tap_action: { action: none }
+      styles:
+        card:
+          - opacity: '0.35'
+          - cursor: default

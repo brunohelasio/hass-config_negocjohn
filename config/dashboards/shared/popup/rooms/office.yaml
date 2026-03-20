@@ -3,28 +3,66 @@ browser_mod:
   service: browser_mod.popup
   data:
     title: Office
+    size: wide
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
-      layout: !include ../../snippets/layout_room_popup.yaml
+      layout:
+        grid-template-columns: 18vw 18vw 36vw
+        grid-template-areas: '"col_luzes col_extra col_camera"'
+        justify-content: center
+        align-content: center
+        grid-gap: 1.5vw
+        mediaquery:
+          "(max-width: 800px)":
+            grid-template-columns: 1fr
+            grid-template-areas: |
+              "col_luzes"
+              "col_extra"
+              "col_camera"
       cards:
-        - type: custom:auto-entities
-          filter:
-            include:
-              - group: group.light_office
-                options:
-                  type: custom:button-card
+        - type: vertical-stack
+          view_layout:
+            grid-area: col_luzes
+          cards:
+            - type: grid
+              columns: 2
+              square: true
+              cards:
+                - type: custom:button-card
+                  entity: light.office_switch_3
+                  name: Luz central
                   template:
                     - tpl_popup_light
-              - entity_id: switch.macbook
-                options:
-                  type: custom:button-card
-                  tap_action: none
-                  double_tap_action: none
+                    - icon_light_flush
+                - type: custom:button-card
+                  entity: light.office_switch_2
+                  name: Luz ambiente
                   template:
-                    - tpl_popup_device
-
-          card:
-            type: grid
-            columns: 3
-          card_param: cards
+                    - tpl_popup_light
+                    - icon_light_flush
+                - type: custom:button-card
+                  entity: light.office_switch_1
+                  name: Luz estante
+                  template:
+                    - tpl_popup_light
+                    - icon_ledstrip
+        - type: vertical-stack
+          view_layout:
+            grid-area: col_extra
+          cards:
+            - type: entities
+              title: Clima / Extras
+              show_header_toggle: false
+              entities:
+                - climate.ac_office
+                - light.grupo_luzes_office
+        - type: vertical-stack
+          view_layout:
+            grid-area: col_camera
+          cards:
+            - type: picture-entity
+              entity: camera.of_camera
+              camera_view: live
+              show_name: false
+              show_state: false

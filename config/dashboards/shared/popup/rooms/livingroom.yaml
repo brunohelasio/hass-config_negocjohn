@@ -47,18 +47,26 @@ browser_mod:
     title: Sala
     size: wide
     style: >
-      --popup-width: 76vw;
+      --popup-width: 74.5vw;
       --popup-max-width: 1180px;
       --popup-background-color: rgba(8, 12, 20, 0.62);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
-      --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
+      --tablet-popup-content-padding: 0.75em 0.7em 0.95em 0.75em;
     card_mod:
       style:
         .: |
           ha-dialog {
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
+            align-items: center !important;
+          }
+          ha-dialog .mdc-dialog__container {
+            align-items: center !important;
+          }
+          ha-dialog .mdc-dialog__surface {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
           }
           ha-dialog::before {
             content: '';

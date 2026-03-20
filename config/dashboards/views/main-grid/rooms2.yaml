@@ -4,7 +4,8 @@
 #                                               #
 #################################################
 - type: grid
-  title: Rooms
+  # title: Rooms
+  title: ''
   view_layout:
     grid-area: other
     show:

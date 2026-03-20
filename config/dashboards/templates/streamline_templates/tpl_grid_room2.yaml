@@ -3,6 +3,75 @@
 #                    ROOMS 2                    #
 #                                               #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# OFFICE ROOM
+grid_office_room:
+  card:
+    type: custom:button-card
+    entity: light.grupo_luzes_office
+    name: Office
+    template:
+      - rooms_base
+      - icon_office
+    double_tap_action: !include ../../shared/popup/rooms/office.yaml
+    hold_action:
+      action: none
+    variables:
+      light_entity: light.office_switch_3
+      active: ''
+
+# QUARTO CASAL
+grid_quarto_casal:
+  card:
+    type: custom:button-card
+    entity: light.grupo_quarto_casal
+    name: Quarto Casal
+    template:
+      - rooms_base
+      - icon_double_bed
+    double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml
+    hold_action:
+      action: none
+    variables:
+      light_entity: light.qc_luz_principal
+      active: ''
+
+# QUARTO MIGUEL
+grid_quarto_miguel:
+  card:
+    type: custom:button-card
+    entity: light.grupo_luzes_quarto_miguel
+    name: Quarto Miguel
+    template:
+      - rooms_base
+      - icon_double_bed
+    tap_action:
+      action: call-service
+      service: homeassistant.toggle
+      service_data:
+        entity_id: switch.quarto_miguel_switch_2
+    double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
+    hold_action:
+      action: none
+    variables:
+      light_entity: switch.quarto_miguel_switch_2
+      active: ''
+
+# QUARTO MARINA
+grid_quarto_marina:
+  card:
+    type: custom:button-card
+    entity: light.grupo_luzes_quarto_marina
+    name: Quarto Marina
+    template:
+      - rooms_base
+      - icon_double_bed
+    double_tap_action: !include ../../shared/popup/rooms/quarto_marina.yaml
+    hold_action:
+      action: none
+    variables:
+      light_entity: light.quarto_marina_switch_4
+      active: ''
+
 # SHOWER ROOM
 grid_shower:
   card:

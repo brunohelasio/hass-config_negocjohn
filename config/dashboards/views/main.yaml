@@ -4,9 +4,6 @@ subview: false
 
 theme: tablet
 type: custom:grid-layout
-
-kiosk_mode:
-  kiosk: true
 layout:
   # default:
   margin: 0

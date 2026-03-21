@@ -1,3 +1,4 @@
+# Coluna de cameras — Sala / Varanda
 - type: picture-entity
   entity: camera.sl_camera
   camera_view: live

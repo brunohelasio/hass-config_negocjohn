@@ -8,6 +8,6 @@
   view_layout:
     grid-area: home
     show:
-      mediaquery: '(max-width: 1440px) and (min-height: 463px)'
+      mediaquery: '(max-width: 1440px) and (min-height: 463px) and (orientation: portrait)'
   columns: 2
   cards: !include ../../shared/grid-cards/home-status.yaml

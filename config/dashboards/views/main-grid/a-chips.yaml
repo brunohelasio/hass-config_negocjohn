@@ -1,86 +1,112 @@
-#-
-#                _
-#  ___ _   _ ___| |_ ___ _ __ ___
-# / __| | | / __| __/ _ \ '_ ` _ \
-# \__ \ |_| \__ \ ||  __/ | | | | |
-# |___/\__, |___/\__\___|_| |_| |_|
-#      |___/
-#
-#- from github.com/ngocjohn/hass-config
-#
-# RECORDER
-recorder:
-  db_url: !secret mariadb_url
-  purge_keep_days: 30
-  auto_purge: true
-  auto_repack: true
-  exclude:
-    domains:
-      - alarm_control_panel
-      - button
-      - camera
-      - media_player
-      - switch
-      - light
-      - sun
-      - weather
-      - timer
-      - update
-      - image
-      - device_tracker
-    entities:
-      - sensor.time
-      - sensor.date
-      - sensor.hassio_addons_use
-      - sensor.zhimi_mb4_b008_moto_speed_rpm
-      - script.fade_music
-    entity_globs:
-      - sensor.*_motor_speed
-      - sensor.browser_*
-      - sensor.*_color
-      - sensor.*_energy
-      - sensor.*_power
-      - sensor.*_linkquality
-      - sensor.*_last_seen
-      - sensor.home_*
-      - sensor.kodi_*
-      - sensor.amg_43_*
-      - sensor.*_write
-      - sensor.prague_next_*
-      - sensor.*_utilization
-      - sensor.*_clients
-      - sensor.*_voltage
-      - sensor.*_current
-      - sensor.*_rx
-      - sensor.*_tx
-      - sensor.sun_*
-      - sensor.*_active
-      - sensor.hacs_*
-      - sensor.motion_sensor_*
-      - sensor.*_outage_count
-      - sensor.*_speed_rpm
-      - sensor.*_clients
-      - sensor.*_containers_cpu_usage
-      - sensor.roidmi_*
-      - binary_sensor.roidmi_*
-  include:
-    entities:
-      - device_tracker.viet_ngoc_samsung
-      - sensor.motion_sensor_entrance_illuminance
-logger:
-logbook:
+#################################################
+#                                               #
+#             CHIPS MAX 800px                   #
+#                                               #
+#################################################
+- type: custom:layout-card
+  view_layout:
+    grid-area: chips
+    show:
+      mediaquery: '(max-width: 800px)'
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))
+    margin: 0
+    grid-gap: 8px
+    padding: 0
+  cards:
+    - &lights
+      type: custom:button-card
+      name: Lights
+      entity: group.light_all
+      tap_action: !include ../../shared/popup/popup_lights.yaml
+      icon: mdi:lightbulb-group
+      template:
+        - chips
+      state_display: >
+        [[[
+            if (variables.state == 'off') return 'All Off';
+            else return variables.light_on;
+        ]]]
+      styles:
+        icon:
+          - color: >
+              [[[
+                return variables.state_on
+                  ? '#b68752'
+                  : '';
+              ]]]
+    - &media
+      type: custom:button-card
+      name: Media
+      entity: sensor.currently_playing
+      icon: custom:ios-hifi-stereo
+      template:
+        - chips
+      state_display: >
+        [[[
+            if (!variables.state_on) return 'None';
+            else return entity.attributes.device_playing;
+        ]]]
+      styles:
+        icon:
+          - color: >
+              [[[
+                return variables.state_on
+                  ? '#607D8B'
+                  : '';
+              ]]]
+      tap_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.more_info
+          data:
+            entity: media_player.currently_playing
+      hold_action: !include ../../shared/extra-popup/mass-homepods.yaml
 
-# TTS
-tts:
-  - platform: google_translate
-  - platform: google_cloud
-    key_file: google_stt.json
-  - platform: edge_tts
-    service_name: edge_eng_say
-    language: en-US-JennyNeural
-  - platform: edge_tts
-    service_name: edge_vietnam_say
-    language: vi-VN-HoaiMyNeural
-bluetooth:
-delete:
-sun:
+    - &presence
+      type: custom:button-card
+      name: Bruno
+      entity: person.bruno_helasio
+      template:
+        - chips
+      styles:
+        icon:
+          - padding: 3px
+          - background-color: null
+          - width: 50%
+
+    # - &air
+    #   type: custom:button-card
+    #   name: Air Quality
+    #   entity: sensor.home_climate
+    #   template:
+    #     - chip_air_new
+#################################################
+#                                               #
+#       CHIPS 801-1440px LANDSCAPE              #
+#                                               #
+#################################################
+- type: horizontal-stack
+  view_layout:
+    grid-area: chips
+    show:
+      mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
+  cards:
+    - *lights
+    - *media
+    - *presence
+#################################################
+#                                               #
+#             CHIPS MIN 1441px                  #
+#                                               #
+#################################################
+- type: horizontal-stack
+  view_layout:
+    grid-area: chips
+    show:
+      mediaquery: '(min-width: 1441px)'
+  cards:
+    - *lights
+    - *media
+    - *presence

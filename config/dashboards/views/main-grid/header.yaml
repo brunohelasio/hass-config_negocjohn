@@ -11,14 +11,9 @@
       mediaquery: '(min-height: 463px)'
   layout:
     margin: 0
-
     place-items: center center
     grid-template-columns: 0.5fr 1fr
     grid-gap: 0
-    mediaquery:
-      '(min-width: 801px) and (max-width: 1440px)':
-        grid-template-columns: 1fr
-        grid-template-rows: auto
   cards:
     - type: custom:button-card
       entity: sensor.time
@@ -27,39 +22,7 @@
       tap_action: !include ../../shared/popup/calendar.yaml
 
     - type: custom:button-card
-      entity: weather.prague
+      entity: weather.forecast_casa
       tap_action: !include ../../shared/popup/popup_weather.yaml
       template:
         - header_weather
-#################################################
-#                                               #
-#                  WEATHER                      #
-#                                               #
-#################################################
-
-# - type: 'custom:layout-card'
-#   layout_type: 'custom:grid-layout'
-#   view_layout:
-#     grid-area: header
-#     show:
-#       mediaquery: '(max-width: 800px)'
-#   layout:
-#     grid-template-columns: 1fr 1fr
-#     grid-gap: 0
-#     margin: 0
-#     align-items: flex-end
-#   cards:
-#     - type: custom:button-card
-#       entity: sensor.template_sidebar_time
-#       template:
-#         - timeclock
-#     - type: custom:button-card
-#       entity: weather.prague
-#       tap_action: !include ../../shared/popup/popup_weather.yaml
-#       name: Prague
-#       variables:
-#         temp_min: sensor.weather_min_temp
-#         temp_max: sensor.weather_max_temp
-#         humidity: sensor.weather_humidity
-#       template:
-#         - horizontal_widget_weather

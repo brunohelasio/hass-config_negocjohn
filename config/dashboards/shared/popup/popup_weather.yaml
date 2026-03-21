@@ -14,7 +14,7 @@ browser_mod:
         layout: !include ../snippets/popup_footer_layout.yaml
         cards:
           - type: entities
-            title: Prague
+            title: Salvador
             entities:
               - type: custom:layout-card
                 layout_type: custom:vertical-layout
@@ -22,12 +22,12 @@ browser_mod:
                   - type: weather-forecast
                     show_current: true
                     show_forecast: true
-                    entity: weather.prague
+                    entity: weather.forecast_casa
                     name: ' '
                     forecast_type: hourly
               - type: divider
               - type: custom:weather-chart-card
-                entity: weather.home
+                entity: weather.forecast_casa
                 show_main: false
                 show_attributes: false
                 forecast:
@@ -45,12 +45,12 @@ browser_mod:
                 show_scale: false
                 show_range: false
                 extra_labels: false
-                center_longitude: 14.42036
+                center_longitude: -38.5108
                 show_marker: false
                 show_zoom: false
-                center_latitude: 50.075763
-                marker_latitude: 50.075763
-                marker_longitude: 14.42036
+                center_latitude: -12.9714
+                marker_latitude: -12.9714
+                marker_longitude: -38.5108
                 zoom_level: 5
                 square_map: false
                 show_recenter: true

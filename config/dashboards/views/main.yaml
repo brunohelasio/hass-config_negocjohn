@@ -11,12 +11,14 @@ layout:
   grid-gap: 1.5vw 1vw
   grid-template-columns: 0 1fr 1fr 1fr 1fr 1fr 0
   grid-template-rows: min-content 1fr 1fr min-content 0
+  # ESTRATEGIA SAGALAND: todas as grid-areas em todos os breakpoints
+  # Areas ocultas ficam em linhas de altura 0 — nenhum card orfao
   grid-template-areas: |
     ". chips     chips      chips     header   header   ."
     ". security  mainrooms  devices   other    movies   ."
     ". cameras   climate    media     .        .        ."
     ". footer    footer     footer    footer   footer   ."
-    ". .         .          .         .        .        ."
+    ". sidebar   home       .         .        .        ."
 
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
@@ -29,19 +31,20 @@ layout:
         ". security  mainrooms  devices   other    movies   ."
         ". cameras   climate    media     .        .        ."
         ". footer    footer     footer    footer   footer   ."
-        ". .         .          .         .        .        ."
+        ". sidebar   home       .         .        .        ."
     # tablet landscape (e.g. 801-1440px) - with sidebar
+    # Estrategia Sagaland: 3 colunas + sidebar, areas ocultas em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
       grid-gap: 1.5vw 1vw
-      grid-template-columns: 0 minmax(100px, 14%) 1fr 1fr 1fr 1fr 0
-      grid-template-rows: min-content 1fr 1fr min-content 0
+      grid-template-columns: 0 minmax(100px, 14%) 1fr 1fr 1fr 0
+      grid-template-rows: 1fr 1fr min-content 0 0
       grid-template-areas: |
-        ". sidebar  chips     chips      header   header   ."
-        ". sidebar  security  mainrooms  devices  other    ."
-        ". sidebar  cameras   climate    media    movies   ."
-        ". sidebar  footer    footer     footer   footer   ."
-        ". .        .         .          .        .        ."
-    #portrait
+        ". sidebar  security  mainrooms  devices  ."
+        ". sidebar  cameras   climate    media    ."
+        ". sidebar  footer    footer     footer   ."
+        ". chips    header    home       other    ."
+        ". .        movies    .          .        ."
+    # portrait — Sagaland: areas ocultas (sidebar, chips, movies) em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-gap: 1% 1.5%
       grid-template-columns: 0 1fr 1fr 1fr 0
@@ -51,14 +54,13 @@ layout:
         ".  cameras    media       climate   ."
         ".  mainrooms  devices     other     ."
         ".  footer     footer      footer    ."
-        ".  .          .           .         ."
-    # phone
+        ".  sidebar    chips       movies    ."
+    # phone — Sagaland: areas ocultas (sidebar, movies) em h=0
     '(max-width: 800px) and (min-height: 463px)':
-      # grid-gap: calc(var(--custom-layout-card-padding) * 1.7)
       margin: 0
       grid-gap: 1rem
       grid-template-columns: 0 1fr 1fr 0
-      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) min-content 1rem
+      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) min-content 0
       grid-template-areas: |
         ". header      header    ."
         ". chips       chips     ."
@@ -67,7 +69,7 @@ layout:
         ". mainrooms   devices   ."
         ". other       climate   ."
         ". footer      footer    ."
-        ". .           .         ."
+        ". sidebar     movies    ."
     # phone cover screen = place horizontal
     '(max-height: 462px)':
       grid-gap: 0.5rem

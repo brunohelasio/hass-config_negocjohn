@@ -82,20 +82,16 @@
     #   entity: sensor.home_climate
     #   template:
     #     - chip_air_new
-#################################################
-#                                               #
-#       CHIPS 801-1440px LANDSCAPE              #
-#                                               #
-#################################################
-- type: horizontal-stack
-  view_layout:
-    grid-area: chips
-    show:
-      mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
-  cards:
-    - *lights
-    - *media
-    - *presence
+# CHIPS 801-1440px LANDSCAPE - desabilitado (sidebar substitui no landscape tablet)
+# - type: horizontal-stack
+#   view_layout:
+#     grid-area: chips
+#     show:
+#       mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
+#   cards:
+#     - *lights
+#     - *media
+#     - *presence
 #################################################
 #                                               #
 #             CHIPS MIN 1441px                  #

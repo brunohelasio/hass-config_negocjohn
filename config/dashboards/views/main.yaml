@@ -31,16 +31,17 @@ layout:
         ". footer    footer     footer    footer   footer   ."
         ". .         .          .         .        .        ."
     # tablet landscape (e.g. 801-1440px) - with sidebar
+    # 3 colunas de conteudo + sidebar | chips/header/home/other/movies em linhas zero (sem orfaos)
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
       grid-gap: 1.5vw 1vw
-      grid-template-columns: 0 minmax(100px, 14%) 1fr 1fr 1fr 1fr 0
-      grid-template-rows: min-content 1fr 1fr min-content 0
+      grid-template-columns: 0 minmax(100px, 14%) 1fr 1fr 1fr 0
+      grid-template-rows: 1fr 1fr min-content 0 0
       grid-template-areas: |
-        ". sidebar  chips     chips      header   header   ."
-        ". sidebar  security  mainrooms  devices  other    ."
-        ". sidebar  cameras   climate    media    movies   ."
-        ". sidebar  footer    footer     footer   footer   ."
-        ". .        .         .          .        .        ."
+        ". sidebar  security  mainrooms  devices  ."
+        ". sidebar  cameras   climate    media    ."
+        ". sidebar  footer    footer     footer   ."
+        ". chips    header    home       other    ."
+        ". .        movies    .          .        ."
     #portrait
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-gap: 1% 1.5%

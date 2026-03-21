@@ -43,13 +43,26 @@ grid_living_room:
   card:
     type: custom:button-card
     # entity: light.living_room_group
-    # entity: light.grupo_luzes_sala
-    entity: light.sala_switch_2
-    name: Lounge
+    entity: light.grupo_luzes_sala
+    # entity: light.sala_switch_2
+    name: Sala
     double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml
+    # double_tap_action:
+    #   action: fire-dom-event
+    #   browser_mod:
+    #     service: popup
+    #     data:
+    #       title: Sala
+    #       content:
+    #         type: markdown
+    #         content: |
+    #           ## Popup de teste (Lounge)
+    #           Se abriu no duplo toque, a ação está funcionando.
+    #           Próximo passo: recolocar o conteúdo completo do `livingroom.yaml`.
     # hold_action: !include ../../shared/honeycomb/living.yaml
-    hold_action:
-      action: none
+    # hold_action:
+    #   action: none
+    hold_action: !include ../../shared/popup/rooms/livingroom.yaml
     template:
       - rooms_base
       - icon_couch_lamp
@@ -70,20 +83,25 @@ grid_living_room:
 grid_kitchen_normal:
   card:
     type: custom:button-card
-    entity: sensor.kitchen_active
-    name: Kitchen
+    # entity: sensor.kitchen_active
+    entity: light.grupo_luzes_cozinha
+    name: Cozinha
     template:
       - rooms_base
       - icon_noodles
-      - fan_circle
-      - motion
+      # - fan_circle
+      # - motion
     double_tap_action: !include ../../shared/popup/rooms/kitchen.yaml
-    hold_action: !include ../../shared/honeycomb/kitchen.yaml
+    # hold_action: !include ../../shared/honeycomb/kitchen.yaml
+    hold_action:
+      action: none
     variables:
-      fan_circle: fan.hood_power
-      light_entity: light.kitchen_table_light
-      motion: binary_sensor.motion_sensor_kitchen_occupancy
-      active: sensor.kitchen_active
+      # fan_circle: fan.hood_power
+      # light_entity: light.kitchen_table_light
+      light_entity: light.cz_luz_principal
+      # motion: binary_sensor.motion_sensor_kitchen_occupancy
+      # active: sensor.kitchen_active
+      active: ''
   # KITCHEN DISHWASING
 grid_kitchen_dishwasing:
   card:
@@ -176,3 +194,36 @@ grid_bedroom:
           let state = states['sensor.bedroom_active'].state;
           if (state == 'yes') return state;
         ]]]
+
+# LAVABO
+grid_lavabo:
+  card:
+    type: custom:button-card
+    entity: light.grupo_luzes_lavabo
+    name: Lavabo
+    double_tap_action: !include ../../shared/popup/rooms/lavabo.yaml
+    hold_action:
+      action: none
+    template:
+      - rooms_base
+      - icon_bathroom
+    variables:
+      light_entity: light.lavabo_switch_2
+      active: ''
+
+# CIRCULAÇÃO
+grid_circulacao:
+  card:
+    type: custom:button-card
+    entity: light.corredor_switch_1
+    name: Circulação
+    double_tap_action:
+      action: none
+    hold_action:
+      action: none
+    template:
+      - rooms_base
+      - icon_hallway
+    variables:
+      light_entity: light.corredor_switch_1
+      active: ''

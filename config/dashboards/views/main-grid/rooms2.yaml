@@ -6,7 +6,7 @@
 - type: grid
   title: Rooms
   view_layout:
-    grid-area: other
+    grid-area: devices
     show:
       mediaquery: '(min-height: 463px)'
   columns: 2

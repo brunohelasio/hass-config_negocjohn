@@ -39,10 +39,6 @@
 #             type: grid
 #             columns: 3
 #           card_param: cards
-
-# Previous monolithic 3-column implementation kept in backup file:
-# - config/dashboards/shared/popup/rooms/livingroom_complex_backup.yaml
-
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
@@ -50,7 +46,8 @@ browser_mod:
     title: Sala
     size: wide
     style: >
-      --popup-max-width: calc(320px + 320px + 460px);
+      --popup-width: 76vw;
+      --popup-max-width: 1180px;
       --popup-background-color: rgba(8, 12, 20, 0.62);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
@@ -62,9 +59,6 @@ browser_mod:
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
           }
-          ha-dialog .mdc-dialog__container {
-            align-items: center !important;
-          }
           ha-dialog::before {
             content: '';
             position: absolute;
@@ -73,39 +67,55 @@ browser_mod:
             pointer-events: none;
             box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
           }
+        ha-dialog$: |
+          .mdc-dialog__container {
+            align-items: center !important;
+            justify-content: center !important;
+          }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: minmax(280px, 1fr) minmax(280px, 1fr) minmax(420px, 1.25fr)
-        grid-template-areas: 'col_luzes col_extra col_camera'
-        justify-content: center
-        align-content: center
-        grid-gap: 1rem
+        grid-template-columns: 1fr 1fr 2fr
+        grid-template-areas: '"col_luzes col_extra col_camera"'
+        grid-gap: 16px
+        margin: 0
+        padding: 1rem
         mediaquery:
-          '(max-width: 1100px)':
-            grid-template-columns: repeat(2, minmax(0, 1fr))
-            grid-template-areas: |
-              'col_luzes col_extra'
-              'col_camera col_camera'
-          '(max-width: 800px)':
+          "(max-width: 800px)":
             grid-template-columns: 1fr
             grid-template-areas: |
-              'col_luzes'
-              'col_extra'
-              'col_camera'
+              "col_luzes"
+              "col_extra"
+              "col_camera"
+            padding: 0
       cards:
-        - type: vertical-stack
+        # ── Coluna 1: Iluminacao ──
+        - type: custom:layout-card
+          layout_type: custom:grid-layout
           view_layout:
             grid-area: col_luzes
-          cards: !include ../../columns/room-living-lights.yaml
+          layout:
+            grid-template-columns: 1fr
+            margin: 0
+          cards: !include ../../columns/room_living_lights.yaml
 
-        - type: vertical-stack
+        # ── Coluna 2: Midia / Extras ──
+        - type: custom:layout-card
+          layout_type: custom:grid-layout
           view_layout:
             grid-area: col_extra
-          cards: !include ../../columns/room-living-extras.yaml
+          layout:
+            grid-template-columns: 1fr
+            margin: 0
+          cards: !include ../../columns/room_living_extras.yaml
 
-        - type: vertical-stack
+        # ── Coluna 3: Cameras ──
+        - type: custom:layout-card
+          layout_type: custom:grid-layout
           view_layout:
             grid-area: col_camera
-          cards: !include ../../columns/room-living-cameras.yaml
+          layout:
+            grid-template-columns: 1fr
+            margin: 0
+          cards: !include ../../columns/room_living_cameras.yaml

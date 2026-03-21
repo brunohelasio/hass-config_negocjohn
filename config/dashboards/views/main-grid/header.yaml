@@ -7,7 +7,7 @@
   view_layout:
     grid-area: header
     show:
-      mediaquery: '(min-height: 463px)'
+      mediaquery: '(min-height: 463px) and (max-width: 800px), (min-height: 463px) and (min-width: 1441px), (min-height: 463px) and (max-width: 1440px) and (orientation: portrait)'
   cards:
     - type: custom:button-card
       entity: sensor.time

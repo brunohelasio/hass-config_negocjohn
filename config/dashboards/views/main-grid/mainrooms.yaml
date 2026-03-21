@@ -4,8 +4,7 @@
 #                                               #
 #################################################
 - type: grid
-  # title: Masters
-  title: Cômodos
+  title: Masters
   view_layout:
     grid-area: mainrooms
     show:

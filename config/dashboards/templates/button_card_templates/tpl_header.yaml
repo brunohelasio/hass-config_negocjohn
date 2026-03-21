@@ -11,108 +11,80 @@
 header_clock:
   template:
     - extra_styles
-  show_icon: false
-  show_name: false
+  show_icon: true
+  icon: mdi:clock-outline
+  show_name: true
   show_state: false
   show_label: true
+  name: >
+    [[[
+      return states['sensor.time'].state;
+    ]]]
   label: >
     [[[
       const event = new Date();
-      const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      var locale = variables.ulm_language;
-      let formatted_date = event.toLocaleDateString('en-GB', options);
-      return formatted_date;
+      const options = {weekday: 'short', day: 'numeric', month: 'short'};
+      return event.toLocaleDateString('pt-BR', options);
     ]]]
   styles:
     grid:
       - grid-template-areas: |
-          "clock"
-          "l"
-      - grid-template-columns: 1fr
-      - grid-template-rows: 1fr min-content
-      - gap: 4px
+          "i n"
+          "i l"
+      - grid-template-rows: min-content min-content
+      - grid-template-columns: 0.5fr 1fr
     card:
-      - padding: inherit
-      - width: 100%
-      - overflow: visible
-      - background: none
+      - padding: 0.3vw
+      - background-color: 'rgba(115, 115, 115, 0.2)'
       - --button-card-ripple-color: none
       - box-shadow: none
-  custom_fields:
-    clock:
-      card:
-        type: clock
-        clock_size: large
-        show_seconds: true
-        card_mod:
-          style: |
-            ha-card {
-              font-family: 'Raleway';
-              color: #97989c;
-            }
-
-            @media screen and (min-width: 800px) {
-              .time-wrapper.size-large .time-parts {
-                font-size: 3rem !important;
-              }
-            }
-
-            .time-part.second {
-              min-width: 30px !important;
-            }
-
-# header_clock:
-#   template:
-#     - extra_styles
-#   show_icon: false
-#   show_name: false
-#   show_state: false
-#   show_label: true
-#   tap_action: !include ../../shared/popup/calendar.yaml
-#   name: >
-#     [[[
-#       return `${states['sensor.time'].state}`;
-#     ]]]
-#   label: >
-#     [[[
-#       const event = new Date();
-#       const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-#       var locale = variables.ulm_language;
-#       let formatted_date = event.toLocaleDateString('en-GB', options);
-#       return formatted_date;
-#     ]]]
-#   styles:
-#     grid:
-#       - grid-template-areas: |
-#           "n"
-#           "l"
-#       - grid-template-columns: 1fr
-#       - grid-template-rows: 1fr min-content
-#       - gap: 4px
-#     card:
-#       - padding: inherit
-#       - width: 100%
-#       - overflow: visible
-#       - background: none
-#       - --button-card-ripple-color: none
-#       - box-shadow: none
+      - color: '#97989c'
+      - border-radius: var(--ha-card-border-radius, 12px)
+      - overflow: visible
+    icon:
+      - width: 40%
+      - height: auto
+      - background: rgb(150 150 150 / 30%)
+      - border-radius: 50%
+      - padding: 8px
+      - margin: 0
+      - color: '#97989c'
+      - opacity: 0.6
+    name:
+      - justify-self: start
+      - font-size: 1rem
+      - font-weight: 600
+      - line-height: calc(100% + 5px)
+      - letter-spacing: 0.06em
+      - color: '#97989c'
+    label:
+      - justify-self: start
+      - font-size: 0.75rem
+      - color: '#97989c'
+      - opacity: 0.7
 
 header_weather:
   template:
     - extra_styles
   show_entity_picture: true
-  show_name: false
-  show_state: true
+  show_name: true
+  show_state: false
   show_label: true
-  state_display: >
+  name: >
     [[[
-        var realtemp = entity.attributes.temperature;
-        var apparent_temperature = entity.attributes.apparent_temperature;
-
-        return `
-            <span class="realtemp">${realtemp}°<span class="degree-symbol">C</span></span>
-            <span class="feels_like">Feels like: ${apparent_temperature}°C</span>
-        `;
+      if (entity) {
+        var temp = entity.attributes.temperature;
+        return `${temp}°C`;
+      }
+      return '';
+    ]]]
+  label: >
+    [[[
+      if (entity) {
+        var humidity = entity.attributes.humidity;
+        return `${humidity}% 💧`;
+      }
+      return '';
     ]]]
   entity_picture: >
     [[[
@@ -146,43 +118,40 @@ header_weather:
         }
       }
     ]]]
-
-  label: >
-    [[[
-        let next_rising = states['sun.sun'].attributes.next_rising,
-            sunrise_time = new Date(Date.parse(next_rising)),
-            sunrise = sunrise_time.getHours() + ":" + sunrise_time.getMinutes();
-        let next_dusk = states['sun.sun'].attributes.next_dusk,
-            sunset_time = new Date(Date.parse(next_dusk)),
-            sunset = sunset_time.getHours() + ":" + sunset_time.getMinutes();
-        return `
-            <ul>
-              <li class="humidity">Humidity - ${entity.attributes.humidity} %</li>
-              <li class="wind-speed">Wind - ${entity.attributes.wind_speed} km/H</li>
-              <li class="sunrise">Sunrise - ${sunrise}</li>
-              <li class="sunset">Sunset - ${sunset}</li>
-            </ul>
-          `
-    ]]]
   styles:
     grid:
       - grid-template-areas: |
-          "i   s   l"
-      - grid-template-columns: 1fr 1fr 1fr
-      - grid-template-rows: auto
-      - margin: 0
+          "i n"
+          "i l"
+      - grid-template-rows: min-content min-content
+      - grid-template-columns: 0.5fr 1fr
     card:
-      - background: none
-      - --webkit-tap-highlight-color: none
+      - padding: 0.3vw
+      - background-color: 'rgba(115, 115, 115, 0.2)'
       - --button-card-ripple-color: none
       - box-shadow: none
-      - padding: 0
-      - color: rgba(255, 255, 255, 0.6)
-      - overflow: visible;
+      - color: '#97989c'
+      - border-radius: var(--ha-card-border-radius, 12px)
+      - overflow: visible
     img-cell:
-      - max-height: 80px
-      - top: 0
+      - display: inline-flex
+      - place-items: center
+      - position: relative
     icon:
-      - max-width: 70px
-      - width: 100%
+      - width: 40%
       - height: auto
+      - position: inherit
+      - margin: 0
+      - opacity: 0.9
+    name:
+      - justify-self: start
+      - font-size: 1rem
+      - font-weight: 600
+      - line-height: calc(100% + 5px)
+      - letter-spacing: 0.06em
+      - color: '#97989c'
+    label:
+      - justify-self: start
+      - font-size: 0.75rem
+      - color: '#97989c'
+      - opacity: 0.7

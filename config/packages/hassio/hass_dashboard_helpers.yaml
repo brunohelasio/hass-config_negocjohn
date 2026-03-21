@@ -1,0 +1,37 @@
+#-
+#       _           _     _                         _
+#    __| | __ _ ___| |__ | |__   ___   __ _ _ __ __| |
+#   / _` |/ _` / __| '_ \| '_ \ / _ \ / _` | '__/ _` |
+#  | (_| | (_| \__ \ | | | |_) | (_) | (_| | | | (_| |
+#   \__,_|\__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|
+#
+#  Dashboard Helpers - Sidebar Controls
+#
+
+#################################################
+#                                               #
+#            INPUT BOOLEAN - SIDEBAR            #
+#                                               #
+#################################################
+input_boolean:
+  menu_mobile:
+    name: Menu Mobile
+    icon: mdi:menu
+    initial: false
+
+#################################################
+#                                               #
+#           INPUT SELECT - SIDEBAR              #
+#                                               #
+#################################################
+input_select:
+  hemma_expanded_row:
+    name: Hemma Expanded Row
+    icon: mdi:arrow-expand-vertical
+    options:
+      - none
+      - lights
+      - media
+      - climate
+      - presence
+    initial: none

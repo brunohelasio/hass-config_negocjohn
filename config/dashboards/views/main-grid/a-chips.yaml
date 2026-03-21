@@ -1,135 +1,136 @@
 #################################################
 #                                               #
 #             CHIPS MAX 800px                   #
+#    (comentado - removido do grid layout)      #
 #                                               #
 #################################################
-- type: custom:layout-card
-  view_layout:
-    grid-area: chips
-    show:
-      mediaquery: '(max-width: 800px)'
-  layout_type: custom:grid-layout
-  layout:
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))
-    margin: 0
-    grid-gap: 8px
-    padding: 0
-  cards:
-    - &lights
-      type: custom:button-card
-      name: Lights
-      entity: group.light_all
-      tap_action: !include ../../shared/popup/popup_lights.yaml
-      icon: mdi:lightbulb-group
-      template:
-        - chips
-      state_display: >
-        [[[
-            if (variables.state == 'off') return 'All Off';
-            else return variables.light_on;
-        ]]]
-      styles:
-        icon:
-          - color: >
-              [[[
-                return variables.state_on
-                  ? '#b68752'
-                  : '';
-              ]]]
-    - &media
-      type: custom:button-card
-      name: Media
-      entity: sensor.currently_playing
-      icon: custom:ios-hifi-stereo
-      template:
-        - chips
-      state_display: >
-        [[[
-            if (!variables.state_on) return 'None';
-            else return entity.attributes.device_playing;
-        ]]]
-      styles:
-        icon:
-          - color: >
-              [[[
-                return variables.state_on
-                  ? '#607D8B'
-                  : '';
-              ]]]
-      tap_action:
-        action: fire-dom-event
-        browser_mod:
-          service: browser_mod.more_info
-          data:
-            entity: media_player.currently_playing
-      hold_action: !include ../../shared/extra-popup/mass-homepods.yaml
-
-    - &air
-      type: custom:button-card
-      name: Air Quality
-      entity: sensor.home_climate
-      template:
-        - chip_air_new
-      # type: custom:button-card
-      # name: Air Quality
-      # entity: sensor.home_climate
-      # template:
-      #   - chip_air
-#################################################
-#                                               #
-#       CHIPS 801-1440px LANDSCAPE              #
-#                                               #
-#################################################
-- type: horizontal-stack
-  view_layout:
-    grid-area: chips
-    show:
-      mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
-  cards:
-    - *lights
-    - *media
-    - *air
-#################################################
-#                                               #
-#             CHIPS MIN 1441px                  #
-#                                               #
-#################################################
-- type: horizontal-stack
-  view_layout:
-    grid-area: chips
-    show:
-      mediaquery: '(min-width: 1441px)'
-  cards:
-    - type: custom:button-card
-      name: Home Mode
-      entity: sensor.home_mode
-      show_label: false
-      template:
-        - chips
-      styles:
-        icon:
-          - color: >
-              [[[
-                const stateColor = {
-                  'Normal': '#607D8B',
-                  'Guest': '#337acc',
-                  'Away': '#f77f00',
-                  'Night': '#003049'
-                }
-                return stateColor[variables.state] ;
-
-              ]]]
-    - *lights
-    - *media
-    - *air
-    - type: custom:button-card
-      name: Viet Ngoc
-      double_tap_action: !include ../../shared/popup/home_vietngoc.yaml
-      entity: person.viet_ngoc
-      template:
-        - chips
-      styles:
-        icon:
-          - padding: 3px
-          - background-color: null
-          - width: 50%
+# - type: custom:layout-card
+#   view_layout:
+#     grid-area: chips
+#     show:
+#       mediaquery: '(max-width: 800px)'
+#   layout_type: custom:grid-layout
+#   layout:
+#     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))
+#     margin: 0
+#     grid-gap: 8px
+#     padding: 0
+#   cards:
+#     - &lights
+#       type: custom:button-card
+#       name: Lights
+#       entity: group.light_all
+#       tap_action: !include ../../shared/popup/popup_lights.yaml
+#       icon: mdi:lightbulb-group
+#       template:
+#         - chips
+#       state_display: >
+#         [[[
+#             if (variables.state == 'off') return 'All Off';
+#             else return variables.light_on;
+#         ]]]
+#       styles:
+#         icon:
+#           - color: >
+#               [[[
+#                 return variables.state_on
+#                   ? '#b68752'
+#                   : '';
+#               ]]]
+#     - &media
+#       type: custom:button-card
+#       name: Media
+#       entity: sensor.currently_playing
+#       icon: custom:ios-hifi-stereo
+#       template:
+#         - chips
+#       state_display: >
+#         [[[
+#             if (!variables.state_on) return 'None';
+#             else return entity.attributes.device_playing;
+#         ]]]
+#       styles:
+#         icon:
+#           - color: >
+#               [[[
+#                 return variables.state_on
+#                   ? '#607D8B'
+#                   : '';
+#               ]]]
+#       tap_action:
+#         action: fire-dom-event
+#         browser_mod:
+#           service: browser_mod.more_info
+#           data:
+#             entity: media_player.currently_playing
+#       hold_action: !include ../../shared/extra-popup/mass-homepods.yaml
+#
+#     - &air
+#       type: custom:button-card
+#       name: Air Quality
+#       entity: sensor.home_climate
+#       template:
+#         - chip_air_new
+#       # type: custom:button-card
+#       # name: Air Quality
+#       # entity: sensor.home_climate
+#       # template:
+#       #   - chip_air
+# #################################################
+# #                                               #
+# #       CHIPS 801-1440px LANDSCAPE              #
+# #                                               #
+# #################################################
+# - type: horizontal-stack
+#   view_layout:
+#     grid-area: chips
+#     show:
+#       mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
+#   cards:
+#     - *lights
+#     - *media
+#     - *air
+# #################################################
+# #                                               #
+# #             CHIPS MIN 1441px                  #
+# #                                               #
+# #################################################
+# - type: horizontal-stack
+#   view_layout:
+#     grid-area: chips
+#     show:
+#       mediaquery: '(min-width: 1441px)'
+#   cards:
+#     - type: custom:button-card
+#       name: Home Mode
+#       entity: sensor.home_mode
+#       show_label: false
+#       template:
+#         - chips
+#       styles:
+#         icon:
+#           - color: >
+#               [[[
+#                 const stateColor = {
+#                   'Normal': '#607D8B',
+#                   'Guest': '#337acc',
+#                   'Away': '#f77f00',
+#                   'Night': '#003049'
+#                 }
+#                 return stateColor[variables.state] ;
+#
+#               ]]]
+#     - *lights
+#     - *media
+#     - *air
+#     - type: custom:button-card
+#       name: Viet Ngoc
+#       double_tap_action: !include ../../shared/popup/home_vietngoc.yaml
+#       entity: person.viet_ngoc
+#       template:
+#         - chips
+#       styles:
+#         icon:
+#           - padding: 3px
+#           - background-color: null
+#           - width: 50%

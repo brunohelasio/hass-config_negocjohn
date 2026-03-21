@@ -1,0 +1,252 @@
+#################################################
+#                                               #
+#              SIDEBAR - BARRA FIXA             #
+#                                               #
+#################################################
+
+# Sidebar fixa desktop (min-width: 1441px)
+- type: custom:layout-card
+  layout_type: custom:grid-layout
+  view_layout:
+    grid-area: sidebar
+    show:
+      mediaquery: '(min-width: 801px)'
+  layout:
+    margin: 0
+    padding: 0
+    grid-gap: 0.5vw
+    grid-template-columns: 1fr
+    grid-template-rows: auto auto 1fr
+    grid-template-areas: |
+      "clock"
+      "nav"
+      "info"
+  cards:
+    #################################################
+    #              SIDEBAR CLOCK                    #
+    #################################################
+    - type: custom:button-card
+      entity: sensor.time
+      view_layout:
+        grid-area: clock
+      template:
+        - wide_timeclock
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - padding: 1vw 0.5vw
+
+    #################################################
+    #           SIDEBAR NAVIGATION                  #
+    #################################################
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      view_layout:
+        grid-area: nav
+      layout:
+        margin: 0
+        padding: 0
+        grid-gap: 0.4vw
+        grid-template-columns: 1fr
+      cards:
+        # --- Security ---
+        - type: custom:button-card
+          name: Security
+          icon: mdi:shield-home
+          show_state: false
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            service_data:
+              entity_id: input_select.hemma_expanded_row
+              option: >
+                [[[ return states['input_select.hemma_expanded_row'].state === 'lights' ? 'none' : 'lights'; ]]]
+          styles:
+            card:
+              - background: >
+                  [[[
+                    return states['input_select.hemma_expanded_row'].state === 'lights'
+                      ? 'rgba(255,255,255,0.08)'
+                      : 'none';
+                  ]]]
+              - border: none
+              - box-shadow: none
+              - padding: 0.6vw
+              - border-radius: 12px
+            icon:
+              - color: >
+                  [[[
+                    return states['input_select.hemma_expanded_row'].state === 'lights'
+                      ? '#b68752'
+                      : '#6a7377';
+                  ]]]
+              - width: 22px
+            name:
+              - font-size: 0.65em
+              - color: '#97989c'
+              - font-family: Poppins, sans-serif
+              - letter-spacing: 0.5px
+
+        # --- Media ---
+        - type: custom:button-card
+          name: Media
+          icon: mdi:play-circle
+          show_state: false
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            service_data:
+              entity_id: input_select.hemma_expanded_row
+              option: >
+                [[[ return states['input_select.hemma_expanded_row'].state === 'media' ? 'none' : 'media'; ]]]
+          styles:
+            card:
+              - background: >
+                  [[[
+                    return states['input_select.hemma_expanded_row'].state === 'media'
+                      ? 'rgba(255,255,255,0.08)'
+                      : 'none';
+                  ]]]
+              - border: none
+              - box-shadow: none
+              - padding: 0.6vw
+              - border-radius: 12px
+            icon:
+              - color: >
+                  [[[
+                    return states['input_select.hemma_expanded_row'].state === 'media'
+                      ? '#607D8B'
+                      : '#6a7377';
+                  ]]]
+              - width: 22px
+            name:
+              - font-size: 0.65em
+              - color: '#97989c'
+              - font-family: Poppins, sans-serif
+              - letter-spacing: 0.5px
+
+        # --- Climate ---
+        - type: custom:button-card
+          name: Climate
+          icon: mdi:thermometer
+          show_state: false
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            service_data:
+              entity_id: input_select.hemma_expanded_row
+              option: >
+                [[[ return states['input_select.hemma_expanded_row'].state === 'climate' ? 'none' : 'climate'; ]]]
+          styles:
+            card:
+              - background: >
+                  [[[
+                    return states['input_select.hemma_expanded_row'].state === 'climate'
+                      ? 'rgba(255,255,255,0.08)'
+                      : 'none';
+                  ]]]
+              - border: none
+              - box-shadow: none
+              - padding: 0.6vw
+              - border-radius: 12px
+            icon:
+              - color: >
+                  [[[
+                    return states['input_select.hemma_expanded_row'].state === 'climate'
+                      ? '#4fc3f7'
+                      : '#6a7377';
+                  ]]]
+              - width: 22px
+            name:
+              - font-size: 0.65em
+              - color: '#97989c'
+              - font-family: Poppins, sans-serif
+              - letter-spacing: 0.5px
+
+        # --- Presence ---
+        - type: custom:button-card
+          name: Presence
+          icon: mdi:account-group
+          show_state: false
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            service_data:
+              entity_id: input_select.hemma_expanded_row
+              option: >
+                [[[ return states['input_select.hemma_expanded_row'].state === 'presence' ? 'none' : 'presence'; ]]]
+          styles:
+            card:
+              - background: >
+                  [[[
+                    return states['input_select.hemma_expanded_row'].state === 'presence'
+                      ? 'rgba(255,255,255,0.08)'
+                      : 'none';
+                  ]]]
+              - border: none
+              - box-shadow: none
+              - padding: 0.6vw
+              - border-radius: 12px
+            icon:
+              - color: >
+                  [[[
+                    return states['input_select.hemma_expanded_row'].state === 'presence'
+                      ? '#66bb6a'
+                      : '#6a7377';
+                  ]]]
+              - width: 22px
+            name:
+              - font-size: 0.65em
+              - color: '#97989c'
+              - font-family: Poppins, sans-serif
+              - letter-spacing: 0.5px
+
+    #################################################
+    #            SIDEBAR INFO (bottom)              #
+    #################################################
+    - type: custom:button-card
+      entity: sensor.template_sidebar
+      view_layout:
+        grid-area: info
+      template:
+        - timesidebar
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - align-self: end
+
+#################################################
+#                                               #
+#         SIDEBAR MOBILE (toggle via            #
+#         input_boolean.menu_mobile)            #
+#                                               #
+#################################################
+# - type: custom:button-card
+#   view_layout:
+#     grid-area: sidebar
+#     show:
+#       mediaquery: '(max-width: 800px)'
+#   entity: input_boolean.menu_mobile
+#   icon: mdi:menu
+#   show_name: false
+#   show_state: false
+#   tap_action:
+#     action: toggle
+#   styles:
+#     card:
+#       - background: none
+#       - border: none
+#       - box-shadow: none
+#       - position: fixed
+#       - top: 10px
+#       - left: 10px
+#       - z-index: 100
+#       - width: 40px
+#       - height: 40px
+#     icon:
+#       - color: '#97989c'
+#       - width: 24px

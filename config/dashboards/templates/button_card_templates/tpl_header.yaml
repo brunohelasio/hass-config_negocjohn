@@ -53,7 +53,7 @@ header_clock:
 
             @media screen and (min-width: 800px) {
               .time-wrapper.size-large .time-parts {
-                font-size: 5rem !important;
+                font-size: 3rem !important;
               }
             }
 
@@ -155,10 +155,8 @@ header_weather:
         let next_dusk = states['sun.sun'].attributes.next_dusk,
             sunset_time = new Date(Date.parse(next_dusk)),
             sunset = sunset_time.getHours() + ":" + sunset_time.getMinutes();
-        let precipitation = states['sensor.prague_rain'].state;
         return `
             <ul>
-              <li class="precipitation">Precipitation - ${precipitation} mm</li>
               <li class="humidity">Humidity - ${entity.attributes.humidity} %</li>
               <li class="wind-speed">Wind - ${entity.attributes.wind_speed} km/H</li>
               <li class="sunrise">Sunrise - ${sunrise}</li>
@@ -182,9 +180,9 @@ header_weather:
       - color: rgba(255, 255, 255, 0.6)
       - overflow: visible;
     img-cell:
-      - max-height: 170px
-      - top: -10%
+      - max-height: 80px
+      - top: 0
     icon:
-      - max-width: 150px
+      - max-width: 70px
       - width: 100%
       - height: auto

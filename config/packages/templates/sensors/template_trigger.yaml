@@ -11,7 +11,7 @@ template:
           type: daily
         target:
           entity_id:
-            - weather.prague
+            - weather.forecast_casa
         response_variable: daily
 
     sensor:
@@ -19,7 +19,7 @@ template:
         unique_id: weather_forecast_daily
         state: '{{ now().isoformat() }}'
         attributes:
-          forecast: "{{ daily['weather.prague'].forecast }}"
+          forecast: "{{ daily['weather.forecast_casa'].forecast }}"
 
   # - trigger:
   #     - platform: time_pattern
@@ -32,11 +32,11 @@ template:
   #         type: hourly
   #       target:
   #         entity_id:
-  #           - weather.prague
+  #           - weather.forecast_casa
   #       response_variable: hourly
   #   sensor:
   #     - name: Hourly Forecast
   #       unique_id: weather_forecast_hourly
   #       state: '{{ now().isoformat() }}'
   #       attributes:
-  #         forecast: "{{ hourly['weather.prague'].forecast }}"
+  #         forecast: "{{ hourly['weather.forecast_casa'].forecast }}"

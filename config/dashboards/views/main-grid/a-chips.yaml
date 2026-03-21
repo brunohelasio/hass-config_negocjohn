@@ -64,17 +64,24 @@
             entity: media_player.currently_playing
       hold_action: !include ../../shared/extra-popup/mass-homepods.yaml
 
-    - &air
+    - &presence
       type: custom:button-card
-      name: Air Quality
-      entity: sensor.home_climate
+      name: Bruno
+      entity: person.bruno_helasio
       template:
-        - chip_air_new
-      # type: custom:button-card
-      # name: Air Quality
-      # entity: sensor.home_climate
-      # template:
-      #   - chip_air
+        - chips
+      styles:
+        icon:
+          - padding: 3px
+          - background-color: null
+          - width: 50%
+
+    # - &air
+    #   type: custom:button-card
+    #   name: Air Quality
+    #   entity: sensor.home_climate
+    #   template:
+    #     - chip_air_new
 #################################################
 #                                               #
 #       CHIPS 801-1440px LANDSCAPE              #
@@ -88,7 +95,7 @@
   cards:
     - *lights
     - *media
-    - *air
+    - *presence
 #################################################
 #                                               #
 #             CHIPS MIN 1441px                  #
@@ -100,36 +107,6 @@
     show:
       mediaquery: '(min-width: 1441px)'
   cards:
-    - type: custom:button-card
-      name: Home Mode
-      entity: sensor.home_mode
-      show_label: false
-      template:
-        - chips
-      styles:
-        icon:
-          - color: >
-              [[[
-                const stateColor = {
-                  'Normal': '#607D8B',
-                  'Guest': '#337acc',
-                  'Away': '#f77f00',
-                  'Night': '#003049'
-                }
-                return stateColor[variables.state] ;
-
-              ]]]
     - *lights
     - *media
-    - *air
-    - type: custom:button-card
-      name: Viet Ngoc
-      double_tap_action: !include ../../shared/popup/home_vietngoc.yaml
-      entity: person.viet_ngoc
-      template:
-        - chips
-      styles:
-        icon:
-          - padding: 3px
-          - background-color: null
-          - width: 50%
+    - *presence

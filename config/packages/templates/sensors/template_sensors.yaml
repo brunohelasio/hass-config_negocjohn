@@ -211,7 +211,7 @@ template:
       - name: Lights count
         unique_id: lights_on_count
         state: >-
-          {%- set light = expand(states.light.all_light_group) | selectattr( 'state', 'eq', 'on') | list | count %}
+          {%- set light = expand('group.light_all') | selectattr( 'state', 'eq', 'on') | list | count %}
           {{ iif (light == 0, 'Off', light ~ ' On') }}
         attributes:
           living_room: "{{ expand(states.light.living_room_group) | selectattr( 'state', 'eq', 'on') | list | count }}"
@@ -296,11 +296,11 @@ template:
         name: 'Weather Humidity'
         unit_of_measurement: '%'
         state: >-
-          {{ states.weather.prague.attributes.humidity }}
+          {{ states.weather.forecast_casa.attributes.humidity }}
       - unique_id: weather_current_temp
         name: 'Weather Current Temperature'
         state: >-
-          {{ states.weather.prague.attributes.temperature }}
+          {{ states.weather.forecast_casa.attributes.temperature }}
         unit_of_measurement: '°C'
 
 command_line:

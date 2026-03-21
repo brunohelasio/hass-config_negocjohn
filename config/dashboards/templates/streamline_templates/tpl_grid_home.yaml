@@ -3,19 +3,18 @@
 #                     HOME                      #
 #                                               #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# PERSON NGOC
+# PERSON BRUNO
 grid_ngoc:
   card:
     type: custom:button-card
-    entity: person.viet_ngoc
-    name: Viet Ngoc
-    double_tap_action: !include ../../shared/popup/home_vietngoc.yaml
+    entity: person.bruno_helasio
+    name: Bruno
     template:
       - person
     card_mod:
       style: |
         #circle {
-        {%- if is_state('person.viet_ngoc', 'home') -%}
+        {%- if is_state('person.bruno_helasio', 'home') -%}
           display:none !important;
         {% endif %}
         }
@@ -60,12 +59,12 @@ grid_zuzu:
 grid_weather:
   card:
     type: custom:button-card
-    entity: weather.prague
-    name: Prague
+    entity: weather.forecast_casa
+    name: Salvador
     variables:
       daily_forecast: sensor.daily_forecast
       humidity: sensor.weather_humidity
-      current_weather: weather.prague
+      current_weather: weather.forecast_casa
     template:
       - widget_weather
   # HOME MODE

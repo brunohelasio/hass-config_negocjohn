@@ -14,7 +14,7 @@ chips:
     - card_bounce
   variables:
     state_on: >
-      [[[ return ['on', 'home', 'Normal', 'Away', 'Night', 'Guest', 'cool', 'fan_only', 'unlocked', 'open', 'streaming', 'yes', 'Blažičkova', 'Plzeňská'].indexOf(!entity || entity.state) !== -1; ]]]
+      [[[ return ['on', 'home', 'Normal', 'Away', 'Night', 'Guest', 'cool', 'fan_only', 'unlocked', 'open', 'streaming', 'yes'].indexOf(!entity || entity.state) !== -1; ]]]
     state: >
       [[[ return !entity || entity.state; ]]]
     light_on: >
@@ -27,8 +27,8 @@ chips:
       [[[ return !entity || entity.attributes.entity_picture; ]]]
     timeout: >
       [[[ return !entity || Date.now() - Date.parse(entity.last_changed); ]]]
-    gle: >
-      [[[ return states['sensor.gle'].state; ]]]
+    # gle: >
+    #   [[[ return states['sensor.gle'].state; ]]]
     hover_enable: true
   # size: 2vw
   show_icon: true

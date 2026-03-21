@@ -1,30 +1,29 @@
 #################################################
 #                                               #
 #                  HORIZONTAL                   #
-#        (comentado - removido do grid layout)  #
 #                                               #
 #################################################
 
-# - &movies_desktop
-#   type: grid
-#   title: Movies
-#   view_layout:
-#     grid-area: movies
-#     show:
-#       mediaquery: '(min-width: 1441px)'
-#   columns: 1
-#   square: true
-#   cards:
-#     - type: custom:added-movie-card
-#       entity: sensor.tmdb_movies_yts_latest
-#       show_item_count: 10
-# #################################################
-# #                                               #
-# #             MOVIES TABLET LANDSCAPE           #
-# #                                               #
-# #################################################
-# - <<: *movies_desktop
-#   view_layout:
-#     grid-area: movies
-#     show:
-#       mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
+- &movies_desktop
+  type: grid
+  title: Movies
+  view_layout:
+    grid-area: movies
+    show:
+      mediaquery: '(min-width: 1441px)'
+  columns: 1
+  square: true
+  cards:
+    - type: custom:added-movie-card
+      entity: sensor.tmdb_movies_yts_latest
+      show_item_count: 10
+#################################################
+#                                               #
+#             MOVIES TABLET LANDSCAPE           #
+#                                               #
+#################################################
+- <<: *movies_desktop
+  view_layout:
+    grid-area: movies
+    show:
+      mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'

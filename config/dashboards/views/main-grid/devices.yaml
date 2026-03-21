@@ -1,14 +1,13 @@
 #################################################
 #                                               #
 #                    DEVICES                    #
-#        (comentado - removido do grid layout)  #
 #                                               #
 #################################################
-# - type: grid
-#   title: Devices
-#   view_layout:
-#     grid-area: devices
-#     show:
-#       mediaquery: '(min-height: 463px)'
-#   columns: 2
-#   cards: !include ../../shared/grid-cards/devices.yaml
+- type: grid
+  title: Devices
+  view_layout:
+    grid-area: devices
+    show:
+      mediaquery: '(min-height: 463px)'
+  columns: 2
+  cards: !include ../../shared/grid-cards/devices.yaml

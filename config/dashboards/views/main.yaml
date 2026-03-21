@@ -9,57 +9,63 @@ layout:
   margin: 0
   padding: 0
   grid-gap: 1.5vw 1vw
-  grid-template-columns: 0 180px 1fr 1fr 1fr 0
-  grid-template-rows: 1fr 1fr min-content 0
+  grid-template-columns: 0 1fr 1fr 1fr 1fr 1fr 0
+  grid-template-rows: min-content 1fr 1fr min-content 0
   grid-template-areas: |
-    ". sidebar  security  mainrooms  other   ."
-    ". sidebar  cameras   climate    media   ."
-    ". sidebar  footer    footer     footer  ."
-    ". .        .         .          .       ."
+    ". chips     chips      chips     header   header   ."
+    ". security  mainrooms  devices   other    movies   ."
+    ". cameras   climate    media     .        .        ."
+    ". footer    footer     footer    footer   footer   ."
+    ". .         .          .         .        .        ."
 
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
     '(min-width: 1441px) and (max-width: 2000px)':
       grid-gap: 1.5vw 1vw
-      grid-template-columns: 0 180px 1fr 1fr 1fr 0
-      grid-template-rows: 1fr 1fr min-content 0
+      grid-template-columns: 0 1fr 1fr 1fr 1fr 1fr 0
+      grid-template-rows: min-content 1fr 1fr min-content 0
       grid-template-areas: |
-        ". sidebar  security  mainrooms  other   ."
-        ". sidebar  cameras   climate    media   ."
-        ". sidebar  footer    footer     footer  ."
-        ". .        .         .          .       ."
+        ". chips     chips      chips     header   header   ."
+        ". security  mainrooms  devices   other    movies   ."
+        ". cameras   climate    media     .        .        ."
+        ". footer    footer     footer    footer   footer   ."
+        ". .         .          .         .        .        ."
     # tablet landscape (e.g. 801-1440px) - PC layout minus last 2 columns
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
       grid-gap: 1.5vw 1vw
-      grid-template-columns: 0 160px 1fr 1fr 1fr 0
-      grid-template-rows: 1fr 1fr min-content 0
+      grid-template-columns: 0 1fr 1fr 1fr 1fr 0
+      grid-template-rows: min-content 1fr 1fr min-content 0
       grid-template-areas: |
-        ". sidebar  security  mainrooms  other   ."
-        ". sidebar  cameras   climate    media   ."
-        ". sidebar  footer    footer     footer  ."
-        ". .        .         .          .       ."
+        ". chips     chips      header   header   ."
+        ". security  mainrooms  devices  other    ."
+        ". cameras   climate    media    movies   ."
+        ". footer    footer     footer   footer   ."
+        ". .         .          .        .        ."
     #portrait
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-gap: 1% 1.5%
-      grid-template-columns: 0 140px 1fr 1fr 1fr 0
-      grid-template-rows: fit-content(100%) fit-content(100%) min-content 0
+      grid-template-columns: 0 1fr 1fr 1fr 0
+      grid-template-rows: fit-content(100%) fit-content(100%) fit-content(100%) min-content 0
       grid-template-areas: |
-        ".  sidebar  security  mainrooms  other     ."
-        ".  sidebar  cameras   climate    media     ."
-        ".  sidebar  footer    footer     footer    ."
-        ".  .        .         .          .         ."
+        ".  header     home        security  ."
+        ".  cameras    media       climate   ."
+        ".  mainrooms  devices     other     ."
+        ".  footer     footer      footer    ."
+        ".  .          .           .         ."
     # phone
     '(max-width: 800px) and (min-height: 463px)':
       # grid-gap: calc(var(--custom-layout-card-padding) * 1.7)
       margin: 0
       grid-gap: 1rem
       grid-template-columns: 0 1fr 1fr 0
-      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) min-content 1rem
+      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) min-content 1rem
       grid-template-areas: |
-        ". home        home      ."
-        ". security    cameras   ."
-        ". mainrooms   climate   ."
-        ". other       media     ."
+        ". header      header    ."
+        ". chips       chips     ."
+        ". home        security  ."
+        ". media       cameras   ."
+        ". mainrooms   devices   ."
+        ". other       climate   ."
         ". footer      footer    ."
         ". .           .         ."
     # phone cover screen = place horizontal
@@ -72,78 +78,15 @@ layout:
         ". chips  chips  ."
         ". cover  cover  ."
         ". .      .      ."
-
-  #################################################
-  #  LAYOUT ORIGINAL (comentado para referência)  #
-  #################################################
-  # grid-template-columns: 0 1fr 1fr 1fr 1fr 1fr 0
-  # grid-template-rows: min-content 1fr 1fr min-content 0
-  # grid-template-areas: |
-  #   ". chips     chips      chips     header   header   ."
-  #   ". security  mainrooms  devices   other    movies   ."
-  #   ". cameras   climate    media     .        .        ."
-  #   ". footer    footer     footer    footer   footer   ."
-  #   ". .         .          .         .        .        ."
-  #
-  # mediaquery:
-  #   # tablet landscape (e.g. 2000x1200)
-  #   '(min-width: 1441px) and (max-width: 2000px)':
-  #     grid-gap: 1.5vw 1vw
-  #     grid-template-columns: 0 1fr 1fr 1fr 1fr 1fr 0
-  #     grid-template-rows: min-content 1fr 1fr min-content 0
-  #     grid-template-areas: |
-  #       ". chips     chips      chips     header   header   ."
-  #       ". security  mainrooms  devices   other    movies   ."
-  #       ". cameras   climate    media     .        .        ."
-  #       ". footer    footer     footer    footer   footer   ."
-  #       ". .         .          .         .        .        ."
-  #   # tablet landscape (e.g. 801-1440px)
-  #   '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
-  #     grid-gap: 1.5vw 1vw
-  #     grid-template-columns: 0 1fr 1fr 1fr 1fr 0
-  #     grid-template-rows: min-content 1fr 1fr min-content 0
-  #     grid-template-areas: |
-  #       ". chips     chips      header   header   ."
-  #       ". security  mainrooms  devices  other    ."
-  #       ". cameras   climate    media    movies   ."
-  #       ". footer    footer     footer   footer   ."
-  #       ". .         .          .        .        ."
-  #   #portrait
-  #   '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
-  #     grid-gap: 1% 1.5%
-  #     grid-template-columns: 0 1fr 1fr 1fr 0
-  #     grid-template-rows: fit-content(100%) fit-content(100%) fit-content(100%) min-content 0
-  #     grid-template-areas: |
-  #       ".  header     home        security  ."
-  #       ".  cameras    media       climate   ."
-  #       ".  mainrooms  devices     other     ."
-  #       ".  footer     footer      footer    ."
-  #       ".  .          .           .         ."
-  #   # phone
-  #   '(max-width: 800px) and (min-height: 463px)':
-  #     margin: 0
-  #     grid-gap: 1rem
-  #     grid-template-columns: 0 1fr 1fr 0
-  #     grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) min-content 1rem
-  #     grid-template-areas: |
-  #       ". header      header    ."
-  #       ". chips       chips     ."
-  #       ". home        security  ."
-  #       ". media       cameras   ."
-  #       ". mainrooms   devices   ."
-  #       ". other       climate   ."
-  #       ". footer      footer    ."
-  #       ". .           .         ."
-  #   # phone cover screen
-  #   '(max-height: 462px)':
-  #     grid-gap: 0.5rem
-  #     grid-template-columns: 0 1fr 1fr 0
-  #     grid-template-rows: 0 min-content 1fr 0
-  #     grid-template-areas: |
-  #       ". .      .      ."
-  #       ". chips  chips  ."
-  #       ". cover  cover  ."
-  #       ". .      .      ."
+    # '(max-height: 462px)':
+    #   grid-gap: 0.5rem
+    #   grid-template-columns: 0 1fr 1fr 0
+    #   grid-template-rows: 0 min-content 1fr 0
+    #   grid-template-areas: |
+    #     ". .      .      ."
+    #     ". chips  chips  ."
+    #     ". cover  cover  ."
+    #     ". .      .      ."
 
 #################################################
 #                                               #

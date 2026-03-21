@@ -1,37 +1,36 @@
 #################################################
 #                                               #
 #                  HEADER                       #
-#    (comentado - movido para sidebar)          #
 #                                               #
 #################################################
-# - type: 'custom:layout-card'
-#   layout_type: 'custom:grid-layout'
-#   view_layout:
-#     grid-area: header
-#     show:
-#       mediaquery: '(min-height: 463px)'
-#   layout:
-#     margin: 0
-#
-#     place-items: center center
-#     grid-template-columns: 0.5fr 1fr
-#     grid-gap: 0
-#     mediaquery:
-#       '(min-width: 801px) and (max-width: 1440px)':
-#         grid-template-columns: 1fr
-#         grid-template-rows: auto
-#   cards:
-#     - type: custom:button-card
-#       entity: sensor.time
-#       template:
-#         - header_clock
-#       tap_action: !include ../../shared/popup/calendar.yaml
-#
-#     - type: custom:button-card
-#       entity: weather.prague
-#       tap_action: !include ../../shared/popup/popup_weather.yaml
-#       template:
-#         - header_weather
+- type: 'custom:layout-card'
+  layout_type: 'custom:grid-layout'
+  view_layout:
+    grid-area: header
+    show:
+      mediaquery: '(min-height: 463px)'
+  layout:
+    margin: 0
+
+    place-items: center center
+    grid-template-columns: 0.5fr 1fr
+    grid-gap: 0
+    mediaquery:
+      '(min-width: 801px) and (max-width: 1440px)':
+        grid-template-columns: 1fr
+        grid-template-rows: auto
+  cards:
+    - type: custom:button-card
+      entity: sensor.time
+      template:
+        - header_clock
+      tap_action: !include ../../shared/popup/calendar.yaml
+
+    - type: custom:button-card
+      entity: weather.prague
+      tap_action: !include ../../shared/popup/popup_weather.yaml
+      template:
+        - header_weather
 #################################################
 #                                               #
 #                  WEATHER                      #

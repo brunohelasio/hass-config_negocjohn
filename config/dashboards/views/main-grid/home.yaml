@@ -7,7 +7,10 @@
   title: Home
   view_layout:
     grid-area: home
+    # show:
+    #   mediaquery: '(max-width: 1440px) and (min-height: 463px) and (orientation: portrait)'
+    # FIX: formato explicito por breakpoint — exclui landscape tablet e desktop
     show:
-      mediaquery: '(max-width: 1440px) and (min-height: 463px) and (orientation: portrait)'
+      mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait), (max-width: 800px) and (min-height: 463px)'
   columns: 2
   cards: !include ../../shared/grid-cards/home-status.yaml

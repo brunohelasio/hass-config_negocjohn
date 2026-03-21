@@ -1,17 +1,29 @@
 # CLAUDE.md — Diretrizes para o Dashboard HA (negocjohn)
 
-## Estrategia de Grid: Sagaland (OBRIGATORIO)
+## Regra de Ouro (OBRIGATORIO)
 
-Baseado na analise do repositorio sagaland-ha-dashboard. Esta e a estrategia DEFINITIVA.
+**NUNCA excluir codigo existente. SEMPRE comentar antes de substituir.**
+
+- Ao modificar qualquer arquivo YAML, o codigo original deve ser COMENTADO, nao deletado.
+- Isso permite reverter facilmente e manter historico visual das mudancas.
+- Novas estruturas devem ser adicionadas ABAIXO do codigo original comentado.
+- Esta regra se aplica a TODOS os arquivos do projeto, sem excecao.
+
+## Estrategia de Grid: Sagaland Hibrida (OBRIGATORIO)
+
+Baseada na analise do repositorio sagaland-ha-dashboard, com ajuste pratico.
 
 ### Principio central
 
-**TODAS as grid-areas devem existir em TODOS os breakpoints.**
+**TODAS as grid-areas devem existir em TODOS os breakpoints** (previne cards orfaos).
 
-- Nenhum card usa `show: mediaquery` para controlar visibilidade no grid.
-- O grid-template controla o que aparece e o que fica oculto.
-- Areas que nao devem aparecer em um breakpoint ficam em linhas de altura zero (`0`).
-- Isso elimina 100% dos cards orfaos — o problema simplesmente nao existe.
+**`show: mediaquery` e NECESSARIO nos cards** para controlar quando renderizam.
+
+- `grid-template-rows: 0` NAO esconde conteudo no custom:grid-layout do HA.
+  Items CSS Grid tem `min-height: auto` — conteudo transborda da row de altura 0.
+- Por isso, `show: mediaquery` e o mecanismo PRIMARIO de ocultacao.
+- As rows de altura 0 ficam como safety net (areas existem, mas sem card renderizado).
+- Resultado: zero orfaos + cards realmente ocultos.
 
 ### Grid-areas do projeto
 
@@ -66,10 +78,11 @@ Linha 5 (h=0):      .       | movies    | .         | .
 
 ### O que NAO fazer
 
-- NAO usar `show: mediaquery` para esconder cards no grid
+- NAO excluir codigo — SEMPRE comentar antes de substituir (Regra de Ouro)
+- NAO confiar APENAS em `grid-template-rows: 0` para esconder cards (nao funciona no HA)
 - NAO criar variantes de cards por breakpoint (ex: chips landscape, chips phone)
 - NAO deixar grid-areas faltando em qualquer breakpoint
-- NAO usar linhas extras com altura zero como UNICA protecao — sempre garantir que a area exista no template
+- NAO remover `show: mediaquery` dos cards — e o mecanismo primario de ocultacao
 
 ### Breakpoints do projeto
 

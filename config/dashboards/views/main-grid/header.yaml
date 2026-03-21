@@ -6,8 +6,11 @@
 - type: horizontal-stack
   view_layout:
     grid-area: header
+    # show:
+    #   mediaquery: '(min-height: 463px)'
+    # FIX: excluir landscape tablet (sidebar substitui header la)
     show:
-      mediaquery: '(min-height: 463px)'
+      mediaquery: '(min-width: 1441px), (min-width: 801px) and (max-width: 1440px) and (orientation: portrait), (max-width: 800px) and (min-height: 463px)'
   cards:
     - type: custom:button-card
       entity: sensor.time

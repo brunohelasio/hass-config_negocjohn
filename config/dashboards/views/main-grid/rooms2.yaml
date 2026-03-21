@@ -4,8 +4,7 @@
 #                                               #
 #################################################
 - type: grid
-  # title: Rooms
-  title: Cômodos 2
+  title: Rooms
   view_layout:
     grid-area: devices
     show:

@@ -77,7 +77,21 @@
       #   - chip_air
 #################################################
 #                                               #
-#             CHIPS MIN 1700px                  #
+#       CHIPS 801-1440px LANDSCAPE              #
+#                                               #
+#################################################
+- type: horizontal-stack
+  view_layout:
+    grid-area: chips
+    show:
+      mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
+  cards:
+    - *lights
+    - *media
+    - *air
+#################################################
+#                                               #
+#             CHIPS MIN 1441px                  #
 #                                               #
 #################################################
 - type: horizontal-stack

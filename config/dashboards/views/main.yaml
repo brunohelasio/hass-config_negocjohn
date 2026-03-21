@@ -30,6 +30,17 @@ layout:
         ". cameras   climate    media     .        .        ."
         ". footer    footer     footer    footer   footer   ."
         ". .         .          .         .        .        ."
+    # tablet landscape smaller (e.g. 801-1440px landscape)
+    '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
+      grid-gap: 1.5vw 1vw
+      grid-template-columns: 0 1fr 1fr 1fr 1fr 0
+      grid-template-rows: min-content 1fr 1fr min-content 0
+      grid-template-areas: |
+        ". chips     chips      header   header   ."
+        ". security  mainrooms  devices  other    ."
+        ". cameras   climate    media    .        ."
+        ". footer    footer     footer   footer   ."
+        ". .         .          .        .        ."
     #portrait
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-gap: 1% 1.5%

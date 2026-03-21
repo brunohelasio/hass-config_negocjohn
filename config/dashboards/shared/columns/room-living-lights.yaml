@@ -2,55 +2,50 @@
 # - used only custom:button-card + tpl_popup_light cards.
 # - replaced by group button + streamline light_card list to follow repository pattern.
 
-- view_layout:
-    grid-column: span 2
-  type: custom:button-card
-  template:
-    - light_button_card_group
-  entity: light.grupo_luzes_sala
-  name: Todas as Luzes
-  icon: mdi:ceiling-light-multiple
-  variables:
-    aspect_ratio: 2/1
-
-- type: custom:streamline-card
-  template: light_card
-  variables:
-    - entity: light.sala_switch_2
-    - name: Luz Principal
-
-- type: custom:streamline-card
-  template: light_card
-  variables:
-    - entity: light.sala_switch_1
-    - name: LED Direito
-
-- type: custom:streamline-card
-  template: light_card
-  variables:
-    - entity: light.sala_switch_3
-    - name: LED Esquerdo
-
-- type: custom:streamline-card
-  template: light_card
-  variables:
-    - entity: light.sala_2_switch_2
-    - name: VR Principal
-
-- type: custom:streamline-card
-  template: light_card
-  variables:
-    - entity: light.sala_2_switch_3
-    - name: VR Cristaleira
-
-- type: custom:streamline-card
-  template: light_card
-  variables:
-    - entity: light.varanda_switch_1
-    - name: VR Gourmet
-
-- type: custom:streamline-card
-  template: light_card
-  variables:
-    - entity: light.varanda_switch_2
-    - name: VR Pendente
+# Coluna de iluminacao — Sala / Varanda
+- type: grid
+  columns: 2
+  square: true
+  cards:
+    - type: custom:button-card
+      entity: light.sala_switch_2
+      name: Luz Principal
+      template:
+        - tpl_popup_light
+        - icon_light_flush
+    - type: custom:button-card
+      entity: light.sala_switch_1
+      name: LED Direito
+      template:
+        - tpl_popup_light
+        - icon_ledstrip
+    - type: custom:button-card
+      entity: light.sala_switch_3
+      name: LED Esquerdo
+      template:
+        - tpl_popup_light
+        - icon_ledstrip
+    - type: custom:button-card
+      entity: light.sala_2_switch_2
+      name: VR Principal
+      template:
+        - tpl_popup_light
+        - icon_light_flush
+    - type: custom:button-card
+      entity: light.sala_2_switch_3
+      name: VR Cristaleira
+      template:
+        - tpl_popup_light
+        - icon_ledstrip
+    - type: custom:button-card
+      entity: light.varanda_switch_1
+      name: VR Gourmet
+      template:
+        - tpl_popup_light
+        - icon_ledstrip
+    - type: custom:button-card
+      entity: light.varanda_switch_2
+      name: VR Pendente
+      template:
+        - tpl_popup_light
+        - icon_pendant

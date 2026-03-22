@@ -37,7 +37,71 @@ sidebar_template:
   # na lista. Quando acionadas via clique simples no botao do comodo,
   # o button-card fazia atualizacao parcial do texto mas NAO recriava
   # o DOM, deixando os onclick dos badges mortos.
-  triggers_update: all
+  #
+  # triggers_update: all  ← REMOVIDO — causava re-render a cada mudanca
+  # de estado de QUALQUER entidade, sobrecarregando o tablet e causando
+  # perda de conexao WebSocket. Substituido por lista completa abaixo.
+  triggers_update:
+    # --- Controle do sidebar ---
+    - input_select.hemma_expanded_row
+    - input_boolean.menu_mobile
+    - weather.forecast_casa
+    # --- Pessoa ---
+    - person.bruno_helasio
+    # --- Luzes: Sala ---
+    - light.sala_switch_1
+    - light.sala_switch_2
+    - light.sala_switch_3
+    - light.sala_2_switch_2
+    - light.sala_2_switch_3
+    - light.varanda_switch_1
+    - light.varanda_switch_2
+    - light.grupo_luzes_sala
+    # --- Luzes: Cozinha ---
+    - light.cozinha_switch_1
+    - light.cozinha_switch_2
+    - light.cozinha_switch_3
+    - light.grupo_luzes_cozinha
+    # --- Luzes: Quarto Casal ---
+    - light.quarto_casal_switch_1
+    - light.quarto_casal_switch_2
+    - light.quarto_casal_2_switch_2
+    - light.quarto_casal_2_switch_3
+    - light.qc_luz_principal
+    - light.suite_casal_switch_1
+    - light.suite_casal_switch_2
+    - light.grupo_quarto_casal
+    # --- Luzes: Quarto Miguel (grupo — individuais sao switch.*) ---
+    - light.grupo_luzes_quarto_miguel
+    # --- Luzes: Quarto Marina ---
+    - light.quarto_marina_switch_1
+    - light.quarto_marina_switch_2
+    - light.quarto_marina_switch_3
+    - light.quarto_marina_switch_4
+    - light.suite_marina_switch_1
+    - light.suite_marina_switch_2
+    - light.grupo_luzes_quarto_marina
+    # --- Luzes: Office ---
+    - light.office_switch_1
+    - light.office_switch_2
+    - light.office_switch_3
+    - light.grupo_luzes_office
+    # --- Luzes: Lavabo ---
+    - light.lavabo_switch_1
+    - light.lavabo_switch_2
+    - light.lavabo_switch_3
+    - light.grupo_luzes_lavabo
+    # --- Luzes: grupo geral + circulacao ---
+    - light.todas_as_luzes
+    - light.corredor_switch_1
+    # --- Media Players ---
+    - media_player.smart_tv_pro_2
+    # - media_player.android_tv_192_168_3_17  # removido — nao existe mais
+    # - media_player.spotifyplus_bruno_helasio  # removido — nao existe mais
+    # - media_player.pioneer  # removido — nao existe mais
+    # --- Clima ---
+    - climate.ac_quarto_miguel
+    - climate.ac_office
   extra_styles: |
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 

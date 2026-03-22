@@ -13,7 +13,6 @@
       mediaquery: '(min-width: 1441px)'
   columns: 1
   square: true
-  card_mod: !include ../../shared/snippets/style-grid-card-title.yaml
   cards:
     - type: custom:added-movie-card
       entity: sensor.tmdb_movies_yts_latest

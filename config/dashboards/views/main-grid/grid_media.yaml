@@ -11,7 +11,6 @@
       mediaquery: '(min-width: 1441px)'
   columns: 1
   square: true
-  card_mod: !include ../../shared/snippets/style-grid-card-title.yaml
   cards:
     - type: conditional
       conditions:
@@ -96,7 +95,6 @@
     show:
       mediaquery: '(min-height: 463px) and (max-width: 1440px)'
   columns: 1
-  card_mod: !include ../../shared/snippets/style-grid-card-title.yaml
   cards:
     - type: conditional
       conditions:

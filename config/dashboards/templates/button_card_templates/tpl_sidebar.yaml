@@ -21,15 +21,23 @@ sidebar_template:
     action: none
   hold_action:
     action: none
-  triggers_update:
-    - input_select.hemma_expanded_row
-    - input_boolean.menu_mobile
-    - light.todas_as_luzes
-    - media_player.android_tv_192_168_3_17
-    - media_player.spotifyplus_bruno_helasio
-    - media_player.pioneer
-    - weather.forecast_casa
-    - person.bruno_helasio
+  # triggers_update original (lista limitada causava badges "mortos"):
+  # triggers_update:
+  #   - input_select.hemma_expanded_row
+  #   - input_boolean.menu_mobile
+  #   - light.todas_as_luzes
+  #   - media_player.android_tv_192_168_3_17
+  #   - media_player.spotifyplus_bruno_helasio
+  #   - media_player.pioneer
+  #   - weather.forecast_casa
+  #   - person.bruno_helasio
+  # Motivo: o template itera Object.keys(states) para contar TODAS as
+  # luzes/media/clima/pessoas. As entidades dos botoes dos comodos
+  # (light.sala_switch_2, light.cz_luz_principal, etc.) NAO estavam
+  # na lista. Quando acionadas via clique simples no botao do comodo,
+  # o button-card fazia atualizacao parcial do texto mas NAO recriava
+  # o DOM, deixando os onclick dos badges mortos.
+  triggers_update: all
   extra_styles: |
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 

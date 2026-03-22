@@ -10,4 +10,5 @@
     show:
       mediaquery: '(min-height: 463px)'
   columns: 2
+  card_mod: !include ../../shared/snippets/style-grid-card-title.yaml
   cards: !include ../../shared/grid-cards/main-rooms.yaml

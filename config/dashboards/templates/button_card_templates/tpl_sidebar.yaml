@@ -96,9 +96,9 @@ sidebar_template:
     - light.corredor_switch_1
     # --- Media Players ---
     - media_player.smart_tv_pro_2
-    - media_player.android_tv_192_168_3_17
-    - media_player.spotifyplus_bruno_helasio
-    - media_player.pioneer
+    # - media_player.android_tv_192_168_3_17  # removido — nao existe mais
+    # - media_player.spotifyplus_bruno_helasio  # removido — nao existe mais
+    # - media_player.pioneer  # removido — nao existe mais
     # --- Clima ---
     - climate.ac_quarto_miguel
     - climate.ac_office

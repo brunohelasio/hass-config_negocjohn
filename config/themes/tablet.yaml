@@ -140,12 +140,14 @@ tablet:
         $: |
           /* default */
           h1 {
-            font-size: 1.4vw !important;
+            /* font-size: 1.4vw !important; */
+            font-size: 1.2vw !important;
             font-weight: 700 !important;
             font-family: Raleway !important;
             letter-spacing: 0.05em !important;
             color: rgba(255, 255, 255, 0.7) !important;
-            padding: 0 0 1rem 0.2vw !important;
+            /* padding: 0 0 1rem 0.2vw !important; */
+            padding: 0 0 0.5rem 0.2vw !important;
             width: 100%;
             line-height: 100% !important;
           }
@@ -153,16 +155,20 @@ tablet:
           @media screen and (max-width: 1440px) {
             h1 {
               /* font-size: 2vw !important; */
-              font-size: 1.5vw !important;
+              /* font-size: 1.5vw !important; */
+              font-size: 1.3vw !important;
               /* padding-bottom: 1.7vw !important; */
-              padding-bottom: 0.8vw !important;
+              /* padding-bottom: 0.8vw !important; */
+              padding-bottom: 0.5vw !important;
             }
           }
           /* phone */
           @media screen and (max-width: 800px) {
             h1 {
-              padding-top: 1rem !important;
-              font-size: 4vw !important;
+              /* padding-top: 1rem !important; */
+              padding-top: 0.6rem !important;
+              /* font-size: 4vw !important; */
+              font-size: 3.5vw !important;
               line-height: 100% !important;
             }
           }

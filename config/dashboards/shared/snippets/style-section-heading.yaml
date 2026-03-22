@@ -3,7 +3,8 @@ style:
     :host {
       font-family: Raleway !important;
       --mdc-icon-size: 24px !important;
-      --ha-heading-card-title-font-size: 1.4vw;
+      /* --ha-heading-card-title-font-size: 1.4vw; */
+      --ha-heading-card-title-font-size: 1.2vw;
       --ha-heading-card-title-font-weight: 700;
       --ha-heading-card-title-line-height: 100%;
       --ha-heading-card-title-color: rgba(255, 255, 255, 0.7);
@@ -11,20 +12,25 @@ style:
       --ha-heading-badge-font-weight: 700;
       --ha-heading-badge-line-height: 100%;
       @media screen and (max-width: 1440px) {
-        --ha-heading-card-title-font-size: 2vw;
+        /* --ha-heading-card-title-font-size: 2vw; */
+        --ha-heading-card-title-font-size: 1.3vw;
       }
       @media screen and (max-width: 800px) {
-        --ha-heading-card-title-font-size: 4vw;
+        /* --ha-heading-card-title-font-size: 4vw; */
+        --ha-heading-card-title-font-size: 3.5vw;
         --ha-heading-badge-font-size: 2vw;
       }
     }
     .container {
       letter-spacing: 0.05em !important;
       align-items: baseline;
+      /* padding ajustado para reduzir distancia titulo-conteudo */
+      padding-bottom: 0.3rem !important;
     }
     @media screen and (max-width: 800px) {
       .container {
-        padding: 1rem 4px 1.7vw 0 !important;
+        /* padding: 1rem 4px 1.7vw 0 !important; */
+        padding: 0.6rem 4px 1vw 0 !important;
       }
       .container .content {
         --mdc-icon-size: 14px !important;

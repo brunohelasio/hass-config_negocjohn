@@ -74,7 +74,7 @@ sidebar_template:
       const expanded = states['input_select.hemma_expanded_row'] ? states['input_select.hemma_expanded_row'].state : 'none';
       const isMobileMenuOpen = states['input_boolean.menu_mobile'] && states['input_boolean.menu_mobile'].state === 'on';
       // Helper: bloqueia propagacao de eventos (impede button-card de engolir cliques)
-      const STOP = 'event.stopPropagation();event.stopImmediatePropagation();event.preventDefault();';
+      const STOP = 'event.stopPropagation();event.stopImmediatePropagation();';
       const toggleMobileBtn = `${STOP} window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.menu_mobile'});`;
       const toggle = (row) => {
         const next = expanded === row ? 'none' : row;

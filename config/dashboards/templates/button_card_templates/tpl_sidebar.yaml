@@ -42,9 +42,14 @@ sidebar_template:
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
     :host { display: block !important; }
-    ha-card { pointer-events: auto !important; }
-    #card { padding: 0 !important; }
-    #container { display: flex !important; flex-direction: column !important; }
+    /* Desabilita pointer-events no ha-card para que button-card NUNCA
+       intercepte cliques. Somente #name (conteudo) recebe eventos. */
+    ha-card { pointer-events: none !important; -webkit-tap-highlight-color: transparent !important; }
+    /* Desabilita ripple/overlay internos do button-card */
+    ha-card #overlay { display: none !important; pointer-events: none !important; }
+    ha-card mwc-ripple { display: none !important; }
+    #card { padding: 0 !important; pointer-events: none !important; }
+    #container { display: flex !important; flex-direction: column !important; pointer-events: none !important; }
     #name { display: flex !important; flex-direction: column !important; width: 100% !important; padding: 0 !important; white-space: normal !important; pointer-events: auto !important; }
 
     @media (min-width: 801px) {
@@ -191,7 +196,7 @@ sidebar_template:
         }
       });
       let outputHtml = `
-        <div style="position:relative; display:flex;flex-direction:column;height:100%;padding:20px 16px 16px;box-sizing:border-box;font-family:'Poppins',system-ui,sans-serif;">
+        <div onclick="event.stopPropagation();" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="position:relative; display:flex;flex-direction:column;height:100%;padding:20px 16px 16px;box-sizing:border-box;font-family:'Poppins',system-ui,sans-serif;">
 
           <div style="width: 100%; text-align: center; margin-bottom: 2px;">
             <div style="font-family:'Futura', system-ui, sans-serif; font-size:clamp(56px,5.8vw,74px);font-weight:200;color:rgba(255,255,255,0.92);line-height:1;letter-spacing:-1px;margin-bottom:6px;text-shadow: 5px 3px 20px #000000;">

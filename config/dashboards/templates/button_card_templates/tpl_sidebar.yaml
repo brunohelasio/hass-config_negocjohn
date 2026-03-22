@@ -93,7 +93,7 @@ sidebar_template:
             lightsCount++;
             let name = states[k].attributes.friendly_name || k;
             activeLightsHTML += `
-              <div onclick="event.stopPropagation(); window.__hh.callService('light', 'toggle', {entity_id: '${k}'})" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
+              <div onclick="event.stopPropagation(); window.__hh.callService('light', 'toggle', {entity_id: '${k}'})" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
                 <div style="display:flex; align-items:center; gap: 10px;">
                   <ha-icon icon="mdi:lightbulb-on" style="--mdc-icon-size: 18px; color: #fdd835; filter:drop-shadow(0 0 3px rgba(253,216,53,0.8));"></ha-icon>
                   <span style="font-size:13px; font-weight:600; color:rgba(255,255,255,0.9);">${name}</span>
@@ -119,7 +119,7 @@ sidebar_template:
           let displayArtist = isPlaying ? artistStr + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + artistStr : artistStr;
           let marqueeClass = isPlaying ? 'marquee' : '';
           activeMediaHTML += `
-            <div onclick="event.stopPropagation(); window.__hh.callService('media_player', 'media_play_pause', {entity_id: '${k}'})" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
+            <div onclick="event.stopPropagation(); window.__hh.callService('media_player', 'media_play_pause', {entity_id: '${k}'})" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
               <div style="display:flex; align-items:center; gap: 10px; overflow:hidden; width: 100%;">
                 <ha-icon icon="mdi:music-note" style="--mdc-icon-size: 18px; color: #1DB954; filter:drop-shadow(0 0 3px rgba(29,185,84,0.8));"></ha-icon>
                 <div style="display:flex; flex-direction:column; overflow:hidden; white-space:nowrap; width: 100%;">
@@ -146,7 +146,7 @@ sidebar_template:
           let stateLabel = states[k].state;
           let temp = states[k].attributes.temperature ? states[k].attributes.temperature + '°' : '';
           climateHTML += `
-            <div onclick="event.stopPropagation(); window.__hh.callService('climate', 'turn_off', {entity_id: '${k}'})" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
+            <div onclick="event.stopPropagation(); window.__hh.callService('climate', 'turn_off', {entity_id: '${k}'})" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
               <div style="display:flex; align-items:center; gap: 10px;">
                 <ha-icon icon="mdi:snowflake" style="--mdc-icon-size: 18px; color: #7fdbe9; filter:drop-shadow(0 0 3px rgba(127,219,233,0.8));"></ha-icon>
                 <div style="display:flex; flex-direction:column;">
@@ -289,7 +289,7 @@ sidebar_template:
 
       outputHtml += `
           <div style="flex:1 1 0;min-height:8px;"></div>
-          <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.09); border-radius:20px;">
+          <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.09); border-radius:20px;">
             <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;margin-bottom:10px;">TEMPO AGORA</div>
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <div>

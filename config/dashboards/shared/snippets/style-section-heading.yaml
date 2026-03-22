@@ -25,12 +25,14 @@ style:
       letter-spacing: 0.05em !important;
       align-items: baseline;
       /* padding ajustado para reduzir distancia titulo-conteudo */
-      padding-bottom: 0.3rem !important;
+      /* padding-bottom: 0.3rem !important; */
+      padding-bottom: 0.1rem !important;
     }
     @media screen and (max-width: 800px) {
       .container {
         /* padding: 1rem 4px 1.7vw 0 !important; */
-        padding: 0.6rem 4px 1vw 0 !important;
+        /* padding: 0.6rem 4px 1vw 0 !important; */
+        padding: 0.3rem 4px 0.5vw 0 !important;
       }
       .container .content {
         --mdc-icon-size: 14px !important;

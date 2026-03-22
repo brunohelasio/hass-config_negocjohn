@@ -7,372 +7,434 @@
 #
 #- from github.com/ngocjohn/hass-config
 #
-sidebar:
+#################################################
+#                                               #
+#   SIDEBAR TEMPLATE (badges interativas)       #
+#   pilulas de luzes/midia/clima/pessoas        #
+#   com expand/collapse + acoes rapidas         #
+#                                               #
+#################################################
+sidebar_template:
   show_state: false
   show_icon: false
   tap_action:
     action: none
-  name: >
-    [[[
-      if (entity) {
-          let attr = [];
-          for (let [k, value] of Object.entries(entity.attributes))
-              window.navigator.userAgent.match(/iPhone/i)
-                  ? k !== 'time' && k !== 'date' && value !== false && (attr += `<p>${k === 'greet' ? `<span class="iphone">${value}</span>` : `${value}`}</p>`)
-                  : value !== false && (attr += `<p>${value}</p>`);
-          return attr;
-      }
-    ]]]
-  extra_styles: >
-    #card {
-      padding: 0;
-      border-width: 0;
-      font-family: SF Pro Display, Roboto, system-ui;
-    }
-    #container {
-      display: flex !important;
-    }
-    #name {
-      padding: 1vw 2.5vw 0 var(--custom-layout-card-padding);
-      white-space: normal;
-      text-align: left;
-    }
-    .iphone {
-      font-size: 1.2em;
-      color: rgba(255, 255, 255, 0.8);
-    }
-    .time {
-      font-size: var(--sidebar-time-font-size);
-      font-weight: 300;
-      line-height: var(--sidebar-time-line-height);
-      letter-spacing: 0.11vw;
-      margin-left: -0.3vw;
-      color: rgba(255, 255, 255, 0.8);
-    }
-    @supports not (-moz-appearance:none) {
-      .time-colon {
-        position: relative;
-        top: -.11em;
-      }
-    }
-    p {
-      font-size: var(--sidebar-font-size);
-      line-height: var(--sidebar-line-height);
-      font-weight: 200;
-      letter-spacing: 0.07vw;
-      color: #6a7377;
-    }
-    b {
-      font-weight: 700;
-    }
-    p > b {
-      color: rgba(255, 255, 255, 0.8);
-    }
-    /* portrait */
-    @media screen and (max-width: 1200px) {
-      .time {
-        font-size: calc(var(--sidebar-time-font-size) * 1.4 );
-        line-height: calc(var(--sidebar-time-line-height) * 1.4 );
-      }
-      p {
-        font-size: calc(var(--sidebar-font-size) * 1.4 );
-        line-height: calc(var(--sidebar-line-height) * 1.4 );
-      }
-    }
-    /* phone */
-    @media screen and (max-width: 800px) {
-      .time {
-        font-size: calc(var(--sidebar-time-font-size) * 2.3 );
-      }
-      p {
-        font-size: calc(var(--sidebar-font-size) * 2.3 );
-        line-height: calc(var(--sidebar-line-height) * 1.4 );
-      }
-      #name {
-        padding: 0;
-        text-align: right;
-      }
-    }
-timesidebar:
-  show_state: false
-  show_icon: false
-  name: >
-    [[[
-      if (entity) {
-          let attr = [];
-          for (let [k, value] of Object.entries(entity.attributes))
-            value !== false && (attr += `<p>${value}</p>`);
-          return attr;
-      }
-    ]]]
-  tap_action:
-    action: fire-dom-event
-    browser_mod:
-      service: browser_mod.javascript
-      data:
-        code: location.reload()
+  hold_action:
+    action: none
+  triggers_update:
+    - input_select.hemma_expanded_row
+    - input_boolean.menu_mobile
+    - light.todas_as_luzes
+    - media_player.android_tv_192_168_3_17
+    - media_player.spotifyplus_bruno_helasio
+    - media_player.pioneer
+    - weather.forecast_casa
+    - person.bruno_helasio
   extra_styles: |
-    #card {
-      padding: 0;
-      border-width: 0;
-      margin-top: 24px;
-    }
-    #container {
-      display: block !important;
-    }
-    #name {
-      white-space: normal;
-      text-align: left;
-      font-family: Poppins;
-      padding-inline: 1vw;
-    }
-    .time {
-      font-family: Futura;
-      font-size: var(--sidebar-time-font-size);
-      font-weight: 300;
-      line-height: var(--sidebar-time-line-height);
-      letter-spacing: 0.11vw;
-      padding-inline: 1vw;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.7);
-    }
-    @supports not (-moz-appearance:none) {
-      .time-colon {
-        position: relative;
-        top: -.11em;
-      }
-    }
-    p {
-      font-family: Poppins;
-      font-size: var(--sidebar-font-size);
-      line-height: var(--sidebar-line-height);
-      font-weight: 200;
-      letter-spacing: 0.06vw;
-      color: #97989c;
-    }
-    p > b {
-      color: rgba(255, 255, 255, 0.7);
-    }
-    /* horizontal */
-    @media screen and (min-width: 1441px) {
-      #card {
-        margin-top: -10px;
-      }
-      #container {
-        margin-left: 10px;
-      }
-      #name {
-        padding-inline: 0;
-      }
-      .battery, .active, .greet, .time, .holiday {
-        display: none !important;
-      }
-      p {
-        line-height: 1.5vw;
-        margin-block-end: -0.5em;
-      }
-    }
-    /* portrait */
-    @media screen and (max-width: 1440px) {
-      #card {
-        padding: 5%;
-        border-width: 0;
-        margin: 0 !important;
-      }
-      .time {
-        font-size: calc(var(--sidebar-time-font-size) * 1.5 );
-        line-height: calc(var(--sidebar-time-line-height) * 1.3);
-        margin: 0;
-        justify-content: center !important;
-      }
-      .battery {
-        display: none !important;
-      }
-      p {
-        font-family: Poppins;
-        font-size: calc(var(--sidebar-font-size) * 1.6 );
-        line-height: calc(var(--sidebar-line-height) * 1.7 );
-        letter-spacing: 0.15vw;
-      }
-    }
-    /* phone */
-    @media screen and (max-width: 800px) {
-      .time {
-        font-size: calc(var(--sidebar-time-font-size) * 2.3 );
-      }
-      p {
-        font-size: calc(var(--sidebar-font-size) * 2.3 );
-        line-height: calc(var(--sidebar-line-height) * 2 );
-      }
-      #name {
-        padding: 0;
-        text-align: left;
-      }
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-timeclock:
-  show_state: false
-  show_icon: false
-  tap_action: !include ../../shared/popup/calendar.yaml
-  double_tap_action:
-    action: none
-  hold_action:
-    action: block
-  name: >
-    [[[
-      if (entity) {
-          let attr = [];
-          for (let [k, value] of Object.entries(entity.attributes))
-            value !== false && (attr += `${value}`);
-          return attr;
+    :host { display: block !important; }
+    ha-card { pointer-events: auto !important; }
+    #card { padding: 0 !important; }
+    #container { display: flex !important; flex-direction: column !important; }
+    #name { display: flex !important; flex-direction: column !important; width: 100% !important; padding: 0 !important; white-space: normal !important; pointer-events: auto !important; }
+
+    @media (min-width: 801px) {
+      :host, ha-card, #card, #container, #name { height: 100% !important; }
+      .mobile-toggle-btn { display: none !important; }
+      .sidebar-bottom-section { display: flex !important; flex-direction: column; flex: 1; }
+    }
+    @media (max-width: 800px) {
+      :host, ha-card, #card, #container, #name { height: auto !important; }
+      .mobile-toggle-btn {
+        display: flex !important; align-items: center; justify-content: center;
+        padding: 12px; margin-top: 15px; border-radius: 16px;
+        background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 600; cursor: pointer;
+        pointer-events: auto;
       }
-    ]]]
-  # styles:
-  #   card:
-  #     - background-image: >
-  #         [[[
-  #           return `url("/local/img/weather/clear-night.png")`;
-  #         ]]]
-  #     - background-color: none
-  #     - background-size: cover
-  #     - background-repeat: no-repeat
-  #     - background-position: right
-  extra_styles: |
-    #card {
-      padding: 0;
-      border-width: 0;
-      border-width: 0;
-      background: none !important;
+      .sidebar-bottom-section.collapsed { display: none !important; }
+      .sidebar-bottom-section.expanded { display: flex !important; flex-direction: column; margin-top: 15px; }
     }
-    #container {
-      display: block !important;
-    }
-    #name {
-      white-space: normal;
-      font-family: Poppins;
-    }
-    .time {
-      font-family: Futura;
-      font-size: 5em;
-      font-weight: 400;
-      line-height: 100%;
-      letter-spacing: 0.21vw;
-      color: rgba(255, 255, 255, 0.5);
-      text-shadow: 5px 3px 20px #000000;
-    }
-    .date, .lunar, .holiday {
-      font-size: 0.8em;
-      font-weight: 200;
-      letter-spacing: 0.05vw;
-      color: #97989c;
-    }
-    @supports not (-moz-appearance:none) {
-      .time-colon {
-        position: relative;
-        top: -.11em;
-      }
-    }
-    .battery, .active, .greet {
-      display: none !important;
-    }
-    /* phone */
-    @media screen and (max-width: 800px) {
-      #name {
-        text-align: -webkit-left !important;
-      }
-      #date {
-        padding-bottom: 0;
-      }
-      .time {
-        font-size: 3em;
-        line-height: 100%
-      }
-      .date, .lunar, .holiday {
-        font-size: 0.55em !important;
-        margin: 0 0 0 0 !important;
-      }
-    }
-wide_timeclock:
-  # aspect_ratio: 2/1
-  show_state: false
-  show_name: false
-  show_label: false
-  show_icon: false
-  tap_action: !include ../../shared/popup/calendar.yaml
-  double_tap_action:
-    action: block
-  hold_action:
-    action: block
-  custom_fields:
-    day: >
-      [[[ return entity.attributes.day; ]]]
-    date: >
-      [[[ return entity.attributes.date; ]]]
-    lunar: >
-      [[[ return entity.attributes.lunar; ]]]
-    events: >
-      [[[ return entity.attributes.events; ]]]
-    hour: >
-      [[[ return entity.attributes.hour; ]]]
-    minute: >
-      [[[ return entity.attributes.minutes; ]]]
-  styles:
-    grid:
-      - grid-template-areas: |
-          "hour     events    "
-          "hour     date   "
-          "minute   lunar  "
-          "minute   day "
-      - grid-template-columns: 1fr 1fr
-      - grid-template-rows: repeat(4, min-content)
-      - gap: 0%
-      - margin: 0
-  extra_styles: |
-    #card {
-      padding: 0;
-      border-width: 0;
-      background: none !important;
-    }
-    #container {
-      justify-items: flex-start;
-      align-items: self-end;
-      color: #6b6b6b;
-      font-family: poppins;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-    }
-    #hour, #minute {
-      justify-self: flex-end;
-      font-weight: 800;
-      line-height: 90%;
-      letter-spacing: 2px;
-      font-family: Futura;
-      padding-right: 0.5vw;
-    }
-    #hour {
-      font-size: 3.5em;
-      color: #848e93 !important;
-    }
-    #minute {
-      font-size: 3.3em;
-      color: #9c9ba3 !important;
-    }
-    #day {
-      font-size: 1.3em;
-      text-transform: uppercase;
-      font-weight: 600;
-      font-family: futura;
-      letter-spacing: 1.5px;
-      color: #848e93;
-    }
+    .expanded-list::-webkit-scrollbar { width: 4px; }
+    .expanded-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
     .marquee {
-      animation: marquee 20s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+      display: inline-block;
+      animation: marquee 12s linear infinite;
     }
     @keyframes marquee {
-      from {
-        transform: translateX(0%);
-      }
-      to {
-        transform: translateX(-50%);
-      }
+      from { transform: translateX(0%); }
+      to { transform: translateX(-50%); }
     }
+  name: >
+    [[[
+      window.__hh = hass;
+      const st  = (e) => states[e]?.state ?? '';
+      const att = (e, a) => states[e]?.attributes?.[a] ?? '';
+      const expanded = states['input_select.hemma_expanded_row'] ? states['input_select.hemma_expanded_row'].state : 'none';
+      const isMobileMenuOpen = states['input_boolean.menu_mobile'] && states['input_boolean.menu_mobile'].state === 'on';
+      const toggleMobileBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.menu_mobile'});`;
+      const toggle = (row) => {
+        const next = expanded === row ? 'none' : row;
+        return `event.stopPropagation(); window.__hh.callService('input_select', 'select_option', {entity_id: 'input_select.hemma_expanded_row', option: '${next}'});`;
+      };
+      const now  = new Date();
+      const hh   = String(now.getHours()).padStart(2,'0');
+      const mm   = String(now.getMinutes()).padStart(2,'0');
+      const dias  = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+      const meses = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+      const greeting = now.getHours() < 12 ? 'Bom dia' : now.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
+      // 1. LUZES
+      let lightsCount = 0;
+      let activeLightsHTML = '';
+      Object.keys(states).forEach(k => {
+        if(k.startsWith('light.') && states[k].state === 'on') {
+          if(!states[k].attributes.entity_id) {
+            lightsCount++;
+            let name = states[k].attributes.friendly_name || k;
+            activeLightsHTML += `
+              <div onclick="event.stopPropagation(); window.__hh.callService('light', 'toggle', {entity_id: '${k}'})" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
+                <div style="display:flex; align-items:center; gap: 10px;">
+                  <ha-icon icon="mdi:lightbulb-on" style="--mdc-icon-size: 18px; color: #fdd835; filter:drop-shadow(0 0 3px rgba(253,216,53,0.8));"></ha-icon>
+                  <span style="font-size:13px; font-weight:600; color:rgba(255,255,255,0.9);">${name}</span>
+                </div>
+                <div style="width:8px; height:8px; border-radius:50%; background:#fdd835; box-shadow:0 0 5px #fdd835;"></div>
+              </div>`;
+          }
+        }
+      });
+      if(lightsCount === 0) activeLightsHTML = '<div style="font-size:12px; color:rgba(255,255,255,0.5); padding:10px; text-align:center;">Nenhuma luz acesa no momento.</div>';
+      // 2. MÍDIA
+      let mediaCount = 0;
+      let activeMediaHTML = '';
+      Object.keys(states).forEach(k => {
+        if(k.startsWith('media_player.') && ['playing', 'paused', 'on'].includes(states[k].state)) {
+          mediaCount++;
+          let name = states[k].attributes.friendly_name || k;
+          let title = states[k].attributes.media_title || 'Ligado';
+          let artistStr = name + (states[k].attributes.media_artist ? ' - ' + states[k].attributes.media_artist : '');
+          let isPlaying = states[k].state === 'playing';
+
+          let displayTitle = isPlaying ? title + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + title : title;
+          let displayArtist = isPlaying ? artistStr + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + artistStr : artistStr;
+          let marqueeClass = isPlaying ? 'marquee' : '';
+          activeMediaHTML += `
+            <div onclick="event.stopPropagation(); window.__hh.callService('media_player', 'media_play_pause', {entity_id: '${k}'})" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
+              <div style="display:flex; align-items:center; gap: 10px; overflow:hidden; width: 100%;">
+                <ha-icon icon="mdi:music-note" style="--mdc-icon-size: 18px; color: #1DB954; filter:drop-shadow(0 0 3px rgba(29,185,84,0.8));"></ha-icon>
+                <div style="display:flex; flex-direction:column; overflow:hidden; white-space:nowrap; width: 100%;">
+                  <div style="overflow:hidden; width:100%;">
+                    <span class="${marqueeClass}" style="font-size:13px; font-weight:600; color:rgba(255,255,255,0.9); ${!isPlaying ? 'text-overflow:ellipsis; overflow:hidden; display:block;' : ''}">${displayTitle}</span>
+                  </div>
+                  <div style="overflow:hidden; width:100%;">
+                    <span class="${marqueeClass}" style="font-size:11px; font-weight:400; color:rgba(255,255,255,0.5); ${!isPlaying ? 'text-overflow:ellipsis; overflow:hidden; display:block;' : ''}">${displayArtist}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="width:8px; height:8px; border-radius:50%; background:${isPlaying ? '#1DB954' : 'rgba(255,255,255,0.3)'}; ${isPlaying ? 'box-shadow:0 0 5px #1DB954;' : ''} flex-shrink:0; margin-left: 8px;"></div>
+            </div>`;
+        }
+      });
+      if(mediaCount === 0) activeMediaHTML = '<div style="font-size:12px; color:rgba(255,255,255,0.5); padding:10px; text-align:center;">Nenhuma mídia em execução.</div>';
+      // 3. CLIMA
+      let climateCount = 0;
+      let climateHTML = '';
+      Object.keys(states).forEach(k => {
+        if(k.startsWith('climate.') && !['off', 'unavailable', 'unknown'].includes(states[k].state)) {
+          climateCount++;
+          let name = states[k].attributes.friendly_name || k;
+          let stateLabel = states[k].state;
+          let temp = states[k].attributes.temperature ? states[k].attributes.temperature + '°' : '';
+          climateHTML += `
+            <div onclick="event.stopPropagation(); window.__hh.callService('climate', 'turn_off', {entity_id: '${k}'})" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
+              <div style="display:flex; align-items:center; gap: 10px;">
+                <ha-icon icon="mdi:snowflake" style="--mdc-icon-size: 18px; color: #7fdbe9; filter:drop-shadow(0 0 3px rgba(127,219,233,0.8));"></ha-icon>
+                <div style="display:flex; flex-direction:column;">
+                  <span style="font-size:13px; font-weight:600; color:rgba(255,255,255,0.9);">${name}</span>
+                  <span style="font-size:11px; color:rgba(255,255,255,0.5); text-transform:capitalize;">${stateLabel}</span>
+                </div>
+              </div>
+              <span style="font-size:14px; font-weight:700; color:#7fdbe9;">${temp}</span>
+            </div>`;
+        }
+      });
+      if(climateCount === 0) climateHTML = '<div style="font-size:12px; color:rgba(255,255,255,0.5); padding:10px; text-align:center;">Nenhum sistema de clima ativo.</div>';
+      // 4. PESSOAS
+      let peopleCount = 0;
+      let peopleHTML = '';
+      Object.keys(states).forEach(k => {
+        if(k.startsWith('person.')) {
+          let isHome = states[k].state === 'home';
+          if(isHome) peopleCount++;
+          let name = states[k].attributes.friendly_name || k;
+
+          let grayscaleStyle = !isHome ? 'filter: grayscale(100%); opacity: 0.5;' : '';
+          let iconColor = isHome ? '#c7983e' : 'rgba(255,255,255,0.5)';
+          let dropShadow = isHome ? 'filter:drop-shadow(0 0 3px rgba(199,152,62,0.8));' : '';
+
+          peopleHTML += `
+            <div style="display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px; transition: all 0.3s ease; ${grayscaleStyle}">
+              <div style="display:flex; align-items:center; gap: 10px;">
+                <ha-icon icon="${isHome ? 'mdi:home-account' : 'mdi:account-arrow-right-outline'}" style="--mdc-icon-size: 18px; color: ${iconColor}; ${dropShadow}"></ha-icon>
+                <span style="font-size:13px; font-weight:600; color:rgba(255,255,255,0.9);">${name}</span>
+              </div>
+              <span style="font-size:11px; font-weight:600; color:${iconColor};">${isHome ? 'Em Casa' : 'Ausente'}</span>
+            </div>`;
+        }
+      });
+      let outputHtml = `
+        <div style="position:relative; display:flex;flex-direction:column;height:100%;padding:20px 16px 16px;box-sizing:border-box;font-family:'Poppins',system-ui,sans-serif;">
+
+          <div style="width: 100%; text-align: center; margin-bottom: 2px;">
+            <div style="font-family:'Futura', system-ui, sans-serif; font-size:clamp(56px,5.8vw,74px);font-weight:200;color:rgba(255,255,255,0.92);line-height:1;letter-spacing:-1px;margin-bottom:6px;text-shadow: 5px 3px 20px #000000;">
+              ${hh}<span style="opacity:0.35;animation:sb-blink 1s step-end infinite;">:</span>${mm}
+            </div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,0.38);text-transform:uppercase;margin-bottom:3px;">${dias[now.getDay()]}, ${now.getDate()} DE ${meses[now.getMonth()]}</div>
+            <div style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.65);">${greeting}, Bruno.</div>
+          </div>
+
+          <div class="mobile-toggle-btn" onclick="${toggleMobileBtn}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
+            ${isMobileMenuOpen ? '🔼 Recolher' : '🔽 Status e Ações'}
+          </div>
+          <div class="sidebar-bottom-section ${isMobileMenuOpen ? 'expanded' : 'collapsed'}">
+            <div style="display:flex;flex-direction:column;gap:8px; margin-top:8px;">`;
+      // --- BADGE DE LUZES ---
+      if (expanded === 'none' || expanded === 'lights') {
+         let iconColor = lightsCount > 0 ? '#fdd835' : 'rgba(255,255,255,0.4)';
+         let iconShadow = lightsCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(253,216,53,0.5))' : 'none';
+
+         outputHtml += `
+           <div onclick="${toggle('lights')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='lights' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='lights' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='lights' ? '4px' : '0'};">
+             <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
+               <ha-icon icon="mdi:lightbulb-on" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
+             </div>
+             <div style="display:flex; flex-direction:column; align-items: flex-start; text-align: left;">
+               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">Luzes</span>
+               <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.5);">${lightsCount === 0 ? 'Todas apagadas' : lightsCount + ' acesa(s)'}</span>
+             </div>
+           </div>`;
+         if (expanded === 'lights') outputHtml += `<div class="expanded-list" style="pointer-events: auto; position: relative; z-index: 2; max-height:40vh; overflow-y:auto; padding-right:4px; margin-bottom:8px;">${activeLightsHTML}</div>`;
+      }
+      // --- BADGE DE MÍDIA ---
+      if (expanded === 'none' || expanded === 'media') {
+         let iconColor = mediaCount > 0 ? '#1DB954' : 'rgba(255,255,255,0.4)';
+         let iconShadow = mediaCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(29,185,84,0.5))' : 'none';
+
+         outputHtml += `
+           <div onclick="${toggle('media')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='media' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='media' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='media' ? '4px' : '0'};">
+             <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
+               <ha-icon icon="mdi:music-note" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
+             </div>
+             <div style="display:flex; flex-direction:column; align-items: flex-start; text-align: left;">
+               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">Mídia</span>
+               <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.5);">${mediaCount === 0 ? 'Nenhuma ativa' : mediaCount + ' ativa(s)'}</span>
+             </div>
+           </div>`;
+         if (expanded === 'media') outputHtml += `<div class="expanded-list" style="pointer-events: auto; position: relative; z-index: 2; max-height:40vh; overflow-y:auto; padding-right:4px; margin-bottom:8px;">${activeMediaHTML}</div>`;
+      }
+      // --- BADGE DE CLIMA ---
+      if (expanded === 'none' || expanded === 'climate') {
+         let iconColor = climateCount > 0 ? '#7fdbe9' : 'rgba(255,255,255,0.4)';
+         let iconShadow = climateCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(127,219,233,0.5))' : 'none';
+         outputHtml += `
+           <div onclick="${toggle('climate')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='climate' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='climate' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='climate' ? '4px' : '0'};">
+             <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
+               <ha-icon icon="mdi:snowflake" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
+             </div>
+             <div style="display:flex; flex-direction:column; align-items: flex-start; text-align: left;">
+               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">Clima</span>
+               <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.5);">${climateCount === 0 ? 'Desligado' : climateCount + ' ativo(s)'}</span>
+             </div>
+           </div>`;
+         if (expanded === 'climate') outputHtml += `<div class="expanded-list" style="pointer-events: auto; position: relative; z-index: 2; max-height:40vh; overflow-y:auto; padding-right:4px; margin-bottom:8px;">${climateHTML}</div>`;
+      }
+      // --- BADGE DE PESSOAS ---
+      if (expanded === 'none' || expanded === 'presence') {
+         let iconColor = peopleCount > 0 ? '#c7983e' : 'rgba(255,255,255,0.4)';
+         let iconShadow = peopleCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(199,152,62,0.5))' : 'none';
+
+         outputHtml += `
+           <div onclick="${toggle('presence')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='presence' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='presence' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='presence' ? '4px' : '10px'};">
+             <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
+               <ha-icon icon="mdi:home-account" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
+             </div>
+             <div style="display:flex; flex-direction:column; align-items: flex-start; text-align: left;">
+               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">Pessoas</span>
+               <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.5);">${peopleCount === 0 ? 'Casa vazia' : peopleCount + ' em casa'}</span>
+             </div>
+           </div>`;
+         if (expanded === 'presence') outputHtml += `<div class="expanded-list" style="pointer-events: auto; position: relative; z-index: 2; max-height:40vh; overflow-y:auto; padding-right:4px; margin-bottom:8px;">${peopleHTML}</div>`;
+      }
+      outputHtml += `</div>`;
+      // --- AÇÕES RÁPIDAS (ALINHADO À ESQUERDA) ---
+      if (expanded === 'none') {
+         outputHtml += `
+            <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;padding-left:4px;margin-bottom:8px;margin-top:10px;">AÇÕES RÁPIDAS</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div onclick="event.stopPropagation(); window.__hh.callService('light','turn_off',{entity_id:'light.todas_as_luzes'})"
+                   onpointerdown="event.stopPropagation();"
+                   ontouchstart="event.stopPropagation();"
+                   style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.09); border-radius:20px; cursor:pointer; transition:all 0.2s ease;">
+                <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
+                  <ha-icon icon="mdi:lightbulb-off-outline" style="--mdc-icon-size: 24px; color: rgba(255,255,255,0.8);"></ha-icon>
+                </div>
+                <span style="font-size:14px; font-weight:600; color:rgba(255,255,255,0.9); text-align: left;">Apagar Todas as Luzes</span>
+              </div>
+            </div>`;
+      }
+      // --- TEMPO ---
+      const weatherState = st('weather.forecast_casa');
+      const tempInt = Math.round(parseFloat(att('weather.forecast_casa','temperature')) || 0);
+      const weatherEmoji = {'sunny':'☀️','clear-night':'🌙','partlycloudy':'⛅','cloudy':'☁️','rainy':'🌧️','snowy':'❄️','windy':'💨','fog':'🌫️','lightning':'⚡','lightning-rainy':'⛈️','pouring':'🌊'}[weatherState] || '🌡️';
+
+      outputHtml += `
+          <div style="flex:1 1 0;min-height:8px;"></div>
+          <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.09); border-radius:20px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;margin-bottom:10px;">TEMPO AGORA</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:34px;font-weight:200;color:rgba(255,255,255,0.92);line-height:1;">${tempInt}°</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.42);margin-top:3px;text-transform:capitalize;">${weatherState}</div>
+              </div>
+              <div style="font-size:44px;line-height:1;">${weatherEmoji}</div>
+            </div>
+          </div>
+        </div> </div> <style>@keyframes sb-blink{0%,49%{opacity:.35}50%,100%{opacity:.10}}</style>
+      `;
+      return outputHtml;
+    ]]]
+  styles:
+    card:
+      - background: "linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))"
+      - backdrop-filter: "blur(40px)"
+      - -webkit-backdrop-filter: "blur(40px)"
+      - border-radius: "28px"
+      - border: "1px solid rgba(255,255,255,0.12)"
+      - box-shadow: "0 4px 16px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08)"
+      - height: "100%"
+      - overflow: "hidden"
+      - aspect-ratio: "unset"
+
+#################################################
+#                                               #
+#   TEMPLATES ORIGINAIS (ngocjohn/hass-config)  #
+#                                               #
+#################################################
+# --- INICIO CODIGO ORIGINAL sidebar (COMENTADO) ---
+# sidebar:
+#   show_state: false
+#   show_icon: false
+#   tap_action:
+#     action: none
+#   name: >
+#     [[[
+#       if (entity) {
+#           let attr = [];
+#           for (let [k, value] of Object.entries(entity.attributes))
+#               window.navigator.userAgent.match(/iPhone/i)
+#                   ? k !== 'time' && k !== 'date' && value !== false && (attr += `<p>${k === 'greet' ? `<span class="iphone">${value}</span>` : `${value}`}</p>`)
+#                   : value !== false && (attr += `<p>${value}</p>`);
+#           return attr;
+#       }
+#     ]]]
+#   extra_styles: >
+#     #card {
+#       padding: 0;
+#       border-width: 0;
+#       font-family: SF Pro Display, Roboto, system-ui;
+#     }
+#     #container {
+#       display: flex !important;
+#     }
+#     #name {
+#       padding: 1vw 2.5vw 0 var(--custom-layout-card-padding);
+#       white-space: normal;
+#       text-align: left;
+#     }
+#     .iphone {
+#       font-size: 1.2em;
+#       color: rgba(255, 255, 255, 0.8);
+#     }
+#     .time {
+#       font-size: var(--sidebar-time-font-size);
+#       font-weight: 300;
+#       line-height: var(--sidebar-time-line-height);
+#       letter-spacing: 0.11vw;
+#       margin-left: -0.3vw;
+#       color: rgba(255, 255, 255, 0.8);
+#     }
+#     @supports not (-moz-appearance:none) {
+#       .time-colon {
+#         position: relative;
+#         top: -.11em;
+#       }
+#     }
+#     p {
+#       font-size: var(--sidebar-font-size);
+#       line-height: var(--sidebar-line-height);
+#       font-weight: 200;
+#       letter-spacing: 0.07vw;
+#       color: #6a7377;
+#     }
+#     b {
+#       font-weight: 700;
+#     }
+#     p > b {
+#       color: rgba(255, 255, 255, 0.8);
+#     }
+#     /* portrait */
+#     @media screen and (max-width: 1200px) {
+#       .time {
+#         font-size: calc(var(--sidebar-time-font-size) * 1.4 );
+#         line-height: calc(var(--sidebar-time-line-height) * 1.4 );
+#       }
+#       p {
+#         font-size: calc(var(--sidebar-font-size) * 1.4 );
+#         line-height: calc(var(--sidebar-line-height) * 1.4 );
+#       }
+#     }
+#     /* phone */
+#     @media screen and (max-width: 800px) {
+#       .time {
+#         font-size: calc(var(--sidebar-time-font-size) * 2.3 );
+#       }
+#       p {
+#         font-size: calc(var(--sidebar-font-size) * 2.3 );
+#         line-height: calc(var(--sidebar-line-height) * 1.4 );
+#       }
+#       #name {
+#         padding: 0;
+#         text-align: right;
+#       }
+#     }
+# --- FIM CODIGO ORIGINAL sidebar (COMENTADO) ---
+# --- INICIO CODIGO ORIGINAL timesidebar (COMENTADO) ---
+# timesidebar:
+#   show_state: false
+#   show_icon: false
+#   name: >
+#     [[[
+#       if (entity) {
+#           let attr = [];
+#           for (let [k, value] of Object.entries(entity.attributes))
+#             value !== false && (attr += `<p>${value}</p>`);
+#           return attr;
+#       }
+#     ]]]
+#   tap_action:
+#     action: fire-dom-event
+#     browser_mod:
+#       service: browser_mod.javascript
+#       data:
+#         code: location.reload()
+#   extra_styles: |
+#     ... (conteudo omitido por brevidade)
+# --- FIM CODIGO ORIGINAL timesidebar (COMENTADO) ---
+# --- INICIO CODIGO ORIGINAL timeclock (COMENTADO) ---
+# timeclock:
+#   ... (conteudo omitido por brevidade)
+# --- FIM CODIGO ORIGINAL timeclock (COMENTADO) ---
+# --- INICIO CODIGO ORIGINAL wide_timeclock (COMENTADO) ---
+# wide_timeclock:
+#   ... (conteudo omitido por brevidade)
+# --- FIM CODIGO ORIGINAL wide_timeclock (COMENTADO) ---

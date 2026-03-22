@@ -82,12 +82,12 @@
 #           - '--mdc-icon-size': 2em
 # --- FIM CODIGO ORIGINAL (COMENTADO) ---
 
-# NOVO: sidebar usando sensor.sidebar + template timesidebar
+# NOVO: sidebar com badges interativas (luzes/midia/clima/pessoas)
+# Usa sidebar_template — nao precisa de entity (tudo via JS/states)
 - type: custom:button-card
-  entity: sensor.sidebar
+  entity: sensor.time
   template:
-    - timesidebar
-  tap_action: !include ../../shared/popup/calendar.yaml
+    - sidebar_template
   view_layout:
     grid-area: sidebar
     show:

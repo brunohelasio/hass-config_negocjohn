@@ -1,0 +1,26 @@
+#################################################
+#                                               #
+#   SIDEBAR HELPERS                             #
+#   input_select e input_boolean para           #
+#   controlar expand/collapse das badges        #
+#   e menu mobile da sidebar                    #
+#                                               #
+#################################################
+
+input_select:
+  hemma_expanded_row:
+    name: Sidebar Expanded Row
+    icon: mdi:arrow-expand-vertical
+    options:
+      - none
+      - lights
+      - media
+      - climate
+      - presence
+    initial: none
+
+input_boolean:
+  menu_mobile:
+    name: Sidebar Menu Mobile
+    icon: mdi:menu
+    initial: false

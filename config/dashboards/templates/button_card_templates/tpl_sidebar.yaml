@@ -73,11 +73,15 @@ sidebar_template:
       const att = (e, a) => states[e]?.attributes?.[a] ?? '';
       const expanded = states['input_select.hemma_expanded_row'] ? states['input_select.hemma_expanded_row'].state : 'none';
       const isMobileMenuOpen = states['input_boolean.menu_mobile'] && states['input_boolean.menu_mobile'].state === 'on';
-      const toggleMobileBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.menu_mobile'});`;
+      // Helper: bloqueia propagacao de eventos (impede button-card de engolir cliques)
+      const STOP = 'event.stopPropagation();event.stopImmediatePropagation();event.preventDefault();';
+      const toggleMobileBtn = `${STOP} window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.menu_mobile'});`;
       const toggle = (row) => {
         const next = expanded === row ? 'none' : row;
-        return `event.stopPropagation(); window.__hh.callService('input_select', 'select_option', {entity_id: 'input_select.hemma_expanded_row', option: '${next}'});`;
+        return `${STOP} window.__hh.callService('input_select', 'select_option', {entity_id: 'input_select.hemma_expanded_row', option: '${next}'});`;
       };
+      // Atributos de bloqueio de eventos para elementos interativos
+      const evBlock = `onpointerdown="${STOP}" ontouchstart="${STOP}"`;
       const now  = new Date();
       const hh   = String(now.getHours()).padStart(2,'0');
       const mm   = String(now.getMinutes()).padStart(2,'0');
@@ -91,9 +95,9 @@ sidebar_template:
         if(k.startsWith('light.') && states[k].state === 'on') {
           if(!states[k].attributes.entity_id) {
             lightsCount++;
-            let name = states[k].attributes.friendly_name || k;
+            let name = (states[k].attributes.friendly_name || k).replace(/'/g, '&#39;');
             activeLightsHTML += `
-              <div onclick="event.stopPropagation(); window.__hh.callService('light', 'toggle', {entity_id: '${k}'})" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
+              <div onclick="${STOP} window.__hh.callService('light', 'toggle', {entity_id: '${k}'})" ${evBlock} style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
                 <div style="display:flex; align-items:center; gap: 10px;">
                   <ha-icon icon="mdi:lightbulb-on" style="--mdc-icon-size: 18px; color: #fdd835; filter:drop-shadow(0 0 3px rgba(253,216,53,0.8));"></ha-icon>
                   <span style="font-size:13px; font-weight:600; color:rgba(255,255,255,0.9);">${name}</span>
@@ -110,16 +114,16 @@ sidebar_template:
       Object.keys(states).forEach(k => {
         if(k.startsWith('media_player.') && ['playing', 'paused', 'on'].includes(states[k].state)) {
           mediaCount++;
-          let name = states[k].attributes.friendly_name || k;
-          let title = states[k].attributes.media_title || 'Ligado';
-          let artistStr = name + (states[k].attributes.media_artist ? ' - ' + states[k].attributes.media_artist : '');
+          let name = (states[k].attributes.friendly_name || k).replace(/'/g, '&#39;');
+          let title = (states[k].attributes.media_title || 'Ligado').replace(/'/g, '&#39;');
+          let artistStr = name + (states[k].attributes.media_artist ? ' - ' + states[k].attributes.media_artist.replace(/'/g, '&#39;') : '');
           let isPlaying = states[k].state === 'playing';
 
           let displayTitle = isPlaying ? title + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + title : title;
           let displayArtist = isPlaying ? artistStr + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + artistStr : artistStr;
           let marqueeClass = isPlaying ? 'marquee' : '';
           activeMediaHTML += `
-            <div onclick="event.stopPropagation(); window.__hh.callService('media_player', 'media_play_pause', {entity_id: '${k}'})" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
+            <div onclick="${STOP} window.__hh.callService('media_player', 'media_play_pause', {entity_id: '${k}'})" ${evBlock} style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
               <div style="display:flex; align-items:center; gap: 10px; overflow:hidden; width: 100%;">
                 <ha-icon icon="mdi:music-note" style="--mdc-icon-size: 18px; color: #1DB954; filter:drop-shadow(0 0 3px rgba(29,185,84,0.8));"></ha-icon>
                 <div style="display:flex; flex-direction:column; overflow:hidden; white-space:nowrap; width: 100%;">
@@ -142,11 +146,11 @@ sidebar_template:
       Object.keys(states).forEach(k => {
         if(k.startsWith('climate.') && !['off', 'unavailable', 'unknown'].includes(states[k].state)) {
           climateCount++;
-          let name = states[k].attributes.friendly_name || k;
+          let name = (states[k].attributes.friendly_name || k).replace(/'/g, '&#39;');
           let stateLabel = states[k].state;
           let temp = states[k].attributes.temperature ? states[k].attributes.temperature + '°' : '';
           climateHTML += `
-            <div onclick="event.stopPropagation(); window.__hh.callService('climate', 'turn_off', {entity_id: '${k}'})" style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
+            <div onclick="${STOP} window.__hh.callService('climate', 'turn_off', {entity_id: '${k}'})" ${evBlock} style="cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px;">
               <div style="display:flex; align-items:center; gap: 10px;">
                 <ha-icon icon="mdi:snowflake" style="--mdc-icon-size: 18px; color: #7fdbe9; filter:drop-shadow(0 0 3px rgba(127,219,233,0.8));"></ha-icon>
                 <div style="display:flex; flex-direction:column;">
@@ -166,7 +170,7 @@ sidebar_template:
         if(k.startsWith('person.')) {
           let isHome = states[k].state === 'home';
           if(isHome) peopleCount++;
-          let name = states[k].attributes.friendly_name || k;
+          let name = (states[k].attributes.friendly_name || k).replace(/'/g, '&#39;');
 
           let grayscaleStyle = !isHome ? 'filter: grayscale(100%); opacity: 0.5;' : '';
           let iconColor = isHome ? '#c7983e' : 'rgba(255,255,255,0.5)';
@@ -193,7 +197,7 @@ sidebar_template:
             <div style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.65);">${greeting}, Bruno.</div>
           </div>
 
-          <div class="mobile-toggle-btn" onclick="${toggleMobileBtn}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
+          <div class="mobile-toggle-btn" onclick="${toggleMobileBtn}" ${evBlock}>
             ${isMobileMenuOpen ? '🔼 Recolher' : '🔽 Status e Ações'}
           </div>
           <div class="sidebar-bottom-section ${isMobileMenuOpen ? 'expanded' : 'collapsed'}">
@@ -204,7 +208,7 @@ sidebar_template:
          let iconShadow = lightsCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(253,216,53,0.5))' : 'none';
 
          outputHtml += `
-           <div onclick="${toggle('lights')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='lights' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='lights' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='lights' ? '4px' : '0'};">
+           <div onclick="${toggle('lights')}" ${evBlock} style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='lights' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='lights' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='lights' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="mdi:lightbulb-on" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
@@ -221,7 +225,7 @@ sidebar_template:
          let iconShadow = mediaCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(29,185,84,0.5))' : 'none';
 
          outputHtml += `
-           <div onclick="${toggle('media')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='media' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='media' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='media' ? '4px' : '0'};">
+           <div onclick="${toggle('media')}" ${evBlock} style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='media' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='media' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='media' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="mdi:music-note" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
@@ -237,7 +241,7 @@ sidebar_template:
          let iconColor = climateCount > 0 ? '#7fdbe9' : 'rgba(255,255,255,0.4)';
          let iconShadow = climateCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(127,219,233,0.5))' : 'none';
          outputHtml += `
-           <div onclick="${toggle('climate')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='climate' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='climate' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='climate' ? '4px' : '0'};">
+           <div onclick="${toggle('climate')}" ${evBlock} style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='climate' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='climate' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='climate' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="mdi:snowflake" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
@@ -254,7 +258,7 @@ sidebar_template:
          let iconShadow = peopleCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(199,152,62,0.5))' : 'none';
 
          outputHtml += `
-           <div onclick="${toggle('presence')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='presence' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='presence' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='presence' ? '4px' : '10px'};">
+           <div onclick="${toggle('presence')}" ${evBlock} style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='presence' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='presence' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='presence' ? '4px' : '10px'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="mdi:home-account" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
@@ -271,9 +275,8 @@ sidebar_template:
          outputHtml += `
             <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;padding-left:4px;margin-bottom:8px;margin-top:10px;">AÇÕES RÁPIDAS</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
-              <div onclick="event.stopPropagation(); window.__hh.callService('light','turn_off',{entity_id:'light.todas_as_luzes'})"
-                   onpointerdown="event.stopPropagation();"
-                   ontouchstart="event.stopPropagation();"
+              <div onclick="${STOP} window.__hh.callService('light','turn_off',{entity_id:'light.todas_as_luzes'})"
+                   ${evBlock}
                    style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.09); border-radius:20px; cursor:pointer; transition:all 0.2s ease;">
                 <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                   <ha-icon icon="mdi:lightbulb-off-outline" style="--mdc-icon-size: 24px; color: rgba(255,255,255,0.8);"></ha-icon>
@@ -289,7 +292,7 @@ sidebar_template:
 
       outputHtml += `
           <div style="flex:1 1 0;min-height:8px;"></div>
-          <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.09); border-radius:20px;">
+          <div onclick="${STOP} let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" ${evBlock} style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.09); border-radius:20px;">
             <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;margin-bottom:10px;">TEMPO AGORA</div>
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <div>

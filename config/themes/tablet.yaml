@@ -149,6 +149,7 @@ tablet:
             /* padding: 0 0 1rem 0.2vw !important; */
             /* padding: 0 0 0.5rem 0.2vw !important; */
             padding: 0 0 0.15rem 0.2vw !important;
+            margin: 0 !important;
             width: 100%;
             line-height: 100% !important;
           }
@@ -162,6 +163,7 @@ tablet:
               /* padding-bottom: 0.8vw !important; */
               /* padding-bottom: 0.5vw !important; */
               padding-bottom: 0.15vw !important;
+              margin: 0 !important;
             }
           }
           /* phone */

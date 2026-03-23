@@ -1,0 +1,41 @@
+# Entidades observadas/renderizadas na sidebar.
+# Mantidas fora do template principal para facilitar manutencao modular.
+light:
+  - light.sala_switch_1
+  - light.sala_switch_2
+  - light.sala_switch_3
+  - light.sala_2_switch_2
+  - light.sala_2_switch_3
+  - light.varanda_switch_1
+  - light.varanda_switch_2
+  - light.cozinha_switch_1
+  - light.cozinha_switch_2
+  - light.cozinha_switch_3
+  - light.cz_luz_principal
+  - light.quarto_casal_switch_1
+  - light.quarto_casal_switch_2
+  - light.quarto_casal_2_switch_2
+  - light.quarto_casal_2_switch_3
+  - light.qc_luz_principal
+  - light.suite_casal_switch_1
+  - light.suite_casal_switch_2
+  - light.quarto_marina_switch_1
+  - light.quarto_marina_switch_2
+  - light.quarto_marina_switch_3
+  - light.quarto_marina_switch_4
+  - light.suite_marina_switch_1
+  - light.suite_marina_switch_2
+  - light.office_switch_1
+  - light.office_switch_2
+  - light.office_switch_3
+  - light.lavabo_switch_1
+  - light.lavabo_switch_2
+  - light.lavabo_switch_3
+  - light.corredor_switch_1
+media:
+  - media_player.smart_tv_pro_2
+climate:
+  - climate.ac_quarto_miguel
+  - climate.ac_office
+presence:
+  - person.bruno_helasio

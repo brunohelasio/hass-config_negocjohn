@@ -46,8 +46,8 @@ browser_mod:
     title: Sala
     size: wide
     style: >
-      --popup-width: 72vw;
-      --popup-max-width: 1080px;
+      --popup-width: 70vw;
+      --popup-max-width: 1020px;
       --popup-background-color: rgba(8, 12, 20, 0.62);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
@@ -76,9 +76,9 @@ browser_mod:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 0.95fr 0.95fr 1.7fr
+        grid-template-columns: 0.9fr 0.9fr 1.6fr
         grid-template-areas: '"col_luzes col_extra col_camera"'
-        grid-gap: 14px
+        grid-gap: 12px
         margin: 0
         padding: 0.75rem
         mediaquery:

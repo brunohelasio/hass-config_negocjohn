@@ -109,7 +109,7 @@
 # ── Clima / Cortina ──
 - type: grid
   columns: 2
-  square: false
+  square: true
   card_mod:
     style: |
       ha-card {

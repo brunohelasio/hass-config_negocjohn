@@ -21,6 +21,14 @@ sidebar_template:
     action: none
   hold_action:
     action: none
+  variables:
+    entities: !include sidebar/_vars.yaml
+    header: !include sidebar/_header.yaml
+    lights_badge: !include sidebar/_badge_lights.yaml
+    media_badge: !include sidebar/_badge_media.yaml
+    climate_badge: !include sidebar/_badge_climate.yaml
+    presence_badge: !include sidebar/_badge_presence.yaml
+    mobile_toggle: !include sidebar/_mobile_toggle.yaml
   # triggers_update original (lista limitada causava badges "mortos"):
   # triggers_update:
   #   - input_select.hemma_expanded_row
@@ -41,62 +49,47 @@ sidebar_template:
   # triggers_update: all  ← REMOVIDO — causava re-render a cada mudanca
   # de estado de QUALQUER entidade, sobrecarregando o tablet e causando
   # perda de conexao WebSocket. Substituido por lista completa abaixo.
-  # Polling para contadores/listas (evita "zonas mortas" quando a entidade
-  # acionada nao estiver na lista de triggers); interacoes de expand/collapse
-  # continuam instantaneas via input_select/input_boolean abaixo.
-  update_timer: 3s
+  # Sidebar custom: prioriza resposta instantânea (sem polling) e re-render
+  # dirigido por entidades-chave, incluindo luzes principais dos cômodos.
   triggers_update:
     - input_select.hemma_expanded_row
     - input_boolean.menu_mobile
-  extra_styles: |
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-
-    :host { display: block !important; }
-    /* Desabilita pointer-events no ha-card para que button-card NUNCA
-       intercepte cliques. Somente #name (conteudo) recebe eventos. */
-    ha-card { pointer-events: none !important; -webkit-tap-highlight-color: transparent !important; }
-    /* Desabilita ripple/overlay internos do button-card */
-    ha-card #overlay { display: none !important; pointer-events: none !important; }
-    ha-card mwc-ripple { display: none !important; }
-    #card { padding: 0 !important; pointer-events: none !important; }
-    #container { display: flex !important; flex-direction: column !important; pointer-events: none !important; }
-    #name { display: flex !important; flex-direction: column !important; width: 100% !important; padding: 0 !important; white-space: normal !important; pointer-events: auto !important; }
-
-    @media (min-width: 801px) {
-      :host, ha-card, #card, #container, #name { height: 100% !important; }
-      .mobile-toggle-btn { display: none !important; }
-      .sidebar-bottom-section { display: flex !important; flex-direction: column; flex: 1; }
-    }
-    @media (max-width: 800px) {
-      :host, ha-card, #card, #container, #name { height: auto !important; }
-      .mobile-toggle-btn {
-        display: flex !important; align-items: center; justify-content: center;
-        padding: 12px; margin-top: 15px; border-radius: 16px;
-        background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-        color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 600; cursor: pointer;
-        pointer-events: auto;
-      }
-      .sidebar-bottom-section.collapsed { display: none !important; }
-      .sidebar-bottom-section.expanded { display: flex !important; flex-direction: column; margin-top: 15px; }
-    }
-    .expanded-list::-webkit-scrollbar { width: 4px; }
-    .expanded-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-    .marquee {
-      display: inline-block;
-      animation: marquee 12s linear infinite;
-    }
-    @keyframes marquee {
-      from { transform: translateX(0%); }
-      to { transform: translateX(-50%); }
-    }
+    - input_boolean.sidebar_compact
+    - light.sala_switch_2
+    - light.cz_luz_principal
+    - light.lavabo_switch_2
+    - light.corredor_switch_1
+    - light.todas_as_luzes
+    - media_player.smart_tv_pro_2
+    - climate.ac_office
+    - person.bruno_helasio
+    - weather.forecast_casa
+  extra_styles: !include sidebar/_styles.yaml
   name: >
     [[[
       window.__hh = hass;
       const st  = (e) => states[e]?.state ?? '';
       const att = (e, a) => states[e]?.attributes?.[a] ?? '';
+      const entitiesCfg = variables.entities || {};
+      const headerCfg = variables.header || {};
+      const mobileCfg = variables.mobile_toggle || {};
+      const lightsBadgeCfg = variables.lights_badge || {};
+      const mediaBadgeCfg = variables.media_badge || {};
+      const climateBadgeCfg = variables.climate_badge || {};
+      const presenceBadgeCfg = variables.presence_badge || {};
       const expanded = states['input_select.hemma_expanded_row'] ? states['input_select.hemma_expanded_row'].state : 'none';
       const isMobileMenuOpen = states['input_boolean.menu_mobile'] && states['input_boolean.menu_mobile'].state === 'on';
+      const isSidebarCompact = states['input_boolean.sidebar_compact'] && states['input_boolean.sidebar_compact'].state === 'on';
       const toggleMobileBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.menu_mobile'});`;
+      const toggleSidebarCompactBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.sidebar_compact'});`;
+      // Controle de layout 3↔4 colunas no tablet landscape sem "vão".
+      try {
+        const root = window?.document?.documentElement;
+        if (root) {
+          root.style.setProperty('--tablet-sidebar-col', isSidebarCompact ? '0.72fr' : '1.3fr');
+          root.style.setProperty('--tablet-devices-col', isSidebarCompact ? '1fr' : '0fr');
+        }
+      } catch (e) {}
       const toggle = (row) => {
         const next = expanded === row ? 'none' : row;
         return `event.stopPropagation(); window.__hh.callService('input_select', 'select_option', {entity_id: 'input_select.hemma_expanded_row', option: '${next}'});`;
@@ -107,27 +100,13 @@ sidebar_template:
       const dias  = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
       const meses = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
       const greeting = now.getHours() < 12 ? 'Bom dia' : now.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
+      const greetingName = headerCfg.greeting_name || 'Bruno';
       // --- Listas fixas de entidades (evita Object.keys(states) que varre TUDO) ---
       // ORIGINAL (4x Object.keys loop) comentado no final do arquivo
-      const lightEntities = [
-        'light.sala_switch_1','light.sala_switch_2','light.sala_switch_3',
-        'light.sala_2_switch_2','light.sala_2_switch_3',
-        'light.varanda_switch_1','light.varanda_switch_2',
-        'light.cozinha_switch_1','light.cozinha_switch_2','light.cozinha_switch_3',
-        'light.quarto_casal_switch_1','light.quarto_casal_switch_2',
-        'light.quarto_casal_2_switch_2','light.quarto_casal_2_switch_3',
-        'light.qc_luz_principal',
-        'light.suite_casal_switch_1','light.suite_casal_switch_2',
-        'light.quarto_marina_switch_1','light.quarto_marina_switch_2',
-        'light.quarto_marina_switch_3','light.quarto_marina_switch_4',
-        'light.suite_marina_switch_1','light.suite_marina_switch_2',
-        'light.office_switch_1','light.office_switch_2','light.office_switch_3',
-        'light.lavabo_switch_1','light.lavabo_switch_2','light.lavabo_switch_3',
-        'light.corredor_switch_1'
-      ];
-      const mediaEntities = ['media_player.smart_tv_pro_2'];
-      const climateEntities = ['climate.ac_quarto_miguel','climate.ac_office'];
-      const peopleEntities = ['person.bruno_helasio'];
+      const lightEntities = entitiesCfg.light || [];
+      const mediaEntities = entitiesCfg.media || [];
+      const climateEntities = entitiesCfg.climate || [];
+      const peopleEntities = entitiesCfg.presence || [];
       // 1. LUZES (iteracao direta — sem varrer todas as entidades do HA)
       let lightsCount = 0;
       let activeLightsHTML = '';
@@ -232,11 +211,14 @@ sidebar_template:
               ${hh}<span style="opacity:0.35;animation:sb-blink 1s step-end infinite;">:</span>${mm}
             </div>
             <div style="font-size:11px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,0.38);text-transform:uppercase;margin-bottom:3px;">${dias[now.getDay()]}, ${now.getDate()} DE ${meses[now.getMonth()]}</div>
-            <div style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.65);">${greeting}, Bruno.</div>
+            <div style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.65);">${greeting}, ${greetingName}.</div>
           </div>
 
           <div class="mobile-toggle-btn" onclick="${toggleMobileBtn}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
-            ${isMobileMenuOpen ? '🔼 Recolher' : '🔽 Status e Ações'}
+            ${isMobileMenuOpen ? (mobileCfg.close_label || '🔼 Recolher') : (mobileCfg.open_label || '🔽 Status e Ações')}
+          </div>
+          <div class="desktop-layout-toggle" onclick="${toggleSidebarCompactBtn}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="display:none; align-items:center; justify-content:center; padding:8px 10px; margin-top:10px; border-radius:14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); font-size:12px; font-weight:600; letter-spacing:0.3px; cursor:pointer; pointer-events:auto;">
+            ${isSidebarCompact ? (mobileCfg.compact_on_label || '↔️ Mostrar 3 colunas') : (mobileCfg.compact_off_label || '📱 Mostrar 4 colunas')}
           </div>
           <div class="sidebar-bottom-section ${isMobileMenuOpen ? 'expanded' : 'collapsed'}">
             <div style="display:flex;flex-direction:column;gap:8px; margin-top:8px;">`;
@@ -248,10 +230,10 @@ sidebar_template:
          outputHtml += `
            <div onclick="${toggle('lights')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='lights' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='lights' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='lights' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
-               <ha-icon icon="mdi:lightbulb-on" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
+               <ha-icon icon="${lightsBadgeCfg.icon || 'mdi:lightbulb-on'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
              <div style="display:flex; flex-direction:column; align-items: flex-start; text-align: left;">
-               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">Luzes</span>
+               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">${lightsBadgeCfg.title || 'Luzes'}</span>
                <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.5);">${lightsCount === 0 ? 'Todas apagadas' : lightsCount + ' acesa(s)'}</span>
              </div>
            </div>`;
@@ -265,10 +247,10 @@ sidebar_template:
          outputHtml += `
            <div onclick="${toggle('media')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='media' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='media' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='media' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
-               <ha-icon icon="mdi:music-note" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
+               <ha-icon icon="${mediaBadgeCfg.icon || 'mdi:music-note'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
              <div style="display:flex; flex-direction:column; align-items: flex-start; text-align: left;">
-               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">Mídia</span>
+               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">${mediaBadgeCfg.title || 'Mídia'}</span>
                <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.5);">${mediaCount === 0 ? 'Nenhuma ativa' : mediaCount + ' ativa(s)'}</span>
              </div>
            </div>`;
@@ -281,10 +263,10 @@ sidebar_template:
          outputHtml += `
            <div onclick="${toggle('climate')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='climate' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='climate' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='climate' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
-               <ha-icon icon="mdi:snowflake" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
+               <ha-icon icon="${climateBadgeCfg.icon || 'mdi:snowflake'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
              <div style="display:flex; flex-direction:column; align-items: flex-start; text-align: left;">
-               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">Clima</span>
+               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">${climateBadgeCfg.title || 'Clima'}</span>
                <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.5);">${climateCount === 0 ? 'Desligado' : climateCount + ' ativo(s)'}</span>
              </div>
            </div>`;
@@ -298,10 +280,10 @@ sidebar_template:
          outputHtml += `
            <div onclick="${toggle('presence')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='presence' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='presence' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='presence' ? '4px' : '10px'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
-               <ha-icon icon="mdi:home-account" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
+               <ha-icon icon="${presenceBadgeCfg.icon || 'mdi:home-account'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
              <div style="display:flex; flex-direction:column; align-items: flex-start; text-align: left;">
-               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">Pessoas</span>
+               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">${presenceBadgeCfg.title || 'Pessoas'}</span>
                <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.5);">${peopleCount === 0 ? 'Casa vazia' : peopleCount + ' em casa'}</span>
              </div>
            </div>`;

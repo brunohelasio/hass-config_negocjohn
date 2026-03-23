@@ -78,7 +78,17 @@ sidebar_template:
       const presenceBadgeCfg = variables.presence_badge || {};
       const expanded = states['input_select.hemma_expanded_row'] ? states['input_select.hemma_expanded_row'].state : 'none';
       const isMobileMenuOpen = states['input_boolean.menu_mobile'] && states['input_boolean.menu_mobile'].state === 'on';
+      const isSidebarCompact = states['input_boolean.sidebar_compact'] && states['input_boolean.sidebar_compact'].state === 'on';
       const toggleMobileBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.menu_mobile'});`;
+      const toggleSidebarCompactBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.sidebar_compact'});`;
+      // Controle de layout 3↔4 colunas no tablet landscape sem "vão".
+      try {
+        const root = window?.document?.documentElement;
+        if (root) {
+          root.style.setProperty('--tablet-sidebar-col', isSidebarCompact ? '0.72fr' : '1.3fr');
+          root.style.setProperty('--tablet-devices-col', isSidebarCompact ? '1fr' : '0fr');
+        }
+      } catch (e) {}
       const toggle = (row) => {
         const next = expanded === row ? 'none' : row;
         return `event.stopPropagation(); window.__hh.callService('input_select', 'select_option', {entity_id: 'input_select.hemma_expanded_row', option: '${next}'});`;

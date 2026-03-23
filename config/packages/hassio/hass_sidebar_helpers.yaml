@@ -20,6 +20,10 @@ input_select:
     initial: none
 
 input_boolean:
+  sidebar_compact:
+    name: Sidebar Compact (Tablet)
+    icon: mdi:view-column-outline
+    initial: false
   menu_mobile:
     name: Sidebar Menu Mobile
     icon: mdi:menu

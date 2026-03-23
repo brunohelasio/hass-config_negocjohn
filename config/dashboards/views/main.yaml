@@ -34,9 +34,17 @@ layout:
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
     '(min-width: 1441px) and (max-width: 2000px)':
-      grid-gap: 3.5vw 3vw
+      # 1. Reduzimos o gap de '3.5vw 3vw' para '2vw 1.5vw'. 
+      # Isso aproxima os blocos (1.5vw) e diminui o espaço entre as linhas (2vw),
+      # fazendo os botões crescerem na medida certa, sem quebrar a altura da tela.
+      grid-gap: 2vw 1.5vw 
+      
       grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
+      
+      # 2. O Segredo: Trocamos o '0' da primeira e da última linha por '1fr'.
+      # Isso cria "molas" invisíveis no topo e no fundo que dividem o espaço vazio,
+      # centralizando todo o seu painel verticalmente.
+      grid-template-rows: 1fr repeat(2, fit-content(100%)) min-content 1fr
       grid-template-areas: |
         ". .         .          .         .        .        ."
         ". sidebar   security   mainrooms devices  other    ."

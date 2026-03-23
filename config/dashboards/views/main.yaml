@@ -8,65 +8,61 @@ layout:
   # default:
   margin: 0
   padding: 0
-  grid-gap: 1.5vw 1vw
-  grid-template-columns: 0 1fr 1fr 1fr 1fr 1fr 0
-  grid-template-rows: 1fr 1fr min-content 0 0 0
+  grid-gap: 3.5vw 3vw
+  grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
+  grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
   # ESTRATEGIA SAGALAND: todas as grid-areas em todos os breakpoints
   # Areas ocultas ficam em linhas de altura 0 — nenhum card orfao
   # floorplan adicionado em row h=0 para evitar card orfao
   grid-template-areas: |
+    ". .         .          .         .        .        ."
     ". sidebar   security   mainrooms devices  other    ."
     ". sidebar   cameras    climate   media    movies   ."
     ". sidebar   footer     footer    footer   footer   ."
-    ". home      .          .         .        .        ."
     ". .         floorplan  .         .        .        ."
-    ". .         .          .         .        .        ."
 
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
     '(min-width: 1441px) and (max-width: 2000px)':
-      grid-gap: 1.5vw 1vw
-      grid-template-columns: 0 1fr 1fr 1fr 1fr 1fr 0
-      grid-template-rows: 1fr 1fr min-content 0 0 0
+      grid-gap: 3.5vw 3vw
+      grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
+      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
       grid-template-areas: |
+        ". .         .          .         .        .        ."
         ". sidebar   security   mainrooms devices  other    ."
         ". sidebar   cameras    climate   media    movies   ."
         ". sidebar   footer     footer    footer   footer   ."
-        ". home      .          .         .        .        ."
         ". .         floorplan  .         .        .        ."
-        ". .         .          .         .        .        ."
     # tablet landscape (e.g. 801-1440px) - with sidebar
     # Estrategia Sagaland: 3 colunas + sidebar, areas ocultas em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
-      # grid-gap: 1.5vw 1vw
-      grid-gap: 0.8vw 1vw
+      # Espaçamento inspirado no hass-config do sagaland93 para separar blocos.
+      grid-gap: 3.5vw 3vw
       # Novo padrão: 5 colunas uniformes (sidebar + 4 colunas de conteúdo).
       # Sidebar ocupa ~20% da área útil no tablet/desktop.
-      grid-template-columns: 0 1fr 1fr 1fr 1fr 1fr 0
+      grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
       # grid-template-rows: auto auto min-content 0 0 0
       # grid-template-rows: 1fr 1fr min-content 0 0 0
       # grid-template-rows: calc((100vh - 56px - 40px - 3vw) / 2) calc((100vh - 56px - 40px - 3vw) / 2) min-content 0 0 0
       # grid-template-rows: 40vh 40vh min-content 0 0 0
-      grid-template-rows: 1fr 1fr min-content 0 0 0
+      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
       grid-template-areas: |
+        ". .        .          .         .        .        ."
         ". sidebar  security   mainrooms devices  other    ."
         ". sidebar  cameras    climate   media    movies   ."
         ". sidebar  footer     footer    footer   footer   ."
-        ". home     .          .         .        .        ."
         ". .        floorplan  .         .        .        ."
-        ". .        .          .         .        .        ."
     # portrait — Sagaland: areas ocultas (sidebar, chips, movies) em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
-      grid-gap: 0.8vw 1vw
-      grid-template-columns: 0 1fr 1fr 1fr 1fr 1fr 0
-      grid-template-rows: 1fr 1fr min-content 0 0 0
+      grid-gap: 4.4vw 3vw
+      grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
+      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
       grid-template-areas: |
+        ". .        .          .         .        .        ."
         ". sidebar  security   mainrooms devices  other    ."
         ". sidebar  cameras    climate   media    movies   ."
         ". sidebar  footer     footer    footer   footer   ."
-        ". home     .          .         .        .        ."
         ". .        floorplan  .         .        .        ."
-        ". .        .          .         .        .        ."
     # phone — Sagaland: areas ocultas (sidebar, movies) em h=0
     '(max-width: 800px) and (min-height: 463px)':
       margin: 0

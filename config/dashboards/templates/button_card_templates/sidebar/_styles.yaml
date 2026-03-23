@@ -1,0 +1,41 @@
+|
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+  :host { display: block !important; }
+  /* Desabilita pointer-events no ha-card para que button-card NUNCA
+     intercepte cliques. Somente #name (conteudo) recebe eventos. */
+  ha-card { pointer-events: none !important; -webkit-tap-highlight-color: transparent !important; }
+  /* Desabilita ripple/overlay internos do button-card */
+  ha-card #overlay { display: none !important; pointer-events: none !important; }
+  ha-card mwc-ripple { display: none !important; }
+  #card { padding: 0 !important; pointer-events: none !important; }
+  #container { display: flex !important; flex-direction: column !important; pointer-events: none !important; }
+  #name { display: flex !important; flex-direction: column !important; width: 100% !important; padding: 0 !important; white-space: normal !important; pointer-events: auto !important; }
+
+  @media (min-width: 801px) {
+    :host, ha-card, #card, #container, #name { height: 100% !important; }
+    .mobile-toggle-btn { display: none !important; }
+    .sidebar-bottom-section { display: flex !important; flex-direction: column; flex: 1; }
+  }
+  @media (max-width: 800px) {
+    :host, ha-card, #card, #container, #name { height: auto !important; }
+    .mobile-toggle-btn {
+      display: flex !important; align-items: center; justify-content: center;
+      padding: 12px; margin-top: 15px; border-radius: 16px;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.9); font-size: 14px; font-weight: 600; cursor: pointer;
+      pointer-events: auto;
+    }
+    .sidebar-bottom-section.collapsed { display: none !important; }
+    .sidebar-bottom-section.expanded { display: flex !important; flex-direction: column; margin-top: 15px; }
+  }
+  .expanded-list::-webkit-scrollbar { width: 4px; }
+  .expanded-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+  .marquee {
+    display: inline-block;
+    animation: marquee 12s linear infinite;
+  }
+  @keyframes marquee {
+    from { transform: translateX(0%); }
+    to { transform: translateX(-50%); }
+  }

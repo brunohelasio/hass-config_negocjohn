@@ -7,7 +7,7 @@
   view_layout:
     grid-area: chips
     show:
-      mediaquery: '(max-width: 800px)'
+      mediaquery: '(max-width: 0px)'
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))
@@ -101,7 +101,7 @@
   view_layout:
     grid-area: chips
     show:
-      mediaquery: '(min-width: 1441px)'
+      mediaquery: '(max-width: 0px)'
   cards:
     - *lights
     - *media

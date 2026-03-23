@@ -104,8 +104,16 @@ tablet:
     #################################################
     grid-layout:
       $: |
-        #root {
+        /* ORIGINAL: min-height: 100% nao funciona porque o pai (layout-card)
+           nao tem altura definida. 100% de "nada" = altura do conteudo.
+           Trocado por calc(100vh - 56px) para forcar grid = viewport.
+           56px = header bar do HA. */
+        /* #root {
           min-height: 100%;
+          overflow: hidden !important;
+        } */
+        #root {
+          min-height: calc(100vh - 56px);
           overflow: hidden !important;
         }
       $swipe-card$:

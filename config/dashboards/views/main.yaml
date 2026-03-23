@@ -20,6 +20,7 @@ layout:
     ". sidebar   cameras    climate   media    movies   ."
     ". sidebar   footer     footer    footer   footer   ."
     ". .         floorplan  .         .        .        ."
+    ". .         .          .         .        .        ."
 
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
@@ -33,6 +34,7 @@ layout:
         ". sidebar   cameras    climate   media    movies   ."
         ". sidebar   footer     footer    footer   footer   ."
         ". .         floorplan  .         .        .        ."
+        ". .         .          .         .        .        ."
     # tablet landscape (e.g. 801-1440px) - with sidebar
     # Estrategia Sagaland: 3 colunas + sidebar, areas ocultas em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':

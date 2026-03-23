@@ -41,67 +41,21 @@ sidebar_template:
   # triggers_update: all  ← REMOVIDO — causava re-render a cada mudanca
   # de estado de QUALQUER entidade, sobrecarregando o tablet e causando
   # perda de conexao WebSocket. Substituido por lista completa abaixo.
+  # Sidebar custom: prioriza resposta instantânea (sem polling) e re-render
+  # dirigido por entidades-chave, incluindo luzes principais dos cômodos.
   triggers_update:
-    # --- Controle do sidebar ---
     - input_select.hemma_expanded_row
     - input_boolean.menu_mobile
-    - weather.forecast_casa
-    # --- Pessoa ---
-    - person.bruno_helasio
-    # --- Luzes: Sala ---
-    - light.sala_switch_1
+    - input_boolean.sidebar_compact
     - light.sala_switch_2
-    - light.sala_switch_3
-    - light.sala_2_switch_2
-    - light.sala_2_switch_3
-    - light.varanda_switch_1
-    - light.varanda_switch_2
-    # - light.grupo_luzes_sala  # comentado — grupos causam re-render duplicado
-    # --- Luzes: Cozinha ---
-    - light.cozinha_switch_1
-    - light.cozinha_switch_2
-    - light.cozinha_switch_3
-    # - light.grupo_luzes_cozinha  # comentado — grupo duplica trigger
-    # --- Luzes: Quarto Casal ---
-    - light.quarto_casal_switch_1
-    - light.quarto_casal_switch_2
-    - light.quarto_casal_2_switch_2
-    - light.quarto_casal_2_switch_3
-    - light.qc_luz_principal
-    - light.suite_casal_switch_1
-    - light.suite_casal_switch_2
-    # - light.grupo_quarto_casal  # comentado — grupo duplica trigger
-    # --- Luzes: Quarto Miguel (grupo — individuais sao switch.*) ---
-    # - light.grupo_luzes_quarto_miguel  # comentado — grupo duplica trigger
-    # --- Luzes: Quarto Marina ---
-    - light.quarto_marina_switch_1
-    - light.quarto_marina_switch_2
-    - light.quarto_marina_switch_3
-    - light.quarto_marina_switch_4
-    - light.suite_marina_switch_1
-    - light.suite_marina_switch_2
-    # - light.grupo_luzes_quarto_marina  # comentado — grupo duplica trigger
-    # --- Luzes: Office ---
-    - light.office_switch_1
-    - light.office_switch_2
-    - light.office_switch_3
-    # - light.grupo_luzes_office  # comentado — grupo duplica trigger
-    # --- Luzes: Lavabo ---
-    - light.lavabo_switch_1
+    - light.cz_luz_principal
     - light.lavabo_switch_2
-    - light.lavabo_switch_3
-    # - light.grupo_luzes_lavabo  # comentado — grupo duplica trigger
-    # --- Luzes: grupo geral + circulacao ---
-    # - light.todas_as_luzes  # comentado — grupo duplica trigger
     - light.corredor_switch_1
-    # --- Media Players ---
+    - light.todas_as_luzes
     - media_player.smart_tv_pro_2
-    # - media_player.android_tv_192_168_3_17  # removido — nao existe mais
-    # - media_player.spotifyplus_bruno_helasio  # removido — nao existe mais
-    # - media_player.pioneer  # removido — nao existe mais
-    # --- Clima ---
-    - climate.ac_quarto_miguel
     - climate.ac_office
+    - person.bruno_helasio
+    - weather.forecast_casa
   extra_styles: |
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -119,6 +73,7 @@ sidebar_template:
     @media (min-width: 801px) {
       :host, ha-card, #card, #container, #name { height: 100% !important; }
       .mobile-toggle-btn { display: none !important; }
+      .desktop-layout-toggle { display: flex !important; }
       .sidebar-bottom-section { display: flex !important; flex-direction: column; flex: 1; }
     }
     @media (max-width: 800px) {
@@ -150,7 +105,17 @@ sidebar_template:
       const att = (e, a) => states[e]?.attributes?.[a] ?? '';
       const expanded = states['input_select.hemma_expanded_row'] ? states['input_select.hemma_expanded_row'].state : 'none';
       const isMobileMenuOpen = states['input_boolean.menu_mobile'] && states['input_boolean.menu_mobile'].state === 'on';
+      const isSidebarCompact = states['input_boolean.sidebar_compact'] && states['input_boolean.sidebar_compact'].state === 'on';
       const toggleMobileBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.menu_mobile'});`;
+      const toggleSidebarCompactBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.sidebar_compact'});`;
+      // Controle de layout 3↔4 colunas no tablet landscape sem "vão".
+      try {
+        const root = window?.document?.documentElement;
+        if (root) {
+          root.style.setProperty('--tablet-sidebar-col', isSidebarCompact ? '0.72fr' : '1.3fr');
+          root.style.setProperty('--tablet-devices-col', isSidebarCompact ? '1fr' : '0fr');
+        }
+      } catch (e) {}
       const toggle = (row) => {
         const next = expanded === row ? 'none' : row;
         return `event.stopPropagation(); window.__hh.callService('input_select', 'select_option', {entity_id: 'input_select.hemma_expanded_row', option: '${next}'});`;
@@ -168,6 +133,9 @@ sidebar_template:
         'light.sala_2_switch_2','light.sala_2_switch_3',
         'light.varanda_switch_1','light.varanda_switch_2',
         'light.cozinha_switch_1','light.cozinha_switch_2','light.cozinha_switch_3',
+        // Entidades "luz principal" acionadas por clique simples no painel
+        // para manter badge expansiva e contagem sincronizadas com o fluxo rooms_base.
+        'light.cz_luz_principal',
         'light.quarto_casal_switch_1','light.quarto_casal_switch_2',
         'light.quarto_casal_2_switch_2','light.quarto_casal_2_switch_3',
         'light.qc_luz_principal',
@@ -291,6 +259,9 @@ sidebar_template:
 
           <div class="mobile-toggle-btn" onclick="${toggleMobileBtn}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
             ${isMobileMenuOpen ? '🔼 Recolher' : '🔽 Status e Ações'}
+          </div>
+          <div class="desktop-layout-toggle" onclick="${toggleSidebarCompactBtn}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="display:none; align-items:center; justify-content:center; padding:8px 10px; margin-top:10px; border-radius:14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); font-size:12px; font-weight:600; letter-spacing:0.3px; cursor:pointer; pointer-events:auto;">
+            ${isSidebarCompact ? '↔️ Mostrar 3 colunas' : '📱 Mostrar 4 colunas'}
           </div>
           <div class="sidebar-bottom-section ${isMobileMenuOpen ? 'expanded' : 'collapsed'}">
             <div style="display:flex;flex-direction:column;gap:8px; margin-top:8px;">`;

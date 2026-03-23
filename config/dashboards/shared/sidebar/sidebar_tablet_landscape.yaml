@@ -1,0 +1,13 @@
+#################################################
+#                                               #
+#      SIDEBAR TABLET LANDSCAPE (MODULAR)      #
+#                                               #
+#################################################
+- type: custom:button-card
+  entity: sensor.time
+  template:
+    - sidebar_template
+  view_layout:
+    grid-area: sidebar
+    show:
+      mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'

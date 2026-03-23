@@ -24,9 +24,11 @@ layout:
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
     '(min-width: 1441px) and (max-width: 2000px)':
-      grid-gap: 3.5vw 3vw
+      # Reduzimos o gap vertical para 2vw e o horizontal para 1vw (ou 1.5vw se achar muito colado)
+      grid-gap: 2vw 1vw       
+      # Mantemos as colunas. Com um gap menor, o "1fr" das 4 colunas principais terá mais espaço livre para expandir os botões.
       grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
+      grid-template-rows: 1fr repeat(2, fit-content(100%)) min-content 1fr
       grid-template-areas: |
         ". .         .          .         .        .        ."
         ". sidebar   security   mainrooms devices  other    ."
@@ -45,7 +47,7 @@ layout:
       # grid-template-rows: 1fr 1fr min-content 0 0 0
       # grid-template-rows: calc((100vh - 56px - 40px - 3vw) / 2) calc((100vh - 56px - 40px - 3vw) / 2) min-content 0 0 0
       # grid-template-rows: 40vh 40vh min-content 0 0 0
-      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
+      grid-template-rows: 0 1fr 1fr min-content 0
       grid-template-areas: |
         ". .        .          .         .        .        ."
         ". sidebar  security   mainrooms devices  other    ."

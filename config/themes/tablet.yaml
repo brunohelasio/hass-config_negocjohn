@@ -104,8 +104,25 @@ tablet:
     #################################################
     grid-layout:
       $: |
-        #root {
+        /* ORIGINAL: min-height: 100% nao funciona porque o pai (layout-card)
+           nao tem altura definida. 100% de "nada" = altura do conteudo.
+           Trocado por calc(100vh - 56px) para forcar grid = viewport.
+           56px = header bar do HA. */
+        /* #root {
           min-height: 100%;
+          overflow: hidden !important;
+        } */
+        /* TENTATIVA 2: min-height nao cria tamanho "definido" para CSS Grid.
+           fr tracks so dividem espaco quando o container tem height explicito.
+           Com min-height, o grid calcula tracks no tamanho intrinseco e depois
+           cresce para min-height — mas as tracks nao redistribuem.
+           Solucao: usar height (nao min-height) para tornar o tamanho definido. */
+        /* #root {
+          min-height: calc(100vh - 56px);
+          overflow: hidden !important;
+        } */
+        #root {
+          height: calc(100vh - 56px);
           overflow: hidden !important;
         }
       $swipe-card$:

@@ -2,7 +2,7 @@
 # ── Midia ──
 - type: grid
   columns: 2
-  square: true
+  square: false
   cards:
     # TV — SVG inline (template icon_tv exige entity)
     - type: custom:button-card

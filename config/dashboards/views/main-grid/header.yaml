@@ -8,9 +8,9 @@
     grid-area: header
     # show:
     #   mediaquery: '(min-height: 463px)'
-    # FIX: excluir landscape tablet (sidebar substitui header la)
+    # Header desativado: infos migradas para sidebar fixa em todos os formatos.
     show:
-      mediaquery: '(min-width: 1441px), (min-width: 801px) and (max-width: 1440px) and (orientation: portrait), (max-width: 800px) and (min-height: 463px)'
+      mediaquery: '(max-width: 0px)'
   cards:
     - type: custom:button-card
       entity: sensor.time

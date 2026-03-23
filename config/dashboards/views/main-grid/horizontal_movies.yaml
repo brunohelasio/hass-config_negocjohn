@@ -10,16 +10,12 @@
   view_layout:
     grid-area: movies
     show:
-      mediaquery: '(min-width: 1441px)'
+      mediaquery: '(min-height: 463px)'
   columns: 1
   square: true
   cards:
     - type: custom:added-movie-card
       entity: sensor.tmdb_movies_yts_latest
       show_item_count: 10
-# MOVIES TABLET LANDSCAPE - desabilitado (consolidado em Media)
-# - <<: *movies_desktop
-#   view_layout:
-#     grid-area: movies
-#     show:
-#       mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
+# MOVIES em todos os formatos padronizados (exceto cover screen)
+- <<: *movies_desktop

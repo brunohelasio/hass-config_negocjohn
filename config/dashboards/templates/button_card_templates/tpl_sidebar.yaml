@@ -54,7 +54,6 @@ sidebar_template:
   triggers_update:
     - input_select.hemma_expanded_row
     - input_boolean.menu_mobile
-    - input_boolean.sidebar_compact
     - light.sala_switch_2
     - light.cz_luz_principal
     - light.lavabo_switch_2
@@ -216,9 +215,6 @@ sidebar_template:
 
           <div class="mobile-toggle-btn" onclick="${toggleMobileBtn}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
             ${isMobileMenuOpen ? (mobileCfg.close_label || '🔼 Recolher') : (mobileCfg.open_label || '🔽 Status e Ações')}
-          </div>
-          <div class="desktop-layout-toggle" onclick="${toggleSidebarCompactBtn}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="display:none; align-items:center; justify-content:center; padding:8px 10px; margin-top:10px; border-radius:14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); font-size:12px; font-weight:600; letter-spacing:0.3px; cursor:pointer; pointer-events:auto;">
-            ${isSidebarCompact ? (mobileCfg.compact_on_label || '↔️ Mostrar 3 colunas') : (mobileCfg.compact_off_label || '📱 Mostrar 4 colunas')}
           </div>
           <div class="sidebar-bottom-section ${isMobileMenuOpen ? 'expanded' : 'collapsed'}">
             <div style="display:flex;flex-direction:column;gap:8px; margin-top:8px;">`;

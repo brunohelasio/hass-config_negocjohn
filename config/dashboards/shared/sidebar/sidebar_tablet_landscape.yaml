@@ -1,6 +1,6 @@
 #################################################
 #                                               #
-#      SIDEBAR TABLET LANDSCAPE (MODULAR)      #
+#      SIDEBAR GLOBAL (MODULAR)                #
 #                                               #
 #################################################
 type: custom:button-card
@@ -10,4 +10,4 @@ template:
 view_layout:
   grid-area: sidebar
   show:
-    mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
+    mediaquery: '(min-height: 463px)'

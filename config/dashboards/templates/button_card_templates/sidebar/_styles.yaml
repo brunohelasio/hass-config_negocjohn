@@ -15,7 +15,6 @@
   @media (min-width: 801px) {
     :host, ha-card, #card, #container, #name { height: 100% !important; }
     .mobile-toggle-btn { display: none !important; }
-    .desktop-layout-toggle { display: flex !important; }
     .sidebar-bottom-section { display: flex !important; flex-direction: column; flex: 1; }
   }
   @media (max-width: 800px) {

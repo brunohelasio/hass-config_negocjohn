@@ -22,6 +22,6 @@
   view_layout:
     grid-area: other
     show:
-      mediaquery: '(min-width: 1441px), (min-width: 801px) and (max-width: 1440px) and (orientation: portrait), (max-width: 800px) and (min-height: 463px)'
+      mediaquery: '(min-height: 463px)'
   columns: 2
   cards: !include ../../shared/grid-cards/devices.yaml

@@ -44,7 +44,8 @@
         - icon_tv
       double_tap_action:
         action: more-info
-      hold_action: !include ../../honeycomb/atv.yaml
+      # ORIGINAL: caminho errado (../../honeycomb/atv.yaml)
+      hold_action: !include ../honeycomb/atv.yaml
     # SPOTIFY — ORIGINAL: placeholder desativado
     # - type: custom:button-card
     #   name: Spotify

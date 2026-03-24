@@ -44,8 +44,8 @@
         - icon_tv
       double_tap_action:
         action: more-info
-      # ORIGINAL: caminho errado (../../honeycomb/atv.yaml)
-      hold_action: !include ../honeycomb/atv.yaml
+      # HA resolve includes relativo ao parent includer (shared/popup/rooms/)
+      hold_action: !include ../../honeycomb/atv.yaml
     # SPOTIFY — ORIGINAL: placeholder desativado
     # - type: custom:button-card
     #   name: Spotify
@@ -94,8 +94,8 @@
         service: media_player.media_play_pause
         service_data:
           entity_id: media_player.spotifyplus_bruno_helasio
-      # ORIGINAL: caminho errado (../../popup/media_spotify.yaml)
-      double_tap_action: !include ../popup/media_spotify.yaml
+      # HA resolve includes relativo ao parent includer (shared/popup/rooms/)
+      double_tap_action: !include ../media_spotify.yaml
       hold_action:
         action: more-info
     # PS5

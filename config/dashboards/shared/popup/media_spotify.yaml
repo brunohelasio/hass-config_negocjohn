@@ -3,6 +3,8 @@ browser_mod:
   service: browser_mod.popup
   data:
     title: Spotify
+    # tag: permite empilhar popup sobre o popup da Sala (sem tag, substitui o anterior)
+    tag: spotify
     style: |
       --popup-max-width: calc(500px + 500px);
     content:
@@ -173,22 +175,47 @@ browser_mod:
                 {% endif %};
               }
         # PLAYLIST BOX
-        - type: custom:spotify-card
+        # ORIGINAL: custom:spotify-card (componente HACS nao instalado — causava erro de configuracao)
+        # - type: custom:spotify-card
+        #   view_layout:
+        #     grid-area: list
+        #   limit: 13
+        #   spotify_entity: media_player.spotifyplus_bruno_helasio
+        #   default_device: Home Assistant
+        #   default: Home Assistant
+        #   playlist_type: featured
+        #   country_code: VN
+        #   hide_warning: true
+        #   display_style: list
+        #   always_play_random_song: true
+        #   filter_devices:
+        #     - SHIELD
+        #     - Air
+        #   hide_chromecast_devices: true
+        #   hide_top_header: true
+        #   hide_currently_playing: true
+        #   hide_playback_controls: true
+        # SUBSTITUIDO: media-player com informacoes de midia e controles
+        - type: custom:mushroom-media-player-card
           view_layout:
             grid-area: list
-          limit: 13
-          spotify_entity: media_player.spotifyplus_bruno_helasio
-          default_device: Home Assistant
-          default: Home Assistant
-          playlist_type: featured
-          country_code: VN
-          hide_warning: true
-          display_style: list
-          always_play_random_song: true
-          filter_devices:
-            - SHIELD
-            - Air
-          hide_chromecast_devices: true
-          hide_top_header: true
-          hide_currently_playing: true
-          hide_playback_controls: true
+          entity: media_player.spotifyplus_bruno_helasio
+          use_media_info: true
+          use_media_artwork: true
+          show_volume_level: true
+          media_controls:
+            - play_pause_stop
+            - previous
+            - next
+            - shuffle
+            - repeat
+          volume_controls:
+            - volume_buttons
+            - volume_set
+            - volume_mute
+          fill_container: true
+          card_mod:
+            style: |
+              ha-card {
+                --ha-card-border-width: 0;
+              }

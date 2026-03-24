@@ -5,7 +5,7 @@
 # e causava gaps diferentes entre as rows.
 - type: grid
   columns: 2
-  square: true
+  square: false
   cards:
     # ── Midia ──
     # TV — ORIGINAL: SVG inline placeholder (desativado)

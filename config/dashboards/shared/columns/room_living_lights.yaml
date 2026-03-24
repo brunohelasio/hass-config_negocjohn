@@ -1,7 +1,7 @@
 # Coluna de iluminacao — Sala / Varanda
 - type: grid
   columns: 2
-  square: true
+  square: false
   cards:
     - type: custom:button-card
       entity: light.sala_switch_2

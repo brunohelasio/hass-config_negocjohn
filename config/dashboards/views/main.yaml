@@ -4,6 +4,16 @@ subview: false
 
 theme: tablet
 type: custom:grid-layout
+card_mod:
+  style: |
+    /* Efeito visual estilo Sagaland: fundo cobrindo toda a view. */
+    hui-grid-layout {
+      background: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(0,0,0,0.88));
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100%;
+    }
 layout:
   # default:
   margin: 0
@@ -24,11 +34,9 @@ layout:
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
     '(min-width: 1441px) and (max-width: 2000px)':
-      # Reduzimos o gap vertical para 2vw e o horizontal para 1vw (ou 1.5vw se achar muito colado)
-      grid-gap: 2vw 1vw       
-      # Mantemos as colunas. Com um gap menor, o "1fr" das 4 colunas principais terá mais espaço livre para expandir os botões.
+      grid-gap: 3.5vw 3vw
       grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-      grid-template-rows: 1fr repeat(2, fit-content(100%)) min-content 1fr
+      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
       grid-template-areas: |
         ". .         .          .         .        .        ."
         ". sidebar   security   mainrooms devices  other    ."
@@ -38,20 +46,15 @@ layout:
     # tablet landscape (e.g. 801-1440px) - with sidebar
     # Estrategia Sagaland: 3 colunas + sidebar, areas ocultas em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
-      # grid-gap: 1.5vw 1vw
-      grid-gap: 0.8vw 1vw
-      # grid-template-columns: 0 minmax(100px, 14%) 1fr 1fr 1fr 0
-      # grid-template-rows: 1fr 1fr min-content 0 0 0
-      # grid-template-columns: 0 minmax(100px, 20%) 1fr 1fr 1fr 0
-      # grid-template-columns: 0 1fr 1fr 1fr 1fr 0
-      grid-template-columns: 0 1.3fr 1fr 1fr 1fr 0
-      # ORIGINAL: auto auto nao estica — rows ficam do tamanho do conteudo.
-      # Com min-height: calc(100vh - 56px) no #root (tablet.yaml),
-      # 1fr divide o espaco vertical restante proporcionalmente.
+      # Espaçamento inspirado no hass-config do sagaland93 para separar blocos.
+      grid-gap: 3.5vw 3vw
+      # Novo padrão: 5 colunas uniformes (sidebar + 4 colunas de conteúdo).
+      # Sidebar ocupa ~20% da área útil no tablet/desktop.
+      grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
       # grid-template-rows: auto auto min-content 0 0 0
       # grid-template-rows: calc((100vh - 56px - 40px - 3vw) / 2) calc((100vh - 56px - 40px - 3vw) / 2) min-content 0 0 0
       # grid-template-rows: 40vh 40vh min-content 0 0 0
-      grid-template-rows: 1fr 1fr min-content 0 0 0
+      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
       grid-template-areas: |
         ". .        .          .         .        .        ."
         ". sidebar  security   mainrooms devices  other    ."

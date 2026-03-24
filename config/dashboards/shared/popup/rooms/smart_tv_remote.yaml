@@ -1,0 +1,181 @@
+# Controle remoto Smart TV — popup browser_mod
+# Baseado no atv_remote.yaml, adaptado para remote.smart_tv_pro + media_player.smart_tv_pro_2
+# tag: tv_remote — empilha sobre popup da Sala
+action: fire-dom-event
+browser_mod:
+  service: browser_mod.popup
+  data:
+    title: 'Smart TV Remote'
+    tag: tv_remote
+    style: >
+      --popup-background-color: rgba(21,25,35,1);
+      --popup-max-width: 480px;
+    card_mod:
+      style:
+        .: |
+          :host {
+            --ha-card-border-radius: 12px !important;
+            --ha-card-background: #ffffff0d !important;
+          }
+          @media (max-width: 450px), (max-height: 500px) {
+            ha-dialog {
+              --mdc-dialog-min-width: 100vw !important;
+              --mdc-dialog-min-height: 100vh !important;
+              --popup-border-radius: 0 !important;
+            }
+          }
+    content:
+      type: vertical-stack
+      cards:
+        # ── Media player status ──
+        - type: custom:mushroom-media-player-card
+          entity: media_player.smart_tv_pro_2
+          icon: mdi:television
+          use_media_info: true
+          use_media_artwork: false
+          show_volume_level: true
+          collapsible_controls: true
+          media_controls:
+            - play_pause_stop
+          volume_controls:
+            - volume_buttons
+            - volume_set
+          fill_container: false
+          card_mod:
+            style: |
+              ha-card {
+                --ha-card-border-width: 0;
+              }
+        # ── Navigation grid ──
+        - type: grid
+          columns: 3
+          square: false
+          cards:
+            # Row 1: Power | Up | Source
+            - type: custom:button-card
+              entity: media_player.smart_tv_pro_2
+              icon: mdi:power
+              tap_action:
+                action: call-service
+                service: media_player.toggle
+                service_data:
+                  entity_id: media_player.smart_tv_pro_2
+                haptic: medium
+              template:
+                - remote_icon_arrow
+                - loader
+            - type: custom:button-card
+              icon: mdi:chevron-up
+              tap_action:
+                action: call-service
+                service: remote.send_command
+                service_data:
+                  entity_id: remote.smart_tv_pro
+                  command: up
+                haptic: light
+              template: remote_icon_arrow
+            - type: custom:button-card
+              icon: mdi:import
+              tap_action:
+                action: call-service
+                service: remote.send_command
+                service_data:
+                  entity_id: remote.smart_tv_pro
+                  command: source
+                haptic: light
+              template: remote_icon_only
+            # Row 2: Left | Select | Right
+            - type: custom:button-card
+              icon: mdi:chevron-left
+              tap_action:
+                action: call-service
+                service: remote.send_command
+                service_data:
+                  entity_id: remote.smart_tv_pro
+                  command: left
+                haptic: light
+              template: remote_icon_arrow
+            - type: custom:button-card
+              icon: mdi:circle-outline
+              tap_action:
+                action: call-service
+                service: remote.send_command
+                service_data:
+                  entity_id: remote.smart_tv_pro
+                  command: select
+                haptic: light
+              template: remote_icon_arrow
+            - type: custom:button-card
+              icon: mdi:chevron-right
+              tap_action:
+                action: call-service
+                service: remote.send_command
+                service_data:
+                  entity_id: remote.smart_tv_pro
+                  command: right
+                haptic: light
+              template: remote_icon_arrow
+            # Row 3: Back | Down | Home
+            - type: custom:button-card
+              icon: mdi:keyboard-backspace
+              tap_action:
+                action: call-service
+                service: remote.send_command
+                service_data:
+                  entity_id: remote.smart_tv_pro
+                  command: back
+                haptic: light
+              template: remote_icon_only
+            - type: custom:button-card
+              icon: mdi:chevron-down
+              tap_action:
+                action: call-service
+                service: remote.send_command
+                service_data:
+                  entity_id: remote.smart_tv_pro
+                  command: down
+                haptic: light
+              template: remote_icon_arrow
+            - type: custom:button-card
+              icon: mdi:home
+              tap_action:
+                action: call-service
+                service: remote.send_command
+                service_data:
+                  entity_id: remote.smart_tv_pro
+                  command: home
+                haptic: light
+              template: remote_icon_only
+        # ── Volume + Mute ──
+        - type: grid
+          columns: 3
+          square: false
+          cards:
+            - type: custom:button-card
+              icon: mdi:volume-minus
+              tap_action:
+                action: call-service
+                service: media_player.volume_down
+                service_data:
+                  entity_id: media_player.smart_tv_pro_2
+                haptic: light
+              template: remote_icon_only
+            - type: custom:button-card
+              icon: mdi:volume-mute
+              tap_action:
+                action: call-service
+                service: media_player.volume_mute
+                service_data:
+                  entity_id: media_player.smart_tv_pro_2
+                  is_volume_muted: true
+                haptic: light
+              template: remote_icon_only
+            - type: custom:button-card
+              icon: mdi:volume-plus
+              tap_action:
+                action: call-service
+                service: media_player.volume_up
+                service_data:
+                  entity_id: media_player.smart_tv_pro_2
+                haptic: light
+              template: remote_icon_only

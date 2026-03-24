@@ -43,10 +43,18 @@
       template:
         - mediaplayer
         - icon_tv
+      # tap: toggle on/off (template base nao define tap — default=toggle nao funciona)
+      tap_action:
+        action: call-service
+        service: homeassistant.toggle
+        service_data:
+          entity_id: media_player.smart_tv_pro_2
+        haptic: success
       double_tap_action:
         action: more-info
-      # ORIGINAL: ../../honeycomb/atv.yaml — corrigido para relativo a shared/columns/
-      hold_action: !include ../honeycomb/atv.yaml
+      # ORIGINAL hold_action: !include ../honeycomb/atv.yaml (honeycomb desabilitado)
+      # hold: controle remoto Smart TV via browser_mod popup
+      hold_action: !include ../popup/rooms/smart_tv_remote.yaml
     # SPOTIFY — ORIGINAL: placeholder desativado
     # - type: custom:button-card
     #   name: Spotify
@@ -96,10 +104,14 @@
       #   service: media_player.media_play_pause
       #   service_data:
       #     entity_id: media_player.spotifyplus_bruno_helasio
+      # TODO: Spotify e tocado via Alexa Echo da Sala.
+      # Quando a integracao Alexa Media Player estiver configurada no HA,
+      # trocar entity_id abaixo para a entidade Echo da sala
+      # (ex: media_player.echo_dot_sala) e usar media_player.media_play_pause
       tap_action:
         action: call-service
         service: media_player.media_play_pause
-        target:
+        service_data:
           entity_id: media_player.spotifyplus_bruno_helasio
         haptic: success
       # PADRONIZADO: double_tap = more-info (igual a TV para consistencia)

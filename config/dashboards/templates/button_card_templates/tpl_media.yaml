@@ -612,6 +612,9 @@ progress_bar:
   #               MEDIA PLAYER                    #
   #                                               #
   #################################################
+# ORIGINAL mediaplayer: state_on usava indexOf(!entity || entity.state)
+# Bug: !entity=false quando entity existe, indexOf(false) retorna -1, state_on era SEMPRE false
+# CORRIGIDO: usa entity && indexOf(entity.state) para avaliar corretamente o estado
 mediaplayer:
   template:
     - base
@@ -620,16 +623,15 @@ mediaplayer:
     - icon_tv
   state_display: >
     [[[
-      return variables.state === 'off' ? " " : null;
+      return entity && entity.state === 'off' ? " " : null;
     ]]]
   variables:
     state_on: >
-      [[[ return ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(!entity || entity.state) !== -1; ]]]
+      [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
 
     circle_input: >
       [[[
-        if (entity) {
-          // if light group get brightness from child to remove bounce
+        if (entity && entity.attributes.volume_level !== undefined) {
           let volume = Math.round(entity.attributes.volume_level * 100)
           return volume === 0 && entity.state !== 'off'
             ? 1

@@ -72,9 +72,10 @@
     #     card:
     #       - opacity: "0.60"
     #       - cursor: "default"
-    # SPOTIFY — ATIVADO: usa templates originais + icon_spotify
+    # SPOTIFY — ATIVADO: entity = echo_show (dispositivo que efetivamente reproduz)
+    # ORIGINAL entity: media_player.spotifyplus_bruno_helasio (API Spotify, nao reflete estado real)
     - type: custom:button-card
-      entity: media_player.spotifyplus_bruno_helasio
+      entity: media_player.echo_show
       name: Spotify
       template:
         - base
@@ -98,28 +99,17 @@
             }
           ]]]
         circle_input_unit: '%'
-      # ORIGINAL tap_action (call-service com service_data — nao respondia ao clique):
-      # tap_action:
-      #   action: call-service
-      #   service: media_player.media_play_pause
-      #   service_data:
-      #     entity_id: media_player.spotifyplus_bruno_helasio
-      # TODO: Spotify e tocado via Alexa Echo da Sala.
-      # Quando a integracao Alexa Media Player estiver configurada no HA,
-      # trocar entity_id abaixo para a entidade Echo da sala
-      # (ex: media_player.echo_dot_sala) e usar media_player.media_play_pause
+      # tap: play/pause no Echo Show (dispositivo real de reproducao)
       tap_action:
         action: call-service
         service: media_player.media_play_pause
         service_data:
-          entity_id: media_player.spotifyplus_bruno_helasio
+          entity_id: media_player.echo_show
         haptic: success
-      # PADRONIZADO: double_tap = more-info (igual a TV para consistencia)
-      # ORIGINAL double_tap_action: !include ../popup/media_spotify.yaml
+      # double_tap: more-info (consistente com TV)
       double_tap_action:
         action: more-info
-      # PADRONIZADO: hold = popup spotify (antes era more-info)
-      # ORIGINAL hold_action: action: more-info
+      # hold: popup spotify personalizado
       hold_action: !include ../popup/media_spotify.yaml
     # PS5
     - type: custom:button-card
@@ -224,6 +214,16 @@
         card:
           - opacity: "0.35"
           - cursor: "default"
+    # BLANK CARD — iguala 7 itens com a coluna de luzes (4 rows no grid columns:2)
+    # Sem isso, a coluna de extras (6 itens = 3 rows) fica com espacamento diferente
+    - type: custom:button-card
+      color_type: blank-card
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - opacity: '0'
 
 # ── ORIGINAL COMENTADO: Divisor (causava grid separados e gaps diferentes) ──
 # - type: custom:button-card

@@ -94,7 +94,8 @@
         service: media_player.media_play_pause
         service_data:
           entity_id: media_player.spotifyplus_bruno_helasio
-      double_tap_action: !include ../../popup/media_spotify.yaml
+      # ORIGINAL: caminho errado (../../popup/media_spotify.yaml)
+      double_tap_action: !include ../popup/media_spotify.yaml
       hold_action:
         action: more-info
     # PS5

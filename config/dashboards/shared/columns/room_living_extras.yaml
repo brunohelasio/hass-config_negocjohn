@@ -36,8 +36,9 @@
     #         <path d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3zM11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3a1.11 1.11 0 0 0 1.1 1.1z"/>
     #       </svg>
     # TV — ATIVADO: usa templates originais do repositorio (mediaplayer + icon_tv)
+    # ORIGINAL: entity: media_player.smart_tv_pro_192_168_3_17
     - type: custom:button-card
-      entity: media_player.smart_tv_pro_192_168_3_17
+      entity: media_player.smart_tv_pro_2
       name: Smart TV
       template:
         - mediaplayer
@@ -89,15 +90,25 @@
             }
           ]]]
         circle_input_unit: '%'
+      # ORIGINAL tap_action (call-service com service_data — nao respondia ao clique):
+      # tap_action:
+      #   action: call-service
+      #   service: media_player.media_play_pause
+      #   service_data:
+      #     entity_id: media_player.spotifyplus_bruno_helasio
       tap_action:
         action: call-service
         service: media_player.media_play_pause
-        service_data:
+        target:
           entity_id: media_player.spotifyplus_bruno_helasio
-      # ORIGINAL: ../../popup/media_spotify.yaml — corrigido para relativo a shared/columns/
-      double_tap_action: !include ../popup/media_spotify.yaml
-      hold_action:
+        haptic: success
+      # PADRONIZADO: double_tap = more-info (igual a TV para consistencia)
+      # ORIGINAL double_tap_action: !include ../popup/media_spotify.yaml
+      double_tap_action:
         action: more-info
+      # PADRONIZADO: hold = popup spotify (antes era more-info)
+      # ORIGINAL hold_action: action: more-info
+      hold_action: !include ../popup/media_spotify.yaml
     # PS5
     - type: custom:button-card
       name: PS5

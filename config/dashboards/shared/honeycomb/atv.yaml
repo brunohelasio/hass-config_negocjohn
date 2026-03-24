@@ -5,14 +5,16 @@ honeycomb_menu:
   audio: /local/sound/popup.m4a
   autoclose: false
   active: true
-  xy_pad:
-    repeat: 500
-    x:
-      invert: true
-      service: script.turn_on
-      service_data:
-        entity_id: >-
-          {{ ( x_percentage > 0 ? 'script.tv_volume_down' : 'script.tv_volume_up' ) }}
+  # ORIGINAL: xy_pad usava scripts inexistentes (script.tv_volume_up/down)
+  # Desabilitado — volume controlado pelos botoes dedicados (posicoes 2 e 5)
+  # xy_pad:
+  #   repeat: 500
+  #   x:
+  #     invert: true
+  #     service: script.turn_on
+  #     service_data:
+  #       entity_id: >-
+  #         {{ ( x_percentage > 0 ? 'script.tv_volume_down' : 'script.tv_volume_up' ) }}
   buttons:
     #0
     - icon: mdi:volume-mute
@@ -57,15 +59,16 @@ honeycomb_menu:
           entity_id: entity
           source: YouTube
     #4
+    # ORIGINAL: usava script.atv_turn_on_off (inexistente)
     - icon: mdi:power
       active: '[[[ return entity.state != "off" ]]]'
       position: 4
       audio: /local/sound/tv.m4a
       tap_action:
         action: call-service
-        service: script.turn_on
+        service: homeassistant.toggle
         service_data:
-          entity_id: script.atv_turn_on_off
+          entity_id: entity
     #5
     - icon: mdi:volume-minus
       active: true

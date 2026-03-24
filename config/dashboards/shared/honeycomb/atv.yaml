@@ -1,6 +1,7 @@
+# ORIGINAL: entity: media_player.living_room_tv
 action: fire-dom-event
 honeycomb_menu:
-  entity: media_player.living_room_tv
+  entity: media_player.smart_tv_pro_192_168_3_17
   audio: /local/sound/popup.m4a
   autoclose: false
   active: true

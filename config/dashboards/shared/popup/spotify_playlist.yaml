@@ -23,7 +23,7 @@ browser_mod:
         - type: custom:stack-in-card
           cards:
             - type: custom:mushroom-media-player-card
-              entity: media_player.spotify
+              entity: media_player.spotifyplus_bruno_helasio
               icon: mdi:play
               use_media_info: true
               use_media_artwork: false
@@ -94,9 +94,9 @@ browser_mod:
                   }
             - type: conditional
               conditions:
-                - entity: media_player.spotify
+                - entity: media_player.spotifyplus_bruno_helasio
                   state_not: 'off'
-                - entity: media_player.spotify
+                - entity: media_player.spotifyplus_bruno_helasio
                   state_not: idle
               card:
                 entity: media_player.currently_playing

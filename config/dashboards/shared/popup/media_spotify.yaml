@@ -5,14 +5,16 @@ browser_mod:
     title: Spotify
     # tag: permite empilhar popup sobre o popup da Sala (sem tag, substitui o anterior)
     tag: spotify
+    # ORIGINAL: --popup-max-width: calc(500px + 500px) — causava scroll lateral no tablet
     style: |
-      --popup-max-width: calc(500px + 500px);
+      --popup-max-width: min(900px, 90vw);
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
         margin: 0
-        grid-template-columns: 500px 500px
+        # ORIGINAL: grid-template-columns: 500px 500px (fixo, causava overflow)
+        grid-template-columns: 1fr 1fr
         grid-template-areas: |
           "player list"
         mediaquery:

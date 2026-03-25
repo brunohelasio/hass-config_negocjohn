@@ -44,6 +44,7 @@ browser_mod:
   service: browser_mod.popup
   data:
     title: Sala
+    tag: sala_popup
     size: wide
     style: >
       --popup-width: 70vw;

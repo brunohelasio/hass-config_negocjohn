@@ -65,7 +65,11 @@ browser_mod:
                 -webkit-transform: translate3d(0,0,0);
                 content: "";
                 {% if not is_state(config.entity, 'idle') and not is_state(config.entity, 'off') %}
-                  background: url( '{{ state_attr(config.entity, "entity_picture") }}') center no-repeat;
+                  {% if state_attr(config.entity, "entity_picture") %}
+                    background: url( '{{ state_attr(config.entity, "entity_picture") }}') center no-repeat;
+                  {% else %}
+                    background: radial-gradient(circle, rgba(30,215,96,0.3) 0%, transparent 70%);
+                  {% endif %}
                 {% endif %}
                 background-size: contain;
                 margin: 4px 4px 16px;
@@ -123,7 +127,11 @@ browser_mod:
             height: 100%;
             width: 100%;
             {% if not is_state('media_player.echo_show', 'idle') and not is_state('media_player.echo_show', 'off') %}
-              background: url( '{{ state_attr('media_player.echo_show', "entity_picture") }}' ) center no-repeat;
+              {% if state_attr('media_player.echo_show', "entity_picture") %}
+                background: url( '{{ state_attr('media_player.echo_show', "entity_picture") }}' ) center no-repeat;
+              {% else %}
+                background: radial-gradient(circle, rgba(30,215,96,0.15) 0%, transparent 70%);
+              {% endif %}
             {% endif %}
             filter: blur(150px) saturate(200%);
             background-size: 100% 100%;
@@ -135,7 +143,12 @@ browser_mod:
           :host {
             --album-art-color:
             {% if not is_state('media_player.echo_show', 'idle') and not is_state('media_player.echo_show', 'off') %}
-              {{ states('sensor.vibrant_color') }}
+              {% if states('sensor.vibrant_color') not in ['unknown', 'unavailable', 'None', ''] %}
+                {# 'None' incluido pois sensores HA podem retornar a string 'None' em casos extremos #}
+                {{ states('sensor.vibrant_color') }}
+              {% else %}
+                30, 215, 96
+              {% endif %}
             {% else %}
               var(--rgb-indigo-color)
             {% endif %};

@@ -100,6 +100,9 @@
     # CORRIGIDO: state_on usava indexOf(!entity || entity.state) — !entity=false quando entity existe,
     #   indexOf(false) retorna -1, state_on era SEMPRE false. Agora usa entity && indexOf(entity.state).
     # CORRIGIDO: tap_action usa entity_id correto
+    # CORRIGIDO (v2): state_on agora so e true quando entity.state === 'playing'. Estados como
+    #   idle/standby/paused nao ativam animacao — o icone so anima com musica efetivamente tocando.
+    # CORRIGIDO (v2): state_display mostra espaco em branco quando nao esta tocando (nao so 'off').
     - type: custom:button-card
       entity: media_player.echo_show
       name: Spotify
@@ -110,11 +113,11 @@
         - icon_spotify_color
       state_display: >
         [[[
-          return entity && entity.state === 'off' ? ' ' : null;
+          return entity && entity.state !== 'playing' ? ' ' : null;
         ]]]
       variables:
         state_on: >
-          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
+          [[[ return entity && entity.state === 'playing'; ]]]
         circle_input: >
           [[[
             if (entity && entity.attributes.volume_level !== undefined) {

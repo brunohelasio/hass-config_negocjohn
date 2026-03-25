@@ -46,13 +46,17 @@ browser_mod:
     title: Sala
     tag: sala_popup
     size: wide
+    # ANTERIOR: --popup-width: 70vw; --popup-max-width: 1020px;
+    # Popup era maior que a tela do tablet, cortando VR Pendente.
+    # Reduzido width para 65vw e max-width para 920px; adicionado max-height: 88vh
+    # para que o popup caiba na viewport do tablet sem scroll.
     style: >
-      --popup-width: 70vw;
-      --popup-max-width: 1020px;
+      --popup-width: 65vw;
+      --popup-max-width: 920px;
       --popup-background-color: rgba(8, 12, 20, 0.62);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
-      --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
+      --tablet-popup-content-padding: 0.5em 0.8em 0.8em 0.7em;
     card_mod:
       style:
         .: |
@@ -73,15 +77,19 @@ browser_mod:
             align-items: center !important;
             justify-content: center !important;
           }
+          .mdc-dialog__surface {
+            max-height: 88vh !important;
+            overflow-y: auto !important;
+          }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
         grid-template-columns: 0.9fr 0.9fr 1.6fr
         grid-template-areas: '"col_luzes col_extra col_camera"'
-        grid-gap: 12px
+        grid-gap: 8px
         margin: 0
-        padding: 0.75rem
+        padding: 0.5rem
         mediaquery:
           "(max-width: 800px)":
             grid-template-columns: 1fr

@@ -41,31 +41,51 @@
     # CORRIGIDO: usa base + icon_tv + circle + loader
     # icon_tv desenha o SVG animado (on/off) e base renderiza o card square
     # circle mostra volume, loader mostra transicao de estado
+    # VERSAO ANTERIOR (v2): templates manuais [base, circle, loader, icon_tv]
+    #   Problema: botao nao acendia e icone nao animava ao ligar a TV.
+    #   Restaurado template mediaplayer (igual ao original ngocjohn) que agrupa
+    #   base+circle+loader+icon_tv com state_on e circle_input ja definidos.
+    # - type: custom:button-card
+    #   entity: media_player.smart_tv_pro_2
+    #   name: Smart TV
+    #   template:
+    #     - base
+    #     - circle
+    #     - loader
+    #     - icon_tv
+    #   state_display: >
+    #     [[[
+    #       return entity && entity.state === 'off' ? ' ' : null;
+    #     ]]]
+    #   variables:
+    #     state_on: >
+    #       [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
+    #     circle_input: >
+    #       [[[
+    #         if (entity && entity.attributes.volume_level !== undefined) {
+    #           let volume = Math.round(entity.attributes.volume_level * 100)
+    #           return volume === 0 && entity.state !== 'off'
+    #             ? 1
+    #             : volume
+    #         }
+    #       ]]]
+    #     circle_input_unit: '%'
+    #   tap_action:
+    #     action: call-service
+    #     service: homeassistant.toggle
+    #     service_data:
+    #       entity_id: media_player.smart_tv_pro_2
+    #     haptic: success
+    #   double_tap_action:
+    #     action: more-info
+    #   hold_action: !include ../popup/rooms/smart_tv_remote.yaml
+    # TV — RESTAURADO: usa template mediaplayer (original ngocjohn)
+    # mediaplayer ja inclui base+circle+loader+icon_tv com state_on correto
     - type: custom:button-card
       entity: media_player.smart_tv_pro_2
       name: Smart TV
       template:
-        - base
-        - circle
-        - loader
-        - icon_tv
-      state_display: >
-        [[[
-          return entity && entity.state === 'off' ? ' ' : null;
-        ]]]
-      variables:
-        state_on: >
-          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
-        circle_input: >
-          [[[
-            if (entity && entity.attributes.volume_level !== undefined) {
-              let volume = Math.round(entity.attributes.volume_level * 100)
-              return volume === 0 && entity.state !== 'off'
-                ? 1
-                : volume
-            }
-          ]]]
-        circle_input_unit: '%'
+        - mediaplayer
       # tap: toggle on/off
       tap_action:
         action: call-service
@@ -103,8 +123,50 @@
     # CORRIGIDO (v2): state_on agora so e true quando entity.state === 'playing'. Estados como
     #   idle/standby/paused nao ativam animacao — o icone so anima com musica efetivamente tocando.
     # CORRIGIDO (v2): state_display mostra espaco em branco quando nao esta tocando (nao so 'off').
+    # VERSAO ANTERIOR (v3): entity era echo_show — nao reflete estado do Spotify.
+    #   Restaurado para spotifyplus_bruno_helasio (integracao SpotifyPlus) que fornece
+    #   estado real, artwork e info de midia do Spotify. state_on restaurado para
+    #   multiplos estados (on/idle/playing/paused/standby) — botao acende quando Spotify ativo.
+    # - type: custom:button-card
+    #   entity: media_player.echo_show
+    #   name: Spotify
+    #   template:
+    #     - base
+    #     - circle
+    #     - loader
+    #     - icon_spotify_color
+    #   state_display: >
+    #     [[[
+    #       return entity && entity.state !== 'playing' ? ' ' : null;
+    #     ]]]
+    #   variables:
+    #     state_on: >
+    #       [[[ return entity && entity.state === 'playing'; ]]]
+    #     circle_input: >
+    #       [[[
+    #         if (entity && entity.attributes.volume_level !== undefined) {
+    #           let volume = Math.round(entity.attributes.volume_level * 100)
+    #           return volume === 0 && entity.state !== 'off'
+    #             ? 1
+    #             : volume
+    #         }
+    #       ]]]
+    #     circle_input_unit: '%'
+    #   tap_action:
+    #     action: call-service
+    #     service: media_player.media_play_pause
+    #     service_data:
+    #       entity_id: media_player.echo_show
+    #     haptic: success
+    #   double_tap_action:
+    #     action: more-info
+    #   hold_action: !include ../popup/media_spotify.yaml
+    # SPOTIFY — RESTAURADO: entity = spotifyplus_bruno_helasio (integracao SpotifyPlus)
+    # SpotifyPlus fornece estado, artwork e info de midia especificos do Spotify.
+    # icon_spotify_color anima barras quando state === 'playing'.
+    # state_on inclui multiplos estados para que o botao acenda quando Spotify ativo.
     - type: custom:button-card
-      entity: media_player.echo_show
+      entity: media_player.spotifyplus_bruno_helasio
       name: Spotify
       template:
         - base
@@ -113,11 +175,11 @@
         - icon_spotify_color
       state_display: >
         [[[
-          return entity && entity.state !== 'playing' ? ' ' : null;
+          return entity && entity.state === 'off' ? ' ' : null;
         ]]]
       variables:
         state_on: >
-          [[[ return entity && entity.state === 'playing'; ]]]
+          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
         circle_input: >
           [[[
             if (entity && entity.attributes.volume_level !== undefined) {
@@ -128,12 +190,12 @@
             }
           ]]]
         circle_input_unit: '%'
-      # tap: play/pause no Echo Show (dispositivo real de reproducao)
+      # tap: play/pause via SpotifyPlus
       tap_action:
         action: call-service
         service: media_player.media_play_pause
         service_data:
-          entity_id: media_player.echo_show
+          entity_id: media_player.spotifyplus_bruno_helasio
         haptic: success
       # double_tap: more-info (consistente com TV)
       double_tap_action:

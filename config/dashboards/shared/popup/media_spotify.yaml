@@ -1,11 +1,15 @@
 # Popup Spotify — browser_mod
-# entity: media_player.echo_show (dispositivo real de reproducao via Alexa)
+# entity: media_player.spotifyplus_bruno_helasio (integracao SpotifyPlus)
 # tag: spotify — empilha sobre popup da Sala
 #
 # ORIGINAL layout: grid 2 colunas (player + list) — list duplicava mushroom card
-# ORIGINAL entity: media_player.spotifyplus_bruno_helasio (API, nao refletia estado real)
+# ORIGINAL entity: media_player.spotifyplus_bruno_helasio (API Spotify, nao refletia estado real)
 # ORIGINAL --popup-max-width: calc(500px + 500px) — causava scroll lateral
 # ORIGINAL list column: custom:spotify-card (HACS nao instalado) → mushroom-media-player duplicado
+# VERSAO ANTERIOR (v2): entity era echo_show — nao reflete estado do Spotify.
+#   Restaurado para spotifyplus_bruno_helasio que fornece estado, artwork e info de midia
+#   especificos do Spotify. Mantidas melhorias de fallback de artwork e vibrant_color.
+# ANTERIOR entity: media_player.echo_show
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
@@ -18,7 +22,7 @@ browser_mod:
       type: custom:stack-in-card
       cards:
         - type: custom:mushroom-media-player-card
-          entity: media_player.echo_show
+          entity: media_player.spotifyplus_bruno_helasio
           icon: mdi:play
           use_media_info: true
           use_media_artwork: false
@@ -79,12 +83,12 @@ browser_mod:
               }
         - type: conditional
           conditions:
-            - entity: media_player.echo_show
+            - entity: media_player.spotifyplus_bruno_helasio
               state_not: 'off'
-            - entity: media_player.echo_show
+            - entity: media_player.spotifyplus_bruno_helasio
               state_not: idle
           card:
-            entity: media_player.echo_show
+            entity: media_player.spotifyplus_bruno_helasio
             hide:
               icon: true
               name: true
@@ -126,9 +130,9 @@ browser_mod:
             position: absolute;
             height: 100%;
             width: 100%;
-            {% if not is_state('media_player.echo_show', 'idle') and not is_state('media_player.echo_show', 'off') %}
-              {% if state_attr('media_player.echo_show', "entity_picture") %}
-                background: url( '{{ state_attr('media_player.echo_show', "entity_picture") }}' ) center no-repeat;
+            {% if not is_state('media_player.spotifyplus_bruno_helasio', 'idle') and not is_state('media_player.spotifyplus_bruno_helasio', 'off') %}
+              {% if state_attr('media_player.spotifyplus_bruno_helasio', "entity_picture") %}
+                background: url( '{{ state_attr('media_player.spotifyplus_bruno_helasio', "entity_picture") }}' ) center no-repeat;
               {% else %}
                 background: radial-gradient(circle, rgba(30,215,96,0.15) 0%, transparent 70%);
               {% endif %}
@@ -142,7 +146,7 @@ browser_mod:
           }
           :host {
             --album-art-color:
-            {% if not is_state('media_player.echo_show', 'idle') and not is_state('media_player.echo_show', 'off') %}
+            {% if not is_state('media_player.spotifyplus_bruno_helasio', 'idle') and not is_state('media_player.spotifyplus_bruno_helasio', 'off') %}
               {% if states('sensor.vibrant_color') not in ['unknown', 'unavailable', 'None', ''] %}
                 {# 'None' incluido pois sensores HA podem retornar a string 'None' em casos extremos #}
                 {{ states('sensor.vibrant_color') }}

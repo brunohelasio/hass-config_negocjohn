@@ -1,11 +1,12 @@
 # Coluna de midia e clima — Sala
-# UNIFICADO: todos os 6 botoes em um unico grid para igualar
+# UNIFICADO: todos os 8 botoes (7 + blank) em um unico grid para igualar
 # espacamento vertical com a coluna de luzes (que tambem e um unico grid).
 # O divisor foi removido — ele quebrava a coluna em 3 cards separados
 # e causava gaps diferentes entre as rows.
+# CORRIGIDO: square: true (era false — causava espacamento diferente da col luzes)
 - type: grid
   columns: 2
-  square: false
+  square: true
   cards:
     # ── Midia ──
     # TV — ORIGINAL: SVG inline placeholder (desativado)
@@ -35,15 +36,37 @@
     #         <path opacity="0.5" d="m 26.2,14 h -2 v 10 h 2 V 14 m 4.8,2.2 -1.4,1.4 a 7,7 0 0 1 2.6,5.4 7,7 0 0 1 -7,7 7,7 0 0 1 -4.4,-12.4 l -1.4,-1.4 a 9,9 0 0 0 -1,12.7 c 3.2,3.8 8.9,4.2 12.7,1 a 9,9 0 0 0 3.2,-6.9 c 0,-2.6 -1.2,-5.1 -3.2,-6.8 z"/>
     #         <path d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3zM11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3a1.11 1.11 0 0 0 1.1 1.1z"/>
     #       </svg>
-    # TV — ATIVADO: usa templates originais do repositorio (mediaplayer + icon_tv)
-    # ORIGINAL: entity: media_player.smart_tv_pro_192_168_3_17
+    # TV — ORIGINAL mediaplayer template (nao mostrava arte pois mediaplayer nao define background-image)
+    # ORIGINAL entity: media_player.smart_tv_pro_192_168_3_17
+    # CORRIGIDO: usa base + icon_tv + circle + loader
+    # icon_tv desenha o SVG animado (on/off) e base renderiza o card square
+    # circle mostra volume, loader mostra transicao de estado
     - type: custom:button-card
       entity: media_player.smart_tv_pro_2
       name: Smart TV
       template:
-        - mediaplayer
+        - base
+        - circle
+        - loader
         - icon_tv
-      # tap: toggle on/off (template base nao define tap — default=toggle nao funciona)
+      state_display: >
+        [[[
+          return entity && entity.state === 'off' ? ' ' : null;
+        ]]]
+      variables:
+        state_on: >
+          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
+        circle_input: >
+          [[[
+            if (entity && entity.attributes.volume_level !== undefined) {
+              let volume = Math.round(entity.attributes.volume_level * 100)
+              return volume === 0 && entity.state !== 'off'
+                ? 1
+                : volume
+            }
+          ]]]
+        circle_input_unit: '%'
+      # tap: toggle on/off
       tap_action:
         action: call-service
         service: homeassistant.toggle
@@ -52,7 +75,6 @@
         haptic: success
       double_tap_action:
         action: more-info
-      # ORIGINAL hold_action: !include ../honeycomb/atv.yaml (honeycomb desabilitado)
       # hold: controle remoto Smart TV via browser_mod popup
       hold_action: !include ../popup/rooms/smart_tv_remote.yaml
     # SPOTIFY — ORIGINAL: placeholder desativado
@@ -74,6 +96,10 @@
     #       - cursor: "default"
     # SPOTIFY — ATIVADO: entity = echo_show (dispositivo que efetivamente reproduz)
     # ORIGINAL entity: media_player.spotifyplus_bruno_helasio (API Spotify, nao reflete estado real)
+    # CORRIGIDO: icon_spotify_color (anima barras quando playing) em vez de icon_spotify (SVG estatico)
+    # CORRIGIDO: state_on usava indexOf(!entity || entity.state) — !entity=false quando entity existe,
+    #   indexOf(false) retorna -1, state_on era SEMPRE false. Agora usa entity && indexOf(entity.state).
+    # CORRIGIDO: tap_action usa entity_id correto
     - type: custom:button-card
       entity: media_player.echo_show
       name: Spotify
@@ -81,17 +107,17 @@
         - base
         - circle
         - loader
-        - icon_spotify
+        - icon_spotify_color
       state_display: >
         [[[
-          return variables.state === 'off' ? " " : null;
+          return entity && entity.state === 'off' ? ' ' : null;
         ]]]
       variables:
         state_on: >
-          [[[ return ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(!entity || entity.state) !== -1; ]]]
+          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
         circle_input: >
           [[[
-            if (entity) {
+            if (entity && entity.attributes.volume_level !== undefined) {
               let volume = Math.round(entity.attributes.volume_level * 100)
               return volume === 0 && entity.state !== 'off'
                 ? 1

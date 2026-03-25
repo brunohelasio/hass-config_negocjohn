@@ -1,7 +1,8 @@
 # Coluna de iluminacao — Sala / Varanda
+# ORIGINAL: square: false (causava espacamento diferente da coluna extras)
 - type: grid
   columns: 2
-  square: false
+  square: true
   cards:
     - type: custom:button-card
       entity: light.sala_switch_2

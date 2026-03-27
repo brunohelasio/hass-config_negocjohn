@@ -125,12 +125,21 @@ rooms_base:
             }
           }
 
-          // Funcao de formatacao de tempo (s/m/h/d) — baseada em circle_state do negocjohn
+          // Funcao de formatacao de tempo (m/h/d) — baseada em circle_state do negocjohn
+          // ANTERIOR: mostrava segundos (s), mas sensor.time atualiza apenas a cada 60s
+          // causando congelamento do display (ex: "39s" parado). Agora inicia a partir de 1m.
+          // const timeFmt = c => {
+          //   let s = (c/1e3), m = (c/6e4), h = (c/36e5), d = (c/864e5);
+          //   return s < 60 ? parseInt(s) + 's'
+          //        : m < 60 ? parseInt(m) + 'm'
+          //        : h < 24 ? parseInt(h) + 'h'
+          //        : parseInt(d) + 'd';
+          // };
           const timeFmt = c => {
-            let s = (c/1e3), m = (c/6e4), h = (c/36e5), d = (c/864e5);
-            return s < 60 ? parseInt(s) + 's'
-                 : m < 60 ? parseInt(m) + 'm'
-                 : h < 24 ? parseInt(h) + 'h'
+            let m = (c/6e4), h = (c/36e5), d = (c/864e5);
+            return m < 1   ? '< 1m'
+                 : m < 60  ? parseInt(m) + 'm'
+                 : h < 24  ? parseInt(h) + 'h'
                  : parseInt(d) + 'd';
           };
 

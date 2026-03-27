@@ -336,6 +336,11 @@
 - type: grid
   columns: 5
   square: false
+  card_mod:
+    style: |
+      #root {
+        gap: 4px !important;
+      }
   cards:
     - type: custom:button-card
       entity: light.sala_switch_2
@@ -400,6 +405,11 @@
 - type: grid
   columns: 5
   square: false
+  card_mod:
+    style: |
+      #root {
+        gap: 4px !important;
+      }
   cards:
     - type: custom:button-card
       entity: light.varanda_switch_1
@@ -511,6 +521,11 @@
 - type: grid
   columns: 5
   square: false
+  card_mod:
+    style: |
+      #root {
+        gap: 4px !important;
+      }
   cards:
     # TV — usa template mediaplayer (original ngocjohn)
     - type: custom:button-card
@@ -622,6 +637,11 @@
 - type: grid
   columns: 5
   square: false
+  card_mod:
+    style: |
+      #root {
+        gap: 4px !important;
+      }
   cards:
     # CORTINA — SVG inline (movida da linha de midia para linha de clima)
     - type: custom:button-card

@@ -48,7 +48,11 @@ grid_living_room:
     name: Sala
     # triggers_update com sensor.time para atualizar o timer de tempo no state_display
     # (mostra "1 light · 2h" etc). Necessario para atualizacao periodica a cada minuto.
-    triggers_update: sensor.time
+    # Inclui sensor.living_room_active para re-renderizar quando contagem de luzes muda.
+    # ANTERIOR: triggers_update: sensor.time
+    triggers_update:
+      - sensor.time
+      - sensor.living_room_active
     double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml
     # double_tap_action:
     #   action: fire-dom-event

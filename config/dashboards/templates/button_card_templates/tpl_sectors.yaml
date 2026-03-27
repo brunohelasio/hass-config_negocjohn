@@ -99,24 +99,47 @@ rooms_base:
           // Obtem contagem de luzes ligadas do sensor active
           const activeEntity = variables.active ? states[variables.active] : null;
           // ANTERIOR: usava lights_on (retorna string Jinja, nao array JS)
-          // FIX: usa lights_on_count primeiro (numero), fallback para lights_on
+          // FIX: usa lights_on_count primeiro (numero), fallback para lights_on,
+          // e depois fallback direto pelo light group entity_id (conta membros on)
           const lightsOnCount = activeEntity?.attributes?.lights_on_count;
           const lightsOn = activeEntity?.attributes?.lights_on;
           let num = null;
-          if (lightsOnCount != null && !isNaN(lightsOnCount)) {
-            num = parseInt(lightsOnCount, 10);
+          if (lightsOnCount != null && lightsOnCount !== '' && !isNaN(lightsOnCount)) {
+            const parsed = parseInt(lightsOnCount, 10);
+            if (!isNaN(parsed)) num = parsed;
           } else if (Array.isArray(lightsOn)) {
             num = lightsOn.length;
+          } else if (typeof lightsOn === 'string' && lightsOn.startsWith('[')) {
+            // Jinja retorna string como "['Switch 2', 'LED']" — conta itens via regex
+            const matches = lightsOn.match(/'/g);
+            if (matches) num = matches.length / 2;
           } else if (Number.isFinite(lightsOn)) {
             num = lightsOn;
           }
 
-          // Funcao de formatacao de tempo (s/m/h/d) — baseada em circle_state do negocjohn
+          // Fallback: conta membros do light group diretamente via entity_id
+          if (num === null && entity.attributes && entity.attributes.entity_id) {
+            const members = entity.attributes.entity_id;
+            if (Array.isArray(members)) {
+              num = members.filter(id => states[id] && states[id].state === 'on').length;
+            }
+          }
+
+          // Funcao de formatacao de tempo (m/h/d) — baseada em circle_state do negocjohn
+          // ANTERIOR: mostrava segundos (s), mas sensor.time atualiza apenas a cada 60s
+          // causando congelamento do display (ex: "39s" parado). Agora inicia a partir de 1m.
+          // const timeFmt = c => {
+          //   let s = (c/1e3), m = (c/6e4), h = (c/36e5), d = (c/864e5);
+          //   return s < 60 ? parseInt(s) + 's'
+          //        : m < 60 ? parseInt(m) + 'm'
+          //        : h < 24 ? parseInt(h) + 'h'
+          //        : parseInt(d) + 'd';
+          // };
           const timeFmt = c => {
-            let s = (c/1e3), m = (c/6e4), h = (c/36e5), d = (c/864e5);
-            return s < 60 ? parseInt(s) + 's'
-                 : m < 60 ? parseInt(m) + 'm'
-                 : h < 24 ? parseInt(h) + 'h'
+            let m = (c/6e4), h = (c/36e5), d = (c/864e5);
+            return m < 1   ? '< 1m'
+                 : m < 60  ? parseInt(m) + 'm'
+                 : h < 24  ? parseInt(h) + 'h'
                  : parseInt(d) + 'd';
           };
 

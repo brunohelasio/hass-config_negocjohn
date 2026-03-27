@@ -10,6 +10,11 @@ browser_mod:
       --popup-max-width: calc(620px + 620px);
     card_mod:
       style:
+        ha-dialog$: |
+          .mdc-dialog__container {
+            align-items: center !important;
+            justify-content: center !important;
+          }
         layout-card:
           $grid-layout$:
             # card divider border

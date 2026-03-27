@@ -30,7 +30,7 @@ browser_mod:
                   - cool
                   - fan_only
                   - dry
-                  - off
+                  - "off"
           - type: thermostat
             entity: climate.ac_office
             show_current_as_primary: true

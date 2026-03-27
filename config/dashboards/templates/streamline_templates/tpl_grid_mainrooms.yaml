@@ -75,7 +75,9 @@ grid_living_room:
       - motion
       - ac_status
       - media_status
-      - lights_status
+      # REMOVIDO: lights_status (icone de lampada) — retirado a pedido do usuario.
+      # O status de luzes continua visivel no state_display (ex: "2 lights · 1h").
+      # - lights_status
     variables:
       # light_entity: light.living_room_group
       light_entity: light.sala_switch_2

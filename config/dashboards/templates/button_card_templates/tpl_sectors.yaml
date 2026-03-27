@@ -172,8 +172,9 @@ motion:
     motion: >
       [[[
         // Protecao contra entidade inexistente (placeholder para sensor futuro)
+        // ANTERIOR: mdi:motion-sensor — trocado para mdi:walk (pessoa andando) a pedido do usuario
         if (variables.motion && states[variables.motion] && states[variables.motion].state == 'on')
-          return '<ha-icon icon="mdi:motion-sensor" style="width:100%;display:flex; color:var(--state-icon-active-color);"></ha-icon>'
+          return '<ha-icon icon="mdi:walk" style="width:100%;display:flex; color:var(--state-icon-active-color);"></ha-icon>'
       ]]]
   styles:
     custom_fields:

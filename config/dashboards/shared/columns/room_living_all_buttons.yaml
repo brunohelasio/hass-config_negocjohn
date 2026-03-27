@@ -1,10 +1,10 @@
 # Layout combinado de botoes — Sala (popup)
-# Disposicao: 4-3-4-2 (linhas com quantidades diferentes de botoes)
+# Disposicao: 4-4-4-4 (todas as linhas com 4 colunas, blanks para igualar)
 # Linha 1: 4 botoes de iluminacao principal
-# Linha 2: 3 botoes de iluminacao varanda
+# Linha 2: 3 botoes de iluminacao varanda + 1 blank
 # Divisor glassmorphism
 # Linha 3: 4 botoes de midia/dispositivos
-# Linha 4: 2 botoes de clima/cortina
+# Linha 4: 2 botoes de clima/cortina + 2 blanks
 
 # ── Linha 1: 4 botoes de iluminacao ──
 - type: grid
@@ -17,28 +17,43 @@
       template:
         - tpl_popup_light
         - icon_light_flush
+      # FIX: tap_action explicito para garantir toggle (nao depender apenas do template)
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.sala_switch_1
       name: LED Direito
       template:
         - tpl_popup_light
         - icon_ledstrip
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.sala_switch_3
       name: LED Esquerdo
       template:
         - tpl_popup_light
         - icon_ledstrip
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.sala_2_switch_2
       name: VR Principal
       template:
         - tpl_popup_light
         - icon_light_flush
+      tap_action:
+        action: toggle
+        haptic: success
 
-# ── Linha 2: 3 botoes de iluminacao varanda ──
+# ── Linha 2: 3 botoes de iluminacao varanda + 1 blank ──
+# ANTERIOR: columns: 3 (botoes maiores que linha 1)
+# FIX: columns: 4 + 1 blank card para igualar tamanho dos botoes
 - type: grid
-  columns: 3
+  columns: 4
   square: false
   cards:
     - type: custom:button-card
@@ -47,18 +62,36 @@
       template:
         - tpl_popup_light
         - icon_ledstrip
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.varanda_switch_1
       name: VR Gourmet
       template:
         - tpl_popup_light
         - icon_ledstrip
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.varanda_switch_2
       name: VR Pendente
       template:
         - tpl_popup_light
         - icon_pendant
+      tap_action:
+        action: toggle
+        haptic: success
+    # BLANK — iguala 3 botoes a grid de 4 colunas
+    - type: custom:button-card
+      color_type: blank-card
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - opacity: '0'
 
 # ── Divisor Glassmorphism ──
 - type: custom:button-card
@@ -94,11 +127,16 @@
       name: Smart TV
       template:
         - mediaplayer
+      # VERSAO ANTERIOR: call-service nao estava executando (botao animava mas TV nao ligava)
+      # tap_action:
+      #   action: call-service
+      #   service: homeassistant.toggle
+      #   service_data:
+      #     entity_id: media_player.smart_tv_pro_2
+      #   haptic: success
+      # FIX: usar action: toggle — button-card envia toggle nativo para o dominio da entity
       tap_action:
-        action: call-service
-        service: homeassistant.toggle
-        service_data:
-          entity_id: media_player.smart_tv_pro_2
+        action: toggle
         haptic: success
       double_tap_action:
         action: more-info
@@ -129,10 +167,18 @@
             }
           ]]]
         circle_input_unit: '%'
+      # VERSAO ANTERIOR: call-service nao executava (botao animava mas Spotify nao respondia)
+      # tap_action:
+      #   action: call-service
+      #   service: media_player.media_play_pause
+      #   service_data:
+      #     entity_id: media_player.spotifyplus_bruno_helasio
+      #   haptic: success
+      # FIX: usar perform-action (sintaxe moderna do button-card v4+)
       tap_action:
-        action: call-service
-        service: media_player.media_play_pause
-        service_data:
+        action: perform-action
+        perform_action: media_player.media_play_pause
+        target:
           entity_id: media_player.spotifyplus_bruno_helasio
         haptic: success
       double_tap_action:
@@ -186,9 +232,11 @@
             <rect x="5" y="35" width="40" height="1.5" rx=".75" opacity=".3"/>
           </svg>
 
-# ── Linha 4: 2 botoes de clima/cortina ──
+# ── Linha 4: 2 botoes de clima/cortina + 2 blanks ──
+# ANTERIOR: columns: 2 (botoes muito maiores que linhas de 4)
+# FIX: columns: 4 + 2 blank cards para igualar tamanho dos botoes
 - type: grid
-  columns: 2
+  columns: 4
   square: false
   cards:
     # CORTINA — SVG inline
@@ -244,3 +292,21 @@
         card:
           - opacity: "0.35"
           - cursor: "default"
+    # BLANK 1 — iguala 2 botoes a grid de 4 colunas
+    - type: custom:button-card
+      color_type: blank-card
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - opacity: '0'
+    # BLANK 2 — iguala 2 botoes a grid de 4 colunas
+    - type: custom:button-card
+      color_type: blank-card
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - opacity: '0'

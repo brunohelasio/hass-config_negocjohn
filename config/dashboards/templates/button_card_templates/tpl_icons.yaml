@@ -685,12 +685,17 @@ icon_spotify_color:
 # animacao pulse quando playing, logo Spotify verde (#1DB954)
 icon_spotify:
   template: base
+  variables:
+    state_on: >
+      [[[ return entity !== undefined && ['on','playing','paused','idle','standby'].includes(entity.state); ]]]
   state_display: >
     [[[
       if (entity === undefined) return 'Desconhecido';
       if (entity.state === 'playing') return 'Tocando';
       if (entity.state === 'paused') return 'Pausado';
       if (entity.state === 'idle') return 'Conectado';
+      if (entity.state === 'standby') return 'Standby';
+      if (entity.state === 'off') return 'Desligado';
       return entity.state;
     ]]]
   styles:
@@ -1821,7 +1826,7 @@ icon_tv:
   template: base
   variables:
     state_on: >
-      [[[ return entity !== undefined && ['on','playing','paused','idle'].includes(entity.state); ]]]
+      [[[ return entity !== undefined && ['on','playing','paused','idle','standby'].includes(entity.state); ]]]
   state_display: >
     [[[
       if (entity === undefined) return 'Desconhecido';
@@ -1829,6 +1834,7 @@ icon_tv:
       if (entity.state === 'paused') return 'Pausada';
       if (entity.state === 'idle') return 'Menu / Ligada';
       if (entity.state === 'on') return 'Ligada';
+      if (entity.state === 'standby') return 'Standby';
       if (entity.state === 'off') return 'Desligada';
       return entity.state;
     ]]]

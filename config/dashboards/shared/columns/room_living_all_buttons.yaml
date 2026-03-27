@@ -540,6 +540,10 @@
         action: more-info
       hold_action: !include ../popup/rooms/smart_tv_remote.yaml
     # SPOTIFY — entity = spotifyplus_bruno_helasio (integracao SpotifyPlus)
+    # ANTERIOR: usava icon_spotify_color (barras saltando) + state_display/state_on locais.
+    # Trocado para icon_spotify (logo verde, pulse, entity_picture bg, state_display PT-BR).
+    # state_display e state_on comentados — icon_spotify agora fornece.
+    # Para restaurar: descomentar state_display, state_on, e trocar icon_spotify → icon_spotify_color.
     - type: custom:button-card
       entity: media_player.spotifyplus_bruno_helasio
       name: Spotify
@@ -547,14 +551,15 @@
         - base
         - circle
         - loader
-        - icon_spotify_color
-      state_display: >
-        [[[
-          return entity && entity.state === 'off' ? ' ' : null;
-        ]]]
+        # - icon_spotify_color
+        - icon_spotify
+      # state_display: >
+      #   [[[
+      #     return entity && entity.state === 'off' ? ' ' : null;
+      #   ]]]
       variables:
-        state_on: >
-          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
+        # state_on: >
+        #   [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
         circle_input: >
           [[[
             if (entity && entity.attributes.volume_level !== undefined) {

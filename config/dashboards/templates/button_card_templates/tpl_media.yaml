@@ -621,14 +621,17 @@ mediaplayer:
     - circle
     - loader
     - icon_tv
-  state_display: >
-    [[[
-      return entity && entity.state === 'off' ? " " : null;
-    ]]]
+  # ANTERIOR: state_display e state_on definidos aqui — sobreescreviam os do icon_tv.
+  # Comentados para que icon_tv (PT-BR, entity_picture, animacoes) prevaleca.
+  # Para restaurar: descomentar as 5 linhas abaixo.
+  # state_display: >
+  #   [[[
+  #     return entity && entity.state === 'off' ? " " : null;
+  #   ]]]
+  # variables:
+  #   state_on: >
+  #     [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
   variables:
-    state_on: >
-      [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
-
     circle_input: >
       [[[
         if (entity && entity.attributes.volume_level !== undefined) {

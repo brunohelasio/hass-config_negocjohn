@@ -46,6 +46,9 @@ grid_living_room:
     entity: light.grupo_luzes_sala
     # entity: light.sala_switch_2
     name: Sala
+    # triggers_update com sensor.time para atualizar o timer de tempo no state_display
+    # (mostra "1 light · 2h" etc). Necessario para atualizacao periodica a cada minuto.
+    triggers_update: sensor.time
     double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml
     # double_tap_action:
     #   action: fire-dom-event
@@ -65,7 +68,9 @@ grid_living_room:
     hold_action: !include ../../shared/popup/rooms/livingroom.yaml
     template:
       - rooms_base
-      - circle
+      # REMOVIDO: circle nao faz parte do comportamento original do botao principal.
+      # Mantido apenas nos botoes de luz do popup (Luz Principal) e midia (TV/Spotify).
+      # - circle
       - icon_couch_lamp
       - motion
       - ac_status
@@ -84,27 +89,26 @@ grid_living_room:
       ac_entity: climate.sl_ar_condicionado
       # TV/Media da sala
       media_entity: media_player.smart_tv_pro_2
-      # Circle brightness: mostra % de brilho da luz principal.
-      # Para luzes sem dimmer, mostra 100% quando ligada.
-      # Quando instalar dimmer, reconhecera automaticamente o valor real.
-      circle_input: >
-        [[[
-          if (entity && entity.state === 'on') {
-            const brightness = entity.attributes.brightness;
-            return brightness != null
-              ? Math.round(brightness / 2.54)
-              : 100;
-          }
-          return ' ';
-        ]]]
-      circle_input_unit: '%'
-    card_mod:
-      style: |
-        #circle {
-        {%- if not is_state('light.grupo_luzes_sala', 'on') -%}
-          display:none !important;
-        {% endif %}
-        }
+      # REMOVIDO: circle_input nao e mais necessario no botao principal (sem circle).
+      # circle_input: >
+      #   [[[
+      #     if (entity && entity.state === 'on') {
+      #       const brightness = entity.attributes.brightness;
+      #       return brightness != null
+      #         ? Math.round(brightness / 2.54)
+      #         : 100;
+      #     }
+      #     return ' ';
+      #   ]]]
+      # circle_input_unit: '%'
+    # REMOVIDO: card_mod para esconder circle nao e mais necessario (circle removido).
+    # card_mod:
+    #   style: |
+    #     #circle {
+    #     {%- if not is_state('light.grupo_luzes_sala', 'on') -%}
+    #       display:none !important;
+    #     {% endif %}
+    #     }
 
 # KITCHEN NORMAL
 grid_kitchen_normal:

@@ -1304,7 +1304,9 @@ circle:
                     // approximate position of thumb relative to circle
                     circle_slider.style.top = `${(circle_slider.value - 50) / 1.66 - 1}%`;
                     // debug position
-                    let debug = true;
+                    // ORIGINAL: debug = true (slider ficava semi-visivel a 30% opacidade)
+                    // FIX: debug = false para esconder o slider em producao
+                    let debug = false;
                     if (debug) circle_slider.style.opacity = 0.3;
                     // pass each event to handler
                     ['click', 'input', 'mousedown', 'mouseup', 'touchstart', 'touchend'].forEach((event) => {

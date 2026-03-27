@@ -127,7 +127,8 @@
         type: custom:button-card
         entity: media_player.spotifyplus_ngoc_nguyen
         name: ' '
-        double_tap_action: !include ../../shared/popup/spotify_playlist.yaml
+        # ANTERIOR: double_tap_action: !include ../../shared/popup/spotify_playlist.yaml
+        double_tap_action: !include ../../shared/popup/media_spotify.yaml
         template:
           - currently_playing
           # - conditional_media

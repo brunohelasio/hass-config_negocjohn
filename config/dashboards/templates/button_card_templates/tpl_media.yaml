@@ -631,7 +631,6 @@ mediaplayer:
   variables:
     state_on: >
       [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
-  variables:
     circle_input: >
       [[[
         if (entity && entity.attributes.volume_level !== undefined) {

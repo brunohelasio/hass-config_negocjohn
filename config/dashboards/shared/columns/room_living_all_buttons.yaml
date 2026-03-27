@@ -672,6 +672,17 @@
       variables:
         state_on: >
           [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
+      # FIX: state overrides para forçar background branco em estados ativos do climate
+      # Sem isso, o botão não acendia (ficava cinza) mesmo com state_on=true.
+      # Usa detecção nativa do button-card via operator:template para garantir styles.card.
+      state:
+        - operator: template
+          value: >
+            [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state); ]]]
+          styles:
+            card:
+              - background-color: 'rgba(250, 250, 250, 0.75)'
+              - color: '#4b5254'
       tap_action:
         action: perform-action
         perform_action: climate.toggle

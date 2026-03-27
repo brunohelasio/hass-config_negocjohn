@@ -323,29 +323,43 @@ let time = c => {
 
 ### Pre-requisitos / Informacoes Necessarias Antes de Implementar
 
-1. **Entidades de presenca da sala**: Existe algum `binary_sensor.motion_sala` ou similar? Precisamos do entity_id exato
-2. **Entidade de climatizacao**: Qual o entity_id do AC da sala? (ex: `climate.sala_ac`)
-3. **Sensor de reuniao do Office**: Como detectar reuniao? Calendario, app, sensor?
-4. **Sensor "active" da sala**: O `sensor.living_room_active` existe no HA? (esta comentado no codigo). Se nao, criar template sensor
-5. **Sensor de retain/persistencia**: Para o timer nao resetar, precisa de `input_datetime` ou `input_text` helper no HA
+**RESOLVIDO (2026-03-27):**
+
+1. **Presenca da sala**: Ainda sem sensor. Implementado com placeholder `binary_sensor.motion_sala_placeholder` — nao quebra o painel, basta trocar o entity_id quando o sensor chegar.
+2. **AC da sala**: `climate.sl_ar_condicionado` — CONFIRMADO. `climate.ac_office` e `climate.ac_quarto_miguel` tambem sao do usuario (mantidos nos popups e sidebar).
+3. **Sensor de temperatura**: `sensor.sl_sensor_temp_humid_temperatura` — CONFIRMADO. Usado no graph do grid Climate e no sensor.home_climate.
+4. **Sensor de reuniao do Office**: Ainda nao definido.
+5. **Sensor "active" da sala**: `sensor.living_room_active` — ATIVADO, agora usa `light.grupo_luzes_sala` e `media_player.smart_tv_pro_2`, com atributos `lights_on` e `lights_on_count`.
+6. **Termostatos europeus**: `climate.office_thermostat`, `climate.living_room_thermostat`, `climate.kids_room_thermostat`, `climate.bedroom_thermostat` — COMENTADOS em todos os arquivos (thermostat.yaml, hass_group.yaml, template_sensors.yaml).
+7. **Circle/brightness**: Implementado com 100% para luzes sem dimmer. Reconhece dimmer automaticamente quando instalado.
+
+### Entidades confirmadas do usuario (Brasil)
+
+| Entidade | Entity ID | Tipo |
+|----------|-----------|------|
+| AC Sala | `climate.sl_ar_condicionado` | climate |
+| AC Office | `climate.ac_office` | climate |
+| AC Quarto Miguel | `climate.ac_quarto_miguel` | climate |
+| Temp/Humid Sala | `sensor.sl_sensor_temp_humid_temperatura` | sensor |
+| Luzes Sala (grupo) | `light.grupo_luzes_sala` | light |
+| Luz principal Sala | `light.sala_switch_2` | light |
+| TV Sala | `media_player.smart_tv_pro_2` | media_player |
+| Remote TV | `remote.smart_tv_pro` | remote |
+| Spotify | `media_player.spotifyplus_bruno_helasio` | media_player |
+| Motion Sala | `binary_sensor.motion_sala_placeholder` | ⏳ pendente |
 
 ---
 
-### Prompt Sugerido para Retomada dos Trabalhos
+### Implementacao concluida (2026-03-27)
 
-```
-Vamos retomar a implementacao das funcionalidades negocjohn no dashboard.
-Consulte o CLAUDE.md secao "Analise de Funcionalidades negocjohn" para o plano completo.
-
-Antes de comecar o codigo, preciso confirmar as entidades do meu HA:
-- Presenca da sala: [informar entity_id do sensor de presenca/motion da sala]
-- AC da sala: [informar entity_id do climate da sala]
-- Sensor de reuniao: [informar como detectar reuniao no office, se aplicavel]
-
-Vamos comecar pela Fase 1 (backdrop/vidro fosco) e Fase 2 (reduzir popup).
-Essas duas nao dependem de entidades especificas.
-
-Depois passamos para a Fase 3 (icones de status) com as entidades confirmadas acima.
-
-Lembre-se: NUNCA excluir codigo, sempre comentar (Regra de Ouro do CLAUDE.md).
+| Fase | Status | Descricao |
+|------|--------|-----------|
+| 0 | ✅ | Limpeza termostatos europeus, adaptacao sensor.home_climate para cooling |
+| 1 | ✅ | Backdrop/vidro fosco blur(12px) em todos os popups |
+| 2 | ✅ | Popup sala reduzido de 65vw para 55vw |
+| 3 | ✅ | Icones de status: motion (placeholder), AC, TV, luzes |
+| 4 | ✅ | Vermelho unavailable ja funciona via tpl_base.yaml (state_error) |
+| 5 | ✅ | Circle brightness: 100% sem dimmer, auto-adapta com dimmer |
+| 6 | ✅ | Contagem de luzes via sensor.living_room_active (lights_on_count) |
+| 7 | ⏳ | Funcionalidades extras (conforme necessidade) |
 ```

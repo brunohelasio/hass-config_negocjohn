@@ -26,7 +26,7 @@ template:
       - unique_id: climate_index
         name: Home Climate
         state: >-
-          {% set aqi = states.sensor.air_quality_index.state | float %}
+          {% set aqi = states.sensor.air_quality_index.state | float(0) %}
           {% if 0 < aqi < 12 %}
             Excellent
           {% elif 12.1 < aqi < 35.4 %}
@@ -37,6 +37,8 @@ template:
             Interior
           {% elif 150.5 < aqi %}
             Poor
+          {% else %}
+            Unknown
           {% endif %}
         icon: >-
           {% if states('sensor.home_climate') in ['Excellent', 'Good'] %}
@@ -48,61 +50,101 @@ template:
           {%- endif %}
         attributes:
           average_temperature: >-
-            {{ states.sensor.average_temperature.state }}
+            {% if has_value('sensor.sl_sensor_temp_humid_temperatura') %}
+              {{ states('sensor.sl_sensor_temp_humid_temperatura') }}
+            {% else %}
+              {{ states.sensor.average_temperature.state | default('N/A') }}
+            {% endif %}
           average_humidity: >-
-            {{ states.sensor.average_humidity.state }}
-          living_room_pm25: >-
-            {% if has_value('sensor.dyson_ph04_pm_2_5') %}
-              {{ states.sensor.dyson_ph04_pm_2_5.state }} µg/m³
-            {% endif %}
-          bedroom_pm25: >-
-            {% if has_value('sensor.zhimi_mb3_8b86_pm25') %}
-              {{ states.sensor.zhimi_mb3_8b86_pm25.state }} µg/m³
-            {% endif %}
-          office_pm25: >-
-            {% if has_value('sensor.zhimi_mb4_b008_pm25_density') %}
-              {{ states.sensor.zhimi_mb4_b008_pm25_density.state }} µg/m³
-            {% endif %}
-          heating: >-
-            {% set heaters = [
-              states.climate.bedroom_thermostat,
-              states.climate.office_thermostat,
-              states.climate.kids_room_thermostat,
-              states.climate.living_room_thermostat
+            {{ states.sensor.average_humidity.state | default('N/A') }}
+          # ORIGINAL negocjohn PM2.5 sensors (comentado — Regra de Ouro)
+          # living_room_pm25: >-
+          #   {% if has_value('sensor.dyson_ph04_pm_2_5') %}
+          #     {{ states.sensor.dyson_ph04_pm_2_5.state }} µg/m³
+          #   {% endif %}
+          # bedroom_pm25: >-
+          #   {% if has_value('sensor.zhimi_mb3_8b86_pm25') %}
+          #     {{ states.sensor.zhimi_mb3_8b86_pm25.state }} µg/m³
+          #   {% endif %}
+          # office_pm25: >-
+          #   {% if has_value('sensor.zhimi_mb4_b008_pm25_density') %}
+          #     {{ states.sensor.zhimi_mb4_b008_pm25_density.state }} µg/m³
+          #   {% endif %}
+          # ORIGINAL negocjohn heating detection (European thermostats — comentado)
+          # heating: >-
+          #   {% set heaters = [
+          #     states.climate.bedroom_thermostat,
+          #     states.climate.office_thermostat,
+          #     states.climate.kids_room_thermostat,
+          #     states.climate.living_room_thermostat
+          #   ] | reject('equalto', none) | list  %}
+          #   {% set heateron = heaters | selectattr('attributes.hvac_action', 'eq', 'heating') | list | count %}
+          #   {%- if heateron != 0 -%}
+          #     yes
+          #   {% else %}
+          #     no
+          #   {% endif %}
+          # AC status (usando entidades do usuario — cooling ao inves de heating)
+          cooling: >-
+            {% set acs = [
+              states.climate.sl_ar_condicionado,
+              states.climate.ac_office,
+              states.climate.ac_quarto_miguel
             ] | reject('equalto', none) | list  %}
-            {% set heateron = heaters | selectattr('attributes.hvac_action', 'eq', 'heating') | list | count %}
-            {%- if heateron != 0 -%}
+            {% set cooling_on = acs | selectattr('state', 'in', ['cool', 'fan_only', 'dry', 'heat']) | list | count %}
+            {%- if cooling_on != 0 -%}
               yes
             {% else %}
               no
             {% endif %}
-          purifier: >-
-            {% set purifiers = [
-              states.fan.dyson_ph04,
-              states.fan.office_xiaomi_air_purifier,
-              states.fan.zhimi_mb3_8b86_air_purifier ] %}
-            {% set purifier_on = purifiers | selectattr('state','eq','on') | list | count %}
-            {%- if (purifier_on != 0) -%}
-              yes
-            {% else %}
-              no
-            {% endif %}
-          heating_on: >-
-            {% set heateron = [
-              states.climate.bedroom_thermostat,
-              states.climate.office_thermostat,
-              states.climate.kids_room_thermostat,
-              states.climate.living_room_thermostat ] | reject('equalto', none) | list  %}
-            {{ heateron | selectattr('attributes.hvac_action','eq','heating') | map(attribute='name') | list | replace('Thermostat', '') }}
+          cooling_on: >-
+            {% set acs = [
+              states.climate.sl_ar_condicionado,
+              states.climate.ac_office,
+              states.climate.ac_quarto_miguel
+            ] | reject('equalto', none) | list  %}
+            {{ acs | selectattr('state', 'in', ['cool', 'fan_only', 'dry', 'heat']) | map(attribute='name') | list }}
+          # ORIGINAL negocjohn purifier sensors (comentado — Regra de Ouro)
+          # purifier: >-
+          #   {% set purifiers = [
+          #     states.fan.dyson_ph04,
+          #     states.fan.office_xiaomi_air_purifier,
+          #     states.fan.zhimi_mb3_8b86_air_purifier ] %}
+          #   {% set purifier_on = purifiers | selectattr('state','eq','on') | list | count %}
+          #   {%- if (purifier_on != 0) -%}
+          #     yes
+          #   {% else %}
+          #     no
+          #   {% endif %}
+          # ORIGINAL negocjohn heating_on attribute (comentado)
+          # heating_on: >-
+          #   {% set heateron = [
+          #     states.climate.bedroom_thermostat,
+          #     states.climate.office_thermostat,
+          #     states.climate.kids_room_thermostat,
+          #     states.climate.living_room_thermostat ] | reject('equalto', none) | list  %}
+          #   {{ heateron | selectattr('attributes.hvac_action','eq','heating') | map(attribute='name') | list | replace('Thermostat', '') }}
       # SENSOR - ROOM ACTIVITY
+      # ORIGINAL negocjohn living_room_active (comentado — Regra de Ouro)
+      # - unique_id: living_room_active
+      #   name: 'Living-room Active'
+      #   state: "{{ iif ((not is_state('light.living_room_group', 'off') or (not is_state('media_player.sony_bravia_tv', 'off'))), 'yes', 'no') }}"
+      #   icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+      #   attributes:
+      #     lights_on: >-
+      #       {%- set light = expand(states.light.living_room_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Living Room ', '') %}
+      #       {{- light }}
+      # Versao adaptada para entidades do usuario
       - unique_id: living_room_active
         name: 'Living-room Active'
-        state: "{{ iif ((not is_state('light.living_room_group', 'off') or (not is_state('media_player.sony_bravia_tv', 'off'))), 'yes', 'no') }}"
+        state: "{{ iif ((not is_state('light.grupo_luzes_sala', 'off') or (not is_state('media_player.smart_tv_pro_2', 'off'))), 'yes', 'no') }}"
         icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
         attributes:
           lights_on: >-
-            {%- set light = expand(states.light.living_room_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Living Room ', '') %}
+            {%- set light = expand(states.light.grupo_luzes_sala) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list %}
             {{- light }}
+          lights_on_count: >-
+            {{ expand(states.light.grupo_luzes_sala) | selectattr('state', 'eq', 'on') | list | count }}
       # SENSOR - BEDROOM ACTIVITY
       - unique_id: bedroom_active
         name: 'Bedroom Active'

@@ -209,7 +209,7 @@ browser_mod:
         padding: 0.5rem
         mediaquery:
           "(max-width: 800px)":
-            grid-template-columns: 1fr
+            grid-template-columns: 1.2fr
             grid-template-areas: |
               "col_buttons"
               "col_camera"

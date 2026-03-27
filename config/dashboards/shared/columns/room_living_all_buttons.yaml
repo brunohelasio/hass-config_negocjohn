@@ -1,10 +1,10 @@
 # Layout combinado de botoes — Sala (popup)
-# Disposicao: 4-3-4-2 (linhas com quantidades diferentes de botoes)
+# Disposicao: 4-4-4-4 (todas as linhas com 4 colunas, blanks para igualar)
 # Linha 1: 4 botoes de iluminacao principal
-# Linha 2: 3 botoes de iluminacao varanda
+# Linha 2: 3 botoes de iluminacao varanda + 1 blank
 # Divisor glassmorphism
 # Linha 3: 4 botoes de midia/dispositivos
-# Linha 4: 2 botoes de clima/cortina
+# Linha 4: 2 botoes de clima/cortina + 2 blanks
 
 # ── Linha 1: 4 botoes de iluminacao ──
 - type: grid
@@ -49,9 +49,11 @@
         action: toggle
         haptic: success
 
-# ── Linha 2: 3 botoes de iluminacao varanda ──
+# ── Linha 2: 3 botoes de iluminacao varanda + 1 blank ──
+# ANTERIOR: columns: 3 (botoes maiores que linha 1)
+# FIX: columns: 4 + 1 blank card para igualar tamanho dos botoes
 - type: grid
-  columns: 3
+  columns: 4
   square: false
   cards:
     - type: custom:button-card
@@ -81,6 +83,15 @@
       tap_action:
         action: toggle
         haptic: success
+    # BLANK — iguala 3 botoes a grid de 4 colunas
+    - type: custom:button-card
+      color_type: blank-card
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - opacity: '0'
 
 # ── Divisor Glassmorphism ──
 - type: custom:button-card
@@ -221,9 +232,11 @@
             <rect x="5" y="35" width="40" height="1.5" rx=".75" opacity=".3"/>
           </svg>
 
-# ── Linha 4: 2 botoes de clima/cortina ──
+# ── Linha 4: 2 botoes de clima/cortina + 2 blanks ──
+# ANTERIOR: columns: 2 (botoes muito maiores que linhas de 4)
+# FIX: columns: 4 + 2 blank cards para igualar tamanho dos botoes
 - type: grid
-  columns: 2
+  columns: 4
   square: false
   cards:
     # CORTINA — SVG inline
@@ -279,3 +292,21 @@
         card:
           - opacity: "0.35"
           - cursor: "default"
+    # BLANK 1 — iguala 2 botoes a grid de 4 colunas
+    - type: custom:button-card
+      color_type: blank-card
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - opacity: '0'
+    # BLANK 2 — iguala 2 botoes a grid de 4 colunas
+    - type: custom:button-card
+      color_type: blank-card
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - opacity: '0'

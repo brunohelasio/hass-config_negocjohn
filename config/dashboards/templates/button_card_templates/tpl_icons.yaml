@@ -1255,8 +1255,16 @@ icon_climate:
       icon:
         - width: 78%
         - margin-left: -10%
+        # ORIGINAL negocjohn (invertido para AC brasileiro):
+        # - fill: >
+        #     [[[ return variables.state === 'heating' || variables.state === 'off' ? '#ff8100' : '#9da0a2'; ]]]
+        # FIX: OFF → cinza, ativo (cool/fan_only/dry/heat/auto) → azul ativo
         - fill: >
-            [[[ return variables.state === 'heating' || variables.state === 'off' ? '#ff8100' : '#9da0a2'; ]]]
+            [[[
+              return ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(variables.state) !== -1
+                ? '#3583b6'
+                : '#9da0a2';
+            ]]]
   custom_fields:
     icon: >
       <svg viewBox="0 0 50 50">

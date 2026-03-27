@@ -79,6 +79,9 @@ browser_mod:
             justify-content: center !important;
           }
           .mdc-dialog__surface {
+            /* ANTERIOR: sem width explicito — popup usava tamanho default do browser_mod */
+            width: 55vw !important;
+            max-width: 850px !important;
             max-height: 88vh !important;
             overflow-y: auto !important;
           }

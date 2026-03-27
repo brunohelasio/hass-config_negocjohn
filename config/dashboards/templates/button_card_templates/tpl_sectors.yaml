@@ -96,13 +96,20 @@ rooms_base:
           return entity.attributes.washdryer_remain;
         }
         else if (variables.state_on || variables.state == 'yes') {
-          // Keep original logic for rooms that expose `attributes.lights_on`,
-          // but protect against undefined sensors while adapting entities.
+          // Obtem contagem de luzes ligadas do sensor active
           const activeEntity = variables.active ? states[variables.active] : null;
+          // ANTERIOR: usava lights_on (retorna string Jinja, nao array JS)
+          // FIX: usa lights_on_count primeiro (numero), fallback para lights_on
+          const lightsOnCount = activeEntity?.attributes?.lights_on_count;
           const lightsOn = activeEntity?.attributes?.lights_on;
-          const num = Array.isArray(lightsOn)
-            ? lightsOn.length
-            : (Number.isFinite(lightsOn) ? lightsOn : null);
+          let num = null;
+          if (lightsOnCount != null && !isNaN(lightsOnCount)) {
+            num = parseInt(lightsOnCount);
+          } else if (Array.isArray(lightsOn)) {
+            num = lightsOn.length;
+          } else if (Number.isFinite(lightsOn)) {
+            num = lightsOn;
+          }
 
           // Funcao de formatacao de tempo (s/m/h/d) — baseada em circle_state do negocjohn
           const timeFmt = c => {
@@ -251,12 +258,19 @@ lights_status:
     lights_status: >
       [[[
         if (variables.active && states[variables.active]) {
-          const lightsOn = states[variables.active].attributes.lights_on_count;
-          if (lightsOn != null && !isNaN(lightsOn)) {
-            const count = parseInt(lightsOn);
-            if (count > 0)
-              return '<ha-icon icon="mdi:lightbulb-on" style="width:100%;display:flex; color:#f0c040;"></ha-icon>';
+          // Tenta lights_on_count primeiro, depois length de lights_on como fallback
+          const attr = states[variables.active].attributes;
+          let count = 0;
+          if (attr.lights_on_count != null && !isNaN(attr.lights_on_count)) {
+            count = parseInt(attr.lights_on_count);
+          } else if (Array.isArray(attr.lights_on)) {
+            count = attr.lights_on.length;
+          } else if (typeof attr.lights_on === 'string' && attr.lights_on.length > 2) {
+            // Jinja retorna string como "['Switch 2', 'Switch 1']" — conta virgulas + 1
+            count = (attr.lights_on.match(/,/g) || []).length + 1;
           }
+          if (count > 0)
+            return '<ha-icon icon="mdi:lightbulb-on" style="width:100%;display:flex; color:#f0c040;"></ha-icon>';
         }
       ]]]
   styles:

@@ -2,14 +2,16 @@
 # ANTERIOR: aspect_ratio: 16:9 (cameras muito grandes, causava scroll no popup)
 # CORRIGIDO: aspect_ratio: 3:2 (cameras menores para caber no popup sem scroll)
 - type: picture-entity
-  entity: camera.sl_camera
+  # ANTERIOR: entity: camera.sl_camera (entity not found)
+  entity: camera.sl_camera_2
   camera_view: live
   aspect_ratio: 3:2
   show_name: false
   show_state: false
 
 - type: picture-entity
-  entity: camera.vr_camera
+  # ANTERIOR: entity: camera.vr_camera (entity not found)
+  entity: camera.vr_camera_2
   camera_view: live
   aspect_ratio: 3:2
   show_name: false

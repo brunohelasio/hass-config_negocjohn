@@ -159,183 +159,218 @@
 #             {%- endif -%};
 #           }
 #
-# v4 — DUAS COLUNAS: player (esquerda) + spotify-card playlist browser (direita)
-# Sensores substituidos por fallback (Spotify green 30,215,96 / indigo)
-# spotify-card-v2 instalado via HACS (custom:spotify-card)
+# VERSAO ANTERIOR (v4 — DUAS COLUNAS: player + spotify-card):
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Spotify
+#     tag: spotify
+#     style: |
+#       --popup-max-width: min(900px, 95vw);
+#     card_mod: !include ../snippets/style_popup_center.yaml
+#     content:
+#       type: horizontal-stack
+#       cards:
+#         # ===== COLUNA ESQUERDA: Player =====
+#         - type: custom:stack-in-card
+#           cards:
+#             - type: custom:mushroom-media-player-card
+#               entity: media_player.spotifyplus_bruno_helasio
+#               icon: mdi:play
+#               use_media_info: true
+#               use_media_artwork: false
+#               show_volume_level: true
+#               media_controls:
+#                 - play_pause_stop
+#                 - previous
+#                 - next
+#               volume_controls:
+#                 - volume_buttons
+#                 - volume_set
+#               fill_container: false
+#               card_mod:
+#                 style: |
+#                   mushroom-shape-icon {
+#                     display: flex;
+#                     {% set media_type = state_attr(config.entity, 'media_content_type') %}
+#                     {% if media_type == 'music' or media_type == 'playlist' %}
+#                       --card-mod-icon: mdi:music;
+#                       animation: beat 1.3s ease-out infinite both;
+#                     {% else %}
+#                       --card-mod-icon: mdi:play;
+#                     {% endif %}
+#                     {{ 'animation: none;' if not is_state(config.entity, 'playing') }}
+#                   }
+#                   @keyframes beat {
+#                     0%, 60% { --icon-symbol-size: 21px; }
+#                     5%, 17%, 57% { --icon-symbol-size: 22px; }
+#                     10%, 20%, 51% { --icon-symbol-size: 23px; }
+#                     25%, 45% { --icon-symbol-size: 24px; }
+#                     30%, 39% { --icon-symbol-size: 25px; }
+#                     33% { --icon-symbol-size: 26px; }
+#                   }
+#                   ha-card {
+#                     --ha-card-border-width: 0;
+#                     --rgb-state-media-player: var(--album-art-color);
+#                   }
+#                   .actions {
+#                     --rgb-primary-text-color: var(--album-art-color);
+#                     --primary-text-color: rgb(var(--album-art-color));
+#                   }
+#                   ha-card:before {
+#                     transform: translate3d(0,0,0);
+#                     -webkit-transform: translate3d(0,0,0);
+#                     content: "";
+#                     {% if not is_state(config.entity, 'idle') and not is_state(config.entity, 'off') %}
+#                       {% if state_attr(config.entity, "entity_picture") %}
+#                         background: url( '{{ state_attr(config.entity, "entity_picture") }}') center no-repeat;
+#                       {% else %}
+#                         background: radial-gradient(circle, rgba(30,215,96,0.3) 0%, transparent 70%);
+#                       {% endif %}
+#                     {% endif %}
+#                     background-size: contain;
+#                     margin: 4px 4px 16px;
+#                     filter: drop-shadow(4px 4px 6px rgba(0, 0, 0, 0.5));
+#                     border-radius: var(--control-border-radius);
+#                     aspect-ratio: 1 / 1;
+#                   }
+#             - type: conditional
+#               conditions:
+#                 - entity: media_player.spotifyplus_bruno_helasio
+#                   state_not: 'off'
+#                 - entity: media_player.spotifyplus_bruno_helasio
+#                   state_not: idle
+#               card:
+#                 entity: media_player.spotifyplus_bruno_helasio
+#                 hide:
+#                   icon: true
+#                   name: true
+#                   runtime: true
+#                   source: true
+#                   power: true
+#                   state_label: true
+#                   volume: true
+#                   info: true
+#                   progress: false
+#                   controls: true
+#                 more_info: false
+#                 type: custom:mini-media-player
+#                 toggle_power: false
+#                 group: true
+#                 card_mod:
+#                   style:
+#                     mmp-progress$: |
+#                       paper-progress {
+#                         {% if is_state(config.entity, 'playing') %}
+#                           --paper-progress-container-color: rgba(var(--album-art-color), 0.2) !important;
+#                         {% endif %}
+#                       }
+#                     .: |
+#                       ha-card {
+#                         margin: 0px 12px 12px;
+#                         --mmp-progress-height: 12px !important;
+#                         height: var(--mmp-progress-height);
+#                         --mmp-accent-color: rgb(var(--album-art-color));
+#                         --mmp-border-radius: 12px !important;
+#                         --ha-card-border-width: 0;
+#                       }
+#           card_mod:
+#             style: |
+#               ha-card:before {
+#                 transform: translate3d(0,0,0);
+#                 -webkit-transform: translate3d(0,0,0);
+#                 content: "";
+#                 position: absolute;
+#                 height: 100%;
+#                 width: 100%;
+#                 {% if not is_state('media_player.spotifyplus_bruno_helasio', 'idle') and not is_state('media_player.spotifyplus_bruno_helasio', 'off') %}
+#                   {% if state_attr('media_player.spotifyplus_bruno_helasio', "entity_picture") %}
+#                     background: url( '{{ state_attr('media_player.spotifyplus_bruno_helasio', "entity_picture") }}' ) center no-repeat;
+#                   {% else %}
+#                     background: radial-gradient(circle, rgba(30,215,96,0.15) 0%, transparent 70%);
+#                   {% endif %}
+#                 {% endif %}
+#                 filter: blur(150px) saturate(200%);
+#                 background-size: 100% 100%;
+#               }
+#               ha-card {
+#                 transform: translate3d(0,0,0);
+#                 -webkit-transform: translate3d(0,0,0);
+#               }
+#               :host {
+#                 --album-art-color:
+#                 {% if not is_state('media_player.spotifyplus_bruno_helasio', 'idle') and not is_state('media_player.spotifyplus_bruno_helasio', 'off') %}
+#                   {% if states('sensor.vibrant_color') not in ['unknown', 'unavailable', 'None', ''] %}
+#                     {{ states('sensor.vibrant_color') }}
+#                   {% else %}
+#                     30, 215, 96
+#                   {% endif %}
+#                 {% else %}
+#                   var(--rgb-indigo-color)
+#                 {% endif %};
+#               }
+#         # ===== COLUNA DIREITA: Spotify Card — browse playlists =====
+#         - type: custom:spotify-card
+#           spotify_entity: media_player.spotifyplus_bruno_helasio
+#           limit: 10
+#           playlist_type: ''
+#           always_play_random_song: true
+#           display_style: list
+#           grid_covers_per_row: 3
+#           grid_show_title: true
+#           hide_warning: true
+#           hide_top_header: true
+#           hide_currently_playing: true
+#           hide_playback_controls: true
+#           card_mod:
+#             style: |
+#               ha-card {
+#                 --ha-card-border-width: 0;
+#                 background: transparent;
+#                 max-height: 480px;
+#                 overflow-y: auto;
+#                 border-radius: 12px;
+#               }
+#               #content {
+#                 border: 0 !important;
+#                 background-color: transparent !important;
+#               }
+# NOVO v5: Popup Spotify simplificado — custom:spotify-card unico com controles
+# Adota o SpotifyPlus card como media player control principal (hold_action do botao Spotify).
+# Descarta templates complexos de mushroom + mini-media-player + vibrant_color.
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
     title: Spotify
     tag: spotify
-    style: |
-      --popup-max-width: min(900px, 95vw);
-    card_mod: !include ../snippets/style_popup_center.yaml
+    style: >
+      --popup-max-width: min(500px, 90vw);
+    card_mod: !include ../snippets/style_popup_complete.yaml
     content:
-      type: horizontal-stack
-      cards:
-        # ===== COLUNA ESQUERDA: Player =====
-        - type: custom:stack-in-card
-          cards:
-            - type: custom:mushroom-media-player-card
-              entity: media_player.spotifyplus_bruno_helasio
-              icon: mdi:play
-              use_media_info: true
-              use_media_artwork: false
-              show_volume_level: true
-              media_controls:
-                - play_pause_stop
-                - previous
-                - next
-              volume_controls:
-                - volume_buttons
-                - volume_set
-              fill_container: false
-              card_mod:
-                style: |
-                  mushroom-shape-icon {
-                    display: flex;
-                    {% set media_type = state_attr(config.entity, 'media_content_type') %}
-                    {% if media_type == 'music' or media_type == 'playlist' %}
-                      --card-mod-icon: mdi:music;
-                      animation: beat 1.3s ease-out infinite both;
-                    {% else %}
-                      --card-mod-icon: mdi:play;
-                    {% endif %}
-                    {{ 'animation: none;' if not is_state(config.entity, 'playing') }}
-                  }
-                  @keyframes beat {
-                    0%, 60% { --icon-symbol-size: 21px; }
-                    5%, 17%, 57% { --icon-symbol-size: 22px; }
-                    10%, 20%, 51% { --icon-symbol-size: 23px; }
-                    25%, 45% { --icon-symbol-size: 24px; }
-                    30%, 39% { --icon-symbol-size: 25px; }
-                    33% { --icon-symbol-size: 26px; }
-                  }
-                  ha-card {
-                    --ha-card-border-width: 0;
-                    --rgb-state-media-player: var(--album-art-color);
-                  }
-                  .actions {
-                    --rgb-primary-text-color: var(--album-art-color);
-                    --primary-text-color: rgb(var(--album-art-color));
-                  }
-                  ha-card:before {
-                    transform: translate3d(0,0,0);
-                    -webkit-transform: translate3d(0,0,0);
-                    content: "";
-                    {% if not is_state(config.entity, 'idle') and not is_state(config.entity, 'off') %}
-                      {% if state_attr(config.entity, "entity_picture") %}
-                        background: url( '{{ state_attr(config.entity, "entity_picture") }}') center no-repeat;
-                      {% else %}
-                        background: radial-gradient(circle, rgba(30,215,96,0.3) 0%, transparent 70%);
-                      {% endif %}
-                    {% endif %}
-                    background-size: contain;
-                    margin: 4px 4px 16px;
-                    filter: drop-shadow(4px 4px 6px rgba(0, 0, 0, 0.5));
-                    border-radius: var(--control-border-radius);
-                    aspect-ratio: 1 / 1;
-                  }
-            - type: conditional
-              conditions:
-                - entity: media_player.spotifyplus_bruno_helasio
-                  state_not: 'off'
-                - entity: media_player.spotifyplus_bruno_helasio
-                  state_not: idle
-              card:
-                entity: media_player.spotifyplus_bruno_helasio
-                hide:
-                  icon: true
-                  name: true
-                  runtime: true
-                  source: true
-                  power: true
-                  state_label: true
-                  volume: true
-                  info: true
-                  progress: false
-                  controls: true
-                more_info: false
-                type: custom:mini-media-player
-                toggle_power: false
-                group: true
-                card_mod:
-                  style:
-                    mmp-progress$: |
-                      paper-progress {
-                        {% if is_state(config.entity, 'playing') %}
-                          --paper-progress-container-color: rgba(var(--album-art-color), 0.2) !important;
-                        {% endif %}
-                      }
-                    .: |
-                      ha-card {
-                        margin: 0px 12px 12px;
-                        --mmp-progress-height: 12px !important;
-                        height: var(--mmp-progress-height);
-                        --mmp-accent-color: rgb(var(--album-art-color));
-                        --mmp-border-radius: 12px !important;
-                        --ha-card-border-width: 0;
-                      }
-          card_mod:
-            style: |
-              ha-card:before {
-                transform: translate3d(0,0,0);
-                -webkit-transform: translate3d(0,0,0);
-                content: "";
-                position: absolute;
-                height: 100%;
-                width: 100%;
-                {% if not is_state('media_player.spotifyplus_bruno_helasio', 'idle') and not is_state('media_player.spotifyplus_bruno_helasio', 'off') %}
-                  {% if state_attr('media_player.spotifyplus_bruno_helasio', "entity_picture") %}
-                    background: url( '{{ state_attr('media_player.spotifyplus_bruno_helasio', "entity_picture") }}' ) center no-repeat;
-                  {% else %}
-                    background: radial-gradient(circle, rgba(30,215,96,0.15) 0%, transparent 70%);
-                  {% endif %}
-                {% endif %}
-                filter: blur(150px) saturate(200%);
-                background-size: 100% 100%;
-              }
-              ha-card {
-                transform: translate3d(0,0,0);
-                -webkit-transform: translate3d(0,0,0);
-              }
-              :host {
-                --album-art-color:
-                {% if not is_state('media_player.spotifyplus_bruno_helasio', 'idle') and not is_state('media_player.spotifyplus_bruno_helasio', 'off') %}
-                  {# fallback: Spotify green quando sensor.vibrant_color indisponivel #}
-                  {% if states('sensor.vibrant_color') not in ['unknown', 'unavailable', 'None', ''] %}
-                    {{ states('sensor.vibrant_color') }}
-                  {% else %}
-                    30, 215, 96
-                  {% endif %}
-                {% else %}
-                  var(--rgb-indigo-color)
-                {% endif %};
-              }
-        # ===== COLUNA DIREITA: Spotify Card — browse playlists =====
-        - type: custom:spotify-card
-          spotify_entity: media_player.spotifyplus_bruno_helasio
-          limit: 10
-          playlist_type: ''
-          always_play_random_song: true
-          display_style: list
-          grid_covers_per_row: 3
-          grid_show_title: true
-          hide_warning: true
-          hide_top_header: true
-          hide_currently_playing: true
-          hide_playback_controls: true
-          card_mod:
-            style: |
-              ha-card {
-                --ha-card-border-width: 0;
-                background: transparent;
-                max-height: 480px;
-                overflow-y: auto;
-                border-radius: 12px;
-              }
-              #content {
-                border: 0 !important;
-                background-color: transparent !important;
-              }
+      type: custom:spotify-card
+      spotify_entity: media_player.spotifyplus_bruno_helasio
+      limit: 10
+      playlist_type: ''
+      always_play_random_song: true
+      display_style: list
+      grid_covers_per_row: 3
+      grid_show_title: true
+      hide_warning: true
+      hide_top_header: false
+      hide_currently_playing: false
+      hide_playback_controls: false
+      card_mod:
+        style: |
+          ha-card {
+            --ha-card-border-width: 0;
+            background: transparent;
+            max-height: 70vh;
+            overflow-y: auto;
+            border-radius: 12px;
+          }
+          #content {
+            border: 0 !important;
+            background-color: transparent !important;
+          }

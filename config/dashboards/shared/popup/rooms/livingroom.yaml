@@ -57,6 +57,9 @@ browser_mod:
       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
       --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
+    # ANTERIOR: card_mod inline com blur, scrim, centering, surface sizing — tudo inline.
+    # Substituido por snippet compartilhado style_popup_complete.yaml +
+    # override de .mdc-dialog__surface para largura especifica desta popup.
     card_mod:
       style:
         .: |

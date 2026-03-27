@@ -66,11 +66,22 @@ grid_living_room:
     template:
       - rooms_base
       - icon_couch_lamp
+      - motion
+      - ac_status
+      - media_status
+      - lights_status
     variables:
       # light_entity: light.living_room_group
       light_entity: light.sala_switch_2
-      # active: sensor.living_room_active
-      active: ''
+      # ORIGINAL: active: sensor.living_room_active (vazio)
+      active: sensor.living_room_active
+      # Motion: placeholder — trocar pelo entity_id real quando o sensor chegar
+      # Usa protecao interna (nao quebra se a entidade nao existir)
+      motion: binary_sensor.motion_sala_placeholder
+      # AC da sala
+      ac_entity: climate.sl_ar_condicionado
+      # TV/Media da sala
+      media_entity: media_player.smart_tv_pro_2
     card_mod:
       style: |
         #circle {

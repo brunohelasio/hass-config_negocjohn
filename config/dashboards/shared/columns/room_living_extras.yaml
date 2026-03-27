@@ -86,12 +86,16 @@
       name: Smart TV
       template:
         - mediaplayer
-      # tap: toggle on/off
+      # VERSAO ANTERIOR: call-service nao executava (botao animava mas TV nao ligava)
+      # tap_action:
+      #   action: call-service
+      #   service: homeassistant.toggle
+      #   service_data:
+      #     entity_id: media_player.smart_tv_pro_2
+      #   haptic: success
+      # FIX: usar action: toggle — button-card envia toggle nativo para o dominio da entity
       tap_action:
-        action: call-service
-        service: homeassistant.toggle
-        service_data:
-          entity_id: media_player.smart_tv_pro_2
+        action: toggle
         haptic: success
       double_tap_action:
         action: more-info

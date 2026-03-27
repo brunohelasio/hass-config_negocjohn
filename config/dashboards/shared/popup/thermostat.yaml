@@ -1,150 +1,176 @@
+# ANTERIOR: popup de Climatizacao com layout footer e 3 ACs (sala, office, quarto_miguel)
+# Comentado para substituir por popup simples estilo sagaland93 (1 AC por comodo)
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Climatização
+#     style: >
+#       --max-popup-column: 2;
+#     card_mod: !include ../snippets/style_popup_center.yaml
+#     content:
+#       type: custom:mod-card
+#       card_mod: !include ../snippets/style_popup_footer.yaml
+#       card:
+#         type: custom:layout-card
+#         layout_type: custom:grid-layout
+#         layout: !include ../snippets/popup_footer_layout.yaml
+#         cards:
+#           #################################################
+#           #                                               #
+#           #            AC (ENTIDADES DO USUARIO)          #
+#           #                                               #
+#           #################################################
+#
+#           - type: thermostat
+#             entity: climate.sl_ar_condicionado
+#             show_current_as_primary: true
+#             features:
+#               - &features_ac
+#                 style: icons
+#                 type: climate-hvac-modes
+#                 hvac_modes:
+#                   - cool
+#                   - fan_only
+#                   - dry
+#                   - "off"
+#           - type: thermostat
+#             entity: climate.ac_office
+#             show_current_as_primary: true
+#             features:
+#               - *features_ac
+#           - type: thermostat
+#             entity: climate.ac_quarto_miguel
+#             show_current_as_primary: true
+#             features:
+#               - *features_ac
+#
+#           #################################################
+#           # ORIGINAL negocjohn European thermostats       #
+#           # (comentado para consulta futura — Regra de    #
+#           # Ouro: nunca deletar, sempre comentar)         #
+#           #################################################
+#           # - type: thermostat
+#           #   entity: climate.office_thermostat
+#           #   show_current_as_primary: true
+#           #   features:
+#           #     - &features
+#           #       style: icons
+#           #       type: climate-preset-modes
+#           #       preset_modes:
+#           #         - none
+#           #         - eco
+#           #         - comfort
+#           #         - home
+#           #         - sleep
+#           # - type: thermostat
+#           #   entity: climate.living_room_thermostat
+#           #   show_current_as_primary: true
+#           #   features:
+#           #     - *features
+#           # - type: thermostat
+#           #   entity: climate.kids_room_thermostat
+#           #   show_current_as_primary: true
+#           #   features:
+#           #     - *features
+#           # - type: thermostat
+#           #   entity: climate.bedroom_thermostat
+#           #   show_current_as_primary: true
+#           #   features:
+#           #     - *features
+#           # - type: entities
+#           #   entities:
+#           #     - type: thermostat
+#           #       entity: climate.office_thermostat
+#           #       show_current_as_primary: true
+#           #       features:
+#           #         - &features
+#           #           style: icons
+#           #           type: climate-preset-modes
+#           #           preset_modes:
+#           #             - none
+#           #             - eco
+#           #             - comfort
+#           #             - home
+#           #             - sleep
+#           # - type: entities
+#           #   entities:
+#           #     - type: thermostat
+#           #       entity: climate.living_room_thermostat
+#           #       show_current_as_primary: true
+#           #       features:
+#           #         - *features
+#           # - type: entities
+#           #   entities:
+#           #     - type: thermostat
+#           #       entity: climate.kids_room_thermostat
+#           #       show_current_as_primary: true
+#           #       features:
+#           #         - *features
+#           # - type: entities
+#           #   entities:
+#           #     - type: thermostat
+#           #       entity: climate.bedroom_thermostat
+#           #       show_current_as_primary: true
+#           #       features:
+#           #         - *features
+#           #################################################
+#           # - type: entities
+#           #   entities:
+#           #     - type: custom:better-thermostat-ui-card
+#           #       entity: climate.living_room_thermostat
+#           #       eco_temperature: 20
+#           #       name: Living room
+#           #       card_mod: &style
+#           #         style: |
+#           #           .name {
+#           #             line-height: normal;
+#           #           }
+#           # - type: entities
+#           #   entities:
+#           #     - type: custom:better-thermostat-ui-card
+#           #       entity: climate.kids_room_thermostat
+#           #       eco_temperature: 20
+#           #       name: Kids Room
+#           #       card_mod: *style
+#           # - type: entities
+#           #   entities:
+#           #     - type: custom:better-thermostat-ui-card
+#           #       entity: climate.bedroom_thermostat
+#           #       disable_summer: true
+#           #       eco_temperature: 20
+#           #       name: Bedroom
+#           #       card_mod: *style
+#           # - type: entities
+#           #   entities:
+#           #     - type: custom:better-thermostat-ui-card
+#           #       entity: climate.office_thermostat
+#           #       disable_window: false
+#           #       disable_summer: true
+#           #       eco_temperature: 20
+#           #       name: Office
+#           #       card_mod: *style
+# NOVO: popup thermostat simples estilo sagaland93 — 1 AC (sala) com thermostat card nativo
+# Chamado via hold_action do botao AC no popup da sala.
+# Card nativo do HA: visualizacao clean, controle de temperatura + hvac modes.
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
-    title: Climatização
+    title: Ar Condicionado — Sala
+    tag: thermostat_sala
     style: >
-      --max-popup-column: 2;
-    card_mod: !include ../snippets/style_popup_center.yaml
+      --popup-max-width: min(450px, 90vw);
+    card_mod: !include ../snippets/style_popup_complete.yaml
     content:
-      type: custom:mod-card
-      card_mod: !include ../snippets/style_popup_footer.yaml
-      card:
-        type: custom:layout-card
-        layout_type: custom:grid-layout
-        layout: !include ../snippets/popup_footer_layout.yaml
-        cards:
-          #################################################
-          #                                               #
-          #            AC (ENTIDADES DO USUARIO)          #
-          #                                               #
-          #################################################
-
-          - type: thermostat
-            entity: climate.sl_ar_condicionado
-            show_current_as_primary: true
-            features:
-              - &features_ac
-                style: icons
-                type: climate-hvac-modes
-                hvac_modes:
-                  - cool
-                  - fan_only
-                  - dry
-                  - "off"
-          - type: thermostat
-            entity: climate.ac_office
-            show_current_as_primary: true
-            features:
-              - *features_ac
-          - type: thermostat
-            entity: climate.ac_quarto_miguel
-            show_current_as_primary: true
-            features:
-              - *features_ac
-
-          #################################################
-          # ORIGINAL negocjohn European thermostats       #
-          # (comentado para consulta futura — Regra de    #
-          # Ouro: nunca deletar, sempre comentar)         #
-          #################################################
-          # - type: thermostat
-          #   entity: climate.office_thermostat
-          #   show_current_as_primary: true
-          #   features:
-          #     - &features
-          #       style: icons
-          #       type: climate-preset-modes
-          #       preset_modes:
-          #         - none
-          #         - eco
-          #         - comfort
-          #         - home
-          #         - sleep
-          # - type: thermostat
-          #   entity: climate.living_room_thermostat
-          #   show_current_as_primary: true
-          #   features:
-          #     - *features
-          # - type: thermostat
-          #   entity: climate.kids_room_thermostat
-          #   show_current_as_primary: true
-          #   features:
-          #     - *features
-          # - type: thermostat
-          #   entity: climate.bedroom_thermostat
-          #   show_current_as_primary: true
-          #   features:
-          #     - *features
-          # - type: entities
-          #   entities:
-          #     - type: thermostat
-          #       entity: climate.office_thermostat
-          #       show_current_as_primary: true
-          #       features:
-          #         - &features
-          #           style: icons
-          #           type: climate-preset-modes
-          #           preset_modes:
-          #             - none
-          #             - eco
-          #             - comfort
-          #             - home
-          #             - sleep
-          # - type: entities
-          #   entities:
-          #     - type: thermostat
-          #       entity: climate.living_room_thermostat
-          #       show_current_as_primary: true
-          #       features:
-          #         - *features
-          # - type: entities
-          #   entities:
-          #     - type: thermostat
-          #       entity: climate.kids_room_thermostat
-          #       show_current_as_primary: true
-          #       features:
-          #         - *features
-          # - type: entities
-          #   entities:
-          #     - type: thermostat
-          #       entity: climate.bedroom_thermostat
-          #       show_current_as_primary: true
-          #       features:
-          #         - *features
-          #################################################
-          # - type: entities
-          #   entities:
-          #     - type: custom:better-thermostat-ui-card
-          #       entity: climate.living_room_thermostat
-          #       eco_temperature: 20
-          #       name: Living room
-          #       card_mod: &style
-          #         style: |
-          #           .name {
-          #             line-height: normal;
-          #           }
-          # - type: entities
-          #   entities:
-          #     - type: custom:better-thermostat-ui-card
-          #       entity: climate.kids_room_thermostat
-          #       eco_temperature: 20
-          #       name: Kids Room
-          #       card_mod: *style
-          # - type: entities
-          #   entities:
-          #     - type: custom:better-thermostat-ui-card
-          #       entity: climate.bedroom_thermostat
-          #       disable_summer: true
-          #       eco_temperature: 20
-          #       name: Bedroom
-          #       card_mod: *style
-          # - type: entities
-          #   entities:
-          #     - type: custom:better-thermostat-ui-card
-          #       entity: climate.office_thermostat
-          #       disable_window: false
-          #       disable_summer: true
-          #       eco_temperature: 20
-          #       name: Office
-          #       card_mod: *style
+      type: thermostat
+      entity: climate.sl_ar_condicionado
+      show_current_as_primary: true
+      features:
+        - style: icons
+          type: climate-hvac-modes
+          hvac_modes:
+            - cool
+            - fan_only
+            - dry
+            - "off"

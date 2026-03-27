@@ -779,13 +779,21 @@ Graphite Auto:
       --dialog-surface-top: unset !important;
       --dialog-surface-margin-top: unset !important;
       --dialog-box-shadow: 0 0px 16px 4px rgba(101,115,134, .15), 0 16px 64px 32px rgba(101,115,134, .5) !important;
-      --ha-dialog-surface-background: rgba(22, 24, 29, 0.7) !important;
+      /* ORIGINAL negocjohn: --ha-dialog-surface-background: rgba(22, 24, 29, 0.7) !important; */
+      --ha-dialog-surface-background: rgba(15, 20, 35, 0.75) !important;
       --wa-color-overlay-modal: rgba(0, 0, 0, 0.7) !important;
-      --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.32)) !important;
+      /* ORIGINAL negocjohn: --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.32)) !important; */
+      --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.55)) !important;
       --mdc-text-field-fill-color: rgb(50 50 50 / 22%) !important;
       --mdc-select-fill-color: rgb(50 50 50 / 22%) !important;
       --mdc-theme-surface: rgba(22, 24, 29, 1) !important;
       --ha-bottom-sheet-height: auto !important;
+    }
+    /* Vidro fosco padronizado em todos os popups */
+    ha-dialog .mdc-dialog__surface,
+    ha-adaptive-dialog .mdc-dialog__surface {
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
     }
 
 

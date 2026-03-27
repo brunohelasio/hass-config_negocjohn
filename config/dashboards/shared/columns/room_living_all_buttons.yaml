@@ -672,17 +672,35 @@
       variables:
         state_on: >
           [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
-      # FIX: state overrides para forçar background branco em estados ativos do climate
-      # Sem isso, o botão não acendia (ficava cinza) mesmo com state_on=true.
-      # Usa detecção nativa do button-card via operator:template para garantir styles.card.
-      state:
-        - operator: template
-          value: >
-            [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state); ]]]
-          styles:
-            card:
-              - background-color: 'rgba(250, 250, 250, 0.75)'
-              - color: '#4b5254'
+      # ANTERIOR: state overrides com operator:template — nao funcionava de forma confiavel.
+      # O button-card avaliava styles.card JS templates do base DEPOIS do state override,
+      # sobrescrevendo o background-color forcado. Agora usamos styles.card direto no card.
+      # state:
+      #   - operator: template
+      #     value: >
+      #       [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state); ]]]
+      #     styles:
+      #       card:
+      #         - background-color: 'rgba(250, 250, 250, 0.75)'
+      #         - color: '#4b5254'
+      # FIX: styles.card direto no card — sobrescreve o template base com certeza.
+      # Verifica entity.state diretamente, sem depender de variables.state_on.
+      styles:
+        card:
+          - background-color: >
+              [[[
+                if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
+                  return 'rgba(250, 250, 250, 0.75)';
+                }
+                return 'rgba(115, 115, 115, 0.2)';
+              ]]]
+          - color: >
+              [[[
+                if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
+                  return '#4b5254';
+                }
+                return '#97989c';
+              ]]]
       tap_action:
         action: perform-action
         perform_action: climate.toggle

@@ -4,6 +4,7 @@ browser_mod:
   data:
     title: Quarto Marina
     size: wide
+    card_mod: !include ../../snippets/style_popup_center.yaml
     content:
       type: vertical-stack
       cards:

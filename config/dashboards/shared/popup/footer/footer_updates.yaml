@@ -3,6 +3,7 @@ browser_mod:
   service: browser_mod.popup
   data:
     title: Updates
+    card_mod: !include ../../snippets/style_popup_center.yaml
 
     content:
       type: custom:mod-card

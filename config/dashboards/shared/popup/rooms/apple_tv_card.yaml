@@ -5,6 +5,7 @@ browser_mod:
     title: 'ATV Remote'
     style: >
       --popup-background-color: rgba(21,25,35,1);
+    card_mod: !include ../../snippets/style_popup_center.yaml
     content:
       type: custom:mod-card
       card_mod:

@@ -5,6 +5,7 @@ browser_mod:
     title: System Information
     style: >
       --max-popup-column: 3;
+    card_mod: !include ../../snippets/style_popup_center.yaml
     content:
       type: custom:mod-card
       card_mod: !include ../../snippets/style_popup_footer.yaml

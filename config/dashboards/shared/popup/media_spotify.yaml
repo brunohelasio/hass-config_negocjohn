@@ -170,6 +170,7 @@ browser_mod:
     tag: spotify
     style: |
       --popup-max-width: min(900px, 95vw);
+    card_mod: !include ../snippets/style_popup_center.yaml
     content:
       type: horizontal-stack
       cards:

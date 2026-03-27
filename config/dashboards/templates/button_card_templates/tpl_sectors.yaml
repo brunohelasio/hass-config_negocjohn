@@ -104,16 +104,31 @@ rooms_base:
             ? lightsOn.length
             : (Number.isFinite(lightsOn) ? lightsOn : null);
 
+          // Funcao de formatacao de tempo (s/m/h/d) — baseada em circle_state do negocjohn
+          const timeFmt = c => {
+            let s = (c/1e3), m = (c/6e4), h = (c/36e5), d = (c/864e5);
+            return s < 60 ? parseInt(s) + 's'
+                 : m < 60 ? parseInt(m) + 'm'
+                 : h < 24 ? parseInt(h) + 'h'
+                 : parseInt(d) + 'd';
+          };
+
+          // Calcula tempo desde que a entidade (light group) ligou
+          let elapsed = '';
+          if (entity.state === 'on' && entity.last_changed) {
+            elapsed = timeFmt(Date.now() - Date.parse(entity.last_changed));
+          }
+
           if (num === 1) {
-            return '1 light';
+            return elapsed ? `1 light · ${elapsed}` : '1 light';
           } else if (typeof num === 'number' && num > 1) {
-            return `${num} lights`;
+            return elapsed ? `${num} lights · ${elapsed}` : `${num} lights`;
           } else if (typeof num === 'number' && num === 0) {
             return 'On';
           }
 
           // Fallback for environments without the `active` room sensor.
-          return 'On';
+          return elapsed ? `On · ${elapsed}` : 'On';
         }
         else {
           return variables.state;

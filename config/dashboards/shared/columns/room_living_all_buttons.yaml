@@ -16,11 +16,27 @@
       name: Luz Principal
       template:
         - tpl_popup_light
+        - circle
         - icon_light_flush
       # FIX: tap_action explicito para garantir toggle (nao depender apenas do template)
       tap_action:
         action: toggle
         haptic: success
+      # Circle brightness: mostra % de brilho da luz principal.
+      # Para luzes sem dimmer, mostra 100% quando ligada.
+      # Quando instalar dimmer, reconhecera automaticamente o valor real.
+      variables:
+        circle_input: >
+          [[[
+            if (entity && entity.state === 'on') {
+              const brightness = entity.attributes.brightness;
+              return brightness != null
+                ? Math.round(brightness / 2.54)
+                : 100;
+            }
+            return ' ';
+          ]]]
+        circle_input_unit: '%'
     - type: custom:button-card
       entity: light.sala_switch_1
       name: LED Direito
@@ -277,21 +293,38 @@
               <path d="M41.1,15.76H7.56c-.95,0-1.59,.63-1.59,1.54v4.77c0,.91,.62,1.52,1.59,1.52H41.09c.96,0,1.58-.62,1.58-1.52v-4.79c0-.9-.62-1.52-1.58-1.52Z"/>
             </g>
           </svg>
-    # AR CONDICIONADO
+    # AR CONDICIONADO — ativado com entity e hold_action para popup thermostat
+    # ORIGINAL: desabilitado (opacity 0.35, cursor default, sem entity)
+    # - type: custom:button-card
+    #   name: Ar Condicionado
+    #   template:
+    #     - base
+    #     - icon_climate
+    #   show_icon: false
+    #   tap_action:
+    #     action: none
+    #   hold_action:
+    #     action: none
+    #   styles:
+    #     card:
+    #       - opacity: "0.35"
+    #       - cursor: "default"
     - type: custom:button-card
-      name: Ar Condicionado
+      entity: climate.sl_ar_condicionado
+      name: Ar Cond.
       template:
         - base
         - icon_climate
       show_icon: false
+      variables:
+        state_on: >
+          [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
       tap_action:
-        action: none
-      hold_action:
-        action: none
-      styles:
-        card:
-          - opacity: "0.35"
-          - cursor: "default"
+        action: toggle
+        haptic: success
+      double_tap_action:
+        action: more-info
+      hold_action: !include ../popup/thermostat.yaml
     # BLANK 1 — iguala 2 botoes a grid de 4 colunas
     - type: custom:button-card
       color_type: blank-card

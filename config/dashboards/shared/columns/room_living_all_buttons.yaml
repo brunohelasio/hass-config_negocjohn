@@ -17,24 +17,37 @@
       template:
         - tpl_popup_light
         - icon_light_flush
+      # FIX: tap_action explicito para garantir toggle (nao depender apenas do template)
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.sala_switch_1
       name: LED Direito
       template:
         - tpl_popup_light
         - icon_ledstrip
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.sala_switch_3
       name: LED Esquerdo
       template:
         - tpl_popup_light
         - icon_ledstrip
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.sala_2_switch_2
       name: VR Principal
       template:
         - tpl_popup_light
         - icon_light_flush
+      tap_action:
+        action: toggle
+        haptic: success
 
 # ── Linha 2: 3 botoes de iluminacao varanda ──
 - type: grid
@@ -47,18 +60,27 @@
       template:
         - tpl_popup_light
         - icon_ledstrip
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.varanda_switch_1
       name: VR Gourmet
       template:
         - tpl_popup_light
         - icon_ledstrip
+      tap_action:
+        action: toggle
+        haptic: success
     - type: custom:button-card
       entity: light.varanda_switch_2
       name: VR Pendente
       template:
         - tpl_popup_light
         - icon_pendant
+      tap_action:
+        action: toggle
+        haptic: success
 
 # ── Divisor Glassmorphism ──
 - type: custom:button-card
@@ -134,10 +156,18 @@
             }
           ]]]
         circle_input_unit: '%'
+      # VERSAO ANTERIOR: call-service nao executava (botao animava mas Spotify nao respondia)
+      # tap_action:
+      #   action: call-service
+      #   service: media_player.media_play_pause
+      #   service_data:
+      #     entity_id: media_player.spotifyplus_bruno_helasio
+      #   haptic: success
+      # FIX: usar perform-action (sintaxe moderna do button-card v4+)
       tap_action:
-        action: call-service
-        service: media_player.media_play_pause
-        service_data:
+        action: perform-action
+        perform_action: media_player.media_play_pause
+        target:
           entity_id: media_player.spotifyplus_bruno_helasio
         haptic: success
       double_tap_action:

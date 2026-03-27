@@ -1,13 +1,19 @@
 # CLAUDE.md — Diretrizes para o Dashboard HA (negocjohn)
 
-## Regra de Ouro (OBRIGATORIO)
+## Regras de Ouro (OBRIGATORIO)
 
-**NUNCA excluir codigo existente. SEMPRE comentar antes de substituir.**
+### 1. NUNCA excluir codigo existente. SEMPRE comentar antes de substituir.
 
 - Ao modificar qualquer arquivo YAML, o codigo original deve ser COMENTADO, nao deletado.
 - Isso permite reverter facilmente e manter historico visual das mudancas.
 - Novas estruturas devem ser adicionadas ABAIXO do codigo original comentado.
 - Esta regra se aplica a TODOS os arquivos do projeto, sem excecao.
+
+### 2. So entregar codigo quando o usuario autorizar.
+
+- Codigo implementado deve ser revisado e aprovado pelo usuario antes de ser entregue/merged.
+- Sempre aguardar autorizacao explicita para avancar para proxima fase.
+- Mudancas devem ser incrementais e reversiveis.
 
 ## Estrategia de Grid: Sagaland Hibrida (OBRIGATORIO)
 
@@ -249,3 +255,157 @@ Adiado para momento posterior. A funcionalidade usaria `entity.attributes.entity
 | Anterior-3 | ✅ | Icones de status: motion (placeholder), AC, TV, luzes |
 | Anterior-4 | ✅ | Vermelho unavailable ja funciona via tpl_base.yaml (state_error) |
 | Anterior-5 | ✅ | Contagem de luzes via sensor.living_room_active (lights_on_count) |
+
+---
+
+## Roteiro de Implementacao — Reestruturacao Completa (2026-03-27)
+
+Baseado na revisao do usuario sobre icones, popups e expansao para todos os comodos.
+
+### Premissas Confirmadas
+
+| Item | Situacao Real |
+|------|---------------|
+| Echo/Alexa | NAO existem. O setup usa HomePods (media_player.office, media_player.bathroom_homepod, etc.) |
+| Spotify | Entidade unica: `media_player.spotifyplus_bruno_helasio`. Card `custom:spotify-card` ja instalado |
+| Quarto Miguel | Entidades sao `switch.quarto_miguel_*` (8 switches). O grupo `light.grupo_luzes_quarto_miguel` existe |
+| Cameras fisicas | 13 cameras. Por comodo: sl_camera_2 (sala), cz_camera + as_camera (cozinha), of_camera (office), camera_quarto_casal, qmi_camera, qma_camera, vr_camera_2 (varanda) + doorway, terasa, zahrada, kids_room, sl_camera |
+| Fechadura | `lock.nuki_neklanka_byt_lock` (Nuki) — unica entidade de lock |
+| Roborock | `vacuum.roidmi_eve` com 30+ sensores, mapa via camera.roidmi_eve |
+| Planta 3D | View existente: `subviews/floor-plan.yaml` com SVG interativo |
+| Alarme | NAO possui. Bloco Security sera reestruturado |
+| Sensores presenca/porta | NAO possui ainda |
+| PC Office | `switch.macbook` (MacBook) |
+
+### FASE 0 — Preparacao e Seguranca (Pre-requisito)
+
+**0.1 — Criar snippet `style_popup_complete.yaml`**
+- Unifica: centralizacao (.mdc-dialog__container), scrim escuro (.mdc-dialog__scrim), backdrop blur(12px), blue glow shadow
+- Substituira `style_popup_center.yaml` em todos os popups
+- Parametrizavel via CSS custom properties do browser_mod (--popup-width, --popup-max-width)
+
+**0.2 — Definir padrao reutilizavel de popup de comodo**
+- Padrao de estrutura: browser_mod.popup → data.style (tamanho) → data.card_mod (snippet) → content (grid col_buttons + col_camera)
+- Cada comodo herda a mesma estrutura, variando conteudo e largura
+
+### FASE 1 — Ajustes no Popup da Sala (Itens 1.1-1.5)
+
+**1.1 — Restaurar icones originais (icon_tv e icon_spotify)**
+- icon_tv: Descomentar original ngocjohn (linhas 1784-1882 tpl_icons.yaml). Comentar versao custom (1883-1960)
+- icon_spotify: Descomentar SVG estatico original (linhas 677-683). Comentar versao hybrid (684-796)
+- Risco: Zero — restauracao pura
+
+**1.2 — Restaurar mediaplayer template**
+- Descomentar state_display e state_on no tpl_media.yaml (linhas 627-633)
+- Os templates originais do mediaplayer devem prevalecer sobre icon_tv
+- Risco: Zero — restauracao
+
+**1.3 — Substituir thermostat popup por card estilo sagaland93**
+- Arquivo: thermostat.yaml — comentar conteudo atual (layout com footer)
+- Novo conteudo: Popup simples com thermostat card HA nativo para climate.sl_ar_condicionado
+- Apenas 1 AC (sala), sem footer layout complexo
+- Hold_action do botao AC ja referencia thermostat.yaml
+- Risco: Baixo — arquivo isolado
+
+**1.4 — Substituir Spotify popup pelo custom:spotify-card**
+- Arquivo: media_spotify.yaml — comentar layout 2-colunas atual
+- Novo conteudo: custom:spotify-card unico, limpo, com controles de player
+- Entity: media_player.spotifyplus_bruno_helasio
+- Hold_action do botao Spotify ja referencia media_spotify.yaml
+- Risco: Baixo — arquivo isolado
+
+**1.5 — Aplicar snippet popup padronizado na Sala**
+- Arquivo: livingroom.yaml — extrair CSS inline para usar style_popup_complete.yaml
+- Verificar comportamento visual identico
+- Risco: Minimo — reorganizacao sem mudanca funcional
+
+### FASE 2 — Replicar Popup para Demais Comodos (Item 2)
+
+Estrutura padrao: col_buttons (luzes + midia/clima em grid 5-col) + col_camera
+
+**2.1 — Quarto Casal**: 7 luzes, Spotify (hold→spotify popup), AC placeholder desabilitado, camera.camera_quarto_casal
+**2.2 — Quarto Miguel**: 8 switches (tratar como luzes), Spotify, climate.ac_quarto_miguel, camera.qmi_camera
+**2.3 — Quarto Marina**: 6 luzes, Spotify, AC placeholder desabilitado, camera.qma_camera
+**2.4 — Office**: 3 luzes, switch.macbook (PC no lugar da TV), Spotify, climate.ac_office, camera.of_camera
+**2.5 — Cozinha**: 3 luzes, eletrodomesticos (airfryer, lava-louca, lava-roupa como placeholders), camera.cz_camera + camera.as_camera
+**2.6 — Lavabo**: Popup PEQUENO (~400-450px) com apenas 3 botoes de luzes. Sem midia, sem camera
+**2.7 — Circulacao**: Sem popup — botao direto liga/desliga light.corredor_switch_1 (ja configurado)
+
+### FASE 3 — Reestruturar Bloco Security → "Home" (Item 3)
+
+**3.1 — Comentar bloco Security atual** (tpl_grid_security.yaml inteiro + security-status.yaml)
+**3.2 — Criar novo bloco "Home"** (4 botoes em grid 2x2):
+- Porta: lock.nuki_neklanka_byt_lock (tap: toggle, hold: more-info)
+- Planta 3D: tap → navigate subviews/floorplan
+- Roborock: vacuum.roidmi_eve (tap: toggle, hold: popup vacuum)
+- Cameras: tap → popup com grid completo de 8 cameras do usuario
+**3.3 — Criar popup de cameras completo (8 cameras)**:
+sl_camera_2, vr_camera_2, cz_camera, as_camera, of_camera, camera_quarto_casal, qmi_camera, qma_camera
+**3.4 — Atualizar titulo** do grid-area: Security → Home
+
+### FASE 4 — Media Carrossel no Painel Principal (Item 4)
+
+**4.1 — Ativar swipe-card** no bloco media (codigo ja existe comentado em grid_media.yaml)
+**4.2 — Adaptar entidades** para o setup do usuario (smart_tv_pro_2, spotifyplus_bruno_helasio)
+**4.3 — Estilo sagaland93**: coverflow effect com artwork do player ativo
+
+### FASE 5 — Mobile Layout (Item 5 — Anotacao para Futuro)
+
+Registrar necessidade de ajustar exibicao mobile:
+- Popups colapsam para 1 coluna em mobile (sem col_camera)
+- Tamanho popup: 95vw em mobile
+- Grid de botoes: 3-col em mobile (vs 5-col desktop)
+- Chips/header para mobile conforme estrategia Sagaland
+
+### Ordem de Execucao
+
+| Passo | Fase | Descricao | Complexidade | Risco |
+|-------|------|-----------|-------------|-------|
+| 1 | 0.1 | Criar snippet style_popup_complete.yaml | Baixa | Zero |
+| 2 | 1.1 | Restaurar icones originais TV + Spotify | Media | Zero |
+| 3 | 1.2 | Restaurar mediaplayer template | Baixa | Zero |
+| 4 | 1.3 | Thermostat popup estilo sagaland93 | Media | Baixo |
+| 5 | 1.4 | Spotify popup com spotify-card | Media | Baixo |
+| 6 | 1.5 | Aplicar snippet popup na Sala | Baixa | Minimo |
+| 7 | 2.1-2.6 | Popups de todos os comodos | Alta | Baixo |
+| 8 | 3.1-3.4 | Bloco Home + cameras completo | Alta | Medio |
+| 9 | 4.1-4.3 | Media carrossel swipe-card | Media | Medio |
+| 10 | 5 | Mobile layout (futuro) | — | — |
+
+### Arquivos Afetados (Resumo)
+
+| Arquivo | Acao | Fases |
+|---------|------|-------|
+| `shared/snippets/style_popup_complete.yaml` | CRIAR | 0, 1, 2 |
+| `templates/button_card_templates/tpl_icons.yaml` | Comentar/descomentar icon_tv e icon_spotify | 1.1 |
+| `templates/button_card_templates/tpl_media.yaml` | Descomentar state_display/state_on | 1.2 |
+| `shared/popup/thermostat.yaml` | Comentar + novo conteudo | 1.3 |
+| `shared/popup/media_spotify.yaml` | Comentar + novo conteudo | 1.4 |
+| `shared/popup/rooms/livingroom.yaml` | Refatorar CSS para snippet | 1.5 |
+| `shared/columns/room_*_all_buttons.yaml` | CRIAR (6 novos) | 2 |
+| `shared/popup/rooms/*.yaml` | Reescrever (6 comodos) | 2 |
+| `templates/streamline_templates/tpl_grid_security.yaml` | Comentar + bloco Home | 3 |
+| `shared/grid-cards/security-status.yaml` | Comentar + home-status | 3 |
+| `shared/popup/cameras_full.yaml` | CRIAR (8 cameras) | 3 |
+| `views/main-grid/grid_media.yaml` | Descomentar swipe + adaptar | 4 |
+
+### Prompt para Continuar (Fases 2-5)
+
+```
+Continuando o roteiro do CLAUDE.md — Fases 0 e 1 estao concluidas.
+Implemente a FASE 2 (popups de todos os comodos), comecando pelo Quarto Casal (2.1).
+
+Estrutura padrao por comodo:
+- col_buttons: vertical-stack com secoes Luzes (header + grid 5-col) e Midia/Clima (header + grid 5-col)
+- col_camera: layout-card com camera(s) do comodo
+- Popup usa style_popup_complete.yaml
+- Botoes sem entidade: opacity 0.35-0.45, cursor default, sem acao
+- Spotify compartilhado: mesma entidade, hold → media_spotify.yaml
+
+Apos concluir Fase 2, implemente Fase 3 (bloco Home substituindo Security).
+Apos Fase 3, implemente Fase 4 (media carrossel).
+Fase 5 (mobile) fica como anotacao para futuro.
+
+Regra de Ouro: COMENTAR codigo existente, nunca deletar.
+So entregar quando eu autorizar.
+```

@@ -202,7 +202,7 @@ browser_mod:
       layout:
         # ANTERIOR (4 colunas): grid-template-columns: 1.4fr 1fr
         # ANTERIOR (5 colunas): grid-template-columns: 1.6fr 1fr
-        grid-template-columns: 1.6fr 0.8fr
+        grid-template-columns: 1.4fr 1.0fr
         grid-template-areas: '"col_buttons col_camera"'
         grid-gap: 10px
         margin: 0
@@ -227,6 +227,6 @@ browser_mod:
           view_layout:
             grid-area: col_camera
           layout:
-            grid-template-columns: 1fr
+            grid-template-columns: 1.2fr
             margin: 0
           cards: !include ../../columns/room_living_cameras.yaml

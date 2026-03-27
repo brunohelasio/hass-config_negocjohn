@@ -209,7 +209,7 @@ browser_mod:
         padding: 0.5rem
         mediaquery:
           "(max-width: 800px)":
-            grid-template-columns: 1.2fr
+            grid-template-columns: 1fr
             grid-template-areas: |
               "col_buttons"
               "col_camera"
@@ -227,6 +227,6 @@ browser_mod:
           view_layout:
             grid-area: col_camera
           layout:
-            grid-template-columns: 1.2fr
+            grid-template-columns: 1fr
             margin: 0
           cards: !include ../../columns/room_living_cameras.yaml

@@ -639,24 +639,26 @@ mediaplayer:
         }
       ]]]
     circle_input_unit: '%'
-  styles:
-    card:
-      # ORIGINAL: box-shadow RGB — aplicava glow colorido baseado em luz RGB conectada.
-      # Comentado porque nao temos luzes RGB. Logica mantida apenas como referencia.
-      # - box-shadow: >
-      #     [[[
-      #       if (entity && variables.light_entity !== undefined) {
-      #         let lightState = states[variables.light_entity].state;
-      #           if (lightState === 'on') {
-      #             let lightAttr = states[variables.light_entity].attributes,
-      #                 rgb = lightAttr.rgb_color,
-      #                 rgba = `rgba(${rgb.join()},${(lightAttr.brightness/255)})`;
-      #             return `inset 0 0 1.5rem ${rgba} !important`;
-      #           } else {
-      #             return 'none';
-      #           }
-      #       }
-      #     ]]]
+  # ORIGINAL: styles.card com box-shadow RGB — aplicava glow colorido baseado em luz RGB.
+  # Comentado INTEIRO (styles: + card:) porque o bloco vazio sobreescrevia os styles.card
+  # do template base, fazendo o botao NAO acender (perdia background-color do state_on).
+  # Manter apenas como referencia. NÃO descomentar styles: card: sem conteudo ativo.
+  # styles:
+  #   card:
+  #     - box-shadow: >
+  #         [[[
+  #           if (entity && variables.light_entity !== undefined) {
+  #             let lightState = states[variables.light_entity].state;
+  #               if (lightState === 'on') {
+  #                 let lightAttr = states[variables.light_entity].attributes,
+  #                     rgb = lightAttr.rgb_color,
+  #                     rgba = `rgba(${rgb.join()},${(lightAttr.brightness/255)})`;
+  #                 return `inset 0 0 1.5rem ${rgba} !important`;
+  #               } else {
+  #                 return 'none';
+  #               }
+  #           }
+  #         ]]]
 currently_playing:
   template:
     - conditional_media

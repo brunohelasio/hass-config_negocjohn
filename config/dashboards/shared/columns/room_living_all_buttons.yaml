@@ -319,8 +319,16 @@
       variables:
         state_on: >
           [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
+      # ANTERIOR: action: toggle (pode nao funcionar com climate entities em todos os cenarios)
+      # tap_action:
+      #   action: toggle
+      #   haptic: success
+      # FIX: usar perform-action para execucao confiavel em climate entities
       tap_action:
-        action: toggle
+        action: perform-action
+        perform_action: climate.toggle
+        target:
+          entity_id: climate.sl_ar_condicionado
         haptic: success
       double_tap_action:
         action: more-info

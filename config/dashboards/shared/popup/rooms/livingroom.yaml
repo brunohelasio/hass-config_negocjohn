@@ -129,7 +129,9 @@ browser_mod:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 1fr 1.3fr
+        # ANTERIOR: 1fr 1.3fr (camera maior que botoes — causava scroll)
+        # CORRIGIDO: 1.4fr 1fr (botoes ficam maiores para acomodar tudo sem scroll; cameras menores)
+        grid-template-columns: 1.4fr 1fr
         grid-template-areas: '"col_buttons col_camera"'
         grid-gap: 10px
         margin: 0

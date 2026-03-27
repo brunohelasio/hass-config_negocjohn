@@ -1,14 +1,16 @@
 # Coluna de cameras — Sala / Varanda
+# ANTERIOR: aspect_ratio: 16:9 (cameras muito grandes, causava scroll no popup)
+# CORRIGIDO: aspect_ratio: 3:2 (cameras menores para caber no popup sem scroll)
 - type: picture-entity
   entity: camera.sl_camera
   camera_view: live
-  aspect_ratio: 16:9
+  aspect_ratio: 3:2
   show_name: false
   show_state: false
 
 - type: picture-entity
   entity: camera.vr_camera
   camera_view: live
-  aspect_ratio: 16:9
+  aspect_ratio: 3:2
   show_name: false
   show_state: false

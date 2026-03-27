@@ -104,7 +104,7 @@ rooms_base:
           const lightsOn = activeEntity?.attributes?.lights_on;
           let num = null;
           if (lightsOnCount != null && !isNaN(lightsOnCount)) {
-            num = parseInt(lightsOnCount);
+            num = parseInt(lightsOnCount, 10);
           } else if (Array.isArray(lightsOn)) {
             num = lightsOn.length;
           } else if (Number.isFinite(lightsOn)) {
@@ -262,7 +262,7 @@ lights_status:
           const attr = states[variables.active].attributes;
           let count = 0;
           if (attr.lights_on_count != null && !isNaN(attr.lights_on_count)) {
-            count = parseInt(attr.lights_on_count);
+            count = parseInt(attr.lights_on_count, 10);
           } else if (Array.isArray(attr.lights_on)) {
             count = attr.lights_on.length;
           } else if (typeof attr.lights_on === 'string' && attr.lights_on.length > 2) {

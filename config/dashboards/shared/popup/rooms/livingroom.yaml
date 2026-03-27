@@ -51,12 +51,12 @@ browser_mod:
     # Reduzido width para 65vw e max-width para 920px; adicionado max-height: 88vh
     # para que o popup caiba na viewport do tablet sem scroll.
     style: >
-      --popup-width: 65vw;
-      --popup-max-width: 920px;
+      --popup-width: 55vw;
+      --popup-max-width: 850px;
       --popup-background-color: rgba(15, 20, 35, 0.75);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
-      --tablet-popup-content-padding: 0.5em 0.8em 0.8em 0.7em;
+      --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
     card_mod:
       style:
         .: |

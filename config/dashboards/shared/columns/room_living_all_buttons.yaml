@@ -505,7 +505,9 @@
       - color: rgba(255,255,255,0.35)
       - justify-self: end
 
-# ── Linha 3: 5 botoes de midia/dispositivos ──
+# ── Linha 3: 4 botoes de midia + 1 blank ──
+# ANTERIOR: 5 botoes (TV, Spotify, PS5, Pioneer, Cortina) — Cortina movida para linha 4 (clima)
+# Para restaurar: mover Cortina de volta para ca e remover o blank card abaixo
 - type: grid
   columns: 5
   square: false
@@ -604,7 +606,24 @@
             <rect x="5" y="31.5" width="40" height="1.5" rx=".75" opacity=".3"/>
             <rect x="5" y="35" width="40" height="1.5" rx=".75" opacity=".3"/>
           </svg>
-    # CORTINA — SVG inline
+    # BLANK — iguala 4 botoes a grid de 5 colunas (posicao anterior da Cortina)
+    - type: custom:button-card
+      color_type: blank-card
+      styles:
+        card:
+          - background: none
+          - border: none
+          - box-shadow: none
+          - opacity: '0'
+
+# ── Linha 4: 2 botoes de clima + 3 blanks ──
+# ANTERIOR: 1 botao (AC) + 4 blanks — Cortina movida da linha 3 para ca
+# Para restaurar: mover Cortina de volta para linha 3 e ajustar blanks (1 botao + 4 blanks)
+- type: grid
+  columns: 5
+  square: false
+  cards:
+    # CORTINA — SVG inline (movida da linha de midia para linha de clima)
     - type: custom:button-card
       name: Cortina
       template:
@@ -642,12 +661,6 @@
               <path d="M41.1,15.76H7.56c-.95,0-1.59,.63-1.59,1.54v4.77c0,.91,.62,1.52,1.59,1.52H41.09c.96,0,1.58-.62,1.58-1.52v-4.79c0-.9-.62-1.52-1.58-1.52Z"/>
             </g>
           </svg>
-
-# ── Linha 4: 1 botao de clima + 4 blanks ──
-- type: grid
-  columns: 5
-  square: false
-  cards:
     # AR CONDICIONADO — ativado com entity e hold_action para popup thermostat
     - type: custom:button-card
       entity: climate.sl_ar_condicionado
@@ -668,15 +681,7 @@
       double_tap_action:
         action: more-info
       hold_action: !include ../popup/thermostat.yaml
-    # BLANK 1-4 — iguala 1 botao a grid de 5 colunas
-    - type: custom:button-card
-      color_type: blank-card
-      styles:
-        card:
-          - background: none
-          - border: none
-          - box-shadow: none
-          - opacity: '0'
+    # BLANK 1-3 — iguala 2 botoes a grid de 5 colunas
     - type: custom:button-card
       color_type: blank-card
       styles:

@@ -46,13 +46,12 @@ browser_mod:
     title: Sala
     tag: sala_popup
     size: wide
-    # ANTERIOR: --popup-width: 70vw; --popup-max-width: 1020px;
-    # Popup era maior que a tela do tablet, cortando VR Pendente.
-    # Reduzido width para 65vw e max-width para 920px; adicionado max-height: 88vh
-    # para que o popup caiba na viewport do tablet sem scroll.
+    # ANTERIOR (4 colunas): --popup-width: 55vw; --popup-max-width: 850px;
+    # Ampliado para 65vw/980px para acomodar layout de 5 colunas nos botoes.
+    # Grid ratio mudou de 1.4fr para 1.6fr para dar mais espaco aos botoes.
     style: >
-      --popup-width: 55vw;
-      --popup-max-width: 850px;
+      --popup-width: 65vw;
+      --popup-max-width: 980px;
       --popup-background-color: rgba(15, 20, 35, 0.75);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
@@ -79,9 +78,9 @@ browser_mod:
             justify-content: center !important;
           }
           .mdc-dialog__surface {
-            /* ANTERIOR: sem width explicito — popup usava tamanho default do browser_mod */
-            width: 55vw !important;
-            max-width: 850px !important;
+            /* ANTERIOR (4 colunas): width: 55vw, max-width: 850px */
+            width: 65vw !important;
+            max-width: 980px !important;
             max-height: 88vh !important;
             overflow-y: auto !important;
           }
@@ -197,7 +196,8 @@ browser_mod:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 1.4fr 1fr
+        # ANTERIOR (4 colunas): grid-template-columns: 1.4fr 1fr
+        grid-template-columns: 1.6fr 1fr
         grid-template-areas: '"col_buttons col_camera"'
         grid-gap: 10px
         margin: 0

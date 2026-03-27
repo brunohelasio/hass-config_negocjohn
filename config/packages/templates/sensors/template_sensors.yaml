@@ -84,20 +84,20 @@ template:
           #   {% else %}
           #     no
           #   {% endif %}
-          # AC status (usando entidades do usuario — cooling ao inves de heating)
-          cooling: >-
+          # AC status (usando entidades do usuario)
+          ac_active: >-
             {% set acs = [
               states.climate.sl_ar_condicionado,
               states.climate.ac_office,
               states.climate.ac_quarto_miguel
             ] | reject('equalto', none) | list  %}
-            {% set cooling_on = acs | selectattr('state', 'in', ['cool', 'fan_only', 'dry', 'heat']) | list | count %}
-            {%- if cooling_on != 0 -%}
+            {% set acs_on = acs | selectattr('state', 'in', ['cool', 'fan_only', 'dry', 'heat']) | list | count %}
+            {%- if acs_on != 0 -%}
               yes
             {% else %}
               no
             {% endif %}
-          cooling_on: >-
+          acs_running: >-
             {% set acs = [
               states.climate.sl_ar_condicionado,
               states.climate.ac_office,

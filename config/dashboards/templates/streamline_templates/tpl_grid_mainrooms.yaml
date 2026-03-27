@@ -76,9 +76,10 @@ grid_living_room:
       light_entity: light.sala_switch_2
       # ORIGINAL: active: sensor.living_room_active (vazio)
       active: sensor.living_room_active
-      # Motion: placeholder — trocar pelo entity_id real quando o sensor chegar
-      # Usa protecao interna (nao quebra se a entidade nao existir)
-      motion: binary_sensor.motion_sala_placeholder
+      # Motion: vazio ate o sensor de presenca chegar.
+      # Quando instalar o sensor, trocar por: motion: binary_sensor.motion_sala
+      # O template motion tem protecao interna e nao quebra com string vazia.
+      motion: ''
       # AC da sala
       ac_entity: climate.sl_ar_condicionado
       # TV/Media da sala

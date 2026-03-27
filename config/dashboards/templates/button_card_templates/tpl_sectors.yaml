@@ -237,9 +237,11 @@ lights_status:
       [[[
         if (variables.active && states[variables.active]) {
           const lightsOn = states[variables.active].attributes.lights_on_count;
-          const count = parseInt(lightsOn);
-          if (count > 0)
-            return '<ha-icon icon="mdi:lightbulb-on" style="width:100%;display:flex; color:#f0c040;"></ha-icon>';
+          if (lightsOn != null && !isNaN(lightsOn)) {
+            const count = parseInt(lightsOn);
+            if (count > 0)
+              return '<ha-icon icon="mdi:lightbulb-on" style="width:100%;display:flex; color:#f0c040;"></ha-icon>';
+          }
         }
       ]]]
   styles:

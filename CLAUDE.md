@@ -346,7 +346,7 @@ let time = c => {
 | TV Sala | `media_player.smart_tv_pro_2` | media_player |
 | Remote TV | `remote.smart_tv_pro` | remote |
 | Spotify | `media_player.spotifyplus_bruno_helasio` | media_player |
-| Motion Sala | `binary_sensor.motion_sala_placeholder` | ⏳ pendente |
+| Motion Sala | *(vazio — trocar quando sensor chegar)* | ⏳ pendente |
 
 ---
 

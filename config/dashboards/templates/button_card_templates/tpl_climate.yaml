@@ -202,10 +202,10 @@ thermostat:
     #   [[[
     #     return ['yes'].indexOf(entity === undefined || entity.attributes.heating) !==-1;
     #   ]]]
-    # Versao adaptada: detecta cooling ao inves de heating
+    # Versao adaptada: detecta AC ativo
     thermostat_on: >
       [[[
-        return ['yes'].indexOf(entity === undefined || entity.attributes.cooling) !==-1;
+        return ['yes'].indexOf(entity === undefined || entity.attributes.ac_active) !==-1;
       ]]]
     entity_id: >
       [[[ return !entity || entity.entity_id; ]]]
@@ -216,8 +216,8 @@ thermostat:
         // Versao adaptada: mostra temperatura do sensor do usuario, icone de termometro
         const temp = entity.attributes.average_temperature;
         if (temp && temp !== 'N/A') {
-          const icon = entity.attributes.cooling === 'yes' ? '❄️' : '🌡️';
-          return icon + Math.round(parseFloat(temp)).toFixed(1) + '°';
+          const icon = entity.attributes.ac_active === 'yes' ? '❄️' : '🌡️';
+          return icon + parseFloat(temp).toFixed(1) + '°';
         }
         return '🌡️--°';
       ]]]

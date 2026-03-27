@@ -2,7 +2,7 @@ action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
-    title: Thermostat
+    title: Climatização
     style: >
       --max-popup-column: 2;
     content:
@@ -15,38 +15,66 @@ browser_mod:
         cards:
           #################################################
           #                                               #
-          #                THERMOSTATS                    #
+          #            AC (ENTIDADES DO USUARIO)          #
           #                                               #
           #################################################
 
           - type: thermostat
-            entity: climate.office_thermostat
+            entity: climate.sl_ar_condicionado
             show_current_as_primary: true
             features:
-              - &features
+              - &features_ac
                 style: icons
-                type: climate-preset-modes
-                preset_modes:
-                  - none
-                  - eco
-                  - comfort
-                  - home
-                  - sleep
+                type: climate-hvac-modes
+                hvac_modes:
+                  - cool
+                  - fan_only
+                  - dry
+                  - off
           - type: thermostat
-            entity: climate.living_room_thermostat
+            entity: climate.ac_office
             show_current_as_primary: true
             features:
-              - *features
+              - *features_ac
           - type: thermostat
-            entity: climate.kids_room_thermostat
+            entity: climate.ac_quarto_miguel
             show_current_as_primary: true
             features:
-              - *features
-          - type: thermostat
-            entity: climate.bedroom_thermostat
-            show_current_as_primary: true
-            features:
-              - *features
+              - *features_ac
+
+          #################################################
+          # ORIGINAL negocjohn European thermostats       #
+          # (comentado para consulta futura — Regra de    #
+          # Ouro: nunca deletar, sempre comentar)         #
+          #################################################
+          # - type: thermostat
+          #   entity: climate.office_thermostat
+          #   show_current_as_primary: true
+          #   features:
+          #     - &features
+          #       style: icons
+          #       type: climate-preset-modes
+          #       preset_modes:
+          #         - none
+          #         - eco
+          #         - comfort
+          #         - home
+          #         - sleep
+          # - type: thermostat
+          #   entity: climate.living_room_thermostat
+          #   show_current_as_primary: true
+          #   features:
+          #     - *features
+          # - type: thermostat
+          #   entity: climate.kids_room_thermostat
+          #   show_current_as_primary: true
+          #   features:
+          #     - *features
+          # - type: thermostat
+          #   entity: climate.bedroom_thermostat
+          #   show_current_as_primary: true
+          #   features:
+          #     - *features
           # - type: entities
           #   entities:
           #     - type: thermostat

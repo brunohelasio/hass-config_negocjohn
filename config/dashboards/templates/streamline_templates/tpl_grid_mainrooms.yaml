@@ -65,12 +65,39 @@ grid_living_room:
     hold_action: !include ../../shared/popup/rooms/livingroom.yaml
     template:
       - rooms_base
+      - circle
       - icon_couch_lamp
+      - motion
+      - ac_status
+      - media_status
+      - lights_status
     variables:
       # light_entity: light.living_room_group
       light_entity: light.sala_switch_2
-      # active: sensor.living_room_active
-      active: ''
+      # ORIGINAL: active: sensor.living_room_active (vazio)
+      active: sensor.living_room_active
+      # Motion: vazio ate o sensor de presenca chegar.
+      # Quando instalar o sensor, trocar por: motion: binary_sensor.motion_sala
+      # O template motion tem protecao interna e nao quebra com string vazia.
+      motion: ''
+      # AC da sala
+      ac_entity: climate.sl_ar_condicionado
+      # TV/Media da sala
+      media_entity: media_player.smart_tv_pro_2
+      # Circle brightness: mostra % de brilho da luz principal.
+      # Para luzes sem dimmer, mostra 100% quando ligada.
+      # Quando instalar dimmer, reconhecera automaticamente o valor real.
+      circle_input: >
+        [[[
+          if (entity && entity.state === 'on') {
+            const brightness = entity.attributes.brightness;
+            return brightness != null
+              ? Math.round(brightness / 2.54)
+              : 100;
+          }
+          return ' ';
+        ]]]
+      circle_input_unit: '%'
     card_mod:
       style: |
         #circle {

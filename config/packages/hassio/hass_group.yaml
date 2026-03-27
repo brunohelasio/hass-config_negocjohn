@@ -183,14 +183,23 @@ group:
       # - sensor.ps5_activity
 
   ## CLIMATE GROUP ##
-  thermostats:
-    name: Thermostats
-    icon: mdi:home-thermometer
+  # ORIGINAL negocjohn European thermostats (comentado — Regra de Ouro)
+  # thermostats:
+  #   name: Thermostats
+  #   icon: mdi:home-thermometer
+  #   entities:
+  #     - climate.bedroom_thermostat
+  #     - climate.office_thermostat
+  #     - climate.living_room_thermostat
+  #     - climate.kids_room_thermostat
+  # AC do usuario (Brasil)
+  ar_condicionado:
+    name: Ar Condicionado
+    icon: mdi:air-conditioner
     entities:
-      - climate.bedroom_thermostat
-      - climate.office_thermostat
-      - climate.living_room_thermostat
-      - climate.kids_room_thermostat
+      - climate.sl_ar_condicionado
+      - climate.ac_office
+      - climate.ac_quarto_miguel
 
 notify:
   - platform: group

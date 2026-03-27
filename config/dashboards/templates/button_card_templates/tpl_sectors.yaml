@@ -149,7 +149,8 @@ motion:
   custom_fields:
     motion: >
       [[[
-        if (states[variables.motion].state == 'on')
+        // Protecao contra entidade inexistente (placeholder para sensor futuro)
+        if (variables.motion && states[variables.motion] && states[variables.motion].state == 'on')
           return '<ha-icon icon="mdi:motion-sensor" style="width:100%;display:flex; color:var(--state-icon-active-color);"></ha-icon>'
       ]]]
   styles:
@@ -168,6 +169,93 @@ motion:
         #         ? 'rgba(255, 255, 255, 0.4)'
         #         : 'rgba(255, 255, 255, 0.8)';
         #     ]]]
+# Icone de status: AC ligado (exibe icone de ar condicionado quando cooling/fan)
+ac_status:
+  custom_fields:
+    ac_status: >
+      [[[
+        if (variables.ac_entity && states[variables.ac_entity]) {
+          const st = states[variables.ac_entity].state;
+          if (['cool', 'fan_only', 'dry', 'heat'].includes(st))
+            return '<ha-icon icon="mdi:snowflake" style="width:100%;display:flex; color:#3583b6;"></ha-icon>';
+        }
+      ]]]
+  styles:
+    custom_fields:
+      ac_status:
+        - position: absolute
+        - height: auto
+        - border-radius: 50%
+        - right: 1%
+        - padding: 5%
+        - margin: -10%
+        - width: 15%
+        - top: >
+            [[[
+              // Empilha abaixo do motion se motion estiver ativo
+              if (variables.motion && states[variables.motion] && states[variables.motion].state == 'on')
+                return '30%';
+              return '0';
+            ]]]
+        - transition: top 250ms ease-out
+# Icone de status: TV/Media playing (exibe icone de TV quando playing)
+media_status:
+  custom_fields:
+    media_status: >
+      [[[
+        if (variables.media_entity && states[variables.media_entity]) {
+          const st = states[variables.media_entity].state;
+          if (['playing', 'on'].includes(st))
+            return '<ha-icon icon="mdi:television" style="width:100%;display:flex; color:var(--state-icon-active-color);"></ha-icon>';
+        }
+      ]]]
+  styles:
+    custom_fields:
+      media_status:
+        - position: absolute
+        - height: auto
+        - border-radius: 50%
+        - right: 1%
+        - padding: 5%
+        - margin: -10%
+        - width: 15%
+        - top: >
+            [[[
+              // Empilha abaixo dos icones ativos acima
+              let offset = 0;
+              if (variables.motion && states[variables.motion] && states[variables.motion].state == 'on')
+                offset += 30;
+              if (variables.ac_entity && states[variables.ac_entity] && ['cool','fan_only','dry','heat'].includes(states[variables.ac_entity].state))
+                offset += 30;
+              return offset > 0 ? offset + '%' : '0';
+            ]]]
+        - transition: top 250ms ease-out
+# Icone de status: luzes acesas (exibe icone de lampada com contagem)
+lights_status:
+  custom_fields:
+    lights_status: >
+      [[[
+        if (variables.active && states[variables.active]) {
+          const lightsOn = states[variables.active].attributes.lights_on_count;
+          if (lightsOn != null && !isNaN(lightsOn)) {
+            const count = parseInt(lightsOn);
+            if (count > 0)
+              return '<ha-icon icon="mdi:lightbulb-on" style="width:100%;display:flex; color:#f0c040;"></ha-icon>';
+          }
+        }
+      ]]]
+  styles:
+    custom_fields:
+      lights_status:
+        - position: absolute
+        - height: auto
+        - border-radius: 50%
+        - left: 1%
+        - padding: 5%
+        - margin: -10%
+        - width: 15%
+        - bottom: 0
+        - transition: all 250ms ease-out
 babycam:
   custom_fields:
     babycam: >

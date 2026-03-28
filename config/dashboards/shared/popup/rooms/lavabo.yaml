@@ -119,14 +119,36 @@ browser_mod:
     content:
       type: vertical-stack
       cards:
-        # ── Titulo: Luzes ──
+        # ── Titulo: Luzes + toggle all lights ──
+        # ANTERIOR: sem entity, tap_action: none (nao fazia nada ao clicar)
+        # FIX C1.1: Adicionado entity + tap_action toggle + cor dinamica do icone
+        # FIX C4.1: Adicionado indicador visual ON/OFF (custom_field)
         - type: custom:button-card
+          entity: light.grupo_luzes_lavabo
           name: Luzes
           show_state: false
           show_icon: true
           icon: mdi:lightbulb-group-outline
           tap_action:
-            action: none
+            action: toggle
+            haptic: success
+          custom_fields:
+            on_off: >
+              [[[
+                const isOn = entity.state === 'on';
+                const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
+                const text = isOn ? 'ON' : 'OFF';
+                return `<span style="
+                  font-size: 9px;
+                  font-weight: 600;
+                  letter-spacing: 0.5px;
+                  color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
+                  background: ${color};
+                  padding: 1px 6px;
+                  border-radius: 8px;
+                  margin-right: 4px;
+                ">${text}</span>`;
+              ]]]
           styles:
             card:
               - background: none
@@ -136,8 +158,8 @@ browser_mod:
               - height: 30px
               - min-height: 30px
             grid:
-              - grid-template-areas: '"n i"'
-              - grid-template-columns: 1fr auto
+              - grid-template-areas: '"n on_off i"'
+              - grid-template-columns: 1fr auto auto
             name:
               - font-size: 11px
               - color: rgba(255,255,255,0.5)
@@ -145,12 +167,19 @@ browser_mod:
               - letter-spacing: 1.5px
               - justify-self: start
               - font-weight: 500
+            custom_fields:
+              on_off:
+                - justify-self: end
+                - align-self: center
             img_cell:
               - justify-self: end
               - width: 24px
             icon:
               - width: 24px
-              - color: rgba(255,255,255,0.25)
+              - color: >
+                  [[[
+                    return entity.state === 'on' ? '#f0c040' : 'rgba(255,255,255,0.25)';
+                  ]]]
         # ── ANTERIOR: Linha 1 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
         # - type: grid
         #   columns: 5

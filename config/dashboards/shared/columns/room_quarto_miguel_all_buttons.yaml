@@ -20,6 +20,7 @@
 # ══════════════════════════════════════════════════════════════════════════
 
 # ── Titulo: Luzes + toggle all lights ──
+# FIX C4.1: Adicionado indicador visual ON/OFF (custom_field)
 - type: custom:button-card
   entity: light.grupo_luzes_quarto_miguel
   name: Luzes
@@ -29,6 +30,23 @@
   tap_action:
     action: toggle
     haptic: success
+  custom_fields:
+    on_off: >
+      [[[
+        const isOn = entity.state === 'on';
+        const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
+        const text = isOn ? 'ON' : 'OFF';
+        return `<span style="
+          font-size: 9px;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
+          background: ${color};
+          padding: 1px 6px;
+          border-radius: 8px;
+          margin-right: 4px;
+        ">${text}</span>`;
+      ]]]
   styles:
     card:
       - background: none
@@ -38,8 +56,8 @@
       - height: 30px
       - min-height: 30px
     grid:
-      - grid-template-areas: '"n i"'
-      - grid-template-columns: 1fr auto
+      - grid-template-areas: '"n on_off i"'
+      - grid-template-columns: 1fr auto auto
     name:
       - font-size: 11px
       - color: rgba(255,255,255,0.5)
@@ -47,6 +65,10 @@
       - letter-spacing: 1.5px
       - justify-self: start
       - font-weight: 500
+    custom_fields:
+      on_off:
+        - justify-self: end
+        - align-self: center
     img_cell:
       - justify-self: end
       - width: 24px
@@ -263,68 +285,89 @@
         card:
           - opacity: "0.45"
           - cursor: "default"
-    # SPOTIFY — compartilhado, mesma entidade em todos os comodos
+    # SPOTIFY — Quarto Miguel NAO tem Alexa (sem dispositivo de audio)
+    # FIX C3: Botao desabilitado — sem Alexa neste comodo, nao ha para onde direcionar playback.
+    # Quando Alexa for adicionada, descomentar a versao ativa e criar popup media_spotify_quarto_miguel.yaml.
+    # ANTERIOR: botao ativo com hold_action: !include ../popup/media_spotify.yaml (popup compartilhado)
+    # - type: custom:button-card
+    #   entity: media_player.spotifyplus_bruno_helasio
+    #   name: Spotify
+    #   template:
+    #     - base
+    #     - circle
+    #     - loader
+    #     - icon_spotify_color
+    #   state_display: >
+    #     [[[
+    #       return entity && entity.state === 'off' ? ' ' : null;
+    #     ]]]
+    #   variables:
+    #     state_on: >
+    #       [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
+    #     circle_input: >
+    #       [[[
+    #         if (entity && entity.attributes.volume_level !== undefined) {
+    #           let volume = Math.round(entity.attributes.volume_level * 100)
+    #           return volume === 0 && entity.state !== 'off'
+    #             ? 1
+    #             : volume
+    #         }
+    #       ]]]
+    #     circle_input_unit: '%'
+    #   tap_action:
+    #     action: perform-action
+    #     perform_action: media_player.media_play_pause
+    #     target:
+    #       entity_id: media_player.spotifyplus_bruno_helasio
+    #     haptic: success
+    #   double_tap_action:
+    #     action: more-info
+    #   hold_action: !include ../popup/media_spotify.yaml
     - type: custom:button-card
-      entity: media_player.spotifyplus_bruno_helasio
       name: Spotify
       template:
         - base
-        - circle
-        - loader
-        - icon_spotify_color
-      state_display: >
-        [[[
-          return entity && entity.state === 'off' ? ' ' : null;
-        ]]]
-      variables:
-        state_on: >
-          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
-        circle_input: >
-          [[[
-            if (entity && entity.attributes.volume_level !== undefined) {
-              let volume = Math.round(entity.attributes.volume_level * 100)
-              return volume === 0 && entity.state !== 'off'
-                ? 1
-                : volume
-            }
-          ]]]
-        circle_input_unit: '%'
+      icon: mdi:spotify
+      show_icon: true
       tap_action:
-        action: perform-action
-        perform_action: media_player.media_play_pause
-        target:
-          entity_id: media_player.spotifyplus_bruno_helasio
-        haptic: success
+        action: none
+      hold_action:
+        action: none
       double_tap_action:
-        action: more-info
-      hold_action: !include ../popup/media_spotify.yaml
+        action: none
+      styles:
+        card:
+          - opacity: "0.35"
+          - cursor: "default"
     # AR CONDICIONADO — Quarto Miguel (entidade restaurada: AC nao usa _2, cameras sim)
+    # FIX C1.3: Agora usa tpl_popup_climate (herda base, state_on correto para climate).
     - type: custom:button-card
       entity: climate.ac_quarto_miguel
       name: Ar Cond.
       template:
-        - base
+        - tpl_popup_climate
         - icon_climate
       show_icon: false
-      variables:
-        state_on: >
-          [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
-      styles:
-        card:
-          - background-color: >
-              [[[
-                if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
-                  return 'rgba(250, 250, 250, 0.75)';
-                }
-                return 'rgba(115, 115, 115, 0.2)';
-              ]]]
-          - color: >
-              [[[
-                if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
-                  return '#4b5254';
-                }
-                return '#97989c';
-              ]]]
+      # ANTERIOR: variables.state_on e styles.card override — substituido por tpl_popup_climate
+      # variables:
+      #   state_on: >
+      #     [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
+      # styles:
+      #   card:
+      #     - background-color: >
+      #         [[[
+      #           if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
+      #             return 'rgba(250, 250, 250, 0.75)';
+      #           }
+      #           return 'rgba(115, 115, 115, 0.2)';
+      #         ]]]
+      #     - color: >
+      #         [[[
+      #           if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
+      #             return '#4b5254';
+      #           }
+      #           return '#97989c';
+      #         ]]]
       tap_action:
         action: perform-action
         perform_action: climate.toggle

@@ -128,7 +128,7 @@
   cards:
     - type: custom:button-card
       entity: light.cozinha_switch_2
-      name: Luz Principal 1
+      name: "CZ - Luz principal 1"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -137,7 +137,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.cozinha_switch_3
-      name: Luz Principal 2
+      name: "CZ - Luz principal 2"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -146,7 +146,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.cozinha_switch_1
-      name: Área Serviço
+      name: "AS - Lavanderia"
       template:
         - tpl_popup_light
         - icon_light_flush

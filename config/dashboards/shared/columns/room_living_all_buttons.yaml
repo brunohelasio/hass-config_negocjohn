@@ -367,7 +367,7 @@
   cards:
     - type: custom:button-card
       entity: light.sala_switch_2
-      name: Luz Principal
+      name: "SL - Luz principal"
       template:
         - tpl_popup_light
         - circle
@@ -389,7 +389,7 @@
         circle_input_unit: '%'
     - type: custom:button-card
       entity: light.sala_switch_1
-      name: LED Direito
+      name: "SL - Led direito"
       template:
         - tpl_popup_light
         - icon_ledstrip
@@ -398,7 +398,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.sala_switch_3
-      name: LED Esquerdo
+      name: "SL - Led esquerdo"
       template:
         - tpl_popup_light
         - icon_ledstrip
@@ -407,7 +407,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.sala_2_switch_2
-      name: VR Principal
+      name: "VR - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -416,7 +416,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.sala_2_switch_3
-      name: VR Cristaleira
+      name: "VR - Cristaleira"
       template:
         - tpl_popup_light
         - icon_ledstrip
@@ -437,7 +437,7 @@
   cards:
     - type: custom:button-card
       entity: light.varanda_switch_1
-      name: VR Gourmet
+      name: "VR - Área gourmet"
       template:
         - tpl_popup_light
         - icon_ledstrip
@@ -446,7 +446,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.varanda_switch_2
-      name: VR Pendente
+      name: "VR - Pendente"
       template:
         - tpl_popup_light
         - icon_pendant

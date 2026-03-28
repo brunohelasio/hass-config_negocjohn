@@ -91,7 +91,7 @@
   cards:
     - type: custom:button-card
       entity: light.qc_luz_principal
-      name: Luz Principal
+      name: "QC - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -100,7 +100,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_casal_switch_1
-      name: Cabeceira 1
+      name: "QC - Luzes quadros"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -109,7 +109,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_casal_2_switch_2
-      name: Cabeceira 2
+      name: "QC - Luz sanca"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -118,7 +118,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_casal_switch_2
-      name: Banheiro
+      name: "QC - Luzes closet"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -127,7 +127,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_casal_2_switch_3
-      name: Closet
+      name: "QC - Luz cortineiro"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -148,7 +148,7 @@
   cards:
     - type: custom:button-card
       entity: light.suite_casal_switch_1
-      name: Suite 1
+      name: "QCS - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -157,7 +157,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.suite_casal_switch_2
-      name: Suite 2
+      name: "QCS - Luz azul"
       template:
         - tpl_popup_light
         - icon_light_flush

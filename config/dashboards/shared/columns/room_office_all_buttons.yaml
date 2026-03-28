@@ -119,7 +119,7 @@
   cards:
     - type: custom:button-card
       entity: light.office_switch_3
-      name: Luz Central
+      name: "OF - Luz central"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -128,7 +128,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.office_switch_2
-      name: Luz Ambiente
+      name: "OF - Luz ambiente"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -137,7 +137,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.office_switch_1
-      name: Luz Estante
+      name: "OF - Luz estante"
       template:
         - tpl_popup_light
         - icon_ledstrip

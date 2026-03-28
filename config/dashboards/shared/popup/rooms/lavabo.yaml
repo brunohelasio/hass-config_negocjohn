@@ -224,7 +224,7 @@ browser_mod:
           cards:
             - type: custom:button-card
               entity: light.lavabo_switch_2
-              name: Luz Principal
+              name: "LV - Luz principal"
               template:
                 - tpl_popup_light
                 - icon_light_flush
@@ -233,7 +233,7 @@ browser_mod:
                 haptic: success
             - type: custom:button-card
               entity: light.lavabo_switch_1
-              name: Luz Parede
+              name: "LV - Luz parede"
               template:
                 - tpl_popup_light
                 - icon_light_flush
@@ -242,7 +242,7 @@ browser_mod:
                 haptic: success
             - type: custom:button-card
               entity: light.lavabo_switch_3
-              name: Luz Espelho
+              name: "LV - Luz espelho"
               template:
                 - tpl_popup_light
                 - icon_light_flush

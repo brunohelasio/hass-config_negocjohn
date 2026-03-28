@@ -90,7 +90,7 @@
   cards:
     - type: custom:button-card
       entity: light.quarto_marina_switch_4
-      name: Luz Principal
+      name: "QMA - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -99,7 +99,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_marina_switch_1
-      name: Cabeceira 1
+      name: "QMA - Arandela"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -108,7 +108,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_marina_switch_2
-      name: Cabeceira 2
+      name: "QMA - Estante"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -117,7 +117,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_marina_switch_3
-      name: Arandela
+      name: "QMA - Luz cortineiro"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -126,7 +126,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.suite_marina_switch_2
-      name: Suite 1
+      name: "QMAS - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -147,7 +147,7 @@
   cards:
     - type: custom:button-card
       entity: light.suite_marina_switch_1
-      name: Suite 2
+      name: "QMAS - Luz azul"
       template:
         - tpl_popup_light
         - icon_light_flush

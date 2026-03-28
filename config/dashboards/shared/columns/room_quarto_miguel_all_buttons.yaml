@@ -4,15 +4,15 @@
 # Secao 1: Luzes (titulo + toggle all + 8 switches em 5 colunas)
 # Secao 2: Midia & Clima (titulo + Spotify + AC + 3 blanks)
 #
-# Entidades confirmadas:
-#   - switch.quarto_miguel_switch_2
-#   - switch.quarto_miguel_2_switch_1
-#   - switch.quarto_miguel_2_switch_2
-#   - switch.quarto_miguel_2_switch_3
-#   - switch.quarto_miguel_switch_1
-#   - switch.quarto_miguel_switch_3
-#   - switch.suite_miguel_switch_1
-#   - switch.suite_miguel_switch_2
+# Entidades confirmadas (atualizado: switch.* → light.*):
+#   - light.quarto_miguel_switch_2
+#   - light.quarto_miguel_2_switch_1
+#   - light.quarto_miguel_2_switch_2
+#   - light.quarto_miguel_2_switch_3
+#   - light.quarto_miguel_switch_1
+#   - light.quarto_miguel_switch_3
+#   - light.suite_miguel_switch_1
+#   - light.suite_miguel_switch_2
 #   - Grupo: light.grupo_luzes_quarto_miguel
 #   - Camera: camera.qmi_camera
 #   - AC: climate.ac_quarto_miguel
@@ -91,8 +91,10 @@
       }
   cards:
     - type: custom:button-card
-      entity: switch.quarto_miguel_switch_2
-      name: Luz Principal
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # entity: switch.quarto_miguel_switch_2
+      entity: light.quarto_miguel_switch_2
+      name: "QMI - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -100,8 +102,10 @@
         action: toggle
         haptic: success
     - type: custom:button-card
-      entity: switch.quarto_miguel_2_switch_1
-      name: Cabeceira 1
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # entity: switch.quarto_miguel_2_switch_1
+      entity: light.quarto_miguel_2_switch_1
+      name: "QMI - Luzes armário"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -109,8 +113,10 @@
         action: toggle
         haptic: success
     - type: custom:button-card
-      entity: switch.quarto_miguel_2_switch_2
-      name: Cabeceira 2
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # entity: switch.quarto_miguel_2_switch_2
+      entity: light.quarto_miguel_2_switch_2
+      name: "QMI - Arandela poltrona"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -118,8 +124,10 @@
         action: toggle
         haptic: success
     - type: custom:button-card
-      entity: switch.quarto_miguel_2_switch_3
-      name: Estante
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # entity: switch.quarto_miguel_2_switch_3
+      entity: light.quarto_miguel_2_switch_3
+      name: "QMI - Arandela berço"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -127,8 +135,10 @@
         action: toggle
         haptic: success
     - type: custom:button-card
-      entity: switch.quarto_miguel_switch_1
-      name: Banheiro
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # entity: switch.quarto_miguel_switch_1
+      entity: light.quarto_miguel_switch_1
+      name: "QMI - Luz prateleiras"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -148,8 +158,10 @@
       }
   cards:
     - type: custom:button-card
-      entity: switch.quarto_miguel_switch_3
-      name: Arandela
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # entity: switch.quarto_miguel_switch_3
+      entity: light.quarto_miguel_switch_3
+      name: "QMI - Luz cortineiro"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -157,8 +169,10 @@
         action: toggle
         haptic: success
     - type: custom:button-card
-      entity: switch.suite_miguel_switch_1
-      name: Suite 1
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # entity: switch.suite_miguel_switch_1
+      entity: light.suite_miguel_switch_1
+      name: "QMIS - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -166,8 +180,10 @@
         action: toggle
         haptic: success
     - type: custom:button-card
-      entity: switch.suite_miguel_switch_2
-      name: Suite 2
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # entity: switch.suite_miguel_switch_2
+      entity: light.suite_miguel_switch_2
+      name: "QMIS - Luz azul"
       template:
         - tpl_popup_light
         - icon_light_flush

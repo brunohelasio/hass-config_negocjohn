@@ -61,13 +61,18 @@ grid_quarto_miguel:
     tap_action:
       action: call-service
       service: homeassistant.toggle
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # service_data:
+      #   entity_id: switch.quarto_miguel_switch_2
       service_data:
-        entity_id: switch.quarto_miguel_switch_2
+        entity_id: light.quarto_miguel_switch_2
     double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
     hold_action:
       action: none
     variables:
-      light_entity: switch.quarto_miguel_switch_2
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # light_entity: switch.quarto_miguel_switch_2
+      light_entity: light.quarto_miguel_switch_2
       active: ''
       # AC do quarto miguel (restaurado sem _2)
       ac_entity: climate.ac_quarto_miguel

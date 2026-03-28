@@ -8,6 +8,11 @@
 # dispositivo no Spotify Connect (verificar no app Spotify > Dispositivos).
 # Se o nome nao corresponder, ajustar manualmente.
 # ══════════════════════════════════════════════════════════════════════════
+# NOTA: Este popup usa custom:spotify-card (card comunitario generico).
+# O custom:spotifyplus-card (thlucas1) NAO esta instalado neste HA.
+# Para instalar: HACS > Frontend > Buscar "SpotifyPlus Card" > Instalar
+# O spotifyplus-card oferece device targeting nativo (deviceDefaultId).
+# Ate ser instalado, o custom:spotify-card funciona para controles basicos.
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup

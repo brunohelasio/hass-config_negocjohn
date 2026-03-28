@@ -311,11 +311,21 @@
             }
           ]]]
         circle_input_unit: '%'
+      # --- CÓDIGO ORIGINAL: media_player.media_play_pause (falha sem device ativo) ---
+      # tap_action:
+      #   action: perform-action
+      #   perform_action: media_player.media_play_pause
+      #   target:
+      #     entity_id: media_player.spotifyplus_bruno_helasio
+      #   haptic: success
+      # FIX: Usar spotifyplus.player_media_play_pause com device_name para iniciar
+      # playback diretamente no Echo do Office, sem precisar de device ativo.
       tap_action:
-        action: perform-action
-        perform_action: media_player.media_play_pause
-        target:
+        action: call-service
+        service: spotifyplus.player_media_play_pause
+        service_data:
           entity_id: media_player.spotifyplus_bruno_helasio
+          device_name: Echo Pop Office
         haptic: success
       double_tap_action:
         action: more-info

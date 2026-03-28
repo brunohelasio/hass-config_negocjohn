@@ -35,7 +35,7 @@ light:
 media:
   - media_player.smart_tv_pro_2
 climate:
-  - climate.ac_quarto_miguel
-  - climate.ac_office
+  - climate.ac_quarto_miguel_2
+  - climate.ac_office_2
 presence:
   - person.bruno_helasio

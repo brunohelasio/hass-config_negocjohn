@@ -92,7 +92,7 @@ grid_living_room:
       # O template motion tem protecao interna e nao quebra com string vazia.
       motion: ''
       # AC da sala
-      ac_entity: climate.sl_ar_condicionado
+      ac_entity: climate.sl_ar_condicionado_2
       # TV/Media da sala
       media_entity: media_player.smart_tv_pro_2
       # REMOVIDO: circle_input nao e mais necessario no botao principal (sem circle).

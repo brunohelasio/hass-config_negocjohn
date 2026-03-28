@@ -60,7 +60,7 @@ sidebar_template:
     - light.corredor_switch_1
     - light.todas_as_luzes
     - media_player.smart_tv_pro_2
-    - climate.ac_office
+    - climate.ac_office_2
     - person.bruno_helasio
     - weather.forecast_casa
   extra_styles: !include sidebar/_styles.yaml

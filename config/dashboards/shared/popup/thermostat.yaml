@@ -164,7 +164,8 @@ browser_mod:
     card_mod: !include ../snippets/style_popup_complete.yaml
     content:
       type: thermostat
-      entity: climate.sl_ar_condicionado
+      # ANTERIOR: entity: climate.sl_ar_condicionado (sem _2)
+      entity: climate.sl_ar_condicionado_2
       show_current_as_primary: true
       features:
         - style: icons

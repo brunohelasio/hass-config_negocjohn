@@ -1,25 +1,175 @@
+# ══════════════════════════════════════════════════════════════════════════
+# ESTADO ANTERIOR — popup com 3 colunas e CSS inline (comentado, nunca deletar)
+# ══════════════════════════════════════════════════════════════════════════
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Cozinha
+#     size: wide
+#     style: >
+#       --popup-width: 76vw;
+#       --popup-max-width: 1180px;
+#       --popup-background-color: rgba(8, 12, 20, 0.62);
+#       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+#       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+#       --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
+#     card_mod:
+#       style:
+#         .: |
+#           ha-dialog {
+#             backdrop-filter: blur(5px);
+#             -webkit-backdrop-filter: blur(5px);
+#           }
+#           ha-dialog .mdc-dialog__container {
+#             align-items: center !important;
+#           }
+#           ha-dialog::before {
+#             content: '';
+#             position: absolute;
+#             inset: 0;
+#             border-radius: inherit;
+#             pointer-events: none;
+#             box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+#           }
+#     content:
+#       type: custom:layout-card
+#       layout_type: custom:grid-layout
+#       layout:
+#         grid-template-columns: 18vw 18vw 36vw
+#         grid-template-areas: '"col_luzes col_extra col_camera"'
+#         justify-content: center
+#         align-content: center
+#         grid-gap: 1.5vw
+#         mediaquery:
+#           "(max-width: 800px)":
+#             grid-template-columns: 1fr
+#             grid-template-areas: |
+#               "col_luzes"
+#               "col_extra"
+#               "col_camera"
+#       cards:
+#         - type: vertical-stack
+#           view_layout:
+#             grid-area: col_luzes
+#           cards:
+#             - type: grid
+#               columns: 2
+#               square: true
+#               cards:
+#                 - type: custom:button-card
+#                   entity: light.cozinha_switch_2
+#                   name: Luz principal 1
+#                   template:
+#                     - tpl_popup_light
+#                     - icon_light_flush
+#                 - type: custom:button-card
+#                   entity: light.cozinha_switch_3
+#                   name: Luz principal 2
+#                   template:
+#                     - tpl_popup_light
+#                     - icon_light_flush
+#                 - type: custom:button-card
+#                   entity: light.cozinha_switch_1
+#                   name: Área de serviço
+#                   template:
+#                     - tpl_popup_light
+#                     - icon_light_flush
+#         - type: vertical-stack
+#           view_layout:
+#             grid-area: col_extra
+#           cards:
+#             - type: grid
+#               columns: 2
+#               square: true
+#               cards:
+#                 - type: custom:button-card
+#                   name: Máquina de lavar
+#                   template:
+#                     - base
+#                     - icon_washer
+#                   show_icon: false
+#                   tap_action:
+#                     action: none
+#                   hold_action:
+#                     action: none
+#                   double_tap_action:
+#                     action: none
+#                   styles:
+#                     card:
+#                       - opacity: "0.45"
+#                       - cursor: "default"
+#                 - type: custom:button-card
+#                   name: Lava-louças
+#                   template:
+#                     - base
+#                     - icon_dishwasher
+#                   show_icon: false
+#                   tap_action:
+#                     action: none
+#                   hold_action:
+#                     action: none
+#                   double_tap_action:
+#                     action: none
+#                   styles:
+#                     card:
+#                       - opacity: "0.45"
+#                       - cursor: "default"
+#                 - type: custom:button-card
+#                   name: Air Fryer
+#                   template:
+#                     - base
+#                     - icon_pot
+#                   show_icon: false
+#                   tap_action:
+#                     action: none
+#                   hold_action:
+#                     action: none
+#                   double_tap_action:
+#                     action: none
+#                   styles:
+#                     card:
+#                       - opacity: "0.45"
+#                       - cursor: "default"
+#         - type: vertical-stack
+#           view_layout:
+#             grid-area: col_camera
+#           cards:
+#             - type: picture-entity
+#               entity: camera.cz_camera
+#               camera_view: live
+#               show_name: false
+#               show_state: false
+#             - type: picture-entity
+#               entity: camera.as_camera
+#               camera_view: live
+#               show_name: false
+#               show_state: false
+# ══════════════════════════════════════════════════════════════════════════
+# NOVO — Popup estilo Sala (2 colunas: col_buttons + col_camera)
+# Replicado de livingroom.yaml — Fase 2.5
+# ══════════════════════════════════════════════════════════════════════════
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
     title: Cozinha
+    tag: cozinha_popup
     size: wide
     style: >
-      --popup-width: 76vw;
-      --popup-max-width: 1180px;
-      --popup-background-color: rgba(8, 12, 20, 0.62);
+      --popup-width: 65vw;
+      --popup-max-width: 980px;
+      --popup-background-color: rgba(15, 20, 35, 0.75);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
-      --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
+      --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
     card_mod:
       style:
         .: |
           ha-dialog {
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-          }
-          ha-dialog .mdc-dialog__container {
-            align-items: center !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
           }
           ha-dialog::before {
             content: '';
@@ -29,116 +179,49 @@ browser_mod:
             pointer-events: none;
             box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
           }
+        ha-dialog$: |
+          .mdc-dialog__scrim {
+            background-color: rgba(0, 0, 0, 0.56) !important;
+          }
+          .mdc-dialog__container {
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          .mdc-dialog__surface {
+            width: 65vw !important;
+            max-width: 980px !important;
+            max-height: 88vh !important;
+            overflow-y: auto !important;
+          }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 18vw 18vw 36vw
-        grid-template-areas: '"col_luzes col_extra col_camera"'
-        justify-content: center
-        align-content: center
-        grid-gap: 1.5vw
+        grid-template-columns: 1.4fr 1.0fr
+        grid-template-areas: '"col_buttons col_camera"'
+        grid-gap: 10px
+        margin: 0
+        padding: 0.5rem
         mediaquery:
           "(max-width: 800px)":
             grid-template-columns: 1fr
             grid-template-areas: |
-              "col_luzes"
-              "col_extra"
+              "col_buttons"
               "col_camera"
+            padding: 0
       cards:
+        # ── Coluna 1: Todos os botoes ──
         - type: vertical-stack
           view_layout:
-            grid-area: col_luzes
-          cards:
-            - type: grid
-              columns: 2
-              square: true
-              cards:
-                - type: custom:button-card
-                  entity: light.cozinha_switch_2
-                  name: Luz principal 1
-                  template:
-                    - tpl_popup_light
-                    - icon_light_flush
-                - type: custom:button-card
-                  entity: light.cozinha_switch_3
-                  name: Luz principal 2
-                  template:
-                    - tpl_popup_light
-                    - icon_light_flush
-                - type: custom:button-card
-                  entity: light.cozinha_switch_1
-                  name: Área de serviço
-                  template:
-                    - tpl_popup_light
-                    - icon_light_flush
-        - type: vertical-stack
-          view_layout:
-            grid-area: col_extra
-          cards:
-            - type: grid
-              columns: 2
-              square: true
-              cards:
-                - type: custom:button-card
-                  name: Máquina de lavar
-                  template:
-                    - base
-                    - icon_washer
-                  show_icon: false
-                  tap_action:
-                    action: none
-                  hold_action:
-                    action: none
-                  double_tap_action:
-                    action: none
-                  styles:
-                    card:
-                      - opacity: "0.45"
-                      - cursor: "default"
-                - type: custom:button-card
-                  name: Lava-louças
-                  template:
-                    - base
-                    - icon_dishwasher
-                  show_icon: false
-                  tap_action:
-                    action: none
-                  hold_action:
-                    action: none
-                  double_tap_action:
-                    action: none
-                  styles:
-                    card:
-                      - opacity: "0.45"
-                      - cursor: "default"
-                - type: custom:button-card
-                  name: Air Fryer
-                  template:
-                    - base
-                    - icon_pot
-                  show_icon: false
-                  tap_action:
-                    action: none
-                  hold_action:
-                    action: none
-                  double_tap_action:
-                    action: none
-                  styles:
-                    card:
-                      - opacity: "0.45"
-                      - cursor: "default"
-        - type: vertical-stack
+            grid-area: col_buttons
+          cards: !include ../../columns/room_cozinha_all_buttons.yaml
+
+        # ── Coluna 2: Cameras ──
+        - type: custom:layout-card
+          layout_type: custom:grid-layout
           view_layout:
             grid-area: col_camera
-          cards:
-            - type: picture-entity
-              entity: camera.cz_camera
-              camera_view: live
-              show_name: false
-              show_state: false
-            - type: picture-entity
-              entity: camera.as_camera
-              camera_view: live
-              show_name: false
-              show_state: false
+          layout:
+            grid-template-columns: 1fr
+            margin: 0
+          cards: !include ../../columns/room_cozinha_cameras.yaml

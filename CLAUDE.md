@@ -256,6 +256,19 @@ Adiado para momento posterior. A funcionalidade usaria `entity.attributes.entity
 | Anterior-4 | ✅ | Vermelho unavailable ja funciona via tpl_base.yaml (state_error) |
 | Anterior-5 | ✅ | Contagem de luzes via sensor.living_room_active (lights_on_count) |
 
+### Pendencias das Fases 0 e 1 (registradas 2026-03-28)
+
+As seguintes pendencias permanecem abertas das Fases 0 e 1. Nenhuma das tentativas
+anteriores resolveu estes problemas — serao revisitados em sessao futura.
+
+| # | Pendencia | Descricao | Status |
+|---|-----------|-----------|--------|
+| P1 | Espacamento lateral dos botoes | Gap/espacamento entre botoes no popup da sala ainda muito grande. Multiplas tentativas com gap:4px, padding, margin nao resolveram. O grid nativo do HA parece impor espacamento minimo. | ⏳ PENDENTE |
+| P2 | Smart Remote TV — botoes | O popup do controle remoto da TV (smart_tv_remote.yaml) esta montado com layout de grid e remote.send_command, mas os botoes ainda nao funcionam corretamente. Precisa de implementacao/debug. | ⏳ PENDENTE |
+| P3 | Spotify — botao nao liga e comandos nao respondem | O botao Spotify no popup da sala nao liga e os comandos (play/pause via media_player.media_play_pause) nao respondem. A integracao SpotifyPlus pode precisar de configuracao adicional ou a entidade pode estar offline. | ⏳ PENDENTE |
+| P4 | Hold do Ar Condicionado — erro de configuracao | O hold_action do botao AC que abre o popup thermostat.yaml ainda apresenta erro de configuracao. O popup do termostato pode nao estar carregando corretamente. | ⏳ PENDENTE |
+| P5 | AC ligado — botao nao fica branco (aceso) | Quando o ar condicionado esta ligado (cool/fan_only/dry/heat), o botao no popup nao muda para background branco. Tentativas com state: operator:template e styles.card JS templates nao resolveram de forma confiavel. O button-card pode estar sobrescrevendo os estilos. | ⏳ PENDENTE |
+
 ---
 
 ## Roteiro de Implementacao — Reestruturacao Completa (2026-03-27)

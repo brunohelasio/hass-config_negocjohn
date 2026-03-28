@@ -47,6 +47,12 @@ grid_quarto_miguel:
     type: custom:button-card
     entity: light.grupo_luzes_quarto_miguel
     name: Quarto Miguel
+    # FIX C5.2: Adicionado triggers_update com sensor.time para atualizar timer
+    # no state_display (mostra tempo desde acendimento). Sem sensor *_active por
+    # enquanto — fallback para grupo entity. Quarto Miguel usa switches (nao lights).
+    # NOTA: Grupo recriado pelo usuario (estava indisponivel) — agora funciona.
+    triggers_update:
+      - sensor.time
     template:
       - rooms_base
       - icon_double_bed

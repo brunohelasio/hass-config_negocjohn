@@ -746,7 +746,60 @@ para Spotify. Quando integrado com SpotifyPlus Card, considerar adicionar
 
 **PENDENCIAS que dependem do usuario:**
 1. Nomes EXATOS dos Echo no Spotify Connect (para deviceDefaultId)
-2. Verificacao do grupo light.grupo_luzes_quarto_miguel no HA (recriado)
-3. Autorizacao para iniciar implementacao
+2. ~~Verificacao do grupo light.grupo_luzes_quarto_miguel no HA (recriado)~~ **RESOLVIDO** (usuario recriou grupo)
+3. ~~Autorizacao para iniciar implementacao~~ **AUTORIZADO** (2026-03-28)
+
+---
+
+## Registro de Implementacao — Fases C1 a C6 (2026-03-28)
+
+Implementacao consolidada das fases C1-C6 conforme autorizacao do usuario.
+Todas as alteracoes sao incrementais e reversiveis (codigo anterior comentado).
+
+### Resolucoes Confirmadas pelo Usuario
+
+| Item | Status | Nota |
+|------|--------|------|
+| Quarto Miguel — botao grid nao acendia | ✅ RESOLVIDO | Usuario recriou grupo `light.grupo_luzes_quarto_miguel`. Botao voltou a acender. |
+| Grupo Q.Miguel indisponivel | ✅ RESOLVIDO | Excluido e recriado com mesmo nome no HA |
+| Cameras nos popups Cozinha/Office | MANTIDAS | Usuario confirmou que quer manter cameras nesses comodos |
+
+### Alteracoes Implementadas
+
+| Fase | Arquivo | Alteracao | Detalhes |
+|------|---------|-----------|----------|
+| C1.1 | `shared/popup/rooms/lavabo.yaml` | Fix "todas as luzes" | Adicionado `entity: light.grupo_luzes_lavabo`, `tap_action: toggle`, cor dinamica do icone (amarelo on, cinza off) |
+| C2.1 | `shared/popup/rooms/office.yaml` | Popup 680px | Reduzido de 65vw/980px para 680px fixo (3-col room com camera) |
+| C2.2 | `shared/popup/rooms/kitchen.yaml` | Popup 680px | Reduzido de 65vw/980px para 680px fixo (3-col room com camera) |
+| C2.3 | `shared/popup/rooms/office.yaml`, `kitchen.yaml` | Layout 1.2fr 1.0fr | Proporcao ajustada para 3 colunas de botoes 98px (antes 1.4fr sobrava espaco) |
+| C4.1 | `shared/columns/room_living_all_buttons.yaml` | ON/OFF badge Sala | Pill badge azul (#3b82f6) quando ON, cinza quando OFF — custom_field no header Luzes |
+| C4.1 | `shared/columns/room_office_all_buttons.yaml` | ON/OFF badge Office | Mesmo padrao visual |
+| C4.1 | `shared/columns/room_cozinha_all_buttons.yaml` | ON/OFF badge Cozinha | Mesmo padrao visual |
+| C4.1 | `shared/columns/room_quarto_casal_all_buttons.yaml` | ON/OFF badge Q.Casal | Mesmo padrao visual |
+| C4.1 | `shared/columns/room_quarto_marina_all_buttons.yaml` | ON/OFF badge Q.Marina | Mesmo padrao visual |
+| C4.1 | `shared/columns/room_quarto_miguel_all_buttons.yaml` | ON/OFF badge Q.Miguel | Mesmo padrao visual |
+| C4.1 | `shared/popup/rooms/lavabo.yaml` | ON/OFF badge Lavabo | Mesmo padrao visual |
+| C5.2 | `templates/streamline_templates/tpl_grid_room2.yaml` | triggers_update Q.Miguel | Adicionado `triggers_update: [sensor.time]` para atualizar timer periodicamente |
+
+### Fases NAO implementadas (justificativa)
+
+| Fase | Motivo |
+|------|--------|
+| C1.2-C1.3 | Template tpl_popup_climate — AC button styling (P5) permanece como pendencia. Requer investigacao mais profunda da cascata CSS do button-card. |
+| C3 | Spotify por comodo — Aguarda nomes dos Echo no Spotify Connect (deviceDefaultId) |
+| C5.1 | Grupo Q.Miguel — RESOLVIDO pelo usuario (recriou grupo no HA) |
+| C5.3-C5.4 | Sensors *_active — Requer criacao no HA (fora do dashboard) |
+| C6.1-C6.2 | Performance — Alta complexidade, risco de quebrar cards existentes. Adiado. |
+
+### Pendencias Atualizadas (P1-P5 + P6)
+
+| # | Pendencia | Status | Nota |
+|---|-----------|--------|------|
+| P1 | Espacamento lateral dos botoes | ⏳ PENDENTE | Grid nativo do HA impoe espacamento minimo |
+| P2 | Smart Remote TV — botoes | ⏳ PENDENTE | Precisa debug do remote.send_command |
+| P3 | Spotify — botao nao liga | ⏳ PENDENTE | Integracao SpotifyPlus pode precisar de config adicional |
+| P4 | Hold do AC — erro config | ⏳ PENDENTE | Popup thermostat pode nao estar carregando |
+| P5 | AC ligado — botao nao fica branco | ⏳ PENDENTE | Cascata CSS do button-card sobrescreve styles |
+| P6 | Quarto Miguel — botao grid | ✅ RESOLVIDO | Usuario recriou grupo. triggers_update adicionado (C5.2) |
 
 ---

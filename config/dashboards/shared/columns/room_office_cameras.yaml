@@ -2,7 +2,8 @@
 # Replicado do modelo base: room_living_cameras.yaml (Sala)
 # camera_view: auto — tenta live primeiro, fallback para still image
 - type: picture-entity
-  entity: camera.of_camera
+  # ANTERIOR: entity: camera.of_camera (corrigido: cameras usam _2)
+  entity: camera.of_camera_2
   camera_view: auto
   aspect_ratio: 3:2
   show_name: false

@@ -340,6 +340,7 @@
     style: |
       #root {
         gap: 4px !important;
+        grid-template-columns: repeat(5, 98px) !important;
       }
   cards:
     - type: custom:button-card
@@ -409,6 +410,7 @@
     style: |
       #root {
         gap: 4px !important;
+        grid-template-columns: repeat(5, 98px) !important;
       }
   cards:
     - type: custom:button-card
@@ -525,6 +527,7 @@
     style: |
       #root {
         gap: 4px !important;
+        grid-template-columns: repeat(5, 98px) !important;
       }
   cards:
     # TV — usa template mediaplayer (original ngocjohn)
@@ -645,6 +648,7 @@
     style: |
       #root {
         gap: 4px !important;
+        grid-template-columns: repeat(5, 98px) !important;
       }
   cards:
     # CORTINA — SVG inline (movida da linha de midia para linha de clima)
@@ -686,6 +690,7 @@
             </g>
           </svg>
     # AR CONDICIONADO — ativado com entity e hold_action para popup thermostat
+    # ANTERIOR: entity: climate.sl_ar_condicionado_2 (corrigido: AC nao usa _2, cameras sim)
     - type: custom:button-card
       entity: climate.sl_ar_condicionado
       name: Ar Cond.

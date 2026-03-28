@@ -143,10 +143,34 @@ rooms_base:
                  : parseInt(d) + 'd';
           };
 
-          // Calcula tempo desde que a entidade (light group) ligou
+          // Calcula tempo desde que luzes estao acesas no comodo.
+          // ANTERIOR: usava entity.last_changed (group entity), mas era inconsistente:
+          //   - Group last_changed so atualiza em transicoes on/off do group inteiro
+          //   - Se um membro muda de brilho, group pode re-trigger mas last_changed nao muda
+          //   - Em restarts do HA, group last_changed reseta para timestamp do restart
+          // FIX: itera os membros "on" do group e encontra o last_changed mais antigo.
+          // Isso mostra ha quanto tempo o comodo tem luzes acesas (desde a primeira acender).
           let elapsed = '';
-          if (entity.state === 'on' && entity.last_changed) {
-            elapsed = timeFmt(Date.now() - Date.parse(entity.last_changed));
+          if (entity.state === 'on') {
+            let earliestOn = null;
+            // Percorre membros do light group para achar o mais antigo ligado
+            if (entity.attributes && entity.attributes.entity_id && Array.isArray(entity.attributes.entity_id)) {
+              entity.attributes.entity_id.forEach(id => {
+                const s = states[id];
+                if (s && s.state === 'on' && s.last_changed) {
+                  const ts = Date.parse(s.last_changed);
+                  if (!isNaN(ts) && (earliestOn === null || ts < earliestOn)) earliestOn = ts;
+                }
+              });
+            }
+            // Fallback: usa last_changed do group entity se membros nao estao disponiveis
+            if (earliestOn === null && entity.last_changed) {
+              earliestOn = Date.parse(entity.last_changed);
+            }
+            if (earliestOn !== null) {
+              const diff = Date.now() - earliestOn;
+              if (diff > 0) elapsed = timeFmt(diff);
+            }
           }
 
           if (num === 1) {

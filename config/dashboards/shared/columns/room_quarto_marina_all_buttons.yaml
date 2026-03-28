@@ -63,6 +63,7 @@
     style: |
       #root {
         gap: 4px !important;
+        grid-template-columns: repeat(5, 98px) !important;
       }
   cards:
     - type: custom:button-card
@@ -119,6 +120,7 @@
     style: |
       #root {
         gap: 4px !important;
+        grid-template-columns: repeat(5, 98px) !important;
       }
   cards:
     - type: custom:button-card
@@ -212,7 +214,24 @@
       - justify-self: start
       - font-weight: 500
 
-# ── Linha 3: Spotify + AC placeholder + 3 blanks ──
+# ── Linha 3: TV (placeholder) + Spotify + AC placeholder + 2 blanks ──
+# ANTERIOR: Linha 3 tinha 5 colunas com Spotify + AC + 3 blanks (sem TV)
+# - type: grid
+#   columns: 5
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#       }
+#   cards:
+#     # SPOTIFY — (sem TV)
+#     ...
+#     # AC — placeholder
+#     ...
+#     # BLANK 1-3
+
+# NOVO: Linha 3 com TV placeholder adicionado + padrao 98px
 - type: grid
   columns: 5
   square: false
@@ -220,8 +239,26 @@
     style: |
       #root {
         gap: 4px !important;
+        grid-template-columns: repeat(5, 98px) !important;
       }
   cards:
+    # TV — placeholder (entidade a definir futuramente)
+    - type: custom:button-card
+      name: TV
+      template:
+        - base
+      icon: mdi:television
+      show_icon: true
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"
     # SPOTIFY — compartilhado, mesma entidade em todos os comodos
     - type: custom:button-card
       entity: media_player.spotifyplus_bruno_helasio
@@ -274,15 +311,7 @@
         card:
           - opacity: "0.35"
           - cursor: "default"
-    # BLANK 1-3
-    - type: custom:button-card
-      color_type: blank-card
-      styles:
-        card:
-          - background: none
-          - border: none
-          - box-shadow: none
-          - opacity: '0'
+    # BLANK 1-2
     - type: custom:button-card
       color_type: blank-card
       styles:

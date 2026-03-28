@@ -53,14 +53,46 @@
             return entity.state === 'on' ? '#f0c040' : 'rgba(255,255,255,0.25)';
           ]]]
 
-# ── Linha 1: 3 botoes de iluminacao + 2 blanks ──
+# ── ANTERIOR: Linha 1 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 5
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#       }
+#   cards:
+#     - type: custom:button-card
+#       entity: light.office_switch_3
+#       name: Luz Central
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.office_switch_2
+#       name: Luz Ambiente
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.office_switch_1
+#       name: Luz Estante
+#       template: [tpl_popup_light, icon_ledstrip]
+#       tap_action: { action: toggle, haptic: success }
+#     # BLANK 1-2
+#     - type: custom:button-card
+#       color_type: blank-card
+#     - type: custom:button-card
+#       color_type: blank-card
+
+# ── NOVO: Linha 1 com 3 colunas e botoes padrao 98px ──
 - type: grid
-  columns: 5
+  columns: 3
   square: false
   card_mod:
     style: |
       #root {
         gap: 4px !important;
+        grid-template-columns: repeat(3, 98px) !important;
       }
   cards:
     - type: custom:button-card
@@ -90,23 +122,6 @@
       tap_action:
         action: toggle
         haptic: success
-    # BLANK 1-2 — iguala 3 botoes a grid de 5 colunas
-    - type: custom:button-card
-      color_type: blank-card
-      styles:
-        card:
-          - background: none
-          - border: none
-          - box-shadow: none
-          - opacity: '0'
-    - type: custom:button-card
-      color_type: blank-card
-      styles:
-        card:
-          - background: none
-          - border: none
-          - box-shadow: none
-          - opacity: '0'
 
 # ── Divisor Glassmorphism ──
 - type: custom:button-card
@@ -156,23 +171,61 @@
       - justify-self: start
       - font-weight: 500
 
-# ── Linha 3: MacBook + Spotify + AC + 2 blanks ──
+# ── ANTERIOR: Linha 3 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 5
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#       }
+#   cards:
+#     # MACBOOK — switch.macbook
+#     - type: custom:button-card
+#       entity: switch.macbook
+#       name: MacBook
+#       template: [base]
+#       icon: mdi:laptop
+#       show_icon: true
+#       tap_action: { action: toggle, haptic: success }
+#       double_tap_action: { action: more-info }
+#     # SPOTIFY
+#     - type: custom:button-card
+#       entity: media_player.spotifyplus_bruno_helasio
+#       name: Spotify
+#       template: [base, circle, loader, icon_spotify_color]
+#       ...
+#     # AC — climate.ac_office
+#     - type: custom:button-card
+#       entity: climate.ac_office
+#       name: Ar Cond.
+#       template: [base, icon_climate]
+#       ...
+#     # BLANK 1-2
+#     - type: custom:button-card
+#       color_type: blank-card
+#     - type: custom:button-card
+#       color_type: blank-card
+
+# ── NOVO: Linha 3 com 3 colunas, PC (antes MacBook), AC corrigido (ac_office_2) ──
 - type: grid
-  columns: 5
+  columns: 3
   square: false
   card_mod:
     style: |
       #root {
         gap: 4px !important;
+        grid-template-columns: repeat(3, 98px) !important;
       }
   cards:
-    # MACBOOK — switch.macbook (PC no lugar da TV)
+    # PC — switch.macbook (renomeado de MacBook para PC, icone desktop)
     - type: custom:button-card
       entity: switch.macbook
-      name: MacBook
+      name: PC
       template:
         - base
-      icon: mdi:laptop
+      icon: mdi:desktop-tower-monitor
       show_icon: true
       tap_action:
         action: toggle
@@ -214,7 +267,7 @@
       double_tap_action:
         action: more-info
       hold_action: !include ../popup/media_spotify.yaml
-    # AR CONDICIONADO — Office tem AC
+    # AR CONDICIONADO — Office (entidade restaurada: AC nao usa _2, cameras sim)
     - type: custom:button-card
       entity: climate.ac_office
       name: Ar Cond.
@@ -251,20 +304,3 @@
         action: more-info
       hold_action:
         action: more-info
-    # BLANK 1-2
-    - type: custom:button-card
-      color_type: blank-card
-      styles:
-        card:
-          - background: none
-          - border: none
-          - box-shadow: none
-          - opacity: '0'
-    - type: custom:button-card
-      color_type: blank-card
-      styles:
-        card:
-          - background: none
-          - border: none
-          - box-shadow: none
-          - opacity: '0'

@@ -791,7 +791,7 @@ Todas as alteracoes sao incrementais e reversiveis (codigo anterior comentado).
 | C5.3-C5.4 | Sensors *_active — Requer criacao no HA (fora do dashboard) |
 | C6.1-C6.2 | Performance — Alta complexidade, risco de quebrar cards existentes. Adiado. |
 
-### Pendencias Atualizadas (P1-P5 + P6)
+### Pendencias Atualizadas (P1-P6 + P7)
 
 | # | Pendencia | Status | Nota |
 |---|-----------|--------|------|
@@ -799,7 +799,79 @@ Todas as alteracoes sao incrementais e reversiveis (codigo anterior comentado).
 | P2 | Smart Remote TV — botoes | ⏳ PENDENTE | Precisa debug do remote.send_command |
 | P3 | Spotify — botao nao liga | ⏳ PENDENTE | Integracao SpotifyPlus pode precisar de config adicional |
 | P4 | Hold do AC — erro config | ⏳ PENDENTE | Popup thermostat pode nao estar carregando |
-| P5 | AC ligado — botao nao fica branco | ⏳ PENDENTE | Cascata CSS do button-card sobrescreve styles |
+| P5 | AC ligado — botao nao fica branco | ✅ RESOLVIDO | Criado tpl_popup_climate (C1.2-C1.3) — herda base com state_on correto para climate |
 | P6 | Quarto Miguel — botao grid | ✅ RESOLVIDO | Usuario recriou grupo. triggers_update adicionado (C5.2) |
+
+---
+
+## Registro de Implementacao — Fases C1.2-C1.3, C3, C5.3-C5.4 (2026-03-28)
+
+Implementacao das fases pendentes conforme solicitacao do usuario.
+
+### C1.2-C1.3 — Investigacao profunda + Fix AC Button (P5)
+
+**Analise da causa raiz:**
+1. Template `base` (tpl_base.yaml:23-24) define `state_on` que JA inclui 'cool' e 'fan_only'
+2. Template `base` (tpl_base.yaml:90-101) usa `variables.state_on` para `styles.card.background-color`
+3. Botoes AC tinham override de `variables.state_on` E `styles.card.background-color` no card-level
+4. O button-card avaliava a cadeia de templates numa ordem que causava conflito entre o override do card e o do template base
+
+**Solucao implementada: `tpl_popup_climate`**
+- Criado template `tpl_popup_climate` em `tpl_sectors.yaml` (herda de `base`)
+- Define `state_on` correto para climate: `['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto']`
+- O `styles.card.background-color` do `base` agora usa o `state_on` do `tpl_popup_climate` (branco quando ativo)
+- Nao precisa mais de override de styles no card-level — a heranca funciona corretamente
+- Botoes AC usam: `template: [tpl_popup_climate, icon_climate]`
+
+**Arquivos alterados:**
+| Arquivo | Alteracao |
+|---------|-----------|
+| `tpl_sectors.yaml` | Novo template `tpl_popup_climate` (apos `tpl_popup_light`) |
+| `room_living_all_buttons.yaml` | AC button: base → tpl_popup_climate, styles override comentado |
+| `room_office_all_buttons.yaml` | AC button: base → tpl_popup_climate, styles override comentado |
+| `room_quarto_miguel_all_buttons.yaml` | AC button: base → tpl_popup_climate, styles override comentado |
+
+### C3 — Spotify Per-Room com Default Device
+
+**Dispositivos Alexa confirmados pelo usuario:**
+| Comodo | Nome do Echo | Entity ID HA | Nome Spotify Connect |
+|--------|-------------|-------------|---------------------|
+| Sala | Echo Show | media_player.echo_show | Echo Show |
+| Office | Echo Pop Office | media_player.echo_pop_office | Echo Pop Office |
+| Quarto Casal | Echo Pop Quarto Casal | media_player.echo_pop_quarto_casal | Echo Pop Quarto Casal |
+| Quarto Marina | Echo Pop Marina | media_player.echo_pop_marina | Echo Pop Marina |
+| Quarto Miguel | — | — | ❌ Sem Alexa |
+| Cozinha | — | — | ❌ Sem Alexa |
+| Lavabo | — | — | ❌ Sem Alexa |
+
+**Popups criados:**
+| Arquivo | default_device | Tag |
+|---------|---------------|-----|
+| `media_spotify_sala.yaml` | Echo Show | spotify_sala |
+| `media_spotify_office.yaml` | Echo Pop Office | spotify_office |
+| `media_spotify_quarto_casal.yaml` | Echo Pop Quarto Casal | spotify_quarto_casal |
+| `media_spotify_quarto_marina.yaml` | Echo Pop Marina | spotify_quarto_marina |
+
+**Botoes atualizados:**
+| Comodo | hold_action | Nota |
+|--------|------------|------|
+| Sala | media_spotify_sala.yaml | ✅ |
+| Office | media_spotify_office.yaml | ✅ |
+| Quarto Casal | media_spotify_quarto_casal.yaml | ✅ |
+| Quarto Marina | media_spotify_quarto_marina.yaml | ✅ |
+| Quarto Miguel | Desabilitado (opacity 0.35) | Sem Alexa — botao placeholder |
+
+**NOTA IMPORTANTE:** Os nomes de `default_device` devem corresponder EXATAMENTE aos
+nomes dos dispositivos no Spotify Connect. Se o Spotify mostrar os dispositivos com
+nomes diferentes (ex: "Echo Show de Bruno", "Echo Pop - Office"), ajustar manualmente
+nos arquivos media_spotify_*.yaml.
+
+O arquivo `media_spotify.yaml` original (popup compartilhado sem device targeting)
+foi MANTIDO intacto para referencia futura.
+
+### C5.3-C5.4 — Orientacao para criar sensors active (ver abaixo)
+
+Orientacao fornecida ao usuario sobre como criar template sensors para cada comodo.
+Definicoes devem ser adicionadas em `config/packages/templates/sensors/template_sensors.yaml`.
 
 ---

@@ -35,7 +35,8 @@ light:
 media:
   - media_player.smart_tv_pro_2
 climate:
-  - climate.ac_quarto_miguel_2
-  - climate.ac_office_2
+  # ANTERIOR: _2 (corrigido: AC nao usa _2, cameras sim)
+  - climate.ac_quarto_miguel
+  - climate.ac_office
 presence:
   - person.bruno_helasio

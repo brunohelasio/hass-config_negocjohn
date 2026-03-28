@@ -12,12 +12,18 @@ grid_office_room:
     template:
       - rooms_base
       - icon_office
+      # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
+      - ac_status
     double_tap_action: !include ../../shared/popup/rooms/office.yaml
     hold_action:
       action: none
     variables:
       light_entity: light.office_switch_3
       active: ''
+      # AC do office (restaurado sem _2)
+      ac_entity: climate.ac_office
+      # Motion: vazio ate sensor chegar
+      motion: ''
 
 # QUARTO CASAL
 grid_quarto_casal:
@@ -44,6 +50,8 @@ grid_quarto_miguel:
     template:
       - rooms_base
       - icon_double_bed
+      # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
+      - ac_status
     tap_action:
       action: call-service
       service: homeassistant.toggle
@@ -55,6 +63,10 @@ grid_quarto_miguel:
     variables:
       light_entity: switch.quarto_miguel_switch_2
       active: ''
+      # AC do quarto miguel (restaurado sem _2)
+      ac_entity: climate.ac_quarto_miguel
+      # Motion: vazio ate sensor chegar
+      motion: ''
 
 # QUARTO MARINA
 grid_quarto_marina:

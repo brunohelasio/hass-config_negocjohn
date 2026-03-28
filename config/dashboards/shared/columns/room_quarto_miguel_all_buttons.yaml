@@ -298,9 +298,9 @@
       double_tap_action:
         action: more-info
       hold_action: !include ../popup/media_spotify.yaml
-    # AR CONDICIONADO — Quarto Miguel (entidade corrigida para _2)
+    # AR CONDICIONADO — Quarto Miguel (entidade restaurada: AC nao usa _2, cameras sim)
     - type: custom:button-card
-      entity: climate.ac_quarto_miguel_2
+      entity: climate.ac_quarto_miguel
       name: Ar Cond.
       template:
         - base
@@ -329,7 +329,7 @@
         action: perform-action
         perform_action: climate.toggle
         target:
-          entity_id: climate.ac_quarto_miguel_2
+          entity_id: climate.ac_quarto_miguel
         haptic: success
       double_tap_action:
         action: more-info

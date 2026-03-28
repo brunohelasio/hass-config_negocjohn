@@ -21,6 +21,8 @@ grid_office:
       # - macbook
       # - server
       - icon_office
+      # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
+      - ac_status
       # - change_grid_title
       # - light
     variables:
@@ -36,6 +38,10 @@ grid_office:
       # macbook: switch.macbook
       # active: sensor.office_active
       active: ''
+      # AC do office (restaurado sem _2)
+      ac_entity: climate.ac_office
+      # Motion: vazio ate sensor chegar
+      motion: ''
       # tempsensor: sensor.office_temp_humid_temperature
       # humidsensor: sensor.office_temp_humid_humidity
   # LIVING ROOM GRID
@@ -91,8 +97,8 @@ grid_living_room:
       # Quando instalar o sensor, trocar por: motion: binary_sensor.motion_sala
       # O template motion tem protecao interna e nao quebra com string vazia.
       motion: ''
-      # AC da sala
-      ac_entity: climate.sl_ar_condicionado_2
+      # AC da sala (restaurado: AC nao usa _2, cameras sim)
+      ac_entity: climate.sl_ar_condicionado
       # TV/Media da sala
       media_entity: media_player.smart_tv_pro_2
       # REMOVIDO: circle_input nao e mais necessario no botao principal (sem circle).

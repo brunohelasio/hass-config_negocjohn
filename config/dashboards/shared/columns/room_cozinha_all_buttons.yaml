@@ -124,6 +124,7 @@
       #root {
         gap: 4px !important;
         grid-template-columns: repeat(3, 98px) !important;
+        justify-content: start !important;
       }
   cards:
     - type: custom:button-card
@@ -269,6 +270,7 @@
       #root {
         gap: 4px !important;
         grid-template-columns: repeat(3, 98px) !important;
+        justify-content: start !important;
       }
   cards:
     # MAQUINA DE LAVAR — placeholder sem entidade

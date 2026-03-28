@@ -282,6 +282,8 @@
           - opacity: "0.45"
           - cursor: "default"
     # SPOTIFY — compartilhado, mesma entidade em todos os comodos
+    # FIX C3: hold_action agora abre popup Spotify dedicado da Q.Marina (com default_device: Echo Pop Marina).
+    # ANTERIOR: hold_action: !include ../popup/media_spotify.yaml (popup compartilhado sem device targeting)
     - type: custom:button-card
       entity: media_player.spotifyplus_bruno_helasio
       name: Spotify
@@ -315,7 +317,7 @@
         haptic: success
       double_tap_action:
         action: more-info
-      hold_action: !include ../popup/media_spotify.yaml
+      hold_action: !include ../popup/media_spotify_quarto_marina.yaml
     # AC — Quarto Marina nao possui AC (placeholder desabilitado)
     - type: custom:button-card
       name: Ar Cond.

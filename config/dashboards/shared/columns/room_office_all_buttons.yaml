@@ -255,6 +255,8 @@
       double_tap_action:
         action: more-info
     # SPOTIFY — compartilhado, mesma entidade em todos os comodos
+    # FIX C3: hold_action agora abre popup Spotify dedicado do Office (com default_device: Echo Pop Office).
+    # ANTERIOR: hold_action: !include ../popup/media_spotify.yaml (popup compartilhado sem device targeting)
     - type: custom:button-card
       entity: media_player.spotifyplus_bruno_helasio
       name: Spotify
@@ -288,7 +290,7 @@
         haptic: success
       double_tap_action:
         action: more-info
-      hold_action: !include ../popup/media_spotify.yaml
+      hold_action: !include ../popup/media_spotify_office.yaml
     # AR CONDICIONADO — Office (entidade restaurada: AC nao usa _2, cameras sim)
     # FIX C1.3: Agora usa tpl_popup_climate (herda base, state_on correto para climate).
     - type: custom:button-card

@@ -285,41 +285,60 @@
         card:
           - opacity: "0.45"
           - cursor: "default"
-    # SPOTIFY — compartilhado, mesma entidade em todos os comodos
+    # SPOTIFY — Quarto Miguel NAO tem Alexa (sem dispositivo de audio)
+    # FIX C3: Botao desabilitado — sem Alexa neste comodo, nao ha para onde direcionar playback.
+    # Quando Alexa for adicionada, descomentar a versao ativa e criar popup media_spotify_quarto_miguel.yaml.
+    # ANTERIOR: botao ativo com hold_action: !include ../popup/media_spotify.yaml (popup compartilhado)
+    # - type: custom:button-card
+    #   entity: media_player.spotifyplus_bruno_helasio
+    #   name: Spotify
+    #   template:
+    #     - base
+    #     - circle
+    #     - loader
+    #     - icon_spotify_color
+    #   state_display: >
+    #     [[[
+    #       return entity && entity.state === 'off' ? ' ' : null;
+    #     ]]]
+    #   variables:
+    #     state_on: >
+    #       [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
+    #     circle_input: >
+    #       [[[
+    #         if (entity && entity.attributes.volume_level !== undefined) {
+    #           let volume = Math.round(entity.attributes.volume_level * 100)
+    #           return volume === 0 && entity.state !== 'off'
+    #             ? 1
+    #             : volume
+    #         }
+    #       ]]]
+    #     circle_input_unit: '%'
+    #   tap_action:
+    #     action: perform-action
+    #     perform_action: media_player.media_play_pause
+    #     target:
+    #       entity_id: media_player.spotifyplus_bruno_helasio
+    #     haptic: success
+    #   double_tap_action:
+    #     action: more-info
+    #   hold_action: !include ../popup/media_spotify.yaml
     - type: custom:button-card
-      entity: media_player.spotifyplus_bruno_helasio
       name: Spotify
       template:
         - base
-        - circle
-        - loader
-        - icon_spotify_color
-      state_display: >
-        [[[
-          return entity && entity.state === 'off' ? ' ' : null;
-        ]]]
-      variables:
-        state_on: >
-          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
-        circle_input: >
-          [[[
-            if (entity && entity.attributes.volume_level !== undefined) {
-              let volume = Math.round(entity.attributes.volume_level * 100)
-              return volume === 0 && entity.state !== 'off'
-                ? 1
-                : volume
-            }
-          ]]]
-        circle_input_unit: '%'
+      icon: mdi:spotify
+      show_icon: true
       tap_action:
-        action: perform-action
-        perform_action: media_player.media_play_pause
-        target:
-          entity_id: media_player.spotifyplus_bruno_helasio
-        haptic: success
+        action: none
+      hold_action:
+        action: none
       double_tap_action:
-        action: more-info
-      hold_action: !include ../popup/media_spotify.yaml
+        action: none
+      styles:
+        card:
+          - opacity: "0.35"
+          - cursor: "default"
     # AR CONDICIONADO — Quarto Miguel (entidade restaurada: AC nao usa _2, cameras sim)
     # FIX C1.3: Agora usa tpl_popup_climate (herda base, state_on correto para climate).
     - type: custom:button-card

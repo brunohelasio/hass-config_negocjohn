@@ -568,6 +568,8 @@
     # RESTAURADO: templates originais com icon_spotify_color (barras saltando).
     # state_display e state_on restaurados do mediaplayer pattern.
     # ANTERIOR: usava icon_spotify (hybrid verde, entity_picture bg, state_display PT-BR) — desativado.
+    # FIX C3: hold_action agora abre popup Spotify dedicado da Sala (com default_device: Echo Show).
+    # ANTERIOR: hold_action: !include ../popup/media_spotify.yaml (popup compartilhado sem device targeting)
     - type: custom:button-card
       entity: media_player.spotifyplus_bruno_helasio
       name: Spotify
@@ -602,7 +604,7 @@
         haptic: success
       double_tap_action:
         action: more-info
-      hold_action: !include ../popup/media_spotify.yaml
+      hold_action: !include ../popup/media_spotify_sala.yaml
     # PS5
     - type: custom:button-card
       name: PS5

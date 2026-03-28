@@ -1,0 +1,46 @@
+# ══════════════════════════════════════════════════════════════════════════
+# SPOTIFY POPUP — QUARTO MARINA (per-room)
+# C3: Popup Spotify dedicado para Quarto Marina com default_device: Echo Pop Marina
+# Direciona playback para o dispositivo Alexa do Quarto Marina via Spotify Connect.
+# Baseado em media_spotify.yaml v5 (custom:spotify-card).
+#
+# NOTA: O nome do default_device deve corresponder EXATAMENTE ao nome do
+# dispositivo no Spotify Connect (verificar no app Spotify > Dispositivos).
+# Se o nome nao corresponder, ajustar manualmente.
+# ══════════════════════════════════════════════════════════════════════════
+action: fire-dom-event
+browser_mod:
+  service: browser_mod.popup
+  data:
+    title: Spotify — Quarto Marina
+    tag: spotify_quarto_marina
+    style: >
+      --popup-max-width: min(500px, 90vw);
+    card_mod: !include ../snippets/style_popup_complete.yaml
+    content:
+      type: custom:spotify-card
+      spotify_entity: media_player.spotifyplus_bruno_helasio
+      default_device: Echo Pop Marina
+      limit: 10
+      playlist_type: ''
+      always_play_random_song: true
+      display_style: list
+      grid_covers_per_row: 3
+      grid_show_title: true
+      hide_warning: true
+      hide_top_header: false
+      hide_currently_playing: false
+      hide_playback_controls: false
+      card_mod:
+        style: |
+          ha-card {
+            --ha-card-border-width: 0;
+            background: transparent;
+            max-height: 70vh;
+            overflow-y: auto;
+            border-radius: 12px;
+          }
+          #content {
+            border: 0 !important;
+            background-color: transparent !important;
+          }

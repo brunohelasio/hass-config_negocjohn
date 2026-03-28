@@ -60,8 +60,10 @@ browser_mod:
     card_mod: !include ../snippets/style_popup_complete.yaml
     content:
       type: custom:spotifyplus-card
-      entity_id: media_player.spotifyplus_bruno_helasio
-      playerDefaultDeviceName: Echo Show
+      # FIX: parametros corretos conforme documentacao thlucas1:
+      # entity (nao entity_id), deviceDefaultId (nao playerDefaultDeviceName)
+      entity: media_player.spotifyplus_bruno_helasio
+      deviceDefaultId: Echo Show
       card_mod:
         style: |
           ha-card {

@@ -11,6 +11,9 @@ grid_office:
     # entity: light.office_group
     entity: light.grupo_luzes_office
     name: Office
+    triggers_update:
+      - sensor.time
+      - sensor.office_active
     double_tap_action: !include ../../shared/popup/rooms/office.yaml
     # hold_action: !include ../../shared/honeycomb/office_mode.yaml
     hold_action:
@@ -37,7 +40,8 @@ grid_office:
       # server: binary_sensor.mbproserver_active
       # macbook: switch.macbook
       # active: sensor.office_active
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.office_active
       # AC do office (restaurado sem _2)
       ac_entity: climate.ac_office
       # Motion: vazio ate sensor chegar
@@ -129,6 +133,9 @@ grid_kitchen_normal:
     # entity: sensor.kitchen_active
     entity: light.grupo_luzes_cozinha
     name: Cozinha
+    triggers_update:
+      - sensor.time
+      - sensor.cozinha_active
     template:
       - rooms_base
       - icon_noodles
@@ -144,7 +151,8 @@ grid_kitchen_normal:
       light_entity: light.cz_luz_principal
       # motion: binary_sensor.motion_sensor_kitchen_occupancy
       # active: sensor.kitchen_active
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.cozinha_active
   # KITCHEN DISHWASING
 grid_kitchen_dishwasing:
   card:

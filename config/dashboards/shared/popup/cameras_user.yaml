@@ -1,0 +1,134 @@
+# ══════════════════════════════════════════════════════════════════════════
+# POPUP DE CAMERAS — Apartamento do usuario
+# 8 cameras em grid 2x4 (2 colunas, 4 linhas)
+# Entidades: sl_camera_2, vr_camera_2, cz_camera_2, as_camera_2,
+#            of_camera_2, camera_quarto_casal_2, qmi_camera_2, qma_camera_2
+# Estilo baseado no cameras.yaml original do sagaland93/ngocjohn
+# ══════════════════════════════════════════════════════════════════════════
+action: fire-dom-event
+browser_mod:
+  service: browser_mod.popup
+  data:
+    title: Cameras
+    tag: cameras_user
+    size: wide
+    style: >
+      --popup-border-width: 0;
+      --popup-max-width: 980px;
+      --popup-background-color: rgba(15, 20, 35, 0.75);
+      --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+    card_mod:
+      style:
+        .: |
+          ha-dialog {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+          }
+        ha-dialog$: |
+          .mdc-dialog__scrim {
+            background-color: rgba(0, 0, 0, 0.56) !important;
+          }
+          .mdc-dialog__container {
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          .mdc-dialog__surface {
+            width: 65vw !important;
+            max-width: 980px !important;
+            max-height: 90vh !important;
+            overflow-y: auto !important;
+          }
+    content:
+      type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout:
+        grid-gap: 8px
+        grid-template-columns: repeat(2, 1fr)
+        grid-template-rows: auto
+        margin: 0
+        padding: 0.5rem
+        mediaquery:
+          '(max-width: 800px)':
+            grid-template-columns: 1fr
+      cards:
+        # SL - Camera (Sala)
+        - type: picture-entity
+          entity: camera.sl_camera_2
+          camera_view: auto
+          show_name: true
+          show_state: false
+          name: SL - Camera
+          card_mod:
+            style: |
+              ha-card { border-radius: 12px !important; }
+        # VR - Camera (Varanda)
+        - type: picture-entity
+          entity: camera.vr_camera_2
+          camera_view: auto
+          show_name: true
+          show_state: false
+          name: VR - Camera
+          card_mod:
+            style: |
+              ha-card { border-radius: 12px !important; }
+        # CZ - Camera (Cozinha)
+        - type: picture-entity
+          entity: camera.cz_camera_2
+          camera_view: auto
+          show_name: true
+          show_state: false
+          name: CZ - Camera
+          card_mod:
+            style: |
+              ha-card { border-radius: 12px !important; }
+        # AS - Camera (Area de Servico)
+        - type: picture-entity
+          entity: camera.as_camera_2
+          camera_view: auto
+          show_name: true
+          show_state: false
+          name: AS - Camera
+          card_mod:
+            style: |
+              ha-card { border-radius: 12px !important; }
+        # OF - Camera (Office)
+        - type: picture-entity
+          entity: camera.of_camera_2
+          camera_view: auto
+          show_name: true
+          show_state: false
+          name: OF - Camera
+          card_mod:
+            style: |
+              ha-card { border-radius: 12px !important; }
+        # QC - Camera (Quarto Casal)
+        - type: picture-entity
+          entity: camera.camera_quarto_casal_2
+          camera_view: auto
+          show_name: true
+          show_state: false
+          name: QC - Camera
+          card_mod:
+            style: |
+              ha-card { border-radius: 12px !important; }
+        # QMI - Camera (Quarto Miguel)
+        - type: picture-entity
+          entity: camera.qmi_camera_2
+          camera_view: auto
+          show_name: true
+          show_state: false
+          name: QMI - Camera
+          card_mod:
+            style: |
+              ha-card { border-radius: 12px !important; }
+        # QMA - Camera (Quarto Marina)
+        - type: picture-entity
+          entity: camera.qma_camera_2
+          camera_view: auto
+          show_name: true
+          show_state: false
+          name: QMA - Camera
+          card_mod:
+            style: |
+              ha-card { border-radius: 12px !important; }

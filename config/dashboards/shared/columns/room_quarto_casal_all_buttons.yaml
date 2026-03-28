@@ -22,6 +22,8 @@
 # FIX C4.1: Adicionado indicador visual ON/OFF (custom_field)
 - type: custom:button-card
   entity: light.grupo_quarto_casal
+  triggers_update:
+    - light.grupo_quarto_casal
   name: Luzes
   show_state: false
   show_icon: true
@@ -30,21 +32,46 @@
     action: toggle
     haptic: success
   custom_fields:
+    # --- CÓDIGO ORIGINAL: badge ON/OFF texto ---
+    # on_off: >
+    #   [[[
+    #     const isOn = entity.state === 'on';
+    #     const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
+    #     const text = isOn ? 'ON' : 'OFF';
+    #     return `<span style="
+    #       font-size: 9px;
+    #       font-weight: 600;
+    #       letter-spacing: 0.5px;
+    #       color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
+    #       background: ${color};
+    #       padding: 1px 6px;
+    #       border-radius: 8px;
+    #       margin-right: 4px;
+    #     ">${text}</span>`;
+    #   ]]]
     on_off: >
       [[[
         const isOn = entity.state === 'on';
-        const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
-        const text = isOn ? 'ON' : 'OFF';
-        return `<span style="
-          font-size: 9px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
-          background: ${color};
-          padding: 1px 6px;
-          border-radius: 8px;
+        return `<div style="
+          width: 36px;
+          height: 20px;
+          border-radius: 10px;
+          background: ${isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)'};
+          position: relative;
+          transition: background 0.25s ease;
+          cursor: pointer;
           margin-right: 4px;
-        ">${text}</span>`;
+        "><div style="
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #fff;
+          position: absolute;
+          top: 2px;
+          left: ${isOn ? '18px' : '2px'};
+          transition: left 0.25s ease;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        "></div></div>`;
       ]]]
   styles:
     card:
@@ -91,7 +118,7 @@
   cards:
     - type: custom:button-card
       entity: light.qc_luz_principal
-      name: Luz Principal
+      name: "QC - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -100,7 +127,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_casal_switch_1
-      name: Cabeceira 1
+      name: "QC - Luzes quadros"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -109,7 +136,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_casal_2_switch_2
-      name: Cabeceira 2
+      name: "QC - Luz sanca"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -118,7 +145,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_casal_switch_2
-      name: Banheiro
+      name: "QC - Luzes closet"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -127,7 +154,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_casal_2_switch_3
-      name: Closet
+      name: "QC - Luz cortineiro"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -148,7 +175,7 @@
   cards:
     - type: custom:button-card
       entity: light.suite_casal_switch_1
-      name: Suite 1
+      name: "QCS - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -157,7 +184,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.suite_casal_switch_2
-      name: Suite 2
+      name: "QCS - Luz azul"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -311,11 +338,21 @@
             }
           ]]]
         circle_input_unit: '%'
+      # --- CÓDIGO ORIGINAL: media_player.media_play_pause (falha sem device ativo) ---
+      # tap_action:
+      #   action: perform-action
+      #   perform_action: media_player.media_play_pause
+      #   target:
+      #     entity_id: media_player.spotifyplus_bruno_helasio
+      #   haptic: success
+      # FIX: Usar spotifyplus.player_media_play_pause com device_name para iniciar
+      # playback diretamente no Echo do Quarto Casal, sem precisar de device ativo.
       tap_action:
-        action: perform-action
-        perform_action: media_player.media_play_pause
-        target:
+        action: call-service
+        service: spotifyplus.player_media_play_pause
+        service_data:
           entity_id: media_player.spotifyplus_bruno_helasio
+          device_name: Echo Pop Quarto Casal
         haptic: success
       double_tap_action:
         action: more-info

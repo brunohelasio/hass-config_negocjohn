@@ -21,6 +21,8 @@
 # FIX C4.1: Adicionado indicador visual ON/OFF (custom_field)
 - type: custom:button-card
   entity: light.grupo_luzes_quarto_marina
+  triggers_update:
+    - light.grupo_luzes_quarto_marina
   name: Luzes
   show_state: false
   show_icon: true
@@ -29,21 +31,46 @@
     action: toggle
     haptic: success
   custom_fields:
+    # --- CÓDIGO ORIGINAL: badge ON/OFF texto ---
+    # on_off: >
+    #   [[[
+    #     const isOn = entity.state === 'on';
+    #     const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
+    #     const text = isOn ? 'ON' : 'OFF';
+    #     return `<span style="
+    #       font-size: 9px;
+    #       font-weight: 600;
+    #       letter-spacing: 0.5px;
+    #       color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
+    #       background: ${color};
+    #       padding: 1px 6px;
+    #       border-radius: 8px;
+    #       margin-right: 4px;
+    #     ">${text}</span>`;
+    #   ]]]
     on_off: >
       [[[
         const isOn = entity.state === 'on';
-        const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
-        const text = isOn ? 'ON' : 'OFF';
-        return `<span style="
-          font-size: 9px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
-          background: ${color};
-          padding: 1px 6px;
-          border-radius: 8px;
+        return `<div style="
+          width: 36px;
+          height: 20px;
+          border-radius: 10px;
+          background: ${isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)'};
+          position: relative;
+          transition: background 0.25s ease;
+          cursor: pointer;
           margin-right: 4px;
-        ">${text}</span>`;
+        "><div style="
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #fff;
+          position: absolute;
+          top: 2px;
+          left: ${isOn ? '18px' : '2px'};
+          transition: left 0.25s ease;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        "></div></div>`;
       ]]]
   styles:
     card:
@@ -90,7 +117,7 @@
   cards:
     - type: custom:button-card
       entity: light.quarto_marina_switch_4
-      name: Luz Principal
+      name: "QMA - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -99,7 +126,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_marina_switch_1
-      name: Cabeceira 1
+      name: "QMA - Arandela"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -108,7 +135,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_marina_switch_2
-      name: Cabeceira 2
+      name: "QMA - Estante"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -117,7 +144,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.quarto_marina_switch_3
-      name: Arandela
+      name: "QMA - Luz cortineiro"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -126,7 +153,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.suite_marina_switch_2
-      name: Suite 1
+      name: "QMAS - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -147,7 +174,7 @@
   cards:
     - type: custom:button-card
       entity: light.suite_marina_switch_1
-      name: Suite 2
+      name: "QMAS - Luz azul"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -309,11 +336,21 @@
             }
           ]]]
         circle_input_unit: '%'
+      # --- CÓDIGO ORIGINAL: media_player.media_play_pause (falha sem device ativo) ---
+      # tap_action:
+      #   action: perform-action
+      #   perform_action: media_player.media_play_pause
+      #   target:
+      #     entity_id: media_player.spotifyplus_bruno_helasio
+      #   haptic: success
+      # FIX: Usar spotifyplus.player_media_play_pause com device_name para iniciar
+      # playback diretamente no Echo do Quarto Marina, sem precisar de device ativo.
       tap_action:
-        action: perform-action
-        perform_action: media_player.media_play_pause
-        target:
+        action: call-service
+        service: spotifyplus.player_media_play_pause
+        service_data:
           entity_id: media_player.spotifyplus_bruno_helasio
+          device_name: Echo Pop Marina
         haptic: success
       double_tap_action:
         action: more-info

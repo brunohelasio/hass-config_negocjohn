@@ -9,6 +9,9 @@ grid_office_room:
     type: custom:button-card
     entity: light.grupo_luzes_office
     name: Office
+    triggers_update:
+      - sensor.time
+      - sensor.office_active
     template:
       - rooms_base
       - icon_office
@@ -19,7 +22,8 @@ grid_office_room:
       action: none
     variables:
       light_entity: light.office_switch_3
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.office_active
       # AC do office (restaurado sem _2)
       ac_entity: climate.ac_office
       # Motion: vazio ate sensor chegar
@@ -31,6 +35,9 @@ grid_quarto_casal:
     type: custom:button-card
     entity: light.grupo_quarto_casal
     name: Quarto Casal
+    triggers_update:
+      - sensor.time
+      - sensor.quarto_casal_active
     template:
       - rooms_base
       - icon_double_bed
@@ -39,7 +46,8 @@ grid_quarto_casal:
       action: none
     variables:
       light_entity: light.qc_luz_principal
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.quarto_casal_active
 
 # QUARTO MIGUEL
 grid_quarto_miguel:
@@ -53,6 +61,7 @@ grid_quarto_miguel:
     # NOTA: Grupo recriado pelo usuario (estava indisponivel) — agora funciona.
     triggers_update:
       - sensor.time
+      - sensor.quarto_miguel_active
     template:
       - rooms_base
       - icon_double_bed
@@ -61,14 +70,20 @@ grid_quarto_miguel:
     tap_action:
       action: call-service
       service: homeassistant.toggle
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # service_data:
+      #   entity_id: switch.quarto_miguel_switch_2
       service_data:
-        entity_id: switch.quarto_miguel_switch_2
+        entity_id: light.quarto_miguel_switch_2
     double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
     hold_action:
       action: none
     variables:
-      light_entity: switch.quarto_miguel_switch_2
-      active: ''
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # light_entity: switch.quarto_miguel_switch_2
+      light_entity: light.quarto_miguel_switch_2
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.quarto_miguel_active
       # AC do quarto miguel (restaurado sem _2)
       ac_entity: climate.ac_quarto_miguel
       # Motion: vazio ate sensor chegar
@@ -80,6 +95,9 @@ grid_quarto_marina:
     type: custom:button-card
     entity: light.grupo_luzes_quarto_marina
     name: Quarto Marina
+    triggers_update:
+      - sensor.time
+      - sensor.quarto_marina_active
     template:
       - rooms_base
       - icon_double_bed
@@ -88,7 +106,8 @@ grid_quarto_marina:
       action: none
     variables:
       light_entity: light.quarto_marina_switch_4
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.quarto_marina_active
 
 # SHOWER ROOM
 grid_shower:

@@ -127,7 +127,10 @@ browser_mod:
       layout:
         # ANTERIOR: grid-template-columns: 1.4fr 1.0fr (muito espaco para 3-col)
         # FIX C2.3: 1.2fr 1.0fr — melhor proporcao para 3 colunas de botoes 98px
-        grid-template-columns: 1.2fr 1.0fr
+        # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+        # grid-template-columns: 1.2fr 1.0fr
+        # FIX: auto 1fr — coluna de botões ocupa apenas o necessário (3×98px + gaps)
+        grid-template-columns: auto 1fr
         grid-template-areas: '"col_buttons col_camera"'
         grid-gap: 10px
         margin: 0

@@ -875,3 +875,64 @@ Orientacao fornecida ao usuario sobre como criar template sensors para cada como
 Definicoes devem ser adicionadas em `config/packages/templates/sensors/template_sensors.yaml`.
 
 ---
+
+## Registro de Implementacao — Sessao 2026-03-28 (tarde)
+
+Implementacao consolidada dos problemas prioritarios reportados pelo usuario.
+
+### Alteracoes Implementadas
+
+| # | Problema | Solucao | Arquivos |
+|---|----------|---------|----------|
+| 1 | Nomes/entidades incorretos nos botoes | Corrigidos prefixos (SL-, VR-, CZ-, QC-, QMI-, QMA-, OF-, LV-). Q.Miguel: switch.* → light.* | room_*_all_buttons.yaml, lavabo.yaml, tpl_grid_room2.yaml |
+| 2 | Botoes 98px esticavam em popups 3-col | justify-content: start nos grids 3-col. Popups cozinha/office: auto 1fr (col botoes auto-size) | room_cozinha/office_all_buttons.yaml, kitchen/office.yaml, lavabo.yaml |
+| 3 | Toggle ON/OFF nao atualizava visualmente | Badge ON/OFF → toggle switch CSS (iOS-style). triggers_update com entidade grupo | 7 arquivos room_*_all_buttons.yaml + lavabo.yaml |
+| 4 | Spotify nao iniciava sem device ativo | tap_action: spotifyplus.player_media_play_pause com device_name por comodo | room_living/office/quarto_casal/quarto_marina_all_buttons.yaml |
+| 5 | SpotifyPlus Card nao implementado | Auditado: custom:spotify-card funcional. spotifyplus-card NAO instalado (documentado) | media_spotify_*.yaml (4 arquivos) |
+| 6 | Template sensors nao conectados ao grid | active: sensor.NOME_active + triggers_update em todos os grid buttons | tpl_grid_mainrooms.yaml, tpl_grid_room2.yaml |
+| 7 | Security: Alarm sem funcao, Front Door errado | Front Door → lock.sl_fechadura_operate_lock. Alarm → Cameras (popup 8 cameras). Doors/Sensors → placeholders | tpl_grid_security.yaml, security-status.yaml, cameras_user.yaml (NOVO) |
+| 8 | Planta 3D ausente do dashboard | Botao no footer com navigate para /lovelace/floorplan | footer-shared.yaml |
+
+### Detalhes Tecnicos
+
+**Toggle switch visual:**
+- CSS puro: div 36x20px, border-radius: 10px, knob branco 16px com transition 0.25s
+- Azul #3b82f6 quando ON, rgba(255,255,255,0.2) quando OFF
+- triggers_update com entidade do grupo garante re-render instantaneo
+
+**Spotify tap_action:**
+- Servico: spotifyplus.player_media_play_pause (integracao SpotifyPlus v1.0.187)
+- Parametro device_name envia playback para Echo especifico do comodo
+- Sala: "Echo Show", Office: "Echo Pop Office", Q.Casal: "Echo Pop Quarto Casal", Q.Marina: "Echo Pop Marina"
+- Q.Miguel: desabilitado (sem Alexa)
+- TENTATIVAS ANTERIORES: media_player.media_play_pause (falhava sem device ativo)
+
+**Popup padronizacao 3-col:**
+- grid-template-columns: repeat(3, 98px) com justify-content: start
+- Popup layout: auto 1fr (coluna botoes auto-size, camera preenche o resto)
+- TENTATIVAS ANTERIORES: 1.2fr 1.0fr (botoes esticavam), repeat(3, 98px) sem justify-content (gap visual)
+
+**Security block:**
+- Cameras popup: 8 cameras em grid 2x2 responsivo (2 colunas desktop, 1 coluna mobile)
+- Doors/Sensors: placeholders com base template, opacity 0.45, sem entidade (nao gera erro)
+- Alarm original: COMENTADO (nunca deletado — Regra de Ouro)
+
+### Pendencias Atualizadas
+
+| # | Pendencia | Status | Nota |
+|---|-----------|--------|------|
+| P1 | Espacamento lateral dos botoes | ⏳ PENDENTE | Grid nativo do HA impoe espacamento minimo |
+| P2 | Smart Remote TV — botoes | ⏳ PENDENTE | Precisa debug do remote.send_command |
+| P3 | Spotify — botao nao liga | ✅ RESOLVIDO | spotifyplus.player_media_play_pause com device_name |
+| P4 | Hold do AC — erro config | ⏳ PENDENTE | Popup thermostat pode nao estar carregando |
+| P5 | AC ligado — botao nao fica branco | ✅ RESOLVIDO | tpl_popup_climate com state_on correto |
+| P6 | Quarto Miguel — botao grid | ✅ RESOLVIDO | Grupo recriado + triggers_update |
+| P7 | Toggle nao atualizava visualmente | ✅ RESOLVIDO | Toggle switch CSS + triggers_update |
+| P8 | Botoes 3-col esticavam | ✅ RESOLVIDO | justify-content: start + auto 1fr |
+| P9 | Sensors nao conectados ao grid | ✅ RESOLVIDO | active + triggers_update em todos os comodos |
+| P10 | Nomes incorretos nos botoes | ✅ RESOLVIDO | Prefixos por comodo (SL-, CZ-, QC-, etc.) |
+| P11 | Q.Miguel entidades switch→light | ✅ RESOLVIDO | Entidades atualizadas de switch.* para light.* |
+| P12 | Security sem funcao util | ✅ RESOLVIDO | Front Door corrigido, Cameras popup, placeholders |
+| P13 | Planta 3D ausente | ✅ RESOLVIDO | Botao no footer |
+
+---

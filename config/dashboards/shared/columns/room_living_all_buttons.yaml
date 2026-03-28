@@ -298,6 +298,8 @@
 # FIX C4.1: Adicionado indicador visual ON/OFF (custom_field)
 - type: custom:button-card
   entity: light.grupo_luzes_sala
+  triggers_update:
+    - light.grupo_luzes_sala
   name: Luzes
   show_state: false
   show_icon: true
@@ -306,21 +308,46 @@
     action: toggle
     haptic: success
   custom_fields:
+    # --- CÓDIGO ORIGINAL: badge ON/OFF texto ---
+    # on_off: >
+    #   [[[
+    #     const isOn = entity.state === 'on';
+    #     const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
+    #     const text = isOn ? 'ON' : 'OFF';
+    #     return `<span style="
+    #       font-size: 9px;
+    #       font-weight: 600;
+    #       letter-spacing: 0.5px;
+    #       color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
+    #       background: ${color};
+    #       padding: 1px 6px;
+    #       border-radius: 8px;
+    #       margin-right: 4px;
+    #     ">${text}</span>`;
+    #   ]]]
     on_off: >
       [[[
         const isOn = entity.state === 'on';
-        const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
-        const text = isOn ? 'ON' : 'OFF';
-        return `<span style="
-          font-size: 9px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
-          background: ${color};
-          padding: 1px 6px;
-          border-radius: 8px;
+        return `<div style="
+          width: 36px;
+          height: 20px;
+          border-radius: 10px;
+          background: ${isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)'};
+          position: relative;
+          transition: background 0.25s ease;
+          cursor: pointer;
           margin-right: 4px;
-        ">${text}</span>`;
+        "><div style="
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #fff;
+          position: absolute;
+          top: 2px;
+          left: ${isOn ? '18px' : '2px'};
+          transition: left 0.25s ease;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        "></div></div>`;
       ]]]
   styles:
     card:
@@ -367,7 +394,7 @@
   cards:
     - type: custom:button-card
       entity: light.sala_switch_2
-      name: Luz Principal
+      name: "SL - Luz principal"
       template:
         - tpl_popup_light
         - circle
@@ -389,7 +416,7 @@
         circle_input_unit: '%'
     - type: custom:button-card
       entity: light.sala_switch_1
-      name: LED Direito
+      name: "SL - Led direito"
       template:
         - tpl_popup_light
         - icon_ledstrip
@@ -398,7 +425,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.sala_switch_3
-      name: LED Esquerdo
+      name: "SL - Led esquerdo"
       template:
         - tpl_popup_light
         - icon_ledstrip
@@ -407,7 +434,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.sala_2_switch_2
-      name: VR Principal
+      name: "VR - Luz principal"
       template:
         - tpl_popup_light
         - icon_light_flush
@@ -416,7 +443,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.sala_2_switch_3
-      name: VR Cristaleira
+      name: "VR - Cristaleira"
       template:
         - tpl_popup_light
         - icon_ledstrip
@@ -437,7 +464,7 @@
   cards:
     - type: custom:button-card
       entity: light.varanda_switch_1
-      name: VR Gourmet
+      name: "VR - Área gourmet"
       template:
         - tpl_popup_light
         - icon_ledstrip
@@ -446,7 +473,7 @@
         haptic: success
     - type: custom:button-card
       entity: light.varanda_switch_2
-      name: VR Pendente
+      name: "VR - Pendente"
       template:
         - tpl_popup_light
         - icon_pendant
@@ -596,11 +623,21 @@
             }
           ]]]
         circle_input_unit: '%'
+      # --- CÓDIGO ORIGINAL: media_player.media_play_pause (falha sem device ativo) ---
+      # tap_action:
+      #   action: perform-action
+      #   perform_action: media_player.media_play_pause
+      #   target:
+      #     entity_id: media_player.spotifyplus_bruno_helasio
+      #   haptic: success
+      # FIX: Usar spotifyplus.player_media_play_pause com device_name para iniciar
+      # playback diretamente no Echo da sala, sem precisar de device ativo.
       tap_action:
-        action: perform-action
-        perform_action: media_player.media_play_pause
-        target:
+        action: call-service
+        service: spotifyplus.player_media_play_pause
+        service_data:
           entity_id: media_player.spotifyplus_bruno_helasio
+          device_name: Echo Show
         haptic: success
       double_tap_action:
         action: more-info

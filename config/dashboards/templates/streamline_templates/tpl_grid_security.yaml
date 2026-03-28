@@ -3,21 +3,62 @@
 #                     SECURITY                  #
 #                                               #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# ALARM PANEL
-grid_alarm:
-  card:
-    type: custom:button-card
-    entity: alarm_control_panel.aqara_hub
-    hold_action: !include ../../shared/honeycomb/security.yaml
-    template:
-      - alarm
-      - icon_alarm
 
-  # FRONT DOOR
+# --- CODIGO ORIGINAL COMENTADO PARA REFERENCIA ---
+# # ALARM PANEL
+# grid_alarm:
+#   card:
+#     type: custom:button-card
+#     entity: alarm_control_panel.aqara_hub
+#     hold_action: !include ../../shared/honeycomb/security.yaml
+#     template:
+#       - alarm
+#       - icon_alarm
+#
+#   # FRONT DOOR
+# grid_front_door:
+#   card:
+#     type: custom:button-card
+#     entity: lock.nuki_neklanka_byt_lock
+#     name: Front door
+#     tap_action:
+#       action: block
+#     template:
+#       - front_door
+#       - icon_lock
+#       - loader
+#     # variables:
+#     #   battery_alert: binary_sensor.nuki_vchod_battery_critical
+#   #  MOTION SENSORS
+# grid_motion_sensors:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.motion_detected
+#     tap_action: !include ../../shared/popup/security_sensors.yaml
+#     template:
+#       - sensors
+#       - icon_motion
+#       - battery_alert
+#     variables:
+#       battery_alert: binary_sensor.zigbee_sensors_problem
+#   #  CONTACT SENSORS
+# grid_contact_sensors:
+#   card:
+#     type: custom:button-card
+#     tap_action: !include ../../shared/popup/security_sensors.yaml
+#     entity: sensor.doors_state
+#     template:
+#       - doors
+#       - circle_state
+#       - icon_closet
+# --- FIM DO CODIGO ORIGINAL ---
+
+# FRONT DOOR (lock.sl_fechadura_operate_lock)
 grid_front_door:
   card:
     type: custom:button-card
-    entity: lock.nuki_neklanka_byt_lock
+    # entity: lock.nuki_neklanka_byt_lock  # entidade antiga
+    entity: lock.sl_fechadura_operate_lock
     name: Front door
     tap_action:
       action: block
@@ -25,27 +66,68 @@ grid_front_door:
       - front_door
       - icon_lock
       - loader
-    # variables:
-    #   battery_alert: binary_sensor.nuki_vchod_battery_critical
-  #  MOTION SENSORS
-grid_motion_sensors:
+
+# CAMERAS (abre popup com 8 cameras do apartamento)
+grid_cameras_button:
   card:
     type: custom:button-card
-    entity: sensor.motion_detected
-    tap_action: !include ../../shared/popup/security_sensors.yaml
+    name: Cameras
+    icon: mdi:cctv
+    show_icon: true
     template:
-      - sensors
-      - icon_motion
-      - battery_alert
+      - base
     variables:
-      battery_alert: binary_sensor.zigbee_sensors_problem
-  #  CONTACT SENSORS
+      state_on: true
+    tap_action: !include ../../shared/popup/cameras_user.yaml
+    hold_action:
+      action: none
+    styles:
+      icon:
+        - color: rgba(255, 255, 255, 0.6)
+        - width: 24px
+
+# DOORS (placeholder — sem sensores de porta ainda)
 grid_contact_sensors:
   card:
     type: custom:button-card
-    tap_action: !include ../../shared/popup/security_sensors.yaml
-    entity: sensor.doors_state
+    name: Doors
+    icon: mdi:door
+    show_icon: true
     template:
-      - doors
-      - circle_state
-      - icon_closet
+      - base
+    tap_action:
+      action: none
+    hold_action:
+      action: none
+    variables:
+      state_on: false
+    styles:
+      card:
+        - opacity: '0.45'
+        - cursor: default
+      icon:
+        - color: rgba(255, 255, 255, 0.4)
+        - width: 24px
+
+# SENSORS (placeholder — sem sensores de presenca ainda)
+grid_motion_sensors:
+  card:
+    type: custom:button-card
+    name: Sensors
+    icon: mdi:motion-sensor
+    show_icon: true
+    template:
+      - base
+    tap_action:
+      action: none
+    hold_action:
+      action: none
+    variables:
+      state_on: false
+    styles:
+      card:
+        - opacity: '0.45'
+        - cursor: default
+      icon:
+        - color: rgba(255, 255, 255, 0.4)
+        - width: 24px

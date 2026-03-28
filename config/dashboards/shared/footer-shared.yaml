@@ -76,3 +76,13 @@ cards:
         ]]]
     template:
       - footer
+
+  # NOVO: Botao Planta 3D no footer — navega para subview floor-plan
+  - type: custom:button-card
+    name: >
+      <ha-icon icon="mdi:floor-plan"></ha-icon> Planta 3D
+    tap_action:
+      action: navigate
+      navigation_path: /lovelace/floorplan
+    template:
+      - footer

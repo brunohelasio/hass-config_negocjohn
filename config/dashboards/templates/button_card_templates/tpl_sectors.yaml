@@ -942,6 +942,20 @@ tpl_popup_light:
     action: more-info
     haptic: medium
 
+# FIX C1.2-C1.3: Template dedicado para botoes de climate/AC nos popups.
+# Herda de base, sobrescreve state_on com estados do climate.
+# Resolve P5 (AC ligado — botao nao ficava branco): a cascata do button-card
+# avaliava o state_on do base template DEPOIS do override no card, sobrescrevendo
+# o background-color. Com tpl_popup_climate na cadeia de heranca, o state_on
+# correto eh avaliado DENTRO da cadeia de templates, antes do styles.card do base.
+# Uso: template: [tpl_popup_climate, icon_climate]
+tpl_popup_climate:
+  template:
+    - base
+  variables:
+    state_on: >
+      [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
+
   # double_tap_action:
   #   action: fire-dom-event
   #   browser_mod:

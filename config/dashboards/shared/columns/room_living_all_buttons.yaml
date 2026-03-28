@@ -713,45 +713,36 @@
           </svg>
     # AR CONDICIONADO — ativado com entity e hold_action para popup thermostat
     # ANTERIOR: entity: climate.sl_ar_condicionado_2 (corrigido: AC nao usa _2, cameras sim)
+    # FIX C1.3: Agora usa tpl_popup_climate (herda base, state_on correto para climate).
+    # ANTERIOR: tinha variable override state_on + styles.card override direto — nao funcionava
+    # porque o button-card reavaliava o state_on do base depois do card-level override.
     - type: custom:button-card
       entity: climate.sl_ar_condicionado
       name: Ar Cond.
       template:
-        - base
+        - tpl_popup_climate
         - icon_climate
       show_icon: false
-      variables:
-        state_on: >
-          [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
-      # ANTERIOR: state overrides com operator:template — nao funcionava de forma confiavel.
-      # O button-card avaliava styles.card JS templates do base DEPOIS do state override,
-      # sobrescrevendo o background-color forcado. Agora usamos styles.card direto no card.
-      # state:
-      #   - operator: template
-      #     value: >
-      #       [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state); ]]]
-      #     styles:
-      #       card:
-      #         - background-color: 'rgba(250, 250, 250, 0.75)'
-      #         - color: '#4b5254'
-      # FIX: styles.card direto no card — sobrescreve o template base com certeza.
-      # Verifica entity.state diretamente, sem depender de variables.state_on.
-      styles:
-        card:
-          - background-color: >
-              [[[
-                if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
-                  return 'rgba(250, 250, 250, 0.75)';
-                }
-                return 'rgba(115, 115, 115, 0.2)';
-              ]]]
-          - color: >
-              [[[
-                if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
-                  return '#4b5254';
-                }
-                return '#97989c';
-              ]]]
+      # ANTERIOR: variables.state_on e styles.card override — substituido por tpl_popup_climate
+      # variables:
+      #   state_on: >
+      #     [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
+      # styles:
+      #   card:
+      #     - background-color: >
+      #         [[[
+      #           if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
+      #             return 'rgba(250, 250, 250, 0.75)';
+      #           }
+      #           return 'rgba(115, 115, 115, 0.2)';
+      #         ]]]
+      #     - color: >
+      #         [[[
+      #           if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
+      #             return '#4b5254';
+      #           }
+      #           return '#97989c';
+      #         ]]]
       tap_action:
         action: perform-action
         perform_action: climate.toggle

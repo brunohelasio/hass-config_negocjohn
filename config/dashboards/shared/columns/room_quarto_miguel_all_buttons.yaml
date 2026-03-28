@@ -321,32 +321,34 @@
         action: more-info
       hold_action: !include ../popup/media_spotify.yaml
     # AR CONDICIONADO — Quarto Miguel (entidade restaurada: AC nao usa _2, cameras sim)
+    # FIX C1.3: Agora usa tpl_popup_climate (herda base, state_on correto para climate).
     - type: custom:button-card
       entity: climate.ac_quarto_miguel
       name: Ar Cond.
       template:
-        - base
+        - tpl_popup_climate
         - icon_climate
       show_icon: false
-      variables:
-        state_on: >
-          [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
-      styles:
-        card:
-          - background-color: >
-              [[[
-                if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
-                  return 'rgba(250, 250, 250, 0.75)';
-                }
-                return 'rgba(115, 115, 115, 0.2)';
-              ]]]
-          - color: >
-              [[[
-                if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
-                  return '#4b5254';
-                }
-                return '#97989c';
-              ]]]
+      # ANTERIOR: variables.state_on e styles.card override — substituido por tpl_popup_climate
+      # variables:
+      #   state_on: >
+      #     [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
+      # styles:
+      #   card:
+      #     - background-color: >
+      #         [[[
+      #           if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
+      #             return 'rgba(250, 250, 250, 0.75)';
+      #           }
+      #           return 'rgba(115, 115, 115, 0.2)';
+      #         ]]]
+      #     - color: >
+      #         [[[
+      #           if (entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].includes(entity.state)) {
+      #             return '#4b5254';
+      #           }
+      #           return '#97989c';
+      #         ]]]
       tap_action:
         action: perform-action
         perform_action: climate.toggle

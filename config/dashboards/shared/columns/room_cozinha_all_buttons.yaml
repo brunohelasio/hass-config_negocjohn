@@ -14,12 +14,14 @@
 
 # ── Titulo: Luzes + toggle all lights ──
 - type: custom:button-card
+  entity: light.grupo_luzes_cozinha
   name: Luzes
   show_state: false
   show_icon: true
   icon: mdi:lightbulb-group-outline
   tap_action:
-    action: none
+    action: toggle
+    haptic: success
   styles:
     card:
       - background: none
@@ -43,7 +45,10 @@
       - width: 24px
     icon:
       - width: 24px
-      - color: rgba(255,255,255,0.25)
+      - color: >
+          [[[
+            return entity.state === 'on' ? '#f0c040' : 'rgba(255,255,255,0.25)';
+          ]]]
 
 # ── Linha 1: 3 botoes de iluminacao + 2 blanks ──
 - type: grid

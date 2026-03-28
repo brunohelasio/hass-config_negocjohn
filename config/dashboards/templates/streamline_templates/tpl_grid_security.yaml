@@ -68,66 +68,59 @@ grid_front_door:
       - loader
 
 # CAMERAS (abre popup com 8 cameras do apartamento)
+# FIX: usa icon_cctv do tpl_icons.yaml (SVG do repositorio) em vez de mdi:cctv
 grid_cameras_button:
   card:
     type: custom:button-card
     name: Cameras
-    icon: mdi:cctv
-    show_icon: true
-    template:
-      - base
-    variables:
-      state_on: true
     tap_action: !include ../../shared/popup/cameras_user.yaml
     hold_action:
       action: none
-    styles:
-      icon:
-        - color: rgba(255, 255, 255, 0.6)
-        - width: 24px
+    template:
+      - base
+      - icon_cctv
+    show_icon: false
+    variables:
+      state_on: false
 
 # DOORS (placeholder — sem sensores de porta ainda)
+# FIX: usa icon_contact_sensor do tpl_icons.yaml em vez de mdi:door
 grid_contact_sensors:
   card:
     type: custom:button-card
     name: Doors
-    icon: mdi:door
-    show_icon: true
-    template:
-      - base
     tap_action:
       action: none
     hold_action:
       action: none
+    template:
+      - base
+      - icon_contact_sensor
+    show_icon: false
     variables:
       state_on: false
     styles:
       card:
         - opacity: '0.45'
         - cursor: default
-      icon:
-        - color: rgba(255, 255, 255, 0.4)
-        - width: 24px
 
 # SENSORS (placeholder — sem sensores de presenca ainda)
+# FIX: usa icon_motion do tpl_icons.yaml em vez de mdi:motion-sensor
 grid_motion_sensors:
   card:
     type: custom:button-card
     name: Sensors
-    icon: mdi:motion-sensor
-    show_icon: true
-    template:
-      - base
     tap_action:
       action: none
     hold_action:
       action: none
+    template:
+      - base
+      - icon_motion
+    show_icon: false
     variables:
       state_on: false
     styles:
       card:
         - opacity: '0.45'
         - cursor: default
-      icon:
-        - color: rgba(255, 255, 255, 0.4)
-        - width: 24px

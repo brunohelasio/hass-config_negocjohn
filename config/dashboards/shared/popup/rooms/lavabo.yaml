@@ -135,46 +135,21 @@ browser_mod:
             action: toggle
             haptic: success
           custom_fields:
-            # --- CÓDIGO ORIGINAL: badge ON/OFF texto ---
-            # on_off: >
-            #   [[[
-            #     const isOn = entity.state === 'on';
-            #     const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
-            #     const text = isOn ? 'ON' : 'OFF';
-            #     return `<span style="
-            #       font-size: 9px;
-            #       font-weight: 600;
-            #       letter-spacing: 0.5px;
-            #       color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
-            #       background: ${color};
-            #       padding: 1px 6px;
-            #       border-radius: 8px;
-            #       margin-right: 4px;
-            #     ">${text}</span>`;
-            #   ]]]
             on_off: >
               [[[
                 const isOn = entity.state === 'on';
-                return `<div style="
-                  width: 36px;
-                  height: 20px;
-                  border-radius: 10px;
-                  background: ${isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)'};
-                  position: relative;
-                  transition: background 0.25s ease;
-                  cursor: pointer;
+                const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
+                const text = isOn ? 'ON' : 'OFF';
+                return `<span style="
+                  font-size: 9px;
+                  font-weight: 600;
+                  letter-spacing: 0.5px;
+                  color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
+                  background: ${color};
+                  padding: 1px 6px;
+                  border-radius: 8px;
                   margin-right: 4px;
-                "><div style="
-                  width: 16px;
-                  height: 16px;
-                  border-radius: 50%;
-                  background: #fff;
-                  position: absolute;
-                  top: 2px;
-                  left: ${isOn ? '18px' : '2px'};
-                  transition: left 0.25s ease;
-                  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-                "></div></div>`;
+                ">${text}</span>`;
               ]]]
           styles:
             card:

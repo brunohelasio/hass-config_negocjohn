@@ -422,3 +422,331 @@ Fase 5 (mobile) fica como anotacao para futuro.
 Regra de Ouro: COMENTAR codigo existente, nunca deletar.
 So entregar quando eu autorizar.
 ```
+
+---
+
+## Analise Consolidada dos Pop-ups (2026-03-28)
+
+Analise completa da estrutura dos popups, templates e problemas identificados.
+Baseada em revisao profunda do codigo e respostas do usuario.
+
+### Hardware e Resolucao de Referencia
+
+| Dispositivo | Resolucao | Uso |
+|-------------|-----------|-----|
+| Galaxy Tab S6 Lite | 2000 x 1200 | Testes atuais |
+| Galaxy Tab A11+ | 1920 x 1200 | Producao (planejado) |
+
+Ambos em landscape: ~1920-2000px largura x ~1200px altura.
+Popups e botoes devem ser otimizados para essas resolucoes.
+
+### Dispositivos Alexa e Entidades Confirmadas
+
+| Comodo | Dispositivo | Entity ID | Spotify via Alexa |
+|--------|-------------|-----------|-------------------|
+| Sala | Echo Show | media_player.echo_show | ✅ |
+| Office | Echo Pop Office | media_player.echo_pop_office | ✅ |
+| Quarto Casal | Echo Pop Quarto Casal | media_player.echo_pop_quarto_casal | ✅ |
+| Quarto Marina | Echo Pop Marina | media_player.echo_pop_marina | ✅ |
+| Cozinha | — | — | ❌ Sem Alexa |
+| Lavabo | — | — | ❌ Sem Alexa |
+| Circulacao | — | — | ❌ Sem Alexa |
+| Quarto Miguel | — | — | ❌ Sem Alexa |
+
+### Decisao: Cameras nos popups
+
+O usuario QUER MANTER cameras nos popups de Cozinha e Office, mesmo com menos botoes.
+Solucao de dimensionamento deve acomodar camera + botoes menores.
+
+### Estado Atual dos Pop-ups por Comodo
+
+| Comodo | Popup Width | Grid Cols | Botoes Ativos | Camera | Status Geral |
+|--------|------------|-----------|---------------|--------|-------------|
+| Sala | 65vw/980px | 5+5 | 14 (7 luzes + TV + Spotify + PS5 + Pioneer + Cortina + AC) | ✅ | Referencia |
+| Quarto Casal | 65vw/980px | 5+5 | 8 (7 luzes + Spotify) | ✅ | OK (herda problemas globais) |
+| Quarto Miguel | 65vw/980px | 5+5 | 10 (8 switches + Spotify + AC) | ✅ | ⚠️ Problemas especificos |
+| Quarto Marina | 65vw/980px | 5+5 | 7 (6 luzes + Spotify) | ✅ | OK (herda problemas globais) |
+| Office | 65vw/980px | 3+3 | 6 (3 luzes + PC + Spotify + AC) | ✅ | ❌ Botoes grandes |
+| Cozinha | 65vw/980px | 3+3 | 3 (3 luzes) | ✅ | ❌ Botoes grandes |
+| Lavabo | 450px/450px | 3 | 3 (3 luzes) | ❌ | ⚠️ "Todas luzes" quebrado |
+| Circulacao | — | — | Toggle direto | ❌ | ✅ OK |
+
+---
+
+### PROBLEMA 1: Botao do AC Nao Acende Visualmente
+
+**Sintoma:** O icone do AC muda de cor (cinza → azul) quando ligado, mas o FUNDO do
+botao permanece escuro/cinza em vez de ficar branco como nos demais botoes.
+
+**Analise da cadeia de templates:**
+
+1. **Template `base` (tpl_base.yaml:23-24)** define `variables.state_on`:
+   ```
+   state_on = ['on','home','cool','fan_only','unlocked','open','streaming','yes',...].indexOf(entity.state) !== -1
+   ```
+   JA inclui 'cool' e 'fan_only'. Deveria funcionar para climate.
+
+2. **Template `base` (tpl_base.yaml:90-101)** define `styles.card.background-color`:
+   ```
+   return variables.state_on ? 'rgba(250,250,250,0.75)' : 'rgba(115,115,115,0.2)'
+   ```
+   Usa `variables.state_on` para decidir branco vs cinza.
+
+3. **O botao do AC (room_living_all_buttons.yaml:692-741)** FAZ OVERRIDE de ambos:
+   - Override de `variables.state_on` (linhas 702-703): verifica climate states
+   - Override de `styles.card.background-color` (linhas 714-727): mesma logica branco/cinza
+
+4. **O BUG:** O button-card processa templates na seguinte ordem:
+   - Card-level styles → Template-level styles (base)
+   - O template `base` avalia `variables.state_on` com SUA PROPRIA definicao
+   - O override do card e processado ANTES, e o template SOBRESCREVE depois
+   - Resultado: o template base reavalia background-color usando sua versao de state_on
+
+**Solucao proposta:**
+- Opcao A: Criar template `tpl_popup_climate` (como tpl_popup_light) que inclua
+  state_on correto para climate na cadeia de heranca
+- Opcao B: Remover override de styles.card do botao AC e garantir que a variavel
+  state_on do base (que JA inclui 'cool','fan_only') funcione — verificar se o
+  override de variables no card realmente prevalece sobre o do template
+- Opcao C: Usar `state:` section do button-card com operator:template
+  (tentado antes — falhou por mesmo motivo de cascata)
+- **RECOMENDADO: Opcao A** — template dedicado garante ordem de avaliacao correta
+
+**Template `icon_climate` (tpl_icons.yaml:1322-1342):**
+- Define fill azul (#3583b6) quando ativo, cinza (#9da0a2) quando off
+- NAO define state_on nem styles.card — so afeta o icone SVG
+- Isso explica por que o icone funciona mas o fundo nao
+
+---
+
+### PROBLEMA 2: Spotify — Arquitetura Inadequada
+
+**Situacao atual:**
+- Todos os comodos usam MESMA entidade: `media_player.spotifyplus_bruno_helasio`
+- Todos abrem MESMO popup: `media_spotify.yaml`
+- Popup usa `custom:spotify-card` (card generico antigo)
+- tap_action faz `media_player.media_play_pause` (global, sem device control)
+- Nenhuma entidade Alexa esta ativa nos botoes
+
+**Problema:** Play/pause controla o ULTIMO dispositivo ativo do Spotify, sem
+distincao por comodo. Nao e possivel direcionar para a Alexa especifica.
+
+**Solucao proposta: SpotifyPlus Card (`custom:spotifyplus-card`)**
+
+O repositorio `thlucas1/spotifyplus_card` oferece:
+- `deviceDefaultId`: define dispositivo padrao por instancia do card
+- Player completo: artwork, progress bar, controles, volume
+- Selecao de devices: lista todos os Spotify Connect
+- Favoritos, busca, presets
+
+**Integracao com Alexa Media Player:**
+- `deviceDefaultId` aponta para o nome do Echo no Spotify Connect
+- Cada comodo tera popup Spotify PROPRIO com seu deviceDefaultId
+- O SpotifyPlus integration precisa reconhecer os Echo como dispositivos Spotify Connect
+
+**Mapeamento Spotify → Alexa por comodo:**
+
+| Comodo | deviceDefaultId (nome no Spotify Connect) | Entidade Alexa |
+|--------|-------------------------------------------|----------------|
+| Sala | (verificar nome do Echo Show no Spotify) | media_player.echo_show |
+| Office | (verificar nome do Echo Pop no Spotify) | media_player.echo_pop_office |
+| Quarto Casal | (verificar nome do Echo Pop no Spotify) | media_player.echo_pop_quarto_casal |
+| Quarto Marina | (verificar nome do Echo Pop no Spotify) | media_player.echo_pop_marina |
+| Quarto Miguel | ❌ Sem Alexa — botao Spotify desabilitado | — |
+| Cozinha | ❌ Sem Alexa — sem botao Spotify | — |
+| Lavabo | ❌ Sem botao Spotify | — |
+
+**PENDENTE:** Usuario precisa confirmar os nomes EXATOS dos Echo no Spotify Connect
+(ex: "Echo Show", "Echo Pop de Bruno — Office", etc.)
+
+**Arquivos de popup Spotify por comodo (a criar):**
+- `media_spotify_sala.yaml` → deviceDefaultId: "Echo Show" (ou nome real)
+- `media_spotify_office.yaml` → deviceDefaultId: "Echo Pop Office" (ou nome real)
+- `media_spotify_quarto_casal.yaml` → deviceDefaultId: "Echo Pop Quarto Casal" (ou nome real)
+- `media_spotify_quarto_marina.yaml` → deviceDefaultId: "Echo Pop Marina" (ou nome real)
+
+---
+
+### PROBLEMA 3: Dimensionamento dos Pop-ups e Botoes
+
+**Diagnostico por resolucao:**
+- Tablet landscape: ~1920-2000px de largura
+- 65vw = ~1248-1300px de popup
+- Layout 1.4fr + 1.0fr = ~729px botoes + ~521px camera
+- 5 colunas × 98px = 490px + gaps → OK no espaco de 729px
+- 3 colunas × 98px = 294px + gaps → 294px vs 729px = MUITO espaco sobrando
+
+**O problema nao e que os botoes sao grandes (sao 98px fixos em todos os comodos).
+O problema e que o POPUP e grande demais para 3 colunas.**
+
+**Opcoes de solucao (camera mantida por decisao do usuario):**
+
+| Opcao | Popup Width | Grid Cols | Resultado |
+|-------|------------|-----------|-----------|
+| A. Popup menor | 650px | 3 × 98px | Botoes 98px, camera compactada |
+| B. Botoes 1fr | 65vw/980px | 3 × 1fr | Botoes ~240px cada (MUITO grandes) |
+| C. Layout adaptativo | auto | 3 × 98px justify-center | Botoes centralizados, popup cheio |
+| D. Tamanho fixo por comodo | px fixo | 3 × 98px | Controle total |
+
+**RECOMENDACAO: Opcao D (tamanho fixo por comodo)**
+
+| Comodo | Popup Width | Layout | Colunas |
+|--------|------------|--------|---------|
+| Sala | 980px | 1.4fr 1.0fr | 5 × 98px |
+| Quartos (casal/miguel/marina) | 980px | 1.4fr 1.0fr | 5 × 98px |
+| Office | 680px | 1.2fr 1.0fr | 3 × 98px |
+| Cozinha | 680px | 1.2fr 1.0fr | 3 × 98px |
+| Lavabo | 450px | vertical-stack | 3 × 98px |
+
+Isso mantem botoes uniformes de 98px e ajusta o CONTAINER ao conteudo.
+
+---
+
+### PROBLEMA 4: Responsividade e Performance
+
+**Causa provavel: `triggers_update: all` no template `base`**
+
+O template `base` (tpl_base.yaml:37) define `triggers_update: all`, o que faz
+CADA button-card re-renderizar em QUALQUER mudanca de estado de QUALQUER entidade.
+
+Num popup com 14 botoes (Sala), cada mudanca de estado gera 14 re-renderizacoes.
+Com dezenas de entidades mudando estado por minuto, o total de re-renders e enorme.
+
+**Agravantes:**
+- Templates aninhados: base → tpl_popup_base → tpl_popup_light → icon_light_flush
+  + circle + loader = JS avaliado dinamicamente a cada render
+- card_mod presente em quase todo card
+- Cameras ao vivo fazem polling periodico
+- 61KB de templates JS no tpl_base.yaml
+
+**Solucoes possiveis:**
+1. Substituir `triggers_update: all` por lista especifica de entidades por botao
+2. Usar cards mais leves (mushroom, etc.) para botoes simples
+3. Reduzir animacoes CSS ativas simultaneamente
+4. Lazy-load cameras (so renderizar quando popup abrir)
+
+---
+
+### PROBLEMA 5: "Todas as Luzes" — Lavabo Quebrado + Toggle Visual
+
+**Lavabo (lavabo.yaml:122-153):**
+- Botao titulo "Luzes" NAO tem `entity` definido
+- `tap_action: action: none` — nao faz NADA ao clicar
+- Icone fixo cinza, sem feedback visual de estado
+- **FIX:** Adicionar `entity: light.grupo_luzes_lavabo` e `tap_action: action: toggle`
+
+**Sala e demais comodos (room_living_all_buttons.yaml:298-333):**
+- Botao titulo tem `entity: light.grupo_luzes_*`
+- `tap_action: action: toggle`
+- Icone muda cor: dourado (#f0c040) quando on, cinza quando off
+- **FUNCIONA** mas sem toggle visual (apenas icone muda cor)
+
+**Toggle visual solicitado pelo usuario:**
+- Adicionar elemento ON/OFF ao lado do icone de lampadas
+- Azul quando ativado, cinza quando desativado
+- Logica: qualquer luz acesa → clicar desliga todas; todas apagadas → clicar acende todas
+- Implementavel via `custom_fields` no button-card com HTML/SVG inline
+- Deve ser replicado em TODOS os comodos
+
+---
+
+### PROBLEMA 6: Quarto Miguel — Problemas Especificos
+
+**6.1. Grid button nao reflete estado das luzes:**
+- Entity: `light.grupo_luzes_quarto_miguel` (grupo HA, recriado pelo usuario)
+- `active: ''` (vazio) — sem sensor de atividade
+- Sem `triggers_update` especifico — nao atualiza periodicamente
+- A Sala tem: `active: sensor.living_room_active` + `triggers_update: [sensor.time, sensor.living_room_active]`
+- **FIX:** Ou criar sensor `sensor.quarto_miguel_active` ou usar fallback direto do grupo
+
+**6.2. Botao luz principal (popup) nao acende visualmente:**
+- Entity: `switch.quarto_miguel_switch_2` (tipo switch, nao light)
+- Template `tpl_popup_light` herda de `base` que verifica state == 'on'
+- Switch tem state 'on'/'off' — DEVERIA funcionar
+- **VERIFICAR:** Se o grupo `light.grupo_luzes_quarto_miguel` esta configurado
+  corretamente no HA com os switches como membros. Grupo foi recriado.
+
+**6.3. Duplicata de variaveis no grid (tpl_grid_room2.yaml:63-69):**
+- `ac_entity: climate.ac_quarto_miguel` aparece DUAS vezes (linhas 65 e 69)
+- Nao causa erro mas indica limpeza necessaria
+
+---
+
+### PROBLEMA 7: Indicadores de Status no Botao Principal
+
+**Templates de status (tpl_sectors.yaml):**
+
+| Template | Icone | Condicao | Cor | Comodos Ativos |
+|----------|-------|----------|-----|----------------|
+| motion | mdi:walk | binary_sensor = on | Active color | Sala (vazio) |
+| ac_status | mdi:snowflake | climate in cool/heat/fan_only/dry | Azul #3583b6 | Sala, Office, Q.Miguel |
+| media_status | mdi:television | media_player in playing/on | Active color | Sala (TV) |
+| lights_status | mdi:lightbulb-on | lights_on_count > 0 | Amarelo #f0c040 | Sala (via sensor) |
+
+**Problema:** Apenas a Sala tem `active: sensor.living_room_active` e
+`triggers_update: [sensor.time, sensor.living_room_active]`. Todos os demais
+comodos tem `active: ''` — sem sensor, sem contagem de luzes, sem timer.
+
+**Para status de midia/Spotify:** Nenhum comodo tem `media_status` apontando
+para Spotify. Quando integrado com SpotifyPlus Card, considerar adicionar
+`media_entity: media_player.spotifyplus_bruno_helasio` nos comodos relevantes.
+
+---
+
+### Plano de Implementacao Consolidado
+
+**Fase C1: Correcoes Urgentes (baixo risco, impacto imediato)**
+
+| # | Acao | Arquivo(s) | Complexidade |
+|---|------|-----------|-------------|
+| C1.1 | Corrigir "todas as luzes" lavabo | lavabo.yaml | Baixa |
+| C1.2 | Criar template tpl_popup_climate | tpl_sectors.yaml ou tpl_base.yaml | Media |
+| C1.3 | Aplicar tpl_popup_climate em todos os botoes AC | room_*_all_buttons.yaml | Baixa |
+| C1.4 | Limpar duplicata ac_entity em tpl_grid_room2 | tpl_grid_room2.yaml | Baixa |
+
+**Fase C2: Dimensionamento dos Pop-ups (media complexidade)**
+
+| # | Acao | Arquivo(s) | Complexidade |
+|---|------|-----------|-------------|
+| C2.1 | Reduzir popup Office para 680px | office.yaml | Baixa |
+| C2.2 | Reduzir popup Cozinha para 680px | kitchen.yaml | Baixa |
+| C2.3 | Ajustar layout 1.2fr 1.0fr para 3-col | office.yaml, kitchen.yaml | Baixa |
+
+**Fase C3: Spotify com SpotifyPlus Card (alta complexidade)**
+
+| # | Acao | Arquivo(s) | Complexidade |
+|---|------|-----------|-------------|
+| C3.1 | Verificar nomes dos Echo no Spotify Connect | (usuario confirma) | — |
+| C3.2 | Criar popup Spotify por comodo (4 arquivos) | media_spotify_*.yaml | Media |
+| C3.3 | Atualizar hold_action do botao Spotify por comodo | room_*_all_buttons.yaml | Baixa |
+| C3.4 | Desabilitar botao Spotify em comodos sem Alexa | room_quarto_miguel_all_buttons.yaml | Baixa |
+
+**Fase C4: Toggle Visual "Todas as Luzes"**
+
+| # | Acao | Arquivo(s) | Complexidade |
+|---|------|-----------|-------------|
+| C4.1 | Criar elemento toggle ON/OFF com custom_fields | Header de cada room_*_all_buttons.yaml + lavabo.yaml | Media |
+| C4.2 | Replicar em todos os comodos | 7 arquivos | Baixa |
+
+**Fase C5: Quarto Miguel e Status Indicators**
+
+| # | Acao | Arquivo(s) | Complexidade |
+|---|------|-----------|-------------|
+| C5.1 | Investigar grupo light.grupo_luzes_quarto_miguel | configuration.yaml / helpers | Baixa |
+| C5.2 | Adicionar triggers_update no grid button Q.Miguel | tpl_grid_room2.yaml | Baixa |
+| C5.3 | Validar state_on para switch entities no popup | tpl_base.yaml, tpl_sectors.yaml | Media |
+| C5.4 | Criar sensors *_active para demais comodos (HA config) | (fora do dashboard) | Media |
+
+**Fase C6: Performance e Responsividade**
+
+| # | Acao | Arquivo(s) | Complexidade |
+|---|------|-----------|-------------|
+| C6.1 | Substituir triggers_update:all por listas especificas | tpl_base.yaml (global) ou por card | Alta |
+| C6.2 | Avaliar substituicao de button-card por cards leves | Multiplos | Alta |
+
+**PENDENCIAS que dependem do usuario:**
+1. Nomes EXATOS dos Echo no Spotify Connect (para deviceDefaultId)
+2. Verificacao do grupo light.grupo_luzes_quarto_miguel no HA (recriado)
+3. Autorizacao para iniciar implementacao
+
+---

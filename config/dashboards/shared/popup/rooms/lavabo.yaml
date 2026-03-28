@@ -119,14 +119,18 @@ browser_mod:
     content:
       type: vertical-stack
       cards:
-        # ── Titulo: Luzes ──
+        # ── Titulo: Luzes + toggle all lights ──
+        # ANTERIOR: sem entity, tap_action: none (nao fazia nada ao clicar)
+        # FIX C1.1: Adicionado entity + tap_action toggle + cor dinamica do icone
         - type: custom:button-card
+          entity: light.grupo_luzes_lavabo
           name: Luzes
           show_state: false
           show_icon: true
           icon: mdi:lightbulb-group-outline
           tap_action:
-            action: none
+            action: toggle
+            haptic: success
           styles:
             card:
               - background: none
@@ -150,7 +154,10 @@ browser_mod:
               - width: 24px
             icon:
               - width: 24px
-              - color: rgba(255,255,255,0.25)
+              - color: >
+                  [[[
+                    return entity.state === 'on' ? '#f0c040' : 'rgba(255,255,255,0.25)';
+                  ]]]
         # ── ANTERIOR: Linha 1 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
         # - type: grid
         #   columns: 5

@@ -83,13 +83,15 @@ browser_mod:
     tag: office_popup
     size: wide
     style: >
-      --popup-width: 65vw;
-      --popup-max-width: 980px;
+      --popup-width: 680px;
+      --popup-max-width: 680px;
       --popup-background-color: rgba(15, 20, 35, 0.75);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
       --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
+    # ANTERIOR: card_mod inline com 65vw/980px
+    # FIX C2.1: Reduzido para 680px (3-col room com camera) + usando snippet
     card_mod:
       style:
         .: |
@@ -114,8 +116,8 @@ browser_mod:
             justify-content: center !important;
           }
           .mdc-dialog__surface {
-            width: 65vw !important;
-            max-width: 980px !important;
+            width: 680px !important;
+            max-width: 680px !important;
             max-height: 88vh !important;
             overflow-y: auto !important;
           }
@@ -123,7 +125,9 @@ browser_mod:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 1.4fr 1.0fr
+        # ANTERIOR: grid-template-columns: 1.4fr 1.0fr (muito espaco para 3-col)
+        # FIX C2.3: 1.2fr 1.0fr — melhor proporcao para 3 colunas de botoes 98px
+        grid-template-columns: 1.2fr 1.0fr
         grid-template-areas: '"col_buttons col_camera"'
         grid-gap: 10px
         margin: 0

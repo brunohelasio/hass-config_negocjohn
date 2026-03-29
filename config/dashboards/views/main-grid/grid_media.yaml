@@ -82,9 +82,78 @@
 #           - icon_homepod
 # --- FIM CÓDIGO ORIGINAL ---
 
-# NOVO: Entidades do usuario (TV Sala, Spotify, Alexa por comodo)
-# select.conditional_media deve ser atualizado no HA com as novas opcoes:
-#   TV Sala, Spotify, Echo Show, Echo Pop Office, Echo Pop Quarto Casal, Echo Pop Marina
+# ANTERIOR: Versao com select.conditional_media (nada renderizava sem o helper entity no HA)
+# Cada card era type: conditional → dependia de select.conditional_media existir.
+# Sem o helper, o bloco media ficava VAZIO no dashboard.
+# - type: grid
+#   title: Media
+#   view_layout:
+#     grid-area: media
+#     show:
+#       mediaquery: '(min-width: 1441px)'
+#   columns: 1
+#   square: true
+#   cards:
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: TV Sala
+#       card: &TVSALA
+#         type: custom:button-card
+#         entity: media_player.smart_tv_pro_2
+#         name: ' '
+#         template: [conditional_media, icon_tv]
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Spotify
+#       card: &SPOTIFY
+#         type: custom:button-card
+#         entity: media_player.spotifyplus_bruno_helasio
+#         name: ' '
+#         double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
+#         template: [currently_playing]
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Echo Show
+#       card: &ECHOSHOW
+#         type: custom:button-card
+#         entity: media_player.echo_show
+#         name: 'Echo Show'
+#         template: [conditional_media, icon_homepod]
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Echo Pop Office
+#       card: &ECHOPOPOFFICE
+#         type: custom:button-card
+#         entity: media_player.echo_pop_office
+#         name: 'Echo Office'
+#         template: [conditional_media, icon_homepod]
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Echo Pop Quarto Casal
+#       card: &ECHOPOPQCASAL
+#         type: custom:button-card
+#         entity: media_player.echo_pop_quarto_casal
+#         name: 'Echo Q.Casal'
+#         template: [conditional_media, icon_homepod]
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Echo Pop Marina
+#       card: &ECHOPOPMARINA
+#         type: custom:button-card
+#         entity: media_player.echo_pop_marina
+#         name: 'Echo Marina'
+#         template: [conditional_media, icon_homepod]
+
+# NOVO: Bloco media SEM conditionals — renderiza direto, sem depender de select.conditional_media
+# Cards mostram estado real das entidades (playing/idle/off).
+# Quando o usuario criar select.conditional_media no HA, pode descomentar a versao acima
+# e comentar esta para voltar ao comportamento de 1 card por vez (carrossel).
 # PS5 (switch.ps5_015_power) AGUARDANDO — entidade ficando indisponivel
 - type: grid
   title: Media
@@ -92,81 +161,51 @@
     grid-area: media
     show:
       mediaquery: '(min-width: 1441px)'
-  columns: 1
+  columns: 2
   square: true
   cards:
     # TV SALA — Smart TV Pro 2
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: TV Sala
-      card: &TVSALA
-        type: custom:button-card
-        entity: media_player.smart_tv_pro_2
-        name: ' '
-        template:
-          - conditional_media
-          - icon_tv
+    - type: custom:button-card
+      entity: media_player.smart_tv_pro_2
+      name: ' '
+      template:
+        - conditional_media
+        - icon_tv
     # SPOTIFY
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Spotify
-      card: &SPOTIFY
-        type: custom:button-card
-        entity: media_player.spotifyplus_bruno_helasio
-        name: ' '
-        double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
-        template:
-          - currently_playing
+    - type: custom:button-card
+      entity: media_player.spotifyplus_bruno_helasio
+      name: ' '
+      double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
+      template:
+        - currently_playing
     # ECHO SHOW (Sala)
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Echo Show
-      card: &ECHOSHOW
-        type: custom:button-card
-        entity: media_player.echo_show
-        name: 'Echo Show'
-        template:
-          - conditional_media
-          - icon_homepod
+    - type: custom:button-card
+      entity: media_player.echo_show
+      name: 'Echo Show'
+      template:
+        - conditional_media
+        - icon_homepod
     # ECHO POP OFFICE
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Echo Pop Office
-      card: &ECHOPOPOFFICE
-        type: custom:button-card
-        entity: media_player.echo_pop_office
-        name: 'Echo Office'
-        template:
-          - conditional_media
-          - icon_homepod
+    - type: custom:button-card
+      entity: media_player.echo_pop_office
+      name: 'Echo Office'
+      template:
+        - conditional_media
+        - icon_homepod
     # ECHO POP QUARTO CASAL
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Echo Pop Quarto Casal
-      card: &ECHOPOPQCASAL
-        type: custom:button-card
-        entity: media_player.echo_pop_quarto_casal
-        name: 'Echo Q.Casal'
-        template:
-          - conditional_media
-          - icon_homepod
+    - type: custom:button-card
+      entity: media_player.echo_pop_quarto_casal
+      name: 'Echo Q.Casal'
+      template:
+        - conditional_media
+        - icon_homepod
     # ECHO POP MARINA
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Echo Pop Marina
-      card: &ECHOPOPMARINA
-        type: custom:button-card
-        entity: media_player.echo_pop_marina
-        name: 'Echo Marina'
-        template:
-          - conditional_media
-          - icon_homepod
+    - type: custom:button-card
+      entity: media_player.echo_pop_marina
+      name: 'Echo Marina'
+      template:
+        - conditional_media
+        - icon_homepod
 
 #################################################
 #                                               #
@@ -228,51 +267,98 @@
 #       card: *MASSAIRPLAY
 # --- FIM CÓDIGO ORIGINAL ---
 
-# NOVO: Entidades do usuario (tablet/responsive, max-width: 1440px)
+# ANTERIOR: Versao tablet com select.conditional_media (nada renderizava)
+# - type: grid
+#   title: Media
+#   view_layout:
+#     grid-area: media
+#     show:
+#       mediaquery: '(min-height: 463px) and (max-width: 1440px)'
+#   columns: 1
+#   cards:
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: TV Sala
+#       card: *TVSALA
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Spotify
+#       card: *SPOTIFY
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Echo Show
+#       card: *ECHOSHOW
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Echo Pop Office
+#       card: *ECHOPOPOFFICE
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Echo Pop Quarto Casal
+#       card: *ECHOPOPQCASAL
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Echo Pop Marina
+#       card: *ECHOPOPMARINA
+
+# NOVO: Bloco media tablet SEM conditionals — renderiza direto
 - type: grid
   title: Media
   view_layout:
     grid-area: media
     show:
       mediaquery: '(min-height: 463px) and (max-width: 1440px)'
-  columns: 1
+  columns: 2
+  square: true
   cards:
     # TV SALA
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: TV Sala
-      card: *TVSALA
+    - type: custom:button-card
+      entity: media_player.smart_tv_pro_2
+      name: ' '
+      template:
+        - conditional_media
+        - icon_tv
     # SPOTIFY
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Spotify
-      card: *SPOTIFY
+    - type: custom:button-card
+      entity: media_player.spotifyplus_bruno_helasio
+      name: ' '
+      double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
+      template:
+        - currently_playing
     # ECHO SHOW (Sala)
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Echo Show
-      card: *ECHOSHOW
+    - type: custom:button-card
+      entity: media_player.echo_show
+      name: 'Echo Show'
+      template:
+        - conditional_media
+        - icon_homepod
     # ECHO POP OFFICE
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Echo Pop Office
-      card: *ECHOPOPOFFICE
+    - type: custom:button-card
+      entity: media_player.echo_pop_office
+      name: 'Echo Office'
+      template:
+        - conditional_media
+        - icon_homepod
     # ECHO POP QUARTO CASAL
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Echo Pop Quarto Casal
-      card: *ECHOPOPQCASAL
+    - type: custom:button-card
+      entity: media_player.echo_pop_quarto_casal
+      name: 'Echo Q.Casal'
+      template:
+        - conditional_media
+        - icon_homepod
     # ECHO POP MARINA
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Echo Pop Marina
-      card: *ECHOPOPMARINA
+    - type: custom:button-card
+      entity: media_player.echo_pop_marina
+      name: 'Echo Marina'
+      template:
+        - conditional_media
+        - icon_homepod
 # #################################################
 # #                                               #
 # #           GRID MEDIA MIN 1441px               #

@@ -80,3 +80,15 @@ browser_mod:
             overflow-y: auto;
             border-radius: 12px;
           }
+          /* FIX: centralizar artwork no popup — imagens do repositorio do card
+             mostram arte ocupando todo o popup. Estas regras garantem que a
+             arte fique centralizada e cubra todo o background disponivel. */
+          .player-background,
+          .player-background img,
+          .player-section .thumbnail,
+          .player-section .thumbnail img {
+            object-fit: cover !important;
+            object-position: center center !important;
+            background-position: center center !important;
+            background-size: cover !important;
+          }

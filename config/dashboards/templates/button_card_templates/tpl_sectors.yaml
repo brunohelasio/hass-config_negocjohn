@@ -300,6 +300,46 @@ media_status:
               return offset > 0 ? offset + '%' : '0';
             ]]]
         - transition: top 250ms ease-out
+# Icone de status: Alexa tocando (exibe icone Alexa quando Echo esta playing)
+# Verifica a entidade Echo Alexa do comodo (nao o Spotify global).
+# Empilha abaixo dos icones ativos acima (motion + ac + media).
+alexa_status:
+  custom_fields:
+    alexa_status: >
+      [[[
+        if (variables.alexa_entity && states[variables.alexa_entity]) {
+          const st = states[variables.alexa_entity].state;
+          if (['playing'].includes(st))
+            return `<svg viewBox="0 0 50 50" style="width:100%;display:flex;">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="#00caff" stroke-width="3" opacity="0.3"/>
+              <circle cx="25" cy="25" r="14" fill="none" stroke="#00caff" stroke-width="2.5" opacity="0.5"/>
+              <circle cx="25" cy="25" r="8" fill="#00caff" opacity="0.85"/>
+            </svg>`;
+        }
+      ]]]
+  styles:
+    custom_fields:
+      alexa_status:
+        - position: absolute
+        - height: auto
+        - border-radius: 50%
+        - right: 1%
+        - padding: 5%
+        - margin: -10%
+        - width: 15%
+        - top: >
+            [[[
+              // Empilha abaixo dos icones ativos acima (motion + ac + media)
+              let offset = 0;
+              if (variables.motion && states[variables.motion] && states[variables.motion].state == 'on')
+                offset += 30;
+              if (variables.ac_entity && states[variables.ac_entity] && ['cool','fan_only','dry','heat'].includes(states[variables.ac_entity].state))
+                offset += 30;
+              if (variables.media_entity && states[variables.media_entity] && ['playing','on'].includes(states[variables.media_entity].state))
+                offset += 30;
+              return offset > 0 ? offset + '%' : '0';
+            ]]]
+        - transition: top 250ms ease-out
 # Icone de status: luzes acesas (exibe icone de lampada com contagem)
 lights_status:
   custom_fields:

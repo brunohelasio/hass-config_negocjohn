@@ -1013,3 +1013,81 @@ Todos os blocos originais estao comentados com marcadores:
 Para restaurar qualquer bloco: descomentar o original e comentar a versao NOVO.
 
 ---
+
+## Registro de Implementacao — Pipeline uix-dialog no Tema Tablet (2026-03-29)
+
+Correcao da causa raiz do problema de redimensionamento de popups no tema tablet.
+O tema tablet.yaml era o unico que NAO tinha o bloco `uix-dialog`, fazendo com que
+`--popup-width` definido nos popups fosse IGNORADO pelo HA. Como compensacao, cada
+popup tinha um `card_mod` hack direto no `.mdc-dialog__surface` com `!important`.
+
+### Diagnostico
+
+**Problema:** `--popup-width: 65vw` definido no `style:` dos popups nao era consumido
+pelo tema tablet, ao contrario do Graphite Auto que tem:
+```css
+ha-dialog.type-browser-mod-popup {
+  --ha-dialog-width-md: calc(var(--max-popup-column, 1) * var(--popup-width, 550px)) !important;
+}
+```
+
+**Consequencia:** Cada popup precisava de `card_mod` com `ha-dialog$ .mdc-dialog__surface { width: 65vw !important }`
+que SOBRESCREVIA o sistema nativo do HA, criando conflitos ao tentar redimensionar.
+
+**Problema adicional:** `--button-card-border-radius: 10%` era exclusivo do tema tablet.
+Em outros temas, `var(--button-card-border-radius)` = undefined → `calc(undefined / 2)` = 0 → botoes quadrados.
+
+### Solucao Implementada
+
+| Acao | Arquivo(s) | Detalhes |
+|------|-----------|----------|
+| Adicionar `uix-dialog` ao tema tablet | `tablet.yaml` | Bloco completo: blur(12px), scrim, centering, `--ha-dialog-width-md`, card resets. Adaptado do graphite-auto.yaml. |
+| Comentar `card_mod` hack em todos os popups | 7 arquivos popup (rooms/*.yaml) | card_mod com `.mdc-dialog__surface { width: ... !important }` comentado. `--popup-width` no `style:` agora funciona nativamente. |
+| Hardcode `border-radius: 10%` no tpl_base | `tpl_base.yaml` | Linha 70: `var(--button-card-border-radius)` → `10%` (mesma regra do tpl_popup_base:934). |
+| Hardcode `border-radius` no tpl_media | `tpl_media.yaml` | 10 ocorrencias: `var(--button-card-border-radius)` → `10%`, `calc(.../2)` → `5%`. |
+| Hardcode `border-radius` em templates auxiliares | `tpl_climate.yaml`, `tpl_iphone.yaml`, `horizontal_movies.yaml` | Mesmo padrao: `var(--button-card-border-radius)` → `10%` ou `5%`. |
+
+### Pipeline de Sizing (como funciona agora)
+
+```
+popup style: --popup-width: 65vw
+       ↓
+tema tablet uix-dialog: --ha-dialog-width-md: calc(1 * 65vw)
+       ↓
+HA nativo dimensiona o dialog
+       ↓
+Para redimensionar: basta mudar --popup-width no style: do popup
+```
+
+### Arquivos Alterados
+
+| Arquivo | Tipo de Alteracao |
+|---------|-------------------|
+| `config/themes/tablet.yaml` | ADICIONADO: bloco uix-dialog (linhas 98-142) |
+| `config/dashboards/shared/popup/rooms/livingroom.yaml` | COMENTADO: card_mod inteiro |
+| `config/dashboards/shared/popup/rooms/kitchen.yaml` | COMENTADO: card_mod inteiro |
+| `config/dashboards/shared/popup/rooms/office.yaml` | COMENTADO: card_mod inteiro |
+| `config/dashboards/shared/popup/rooms/quarto_casal.yaml` | COMENTADO: card_mod inteiro |
+| `config/dashboards/shared/popup/rooms/quarto_miguel.yaml` | COMENTADO: card_mod inteiro |
+| `config/dashboards/shared/popup/rooms/quarto_marina.yaml` | COMENTADO: card_mod inteiro |
+| `config/dashboards/shared/popup/rooms/lavabo.yaml` | COMENTADO: card_mod inteiro |
+| `config/dashboards/templates/button_card_templates/tpl_base.yaml` | HARDCODED: border-radius 10% + clip-paths |
+| `config/dashboards/templates/button_card_templates/tpl_media.yaml` | HARDCODED: border-radius 10%/5% (10 ocorrencias) |
+| `config/dashboards/templates/button_card_templates/tpl_climate.yaml` | HARDCODED: border-radius 10% |
+| `config/dashboards/templates/button_card_templates/tpl_iphone.yaml` | HARDCODED: border-radius 10% |
+| `config/dashboards/views/main-grid/horizontal_movies.yaml` | HARDCODED: border-radius 5% |
+
+### Para Restaurar (Rollback)
+
+1. **Popups:** Descomentar `card_mod:` em cada arquivo de popup (marcado com `# --- CÓDIGO ORIGINAL COMENTADO ---`)
+2. **Tema:** Remover ou comentar o bloco `uix-dialog:` e as linhas `uix-browser-mod-popup-inner:` e `uix-more-info:` no tablet.yaml
+3. **Border-radius:** Reverter `10%` → `var(--button-card-border-radius)` e `5%` → `calc(var(--button-card-border-radius) / 2)` nos templates
+
+### Nota sobre --button-card-border-radius no tablet.yaml
+
+A variavel `button-card-border-radius: 10%` PERMANECE definida no tablet.yaml (linha 25)
+para manter compatibilidade com qualquer codigo que ainda a referencie indiretamente
+(ex: via `--custom-button-card-border-radius` em cards de spotify). Os templates
+principais agora usam valores hardcoded, tornando-os independentes do tema.
+
+---

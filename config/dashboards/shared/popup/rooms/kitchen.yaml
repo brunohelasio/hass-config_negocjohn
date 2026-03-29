@@ -156,18 +156,18 @@ browser_mod:
     title: Cozinha
     tag: cozinha_popup
     size: wide
-    # ANTERIOR: --popup-width: 680px; --popup-max-width: 680px; (fixo)
-    # FIX: fit-content — popup se ajusta ao conteúdo real (botões + câmera)
-    # Em vez de forçar 680px, o popup encolhe/cresce conforme o conteúdo interno.
-    # max-width: 90vw impede que exceda a tela em tablets.
+    # ANTERIOR: fit-content — popup ficava enorme porque 1fr da camera expandia sem limite
+    # FIX: 680px fixo (mesmo padrao do Office) — controla tamanho do popup para 3-col rooms
     style: >
+      --popup-width: 680px;
+      --popup-max-width: 680px;
       --popup-background-color: rgba(15, 20, 35, 0.75);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
       --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
-    # ANTERIOR: card_mod com width: 680px !important (fixo)
-    # FIX: fit-content — .mdc-dialog__surface ajusta ao conteúdo
+    # ANTERIOR: card_mod com fit-content (nao funcionava — cameras expandiam)
+    # FIX: 680px fixo no .mdc-dialog__surface (mesmo padrao do Office)
     card_mod:
       style:
         .: |
@@ -192,8 +192,8 @@ browser_mod:
             justify-content: center !important;
           }
           .mdc-dialog__surface {
-            width: fit-content !important;
-            max-width: 90vw !important;
+            width: 680px !important;
+            max-width: 680px !important;
             max-height: 88vh !important;
             overflow-y: auto !important;
           }

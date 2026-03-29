@@ -108,16 +108,42 @@
 #     - type: custom:button-card
 #       color_type: blank-card
 
-# ── NOVO: Linha 1 com 3 colunas e botoes padrao 98px ──
+# ── ANTERIOR: Linha 1 com 3 colunas e botoes padrao 98px (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 3
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#         grid-template-columns: repeat(3, 98px) !important;
+#         justify-content: start !important;
+#       }
+#   cards:
+#     - type: custom:button-card
+#       entity: light.office_switch_3
+#       name: "OF - Luz central"
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.office_switch_2
+#       name: "OF - Luz ambiente"
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.office_switch_1
+#       name: "OF - Luz estante"
+#       template: [tpl_popup_light, icon_ledstrip]
+#       tap_action: { action: toggle, haptic: success }
+
+# ── NOVO: Linha 1 com 5 colunas — 3 luzes + 2 blanks (mesma estrutura da Sala) ──
 - type: grid
-  columns: 3
+  columns: 5
   square: false
   card_mod:
     style: |
       #root {
         gap: 4px !important;
-        grid-template-columns: repeat(3, 98px) !important;
-        justify-content: start !important;
       }
   cards:
     - type: custom:button-card
@@ -147,6 +173,11 @@
       tap_action:
         action: toggle
         haptic: success
+    # BLANK 1-2
+    - type: custom:button-card
+      color_type: blank-card
+    - type: custom:button-card
+      color_type: blank-card
 
 # ── Divisor Glassmorphism ──
 - type: custom:button-card
@@ -233,16 +264,44 @@
 #     - type: custom:button-card
 #       color_type: blank-card
 
-# ── NOVO: Linha 3 com 3 colunas, PC (antes MacBook), AC corrigido (ac_office_2) ──
+# ── ANTERIOR: Linha 3 com 3 colunas, PC, Spotify, AC (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 3
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#         grid-template-columns: repeat(3, 98px) !important;
+#         justify-content: start !important;
+#       }
+#   cards:
+#     - type: custom:button-card
+#       entity: switch.macbook
+#       name: PC
+#       template: [base, icon_imac]
+#       show_icon: false
+#       tap_action: { action: toggle, haptic: success }
+#       double_tap_action: { action: more-info }
+#     - type: custom:button-card
+#       entity: media_player.spotifyplus_bruno_helasio
+#       name: Spotify
+#       template: [base, circle, loader, icon_spotify_color]
+#       (...)
+#     - type: custom:button-card
+#       entity: climate.ac_office
+#       name: Ar Cond.
+#       template: [tpl_popup_climate, icon_climate]
+#       (...)
+
+# ── NOVO: Linha 3 com 5 colunas — PC + Spotify + AC + MacBook (placeholder) + Cortina (placeholder) ──
 - type: grid
-  columns: 3
+  columns: 5
   square: false
   card_mod:
     style: |
       #root {
         gap: 4px !important;
-        grid-template-columns: repeat(3, 98px) !important;
-        justify-content: start !important;
       }
   cards:
     # PC — switch.macbook (renomeado de MacBook para PC, icone desktop)
@@ -349,3 +408,37 @@
         action: more-info
       hold_action:
         action: more-info
+    # MACBOOK — placeholder sem ação (visualização apenas)
+    - type: custom:button-card
+      name: MacBook
+      template:
+        - base
+        - icon_imac
+      show_icon: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"
+    # CORTINA — placeholder sem ação (visualização apenas)
+    - type: custom:button-card
+      name: Cortina
+      template:
+        - base
+        - icon_shade
+      show_icon: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"

@@ -63,6 +63,12 @@ browser_mod:
       # entity (nao entity_id), deviceDefaultId (nao playerDefaultDeviceName)
       entity: media_player.spotifyplus_bruno_helasio
       deviceDefaultId: Echo Pop Quarto Casal
+      playerBackgroundImageSize: "cover"
+      deviceControlByName: true
+      sections:
+        - player
+        - devices
+        - userpresets
       card_mod:
         style: |
           ha-card {

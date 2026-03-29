@@ -554,8 +554,10 @@ icon_cctv:
     custom_fields:
       icon:
         - width: 60%
-        - margin-top: -15%
-        - margin-left: -5%
+        # ANTERIOR: margin-top: -15% e margin-left: -5% (deslocava icone para cima/esquerda)
+        # FIX: removido offsets negativos para centralizar icone no botao
+        - margin-top: 0
+        - margin-left: 0
         - fill: >
             [[[ return variables.state === 'streaming'
               ? '#8a3333'

@@ -32,23 +32,26 @@
   tap_action:
     action: toggle
     haptic: success
+  # ANTERIOR: custom_fields com JS template para ON/OFF badge (nao atualizava em browser_mod popup)
+  # FIX: state: section nativa do button-card com HTML estatico — mais reativo
   custom_fields:
-    on_off: >
-      [[[
-        const isOn = entity.state === 'on';
-        const color = isOn ? '#3b82f6' : 'rgba(255,255,255,0.2)';
-        const text = isOn ? 'ON' : 'OFF';
-        return `<span style="
-          font-size: 9px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-          color: ${isOn ? '#fff' : 'rgba(255,255,255,0.4)'};
-          background: ${color};
-          padding: 1px 6px;
-          border-radius: 8px;
-          margin-right: 4px;
-        ">${text}</span>`;
-      ]]]
+    on_off: |
+      <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-right:4px">OFF</span>
+  state:
+    - value: 'on'
+      custom_fields:
+        on_off: |
+          <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:#fff;background:#3b82f6;padding:1px 6px;border-radius:8px;margin-right:4px">ON</span>
+      styles:
+        icon:
+          - color: '#f0c040'
+    - value: 'off'
+      custom_fields:
+        on_off: |
+          <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-right:4px">OFF</span>
+      styles:
+        icon:
+          - color: 'rgba(255,255,255,0.25)'
   styles:
     card:
       - background: none
@@ -76,10 +79,7 @@
       - width: 24px
     icon:
       - width: 24px
-      - color: >
-          [[[
-            return entity.state === 'on' ? '#f0c040' : 'rgba(255,255,255,0.25)';
-          ]]]
+      - color: 'rgba(255,255,255,0.25)'
 
 # ── Linha 1: 5 switches de iluminacao ──
 - type: grid

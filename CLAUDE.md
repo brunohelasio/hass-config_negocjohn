@@ -936,3 +936,80 @@ Implementacao consolidada dos problemas prioritarios reportados pelo usuario.
 | P13 | Planta 3D ausente | ✅ RESOLVIDO | Botao no footer |
 
 ---
+
+## Registro de Implementacao — Diagnostico Raiz Cameras e Media (2026-03-29)
+
+Correcao dos ButtonCardErrors causados por entidades do repositorio original ngocjohn
+que nao existem no setup do usuario. Todas as alteracoes seguem a Regra de Ouro
+(codigo original comentado, nunca deletado).
+
+### Diagnostico Raiz
+
+**Cameras — Causa dos ButtonCardErrors no grid principal:**
+O template `camera` em `tpl_sectors.yaml` tinha 3 dependencias que causavam erros JS:
+1. `stream_state` variable: `states[variables.stream_status].state` → `stream_status` indefinido → JS error
+2. `tooltip`: `states[variables.battery].state+' %'` → `battery` era '' → `states[''].state` → JS error
+3. `tap_action`: `button.press` usando `states[variables.stream_status]` → JS error
+
+**Media — Causa dos ButtonCardErrors no grid principal:**
+1. Template `currently_playing` em `tpl_media.yaml`: card_mod hardcoded com `media_player.mass_universal_airplay` e `media_player.spotifyplus_ngoc_nguyen`
+2. `media_universal.yaml`: criava `media_player.currently_playing` a partir de entidades europeias inexistentes
+3. `hass_group.yaml`: grupos `cameras`, `device_players`, `conditional_media`, `homepod_airplay`, `homepod_mass_airplay` todos com entidades europeias
+4. `currently_playing.yaml` popup: `sensor.youtube_thumbnail`, `sensor.muted_color`, `sensor.dark_vibrant_color` nao existem
+
+### Alteracoes Implementadas
+
+| Arquivo | Acao | Detalhes |
+|---------|------|----------|
+| `tpl_sectors.yaml` | Camera template reescrito | Removidos: battery, stream_status, button.press. tap_action → more-info. background-image usa entity.attributes.entity_picture direto. Circle e icon_spot_cam mantidos. |
+| `tpl_media.yaml` | currently_playing card_mod corrigido | Removida referencia hardcoded a mass_universal_airplay e spotifyplus_ngoc_nguyen. Substituida por spotifyplus_bruno_helasio. |
+| `hass_group.yaml` | Grupos cameras e media atualizados | cameras: 8 cameras do usuario. device_players: smart_tv_pro_2 + spotifyplus_bruno_helasio. conditional_media: TV + Spotify + 4 Echo devices. homepod_airplay e homepod_mass_airplay comentados. |
+| `media_universal.yaml` | Reescrito com entidades do usuario | media_player.currently_playing: Spotify, Smart TV, Echo Show, 3 Echo Pop. select.conditional_media usa group.conditional_media atualizado. sensor.currently_playing simplificado (sem homepod groups). |
+| `cameras.yaml` (popup) | Comentado inteiro | Popup de cameras europeias (terasa, zahrada, doorway, kids_room). Nao era referenciado por codigo ativo (grid usa cameras_user.yaml). Placeholder `action: none` mantido. |
+| `currently_playing.yaml` (popup) | Corrigido entity refs | sensor.youtube_thumbnail → entity_picture direto. sensor.dark_vibrant_color → var(--mush-rgb-blue-grey). sensor.muted_color → var(--mush-rgb-blue-grey). living_room_tv → smart_tv_pro_2. bedroom_tv removido. |
+
+### Arquivos NAO alterados (entidades europeias em codigo JA comentado)
+
+Estes arquivos contem referencia a entidades europeias, mas APENAS em linhas ja comentadas:
+- `tpl_grid_cameras.yaml`: cameras europeias ja estavam comentadas
+- `grid_media.yaml`: 3 versoes anteriores com conditionals ja comentadas
+- `atv_remote.yaml`: sensor.youtube_thumbnail em linhas comentadas e nao-comentadas (arquivo nao referenciado por codigo ativo)
+- `floorplan/mediaplayers.yaml`: sensor.youtube_thumbnail (floorplan nao ativo no grid principal)
+
+### Arquivos com entidades europeias em automations (NAO alterados)
+
+`automations.yaml` contem ~30 referencias a cameras europeias (doorway, terasa, zahrada, kids_room)
+em automacoes de snapshot e monitoramento. Estas automacoes falham silenciosamente no HA
+quando as entidades nao existem — nao causam ButtonCardErrors no dashboard.
+Recomendacao: comentar as automacoes europeias em sessao futura dedicada.
+
+### Resumo de Entidades Substituidas
+
+| Entidade Original (ngocjohn) | Entidade Nova (usuario) | Tipo |
+|-------------------------------|-------------------------|------|
+| camera.doorway | camera.sl_camera_2 | camera |
+| camera.kids_room | camera.cz_camera_2 | camera |
+| camera.terasa | camera.vr_camera_2 | camera |
+| camera.zahrada | camera.as_camera_2 | camera |
+| media_player.living_room_tv | media_player.smart_tv_pro_2 | media_player |
+| media_player.spotifyplus_ngoc_nguyen | media_player.spotifyplus_bruno_helasio | media_player |
+| media_player.mass_universal_airplay | (removido — nao existe) | media_player |
+| media_player.kodi_atv | (removido — nao existe) | media_player |
+| media_player.shield (bedroom_tv) | (removido — nao existe) | media_player |
+| media_player.playstation_5 | (removido — nao existe) | media_player |
+| sensor.youtube_thumbnail | (removido — nao existe) | sensor |
+| sensor.muted_color | (removido — nao existe) | sensor |
+| sensor.dark_vibrant_color | (removido — nao existe) | sensor |
+| sensor.doorway_battery_percentage | (removido — nao existe) | sensor |
+| sensor.terasa_battery_percentage | (removido — nao existe) | sensor |
+| sensor.zahrada_battery_percentage | (removido — nao existe) | sensor |
+
+### Para Restore
+
+Todos os blocos originais estao comentados com marcadores:
+- `# --- CÓDIGO ORIGINAL COMENTADO (...) ---`
+- `# --- FIM CÓDIGO ORIGINAL ---`
+
+Para restaurar qualquer bloco: descomentar o original e comentar a versao NOVO.
+
+---

@@ -11,7 +11,7 @@ browser_mod:
       style:
         .: |
           :host {
-            --mdc-dialog-scrim-color: rgba({{ states('sensor.dark_vibrant_color') }}, 0.2);
+            --mdc-dialog-scrim-color: rgba(var(--mush-rgb-blue-grey), 0.2);
             --ha-card-border-radius: 16px !important;
           }
           ha-header-bar {
@@ -83,15 +83,19 @@ browser_mod:
                   content: "";
                 {% endif %}
                 {% if not is_state('media_player.currently_playing', 'idle') and not is_state('media_player.currently_playing', 'off') %}
-                {% set source = state_attr('media_player.currently_playing', 'source') %}
-                {% set appname = state_attr('media_player.currently_playing', 'app_id') %}
-                  {% if source == 'YouTube' %}
-                    background: url( '{{ states.sensor.youtube_thumbnail.attributes.entity_picture }}' ) center no-repeat;
-                    {% elif appname == 'com.google.ios.youtube' %}
-                    background: url( '{{ states.sensor.youtube_thumbnail.attributes.entity_picture }}' ) center no-repeat;
-                    {% else %}
-                    background: url( '{{ state_attr('media_player.currently_playing', "entity_picture") }}' ) center no-repeat;
-                  {% endif %}
+                  {# --- CÓDIGO ORIGINAL COMENTADO (sensor.youtube_thumbnail não existe) ---
+                  {% set source = state_attr('media_player.currently_playing', 'source') %}
+                  {% set appname = state_attr('media_player.currently_playing', 'app_id') %}
+                    {% if source == 'YouTube' %}
+                      background: url( '{{ states.sensor.youtube_thumbnail.attributes.entity_picture }}' ) center no-repeat;
+                      {% elif appname == 'com.google.ios.youtube' %}
+                      background: url( '{{ states.sensor.youtube_thumbnail.attributes.entity_picture }}' ) center no-repeat;
+                      {% else %}
+                      background: url( '{{ state_attr('media_player.currently_playing', "entity_picture") }}' ) center no-repeat;
+                    {% endif %}
+                  --- FIM CÓDIGO ORIGINAL --- #}
+                  {# NOVO: usa entity_picture direto (funciona com qualquer media player) #}
+                  background: url( '{{ state_attr("media_player.currently_playing", "entity_picture") }}' ) center no-repeat;
                 {% endif %}
                 background-size: contain;
                 margin: 4px 4px 16px;
@@ -100,10 +104,8 @@ browser_mod:
                 {% set active_child = state_attr(config.entity, 'active_child') %}
                 {% if active_child == 'media_player.spotifyplus_bruno_helasio' %}
                   aspect-ratio: 1 / 1;
-                {% elif active_child == 'media_player.living_room_tv' %}
+                {% elif active_child == 'media_player.smart_tv_pro_2' %}
                   aspect-ratio: 16 / 9;
-                {% elif active_child == 'media_player.bedroom_tv' %}
-                  aspect-ratio: 2 / 3;
                 {% else %}
                   aspect-ratio: 1 / 1;
                 {% endif %}
@@ -159,15 +161,19 @@ browser_mod:
             width: 100%;
             background: url('/local/idle_art.png') center no-repeat;
             {% if not is_state('media_player.currently_playing', 'idle') and not is_state('media_player.currently_playing', 'off') %}
-            {% set source = state_attr('media_player.currently_playing', 'source') %}
-            {% set appname = state_attr('media_player.currently_playing', 'app_id') %}
-              {% if source == 'YouTube' %}
-                background: url( '{{ states.sensor.youtube_thumbnail.attributes.entity_picture }}' ) center no-repeat;
-                {% elif appname == 'com.google.ios.youtube' %}
-                background: url( '{{ states.sensor.youtube_thumbnail.attributes.entity_picture }}' ) center no-repeat;
-                {% else %}
-                background: url( '{{ state_attr('media_player.currently_playing', "entity_picture") }}' ) center no-repeat;
-              {% endif %}
+              {# --- CÓDIGO ORIGINAL COMENTADO (sensor.youtube_thumbnail não existe) ---
+              {% set source = state_attr('media_player.currently_playing', 'source') %}
+              {% set appname = state_attr('media_player.currently_playing', 'app_id') %}
+                {% if source == 'YouTube' %}
+                  background: url( '{{ states.sensor.youtube_thumbnail.attributes.entity_picture }}' ) center no-repeat;
+                  {% elif appname == 'com.google.ios.youtube' %}
+                  background: url( '{{ states.sensor.youtube_thumbnail.attributes.entity_picture }}' ) center no-repeat;
+                  {% else %}
+                  background: url( '{{ state_attr('media_player.currently_playing', "entity_picture") }}' ) center no-repeat;
+                {% endif %}
+              --- FIM CÓDIGO ORIGINAL --- #}
+              {# NOVO: usa entity_picture direto #}
+              background: url( '{{ state_attr("media_player.currently_playing", "entity_picture") }}' ) center no-repeat;
             {% endif %}
             filter: blur(150px) saturate(200%);
             background-size: 100% 100%;
@@ -178,8 +184,8 @@ browser_mod:
           }
           :host {
             --album-art-color:
-            {% if not is_state('media_player.currently_playing', 'idle') and not is_state('media_player.currently_playing', 'off') and states('sensor.muted_color') not in ['unknown', 'unavaible'] %}
-              {{ states('sensor.muted_color') }}
+            {% if not is_state('media_player.currently_playing', 'idle') and not is_state('media_player.currently_playing', 'off') %}
+              var(--mush-rgb-blue-grey)
             {% else %}
             var(--mush-rgb-blue-grey)
             {% endif %};

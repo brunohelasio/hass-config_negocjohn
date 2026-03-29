@@ -1216,6 +1216,113 @@ doors:
   #                    CAMERA                     #
   #                                               #
   #################################################
+# --- CÓDIGO ORIGINAL COMENTADO (camera template com dependências europeias: battery, stream_status, button.press) ---
+# camera:
+#   template:
+#     - base
+#     - circle
+#     - icon_spot_cam
+#   variables:
+#     camera_on: >
+#       [[[ return !entity || ['streaming'].indexOf(entity.state) !== -1; ]]]
+#     camera_off: >
+#       [[[ return !entity || ['off', 'standby', 'unknown', 'unavailable', 'idle'].indexOf(entity.state) !== -1; ]]]
+#     is_bellow_horrizon: >
+#       [[[
+#         if (states['sun.sun'].state == 'below_horizon') {
+#             return true;
+#         }
+#       ]]]
+#     battery: ''
+#     stream_state: >
+#       [[[
+#         return !entity || states[variables.stream_status].state;
+#       ]]]
+#   show_name: false
+#   # tap_action:
+#   #   action: call-service
+#   #   service: automation.trigger
+#   #   service_data:
+#   #     entity_id: automation.camera_snapshot
+#   tooltip: >
+#     [[[
+#       return states[variables.battery].state+' %';
+#     ]]]
+#
+#   double_tap_action:
+#     action: fire-dom-event
+#     browser_mod:
+#       service: browser_mod.more_info
+#       data:
+#         entity: >
+#           [[[
+#             return variables.entity_id;
+#           ]]]
+#   tap_action:
+#     action: call-service
+#     service: button.press
+#     service_data:
+#       entity_id: >
+#         [[[
+#             let isIdle = states[variables.stream_status].state === 'StreamStatus.IDLE',
+#                 pressAction = isIdle ? 'start' : 'stop';
+#             return `button.${entity.entity_id.split('.')[1]}_${pressAction}_rtsp_stream`;
+#         ]]]
+#
+#   styles:
+#     card:
+#       - padding: 8%
+#       - background-color: none
+#       - background-size: cover
+#       # - background-position: center
+#       - background-repeat: no-repeat
+#       - background-image: >
+#           [[[
+#               let picUrl = variables.image_entity !== undefined
+#                   ? states[variables.image_entity].attributes.entity_picture
+#                   : variables.entity_picture;
+#               return `linear-gradient(0deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 100%), url(${picUrl})`;
+#           ]]]
+#
+#     custom_fields:
+#       circle:
+#         - width: 50%
+#   custom_fields:
+#     circle: >
+#       [[[
+#         if (entity.state === 'streaming' || entity.state === 'idle') {
+#           let time = c => {
+#               let s = (c/1e3),
+#                   m = (c/6e4),
+#                   h = (c/36e5),
+#                   d = (c/864e5);
+#               return s < 60
+#                   ? parseInt(s) + 's'
+#                   : m < 60 ? parseInt(m) + 'm'
+#                   : h < 24 ? parseInt(h) + 'h'
+#                   : parseInt(d) + 'd';
+#           };
+#             let last_changed = time(Date.now() - Date.parse(entity.last_changed)),
+#               stroke = variables.state === 'streaming' || variables.state === 'on'  ? '#000000' : 'rgba(255,255,255,0.1)',
+#               fill = variables.is_bellow_horrizon && variables.state === 'idle' || variables.state === 'off' ? 'rgba(255,255,255,0.1)' : '#efefef95',
+#               text = variables.is_bellow_horrizon && variables.state === 'idle' || variables.state === 'off' ? '#8d8e90' : '#000000';
+#         if (entity) {
+#         return `
+#           <svg viewBox="0 0 50 50">
+#             <circle cx="25" cy="25" r="20.5" stroke="${stroke}" stroke-width="2.5" fill="${fill}" />
+#             <text x="50%" y="54%" fill="${text}" font-size="14" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">${last_changed}</text>
+#           </svg>
+#         `;
+#         }}
+#       ]]]
+# --- FIM CÓDIGO ORIGINAL ---
+
+# NOVO: camera template genérico — sem dependências de battery, stream_status, button.press
+# Funciona com qualquer entidade camera.* (WiFi, RTSP, polling)
+# tap_action: more-info (abre o feed da camera)
+# double_tap_action: more-info via browser_mod
+# background-image: usa entity_picture da entidade (funciona com polling)
+# circle: mostra tempo desde última mudança de estado
 camera:
   template:
     - base
@@ -1232,22 +1339,9 @@ camera:
             return true;
         }
       ]]]
-    battery: ''
-    stream_state: >
-      [[[
-        return !entity || states[variables.stream_status].state;
-      ]]]
   show_name: false
-  # tap_action:
-  #   action: call-service
-  #   service: automation.trigger
-  #   service_data:
-  #     entity_id: automation.camera_snapshot
-  tooltip: >
-    [[[
-      return states[variables.battery].state+' %';
-    ]]]
-
+  tap_action:
+    action: more-info
   double_tap_action:
     action: fire-dom-event
     browser_mod:
@@ -1257,30 +1351,19 @@ camera:
           [[[
             return variables.entity_id;
           ]]]
-  tap_action:
-    action: call-service
-    service: button.press
-    service_data:
-      entity_id: >
-        [[[
-            let isIdle = states[variables.stream_status].state === 'StreamStatus.IDLE',
-                pressAction = isIdle ? 'start' : 'stop';
-            return `button.${entity.entity_id.split('.')[1]}_${pressAction}_rtsp_stream`;
-        ]]]
 
   styles:
     card:
       - padding: 8%
       - background-color: none
       - background-size: cover
-      # - background-position: center
       - background-repeat: no-repeat
       - background-image: >
           [[[
-              let picUrl = variables.image_entity !== undefined
-                  ? states[variables.image_entity].attributes.entity_picture
-                  : variables.entity_picture;
-              return `linear-gradient(0deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 100%), url(${picUrl})`;
+              let picUrl = entity && entity.attributes ? entity.attributes.entity_picture : '';
+              return picUrl
+                ? `linear-gradient(0deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 100%), url(${picUrl})`
+                : 'none';
           ]]]
 
     custom_fields:
@@ -1289,7 +1372,7 @@ camera:
   custom_fields:
     circle: >
       [[[
-        if (entity.state === 'streaming' || entity.state === 'idle') {
+        if (entity && (entity.state === 'streaming' || entity.state === 'idle')) {
           let time = c => {
               let s = (c/1e3),
                   m = (c/6e4),

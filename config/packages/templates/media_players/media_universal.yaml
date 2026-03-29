@@ -1,20 +1,109 @@
+# --- CÓDIGO ORIGINAL COMENTADO (media_universal com entidades europeias ngocjohn) ---
+# Cria media_player.currently_playing e select.conditional_media a partir de entidades
+# que NÃO existem no setup do usuário (mass_universal_airplay, spotifyplus_ngoc_nguyen,
+# living_room_tv, bedroom_tv, HomePods europeus).
+# Mantido comentado para referência. Pode ser adaptado quando o usuário quiser
+# recriar media_player.currently_playing com suas próprias entidades.
+#
+# media_player:
+#   - platform: universal ### CURRENTLY PLAYING ###
+#     name: Currently Playing
+#     unique_id: currently_playing
+#     children:
+#       - media_player.mass_universal_airplay
+#       - media_player.spotifyplus_ngoc_nguyen
+#       - media_player.living_room_tv
+#       - media_player.bedroom_tv
+#   - platform: universal ### CURRENTLY PLAYING ###
+#     name: Homepod Airplay Group
+#     unique_id: homepod_airplay_media
+#     children:
+#       - media_player.office
+#       - media_player.bathroom_homepod
+#       - media_player.bedroom_homepod
+#       - media_player.living_room
+#
+# template:
+#   - select:
+#       - name: conditional_media
+#         state: >-
+#           {% set recently_added = 'Recently added' %}
+#           {% set paused_timeout_minutes = 2 %}
+#           {% set idled_timeout_minutes = 1 %}
+#           {% set media_players = expand('group.conditional_media') %}
+#
+#           {% macro media(state) %}
+#           {% set state = media_players | selectattr('state','eq',state) | list %}
+#           {% set last_changed = recently_added if state | length == 0 else state | map(attribute='last_changed') | list | max %}
+#             {{ state | selectattr('last_changed','eq', last_changed) | map(attribute='name') | list | join }}
+#           {% endmacro %}
+#
+#           {% set playing = media_players | selectattr('state','eq','playing') | list %}
+#           {% set timeout_playing = False if playing | length == 0 else (as_timestamp(now()) - as_timestamp(playing | map(attribute='last_changed') | list | max)) < paused_timeout_minutes * 60 %}
+#
+#           {% set paused = media_players | selectattr('state','eq','paused') | list %}
+#           {% set timeout_paused = False if paused | length == 0 else (as_timestamp(now()) - as_timestamp(paused | map(attribute='last_changed') | list | max)) < paused_timeout_minutes * 60 %}
+#
+#           {% set idled = media_players | selectattr('state','eq','idle') | list %}
+#           {% set timeout_idled = False if idled | length == 0 else (as_timestamp(now()) - as_timestamp(idled | map(attribute='last_changed') | list | max)) < idled_timeout_minutes * 60 %}
+#
+#           {% if playing %}
+#             {{ media('playing') if timeout_playing else media('paused') if timeout_paused else media('playing') }}
+#           {% elif paused %}
+#             {{ media('paused') if timeout_paused else media('idle') if timeout_idled else recently_added }}
+#           {% elif idled %}
+#             {{ media('idle') if timeout_idled else recently_added }}
+#           {% else %}
+#             {{ recently_added }}
+#           {% endif %}
+#         options: >
+#           {% set recently_added = ['Recently added'] %}
+#           {% set media_players = expand('group.conditional_media') %}
+#           {{ recently_added + media_players | map(attribute='name') | list }}
+#         select_option:
+#           service: select.select_option
+#           target:
+#             entity_id: select.conditional_media
+#           data:
+#             option: >
+#               {{ option }}
+#
+#   - sensor:
+#       # SENSOR - MEDIA PLAYER
+#       - name: Currently playing
+#         unique_id: currently_playing
+#         state: >-
+#           {% if this.attributes.device | list | count > 0 %} on {% else %} off {% endif %}
+#         attributes:
+#           device: >-
+#             {% set p2 = expand(states.group.homepod_airplay) | selectattr( 'state', 'in', ['on', 'playing']) | map(attribute='entity_id') | list %}
+#             {% set p1 = expand(states.group.device_players) | rejectattr('entity_id', 'in', ['media_player.spotifyplus_ngoc_nguyen']) | selectattr( 'state', 'in', ['on', 'playing', 'idle', 'paused']) | map(attribute='entity_id') | list %}
+#             {% set p3 = expand(states.group.homepod_mass_airplay) | selectattr( 'state', 'in', ['on', 'playing']) | map(attribute='entity_id') | list %}
+#             {{ p1 + p2 + p3 }}
+#           device_playing: >-
+#             {{ this.attributes.device | list | count }} Playing
+#           # filter Mass airplay homepods that are not active
+#           mass_homepods: >-
+#             {{ expand('group.homepod_mass_airplay')
+#                 | rejectattr('state', 'in', ['idle', 'off'])
+#                 | list
+#                 | count
+#             }}
+# --- FIM CÓDIGO ORIGINAL ---
+
+# NOVO: media_player universal com entidades do usuário (Brasil)
+# Cria media_player.currently_playing a partir das entidades reais
 media_player:
-  - platform: universal ### CURRENTLY PLAYING ###
+  - platform: universal
     name: Currently Playing
     unique_id: currently_playing
     children:
-      - media_player.mass_universal_airplay
-      - media_player.spotifyplus_ngoc_nguyen
-      - media_player.living_room_tv
-      - media_player.bedroom_tv
-  - platform: universal ### CURRENTLY PLAYING ###
-    name: Homepod Airplay Group
-    unique_id: homepod_airplay_media
-    children:
-      - media_player.office
-      - media_player.bathroom_homepod
-      - media_player.bedroom_homepod
-      - media_player.living_room
+      - media_player.spotifyplus_bruno_helasio
+      - media_player.smart_tv_pro_2
+      - media_player.echo_show
+      - media_player.echo_pop_office
+      - media_player.echo_pop_quarto_casal
+      - media_player.echo_pop_marina
 
 template:
   - select:
@@ -69,16 +158,7 @@ template:
           {% if this.attributes.device | list | count > 0 %} on {% else %} off {% endif %}
         attributes:
           device: >-
-            {% set p2 = expand(states.group.homepod_airplay) | selectattr( 'state', 'in', ['on', 'playing']) | map(attribute='entity_id') | list %}
-            {% set p1 = expand(states.group.device_players) | rejectattr('entity_id', 'in', ['media_player.spotifyplus_ngoc_nguyen']) | selectattr( 'state', 'in', ['on', 'playing', 'idle', 'paused']) | map(attribute='entity_id') | list %}
-            {% set p3 = expand(states.group.homepod_mass_airplay) | selectattr( 'state', 'in', ['on', 'playing']) | map(attribute='entity_id') | list %}
-            {{ p1 + p2 + p3 }}
+            {% set p1 = expand(states.group.device_players) | selectattr( 'state', 'in', ['on', 'playing', 'idle', 'paused']) | map(attribute='entity_id') | list %}
+            {{ p1 }}
           device_playing: >-
             {{ this.attributes.device | list | count }} Playing
-          # filter Mass airplay homepods that are not active
-          mass_homepods: >-
-            {{ expand('group.homepod_mass_airplay')
-                | rejectattr('state', 'in', ['idle', 'off'])
-                | list
-                | count
-            }}

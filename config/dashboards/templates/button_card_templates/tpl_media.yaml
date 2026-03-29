@@ -701,11 +701,16 @@ currently_playing:
               -webkit-transform: translate3d(0,0,0);
               content: "";
               background:
-                {% if is_state('media_player.mass_universal_airplay', 'playing') %}
-                  url( '{{ state_attr('media_player.mass_universal_airplay', "entity_picture") }}')
-                {% else %}
-                  url( '{{ state_attr('media_player.spotifyplus_ngoc_nguyen', "entity_picture") }}')
-                {% endif %} center no-repeat;
+                {# --- CÓDIGO ORIGINAL COMENTADO (entidades europeias ngocjohn) ---
+                  {% if is_state('media_player.mass_universal_airplay', 'playing') %}
+                    url( '{{ state_attr("media_player.mass_universal_airplay", "entity_picture") }}')
+                  {% else %}
+                    url( '{{ state_attr("media_player.spotifyplus_ngoc_nguyen", "entity_picture") }}')
+                  {% endif %}
+                --- FIM CÓDIGO ORIGINAL --- #}
+                {# NOVO: usa entity_picture da entidade Spotify do usuário #}
+                url( '{{ state_attr('media_player.spotifyplus_bruno_helasio', "entity_picture") }}')
+                center no-repeat;
               background-size: contain;
               filter: drop-shadow(4px 4px 6px rgba(0, 0, 0, 0.5));
               border-radius: var(--control-border-radius);

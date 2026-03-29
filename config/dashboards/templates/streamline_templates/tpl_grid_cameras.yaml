@@ -1,72 +1,128 @@
 ## DASHBOARD GRID CAMERAS ##
+# --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA (cameras europeias) ---
+# grid_cam_door:
+#   card:
+#     type: custom:button-card
+#     entity: camera.doorway
+#     name: ' '
+#     hold_action: !include ../../shared/popup/cameras.yaml
+#     variables:
+#       battery: sensor.doorway_battery_percentage
+#     template:
+#       - camera
+#       - loader
+#     styles:
+#       card:
+#         - background-position: center
+# grid_cam_kids:
+#   card:
+#     type: custom:button-card
+#     entity: camera.kids_room
+#     name: ' '
+#     hold_action: !include ../../shared/popup/cameras.yaml
+#     template:
+#       - camera
+#       - loader
+#     variables:
+#       battery: 'sensor.doorway_battery_percentage'
+#       stream_status: 'sensor.kids_room_stream_status'
+#       image_entity: 'image.kids_room_cam_snapshot'
+#     double_tap_action:
+#       action: fire-dom-event
+#       browser_mod:
+#         service: browser_mod.popup
+#         data:
+#           title: 'Kids Room'
+#           content:
+#             type: custom:webrtc-camera
+#             entity: camera.kids_room
+#     styles:
+#       card:
+#         - background-position: center
+# grid_cam_terrace:
+#   card:
+#     type: custom:button-card
+#     entity: camera.terasa
+#     name: ' '
+#     hold_action: !include ../../shared/popup/cameras.yaml
+#     template:
+#       - camera
+#       - loader
+#     variables:
+#       battery: sensor.terasa_battery_percentage
+#     styles:
+#       card:
+#         - background-position: center
+# grid_cam_garden:
+#   card:
+#     type: custom:button-card
+#     entity: camera.zahrada
+#     name: ' '
+#     hold_action: !include ../../shared/popup/cameras.yaml
+#     template:
+#       - camera
+#       - loader
+#     variables:
+#       battery: sensor.zahrada_battery_percentage
+# --- FIM CÓDIGO ORIGINAL ---
 
-# CAM DOOR
-grid_cam_door:
+# NOVO: Cameras do apartamento do usuario (WiFi)
+# 4 cameras: Sala, Varanda, Cozinha, Area de Servico
+# Grid: camera_view: auto (polling, nao live) — melhor para cameras WiFi no grid principal
+# Hold_action: abre popup cameras_user.yaml (todas as 8 cameras)
+
+# CAM SALA
+grid_cam_sala:
   card:
     type: custom:button-card
-    entity: camera.doorway
+    entity: camera.sl_camera_2
     name: ' '
-    hold_action: !include ../../shared/popup/cameras.yaml
-    variables:
-      battery: sensor.doorway_battery_percentage
+    hold_action: !include ../../shared/popup/cameras_user.yaml
     template:
       - camera
       - loader
     styles:
       card:
         - background-position: center
-  # CAM KIDS ROOM
-grid_cam_kids:
+
+# CAM VARANDA
+grid_cam_varanda:
   card:
     type: custom:button-card
-    entity: camera.kids_room
+    entity: camera.vr_camera_2
     name: ' '
-    hold_action: !include ../../shared/popup/cameras.yaml
+    hold_action: !include ../../shared/popup/cameras_user.yaml
     template:
       - camera
       - loader
-    variables:
-      battery: 'sensor.doorway_battery_percentage'
-      stream_status: 'sensor.kids_room_stream_status'
-      image_entity: 'image.kids_room_cam_snapshot'
-    double_tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.popup
-        data:
-          title: 'Kids Room'
-          content:
-            type: custom:webrtc-camera
-            entity: camera.kids_room
-
     styles:
       card:
         - background-position: center
 
-# CAM TERRACE
-grid_cam_terrace:
+# CAM COZINHA
+grid_cam_cozinha:
   card:
     type: custom:button-card
-    entity: camera.terasa
+    entity: camera.cz_camera_2
     name: ' '
-    hold_action: !include ../../shared/popup/cameras.yaml
+    hold_action: !include ../../shared/popup/cameras_user.yaml
     template:
       - camera
       - loader
-    variables:
-      battery: sensor.terasa_battery_percentage
     styles:
       card:
         - background-position: center
-  # CAM GARDEN
-grid_cam_garden:
+
+# CAM AREA DE SERVICO
+grid_cam_area_servico:
   card:
     type: custom:button-card
-    entity: camera.zahrada
+    entity: camera.as_camera_2
     name: ' '
-    hold_action: !include ../../shared/popup/cameras.yaml
+    hold_action: !include ../../shared/popup/cameras_user.yaml
     template:
       - camera
       - loader
-    variables:
-      battery: sensor.zahrada_battery_percentage
+    styles:
+      card:
+        - background-position: center

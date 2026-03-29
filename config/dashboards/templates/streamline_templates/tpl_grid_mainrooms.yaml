@@ -26,6 +26,7 @@ grid_office:
       - icon_office
       # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
       - ac_status
+      - alexa_status
       # - change_grid_title
       # - light
     variables:
@@ -46,6 +47,8 @@ grid_office:
       ac_entity: climate.ac_office
       # Motion: vazio ate sensor chegar
       motion: ''
+      # Alexa do Office (Echo Pop Office) — alexa_status mostra icone quando tocando
+      alexa_entity: media_player.echo_pop_office
       # tempsensor: sensor.office_temp_humid_temperature
       # humidsensor: sensor.office_temp_humid_humidity
   # LIVING ROOM GRID
@@ -89,6 +92,7 @@ grid_living_room:
       - motion
       - ac_status
       - media_status
+      - alexa_status
       # REMOVIDO: lights_status (icone de lampada) — retirado a pedido do usuario.
       # O status de luzes continua visivel no state_display (ex: "2 lights · 1h").
       # - lights_status
@@ -105,6 +109,8 @@ grid_living_room:
       ac_entity: climate.sl_ar_condicionado
       # TV/Media da sala
       media_entity: media_player.smart_tv_pro_2
+      # Alexa da sala (Echo Show) — alexa_status mostra icone quando tocando
+      alexa_entity: media_player.echo_show
       # REMOVIDO: circle_input nao e mais necessario no botao principal (sem circle).
       # circle_input: >
       #   [[[

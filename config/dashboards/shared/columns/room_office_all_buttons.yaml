@@ -246,13 +246,15 @@
       }
   cards:
     # PC — switch.macbook (renomeado de MacBook para PC, icone desktop)
+    # FIX: Substituido mdi:desktop-tower-monitor por icon_imac (SVG customizado do repositorio)
+    # Convenção: NUNCA usar mdi: icons — sempre usar icon_* templates de tpl_icons.yaml
     - type: custom:button-card
       entity: switch.macbook
       name: PC
       template:
         - base
-      icon: mdi:desktop-tower-monitor
-      show_icon: true
+        - icon_imac
+      show_icon: false
       tap_action:
         action: toggle
         haptic: success

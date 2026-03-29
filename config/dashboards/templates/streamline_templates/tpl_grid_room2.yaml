@@ -41,6 +41,7 @@ grid_quarto_casal:
     template:
       - rooms_base
       - icon_double_bed
+      - alexa_status
     double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml
     hold_action:
       action: none
@@ -48,6 +49,8 @@ grid_quarto_casal:
       light_entity: light.qc_luz_principal
       # --- ANTERIOR: active: '' (sem sensor) ---
       active: sensor.quarto_casal_active
+      # Alexa do Quarto Casal (Echo Pop) — alexa_status mostra icone quando tocando
+      alexa_entity: media_player.echo_pop_quarto_casal
 
 # QUARTO MIGUEL
 grid_quarto_miguel:
@@ -101,6 +104,7 @@ grid_quarto_marina:
     template:
       - rooms_base
       - icon_double_bed
+      - alexa_status
     double_tap_action: !include ../../shared/popup/rooms/quarto_marina.yaml
     hold_action:
       action: none
@@ -108,6 +112,8 @@ grid_quarto_marina:
       light_entity: light.quarto_marina_switch_4
       # --- ANTERIOR: active: '' (sem sensor) ---
       active: sensor.quarto_marina_active
+      # Alexa do Quarto Marina (Echo Pop) — alexa_status mostra icone quando tocando
+      alexa_entity: media_player.echo_pop_marina
 
 # SHOWER ROOM
 grid_shower:

@@ -3,6 +3,89 @@
 #           GRID MEDIA MIN 1441px               #
 #                                               #
 #################################################
+# --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA (entidades europeias) ---
+# - type: grid
+#   title: Media
+#   view_layout:
+#     grid-area: media
+#     show:
+#       mediaquery: '(min-width: 1441px)'
+#   columns: 1
+#   square: true
+#   cards:
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Recently added
+#       card:
+#         type: custom:added-movie-card
+#         entity: sensor.tmdb_movies_trending
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Living Room TV
+#       card: &ATV
+#         type: custom:button-card
+#         entity: media_player.living_room_tv
+#         name: ' '
+#         triggers_update: sensor.youtube_thumbnail
+#         template:
+#           - universal_media_player
+#           - icon_apple_tv
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Kodi ATV
+#       card: &KODIATV
+#         type: custom:button-card
+#         entity: media_player.kodi_atv
+#         name: ' '
+#         triggers_update: sensor.kodi_picture
+#         template:
+#           - conditional_media
+#           - progress_bar
+#           - tpl_minicontrol
+#           - icon_kodi
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Bedroom TV
+#       card: &BEDROOMTV
+#         type: custom:button-card
+#         entity: media_player.shield
+#         name: 'ShieldTV'
+#         triggers_update: sensor.youtube_thumbnail
+#         template:
+#           - conditional_media
+#           - icon_shieldtv_text
+#           - progress_bar
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: 'PlayStation 5'
+#       card: &PS5
+#         type: custom:button-card
+#         entity: media_player.playstation_5
+#         name: ''
+#         template:
+#           - conditional_media
+#           - icon_playstation
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Mass Universal Airplay
+#       card: &MASSAIRPLAY
+#         type: custom:button-card
+#         entity: media_player.mass_universal_airplay
+#         template:
+#           - universal_media_player
+#           - icon_homepod
+# --- FIM CÓDIGO ORIGINAL ---
+
+# NOVO: Entidades do usuario (TV Sala, Spotify, Alexa por comodo)
+# select.conditional_media deve ser atualizado no HA com as novas opcoes:
+#   TV Sala, Spotify, Echo Show, Echo Pop Office, Echo Pop Quarto Casal, Echo Pop Marina
+# PS5 (switch.ps5_015_power) AGUARDANDO — entidade ficando indisponivel
 - type: grid
   title: Media
   view_layout:
@@ -12,75 +95,77 @@
   columns: 1
   square: true
   cards:
+    # TV SALA — Smart TV Pro 2
     - type: conditional
       conditions:
         - entity: select.conditional_media
-          state: Recently added
-      card:
-        type: custom:added-movie-card
-        entity: sensor.tmdb_movies_trending
-
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Living Room TV
-      card: &ATV
+          state: TV Sala
+      card: &TVSALA
         type: custom:button-card
-        entity: media_player.living_room_tv
+        entity: media_player.smart_tv_pro_2
         name: ' '
-        triggers_update: sensor.youtube_thumbnail
         template:
-          - universal_media_player
-          - icon_apple_tv
-
+          - conditional_media
+          - icon_tv
+    # SPOTIFY
     - type: conditional
       conditions:
         - entity: select.conditional_media
-          state: Kodi ATV
-      card: &KODIATV
+          state: Spotify
+      card: &SPOTIFY
         type: custom:button-card
-        entity: media_player.kodi_atv
+        entity: media_player.spotifyplus_bruno_helasio
         name: ' '
-        triggers_update: sensor.kodi_picture
+        double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
         template:
-          - conditional_media
-          - progress_bar
-          - tpl_minicontrol
-          - icon_kodi
+          - currently_playing
+    # ECHO SHOW (Sala)
     - type: conditional
       conditions:
         - entity: select.conditional_media
-          state: Bedroom TV
-      card: &BEDROOMTV
+          state: Echo Show
+      card: &ECHOSHOW
         type: custom:button-card
-        entity: media_player.shield
-        name: 'ShieldTV'
-        triggers_update: sensor.youtube_thumbnail
+        entity: media_player.echo_show
+        name: 'Echo Show'
         template:
           - conditional_media
-          - icon_shieldtv_text
-          - progress_bar
+          - icon_homepod
+    # ECHO POP OFFICE
     - type: conditional
       conditions:
         - entity: select.conditional_media
-          state: 'PlayStation 5'
-      card: &PS5
+          state: Echo Pop Office
+      card: &ECHOPOPOFFICE
         type: custom:button-card
-        entity: media_player.playstation_5
-        name: ''
+        entity: media_player.echo_pop_office
+        name: 'Echo Office'
         template:
           - conditional_media
-          - icon_playstation
-
+          - icon_homepod
+    # ECHO POP QUARTO CASAL
     - type: conditional
       conditions:
         - entity: select.conditional_media
-          state: Mass Universal Airplay
-      card: &MASSAIRPLAY
+          state: Echo Pop Quarto Casal
+      card: &ECHOPOPQCASAL
         type: custom:button-card
-        entity: media_player.mass_universal_airplay
+        entity: media_player.echo_pop_quarto_casal
+        name: 'Echo Q.Casal'
         template:
-          - universal_media_player
+          - conditional_media
+          - icon_homepod
+    # ECHO POP MARINA
+    - type: conditional
+      conditions:
+        - entity: select.conditional_media
+          state: Echo Pop Marina
+      card: &ECHOPOPMARINA
+        type: custom:button-card
+        entity: media_player.echo_pop_marina
+        name: 'Echo Marina'
+        template:
+          - conditional_media
           - icon_homepod
 
 #################################################
@@ -88,6 +173,62 @@
 #                     MEDIA                     #
 #                                               #
 #################################################
+# --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA (entidades europeias) ---
+# - type: grid
+#   title: Media
+#   view_layout:
+#     grid-area: media
+#     show:
+#       mediaquery: '(min-height: 463px) and (max-width: 1440px)'
+#   columns: 1
+#   cards:
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Recently added
+#       card:
+#         type: custom:added-movie-card
+#         entity: sensor.tmdb_movies_trending
+#         show_item_count: 10
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Living Room TV
+#       card: *ATV
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Bedroom TV
+#       card: *BEDROOMTV
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Kodi ATV
+#       card: *KODIATV
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Spotify
+#       card:
+#         type: custom:button-card
+#         entity: media_player.spotifyplus_ngoc_nguyen
+#         name: ' '
+#         double_tap_action: !include ../../shared/popup/media_spotify.yaml
+#         template:
+#           - currently_playing
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: PlayStation 5
+#       card: *PS5
+#     - type: conditional
+#       conditions:
+#         - entity: select.conditional_media
+#           state: Mass Player Group
+#       card: *MASSAIRPLAY
+# --- FIM CÓDIGO ORIGINAL ---
+
+# NOVO: Entidades do usuario (tablet/responsive, max-width: 1440px)
 - type: grid
   title: Media
   view_layout:
@@ -96,52 +237,42 @@
       mediaquery: '(min-height: 463px) and (max-width: 1440px)'
   columns: 1
   cards:
+    # TV SALA
     - type: conditional
       conditions:
         - entity: select.conditional_media
-          state: Recently added
-      card:
-        type: custom:added-movie-card
-        entity: sensor.tmdb_movies_trending
-        show_item_count: 10
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Living Room TV
-      card: *ATV
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Bedroom TV
-      card: *BEDROOMTV
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Kodi ATV
-      card: *KODIATV
+          state: TV Sala
+      card: *TVSALA
+    # SPOTIFY
     - type: conditional
       conditions:
         - entity: select.conditional_media
           state: Spotify
-      card:
-        type: custom:button-card
-        entity: media_player.spotifyplus_ngoc_nguyen
-        name: ' '
-        # ANTERIOR: double_tap_action: !include ../../shared/popup/spotify_playlist.yaml
-        double_tap_action: !include ../../shared/popup/media_spotify.yaml
-        template:
-          - currently_playing
-          # - conditional_media
+      card: *SPOTIFY
+    # ECHO SHOW (Sala)
     - type: conditional
       conditions:
         - entity: select.conditional_media
-          state: PlayStation 5
-      card: *PS5
+          state: Echo Show
+      card: *ECHOSHOW
+    # ECHO POP OFFICE
     - type: conditional
       conditions:
         - entity: select.conditional_media
-          state: Mass Player Group
-      card: *MASSAIRPLAY
+          state: Echo Pop Office
+      card: *ECHOPOPOFFICE
+    # ECHO POP QUARTO CASAL
+    - type: conditional
+      conditions:
+        - entity: select.conditional_media
+          state: Echo Pop Quarto Casal
+      card: *ECHOPOPQCASAL
+    # ECHO POP MARINA
+    - type: conditional
+      conditions:
+        - entity: select.conditional_media
+          state: Echo Pop Marina
+      card: *ECHOPOPMARINA
 # #################################################
 # #                                               #
 # #           GRID MEDIA MIN 1441px               #

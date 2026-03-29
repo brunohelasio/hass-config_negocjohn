@@ -61,7 +61,7 @@
                 left: 50%;
                 transform: translateX(-50%);
                 font-family: 'Arial Black', Impact, sans-serif;
-                font-size: 2.2em;
+                font-size: clamp(1.4em, 3vw, 2.2em);
                 font-weight: 900;
                 color: #e50914;
                 letter-spacing: 0.15em;

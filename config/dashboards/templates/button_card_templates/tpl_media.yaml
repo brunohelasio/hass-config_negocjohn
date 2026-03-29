@@ -2210,8 +2210,6 @@ universal_media_player:
       [[[ return 'rgb(96, 125, 139)'; ]]]
     vibrant_dark_color: >
       [[[ return 'rgb(55, 71, 79)'; ]]]
-        return `rgb(${color})`;
-      ]]]
     tilt_enable: >
       [[[
         return false;

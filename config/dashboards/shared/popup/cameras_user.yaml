@@ -1,10 +1,17 @@
 # ══════════════════════════════════════════════════════════════════════════
 # POPUP DE CAMERAS — Apartamento do usuario
-# 8 cameras em grid 2x4 (2 colunas, 4 linhas)
+# 8 cameras em layout 3-3-2 (3 colunas, 3 linhas)
 # Entidades: sl_camera_2, vr_camera_2, cz_camera_2, as_camera_2,
 #            of_camera_2, camera_quarto_casal_2, qmi_camera_2, qma_camera_2
 # Estilo baseado no cameras.yaml original do sagaland93/ngocjohn
 # ══════════════════════════════════════════════════════════════════════════
+# --- CÓDIGO ANTERIOR COMENTADO PARA REFERÊNCIA ---
+# Layout anterior: grid 2x4 (2 colunas, 4 linhas) — fazia scroll no tablet
+# grid-template-columns: repeat(2, 1fr)
+# Cada camera com picture-entity sem tap_action (sem ampliar)
+# --- FIM CÓDIGO ANTERIOR ---
+# NOVO: Layout 3-3-2 (3 colunas) — cabe tudo sem scroll
+# Cada camera abre popup ampliado ao clicar (more-info nativo do HA)
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
@@ -36,15 +43,15 @@ browser_mod:
           .mdc-dialog__surface {
             width: 65vw !important;
             max-width: 980px !important;
-            max-height: 90vh !important;
+            max-height: 88vh !important;
             overflow-y: auto !important;
           }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-gap: 8px
-        grid-template-columns: repeat(2, 1fr)
+        grid-gap: 6px
+        grid-template-columns: repeat(3, 1fr)
         grid-template-rows: auto
         margin: 0
         padding: 0.5rem
@@ -52,83 +59,102 @@ browser_mod:
           '(max-width: 800px)':
             grid-template-columns: 1fr
       cards:
+        # ── Linha 1: 3 cameras ──
         # SL - Camera (Sala)
         - type: picture-entity
           entity: camera.sl_camera_2
           camera_view: auto
           show_name: true
           show_state: false
-          name: SL - Camera
+          name: SL - Sala
+          tap_action:
+            action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 12px !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # VR - Camera (Varanda)
         - type: picture-entity
           entity: camera.vr_camera_2
           camera_view: auto
           show_name: true
           show_state: false
-          name: VR - Camera
+          name: VR - Varanda
+          tap_action:
+            action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 12px !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # CZ - Camera (Cozinha)
         - type: picture-entity
           entity: camera.cz_camera_2
           camera_view: auto
           show_name: true
           show_state: false
-          name: CZ - Camera
+          name: CZ - Cozinha
+          tap_action:
+            action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 12px !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
+        # ── Linha 2: 3 cameras ──
         # AS - Camera (Area de Servico)
         - type: picture-entity
           entity: camera.as_camera_2
           camera_view: auto
           show_name: true
           show_state: false
-          name: AS - Camera
+          name: AS - Area Servico
+          tap_action:
+            action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 12px !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # OF - Camera (Office)
         - type: picture-entity
           entity: camera.of_camera_2
           camera_view: auto
           show_name: true
           show_state: false
-          name: OF - Camera
+          name: OF - Office
+          tap_action:
+            action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 12px !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # QC - Camera (Quarto Casal)
         - type: picture-entity
           entity: camera.camera_quarto_casal_2
           camera_view: auto
           show_name: true
           show_state: false
-          name: QC - Camera
+          name: QC - Quarto Casal
+          tap_action:
+            action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 12px !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
+        # ── Linha 3: 2 cameras (ultima linha incompleta) ──
         # QMI - Camera (Quarto Miguel)
         - type: picture-entity
           entity: camera.qmi_camera_2
           camera_view: auto
           show_name: true
           show_state: false
-          name: QMI - Camera
+          name: QMI - Quarto Miguel
+          tap_action:
+            action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 12px !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # QMA - Camera (Quarto Marina)
         - type: picture-entity
           entity: camera.qma_camera_2
           camera_view: auto
           show_name: true
           show_state: false
-          name: QMA - Camera
+          name: QMA - Quarto Marina
+          tap_action:
+            action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 12px !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }

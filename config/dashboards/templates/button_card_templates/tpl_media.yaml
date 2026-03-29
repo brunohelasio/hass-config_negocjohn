@@ -258,7 +258,7 @@ conditional_media:
       - overflow: visible
     card:
       - padding: 5.75% 5.75% 0 5.75%
-      - border-radius: calc(var(--button-card-border-radius) / 2)
+      - border-radius: 5%
       - background: &media_background >
           [[[
             if (entity) {
@@ -348,7 +348,7 @@ conditional_media:
         - width: 100%
         - bottom: 0
         - backdrop-filter: blur(0.3em) brightness(0.7)
-        - border-radius: 0% 0% calc(var(--button-card-border-radius) / 2) calc(var(--button-card-border-radius) / 2)
+        - border-radius: 0% 0% 5% 5%
 
   custom_fields:
     blur_overlay: >
@@ -471,7 +471,7 @@ conditional_media_shows:
       - text-shadow: black 3px 2px 4px
     card:
       - padding: 5.75% 5.75% 0 5.75%
-      - border-radius: calc(var(--button-card-border-radius) / 2)
+      - border-radius: 5%
       - background: *media_background
       - background-image: *media_background_image
       - color: >
@@ -503,7 +503,7 @@ conditional_media_shows:
         - height: 110%
         - filter: var(--blur-intensity)
         - clip-path: >
-            inset(77.5% 3.45% 1.45% 5.45% round 0 0 calc(var(--button-card-border-radius) / 2) calc(var(--button-card-border-radius) / 2))
+            inset(77.5% 3.45% 1.45% 5.45% round 0 0 5% 5%)
         - background: *media_background
         - background-image: *media_background_image
         - left: -6%
@@ -948,7 +948,7 @@ currently_playing:
         #       ]]]
         #   - background-image: none
         #   - clip-path: >
-        #       inset(80% 1.45% 1.45% 1.45% round 0 0 calc(var(--button-card-border-radius) / 2) calc(var(--button-card-border-radius) / 2))
+        #       inset(80% 1.45% 1.45% 1.45% round 0 0 5% 5%)
         # icon:
         - width: 22%
       progress:
@@ -1452,7 +1452,7 @@ remote:
   show_state: false
   styles:
     card:
-      - border-radius: var(--button-card-border-radius)
+      - border-radius: 10%
       - border-width: 0
       - -webkit-tap-highlight-color: rgba(0,0,0,0)
       - transition: none
@@ -1547,14 +1547,14 @@ tpl_spotify:
               top: 50% !important;  /* center buttons */
             }
             .grid-item {
-              border-radius: var(--button-card-border-radius) !important;
+              border-radius: 10% !important;
               object-fit: cover !important;  /* fill the whole card */
               aspect-ratio: unset;  /* undo image aspect-ratio when clicked */
               box-shadow:none !important;
               color: transparent !important;
             }
             .grid-item-album-image img{
-              border-radius: var(--button-card-border-radius) !important;
+              border-radius: 10% !important;
               object-fit: cover !important;  /* fill the whole card */
               aspect-ratio: unset;  /* undo image aspect-ratio when clicked */
               margin: 0px !important;  /* remove card margins to line up with rest of dashboard */
@@ -1564,7 +1564,7 @@ tpl_spotify:
               color: transparent !important;
             }
             .grid-item-album-image.playing{
-              border-radius: var(--button-card-border-radius) !important;
+              border-radius: 10% !important;
             }
             #header{
               display:none !important;
@@ -1696,7 +1696,7 @@ tpl_ytube_music:
               display: flex !important;
             }
             .grid-item {
-              border-radius: var(--button-card-border-radius) !important;
+              border-radius: 10% !important;
               object-fit: cover !important;  /* fill the whole card */
               aspect-ratio: unset;  /* undo image aspect-ratio when clicked */
               box-shadow:none !important;
@@ -1706,7 +1706,7 @@ tpl_ytube_music:
     grid:
       - gap: 0
     card:
-      - border-radius: calc(var(--button-card-border-radius) / 2)
+      - border-radius: 5%
       - padding: 0
       - background: none
       - --button-card-ripple-color: none

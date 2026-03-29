@@ -48,7 +48,7 @@
               linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%),
               linear-gradient(135deg, #e50914 0%, #b20710 25%, #221f1f 60%)
           - background-size: cover
-          - border-radius: calc(var(--button-card-border-radius) / 2)
+          - border-radius: 5%
           - overflow: hidden
           - position: relative
       custom_fields:

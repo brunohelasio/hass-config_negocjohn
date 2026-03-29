@@ -1360,7 +1360,7 @@ camera:
       - background-repeat: no-repeat
       - background-image: >
           [[[
-              let picUrl = entity ? entity.attributes.entity_picture : '';
+              let picUrl = entity && entity.attributes ? entity.attributes.entity_picture : '';
               return picUrl
                 ? `linear-gradient(0deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 100%), url(${picUrl})`
                 : 'none';

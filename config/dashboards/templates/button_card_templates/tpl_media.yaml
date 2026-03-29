@@ -2005,7 +2005,9 @@ new_media_player:
     media_on: >
       [[[ return !entity || ['playing', 'on'].indexOf(entity.state) !== -1; ]]]
     vibrant_color: >
-      [[[ return states['sensor.light_vibrant_color'].state; ]]]
+      # ORIGINAL: [[[ return states['sensor.light_vibrant_color'].state; ]]]
+      # NOVO: sensor não existe — cor fixa
+      [[[ return '96, 125, 139'; ]]]
     entity_picture: >
       [[[ return !entity || entity.attributes.entity_picture; ]]]
     entity_id: >

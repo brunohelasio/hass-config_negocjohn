@@ -24,12 +24,19 @@ layout:
   # ESTRATEGIA SAGALAND: todas as grid-areas em todos os breakpoints
   # Areas ocultas ficam em linhas de altura 0 — nenhum card orfao
   # floorplan adicionado em row h=0 para evitar card orfao
+  # ANTERIOR:
+  # grid-template-areas: |
+  #   ". .         .          .         .        .        ."
+  #   ". sidebar   security   mainrooms devices  other    ."
+  #   ". sidebar   cameras    climate   media    movies   ."
+  #   ". sidebar   footer     footer    footer   footer   ."
+  #   ". .         floorplan  .         .        .        ."
+  # HOTFIX FINAL: sem areas other/movies no layout principal.
   grid-template-areas: |
-    ". .         .          .         .        .        ."
-    ". sidebar   security   mainrooms devices  other    ."
-    ". sidebar   cameras    climate   media    movies   ."
-    ". sidebar   footer     footer    footer   footer   ."
-    ". .         floorplan  .         .        .        ."
+    ". sidebar   security   mainrooms devices  ."
+    ". sidebar   cameras    climate   media    ."
+    ". sidebar   footer     footer    footer   ."
+    ". .         floorplan  .         .        ."
 
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
@@ -38,11 +45,10 @@ layout:
       grid-template-columns: 0 minmax(220px, 26%) repeat(4, minmax(0, 1fr)) 0
       grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
       grid-template-areas: |
-        ". .         .          .         .        .        ."
-        ". sidebar   security   mainrooms devices  other    ."
-        ". sidebar   cameras    climate   media    movies   ."
-        ". sidebar   footer     footer    footer   footer   ."
-        ". .         floorplan  .         .        .        ."
+        ". sidebar   security   mainrooms devices  ."
+        ". sidebar   cameras    climate   media    ."
+        ". sidebar   footer     footer    footer   ."
+        ". .         floorplan  .         .        ."
     # tablet landscape (e.g. 801-1440px) - with sidebar
     # Estrategia Sagaland: 3 colunas + sidebar, areas ocultas em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
@@ -54,39 +60,56 @@ layout:
       # grid-template-rows: auto auto min-content 0 0 0
       # grid-template-rows: calc((100vh - 56px - 40px - 3vw) / 2) calc((100vh - 56px - 40px - 3vw) / 2) min-content 0 0 0
       # grid-template-rows: 40vh 40vh min-content 0 0 0
-      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
+      # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
+      grid-template-rows: repeat(2, fit-content(100%)) min-content 0
+      # ANTERIOR:
+      # grid-template-areas: |
+      #   ". .        .          .         .        .        ."
+      #   ". sidebar  security   mainrooms devices  other    ."
+      #   ". sidebar  cameras    climate   media    movies   ."
+      #   ". sidebar  footer     footer    footer   footer   ."
+      #   ". .        floorplan  .         .        .        ."
       grid-template-areas: |
-        ". .        .          .         .        .        ."
-        ". sidebar  security   mainrooms devices  other    ."
-        ". sidebar  cameras    climate   media    movies   ."
-        ". sidebar  footer     footer    footer   footer   ."
-        ". .        floorplan  .         .        .        ."
+        ". sidebar  security   mainrooms devices  ."
+        ". sidebar  cameras    climate   media    ."
+        ". sidebar  footer     footer    footer   ."
+        ". .        floorplan  .         .        ."
     # portrait — Sagaland: areas ocultas (sidebar, chips, movies) em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-gap: 4.4vw 3vw
       grid-template-columns: 0 minmax(220px, 26%) repeat(4, minmax(0, 1fr)) 0
       grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
       grid-template-areas: |
-        ". .        .          .         .        .        ."
-        ". sidebar  security   mainrooms devices  other    ."
-        ". sidebar  cameras    climate   media    movies   ."
-        ". sidebar  footer     footer    footer   footer   ."
-        ". .        floorplan  .         .        .        ."
+        ". sidebar  security   mainrooms devices  ."
+        ". sidebar  cameras    climate   media    ."
+        ". sidebar  footer     footer    footer   ."
+        ". .        floorplan  .         .        ."
     # phone — Sagaland: areas ocultas (sidebar, movies) em h=0
     '(max-width: 800px) and (min-height: 463px)':
       margin: 0
       grid-gap: 1rem
       grid-template-columns: 0 1fr 1fr 0
-      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) min-content 0 0
+      # ANTERIOR:
+      # grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) min-content 0 0
+      # grid-template-areas: |
+      #   ". sidebar     sidebar   ."
+      #   ". home        security  ."
+      #   ". media       cameras   ."
+      #   ". mainrooms   devices   ."
+      #   ". other       climate   ."
+      #   ". footer      footer    ."
+      #   ". movies      movies    ."
+      #   ". floorplan   .         ."
+      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) min-content 0
       grid-template-areas: |
         ". sidebar     sidebar   ."
         ". home        security  ."
         ". media       cameras   ."
         ". mainrooms   devices   ."
-        ". other       climate   ."
         ". footer      footer    ."
-        ". movies      movies    ."
         ". floorplan   .         ."
+        ". other       .         ."
+        ". movies      .         ."
     # phone cover screen = place horizontal
     '(max-height: 462px)':
       grid-gap: 0.5rem

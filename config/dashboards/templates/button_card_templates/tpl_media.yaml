@@ -258,22 +258,40 @@ conditional_media:
       - overflow: visible
     card:
       - padding: 5.75% 5.75% 0 5.75%
-      - border-radius: 5%
-      - background: &media_background >
+      - border-radius: calc(var(--button-card-border-radius) / 2)
+      # ORIGINAL background (dependia de data[variables.i]):
+      # - background: &media_background_ORIG >
+      #     [[[
+      #       if (entity) {
+      #         if (variables.is_youtube) {
+      #             return `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
+      #         } else {
+      #           let data = entity.attributes.data;
+      #           return data && (data[variables.i].entity_picture)
+      #               ? `rgba(115, 115, 115, 0.2) center center/cover no-repeat`
+      #               :  data && (data[variables.i].fanart)
+      #                 ? `rgba(115, 115, 115, 0.2) top center/cover no-repeat`
+      #                 : `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
+      #         }
+      #       }
+      #     ]]]
+      # ORIGINAL COMENTADO — background shorthand resetava background-image (artwork nao aparecia):
+      # - background: &media_background >
+      #     [[[
+      #       if (entity) {
+      #         return `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
+      #       }
+      #     ]]]
+      # FIX: propriedades separadas para preservar background-image (artwork)
+      - background-color: &media_background >
           [[[
             if (entity) {
-              if (variables.is_youtube) {
-                  return `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
-              } else {
-                let data = entity.attributes.data;
-                return data && (data[variables.i].entity_picture)
-                    ? `rgba(115, 115, 115, 0.2) center center/cover no-repeat`
-                    :  data && (data[variables.i].fanart)
-                      ? `rgba(115, 115, 115, 0.2) top center/cover no-repeat`
-                      : `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
-              }
+              return 'rgba(115, 115, 115, 0.2)';
             }
           ]]]
+      - background-size: cover
+      - background-position: center center
+      - background-repeat: no-repeat
       # - --speed: >
       #     [[[
       #       setTimeout(() => {
@@ -297,28 +315,59 @@ conditional_media:
       #       return '0s';
       #     ]]]
 
+      # ORIGINAL background-image (dependia de sensor.youtube_thumbnail, sensor.kodi_picture):
+      # - background-image: &media_background_image_ORIG >
+      #     [[[
+      #       if (entity) {
+      #         if (variables.is_youtube) {
+      #             return `url(${states[this._config?.triggers_update].attributes.entity_picture})`;
+      #         }
+      #         if (variables.is_kodi) {
+      #             let fanart = states[this._config?.triggers_update].attributes.fanart;
+      #             let poster = states[this._config?.triggers_update].attributes.poster;
+      #             return `url(${fanart})`;
+      #         }
+      #         if (entity?.attributes?.app_id === 'com.google.ios.youtubekids') {
+      #             return `url(/local/img/channels/youtubekids.png)`;
+      #         } else {
+      #           let data = entity.attributes.data,
+      #           game_image = entity.attributes.title_image;
+      #           return game_image !== undefined
+      #             ? `url("${game_image}")`
+      #             : data && (data[variables.i].entity_picture || data[variables.i].fanart)
+      #               ? `linear-gradient(to top, rgba(0, 0, 0, .65) 0%, rgba(0, 0, 0, 0) 100%), url("${data[variables.i].entity_picture}"), url("${data[variables.i].fanart}")`
+      #               : `url("${variables.entity_picture}")`;
+      #         }
+      #       }
+      #     ]]]
+      # NOVO: Simplificado - usa entity_picture diretamente (funciona com TV, Spotify, Alexa)
       - background-image: &media_background_image >
           [[[
             if (entity) {
-              if (variables.is_youtube) {
-                  return `url(${states[this._config?.triggers_update].attributes.entity_picture})`;
+              // Tentar triggers_update sensor se existir (ex: youtube_thumbnail)
+              let sensor = this._config?.triggers_update;
+              if (sensor && states[sensor]?.attributes?.entity_picture) {
+                return `url(${states[sensor].attributes.entity_picture})`;
               }
-              if (variables.is_kodi) {
-                  let fanart = states[this._config?.triggers_update].attributes.fanart;
-                  let poster = states[this._config?.triggers_update].attributes.poster;
-                  return `url(${fanart})`;
+              // Game image (PS5, etc)
+              let game_image = entity.attributes.title_image;
+              if (game_image) {
+                return `url("${game_image}")`;
               }
-              if (entity?.attributes?.app_id === 'com.google.ios.youtubekids') {
-                  return `url(/local/img/channels/youtubekids.png)`;
-              } else {
-                let data = entity.attributes.data,
-                game_image = entity.attributes.title_image;
-                return game_image !== undefined
-                  ? `url("${game_image}")`
-                  : data && (data[variables.i].entity_picture || data[variables.i].fanart)
-                    ? `linear-gradient(to top, rgba(0, 0, 0, .65) 0%, rgba(0, 0, 0, 0) 100%), url("${data[variables.i].entity_picture}"), url("${data[variables.i].fanart}")`
-                    : `url("${variables.entity_picture}")`;
+              // Data array (recently added, etc)
+              let data = entity.attributes.data;
+              if (data && data[variables.i]) {
+                let ep = data[variables.i].entity_picture;
+                let fa = data[variables.i].fanart;
+                if (ep || fa) {
+                  return `linear-gradient(to top, rgba(0, 0, 0, .65) 0%, rgba(0, 0, 0, 0) 100%), url("${ep || ''}"), url("${fa || ''}")`;
+                }
               }
+              // Default: entity_picture do media player (album art, TV screenshot, etc)
+              if (variables.entity_picture) {
+                return `url("${variables.entity_picture}")`;
+              }
+              return 'none';
             }
           ]]]
       - color: >
@@ -472,7 +521,11 @@ conditional_media_shows:
     card:
       - padding: 5.75% 5.75% 0 5.75%
       - border-radius: 5%
-      - background: *media_background
+      # ORIGINAL: - background: *media_background  # shorthand resetava background-image
+      - background-color: *media_background
+      - background-size: cover
+      - background-position: center center
+      - background-repeat: no-repeat
       - background-image: *media_background_image
       - color: >
           [[[
@@ -504,7 +557,11 @@ conditional_media_shows:
         - filter: var(--blur-intensity)
         - clip-path: >
             inset(77.5% 3.45% 1.45% 5.45% round 0 0 5% 5%)
-        - background: *media_background
+        # ORIGINAL: - background: *media_background  # shorthand resetava background-image
+        - background-color: *media_background
+        - background-size: cover
+        - background-position: center center
+        - background-repeat: no-repeat
         - background-image: *media_background_image
         - left: -6%
         - bottom: -2%
@@ -668,6 +725,103 @@ mediaplayer:
   #               }
   #           }
   #         ]]]
+  #################################################
+  #                                               #
+  #          MEDIA PREMIUM (HEMMA)                #
+  #  tap=play/pause, circle=volume slider         #
+  #                                               #
+  #################################################
+media_premium:
+  variables:
+    circle_input: >
+      [[[
+        if (entity && entity.attributes.volume_level !== undefined) {
+          return Math.round(entity.attributes.volume_level * 100);
+        }
+        return 0;
+      ]]]
+    circle_input_unit: '%'
+  tap_action:
+    action: call-service
+    service: media_player.media_play_pause
+    service_data:
+      entity_id: '[[[ return entity.entity_id; ]]]'
+    haptic: light
+  double_tap_action:
+    action: call-service
+    service: media_player.turn_off
+    service_data:
+      entity_id: '[[[ return entity.entity_id; ]]]'
+    haptic: medium
+  hold_action:
+    action: more-info
+    haptic: heavy
+  custom_fields:
+    circle: >
+      [[[
+        if (entity) {
+          let r = 20.5;
+          let c = r * 2 * Math.PI;
+          let tbp = variables.circle_input;
+          let stroke = c - (c * tbp) / 100;
+          let fill  = tbp > 0 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.2)';
+          let track = 'rgba(255,255,255,0.15)';
+          let text_color = 'rgba(255,255,255,0.95)';
+          setTimeout(() => {
+            let elt = this.shadowRoot;
+            let slider = elt.getElementById('media_slider');
+            let circle_stroke = elt.getElementById('circle_stroke');
+            if(slider && circle_stroke) {
+              ['input', 'change', 'mousedown', 'touchstart'].forEach((event) => {
+                slider.addEventListener(event, (e) => {
+                  e.stopPropagation();
+                  if (e.type === 'input') {
+                    circle_stroke.style.strokeDashoffset = c - slider.value / 100 * c;
+                  }
+                  if (e.type === 'change') {
+                    hass.callService('media_player', 'volume_set', {
+                      entity_id: entity.entity_id,
+                      volume_level: slider.value / 100
+                    });
+                  }
+                }, { passive: true });
+              });
+            }
+          }, 0);
+          return `
+            <div style="position:relative;width:100%;height:100%;">
+              <svg viewBox="0 0 50 50" style="width:100%;height:100%;overflow:visible;">
+                <circle cx="25" cy="25" r="${r}" fill="none" stroke="${track}"
+                        stroke-width="1.5" opacity="0.5"/>
+                <circle id="circle_stroke" cx="25" cy="25" r="${r}" fill="none"
+                        stroke="${fill}" stroke-width="1.5"
+                        stroke-dasharray="${c}" stroke-dashoffset="${stroke}"
+                        stroke-linecap="round"
+                        transform="rotate(-90 25 25)"
+                        style="transition: stroke-dashoffset 0.3s ease;"/>
+                <text x="25" y="28" text-anchor="middle"
+                      fill="${text_color}" font-size="11" font-weight="600"
+                      style="font-family:Raleway,sans-serif;">
+                  ${tbp}
+                </text>
+              </svg>
+              <input id="media_slider" type="range" min="0" max="100" value="${tbp}"
+                     style="position:absolute;top:0;left:0;width:100%;height:100%;
+                            opacity:0;cursor:pointer;margin:0;padding:0;
+                            -webkit-appearance:none;"/>
+            </div>
+          `;
+        }
+      ]]]
+  styles:
+    custom_fields:
+      circle:
+        - position: absolute
+        - top: 10%
+        - right: 10%
+        - width: 36px
+        - height: 36px
+        - z-index: 10
 currently_playing:
   template:
     - conditional_media

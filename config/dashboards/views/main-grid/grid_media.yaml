@@ -212,7 +212,7 @@
         ########## SLIDE 1: ARTWORK CONDICIONAL ##########
         - type: horizontal-stack
           cards:
-            # TV - TCL Smart TV Pro 2
+            # TV - TCL Smart TV Pro 2 (Slide 1: conditional_media cuida da arte, icon_play_pause generico)
             - type: conditional
               conditions:
                 - entity: select.conditional_media
@@ -224,8 +224,8 @@
                 template:
                   - conditional_media
                   - progress_bar
-                  - icon_tv
-            # Alexa - Echo Show
+                  - icon_play_pause
+            # Alexa - Echo Show (Slide 1: arte via conditional_media)
             - type: conditional
               conditions:
                 - entity: select.conditional_media
@@ -237,6 +237,7 @@
                 template:
                   - conditional_media
                   - progress_bar
+                  - icon_play_pause
             # SpotifyPlus
             - type: conditional
               conditions:
@@ -271,7 +272,7 @@
                 template:
                   - conditional_media
 
-        ########## SLIDE 2: GRID DE BOTOES ##########
+        ########## SLIDE 2: GRID DE BOTOES (media_premium = tap play/pause + volume circle) ##########
         - type: grid
           columns: 2
           square: true
@@ -279,22 +280,27 @@
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
               template:
-                - mediaplayer
+                - base
+                - media_premium
                 - icon_tv
             - type: custom:button-card
               entity: media_player.echo_show
               template:
-                - mediaplayer
+                - base
+                - media_premium
+                - icon_tv
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:
-                - mediaplayer
+                - base
+                - media_premium
                 - icon_spotify
             - type: custom:button-card
               entity: media_player.spotify
               template:
-                - mediaplayer
-                - icon_spotify_color
+                - base
+                - media_premium
+                - icon_spotify
 
 #################################################
 #      TABLET/PHONE (max-width: 1440px)         #
@@ -349,7 +355,7 @@
                 template:
                   - conditional_media
 
-        ########## SLIDE 2: GRID DE BOTOES ##########
+        ########## SLIDE 2: GRID DE BOTOES (media_premium = tap play/pause + volume circle) ##########
         - type: grid
           columns: 2
           square: true
@@ -357,19 +363,24 @@
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
               template:
-                - mediaplayer
+                - base
+                - media_premium
                 - icon_tv
             - type: custom:button-card
               entity: media_player.echo_show
               template:
-                - mediaplayer
+                - base
+                - media_premium
+                - icon_tv
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:
-                - mediaplayer
+                - base
+                - media_premium
                 - icon_spotify
             - type: custom:button-card
               entity: media_player.spotify
               template:
-                - mediaplayer
-                - icon_spotify_color
+                - base
+                - media_premium
+                - icon_spotify

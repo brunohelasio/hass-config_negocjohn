@@ -104,7 +104,8 @@ browser_mod:
             card_mod:
               class: header nopadding
             entities:
-              - type: custom:xiaomi-vacuum-map-card
+              - type: custom:hui-element
+                card_type: custom:xiaomi-vacuum-map-card
                 entity: vacuum.roborock_s7
                 vacuum_platform: Roborock
                 map_source:

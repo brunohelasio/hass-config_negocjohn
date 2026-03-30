@@ -196,20 +196,6 @@
       template:
         - mediaplayer
         - icon_homepod
-    # ECHO POP QUARTO CASAL
-    - type: custom:button-card
-      entity: media_player.echo_pop_quarto_casal
-      name: 'Echo Q.Casal'
-      template:
-        - mediaplayer
-        - icon_homepod
-    # ECHO POP MARINA
-    - type: custom:button-card
-      entity: media_player.echo_pop_marina
-      name: 'Echo Marina'
-      template:
-        - mediaplayer
-        - icon_homepod
 
 #################################################
 #                                               #
@@ -318,7 +304,7 @@
   view_layout:
     grid-area: media
     show:
-      mediaquery: '(min-height: 463px) and (max-width: 1440px)'
+      mediaquery: '(min-width: 801px) and (max-width: 1440px)'
   columns: 2
   square: true
   cards:
@@ -351,20 +337,99 @@
       template:
         - mediaplayer
         - icon_homepod
-    # ECHO POP QUARTO CASAL
-    - type: custom:button-card
-      entity: media_player.echo_pop_quarto_casal
-      name: 'Echo Q.Casal'
-      template:
-        - mediaplayer
-        - icon_homepod
-    # ECHO POP MARINA
-    - type: custom:button-card
-      entity: media_player.echo_pop_marina
-      name: 'Echo Marina'
-      template:
-        - mediaplayer
-        - icon_homepod
+
+# PHONE: carrossel ocupando o espaco do bloco media (substitui grade 2x2 em telas pequenas)
+- type: grid
+  title: Media
+  view_layout:
+    grid-area: media
+    show:
+      mediaquery: '(max-width: 800px) and (min-height: 463px)'
+  columns: 1
+  square: false
+  cards:
+    - type: custom:swipe-card
+      start_card: 1
+      parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
+      cards:
+        # Slide 1: "tela pequena" (placeholder visual) ocupando area equivalente ao bloco 2x2
+        - type: custom:button-card
+          name: ' '
+          show_name: false
+          show_icon: false
+          show_state: false
+          aspect_ratio: 1/1
+          tap_action:
+            action: none
+          styles:
+            card:
+              - background: >
+                  linear-gradient(0deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 45%),
+                  linear-gradient(135deg, #e50914 0%, #b20710 25%, #221f1f 60%)
+              - background-size: cover
+              - border-radius: 8%
+              - overflow: hidden
+              - position: relative
+          custom_fields:
+            netflix_logo: >
+              [[[
+                return `
+                  <div style="
+                    position: absolute;
+                    top: 12%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    font-family: 'Arial Black', Impact, sans-serif;
+                    font-size: clamp(1.2em, 3.4vw, 1.9em);
+                    font-weight: 900;
+                    color: #e50914;
+                    letter-spacing: 0.12em;
+                    text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+                    text-transform: uppercase;
+                  ">NETFLIX</div>
+                  <div style="
+                    position: absolute;
+                    bottom: 12%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    font-family: 'Helvetica Neue', Arial, sans-serif;
+                    font-size: 0.72em;
+                    color: rgba(255,255,255,0.52);
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                  ">Swipe para controles</div>
+                `;
+              ]]]
+        # Slide 2: grade 2x2 com os 4 botoes de media
+        - type: grid
+          columns: 2
+          square: true
+          cards:
+            - type: custom:button-card
+              entity: media_player.smart_tv_pro_2
+              name: ' '
+              template:
+                - mediaplayer
+                - icon_tv
+            - type: custom:button-card
+              entity: media_player.spotifyplus_bruno_helasio
+              name: ' '
+              double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
+              template:
+                - mediaplayer
+                - icon_spotify_color
+            - type: custom:button-card
+              entity: media_player.echo_show
+              name: 'Echo Show'
+              template:
+                - mediaplayer
+                - icon_homepod
+            - type: custom:button-card
+              entity: media_player.echo_pop_office
+              name: 'Echo Office'
+              template:
+                - mediaplayer
+                - icon_homepod
 # #################################################
 # #                                               #
 # #           GRID MEDIA MIN 1441px               #

@@ -51,11 +51,14 @@
   como trilhas ocultas (coluna/linha zero) para evitar auto-placement residual e
   compressao do grid principal quando houver qualquer card legado ainda renderizando.
 - HOTFIX FINAL pos-segundo feedback:
-  - sidebar ajustada para ocupar 30% do grid principal;
+  - sidebar ajustada para ocupar 28% do grid principal;
   - restante redistribuido igualmente entre 3 colunas de conteudo;
   - removidas novamente areas `other`/`movies` do `grid-template-areas` principal;
   - adicionados stubs condicionais `max-width: 0px` em `devices.yaml` e
     `horizontal_movies.yaml` para impedir qualquer render residual dessas colunas.
+  - bloco media reduzido para 4 botoes (desktop/tablet) e
+    carrossel `swipe-card` exclusivo para phone alternando:
+    (slide 1) tela pequena placeholder + (slide 2) grade 2x2 dos 4 botoes.
 
 ## Estrategia de Grid: Sagaland Hibrida (OBRIGATORIO)
 

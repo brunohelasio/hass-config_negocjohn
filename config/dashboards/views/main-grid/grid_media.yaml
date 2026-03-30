@@ -155,6 +155,9 @@
 # Quando o usuario criar select.conditional_media no HA, pode descomentar a versao acima
 # e comentar esta para voltar ao comportamento de 1 card por vez (carrossel).
 # PS5 (switch.ps5_015_power) AGUARDANDO — entidade ficando indisponivel
+# FASE C (2026-03-30): remover dependencia estrutural de conditional_media/currently_playing
+# no grid principal. Esses templates assumem contexto de swipe-card (swiper) e podem gerar
+# erro de button-card quando renderizados diretamente em grid.
 - type: grid
   title: Media
   view_layout:
@@ -169,7 +172,7 @@
       entity: media_player.smart_tv_pro_2
       name: ' '
       template:
-        - conditional_media
+        - mediaplayer
         - icon_tv
     # SPOTIFY
     - type: custom:button-card
@@ -177,35 +180,20 @@
       name: ' '
       double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
       template:
-        - currently_playing
+        - mediaplayer
+        - icon_spotify_color
     # ECHO SHOW (Sala)
     - type: custom:button-card
       entity: media_player.echo_show
       name: 'Echo Show'
       template:
-        - conditional_media
-        - icon_homepod
+        - mediaplayer
     # ECHO POP OFFICE
     - type: custom:button-card
       entity: media_player.echo_pop_office
       name: 'Echo Office'
       template:
-        - conditional_media
-        - icon_homepod
-    # ECHO POP QUARTO CASAL
-    - type: custom:button-card
-      entity: media_player.echo_pop_quarto_casal
-      name: 'Echo Q.Casal'
-      template:
-        - conditional_media
-        - icon_homepod
-    # ECHO POP MARINA
-    - type: custom:button-card
-      entity: media_player.echo_pop_marina
-      name: 'Echo Marina'
-      template:
-        - conditional_media
-        - icon_homepod
+        - mediaplayer
 
 #################################################
 #                                               #
@@ -308,12 +296,13 @@
 #       card: *ECHOPOPMARINA
 
 # NOVO: Bloco media tablet SEM conditionals — renderiza direto
+# FASE C (2026-03-30): mesmas trocas do bloco desktop para evitar erro estrutural de button-card.
 - type: grid
   title: Media
   view_layout:
     grid-area: media
     show:
-      mediaquery: '(min-height: 463px) and (max-width: 1440px)'
+      mediaquery: '(min-width: 801px) and (max-width: 1440px)'
   columns: 2
   square: true
   cards:
@@ -322,7 +311,7 @@
       entity: media_player.smart_tv_pro_2
       name: ' '
       template:
-        - conditional_media
+        - mediaplayer
         - icon_tv
     # SPOTIFY
     - type: custom:button-card
@@ -330,35 +319,130 @@
       name: ' '
       double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
       template:
-        - currently_playing
+        - mediaplayer
+        - icon_spotify_color
     # ECHO SHOW (Sala)
     - type: custom:button-card
       entity: media_player.echo_show
       name: 'Echo Show'
       template:
-        - conditional_media
-        - icon_homepod
+        - mediaplayer
     # ECHO POP OFFICE
     - type: custom:button-card
       entity: media_player.echo_pop_office
       name: 'Echo Office'
       template:
-        - conditional_media
-        - icon_homepod
-    # ECHO POP QUARTO CASAL
-    - type: custom:button-card
-      entity: media_player.echo_pop_quarto_casal
-      name: 'Echo Q.Casal'
-      template:
-        - conditional_media
-        - icon_homepod
-    # ECHO POP MARINA
-    - type: custom:button-card
-      entity: media_player.echo_pop_marina
-      name: 'Echo Marina'
-      template:
-        - conditional_media
-        - icon_homepod
+        - mediaplayer
+
+# PHONE: carrossel ocupando o espaco do bloco media (substitui grade 2x2 em telas pequenas)
+# HOTFIX (2026-03-30): Echo Show / Echo Office sem template icon_homepod para evitar
+# erros de button-card em entidades que nao expõem atributos esperados pelo template.
+- type: grid
+  title: Media
+  view_layout:
+    grid-area: media
+    show:
+      mediaquery: '(max-width: 800px) and (min-height: 463px)'
+  columns: 1
+  square: false
+  cards:
+    - type: custom:swipe-card
+      start_card: 1
+      parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
+      cards:
+        # Slide 1: arte da mídia em execução ocupando area equivalente ao bloco 2x2
+        - type: custom:button-card
+          entity: media_player.currently_playing
+          show_icon: false
+          show_state: true
+          aspect_ratio: 1/1
+          tap_action:
+            action: more-info
+          name: >
+            [[[
+              const candidates = ['media_player.currently_playing','media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio'];
+              for (const id of candidates) {
+                const s = states[id];
+                if (s && s.attributes && s.attributes.media_title) return s.attributes.media_title;
+              }
+              return 'Sem mídia ativa';
+            ]]]
+          state_display: >
+            [[[
+              const candidates = ['media_player.currently_playing','media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio'];
+              for (const id of candidates) {
+                const s = states[id];
+                if (s && s.attributes && s.attributes.media_artist) return s.attributes.media_artist;
+              }
+              return 'Swipe para controles';
+            ]]]
+          styles:
+            card:
+              - background: >
+                  [[[
+                    const candidates = ['media_player.currently_playing','media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio'];
+                    let pic = null;
+                    for (const id of candidates) {
+                      const s = states[id];
+                      if (s && s.attributes && s.attributes.entity_picture) {
+                        pic = s.attributes.entity_picture;
+                        break;
+                      }
+                    }
+                    return pic
+                      ? `linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.08) 60%), url(${pic})`
+                      : 'linear-gradient(135deg, #2f3240 0%, #1f2433 60%, #151922 100%)';
+                  ]]]
+              - background-size: cover
+              - background-position: center
+              - border-radius: 8%
+              - overflow: hidden
+              - position: relative
+            name:
+              - justify-self: start
+              - align-self: end
+              - text-align: left
+              - font-size: 1.45em
+              - font-weight: 700
+              - color: '#ffffff'
+              - text-shadow: 0 2px 8px rgba(0,0,0,0.9)
+              - padding: 0 0.6em 0.1em
+            state:
+              - justify-self: start
+              - align-self: end
+              - text-align: left
+              - font-size: 1em
+              - color: rgba(255,255,255,0.82)
+              - text-shadow: 0 2px 8px rgba(0,0,0,0.9)
+              - padding: 0 0.95em 0.8em
+        # Slide 2: grade 2x2 com os 4 botoes de media
+        - type: grid
+          columns: 2
+          square: true
+          cards:
+            - type: custom:button-card
+              entity: media_player.smart_tv_pro_2
+              name: ' '
+              template:
+                - mediaplayer
+                - icon_tv
+            - type: custom:button-card
+              entity: media_player.spotifyplus_bruno_helasio
+              name: ' '
+              double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
+              template:
+                - mediaplayer
+                - icon_spotify_color
+            - type: custom:button-card
+              entity: media_player.echo_show
+              name: 'Echo Show'
+              template:
+                - mediaplayer
+            - type: custom:button-card
+              entity: media_player.echo_pop_office
+              name: 'Echo Office'
+              template:
+                - mediaplayer
 # #################################################
 # #                                               #
 # #           GRID MEDIA MIN 1441px               #

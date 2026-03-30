@@ -283,7 +283,7 @@ conditional_media:
       #       }
       #     ]]]
       # FIX: propriedades separadas para preservar background-image (artwork)
-      - background-color: >
+      - background-color: &media_background >
           [[[
             if (entity) {
               return 'rgba(115, 115, 115, 0.2)';
@@ -521,7 +521,11 @@ conditional_media_shows:
     card:
       - padding: 5.75% 5.75% 0 5.75%
       - border-radius: 5%
-      - background: *media_background
+      # ORIGINAL: - background: *media_background  # shorthand resetava background-image
+      - background-color: *media_background
+      - background-size: cover
+      - background-position: center center
+      - background-repeat: no-repeat
       - background-image: *media_background_image
       - color: >
           [[[
@@ -553,7 +557,11 @@ conditional_media_shows:
         - filter: var(--blur-intensity)
         - clip-path: >
             inset(77.5% 3.45% 1.45% 5.45% round 0 0 5% 5%)
-        - background: *media_background
+        # ORIGINAL: - background: *media_background  # shorthand resetava background-image
+        - background-color: *media_background
+        - background-size: cover
+        - background-position: center center
+        - background-repeat: no-repeat
         - background-image: *media_background_image
         - left: -6%
         - bottom: -2%

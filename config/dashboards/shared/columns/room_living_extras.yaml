@@ -36,69 +36,18 @@
     #         <path opacity="0.5" d="m 26.2,14 h -2 v 10 h 2 V 14 m 4.8,2.2 -1.4,1.4 a 7,7 0 0 1 2.6,5.4 7,7 0 0 1 -7,7 7,7 0 0 1 -4.4,-12.4 l -1.4,-1.4 a 9,9 0 0 0 -1,12.7 c 3.2,3.8 8.9,4.2 12.7,1 a 9,9 0 0 0 3.2,-6.9 c 0,-2.6 -1.2,-5.1 -3.2,-6.8 z"/>
     #         <path d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3zM11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3a1.11 1.11 0 0 0 1.1 1.1z"/>
     #       </svg>
-    # TV — ORIGINAL mediaplayer template (nao mostrava arte pois mediaplayer nao define background-image)
-    # ORIGINAL entity: media_player.smart_tv_pro_192_168_3_17
-    # CORRIGIDO: usa base + icon_tv + circle + loader
-    # icon_tv desenha o SVG animado (on/off) e base renderiza o card square
-    # circle mostra volume, loader mostra transicao de estado
-    # VERSAO ANTERIOR (v2): templates manuais [base, circle, loader, icon_tv]
-    #   Problema: botao nao acendia e icone nao animava ao ligar a TV.
-    #   Restaurado template mediaplayer (igual ao original ngocjohn) que agrupa
-    #   base+circle+loader+icon_tv com state_on e circle_input ja definidos.
-    # - type: custom:button-card
-    #   entity: media_player.smart_tv_pro_2
-    #   name: Smart TV
-    #   template:
-    #     - base
-    #     - circle
-    #     - loader
-    #     - icon_tv
-    #   state_display: >
-    #     [[[
-    #       return entity && entity.state === 'off' ? ' ' : null;
-    #     ]]]
-    #   variables:
-    #     state_on: >
-    #       [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
-    #     circle_input: >
-    #       [[[
-    #         if (entity && entity.attributes.volume_level !== undefined) {
-    #           let volume = Math.round(entity.attributes.volume_level * 100)
-    #           return volume === 0 && entity.state !== 'off'
-    #             ? 1
-    #             : volume
-    #         }
-    #       ]]]
-    #     circle_input_unit: '%'
-    #   tap_action:
-    #     action: call-service
-    #     service: homeassistant.toggle
-    #     service_data:
-    #       entity_id: media_player.smart_tv_pro_2
-    #     haptic: success
-    #   double_tap_action:
-    #     action: more-info
-    #   hold_action: !include ../popup/rooms/smart_tv_remote.yaml
-    # TV — RESTAURADO: usa template mediaplayer (original ngocjohn)
-    # mediaplayer ja inclui base+circle+loader+icon_tv com state_on correto
+    # TV — Historico de versoes anteriores (comentado para referencia):
+    # v1: mediaplayer + icon_tv (sem artwork, tap=toggle — nao funcionava)
+    # v2: base + circle + loader + icon_tv (manual — botao nao acendia)
+    # v3: mediaplayer restaurado + action: toggle (funcionava mas sem artwork)
+    # v4 (ATUAL): base + media_premium + icon_tv (artwork hemma + tap=play/pause + volume circle)
     - type: custom:button-card
       entity: media_player.smart_tv_pro_2
       name: Smart TV
       template:
-        - mediaplayer
-      # VERSAO ANTERIOR: call-service nao executava (botao animava mas TV nao ligava)
-      # tap_action:
-      #   action: call-service
-      #   service: homeassistant.toggle
-      #   service_data:
-      #     entity_id: media_player.smart_tv_pro_2
-      #   haptic: success
-      # FIX: usar action: toggle — button-card envia toggle nativo para o dominio da entity
-      tap_action:
-        action: toggle
-        haptic: success
-      double_tap_action:
-        action: more-info
+        - base
+        - media_premium
+        - icon_tv
       # hold: controle remoto Smart TV via browser_mod popup
       hold_action: !include ../popup/rooms/smart_tv_remote.yaml
     # SPOTIFY — ORIGINAL: placeholder desativado
@@ -118,99 +67,18 @@
     #     card:
     #       - opacity: "0.60"
     #       - cursor: "default"
-    # SPOTIFY — ATIVADO: entity = echo_show (dispositivo que efetivamente reproduz)
-    # ORIGINAL entity: media_player.spotifyplus_bruno_helasio (API Spotify, nao reflete estado real)
-    # CORRIGIDO: icon_spotify_color (anima barras quando playing) em vez de icon_spotify (SVG estatico)
-    # CORRIGIDO: state_on usava indexOf(!entity || entity.state) — !entity=false quando entity existe,
-    #   indexOf(false) retorna -1, state_on era SEMPRE false. Agora usa entity && indexOf(entity.state).
-    # CORRIGIDO: tap_action usa entity_id correto
-    # CORRIGIDO (v2): state_on agora so e true quando entity.state === 'playing'. Estados como
-    #   idle/standby/paused nao ativam animacao — o icone so anima com musica efetivamente tocando.
-    # CORRIGIDO (v2): state_display mostra espaco em branco quando nao esta tocando (nao so 'off').
-    # VERSAO ANTERIOR (v3): entity era echo_show — nao reflete estado do Spotify.
-    #   Restaurado para spotifyplus_bruno_helasio (integracao SpotifyPlus) que fornece
-    #   estado real, artwork e info de midia do Spotify. state_on restaurado para
-    #   multiplos estados (on/idle/playing/paused/standby) — botao acende quando Spotify ativo.
-    # - type: custom:button-card
-    #   entity: media_player.echo_show
-    #   name: Spotify
-    #   template:
-    #     - base
-    #     - circle
-    #     - loader
-    #     - icon_spotify_color
-    #   state_display: >
-    #     [[[
-    #       return entity && entity.state !== 'playing' ? ' ' : null;
-    #     ]]]
-    #   variables:
-    #     state_on: >
-    #       [[[ return entity && entity.state === 'playing'; ]]]
-    #     circle_input: >
-    #       [[[
-    #         if (entity && entity.attributes.volume_level !== undefined) {
-    #           let volume = Math.round(entity.attributes.volume_level * 100)
-    #           return volume === 0 && entity.state !== 'off'
-    #             ? 1
-    #             : volume
-    #         }
-    #       ]]]
-    #     circle_input_unit: '%'
-    #   tap_action:
-    #     action: call-service
-    #     service: media_player.media_play_pause
-    #     service_data:
-    #       entity_id: media_player.echo_show
-    #     haptic: success
-    #   double_tap_action:
-    #     action: more-info
-    #   hold_action: !include ../popup/media_spotify.yaml
-    # SPOTIFY — RESTAURADO: entity = spotifyplus_bruno_helasio (integracao SpotifyPlus)
-    # SpotifyPlus fornece estado, artwork e info de midia especificos do Spotify.
-    # icon_spotify_color anima barras quando state === 'playing'.
-    # state_on inclui multiplos estados para que o botao acenda quando Spotify ativo.
+    # SPOTIFY — Historico de versoes anteriores (comentado para referencia):
+    # v1: echo_show entity + base+circle+loader+icon_spotify (nao refletia estado Spotify)
+    # v2: spotifyplus_bruno_helasio + icon_spotify_color (state_on corrigido)
+    # v3: perform-action syntax (tentativa de fix play/pause)
+    # v4 (ATUAL): base + media_premium + icon_spotify (artwork hemma + tap=play/pause + volume circle)
     - type: custom:button-card
       entity: media_player.spotifyplus_bruno_helasio
       name: Spotify
       template:
         - base
-        - circle
-        - loader
-        - icon_spotify_color
-      state_display: >
-        [[[
-          return entity && entity.state === 'off' ? ' ' : null;
-        ]]]
-      variables:
-        state_on: >
-          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
-        circle_input: >
-          [[[
-            if (entity && entity.attributes.volume_level !== undefined) {
-              let volume = Math.round(entity.attributes.volume_level * 100)
-              return volume === 0 && entity.state !== 'off'
-                ? 1
-                : volume
-            }
-          ]]]
-        circle_input_unit: '%'
-      # VERSAO ANTERIOR: call-service nao executava (botao animava mas Spotify nao respondia)
-      # tap_action:
-      #   action: call-service
-      #   service: media_player.media_play_pause
-      #   service_data:
-      #     entity_id: media_player.spotifyplus_bruno_helasio
-      #   haptic: success
-      # FIX: usar perform-action (sintaxe moderna do button-card v4+)
-      tap_action:
-        action: perform-action
-        perform_action: media_player.media_play_pause
-        target:
-          entity_id: media_player.spotifyplus_bruno_helasio
-        haptic: success
-      # double_tap: more-info (consistente com TV)
-      double_tap_action:
-        action: more-info
+        - media_premium
+        - icon_spotify
       # hold: popup spotify personalizado
       hold_action: !include ../popup/media_spotify.yaml
     # PS5

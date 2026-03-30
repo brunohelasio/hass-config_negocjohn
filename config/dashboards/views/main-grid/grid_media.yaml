@@ -1,9 +1,11 @@
 #################################################
 #                                               #
-#           GRID MEDIA MIN 1441px               #
+#     ORIGINAL GRID MEDIA (COMENTADO)           #
+#     Motivo: entidades nao existem no setup    #
+#     atual. Substituido por swipe-card com     #
+#     entidades reais abaixo.                   #
 #                                               #
 #################################################
-# --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA (entidades europeias) ---
 # - type: grid
 #   title: Media
 #   view_layout:
@@ -20,11 +22,12 @@
 #       card:
 #         type: custom:added-movie-card
 #         entity: sensor.tmdb_movies_trending
+#
 #     - type: conditional
 #       conditions:
 #         - entity: select.conditional_media
 #           state: Living Room TV
-#       card: &ATV
+#       card: &ATV_OLD
 #         type: custom:button-card
 #         entity: media_player.living_room_tv
 #         name: ' '
@@ -32,11 +35,12 @@
 #         template:
 #           - universal_media_player
 #           - icon_apple_tv
+#
 #     - type: conditional
 #       conditions:
 #         - entity: select.conditional_media
 #           state: Kodi ATV
-#       card: &KODIATV
+#       card: &KODIATV_OLD
 #         type: custom:button-card
 #         entity: media_player.kodi_atv
 #         name: ' '
@@ -50,7 +54,7 @@
 #       conditions:
 #         - entity: select.conditional_media
 #           state: Bedroom TV
-#       card: &BEDROOMTV
+#       card: &BEDROOMTV_OLD
 #         type: custom:button-card
 #         entity: media_player.shield
 #         name: 'ShieldTV'
@@ -63,144 +67,25 @@
 #       conditions:
 #         - entity: select.conditional_media
 #           state: 'PlayStation 5'
-#       card: &PS5
+#       card: &PS5_OLD
 #         type: custom:button-card
 #         entity: media_player.playstation_5
 #         name: ''
 #         template:
 #           - conditional_media
 #           - icon_playstation
+#
 #     - type: conditional
 #       conditions:
 #         - entity: select.conditional_media
 #           state: Mass Universal Airplay
-#       card: &MASSAIRPLAY
+#       card: &MASSAIRPLAY_OLD
 #         type: custom:button-card
 #         entity: media_player.mass_universal_airplay
 #         template:
 #           - universal_media_player
 #           - icon_homepod
-# --- FIM CÓDIGO ORIGINAL ---
-
-# ANTERIOR: Versao com select.conditional_media (nada renderizava sem o helper entity no HA)
-# Cada card era type: conditional → dependia de select.conditional_media existir.
-# Sem o helper, o bloco media ficava VAZIO no dashboard.
-# - type: grid
-#   title: Media
-#   view_layout:
-#     grid-area: media
-#     show:
-#       mediaquery: '(min-width: 1441px)'
-#   columns: 1
-#   square: true
-#   cards:
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: TV Sala
-#       card: &TVSALA
-#         type: custom:button-card
-#         entity: media_player.smart_tv_pro_2
-#         name: ' '
-#         template: [conditional_media, icon_tv]
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Spotify
-#       card: &SPOTIFY
-#         type: custom:button-card
-#         entity: media_player.spotifyplus_bruno_helasio
-#         name: ' '
-#         double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
-#         template: [currently_playing]
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Echo Show
-#       card: &ECHOSHOW
-#         type: custom:button-card
-#         entity: media_player.echo_show
-#         name: 'Echo Show'
-#         template: [conditional_media, icon_homepod]
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Echo Pop Office
-#       card: &ECHOPOPOFFICE
-#         type: custom:button-card
-#         entity: media_player.echo_pop_office
-#         name: 'Echo Office'
-#         template: [conditional_media, icon_homepod]
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Echo Pop Quarto Casal
-#       card: &ECHOPOPQCASAL
-#         type: custom:button-card
-#         entity: media_player.echo_pop_quarto_casal
-#         name: 'Echo Q.Casal'
-#         template: [conditional_media, icon_homepod]
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Echo Pop Marina
-#       card: &ECHOPOPMARINA
-#         type: custom:button-card
-#         entity: media_player.echo_pop_marina
-#         name: 'Echo Marina'
-#         template: [conditional_media, icon_homepod]
-
-# NOVO: Bloco media SEM conditionals — renderiza direto, sem depender de select.conditional_media
-# Cards mostram estado real das entidades (playing/idle/off).
-# Quando o usuario criar select.conditional_media no HA, pode descomentar a versao acima
-# e comentar esta para voltar ao comportamento de 1 card por vez (carrossel).
-# PS5 (switch.ps5_015_power) AGUARDANDO — entidade ficando indisponivel
-# FASE C (2026-03-30): remover dependencia estrutural de conditional_media/currently_playing
-# no grid principal. Esses templates assumem contexto de swipe-card (swiper) e podem gerar
-# erro de button-card quando renderizados diretamente em grid.
-- type: grid
-  title: Media
-  view_layout:
-    grid-area: media
-    show:
-      mediaquery: '(min-width: 1441px)'
-  columns: 2
-  square: true
-  cards:
-    # TV SALA — Smart TV Pro 2
-    - type: custom:button-card
-      entity: media_player.smart_tv_pro_2
-      name: ' '
-      template:
-        - mediaplayer
-        - icon_tv
-    # SPOTIFY
-    - type: custom:button-card
-      entity: media_player.spotifyplus_bruno_helasio
-      name: ' '
-      double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
-      template:
-        - mediaplayer
-        - icon_spotify_color
-    # ECHO SHOW (Sala)
-    - type: custom:button-card
-      entity: media_player.echo_show
-      name: 'Echo Show'
-      template:
-        - mediaplayer
-    # ECHO POP OFFICE
-    - type: custom:button-card
-      entity: media_player.echo_pop_office
-      name: 'Echo Office'
-      template:
-        - mediaplayer
-
-#################################################
-#                                               #
-#                     MEDIA                     #
-#                                               #
-#################################################
-# --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA (entidades europeias) ---
+#
 # - type: grid
 #   title: Media
 #   view_layout:
@@ -221,17 +106,17 @@
 #       conditions:
 #         - entity: select.conditional_media
 #           state: Living Room TV
-#       card: *ATV
+#       card: *ATV_OLD
 #     - type: conditional
 #       conditions:
 #         - entity: select.conditional_media
 #           state: Bedroom TV
-#       card: *BEDROOMTV
+#       card: *BEDROOMTV_OLD
 #     - type: conditional
 #       conditions:
 #         - entity: select.conditional_media
 #           state: Kodi ATV
-#       card: *KODIATV
+#       card: *KODIATV_OLD
 #     - type: conditional
 #       conditions:
 #         - entity: select.conditional_media
@@ -240,214 +125,26 @@
 #         type: custom:button-card
 #         entity: media_player.spotifyplus_ngoc_nguyen
 #         name: ' '
-#         double_tap_action: !include ../../shared/popup/media_spotify.yaml
+#         double_tap_action: !include ../../shared/popup/spotify_playlist.yaml
 #         template:
 #           - currently_playing
 #     - type: conditional
 #       conditions:
 #         - entity: select.conditional_media
 #           state: PlayStation 5
-#       card: *PS5
+#       card: *PS5_OLD
 #     - type: conditional
 #       conditions:
 #         - entity: select.conditional_media
 #           state: Mass Player Group
-#       card: *MASSAIRPLAY
-# --- FIM CÓDIGO ORIGINAL ---
+#       card: *MASSAIRPLAY_OLD
 
-# ANTERIOR: Versao tablet com select.conditional_media (nada renderizava)
-# - type: grid
-#   title: Media
-#   view_layout:
-#     grid-area: media
-#     show:
-#       mediaquery: '(min-height: 463px) and (max-width: 1440px)'
-#   columns: 1
-#   cards:
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: TV Sala
-#       card: *TVSALA
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Spotify
-#       card: *SPOTIFY
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Echo Show
-#       card: *ECHOSHOW
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Echo Pop Office
-#       card: *ECHOPOPOFFICE
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Echo Pop Quarto Casal
-#       card: *ECHOPOPQCASAL
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Echo Pop Marina
-#       card: *ECHOPOPMARINA
-
-# NOVO: Bloco media tablet SEM conditionals — renderiza direto
-# FASE C (2026-03-30): mesmas trocas do bloco desktop para evitar erro estrutural de button-card.
-- type: grid
-  title: Media
-  view_layout:
-    grid-area: media
-    show:
-      mediaquery: '(min-width: 801px) and (max-width: 1440px)'
-  columns: 2
-  square: true
-  cards:
-    # TV SALA
-    - type: custom:button-card
-      entity: media_player.smart_tv_pro_2
-      name: ' '
-      template:
-        - mediaplayer
-        - icon_tv
-    # SPOTIFY
-    - type: custom:button-card
-      entity: media_player.spotifyplus_bruno_helasio
-      name: ' '
-      double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
-      template:
-        - mediaplayer
-        - icon_spotify_color
-    # ECHO SHOW (Sala)
-    - type: custom:button-card
-      entity: media_player.echo_show
-      name: 'Echo Show'
-      template:
-        - mediaplayer
-    # ECHO POP OFFICE
-    - type: custom:button-card
-      entity: media_player.echo_pop_office
-      name: 'Echo Office'
-      template:
-        - mediaplayer
-
-# PHONE: carrossel ocupando o espaco do bloco media (substitui grade 2x2 em telas pequenas)
-# HOTFIX (2026-03-30): Echo Show / Echo Office sem template icon_homepod para evitar
-# erros de button-card em entidades que nao expõem atributos esperados pelo template.
-- type: grid
-  title: Media
-  view_layout:
-    grid-area: media
-    show:
-      mediaquery: '(max-width: 800px) and (min-height: 463px)'
-  columns: 1
-  square: false
-  cards:
-    - type: custom:swipe-card
-      start_card: 1
-      parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
-      cards:
-        # Slide 1: arte da mídia em execução ocupando area equivalente ao bloco 2x2
-        - type: custom:button-card
-          entity: media_player.currently_playing
-          show_icon: false
-          show_state: true
-          aspect_ratio: 1/1
-          tap_action:
-            action: more-info
-          name: >
-            [[[
-              const candidates = ['media_player.currently_playing','media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio'];
-              for (const id of candidates) {
-                const s = states[id];
-                if (s && s.attributes && s.attributes.media_title) return s.attributes.media_title;
-              }
-              return 'Sem mídia ativa';
-            ]]]
-          state_display: >
-            [[[
-              const candidates = ['media_player.currently_playing','media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio'];
-              for (const id of candidates) {
-                const s = states[id];
-                if (s && s.attributes && s.attributes.media_artist) return s.attributes.media_artist;
-              }
-              return 'Swipe para controles';
-            ]]]
-          styles:
-            card:
-              - background: >
-                  [[[
-                    const candidates = ['media_player.currently_playing','media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio'];
-                    let pic = null;
-                    for (const id of candidates) {
-                      const s = states[id];
-                      if (s && s.attributes && s.attributes.entity_picture) {
-                        pic = s.attributes.entity_picture;
-                        break;
-                      }
-                    }
-                    return pic
-                      ? `linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.08) 60%), url(${pic})`
-                      : 'linear-gradient(135deg, #2f3240 0%, #1f2433 60%, #151922 100%)';
-                  ]]]
-              - background-size: cover
-              - background-position: center
-              - border-radius: 8%
-              - overflow: hidden
-              - position: relative
-            name:
-              - justify-self: start
-              - align-self: end
-              - text-align: left
-              - font-size: 1.45em
-              - font-weight: 700
-              - color: '#ffffff'
-              - text-shadow: 0 2px 8px rgba(0,0,0,0.9)
-              - padding: 0 0.6em 0.1em
-            state:
-              - justify-self: start
-              - align-self: end
-              - text-align: left
-              - font-size: 1em
-              - color: rgba(255,255,255,0.82)
-              - text-shadow: 0 2px 8px rgba(0,0,0,0.9)
-              - padding: 0 0.95em 0.8em
-        # Slide 2: grade 2x2 com os 4 botoes de media
-        - type: grid
-          columns: 2
-          square: true
-          cards:
-            - type: custom:button-card
-              entity: media_player.smart_tv_pro_2
-              name: ' '
-              template:
-                - mediaplayer
-                - icon_tv
-            - type: custom:button-card
-              entity: media_player.spotifyplus_bruno_helasio
-              name: ' '
-              double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
-              template:
-                - mediaplayer
-                - icon_spotify_color
-            - type: custom:button-card
-              entity: media_player.echo_show
-              name: 'Echo Show'
-              template:
-                - mediaplayer
-            - type: custom:button-card
-              entity: media_player.echo_pop_office
-              name: 'Echo Office'
-              template:
-                - mediaplayer
-# #################################################
-# #                                               #
-# #           GRID MEDIA MIN 1441px               #
-# #                                               #
-# #################################################
+#################################################
+#                                               #
+#     ORIGINAL SWIPE-CARD (COMENTADO)           #
+#     Referencia do ngocjohn original           #
+#                                               #
+#################################################
 # - type: grid
 #   title: Media
 #   view_layout:
@@ -457,7 +154,6 @@
 #   columns: 1
 #   square: true
 #   cards:
-#     #Conditional Media
 #     - type: custom:swipe-card
 #       start_card: 1
 #       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
@@ -471,12 +167,11 @@
 #               card:
 #                 type: custom:added-movie-card
 #                 entity: sensor.tmdb_movies_trending
-
 #             - type: conditional
 #               conditions:
 #                 - entity: select.conditional_media
 #                   state: Living Room TV
-#               card: &ATV
+#               card:
 #                 type: custom:button-card
 #                 entity: media_player.living_room_tv
 #                 name: ' '
@@ -485,136 +180,196 @@
 #                   - universal_media_player
 #                   - icon_apple_tv
 
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Kodi ATV
-#               card: &KODIATV
-#                 type: custom:button-card
-#                 entity: media_player.kodi_atv
-#                 name: ' '
-#                 triggers_update: sensor.kodi_picture
-#                 template:
-#                   - conditional_media
-#                   - progress_bar
-#                   - tpl_minicontrol
-#                   - icon_kodi
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Bedroom TV
-#               card: &BEDROOMTV
-#                 type: custom:button-card
-#                 entity: media_player.shield
-#                 name: 'ShieldTV'
-#                 triggers_update: sensor.youtube_thumbnail
-#                 template:
-#                   - conditional_media
-#                   - icon_shieldtv_text
-#                   - progress_bar
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: 'PlayStation 5'
-#               card: &PS5
-#                 type: custom:button-card
-#                 entity: media_player.playstation_5
-#                 name: ''
-#                 template:
-#                   - conditional_media
-#                   - icon_playstation
+#################################################
+#                                               #
+#    NOVO: SWIPE-CARD MEDIA COM ENTIDADES REAIS #
+#                                               #
+#    Slide 1: Artwork fullscreen (condicional)  #
+#    Slide 2: Grid de botoes dos players        #
+#                                               #
+#    IMPORTANTE: Os valores de 'state:' nos     #
+#    conditional cards devem corresponder ao     #
+#    friendly_name EXATO da entidade no HA.     #
+#    Se nao corresponderem, ajuste manualmente. #
+#                                               #
+#################################################
 
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Mass Universal Airplay
-#               card: &MASSAIRPLAY
-#                 type: custom:button-card
-#                 entity: media_player.mass_universal_airplay
-#                 template:
-#                   - universal_media_player
-#                   - icon_homepod
+#################################################
+#           DESKTOP (min-width: 1441px)         #
+#################################################
+- type: grid
+  title: Media
+  view_layout:
+    grid-area: media
+    show:
+      mediaquery: '(min-width: 1441px)'
+  columns: 1
+  square: true
+  cards:
+    - type: custom:swipe-card
+      parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
+      cards:
+        ########## SLIDE 1: ARTWORK CONDICIONAL ##########
+        - type: horizontal-stack
+          cards:
+            # TV - TCL Smart TV Pro 2
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Smart TV Pro 2
+              card: &TV_CARD
+                type: custom:button-card
+                entity: media_player.smart_tv_pro_2
+                name: ' '
+                template:
+                  - conditional_media
+                  - progress_bar
+                  - icon_tv
+            # Alexa - Echo Show
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Echo Show
+              card: &ECHO_CARD
+                type: custom:button-card
+                entity: media_player.echo_show
+                name: ' '
+                template:
+                  - conditional_media
+                  - progress_bar
+            # SpotifyPlus
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Spotifyplus Bruno Helasio
+              card: &SPOTIFYPLUS_CARD
+                type: custom:button-card
+                entity: media_player.spotifyplus_bruno_helasio
+                name: ' '
+                template:
+                  - currently_playing
+            # Spotify nativo
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Spotify Bruno Helasio
+              card: &SPOTIFY_CARD
+                type: custom:button-card
+                entity: media_player.spotify
+                name: ' '
+                template:
+                  - currently_playing
+            # Fallback: Recently added (nenhum player ativo)
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Recently added
+              card:
+                type: custom:button-card
+                entity: media_player.smart_tv_pro_2
+                name: 'Media'
+                template:
+                  - conditional_media
 
-# #################################################
-# #                                               #
-# #                     MEDIA                     #
-# #                                               #
-# #################################################
-# - type: grid
-#   title: Media
-#   view_layout:
-#     grid-area: media
-#     show:
-#       mediaquery: '(min-height: 463px) and (max-width: 1440px)'
-#   columns: 1
-#   cards:
-#     #Conditional Media
-#     - type: custom:swipe-card
-#       start_card: 1
-#       parameters:
-#         pagination:
-#           type: bullets
-#           clickable: true
-#         direction: horizontal
-#         roundLengths: true
-#         effect: coverflow
-#         speed: 650
-#         spaceBetween: 20
-#         threshold: 7
-#         coverflowEffect:
-#           rotate: 80
-#           depth: 300
-#       cards:
-#         - type: horizontal-stack
-#           cards:
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Recently added
-#               card:
-#                 type: custom:added-movie-card
-#                 entity: sensor.kodi_all_movies
-#                 show_item_count: 10
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Living Room TV
-#               card: *ATV
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Bedroom TV
-#               card: *BEDROOMTV
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Kodi ATV
-#               card: *KODIATV
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Spotify
-#               card:
-#                 type: custom:button-card
-#                 entity: media_player.spotifyplus_ngoc_nguyen
-#                 name: ' '
-#                 double_tap_action: !include ../../shared/popup/spotify_playlist.yaml
-#                 template:
-#                   - currently_playing
-#                   # - conditional_media
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: PlayStation 5
-#               card: *PS5
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Mass Player Group
-#               card: *MASSAIRPLAY
-#             # - type: conditional
-#             #   conditions:
-#             #     - entity: select.conditional_media
-#             #       state: Youtube Music Player
-#             #   card: *YOUTUBEPLAYER
-#           #Media Players
+        ########## SLIDE 2: GRID DE BOTOES ##########
+        - type: grid
+          columns: 2
+          square: true
+          cards:
+            - type: custom:button-card
+              entity: media_player.smart_tv_pro_2
+              template:
+                - mediaplayer
+                - icon_tv
+            - type: custom:button-card
+              entity: media_player.echo_show
+              template:
+                - mediaplayer
+            - type: custom:button-card
+              entity: media_player.spotifyplus_bruno_helasio
+              template:
+                - mediaplayer
+                - icon_spotify
+            - type: custom:button-card
+              entity: media_player.spotify
+              template:
+                - mediaplayer
+                - icon_spotify_color
+
+#################################################
+#      TABLET/PHONE (max-width: 1440px)         #
+#################################################
+- type: grid
+  title: Media
+  view_layout:
+    grid-area: media
+    show:
+      mediaquery: '(min-height: 463px) and (max-width: 1440px)'
+  columns: 1
+  cards:
+    - type: custom:swipe-card
+      parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
+      cards:
+        ########## SLIDE 1: ARTWORK CONDICIONAL ##########
+        - type: horizontal-stack
+          cards:
+            # TV - TCL Smart TV Pro 2
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Smart TV Pro 2
+              card: *TV_CARD
+            # Alexa - Echo Show
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Echo Show
+              card: *ECHO_CARD
+            # SpotifyPlus
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Spotifyplus Bruno Helasio
+              card: *SPOTIFYPLUS_CARD
+            # Spotify nativo
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Spotify Bruno Helasio
+              card: *SPOTIFY_CARD
+            # Fallback
+            - type: conditional
+              conditions:
+                - entity: select.conditional_media
+                  state: Recently added
+              card:
+                type: custom:button-card
+                entity: media_player.smart_tv_pro_2
+                name: 'Media'
+                template:
+                  - conditional_media
+
+        ########## SLIDE 2: GRID DE BOTOES ##########
+        - type: grid
+          columns: 2
+          square: true
+          cards:
+            - type: custom:button-card
+              entity: media_player.smart_tv_pro_2
+              template:
+                - mediaplayer
+                - icon_tv
+            - type: custom:button-card
+              entity: media_player.echo_show
+              template:
+                - mediaplayer
+            - type: custom:button-card
+              entity: media_player.spotifyplus_bruno_helasio
+              template:
+                - mediaplayer
+                - icon_spotify
+            - type: custom:button-card
+              entity: media_player.spotify
+              template:
+                - mediaplayer
+                - icon_spotify_color

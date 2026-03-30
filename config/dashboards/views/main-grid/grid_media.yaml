@@ -155,6 +155,9 @@
 # Quando o usuario criar select.conditional_media no HA, pode descomentar a versao acima
 # e comentar esta para voltar ao comportamento de 1 card por vez (carrossel).
 # PS5 (switch.ps5_015_power) AGUARDANDO — entidade ficando indisponivel
+# FASE C (2026-03-30): remover dependencia estrutural de conditional_media/currently_playing
+# no grid principal. Esses templates assumem contexto de swipe-card (swiper) e podem gerar
+# erro de button-card quando renderizados diretamente em grid.
 - type: grid
   title: Media
   view_layout:
@@ -169,7 +172,7 @@
       entity: media_player.smart_tv_pro_2
       name: ' '
       template:
-        - conditional_media
+        - mediaplayer
         - icon_tv
     # SPOTIFY
     - type: custom:button-card
@@ -177,34 +180,35 @@
       name: ' '
       double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
       template:
-        - currently_playing
+        - mediaplayer
+        - icon_spotify_color
     # ECHO SHOW (Sala)
     - type: custom:button-card
       entity: media_player.echo_show
       name: 'Echo Show'
       template:
-        - conditional_media
+        - mediaplayer
         - icon_homepod
     # ECHO POP OFFICE
     - type: custom:button-card
       entity: media_player.echo_pop_office
       name: 'Echo Office'
       template:
-        - conditional_media
+        - mediaplayer
         - icon_homepod
     # ECHO POP QUARTO CASAL
     - type: custom:button-card
       entity: media_player.echo_pop_quarto_casal
       name: 'Echo Q.Casal'
       template:
-        - conditional_media
+        - mediaplayer
         - icon_homepod
     # ECHO POP MARINA
     - type: custom:button-card
       entity: media_player.echo_pop_marina
       name: 'Echo Marina'
       template:
-        - conditional_media
+        - mediaplayer
         - icon_homepod
 
 #################################################
@@ -308,6 +312,7 @@
 #       card: *ECHOPOPMARINA
 
 # NOVO: Bloco media tablet SEM conditionals — renderiza direto
+# FASE C (2026-03-30): mesmas trocas do bloco desktop para evitar erro estrutural de button-card.
 - type: grid
   title: Media
   view_layout:
@@ -322,7 +327,7 @@
       entity: media_player.smart_tv_pro_2
       name: ' '
       template:
-        - conditional_media
+        - mediaplayer
         - icon_tv
     # SPOTIFY
     - type: custom:button-card
@@ -330,34 +335,35 @@
       name: ' '
       double_tap_action: !include ../../shared/popup/media_spotify_sala.yaml
       template:
-        - currently_playing
+        - mediaplayer
+        - icon_spotify_color
     # ECHO SHOW (Sala)
     - type: custom:button-card
       entity: media_player.echo_show
       name: 'Echo Show'
       template:
-        - conditional_media
+        - mediaplayer
         - icon_homepod
     # ECHO POP OFFICE
     - type: custom:button-card
       entity: media_player.echo_pop_office
       name: 'Echo Office'
       template:
-        - conditional_media
+        - mediaplayer
         - icon_homepod
     # ECHO POP QUARTO CASAL
     - type: custom:button-card
       entity: media_player.echo_pop_quarto_casal
       name: 'Echo Q.Casal'
       template:
-        - conditional_media
+        - mediaplayer
         - icon_homepod
     # ECHO POP MARINA
     - type: custom:button-card
       entity: media_player.echo_pop_marina
       name: 'Echo Marina'
       template:
-        - conditional_media
+        - mediaplayer
         - icon_homepod
 # #################################################
 # #                                               #

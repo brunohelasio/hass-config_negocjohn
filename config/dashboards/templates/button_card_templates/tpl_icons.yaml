@@ -690,18 +690,32 @@ icon_spotify:
     ]]]
   styles:
     # HEMMA: artwork como background do card (entity_picture)
+    # ORIGINAL COMENTADO — background shorthand conflitava com background-color do template base:
+    # card:
+    #   - background: >
+    #       [[[
+    #         if (entity !== undefined && entity.attributes && entity.attributes.entity_picture) {
+    #           return `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url(${entity.attributes.entity_picture}) center / cover no-repeat`;
+    #         }
+    #         let state_on = entity !== undefined && ['playing','paused','idle'].includes(entity.state);
+    #         return state_on
+    #           ? 'linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.12))'
+    #           : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
+    #       ]]]
+    # FIX: propriedades separadas para nao conflitar com background-color do base
     card:
-      - background: >
+      - background-image: >
           [[[
             if (entity !== undefined && entity.attributes && entity.attributes.entity_picture) {
-              return `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url(${entity.attributes.entity_picture}) center / cover no-repeat`;
+              return `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url(${entity.attributes.entity_picture})`;
             }
             let state_on = entity !== undefined && ['playing','paused','idle'].includes(entity.state);
             return state_on
               ? 'linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.12))'
               : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
           ]]]
-  # HEMMA: SVG com animacao pulse quando playing
+      - background-size: cover
+      - background-position: center
   # HEMMA: SVG com animacao pulse quando playing
   custom_fields:
     icon: >
@@ -1738,16 +1752,30 @@ icon_tv:
     ]]]
   styles:
     # HEMMA: artwork como background do card (entity_picture)
+    # ORIGINAL COMENTADO — background shorthand conflitava com background-color do template base:
+    # card:
+    #   - background: >
+    #       [[[
+    #         if (entity !== undefined && entity.attributes && entity.attributes.entity_picture) {
+    #           return `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url(${entity.attributes.entity_picture}) center / cover no-repeat`;
+    #         }
+    #         return variables.state_on
+    #           ? 'linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.12))'
+    #           : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
+    #       ]]]
+    # FIX: propriedades separadas para nao conflitar com background-color do base
     card:
-      - background: >
+      - background-image: >
           [[[
             if (entity !== undefined && entity.attributes && entity.attributes.entity_picture) {
-              return `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url(${entity.attributes.entity_picture}) center / cover no-repeat`;
+              return `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url(${entity.attributes.entity_picture})`;
             }
             return variables.state_on
               ? 'linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.12))'
               : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
           ]]]
+      - background-size: cover
+      - background-position: center
     # ORIGINAL: estilos do icone SVG (mantidos)
     custom_fields:
       icon:

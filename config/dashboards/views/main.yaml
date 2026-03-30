@@ -133,6 +133,8 @@ layout:
         ". mainrooms   devices   ."
         ". footer      footer    ."
         ". floorplan   .         ."
+        ". other       .         ."
+        ". movies      .         ."
     # phone cover screen = place horizontal
     '(max-height: 462px)':
       grid-gap: 0.5rem

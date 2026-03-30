@@ -25,6 +25,18 @@
 # NOVO (agora comentado): Bloco Movies com imagem estática Netflix como placeholder
 # FASE B (2026-03-30): retirado do painel principal por diretriz do usuario.
 # Mantido comentado para possivel reativacao futura.
+# Stub ativo para garantir parse da lista sem renderizar conteudo.
+- type: conditional
+  conditions:
+    - condition: screen
+      media_query: '(max-width: 0px)'
+  card:
+    type: markdown
+    content: 'Movies column disabled'
+    view_layout:
+      grid-area: movies
+      show:
+        mediaquery: '(max-width: 0px)'
 # - &movies_desktop
 #   type: grid
 #   title: Movies

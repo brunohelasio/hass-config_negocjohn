@@ -50,6 +50,12 @@
 - HOTFIX pos-feedback: areas `other` e `movies` foram reintroduzidas no `main.yaml`
   como trilhas ocultas (coluna/linha zero) para evitar auto-placement residual e
   compressao do grid principal quando houver qualquer card legado ainda renderizando.
+- HOTFIX FINAL pos-segundo feedback:
+  - sidebar ajustada para ocupar 30% do grid principal;
+  - restante redistribuido igualmente entre 3 colunas de conteudo;
+  - removidas novamente areas `other`/`movies` do `grid-template-areas` principal;
+  - adicionados stubs condicionais `max-width: 0px` em `devices.yaml` e
+    `horizontal_movies.yaml` para impedir qualquer render residual dessas colunas.
 
 ## Estrategia de Grid: Sagaland Hibrida (OBRIGATORIO)
 

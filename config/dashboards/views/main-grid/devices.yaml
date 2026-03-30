@@ -6,6 +6,19 @@
 # FASE B (2026-03-30): coluna Devices (grid-area: other) retirada por diretriz do usuario.
 # NUNCA deletar: blocos originais mantidos comentados para rollback rapido.
 #
+# Stub ativo para garantir parse da lista sem renderizar conteudo.
+- type: conditional
+  conditions:
+    - condition: screen
+      media_query: '(max-width: 0px)'
+  card:
+    type: markdown
+    content: 'Devices column disabled'
+    view_layout:
+      grid-area: other
+      show:
+        mediaquery: '(max-width: 0px)'
+#
 # - type: conditional
 #   conditions:
 #     - entity: input_boolean.sidebar_compact

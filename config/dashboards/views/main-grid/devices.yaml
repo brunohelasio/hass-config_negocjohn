@@ -3,25 +3,28 @@
 #                    DEVICES                    #
 #                                               #
 #################################################
-- type: conditional
-  conditions:
-    - entity: input_boolean.sidebar_compact
-      state: 'on'
-  card:
-    type: grid
-    title: Devices
-    view_layout:
-      grid-area: other
-      show:
-        mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
-    columns: 2
-    cards: !include ../../shared/grid-cards/devices.yaml
-
-- type: grid
-  title: Devices
-  view_layout:
-    grid-area: other
-    show:
-      mediaquery: '(min-height: 463px)'
-  columns: 2
-  cards: !include ../../shared/grid-cards/devices.yaml
+# FASE B (2026-03-30): coluna Devices (grid-area: other) retirada por diretriz do usuario.
+# NUNCA deletar: blocos originais mantidos comentados para rollback rapido.
+#
+# - type: conditional
+#   conditions:
+#     - entity: input_boolean.sidebar_compact
+#       state: 'on'
+#   card:
+#     type: grid
+#     title: Devices
+#     view_layout:
+#       grid-area: other
+#       show:
+#         mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)'
+#     columns: 2
+#     cards: !include ../../shared/grid-cards/devices.yaml
+#
+# - type: grid
+#   title: Devices
+#   view_layout:
+#     grid-area: other
+#     show:
+#       mediaquery: '(min-height: 463px)'
+#   columns: 2
+#   cards: !include ../../shared/grid-cards/devices.yaml

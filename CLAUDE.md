@@ -15,6 +15,39 @@
 - Sempre aguardar autorizacao explicita para avancar para proxima fase.
 - Mudancas devem ser incrementais e reversiveis.
 
+## Registro de Execucao Controlada — 2026-03-30 (Fases A, B, C)
+
+### Fase A — Baseline e congelamento
+
+- Baseline registrado antes de alterar layout principal.
+- Escopo autorizado pelo usuario: executar Fases A, B e C.
+- Diretriz adicional do usuario: apos retirar coluna Devices/Movies, ajustar barra fixa + colunas para 25% cada.
+
+### Fase B — Retirada de colunas Devices e Movies (sem exclusao)
+
+- `config/dashboards/views/main-grid/devices.yaml`
+  - Blocos ativos da coluna Devices (`grid-area: other`) comentados por completo.
+  - Nenhum trecho apagado; rollback imediato disponivel por descomentar.
+- `config/dashboards/views/main-grid/horizontal_movies.yaml`
+  - Bloco ativo de Movies (placeholder Netflix) comentado por completo.
+  - Nenhum trecho apagado; rollback imediato disponivel por descomentar.
+- `config/dashboards/views/main.yaml`
+  - Grid principal ajustado para remover colunas visiveis `other` e `movies`.
+  - Estrutura atualizada para 4 colunas uteis iguais (sidebar + 3 colunas de conteudo), 25% cada.
+  - Ajustes aplicados em default, desktop, landscape tablet, portrait tablet e phone.
+
+### Fase C — Correcao estrutural do bloco Media (erro button-card)
+
+- `config/dashboards/views/main-grid/grid_media.yaml`
+  - Cards ativos deixaram de usar `conditional_media` / `currently_playing` no grid principal.
+  - Substituicao por `mediaplayer` + icones especificos (`icon_tv`, `icon_homepod`, `icon_spotify_color`) nos blocos desktop e tablet.
+  - Motivo: evitar dependencia de contexto `swipe-card/swiper` em renderizacao direta de grid.
+
+### Observacoes
+
+- Regra de ouro preservada: nenhuma exclusao de codigo foi realizada.
+- Historico anterior mantido em comentarios para rastreabilidade e reversao.
+
 ## Estrategia de Grid: Sagaland Hibrida (OBRIGATORIO)
 
 Baseada na analise do repositorio sagaland-ha-dashboard, com ajuste pratico.

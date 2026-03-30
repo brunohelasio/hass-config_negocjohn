@@ -19,14 +19,8 @@ layout:
   margin: 0
   padding: 0
   grid-gap: 3.5vw 3vw
-  # ANTERIOR: sidebar ~20% + 4 colunas de conteudo (incluia areas other/movies visiveis)
-  # grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-  # HOTFIX FINAL (2026-03-30): sidebar fixa em 27% + 3 colunas de conteudo igualmente distribuidas.
-  # ANTERIOR: grid-template-columns: 0 repeat(4, minmax(0, 1fr)) 0 0
-  grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
-  # ANTERIOR:
-  # grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-  grid-template-rows: repeat(2, fit-content(100%)) min-content 0
+  grid-template-columns: 0 minmax(220px, 26%) repeat(4, minmax(0, 1fr)) 0
+  grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
   # ESTRATEGIA SAGALAND: todas as grid-areas em todos os breakpoints
   # Areas ocultas ficam em linhas de altura 0 — nenhum card orfao
   # floorplan adicionado em row h=0 para evitar card orfao
@@ -48,17 +42,8 @@ layout:
     # tablet landscape (e.g. 2000x1200)
     '(min-width: 1441px) and (max-width: 2000px)':
       grid-gap: 3.5vw 3vw
-      # ANTERIOR: grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-      grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
-      # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-      grid-template-rows: repeat(2, fit-content(100%)) min-content 0
-      # ANTERIOR:
-      # grid-template-areas: |
-      #   ". .         .          .         .        .        ."
-      #   ". sidebar   security   mainrooms devices  other    ."
-      #   ". sidebar   cameras    climate   media    movies   ."
-      #   ". sidebar   footer     footer    footer   footer   ."
-      #   ". .         floorplan  .         .        .        ."
+      grid-template-columns: 0 minmax(220px, 26%) repeat(4, minmax(0, 1fr)) 0
+      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
       grid-template-areas: |
         ". sidebar   security   mainrooms devices  ."
         ". sidebar   cameras    climate   media    ."
@@ -69,10 +54,9 @@ layout:
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
       # Espaçamento inspirado no hass-config do sagaland93 para separar blocos.
       grid-gap: 3.5vw 3vw
-      # ANTERIOR: 5 colunas (sidebar + 4 conteúdos), com other/movies visiveis.
-      # grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-      # NOVO: sidebar 27% + 3 colunas iguais para conteudo principal.
-      grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
+      # Novo padrão: 5 colunas uniformes (sidebar + 4 colunas de conteúdo).
+      # Sidebar ocupa ~26% da área útil no tablet/desktop.
+      grid-template-columns: 0 minmax(220px, 26%) repeat(4, minmax(0, 1fr)) 0
       # grid-template-rows: auto auto min-content 0 0 0
       # grid-template-rows: calc((100vh - 56px - 40px - 3vw) / 2) calc((100vh - 56px - 40px - 3vw) / 2) min-content 0 0 0
       # grid-template-rows: 40vh 40vh min-content 0 0 0
@@ -93,17 +77,8 @@ layout:
     # portrait — Sagaland: areas ocultas (sidebar, chips, movies) em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-gap: 4.4vw 3vw
-      # ANTERIOR: grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-      grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
-      # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-      grid-template-rows: repeat(2, fit-content(100%)) min-content 0
-      # ANTERIOR:
-      # grid-template-areas: |
-      #   ". .        .          .         .        .        ."
-      #   ". sidebar  security   mainrooms devices  other    ."
-      #   ". sidebar  cameras    climate   media    movies   ."
-      #   ". sidebar  footer     footer    footer   footer   ."
-      #   ". .        floorplan  .         .        .        ."
+      grid-template-columns: 0 minmax(220px, 26%) repeat(4, minmax(0, 1fr)) 0
+      grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
       grid-template-areas: |
         ". sidebar  security   mainrooms devices  ."
         ". sidebar  cameras    climate   media    ."

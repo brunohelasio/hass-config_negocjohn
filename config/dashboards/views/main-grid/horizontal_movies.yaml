@@ -22,77 +22,64 @@
 # - <<: *movies_desktop
 # --- FIM CÓDIGO ORIGINAL ---
 
-# NOVO (agora comentado): Bloco Movies com imagem estática Netflix como placeholder
-# FASE B (2026-03-30): retirado do painel principal por diretriz do usuario.
-# Mantido comentado para possivel reativacao futura.
-# Stub ativo para garantir parse da lista sem renderizar conteudo.
-- type: conditional
-  conditions:
-    - condition: screen
-      media_query: '(max-width: 0px)'
-  card:
-    type: markdown
-    content: 'Movies column disabled'
-    view_layout:
-      grid-area: movies
-      show:
-        mediaquery: '(max-width: 0px)'
-# - &movies_desktop
-#   type: grid
-#   title: Movies
-#   view_layout:
-#     grid-area: movies
-#     show:
-#       mediaquery: '(min-height: 463px)'
-#   columns: 1
-#   square: false
-#   cards:
-#     - type: custom:button-card
-#       name: ' '
-#       show_name: false
-#       show_icon: false
-#       show_state: false
-#       aspect_ratio: 16/9
-#       tap_action:
-#         action: none
-#       styles:
-#         card:
-#           - background: >
-#               linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%),
-#               linear-gradient(135deg, #e50914 0%, #b20710 25%, #221f1f 60%)
-#           - background-size: cover
-#           - border-radius: 5%
-#           - overflow: hidden
-#           - position: relative
-#       custom_fields:
-#         netflix_logo: >
-#           [[[
-#             return `
-#               <div style="
-#                 position: absolute;
-#                 top: 12%;
-#                 left: 50%;
-#                 transform: translateX(-50%);
-#                 font-family: 'Arial Black', Impact, sans-serif;
-#                 font-size: clamp(1.4em, 3vw, 2.2em);
-#                 font-weight: 900;
-#                 color: #e50914;
-#                 letter-spacing: 0.15em;
-#                 text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
-#                 text-transform: uppercase;
-#               ">NETFLIX</div>
-#               <div style="
-#                 position: absolute;
-#                 bottom: 12%;
-#                 left: 50%;
-#                 transform: translateX(-50%);
-#                 font-family: 'Helvetica Neue', Arial, sans-serif;
-#                 font-size: 0.75em;
-#                 color: rgba(255,255,255,0.5);
-#                 letter-spacing: 0.1em;
-#                 text-transform: uppercase;
-#               ">Em breve · TMDB</div>
-#             `;
-#           ]]]
-# # MOVIES em todos os formatos padronizados (exceto cover screen)
-# - <<: *movies_desktop
+# NOVO: Bloco Movies com imagem estática Netflix como placeholder
+# Até decidir se instala TMDB ou outra integração de filmes
+- &movies_desktop
+  type: grid
+  title: Movies
+  view_layout:
+    grid-area: movies
+    show:
+      mediaquery: '(min-height: 463px)'
+  columns: 1
+  square: false
+  cards:
+    - type: custom:button-card
+      name: ' '
+      show_name: false
+      show_icon: false
+      show_state: false
+      aspect_ratio: 16/9
+      tap_action:
+        action: none
+      styles:
+        card:
+          - background: >
+              linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 40%),
+              linear-gradient(135deg, #e50914 0%, #b20710 25%, #221f1f 60%)
+          - background-size: cover
+          - border-radius: 5%
+          - overflow: hidden
+          - position: relative
+      custom_fields:
+        netflix_logo: >
+          [[[
+            return `
+              <div style="
+                position: absolute;
+                top: 12%;
+                left: 50%;
+                transform: translateX(-50%);
+                font-family: 'Arial Black', Impact, sans-serif;
+                font-size: clamp(1.4em, 3vw, 2.2em);
+                font-weight: 900;
+                color: #e50914;
+                letter-spacing: 0.15em;
+                text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+                text-transform: uppercase;
+              ">NETFLIX</div>
+              <div style="
+                position: absolute;
+                bottom: 12%;
+                left: 50%;
+                transform: translateX(-50%);
+                font-family: 'Helvetica Neue', Arial, sans-serif;
+                font-size: 0.75em;
+                color: rgba(255,255,255,0.5);
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+              ">Em breve · TMDB</div>
+            `;
+          ]]]
+# MOVIES em todos os formatos padronizados (exceto cover screen)
+- <<: *movies_desktop

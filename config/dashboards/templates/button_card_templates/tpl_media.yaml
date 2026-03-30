@@ -275,13 +275,23 @@ conditional_media:
       #         }
       #       }
       #     ]]]
-      # NOVO: Simplificado - nao depende de data array
-      - background: &media_background >
+      # ORIGINAL COMENTADO — background shorthand resetava background-image (artwork nao aparecia):
+      # - background: &media_background >
+      #     [[[
+      #       if (entity) {
+      #         return `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
+      #       }
+      #     ]]]
+      # FIX: propriedades separadas para preservar background-image (artwork)
+      - background-color: >
           [[[
             if (entity) {
-              return `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
+              return 'rgba(115, 115, 115, 0.2)';
             }
           ]]]
+      - background-size: cover
+      - background-position: center center
+      - background-repeat: no-repeat
       # - --speed: >
       #     [[[
       #       setTimeout(() => {

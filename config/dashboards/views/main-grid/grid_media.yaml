@@ -275,7 +275,7 @@
         ########## SLIDE 2: GRID DE BOTOES (media_premium = tap play/pause + volume circle) ##########
         - type: grid
           columns: 2
-          square: true
+          # square: true  # REMOVIDO — com square:true, 2x2 grid transbordava o container do swipe-card (cortava botoes inferiores)
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
@@ -358,7 +358,7 @@
         ########## SLIDE 2: GRID DE BOTOES (media_premium = tap play/pause + volume circle) ##########
         - type: grid
           columns: 2
-          square: true
+          # square: true  # REMOVIDO — com square:true, 2x2 grid transbordava o container do swipe-card
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2

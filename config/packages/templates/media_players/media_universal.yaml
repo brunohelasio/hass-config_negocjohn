@@ -3,18 +3,22 @@ media_player:
     name: Currently Playing
     unique_id: currently_playing
     children:
-      - media_player.mass_universal_airplay
-      - media_player.spotifyplus_ngoc_nguyen
-      - media_player.living_room_tv
-      - media_player.bedroom_tv
-  - platform: universal ### CURRENTLY PLAYING ###
-    name: Homepod Airplay Group
-    unique_id: homepod_airplay_media
-    children:
-      - media_player.office
-      - media_player.bathroom_homepod
-      - media_player.bedroom_homepod
-      - media_player.living_room
+      # - media_player.mass_universal_airplay    # original ngocjohn
+      # - media_player.spotifyplus_ngoc_nguyen   # original ngocjohn
+      # - media_player.living_room_tv            # original ngocjohn
+      # - media_player.bedroom_tv                # original ngocjohn
+      - media_player.smart_tv_pro_2
+      - media_player.echo_show
+      - media_player.spotifyplus_bruno_helasio
+      - media_player.spotify
+  # - platform: universal ### CURRENTLY PLAYING ###
+  #   name: Homepod Airplay Group
+  #   unique_id: homepod_airplay_media
+  #   children:
+  #     - media_player.office                    # original ngocjohn
+  #     - media_player.bathroom_homepod          # original ngocjohn
+  #     - media_player.bedroom_homepod           # original ngocjohn
+  #     - media_player.living_room               # original ngocjohn
 
 template:
   - select:

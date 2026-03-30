@@ -175,12 +175,16 @@ group:
     name: Conditional Media
     icon: mdi:play-circle
     entities:
-      - media_player.spotifyplus_ngoc_nguyen
-      - media_player.mass_universal_airplay
-      - media_player.living_room_tv
-      - media_player.kodi_atv
-      - media_player.playstation_5
-      # - sensor.ps5_activity
+      # - media_player.spotifyplus_ngoc_nguyen  # original ngocjohn
+      # - media_player.mass_universal_airplay    # original ngocjohn
+      # - media_player.living_room_tv            # original ngocjohn
+      # - media_player.kodi_atv                  # original ngocjohn
+      # - media_player.playstation_5             # original ngocjohn
+      # - sensor.ps5_activity                    # original ngocjohn
+      - media_player.smart_tv_pro_2              # TCL TV
+      - media_player.echo_show                   # Alexa
+      - media_player.spotifyplus_bruno_helasio   # SpotifyPlus
+      - media_player.spotify                     # Spotify nativo
 
   ## CLIMATE GROUP ##
   thermostats:

@@ -252,19 +252,27 @@ conditional_media:
     card:
       - padding: 5.75% 5.75% 0 5.75%
       - border-radius: calc(var(--button-card-border-radius) / 2)
+      # ORIGINAL background (dependia de data[variables.i]):
+      # - background: &media_background_ORIG >
+      #     [[[
+      #       if (entity) {
+      #         if (variables.is_youtube) {
+      #             return `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
+      #         } else {
+      #           let data = entity.attributes.data;
+      #           return data && (data[variables.i].entity_picture)
+      #               ? `rgba(115, 115, 115, 0.2) center center/cover no-repeat`
+      #               :  data && (data[variables.i].fanart)
+      #                 ? `rgba(115, 115, 115, 0.2) top center/cover no-repeat`
+      #                 : `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
+      #         }
+      #       }
+      #     ]]]
+      # NOVO: Simplificado - nao depende de data array
       - background: &media_background >
           [[[
             if (entity) {
-              if (variables.is_youtube) {
-                  return `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
-              } else {
-                let data = entity.attributes.data;
-                return data && (data[variables.i].entity_picture)
-                    ? `rgba(115, 115, 115, 0.2) center center/cover no-repeat`
-                    :  data && (data[variables.i].fanart)
-                      ? `rgba(115, 115, 115, 0.2) top center/cover no-repeat`
-                      : `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
-              }
+              return `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
             }
           ]]]
       # - --speed: >
@@ -290,28 +298,59 @@ conditional_media:
       #       return '0s';
       #     ]]]
 
+      # ORIGINAL background-image (dependia de sensor.youtube_thumbnail, sensor.kodi_picture):
+      # - background-image: &media_background_image_ORIG >
+      #     [[[
+      #       if (entity) {
+      #         if (variables.is_youtube) {
+      #             return `url(${states[this._config?.triggers_update].attributes.entity_picture})`;
+      #         }
+      #         if (variables.is_kodi) {
+      #             let fanart = states[this._config?.triggers_update].attributes.fanart;
+      #             let poster = states[this._config?.triggers_update].attributes.poster;
+      #             return `url(${fanart})`;
+      #         }
+      #         if (entity?.attributes?.app_id === 'com.google.ios.youtubekids') {
+      #             return `url(/local/img/channels/youtubekids.png)`;
+      #         } else {
+      #           let data = entity.attributes.data,
+      #           game_image = entity.attributes.title_image;
+      #           return game_image !== undefined
+      #             ? `url("${game_image}")`
+      #             : data && (data[variables.i].entity_picture || data[variables.i].fanart)
+      #               ? `linear-gradient(to top, rgba(0, 0, 0, .65) 0%, rgba(0, 0, 0, 0) 100%), url("${data[variables.i].entity_picture}"), url("${data[variables.i].fanart}")`
+      #               : `url("${variables.entity_picture}")`;
+      #         }
+      #       }
+      #     ]]]
+      # NOVO: Simplificado - usa entity_picture diretamente (funciona com TV, Spotify, Alexa)
       - background-image: &media_background_image >
           [[[
             if (entity) {
-              if (variables.is_youtube) {
-                  return `url(${states[this._config?.triggers_update].attributes.entity_picture})`;
+              // Tentar triggers_update sensor se existir (ex: youtube_thumbnail)
+              let sensor = this._config?.triggers_update;
+              if (sensor && states[sensor] && states[sensor].attributes.entity_picture) {
+                return `url(${states[sensor].attributes.entity_picture})`;
               }
-              if (variables.is_kodi) {
-                  let fanart = states[this._config?.triggers_update].attributes.fanart;
-                  let poster = states[this._config?.triggers_update].attributes.poster;
-                  return `url(${fanart})`;
+              // Game image (PS5, etc)
+              let game_image = entity.attributes.title_image;
+              if (game_image) {
+                return `url("${game_image}")`;
               }
-              if (entity?.attributes?.app_id === 'com.google.ios.youtubekids') {
-                  return `url(/local/img/channels/youtubekids.png)`;
-              } else {
-                let data = entity.attributes.data,
-                game_image = entity.attributes.title_image;
-                return game_image !== undefined
-                  ? `url("${game_image}")`
-                  : data && (data[variables.i].entity_picture || data[variables.i].fanart)
-                    ? `linear-gradient(to top, rgba(0, 0, 0, .65) 0%, rgba(0, 0, 0, 0) 100%), url("${data[variables.i].entity_picture}"), url("${data[variables.i].fanart}")`
-                    : `url("${variables.entity_picture}")`;
+              // Data array (recently added, etc)
+              let data = entity.attributes.data;
+              if (data && data[variables.i]) {
+                let ep = data[variables.i].entity_picture;
+                let fa = data[variables.i].fanart;
+                if (ep || fa) {
+                  return `linear-gradient(to top, rgba(0, 0, 0, .65) 0%, rgba(0, 0, 0, 0) 100%), url("${ep || ''}"), url("${fa || ''}")`;
+                }
               }
+              // Default: entity_picture do media player (album art, TV screenshot, etc)
+              if (variables.entity_picture) {
+                return `url("${variables.entity_picture}")`;
+              }
+              return 'none';
             }
           ]]]
       - color: >

@@ -1,0 +1,412 @@
+# ══════════════════════════════════════════════════════════════════════════
+# LAYOUT 5 COLUNAS — Office (popup)
+# Replicado do modelo base: room_living_all_buttons.yaml (Sala)
+# Secao 1: Luzes (titulo + toggle all + 3 botoes em 5 colunas)
+# Secao 2: Midia & Clima (titulo + MacBook + Spotify + AC + 2 blanks)
+#
+# Entidades confirmadas:
+#   - light.office_switch_3 (Luz central)
+#   - light.office_switch_2 (Luz ambiente)
+#   - light.office_switch_1 (Luz estante)
+#   - Grupo: light.grupo_luzes_office
+#   - Camera: camera.of_camera
+#   - AC: climate.ac_office
+#   - PC: switch.macbook
+#   - Spotify: media_player.spotifyplus_bruno_helasio (compartilhado)
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── Titulo: Luzes + toggle all lights ──
+# FIX C4.1: Adicionado indicador visual ON/OFF (custom_field)
+- type: custom:button-card
+  entity: light.grupo_luzes_office
+  triggers_update:
+    - light.grupo_luzes_office
+  name: Luzes
+  show_state: false
+  show_icon: true
+  icon: mdi:lightbulb-group-outline
+  tap_action:
+    action: toggle
+    haptic: success
+  # ANTERIOR: custom_fields com JS template para ON/OFF badge (nao atualizava em browser_mod popup)
+  # FIX: state: section nativa do button-card com HTML estatico — mais reativo
+  custom_fields:
+    on_off: |
+      <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-right:4px">OFF</span>
+  state:
+    - value: 'on'
+      custom_fields:
+        on_off: |
+          <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:#fff;background:#3b82f6;padding:1px 6px;border-radius:8px;margin-right:4px">ON</span>
+      styles:
+        icon:
+          - color: '#f0c040'
+    - value: 'off'
+      custom_fields:
+        on_off: |
+          <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-right:4px">OFF</span>
+      styles:
+        icon:
+          - color: 'rgba(255,255,255,0.25)'
+  styles:
+    card:
+      - background: none
+      - box-shadow: none
+      - border: none
+      - padding: 0 4px
+      - height: 30px
+      - min-height: 30px
+    grid:
+      - grid-template-areas: '"n on_off i"'
+      - grid-template-columns: 1fr auto auto
+    name:
+      - font-size: 11px
+      - color: rgba(255,255,255,0.5)
+      - text-transform: uppercase
+      - letter-spacing: 1.5px
+      - justify-self: start
+      - font-weight: 500
+    custom_fields:
+      on_off:
+        - justify-self: end
+        - align-self: center
+    img_cell:
+      - justify-self: end
+      - width: 24px
+    icon:
+      - width: 24px
+      - color: 'rgba(255,255,255,0.25)'
+
+# ── ANTERIOR: Linha 1 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 5
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#       }
+#   cards:
+#     - type: custom:button-card
+#       entity: light.office_switch_3
+#       name: Luz Central
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.office_switch_2
+#       name: Luz Ambiente
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.office_switch_1
+#       name: Luz Estante
+#       template: [tpl_popup_light, icon_ledstrip]
+#       tap_action: { action: toggle, haptic: success }
+#     # BLANK 1-2
+#     - type: custom:button-card
+#       color_type: blank-card
+#     - type: custom:button-card
+#       color_type: blank-card
+
+# ── ANTERIOR: Linha 1 com 3 colunas e botoes padrao 98px (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 3
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#         grid-template-columns: repeat(3, 98px) !important;
+#         justify-content: start !important;
+#       }
+#   cards:
+#     - type: custom:button-card
+#       entity: light.office_switch_3
+#       name: "OF - Luz central"
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.office_switch_2
+#       name: "OF - Luz ambiente"
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.office_switch_1
+#       name: "OF - Luz estante"
+#       template: [tpl_popup_light, icon_ledstrip]
+#       tap_action: { action: toggle, haptic: success }
+
+# ── NOVO: Linha 1 com 5 colunas — 3 luzes + 2 blanks (mesma estrutura da Sala) ──
+- type: grid
+  columns: 5
+  square: false
+  card_mod:
+    style: |
+      #root {
+        gap: 4px !important;
+      }
+  cards:
+    - type: custom:button-card
+      entity: light.office_switch_3
+      name: "OF - Luz central"
+      template:
+        - tpl_popup_light
+        - icon_light_flush
+      tap_action:
+        action: toggle
+        haptic: success
+    - type: custom:button-card
+      entity: light.office_switch_2
+      name: "OF - Luz ambiente"
+      template:
+        - tpl_popup_light
+        - icon_light_flush
+      tap_action:
+        action: toggle
+        haptic: success
+    - type: custom:button-card
+      entity: light.office_switch_1
+      name: "OF - Luz estante"
+      template:
+        - tpl_popup_light
+        - icon_ledstrip
+      tap_action:
+        action: toggle
+        haptic: success
+    # BLANK 1-2
+    - type: custom:button-card
+      color_type: blank-card
+    - type: custom:button-card
+      color_type: blank-card
+
+# ── Divisor Glassmorphism ──
+- type: custom:button-card
+  color_type: blank-card
+  styles:
+    card:
+      - height: 2px
+      - margin: 4px 8px
+      - background: >-
+          linear-gradient(90deg,
+          rgba(255,255,255,0) 0%,
+          rgba(255,255,255,0.12) 15%,
+          rgba(255,255,255,0.20) 50%,
+          rgba(255,255,255,0.12) 85%,
+          rgba(255,255,255,0) 100%)
+      - backdrop-filter: blur(8px)
+      - -webkit-backdrop-filter: blur(8px)
+      - border: none
+      - box-shadow: 0 0 6px rgba(62, 132, 255, 0.10)
+      - border-radius: 2px
+      - padding: 0
+      - min-height: auto
+
+# ── Titulo: Midia & Clima ──
+- type: custom:button-card
+  name: "Mídia & Clima"
+  show_state: false
+  show_icon: false
+  tap_action:
+    action: none
+  styles:
+    card:
+      - background: none
+      - box-shadow: none
+      - border: none
+      - padding: 0 4px
+      - height: 30px
+      - min-height: 30px
+    grid:
+      - grid-template-areas: '"n"'
+      - grid-template-columns: 1fr
+    name:
+      - font-size: 11px
+      - color: rgba(255,255,255,0.5)
+      - text-transform: uppercase
+      - letter-spacing: 1.5px
+      - justify-self: start
+      - font-weight: 500
+
+# ── ANTERIOR: Linha 3 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 5
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#       }
+#   cards:
+#     # MACBOOK — switch.macbook
+#     - type: custom:button-card
+#       entity: switch.macbook
+#       name: MacBook
+#       template: [base]
+#       icon: mdi:laptop
+#       show_icon: true
+#       tap_action: { action: toggle, haptic: success }
+#       double_tap_action: { action: more-info }
+#     # SPOTIFY
+#     - type: custom:button-card
+#       entity: media_player.spotifyplus_bruno_helasio
+#       name: Spotify
+#       template: [base, circle, loader, icon_spotify_color]
+#       ...
+#     # AC — climate.ac_office
+#     - type: custom:button-card
+#       entity: climate.ac_office
+#       name: Ar Cond.
+#       template: [base, icon_climate]
+#       ...
+#     # BLANK 1-2
+#     - type: custom:button-card
+#       color_type: blank-card
+#     - type: custom:button-card
+#       color_type: blank-card
+
+# ── ANTERIOR: Linha 3 com 3 colunas, PC, Spotify, AC (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 3
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#         grid-template-columns: repeat(3, 98px) !important;
+#         justify-content: start !important;
+#       }
+#   cards:
+#     - type: custom:button-card
+#       entity: switch.macbook
+#       name: PC
+#       template: [base, icon_imac]
+#       show_icon: false
+#       tap_action: { action: toggle, haptic: success }
+#       double_tap_action: { action: more-info }
+#     - type: custom:button-card
+#       entity: media_player.spotifyplus_bruno_helasio
+#       name: Spotify
+#       template: [base, circle, loader, icon_spotify_color]
+#       (...)
+#     - type: custom:button-card
+#       entity: climate.ac_office
+#       name: Ar Cond.
+#       template: [tpl_popup_climate, icon_climate]
+#       (...)
+
+# ── NOVO: Linha 3 com 5 colunas — PC + MacBook + Spotify + Ar Cond. + Cortina ──
+- type: grid
+  columns: 5
+  square: false
+  card_mod:
+    style: |
+      #root {
+        gap: 4px !important;
+      }
+  cards:
+    # 1. PC — switch.macbook (icone desktop)
+    # Convenção: NUNCA usar mdi: icons — sempre usar icon_* templates de tpl_icons.yaml
+    - type: custom:button-card
+      entity: switch.macbook
+      name: PC
+      template:
+        - base
+        - icon_imac
+      show_icon: false
+      tap_action:
+        action: toggle
+        haptic: success
+      double_tap_action:
+        action: more-info
+    # 2. MACBOOK — placeholder sem ação (visualização apenas)
+    - type: custom:button-card
+      name: MacBook
+      template:
+        - base
+        - icon_imac
+      show_icon: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"
+    # 3. SPOTIFY — compartilhado, mesma entidade em todos os comodos
+    # hold_action abre popup Spotify dedicado do Office (com default_device: Echo Pop Office).
+    - type: custom:button-card
+      entity: media_player.spotifyplus_bruno_helasio
+      name: Spotify
+      template:
+        - base
+        - circle
+        - loader
+        - icon_spotify_color
+      state_display: >
+        [[[
+          return entity && entity.state === 'off' ? ' ' : null;
+        ]]]
+      variables:
+        state_on: >
+          [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
+        circle_input: >
+          [[[
+            if (entity && entity.attributes.volume_level !== undefined) {
+              let volume = Math.round(entity.attributes.volume_level * 100)
+              return volume === 0 && entity.state !== 'off'
+                ? 1
+                : volume
+            }
+          ]]]
+        circle_input_unit: '%'
+      tap_action:
+        action: perform-action
+        perform_action: spotifyplus.player_transfer_playback
+        data:
+          entity_id: media_player.spotifyplus_bruno_helasio
+          device_name: "Echo Pop Office"
+          play: true
+          force_activate_device: true
+        haptic: success
+      double_tap_action:
+        action: more-info
+      hold_action: !include ../popup/media_spotify_office.yaml
+    # 4. AR CONDICIONADO — climate.ac_office
+    # Usa tpl_popup_climate (herda base, state_on correto para climate).
+    - type: custom:button-card
+      entity: climate.ac_office
+      name: Ar Cond.
+      template:
+        - tpl_popup_climate
+        - icon_climate
+      show_icon: false
+      tap_action:
+        action: perform-action
+        perform_action: climate.toggle
+        target:
+          entity_id: climate.ac_office
+        haptic: success
+      double_tap_action:
+        action: more-info
+      hold_action:
+        action: more-info
+    # 5. CORTINA — placeholder sem ação (visualização apenas)
+    - type: custom:button-card
+      name: Cortina
+      template:
+        - base
+        - icon_shade
+      show_icon: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"

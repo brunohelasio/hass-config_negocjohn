@@ -1,0 +1,24 @@
+# Coluna de cameras — Cozinha
+# Replicado do modelo base: room_living_cameras.yaml (Sala)
+# camera_view: auto — tenta live primeiro, fallback para still image
+# Cozinha possui 2 cameras: cz_camera + as_camera (area de servico)
+- type: picture-entity
+  # ANTERIOR: entity: camera.cz_camera (corrigido: cameras usam _2)
+  entity: camera.cz_camera_2
+  camera_view: auto
+  aspect_ratio: 3:2
+  show_name: false
+  show_state: false
+  card_mod:
+    style: |
+      ha-card {
+        margin-bottom: 8px;
+      }
+
+- type: picture-entity
+  # ANTERIOR: entity: camera.as_camera (corrigido: cameras usam _2)
+  entity: camera.as_camera_2
+  camera_view: auto
+  aspect_ratio: 3:2
+  show_name: false
+  show_state: false

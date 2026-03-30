@@ -6,6 +6,7 @@ browser_mod:
     style: >
       --max-popup-column: 2;
       --max-popup-column-width: 550px;
+    card_mod: !include ../snippets/style_popup_center.yaml
     content:
       type: custom:mod-card
       card_mod: !include ../snippets/style_popup_footer.yaml

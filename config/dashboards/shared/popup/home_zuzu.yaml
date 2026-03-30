@@ -5,7 +5,10 @@ browser_mod:
     title: Zuzu
     style: !include ../snippets/style_footer_transparent.yaml
 
-    card_mod: !include ../snippets/style_popup_footer.yaml
+    # ANTERIOR: card_mod de footer no nivel do popup (nao do content).
+    # Substituido por centering no nivel do popup + footer no content via mod-card.
+    # card_mod: !include ../snippets/style_popup_footer.yaml
+    card_mod: !include ../snippets/style_popup_center.yaml
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout

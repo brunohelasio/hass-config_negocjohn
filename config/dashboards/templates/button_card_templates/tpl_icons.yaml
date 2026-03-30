@@ -554,8 +554,10 @@ icon_cctv:
     custom_fields:
       icon:
         - width: 60%
-        - margin-top: -15%
-        - margin-left: -5%
+        # ANTERIOR: margin-top: -15% e margin-left: -5% (deslocava icone para cima/esquerda)
+        # FIX: removido offsets negativos para centralizar icone no botao
+        - margin-top: 0
+        - margin-left: 0
         - fill: >
             [[[ return variables.state === 'streaming'
               ? '#8a3333'
@@ -674,12 +676,82 @@ icon_spotify_color:
               <path d="M39.09 21.88c-7.87-4.67-21.02-5.16-28.52-2.83-1.23.37-2.46-.37-2.83-1.47-.37-1.23.37-2.46 1.47-2.83 8.73-2.58 23.11-2.09 32.2 3.32 1.11.61 1.47 2.09.86 3.2-.61.86-2.09 1.23-3.2.61m-.25 6.88c-.61.86-1.72 1.23-2.58.61-6.64-4.06-16.72-5.29-24.46-2.83-.98.25-2.09-.25-2.34-1.23s.25-2.09 1.23-2.34c8.97-2.7 20.04-1.35 27.66 3.32.74.37 1.11 1.6.49 2.46m-2.95 6.76c-.49.74-1.35.98-2.09.49-5.78-3.56-13.03-4.3-21.63-2.34-.86.25-1.6-.37-1.84-1.11-.25-.86.37-1.6 1.11-1.84 9.34-2.09 17.45-1.23 23.85 2.7.86.37.98 1.35.61 2.09M24.58 0C11.06 0 0 11.06 0 24.58s11.06 24.58 24.58 24.58S49.16 38.1 49.16 24.58 38.23 0 24.58 0"/>
             </svg>`;
       ]]]
+# RESTAURADO: icon_spotify estatico original do negocjohn — SVG simples, sem animacao,
+# sem state_display, sem entity_picture. Restaurado a pedido do usuario (2026-03-27).
 icon_spotify:
   custom_fields:
     icon: >
       <svg viewBox="0 0 50 50">
         <path d="M25 .3C11.4.3.3 11.4.3 25S11.4 49.7 25 49.7 49.7 38.6 49.7 25 38.6.3 25 .3zm11.3 35.6c-.4.7-1.4 1-2.1.5-5.8-3.5-13.1-4.3-21.7-2.4-.8.2-1.7-.3-1.8-1.2-.2-.8.3-1.7 1.2-1.8 9.4-2.2 17.5-1.2 24 2.8.6.5.9 1.4.4 2.1zm3.1-6.7c-.6.9-1.7 1.2-2.6.6-6.6-4.1-16.8-5.3-24.6-2.9a1.96 1.96 0 0 1-2.4-1.3 1.96 1.96 0 0 1 1.3-2.4c9-2.7 20.1-1.4 27.7 3.3.8.6 1.1 1.8.6 2.7h0zm.2-7c-8-4.7-21.1-5.2-28.7-2.9-1.2.4-2.5-.3-2.9-1.5s.3-2.5 1.5-2.9c8.7-2.6 23.2-2.1 32.4 3.3 1.1.7 1.5 2.1.8 3.2-.6 1.1-2 1.4-3.1.8h0z"/>
       </svg>
+# COMENTADO: icon_spotify hybrid — bounce bars verdes (#1DB954) quando playing + logo verde
+# quando nao playing. Template base, state_display PT-BR, entity_picture background.
+# Desativado: artwork nao exibia, cor ficava vidro claro em vez de branco.
+# icon_spotify:
+#   template: base
+#   variables:
+#     state_on: >
+#       [[[ return entity !== undefined && ['on','playing','paused','idle','standby'].includes(entity.state); ]]]
+#   state_display: >
+#     [[[
+#       if (entity === undefined) return 'Desconhecido';
+#       if (entity.state === 'playing') return 'Tocando';
+#       if (entity.state === 'paused') return 'Pausado';
+#       if (entity.state === 'idle') return 'Conectado';
+#       if (entity.state === 'standby') return 'Standby';
+#       if (entity.state === 'off') return 'Desligado';
+#       return entity.state;
+#     ]]]
+#   styles:
+#     card:
+#       - background: >
+#           [[[
+#             if (entity !== undefined && entity.attributes && entity.attributes.entity_picture) {
+#               return `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url(${entity.attributes.entity_picture}) center / cover no-repeat`;
+#             }
+#             return variables.state_on
+#               ? 'linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.12))'
+#               : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
+#           ]]]
+#   # ANTERIOR: icon_spotify com pulse-music (logo pulsava suavemente quando playing)
+#   # custom_fields:
+#   #   icon: > (...)
+#   # NOVO HIBRIDO: bounce bars verdes + logo Spotify verde
+#   custom_fields:
+#     icon: >
+#       [[[
+#         if (entity !== undefined && entity.state === 'playing')
+#           return `
+#             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 42.55 42.55">
+#               <style>
+#               @keyframes bounce {
+#                 10% { transform: scaleY(0.3); }
+#                 30% { transform: scaleY(1); opacity: .35; }
+#                 60% { transform: scaleY(0.5); }
+#                 80% { transform: scaleY(0.75); opacity: .75; }
+#                 100% { transform: scaleY(0.6); }
+#               }
+#               .bars { fill: #1DB954; stroke: #1DB954; stroke-linecap:round; stroke-width:5px; }
+#               .bar { animation: bounce 2.2s ease infinite alternate; transform-origin: center; }
+#               .bar:nth-child(2) { animation-delay: -2.2s; }
+#               .bar:nth-child(3) { animation-delay: -3.2s; }
+#               .bar:nth-child(4) { animation-delay: -1.2s; }
+#               .bar:nth-child(5) { animation-delay: -2.1s; }
+#               </style>
+#             <g class="bars">
+#               <path class="bar" d="M2.5,18.24v7.87" />
+#               <path class="bar" d="M32.54,18.24v7.87" />
+#               <path class="bar" d="M10.01,10.37v23.61" />
+#               <path class="bar" d="M25.03,10.37v23.61" />
+#               <path class="bar" d="M17.52,2.5V41.85" />
+#             </g>
+#             </svg>`;
+#           else
+#           return `
+#             <svg viewBox="0 0 50 50" style="width:32px;height:32px;overflow:visible;">
+#               <path fill="#1DB954" d="M25 .3C11.4.3.3 11.4.3 25S11.4 49.7 25 49.7 49.7 38.6 49.7 25 38.6.3 25 .3zm11.3 35.6c-.4.7-1.4 1-2.1.5-5.8-3.5-13.1-4.3-21.7-2.4-.8.2-1.7-.3-1.8-1.2-.2-.8.3-1.7 1.2-1.8 9.4-2.2 17.5-1.2 24 2.8.6.5.9 1.4.4 2.1zm3.1-6.7c-.6.9-1.7 1.2-2.6.6-6.6-4.1-16.8-5.3-24.6-2.9a1.96 1.96 0 0 1-2.4-1.3 1.96 1.96 0 0 1 1.3-2.4c9-2.7 20.1-1.4 27.7 3.3.8.6 1.1 1.8.6 2.7h0zm.2-7c-8-4.7-21.1-5.2-28.7-2.9-1.2.4-2.5-.3-2.9-1.5s.3-2.5 1.5-2.9c8.7-2.6 23.2-2.1 32.4 3.3 1.1.7 1.5 2.1.8 3.2-.6 1.1-2 1.4-3.1.8h0z"/>
+#             </svg>`;
+#       ]]]
 icon_youtube:
   custom_fields:
     icon: >
@@ -1255,8 +1327,16 @@ icon_climate:
       icon:
         - width: 78%
         - margin-left: -10%
+        # ORIGINAL negocjohn (invertido para AC brasileiro):
+        # - fill: >
+        #     [[[ return variables.state === 'heating' || variables.state === 'off' ? '#ff8100' : '#9da0a2'; ]]]
+        # FIX: OFF → cinza, ativo (cool/fan_only/dry/heat/auto) → azul ativo
         - fill: >
-            [[[ return variables.state === 'heating' || variables.state === 'off' ? '#ff8100' : '#9da0a2'; ]]]
+            [[[
+              return ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(variables.state) !== -1
+                ? '#3583b6'
+                : '#9da0a2';
+            ]]]
   custom_fields:
     icon: >
       <svg viewBox="0 0 50 50">
@@ -1657,6 +1737,10 @@ icon_home:
           </svg>
         `;
       ]]]
+# RESTAURADO: icon_tv original do negocjohn — animacoes com transform-origin -100% 46%,
+# timeout de 50000ms, fill estatico #616161/#9da0a2, sem state_display, sem entity_picture.
+# Restaurado a pedido do usuario (2026-03-27): icones custom nao tiveram comportamento esperado
+# (animacao ativava ao abrir popup, sem artwork, cor vidro claro em vez de branco).
 icon_tv:
   styles:
     custom_fields:
@@ -1756,6 +1840,84 @@ icon_tv:
           }
         }
       ]]]
+# COMENTADO: icon_tv custom — template base, state_display PT-BR, entity_picture background,
+# animacoes centralizadas (50% 50%), timeout 2s. Desativado porque: animacao ativava ao abrir
+# popup, artwork nao exibia, cor ficava vidro claro em vez de branco.
+# icon_tv:
+#   template: base
+#   variables:
+#     state_on: >
+#       [[[ return entity !== undefined && ['on','playing','paused','idle','standby'].includes(entity.state); ]]]
+#   state_display: >
+#     [[[
+#       if (entity === undefined) return 'Desconhecido';
+#       if (entity.state === 'playing') return 'Reproduzindo';
+#       if (entity.state === 'paused') return 'Pausada';
+#       if (entity.state === 'idle') return 'Menu / Ligada';
+#       if (entity.state === 'on') return 'Ligada';
+#       if (entity.state === 'standby') return 'Standby';
+#       if (entity.state === 'off') return 'Desligada';
+#       return entity.state;
+#     ]]]
+#   styles:
+#     card:
+#       - background: >
+#           [[[
+#             if (entity !== undefined && entity.attributes && entity.attributes.entity_picture) {
+#               return `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.8)), url(${entity.attributes.entity_picture}) center / cover no-repeat`;
+#             }
+#             return variables.state_on
+#               ? 'linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.12))'
+#               : 'linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))';
+#           ]]]
+#   custom_fields:
+#     icon: >
+#       [[[
+#         let is_on = variables.state_on;
+#         let timeout = variables.timeout;
+#         let style = `
+#           <style>
+#             @keyframes tv-on {
+#               from{transform:scaleY(0)}
+#               to{transform:scaleY(1)}
+#             }
+#             @keyframes tv-off {
+#               from{transform:scaleY(1)}
+#               to{transform:scaleY(0)}
+#             }
+#             .tv-on {
+#               animation:tv-on 0.9s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+#               transform-origin:50% 50%;
+#               transform-box:fill-box;
+#             }
+#             .tv-off {
+#               animation:tv-off 0.4s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+#               transform-origin:50% 50%;
+#               transform-box:fill-box;
+#             }
+#           </style>`;
+#         let gradient = `
+#           <defs>
+#             <linearGradient id="tv-screen" gradientUnits="userSpaceOnUse" x1="5.4" y1="34.7" x2="43.8" y2="11.7">
+#               <stop offset="0" stop-color="#64acb7"/>
+#               <stop offset="1" stop-color="#7fdbe9"/>
+#             </linearGradient>
+#           </defs>`;
+#         let frame = `<path fill="#b0bec5" style="transition:fill 0.3s ease;" d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3z M11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3 a1.11 1.11 0 0 0 1.1 1.1z"/>`;
+#         let svgProps = 'viewBox="0 0 50 50" style="width:32px;height:32px;overflow:visible;"';
+#         let bg = `<path d="M2.9,8h44.3v29.9H2.9V8z" fill="#1a2022"/>`;
+#         let screen = `<path d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#tv-screen)"/>`;
+#         if (is_on && timeout < 2000) {
+#           return `<svg ${svgProps}>${style}${gradient}${bg}<path class="tv-on" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#tv-screen)"/>${frame}</svg>`;
+#         }
+#         if (is_on) {
+#           return `<svg ${svgProps}>${gradient}${bg}${screen}${frame}</svg>`;
+#         }
+#         if (!is_on && timeout < 2000) {
+#           return `<svg ${svgProps}>${style}${gradient}${bg}<path class="tv-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#tv-screen)"/>${frame}</svg>`;
+#         }
+#         return `<svg ${svgProps}>${gradient}${bg}${screen}${frame}</svg>`;
+#       ]]]
 icon_camera_stream:
   styles:
     custom_fields:

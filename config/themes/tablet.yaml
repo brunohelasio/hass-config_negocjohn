@@ -95,6 +95,55 @@ tablet:
 
   uix-theme: tablet
 
+  #################################################
+  #                                               #
+  #   UIX-DIALOG — Pipeline nativa de popups      #
+  #   Adaptado do graphite-auto.yaml              #
+  #   Permite --popup-width funcionar via         #
+  #   --ha-dialog-width-md (mecanismo nativo HA)  #
+  #   eliminando card_mod hacks nos popups        #
+  #                                               #
+  #################################################
+  uix-dialog: &popup_card_mod |
+    :host([card]) .content .container {
+      padding: 0px !important;
+    }
+    :host {
+      font-family: Poppins, Raleway, SF Pro Text, SF Pro Display, SF Mono, sans-serif, system-ui !important;
+    }
+    ha-adaptive-dialog,
+    ha-dialog {
+      --vertical-align-dialog: unset !important;
+      --dialog-surface-top: unset !important;
+      --dialog-surface-margin-top: unset !important;
+      --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14) !important;
+      --ha-dialog-surface-background: rgba(15, 20, 35, 0.75) !important;
+      --wa-color-overlay-modal: rgba(0, 0, 0, 0.7) !important;
+      --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.55)) !important;
+      --mdc-text-field-fill-color: rgb(50 50 50 / 22%) !important;
+      --mdc-select-fill-color: rgb(50 50 50 / 22%) !important;
+      --mdc-theme-surface: rgba(20, 24, 33, 0.88) !important;
+      --ha-bottom-sheet-height: auto !important;
+    }
+    /* Vidro fosco padronizado em todos os popups */
+    ha-dialog .mdc-dialog__surface,
+    ha-adaptive-dialog .mdc-dialog__surface {
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+    }
+
+    ha-dialog.type-browser-mod-popup {
+      --ha-dialog-width-md: calc(var(--max-popup-column, 1) * var(--popup-width, 550px)) !important;
+      --bar-card-border-radius: 12px !important;
+      --ha-card-border-radius: 0px !important;
+      --ha-card-background: none !important;
+      --ha-card-box-shadow: none !important;
+      --entities-divider-color: rgba(58, 69, 73, 0.2) !important;
+      --dialog-content-padding: 0 !important;
+    }
+  uix-browser-mod-popup-inner: *popup_card_mod
+  uix-more-info: *popup_card_mod
+
   uix-view-yaml: |
 
     #################################################

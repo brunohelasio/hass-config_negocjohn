@@ -7,6 +7,11 @@ browser_mod:
       --popup-max-width: calc(450px + 450px + 450px);
     card_mod:
       style:
+        ha-dialog$: |
+          .mdc-dialog__container {
+            align-items: center !important;
+            justify-content: center !important;
+          }
         .: |
         layout-card$grid-layout$:
           .: |

@@ -1,0 +1,437 @@
+# ══════════════════════════════════════════════════════════════════════════
+# LAYOUT 5 COLUNAS — Cozinha (popup)
+# Replicado do modelo base: room_living_all_buttons.yaml (Sala)
+# Secao 1: Luzes (titulo + toggle all + 3 botoes em 5 colunas)
+# Secao 2: Eletrodomesticos (titulo + 3 placeholders + 2 blanks)
+#
+# Entidades confirmadas:
+#   - light.cozinha_switch_2 (Luz principal 1)
+#   - light.cozinha_switch_3 (Luz principal 2)
+#   - light.cozinha_switch_1 (Area de servico)
+#   - Camera: camera.cz_camera + camera.as_camera
+#   - Eletrodomesticos: placeholders (airfryer, lava-louca, lava-roupa)
+# ══════════════════════════════════════════════════════════════════════════
+
+# ── Titulo: Luzes + toggle all lights ──
+# FIX C4.1: Adicionado indicador visual ON/OFF (custom_field)
+- type: custom:button-card
+  entity: light.grupo_luzes_cozinha
+  triggers_update:
+    - light.grupo_luzes_cozinha
+  name: Luzes
+  show_state: false
+  show_icon: true
+  icon: mdi:lightbulb-group-outline
+  tap_action:
+    action: toggle
+    haptic: success
+  # ANTERIOR: custom_fields com JS template para ON/OFF badge (nao atualizava em browser_mod popup)
+  # FIX: state: section nativa do button-card com HTML estatico — mais reativo
+  custom_fields:
+    on_off: |
+      <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-right:4px">OFF</span>
+  state:
+    - value: 'on'
+      custom_fields:
+        on_off: |
+          <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:#fff;background:#3b82f6;padding:1px 6px;border-radius:8px;margin-right:4px">ON</span>
+      styles:
+        icon:
+          - color: '#f0c040'
+    - value: 'off'
+      custom_fields:
+        on_off: |
+          <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-right:4px">OFF</span>
+      styles:
+        icon:
+          - color: 'rgba(255,255,255,0.25)'
+  styles:
+    card:
+      - background: none
+      - box-shadow: none
+      - border: none
+      - padding: 0 4px
+      - height: 30px
+      - min-height: 30px
+    grid:
+      - grid-template-areas: '"n on_off i"'
+      - grid-template-columns: 1fr auto auto
+    name:
+      - font-size: 11px
+      - color: rgba(255,255,255,0.5)
+      - text-transform: uppercase
+      - letter-spacing: 1.5px
+      - justify-self: start
+      - font-weight: 500
+    custom_fields:
+      on_off:
+        - justify-self: end
+        - align-self: center
+    img_cell:
+      - justify-self: end
+      - width: 24px
+    icon:
+      - width: 24px
+      - color: 'rgba(255,255,255,0.25)'
+
+# ── ANTERIOR: Linha 1 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 5
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#       }
+#   cards:
+#     - type: custom:button-card
+#       entity: light.cozinha_switch_2
+#       name: Luz Principal 1
+#       template:
+#         - tpl_popup_light
+#         - icon_light_flush
+#       tap_action:
+#         action: toggle
+#         haptic: success
+#     - type: custom:button-card
+#       entity: light.cozinha_switch_3
+#       name: Luz Principal 2
+#       template:
+#         - tpl_popup_light
+#         - icon_light_flush
+#       tap_action:
+#         action: toggle
+#         haptic: success
+#     - type: custom:button-card
+#       entity: light.cozinha_switch_1
+#       name: Área Serviço
+#       template:
+#         - tpl_popup_light
+#         - icon_light_flush
+#       tap_action:
+#         action: toggle
+#         haptic: success
+#     # BLANK 1-2
+#     - type: custom:button-card
+#       color_type: blank-card
+#     - type: custom:button-card
+#       color_type: blank-card
+
+# ── ANTERIOR: Linha 1 com 3 colunas e botoes padrao 98px (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 3
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#         grid-template-columns: repeat(3, 98px) !important;
+#         justify-content: start !important;
+#       }
+#   cards:
+#     - type: custom:button-card
+#       entity: light.cozinha_switch_2
+#       name: "CZ - Luz principal 1"
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.cozinha_switch_3
+#       name: "CZ - Luz principal 2"
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+#     - type: custom:button-card
+#       entity: light.cozinha_switch_1
+#       name: "AS - Lavanderia"
+#       template: [tpl_popup_light, icon_light_flush]
+#       tap_action: { action: toggle, haptic: success }
+
+# ── NOVO: Linha 1 com 5 colunas — 3 luzes + 2 blanks (mesma estrutura da Sala) ──
+- type: grid
+  columns: 5
+  square: false
+  card_mod:
+    style: |
+      #root {
+        gap: 4px !important;
+      }
+  cards:
+    - type: custom:button-card
+      entity: light.cozinha_switch_2
+      name: "CZ - Luz principal 1"
+      template:
+        - tpl_popup_light
+        - icon_light_flush
+      tap_action:
+        action: toggle
+        haptic: success
+    - type: custom:button-card
+      entity: light.cozinha_switch_3
+      name: "CZ - Luz principal 2"
+      template:
+        - tpl_popup_light
+        - icon_light_flush
+      tap_action:
+        action: toggle
+        haptic: success
+    - type: custom:button-card
+      entity: light.cozinha_switch_1
+      name: "AS - Lavanderia"
+      template:
+        - tpl_popup_light
+        - icon_light_flush
+      tap_action:
+        action: toggle
+        haptic: success
+    # BLANK 1-2
+    - type: custom:button-card
+      color_type: blank-card
+    - type: custom:button-card
+      color_type: blank-card
+
+# ── Divisor Glassmorphism ──
+- type: custom:button-card
+  color_type: blank-card
+  styles:
+    card:
+      - height: 2px
+      - margin: 4px 8px
+      - background: >-
+          linear-gradient(90deg,
+          rgba(255,255,255,0) 0%,
+          rgba(255,255,255,0.12) 15%,
+          rgba(255,255,255,0.20) 50%,
+          rgba(255,255,255,0.12) 85%,
+          rgba(255,255,255,0) 100%)
+      - backdrop-filter: blur(8px)
+      - -webkit-backdrop-filter: blur(8px)
+      - border: none
+      - box-shadow: 0 0 6px rgba(62, 132, 255, 0.10)
+      - border-radius: 2px
+      - padding: 0
+      - min-height: auto
+
+# ── Titulo: Eletrodomésticos ──
+- type: custom:button-card
+  name: "Eletrodomésticos"
+  show_state: false
+  show_icon: false
+  tap_action:
+    action: none
+  styles:
+    card:
+      - background: none
+      - box-shadow: none
+      - border: none
+      - padding: 0 4px
+      - height: 30px
+      - min-height: 30px
+    grid:
+      - grid-template-areas: '"n"'
+      - grid-template-columns: 1fr
+    name:
+      - font-size: 11px
+      - color: rgba(255,255,255,0.5)
+      - text-transform: uppercase
+      - letter-spacing: 1.5px
+      - justify-self: start
+      - font-weight: 500
+
+# ── ANTERIOR: Linha 3 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 5
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#       }
+#   cards:
+#     # MAQUINA DE LAVAR — placeholder sem entidade
+#     - type: custom:button-card
+#       name: Lava-Roupa
+#       template:
+#         - base
+#         - icon_washer
+#       show_icon: false
+#       tap_action: { action: none }
+#       hold_action: { action: none }
+#       double_tap_action: { action: none }
+#       styles:
+#         card:
+#           - opacity: "0.45"
+#           - cursor: "default"
+#     # LAVA-LOUCAS — placeholder sem entidade
+#     - type: custom:button-card
+#       name: Lava-Louças
+#       template:
+#         - base
+#         - icon_dishwasher
+#       show_icon: false
+#       tap_action: { action: none }
+#       hold_action: { action: none }
+#       double_tap_action: { action: none }
+#       styles:
+#         card:
+#           - opacity: "0.45"
+#           - cursor: "default"
+#     # AIR FRYER — placeholder sem entidade
+#     - type: custom:button-card
+#       name: Air Fryer
+#       template:
+#         - base
+#         - icon_pot
+#       show_icon: false
+#       tap_action: { action: none }
+#       hold_action: { action: none }
+#       double_tap_action: { action: none }
+#       styles:
+#         card:
+#           - opacity: "0.45"
+#           - cursor: "default"
+#     # BLANK 1-2
+#     - type: custom:button-card
+#       color_type: blank-card
+#     - type: custom:button-card
+#       color_type: blank-card
+
+# ── ANTERIOR: Linha 3 com 3 colunas e botoes padrao 98px (comentado, nunca deletar) ──
+# - type: grid
+#   columns: 3
+#   square: false
+#   card_mod:
+#     style: |
+#       #root {
+#         gap: 4px !important;
+#         grid-template-columns: repeat(3, 98px) !important;
+#         justify-content: start !important;
+#       }
+#   cards:
+#     - type: custom:button-card
+#       name: Lava-Roupa
+#       template: [base, icon_washer]
+#       show_icon: false
+#       tap_action: { action: none }
+#       hold_action: { action: none }
+#       double_tap_action: { action: none }
+#       styles:
+#         card:
+#           - opacity: "0.45"
+#           - cursor: "default"
+#     - type: custom:button-card
+#       name: Lava-Louças
+#       template: [base, icon_dishwasher]
+#       show_icon: false
+#       tap_action: { action: none }
+#       hold_action: { action: none }
+#       double_tap_action: { action: none }
+#       styles:
+#         card:
+#           - opacity: "0.45"
+#           - cursor: "default"
+#     - type: custom:button-card
+#       name: Air Fryer
+#       template: [base, icon_pot]
+#       show_icon: false
+#       tap_action: { action: none }
+#       hold_action: { action: none }
+#       double_tap_action: { action: none }
+#       styles:
+#         card:
+#           - opacity: "0.45"
+#           - cursor: "default"
+
+# ── NOVO: Linha 3 com 5 colunas — 3 existentes + geladeira + microondas (mesma estrutura da Sala) ──
+- type: grid
+  columns: 5
+  square: false
+  card_mod:
+    style: |
+      #root {
+        gap: 4px !important;
+      }
+  cards:
+    # MAQUINA DE LAVAR — placeholder sem entidade
+    - type: custom:button-card
+      name: Lava-Roupa
+      template:
+        - base
+        - icon_washer
+      show_icon: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"
+    # LAVA-LOUCAS — placeholder sem entidade
+    - type: custom:button-card
+      name: Lava-Louças
+      template:
+        - base
+        - icon_dishwasher
+      show_icon: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"
+    # AIR FRYER — placeholder sem entidade
+    - type: custom:button-card
+      name: Air Fryer
+      template:
+        - base
+        - icon_pot
+      show_icon: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"
+    # GELADEIRA — placeholder sem entidade, sem acao
+    - type: custom:button-card
+      name: Geladeira
+      template:
+        - base
+        - icon_dish
+      show_icon: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"
+    # MICROONDAS — placeholder sem entidade, sem acao
+    - type: custom:button-card
+      name: Microondas
+      template:
+        - base
+        - icon_oven
+      show_icon: false
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      double_tap_action:
+        action: none
+      styles:
+        card:
+          - opacity: "0.45"
+          - cursor: "default"

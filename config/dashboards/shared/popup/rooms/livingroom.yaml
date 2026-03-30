@@ -44,73 +44,190 @@ browser_mod:
   service: browser_mod.popup
   data:
     title: Sala
+    tag: sala_popup
     size: wide
+    # ANTERIOR (4 colunas): --popup-width: 55vw; --popup-max-width: 850px;
+    # Ampliado para 65vw/980px para acomodar layout de 5 colunas nos botoes.
+    # Grid ratio mudou de 1.4fr para 1.6fr para dar mais espaco aos botoes.
     style: >
-      --popup-width: 70vw;
-      --popup-max-width: 1020px;
-      --popup-background-color: rgba(8, 12, 20, 0.62);
+      --popup-width: 65vw;
+      --popup-max-width: 980px;
+      --popup-background-color: rgba(15, 20, 35, 0.75);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
-      --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
-    card_mod:
-      style:
-        .: |
-          ha-dialog {
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-          }
-          ha-dialog::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
-          }
-        ha-dialog$: |
-          .mdc-dialog__container {
-            align-items: center !important;
-            justify-content: center !important;
-          }
+      --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
+    # --- CÓDIGO ORIGINAL COMENTADO (card_mod inline com .mdc-dialog__surface hack) ---
+    # Removido porque o tema tablet.yaml agora tem uix-dialog com --ha-dialog-width-md
+    # que le --popup-width do style: e dimensiona o popup nativamente via HA.
+    # O blur, scrim, centering e glow agora sao gerenciados pelo uix-dialog do tema.
+    # Para restaurar: descomentar card_mod abaixo e comentar uix-dialog no tablet.yaml.
+    # card_mod:
+    #   style:
+    #     .: |
+    #       ha-dialog {
+    #         /* ORIGINAL negocjohn: backdrop-filter: blur(5px); */
+    #         backdrop-filter: blur(12px);
+    #         -webkit-backdrop-filter: blur(12px);
+    #       }
+    #       ha-dialog::before {
+    #         content: '';
+    #         position: absolute;
+    #         inset: 0;
+    #         border-radius: inherit;
+    #         pointer-events: none;
+    #         box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+    #       }
+    #     ha-dialog$: |
+    #       .mdc-dialog__scrim {
+    #         background-color: rgba(0, 0, 0, 0.56) !important;
+    #       }
+    #       .mdc-dialog__container {
+    #         align-items: center !important;
+    #         justify-content: center !important;
+    #       }
+    #       .mdc-dialog__surface {
+    #         /* ANTERIOR (4 colunas): width: 55vw, max-width: 850px */
+    #         width: 65vw !important;
+    #         max-width: 980px !important;
+    #         max-height: 88vh !important;
+    #         overflow-y: auto !important;
+    #       }
+    # --- FIM CÓDIGO ORIGINAL ---
+    # ANTERIOR layout 3 colunas (col_luzes | col_extra | col_camera):
+    # content:
+    #   type: custom:layout-card
+    #   layout_type: custom:grid-layout
+    #   layout:
+    #     grid-template-columns: 0.9fr 0.9fr 1.6fr
+    #     grid-template-areas: '"col_luzes col_extra col_camera"'
+    #     grid-gap: 8px
+    #     margin: 0
+    #     padding: 0.5rem
+    #     mediaquery:
+    #       "(max-width: 800px)":
+    #         grid-template-columns: 1fr
+    #         grid-template-areas: |
+    #           "col_luzes"
+    #           "col_extra"
+    #           "col_camera"
+    #         padding: 0
+    #   cards:
+    #     - type: custom:layout-card
+    #       layout_type: custom:grid-layout
+    #       view_layout:
+    #         grid-area: col_luzes
+    #       layout:
+    #         grid-template-columns: 1fr
+    #         margin: 0
+    #       cards: !include ../../columns/room_living_lights.yaml
+    #     - type: custom:layout-card
+    #       layout_type: custom:grid-layout
+    #       view_layout:
+    #         grid-area: col_extra
+    #       layout:
+    #         grid-template-columns: 1fr
+    #         margin: 0
+    #       cards: !include ../../columns/room_living_extras.yaml
+    #     - type: custom:layout-card
+    #       layout_type: custom:grid-layout
+    #       view_layout:
+    #         grid-area: col_camera
+    #       layout:
+    #         grid-template-columns: 1fr
+    #         margin: 0
+    #       cards: !include ../../columns/room_living_cameras.yaml
+    # ANTERIOR layout 2 colunas com grids separados (luzes 2col + divisor + extras 2col):
+    # Botoes ficavam grandes em 2 colunas. Substituido por layout 4-3-4-2.
+    # content:
+    #   type: custom:layout-card
+    #   layout_type: custom:grid-layout
+    #   layout:
+    #     grid-template-columns: 1.4fr 1fr
+    #     grid-template-areas: '"col_buttons col_camera"'
+    #     grid-gap: 10px
+    #     margin: 0
+    #     padding: 0.5rem
+    #     mediaquery:
+    #       "(max-width: 800px)":
+    #         grid-template-columns: 1fr
+    #         grid-template-areas: |
+    #           "col_buttons"
+    #           "col_camera"
+    #         padding: 0
+    #   cards:
+    #     - type: vertical-stack
+    #       view_layout:
+    #         grid-area: col_buttons
+    #       cards:
+    #         - type: custom:layout-card
+    #           layout_type: custom:grid-layout
+    #           layout:
+    #             grid-template-columns: 1fr
+    #             margin: 0
+    #           cards: !include ../../columns/room_living_lights.yaml
+    #         - type: custom:button-card
+    #           color_type: blank-card
+    #           styles:
+    #             card:
+    #               - height: 2px
+    #               - margin: 4px 8px
+    #               - background: >-
+    #                   linear-gradient(90deg,
+    #                   rgba(255,255,255,0) 0%,
+    #                   rgba(255,255,255,0.12) 15%,
+    #                   rgba(255,255,255,0.20) 50%,
+    #                   rgba(255,255,255,0.12) 85%,
+    #                   rgba(255,255,255,0) 100%)
+    #               - backdrop-filter: blur(8px)
+    #               - -webkit-backdrop-filter: blur(8px)
+    #               - border: none
+    #               - box-shadow: 0 0 6px rgba(62, 132, 255, 0.10)
+    #               - border-radius: 2px
+    #               - padding: 0
+    #               - min-height: auto
+    #         - type: custom:layout-card
+    #           layout_type: custom:grid-layout
+    #           layout:
+    #             grid-template-columns: 1fr
+    #             margin: 0
+    #           cards: !include ../../columns/room_living_extras.yaml
+    #     - type: custom:layout-card
+    #       layout_type: custom:grid-layout
+    #       view_layout:
+    #         grid-area: col_camera
+    #       layout:
+    #         grid-template-columns: 1fr
+    #         margin: 0
+    #       cards: !include ../../columns/room_living_cameras.yaml
+    # NOVO layout 2 colunas: col_buttons (4-3-4-2 grid) | col_camera
+    # Botoes organizados em 4 linhas: 4 luzes | 3 luzes | 4 midia | 2 clima
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 0.9fr 0.9fr 1.6fr
-        grid-template-areas: '"col_luzes col_extra col_camera"'
-        grid-gap: 12px
+        # ANTERIOR (4 colunas): grid-template-columns: 1.4fr 1fr
+        # ANTERIOR (5 colunas): grid-template-columns: 1.6fr 1fr
+        grid-template-columns: 1.4fr 1.0fr
+        grid-template-areas: '"col_buttons col_camera"'
+        grid-gap: 10px
         margin: 0
-        padding: 0.75rem
+        padding: 0.5rem
         mediaquery:
           "(max-width: 800px)":
             grid-template-columns: 1fr
             grid-template-areas: |
-              "col_luzes"
-              "col_extra"
+              "col_buttons"
               "col_camera"
             padding: 0
       cards:
-        # ── Coluna 1: Iluminacao ──
-        - type: custom:layout-card
-          layout_type: custom:grid-layout
+        # ── Coluna 1: Todos os botoes em layout 4-3-4-2 ──
+        - type: vertical-stack
           view_layout:
-            grid-area: col_luzes
-          layout:
-            grid-template-columns: 1fr
-            margin: 0
-          cards: !include ../../columns/room_living_lights.yaml
+            grid-area: col_buttons
+          cards: !include ../../columns/room_living_all_buttons.yaml
 
-        # ── Coluna 2: Midia / Extras ──
-        - type: custom:layout-card
-          layout_type: custom:grid-layout
-          view_layout:
-            grid-area: col_extra
-          layout:
-            grid-template-columns: 1fr
-            margin: 0
-          cards: !include ../../columns/room_living_extras.yaml
-
-        # ── Coluna 3: Cameras ──
+        # ── Coluna 2: Cameras ──
         - type: custom:layout-card
           layout_type: custom:grid-layout
           view_layout:

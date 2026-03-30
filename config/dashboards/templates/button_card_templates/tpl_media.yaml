@@ -26,20 +26,27 @@ base_media:
             return true;
         }
       ]]]
+    # --- CÓDIGO ORIGINAL COMENTADO (entidades europeias ngocjohn — media_player.atv e mass_universal_airplay não existem) ---
+    # is_kodi: >
+    #   [[[
+    #     let kodi_atv = states['media_player.atv'].attributes.app_id === 'org.xbmc.kodi-tvos';
+    #     if (kodi_atv) {
+    #         return true;
+    #     }
+    #   ]]]
+    # is_homepod: >
+    #   [[[
+    #     let is_homepod = states['media_player.mass_universal_airplay'].state === 'playing';
+    #       if (is_homepod) {
+    #         return true;
+    #       }
+    #   ]]]
+    # --- FIM CÓDIGO ORIGINAL ---
+    # NOVO: retorna false — usuario não tem Kodi nem HomePods/MASS Airplay
     is_kodi: >
-      [[[
-        let kodi_atv = states['media_player.atv'].attributes.app_id === 'org.xbmc.kodi-tvos';
-        if (kodi_atv) {
-            return true;
-        }
-      ]]]
+      [[[ return false; ]]]
     is_homepod: >
-      [[[
-        let is_homepod = states['media_player.mass_universal_airplay'].state === 'playing';
-          if (is_homepod) {
-            return true;
-          }
-      ]]]
+      [[[ return false; ]]]
   tap_action:
     action: >
       [[[
@@ -380,7 +387,7 @@ conditional_media:
         - width: 100%
         - bottom: 0
         - backdrop-filter: blur(0.3em) brightness(0.7)
-        - border-radius: 0% 0% calc(var(--button-card-border-radius) / 2) calc(var(--button-card-border-radius) / 2)
+        - border-radius: 0% 0% 5% 5%
 
   custom_fields:
     blur_overlay: >
@@ -503,7 +510,7 @@ conditional_media_shows:
       - text-shadow: black 3px 2px 4px
     card:
       - padding: 5.75% 5.75% 0 5.75%
-      - border-radius: calc(var(--button-card-border-radius) / 2)
+      - border-radius: 5%
       - background: *media_background
       - background-image: *media_background_image
       - color: >
@@ -535,7 +542,7 @@ conditional_media_shows:
         - height: 110%
         - filter: var(--blur-intensity)
         - clip-path: >
-            inset(77.5% 3.45% 1.45% 5.45% round 0 0 calc(var(--button-card-border-radius) / 2) calc(var(--button-card-border-radius) / 2))
+            inset(77.5% 3.45% 1.45% 5.45% round 0 0 5% 5%)
         - background: *media_background
         - background-image: *media_background_image
         - left: -6%
@@ -651,24 +658,28 @@ progress_bar:
   #               MEDIA PLAYER                    #
   #                                               #
   #################################################
+# ORIGINAL mediaplayer: state_on usava indexOf(!entity || entity.state)
+# Bug: !entity=false quando entity existe, indexOf(false) retorna -1, state_on era SEMPRE false
+# CORRIGIDO: usa entity && indexOf(entity.state) para avaliar corretamente o estado
 mediaplayer:
   template:
     - base
     - circle
     - loader
     - icon_tv
+  # RESTAURADO: state_display e state_on originais do mediaplayer template.
+  # Anteriormente comentados para que icon_tv custom (PT-BR) prevalecesse.
+  # Com a restauracao do icon_tv original (sem state_display), estes voltam a ser necessarios.
   state_display: >
     [[[
-      return variables.state === 'off' ? " " : null;
+      return entity && entity.state === 'off' ? " " : null;
     ]]]
   variables:
     state_on: >
-      [[[ return ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(!entity || entity.state) !== -1; ]]]
-
+      [[[ return entity && ['on', 'idle', 'playing', 'paused', 'standby'].indexOf(entity.state) !== -1; ]]]
     circle_input: >
       [[[
-        if (entity) {
-          // if light group get brightness from child to remove bounce
+        if (entity && entity.attributes.volume_level !== undefined) {
           let volume = Math.round(entity.attributes.volume_level * 100)
           return volume === 0 && entity.state !== 'off'
             ? 1
@@ -676,22 +687,26 @@ mediaplayer:
         }
       ]]]
     circle_input_unit: '%'
-  styles:
-    card:
-      - box-shadow: >
-          [[[
-            if (entity && variables.light_entity !== undefined) {
-              let lightState = states[variables.light_entity].state;
-                if (lightState === 'on') {
-                  let lightAttr = states[variables.light_entity].attributes,
-                      rgb = lightAttr.rgb_color,
-                      rgba = `rgba(${rgb.join()},${(lightAttr.brightness/255)})`;
-                  return `inset 0 0 1.5rem ${rgba} !important`;
-                } else {
-                  return 'none';
-                }
-            }
-          ]]]
+  # ORIGINAL: styles.card com box-shadow RGB — aplicava glow colorido baseado em luz RGB.
+  # Comentado INTEIRO (styles: + card:) porque o bloco vazio sobreescrevia os styles.card
+  # do template base, fazendo o botao NAO acender (perdia background-color do state_on).
+  # Manter apenas como referencia. NÃO descomentar styles: card: sem conteudo ativo.
+  # styles:
+  #   card:
+  #     - box-shadow: >
+  #         [[[
+  #           if (entity && variables.light_entity !== undefined) {
+  #             let lightState = states[variables.light_entity].state;
+  #               if (lightState === 'on') {
+  #                 let lightAttr = states[variables.light_entity].attributes,
+  #                     rgb = lightAttr.rgb_color,
+  #                     rgba = `rgba(${rgb.join()},${(lightAttr.brightness/255)})`;
+  #                 return `inset 0 0 1.5rem ${rgba} !important`;
+  #               } else {
+  #                 return 'none';
+  #               }
+  #           }
+  #         ]]]
 currently_playing:
   template:
     - conditional_media
@@ -732,11 +747,16 @@ currently_playing:
               -webkit-transform: translate3d(0,0,0);
               content: "";
               background:
-                {% if is_state('media_player.mass_universal_airplay', 'playing') %}
-                  url( '{{ state_attr('media_player.mass_universal_airplay', "entity_picture") }}')
-                {% else %}
-                  url( '{{ state_attr('media_player.spotifyplus_ngoc_nguyen', "entity_picture") }}')
-                {% endif %} center no-repeat;
+                {# --- CÓDIGO ORIGINAL COMENTADO (entidades europeias ngocjohn) ---
+                  {% if is_state('media_player.mass_universal_airplay', 'playing') %}
+                    url( '{{ state_attr("media_player.mass_universal_airplay", "entity_picture") }}')
+                  {% else %}
+                    url( '{{ state_attr("media_player.spotifyplus_ngoc_nguyen", "entity_picture") }}')
+                  {% endif %}
+                --- FIM CÓDIGO ORIGINAL --- #}
+                {# NOVO: usa entity_picture da entidade Spotify do usuário #}
+                url( '{{ state_attr('media_player.spotifyplus_bruno_helasio', "entity_picture") }}')
+                center no-repeat;
               background-size: contain;
               filter: drop-shadow(4px 4px 6px rgba(0, 0, 0, 0.5));
               border-radius: var(--control-border-radius);
@@ -931,9 +951,17 @@ currently_playing:
     card:
       - padding: 2.75% 5.75% 0 5.75%
       # - background-color: '#00000'
+      # --- CÓDIGO ORIGINAL COMENTADO (sensor.vibrant_color não existe no setup do usuário) ---
+      # - background: >
+      #     [[[
+      #         let bg = states['sensor.vibrant_color'].state;
+      #         return `linear-gradient(to top, rgba(${bg},.1), rgba(${bg},.6))`;
+      #     ]]]
+      # --- FIM CÓDIGO ORIGINAL ---
+      # NOVO: gradiente com cor fixa (blue-grey) em vez de sensor.vibrant_color
       - background: >
           [[[
-              let bg = states['sensor.vibrant_color'].state;
+              let bg = '96, 125, 139';
               return `linear-gradient(to top, rgba(${bg},.1), rgba(${bg},.6))`;
           ]]]
       - background-image: '#00000'
@@ -959,7 +987,7 @@ currently_playing:
         #       ]]]
         #   - background-image: none
         #   - clip-path: >
-        #       inset(80% 1.45% 1.45% 1.45% round 0 0 calc(var(--button-card-border-radius) / 2) calc(var(--button-card-border-radius) / 2))
+        #       inset(80% 1.45% 1.45% 1.45% round 0 0 5% 5%)
         # icon:
         - width: 22%
       progress:
@@ -1463,7 +1491,7 @@ remote:
   show_state: false
   styles:
     card:
-      - border-radius: var(--button-card-border-radius)
+      - border-radius: 10%
       - border-width: 0
       - -webkit-tap-highlight-color: rgba(0,0,0,0)
       - transition: none
@@ -1558,14 +1586,14 @@ tpl_spotify:
               top: 50% !important;  /* center buttons */
             }
             .grid-item {
-              border-radius: var(--button-card-border-radius) !important;
+              border-radius: 10% !important;
               object-fit: cover !important;  /* fill the whole card */
               aspect-ratio: unset;  /* undo image aspect-ratio when clicked */
               box-shadow:none !important;
               color: transparent !important;
             }
             .grid-item-album-image img{
-              border-radius: var(--button-card-border-radius) !important;
+              border-radius: 10% !important;
               object-fit: cover !important;  /* fill the whole card */
               aspect-ratio: unset;  /* undo image aspect-ratio when clicked */
               margin: 0px !important;  /* remove card margins to line up with rest of dashboard */
@@ -1575,7 +1603,7 @@ tpl_spotify:
               color: transparent !important;
             }
             .grid-item-album-image.playing{
-              border-radius: var(--button-card-border-radius) !important;
+              border-radius: 10% !important;
             }
             #header{
               display:none !important;
@@ -1707,7 +1735,7 @@ tpl_ytube_music:
               display: flex !important;
             }
             .grid-item {
-              border-radius: var(--button-card-border-radius) !important;
+              border-radius: 10% !important;
               object-fit: cover !important;  /* fill the whole card */
               aspect-ratio: unset;  /* undo image aspect-ratio when clicked */
               box-shadow:none !important;
@@ -1717,17 +1745,71 @@ tpl_ytube_music:
     grid:
       - gap: 0
     card:
-      - border-radius: calc(var(--button-card-border-radius) / 2)
+      - border-radius: 5%
       - padding: 0
       - background: none
       - --button-card-ripple-color: none
       - --webkit-tap-highlight-color: none
+# --- CÓDIGO ORIGINAL COMENTADO (media_player.mass_universal_airplay não existe no setup do usuário) ---
+# tpl_minicontrol_mass:
+#   custom_fields:
+#     minicontrol:
+#       card:
+#         type: custom:mini-media-player
+#         entity: media_player.mass_universal_airplay
+#         hide:
+#           icon: true
+#           name: true
+#           runtime: true
+#           source: true
+#           power: true
+#           state_label: true
+#           volume: false
+#           volume_level: true
+#           info: true
+#           progress: true
+#           controls: false
+#           mute: true
+#         volume_stateless: true
+#         card_mod:
+#           style:
+#             mmp-media-controls$: |
+#               ha-icon-button {
+#                 filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.7));
+#                 color: #ffffff70 !important;
+#               }
+#               ha-icon-button:hover {
+#                 color: #ffffff !important;
+#                 transform: scale(1.2);
+#                 transition-duration: 0.2s;
+#                 background: none !important;
+#               }
+#             .: |
+#               ha-card>div.mmp-player{
+#                 padding: 0px !important;
+#               }
+#   styles:
+#     custom_fields:
+#       minicontrol:
+#         - display: block
+#         - position: absolute
+#         - justify-self: start
+#         - width: 100%
+#         - bottom: 0px
+#         - display: >
+#             [[[
+#               return window.matchMedia('(max-width: 800px)').matches
+#                 ? 'none'
+#                 : null;
+#             ]]]
+# --- FIM CÓDIGO ORIGINAL ---
+# NOVO: tpl_minicontrol_mass usa media_player.currently_playing como fallback
 tpl_minicontrol_mass:
   custom_fields:
     minicontrol:
       card:
         type: custom:mini-media-player
-        entity: media_player.mass_universal_airplay
+        entity: media_player.currently_playing
         hide:
           icon: true
           name: true
@@ -1962,7 +2044,9 @@ new_media_player:
     media_on: >
       [[[ return !entity || ['playing', 'on'].indexOf(entity.state) !== -1; ]]]
     vibrant_color: >
-      [[[ return states['sensor.light_vibrant_color'].state; ]]]
+      # ORIGINAL: [[[ return states['sensor.light_vibrant_color'].state; ]]]
+      # NOVO: sensor não existe — cor fixa
+      [[[ return '96, 125, 139'; ]]]
     entity_picture: >
       [[[ return !entity || entity.attributes.entity_picture; ]]]
     entity_id: >
@@ -2141,21 +2225,30 @@ universal_media_player:
     - base
     - base_media
   variables:
+    # --- CÓDIGO ORIGINAL COMENTADO (sensores vibrant_color não existem no setup do usuário) ---
+    # vibrant_light_color: >
+    #   [[[
+    #     let color = states['sensor.light_vibrant_color'].state;
+    #     return `rgb(${color})`;
+    #   ]]]
+    # vibrant_color: >
+    #   [[[
+    #     let color = states['sensor.vibrant_color'].state;
+    #     return `rgb(${color})`;
+    #   ]]]
+    # vibrant_dark_color: >
+    #   [[[
+    #     let color = states['sensor.dark_vibrant_color'].state;
+    #     return `rgb(${color})`;
+    #   ]]]
+    # --- FIM CÓDIGO ORIGINAL ---
+    # NOVO: cores fixas (blue-grey palette) em vez de sensores que não existem
     vibrant_light_color: >
-      [[[
-        let color = states['sensor.light_vibrant_color'].state;
-        return `rgb(${color})`;
-      ]]]
+      [[[ return 'rgb(144, 164, 174)'; ]]]
     vibrant_color: >
-      [[[
-        let color = states['sensor.vibrant_color'].state;
-        return `rgb(${color})`;
-      ]]]
+      [[[ return 'rgb(96, 125, 139)'; ]]]
     vibrant_dark_color: >
-      [[[
-        let color = states['sensor.dark_vibrant_color'].state;
-        return `rgb(${color})`;
-      ]]]
+      [[[ return 'rgb(55, 71, 79)'; ]]]
     tilt_enable: >
       [[[
         return false;

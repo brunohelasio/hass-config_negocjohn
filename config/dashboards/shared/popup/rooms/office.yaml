@@ -1,68 +1,159 @@
+# ══════════════════════════════════════════════════════════════════════════
+# ESTADO ANTERIOR — popup com 3 colunas (col_luzes, col_extra, col_camera)
+# (comentado, nunca deletar)
+# ══════════════════════════════════════════════════════════════════════════
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Office
+#     size: wide
+#     card_mod: !include ../../snippets/style_popup_center.yaml
+#     content:
+#       type: custom:layout-card
+#       layout_type: custom:grid-layout
+#       layout:
+#         grid-template-columns: 18vw 18vw 36vw
+#         grid-template-areas: '"col_luzes col_extra col_camera"'
+#         justify-content: center
+#         align-content: center
+#         grid-gap: 1.5vw
+#         mediaquery:
+#           "(max-width: 800px)":
+#             grid-template-columns: 1fr
+#             grid-template-areas: |
+#               "col_luzes"
+#               "col_extra"
+#               "col_camera"
+#       cards:
+#         - type: vertical-stack
+#           view_layout:
+#             grid-area: col_luzes
+#           cards:
+#             - type: grid
+#               columns: 2
+#               square: true
+#               cards:
+#                 - type: custom:button-card
+#                   entity: light.office_switch_3
+#                   name: Luz central
+#                   template:
+#                     - tpl_popup_light
+#                     - icon_light_flush
+#                 - type: custom:button-card
+#                   entity: light.office_switch_2
+#                   name: Luz ambiente
+#                   template:
+#                     - tpl_popup_light
+#                     - icon_light_flush
+#                 - type: custom:button-card
+#                   entity: light.office_switch_1
+#                   name: Luz estante
+#                   template:
+#                     - tpl_popup_light
+#                     - icon_ledstrip
+#         - type: vertical-stack
+#           view_layout:
+#             grid-area: col_extra
+#           cards:
+#             - type: entities
+#               title: Clima / Extras
+#               show_header_toggle: false
+#               entities:
+#                 - climate.ac_office
+#                 - light.grupo_luzes_office
+#         - type: vertical-stack
+#           view_layout:
+#             grid-area: col_camera
+#           cards:
+#             - type: picture-entity
+#               entity: camera.of_camera
+#               camera_view: live
+#               show_name: false
+#               show_state: false
+# ══════════════════════════════════════════════════════════════════════════
+# NOVO — Popup estilo Sala (2 colunas: col_buttons + col_camera)
+# Replicado de livingroom.yaml — Fase 2.4
+# ══════════════════════════════════════════════════════════════════════════
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
     title: Office
+    tag: office_popup
     size: wide
+    style: >
+      --popup-width: 65vw;
+      --popup-max-width: 980px;
+      --popup-background-color: rgba(15, 20, 35, 0.75);
+      --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+      --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+      --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
+    # --- CÓDIGO ORIGINAL COMENTADO (card_mod inline com .mdc-dialog__surface hack) ---
+    # Removido porque o tema tablet.yaml agora tem uix-dialog com --ha-dialog-width-md
+    # que le --popup-width do style: e dimensiona o popup nativamente via HA.
+    # card_mod:
+    #   style:
+    #     .: |
+    #       ha-dialog {
+    #         backdrop-filter: blur(12px);
+    #         -webkit-backdrop-filter: blur(12px);
+    #       }
+    #       ha-dialog::before {
+    #         content: '';
+    #         position: absolute;
+    #         inset: 0;
+    #         border-radius: inherit;
+    #         pointer-events: none;
+    #         box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+    #       }
+    #     ha-dialog$: |
+    #       .mdc-dialog__scrim {
+    #         background-color: rgba(0, 0, 0, 0.56) !important;
+    #       }
+    #       .mdc-dialog__container {
+    #         align-items: center !important;
+    #         justify-content: center !important;
+    #       }
+    #       .mdc-dialog__surface {
+    #         width: 65vw !important;
+    #         max-width: 980px !important;
+    #         max-height: 88vh !important;
+    #         overflow-y: auto !important;
+    #       }
+    # --- FIM CÓDIGO ORIGINAL ---
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 18vw 18vw 36vw
-        grid-template-areas: '"col_luzes col_extra col_camera"'
-        justify-content: center
-        align-content: center
-        grid-gap: 1.5vw
+        # ANTERIOR: grid-template-columns: 340px 1fr (3-col rooms com 3x98px buttons)
+        # NOVO: 1.4fr 1.0fr (5-col rooms — mesma proporção da Sala)
+        grid-template-columns: 1.4fr 1.0fr
+        grid-template-areas: '"col_buttons col_camera"'
+        grid-gap: 10px
+        margin: 0
+        padding: 0.5rem
         mediaquery:
           "(max-width: 800px)":
             grid-template-columns: 1fr
             grid-template-areas: |
-              "col_luzes"
-              "col_extra"
+              "col_buttons"
               "col_camera"
+            padding: 0
       cards:
+        # ── Coluna 1: Todos os botoes ──
         - type: vertical-stack
           view_layout:
-            grid-area: col_luzes
-          cards:
-            - type: grid
-              columns: 2
-              square: true
-              cards:
-                - type: custom:button-card
-                  entity: light.office_switch_3
-                  name: Luz central
-                  template:
-                    - tpl_popup_light
-                    - icon_light_flush
-                - type: custom:button-card
-                  entity: light.office_switch_2
-                  name: Luz ambiente
-                  template:
-                    - tpl_popup_light
-                    - icon_light_flush
-                - type: custom:button-card
-                  entity: light.office_switch_1
-                  name: Luz estante
-                  template:
-                    - tpl_popup_light
-                    - icon_ledstrip
-        - type: vertical-stack
-          view_layout:
-            grid-area: col_extra
-          cards:
-            - type: entities
-              title: Clima / Extras
-              show_header_toggle: false
-              entities:
-                - climate.ac_office
-                - light.grupo_luzes_office
-        - type: vertical-stack
+            grid-area: col_buttons
+          cards: !include ../../columns/room_office_all_buttons.yaml
+
+        # ── Coluna 2: Camera ──
+        - type: custom:layout-card
+          layout_type: custom:grid-layout
           view_layout:
             grid-area: col_camera
-          cards:
-            - type: picture-entity
-              entity: camera.of_camera
-              camera_view: live
-              show_name: false
-              show_state: false
+          layout:
+            grid-template-columns: 1fr
+            margin: 0
+          cards: !include ../../columns/room_office_cameras.yaml

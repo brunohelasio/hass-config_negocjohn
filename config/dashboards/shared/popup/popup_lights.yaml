@@ -18,6 +18,7 @@ browser_mod:
       --h3-font-size: 2rem;
       --paper-item-icon-active-color: #ff8c00;
       --max-popup-column: 2;
+    card_mod: !include ../snippets/style_popup_center.yaml
     content:
       type: 'custom:layout-card'
       layout_type: 'custom:grid-layout'

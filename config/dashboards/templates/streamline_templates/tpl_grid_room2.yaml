@@ -9,15 +9,25 @@ grid_office_room:
     type: custom:button-card
     entity: light.grupo_luzes_office
     name: Office
+    triggers_update:
+      - sensor.time
+      - sensor.office_active
     template:
       - rooms_base
       - icon_office
+      # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
+      - ac_status
     double_tap_action: !include ../../shared/popup/rooms/office.yaml
     hold_action:
       action: none
     variables:
       light_entity: light.office_switch_3
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.office_active
+      # AC do office (restaurado sem _2)
+      ac_entity: climate.ac_office
+      # Motion: vazio ate sensor chegar
+      motion: ''
 
 # QUARTO CASAL
 grid_quarto_casal:
@@ -25,15 +35,22 @@ grid_quarto_casal:
     type: custom:button-card
     entity: light.grupo_quarto_casal
     name: Quarto Casal
+    triggers_update:
+      - sensor.time
+      - sensor.quarto_casal_active
     template:
       - rooms_base
       - icon_double_bed
+      - alexa_status
     double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml
     hold_action:
       action: none
     variables:
       light_entity: light.qc_luz_principal
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.quarto_casal_active
+      # Alexa do Quarto Casal (Echo Pop) — alexa_status mostra icone quando tocando
+      alexa_entity: media_player.echo_pop_quarto_casal
 
 # QUARTO MIGUEL
 grid_quarto_miguel:
@@ -41,20 +58,39 @@ grid_quarto_miguel:
     type: custom:button-card
     entity: light.grupo_luzes_quarto_miguel
     name: Quarto Miguel
+    # FIX C5.2: Adicionado triggers_update com sensor.time para atualizar timer
+    # no state_display (mostra tempo desde acendimento). Sem sensor *_active por
+    # enquanto — fallback para grupo entity. Quarto Miguel usa switches (nao lights).
+    # NOTA: Grupo recriado pelo usuario (estava indisponivel) — agora funciona.
+    triggers_update:
+      - sensor.time
+      - sensor.quarto_miguel_active
     template:
       - rooms_base
       - icon_double_bed
+      # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
+      - ac_status
     tap_action:
       action: call-service
       service: homeassistant.toggle
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # service_data:
+      #   entity_id: switch.quarto_miguel_switch_2
       service_data:
-        entity_id: switch.quarto_miguel_switch_2
+        entity_id: light.quarto_miguel_switch_2
     double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
     hold_action:
       action: none
     variables:
-      light_entity: switch.quarto_miguel_switch_2
-      active: ''
+      # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
+      # light_entity: switch.quarto_miguel_switch_2
+      light_entity: light.quarto_miguel_switch_2
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.quarto_miguel_active
+      # AC do quarto miguel (restaurado sem _2)
+      ac_entity: climate.ac_quarto_miguel
+      # Motion: vazio ate sensor chegar
+      motion: ''
 
 # QUARTO MARINA
 grid_quarto_marina:
@@ -62,15 +98,22 @@ grid_quarto_marina:
     type: custom:button-card
     entity: light.grupo_luzes_quarto_marina
     name: Quarto Marina
+    triggers_update:
+      - sensor.time
+      - sensor.quarto_marina_active
     template:
       - rooms_base
       - icon_double_bed
+      - alexa_status
     double_tap_action: !include ../../shared/popup/rooms/quarto_marina.yaml
     hold_action:
       action: none
     variables:
       light_entity: light.quarto_marina_switch_4
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.quarto_marina_active
+      # Alexa do Quarto Marina (Echo Pop) — alexa_status mostra icone quando tocando
+      alexa_entity: media_player.echo_pop_marina
 
 # SHOWER ROOM
 grid_shower:

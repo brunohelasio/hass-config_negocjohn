@@ -96,24 +96,93 @@ rooms_base:
           return entity.attributes.washdryer_remain;
         }
         else if (variables.state_on || variables.state == 'yes') {
-          // Keep original logic for rooms that expose `attributes.lights_on`,
-          // but protect against undefined sensors while adapting entities.
+          // Obtem contagem de luzes ligadas do sensor active
           const activeEntity = variables.active ? states[variables.active] : null;
+          // ANTERIOR: usava lights_on (retorna string Jinja, nao array JS)
+          // FIX: usa lights_on_count primeiro (numero), fallback para lights_on,
+          // e depois fallback direto pelo light group entity_id (conta membros on)
+          const lightsOnCount = activeEntity?.attributes?.lights_on_count;
           const lightsOn = activeEntity?.attributes?.lights_on;
-          const num = Array.isArray(lightsOn)
-            ? lightsOn.length
-            : (Number.isFinite(lightsOn) ? lightsOn : null);
+          let num = null;
+          if (lightsOnCount != null && lightsOnCount !== '' && !isNaN(lightsOnCount)) {
+            const parsed = parseInt(lightsOnCount, 10);
+            if (!isNaN(parsed)) num = parsed;
+          } else if (Array.isArray(lightsOn)) {
+            num = lightsOn.length;
+          } else if (typeof lightsOn === 'string' && lightsOn.startsWith('[')) {
+            // Jinja retorna string como "['Switch 2', 'LED']" — conta itens via regex
+            const matches = lightsOn.match(/'/g);
+            if (matches) num = matches.length / 2;
+          } else if (Number.isFinite(lightsOn)) {
+            num = lightsOn;
+          }
+
+          // Fallback: conta membros do light group diretamente via entity_id
+          if (num === null && entity.attributes && entity.attributes.entity_id) {
+            const members = entity.attributes.entity_id;
+            if (Array.isArray(members)) {
+              num = members.filter(id => states[id] && states[id].state === 'on').length;
+            }
+          }
+
+          // Funcao de formatacao de tempo (m/h/d) — baseada em circle_state do negocjohn
+          // ANTERIOR: mostrava segundos (s), mas sensor.time atualiza apenas a cada 60s
+          // causando congelamento do display (ex: "39s" parado). Agora inicia a partir de 1m.
+          // const timeFmt = c => {
+          //   let s = (c/1e3), m = (c/6e4), h = (c/36e5), d = (c/864e5);
+          //   return s < 60 ? parseInt(s) + 's'
+          //        : m < 60 ? parseInt(m) + 'm'
+          //        : h < 24 ? parseInt(h) + 'h'
+          //        : parseInt(d) + 'd';
+          // };
+          const timeFmt = c => {
+            let m = (c/6e4), h = (c/36e5), d = (c/864e5);
+            return m < 1   ? '< 1m'
+                 : m < 60  ? parseInt(m) + 'm'
+                 : h < 24  ? parseInt(h) + 'h'
+                 : parseInt(d) + 'd';
+          };
+
+          // Calcula tempo desde que luzes estao acesas no comodo.
+          // ANTERIOR: usava entity.last_changed (group entity), mas era inconsistente:
+          //   - Group last_changed so atualiza em transicoes on/off do group inteiro
+          //   - Se um membro muda de brilho, group pode re-trigger mas last_changed nao muda
+          //   - Em restarts do HA, group last_changed reseta para timestamp do restart
+          // FIX: itera os membros "on" do group e encontra o last_changed mais antigo.
+          // Isso mostra ha quanto tempo o comodo tem luzes acesas (desde a primeira acender).
+          let elapsed = '';
+          if (entity.state === 'on') {
+            let earliestOn = null;
+            // Percorre membros do light group para achar o mais antigo ligado
+            if (entity.attributes && entity.attributes.entity_id && Array.isArray(entity.attributes.entity_id)) {
+              entity.attributes.entity_id.forEach(id => {
+                const s = states[id];
+                if (s && s.state === 'on' && s.last_changed) {
+                  const ts = Date.parse(s.last_changed);
+                  if (!isNaN(ts) && (earliestOn === null || ts < earliestOn)) earliestOn = ts;
+                }
+              });
+            }
+            // Fallback: usa last_changed do group entity se membros nao estao disponiveis
+            if (earliestOn === null && entity.last_changed) {
+              earliestOn = Date.parse(entity.last_changed);
+            }
+            if (earliestOn !== null) {
+              const diff = Date.now() - earliestOn;
+              if (diff > 0) elapsed = timeFmt(diff);
+            }
+          }
 
           if (num === 1) {
-            return '1 light';
+            return elapsed ? `1 light · ${elapsed}` : '1 light';
           } else if (typeof num === 'number' && num > 1) {
-            return `${num} lights`;
+            return elapsed ? `${num} lights · ${elapsed}` : `${num} lights`;
           } else if (typeof num === 'number' && num === 0) {
             return 'On';
           }
 
           // Fallback for environments without the `active` room sensor.
-          return 'On';
+          return elapsed ? `On · ${elapsed}` : 'On';
         }
         else {
           return variables.state;
@@ -149,8 +218,10 @@ motion:
   custom_fields:
     motion: >
       [[[
-        if (states[variables.motion].state == 'on')
-          return '<ha-icon icon="mdi:motion-sensor" style="width:100%;display:flex; color:var(--state-icon-active-color);"></ha-icon>'
+        // Protecao contra entidade inexistente (placeholder para sensor futuro)
+        // ANTERIOR: mdi:motion-sensor — trocado para mdi:walk (pessoa andando) a pedido do usuario
+        if (variables.motion && states[variables.motion] && states[variables.motion].state == 'on')
+          return '<ha-icon icon="mdi:walk" style="width:100%;display:flex; color:var(--state-icon-active-color);"></ha-icon>'
       ]]]
   styles:
     custom_fields:
@@ -168,6 +239,140 @@ motion:
         #         ? 'rgba(255, 255, 255, 0.4)'
         #         : 'rgba(255, 255, 255, 0.8)';
         #     ]]]
+# Icone de status: AC ligado (exibe icone de ar condicionado quando cooling/fan)
+ac_status:
+  custom_fields:
+    ac_status: >
+      [[[
+        if (variables.ac_entity && states[variables.ac_entity]) {
+          const st = states[variables.ac_entity].state;
+          if (['cool', 'fan_only', 'dry', 'heat'].includes(st))
+            return '<ha-icon icon="mdi:snowflake" style="width:100%;display:flex; color:#3583b6;"></ha-icon>';
+        }
+      ]]]
+  styles:
+    custom_fields:
+      ac_status:
+        - position: absolute
+        - height: auto
+        - border-radius: 50%
+        - right: 1%
+        - padding: 5%
+        - margin: -10%
+        - width: 15%
+        - top: >
+            [[[
+              // Empilha abaixo do motion se motion estiver ativo
+              if (variables.motion && states[variables.motion] && states[variables.motion].state == 'on')
+                return '30%';
+              return '0';
+            ]]]
+        - transition: top 250ms ease-out
+# Icone de status: TV/Media playing (exibe icone de TV quando playing)
+media_status:
+  custom_fields:
+    media_status: >
+      [[[
+        if (variables.media_entity && states[variables.media_entity]) {
+          const st = states[variables.media_entity].state;
+          if (['playing', 'on'].includes(st))
+            return '<ha-icon icon="mdi:television" style="width:100%;display:flex; color:var(--state-icon-active-color);"></ha-icon>';
+        }
+      ]]]
+  styles:
+    custom_fields:
+      media_status:
+        - position: absolute
+        - height: auto
+        - border-radius: 50%
+        - right: 1%
+        - padding: 5%
+        - margin: -10%
+        - width: 15%
+        - top: >
+            [[[
+              // Empilha abaixo dos icones ativos acima
+              let offset = 0;
+              if (variables.motion && states[variables.motion] && states[variables.motion].state == 'on')
+                offset += 30;
+              if (variables.ac_entity && states[variables.ac_entity] && ['cool','fan_only','dry','heat'].includes(states[variables.ac_entity].state))
+                offset += 30;
+              return offset > 0 ? offset + '%' : '0';
+            ]]]
+        - transition: top 250ms ease-out
+# Icone de status: Alexa tocando (exibe icone Alexa quando Echo esta playing)
+# Verifica a entidade Echo Alexa do comodo (nao o Spotify global).
+# Empilha abaixo dos icones ativos acima (motion + ac + media).
+alexa_status:
+  custom_fields:
+    alexa_status: >
+      [[[
+        if (variables.alexa_entity && states[variables.alexa_entity]) {
+          const st = states[variables.alexa_entity].state;
+          if (['playing'].includes(st))
+            return `<svg viewBox="0 0 50 50" style="width:100%;display:flex;">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="#00caff" stroke-width="3" opacity="0.3"/>
+              <circle cx="25" cy="25" r="14" fill="none" stroke="#00caff" stroke-width="2.5" opacity="0.5"/>
+              <circle cx="25" cy="25" r="8" fill="#00caff" opacity="0.85"/>
+            </svg>`;
+        }
+      ]]]
+  styles:
+    custom_fields:
+      alexa_status:
+        - position: absolute
+        - height: auto
+        - border-radius: 50%
+        - right: 1%
+        - padding: 5%
+        - margin: -10%
+        - width: 15%
+        - top: >
+            [[[
+              // Empilha abaixo dos icones ativos acima (motion + ac + media)
+              let offset = 0;
+              if (variables.motion && states[variables.motion] && states[variables.motion].state == 'on')
+                offset += 30;
+              if (variables.ac_entity && states[variables.ac_entity] && ['cool','fan_only','dry','heat'].includes(states[variables.ac_entity].state))
+                offset += 30;
+              if (variables.media_entity && states[variables.media_entity] && ['playing','on'].includes(states[variables.media_entity].state))
+                offset += 30;
+              return offset > 0 ? offset + '%' : '0';
+            ]]]
+        - transition: top 250ms ease-out
+# Icone de status: luzes acesas (exibe icone de lampada com contagem)
+lights_status:
+  custom_fields:
+    lights_status: >
+      [[[
+        if (variables.active && states[variables.active]) {
+          // Tenta lights_on_count primeiro, depois length de lights_on como fallback
+          const attr = states[variables.active].attributes;
+          let count = 0;
+          if (attr.lights_on_count != null && !isNaN(attr.lights_on_count)) {
+            count = parseInt(attr.lights_on_count, 10);
+          } else if (Array.isArray(attr.lights_on)) {
+            count = attr.lights_on.length;
+          } else if (typeof attr.lights_on === 'string' && attr.lights_on.length > 2) {
+            // Jinja retorna string como "['Switch 2', 'Switch 1']" — conta virgulas + 1
+            count = (attr.lights_on.match(/,/g) || []).length + 1;
+          }
+          if (count > 0)
+            return '<ha-icon icon="mdi:lightbulb-on" style="width:100%;display:flex; color:#f0c040;"></ha-icon>';
+        }
+      ]]]
+  styles:
+    custom_fields:
+      lights_status:
+        - position: absolute
+        - height: auto
+        - border-radius: 50%
+        - left: 1%
+        - padding: 5%
+        - margin: -10%
+        - width: 15%
+        - bottom: 0
+        - transition: all 250ms ease-out
 babycam:
   custom_fields:
     babycam: >
@@ -777,6 +982,20 @@ tpl_popup_light:
     action: more-info
     haptic: medium
 
+# FIX C1.2-C1.3: Template dedicado para botoes de climate/AC nos popups.
+# Herda de base, sobrescreve state_on com estados do climate.
+# Resolve P5 (AC ligado — botao nao ficava branco): a cascata do button-card
+# avaliava o state_on do base template DEPOIS do override no card, sobrescrevendo
+# o background-color. Com tpl_popup_climate na cadeia de heranca, o state_on
+# correto eh avaliado DENTRO da cadeia de templates, antes do styles.card do base.
+# Uso: template: [tpl_popup_climate, icon_climate]
+tpl_popup_climate:
+  template:
+    - base
+  variables:
+    state_on: >
+      [[[ return entity && ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'].indexOf(entity.state) !== -1; ]]]
+
   # double_tap_action:
   #   action: fire-dom-event
   #   browser_mod:
@@ -997,6 +1216,113 @@ doors:
   #                    CAMERA                     #
   #                                               #
   #################################################
+# --- CÓDIGO ORIGINAL COMENTADO (camera template com dependências europeias: battery, stream_status, button.press) ---
+# camera:
+#   template:
+#     - base
+#     - circle
+#     - icon_spot_cam
+#   variables:
+#     camera_on: >
+#       [[[ return !entity || ['streaming'].indexOf(entity.state) !== -1; ]]]
+#     camera_off: >
+#       [[[ return !entity || ['off', 'standby', 'unknown', 'unavailable', 'idle'].indexOf(entity.state) !== -1; ]]]
+#     is_bellow_horrizon: >
+#       [[[
+#         if (states['sun.sun'].state == 'below_horizon') {
+#             return true;
+#         }
+#       ]]]
+#     battery: ''
+#     stream_state: >
+#       [[[
+#         return !entity || states[variables.stream_status].state;
+#       ]]]
+#   show_name: false
+#   # tap_action:
+#   #   action: call-service
+#   #   service: automation.trigger
+#   #   service_data:
+#   #     entity_id: automation.camera_snapshot
+#   tooltip: >
+#     [[[
+#       return states[variables.battery].state+' %';
+#     ]]]
+#
+#   double_tap_action:
+#     action: fire-dom-event
+#     browser_mod:
+#       service: browser_mod.more_info
+#       data:
+#         entity: >
+#           [[[
+#             return variables.entity_id;
+#           ]]]
+#   tap_action:
+#     action: call-service
+#     service: button.press
+#     service_data:
+#       entity_id: >
+#         [[[
+#             let isIdle = states[variables.stream_status].state === 'StreamStatus.IDLE',
+#                 pressAction = isIdle ? 'start' : 'stop';
+#             return `button.${entity.entity_id.split('.')[1]}_${pressAction}_rtsp_stream`;
+#         ]]]
+#
+#   styles:
+#     card:
+#       - padding: 8%
+#       - background-color: none
+#       - background-size: cover
+#       # - background-position: center
+#       - background-repeat: no-repeat
+#       - background-image: >
+#           [[[
+#               let picUrl = variables.image_entity !== undefined
+#                   ? states[variables.image_entity].attributes.entity_picture
+#                   : variables.entity_picture;
+#               return `linear-gradient(0deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 100%), url(${picUrl})`;
+#           ]]]
+#
+#     custom_fields:
+#       circle:
+#         - width: 50%
+#   custom_fields:
+#     circle: >
+#       [[[
+#         if (entity.state === 'streaming' || entity.state === 'idle') {
+#           let time = c => {
+#               let s = (c/1e3),
+#                   m = (c/6e4),
+#                   h = (c/36e5),
+#                   d = (c/864e5);
+#               return s < 60
+#                   ? parseInt(s) + 's'
+#                   : m < 60 ? parseInt(m) + 'm'
+#                   : h < 24 ? parseInt(h) + 'h'
+#                   : parseInt(d) + 'd';
+#           };
+#             let last_changed = time(Date.now() - Date.parse(entity.last_changed)),
+#               stroke = variables.state === 'streaming' || variables.state === 'on'  ? '#000000' : 'rgba(255,255,255,0.1)',
+#               fill = variables.is_bellow_horrizon && variables.state === 'idle' || variables.state === 'off' ? 'rgba(255,255,255,0.1)' : '#efefef95',
+#               text = variables.is_bellow_horrizon && variables.state === 'idle' || variables.state === 'off' ? '#8d8e90' : '#000000';
+#         if (entity) {
+#         return `
+#           <svg viewBox="0 0 50 50">
+#             <circle cx="25" cy="25" r="20.5" stroke="${stroke}" stroke-width="2.5" fill="${fill}" />
+#             <text x="50%" y="54%" fill="${text}" font-size="14" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">${last_changed}</text>
+#           </svg>
+#         `;
+#         }}
+#       ]]]
+# --- FIM CÓDIGO ORIGINAL ---
+
+# NOVO: camera template genérico — sem dependências de battery, stream_status, button.press
+# Funciona com qualquer entidade camera.* (WiFi, RTSP, polling)
+# tap_action: more-info (abre o feed da camera)
+# double_tap_action: more-info via browser_mod
+# background-image: usa entity_picture da entidade (funciona com polling)
+# circle: mostra tempo desde última mudança de estado
 camera:
   template:
     - base
@@ -1013,22 +1339,9 @@ camera:
             return true;
         }
       ]]]
-    battery: ''
-    stream_state: >
-      [[[
-        return !entity || states[variables.stream_status].state;
-      ]]]
   show_name: false
-  # tap_action:
-  #   action: call-service
-  #   service: automation.trigger
-  #   service_data:
-  #     entity_id: automation.camera_snapshot
-  tooltip: >
-    [[[
-      return states[variables.battery].state+' %';
-    ]]]
-
+  tap_action:
+    action: more-info
   double_tap_action:
     action: fire-dom-event
     browser_mod:
@@ -1038,30 +1351,19 @@ camera:
           [[[
             return variables.entity_id;
           ]]]
-  tap_action:
-    action: call-service
-    service: button.press
-    service_data:
-      entity_id: >
-        [[[
-            let isIdle = states[variables.stream_status].state === 'StreamStatus.IDLE',
-                pressAction = isIdle ? 'start' : 'stop';
-            return `button.${entity.entity_id.split('.')[1]}_${pressAction}_rtsp_stream`;
-        ]]]
 
   styles:
     card:
       - padding: 8%
       - background-color: none
       - background-size: cover
-      # - background-position: center
       - background-repeat: no-repeat
       - background-image: >
           [[[
-              let picUrl = variables.image_entity !== undefined
-                  ? states[variables.image_entity].attributes.entity_picture
-                  : variables.entity_picture;
-              return `linear-gradient(0deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 100%), url(${picUrl})`;
+              let picUrl = entity && entity.attributes ? entity.attributes.entity_picture : '';
+              return picUrl
+                ? `linear-gradient(0deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 100%), url(${picUrl})`
+                : 'none';
           ]]]
 
     custom_fields:
@@ -1070,7 +1372,7 @@ camera:
   custom_fields:
     circle: >
       [[[
-        if (entity.state === 'streaming' || entity.state === 'idle') {
+        if (entity && (entity.state === 'streaming' || entity.state === 'idle')) {
           let time = c => {
               let s = (c/1e3),
                   m = (c/6e4),

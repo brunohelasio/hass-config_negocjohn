@@ -120,14 +120,29 @@ group:
       - binary_sensor.contact_sensor_kid_balcony_contact
       - binary_sensor.contact_sensor_office_balcony_contact
       - binary_sensor.contact_sensor_terrace_door
+  # --- CÓDIGO ORIGINAL COMENTADO (cameras europeias ngocjohn) ---
+  # cameras:
+  #   name: Camera Group
+  #   icon: mdi:cctv
+  #   entities:
+  #     - camera.doorway
+  #     - camera.kids_room
+  #     - camera.terasa
+  #     - camera.zahrada
+  # --- FIM CÓDIGO ORIGINAL ---
+  # NOVO: Cameras do apartamento do usuário (WiFi)
   cameras:
     name: Camera Group
     icon: mdi:cctv
     entities:
-      - camera.doorway
-      - camera.kids_room
-      - camera.terasa
-      - camera.zahrada
+      - camera.sl_camera_2
+      - camera.vr_camera_2
+      - camera.cz_camera_2
+      - camera.as_camera_2
+      - camera.of_camera
+      - camera.camera_quarto_casal
+      - camera.qmi_camera
+      - camera.qma_camera
   ## COVER GROUP ##
   shades_cover:
     name: Shades Cover Group
@@ -141,36 +156,60 @@ group:
       - cover.right
       - cover.window
   ## MEDIA PLAYER GROUP ##
+  # --- CÓDIGO ORIGINAL COMENTADO (media players europeus ngocjohn) ---
+  # device_players:
+  #   name: Media Players
+  #   icon: mdi:play-circle
+  #   entities:
+  #     # - media_player.spotify
+  #     - media_player.living_room_tv
+  #     # - media_player.bedroom_tv
+  #     - media_player.spotifyplus_ngoc_nguyen
+  # homepod_airplay:
+  #   name: 'Homepod Airplay'
+  #   icon: mdi:speaker
+  #   entities:
+  #     - media_player.office
+  #     - media_player.bathroom_homepod
+  #     - media_player.bedroom_homepod
+  #     - media_player.living_room
+  # homepod_mass_airplay:
+  #   name: 'Homepod MASS Airplay'
+  #   icon: mdi:speaker
+  #   entities:
+  #     - media_player.office_homepod
+  #     - media_player.bathroom
+  #     - media_player.bedroom
+  #     - media_player.living_room_2
+  # television:
+  #   name: Television
+  #   icon: mdi:television
+  #   entities:
+  #     - media_player.living_room_tv
+  #     # - media_player.bedroom_tv
+  # conditional_media:
+  #   name: Conditional Media
+  #   icon: mdi:play-circle
+  #   entities:
+  #     - media_player.spotifyplus_ngoc_nguyen
+  #     - media_player.mass_universal_airplay
+  #     - media_player.living_room_tv
+  #     - media_player.kodi_atv
+  #     - media_player.playstation_5
+  #     # - sensor.ps5_activity
+  # --- FIM CÓDIGO ORIGINAL ---
+  # NOVO: Media players do usuário (Brasil)
   device_players:
     name: Media Players
     icon: mdi:play-circle
     entities:
-      # - media_player.spotify
-      - media_player.living_room_tv
-      # - media_player.bedroom_tv
-      - media_player.spotifyplus_ngoc_nguyen
-  homepod_airplay:
-    name: 'Homepod Airplay'
-    icon: mdi:speaker
-    entities:
-      - media_player.office
-      - media_player.bathroom_homepod
-      - media_player.bedroom_homepod
-      - media_player.living_room
-  homepod_mass_airplay:
-    name: 'Homepod MASS Airplay'
-    icon: mdi:speaker
-    entities:
-      - media_player.office_homepod
-      - media_player.bathroom
-      - media_player.bedroom
-      - media_player.living_room_2
+      - media_player.smart_tv_pro_2
+      - media_player.spotifyplus_bruno_helasio
   television:
     name: Television
     icon: mdi:television
     entities:
-      - media_player.living_room_tv
-      # - media_player.bedroom_tv
+      - media_player.smart_tv_pro_2
   conditional_media:
     name: Conditional Media
     icon: mdi:play-circle
@@ -187,14 +226,23 @@ group:
       - media_player.spotify                     # Spotify nativo
 
   ## CLIMATE GROUP ##
-  thermostats:
-    name: Thermostats
-    icon: mdi:home-thermometer
+  # ORIGINAL negocjohn European thermostats (comentado — Regra de Ouro)
+  # thermostats:
+  #   name: Thermostats
+  #   icon: mdi:home-thermometer
+  #   entities:
+  #     - climate.bedroom_thermostat
+  #     - climate.office_thermostat
+  #     - climate.living_room_thermostat
+  #     - climate.kids_room_thermostat
+  # AC do usuario (Brasil)
+  ar_condicionado:
+    name: Ar Condicionado
+    icon: mdi:air-conditioner
     entities:
-      - climate.bedroom_thermostat
-      - climate.office_thermostat
-      - climate.living_room_thermostat
-      - climate.kids_room_thermostat
+      - climate.sl_ar_condicionado
+      - climate.ac_office
+      - climate.ac_quarto_miguel
 
 notify:
   - platform: group

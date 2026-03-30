@@ -11,6 +11,9 @@ grid_office:
     # entity: light.office_group
     entity: light.grupo_luzes_office
     name: Office
+    triggers_update:
+      - sensor.time
+      - sensor.office_active
     double_tap_action: !include ../../shared/popup/rooms/office.yaml
     # hold_action: !include ../../shared/honeycomb/office_mode.yaml
     hold_action:
@@ -21,6 +24,9 @@ grid_office:
       # - macbook
       # - server
       - icon_office
+      # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
+      - ac_status
+      - alexa_status
       # - change_grid_title
       # - light
     variables:
@@ -35,7 +41,14 @@ grid_office:
       # server: binary_sensor.mbproserver_active
       # macbook: switch.macbook
       # active: sensor.office_active
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.office_active
+      # AC do office (restaurado sem _2)
+      ac_entity: climate.ac_office
+      # Motion: vazio ate sensor chegar
+      motion: ''
+      # Alexa do Office (Echo Pop Office) — alexa_status mostra icone quando tocando
+      alexa_entity: media_player.echo_pop_office
       # tempsensor: sensor.office_temp_humid_temperature
       # humidsensor: sensor.office_temp_humid_humidity
   # LIVING ROOM GRID
@@ -46,6 +59,13 @@ grid_living_room:
     entity: light.grupo_luzes_sala
     # entity: light.sala_switch_2
     name: Sala
+    # triggers_update com sensor.time para atualizar o timer de tempo no state_display
+    # (mostra "1 light · 2h" etc). Necessario para atualizacao periodica a cada minuto.
+    # Inclui sensor.living_room_active para re-renderizar quando contagem de luzes muda.
+    # ANTERIOR: triggers_update: sensor.time
+    triggers_update:
+      - sensor.time
+      - sensor.living_room_active
     double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml
     # double_tap_action:
     #   action: fire-dom-event
@@ -65,19 +85,52 @@ grid_living_room:
     hold_action: !include ../../shared/popup/rooms/livingroom.yaml
     template:
       - rooms_base
+      # REMOVIDO: circle nao faz parte do comportamento original do botao principal.
+      # Mantido apenas nos botoes de luz do popup (Luz Principal) e midia (TV/Spotify).
+      # - circle
       - icon_couch_lamp
+      - motion
+      - ac_status
+      - media_status
+      - alexa_status
+      # REMOVIDO: lights_status (icone de lampada) — retirado a pedido do usuario.
+      # O status de luzes continua visivel no state_display (ex: "2 lights · 1h").
+      # - lights_status
     variables:
       # light_entity: light.living_room_group
       light_entity: light.sala_switch_2
-      # active: sensor.living_room_active
-      active: ''
-    card_mod:
-      style: |
-        #circle {
-        {%- if not is_state('light.grupo_luzes_sala', 'on') -%}
-          display:none !important;
-        {% endif %}
-        }
+      # ORIGINAL: active: sensor.living_room_active (vazio)
+      active: sensor.living_room_active
+      # Motion: vazio ate o sensor de presenca chegar.
+      # Quando instalar o sensor, trocar por: motion: binary_sensor.motion_sala
+      # O template motion tem protecao interna e nao quebra com string vazia.
+      motion: ''
+      # AC da sala (restaurado: AC nao usa _2, cameras sim)
+      ac_entity: climate.sl_ar_condicionado
+      # TV/Media da sala
+      media_entity: media_player.smart_tv_pro_2
+      # Alexa da sala (Echo Show) — alexa_status mostra icone quando tocando
+      alexa_entity: media_player.echo_show
+      # REMOVIDO: circle_input nao e mais necessario no botao principal (sem circle).
+      # circle_input: >
+      #   [[[
+      #     if (entity && entity.state === 'on') {
+      #       const brightness = entity.attributes.brightness;
+      #       return brightness != null
+      #         ? Math.round(brightness / 2.54)
+      #         : 100;
+      #     }
+      #     return ' ';
+      #   ]]]
+      # circle_input_unit: '%'
+    # REMOVIDO: card_mod para esconder circle nao e mais necessario (circle removido).
+    # card_mod:
+    #   style: |
+    #     #circle {
+    #     {%- if not is_state('light.grupo_luzes_sala', 'on') -%}
+    #       display:none !important;
+    #     {% endif %}
+    #     }
 
 # KITCHEN NORMAL
 grid_kitchen_normal:
@@ -86,6 +139,9 @@ grid_kitchen_normal:
     # entity: sensor.kitchen_active
     entity: light.grupo_luzes_cozinha
     name: Cozinha
+    triggers_update:
+      - sensor.time
+      - sensor.cozinha_active
     template:
       - rooms_base
       - icon_noodles
@@ -101,7 +157,8 @@ grid_kitchen_normal:
       light_entity: light.cz_luz_principal
       # motion: binary_sensor.motion_sensor_kitchen_occupancy
       # active: sensor.kitchen_active
-      active: ''
+      # --- ANTERIOR: active: '' (sem sensor) ---
+      active: sensor.cozinha_active
   # KITCHEN DISHWASING
 grid_kitchen_dishwasing:
   card:

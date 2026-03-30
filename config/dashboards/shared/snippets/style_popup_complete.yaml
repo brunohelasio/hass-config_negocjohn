@@ -1,0 +1,37 @@
+# Snippet completo para popups browser_mod — centering + scrim + blur + glow
+# Uso: card_mod: !include ../snippets/style_popup_complete.yaml
+# (ou ../../snippets/style_popup_complete.yaml para subdiretorios)
+#
+# Unifica: centralizacao (.mdc-dialog__container), scrim escuro, backdrop blur(12px),
+# blue glow inset e controle de largura/altura do dialog.
+# Substituir style_popup_center.yaml onde for necessario o kit completo.
+#
+# Parametros de tamanho sao controlados pelas CSS custom properties do browser_mod:
+#   --popup-width, --popup-max-width (definidos no style: do popup)
+# O snippet nao define largura fixa — cada popup define a sua via style:.
+style:
+  .: |
+    ha-dialog {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    ha-dialog::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+    }
+  ha-dialog$: |
+    .mdc-dialog__scrim {
+      background-color: rgba(0, 0, 0, 0.56) !important;
+    }
+    .mdc-dialog__container {
+      align-items: center !important;
+      justify-content: center !important;
+    }
+    .mdc-dialog__surface {
+      max-height: 88vh !important;
+      overflow-y: auto !important;
+    }

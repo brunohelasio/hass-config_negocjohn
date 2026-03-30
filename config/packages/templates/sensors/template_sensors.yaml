@@ -26,7 +26,7 @@ template:
       - unique_id: climate_index
         name: Home Climate
         state: >-
-          {% set aqi = states.sensor.air_quality_index.state | float %}
+          {% set aqi = states.sensor.air_quality_index.state | float(0) %}
           {% if 0 < aqi < 12 %}
             Excellent
           {% elif 12.1 < aqi < 35.4 %}
@@ -37,6 +37,8 @@ template:
             Interior
           {% elif 150.5 < aqi %}
             Poor
+          {% else %}
+            Unknown
           {% endif %}
         icon: >-
           {% if states('sensor.home_climate') in ['Excellent', 'Good'] %}
@@ -48,144 +50,270 @@ template:
           {%- endif %}
         attributes:
           average_temperature: >-
-            {{ states.sensor.average_temperature.state }}
+            {% if has_value('sensor.sl_sensor_temp_humid_temperatura') %}
+              {{ states('sensor.sl_sensor_temp_humid_temperatura') }}
+            {% else %}
+              {{ states.sensor.average_temperature.state | default('N/A') }}
+            {% endif %}
           average_humidity: >-
-            {{ states.sensor.average_humidity.state }}
-          living_room_pm25: >-
-            {% if has_value('sensor.dyson_ph04_pm_2_5') %}
-              {{ states.sensor.dyson_ph04_pm_2_5.state }} µg/m³
-            {% endif %}
-          bedroom_pm25: >-
-            {% if has_value('sensor.zhimi_mb3_8b86_pm25') %}
-              {{ states.sensor.zhimi_mb3_8b86_pm25.state }} µg/m³
-            {% endif %}
-          office_pm25: >-
-            {% if has_value('sensor.zhimi_mb4_b008_pm25_density') %}
-              {{ states.sensor.zhimi_mb4_b008_pm25_density.state }} µg/m³
-            {% endif %}
-          heating: >-
-            {% set heaters = [
-              states.climate.bedroom_thermostat,
-              states.climate.office_thermostat,
-              states.climate.kids_room_thermostat,
-              states.climate.living_room_thermostat
+            {{ states.sensor.average_humidity.state | default('N/A') }}
+          # ORIGINAL negocjohn PM2.5 sensors (comentado — Regra de Ouro)
+          # living_room_pm25: >-
+          #   {% if has_value('sensor.dyson_ph04_pm_2_5') %}
+          #     {{ states.sensor.dyson_ph04_pm_2_5.state }} µg/m³
+          #   {% endif %}
+          # bedroom_pm25: >-
+          #   {% if has_value('sensor.zhimi_mb3_8b86_pm25') %}
+          #     {{ states.sensor.zhimi_mb3_8b86_pm25.state }} µg/m³
+          #   {% endif %}
+          # office_pm25: >-
+          #   {% if has_value('sensor.zhimi_mb4_b008_pm25_density') %}
+          #     {{ states.sensor.zhimi_mb4_b008_pm25_density.state }} µg/m³
+          #   {% endif %}
+          # ORIGINAL negocjohn heating detection (European thermostats — comentado)
+          # heating: >-
+          #   {% set heaters = [
+          #     states.climate.bedroom_thermostat,
+          #     states.climate.office_thermostat,
+          #     states.climate.kids_room_thermostat,
+          #     states.climate.living_room_thermostat
+          #   ] | reject('equalto', none) | list  %}
+          #   {% set heateron = heaters | selectattr('attributes.hvac_action', 'eq', 'heating') | list | count %}
+          #   {%- if heateron != 0 -%}
+          #     yes
+          #   {% else %}
+          #     no
+          #   {% endif %}
+          # AC status (usando entidades do usuario)
+          ac_active: >-
+            {% set acs = [
+              states.climate.sl_ar_condicionado,
+              states.climate.ac_office,
+              states.climate.ac_quarto_miguel
             ] | reject('equalto', none) | list  %}
-            {% set heateron = heaters | selectattr('attributes.hvac_action', 'eq', 'heating') | list | count %}
-            {%- if heateron != 0 -%}
+            {% set acs_on = acs | selectattr('state', 'in', ['cool', 'fan_only', 'dry', 'heat']) | list | count %}
+            {%- if acs_on != 0 -%}
               yes
             {% else %}
               no
             {% endif %}
-          purifier: >-
-            {% set purifiers = [
-              states.fan.dyson_ph04,
-              states.fan.office_xiaomi_air_purifier,
-              states.fan.zhimi_mb3_8b86_air_purifier ] %}
-            {% set purifier_on = purifiers | selectattr('state','eq','on') | list | count %}
-            {%- if (purifier_on != 0) -%}
-              yes
-            {% else %}
-              no
-            {% endif %}
-          heating_on: >-
-            {% set heateron = [
-              states.climate.bedroom_thermostat,
-              states.climate.office_thermostat,
-              states.climate.kids_room_thermostat,
-              states.climate.living_room_thermostat ] | reject('equalto', none) | list  %}
-            {{ heateron | selectattr('attributes.hvac_action','eq','heating') | map(attribute='name') | list | replace('Thermostat', '') }}
+          acs_running: >-
+            {% set acs = [
+              states.climate.sl_ar_condicionado,
+              states.climate.ac_office,
+              states.climate.ac_quarto_miguel
+            ] | reject('equalto', none) | list  %}
+            {{ acs | selectattr('state', 'in', ['cool', 'fan_only', 'dry', 'heat']) | map(attribute='name') | list }}
+          # ORIGINAL negocjohn purifier sensors (comentado — Regra de Ouro)
+          # purifier: >-
+          #   {% set purifiers = [
+          #     states.fan.dyson_ph04,
+          #     states.fan.office_xiaomi_air_purifier,
+          #     states.fan.zhimi_mb3_8b86_air_purifier ] %}
+          #   {% set purifier_on = purifiers | selectattr('state','eq','on') | list | count %}
+          #   {%- if (purifier_on != 0) -%}
+          #     yes
+          #   {% else %}
+          #     no
+          #   {% endif %}
+          # ORIGINAL negocjohn heating_on attribute (comentado)
+          # heating_on: >-
+          #   {% set heateron = [
+          #     states.climate.bedroom_thermostat,
+          #     states.climate.office_thermostat,
+          #     states.climate.kids_room_thermostat,
+          #     states.climate.living_room_thermostat ] | reject('equalto', none) | list  %}
+          #   {{ heateron | selectattr('attributes.hvac_action','eq','heating') | map(attribute='name') | list | replace('Thermostat', '') }}
       # SENSOR - ROOM ACTIVITY
+      # ORIGINAL negocjohn living_room_active (comentado — Regra de Ouro)
+      # - unique_id: living_room_active
+      #   name: 'Living-room Active'
+      #   state: "{{ iif ((not is_state('light.living_room_group', 'off') or (not is_state('media_player.sony_bravia_tv', 'off'))), 'yes', 'no') }}"
+      #   icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+      #   attributes:
+      #     lights_on: >-
+      #       {%- set light = expand(states.light.living_room_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Living Room ', '') %}
+      #       {{- light }}
+      # Versao adaptada para entidades do usuario
       - unique_id: living_room_active
         name: 'Living-room Active'
-        state: "{{ iif ((not is_state('light.living_room_group', 'off') or (not is_state('media_player.sony_bravia_tv', 'off'))), 'yes', 'no') }}"
+        state: "{{ iif ((not is_state('light.grupo_luzes_sala', 'off') or (not is_state('media_player.smart_tv_pro_2', 'off'))), 'yes', 'no') }}"
         icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
         attributes:
           lights_on: >-
-            {%- set light = expand(states.light.living_room_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Living Room ', '') %}
+            {%- set light = expand(states.light.grupo_luzes_sala) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list %}
             {{- light }}
-      # SENSOR - BEDROOM ACTIVITY
-      - unique_id: bedroom_active
-        name: 'Bedroom Active'
+          lights_on_count: >-
+            {{ expand(states.light.grupo_luzes_sala) | selectattr('state', 'eq', 'on') | list | count }}
+      # ══════════════════════════════════════════════════════════════════
+      # SENSORS ACTIVE — COMODOS DO USUARIO (C5.3-C5.4)
+      # Padrao: state 'yes'/'no', atributos lights_on (lista) e lights_on_count (int)
+      # Usados nos grid buttons via variavel active: sensor.NOME_active
+      # e triggers_update: [sensor.time, sensor.NOME_active]
+      # ══════════════════════════════════════════════════════════════════
+
+      # SENSOR - QUARTO CASAL ACTIVITY
+      - unique_id: quarto_casal_active
+        name: 'Quarto Casal Active'
         state: >-
-          {{ iif ((not is_state('light.bedroom_group', 'off') or is_state('media_player.bedroom_homepod', 'playing')), 'yes', 'no') }}
-        icon: >-
-          {{ iif (is_state('sensor.bedroom_active', 'no'), 'mdi:thumb-down', 'mdi:thumb-up')  }}
-        attributes:
-          lights_on: >-
-            {%- set light = expand(states.light.bedroom_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Bedroom ', '') %}
-            {{- light }}
-      # SENSOR - HALLWAY ACTIVITY
-      - unique_id: hallway_active
-        name: 'Hallway Active'
-        state: >-
-          {% set halway_devices = [states.light.hallway_group, states.binary_sensor.motion_sensor_entrance_occupancy, states.binary_sensor.motion_sensor_hallway_occupancy] | reject('equalto', none) | list  %}
-          {% set active = halway_devices | selectattr('state', 'eq', 'on') | list %}
-          {{ iif (active != 0, 'yes', 'no') }}
+          {{ iif (not is_state('light.grupo_quarto_casal', 'off'), 'yes', 'no') }}
         icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
         attributes:
           lights_on: >-
-            {%- set light = expand(states.light.hallway_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Hallway ', '') %}
+            {%- set light = expand(states.light.grupo_quarto_casal) | selectattr('state', 'eq', 'on') | map(attribute='name') | list %}
             {{- light }}
-      # SENSOR - KITCHEN ACTIVITY
-      - unique_id: kitchen_active
-        name: 'Kitchen Active'
+          lights_on_count: >-
+            {{ expand(states.light.grupo_quarto_casal) | selectattr('state', 'eq', 'on') | list | count }}
+
+      # SENSOR - QUARTO MIGUEL ACTIVITY
+      - unique_id: quarto_miguel_active
+        name: 'Quarto Miguel Active'
         state: >-
-          {% if is_state('sensor.hob_operation_state', 'run') %} cooking
-          {% elif is_state('sensor.mycka_nadobi_operation_state', 'run') %} dishwashing
-          {% elif is_state('light.kitchen_group', 'on') %} on
-          {% else %} no
-          {% endif %}
+          {{ iif ((not is_state('light.grupo_luzes_quarto_miguel', 'off') or is_state('climate.ac_quarto_miguel', 'cool') or is_state('climate.ac_quarto_miguel', 'fan_only') or is_state('climate.ac_quarto_miguel', 'dry') or is_state('climate.ac_quarto_miguel', 'heat')), 'yes', 'no') }}
         icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
         attributes:
-          dishwasher_remain: >-
-            {% if has_value('sensor.mycka_nadobi_remaining_program_time') %}
-            {% from 'easy_time.jinja' import easy_relative_time %}
-              {{ easy_relative_time(states('sensor.mycka_nadobi_remaining_program_time')) | string | replace(' minutes', ' min') }}
-            {% endif %}
           lights_on: >-
-            {%- set light = expand(states.light.kitchen_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Kitchen ', '') %}
+            {%- set light = expand(states.light.grupo_luzes_quarto_miguel) | selectattr('state', 'eq', 'on') | map(attribute='name') | list %}
             {{- light }}
-      # SENSOR - OFFICE ACTIVITY
+          lights_on_count: >-
+            {{ expand(states.light.grupo_luzes_quarto_miguel) | selectattr('state', 'eq', 'on') | list | count }}
+
+      # SENSOR - QUARTO MARINA ACTIVITY
+      - unique_id: quarto_marina_active
+        name: 'Quarto Marina Active'
+        state: >-
+          {{ iif (not is_state('light.grupo_luzes_quarto_marina', 'off'), 'yes', 'no') }}
+        icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+        attributes:
+          lights_on: >-
+            {%- set light = expand(states.light.grupo_luzes_quarto_marina) | selectattr('state', 'eq', 'on') | map(attribute='name') | list %}
+            {{- light }}
+          lights_on_count: >-
+            {{ expand(states.light.grupo_luzes_quarto_marina) | selectattr('state', 'eq', 'on') | list | count }}
+
+      # SENSOR - OFFICE ACTIVITY (adaptado para entidades do usuario)
+      # ORIGINAL ngocjohn office_active (comentado — Regra de Ouro)
+      # - unique_id: office_active
+      #   name: 'Office Active'
+      #   state: >-
+      #     {% if not is_state('light.office_group', 'off') %} yes
+      #     {% elif is_state('media_player.office', 'playing') %} playing
+      #     {% else %} no
+      #     {% endif %}
+      #   icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+      #   attributes:
+      #     lights_on: >-
+      #       {%- set light = expand(states.light.office_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Office ', '') %}
+      #       {{- light }}
       - unique_id: office_active
         name: 'Office Active'
         state: >-
-          {% if not is_state('light.office_group', 'off') %} yes
-          {% elif is_state('media_player.office', 'playing') %} playing
+          {% if not is_state('light.grupo_luzes_office', 'off') %} yes
+          {% elif is_state('switch.macbook', 'on') %} yes
+          {% elif is_state('climate.ac_office', 'cool') or is_state('climate.ac_office', 'fan_only') or is_state('climate.ac_office', 'dry') or is_state('climate.ac_office', 'heat') %} yes
           {% else %} no
           {% endif %}
         icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
         attributes:
           lights_on: >-
-            {%- set light = expand(states.light.office_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Office ', '') %}
+            {%- set light = expand(states.light.grupo_luzes_office) | selectattr('state', 'eq', 'on') | map(attribute='name') | list %}
             {{- light }}
-      # SENSOR - BATHROOM ACTIVITY
-      - unique_id: bathroom_active
-        name: 'Bathroom Active'
+          lights_on_count: >-
+            {{ expand(states.light.grupo_luzes_office) | selectattr('state', 'eq', 'on') | list | count }}
+
+      # SENSOR - COZINHA ACTIVITY
+      - unique_id: cozinha_active
+        name: 'Cozinha Active'
         state: >-
-          {% if is_state('binary_sensor.bathroom_occupancy', 'on') %} occupied
-          {% elif is_state('light.bathroom_group', 'on') %} yes
-          {% elif is_state('media_player.bathroom_homepod', 'playing') %} playing
-          {% else %} no
-          {% endif %}
+          {{ iif (not is_state('light.grupo_luzes_cozinha', 'off'), 'yes', 'no') }}
         icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
         attributes:
           lights_on: >-
-            {%- set light = expand(states.light.bathroom_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Bathroom ', '') %}
+            {%- set light = expand(states.light.grupo_luzes_cozinha) | selectattr('state', 'eq', 'on') | map(attribute='name') | list %}
             {{- light }}
-      # SENSOR - SHOWER ACTIVITY
-      - unique_id: shower_active
-        name: 'Shower Active'
-        state: >-
-          {% if is_state('binary_sensor.motion_sensor_shower_room_occupancy', 'on') %} occupied
-          {% elif is_state('light.shower_group', 'on') %} yes
-          {% else %} no
-          {% endif %}
-        icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
-        attributes:
-          lights_on: >-
-            {%- set light = expand(states.light.shower_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Shower Room ', '') %}
-            {{- light }}
-      # SENSOR - UTILITY ACTIVITY
+          lights_on_count: >-
+            {{ expand(states.light.grupo_luzes_cozinha) | selectattr('state', 'eq', 'on') | list | count }}
+
+      # ══════════════════════════════════════════════════════════════════
+      # SENSORS ORIGINAIS ngocjohn (europeus — comentados — Regra de Ouro)
+      # Mantidos para referencia futura. Os sensors acima substituem estes.
+      # ══════════════════════════════════════════════════════════════════
+
+      # SENSOR - BEDROOM ACTIVITY (ORIGINAL ngocjohn — comentado)
+      # - unique_id: bedroom_active
+      #   name: 'Bedroom Active'
+      #   state: >-
+      #     {{ iif ((not is_state('light.bedroom_group', 'off') or is_state('media_player.bedroom_homepod', 'playing')), 'yes', 'no') }}
+      #   icon: >-
+      #     {{ iif (is_state('sensor.bedroom_active', 'no'), 'mdi:thumb-down', 'mdi:thumb-up')  }}
+      #   attributes:
+      #     lights_on: >-
+      #       {%- set light = expand(states.light.bedroom_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Bedroom ', '') %}
+      #       {{- light }}
+
+      # SENSOR - HALLWAY ACTIVITY (ORIGINAL ngocjohn — comentado)
+      # - unique_id: hallway_active
+      #   name: 'Hallway Active'
+      #   state: >-
+      #     {% set halway_devices = [states.light.hallway_group, states.binary_sensor.motion_sensor_entrance_occupancy, states.binary_sensor.motion_sensor_hallway_occupancy] | reject('equalto', none) | list  %}
+      #     {% set active = halway_devices | selectattr('state', 'eq', 'on') | list %}
+      #     {{ iif (active != 0, 'yes', 'no') }}
+      #   icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+      #   attributes:
+      #     lights_on: >-
+      #       {%- set light = expand(states.light.hallway_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Hallway ', '') %}
+      #       {{- light }}
+
+      # SENSOR - KITCHEN ACTIVITY (ORIGINAL ngocjohn — comentado)
+      # - unique_id: kitchen_active
+      #   name: 'Kitchen Active'
+      #   state: >-
+      #     {% if is_state('sensor.hob_operation_state', 'run') %} cooking
+      #     {% elif is_state('sensor.mycka_nadobi_operation_state', 'run') %} dishwashing
+      #     {% elif is_state('light.kitchen_group', 'on') %} on
+      #     {% else %} no
+      #     {% endif %}
+      #   icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+      #   attributes:
+      #     dishwasher_remain: >-
+      #       {% if has_value('sensor.mycka_nadobi_remaining_program_time') %}
+      #       {% from 'easy_time.jinja' import easy_relative_time %}
+      #         {{ easy_relative_time(states('sensor.mycka_nadobi_remaining_program_time')) | string | replace(' minutes', ' min') }}
+      #       {% endif %}
+      #     lights_on: >-
+      #       {%- set light = expand(states.light.kitchen_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Kitchen ', '') %}
+      #       {{- light }}
+
+      # SENSOR - BATHROOM ACTIVITY (ORIGINAL ngocjohn — comentado)
+      # - unique_id: bathroom_active
+      #   name: 'Bathroom Active'
+      #   state: >-
+      #     {% if is_state('binary_sensor.bathroom_occupancy', 'on') %} occupied
+      #     {% elif is_state('light.bathroom_group', 'on') %} yes
+      #     {% elif is_state('media_player.bathroom_homepod', 'playing') %} playing
+      #     {% else %} no
+      #     {% endif %}
+      #   icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+      #   attributes:
+      #     lights_on: >-
+      #       {%- set light = expand(states.light.bathroom_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Bathroom ', '') %}
+      #       {{- light }}
+
+      # SENSOR - SHOWER ACTIVITY (ORIGINAL ngocjohn — comentado)
+      # - unique_id: shower_active
+      #   name: 'Shower Active'
+      #   state: >-
+      #     {% if is_state('binary_sensor.motion_sensor_shower_room_occupancy', 'on') %} occupied
+      #     {% elif is_state('light.shower_group', 'on') %} yes
+      #     {% else %} no
+      #     {% endif %}
+      #   icon: "{{ iif (this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+      #   attributes:
+      #     lights_on: >-
+      #       {%- set light = expand(states.light.shower_group) | selectattr( 'state', 'eq', 'on') | map(attribute='name') | list | replace('Shower Room ', '') %}
+      #       {{- light }}
+
+      # SENSOR - UTILITY ACTIVITY (ORIGINAL ngocjohn — MANTIDO pois usa vacuum.roidmi_eve do usuario)
       - unique_id: appliance_active
         name: 'Appliance Active'
         state: >-

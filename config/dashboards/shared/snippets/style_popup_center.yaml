@@ -1,0 +1,12 @@
+# Snippet compartilhado para centralizar popups browser_mod verticalmente.
+# Uso: card_mod: !include ../snippets/style_popup_center.yaml
+# (ou ../../snippets/style_popup_center.yaml para subdiretorios)
+#
+# Sem isso, o dialog MDC alinha no topo (flex-start).
+# Ref: livingroom.yaml, kitchen.yaml, lavabo.yaml que ja usavam inline.
+style:
+  ha-dialog$: |
+    .mdc-dialog__container {
+      align-items: center !important;
+      justify-content: center !important;
+    }

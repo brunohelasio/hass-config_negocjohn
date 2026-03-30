@@ -1,65 +1,258 @@
+# ══════════════════════════════════════════════════════════════════════════
+# ESTADO ANTERIOR — popup pequeno com 3 botoes em grid (comentado, nunca deletar)
+# ══════════════════════════════════════════════════════════════════════════
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Lavabo
+#     size: normal
+#     style: >
+#       --popup-width: 520px;
+#       --popup-max-width: 520px;
+#       --popup-background-color: rgba(8, 12, 20, 0.62);
+#       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+#       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+#       --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
+#     card_mod:
+#       style:
+#         .: |
+#           ha-dialog {
+#             backdrop-filter: blur(5px);
+#             -webkit-backdrop-filter: blur(5px);
+#           }
+#           ha-dialog .mdc-dialog__container {
+#             align-items: center !important;
+#           }
+#           ha-dialog::before {
+#             content: '';
+#             position: absolute;
+#             inset: 0;
+#             border-radius: inherit;
+#             pointer-events: none;
+#             box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+#           }
+#     content:
+#       type: vertical-stack
+#       cards:
+#         - type: grid
+#           columns: 3
+#           square: false
+#           cards:
+#             - type: custom:button-card
+#               entity: light.lavabo_switch_2
+#               name: Luz principal
+#               template:
+#                 - tpl_popup_light
+#                 - icon_light_flush
+#               styles:
+#                 card:
+#                   - height: 150px
+#             - type: custom:button-card
+#               entity: light.lavabo_switch_1
+#               name: Luz parede
+#               template:
+#                 - tpl_popup_light
+#                 - icon_light_flush
+#               styles:
+#                 card:
+#                   - height: 150px
+#             - type: custom:button-card
+#               entity: light.lavabo_switch_3
+#               name: Luz espelho
+#               template:
+#                 - tpl_popup_light
+#                 - icon_light_flush
+#               styles:
+#                 card:
+#                   - height: 150px
+# ══════════════════════════════════════════════════════════════════════════
+# NOVO — Popup PEQUENO estilo Sala (apenas col_buttons, sem camera)
+# Replicado de livingroom.yaml — Fase 2.6
+# Lavabo: popup pequeno (~450px) com apenas 3 botoes de luzes
+# Sem midia, sem camera, sem clima
+# ══════════════════════════════════════════════════════════════════════════
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
     title: Lavabo
+    tag: lavabo_popup
     size: normal
     style: >
-      --popup-width: 520px;
-      --popup-max-width: 520px;
-      --popup-background-color: rgba(8, 12, 20, 0.62);
+      --popup-width: 450px;
+      --popup-max-width: 450px;
+      --popup-background-color: rgba(15, 20, 35, 0.75);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
-      --tablet-popup-content-padding: 0.8em 1em 1em 0.9em;
-    card_mod:
-      style:
-        .: |
-          ha-dialog {
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-          }
-          ha-dialog .mdc-dialog__container {
-            align-items: center !important;
-          }
-          ha-dialog::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
-          }
+      --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
+    # --- CÓDIGO ORIGINAL COMENTADO (card_mod inline com .mdc-dialog__surface hack) ---
+    # Removido porque o tema tablet.yaml agora tem uix-dialog com --ha-dialog-width-md
+    # que le --popup-width do style: e dimensiona o popup nativamente via HA.
+    # card_mod:
+    #   style:
+    #     .: |
+    #       ha-dialog {
+    #         backdrop-filter: blur(12px);
+    #         -webkit-backdrop-filter: blur(12px);
+    #       }
+    #       ha-dialog::before {
+    #         content: '';
+    #         position: absolute;
+    #         inset: 0;
+    #         border-radius: inherit;
+    #         pointer-events: none;
+    #         box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+    #       }
+    #     ha-dialog$: |
+    #       .mdc-dialog__scrim {
+    #         background-color: rgba(0, 0, 0, 0.56) !important;
+    #       }
+    #       .mdc-dialog__container {
+    #         align-items: center !important;
+    #         justify-content: center !important;
+    #       }
+    #       .mdc-dialog__surface {
+    #         width: 450px !important;
+    #         max-width: 450px !important;
+    #         max-height: 88vh !important;
+    #         overflow-y: auto !important;
+    #       }
+    # --- FIM CÓDIGO ORIGINAL ---
     content:
       type: vertical-stack
       cards:
+        # ── Titulo: Luzes + toggle all lights ──
+        # ANTERIOR: sem entity, tap_action: none (nao fazia nada ao clicar)
+        # FIX C1.1: Adicionado entity + tap_action toggle + cor dinamica do icone
+        # FIX C4.1: Adicionado indicador visual ON/OFF (custom_field)
+        - type: custom:button-card
+          entity: light.grupo_luzes_lavabo
+          triggers_update:
+            - light.grupo_luzes_lavabo
+          name: Luzes
+          show_state: false
+          show_icon: true
+          icon: mdi:lightbulb-group-outline
+          tap_action:
+            action: toggle
+            haptic: success
+          # ANTERIOR: custom_fields com JS template para ON/OFF badge (nao atualizava em browser_mod popup)
+          # FIX: state: section nativa do button-card com HTML estatico — mais reativo
+          custom_fields:
+            on_off: |
+              <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-right:4px">OFF</span>
+          state:
+            - value: 'on'
+              custom_fields:
+                on_off: |
+                  <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:#fff;background:#3b82f6;padding:1px 6px;border-radius:8px;margin-right:4px">ON</span>
+              styles:
+                icon:
+                  - color: '#f0c040'
+            - value: 'off'
+              custom_fields:
+                on_off: |
+                  <span style="font-size:9px;font-weight:600;letter-spacing:0.5px;color:rgba(255,255,255,0.4);background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:8px;margin-right:4px">OFF</span>
+              styles:
+                icon:
+                  - color: 'rgba(255,255,255,0.25)'
+          styles:
+            card:
+              - background: none
+              - box-shadow: none
+              - border: none
+              - padding: 0 4px
+              - height: 30px
+              - min-height: 30px
+            grid:
+              - grid-template-areas: '"n on_off i"'
+              - grid-template-columns: 1fr auto auto
+            name:
+              - font-size: 11px
+              - color: rgba(255,255,255,0.5)
+              - text-transform: uppercase
+              - letter-spacing: 1.5px
+              - justify-self: start
+              - font-weight: 500
+            custom_fields:
+              on_off:
+                - justify-self: end
+                - align-self: center
+            img_cell:
+              - justify-self: end
+              - width: 24px
+            icon:
+              - width: 24px
+              - color: 'rgba(255,255,255,0.25)'
+        # ── ANTERIOR: Linha 1 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
+        # - type: grid
+        #   columns: 5
+        #   square: false
+        #   card_mod:
+        #     style: |
+        #       #root {
+        #         gap: 4px !important;
+        #       }
+        #   cards:
+        #     - type: custom:button-card
+        #       entity: light.lavabo_switch_2
+        #       name: Luz Principal
+        #       template: [tpl_popup_light, icon_light_flush]
+        #       tap_action: { action: toggle, haptic: success }
+        #     - type: custom:button-card
+        #       entity: light.lavabo_switch_1
+        #       name: Luz Parede
+        #       template: [tpl_popup_light, icon_light_flush]
+        #       tap_action: { action: toggle, haptic: success }
+        #     - type: custom:button-card
+        #       entity: light.lavabo_switch_3
+        #       name: Luz Espelho
+        #       template: [tpl_popup_light, icon_light_flush]
+        #       tap_action: { action: toggle, haptic: success }
+        #     # BLANK 1-2
+        #     - type: custom:button-card
+        #       color_type: blank-card
+        #     - type: custom:button-card
+        #       color_type: blank-card
+
+        # ── NOVO: Linha 1 com 3 colunas e botoes padrao 98px ──
         - type: grid
           columns: 3
           square: false
+          card_mod:
+            style: |
+              #root {
+                gap: 4px !important;
+                grid-template-columns: repeat(3, 98px) !important;
+                justify-content: start !important;
+              }
           cards:
             - type: custom:button-card
               entity: light.lavabo_switch_2
-              name: Luz principal
+              name: "LV - Luz principal"
               template:
                 - tpl_popup_light
                 - icon_light_flush
-              styles:
-                card:
-                  - height: 150px
+              tap_action:
+                action: toggle
+                haptic: success
             - type: custom:button-card
               entity: light.lavabo_switch_1
-              name: Luz parede
+              name: "LV - Luz parede"
               template:
                 - tpl_popup_light
                 - icon_light_flush
-              styles:
-                card:
-                  - height: 150px
+              tap_action:
+                action: toggle
+                haptic: success
             - type: custom:button-card
               entity: light.lavabo_switch_3
-              name: Luz espelho
+              name: "LV - Luz espelho"
               template:
                 - tpl_popup_light
                 - icon_light_flush
-              styles:
-                card:
-                  - height: 150px
+              tap_action:
+                action: toggle
+                haptic: success

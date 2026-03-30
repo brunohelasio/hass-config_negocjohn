@@ -27,7 +27,7 @@ iphone:
   show_name: true
   styles:
     card:
-      - border-radius: var(--button-card-border-radius)
+      - border-radius: 10%
       - border-width: 0
       - -webkit-tap-highlight-color: rgba(0,0,0,0)
       - transition: none

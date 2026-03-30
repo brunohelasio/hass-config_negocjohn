@@ -9,6 +9,11 @@ browser_mod:
     initial_style: wide
     card_mod:
       style:
+        ha-dialog$: |
+          .mdc-dialog__container {
+            align-items: center !important;
+            justify-content: center !important;
+          }
         #popup header
         .: |
           ha-dialog>ha-dialog-header {

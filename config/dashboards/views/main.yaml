@@ -22,11 +22,12 @@ layout:
   # ANTERIOR: sidebar ~20% + 4 colunas de conteudo (incluia areas other/movies visiveis)
   # grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
   # NOVO (Fases B/C): sidebar fixa + 3 colunas de conteudo, 25% cada coluna util.
-  # Resultado: 4 colunas iguais (sidebar, security/cameras, mainrooms/climate, devices/media).
-  grid-template-columns: 0 repeat(4, minmax(0, 1fr)) 0
+  # Safety-net: mantem coluna "other" com largura 0 para impedir auto-placement/orfaos.
+  grid-template-columns: 0 repeat(4, minmax(0, 1fr)) 0 0
   # ANTERIOR:
   # grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-  grid-template-rows: repeat(2, fit-content(100%)) min-content 0
+  # Safety-net: mantem linha "movies" com altura 0 para impedir auto-placement/orfaos.
+  grid-template-rows: repeat(2, fit-content(100%)) min-content 0 0
   # ESTRATEGIA SAGALAND: todas as grid-areas em todos os breakpoints
   # Areas ocultas ficam em linhas de altura 0 — nenhum card orfao
   # floorplan adicionado em row h=0 para evitar card orfao
@@ -37,22 +38,23 @@ layout:
   #   ". sidebar   cameras    climate   media    movies   ."
   #   ". sidebar   footer     footer    footer   footer   ."
   #   ". .         floorplan  .         .        .        ."
-  # NOVO: remove colunas visiveis "other (Devices)" e "movies".
-  # A area "devices" continua sendo ROOMS (rooms2.yaml), conforme estrategia consolidada.
+  # NOVO: remove visualmente "other/devices" e "movies", mantendo areas ocultas em 0
+  # para evitar compressao por auto-placement caso algum card residual renderize.
   grid-template-areas: |
-    ". sidebar   security   mainrooms devices  ."
-    ". sidebar   cameras    climate   media    ."
-    ". sidebar   footer     footer    footer   ."
-    ". .         floorplan  .         .        ."
+    ". sidebar   security   mainrooms devices  other  . ."
+    ". sidebar   cameras    climate   media    .      . ."
+    ". sidebar   footer     footer    footer   footer . ."
+    ". .         floorplan  .         .        .      . ."
+    ". .         movies     .         .        .      . ."
 
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
     '(min-width: 1441px) and (max-width: 2000px)':
       grid-gap: 3.5vw 3vw
       # ANTERIOR: grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-      grid-template-columns: 0 repeat(4, minmax(0, 1fr)) 0
+      grid-template-columns: 0 repeat(4, minmax(0, 1fr)) 0 0
       # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-      grid-template-rows: repeat(2, fit-content(100%)) min-content 0
+      grid-template-rows: repeat(2, fit-content(100%)) min-content 0 0
       # ANTERIOR:
       # grid-template-areas: |
       #   ". .         .          .         .        .        ."
@@ -61,10 +63,11 @@ layout:
       #   ". sidebar   footer     footer    footer   footer   ."
       #   ". .         floorplan  .         .        .        ."
       grid-template-areas: |
-        ". sidebar   security   mainrooms devices  ."
-        ". sidebar   cameras    climate   media    ."
-        ". sidebar   footer     footer    footer   ."
-        ". .         floorplan  .         .        ."
+        ". sidebar   security   mainrooms devices  other  . ."
+        ". sidebar   cameras    climate   media    .      . ."
+        ". sidebar   footer     footer    footer   footer . ."
+        ". .         floorplan  .         .        .      . ."
+        ". .         movies     .         .        .      . ."
     # tablet landscape (e.g. 801-1440px) - with sidebar
     # Estrategia Sagaland: 3 colunas + sidebar, areas ocultas em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
@@ -73,12 +76,12 @@ layout:
       # ANTERIOR: 5 colunas (sidebar + 4 conteúdos), com other/movies visiveis.
       # grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
       # NOVO: 4 colunas iguais (25% cada) apos retirada de devices(other)/movies.
-      grid-template-columns: 0 repeat(4, minmax(0, 1fr)) 0
+      grid-template-columns: 0 repeat(4, minmax(0, 1fr)) 0 0
       # grid-template-rows: auto auto min-content 0 0 0
       # grid-template-rows: calc((100vh - 56px - 40px - 3vw) / 2) calc((100vh - 56px - 40px - 3vw) / 2) min-content 0 0 0
       # grid-template-rows: 40vh 40vh min-content 0 0 0
       # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-      grid-template-rows: repeat(2, fit-content(100%)) min-content 0
+      grid-template-rows: repeat(2, fit-content(100%)) min-content 0 0
       # ANTERIOR:
       # grid-template-areas: |
       #   ". .        .          .         .        .        ."
@@ -87,17 +90,18 @@ layout:
       #   ". sidebar  footer     footer    footer   footer   ."
       #   ". .        floorplan  .         .        .        ."
       grid-template-areas: |
-        ". sidebar  security   mainrooms devices  ."
-        ". sidebar  cameras    climate   media    ."
-        ". sidebar  footer     footer    footer   ."
-        ". .        floorplan  .         .        ."
+        ". sidebar  security   mainrooms devices  other  . ."
+        ". sidebar  cameras    climate   media    .      . ."
+        ". sidebar  footer     footer    footer   footer . ."
+        ". .        floorplan  .         .        .      . ."
+        ". .        movies     .         .        .      . ."
     # portrait — Sagaland: areas ocultas (sidebar, chips, movies) em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-gap: 4.4vw 3vw
       # ANTERIOR: grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-      grid-template-columns: 0 repeat(4, minmax(0, 1fr)) 0
+      grid-template-columns: 0 repeat(4, minmax(0, 1fr)) 0 0
       # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-      grid-template-rows: repeat(2, fit-content(100%)) min-content 0
+      grid-template-rows: repeat(2, fit-content(100%)) min-content 0 0
       # ANTERIOR:
       # grid-template-areas: |
       #   ". .        .          .         .        .        ."
@@ -106,10 +110,11 @@ layout:
       #   ". sidebar  footer     footer    footer   footer   ."
       #   ". .        floorplan  .         .        .        ."
       grid-template-areas: |
-        ". sidebar  security   mainrooms devices  ."
-        ". sidebar  cameras    climate   media    ."
-        ". sidebar  footer     footer    footer   ."
-        ". .        floorplan  .         .        ."
+        ". sidebar  security   mainrooms devices  other  . ."
+        ". sidebar  cameras    climate   media    .      . ."
+        ". sidebar  footer     footer    footer   footer . ."
+        ". .        floorplan  .         .        .      . ."
+        ". .        movies     .         .        .      . ."
     # phone — Sagaland: areas ocultas (sidebar, movies) em h=0
     '(max-width: 800px) and (min-height: 463px)':
       margin: 0
@@ -126,7 +131,7 @@ layout:
       #   ". footer      footer    ."
       #   ". movies      movies    ."
       #   ". floorplan   .         ."
-      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) min-content 0
+      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) min-content 0 0 0
       grid-template-areas: |
         ". sidebar     sidebar   ."
         ". home        security  ."
@@ -134,6 +139,8 @@ layout:
         ". mainrooms   devices   ."
         ". footer      footer    ."
         ". floorplan   .         ."
+        ". other       .         ."
+        ". movies      .         ."
     # phone cover screen = place horizontal
     '(max-height: 462px)':
       grid-gap: 0.5rem

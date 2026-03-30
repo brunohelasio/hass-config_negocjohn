@@ -47,6 +47,9 @@
 
 - Regra de ouro preservada: nenhuma exclusao de codigo foi realizada.
 - Historico anterior mantido em comentarios para rastreabilidade e reversao.
+- HOTFIX pos-feedback: areas `other` e `movies` foram reintroduzidas no `main.yaml`
+  como trilhas ocultas (coluna/linha zero) para evitar auto-placement residual e
+  compressao do grid principal quando houver qualquer card legado ainda renderizando.
 
 ## Estrategia de Grid: Sagaland Hibrida (OBRIGATORIO)
 

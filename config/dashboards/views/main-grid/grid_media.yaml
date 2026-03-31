@@ -204,78 +204,46 @@
     show:
       mediaquery: '(min-width: 1441px)'
   columns: 1
-  square: true
+  # square: true  # REMOVIDO — square:true no grid externo forcava o container inteiro a ser quadrado, cortando o Slide 2
   cards:
     - type: custom:swipe-card
       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
       cards:
-        ########## SLIDE 1: ARTWORK CONDICIONAL ##########
-        - type: horizontal-stack
-          cards:
-            # TV - TCL Smart TV Pro 2 (Slide 1: conditional_media cuida da arte, icon_play_pause generico)
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Smart TV Pro 2
-              card: &TV_CARD
-                type: custom:button-card
-                entity: media_player.smart_tv_pro_2
-                name: ' '
-                template:
-                  - conditional_media
-                  - progress_bar
-                  - icon_play_pause
-            # Alexa - Echo Show (Slide 1: arte via conditional_media)
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Echo Show
-              card: &ECHO_CARD
-                type: custom:button-card
-                entity: media_player.echo_show
-                name: ' '
-                template:
-                  - conditional_media
-                  - progress_bar
-                  - icon_play_pause
-            # SpotifyPlus
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Spotifyplus Bruno Helasio
-              card: &SPOTIFYPLUS_CARD
-                type: custom:button-card
-                entity: media_player.spotifyplus_bruno_helasio
-                name: ' '
-                template:
-                  - currently_playing
-            # Spotify nativo
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Spotify Bruno Helasio
-              card: &SPOTIFY_CARD
-                type: custom:button-card
-                entity: media_player.spotify
-                name: ' '
-                template:
-                  - currently_playing
-            # Fallback: Recently added (nenhum player ativo)
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Recently added
-              card:
-                type: custom:button-card
-                entity: media_player.smart_tv_pro_2
-                name: 'Media'
-                template:
-                  - conditional_media
+        ########## SLIDE 1: ARTWORK FULLSCREEN ##########
+        # ORIGINAL COMENTADO — conditional cards dependiam de select.conditional_media
+        # cujo estado retornava nomes com whitespace (indentacao do Jinja2 macro),
+        # causando match falho e Slide 1 sempre vazio.
+        # - type: horizontal-stack
+        #   cards:
+        #     - type: conditional
+        #       conditions:
+        #         - entity: select.conditional_media
+        #           state: Smart TV Pro 2
+        #       card:
+        #         type: custom:button-card
+        #         entity: media_player.smart_tv_pro_2
+        #         ...
+        # FIX: Card unico usando media_player.currently_playing (universal media player)
+        # que herda automaticamente entity_picture do child ativo.
+        - type: custom:button-card
+          entity: media_player.currently_playing
+          name: ' '
+          template:
+            - conditional_media
+            - progress_bar
+            - icon_play_pause
+          tap_action:
+            action: call-service
+            service: media_player.media_play_pause
+            service_data:
+              entity_id: media_player.currently_playing
+            haptic: light
+          hold_action:
+            action: more-info
 
-        ########## SLIDE 2: GRID DE BOTOES (media_premium = tap play/pause + volume circle) ##########
+        ########## SLIDE 2: GRID DE BOTOES ##########
         - type: grid
           columns: 2
-          # square: true  # REMOVIDO — com square:true, 2x2 grid transbordava o container do swipe-card (cortava botoes inferiores)
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
@@ -316,49 +284,27 @@
     - type: custom:swipe-card
       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
       cards:
-        ########## SLIDE 1: ARTWORK CONDICIONAL ##########
-        - type: horizontal-stack
-          cards:
-            # TV - TCL Smart TV Pro 2
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Smart TV Pro 2
-              card: *TV_CARD
-            # Alexa - Echo Show
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Echo Show
-              card: *ECHO_CARD
-            # SpotifyPlus
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Spotifyplus Bruno Helasio
-              card: *SPOTIFYPLUS_CARD
-            # Spotify nativo
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Spotify Bruno Helasio
-              card: *SPOTIFY_CARD
-            # Fallback
-            - type: conditional
-              conditions:
-                - entity: select.conditional_media
-                  state: Recently added
-              card:
-                type: custom:button-card
-                entity: media_player.smart_tv_pro_2
-                name: 'Media'
-                template:
-                  - conditional_media
+        ########## SLIDE 1: ARTWORK FULLSCREEN ##########
+        # FIX: Card unico usando media_player.currently_playing
+        - type: custom:button-card
+          entity: media_player.currently_playing
+          name: ' '
+          template:
+            - conditional_media
+            - progress_bar
+            - icon_play_pause
+          tap_action:
+            action: call-service
+            service: media_player.media_play_pause
+            service_data:
+              entity_id: media_player.currently_playing
+            haptic: light
+          hold_action:
+            action: more-info
 
-        ########## SLIDE 2: GRID DE BOTOES (media_premium = tap play/pause + volume circle) ##########
+        ########## SLIDE 2: GRID DE BOTOES ##########
         - type: grid
           columns: 2
-          # square: true  # REMOVIDO — com square:true, 2x2 grid transbordava o container do swipe-card
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2

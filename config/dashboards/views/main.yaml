@@ -2,13 +2,17 @@ icon: mdi:home-circle
 path: summary
 subview: false
 
-theme: tablet
+# ANTERIOR:
+# theme: tablet
+theme: frosted_dark_sagalang
 type: custom:grid-layout
 card_mod:
   style: |
-    /* Efeito visual estilo Sagaland: fundo cobrindo toda a view. */
+    /* ANTERIOR:
+       Efeito radial customizado no fundo da view. */
+    /* Efeito final: painel em cinza escuro (contraste com sidebar preta). */
     hui-grid-layout {
-      background: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(0,0,0,0.88));
+      background: var(--secondary-background-color, rgba(30, 33, 54, 0.65));
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;

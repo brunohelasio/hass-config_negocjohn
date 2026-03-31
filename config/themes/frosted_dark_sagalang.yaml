@@ -1,0 +1,58 @@
+frosted_dark_sagalang:
+  card-mod-theme: 'frosted_dark_sagalang'
+  modes:
+    dark: {}
+
+  #################################################
+  #                                               #
+  #   BASE FROSTED DARK + CONTRASTE SAGALANG      #
+  #                                               #
+  #################################################
+  # Fundo geral cinza escuro (painel)
+  primary-background-color: 'rgba(30, 30, 30, 1)'
+  secondary-background-color: 'rgba(30, 33, 54, 0.65)'
+  clear-background-color: 'rgba(30, 33, 54, 0.7)'
+  background-image: none
+  lovelace-background: var(--secondary-background-color)
+
+  # Sidebar/drawer nativo (quando aplicavel)
+  sidebar-background-color: 'rgba(12, 12, 14, 0.98)'
+  sidebar-icon-color: 'rgba(234, 235, 238, 0.6)'
+  sidebar-text-color: 'rgba(234, 235, 238, 0.8)'
+  sidebar-selected-icon-color: 'rgba(234, 235, 238, 0.95)'
+  sidebar-selected-text-color: 'rgba(234, 235, 238, 0.98)'
+
+  # Cards no estilo frosted
+  ha-card-background: 'rgba(30, 30, 30, 0.9)'
+  card-background-color: 'rgba(30, 30, 30, 0.85)'
+  ha-card-border-radius: '18px'
+  ha-card-border-width: '0.5px'
+  ha-card-border-style: 'solid'
+  ha-card-border-color: 'rgba(234, 235, 238, 0.22)'
+  ha-card-border: '0.5px solid rgba(234, 235, 238, 0.1)'
+  ha-card-box-shadow: '0 12px 20px rgba(0, 0, 0, 0.28)'
+  dialog-box-shadow: '0 12px 20px rgba(0, 0, 0, 0.25)'
+
+  # Texto
+  primary-text-color: 'rgba(234, 235, 238, 0.98)'
+  secondary-text-color: 'rgba(234, 235, 238, 0.8)'
+  disabled-text-color: 'rgba(234, 235, 238, 0.45)'
+
+  # Primaria/acento
+  primary-color: 'rgb(106, 116, 211)'
+  dark-primary-color: 'rgb(106, 116, 211)'
+  light-primary-color: 'rgb(167, 182, 199)'
+  accent-color: 'rgb(106, 116, 211)'
+
+  # Header
+  app-header-backdrop-filter: 'blur(8px) saturate(1.1)'
+  app-header-background-color: 'rgba(30, 30, 30, 0.01)'
+  app-header-text-color: 'rgba(240, 243, 255, 0.95)'
+  app-header-edit-background-color: 'rgba(30, 33, 54, 0.8)'
+  app-header-edit-text-color: 'rgba(234, 235, 238, 0.98)'
+
+  # Dialog/scrim
+  ha-dialog-surface-backdrop-filter: 'blur(8px)'
+  ha-dialog-surface-background: 'rgba(30, 30, 30, 0.7)'
+  paper-dialog-background-color: 'rgba(30, 30, 30, 0.7)'
+  mdc-dialog-scrim-color: 'rgba(0, 0, 0, 0.8)'

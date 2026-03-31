@@ -1138,3 +1138,133 @@ para manter compatibilidade com qualquer codigo que ainda a referencie indiretam
 principais agora usam valores hardcoded, tornando-os independentes do tema.
 
 ---
+
+---
+
+## Registro Pre-Implementacao — 2026-03-31 (Roborock Popup + Sidebar Re-Skin)
+
+### Contexto da solicitacao
+
+Usuario autorizou avancar para implementacao, com exigencia de registrar antes:
+1) estado tecnico atual;
+2) alteracoes planejadas;
+3) trilha de restore/rollback.
+
+Este registro congela o baseline imediatamente anterior a qualquer mudanca de implementacao.
+
+### Baseline atual confirmado
+
+#### A) Popup do vacuum no rodape
+
+- Botao `Vacuum` do footer chama `config/dashboards/shared/popup/footer/footer_vacuum.yaml`.
+- Popup atual esta nomeado como `Roborock S7` e utiliza entidades `vacuum.roborock_s7`.
+- Ha risco alto de erro de configuracao no card `entities` por uso de `secondary_info` em formato objeto (`entity/prefix/postfix`) na linha principal do aspirador.
+- Mapa usa `custom:xiaomi-vacuum-map-card` com `vacuum_platform: Roborock`.
+- Ambiente ainda apresenta legado misto Roidmi/Roborock (ex.: notify do footer e honeycomb com `vacuum.roidmi_eve`).
+
+#### B) Sidebar atual
+
+- Largura do layout principal esta fixa em ~27% para coluna da sidebar (`minmax(260px, 27%)`) nos breakpoints principais.
+- Estilo atual da moldura e glassmorphism definido no `sidebar_template` (`background gradient`, `backdrop blur 40px`, borda translucida e sombra).
+- Estrutura funcional vigente (que deve ser preservada):
+  1. relogio;
+  2. data;
+  3. saudacao;
+  4. bloco dinamico com badges de luzes/midia/clima/presenca;
+  5. acoes rapidas;
+  6. previsao/tempo.
+- Badge de presenca hoje ainda segue formato de pilula no bloco dinamico.
+
+### Escopo autorizado para a proxima implementacao
+
+#### Item 1 — Popup Roborock
+
+Objetivo: remover erro de configuracao do popup sem reintroduzir tentativas fracassadas.
+
+Plano tecnico:
+1. Corrigir schema do bloco `Summary` para evitar quebra no card `entities`.
+2. Validar compatibilidade da secao de mapa com a versao instalada do card de mapa do vacuum.
+3. Alinhar referencias de entidade do vacuum em pontos criticos do dashboard para reduzir inconsistencia Roidmi/Roborock.
+4. Preservar semantica funcional do popup (sumario, comandos basicos, mapa e configuracoes).
+
+#### Item 2 — Sidebar (re-skin estetico + unica mudanca estrutural em presenca)
+
+Objetivo: manter estrutura e funcoes, alterando apenas visual conforme diretriz.
+
+Plano tecnico:
+1. Substituir moldura glass atual por fundo preto continuo de coluna (estilo sagaland/lukevink), mantendo altura total.
+2. Manter badges de luzes/midia/clima com mesma funcionalidade de expand/collapse e interacao; alterar somente estetica para modo flat, destacando pill apenas quando pressionada/ativa.
+3. Executar unica mudanca estrutural solicitada:
+   - remover badge de presenca do bloco principal;
+   - criar secao inferior dedicada com pessoas presentes em avatares circulares.
+4. Manter intactas acoes rapidas e card de tempo/previsao na mesma hierarquia funcional.
+5. Nao alterar logica de performance existente (`triggers_update` direcionado; sem retornar para `all`).
+
+### Regras de execucao para preservar restore
+
+- Regra de ouro mantida: nao excluir codigo existente; comentar antes de substituir.
+- Implementacao incremental por blocos pequenos para rollback rapido.
+- Qualquer ajuste adicional fora do escopo acima exige nova aprovacao do usuario.
+
+### Critérios de aceite (pre-definidos)
+
+#### Popup Roborock
+- Ao clicar no botao do footer, popup abre sem `Configuration error`.
+- Cards internos carregam sem quebrar toda a janela.
+- Comandos principais do vacuum permanecem operacionais.
+
+#### Sidebar
+- Layout continua ocupando faixa lateral prevista no grid.
+- Ordem funcional original dos blocos permanece.
+- Apenas presenca muda de estrutura para avatares circulares na base.
+- Demais mudancas sao exclusivamente visuais.
+
+### Restore rapido (caso necessario)
+
+- Referencia baseline: este registro + estado Git imediatamente anterior ao commit de implementacao.
+- Em caso de regressao, reverter por:
+  1) descomentar blocos anteriores mantidos in-place; ou
+  2) `git revert` do(s) commit(s) de implementacao.
+
+
+## Registro de Implementacao — 2026-03-31 (Frosted Dark Sagalang + ajustes popup/sidebar)
+
+### Objetivo
+
+Aplicar o contraste visual solicitado (barra fixa preta + painel cinza escuro) sem perder identidade frosted,
+resolver o erro do popup do vacuum e registrar trilha de restore.
+
+### Alteracoes executadas
+
+1. **Novo tema adicionado**
+   - Arquivo: `config/themes/frosted_dark_sagalang.yaml`
+   - Tema novo com base no Frosted Dark informado pelo usuario, ajustado para contraste:
+     - `sidebar-background-color` em tom preto profundo;
+     - `secondary-background-color` para painel cinza escuro;
+     - `lovelace-background` sem imagem, seguindo cor do tema.
+
+2. **View principal migrada para novo tema**
+   - Arquivo: `config/dashboards/views/main.yaml`
+   - `theme` alterado de `tablet` para `frosted_dark_sagalang`.
+   - Fundo da view alterado de radial custom para `var(--secondary-background-color)`
+     para obedecer o tema ativo e manter contraste com a sidebar.
+
+3. **Popup Roborock (erro de configuracao)**
+   - Arquivo: `config/dashboards/shared/popup/footer/footer_vacuum.yaml`
+   - Bloco row invalido (`custom:mod-card` dentro de `entities`) foi mantido em comentario
+     e substituido por `custom:hui-element` com `card_type: horizontal-stack`.
+   - Objetivo: eliminar `Configuration Error` ao abrir popup.
+
+4. **Sidebar (estilo dos botoes)**
+   - Arquivo: `config/dashboards/templates/button_card_templates/tpl_sidebar.yaml`
+   - Reaplicado visual frosted nos badges de Luzes/Midia/Clima
+     (fundo + borda translucidos quando inativos e destaque ao expandir),
+     conforme diretriz de manter botoes em estilo vidro fosco.
+
+### Restore rapido
+
+- Reverter tema da view: `theme: frosted_dark_sagalang` -> `theme: tablet` em `main.yaml`.
+- Reativar fundo anterior: descomentar/comentar bloco de background em `main.yaml`.
+- Popup vacuum: reverter para bloco anterior comentado no proprio arquivo.
+- Tema novo: remover `config/themes/frosted_dark_sagalang.yaml` se necessario.
+

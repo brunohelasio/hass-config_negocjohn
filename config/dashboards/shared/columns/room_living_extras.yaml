@@ -48,7 +48,8 @@
         - base
         - media_premium
         - icon_tv
-      # FIX P3: forcar background branco/cinza no popup (icon_tv background-image sobrescrevia o base)
+      # FIX P3: forcar background branco/cinza no popup (icon_tv usa background-color:none + gradientes)
+      # No popup, queremos o padrao base (branco ON, cinza OFF), sem artwork
       styles:
         card:
           - background-color: >
@@ -58,6 +59,7 @@
                   : 'rgba(115, 115, 115, 0.2)';
               ]]]
           - background-image: none
+          - background-size: unset
       # hold: controle remoto Smart TV via browser_mod popup
       hold_action: !include ../popup/rooms/smart_tv_remote.yaml
     # SPOTIFY — ORIGINAL: placeholder desativado
@@ -89,7 +91,7 @@
         - base
         - media_premium
         - icon_spotify
-      # FIX P3: forcar background branco/cinza no popup (icon_spotify background-image sobrescrevia o base)
+      # FIX P3: forcar background branco/cinza no popup (icon_spotify usa background-color:none + gradientes)
       styles:
         card:
           - background-color: >
@@ -99,6 +101,7 @@
                   : 'rgba(115, 115, 115, 0.2)';
               ]]]
           - background-image: none
+          - background-size: unset
       # hold: popup spotify personalizado
       hold_action: !include ../popup/media_spotify.yaml
     # PS5

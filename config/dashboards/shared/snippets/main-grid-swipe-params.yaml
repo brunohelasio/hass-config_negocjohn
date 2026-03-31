@@ -9,6 +9,8 @@ coverflowEffect:
 speed: 600
 spaceBetween: 20
 threshold: 7
+# autoHeight: ajusta altura ao slide ativo (Slide 2 pode ser mais alto que Slide 1)
+autoHeight: true
 observer: false
 followFinger: true
 grabCursor: true

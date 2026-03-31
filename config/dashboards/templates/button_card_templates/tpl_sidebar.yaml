@@ -283,7 +283,7 @@ sidebar_template:
               <div onclick="event.stopPropagation(); window.__hh.callService('light','turn_off',{entity_id:'light.todas_as_luzes'})"
                    onpointerdown="event.stopPropagation();"
                    ontouchstart="event.stopPropagation();"
-                   style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.09); border-radius:20px; cursor:pointer; transition:all 0.2s ease;">
+                   style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background:transparent; border:none; border-radius:20px; cursor:pointer; transition:all 0.2s ease;">
                 <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                   <ha-icon icon="mdi:lightbulb-off-outline" style="--mdc-icon-size: 24px; color: rgba(255,255,255,0.8);"></ha-icon>
                 </div>
@@ -304,7 +304,7 @@ sidebar_template:
               ${peopleHomeAvatars}
             </div>
           </div>
-          <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.09); border-radius:20px;">
+          <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:transparent; border:none; border-radius:20px;">
             <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;margin-bottom:10px;">TEMPO AGORA</div>
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <div>

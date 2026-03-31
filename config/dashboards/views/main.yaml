@@ -2,17 +2,17 @@ icon: mdi:home-circle
 path: summary
 subview: false
 
-# ANTERIOR:
-# theme: tablet
-theme: frosted_dark_sagalang
+# RESTORE CONTROLADO (2026-03-31):
+# theme: frosted_dark_sagalang
+theme: tablet
 type: custom:grid-layout
 card_mod:
   style: |
     /* ANTERIOR:
-       Efeito radial customizado no fundo da view. */
-    /* Efeito final: painel em cinza escuro (contraste com sidebar preta). */
+       background: var(--secondary-background-color, rgba(30, 33, 54, 0.65)); */
+    /* Ajuste: cinza neutro (sem dominante azul) para contraste com sidebar preta. */
     hui-grid-layout {
-      background: var(--secondary-background-color, rgba(30, 33, 54, 0.65));
+      background: #2f3342;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;

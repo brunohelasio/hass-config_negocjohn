@@ -1268,3 +1268,36 @@ resolver o erro do popup do vacuum e registrar trilha de restore.
 - Popup vacuum: reverter para bloco anterior comentado no proprio arquivo.
 - Tema novo: remover `config/themes/frosted_dark_sagalang.yaml` se necessario.
 
+
+## Registro de Correcao de Regressao — 2026-03-31 (hotfix visual pos-feedback)
+
+### Problema reportado pelo usuario
+
+Apos migracao para `frosted_dark_sagalang`, o dashboard apresentou regressao visual:
+- escala/tamanho alterado (incluindo rodape),
+- tonalidade azulada indesejada no painel,
+- barra lateral sem leitura visual esperada,
+- efeito frosted ainda presente em blocos que deveriam ficar sem destaque.
+
+### Correcao aplicada
+
+1. **Restore de tema na view principal**
+   - `config/dashboards/views/main.yaml`
+   - tema da view retornado para `tablet` (com `frosted_dark_sagalang` comentado),
+     para restaurar escala/espacamentos originais do dashboard.
+
+2. **Fundo principal neutralizado**
+   - `config/dashboards/views/main.yaml`
+   - fundo alterado para cinza neutro `#2f3342` (sem dominante azul),
+     mantendo contraste com a sidebar preta.
+
+3. **Remocao de destaque indevido**
+   - `config/dashboards/templates/button_card_templates/tpl_sidebar.yaml`
+   - botao `Apagar Todas as Luzes`: `background: transparent; border: none`.
+   - card de tempo/clima na base: `background: transparent; border: none`.
+
+### Estado funcional preservado
+
+- Correcao estrutural do popup Roborock mantida (row valida em `entities`).
+- Presenca em avatares na base da sidebar mantida.
+

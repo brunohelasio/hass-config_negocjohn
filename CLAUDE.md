@@ -1226,3 +1226,45 @@ Plano tecnico:
   1) descomentar blocos anteriores mantidos in-place; ou
   2) `git revert` do(s) commit(s) de implementacao.
 
+
+## Registro de Implementacao — 2026-03-31 (Frosted Dark Sagalang + ajustes popup/sidebar)
+
+### Objetivo
+
+Aplicar o contraste visual solicitado (barra fixa preta + painel cinza escuro) sem perder identidade frosted,
+resolver o erro do popup do vacuum e registrar trilha de restore.
+
+### Alteracoes executadas
+
+1. **Novo tema adicionado**
+   - Arquivo: `config/themes/frosted_dark_sagalang.yaml`
+   - Tema novo com base no Frosted Dark informado pelo usuario, ajustado para contraste:
+     - `sidebar-background-color` em tom preto profundo;
+     - `secondary-background-color` para painel cinza escuro;
+     - `lovelace-background` sem imagem, seguindo cor do tema.
+
+2. **View principal migrada para novo tema**
+   - Arquivo: `config/dashboards/views/main.yaml`
+   - `theme` alterado de `tablet` para `frosted_dark_sagalang`.
+   - Fundo da view alterado de radial custom para `var(--secondary-background-color)`
+     para obedecer o tema ativo e manter contraste com a sidebar.
+
+3. **Popup Roborock (erro de configuracao)**
+   - Arquivo: `config/dashboards/shared/popup/footer/footer_vacuum.yaml`
+   - Bloco row invalido (`custom:mod-card` dentro de `entities`) foi mantido em comentario
+     e substituido por `custom:hui-element` com `card_type: horizontal-stack`.
+   - Objetivo: eliminar `Configuration Error` ao abrir popup.
+
+4. **Sidebar (estilo dos botoes)**
+   - Arquivo: `config/dashboards/templates/button_card_templates/tpl_sidebar.yaml`
+   - Reaplicado visual frosted nos badges de Luzes/Midia/Clima
+     (fundo + borda translucidos quando inativos e destaque ao expandir),
+     conforme diretriz de manter botoes em estilo vidro fosco.
+
+### Restore rapido
+
+- Reverter tema da view: `theme: frosted_dark_sagalang` -> `theme: tablet` em `main.yaml`.
+- Reativar fundo anterior: descomentar/comentar bloco de background em `main.yaml`.
+- Popup vacuum: reverter para bloco anterior comentado no proprio arquivo.
+- Tema novo: remover `config/themes/frosted_dark_sagalang.yaml` se necessario.
+

@@ -275,23 +275,9 @@ conditional_media:
       #         }
       #       }
       #     ]]]
-      # ORIGINAL COMENTADO — background shorthand resetava background-image (artwork nao aparecia):
-      # - background: &media_background >
-      #     [[[
-      #       if (entity) {
-      #         return `rgba(115, 115, 115, 0.2) center center/cover no-repeat`;
-      #       }
-      #     ]]]
-      # FIX: propriedades separadas para preservar background-image (artwork)
-      - background-color: &media_background >
-          [[[
-            if (entity) {
-              return 'rgba(115, 115, 115, 0.2)';
-            }
-          ]]]
-      - background-size: cover
-      - background-position: center center
-      - background-repeat: no-repeat
+      # PADRAO SAGALAND93: background shorthand + background-image separado
+      # O CSS garante que background-image sobrescreve a parte image do shorthand
+      - background: &media_background rgba(115, 115, 115, 0.2) center center/cover no-repeat
       # - --speed: >
       #     [[[
       #       setTimeout(() => {
@@ -340,33 +326,13 @@ conditional_media:
       #         }
       #       }
       #     ]]]
-      # NOVO: Simplificado - usa entity_picture diretamente (funciona com TV, Spotify, Alexa)
+      # PADRAO SAGALAND93: background-image direto do entity.attributes.entity_picture
+      # Sem depender de variables.entity_picture (avaliacao em tempo real)
       - background-image: &media_background_image >
           [[[
-            if (entity) {
-              // Tentar triggers_update sensor se existir (ex: youtube_thumbnail)
-              let sensor = this._config?.triggers_update;
-              if (sensor && states[sensor]?.attributes?.entity_picture) {
-                return `url(${states[sensor].attributes.entity_picture})`;
-              }
-              // Game image (PS5, etc)
-              let game_image = entity.attributes.title_image;
-              if (game_image) {
-                return `url("${game_image}")`;
-              }
-              // Data array (recently added, etc)
-              let data = entity.attributes.data;
-              if (data && data[variables.i]) {
-                let ep = data[variables.i].entity_picture;
-                let fa = data[variables.i].fanart;
-                if (ep || fa) {
-                  return `linear-gradient(to top, rgba(0, 0, 0, .65) 0%, rgba(0, 0, 0, 0) 100%), url("${ep || ''}"), url("${fa || ''}")`;
-                }
-              }
-              // Default: entity_picture do media player (album art, TV screenshot, etc)
-              if (variables.entity_picture) {
-                return `url("${variables.entity_picture}")`;
-              }
+            if (entity && entity.attributes && entity.attributes.entity_picture) {
+              return `url("${entity.attributes.entity_picture}")`;
+            }
               return 'none';
             }
           ]]]
@@ -521,11 +487,7 @@ conditional_media_shows:
     card:
       - padding: 5.75% 5.75% 0 5.75%
       - border-radius: 5%
-      # ORIGINAL: - background: *media_background  # shorthand resetava background-image
-      - background-color: *media_background
-      - background-size: cover
-      - background-position: center center
-      - background-repeat: no-repeat
+      - background: *media_background
       - background-image: *media_background_image
       - color: >
           [[[
@@ -557,11 +519,7 @@ conditional_media_shows:
         - filter: var(--blur-intensity)
         - clip-path: >
             inset(77.5% 3.45% 1.45% 5.45% round 0 0 5% 5%)
-        # ORIGINAL: - background: *media_background  # shorthand resetava background-image
-        - background-color: *media_background
-        - background-size: cover
-        - background-position: center center
-        - background-repeat: no-repeat
+        - background: center center/cover no-repeat
         - background-image: *media_background_image
         - left: -6%
         - bottom: -2%

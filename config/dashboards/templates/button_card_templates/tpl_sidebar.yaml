@@ -229,7 +229,7 @@ sidebar_template:
          let iconShadow = lightsCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(253,216,53,0.5))' : 'none';
 
          outputHtml += `
-           <div onclick="${toggle('lights')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='lights' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='lights' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='lights' ? '4px' : '0'};">
+           <div onclick="${toggle('lights')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='lights' ? 'rgba(255,255,255,0.14)' : 'transparent'}; border: 1px solid ${expanded==='lights' ? 'rgba(255,255,255,0.28)' : 'transparent'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='lights' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="${lightsBadgeCfg.icon || 'mdi:lightbulb-on'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
@@ -246,7 +246,7 @@ sidebar_template:
          let iconShadow = mediaCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(29,185,84,0.5))' : 'none';
 
          outputHtml += `
-           <div onclick="${toggle('media')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='media' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='media' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='media' ? '4px' : '0'};">
+           <div onclick="${toggle('media')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='media' ? 'rgba(255,255,255,0.14)' : 'transparent'}; border: 1px solid ${expanded==='media' ? 'rgba(255,255,255,0.28)' : 'transparent'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='media' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="${mediaBadgeCfg.icon || 'mdi:music-note'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
@@ -262,7 +262,7 @@ sidebar_template:
          let iconColor = climateCount > 0 ? '#7fdbe9' : 'rgba(255,255,255,0.4)';
          let iconShadow = climateCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(127,219,233,0.5))' : 'none';
          outputHtml += `
-           <div onclick="${toggle('climate')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='climate' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='climate' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='climate' ? '4px' : '0'};">
+           <div onclick="${toggle('climate')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='climate' ? 'rgba(255,255,255,0.14)' : 'transparent'}; border: 1px solid ${expanded==='climate' ? 'rgba(255,255,255,0.28)' : 'transparent'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='climate' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="${climateBadgeCfg.icon || 'mdi:snowflake'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>

@@ -75,7 +75,6 @@ sidebar_template:
       const lightsBadgeCfg = variables.lights_badge || {};
       const mediaBadgeCfg = variables.media_badge || {};
       const climateBadgeCfg = variables.climate_badge || {};
-      const presenceBadgeCfg = variables.presence_badge || {};
       const expanded = states['input_select.hemma_expanded_row'] ? states['input_select.hemma_expanded_row'].state : 'none';
       const isMobileMenuOpen = states['input_boolean.menu_mobile'] && states['input_boolean.menu_mobile'].state === 'on';
       const isSidebarCompact = states['input_boolean.sidebar_compact'] && states['input_boolean.sidebar_compact'].state === 'on';
@@ -181,27 +180,33 @@ sidebar_template:
       if(climateCount === 0) climateHTML = '<div style="font-size:12px; color:rgba(255,255,255,0.5); padding:10px; text-align:center;">Nenhum sistema de clima ativo.</div>';
       // 4. PESSOAS (iteracao direta)
       let peopleCount = 0;
-      let peopleHTML = '';
       peopleEntities.forEach(k => {
         if(states[k]) {
           let isHome = states[k].state === 'home';
           if(isHome) peopleCount++;
           let name = states[k].attributes.friendly_name || k;
-
-          let grayscaleStyle = !isHome ? 'filter: grayscale(100%); opacity: 0.5;' : '';
-          let iconColor = isHome ? '#c7983e' : 'rgba(255,255,255,0.5)';
-          let dropShadow = isHome ? 'filter:drop-shadow(0 0 3px rgba(199,152,62,0.8));' : '';
-
-          peopleHTML += `
-            <div style="display:flex; align-items:center; justify-content:space-between; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; margin-bottom: 6px; transition: all 0.3s ease; ${grayscaleStyle}">
-              <div style="display:flex; align-items:center; gap: 10px;">
-                <ha-icon icon="${isHome ? 'mdi:home-account' : 'mdi:account-arrow-right-outline'}" style="--mdc-icon-size: 18px; color: ${iconColor}; ${dropShadow}"></ha-icon>
-                <span style="font-size:13px; font-weight:600; color:rgba(255,255,255,0.9);">${name}</span>
-              </div>
-              <span style="font-size:11px; font-weight:600; color:${iconColor};">${isHome ? 'Em Casa' : 'Ausente'}</span>
+        }
+      });
+      let peopleHomeAvatars = '';
+      peopleEntities.forEach(k => {
+        if(states[k] && states[k].state === 'home') {
+          let name = states[k].attributes.friendly_name || k;
+          let picture = states[k].attributes.entity_picture || '';
+          peopleHomeAvatars += `
+            <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: '${k}'}; this.dispatchEvent(ev);"
+                 onpointerdown="event.stopPropagation();"
+                 ontouchstart="event.stopPropagation();"
+                 title="${name}"
+                 style="width:42px; height:42px; border-radius:50%; overflow:hidden; border:1px solid rgba(255,255,255,0.35); box-shadow:0 0 10px rgba(0,0,0,0.45); cursor:pointer; flex-shrink:0;">
+              ${picture
+                ? `<img src="${picture}" alt="${name}" style="width:100%; height:100%; object-fit:cover;" />`
+                : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:rgba(255,255,255,0.92); background:rgba(255,255,255,0.15);">${name.charAt(0)}</div>`}
             </div>`;
         }
       });
+      if(!peopleHomeAvatars) {
+        peopleHomeAvatars = `<div style="font-size:11px; color:rgba(255,255,255,0.45);">Ninguem em casa</div>`;
+      }
       let outputHtml = `
         <div onclick="event.stopPropagation();" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="position:relative; display:flex;flex-direction:column;height:100%;padding:20px 16px 16px;box-sizing:border-box;font-family:'Poppins',system-ui,sans-serif;">
 
@@ -224,7 +229,7 @@ sidebar_template:
          let iconShadow = lightsCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(253,216,53,0.5))' : 'none';
 
          outputHtml += `
-           <div onclick="${toggle('lights')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='lights' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='lights' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='lights' ? '4px' : '0'};">
+           <div onclick="${toggle('lights')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='lights' ? 'rgba(255,255,255,0.14)' : 'transparent'}; border: 1px solid ${expanded==='lights' ? 'rgba(255,255,255,0.28)' : 'transparent'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='lights' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="${lightsBadgeCfg.icon || 'mdi:lightbulb-on'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
@@ -241,7 +246,7 @@ sidebar_template:
          let iconShadow = mediaCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(29,185,84,0.5))' : 'none';
 
          outputHtml += `
-           <div onclick="${toggle('media')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='media' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='media' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='media' ? '4px' : '0'};">
+           <div onclick="${toggle('media')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='media' ? 'rgba(255,255,255,0.14)' : 'transparent'}; border: 1px solid ${expanded==='media' ? 'rgba(255,255,255,0.28)' : 'transparent'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='media' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="${mediaBadgeCfg.icon || 'mdi:music-note'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
@@ -257,7 +262,7 @@ sidebar_template:
          let iconColor = climateCount > 0 ? '#7fdbe9' : 'rgba(255,255,255,0.4)';
          let iconShadow = climateCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(127,219,233,0.5))' : 'none';
          outputHtml += `
-           <div onclick="${toggle('climate')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='climate' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='climate' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='climate' ? '4px' : '0'};">
+           <div onclick="${toggle('climate')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='climate' ? 'rgba(255,255,255,0.14)' : 'transparent'}; border: 1px solid ${expanded==='climate' ? 'rgba(255,255,255,0.28)' : 'transparent'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='climate' ? '4px' : '0'};">
              <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                <ha-icon icon="${climateBadgeCfg.icon || 'mdi:snowflake'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
              </div>
@@ -268,23 +273,7 @@ sidebar_template:
            </div>`;
          if (expanded === 'climate') outputHtml += `<div class="expanded-list" style="pointer-events: auto; position: relative; z-index: 2; max-height:40vh; overflow-y:auto; padding-right:4px; margin-bottom:8px;">${climateHTML}</div>`;
       }
-      // --- BADGE DE PESSOAS ---
-      if (expanded === 'none' || expanded === 'presence') {
-         let iconColor = peopleCount > 0 ? '#c7983e' : 'rgba(255,255,255,0.4)';
-         let iconShadow = peopleCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(199,152,62,0.5))' : 'none';
-
-         outputHtml += `
-           <div onclick="${toggle('presence')}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background: ${expanded==='presence' ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'}; border: 1px solid ${expanded==='presence' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)'}; border-radius: 20px; cursor:pointer; transition: 0.2s; margin-bottom: ${expanded==='presence' ? '4px' : '10px'};">
-             <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
-               <ha-icon icon="${presenceBadgeCfg.icon || 'mdi:home-account'}" style="--mdc-icon-size: 24px; color: ${iconColor}; ${iconShadow};"></ha-icon>
-             </div>
-             <div style="display:flex; flex-direction:column; align-items: flex-start; text-align: left;">
-               <span style="font-size:14px; font-weight:700; color:rgba(255,255,255,0.9);">${presenceBadgeCfg.title || 'Pessoas'}</span>
-               <span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.5);">${peopleCount === 0 ? 'Casa vazia' : peopleCount + ' em casa'}</span>
-             </div>
-           </div>`;
-         if (expanded === 'presence') outputHtml += `<div class="expanded-list" style="pointer-events: auto; position: relative; z-index: 2; max-height:40vh; overflow-y:auto; padding-right:4px; margin-bottom:8px;">${peopleHTML}</div>`;
-      }
+      // BADGE DE PESSOAS removida da pilha principal por diretriz de UX.
       outputHtml += `</div>`;
       // --- AÇÕES RÁPIDAS (ALINHADO À ESQUERDA) ---
       if (expanded === 'none') {
@@ -294,7 +283,7 @@ sidebar_template:
               <div onclick="event.stopPropagation(); window.__hh.callService('light','turn_off',{entity_id:'light.todas_as_luzes'})"
                    onpointerdown="event.stopPropagation();"
                    ontouchstart="event.stopPropagation();"
-                   style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.09); border-radius:20px; cursor:pointer; transition:all 0.2s ease;">
+                   style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background:transparent; border:none; border-radius:20px; cursor:pointer; transition:all 0.2s ease;">
                 <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
                   <ha-icon icon="mdi:lightbulb-off-outline" style="--mdc-icon-size: 24px; color: rgba(255,255,255,0.8);"></ha-icon>
                 </div>
@@ -309,7 +298,13 @@ sidebar_template:
 
       outputHtml += `
           <div style="flex:1 1 0;min-height:8px;"></div>
-          <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.09); border-radius:20px;">
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;margin-bottom:10px;">PESSOAS EM CASA</div>
+            <div style="display:flex; align-items:center; gap:8px; min-height:42px; overflow-x:auto; padding-bottom:2px;">
+              ${peopleHomeAvatars}
+            </div>
+          </div>
+          <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:transparent; border:none; border-radius:20px;">
             <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;margin-bottom:10px;">TEMPO AGORA</div>
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <div>

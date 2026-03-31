@@ -9,7 +9,7 @@ card_mod:
   style: |
     /* --- CÓDIGO ORIGINAL COMENTADO (radial-gradient Sagaland) ---
     hui-grid-layout {
-      background: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(0,0,0,0.88));
+      background: #2f3342;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;

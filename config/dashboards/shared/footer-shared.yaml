@@ -28,7 +28,9 @@ cards:
       notify_icon: 'mdi:broom'
       notify: >
         [[[
-          let isCleaning = states['vacuum.roidmi_eve']?.state === 'cleaning';
+          // ANTERIOR:
+          // let isCleaning = states['vacuum.roidmi_eve']?.state === 'cleaning';
+          let isCleaning = states['vacuum.roborock_s7']?.state === 'cleaning';
           return isCleaning;
         ]]]
 

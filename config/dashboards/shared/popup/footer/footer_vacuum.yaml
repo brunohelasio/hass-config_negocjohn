@@ -24,10 +24,14 @@ browser_mod:
               - entity: vacuum.roborock_s7
                 name: Roborock S7
                 icon: custom:roborock
-                secondary_info:
-                  entity: sensor.roborock_s7_bateria
-                  postfix: ' %'
-                  prefix: 'Battery: '
+                # ANTERIOR (invalido em entities row padrao):
+                # secondary_info:
+                #   entity: sensor.roborock_s7_bateria
+                #   postfix: ' %'
+                #   prefix: 'Battery: '
+                secondary_info: last-changed
+              - entity: sensor.roborock_s7_bateria
+                name: Bateria
               - entity: sensor.roborock_s7_status
                 name: Status
               - entity: sensor.roborock_s7_comodo_atual
@@ -45,57 +49,70 @@ browser_mod:
                 name: Intensidade do Mop
               - entity: select.roborock_s7_modo_mop
                 name: Modo do Mop
-              - type: custom:mod-card
-                card_mod:
-                  style:
-                    hui-horizontal-stack-card$: |
-                      #root {
-                        justify-content: space-between!important;
-                        padding: 1em;
-                      }
-                card:
-                  type: horizontal-stack
-                  cards:
-                    - type: custom:button-card
-                      entity: vacuum.roborock_s7
-                      icon: mdi:play-pause
-                      variables:
-                        vacuum_action: |
-                          [[[
-                            if (entity) {
-                              const service = entity.state === 'docked' || entity.state === 'paused'
-                                ? 'vacuum.start'
-                                : 'vacuum.pause';
-                              return {
-                                action: 'call-service',
-                                service: service,
-                                target: { entity_id: entity.entity_id },
-                              };
-                            } else {
-                              return { action: 'none' };
-                            }
-                          ]]]
-                      tap_action: '[[[ return variables.vacuum_action ]]]'
-                      template: icon_only
-                    - type: custom:button-card
-                      entity: vacuum.roborock_s7
-                      icon: mdi:battery-charging
-                      tap_action:
-                        action: call-service
-                        service: vacuum.return_to_base
-                        service_data:
-                          entity_id: vacuum.roborock_s7
-                      template: icon_only
-                    - type: custom:button-card
-                      icon: mdi:bell
-                      tap_action:
-                        action: none
-                      template: icon_only
-                    - type: custom:button-card
-                      icon: mdi:delete-empty
-                      tap_action:
-                        action: none
-                      template: icon_only
+              # ANTERIOR (causava Configuration Error ao usar card-container
+              # como row de entities):
+              # - type: custom:mod-card
+              #   card_mod:
+              #     style:
+              #       hui-horizontal-stack-card$: |
+              #         #root {
+              #           justify-content: space-between!important;
+              #           padding: 1em;
+              #         }
+              #   card:
+              #     type: horizontal-stack
+              #     cards:
+              #       - type: custom:button-card
+              #         entity: vacuum.roborock_s7
+              #         icon: mdi:play-pause
+              #         variables:
+              #           vacuum_action: |
+              #             [[[ ... ]]]
+              #         tap_action: '[[[ return variables.vacuum_action ]]]'
+              #         template: icon_only
+              - type: custom:hui-element
+                card_type: horizontal-stack
+                cards:
+                  - type: custom:button-card
+                    entity: vacuum.roborock_s7
+                    icon: mdi:play-pause
+                    variables:
+                      vacuum_action: |
+                        [[[
+                          if (entity) {
+                            const service = entity.state === 'docked' || entity.state === 'paused'
+                              ? 'vacuum.start'
+                              : 'vacuum.pause';
+                            return {
+                              action: 'call-service',
+                              service: service,
+                              target: { entity_id: entity.entity_id },
+                            };
+                          } else {
+                            return { action: 'none' };
+                          }
+                        ]]]
+                    tap_action: '[[[ return variables.vacuum_action ]]]'
+                    template: icon_only
+                  - type: custom:button-card
+                    entity: vacuum.roborock_s7
+                    icon: mdi:battery-charging
+                    tap_action:
+                      action: call-service
+                      service: vacuum.return_to_base
+                      service_data:
+                        entity_id: vacuum.roborock_s7
+                    template: icon_only
+                  - type: custom:button-card
+                    icon: mdi:bell
+                    tap_action:
+                      action: none
+                    template: icon_only
+                  - type: custom:button-card
+                    icon: mdi:delete-empty
+                    tap_action:
+                      action: none
+                    template: icon_only
 
           ### MAP
           - type: entities
@@ -107,7 +124,9 @@ browser_mod:
               - type: custom:hui-element
                 card_type: custom:xiaomi-vacuum-map-card
                 entity: vacuum.roborock_s7
-                vacuum_platform: Roborock
+                # ANTERIOR:
+                # vacuum_platform: Roborock
+                vacuum_platform: default
                 map_source:
                   camera: image.roborock_s7_map_0_custom
                 calibration_source:

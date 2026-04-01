@@ -124,11 +124,16 @@ browser_mod:
               - type: custom:hui-element
                 card_type: custom:xiaomi-vacuum-map-card
                 entity: vacuum.roborock_s7
-                # ANTERIOR:
-                # vacuum_platform: Roborock
-                vacuum_platform: default
+                # HISTORICO de vacuum_platform:
+                # v1 (ngocjohn original): vacuum_platform: Roborock
+                # v2 (tentativa de correcao anterior): vacuum_platform: default
+                # v3 (2026-04-01, FIX): vacuum_platform: Roborock (correto para integracao Roborock no HA)
+                # HISTORICO de map_source.camera:
+                # v1: image.roborock_s7_map_0_custom (sufixo _custom nao existe no HA do usuario)
+                # v2 (2026-04-01, FIX): image.roborock_s7_map_0 (entidade real confirmada pelo usuario)
+                vacuum_platform: Roborock
                 map_source:
-                  camera: image.roborock_s7_map_0_custom
+                  camera: image.roborock_s7_map_0
                 calibration_source:
                   camera: true
                 map_locked: true

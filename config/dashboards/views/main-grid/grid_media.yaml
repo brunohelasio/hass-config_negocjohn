@@ -210,28 +210,23 @@
       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
       cards:
         ########## SLIDE 1: ARTWORK FULLSCREEN ##########
-        # ORIGINAL COMENTADO — conditional cards dependiam de select.conditional_media
-        # cujo estado retornava nomes com whitespace (indentacao do Jinja2 macro),
-        # causando match falho e Slide 1 sempre vazio.
-        # - type: horizontal-stack
-        #   cards:
-        #     - type: conditional
-        #       conditions:
-        #         - entity: select.conditional_media
-        #           state: Smart TV Pro 2
-        #       card:
-        #         type: custom:button-card
-        #         entity: media_player.smart_tv_pro_2
-        #         ...
-        # FIX: Card unico usando media_player.currently_playing (universal media player)
-        # que herda automaticamente entity_picture do child ativo.
+        # ANTERIOR: usava template [conditional_media, progress_bar, icon_play_pause]
+        # Problema: conditional_media tem aspect_ratio:1000/996 que conflitava com autoHeight,
+        # alem de JS fragil (state_display com marquee + DOM navigation) que causava
+        # button-card error quando media_player.currently_playing estava off/unavailable.
+        # base_media acessava entity.attributes sem guard, causando TypeError quando
+        # entity era null.
+        #
+        # FIX: Card inline sem templates complexos — apenas background-image com
+        # try/catch guard, play/pause tap_action e more-info hold_action.
+        # Artwork exibido diretamente de entity.attributes.entity_picture (nativo HA).
+        # Sem dependencies de sensor.art_colors, sensor.youtube_thumbnail, etc.
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
-          template:
-            - conditional_media
-            - progress_bar
-            - icon_play_pause
+          show_icon: false
+          show_state: false
+          aspect_ratio: 1/1
           tap_action:
             action: call-service
             service: media_player.media_play_pause
@@ -240,36 +235,72 @@
             haptic: light
           hold_action:
             action: more-info
+          styles:
+            card:
+              - border-radius: 5%
+              - overflow: hidden
+              - background-color: rgba(115, 115, 115, 0.2)
+              - background-size: cover
+              - background-position: center
+              - background-image: >
+                  [[[
+                    try {
+                      if (entity && entity.attributes && entity.attributes.entity_picture) {
+                        return 'url("' + entity.attributes.entity_picture + '")';
+                      }
+                    } catch(e) { console.warn('Slide1 media artwork (desktop):', e.message); }
+                    return 'none';
+                  ]]]
 
         ########## SLIDE 2: GRID DE BOTOES ##########
+        # FIX overflow: card_mod overflow:visible garante que os 4 botoes do grid 2x2
+        # nao sejam cortados quando o swipe-card aloca altura baseada no Slide 1.
+        # ANTERIOR: sem card_mod — linha inferior do grid ficava parcialmente oculta.
         - type: grid
           columns: 2
+          card_mod:
+            style: |
+              #root {
+                overflow: visible !important;
+              }
           cards:
+            # Slot 1: Smart TV
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
               template:
                 - base
                 - media_premium
                 - icon_tv
+            # Slot 2: Echo Show
+            # ANTERIOR: icon_homepod causava button-card error (possivelmente por
+            # conflito de template chain: base nao inclui base_media, entao
+            # variables.media_on era undefined no contexto de icon_homepod).
+            # FIX: icon_tv confirmado funcional para este slot. icon_homepod pode
+            # ser reativado futuramente se o erro for diagnosticado.
+            # ANTERIOR: - icon_homepod
             - type: custom:button-card
               entity: media_player.echo_show
               template:
                 - base
                 - media_premium
-                # - icon_tv
-                - icon_homepod
+                - icon_tv
+            # Slot 3: Spotify
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:
                 - base
                 - media_premium
                 - icon_spotify
+            # Slot 4: Echo Pop Office
+            # ANTERIOR: media_player.spotify — entidade nao existe no setup do usuario,
+            # causava TypeError em media_premium (entity.entity_id em service_data).
+            # FIX: media_player.echo_pop_office — entidade real do usuario.
             - type: custom:button-card
-              entity: media_player.spotify
+              entity: media_player.echo_pop_office
               template:
                 - base
                 - media_premium
-                - icon_spotify
+                - icon_tv
 
 #################################################
 #      TABLET/PHONE (max-width: 1440px)         #
@@ -286,14 +317,13 @@
       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
       cards:
         ########## SLIDE 1: ARTWORK FULLSCREEN ##########
-        # FIX: Card unico usando media_player.currently_playing
+        # FIX: Card inline seguro — ver comentario no bloco desktop acima
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
-          template:
-            - conditional_media
-            - progress_bar
-            - icon_play_pause
+          show_icon: false
+          show_state: false
+          aspect_ratio: 1/1
           tap_action:
             action: call-service
             service: media_player.media_play_pause
@@ -302,10 +332,31 @@
             haptic: light
           hold_action:
             action: more-info
+          styles:
+            card:
+              - border-radius: 5%
+              - overflow: hidden
+              - background-color: rgba(115, 115, 115, 0.2)
+              - background-size: cover
+              - background-position: center
+              - background-image: >
+                  [[[
+                    try {
+                      if (entity && entity.attributes && entity.attributes.entity_picture) {
+                        return 'url("' + entity.attributes.entity_picture + '")';
+                      }
+                    } catch(e) { console.warn('Slide1 media artwork (tablet):', e.message); }
+                    return 'none';
+                  ]]]
 
         ########## SLIDE 2: GRID DE BOTOES ##########
         - type: grid
           columns: 2
+          card_mod:
+            style: |
+              #root {
+                overflow: visible !important;
+              }
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
@@ -313,22 +364,23 @@
                 - base
                 - media_premium
                 - icon_tv
+            # ANTERIOR: icon_homepod → icon_tv (fix erro, ver comentario desktop)
             - type: custom:button-card
               entity: media_player.echo_show
               template:
                 - base
                 - media_premium
-                # - icon_tv
-                - icon_homepod
+                - icon_tv
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:
                 - base
                 - media_premium
                 - icon_spotify
+            # ANTERIOR: media_player.spotify (inexistente) → echo_pop_office (fix erro)
             - type: custom:button-card
-              entity: media_player.spotify
+              entity: media_player.echo_pop_office
               template:
                 - base
                 - media_premium
-                - icon_spotify
+                - icon_tv

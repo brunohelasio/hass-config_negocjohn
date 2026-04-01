@@ -3,6 +3,9 @@ browser_mod:
   service: browser_mod.popup
   data:
     title: Living Room TV
+    style: >
+      --popup-background-color: linear-gradient(180deg, rgba(15, 25, 50, 0.92) 0%, rgba(10, 18, 40, 0.96) 100%);
+      --popup-border-width: 0;
     card_mod:
       style:
         #popup header

@@ -18,8 +18,14 @@ grid_office_room:
       # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
       - ac_status
     double_tap_action: !include ../../shared/popup/rooms/office.yaml
+    # hold_action:
+    #   action: none
     hold_action:
-      action: none
+      action: perform-action
+      perform_action: light.turn_off
+      data:
+        entity_id: light.grupo_luzes_office
+      haptic: success
     variables:
       light_entity: light.office_switch_3
       # --- ANTERIOR: active: '' (sem sensor) ---
@@ -43,8 +49,14 @@ grid_quarto_casal:
       - icon_double_bed
       - alexa_status
     double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml
+    # hold_action:
+    #   action: none
     hold_action:
-      action: none
+      action: perform-action
+      perform_action: light.turn_off
+      data:
+        entity_id: light.grupo_quarto_casal
+      haptic: success
     variables:
       light_entity: light.qc_luz_principal
       # --- ANTERIOR: active: '' (sem sensor) ---
@@ -71,16 +83,24 @@ grid_quarto_miguel:
       # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
       - ac_status
     tap_action:
-      action: call-service
-      service: homeassistant.toggle
+      # action: call-service
+      # service: homeassistant.toggle
+      action: perform-action
+      perform_action: homeassistant.toggle
       # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
       # service_data:
       #   entity_id: switch.quarto_miguel_switch_2
-      service_data:
+      target:
         entity_id: light.quarto_miguel_switch_2
     double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
+    # hold_action:
+    #   action: none
     hold_action:
-      action: none
+      action: perform-action
+      perform_action: light.turn_off
+      data:
+        entity_id: light.grupo_luzes_quarto_miguel
+      haptic: success
     variables:
       # --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA ---
       # light_entity: switch.quarto_miguel_switch_2
@@ -106,8 +126,14 @@ grid_quarto_marina:
       - icon_double_bed
       - alexa_status
     double_tap_action: !include ../../shared/popup/rooms/quarto_marina.yaml
+    # hold_action:
+    #   action: none
     hold_action:
-      action: none
+      action: perform-action
+      perform_action: light.turn_off
+      data:
+        entity_id: light.grupo_luzes_quarto_marina
+      haptic: success
     variables:
       light_entity: light.quarto_marina_switch_4
       # --- ANTERIOR: active: '' (sem sensor) ---

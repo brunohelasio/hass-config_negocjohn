@@ -25,8 +25,9 @@
     - light.grupo_luzes_quarto_marina
   name: Luzes
   show_state: false
-  show_icon: true
-  icon: mdi:lightbulb-group-outline
+  show_icon: false
+  # show_icon: true
+  # icon: mdi:lightbulb-group-outline
   tap_action:
     action: toggle
     haptic: success
@@ -95,7 +96,8 @@
       name: "QMA - Luz principal"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -104,7 +106,20 @@
       name: "QMA - Arandela"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+      show_icon: false
+      custom_fields:
+        icon: >
+          <svg viewBox="0 0 50 50">
+            <rect x="20" y="4" width="10" height="6" rx="1" fill="var(--state-icon-color)" opacity="0.5"/>
+            <path d="M15 12 h20 l4 18 H11 z" fill="var(--state-icon-color)" opacity="0.3"/>
+            <ellipse cx="25" cy="32" rx="16" ry="3" fill="var(--state-icon-color)" opacity="0.6"/>
+            <line x1="25" y1="10" x2="25" y2="4" stroke="var(--state-icon-color)" stroke-width="2"/>
+          </svg>
+      styles:
+        custom_fields:
+          icon:
+            - width: 80%
       tap_action:
         action: toggle
         haptic: success
@@ -113,7 +128,8 @@
       name: "QMA - Estante"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -122,7 +138,8 @@
       name: "QMA - Luz cortineiro"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -131,7 +148,8 @@
       name: "QMAS - Luz principal"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -152,7 +170,8 @@
       name: "QMAS - Luz azul"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_light_recessed
       tap_action:
         action: toggle
         haptic: success
@@ -271,8 +290,9 @@
       name: TV
       template:
         - base
-      icon: mdi:television
-      show_icon: true
+        - icon_tv
+      show_icon: false
+      # icon: mdi:television
       tap_action:
         action: none
       hold_action:

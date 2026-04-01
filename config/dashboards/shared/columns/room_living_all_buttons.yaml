@@ -302,8 +302,9 @@
     - light.grupo_luzes_sala
   name: Luzes
   show_state: false
-  show_icon: true
-  icon: mdi:lightbulb-group-outline
+  show_icon: false
+  # show_icon: true
+  # icon: mdi:lightbulb-group-outline
   tap_action:
     action: toggle
     haptic: success

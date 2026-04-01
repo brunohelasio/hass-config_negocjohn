@@ -72,7 +72,8 @@
         - chips
       styles:
         icon:
-          - padding: 3px
+          # - padding: 3px
+          - padding: 0
           - background-color: null
           - width: 50%
 

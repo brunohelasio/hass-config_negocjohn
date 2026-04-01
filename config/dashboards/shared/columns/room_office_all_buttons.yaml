@@ -23,12 +23,12 @@
     - light.grupo_luzes_office
   name: Luzes
   show_state: false
-  show_icon: true
-  icon: mdi:lightbulb-group-outline
+  show_icon: false
+  # show_icon: true
+  # icon: mdi:lightbulb-group-outline
   tap_action:
     action: toggle
     haptic: success
-  # ANTERIOR: custom_fields com JS template para ON/OFF badge (nao atualizava em browser_mod popup)
   # FIX: state: section nativa do button-card com HTML estatico — mais reativo
   custom_fields:
     on_off: |
@@ -323,18 +323,28 @@
       name: MacBook
       template:
         - base
-        - icon_imac
+        # - icon_imac
       show_icon: false
+      custom_fields:
+        icon: >
+          <svg viewBox="0 0 50 50">
+            <rect x="8" y="10" width="34" height="22" rx="2" fill="none" stroke="var(--state-icon-color)" stroke-width="2.5"/>
+            <rect x="12" y="14" width="26" height="14" rx="1" fill="var(--state-icon-color)" opacity="0.15"/>
+            <path d="M4 34 h42 a2 2 0 0 1 2 2 v1 a2 2 0 0 1 -2 2 H4 a2 2 0 0 1 -2 -2 v-1 a2 2 0 0 1 2 -2z" fill="var(--state-icon-color)" opacity="0.6"/>
+          </svg>
+      styles:
+        custom_fields:
+          icon:
+            - width: 80%
+        card:
+          - opacity: "0.45"
+          - cursor: "default"
       tap_action:
         action: none
       hold_action:
         action: none
       double_tap_action:
         action: none
-      styles:
-        card:
-          - opacity: "0.45"
-          - cursor: "default"
     # 3. SPOTIFY — compartilhado, mesma entidade em todos os comodos
     # hold_action abre popup Spotify dedicado do Office (com default_device: Echo Pop Office).
     - type: custom:button-card

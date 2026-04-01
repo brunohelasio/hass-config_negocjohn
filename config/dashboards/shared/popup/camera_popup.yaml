@@ -7,6 +7,7 @@ browser_mod:
     size: wide
     style: >
       --ha-card-border-radius: 0;
+      --popup-background-color: linear-gradient(180deg, rgba(15, 25, 50, 0.92) 0%, rgba(10, 18, 40, 0.96) 100%);
     card_mod:
       style:
         layout-card:

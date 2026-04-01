@@ -26,8 +26,9 @@
     - light.grupo_quarto_casal
   name: Luzes
   show_state: false
-  show_icon: true
-  icon: mdi:lightbulb-group-outline
+  show_icon: false
+  # show_icon: true
+  # icon: mdi:lightbulb-group-outline
   tap_action:
     action: toggle
     haptic: success
@@ -96,7 +97,8 @@
       name: "QC - Luz principal"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -105,7 +107,8 @@
       name: "QC - Luzes quadros"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_light_recessed
       tap_action:
         action: toggle
         haptic: success
@@ -114,7 +117,8 @@
       name: "QC - Luz sanca"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -123,7 +127,8 @@
       name: "QC - Luzes closet"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_light_recessed
       tap_action:
         action: toggle
         haptic: success
@@ -132,7 +137,8 @@
       name: "QC - Luz cortineiro"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -153,7 +159,8 @@
       name: "QCS - Luz principal"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -162,7 +169,8 @@
       name: "QCS - Luz azul"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_light_recessed
       tap_action:
         action: toggle
         haptic: success
@@ -273,8 +281,9 @@
       name: TV
       template:
         - base
-      icon: mdi:television
-      show_icon: true
+        - icon_tv
+      show_icon: false
+      # icon: mdi:television
       tap_action:
         action: none
       hold_action:

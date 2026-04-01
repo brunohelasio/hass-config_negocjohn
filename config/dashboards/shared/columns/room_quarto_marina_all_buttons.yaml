@@ -148,8 +148,8 @@
       name: "QMAS - Luz principal"
       template:
         - tpl_popup_light
-        # - icon_light_flush
-        - icon_ledstrip
+        - icon_light_flush
+        # - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -170,8 +170,8 @@
       name: "QMAS - Luz azul"
       template:
         - tpl_popup_light
-        # - icon_light_flush
-        - icon_light_recessed
+        - icon_light_flush
+        # - icon_light_recessed
       tap_action:
         action: toggle
         haptic: success
@@ -285,14 +285,14 @@
         grid-template-columns: repeat(5, 98px) !important;
       }
   cards:
-    # TV — placeholder (entidade a definir futuramente)
+    # TV — placeholder com ícone LG inline (icon_tv nao renderiza sem entity/tv_screen)
+    # ANTERIOR: template [base, icon_tv] — nao aparecia porque icon_tv depende de tv_screen
     - type: custom:button-card
-      name: TV
+      name: LG TV
       template:
         - base
-        - icon_tv
+        # - icon_tv
       show_icon: false
-      # icon: mdi:television
       tap_action:
         action: none
       hold_action:
@@ -303,6 +303,16 @@
         card:
           - opacity: "0.45"
           - cursor: "default"
+        custom_fields:
+          icon:
+            - width: 95%
+            - margin-left: 1%
+            - margin-top: -5%
+      custom_fields:
+        icon: >
+          <svg viewBox="0 0 50 50">
+            <path fill="#9da0a2" d="M.303 11.082c-.063 0-.113.05-.113.111v27.615c0 .062.051.109.113.109h49.395c.063 0 .113-.047.113-.109V11.193c0-.062-.051-.111-.113-.111zm25.098 4.18c.241-.008.44.186.439.428v.846c0 .231-.183.42-.414.426l-.697.02c-.74.02-1.173.082-1.85.262-2.563.682-4.673 2.67-5.52 5.205-.301.9-.414 1.595-.414 2.578 0 1.401.307 2.625.945 3.799a8.09 8.09 0 0 0 6.227 4.191 12.45 12.45 0 0 0 2.244-.068c3.091-.549 5.599-2.842 6.396-5.84.097-.365.178-.864.223-1.25H27.67c-.235-.001-.426-.191-.426-.426v-.406-.406c0-.235.191-.425.426-.426h6.639c.241-.001.436.198.428.439l-.021.66c-.054 1.704-.496 3.245-1.34 4.658-1.621 2.714-4.379 4.463-7.5 4.752a10.84 10.84 0 0 1-1.92-.016c-3.83-.419-7.042-3.023-8.232-6.674-.155-.476-.277-.997-.363-1.547-.118-.749-.129-2.074-.018-2.793.179-1.154.5-2.155 1.006-3.127 1.191-2.289 3.202-3.992 5.664-4.797.884-.289 1.732-.434 2.727-.467zm-.834 4.453h.848c.236 0 .426.192.426.428V28.6h1.795c.236 0 .426.192.426.428v.846c0 .236-.19.428-.426.428h-3.068c-.236 0-.426-.192-.426-.428v-9.73c0-.236.19-.428.426-.428zm-3.129.004c.958 0 1.734.777 1.734 1.734s-.777 1.734-1.734 1.734-1.734-.777-1.734-1.734.777-1.734 1.734-1.734z"/>
+          </svg>
     # SPOTIFY — compartilhado, mesma entidade em todos os comodos
     # FIX C3: hold_action agora abre popup Spotify dedicado da Q.Marina (com default_device: Echo Pop Marina).
     # ANTERIOR: hold_action: !include ../popup/media_spotify.yaml (popup compartilhado sem device targeting)

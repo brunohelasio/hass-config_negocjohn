@@ -1301,3 +1301,145 @@ Apos migracao para `frosted_dark_sagalang`, o dashboard apresentou regressao vis
 - Correcao estrutural do popup Roborock mantida (row valida em `entities`).
 - Presenca em avatares na base da sidebar mantida.
 
+
+
+---
+
+## Registro de Implementacao — 2026-04-01 (Correções Estruturais: Climate, Media, Vacuum, Refresh, Alinhamento)
+
+Implementacao consolidada de 5 correcoes estruturais e visuais conforme autorizacao
+do usuario em sessao de 2026-04-01. Todas as mudancas seguem a Regra de Ouro
+(codigo original comentado, nunca deletado).
+
+### 1. Alinhamento da Presença (Avatar) na Sidebar
+
+**Arquivo:** `config/dashboards/templates/button_card_templates/tpl_sidebar.yaml`
+
+**Problema:** O bloco "PESSOAS EM CASA" (avatar circular) aparecia mais à esquerda que
+os badges de Luzes, Mídia, Clima e o card de tempo. Diferença visual de 16px.
+
+**Causa-raiz:** Os badges usam `padding: 12px 16px` dentro do container com `padding:20px 16px 16px`.
+O conteúdo dos badges começa em 16+16=32px da borda da sidebar. Já o wrapper do bloco
+PESSOAS não tinha padding lateral adicional, ficando em apenas 16px (só o container).
+
+**Fix:** Adicionado `padding: 0 0 0 16px` ao `<div style="margin-bottom:0;">` wrapper
+do bloco PESSOAS, igualando o recuo ao dos outros blocos.
+
+**Rollback:** Remover `padding: 0 0 0 16px` do wrapper (comentário inline preservado).
+
+### 2. Botão Refresh (Footer)
+
+**Status:** JÁ ESTAVA CORRETO no HEAD anterior (2026-03-31).
+
+`footer-shared.yaml` já usava `browser_mod.javascript` com `code: location.reload()`
+(hard reload do navegador no tablet). Nenhuma alteração necessária.
+
+### 3. Popup Vacuum — Entidade do Mapa e vacuum_platform
+
+**Arquivo:** `config/dashboards/shared/popup/footer/footer_vacuum.yaml`
+
+**Problema 1:** `map_source.camera: image.roborock_s7_map_0_custom` — sufixo `_custom`
+não existe no HA do usuário. A entidade real é `image.roborock_s7_map_0`.
+
+**Problema 2:** `vacuum_platform: default` — valor incorreto para integração Roborock.
+O card `custom:xiaomi-vacuum-map-card` requer `vacuum_platform: Roborock`.
+
+**Fix:**
+- `image.roborock_s7_map_0_custom` → `image.roborock_s7_map_0`
+- `vacuum_platform: default` → `vacuum_platform: Roborock`
+
+**Rollback:** Reverter para `_custom` e `default` (comentários inline preservados).
+
+### 4. Bloco Climatização — 4 Botões de AC com icon_climate
+
+**Arquivo:** `config/dashboards/shared/grid-cards/climate-status.yaml`
+
+**Problema:** Bloco climate usava 4 `custom:streamline-card` com templates do setup
+europeu original (grid_air_purifier, grid_thermostat, grid_covers_living,
+grid_covers_bedroom) — entidades `sensor.home_climate`, `cover.living_room_cover`,
+`cover.bedroom_shutters` não existem no setup do usuário.
+
+**Fix:** Substituídos por 4 `custom:button-card` com `template: [tpl_popup_climate, icon_climate]`:
+- AC Sala: `climate.sl_ar_condicionado`
+- AC Office: `climate.ac_office`
+- AC Q. Miguel: `climate.ac_quarto_miguel`
+- AC Q. Casal: placeholder (entidade a confirmar — `tap_action: none`, `opacity: 0.45`)
+
+**Icone:** `icon_climate` renderiza SVG proprio de ar-condicionado (azul quando ativo,
+cinza quando off), via template `tpl_icons.yaml:1331`.
+
+**Rollback:** Descomentar bloco original (streamline-cards) e comentar os novos button-cards.
+
+**PENDENCIA:** Entidade do AC Q. Casal não foi confirmada pelo usuário. Quando
+confirmada (ex: `climate.ac_quarto_casal`), adicionar `entity:` e remover
+`tap_action: none` + `styles.card.opacity`.
+
+### 5. Mídia Swipe-card — Slide 1, Slide 2 e Ícone Echo
+
+**Arquivo:** `config/dashboards/views/main-grid/grid_media.yaml`
+
+#### 5.1 Slide 1 — Template Seguro (sem JS frágil)
+
+**Problema:** Template `conditional_media` + `progress_bar` + `icon_play_pause` causava
+button-card error quando `media_player.currently_playing` estava off/unavailable:
+- `conditional_media` tem `aspect_ratio: 1000/996` que conflitava com `autoHeight`
+  do swipe-card, além de `state_display` com marquee + DOM navigation complexos
+- `base_media` acessava `entity.attributes` sem guard, causando TypeError quando
+  entity era null/undefined
+- `progress_bar` acessava `entity.attributes.media_position` sem null check
+
+**Fix:** Card inline sem templates complexos — apenas `background-image` com try/catch
+guard, `tap_action: media_play_pause`, `hold_action: more-info`, `aspect_ratio: 1/1`.
+Artwork exibido diretamente via `entity.attributes.entity_picture` (nativo do HA).
+Sem dependências de sensor.art_colors, sensor.youtube_thumbnail, etc.
+
+#### 5.2 Slide 2 — Overflow dos Botões Inferiores
+
+**Problema:** Grid 2x2 com 4 botões — linha inferior ficava parcialmente cortada.
+Swipe-card alocava altura baseada no Slide 1, mas Slide 2 (2 linhas de botões 1:1)
+precisava de mais espaço. `overflow: hidden` no container cortava o fundo.
+
+**Fix:** Adicionado `card_mod` ao grid do Slide 2 com `#root { overflow: visible !important; }`.
+O swipe-card tem `autoHeight: true` (main-grid-swipe-params.yaml) — o `overflow: visible`
+garante que o conteúdo não seja clipado enquanto autoHeight calcula a altura real.
+
+#### 5.3 Ícone Echo Show — icon_tv (substituição de icon_homepod)
+
+**Problema:** O botão do Echo Show (slot 2 do grid) usava `icon_homepod`. Em certos
+estados do media_player, `icon_homepod` pode causar button-card error por problema
+de scoping JS (statements após `if (entity)` ficam no escopo externo, não no interno).
+`variables.media_on` é undefined no chain `[base, media_premium, icon_homepod]`
+pois `base_media` não está incluído.
+
+**Fix:** Substituído `icon_homepod` por `icon_tv` para o slot Echo Show.
+`icon_tv` é confirmado funcional e tem guards de null adequados
+(`entity !== undefined &&`). Pode ser revertido para `icon_homepod` se
+futuro diagnóstico confirmar que o erro vinha de outro card.
+
+**NOTA:** Se preferir usar `icon_homepod` para Echo, adicionar `variables.vibrant_data: {}`
+explicitamente no card para garantir que o optional chaining não quebre.
+
+#### 5.4 4º Slot — media_player.spotify → echo_pop_office
+
+**Problema:** Slot 4 usava `media_player.spotify` — entidade que não existe no setup
+do usuário. `media_premium` template acessa `entity.entity_id` em `service_data` sem
+null check; com entity=null, resulta em TypeError e button-card error.
+
+**Fix:** Substituído por `media_player.echo_pop_office` (Echo Pop do Office — entidade
+real do usuário). Template mantido como `[base, media_premium, icon_tv]`.
+
+### Resumo dos Arquivos Alterados
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `tpl_sidebar.yaml` | padding-left:16px no wrapper PESSOAS EM CASA |
+| `footer_vacuum.yaml` | image.roborock_s7_map_0 + vacuum_platform: Roborock |
+| `climate-status.yaml` | 4 button-cards AC com tpl_popup_climate + icon_climate |
+| `grid_media.yaml` | Slide 1 inline, Slide 2 overflow fix, icon_tv Echo, fix 4º slot |
+
+### Restore Rápido
+
+- **Sidebar:** remover `padding: 0 0 0 16px` do wrapper PESSOAS (linha marcada)
+- **Vacuum mapa:** reverter camera para `image.roborock_s7_map_0_custom` e `vacuum_platform: default`
+- **Climate:** descomentar bloco `# --- CÓDIGO ORIGINAL ---` em `climate-status.yaml`
+- **Media:** reverter para commits anteriores (blocos originais preservados em comentários)

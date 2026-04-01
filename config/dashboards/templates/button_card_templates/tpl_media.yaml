@@ -188,7 +188,7 @@ conditional_media:
               }
           });
         }
-      } catch(e) { /* DOM not ready or structure changed */ }
+      } catch(e) { console.debug('Media DOM navigation:', e.message); }
       if (entity) {
           let elt = this.shadowRoot,
               await = setTimeout(marquee, 100),

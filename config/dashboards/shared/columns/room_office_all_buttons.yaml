@@ -151,7 +151,7 @@
       name: "OF - Luz central"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -160,7 +160,7 @@
       name: "OF - Luz ambiente"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success

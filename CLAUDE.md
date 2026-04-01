@@ -1447,3 +1447,63 @@ Todos os blocos originais estao comentados inline nos respectivos arquivos com m
 - `# ANTERIOR:` ou `# --- CÓDIGO ORIGINAL COMENTADO ---`
 - Para reverter: descomentar o bloco ANTERIOR e comentar/remover o bloco NOVO.
 
+
+
+---
+
+## Registro de Implementacao — Refatoracao Completa do Popup Vacuum (2026-04-01)
+
+### Contexto
+
+O popup do vacuum (`footer_vacuum.yaml`) persistia com erro de configuracao mesmo
+apos multiplas tentativas de correcao incremental. As causas-raiz eram estruturais:
+
+1. O mapa era renderizado dentro de um card `entities` via `custom:hui-element`,
+   o que limitava sua renderizacao e causava conflitos com o CSS do `style_popup_footer.yaml`.
+2. Os botoes de controle tentavam usar `custom:hui-element` com `card_type: horizontal-stack`
+   como entities row — o HA nao suporta isso de forma confiavel.
+3. O layout usava `!include` snippets (`popup_footer_layout.yaml`, `style_popup_footer.yaml`)
+   que injetavam CSS via shadow DOM piercing — funcionava no setup europeu do ngocjohn
+   mas nao no setup do usuario.
+
+### Solucao
+
+Reescrito do ZERO baseado no codigo funcional do dashboard antigo do usuario.
+
+**Estrutura nova:**
+- `custom:mod-card` → `custom:layout-card` com grid explicito de 3 colunas (320px | 1fr | 280px)
+- Coluna 1 (Summary): `vertical-stack` com card `entities` (status, pecas, mop) + `horizontal-stack` (botoes play/pause e return-to-base)
+- Coluna 2 (Mapa): `custom:xiaomi-vacuum-map-card` como card de PRIMEIRO NIVEL (nao dentro de entities)
+- Coluna 3 (Settings): `vertical-stack` com card `entities` (config, divider, estatisticas)
+
+**Mudancas-chave vs versao anterior:**
+- Mapa e um card direto (nao `custom:hui-element` dentro de `entities`)
+- Botoes de controle sao `horizontal-stack` separado (nao entities row)
+- Popup usa `popup_styles` com `style: all` para scrim/blur (nao `card_mod` com `!include`)
+- `bar-card` com barras de desgaste (bateria, filtro, escova principal/lateral, sensores)
+- Layout responsivo: 1 coluna em mobile (<800px)
+- Divisorias verticais entre colunas via CSS no `layout-card`
+
+**Entidades usadas (todas confirmadas pelo usuario):**
+- `vacuum.roborock_s7` (vacuum principal)
+- `sensor.roborock_s7_status`, `sensor.roborock_s7_comodo_atual`, `sensor.roborock_s7_vacuum_error`
+- `sensor.roborock_s7_bateria`
+- `binary_sensor.roborock_s7_mop_attached`, `binary_sensor.roborock_s7_water_box_attached`, `binary_sensor.roborock_s7_water_shortage`
+- `sensor.roborock_s7_tempo_restante_do_filtro`, `sensor.roborock_s7_tempo_restante_da_escova_principal`, `sensor.roborock_s7_tempo_restante_da_escova_lateral`, `sensor.roborock_s7_tempo_restante_do_sensor`
+- `select.roborock_s7_intensidade_do_mop`, `select.roborock_s7_modo_mop`
+- `number.roborock_s7_volume`
+- `switch.roborock_s7_nao_perturbe`, `switch.roborock_s7_dock_luz_indicadora_de_status`, `switch.roborock_s7_dock_bloqueio_infantil`
+- `time.roborock_s7_comecar_nao_perturbe`, `time.roborock_s7_terminar_nao_perturbe`
+- `sensor.roborock_s7_area_de_limpeza`, `sensor.roborock_s7_tempo_de_limpeza`
+- `sensor.roborock_s7_area_total_de_limpeza`, `sensor.roborock_s7_tempo_total_de_limpeza`, `sensor.roborock_s7_contagem_total_de_limpeza`
+- `image.roborock_s7_map_0` (mapa ao vivo)
+
+### Rollback
+
+O codigo original (versao ngocjohn com !include snippets) esta integralmente
+comentado no inicio do arquivo, delimitado por:
+- `# --- CÓDIGO ORIGINAL COMENTADO (versao ngocjohn com !include snippets) ---`
+- `# --- FIM CÓDIGO ORIGINAL ---`
+
+Para restaurar: descomentar o bloco original e comentar/remover o bloco `# NOVO:`.
+

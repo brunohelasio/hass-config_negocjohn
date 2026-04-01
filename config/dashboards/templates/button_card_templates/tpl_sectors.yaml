@@ -23,37 +23,70 @@ room_group:
       entity_id: >
         [[[ return variables.light_entity; ]]]
   double_tap_action:
-    action: fire-dom-event
-    browser_mod:
-      service: popup
-      data:
-        title: >
-          [[[
-            return states[variables.light_entity].attributes.friendly_name;
-          ]]]
-        style: >
-          --popup-background-color: transparent;
-        content:
-          type: custom:mod-card
-          card_mod:
-            style: |
-              #states {
-                padding-top: 0.5em;
-              }
-          card:
-            type: custom:light-popup-card
-            entity: >
-              [[[ return variables.light_entity; ]]]
-            icon: none
-            fullscreen: false
-            brightnessWidth: 130px
-            brightnessHeight: 360px
-            borderRadius: 1.7em
-            sliderColor: '#c7c7c7'
-            sliderTrackColor: rgba(25, 25, 25, 0.9)
-            displayType: slider
-            actionSize: 4.5em
-            actionsInARow: 2
+    # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+    # action: fire-dom-event
+    # browser_mod:
+    #   service: popup
+    #   data:
+    #     title: >
+    #       [[[
+    #         return states[variables.light_entity].attributes.friendly_name;
+    #       ]]]
+    #     style: >
+    #       --popup-background-color: transparent;
+    #     content:
+    #       type: custom:mod-card
+    #       card_mod:
+    #         style: |
+    #           #states {
+    #             padding-top: 0.5em;
+    #           }
+    #       card:
+    #         type: custom:light-popup-card
+    #         entity: >
+    #           [[[ return variables.light_entity; ]]]
+    #         icon: none
+    #         fullscreen: false
+    #         brightnessWidth: 130px
+    #         brightnessHeight: 360px
+    #         borderRadius: 1.7em
+    #         sliderColor: '#c7c7c7'
+    #         sliderTrackColor: rgba(25, 25, 25, 0.9)
+    #         displayType: slider
+    #         actionSize: 4.5em
+    #         actionsInARow: 2
+
+    # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+    action: call-service
+    service: browser_mod.popup
+    data:
+      title: >
+        [[[
+          return states[variables.light_entity].attributes.friendly_name;
+        ]]]
+      style: >
+        --popup-background-color: transparent;
+      content:
+        type: custom:mod-card
+        card_mod:
+          style: |
+            #states {
+              padding-top: 0.5em;
+            }
+        card:
+          type: custom:light-popup-card
+          entity: >
+            [[[ return variables.light_entity; ]]]
+          icon: none
+          fullscreen: false
+          brightnessWidth: 130px
+          brightnessHeight: 360px
+          borderRadius: 1.7em
+          sliderColor: '#c7c7c7'
+          sliderTrackColor: rgba(25, 25, 25, 0.9)
+          displayType: slider
+          actionSize: 4.5em
+          actionsInARow: 2
   #################################################
   #                                               #
   #                  SECTOR                       #
@@ -763,56 +796,108 @@ light:
       ]]]
     circle_input_unit: '%'
   double_tap_action:
-    action: fire-dom-event
-    browser_mod:
-      service: browser_mod.popup
-      data:
-        title: >
-          [[[
-            return !entity || entity.attributes.friendly_name;
-          ]]]
-        style: >
-          --tablet-popup-header-color: rgba(0, 0, 0, 0);
-          --popup-background-color: rgba(0, 0, 0, 0);
-          --popup-border-width: 0;
+    # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+    # action: fire-dom-event
+    # browser_mod:
+    #   service: browser_mod.popup
+    #   data:
+    #     title: >
+    #       [[[
+    #         return !entity || entity.attributes.friendly_name;
+    #       ]]]
+    #     style: >
+    #       --tablet-popup-header-color: rgba(0, 0, 0, 0);
+    #       --popup-background-color: rgba(0, 0, 0, 0);
+    #       --popup-border-width: 0;
+    #     card_mod:
+    #       style:
+    #         .: |
+    #           ha-header-bar {
+    #             display: none !important;
+    #           }
+    #     content:
+    #       type: entities
+    #       card_mod:
+    #         style: |
+    #           #states {
+    #             padding-top: 0.5em;
+    #           }
+    #       entities: >
+    #         [[[
+    #           if (entity) {
+    #               let lights = [],
+    #                   id = Boolean(entity.attributes.entity_id)
+    #                       ? [entity.entity_id].concat(entity.attributes.entity_id)
+    #                       : [entity.entity_id];
+    #               for (let i = 0; i < id.length; i++) {
+    #                   lights.push({
+    #                       "type": "custom:mushroom-light-card",
+    #                       "entity": id[i],
+    #                       "fill_container": false,
+    #                       "primary_info": "name",
+    #                       "secondary_info": "state",
+    #                       "icon_type": "icon",
+    #                       "show_brightness_control": true,
+    #                       "use_light_color": true,
+    #                       "show_color_temp_control": true,
+    #                       "show_color_control": true,
+    #                       "collapsible_controls": false
+    #                   });
+    #               }
+    #               return lights;
+    #           }
+    #         ]]]
+
+    # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+    action: call-service
+    service: browser_mod.popup
+    data:
+      title: >
+        [[[
+          return !entity || entity.attributes.friendly_name;
+        ]]]
+      style: >
+        --tablet-popup-header-color: rgba(0, 0, 0, 0);
+        --popup-background-color: rgba(0, 0, 0, 0);
+        --popup-border-width: 0;
+      card_mod:
+        style:
+          .: |
+            ha-header-bar {
+              display: none !important;
+            }
+      content:
+        type: entities
         card_mod:
-          style:
-            .: |
-              ha-header-bar {
-                display: none !important;
-              }
-        content:
-          type: entities
-          card_mod:
-            style: |
-              #states {
-                padding-top: 0.5em;
-              }
-          entities: >
-            [[[
-              if (entity) {
-                  let lights = [],
-                      id = Boolean(entity.attributes.entity_id)
-                          ? [entity.entity_id].concat(entity.attributes.entity_id)
-                          : [entity.entity_id];
-                  for (let i = 0; i < id.length; i++) {
-                      lights.push({
-                          "type": "custom:mushroom-light-card",
-                          "entity": id[i],
-                          "fill_container": false,
-                          "primary_info": "name",
-                          "secondary_info": "state",
-                          "icon_type": "icon",
-                          "show_brightness_control": true,
-                          "use_light_color": true,
-                          "show_color_temp_control": true,
-                          "show_color_control": true,
-                          "collapsible_controls": false
-                      });
-                  }
-                  return lights;
-              }
-            ]]]
+          style: |
+            #states {
+              padding-top: 0.5em;
+            }
+        entities: >
+          [[[
+            if (entity) {
+                let lights = [],
+                    id = Boolean(entity.attributes.entity_id)
+                        ? [entity.entity_id].concat(entity.attributes.entity_id)
+                        : [entity.entity_id];
+                for (let i = 0; i < id.length; i++) {
+                    lights.push({
+                        "type": "custom:mushroom-light-card",
+                        "entity": id[i],
+                        "fill_container": false,
+                        "primary_info": "name",
+                        "secondary_info": "state",
+                        "icon_type": "icon",
+                        "show_brightness_control": true,
+                        "use_light_color": true,
+                        "show_color_temp_control": true,
+                        "show_color_control": true,
+                        "collapsible_controls": false
+                    });
+                }
+                return lights;
+            }
+          ]]]
 light_slider:
   template:
     - extra_styles
@@ -943,35 +1028,66 @@ tpl_popup_device:
       entity_id: >
         [[[return variables.entity_id;]]]
   double_tap_action:
-    action: fire-dom-event
-    browser_mod:
-      service: browser_mod.popup
-      data:
-        title: >
-          [[[
-            if (entity)
-            return entity.attributes.friendly_name.split(' ')[0];
-          ]]]
-        style: !include ../../shared/snippets/style_popup_transparent.yaml
-        content:
-          type: custom:auto-entities
-          card:
-            type: entities
-          filter:
-            include:
-              - device: >
-                  [[[
-                    if (entity)
-                      return entity.attributes.friendly_name.split(' ')[0];
-                  ]]]
-            exclude:
-              - state: unavailable
-              - domain: binary_sensor
-              - domain: light
-              - entity_id: '*_remote*'
-              - entity_id: '*_operation*'
-          sort:
-            method: entity_id
+    # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+    # action: fire-dom-event
+    # browser_mod:
+    #   service: browser_mod.popup
+    #   data:
+    #     title: >
+    #       [[[
+    #         if (entity)
+    #         return entity.attributes.friendly_name.split(' ')[0];
+    #       ]]]
+    #     style: !include ../../shared/snippets/style_popup_transparent.yaml
+    #     content:
+    #       type: custom:auto-entities
+    #       card:
+    #         type: entities
+    #       filter:
+    #         include:
+    #           - device: >
+    #               [[[
+    #                 if (entity)
+    #                   return entity.attributes.friendly_name.split(' ')[0];
+    #               ]]]
+    #         exclude:
+    #           - state: unavailable
+    #           - domain: binary_sensor
+    #           - domain: light
+    #           - entity_id: '*_remote*'
+    #           - entity_id: '*_operation*'
+    #       sort:
+    #         method: entity_id
+
+    # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+    action: call-service
+    service: browser_mod.popup
+    data:
+      title: >
+        [[[
+          if (entity)
+          return entity.attributes.friendly_name.split(' ')[0];
+        ]]]
+      style: !include ../../shared/snippets/style_popup_transparent.yaml
+      content:
+        type: custom:auto-entities
+        card:
+          type: entities
+        filter:
+          include:
+            - device: >
+                [[[
+                  if (entity)
+                    return entity.attributes.friendly_name.split(' ')[0];
+                ]]]
+          exclude:
+            - state: unavailable
+            - domain: binary_sensor
+            - domain: light
+            - entity_id: '*_remote*'
+            - entity_id: '*_operation*'
+        sort:
+          method: entity_id
 tpl_popup_light:
   template:
     - tpl_popup_base
@@ -1343,14 +1459,24 @@ camera:
   tap_action:
     action: more-info
   double_tap_action:
-    action: fire-dom-event
-    browser_mod:
-      service: browser_mod.more_info
-      data:
-        entity: >
-          [[[
-            return variables.entity_id;
-          ]]]
+    # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+    # action: fire-dom-event
+    # browser_mod:
+    #   service: browser_mod.more_info
+    #   data:
+    #     entity: >
+    #       [[[
+    #         return variables.entity_id;
+    #       ]]]
+
+    # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+    action: call-service
+    service: browser_mod.more_info
+    data:
+      entity: >
+        [[[
+          return variables.entity_id;
+        ]]]
 
   styles:
     card:

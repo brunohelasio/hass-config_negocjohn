@@ -1,52 +1,106 @@
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    style: >
-      --popup-width: 80vw;
-      --popup-background-color: rgba(0, 0, 0, 0);
-    title: 'MASS'
-    initial_style: wide
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     style: >
+#       --popup-width: 80vw;
+#       --popup-background-color: rgba(0, 0, 0, 0);
+#     title: 'MASS'
+#     initial_style: wide
+#     card_mod:
+#       style:
+#         ha-dialog$: |
+#           .mdc-dialog__container {
+#             align-items: center !important;
+#             justify-content: center !important;
+#           }
+#         #popup header
+#         .: |
+#           ha-dialog>ha-dialog-header {
+#             display: none;
+#           }
+#           @media (max-width: 450px), (max-height: 500px) {
+#             ha-dialog>ha-dialog-header {
+#               display: block;
+#             }
+#           }
+#     content:
+#       type: custom:mod-card
+#       card_mod:
+#         style:
+#           layout-card$:
+#             grid-layout$:
+#               .: |
+#                 #root > * {
+#                   margin: 0px !important;
+#                 }
+#       card:
+#         type: custom:layout-card
+#         layout_type: custom:grid-layout
+#         layout:
+#           margin: 0
+#           padding: 0
+#           grid-template-columns: 80vw
+#           mediaquery:
+#             '(max-width: 800px)':
+#               grid-template-columns: 100vw
+#               grid-template-rows: 100vh
+
+#         cards:
+#           - type: iframe
+#             url: '/api/hassio_ingress/DxjwvCHHhrKMJQKVZKPsf-69nPQW-hrXk4iJ09PqKgQ/'
+#             # url: !secret mass_url
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  style: >
+    --popup-width: 80vw;
+    --popup-background-color: rgba(0, 0, 0, 0);
+  title: 'MASS'
+  initial_style: wide
+  card_mod:
+    style:
+      ha-dialog$: |
+        .mdc-dialog__container {
+          align-items: center !important;
+          justify-content: center !important;
+        }
+      #popup header
+      .: |
+        ha-dialog>ha-dialog-header {
+          display: none;
+        }
+        @media (max-width: 450px), (max-height: 500px) {
+          ha-dialog>ha-dialog-header {
+            display: block;
+          }
+        }
+  content:
+    type: custom:mod-card
     card_mod:
       style:
-        ha-dialog$: |
-          .mdc-dialog__container {
-            align-items: center !important;
-            justify-content: center !important;
-          }
-        #popup header
-        .: |
-          ha-dialog>ha-dialog-header {
-            display: none;
-          }
-          @media (max-width: 450px), (max-height: 500px) {
-            ha-dialog>ha-dialog-header {
-              display: block;
-            }
-          }
-    content:
-      type: custom:mod-card
-      card_mod:
-        style:
-          layout-card$:
-            grid-layout$:
-              .: |
-                #root > * {
-                  margin: 0px !important;
-                }
-      card:
-        type: custom:layout-card
-        layout_type: custom:grid-layout
-        layout:
-          margin: 0
-          padding: 0
-          grid-template-columns: 80vw
-          mediaquery:
-            '(max-width: 800px)':
-              grid-template-columns: 100vw
-              grid-template-rows: 100vh
+        layout-card$:
+          grid-layout$:
+            .: |
+              #root > * {
+                margin: 0px !important;
+              }
+    card:
+      type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout:
+        margin: 0
+        padding: 0
+        grid-template-columns: 80vw
+        mediaquery:
+          '(max-width: 800px)':
+            grid-template-columns: 100vw
+            grid-template-rows: 100vh
 
-        cards:
-          - type: iframe
-            url: '/api/hassio_ingress/DxjwvCHHhrKMJQKVZKPsf-69nPQW-hrXk4iJ09PqKgQ/'
-            # url: !secret mass_url
+      cards:
+        - type: iframe
+          url: '/api/hassio_ingress/DxjwvCHHhrKMJQKVZKPsf-69nPQW-hrXk4iJ09PqKgQ/'
+          # url: !secret mass_url

@@ -153,25 +153,49 @@
 # NOVO: popup thermostat simples estilo sagaland93 — 1 AC (sala) com thermostat card nativo
 # Chamado via hold_action do botao AC no popup da sala.
 # Card nativo do HA: visualizacao clean, controle de temperatura + hvac modes.
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: Ar Condicionado — Sala
-    tag: thermostat_sala
-    style: >
-      --popup-max-width: min(450px, 90vw);
-    card_mod: !include ../snippets/style_popup_complete.yaml
-    content:
-      type: thermostat
-      # ANTERIOR: entity: climate.sl_ar_condicionado_2 (corrigido: AC nao usa _2, cameras sim)
-      entity: climate.sl_ar_condicionado
-      show_current_as_primary: true
-      features:
-        - style: icons
-          type: climate-hvac-modes
-          hvac_modes:
-            - cool
-            - fan_only
-            - dry
-            - "off"
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Ar Condicionado — Sala
+#     tag: thermostat_sala
+#     style: >
+#       --popup-max-width: min(450px, 90vw);
+#     card_mod: !include ../snippets/style_popup_complete.yaml
+#     content:
+#       type: thermostat
+#       # ANTERIOR: entity: climate.sl_ar_condicionado_2 (corrigido: AC nao usa _2, cameras sim)
+#       entity: climate.sl_ar_condicionado
+#       show_current_as_primary: true
+#       features:
+#         - style: icons
+#           type: climate-hvac-modes
+#           hvac_modes:
+#             - cool
+#             - fan_only
+#             - dry
+#             - "off"
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: Ar Condicionado — Sala
+  tag: thermostat_sala
+  style: >
+    --popup-max-width: min(450px, 90vw);
+  card_mod: !include ../snippets/style_popup_complete.yaml
+  content:
+    type: thermostat
+    # ANTERIOR: entity: climate.sl_ar_condicionado_2 (corrigido: AC nao usa _2, cameras sim)
+    entity: climate.sl_ar_condicionado
+    show_current_as_primary: true
+    features:
+      - style: icons
+        type: climate-hvac-modes
+        hvac_modes:
+          - cool
+          - fan_only
+          - dry
+          - "off"

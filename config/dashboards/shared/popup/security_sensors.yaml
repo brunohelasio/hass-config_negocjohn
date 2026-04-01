@@ -1,66 +1,134 @@
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: Sensors
-    style: >
-      --max-popup-column: 2;
-    card_mod: !include ../snippets/style_popup_center.yaml
-    content:
-      type: custom:mod-card
-      card_mod: !include ../snippets/style_popup_footer.yaml
-      card:
-        type: custom:layout-card
-        layout_type: custom:grid-layout
-        layout: !include ../snippets/popup_footer_layout.yaml
-        cards:
-          #################################################
-          #                                               #
-          #                SECURITY SENSORS               #
-          #                                               #
-          #################################################
-          - type: custom:auto-entities
-            card:
-              type: entities
-              title: Motion Sensors
-              show_header_toggle: false
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Sensors
+#     style: >
+#       --max-popup-column: 2;
+#     card_mod: !include ../snippets/style_popup_center.yaml
+#     content:
+#       type: custom:mod-card
+#       card_mod: !include ../snippets/style_popup_footer.yaml
+#       card:
+#         type: custom:layout-card
+#         layout_type: custom:grid-layout
+#         layout: !include ../snippets/popup_footer_layout.yaml
+#         cards:
+#           #################################################
+#           #                                               #
+#           #                SECURITY SENSORS               #
+#           #                                               #
+#           #################################################
+#           - type: custom:auto-entities
+#             card:
+#               type: entities
+#               title: Motion Sensors
+#               show_header_toggle: false
+#             card_mod:
+#               class: header
+#             filter:
+#               template: |
+#                 {% for sensor in expand('group.motion_sensors') -%}
+#                   {%- set name = state_attr(sensor.entity_id, "friendly_name") | regex_replace('Motion Sensor| ?Occupancy','') | trim -%}
+#                   {{
+#                     { 'entity': sensor.entity_id,
+#                       'name': name,
+#                       'state_color': true,
+#                       'secondary_info': 'last-changed'
+#                     }
+#                   }},
+#                 {%- endfor %}
+#             sort:
+#               method: last_changed
+#               reverse: true
+
+#           - type: custom:auto-entities
+#             card:
+#               type: entities
+#               title: Contact Sensors
+#               show_header_toggle: false
+#               card_mod:
+#                 class: header
+#             filter:
+#               template: |
+#                 {% for sensor in expand('group.contact_sensors') -%}
+#                   {%- set name = state_attr(sensor.entity_id, "friendly_name") | regex_replace('Contact Sensor| ?Occupancy','') | trim -%}
+#                   {{
+#                     { 'entity': sensor.entity_id,
+#                       'name': name,
+#                       'state_color': true,
+#                       'secondary_info': 'last-changed'
+#                     }
+#                   }},
+#                 {%- endfor %}
+#             sort:
+#               method: last_changed
+#               reverse: true
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: Sensors
+  style: >
+    --max-popup-column: 2;
+  card_mod: !include ../snippets/style_popup_center.yaml
+  content:
+    type: custom:mod-card
+    card_mod: !include ../snippets/style_popup_footer.yaml
+    card:
+      type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout: !include ../snippets/popup_footer_layout.yaml
+      cards:
+        #################################################
+        #                                               #
+        #                SECURITY SENSORS               #
+        #                                               #
+        #################################################
+        - type: custom:auto-entities
+          card:
+            type: entities
+            title: Motion Sensors
+            show_header_toggle: false
+          card_mod:
+            class: header
+          filter:
+            template: |
+              {% for sensor in expand('group.motion_sensors') -%}
+                {%- set name = state_attr(sensor.entity_id, "friendly_name") | regex_replace('Motion Sensor| ?Occupancy','') | trim -%}
+                {{
+                  { 'entity': sensor.entity_id,
+                    'name': name,
+                    'state_color': true,
+                    'secondary_info': 'last-changed'
+                  }
+                }},
+              {%- endfor %}
+          sort:
+            method: last_changed
+            reverse: true
+
+        - type: custom:auto-entities
+          card:
+            type: entities
+            title: Contact Sensors
+            show_header_toggle: false
             card_mod:
               class: header
-            filter:
-              template: |
-                {% for sensor in expand('group.motion_sensors') -%}
-                  {%- set name = state_attr(sensor.entity_id, "friendly_name") | regex_replace('Motion Sensor| ?Occupancy','') | trim -%}
-                  {{
-                    { 'entity': sensor.entity_id,
-                      'name': name,
-                      'state_color': true,
-                      'secondary_info': 'last-changed'
-                    }
-                  }},
-                {%- endfor %}
-            sort:
-              method: last_changed
-              reverse: true
-
-          - type: custom:auto-entities
-            card:
-              type: entities
-              title: Contact Sensors
-              show_header_toggle: false
-              card_mod:
-                class: header
-            filter:
-              template: |
-                {% for sensor in expand('group.contact_sensors') -%}
-                  {%- set name = state_attr(sensor.entity_id, "friendly_name") | regex_replace('Contact Sensor| ?Occupancy','') | trim -%}
-                  {{
-                    { 'entity': sensor.entity_id,
-                      'name': name,
-                      'state_color': true,
-                      'secondary_info': 'last-changed'
-                    }
-                  }},
-                {%- endfor %}
-            sort:
-              method: last_changed
-              reverse: true
+          filter:
+            template: |
+              {% for sensor in expand('group.contact_sensors') -%}
+                {%- set name = state_attr(sensor.entity_id, "friendly_name") | regex_replace('Contact Sensor| ?Occupancy','') | trim -%}
+                {{
+                  { 'entity': sensor.entity_id,
+                    'name': name,
+                    'state_color': true,
+                    'secondary_info': 'last-changed'
+                  }
+                }},
+              {%- endfor %}
+          sort:
+            method: last_changed
+            reverse: true

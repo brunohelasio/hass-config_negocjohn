@@ -50,214 +50,427 @@
 #         entity: media_player.smart_tv_pro_2
 #         full_screen: true
 #         remote: remote.smart_tv_pro
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: 'Smart TV Remote'
-    tag: tv_remote
-    style: >
-      --popup-background-color: rgba(21,25,35,1);
-      --popup-min-width: min(380px, 95vw);
-      --popup-max-width: min(420px, 95vw);
-    card_mod:
-      style:
-        ha-dialog$: |
-          .mdc-dialog__container {
-            align-items: center !important;
-            justify-content: center !important;
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: 'Smart TV Remote'
+#     tag: tv_remote
+#     style: >
+#       --popup-background-color: rgba(21,25,35,1);
+#       --popup-min-width: min(380px, 95vw);
+#       --popup-max-width: min(420px, 95vw);
+#     card_mod:
+#       style:
+#         ha-dialog$: |
+#           .mdc-dialog__container {
+#             align-items: center !important;
+#             justify-content: center !important;
+#           }
+#         .: |
+#           :host {
+#             --ha-card-border-radius: 12px !important;
+#           }
+#           @media (max-width: 450px), (max-height: 500px) {
+#             ha-dialog {
+#               --mdc-dialog-min-width: 100vw !important;
+#               --mdc-dialog-min-height: 100vh !important;
+#               --popup-border-radius: 0 !important;
+#             }
+#             ha-dialog>ha-dialog-header {
+#               display: block !important;
+#             }
+#           }
+#     content:
+#       type: vertical-stack
+#       cards:
+#         # ── Linha 1: Power / Input / Menu ──
+#         - type: grid
+#           columns: 3
+#           square: false
+#           cards:
+#             - type: custom:button-card
+#               entity: media_player.smart_tv_pro_2
+#               icon: mdi:power
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: power
+#               template:
+#                 - remote_icon_only
+#                 - loader
+#             - type: custom:button-card
+#               icon: mdi:import
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: input
+#               template: remote_icon_only
+#             - type: custom:button-card
+#               icon: mdi:menu
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: menu
+#               template: remote_icon_only
+#         # ── D-Pad: Navigate Up ──
+#         - type: grid
+#           columns: 3
+#           square: false
+#           cards:
+#             - type: custom:button-card
+#               color_type: blank-card
+#             - type: custom:button-card
+#               icon: mdi:arrow-up-drop-circle-outline
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: navigate_up
+#               template: remote_icon_arrow
+#             - type: custom:button-card
+#               color_type: blank-card
+#         # ── D-Pad: Left / OK / Right ──
+#         - type: grid
+#           columns: 3
+#           square: false
+#           cards:
+#             - type: custom:button-card
+#               icon: mdi:arrow-left-drop-circle-outline
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: navigate_left
+#               template: remote_icon_arrow
+#             - type: custom:button-card
+#               icon: mdi:radiobox-marked
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: ok
+#                 haptic: success
+#               template: remote_icon_arrow
+#             - type: custom:button-card
+#               icon: mdi:arrow-right-drop-circle-outline
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: navigate_right
+#               template: remote_icon_arrow
+#         # ── D-Pad: Navigate Down ──
+#         - type: grid
+#           columns: 3
+#           square: false
+#           cards:
+#             - type: custom:button-card
+#               color_type: blank-card
+#             - type: custom:button-card
+#               icon: mdi:arrow-down-drop-circle-outline
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: navigate_down
+#               template: remote_icon_arrow
+#             - type: custom:button-card
+#               color_type: blank-card
+#         # ── Linha de baixo: Back / Home / Mute ──
+#         - type: grid
+#           columns: 3
+#           square: false
+#           cards:
+#             - type: custom:button-card
+#               icon: mdi:keyboard-backspace
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: back
+#               template: remote_icon_only
+#             - type: custom:button-card
+#               icon: mdi:home
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: homepage
+#               template: remote_icon_only
+#             - type: custom:button-card
+#               icon: mdi:volume-mute
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: mute
+#               template: remote_icon_only
+#         # ── Volume / Canal ──
+#         - type: grid
+#           columns: 4
+#           square: false
+#           cards:
+#             - type: custom:button-card
+#               icon: mdi:volume-minus
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: volume_down
+#               template: remote_icon_only
+#             - type: custom:button-card
+#               icon: mdi:volume-plus
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: volume_up
+#               template: remote_icon_only
+#             - type: custom:button-card
+#               icon: mdi:chevron-down
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: channel_down
+#               template: remote_icon_only
+#             - type: custom:button-card
+#               icon: mdi:chevron-up
+#               tap_action:
+#                 action: call-service
+#                 service: remote.send_command
+#                 service_data:
+#                   entity_id: remote.smart_tv_pro
+#                   command: channel_up
+#               template: remote_icon_only
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: 'Smart TV Remote'
+  tag: tv_remote
+  style: >
+    --popup-background-color: rgba(21,25,35,1);
+    --popup-min-width: min(380px, 95vw);
+    --popup-max-width: min(420px, 95vw);
+  card_mod:
+    style:
+      ha-dialog$: |
+        .mdc-dialog__container {
+          align-items: center !important;
+          justify-content: center !important;
+        }
+      .: |
+        :host {
+          --ha-card-border-radius: 12px !important;
+        }
+        @media (max-width: 450px), (max-height: 500px) {
+          ha-dialog {
+            --mdc-dialog-min-width: 100vw !important;
+            --mdc-dialog-min-height: 100vh !important;
+            --popup-border-radius: 0 !important;
           }
-        .: |
-          :host {
-            --ha-card-border-radius: 12px !important;
+          ha-dialog>ha-dialog-header {
+            display: block !important;
           }
-          @media (max-width: 450px), (max-height: 500px) {
-            ha-dialog {
-              --mdc-dialog-min-width: 100vw !important;
-              --mdc-dialog-min-height: 100vh !important;
-              --popup-border-radius: 0 !important;
-            }
-            ha-dialog>ha-dialog-header {
-              display: block !important;
-            }
-          }
-    content:
-      type: vertical-stack
-      cards:
-        # ── Linha 1: Power / Input / Menu ──
-        - type: grid
-          columns: 3
-          square: false
-          cards:
-            - type: custom:button-card
-              entity: media_player.smart_tv_pro_2
-              icon: mdi:power
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: power
-              template:
-                - remote_icon_only
-                - loader
-            - type: custom:button-card
-              icon: mdi:import
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: input
-              template: remote_icon_only
-            - type: custom:button-card
-              icon: mdi:menu
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: menu
-              template: remote_icon_only
-        # ── D-Pad: Navigate Up ──
-        - type: grid
-          columns: 3
-          square: false
-          cards:
-            - type: custom:button-card
-              color_type: blank-card
-            - type: custom:button-card
-              icon: mdi:arrow-up-drop-circle-outline
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: navigate_up
-              template: remote_icon_arrow
-            - type: custom:button-card
-              color_type: blank-card
-        # ── D-Pad: Left / OK / Right ──
-        - type: grid
-          columns: 3
-          square: false
-          cards:
-            - type: custom:button-card
-              icon: mdi:arrow-left-drop-circle-outline
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: navigate_left
-              template: remote_icon_arrow
-            - type: custom:button-card
-              icon: mdi:radiobox-marked
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: ok
-                haptic: success
-              template: remote_icon_arrow
-            - type: custom:button-card
-              icon: mdi:arrow-right-drop-circle-outline
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: navigate_right
-              template: remote_icon_arrow
-        # ── D-Pad: Navigate Down ──
-        - type: grid
-          columns: 3
-          square: false
-          cards:
-            - type: custom:button-card
-              color_type: blank-card
-            - type: custom:button-card
-              icon: mdi:arrow-down-drop-circle-outline
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: navigate_down
-              template: remote_icon_arrow
-            - type: custom:button-card
-              color_type: blank-card
-        # ── Linha de baixo: Back / Home / Mute ──
-        - type: grid
-          columns: 3
-          square: false
-          cards:
-            - type: custom:button-card
-              icon: mdi:keyboard-backspace
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: back
-              template: remote_icon_only
-            - type: custom:button-card
-              icon: mdi:home
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: homepage
-              template: remote_icon_only
-            - type: custom:button-card
-              icon: mdi:volume-mute
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: mute
-              template: remote_icon_only
-        # ── Volume / Canal ──
-        - type: grid
-          columns: 4
-          square: false
-          cards:
-            - type: custom:button-card
-              icon: mdi:volume-minus
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: volume_down
-              template: remote_icon_only
-            - type: custom:button-card
-              icon: mdi:volume-plus
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: volume_up
-              template: remote_icon_only
-            - type: custom:button-card
-              icon: mdi:chevron-down
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: channel_down
-              template: remote_icon_only
-            - type: custom:button-card
-              icon: mdi:chevron-up
-              tap_action:
-                action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: channel_up
-              template: remote_icon_only
+        }
+  content:
+    type: vertical-stack
+    cards:
+      # ── Linha 1: Power / Input / Menu ──
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:button-card
+            entity: media_player.smart_tv_pro_2
+            icon: mdi:power
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: power
+            template:
+              - remote_icon_only
+              - loader
+          - type: custom:button-card
+            icon: mdi:import
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: input
+            template: remote_icon_only
+          - type: custom:button-card
+            icon: mdi:menu
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: menu
+            template: remote_icon_only
+      # ── D-Pad: Navigate Up ──
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:button-card
+            color_type: blank-card
+          - type: custom:button-card
+            icon: mdi:arrow-up-drop-circle-outline
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: navigate_up
+            template: remote_icon_arrow
+          - type: custom:button-card
+            color_type: blank-card
+      # ── D-Pad: Left / OK / Right ──
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:button-card
+            icon: mdi:arrow-left-drop-circle-outline
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: navigate_left
+            template: remote_icon_arrow
+          - type: custom:button-card
+            icon: mdi:radiobox-marked
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: ok
+              haptic: success
+            template: remote_icon_arrow
+          - type: custom:button-card
+            icon: mdi:arrow-right-drop-circle-outline
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: navigate_right
+            template: remote_icon_arrow
+      # ── D-Pad: Navigate Down ──
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:button-card
+            color_type: blank-card
+          - type: custom:button-card
+            icon: mdi:arrow-down-drop-circle-outline
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: navigate_down
+            template: remote_icon_arrow
+          - type: custom:button-card
+            color_type: blank-card
+      # ── Linha de baixo: Back / Home / Mute ──
+      - type: grid
+        columns: 3
+        square: false
+        cards:
+          - type: custom:button-card
+            icon: mdi:keyboard-backspace
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: back
+            template: remote_icon_only
+          - type: custom:button-card
+            icon: mdi:home
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: homepage
+            template: remote_icon_only
+          - type: custom:button-card
+            icon: mdi:volume-mute
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: mute
+            template: remote_icon_only
+      # ── Volume / Canal ──
+      - type: grid
+        columns: 4
+        square: false
+        cards:
+          - type: custom:button-card
+            icon: mdi:volume-minus
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: volume_down
+            template: remote_icon_only
+          - type: custom:button-card
+            icon: mdi:volume-plus
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: volume_up
+            template: remote_icon_only
+          - type: custom:button-card
+            icon: mdi:chevron-down
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: channel_down
+            template: remote_icon_only
+          - type: custom:button-card
+            icon: mdi:chevron-up
+            tap_action:
+              action: call-service
+              service: remote.send_command
+              service_data:
+                entity_id: remote.smart_tv_pro
+                command: channel_up
+            template: remote_icon_only

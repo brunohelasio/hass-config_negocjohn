@@ -1,39 +1,80 @@
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: 'ATV Remote'
-    style: >
-      --popup-background-color: rgba(21,25,35,1);
-    card_mod: !include ../../snippets/style_popup_center.yaml
-    content:
-      type: custom:mod-card
-      card_mod:
-        style:
-          .: |
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: 'ATV Remote'
+#     style: >
+#       --popup-background-color: rgba(21,25,35,1);
+#     card_mod: !include ../../snippets/style_popup_center.yaml
+#     content:
+#       type: custom:mod-card
+#       card_mod:
+#         style:
+#           .: |
+#             ha-dialog>ha-dialog-header {
+#               display: none;
+#             }
+#             @media (max-width: 450px), (max-height: 500px) {
+#               .content .container {
+#                 margin: 0 6.8% !important;
+#               }
+#               ha-dialog {
+#                 --mdc-dialog-min-width: 100vw !important;
+#                 --mdc-dialog-min-height: 100vh !important;
+#                 --popup-border-radius: 0 !important;
+#               }
+#               ha-dialog>ha-dialog-header {
+#                 display: block !important;
+#               }
+#             }
+#       card:
+#         type: custom:apple-tv-card
+#         background: 'linear-gradient(155deg, rgba(60,66,80,1) 0%, rgba(23,26,37,1) 42%, rgba(21,25,35,1) 100%)'
+#         entity: media_player.atv
+#         full_screen: true
+#         remote: remote.atv
+#         sources:
+#           - source_name: Disney+
+#           - source_name: Netflix
+#           - source_name: YouTube
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: 'ATV Remote'
+  style: >
+    --popup-background-color: rgba(21,25,35,1);
+  card_mod: !include ../../snippets/style_popup_center.yaml
+  content:
+    type: custom:mod-card
+    card_mod:
+      style:
+        .: |
+          ha-dialog>ha-dialog-header {
+            display: none;
+          }
+          @media (max-width: 450px), (max-height: 500px) {
+            .content .container {
+              margin: 0 6.8% !important;
+            }
+            ha-dialog {
+              --mdc-dialog-min-width: 100vw !important;
+              --mdc-dialog-min-height: 100vh !important;
+              --popup-border-radius: 0 !important;
+            }
             ha-dialog>ha-dialog-header {
-              display: none;
+              display: block !important;
             }
-            @media (max-width: 450px), (max-height: 500px) {
-              .content .container {
-                margin: 0 6.8% !important;
-              }
-              ha-dialog {
-                --mdc-dialog-min-width: 100vw !important;
-                --mdc-dialog-min-height: 100vh !important;
-                --popup-border-radius: 0 !important;
-              }
-              ha-dialog>ha-dialog-header {
-                display: block !important;
-              }
-            }
-      card:
-        type: custom:apple-tv-card
-        background: 'linear-gradient(155deg, rgba(60,66,80,1) 0%, rgba(23,26,37,1) 42%, rgba(21,25,35,1) 100%)'
-        entity: media_player.atv
-        full_screen: true
-        remote: remote.atv
-        sources:
-          - source_name: Disney+
-          - source_name: Netflix
-          - source_name: YouTube
+          }
+    card:
+      type: custom:apple-tv-card
+      background: 'linear-gradient(155deg, rgba(60,66,80,1) 0%, rgba(23,26,37,1) 42%, rgba(21,25,35,1) 100%)'
+      entity: media_player.atv
+      full_screen: true
+      remote: remote.atv
+      sources:
+        - source_name: Disney+
+        - source_name: Netflix
+        - source_name: YouTube

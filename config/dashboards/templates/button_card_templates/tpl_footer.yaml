@@ -418,36 +418,67 @@ updates_icon_name:
           ]]]
 hacs_iframe:
   tap_action:
-    action: fire-dom-event
-    browser_mod:
-      service: browser_mod.popup
-      data:
-        # card_mod:
-        #   style:
-        #     .: |
-        #       .header-bar {
-        #         display: none !important;
-        #       }
-        card_mod:
-          style:
-            .: |
-              ha-dialog>ha-dialog-header {
-                display: none !important;
-              }
-        content:
-          type: iframe
-          aspect_ratio: '9:16'
-          url: >
-            [[[ return `/${hass.panels.config.url_path}/updates` ]]]
+    # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+    # action: fire-dom-event
+    # browser_mod:
+    #   service: browser_mod.popup
+    #   data:
+    #     # card_mod:
+    #     #   style:
+    #     #     .: |
+    #     #       .header-bar {
+    #     #         display: none !important;
+    #     #       }
+    #     card_mod:
+    #       style:
+    #         .: |
+    #           ha-dialog>ha-dialog-header {
+    #             display: none !important;
+    #           }
+    #     content:
+    #       type: iframe
+    #       aspect_ratio: '9:16'
+    #       url: >
+    #         [[[ return `/${hass.panels.config.url_path}/updates` ]]]
+
+    # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+    action: call-service
+    service: browser_mod.popup
+    data:
+      # card_mod:
+      #   style:
+      #     .: |
+      #       .header-bar {
+      #         display: none !important;
+      #       }
+      card_mod:
+        style:
+          .: |
+            ha-dialog>ha-dialog-header {
+              display: none !important;
+            }
+      content:
+        type: iframe
+        aspect_ratio: '9:16'
+        url: >
+          [[[ return `/${hass.panels.config.url_path}/updates` ]]]
   template: icon_name
 hacs_navigate_ios:
   tap_action:
-    action: fire-dom-event
-    browser_mod:
-      service: browser_mod.javascript
-      data:
-        code: >
-          window.location.href = `/${hass.panels.config.url_path}/updates`;
+    # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+    # action: fire-dom-event
+    # browser_mod:
+    #   service: browser_mod.javascript
+    #   data:
+    #     code: >
+    #       window.location.href = `/${hass.panels.config.url_path}/updates`;
+
+    # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+    action: call-service
+    service: browser_mod.javascript
+    data:
+      code: >
+        window.location.href = `/${hass.panels.config.url_path}/updates`;
   template: icon_name
 unifi_ios:
   tap_action:

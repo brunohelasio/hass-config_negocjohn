@@ -183,11 +183,18 @@ grid_utility_vacuum:
         }
       ]]]
     double_tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.more_info
-        data:
-          entity: camera.roidmi_eve
+      # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+      # action: fire-dom-event
+      # browser_mod:
+      #   service: browser_mod.more_info
+      #   data:
+      #     entity: camera.roidmi_eve
+
+      # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+      action: call-service
+      service: browser_mod.more_info
+      data:
+        entity: camera.roidmi_eve
     hold_action: !include ../../shared/honeycomb/utitlity.yaml
     state_display: >
       [[[
@@ -223,32 +230,60 @@ grid_utility_washing:
       active: sensor.appliance_active
       appliance: sensor.washer_dryer_program_progress
     double_tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.popup
-        data:
-          title: 'Washer-Dryer'
-          card_mod:
-            style:
-              #popup header
-              .:
-          content:
-            type: vertical-stack
-            cards:
-              - type: entities
-                entities:
-                  - entity: switch.washer_dryer_power
-                    name: Power
-                    icon: mdi:power
-                    secondary_info: last-changed
-                  - entity: sensor.washer_dryer_door
-                    name: Door
-                  - entity: sensor.washer_dryer_operation_state
-                    name: Operation State
-                  - entity: sensor.washer_dryer_program_progress
-                    name: Program Progress
-                  - entity: sensor.washer_dryer_remaining_program_time
-                    name: Remaining Program Time
+      # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+      # action: fire-dom-event
+      # browser_mod:
+      #   service: browser_mod.popup
+      #   data:
+      #     title: 'Washer-Dryer'
+      #     card_mod:
+      #       style:
+      #         #popup header
+      #         .:
+      #     content:
+      #       type: vertical-stack
+      #       cards:
+      #         - type: entities
+      #           entities:
+      #             - entity: switch.washer_dryer_power
+      #               name: Power
+      #               icon: mdi:power
+      #               secondary_info: last-changed
+      #             - entity: sensor.washer_dryer_door
+      #               name: Door
+      #             - entity: sensor.washer_dryer_operation_state
+      #               name: Operation State
+      #             - entity: sensor.washer_dryer_program_progress
+      #               name: Program Progress
+      #             - entity: sensor.washer_dryer_remaining_program_time
+      #               name: Remaining Program Time
+
+      # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+      action: call-service
+      service: browser_mod.popup
+      data:
+        title: 'Washer-Dryer'
+        card_mod:
+          style:
+            #popup header
+            .:
+        content:
+          type: vertical-stack
+          cards:
+            - type: entities
+              entities:
+                - entity: switch.washer_dryer_power
+                  name: Power
+                  icon: mdi:power
+                  secondary_info: last-changed
+                - entity: sensor.washer_dryer_door
+                  name: Door
+                - entity: sensor.washer_dryer_operation_state
+                  name: Operation State
+                - entity: sensor.washer_dryer_program_progress
+                  name: Program Progress
+                - entity: sensor.washer_dryer_remaining_program_time
+                  name: Remaining Program Time
 
   # HALLWAY
 grid_hallway:

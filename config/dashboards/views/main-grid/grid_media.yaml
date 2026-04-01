@@ -256,6 +256,22 @@
             haptic: light
           hold_action:
             action: more-info
+          styles:
+            card:
+              - border-radius: 5%
+              - overflow: hidden
+              - background-color: rgba(115, 115, 115, 0.2)
+              - background-size: cover
+              - background-position: center
+              - background-image: >
+                  [[[
+                    try {
+                      if (entity && entity.attributes && entity.attributes.entity_picture) {
+                        return 'url("' + entity.attributes.entity_picture + '")';
+                      }
+                    } catch(e) { console.warn('Slide1 media artwork (desktop):', e.message); }
+                    return 'none';
+                  ]]]
 
         ########## SLIDE 2: GRID DE BOTOES ##########
         # ANTERIOR: sem square: false — aspect-ratio do Slide 1 forcava altura quadrada,
@@ -264,6 +280,7 @@
           columns: 2
           square: false
           cards:
+            # Slot 1: Smart TV
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
               template:
@@ -291,12 +308,16 @@
                 - base
                 - media_premium
                 - icon_spotify
+            # Slot 4: Echo Pop Office
+            # ANTERIOR: media_player.spotify — entidade nao existe no setup do usuario,
+            # causava TypeError em media_premium (entity.entity_id em service_data).
+            # FIX: media_player.echo_pop_office — entidade real do usuario.
             - type: custom:button-card
-              entity: media_player.spotify
+              entity: media_player.echo_pop_office
               template:
                 - base
                 - media_premium
-                - icon_spotify
+                - icon_tv
 
 #################################################
 #      TABLET/PHONE (max-width: 1440px)         #
@@ -338,6 +359,22 @@
             haptic: light
           hold_action:
             action: more-info
+          styles:
+            card:
+              - border-radius: 5%
+              - overflow: hidden
+              - background-color: rgba(115, 115, 115, 0.2)
+              - background-size: cover
+              - background-position: center
+              - background-image: >
+                  [[[
+                    try {
+                      if (entity && entity.attributes && entity.attributes.entity_picture) {
+                        return 'url("' + entity.attributes.entity_picture + '")';
+                      }
+                    } catch(e) { console.warn('Slide1 media artwork (tablet):', e.message); }
+                    return 'none';
+                  ]]]
 
         ########## SLIDE 2: GRID DE BOTOES ##########
         # ANTERIOR: sem square: false — botoes inferiores eram cortados
@@ -371,9 +408,10 @@
                 - base
                 - media_premium
                 - icon_spotify
+            # ANTERIOR: media_player.spotify (inexistente) → echo_pop_office (fix erro)
             - type: custom:button-card
-              entity: media_player.spotify
+              entity: media_player.echo_pop_office
               template:
                 - base
                 - media_premium
-                - icon_spotify
+                - icon_tv

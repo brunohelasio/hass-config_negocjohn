@@ -25,7 +25,7 @@ layout:
   # default:
   margin: 0
   padding: 0
-  grid-gap: 3.5vw 3vw
+  grid-gap: 3.0vw 3vw
   # ANTERIOR: sidebar ~20% + 4 colunas de conteudo (incluia areas other/movies visiveis)
   # grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
   # HOTFIX FINAL (2026-03-30): sidebar fixa em 27% + 3 colunas de conteudo igualmente distribuidas.
@@ -49,12 +49,12 @@ layout:
     "sidebar security   mainrooms devices  ."
     "sidebar cameras    climate   media    ."
     "sidebar footer     footer    footer   ."
-    ".       floorplan  .         .        ."
+    "sidebar floorplan  .         .        ."
 
   mediaquery:
     # tablet landscape (e.g. 2000x1200)
     '(min-width: 1441px) and (max-width: 2000px)':
-      grid-gap: 3.5vw 3vw
+      grid-gap: 3.0vw 3vw
       # ANTERIOR: grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
       grid-template-columns: minmax(260px, 25.5%) repeat(3, minmax(0, 1fr)) 0
       # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
@@ -69,12 +69,12 @@ layout:
         "sidebar security   mainrooms devices  ."
         "sidebar cameras    climate   media    ."
         "sidebar footer     footer    footer   ."
-        ".       floorplan  .         .        ."
+        "sidebar floorplan  .         .        ."
     # tablet landscape (e.g. 801-1440px) - with sidebar
     # Estrategia Sagaland: 3 colunas + sidebar, areas ocultas em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
       # Espaçamento inspirado no hass-config do sagaland93 para separar blocos.
-      grid-gap: 3.5vw 3vw
+      grid-gap: 3.0vw 3vw
       # ANTERIOR: grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
       grid-template-columns: minmax(260px, 25.5%) repeat(3, minmax(0, 1fr)) 0
       # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
@@ -89,7 +89,7 @@ layout:
         "sidebar security   mainrooms devices  ."
         "sidebar cameras    climate   media    ."
         "sidebar footer     footer    footer   ."
-        ".       floorplan  .         .        ."
+        "sidebar floorplan  .         .        ."
     # portrait — Sagaland: areas ocultas (sidebar, chips, movies) em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-gap: 4.4vw 3vw
@@ -107,7 +107,7 @@ layout:
         "sidebar security   mainrooms devices  ."
         "sidebar cameras    climate   media    ."
         "sidebar footer     footer    footer   ."
-        ".       floorplan  .         .        ."
+        "sidebar floorplan  .         .        ."
     # phone — Sagaland: areas ocultas (sidebar, movies) em h=0
     '(max-width: 800px) and (min-height: 463px)':
       margin: 0

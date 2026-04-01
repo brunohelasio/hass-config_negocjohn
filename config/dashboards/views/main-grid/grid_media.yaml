@@ -256,7 +256,8 @@
               template:
                 - base
                 - media_premium
-                - icon_tv
+                # - icon_tv
+                - icon_homepod
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:
@@ -317,7 +318,8 @@
               template:
                 - base
                 - media_premium
-                - icon_tv
+                # - icon_tv
+                - icon_homepod
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:

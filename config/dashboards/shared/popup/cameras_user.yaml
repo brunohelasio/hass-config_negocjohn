@@ -22,7 +22,8 @@ browser_mod:
     style: >
       --popup-border-width: 0;
       --popup-max-width: 980px;
-      --popup-background-color: rgba(15, 20, 35, 0.75);
+      # --popup-background-color: rgba(15, 20, 35, 0.75);
+      --popup-background-color: linear-gradient(180deg, rgba(15, 25, 50, 0.92) 0%, rgba(10, 18, 40, 0.96) 100%);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
     card_mod:

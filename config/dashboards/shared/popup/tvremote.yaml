@@ -5,7 +5,8 @@ browser_mod:
     title: SONY TV
     style: >
       --tablet-popup-header-color: rgba(0, 0, 0, 0);
-      --popup-background-color: rgba(0, 0, 0, 0);
+      # --popup-background-color: rgba(0, 0, 0, 0);
+      --popup-background-color: linear-gradient(180deg, rgba(15, 25, 50, 0.92) 0%, rgba(10, 18, 40, 0.96) 100%);
       --popup-border-width: 0;
       --button-card-border-radius: 10%;
       --grid-card-gap: 5%;

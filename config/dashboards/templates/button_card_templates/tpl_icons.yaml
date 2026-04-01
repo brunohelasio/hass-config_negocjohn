@@ -133,6 +133,12 @@ icon_ledstrip:
     custom_fields:
       icon:
         - width: 80%
+        - '--light-color': >
+            [[[
+              return variables.state_on
+                ? 'var(--state-icon-active-color, #f0c040)'
+                : 'var(--state-icon-color)';
+            ]]]
   custom_fields:
     icon: >
       <svg viewBox="0 0 32 32">
@@ -785,6 +791,12 @@ icon_pendant:
         - width: 100%
         - margin-left: -9%
         - margin-top: -9%
+        - '--light-color': >
+            [[[
+              return variables.state_on
+                ? 'var(--state-icon-active-color, #f0c040)'
+                : 'var(--state-icon-color)';
+            ]]]
   custom_fields:
     icon: >
       [[[

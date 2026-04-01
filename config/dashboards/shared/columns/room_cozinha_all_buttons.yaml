@@ -20,8 +20,9 @@
     - light.grupo_luzes_cozinha
   name: Luzes
   show_state: false
-  show_icon: true
-  icon: mdi:lightbulb-group-outline
+  show_icon: false
+  # show_icon: true
+  # icon: mdi:lightbulb-group-outline
   tap_action:
     action: toggle
     haptic: success
@@ -160,7 +161,8 @@
       name: "CZ - Luz principal 1"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -169,7 +171,8 @@
       name: "CZ - Luz principal 2"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success
@@ -178,7 +181,8 @@
       name: "AS - Lavanderia"
       template:
         - tpl_popup_light
-        - icon_light_flush
+        # - icon_light_flush
+        - icon_ledstrip
       tap_action:
         action: toggle
         haptic: success

@@ -82,7 +82,12 @@ grid_living_room:
     # hold_action: !include ../../shared/honeycomb/living.yaml
     # hold_action:
     #   action: none
-    hold_action: !include ../../shared/popup/rooms/livingroom.yaml
+    hold_action:
+      action: perform-action
+      perform_action: light.turn_off
+      data:
+        entity_id: light.grupo_luzes_sala
+      haptic: success
     template:
       - rooms_base
       # REMOVIDO: circle nao faz parte do comportamento original do botao principal.
@@ -149,8 +154,14 @@ grid_kitchen_normal:
       # - motion
     double_tap_action: !include ../../shared/popup/rooms/kitchen.yaml
     # hold_action: !include ../../shared/honeycomb/kitchen.yaml
+    # hold_action:
+    #   action: none
     hold_action:
-      action: none
+      action: perform-action
+      perform_action: light.turn_off
+      data:
+        entity_id: light.grupo_luzes_cozinha
+      haptic: success
     variables:
       # fan_circle: fan.hood_power
       # light_entity: light.kitchen_table_light
@@ -259,8 +270,14 @@ grid_lavabo:
     entity: light.grupo_luzes_lavabo
     name: Lavabo
     double_tap_action: !include ../../shared/popup/rooms/lavabo.yaml
+    # hold_action:
+    #   action: none
     hold_action:
-      action: none
+      action: perform-action
+      perform_action: light.turn_off
+      data:
+        entity_id: light.grupo_luzes_lavabo
+      haptic: success
     template:
       - rooms_base
       - icon_bathroom
@@ -276,8 +293,14 @@ grid_circulacao:
     name: Circulação
     double_tap_action:
       action: none
+    # hold_action:
+    #   action: none
     hold_action:
-      action: none
+      action: perform-action
+      perform_action: light.turn_off
+      data:
+        entity_id: light.corredor_switch_1
+      haptic: success
     template:
       - rooms_base
       - icon_hallway

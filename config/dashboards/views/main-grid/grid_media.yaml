@@ -225,11 +225,27 @@
         #         ...
         # FIX: Card unico usando media_player.currently_playing (universal media player)
         # que herda automaticamente entity_picture do child ativo.
+        # ANTERIOR: usava template conditional_media que continha JavaScript de DOM navigation
+        # (this.getRootNode().host) e acesso a entity.attributes.data. Quando
+        # media_player.currently_playing esta off/unavailable, o JS lancava excecao
+        # causando o erro vermelho de button-card.
+        # - type: custom:button-card
+        #   entity: media_player.currently_playing
+        #   name: ' '
+        #   template:
+        #     - conditional_media
+        #     - progress_bar
+        #     - icon_play_pause
+        # NOVO: usa template media (mais simples) que exibe artwork sem JS complexo.
+        # O template media usa apenas CSS background-image para o artwork e nao
+        # acessa entity.attributes.data nem faz navegacao DOM. Quando a entidade
+        # esta off/unavailable, as variaveis media_off/entity_picture do base_media
+        # retornam graciosamente sem lancar excecoes, exibindo fundo cinza neutro.
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
           template:
-            - conditional_media
+            - media
             - progress_bar
             - icon_play_pause
           tap_action:
@@ -242,8 +258,11 @@
             action: more-info
 
         ########## SLIDE 2: GRID DE BOTOES ##########
+        # ANTERIOR: sem square: false — aspect-ratio do Slide 1 forcava altura quadrada,
+        # cortando os botoes inferiores do grid 2x2.
         - type: grid
           columns: 2
+          square: false
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
@@ -251,13 +270,21 @@
                 - base
                 - media_premium
                 - icon_tv
+            # ANTERIOR: icon_homepod causava erro — dependia de variables.vibrant_data
+            # (sensor de cores vibrantes que nao existe no setup).
+            # - type: custom:button-card
+            #   entity: media_player.echo_show
+            #   template:
+            #     - base
+            #     - media_premium
+            #     - icon_homepod
+            # NOVO: usa icon_tv (genericamente funcional, sem dependencias externas)
             - type: custom:button-card
               entity: media_player.echo_show
               template:
                 - base
                 - media_premium
-                # - icon_tv
-                - icon_homepod
+                - icon_tv
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:
@@ -287,11 +314,20 @@
       cards:
         ########## SLIDE 1: ARTWORK FULLSCREEN ##########
         # FIX: Card unico usando media_player.currently_playing
+        # ANTERIOR: usava template conditional_media (mesmo problema que Desktop)
+        # - type: custom:button-card
+        #   entity: media_player.currently_playing
+        #   name: ' '
+        #   template:
+        #     - conditional_media
+        #     - progress_bar
+        #     - icon_play_pause
+        # NOVO: usa template media (mais simples, sem JS de DOM navigation)
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
           template:
-            - conditional_media
+            - media
             - progress_bar
             - icon_play_pause
           tap_action:
@@ -304,8 +340,10 @@
             action: more-info
 
         ########## SLIDE 2: GRID DE BOTOES ##########
+        # ANTERIOR: sem square: false — botoes inferiores eram cortados
         - type: grid
           columns: 2
+          square: false
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
@@ -313,13 +351,20 @@
                 - base
                 - media_premium
                 - icon_tv
+            # ANTERIOR: icon_homepod causava erro — dependia de variables.vibrant_data
+            # - type: custom:button-card
+            #   entity: media_player.echo_show
+            #   template:
+            #     - base
+            #     - media_premium
+            #     - icon_homepod
+            # NOVO: usa icon_tv (sem dependencias externas)
             - type: custom:button-card
               entity: media_player.echo_show
               template:
                 - base
                 - media_premium
-                # - icon_tv
-                - icon_homepod
+                - icon_tv
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:

@@ -126,9 +126,15 @@ browser_mod:
                 entity: vacuum.roborock_s7
                 # ANTERIOR:
                 # vacuum_platform: Roborock
-                vacuum_platform: default
+                # ANTERIOR 2: vacuum_platform alterado para default em tentativa anterior
+                # vacuum_platform: default
+                # NOVO: restaurado vacuum_platform correto para Roborock
+                vacuum_platform: Roborock
                 map_source:
-                  camera: image.roborock_s7_map_0_custom
+                  # ANTERIOR: entidade com sufixo _custom nao existe no HA
+                  # camera: image.roborock_s7_map_0_custom
+                  # NOVO: entidade correta sem sufixo _custom
+                  camera: image.roborock_s7_map_0
                 calibration_source:
                   camera: true
                 map_locked: true

@@ -11,15 +11,24 @@
     - type: custom:button-card
       name: >
         <ha-icon icon="mdi:reload"></ha-icon> Refresh
+      # ANTERIOR: browser_mod.sequence encadeava shell_command (git pull europeu) + lovelace_reload().
+      # No contexto do usuario, o shell_command nao faz nada util, e lovelace_reload() nao
+      # produz efeito visivel se nao ha mudancas pendentes no YAML.
+      # tap_action:
+      #   action: call-service
+      #   service: browser_mod.sequence
+      #   service_data:
+      #     sequence:
+      #       - service: shell_command.refresh_lovelace
+      #       - service: browser_mod.javascript
+      #         data:
+      #           code: lovelace_reload()
+      # NOVO: hard reload do navegador — unico efeito util no contexto do usuario
       tap_action:
         action: call-service
-        service: browser_mod.sequence
+        service: browser_mod.javascript
         service_data:
-          sequence:
-            - service: shell_command.refresh_lovelace
-            - service: browser_mod.javascript
-              data:
-                code: lovelace_reload()
+          code: location.reload()
       template:
         - footer
     - type: custom:button-card

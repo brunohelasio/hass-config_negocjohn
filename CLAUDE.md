@@ -1301,3 +1301,149 @@ Apos migracao para `frosted_dark_sagalang`, o dashboard apresentou regressao vis
 - Correcao estrutural do popup Roborock mantida (row valida em `entities`).
 - Presenca em avatares na base da sidebar mantida.
 
+
+
+---
+
+## Registro de Implementacao — Correcoes de 5 Problemas Persistentes (2026-04-01)
+
+### Problemas corrigidos
+
+#### Problema 1 — Presenca desalinhada na Sidebar
+
+**Arquivo:** `config/dashboards/templates/button_card_templates/tpl_sidebar.yaml`
+
+**Causa-raiz:** O bloco "PESSOAS EM CASA" (wrapper div + avatares) nao tinha padding-left,
+ficando rente a borda esquerda do container. Os badges de Luzes/Midia/Clima possuem
+`padding: 12px 16px`, portanto o icone/texto dos badges comeca a 16px da esquerda.
+O container "PESSOAS EM CASA" comeava a 0px, causando desalinhamento visivel.
+
+**Solucao aplicada:**
+- Wrapper externo do bloco presenca: adicionado `padding-left: 12px`
+- Div interno dos avatares: adicionado `padding-left: 4px` (total: 16px da esquerda)
+- Codigo original comentado inline antes da alteracao
+
+**Rollback:** descomentar o bloco `<!-- ORIGINAL: ... FIM ORIGINAL -->` e remover o bloco NOVO.
+
+---
+
+#### Problema 2 — Botao Refresh sem efeito
+
+**Arquivos:**
+- `config/dashboards/views/media-grid/footer_copy.yaml`
+- `config/dashboards/templates/streamline_templates/streamline-card.yaml`
+
+(Nota: `shared/footer-shared.yaml` ja estava corrigido desde sessao anterior.)
+
+**Causa-raiz:** O botao Refresh chamava `browser_mod.sequence` com dois passos:
+1. `shell_command.refresh_lovelace` — fazia git pull do repo europeu ngocjohn (inutil no contexto do usuario)
+2. `browser_mod.javascript: lovelace_reload()` — sem mudancas pendentes no YAML, nao produzia efeito visivel
+
+**Solucao aplicada:** Substituido por `browser_mod.javascript` com `code: location.reload()`
+— hard reload do navegador no tablet, unico efeito util no contexto atual.
+
+**Rollback:** descomentar o bloco `# ANTERIOR: ...` e remover o bloco `# NOVO:`.
+
+---
+
+#### Problema 3 — Vacuum popup com erro de configuracao
+
+**Arquivo:** `config/dashboards/shared/popup/footer/footer_vacuum.yaml`
+
+**Causa-raiz:** O `map_source.camera` referenciava `image.roborock_s7_map_0_custom`
+(com sufixo `_custom`) que nao existe no HA. A entidade correta criada pela integracao
+Roborock e `image.roborock_s7_map_0` (sem sufixo). Adicionalmente, `vacuum_platform`
+estava como `default` em vez de `Roborock`.
+
+**Solucao aplicada:**
+- `camera: image.roborock_s7_map_0_custom` → `camera: image.roborock_s7_map_0`
+- `vacuum_platform: default` → `vacuum_platform: Roborock`
+- Linhas anteriores comentadas inline
+
+**Rollback:** reverter as duas linhas para os valores comentados.
+
+---
+
+#### Problema 4 — Bloco Climate: botoes sem icone SVG + 4o botao com erro
+
+**Arquivo:** `config/dashboards/templates/streamline_templates/tpl_grid_climate.yaml`
+
+**Causa-raiz:**
+- Posicoes 1 e 2 (`grid_air_purifier`, `grid_thermostat`) usavam entidades europeias
+  (`sensor.home_climate`) com templates `airpurifier`/`thermostat` que nao existem no setup.
+- Posicoes 3 e 4 usavam `template: base` sem o icone SVG proprio `icon_climate`.
+- O 4o botao (`grid_covers_bedroom`) estava apontando para `climate.ac_quarto_miguel`
+  (posicao 3 duplicada) em vez de `climate.ac_quarto_casal` (placeholder).
+
+**Solucao aplicada:** Todo o bloco anterior foi comentado. Novos 4 templates criados:
+
+| Posicao | Key streamline | Entidade | Template |
+|---------|----------------|----------|---------|
+| 1 | `grid_air_purifier` | `climate.sl_ar_condicionado` | `tpl_popup_climate + icon_climate` |
+| 2 | `grid_thermostat` | `climate.ac_office` | `tpl_popup_climate + icon_climate` |
+| 3 | `grid_covers_living` | `climate.ac_quarto_miguel` | `tpl_popup_climate + icon_climate` |
+| 4 | `grid_covers_bedroom` | *(sem entity — placeholder)* | `base + icon_climate` |
+
+- Botoes ativos: `perform-action: climate.toggle` com `haptic: success`
+- Placeholder AC Q.Casal: `opacity: 0.45`, `cursor: default`, sem acao
+- `climate-status.yaml` NAO foi alterado (ja referenciava os 4 streamline templates corretamente)
+
+**Rollback:** descomentar o bloco `# --- CÓDIGO ORIGINAL COMENTADO ---` e remover os novos templates.
+
+---
+
+#### Problema 5 — Bloco Media: erros no Slide 1, Slide 2 cortado, Echo com erro
+
+**Arquivo:** `config/dashboards/views/main-grid/grid_media.yaml`
+
+##### 5A. Slide 1 — template conditional_media causava erro de button-card
+
+**Causa-raiz:** O template `conditional_media` continha:
+1. JavaScript de DOM navigation (`this.getRootNode().host`) para interceptar eventos do swipe-card
+2. Acesso a `entity.attributes.data` sem verificacao de null
+3. `aspect_ratio: 1000/996` que forcava o Slide 1 a ser quadrado
+
+Quando `media_player.currently_playing` estava `off`/`unavailable`, o JS lancava
+excecao, causando o erro vermelho de button-card.
+
+**Solucao:** Substituido `conditional_media` por `media` (template mais simples que
+exibe artwork via `background-image` sem navegacao DOM). Aplicado nos 2 breakpoints.
+
+##### 5B. Slide 2 — botoes inferiores cortados
+
+**Causa-raiz:** O swipe-card redimensionava todos os slides pela altura do Slide 1
+(que tinha `aspect_ratio: 1000/996`, virtualmente quadrado). O grid 2x2 do Slide 2
+precisava de mais altura para os 4 botoes, mas era cortado pelo container.
+
+**Solucao:** Adicionado `square: false` no `type: grid` do Slide 2 (ambos os breakpoints).
+Isso evita que os botoes forcem aspect-ratio quadrado, permitindo auto-dimensionamento.
+
+##### 5C. Echo Show — erro com icon_homepod
+
+**Causa-raiz:** Template `icon_homepod` acessa `variables.vibrant_data.LightVibrant`
+(sensor de cores vibrantes que nao existe no setup). Combinado com `media_premium`
+que define `custom_fields.circle`, causava conflito e erro de button-card.
+
+**Solucao:** Substituido `icon_homepod` por `icon_tv` no card do Echo Show.
+O `icon_tv` e genericamente funcional e nao tem dependencias externas. Aplicado
+nos 2 breakpoints. Codigo anterior comentado inline.
+
+---
+
+### Resumo de arquivos alterados
+
+| Arquivo | Tipo de alteracao |
+|---------|------------------|
+| `tpl_sidebar.yaml` | padding-left adicionado ao wrapper de presenca |
+| `footer_copy.yaml` | Refresh → location.reload() |
+| `streamline-card.yaml` | Refresh → location.reload() |
+| `footer_vacuum.yaml` | camera entity + vacuum_platform corrigidos |
+| `tpl_grid_climate.yaml` | 4 ACs reescritos com tpl_popup_climate + icon_climate |
+| `grid_media.yaml` | Slide 1: media template; Slide 2: square:false; Echo: icon_tv |
+
+### Para rollback completo
+
+Todos os blocos originais estao comentados inline nos respectivos arquivos com marcadores:
+- `# ANTERIOR:` ou `# --- CÓDIGO ORIGINAL COMENTADO ---`
+- Para reverter: descomentar o bloco ANTERIOR e comentar/remover o bloco NOVO.
+

@@ -1,3 +1,264 @@
+# ==============================================================================
+# POPUP ASPIRADOR — Roborock S7
+# Estrutura original ngocjohn com !include snippets, adequada às entidades do usuario.
+# 3 colunas: Summary | Map | Settings (conforme screenshot Roidmi EVE Plus original)
+# ==============================================================================
+#
+# --- CÓDIGO COMENTADO: versao self-contained (2026-04-01 primeira tentativa) ---
+# Motivo: O usuario pediu para utilizar a estrutura ORIGINAL do popup ngocjohn
+# (com !include snippets, entities com title, card_mod class header, icon_only buttons).
+# A versao self-contained abaixo usava layout-card com grid explicito de 3 colunas,
+# popup_styles inline, e botoes com estilo custom. Nao seguia o padrao visual do ngocjohn.
+#
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: " "
+#     size: wide
+#     style: >
+#       --popup-background-color: transparent;
+#       --mdc-dialog-min-width: 1100px !important;
+#       --mdc-dialog-max-width: 1100px !important;
+#     popup_styles:
+#       - style: all
+#         styles: |
+#           ha-dialog {
+#             --ha-dialog-surface-background: transparent;
+#             --ha-card-background: transparent;
+#             --ha-dialog-scrim-backdrop-filter: blur(24px) saturate(100%);
+#             --mdc-dialog-scrim-color: rgba(0,0,0,0.55);
+#             --dialog-surface-margin-top: auto;
+#             --mdc-dialog-min-width: 1100px;
+#             --mdc-dialog-max-width: 1100px;
+#           }
+#     content:
+#       type: custom:mod-card
+#       card_mod:
+#         style:
+#           .: |
+#             ha-card {
+#               background: transparent !important;
+#               border: none !important;
+#               box-shadow: none !important;
+#             }
+#           layout-card$grid-layout:
+#             $: |
+#               .grid > * {
+#                 border-right: 1px solid rgba(255,255,255,0.10);
+#                 padding-right: 20px;
+#                 margin-right: 10px;
+#               }
+#               .grid > *:last-child {
+#                 border-right: none;
+#                 padding-right: 0;
+#                 margin-right: 0;
+#               }
+#               @media (max-width: 800px) {
+#                 .grid > * {
+#                   border-right: none;
+#                   border-bottom: 1px solid rgba(255,255,255,0.10);
+#                   padding-right: 0;
+#                   margin-right: 0;
+#                   padding-bottom: 20px;
+#                   margin-bottom: 10px;
+#                 }
+#                 .grid > *:last-child {
+#                   border-bottom: none;
+#                   padding-bottom: 0;
+#                   margin-bottom: 0;
+#                 }
+#               }
+#             $hui-vertical-stack-card:
+#               $: |
+#                 hui-horizontal-stack-card {
+#                   padding: 12px 0 0 0;
+#                 }
+#               $hui-entities-card$: |
+#                 .card-content { padding: 0; letter-spacing: normal; }
+#               $hui-horizontal-stack-card$: |
+#                 #root { justify-content: space-evenly; }
+#       card:
+#         type: custom:layout-card
+#         layout_type: custom:grid-layout
+#         layout:
+#           grid-template-columns: 320px 1fr 280px
+#           grid-template-rows: 1fr
+#           grid-template-areas: '"summary map settings"'
+#           mediaquery:
+#             "(max-width: 800px)":
+#               grid-template-columns: 1fr
+#               grid-template-rows: auto auto auto
+#               grid-template-areas: |
+#                 "summary"
+#                 "map"
+#                 "settings"
+#         cards:
+#           - type: vertical-stack
+#             view_layout:
+#               grid-area: summary
+#             cards:
+#               - type: entities
+#                 card_mod:
+#                   style: |
+#                     ha-card { background: transparent !important; border: none !important; box-shadow: none !important; }
+#                 entities:
+#                   - entity: sensor.roborock_s7_status
+#                     name: Status
+#                   - entity: sensor.roborock_s7_comodo_atual
+#                     name: Cômodo Atual
+#                   - entity: sensor.roborock_s7_vacuum_error
+#                     name: Erro
+#                   - entity: binary_sensor.roborock_s7_mop_attached
+#                     name: Mop Acoplado
+#                   - entity: binary_sensor.roborock_s7_water_box_attached
+#                     name: Caixa de Água
+#                   - entity: binary_sensor.roborock_s7_water_shortage
+#                     name: Falta de Água
+#                   - type: custom:bar-card
+#                     width: 55%
+#                     height: 2em
+#                     decimal: 0
+#                     unit_of_measurement: '%'
+#                     positions:
+#                       icon: outside
+#                       indicator: 'off'
+#                       name: outside
+#                     severity:
+#                       - color: '#303435'
+#                         from: 11
+#                         to: 100
+#                       - color: '#6d2525'
+#                         from: 0
+#                         to: 10
+#                     entity_row: true
+#                     entities:
+#                       - entity: sensor.roborock_s7_bateria
+#                         name: Bateria
+#                         icon: mdi:battery
+#                       - entity: sensor.roborock_s7_tempo_restante_do_filtro
+#                         name: Filtro
+#                       - entity: sensor.roborock_s7_tempo_restante_da_escova_principal
+#                         name: Escova Principal
+#                       - entity: sensor.roborock_s7_tempo_restante_da_escova_lateral
+#                         name: Escova Lateral
+#                       - entity: sensor.roborock_s7_tempo_restante_do_sensor
+#                         name: Sensores
+#                   - entity: select.roborock_s7_intensidade_do_mop
+#                     name: Intensidade do Mop
+#                   - entity: select.roborock_s7_modo_mop
+#                     name: Modo do Mop
+#               - type: horizontal-stack
+#                 cards:
+#                   - type: custom:button-card
+#                     entity: vacuum.roborock_s7
+#                     icon: mdi:play-pause
+#                     show_name: false
+#                     styles:
+#                       card:
+#                         - height: 50px
+#                         - border-radius: 12px
+#                         - background: rgba(255,255,255,0.07)
+#                         - box-shadow: none
+#                         - border: none
+#                         - aspect-ratio: unset
+#                       icon:
+#                         - color: rgba(255,255,255,0.70)
+#                     tap_action:
+#                       action: call-service
+#                       service: >
+#                         [[[ return entity.state === 'docked' || entity.state === 'paused' ? 'vacuum.start' : 'vacuum.pause'; ]]]
+#                       service_data:
+#                         entity_id: >
+#                           [[[ return entity.entity_id; ]]]
+#                   - type: custom:button-card
+#                     entity: vacuum.roborock_s7
+#                     icon: mdi:arrow-u-down-left
+#                     show_name: false
+#                     styles:
+#                       card:
+#                         - height: 50px
+#                         - border-radius: 12px
+#                         - background: rgba(255,255,255,0.07)
+#                         - box-shadow: none
+#                         - border: none
+#                         - aspect-ratio: unset
+#                       icon:
+#                         - color: rgba(255,255,255,0.70)
+#                     tap_action:
+#                       action: call-service
+#                       service: vacuum.return_to_base
+#                       service_data:
+#                         entity_id: >
+#                           [[[ return entity.entity_id; ]]]
+#           - type: custom:xiaomi-vacuum-map-card
+#             view_layout:
+#               grid-area: map
+#             vacuum_platform: Roborock
+#             entity: vacuum.roborock_s7
+#             map_source:
+#               camera: image.roborock_s7_map_0
+#             calibration_source:
+#               camera: true
+#             map_locked: true
+#             card_mod:
+#               style: |
+#                 ha-card {
+#                   background: transparent !important;
+#                   border: none !important;
+#                   box-shadow: none !important;
+#                   --map-card-primary-color: rgba(255,255,255,0.08);
+#                   --map-card-secondary-color: none;
+#                   --map-card-secondary-text-color: rgba(255,255,255,0.55);
+#                   --map-card-zoomer-background: transparent;
+#                   --map-card-predefined-rectangle-fill-color: none;
+#                   --map-card-predefined-rectangle-line-color: none;
+#                   --map-card-predefined-rectangle-line-color-selected: rgba(255,255,255,0.5);
+#                   --map-card-predefined-rectangle-fill-color-selected: rgba(42,124,194,0.1);
+#                   --map-card-predefined-rectangle-icon-background-color-selected: rgb(42,124,194);
+#                   --map-card-internal-big-radius: 0.6em !important;
+#                 }
+#           - type: vertical-stack
+#             view_layout:
+#               grid-area: settings
+#             cards:
+#               - type: entities
+#                 card_mod:
+#                   style: |
+#                     ha-card { background: transparent !important; border: none !important; box-shadow: none !important; }
+#                 entities:
+#                   - entity: number.roborock_s7_volume
+#                     name: Volume
+#                   - entity: switch.roborock_s7_nao_perturbe
+#                     name: Não Perturbe
+#                   - entity: time.roborock_s7_comecar_nao_perturbe
+#                     name: Início NP
+#                   - entity: time.roborock_s7_terminar_nao_perturbe
+#                     name: Fim NP
+#                   - entity: switch.roborock_s7_dock_luz_indicadora_de_status
+#                     name: Luz Indicadora
+#                   - entity: switch.roborock_s7_dock_bloqueio_infantil
+#                     name: Bloqueio Infantil
+#                   - type: divider
+#                     style:
+#                       padding: 4px 0
+#                   - entity: sensor.roborock_s7_area_de_limpeza
+#                     name: Área (Última)
+#                   - entity: sensor.roborock_s7_tempo_de_limpeza
+#                     name: Tempo (Última)
+#                   - entity: sensor.roborock_s7_area_total_de_limpeza
+#                     name: Área Total
+#                   - entity: sensor.roborock_s7_tempo_total_de_limpeza
+#                     name: Tempo Total
+#                   - entity: sensor.roborock_s7_contagem_total_de_limpeza
+#                     name: Nº de Limpezas
+# --- FIM CÓDIGO COMENTADO (versao self-contained) ---
+
+# ==============================================================================
+# NOVO: Estrutura original ngocjohn restaurada com entidades Roborock S7.
+# Usa !include snippets (style_popup_center, style_popup_footer, popup_footer_layout)
+# para manter visual identico ao screenshot original (Roidmi EVE Plus).
+# ==============================================================================
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
@@ -14,7 +275,10 @@ browser_mod:
         layout_type: custom:grid-layout
         layout: !include ../../snippets/popup_footer_layout.yaml
         cards:
-          ### SUMMARY
+
+          # ================================================================
+          # COLUNA 1 — SUMMARY
+          # ================================================================
           - type: entities
             title: Summary
             show_header_toggle: false
@@ -23,53 +287,38 @@ browser_mod:
             entities:
               - entity: vacuum.roborock_s7
                 name: Roborock S7
-                icon: custom:roborock
-                # ANTERIOR (invalido em entities row padrao):
-                # secondary_info:
-                #   entity: sensor.roborock_s7_bateria
-                #   postfix: ' %'
-                #   prefix: 'Battery: '
                 secondary_info: last-changed
-              - entity: sensor.roborock_s7_bateria
-                name: Bateria
-              - entity: sensor.roborock_s7_status
-                name: Status
-              - entity: sensor.roborock_s7_comodo_atual
-                name: Cômodo Atual
+
               - entity: sensor.roborock_s7_vacuum_error
                 name: Erro
+
+              - entity: sensor.roborock_s7_status
+                name: Status
+
+              - entity: sensor.roborock_s7_comodo_atual
+                name: Cômodo Atual
+
               - entity: binary_sensor.roborock_s7_mop_attached
                 name: Mop Acoplado
+
               - entity: binary_sensor.roborock_s7_water_box_attached
                 name: Caixa de Água
+
               - entity: binary_sensor.roborock_s7_water_shortage
                 name: Falta de Água
+
+              - entity: sensor.roborock_s7_bateria
+                name: Bateria
+
               - type: divider
+
               - entity: select.roborock_s7_intensidade_do_mop
                 name: Intensidade do Mop
+
               - entity: select.roborock_s7_modo_mop
                 name: Modo do Mop
-              # ANTERIOR (causava Configuration Error ao usar card-container
-              # como row de entities):
-              # - type: custom:mod-card
-              #   card_mod:
-              #     style:
-              #       hui-horizontal-stack-card$: |
-              #         #root {
-              #           justify-content: space-between!important;
-              #           padding: 1em;
-              #         }
-              #   card:
-              #     type: horizontal-stack
-              #     cards:
-              #       - type: custom:button-card
-              #         entity: vacuum.roborock_s7
-              #         icon: mdi:play-pause
-              #         variables:
-              #           vacuum_action: |
-              #             [[[ ... ]]]
-              #         tap_action: '[[[ return variables.vacuum_action ]]]'
-              #         template: icon_only
+
+              # Botoes de controle (dentro de entities via hui-element, padrao ngocjohn)
               - type: custom:hui-element
                 card_type: horizontal-stack
                 cards:
@@ -94,6 +343,7 @@ browser_mod:
                         ]]]
                     tap_action: '[[[ return variables.vacuum_action ]]]'
                     template: icon_only
+
                   - type: custom:button-card
                     entity: vacuum.roborock_s7
                     icon: mdi:battery-charging
@@ -103,18 +353,16 @@ browser_mod:
                       service_data:
                         entity_id: vacuum.roborock_s7
                     template: icon_only
+
                   - type: custom:button-card
                     icon: mdi:bell
                     tap_action:
                       action: none
                     template: icon_only
-                  - type: custom:button-card
-                    icon: mdi:delete-empty
-                    tap_action:
-                      action: none
-                    template: icon_only
 
-          ### MAP
+          # ================================================================
+          # COLUNA 2 — MAP
+          # ================================================================
           - type: entities
             title: Map
             show_header_toggle: false
@@ -124,13 +372,6 @@ browser_mod:
               - type: custom:hui-element
                 card_type: custom:xiaomi-vacuum-map-card
                 entity: vacuum.roborock_s7
-                # HISTORICO de vacuum_platform:
-                # v1 (ngocjohn original): vacuum_platform: Roborock
-                # v2 (tentativa de correcao anterior): vacuum_platform: default
-                # v3 (2026-04-01, FIX): vacuum_platform: Roborock (correto para integracao Roborock no HA)
-                # HISTORICO de map_source.camera:
-                # v1: image.roborock_s7_map_0_custom (sufixo _custom nao existe no HA do usuario)
-                # v2 (2026-04-01, FIX): image.roborock_s7_map_0 (entidade real confirmada pelo usuario)
                 vacuum_platform: Roborock
                 map_source:
                   camera: image.roborock_s7_map_0
@@ -138,30 +379,44 @@ browser_mod:
                   camera: true
                 map_locked: true
 
-          ## SETTINGS
+          # ================================================================
+          # COLUNA 3 — SETTINGS
+          # ================================================================
           - type: entities
             title: Settings
             show_header_toggle: false
             entities:
               - entity: number.roborock_s7_volume
                 name: Volume
+
               - entity: switch.roborock_s7_nao_perturbe
                 name: Não Perturbe
+
               - entity: time.roborock_s7_comecar_nao_perturbe
                 name: Início NP
+
               - entity: time.roborock_s7_terminar_nao_perturbe
                 name: Fim NP
+
               - entity: switch.roborock_s7_dock_luz_indicadora_de_status
                 name: Luz Indicadora
+
               - entity: switch.roborock_s7_dock_bloqueio_infantil
                 name: Bloqueio Infantil
+
+              - type: divider
+
               - entity: sensor.roborock_s7_area_de_limpeza
                 name: Área (Última)
+
               - entity: sensor.roborock_s7_tempo_de_limpeza
                 name: Tempo (Última)
+
               - entity: sensor.roborock_s7_area_total_de_limpeza
                 name: Área Total
+
               - entity: sensor.roborock_s7_tempo_total_de_limpeza
                 name: Tempo Total
+
               - entity: sensor.roborock_s7_contagem_total_de_limpeza
                 name: Nº de Limpezas

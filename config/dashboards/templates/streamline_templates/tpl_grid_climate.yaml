@@ -4,6 +4,12 @@
 #                                               #
 ## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+# --- CÓDIGO ORIGINAL COMENTADO (versoes sem icon_climate, usando template: base ou thermostat) ---
+# grid_air_purifier:   → sensor.home_climate + template airpurifier (europeu, nao existe)
+# grid_thermostat:     → sensor.home_climate + template thermostat (europeu, nao existe)
+# grid_covers_living:  → climate.ac_office + template base (sem icon_climate)
+# grid_covers_bedroom: → climate.ac_quarto_miguel + template base (sem icon_climate)
+#
 # ANTERIOR: AIR PURIFIER — template airpurifier acessa entity.attributes.purifier
 # que nao existe no setup do usuario (sem Dyson/Xiaomi purifier).
 # grid_air_purifier:
@@ -15,86 +21,173 @@
 #     template:
 #       - airpurifier
 #     double_tap_action: !include ../../shared/popup/airpurifier.yaml
-# NOVO: AC Sala — usa thermostat template adaptado
+# ANTERIOR: AC Sala — usava template base sem icon_climate
+# grid_air_purifier:
+#   card:
+#     type: custom:button-card
+#     entity: climate.sl_ar_condicionado
+#     name: AC Sala
+#     template:
+#       - base
+#     variables:
+#       state_on: >
+#         [[[
+#           return entity && ['cool','heat','fan_only','dry','heat_cool','auto'].indexOf(entity.state) !== -1;
+#         ]]]
+#     tap_action:
+#       action: toggle
+#     hold_action:
+#       action: more-info
+#   # THERMOSTAT
+# grid_thermostat:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.home_climate
+#     name: Temperature
+#     template:
+#       - thermostat
+#     double_tap_action: !include ../../shared/popup/thermostat.yaml
+#     tap_action:
+#       action: call-service
+#       service: input_boolean.toggle
+#       service_data:
+#         entity_id: input_boolean.svg_temp_humid
+#   # ANTERIOR: LIVING ROOM COVERS — entidade europeia cover.living_room_cover nao existe
+#   # grid_covers_living:
+#   #   card:
+#   #     type: custom:button-card
+#   #     entity: cover.living_room_cover
+#   #     name: Lounge
+#   #     # hold_action: !include ../../shared/honeycomb/cover_living.yaml
+#   #     template:
+#   #       - cover
+# ANTERIOR: AC Office — usava template base sem icon_climate
+# grid_covers_living:
+#   card:
+#     type: custom:button-card
+#     entity: climate.ac_office
+#     name: AC Office
+#     template:
+#       - base
+#     variables:
+#       state_on: >
+#         [[[
+#           return entity && ['cool','heat','fan_only','dry','heat_cool','auto'].indexOf(entity.state) !== -1;
+#         ]]]
+#     tap_action:
+#       action: toggle
+#     hold_action:
+#       action: more-info
+#   # ANTERIOR: BEDROOM COVERS — entidade europeia cover.bedroom_shutters nao existe
+#   # grid_covers_bedroom:
+#   #   card:
+#   #     type: custom:button-card
+#   #     entity: cover.bedroom_shutters
+#   #     name: Bedroom
+#   #     # hold_action: !include ../../shared/honeycomb/cover_bedroom.yaml
+#   #     template:
+#   #       - cover
+# ANTERIOR: AC Quarto Miguel — usava template base sem icon_climate
+# grid_covers_bedroom:
+#   card:
+#     type: custom:button-card
+#     entity: climate.ac_quarto_miguel
+#     name: AC Q.Miguel
+#     template:
+#       - base
+#     variables:
+#       state_on: >
+#         [[[
+#           return entity && ['cool','heat','fan_only','dry','heat_cool','auto'].indexOf(entity.state) !== -1;
+#         ]]]
+#     tap_action:
+#       action: toggle
+#     hold_action:
+#       action: more-info
+# --- FIM CÓDIGO ORIGINAL ---
+
+# NOVO: 4 botoes de AC usando tpl_popup_climate + icon_climate (SVG proprio do repositorio).
+# tpl_popup_climate (tpl_sectors.yaml): herda de base, define state_on correto para climate.
+# icon_climate (tpl_icons.yaml): SVG do ar-condicionado com cor dinamica (azul ativo, cinza off).
+# Posicao 1: AC Sala
 grid_air_purifier:
   card:
     type: custom:button-card
     entity: climate.sl_ar_condicionado
     name: AC Sala
+    show_icon: false
     template:
-      - base
-    variables:
-      state_on: >
-        [[[
-          return entity && ['cool','heat','fan_only','dry','heat_cool','auto'].indexOf(entity.state) !== -1;
-        ]]]
+      - tpl_popup_climate
+      - icon_climate
     tap_action:
-      action: toggle
+      action: perform-action
+      perform_action: climate.toggle
+      target:
+        entity_id: climate.sl_ar_condicionado
+      haptic: success
+    double_tap_action:
+      action: more-info
     hold_action:
       action: more-info
-  # THERMOSTAT
+
+# Posicao 2: AC Office
 grid_thermostat:
-  card:
-    type: custom:button-card
-    entity: sensor.home_climate
-    name: Temperature
-    template:
-      - thermostat
-    double_tap_action: !include ../../shared/popup/thermostat.yaml
-    tap_action:
-      action: call-service
-      service: input_boolean.toggle
-      service_data:
-        entity_id: input_boolean.svg_temp_humid
-  # ANTERIOR: LIVING ROOM COVERS — entidade europeia cover.living_room_cover nao existe
-  # grid_covers_living:
-  #   card:
-  #     type: custom:button-card
-  #     entity: cover.living_room_cover
-  #     name: Lounge
-  #     # hold_action: !include ../../shared/honeycomb/cover_living.yaml
-  #     template:
-  #       - cover
-  # NOVO: AC Office
-grid_covers_living:
   card:
     type: custom:button-card
     entity: climate.ac_office
     name: AC Office
+    show_icon: false
     template:
-      - base
-    variables:
-      state_on: >
-        [[[
-          return entity && ['cool','heat','fan_only','dry','heat_cool','auto'].indexOf(entity.state) !== -1;
-        ]]]
+      - tpl_popup_climate
+      - icon_climate
     tap_action:
-      action: toggle
+      action: perform-action
+      perform_action: climate.toggle
+      target:
+        entity_id: climate.ac_office
+      haptic: success
+    double_tap_action:
+      action: more-info
     hold_action:
       action: more-info
-  # ANTERIOR: BEDROOM COVERS — entidade europeia cover.bedroom_shutters nao existe
-  # grid_covers_bedroom:
-  #   card:
-  #     type: custom:button-card
-  #     entity: cover.bedroom_shutters
-  #     name: Bedroom
-  #     # hold_action: !include ../../shared/honeycomb/cover_bedroom.yaml
-  #     template:
-  #       - cover
-  # NOVO: AC Quarto Miguel
-grid_covers_bedroom:
+
+# Posicao 3: AC Q.Miguel
+grid_covers_living:
   card:
     type: custom:button-card
     entity: climate.ac_quarto_miguel
     name: AC Q.Miguel
+    show_icon: false
     template:
-      - base
-    variables:
-      state_on: >
-        [[[
-          return entity && ['cool','heat','fan_only','dry','heat_cool','auto'].indexOf(entity.state) !== -1;
-        ]]]
+      - tpl_popup_climate
+      - icon_climate
     tap_action:
-      action: toggle
+      action: perform-action
+      perform_action: climate.toggle
+      target:
+        entity_id: climate.ac_quarto_miguel
+      haptic: success
+    double_tap_action:
+      action: more-info
     hold_action:
       action: more-info
+
+# Posicao 4: AC Q.Casal — placeholder visivel, sem acao (entidade a confirmar futuramente)
+grid_covers_bedroom:
+  card:
+    type: custom:button-card
+    name: AC Q.Casal
+    show_icon: false
+    template:
+      - base
+      - icon_climate
+    tap_action:
+      action: none
+    hold_action:
+      action: none
+    double_tap_action:
+      action: none
+    styles:
+      card:
+        - opacity: "0.45"
+        - cursor: "default"

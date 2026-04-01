@@ -210,23 +210,44 @@
       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
       cards:
         ########## SLIDE 1: ARTWORK FULLSCREEN ##########
-        # ANTERIOR: usava template [conditional_media, progress_bar, icon_play_pause]
-        # Problema: conditional_media tem aspect_ratio:1000/996 que conflitava com autoHeight,
-        # alem de JS fragil (state_display com marquee + DOM navigation) que causava
-        # button-card error quando media_player.currently_playing estava off/unavailable.
-        # base_media acessava entity.attributes sem guard, causando TypeError quando
-        # entity era null.
-        #
-        # FIX: Card inline sem templates complexos — apenas background-image com
-        # try/catch guard, play/pause tap_action e more-info hold_action.
-        # Artwork exibido diretamente de entity.attributes.entity_picture (nativo HA).
-        # Sem dependencies de sensor.art_colors, sensor.youtube_thumbnail, etc.
+        # ORIGINAL COMENTADO — conditional cards dependiam de select.conditional_media
+        # cujo estado retornava nomes com whitespace (indentacao do Jinja2 macro),
+        # causando match falho e Slide 1 sempre vazio.
+        # - type: horizontal-stack
+        #   cards:
+        #     - type: conditional
+        #       conditions:
+        #         - entity: select.conditional_media
+        #           state: Smart TV Pro 2
+        #       card:
+        #         type: custom:button-card
+        #         entity: media_player.smart_tv_pro_2
+        #         ...
+        # FIX: Card unico usando media_player.currently_playing (universal media player)
+        # que herda automaticamente entity_picture do child ativo.
+        # ANTERIOR: usava template conditional_media que continha JavaScript de DOM navigation
+        # (this.getRootNode().host) e acesso a entity.attributes.data. Quando
+        # media_player.currently_playing esta off/unavailable, o JS lancava excecao
+        # causando o erro vermelho de button-card.
+        # - type: custom:button-card
+        #   entity: media_player.currently_playing
+        #   name: ' '
+        #   template:
+        #     - conditional_media
+        #     - progress_bar
+        #     - icon_play_pause
+        # NOVO: usa template media (mais simples) que exibe artwork sem JS complexo.
+        # O template media usa apenas CSS background-image para o artwork e nao
+        # acessa entity.attributes.data nem faz navegacao DOM. Quando a entidade
+        # esta off/unavailable, as variaveis media_off/entity_picture do base_media
+        # retornam graciosamente sem lancar excecoes, exibindo fundo cinza neutro.
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
-          show_icon: false
-          show_state: false
-          aspect_ratio: 1/1
+          template:
+            - media
+            - progress_bar
+            - icon_play_pause
           tap_action:
             action: call-service
             service: media_player.media_play_pause
@@ -253,16 +274,11 @@
                   ]]]
 
         ########## SLIDE 2: GRID DE BOTOES ##########
-        # FIX overflow: card_mod overflow:visible garante que os 4 botoes do grid 2x2
-        # nao sejam cortados quando o swipe-card aloca altura baseada no Slide 1.
-        # ANTERIOR: sem card_mod — linha inferior do grid ficava parcialmente oculta.
+        # ANTERIOR: sem square: false — aspect-ratio do Slide 1 forcava altura quadrada,
+        # cortando os botoes inferiores do grid 2x2.
         - type: grid
           columns: 2
-          card_mod:
-            style: |
-              #root {
-                overflow: visible !important;
-              }
+          square: false
           cards:
             # Slot 1: Smart TV
             - type: custom:button-card
@@ -271,20 +287,21 @@
                 - base
                 - media_premium
                 - icon_tv
-            # Slot 2: Echo Show
-            # ANTERIOR: icon_homepod causava button-card error (possivelmente por
-            # conflito de template chain: base nao inclui base_media, entao
-            # variables.media_on era undefined no contexto de icon_homepod).
-            # FIX: icon_tv confirmado funcional para este slot. icon_homepod pode
-            # ser reativado futuramente se o erro for diagnosticado.
-            # ANTERIOR: - icon_homepod
+            # ANTERIOR: icon_homepod causava erro — dependia de variables.vibrant_data
+            # (sensor de cores vibrantes que nao existe no setup).
+            # - type: custom:button-card
+            #   entity: media_player.echo_show
+            #   template:
+            #     - base
+            #     - media_premium
+            #     - icon_homepod
+            # NOVO: usa icon_tv (genericamente funcional, sem dependencias externas)
             - type: custom:button-card
               entity: media_player.echo_show
               template:
                 - base
                 - media_premium
                 - icon_tv
-            # Slot 3: Spotify
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:
@@ -317,13 +334,23 @@
       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
       cards:
         ########## SLIDE 1: ARTWORK FULLSCREEN ##########
-        # FIX: Card inline seguro — ver comentario no bloco desktop acima
+        # FIX: Card unico usando media_player.currently_playing
+        # ANTERIOR: usava template conditional_media (mesmo problema que Desktop)
+        # - type: custom:button-card
+        #   entity: media_player.currently_playing
+        #   name: ' '
+        #   template:
+        #     - conditional_media
+        #     - progress_bar
+        #     - icon_play_pause
+        # NOVO: usa template media (mais simples, sem JS de DOM navigation)
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
-          show_icon: false
-          show_state: false
-          aspect_ratio: 1/1
+          template:
+            - media
+            - progress_bar
+            - icon_play_pause
           tap_action:
             action: call-service
             service: media_player.media_play_pause
@@ -350,13 +377,10 @@
                   ]]]
 
         ########## SLIDE 2: GRID DE BOTOES ##########
+        # ANTERIOR: sem square: false — botoes inferiores eram cortados
         - type: grid
           columns: 2
-          card_mod:
-            style: |
-              #root {
-                overflow: visible !important;
-              }
+          square: false
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
@@ -364,7 +388,14 @@
                 - base
                 - media_premium
                 - icon_tv
-            # ANTERIOR: icon_homepod → icon_tv (fix erro, ver comentario desktop)
+            # ANTERIOR: icon_homepod causava erro — dependia de variables.vibrant_data
+            # - type: custom:button-card
+            #   entity: media_player.echo_show
+            #   template:
+            #     - base
+            #     - media_premium
+            #     - icon_homepod
+            # NOVO: usa icon_tv (sem dependencias externas)
             - type: custom:button-card
               entity: media_player.echo_show
               template:

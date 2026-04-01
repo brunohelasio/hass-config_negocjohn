@@ -1305,141 +1305,205 @@ Apos migracao para `frosted_dark_sagalang`, o dashboard apresentou regressao vis
 
 ---
 
-## Registro de Implementacao — 2026-04-01 (Correções Estruturais: Climate, Media, Vacuum, Refresh, Alinhamento)
+## Registro de Implementacao — Correcoes de 5 Problemas Persistentes (2026-04-01)
 
-Implementacao consolidada de 5 correcoes estruturais e visuais conforme autorizacao
-do usuario em sessao de 2026-04-01. Todas as mudancas seguem a Regra de Ouro
-(codigo original comentado, nunca deletado).
+### Problemas corrigidos
 
-### 1. Alinhamento da Presença (Avatar) na Sidebar
+#### Problema 1 — Presenca desalinhada na Sidebar
 
 **Arquivo:** `config/dashboards/templates/button_card_templates/tpl_sidebar.yaml`
 
-**Problema:** O bloco "PESSOAS EM CASA" (avatar circular) aparecia mais à esquerda que
-os badges de Luzes, Mídia, Clima e o card de tempo. Diferença visual de 16px.
+**Causa-raiz:** O bloco "PESSOAS EM CASA" (wrapper div + avatares) nao tinha padding-left,
+ficando rente a borda esquerda do container. Os badges de Luzes/Midia/Clima possuem
+`padding: 12px 16px`, portanto o icone/texto dos badges comeca a 16px da esquerda.
+O container "PESSOAS EM CASA" comeava a 0px, causando desalinhamento visivel.
 
-**Causa-raiz:** Os badges usam `padding: 12px 16px` dentro do container com `padding:20px 16px 16px`.
-O conteúdo dos badges começa em 16+16=32px da borda da sidebar. Já o wrapper do bloco
-PESSOAS não tinha padding lateral adicional, ficando em apenas 16px (só o container).
+**Solucao aplicada:**
+- Wrapper externo do bloco presenca: adicionado `padding-left: 12px`
+- Div interno dos avatares: adicionado `padding-left: 4px` (total: 16px da esquerda)
+- Codigo original comentado inline antes da alteracao
 
-**Fix:** Adicionado `padding: 0 0 0 16px` ao `<div style="margin-bottom:0;">` wrapper
-do bloco PESSOAS, igualando o recuo ao dos outros blocos.
+**Rollback:** descomentar o bloco `<!-- ORIGINAL: ... FIM ORIGINAL -->` e remover o bloco NOVO.
 
-**Rollback:** Remover `padding: 0 0 0 16px` do wrapper (comentário inline preservado).
+---
 
-### 2. Botão Refresh (Footer)
+#### Problema 2 — Botao Refresh sem efeito
 
-**Status:** JÁ ESTAVA CORRETO no HEAD anterior (2026-03-31).
+**Arquivos:**
+- `config/dashboards/views/media-grid/footer_copy.yaml`
+- `config/dashboards/templates/streamline_templates/streamline-card.yaml`
 
-`footer-shared.yaml` já usava `browser_mod.javascript` com `code: location.reload()`
-(hard reload do navegador no tablet). Nenhuma alteração necessária.
+(Nota: `shared/footer-shared.yaml` ja estava corrigido desde sessao anterior.)
 
-### 3. Popup Vacuum — Entidade do Mapa e vacuum_platform
+**Causa-raiz:** O botao Refresh chamava `browser_mod.sequence` com dois passos:
+1. `shell_command.refresh_lovelace` — fazia git pull do repo europeu ngocjohn (inutil no contexto do usuario)
+2. `browser_mod.javascript: lovelace_reload()` — sem mudancas pendentes no YAML, nao produzia efeito visivel
+
+**Solucao aplicada:** Substituido por `browser_mod.javascript` com `code: location.reload()`
+— hard reload do navegador no tablet, unico efeito util no contexto atual.
+
+**Rollback:** descomentar o bloco `# ANTERIOR: ...` e remover o bloco `# NOVO:`.
+
+---
+
+#### Problema 3 — Vacuum popup com erro de configuracao
 
 **Arquivo:** `config/dashboards/shared/popup/footer/footer_vacuum.yaml`
 
-**Problema 1:** `map_source.camera: image.roborock_s7_map_0_custom` — sufixo `_custom`
-não existe no HA do usuário. A entidade real é `image.roborock_s7_map_0`.
+**Causa-raiz:** O `map_source.camera` referenciava `image.roborock_s7_map_0_custom`
+(com sufixo `_custom`) que nao existe no HA. A entidade correta criada pela integracao
+Roborock e `image.roborock_s7_map_0` (sem sufixo). Adicionalmente, `vacuum_platform`
+estava como `default` em vez de `Roborock`.
 
-**Problema 2:** `vacuum_platform: default` — valor incorreto para integração Roborock.
-O card `custom:xiaomi-vacuum-map-card` requer `vacuum_platform: Roborock`.
-
-**Fix:**
-- `image.roborock_s7_map_0_custom` → `image.roborock_s7_map_0`
+**Solucao aplicada:**
+- `camera: image.roborock_s7_map_0_custom` → `camera: image.roborock_s7_map_0`
 - `vacuum_platform: default` → `vacuum_platform: Roborock`
+- Linhas anteriores comentadas inline
 
-**Rollback:** Reverter para `_custom` e `default` (comentários inline preservados).
+**Rollback:** reverter as duas linhas para os valores comentados.
 
-### 4. Bloco Climatização — 4 Botões de AC com icon_climate
+---
 
-**Arquivo:** `config/dashboards/shared/grid-cards/climate-status.yaml`
+#### Problema 4 — Bloco Climate: botoes sem icone SVG + 4o botao com erro
 
-**Problema:** Bloco climate usava 4 `custom:streamline-card` com templates do setup
-europeu original (grid_air_purifier, grid_thermostat, grid_covers_living,
-grid_covers_bedroom) — entidades `sensor.home_climate`, `cover.living_room_cover`,
-`cover.bedroom_shutters` não existem no setup do usuário.
+**Arquivo:** `config/dashboards/templates/streamline_templates/tpl_grid_climate.yaml`
 
-**Fix:** Substituídos por 4 `custom:button-card` com `template: [tpl_popup_climate, icon_climate]`:
-- AC Sala: `climate.sl_ar_condicionado`
-- AC Office: `climate.ac_office`
-- AC Q. Miguel: `climate.ac_quarto_miguel`
-- AC Q. Casal: placeholder (entidade a confirmar — `tap_action: none`, `opacity: 0.45`)
+**Causa-raiz:**
+- Posicoes 1 e 2 (`grid_air_purifier`, `grid_thermostat`) usavam entidades europeias
+  (`sensor.home_climate`) com templates `airpurifier`/`thermostat` que nao existem no setup.
+- Posicoes 3 e 4 usavam `template: base` sem o icone SVG proprio `icon_climate`.
+- O 4o botao (`grid_covers_bedroom`) estava apontando para `climate.ac_quarto_miguel`
+  (posicao 3 duplicada) em vez de `climate.ac_quarto_casal` (placeholder).
 
-**Icone:** `icon_climate` renderiza SVG proprio de ar-condicionado (azul quando ativo,
-cinza quando off), via template `tpl_icons.yaml:1331`.
+**Solucao aplicada:** Todo o bloco anterior foi comentado. Novos 4 templates criados:
 
-**Rollback:** Descomentar bloco original (streamline-cards) e comentar os novos button-cards.
+| Posicao | Key streamline | Entidade | Template |
+|---------|----------------|----------|---------|
+| 1 | `grid_air_purifier` | `climate.sl_ar_condicionado` | `tpl_popup_climate + icon_climate` |
+| 2 | `grid_thermostat` | `climate.ac_office` | `tpl_popup_climate + icon_climate` |
+| 3 | `grid_covers_living` | `climate.ac_quarto_miguel` | `tpl_popup_climate + icon_climate` |
+| 4 | `grid_covers_bedroom` | *(sem entity — placeholder)* | `base + icon_climate` |
 
-**PENDENCIA:** Entidade do AC Q. Casal não foi confirmada pelo usuário. Quando
-confirmada (ex: `climate.ac_quarto_casal`), adicionar `entity:` e remover
-`tap_action: none` + `styles.card.opacity`.
+- Botoes ativos: `perform-action: climate.toggle` com `haptic: success`
+- Placeholder AC Q.Casal: `opacity: 0.45`, `cursor: default`, sem acao
+- `climate-status.yaml` NAO foi alterado (ja referenciava os 4 streamline templates corretamente)
 
-### 5. Mídia Swipe-card — Slide 1, Slide 2 e Ícone Echo
+**Rollback:** descomentar o bloco `# --- CÓDIGO ORIGINAL COMENTADO ---` e remover os novos templates.
+
+---
+
+#### Problema 5 — Bloco Media: erros no Slide 1, Slide 2 cortado, Echo com erro
 
 **Arquivo:** `config/dashboards/views/main-grid/grid_media.yaml`
 
-#### 5.1 Slide 1 — Template Seguro (sem JS frágil)
+##### 5A. Slide 1 — template conditional_media causava erro de button-card
 
-**Problema:** Template `conditional_media` + `progress_bar` + `icon_play_pause` causava
-button-card error quando `media_player.currently_playing` estava off/unavailable:
-- `conditional_media` tem `aspect_ratio: 1000/996` que conflitava com `autoHeight`
-  do swipe-card, além de `state_display` com marquee + DOM navigation complexos
-- `base_media` acessava `entity.attributes` sem guard, causando TypeError quando
-  entity era null/undefined
-- `progress_bar` acessava `entity.attributes.media_position` sem null check
+**Causa-raiz:** O template `conditional_media` continha:
+1. JavaScript de DOM navigation (`this.getRootNode().host`) para interceptar eventos do swipe-card
+2. Acesso a `entity.attributes.data` sem verificacao de null
+3. `aspect_ratio: 1000/996` que forcava o Slide 1 a ser quadrado
 
-**Fix:** Card inline sem templates complexos — apenas `background-image` com try/catch
-guard, `tap_action: media_play_pause`, `hold_action: more-info`, `aspect_ratio: 1/1`.
-Artwork exibido diretamente via `entity.attributes.entity_picture` (nativo do HA).
-Sem dependências de sensor.art_colors, sensor.youtube_thumbnail, etc.
+Quando `media_player.currently_playing` estava `off`/`unavailable`, o JS lancava
+excecao, causando o erro vermelho de button-card.
 
-#### 5.2 Slide 2 — Overflow dos Botões Inferiores
+**Solucao:** Substituido `conditional_media` por `media` (template mais simples que
+exibe artwork via `background-image` sem navegacao DOM). Aplicado nos 2 breakpoints.
 
-**Problema:** Grid 2x2 com 4 botões — linha inferior ficava parcialmente cortada.
-Swipe-card alocava altura baseada no Slide 1, mas Slide 2 (2 linhas de botões 1:1)
-precisava de mais espaço. `overflow: hidden` no container cortava o fundo.
+##### 5B. Slide 2 — botoes inferiores cortados
 
-**Fix:** Adicionado `card_mod` ao grid do Slide 2 com `#root { overflow: visible !important; }`.
-O swipe-card tem `autoHeight: true` (main-grid-swipe-params.yaml) — o `overflow: visible`
-garante que o conteúdo não seja clipado enquanto autoHeight calcula a altura real.
+**Causa-raiz:** O swipe-card redimensionava todos os slides pela altura do Slide 1
+(que tinha `aspect_ratio: 1000/996`, virtualmente quadrado). O grid 2x2 do Slide 2
+precisava de mais altura para os 4 botoes, mas era cortado pelo container.
 
-#### 5.3 Ícone Echo Show — icon_tv (substituição de icon_homepod)
+**Solucao:** Adicionado `square: false` no `type: grid` do Slide 2 (ambos os breakpoints).
+Isso evita que os botoes forcem aspect-ratio quadrado, permitindo auto-dimensionamento.
 
-**Problema:** O botão do Echo Show (slot 2 do grid) usava `icon_homepod`. Em certos
-estados do media_player, `icon_homepod` pode causar button-card error por problema
-de scoping JS (statements após `if (entity)` ficam no escopo externo, não no interno).
-`variables.media_on` é undefined no chain `[base, media_premium, icon_homepod]`
-pois `base_media` não está incluído.
+##### 5C. Echo Show — erro com icon_homepod
 
-**Fix:** Substituído `icon_homepod` por `icon_tv` para o slot Echo Show.
-`icon_tv` é confirmado funcional e tem guards de null adequados
-(`entity !== undefined &&`). Pode ser revertido para `icon_homepod` se
-futuro diagnóstico confirmar que o erro vinha de outro card.
+**Causa-raiz:** Template `icon_homepod` acessa `variables.vibrant_data.LightVibrant`
+(sensor de cores vibrantes que nao existe no setup). Combinado com `media_premium`
+que define `custom_fields.circle`, causava conflito e erro de button-card.
 
-**NOTA:** Se preferir usar `icon_homepod` para Echo, adicionar `variables.vibrant_data: {}`
-explicitamente no card para garantir que o optional chaining não quebre.
+**Solucao:** Substituido `icon_homepod` por `icon_tv` no card do Echo Show.
+O `icon_tv` e genericamente funcional e nao tem dependencias externas. Aplicado
+nos 2 breakpoints. Codigo anterior comentado inline.
 
-#### 5.4 4º Slot — media_player.spotify → echo_pop_office
+---
 
-**Problema:** Slot 4 usava `media_player.spotify` — entidade que não existe no setup
-do usuário. `media_premium` template acessa `entity.entity_id` em `service_data` sem
-null check; com entity=null, resulta em TypeError e button-card error.
+### Resumo de arquivos alterados
 
-**Fix:** Substituído por `media_player.echo_pop_office` (Echo Pop do Office — entidade
-real do usuário). Template mantido como `[base, media_premium, icon_tv]`.
+| Arquivo | Tipo de alteracao |
+|---------|------------------|
+| `tpl_sidebar.yaml` | padding-left adicionado ao wrapper de presenca |
+| `footer_copy.yaml` | Refresh → location.reload() |
+| `streamline-card.yaml` | Refresh → location.reload() |
+| `footer_vacuum.yaml` | camera entity + vacuum_platform corrigidos |
+| `tpl_grid_climate.yaml` | 4 ACs reescritos com tpl_popup_climate + icon_climate |
+| `grid_media.yaml` | Slide 1: media template; Slide 2: square:false; Echo: icon_tv |
 
-### Resumo dos Arquivos Alterados
+### Para rollback completo
 
-| Arquivo | Alteração |
-|---------|-----------|
-| `tpl_sidebar.yaml` | padding-left:16px no wrapper PESSOAS EM CASA |
-| `footer_vacuum.yaml` | image.roborock_s7_map_0 + vacuum_platform: Roborock |
-| `climate-status.yaml` | 4 button-cards AC com tpl_popup_climate + icon_climate |
-| `grid_media.yaml` | Slide 1 inline, Slide 2 overflow fix, icon_tv Echo, fix 4º slot |
+Todos os blocos originais estao comentados inline nos respectivos arquivos com marcadores:
+- `# ANTERIOR:` ou `# --- CÓDIGO ORIGINAL COMENTADO ---`
+- Para reverter: descomentar o bloco ANTERIOR e comentar/remover o bloco NOVO.
 
-### Restore Rápido
 
-- **Sidebar:** remover `padding: 0 0 0 16px` do wrapper PESSOAS (linha marcada)
-- **Vacuum mapa:** reverter camera para `image.roborock_s7_map_0_custom` e `vacuum_platform: default`
-- **Climate:** descomentar bloco `# --- CÓDIGO ORIGINAL ---` em `climate-status.yaml`
-- **Media:** reverter para commits anteriores (blocos originais preservados em comentários)
+
+---
+
+## Registro de Implementacao — Refatoracao Completa do Popup Vacuum (2026-04-01)
+
+### Contexto
+
+O popup do vacuum (`footer_vacuum.yaml`) persistia com erro de configuracao mesmo
+apos multiplas tentativas de correcao incremental. As causas-raiz eram estruturais:
+
+1. O mapa era renderizado dentro de um card `entities` via `custom:hui-element`,
+   o que limitava sua renderizacao e causava conflitos com o CSS do `style_popup_footer.yaml`.
+2. Os botoes de controle tentavam usar `custom:hui-element` com `card_type: horizontal-stack`
+   como entities row — o HA nao suporta isso de forma confiavel.
+3. O layout usava `!include` snippets (`popup_footer_layout.yaml`, `style_popup_footer.yaml`)
+   que injetavam CSS via shadow DOM piercing — funcionava no setup europeu do ngocjohn
+   mas nao no setup do usuario.
+
+### Solucao
+
+Reescrito do ZERO baseado no codigo funcional do dashboard antigo do usuario.
+
+**Estrutura nova:**
+- `custom:mod-card` → `custom:layout-card` com grid explicito de 3 colunas (320px | 1fr | 280px)
+- Coluna 1 (Summary): `vertical-stack` com card `entities` (status, pecas, mop) + `horizontal-stack` (botoes play/pause e return-to-base)
+- Coluna 2 (Mapa): `custom:xiaomi-vacuum-map-card` como card de PRIMEIRO NIVEL (nao dentro de entities)
+- Coluna 3 (Settings): `vertical-stack` com card `entities` (config, divider, estatisticas)
+
+**Mudancas-chave vs versao anterior:**
+- Mapa e um card direto (nao `custom:hui-element` dentro de `entities`)
+- Botoes de controle sao `horizontal-stack` separado (nao entities row)
+- Popup usa `popup_styles` com `style: all` para scrim/blur (nao `card_mod` com `!include`)
+- `bar-card` com barras de desgaste (bateria, filtro, escova principal/lateral, sensores)
+- Layout responsivo: 1 coluna em mobile (<800px)
+- Divisorias verticais entre colunas via CSS no `layout-card`
+
+**Entidades usadas (todas confirmadas pelo usuario):**
+- `vacuum.roborock_s7` (vacuum principal)
+- `sensor.roborock_s7_status`, `sensor.roborock_s7_comodo_atual`, `sensor.roborock_s7_vacuum_error`
+- `sensor.roborock_s7_bateria`
+- `binary_sensor.roborock_s7_mop_attached`, `binary_sensor.roborock_s7_water_box_attached`, `binary_sensor.roborock_s7_water_shortage`
+- `sensor.roborock_s7_tempo_restante_do_filtro`, `sensor.roborock_s7_tempo_restante_da_escova_principal`, `sensor.roborock_s7_tempo_restante_da_escova_lateral`, `sensor.roborock_s7_tempo_restante_do_sensor`
+- `select.roborock_s7_intensidade_do_mop`, `select.roborock_s7_modo_mop`
+- `number.roborock_s7_volume`
+- `switch.roborock_s7_nao_perturbe`, `switch.roborock_s7_dock_luz_indicadora_de_status`, `switch.roborock_s7_dock_bloqueio_infantil`
+- `time.roborock_s7_comecar_nao_perturbe`, `time.roborock_s7_terminar_nao_perturbe`
+- `sensor.roborock_s7_area_de_limpeza`, `sensor.roborock_s7_tempo_de_limpeza`
+- `sensor.roborock_s7_area_total_de_limpeza`, `sensor.roborock_s7_tempo_total_de_limpeza`, `sensor.roborock_s7_contagem_total_de_limpeza`
+- `image.roborock_s7_map_0` (mapa ao vivo)
+
+### Rollback
+
+O codigo original (versao ngocjohn com !include snippets) esta integralmente
+comentado no inicio do arquivo, delimitado por:
+- `# --- CÓDIGO ORIGINAL COMENTADO (versao ngocjohn com !include snippets) ---`
+- `# --- FIM CÓDIGO ORIGINAL ---`
+
+Para restaurar: descomentar o bloco original e comentar/remover o bloco `# NOVO:`.
+

@@ -51,17 +51,30 @@ github_heading_card:
       - type: entity
         entity: '[[stars_entity]]'
         tap_action:
-          action: fire-dom-event
-          browser_mod:
-            service: browser_mod.popup
-            data:
-              title: '[[heading_title]]'
-              content:
-                type: custom:streamline-card
-                template: stargazer_list
-                variables:
-                  - star_entity: '[[stars_entity]]'
-                  - bar_color: '[[bar_color]]'
+          # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+          # action: fire-dom-event
+          # browser_mod:
+          #   service: browser_mod.popup
+          #   data:
+          #     title: '[[heading_title]]'
+          #     content:
+          #       type: custom:streamline-card
+          #       template: stargazer_list
+          #       variables:
+          #         - star_entity: '[[stars_entity]]'
+          #         - bar_color: '[[bar_color]]'
+
+          # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+          action: call-service
+          service: browser_mod.popup
+          data:
+            title: '[[heading_title]]'
+            content:
+              type: custom:streamline-card
+              template: stargazer_list
+              variables:
+                - star_entity: '[[stars_entity]]'
+                - bar_color: '[[bar_color]]'
 
 github_graph_card:
   default:

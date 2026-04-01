@@ -1,30 +1,62 @@
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: Viet Ngoc
-    content:
-      type: custom:mod-card
-      card_mod: !include ../snippets/style-person-popup.yaml
-      card:
-        type: vertical-stack
-        cards:
-          - type: entities
-            card_mod:
-              class: content
-            entities:
-              - entity: person.viet_ngoc
-                secondary_info: last-changed
-          - type: history-graph
-            entities:
-              - entity: person.viet_ngoc
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Viet Ngoc
+#     content:
+#       type: custom:mod-card
+#       card_mod: !include ../snippets/style-person-popup.yaml
+#       card:
+#         type: vertical-stack
+#         cards:
+#           - type: entities
+#             card_mod:
+#               class: content
+#             entities:
+#               - entity: person.viet_ngoc
+#                 secondary_info: last-changed
+#           - type: history-graph
+#             entities:
+#               - entity: person.viet_ngoc
 
-          - type: map
-            default_zoom: 16
-            auto_fit: true
-            dark_mode: true
-            entities:
-              - device_tracker.findmy_521d68e4ecef4686a97a2b77ccd20056
-              - entity: device_tracker.viet_ngoc_samsung
-                focus: false
-            hours_to_show: 24
+#           - type: map
+#             default_zoom: 16
+#             auto_fit: true
+#             dark_mode: true
+#             entities:
+#               - device_tracker.findmy_521d68e4ecef4686a97a2b77ccd20056
+#               - entity: device_tracker.viet_ngoc_samsung
+#                 focus: false
+#             hours_to_show: 24
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: Viet Ngoc
+  content:
+    type: custom:mod-card
+    card_mod: !include ../snippets/style-person-popup.yaml
+    card:
+      type: vertical-stack
+      cards:
+        - type: entities
+          card_mod:
+            class: content
+          entities:
+            - entity: person.viet_ngoc
+              secondary_info: last-changed
+        - type: history-graph
+          entities:
+            - entity: person.viet_ngoc
+
+        - type: map
+          default_zoom: 16
+          auto_fit: true
+          dark_mode: true
+          entities:
+            - device_tracker.findmy_521d68e4ecef4686a97a2b77ccd20056
+            - entity: device_tracker.viet_ngoc_samsung
+              focus: false
+          hours_to_show: 24

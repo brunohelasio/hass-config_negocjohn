@@ -35,83 +35,165 @@
 # NOVO — Popup estilo Sala (2 colunas: col_buttons + col_camera)
 # Replicado de livingroom.yaml — Fase 2.3
 # ══════════════════════════════════════════════════════════════════════════
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: Quarto Marina
-    tag: quarto_marina_popup
-    size: wide
-    style: >
-      --popup-width: 65vw;
-      --popup-max-width: 980px;
-      --popup-background-color: rgba(15, 20, 35, 0.75);
-      --mdc-theme-surface: rgba(20, 24, 33, 0.88);
-      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
-      --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
-      --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
-    # --- CÓDIGO ORIGINAL COMENTADO (card_mod inline com .mdc-dialog__surface hack) ---
-    # Removido porque o tema tablet.yaml agora tem uix-dialog com --ha-dialog-width-md
-    # que le --popup-width do style: e dimensiona o popup nativamente via HA.
-    # card_mod:
-    #   style:
-    #     .: |
-    #       ha-dialog {
-    #         backdrop-filter: blur(12px);
-    #         -webkit-backdrop-filter: blur(12px);
-    #       }
-    #       ha-dialog::before {
-    #         content: '';
-    #         position: absolute;
-    #         inset: 0;
-    #         border-radius: inherit;
-    #         pointer-events: none;
-    #         box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
-    #       }
-    #     ha-dialog$: |
-    #       .mdc-dialog__scrim {
-    #         background-color: rgba(0, 0, 0, 0.56) !important;
-    #       }
-    #       .mdc-dialog__container {
-    #         align-items: center !important;
-    #         justify-content: center !important;
-    #       }
-    #       .mdc-dialog__surface {
-    #         width: 65vw !important;
-    #         max-width: 980px !important;
-    #         max-height: 88vh !important;
-    #         overflow-y: auto !important;
-    #       }
-    # --- FIM CÓDIGO ORIGINAL ---
-    content:
-      type: custom:layout-card
-      layout_type: custom:grid-layout
-      layout:
-        grid-template-columns: 1.4fr 1.0fr
-        grid-template-areas: '"col_buttons col_camera"'
-        grid-gap: 10px
-        margin: 0
-        padding: 0.5rem
-        mediaquery:
-          "(max-width: 800px)":
-            grid-template-columns: 1fr
-            grid-template-areas: |
-              "col_buttons"
-              "col_camera"
-            padding: 0
-      cards:
-        # ── Coluna 1: Todos os botoes ──
-        - type: vertical-stack
-          view_layout:
-            grid-area: col_buttons
-          cards: !include ../../columns/room_quarto_marina_all_buttons.yaml
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Quarto Marina
+#     tag: quarto_marina_popup
+#     size: wide
+#     style: >
+#       --popup-width: 65vw;
+#       --popup-max-width: 980px;
+#       --popup-background-color: rgba(15, 20, 35, 0.75);
+#       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+#       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+#       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+#       --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
+#     # --- CÓDIGO ORIGINAL COMENTADO (card_mod inline com .mdc-dialog__surface hack) ---
+#     # Removido porque o tema tablet.yaml agora tem uix-dialog com --ha-dialog-width-md
+#     # que le --popup-width do style: e dimensiona o popup nativamente via HA.
+#     # card_mod:
+#     #   style:
+#     #     .: |
+#     #       ha-dialog {
+#     #         backdrop-filter: blur(12px);
+#     #         -webkit-backdrop-filter: blur(12px);
+#     #       }
+#     #       ha-dialog::before {
+#     #         content: '';
+#     #         position: absolute;
+#     #         inset: 0;
+#     #         border-radius: inherit;
+#     #         pointer-events: none;
+#     #         box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+#     #       }
+#     #     ha-dialog$: |
+#     #       .mdc-dialog__scrim {
+#     #         background-color: rgba(0, 0, 0, 0.56) !important;
+#     #       }
+#     #       .mdc-dialog__container {
+#     #         align-items: center !important;
+#     #         justify-content: center !important;
+#     #       }
+#     #       .mdc-dialog__surface {
+#     #         width: 65vw !important;
+#     #         max-width: 980px !important;
+#     #         max-height: 88vh !important;
+#     #         overflow-y: auto !important;
+#     #       }
+#     # --- FIM CÓDIGO ORIGINAL ---
+#     content:
+#       type: custom:layout-card
+#       layout_type: custom:grid-layout
+#       layout:
+#         grid-template-columns: 1.4fr 1.0fr
+#         grid-template-areas: '"col_buttons col_camera"'
+#         grid-gap: 10px
+#         margin: 0
+#         padding: 0.5rem
+#         mediaquery:
+#           "(max-width: 800px)":
+#             grid-template-columns: 1fr
+#             grid-template-areas: |
+#               "col_buttons"
+#               "col_camera"
+#             padding: 0
+#       cards:
+#         # ── Coluna 1: Todos os botoes ──
+#         - type: vertical-stack
+#           view_layout:
+#             grid-area: col_buttons
+#           cards: !include ../../columns/room_quarto_marina_all_buttons.yaml
 
-        # ── Coluna 2: Camera ──
-        - type: custom:layout-card
-          layout_type: custom:grid-layout
-          view_layout:
-            grid-area: col_camera
-          layout:
-            grid-template-columns: 1fr
-            margin: 0
-          cards: !include ../../columns/room_quarto_marina_cameras.yaml
+#         # ── Coluna 2: Camera ──
+#         - type: custom:layout-card
+#           layout_type: custom:grid-layout
+#           view_layout:
+#             grid-area: col_camera
+#           layout:
+#             grid-template-columns: 1fr
+#             margin: 0
+#           cards: !include ../../columns/room_quarto_marina_cameras.yaml
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: Quarto Marina
+  tag: quarto_marina_popup
+  size: wide
+  style: >
+    --popup-width: 65vw;
+    --popup-max-width: 980px;
+    --popup-background-color: rgba(15, 20, 35, 0.75);
+    --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+    --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+    --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+    --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
+  # --- CÓDIGO ORIGINAL COMENTADO (card_mod inline com .mdc-dialog__surface hack) ---
+  # Removido porque o tema tablet.yaml agora tem uix-dialog com --ha-dialog-width-md
+  # que le --popup-width do style: e dimensiona o popup nativamente via HA.
+  # card_mod:
+  #   style:
+  #     .: |
+  #       ha-dialog {
+  #         backdrop-filter: blur(12px);
+  #         -webkit-backdrop-filter: blur(12px);
+  #       }
+  #       ha-dialog::before {
+  #         content: '';
+  #         position: absolute;
+  #         inset: 0;
+  #         border-radius: inherit;
+  #         pointer-events: none;
+  #         box-shadow: inset 0 0 0 1px rgba(80, 150, 255, 0.12);
+  #       }
+  #     ha-dialog$: |
+  #       .mdc-dialog__scrim {
+  #         background-color: rgba(0, 0, 0, 0.56) !important;
+  #       }
+  #       .mdc-dialog__container {
+  #         align-items: center !important;
+  #         justify-content: center !important;
+  #       }
+  #       .mdc-dialog__surface {
+  #         width: 65vw !important;
+  #         max-width: 980px !important;
+  #         max-height: 88vh !important;
+  #         overflow-y: auto !important;
+  #       }
+  # --- FIM CÓDIGO ORIGINAL ---
+  content:
+    type: custom:layout-card
+    layout_type: custom:grid-layout
+    layout:
+      grid-template-columns: 1.4fr 1.0fr
+      grid-template-areas: '"col_buttons col_camera"'
+      grid-gap: 10px
+      margin: 0
+      padding: 0.5rem
+      mediaquery:
+        "(max-width: 800px)":
+          grid-template-columns: 1fr
+          grid-template-areas: |
+            "col_buttons"
+            "col_camera"
+          padding: 0
+    cards:
+      # ── Coluna 1: Todos os botoes ──
+      - type: vertical-stack
+        view_layout:
+          grid-area: col_buttons
+        cards: !include ../../columns/room_quarto_marina_all_buttons.yaml
+
+      # ── Coluna 2: Camera ──
+      - type: custom:layout-card
+        layout_type: custom:grid-layout
+        view_layout:
+          grid-area: col_camera
+        layout:
+          grid-template-columns: 1fr
+          margin: 0
+        cards: !include ../../columns/room_quarto_marina_cameras.yaml

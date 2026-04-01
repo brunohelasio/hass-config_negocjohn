@@ -1,35 +1,72 @@
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: Utility Room
-    card_mod: !include ../../snippets/style_popup_center.yaml
-    content:
-      type: custom:layout-card
-      layout_type: custom:grid-layout
-      layout: !include ../../snippets/layout_room_popup.yaml
-      cards:
-        - type: custom:auto-entities
-          filter:
-            include:
-              - entity_id: light.utility_room_light
-                options:
-                  type: custom:button-card
-                  template:
-                    - tpl_popup_light
-              - entity_id: vacuum.roidmi_eve
-                options:
-                  type: custom:button-card
-                  tap_action: !include ../footer/footer_vacuum.yaml
-                  double_tap_action: !include ../footer/footer_vacuum.yaml
-                  template:
-                    - tpl_popup_device
-              - entity_id: switch.washer_dryer_power
-                options:
-                  type: custom:button-card
-                  template:
-                    - tpl_popup_device
-          card:
-            type: grid
-            columns: 3
-          card_param: cards
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Utility Room
+#     card_mod: !include ../../snippets/style_popup_center.yaml
+#     content:
+#       type: custom:layout-card
+#       layout_type: custom:grid-layout
+#       layout: !include ../../snippets/layout_room_popup.yaml
+#       cards:
+#         - type: custom:auto-entities
+#           filter:
+#             include:
+#               - entity_id: light.utility_room_light
+#                 options:
+#                   type: custom:button-card
+#                   template:
+#                     - tpl_popup_light
+#               - entity_id: vacuum.roidmi_eve
+#                 options:
+#                   type: custom:button-card
+#                   tap_action: !include ../footer/footer_vacuum.yaml
+#                   double_tap_action: !include ../footer/footer_vacuum.yaml
+#                   template:
+#                     - tpl_popup_device
+#               - entity_id: switch.washer_dryer_power
+#                 options:
+#                   type: custom:button-card
+#                   template:
+#                     - tpl_popup_device
+#           card:
+#             type: grid
+#             columns: 3
+#           card_param: cards
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: Utility Room
+  card_mod: !include ../../snippets/style_popup_center.yaml
+  content:
+    type: custom:layout-card
+    layout_type: custom:grid-layout
+    layout: !include ../../snippets/layout_room_popup.yaml
+    cards:
+      - type: custom:auto-entities
+        filter:
+          include:
+            - entity_id: light.utility_room_light
+              options:
+                type: custom:button-card
+                template:
+                  - tpl_popup_light
+            - entity_id: vacuum.roidmi_eve
+              options:
+                type: custom:button-card
+                tap_action: !include ../footer/footer_vacuum.yaml
+                double_tap_action: !include ../footer/footer_vacuum.yaml
+                template:
+                  - tpl_popup_device
+            - entity_id: switch.washer_dryer_power
+              options:
+                type: custom:button-card
+                template:
+                  - tpl_popup_device
+        card:
+          type: grid
+          columns: 3
+        card_param: cards

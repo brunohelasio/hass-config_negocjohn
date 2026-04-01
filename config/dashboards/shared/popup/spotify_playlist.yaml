@@ -173,16 +173,31 @@
 # Redirecionado: qualquer !include que apontava para este arquivo agora aponta para media_spotify.yaml
 # Se precisar reativar, descomente o bloco acima e atualize os includes de volta.
 # Stub minimo para evitar erro de parse caso este arquivo seja incluido acidentalmente.
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: '⚠️ Deprecated'
-    tag: spotify_legacy
-    style: |
-      --popup-max-width: min(400px, 90vw);
-    content:
-      type: custom:mushroom-template-card
-      primary: Este popup foi migrado
-      secondary: Use hold no botão Spotify ou double-tap no card media
-      icon: mdi:spotify
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: '⚠️ Deprecated'
+#     tag: spotify_legacy
+#     style: |
+#       --popup-max-width: min(400px, 90vw);
+#     content:
+#       type: custom:mushroom-template-card
+#       primary: Este popup foi migrado
+#       secondary: Use hold no botão Spotify ou double-tap no card media
+#       icon: mdi:spotify
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: '⚠️ Deprecated'
+  tag: spotify_legacy
+  style: |
+    --popup-max-width: min(400px, 90vw);
+  content:
+    type: custom:mushroom-template-card
+    primary: Este popup foi migrado
+    secondary: Use hold no botão Spotify ou double-tap no card media
+    icon: mdi:spotify

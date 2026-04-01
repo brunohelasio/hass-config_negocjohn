@@ -111,17 +111,30 @@ unifi_clients_total:
     name: 'Total Clients'
     show_state: false
     tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.popup
-        data:
-          title: '[[heading_title]]'
-          tag: inner
-          content:
-            type: custom:streamline-card
-            template: unifi_clients_list
-            variables:
-              - client_entity: sensor.unifi_controller_all_clients
+      # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+      # action: fire-dom-event
+      # browser_mod:
+      #   service: browser_mod.popup
+      #   data:
+      #     title: '[[heading_title]]'
+      #     tag: inner
+      #     content:
+      #       type: custom:streamline-card
+      #       template: unifi_clients_list
+      #       variables:
+      #         - client_entity: sensor.unifi_controller_all_clients
+
+      # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+      action: call-service
+      service: browser_mod.popup
+      data:
+        title: '[[heading_title]]'
+        tag: inner
+        content:
+          type: custom:streamline-card
+          template: unifi_clients_list
+          variables:
+            - client_entity: sensor.unifi_controller_all_clients
     secondary_info:
       entity: '[[controller_entity]]'
       unit: true
@@ -130,33 +143,59 @@ unifi_clients_total:
         name: Wired
         unit: ' '
         tap_action:
-          action: fire-dom-event
-          browser_mod:
-            service: browser_mod.popup
-            data:
-              title: Wired Clients
-              tag: inner
-              content:
-                type: custom:streamline-card
-                template: unifi_clients_list
-                variables:
-                  - client_entity: sensor.unifi_controller_wired_clients
+          # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+          # action: fire-dom-event
+          # browser_mod:
+          #   service: browser_mod.popup
+          #   data:
+          #     title: Wired Clients
+          #     tag: inner
+          #     content:
+          #       type: custom:streamline-card
+          #       template: unifi_clients_list
+          #       variables:
+          #         - client_entity: sensor.unifi_controller_wired_clients
+
+          # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+          action: call-service
+          service: browser_mod.popup
+          data:
+            title: Wired Clients
+            tag: inner
+            content:
+              type: custom:streamline-card
+              template: unifi_clients_list
+              variables:
+                - client_entity: sensor.unifi_controller_wired_clients
 
       - attribute: wifi0
         name: 2.4GhZ
         unit: ' '
         tap_action: &wifi_popup
-          action: fire-dom-event
-          browser_mod:
-            service: browser_mod.popup
-            data:
-              title: 'Wifi clients'
-              tag: inner
-              content:
-                type: custom:streamline-card
-                template: unifi_clients_list
-                variables:
-                  - client_entity: sensor.unifi_controller_wifi_clients
+          # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+          # action: fire-dom-event
+          # browser_mod:
+          #   service: browser_mod.popup
+          #   data:
+          #     title: 'Wifi clients'
+          #     tag: inner
+          #     content:
+          #       type: custom:streamline-card
+          #       template: unifi_clients_list
+          #       variables:
+          #         - client_entity: sensor.unifi_controller_wifi_clients
+
+          # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+          action: call-service
+          service: browser_mod.popup
+          data:
+            title: 'Wifi clients'
+            tag: inner
+            content:
+              type: custom:streamline-card
+              template: unifi_clients_list
+              variables:
+                - client_entity: sensor.unifi_controller_wifi_clients
       - attribute: wifi1
         name: 5GhZ
         unit: ' '

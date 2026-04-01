@@ -57,11 +57,18 @@
                   : '';
               ]]]
       tap_action:
-        action: fire-dom-event
-        browser_mod:
-          service: browser_mod.more_info
-          data:
-            entity: media_player.currently_playing
+        # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+        # action: fire-dom-event
+        # browser_mod:
+        #   service: browser_mod.more_info
+        #   data:
+        #     entity: media_player.currently_playing
+
+        # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+        action: call-service
+        service: browser_mod.more_info
+        data:
+          entity: media_player.currently_playing
       hold_action: !include ../../shared/extra-popup/mass-homepods.yaml
 
     - &presence

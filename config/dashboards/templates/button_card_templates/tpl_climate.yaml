@@ -521,92 +521,180 @@ cover:
   #     entity_id: >
   #       [[[ return variables.entity_id; ]]]
   double_tap_action:
-    action: fire-dom-event
-    browser_mod:
-      service: browser_mod.popup
-      data:
-        title: >
-          [[[
-            return !entity || entity.attributes.friendly_name;
-          ]]]
-        style: >
-          --max-popup-column: 2;
-        content:
-          type: custom:layout-card
-          layout_type: custom:grid-layout
-          layout:
-            grid-template-columns: 1fr
-            grid-template-rows: auto
-            margin: 0
-            padding: 0
-            mediaquery:
-              '(min-width: 1441.99px)':
-                grid-template-columns: repeat(var(--max-popup-column), var(--max-popup-column-width, 550px))
-                grid-template-rows: auto
-              '(min-width: 800px)':
-                grid-template-columns: 550px
-                grid-template-rows: auto
-                margin: 0
-                padding: 0
+    # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+    # action: fire-dom-event
+    # browser_mod:
+    #   service: browser_mod.popup
+    #   data:
+    #     title: >
+    #       [[[
+    #         return !entity || entity.attributes.friendly_name;
+    #       ]]]
+    #     style: >
+    #       --max-popup-column: 2;
+    #     content:
+    #       type: custom:layout-card
+    #       layout_type: custom:grid-layout
+    #       layout:
+    #         grid-template-columns: 1fr
+    #         grid-template-rows: auto
+    #         margin: 0
+    #         padding: 0
+    #         mediaquery:
+    #           '(min-width: 1441.99px)':
+    #             grid-template-columns: repeat(var(--max-popup-column), var(--max-popup-column-width, 550px))
+    #             grid-template-rows: auto
+    #           '(min-width: 800px)':
+    #             grid-template-columns: 550px
+    #             grid-template-rows: auto
+    #             margin: 0
+    #             padding: 0
 
-          cards:
-            - type: custom:more-info-card
-              entity: >
-                [[[ return variables.entity_id ]]]
-              card_mod:
-                style:
-                  $: |
-                    h1 {
-                      display: none !important;
-                    }
-                  .: |
-                    state-card-content {
-                      display: none !important;
-                    }
-                    div.action {
-                      display: none !important;
-                    }
-                  ha-card>div>more-info-content>more-info-cover$ha-more-info-state-header$: |
-                    p.name {
-                      display: none !important;
-                    }
-                    p.state {
-                      font-size: 1.5em;
-                    }
-                  ha-card>div>more-info-content>more-info-cover$: |
-                    div {
-                      margin: 0 !important;
-                    }
-                    div.actions {
-                      display: none !important;
-                    }
-            - type: entities
-              state_color: true
-              show_header_toggle: false
-              entities: >
-                [[[
-                  if (entity) {
-                      let covers = [],
-                          id = Boolean(entity.attributes.entity_id)
-                              ? [entity.entity_id].concat(entity.attributes.entity_id)
-                              : [entity.entity_id];
-                      for (let i = 1; i < id.length; i++) {
-                          covers.push({
-                              "type": "custom:mushroom-cover-card",
-                              "entity": id[i],
-                              "fill_container": false,
-                              "primary_info": "name",
-                              "secondary_info": "state",
-                              "icon_type": "icon",
-                              "show_position_control": true,
-                              "show_tilt_position_control": false,
-                              "show_buttons_control": true,
-                              "layout": "horizontal"
-                          });
-                      }
-                      return covers;
+    #       cards:
+    #         - type: custom:more-info-card
+    #           entity: >
+    #             [[[ return variables.entity_id ]]]
+    #           card_mod:
+    #             style:
+    #               $: |
+    #                 h1 {
+    #                   display: none !important;
+    #                 }
+    #               .: |
+    #                 state-card-content {
+    #                   display: none !important;
+    #                 }
+    #                 div.action {
+    #                   display: none !important;
+    #                 }
+    #               ha-card>div>more-info-content>more-info-cover$ha-more-info-state-header$: |
+    #                 p.name {
+    #                   display: none !important;
+    #                 }
+    #                 p.state {
+    #                   font-size: 1.5em;
+    #                 }
+    #               ha-card>div>more-info-content>more-info-cover$: |
+    #                 div {
+    #                   margin: 0 !important;
+    #                 }
+    #                 div.actions {
+    #                   display: none !important;
+    #                 }
+    #         - type: entities
+    #           state_color: true
+    #           show_header_toggle: false
+    #           entities: >
+    #             [[[
+    #               if (entity) {
+    #                   let covers = [],
+    #                       id = Boolean(entity.attributes.entity_id)
+    #                           ? [entity.entity_id].concat(entity.attributes.entity_id)
+    #                           : [entity.entity_id];
+    #                   for (let i = 1; i < id.length; i++) {
+    #                       covers.push({
+    #                           "type": "custom:mushroom-cover-card",
+    #                           "entity": id[i],
+    #                           "fill_container": false,
+    #                           "primary_info": "name",
+    #                           "secondary_info": "state",
+    #                           "icon_type": "icon",
+    #                           "show_position_control": true,
+    #                           "show_tilt_position_control": false,
+    #                           "show_buttons_control": true,
+    #                           "layout": "horizontal"
+    #                       });
+    #                   }
+    #                   return covers;
+    #               }
+    #             ]]]
+
+    # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+    action: call-service
+    service: browser_mod.popup
+    data:
+      title: >
+        [[[
+          return !entity || entity.attributes.friendly_name;
+        ]]]
+      style: >
+        --max-popup-column: 2;
+      content:
+        type: custom:layout-card
+        layout_type: custom:grid-layout
+        layout:
+          grid-template-columns: 1fr
+          grid-template-rows: auto
+          margin: 0
+          padding: 0
+          mediaquery:
+            '(min-width: 1441.99px)':
+              grid-template-columns: repeat(var(--max-popup-column), var(--max-popup-column-width, 550px))
+              grid-template-rows: auto
+            '(min-width: 800px)':
+              grid-template-columns: 550px
+              grid-template-rows: auto
+              margin: 0
+              padding: 0
+
+        cards:
+          - type: custom:more-info-card
+            entity: >
+              [[[ return variables.entity_id ]]]
+            card_mod:
+              style:
+                $: |
+                  h1 {
+                    display: none !important;
                   }
-                ]]]
+                .: |
+                  state-card-content {
+                    display: none !important;
+                  }
+                  div.action {
+                    display: none !important;
+                  }
+                ha-card>div>more-info-content>more-info-cover$ha-more-info-state-header$: |
+                  p.name {
+                    display: none !important;
+                  }
+                  p.state {
+                    font-size: 1.5em;
+                  }
+                ha-card>div>more-info-content>more-info-cover$: |
+                  div {
+                    margin: 0 !important;
+                  }
+                  div.actions {
+                    display: none !important;
+                  }
+          - type: entities
+            state_color: true
+            show_header_toggle: false
+            entities: >
+              [[[
+                if (entity) {
+                    let covers = [],
+                        id = Boolean(entity.attributes.entity_id)
+                            ? [entity.entity_id].concat(entity.attributes.entity_id)
+                            : [entity.entity_id];
+                    for (let i = 1; i < id.length; i++) {
+                        covers.push({
+                            "type": "custom:mushroom-cover-card",
+                            "entity": id[i],
+                            "fill_container": false,
+                            "primary_info": "name",
+                            "secondary_info": "state",
+                            "icon_type": "icon",
+                            "show_position_control": true,
+                            "show_tilt_position_control": false,
+                            "show_buttons_control": true,
+                            "layout": "horizontal"
+                        });
+                    }
+                    return covers;
+                }
+              ]]]
 homeclimate:
   template:
     - base

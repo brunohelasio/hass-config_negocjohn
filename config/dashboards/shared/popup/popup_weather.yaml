@@ -1,58 +1,118 @@
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: Weather
-    style: >
-      --max-popup-column: 2;
-    card_mod: !include ../snippets/style_popup_center.yaml
-    content:
-      type: custom:mod-card
-      card_mod: !include ../snippets/style_popup_footer.yaml
-      card:
-        type: custom:layout-card
-        layout_type: custom:grid-layout
-        layout: !include ../snippets/popup_footer_layout.yaml
-        cards:
-          - type: entities
-            title: Salvador
-            entities:
-              - type: custom:layout-card
-                layout_type: custom:vertical-layout
-                cards:
-                  - type: weather-forecast
-                    show_current: true
-                    show_forecast: true
-                    entity: weather.forecast_casa
-                    name: ' '
-                    forecast_type: hourly
-              - type: divider
-              - type: custom:weather-chart-card
-                entity: weather.forecast_casa
-                show_main: false
-                show_attributes: false
-                forecast:
-                  condition_icons: false
-                  show_wind_forecast: false
-          - type: entities
-            title: Radar
-            card_mod:
-              class: header nopadding
-            entities:
-              - type: custom:weather-radar-card
-                static_map: false
-                map_style: Dark
-                data_source: RainViewer-DarkSky
-                show_scale: false
-                show_range: false
-                extra_labels: false
-                center_longitude: -38.5108
-                show_marker: false
-                show_zoom: false
-                center_latitude: -12.9714
-                marker_latitude: -12.9714
-                marker_longitude: -38.5108
-                zoom_level: 5
-                square_map: false
-                show_recenter: true
-                show_playback: false
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Weather
+#     style: >
+#       --max-popup-column: 2;
+#     card_mod: !include ../snippets/style_popup_center.yaml
+#     content:
+#       type: custom:mod-card
+#       card_mod: !include ../snippets/style_popup_footer.yaml
+#       card:
+#         type: custom:layout-card
+#         layout_type: custom:grid-layout
+#         layout: !include ../snippets/popup_footer_layout.yaml
+#         cards:
+#           - type: entities
+#             title: Salvador
+#             entities:
+#               - type: custom:layout-card
+#                 layout_type: custom:vertical-layout
+#                 cards:
+#                   - type: weather-forecast
+#                     show_current: true
+#                     show_forecast: true
+#                     entity: weather.forecast_casa
+#                     name: ' '
+#                     forecast_type: hourly
+#               - type: divider
+#               - type: custom:weather-chart-card
+#                 entity: weather.forecast_casa
+#                 show_main: false
+#                 show_attributes: false
+#                 forecast:
+#                   condition_icons: false
+#                   show_wind_forecast: false
+#           - type: entities
+#             title: Radar
+#             card_mod:
+#               class: header nopadding
+#             entities:
+#               - type: custom:weather-radar-card
+#                 static_map: false
+#                 map_style: Dark
+#                 data_source: RainViewer-DarkSky
+#                 show_scale: false
+#                 show_range: false
+#                 extra_labels: false
+#                 center_longitude: -38.5108
+#                 show_marker: false
+#                 show_zoom: false
+#                 center_latitude: -12.9714
+#                 marker_latitude: -12.9714
+#                 marker_longitude: -38.5108
+#                 zoom_level: 5
+#                 square_map: false
+#                 show_recenter: true
+#                 show_playback: false
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: Weather
+  style: >
+    --max-popup-column: 2;
+  card_mod: !include ../snippets/style_popup_center.yaml
+  content:
+    type: custom:mod-card
+    card_mod: !include ../snippets/style_popup_footer.yaml
+    card:
+      type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout: !include ../snippets/popup_footer_layout.yaml
+      cards:
+        - type: entities
+          title: Salvador
+          entities:
+            - type: custom:layout-card
+              layout_type: custom:vertical-layout
+              cards:
+                - type: weather-forecast
+                  show_current: true
+                  show_forecast: true
+                  entity: weather.forecast_casa
+                  name: ' '
+                  forecast_type: hourly
+            - type: divider
+            - type: custom:weather-chart-card
+              entity: weather.forecast_casa
+              show_main: false
+              show_attributes: false
+              forecast:
+                condition_icons: false
+                show_wind_forecast: false
+        - type: entities
+          title: Radar
+          card_mod:
+            class: header nopadding
+          entities:
+            - type: custom:weather-radar-card
+              static_map: false
+              map_style: Dark
+              data_source: RainViewer-DarkSky
+              show_scale: false
+              show_range: false
+              extra_labels: false
+              center_longitude: -38.5108
+              show_marker: false
+              show_zoom: false
+              center_latitude: -12.9714
+              marker_latitude: -12.9714
+              marker_longitude: -38.5108
+              zoom_level: 5
+              square_map: false
+              show_recenter: true
+              show_playback: false

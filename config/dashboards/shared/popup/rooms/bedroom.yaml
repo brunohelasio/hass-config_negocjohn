@@ -1,42 +1,86 @@
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: Bedroom
-    card_mod: !include ../../snippets/style_popup_center.yaml
-    content:
-      type: custom:layout-card
-      layout_type: custom:grid-layout
-      layout: !include ../../snippets/layout_room_popup.yaml
-      cards:
-        - type: custom:auto-entities
-          filter:
-            include:
-              - group: group.light_bedroom
-                options:
-                  type: custom:button-card
-                  template:
-                    - tpl_popup_light
-              - entity_id: switch.lidl_3_gang_socket_l1
-                options:
-                  type: custom:button-card
-                  double_tap_action:
-                    action: more-info
-                  template:
-                    - tpl_popup_device
-              - entity_id: media_player.bedroom_tv
-                options:
-                  type: custom:button-card
-                  double_tap_action:
-                    action: more-info
-                  hold_action: !include ../../honeycomb/shield.yaml
-                  template:
-                    - mediaplayer
-                    - icon_tv
-                  styles:
-                    card:
-                      - border-radius: 10%
-          card:
-            type: grid
-            columns: 3
-          card_param: cards
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Bedroom
+#     card_mod: !include ../../snippets/style_popup_center.yaml
+#     content:
+#       type: custom:layout-card
+#       layout_type: custom:grid-layout
+#       layout: !include ../../snippets/layout_room_popup.yaml
+#       cards:
+#         - type: custom:auto-entities
+#           filter:
+#             include:
+#               - group: group.light_bedroom
+#                 options:
+#                   type: custom:button-card
+#                   template:
+#                     - tpl_popup_light
+#               - entity_id: switch.lidl_3_gang_socket_l1
+#                 options:
+#                   type: custom:button-card
+#                   double_tap_action:
+#                     action: more-info
+#                   template:
+#                     - tpl_popup_device
+#               - entity_id: media_player.bedroom_tv
+#                 options:
+#                   type: custom:button-card
+#                   double_tap_action:
+#                     action: more-info
+#                   hold_action: !include ../../honeycomb/shield.yaml
+#                   template:
+#                     - mediaplayer
+#                     - icon_tv
+#                   styles:
+#                     card:
+#                       - border-radius: 10%
+#           card:
+#             type: grid
+#             columns: 3
+#           card_param: cards
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: Bedroom
+  card_mod: !include ../../snippets/style_popup_center.yaml
+  content:
+    type: custom:layout-card
+    layout_type: custom:grid-layout
+    layout: !include ../../snippets/layout_room_popup.yaml
+    cards:
+      - type: custom:auto-entities
+        filter:
+          include:
+            - group: group.light_bedroom
+              options:
+                type: custom:button-card
+                template:
+                  - tpl_popup_light
+            - entity_id: switch.lidl_3_gang_socket_l1
+              options:
+                type: custom:button-card
+                double_tap_action:
+                  action: more-info
+                template:
+                  - tpl_popup_device
+            - entity_id: media_player.bedroom_tv
+              options:
+                type: custom:button-card
+                double_tap_action:
+                  action: more-info
+                hold_action: !include ../../honeycomb/shield.yaml
+                template:
+                  - mediaplayer
+                  - icon_tv
+                styles:
+                  card:
+                    - border-radius: 10%
+        card:
+          type: grid
+          columns: 3
+        card_param: cards

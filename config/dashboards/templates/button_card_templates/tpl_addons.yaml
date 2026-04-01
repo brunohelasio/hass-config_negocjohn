@@ -215,38 +215,74 @@ addon_active:
 
 addon_conf_url:
   hold_action:
-    action: fire-dom-event
-    browser_mod:
-      service: browser_mod.popup
-      data:
-        title: Addons Configuration
-        card_mod:
-          style:
-            #popup header
-            .: |
+    # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+    # action: fire-dom-event
+    # browser_mod:
+    #   service: browser_mod.popup
+    #   data:
+    #     title: Addons Configuration
+    #     card_mod:
+    #       style:
+    #         #popup header
+    #         .: |
+    #           ha-dialog>ha-dialog-header {
+    #             display: none;
+    #           }
+    #           @media (max-width: 450px), (max-height: 500px) {
+    #             ha-dialog>ha-dialog-header {
+    #               display: block;
+    #             }
+    #           }
+    #     content:
+    #       type: iframe
+    #       aspect_ratio: '9:16'
+    #       url: >
+    #         [[[
+    #           const confUrl = variables.nav_path;
+    #           console.log(confUrl);
+    #           return `${confUrl}`;
+    #         ]]]
+
+    # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+    action: call-service
+    service: browser_mod.popup
+    data:
+      title: Addons Configuration
+      card_mod:
+        style:
+          #popup header
+          .: |
+            ha-dialog>ha-dialog-header {
+              display: none;
+            }
+            @media (max-width: 450px), (max-height: 500px) {
               ha-dialog>ha-dialog-header {
-                display: none;
+                display: block;
               }
-              @media (max-width: 450px), (max-height: 500px) {
-                ha-dialog>ha-dialog-header {
-                  display: block;
-                }
-              }
-        content:
-          type: iframe
-          aspect_ratio: '9:16'
-          url: >
-            [[[
-              const confUrl = variables.nav_path;
-              console.log(confUrl);
-              return `${confUrl}`;
-            ]]]
+            }
+      content:
+        type: iframe
+        aspect_ratio: '9:16'
+        url: >
+          [[[
+            const confUrl = variables.nav_path;
+            console.log(confUrl);
+            return `${confUrl}`;
+          ]]]
 
 addon_ios_conf_url:
   hold_action:
-    action: fire-dom-event
-    browser_mod:
-      service: browser_mod.javascript
-      data:
-        code: >
-          window.location.href = `/${variables.conf_url}`;
+    # --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+    # action: fire-dom-event
+    # browser_mod:
+    #   service: browser_mod.javascript
+    #   data:
+    #     code: >
+    #       window.location.href = `/${variables.conf_url}`;
+
+    # --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+    action: call-service
+    service: browser_mod.javascript
+    data:
+      code: >
+        window.location.href = `/${variables.conf_url}`;

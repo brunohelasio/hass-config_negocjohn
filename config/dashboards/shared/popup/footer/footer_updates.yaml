@@ -1,68 +1,138 @@
-action: fire-dom-event
-browser_mod:
-  service: browser_mod.popup
-  data:
-    title: Updates
-    card_mod: !include ../../snippets/style_popup_center.yaml
+# --- ANTERIOR (fire-dom-event — quebrado no HA 2026.4 + browser_mod 2.10.2) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Updates
+#     card_mod: !include ../../snippets/style_popup_center.yaml
 
-    content:
-      type: custom:mod-card
-      card_mod:
-        style:
-          hui-grid-card:
-            $: |
-              #root {
-                grid-gap: 0 !important;
-                padding: var(--tablet-popup-content-padding);
-                padding-top: 0 !important;
-                max-width: 700px;
-              }
+#     content:
+#       type: custom:mod-card
+#       card_mod:
+#         style:
+#           hui-grid-card:
+#             $: |
+#               #root {
+#                 grid-gap: 0 !important;
+#                 padding: var(--tablet-popup-content-padding);
+#                 padding-top: 0 !important;
+#                 max-width: 700px;
+#               }
 
-              #root hui-card:nth-child(2) {
-                margin-bottom: 1.5em !important;
-              }
-      card:
-        type: grid
-        columns: 1
-        square: false
-        cards:
-          - type: custom:button-card
-            entity: sensor.current_version
-            template: updates_hass
-            tap_action:
-              action: none
-            variables:
-              available: sensor.hassio_updates_available
-              latest: sensor.home_assistant_versions
-              latest_beta: sensor.docker_hub_beta
-              release_notes: sensor.hass_release_notes
-              release_notes_beta: sensor.hass_release_notes_beta
-          - type: custom:button-card
-            entity: sensor.current_version
-            name: Github Release
-            variables:
-              latest: sensor.home_assistant_versions
-            tap_action:
-              action: url
-              url_path: >
-                [[[
-                  return states['sensor.hass_release_notes'].attributes.html_url;
-                ]]]
-            template: updates_hass_icon_name
-          ############################################
-          - type: custom:button-card
-            variables:
-              updates: sensor.hassio_updates_available
-              hacs_installed: sensor.hacs_installed
-            template: updates
-          - type: custom:button-card
-            entity: sensor.hassio_updates_available
-            name: Updates
-            template:
-              - updates_icon_name
-              - >
-                [[[
-                  return window.navigator.userAgent.match(/iPhone/i)
-                    ? 'hacs_navigate_ios'
-                    : 'hacs_iframe';
-                ]]]
+#               #root hui-card:nth-child(2) {
+#                 margin-bottom: 1.5em !important;
+#               }
+#       card:
+#         type: grid
+#         columns: 1
+#         square: false
+#         cards:
+#           - type: custom:button-card
+#             entity: sensor.current_version
+#             template: updates_hass
+#             tap_action:
+#               action: none
+#             variables:
+#               available: sensor.hassio_updates_available
+#               latest: sensor.home_assistant_versions
+#               latest_beta: sensor.docker_hub_beta
+#               release_notes: sensor.hass_release_notes
+#               release_notes_beta: sensor.hass_release_notes_beta
+#           - type: custom:button-card
+#             entity: sensor.current_version
+#             name: Github Release
+#             variables:
+#               latest: sensor.home_assistant_versions
+#             tap_action:
+#               action: url
+#               url_path: >
+#                 [[[
+#                   return states['sensor.hass_release_notes'].attributes.html_url;
+#                 ]]]
+#             template: updates_hass_icon_name
+#           ############################################
+#           - type: custom:button-card
+#             variables:
+#               updates: sensor.hassio_updates_available
+#               hacs_installed: sensor.hacs_installed
+#             template: updates
+#           - type: custom:button-card
+#             entity: sensor.hassio_updates_available
+#             name: Updates
+#             template:
+#               - updates_icon_name
+#               - >
+#                 [[[
+#                   return window.navigator.userAgent.match(/iPhone/i)
+#                     ? 'hacs_navigate_ios'
+#                     : 'hacs_iframe';
+#                 ]]]
+
+# --- NOVO (call-service — compatível com browser_mod 2.10.2 + HA 2026.4.0) ---
+action: call-service
+service: browser_mod.popup
+data:
+  title: Updates
+  card_mod: !include ../../snippets/style_popup_center.yaml
+
+  content:
+    type: custom:mod-card
+    card_mod:
+      style:
+        hui-grid-card:
+          $: |
+            #root {
+              grid-gap: 0 !important;
+              padding: var(--tablet-popup-content-padding);
+              padding-top: 0 !important;
+              max-width: 700px;
+            }
+
+            #root hui-card:nth-child(2) {
+              margin-bottom: 1.5em !important;
+            }
+    card:
+      type: grid
+      columns: 1
+      square: false
+      cards:
+        - type: custom:button-card
+          entity: sensor.current_version
+          template: updates_hass
+          tap_action:
+            action: none
+          variables:
+            available: sensor.hassio_updates_available
+            latest: sensor.home_assistant_versions
+            latest_beta: sensor.docker_hub_beta
+            release_notes: sensor.hass_release_notes
+            release_notes_beta: sensor.hass_release_notes_beta
+        - type: custom:button-card
+          entity: sensor.current_version
+          name: Github Release
+          variables:
+            latest: sensor.home_assistant_versions
+          tap_action:
+            action: url
+            url_path: >
+              [[[
+                return states['sensor.hass_release_notes'].attributes.html_url;
+              ]]]
+          template: updates_hass_icon_name
+        ############################################
+        - type: custom:button-card
+          variables:
+            updates: sensor.hassio_updates_available
+            hacs_installed: sensor.hacs_installed
+          template: updates
+        - type: custom:button-card
+          entity: sensor.hassio_updates_available
+          name: Updates
+          template:
+            - updates_icon_name
+            - >
+              [[[
+                return window.navigator.userAgent.match(/iPhone/i)
+                  ? 'hacs_navigate_ios'
+                  : 'hacs_iframe';
+              ]]]

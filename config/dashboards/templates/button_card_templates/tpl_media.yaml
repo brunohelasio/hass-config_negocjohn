@@ -75,6 +75,10 @@ base_media:
       - overflow: hidden
       - color: >
           [[[
+            // FIX: guarda nula — entity pode ser undefined quando media_player.currently_playing
+            // nao existe no HA (media_universal.yaml nao carregado) ou esta unavailable.
+            // Sem essa guarda, entity.attributes lança TypeError e o button-card mostra erro vermelho.
+            if (!entity || !entity.attributes) return '#97989c';
             let game_image = entity.attributes.title_image;
             if (variables.is_youtube) {
                 return '#efefef';
@@ -90,6 +94,8 @@ base_media:
           ]]]
       - text-shadow: >
           [[[
+            // FIX: guarda nula — mesma razao do campo color acima.
+            if (!entity || !entity.attributes) return 'none';
             let game_image = entity.attributes.title_image;
             if (variables.is_youtube) {
                 return `1px 1px 5px rgba(18, 22, 23, 0.9)`;
@@ -118,6 +124,8 @@ media:
         - fill: '#9da0a2'
         - display: >
             [[[
+              // FIX: guarda nula — entity pode ser undefined na primeira renderizacao.
+              if (!entity || !entity.attributes) return 'initial';
               let game_image = entity.attributes.title_image;
               if (variables.is_youtube) {
                   return 'none';
@@ -136,6 +144,12 @@ media:
       - background-position: center
       - background-image: >
           [[[
+            // FIX: guarda nula — este campo pode ser sobrescrito pelo card-level styles
+            // em grid_media.yaml, mas o guarda evita erros durante o primeiro render
+            // antes da sobreposição ser aplicada.
+            if (!entity || !entity.attributes) {
+              return 'linear-gradient(0deg, rgba(115, 115, 115, 0.2) 0%, rgba(115, 115, 115, 0.2) 100%)';
+            }
             let game_image = entity.attributes.title_image;
 
             if (variables.is_youtube) {
@@ -593,6 +607,8 @@ progress_bar:
   custom_fields:
     bar: >
       [[[
+        // FIX: guarda nula — entity pode ser undefined quando entidade nao existe no HA.
+        if (!entity || !entity.attributes) return ' ';
         if (entity.attributes.media_position !== undefined) {
         setTimeout(() => {
           let elt = this.shadowRoot,
@@ -621,6 +637,8 @@ progress_bar:
       ]]]
     progress: >
       [[[
+        // FIX: guarda nula — mesma razao do campo bar acima.
+        if (!entity || !entity.attributes) return ' ';
         if (entity.attributes.media_position !== undefined) {
         setTimeout(() => {
             let elt = this.shadowRoot,

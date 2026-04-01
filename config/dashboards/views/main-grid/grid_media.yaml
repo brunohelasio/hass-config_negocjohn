@@ -204,7 +204,9 @@
     show:
       mediaquery: '(min-width: 1441px)'
   columns: 1
-  # square: true  # REMOVIDO — square:true no grid externo forcava o container inteiro a ser quadrado, cortando o Slide 2
+  # ANTERIOR: square: true — forcava o container inteiro a ser quadrado, cortando o Slide 2
+  # FIX: square: false explicito — permite auto-height via autoHeight: true do swipe-card
+  square: false
   cards:
     - type: custom:swipe-card
       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
@@ -329,6 +331,9 @@
     show:
       mediaquery: '(min-height: 463px) and (max-width: 1440px)'
   columns: 1
+  # ANTERIOR: square nao definido — outer grid podia impor constraint de altura
+  # FIX: square: false explicito — garante auto-height para Slide 2
+  square: false
   cards:
     - type: custom:swipe-card
       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml

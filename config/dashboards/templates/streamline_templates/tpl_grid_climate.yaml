@@ -4,17 +4,34 @@
 #                                               #
 ## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-# AIR PURIFIER
+# ANTERIOR: AIR PURIFIER — template airpurifier acessa entity.attributes.purifier
+# que nao existe no setup do usuario (sem Dyson/Xiaomi purifier).
+# grid_air_purifier:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.home_climate
+#     name: Humidity
+#     tap_action: block
+#     template:
+#       - airpurifier
+#     double_tap_action: !include ../../shared/popup/airpurifier.yaml
+# NOVO: AC Sala — usa thermostat template adaptado
 grid_air_purifier:
   card:
     type: custom:button-card
-    entity: sensor.home_climate
-    name: Humidity
-    tap_action: block
+    entity: climate.sl_ar_condicionado
+    name: AC Sala
     template:
-      - airpurifier
-    double_tap_action: !include ../../shared/popup/airpurifier.yaml
-    # double_tap_action: !include ../../shared/popup/purifier_popup.yaml
+      - base
+    variables:
+      state_on: >
+        [[[
+          return entity && ['cool','heat','fan_only','dry','heat_cool','auto'].indexOf(entity.state) !== -1;
+        ]]]
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
   # THERMOSTAT
 grid_thermostat:
   card:
@@ -29,21 +46,55 @@ grid_thermostat:
       service: input_boolean.toggle
       service_data:
         entity_id: input_boolean.svg_temp_humid
-  # LIVING ROOM COVERS
+  # ANTERIOR: LIVING ROOM COVERS — entidade europeia cover.living_room_cover nao existe
+  # grid_covers_living:
+  #   card:
+  #     type: custom:button-card
+  #     entity: cover.living_room_cover
+  #     name: Lounge
+  #     # hold_action: !include ../../shared/honeycomb/cover_living.yaml
+  #     template:
+  #       - cover
+  # NOVO: AC Office
 grid_covers_living:
   card:
     type: custom:button-card
-    entity: cover.living_room_cover
-    name: Lounge
-    # hold_action: !include ../../shared/honeycomb/cover_living.yaml
+    entity: climate.ac_office
+    name: AC Office
     template:
-      - cover
-  # LIVING ROOM COVERS
+      - base
+    variables:
+      state_on: >
+        [[[
+          return entity && ['cool','heat','fan_only','dry','heat_cool','auto'].indexOf(entity.state) !== -1;
+        ]]]
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+  # ANTERIOR: BEDROOM COVERS — entidade europeia cover.bedroom_shutters nao existe
+  # grid_covers_bedroom:
+  #   card:
+  #     type: custom:button-card
+  #     entity: cover.bedroom_shutters
+  #     name: Bedroom
+  #     # hold_action: !include ../../shared/honeycomb/cover_bedroom.yaml
+  #     template:
+  #       - cover
+  # NOVO: AC Quarto Miguel
 grid_covers_bedroom:
   card:
     type: custom:button-card
-    entity: cover.bedroom_shutters
-    name: Bedroom
-    # hold_action: !include ../../shared/honeycomb/cover_bedroom.yaml
+    entity: climate.ac_quarto_miguel
+    name: AC Q.Miguel
     template:
-      - cover
+      - base
+    variables:
+      state_on: >
+        [[[
+          return entity && ['cool','heat','fan_only','dry','heat_cool','auto'].indexOf(entity.state) !== -1;
+        ]]]
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info

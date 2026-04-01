@@ -75,7 +75,8 @@ base_media:
       - overflow: hidden
       - color: >
           [[[
-            let game_image = entity.attributes.title_image;
+            // ANTERIOR: entity.attributes.title_image — lancava TypeError quando entity era undefined/unavailable
+            let game_image = entity?.attributes?.title_image;
             if (variables.is_youtube) {
                 return '#efefef';
             } else {
@@ -90,7 +91,8 @@ base_media:
           ]]]
       - text-shadow: >
           [[[
-            let game_image = entity.attributes.title_image;
+            // ANTERIOR: entity.attributes.title_image — lancava TypeError quando entity era undefined/unavailable
+            let game_image = entity?.attributes?.title_image;
             if (variables.is_youtube) {
                 return `1px 1px 5px rgba(18, 22, 23, 0.9)`;
             } else {
@@ -118,7 +120,8 @@ media:
         - fill: '#9da0a2'
         - display: >
             [[[
-              let game_image = entity.attributes.title_image;
+              // ANTERIOR: entity.attributes.title_image — lancava TypeError quando entity era undefined/unavailable
+              let game_image = entity?.attributes?.title_image;
               if (variables.is_youtube) {
                   return 'none';
               }
@@ -136,7 +139,8 @@ media:
       - background-position: center
       - background-image: >
           [[[
-            let game_image = entity.attributes.title_image;
+            // ANTERIOR: entity.attributes.title_image — lancava TypeError quando entity era undefined/unavailable
+            let game_image = entity?.attributes?.title_image;
 
             if (variables.is_youtube) {
                 return `linear-gradient(0deg, rgba(0,0,0,.8) 0%, rgba(0,0,0,0) 100%), url(${states[this._config?.triggers_update].state})`;

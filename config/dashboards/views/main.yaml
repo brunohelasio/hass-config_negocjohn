@@ -2,8 +2,8 @@ icon: mdi:home-circle
 path: summary
 subview: false
 
-# ANTERIOR: theme: tablet
-theme: Graphite Auto
+# ANTERIOR: theme: Graphite Auto (causou regressao visual — sidebar desaparecia com esse tema)
+theme: tablet
 type: custom:grid-layout
 card_mod:
   style: |

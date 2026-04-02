@@ -2,19 +2,24 @@ pagination:
   type: bullets
   clickable: true
 roundLengths: true
-effect: coverflow
-coverflowEffect:
-  rotate: 80
-  depth: 300
+# ANTERIOR: effect: coverflow + coverflowEffect — efeito 3D que causava problemas
+# de layout quando combinado com aspect_ratio no Slide 1 e autoHeight.
+# NOVO: effect: slide (linear, sem transformações 3D).
+# effect: coverflow
+# coverflowEffect:
+#   rotate: 80
+#   depth: 300
+effect: slide
 speed: 600
 spaceBetween: 20
 threshold: 7
-# ANTERIOR: autoHeight: true — calculava altura do container baseado no offsetHeight
-# do slide ativo ANTES do CSS aspect-ratio (padding-top: 100%) ser aplicado.
-# Resultado: Slide 2 (grid 2x2) ficava cortado porque o container já tinha sido
-# dimensionado com a altura "pre-aspect-ratio" (menor que a real).
-# NOVO: autoHeight desabilitado. Ambos os slides usam altura natural do container.
-autoHeight: false
+# ANTERIOR: autoHeight: false — desabilitado anteriormente porque autoHeight: true
+# causava cálculo de altura antes do CSS aspect-ratio ser aplicado (sem aspect_ratio
+# definido no card). Com aspect_ratio: 1000/996 agora definido no card do Slide 1,
+# o HA renderiza o card com altura correta antes do Swiper medir, então autoHeight: true
+# funciona corretamente e permite que Slide 2 (grid 2x2) use sua altura natural.
+# autoHeight: false
+autoHeight: true
 observer: false
 followFinger: true
 grabCursor: true

@@ -244,6 +244,8 @@
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
+          aspect_ratio: 1000/996
+          show_icon: false
           template:
             - media
             - progress_bar
@@ -256,22 +258,26 @@
             haptic: light
           hold_action:
             action: more-info
-          styles:
-            card:
-              - border-radius: 5%
-              - overflow: hidden
-              - background-color: rgba(115, 115, 115, 0.2)
-              - background-size: cover
-              - background-position: center
-              - background-image: >
-                  [[[
-                    try {
-                      if (entity && entity.attributes && entity.attributes.entity_picture) {
-                        return 'url("' + entity.attributes.entity_picture + '")';
-                      }
-                    } catch(e) { console.warn('Slide1 media artwork (desktop):', e.message); }
-                    return 'none';
-                  ]]]
+          # ANTERIOR: styles.card inline com background-image JS — removido.
+          # O template media em tpl_media.yaml já define background-image via
+          # entity.attributes.entity_picture. O aspect_ratio: 1000/996 garante
+          # que o card tenha altura suficiente para exibir o artwork.
+          # styles:
+          #   card:
+          #     - border-radius: 5%
+          #     - overflow: hidden
+          #     - background-color: rgba(115, 115, 115, 0.2)
+          #     - background-size: cover
+          #     - background-position: center
+          #     - background-image: >
+          #         [[[
+          #           try {
+          #             if (entity && entity.attributes && entity.attributes.entity_picture) {
+          #               return 'url("' + entity.attributes.entity_picture + '")';
+          #             }
+          #           } catch(e) { console.warn('Slide1 media artwork (desktop):', e.message); }
+          #           return 'none';
+          #         ]]]
 
         ########## SLIDE 2: GRID DE BOTOES ##########
         # ANTERIOR: sem square: false — aspect-ratio do Slide 1 forcava altura quadrada,
@@ -279,6 +285,14 @@
         - type: grid
           columns: 2
           square: false
+          card_mod:
+            style: |
+              ha-card {
+                /* Safety net: garante altura mínima de 200px para que os 4 botões
+                   do grid 2x2 não sejam cortados quando o Swiper redimensiona
+                   o container com base no Slide 1. */
+                min-height: 200px;
+              }
           cards:
             # Slot 1: Smart TV
             - type: custom:button-card
@@ -343,10 +357,11 @@
         #     - conditional_media
         #     - progress_bar
         #     - icon_play_pause
-        # NOVO: usa template media (mais simples, sem JS de DOM navigation)
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
+          aspect_ratio: 1000/996
+          show_icon: false
           template:
             - media
             - progress_bar
@@ -359,28 +374,40 @@
             haptic: light
           hold_action:
             action: more-info
-          styles:
-            card:
-              - border-radius: 5%
-              - overflow: hidden
-              - background-color: rgba(115, 115, 115, 0.2)
-              - background-size: cover
-              - background-position: center
-              - background-image: >
-                  [[[
-                    try {
-                      if (entity && entity.attributes && entity.attributes.entity_picture) {
-                        return 'url("' + entity.attributes.entity_picture + '")';
-                      }
-                    } catch(e) { console.warn('Slide1 media artwork (tablet):', e.message); }
-                    return 'none';
-                  ]]]
+          # ANTERIOR: styles.card inline com background-image JS — removido.
+          # O template media em tpl_media.yaml já define background-image via
+          # entity.attributes.entity_picture. O aspect_ratio: 1000/996 garante
+          # que o card tenha altura suficiente para exibir o artwork.
+          # styles:
+          #   card:
+          #     - border-radius: 5%
+          #     - overflow: hidden
+          #     - background-color: rgba(115, 115, 115, 0.2)
+          #     - background-size: cover
+          #     - background-position: center
+          #     - background-image: >
+          #         [[[
+          #           try {
+          #             if (entity && entity.attributes && entity.attributes.entity_picture) {
+          #               return 'url("' + entity.attributes.entity_picture + '")';
+          #             }
+          #           } catch(e) { console.warn('Slide1 media artwork (tablet):', e.message); }
+          #           return 'none';
+          #         ]]]
 
         ########## SLIDE 2: GRID DE BOTOES ##########
         # ANTERIOR: sem square: false — botoes inferiores eram cortados
         - type: grid
           columns: 2
           square: false
+          card_mod:
+            style: |
+              ha-card {
+                /* Safety net: garante altura mínima de 200px para que os 4 botões
+                   do grid 2x2 não sejam cortados quando o Swiper redimensiona
+                   o container com base no Slide 1. */
+                min-height: 200px;
+              }
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2

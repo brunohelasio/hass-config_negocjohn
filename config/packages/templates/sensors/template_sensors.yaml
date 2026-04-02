@@ -56,7 +56,11 @@ template:
               {{ states.sensor.average_temperature.state | default('N/A') }}
             {% endif %}
           average_humidity: >-
-            {{ states.sensor.average_humidity.state | default('N/A') }}
+            {% if has_value('sensor.sl_sensor_temp_humid_umidade') %}
+              {{ states('sensor.sl_sensor_temp_humid_umidade') }}
+            {% else %}
+              {{ states.sensor.average_humidity.state | default('N/A') }}
+            {% endif %}
           # ORIGINAL negocjohn PM2.5 sensors (comentado — Regra de Ouro)
           # living_room_pm25: >-
           #   {% if has_value('sensor.dyson_ph04_pm_2_5') %}

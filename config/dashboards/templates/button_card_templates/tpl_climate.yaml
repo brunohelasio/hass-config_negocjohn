@@ -92,7 +92,7 @@ airpurifier:
       card:
         type: 'custom:mini-graph-card'
         entities:
-          - sensor.average_humidity
+          - sensor.sl_sensor_temp_humid_umidade
         color_thresholds:
           - value: 30
             color: '#D35467'

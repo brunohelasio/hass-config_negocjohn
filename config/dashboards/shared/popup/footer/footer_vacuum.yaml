@@ -254,11 +254,13 @@
 #                     name: Nº de Limpezas
 # --- FIM CÓDIGO COMENTADO (versao self-contained) ---
 
-# --- CÓDIGO COMENTADO: versao ngocjohn com !include snippets (2026-04-01) ---
-# Motivo: popup_footer_layout.yaml criava colunas de 550px cada (3x550=1650px) —
-# largura excessiva para tablet. tap_action.service com JS template nao é suportado
-# em formato ngocjohn. Mapa dentro de entities via custom:hui-element era instavel.
-# Substituido pela versao self-contained abaixo (reescrita do zero 2026-04-01).
+# --- CÓDIGO COMENTADO: versao self-contained sem mod-card (2026-04-01) ---
+# Motivo: custom:layout-card usado diretamente como content do browser_mod.popup
+# NAO funciona — popup nao abria. TODOS os footer popups que funcionam (System,
+# Network, Server, Updates) usam custom:mod-card como wrapper do layout-card.
+# O mod-card fornece isolamento de erros: se um card filho falha (ex: map card
+# nao instalado), o mod-card captura o erro e o popup ainda abre.
+# Sem o wrapper, o erro propaga e impede o popup de renderizar.
 #
 # action: fire-dom-event
 # browser_mod:
@@ -266,41 +268,33 @@
 #   data:
 #     title: Roborock S7
 #     style: >
-#       --max-popup-column: 3;
-#     card_mod: !include ../../snippets/style_popup_center.yaml
+#       --popup-width: 1100px;
+#     card_mod:
+#       style:
+#         ha-dialog$: |
+#           .mdc-dialog__container {
+#             align-items: center !important;
+#             justify-content: center !important;
+#           }
 #     content:
-#       type: custom:mod-card
-#       card_mod: !include ../../snippets/style_popup_footer.yaml
-#       card:
-#         type: custom:layout-card
-#         layout_type: custom:grid-layout
-#         layout: !include ../../snippets/popup_footer_layout.yaml
-#         cards:
-#           - type: entities
-#             title: Summary
-#             ...  (entidades Roborock S7)
-#           - type: entities
-#             title: Map
-#             ...  (custom:hui-element xiaomi-vacuum-map-card dentro de entities)
-#           - type: entities
-#             title: Settings
-#             ...  (configuracoes Roborock S7)
-# --- FIM CÓDIGO COMENTADO (versao ngocjohn) ---
+#       type: custom:layout-card  ← PROBLEMA: sem wrapper custom:mod-card
+#       ...
+# --- FIM CÓDIGO COMENTADO (versao self-contained) ---
 
 # ==============================================================================
-# NOVO: Reescrita do zero (2026-04-01).
-# Estrutura self-contained — sem !include snippets problemáticos.
+# NOVO: Padrao ngocjohn restaurado (2026-04-02).
+# Segue EXATAMENTE a mesma estrutura de footer_system.yaml (comprovadamente funcional):
+#   - card_mod: !include style_popup_center.yaml (centering)
+#   - content: custom:mod-card (wrapper com isolamento de erros)
+#   - card_mod: !include style_popup_footer.yaml (styling das colunas)
+#   - card: custom:layout-card + !include popup_footer_layout.yaml (grid)
 #
-# Layout: 3 colunas via custom:layout-card
-#   Coluna 1 (Resumo 300px): entities status + botoes controle
-#   Coluna 2 (Mapa 1fr): xiaomi-vacuum-map-card como card de PRIMEIRO NIVEL
-#   Coluna 3 (Config 280px): entities configuracoes + estatisticas
+# Diferenca vs tentativa anterior: custom:mod-card como wrapper obrigatorio.
+# Entidades: todas vacuum.roborock_s7 e sensores confirmados pelo usuario.
+# Botoes: custom:hui-horizontal-stack-card (mesmo padrao do footer_system.yaml).
+# Mapa: custom:xiaomi-vacuum-map-card como card direto no grid.
 #
-# Popup width: --popup-width: 1100px via pipeline uix-dialog do tema tablet
-# Centering: card_mod inline (sem !include style_popup_center.yaml)
-# Botoes: custom:button-card com servicos diretos (sem JS condicional em service:)
-#
-# Para rollback: comentar este bloco e descomentar o bloco ngocjohn acima.
+# Para rollback: comentar este bloco e descomentar versao acima.
 # ==============================================================================
 action: fire-dom-event
 browser_mod:
@@ -308,213 +302,164 @@ browser_mod:
   data:
     title: Roborock S7
     style: >
-      --popup-width: 1100px;
-    card_mod:
-      style:
-        ha-dialog$: |
-          .mdc-dialog__container {
-            align-items: center !important;
-            justify-content: center !important;
-          }
+      --max-popup-column: 3;
+    card_mod: !include ../../snippets/style_popup_center.yaml
     content:
-      type: custom:layout-card
-      layout_type: custom:grid-layout
-      layout:
-        grid-template-columns: 300px 1fr 280px
-        grid-template-rows: 1fr
-        grid-template-areas: '"summary map settings"'
-        grid-gap: 16px
-        margin: 0
-        padding: 16px
-        mediaquery:
-          "(max-width: 800px)":
-            grid-template-columns: 1fr
-            grid-template-rows: auto auto auto
-            grid-template-areas: |
-              "summary"
-              "map"
-              "settings"
-      cards:
+      type: custom:mod-card
+      card_mod: !include ../../snippets/style_popup_footer.yaml
+      card:
+        type: custom:layout-card
+        layout_type: custom:grid-layout
+        layout: !include ../../snippets/popup_footer_layout.yaml
+        cards:
 
-        # ================================================================
-        # COLUNA 1 — RESUMO (Status + Peças + Controles)
-        # ================================================================
-        - type: vertical-stack
-          view_layout:
-            grid-area: summary
-          cards:
-            - type: entities
-              title: Status
-              show_header_toggle: false
-              entities:
-                - entity: vacuum.roborock_s7
-                  name: Roborock S7
-                - entity: sensor.roborock_s7_status
-                  name: Status
-                - entity: sensor.roborock_s7_comodo_atual
-                  name: Cômodo Atual
-                - entity: sensor.roborock_s7_vacuum_error
-                  name: Erro
-                - entity: sensor.roborock_s7_bateria
-                  name: Bateria
-                - entity: binary_sensor.roborock_s7_mop_attached
-                  name: Mop Acoplado
-                - entity: binary_sensor.roborock_s7_water_box_attached
-                  name: Caixa de Água
-                - entity: binary_sensor.roborock_s7_water_shortage
-                  name: Falta de Água
-                - type: divider
-                - entity: select.roborock_s7_intensidade_do_mop
-                  name: Intensidade do Mop
-                - entity: select.roborock_s7_modo_mop
-                  name: Modo do Mop
+          # ================================================================
+          # COLUNA 1 — STATUS + CONTROLES
+          # ================================================================
+          - type: entities
+            title: Status
+            show_header_toggle: false
+            card_mod:
+              class: header
+            entities:
+              - entity: vacuum.roborock_s7
+                name: Roborock S7
+                secondary_info: last-changed
 
-            # Botões de controle — horizontal-stack separado (não dentro de entities)
-            - type: horizontal-stack
-              cards:
-                # Botão Iniciar
-                - type: custom:button-card
-                  entity: vacuum.roborock_s7
-                  icon: mdi:play
-                  name: Iniciar
-                  show_name: true
-                  styles:
-                    card:
-                      - height: 56px
-                      - border-radius: 12px
-                      - background: rgba(255,255,255,0.07)
-                      - box-shadow: none
-                      - border: 1px solid rgba(255,255,255,0.12)
-                      - aspect-ratio: unset
-                    icon:
-                      - color: rgba(255,255,255,0.80)
-                      - width: 22px
-                    name:
-                      - font-size: 12px
-                      - color: rgba(255,255,255,0.70)
-                  tap_action:
-                    action: call-service
-                    service: vacuum.start
-                    service_data:
-                      entity_id: vacuum.roborock_s7
-                    haptic: success
+              - entity: sensor.roborock_s7_status
+                name: Status
 
-                # Botão Pausar
-                - type: custom:button-card
-                  entity: vacuum.roborock_s7
-                  icon: mdi:pause
-                  name: Pausar
-                  show_name: true
-                  styles:
-                    card:
-                      - height: 56px
-                      - border-radius: 12px
-                      - background: rgba(255,255,255,0.07)
-                      - box-shadow: none
-                      - border: 1px solid rgba(255,255,255,0.12)
-                      - aspect-ratio: unset
-                    icon:
-                      - color: rgba(255,255,255,0.80)
-                      - width: 22px
-                    name:
-                      - font-size: 12px
-                      - color: rgba(255,255,255,0.70)
-                  tap_action:
-                    action: call-service
-                    service: vacuum.pause
-                    service_data:
-                      entity_id: vacuum.roborock_s7
-                    haptic: light
+              - entity: sensor.roborock_s7_comodo_atual
+                name: Cômodo Atual
 
-                # Botão Voltar à Base
-                - type: custom:button-card
-                  entity: vacuum.roborock_s7
-                  icon: mdi:home-import-outline
-                  name: Base
-                  show_name: true
-                  styles:
-                    card:
-                      - height: 56px
-                      - border-radius: 12px
-                      - background: rgba(255,255,255,0.07)
-                      - box-shadow: none
-                      - border: 1px solid rgba(255,255,255,0.12)
-                      - aspect-ratio: unset
-                    icon:
-                      - color: rgba(255,255,255,0.80)
-                      - width: 22px
-                    name:
-                      - font-size: 12px
-                      - color: rgba(255,255,255,0.70)
-                  tap_action:
-                    action: call-service
-                    service: vacuum.return_to_base
-                    service_data:
-                      entity_id: vacuum.roborock_s7
-                    haptic: medium
+              - entity: sensor.roborock_s7_vacuum_error
+                name: Erro
 
-        # ================================================================
-        # COLUNA 2 — MAPA (card de primeiro nível — NÃO dentro de entities)
-        # ================================================================
-        - type: custom:xiaomi-vacuum-map-card
-          view_layout:
-            grid-area: map
-          vacuum_platform: Roborock
-          entity: vacuum.roborock_s7
-          map_source:
-            camera: image.roborock_s7_map_0
-          calibration_source:
-            camera: true
-          map_locked: true
-          card_mod:
-            style: |
-              ha-card {
-                background: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-              }
+              - entity: sensor.roborock_s7_bateria
+                name: Bateria
 
-        # ================================================================
-        # COLUNA 3 — CONFIGURAÇÕES + ESTATÍSTICAS
-        # ================================================================
-        - type: entities
-          view_layout:
-            grid-area: settings
-          title: Configurações
-          show_header_toggle: false
-          entities:
-            - entity: number.roborock_s7_volume
-              name: Volume
+              - entity: binary_sensor.roborock_s7_mop_attached
+                name: Mop Acoplado
 
-            - entity: switch.roborock_s7_nao_perturbe
-              name: Não Perturbe
+              - entity: binary_sensor.roborock_s7_water_box_attached
+                name: Caixa de Água
 
-            - entity: time.roborock_s7_comecar_nao_perturbe
-              name: Início NP
+              - entity: binary_sensor.roborock_s7_water_shortage
+                name: Falta de Água
 
-            - entity: time.roborock_s7_terminar_nao_perturbe
-              name: Fim NP
+              - type: divider
 
-            - entity: switch.roborock_s7_dock_luz_indicadora_de_status
-              name: Luz Indicadora
+              - entity: select.roborock_s7_intensidade_do_mop
+                name: Intensidade do Mop
 
-            - entity: switch.roborock_s7_dock_bloqueio_infantil
-              name: Bloqueio Infantil
+              - entity: select.roborock_s7_modo_mop
+                name: Modo do Mop
 
-            - type: divider
+              - type: section
 
-            - entity: sensor.roborock_s7_area_de_limpeza
-              name: Área (Última)
+              # Botoes de controle — mesmo padrao do footer_system.yaml
+              # (custom:hui-horizontal-stack-card dentro de entities)
+              - type: custom:hui-horizontal-stack-card
+                cards:
+                  - type: custom:button-card
+                    entity: vacuum.roborock_s7
+                    name: Iniciar
+                    icon: mdi:play
+                    tap_action:
+                      action: call-service
+                      service: vacuum.start
+                      service_data:
+                        entity_id: vacuum.roborock_s7
+                      haptic: success
+                    template: icon_name
 
-            - entity: sensor.roborock_s7_tempo_de_limpeza
-              name: Tempo (Última)
+                  - type: custom:button-card
+                    entity: vacuum.roborock_s7
+                    name: Pausar
+                    icon: mdi:pause
+                    tap_action:
+                      action: call-service
+                      service: vacuum.pause
+                      service_data:
+                        entity_id: vacuum.roborock_s7
+                      haptic: light
+                    template: icon_name
 
-            - entity: sensor.roborock_s7_area_total_de_limpeza
-              name: Área Total
+                  - type: custom:button-card
+                    entity: vacuum.roborock_s7
+                    name: Base
+                    icon: mdi:home-import-outline
+                    tap_action:
+                      action: call-service
+                      service: vacuum.return_to_base
+                      service_data:
+                        entity_id: vacuum.roborock_s7
+                      haptic: medium
+                    template: icon_name
 
-            - entity: sensor.roborock_s7_tempo_total_de_limpeza
-              name: Tempo Total
+          # ================================================================
+          # COLUNA 2 — MAPA
+          # Card direto no grid (nao dentro de entities via hui-element).
+          # O style_popup_footer.yaml estiliza hui-entities-card$, nao
+          # afeta este card — resultado: mapa sem borda lateral (OK).
+          # ================================================================
+          - type: custom:xiaomi-vacuum-map-card
+            entity: vacuum.roborock_s7
+            vacuum_platform: Roborock
+            map_source:
+              camera: image.roborock_s7_map_0
+            calibration_source:
+              camera: true
+            map_locked: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: transparent !important;
+                  border: none !important;
+                  box-shadow: none !important;
+                }
 
-            - entity: sensor.roborock_s7_contagem_total_de_limpeza
-              name: Nº de Limpezas
+          # ================================================================
+          # COLUNA 3 — CONFIGURAÇÕES + ESTATÍSTICAS
+          # ================================================================
+          - type: entities
+            title: Configurações
+            show_header_toggle: false
+            card_mod:
+              class: header
+            entities:
+              - entity: number.roborock_s7_volume
+                name: Volume
+
+              - entity: switch.roborock_s7_nao_perturbe
+                name: Não Perturbe
+
+              - entity: time.roborock_s7_comecar_nao_perturbe
+                name: Início NP
+
+              - entity: time.roborock_s7_terminar_nao_perturbe
+                name: Fim NP
+
+              - entity: switch.roborock_s7_dock_luz_indicadora_de_status
+                name: Luz Indicadora
+
+              - entity: switch.roborock_s7_dock_bloqueio_infantil
+                name: Bloqueio Infantil
+
+              - type: divider
+
+              - entity: sensor.roborock_s7_area_de_limpeza
+                name: Área (Última)
+
+              - entity: sensor.roborock_s7_tempo_de_limpeza
+                name: Tempo (Última)
+
+              - entity: sensor.roborock_s7_area_total_de_limpeza
+                name: Área Total
+
+              - entity: sensor.roborock_s7_tempo_total_de_limpeza
+                name: Tempo Total
+
+              - entity: sensor.roborock_s7_contagem_total_de_limpeza
+                name: Nº de Limpezas
 

@@ -115,8 +115,8 @@ airpurifier:
           legend: false
           points: false
           fill: fade
-          extrema: true
-          average: true
+          extrema: false
+          average: false
         card_mod:
           style: |
             ha-card {
@@ -265,8 +265,8 @@ thermostat:
           legend: false
           points: false
           fill: fade
-          extrema: true
-          average: true
+          extrema: false
+          average: false
         card_mod:
           style: |
             ha-card {

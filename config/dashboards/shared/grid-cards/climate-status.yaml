@@ -1,28 +1,29 @@
-# --- CÓDIGO ORIGINAL COMENTADO (streamline-cards com entidades europeias — nao existem no setup) ---
 # CLIMATE STATUS AND TEMPERATURES
 ##########################################
-# - type: custom:streamline-card
-#   template: grid_air_purifier
-# # THERMOSTAT
-# - type: custom:streamline-card
-#   template: grid_thermostat
-# # LIVING ROOM COVERS
-# - type: custom:streamline-card
-#   template: grid_covers_living
-# # BEDOOM COVERS
-# - type: custom:streamline-card
-#   template: grid_covers_bedroom
-# --- FIM CÓDIGO ORIGINAL ---
 
-# NOVO: 4 botoes de AC usando tpl_popup_climate + icon_climate
-# Motivo: streamline-cards originais usavam sensor.home_climate, cover.living_room_cover,
-# cover.bedroom_shutters — entidades do setup europeu (ngocjohn) que nao existem aqui.
-# Substitutos: entidades reais do usuario (climate.*).
-# Uso de tpl_popup_climate: garante state_on correto para climate
-# (cool/fan_only/dry/heat/heat_cool/auto) na cascata de heranca do button-card.
-# icon_climate: SVG proprio do template (icone de ar-condicionado em azul quando ativo).
+# Superior esquerdo — Umidade (estilo original com grafico)
+- type: custom:button-card
+  entity: sensor.home_climate
+  name: Humidade
+  tap_action:
+    action: none
+  template:
+    - airpurifier
 
-# AC 1 — Sala
+# Superior direito — Temperatura (estilo original com grafico)
+- type: custom:button-card
+  entity: sensor.home_climate
+  name: Temperatura
+  template:
+    - thermostat
+  tap_action:
+    action: call-service
+    service: input_boolean.toggle
+    service_data:
+      entity_id: input_boolean.svg_temp_humid
+  double_tap_action: !include ../popup/thermostat.yaml
+
+# Inferior esquerdo — Ar da sala
 - type: custom:button-card
   entity: climate.sl_ar_condicionado
   name: AC Sala
@@ -30,37 +31,29 @@
   template:
     - tpl_popup_climate
     - icon_climate
-
-# AC 2 — Office
-- type: custom:button-card
-  entity: climate.ac_office
-  name: AC Office
-  show_icon: false
-  template:
-    - tpl_popup_climate
-    - icon_climate
-
-# AC 3 — Quarto Miguel
-- type: custom:button-card
-  entity: climate.ac_quarto_miguel
-  name: AC Q.Miguel
-  show_icon: false
-  template:
-    - tpl_popup_climate
-    - icon_climate
-
-# AC 4 — Quarto Casal (entidade a confirmar — placeholder visivel, sem acao ativa)
-# Quando a entidade for confirmada, substituir:
-#   entity: climate.ac_quarto_casal  (ou o entity_id real, formato: climate.<nome_do_ac>)
-# e remover tap_action:none + styles.card.opacity para ativar o botao.
-- type: custom:button-card
-  name: AC Q.Casal
-  show_icon: false
-  template:
-    - tpl_popup_climate
-    - icon_climate
-  # Placeholder sem entidade real confirmada — botao visivel mas sem acao
   tap_action:
+    action: perform-action
+    perform_action: climate.toggle
+    target:
+      entity_id: climate.sl_ar_condicionado
+    haptic: success
+  double_tap_action:
+    action: more-info
+  hold_action:
+    action: more-info
+
+# Inferior direito — Cortina (icone visivel, inativo)
+- type: custom:button-card
+  name: Cortina Sala
+  show_icon: false
+  template:
+    - base
+    - icon_shade
+  tap_action:
+    action: none
+  hold_action:
+    action: none
+  double_tap_action:
     action: none
   styles:
     card:

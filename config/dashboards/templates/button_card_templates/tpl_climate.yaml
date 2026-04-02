@@ -87,12 +87,16 @@ airpurifier:
       [[[ return !entity || entity.entity_id; ]]]
   custom_fields:
     humid: >
-      [[[ return '💧' + Math.round(entity.attributes.average_humidity)+'%'; ]]]
+      [[[
+        const humid = entity?.attributes?.average_humidity ?? entity?.state;
+        const value = parseFloat(humid);
+        return isNaN(value) ? '💧--%' : '💧' + Math.round(value) + '%';
+      ]]]
     graph:
       card:
         type: 'custom:mini-graph-card'
         entities:
-          - sensor.average_humidity
+          - sensor.sl_sensor_temp_humid_umidade
         color_thresholds:
           - value: 30
             color: '#D35467'
@@ -214,10 +218,11 @@ thermostat:
       [[[
         // ORIGINAL negocjohn: return '🔥'+Math.round(entity.attributes.average_temperature).toFixed(1)+'°';
         // Versao adaptada: mostra temperatura do sensor do usuario, icone de termometro
-        const temp = entity.attributes.average_temperature;
+        const temp = entity?.attributes?.average_temperature ?? entity?.state;
         if (temp && temp !== 'N/A') {
-          const icon = entity.attributes.ac_active === 'yes' ? '❄️' : '🌡️';
-          return icon + parseFloat(temp).toFixed(1) + '°';
+          const icon = entity?.attributes?.ac_active === 'yes' ? '❄️' : '🌡️';
+          const value = parseFloat(temp);
+          return isNaN(value) ? '🌡️--°' : icon + value.toFixed(1) + '°';
         }
         return '🌡️--°';
       ]]]

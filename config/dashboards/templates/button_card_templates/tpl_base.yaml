@@ -1637,9 +1637,24 @@ settings:
       [[[
         return /(?:iphone|android|ipad)/i.test(navigator.userAgent)
       ]]]
+# --- CÓDIGO ORIGINAL COMENTADO (sensor.art_colors não existe no setup do usuário) ---
+# vibrant_colors:
+#   variables:
+#     vibrant_data: >
+#       [[[
+#         return states['sensor.art_colors'].attributes.data || {};
+#       ]]]
+# --- FIM CÓDIGO ORIGINAL ---
+# NOVO: retorna objeto vazio sem acessar sensor inexistente.
+# Qualquer template que use variables.vibrant_data (ex: icon_homepod)
+# recebe {} sem TypeError — cores ficam no fallback cinza.
 vibrant_colors:
   variables:
     vibrant_data: >
       [[[
-        return states['sensor.art_colors'].attributes.data || {};
+        try {
+          let s = states['sensor.art_colors'];
+          if (s && s.attributes && s.attributes.data) return s.attributes.data;
+        } catch(e) {}
+        return {};
       ]]]

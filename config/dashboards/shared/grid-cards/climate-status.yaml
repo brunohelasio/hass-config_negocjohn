@@ -1,27 +1,126 @@
 # CLIMATE STATUS AND TEMPERATURES
 ##########################################
+# RECONSTRUÍDO DO ZERO — 2026-04-02
+# Problema: templates airpurifier/thermostat exibiam mini-graph-card e
+# custom_fields extras (humid/temp/graph) que criavam sub-cards visíveis
+# e desalinhados dentro do botão principal.
+# Solução: botões simples usando template base + leitura direta do valor
+# via state_display, sem mini-graph-card nem custom_fields extras.
 
-# Superior esquerdo — Umidade (estilo original com grafico)
+# --- CÓDIGO ORIGINAL COMENTADO (airpurifier + thermostat com mini-graph) ---
+# - type: custom:button-card
+#   entity: sensor.sl_sensor_temp_humid_umidade
+#   name: Humidade
+#   tap_action:
+#     action: none
+#   template:
+#     - airpurifier
+#
+# - type: custom:button-card
+#   entity: sensor.sl_sensor_temp_humid_temperatura
+#   name: Temperatura
+#   template:
+#     - thermostat
+#   tap_action:
+#     action: call-service
+#     service: input_boolean.toggle
+#     service_data:
+#       entity_id: input_boolean.svg_temp_humid
+#   double_tap_action: !include ../popup/thermostat.yaml
+# --- FIM CÓDIGO ORIGINAL ---
+
+# NOVO: Botões limpos com template base + state_display
+
+# Superior esquerdo — Umidade (limpo, sem gráfico)
 - type: custom:button-card
   entity: sensor.sl_sensor_temp_humid_umidade
-  name: Humidade
-  tap_action:
-    action: none
+  name: Umidade
+  show_icon: false
   template:
-    - airpurifier
+    - base
+  tap_action:
+    action: more-info
+  state_display: >
+    [[[
+      if (entity && entity.state && entity.state !== 'unavailable') {
+        return Math.round(parseFloat(entity.state)) + '%';
+      }
+      return '--%';
+    ]]]
+  custom_fields:
+    icon: >
+      <svg viewBox="0 0 50 50" style="width:50%;opacity:0.6">
+        <path fill="#68C9F0" d="M25,2 C25,2 10,22 10,33 C10,41.3 16.7,48 25,48 C33.3,48 40,41.3 40,33 C40,22 25,2 25,2 Z"/>
+      </svg>
+  styles:
+    grid:
+      - grid-template-areas: '"i" "s" "n"'
+      - grid-template-columns: 1fr
+      - grid-template-rows: 1fr min-content min-content
+    custom_fields:
+      icon:
+        - place-self: center
+        - margin-top: 8%
+    state:
+      - place-self: center
+      - font-size: >
+          [[[
+            return window.matchMedia('(max-width: 800px)').matches
+              ? '1.1em'
+              : window.matchMedia('(max-width: 1500px)').matches
+                ? '2vw' : '1.2vw';
+          ]]]
+      - font-weight: 600
+      - letter-spacing: '-0.5px'
+      - color: '#68C9F0'
 
-# Superior direito — Temperatura (estilo original com grafico)
+# Superior direito — Temperatura (limpo, sem gráfico)
 - type: custom:button-card
   entity: sensor.sl_sensor_temp_humid_temperatura
   name: Temperatura
+  show_icon: false
   template:
-    - thermostat
+    - base
   tap_action:
-    action: call-service
-    service: input_boolean.toggle
-    service_data:
-      entity_id: input_boolean.svg_temp_humid
+    action: more-info
   double_tap_action: !include ../popup/thermostat.yaml
+  state_display: >
+    [[[
+      if (entity && entity.state && entity.state !== 'unavailable') {
+        const val = parseFloat(entity.state);
+        return isNaN(val) ? '--°' : val.toFixed(1) + '°C';
+      }
+      return '--°';
+    ]]]
+  custom_fields:
+    icon: >
+      <svg viewBox="0 0 50 50" style="width:50%;opacity:0.6">
+        <path fill="#f39c12" d="M25,2 L25,30 M20,30 A8,8,0,1,0,30,30 A8,8,0,1,0,20,30 M22,6 L22,28 A6,6,0,1,0,28,28 L28,6 A3,3,0,0,0,22,6 Z"/>
+        <rect fill="#fd3721" x="23.5" y="12" width="3" height="18" rx="1.5"/>
+        <circle fill="#fd3721" cx="25" cy="35" r="5"/>
+        <rect fill="#f39c12" x="22" y="4" width="6" height="28" rx="3" opacity="0.3"/>
+      </svg>
+  styles:
+    grid:
+      - grid-template-areas: '"i" "s" "n"'
+      - grid-template-columns: 1fr
+      - grid-template-rows: 1fr min-content min-content
+    custom_fields:
+      icon:
+        - place-self: center
+        - margin-top: 8%
+    state:
+      - place-self: center
+      - font-size: >
+          [[[
+            return window.matchMedia('(max-width: 800px)').matches
+              ? '1.1em'
+              : window.matchMedia('(max-width: 1500px)').matches
+                ? '2vw' : '1.2vw';
+          ]]]
+      - font-weight: 600
+      - letter-spacing: '-0.5px'
+      - color: '#f39c12'
 
 # Inferior esquerdo — Ar da sala
 - type: custom:button-card

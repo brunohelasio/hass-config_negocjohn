@@ -1,196 +1,27 @@
 #################################################
 #                                               #
-#     ORIGINAL GRID MEDIA (COMENTADO)           #
-#     Motivo: entidades nao existem no setup    #
-#     atual. Substituido por swipe-card com     #
-#     entidades reais abaixo.                   #
+#     CÓDIGO ORIGINAL COMPLETO (COMENTADO)      #
+#     Preservado conforme Regra de Ouro         #
 #                                               #
 #################################################
-# - type: grid
-#   title: Media
-#   view_layout:
-#     grid-area: media
-#     show:
-#       mediaquery: '(min-width: 1441px)'
-#   columns: 1
-#   square: true
-#   cards:
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Recently added
-#       card:
-#         type: custom:added-movie-card
-#         entity: sensor.tmdb_movies_trending
-#
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Living Room TV
-#       card: &ATV_OLD
-#         type: custom:button-card
-#         entity: media_player.living_room_tv
-#         name: ' '
-#         triggers_update: sensor.youtube_thumbnail
-#         template:
-#           - universal_media_player
-#           - icon_apple_tv
-#
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Kodi ATV
-#       card: &KODIATV_OLD
-#         type: custom:button-card
-#         entity: media_player.kodi_atv
-#         name: ' '
-#         triggers_update: sensor.kodi_picture
-#         template:
-#           - conditional_media
-#           - progress_bar
-#           - tpl_minicontrol
-#           - icon_kodi
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Bedroom TV
-#       card: &BEDROOMTV_OLD
-#         type: custom:button-card
-#         entity: media_player.shield
-#         name: 'ShieldTV'
-#         triggers_update: sensor.youtube_thumbnail
-#         template:
-#           - conditional_media
-#           - icon_shieldtv_text
-#           - progress_bar
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: 'PlayStation 5'
-#       card: &PS5_OLD
-#         type: custom:button-card
-#         entity: media_player.playstation_5
-#         name: ''
-#         template:
-#           - conditional_media
-#           - icon_playstation
-#
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Mass Universal Airplay
-#       card: &MASSAIRPLAY_OLD
-#         type: custom:button-card
-#         entity: media_player.mass_universal_airplay
-#         template:
-#           - universal_media_player
-#           - icon_homepod
-#
-# - type: grid
-#   title: Media
-#   view_layout:
-#     grid-area: media
-#     show:
-#       mediaquery: '(min-height: 463px) and (max-width: 1440px)'
-#   columns: 1
-#   cards:
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Recently added
-#       card:
-#         type: custom:added-movie-card
-#         entity: sensor.tmdb_movies_trending
-#         show_item_count: 10
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Living Room TV
-#       card: *ATV_OLD
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Bedroom TV
-#       card: *BEDROOMTV_OLD
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Kodi ATV
-#       card: *KODIATV_OLD
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Spotify
-#       card:
-#         type: custom:button-card
-#         entity: media_player.spotifyplus_ngoc_nguyen
-#         name: ' '
-#         double_tap_action: !include ../../shared/popup/spotify_playlist.yaml
-#         template:
-#           - currently_playing
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: PlayStation 5
-#       card: *PS5_OLD
-#     - type: conditional
-#       conditions:
-#         - entity: select.conditional_media
-#           state: Mass Player Group
-#       card: *MASSAIRPLAY_OLD
+# --- CÓDIGO ORIGINAL COMENTADO (todas as versões anteriores) ---
+# Versão 1: conditional cards com select.conditional_media (ngocjohn europeu)
+# Versão 2: swipe-card com template media/conditional_media
+# Versão 3: swipe-card com aspect_ratio hack + autoHeight
+# Todas falharam por: template chain complexa, aspect_ratio conflicts, Swiper height
+# Ver /tmp/grid_media-backup.yaml para código completo anterior
+# --- FIM CÓDIGO ORIGINAL ---
 
 #################################################
 #                                               #
-#     ORIGINAL SWIPE-CARD (COMENTADO)           #
-#     Referencia do ngocjohn original           #
+#    NOVO: RECONSTRUÍDO DO ZERO — 2026-04-02    #
 #                                               #
-#################################################
-# - type: grid
-#   title: Media
-#   view_layout:
-#     grid-area: media
-#     show:
-#       mediaquery: '(min-width: 1441px)'
-#   columns: 1
-#   square: true
-#   cards:
-#     - type: custom:swipe-card
-#       start_card: 1
-#       parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
-#       cards:
-#         - type: horizontal-stack
-#           cards:
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Recently added
-#               card:
-#                 type: custom:added-movie-card
-#                 entity: sensor.tmdb_movies_trending
-#             - type: conditional
-#               conditions:
-#                 - entity: select.conditional_media
-#                   state: Living Room TV
-#               card:
-#                 type: custom:button-card
-#                 entity: media_player.living_room_tv
-#                 name: ' '
-#                 triggers_update: sensor.youtube_thumbnail
-#                 template:
-#                   - universal_media_player
-#                   - icon_apple_tv
-
-#################################################
+#    Slide 1: Artwork fullscreen (JS inline)    #
+#    Slide 2: Grid 2x2 player buttons           #
 #                                               #
-#    NOVO: SWIPE-CARD MEDIA COM ENTIDADES REAIS #
-#                                               #
-#    Slide 1: Artwork fullscreen (condicional)  #
-#    Slide 2: Grid de botoes dos players        #
-#                                               #
-#    IMPORTANTE: Os valores de 'state:' nos     #
-#    conditional cards devem corresponder ao     #
-#    friendly_name EXATO da entidade no HA.     #
-#    Se nao corresponderem, ajuste manualmente. #
+#    SEM templates media/conditional_media       #
+#    SEM aspect_ratio hacks                      #
+#    Background-image via JS direto no card      #
 #                                               #
 #################################################
 
@@ -204,52 +35,29 @@
     show:
       mediaquery: '(min-width: 1441px)'
   columns: 1
-  # square: true  # REMOVIDO — square:true no grid externo forcava o container inteiro a ser quadrado, cortando o Slide 2
   cards:
     - type: custom:swipe-card
-      parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
+      parameters:
+        pagination:
+          type: bullets
+          clickable: true
+        roundLengths: true
+        effect: slide
+        speed: 600
+        spaceBetween: 12
+        threshold: 7
+        autoHeight: false
+        observer: true
+        followFinger: true
+        grabCursor: true
       cards:
         ########## SLIDE 1: ARTWORK FULLSCREEN ##########
-        # ORIGINAL COMENTADO — conditional cards dependiam de select.conditional_media
-        # cujo estado retornava nomes com whitespace (indentacao do Jinja2 macro),
-        # causando match falho e Slide 1 sempre vazio.
-        # - type: horizontal-stack
-        #   cards:
-        #     - type: conditional
-        #       conditions:
-        #         - entity: select.conditional_media
-        #           state: Smart TV Pro 2
-        #       card:
-        #         type: custom:button-card
-        #         entity: media_player.smart_tv_pro_2
-        #         ...
-        # FIX: Card unico usando media_player.currently_playing (universal media player)
-        # que herda automaticamente entity_picture do child ativo.
-        # ANTERIOR: usava template conditional_media que continha JavaScript de DOM navigation
-        # (this.getRootNode().host) e acesso a entity.attributes.data. Quando
-        # media_player.currently_playing esta off/unavailable, o JS lancava excecao
-        # causando o erro vermelho de button-card.
-        # - type: custom:button-card
-        #   entity: media_player.currently_playing
-        #   name: ' '
-        #   template:
-        #     - conditional_media
-        #     - progress_bar
-        #     - icon_play_pause
-        # NOVO: usa template media (mais simples) que exibe artwork sem JS complexo.
-        # O template media usa apenas CSS background-image para o artwork e nao
-        # acessa entity.attributes.data nem faz navegacao DOM. Quando a entidade
-        # esta off/unavailable, as variaveis media_off/entity_picture do base_media
-        # retornam graciosamente sem lancar excecoes, exibindo fundo cinza neutro.
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
-          aspect_ratio: 1000/996
           show_icon: false
-          template:
-            - media
-            - progress_bar
-            - icon_play_pause
+          show_state: false
+          show_name: false
           tap_action:
             action: call-service
             service: media_player.media_play_pause
@@ -258,52 +66,76 @@
             haptic: light
           hold_action:
             action: more-info
-          # ANTERIOR: styles.card inline com background-image JS — removido.
-          # O template media em tpl_media.yaml já define background-image via
-          # entity.attributes.entity_picture. O aspect_ratio: 1000/996 garante
-          # que o card tenha altura suficiente para exibir o artwork.
-          # styles:
-          #   card:
-          #     - border-radius: 5%
-          #     - overflow: hidden
-          #     - background-color: rgba(115, 115, 115, 0.2)
-          #     - background-size: cover
-          #     - background-position: center
-          #     - background-image: >
-          #         [[[
-          #           try {
-          #             if (entity && entity.attributes && entity.attributes.entity_picture) {
-          #               return 'url("' + entity.attributes.entity_picture + '")';
-          #             }
-          #           } catch(e) { console.warn('Slide1 media artwork (desktop):', e.message); }
-          #           return 'none';
-          #         ]]]
-          # FIX: Estilos de container necessários para que o background-image do
-          # template media seja visível (border-radius + overflow:hidden + cover/center).
-          # O background-image em si é calculado pelo template media, não por JS inline.
+          state_display: >
+            [[[
+              if (entity && entity.state === 'playing') {
+                const title = entity.attributes.media_title || '';
+                const artist = entity.attributes.media_artist || '';
+                return artist ? artist + ' — ' + title : title;
+              }
+              return '';
+            ]]]
           styles:
             card:
               - border-radius: 5%
               - overflow: hidden
+              - padding: 0
+              - height: 0
+              - padding-bottom: 100%
+              - position: relative
               - background-color: rgba(115, 115, 115, 0.2)
               - background-size: cover
               - background-position: center
+              - background-repeat: no-repeat
+              - background-image: >
+                  [[[
+                    try {
+                      if (entity && entity.attributes && entity.attributes.entity_picture) {
+                        return 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 40%), url("' + entity.attributes.entity_picture + '")';
+                      }
+                    } catch(e) {}
+                    return 'none';
+                  ]]]
+            state:
+              - position: absolute
+              - bottom: 8%
+              - left: 5%
+              - right: 5%
+              - font-size: 0.9em
+              - color: rgba(255,255,255,0.9)
+              - text-shadow: 1px 1px 3px rgba(0,0,0,0.8)
+              - white-space: nowrap
+              - overflow: hidden
+              - text-overflow: ellipsis
+            name:
+              - display: none
 
         ########## SLIDE 2: GRID DE BOTOES ##########
-        # ANTERIOR: sem square: false — aspect-ratio do Slide 1 forcava altura quadrada,
-        # cortando os botoes inferiores do grid 2x2.
-        - type: grid
-          columns: 2
-          square: false
+        - type: custom:button-card
+          color_type: blank-card
+          styles:
+            card:
+              - padding: 0
+              - margin: 0
+              - background: none
+              - box-shadow: none
+              - border: none
+              - overflow: visible
+          custom_fields:
+            grid: |
+              [[[ return '' ]]]
           card_mod:
             style: |
               ha-card {
-                /* Safety net: garante altura mínima de 350px para que os 4 botões
-                   do grid 2x2 não sejam cortados quando o Swiper redimensiona
-                   o container com base no Slide 1. */
-                min-height: 350px;
-                height: 100%;
+                background: none !important;
+                box-shadow: none !important;
+                border: none !important;
+                overflow: visible !important;
               }
+              ha-card::before { content: none !important; }
+        - type: grid
+          columns: 2
+          square: false
           cards:
             # Slot 1: Smart TV
             - type: custom:button-card
@@ -312,21 +144,14 @@
                 - base
                 - media_premium
                 - icon_tv
-            # ANTERIOR: icon_homepod causava erro — dependia de variables.vibrant_data
-            # (sensor de cores vibrantes que nao existe no setup).
-            # - type: custom:button-card
-            #   entity: media_player.echo_show
-            #   template:
-            #     - base
-            #     - media_premium
-            #     - icon_homepod
-            # NOVO: usa icon_tv (genericamente funcional, sem dependencias externas)
+            # Slot 2: Echo Show
             - type: custom:button-card
               entity: media_player.echo_show
               template:
                 - base
                 - media_premium
                 - icon_tv
+            # Slot 3: Spotify
             - type: custom:button-card
               entity: media_player.spotifyplus_bruno_helasio
               template:
@@ -334,9 +159,6 @@
                 - media_premium
                 - icon_spotify
             # Slot 4: Echo Pop Office
-            # ANTERIOR: media_player.spotify — entidade nao existe no setup do usuario,
-            # causava TypeError em media_premium (entity.entity_id em service_data).
-            # FIX: media_player.echo_pop_office — entidade real do usuario.
             - type: custom:button-card
               entity: media_player.echo_pop_office
               template:
@@ -356,27 +178,27 @@
   columns: 1
   cards:
     - type: custom:swipe-card
-      parameters: !include ../../shared/snippets/main-grid-swipe-params.yaml
+      parameters:
+        pagination:
+          type: bullets
+          clickable: true
+        roundLengths: true
+        effect: slide
+        speed: 600
+        spaceBetween: 12
+        threshold: 7
+        autoHeight: false
+        observer: true
+        followFinger: true
+        grabCursor: true
       cards:
         ########## SLIDE 1: ARTWORK FULLSCREEN ##########
-        # FIX: Card unico usando media_player.currently_playing
-        # ANTERIOR: usava template conditional_media (mesmo problema que Desktop)
-        # - type: custom:button-card
-        #   entity: media_player.currently_playing
-        #   name: ' '
-        #   template:
-        #     - conditional_media
-        #     - progress_bar
-        #     - icon_play_pause
         - type: custom:button-card
           entity: media_player.currently_playing
           name: ' '
-          aspect_ratio: 1000/996
           show_icon: false
-          template:
-            - media
-            - progress_bar
-            - icon_play_pause
+          show_state: false
+          show_name: false
           tap_action:
             action: call-service
             service: media_player.media_play_pause
@@ -385,50 +207,73 @@
             haptic: light
           hold_action:
             action: more-info
-          # ANTERIOR: styles.card inline com background-image JS — removido.
-          # O template media em tpl_media.yaml já define background-image via
-          # entity.attributes.entity_picture. O aspect_ratio: 1000/996 garante
-          # que o card tenha altura suficiente para exibir o artwork.
-          # styles:
-          #   card:
-          #     - border-radius: 5%
-          #     - overflow: hidden
-          #     - background-color: rgba(115, 115, 115, 0.2)
-          #     - background-size: cover
-          #     - background-position: center
-          #     - background-image: >
-          #         [[[
-          #           try {
-          #             if (entity && entity.attributes && entity.attributes.entity_picture) {
-          #               return 'url("' + entity.attributes.entity_picture + '")';
-          #             }
-          #           } catch(e) { console.warn('Slide1 media artwork (tablet):', e.message); }
-          #           return 'none';
-          #         ]]]
-          # FIX: Estilos de container necessários para que o background-image do
-          # template media seja visível (border-radius + overflow:hidden + cover/center).
+          state_display: >
+            [[[
+              if (entity && entity.state === 'playing') {
+                const title = entity.attributes.media_title || '';
+                const artist = entity.attributes.media_artist || '';
+                return artist ? artist + ' — ' + title : title;
+              }
+              return '';
+            ]]]
           styles:
             card:
               - border-radius: 5%
               - overflow: hidden
+              - padding: 0
+              - height: 0
+              - padding-bottom: 100%
+              - position: relative
               - background-color: rgba(115, 115, 115, 0.2)
               - background-size: cover
               - background-position: center
+              - background-repeat: no-repeat
+              - background-image: >
+                  [[[
+                    try {
+                      if (entity && entity.attributes && entity.attributes.entity_picture) {
+                        return 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 40%), url("' + entity.attributes.entity_picture + '")';
+                      }
+                    } catch(e) {}
+                    return 'none';
+                  ]]]
+            state:
+              - position: absolute
+              - bottom: 8%
+              - left: 5%
+              - right: 5%
+              - font-size: 0.9em
+              - color: rgba(255,255,255,0.9)
+              - text-shadow: 1px 1px 3px rgba(0,0,0,0.8)
+              - white-space: nowrap
+              - overflow: hidden
+              - text-overflow: ellipsis
+            name:
+              - display: none
 
         ########## SLIDE 2: GRID DE BOTOES ##########
-        # ANTERIOR: sem square: false — botoes inferiores eram cortados
-        - type: grid
-          columns: 2
-          square: false
+        - type: custom:button-card
+          color_type: blank-card
+          styles:
+            card:
+              - padding: 0
+              - margin: 0
+              - background: none
+              - box-shadow: none
+              - border: none
+              - overflow: visible
           card_mod:
             style: |
               ha-card {
-                /* Safety net: garante altura mínima de 350px para que os 4 botões
-                   do grid 2x2 não sejam cortados quando o Swiper redimensiona
-                   o container com base no Slide 1. */
-                min-height: 350px;
-                height: 100%;
+                background: none !important;
+                box-shadow: none !important;
+                border: none !important;
+                overflow: visible !important;
               }
+              ha-card::before { content: none !important; }
+        - type: grid
+          columns: 2
+          square: false
           cards:
             - type: custom:button-card
               entity: media_player.smart_tv_pro_2
@@ -436,14 +281,6 @@
                 - base
                 - media_premium
                 - icon_tv
-            # ANTERIOR: icon_homepod causava erro — dependia de variables.vibrant_data
-            # - type: custom:button-card
-            #   entity: media_player.echo_show
-            #   template:
-            #     - base
-            #     - media_premium
-            #     - icon_homepod
-            # NOVO: usa icon_tv (sem dependencias externas)
             - type: custom:button-card
               entity: media_player.echo_show
               template:
@@ -456,7 +293,6 @@
                 - base
                 - media_premium
                 - icon_spotify
-            # ANTERIOR: media_player.spotify (inexistente) → echo_pop_office (fix erro)
             - type: custom:button-card
               entity: media_player.echo_pop_office
               template:

@@ -3,7 +3,7 @@
 
 # Superior esquerdo — Umidade (estilo original com grafico)
 - type: custom:button-card
-  entity: sensor.home_climate
+  entity: sensor.sl_sensor_temp_humid_umidade
   name: Humidade
   tap_action:
     action: none
@@ -12,7 +12,7 @@
 
 # Superior direito — Temperatura (estilo original com grafico)
 - type: custom:button-card
-  entity: sensor.home_climate
+  entity: sensor.sl_sensor_temp_humid_temperatura
   name: Temperatura
   template:
     - thermostat

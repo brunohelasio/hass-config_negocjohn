@@ -2,10 +2,7 @@ icon: mdi:home-circle
 path: summary
 subview: false
 
-# ANTERIOR: theme: Graphite Auto
-# Restaurado para tablet: tema correto que fornece uix-dialog (pipeline de sizing de popups),
-# --button-card-border-radius, --grid-card-gap e demais variaveis de layout.
-# Com Graphite Auto, a sidebar preta era invisivel sobre o fundo preto (sem contraste).
+# ANTERIOR: theme: Graphite Auto (causou regressao visual — sidebar desaparecia com esse tema)
 theme: tablet
 type: custom:grid-layout
 card_mod:
@@ -19,10 +16,9 @@ card_mod:
       height: 100%;
     }
     --- FIM CÓDIGO ORIGINAL --- */
-    /* ANTERIOR: background: rgb(0, 0, 0) — sidebar preta invisivel sobre fundo preto */
-    /* NOVO: cinza neutro #2f3342 — contraste com sidebar preta; sem dominante azulada */
+    /* NOVO: fundo preto sólido — contraste com sidebar preta vem dos cards */
     hui-grid-layout {
-      background: #2f3342;
+      background: rgb(0, 0, 0);
       height: 100%;
     }
 layout:

@@ -121,66 +121,39 @@ airpurifier:
         card_mod:
           style: |
             ha-card {
+              font-size: 0.5vw !important;
               background: none !important;
-              --ha-card-background: none !important;
-              box-shadow: none !important;
-              border: none !important;
-              border-radius: 0 !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              overflow: hidden !important;
             }
-
-            .graph,
-            .graph__container,
-            .graph__container__svg {
-              background: transparent !important;
-              box-shadow: none !important;
-              border: none !important;
-              border-radius: 0 !important;
-            }
-
-            .graph__labels,
-            .graph-labels,
-            .labels {
-              display: none !important;
-              opacity: 0 !important;
-              height: 0 !important;
-            }
-
-            .info {
-              display: grid !important;
-              grid-template-columns: repeat(3, 1fr) !important;
-              gap: 0 !important;
-              margin: 0 !important;
-              padding: 0 4% !important;
-              opacity: 0.75 !important;
-            }
-
-            .info__item__time,
-            .info__item--time,
-            .info > *:nth-child(n+4) {
-              display: none !important;
-            }
-
             @media (max-width: 1440px) {
               ha-card {
                 font-size: 1vw !important;
               }
             }
-
+            ha-card[fill] .info {
+              padding-bottom: 0 !important;
+            }
+            .info {
+              opacity: 0.5 !important;
+            }
+            .info__item__time {
+              display: none !important;
+            }
+            /* Posiciona os labels do gráfico acima da linha — valor do repositório original ngocjohn */
+            .graph__labels {
+              top: -10% !important;
+            }
+            .graph__container__svg {
+              padding-bottom: 5px;
+            }
             @media (max-width: 800px) {
-              .info {
-                font-size: 10px !important;
+              div.info.flex {
+                display: none;
               }
             }
 
   styles:
     grid:
       - grid-template-areas: |
-          "humid"
-          "n"
-          "graph"
       - grid-template-columns: 1fr
       - grid-template-rows: fit-content(100%) min-content 1fr
       - gap: 0
@@ -268,57 +241,33 @@ thermostat:
         card_mod:
           style: |
             ha-card {
+              font-size: 0.5vw !important;
               background: none !important;
-              --ha-card-background: none !important;
-              box-shadow: none !important;
-              border: none !important;
-              border-radius: 0 !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              overflow: hidden !important;
             }
-
-            .graph,
-            .graph__container,
-            .graph__container__svg {
-              background: transparent !important;
-              box-shadow: none !important;
-              border: none !important;
-              border-radius: 0 !important;
-            }
-
-            .graph__labels,
-            .graph-labels,
-            .labels {
-              display: none !important;
-              opacity: 0 !important;
-              height: 0 !important;
-            }
-
-            .info {
-              display: grid !important;
-              grid-template-columns: repeat(3, 1fr) !important;
-              gap: 0 !important;
-              margin: 0 !important;
-              padding: 0 4% !important;
-              opacity: 0.75 !important;
-            }
-
-            .info__item__time,
-            .info__item--time,
-            .info > *:nth-child(n+4) {
-              display: none !important;
-            }
-
             @media (max-width: 1440px) {
               ha-card {
                 font-size: 1vw !important;
               }
             }
-
+            ha-card[fill] .info {
+              padding-bottom: 0 !important;
+            }
+            .info {
+              opacity: 0.5 !important;
+            }
+            .info__item__time {
+              display: none !important;
+            }
+            /* Posiciona os labels do gráfico acima da linha — valor do repositório original ngocjohn */
+            .graph__labels {
+              top: -10% !important;
+            }
+            .graph__container__svg {
+              padding-bottom: 5px;
+            }
             @media (max-width: 800px) {
-              .info {
-                font-size: 10px !important;
+              div.info.flex {
+                display: none;
               }
             }
 

@@ -187,6 +187,11 @@ browser_mod:
             icon:
               - width: 24px
               - color: 'rgba(255,255,255,0.25)'
+          card_mod:
+            style: |
+              ha-card::before {
+                content: none !important;
+              }
         # ── ANTERIOR: Linha 1 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
         # - type: grid
         #   columns: 5

@@ -74,6 +74,11 @@
     icon:
       - width: 24px
       - color: 'rgba(255,255,255,0.25)'
+  card_mod:
+    style: |
+      ha-card::before {
+        content: none !important;
+      }
 
 # ── ANTERIOR: Linha 1 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
 # - type: grid
@@ -213,6 +218,11 @@
       - border-radius: 2px
       - padding: 0
       - min-height: auto
+  card_mod:
+    style: |
+      ha-card::before {
+        content: none !important;
+      }
 
 # ── Titulo: Eletrodomésticos ──
 - type: custom:button-card
@@ -239,6 +249,11 @@
       - letter-spacing: 1.5px
       - justify-self: start
       - font-weight: 500
+  card_mod:
+    style: |
+      ha-card::before {
+        content: none !important;
+      }
 
 # ── ANTERIOR: Linha 3 com 5 colunas + 2 blanks (comentado, nunca deletar) ──
 # - type: grid

@@ -278,6 +278,16 @@
           #           } catch(e) { console.warn('Slide1 media artwork (desktop):', e.message); }
           #           return 'none';
           #         ]]]
+          # FIX: Estilos de container necessários para que o background-image do
+          # template media seja visível (border-radius + overflow:hidden + cover/center).
+          # O background-image em si é calculado pelo template media, não por JS inline.
+          styles:
+            card:
+              - border-radius: 5%
+              - overflow: hidden
+              - background-color: rgba(115, 115, 115, 0.2)
+              - background-size: cover
+              - background-position: center
 
         ########## SLIDE 2: GRID DE BOTOES ##########
         # ANTERIOR: sem square: false — aspect-ratio do Slide 1 forcava altura quadrada,
@@ -288,10 +298,11 @@
           card_mod:
             style: |
               ha-card {
-                /* Safety net: garante altura mínima de 200px para que os 4 botões
+                /* Safety net: garante altura mínima de 350px para que os 4 botões
                    do grid 2x2 não sejam cortados quando o Swiper redimensiona
                    o container com base no Slide 1. */
-                min-height: 200px;
+                min-height: 350px;
+                height: 100%;
               }
           cards:
             # Slot 1: Smart TV
@@ -394,6 +405,15 @@
           #           } catch(e) { console.warn('Slide1 media artwork (tablet):', e.message); }
           #           return 'none';
           #         ]]]
+          # FIX: Estilos de container necessários para que o background-image do
+          # template media seja visível (border-radius + overflow:hidden + cover/center).
+          styles:
+            card:
+              - border-radius: 5%
+              - overflow: hidden
+              - background-color: rgba(115, 115, 115, 0.2)
+              - background-size: cover
+              - background-position: center
 
         ########## SLIDE 2: GRID DE BOTOES ##########
         # ANTERIOR: sem square: false — botoes inferiores eram cortados
@@ -403,10 +423,11 @@
           card_mod:
             style: |
               ha-card {
-                /* Safety net: garante altura mínima de 200px para que os 4 botões
+                /* Safety net: garante altura mínima de 350px para que os 4 botões
                    do grid 2x2 não sejam cortados quando o Swiper redimensiona
                    o container com base no Slide 1. */
-                min-height: 200px;
+                min-height: 350px;
+                height: 100%;
               }
           cards:
             - type: custom:button-card

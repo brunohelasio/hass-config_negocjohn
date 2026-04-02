@@ -296,21 +296,180 @@
 #
 # Para rollback: comentar este bloco e descomentar versao acima.
 # ==============================================================================
+# --- CÓDIGO ANTERIOR (versao self-contained 2026-04-02) ---
+# Motivo: Refatorado para reproduzir o layout visual do screenshot de referencia
+# do popup original Roidmi EVE Plus do ngocjohn, com !include snippets para
+# separadores de colunas e estrutura de 3 colunas conforme padrao do projeto.
+#
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: Roborock S7
+#     tag: vacuum_popup
+#     size: wide
+#     style: >
+#       --popup-width: 1000px;
+#       --popup-background-color: rgba(15, 20, 35, 0.75);
+#       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+#       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+#       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+#     content:
+#       type: custom:layout-card
+#       layout_type: custom:grid-layout
+#       layout:
+#         grid-template-columns: 300px 1fr 260px
+#         grid-gap: 8px
+#         margin: 0
+#         padding: 0.5rem
+#         mediaquery:
+#           '(max-width: 800px)':
+#             grid-template-columns: 1fr
+#       cards:
+#         - type: vertical-stack
+#           cards:
+#             - type: entities
+#               title: Status
+#               show_header_toggle: false
+#               entities:
+#                 - entity: vacuum.roborock_s7
+#                   name: Roborock S7
+#                 - entity: sensor.roborock_s7_status
+#                   name: Estado
+#                 - entity: sensor.roborock_s7_comodo_atual
+#                   name: Cômodo Atual
+#                 - entity: sensor.roborock_s7_bateria
+#                   name: Bateria
+#                 - entity: binary_sensor.roborock_s7_mop_attached
+#                   name: Mop Acoplado
+#                 - entity: binary_sensor.roborock_s7_water_box_attached
+#                   name: Caixa d'Água
+#                 - entity: binary_sensor.roborock_s7_water_shortage
+#                   name: Falta de Água
+#                 - entity: sensor.roborock_s7_vacuum_error
+#                   name: Erro
+#             - type: horizontal-stack
+#               cards:
+#                 - type: custom:button-card
+#                   entity: vacuum.roborock_s7
+#                   name: Iniciar
+#                   icon: mdi:play
+#                   tap_action:
+#                     action: call-service
+#                     service: vacuum.start
+#                     service_data:
+#                       entity_id: vacuum.roborock_s7
+#                   template:
+#                     - base
+#                 - type: custom:button-card
+#                   entity: vacuum.roborock_s7
+#                   name: Pausar
+#                   icon: mdi:pause
+#                   tap_action:
+#                     action: call-service
+#                     service: vacuum.pause
+#                     service_data:
+#                       entity_id: vacuum.roborock_s7
+#                   template:
+#                     - base
+#                 - type: custom:button-card
+#                   entity: vacuum.roborock_s7
+#                   name: Base
+#                   icon: mdi:home-map-marker
+#                   tap_action:
+#                     action: call-service
+#                     service: vacuum.return_to_base
+#                     service_data:
+#                       entity_id: vacuum.roborock_s7
+#                   template:
+#                     - base
+#             - type: entities
+#               title: Mop
+#               show_header_toggle: false
+#               entities:
+#                 - entity: select.roborock_s7_intensidade_do_mop
+#                   name: Intensidade
+#                 - entity: select.roborock_s7_modo_mop
+#                   name: Modo
+#         - type: custom:xiaomi-vacuum-map-card
+#           entity: vacuum.roborock_s7
+#           vacuum_platform: Roborock
+#           map_source:
+#             camera: image.roborock_s7_map_0
+#           calibration_source:
+#             camera: true
+#           map_locked: false
+#         - type: vertical-stack
+#           cards:
+#             - type: entities
+#               title: Configurações
+#               show_header_toggle: false
+#               entities:
+#                 - entity: number.roborock_s7_volume
+#                   name: Volume
+#                 - entity: switch.roborock_s7_nao_perturbe
+#                   name: Não Perturbe
+#                 - entity: time.roborock_s7_comecar_nao_perturbe
+#                   name: Início NP
+#                 - entity: time.roborock_s7_terminar_nao_perturbe
+#                   name: Fim NP
+#                 - entity: switch.roborock_s7_dock_luz_indicadora_de_status
+#                   name: Luz Indicadora
+#                 - entity: switch.roborock_s7_dock_bloqueio_infantil
+#                   name: Bloqueio Infantil
+#             - type: entities
+#               title: Estatísticas
+#               show_header_toggle: false
+#               entities:
+#                 - entity: sensor.roborock_s7_area_de_limpeza
+#                   name: Área (Última)
+#                 - entity: sensor.roborock_s7_tempo_de_limpeza
+#                   name: Tempo (Última)
+#                 - type: divider
+#                 - entity: sensor.roborock_s7_area_total_de_limpeza
+#                   name: Área Total
+#                 - entity: sensor.roborock_s7_tempo_total_de_limpeza
+#                   name: Tempo Total
+#                 - entity: sensor.roborock_s7_contagem_total_de_limpeza
+#                   name: Nº de Limpezas
+# --- FIM CÓDIGO ANTERIOR ---
+
+# NOVO: Layout 3 colunas estilo ngocjohn (2026-04-02)
+# Reproduz o layout visual do screenshot de referencia (Roidmi EVE Plus do ngocjohn).
+# Usa custom:mod-card → custom:layout-card com !include snippets para:
+#   - style_popup_center.yaml: centraliza o dialog verticalmente
+#   - style_popup_footer.yaml: separadores entre colunas + estilos de entities cards
+# Sizing: --popup-width: 1100px via pipeline uix-dialog do tema tablet.yaml
+# Hardware de referencia: Galaxy Tab S6 Lite (2000x1200 landscape) — sem scroll vertical.
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
     title: Roborock S7
+    tag: vacuum_popup
     style: >
-      --max-popup-column: 3;
-    card_mod: !include ../../snippets/style_popup_center.yaml
+      --popup-width: 1100px;
+    card_mod: !include ../../snippets/style_popup_center.yaml  # centraliza o dialog verticalmente
     content:
       type: custom:mod-card
-      card_mod: !include ../../snippets/style_popup_footer.yaml
+      card_mod: !include ../../snippets/style_popup_footer.yaml  # separadores entre colunas + estilos entities cards
       card:
         type: custom:layout-card
         layout_type: custom:grid-layout
-        layout: !include ../../snippets/popup_footer_layout.yaml
+        layout:
+          grid-template-columns: 320px 1fr 340px
+          grid-template-rows: 1fr
+          grid-template-areas: '"summary map settings"'
+          margin: 0
+          padding: 0
+          mediaquery:
+            '(max-width: 800px)':
+              grid-template-columns: 1fr
+              grid-template-rows: auto auto auto
+              grid-template-areas: |
+                "summary"
+                "map"
+                "settings"
         cards:
 
           # ================================================================
@@ -430,36 +589,23 @@ browser_mod:
             entities:
               - entity: number.roborock_s7_volume
                 name: Volume
-
               - entity: switch.roborock_s7_nao_perturbe
                 name: Não Perturbe
-
-              - entity: time.roborock_s7_comecar_nao_perturbe
-                name: Início NP
-
-              - entity: time.roborock_s7_terminar_nao_perturbe
-                name: Fim NP
-
               - entity: switch.roborock_s7_dock_luz_indicadora_de_status
                 name: Luz Indicadora
-
               - entity: switch.roborock_s7_dock_bloqueio_infantil
                 name: Bloqueio Infantil
-
               - type: divider
-
+                style:
+                  padding: 4px 0
               - entity: sensor.roborock_s7_area_de_limpeza
-                name: Área (Última)
-
+                name: Área Última
               - entity: sensor.roborock_s7_tempo_de_limpeza
-                name: Tempo (Última)
-
+                name: Tempo Última
               - entity: sensor.roborock_s7_area_total_de_limpeza
                 name: Área Total
-
               - entity: sensor.roborock_s7_tempo_total_de_limpeza
                 name: Tempo Total
-
               - entity: sensor.roborock_s7_contagem_total_de_limpeza
                 name: Nº de Limpezas
 

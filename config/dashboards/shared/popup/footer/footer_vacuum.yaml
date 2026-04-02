@@ -1,64 +1,120 @@
 # ==============================================================================
 # POPUP ASPIRADOR — Roborock S7
 #
-# Estrutura: IDÊNTICA ao footer_system.yaml (popup funcional de referência)
-# → browser_mod.popup → !include snippets → mod-card → layout-card → 3 entities
-# → CSS via style_popup_footer.yaml + style_popup_center.yaml + popup_footer_layout.yaml
-# → Mapa via custom:hui-element dentro do entities card (mesmo padrão ngocjohn)
+# Estrutura: mod-card → layout-card → grid-layout (layout ngocjohn)
+# CSS: TODO INLINE — SEM !include snippets (snippets quebram este popup)
+# Grid: 320px | 1fr | 280px (do código funcional do usuário)
 #
 # Entidades: todas Roborock S7 — confirmadas e testadas pelo usuário
 # Hardware: Galaxy Tab S6 Lite (2000x1200)
 # ==============================================================================
-# --- CÓDIGO ORIGINAL COMENTADO (versão CSS inline, sem !include snippets) ---
+# --- CÓDIGO ANTERIOR COMENTADO (versão com !include snippets — QUEBRAVA) ---
 # action: fire-dom-event
 # browser_mod:
 #   service: browser_mod.popup
 #   data:
-#     title: " "
-#     size: wide
+#     title: Roborock S7
 #     style: >
-#       --popup-background-color: transparent;
-#       --mdc-dialog-min-width: 1100px !important;
-#       --mdc-dialog-max-width: 1100px !important;
-#       --mdc-dialog-max-height: 90vh;
-#     card_mod:
-#       style:
-#         ha-dialog$: |
-#           .mdc-dialog__container {
-#             align-items: center !important;
-#             justify-content: center !important;
-#           }
+#       --max-popup-column: 3;
+#     card_mod: !include ../../snippets/style_popup_center.yaml
 #     content:
 #       type: custom:mod-card
-#       card_mod:
-#         style:
-#           .: |
-#             ha-card { background: transparent !important; border: none !important; box-shadow: none !important; }
-#           layout-card$: grid-layout$: ...
+#       card_mod: !include ../../snippets/style_popup_footer.yaml
 #       card:
 #         type: custom:layout-card
 #         layout_type: custom:grid-layout
-#         layout:
-#           grid-template-columns: 320px 1fr 280px
-#           ...
-# --- FIM CÓDIGO ORIGINAL ---
+#         layout: !include ../../snippets/popup_footer_layout.yaml
+#         cards: [...]
+# --- FIM CÓDIGO ANTERIOR ---
 
-# NOVO: Padrão idêntico ao footer_system.yaml (funcional)
+# NOVO: CSS inline (conteúdo dos 3 snippets embutido diretamente)
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
-    title: Roborock S7
+    title: " "
+    size: wide
     style: >
-      --max-popup-column: 3;
-    card_mod: !include ../../snippets/style_popup_center.yaml
+      --popup-background-color: transparent;
+      --mdc-dialog-min-width: 1100px !important;
+      --mdc-dialog-max-width: 1100px !important;
+      --mdc-dialog-max-height: 90vh;
+    # Centering — conteúdo de style_popup_center.yaml inline
+    card_mod:
+      style:
+        ha-dialog$: |
+          .mdc-dialog__container {
+            align-items: center !important;
+            justify-content: center !important;
+          }
     content:
       type: custom:mod-card
-      card_mod: !include ../../snippets/style_popup_footer.yaml
+      # Footer styling — conteúdo de style_popup_footer.yaml inline
+      card_mod:
+        style:
+          .: |
+            ha-card {
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+            }
+          layout-card$:
+            grid-layout$:
+              .: |
+                #root > * {
+                  margin: 0px !important;
+                }
+                @media (max-width: 800px) {
+                  #root {
+                    display: block !important;
+                  }
+                }
+              hui-entities-card$:
+                .: |
+                  ha-card {
+                    border-right: 0.1vw solid rgba(58, 69, 73, 0.2);
+                    border-radius: 0;
+                    transition: none;
+                    margin-bottom: 0 !important;
+                  }
+                  ha-card.header .card-header {
+                    letter-spacing: 0.005em;
+                    font-size: 1.6em;
+                    line-height: initial;
+                  }
+                  @media screen and (max-width: 800px) {
+                    ha-card {
+                      border-right: none;
+                      border-bottom: 0.1vw solid rgba(58, 69, 73, 0.2);
+                    }
+                  }
+                hui-horizontal-stack-card:
+                  $: |
+                    #root {
+                      justify-content: space-evenly;
+                      margin-block: 1em;
+                      height: unset !important;
+                    }
+              hui-entities-card:last-child:
+                $: |
+                  ha-card {
+                    border: none;
+                  }
       card:
         type: custom:layout-card
         layout_type: custom:grid-layout
-        layout: !include ../../snippets/popup_footer_layout.yaml
+        # Layout — grid explícito (NÃO usa popup_footer_layout.yaml)
+        layout:
+          grid-template-columns: 320px 1fr 280px
+          grid-template-rows: auto
+          margin: 0
+          padding: 0
+          mediaquery:
+            "(max-width: 800px)":
+              grid-template-columns: 1fr
+              grid-template-rows: auto
+              margin: 0
+              padding: 0
         cards:
 
           #################################################
@@ -157,38 +213,33 @@ browser_mod:
           #           COLUNA 2 — MAPA AO VIVO             #
           #                                               #
           #################################################
-          - type: entities
-            title: Mapa
-            show_header_toggle: false
+          - type: custom:xiaomi-vacuum-map-card
+            vacuum_platform: Roborock
+            entity: vacuum.roborock_s7
+            map_source:
+              camera: image.roborock_s7_map_0
+            calibration_source:
+              camera: true
+            map_locked: true
             card_mod:
-              class: header
-            entities:
-              - type: custom:hui-element
-                card_type: custom:xiaomi-vacuum-map-card
-                vacuum_platform: Roborock
-                entity: vacuum.roborock_s7
-                map_source:
-                  camera: image.roborock_s7_map_0
-                calibration_source:
-                  camera: true
-                map_locked: true
-                card_mod:
-                  style: |
-                    ha-card {
-                      background: transparent !important;
-                      border: none !important;
-                      box-shadow: none !important;
-                      --map-card-primary-color: rgba(255,255,255,0.08);
-                      --map-card-secondary-color: none;
-                      --map-card-secondary-text-color: rgba(255,255,255,0.55);
-                      --map-card-zoomer-background: transparent;
-                      --map-card-predefined-rectangle-fill-color: none;
-                      --map-card-predefined-rectangle-line-color: none;
-                      --map-card-predefined-rectangle-line-color-selected: rgba(255,255,255,0.5);
-                      --map-card-predefined-rectangle-fill-color-selected: rgba(42,124,194,0.1);
-                      --map-card-predefined-rectangle-icon-background-color-selected: rgb(42,124,194);
-                      --map-card-internal-big-radius: 0.6em !important;
-                    }
+              style: |
+                ha-card {
+                  background: transparent !important;
+                  border: none !important;
+                  box-shadow: none !important;
+                  max-height: 70vh;
+                  overflow: hidden;
+                  --map-card-primary-color: rgba(255,255,255,0.08);
+                  --map-card-secondary-color: none;
+                  --map-card-secondary-text-color: rgba(255,255,255,0.55);
+                  --map-card-zoomer-background: transparent;
+                  --map-card-predefined-rectangle-fill-color: none;
+                  --map-card-predefined-rectangle-line-color: none;
+                  --map-card-predefined-rectangle-line-color-selected: rgba(255,255,255,0.5);
+                  --map-card-predefined-rectangle-fill-color-selected: rgba(42,124,194,0.1);
+                  --map-card-predefined-rectangle-icon-background-color-selected: rgb(42,124,194);
+                  --map-card-internal-big-radius: 0.6em !important;
+                }
 
           #################################################
           #                                               #

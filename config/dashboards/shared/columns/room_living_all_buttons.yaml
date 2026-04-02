@@ -358,6 +358,11 @@
     icon:
       - width: 24px
       - color: 'rgba(255,255,255,0.25)'
+  card_mod:
+    style: |
+      ha-card::before {
+        content: none !important;
+      }
 
 # ── Linha 1: 5 botoes de iluminacao ──
 - type: grid
@@ -505,6 +510,11 @@
       - border-radius: 2px
       - padding: 0
       - min-height: auto
+  card_mod:
+    style: |
+      ha-card::before {
+        content: none !important;
+      }
 
 # ── Titulo: Midia & Clima + temperatura ──
 - type: custom:button-card
@@ -543,6 +553,11 @@
       - font-size: 11px
       - color: rgba(255,255,255,0.35)
       - justify-self: end
+  card_mod:
+    style: |
+      ha-card::before {
+        content: none !important;
+      }
 
 # ── Linha 3: 4 botoes de midia + 1 blank ──
 # ANTERIOR: 5 botoes (TV, Spotify, PS5, Pioneer, Cortina) — Cortina movida para linha 4 (clima)

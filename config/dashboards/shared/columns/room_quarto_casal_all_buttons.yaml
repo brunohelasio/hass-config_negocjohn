@@ -80,6 +80,11 @@
     icon:
       - width: 24px
       - color: 'rgba(255,255,255,0.25)'
+  card_mod:
+    style: |
+      ha-card::before {
+        content: none !important;
+      }
 
 # ── Linha 1: 5 botoes de iluminacao ──
 - type: grid
@@ -221,6 +226,11 @@
       - border-radius: 2px
       - padding: 0
       - min-height: auto
+  card_mod:
+    style: |
+      ha-card::before {
+        content: none !important;
+      }
 
 # ── Titulo: Midia & Clima ──
 - type: custom:button-card
@@ -247,6 +257,11 @@
       - letter-spacing: 1.5px
       - justify-self: start
       - font-weight: 500
+  card_mod:
+    style: |
+      ha-card::before {
+        content: none !important;
+      }
 
 # ── Linha 3: TV (placeholder) + Spotify + AC placeholder + 2 blanks ──
 # ANTERIOR: Linha 3 tinha 5 colunas com Spotify + AC + 3 blanks (sem TV)

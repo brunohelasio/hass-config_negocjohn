@@ -213,14 +213,42 @@ browser_mod:
           #           COLUNA 2 — MAPA AO VIVO             #
           #                                               #
           #################################################
-          - type: custom:xiaomi-vacuum-map-card
-            vacuum_platform: Roborock
-            entity: vacuum.roborock_s7
-            map_source:
-              camera: image.roborock_s7_map_0
-            calibration_source:
-              camera: true
-            map_locked: true
+          # ANTERIOR: xiaomi-vacuum-map-card com map_source.camera: image.roborock_s7_map_0
+          # PROBLEMA: xiaomi-vacuum-map-card espera entidade camera.*, mas a integração
+          # Roborock oficial cria image.* — causando "configuration error".
+          # FIX: picture-entity card para exibir o mapa como imagem estática atualizada
+          # - type: custom:xiaomi-vacuum-map-card
+          #   vacuum_platform: Roborock
+          #   entity: vacuum.roborock_s7
+          #   map_source:
+          #     camera: image.roborock_s7_map_0
+          #   calibration_source:
+          #     camera: true
+          #   map_locked: true
+          #   card_mod:
+          #     style: |
+          #       ha-card {
+          #         background: transparent !important;
+          #         border: none !important;
+          #         box-shadow: none !important;
+          #         max-height: 70vh;
+          #         overflow: hidden;
+          #         --map-card-primary-color: rgba(255,255,255,0.08);
+          #         --map-card-secondary-color: none;
+          #         --map-card-secondary-text-color: rgba(255,255,255,0.55);
+          #         --map-card-zoomer-background: transparent;
+          #         --map-card-predefined-rectangle-fill-color: none;
+          #         --map-card-predefined-rectangle-line-color: none;
+          #         --map-card-predefined-rectangle-line-color-selected: rgba(255,255,255,0.5);
+          #         --map-card-predefined-rectangle-fill-color-selected: rgba(42,124,194,0.1);
+          #         --map-card-predefined-rectangle-icon-background-color-selected: rgb(42,124,194);
+          #         --map-card-internal-big-radius: 0.6em !important;
+          #       }
+          - type: picture-entity
+            entity: image.roborock_s7_map_0
+            show_name: false
+            show_state: false
+            camera_view: auto
             card_mod:
               style: |
                 ha-card {
@@ -229,16 +257,14 @@ browser_mod:
                   box-shadow: none !important;
                   max-height: 70vh;
                   overflow: hidden;
-                  --map-card-primary-color: rgba(255,255,255,0.08);
-                  --map-card-secondary-color: none;
-                  --map-card-secondary-text-color: rgba(255,255,255,0.55);
-                  --map-card-zoomer-background: transparent;
-                  --map-card-predefined-rectangle-fill-color: none;
-                  --map-card-predefined-rectangle-line-color: none;
-                  --map-card-predefined-rectangle-line-color-selected: rgba(255,255,255,0.5);
-                  --map-card-predefined-rectangle-fill-color-selected: rgba(42,124,194,0.1);
-                  --map-card-predefined-rectangle-icon-background-color-selected: rgb(42,124,194);
-                  --map-card-internal-big-radius: 0.6em !important;
+                  border-radius: 12px;
+                }
+                ha-card::before {
+                  content: none !important;
+                }
+                img {
+                  object-fit: contain;
+                  border-radius: 12px;
                 }
 
           #################################################

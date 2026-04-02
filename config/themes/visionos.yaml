@@ -141,6 +141,8 @@ visionos:
   wa-border-radius-m: var(--ha-card-border-radius)
   ha-color-on-neutral-normal: var(--primary-text-color) # icon color
   wa-color-neutral-fill-normal: "#FFFFFF14" # hover color
+  # Garante títulos dos blocos (Security, Masters, Climate etc.) em branco
+  ha-card-header-color: '#ffffff'
 
   card-mod-theme: "visionos"
   card-mod-drawer: |
@@ -212,4 +214,20 @@ visionos:
       content: none !important;
       background: none !important;
       backdrop-filter: none !important;
+    }
+
+    /* Títulos dos blocos do grid principal em branco */
+    .card-header {
+      color: #ffffff !important;
+    }
+
+    /* Button cards usados como títulos/separadores nos popups (background:none/box-shadow:none) */
+    /* Remove o efeito de pílula causado pelo ::before do VisionOS */
+    /* NOTA: Este seletor é um fallback de segurança. A correção primária é o card_mod
+       individual em cada button-card de título (nos arquivos room_*_all_buttons.yaml). */
+    :host(button-card) ha-card[style*="none"] {
+      backdrop-filter: none !important;
+    }
+    :host(button-card) ha-card[style*="none"]::before {
+      content: none !important;
     }

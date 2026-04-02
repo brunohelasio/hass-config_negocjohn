@@ -9,8 +9,12 @@ coverflowEffect:
 speed: 600
 spaceBetween: 20
 threshold: 7
-# autoHeight: ajusta altura ao slide ativo (Slide 2 pode ser mais alto que Slide 1)
-autoHeight: true
+# ANTERIOR: autoHeight: true — calculava altura do container baseado no offsetHeight
+# do slide ativo ANTES do CSS aspect-ratio (padding-top: 100%) ser aplicado.
+# Resultado: Slide 2 (grid 2x2) ficava cortado porque o container já tinha sido
+# dimensionado com a altura "pre-aspect-ratio" (menor que a real).
+# NOVO: autoHeight desabilitado. Ambos os slides usam altura natural do container.
+autoHeight: false
 observer: false
 followFinger: true
 grabCursor: true

@@ -595,9 +595,12 @@ progress_bar:
         - z-index: 1
         - transition: 1s ease-out
   custom_fields:
+    # ANTERIOR: entity.attributes acessado sem null guard — TypeError quando entity é undefined
+    # if (entity.attributes.media_position !== undefined) { ...
+    # NOVO: entity && entity.attributes guard adicionado
     bar: >
       [[[
-        if (entity.attributes.media_position !== undefined) {
+        if (entity && entity.attributes && entity.attributes.media_position !== undefined) {
         setTimeout(() => {
           let elt = this.shadowRoot,
               card = elt.getElementById('card'),
@@ -623,9 +626,11 @@ progress_bar:
         }, 0);
         return ' ';}
       ]]]
+    # ANTERIOR: entity.attributes acessado sem null guard
+    # NOVO: entity && entity.attributes guard adicionado
     progress: >
       [[[
-        if (entity.attributes.media_position !== undefined) {
+        if (entity && entity.attributes && entity.attributes.media_position !== undefined) {
         setTimeout(() => {
             let elt = this.shadowRoot,
                 card = elt.getElementById('card'),
@@ -635,7 +640,7 @@ progress_bar:
                 progress = elt.getElementById('progress');
             if (elt && card && container && progress) {
                 card.insertBefore(progress, container);
-                let height = state.offsetHeight + 5;
+                let height = state ? state.offsetHeight + 5 : 5;
                 bar.style.bottom = `${height}px`;
                 progress.style.bottom = `${height}px`;
             }
@@ -716,7 +721,7 @@ media_premium:
     action: call-service
     service: media_player.media_play_pause
     service_data:
-      entity_id: '[[[ return entity.entity_id; ]]]'
+      entity_id: '[[[ return entity ? entity.entity_id : ""; ]]]'
     haptic: light
   double_tap_action:
     action: more-info

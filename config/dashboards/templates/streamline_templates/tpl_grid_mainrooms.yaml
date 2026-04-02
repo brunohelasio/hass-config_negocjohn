@@ -66,6 +66,8 @@ grid_living_room:
     triggers_update:
       - sensor.time
       - sensor.living_room_active
+      - sensor.roborock_s7_comodo_atual
+      - vacuum.roborock_s7
     double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml
     # double_tap_action:
     #   action: fire-dom-event
@@ -101,6 +103,7 @@ grid_living_room:
       # REMOVIDO: lights_status (icone de lampada) — retirado a pedido do usuario.
       # O status de luzes continua visivel no state_display (ex: "2 lights · 1h").
       # - lights_status
+      - vacuum_overlay
     variables:
       # light_entity: light.living_room_group
       light_entity: light.sala_switch_2
@@ -116,6 +119,8 @@ grid_living_room:
       media_entity: media_player.smart_tv_pro_2
       # Alexa da sala (Echo Show) — alexa_status mostra icone quando tocando
       alexa_entity: media_player.echo_show
+      # Roborock overlay — cômodos mapeados para a Sala
+      vacuum_rooms: 'Sala'
       # REMOVIDO: circle_input nao e mais necessario no botao principal (sem circle).
       # circle_input: >
       #   [[[
@@ -147,11 +152,14 @@ grid_kitchen_normal:
     triggers_update:
       - sensor.time
       - sensor.cozinha_active
+      - sensor.roborock_s7_comodo_atual
+      - vacuum.roborock_s7
     template:
       - rooms_base
       - icon_noodles
       # - fan_circle
       # - motion
+      - vacuum_overlay
     double_tap_action: !include ../../shared/popup/rooms/kitchen.yaml
     # hold_action: !include ../../shared/honeycomb/kitchen.yaml
     # hold_action:
@@ -170,6 +178,8 @@ grid_kitchen_normal:
       # active: sensor.kitchen_active
       # --- ANTERIOR: active: '' (sem sensor) ---
       active: sensor.cozinha_active
+      # Roborock overlay — cômodos mapeados para a Cozinha e Área de Serviço
+      vacuum_rooms: 'Cozinha,Área de Serviço'
   # KITCHEN DISHWASING
 grid_kitchen_dishwasing:
   card:
@@ -269,6 +279,9 @@ grid_lavabo:
     type: custom:button-card
     entity: light.grupo_luzes_lavabo
     name: Lavabo
+    triggers_update:
+      - sensor.roborock_s7_comodo_atual
+      - vacuum.roborock_s7
     double_tap_action: !include ../../shared/popup/rooms/lavabo.yaml
     # hold_action:
     #   action: none
@@ -281,9 +294,12 @@ grid_lavabo:
     template:
       - rooms_base
       - icon_bathroom
+      - vacuum_overlay
     variables:
       light_entity: light.lavabo_switch_2
       active: ''
+      # Roborock overlay — cômodo mapeado para o Lavabo
+      vacuum_rooms: 'Lavabo'
 
 # CIRCULAÇÃO
 grid_circulacao:
@@ -291,6 +307,9 @@ grid_circulacao:
     type: custom:button-card
     entity: light.corredor_switch_1
     name: Circulação
+    triggers_update:
+      - sensor.roborock_s7_comodo_atual
+      - vacuum.roborock_s7
     double_tap_action:
       action: none
     # hold_action:
@@ -304,6 +323,9 @@ grid_circulacao:
     template:
       - rooms_base
       - icon_hallway
+      - vacuum_overlay
     variables:
       light_entity: light.corredor_switch_1
       active: ''
+      # Roborock overlay — cômodo mapeado para a Circulação/Corredor
+      vacuum_rooms: 'Corredor'

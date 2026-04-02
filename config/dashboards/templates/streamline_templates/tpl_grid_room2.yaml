@@ -12,11 +12,14 @@ grid_office_room:
     triggers_update:
       - sensor.time
       - sensor.office_active
+      - sensor.roborock_s7_comodo_atual
+      - vacuum.roborock_s7
     template:
       - rooms_base
       - icon_office
       # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
       - ac_status
+      - vacuum_overlay
     double_tap_action: !include ../../shared/popup/rooms/office.yaml
     # hold_action:
     #   action: none
@@ -34,6 +37,8 @@ grid_office_room:
       ac_entity: climate.ac_office
       # Motion: vazio ate sensor chegar
       motion: ''
+      # Roborock overlay — cômodo mapeado para o Escritório/Office
+      vacuum_rooms: 'Escritório'
 
 # QUARTO CASAL
 grid_quarto_casal:
@@ -44,10 +49,13 @@ grid_quarto_casal:
     triggers_update:
       - sensor.time
       - sensor.quarto_casal_active
+      - sensor.roborock_s7_comodo_atual
+      - vacuum.roborock_s7
     template:
       - rooms_base
       - icon_double_bed
       - alexa_status
+      - vacuum_overlay
     double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml
     # hold_action:
     #   action: none
@@ -63,6 +71,8 @@ grid_quarto_casal:
       active: sensor.quarto_casal_active
       # Alexa do Quarto Casal (Echo Pop) — alexa_status mostra icone quando tocando
       alexa_entity: media_player.echo_pop_quarto_casal
+      # Roborock overlay — cômodos mapeados para o Quarto Casal (inclui suíte e closet)
+      vacuum_rooms: 'Quarto Casal,Suite Casal,Closet'
 
 # QUARTO MIGUEL
 grid_quarto_miguel:
@@ -77,11 +87,14 @@ grid_quarto_miguel:
     triggers_update:
       - sensor.time
       - sensor.quarto_miguel_active
+      - sensor.roborock_s7_comodo_atual
+      - vacuum.roborock_s7
     template:
       - rooms_base
       - icon_double_bed
       # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
       - ac_status
+      - vacuum_overlay
     tap_action:
       # action: call-service
       # service: homeassistant.toggle
@@ -111,6 +124,8 @@ grid_quarto_miguel:
       ac_entity: climate.ac_quarto_miguel
       # Motion: vazio ate sensor chegar
       motion: ''
+      # Roborock overlay — cômodos mapeados para o Quarto Miguel (inclui suíte)
+      vacuum_rooms: 'Quarto Miguel,Suíte Miguel'
 
 # QUARTO MARINA
 grid_quarto_marina:
@@ -121,10 +136,13 @@ grid_quarto_marina:
     triggers_update:
       - sensor.time
       - sensor.quarto_marina_active
+      - sensor.roborock_s7_comodo_atual
+      - vacuum.roborock_s7
     template:
       - rooms_base
       - icon_double_bed
       - alexa_status
+      - vacuum_overlay
     double_tap_action: !include ../../shared/popup/rooms/quarto_marina.yaml
     # hold_action:
     #   action: none
@@ -140,6 +158,8 @@ grid_quarto_marina:
       active: sensor.quarto_marina_active
       # Alexa do Quarto Marina (Echo Pop) — alexa_status mostra icone quando tocando
       alexa_entity: media_player.echo_pop_marina
+      # Roborock overlay — cômodos mapeados para o Quarto Marina (inclui suíte)
+      vacuum_rooms: 'Quarto Marina,Suite Marina'
 
 # SHOWER ROOM
 grid_shower:
@@ -191,90 +211,97 @@ grid_utility_normal:
     variables:
       light_entity: light.utility_room_light
       active: sensor.appliance_active
+  # --- CÓDIGO ORIGINAL COMENTADO (templates Roidmi/Washer do ngocjohn) ---
+  # Motivo: grid_utility_vacuum depende de sensor.vacuum_status_fix, sensor.vacuum_position,
+  # camera.roidmi_eve (Roidmi Eve — não existe no setup). grid_utility_washing depende de
+  # switch.washer_dryer_power e sensores washer_dryer (não existem no setup).
+  # Ambos já desativados no common-rooms.yaml. Templates mantidos para referência.
+  # Restaurar se adaptar para entidades locais.
+  # ---
   # UTILITY VACUUM
-grid_utility_vacuum:
-  card:
-    type: custom:button-card
-    entity: sensor.appliance_active
-    name: >
-      [[[
-        if (entity) {
-          let vacumState = states['sensor.vacuum_status_fix'].state,
-              position = states['sensor.vacuum_position'].state;
-          if (vacumState === 'Cleaning') {
-            return 'Cleaning';
-          } else {
-            return vacumState;
-          }
-        }
-      ]]]
-    double_tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.more_info
-        data:
-          entity: camera.roidmi_eve
-    hold_action: !include ../../shared/honeycomb/utitlity.yaml
-    state_display: >
-      [[[
-        if (entity) {
-        let vacumState = states['sensor.vacuum_status_fix'].state,
-            position = states['sensor.vacuum_position'].state;
-          if (vacumState === 'Cleaning') {
-            return position;
-          } else {
-            return vacumState;
-          }
-        }
-      ]]]
-    template:
-      - rooms_base
-      - icon_roborock
-    variables:
-      light_entity: light.utility_room_light
-      active: sensor.appliance_active
-  # UTILITY WASHING
-grid_utility_washing:
-  card:
-    type: custom:button-card
-    entity: sensor.appliance_active
-    name: Washdryer
-    hold_action: !include ../../shared/honeycomb/utitlity.yaml
-    template:
-      - rooms_base
-      - appliance_circle
-      - icon_washer
-    variables:
-      light_entity: light.utility_room_light
-      active: sensor.appliance_active
-      appliance: sensor.washer_dryer_program_progress
-    double_tap_action:
-      action: fire-dom-event
-      browser_mod:
-        service: browser_mod.popup
-        data:
-          title: 'Washer-Dryer'
-          card_mod:
-            style:
-              #popup header
-              .:
-          content:
-            type: vertical-stack
-            cards:
-              - type: entities
-                entities:
-                  - entity: switch.washer_dryer_power
-                    name: Power
-                    icon: mdi:power
-                    secondary_info: last-changed
-                  - entity: sensor.washer_dryer_door
-                    name: Door
-                  - entity: sensor.washer_dryer_operation_state
-                    name: Operation State
-                  - entity: sensor.washer_dryer_program_progress
-                    name: Program Progress
-                  - entity: sensor.washer_dryer_remaining_program_time
-                    name: Remaining Program Time
+# grid_utility_vacuum:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.appliance_active
+#     name: >
+#       [[[
+#         if (entity) {
+#           let vacumState = states['sensor.vacuum_status_fix'].state,
+#               position = states['sensor.vacuum_position'].state;
+#           if (vacumState === 'Cleaning') {
+#             return 'Cleaning';
+#           } else {
+#             return vacumState;
+#           }
+#         }
+#       ]]]
+#     double_tap_action:
+#       action: fire-dom-event
+#       browser_mod:
+#         service: browser_mod.more_info
+#         data:
+#           entity: camera.roidmi_eve
+#     hold_action: !include ../../shared/honeycomb/utitlity.yaml
+#     state_display: >
+#       [[[
+#         if (entity) {
+#         let vacumState = states['sensor.vacuum_status_fix'].state,
+#             position = states['sensor.vacuum_position'].state;
+#           if (vacumState === 'Cleaning') {
+#             return position;
+#           } else {
+#             return vacumState;
+#           }
+#         }
+#       ]]]
+#     template:
+#       - rooms_base
+#       - icon_roborock
+#     variables:
+#       light_entity: light.utility_room_light
+#       active: sensor.appliance_active
+#   # UTILITY WASHING
+# grid_utility_washing:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.appliance_active
+#     name: Washdryer
+#     hold_action: !include ../../shared/honeycomb/utitlity.yaml
+#     template:
+#       - rooms_base
+#       - appliance_circle
+#       - icon_washer
+#     variables:
+#       light_entity: light.utility_room_light
+#       active: sensor.appliance_active
+#       appliance: sensor.washer_dryer_program_progress
+#     double_tap_action:
+#       action: fire-dom-event
+#       browser_mod:
+#         service: browser_mod.popup
+#         data:
+#           title: 'Washer-Dryer'
+#           card_mod:
+#             style:
+#               #popup header
+#               .:
+#           content:
+#             type: vertical-stack
+#             cards:
+#               - type: entities
+#                 entities:
+#                   - entity: switch.washer_dryer_power
+#                     name: Power
+#                     icon: mdi:power
+#                     secondary_info: last-changed
+#                   - entity: sensor.washer_dryer_door
+#                     name: Door
+#                   - entity: sensor.washer_dryer_operation_state
+#                     name: Operation State
+#                   - entity: sensor.washer_dryer_program_progress
+#                     name: Program Progress
+#                   - entity: sensor.washer_dryer_remaining_program_time
+#                     name: Remaining Program Time
 
   # HALLWAY
 grid_hallway:

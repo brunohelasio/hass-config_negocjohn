@@ -1,0 +1,74 @@
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                               #
+#              VACUUM OVERLAY TEMPLATE          #
+#                                               #
+# Exibe ícone SVG animado do Roborock S7 no     #
+# canto inferior direito do card de cômodo      #
+# quando o aspirador está ativo naquele cômodo. #
+#                                               #
+# Condições de exibição (ambas devem ser true): #
+#   1. vacuum.roborock_s7 em estado ativo        #
+#      (cleaning, moving, returning,             #
+#       segment_cleaning)                        #
+#   2. sensor.roborock_s7_comodo_atual contém    #
+#      um dos valores em variables.vacuum_rooms  #
+#      (string separada por vírgulas)            #
+#                                               #
+# Uso: adicionar 'vacuum_overlay' à lista de    #
+# templates do card de cômodo e definir         #
+# variables.vacuum_rooms com os nomes dos       #
+# cômodos correspondentes ao mapa do Roborock.  #
+#                                               #
+# Exemplo:                                      #
+#   template:                                   #
+#     - rooms_base                              #
+#     - icon_couch_lamp                         #
+#     - vacuum_overlay                          #
+#   variables:                                  #
+#     vacuum_rooms: 'Sala'                      #
+#                                               #
+# O SVG é reutilizado do icon_roborock          #
+# (tpl_icons.yaml) — mesmas animações CSS.      #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+vacuum_overlay:
+  variables:
+    vacuum_rooms: ''
+  styles:
+    custom_fields:
+      vacuum_icon:
+        - position: absolute
+        - bottom: 5%
+        - right: 5%
+        - width: 28%
+        - height: 28%
+        - z-index: 10
+        - pointer-events: none
+        - opacity: 0.9
+  custom_fields:
+    vacuum_icon: >
+      [[[
+        try {
+          const vacuumEntity = states['vacuum.roborock_s7'];
+          const roomEntity = states['sensor.roborock_s7_comodo_atual'];
+          if (!vacuumEntity || !roomEntity) return '';
+          // Skip unavailable/unknown states
+          const invalidStates = ['unavailable', 'unknown', 'none'];
+          if (invalidStates.indexOf(vacuumEntity.state) !== -1) return '';
+          if (invalidStates.indexOf(roomEntity.state) !== -1) return '';
+          const activeStates = ['cleaning', 'moving', 'returning', 'segment_cleaning'];
+          if (activeStates.indexOf(vacuumEntity.state) === -1) return '';
+          const currentRoom = roomEntity.state.trim().toLowerCase();
+          const rooms = variables.vacuum_rooms
+            ? variables.vacuum_rooms.split(',').map(function(r) { return r.trim().toLowerCase(); })
+            : [];
+          if (rooms.length === 0) return '';
+          // Case-insensitive match — room names in vacuum_rooms must match sensor values
+          const match = rooms.some(function(r) { return r === currentRoom; });
+          if (!match) return '';
+          return '<svg viewBox="0 0 50 50"><style>@keyframes spinner{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}@keyframes robot{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}</style><g id="roborock_s6 1" style="animation:robot 10s infinite ease-in-out;transform-origin:center;transform-box:fill-box"><path id="spinner" fill="#242424" d="M32.91 9.041c-.038.01-.078.116-.078.116l3.389 2.136-.07.078-3.413-2.124s-.073.095-.039.12c2.241 1.627 5.202 3.379 5.202 3.379s-.144.323-.134.497c.01.162.177.466.177.466l-4.476 3.854.089.125 2.962-2.433.053.081-3.006 2.469.14.07 4.601-3.746s.281.226.475.287a.833.833 0 0 0 .573-.02l2.598 5.381.143-.082-1.621-3.524.062-.03 1.659 3.507.135-.06-2.516-5.456s.047-.059.075-.084c0 0 .193-.092.313-.28.073-.113.127-.224.07-.484l.188-.115c1.22-.184 6.06-.892 6.06-.892l-.012-.13-4.057.524-.016-.068 4.097-.558-.002-.135-6.25.75c-.1-.481-.681-.718-.681-.718.272-1.206 1.195-6.174 1.195-6.174s-.068-.044-.073-.02l-.896 3.984-.073.002.829-3.984c.005-.024-.07-.018-.07-.018L39.01 11.85s-.195-.032-.812.356c-.042.026-.147-.003-.147-.003l-5.125-3.159a.02.02 0 0 0-.016-.002Zm6.014 3.717a.357.357 0 1 1 .303.645.357.357 0 0 1-.303-.645Zm.061.138.005.115-.102.048.037.096.094-.002.057.098.087-.034-.002-.108.09-.043-.018-.086-.107-.003-.04-.099-.1.018Z" style="animation:spinner .8s infinite linear;transform-origin:center;transform-box:fill-box"/><path id="body" fill="#9da0a2" stroke="#787878" d="M47.53 24.915c0 .3-.016.61-.047.93-.026.27-1.094-.718-1.14-.436-.041.247-.138.76-.138.76.403.29 1.087 1.11 1.076 1.472-.182 6.02-5.726 12.664-5.726 12.664-5.937 5.656-10.869 6.615-16.526 7.048C13.714 48.22 2.715 36.397 2.815 27.72c0 0-.178-.417.934-1.593 0 0-.02-.688-.05-.99-.033-.33-1.13 1.18-1.148.845-.022-.406 0-1.39 0-1.802 0-12.383 10.094-21.671 22.478-21.671 12.384 0 22.501 10.023 22.501 22.407Z"/><path id="buttons" fill="#787878" d="M28.618 8.842h-7.281c-.623 0-1.127.455-1.127 1.016 0 .561.504 1.016 1.127 1.016h7.281c.622 0 1.127-.455 1.127-1.016 0-.561-.505-1.016-1.127-1.016Z"/><g id="lydar"><path id="circle3251" d="M25.036 27.378a6.563 6.563 0 1 0 0-13.125 6.563 6.563 0 0 0 0 13.125Z" fill="#787878"/><path id="path3028" d="M25.035 26.45a5.635 5.635 0 1 0 0-11.27 5.635 5.635 0 0 0 0 11.27Z" fill="#9da0a2"/></g></g></svg>';
+        } catch(e) {
+          console.warn('vacuum_overlay:', e.message);
+          return '';
+        }
+      ]]]

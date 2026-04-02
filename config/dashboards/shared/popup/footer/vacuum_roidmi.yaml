@@ -1,80 +1,85 @@
-type: custom:xiaomi-vacuum-map-card
-map_source:
-  camera: camera.roidmi_eve_live_map
-calibration_source:
-  camera: true
-entity: vacuum.roidmi_eve
-vacuum_platform: default
-map_locked: true
-map_modes:
-  - template: vacuum_goto
-  - template: vacuum_clean_zone
-    max_selections: 3
-    repeats_type: REPEAT
-    service_call_schema:
-      service: xiaomi_miot.call_action
-      evaluate_data_as_template: true
-      service_data:
-        entity_id: '[[entity_id]]'
-        siid: 14
-        aiid: 1
-        params:
-          - 2
-          - >-
-            {% set s_s = [[selection]] %}{"MapId":[[map_id]],"ExtraAreas":[{%for
-            s in s_s %}{"name":"[[name]]", "id":[[id]], "tag":"[[tag]]",
-            "vertexs":[[{{s[0]}},{{s[1]}}],[{{s[2]}},{{s[1]}}],[{{s[2]}},{{s[3]}}],[{{s[0]}},{{s[3]}}]],"active":"normal","mode":"area"}{%
-            if not loop.last%},{% endif%}{%endfor%}]}
-    variables:
-      map_id: 1696538829
-      name: hi
-      id: 300
-      tag: 4
-card_mod:
-  style: |
-    ha-card {
-      --map-card-primary-color: #FFFFFF30;
-      --map-card-secondary-color: #FFFFFF10;
-      --map-card-secondary-text-color: #9da0a2;
-      --map-card-zoomer-background: none;
-      --map-card-predefined-rectangle-fill-color: none;
-      --map-card-predefined-rectangle-line-color: none;
-      --map-card-predefined-rectangle-line-color-selected:rgba(255, 92, 10, 0.5);
-      --map-card-predefined-rectangle-fill-color-selected: rgba(255, 92, 10, 0.5);
-      --map-card-room-outline-fill-color-selected: rgba(255, 92, 10, 0.5);
-      --map-card-predefined-rectangle-icon-background-color-selected: rgb(255, 159, 26);
-      --map-card-predefined-rectangle-icon-color: #1d1d1d;
-      --map-card-predefined-rectangle-icon-background-color: rgba(255, 255, 255, 0.7);
-      --map-card-internal-big-radius: 0.6em !important;
-    }
-    div.map-wrapper {
-      padding: 2vw 0px 0.6vw !important;
-    }
-    div.controls-wrapper {
-      padding-top: 0;
-      padding-bottom: 0;
-      letter-spacing: normal;
-      margin: 0;
-    }
-    div.tiles-wrapper, div.vacuum-controls, div.icons-wrapper {
-      display: none;
-    }
-    div.map-controls-wrapper {
-      padding: var(--tablet-popup-button-padding);
-    }
-    paper-button {
-      --mdc-icon-size: 1.5em;
-      color: #9da0a2 !important;
-      padding: 0.42em;
-    }
-    #map-image {
-      filter: brightness(0.7);
-    }
-    #map-zoomer-content {
-      background-image: url(/local/img/roidme_plan.png);
-      background-size: contain;
-      background-repeat: no-repeat;
-    }
+# --- CÓDIGO ORIGINAL COMENTADO (mapa Roidmi Eve do ngocjohn) ---
+# Motivo: camera.roidmi_eve_live_map e vacuum.roidmi_eve não existem no setup.
+# Setup atual usa vacuum.roborock_s7 (popup em footer_vacuum.yaml).
+# Restaurar se migrar de volta para Roidmi ou adaptar para Roborock S7.
+# ---
+# type: custom:xiaomi-vacuum-map-card
+# map_source:
+#   camera: camera.roidmi_eve_live_map
+# calibration_source:
+#   camera: true
+# entity: vacuum.roidmi_eve
+# vacuum_platform: default
+# map_locked: true
+# map_modes:
+#   - template: vacuum_goto
+#   - template: vacuum_clean_zone
+#     max_selections: 3
+#     repeats_type: REPEAT
+#     service_call_schema:
+#       service: xiaomi_miot.call_action
+#       evaluate_data_as_template: true
+#       service_data:
+#         entity_id: '[[entity_id]]'
+#         siid: 14
+#         aiid: 1
+#         params:
+#           - 2
+#           - >-
+#             {% set s_s = [[selection]] %}{"MapId":[[map_id]],"ExtraAreas":[{%for
+#             s in s_s %}{"name":"[[name]]", "id":[[id]], "tag":"[[tag]]",
+#             "vertexs":[[{{s[0]}},{{s[1]}}],[{{s[2]}},{{s[1]}}],[{{s[2]}},{{s[3]}}],[{{s[0]}},{{s[3]}}]],"active":"normal","mode":"area"}{%
+#             if not loop.last%},{% endif%}{%endfor%}]}
+#     variables:
+#       map_id: 1696538829
+#       name: hi
+#       id: 300
+#       tag: 4
+# card_mod:
+#   style: |
+#     ha-card {
+#       --map-card-primary-color: #FFFFFF30;
+#       --map-card-secondary-color: #FFFFFF10;
+#       --map-card-secondary-text-color: #9da0a2;
+#       --map-card-zoomer-background: none;
+#       --map-card-predefined-rectangle-fill-color: none;
+#       --map-card-predefined-rectangle-line-color: none;
+#       --map-card-predefined-rectangle-line-color-selected:rgba(255, 92, 10, 0.5);
+#       --map-card-predefined-rectangle-fill-color-selected: rgba(255, 92, 10, 0.5);
+#       --map-card-room-outline-fill-color-selected: rgba(255, 92, 10, 0.5);
+#       --map-card-predefined-rectangle-icon-background-color-selected: rgb(255, 159, 26);
+#       --map-card-predefined-rectangle-icon-color: #1d1d1d;
+#       --map-card-predefined-rectangle-icon-background-color: rgba(255, 255, 255, 0.7);
+#       --map-card-internal-big-radius: 0.6em !important;
+#     }
+#     div.map-wrapper {
+#       padding: 2vw 0px 0.6vw !important;
+#     }
+#     div.controls-wrapper {
+#       padding-top: 0;
+#       padding-bottom: 0;
+#       letter-spacing: normal;
+#       margin: 0;
+#     }
+#     div.tiles-wrapper, div.vacuum-controls, div.icons-wrapper {
+#       display: none;
+#     }
+#     div.map-controls-wrapper {
+#       padding: var(--tablet-popup-button-padding);
+#     }
+#     paper-button {
+#       --mdc-icon-size: 1.5em;
+#       color: #9da0a2 !important;
+#       padding: 0.42em;
+#     }
+#     #map-image {
+#       filter: brightness(0.7);
+#     }
+#     #map-zoomer-content {
+#       background-image: url(/local/img/roidme_plan.png);
+#       background-size: contain;
+#       background-repeat: no-repeat;
+#     }
 
 # - type: custom:state-switch
 #   entity: vacuum.roidmi_eve

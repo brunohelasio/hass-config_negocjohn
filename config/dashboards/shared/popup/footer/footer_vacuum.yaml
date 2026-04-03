@@ -185,7 +185,7 @@ browser_mod:
                       action: call-service
                       service: "[[[ return entity.state === 'docked' || entity.state === 'paused' ? 'vacuum.start' : 'vacuum.pause'; ]]]"
                       service_data:
-                        entity_id: "[[[ return entity.entity_id; ]]]"
+                        entity_id: vacuum.roborock_s7
 
                   - type: custom:button-card
                     entity: vacuum.roborock_s7
@@ -210,32 +210,21 @@ browser_mod:
           # ==================================================================
           # COLUNA 2 — MAPA
           # ==================================================================
-          - type: custom:xiaomi-vacuum-map-card
+          - type: picture-entity
             view_layout:
               grid-area: map
-            vacuum_platform: Roborock
-            entity: vacuum.roborock_s7
-            map_source:
-              camera: image.roborock_s7_map_0_custom
-            calibration_source:
-              camera: true
-            map_locked: true
+            entity: image.roborock_s7_map_0_custom
+            show_name: false
+            show_state: false
+            camera_view: auto
             card_mod:
               style: |
                 ha-card {
                   background: transparent !important;
                   border: none !important;
                   box-shadow: none !important;
-                  --map-card-primary-color: rgba(255,255,255,0.08);
-                  --map-card-secondary-color: none;
-                  --map-card-secondary-text-color: rgba(255,255,255,0.55);
-                  --map-card-zoomer-background: transparent;
-                  --map-card-predefined-rectangle-fill-color: none;
-                  --map-card-predefined-rectangle-line-color: none;
-                  --map-card-predefined-rectangle-line-color-selected: rgba(255,255,255,0.5);
-                  --map-card-predefined-rectangle-fill-color-selected: rgba(42,124,194,0.1);
-                  --map-card-predefined-rectangle-icon-background-color-selected: rgb(42,124,194);
-                  --map-card-internal-big-radius: 0.6em !important;
+                  border-radius: 12px;
+                  overflow: hidden;
                 }
 
           # ==================================================================

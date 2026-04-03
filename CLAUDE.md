@@ -1507,3 +1507,69 @@ comentado no inicio do arquivo, delimitado por:
 
 Para restaurar: descomentar o bloco original e comentar/remover o bloco `# NOVO:`.
 
+
+---
+
+## Registro de Implementacao — Climate, Media e Vacuum (2026-04-03)
+
+### Problemas corrigidos
+
+#### 1. Bloco Climate — Botoes temperatura/umidade sem grafico visivel
+
+**Causa-raiz:**
+- Template `airpurifier` em `tpl_climate.yaml` tinha `grid-template-areas: |` com valor vazio (pipe sem conteudo apos). Isso invalidava o grid de custom_fields, fazendo `humid` flutuar sem area definida.
+- Ambos `airpurifier` e `thermostat` posicionavam `graph` com `position: absolute; bottom: -40%` — 40% abaixo do card — mas com `overflow: hidden` no card, o grafico ficava completamente invisivel.
+- Background usava `linear-gradient(to top, rgba(53,59,83,0.8)...)` opaco em vez do transparente/frosted padrao.
+- Sessao anterior reconstruiu os botoes do zero (2026-04-02) em `climate-status.yaml` sem mini-graph, tentando resolver os problemas de sobreposicao, mas perdeu a funcionalidade de grafico/min/max/media.
+
+**Solucao implementada:**
+- `tpl_climate.yaml` (template `airpurifier`):
+  - Corrigido `grid-template-areas` para `"humid" "n" "graph"` (tres rows validas)
+  - `grid-template-rows` alterado de `fit-content(100%) min-content 1fr` para `min-content min-content 1fr`
+  - Removido `position: absolute; bottom: -40%; left: -15%; width: 130%` do graph — substituido por `width: 100%; place-self: stretch`
+  - Background alterado para `rgba(115, 115, 115, 0.2)` (frosted, sem gradiente)
+- `tpl_climate.yaml` (template `thermostat`):
+  - Mesmos ajustes no graph (remocao de posicao absoluta)
+  - Background alterado para `rgba(115, 115, 115, 0.2)`
+- `climate-status.yaml`:
+  - Botoes "simples" (sem grafico) comentados
+  - Restaurados templates `airpurifier` (umidade) e `thermostat` (temperatura) com mini-graph-card funcional mostrando extrema (min/max) e average (media)
+
+**Rollback:**
+- `tpl_climate.yaml`: Descomentar blocos `# --- CÓDIGO ORIGINAL COMENTADO ---` para restaurar posicao absoluta e gradient.
+- `climate-status.yaml`: Descomentar bloco `# --- CÓDIGO COMENTADO ---` para restaurar botoes simples. Comentar as duas linhas de restauracao dos templates.
+
+---
+
+#### 2. Bloco Media — Slide 2 vazio + Slide 1 sem artwork
+
+**Causa-raiz:**
+- Um `custom:button-card` com `color_type: blank-card` foi inserido entre o Slide 1 (artwork) e o `type: grid` (grade 2x2). Esse card fantasma virava um slide vazio no swipe-card, deslocando a grade 2x2 para Slide 3.
+- Slide 1 usava hack CSS `height: 0; padding-bottom: 100%; position: relative` para criar aspect-ratio quadrado. No contexto de swipe-card com `autoHeight: false`, esse hack pode resultar em container de altura 0, impedindo que o `background-image` (artwork) seja renderizado corretamente pelo navegador.
+
+**Solucao implementada:**
+- `grid_media.yaml` (desktop e tablet):
+  - Removido blank-card fantasma (comentado com `# --- CÓDIGO ORIGINAL COMENTADO ---`)
+  - Substituido hack CSS `height: 0; padding-bottom: 100%; position: relative` por `aspect_ratio: 1/1` (parametro nativo do button-card, mais confiavel para sizing dentro de swipe-card)
+  - Grade 2x2 volta a ser Slide 2 diretamente apos o Slide 1
+
+**Rollback:**
+- Descomentar os blocos `# --- CÓDIGO ORIGINAL COMENTADO ---` em `grid_media.yaml` para restaurar blank-card e remover `aspect_ratio: 1/1` do Slide 1.
+
+---
+
+#### 3. Botao Vacuum no Rodape — Nao abre popup do vacuum
+
+**Causa-raiz:**
+- Em `footer-shared.yaml`, o botao vacuum tinha o `tap_action: !include ./popup/footer/footer_vacuum.yaml` comentado (linha 32, marcado `# ANTERIOR:`).
+- Em seu lugar, foi inserida inline uma definicao massiva de `tap_action` com um popup de cameras (grade 2x2 de 8 cameras com zoom individual). Esse codigo foi colocado no slot do vacuum por engano durante a implementacao da funcionalidade de cameras.
+- Resultado: ao clicar no botao vacuum, abria uma grade de cameras em vez do popup do aspirador.
+- Adicionalmente, `footer_vacuum.yaml` referenciava `image.roborock_s7_map_0_custom` (entidade inexistente — sufixo `_custom` incorreto). A entidade correta e `image.roborock_s7_map_0`.
+
+**Solucao implementada:**
+- `footer-shared.yaml`: Cameras popup inline comentado (bloco com marcador `# CÂMERAS POPUP (colocado aqui por engano)`). Restaurado `tap_action: !include ./popup/footer/footer_vacuum.yaml`.
+- `footer_vacuum.yaml`: `entity: image.roborock_s7_map_0_custom` → `entity: image.roborock_s7_map_0` (linha da coluna mapa).
+
+**Rollback:**
+- `footer-shared.yaml`: Descomentar o bloco `# CÂMERAS POPUP`. Comentar `tap_action: !include ./popup/footer/footer_vacuum.yaml`.
+- `footer_vacuum.yaml`: Reverter para `entity: image.roborock_s7_map_0_custom` (linha comentada disponivel no arquivo).

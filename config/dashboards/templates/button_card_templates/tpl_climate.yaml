@@ -153,23 +153,34 @@ airpurifier:
 
   styles:
     grid:
+      # --- CÓDIGO ORIGINAL COMENTADO (grid-template-areas vazio + graph posição absoluta) ---
+      # - grid-template-areas: |
+      # - grid-template-columns: 1fr
+      # - grid-template-rows: fit-content(100%) min-content 1fr
+      # --- FIM CÓDIGO ORIGINAL ---
       - grid-template-areas: |
+          "humid"
+          "n"
+          "graph"
       - grid-template-columns: 1fr
-      - grid-template-rows: fit-content(100%) min-content 1fr
+      - grid-template-rows: min-content min-content 1fr
       - gap: 0
     card:
       - color: rgba(255, 255, 255, 0.6)
-      - background: >
-          [[[
-            return variables.purifier_on
-              ? 'linear-gradient(to top, rgba(53,59,83,0.8) 0%, rgba(10,14,34,0.8) 100%)'
-              : 'rgba(115, 115, 115, 0.25)';
-          ]]]
+      # --- CÓDIGO ORIGINAL COMENTADO (gradient opaco) ---
+      # - background: >
+      #     [[[
+      #       return variables.purifier_on
+      #         ? 'linear-gradient(to top, rgba(53,59,83,0.8) 0%, rgba(10,14,34,0.8) 100%)'
+      #         : 'rgba(115, 115, 115, 0.25)';
+      #     ]]]
+      # --- FIM CÓDIGO ORIGINAL ---
+      - background: rgba(115, 115, 115, 0.2)
       - overflow: hidden
       - padding: 10.9% 9.9% 8.9% 10.9%
     custom_fields:
       humid:
-        - place-self: flex-start
+        - place-self: start
         - font-family: Futura
         - font-size: >
             [[[
@@ -183,11 +194,16 @@ airpurifier:
         - font-weight: 500
         - letter-spacing: -1px
       graph:
-        - bottom: -40%
-        - left: '-15%'
-        - width: 130%
-        - position: absolute
-        - place-self: start
+        # --- CÓDIGO ORIGINAL COMENTADO (posição absoluta — gráfico ficava invisível) ---
+        # - bottom: -40%
+        # - left: '-15%'
+        # - width: 130%
+        # - position: absolute
+        # - place-self: start
+        # - overflow: hidden
+        # --- FIM CÓDIGO ORIGINAL ---
+        - width: 100%
+        - place-self: stretch
         - overflow: hidden
 
 thermostat:
@@ -278,18 +294,21 @@ thermostat:
           "n"
           "graph"
       - grid-template-columns: 1fr
-      - grid-template-rows: fit-content(100%) min-content 1fr
+      - grid-template-rows: min-content min-content 1fr
       - gap: 0
     card:
       - color: rgba(255, 255, 255, 0.6)
-      - background: linear-gradient(to top, rgba(53,59,83,0.8) 0%, rgba(10,14,34,0.8) 100%)
+      # --- CÓDIGO ORIGINAL COMENTADO (gradient opaco) ---
+      # - background: linear-gradient(to top, rgba(53,59,83,0.8) 0%, rgba(10,14,34,0.8) 100%)
+      # --- FIM CÓDIGO ORIGINAL ---
+      - background: rgba(115, 115, 115, 0.2)
       - overflow: hidden
       - padding: 10.9% 9.9% 8.9% 10.9%
     name:
       - overflow: inherit
     custom_fields:
       temp:
-        - place-self: flex-start
+        - place-self: start
         - font-family: Futura
         - font-size: >
             [[[
@@ -309,11 +328,16 @@ thermostat:
                 : '#97989c';
             ]]]
       graph:
-        - bottom: -40%
-        - left: '-15%'
-        - width: 130%
-        - position: absolute
-        - place-self: start
+        # --- CÓDIGO ORIGINAL COMENTADO (posição absoluta — gráfico ficava invisível) ---
+        # - bottom: -40%
+        # - left: '-15%'
+        # - width: 130%
+        # - position: absolute
+        # - place-self: start
+        # --- FIM CÓDIGO ORIGINAL ---
+        - width: 100%
+        - place-self: stretch
+        - overflow: hidden
 
 radiator:
   template:

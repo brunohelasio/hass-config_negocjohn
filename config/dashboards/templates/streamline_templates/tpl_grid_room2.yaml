@@ -14,11 +14,16 @@ grid_office_room:
       - sensor.office_active
       - sensor.roborock_s7_comodo_atual
       - vacuum.roborock_s7
+      - media_player.echo_pop_office
     template:
       - rooms_base
       - icon_office
       # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
       - ac_status
+      # --- CÓDIGO ORIGINAL COMENTADO (alexa_status faltava — ícone Spotify nunca aparecia) ---
+      # alexa_status não estava na lista de templates
+      # --- FIM CÓDIGO ORIGINAL ---
+      - alexa_status
       - vacuum_overlay
     double_tap_action: !include ../../shared/popup/rooms/office.yaml
     # hold_action:
@@ -35,6 +40,8 @@ grid_office_room:
       active: sensor.office_active
       # AC do office (restaurado sem _2)
       ac_entity: climate.ac_office
+      # Alexa do Office (Echo Pop) — alexa_status mostra icone quando tocando
+      alexa_entity: media_player.echo_pop_office
       # Motion: vazio ate sensor chegar
       motion: ''
       # Roborock overlay — cômodo mapeado para o Escritório/Office

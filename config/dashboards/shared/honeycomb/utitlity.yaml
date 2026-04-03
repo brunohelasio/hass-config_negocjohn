@@ -18,14 +18,20 @@ honeycomb_menu:
     - icon: custom:roborock
       position: 1
       show: true
-      entity: vacuum.roidmi_eve
+      entity: vacuum.roborock_s7
+      # --- CÓDIGO ORIGINAL COMENTADO (entidade renomeada: roidmi_eve → roborock_s7) ---
+      # entity: vacuum.roidmi_eve
+      # --- FIM CÓDIGO ORIGINAL ---
       active: '[[[ return entity.state != "docked" ]]]'
       tap_action: !include ../popup/footer/footer_vacuum.yaml
     #2
     - icon: mdi:play-pause
       position: 2
       show: true
-      entity: vacuum.roidmi_eve
+      entity: vacuum.roborock_s7
+      # --- CÓDIGO ORIGINAL COMENTADO (entidade renomeada: roidmi_eve → roborock_s7) ---
+      # entity: vacuum.roidmi_eve
+      # --- FIM CÓDIGO ORIGINAL ---
       tap_action:
         action: >
           [[[
@@ -39,23 +45,35 @@ honeycomb_menu:
             }
           ]]]
         service_data:
-          entity_id: vacuum.roidmi_eve
+          entity_id: vacuum.roborock_s7
+          # --- CÓDIGO ORIGINAL COMENTADO (entidade renomeada: roidmi_eve → roborock_s7) ---
+          # entity_id: vacuum.roidmi_eve
+          # --- FIM CÓDIGO ORIGINAL ---
     #3
     - icon: mdi:battery-charging
       position: 3
       show: true
-      entity: vacuum.roidmi_eve
+      entity: vacuum.roborock_s7
+      # --- CÓDIGO ORIGINAL COMENTADO (entidade renomeada: roidmi_eve → roborock_s7) ---
+      # entity: vacuum.roidmi_eve
+      # --- FIM CÓDIGO ORIGINAL ---
       active: '[[[ return entity.state != "docked" ]]]'
       tap_action:
         action: call-service
         service: vacuum.return_to_base
         service_data:
-          entity_id: vacuum.roidmi_eve
+          entity_id: vacuum.roborock_s7
+          # --- CÓDIGO ORIGINAL COMENTADO (entidade renomeada: roidmi_eve → roborock_s7) ---
+          # entity_id: vacuum.roidmi_eve
+          # --- FIM CÓDIGO ORIGINAL ---
     #4
     - icon: mdi:delete-empty
       position: 4
       show: true
-      entity: vacuum.roidmi_eve
+      entity: vacuum.roborock_s7
+      # --- CÓDIGO ORIGINAL COMENTADO (entidade renomeada: roidmi_eve → roborock_s7) ---
+      # entity: vacuum.roidmi_eve
+      # --- FIM CÓDIGO ORIGINAL ---
       active: '[[[ return entity.state != "docked" ]]]'
       tap_action:
         action: call-service

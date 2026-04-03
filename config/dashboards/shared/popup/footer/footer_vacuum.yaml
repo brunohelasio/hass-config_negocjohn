@@ -1,33 +1,16 @@
-# ==============================================================================
-# POPUP ASPIRADOR — Roborock S7
-#
-# Estrutura: mod-card → layout-card → grid-layout (layout ngocjohn)
-# CSS: TODO INLINE — SEM !include snippets (snippets quebram este popup)
-# Grid: 320px | 1fr | 280px (do código funcional do usuário)
-#
-# Entidades: todas Roborock S7 — confirmadas e testadas pelo usuário
-# Hardware: Galaxy Tab S6 Lite (2000x1200)
-# ==============================================================================
-# --- CÓDIGO ANTERIOR COMENTADO (versão com !include snippets — QUEBRAVA) ---
+# ANTERIOR (mantido comentado):
+# popup antigo do aspirador com layout Roborock S7 específico deste repositório.
 # action: fire-dom-event
 # browser_mod:
 #   service: browser_mod.popup
 #   data:
-#     title: Roborock S7
+#     title: " "
+#     size: wide
 #     style: >
-#       --max-popup-column: 3;
-#     card_mod: !include ../../snippets/style_popup_center.yaml
-#     content:
-#       type: custom:mod-card
-#       card_mod: !include ../../snippets/style_popup_footer.yaml
-#       card:
-#         type: custom:layout-card
-#         layout_type: custom:grid-layout
-#         layout: !include ../../snippets/popup_footer_layout.yaml
-#         cards: [...]
-# --- FIM CÓDIGO ANTERIOR ---
+#       --popup-background-color: transparent;
+#       --mdc-dialog-min-width: 1100px !important;
+#       --mdc-dialog-max-width: 1100px !important;
 
-# NOVO: CSS inline (conteúdo dos 3 snippets embutido diretamente)
 action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
@@ -35,282 +18,416 @@ browser_mod:
     title: " "
     size: wide
     style: >
-      --popup-background-color: transparent;
-      --mdc-dialog-min-width: 1100px !important;
-      --mdc-dialog-max-width: 1100px !important;
-      --mdc-dialog-max-height: 90vh;
-    # Centering — conteúdo de style_popup_center.yaml inline
-    card_mod:
-      style:
-        ha-dialog$: |
-          .mdc-dialog__container {
-            align-items: center !important;
-            justify-content: center !important;
+      --popup-background-color: transparent !important;
+      --ha-dialog-background-color: transparent !important;
+      --mdc-theme-surface: transparent !important;
+      --mdc-dialog-min-width: 92vw !important;
+      --mdc-dialog-max-width: 92vw !important;
+    popup_styles:
+      - style: all
+        styles: |
+          ha-dialog {
+            --ha-dialog-surface-background: transparent;
+            --ha-card-background: transparent;
+            --ha-dialog-scrim-backdrop-filter: blur(24px) saturate(100%);
+            --mdc-dialog-scrim-color: rgba(0,0,0,0.55);
+            --dialog-surface-margin-top: auto;
           }
     content:
-      type: custom:mod-card
-      # Footer styling — conteúdo de style_popup_footer.yaml inline
+      type: custom:layout-card
+      layout_type: custom:grid-layout
       card_mod:
-        style:
-          .: |
-            ha-card {
-              background: transparent !important;
-              border: none !important;
-              box-shadow: none !important;
-            }
-          layout-card$:
-            grid-layout$:
-              .: |
-                #root > * {
-                  margin: 0px !important;
-                }
-                @media (max-width: 800px) {
-                  #root {
-                    display: block !important;
-                  }
-                }
-              hui-entities-card$:
-                .: |
-                  ha-card {
-                    border-right: 0.1vw solid rgba(58, 69, 73, 0.2);
-                    border-radius: 0;
-                    transition: none;
-                    margin-bottom: 0 !important;
-                  }
-                  ha-card.header .card-header {
-                    letter-spacing: 0.005em;
-                    font-size: 1.6em;
-                    line-height: initial;
-                  }
-                  @media screen and (max-width: 800px) {
-                    ha-card {
-                      border-right: none;
-                      border-bottom: 0.1vw solid rgba(58, 69, 73, 0.2);
-                    }
-                  }
-                hui-horizontal-stack-card:
-                  $: |
-                    #root {
-                      justify-content: space-evenly;
-                      margin-block: 1em;
-                      height: unset !important;
-                    }
-              hui-entities-card:last-child:
-                $: |
-                  ha-card {
-                    border: none;
-                  }
-      card:
-        type: custom:layout-card
-        layout_type: custom:grid-layout
-        # Layout — grid explícito (NÃO usa popup_footer_layout.yaml)
-        layout:
-          grid-template-columns: 320px 1fr 280px
-          grid-template-rows: auto
-          margin: 0
-          padding: 0
-          mediaquery:
-            "(max-width: 800px)":
-              grid-template-columns: 1fr
-              grid-template-rows: auto
-              margin: 0
-              padding: 0
-        cards:
+        style: |
+          ha-card {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+      layout:
+        grid-template-columns: 1fr
+        grid-template-areas: '"main"'
+      cards:
+        # ======================================================================
+        # ESTADO 1: A GRELHA GERAL (Snapshot 'auto' para salvar RAM/CPU)
+        # ======================================================================
+        - type: conditional
+          conditions:
+            - entity: input_text.camera_selecionada
+              state_not: 'cam_1'
+            - entity: input_text.camera_selecionada
+              state_not: 'cam_2'
+            - entity: input_text.camera_selecionada
+              state_not: 'cam_3'
+            - entity: input_text.camera_selecionada
+              state_not: 'cam_4'
+            - entity: input_text.camera_selecionada
+              state_not: 'cam_5'
+            - entity: input_text.camera_selecionada
+              state_not: 'cam_6'
+            - entity: input_text.camera_selecionada
+              state_not: 'cam_7'
+            - entity: input_text.camera_selecionada
+              state_not: 'cam_8'
+          card:
+            type: custom:layout-card
+            layout_type: custom:grid-layout
+            layout:
+              grid-template-columns: 1fr 1fr 1fr
+              grid-template-areas: |
+                "cam1 cam2 cam3"
+                "cam4 cam5 cam6"
+                "cam7 cam8 ."
+              grid-gap: 2vw
+              mediaquery:
+                "(max-width: 800px)":
+                  grid-template-columns: 1fr
+                  grid-template-areas: |
+                    "cam1"
+                    "cam2"
+                    "cam3"
+                    "cam4"
+                    "cam5"
+                    "cam6"
+                    "cam7"
+                    "cam8"
+                  grid-gap: 4vw
+            cards:
+              # --- CÂMERA 1 ---
+              - type: picture-entity
+                view_layout: { grid-area: cam1 }
+                entity: camera.sl_camera
+                camera_view: auto
+                aspect_ratio: '16:9'
+                show_name: true
+                name: "Sala"
+                show_state: false
+                card_mod:
+                  style: |
+                    ha-card { background: rgba(0,0,0,0.3) !important; border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.10) !important; overflow: hidden; cursor: pointer; }
+                tap_action:
+                  action: call-service
+                  service: input_text.set_value
+                  data:
+                    entity_id: input_text.camera_selecionada
+                    value: 'cam_1'
 
-          #################################################
-          #                                               #
-          #             COLUNA 1 — STATUS                 #
-          #                                               #
-          #################################################
-          - type: entities
-            title: Status
-            show_header_toggle: false
-            card_mod:
-              class: header
-            entities:
-              - entity: sensor.roborock_s7_status
-                name: Status
+              # --- CÂMERA 2 ---
+              - type: picture-entity
+                view_layout: { grid-area: cam2 }
+                entity: camera.vr_camera
+                camera_view: auto
+                aspect_ratio: '16:9'
+                show_name: true
+                name: "Varanda"
+                show_state: false
+                card_mod:
+                  style: |
+                    ha-card { background: rgba(0,0,0,0.3) !important; border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.10) !important; overflow: hidden; cursor: pointer; }
+                tap_action:
+                  action: call-service
+                  service: input_text.set_value
+                  data:
+                    entity_id: input_text.camera_selecionada
+                    value: 'cam_2'
 
-              - entity: sensor.roborock_s7_comodo_atual
-                name: Cômodo Atual
+              # --- CÂMERA 3 ---
+              - type: picture-entity
+                view_layout: { grid-area: cam3 }
+                entity: camera.cz_camera
+                camera_view: auto
+                aspect_ratio: '16:9'
+                show_name: true
+                name: "Cozinha"
+                show_state: false
+                card_mod:
+                  style: |
+                    ha-card { background: rgba(0,0,0,0.3) !important; border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.10) !important; overflow: hidden; cursor: pointer; }
+                tap_action:
+                  action: call-service
+                  service: input_text.set_value
+                  data:
+                    entity_id: input_text.camera_selecionada
+                    value: 'cam_3'
 
-              - entity: sensor.roborock_s7_vacuum_error
-                name: Erro
+              # --- CÂMERA 4 ---
+              - type: picture-entity
+                view_layout: { grid-area: cam4 }
+                entity: camera.as_camera
+                camera_view: auto
+                aspect_ratio: '16:9'
+                show_name: true
+                name: "Área de Serviço"
+                show_state: false
+                card_mod:
+                  style: |
+                    ha-card { background: rgba(0,0,0,0.3) !important; border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.10) !important; overflow: hidden; cursor: pointer; }
+                tap_action:
+                  action: call-service
+                  service: input_text.set_value
+                  data:
+                    entity_id: input_text.camera_selecionada
+                    value: 'cam_4'
 
-              - entity: binary_sensor.roborock_s7_mop_attached
-                name: Mop Acoplado
+              # --- CÂMERA 5 ---
+              - type: picture-entity
+                view_layout: { grid-area: cam5 }
+                entity: camera.camera_quarto_casal
+                camera_view: auto
+                aspect_ratio: '16:9'
+                show_name: true
+                name: "Quarto Casal"
+                show_state: false
+                card_mod:
+                  style: |
+                    ha-card { background: rgba(0,0,0,0.3) !important; border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.10) !important; overflow: hidden; cursor: pointer; }
+                tap_action:
+                  action: call-service
+                  service: input_text.set_value
+                  data:
+                    entity_id: input_text.camera_selecionada
+                    value: 'cam_5'
 
-              - entity: binary_sensor.roborock_s7_water_box_attached
-                name: Caixa de Água
+              # --- CÂMERA 6 ---
+              - type: picture-entity
+                view_layout: { grid-area: cam6 }
+                entity: camera.qma_camera
+                camera_view: auto
+                aspect_ratio: '16:9'
+                show_name: true
+                name: "Quarto Marina"
+                show_state: false
+                card_mod:
+                  style: |
+                    ha-card { background: rgba(0,0,0,0.3) !important; border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.10) !important; overflow: hidden; cursor: pointer; }
+                tap_action:
+                  action: call-service
+                  service: input_text.set_value
+                  data:
+                    entity_id: input_text.camera_selecionada
+                    value: 'cam_6'
 
-              - entity: binary_sensor.roborock_s7_water_shortage
-                name: Falta de Água
+              # --- CÂMERA 7 ---
+              - type: picture-entity
+                view_layout: { grid-area: cam7 }
+                entity: camera.qmi_camera
+                camera_view: auto
+                aspect_ratio: '16:9'
+                show_name: true
+                name: "Quarto Miguel"
+                show_state: false
+                card_mod:
+                  style: |
+                    ha-card { background: rgba(0,0,0,0.3) !important; border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.10) !important; overflow: hidden; cursor: pointer; }
+                tap_action:
+                  action: call-service
+                  service: input_text.set_value
+                  data:
+                    entity_id: input_text.camera_selecionada
+                    value: 'cam_7'
 
-              - type: custom:bar-card
-                width: 55%
-                height: 2em
-                decimal: 0
-                unit_of_measurement: '%'
-                positions:
-                  icon: outside
-                  indicator: 'off'
-                  name: outside
-                severity:
-                  - color: '#303435'
-                    from: 11
-                    to: 100
-                  - color: '#6d2525'
-                    from: 0
-                    to: 10
-                entity_row: true
-                entities:
-                  - entity: sensor.roborock_s7_bateria
-                    name: Bateria
-                    icon: mdi:battery
-                  - entity: sensor.roborock_s7_tempo_restante_do_filtro
-                    name: Filtro
-                  - entity: sensor.roborock_s7_tempo_restante_da_escova_principal
-                    name: Escova Principal
-                  - entity: sensor.roborock_s7_tempo_restante_da_escova_lateral
-                    name: Escova Lateral
-                  - entity: sensor.roborock_s7_tempo_restante_do_sensor
-                    name: Sensores
+              # --- CÂMERA 8 ---
+              - type: picture-entity
+                view_layout: { grid-area: cam8 }
+                entity: camera.of_camera
+                camera_view: auto
+                aspect_ratio: '16:9'
+                show_name: true
+                name: "Office"
+                show_state: false
+                card_mod:
+                  style: |
+                    ha-card { background: rgba(0,0,0,0.3) !important; border-radius: 16px !important; border: 1px solid rgba(255,255,255,0.10) !important; overflow: hidden; cursor: pointer; }
+                tap_action:
+                  action: call-service
+                  service: input_text.set_value
+                  data:
+                    entity_id: input_text.camera_selecionada
+                    value: 'cam_8'
 
-              - entity: select.roborock_s7_intensidade_do_mop
-                name: Intensidade do Mop
+        # ======================================================================
+        # ESTADOS INDIVIDUAIS: ZOOM EM TEMPO REAL ('live')
+        # ======================================================================
 
-              - entity: select.roborock_s7_modo_mop
-                name: Modo do Mop
-
-              - type: section
-
-              - type: custom:hui-horizontal-stack-card
-                cards:
-                  - type: custom:button-card
-                    entity: vacuum.roborock_s7
-                    name: Iniciar/Pausar
-                    icon: mdi:play-pause
-                    tap_action:
-                      action: call-service
-                      service: vacuum.start_pause
-                      service_data:
-                        entity_id: vacuum.roborock_s7
-                    template: icon_name
-
-                  - type: custom:button-card
-                    entity: vacuum.roborock_s7
-                    name: Base
-                    icon: mdi:home-import-outline
-                    tap_action:
-                      action: call-service
-                      service: vacuum.return_to_base
-                      service_data:
-                        entity_id: vacuum.roborock_s7
-                    template: icon_name
-
-          #################################################
-          #                                               #
-          #           COLUNA 2 — MAPA AO VIVO             #
-          #                                               #
-          #################################################
-          # ANTERIOR: xiaomi-vacuum-map-card com map_source.camera: image.roborock_s7_map_0
-          # PROBLEMA: xiaomi-vacuum-map-card espera entidade camera.*, mas a integração
-          # Roborock oficial cria image.* — causando "configuration error".
-          # FIX: picture-entity card para exibir o mapa como imagem estática atualizada
-          # - type: custom:xiaomi-vacuum-map-card
-          #   vacuum_platform: Roborock
-          #   entity: vacuum.roborock_s7
-          #   map_source:
-          #     camera: image.roborock_s7_map_0
-          #   calibration_source:
-          #     camera: true
-          #   map_locked: true
-          #   card_mod:
-          #     style: |
-          #       ha-card {
-          #         background: transparent !important;
-          #         border: none !important;
-          #         box-shadow: none !important;
-          #         max-height: 70vh;
-          #         overflow: hidden;
-          #         --map-card-primary-color: rgba(255,255,255,0.08);
-          #         --map-card-secondary-color: none;
-          #         --map-card-secondary-text-color: rgba(255,255,255,0.55);
-          #         --map-card-zoomer-background: transparent;
-          #         --map-card-predefined-rectangle-fill-color: none;
-          #         --map-card-predefined-rectangle-line-color: none;
-          #         --map-card-predefined-rectangle-line-color-selected: rgba(255,255,255,0.5);
-          #         --map-card-predefined-rectangle-fill-color-selected: rgba(42,124,194,0.1);
-          #         --map-card-predefined-rectangle-icon-background-color-selected: rgb(42,124,194);
-          #         --map-card-internal-big-radius: 0.6em !important;
-          #       }
-          - type: picture-entity
-            entity: image.roborock_s7_map_0
-            show_name: false
+        # --- ZOOM CÂMERA 1 ---
+        - type: conditional
+          conditions:
+            - entity: input_text.camera_selecionada
+              state: 'cam_1'
+          card:
+            type: picture-entity
+            entity: camera.sl_camera
+            camera_view: live
+            aspect_ratio: '16:9'
+            name: "⬅ Toque na imagem para voltar à Grelha"
+            show_name: true
             show_state: false
-            camera_view: auto
+            tap_action:
+              action: call-service
+              service: input_text.set_value
+              data:
+                entity_id: input_text.camera_selecionada
+                value: 'grid'
             card_mod:
               style: |
-                ha-card {
-                  background: transparent !important;
-                  border: none !important;
-                  box-shadow: none !important;
-                  max-height: 70vh;
-                  overflow: hidden;
-                  border-radius: 12px;
-                }
-                ha-card::before {
-                  content: none !important;
-                }
-                img {
-                  object-fit: contain;
-                  border-radius: 12px;
-                }
+                ha-card { background: rgba(0,0,0,0.5) !important; border-radius: 24px !important; border: 1px solid rgba(255,255,255,0.15) !important; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6) !important; margin: 0 auto; max-width: 90%; cursor: pointer; }
 
-          #################################################
-          #                                               #
-          #      COLUNA 3 — CONFIGURAÇÕES + STATS         #
-          #                                               #
-          #################################################
-          - type: entities
-            title: Configurações
-            show_header_toggle: false
+        # --- ZOOM CÂMERA 2 ---
+        - type: conditional
+          conditions:
+            - entity: input_text.camera_selecionada
+              state: 'cam_2'
+          card:
+            type: picture-entity
+            entity: camera.vr_camera
+            camera_view: live
+            aspect_ratio: '16:9'
+            name: "⬅ Toque na imagem para voltar à Grelha"
+            show_name: true
+            show_state: false
+            tap_action:
+              action: call-service
+              service: input_text.set_value
+              data:
+                entity_id: input_text.camera_selecionada
+                value: 'grid'
             card_mod:
-              class: header
-            entities:
-              - entity: number.roborock_s7_volume
-                name: Volume
+              style: |
+                ha-card { background: rgba(0,0,0,0.5) !important; border-radius: 24px !important; border: 1px solid rgba(255,255,255,0.15) !important; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6) !important; margin: 0 auto; max-width: 90%; cursor: pointer; }
 
-              - entity: switch.roborock_s7_nao_perturbe
-                name: Não Perturbe
+        # --- ZOOM CÂMERA 3 ---
+        - type: conditional
+          conditions:
+            - entity: input_text.camera_selecionada
+              state: 'cam_3'
+          card:
+            type: picture-entity
+            entity: camera.cz_camera
+            camera_view: live
+            aspect_ratio: '16:9'
+            name: "⬅ Toque na imagem para voltar à Grelha"
+            show_name: true
+            show_state: false
+            tap_action:
+              action: call-service
+              service: input_text.set_value
+              data:
+                entity_id: input_text.camera_selecionada
+                value: 'grid'
+            card_mod:
+              style: |
+                ha-card { background: rgba(0,0,0,0.5) !important; border-radius: 24px !important; border: 1px solid rgba(255,255,255,0.15) !important; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6) !important; margin: 0 auto; max-width: 90%; cursor: pointer; }
 
-              - entity: time.roborock_s7_comecar_nao_perturbe
-                name: Início NP
+        # --- ZOOM CÂMERA 4 ---
+        - type: conditional
+          conditions:
+            - entity: input_text.camera_selecionada
+              state: 'cam_4'
+          card:
+            type: picture-entity
+            entity: camera.as_camera
+            camera_view: live
+            aspect_ratio: '16:9'
+            name: "⬅ Toque na imagem para voltar à Grelha"
+            show_name: true
+            show_state: false
+            tap_action:
+              action: call-service
+              service: input_text.set_value
+              data:
+                entity_id: input_text.camera_selecionada
+                value: 'grid'
+            card_mod:
+              style: |
+                ha-card { background: rgba(0,0,0,0.5) !important; border-radius: 24px !important; border: 1px solid rgba(255,255,255,0.15) !important; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6) !important; margin: 0 auto; max-width: 90%; cursor: pointer; }
 
-              - entity: time.roborock_s7_terminar_nao_perturbe
-                name: Fim NP
+        # --- ZOOM CÂMERA 5 ---
+        - type: conditional
+          conditions:
+            - entity: input_text.camera_selecionada
+              state: 'cam_5'
+          card:
+            type: picture-entity
+            entity: camera.camera_quarto_casal
+            camera_view: live
+            aspect_ratio: '16:9'
+            name: "⬅ Toque na imagem para voltar à Grelha"
+            show_name: true
+            show_state: false
+            tap_action:
+              action: call-service
+              service: input_text.set_value
+              data:
+                entity_id: input_text.camera_selecionada
+                value: 'grid'
+            card_mod:
+              style: |
+                ha-card { background: rgba(0,0,0,0.5) !important; border-radius: 24px !important; border: 1px solid rgba(255,255,255,0.15) !important; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6) !important; margin: 0 auto; max-width: 90%; cursor: pointer; }
 
-              - entity: switch.roborock_s7_dock_luz_indicadora_de_status
-                name: Luz Indicadora
+        # --- ZOOM CÂMERA 6 ---
+        - type: conditional
+          conditions:
+            - entity: input_text.camera_selecionada
+              state: 'cam_6'
+          card:
+            type: picture-entity
+            entity: camera.qma_camera
+            camera_view: live
+            aspect_ratio: '16:9'
+            name: "⬅ Toque na imagem para voltar à Grelha"
+            show_name: true
+            show_state: false
+            tap_action:
+              action: call-service
+              service: input_text.set_value
+              data:
+                entity_id: input_text.camera_selecionada
+                value: 'grid'
+            card_mod:
+              style: |
+                ha-card { background: rgba(0,0,0,0.5) !important; border-radius: 24px !important; border: 1px solid rgba(255,255,255,0.15) !important; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6) !important; margin: 0 auto; max-width: 90%; cursor: pointer; }
 
-              - entity: switch.roborock_s7_dock_bloqueio_infantil
-                name: Bloqueio Infantil
+        # --- ZOOM CÂMERA 7 ---
+        - type: conditional
+          conditions:
+            - entity: input_text.camera_selecionada
+              state: 'cam_7'
+          card:
+            type: picture-entity
+            entity: camera.qmi_camera
+            camera_view: live
+            aspect_ratio: '16:9'
+            name: "⬅ Toque na imagem para voltar à Grelha"
+            show_name: true
+            show_state: false
+            tap_action:
+              action: call-service
+              service: input_text.set_value
+              data:
+                entity_id: input_text.camera_selecionada
+                value: 'grid'
+            card_mod:
+              style: |
+                ha-card { background: rgba(0,0,0,0.5) !important; border-radius: 24px !important; border: 1px solid rgba(255,255,255,0.15) !important; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6) !important; margin: 0 auto; max-width: 90%; cursor: pointer; }
 
-              - type: divider
-                style:
-                  padding: 4px 0
-
-              - entity: sensor.roborock_s7_area_de_limpeza
-                name: Área (Última)
-
-              - entity: sensor.roborock_s7_tempo_de_limpeza
-                name: Tempo (Última)
-
-              - entity: sensor.roborock_s7_area_total_de_limpeza
-                name: Área Total
-
-              - entity: sensor.roborock_s7_tempo_total_de_limpeza
-                name: Tempo Total
-
-              - entity: sensor.roborock_s7_contagem_total_de_limpeza
-                name: Nº de Limpezas
+        # --- ZOOM CÂMERA 8 ---
+        - type: conditional
+          conditions:
+            - entity: input_text.camera_selecionada
+              state: 'cam_8'
+          card:
+            type: picture-entity
+            entity: camera.of_camera
+            camera_view: live
+            aspect_ratio: '16:9'
+            name: "⬅ Toque na imagem para voltar à Grelha"
+            show_name: true
+            show_state: false
+            tap_action:
+              action: call-service
+              service: input_text.set_value
+              data:
+                entity_id: input_text.camera_selecionada
+                value: 'grid'
+            card_mod:
+              style: |
+                ha-card { background: rgba(0,0,0,0.5) !important; border-radius: 24px !important; border: 1px solid rgba(255,255,255,0.15) !important; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.6) !important; margin: 0 auto; max-width: 90%; cursor: pointer; }

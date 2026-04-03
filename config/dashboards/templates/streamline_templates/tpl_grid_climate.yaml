@@ -110,43 +110,87 @@
 # tpl_popup_climate (tpl_sectors.yaml): herda de base, define state_on correto para climate.
 # icon_climate (tpl_icons.yaml): SVG do ar-condicionado com cor dinamica (azul ativo, cinza off).
 # Posicao 1: AC Sala
+# grid_air_purifier:
+#   card:
+#     type: custom:button-card
+#     entity: climate.sl_ar_condicionado
+#     name: AC Sala
+#     show_icon: false
+#     template:
+#       - tpl_popup_climate
+#       - icon_climate
+#     tap_action:
+#       action: perform-action
+#       perform_action: climate.toggle
+#       target:
+#         entity_id: climate.sl_ar_condicionado
+#       haptic: success
+#     double_tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+
+# Posicao 2: AC Office
+# grid_thermostat:
+#   card:
+#     type: custom:button-card
+#     entity: climate.ac_office
+#     name: AC Office
+#     show_icon: false
+#     template:
+#       - tpl_popup_climate
+#       - icon_climate
+#     tap_action:
+#       action: perform-action
+#       perform_action: climate.toggle
+#       target:
+#         entity_id: climate.ac_office
+#       haptic: success
+#     double_tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+
+# NOVO (2026-04-03): botoes superiores restaurados para sensores locais
+# no estilo negocjohn/sagaland, sem depender de atributos average_*.
+# Posicao 1: Umidade
 grid_air_purifier:
   card:
     type: custom:button-card
-    entity: climate.sl_ar_condicionado
-    name: AC Sala
-    show_icon: false
+    entity: sensor.sl_sensor_temp_humid_umidade
+    name: Umidade
+    icon: mdi:water-percent
     template:
-      - tpl_popup_climate
-      - icon_climate
+      - base
+    state_display: >
+      [[[
+        if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+          return '--%';
+        }
+        return `${entity.state}%`;
+      ]]]
     tap_action:
-      action: perform-action
-      perform_action: climate.toggle
-      target:
-        entity_id: climate.sl_ar_condicionado
-      haptic: success
-    double_tap_action:
       action: more-info
     hold_action:
       action: more-info
 
-# Posicao 2: AC Office
+# Posicao 2: Temperatura
 grid_thermostat:
   card:
     type: custom:button-card
-    entity: climate.ac_office
-    name: AC Office
-    show_icon: false
+    entity: sensor.sl_sensor_temp_humid_temperatura
+    name: Temperatura
+    icon: mdi:thermometer
     template:
-      - tpl_popup_climate
-      - icon_climate
+      - base
+    state_display: >
+      [[[
+        if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+          return '--°C';
+        }
+        return `${entity.state}°C`;
+      ]]]
     tap_action:
-      action: perform-action
-      perform_action: climate.toggle
-      target:
-        entity_id: climate.ac_office
-      haptic: success
-    double_tap_action:
       action: more-info
     hold_action:
       action: more-info

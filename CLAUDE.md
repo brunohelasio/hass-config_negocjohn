@@ -1507,3 +1507,92 @@ comentado no inicio do arquivo, delimitado por:
 
 Para restaurar: descomentar o bloco original e comentar/remover o bloco `# NOVO:`.
 
+
+---
+
+## Registro de Implementacao — Correcoes Climate, Media e Vacuum (2026-04-03)
+
+### Contexto
+
+Sessao de correcao de 3 regressoes visuais/funcionais reportadas pelo usuario:
+1. Botoes Climate (umidade/temperatura) "horrorosos" — reconstrucao anterior (2026-04-02) tinha removido o grafico e adicionado icones SVG simples.
+2. Bloco Media — slide vazio (slide 2 fantasma) causado por blank-card + arte do slide 1 sem aparecer.
+3. Botao Vacuum no footer — clique nao abria nenhum popup.
+
+---
+
+### Alteracao 1 — Climate: templates airpurifier/thermostat restaurados (tpl_climate.yaml + climate-status.yaml)
+
+**Causa raiz dos 3 problemas dos templates originais:**
+1. `airpurifier`: `grid-template-areas: |` com valor VAZIO (linha em branco apos `|`) — CSS `grid-template-areas` invalido, os campos nao eram posicionados no grid.
+2. Ambos: `graph` com `position: absolute; bottom: -40%` — empurrava o mini-graph-card 40% abaixo da borda inferior do botao, sendo cortado pelo `overflow: hidden` do card.
+3. Ambos: background com gradiente opaco (`linear-gradient(...)`) em vez de vidro fosco transparente.
+
+**Solucao aplicada:**
+- `tpl_climate.yaml` — `airpurifier`: corrigido `grid-template-areas` para `"humid" "n" "graph"` (igual ao thermostat).
+- `tpl_climate.yaml` — ambos: removido `position: absolute; bottom: -40%; left: -15%` do graph; substituido por `margin-left: -15%; place-self: end` (grafico fica no fluxo normal do grid, alinhado ao fundo).
+- `tpl_climate.yaml` — ambos: background alterado para `rgba(115, 115, 115, 0.2)` (vidro fosco padrao, igual ao `base`).
+- `climate-status.yaml`: restaurado para usar `template: airpurifier` (umidade) e `template: thermostat` (temperatura). Versao SVG-inline de 2026-04-02 comentada.
+
+**Rollback:**
+- `tpl_climate.yaml`: descomentar os blocos `# --- CÓDIGO ORIGINAL COMENTADO ---` em airpurifier e thermostat.
+- `climate-status.yaml`: descomentar o bloco `# --- CÓDIGO COMENTADO ---` e remover os novos button-cards (airpurifier/thermostat).
+
+---
+
+### Alteracao 2 — Media: slide vazio removido + artwork corrigida (grid_media.yaml)
+
+**Causa raiz:**
+1. Blank-card (linhas anteriores 113-135 desktop / 254-273 tablet): um `custom:button-card` com `color_type: blank-card` existia como filho direto do swipe-card, criando um slide vazio entre o slide de artwork e o grid de botoes.
+2. Artwork nao aparecia: `height: 0; padding-bottom: 100%` e o hack CSS de aspect-ratio que impede o Swiper de medir a altura do slide corretamente na inicializacao (Swiper le height=0 antes do CSS ser aplicado).
+
+**Solucao aplicada:**
+- Blank-card removido em ambos os breakpoints (desktop e tablet). Codigo comentado.
+- `height: 0; padding-bottom: 100%` substituido por `aspect-ratio: 1/1` em ambos os breakpoints.
+- `padding: 0` removido (nao era necessario com aspect-ratio).
+- `position: relative` mantido (necessario para position:absolute dos elementos filhos).
+- `autoHeight: false` mantido (nao alterado).
+
+**Importante:** Sem o blank-card, o slide 2 volta a ser o grid 2x2 de botoes (nao mais o slide 3).
+A combinacao `aspect-ratio: 1/1` + `autoHeight: false` funciona porque o Swiper agora mede
+a altura corretamente. Os botoes do grid (2x2 com base template aspect-ratio:1/1)
+tem altura aproximadamente igual ao slide de artwork, entao nao sao cortados.
+
+**Rollback:**
+- Descomentar os blocos `# --- CÓDIGO ORIGINAL COMENTADO ---` (blank-cards).
+- Substituir `aspect-ratio: 1/1` por `height: 0; padding-bottom: 100%; padding: 0`.
+
+---
+
+### Alteracao 3 — Vacuum: botao no footer restaurado (footer-shared.yaml + footer_vacuum.yaml)
+
+**Causa raiz:**
+1. `footer-shared.yaml`: O `tap_action: !include ./popup/footer/footer_vacuum.yaml` estava COMENTADO.
+   Substituido por um tap_action INLINE com popup de cameras (layout-card direto, sem mod-card wrapper).
+   **Regra critica:** popup layout convention exige `mod-card → layout-card`, NAO `layout-card direto`.
+   Direct layout-card como content faz o popup nao abrir (comportamento silencioso — sem erro, sem acao).
+2. `footer_vacuum.yaml`: entidade do mapa `image.roborock_s7_map_0_custom` (com sufixo `_custom` inexistente).
+
+**Solucao aplicada:**
+- `footer-shared.yaml`: Restaurado `tap_action: !include ./popup/footer/footer_vacuum.yaml`.
+   O bloco inline de cameras (430 linhas) foi removido e substituido por comentario explicativo.
+   Referencia ao popup de cameras: consultar git history do commit anterior para recuperar o codigo.
+- `footer_vacuum.yaml`: Corrigida entidade do mapa: `image.roborock_s7_map_0_custom` → `image.roborock_s7_map_0`.
+
+**Rollback:**
+- `footer-shared.yaml`: Restaurar o bloco inline de tap_action a partir do git history.
+- `footer_vacuum.yaml`: Reverter para `image.roborock_s7_map_0_custom` (e adicionar a entidade no HA se necessario).
+
+---
+
+### Resumo de arquivos alterados
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `tpl_climate.yaml` | airpurifier: grid-template-areas + background + graph position. thermostat: background + graph position |
+| `climate-status.yaml` | Restaurado para templates airpurifier/thermostat. Versao SVG-inline comentada. |
+| `grid_media.yaml` | Blank-card removido (2 breakpoints). aspect-ratio:1/1 substituindo height:0 hack (2 breakpoints). |
+| `footer-shared.yaml` | tap_action vacuum restaurado para !include. Inline cameras popup removido (git history). |
+| `footer_vacuum.yaml` | Entidade mapa corrigida: _custom removido. |
+
+

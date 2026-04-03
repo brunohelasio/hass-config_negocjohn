@@ -79,10 +79,13 @@
             card:
               - border-radius: 5%
               - overflow: hidden
-              - padding: 0
-              - height: 0
-              - padding-bottom: 100%
               - position: relative
+              # --- CÓDIGO ORIGINAL COMENTADO (height:0 + padding-bottom:100% = hack que
+              # impedia Swiper de medir altura corretamente na inicialização) ---
+              # - height: 0
+              # - padding-bottom: 100%
+              # --- FIM CÓDIGO ORIGINAL ---
+              - aspect-ratio: 1/1
               - background-color: rgba(115, 115, 115, 0.2)
               - background-size: cover
               - background-position: center
@@ -111,28 +114,30 @@
               - display: none
 
         ########## SLIDE 2: GRID DE BOTOES ##########
-        - type: custom:button-card
-          color_type: blank-card
-          styles:
-            card:
-              - padding: 0
-              - margin: 0
-              - background: none
-              - box-shadow: none
-              - border: none
-              - overflow: visible
-          custom_fields:
-            grid: |
-              [[[ return '' ]]]
-          card_mod:
-            style: |
-              ha-card {
-                background: none !important;
-                box-shadow: none !important;
-                border: none !important;
-                overflow: visible !important;
-              }
-              ha-card::before { content: none !important; }
+        # --- CÓDIGO ORIGINAL COMENTADO (blank-card fantasma que criava slide vazio) ---
+        # - type: custom:button-card
+        #   color_type: blank-card
+        #   styles:
+        #     card:
+        #       - padding: 0
+        #       - margin: 0
+        #       - background: none
+        #       - box-shadow: none
+        #       - border: none
+        #       - overflow: visible
+        #   custom_fields:
+        #     grid: |
+        #       [[[ return '' ]]]
+        #   card_mod:
+        #     style: |
+        #       ha-card {
+        #         background: none !important;
+        #         box-shadow: none !important;
+        #         border: none !important;
+        #         overflow: visible !important;
+        #       }
+        #       ha-card::before { content: none !important; }
+        # --- FIM CÓDIGO ORIGINAL ---
         - type: grid
           columns: 2
           square: false
@@ -220,10 +225,13 @@
             card:
               - border-radius: 5%
               - overflow: hidden
-              - padding: 0
-              - height: 0
-              - padding-bottom: 100%
               - position: relative
+              # --- CÓDIGO ORIGINAL COMENTADO (height:0 + padding-bottom:100% = hack que
+              # impedia Swiper de medir altura corretamente na inicialização) ---
+              # - height: 0
+              # - padding-bottom: 100%
+              # --- FIM CÓDIGO ORIGINAL ---
+              - aspect-ratio: 1/1
               - background-color: rgba(115, 115, 115, 0.2)
               - background-size: cover
               - background-position: center
@@ -252,25 +260,27 @@
               - display: none
 
         ########## SLIDE 2: GRID DE BOTOES ##########
-        - type: custom:button-card
-          color_type: blank-card
-          styles:
-            card:
-              - padding: 0
-              - margin: 0
-              - background: none
-              - box-shadow: none
-              - border: none
-              - overflow: visible
-          card_mod:
-            style: |
-              ha-card {
-                background: none !important;
-                box-shadow: none !important;
-                border: none !important;
-                overflow: visible !important;
-              }
-              ha-card::before { content: none !important; }
+        # --- CÓDIGO ORIGINAL COMENTADO (blank-card fantasma que criava slide vazio) ---
+        # - type: custom:button-card
+        #   color_type: blank-card
+        #   styles:
+        #     card:
+        #       - padding: 0
+        #       - margin: 0
+        #       - background: none
+        #       - box-shadow: none
+        #       - border: none
+        #       - overflow: visible
+        #   card_mod:
+        #     style: |
+        #       ha-card {
+        #         background: none !important;
+        #         box-shadow: none !important;
+        #         border: none !important;
+        #         overflow: visible !important;
+        #       }
+        #       ha-card::before { content: none !important; }
+        # --- FIM CÓDIGO ORIGINAL ---
         - type: grid
           columns: 2
           square: false

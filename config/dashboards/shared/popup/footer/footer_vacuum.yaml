@@ -183,7 +183,7 @@ browser_mod:
                         - color: rgba(255,255,255,0.70)
                     tap_action:
                       action: call-service
-                      service: vacuum.start_pause
+                      service: "[[[ return entity.state === 'docked' || entity.state === 'paused' ? 'vacuum.start' : 'vacuum.pause'; ]]]"
                       service_data:
                         entity_id: vacuum.roborock_s7
 

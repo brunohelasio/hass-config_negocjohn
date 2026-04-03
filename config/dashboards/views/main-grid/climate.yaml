@@ -10,5 +10,8 @@
       mediaquery: '(min-height: 463px)'
   title: Climate
   columns: 2
-  square: true
+  # --- CÓDIGO ORIGINAL COMENTADO (square:true forçava cards quadrados, impedindo gráfico) ---
+  # square: true
+  # --- FIM CÓDIGO ORIGINAL ---
+  square: false
   cards: !include ../../shared/grid-cards/climate-status.yaml

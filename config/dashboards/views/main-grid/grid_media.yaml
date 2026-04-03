@@ -56,7 +56,7 @@
           entity: media_player.currently_playing
           name: ' '
           show_icon: false
-          show_state: false
+          show_state: true
           show_name: false
           aspect_ratio: 1/1
           tap_action:
@@ -76,6 +76,16 @@
               }
               return '';
             ]]]
+          custom_fields:
+            artwork: >
+              [[[
+                try {
+                  if (entity && entity.attributes && entity.attributes.entity_picture) {
+                    return '<img src="' + entity.attributes.entity_picture + '" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" />';
+                  }
+                } catch(e) {}
+                return '';
+              ]]]
           styles:
             card:
               - border-radius: 5%
@@ -90,15 +100,25 @@
               - background-size: cover
               - background-position: center
               - background-repeat: no-repeat
-              - background-image: >
-                  [[[
-                    try {
-                      if (entity && entity.attributes && entity.attributes.entity_picture) {
-                        return 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 40%), url("' + entity.attributes.entity_picture + '")';
-                      }
-                    } catch(e) {}
-                    return 'none';
-                  ]]]
+              # --- CÓDIGO ORIGINAL COMENTADO (background-image via CSS não envia token HA — imagem bloqueada 401) ---
+              # - background-image: >
+              #     [[[
+              #       try {
+              #         if (entity && entity.attributes && entity.attributes.entity_picture) {
+              #           return 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 40%), url("' + entity.attributes.entity_picture + '")';
+              #         }
+              #       } catch(e) {}
+              #       return 'none';
+              #     ]]]
+              # --- FIM CÓDIGO ORIGINAL ---
+            custom_fields:
+              artwork:
+                - position: absolute
+                - top: 0
+                - left: 0
+                - width: 100%
+                - height: 100%
+                - z-index: 0
             state:
               - position: absolute
               - bottom: 8%
@@ -110,35 +130,9 @@
               - white-space: nowrap
               - overflow: hidden
               - text-overflow: ellipsis
+              - z-index: 1
             name:
               - display: none
-
-        # --- CÓDIGO ORIGINAL COMENTADO (blank-card fantasma — criava slide vazio) ---
-        # - type: custom:button-card
-        #   color_type: blank-card
-        #   styles:
-        #     card:
-        #       - padding: 0
-        #       - margin: 0
-        #       - background: none
-        #       - box-shadow: none
-        #       - border: none
-        #       - overflow: visible
-        #   custom_fields:
-        #     grid: |
-        #       [[[ return '' ]]]
-        #   card_mod:
-        #     style: |
-        #       ha-card {
-        #         background: none !important;
-        #         box-shadow: none !important;
-        #         border: none !important;
-        #         overflow: visible !important;
-        #       }
-        #       ha-card::before { content: none !important; }
-        # --- FIM CÓDIGO ORIGINAL ---
-
-        ########## SLIDE 2: GRID DE BOTOES ##########
         - type: grid
           columns: 2
           square: false
@@ -203,7 +197,7 @@
           entity: media_player.currently_playing
           name: ' '
           show_icon: false
-          show_state: false
+          show_state: true
           show_name: false
           aspect_ratio: 1/1
           tap_action:
@@ -223,6 +217,16 @@
               }
               return '';
             ]]]
+          custom_fields:
+            artwork: >
+              [[[
+                try {
+                  if (entity && entity.attributes && entity.attributes.entity_picture) {
+                    return '<img src="' + entity.attributes.entity_picture + '" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" />';
+                  }
+                } catch(e) {}
+                return '';
+              ]]]
           styles:
             card:
               - border-radius: 5%
@@ -237,15 +241,25 @@
               - background-size: cover
               - background-position: center
               - background-repeat: no-repeat
-              - background-image: >
-                  [[[
-                    try {
-                      if (entity && entity.attributes && entity.attributes.entity_picture) {
-                        return 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 40%), url("' + entity.attributes.entity_picture + '")';
-                      }
-                    } catch(e) {}
-                    return 'none';
-                  ]]]
+              # --- CÓDIGO ORIGINAL COMENTADO (background-image via CSS não envia token HA — imagem bloqueada 401) ---
+              # - background-image: >
+              #     [[[
+              #       try {
+              #         if (entity && entity.attributes && entity.attributes.entity_picture) {
+              #           return 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 40%), url("' + entity.attributes.entity_picture + '")';
+              #         }
+              #       } catch(e) {}
+              #       return 'none';
+              #     ]]]
+              # --- FIM CÓDIGO ORIGINAL ---
+            custom_fields:
+              artwork:
+                - position: absolute
+                - top: 0
+                - left: 0
+                - width: 100%
+                - height: 100%
+                - z-index: 0
             state:
               - position: absolute
               - bottom: 8%
@@ -257,6 +271,7 @@
               - white-space: nowrap
               - overflow: hidden
               - text-overflow: ellipsis
+              - z-index: 1
             name:
               - display: none
 

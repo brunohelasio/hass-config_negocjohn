@@ -76,6 +76,10 @@ climate_swing_mode:
 airpurifier:
   template:
     - base
+  # --- CÓDIGO ORIGINAL COMENTADO (aspect_ratio 1/1 herdado do base impedia gráfico de aparecer) ---
+  # aspect_ratio herdado do base = 1/1
+  # --- FIM CÓDIGO ORIGINAL ---
+  aspect_ratio: auto
   show_state: false
   variables:
     average_humid: ''
@@ -123,6 +127,8 @@ airpurifier:
             ha-card {
               font-size: 0.5vw !important;
               background: none !important;
+              border: none !important;
+              box-shadow: none !important;
             }
             @media (max-width: 1440px) {
               ha-card {
@@ -205,10 +211,15 @@ airpurifier:
         - width: 100%
         - place-self: stretch
         - overflow: hidden
+        - min-height: 80px
 
 thermostat:
   template:
     - base
+  # --- CÓDIGO ORIGINAL COMENTADO (aspect_ratio 1/1 herdado do base impedia gráfico de aparecer) ---
+  # aspect_ratio herdado do base = 1/1
+  # --- FIM CÓDIGO ORIGINAL ---
+  aspect_ratio: auto
   show_state: false
   variables:
     thermostat_on: >
@@ -259,6 +270,8 @@ thermostat:
             ha-card {
               font-size: 0.5vw !important;
               background: none !important;
+              border: none !important;
+              box-shadow: none !important;
             }
             @media (max-width: 1440px) {
               ha-card {
@@ -338,6 +351,7 @@ thermostat:
         - width: 100%
         - place-self: stretch
         - overflow: hidden
+        - min-height: 80px
 
 radiator:
   template:

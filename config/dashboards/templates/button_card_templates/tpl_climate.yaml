@@ -76,10 +76,9 @@ climate_swing_mode:
 airpurifier:
   template:
     - base
-  # --- CÓDIGO ORIGINAL COMENTADO (aspect_ratio 1/1 herdado do base impedia gráfico de aparecer) ---
-  # aspect_ratio herdado do base = 1/1
-  # --- FIM CÓDIGO ORIGINAL ---
-  aspect_ratio: auto
+  # --- CÓDIGO COMENTADO (aspect_ratio: auto — tentativa de fix gráfico, causou colapso visual) ---
+  # aspect_ratio: auto
+  # --- FIM CÓDIGO COMENTADO ---
   show_state: false
   variables:
     average_humid: ''
@@ -92,15 +91,13 @@ airpurifier:
   custom_fields:
     humid: >
       [[[
-        const humid = entity?.attributes?.average_humidity ?? entity?.state;
-        const value = parseFloat(humid);
-        return isNaN(value) ? '💧--%' : '💧' + Math.round(value) + '%';
+        return entity.attributes.average_humidity + '%';
       ]]]
     graph:
       card:
         type: custom:mini-graph-card
         entities:
-          - sensor.sl_sensor_temp_humid_umidade
+          - sensor.average_humidity
         color_thresholds:
           - value: 30
             color: '#D35467'
@@ -159,29 +156,21 @@ airpurifier:
 
   styles:
     grid:
-      # --- CÓDIGO ORIGINAL COMENTADO (grid-template-areas vazio + graph posição absoluta) ---
-      # - grid-template-areas: |
-      # - grid-template-columns: 1fr
-      # - grid-template-rows: fit-content(100%) min-content 1fr
-      # --- FIM CÓDIGO ORIGINAL ---
       - grid-template-areas: |
           "humid"
           "n"
           "graph"
       - grid-template-columns: 1fr
-      - grid-template-rows: min-content min-content 1fr
+      - grid-template-rows: fit-content(100%) min-content 1fr
       - gap: 0
     card:
       - color: rgba(255, 255, 255, 0.6)
-      # --- CÓDIGO ORIGINAL COMENTADO (gradient opaco) ---
-      # - background: >
-      #     [[[
-      #       return variables.purifier_on
-      #         ? 'linear-gradient(to top, rgba(53,59,83,0.8) 0%, rgba(10,14,34,0.8) 100%)'
-      #         : 'rgba(115, 115, 115, 0.25)';
-      #     ]]]
-      # --- FIM CÓDIGO ORIGINAL ---
-      - background: rgba(115, 115, 115, 0.2)
+      - background: >
+          [[[
+            return variables.purifier_on
+              ? 'linear-gradient(to top, rgba(53,59,83,0.8) 0%, rgba(10,14,34,0.8) 100%)'
+              : 'rgba(115, 115, 115, 0.25)';
+          ]]]
       - overflow: hidden
       - padding: 10.9% 9.9% 8.9% 10.9%
     custom_fields:
@@ -200,26 +189,19 @@ airpurifier:
         - font-weight: 500
         - letter-spacing: -1px
       graph:
-        # --- CÓDIGO ORIGINAL COMENTADO (posição absoluta — gráfico ficava invisível) ---
-        # - bottom: -40%
-        # - left: '-15%'
-        # - width: 130%
-        # - position: absolute
-        # - place-self: start
-        # - overflow: hidden
-        # --- FIM CÓDIGO ORIGINAL ---
-        - width: 100%
-        - place-self: stretch
+        - bottom: -40%
+        - left: '-15%'
+        - width: 130%
+        - position: absolute
+        - place-self: start
         - overflow: hidden
-        - min-height: 80px
 
 thermostat:
   template:
     - base
-  # --- CÓDIGO ORIGINAL COMENTADO (aspect_ratio 1/1 herdado do base impedia gráfico de aparecer) ---
-  # aspect_ratio herdado do base = 1/1
-  # --- FIM CÓDIGO ORIGINAL ---
-  aspect_ratio: auto
+  # --- CÓDIGO COMENTADO (aspect_ratio: auto — tentativa de fix gráfico, causou colapso visual) ---
+  # aspect_ratio: auto
+  # --- FIM CÓDIGO COMENTADO ---
   show_state: false
   variables:
     thermostat_on: >
@@ -231,19 +213,13 @@ thermostat:
   custom_fields:
     temp: >
       [[[
-        const temp = entity?.attributes?.average_temperature ?? entity?.state;
-        if (temp && temp !== 'N/A') {
-          const icon = entity?.attributes?.ac_active === 'yes' ? '❄️' : '🌡️';
-          const value = parseFloat(temp);
-          return isNaN(value) ? '🌡️--°' : icon + value.toFixed(1) + '°';
-        }
-        return '🌡️--°';
+        return entity.attributes.average_temperature + '°';
       ]]]
     graph:
       card:
         type: custom:mini-graph-card
         entities:
-          - sensor.sl_sensor_temp_humid_temperatura
+          - sensor.average_temperature
         color_thresholds:
           - value: 20.5
             color: '#f39c12'
@@ -307,14 +283,11 @@ thermostat:
           "n"
           "graph"
       - grid-template-columns: 1fr
-      - grid-template-rows: min-content min-content 1fr
+      - grid-template-rows: fit-content(100%) min-content 1fr
       - gap: 0
     card:
       - color: rgba(255, 255, 255, 0.6)
-      # --- CÓDIGO ORIGINAL COMENTADO (gradient opaco) ---
-      # - background: linear-gradient(to top, rgba(53,59,83,0.8) 0%, rgba(10,14,34,0.8) 100%)
-      # --- FIM CÓDIGO ORIGINAL ---
-      - background: rgba(115, 115, 115, 0.2)
+      - background: linear-gradient(to top, rgba(53,59,83,0.8) 0%, rgba(10,14,34,0.8) 100%)
       - overflow: hidden
       - padding: 10.9% 9.9% 8.9% 10.9%
     name:
@@ -341,17 +314,12 @@ thermostat:
                 : '#97989c';
             ]]]
       graph:
-        # --- CÓDIGO ORIGINAL COMENTADO (posição absoluta — gráfico ficava invisível) ---
-        # - bottom: -40%
-        # - left: '-15%'
-        # - width: 130%
-        # - position: absolute
-        # - place-self: start
-        # --- FIM CÓDIGO ORIGINAL ---
-        - width: 100%
-        - place-self: stretch
+        - bottom: -40%
+        - left: '-15%'
+        - width: 130%
+        - position: absolute
+        - place-self: start
         - overflow: hidden
-        - min-height: 80px
 
 radiator:
   template:

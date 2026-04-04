@@ -110,46 +110,402 @@
 # tpl_popup_climate (tpl_sectors.yaml): herda de base, define state_on correto para climate.
 # icon_climate (tpl_icons.yaml): SVG do ar-condicionado com cor dinamica (azul ativo, cinza off).
 # Posicao 1: AC Sala
+# grid_air_purifier:
+#   card:
+#     type: custom:button-card
+#     entity: climate.sl_ar_condicionado
+#     name: AC Sala
+#     show_icon: false
+#     template:
+#       - tpl_popup_climate
+#       - icon_climate
+#     tap_action:
+#       action: perform-action
+#       perform_action: climate.toggle
+#       target:
+#         entity_id: climate.sl_ar_condicionado
+#       haptic: success
+#     double_tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+
+# Posicao 2: AC Office
+# grid_thermostat:
+#   card:
+#     type: custom:button-card
+#     entity: climate.ac_office
+#     name: AC Office
+#     show_icon: false
+#     template:
+#       - tpl_popup_climate
+#       - icon_climate
+#     tap_action:
+#       action: perform-action
+#       perform_action: climate.toggle
+#       target:
+#         entity_id: climate.ac_office
+#       haptic: success
+#     double_tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+
+# NOVO (2026-04-03): botoes superiores restaurados para sensores locais
+# no estilo negocjohn/sagaland, sem depender de atributos average_*.
+# Posicao 1: Umidade
+# grid_air_purifier:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.sl_sensor_temp_humid_umidade
+#     name: Umidade
+#     icon: mdi:water-percent
+#     template:
+#       - base
+#     state_display: >
+#       [[[
+#         if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+#           return '--%';
+#         }
+#         return `${entity.state}%`;
+#       ]]]
+#     tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+#
+# Posicao 2: Temperatura
+# grid_thermostat:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.sl_sensor_temp_humid_temperatura
+#     name: Temperatura
+#     icon: mdi:thermometer
+#     template:
+#       - base
+#     state_display: >
+#       [[[
+#         if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+#           return '--°C';
+#         }
+#         return `${entity.state}°C`;
+#       ]]]
+#     tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+
+# NOVO (2026-04-03 - REV2): valor principal no topo + mini-gráfico inferior.
+# Posicao 1: Umidade (topo = valor, base = gráfico com min/avg/max)
+# grid_air_purifier:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.sl_sensor_temp_humid_umidade
+#     name: Umidade
+#     tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+#     template:
+#       - airpurifier
+#     custom_fields:
+#       humid: >
+#         [[[
+#           if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+#             return '--%';
+#           }
+#           return `${entity.state}%`;
+#         ]]]
+#       graph:
+#         card:
+#           type: custom:mini-graph-card
+#           entities:
+#             - sensor.sl_sensor_temp_humid_umidade
+#           color_thresholds:
+#             - value: 30
+#               color: '#D35467'
+#             - value: 50
+#               color: '#68C9F0'
+#             - value: 60
+#               color: '#4D6DDC'
+#           hours_to_show: 96
+#           points_per_hour: 1
+#           line_width: 7
+#           show:
+#             name: false
+#             icon: false
+#             state: false
+#             labels: false
+#             labels_secondary: false
+#             legend: false
+#             points: false
+#             fill: fade
+#             extrema: true
+#             average: true
+#           card_mod:
+#             style: |
+#               ha-card {
+#                 font-size: 0.5vw !important;
+#                 background: none !important;
+#                 border: none !important;
+#                 box-shadow: none !important;
+#               }
+#               @media (max-width: 1440px) {
+#                 ha-card {
+#                   font-size: 1vw !important;
+#                 }
+#               }
+#               ha-card[fill] .info {
+#                 padding-bottom: 0 !important;
+#               }
+#               .info {
+#                 opacity: 0.5 !important;
+#               }
+#               .info__item__time {
+#                 display: none !important;
+#               }
+#               .graph__labels {
+#                 top: -10% !important;
+#               }
+#               .graph__container__svg {
+#                 padding-bottom: 5px;
+#               }
+#               @media (max-width: 800px) {
+#                 div.info.flex {
+#                   display: none;
+#                 }
+#               }
+#
+# Posicao 2: Temperatura (topo = valor, base = gráfico com min/avg/max)
+# grid_thermostat:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.sl_sensor_temp_humid_temperatura
+#     name: Temperatura
+#     tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+#     template:
+#       - thermostat
+#     custom_fields:
+#       temp: >
+#         [[[
+#           if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+#             return '--°C';
+#           }
+#           return `${entity.state}°C`;
+#         ]]]
+#       graph:
+#         card:
+#           type: custom:mini-graph-card
+#           entities:
+#             - sensor.sl_sensor_temp_humid_temperatura
+#           color_thresholds:
+#             - value: 20.5
+#               color: '#f39c12'
+#             - value: 23.5
+#               color: '#fd3721'
+#             - value: 28
+#               color: '#e74c3c'
+#           hours_to_show: 96
+#           points_per_hour: 0.5
+#           line_width: 7
+#           show:
+#             name: false
+#             icon: false
+#             state: false
+#             labels: false
+#             labels_secondary: false
+#             legend: false
+#             points: false
+#             fill: fade
+#             extrema: true
+#             average: true
+#           card_mod:
+#             style: |
+#               ha-card {
+#                 font-size: 0.5vw !important;
+#                 background: none !important;
+#                 border: none !important;
+#                 box-shadow: none !important;
+#               }
+#               @media (max-width: 1440px) {
+#                 ha-card {
+#                   font-size: 1vw !important;
+#                 }
+#               }
+#               ha-card[fill] .info {
+#                 padding-bottom: 0 !important;
+#               }
+#               .info {
+#                 opacity: 0.5 !important;
+#               }
+#               .info__item__time {
+#                 display: none !important;
+#               }
+#               .graph__labels {
+#                 top: -10% !important;
+#               }
+#               .graph__container__svg {
+#                 padding-bottom: 5px;
+#               }
+#               @media (max-width: 800px) {
+#                 div.info.flex {
+#                   display: none;
+#                 }
+#               }
+
+# NOVO (2026-04-04 - REV3): gráfico "cru" no rodapé (sem pílula/borda/background).
 grid_air_purifier:
   card:
     type: custom:button-card
-    entity: climate.sl_ar_condicionado
-    name: AC Sala
-    show_icon: false
-    template:
-      - tpl_popup_climate
-      - icon_climate
+    entity: sensor.sl_sensor_temp_humid_umidade
+    name: Umidade
     tap_action:
-      action: perform-action
-      perform_action: climate.toggle
-      target:
-        entity_id: climate.sl_ar_condicionado
-      haptic: success
-    double_tap_action:
       action: more-info
     hold_action:
       action: more-info
+    template:
+      - airpurifier
+    styles:
+      custom_fields:
+        graph:
+          - position: relative
+          - left: 0
+          - bottom: 0
+          - width: 100%
+          - margin: 0
+    custom_fields:
+      humid: >
+        [[[
+          if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+            return '--%';
+          }
+          return `${entity.state}%`;
+        ]]]
+      graph:
+        card:
+          type: custom:mini-graph-card
+          entities:
+            - sensor.sl_sensor_temp_humid_umidade
+          color_thresholds:
+            - value: 30
+              color: '#D35467'
+            - value: 50
+              color: '#68C9F0'
+            - value: 60
+              color: '#4D6DDC'
+          hours_to_show: 96
+          points_per_hour: 1
+          line_width: 4
+          show:
+            name: false
+            icon: false
+            state: false
+            labels: false
+            labels_secondary: false
+            legend: false
+            points: false
+            fill: false
+            extrema: false
+            average: false
+          card_mod:
+            style: |
+              ha-card {
+                background: transparent !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+              }
+              .graph__container {
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              .graph__container__svg {
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              .info {
+                display: none !important;
+              }
 
-# Posicao 2: AC Office
 grid_thermostat:
   card:
     type: custom:button-card
-    entity: climate.ac_office
-    name: AC Office
-    show_icon: false
-    template:
-      - tpl_popup_climate
-      - icon_climate
+    entity: sensor.sl_sensor_temp_humid_temperatura
+    name: Temperatura
     tap_action:
-      action: perform-action
-      perform_action: climate.toggle
-      target:
-        entity_id: climate.ac_office
-      haptic: success
-    double_tap_action:
       action: more-info
     hold_action:
       action: more-info
+    template:
+      - thermostat
+    styles:
+      custom_fields:
+        graph:
+          - position: relative
+          - left: 0
+          - bottom: 0
+          - width: 100%
+          - margin: 0
+    custom_fields:
+      temp: >
+        [[[
+          if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+            return '--°C';
+          }
+          return `${entity.state}°C`;
+        ]]]
+      graph:
+        card:
+          type: custom:mini-graph-card
+          entities:
+            - sensor.sl_sensor_temp_humid_temperatura
+          color_thresholds:
+            - value: 20.5
+              color: '#f39c12'
+            - value: 23.5
+              color: '#fd3721'
+            - value: 28
+              color: '#e74c3c'
+          hours_to_show: 96
+          points_per_hour: 0.5
+          line_width: 4
+          show:
+            name: false
+            icon: false
+            state: false
+            labels: false
+            labels_secondary: false
+            legend: false
+            points: false
+            fill: false
+            extrema: false
+            average: false
+          card_mod:
+            style: |
+              ha-card {
+                background: transparent !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+              }
+              .graph__container {
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              .graph__container__svg {
+                margin: 0 !important;
+                padding: 0 !important;
+              }
+              .info {
+                display: none !important;
+              }
 
 # Posicao 3: AC Q.Miguel
 grid_covers_living:

@@ -675,199 +675,402 @@
 #           - margin: 0
 
 # NOVO (2026-04-04 - REV5): fundo azul + gráfico no rodapé sem pílula.
+# grid_air_purifier:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.sl_sensor_temp_humid_umidade
+#     name: Umidade
+#     icon: mdi:water-percent
+#     show_icon: true
+#     show_state: false
+#     template:
+#       - base
+#     tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+#     custom_fields:
+#       metric: >
+#         [[[
+#           if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+#             return '--%';
+#           }
+#           return `${entity.state}%`;
+#         ]]]
+#       graph:
+#         card:
+#           type: custom:mini-graph-card
+#           entities:
+#             - sensor.sl_sensor_temp_humid_umidade
+#           hours_to_show: 96
+#           points_per_hour: 1
+#           line_width: 4
+#           show:
+#             name: false
+#             icon: false
+#             state: false
+#             labels: false
+#             labels_secondary: false
+#             legend: false
+#             points: false
+#             fill: false
+#             extrema: false
+#             average: false
+#           card_mod:
+#             style: |
+#               ha-card {
+#                 background: transparent !important;
+#                 border: 0 !important;
+#                 --ha-card-border-width: 0 !important;
+#                 --ha-card-border-color: transparent !important;
+#                 --ha-card-border-radius: 0 !important;
+#                 border-radius: 0 !important;
+#                 box-shadow: none !important;
+#                 outline: none !important;
+#                 padding: 0 !important;
+#                 margin: 0 !important;
+#               }
+#               .graph,
+#               .graph__container,
+#               .graph__container__svg {
+#                 background: transparent !important;
+#                 margin: 0 !important;
+#                 padding: 0 !important;
+#                 border-radius: 0 !important;
+#               }
+#               .info {
+#                 display: none !important;
+#               }
+#     styles:
+#       card:
+#         - background: linear-gradient(180deg, rgba(20,42,95,0.95) 0%, rgba(12,27,66,0.95) 100%)
+#         - border-radius: 18px
+#         - padding: 12px 12px 6px 12px
+#       grid:
+#         - grid-template-areas: |
+#             "i metric"
+#             "n n"
+#             "graph graph"
+#         - grid-template-columns: min-content 1fr
+#         - grid-template-rows: min-content min-content 30px
+#         - row-gap: 2px
+#       icon:
+#         - color: '#68C9F0'
+#         - width: 22px
+#       custom_fields:
+#         metric:
+#           - justify-self: start
+#           - align-self: center
+#           - font-size: 1.9em
+#           - font-weight: 500
+#           - line-height: 1
+#         graph:
+#           - align-self: end
+#           - width: calc(100% + 24px)
+#           - margin-left: -12px
+#           - margin-right: -12px
+#           # ANTERIOR: margin-bottom: -2px
+#           - margin-bottom: -8px
+#
+# grid_thermostat:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.sl_sensor_temp_humid_temperatura
+#     name: Temperatura
+#     icon: mdi:fire
+#     show_icon: true
+#     show_state: false
+#     template:
+#       - base
+#     tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+#     custom_fields:
+#       metric: >
+#         [[[
+#           if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+#             return '--°C';
+#           }
+#           return `${entity.state}°C`;
+#         ]]]
+#       graph:
+#         card:
+#           type: custom:mini-graph-card
+#           entities:
+#             - sensor.sl_sensor_temp_humid_temperatura
+#           hours_to_show: 96
+#           points_per_hour: 0.5
+#           line_width: 4
+#           show:
+#             name: false
+#             icon: false
+#             state: false
+#             labels: false
+#             labels_secondary: false
+#             legend: false
+#             points: false
+#             fill: false
+#             extrema: false
+#             average: false
+#           card_mod:
+#             style: |
+#               ha-card {
+#                 background: transparent !important;
+#                 border: 0 !important;
+#                 --ha-card-border-width: 0 !important;
+#                 --ha-card-border-color: transparent !important;
+#                 --ha-card-border-radius: 0 !important;
+#                 border-radius: 0 !important;
+#                 box-shadow: none !important;
+#                 outline: none !important;
+#                 padding: 0 !important;
+#                 margin: 0 !important;
+#               }
+#               .graph,
+#               .graph__container,
+#               .graph__container__svg {
+#                 background: transparent !important;
+#                 margin: 0 !important;
+#                 padding: 0 !important;
+#                 border-radius: 0 !important;
+#               }
+#               .info {
+#                 display: none !important;
+#               }
+#     styles:
+#       card:
+#         - background: linear-gradient(180deg, rgba(20,42,95,0.95) 0%, rgba(12,27,66,0.95) 100%)
+#         - border-radius: 18px
+#         - padding: 12px 12px 6px 12px
+#       grid:
+#         - grid-template-areas: |
+#             "i metric"
+#             "n n"
+#             "graph graph"
+#         - grid-template-columns: min-content 1fr
+#         - grid-template-rows: min-content min-content 30px
+#         - row-gap: 2px
+#       icon:
+#         - color: '#fd3721'
+#         - width: 22px
+#       custom_fields:
+#         metric:
+#           - justify-self: start
+#           - align-self: center
+#           - font-size: 1.9em
+#           - font-weight: 500
+#           - line-height: 1
+#         graph:
+#           - align-self: end
+#           - width: calc(100% + 24px)
+#           - margin-left: -12px
+#           - margin-right: -12px
+#           # ANTERIOR: margin-bottom: -2px
+#           - margin-bottom: -8px
+
+# NOVO (2026-04-04 - REV6): stack-in-card para eliminar borda da pílula do mini-graph.
 grid_air_purifier:
   card:
-    type: custom:button-card
-    entity: sensor.sl_sensor_temp_humid_umidade
-    name: Umidade
-    icon: mdi:water-percent
-    show_icon: true
-    show_state: false
-    template:
-      - base
-    tap_action:
-      action: more-info
-    hold_action:
-      action: more-info
-    custom_fields:
-      metric: >
-        [[[
-          if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
-            return '--%';
-          }
-          return `${entity.state}%`;
-        ]]]
-      graph:
-        card:
-          type: custom:mini-graph-card
-          entities:
-            - sensor.sl_sensor_temp_humid_umidade
-          hours_to_show: 96
-          points_per_hour: 1
-          line_width: 4
-          show:
-            name: false
-            icon: false
-            state: false
-            labels: false
-            labels_secondary: false
-            legend: false
-            points: false
-            fill: false
-            extrema: false
-            average: false
-          card_mod:
-            style: |
-              ha-card {
-                background: transparent !important;
-                border: 0 !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-border-color: transparent !important;
-                --ha-card-border-radius: 0 !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                outline: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
+    type: custom:stack-in-card
+    mode: vertical
+    keep:
+      margin: false
+      border_radius: true
+      background: true
+      box_shadow: true
+    cards:
+      - type: custom:button-card
+        entity: sensor.sl_sensor_temp_humid_umidade
+        name: Umidade
+        icon: mdi:water-percent
+        show_state: false
+        show_icon: true
+        tap_action:
+          action: more-info
+        hold_action:
+          action: more-info
+        custom_fields:
+          metric: >
+            [[[
+              if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+                return '--%';
               }
-              .graph,
-              .graph__container,
-              .graph__container__svg {
-                background: transparent !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                border-radius: 0 !important;
-              }
-              .info {
-                display: none !important;
-              }
-    styles:
-      card:
-        - background: linear-gradient(180deg, rgba(20,42,95,0.95) 0%, rgba(12,27,66,0.95) 100%)
-        - border-radius: 18px
-        - padding: 12px 12px 6px 12px
-      grid:
-        - grid-template-areas: |
-            "i metric"
-            "n n"
-            "graph graph"
-        - grid-template-columns: min-content 1fr
-        - grid-template-rows: min-content min-content 30px
-        - row-gap: 2px
-      icon:
-        - color: '#68C9F0'
-        - width: 22px
-      custom_fields:
-        metric:
-          - justify-self: start
-          - align-self: center
-          - font-size: 1.9em
-          - font-weight: 500
-          - line-height: 1
-        graph:
-          - align-self: end
-          - width: calc(100% + 24px)
-          - margin-left: -12px
-          - margin-right: -12px
-          # ANTERIOR: margin-bottom: -2px
-          - margin-bottom: -8px
+              return `${entity.state}%`;
+            ]]]
+        styles:
+          card:
+            - background: transparent
+            - border-radius: 0
+            - box-shadow: none
+            - padding: 10px 10px 0 10px
+          grid:
+            - grid-template-areas: |
+                "i metric"
+                "n n"
+            - grid-template-columns: min-content 1fr
+            - grid-template-rows: min-content min-content
+            - row-gap: 2px
+          icon:
+            - color: '#68C9F0'
+            - width: 22px
+          custom_fields:
+            metric:
+              - justify-self: start
+              - align-self: center
+              - font-size: 1.9em
+              - font-weight: 500
+              - line-height: 1
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.sl_sensor_temp_humid_umidade
+        hours_to_show: 96
+        points_per_hour: 1
+        line_width: 4
+        show:
+          name: false
+          icon: false
+          state: false
+          labels: false
+          labels_secondary: false
+          legend: false
+          points: false
+          fill: false
+          extrema: false
+          average: false
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent !important;
+              border: 0 !important;
+              --ha-card-border-width: 0 !important;
+              --ha-card-border-color: transparent !important;
+              --ha-card-border-radius: 0 !important;
+              border-radius: 0 !important;
+              box-shadow: none !important;
+              outline: none !important;
+              padding: 0 0 0 0 !important;
+              margin: -4px -2px -8px -2px !important;
+            }
+            .graph,
+            .graph__container,
+            .graph__container__svg {
+              background: transparent !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border-radius: 0 !important;
+            }
+            .info {
+              display: none !important;
+            }
+    card_mod:
+      style: |
+        ha-card {
+          background: linear-gradient(180deg, rgba(20,42,95,0.95) 0%, rgba(12,27,66,0.95) 100%) !important;
+          border-radius: 18px !important;
+          overflow: hidden !important;
+        }
 
 grid_thermostat:
   card:
-    type: custom:button-card
-    entity: sensor.sl_sensor_temp_humid_temperatura
-    name: Temperatura
-    icon: mdi:fire
-    show_icon: true
-    show_state: false
-    template:
-      - base
-    tap_action:
-      action: more-info
-    hold_action:
-      action: more-info
-    custom_fields:
-      metric: >
-        [[[
-          if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
-            return '--°C';
-          }
-          return `${entity.state}°C`;
-        ]]]
-      graph:
-        card:
-          type: custom:mini-graph-card
-          entities:
-            - sensor.sl_sensor_temp_humid_temperatura
-          hours_to_show: 96
-          points_per_hour: 0.5
-          line_width: 4
-          show:
-            name: false
-            icon: false
-            state: false
-            labels: false
-            labels_secondary: false
-            legend: false
-            points: false
-            fill: false
-            extrema: false
-            average: false
-          card_mod:
-            style: |
-              ha-card {
-                background: transparent !important;
-                border: 0 !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-border-color: transparent !important;
-                --ha-card-border-radius: 0 !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                outline: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
+    type: custom:stack-in-card
+    mode: vertical
+    keep:
+      margin: false
+      border_radius: true
+      background: true
+      box_shadow: true
+    cards:
+      - type: custom:button-card
+        entity: sensor.sl_sensor_temp_humid_temperatura
+        name: Temperatura
+        icon: mdi:fire
+        show_state: false
+        show_icon: true
+        tap_action:
+          action: more-info
+        hold_action:
+          action: more-info
+        custom_fields:
+          metric: >
+            [[[
+              if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+                return '--°C';
               }
-              .graph,
-              .graph__container,
-              .graph__container__svg {
-                background: transparent !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                border-radius: 0 !important;
-              }
-              .info {
-                display: none !important;
-              }
-    styles:
-      card:
-        - background: linear-gradient(180deg, rgba(20,42,95,0.95) 0%, rgba(12,27,66,0.95) 100%)
-        - border-radius: 18px
-        - padding: 12px 12px 6px 12px
-      grid:
-        - grid-template-areas: |
-            "i metric"
-            "n n"
-            "graph graph"
-        - grid-template-columns: min-content 1fr
-        - grid-template-rows: min-content min-content 30px
-        - row-gap: 2px
-      icon:
-        - color: '#fd3721'
-        - width: 22px
-      custom_fields:
-        metric:
-          - justify-self: start
-          - align-self: center
-          - font-size: 1.9em
-          - font-weight: 500
-          - line-height: 1
-        graph:
-          - align-self: end
-          - width: calc(100% + 24px)
-          - margin-left: -12px
-          - margin-right: -12px
-          # ANTERIOR: margin-bottom: -2px
-          - margin-bottom: -8px
+              return `${entity.state}°C`;
+            ]]]
+        styles:
+          card:
+            - background: transparent
+            - border-radius: 0
+            - box-shadow: none
+            - padding: 10px 10px 0 10px
+          grid:
+            - grid-template-areas: |
+                "i metric"
+                "n n"
+            - grid-template-columns: min-content 1fr
+            - grid-template-rows: min-content min-content
+            - row-gap: 2px
+          icon:
+            - color: '#fd3721'
+            - width: 22px
+          custom_fields:
+            metric:
+              - justify-self: start
+              - align-self: center
+              - font-size: 1.9em
+              - font-weight: 500
+              - line-height: 1
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.sl_sensor_temp_humid_temperatura
+        hours_to_show: 96
+        points_per_hour: 0.5
+        line_width: 4
+        show:
+          name: false
+          icon: false
+          state: false
+          labels: false
+          labels_secondary: false
+          legend: false
+          points: false
+          fill: false
+          extrema: false
+          average: false
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent !important;
+              border: 0 !important;
+              --ha-card-border-width: 0 !important;
+              --ha-card-border-color: transparent !important;
+              --ha-card-border-radius: 0 !important;
+              border-radius: 0 !important;
+              box-shadow: none !important;
+              outline: none !important;
+              padding: 0 0 0 0 !important;
+              margin: -4px -2px -8px -2px !important;
+            }
+            .graph,
+            .graph__container,
+            .graph__container__svg {
+              background: transparent !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border-radius: 0 !important;
+            }
+            .info {
+              display: none !important;
+            }
+    card_mod:
+      style: |
+        ha-card {
+          background: linear-gradient(180deg, rgba(20,42,95,0.95) 0%, rgba(12,27,66,0.95) 100%) !important;
+          border-radius: 18px !important;
+          overflow: hidden !important;
+        }
 
 # Posicao 3: AC Q.Miguel
 grid_covers_living:

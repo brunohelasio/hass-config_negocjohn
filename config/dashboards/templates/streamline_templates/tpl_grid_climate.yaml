@@ -721,8 +721,12 @@ grid_air_purifier:
               ha-card {
                 background: transparent !important;
                 border: 0 !important;
+                --ha-card-border-width: 0 !important;
+                --ha-card-border-color: transparent !important;
+                --ha-card-border-radius: 0 !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
+                outline: none !important;
                 padding: 0 !important;
                 margin: 0 !important;
               }
@@ -765,7 +769,8 @@ grid_air_purifier:
           - width: calc(100% + 24px)
           - margin-left: -12px
           - margin-right: -12px
-          - margin-bottom: -2px
+          # ANTERIOR: margin-bottom: -2px
+          - margin-bottom: -8px
 
 grid_thermostat:
   card:
@@ -813,8 +818,12 @@ grid_thermostat:
               ha-card {
                 background: transparent !important;
                 border: 0 !important;
+                --ha-card-border-width: 0 !important;
+                --ha-card-border-color: transparent !important;
+                --ha-card-border-radius: 0 !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
+                outline: none !important;
                 padding: 0 !important;
                 margin: 0 !important;
               }
@@ -857,7 +866,8 @@ grid_thermostat:
           - width: calc(100% + 24px)
           - margin-left: -12px
           - margin-right: -12px
-          - margin-bottom: -2px
+          # ANTERIOR: margin-bottom: -2px
+          - margin-bottom: -8px
 
 # Posicao 3: AC Q.Miguel
 grid_covers_living:

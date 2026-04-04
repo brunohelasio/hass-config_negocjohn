@@ -508,6 +508,173 @@
 #               }
 
 # NOVO (2026-04-04 - REV4): card dedicado para garantir gráfico visível no rodapé.
+# grid_air_purifier:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.sl_sensor_temp_humid_umidade
+#     name: Umidade
+#     icon: mdi:water-percent
+#     show_icon: true
+#     show_state: false
+#     template:
+#       - base
+#     tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+#     custom_fields:
+#       metric: >
+#         [[[
+#           if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+#             return '--%';
+#           }
+#           return `${entity.state}%`;
+#         ]]]
+#       graph:
+#         card:
+#           type: custom:mini-graph-card
+#           entities:
+#             - sensor.sl_sensor_temp_humid_umidade
+#           hours_to_show: 96
+#           points_per_hour: 1
+#           line_width: 4
+#           show:
+#             name: false
+#             icon: false
+#             state: false
+#             labels: false
+#             labels_secondary: false
+#             legend: false
+#             points: false
+#             fill: false
+#             extrema: false
+#             average: false
+#           card_mod:
+#             style: |
+#               ha-card {
+#                 background: transparent !important;
+#                 border: none !important;
+#                 border-radius: 0 !important;
+#                 box-shadow: none !important;
+#                 padding: 0 !important;
+#                 margin: 0 !important;
+#               }
+#               .graph__container,
+#               .graph__container__svg {
+#                 margin: 0 !important;
+#                 padding: 0 !important;
+#               }
+#               .info {
+#                 display: none !important;
+#               }
+#     styles:
+#       grid:
+#         - grid-template-areas: |
+#             "i metric"
+#             "n n"
+#             "graph graph"
+#         - grid-template-columns: min-content 1fr
+#         - grid-template-rows: min-content min-content 38px
+#         - row-gap: 2px
+#       icon:
+#         - color: '#68C9F0'
+#         - width: 22px
+#       custom_fields:
+#         metric:
+#           - justify-self: start
+#           - align-self: center
+#           - font-size: 1.9em
+#           - font-weight: 500
+#           - line-height: 1
+#         graph:
+#           - align-self: end
+#           - width: 100%
+#           - margin: 0
+#
+# grid_thermostat:
+#   card:
+#     type: custom:button-card
+#     entity: sensor.sl_sensor_temp_humid_temperatura
+#     name: Temperatura
+#     icon: mdi:fire
+#     show_icon: true
+#     show_state: false
+#     template:
+#       - base
+#     tap_action:
+#       action: more-info
+#     hold_action:
+#       action: more-info
+#     custom_fields:
+#       metric: >
+#         [[[
+#           if (!entity || entity.state === undefined || entity.state === null || entity.state === 'unknown' || entity.state === 'unavailable') {
+#             return '--°C';
+#           }
+#           return `${entity.state}°C`;
+#         ]]]
+#       graph:
+#         card:
+#           type: custom:mini-graph-card
+#           entities:
+#             - sensor.sl_sensor_temp_humid_temperatura
+#           hours_to_show: 96
+#           points_per_hour: 0.5
+#           line_width: 4
+#           show:
+#             name: false
+#             icon: false
+#             state: false
+#             labels: false
+#             labels_secondary: false
+#             legend: false
+#             points: false
+#             fill: false
+#             extrema: false
+#             average: false
+#           card_mod:
+#             style: |
+#               ha-card {
+#                 background: transparent !important;
+#                 border: none !important;
+#                 border-radius: 0 !important;
+#                 box-shadow: none !important;
+#                 padding: 0 !important;
+#                 margin: 0 !important;
+#               }
+#               .graph__container,
+#               .graph__container__svg {
+#                 margin: 0 !important;
+#                 padding: 0 !important;
+#               }
+#               .info {
+#                 display: none !important;
+#               }
+#     styles:
+#       grid:
+#         - grid-template-areas: |
+#             "i metric"
+#             "n n"
+#             "graph graph"
+#         - grid-template-columns: min-content 1fr
+#         - grid-template-rows: min-content min-content 38px
+#         - row-gap: 2px
+#       icon:
+#         - color: '#fd3721'
+#         - width: 22px
+#       custom_fields:
+#         metric:
+#           - justify-self: start
+#           - align-self: center
+#           - font-size: 1.9em
+#           - font-weight: 500
+#           - line-height: 1
+#         graph:
+#           - align-self: end
+#           - width: 100%
+#           - margin: 0
+
+# NOVO (2026-04-04 - REV5): fundo azul + gráfico no rodapé sem pílula.
 grid_air_purifier:
   card:
     type: custom:button-card
@@ -553,28 +720,35 @@ grid_air_purifier:
             style: |
               ha-card {
                 background: transparent !important;
-                border: none !important;
+                border: 0 !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 padding: 0 !important;
                 margin: 0 !important;
               }
+              .graph,
               .graph__container,
               .graph__container__svg {
+                background: transparent !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                border-radius: 0 !important;
               }
               .info {
                 display: none !important;
               }
     styles:
+      card:
+        - background: linear-gradient(180deg, rgba(20,42,95,0.95) 0%, rgba(12,27,66,0.95) 100%)
+        - border-radius: 18px
+        - padding: 12px 12px 6px 12px
       grid:
         - grid-template-areas: |
             "i metric"
             "n n"
             "graph graph"
         - grid-template-columns: min-content 1fr
-        - grid-template-rows: min-content min-content 38px
+        - grid-template-rows: min-content min-content 30px
         - row-gap: 2px
       icon:
         - color: '#68C9F0'
@@ -588,8 +762,10 @@ grid_air_purifier:
           - line-height: 1
         graph:
           - align-self: end
-          - width: 100%
-          - margin: 0
+          - width: calc(100% + 24px)
+          - margin-left: -12px
+          - margin-right: -12px
+          - margin-bottom: -2px
 
 grid_thermostat:
   card:
@@ -636,28 +812,35 @@ grid_thermostat:
             style: |
               ha-card {
                 background: transparent !important;
-                border: none !important;
+                border: 0 !important;
                 border-radius: 0 !important;
                 box-shadow: none !important;
                 padding: 0 !important;
                 margin: 0 !important;
               }
+              .graph,
               .graph__container,
               .graph__container__svg {
+                background: transparent !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                border-radius: 0 !important;
               }
               .info {
                 display: none !important;
               }
     styles:
+      card:
+        - background: linear-gradient(180deg, rgba(20,42,95,0.95) 0%, rgba(12,27,66,0.95) 100%)
+        - border-radius: 18px
+        - padding: 12px 12px 6px 12px
       grid:
         - grid-template-areas: |
             "i metric"
             "n n"
             "graph graph"
         - grid-template-columns: min-content 1fr
-        - grid-template-rows: min-content min-content 38px
+        - grid-template-rows: min-content min-content 30px
         - row-gap: 2px
       icon:
         - color: '#fd3721'
@@ -671,8 +854,10 @@ grid_thermostat:
           - line-height: 1
         graph:
           - align-self: end
-          - width: 100%
-          - margin: 0
+          - width: calc(100% + 24px)
+          - margin-left: -12px
+          - margin-right: -12px
+          - margin-bottom: -2px
 
 # Posicao 3: AC Q.Miguel
 grid_covers_living:

@@ -234,7 +234,8 @@ browser_mod:
             vacuum_platform: Roborock
             entity: vacuum.roborock_s7
             map_source:
-              camera: image.roborock_s7_map_0_custom
+              # ANTERIOR: camera: image.roborock_s7_map_0_custom
+              camera: image.roborock_s7_map_0
             calibration_source:
               camera: true
             map_locked: true

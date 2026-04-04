@@ -123,37 +123,70 @@ browser_mod:
     #         overflow-y: auto !important;
     #       }
     # --- FIM CÓDIGO ORIGINAL ---
+    card_mod:
+      style:
+        .: |
+          ha-dialog {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+          }
+        ha-dialog$: |
+          .mdc-dialog__content {
+            padding-top: 0 !important;
+          }
     content:
-      type: custom:layout-card
-      layout_type: custom:grid-layout
-      layout:
-        # ANTERIOR: grid-template-columns: 340px 1fr (3-col rooms com 3x98px buttons)
-        # NOVO: 1.4fr 1.0fr (5-col rooms — mesma proporção da Sala)
-        grid-template-columns: 1.4fr 1.0fr
-        grid-template-areas: '"col_buttons col_camera"'
-        grid-gap: 10px
-        margin: 0
-        padding: 0.5rem
-        mediaquery:
-          "(max-width: 800px)":
-            grid-template-columns: 1fr
-            grid-template-areas: |
-              "col_buttons"
-              "col_camera"
-            padding: 0
+      type: vertical-stack
       cards:
-        # ── Coluna 1: Todos os botoes ──
-        - type: vertical-stack
-          view_layout:
-            grid-area: col_buttons
-          cards: !include ../../columns/room_office_all_buttons.yaml
+        # Header visual de sala (sem nome/icone, pois já existe no título do popup)
+        - type: custom:button-card
+          show_name: false
+          show_icon: false
+          show_state: false
+          tap_action:
+            action: none
+          hold_action:
+            action: none
+          styles:
+            card:
+              - margin: 0 -0.6em 0.4em -0.5em
+              - height: 138px
+              - border-radius: 0
+              - overflow: hidden
+              - border: 0
+              - box-shadow: none
+              - backdrop-filter: blur(10px)
+              - -webkit-backdrop-filter: blur(10px)
+              - background-image: "linear-gradient(rgba(8,12,20,0.55), rgba(8,12,20,0.55)), url('/local/images/office_header.jpg')"
+              - background-size: cover
+              - background-position: center center
+              - background-repeat: no-repeat
 
-        # ── Coluna 2: Camera ──
+        # Estrutura original mantida (2 colunas: botoes + camera)
         - type: custom:layout-card
           layout_type: custom:grid-layout
-          view_layout:
-            grid-area: col_camera
           layout:
-            grid-template-columns: 1fr
+            grid-template-columns: 1.4fr 1.0fr
+            grid-template-areas: '"col_buttons col_camera"'
+            grid-gap: 10px
             margin: 0
-          cards: !include ../../columns/room_office_cameras.yaml
+            padding: 0.5rem
+            mediaquery:
+              "(max-width: 800px)":
+                grid-template-columns: 1fr
+                grid-template-areas: |
+                  "col_buttons"
+                  "col_camera"
+                padding: 0
+          cards:
+            - type: vertical-stack
+              view_layout:
+                grid-area: col_buttons
+              cards: !include ../../columns/room_office_all_buttons.yaml
+            - type: custom:layout-card
+              layout_type: custom:grid-layout
+              view_layout:
+                grid-area: col_camera
+              layout:
+                grid-template-columns: 1fr
+                margin: 0
+              cards: !include ../../columns/room_office_cameras.yaml

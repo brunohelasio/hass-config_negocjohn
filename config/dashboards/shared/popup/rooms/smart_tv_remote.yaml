@@ -4,8 +4,8 @@
 # ORIGINAL: custom:apple-tv-card (comentado abaixo — CLAUDE.md: nunca deletar)
 # A apple-tv-card usa comandos Apple TV (up/down/select/home) que nao mapeiam
 # corretamente nos comandos Android TV (navigate_up/navigate_down/ok/homepage).
-# Substituida por grid de button-cards que chama remote.send_command diretamente
-# com os comandos corretos da integracao Android TV.
+# Substituida por grid de button-cards que chama button.press
+# nas entidades Tuya Extend button.tv_sala_* (mais estavel neste ambiente).
 #
 # Comandos disponiveis confirmados: back, channel_down, channel_up, homepage,
 # input, menu, mouse, mute, navigate_down, navigate_left, navigate_right,
@@ -94,10 +94,9 @@ browser_mod:
               icon: mdi:power
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: power
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_power
               template:
                 - remote_icon_only
                 - loader
@@ -105,19 +104,17 @@ browser_mod:
               icon: mdi:import
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: input
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_input
               template: remote_icon_only
             - type: custom:button-card
               icon: mdi:menu
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: menu
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_menu
               template: remote_icon_only
         # ── D-Pad: Navigate Up ──
         - type: grid
@@ -130,10 +127,9 @@ browser_mod:
               icon: mdi:arrow-up-drop-circle-outline
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: navigate_up
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_navigate_up
               template: remote_icon_arrow
             - type: custom:button-card
               color_type: blank-card
@@ -146,29 +142,26 @@ browser_mod:
               icon: mdi:arrow-left-drop-circle-outline
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: navigate_left
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_navigate_left
               template: remote_icon_arrow
             - type: custom:button-card
               icon: mdi:radiobox-marked
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: ok
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_ok
                 haptic: success
               template: remote_icon_arrow
             - type: custom:button-card
               icon: mdi:arrow-right-drop-circle-outline
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: navigate_right
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_navigate_right
               template: remote_icon_arrow
         # ── D-Pad: Navigate Down ──
         - type: grid
@@ -181,10 +174,9 @@ browser_mod:
               icon: mdi:arrow-down-drop-circle-outline
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: navigate_down
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_navigate_down
               template: remote_icon_arrow
             - type: custom:button-card
               color_type: blank-card
@@ -197,28 +189,25 @@ browser_mod:
               icon: mdi:keyboard-backspace
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: back
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_back
               template: remote_icon_only
             - type: custom:button-card
               icon: mdi:home
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: homepage
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_homepage
               template: remote_icon_only
             - type: custom:button-card
               icon: mdi:volume-mute
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: mute
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_mute
               template: remote_icon_only
         # ── Volume / Canal ──
         - type: grid
@@ -229,35 +218,31 @@ browser_mod:
               icon: mdi:volume-minus
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: volume_down
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_volume_down
               template: remote_icon_only
             - type: custom:button-card
               icon: mdi:volume-plus
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: volume_up
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_volume_up
               template: remote_icon_only
             - type: custom:button-card
               icon: mdi:chevron-down
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: channel_down
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_channel_down
               template: remote_icon_only
             - type: custom:button-card
               icon: mdi:chevron-up
               tap_action:
                 action: call-service
-                service: remote.send_command
-                service_data:
-                  entity_id: remote.smart_tv_pro
-                  command: channel_up
+                service: button.press
+                target:
+                  entity_id: button.tv_sala_channel_up
               template: remote_icon_only

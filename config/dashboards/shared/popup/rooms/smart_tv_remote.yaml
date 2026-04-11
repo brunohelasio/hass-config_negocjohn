@@ -47,7 +47,7 @@
 #       card:
 #         type: custom:apple-tv-card
 #         background: 'linear-gradient(155deg, rgba(60,66,80,1) 0%, rgba(23,26,37,1) 42%, rgba(21,25,35,1) 100%)'
-#         entity: media_player.smart_tv_pro_2
+#         entity: media_player.android_tv_192_168_3_17
 #         full_screen: true
 #         remote: remote.smart_tv_pro
 action: fire-dom-event
@@ -90,7 +90,7 @@ browser_mod:
           square: false
           cards:
             - type: custom:button-card
-              entity: media_player.smart_tv_pro_2
+              entity: media_player.android_tv_192_168_3_17
               icon: mdi:power
               tap_action:
                 action: call-service

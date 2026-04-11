@@ -1,0 +1,43 @@
+title: Masters/Rooms
+path: mobile-masters-rooms
+icon: mdi:sofa-outline
+subview: false
+theme: tablet
+type: custom:grid-layout
+layout:
+  margin: 0
+  padding: 0
+  grid-gap: 0.9rem
+  grid-template-columns: 14px 1fr 14px
+  grid-template-rows: fit-content(100%) fit-content(100%) min-content
+  grid-template-areas: |
+    ". mainrooms ."
+    ". rooms ."
+    ". nav ."
+cards:
+  - type: grid
+    title: Masters
+    view_layout:
+      grid-area: mainrooms
+    columns: 2
+    cards: !include ../shared/grid-cards/main-rooms.yaml
+
+  - type: grid
+    title: Rooms
+    view_layout:
+      grid-area: rooms
+    columns: 2
+    cards: !include ../shared/grid-cards/common-rooms.yaml
+
+  - type: custom:mod-card
+    view_layout:
+      grid-area: nav
+    card_mod:
+      style: |
+        ha-card {
+          background: none;
+          box-shadow: none;
+          border: none;
+          min-height: 90px;
+        }
+    card: !include ../shared/mobile-bottom-nav.yaml

@@ -26,6 +26,7 @@ layout:
   margin: 0
   padding: 0
   grid-gap: 3.0vw 3vw
+  # ... (MANTENHA O RESTANTE DO SEU ARQUIVO MAIN.YAML INTACTO A PARTIR DAQUI) ...
   # ANTERIOR: sidebar ~20% + 4 colunas de conteudo (incluia areas other/movies visiveis)
   # grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
   # HOTFIX FINAL (2026-03-30): sidebar fixa em 27% + 3 colunas de conteudo igualmente distribuidas.
@@ -111,8 +112,8 @@ layout:
     # phone — Sagaland: areas ocultas (sidebar, movies) em h=0
     '(max-width: 800px) and (min-height: 463px)':
       margin: 0
-      grid-gap: 1rem
-      grid-template-columns: 0 1fr 1fr 0
+      grid-gap: 0.9rem
+      grid-template-columns: 1fr
       # ANTERIOR:
       # grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) min-content 0 0
       # grid-template-areas: |
@@ -126,14 +127,15 @@ layout:
       #   ". floorplan   .         ."
       grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) min-content 0
       grid-template-areas: |
-        ". sidebar     sidebar   ."
-        ". home        security  ."
-        ". media       cameras   ."
-        ". mainrooms   devices   ."
-        ". footer      footer    ."
-        ". floorplan   .         ."
-        ". other       .         ."
-        ". movies      .         ."
+        "sidebar"
+        "security"
+        "cameras"
+        "mainrooms"
+        "devices"
+        "climate"
+        "media"
+        "footer"
+        "floorplan"
     # phone cover screen = place horizontal
     '(max-height: 462px)':
       grid-gap: 0.5rem

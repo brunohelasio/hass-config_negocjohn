@@ -7,11 +7,24 @@
   view_layout:
     grid-area: climate
     show:
-      mediaquery: '(min-height: 463px)'
+      mediaquery: '(min-width: 801px) and (min-height: 463px)'
   title: Climate
-  columns: 2
-  # --- CÓDIGO COMENTADO (square: false — tentativa de fix gráfico, causou layout quebrado) ---
-  # square: false
-  # --- FIM CÓDIGO COMENTADO ---
-  square: true
+  columns: 1
+  square: false
   cards: !include ../../shared/grid-cards/climate-status.yaml
+
+- type: conditional
+  view_layout:
+    grid-area: climate
+  conditions:
+    - condition: screen
+      media_query: '(max-width: 800px) and (min-height: 463px)'
+    - condition: state
+      entity: input_select.mobile_dashboard_tab
+      state: clima_midia
+  card:
+    type: grid
+    title: Climate
+    columns: 1
+    square: false
+    cards: !include ../../shared/grid-cards/climate-status.yaml

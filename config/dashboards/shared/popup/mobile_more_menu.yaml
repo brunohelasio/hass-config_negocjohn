@@ -1,0 +1,53 @@
+title: Menu
+size: normal
+content:
+  type: vertical-stack
+  cards:
+    - type: custom:button-card
+      name: >
+        <ha-icon icon="mdi:reload"></ha-icon> Refresh
+      tap_action:
+        action: call-service
+        service: browser_mod.javascript
+        service_data:
+          code: location.reload()
+      template:
+        - footer
+
+    - type: custom:button-card
+      entity: vacuum.roborock_s7
+      name: >
+        <ha-icon icon="mdi:vacuum"></ha-icon> Vacuum
+      tap_action: !include ./footer/footer_vacuum.yaml
+      template:
+        - footer
+
+    - type: custom:button-card
+      name: >
+        <ha-icon icon="mdi:home-assistant"></ha-icon> System
+      tap_action: !include ./footer/footer_system.yaml
+      template:
+        - footer
+
+    - type: custom:button-card
+      name: >
+        <ha-icon icon="mdi:server"></ha-icon> Server
+      tap_action: !include ./footer/footer_mbproserver.yaml
+      template:
+        - footer
+
+    - type: custom:button-card
+      entity: sensor.hassio_updates_available
+      name: >
+        <ha-icon icon="mdi:arrow-up-bold-circle-outline"></ha-icon> Updates
+      tap_action: !include ./footer/footer_updates.yaml
+      template:
+        - footer
+
+    - type: custom:button-card
+      entity: binary_sensor.unifi_controller_alert
+      name: >
+        <ha-icon icon="mdi:router-wireless"></ha-icon> Network
+      tap_action: !include ./footer/footer_network.yaml
+      template:
+        - footer

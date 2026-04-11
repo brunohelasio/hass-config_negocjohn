@@ -1,0 +1,406 @@
+# =========================
+# visionOS × Frosted Glass Dark
+# Painel principal → visionOS | Popups → Frosted Glass Dark
+# =========================
+
+visionos-frosted:
+  modes:
+    light:
+      background-image: "center / cover no-repeat fixed url('/local/images/home.jpg')"
+      primary-background-color: rgb(84, 80, 76)
+      secondary-background-color: rgb(84, 80, 76)
+      app-header-background-color: rgba(84, 80, 76, 0.3)
+      ha-card-background: rgba(128, 128, 128, 0.3)
+      app-theme-color: rgb(122, 114, 106)
+    dark:
+      background-image: "center / cover no-repeat fixed url('/local/images/home.jpg')"
+      primary-background-color: rgb(25, 24, 22)
+      secondary-background-color: rgb(25, 24, 22)
+      app-header-background-color: rgba(25, 24, 22, 0.3)
+      ha-card-background: rgba(0, 0, 0, 0.3)
+      app-theme-color: rgb(0, 0, 0)
+
+  # =========================
+  # BACKGROUND
+  # =========================
+  lovelace-background: "linear-gradient(rgba(0, 0, 0, 0.70), rgba(0, 0, 0, 0.70)), var(--background-image)"
+
+  # =========================
+  # HEADER
+  # =========================
+  app-header-backdrop-filter: blur(20px)
+  app-header-edit-background-color: rgba(0, 0, 0, 0.2)
+  app-header-text-color: 'rgba(240, 243, 255, 0.95)'
+  app-header-edit-text-color: 'rgba(234, 235, 238, 0.98)'
+  app-theme-color: 'rgb(0, 0, 0)'
+
+  # =========================
+  # SIDEBAR / DRAWER
+  # =========================
+  light-primary-color: rgb(241, 241, 241)
+  sidebar-background-color: var(--secondary-background-color)
+  sidebar-icon-color: var(--light-primary-color)
+  sidebar-text-color: var(--light-primary-color)
+  sidebar-selected-background-color: var(--primary-background-color)
+  sidebar-selected-icon-color: var(--primary-text-color)
+  sidebar-selected-text-color: var(--sidebar-selected-icon-color)
+
+  # =========================
+  # DIALOGS — Frosted Glass Dark
+  # =========================
+  ha-dialog-surface-backdrop-filter: 'blur(18px) saturate(1.4)'
+  ha-dialog-surface-background: 'rgba(28, 29, 33, 0.80)'
+  dialog-box-shadow: '0 12px 20px rgba(0, 0, 0, 0.4)'
+  paper-dialog-background-color: 'rgba(30, 30, 30, 0.7)'
+  mdc-dialog-scrim-color: 'rgba(0, 0, 0, 0.8)'
+  ha-dialog-scrim-backdrop-filter: none
+
+  # =========================
+  # CARDS — visionOS base
+  # =========================
+  ha-card-border-radius: 20px
+  ha-card-border-width: 0
+  ha-card-backdrop-filter: blur(20px)
+  ha-card-box-shadow: >-
+    0.5px 0.5px 1px 0px rgba(255, 255, 255, 0.40) inset,
+    -0.5px -0.5px 1px 0px rgba(255, 255, 255, 0.10) inset,
+    0px 1px 2px 0px rgba(0, 0, 0, 0.10)
+  card-background-color: var(--secondary-background-color)
+  paper-card-background-color: var(--ha-card-background)
+  paper-listbox-background-color: var(--primary-background-color)
+  rgb-card-background-color: rgb(10, 10, 10)
+  ha-card-header-color: '#ffffff'
+
+  # =========================
+  # TEXTO
+  # =========================
+  primary-text-color: rgba(255, 255, 255, 0.96)
+  secondary-text-color: '#d3d3d3'
+  text-primary-color: var(--primary-text-color)
+  disabled-text-color: rgba(208, 208, 208, 0.5)
+  text-dark-color: var(--primary-text-color)
+
+  # =========================
+  # CORES — visionOS
+  # =========================
+  divider-color: rgba(152, 152, 157, 0.3)
+  accent-color: var(--primary-color)
+  red-color: '#FF453A'
+  pink-color: '#FF375F'
+  purple-color: '#BF5AF2'
+  indigo-color: '#5E5CE6'
+  blue-color: '#0A84FF'
+  light-blue-color: '#66D4CF'
+  cyan-color: '#5AC8F5'
+  teal-color: '#6AC4DC'
+  green-color: '#32D74B'
+  yellow-color: '#FFD60A'
+  orange-color: '#FF9F0A'
+  brown-color: '#AC8E68'
+  primary-color: var(--orange-color)
+  ha-color-primary-05: '#331f00'
+  ha-color-primary-10: '#663d00'
+  ha-color-primary-20: '#995c00'
+  ha-color-primary-30: '#cc7a00'
+  ha-color-primary-40: var(--primary-color)
+  ha-color-primary-50: '#ffa31a'
+  ha-color-primary-60: '#ffad33'
+  ha-color-primary-70: '#ffc266'
+  ha-color-primary-80: '#ffd699'
+  ha-color-primary-90: '#ffebcc'
+  ha-color-primary-95: '#fff5e6'
+
+  # =========================
+  # SLIDERS
+  # =========================
+  paper-slider-knob-color: '#FFFFFF'
+  paper-slider-knob-start-color: var(--paper-slider-knob-color)
+  paper-slider-pin-color: var(--paper-slider-knob-color)
+  paper-slider-active-color: '#0984ff'
+  paper-slider-secondary-color: var(--paper-slider-knob-color)
+  paper-slider-container-color: rgba(255, 255, 255, 0.5)
+  paper-slider-font-color: '#000'
+  ha-slider-background: none !important
+  paper-slider-height: '5px'
+
+  # =========================
+  # SWITCHES / TOGGLES
+  # =========================
+  switch-checked-track-color: var(--green-color)
+  switch-checked-button-color: '#FFF'
+  switch-unchecked-track-color: var(--disabled-text-color)
+  switch-unchecked-button-color: '#FFF'
+  paper-toggle-button-checked-button-color: '#484848'
+  paper-toggle-button-checked-bar-color: '#484848'
+  paper-toggle-button-unchecked-button-color: var(--paper-toggle-button-checked-button-color)
+  paper-toggle-button-unchecked-bar-color: var(--disabled-text-color)
+  mdc-checkbox-unchecked-color: '#FFF'
+  mdc-radio-unchecked-color: '#FFF'
+
+  # =========================
+  # LABELS / STATES
+  # =========================
+  label-badge-background-color: '#23232E'
+  label-badge-text-color: '#F1F1F1'
+  label-badge-red: rgba(255, 159, 9, 0.7)
+  state-icon-color: var(--primary-text-color)
+  state-icon-active-color: var(--yellow-color)
+  state-icon-unavailable-color: var(--disabled-text-color)
+  state-inactive-color: var(--disabled-text-color)
+  paper-item-icon-color: white
+  paper-item-icon-active-color: var(--state-icon-active-color)
+
+  # =========================
+  # TABLE
+  # =========================
+  table-row-background-color: var(--primary-background-color)
+  table-row-alternative-background-color: var(--secondary-background-color)
+
+  # =========================
+  # INPUTS
+  # =========================
+  input-ink-color: var(--primary-text-color)
+  input-fill-color: transparent
+  input-disabled-fill-color: transparent
+  input-label-ink-color: var(--primary-text-color)
+  input-disabled-ink-color: var(--disabled-text-color)
+  input-dropdown-icon-color: var(--primary-text-color)
+  input-idle-line-color: var(--secondary-text-color)
+  input-hover-line-color: var(--secondary-text-color)
+  mdc-select-idle-line-color: 'transparent'
+  mdc-text-field-idle-line-color: 'transparent'
+
+  # =========================
+  # OUTROS
+  # =========================
+  markdown-code-background-color: '#464646'
+  code-editor-background-color: '#161616'
+  clear-background-color: var(--ha-card-background)
+  mdc-theme-surface: var(--secondary-background-color)
+  material-background-color: var(--secondary-background-color)
+  more-info-header-background: rgba(25, 25, 25, 0.5)
+  lumo-body-text-color: var(--primary-text-color)
+  codemirror-property: var(--accent-color)
+  md-list-container-color: none
+  wa-border-style: none
+  wa-shadow-m: var(--ha-card-box-shadow)
+  wa-border-radius-s: 16px
+  wa-border-radius-m: var(--ha-card-border-radius)
+  ha-color-on-neutral-normal: var(--primary-text-color)
+  wa-color-neutral-fill-normal: '#FFFFFF14'
+  mcg-title-letter-spacing: .15em
+  mini-media-player-base-color: white
+  mini-media-player-icon-color: white
+
+  # =========================
+  # TIPOGRAFIA — Frosted Glass Dark
+  # =========================
+  ha-font-family-body: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  ha-font-family-heading: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  ha-font-family-code: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  ha-font-family-longform: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  ha-card-header-font-family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  mdc-typography-font-family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  mdc-typography-button-font-family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  mdc-typography-body1-font-family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+  ha-font-weight-normal: '400'
+  ha-font-weight-medium: '500'
+  ha-font-weight-bold: '700'
+  ha-font-smoothing: 'antialiased'
+  mcg-title-font-weight: '400'
+  mush-title-font-weight: '500'
+  mush-title-font-size: '25px'
+
+  # =========================
+  # CARD-MOD
+  # =========================
+  card-mod-theme: 'visionos-frosted'
+
+  card-mod-drawer: |
+    .mdc-drawer {
+      background-color: var(--app-header-background-color) !important;
+      backdrop-filter: var(--ha-card-backdrop-filter);
+    }
+
+  card-mod-sidebar: |
+    :host {
+      background: none !important;
+    }
+
+  card-mod-card: |
+
+    /* ═══════════════════════════════════════════
+       PAINEL PRINCIPAL — visionOS
+       ha-card::before com blur + rgba escuro
+    ═══════════════════════════════════════════ */
+    ha-card {
+      backdrop-filter: unset !important;
+    }
+    ha-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.28);
+      backdrop-filter: var(--ha-card-backdrop-filter);
+      z-index: -1;
+      pointer-events: none;
+      border-radius: inherit;
+      box-shadow: var(--ha-card-box-shadow);
+    }
+
+    /* ═══════════════════════════════════════════
+       POPUPS — Frosted Glass Dark
+       Sobrescreve o ::before dentro de ha-dialog
+       com o glass tint + bevel do Frosted
+    ═══════════════════════════════════════════ */
+    ha-dialog ha-card,
+    ha-adaptive-dialog ha-card {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    ha-dialog ha-card::before,
+    ha-adaptive-dialog ha-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(28, 29, 33, 0.35);
+      backdrop-filter: blur(18px) saturate(1.6);
+      -webkit-backdrop-filter: blur(18px) saturate(1.6);
+      z-index: -1;
+      pointer-events: none;
+      border-radius: inherit;
+      box-shadow:
+        3px 3px 0.5px -3.5px rgba(255, 255, 255, 0.22) inset,
+        -2px -2px 0.5px -2px rgba(255, 255, 255, 0.18) inset,
+        0 0 8px 1px rgba(255, 255, 255, 0.06) inset,
+        0 0 2px 0 rgba(0, 0, 0, 0.18);
+    }
+
+    /* ═══════════════════════════════════════════
+       EXCLUSÕES GLOBAIS
+    ═══════════════════════════════════════════ */
+
+    /* Heading card */
+    :host(hui-heading-card) ha-card,
+    :host(hui-glance-card) ha-card {
+      background: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+    :host(hui-heading-card) ha-card::before,
+    :host(hui-glance-card) ha-card::before {
+      content: none !important;
+    }
+
+    /* Mushroom title */
+    :host(mushroom-title-card) ha-card {
+      background: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+    }
+    :host(mushroom-title-card) ha-card::before {
+      content: none !important;
+    }
+
+    /* Mushroom chips */
+    :host(mushroom-chips-card) ha-card {
+      background: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+    }
+    :host(mushroom-chips-card) ha-card::before {
+      content: none !important;
+      background: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* Bubble card */
+    :host(.type-custom-bubble-card) ha-card {
+      background: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+      border-radius: 0px !important;
+    }
+    :host(.type-custom-bubble-card) ha-card::before {
+      content: none !important;
+      background: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* Text-only markdown */
+    :host(.text-only) ha-card,
+    ha-card.text-only {
+      background: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
+      overflow: visible;
+    }
+    :host(.text-only) ha-card::before,
+    ha-card.text-only::before {
+      content: none !important;
+    }
+
+    /* Energy dashboard */
+    .mdc-data-table,
+    .mdc-data-table__row,
+    .mdc-data-table__header-cell,
+    ha-sankey-chart {
+      background: none !important;
+    }
+
+    /* mini-graph-card — sem pílula */
+    mini-graph-card {
+      --ha-card-border-width: 0px;
+      --ha-card-border-color: transparent;
+      --ha-card-border-style: none;
+      --ha-card-box-shadow: none;
+    }
+
+    /* Títulos dos blocos */
+    .card-header {
+      color: #ffffff !important;
+    }
+
+    /* Button-cards de título nos popups — sem pílula */
+    :host(button-card) ha-card[style*="none"] {
+      backdrop-filter: none !important;
+    }
+    :host(button-card) ha-card[style*="none"]::before {
+      content: none !important;
+    }
+
+    /* Inputs dentro dos popups */
+    ha-dialog input,
+    ha-dialog ha-textfield,
+    ha-dialog ha-select,
+    ha-adaptive-dialog input,
+    ha-adaptive-dialog ha-textfield,
+    ha-adaptive-dialog ha-select {
+      background: rgba(30, 33, 54, 0.7) !important;
+      backdrop-filter: blur(6px) !important;
+      -webkit-backdrop-filter: blur(6px);
+      border-radius: 10px;
+      border: none !important;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.09) !important;
+    }
+
+    /* custom-text-divider */
+    custom-text-divider-row .text-divider-content {
+      background: #181929 !important;
+      opacity: 1 !important;
+      box-shadow: none !important;
+      border-radius: 10px !important;
+      padding: 0 8px !important;
+      --text-divider-font-size: 16px !important;
+      --text-divider-line-size: 1px;
+      --text-divider-color: rgba(234, 235, 238, 1) !important;
+    }
+
+  # --- End of Theme ---

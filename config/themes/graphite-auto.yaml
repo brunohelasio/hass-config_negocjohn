@@ -3,8 +3,9 @@ Graphite Auto:
   # dialog-box-shadow: var(--rgb-accent-color)
   dialog-box-shadow: 0 0px 16px 4px rgba(101,115,134, .15), 0 16px 64px 32px rgba(101,115,134, .5) !important;
   dialog-backdrop-filter: blur(12px)
-  dialog-scrim-color: rgba(0, 0, 0, 0.32)
+  dialog-scrim-color: rgba(0, 0, 0, 0.7)
   popup-background-color: transparent
+  ha-dialog-surface-background: rgba(22, 24, 29, 0.7)
   ha-dialog-scrim-backdrop-filter: var(--dialog-backdrop-filter)
   # popup-background-color: rgba(34,38,39,0.7)
   # popup-background-color: rgba(30,30,45, 0.6)
@@ -33,8 +34,18 @@ Graphite Auto:
   ha-font-family-body: var(--primary-font-family)
   st-spacing: 0
 
+  # Input Form
+  ha-color-form-background: rgb(50 50 50 / 22%)
+  ha-color-form-background-hover: rgb(50 50 50 / 42%)
+  ha-color-form-background-disabled: rgb(50 50 50 / 12%)
+
   # Ha button
   ha-button-height: 32px
+
+  # Focus state
+  wa-focus-ring-width: 1px
+  wa-focus-ring-offset: 1px
+
   # mdc-theme-surface: var(--app-header-background-color)
   # Code mirror
   indent-marker-active-bg-color: var(--catppuccin-overlay0, '#6e738d')
@@ -571,8 +582,6 @@ Graphite Auto:
       # Navbar
       # app-header-background-color: var(--primary-background-color)
 
-      app-header-background-color: '#ffffff00'
-      app-header-backdrop-filter: 'blur(10px)'
       app-header-text-color: var(--token-color-icon-primary)
       app-header-edit-background-color: var(--token-color-background-card)
       # Sidebar
@@ -733,114 +742,18 @@ Graphite Auto:
       mush-rgb-black: var(--rgb-black-color)
       mush-rgb-disabled: var(--rgb-disabled-color)
 
-      ##############################################################################
-      # Variáveis portadas do tema Tablet (negocjohn)
-      # Convertidas de vw → em para funcionar corretamente dentro de popups.
-      # Originais (vw) comentados ao lado para referência.
-      ##############################################################################
-
-      # Button card
-      tablet-primary-color: '#00acc1'
-      button-card-border-radius: 10%
-      button-card-font-size: 0.95em           # tablet: 0.9vw
-      button-card-font-weight: 500
-      button-card-letter-spacing: 0
-      button-card-light-color-temp: hsl(204, 58%, 38%)
-      button-card-movie-state-size: 0.85em    # tablet: 0.8vw
-      button-card-state-size: 0.85em          # tablet: 0.8vw
-
-      # Chips card
-      chips-card-border-radius: 0.9em         # tablet: 0.9vw
-      chips-card-font-size: 0.85em            # tablet: 0.8vw
-      chips-card-padding-h: 0.2em             # tablet: 0.2vw
-      chips-card-padding-v: 0.3em             # tablet: 0.3vw
-      chips-card-state-size: 0.75em           # tablet: 0.7vw
-
-      # Footer card
-      footer-card-border-radius: 0.65em       # tablet: 0.65vw
-      footer-card-font-size: 1em              # tablet: 1vw
-      footer-card-icon-size: 1.2em            # tablet: 1.2vw
-      footer-card-padding-h: 1em              # tablet: 1vw
-      footer-card-padding-v: 0.5em            # tablet: 0.5vw
-      footer-notify-box-size: 1.8em           # tablet: 1.8vw
-      footer-notify-font-size: 0.9em          # tablet: 0.9vw
-      footer-notify-right: -1em               # tablet: -1vw
-      footer-notify-top: -0.9em               # tablet: -0.9vw
-
-      # Layout e grid
-      custom-layout-card-padding: 2em         # tablet: 2vw
-      grid-card-gap: 5%
-      masonry-view-card-margin: 0
-      z-axis-adjustment: 0.05em               # tablet: 0.05vw
-
-      # Card overrides (mesmos do tablet)
-      ha-card-background: none
-      ha-card-box-shadow: none
-
-      # State icon colors
-      state-icon-color: '#9da0a2'
-      state-icon-active-color: '#3182b7'
-      state-active-color: '#b68349'
-      state-light-color: '#9da0a2'
-      state-light-active-color: '#b68349'
-
-      # Progress bar (media)
-      progress-bar-color: 'var(--tablet-primary-color, #00acc1)'
-      progress-bar-background-color: rgba(0,0,0,0.33)
-      progress-bar-height: 0.5rem
-
-      # Sidebar font sizes (usados no código original comentado, mantidos para compatibilidade)
-      sidebar-time-font-size: 4.2vw
-      sidebar-time-line-height: 4.3vw
-      sidebar-font-size: 1vw
-      sidebar-line-height: 2vw
-
-      # Swiper
-      swiper-pagination-bottom: 8px
-      swiper-pagination-bullet-height: 8px
-      swiper-pagination-bullet-horizontal-gap: 4px
-      swiper-pagination-bullet-inactive-color: '#000'
-      swiper-pagination-bullet-inactive-opacity: 0.2
-      swiper-pagination-bullet-opacity: 1
-      swiper-pagination-bullet-size: 8px
-      swiper-pagination-bullet-vertical-gap: 6px
-      swiper-pagination-bullet-width: 8px
-      swiper-pagination-color: var(--swiper-theme-color)
-      swiper-pagination-fraction-color: inherit
-      swiper-pagination-left: auto
-      swiper-pagination-progressbar-bg-color: rgba(0, 0, 0, 0.25)
-      swiper-pagination-progressbar-size: 4px
-      swiper-pagination-right: 8px
-      swiper-pagination-top: auto
-      swiper-theme-color: rgb(179, 179, 179)
-      swiper-scrollbar-border-radius: 10px
-      swiper-scrollbar-top: auto
-      swiper-scrollbar-bottom: 4px
-      swiper-scrollbar-left: auto
-      swiper-scrollbar-right: 4px
-      swiper-scrollbar-sides-offset: 1%
-      swiper-scrollbar-bg-color: rgba(0, 0, 0, 0.25)
-      swiper-scrollbar-drag-bg-color: rgb(179, 179, 179)
-      swiper-scrollbar-size: 4px
-
   uix-theme: 'Graphite Auto'
 
   uix-root-yaml: |
-    .: |
 
+    .: |
       .header {
         z-index: 4 !important;
         --app-header-edit-background-color: #ffffff00;
         --app-header-background-color: #ffffff00;
         --app-header-backdrop-filter: blur(2em);
         --app-header-border-bottom: none;
-        backdrop-filter: blur(1em);
       }
-
-  # uix-drawer: |
-  #   :host aside.mdc-drawer {
-  #     background-color: #ffffff00 !important;
-  #   }
 
   uix-top-app-bar-fixed: &config_header |
     :host {
@@ -856,215 +769,103 @@ Graphite Auto:
 
   uix-developer-tools: *config_header
 
-  uix-dialog: &popup_card_mod |
-    :host([card]) .content .container {
-      padding: 0px !important;
-    }
-    :host {
-      font-family: Poppins, Raleway, SF Pro Text, sans-serif, system-ui !important;
-    }
-    ha-adaptive-dialog,
-    ha-dialog {
-      --vertical-align-dialog: unset !important;
-      --dialog-surface-top: unset !important;
-      --dialog-surface-margin-top: unset !important;
-      --dialog-box-shadow: 0 0px 16px 4px rgba(101,115,134, .15), 0 16px 64px 32px rgba(101,115,134, .5) !important;
-      /* ORIGINAL negocjohn: --ha-dialog-surface-background: rgba(22, 24, 29, 0.7) !important; */
-      --ha-dialog-surface-background: rgba(15, 20, 35, 0.75) !important;
-      --wa-color-overlay-modal: rgba(0, 0, 0, 0.7) !important;
-      /* ORIGINAL negocjohn: --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.32)) !important; */
-      --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.55)) !important;
-      --mdc-text-field-fill-color: rgb(50 50 50 / 22%) !important;
-      --mdc-select-fill-color: rgb(50 50 50 / 22%) !important;
-      --mdc-theme-surface: rgba(22, 24, 29, 1) !important;
-      --ha-bottom-sheet-height: auto !important;
-    }
-    /* Vidro fosco padronizado em todos os popups */
-    ha-dialog .mdc-dialog__surface,
-    ha-adaptive-dialog .mdc-dialog__surface {
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-    }
+  uix-dialog-yaml: |
 
+    .: |
+      :host,
+      ha-adaptive-dialog,
+      ha-dialog  {
+        --vertical-align-dialog: unset !important;
+        --dialog-surface-top: unset !important;
+        --dialog-surface-margin-top: unset !important;
+        --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.7)) !important;
+        font-family: Poppins, Raleway, SF Pro Text, sans-serif, system-ui !important;
+      }
+      :host([card]) .content .container {
+        padding: 0px !important;
+        margin: 0 !important;
+      }
+      ha-dialog.type-dialog-edit-card {
+        --ha-dialog-surface-background: initial !important;
+      }
 
-    ha-dialog.type-browser-mod-popup {
-      --ha-dialog-width-md: calc(var(--max-popup-column, 1) * var(--popup-width, 550px)) !important;
-      --bar-card-border-radius: 12px !important;
-      --ha-card-border-radius: 0px !important;
-      --ha-card-background: none !important;
-      --ha-card-box-shadow: none !important;
-      --entities-divider-color: rgba(58, 69, 73, 0.2) !important;
-      --dialog-content-padding: 0 !important;
-    }
-  uix-browser-mod-popup-inner: *popup_card_mod
-  uix-more-info: *popup_card_mod
-
-  #################################################
-  #                                               #
-  #   UIX-VIEW-YAML — Portado do tema Tablet      #
-  #   Grid headings, swiper, chips, footer         #
-  #                                               #
-  #################################################
-  uix-view-yaml: |
-
-    #################################################
-    #              GRID CARD HEADINGS               #
-    #################################################
-    grid-layout:
-      $: |
-        #root {
-          height: calc(100vh - 56px);
-          overflow: hidden !important;
+      ha-dialog.type-browser-mod-popup-inner,
+      ha-dialog.type-browser-mod-popup,
+      ha-adaptive-dialog.type-browser-mod-popup {
+        --ha-dialog-width-md: calc(var(--max-popup-column, 1) * var(--popup-width, 550px)) !important;
+        --ha-card-border-radius: 0px !important;
+        --ha-card-background: none !important;
+        --ha-card-box-shadow: none !important;
+        --entities-divider-color: rgba(58, 69, 73, 0.2) !important;
+        --dialog-content-padding: 0 !important;
+        --dialog-box-shadow: 0 0px 16px 4px rgba(101,115,134, .15), 0 16px 64px 32px rgba(101,115,134, .5) !important;
+      }
+      @media (max-width: 500px) {
+        ha-adaptive-dialog.type-browser-mod-popup {
+          --ha-dialog-width-md: initial !important;
         }
-      $swipe-card$:
-        .: |
-          .swiper-container {
-            overflow: visible !important;
-            height: 100% !important;
-          }
-          .swiper-container-horizontal > .swiper-pagination-bullets {
-            bottom: -4px !important;
-          }
-          .swiper-pagination-bullet {
-            background-color: rgba(255, 255, 255, .7) !important;
-            transition: all 0.3s ease-in-out !important;
-          }
-          .swiper-pagination-bullet-active {
-            width: 18px !important;
-            border-radius: 1rem !important;
-          }
-        hui-horizontal-stack-card:
-          $hui-grid-card:
-            $: |
-              /* phone */
-              @media screen and (max-width: 800px) {
-                h1 {
-                  padding: 0.3rem 0.3rem !important;
-                  font-size: 5vw !important;
-                  line-height: normal !important;
-                }
-              }
-      $hui-grid-card:
-        $: |
-          /* default */
-          h1 {
-            font-size: 1.4vw !important;
-            font-weight: 700 !important;
-            font-family: Raleway !important;
-            letter-spacing: 0.05em !important;
-            color: rgba(255, 255, 255, 0.7) !important;
-            padding: 0 0 1rem 0.2vw !important;
-            width: 100%;
-            line-height: 100% !important;
-          }
-          /* secondmonitor */
-          @media screen and (max-width: 1440px) {
-            h1 {
-              font-size: 1.5vw !important;
-              padding-bottom: 0.8vw !important;
-            }
-          }
-          /* phone */
-          @media screen and (max-width: 800px) {
-            h1 {
-              padding-top: 1rem !important;
-              font-size: 4vw !important;
-              line-height: 100% !important;
-            }
-          }
+      }
 
-    #################################################
-    #               SWIPE CARD MARGIN               #
-    #################################################
-        $swipe-card$:
-          .: |
-            .swiper-pagination {
-              top: 95%;
-            }
-            .swiper-container-horizontal > .swiper-pagination-bullets {
-              bottom: 0px !important;
-            }
-            .swiper-container {
-              overflow-x: clip !important;
-              margin: -1rem !important;
-              padding: 1rem !important;
-              padding-bottom: 1.5rem !important;
-              overflow-y: visible !important;
-            }
-            .swiper-pagination-bullet {
-              background-color: rgba(255, 255, 255, .7) !important;
-              transition: all 0.3s ease-in-out !important;
-            }
-            .swiper-pagination-bullet-active {
-              width: 18px !important;
-              border-radius: 1rem !important;
-            }
+  uix-more-info-yaml: |
 
-            @media screen and (max-width: 800px) {
-              .swiper-container {
-                overflow-x: clip !important;
-                margin-bottom: 0vw !important;
-              }
-              .swiper-pagination {
-                top: 92%;
-              }
-            }
-          hui-horizontal-stack-card$:
-            .: |
-              hui-conditional-card {
-                margin: 0 0.1vw 0 0 !important;
-              }
-          hui-horizontal-stack-card$hui-grid-card$swipe-card$:
-            .: |
-              .swiper-container {
-                overflow-x: clip !important;
-                margin: -1.5vw !important;
-                padding: 1.5vw !important;
-                margin-bottom: -1vw !important;
-                overflow-y: visible !important;
-              }
-              .swiper-pagination {
-                right: 10% !important;
-                top: 50% !important;
-              }
-              .swiper-pagination-bullet {
-                background-color: rgba(255, 255, 255, .7) !important;
-              }
-              @media screen and (max-width: 800px) {
-                .swiper-pagination-bullet {
-                  width: 0.5em !important;
-                  height: 0.5em !important;
-                }
-              }
+    .: |
+      :host, ha-adaptive-dialog {
+        --ha-bottom-sheet-height: auto !important;
+        --vertical-align-dialog: unset !important;
+        --dialog-surface-top: unset !important;
+        --dialog-surface-margin-top: unset !important;
+        --dialog-box-shadow: 0 0px 16px 4px rgba(101,115,134, .15), 0 16px 64px 32px rgba(101,115,134, .5) !important;
+        --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.7)) !important;
+        font-family: Poppins, Raleway, SF Pro Text, sans-serif, system-ui !important;
+      }
 
-    #################################################
-    #                    CHIPS                      #
-    #################################################
-    grid-layout$hui-horizontal-stack-card:
-      $: |
-        #root {
-          flex-wrap: wrap;
-          justify-content: space-between;
-          place-items: center;
-        }
+  # uix-more-info-yaml: |
 
-    #################################################
-    #                   FOOTER                      #
-    #################################################
-    grid-layout$hui-horizontal-stack-card:last-child:
-      $: |
-        #root {
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-        }
-        @media only screen and (max-width: 1440px) {
-          #root {
-            justify-content: space-evenly;
-          }
-        }
-        @media only screen and (max-width: 800px) {
-          #root {
-            justify-content: space-evenly;
-          }
-        }
+  #   .: |
+  #     :host, ha-adaptive-dialog {
+  #       --vertical-align-dialog: unset !important;
+  #       --dialog-surface-top: unset !important;
+  #       --dialog-surface-margin-top: unset !important;
+  #       --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.7)) !important;
+  #       --mdc-theme-surface: rgba(22, 24, 29, 1) !important;
+  #     }
+
+  # uix-dialog: &popup_card_mod |
+  #   :host([card]) .content .container {
+  #     padding: 0px !important;
+  #   }
+  #   :host {
+  #     font-family: Poppins, Raleway, SF Pro Text, sans-serif, system-ui !important;
+  #   }
+
+  #   ha-adaptive-dialog,
+  #   ha-dialog {
+  #     --vertical-align-dialog: unset !important;
+  #     --dialog-surface-top: unset !important;
+  #     --dialog-surface-margin-top: unset !important;
+  #     --dialog-box-shadow: 0 0px 16px 4px rgba(101,115,134, .15), 0 16px 64px 32px rgba(101,115,134, .5) !important;
+  #     --ha-dialog-surface-background: rgba(22, 24, 29, 0.7) !important;
+  #     --wa-color-overlay-modal: var(--dialog-scrim-color, rgba(0, 0, 0, 0.7)) !important;
+  #     --mdc-dialog-scrim-color: var(--dialog-scrim-color, rgba(0, 0, 0, 0.7)) !important;
+  #     --mdc-text-field-fill-color: rgb(50 50 50 / 22%) !important;
+  #     --mdc-select-fill-color: rgb(50 50 50 / 22%) !important;
+  #     --mdc-theme-surface: rgba(22, 24, 29, 1) !important;
+  #   }
+
+  #   ha-adaptive-dialog:not(.type-quick-bar) {
+  #     --ha-bottom-sheet-height: auto !important;
+  #     --ha-card-background: none !important;
+  #     --bar-card-border-radius: 12px !important;
+  #     --ha-dialog-width-md: calc(var(--max-popup-column, 1) * var(--popup-width, 550px)) !important;
+  #   }
+  #   ha-dialog.type-browser-mod-popup {
+  #     --ha-dialog-width-md: calc(var(--max-popup-column, 1) * var(--popup-width, 550px)) !important;
+  #     --bar-card-border-radius: 12px !important;
+  #     --ha-card-border-radius: 0px !important;
+  #     --ha-card-background: none !important;
+  #     --ha-card-box-shadow: none !important;
+  #     --entities-divider-color: rgba(58, 69, 73, 0.2) !important;
+  #     --dialog-content-padding: 0 !important;
+  #   }
+  # uix-browser-mod-popup-inner: *popup_card_mod
+  # uix-more-info: *popup_card_mod

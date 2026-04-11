@@ -9,7 +9,23 @@
   view_layout:
     grid-area: cameras
     show:
-      mediaquery: '(min-height: 463px)'
+      mediaquery: '(min-width: 801px) and (min-height: 463px)'
   columns: 2
   square: true
   cards: !include ../../shared/grid-cards/cameras.yaml
+
+- type: conditional
+  view_layout:
+    grid-area: cameras
+  conditions:
+    - condition: screen
+      media_query: '(max-width: 800px) and (min-height: 463px)'
+    - condition: state
+      entity: input_select.mobile_dashboard_tab
+      state: home
+  card:
+    type: grid
+    title: Cameras
+    columns: 2
+    square: true
+    cards: !include ../../shared/grid-cards/cameras.yaml

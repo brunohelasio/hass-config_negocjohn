@@ -1,0 +1,346 @@
+"""Support for Tuya event entities."""
+
+from __future__ import annotations
+from typing import Any, cast
+from datetime import datetime
+from dataclasses import dataclass
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from tuya_device_handlers.definition.event import (
+    TuyaEventDefinition,
+    get_default_definition,
+)
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeIntegerWrapper,
+)
+from .util import (
+    restrict_descriptor_category,
+)
+from .multi_manager.multi_manager import (
+    XTConfigEntry,
+    MultiManager,
+    XTDevice,
+)
+from .const import (
+    TUYA_DISCOVERY_NEW,
+    LOGGER,
+    XTDPCode,
+    XTDeviceWatcherCategory,  # noqa: F401
+    VirtualStates,
+)
+from .ha_tuya_integration.tuya_integration_imports import (
+    TuyaEventEntity,
+    TuyaEventEntityDescription,
+    TuyaCustomerDevice,
+)
+from .entity import (
+    XTEntity,
+    XTEntityDescriptorManager,
+)
+
+
+class IntegerEventWrapper(DPCodeIntegerWrapper[tuple[str, dict[str, Any]]]):
+    """Wrapper for a string message received in a base64/UTF-8 RAW DPCode.
+
+    Raises 'triggered' event, with the message in the event attributes.
+    """
+
+    def __init__(self, dpcode: str, type_information: Any) -> None:
+        """Init Base64Utf8RawEventWrapper."""
+        super().__init__(dpcode, type_information)
+        self.options = [f"{self.dpcode}"]
+
+    def read_device_status(
+        self, device: TuyaCustomerDevice
+    ) -> tuple[str, dict[str, Any]] | None:
+        """Return the event with message attribute."""
+        if (status := self._read_dpcode_value(device)) is None:
+            return None
+        return (f"{self.dpcode}", {"value": status, "changed_time": datetime.now()})
+
+
+@dataclass(frozen=True)
+class XTEventEntityDescription(TuyaEventEntityDescription):
+    override_tuya: bool = False
+    dont_send_to_cloud: bool = False
+    on_value: Any = None
+    off_value: Any = None
+
+    # duplicate the entity if handled by another integration
+    ignore_other_dp_code_handler: bool = False
+    virtual_state: VirtualStates | None = VirtualStates.STATE_DEDUPLICATE_IN_REPORTING
+
+    def get_entity_instance(
+        self,
+        device: XTDevice,
+        device_manager: MultiManager,
+        description: XTEventEntityDescription,
+        definition: TuyaEventDefinition,
+    ) -> XTEventEntity:
+        return XTEventEntity(
+            device=device,
+            device_manager=device_manager,
+            description=XTEventEntityDescription(**description.__dict__),
+            definition=definition,
+        )
+
+
+# All descriptions can be found here. Mostly the Enum data types in the
+# default status set of each category (that don't have a set instruction)
+# end up being events.
+# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
+EVENTS: dict[str, tuple[XTEventEntityDescription, ...]] = {
+    # Smart Lock - Track who unlocked the door
+    "jtmspro": (
+        XTEventEntityDescription(
+            key=XTDPCode.CARD_UNLOCK_USER,
+            translation_key="unlock_user",
+            translation_placeholders={"user_type": "Card"},
+            device_class=None,
+            wrapper_class=IntegerEventWrapper,
+        ),
+        XTEventEntityDescription(
+            key=XTDPCode.FACE_UNLOCK_USER,
+            translation_key="unlock_user",
+            translation_placeholders={"user_type": "Face"},
+            device_class=None,
+            wrapper_class=IntegerEventWrapper,
+        ),
+        XTEventEntityDescription(
+            key=XTDPCode.HAND_UNLOCK_USER,
+            translation_key="unlock_user",
+            translation_placeholders={"user_type": "Hand"},
+            device_class=None,
+            wrapper_class=IntegerEventWrapper,
+        ),
+        XTEventEntityDescription(
+            key=XTDPCode.FINGERPRINT_UNLOCK_USER,
+            translation_key="unlock_user",
+            translation_placeholders={"user_type": "Fingerprint"},
+            device_class=None,
+            wrapper_class=IntegerEventWrapper,
+        ),
+        XTEventEntityDescription(
+            key=XTDPCode.PASSWORD_UNLOCK_USER,
+            translation_key="unlock_user",
+            translation_placeholders={"user_type": "Password"},
+            device_class=None,
+            wrapper_class=IntegerEventWrapper,
+        ),
+        XTEventEntityDescription(
+            key=XTDPCode.UNLOCK_PHONE_REMOTE,
+            translation_key="unlock_user",
+            translation_placeholders={"user_type": "Phone"},
+            device_class=None,
+            wrapper_class=IntegerEventWrapper,
+        ),
+        XTEventEntityDescription(
+            key=XTDPCode.UNLOCK_KEY,
+            translation_key="unlock_user",
+            translation_placeholders={"user_type": "Key"},
+            device_class=None,
+            wrapper_class=IntegerEventWrapper,
+        ),
+        XTEventEntityDescription(
+            key=XTDPCode.UNLOCK_BLE,
+            translation_key="unlock_user",
+            translation_placeholders={"user_type": "Bluetooth"},
+            device_class=None,
+            wrapper_class=IntegerEventWrapper,
+        ),
+        XTEventEntityDescription(
+            key=XTDPCode.UNLOCK_VOICE_REMOTE,
+            translation_key="unlock_user",
+            translation_placeholders={"user_type": "Voice"},
+            device_class=None,
+            wrapper_class=IntegerEventWrapper,
+        ),
+    ),
+}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: XTConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up tuya sensors dynamically through tuya discovery."""
+    hass_data = entry.runtime_data
+    this_platform = Platform.EVENT
+
+    if entry.runtime_data.multi_manager is None or hass_data.manager is None:
+        return
+
+    supported_descriptors, externally_managed_descriptors = cast(
+        tuple[
+            dict[str, tuple[XTEventEntityDescription, ...]],
+            dict[str, tuple[XTEventEntityDescription, ...]],
+        ],
+        XTEntityDescriptorManager.get_platform_descriptors(
+            EVENTS,
+            entry.runtime_data.multi_manager,
+            XTEventEntityDescription,
+            this_platform,
+        ),
+    )
+
+    @callback
+    def async_discover_device(device_map, restrict_dpcode: str | None = None) -> None:
+        """Discover and add a discovered tuya sensor."""
+        if hass_data.manager is None:
+            return
+        entities: list[XTEventEntity] = []
+        device_ids = [*device_map]
+        for device_id in device_ids:
+            if device := hass_data.manager.device_map.get(device_id):
+                if (
+                    category_descriptions
+                    := XTEntityDescriptorManager.get_category_descriptors(
+                        supported_descriptors, device.category
+                    )
+                ):
+                    externally_managed_dpcodes = (
+                        XTEntityDescriptorManager.get_category_keys(
+                            externally_managed_descriptors.get(device.category)
+                        )
+                    )
+                    if restrict_dpcode is not None:
+                        category_descriptions = cast(
+                            tuple[XTEventEntityDescription, ...],
+                            restrict_descriptor_category(
+                                category_descriptions, [restrict_dpcode]
+                            ),
+                        )
+                    entities.extend(
+                        XTEventEntity.get_entity_instance(
+                            device=device,
+                            device_manager=hass_data.manager,
+                            description=description,
+                            definition=definition,
+                        )
+                        for description in category_descriptions
+                        if (
+                            XTEntity.supports_description(
+                                device,
+                                this_platform,
+                                description,
+                                True,
+                                externally_managed_dpcodes,
+                            )
+                            and (
+                                definition := get_default_definition(
+                                    device, description.key, description.wrapper_class
+                                )
+                            )
+                        )
+                    )
+                    entities.extend(
+                        XTEventEntity.get_entity_instance(
+                            device=device,
+                            device_manager=hass_data.manager,
+                            description=description,
+                            definition=definition,
+                        )
+                        for description in category_descriptions
+                        if (
+                            XTEntity.supports_description(
+                                device,
+                                this_platform,
+                                description,
+                                False,
+                                externally_managed_dpcodes,
+                            )
+                            and (
+                                definition := get_default_definition(
+                                    device, description.key, description.wrapper_class
+                                )
+                            )
+                        )
+                    )
+
+        async_add_entities(entities)
+
+    hass_data.manager.register_device_descriptors(this_platform, supported_descriptors)
+    async_discover_device([*hass_data.manager.device_map])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
+    )
+
+
+class XTEventEntity(XTEntity, TuyaEventEntity):
+    """Tuya Event Entity."""
+
+    entity_description: XTEventEntityDescription
+
+    def __init__(
+        self,
+        device: XTDevice,
+        device_manager: MultiManager,
+        description: XTEventEntityDescription,
+        definition: TuyaEventDefinition,
+    ) -> None:
+        """Init Tuya event entity."""
+        try:
+            super(XTEventEntity, self).__init__(device, device_manager, description)
+            super(XTEntity, self).__init__(
+                device=device,
+                device_manager=device_manager,  # type: ignore
+                description=description,
+                definition=definition,
+            )
+        except Exception as e:
+            LOGGER.warning(f"Events failed to initialize, is your HA up to date? ({e})")
+        self.device = device
+        self.device_manager = device_manager
+        self.entity_description = description  # type: ignore
+    
+    async def _process_device_update(
+        self,
+        updated_status_properties: list[str],
+        dp_timestamps: dict[str, int] | None,
+    ) -> bool:
+        """Called when Tuya device sends an update with updated properties.
+
+        Returns True if the Home Assistant state should be written,
+        or False if the state write should be skipped.
+        """
+        if self._dpcode_wrapper.skip_update(
+            self.device, updated_status_properties, dp_timestamps
+        ) or not (event_data := self._dpcode_wrapper.read_device_status(self.device)):
+            return False
+
+        event_type, event_attributes = event_data
+        self._trigger_event(event_type, event_attributes)
+        return True
+    
+    @property
+    def state_attributes(self) -> dict[str, Any]: # type: ignore
+        """Return the state attributes."""
+        try:
+            return super().state_attributes
+        except Exception:
+            return {}
+
+    @staticmethod
+    def get_entity_instance(
+        device: XTDevice,
+        device_manager: MultiManager,
+        description: XTEventEntityDescription,
+        definition: TuyaEventDefinition,
+    ) -> XTEventEntity:
+        if hasattr(description, "get_entity_instance") and callable(
+            getattr(description, "get_entity_instance")
+        ):
+            return description.get_entity_instance(
+                device=device,
+                device_manager=device_manager,
+                description=description,
+                definition=definition,
+            )
+        return XTEventEntity(
+            device=device,
+            device_manager=device_manager,
+            description=XTEventEntityDescription(**description.__dict__),
+            definition=definition,
+        )

@@ -1,50 +1,55 @@
 ########################################
-#   LIVING ROOM MEDIA                  #
+#   LIVING ROOM MEDIA (COMENTADO)      #
+#   Entidades não existem no setup     #
+#   media_player.atv                   #
+#   media_player.sony_tv_combined      #
+#   media_player.kodi_atv              #
+#   Causa erro no boot → impede        #
+#   registro de TODOS os media_players #
+#   do package.                        #
 ########################################
-# LIVING ROOM TV ###
-media_player:
-  - platform: universal
-    name: Living Room TV
-    device_class: tv
-    unique_id: living_room_tv
-    children:
-      - media_player.atv
-      - media_player.sony_tv_combined
-    active_child_template: >
-      {% set sony = states.media_player.sony_tv_combined %}
-      {% set atv = states.media_player.atv %}
-      {% set kodi = states.media_player.kodi_atv %}
-      {% set is_kodi = atv.attributes.app_id == 'org.xbmc.kodi-tvos' and kodi.state != 'off' %}
-      {% set is_atv = sony.attributes.source in ['HDMI 2', 'Apple TV'] %}
-      {% if is_kodi or is_atv %}
-        media_player.atv
-      {% else %}
-        media_player.sony_tv_combined
-      {% endif %}
-    state_template: >
-      {% set sony = states.media_player.sony_tv_combined %}
-      {% set atv = states.media_player.atv %}
-      {% set kodi = states.media_player.kodi_atv %}
-
-      {% set paused_timeout = 1 * 45 %}
-      {% set is_kodi = atv.attributes.app_id == 'org.xbmc.kodi-tvos' and kodi.state != 'off' %}
-      {% set is_atv = sony.attributes.source in ['HDMI 2', 'Apple TV'] %}
-
-      {% if is_kodi %}
-        {{ kodi.state }}
-      {% elif is_atv %}
-        {% set paused = atv.state == 'paused' and atv.attributes.app_name != None %}
-        {% set timeout_paused = paused and (as_timestamp(now()) - as_timestamp(atv.last_changed)) < paused_timeout %}
-
-        {{ 'idle' if paused and not timeout_paused else atv.state }}
-      {% else %}
-        {{ sony.state }}
-      {% endif %}
-    commands:
-      turn_on:
-        service: remote.turn_on
-        target:
-          entity_id: remote.sony_bravia_tv
-      turn_off:
-        service: script.atv_sleep
-        data: {}
+# --- CÓDIGO ORIGINAL COMENTADO ---
+# media_player:
+#   - platform: universal
+#     name: Living Room TV
+#     device_class: tv
+#     unique_id: living_room_tv
+#     children:
+#       - media_player.atv
+#       - media_player.sony_tv_combined
+#     active_child_template: >
+#       {% set sony = states.media_player.sony_tv_combined %}
+#       {% set atv = states.media_player.atv %}
+#       {% set kodi = states.media_player.kodi_atv %}
+#       {% set is_kodi = atv.attributes.app_id == 'org.xbmc.kodi-tvos' and kodi.state != 'off' %}
+#       {% set is_atv = sony.attributes.source in ['HDMI 2', 'Apple TV'] %}
+#       {% if is_kodi or is_atv %}
+#         media_player.atv
+#       {% else %}
+#         media_player.sony_tv_combined
+#       {% endif %}
+#     state_template: >
+#       {% set sony = states.media_player.sony_tv_combined %}
+#       {% set atv = states.media_player.atv %}
+#       {% set kodi = states.media_player.kodi_atv %}
+#       {% set paused_timeout = 1 * 45 %}
+#       {% set is_kodi = atv.attributes.app_id == 'org.xbmc.kodi-tvos' and kodi.state != 'off' %}
+#       {% set is_atv = sony.attributes.source in ['HDMI 2', 'Apple TV'] %}
+#       {% if is_kodi %}
+#         {{ kodi.state }}
+#       {% elif is_atv %}
+#         {% set paused = atv.state == 'paused' and atv.attributes.app_name != None %}
+#         {% set timeout_paused = paused and (as_timestamp(now()) - as_timestamp(atv.last_changed)) < paused_timeout %}
+#         {{ 'idle' if paused and not timeout_paused else atv.state }}
+#       {% else %}
+#         {{ sony.state }}
+#       {% endif %}
+#     commands:
+#       turn_on:
+#         service: remote.turn_on
+#         target:
+#           entity_id: remote.sony_bravia_tv
+#       turn_off:
+#         service: script.atv_sleep
+#         data: {}
+# --- FIM CÓDIGO ORIGINAL ---

@@ -7,80 +7,89 @@
 #      |___/
 #
 #- from github.com/ngocjohn/hass-config
-#
-# RECORDER
-recorder:
-  db_url: !secret mariadb_url
-  purge_keep_days: 30
-  auto_purge: true
-  auto_repack: true
-  exclude:
-    domains:
-      - alarm_control_panel
-      - button
-      - camera
-      - media_player
-      - switch
-      - light
-      - sun
-      - weather
-      - timer
-      - update
-      - image
-      - device_tracker
-    entities:
-      - sensor.time
-      - sensor.date
-      - sensor.hassio_addons_use
-      - sensor.zhimi_mb4_b008_moto_speed_rpm
-      - script.fade_music
-    entity_globs:
-      - sensor.*_motor_speed
-      - sensor.browser_*
-      - sensor.*_color
-      - sensor.*_energy
-      - sensor.*_power
-      - sensor.*_linkquality
-      - sensor.*_last_seen
-      - sensor.home_*
-      - sensor.kodi_*
-      - sensor.amg_43_*
-      - sensor.*_write
-      - sensor.prague_next_*
-      - sensor.*_utilization
-      - sensor.*_clients
-      - sensor.*_voltage
-      - sensor.*_current
-      - sensor.*_rx
-      - sensor.*_tx
-      - sensor.sun_*
-      - sensor.*_active
-      - sensor.hacs_*
-      - sensor.motion_sensor_*
-      - sensor.*_outage_count
-      - sensor.*_speed_rpm
-      - sensor.*_clients
-      - sensor.*_containers_cpu_usage
-      - sensor.roidmi_*
-      - binary_sensor.roidmi_*
-  include:
-    entities:
-      - device_tracker.viet_ngoc_samsung
-      - sensor.motion_sensor_entrance_illuminance
-logger:
-logbook:
 
-# TTS
-tts:
-  - platform: google_translate
-  - platform: google_cloud
-    key_file: google_stt.json
-  - platform: edge_tts
-    service_name: edge_eng_say
-    language: en-US-JennyNeural
-  - platform: edge_tts
-    service_name: edge_vietnam_say
-    language: vi-VN-HoaiMyNeural
-bluetooth:
-delete:
-sun:
+# --- CÓDIGO ORIGINAL COMENTADO (causa erros no boot sem MariaDB real) ---
+# recorder:
+#   db_url: !secret mariadb_url
+#   purge_keep_days: 30
+#   auto_purge: true
+#   auto_repack: true
+#   exclude:
+#     domains:
+#       - alarm_control_panel
+#       - button
+#       - camera
+#       - media_player
+#       - switch
+#       - light
+#       - sun
+#       - weather
+#       - timer
+#       - update
+#       - image
+#       - device_tracker
+#     entities:
+#       - sensor.time
+#       - sensor.date
+#       - sensor.hassio_addons_use
+#       - sensor.zhimi_mb4_b008_moto_speed_rpm
+#       - script.fade_music
+#     entity_globs:
+#       - sensor.*_motor_speed
+#       - sensor.browser_*
+#       - sensor.*_color
+#       - sensor.*_energy
+#       - sensor.*_power
+#       - sensor.*_linkquality
+#       - sensor.*_last_seen
+#       - sensor.home_*
+#       - sensor.kodi_*
+#       - sensor.amg_43_*
+#       - sensor.*_write
+#       - sensor.prague_next_*
+#       - sensor.*_utilization
+#       - sensor.*_clients
+#       - sensor.*_voltage
+#       - sensor.*_current
+#       - sensor.*_rx
+#       - sensor.*_tx
+#       - sensor.sun_*
+#       - sensor.*_active
+#       - sensor.hacs_*
+#       - sensor.motion_sensor_*
+#       - sensor.*_outage_count
+#       - sensor.*_speed_rpm
+#       - sensor.*_clients
+#       - sensor.*_containers_cpu_usage
+#       - sensor.roidmi_*
+#       - binary_sensor.roidmi_*
+#   include:
+#     entities:
+#       - device_tracker.viet_ngoc_samsung
+#       - sensor.motion_sensor_entrance_illuminance
+# --- FIM CÓDIGO ORIGINAL ---
+
+# --- CÓDIGO ORIGINAL COMENTADO (chaves vazias — inválidas em packages) ---
+# logger:
+# logbook:
+# bluetooth:
+# delete:
+# sun:
+# --- FIM CÓDIGO ORIGINAL ---
+logger: {}
+logbook: {}
+bluetooth: {}
+sun: {}
+
+# --- CÓDIGO ORIGINAL COMENTADO (tts com platform: não suportado dentro de package) ---
+# tts:
+#   - platform: google_translate
+#   - platform: google_cloud
+#     key_file: google_stt.json
+#   - platform: edge_tts
+#     service_name: edge_eng_say
+#     language: en-US-JennyNeural
+#   - platform: edge_tts
+#     service_name: edge_vietnam_say
+#     language: vi-VN-HoaiMyNeural
+# --- FIM CÓDIGO ORIGINAL ---

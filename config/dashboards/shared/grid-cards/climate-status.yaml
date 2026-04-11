@@ -59,14 +59,35 @@
 #       <svg viewBox="0 0 50 50">...</svg>
 # --- FIM CÓDIGO COMENTADO ---
 
-- type: custom:streamline-card
-  template: grid_air_purifier
-# THERMOSTAT
-- type: custom:streamline-card
-  template: grid_thermostat
-# LIVING ROOM COVERS
-- type: custom:streamline-card
-  template: grid_covers_living
-# BEDROOM COVERS
-- type: custom:streamline-card
-  template: grid_covers_bedroom
+# CLIMATE STATUS AND TEMPERATURES (Layout 2x1 Combinado)
+##########################################
+
+- type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: 1fr 1fr
+    grid-template-rows: auto auto
+    grid-template-areas: |
+      "topo topo"
+      "ac cortina"
+    margin: 0
+    padding: 0
+    grid-gap: 0.9rem # Alinhado com o padrão de gap do seu projeto
+  cards:
+    # TOPO (2x1): Temperatura e Umidade
+    - type: custom:streamline-card
+      template: grid_climate_trend_2x1
+      view_layout:
+        grid-area: topo
+
+    # INFERIOR ESQUERDO: AC Sala
+    - type: custom:streamline-card
+      template: grid_covers_living
+      view_layout:
+        grid-area: ac
+
+    # INFERIOR DIREITO: Cortina
+    - type: custom:streamline-card
+      template: grid_covers_bedroom
+      view_layout:
+        grid-area: cortina

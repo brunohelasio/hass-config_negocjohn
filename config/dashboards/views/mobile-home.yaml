@@ -1,0 +1,29 @@
+title: Home
+path: mobile-home
+icon: mdi:home-circle
+subview: false
+theme: tablet
+type: custom:grid-layout
+layout:
+  margin: 0
+  padding: 0
+  grid-gap: 0.9rem
+  grid-template-columns: 14px 1fr 14px
+  grid-template-rows: fit-content(100%) min-content
+  grid-template-areas: |
+    ". home ."
+    ". nav ."
+cards:
+  - !include ../shared/sidebar/sidebar_mobile_home.yaml
+  - type: custom:mod-card
+    view_layout:
+      grid-area: nav
+    card_mod:
+      style: |
+        ha-card {
+          background: none;
+          box-shadow: none;
+          border: none;
+          min-height: 90px;
+        }
+    card: !include ../shared/mobile-bottom-nav.yaml

@@ -1,0 +1,281 @@
+##############################################################################
+#                                                                            #
+#   MEDIA GRID v2 — Active Player Package                                    #
+#   Criado: 2026-04-05                                                       #
+#                                                                            #
+#   Substitui a abordagem media_player.currently_playing (Media Grid v1)     #
+#   que dependia de group.conditional_media e group.device_players           #
+#   (nunca existiram no setup do usuario).                                   #
+#                                                                            #
+#   Arquitetura:                                                             #
+#   - input_select.media_focus_player  → qual player o Slide 1 exibe         #
+#   - input_select.media_slot_1..4    → quais players o Slide 2 exibe (2x2)  #
+#   - automation auto_media_focus     → auto-foco quando player inicia       #
+#   - automation auto_media_slots     → FIFO de 4 slots ao iniciar player    #
+#                                                                            #
+#   Catalogo inicial (4 players):                                            #
+#     media_player.android_tv_192_168_3_17          — TV Sala                #
+#     media_player.echo_show               — Echo Show Sala                  #
+#     media_player.spotifyplus_bruno_helasio — Spotify Global                #
+#     media_player.echo_pop_office         — Echo Pop Office                 #
+#                                                                            #
+#   Para expandir: adicionar entity_id na lista options de TODOS             #
+#   os input_selects abaixo e adicionar trigger nas automacoes.              #
+#                                                                            #
+##############################################################################
+
+input_select:
+
+  # ── Foco: qual player o Slide 1 exibe ─────────────────────────────────────
+  media_focus_player:
+    name: Active Media Player
+    icon: mdi:play-circle
+    options:
+      - media_player.android_tv_192_168_3_17
+      - media_player.echo_show
+      - media_player.spotifyplus_bruno_helasio
+      - media_player.echo_pop_office
+    initial: media_player.android_tv_192_168_3_17
+
+  # ── Slots: 4 posicoes do grid 2x2 no Slide 2 ──────────────────────────────
+  media_slot_1:
+    name: Media Slot 1
+    icon: mdi:numeric-1-box
+    options:
+      - media_player.android_tv_192_168_3_17
+      - media_player.echo_show
+      - media_player.spotifyplus_bruno_helasio
+      - media_player.echo_pop_office
+    initial: media_player.android_tv_192_168_3_17
+
+  media_slot_2:
+    name: Media Slot 2
+    icon: mdi:numeric-2-box
+    options:
+      - media_player.android_tv_192_168_3_17
+      - media_player.echo_show
+      - media_player.spotifyplus_bruno_helasio
+      - media_player.echo_pop_office
+    initial: media_player.echo_show
+
+  media_slot_3:
+    name: Media Slot 3
+    icon: mdi:numeric-3-box
+    options:
+      - media_player.android_tv_192_168_3_17
+      - media_player.echo_show
+      - media_player.spotifyplus_bruno_helasio
+      - media_player.echo_pop_office
+    initial: media_player.spotifyplus_bruno_helasio
+
+  media_slot_4:
+    name: Media Slot 4
+    icon: mdi:numeric-4-box
+    options:
+      - media_player.android_tv_192_168_3_17
+      - media_player.echo_show
+      - media_player.spotifyplus_bruno_helasio
+      - media_player.echo_pop_office
+    initial: media_player.echo_pop_office
+
+automation:
+
+  # ── Auto-Focus: Apenas quando um player COMEÇA a tocar ────────────────────
+  # Removemos o paused/idle do trigger para evitar que o Echo roube a tela
+  # após o Spotify ser desligado.
+  - id: auto_media_focus
+    alias: "Media Grid v2 — Auto Focus Player"
+    description: >
+      Quando um player muda para PLAYING, atualiza o media_focus_player. 
+      TV tem prioridade maxima. Echos so assumem se Spotify não estiver tocando.
+    mode: single
+    max_exceeded: silent
+    trigger:
+      - platform: state
+        entity_id:
+          - media_player.android_tv_192_168_3_17
+          - media_player.echo_show
+          - media_player.spotifyplus_bruno_helasio
+          - media_player.echo_pop_office
+        to: "playing"
+    condition: []
+    action:
+      - variables:
+          triggered_entity: "{{ trigger.entity_id }}"
+      - choose:
+          # 1. TV sempre assume o foco (Prioridade Máxima)
+          - conditions:
+              - condition: template
+                value_template: "{{ triggered_entity == 'media_player.android_tv_192_168_3_17' }}"
+            sequence:
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.media_focus_player
+                data:
+                  option: media_player.android_tv_192_168_3_17
+          
+          # 2. Spotify assume o foco (Prioridade sobre os Echos)
+          - conditions:
+              - condition: template
+                value_template: "{{ triggered_entity == 'media_player.spotifyplus_bruno_helasio' }}"
+            sequence:
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.media_focus_player
+                data:
+                  option: media_player.spotifyplus_bruno_helasio
+          
+          # 3. Echo Show assume o foco (SE o Spotify NÃO estiver tocando)
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ triggered_entity == 'media_player.echo_show'
+                     and states('media_player.spotifyplus_bruno_helasio') != 'playing' }}
+            sequence:
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.media_focus_player
+                data:
+                  option: media_player.echo_show
+          
+          # 4. Echo Pop assume o foco (SE o Spotify NÃO estiver tocando)
+          - conditions:
+              - condition: template
+                value_template: >
+                  {{ triggered_entity == 'media_player.echo_pop_office'
+                     and states('media_player.spotifyplus_bruno_helasio') != 'playing' }}
+            sequence:
+              - service: input_select.select_option
+                target:
+                  entity_id: input_select.media_focus_player
+                data:
+                  option: media_player.echo_pop_office
+
+  # ── Auto-Slots FIFO: Mantém o registro histórico de atividade ─────────────
+  - id: auto_media_slots_fifo
+    alias: "Media Grid v2 — Auto Slots FIFO"
+    description: >
+      Mantem os 4 slots do Slide 2 atualizados como fila FIFO.
+    mode: queued
+    max: 5
+    trigger:
+      - platform: state
+        entity_id:
+          - media_player.android_tv_192_168_3_17
+          - media_player.echo_show
+          - media_player.spotifyplus_bruno_helasio
+          - media_player.echo_pop_office
+        to:
+          - "playing"
+          - "paused"
+          - "idle"
+    condition: []
+    action:
+      - variables:
+          new_player: "{{ trigger.entity_id }}"
+          s1: "{{ states('input_select.media_slot_1') }}"
+          s2: "{{ states('input_select.media_slot_2') }}"
+          s3: "{{ states('input_select.media_slot_3') }}"
+          s4: "{{ states('input_select.media_slot_4') }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.media_slot_1
+        data:
+          option: "{{ new_player }}"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.media_slot_2
+        data:
+          option: >
+            {% set filtered = [s1, s2, s3, s4] | reject('eq', new_player) | list %}
+            {{ filtered[0] if filtered | length > 0 else s2 }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.media_slot_3
+        data:
+          option: >
+            {% set filtered = [s1, s2, s3, s4] | reject('eq', new_player) | list %}
+            {{ filtered[1] if filtered | length > 1 else s3 }}
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.media_slot_4
+        data:
+          option: >
+            {% set filtered = [s1, s2, s3, s4] | reject('eq', new_player) | list %}
+            {{ filtered[2] if filtered | length > 2 else s4 }}
+
+  # ── Limpeza de Fantasma: Força TV e limpa Echos ao Desligar Spotify ───────
+  - id: auto_media_sync_off
+    alias: "Media Grid v2 — Sync Spotify Off to Echos"
+    description: >
+      Garante que os Echos saiam do pause e reseta o foco da tela
+      para a Standby Art (TV) quando o Spotify for desligado.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id: media_player.spotifyplus_bruno_helasio
+        to: 
+          - "off"
+          - "idle"
+    action:
+      - service: media_player.media_stop
+        target:
+          entity_id: 
+            - media_player.echo_show
+            - media_player.echo_pop_office
+      - delay: "00:00:02"
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.media_focus_player
+        data:
+          option: media_player.android_tv_192_168_3_17
+
+  # ── Otimização de Voz: Atualização Dupla do Spotify ───────────────────────
+  - id: auto_media_force_spotify_sync
+    alias: "Media Grid v2 — Force Spotify Sync"
+    description: >
+      O HA demora a perceber que a Alexa iniciou o Spotify por voz. 
+      Isso manda um 'cutucão' imediato e outro após 3s para o Spotify acordar.
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: 
+          - media_player.echo_show
+          - media_player.echo_pop_office
+        to: "playing"
+    action:
+      - service: homeassistant.update_entity
+        target:
+          entity_id: media_player.spotifyplus_bruno_helasio
+      - delay: "00:00:03" 
+      - service: homeassistant.update_entity
+        target:
+          entity_id: media_player.spotifyplus_bruno_helasio
+
+script:
+  media_focus_play_pause:
+    alias: "Media Grid v2 — Play/Pause Focused Player"
+    mode: single
+    sequence:
+      - service: media_player.media_play_pause
+        target:
+          entity_id: "{{ states('input_select.media_focus_player') }}"
+
+template:
+  - sensor:
+      - name: "Media Focus Visuals"
+        unique_id: media_focus_visuals
+        state: >
+          {% set player = states('input_select.media_focus_player') %}
+          {{ states(player) if player and states(player) != 'unknown' else 'off' }}
+        attributes:
+          entity_picture: >
+            {% set player = states('input_select.media_focus_player') %}
+            {% set pic = state_attr(player, 'entity_picture') %}
+            {{ pic if pic else '/local/images/standby_art.jpg' }}
+          media_title: >
+            {% set player = states('input_select.media_focus_player') %}
+            {{ state_attr(player, 'media_title') | default('Sistema de Áudio', true) }}
+          media_artist: >
+            {% set player = states('input_select.media_focus_player') %}
+            {{ state_attr(player, 'media_artist') | default('Pronto para tocar', true) }}

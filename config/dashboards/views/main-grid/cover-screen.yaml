@@ -1,0 +1,63 @@
+- type: custom:swipe-card
+  view_layout:
+    grid-area: cover
+    show:
+      mediaquery: '(max-height: 462px)'
+  parameters:
+    start_card: 1
+    slidesPerView: 1
+    spaceBetween: 10
+    speed: 420
+    pagination:
+      type: bullets
+      clickable: true
+  cards:
+    - type: horizontal-stack # HOME - SECURITY
+      cards:
+        - &grid-card
+          type: grid
+          square: true
+          title: Home
+          columns: 2
+          cards: !include ../../shared/grid-cards/home-status.yaml
+        - <<: *grid-card
+          title: Security
+          cards: !include ../../shared/grid-cards/security-status.yaml
+
+    - type: horizontal-stack # MASTERS - OTHER ROOMS
+      cards:
+        - <<: *grid-card
+          title: Masters
+          cards: !include ../../shared/grid-cards/main-rooms.yaml
+          #################################################
+          #                                               #
+          #                    ROOMS 2                    #
+          #                                               #
+          #################################################
+        - <<: *grid-card
+          title: Rooms
+          cards: !include ../../shared/grid-cards/common-rooms.yaml
+
+    - type: horizontal-stack # CLIMATE - CAMERA
+      cards:
+        # AIR PURIFIER
+        - <<: *grid-card
+          title: Climate
+          cards: !include ../../shared/grid-cards/climate-status.yaml
+        - <<: *grid-card
+          title: Devices
+          cards: !include ../../shared/grid-cards/devices.yaml
+
+    - type: horizontal-stack # MEDIA - MOVIES
+      cards:
+        - <<: *grid-card
+          title: Cameras
+          cards: !include ../../shared/grid-cards/cameras.yaml
+        - type: grid
+          title: Media
+          columns: 1
+          square: true
+          cards:
+            - type: custom:added-movie-card
+              entity: sensor.tmdb_movies_yts_latest
+              show_item_count: 10

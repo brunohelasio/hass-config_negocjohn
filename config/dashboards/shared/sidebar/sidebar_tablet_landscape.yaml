@@ -7,6 +7,13 @@ type: custom:button-card
 entity: sensor.time
 template:
   - sidebar_template
+card_mod:
+  style: |
+    @media (max-width: 800px) {
+      ha-card {
+        width: 100% !important;
+      }
+    }
 view_layout:
   grid-area: sidebar
   show:

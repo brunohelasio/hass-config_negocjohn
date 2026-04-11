@@ -1,0 +1,44 @@
+title: Security/Cameras
+path: mobile-security-cameras
+icon: mdi:shield-home-outline
+subview: false
+theme: tablet
+type: custom:grid-layout
+layout:
+  margin: 0
+  padding: 0
+  grid-gap: 0.9rem
+  grid-template-columns: 14px 1fr 14px
+  grid-template-rows: fit-content(100%) fit-content(100%) min-content
+  grid-template-areas: |
+    ". security ."
+    ". cameras ."
+    ". nav ."
+cards:
+  - type: grid
+    title: Security
+    view_layout:
+      grid-area: security
+    columns: 2
+    cards: !include ../shared/grid-cards/security-status.yaml
+
+  - type: grid
+    title: Cameras
+    view_layout:
+      grid-area: cameras
+    columns: 2
+    square: true
+    cards: !include ../shared/grid-cards/cameras.yaml
+
+  - type: custom:mod-card
+    view_layout:
+      grid-area: nav
+    card_mod:
+      style: |
+        ha-card {
+          background: none;
+          box-shadow: none;
+          border: none;
+          min-height: 90px;
+        }
+    card: !include ../shared/mobile-bottom-nav.yaml

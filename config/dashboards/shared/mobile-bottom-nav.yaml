@@ -1,0 +1,93 @@
+type: custom:stack-in-card
+card_mod:
+  style:
+    .: |
+      :host {
+        position: fixed !important;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 60;
+      }
+      ha-card {
+        border-radius: 0;
+        background-color: #0000004d !important;
+        backdrop-filter: blur(50px) brightness(1.4);
+        -webkit-backdrop-filter: blur(50px) brightness(1.4);
+        box-shadow: 0px 2px 8px 0px #0000008c;
+        padding: 12px 8px calc(12px + env(safe-area-inset-bottom, 0px));
+        width: 100vw;
+        margin-bottom: -2px;
+      }
+cards:
+  - type: custom:mod-card
+    card_mod:
+      style:
+        hui-horizontal-stack-card$: |
+          #root {
+            justify-content: space-between !important;
+            gap: 4px !important;
+          }
+    card:
+      type: horizontal-stack
+      cards:
+        - type: custom:button-card
+          template: icon_sticky_menu
+          icon: mdi:home-circle
+          tap_action:
+            action: navigate
+            navigation_path: /lovelace-yaml/mobile-home
+          styles:
+            icon:
+              - color: >
+                  [[[
+                      if (location.pathname.split('/').slice(-1) == "mobile-home")
+                      return '#ffb300';
+                  ]]]
+        - type: custom:button-card
+          template: icon_sticky_menu
+          icon: mdi:shield-home-outline
+          tap_action:
+            action: navigate
+            navigation_path: /lovelace-yaml/mobile-security-cameras
+          styles:
+            icon:
+              - color: >
+                  [[[
+                      if (location.pathname.split('/').slice(-1) == "mobile-security-cameras")
+                      return '#ffb300';
+                  ]]]
+        - type: custom:button-card
+          template: icon_sticky_menu
+          icon: mdi:sofa-outline
+          tap_action:
+            action: navigate
+            navigation_path: /lovelace-yaml/mobile-masters-rooms
+          styles:
+            icon:
+              - color: >
+                  [[[
+                      if (location.pathname.split('/').slice(-1) == "mobile-masters-rooms")
+                      return '#ffb300';
+                  ]]]
+        - type: custom:button-card
+          template: icon_sticky_menu
+          icon: mdi:music-circle
+          tap_action:
+            action: navigate
+            navigation_path: /lovelace-yaml/mobile-climate-media
+          styles:
+            icon:
+              - color: >
+                  [[[
+                      if (location.pathname.split('/').slice(-1) == "mobile-climate-media")
+                      return '#ffb300';
+                  ]]]
+        - type: custom:button-card
+          template: icon_sticky_menu
+          icon: mdi:dots-horizontal
+          tap_action:
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data: !include ./popup/mobile_more_menu.yaml

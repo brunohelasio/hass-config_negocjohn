@@ -7,6 +7,10 @@ kiosk_mode:
 title: Neklanka Home
 views:
   - !include views/main.yaml
+  - !include views/mobile-home.yaml
+  - !include views/mobile-security-cameras.yaml
+  - !include views/mobile-masters-rooms.yaml
+  - !include views/mobile-climate-media.yaml
   - !include views/system.yaml
   - !include views/github-view.yaml
   - !include subviews/movie-panel.yaml

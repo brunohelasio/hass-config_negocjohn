@@ -1,0 +1,6 @@
+type: custom:button-card
+entity: sensor.time
+template:
+  - sidebar_template
+view_layout:
+  grid-area: home

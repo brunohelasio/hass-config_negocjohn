@@ -1,88 +1,166 @@
-type: horizontal-stack
+type: vertical-stack
 view_layout:
   grid-area: footer
   show:
     mediaquery: '(min-height: 463px)'
 cards:
-  - type: custom:button-card
-    name: >
-      <ha-icon icon="mdi:reload"></ha-icon> Refresh
-    # ANTERIOR: browser_mod.sequence encadeava shell_command + javascript,
-    # mas a cadeia falhava silenciosamente quando o primeiro servico bloqueava.
-    # tap_action:
-    #   action: call-service
-    #   service: browser_mod.sequence
-    #   service_data:
-    #     sequence:
-    #       - service: shell_command.refresh_lovelace
-    #       - service: browser_mod.javascript
-    #         data:
-    #           code: lovelace_reload()
-    tap_action:
-      action: call-service
-      service: browser_mod.javascript
-      service_data:
-        code: location.reload()
-    template:
-      - footer
-  - type: custom:button-card
-    name: >
-      <ha-icon icon="mdi:vacuum"></ha-icon> Vacuum
-    # Código de câmeras inline que estava aqui foi removido (ver git history).
-    tap_action: !include ./popup/footer/footer_vacuum.yaml
-    template:
-      - footer
-    variables:
-      notify_icon: 'mdi:broom'
-      notify: >
-        [[[
-          // ANTERIOR:
-          // let isCleaning = states['vacuum.roidmi_eve']?.state === 'cleaning';
-          let isCleaning = states['vacuum.roborock_s7']?.state === 'cleaning';
-          return isCleaning;
-        ]]]
+  # Desktop / tablet: mantém faixa horizontal original.
+  - type: conditional
+    conditions:
+      - condition: screen
+        media_query: '(min-width: 801px)'
+    card:
+      type: grid
+      columns: 6
+      square: false
+      cards:
+        - type: custom:button-card
+          name: >
+            <ha-icon icon="mdi:reload"></ha-icon> Refresh
+          tap_action:
+            action: call-service
+            service: browser_mod.javascript
+            service_data:
+              code: location.reload()
+          template:
+            - footer
+        - type: custom:button-card
+          entity: vacuum.roborock_s7
+          name: >
+            <ha-icon icon="mdi:vacuum"></ha-icon> Vacuum
+          tap_action: !include ./popup/footer/footer_vacuum.yaml
+          template:
+            - footer
+          variables:
+            notify_icon: 'mdi:broom'
+            notify: >
+              [[[
+                let isCleaning = states['vacuum.roborock_s7']?.state === 'cleaning';
+                return isCleaning;
+              ]]]
+        - type: custom:button-card
+          name: >
+            <ha-icon icon="mdi:home-assistant"></ha-icon> System
+          tap_action: !include ./popup/footer/footer_system.yaml
+          template:
+            - footer
+          variables:
+            notify: >
+              [[[
+                let containerProblem = states['binary_sensor.pi_docker_containers_problem']?.state === 'on';
+                return containerProblem ? 'alert' : null;
+              ]]]
+        - type: custom:button-card
+          name: >
+            <ha-icon icon="mdi:server"></ha-icon> Server
+          tap_action: !include ./popup/footer/footer_mbproserver.yaml
+          template:
+            - footer
+        - type: custom:button-card
+          entity: sensor.hassio_updates_available
+          name: >
+            <ha-icon icon="mdi:arrow-up-bold-circle-outline"></ha-icon> Updates
+          tap_action: !include ./popup/footer/footer_updates.yaml
+          variables:
+            notify: >
+              [[[
+                return parseInt(entity?.state);
+              ]]]
+          template:
+            - footer
+        - type: custom:button-card
+          entity: binary_sensor.unifi_controller_alert
+          name: >
+            <ha-icon icon="mdi:router-wireless"></ha-icon> Network
+          tap_action: !include ./popup/footer/footer_network.yaml
+          variables:
+            notify: >
+              [[[
+                let entityState = entity?.state;
+                  return entityState === 'on' ? 'alert' : null;
+              ]]]
+          template:
+            - footer
 
-  - type: custom:button-card
-    name: >
-      <ha-icon icon="mdi:home-assistant"></ha-icon> System
-    tap_action: !include ./popup/footer/footer_system.yaml
-    template:
-      - footer
-    variables:
-      notify: >
-        [[[
-          let containerProblem = states['binary_sensor.pi_docker_containers_problem']?.state === 'on';
-          return containerProblem ? 'alert' : null;
-        ]]]
-  - type: custom:button-card
-    name: >
-      <ha-icon icon="mdi:server"></ha-icon> Server
-    tap_action: !include ./popup/footer/footer_mbproserver.yaml
-    template:
-      - footer
-  - type: custom:button-card
-    entity: sensor.hassio_updates_available
-    name: >
-      <ha-icon icon="mdi:arrow-up-bold-circle-outline"></ha-icon> Updates
-    tap_action: !include ./popup/footer/footer_updates.yaml
-    variables:
-      notify: >
-        [[[
-          return parseInt(entity?.state);
-        ]]]
-    template:
-      - footer
-
-  - type: custom:button-card
-    entity: binary_sensor.unifi_controller_alert
-    name: >
-      <ha-icon icon="mdi:router-wireless"></ha-icon> Network
-    tap_action: !include ./popup/footer/footer_network.yaml
-    variables:
-      notify: >
-        [[[
-          let entityState = entity?.state;
-            return entityState === 'on' ? 'alert' : null;
-        ]]]
-    template:
-      - footer
+  # Mobile: distribui em 3 colunas para eliminar overflow horizontal.
+  - type: conditional
+    conditions:
+      - condition: screen
+        media_query: '(max-width: 800px)'
+    card:
+      type: grid
+      columns: 3
+      square: false
+      card_mod:
+        style: |
+          ha-card {
+            margin-bottom: 86px;
+          }
+      cards:
+        - type: custom:button-card
+          name: >
+            <ha-icon icon="mdi:reload"></ha-icon> Refresh
+          tap_action:
+            action: call-service
+            service: browser_mod.javascript
+            service_data:
+              code: location.reload()
+          template:
+            - footer
+        - type: custom:button-card
+          entity: vacuum.roborock_s7
+          name: >
+            <ha-icon icon="mdi:vacuum"></ha-icon> Vacuum
+          tap_action: !include ./popup/footer/footer_vacuum.yaml
+          template:
+            - footer
+          variables:
+            notify_icon: 'mdi:broom'
+            notify: >
+              [[[
+                let isCleaning = states['vacuum.roborock_s7']?.state === 'cleaning';
+                return isCleaning;
+              ]]]
+        - type: custom:button-card
+          name: >
+            <ha-icon icon="mdi:home-assistant"></ha-icon> System
+          tap_action: !include ./popup/footer/footer_system.yaml
+          template:
+            - footer
+          variables:
+            notify: >
+              [[[
+                let containerProblem = states['binary_sensor.pi_docker_containers_problem']?.state === 'on';
+                return containerProblem ? 'alert' : null;
+              ]]]
+        - type: custom:button-card
+          name: >
+            <ha-icon icon="mdi:server"></ha-icon> Server
+          tap_action: !include ./popup/footer/footer_mbproserver.yaml
+          template:
+            - footer
+        - type: custom:button-card
+          entity: sensor.hassio_updates_available
+          name: >
+            <ha-icon icon="mdi:arrow-up-bold-circle-outline"></ha-icon> Updates
+          tap_action: !include ./popup/footer/footer_updates.yaml
+          variables:
+            notify: >
+              [[[
+                return parseInt(entity?.state);
+              ]]]
+          template:
+            - footer
+        - type: custom:button-card
+          entity: binary_sensor.unifi_controller_alert
+          name: >
+            <ha-icon icon="mdi:router-wireless"></ha-icon> Network
+          tap_action: !include ./popup/footer/footer_network.yaml
+          variables:
+            notify: >
+              [[[
+                let entityState = entity?.state;
+                  return entityState === 'on' ? 'alert' : null;
+              ]]]
+          template:
+            - footer

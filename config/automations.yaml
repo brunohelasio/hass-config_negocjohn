@@ -229,7 +229,7 @@
         - action: '{{ action_no }}'
           title: 'NO'
       title: Guest mode
-    action: notify.mobile_app_viet_ngoc_samsung
+    #action: notify.mobile_app_viet_ngoc_samsung
   - alias: Wait for a response
     wait_for_trigger:
     - event_type: mobile_app_notification_action
@@ -324,7 +324,7 @@
       message: Home assistant started
       data:
         tag: hastarted
-    action: notify.mobile_app_viet_ngoc_samsung
+    #action: notify.mobile_app_viet_ngoc_samsung
   - delay:
       hours: 0
       minutes: 0
@@ -334,7 +334,7 @@
       message: clear_notification
       data:
         tag: hastarted
-    action: notify.mobile_app_viet_ngoc_samsung
+    #action: notify.mobile_app_viet_ngoc_samsung
   - action: readme.generate
     data: {}
   mode: single
@@ -911,7 +911,7 @@
         '
       retain: true
     action: mqtt.publish
-  - action: notify.mobile_app_viet_ngoc_samsung
+  - #action: notify.mobile_app_viet_ngoc_samsung
     metadata: {}
     data:
       message: '{{ trigger.to_state.name | lower }}'
@@ -1031,7 +1031,7 @@
     data:
       entity_id:
       - binary_sensor.appdaemon_mbpro
-  - action: notify.mobile_app_viet_ngoc_samsung
+  - #action: notify.mobile_app_viet_ngoc_samsung
     metadata: {}
     data:
       title: Appdaemon

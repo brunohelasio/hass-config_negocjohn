@@ -5,32 +5,36 @@
 #  / /___/ /_/ / / / / __/ / /_/ / /_/ / /  / /_/ / /_/ / /_/ / / / /
 #  \____/\____/_/ /_/_/ /_/\__, /\__,_/_/   \__,_/\__/_/\____/_/ /_/
 #                         /____/
+# Loads default set of integrations. Do not remove.
 default_config:
-homeassistant:
-  packages: !include_dir_named packages
-  allowlist_external_dirs:
-    - /config
-    - /config/www
-  media_dirs:
-    movies: /media/movies
-    local: /media
 
-# FRONT - END
+# Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
-  extra_module_url:
-    - /hacsfiles/lovelace-canary/canary.js?hacstag=245159052050
-    - /hacsfiles/sidebar-organizer/sidebar-organizer.js?hacstag=9325344113211
-    - /local/dashboard-resources/customize-css-change.js?v1.0.3
-    - /local/dashboard-resources/quickbar-navigate-shortcut.js?v0.0.1
-    - /local/dashboard-resources/custom_ikonky.js?v0.0.1
 
-# HTTP
-http:
-  use_x_forwarded_for: true
-  trusted_proxies:
-    - 172.30.33.0/24
+homeassistant:
+  packages:
+    active_player: !include packages/active_player.yaml
+    hass_sidebar_helpers: !include packages/hassio/hass_sidebar_helpers.yaml
 
-# INCLUDES
-automation ui: !include automations.yaml
+automation: !include automations.yaml
 script: !include scripts.yaml
+scene: !include scenes.yaml
+
+lovelace:
+  mode: storage
+  dashboards:
+    ngocjohn-main:
+      mode: yaml
+      title: Ngocjohn Main
+      icon: mdi:home-automation
+      show_in_sidebar: true
+      filename: dashboards/ui-lovelace-main.yaml
+    
+    # --- NOVO DASHBOARD DE TESTE ---
+    homekitesq-teste:
+      mode: yaml
+      title: Teste HomeKit
+      icon: mdi:tablet-dashboard
+      show_in_sidebar: true
+      filename: lovelace-homekitesq.yaml

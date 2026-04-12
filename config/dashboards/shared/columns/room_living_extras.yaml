@@ -42,7 +42,7 @@
     # v3: mediaplayer restaurado + action: toggle (funcionava mas sem artwork)
     # v4 (ATUAL): base + media_premium + icon_tv (artwork hemma + tap=play/pause + volume circle)
     - type: custom:button-card
-      entity: media_player.smart_tv_pro_2
+      entity: media_player.android_tv_192_168_3_17
       name: Smart TV
       template:
         - base

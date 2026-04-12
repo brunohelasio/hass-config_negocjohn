@@ -571,8 +571,7 @@
       tap_action:
         action: toggle
         haptic: success
-      double_tap_action:
-        action: more-info
+      double_tap_action: !include ../popup/rooms/smart_tv_remote.yaml
       hold_action: !include ../popup/rooms/smart_tv_remote.yaml
       
     # 2. SPOTIFY

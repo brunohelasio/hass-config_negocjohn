@@ -95,7 +95,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_power
               template:
                 - remote_icon_only
@@ -105,7 +105,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_input
               template: remote_icon_only
             - type: custom:button-card
@@ -113,7 +113,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_menu
               template: remote_icon_only
         # ── D-Pad: Navigate Up ──
@@ -128,7 +128,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_navigate_up
               template: remote_icon_arrow
             - type: custom:button-card
@@ -143,7 +143,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_navigate_left
               template: remote_icon_arrow
             - type: custom:button-card
@@ -151,7 +151,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_ok
                 haptic: success
               template: remote_icon_arrow
@@ -160,7 +160,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_navigate_right
               template: remote_icon_arrow
         # ── D-Pad: Navigate Down ──
@@ -175,7 +175,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_navigate_down
               template: remote_icon_arrow
             - type: custom:button-card
@@ -190,7 +190,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_back
               template: remote_icon_only
             - type: custom:button-card
@@ -198,7 +198,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_homepage
               template: remote_icon_only
             - type: custom:button-card
@@ -206,7 +206,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_mute
               template: remote_icon_only
         # ── Volume / Canal ──
@@ -219,7 +219,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_volume_down
               template: remote_icon_only
             - type: custom:button-card
@@ -227,7 +227,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_volume_up
               template: remote_icon_only
             - type: custom:button-card
@@ -235,7 +235,7 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_channel_down
               template: remote_icon_only
             - type: custom:button-card
@@ -243,6 +243,6 @@ browser_mod:
               tap_action:
                 action: call-service
                 service: button.press
-                target:
+                service_data:
                   entity_id: button.tv_sala_channel_up
               template: remote_icon_only

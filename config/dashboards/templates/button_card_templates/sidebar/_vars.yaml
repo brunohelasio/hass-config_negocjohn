@@ -32,8 +32,14 @@ light:
   - light.lavabo_switch_2
   - light.lavabo_switch_3
   - light.corredor_switch_1
+  - light.quarto_miguel_switch_2
+  - light.quarto_miguel_2_switch_1
+  - light.quarto_miguel_2_switch_2
+  - light.quarto_miguel_2_switch_3
+  - light.quarto_miguel_switch_1
+  - light.quarto_miguel_switch_3
 media:
-  - media_player.smart_tv_pro_2
+  - media_player.android_tv_192_168_3_17
 climate:
   # ANTERIOR: _2 (corrigido: AC nao usa _2, cameras sim)
   - climate.ac_quarto_miguel

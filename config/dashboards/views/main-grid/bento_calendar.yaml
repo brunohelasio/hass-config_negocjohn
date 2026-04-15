@@ -3,4 +3,12 @@ columns: 1
 square: false
 view_layout:
   grid-area: calendar
+card_mod:
+  style: |
+    ha-card {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+      padding: 0 !important;
+    }
 cards: !include ../../shared/grid-cards/bento_calendar.yaml

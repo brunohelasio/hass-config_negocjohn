@@ -1,0 +1,30 @@
+- type: markdown
+  content: |
+    <small style="letter-spacing:.12em;opacity:.58;">ROBOROCK</small>
+
+    <br>
+
+    ◯
+
+    **Parado**
+
+    Local: Sala
+
+    Última: 10h45
+  card_mod:
+    style: |
+      ha-card {
+        background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+        backdrop-filter: blur(18px) saturate(1.2);
+        -webkit-backdrop-filter: blur(18px) saturate(1.2);
+        border-right: 1px solid rgba(255,255,255,0.08);
+        border-radius: 0;
+        border-top: none;
+        border-bottom: none;
+        border-left: none;
+        box-shadow: none;
+        height: 100%;
+        overflow: hidden;
+        aspect-ratio: unset;
+        padding: 0;
+      }

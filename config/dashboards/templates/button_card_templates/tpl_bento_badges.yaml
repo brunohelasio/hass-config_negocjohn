@@ -1,0 +1,102 @@
+hemma_badge_light_group:
+  template: [chips]
+  entity: input_select.hemma_expanded_row
+  variables:
+    enabled: true
+    entity_1: null
+    entity_2: null
+    entity_3: null
+    entity_4: null
+    entity_5: null
+    entity_6: null
+    entity_7: null
+    entity_8: null
+  show_state: false
+  show_label: false
+  show_icon: true
+  icon: mdi:lightbulb-group
+  tap_action:
+    action: call-service
+    service: input_select.select_option
+    service_data:
+      entity_id: input_select.hemma_expanded_row
+      option: >
+        [[[
+          return states['input_select.hemma_expanded_row']?.state === 'lights' ? 'none' : 'lights';
+        ]]]
+  hold_action:
+    action: more-info
+  double_tap_action:
+    action: none
+  triggers_update:
+    - '[[[ return variables?.entity_1 ]]]'
+    - '[[[ return variables?.entity_2 ]]]'
+    - '[[[ return variables?.entity_3 ]]]'
+    - '[[[ return variables?.entity_4 ]]]'
+    - '[[[ return variables?.entity_5 ]]]'
+    - '[[[ return variables?.entity_6 ]]]'
+    - '[[[ return variables?.entity_7 ]]]'
+    - '[[[ return variables?.entity_8 ]]]'
+  extra_styles: >
+    [[[
+      const v = variables?.enabled;
+      const enabled = (v === undefined || v === null) ? true :
+        (typeof v === 'boolean') ? v :
+        (typeof v === 'number') ? v !== 0 :
+        !['false','0','no','off','disabled'].includes(String(v).trim().toLowerCase());
+      const eids = [
+        variables?.entity_1, variables?.entity_2, variables?.entity_3, variables?.entity_4,
+        variables?.entity_5, variables?.entity_6, variables?.entity_7, variables?.entity_8
+      ].filter(Boolean);
+      return `:host{display:${(enabled && eids.length > 0) ? 'inline-block' : 'none'} !important;}`;
+    ]]]
+  styles:
+    card:
+      - width: max-content
+      - padding: 0 10px
+      - height: 34px
+      - border-radius: 999px
+      - background: var(--badge-background, rgba(0,0,0,0.18))
+      - border: 1px solid rgba(255,255,255,0.22)
+      - box-shadow: none
+    grid:
+      - grid-template-areas: "i n s"
+      - grid-template-columns: 14px auto auto
+      - column-gap: 6px
+    icon:
+      - width: 12px
+      - color: >
+          [[[
+            const cfgEids = [
+              variables?.entity_1, variables?.entity_2, variables?.entity_3, variables?.entity_4,
+              variables?.entity_5, variables?.entity_6, variables?.entity_7, variables?.entity_8
+            ].filter(Boolean);
+            const eids = cfgEids.flatMap(eid => {
+              const m = hass.states[eid]?.attributes?.entity_id;
+              return (Array.isArray(m) && m.length > 0) ? m : [eid];
+            });
+            const onCount = eids.filter(eid => hass.states[eid]?.state === 'on').length;
+            return onCount > 0 ? '#ffd700' : 'var(--badge-title-inactive)';
+          ]]]
+    name:
+      - font-size: 10px
+      - color: rgba(255,255,255,0.70)
+      - letter-spacing: 0.08em
+    state:
+      - font-size: 12px
+      - font-weight: 700
+      - color: white
+  name: Lights
+  state_display: >
+    [[[
+      const cfgEids = [
+        variables?.entity_1, variables?.entity_2, variables?.entity_3, variables?.entity_4,
+        variables?.entity_5, variables?.entity_6, variables?.entity_7, variables?.entity_8
+      ].filter(Boolean);
+      const eids = cfgEids.flatMap(eid => {
+        const m = hass.states[eid]?.attributes?.entity_id;
+        return (Array.isArray(m) && m.length > 0) ? m : [eid];
+      });
+      const onCount = eids.filter(eid => hass.states[eid]?.state === 'on').length;
+      return onCount === 0 ? 'All Off' : onCount === eids.length ? 'All On' : `${onCount} On`;
+    ]]]

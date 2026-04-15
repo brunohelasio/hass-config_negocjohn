@@ -1,0 +1,7 @@
+type: grid
+title: Top Badges
+columns: 1
+square: false
+view_layout:
+  grid-area: top_badges
+cards: !include ../../shared/grid-cards/bento_top_badges.yaml

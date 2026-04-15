@@ -1,5 +1,4 @@
 type: grid
-title: Welcome
 columns: 1
 square: false
 view_layout:

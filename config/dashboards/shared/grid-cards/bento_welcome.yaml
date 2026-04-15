@@ -1,21 +1,28 @@
 - type: markdown
   content: |
-    **Quarta, 15 Abr**  
+    <small style="letter-spacing:.12em;opacity:.6;">QUARTA, 15 ABR</small>
+
     ## Boa tarde, Bruno
 
-    🔒 Porta Principal &nbsp;&nbsp;&nbsp; ⟷  
-    🔒 Porta Serviço &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⟷
+    🔒&nbsp;&nbsp;Porta Principal&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⟷
 
-    **23° / 28°**  
-    Northwest, 24 km/h
+    🔒&nbsp;&nbsp;Porta Serviço&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⟷
 
-    10:00 24° · 11:00 25° · 12:00 27° · 13:00 28° · 14:00 26°
+    <br>
+    <span style="font-size:46px;line-height:.95;">23°</span> <span style="opacity:.6;">/ 28°</span>
+
+    <small style="opacity:.62;">Northwest, 24 km/h</small>
+
+    <small>10:00 24° · 11:00 25° · 12:00 27° · 13:00 28° · 14:00 26°</small>
   card_mod:
     style: |
       ha-card {
         height: 100%;
-        border-radius: 22px;
-        border: 1px solid rgba(255,255,255,0.16);
-        background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
-        color: white;
+        border-radius: 24px;
+        border: 1px solid rgba(173, 214, 255, 0.30);
+        background: linear-gradient(180deg, rgba(116,164,214,0.24) 0%, rgba(33,64,108,0.40) 100%);
+        backdrop-filter: blur(34px) saturate(165%);
+        -webkit-backdrop-filter: blur(34px) saturate(165%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 0 rgba(255,255,255,0.05), 0 18px 35px rgba(0,0,0,0.30);
+        color: rgba(255,255,255,0.95);
       }

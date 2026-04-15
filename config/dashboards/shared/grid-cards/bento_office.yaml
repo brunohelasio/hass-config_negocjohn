@@ -1,31 +1,37 @@
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
-    grid-template-columns: repeat(3, 1fr)
-    grid-template-rows: repeat(2, minmax(130px, 1fr))
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+    grid-template-rows: repeat(2, minmax(160px, 1fr))
     grid-gap: 10px
   cards:
     - type: markdown
-      content: "**🍽️ Cozinha**  \n2 luzes"
+      content: "## 🍽️ Cozinha\n2 luzes"
       card_mod:
-        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.10); color: white; border: 1px solid rgba(255,255,255,0.12); }"
+        style: |
+          ha-card {height:100%;border-radius:24px;border:1px solid rgba(173,214,255,.30);background:linear-gradient(180deg, rgba(116,164,214,.24), rgba(33,64,108,.40));backdrop-filter:blur(34px) saturate(165%);-webkit-backdrop-filter:blur(34px) saturate(165%);box-shadow: inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(255,255,255,.05), 0 18px 35px rgba(0,0,0,.30);color:rgba(255,255,255,.95);} 
     - type: markdown
-      content: "**🛁 Lavabo**  \nApagado"
+      content: "## 🛁 Lavabo\nApagado"
       card_mod:
-        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.10); }"
+        style: |
+          ha-card {height:100%;border-radius:24px;border:1px solid rgba(173,214,255,.30);background:linear-gradient(180deg, rgba(116,164,214,.24), rgba(33,64,108,.40));backdrop-filter:blur(34px) saturate(165%);-webkit-backdrop-filter:blur(34px) saturate(165%);box-shadow: inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(255,255,255,.05), 0 18px 35px rgba(0,0,0,.30);color:rgba(255,255,255,.95);} 
     - type: markdown
-      content: "**🚪 Corredor**  \n3 luzes"
+      content: "## 🚪 Corredor\n3 luzes"
       card_mod:
-        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.10); color: white; border: 1px solid rgba(255,255,255,0.12); }"
+        style: |
+          ha-card {height:100%;border-radius:24px;border:1px solid rgba(173,214,255,.30);background:linear-gradient(180deg, rgba(116,164,214,.24), rgba(33,64,108,.40));backdrop-filter:blur(34px) saturate(165%);-webkit-backdrop-filter:blur(34px) saturate(165%);box-shadow: inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(255,255,255,.05), 0 18px 35px rgba(0,0,0,.30);color:rgba(255,255,255,.95);} 
     - type: markdown
-      content: "**🛏️ Q. Casal**  \nApagado"
+      content: "## 🛏️ Q. Casal\nApagado"
       card_mod:
-        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.10); }"
+        style: |
+          ha-card {height:100%;border-radius:24px;border:1px solid rgba(173,214,255,.30);background:linear-gradient(180deg, rgba(116,164,214,.24), rgba(33,64,108,.40));backdrop-filter:blur(34px) saturate(165%);-webkit-backdrop-filter:blur(34px) saturate(165%);box-shadow: inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(255,255,255,.05), 0 18px 35px rgba(0,0,0,.30);color:rgba(255,255,255,.95);} 
     - type: markdown
-      content: "**🛏️ Q. Marina**  \n1 luz"
+      content: "## 🛏️ Q. Marina\n1 luz"
       card_mod:
-        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.10); color: white; border: 1px solid rgba(255,255,255,0.12); }"
+        style: |
+          ha-card {height:100%;border-radius:24px;border:1px solid rgba(173,214,255,.30);background:linear-gradient(180deg, rgba(116,164,214,.24), rgba(33,64,108,.40));backdrop-filter:blur(34px) saturate(165%);-webkit-backdrop-filter:blur(34px) saturate(165%);box-shadow: inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(255,255,255,.05), 0 18px 35px rgba(0,0,0,.30);color:rgba(255,255,255,.95);} 
     - type: markdown
-      content: "**🛏️ Q. Miguel**  \nApagado"
+      content: "## 🛏️ Q. Miguel\nApagado"
       card_mod:
-        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.10); }"
+        style: |
+          ha-card {height:100%;border-radius:24px;border:1px solid rgba(173,214,255,.30);background:linear-gradient(180deg, rgba(116,164,214,.24), rgba(33,64,108,.40));backdrop-filter:blur(34px) saturate(165%);-webkit-backdrop-filter:blur(34px) saturate(165%);box-shadow: inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(255,255,255,.05), 0 18px 35px rgba(0,0,0,.30);color:rgba(255,255,255,.95);} 

@@ -1,5 +1,4 @@
 type: grid
-title: Media
 columns: 1
 square: false
 view_layout:

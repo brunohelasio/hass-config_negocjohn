@@ -1,16 +1,22 @@
 - type: markdown
   content: |
-    **🟡 Luzes: 12 ligadas** &nbsp;&nbsp; **🔵 Clima: 22°C** &nbsp;&nbsp; **🟣 Mídia: Tocando**
-
-    <div style="float:right">🔵 B &nbsp; 🟠 D &nbsp; 🩷 M &nbsp; 🟢 Mi</div>
+    <span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);">🟡 LUZES&nbsp;&nbsp;<b>12 ligadas</b></span>
+    &nbsp;
+    <span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);">🔵 CLIMA&nbsp;&nbsp;<b>22°C</b></span>
+    &nbsp;
+    <span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);">🟣 MÍDIA&nbsp;&nbsp;<b>Tocando</b></span>
   card_mod:
     style: |
       ha-card {
-        height: 56px;
+        min-height: 56px;
         border-radius: 22px;
-        border: 1px solid rgba(255,255,255,0.14);
-        background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.07));
-        color: white;
-        display: flex;
-        align-items: center;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        padding: 2px 0;
+      }
+      ha-markdown {
+        color: rgba(255,255,255,0.92);
+        white-space: nowrap;
+        overflow: hidden;
       }

@@ -1,0 +1,17 @@
+- type: markdown
+  content: '<span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);">🟡 LUZES&nbsp;&nbsp;<b>12 ligadas</b></span>&nbsp;<span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);">🔵 CLIMA&nbsp;&nbsp;<b>22°C</b></span>&nbsp;<span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);">🟣 MÍDIA&nbsp;&nbsp;<b>Tocando</b></span>'
+  card_mod:
+    style: |
+      ha-card {
+        min-height: 64px;
+        border-radius: 22px;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        padding: 10px 0 2px;
+      }
+      ha-markdown {
+        color: rgba(255,255,255,0.92);
+        white-space: nowrap;
+        overflow: hidden;
+      }

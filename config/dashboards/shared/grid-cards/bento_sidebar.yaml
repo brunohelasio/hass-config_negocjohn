@@ -1,3 +1,70 @@
+# --- CÓDIGO ORIGINAL COMENTADO (ícones MDI espessos, card_mod glass unilateral, border-radius 0) ---
+# - type: custom:layout-card
+#   layout_type: custom:grid-layout
+#   layout:
+#     grid-template-rows: auto 1fr auto
+#     height: 100%
+#     padding: 12px 0
+#   card_mod:
+#     style: |
+#       ha-card {
+#         background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+#         backdrop-filter: blur(18px) saturate(1.2);
+#         -webkit-backdrop-filter: blur(18px) saturate(1.2);
+#         border-right: 1px solid rgba(255,255,255,0.08);
+#         border-radius: 0;
+#         border-top: none;
+#         border-bottom: none;
+#         border-left: none;
+#         box-shadow: none;
+#         height: 100%;
+#         overflow: hidden;
+#         aspect-ratio: unset;
+#         padding: 0;
+#       }
+#   cards:
+#     - type: vertical-stack
+#       cards:
+#         - &nav_icon
+#           type: custom:button-card
+#           icon: mdi:home-outline
+#           show_name: false
+#           tap_action: { action: none }
+#           hold_action: { action: none }
+#           styles:
+#             card: [width: 38px, height: 38px, margin: 3px auto, border-radius: 12px, background: transparent, border: none, box-shadow: none, padding: 0]
+#             icon: [color: rgba(255,255,255,0.92), width: 15px]
+#         - <<: *nav_icon
+#           icon: mdi:music-note-outline
+#         - <<: *nav_icon
+#           icon: mdi:shield-outline
+#         - <<: *nav_icon
+#           icon: mdi:radar
+#         - <<: *nav_icon
+#           icon: mdi:robot-vacuum
+#         - <<: *nav_icon
+#           icon: mdi:wifi
+#         - <<: *nav_icon
+#           icon: mdi:refresh
+#         - <<: *nav_icon
+#           icon: mdi:download
+#         - <<: *nav_icon
+#           icon: mdi:cube-outline
+#     - type: custom:button-card
+#       show_name: false
+#       tap_action: { action: none }
+#       hold_action: { action: none }
+#       styles:
+#         card: [background: transparent, border: none, box-shadow: none]
+#     - type: vertical-stack
+#       cards:
+#         - <<: *nav_icon
+#           icon: mdi:monitor-dashboard
+#         - <<: *nav_icon
+#           icon: mdi:power
+# --- FIM CÓDIGO ORIGINAL ---
+
+# NOVO: vidro fosco com border-radius 12px + ícones SVG de linha fina (Feather-style, stroke-width 1.5)
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
@@ -7,57 +74,114 @@
   card_mod:
     style: |
       ha-card {
-        background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-        backdrop-filter: blur(18px) saturate(1.2);
-        -webkit-backdrop-filter: blur(18px) saturate(1.2);
-        border-right: 1px solid rgba(255,255,255,0.08);
-        border-radius: 0;
-        border-top: none;
-        border-bottom: none;
-        border-left: none;
-        box-shadow: none;
+        background: rgba(255,255,255,0.07);
+        backdrop-filter: blur(20px) saturate(1.2);
+        -webkit-backdrop-filter: blur(20px) saturate(1.2);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
         height: 100%;
         overflow: hidden;
-        aspect-ratio: unset;
-        padding: 0;
       }
   cards:
     - type: vertical-stack
       cards:
-        - &nav_icon
+        # ── base SVG (home) ─────────────────────────────────────
+        - &nav_svg
           type: custom:button-card
-          icon: mdi:home-outline
+          show_icon: false
           show_name: false
+          show_state: false
           tap_action: { action: none }
           hold_action: { action: none }
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+              ]]]
           styles:
-            card: [width: 38px, height: 38px, margin: 3px auto, border-radius: 12px, background: transparent, border: none, box-shadow: none, padding: 0]
-            icon: [color: rgba(255,255,255,0.92), width: 15px]
-        - <<: *nav_icon
-          icon: mdi:music-note-outline
-        - <<: *nav_icon
-          icon: mdi:shield-outline
-        - <<: *nav_icon
-          icon: mdi:radar
-        - <<: *nav_icon
-          icon: mdi:robot-vacuum
-        - <<: *nav_icon
-          icon: mdi:wifi
-        - <<: *nav_icon
-          icon: mdi:refresh
-        - <<: *nav_icon
-          icon: mdi:download
-        - <<: *nav_icon
-          icon: mdi:cube-outline
+            card: [width: 38px, height: 38px, margin: 3px auto, border-radius: 10px, background: transparent, border: none, box-shadow: none, padding: 0]
+            custom_fields:
+              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
+            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr]
+        # ── música ──────────────────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+              ]]]
+        # ── segurança ────────────────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+              ]]]
+        # ── atividade / radar ────────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>';
+              ]]]
+        # ── vacuum ──────────────────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="3" x2="12" y2="5"/></svg>';
+              ]]]
+        # ── wifi ────────────────────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>';
+              ]]]
+        # ── refresh ─────────────────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+              ]]]
+        # ── download ────────────────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+              ]]]
+        # ── cubo ────────────────────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+              ]]]
+    # ── espaçador flexível ───────────────────────────────────────
     - type: custom:button-card
+      show_icon: false
       show_name: false
       tap_action: { action: none }
       hold_action: { action: none }
       styles:
         card: [background: transparent, border: none, box-shadow: none]
+    # ── grupo inferior ────────────────────────────────────────────
     - type: vertical-stack
       cards:
-        - <<: *nav_icon
-          icon: mdi:monitor-dashboard
-        - <<: *nav_icon
-          icon: mdi:power
+        # ── monitor / dashboard ──────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+              ]]]
+        # ── power ───────────────────────────────────────────────
+        - <<: *nav_svg
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>';
+              ]]]

@@ -1,0 +1,51 @@
+#################################################
+#                                               #
+#                  CALENDÁRIO                   #
+#                                               #
+#################################################
+- type: vertical-stack
+  title: Calendário
+  view_layout:
+    grid-area: calendar_card
+    show:
+      mediaquery: '(min-width: 801px) and (min-height: 463px)'
+  cards:
+    # Card principal com ação para popup completo.
+    - type: custom:button-card
+      entity: sensor.time
+      name: Calendário
+      icon: mdi:calendar-month
+      template:
+        - base
+      tap_action: !include ../../shared/popup/calendar.yaml
+      show_state: true
+      state_display: >
+        [[[
+          return new Date().toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'2-digit' });
+        ]]]
+      styles:
+        card:
+          - min-height: 110px
+    # Preview compacto do próximo evento (entidade ajustável no HA).
+    - type: markdown
+      content: |
+        ### Próximos eventos
+        Abra o calendário para ver a agenda completa.
+
+- type: conditional
+  view_layout:
+    grid-area: calendar_card
+  conditions:
+    - condition: screen
+      media_query: '(max-width: 800px) and (min-height: 463px)'
+    - condition: state
+      entity: input_select.mobile_dashboard_tab
+      state: home
+  card:
+    type: custom:button-card
+    entity: sensor.time
+    name: Calendário
+    icon: mdi:calendar-month
+    template:
+      - base
+    tap_action: !include ../../shared/popup/calendar.yaml

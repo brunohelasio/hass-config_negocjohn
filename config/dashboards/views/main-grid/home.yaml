@@ -11,6 +11,7 @@
     #   mediaquery: '(max-width: 1440px) and (min-height: 463px) and (orientation: portrait)'
     # FIX: formato explicito por breakpoint — exclui landscape tablet e desktop
     show:
-      mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)'
+      # ANTERIOR: mediaquery: '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)'
+      mediaquery: '(max-width: 0px)'
   columns: 2
   cards: !include ../../shared/grid-cards/home-status.yaml

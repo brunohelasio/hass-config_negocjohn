@@ -6,7 +6,8 @@
 type: custom:button-card
 entity: sensor.time
 template:
-  - sidebar_template
+  # ANTERIOR: - sidebar_template
+  - sidebar_nav_template
 card_mod:
   style: |
     @media (max-width: 800px) {

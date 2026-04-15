@@ -4,4 +4,15 @@
 #                                               #
 #################################################
 # AHOJ!!! Main footer
-- !include ../../shared/footer-shared.yaml
+# ANTERIOR:
+# - !include ../../shared/footer-shared.yaml
+#
+# BENTO: footer horizontal removido do desktop (ações migradas para sidebar compacta).
+# Mantido no código para restauração rápida.
+- type: conditional
+  conditions:
+    - condition: screen
+      media_query: '(max-width: 0px)'
+  card:
+    type: markdown
+    content: Footer desativado no layout Bento.

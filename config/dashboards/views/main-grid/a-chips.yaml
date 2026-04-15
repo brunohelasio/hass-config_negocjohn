@@ -5,9 +5,11 @@
 #################################################
 - type: custom:layout-card
   view_layout:
-    grid-area: chips
+    # ANTERIOR: grid-area: chips
+    grid-area: top_badges
     show:
-      mediaquery: '(max-width: 0px)'
+      # ANTERIOR: mediaquery: '(max-width: 0px)'
+      mediaquery: '(min-width: 801px) and (min-height: 463px)'
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))
@@ -100,8 +102,10 @@
 #################################################
 - type: horizontal-stack
   view_layout:
-    grid-area: chips
+    # ANTERIOR: grid-area: chips
+    grid-area: top_badges
     show:
+      # ANTERIOR: mediaquery: '(max-width: 0px)'
       mediaquery: '(max-width: 0px)'
   cards:
     - *lights

@@ -8,7 +8,8 @@
   view_layout:
     grid-area: devices
     show:
-      mediaquery: '(min-width: 801px) and (min-height: 463px)'
+      # ANTERIOR: mediaquery: '(min-width: 801px) and (min-height: 463px)'
+      mediaquery: '(max-width: 0px)'
   columns: 2
   cards: !include ../../shared/grid-cards/common-rooms.yaml
 
@@ -17,7 +18,8 @@
     grid-area: devices
   conditions:
     - condition: screen
-      media_query: '(max-width: 800px) and (min-height: 463px)'
+      # ANTERIOR: media_query: '(max-width: 800px) and (min-height: 463px)'
+      media_query: '(max-width: 0px)'
     - condition: state
       entity: input_select.mobile_dashboard_tab
       state: comodos

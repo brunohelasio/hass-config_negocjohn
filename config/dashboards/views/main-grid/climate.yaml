@@ -5,17 +5,20 @@
 #################################################
 - type: grid
   view_layout:
-    grid-area: climate
+    # ANTERIOR: grid-area: climate
+    grid-area: sala_feature
     show:
       mediaquery: '(min-width: 801px) and (min-height: 463px)'
-  title: Climate
+  # ANTERIOR: title: Climate
+  title: Sala
   columns: 1
   square: false
   cards: !include ../../shared/grid-cards/climate-status.yaml
 
 - type: conditional
   view_layout:
-    grid-area: climate
+    # ANTERIOR: grid-area: climate
+    grid-area: sala_feature
   conditions:
     - condition: screen
       media_query: '(max-width: 800px) and (min-height: 463px)'
@@ -24,7 +27,8 @@
       state: clima_midia
   card:
     type: grid
-    title: Climate
+    # ANTERIOR: title: Climate
+    title: Sala
     columns: 1
     square: false
     cards: !include ../../shared/grid-cards/climate-status.yaml

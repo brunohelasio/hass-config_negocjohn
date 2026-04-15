@@ -1,15 +1,15 @@
 - type: markdown
   content: |
-    <small style="letter-spacing:.12em;opacity:.6;">QUARTA, 15 ABR</small>
+    <small style="letter-spacing:.12em;opacity:.58;">QUARTA, 15 ABR</small>
 
     ## Boa tarde, Bruno
 
-    🔒&nbsp;&nbsp;Porta Principal&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⟷
+    🔒  Porta Principal            ⟷
 
-    🔒&nbsp;&nbsp;Porta Serviço&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⟷
+    🔒  Porta Serviço              ⟷
 
     <br>
-    <span style="font-size:46px;line-height:.95;">23°</span> <span style="opacity:.6;">/ 28°</span>
+    <span style="font-size:46px;line-height:.95;">23°</span> <span style="opacity:.56;">/ 28°</span>
 
     <small style="opacity:.62;">Northwest, 24 km/h</small>
 
@@ -19,10 +19,10 @@
       ha-card {
         height: 100%;
         border-radius: 24px;
-        border: 1px solid rgba(173, 214, 255, 0.30);
-        background: linear-gradient(180deg, rgba(116,164,214,0.24) 0%, rgba(33,64,108,0.40) 100%);
-        backdrop-filter: blur(34px) saturate(165%);
-        -webkit-backdrop-filter: blur(34px) saturate(165%);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.30), inset 0 -1px 0 rgba(255,255,255,0.05), 0 18px 35px rgba(0,0,0,0.30);
+        border: 1px solid rgba(255,255,255,0.18);
+        background: linear-gradient(180deg, rgba(132,175,236,0.22) 0%, rgba(98,146,212,0.16) 55%, rgba(34,63,104,0.30) 100%);
+        backdrop-filter: blur(34px) saturate(155%);
+        -webkit-backdrop-filter: blur(34px) saturate(155%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.24), 0 2px 10px rgba(0,0,0,0.14);
         color: rgba(255,255,255,0.95);
       }

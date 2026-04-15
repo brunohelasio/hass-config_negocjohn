@@ -22,120 +22,49 @@ card_mod:
       height: 100%;
     }
 layout:
-  # default:
+  # BENTO GRID (FASE 1)
+  # Regra de Ouro aplicada: configuração anterior preservada em comentários abaixo.
   margin: 0
   padding: 0
-  grid-gap: 3.0vw 3vw
-  # ... (MANTENHA O RESTANTE DO SEU ARQUIVO MAIN.YAML INTACTO A PARTIR DAQUI) ...
-  # ANTERIOR: sidebar ~20% + 4 colunas de conteudo (incluia areas other/movies visiveis)
-  # grid-template-columns: 0 minmax(220px, 20%) repeat(4, minmax(0, 1fr)) 0
-  # HOTFIX FINAL (2026-03-30): sidebar fixa em 27% + 3 colunas de conteudo igualmente distribuidas.
-  # ANTERIOR: grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
-  # NOVO: sidebar edge-to-edge (sem coluna 0 à esquerda), 25.5% conforme solicitado
-  grid-template-columns: minmax(260px, 25.5%) repeat(3, minmax(0, 1fr)) 0
-  # ANTERIOR:
-  # grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-  grid-template-rows: repeat(2, fit-content(100%)) min-content 0
-  # ESTRATEGIA SAGALAND: todas as grid-areas em todos os breakpoints
-  # Areas ocultas ficam em linhas de altura 0 — nenhum card orfao
-  # floorplan adicionado em row h=0 para evitar card orfao
-  # ANTERIOR:
-  # grid-template-areas: |
-  #   ". sidebar   security   mainrooms devices  ."
-  #   ". sidebar   cameras    climate   media    ."
-  #   ". sidebar   footer     footer    footer   ."
-  #   ". .         floorplan  .         .        ."
-  # NOVO: sidebar na primeira coluna (sem "." à esquerda)
+  grid-gap: 0.9rem
+  # ANTERIOR (preservado):
+  # grid-template-columns: minmax(260px, 25.5%) repeat(3, minmax(0, 1fr)) 0
+  # NOVO: sidebar estreita + conteúdo em 12 colunas.
+  grid-template-columns: minmax(72px, 88px) repeat(12, minmax(0, 1fr))
+  grid-template-rows: auto minmax(160px, auto) minmax(220px, auto) minmax(220px, auto)
   grid-template-areas: |
-    "sidebar security   mainrooms devices  ."
-    "sidebar cameras    climate   media    ."
-    "sidebar footer     footer    footer   ."
-    "sidebar floorplan  .         .        ."
+    "sidebar top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges"
+    "sidebar welcome_locks welcome_locks welcome_locks sala_feature sala_feature sala_feature office_tall rooms_grid rooms_grid rooms_grid rooms_grid rooms_grid"
+    "sidebar cameras_big   cameras_big   cameras_big   cameras_big   cameras_big   calendar_card calendar_card calendar_card roborock_tall media media media"
+    "sidebar cameras_big   cameras_big   cameras_big   cameras_big   cameras_big   calendar_card calendar_card calendar_card roborock_tall media media media"
 
   mediaquery:
-    # tablet landscape (e.g. 2000x1200)
-    '(min-width: 1441px) and (max-width: 2000px)':
-      grid-gap: 3.0vw 3vw
-      # ANTERIOR: grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
-      grid-template-columns: minmax(260px, 25.5%) repeat(3, minmax(0, 1fr)) 0
-      # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-      grid-template-rows: repeat(2, fit-content(100%)) min-content 0
-      # ANTERIOR:
-      # grid-template-areas: |
-      #   ". sidebar   security   mainrooms devices  ."
-      #   ". sidebar   cameras    climate   media    ."
-      #   ". sidebar   footer     footer    footer   ."
-      #   ". .         floorplan  .         .        ."
-      grid-template-areas: |
-        "sidebar security   mainrooms devices  ."
-        "sidebar cameras    climate   media    ."
-        "sidebar footer     footer    footer   ."
-        "sidebar floorplan  .         .        ."
-    # tablet landscape (e.g. 801-1440px) - with sidebar
-    # Estrategia Sagaland: 3 colunas + sidebar, areas ocultas em h=0
-    '(min-width: 801px) and (max-width: 1440px) and (orientation: landscape)':
-      # Espaçamento inspirado no hass-config do sagaland93 para separar blocos.
-      grid-gap: 3.0vw 3vw
-      # ANTERIOR: grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
-      grid-template-columns: minmax(260px, 25.5%) repeat(3, minmax(0, 1fr)) 0
-      # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-      grid-template-rows: repeat(2, fit-content(100%)) min-content 0
-      # ANTERIOR:
-      # grid-template-areas: |
-      #   ". sidebar  security   mainrooms devices  ."
-      #   ". sidebar  cameras    climate   media    ."
-      #   ". sidebar  footer     footer    footer   ."
-      #   ". .        floorplan  .         .        ."
-      grid-template-areas: |
-        "sidebar security   mainrooms devices  ."
-        "sidebar cameras    climate   media    ."
-        "sidebar footer     footer    footer   ."
-        "sidebar floorplan  .         .        ."
-    # portrait — Sagaland: areas ocultas (sidebar, chips, movies) em h=0
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
-      grid-gap: 4.4vw 3vw
-      # ANTERIOR: grid-template-columns: 0 minmax(260px, 27%) repeat(3, minmax(0, 1fr)) 0
-      grid-template-columns: minmax(260px, 25.5%) repeat(3, minmax(0, 1fr)) 0
-      # ANTERIOR: grid-template-rows: 0 repeat(2, fit-content(100%)) min-content 0
-      grid-template-rows: repeat(2, fit-content(100%)) min-content 0
-      # ANTERIOR:
-      # grid-template-areas: |
-      #   ". sidebar  security   mainrooms devices  ."
-      #   ". sidebar  cameras    climate   media    ."
-      #   ". sidebar  footer     footer    footer   ."
-      #   ". .        floorplan  .         .        ."
+      grid-gap: 0.8rem
+      grid-template-columns: minmax(64px, 80px) repeat(12, minmax(0, 1fr))
+      grid-template-rows: auto minmax(140px, auto) minmax(200px, auto) minmax(200px, auto)
       grid-template-areas: |
-        "sidebar security   mainrooms devices  ."
-        "sidebar cameras    climate   media    ."
-        "sidebar footer     footer    footer   ."
-        "sidebar floorplan  .         .        ."
-    # phone — Sagaland: areas ocultas (sidebar, movies) em h=0
+        "sidebar top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges"
+        "sidebar welcome_locks welcome_locks welcome_locks sala_feature sala_feature sala_feature office_tall rooms_grid rooms_grid rooms_grid rooms_grid rooms_grid"
+        "sidebar cameras_big   cameras_big   cameras_big   cameras_big   cameras_big   calendar_card calendar_card calendar_card roborock_tall media media media"
+        "sidebar cameras_big   cameras_big   cameras_big   cameras_big   cameras_big   calendar_card calendar_card calendar_card roborock_tall media media media"
+    # Mobile fallback simples e estável para evitar quebra.
     '(max-width: 800px) and (min-height: 463px)':
       margin: 0
       grid-gap: 0.9rem
       grid-template-columns: 1fr
-      # ANTERIOR:
-      # grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) min-content 0 0
-      # grid-template-areas: |
-      #   ". sidebar     sidebar   ."
-      #   ". home        security  ."
-      #   ". media       cameras   ."
-      #   ". mainrooms   devices   ."
-      #   ". other       climate   ."
-      #   ". footer      footer    ."
-      #   ". movies      movies    ."
-      #   ". floorplan   .         ."
-      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) min-content 0
+      grid-template-rows: repeat(10, min-content)
       grid-template-areas: |
         "sidebar"
-        "security"
-        "cameras"
-        "mainrooms"
-        "devices"
-        "climate"
+        "top_badges"
+        "welcome_locks"
+        "sala_feature"
+        "office_tall"
+        "rooms_grid"
+        "cameras_big"
+        "calendar_card"
+        "roborock_tall"
         "media"
-        "footer"
-        "floorplan"
     # phone cover screen = place horizontal
     '(max-height: 462px)':
       grid-gap: 0.5rem

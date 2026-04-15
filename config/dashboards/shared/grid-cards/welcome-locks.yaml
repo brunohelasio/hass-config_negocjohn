@@ -1,0 +1,19 @@
+# WELCOME + LOCKS (BENTO)
+#################################################
+# ANTERIOR no bloco security-status:
+# - grid_front_door
+# - grid_cameras_button
+# - grid_contact_sensors
+# - grid_motion_sensors
+#
+# NOVO: card de boas-vindas + portas como card principal.
+
+- type: markdown
+  content: >
+    {% set h = now().hour %}
+    {% set saudacao = 'Bom dia' if h < 12 else 'Boa tarde' if h < 18 else 'Boa noite' %}
+    ## {{ saudacao }}, Bruno!
+    {{ now().strftime('%d/%m/%Y') }} · Neklanka Home
+
+- type: custom:streamline-card
+  template: grid_front_door

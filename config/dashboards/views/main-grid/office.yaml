@@ -1,32 +1,30 @@
 #################################################
 #                                               #
-#                     SECURITY                  #
+#                   OFFICE 1x2                  #
 #                                               #
 #################################################
 - type: grid
-  # ANTERIOR: title: Security
-  title: Portas
+  title: Office
   view_layout:
-    # ANTERIOR: grid-area: security
-    grid-area: welcome_locks
+    grid-area: office_tall
     show:
       mediaquery: '(min-width: 801px) and (min-height: 463px)'
   columns: 1
-  cards: !include ../../shared/grid-cards/welcome-locks.yaml
+  square: false
+  cards: !include ../../shared/grid-cards/office-bento.yaml
 
 - type: conditional
   view_layout:
-    # ANTERIOR: grid-area: security
-    grid-area: welcome_locks
+    grid-area: office_tall
   conditions:
     - condition: screen
       media_query: '(max-width: 800px) and (min-height: 463px)'
     - condition: state
       entity: input_select.mobile_dashboard_tab
-      state: home
+      state: comodos
   card:
     type: grid
-    # ANTERIOR: title: Security
-    title: Portas
+    title: Office
     columns: 1
-    cards: !include ../../shared/grid-cards/welcome-locks.yaml
+    square: false
+    cards: !include ../../shared/grid-cards/office-bento.yaml

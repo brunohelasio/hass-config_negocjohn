@@ -1,0 +1,41 @@
+#################################################
+#                                               #
+#                 ROBOROCK 1x2                  #
+#                                               #
+#################################################
+- type: vertical-stack
+  view_layout:
+    grid-area: roborock_tall
+    show:
+      mediaquery: '(min-width: 801px) and (min-height: 463px)'
+  cards:
+    - type: custom:button-card
+      entity: vacuum.roborock_s7
+      name: Roborock
+      icon: mdi:robot-vacuum
+      template:
+        - base
+      tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
+      hold_action:
+        action: more-info
+      styles:
+        card:
+          - min-height: 250px
+
+- type: conditional
+  view_layout:
+    grid-area: roborock_tall
+  conditions:
+    - condition: screen
+      media_query: '(max-width: 800px) and (min-height: 463px)'
+    - condition: state
+      entity: input_select.mobile_dashboard_tab
+      state: home
+  card:
+    type: custom:button-card
+    entity: vacuum.roborock_s7
+    name: Roborock
+    icon: mdi:robot-vacuum
+    template:
+      - base
+    tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml

@@ -14,6 +14,39 @@
 #   com expand/collapse + acoes rapidas         #
 #                                               #
 #################################################
+sidebar_nav_template:
+  show_state: false
+  show_icon: false
+  tap_action:
+    action: none
+  hold_action:
+    action: none
+  name: >
+    [[[
+      const go = (path) => `event.stopPropagation(); window.location.assign('${path}');`;
+      const moreInfo = (entityId) => `event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: '${entityId}'}; this.dispatchEvent(ev);`;
+      return `
+        <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 0;">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div onclick="${go('/summary')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:home-outline"></ha-icon></div>
+            <div onclick="${go('/mass-media')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:music-note-outline"></ha-icon></div>
+            <div onclick="${go('/mobile-security-cameras')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:shield-home-outline"></ha-icon></div>
+            <div onclick="${moreInfo('vacuum.roborock_s7')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:robot-vacuum"></ha-icon></div>
+            <div onclick="${moreInfo('binary_sensor.unifi_controller_alert')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:router-wireless"></ha-icon></div>
+          </div>
+          <div onclick="${go('/system')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:cog-outline"></ha-icon></div>
+        </div>
+      `;
+    ]]]
+  styles:
+    card:
+      - background: "rgb(0, 0, 0)"
+      - border-radius: "0"
+      - border: "none"
+      - box-shadow: "none"
+      - height: "100%"
+      - overflow: "hidden"
+
 sidebar_template:
   show_state: false
   show_icon: false

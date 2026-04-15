@@ -1,0 +1,31 @@
+- type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: repeat(3, 1fr)
+    grid-template-rows: repeat(2, minmax(130px, 1fr))
+    grid-gap: 10px
+  cards:
+    - type: markdown
+      content: "**🍽️ Cozinha**  \n2 luzes"
+      card_mod:
+        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.10); color: white; border: 1px solid rgba(255,255,255,0.12); }"
+    - type: markdown
+      content: "**🛁 Lavabo**  \nApagado"
+      card_mod:
+        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.10); }"
+    - type: markdown
+      content: "**🚪 Corredor**  \n3 luzes"
+      card_mod:
+        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.10); color: white; border: 1px solid rgba(255,255,255,0.12); }"
+    - type: markdown
+      content: "**🛏️ Q. Casal**  \nApagado"
+      card_mod:
+        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.10); }"
+    - type: markdown
+      content: "**🛏️ Q. Marina**  \n1 luz"
+      card_mod:
+        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.10); color: white; border: 1px solid rgba(255,255,255,0.12); }"
+    - type: markdown
+      content: "**🛏️ Q. Miguel**  \nApagado"
+      card_mod:
+        style: "ha-card { border-radius: 20px; background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.10); }"

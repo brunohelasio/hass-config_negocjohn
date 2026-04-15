@@ -1,0 +1,17 @@
+- type: markdown
+  content: |
+    **Mídia**
+
+    🎵 As It Was  
+    Harry Styles · Sala
+
+    ⏯ ▶⏭  TV Sala
+  card_mod:
+    style: |
+      ha-card {
+        height: 100%;
+        border-radius: 22px;
+        border: 1px solid rgba(167,139,250,0.26);
+        background: linear-gradient(180deg, rgba(167,139,250,0.20), rgba(167,139,250,0.08));
+        color: white;
+      }

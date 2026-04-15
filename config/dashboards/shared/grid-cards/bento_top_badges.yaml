@@ -1,0 +1,78 @@
+- type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: repeat(3, minmax(140px, 1fr))
+    grid-gap: 8px
+    margin: 0
+    padding: 0
+  cards:
+    - &lights
+      type: custom:button-card
+      name: Luzes
+      entity: group.light_all
+      icon: mdi:lightbulb-group
+      template:
+        - chips
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      state_display: >
+        [[[
+            if (variables.state == 'off') return 'Todas apagadas';
+            else return variables.light_on;
+        ]]]
+      styles:
+        icon:
+          - color: >
+              [[[
+                return variables.state_on
+                  ? '#b68752'
+                  : '';
+              ]]]
+
+    - &media
+      type: custom:button-card
+      name: Mídia
+      entity: sensor.currently_playing
+      icon: custom:ios-hifi-stereo
+      template:
+        - chips
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      state_display: >
+        [[[
+            if (!variables.state_on) return 'Nenhuma';
+            else return entity.attributes.device_playing;
+        ]]]
+      styles:
+        icon:
+          - color: >
+              [[[
+                return variables.state_on
+                  ? '#607D8B'
+                  : '';
+              ]]]
+
+    - &climate
+      type: custom:button-card
+      name: Clima
+      entity: sensor.home_climate
+      icon: mdi:snowflake
+      template:
+        - chips
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      state_display: >
+        [[[
+            return entity?.attributes?.average_temperature
+              ? `${Math.round(entity.attributes.average_temperature)}°C`
+              : (entity?.state || '—');
+        ]]]
+      styles:
+        icon:
+          - color: '#60a5fa'

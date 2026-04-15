@@ -1,0 +1,39 @@
+- type: markdown
+  content: |
+    <small style="letter-spacing:.12em;opacity:.58;">AGENDA</small>
+
+    <br>
+
+    15h00 · Reunião
+
+    18h30 · Academia
+
+    20h00 · Jantar
+
+    21h30 · Lembrete
+  card_mod:
+    style: |
+      ha-card {
+        --ios-blue: rgba(10, 132, 255, 0.3);
+        --ios-blue-glow: rgba(10, 132, 255, 0.6);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        height: 100%;
+        border-radius: 24px;
+        background: var(--ios-blue);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid var(--glass-border);
+        border-top: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 25px var(--ios-blue-glow), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        color: #ffffff;
+        transition: all 0.3s ease;
+      }
+      ha-card:hover {
+        background: rgba(10, 132, 255, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3), 0 0 35px rgba(10, 132, 255, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+      }
+      ha-card:active {
+        transform: translateY(1px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2), 0 0 15px var(--ios-blue-glow), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+      }

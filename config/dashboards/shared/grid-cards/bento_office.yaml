@@ -1,0 +1,91 @@
+- type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+    grid-template-rows: repeat(2, minmax(160px, 1fr))
+    grid-gap: 10px
+  cards:
+    - type: markdown
+      content: "## 🍽️ Cozinha\n2 luzes"
+      card_mod:
+        style: |
+          ha-card {
+            height: 100%;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: linear-gradient(180deg, rgba(132,175,236,0.22) 0%, rgba(98,146,212,0.16) 55%, rgba(34,63,104,0.30) 100%);
+            backdrop-filter: blur(34px) saturate(155%);
+            -webkit-backdrop-filter: blur(34px) saturate(155%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.24), 0 2px 10px rgba(0,0,0,0.14);
+            color: rgba(255,255,255,0.95);
+          }
+    - type: markdown
+      content: "## 🛁 Lavabo\nApagado"
+      card_mod:
+        style: |
+          ha-card {
+            height: 100%;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: linear-gradient(180deg, rgba(132,175,236,0.22) 0%, rgba(98,146,212,0.16) 55%, rgba(34,63,104,0.30) 100%);
+            backdrop-filter: blur(34px) saturate(155%);
+            -webkit-backdrop-filter: blur(34px) saturate(155%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.24), 0 2px 10px rgba(0,0,0,0.14);
+            color: rgba(255,255,255,0.95);
+          }
+    - type: markdown
+      content: "## 🚪 Corredor\n3 luzes"
+      card_mod:
+        style: |
+          ha-card {
+            height: 100%;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: linear-gradient(180deg, rgba(132,175,236,0.22) 0%, rgba(98,146,212,0.16) 55%, rgba(34,63,104,0.30) 100%);
+            backdrop-filter: blur(34px) saturate(155%);
+            -webkit-backdrop-filter: blur(34px) saturate(155%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.24), 0 2px 10px rgba(0,0,0,0.14);
+            color: rgba(255,255,255,0.95);
+          }
+    - type: markdown
+      content: "## 🛏️ Q. Casal\nApagado"
+      card_mod:
+        style: |
+          ha-card {
+            height: 100%;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: linear-gradient(180deg, rgba(132,175,236,0.22) 0%, rgba(98,146,212,0.16) 55%, rgba(34,63,104,0.30) 100%);
+            backdrop-filter: blur(34px) saturate(155%);
+            -webkit-backdrop-filter: blur(34px) saturate(155%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.24), 0 2px 10px rgba(0,0,0,0.14);
+            color: rgba(255,255,255,0.95);
+          }
+    - type: markdown
+      content: "## 🛏️ Q. Marina\n1 luz"
+      card_mod:
+        style: |
+          ha-card {
+            height: 100%;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: linear-gradient(180deg, rgba(132,175,236,0.22) 0%, rgba(98,146,212,0.16) 55%, rgba(34,63,104,0.30) 100%);
+            backdrop-filter: blur(34px) saturate(155%);
+            -webkit-backdrop-filter: blur(34px) saturate(155%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.24), 0 2px 10px rgba(0,0,0,0.14);
+            color: rgba(255,255,255,0.95);
+          }
+    - type: markdown
+      content: "## 🛏️ Q. Miguel\nApagado"
+      card_mod:
+        style: |
+          ha-card {
+            height: 100%;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: linear-gradient(180deg, rgba(132,175,236,0.22) 0%, rgba(98,146,212,0.16) 55%, rgba(34,63,104,0.30) 100%);
+            backdrop-filter: blur(34px) saturate(155%);
+            -webkit-backdrop-filter: blur(34px) saturate(155%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.24), 0 2px 10px rgba(0,0,0,0.14);
+            color: rgba(255,255,255,0.95);
+          }

@@ -1,0 +1,28 @@
+- type: markdown
+  content: |
+    <small style="letter-spacing:.12em;opacity:.58;">QUARTA, 15 ABR</small>
+
+    ## Boa tarde, Bruno
+
+    🔒  Porta Principal            ⟷
+
+    🔒  Porta Serviço              ⟷
+
+    <br>
+    <span style="font-size:46px;line-height:.95;">23°</span> <span style="opacity:.56;">/ 28°</span>
+
+    <small style="opacity:.62;">Northwest, 24 km/h</small>
+
+    <small>10:00 24° · 11:00 25° · 12:00 27° · 13:00 28° · 14:00 26°</small>
+  card_mod:
+    style: |
+      ha-card {
+        height: 100%;
+        border-radius: 24px;
+        border: 1px solid rgba(255,255,255,0.18);
+        background: linear-gradient(180deg, rgba(132,175,236,0.22) 0%, rgba(98,146,212,0.16) 55%, rgba(34,63,104,0.30) 100%);
+        backdrop-filter: blur(34px) saturate(155%);
+        -webkit-backdrop-filter: blur(34px) saturate(155%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), inset 0 -1px 0 rgba(255,255,255,0.04), 0 10px 30px rgba(0,0,0,0.24), 0 2px 10px rgba(0,0,0,0.14);
+        color: rgba(255,255,255,0.95);
+      }

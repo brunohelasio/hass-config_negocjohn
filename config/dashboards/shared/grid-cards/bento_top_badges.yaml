@@ -1,17 +1,52 @@
-- type: markdown
-  content: '<span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);">🟡 LUZES&nbsp;&nbsp;<b>12 ligadas</b></span>&nbsp;<span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);">🔵 CLIMA&nbsp;&nbsp;<b>22°C</b></span>&nbsp;<span style="display:inline-block;padding:6px 14px;border-radius:999px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.08));border:1px solid rgba(255,255,255,.25);">🟣 MÍDIA&nbsp;&nbsp;<b>Tocando</b></span>'
-  card_mod:
-    style: |
-      ha-card {
-        min-height: 64px;
-        border-radius: 22px;
-        border: none;
-        background: transparent;
-        box-shadow: none;
-        padding: 10px 0 2px;
-      }
-      ha-markdown {
-        color: rgba(255,255,255,0.92);
-        white-space: nowrap;
-        overflow: hidden;
-      }
+- type: horizontal-stack
+  cards:
+    - type: custom:button-card
+      entity: group.light_all
+      icon: mdi:lightbulb-group
+      name: Luzes
+      tap_action: { action: none }
+      hold_action: { action: none }
+      state_display: >
+        [[[
+          const n = states['sensor.lights_count']?.state;
+          return (n && n !== 'unknown') ? `${n} ligadas` : (entity?.state === 'on' ? 'Ativas' : 'Desligadas');
+        ]]]
+      styles:
+        card: [height: 42px, border-radius: 999px, padding: 0 12px, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.22)]
+        grid: [grid-template-areas: 'i n s', grid-template-columns: 18px auto auto, column-gap: 8px]
+        name: [font-size: 11px, color: rgba(255,255,255,0.62), text-transform: uppercase, letter-spacing: 0.12em]
+        state: [font-size: 12px, font-weight: 700, color: white]
+        icon: [color: '#fbbf24', width: 14px]
+    - type: custom:button-card
+      entity: weather.forecast_casa
+      icon: mdi:thermometer
+      name: Clima
+      tap_action: { action: none }
+      hold_action: { action: none }
+      state_display: >
+        [[[
+          const t = states['weather.forecast_casa']?.attributes?.temperature;
+          return (t !== undefined && t !== null) ? `${Math.round(t)}°C` : '—';
+        ]]]
+      styles:
+        card: [height: 42px, border-radius: 999px, padding: 0 12px, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.22)]
+        grid: [grid-template-areas: 'i n s', grid-template-columns: 18px auto auto, column-gap: 8px]
+        name: [font-size: 11px, color: rgba(255,255,255,0.62), text-transform: uppercase, letter-spacing: 0.12em]
+        state: [font-size: 12px, font-weight: 700, color: white]
+        icon: [color: '#60a5fa', width: 14px]
+    - type: custom:button-card
+      entity: sensor.currently_playing
+      icon: mdi:music-circle
+      name: Mídia
+      tap_action: { action: none }
+      hold_action: { action: none }
+      state_display: >
+        [[[
+          return states['sensor.currently_playing']?.attributes?.device_playing || 'Parada';
+        ]]]
+      styles:
+        card: [height: 42px, border-radius: 999px, padding: 0 12px, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.22)]
+        grid: [grid-template-areas: 'i n s', grid-template-columns: 18px auto auto, column-gap: 8px]
+        name: [font-size: 11px, color: rgba(255,255,255,0.62), text-transform: uppercase, letter-spacing: 0.12em]
+        state: [font-size: 12px, font-weight: 700, color: white]
+        icon: [color: '#a78bfa', width: 14px]

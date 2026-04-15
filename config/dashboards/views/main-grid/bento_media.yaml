@@ -1,0 +1,7 @@
+- type: grid
+  title: Media
+  columns: 1
+  square: false
+  view_layout:
+    grid-area: media
+  cards: !include ../../shared/grid-cards/bento_media.yaml

@@ -1,0 +1,17 @@
+- type: markdown
+  content: |
+    **📷 Câmeras · 4 online**
+
+    Entrada | Sala  
+    Garagem | Quintal
+
+    (mock visual)
+  card_mod:
+    style: |
+      ha-card {
+        height: 100%;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.14);
+        background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05));
+        color: white;
+      }

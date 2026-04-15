@@ -1,0 +1,7 @@
+- type: grid
+  title: Roborock
+  columns: 1
+  square: false
+  view_layout:
+    grid-area: roborock
+  cards: !include ../../shared/grid-cards/bento_roborock.yaml

@@ -1,0 +1,30 @@
+- type: markdown
+  content: |
+    ### ⌂
+    ♪
+    🛡️
+    🧭
+    🤖
+    📶
+    ⟳
+    ⬇
+    ◻
+
+    <br>
+
+    ⚙️
+    ⏻
+  card_mod:
+    style: |
+      ha-card {
+        height: 100%;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.16);
+        background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+        color: white;
+      }
+      ha-markdown {
+        text-align: center;
+        line-height: 1.9;
+        font-size: 18px;
+      }

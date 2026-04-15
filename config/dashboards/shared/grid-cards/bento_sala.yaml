@@ -1,0 +1,19 @@
+- type: markdown
+  content: |
+    ## 🛋️ Sala
+    22° · 58%
+
+    **TV**: Desligada  
+    **A/C**: 22° · Frio  
+    **Cortina Sala**: 60% aberta
+
+    (Bloco somente visual para validação de layout)
+  card_mod:
+    style: |
+      ha-card {
+        height: 100%;
+        border-radius: 22px;
+        border: 1px solid rgba(79,172,254,0.28);
+        background: linear-gradient(180deg, rgba(79,172,254,0.22), rgba(79,172,254,0.08));
+        color: white;
+      }

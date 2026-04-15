@@ -1,0 +1,16 @@
+- type: markdown
+  content: |
+    **🟡 Luzes: 12 ligadas** &nbsp;&nbsp; **🔵 Clima: 22°C** &nbsp;&nbsp; **🟣 Mídia: Tocando**
+
+    <div style="float:right">🔵 B &nbsp; 🟠 D &nbsp; 🩷 M &nbsp; 🟢 Mi</div>
+  card_mod:
+    style: |
+      ha-card {
+        height: 56px;
+        border-radius: 22px;
+        border: 1px solid rgba(255,255,255,0.14);
+        background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.07));
+        color: white;
+        display: flex;
+        align-items: center;
+      }

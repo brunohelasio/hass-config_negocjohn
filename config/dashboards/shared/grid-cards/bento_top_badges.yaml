@@ -1,33 +1,30 @@
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
-    grid-template-columns: 1fr auto
+    grid-template-columns: max-content auto
     align-items: center
     grid-gap: 10px
     margin: 0
     padding: 0
   cards:
-    - type: horizontal-stack
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout:
+        grid-auto-flow: column
+        grid-auto-columns: max-content
+        grid-gap: 8px
       cards:
         - type: custom:button-card
-          entity: group.light_all
+          template: [hemma_badge_light_group]
           variables:
-            badge: !include ../../templates/button_card_templates/sidebar/_badge_lights.yaml
-          icon: '[[[ return variables.badge.icon; ]]]'
-          name: '[[[ return variables.badge.title; ]]]'
-          tap_action: { action: none }
-          hold_action: { action: none }
-          state_display: >
-            [[[
-              const n = states['sensor.lights_count']?.state;
-              return (n && n !== 'unknown') ? `${n}` : (entity?.state === 'on' ? 'on' : 'off');
-            ]]]
-          styles:
-            card: [height: 34px, border-radius: 999px, padding: 0 10px, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.22)]
-            grid: [grid-template-areas: 'i n s', grid-template-columns: 14px auto auto, column-gap: 6px]
-            name: [font-size: 10px, color: rgba(255,255,255,0.70), letter-spacing: 0.08em]
-            state: [font-size: 12px, font-weight: 700, color: white]
-            icon: [color: '#fbbf24', width: 12px]
+            entity_1: light.sala_switch_1
+            entity_2: light.sala_switch_2
+            entity_3: light.cozinha_switch_1
+            entity_4: light.cozinha_switch_2
+            entity_5: light.lavabo_switch_1
+            entity_6: light.corredor_switch_1
+            entity_7: light.quarto_miguel_switch_1
+            entity_8: light.quarto_miguel_switch_2
 
         - type: custom:button-card
           entity: sensor.currently_playing
@@ -42,7 +39,7 @@
               return states['sensor.currently_playing']?.attributes?.device_playing ? 'on' : 'off';
             ]]]
           styles:
-            card: [height: 34px, border-radius: 999px, padding: 0 10px, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.22)]
+            card: [width: max-content, height: 34px, border-radius: 999px, padding: 0 10px, background: rgba(0,0,0,0.18), border: 1px solid rgba(255,255,255,0.22)]
             grid: [grid-template-areas: 'i n s', grid-template-columns: 14px auto auto, column-gap: 6px]
             name: [font-size: 10px, color: rgba(255,255,255,0.70), letter-spacing: 0.08em]
             state: [font-size: 12px, font-weight: 700, color: white]
@@ -62,7 +59,7 @@
               return (t !== undefined && t !== null) ? `${Math.round(t)}°` : '—';
             ]]]
           styles:
-            card: [height: 34px, border-radius: 999px, padding: 0 10px, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.22)]
+            card: [width: max-content, height: 34px, border-radius: 999px, padding: 0 10px, background: rgba(0,0,0,0.18), border: 1px solid rgba(255,255,255,0.22)]
             grid: [grid-template-areas: 'i n s', grid-template-columns: 14px auto auto, column-gap: 6px]
             name: [font-size: 10px, color: rgba(255,255,255,0.70), letter-spacing: 0.08em]
             state: [font-size: 12px, font-weight: 700, color: white]
@@ -86,6 +83,6 @@
               : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;">P</div>`;
           ]]]
       styles:
-        card: [width: 34px, height: 34px, border-radius: 50%, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.24), padding: 0]
+        card: [justify-self: end, width: 34px, height: 34px, border-radius: 50%, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.24), padding: 0]
         custom_fields:
           avatar: [width: 100%, height: 100%]

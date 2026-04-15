@@ -7,17 +7,19 @@
   card_mod:
     style: |
       ha-card {
-        --ios-blue: rgba(10, 132, 255, 0.30);
-        --ios-blue-glow: rgba(10, 132, 255, 0.55);
-        --glass-border: rgba(255, 255, 255, 0.20);
+        background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+        backdrop-filter: blur(18px) saturate(1.2);
+        -webkit-backdrop-filter: blur(18px) saturate(1.2);
+        border-right: 1px solid rgba(255,255,255,0.08);
+        border-radius: 0;
+        border-top: none;
+        border-bottom: none;
+        border-left: none;
+        box-shadow: none;
         height: 100%;
-        border-radius: 24px;
-        background: var(--ios-blue);
-        backdrop-filter: blur(25px) saturate(180%);
-        -webkit-backdrop-filter: blur(25px) saturate(180%);
-        border: 1px solid var(--glass-border);
-        border-top: 1px solid rgba(255, 255, 255, 0.38);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), 0 0 24px var(--ios-blue-glow), inset 0 1px 2px rgba(255, 255, 255, 0.35);
+        overflow: hidden;
+        aspect-ratio: unset;
+        padding: 0;
       }
   cards:
     - type: vertical-stack
@@ -30,7 +32,7 @@
           hold_action: { action: none }
           styles:
             card: [width: 38px, height: 38px, margin: 3px auto, border-radius: 12px, background: transparent, border: none, box-shadow: none, padding: 0]
-            icon: [color: rgba(255,255,255,0.92), width: 19px]
+            icon: [color: rgba(255,255,255,0.92), width: 15px]
         - <<: *nav_icon
           icon: mdi:music-note-outline
         - <<: *nav_icon

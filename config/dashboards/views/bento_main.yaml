@@ -6,7 +6,7 @@ type: custom:grid-layout
 card_mod:
   style: |
     hui-grid-layout {
-      background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%);
+      background: rgba(11, 22, 35, 0.55);
       height: 100%;
     }
 layout:
@@ -14,8 +14,7 @@ layout:
   padding: 12px
   grid-gap: 10px
   grid-template-columns: 56px repeat(12, minmax(0, 1fr))
-  # grid-template-rows: 92px minmax(0, 1fr) minmax(0, 1fr)  # ORIGINAL: 92px muito alto para badges de 34px
-  grid-template-rows: min-content minmax(0, 1fr) minmax(0, 1fr)
+  grid-template-rows: 92px minmax(0, 1fr) minmax(0, 1fr)
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
     "sidebar welcome welcome welcome sala sala sala office office office office office office"

@@ -1,222 +1,88 @@
-# --- CÓDIGO ORIGINAL COMENTADO (hemma_badge_light_group com template chips + badges separados) ---
-# - type: custom:layout-card
-#   layout_type: custom:grid-layout
-#   layout:
-#     grid-template-columns: max-content auto
-#     align-items: center
-#     grid-gap: 10px
-#     margin: 0
-#     padding: 0
-#   cards:
-#     - type: custom:layout-card
-#       layout_type: custom:grid-layout
-#       layout:
-#         grid-auto-flow: column
-#         grid-auto-columns: max-content
-#         grid-gap: 8px
-#       cards:
-#         - type: custom:button-card
-#           template: [hemma_badge_light_group]
-#           variables:
-#             entity_1: light.sala_switch_1
-#             entity_2: light.sala_switch_2
-#             entity_3: light.cozinha_switch_1
-#             entity_4: light.cozinha_switch_2
-#             entity_5: light.lavabo_switch_1
-#             entity_6: light.corredor_switch_1
-#             entity_7: light.quarto_miguel_switch_1
-#             entity_8: light.quarto_miguel_switch_2
-#
-#         - type: custom:button-card
-#           entity: sensor.currently_playing
-#           variables:
-#             badge: !include ../../templates/button_card_templates/sidebar/_badge_media.yaml
-#           icon: '[[[ return variables.badge.icon; ]]]'
-#           name: '[[[ return variables.badge.title; ]]]'
-#           tap_action: { action: none }
-#           hold_action: { action: none }
-#           state_display: >
-#             [[[
-#               return states['sensor.currently_playing']?.attributes?.device_playing ? 'on' : 'off';
-#             ]]]
-#           styles:
-#             card: [width: max-content, height: 34px, border-radius: 999px, padding: 0 10px, background: rgba(0,0,0,0.18), border: 1px solid rgba(255,255,255,0.22)]
-#             grid: [grid-template-areas: 'i n s', grid-template-columns: 14px auto auto, column-gap: 6px]
-#             name: [font-size: 10px, color: rgba(255,255,255,0.70), letter-spacing: 0.08em]
-#             state: [font-size: 12px, font-weight: 700, color: white]
-#             icon: [color: '#a78bfa', width: 12px]
-#
-#         - type: custom:button-card
-#           entity: weather.forecast_casa
-#           variables:
-#             badge: !include ../../templates/button_card_templates/sidebar/_badge_climate.yaml
-#           icon: '[[[ return variables.badge.icon; ]]]'
-#           name: '[[[ return variables.badge.title; ]]]'
-#           tap_action: { action: none }
-#           hold_action: { action: none }
-#           state_display: >
-#             [[[
-#               const t = states['weather.forecast_casa']?.attributes?.temperature;
-#               return (t !== undefined && t !== null) ? `${Math.round(t)}°` : '—';
-#             ]]]
-#           styles:
-#             card: [width: max-content, height: 34px, border-radius: 999px, padding: 0 10px, background: rgba(0,0,0,0.18), border: 1px solid rgba(255,255,255,0.22)]
-#             grid: [grid-template-areas: 'i n s', grid-template-columns: 14px auto auto, column-gap: 6px]
-#             name: [font-size: 10px, color: rgba(255,255,255,0.70), letter-spacing: 0.08em]
-#             state: [font-size: 12px, font-weight: 700, color: white]
-#             icon: [color: '#60a5fa', width: 12px]
-#
-#     - type: custom:button-card
-#       entity: person.bruno_helasio
-#       variables:
-#         badge: !include ../../templates/button_card_templates/sidebar/_badge_presence.yaml
-#       show_name: false
-#       show_state: false
-#       show_icon: false
-#       tap_action: { action: none }
-#       hold_action: { action: none }
-#       custom_fields:
-#         avatar: >
-#           [[[
-#             const pic = entity?.attributes?.entity_picture || '';
-#             return pic
-#               ? `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`
-#               : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;">P</div>`;
-#           ]]]
-#       styles:
-#         card: [justify-self: end, width: 34px, height: 34px, border-radius: 50%, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.24), padding: 0]
-#         custom_fields:
-#           avatar: [width: 100%, height: 100%]
-# --- FIM CÓDIGO ORIGINAL ---
-
-# NOVO: badges JS inline (Opção A) — luzes/mídia/clima via custom_fields + avatar à direita
-# Sem dependências de templates externos (chips, hemma_badge, _badge_*.yaml)
-# triggers_update: lista explícita de entidades relevantes (sem all)
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
-    grid-template-columns: 1fr auto
+    grid-template-columns: max-content auto
     align-items: center
-    grid-gap: 12px
+    grid-gap: 10px
     margin: 0
-    padding: 0 4px
-  card_mod:
-    style: |
-      ha-card {
-        background: transparent !important;
-        box-shadow: none !important;
-        border: none !important;
-        padding: 0 !important;
-      }
+    padding: 0
   cards:
-    # ── badges de status (luzes / mídia / clima) ─────────────────
-    - type: custom:button-card
-      show_icon: false
-      show_name: false
-      show_state: false
-      tap_action: { action: none }
-      hold_action: { action: none }
-      triggers_update:
-        - light.sala_switch_1
-        - light.sala_switch_2
-        - light.cozinha_switch_1
-        - light.cozinha_switch_2
-        - light.lavabo_switch_1
-        - light.corredor_switch_1
-        - light.quarto_miguel_switch_1
-        - light.quarto_miguel_switch_2
-        - media_player.smart_tv_pro_2
-        - media_player.spotifyplus_bruno_helasio
-        - media_player.echo_show
-        - climate.sl_ar_condicionado
-        - climate.ac_office
-        - climate.ac_quarto_miguel
-      custom_fields:
-        badges: >
-          [[[
-            // ── Luzes ──────────────────────────────────────────
-            const lightEids = [
-              'light.sala_switch_1', 'light.sala_switch_2',
-              'light.cozinha_switch_1', 'light.cozinha_switch_2',
-              'light.lavabo_switch_1', 'light.corredor_switch_1',
-              'light.quarto_miguel_switch_1', 'light.quarto_miguel_switch_2'
-            ];
-            const lightsOn = lightEids.filter(e => states[e]?.state === 'on').length;
-            const lightsActive = lightsOn > 0;
-            const lightsColor = lightsActive ? '#fdd835' : 'rgba(255,255,255,0.38)';
-            const lightsLabel = lightsOn === 0 ? 'Off'
-              : lightsOn === lightEids.length ? 'All On'
-              : lightsOn + ' On';
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout:
+        grid-auto-flow: column
+        grid-auto-columns: max-content
+        grid-gap: 8px
+      cards:
+        - type: custom:button-card
+          template: [hemma_badge_light_group]
+          variables:
+            entity_1: light.sala_switch_1
+            entity_2: light.sala_switch_2
+            entity_3: light.cozinha_switch_1
+            entity_4: light.cozinha_switch_2
+            entity_5: light.lavabo_switch_1
+            entity_6: light.corredor_switch_1
+            entity_7: light.quarto_miguel_switch_1
+            entity_8: light.quarto_miguel_switch_2
 
-            // ── Mídia ──────────────────────────────────────────
-            const mediaEids = [
-              'media_player.smart_tv_pro_2',
-              'media_player.spotifyplus_bruno_helasio',
-              'media_player.echo_show'
-            ];
-            const mediaOn = mediaEids.filter(e => ['playing','paused','on'].includes(states[e]?.state ?? '')).length;
-            const mediaActive = mediaOn > 0;
-            const mediaColor = mediaActive ? '#1DB954' : 'rgba(255,255,255,0.38)';
-            const mediaLabel = mediaOn === 0 ? 'Off' : mediaOn + ' On';
+        - type: custom:button-card
+          entity: sensor.currently_playing
+          variables:
+            badge: !include ../../templates/button_card_templates/sidebar/_badge_media.yaml
+          icon: '[[[ return variables.badge.icon; ]]]'
+          name: '[[[ return variables.badge.title; ]]]'
+          tap_action: { action: none }
+          hold_action: { action: none }
+          state_display: >
+            [[[
+              return states['sensor.currently_playing']?.attributes?.device_playing ? 'on' : 'off';
+            ]]]
+          styles:
+            card: [width: max-content, height: 34px, border-radius: 999px, padding: 0 10px, background: rgba(0,0,0,0.18), border: 1px solid rgba(255,255,255,0.22)]
+            grid: [grid-template-areas: 'i n s', grid-template-columns: 14px auto auto, column-gap: 6px]
+            name: [font-size: 10px, color: rgba(255,255,255,0.70), letter-spacing: 0.08em]
+            state: [font-size: 12px, font-weight: 700, color: white]
+            icon: [color: '#a78bfa', width: 12px]
 
-            // ── Clima ──────────────────────────────────────────
-            const climateEids = [
-              'climate.sl_ar_condicionado',
-              'climate.ac_office',
-              'climate.ac_quarto_miguel'
-            ];
-            const climateOn = climateEids.filter(e => !['off','unavailable','unknown',''].includes(states[e]?.state ?? 'unknown')).length;
-            const climateActive = climateOn > 0;
-            const climateColor = climateActive ? '#7fdbe9' : 'rgba(255,255,255,0.38)';
-            const climateLabel = climateOn === 0 ? 'Off' : climateOn + ' On';
+        - type: custom:button-card
+          entity: weather.forecast_casa
+          variables:
+            badge: !include ../../templates/button_card_templates/sidebar/_badge_climate.yaml
+          icon: '[[[ return variables.badge.icon; ]]]'
+          name: '[[[ return variables.badge.title; ]]]'
+          tap_action: { action: none }
+          hold_action: { action: none }
+          state_display: >
+            [[[
+              const t = states['weather.forecast_casa']?.attributes?.temperature;
+              return (t !== undefined && t !== null) ? `${Math.round(t)}°` : '—';
+            ]]]
+          styles:
+            card: [width: max-content, height: 34px, border-radius: 999px, padding: 0 10px, background: rgba(0,0,0,0.18), border: 1px solid rgba(255,255,255,0.22)]
+            grid: [grid-template-areas: 'i n s', grid-template-columns: 14px auto auto, column-gap: 6px]
+            name: [font-size: 10px, color: rgba(255,255,255,0.70), letter-spacing: 0.08em]
+            state: [font-size: 12px, font-weight: 700, color: white]
+            icon: [color: '#60a5fa', width: 12px]
 
-            // ── Helper: pill ────────────────────────────────────
-            const pill = (svgPaths, label, count, color, isActive) => {
-              const border = isActive ? 'rgba(255,255,255,0.30)' : 'rgba(255,255,255,0.14)';
-              return '<div style="display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 12px;border-radius:999px;background:rgba(0,0,0,0.22);border:1px solid ' + border + ';white-space:nowrap;">'
-                + '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;flex-shrink:0;">' + svgPaths + '</svg>'
-                + '<span style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.55);letter-spacing:0.09em;">' + label + '</span>'
-                + '<span style="font-size:11px;font-weight:700;color:' + color + ';">' + count + '</span>'
-                + '</div>';
-            };
-
-            // ── Ícones SVG (24×24 Feather-style) ───────────────
-            const lightSvg = '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5C17.61 10.48 18 9.29 18 8A6 6 0 1 0 6 8c0 1.29.39 2.48 1.09 3.5.76.76 1.23 1.52 1.41 2.5"/>';
-            const mediaSvg = '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>';
-            const climateSvg = '<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>';
-
-            return '<div style="display:flex;align-items:center;gap:8px;">'
-              + pill(lightSvg,   'LUZES', lightsLabel,  lightsColor,  lightsActive)
-              + pill(mediaSvg,   'MÍDIA', mediaLabel,   mediaColor,   mediaActive)
-              + pill(climateSvg, 'CLIMA', climateLabel, climateColor, climateActive)
-              + '</div>';
-          ]]]
-      styles:
-        card: [background: transparent, border: none, box-shadow: none, height: 34px, padding: 0]
-        custom_fields:
-          badges: [display: flex, align-items: center, height: 100%]
-        grid: [grid-template-areas: '"badges"', grid-template-columns: 1fr, grid-template-rows: 1fr]
-
-    # ── avatar de presença ────────────────────────────────────────
     - type: custom:button-card
       entity: person.bruno_helasio
+      variables:
+        badge: !include ../../templates/button_card_templates/sidebar/_badge_presence.yaml
       show_name: false
       show_state: false
       show_icon: false
       tap_action: { action: none }
       hold_action: { action: none }
-      triggers_update:
-        - person.bruno_helasio
       custom_fields:
         avatar: >
           [[[
             const pic = entity?.attributes?.entity_picture || '';
             return pic
-              ? '<img src="' + pic + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>'
-              : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;background:rgba(255,255,255,0.15);border-radius:50%;">B</div>';
+              ? `<img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`
+              : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:12px;">P</div>`;
           ]]]
       styles:
-        card: [justify-self: end, width: 34px, height: 34px, border-radius: 50%, background: rgba(255,255,255,0.12), border: "1px solid rgba(255,255,255,0.24)", padding: 0, box-shadow: none]
+        card: [justify-self: end, width: 34px, height: 34px, border-radius: 50%, background: rgba(255,255,255,0.14), border: 1px solid rgba(255,255,255,0.24), padding: 0]
         custom_fields:
-          avatar: [width: 100%, height: 100%, overflow: hidden, border-radius: 50%]
-        grid: [grid-template-areas: '"avatar"', grid-template-columns: 1fr, grid-template-rows: 1fr]
+          avatar: [width: 100%, height: 100%]

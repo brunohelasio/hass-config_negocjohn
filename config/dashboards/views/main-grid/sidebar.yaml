@@ -1,7 +1,0 @@
-#################################################
-#                                               #
-#                  SIDEBAR                      #
-#                                               #
-#################################################
-# Sidebar modularizada (arquivo dedicado).
-- !include ../../shared/sidebar/sidebar_tablet_landscape.yaml

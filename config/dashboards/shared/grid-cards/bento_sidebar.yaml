@@ -1,0 +1,63 @@
+- type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-rows: auto 1fr auto
+    height: 100%
+    padding: 12px 0
+  card_mod:
+    style: |
+      ha-card {
+        background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+        backdrop-filter: blur(18px) saturate(1.2);
+        -webkit-backdrop-filter: blur(18px) saturate(1.2);
+        border-right: 1px solid rgba(255,255,255,0.08);
+        border-radius: 0;
+        border-top: none;
+        border-bottom: none;
+        border-left: none;
+        box-shadow: none;
+        height: 100%;
+        overflow: hidden;
+        aspect-ratio: unset;
+        padding: 0;
+      }
+  cards:
+    - type: vertical-stack
+      cards:
+        - &nav_icon
+          type: custom:button-card
+          icon: mdi:home-outline
+          show_name: false
+          tap_action: { action: none }
+          hold_action: { action: none }
+          styles:
+            card: [width: 38px, height: 38px, margin: 3px auto, border-radius: 12px, background: transparent, border: none, box-shadow: none, padding: 0]
+            icon: [color: rgba(255,255,255,0.92), width: 15px]
+        - <<: *nav_icon
+          icon: mdi:music-note-outline
+        - <<: *nav_icon
+          icon: mdi:shield-outline
+        - <<: *nav_icon
+          icon: mdi:radar
+        - <<: *nav_icon
+          icon: mdi:robot-vacuum
+        - <<: *nav_icon
+          icon: mdi:wifi
+        - <<: *nav_icon
+          icon: mdi:refresh
+        - <<: *nav_icon
+          icon: mdi:download
+        - <<: *nav_icon
+          icon: mdi:cube-outline
+    - type: custom:button-card
+      show_name: false
+      tap_action: { action: none }
+      hold_action: { action: none }
+      styles:
+        card: [background: transparent, border: none, box-shadow: none]
+    - type: vertical-stack
+      cards:
+        - <<: *nav_icon
+          icon: mdi:monitor-dashboard
+        - <<: *nav_icon
+          icon: mdi:power

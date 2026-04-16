@@ -1,0 +1,30 @@
+# SECURITY STATUS
+################################################
+# --- CODIGO ORIGINAL COMENTADO PARA REFERENCIA ---
+# # ALARM
+# - type: custom:streamline-card
+#   template: grid_alarm
+# # FRONT DOOR
+# - type: custom:streamline-card
+#   template: grid_front_door
+# # MOTION SENSORS
+# - type: custom:streamline-card
+#   template: grid_motion_sensors
+# #  CONTACT SENSORS
+# - type: custom:streamline-card
+#   template: grid_contact_sensors
+# --- FIM DO CODIGO ORIGINAL ---
+
+# NOVO: Front Door + Cameras + Doors placeholder + Sensors placeholder
+# FRONT DOOR (lock.sl_fechadura_operate_lock)
+- type: custom:streamline-card
+  template: grid_front_door
+# CAMERAS (abre popup com 8 cameras do apartamento)
+- type: custom:streamline-card
+  template: grid_cameras_button
+# DOORS (placeholder — sem sensores de porta ainda)
+- type: custom:streamline-card
+  template: grid_contact_sensors
+# SENSORS (placeholder — sem sensores de presenca ainda)
+- type: custom:streamline-card
+  template: grid_motion_sensors

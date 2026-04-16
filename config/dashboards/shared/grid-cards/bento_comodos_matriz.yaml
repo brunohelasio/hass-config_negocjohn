@@ -1,0 +1,33 @@
+type: custom:layout-card
+layout_type: custom:grid-layout
+layout:
+  grid-template-columns: repeat(3, 1fr)
+  # A MÁGICA DA ALTURA: Força as duas linhas a dividirem os 40vh exatos
+  grid-template-rows: repeat(2, calc((40vh - 10px) / 2))
+  grid-gap: 10px
+  margin: 0px !important
+  padding: 0px !important
+card_mod:
+  style: |
+    :host { 
+      height: 100% !important; 
+      margin: 0 !important; 
+      padding: 0 !important; 
+      display: block !important; 
+    }
+    #root { 
+      height: 100% !important; 
+      margin: 0 !important; 
+      padding: 0 !important; 
+    }
+    #root > * { 
+      height: 100% !important; 
+      margin: 0 !important; 
+    }
+cards:
+  - !include ../../views/main-grid/bento_office.yaml
+  - !include ../../views/main-grid/bento_cozinha.yaml
+  - !include ../../views/main-grid/bento_lavabo.yaml
+  - !include ../../views/main-grid/bento_quarto_casal.yaml
+  - !include ../../views/main-grid/bento_quarto_marina.yaml
+  - !include ../../views/main-grid/bento_quarto_miguel.yaml

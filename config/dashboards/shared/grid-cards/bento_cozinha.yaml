@@ -1,0 +1,108 @@
+type: custom:button-card
+entity: light.grupo_luzes_cozinha
+name: Cozinha
+template:
+  - rooms_base
+  - icon_noodles
+
+# ─── VARIÁVEIS CONFORME SEU TPL_BASE ──────────────────────
+variables:
+  state: "[[[ return entity.state; ]]]"
+  state_on: >
+    [[[ 
+      return ['on', 'home', 'active', 'yes'].indexOf(!entity || entity.state) !== -1; 
+    ]]]
+  light_entity: light.cz_luz_principal
+  active: sensor.cozinha_active
+  vacuum_rooms: 'Cozinha,Área de Serviço'
+
+# ─── AÇÕES ────────────────────────────────────────────────
+tap_action:
+  action: toggle
+double_tap_action: !include ../../shared/popup/rooms/kitchen.yaml
+hold_action:
+  action: perform-action
+  perform_action: light.turn_off
+  data:
+    entity_id: light.grupo_luzes_cozinha
+
+# ─── ESTILOS (LIMPANDO CONFLITOS COM O ROOMS_BASE) ────────
+styles:
+  card:
+    - border: "none !important"
+    - box-shadow: "none !important"
+    - padding: "0px !important"
+    - overflow: "visible !important" # <-- Resolve o corte do ícone de presença
+  
+  grid:
+    - grid-template-areas: '"icon temp dots" "n n dots" "s s dots"'
+    - grid-template-columns: "min-content 1fr min-content"
+    - grid-template-rows: "1fr min-content min-content"
+  
+  name:
+    - justify-self: "start"
+    - align-self: "end"
+    - font-size: "15px"
+    - font-weight: "700"
+    - margin-bottom: "2px !important"
+    - color: >
+        [[[ return variables.state_on ? 'black' : 'white'; ]]]
+
+  state:
+    - justify-self: "start"
+    - align-self: "end"
+    - font-size: "11px"
+    - font-weight: "500"
+    - margin-bottom: "44px !important"
+    - color: >
+        [[[ return variables.state_on ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)'; ]]]
+        
+  custom_fields:
+    icon: 
+      - justify-self: "start"
+      - align-self: "start"
+      - width: "65px !important"
+      - height: "65px !important"
+    temp:
+      - justify-self: "start"
+      - align-self: "start"
+      - margin-left: "12px"  
+      - margin-top: "4px"
+    dots:
+      - justify-self: "end"
+      - align-self: "start"
+
+# ─── CONTEÚDO DOS CAMPOS ──────────────────────────────────
+custom_fields:
+  temp: >
+    [[[
+      const t = states['sensor.temperatura_cozinha'];
+      const h = states['sensor.umidade_cozinha'];
+      if (!t || t.state === 'unknown') return '';
+      const color = variables.state_on ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)';
+      const subColor = variables.state_on ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.5)';
+      return `
+        <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1;">
+          <span style="font-size: 13px; font-weight: 700; color: ${color};">${t.state}°</span>
+          <span style="font-size: 11px; color: ${subColor};">${h ? h.state + '%' : ''}</span>
+        </div>
+      `;
+    ]]]
+
+  dots: >
+    [[[
+      const dotBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
+      const iconColor = variables.state_on ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)';
+      const renderDot = (icon) => `
+        <div style="width: 26px; height: 26px; border-radius: 50%; background: ${dotBg}; display: flex; justify-content: center; align-items: center; color: ${iconColor};">
+          <ha-icon icon="${icon}" style="width: 15px; height: 15px; display: flex;"></ha-icon>
+        </div>
+      `;
+      return `
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          ${renderDot('mdi:account')}
+          ${renderDot('mdi:dishwasher')}
+          ${renderDot('mdi:washing-machine')}
+        </div>
+      `;
+    ]]]

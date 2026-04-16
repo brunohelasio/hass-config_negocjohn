@@ -1,0 +1,16 @@
+# MAIN ROOMS GRID CARDS
+#################################################
+# Living Room
+- type: custom:streamline-card
+  template: grid_living_room
+# OFFICE
+- type: custom:streamline-card
+  # template: grid_office
+  template: grid_lavabo
+# Kitchen
+- type: custom:streamline-card
+  template: grid_kitchen_normal
+# Bedroom
+- type: custom:streamline-card
+  # template: grid_bedroom
+  template: grid_circulacao

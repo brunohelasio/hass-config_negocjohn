@@ -1,0 +1,6 @@
+type: grid
+columns: 1
+square: false
+view_layout:
+  grid-area: office
+cards: !include ../../shared/grid-cards/bento_office.yaml

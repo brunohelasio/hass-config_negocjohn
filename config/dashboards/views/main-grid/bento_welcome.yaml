@@ -1,6 +1,0 @@
-type: grid
-columns: 1
-square: false
-view_layout:
-  grid-area: welcome
-cards: !include ../../shared/grid-cards/bento_welcome.yaml

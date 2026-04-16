@@ -1,0 +1,28 @@
+#################################################
+#                                               #
+#                    ROOMS 2                    #
+#                                               #
+#################################################
+- type: grid
+  title: Rooms
+  view_layout:
+    grid-area: devices
+    show:
+      mediaquery: '(min-width: 801px) and (min-height: 463px)'
+  columns: 2
+  cards: !include ../../shared/grid-cards/common-rooms.yaml
+
+- type: conditional
+  view_layout:
+    grid-area: devices
+  conditions:
+    - condition: screen
+      media_query: '(max-width: 800px) and (min-height: 463px)'
+    - condition: state
+      entity: input_select.mobile_dashboard_tab
+      state: comodos
+  card:
+    type: grid
+    title: Rooms
+    columns: 2
+    cards: !include ../../shared/grid-cards/common-rooms.yaml

@@ -1,0 +1,28 @@
+#################################################
+#                                               #
+#                  MAIN ROOMS                   #
+#                                               #
+#################################################
+- type: grid
+  title: Masters
+  view_layout:
+    grid-area: mainrooms
+    show:
+      mediaquery: '(min-width: 801px) and (min-height: 463px)'
+  columns: 2
+  cards: !include ../../shared/grid-cards/main-rooms.yaml
+
+- type: conditional
+  view_layout:
+    grid-area: mainrooms
+  conditions:
+    - condition: screen
+      media_query: '(max-width: 800px) and (min-height: 463px)'
+    - condition: state
+      entity: input_select.mobile_dashboard_tab
+      state: comodos
+  card:
+    type: grid
+    title: Masters
+    columns: 2
+    cards: !include ../../shared/grid-cards/main-rooms.yaml

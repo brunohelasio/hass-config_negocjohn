@@ -1,0 +1,23 @@
+type: grid
+columns: 1
+square: false
+view_layout:
+  grid-area: top_badges
+card_mod:
+  style:
+    $: |
+      .card-content {
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+    .: |
+      ha-card {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        transform: scale(1.15); /* Aumenta em 15% */
+        transform-origin: left center;
+      }
+cards: !include ../../shared/grid-cards/bento_top_badges.yaml

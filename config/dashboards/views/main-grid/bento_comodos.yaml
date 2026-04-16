@@ -1,0 +1,18 @@
+type: custom:layout-card
+layout_type: custom:grid-layout
+view_layout:
+  grid-area: comodos
+card_mod:
+  style: |
+    :host { 
+      height: 100% !important; 
+      display: block !important; 
+    }
+    #root { 
+      height: 100% !important; 
+    }
+    #root > * { 
+      height: 100% !important; 
+    }
+cards:
+  - !include ../../shared/grid-cards/bento_comodos_matriz.yaml

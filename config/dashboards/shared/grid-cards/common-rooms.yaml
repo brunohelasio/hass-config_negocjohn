@@ -1,0 +1,35 @@
+# COMMON ROOMS GRID CARDS
+#################################################
+# SHOWER ROOM
+- type: custom:streamline-card
+  # template: grid_shower
+  template: grid_office_room
+# BATHROOM
+- type: custom:streamline-card
+  # template: grid_bathroom
+  template: grid_quarto_casal
+# HALLWAY
+- type: custom:streamline-card
+  # template: grid_hallway
+  template: grid_quarto_miguel
+# UTILITY NORMAL
+- type: custom:streamline-card
+  # template: grid_utility_normal
+  template: grid_quarto_marina
+
+# # UTILITY VACUUM
+# - type: conditional
+#   conditions:
+#     - entity: sensor.appliance_active
+#       state: cleaning
+#   card:
+#     type: custom:streamline-card
+#     template: grid_utility_vacuum
+# # WASHING
+# - type: conditional
+#   conditions:
+#     - entity: sensor.appliance_active
+#       state: washing
+#   card:
+#     type: custom:streamline-card
+#     template: grid_utility_washing

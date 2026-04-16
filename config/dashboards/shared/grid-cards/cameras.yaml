@@ -1,0 +1,29 @@
+# CAMERAS CARDS
+##########################################
+# --- CÓDIGO ORIGINAL COMENTADO PARA REFERÊNCIA (cameras europeias) ---
+# # CAM DOOR
+# - type: custom:streamline-card
+#   template: grid_cam_door
+# # CAM KIDS ROOM
+# - type: custom:streamline-card
+#   template: grid_cam_kids
+# # CAM TERRACE
+# - type: custom:streamline-card
+#   template: grid_cam_terrace
+# # CAM GARDEN
+# - type: custom:streamline-card
+#   template: grid_cam_garden
+# --- FIM CÓDIGO ORIGINAL ---
+# NOVO: Cameras do apartamento do usuario (WiFi)
+# CAM SALA
+- type: custom:streamline-card
+  template: grid_cam_sala
+# CAM VARANDA
+- type: custom:streamline-card
+  template: grid_cam_varanda
+# CAM COZINHA
+- type: custom:streamline-card
+  template: grid_cam_cozinha
+# CAM AREA DE SERVICO
+- type: custom:streamline-card
+  template: grid_cam_area_servico

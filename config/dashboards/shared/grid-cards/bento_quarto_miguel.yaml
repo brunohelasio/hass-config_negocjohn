@@ -1,0 +1,10 @@
+type: markdown
+content: "## Q. Miguel"
+card_mod:
+  style: |
+    ha-card {
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }

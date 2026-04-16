@@ -1,0 +1,32 @@
+type: custom:stack-in-card
+card_mod:
+  style: |
+    :host { 
+      height: 100% !important; 
+      display: block !important; /* <- ISSO FORÇA O CARTÃO A ESTICAR */
+    }
+    #root {
+      height: 100% !important; /* <- ISSO GARANTE QUE O MIOLO ACOMPANHE O ESTICAMENTO */
+    }
+    ha-card {
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important; /* <- ISSO CENTRALIZA O TEXTO "COZINHA" NO MEIO DO BOTÃO */
+      padding: 16px !important;
+      
+      /* O seu estilo de vidro validado */
+      background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;
+      backdrop-filter: blur(18px) saturate(1.2) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 18px !important;
+      overflow: hidden !important;
+      
+      --ha-card-backdrop-filter: none !important;
+      --ha-card-background: transparent !important;
+      --ha-card-border-width: 0 !important;
+    }
+    ha-card::before { display: none !important; }
+cards:
+  - !include ../../shared/grid-cards/bento_quarto_miguel.yaml

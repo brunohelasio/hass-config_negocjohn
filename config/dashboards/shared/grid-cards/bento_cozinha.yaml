@@ -71,16 +71,18 @@ styles:
     - align-self: "end"
     - font-size: "11px"
     - font-weight: "500"
-    - margin-bottom: "44px !important"
+    # - margin-bottom: "44px !important"  # ORIGINAL — projetado para botão quadrado, subia o texto no retangular
+    - margin-bottom: "0px !important"
     - color: >
         [[[ return variables.state_on ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)'; ]]]
         
   custom_fields:
-    icon: 
+    icon:
       - justify-self: "start"
       - align-self: "start"
       - width: "65px !important"
       - height: "65px !important"
+      - margin-top: "0px !important"  # neutraliza o margin-top: -15% do template icon_noodles
     temp:
       - justify-self: "start"
       - align-self: "start"
@@ -112,8 +114,8 @@ custom_fields:
       const dotBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
       const iconColor = variables.state_on ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)';
       const renderDot = (icon) => `
-        <div style="width: 26px; height: 26px; border-radius: 50%; background: ${dotBg}; display: flex; justify-content: center; align-items: center; color: ${iconColor};">
-          <ha-icon icon="${icon}" style="width: 15px; height: 15px; display: flex;"></ha-icon>
+        <div style="width: 30px; height: 30px; border-radius: 50%; background: ${dotBg}; display: flex; justify-content: center; align-items: center; color: ${iconColor};">
+          <ha-icon icon="${icon}" style="width: 18px; height: 18px; display: flex;"></ha-icon>
         </div>
       `;
       return `
@@ -121,6 +123,7 @@ custom_fields:
           ${renderDot('mdi:account')}
           ${renderDot('mdi:dishwasher')}
           ${renderDot('mdi:washing-machine')}
+          ${renderDot('mdi:air-fryer')}
         </div>
       `;
     ]]]

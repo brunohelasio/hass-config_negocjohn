@@ -5,6 +5,18 @@ template:
   - rooms_base
   - icon_noodles
 
+# Sobrescreve o aspect_ratio: 1/1 herdado do template base.
+# Sem isso, o button-card cria um container quadrado (padding-bottom: 100%)
+# que ultrapassa a altura da célula retangular, gerando o quadrado branco interno.
+aspect_ratio: false
+
+card_mod:
+  style: |
+    :host {
+      height: 100% !important;
+      display: block !important;
+    }
+
 # ─── VARIÁVEIS CONFORME SEU TPL_BASE ──────────────────────
 variables:
   state: "[[[ return entity.state; ]]]"
@@ -31,7 +43,9 @@ styles:
   card:
     - border: "none !important"
     - box-shadow: "none !important"
-    - padding: "0px !important"
+    - height: "100% !important"      # Faz o ha-card preencher toda a célula retangular
+    # - padding: "0px !important"    # ORIGINAL — sem padding (estava no wrapper)
+    - padding: "16px !important"     # Padding migrado do wrapper para o botão
     - overflow: "visible !important" # <-- Resolve o corte do ícone de presença
   
   grid:

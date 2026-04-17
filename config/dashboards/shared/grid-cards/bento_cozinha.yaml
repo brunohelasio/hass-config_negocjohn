@@ -16,6 +16,9 @@ card_mod:
       height: 100% !important;
       display: block !important;
     }
+    .button-card-container {
+      height: 100% !important;
+    }
 
 # ─── VARIÁVEIS CONFORME SEU TPL_BASE ──────────────────────
 variables:

@@ -1,22 +1,26 @@
 type: custom:stack-in-card
 card_mod:
   style: |
-    :host { 
-      height: 100% !important; 
-      margin: 0 !important; # GARANTIA ANTI-ESPAÇO
-      display: block !important; 
+    :host {
+      height: 100% !important;
+      margin: 0 !important;
+      display: block !important;
     }
+    /* #root — COMENTADO: não necessário. O overflow:hidden do ha-card clipa o excesso
+       do quadrado aspect_ratio:1/1 (258px) para a altura da célula (235px).
+       Não precisamos propagar height pelo #root.
     #root {
       height: 100% !important;
-      flex: 1 !important; /* Garante que o #root cresce para preencher o flex container */
+      flex: 1 !important;
     }
+    */
     ha-card {
       height: 100% !important;
-      margin: 0 !important; # GARANTIA ANTI-ESPAÇO
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: center !important;
-      # padding: 16px !important; # ORIGINAL — padding no wrapper criava área de conteúdo menor que o botão, causando quadrado branco interno
+      margin: 0 !important;
+      /* SIMPLIFICADO: display:block em vez de flex — com flex+justify-content:center o
+         quadrado seria centralizado verticalmente (clipando 11px em cima E em baixo);
+         com block, o quadrado começa no topo e só os 23px inferiores são clipados. */
+      display: block !important;
       padding: 0px !important;
       
       /* O seu vidro validado */

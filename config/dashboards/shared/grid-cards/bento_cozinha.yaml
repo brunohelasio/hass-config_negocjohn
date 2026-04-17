@@ -5,21 +5,19 @@ template:
   - rooms_base
   - icon_noodles
 
-# Sobrescreve o aspect_ratio: 1/1 herdado do template base.
-# Sem isso, o button-card cria um container quadrado (padding-bottom: 100%)
-# que ultrapassa a altura da célula retangular, gerando o quadrado branco interno.
-aspect_ratio: false
+# aspect_ratio: false  # COMENTADO — com células ~258×235px (sala=4col, comodos=5col)
+#   o aspect_ratio:1/1 herdado do base cria um quadrado de 258×258px que é clipado
+#   pelos 23px inferiores pelo overflow:hidden do wrapper. Simples e sem hacks de altura.
 
-card_mod:
-  style: |
-    :host {
-      /* Altura explícita com a mesma fórmula do grid-template-rows — bypassa a cadeia height:100% */
-      height: calc((40vh - 10px) / 2) !important;
-      display: block !important;
-    }
-    .button-card-container {
-      height: 100% !important;
-    }
+# card_mod:  # COMENTADO — altura explícita via calc() não é mais necessária;
+#   style: |  # o wrapper clipa o overflow naturalmente.
+#     :host {
+#       height: calc((40vh - 10px) / 2) !important;
+#       display: block !important;
+#     }
+#     .button-card-container {
+#       height: 100% !important;
+#     }
 
 # ─── VARIÁVEIS CONFORME SEU TPL_BASE ──────────────────────
 variables:
@@ -47,9 +45,8 @@ styles:
   card:
     - border: "none !important"
     - box-shadow: "none !important"
-    - height: "calc((40vh - 10px) / 2) !important" # mesma fórmula do grid-template-rows
-    # - padding: "0px !important"    # ORIGINAL — sem padding (estava no wrapper)
-    - padding: "16px !important"     # Padding migrado do wrapper para o botão
+    # - height: "calc((40vh - 10px) / 2) !important"  # COMENTADO — não necessário com aspect_ratio:1/1 + overflow:hidden
+    - padding: "16px !important"
     - overflow: "visible !important" # <-- Resolve o corte do ícone de presença
   
   grid:

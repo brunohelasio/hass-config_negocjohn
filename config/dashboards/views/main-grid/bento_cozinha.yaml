@@ -8,6 +8,7 @@ card_mod:
     }
     #root {
       height: 100% !important;
+      flex: 1 !important; /* Garante que o #root cresce para preencher o flex container */
     }
     ha-card {
       height: 100% !important;

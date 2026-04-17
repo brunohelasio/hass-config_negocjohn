@@ -13,7 +13,8 @@ aspect_ratio: false
 card_mod:
   style: |
     :host {
-      height: 100% !important;
+      /* Altura explícita com a mesma fórmula do grid-template-rows — bypassa a cadeia height:100% */
+      height: calc((40vh - 10px) / 2) !important;
       display: block !important;
     }
     .button-card-container {
@@ -46,7 +47,7 @@ styles:
   card:
     - border: "none !important"
     - box-shadow: "none !important"
-    - height: "100% !important"      # Faz o ha-card preencher toda a célula retangular
+    - height: "calc((40vh - 10px) / 2) !important" # mesma fórmula do grid-template-rows
     # - padding: "0px !important"    # ORIGINAL — sem padding (estava no wrapper)
     - padding: "16px !important"     # Padding migrado do wrapper para o botão
     - overflow: "visible !important" # <-- Resolve o corte do ícone de presença

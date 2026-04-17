@@ -1,0 +1,272 @@
+---
+- type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    grid-template-rows: 136px minmax(110px, 1fr) 58px
+    grid-template-areas: |
+      "hero hero"
+      "tv ac"
+      "curtain curtain"
+    column-gap: 20px
+    row-gap: 14px
+    height: 100%
+    margin: 0
+    padding: 12px 14px 12px 14px
+  cards:
+    - type: custom:button-card
+      view_layout:
+        grid-area: hero
+      entity: light.grupo_luzes_sala
+      show_icon: false
+      show_name: false
+      show_state: false
+      tap_action:
+        action: toggle
+      double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml
+      hold_action:
+        action: perform-action
+        perform_action: light.turn_off
+        data:
+          entity_id: light.grupo_luzes_sala
+      custom_fields:
+        left: >
+          [[[
+            const t = states['sensor.sl_sensor_temp_humid_temperatura'];
+            const temp = t && t.state && t.state !== 'unknown' && t.state !== 'unavailable' ? `${t.state}°` : '22°';
+            const hum = t && t.attributes && t.attributes.humidity != null ? `${t.attributes.humidity}%` : '58%';
+            const raw = states['sensor.living_room_active'] ? states['sensor.living_room_active'].state : '';
+            const n = Number(raw);
+            const lights = !Number.isNaN(n) && n > 0 ? `${n} luz${n > 1 ? 'es' : ''}` : '2 luzes';
+            return `
+              <div style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;">
+                <div style="display:flex;align-items:flex-start;gap:8px;">
+                  <ha-icon icon="mdi:sofa-outline" style="width:38px;height:38px;color:rgba(255,255,255,0.82);"></ha-icon>
+                  <div style="display:flex;flex-direction:column;gap:4px;padding-top:3px;">
+                    <div style="font-size:10px;color:rgba(255,255,255,0.72);line-height:1;">${temp}</div>
+                    <div style="font-size:10px;color:rgba(255,255,255,0.58);line-height:1;">${hum}</div>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:13px;font-weight:700;line-height:1.2;color:white;">Sala</div>
+                  <div style="font-size:12px;font-weight:700;line-height:1.2;color:#fbbf24;margin-top:3px;">${lights}</div>
+                </div>
+              </div>
+            `;
+          ]]]
+        right: >
+          [[[ return `
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;padding-top:4px;">
+              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;"><ha-icon icon="mdi:account" style="width:10px;height:10px;color:rgba(255,255,255,0.72);"></ha-icon></div>
+              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;"><ha-icon icon="mdi:television" style="width:10px;height:10px;color:rgba(255,255,255,0.72);"></ha-icon></div>
+              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;"><ha-icon icon="mdi:snowflake" style="width:10px;height:10px;color:rgba(255,255,255,0.72);"></ha-icon></div>
+              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;"><ha-icon icon="mdi:amazon-alexa" style="width:10px;height:10px;color:rgba(255,255,255,0.72);"></ha-icon></div>
+            </div>`; ]]]
+      styles:
+        card:
+          - background: transparent
+          - border: none
+          - box-shadow: none
+          - padding: 0
+          - margin: 0
+          - height: 100%
+        grid:
+          - grid-template-areas: '"left right"'
+          - grid-template-columns: 1fr auto
+          - grid-template-rows: 1fr
+        custom_fields:
+          left:
+            - justify-self: start
+            - align-self: start
+          right:
+            - justify-self: end
+            - align-self: start
+            - margin-right: 6px
+            - margin-top: 1px
+
+    - type: custom:button-card
+      view_layout:
+        grid-area: tv
+      entity: media_player.smart_tv_pro_2
+      icon: mdi:television-classic
+      name: TV
+      show_icon: true
+      show_name: true
+      show_state: true
+      show_label: true
+      state_display: >
+        [[[ return !entity || entity.state === 'off' ? 'Desligada' : 'Ligada'; ]]]
+      label: >
+        [[[ return entity && entity.state !== 'off' ? 'Controle rapido' : 'Toque para ligar'; ]]]
+      tap_action:
+        action: toggle
+      hold_action:
+        action: more-info
+      custom_fields:
+        toggle_vis: >
+          [[[
+            const on = entity && entity.state !== 'off';
+            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on ? 'linear-gradient(180deg, rgba(167,139,250,0.95) 0%, rgba(167,139,250,0.65) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.10) 100%)'};">
+              <div style="position:absolute;top:2px;left:${on ? '18px' : '2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
+            </div>`;
+          ]]]
+      styles:
+        card:
+          - background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)
+          - border: 1px solid rgba(255,255,255,0.14)
+          - border-radius: 18px
+          - padding: 16px
+          - margin-right: 9px
+          - height: 100%
+          - box-shadow: none
+        grid:
+          - grid-template-areas: '"i toggle_vis" "n toggle_vis" "s ." "l ."'
+          - grid-template-columns: 1fr auto
+          - grid-template-rows: auto auto auto 1fr
+          - row-gap: 8px
+        icon:
+          - width: 16px
+          - color: rgba(255,255,255,0.82)
+        name:
+          - font-size: 12px
+          - font-weight: 700
+          - justify-self: start
+        state:
+          - font-size: 11px
+          - color: rgba(255,255,255,0.82)
+          - justify-self: start
+        label:
+          - font-size: 9px
+          - color: rgba(255,255,255,0.38)
+          - justify-self: start
+        custom_fields:
+          toggle_vis:
+            - justify-self: end
+            - align-self: start
+
+    - type: custom:button-card
+      view_layout:
+        grid-area: ac
+      entity: climate.sl_ar_condicionado
+      icon: mdi:snowflake
+      name: A/C
+      show_icon: true
+      show_name: true
+      show_state: true
+      show_label: true
+      state_display: >
+        [[[ 
+          if (!entity || entity.state === 'off') return 'Desligado';
+          const temp = entity.attributes && entity.attributes.temperature ? entity.attributes.temperature : 22;
+          return `${temp}° · ${entity.state}`;
+        ]]]
+      label: >
+        [[[ return entity && entity.state !== 'off' ? 'Controle rapido' : 'Toque para ligar'; ]]]
+      tap_action:
+        action: more-info
+      hold_action:
+        action: more-info
+      custom_fields:
+        toggle_vis: >
+          [[[
+            const on = entity && entity.state !== 'off';
+            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on ? 'linear-gradient(180deg, rgba(79,172,254,0.95) 0%, rgba(79,172,254,0.65) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.10) 100%)'};">
+              <div style="position:absolute;top:2px;left:${on ? '18px' : '2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
+            </div>`;
+          ]]]
+        controls: >
+          [[[ return `
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+              <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">+</div>
+              <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">−</div>
+            </div>`; ]]]
+      styles:
+        card:
+          - background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)
+          - border: 1px solid rgba(255,255,255,0.14)
+          - border-radius: 18px
+          - padding: 16px
+          - margin-left: 9px
+          - margin-right: 9px
+          - height: 100%
+          - box-shadow: none
+        grid:
+          - grid-template-areas: '"i toggle_vis" "n toggle_vis" "s controls" "l controls"'
+          - grid-template-columns: 1fr auto
+          - grid-template-rows: auto auto auto 1fr
+          - row-gap: 8px
+        icon:
+          - width: 16px
+          - color: rgba(255,255,255,0.82)
+        name:
+          - font-size: 12px
+          - font-weight: 700
+          - justify-self: start
+        state:
+          - font-size: 11px
+          - color: rgba(255,255,255,0.82)
+          - justify-self: start
+        label:
+          - font-size: 9px
+          - color: rgba(255,255,255,0.38)
+          - justify-self: start
+        custom_fields:
+          toggle_vis:
+            - justify-self: end
+            - align-self: start
+          controls:
+            - justify-self: end
+            - align-self: end
+
+    - type: custom:button-card
+      view_layout:
+        grid-area: curtain
+      entity: cover.cortina_sala
+      show_icon: false
+      show_name: false
+      show_state: false
+      tap_action:
+        action: more-info
+      custom_fields:
+        left: >
+          [[[ 
+            let stateTxt = '60% aberta';
+            if (entity) {
+              if (entity.state === 'open') stateTxt = 'Aberta';
+              else if (entity.state === 'closed') stateTxt = 'Fechada';
+              else if (entity.attributes && entity.attributes.current_position != null) stateTxt = `${entity.attributes.current_position}% aberta`;
+            }
+            return `
+              <div style="display:flex;align-items:center;gap:10px;">
+                <ha-icon icon="mdi:blinds" style="width:14px;color:rgba(255,255,255,0.82);"></ha-icon>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:white;line-height:1.2;">Cortina Sala</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.62);margin-top:4px;line-height:1.2;">${stateTxt}</div>
+                </div>
+              </div>`;
+          ]]]
+        right: >
+          [[[ return `
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="padding:6px 12px;border-radius:999px;background:linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.12);font-size:10px;font-weight:700;color:rgba(255,255,255,0.82);">Abrir</div>
+              <div style="padding:6px 12px;border-radius:999px;background:linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.12);font-size:10px;font-weight:700;color:rgba(255,255,255,0.82);">Fechar</div>
+            </div>`; ]]]
+      styles:
+        card:
+          - background: transparent
+          - border: none
+          - box-shadow: none
+          - padding: 16px 0 0 0
+          - margin: 0
+          - height: 100%
+        grid:
+          - grid-template-areas: '"left right"'
+          - grid-template-columns: 1fr auto
+          - grid-template-rows: 1fr
+        custom_fields:
+          left:
+            - justify-self: start
+            - align-self: center
+          right:
+            - justify-self: end
+            - align-self: center

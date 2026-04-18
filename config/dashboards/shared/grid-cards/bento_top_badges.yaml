@@ -218,6 +218,8 @@
           box-shadow: none !important;
           border: none !important;
           padding: 0 !important;
+          /* FIX 1: força 100% da largura para o 1fr empurrar o avatar até a borda direita */
+          width: 100% !important;
         }
       $: |
         /* FIX C: zerando padding padrão do .card-content que causava espaço extra abaixo das badges */

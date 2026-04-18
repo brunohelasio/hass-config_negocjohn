@@ -50,104 +50,196 @@
 
 
 # ─────────────────────────────────────────────────────────────────
-# 2. PORTA PRINCIPAL — button-card (funcionando)
+# 2. PORTA PRINCIPAL — button-card com toggle pill iOS (v8)
+#    Controla lock.sl_fechadura_operate_lock via homeassistant.toggle
+#    Verde=trancada, cinza=destrancada. Knob animado (left transition).
 # ─────────────────────────────────────────────────────────────────
+
+# --- CÓDIGO ORIGINAL COMENTADO (v7 — dupla ação, btn_trancar/btn_abrir) ---
+# - type: custom:button-card
+#   entity: lock.sl_fechadura_operate_lock
+#   show_name: true
+#   name: "Porta Principal"
+#   show_icon: true
+#   icon: mdi:door-closed
+#   show_state: false
+#   show_label: true
+#
+#   label: >
+#     [[[
+#       if (entity.state === 'locked')   return 'Trancada';
+#       if (entity.state === 'unlocked') return 'Aberta';
+#       return entity.state;
+#     ]]]
+#
+#   custom_fields:
+#     btn_trancar:
+#       card:
+#         type: custom:button-card
+#         entity: lock.sl_fechadura_operate_lock
+#         show_name: false
+#         show_icon: true
+#         icon: mdi:lock
+#         tap_action:
+#           action: call-service
+#           service: lock.lock
+#           service_data:
+#             entity_id: lock.sl_fechadura_operate_lock
+#         styles:
+#           card:
+#             - width: "40px"
+#             - height: "40px"
+#             - border-radius: "13px"
+#             - padding: "0"
+#             - background: >
+#                 [[[
+#                   return entity.state === 'locked'
+#                     ? 'rgba(52,211,153,0.20)'
+#                     : 'rgba(255,255,255,0.07)';
+#                 ]]]
+#             - border: >
+#                 [[[
+#                   return entity.state === 'locked'
+#                     ? '1px solid rgba(52,211,153,0.45)'
+#                     : '1px solid rgba(255,255,255,0.12)';
+#                 ]]]
+#           icon:
+#             - width: "19px"
+#             - color: >
+#                 [[[
+#                   return entity.state === 'locked'
+#                     ? '#34d399'
+#                     : 'rgba(255,255,255,0.35)';
+#                 ]]]
+#     btn_abrir:
+#       card:
+#         type: custom:button-card
+#         entity: lock.sl_fechadura_operate_lock
+#         show_name: false
+#         show_icon: true
+#         icon: mdi:lock-open-variant
+#         tap_action:
+#           action: call-service
+#           service: lock.unlock
+#           service_data:
+#             entity_id: lock.sl_fechadura_operate_lock
+#         styles:
+#           card:
+#             - width: "40px"
+#             - height: "40px"
+#             - border-radius: "13px"
+#             - padding: "0"
+#             - background: >
+#                 [[[
+#                   return entity.state === 'unlocked'
+#                     ? 'rgba(248,113,113,0.20)'
+#                     : 'rgba(255,255,255,0.07)';
+#                 ]]]
+#             - border: >
+#                 [[[
+#                   return entity.state === 'unlocked'
+#                     ? '1px solid rgba(248,113,113,0.45)'
+#                     : '1px solid rgba(255,255,255,0.12)';
+#                 ]]]
+#           icon:
+#             - width: "19px"
+#             - color: >
+#                 [[[
+#                   return entity.state === 'unlocked'
+#                     ? '#f87171'
+#                     : 'rgba(255,255,255,0.35)';
+#                 ]]]
+#
+#   tap_action:
+#     action: none
+#   state_styles:
+#     locked:
+#       icon:
+#         - color: "rgba(52,211,153,0.80)"
+#     unlocked:
+#       icon:
+#         - color: "rgba(248,113,113,0.80)"
+#
+#   styles:
+#     grid:
+#       - grid-template-areas: >
+#           "i n btn_trancar btn_abrir"
+#           "i l btn_trancar btn_abrir"
+#       - grid-template-columns: "30px 1fr 46px 46px"
+#       - grid-template-rows: "auto auto"
+#       - column-gap: "8px"
+#       - align-items: "center"
+#     card:
+#       - padding: "10px 12px 10px 18px"
+#     name:
+#       - font-size: "15px"
+#       - font-weight: "600"
+#       - color: "rgba(255,255,255,0.92)"
+#       - text-align: "left"
+#       - justify-self: "start"
+#       - align-self: "end"
+#     label:
+#       - font-size: "12px"
+#       - color: "rgba(255,255,255,0.40)"
+#       - text-align: "left"
+#       - justify-self: "start"
+#       - align-self: "start"
+#     icon:
+#       - width: "24px"
+#       - align-self: "center"
+#     custom_fields:
+#       btn_trancar:
+#         - align-self: "center"
+#         - justify-self: "center"
+#       btn_abrir:
+#         - align-self: "center"
+#         - justify-self: "center"
+#
+#   card_mod:
+#     style: |
+#       ha-card {
+#         background: transparent !important;
+#         border: none !important;
+#         box-shadow: none !important;
+#         height: auto !important;
+#       }
+#       .name, .label { text-align: left !important; }
+# --- FIM CÓDIGO ORIGINAL ---
+
 - type: custom:button-card
   entity: lock.sl_fechadura_operate_lock
   show_name: true
-  name: "Porta Principal"
   show_icon: true
-  icon: mdi:door-closed
-  show_state: false
   show_label: true
-
+  show_state: false
+  icon: mdi:door-closed
+  name: "Porta Principal"
   label: >
     [[[
       if (entity.state === 'locked')   return 'Trancada';
-      if (entity.state === 'unlocked') return 'Aberta';
+      if (entity.state === 'unlocked') return 'Destrancada';
       return entity.state;
     ]]]
-
-  custom_fields:
-    btn_trancar:
-      card:
-        type: custom:button-card
-        entity: lock.sl_fechadura_operate_lock
-        show_name: false
-        show_icon: true
-        icon: mdi:lock
-        tap_action:
-          action: call-service
-          service: lock.lock
-          service_data:
-            entity_id: lock.sl_fechadura_operate_lock
-        styles:
-          card:
-            - width: "40px"
-            - height: "40px"
-            - border-radius: "13px"
-            - padding: "0"
-            - background: >
-                [[[
-                  return entity.state === 'locked'
-                    ? 'rgba(52,211,153,0.20)'
-                    : 'rgba(255,255,255,0.07)';
-                ]]]
-            - border: >
-                [[[
-                  return entity.state === 'locked'
-                    ? '1px solid rgba(52,211,153,0.45)'
-                    : '1px solid rgba(255,255,255,0.12)';
-                ]]]
-          icon:
-            - width: "19px"
-            - color: >
-                [[[
-                  return entity.state === 'locked'
-                    ? '#34d399'
-                    : 'rgba(255,255,255,0.35)';
-                ]]]
-    btn_abrir:
-      card:
-        type: custom:button-card
-        entity: lock.sl_fechadura_operate_lock
-        show_name: false
-        show_icon: true
-        icon: mdi:lock-open-variant
-        tap_action:
-          action: call-service
-          service: lock.unlock
-          service_data:
-            entity_id: lock.sl_fechadura_operate_lock
-        styles:
-          card:
-            - width: "40px"
-            - height: "40px"
-            - border-radius: "13px"
-            - padding: "0"
-            - background: >
-                [[[
-                  return entity.state === 'unlocked'
-                    ? 'rgba(248,113,113,0.20)'
-                    : 'rgba(255,255,255,0.07)';
-                ]]]
-            - border: >
-                [[[
-                  return entity.state === 'unlocked'
-                    ? '1px solid rgba(248,113,113,0.45)'
-                    : '1px solid rgba(255,255,255,0.12)';
-                ]]]
-          icon:
-            - width: "19px"
-            - color: >
-                [[[
-                  return entity.state === 'unlocked'
-                    ? '#f87171'
-                    : 'rgba(255,255,255,0.35)';
-                ]]]
-
   tap_action:
-    action: none
+    action: call-service
+    service: homeassistant.toggle
+    service_data:
+      entity_id: lock.sl_fechadura_operate_lock
+  custom_fields:
+    toggle_pill: >
+      [[[
+        var locked = entity.state === 'locked';
+        var bg = locked ? '#22c55e' : 'rgba(255,255,255,0.18)';
+        var left = locked ? '26px' : '2px';
+        return '<div style="position:relative;width:46px;height:24px;'
+             + 'border-radius:12px;background:' + bg + ';'
+             + 'transition:background 0.25s;pointer-events:none;">'
+             +   '<div style="position:absolute;top:2px;left:' + left + ';'
+             +     'width:20px;height:20px;border-radius:50%;background:white;'
+             +     'transition:left 0.25s;box-shadow:0 1px 3px rgba(0,0,0,0.35);'
+             +   '"></div>'
+             + '</div>';
+      ]]]
   state_styles:
     locked:
       icon:
@@ -155,18 +247,15 @@
     unlocked:
       icon:
         - color: "rgba(248,113,113,0.80)"
-
   styles:
     grid:
-      - grid-template-areas: >
-          "i n btn_trancar btn_abrir"
-          "i l btn_trancar btn_abrir"
-      - grid-template-columns: "30px 1fr 46px 46px"
+      - grid-template-areas: '"i n toggle_pill" "i l toggle_pill"'
+      - grid-template-columns: "30px 1fr 54px"
       - grid-template-rows: "auto auto"
       - column-gap: "8px"
       - align-items: "center"
     card:
-      - padding: "10px 12px 10px 18px"
+      - padding: "8px 14px 8px 18px"
     name:
       - font-size: "15px"
       - font-weight: "600"
@@ -184,13 +273,9 @@
       - width: "24px"
       - align-self: "center"
     custom_fields:
-      btn_trancar:
+      toggle_pill:
         - align-self: "center"
-        - justify-self: "center"
-      btn_abrir:
-        - align-self: "center"
-        - justify-self: "center"
-
+        - justify-self: "end"
   card_mod:
     style: |
       ha-card {
@@ -203,57 +288,129 @@
 
 
 # ─────────────────────────────────────────────────────────────────
-# 3. PORTA SERVIÇO — [1] type:markdown
-#    HTML direto = flexbox garantido = alinhamento correto
-#    Sem button-card, sem grid bug, sem JS template
+# 3. PORTA SERVIÇO — button-card desabilitado (sem entidade) (v8)
+#    Mesmo layout da Porta Principal; toggle pill visualmente OFF,
+#    opacity 0.5, sem tap_action.
+#    Motivo da reescrita: a versao anterior com type:markdown +
+#    HTML inline flex era sanitizada pelo ha-markdown (<p> wrapper
+#    removia display:flex), causando ícone/texto/cadeados empilhados
+#    em fluxo de bloco (imagem 1).
 # ─────────────────────────────────────────────────────────────────
-- type: markdown
-  content: >
-    <div style="display:flex;align-items:center;gap:8px;
-    padding:10px 12px 10px 18px;box-sizing:border-box;width:100%;">
 
-      <ha-icon icon="mdi:door-closed"
-        style="--mdc-icon-size:24px;color:rgba(255,255,255,0.28);
-        flex-shrink:0;"></ha-icon>
+# --- CÓDIGO ORIGINAL COMENTADO (v7 — type:markdown com HTML inline) ---
+# - type: markdown
+#   content: >
+#     <div style="display:flex;align-items:center;gap:8px;
+#     padding:10px 12px 10px 18px;box-sizing:border-box;width:100%;">
+#
+#       <ha-icon icon="mdi:door-closed"
+#         style="--mdc-icon-size:24px;color:rgba(255,255,255,0.28);
+#         flex-shrink:0;"></ha-icon>
+#
+#       <div style="flex:1;min-width:0;">
+#         <div style="font-size:15px;font-weight:600;
+#         color:rgba(255,255,255,0.35);text-align:left;
+#         white-space:nowrap;">Porta Serviço</div>
+#         <div style="font-size:12px;color:rgba(255,255,255,0.20);
+#         text-align:left;">Sem entidade</div>
+#       </div>
+#
+#       <div style="display:flex;gap:6px;flex-shrink:0;">
+#         <div style="width:40px;height:40px;border-radius:13px;
+#         background:rgba(255,255,255,0.04);
+#         border:1px solid rgba(255,255,255,0.08);
+#         display:flex;align-items:center;justify-content:center;">
+#           <ha-icon icon="mdi:lock"
+#             style="--mdc-icon-size:19px;
+#             color:rgba(255,255,255,0.16);"></ha-icon>
+#         </div>
+#         <div style="width:40px;height:40px;border-radius:13px;
+#         background:rgba(255,255,255,0.04);
+#         border:1px solid rgba(255,255,255,0.08);
+#         display:flex;align-items:center;justify-content:center;">
+#           <ha-icon icon="mdi:lock-open-variant"
+#             style="--mdc-icon-size:19px;
+#             color:rgba(255,255,255,0.16);"></ha-icon>
+#         </div>
+#       </div>
+#
+#     </div>
+#
+#   card_mod:
+#     style: |
+#       ha-card {
+#         background: transparent !important;
+#         border: none !important;
+#         box-shadow: none !important;
+#         padding: 0 !important;
+#       }
+#       ha-markdown { padding: 0 !important; }
+# --- FIM CÓDIGO ORIGINAL ---
 
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:15px;font-weight:600;
-        color:rgba(255,255,255,0.35);text-align:left;
-        white-space:nowrap;">Porta Serviço</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.20);
-        text-align:left;">Sem entidade</div>
-      </div>
-
-      <div style="display:flex;gap:6px;flex-shrink:0;">
-        <div style="width:40px;height:40px;border-radius:13px;
-        background:rgba(255,255,255,0.04);
-        border:1px solid rgba(255,255,255,0.08);
-        display:flex;align-items:center;justify-content:center;">
-          <ha-icon icon="mdi:lock"
-            style="--mdc-icon-size:19px;
-            color:rgba(255,255,255,0.16);"></ha-icon>
-        </div>
-        <div style="width:40px;height:40px;border-radius:13px;
-        background:rgba(255,255,255,0.04);
-        border:1px solid rgba(255,255,255,0.08);
-        display:flex;align-items:center;justify-content:center;">
-          <ha-icon icon="mdi:lock-open-variant"
-            style="--mdc-icon-size:19px;
-            color:rgba(255,255,255,0.16);"></ha-icon>
-        </div>
-      </div>
-
-    </div>
-
+- type: custom:button-card
+  show_name: true
+  show_icon: true
+  show_label: true
+  icon: mdi:door-closed
+  name: "Porta Serviço"
+  label: "Sem entidade"
+  tap_action:
+    action: none
+  hold_action:
+    action: none
+  custom_fields:
+    toggle_pill: >
+      [[[
+        return '<div style="position:relative;width:46px;height:24px;'
+             + 'border-radius:12px;background:rgba(255,255,255,0.10);'
+             + 'pointer-events:none;">'
+             +   '<div style="position:absolute;top:2px;left:2px;'
+             +     'width:20px;height:20px;border-radius:50%;'
+             +     'background:rgba(255,255,255,0.35);'
+             +     'box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>'
+             + '</div>';
+      ]]]
+  styles:
+    grid:
+      - grid-template-areas: '"i n toggle_pill" "i l toggle_pill"'
+      - grid-template-columns: "30px 1fr 54px"
+      - grid-template-rows: "auto auto"
+      - column-gap: "8px"
+      - align-items: "center"
+    card:
+      - padding: "8px 14px 8px 18px"
+      - opacity: "0.55"
+      - cursor: "default"
+    name:
+      - font-size: "15px"
+      - font-weight: "600"
+      - color: "rgba(255,255,255,0.45)"
+      - text-align: "left"
+      - justify-self: "start"
+      - align-self: "end"
+    label:
+      - font-size: "12px"
+      - color: "rgba(255,255,255,0.28)"
+      - text-align: "left"
+      - justify-self: "start"
+      - align-self: "start"
+    icon:
+      - width: "24px"
+      - color: "rgba(255,255,255,0.32)"
+      - align-self: "center"
+    custom_fields:
+      toggle_pill:
+        - align-self: "center"
+        - justify-self: "end"
   card_mod:
     style: |
       ha-card {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 0 !important;
+        height: auto !important;
       }
-      ha-markdown { padding: 0 !important; }
+      .name, .label { text-align: left !important; }
 
 
 # ─────────────────────────────────────────────────────────────────

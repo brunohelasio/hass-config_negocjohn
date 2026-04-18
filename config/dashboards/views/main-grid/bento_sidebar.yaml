@@ -48,5 +48,6 @@ card_mod:
     ha-card::before {
       display: none !important;
     }
-cards:
-  - !include ../../shared/grid-cards/bento_sidebar.yaml
+# Fix 1 (P1): "- !include" criava [[array]] duplo pois bento_sidebar.yaml é sequência YAML
+# ANTERIOR: cards:\n  - !include ../../shared/grid-cards/bento_sidebar.yaml
+cards: !include ../../shared/grid-cards/bento_sidebar.yaml

@@ -395,6 +395,10 @@
 
     # ── avatar de presença (46px, align-self:center corrige oval) ─
     - type: custom:button-card
+      # Fix 2 (P2): view_layout aplica justify-self ao host element (item de grid real)
+      # styles.card aplicava ao ha-card interno (shadow DOM) — não movia o item de grid
+      view_layout:
+        justify-self: end
       entity: person.bruno_helasio
       show_name: false
       show_state: false

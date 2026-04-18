@@ -77,9 +77,9 @@
               + '<path d="M4.447 3.053a.15.15 0 0 1-.15.15H.502a.15.15 0 0 1-.15-.15v-.975a.15.15 0 0 1 .15-.15h3.803a.15.15 0 0 1 .15.15v.975z" fill="#428bc1" opacity=".5"/>'
               + '<path d="M3.375 3.203H.352V2.047s.6.69 3.022 1.155" fill="#428bc1"/>'
               + '<path d="M4.672 2.288c0-.135-.098-.24-.225-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .225-.105.225-.24v-.93" fill="#42ade2"/>'
-              + '<path fill="#3e4347" d="M.457 4.485H.75V4.8H.457z"/>'
+              + '<path fill="#8a8e92" d="M.457 4.485H.75V4.8H.457z"/>'
               + '<path d="M3.375 4.485H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645m0-.646H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645" fill="#428bc1"/>'
-              + '<path fill="#3e4347" d="M4.05 4.485h.292V4.8H4.05z"/>'
+              + '<path fill="#8a8e92" d="M4.05 4.485h.292V4.8H4.05z"/>'
               + '<path d="M1.425 3.84H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>'
               + '<path d="M1.425 3.203H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>'
               + '<path d="M.57 2.288c0-.135-.098-.24-.217-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .217-.105.217-.24v-.93" fill="#42ade2"/>'
@@ -90,7 +90,10 @@
           [[[
             const t = states['sensor.sl_sensor_temp_humid_temperatura'];
             const temp = t && t.state && !['unknown','unavailable'].includes(t.state) ? `${t.state}°` : '—';
-            const hum = t?.attributes?.humidity != null ? `${t.attributes.humidity}%` : '';
+            // Fix P3: umidade vem de sensor separado (atributo humidity inexistente no sensor de temp)
+            // ANTERIOR: t?.attributes?.humidity != null ? `${t.attributes.humidity}%` : ''
+            const h = states['sensor.sl_sensor_temp_humid_umidade'];
+            const hum = h && !['unknown','unavailable'].includes(h.state) ? `${h.state}%` : '';
             return `<div style="display:flex;flex-direction:column;gap:3px;">
               <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.9);">${temp}</span>
               <span style="font-size:11px;color:rgba(255,255,255,0.52);">${hum}</span>
@@ -133,7 +136,7 @@
               ${dot('mdi:account',          home,  '#60a5fa')}
               ${dot('mdi:television-classic', tvOn,  '#a78bfa')}
               ${dot('mdi:snowflake',          acOn,  '#4facfe')}
-              ${dot('mdi:amazon-alexa',       alexa, '#ff9900')}
+              ${dot('mdi:speaker-wireless',   alexa, '#ff9900')}
             </div>`;
           ]]]
       styles:
@@ -148,7 +151,9 @@
         grid:
           - grid-template-areas: '"icon temp right" "n n right" "lights lights right"'
           - grid-template-columns: auto 1fr auto
-          - grid-template-rows: 1fr auto auto
+          # Fix P5: auto auto 1fr — ícone+temp no topo, nome embaixo imediato, lights preenche o resto
+          # ANTERIOR: 1fr auto auto — empurrava nome+lights para borda inferior causando corte
+          - grid-template-rows: auto auto 1fr
         name:
           - justify-self: start
           - align-self: end
@@ -167,8 +172,8 @@
             - margin-top: 4px
           lights:
             - justify-self: start
-            - align-self: end
-            - margin-bottom: 2px
+            # Fix P5: align-self:start — badge aparece logo abaixo do nome (anterior: end colava na borda)
+            - align-self: start
           right:
             - justify-self: end
             - align-self: start
@@ -219,8 +224,8 @@
           - border: 1px solid rgba(255,255,255,0.14)
           - border-radius: 18px
           - padding: 16px
-          # Fix 2: margem simétrica (era margin-left:12px / margin-right:9px assimétrico)
-          - margin: 0 8px
+          # Fix P7: margin removido — margin em ha-card (shadow DOM) não afeta item de grid host
+          # ANTERIOR: - margin: 0 8px (causava também overflow com height:100%)
           - height: 100%
           - box-shadow: none
         # Fix 10: ícone e nome na mesma linha (3 colunas)
@@ -270,16 +275,23 @@
         - climate.sl_ar_condicionado
       state_display: >
         [[[
-          if (!entity || entity.state === 'off') return 'Desligado';
-          const temp = entity.attributes?.temperature ?? 22;
+          // Fix P8: lista explícita de estados ativos (anterior: !== 'off' incluía 'unavailable')
+          const active = ['cool','heat','fan_only','dry','heat_cool','auto'];
+          if (!entity || !active.includes(entity.state)) return 'Desligado';
+          const temp = entity.attributes?.temperature ?? '—';
           return `${temp}° · ${entity.state}`;
         ]]]
       label: >
-        [[[ return entity && entity.state !== 'off' ? 'Controle rápido' : 'Toque para ligar'; ]]]
+        [[[
+          // Fix P8: ANTERIOR: entity && entity.state !== 'off' ? ... : ...
+          const active = ['cool','heat','fan_only','dry','heat_cool','auto'];
+          return active.includes(entity?.state) ? 'Controle rápido' : 'Toque para ligar';
+        ]]]
       # Fix 4: turn_off/turn_on explícito — climate.toggle não suportado pela integração
       tap_action:
         action: perform-action
-        perform_action: "[[[ return entity?.state !== 'off' ? 'climate.turn_off' : 'climate.turn_on'; ]]]"
+        # Fix P8: lista explícita — ANTERIOR: !== 'off' avaliava 'unavailable' como ligado
+        perform_action: "[[[ const on=['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state); return on?'climate.turn_off':'climate.turn_on'; ]]]"
         target:
           entity_id: climate.sl_ar_condicionado
         haptic: success
@@ -288,7 +300,8 @@
       custom_fields:
         toggle_vis: >
           [[[
-            const on = entity && entity.state !== 'off';
+            // Fix P8: lista explícita — ANTERIOR: entity && entity.state !== 'off'
+            const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
             return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(79,172,254,0.95)0%,rgba(79,172,254,0.65)100%)':'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'};">
               <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
             </div>`;
@@ -296,7 +309,8 @@
         # Fix 3: +/− só quando AC ligado (era sempre visível)
         controls: >
           [[[
-            const on = entity && entity.state !== 'off';
+            // Fix P8: lista explícita — ANTERIOR: entity && entity.state !== 'off'
+            const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
             if (!on) return '';
             return `<div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
               <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">+</div>
@@ -309,8 +323,8 @@
           - border: 1px solid rgba(255,255,255,0.14)
           - border-radius: 18px
           - padding: 16px
-          # Fix 2: margem simétrica (era margin-left:9px / margin-right:12px assimétrico)
-          - margin: 0 8px
+          # Fix P7: margin removido — margin em ha-card (shadow DOM) não afeta item de grid host
+          # ANTERIOR: - margin: 0 8px (causava também overflow com height:100%)
           - height: 100%
           - box-shadow: none
         # Fix 10: ícone e nome na mesma linha (3 colunas)
@@ -415,6 +429,9 @@
               border: none !important;
               box-shadow: none !important;
               padding: 0 !important;
+              /* Fix P9: garantir preenchimento da linha de 54px; min-height:0 remove default do HA */
+              height: 100% !important;
+              min-height: 0 !important;
             }
           $: |
             .card-content { padding: 0 !important; }

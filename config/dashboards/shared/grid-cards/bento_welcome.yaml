@@ -493,7 +493,15 @@
             var fc   = entity.attributes.forecast;
             var tMax = (fc && fc.length > 0) ? Math.round(fc[0].temperature) : '—';
             var wind    = entity.attributes.wind_speed || '—';
-            var windDir = entity.attributes.wind_bearing || '';
+            var windRaw = entity.attributes.wind_bearing;
+            // Converte bearing numerico em cardinal (N/NE/E/SE/S/SW/W/NW)
+            var windDir = '';
+            if (typeof windRaw === 'number') {
+              var cards = ['N','NE','E','SE','S','SW','W','NW'];
+              windDir = cards[Math.round(windRaw / 45) % 8];
+            } else if (windRaw) {
+              windDir = String(windRaw);
+            }
 
             return '<div style="display:flex;align-items:flex-start;gap:10px;width:100%;">'
                  +   '<ha-icon icon="' + icon + '" style="--mdc-icon-size:44px;'
@@ -527,6 +535,8 @@
             - padding: "0"
 
     # Curva SVG decorativa laranja — sangra nas laterais
+    # v8: peak do SVG rebaixado (y=17 antes era y=1) para NAO invadir
+    # o texto do weather_top. ViewBox ampliado para 60px para dar folga.
     weather_curve:
       card:
         type: custom:button-card
@@ -536,7 +546,7 @@
         show_label: true
         label: >
           [[[
-            return '<svg viewBox="0 0 400 52" width="100%" height="52"'
+            return '<svg viewBox="0 0 400 60" width="100%" height="60"'
                  + ' preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'
                  + '<defs>'
                  +   '<linearGradient id="wg2" x1="0" y1="0" x2="0" y2="1">'
@@ -544,20 +554,20 @@
                  +     '<stop offset="100%" stop-color="rgba(245,158,11,0.01)"/>'
                  +   '</linearGradient>'
                  + '</defs>'
-                 + '<path d="M0 38 C30 39,58 36,86 32'
-                 +         ' C116 27,142 29,168 22'
-                 +         ' C196 14,222 5,248 1'
-                 +         ' C276 -2,300 2,322 9'
-                 +         ' C350 17,370 27,390 35'
-                 +         ' C394 36,398 38,400 39'
-                 +         ' L400 52 L0 52 Z"'
+                 + '<path d="M0 46 C30 46,58 45,86 43'
+                 +         ' C116 40,142 40,168 37'
+                 +         ' C196 33,222 29,248 26'
+                 +         ' C276 24,300 25,322 28'
+                 +         ' C350 33,370 38,390 42'
+                 +         ' C394 43,398 44,400 44'
+                 +         ' L400 60 L0 60 Z"'
                  +  ' fill="url(#wg2)"/>'
-                 + '<path d="M0 38 C30 39,58 36,86 32'
-                 +         ' C116 27,142 29,168 22'
-                 +         ' C196 14,222 5,248 1'
-                 +         ' C276 -2,300 2,322 9'
-                 +         ' C350 17,370 27,390 35'
-                 +         ' C394 36,398 38,400 39"'
+                 + '<path d="M0 46 C30 46,58 45,86 43'
+                 +         ' C116 40,142 40,168 37'
+                 +         ' C196 33,222 29,248 26'
+                 +         ' C276 24,300 25,322 28'
+                 +         ' C350 33,370 38,390 42'
+                 +         ' C394 43,398 44,400 44"'
                  +  ' fill="none" stroke="#f59e0b"'
                  +  ' stroke-width="2" stroke-linecap="round"/>'
                  + '</svg>';
@@ -568,12 +578,12 @@
             - border: "none"
             - box-shadow: "none"
             - padding: "0"
-            - height: "52px"
+            - height: "60px"
             - overflow: "visible"
           label:
             - width: "100%"
             - padding: "0"
-            - height: "52px"
+            - height: "60px"
 
   # Posiciona os dois custom_fields em coluna
   styles:
@@ -588,7 +598,8 @@
       - padding: "10px 18px 0"
       - display: "flex"
       - flex-direction: "column"
-      - gap: "8px"
+      # v8: gap maior (20px) para afastar o texto da curva
+      - gap: "20px"
       - height: "auto"
     custom_fields:
       weather_top:

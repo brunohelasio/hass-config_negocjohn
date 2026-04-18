@@ -161,10 +161,13 @@
           - font-weight: 700
           - color: white
           - margin-bottom: 2px
+          # ANTERIOR: margin-top: 8px (não funciona — aplica-se ao span interno, não ao grid item)
         custom_fields:
           icon:
             - justify-self: start
             - align-self: start
+            # padding-bottom no container do ícone aumenta a altura da linha 1 e empurra o nome para baixo
+            - padding-bottom: 10px
           temp:
             - justify-self: start
             - align-self: start

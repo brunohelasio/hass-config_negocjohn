@@ -1,50 +1,25 @@
 # ═══════════════════════════════════════════════════════════════════
-#  BENTO WELCOME — Conteúdo interno
+#  BENTO WELCOME — v7
 #  Arquivo: config/dashboards/shared/grid-cards/bento_welcome.yaml
 #
-#  Incluído por: views/main-grid/bento_welcome.yaml (container stack-in-card)
-#
-#  Estrutura (espelha o React WelcomeCard):
-#    Seção 1 — Saudação (data + nome)
-#    Seção 2 — Portas (2 locks com estado)
-#    Seção 3 — Clima (temp + previsão horária)
-#
-#  Dependências:
-#    • card_mod        (já em uso no seu setup)
-#    • custom:button-card
-#    • Entidade: weather.casa  (ou equivalente)
-#    • Entidades: lock.porta_principal, lock.porta_servico
+#  Mudanças v7:
+#    [1] Porta Serviço: type:markdown (sem button-card, sem grid bug)
+#        → alinhamento correto garantido pelo flexbox do HTML
+#    [2] Weather: substituído por button-card compacto
+#        → sem overflow, sem corte, controle total de altura
+#        → temperatura grande + vento + curva SVG decorativa
+#        → ocupa toda a base do bloco, sangra nas bordas
 # ═══════════════════════════════════════════════════════════════════
 
-# ── SEÇÃO 1: Saudação ─────────────────────────────────────────────
-# Renderiza:  "QUARTA, 15 ABR"   (label pequeno)
-#             "Boa tarde, Bruno" (título)
-#
-# Tradução React:
-#   <div style={{...label, fontSize:"9px"}}>Quarta, 15 Abr</div>
-#   <div style={{fontSize:"17px", fontWeight:"700"}}>Boa tarde, Bruno</div>
+
 # ─────────────────────────────────────────────────────────────────
+# 1. SAUDAÇÃO
+# ─────────────────────────────────────────────────────────────────
+- type: markdown
+  content: >
+    {{ now().strftime('%A, %d %b') | upper }}
 
-- type: custom:button-card
-  entity: ""
-  show_name: false
-  show_icon: false
-  show_state: false
-
-  # Jinja: dia da semana + data + saudação por hora
-  label: >
-    [[[
-      const now = new Date();
-      const dias = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-      const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-      const diaSemana = dias[now.getDay()].toUpperCase();
-      const dia = now.getDate();
-      const mes = meses[now.getMonth()].toUpperCase();
-      const hora = now.getHours();
-      const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-      return `<span style="font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,.44);font-weight:600;display:block;margin-bottom:6px;">${diaSemana}, ${dia} ${mes}</span><span style="font-size:17px;font-weight:700;line-height:1.12;">${saudacao}, Bruno</span>`;
-    ]]]
-  show_label: true
+    ## {% set h = now().hour %}{% if h < 12 %}Bom dia{% elif h < 18 %}Boa tarde{% else %}Boa noite{% endif %}, Bruno
 
   card_mod:
     style: |
@@ -52,229 +27,336 @@
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 14px 18px 0 !important;
+        padding: 18px 18px 6px !important;
+      }
+      ha-markdown { padding: 0 !important; }
+      ha-markdown p:first-child {
+        font-size: 11px !important;
+        letter-spacing: 0.12em !important;
+        color: rgba(255,255,255,0.44) !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        margin: 0 0 4px !important;
+      }
+      ha-markdown h2 {
+        font-size: 26px !important;
+        font-weight: 700 !important;
+        color: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        line-height: 1.15 !important;
+      }
+
+
+# ─────────────────────────────────────────────────────────────────
+# 2. PORTA PRINCIPAL — button-card (funcionando)
+# ─────────────────────────────────────────────────────────────────
+- type: custom:button-card
+  entity: lock.sl_fechadura_operate_lock
+  show_name: true
+  name: "Porta Principal"
+  show_icon: true
+  icon: mdi:door-closed
+  show_state: false
+  show_label: true
+
+  label: >
+    [[[
+      if (entity.state === 'locked')   return 'Trancada';
+      if (entity.state === 'unlocked') return 'Aberta';
+      return entity.state;
+    ]]]
+
+  custom_fields:
+    btn_trancar:
+      card:
+        type: custom:button-card
+        entity: lock.sl_fechadura_operate_lock
+        show_name: false
+        show_icon: true
+        icon: mdi:lock
+        tap_action:
+          action: call-service
+          service: lock.lock
+          service_data:
+            entity_id: lock.sl_fechadura_operate_lock
+        styles:
+          card:
+            - width: "40px"
+            - height: "40px"
+            - border-radius: "13px"
+            - padding: "0"
+            - background: >
+                [[[
+                  return entity.state === 'locked'
+                    ? 'rgba(52,211,153,0.20)'
+                    : 'rgba(255,255,255,0.07)';
+                ]]]
+            - border: >
+                [[[
+                  return entity.state === 'locked'
+                    ? '1px solid rgba(52,211,153,0.45)'
+                    : '1px solid rgba(255,255,255,0.12)';
+                ]]]
+          icon:
+            - width: "19px"
+            - color: >
+                [[[
+                  return entity.state === 'locked'
+                    ? '#34d399'
+                    : 'rgba(255,255,255,0.35)';
+                ]]]
+    btn_abrir:
+      card:
+        type: custom:button-card
+        entity: lock.sl_fechadura_operate_lock
+        show_name: false
+        show_icon: true
+        icon: mdi:lock-open-variant
+        tap_action:
+          action: call-service
+          service: lock.unlock
+          service_data:
+            entity_id: lock.sl_fechadura_operate_lock
+        styles:
+          card:
+            - width: "40px"
+            - height: "40px"
+            - border-radius: "13px"
+            - padding: "0"
+            - background: >
+                [[[
+                  return entity.state === 'unlocked'
+                    ? 'rgba(248,113,113,0.20)'
+                    : 'rgba(255,255,255,0.07)';
+                ]]]
+            - border: >
+                [[[
+                  return entity.state === 'unlocked'
+                    ? '1px solid rgba(248,113,113,0.45)'
+                    : '1px solid rgba(255,255,255,0.12)';
+                ]]]
+          icon:
+            - width: "19px"
+            - color: >
+                [[[
+                  return entity.state === 'unlocked'
+                    ? '#f87171'
+                    : 'rgba(255,255,255,0.35)';
+                ]]]
+
+  tap_action:
+    action: none
+  state_styles:
+    locked:
+      icon:
+        - color: "rgba(52,211,153,0.80)"
+    unlocked:
+      icon:
+        - color: "rgba(248,113,113,0.80)"
+
+  styles:
+    grid:
+      - grid-template-areas: >
+          "i n btn_trancar btn_abrir"
+          "i l btn_trancar btn_abrir"
+      - grid-template-columns: "30px 1fr 46px 46px"
+      - grid-template-rows: "auto auto"
+      - column-gap: "8px"
+      - align-items: "center"
+    card:
+      - padding: "10px 12px 10px 18px"
+    name:
+      - font-size: "15px"
+      - font-weight: "600"
+      - color: "rgba(255,255,255,0.92)"
+      - text-align: "left"
+      - justify-self: "start"
+      - align-self: "end"
+    label:
+      - font-size: "12px"
+      - color: "rgba(255,255,255,0.40)"
+      - text-align: "left"
+      - justify-self: "start"
+      - align-self: "start"
+    icon:
+      - width: "24px"
+      - align-self: "center"
+    custom_fields:
+      btn_trancar:
+        - align-self: "center"
+        - justify-self: "center"
+      btn_abrir:
+        - align-self: "center"
+        - justify-self: "center"
+
+  card_mod:
+    style: |
+      ha-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
         height: auto !important;
       }
-      .label {
-        text-align: left;
-        line-height: 1.3;
+      .name, .label { text-align: left !important; }
+
+
+# ─────────────────────────────────────────────────────────────────
+# 3. PORTA SERVIÇO — [1] type:markdown
+#    HTML direto = flexbox garantido = alinhamento correto
+#    Sem button-card, sem grid bug, sem JS template
+# ─────────────────────────────────────────────────────────────────
+- type: markdown
+  content: >
+    <div style="display:flex;align-items:center;gap:8px;
+    padding:10px 12px 10px 18px;box-sizing:border-box;width:100%;">
+
+      <ha-icon icon="mdi:door-closed"
+        style="--mdc-icon-size:24px;color:rgba(255,255,255,0.28);
+        flex-shrink:0;"></ha-icon>
+
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:600;
+        color:rgba(255,255,255,0.35);text-align:left;
+        white-space:nowrap;">Porta Serviço</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.20);
+        text-align:left;">Sem entidade</div>
+      </div>
+
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <div style="width:40px;height:40px;border-radius:13px;
+        background:rgba(255,255,255,0.04);
+        border:1px solid rgba(255,255,255,0.08);
+        display:flex;align-items:center;justify-content:center;">
+          <ha-icon icon="mdi:lock"
+            style="--mdc-icon-size:19px;
+            color:rgba(255,255,255,0.16);"></ha-icon>
+        </div>
+        <div style="width:40px;height:40px;border-radius:13px;
+        background:rgba(255,255,255,0.04);
+        border:1px solid rgba(255,255,255,0.08);
+        display:flex;align-items:center;justify-content:center;">
+          <ha-icon icon="mdi:lock-open-variant"
+            style="--mdc-icon-size:19px;
+            color:rgba(255,255,255,0.16);"></ha-icon>
+        </div>
+      </div>
+
+    </div>
+
+  card_mod:
+    style: |
+      ha-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
       }
+      ha-markdown { padding: 0 !important; }
 
-# ── SEÇÃO 2: Portas ───────────────────────────────────────────────
-# Renderiza 2 linhas:
-#   🔒  Porta Principal    [mini-slider]
-#   🔒  Porta Serviço      [mini-slider]
-#
-# Tradução React:
-#   locks.map({ label, locked, icon: DoorClosed }) →
-#     <span>icon + nome</span> + <MiniSlider on={locked} />
-#
-# No HA: cada lock é um button-card com estado trancado/aberto
-#   - icon muda via state_styles
-#   - pseudo-elemento ::after simula o mini-slider via card_mod
+
 # ─────────────────────────────────────────────────────────────────
-
-- type: horizontal-stack
-  cards:
-
-    # Porta Principal
-    - type: custom:button-card
-      entity: lock.sl_fechadura_operate_lock
-      show_name: true
-      name: "Porta Principal"
-      show_icon: true
-      icon: mdi:door-closed-lock
-      show_state: false
-
-      # Mini-slider iOS: thumb branco que desliza
-      # posição left:26px = locked, left:2px = unlocked
-      card_mod:
-        style: |
-          ha-card {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 4px 18px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            height: auto !important;
-          }
-
-          /* Container do slider (criado via ::after do card) */
-          ha-card::after {
-            content: '';
-            display: block;
-            width: 48px;
-            height: 24px;
-            border-radius: 999px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 100%);
-            border: 1px solid rgba(255,255,255,0.12);
-            box-shadow:
-              inset 0 1px 0 rgba(255,255,255,0.14),
-              inset 0 -1px 0 rgba(255,255,255,0.03);
-            position: relative;
-            flex-shrink: 0;
-          }
-
-          /* Thumb branco do slider */
-          /* Posição controlada por variável CSS --thumb-x */
-          ha-card::before {
-            content: '';
-            position: absolute;
-            right: 20px;   /* Posição fixa; ver nota abaixo sobre estado */
-            top: 50%;
-            transform: translateY(-50%);
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(229,231,235,0.96));
-            border: 1px solid rgba(255,255,255,0.36);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.8);
-            z-index: 2;
-          }
-
-      styles:
-        card:
-          - padding: "4px 18px"
-          - flex-direction: "row"
-          - align-items: "center"
-          - justify-content: "space-between"
-        name:
-          - font-size: "12px"
-          - color: "rgba(255,255,255,0.92)"
-          - font-weight: "500"
-        icon:
-          - color: "rgba(255,255,255,0.72)"
-          - width: "13px"
-
-      # Estado do lock muda cor do icon
-      state_styles:
-        locked:
-          icon:
-            - color: "rgba(52,211,153,0.9)"   # verde = trancado
-        unlocked:
-          icon:
-            - color: "rgba(248,113,113,0.9)"  # vermelho = aberto
-
-      tap_action:
-        action: toggle
-
-    # Porta Serviço
-    - type: custom:button-card
-      entity: lock.porta_servico      # <-- ajustar
-      show_name: true
-      name: "Porta Serviço"
-      show_icon: true
-      icon: mdi:door-closed-lock
-      show_state: false
-
-      card_mod:
-        style: |
-          ha-card {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 4px 18px !important;
-            height: auto !important;
-          }
-          ha-card::after {
-            content: '';
-            display: block;
-            width: 48px;
-            height: 24px;
-            border-radius: 999px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.08) 100%);
-            border: 1px solid rgba(255,255,255,0.12);
-            flex-shrink: 0;
-          }
-          ha-card::before {
-            content: '';
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(229,231,235,0.96));
-            border: 1px solid rgba(255,255,255,0.36);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.22);
-            z-index: 2;
-          }
-
-      styles:
-        card:
-          - padding: "4px 18px"
-          - flex-direction: "row"
-          - align-items: "center"
-          - justify-content: "space-between"
-        name:
-          - font-size: "12px"
-          - color: "rgba(255,255,255,0.92)"
-          - font-weight: "500"
-        icon:
-          - color: "rgba(255,255,255,0.72)"
-          - width: "13px"
-
-      state_styles:
-        locked:
-          icon:
-            - color: "rgba(52,211,153,0.9)"
-        unlocked:
-          icon:
-            - color: "rgba(248,113,113,0.9)"
-
-      tap_action:
-        action: toggle
-
-# ── SEÇÃO 3: Clima ────────────────────────────────────────────────
-# Renderiza:
-#   "23° / 28°"  (temp atual / máxima)
-#   "Northwest, 24 km/h"
-#   Curva SVG decorativa (estática — impossível dinâmica sem apexcharts)
-#   Previsão horária: 5 slots (hora + ícone + temp)
+# 4. CLIMA — [2] button-card compacto substitui weather-forecast-card
 #
-# Tradução React:
-#   <span style={{fontSize:"36px", fontWeight:"300"}}>23°</span>
-#   <span style={{opacity:.52}}> / 28°</span>
-#   <svg>...curva de temperatura...</svg>
-#   forecast.map({time, temp, icon}) → div col por slot
+#    Vantagens vs weather-forecast-card:
+#      • Altura fixa e previsível — sem overflow, sem corte
+#      • Sangra nas bordas do stack-in-card (margin negativo)
+#      • Arredonda os cantos inferiores junto com o container
+#      • Lê dados de weather.forecast_casa via JS template
 #
-# No HA: button-card com custom_fields para cada slot horário
-#   + curva SVG estática embutida como custom_field
-#   + dados puxados de weather.casa via JS template
+#    Layout:
+#      ┌──────────────────────────────────────────┐
+#      │  [ícone 44px]  Condição       28.6°C     │  ← topo
+#      │                               28.6°/26°  │
+#      │                💨 NW 19 km/h             │
+#      │  ──────────── curva laranja ───────────   │
+#      └──────────────────────────────────────────┘  ← base do bloco
+#
+#    O ícone MDI reflete a condição atual (sol, nuvem, chuva etc.)
 # ─────────────────────────────────────────────────────────────────
-
 - type: custom:button-card
-  entity: weather.casa                # <-- ajustar (sua entidade de clima)
+  entity: weather.forecast_casa
   show_name: false
   show_icon: false
   show_state: false
+  show_label: false
 
+  # Todo o conteúdo via custom_fields para controle total
   custom_fields:
 
-    # Temperatura principal + wind
-    temp_header:
+    # Linha principal: ícone + condição + temperatura
+    weather_top:
       card:
         type: custom:button-card
         entity: weather.forecast_casa
         show_name: false
         show_icon: false
         show_state: false
+        show_label: true
         label: >
           [[[
-            const t = entity.attributes.temperature;
-            const tMax = entity.attributes.forecast?.[0]?.temperature ?? '—';
-            const wind = entity.attributes.wind_speed ?? '—';
-            const windDir = entity.attributes.wind_bearing_text ?? entity.attributes.wind_bearing ?? '';
-            return `<div style="display:flex;align-items:flex-start;gap:4px;">
-              <span style="font-size:36px;font-weight:300;line-height:0.95;">${t}°</span>
-              <span style="font-size:15px;color:rgba(255,255,255,.52);padding-top:9px;">/ ${tMax}°</span>
-            </div>
-            <div style="font-size:9px;color:rgba(255,255,255,.42);margin-top:2px;">${windDir}, ${wind} km/h</div>`;
+            var conds = {
+              'sunny':           'Ensolarado',
+              'clear-night':     'Céu limpo',
+              'partlycloudy':    'Parcialmente nublado',
+              'cloudy':          'Nublado',
+              'rainy':           'Chuva',
+              'pouring':         'Chuva forte',
+              'snowy':           'Neve',
+              'snowy-rainy':     'Chuva com neve',
+              'windy':           'Ventoso',
+              'windy-variant':   'Ventoso',
+              'fog':             'Neblina',
+              'hail':            'Granizo',
+              'lightning':       'Tempestade',
+              'lightning-rainy': 'Tempestade com chuva',
+              'exceptional':     'Excepcional'
+            };
+            var iconMap = {
+              'sunny':           'mdi:weather-sunny',
+              'clear-night':     'mdi:weather-night',
+              'partlycloudy':    'mdi:weather-partly-cloudy',
+              'cloudy':          'mdi:weather-cloudy',
+              'rainy':           'mdi:weather-rainy',
+              'pouring':         'mdi:weather-pouring',
+              'snowy':           'mdi:weather-snowy',
+              'snowy-rainy':     'mdi:weather-snowy-rainy',
+              'windy':           'mdi:weather-windy',
+              'fog':             'mdi:weather-fog',
+              'hail':            'mdi:weather-hail',
+              'lightning':       'mdi:weather-lightning',
+              'lightning-rainy': 'mdi:weather-lightning-rainy',
+              'exceptional':     'mdi:weather-sunset'
+            };
+            var s    = entity.state;
+            var cond = conds[s] || s;
+            var icon = iconMap[s] || 'mdi:weather-partly-cloudy';
+            var temp = entity.attributes.temperature || '—';
+            var fc   = entity.attributes.forecast;
+            var tMax = (fc && fc.length > 0) ? Math.round(fc[0].temperature) : '—';
+            var wind    = entity.attributes.wind_speed || '—';
+            var windDir = entity.attributes.wind_bearing || '';
+
+            return '<div style="display:flex;align-items:flex-start;gap:10px;width:100%;">'
+                 +   '<ha-icon icon="' + icon + '" style="--mdc-icon-size:44px;'
+                 +     'color:rgba(255,255,255,0.85);flex-shrink:0;margin-top:2px;"></ha-icon>'
+                 +   '<div style="flex:1;min-width:0;">'
+                 +     '<div style="font-size:13px;font-weight:500;'
+                 +       'color:rgba(255,255,255,0.62);white-space:nowrap;'
+                 +       'overflow:hidden;text-overflow:ellipsis;">' + cond + '</div>'
+                 +     '<div style="font-size:9px;color:rgba(255,255,255,0.36);margin-top:3px;">'
+                 +       '💨 ' + windDir + ', ' + wind + ' km/h'
+                 +     '</div>'
+                 +   '</div>'
+                 +   '<div style="text-align:right;flex-shrink:0;">'
+                 +     '<div style="font-size:28px;font-weight:300;line-height:1;">' + temp + '°</div>'
+                 +     '<div style="font-size:11px;color:rgba(255,255,255,0.38);margin-top:2px;">'
+                 +       temp + '° / ' + tMax + '°'
+                 +     '</div>'
+                 +   '</div>'
+                 + '</div>';
           ]]]
-        show_label: true
         styles:
           card:
             - background: "transparent"
@@ -283,130 +365,78 @@
             - padding: "0"
             - height: "auto"
           label:
+            - width: "100%"
             - text-align: "left"
+            - padding: "0"
 
-    # Curva SVG decorativa estática
-    # (representa graficamente a progressão de temp ao longo do dia)
-    # Para curva dinâmica: substituir por custom:apexcharts-card
-    curva_svg:
+    # Curva SVG decorativa laranja — sangra nas laterais
+    weather_curve:
       card:
         type: custom:button-card
         entity: ""
         show_name: false
         show_icon: false
+        show_label: true
         label: >
           [[[
-            return `<svg viewBox="0 0 280 50" width="100%" height="100%"
-              preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="wfill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="rgba(255,255,255,0.12)"/>
-                  <stop offset="100%" stop-color="rgba(255,255,255,0.01)"/>
-                </linearGradient>
-              </defs>
-              <path d="M0 35 C20 36,38 34,56 31 C76 27,94 29,112 23
-                       C132 17,150 9,168 4 C188 0,204 3,220 9
-                       C238 15,252 23,268 31 C272 33,276 35,280 37
-                       L280 50 L0 50 Z"
-                    fill="url(#wfill)"/>
-              <path d="M0 35 C20 36,38 34,56 31 C76 27,94 29,112 23
-                       C132 17,150 9,168 4 C188 0,204 3,220 9
-                       C238 15,252 23,268 31 C272 33,276 35,280 37"
-                    fill="none" stroke="#f59e0b" stroke-width="2"
-                    stroke-linecap="round"/>
-            </svg>`;
+            return '<svg viewBox="0 0 400 52" width="100%" height="52"'
+                 + ' preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'
+                 + '<defs>'
+                 +   '<linearGradient id="wg2" x1="0" y1="0" x2="0" y2="1">'
+                 +     '<stop offset="0%" stop-color="rgba(245,158,11,0.22)"/>'
+                 +     '<stop offset="100%" stop-color="rgba(245,158,11,0.01)"/>'
+                 +   '</linearGradient>'
+                 + '</defs>'
+                 + '<path d="M0 38 C30 39,58 36,86 32'
+                 +         ' C116 27,142 29,168 22'
+                 +         ' C196 14,222 5,248 1'
+                 +         ' C276 -2,300 2,322 9'
+                 +         ' C350 17,370 27,390 35'
+                 +         ' C394 36,398 38,400 39'
+                 +         ' L400 52 L0 52 Z"'
+                 +  ' fill="url(#wg2)"/>'
+                 + '<path d="M0 38 C30 39,58 36,86 32'
+                 +         ' C116 27,142 29,168 22'
+                 +         ' C196 14,222 5,248 1'
+                 +         ' C276 -2,300 2,322 9'
+                 +         ' C350 17,370 27,390 35'
+                 +         ' C394 36,398 38,400 39"'
+                 +  ' fill="none" stroke="#f59e0b"'
+                 +  ' stroke-width="2" stroke-linecap="round"/>'
+                 + '</svg>';
           ]]]
-        show_label: true
         styles:
           card:
             - background: "transparent"
             - border: "none"
             - box-shadow: "none"
             - padding: "0"
-            - height: "50px"
+            - height: "52px"
             - overflow: "visible"
           label:
             - width: "100%"
-            - height: "50px"
             - padding: "0"
+            - height: "52px"
 
-    # Previsão horária — 5 slots
-    # Cada slot: hora + ícone MDI + temperatura
-    # Puxado do forecast[0..4] da entidade weather
-    forecast_row:
-      card:
-        type: custom:button-card
-        entity: weather.casa          # <-- ajustar
-        show_name: false
-        show_icon: false
-        show_state: false
-        label: >
-          [[[
-            const fc = entity.attributes.forecast ?? [];
-            // Mapeia condition → ícone MDI simples
-            const iconMap = {
-              'sunny': '☀️', 'clear-night': '🌙',
-              'partlycloudy': '⛅', 'cloudy': '☁️',
-              'rainy': '🌧️', 'pouring': '🌧️',
-              'snowy': '❄️', 'windy': '💨',
-              'fog': '🌫️', 'hail': '🌨️',
-              'lightning': '⚡', 'lightning-rainy': '⛈️',
-            };
-            const slots = fc.slice(0, 5).map(f => {
-              const d = new Date(f.datetime);
-              const hora = d.getHours().toString().padStart(2,'0') + ':00';
-              const icon = iconMap[f.condition] ?? '🌤️';
-              const temp = Math.round(f.temperature);
-              return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
-                <span style="font-size:13px;">${icon}</span>
-                <span style="font-size:11px;font-weight:700;">${temp}°</span>
-                <span style="font-size:8px;color:rgba(255,255,255,.44);">${hora}</span>
-              </div>`;
-            });
-            return `<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;">${slots.join('')}</div>`;
-          ]]]
-        show_label: true
-        styles:
-          card:
-            - background: "transparent"
-            - border: "none"
-            - box-shadow: "none"
-            - padding: "0"
-            - height: "auto"
-          label:
-            - width: "100%"
-            - text-align: "left"
-
-  # Layout interno: header topo + curva + previsão na base
-  # Espelha o gridTemplateRows: "auto minmax(0,1fr)" do React
-  card_mod:
-    style: |
-      ha-card {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 8px 0 0 !important;
-        height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-end !important;
-        overflow: hidden !important;
-      }
-
+  # Posiciona os dois custom_fields em coluna
   styles:
     card:
-      - padding: "8px 18px 12px"
+      - background: "transparent"
+      - border: "none"
+      - box-shadow: "none"
+      # Sangra nas bordas do stack-in-card e fecha os cantos inferiores
+      - margin: "auto -1px -1px -1px"
+      - border-radius: "0 0 17px 17px"
+      - overflow: "hidden"
+      - padding: "10px 18px 0"
       - display: "flex"
       - flex-direction: "column"
-      - gap: "4px"
-      - justify-content: "flex-end"
-      - flex: "1"
+      - gap: "8px"
+      - height: "auto"
     custom_fields:
-      temp_header:
-        - padding: "0"
-        - margin-bottom: "4px"
-      curva_svg:
-        - margin: "4px -18px 0"   # sangra até as bordas do card
-        - width: "calc(100% + 36px)"
-      forecast_row:
-        - padding: "8px 0 0"
+      weather_top:
+        - width: "100%"
+      weather_curve:
+        - width: "calc(100% + 36px)"   # sangra nas laterais do padding
+        - margin: "0 -18px"
+        - overflow: "hidden"

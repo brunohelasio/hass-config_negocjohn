@@ -19,13 +19,9 @@ layout:
   grid-template-columns: 56px repeat(12, minmax(0, 1fr))
   # PRIMEIRA LINHA: auto (Badges) | SEGUNDA E TERCEIRA: 1fr (Dividem o resto da tela em 50/50)
   grid-template-rows: auto 40vh 40vh
-  # grid-template-areas: |  # ORIGINAL — sala=3col, comodos=6col → células 312×235px retangulares
-  #   "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
-  #   "sidebar welcome welcome welcome sala sala sala comodos comodos comodos comodos comodos comodos"
-  #   "sidebar cameras cameras cameras cameras calendar calendar roborock roborock media media media media"
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
-    "sidebar welcome welcome welcome sala sala sala sala comodos comodos comodos comodos comodos"
+    "sidebar welcome welcome welcome welcome sala sala sala comodos comodos comodos comodos comodos"
     "sidebar cameras cameras cameras cameras calendar calendar roborock roborock media media media media"
 
   mediaquery:

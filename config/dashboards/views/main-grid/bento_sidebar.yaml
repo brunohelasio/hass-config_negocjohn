@@ -5,12 +5,30 @@ view_layout:
   grid-area: sidebar
 card_mod:
   style: |
+    # --- CÓDIGO ANTERIOR COMENTADO (wrapper transparente — vidro aplicado no layout-card interno, não funcionava) ---
+    # ha-card {
+    #   --grid-card-gap: 0px;
+    #   padding-top: 0px !important;
+    #   margin-top: 0px !important;
+    #   border: none !important;
+    #   background: transparent !important;
+    #   box-shadow: none !important;
+    # }
+    # .card-content {
+    #   padding-top: 0px !important;
+    # }
+    # --- FIM CÓDIGO ANTERIOR ---
     ha-card {
       --grid-card-gap: 0px;
       padding-top: 0px !important;
       margin-top: 0px !important;
-      border: none !important;
-      background: transparent !important;
+      /* FIX A: vidro aplicado aqui no wrapper externo (card_mod no custom:layout-card não propaga backdrop-filter) */
+      background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;
+      backdrop-filter: blur(18px) saturate(1.2) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
+      border: 1px solid rgba(255,255,255,0.10) !important;
+      border-radius: 16px !important;
+      overflow: hidden !important;
       box-shadow: none !important;
     }
     .card-content {

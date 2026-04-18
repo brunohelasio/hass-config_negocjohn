@@ -1,18 +1,78 @@
+# --- CÓDIGO ORIGINAL COMENTADO (versão commitada pelo usuário em main) ---
+# Alterações aplicadas (2026-04-18):
+#   Fix 1+2: margens assimétricas removidas dos cards TV e AC
+#   Fix 2b: linha corredor adicionada (grid-area: corredor)
+#   Fix 2c: cortina — botões Abrir/Parar/Fechar com tap_action reais
+#   Fix 3: hero — triggers_update + JS de contagem direto de states[]
+#   Fix 4: hero — icon_couch_lamp SVG inline (substituindo mdi:sofa-outline)
+#   Fix 5a: hero — tap_action toggles só light.sala_switch_2 (não o grupo)
+#   Fix 5b: TV — custom_field controls (+/−) visível quando TV ligada
+#   Fix 6: AC — tap_action: climate.toggle (era more-info)
+#
+# - type: custom:layout-card
+#   layout_type: custom:grid-layout
+#   layout:
+#     grid-template-columns: repeat(2, minmax(0, 1fr))
+#     grid-template-rows: 136px minmax(110px, 1fr) 58px
+#     grid-template-areas: |
+#       "hero hero"
+#       "tv ac"
+#       "curtain curtain"
+#     column-gap: 20px
+#     row-gap: 14px
+#     height: 100%
+#     margin: 0
+#     padding: 12px 14px 12px 14px
+#   cards:
+#     - type: custom:button-card
+#       view_layout: { grid-area: hero }
+#       entity: light.grupo_luzes_sala
+#       tap_action: { action: toggle }                        # toggleava grupo inteiro (Fix 5a)
+#       custom_fields:
+#         left: |   # <ha-icon icon="mdi:sofa-outline"> (Fix 4) + sensor fallback '2 luzes' (Fix 3)
+#         right: |  # ícones estáticos
+#     - type: custom:button-card
+#       view_layout: { grid-area: tv }
+#       entity: media_player.smart_tv_pro_2
+#       styles:
+#         card:
+#           - margin-left: 12px    # ASSIMÉTRICO — removido (Fix 1+2)
+#           - margin-right: 9px    # ASSIMÉTRICO — removido (Fix 1+2)
+#       # sem custom_field controls (Fix 5b)
+#     - type: custom:button-card
+#       view_layout: { grid-area: ac }
+#       entity: climate.sl_ar_condicionado
+#       tap_action: { action: more-info }                     # era more-info (Fix 6)
+#       styles:
+#         card:
+#           - margin-left: 9px     # ASSIMÉTRICO — removido (Fix 1+2)
+#           - margin-right: 12px   # ASSIMÉTRICO — removido (Fix 1+2)
+#     # sem card corredor (Fix 2b)
+#     - type: custom:button-card
+#       view_layout: { grid-area: curtain }
+#       # right: divs HTML estáticos sem tap_action real (Fix 2c)
+# --- FIM CÓDIGO ORIGINAL ---
+
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: repeat(2, minmax(0, 1fr))
-    grid-template-rows: 136px minmax(110px, 1fr) 58px
+    # FIX 2b: 4 linhas — hero / tv+ac / corredor / curtain
+    # ANTERIOR: grid-template-rows: 136px minmax(110px, 1fr) 58px
+    grid-template-rows: 136px minmax(110px, 1fr) 44px 54px
     grid-template-areas: |
       "hero hero"
       "tv ac"
+      "corredor corredor"
       "curtain curtain"
     column-gap: 20px
-    row-gap: 14px
+    row-gap: 10px
     height: 100%
     margin: 0
     padding: 12px 14px 12px 14px
   cards:
+
+    # ── Hero ──────────────────────────────────────────────────────────
     - type: custom:button-card
       view_layout:
         grid-area: hero
@@ -20,8 +80,19 @@
       show_icon: false
       show_name: false
       show_state: false
+      # FIX 3: triggers_update para re-render ao mudar luzes ou sensor
+      triggers_update:
+        - light.sala_switch_1
+        - light.sala_switch_2
+        - sensor.living_room_active
+        - sensor.sl_sensor_temp_humid_temperatura
+      # FIX 5a: toca apenas a luz principal (sala_switch_2), não o grupo inteiro
+      # ANTERIOR: action: toggle  (toggleava light.grupo_luzes_sala)
       tap_action:
-        action: toggle
+        action: perform-action
+        perform_action: light.toggle
+        target:
+          entity_id: light.sala_switch_2
       double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml
       hold_action:
         action: perform-action
@@ -34,13 +105,39 @@
             const t = states['sensor.sl_sensor_temp_humid_temperatura'];
             const temp = t && t.state && t.state !== 'unknown' && t.state !== 'unavailable' ? `${t.state}°` : '22°';
             const hum = t && t.attributes && t.attributes.humidity != null ? `${t.attributes.humidity}%` : '58%';
-            const raw = states['sensor.living_room_active'] ? states['sensor.living_room_active'].state : '';
-            const n = Number(raw);
-            const lights = !Number.isNaN(n) && n > 0 ? `${n} luz${n > 1 ? 'es' : ''}` : '2 luzes';
+            // FIX 3: contagem direta de states[] com sensor como primary e fallback direto
+            // ANTERIOR: só usava sensor.living_room_active, fallback fixo '2 luzes'
+            const raw = states['sensor.living_room_active']?.state;
+            const n = raw != null ? Number(raw) : NaN;
+            let lights;
+            if (!Number.isNaN(n) && n > 0) {
+              lights = `${n} luz${n > 1 ? 'es' : ''}`;
+            } else {
+              const ids = ['light.sala_switch_1','light.sala_switch_2'];
+              const direct = ids.filter(id => states[id]?.state === 'on').length;
+              lights = direct > 0 ? `${direct} luz${direct > 1 ? 'es' : ''}` : 'Luzes off';
+            }
+            // FIX 4: icon_couch_lamp SVG inline (substituindo mdi:sofa-outline)
+            const sofaSvg = '<svg viewBox="0 0 4.8 4.8" xmlns="http://www.w3.org/2000/svg" style="width:36px;height:36px;flex-shrink:0;">'
+              + '<path d="M.78 2.565H.69V.87C.69.75.75.51.975.51v.098C.78.608.78.855.78.871v1.695" fill="#666"/>'
+              + '<path d="M1.62.525a.81.81 0 0 0-.188-.09L1.313.052C1.298 0 1.171-.008 1.021.037s-.255.128-.24.18l.128.397S.811.786.804.846c-.022.12.045.472.045.472l1.05-.315c-.007-.007-.172-.39-.278-.48" fill="#94989b"/>'
+              + '<path d="M1.89.998c.03.105-.188.263-.472.345-.292.09-.547.075-.57-.03-.03-.105.188-.263.472-.345.285-.09.547-.075.57.03" fill="#ffe62e"/>'
+              + '<path d="M4.447 3.053a.15.15 0 0 1-.15.15H.502a.15.15 0 0 1-.15-.15v-.975a.15.15 0 0 1 .15-.15h3.803a.15.15 0 0 1 .15.15v.975z" fill="#42ade2"/>'
+              + '<path d="M4.447 3.053a.15.15 0 0 1-.15.15H.502a.15.15 0 0 1-.15-.15v-.975a.15.15 0 0 1 .15-.15h3.803a.15.15 0 0 1 .15.15v.975z" fill="#428bc1" opacity=".5"/>'
+              + '<path d="M3.375 3.203H.352V2.047s.6.69 3.022 1.155" fill="#428bc1"/>'
+              + '<path d="M4.672 2.288c0-.135-.098-.24-.225-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .225-.105.225-.24v-.93" fill="#42ade2"/>'
+              + '<path fill="#3e4347" d="M.457 4.485H.75V4.8H.457z"/>'
+              + '<path d="M3.375 4.485H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645m0-.646H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645" fill="#428bc1"/>'
+              + '<path fill="#3e4347" d="M4.05 4.485h.292V4.8H4.05z"/>'
+              + '<path d="M1.425 3.84H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>'
+              + '<path d="M1.425 3.203H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>'
+              + '<path d="M.57 2.288c0-.135-.098-.24-.217-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .217-.105.217-.24v-.93" fill="#42ade2"/>'
+              + '<path d="M4.53 1.965s-.217.187-.255.285c-.075.21-.022.667 0 .892.007.037.037.142.037.142s-.255-.068-.345-.083c-.172-.022-.51.015-.682 0-.075-.007-.3-.06-.3-.06s.195-.09.232-.15c.12-.186.143-.666.158-.891v-.128s.165.052.225.06c.165.015.51-.015.675-.03.06 0 .255-.037.255-.037" fill="#c7e755"/>'
+              + '</svg>';
             return `
               <div style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;">
                 <div style="display:flex;align-items:flex-start;gap:8px;">
-                  <ha-icon icon="mdi:sofa-outline" style="width:38px;height:38px;color:rgba(255,255,255,0.82);"></ha-icon>
+                  ${sofaSvg}
                   <div style="display:flex;flex-direction:column;gap:4px;padding-top:3px;">
                     <div style="font-size:10px;color:rgba(255,255,255,0.72);line-height:1;">${temp}</div>
                     <div style="font-size:10px;color:rgba(255,255,255,0.58);line-height:1;">${hum}</div>
@@ -83,6 +180,7 @@
             - margin-right: 6px
             - margin-top: 1px
 
+    # ── TV ────────────────────────────────────────────────────────────
     - type: custom:button-card
       view_layout:
         grid-area: tv
@@ -93,10 +191,12 @@
       show_name: true
       show_state: true
       show_label: true
+      triggers_update:
+        - media_player.smart_tv_pro_2
       state_display: >
         [[[ return !entity || entity.state === 'off' ? 'Desligada' : 'Ligada'; ]]]
       label: >
-        [[[ return entity && entity.state !== 'off' ? 'Controle rapido' : 'Toque para ligar'; ]]]
+        [[[ return entity && entity.state !== 'off' ? 'Controle rápido' : 'Toque para ligar'; ]]]
       tap_action:
         action: toggle
       hold_action:
@@ -109,18 +209,30 @@
               <div style="position:absolute;top:2px;left:${on ? '18px' : '2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
             </div>`;
           ]]]
+        # FIX 5b: controles +/− de volume — visíveis apenas quando TV ligada
+        # ANTERIOR: campo não existia; grid-template-areas não tinha slot controls
+        controls: >
+          [[[
+            const on = entity && entity.state !== 'off';
+            if (!on) return '';
+            return `<div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+              <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">+</div>
+              <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">−</div>
+            </div>`;
+          ]]]
       styles:
         card:
+          # FIX 1+2: margens assimétricas removidas (eram margin-left:12px, margin-right:9px)
           - background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)
           - border: 1px solid rgba(255,255,255,0.14)
           - border-radius: 18px
           - padding: 16px
-          - margin-left: 12px
-          - margin-right: 9px
           - height: 100%
           - box-shadow: none
         grid:
-          - grid-template-areas: '"i toggle_vis" "n toggle_vis" "s ." "l ."'
+          # FIX 5b: adicionado slot controls nas linhas 3 e 4
+          # ANTERIOR: '"i toggle_vis" "n toggle_vis" "s ." "l ."'
+          - grid-template-areas: '"i toggle_vis" "n toggle_vis" "s controls" "l controls"'
           - grid-template-columns: 1fr auto
           - grid-template-rows: auto auto auto 1fr
           - row-gap: 8px
@@ -143,7 +255,11 @@
           toggle_vis:
             - justify-self: end
             - align-self: start
+          controls:
+            - justify-self: end
+            - align-self: end
 
+    # ── A/C ───────────────────────────────────────────────────────────
     - type: custom:button-card
       view_layout:
         grid-area: ac
@@ -154,16 +270,24 @@
       show_name: true
       show_state: true
       show_label: true
+      triggers_update:
+        - climate.sl_ar_condicionado
       state_display: >
-        [[[ 
+        [[[
           if (!entity || entity.state === 'off') return 'Desligado';
           const temp = entity.attributes && entity.attributes.temperature ? entity.attributes.temperature : 22;
           return `${temp}° · ${entity.state}`;
         ]]]
       label: >
-        [[[ return entity && entity.state !== 'off' ? 'Controle rapido' : 'Toque para ligar'; ]]]
+        [[[ return entity && entity.state !== 'off' ? 'Controle rápido' : 'Toque para ligar'; ]]]
+      # FIX 6: toggle liga/desliga AC; hold mantém more-info para detalhes
+      # ANTERIOR: tap_action: { action: more-info }
       tap_action:
-        action: more-info
+        action: perform-action
+        perform_action: climate.toggle
+        target:
+          entity_id: climate.sl_ar_condicionado
+        haptic: success
       hold_action:
         action: more-info
       custom_fields:
@@ -176,18 +300,17 @@
           ]]]
         controls: >
           [[[ return `
-            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
               <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">+</div>
               <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">−</div>
             </div>`; ]]]
       styles:
         card:
+          # FIX 1+2: margens assimétricas removidas (eram margin-left:9px, margin-right:12px)
           - background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)
           - border: 1px solid rgba(255,255,255,0.14)
           - border-radius: 18px
           - padding: 16px
-          - margin-left: 9px
-          - margin-right: 12px
           - height: 100%
           - box-shadow: none
         grid:
@@ -218,45 +341,44 @@
             - justify-self: end
             - align-self: end
 
+    # ── Corredor (FIX 2b — novo) ──────────────────────────────────────
     - type: custom:button-card
       view_layout:
-        grid-area: curtain
-      entity: cover.cortina_sala
+        grid-area: corredor
+      entity: light.corredor_switch_1
       show_icon: false
       show_name: false
       show_state: false
+      triggers_update:
+        - light.corredor_switch_1
       tap_action:
-        action: more-info
+        action: toggle
       custom_fields:
         left: >
-          [[[ 
-            let stateTxt = '60% aberta';
-            if (entity) {
-              if (entity.state === 'open') stateTxt = 'Aberta';
-              else if (entity.state === 'closed') stateTxt = 'Fechada';
-              else if (entity.attributes && entity.attributes.current_position != null) stateTxt = `${entity.attributes.current_position}% aberta`;
-            }
+          [[[
+            const on = entity?.state === 'on';
             return `
               <div style="display:flex;align-items:center;gap:10px;">
-                <ha-icon icon="mdi:blinds" style="width:14px;color:rgba(255,255,255,0.82);"></ha-icon>
+                <ha-icon icon="mdi:lightbulb-outline" style="width:14px;height:14px;color:${on ? '#fbbf24' : 'rgba(255,255,255,0.62)'};"></ha-icon>
                 <div>
-                  <div style="font-size:12px;font-weight:700;color:white;line-height:1.2;">Cortina Sala</div>
-                  <div style="font-size:11px;color:rgba(255,255,255,0.62);margin-top:4px;line-height:1.2;">${stateTxt}</div>
+                  <div style="font-size:12px;font-weight:700;color:white;line-height:1.2;">Corredor</div>
+                  <div style="font-size:11px;color:rgba(255,255,255,0.52);margin-top:2px;line-height:1.2;">${on ? 'Ligado' : 'Desligado'}</div>
                 </div>
               </div>`;
           ]]]
         right: >
-          [[[ return `
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div style="padding:6px 12px;border-radius:999px;background:linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.12);font-size:10px;font-weight:700;color:rgba(255,255,255,0.82);">Abrir</div>
-              <div style="padding:6px 12px;border-radius:999px;background:linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.12);font-size:10px;font-weight:700;color:rgba(255,255,255,0.82);">Fechar</div>
-            </div>`; ]]]
+          [[[
+            const on = entity?.state === 'on';
+            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on ? 'linear-gradient(180deg, rgba(251,191,36,0.95) 0%, rgba(251,191,36,0.65) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.10) 100%)'};">
+              <div style="position:absolute;top:2px;left:${on ? '18px' : '2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
+            </div>`;
+          ]]]
       styles:
         card:
           - background: transparent
           - border: none
           - box-shadow: none
-          - padding: 16px 0 0 0
+          - padding: 0
           - margin: 0
           - height: 100%
         grid:
@@ -270,3 +392,139 @@
           right:
             - justify-self: end
             - align-self: center
+
+    # ── Cortina (FIX 2c — botões com tap_action reais: Abrir/Parar/Fechar) ─
+    # ANTERIOR: custom:button-card único com divs HTML estáticos sem ação real
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      view_layout:
+        grid-area: curtain
+      layout:
+        grid-template-columns: 1fr auto auto auto
+        align-items: center
+        grid-gap: 6px
+        margin: 0
+        padding: 6px 0 0 0
+        height: 100%
+      card_mod:
+        style: |
+          ha-card {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+          }
+          $: |
+            .card-content { padding: 0 !important; }
+      cards:
+        # Status (display apenas — sem ação)
+        - type: custom:button-card
+          entity: cover.cortina_sala
+          show_icon: false
+          show_name: false
+          show_state: false
+          tap_action: { action: none }
+          triggers_update:
+            - cover.cortina_sala
+          custom_fields:
+            info: >
+              [[[
+                let stateTxt = '—';
+                if (entity) {
+                  if (entity.state === 'open') stateTxt = 'Aberta';
+                  else if (entity.state === 'closed') stateTxt = 'Fechada';
+                  else if (entity.attributes?.current_position != null) stateTxt = `${entity.attributes.current_position}% aberta`;
+                }
+                return `
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <ha-icon icon="mdi:blinds" style="width:14px;height:14px;color:rgba(255,255,255,0.82);"></ha-icon>
+                    <div>
+                      <div style="font-size:12px;font-weight:700;color:white;line-height:1.2;">Cortina Sala</div>
+                      <div style="font-size:11px;color:rgba(255,255,255,0.52);margin-top:2px;line-height:1.2;">${stateTxt}</div>
+                    </div>
+                  </div>`;
+              ]]]
+          styles:
+            card:
+              - background: transparent
+              - border: none
+              - box-shadow: none
+              - padding: 0
+              - height: 100%
+            grid:
+              - grid-template-areas: '"info"'
+              - grid-template-columns: 1fr
+              - grid-template-rows: 1fr
+            custom_fields:
+              info:
+                - justify-self: start
+                - align-self: center
+
+        # Botão Abrir
+        - type: custom:button-card
+          show_icon: false
+          show_name: true
+          name: Abrir
+          tap_action:
+            action: perform-action
+            perform_action: cover.open_cover
+            target:
+              entity_id: cover.cortina_sala
+          styles:
+            card:
+              - padding: 6px 12px
+              - border-radius: 999px
+              - background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)
+              - border: 1px solid rgba(255,255,255,0.12)
+              - box-shadow: none
+              - height: 30px
+            name:
+              - font-size: 10px
+              - font-weight: 700
+              - color: rgba(255,255,255,0.82)
+
+        # Botão Parar
+        - type: custom:button-card
+          show_icon: false
+          show_name: true
+          name: Parar
+          tap_action:
+            action: perform-action
+            perform_action: cover.stop_cover
+            target:
+              entity_id: cover.cortina_sala
+          styles:
+            card:
+              - padding: 6px 12px
+              - border-radius: 999px
+              - background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)
+              - border: 1px solid rgba(255,255,255,0.12)
+              - box-shadow: none
+              - height: 30px
+            name:
+              - font-size: 10px
+              - font-weight: 700
+              - color: rgba(255,255,255,0.82)
+
+        # Botão Fechar
+        - type: custom:button-card
+          show_icon: false
+          show_name: true
+          name: Fechar
+          tap_action:
+            action: perform-action
+            perform_action: cover.close_cover
+            target:
+              entity_id: cover.cortina_sala
+          styles:
+            card:
+              - padding: 6px 12px
+              - border-radius: 999px
+              - background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)
+              - border: 1px solid rgba(255,255,255,0.12)
+              - box-shadow: none
+              - height: 30px
+            name:
+              - font-size: 10px
+              - font-weight: 700
+              - color: rgba(255,255,255,0.82)

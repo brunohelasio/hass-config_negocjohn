@@ -161,6 +161,8 @@
           - font-weight: 700
           - color: white
           - margin-bottom: 2px
+          # pequeno espaçamento entre ícone e título
+          - margin-top: 8px
         custom_fields:
           icon:
             - justify-self: start

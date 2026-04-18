@@ -1,70 +1,28 @@
-# --- CÓDIGO ORIGINAL COMENTADO (versão commitada pelo usuário em main) ---
-# Alterações aplicadas (2026-04-18):
-#   Fix 1+2: margens assimétricas removidas dos cards TV e AC
-#   Fix 2b: linha corredor adicionada (grid-area: corredor)
-#   Fix 2c: cortina — botões Abrir/Parar/Fechar com tap_action reais
-#   Fix 3: hero — triggers_update + JS de contagem direto de states[]
-#   Fix 4: hero — icon_couch_lamp SVG inline (substituindo mdi:sofa-outline)
-#   Fix 5a: hero — tap_action toggles só light.sala_switch_2 (não o grupo)
-#   Fix 5b: TV — custom_field controls (+/−) visível quando TV ligada
-#   Fix 6: AC — tap_action: climate.toggle (era more-info)
-#
-# - type: custom:layout-card
-#   layout_type: custom:grid-layout
-#   layout:
-#     grid-template-columns: repeat(2, minmax(0, 1fr))
-#     grid-template-rows: 136px minmax(110px, 1fr) 58px
-#     grid-template-areas: |
-#       "hero hero"
-#       "tv ac"
-#       "curtain curtain"
-#     column-gap: 20px
-#     row-gap: 14px
-#     height: 100%
-#     margin: 0
-#     padding: 12px 14px 12px 14px
-#   cards:
-#     - type: custom:button-card
-#       view_layout: { grid-area: hero }
-#       entity: light.grupo_luzes_sala
-#       tap_action: { action: toggle }                        # toggleava grupo inteiro (Fix 5a)
-#       custom_fields:
-#         left: |   # <ha-icon icon="mdi:sofa-outline"> (Fix 4) + sensor fallback '2 luzes' (Fix 3)
-#         right: |  # ícones estáticos
-#     - type: custom:button-card
-#       view_layout: { grid-area: tv }
-#       entity: media_player.smart_tv_pro_2
-#       styles:
-#         card:
-#           - margin-left: 12px    # ASSIMÉTRICO — removido (Fix 1+2)
-#           - margin-right: 9px    # ASSIMÉTRICO — removido (Fix 1+2)
-#       # sem custom_field controls (Fix 5b)
-#     - type: custom:button-card
-#       view_layout: { grid-area: ac }
-#       entity: climate.sl_ar_condicionado
-#       tap_action: { action: more-info }                     # era more-info (Fix 6)
-#       styles:
-#         card:
-#           - margin-left: 9px     # ASSIMÉTRICO — removido (Fix 1+2)
-#           - margin-right: 12px   # ASSIMÉTRICO — removido (Fix 1+2)
-#     # sem card corredor (Fix 2b)
-#     - type: custom:button-card
-#       view_layout: { grid-area: curtain }
-#       # right: divs HTML estáticos sem tap_action real (Fix 2c)
-# --- FIM CÓDIGO ORIGINAL ---
+# --- CÓDIGO ANTERIOR COMENTADO (commit 46b5fd0 — margens assimétricas, hero sem filtro/timer, corredor linha separada) ---
+# Ver histórico git para versão completa anterior.
+# Alterações aplicadas neste commit:
+#   Fix 1:  avatar badges — width:100% no layout-card (empurra avatar para extremo direito)
+#   Fix 2:  TV/AC — margin:0 8px simétrico (respiro entre botões sem alterar padding externo)
+#   Fix 3:  AC controls — condicional (só aparece quando ligado, igual TV)
+#   Fix 4:  AC tap_action — climate.turn_off/turn_on explícito (climate.toggle não suportado)
+#   Fix 5:  hero ícone — 65px + filter grayscale quando luzes off (igual bento_cozinha)
+#   Fix 6:  hero "Sala" — 15px, alinhado à esquerda na sua própria linha (abaixo do ícone)
+#   Fix 7:  hero status de luzes — vazio quando off; mini badge icon+count+timer quando on
+#   Fix 8:  hero dots direita — reativos (TV/AC/Alexa mudam cor quando ativos)
+#   Fix 9:  corredor+cortina — mesma linha; corredor esq, cortina dir, sem botão Parar
+#   Fix 10: TV/AC — ícone na mesma linha do nome (grid 3 colunas)
+# --- FIM CÓDIGO ANTERIOR ---
 
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: repeat(2, minmax(0, 1fr))
-    # FIX 2b: 4 linhas — hero / tv+ac / corredor / curtain
-    # ANTERIOR: grid-template-rows: 136px minmax(110px, 1fr) 58px
-    grid-template-rows: 136px minmax(110px, 1fr) 44px 54px
+    # Fix 9: 3 linhas — hero / tv+ac / corredor+curtain (era 4 linhas com corredor separado)
+    grid-template-rows: 136px minmax(110px, 1fr) 54px
     grid-template-areas: |
       "hero hero"
       "tv ac"
-      "corredor corredor"
-      "curtain curtain"
+      "corredor curtain"
     column-gap: 20px
     row-gap: 10px
     height: 100%
@@ -72,22 +30,28 @@
     padding: 12px 14px 12px 14px
   cards:
 
-    # ── Hero ──────────────────────────────────────────────────────────
+    # ── Hero ─────────────────────────────────────────────────────────
     - type: custom:button-card
       view_layout:
         grid-area: hero
       entity: light.grupo_luzes_sala
+      # Fix 6: native name field para "Sala" (15px, posição própria no grid)
       show_icon: false
-      show_name: false
+      show_name: true
       show_state: false
-      # FIX 3: triggers_update para re-render ao mudar luzes ou sensor
+      name: Sala
+      # Fix 7+8: triggers_update abrange luzes, sensores, mídia, clima, presença e timer
       triggers_update:
         - light.sala_switch_1
         - light.sala_switch_2
         - sensor.living_room_active
         - sensor.sl_sensor_temp_humid_temperatura
-      # FIX 5a: toca apenas a luz principal (sala_switch_2), não o grupo inteiro
-      # ANTERIOR: action: toggle  (toggleava light.grupo_luzes_sala)
+        - media_player.smart_tv_pro_2
+        - climate.sl_ar_condicionado
+        - media_player.echo_show
+        - person.bruno_helasio
+        - sensor.time
+      # Fix 5a: tap aciona só luz principal (não grupo)
       tap_action:
         action: perform-action
         perform_action: light.toggle
@@ -100,25 +64,12 @@
         data:
           entity_id: light.grupo_luzes_sala
       custom_fields:
-        left: >
+        # Fix 5: ícone 65px com grayscale quando luzes off (igual bento_cozinha/icon_couch_lamp)
+        icon: >
           [[[
-            const t = states['sensor.sl_sensor_temp_humid_temperatura'];
-            const temp = t && t.state && t.state !== 'unknown' && t.state !== 'unavailable' ? `${t.state}°` : '22°';
-            const hum = t && t.attributes && t.attributes.humidity != null ? `${t.attributes.humidity}%` : '58%';
-            // FIX 3: contagem direta de states[] com sensor como primary e fallback direto
-            // ANTERIOR: só usava sensor.living_room_active, fallback fixo '2 luzes'
-            const raw = states['sensor.living_room_active']?.state;
-            const n = raw != null ? Number(raw) : NaN;
-            let lights;
-            if (!Number.isNaN(n) && n > 0) {
-              lights = `${n} luz${n > 1 ? 'es' : ''}`;
-            } else {
-              const ids = ['light.sala_switch_1','light.sala_switch_2'];
-              const direct = ids.filter(id => states[id]?.state === 'on').length;
-              lights = direct > 0 ? `${direct} luz${direct > 1 ? 'es' : ''}` : 'Luzes off';
-            }
-            // FIX 4: icon_couch_lamp SVG inline (substituindo mdi:sofa-outline)
-            const sofaSvg = '<svg viewBox="0 0 4.8 4.8" xmlns="http://www.w3.org/2000/svg" style="width:36px;height:36px;flex-shrink:0;">'
+            const on = entity?.state === 'on';
+            const f = on ? 'none' : 'grayscale(1) contrast(0.4) brightness(0.8)';
+            return '<svg viewBox="0 0 4.8 4.8" xmlns="http://www.w3.org/2000/svg" style="width:65px;height:65px;filter:' + f + ';display:block;">'
               + '<path d="M.78 2.565H.69V.87C.69.75.75.51.975.51v.098C.78.608.78.855.78.871v1.695" fill="#666"/>'
               + '<path d="M1.62.525a.81.81 0 0 0-.188-.09L1.313.052C1.298 0 1.171-.008 1.021.037s-.255.128-.24.18l.128.397S.811.786.804.846c-.022.12.045.472.045.472l1.05-.315c-.007-.007-.172-.39-.278-.48" fill="#94989b"/>'
               + '<path d="M1.89.998c.03.105-.188.263-.472.345-.292.09-.547.075-.57-.03-.03-.105.188-.263.472-.345.285-.09.547-.075.57.03" fill="#ffe62e"/>'
@@ -134,30 +85,57 @@
               + '<path d="M.57 2.288c0-.135-.098-.24-.217-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .217-.105.217-.24v-.93" fill="#42ade2"/>'
               + '<path d="M4.53 1.965s-.217.187-.255.285c-.075.21-.022.667 0 .892.007.037.037.142.037.142s-.255-.068-.345-.083c-.172-.022-.51.015-.682 0-.075-.007-.3-.06-.3-.06s.195-.09.232-.15c.12-.186.143-.666.158-.891v-.128s.165.052.225.06c.165.015.51-.015.675-.03.06 0 .255-.037.255-.037" fill="#c7e755"/>'
               + '</svg>';
-            return `
-              <div style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;">
-                <div style="display:flex;align-items:flex-start;gap:8px;">
-                  ${sofaSvg}
-                  <div style="display:flex;flex-direction:column;gap:4px;padding-top:3px;">
-                    <div style="font-size:10px;color:rgba(255,255,255,0.72);line-height:1;">${temp}</div>
-                    <div style="font-size:10px;color:rgba(255,255,255,0.58);line-height:1;">${hum}</div>
-                  </div>
-                </div>
-                <div>
-                  <div style="font-size:13px;font-weight:700;line-height:1.2;color:white;">Sala</div>
-                  <div style="font-size:12px;font-weight:700;line-height:1.2;color:#fbbf24;margin-top:3px;">${lights}</div>
-                </div>
-              </div>
-            `;
           ]]]
+        temp: >
+          [[[
+            const t = states['sensor.sl_sensor_temp_humid_temperatura'];
+            const temp = t && t.state && !['unknown','unavailable'].includes(t.state) ? `${t.state}°` : '—';
+            const hum = t?.attributes?.humidity != null ? `${t.attributes.humidity}%` : '';
+            return `<div style="display:flex;flex-direction:column;gap:3px;">
+              <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.9);">${temp}</span>
+              <span style="font-size:11px;color:rgba(255,255,255,0.52);">${hum}</span>
+            </div>`;
+          ]]]
+        # Fix 7: vazio quando off; mini badge icon+count+timer quando on
+        lights: >
+          [[[
+            const raw = states['sensor.living_room_active']?.state;
+            const n = raw != null ? Number(raw) : NaN;
+            let count;
+            if (!Number.isNaN(n) && n > 0) {
+              count = n;
+            } else {
+              const ids = ['light.sala_switch_1','light.sala_switch_2'];
+              count = ids.filter(id => states[id]?.state === 'on').length;
+            }
+            if (count === 0) return '';
+            const ms = Date.now() - Date.parse(entity?.last_changed ?? '');
+            const m = Math.floor(ms / 60000);
+            const h = Math.floor(m / 60);
+            const d = Math.floor(h / 24);
+            const timeStr = d > 0 ? `${d}d` : h > 0 ? `${h}h` : m > 0 ? `${m}m` : '<1m';
+            return `<div style="display:flex;align-items:center;gap:4px;">
+              <ha-icon icon="mdi:lightbulb-on" style="width:11px;height:11px;color:#fbbf24;display:flex;"></ha-icon>
+              <span style="font-size:10px;font-weight:600;color:#fbbf24;">${count} · ${timeStr}</span>
+            </div>`;
+          ]]]
+        # Fix 8: dots reativos — mudam cor quando TV/AC/Alexa/pessoa ativos
         right: >
-          [[[ return `
-            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;padding-top:4px;">
-              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;"><ha-icon icon="mdi:account" style="--mdc-icon-size: 14px; display: flex; align-items: center; justify-content: center; color:rgba(255,255,255,0.72);"></ha-icon></div>
-              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;"><ha-icon icon="mdi:television" style="--mdc-icon-size: 14px; display: flex; align-items: center; justify-content: center; color:rgba(255,255,255,0.72);"></ha-icon></div>
-              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;"><ha-icon icon="mdi:snowflake" style="--mdc-icon-size: 14px; display: flex; align-items: center; justify-content: center; color:rgba(255,255,255,0.72);"></ha-icon></div>
-              <div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%);border:1px solid rgba(255,255,255,0.16);display:flex;align-items:center;justify-content:center;"><ha-icon icon="mdi:amazon-alexa" style="--mdc-icon-size: 14px; display: flex; align-items: center; justify-content: center; color:rgba(255,255,255,0.72);"></ha-icon></div>
-            </div>`; ]]]
+          [[[
+            const tvOn  = ['on','playing','paused','idle'].includes(states['media_player.smart_tv_pro_2']?.state ?? '');
+            const acOn  = !['off','unavailable','unknown',''].includes(states['climate.sl_ar_condicionado']?.state ?? 'off');
+            const alexa = ['playing','on','paused'].includes(states['media_player.echo_show']?.state ?? '');
+            const home  = states['person.bruno_helasio']?.state === 'home';
+            const dot = (icon, active, color) =>
+              `<div style="width:26px;height:26px;border-radius:50%;background:${active?color+'22':'rgba(255,255,255,0.08)'};border:1px solid ${active?color+'55':'rgba(255,255,255,0.12)'};display:flex;align-items:center;justify-content:center;">` +
+              `<ha-icon icon="${icon}" style="width:14px;height:14px;color:${active?color:'rgba(255,255,255,0.35)'};display:flex;"></ha-icon></div>`;
+            return `<div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;">
+              ${dot('mdi:account',          home,  '#60a5fa')}
+              ${dot('mdi:television-classic', tvOn,  '#a78bfa')}
+              ${dot('mdi:snowflake',          acOn,  '#4facfe')}
+              ${dot('mdi:amazon-alexa',       alexa, '#ff9900')}
+            </div>`;
+          ]]]
       styles:
         card:
           - background: transparent
@@ -166,21 +144,37 @@
           - padding: 0
           - margin: 0
           - height: 100%
+        # Fix 6: "n" (native name) na própria linha, alinhado à esquerda; ícone+temp em cima
         grid:
-          - grid-template-areas: '"left right"'
-          - grid-template-columns: 1fr auto
-          - grid-template-rows: 1fr
+          - grid-template-areas: '"icon temp right" "n n right" "lights lights right"'
+          - grid-template-columns: auto 1fr auto
+          - grid-template-rows: 1fr auto auto
+        name:
+          - justify-self: start
+          - align-self: end
+          - font-size: 15px
+          - font-weight: 700
+          - color: white
+          - margin-bottom: 2px
         custom_fields:
-          left:
+          icon:
             - justify-self: start
             - align-self: start
+          temp:
+            - justify-self: start
+            - align-self: start
+            - margin-left: 10px
+            - margin-top: 4px
+          lights:
+            - justify-self: start
+            - align-self: end
+            - margin-bottom: 2px
           right:
             - justify-self: end
             - align-self: start
-            - margin-right: 6px
-            - margin-top: 1px
+            - margin-right: 2px
 
-    # ── TV ────────────────────────────────────────────────────────────
+    # ── TV ───────────────────────────────────────────────────────────
     - type: custom:button-card
       view_layout:
         grid-area: tv
@@ -205,12 +199,11 @@
         toggle_vis: >
           [[[
             const on = entity && entity.state !== 'off';
-            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on ? 'linear-gradient(180deg, rgba(167,139,250,0.95) 0%, rgba(167,139,250,0.65) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.10) 100%)'};">
-              <div style="position:absolute;top:2px;left:${on ? '18px' : '2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
+            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(167,139,250,0.95)0%,rgba(167,139,250,0.65)100%)':'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'};">
+              <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
             </div>`;
           ]]]
-        # FIX 5b: controles +/− de volume — visíveis apenas quando TV ligada
-        # ANTERIOR: campo não existia; grid-template-areas não tinha slot controls
+        # Fix 5b: +/− só quando TV ligada
         controls: >
           [[[
             const on = entity && entity.state !== 'off';
@@ -222,27 +215,30 @@
           ]]]
       styles:
         card:
-          # FIX 1+2: margens assimétricas removidas (eram margin-left:12px, margin-right:9px)
           - background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)
           - border: 1px solid rgba(255,255,255,0.14)
           - border-radius: 18px
           - padding: 16px
+          # Fix 2: margem simétrica (era margin-left:12px / margin-right:9px assimétrico)
+          - margin: 0 8px
           - height: 100%
           - box-shadow: none
+        # Fix 10: ícone e nome na mesma linha (3 colunas)
         grid:
-          # FIX 5b: adicionado slot controls nas linhas 3 e 4
-          # ANTERIOR: '"i toggle_vis" "n toggle_vis" "s ." "l ."'
-          - grid-template-areas: '"i toggle_vis" "n toggle_vis" "s controls" "l controls"'
-          - grid-template-columns: 1fr auto
-          - grid-template-rows: auto auto auto 1fr
-          - row-gap: 8px
+          - grid-template-areas: '"i n toggle_vis" "s s controls" "l l controls"'
+          - grid-template-columns: auto 1fr auto
+          - grid-template-rows: auto 1fr auto
+          - row-gap: 6px
         icon:
-          - width: 16px
+          - width: 20px
           - color: rgba(255,255,255,0.82)
+          - align-self: center
         name:
           - font-size: 12px
           - font-weight: 700
           - justify-self: start
+          - align-self: center
+          - margin-left: 6px
         state:
           - font-size: 11px
           - color: rgba(255,255,255,0.82)
@@ -259,7 +255,7 @@
             - justify-self: end
             - align-self: end
 
-    # ── A/C ───────────────────────────────────────────────────────────
+    # ── A/C ──────────────────────────────────────────────────────────
     - type: custom:button-card
       view_layout:
         grid-area: ac
@@ -275,16 +271,15 @@
       state_display: >
         [[[
           if (!entity || entity.state === 'off') return 'Desligado';
-          const temp = entity.attributes && entity.attributes.temperature ? entity.attributes.temperature : 22;
+          const temp = entity.attributes?.temperature ?? 22;
           return `${temp}° · ${entity.state}`;
         ]]]
       label: >
         [[[ return entity && entity.state !== 'off' ? 'Controle rápido' : 'Toque para ligar'; ]]]
-      # FIX 6: toggle liga/desliga AC; hold mantém more-info para detalhes
-      # ANTERIOR: tap_action: { action: more-info }
+      # Fix 4: turn_off/turn_on explícito — climate.toggle não suportado pela integração
       tap_action:
         action: perform-action
-        perform_action: climate.toggle
+        perform_action: "[[[ return entity?.state !== 'off' ? 'climate.turn_off' : 'climate.turn_on'; ]]]"
         target:
           entity_id: climate.sl_ar_condicionado
         haptic: success
@@ -294,37 +289,46 @@
         toggle_vis: >
           [[[
             const on = entity && entity.state !== 'off';
-            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on ? 'linear-gradient(180deg, rgba(79,172,254,0.95) 0%, rgba(79,172,254,0.65) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.10) 100%)'};">
-              <div style="position:absolute;top:2px;left:${on ? '18px' : '2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
+            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(79,172,254,0.95)0%,rgba(79,172,254,0.65)100%)':'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'};">
+              <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
             </div>`;
           ]]]
+        # Fix 3: +/− só quando AC ligado (era sempre visível)
         controls: >
-          [[[ return `
-            <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+          [[[
+            const on = entity && entity.state !== 'off';
+            if (!on) return '';
+            return `<div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
               <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">+</div>
               <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">−</div>
-            </div>`; ]]]
+            </div>`;
+          ]]]
       styles:
         card:
-          # FIX 1+2: margens assimétricas removidas (eram margin-left:9px, margin-right:12px)
           - background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)
           - border: 1px solid rgba(255,255,255,0.14)
           - border-radius: 18px
           - padding: 16px
+          # Fix 2: margem simétrica (era margin-left:9px / margin-right:12px assimétrico)
+          - margin: 0 8px
           - height: 100%
           - box-shadow: none
+        # Fix 10: ícone e nome na mesma linha (3 colunas)
         grid:
-          - grid-template-areas: '"i toggle_vis" "n toggle_vis" "s controls" "l controls"'
-          - grid-template-columns: 1fr auto
-          - grid-template-rows: auto auto auto 1fr
-          - row-gap: 8px
+          - grid-template-areas: '"i n toggle_vis" "s s controls" "l l controls"'
+          - grid-template-columns: auto 1fr auto
+          - grid-template-rows: auto 1fr auto
+          - row-gap: 6px
         icon:
-          - width: 16px
+          - width: 20px
           - color: rgba(255,255,255,0.82)
+          - align-self: center
         name:
           - font-size: 12px
           - font-weight: 700
           - justify-self: start
+          - align-self: center
+          - margin-left: 6px
         state:
           - font-size: 11px
           - color: rgba(255,255,255,0.82)
@@ -341,7 +345,7 @@
             - justify-self: end
             - align-self: end
 
-    # ── Corredor (FIX 2b — novo) ──────────────────────────────────────
+    # ── Corredor (Fix 9: mesma linha que cortina, coluna esquerda) ────
     - type: custom:button-card
       view_layout:
         grid-area: corredor
@@ -357,20 +361,19 @@
         left: >
           [[[
             const on = entity?.state === 'on';
-            return `
-              <div style="display:flex;align-items:center;gap:10px;">
-                <ha-icon icon="mdi:lightbulb-outline" style="width:14px;height:14px;color:${on ? '#fbbf24' : 'rgba(255,255,255,0.62)'};"></ha-icon>
-                <div>
-                  <div style="font-size:12px;font-weight:700;color:white;line-height:1.2;">Corredor</div>
-                  <div style="font-size:11px;color:rgba(255,255,255,0.52);margin-top:2px;line-height:1.2;">${on ? 'Ligado' : 'Desligado'}</div>
-                </div>
-              </div>`;
+            return `<div style="display:flex;align-items:center;gap:8px;">
+              <ha-icon icon="mdi:lightbulb-outline" style="width:14px;height:14px;color:${on?'#fbbf24':'rgba(255,255,255,0.55)'};"></ha-icon>
+              <div>
+                <div style="font-size:11px;font-weight:700;color:white;line-height:1.1;">Corredor</div>
+                <div style="font-size:9px;color:rgba(255,255,255,0.45);line-height:1.2;">${on?'Ligado':'Desligado'}</div>
+              </div>
+            </div>`;
           ]]]
         right: >
           [[[
             const on = entity?.state === 'on';
-            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on ? 'linear-gradient(180deg, rgba(251,191,36,0.95) 0%, rgba(251,191,36,0.65) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.10) 100%)'};">
-              <div style="position:absolute;top:2px;left:${on ? '18px' : '2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
+            return `<div style="width:34px;height:18px;border-radius:9px;position:relative;background:${on?'linear-gradient(180deg,rgba(251,191,36,0.95)0%,rgba(251,191,36,0.65)100%)':'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'};">
+              <div style="position:absolute;top:1px;left:${on?'17px':'1px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
             </div>`;
           ]]]
       styles:
@@ -379,7 +382,6 @@
           - border: none
           - box-shadow: none
           - padding: 0
-          - margin: 0
           - height: 100%
         grid:
           - grid-template-areas: '"left right"'
@@ -393,31 +395,30 @@
             - justify-self: end
             - align-self: center
 
-    # ── Cortina (FIX 2c — botões com tap_action reais: Abrir/Parar/Fechar) ─
-    # ANTERIOR: custom:button-card único com divs HTML estáticos sem ação real
+    # ── Cortina (Fix 9: coluna direita; sem botão Parar — espaço reduzido) ─
     - type: custom:layout-card
       layout_type: custom:grid-layout
       view_layout:
         grid-area: curtain
       layout:
-        grid-template-columns: 1fr auto auto auto
+        grid-template-columns: 1fr auto auto
         align-items: center
-        grid-gap: 6px
+        grid-gap: 5px
         margin: 0
-        padding: 6px 0 0 0
+        padding: 0
         height: 100%
       card_mod:
-        style: |
-          ha-card {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-          }
+        style:
+          .: |
+            ha-card {
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+              padding: 0 !important;
+            }
           $: |
             .card-content { padding: 0 !important; }
       cards:
-        # Status (display apenas — sem ação)
         - type: custom:button-card
           entity: cover.cortina_sala
           show_icon: false
@@ -429,38 +430,26 @@
           custom_fields:
             info: >
               [[[
-                let stateTxt = '—';
+                let st = '';
                 if (entity) {
-                  if (entity.state === 'open') stateTxt = 'Aberta';
-                  else if (entity.state === 'closed') stateTxt = 'Fechada';
-                  else if (entity.attributes?.current_position != null) stateTxt = `${entity.attributes.current_position}% aberta`;
+                  if (entity.state === 'open') st = 'Aberta';
+                  else if (entity.state === 'closed') st = 'Fechada';
+                  else if (entity.attributes?.current_position != null) st = `${entity.attributes.current_position}%`;
                 }
-                return `
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <ha-icon icon="mdi:blinds" style="width:14px;height:14px;color:rgba(255,255,255,0.82);"></ha-icon>
-                    <div>
-                      <div style="font-size:12px;font-weight:700;color:white;line-height:1.2;">Cortina Sala</div>
-                      <div style="font-size:11px;color:rgba(255,255,255,0.52);margin-top:2px;line-height:1.2;">${stateTxt}</div>
-                    </div>
-                  </div>`;
+                return `<div style="display:flex;align-items:center;gap:6px;">
+                  <ha-icon icon="mdi:blinds" style="width:12px;height:12px;color:rgba(255,255,255,0.72);"></ha-icon>
+                  <div>
+                    <div style="font-size:11px;font-weight:700;color:white;line-height:1.1;">Cortina</div>
+                    ${st ? `<div style="font-size:9px;color:rgba(255,255,255,0.45);line-height:1.2;">${st}</div>` : ''}
+                  </div>
+                </div>`;
               ]]]
           styles:
-            card:
-              - background: transparent
-              - border: none
-              - box-shadow: none
-              - padding: 0
-              - height: 100%
-            grid:
-              - grid-template-areas: '"info"'
-              - grid-template-columns: 1fr
-              - grid-template-rows: 1fr
+            card: [background: transparent, border: none, box-shadow: none, padding: 0, height: 100%]
+            grid: [grid-template-areas: '"info"', grid-template-columns: 1fr, grid-template-rows: 1fr]
             custom_fields:
-              info:
-                - justify-self: start
-                - align-self: center
+              info: [justify-self: start, align-self: center]
 
-        # Botão Abrir
         - type: custom:button-card
           show_icon: false
           show_name: true
@@ -472,41 +461,14 @@
               entity_id: cover.cortina_sala
           styles:
             card:
-              - padding: 6px 12px
+              - padding: 3px 10px
               - border-radius: 999px
               - background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)
               - border: 1px solid rgba(255,255,255,0.12)
               - box-shadow: none
-              - height: 30px
-            name:
-              - font-size: 10px
-              - font-weight: 700
-              - color: rgba(255,255,255,0.82)
+              - height: 26px
+            name: [font-size: 9px, font-weight: 700, color: rgba(255,255,255,0.82)]
 
-        # Botão Parar
-        - type: custom:button-card
-          show_icon: false
-          show_name: true
-          name: Parar
-          tap_action:
-            action: perform-action
-            perform_action: cover.stop_cover
-            target:
-              entity_id: cover.cortina_sala
-          styles:
-            card:
-              - padding: 6px 12px
-              - border-radius: 999px
-              - background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)
-              - border: 1px solid rgba(255,255,255,0.12)
-              - box-shadow: none
-              - height: 30px
-            name:
-              - font-size: 10px
-              - font-weight: 700
-              - color: rgba(255,255,255,0.82)
-
-        # Botão Fechar
         - type: custom:button-card
           show_icon: false
           show_name: true
@@ -518,13 +480,10 @@
               entity_id: cover.cortina_sala
           styles:
             card:
-              - padding: 6px 12px
+              - padding: 3px 10px
               - border-radius: 999px
               - background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)
               - border: 1px solid rgba(255,255,255,0.12)
               - box-shadow: none
-              - height: 30px
-            name:
-              - font-size: 10px
-              - font-weight: 700
-              - color: rgba(255,255,255,0.82)
+              - height: 26px
+            name: [font-size: 9px, font-weight: 700, color: rgba(255,255,255,0.82)]

@@ -203,19 +203,28 @@
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
-    grid-template-columns: max-content max-content max-content 1fr max-content
+    # FIX C: removida coluna do spacer fantasma; avatar ocupa a 4ª coluna (1fr) com justify-self:end
+    # ANTERIOR: max-content max-content max-content 1fr max-content
+    grid-template-columns: max-content max-content max-content 1fr
     align-items: center
     grid-gap: 8px
     margin: 0
     padding: 0 4px
   card_mod:
-    style: |
-      ha-card {
-        background: transparent !important;
-        box-shadow: none !important;
-        border: none !important;
-        padding: 0 !important;
-      }
+    style:
+      .: |
+        ha-card {
+          background: transparent !important;
+          box-shadow: none !important;
+          border: none !important;
+          padding: 0 !important;
+        }
+      $: |
+        /* FIX C: zerando padding padrão do .card-content que causava espaço extra abaixo das badges */
+        .card-content {
+          padding: 0 !important;
+          margin: 0 !important;
+        }
   cards:
 
     # ── badge Luzes ──────────────────────────────────────────────
@@ -260,9 +269,9 @@
           ]]]
       styles:
         card:
-          - height: 40px
+          - height: 46px
           - border-radius: 999px
-          - padding: 0 12px
+          - padding: 0 14px
           - background: "[[[ return variables.ls?.a ? 'rgba(250,250,250,0.82)' : 'rgba(0,0,0,0.22)'; ]]]"
           - border: "[[[ return variables.ls?.a ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.14)'; ]]]"
           - backdrop-filter: "[[[ return variables.ls?.a ? 'none' : 'blur(16px) saturate(1.2)'; ]]]"
@@ -309,9 +318,9 @@
           ]]]
       styles:
         card:
-          - height: 40px
+          - height: 46px
           - border-radius: 999px
-          - padding: 0 12px
+          - padding: 0 14px
           - background: "[[[ return variables.ms?.a ? 'rgba(250,250,250,0.82)' : 'rgba(0,0,0,0.22)'; ]]]"
           - border: "[[[ return variables.ms?.a ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.14)'; ]]]"
           - backdrop-filter: "[[[ return variables.ms?.a ? 'none' : 'blur(16px) saturate(1.2)'; ]]]"
@@ -358,9 +367,9 @@
           ]]]
       styles:
         card:
-          - height: 40px
+          - height: 46px
           - border-radius: 999px
-          - padding: 0 12px
+          - padding: 0 14px
           - background: "[[[ return variables.cs?.a ? 'rgba(250,250,250,0.82)' : 'rgba(0,0,0,0.22)'; ]]]"
           - border: "[[[ return variables.cs?.a ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.14)'; ]]]"
           - backdrop-filter: "[[[ return variables.cs?.a ? 'none' : 'blur(16px) saturate(1.2)'; ]]]"
@@ -370,16 +379,19 @@
           badge: [display: flex, align-items: center, height: 100%]
         grid: [grid-template-areas: '"badge"', grid-template-columns: 1fr, grid-template-rows: 1fr]
 
-    # ── espaçador ────────────────────────────────────────────────
-    - type: custom:button-card
-      show_icon: false
-      show_name: false
-      tap_action: { action: none }
-      hold_action: { action: none }
-      styles:
-        card: [background: transparent, border: none, box-shadow: none]
+    # ── espaçador REMOVIDO ───────────────────────────────────────
+    # FIX D: card de espaçador herdava estilos globais do tema e criava barra fosca visual
+    # ANTERIOR:
+    # - type: custom:button-card
+    #   show_icon: false
+    #   show_name: false
+    #   tap_action: { action: none }
+    #   hold_action: { action: none }
+    #   styles:
+    #     card: [background: transparent, border: none, box-shadow: none]
+    # Grid agora usa 4 colunas (max-content x3 + 1fr); avatar vai na coluna 4 com justify-self:end
 
-    # ── avatar de presença (40px, align-self:center corrige oval) ─
+    # ── avatar de presença (46px, align-self:center corrige oval) ─
     - type: custom:button-card
       entity: person.bruno_helasio
       show_name: false
@@ -401,8 +413,8 @@
         card:
           - justify-self: end
           - align-self: center
-          - width: 40px
-          - height: 40px
+          - width: 46px
+          - height: 46px
           - border-radius: 50%
           - background: rgba(255,255,255,0.12)
           - border: "1px solid rgba(255,255,255,0.24)"

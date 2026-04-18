@@ -17,7 +17,7 @@ card_mod:
         border: none !important;
         margin: 0 !important;
         padding: 0 !important;
-        transform: scale(1.15); /* Aumenta em 15% */
-        transform-origin: left center;
+        /* transform: scale(1.15); — COMENTADO: removido hack de escala; badges agora têm 40px nativos */
+        /* transform-origin: left center; */
       }
 cards: !include ../../shared/grid-cards/bento_top_badges.yaml

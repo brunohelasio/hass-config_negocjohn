@@ -64,22 +64,42 @@
 #           icon: mdi:power
 # --- FIM CÓDIGO ORIGINAL ---
 
-# NOVO: vidro fosco com border-radius 12px + ícones SVG de linha fina (Feather-style, stroke-width 1.5)
+# NOVO v2: vidro fosco reforçado (gradient glass, border-radius 16px) + ícones SVG sem fundo + :active feedback
+# --- CÓDIGO ANTERIOR COMENTADO (vidro fraco rgba 0.07, border-radius 12px, sem :active) ---
+# - type: custom:layout-card
+#   layout_type: custom:grid-layout
+#   layout:
+#     grid-template-rows: auto 1fr auto
+#     height: 100%
+#     padding: 12px 0
+#   card_mod:
+#     style: |
+#       ha-card {
+#         background: rgba(255,255,255,0.07);
+#         backdrop-filter: blur(20px) saturate(1.2);
+#         -webkit-backdrop-filter: blur(20px) saturate(1.2);
+#         border: 1px solid rgba(255,255,255,0.12);
+#         border-radius: 12px;
+#         box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+#         height: 100%;
+#         overflow: hidden;
+#       }
+# --- FIM CÓDIGO ANTERIOR ---
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
     grid-template-rows: auto 1fr auto
     height: 100%
-    padding: 12px 0
+    padding: 4px 0 8px 0
   card_mod:
     style: |
       ha-card {
-        background: rgba(255,255,255,0.07);
-        backdrop-filter: blur(20px) saturate(1.2);
-        -webkit-backdrop-filter: blur(20px) saturate(1.2);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+        backdrop-filter: blur(18px) saturate(1.2);
+        -webkit-backdrop-filter: blur(18px) saturate(1.2);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 16px;
+        box-shadow: none;
         height: 100%;
         overflow: hidden;
       }
@@ -94,13 +114,19 @@
           show_state: false
           tap_action: { action: none }
           hold_action: { action: none }
+          card_mod:
+            style: |
+              :host(:active) ha-card {
+                background: rgba(255,255,255,0.14) !important;
+                transition: background 0.12s ease;
+              }
           custom_fields:
             ico: >
               [[[
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;display:block;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
               ]]]
           styles:
-            card: [width: 38px, height: 38px, margin: 3px auto, border-radius: 10px, background: transparent, border: none, box-shadow: none, padding: 0]
+            card: [width: 38px, height: 38px, margin: 3px auto, border-radius: 10px, background: transparent, border: none, box-shadow: none, padding: 0, transition: "background 0.12s ease"]
             custom_fields:
               ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
             grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr]

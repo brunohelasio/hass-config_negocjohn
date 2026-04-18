@@ -1,23 +1,7 @@
-# --- CÓDIGO ANTERIOR COMENTADO (commit 46b5fd0 — margens assimétricas, hero sem filtro/timer, corredor linha separada) ---
-# Ver histórico git para versão completa anterior.
-# Alterações aplicadas neste commit:
-#   Fix 1:  avatar badges — width:100% no layout-card (empurra avatar para extremo direito)
-#   Fix 2:  TV/AC — margin:0 8px simétrico (respiro entre botões sem alterar padding externo)
-#   Fix 3:  AC controls — condicional (só aparece quando ligado, igual TV)
-#   Fix 4:  AC tap_action — climate.turn_off/turn_on explícito (climate.toggle não suportado)
-#   Fix 5:  hero ícone — 65px + filter grayscale quando luzes off (igual bento_cozinha)
-#   Fix 6:  hero "Sala" — 15px, alinhado à esquerda na sua própria linha (abaixo do ícone)
-#   Fix 7:  hero status de luzes — vazio quando off; mini badge icon+count+timer quando on
-#   Fix 8:  hero dots direita — reativos (TV/AC/Alexa mudam cor quando ativos)
-#   Fix 9:  corredor+cortina — mesma linha; corredor esq, cortina dir, sem botão Parar
-#   Fix 10: TV/AC — ícone na mesma linha do nome (grid 3 colunas)
-# --- FIM CÓDIGO ANTERIOR ---
-
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: repeat(2, minmax(0, 1fr))
-    # Fix 9: 3 linhas — hero / tv+ac / corredor+curtain (era 4 linhas com corredor separado)
     grid-template-rows: 136px minmax(110px, 1fr) 54px
     grid-template-areas: |
       "hero hero"
@@ -29,18 +13,15 @@
     margin: 0
     padding: 12px 14px 12px 14px
   cards:
-
     # ── Hero ─────────────────────────────────────────────────────────
     - type: custom:button-card
       view_layout:
         grid-area: hero
       entity: light.grupo_luzes_sala
-      # Fix 6: native name field para "Sala" (15px, posição própria no grid)
       show_icon: false
       show_name: true
       show_state: false
       name: Sala
-      # Fix 7+8: triggers_update abrange luzes, sensores, mídia, clima, presença e timer
       triggers_update:
         - light.sala_switch_1
         - light.sala_switch_2
@@ -51,7 +32,6 @@
         - media_player.echo_show
         - person.bruno_helasio
         - sensor.time
-      # Fix 5a: tap aciona só luz principal (não grupo)
       tap_action:
         action: perform-action
         perform_action: light.toggle
@@ -64,7 +44,6 @@
         data:
           entity_id: light.grupo_luzes_sala
       custom_fields:
-        # Fix 5: ícone 65px com grayscale quando luzes off (igual bento_cozinha/icon_couch_lamp)
         icon: >
           [[[
             const on = entity?.state === 'on';
@@ -90,8 +69,6 @@
           [[[
             const t = states['sensor.sl_sensor_temp_humid_temperatura'];
             const temp = t && t.state && !['unknown','unavailable'].includes(t.state) ? `${t.state}°` : '—';
-            // Fix P3: umidade vem de sensor separado (atributo humidity inexistente no sensor de temp)
-            // ANTERIOR: t?.attributes?.humidity != null ? `${t.attributes.humidity}%` : ''
             const h = states['sensor.sl_sensor_temp_humid_umidade'];
             const hum = h && !['unknown','unavailable'].includes(h.state) ? `${h.state}%` : '';
             return `<div style="display:flex;flex-direction:column;gap:3px;">
@@ -99,7 +76,6 @@
               <span style="font-size:11px;color:rgba(255,255,255,0.52);">${hum}</span>
             </div>`;
           ]]]
-        # Fix 7: vazio quando off; mini badge icon+count+timer quando on
         lights: >
           [[[
             const raw = states['sensor.living_room_active']?.state;
@@ -122,7 +98,6 @@
               <span style="font-size:10px;font-weight:600;color:#fbbf24;">${count} · ${timeStr}</span>
             </div>`;
           ]]]
-        # Fix 8: dots reativos — mudam cor quando TV/AC/Alexa/pessoa ativos
         right: >
           [[[
             const tvOn  = ['on','playing','paused','idle'].includes(states['media_player.smart_tv_pro_2']?.state ?? '');
@@ -147,12 +122,9 @@
           - padding: 0
           - margin: 0
           - height: 100%
-        # Fix 6: "n" (native name) na própria linha, alinhado à esquerda; ícone+temp em cima
         grid:
           - grid-template-areas: '"icon temp right" "n n right" "lights lights right"'
           - grid-template-columns: auto 1fr auto
-          # Fix P5: auto auto 1fr — ícone+temp no topo, nome embaixo imediato, lights preenche o resto
-          # ANTERIOR: 1fr auto auto — empurrava nome+lights para borda inferior causando corte
           - grid-template-rows: auto auto 1fr
         name:
           - justify-self: start
@@ -161,12 +133,10 @@
           - font-weight: 700
           - color: white
           - margin-bottom: 2px
-          # ANTERIOR: margin-top: 8px (não funciona — aplica-se ao span interno, não ao grid item)
         custom_fields:
           icon:
             - justify-self: start
             - align-self: start
-            # padding-bottom no container do ícone aumenta a altura da linha 1 e empurra o nome para baixo
             - padding-bottom: 10px
           temp:
             - justify-self: start
@@ -175,7 +145,6 @@
             - margin-top: 4px
           lights:
             - justify-self: start
-            # Fix P5: align-self:start — badge aparece logo abaixo do nome (anterior: end colava na borda)
             - align-self: start
           right:
             - justify-self: end
@@ -211,14 +180,13 @@
               <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
             </div>`;
           ]]]
-        # Fix 5b: +/− só quando TV ligada
         controls: >
           [[[
             const on = entity && entity.state !== 'off';
             if (!on) return '';
-            return `<div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
-              <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">+</div>
-              <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">−</div>
+            return `<div style="display:flex;flex-direction:row;gap:8px;align-items:center;">
+              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:18px;font-weight:700;">−</div>
+              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:18px;font-weight:700;">+</div>
             </div>`;
           ]]]
       styles:
@@ -227,34 +195,44 @@
           - border: 1px solid rgba(255,255,255,0.14)
           - border-radius: 18px
           - padding: 16px
-          # Fix P7: margin removido — margin em ha-card (shadow DOM) não afeta item de grid host
-          # ANTERIOR: - margin: 0 8px (causava também overflow com height:100%)
           - height: 100%
           - box-shadow: none
-        # Fix 10: ícone e nome na mesma linha (3 colunas)
+          # FIX: Subtrai 10px da largura total e compensa no lado direito. Isso trava o cartão.
+          - box-sizing: border-box
+          - width: calc(100% - 10px) !important
+          - margin: 0 10px 0 0 !important
         grid:
-          - grid-template-areas: '"i n toggle_vis" "s s controls" "l l controls"'
-          - grid-template-columns: auto 1fr auto
-          - grid-template-rows: auto 1fr auto
-          - row-gap: 6px
+          - grid-template-areas: |
+              "i toggle_vis"
+              "n n"
+              "space space"
+              "s controls"
+              "l controls"
+          - grid-template-columns: 1fr auto
+          - grid-template-rows: auto auto 1fr min-content min-content
+        # FIX: Força o contêiner do ícone para a esquerda total.
+        img_cell:
+          - justify-content: flex-start
         icon:
-          - width: 20px
+          - width: 22px
           - color: rgba(255,255,255,0.82)
-          - align-self: center
+          - justify-self: start
+          - margin-bottom: 8px
         name:
-          - font-size: 12px
+          - font-size: 14px
           - font-weight: 700
           - justify-self: start
-          - align-self: center
-          - margin-left: 6px
         state:
-          - font-size: 11px
-          - color: rgba(255,255,255,0.82)
+          - font-size: 12px
+          - font-weight: 700
+          - color: rgba(255,255,255,0.9)
           - justify-self: start
+          - align-self: end
         label:
-          - font-size: 9px
-          - color: rgba(255,255,255,0.38)
+          - font-size: 10px
+          - color: rgba(255,255,255,0.4)
           - justify-self: start
+          - margin-top: 2px
         custom_fields:
           toggle_vis:
             - justify-self: end
@@ -278,7 +256,6 @@
         - climate.sl_ar_condicionado
       state_display: >
         [[[
-          // Fix P8: lista explícita de estados ativos (anterior: !== 'off' incluía 'unavailable')
           const active = ['cool','heat','fan_only','dry','heat_cool','auto'];
           if (!entity || !active.includes(entity.state)) return 'Desligado';
           const temp = entity.attributes?.temperature ?? '—';
@@ -286,14 +263,11 @@
         ]]]
       label: >
         [[[
-          // Fix P8: ANTERIOR: entity && entity.state !== 'off' ? ... : ...
           const active = ['cool','heat','fan_only','dry','heat_cool','auto'];
           return active.includes(entity?.state) ? 'Controle rápido' : 'Toque para ligar';
         ]]]
-      # Fix 4: turn_off/turn_on explícito — climate.toggle não suportado pela integração
       tap_action:
         action: perform-action
-        # Fix P8: lista explícita — ANTERIOR: !== 'off' avaliava 'unavailable' como ligado
         perform_action: "[[[ const on=['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state); return on?'climate.turn_off':'climate.turn_on'; ]]]"
         target:
           entity_id: climate.sl_ar_condicionado
@@ -303,21 +277,18 @@
       custom_fields:
         toggle_vis: >
           [[[
-            // Fix P8: lista explícita — ANTERIOR: entity && entity.state !== 'off'
             const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
             return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(79,172,254,0.95)0%,rgba(79,172,254,0.65)100%)':'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'};">
               <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
             </div>`;
           ]]]
-        # Fix 3: +/− só quando AC ligado (era sempre visível)
         controls: >
           [[[
-            // Fix P8: lista explícita — ANTERIOR: entity && entity.state !== 'off'
             const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
             if (!on) return '';
-            return `<div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
-              <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">+</div>
-              <div style="width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.78);font-size:14px;font-weight:700;">−</div>
+            return `<div style="display:flex;flex-direction:row;gap:8px;align-items:center;">
+              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:18px;font-weight:700;">−</div>
+              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:18px;font-weight:700;">+</div>
             </div>`;
           ]]]
       styles:
@@ -326,34 +297,44 @@
           - border: 1px solid rgba(255,255,255,0.14)
           - border-radius: 18px
           - padding: 16px
-          # Fix P7: margin removido — margin em ha-card (shadow DOM) não afeta item de grid host
-          # ANTERIOR: - margin: 0 8px (causava também overflow com height:100%)
           - height: 100%
           - box-shadow: none
-        # Fix 10: ícone e nome na mesma linha (3 colunas)
+          # FIX: Subtrai 10px da largura e aplica 10px de margem na esquerda para formar o túnel de 20px no centro.
+          - box-sizing: border-box
+          - width: calc(100% - 10px) !important
+          - margin: 0 0 0 10px !important
         grid:
-          - grid-template-areas: '"i n toggle_vis" "s s controls" "l l controls"'
-          - grid-template-columns: auto 1fr auto
-          - grid-template-rows: auto 1fr auto
-          - row-gap: 6px
+          - grid-template-areas: |
+              "i toggle_vis"
+              "n n"
+              "space space"
+              "s controls"
+              "l controls"
+          - grid-template-columns: 1fr auto
+          - grid-template-rows: auto auto 1fr min-content min-content
+        # FIX: Força o contêiner do ícone para a esquerda total.
+        img_cell:
+          - justify-content: flex-start
         icon:
-          - width: 20px
+          - width: 22px
           - color: rgba(255,255,255,0.82)
-          - align-self: center
+          - justify-self: start
+          - margin-bottom: 8px
         name:
-          - font-size: 12px
+          - font-size: 14px
           - font-weight: 700
           - justify-self: start
-          - align-self: center
-          - margin-left: 6px
         state:
-          - font-size: 11px
-          - color: rgba(255,255,255,0.82)
+          - font-size: 12px
+          - font-weight: 700
+          - color: rgba(255,255,255,0.9)
           - justify-self: start
+          - align-self: end
         label:
-          - font-size: 9px
-          - color: rgba(255,255,255,0.38)
+          - font-size: 10px
+          - color: rgba(255,255,255,0.4)
           - justify-self: start
+          - margin-top: 2px
         custom_fields:
           toggle_vis:
             - justify-self: end
@@ -362,7 +343,7 @@
             - justify-self: end
             - align-self: end
 
-    # ── Corredor (Fix 9: mesma linha que cortina, coluna esquerda) ────
+    # ── Corredor ─────────────────────────────────────────────────────
     - type: custom:button-card
       view_layout:
         grid-area: corredor
@@ -379,9 +360,9 @@
           [[[
             const on = entity?.state === 'on';
             return `<div style="display:flex;align-items:center;gap:8px;">
-              <ha-icon icon="mdi:lightbulb-outline" style="width:14px;height:14px;color:${on?'#fbbf24':'rgba(255,255,255,0.55)'};"></ha-icon>
+              <ha-icon icon="mdi:lightbulb-outline" style="width:16px;height:16px;color:${on?'#fbbf24':'rgba(255,255,255,0.55)'};"></ha-icon>
               <div>
-                <div style="font-size:11px;font-weight:700;color:white;line-height:1.1;">Corredor</div>
+                <div style="font-size:12px;font-weight:700;color:white;line-height:1.1;">Corredor</div>
                 <div style="font-size:9px;color:rgba(255,255,255,0.45);line-height:1.2;">${on?'Ligado':'Desligado'}</div>
               </div>
             </div>`;
@@ -400,110 +381,17 @@
           - box-shadow: none
           - padding: 0
           - height: 100%
+          - padding-top: 8px 
         grid:
-          - grid-template-areas: '"left right"'
-          - grid-template-columns: 1fr auto
+          - grid-template-areas: '"left right ."'
+          - grid-template-columns: max-content max-content 1fr
           - grid-template-rows: 1fr
+          - column-gap: 12px
         custom_fields:
           left:
             - justify-self: start
             - align-self: center
           right:
-            - justify-self: end
+            - justify-self: start
             - align-self: center
 
-    # ── Cortina (Fix 9: coluna direita; sem botão Parar — espaço reduzido) ─
-    - type: custom:layout-card
-      layout_type: custom:grid-layout
-      view_layout:
-        grid-area: curtain
-      layout:
-        grid-template-columns: 1fr auto auto
-        align-items: center
-        grid-gap: 5px
-        margin: 0
-        padding: 0
-        height: 100%
-      card_mod:
-        style:
-          .: |
-            ha-card {
-              background: transparent !important;
-              border: none !important;
-              box-shadow: none !important;
-              padding: 0 !important;
-              /* Fix P9: garantir preenchimento da linha de 54px; min-height:0 remove default do HA */
-              height: 100% !important;
-              min-height: 0 !important;
-            }
-          $: |
-            .card-content { padding: 0 !important; }
-      cards:
-        - type: custom:button-card
-          entity: cover.cortina_sala
-          show_icon: false
-          show_name: false
-          show_state: false
-          tap_action: { action: none }
-          triggers_update:
-            - cover.cortina_sala
-          custom_fields:
-            info: >
-              [[[
-                let st = '';
-                if (entity) {
-                  if (entity.state === 'open') st = 'Aberta';
-                  else if (entity.state === 'closed') st = 'Fechada';
-                  else if (entity.attributes?.current_position != null) st = `${entity.attributes.current_position}%`;
-                }
-                return `<div style="display:flex;align-items:center;gap:6px;">
-                  <ha-icon icon="mdi:blinds" style="width:12px;height:12px;color:rgba(255,255,255,0.72);"></ha-icon>
-                  <div>
-                    <div style="font-size:11px;font-weight:700;color:white;line-height:1.1;">Cortina</div>
-                    ${st ? `<div style="font-size:9px;color:rgba(255,255,255,0.45);line-height:1.2;">${st}</div>` : ''}
-                  </div>
-                </div>`;
-              ]]]
-          styles:
-            card: [background: transparent, border: none, box-shadow: none, padding: 0, height: 100%]
-            grid: [grid-template-areas: '"info"', grid-template-columns: 1fr, grid-template-rows: 1fr]
-            custom_fields:
-              info: [justify-self: start, align-self: center]
-
-        - type: custom:button-card
-          show_icon: false
-          show_name: true
-          name: Abrir
-          tap_action:
-            action: perform-action
-            perform_action: cover.open_cover
-            target:
-              entity_id: cover.cortina_sala
-          styles:
-            card:
-              - padding: 3px 10px
-              - border-radius: 999px
-              - background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)
-              - border: 1px solid rgba(255,255,255,0.12)
-              - box-shadow: none
-              - height: 26px
-            name: [font-size: 9px, font-weight: 700, color: rgba(255,255,255,0.82)]
-
-        - type: custom:button-card
-          show_icon: false
-          show_name: true
-          name: Fechar
-          tap_action:
-            action: perform-action
-            perform_action: cover.close_cover
-            target:
-              entity_id: cover.cortina_sala
-          styles:
-            card:
-              - padding: 3px 10px
-              - border-radius: 999px
-              - background: linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)
-              - border: 1px solid rgba(255,255,255,0.12)
-              - box-shadow: none
-              - height: 26px
-            name: [font-size: 9px, font-weight: 700, color: rgba(255,255,255,0.82)]

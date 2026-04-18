@@ -1,26 +1,173 @@
-- type: markdown
-  content: |
-    <small style="letter-spacing:.12em;opacity:.58;">📷 CÂMERAS · 4 ONLINE</small>
+# ═══════════════════════════════════════════════════════════════════
+#  BENTO CAMERAS — v2 (grid 2x2 de tiles, estilo imagem 3)
+#
+#  Mudancas v2:
+#    - Conteudo deixou de ser markdown-placeholder com "[Entrada] [Sala]"
+#    - Header compacto + grid 2x2 de button-cards
+#    - Cada tile: fundo escuro, icone mdi:camera central, dot verde
+#      top-right (online), label na base
+#    - card_mod interno (que brigava com o wrapper externo) removido
+#  Regra de Ouro: codigo original comentado abaixo, nao deletado.
+# ═══════════════════════════════════════════════════════════════════
 
-    <br><br>
+# --- CÓDIGO ORIGINAL COMENTADO (v1 — markdown placeholder sem tiles) ---
+# - type: markdown
+#   content: |
+#     <small style="letter-spacing:.12em;opacity:.58;">📷 CÂMERAS · 4 ONLINE</small>
+#
+#     <br><br>
+#
+#     [Entrada]   [Sala]
+#
+#     [Garagem]   [Quintal]
+#   card_mod:
+#     style: |
+#       ha-card {
+#         background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+#         backdrop-filter: blur(18px) saturate(1.2);
+#         -webkit-backdrop-filter: blur(18px) saturate(1.2);
+#         border-right: 1px solid rgba(255,255,255,0.08);
+#         border-radius: 0;
+#         border-top: none;
+#         border-bottom: none;
+#         border-left: none;
+#         box-shadow: none;
+#         height: 100%;
+#         overflow: hidden;
+#         aspect-ratio: unset;
+#         padding: 0;
+#       }
+# --- FIM CÓDIGO ORIGINAL ---
 
-    [Entrada]   [Sala]
 
-    [Garagem]   [Quintal]
+# ─────────────────────────────────────────────────────────────────
+# 1. HEADER — "CÂMERAS · N ONLINE"
+# ─────────────────────────────────────────────────────────────────
+- type: custom:button-card
+  show_icon: false
+  show_name: false
+  show_label: true
+  tap_action:
+    action: none
+  label: >
+    [[[
+      var cams = [
+        'camera.sl_camera_2',
+        'camera.vr_camera_2',
+        'camera.cz_camera_2',
+        'camera.as_camera_2'
+      ];
+      var online = cams.filter(function(id){
+        var e = states[id];
+        if (!e) return false;
+        var s = e.state;
+        return s === 'streaming' || s === 'recording' || s === 'idle' || s === 'on';
+      }).length;
+      return '<div style="display:flex;align-items:center;gap:8px;'
+           + 'letter-spacing:.12em;font-size:10px;font-weight:600;'
+           + 'color:rgba(255,255,255,0.58);text-transform:uppercase;">'
+           +   '<ha-icon icon="mdi:cctv" style="--mdc-icon-size:14px;'
+           +     'color:rgba(255,255,255,0.58);"></ha-icon>'
+           +   'CÂMERAS · ' + online + ' ONLINE'
+           + '</div>';
+    ]]]
+  styles:
+    card:
+      - background: "transparent"
+      - border: "none"
+      - box-shadow: "none"
+      - padding: "14px 14px 8px"
+      - height: "auto"
+    label:
+      - width: "100%"
+      - text-align: "left"
+      - padding: "0"
+
+
+# ─────────────────────────────────────────────────────────────────
+# 2. GRID 2x2 — 4 tiles de camera
+# ─────────────────────────────────────────────────────────────────
+- type: grid
+  columns: 2
+  square: false
+  cards:
+
+    # Tile 1 — Sala
+    - &cam_tile
+      type: custom:button-card
+      entity: camera.sl_camera_2
+      show_name: true
+      show_icon: true
+      show_label: false
+      name: Sala
+      icon: mdi:camera
+      tap_action:
+        action: more-info
+      custom_fields:
+        status_dot: >
+          [[[
+            var s = entity && entity.state;
+            var online = (s === 'streaming' || s === 'recording' || s === 'idle' || s === 'on');
+            var color  = online ? '#22c55e' : '#64748b';
+            return '<div style="width:9px;height:9px;border-radius:50%;'
+                 + 'background:' + color + ';'
+                 + 'box-shadow:0 0 6px ' + color + ';"></div>';
+          ]]]
+      styles:
+        card:
+          - background: "#1b2535"
+          - border: "1px solid rgba(255,255,255,0.05)"
+          - border-radius: "12px"
+          - padding: "10px 12px"
+          - box-shadow: "none"
+          - aspect-ratio: "16/11"
+          - overflow: "hidden"
+        grid:
+          - grid-template-areas: '"status_dot" "i" "n"'
+          - grid-template-columns: "1fr"
+          - grid-template-rows: "auto 1fr auto"
+          - row-gap: "4px"
+        icon:
+          - width: "28px"
+          - color: "rgba(255,255,255,0.32)"
+          - align-self: "center"
+          - justify-self: "center"
+        name:
+          - font-size: "12px"
+          - font-weight: "500"
+          - color: "rgba(255,255,255,0.68)"
+          - text-align: "left"
+          - justify-self: "start"
+          - align-self: "end"
+        custom_fields:
+          status_dot:
+            - justify-self: "end"
+            - align-self: "start"
+
+    # Tile 2 — Varanda
+    - <<: *cam_tile
+      entity: camera.vr_camera_2
+      name: Varanda
+
+    # Tile 3 — Cozinha
+    - <<: *cam_tile
+      entity: camera.cz_camera_2
+      name: Cozinha
+
+    # Tile 4 — Área
+    - <<: *cam_tile
+      entity: camera.as_camera_2
+      name: Área
+
   card_mod:
     style: |
       ha-card {
-        background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-        backdrop-filter: blur(18px) saturate(1.2);
-        -webkit-backdrop-filter: blur(18px) saturate(1.2);
-        border-right: 1px solid rgba(255,255,255,0.08);
-        border-radius: 0;
-        border-top: none;
-        border-bottom: none;
-        border-left: none;
-        box-shadow: none;
-        height: 100%;
-        overflow: hidden;
-        aspect-ratio: unset;
-        padding: 0;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 10px 12px !important;
+        height: auto !important;
+      }
+      #root {
+        gap: 8px !important;
       }

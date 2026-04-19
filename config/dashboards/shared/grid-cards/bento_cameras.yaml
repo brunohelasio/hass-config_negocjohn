@@ -291,6 +291,80 @@
 #       name: Área
 # --- FIM CÓDIGO ORIGINAL ---
 
+# --- CÓDIGO COMENTADO (v5 — background-image CSS template, quebrava render) ---
+# Causas-raiz da v5 quebrar:
+#   1) URL do entity_picture contém `&` (token rotativo) que pode quebrar parse CSS.
+#   2) button-card não re-avalia template CSS background-image quando o token muda.
+# Solução v6: embed <img> direto no label (HTML nativo + reativo via triggers_update).
+# - type: grid
+#   columns: 2
+#   square: false
+#   cards:
+#     - &cam_tile_v5
+#       type: custom:button-card
+#       entity: camera.sl_camera_2
+#       triggers_update:
+#         - camera.sl_camera_2
+#       name: Sala
+#       show_name: true
+#       show_icon: false
+#       show_label: false
+#       show_state: false
+#       tap_action:
+#         action: more-info
+#       styles:
+#         card:
+#           - background-color: "#1b2535"
+#           - background-image: >
+#               [[[
+#                 var p = entity && entity.attributes && entity.attributes.entity_picture;
+#                 return p ? 'url(' + p + ')' : 'none';
+#               ]]]
+#           - background-size: "cover"
+#           - background-position: "center"
+#           - background-repeat: "no-repeat"
+#           - border-radius: "12px"
+#           - border: "1px solid rgba(255,255,255,0.06)"
+#           - box-shadow: "none"
+#           - height: "100%"
+#           - width: "100%"
+#           - padding: "0"
+#           - overflow: "hidden"
+#           - cursor: "pointer"
+#         grid:
+#           - grid-template-areas: '"n"'
+#           - grid-template-rows: "1fr"
+#           - grid-template-columns: "1fr"
+#         name:
+#           - align-self: "end"
+#           - justify-self: "stretch"
+#           - width: "100%"
+#           - padding: "16px 10px 8px"
+#           - box-sizing: "border-box"
+#           - background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0) 100%)"
+#           - font-size: "12px"
+#           - font-weight: "500"
+#           - color: "rgba(255,255,255,0.92)"
+#           - text-align: "left"
+#     - <<: *cam_tile_v5
+#       entity: camera.vr_camera_2
+#       triggers_update:
+#         - camera.vr_camera_2
+#       name: Varanda
+#     - <<: *cam_tile_v5
+#       entity: camera.cz_camera_2
+#       triggers_update:
+#         - camera.cz_camera_2
+#       name: Cozinha
+#     - <<: *cam_tile_v5
+#       entity: camera.as_camera_2
+#       triggers_update:
+#         - camera.as_camera_2
+#       name: Área
+# --- FIM CÓDIGO COMENTADO ---
+
+
+# v6 — <img> embed direto no label (HTML nativo + reativo)
 - type: grid
   columns: 2
   square: false
@@ -301,65 +375,71 @@
       entity: camera.sl_camera_2
       triggers_update:
         - camera.sl_camera_2
-      name: Sala
-      show_name: true
+      show_name: false
       show_icon: false
-      show_label: false
       show_state: false
+      show_label: true
       tap_action:
         action: more-info
+      variables:
+        cam_name: Sala
+      label: >
+        [[[
+          var p = (entity && entity.attributes && entity.attributes.entity_picture) || '';
+          var name = (variables && variables.cam_name) || '';
+          var bg = p
+            ? '<img src="' + p + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;"/>'
+            : '<div style="position:absolute;inset:0;background:#1b2535;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.32);font-size:11px;">offline</div>';
+          return '<div style="position:relative;width:100%;height:100%;overflow:hidden;border-radius:12px;">'
+               +   bg
+               +   '<div style="position:absolute;left:0;right:0;bottom:0;padding:18px 10px 8px;'
+               +     'background:linear-gradient(to top,rgba(0,0,0,0.78) 0%,rgba(0,0,0,0.35) 60%,rgba(0,0,0,0) 100%);'
+               +     'font-size:12px;font-weight:500;color:rgba(255,255,255,0.92);text-align:left;'
+               +     'pointer-events:none;">' + name + '</div>'
+               + '</div>';
+        ]]]
       styles:
         card:
-          - background-color: "#1b2535"
-          - background-image: >
-              [[[
-                var p = entity && entity.attributes && entity.attributes.entity_picture;
-                return p ? 'url(' + p + ')' : 'none';
-              ]]]
-          - background-size: "cover"
-          - background-position: "center"
-          - background-repeat: "no-repeat"
-          - border-radius: "12px"
+          - background: "#1b2535"
           - border: "1px solid rgba(255,255,255,0.06)"
+          - border-radius: "12px"
           - box-shadow: "none"
           - height: "100%"
           - width: "100%"
           - padding: "0"
           - overflow: "hidden"
           - cursor: "pointer"
+          - position: "relative"
         grid:
-          - grid-template-areas: '"n"'
+          - grid-template-areas: '"l"'
           - grid-template-rows: "1fr"
           - grid-template-columns: "1fr"
-        name:
-          - align-self: "end"
-          - justify-self: "stretch"
+        label:
           - width: "100%"
-          - padding: "16px 10px 8px"
-          - box-sizing: "border-box"
-          - background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0) 100%)"
-          - font-size: "12px"
-          - font-weight: "500"
-          - color: "rgba(255,255,255,0.92)"
-          - text-align: "left"
+          - height: "100%"
+          - padding: "0"
+          - margin: "0"
 
     - <<: *cam_tile
       entity: camera.vr_camera_2
       triggers_update:
         - camera.vr_camera_2
-      name: Varanda
+      variables:
+        cam_name: Varanda
 
     - <<: *cam_tile
       entity: camera.cz_camera_2
       triggers_update:
         - camera.cz_camera_2
-      name: Cozinha
+      variables:
+        cam_name: Cozinha
 
     - <<: *cam_tile
       entity: camera.as_camera_2
       triggers_update:
         - camera.as_camera_2
-      name: Área
+      variables:
+        cam_name: Área
 
   card_mod:
     style: |

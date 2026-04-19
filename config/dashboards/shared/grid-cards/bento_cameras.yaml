@@ -218,81 +218,147 @@
 
 
 # ─────────────────────────────────────────────────────────────────
-# 2. GRID 2x2 — 4 tiles de camera com imagem AO VIVO (v4)
-#    v4: sem aspect-ratio fixo nos tiles. Grid força height: 100%
-#    e rows 1fr 1fr para que os 4 tiles preencham todo o bloco,
-#    ficando aproximadamente quadrados conforme o espaço disponível.
-#    Uso de picture-entity (nativo HA) para exibir stream da camera.
-#    camera_view: auto  → snapshot estatico (mais leve/confiavel em tablet);
-#                  live  → mjpeg stream (mais pesado, pode falhar se HLS)
-#    Name overlay nativo do picture-entity (.box no bottom).
-#    card_mod esconde o "state" (Streaming/Idle) e so mantem o nome.
+# 2. GRID 2x2 — 4 tiles de camera com imagem AO VIVO (v5)
+#    v5 (Saída 2): picture-entity substituído por custom:button-card com
+#    background-image lido de entity.attributes.entity_picture.
+#    Controle total sobre sizing — sem depender de aspect-ratio interno
+#    do hui-image. Snapshot atualiza sozinho (HA rotaciona o access_token
+#    no entity_picture).
 # ─────────────────────────────────────────────────────────────────
+
+# --- CÓDIGO ORIGINAL COMENTADO (v4 — picture-entity) ---
+# - type: grid
+#   columns: 2
+#   square: false
+#   cards:
+#
+#     - &cam_tile
+#       type: picture-entity
+#       entity: camera.sl_camera_2
+#       camera_image: camera.sl_camera_2
+#       camera_view: auto
+#       name: Sala
+#       show_state: false
+#       show_name: true
+#       tap_action:
+#         action: more-info
+#       card_mod:
+#         style: |
+#           ha-card {
+#             border-radius: 12px !important;
+#             overflow: hidden !important;
+#             border: 1px solid rgba(255,255,255,0.06) !important;
+#             box-shadow: none !important;
+#             background: #1b2535 !important;
+#             height: 100% !important;
+#             width: 100% !important;
+#           }
+#           hui-image {
+#             height: 100% !important;
+#             width: 100% !important;
+#           }
+#           hui-image img,
+#           hui-image div[style*="background-image"] {
+#             height: 100% !important;
+#             width: 100% !important;
+#             object-fit: cover !important;
+#             background-size: cover !important;
+#             background-position: center !important;
+#           }
+#           .box {
+#             background: linear-gradient(to top,
+#               rgba(0,0,0,0.78) 0%,
+#               rgba(0,0,0,0.35) 60%,
+#               rgba(0,0,0,0) 100%) !important;
+#             padding: 16px 10px 8px !important;
+#           }
+#           .box .title {
+#             font-size: 12px !important;
+#             font-weight: 500 !important;
+#             color: rgba(255,255,255,0.92) !important;
+#           }
+#     - <<: *cam_tile
+#       entity: camera.vr_camera_2
+#       camera_image: camera.vr_camera_2
+#       name: Varanda
+#     - <<: *cam_tile
+#       entity: camera.cz_camera_2
+#       camera_image: camera.cz_camera_2
+#       name: Cozinha
+#     - <<: *cam_tile
+#       entity: camera.as_camera_2
+#       camera_image: camera.as_camera_2
+#       name: Área
+# --- FIM CÓDIGO ORIGINAL ---
+
 - type: grid
   columns: 2
   square: false
   cards:
 
     - &cam_tile
-      type: picture-entity
+      type: custom:button-card
       entity: camera.sl_camera_2
-      camera_image: camera.sl_camera_2
-      camera_view: auto
+      triggers_update:
+        - camera.sl_camera_2
       name: Sala
-      show_state: false
       show_name: true
+      show_icon: false
+      show_label: false
+      show_state: false
       tap_action:
         action: more-info
-      card_mod:
-        style: |
-          /* v4: sem aspect-ratio — tile preenche sua célula do grid */
-          ha-card {
-            border-radius: 12px !important;
-            overflow: hidden !important;
-            border: 1px solid rgba(255,255,255,0.06) !important;
-            box-shadow: none !important;
-            background: #1b2535 !important;
-            height: 100% !important;
-            width: 100% !important;
-          }
-          hui-image {
-            height: 100% !important;
-            width: 100% !important;
-          }
-          hui-image img,
-          hui-image div[style*="background-image"] {
-            height: 100% !important;
-            width: 100% !important;
-            object-fit: cover !important;
-            background-size: cover !important;
-            background-position: center !important;
-          }
-          .box {
-            background: linear-gradient(to top,
-              rgba(0,0,0,0.78) 0%,
-              rgba(0,0,0,0.35) 60%,
-              rgba(0,0,0,0) 100%) !important;
-            padding: 16px 10px 8px !important;
-          }
-          .box .title {
-            font-size: 12px !important;
-            font-weight: 500 !important;
-            color: rgba(255,255,255,0.92) !important;
-          }
+      styles:
+        card:
+          - background-color: "#1b2535"
+          - background-image: >
+              [[[
+                var p = entity && entity.attributes && entity.attributes.entity_picture;
+                return p ? 'url(' + p + ')' : 'none';
+              ]]]
+          - background-size: "cover"
+          - background-position: "center"
+          - background-repeat: "no-repeat"
+          - border-radius: "12px"
+          - border: "1px solid rgba(255,255,255,0.06)"
+          - box-shadow: "none"
+          - height: "100%"
+          - width: "100%"
+          - padding: "0"
+          - overflow: "hidden"
+          - cursor: "pointer"
+        grid:
+          - grid-template-areas: '"n"'
+          - grid-template-rows: "1fr"
+          - grid-template-columns: "1fr"
+        name:
+          - align-self: "end"
+          - justify-self: "stretch"
+          - width: "100%"
+          - padding: "16px 10px 8px"
+          - box-sizing: "border-box"
+          - background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0) 100%)"
+          - font-size: "12px"
+          - font-weight: "500"
+          - color: "rgba(255,255,255,0.92)"
+          - text-align: "left"
 
     - <<: *cam_tile
       entity: camera.vr_camera_2
-      camera_image: camera.vr_camera_2
+      triggers_update:
+        - camera.vr_camera_2
       name: Varanda
 
     - <<: *cam_tile
       entity: camera.cz_camera_2
-      camera_image: camera.cz_camera_2
+      triggers_update:
+        - camera.cz_camera_2
       name: Cozinha
 
     - <<: *cam_tile
       entity: camera.as_camera_2
-      camera_image: camera.as_camera_2
+      triggers_update:
+        - camera.as_camera_2
       name: Área
 
   card_mod:

@@ -486,67 +486,147 @@
 
 
 # ─────────────────────────────────────────────────────────────────
-# 4. CLIMA — v9 substituído por custom:weather-forecast-card (troinine)
-#    - show_current: true (clima atual no topo)
-#    - forecast.mode: chart (curva contínua)
-#    - daily_slots: 5 (cinco dias da semana, SEM ícones)
-#    - card_mod esconde ícones da forecast e comprime altura
+# 4. CLIMA — v10 "TEMPO AGORA" (clone do tpl_sidebar) + curva decorativa
+#    - Widget compacto com emoji + temperatura + condição (idêntico ao sidebar)
+#    - tap_action abre popup_weather.yaml (radar + forecast + chart)
+#    - Curva decorativa SVG ocupa a base do bloco, SANGRANDO em:
+#        • laterais (negativo em -24px)
+#        • fundo (negativo em -24px + border-radius do wrapper)
+#      estilo lukevink/hass-config-lajv (orange/red gradient)
 # ─────────────────────────────────────────────────────────────────
 
-# --- CÓDIGO ORIGINAL COMENTADO (v8 — button-card + SVG manual) ---
-# - type: custom:button-card
+# --- CÓDIGO ORIGINAL COMENTADO (v9 — custom:weather-forecast-card troinine) ---
+# - type: custom:weather-forecast-card
 #   entity: weather.forecast_casa
-#   show_name: false
-#   show_icon: false
-#   show_state: false
-#   show_label: false
-#
-#   # Todo o conteúdo via custom_fields para controle total
-#   custom_fields:
-#
-#     # Linha principal: ícone + condição + temperatura
-#     weather_top_OLD:
-# (bloco antigo removido do YAML ativo — estava integralmente comentado
-# acima no marcador "--- CÓDIGO ORIGINAL COMENTADO (v8 ...) ---")
+#   show_current: true
+#   show_forecast: true
+#   default_forecast: daily
+#   current:
+#     show_attributes: false
+#   forecast:
+#     mode: chart
+#     daily_slots: 5
+#     show_sun_times: false
+#   card_mod:
+#     style: |
+#       ha-card {
+#         background: transparent !important;
+#         border: none !important;
+#         box-shadow: none !important;
+#         padding: 8px 14px 14px !important;
+#         margin: auto -1px -1px -1px !important;
+#         border-radius: 0 0 17px 17px !important;
+#         overflow: hidden !important;
+#         max-height: 210px !important;
+#         --weather-forecast-card-forecast-conditions-icon-size: 0px;
+#       }
+#       .wfc-forecast ha-state-icon,
+#       .wfc-forecast ha-icon,
+#       .wfc-forecast img,
+#       .wfc-forecast-condition-icon {
+#         display: none !important;
+#       }
+#       .wfc-current-weather {
+#         padding: 0 0 6px 0 !important;
+#       }
+#       .wfc-forecast {
+#         padding: 0 !important;
+#       }
 # --- FIM CÓDIGO ORIGINAL ---
 
-- type: custom:weather-forecast-card
+# 4a. TEMPO AGORA — widget compacto (clone direto do tpl_sidebar.yaml linhas 353-362)
+- type: custom:button-card
   entity: weather.forecast_casa
-  show_current: true
-  show_forecast: true
-  default_forecast: daily
-  current:
-    show_attributes: false
-  forecast:
-    mode: chart
-    daily_slots: 5
-    show_sun_times: false
-  card_mod:
-    style: |
-      ha-card {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 8px 14px 14px !important;
-        margin: auto -1px -1px -1px !important;
-        border-radius: 0 0 17px 17px !important;
-        overflow: hidden !important;
-        /* Compacta altura para caber no bloco welcome */
-        max-height: 210px !important;
-        /* Remove ícones grandes do forecast (usuário pediu SEM imagens) */
-        --weather-forecast-card-forecast-conditions-icon-size: 0px;
-      }
-      /* Esconde ícones/imagens de condição na forecast diária */
-      .wfc-forecast ha-state-icon,
-      .wfc-forecast ha-icon,
-      .wfc-forecast img,
-      .wfc-forecast-condition-icon {
-        display: none !important;
-      }
-      /* Compacta paddings internos */
-      .wfc-current-weather {
-        padding: 0 0 6px 0 !important;
-      }
-      .wfc-forecast {
-        padding: 0 !important;
-      }
+  triggers_update:
+    - weather.forecast_casa
+  show_name: false
+  show_icon: false
+  show_state: false
+  show_label: true
+  label: >
+    [[[
+      var state = entity.state;
+      var tempInt = Math.round(parseFloat(entity.attributes.temperature) || 0);
+      var weatherEmoji = {
+        'sunny':'☀️','clear-night':'🌙','partlycloudy':'⛅','cloudy':'☁️',
+        'rainy':'🌧️','snowy':'❄️','windy':'💨','fog':'🌫️',
+        'lightning':'⚡','lightning-rainy':'⛈️','pouring':'🌊'
+      }[state] || '🌡️';
+      return '<div style="font-size:10px;font-weight:700;letter-spacing:2px;'
+           + 'color:rgba(255,255,255,0.30);text-transform:uppercase;'
+           + 'margin-bottom:10px;">TEMPO AGORA</div>'
+           + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+           +   '<div>'
+           +     '<div style="font-size:34px;font-weight:200;color:rgba(255,255,255,0.92);'
+           +       'line-height:1;">' + tempInt + '°</div>'
+           +     '<div style="font-size:12px;color:rgba(255,255,255,0.42);'
+           +       'margin-top:3px;text-transform:capitalize;">' + state + '</div>'
+           +   '</div>'
+           +   '<div style="font-size:44px;line-height:1;">' + weatherEmoji + '</div>'
+           + '</div>';
+    ]]]
+  tap_action: !include ../popup/popup_weather.yaml
+  styles:
+    card:
+      - background: "transparent"
+      - border: "none"
+      - box-shadow: "none"
+      - padding: "14px 18px 10px"
+      - height: "auto"
+      - cursor: "pointer"
+    label:
+      - width: "100%"
+      - text-align: "left"
+      - padding: "0"
+
+# 4b. CURVA DECORATIVA — SVG orange/red, sangra lateral+inferior (lukevink-style)
+- type: custom:button-card
+  show_name: false
+  show_icon: false
+  show_state: false
+  show_label: true
+  tap_action:
+    action: none
+  label: >
+    [[[
+      return '<svg viewBox="0 0 400 48" width="100%" height="48" '
+           + 'preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" '
+           + 'style="display:block;">'
+           + '<defs>'
+           +   '<linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">'
+           +     '<stop offset="0%" stop-color="rgba(251,146,60,0.00)"/>'
+           +     '<stop offset="50%" stop-color="rgba(251,146,60,0.18)"/>'
+           +     '<stop offset="100%" stop-color="rgba(239,68,68,0.32)"/>'
+           +   '</linearGradient>'
+           +   '<linearGradient id="curveStroke" x1="0" y1="0" x2="1" y2="0">'
+           +     '<stop offset="0%" stop-color="#fb923c" stop-opacity="0.55"/>'
+           +     '<stop offset="50%" stop-color="#f97316" stop-opacity="0.80"/>'
+           +     '<stop offset="100%" stop-color="#ef4444" stop-opacity="0.60"/>'
+           +   '</linearGradient>'
+           + '</defs>'
+           + '<path d="M0 28 C55 22,110 18,170 22 C230 26,285 32,340 26 C370 22,388 20,400 19 L400 48 L0 48 Z" '
+           +  'fill="url(#curveFill)"/>'
+           + '<path d="M0 28 C55 22,110 18,170 22 C230 26,285 32,340 26 C370 22,388 20,400 19" '
+           +  'fill="none" stroke="url(#curveStroke)" stroke-width="1.5" '
+           +  'stroke-linecap="round"/>'
+           + '</svg>';
+    ]]]
+  styles:
+    card:
+      - background: "transparent"
+      - border: "none"
+      - box-shadow: "none"
+      - padding: "0"
+      # Sangra nas 3 bordas (esquerda, direita, base) do wrapper stack-in-card.
+      # O overflow:hidden + border-radius:18px do wrapper cuida do clipping.
+      - margin: "0 -24px -24px -24px"
+      - width: "calc(100% + 48px)"
+      - height: "48px"
+      - overflow: "hidden"
+      - pointer-events: "none"
+      - cursor: "default"
+    label:
+      - width: "100%"
+      - height: "48px"
+      - padding: "0"
+      - display: "block"

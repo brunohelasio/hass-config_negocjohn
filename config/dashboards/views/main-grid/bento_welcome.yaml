@@ -35,11 +35,16 @@ card_mod:
       flex-direction: column !important;
       justify-content: space-between !important;
 
-      /* 3. O SEU Vidro Perfeito */
-      background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;
+      /* 3. Vidro Premium — tom azul claro suave (v9)
+            Baseline v8 (restore rápido):
+            background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+      */
+      background: linear-gradient(160deg, rgba(186,230,253,0.12), rgba(147,197,253,0.04)) !important;
       backdrop-filter: blur(18px) saturate(1.2) !important;
       -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
+      border: 1px solid rgba(191,219,254,0.22) !important;
+      box-shadow: 0 0 24px rgba(96,165,250,0.06), 0 8px 32px rgba(0,0,0,0.2) !important;
       
       /* 4. Força o arredondamento e IMPEDE que o conteúdo vaze e deixe quadrado */
       border-radius: 18px !important;

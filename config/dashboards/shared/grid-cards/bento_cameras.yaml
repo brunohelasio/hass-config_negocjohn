@@ -160,64 +160,68 @@
 
 
 # ─────────────────────────────────────────────────────────────────
-# 1. HEADER — "CÂMERAS · N ONLINE" (v3)
-#    - icone grudado ao texto via grid-template-areas "i l"
-#    - column-gap: 6px (bem proximo do texto)
-#    - sem bolinhas verdes nos tiles (removidas)
+# 1. HEADER — REMOVIDO na v4
+#    Usuário pediu que as câmeras ocupem todo o bloco, sem título.
 # ─────────────────────────────────────────────────────────────────
-- type: custom:button-card
-  show_icon: true
-  show_name: false
-  show_label: true
-  icon: mdi:cctv
-  tap_action:
-    action: none
-  label: >
-    [[[
-      var cams = [
-        'camera.sl_camera_2',
-        'camera.vr_camera_2',
-        'camera.cz_camera_2',
-        'camera.as_camera_2'
-      ];
-      var online = cams.filter(function(id){
-        var e = states[id];
-        if (!e) return false;
-        var s = e.state;
-        return s === 'streaming' || s === 'recording' || s === 'idle' || s === 'on';
-      }).length;
-      return 'CÂMERAS · ' + online + ' ONLINE';
-    ]]]
-  styles:
-    card:
-      - background: "transparent"
-      - border: "none"
-      - box-shadow: "none"
-      - padding: "12px 14px 8px"
-      - height: "auto"
-    grid:
-      - grid-template-areas: '"i l"'
-      - grid-template-columns: "auto 1fr"
-      - grid-template-rows: "auto"
-      - column-gap: "6px"
-      - align-items: "center"
-    icon:
-      - width: "14px"
-      - color: "rgba(255,255,255,0.62)"
-      - justify-self: "start"
-    label:
-      - font-size: "10px"
-      - font-weight: "600"
-      - letter-spacing: "0.12em"
-      - text-transform: "uppercase"
-      - color: "rgba(255,255,255,0.62)"
-      - text-align: "left"
-      - justify-self: "start"
-      - padding: "0"
+
+# --- CÓDIGO ORIGINAL COMENTADO (v3 — header "CÂMERAS · N ONLINE") ---
+# - type: custom:button-card
+#   show_icon: true
+#   show_name: false
+#   show_label: true
+#   icon: mdi:cctv
+#   tap_action:
+#     action: none
+#   label: >
+#     [[[
+#       var cams = [
+#         'camera.sl_camera_2',
+#         'camera.vr_camera_2',
+#         'camera.cz_camera_2',
+#         'camera.as_camera_2'
+#       ];
+#       var online = cams.filter(function(id){
+#         var e = states[id];
+#         if (!e) return false;
+#         var s = e.state;
+#         return s === 'streaming' || s === 'recording' || s === 'idle' || s === 'on';
+#       }).length;
+#       return 'CÂMERAS · ' + online + ' ONLINE';
+#     ]]]
+#   styles:
+#     card:
+#       - background: "transparent"
+#       - border: "none"
+#       - box-shadow: "none"
+#       - padding: "12px 14px 8px"
+#       - height: "auto"
+#     grid:
+#       - grid-template-areas: '"i l"'
+#       - grid-template-columns: "auto 1fr"
+#       - grid-template-rows: "auto"
+#       - column-gap: "6px"
+#       - align-items: "center"
+#     icon:
+#       - width: "14px"
+#       - color: "rgba(255,255,255,0.62)"
+#       - justify-self: "start"
+#     label:
+#       - font-size: "10px"
+#       - font-weight: "600"
+#       - letter-spacing: "0.12em"
+#       - text-transform: "uppercase"
+#       - color: "rgba(255,255,255,0.62)"
+#       - text-align: "left"
+#       - justify-self: "start"
+#       - padding: "0"
+# --- FIM CÓDIGO ORIGINAL ---
 
 
 # ─────────────────────────────────────────────────────────────────
-# 2. GRID 2x2 — 4 tiles de camera com imagem AO VIVO (v3)
+# 2. GRID 2x2 — 4 tiles de camera com imagem AO VIVO (v4)
+#    v4: sem aspect-ratio fixo nos tiles. Grid força height: 100%
+#    e rows 1fr 1fr para que os 4 tiles preencham todo o bloco,
+#    ficando aproximadamente quadrados conforme o espaço disponível.
 #    Uso de picture-entity (nativo HA) para exibir stream da camera.
 #    camera_view: auto  → snapshot estatico (mais leve/confiavel em tablet);
 #                  live  → mjpeg stream (mais pesado, pode falhar se HLS)
@@ -241,16 +245,27 @@
         action: more-info
       card_mod:
         style: |
+          /* v4: sem aspect-ratio — tile preenche sua célula do grid */
           ha-card {
             border-radius: 12px !important;
             overflow: hidden !important;
             border: 1px solid rgba(255,255,255,0.06) !important;
             box-shadow: none !important;
             background: #1b2535 !important;
+            height: 100% !important;
+            width: 100% !important;
           }
           hui-image {
-            aspect-ratio: 16/10 !important;
-            height: auto !important;
+            height: 100% !important;
+            width: 100% !important;
+          }
+          hui-image img,
+          hui-image div[style*="background-image"] {
+            height: 100% !important;
+            width: 100% !important;
+            object-fit: cover !important;
+            background-size: cover !important;
+            background-position: center !important;
           }
           .box {
             background: linear-gradient(to top,
@@ -282,13 +297,18 @@
 
   card_mod:
     style: |
+      /* v4: grid ocupa 100% da célula (welcome/cameras estica no bento_main) */
       ha-card {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        padding: 0 12px 12px !important;
-        height: auto !important;
+        padding: 10px !important;
+        height: 100% !important;
       }
       #root {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        grid-template-rows: 1fr 1fr !important;
         gap: 8px !important;
+        height: 100% !important;
       }

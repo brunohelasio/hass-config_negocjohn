@@ -13,40 +13,112 @@
 
 
 # ─────────────────────────────────────────────────────────────────
-# 1. SAUDAÇÃO
+# 1. SAUDAÇÃO + RELÓGIO (v9)
+#    - Botão com grid de 2 colunas: [data+saudação] | [relógio]
+#    - Relógio (HH:MM) ocupa as DUAS linhas (grid-row: 1 / span 2)
+#    - Font 52px weight 300 — visual premium
+#    - Atualiza via entity: sensor.time + triggers_update
 # ─────────────────────────────────────────────────────────────────
-- type: markdown
-  content: >
-    {{ now().strftime('%A, %d %b') | upper }}
 
-    ## {% set h = now().hour %}{% if h < 12 %}Bom dia{% elif h < 18 %}Boa tarde{% else %}Boa noite{% endif %}, Bruno
+# --- CÓDIGO ORIGINAL COMENTADO (v8 — type:markdown sem relógio) ---
+# - type: markdown
+#   content: >
+#     {{ now().strftime('%A, %d %b') | upper }}
+#
+#     ## {% set h = now().hour %}{% if h < 12 %}Bom dia{% elif h < 18 %}Boa tarde{% else %}Boa noite{% endif %}, Bruno
+#
+#   card_mod:
+#     style: |
+#       ha-card {
+#         background: transparent !important;
+#         border: none !important;
+#         box-shadow: none !important;
+#         padding: 18px 18px 6px !important;
+#       }
+#       ha-markdown { padding: 0 !important; }
+#       ha-markdown p:first-child {
+#         font-size: 11px !important;
+#         letter-spacing: 0.12em !important;
+#         color: rgba(255,255,255,0.44) !important;
+#         font-weight: 600 !important;
+#         text-transform: uppercase !important;
+#         margin: 0 0 4px !important;
+#       }
+#       ha-markdown h2 {
+#         font-size: 26px !important;
+#         font-weight: 700 !important;
+#         color: white !important;
+#         margin: 0 !important;
+#         padding: 0 !important;
+#         border: none !important;
+#         line-height: 1.15 !important;
+#       }
+# --- FIM CÓDIGO ORIGINAL ---
 
-  card_mod:
-    style: |
-      ha-card {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 18px 18px 6px !important;
-      }
-      ha-markdown { padding: 0 !important; }
-      ha-markdown p:first-child {
-        font-size: 11px !important;
-        letter-spacing: 0.12em !important;
-        color: rgba(255,255,255,0.44) !important;
-        font-weight: 600 !important;
-        text-transform: uppercase !important;
-        margin: 0 0 4px !important;
-      }
-      ha-markdown h2 {
-        font-size: 26px !important;
-        font-weight: 700 !important;
-        color: white !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: none !important;
-        line-height: 1.15 !important;
-      }
+- type: custom:button-card
+  entity: sensor.time
+  triggers_update:
+    - sensor.time
+  show_name: false
+  show_icon: false
+  show_state: false
+  show_label: false
+  tap_action:
+    action: none
+  custom_fields:
+    date_line: >
+      [[[
+        var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira',
+                    'Quinta-feira','Sexta-feira','Sábado'];
+        var meses = ['Jan','Fev','Mar','Abr','Mai','Jun',
+                     'Jul','Ago','Set','Out','Nov','Dez'];
+        var d = new Date();
+        var s = dias[d.getDay()] + ', ' + d.getDate() + ' ' + meses[d.getMonth()];
+        return '<div style="font-size:11px;letter-spacing:0.12em;'
+             + 'color:rgba(255,255,255,0.44);font-weight:600;'
+             + 'text-transform:uppercase;">' + s + '</div>';
+      ]]]
+    greet_line: >
+      [[[
+        var h = new Date().getHours();
+        var g = (h < 12) ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite');
+        return '<div style="font-size:26px;font-weight:700;color:white;'
+             + 'line-height:1.15;">' + g + ', Bruno</div>';
+      ]]]
+    clock: >
+      [[[
+        var d = new Date();
+        var hh = String(d.getHours()).padStart(2, '0');
+        var mm = String(d.getMinutes()).padStart(2, '0');
+        return '<div style="font-size:52px;font-weight:300;line-height:1;'
+             + 'color:white;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;">'
+             + hh + ':' + mm + '</div>';
+      ]]]
+  styles:
+    grid:
+      - grid-template-areas: '"date_line clock" "greet_line clock"'
+      - grid-template-columns: "1fr auto"
+      - grid-template-rows: "auto auto"
+      - column-gap: "14px"
+      - row-gap: "4px"
+      - align-items: "center"
+    card:
+      - background: "transparent"
+      - border: "none"
+      - box-shadow: "none"
+      - padding: "18px 18px 6px"
+      - cursor: "default"
+    custom_fields:
+      date_line:
+        - justify-self: "start"
+        - align-self: "end"
+      greet_line:
+        - justify-self: "start"
+        - align-self: "start"
+      clock:
+        - grid-row: "1 / span 2"
+        - justify-self: "end"
+        - align-self: "center"
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -414,197 +486,67 @@
 
 
 # ─────────────────────────────────────────────────────────────────
-# 4. CLIMA — [2] button-card compacto substitui weather-forecast-card
-#
-#    Vantagens vs weather-forecast-card:
-#      • Altura fixa e previsível — sem overflow, sem corte
-#      • Sangra nas bordas do stack-in-card (margin negativo)
-#      • Arredonda os cantos inferiores junto com o container
-#      • Lê dados de weather.forecast_casa via JS template
-#
-#    Layout:
-#      ┌──────────────────────────────────────────┐
-#      │  [ícone 44px]  Condição       28.6°C     │  ← topo
-#      │                               28.6°/26°  │
-#      │                💨 NW 19 km/h             │
-#      │  ──────────── curva laranja ───────────   │
-#      └──────────────────────────────────────────┘  ← base do bloco
-#
-#    O ícone MDI reflete a condição atual (sol, nuvem, chuva etc.)
+# 4. CLIMA — v9 substituído por custom:weather-forecast-card (troinine)
+#    - show_current: true (clima atual no topo)
+#    - forecast.mode: chart (curva contínua)
+#    - daily_slots: 5 (cinco dias da semana, SEM ícones)
+#    - card_mod esconde ícones da forecast e comprime altura
 # ─────────────────────────────────────────────────────────────────
-- type: custom:button-card
+
+# --- CÓDIGO ORIGINAL COMENTADO (v8 — button-card + SVG manual) ---
+# - type: custom:button-card
+#   entity: weather.forecast_casa
+#   show_name: false
+#   show_icon: false
+#   show_state: false
+#   show_label: false
+#
+#   # Todo o conteúdo via custom_fields para controle total
+#   custom_fields:
+#
+#     # Linha principal: ícone + condição + temperatura
+#     weather_top_OLD:
+# (bloco antigo removido do YAML ativo — estava integralmente comentado
+# acima no marcador "--- CÓDIGO ORIGINAL COMENTADO (v8 ...) ---")
+# --- FIM CÓDIGO ORIGINAL ---
+
+- type: custom:weather-forecast-card
   entity: weather.forecast_casa
-  show_name: false
-  show_icon: false
-  show_state: false
-  show_label: false
-
-  # Todo o conteúdo via custom_fields para controle total
-  custom_fields:
-
-    # Linha principal: ícone + condição + temperatura
-    weather_top:
-      card:
-        type: custom:button-card
-        entity: weather.forecast_casa
-        show_name: false
-        show_icon: false
-        show_state: false
-        show_label: true
-        label: >
-          [[[
-            var conds = {
-              'sunny':           'Ensolarado',
-              'clear-night':     'Céu limpo',
-              'partlycloudy':    'Parcialmente nublado',
-              'cloudy':          'Nublado',
-              'rainy':           'Chuva',
-              'pouring':         'Chuva forte',
-              'snowy':           'Neve',
-              'snowy-rainy':     'Chuva com neve',
-              'windy':           'Ventoso',
-              'windy-variant':   'Ventoso',
-              'fog':             'Neblina',
-              'hail':            'Granizo',
-              'lightning':       'Tempestade',
-              'lightning-rainy': 'Tempestade com chuva',
-              'exceptional':     'Excepcional'
-            };
-            var iconMap = {
-              'sunny':           'mdi:weather-sunny',
-              'clear-night':     'mdi:weather-night',
-              'partlycloudy':    'mdi:weather-partly-cloudy',
-              'cloudy':          'mdi:weather-cloudy',
-              'rainy':           'mdi:weather-rainy',
-              'pouring':         'mdi:weather-pouring',
-              'snowy':           'mdi:weather-snowy',
-              'snowy-rainy':     'mdi:weather-snowy-rainy',
-              'windy':           'mdi:weather-windy',
-              'fog':             'mdi:weather-fog',
-              'hail':            'mdi:weather-hail',
-              'lightning':       'mdi:weather-lightning',
-              'lightning-rainy': 'mdi:weather-lightning-rainy',
-              'exceptional':     'mdi:weather-sunset'
-            };
-            var s    = entity.state;
-            var cond = conds[s] || s;
-            var icon = iconMap[s] || 'mdi:weather-partly-cloudy';
-            var temp = entity.attributes.temperature || '—';
-            var fc   = entity.attributes.forecast;
-            var tMax = (fc && fc.length > 0) ? Math.round(fc[0].temperature) : '—';
-            var wind    = entity.attributes.wind_speed || '—';
-            var windRaw = entity.attributes.wind_bearing;
-            // Converte bearing numerico em cardinal (N/NE/E/SE/S/SW/W/NW)
-            var windDir = '';
-            if (typeof windRaw === 'number') {
-              var cards = ['N','NE','E','SE','S','SW','W','NW'];
-              windDir = cards[Math.round(windRaw / 45) % 8];
-            } else if (windRaw) {
-              windDir = String(windRaw);
-            }
-
-            return '<div style="display:flex;align-items:flex-start;gap:10px;width:100%;">'
-                 +   '<ha-icon icon="' + icon + '" style="--mdc-icon-size:44px;'
-                 +     'color:rgba(255,255,255,0.85);flex-shrink:0;margin-top:2px;"></ha-icon>'
-                 +   '<div style="flex:1;min-width:0;">'
-                 +     '<div style="font-size:13px;font-weight:500;'
-                 +       'color:rgba(255,255,255,0.62);white-space:nowrap;'
-                 +       'overflow:hidden;text-overflow:ellipsis;">' + cond + '</div>'
-                 +     '<div style="font-size:9px;color:rgba(255,255,255,0.36);margin-top:3px;">'
-                 +       '💨 ' + windDir + ', ' + wind + ' km/h'
-                 +     '</div>'
-                 +   '</div>'
-                 +   '<div style="text-align:right;flex-shrink:0;">'
-                 +     '<div style="font-size:28px;font-weight:300;line-height:1;">' + temp + '°</div>'
-                 +     '<div style="font-size:11px;color:rgba(255,255,255,0.38);margin-top:2px;">'
-                 +       temp + '° / ' + tMax + '°'
-                 +     '</div>'
-                 +   '</div>'
-                 + '</div>';
-          ]]]
-        styles:
-          card:
-            - background: "transparent"
-            - border: "none"
-            - box-shadow: "none"
-            - padding: "0"
-            - height: "auto"
-          label:
-            - width: "100%"
-            - text-align: "left"
-            - padding: "0"
-
-    # Curva SVG decorativa laranja — sangra nas laterais
-    # v8: peak do SVG rebaixado (y=17 antes era y=1) para NAO invadir
-    # o texto do weather_top. ViewBox ampliado para 60px para dar folga.
-    weather_curve:
-      card:
-        type: custom:button-card
-        entity: ""
-        show_name: false
-        show_icon: false
-        show_label: true
-        label: >
-          [[[
-            return '<svg viewBox="0 0 400 60" width="100%" height="60"'
-                 + ' preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'
-                 + '<defs>'
-                 +   '<linearGradient id="wg2" x1="0" y1="0" x2="0" y2="1">'
-                 +     '<stop offset="0%" stop-color="rgba(245,158,11,0.22)"/>'
-                 +     '<stop offset="100%" stop-color="rgba(245,158,11,0.01)"/>'
-                 +   '</linearGradient>'
-                 + '</defs>'
-                 + '<path d="M0 46 C30 46,58 45,86 43'
-                 +         ' C116 40,142 40,168 37'
-                 +         ' C196 33,222 29,248 26'
-                 +         ' C276 24,300 25,322 28'
-                 +         ' C350 33,370 38,390 42'
-                 +         ' C394 43,398 44,400 44'
-                 +         ' L400 60 L0 60 Z"'
-                 +  ' fill="url(#wg2)"/>'
-                 + '<path d="M0 46 C30 46,58 45,86 43'
-                 +         ' C116 40,142 40,168 37'
-                 +         ' C196 33,222 29,248 26'
-                 +         ' C276 24,300 25,322 28'
-                 +         ' C350 33,370 38,390 42'
-                 +         ' C394 43,398 44,400 44"'
-                 +  ' fill="none" stroke="#f59e0b"'
-                 +  ' stroke-width="2" stroke-linecap="round"/>'
-                 + '</svg>';
-          ]]]
-        styles:
-          card:
-            - background: "transparent"
-            - border: "none"
-            - box-shadow: "none"
-            - padding: "0"
-            - height: "60px"
-            - overflow: "visible"
-          label:
-            - width: "100%"
-            - padding: "0"
-            - height: "60px"
-
-  # Posiciona os dois custom_fields em coluna
-  styles:
-    card:
-      - background: "transparent"
-      - border: "none"
-      - box-shadow: "none"
-      # Sangra nas bordas do stack-in-card e fecha os cantos inferiores
-      - margin: "auto -1px -1px -1px"
-      - border-radius: "0 0 17px 17px"
-      - overflow: "hidden"
-      - padding: "10px 18px 0"
-      - display: "flex"
-      - flex-direction: "column"
-      # v8: gap maior (20px) para afastar o texto da curva
-      - gap: "20px"
-      - height: "auto"
-    custom_fields:
-      weather_top:
-        - width: "100%"
-      weather_curve:
-        - width: "calc(100% + 36px)"   # sangra nas laterais do padding
-        - margin: "0 -18px"
-        - overflow: "hidden"
+  show_current: true
+  show_forecast: true
+  default_forecast: daily
+  current:
+    show_attributes: false
+  forecast:
+    mode: chart
+    daily_slots: 5
+    show_sun_times: false
+  card_mod:
+    style: |
+      ha-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 8px 14px 14px !important;
+        margin: auto -1px -1px -1px !important;
+        border-radius: 0 0 17px 17px !important;
+        overflow: hidden !important;
+        /* Compacta altura para caber no bloco welcome */
+        max-height: 210px !important;
+        /* Remove ícones grandes do forecast (usuário pediu SEM imagens) */
+        --weather-forecast-card-forecast-conditions-icon-size: 0px;
+      }
+      /* Esconde ícones/imagens de condição na forecast diária */
+      .wfc-forecast ha-state-icon,
+      .wfc-forecast ha-icon,
+      .wfc-forecast img,
+      .wfc-forecast-condition-icon {
+        display: none !important;
+      }
+      /* Compacta paddings internos */
+      .wfc-current-weather {
+        padding: 0 0 6px 0 !important;
+      }
+      .wfc-forecast {
+        padding: 0 !important;
+      }

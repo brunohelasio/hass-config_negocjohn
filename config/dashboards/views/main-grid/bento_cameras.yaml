@@ -36,4 +36,10 @@ card_mod:
     ha-card::before {
       display: none !important;
     }
+
+    /* v4: garante que o grid de câmeras (único filho) estique até o fundo */
+    ha-card > * {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+    }
 cards: !include ../../shared/grid-cards/bento_cameras.yaml

@@ -61,6 +61,7 @@ card_mod:
       flex: 1 1 auto !important;
       min-height: 0 !important;
     }
+    /* --- CÓDIGO ORIGINAL COMENTADO (v9/v10 — mini tabs em hui-grid-card direto) ---
     ha-card > hui-grid-card {
       flex: 0 0 auto !important;
       width: 100% !important;
@@ -68,5 +69,18 @@ card_mod:
       min-width: 0 !important;
       box-sizing: border-box !important;
       overflow: hidden !important;
+    }
+       --- FIM CÓDIGO ORIGINAL --- */
+
+    /* v11 — mini tabs agora estão dentro de custom:mod-card.
+       Regras aplicadas no wrapper para reservar margem lateral e
+       evitar clipping do último tile da direita. */
+    ha-card > hui-mod-card {
+      flex: 0 0 auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      overflow: visible !important;
     }
 cards: !include ../../shared/grid-cards/bento_cameras.yaml

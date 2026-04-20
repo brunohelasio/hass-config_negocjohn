@@ -1,30 +1,120 @@
-- type: markdown
-  content: |
-    <small style="letter-spacing:.12em;opacity:.58;">AGENDA</small>
-
-    <br>
-
-    15h00 · Reunião
-
-    18h30 · Academia
-
-    20h00 · Jantar
-
-    21h30 · Lembrete
-  card_mod:
-    style: |
-      ha-card {
-        background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-        backdrop-filter: blur(18px) saturate(1.2);
-        -webkit-backdrop-filter: blur(18px) saturate(1.2);
-        border-right: 1px solid rgba(255,255,255,0.08);
-        border-radius: 0;
-        border-top: none;
-        border-bottom: none;
-        border-left: none;
-        box-shadow: none;
-        height: 100%;
-        overflow: hidden;
-        aspect-ratio: unset;
-        padding: 0;
-      }
+- type: custom:button-card
+  show_name: false
+  show_icon: false
+  show_state: false
+  tap_action:
+    action: none
+  custom_fields:
+    header: |
+      [[[
+        return '<div style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.46);text-transform:uppercase;">Agenda</div>';
+      ]]]
+    icon:
+      card:
+        type: custom:button-card
+        show_name: false
+        show_icon: false
+        show_state: false
+        tap_action:
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: Agenda Mensal
+              size: wide
+              content:
+                type: calendar
+                entities:
+                  - calendar.brunohelasio_gmail_com
+                  - calendar.familia
+                  - calendar.feriados_no_brasil
+                initial_view: dayGridMonth
+        styles:
+          card:
+            - background: transparent
+            - border: none
+            - box-shadow: none
+            - padding: 0
+            - margin: 0 auto
+            - width: 100px
+            - height: 78px
+          custom_fields:
+            icon:
+              - width: 100%
+              - display: flex
+              - justify-content: center
+              - align-items: center
+        custom_fields:
+          icon: |
+            [[[
+              return `
+                <svg viewBox="0 0 96 96" width="82" height="82" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 8px 14px rgba(0,0,0,.30));">
+                  <rect x="10" y="24" width="76" height="58" rx="16" stroke="rgba(255,255,255,0.78)" stroke-width="2.5"/>
+                  <path d="M10 40H86" stroke="rgba(255,255,255,0.60)" stroke-width="2"/>
+                  <path d="M30 14V30" stroke="rgba(255,255,255,0.82)" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M66 14V30" stroke="rgba(255,255,255,0.82)" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M24 52H44" stroke="#6FB8FF" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M24 64H54" stroke="#6FB8FF" stroke-width="3" stroke-linecap="round"/>
+                  <circle cx="67" cy="62" r="12" stroke="rgba(255,255,255,0.72)" stroke-width="2.5"/>
+                  <path d="M67 56V62H73" stroke="#FFC857" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              `;
+            ]]]
+    events:
+      card:
+        type: custom:calendar-card-pro
+        background_color: transparent
+        refresh_interval: 5
+        refresh_on_navigate: true
+        entities:
+          - entity: calendar.brunohelasio_gmail_com
+            color: "#7fdbe9"
+          - entity: calendar.familia
+            color: "#fdd835"
+          - entity: calendar.birthdays
+            color: "#ff6c92"
+          - entity: calendar.feriados_no_brasil
+            color: "#1DB954"
+        days_to_show: 3
+        compact_events_to_show: 4
+        event_color: "rgba(255,255,255,0.92)"
+        time_color: "rgba(255,255,255,0.72)"
+        location_color: "rgba(255,255,255,0.50)"
+        weekday_color: "rgba(255,255,255,0.50)"
+        day_color: "rgba(255,255,255,0.92)"
+        empty_day_color: "rgba(255,255,255,0.4)"
+        day_separator_color: "rgba(255,255,255,0.08)"
+        show_month: false
+        show_location: false
+        event_background_opacity: 0
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+              padding: 0 !important;
+            }
+  styles:
+    grid:
+      - grid-template-areas: '"header" "icon" "events"'
+      - grid-template-columns: 1fr
+      - grid-template-rows: min-content min-content 1fr
+      - row-gap: 8px
+    card:
+      - background: transparent
+      - border: none
+      - box-shadow: none
+      - padding: 14px 14px 12px
+      - height: 100%
+    custom_fields:
+      header:
+        - justify-self: start
+        - align-self: start
+      icon:
+        - justify-self: center
+        - align-self: center
+      events:
+        - align-self: end
+        - width: 100%
+        - overflow: hidden

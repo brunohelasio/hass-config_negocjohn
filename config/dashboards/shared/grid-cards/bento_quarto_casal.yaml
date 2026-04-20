@@ -1,10 +1,89 @@
-type: markdown
-content: "## Q. Casal"
-card_mod:
-  style: |
-    ha-card {
-      background: none !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-    }
+type: custom:button-card
+entity: light.grupo_quarto_casal
+name: Q. Casal
+template:
+  - rooms_base
+  - icon_double_bed
+
+variables:
+  state: "[[[ return entity.state; ]]]"
+  state_on: >
+    [[[ 
+      return ['on', 'home', 'active', 'yes'].indexOf(!entity || entity.state) !== -1; 
+    ]]]
+  light_entity: light.grupo_quarto_casal
+  active: sensor.quarto_casal_active
+
+tap_action:
+  action: toggle
+double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml
+hold_action:
+  action: perform-action
+  perform_action: light.turn_off
+  data:
+    entity_id: light.grupo_quarto_casal
+
+styles:
+  card:
+    - border: "none !important"
+    - box-shadow: "none !important"
+    - padding: "16px !important"
+    - overflow: "visible !important"
+  grid:
+    - grid-template-areas: '"icon temp dots" "n n dots" "s s dots"'
+    - grid-template-columns: "min-content 1fr min-content"
+    - grid-template-rows: "1fr min-content min-content"
+  name:
+    - justify-self: "start"
+    - align-self: "end"
+    - font-size: "15px"
+    - font-weight: "700"
+    - margin-bottom: "2px !important"
+    - color: >
+        [[[ return variables.state_on ? 'black' : 'white'; ]]]
+  state:
+    - justify-self: "start"
+    - align-self: "end"
+    - font-size: "11px"
+    - font-weight: "500"
+    - margin-bottom: "0px !important"
+    - color: >
+        [[[ return variables.state_on ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)'; ]]]
+  custom_fields:
+    icon:
+      - justify-self: "start"
+      - align-self: "start"
+      - width: "65px !important"
+      - height: "65px !important"
+      - margin-top: "0px !important"
+    temp:
+      - justify-self: "start"
+      - align-self: "start"
+      - margin-left: "12px"
+      - margin-top: "4px"
+    dots:
+      - justify-self: "end"
+      - align-self: "start"
+
+custom_fields:
+  temp: >
+    [[[
+      return '';
+    ]]]
+
+  dots: >
+    [[[
+      const home = states['person.bruno_helasio']?.state === 'home';
+      const mediaOn = ['playing','on','paused','idle'].includes(states['media_player.spotifyplus_bruno_helasio']?.state ?? '');
+      const acOn = !['off','unavailable','unknown',''].includes(states['climate.ac_quarto_casal']?.state ?? 'off');
+      const lightOn = entity?.state === 'on';
+      const dot = (icon, active, color) =>
+        `<div style="width:26px;height:26px;border-radius:50%;background:${active ? color + '22' : 'rgba(255,255,255,0.08)'};border:1px solid ${active ? color + '55' : 'rgba(255,255,255,0.12)'};display:flex;align-items:center;justify-content:center;">` +
+        `<ha-icon icon="${icon}" style="width:14px;height:14px;color:${active ? color : 'rgba(255,255,255,0.35)'};display:flex;"></ha-icon></div>`;
+      return `<div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;">
+        ${dot('mdi:account', home, '#60a5fa')}
+        ${dot('mdi:lightbulb-on', lightOn, '#fbbf24')}
+        ${dot('mdi:snowflake', acOn, '#4facfe')}
+        ${dot('mdi:speaker-wireless', mediaOn, '#ff9900')}
+      </div>`;
+    ]]]

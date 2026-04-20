@@ -387,102 +387,102 @@
 #   Tap em mini tab chama input_select.select_option.
 
 # === TOPO — 4 conditionals, 1 visível por vez ===
-- type: conditional
-  conditions:
-    - entity: input_select.bento_active_camera
-      state: camera.sl_camera_2
-  card:
-    type: picture-entity
-    entity: camera.sl_camera_2
-    camera_image: camera.sl_camera_2
-    camera_view: auto
-    show_state: false
-    show_name: true
-    name: Sala
-    tap_action:
-      action: more-info
-    card_mod: &cam_main_style
-      style: |
-        ha-card {
-          border-radius: 14px !important;
-          overflow: hidden !important;
-          border: 1px solid rgba(255,255,255,0.08) !important;
-          box-shadow: none !important;
-          background: #1b2535 !important;
-          height: 100% !important;
-          width: 100% !important;
-          margin: 0 !important;
-        }
-        hui-image,
-        hui-image img,
-        hui-image div[style*="background-image"] {
-          height: 100% !important;
-          width: 100% !important;
-          object-fit: cover !important;
-          background-size: cover !important;
-          background-position: center !important;
-        }
-        .box {
-          background: linear-gradient(to top,
-            rgba(0,0,0,0.78) 0%,
-            rgba(0,0,0,0.35) 55%,
-            rgba(0,0,0,0) 100%) !important;
-          padding: 18px 12px 10px !important;
-        }
-        .box .title {
-          font-size: 13px !important;
-          font-weight: 500 !important;
-          color: rgba(255,255,255,0.95) !important;
-          letter-spacing: 0.2px;
-        }
+# - type: conditional
+#   conditions:
+#     - entity: input_select.bento_active_camera
+#       state: camera.sl_camera_2
+#   card:
+#     type: picture-entity
+#     entity: camera.sl_camera_2
+#     camera_image: camera.sl_camera_2
+#     camera_view: auto
+#     show_state: false
+#     show_name: true
+#     name: Sala
+#     tap_action:
+#       action: more-info
+#     card_mod: &cam_main_style
+#       style: |
+#         ha-card {
+#           border-radius: 14px !important;
+#           overflow: hidden !important;
+#           border: 1px solid rgba(255,255,255,0.08) !important;
+#           box-shadow: none !important;
+#           background: #1b2535 !important;
+#           height: 100% !important;
+#           width: 100% !important;
+#           margin: 0 !important;
+#         }
+#         hui-image,
+#         hui-image img,
+#         hui-image div[style*="background-image"] {
+#           height: 100% !important;
+#           width: 100% !important;
+#           object-fit: cover !important;
+#           background-size: cover !important;
+#           background-position: center !important;
+#         }
+#         .box {
+#           background: linear-gradient(to top,
+#             rgba(0,0,0,0.78) 0%,
+#             rgba(0,0,0,0.35) 55%,
+#             rgba(0,0,0,0) 100%) !important;
+#           padding: 18px 12px 10px !important;
+#         }
+#         .box .title {
+#           font-size: 13px !important;
+#           font-weight: 500 !important;
+#           color: rgba(255,255,255,0.95) !important;
+#           letter-spacing: 0.2px;
+#         }
 
-- type: conditional
-  conditions:
-    - entity: input_select.bento_active_camera
-      state: camera.vr_camera_2
-  card:
-    type: picture-entity
-    entity: camera.vr_camera_2
-    camera_image: camera.vr_camera_2
-    camera_view: auto
-    show_state: false
-    show_name: true
-    name: Varanda
-    tap_action:
-      action: more-info
-    card_mod: *cam_main_style
+# - type: conditional
+#   conditions:
+#     - entity: input_select.bento_active_camera
+#       state: camera.vr_camera_2
+#   card:
+#     type: picture-entity
+#     entity: camera.vr_camera_2
+#     camera_image: camera.vr_camera_2
+#     camera_view: auto
+#     show_state: false
+#     show_name: true
+#     name: Varanda
+#     tap_action:
+#       action: more-info
+#     card_mod: *cam_main_style
 
-- type: conditional
-  conditions:
-    - entity: input_select.bento_active_camera
-      state: camera.cz_camera_2
-  card:
-    type: picture-entity
-    entity: camera.cz_camera_2
-    camera_image: camera.cz_camera_2
-    camera_view: auto
-    show_state: false
-    show_name: true
-    name: Cozinha
-    tap_action:
-      action: more-info
-    card_mod: *cam_main_style
+# - type: conditional
+#   conditions:
+#     - entity: input_select.bento_active_camera
+#       state: camera.cz_camera_2
+#   card:
+#     type: picture-entity
+#     entity: camera.cz_camera_2
+#     camera_image: camera.cz_camera_2
+#     camera_view: auto
+#     show_state: false
+#     show_name: true
+#     name: Cozinha
+#     tap_action:
+#       action: more-info
+#     card_mod: *cam_main_style
 
-- type: conditional
-  conditions:
-    - entity: input_select.bento_active_camera
-      state: camera.as_camera_2
-  card:
-    type: picture-entity
-    entity: camera.as_camera_2
-    camera_image: camera.as_camera_2
-    camera_view: auto
-    show_state: false
-    show_name: true
-    name: Área
-    tap_action:
-      action: more-info
-    card_mod: *cam_main_style
+# - type: conditional
+#   conditions:
+#     - entity: input_select.bento_active_camera
+#       state: camera.as_camera_2
+#   card:
+#     type: picture-entity
+#     entity: camera.as_camera_2
+#     camera_image: camera.as_camera_2
+#     camera_view: auto
+#     show_state: false
+#     show_name: true
+#     name: Área
+#     tap_action:
+#       action: more-info
+#     card_mod: *cam_main_style
 
 
 # === BASE — 4 mini tabs (v9 — solução definitiva) ===
@@ -623,201 +623,507 @@
 
 
 # === v9 — type: grid + 4 picture-entity nativos ===
-- type: grid
-  columns: 4
-  square: false
-  cards:
+# - type: grid
+#   columns: 4
+#   square: false
+#   cards:
 
-    - type: picture-entity
-      entity: camera.sl_camera_2
-      camera_image: camera.sl_camera_2
-      camera_view: auto
-      show_state: false
-      show_name: true
-      name: Sala
-      tap_action:
-        action: perform-action
-        perform_action: input_select.select_option
-        data:
-          entity_id: input_select.bento_active_camera
-          option: camera.sl_camera_2
-      card_mod:
-        style: |
-          ha-card {
-            border-radius: 10px !important;
-            overflow: hidden !important;
-            aspect-ratio: 16 / 11 !important;
-            background: #1b2535 !important;
-            /* v10: outline no lugar de border (não entra no box model,
-               evita bleed do último tab na direita) */
-            outline: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
-            outline-offset: -2px !important;
-            box-shadow: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
-            box-sizing: border-box !important;
-            min-width: 0 !important;
-            transition: outline-color 0.2s, box-shadow 0.2s !important;
-          }
-          hui-image,
-          hui-image img,
-          hui-image div[style*="background-image"] {
-            height: 100% !important;
-            width: 100% !important;
-            object-fit: cover !important;
-            background-size: cover !important;
-            background-position: center !important;
-          }
-          .box {
-            background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
-            padding: 10px 6px 4px !important;
-          }
-          .box .title {
-            font-size: 10px !important;
-            font-weight: 600 !important;
-            color: rgba(255,255,255,0.95) !important;
-            text-align: center !important;
-            letter-spacing: 0.3px !important;
-          }
+#     - type: picture-entity
+#       entity: camera.sl_camera_2
+#       camera_image: camera.sl_camera_2
+#       camera_view: auto
+#       show_state: false
+#       show_name: true
+#       name: Sala
+#       tap_action:
+#         action: perform-action
+#         perform_action: input_select.select_option
+#         data:
+#           entity_id: input_select.bento_active_camera
+#           option: camera.sl_camera_2
+#       card_mod:
+#         style: |
+#           ha-card {
+#             border-radius: 10px !important;
+#             overflow: hidden !important;
+#             aspect-ratio: 16 / 11 !important;
+#             background: #1b2535 !important;
+#             /* v10: outline no lugar de border (não entra no box model,
+#                evita bleed do último tab na direita) */
+#             outline: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+#             outline-offset: -2px !important;
+#             box-shadow: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
+#             box-sizing: border-box !important;
+#             min-width: 0 !important;
+#             transition: outline-color 0.2s, box-shadow 0.2s !important;
+#           }
+#           hui-image,
+#           hui-image img,
+#           hui-image div[style*="background-image"] {
+#             height: 100% !important;
+#             width: 100% !important;
+#             object-fit: cover !important;
+#             background-size: cover !important;
+#             background-position: center !important;
+#           }
+#           .box {
+#             background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
+#             padding: 10px 6px 4px !important;
+#           }
+#           .box .title {
+#             font-size: 10px !important;
+#             font-weight: 600 !important;
+#             color: rgba(255,255,255,0.95) !important;
+#             text-align: center !important;
+#             letter-spacing: 0.3px !important;
+#           }
 
-    - type: picture-entity
-      entity: camera.vr_camera_2
-      camera_image: camera.vr_camera_2
-      camera_view: auto
-      show_state: false
-      show_name: true
-      name: Varanda
-      tap_action:
-        action: perform-action
-        perform_action: input_select.select_option
-        data:
-          entity_id: input_select.bento_active_camera
-          option: camera.vr_camera_2
-      card_mod:
-        style: |
-          ha-card {
-            border-radius: 10px !important;
-            overflow: hidden !important;
-            aspect-ratio: 16 / 11 !important;
-            background: #1b2535 !important;
-            outline: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
-            outline-offset: -2px !important;
-            box-shadow: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
-            box-sizing: border-box !important;
-            min-width: 0 !important;
-            transition: outline-color 0.2s, box-shadow 0.2s !important;
-          }
-          hui-image,
-          hui-image img,
-          hui-image div[style*="background-image"] {
-            height: 100% !important;
-            width: 100% !important;
-            object-fit: cover !important;
-            background-size: cover !important;
-            background-position: center !important;
-          }
-          .box {
-            background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
-            padding: 10px 6px 4px !important;
-          }
-          .box .title {
-            font-size: 10px !important;
-            font-weight: 600 !important;
-            color: rgba(255,255,255,0.95) !important;
-            text-align: center !important;
-            letter-spacing: 0.3px !important;
-          }
+#     - type: picture-entity
+#       entity: camera.vr_camera_2
+#       camera_image: camera.vr_camera_2
+#       camera_view: auto
+#       show_state: false
+#       show_name: true
+#       name: Varanda
+#       tap_action:
+#         action: perform-action
+#         perform_action: input_select.select_option
+#         data:
+#           entity_id: input_select.bento_active_camera
+#           option: camera.vr_camera_2
+#       card_mod:
+#         style: |
+#           ha-card {
+#             border-radius: 10px !important;
+#             overflow: hidden !important;
+#             aspect-ratio: 16 / 11 !important;
+#             background: #1b2535 !important;
+#             outline: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+#             outline-offset: -2px !important;
+#             box-shadow: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
+#             box-sizing: border-box !important;
+#             min-width: 0 !important;
+#             transition: outline-color 0.2s, box-shadow 0.2s !important;
+#           }
+#           hui-image,
+#           hui-image img,
+#           hui-image div[style*="background-image"] {
+#             height: 100% !important;
+#             width: 100% !important;
+#             object-fit: cover !important;
+#             background-size: cover !important;
+#             background-position: center !important;
+#           }
+#           .box {
+#             background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
+#             padding: 10px 6px 4px !important;
+#           }
+#           .box .title {
+#             font-size: 10px !important;
+#             font-weight: 600 !important;
+#             color: rgba(255,255,255,0.95) !important;
+#             text-align: center !important;
+#             letter-spacing: 0.3px !important;
+#           }
 
-    - type: picture-entity
-      entity: camera.cz_camera_2
-      camera_image: camera.cz_camera_2
-      camera_view: auto
-      show_state: false
-      show_name: true
-      name: Cozinha
-      tap_action:
-        action: perform-action
-        perform_action: input_select.select_option
-        data:
-          entity_id: input_select.bento_active_camera
-          option: camera.cz_camera_2
-      card_mod:
-        style: |
-          ha-card {
-            border-radius: 10px !important;
-            overflow: hidden !important;
-            aspect-ratio: 16 / 11 !important;
-            background: #1b2535 !important;
-            outline: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
-            outline-offset: -2px !important;
-            box-shadow: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
-            box-sizing: border-box !important;
-            min-width: 0 !important;
-            transition: outline-color 0.2s, box-shadow 0.2s !important;
-          }
-          hui-image,
-          hui-image img,
-          hui-image div[style*="background-image"] {
-            height: 100% !important;
-            width: 100% !important;
-            object-fit: cover !important;
-            background-size: cover !important;
-            background-position: center !important;
-          }
-          .box {
-            background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
-            padding: 10px 6px 4px !important;
-          }
-          .box .title {
-            font-size: 10px !important;
-            font-weight: 600 !important;
-            color: rgba(255,255,255,0.95) !important;
-            text-align: center !important;
-            letter-spacing: 0.3px !important;
-          }
+#     - type: picture-entity
+#       entity: camera.cz_camera_2
+#       camera_image: camera.cz_camera_2
+#       camera_view: auto
+#       show_state: false
+#       show_name: true
+#       name: Cozinha
+#       tap_action:
+#         action: perform-action
+#         perform_action: input_select.select_option
+#         data:
+#           entity_id: input_select.bento_active_camera
+#           option: camera.cz_camera_2
+#       card_mod:
+#         style: |
+#           ha-card {
+#             border-radius: 10px !important;
+#             overflow: hidden !important;
+#             aspect-ratio: 16 / 11 !important;
+#             background: #1b2535 !important;
+#             outline: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+#             outline-offset: -2px !important;
+#             box-shadow: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
+#             box-sizing: border-box !important;
+#             min-width: 0 !important;
+#             transition: outline-color 0.2s, box-shadow 0.2s !important;
+#           }
+#           hui-image,
+#           hui-image img,
+#           hui-image div[style*="background-image"] {
+#             height: 100% !important;
+#             width: 100% !important;
+#             object-fit: cover !important;
+#             background-size: cover !important;
+#             background-position: center !important;
+#           }
+#           .box {
+#             background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
+#             padding: 10px 6px 4px !important;
+#           }
+#           .box .title {
+#             font-size: 10px !important;
+#             font-weight: 600 !important;
+#             color: rgba(255,255,255,0.95) !important;
+#             text-align: center !important;
+#             letter-spacing: 0.3px !important;
+#           }
 
-    - type: picture-entity
-      entity: camera.as_camera_2
-      camera_image: camera.as_camera_2
-      camera_view: auto
-      show_state: false
-      show_name: true
-      name: Área
-      tap_action:
-        action: perform-action
-        perform_action: input_select.select_option
-        data:
-          entity_id: input_select.bento_active_camera
-          option: camera.as_camera_2
-      card_mod:
-        style: |
-          ha-card {
-            border-radius: 10px !important;
-            overflow: hidden !important;
-            aspect-ratio: 16 / 11 !important;
-            background: #1b2535 !important;
-            outline: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
-            outline-offset: -2px !important;
-            box-shadow: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
-            box-sizing: border-box !important;
-            min-width: 0 !important;
-            transition: outline-color 0.2s, box-shadow 0.2s !important;
-          }
-          hui-image,
-          hui-image img,
-          hui-image div[style*="background-image"] {
-            height: 100% !important;
-            width: 100% !important;
-            object-fit: cover !important;
-            background-size: cover !important;
-            background-position: center !important;
-          }
-          .box {
-            background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
-            padding: 10px 6px 4px !important;
-          }
-          .box .title {
-            font-size: 10px !important;
-            font-weight: 600 !important;
-            color: rgba(255,255,255,0.95) !important;
-            text-align: center !important;
-            letter-spacing: 0.3px !important;
-          }
+#     - type: picture-entity
+#       entity: camera.as_camera_2
+#       camera_image: camera.as_camera_2
+#       camera_view: auto
+#       show_state: false
+#       show_name: true
+#       name: Área
+#       tap_action:
+#         action: perform-action
+#         perform_action: input_select.select_option
+#         data:
+#           entity_id: input_select.bento_active_camera
+#           option: camera.as_camera_2
+#       card_mod:
+#         style: |
+#           ha-card {
+#             border-radius: 10px !important;
+#             overflow: hidden !important;
+#             aspect-ratio: 16 / 11 !important;
+#             background: #1b2535 !important;
+#             outline: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+#             outline-offset: -2px !important;
+#             box-shadow: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
+#             box-sizing: border-box !important;
+#             min-width: 0 !important;
+#             transition: outline-color 0.2s, box-shadow 0.2s !important;
+#           }
+#           hui-image,
+#           hui-image img,
+#           hui-image div[style*="background-image"] {
+#             height: 100% !important;
+#             width: 100% !important;
+#             object-fit: cover !important;
+#             background-size: cover !important;
+#             background-position: center !important;
+#           }
+#           .box {
+#             background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
+#             padding: 10px 6px 4px !important;
+#           }
+#           .box .title {
+#             font-size: 10px !important;
+#             font-weight: 600 !important;
+#             color: rgba(255,255,255,0.95) !important;
+#             text-align: center !important;
+#             letter-spacing: 0.3px !important;
+#           }
+
+# ─────────────────────────────────────────────────────────────────
+# v11 — REFACTOR DEFINITIVO: layout determinístico (topo + trilha mini)
+# Objetivo: ocupar harmonicamente o bloco sem bleed/corte lateral.
+# Estratégia:
+#   1) Um único card de topo flexível (conditional).
+#   2) Miniaturas em grid 4 colunas com padding lateral dedicado.
+#   3) Estado ativo com realce interno (inset) — sem glow externo recortável.
+#   4) Nenhuma remoção de histórico: versões anteriores mantidas comentadas.
+# ─────────────────────────────────────────────────────────────────
+
+# === TOPO — mantém dinâmica de câmera ativa via input_select ===
+- type: conditional
+  conditions:
+    - entity: input_select.bento_active_camera
+      state: camera.sl_camera_2
+  card:
+    type: picture-entity
+    entity: camera.sl_camera_2
+    camera_image: camera.sl_camera_2
+    camera_view: auto
+    show_state: false
+    show_name: true
+    name: Sala
+    tap_action:
+      action: more-info
+    card_mod: &cam_main_style_v11
+      style: |
+        ha-card {
+          border-radius: 14px !important;
+          overflow: hidden !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+          box-shadow: none !important;
+          background: #1b2535 !important;
+          height: 100% !important;
+          width: 100% !important;
+          margin: 0 !important;
+        }
+        hui-image,
+        hui-image img,
+        hui-image div[style*="background-image"] {
+          height: 100% !important;
+          width: 100% !important;
+          object-fit: cover !important;
+          background-size: cover !important;
+          background-position: center !important;
+        }
+        .box {
+          background: linear-gradient(to top,
+            rgba(0,0,0,0.78) 0%,
+            rgba(0,0,0,0.35) 55%,
+            rgba(0,0,0,0) 100%) !important;
+          padding: 18px 12px 10px !important;
+        }
+        .box .title {
+          font-size: 13px !important;
+          font-weight: 500 !important;
+          color: rgba(255,255,255,0.95) !important;
+          letter-spacing: 0.2px;
+        }
+
+- type: conditional
+  conditions:
+    - entity: input_select.bento_active_camera
+      state: camera.vr_camera_2
+  card:
+    type: picture-entity
+    entity: camera.vr_camera_2
+    camera_image: camera.vr_camera_2
+    camera_view: auto
+    show_state: false
+    show_name: true
+    name: Varanda
+    tap_action:
+      action: more-info
+    card_mod: *cam_main_style_v11
+
+- type: conditional
+  conditions:
+    - entity: input_select.bento_active_camera
+      state: camera.cz_camera_2
+  card:
+    type: picture-entity
+    entity: camera.cz_camera_2
+    camera_image: camera.cz_camera_2
+    camera_view: auto
+    show_state: false
+    show_name: true
+    name: Cozinha
+    tap_action:
+      action: more-info
+    card_mod: *cam_main_style_v11
+
+- type: conditional
+  conditions:
+    - entity: input_select.bento_active_camera
+      state: camera.as_camera_2
+  card:
+    type: picture-entity
+    entity: camera.as_camera_2
+    camera_image: camera.as_camera_2
+    camera_view: auto
+    show_state: false
+    show_name: true
+    name: Área
+    tap_action:
+      action: more-info
+    card_mod: *cam_main_style_v11
+
+
+# === BASE — trilha de miniaturas com margem lateral explícita ===
+- type: custom:mod-card
+  card_mod:
+    style: |
+      ha-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 2px !important; /* reserva lateral para evitar corte do último tile */
+      }
+  card:
+    type: grid
+    columns: 4
+    square: false
+    cards:
+
+      - &mini_cam_v11
+        type: picture-entity
+        entity: camera.sl_camera_2
+        camera_image: camera.sl_camera_2
+        camera_view: auto
+        show_state: false
+        show_name: true
+        name: Sala
+        tap_action:
+          action: perform-action
+          perform_action: input_select.select_option
+          data:
+            entity_id: input_select.bento_active_camera
+            option: camera.sl_camera_2
+        card_mod:
+          style: &mini_cam_style_v11 |
+            ha-card {
+              border-radius: 10px !important;
+              overflow: hidden !important;
+              aspect-ratio: 16 / 11 !important;
+              background: #1b2535 !important;
+              border: 1px solid rgba(255,255,255,0.10) !important;
+              box-shadow: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}inset 0 0 0 2px #60a5fa{% else %}none{% endif %} !important;
+              box-sizing: border-box !important;
+              min-width: 0 !important;
+              transition: box-shadow 0.2s, border-color 0.2s !important;
+            }
+            hui-image,
+            hui-image img,
+            hui-image div[style*="background-image"] {
+              height: 100% !important;
+              width: 100% !important;
+              object-fit: cover !important;
+              background-size: cover !important;
+              background-position: center !important;
+            }
+            .box {
+              background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
+              padding: 10px 6px 4px !important;
+            }
+            .box .title {
+              font-size: 10px !important;
+              font-weight: 600 !important;
+              color: rgba(255,255,255,0.95) !important;
+              text-align: center !important;
+              letter-spacing: 0.3px !important;
+            }
+
+      - <<: *mini_cam_v11
+        entity: camera.vr_camera_2
+        camera_image: camera.vr_camera_2
+        name: Varanda
+        tap_action:
+          action: perform-action
+          perform_action: input_select.select_option
+          data:
+            entity_id: input_select.bento_active_camera
+            option: camera.vr_camera_2
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 10px !important;
+              overflow: hidden !important;
+              aspect-ratio: 16 / 11 !important;
+              background: #1b2535 !important;
+              border: 1px solid rgba(255,255,255,0.10) !important;
+              box-shadow: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}inset 0 0 0 2px #60a5fa{% else %}none{% endif %} !important;
+              box-sizing: border-box !important;
+              min-width: 0 !important;
+              transition: box-shadow 0.2s, border-color 0.2s !important;
+            }
+            hui-image,
+            hui-image img,
+            hui-image div[style*="background-image"] {
+              height: 100% !important;
+              width: 100% !important;
+              object-fit: cover !important;
+              background-size: cover !important;
+              background-position: center !important;
+            }
+            .box {
+              background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
+              padding: 10px 6px 4px !important;
+            }
+            .box .title {
+              font-size: 10px !important;
+              font-weight: 600 !important;
+              color: rgba(255,255,255,0.95) !important;
+              text-align: center !important;
+              letter-spacing: 0.3px !important;
+            }
+
+      - <<: *mini_cam_v11
+        entity: camera.cz_camera_2
+        camera_image: camera.cz_camera_2
+        name: Cozinha
+        tap_action:
+          action: perform-action
+          perform_action: input_select.select_option
+          data:
+            entity_id: input_select.bento_active_camera
+            option: camera.cz_camera_2
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 10px !important;
+              overflow: hidden !important;
+              aspect-ratio: 16 / 11 !important;
+              background: #1b2535 !important;
+              border: 1px solid rgba(255,255,255,0.10) !important;
+              box-shadow: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}inset 0 0 0 2px #60a5fa{% else %}none{% endif %} !important;
+              box-sizing: border-box !important;
+              min-width: 0 !important;
+              transition: box-shadow 0.2s, border-color 0.2s !important;
+            }
+            hui-image,
+            hui-image img,
+            hui-image div[style*="background-image"] {
+              height: 100% !important;
+              width: 100% !important;
+              object-fit: cover !important;
+              background-size: cover !important;
+              background-position: center !important;
+            }
+            .box {
+              background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
+              padding: 10px 6px 4px !important;
+            }
+            .box .title {
+              font-size: 10px !important;
+              font-weight: 600 !important;
+              color: rgba(255,255,255,0.95) !important;
+              text-align: center !important;
+              letter-spacing: 0.3px !important;
+            }
+
+      - <<: *mini_cam_v11
+        entity: camera.as_camera_2
+        camera_image: camera.as_camera_2
+        name: Área
+        tap_action:
+          action: perform-action
+          perform_action: input_select.select_option
+          data:
+            entity_id: input_select.bento_active_camera
+            option: camera.as_camera_2
+        card_mod:
+          style: |
+            ha-card {
+              border-radius: 10px !important;
+              overflow: hidden !important;
+              aspect-ratio: 16 / 11 !important;
+              background: #1b2535 !important;
+              border: 1px solid rgba(255,255,255,0.10) !important;
+              box-shadow: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}inset 0 0 0 2px #60a5fa{% else %}none{% endif %} !important;
+              box-sizing: border-box !important;
+              min-width: 0 !important;
+              transition: box-shadow 0.2s, border-color 0.2s !important;
+            }
+            hui-image,
+            hui-image img,
+            hui-image div[style*="background-image"] {
+              height: 100% !important;
+              width: 100% !important;
+              object-fit: cover !important;
+              background-size: cover !important;
+              background-position: center !important;
+            }
+            .box {
+              background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
+              padding: 10px 6px 4px !important;
+            }
+            .box .title {
+              font-size: 10px !important;
+              font-weight: 600 !important;
+              color: rgba(255,255,255,0.95) !important;
+              text-align: center !important;
+              letter-spacing: 0.3px !important;
+            }

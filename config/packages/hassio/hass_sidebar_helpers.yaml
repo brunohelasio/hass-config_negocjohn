@@ -27,6 +27,22 @@ input_select:
       - camera.cz_camera_2
       - camera.as_camera_2
     initial: camera.sl_camera_2
+  bento_sidebar_active:
+    name: Bento Sidebar Active Icon
+    icon: mdi:gesture-tap-button
+    options:
+      - home
+      - music
+      - security
+      - activity
+      - vacuum
+      - wifi
+      - refresh
+      - download
+      - cube
+      - monitor
+      - power
+    initial: home
 
 input_boolean:
   sidebar_compact:
@@ -37,3 +53,136 @@ input_boolean:
     name: Sidebar Menu Mobile
     icon: mdi:menu
     initial: false
+
+script:
+  bento_sidebar_open_security:
+    alias: Bento Sidebar - Security Popup
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.bento_sidebar_active
+        data:
+          option: security
+      - service: browser_mod.popup
+        data:
+          title: Cameras
+          tag: cameras_user
+          size: wide
+          style: >
+            --popup-border-width: 0;
+            --popup-max-width: 980px;
+            --popup-background-color: linear-gradient(180deg, rgba(15, 25, 50, 0.92) 0%, rgba(10, 18, 40, 0.96) 100%);
+            --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+            --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+          card_mod:
+            style:
+              .: |
+                ha-dialog {
+                  backdrop-filter: blur(12px);
+                  -webkit-backdrop-filter: blur(12px);
+                }
+              ha-dialog$: |
+                .mdc-dialog__scrim {
+                  background-color: rgba(0, 0, 0, 0.56) !important;
+                }
+                .mdc-dialog__container {
+                  align-items: center !important;
+                  justify-content: center !important;
+                }
+                .mdc-dialog__surface {
+                  width: 65vw !important;
+                  max-width: 980px !important;
+                  max-height: 88vh !important;
+                  overflow-y: auto !important;
+                }
+          content:
+            type: custom:layout-card
+            layout_type: custom:grid-layout
+            layout:
+              grid-gap: 6px
+              grid-template-columns: repeat(3, 1fr)
+              grid-template-rows: auto
+              margin: 0
+              padding: 0.5rem
+              mediaquery:
+                '(max-width: 800px)':
+                  grid-template-columns: 1fr
+            cards:
+              - type: picture-entity
+                entity: camera.sl_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: SL - Sala
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.vr_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: VR - Varanda
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.cz_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: CZ - Cozinha
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.as_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: AS - Área Serviço
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.of_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: OF - Office
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.camera_quarto_casal_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: QC - Quarto Casal
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.qmi_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: QMI - Quarto Miguel
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.qma_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: QMA - Quarto Marina
+                tap_action: { action: more-info }
+
+  bento_sidebar_open_vacuum:
+    alias: Bento Sidebar - Roborock Popup
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.bento_sidebar_active
+        data:
+          option: vacuum
+      # CÓDIGO ANTERIOR (restore rápido): popup via include no botão
+      # tap_action: !include ../popup/footer/footer_vacuum.yaml
+      - service: browser_mod.popup
+        data:
+          title: Roborock S7
+          size: wide
+          content:
+            type: entities
+            entities:
+              - vacuum.roborock_s7
+              - sensor.roborock_s7_vacuum_error
+              - sensor.roborock_s7_comodo_atual
+              - sensor.roborock_s7_bateria

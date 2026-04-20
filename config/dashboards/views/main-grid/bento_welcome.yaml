@@ -36,16 +36,17 @@ card_mod:
       justify-content: space-between !important;
       position: relative !important;  /* v10: âncora para ::after da curva decorativa */
 
-      /* 3. Vidro Premium — tom azul claro suave (v9)
-            Baseline v8 (restore rápido):
-            background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
+      /* 3. Vidro Premium — tom azul reforçado (v10)
+            Baseline v9 (restore rapido):
+              background: linear-gradient(160deg, rgba(186,230,253,0.12), rgba(147,197,253,0.04)) !important;
+              border: 1px solid rgba(191,219,254,0.22) !important;
+              box-shadow: 0 0 24px rgba(96,165,250,0.06), 0 8px 32px rgba(0,0,0,0.2) !important;
       */
-      background: linear-gradient(160deg, rgba(186,230,253,0.12), rgba(147,197,253,0.04)) !important;
-      backdrop-filter: blur(18px) saturate(1.2) !important;
-      -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
-      border: 1px solid rgba(191,219,254,0.22) !important;
-      box-shadow: 0 0 24px rgba(96,165,250,0.06), 0 8px 32px rgba(0,0,0,0.2) !important;
+      background: linear-gradient(160deg, rgba(96,165,250,0.22), rgba(59,130,246,0.08)) !important;
+      backdrop-filter: blur(20px) saturate(1.35) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+      border: 1px solid rgba(147,197,253,0.34) !important;
+      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
 
       /* 4. Força o arredondamento e IMPEDE que o conteúdo vaze e deixe quadrado */
       border-radius: 18px !important;

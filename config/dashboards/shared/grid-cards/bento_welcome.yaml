@@ -278,6 +278,20 @@
 #       .name, .label { text-align: left !important; }
 # --- FIM CÓDIGO ORIGINAL ---
 
+# --- CÓDIGO COMENTADO (v8 — toggle pill iOS) ---
+# Substituida por v9: 2 cadeados (trancar + destrancar) por pedido do usuario.
+# Razao: slider "Slide to answer" real requer drag gesture complexo, nao
+# disponivel como card oficial. Fallback autorizado: 2 botoes de cadeado.
+# - type: custom:button-card
+#   entity: lock.sl_fechadura_operate_lock
+#   ... (toggle pill completo comentado)
+# --- FIM CÓDIGO COMENTADO ---
+
+# v9 — Porta Principal com 2 cadeados (trancar / destrancar)
+#   - Cadeado 1 (lock): destaca verde quando trancada, pressionavel para trancar
+#   - Cadeado 2 (lock-open): destaca laranja quando destrancada, pressionavel para destrancar
+#   - Card inteiro sem tap_action (evita double-action). Cada cadeado tem sua
+#     propria acao via custom_field com onclick inline.
 - type: custom:button-card
   entity: lock.sl_fechadura_operate_lock
   show_name: true
@@ -293,23 +307,42 @@
       return entity.state;
     ]]]
   tap_action:
-    action: call-service
-    service: homeassistant.toggle
-    service_data:
-      entity_id: lock.sl_fechadura_operate_lock
+    action: none
+  hold_action:
+    action: none
   custom_fields:
-    toggle_pill: >
+    lock_buttons: >
       [[[
         var locked = entity.state === 'locked';
-        var bg = locked ? '#22c55e' : 'rgba(255,255,255,0.18)';
-        var left = locked ? '26px' : '2px';
-        return '<div style="position:relative;width:46px;height:24px;'
-             + 'border-radius:12px;background:' + bg + ';'
-             + 'transition:background 0.25s;pointer-events:none;">'
-             +   '<div style="position:absolute;top:2px;left:' + left + ';'
-             +     'width:20px;height:20px;border-radius:50%;background:white;'
-             +     'transition:left 0.25s;box-shadow:0 1px 3px rgba(0,0,0,0.35);'
-             +   '"></div>'
+        var cardEl = this;
+        // IDs unicos para cada cadeado — clique chama hass.callService diretamente
+        // via onclick inline (stopPropagation evita acionar o card inteiro).
+        var lockActive = locked
+          ? 'background:rgba(34,197,94,0.22);border:1px solid rgba(34,197,94,0.60);'
+          : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);';
+        var lockIconColor = locked ? '#22c55e' : 'rgba(255,255,255,0.40)';
+        var unlockActive = !locked
+          ? 'background:rgba(251,146,60,0.22);border:1px solid rgba(251,146,60,0.60);'
+          : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);';
+        var unlockIconColor = !locked ? '#fb923c' : 'rgba(255,255,255,0.40)';
+        var btnBase = 'width:38px;height:38px;border-radius:12px;'
+                    + 'display:flex;align-items:center;justify-content:center;'
+                    + 'cursor:pointer;transition:all 0.2s;pointer-events:auto;';
+        var lockClick = "event.stopPropagation();"
+          + "var ev=new Event('hass-call-service',{bubbles:true,composed:true});"
+          + "ev.detail={domain:'lock',service:'lock',serviceData:{entity_id:'lock.sl_fechadura_operate_lock'}};"
+          + "this.dispatchEvent(ev);";
+        var unlockClick = "event.stopPropagation();"
+          + "var ev=new Event('hass-call-service',{bubbles:true,composed:true});"
+          + "ev.detail={domain:'lock',service:'unlock',serviceData:{entity_id:'lock.sl_fechadura_operate_lock'}};"
+          + "this.dispatchEvent(ev);";
+        return '<div style="display:flex;gap:6px;">'
+             +   '<div onclick="' + lockClick + '" style="' + btnBase + lockActive + '">'
+             +     '<ha-icon icon="mdi:lock" style="--mdc-icon-size:20px;color:' + lockIconColor + ';"></ha-icon>'
+             +   '</div>'
+             +   '<div onclick="' + unlockClick + '" style="' + btnBase + unlockActive + '">'
+             +     '<ha-icon icon="mdi:lock-open-variant" style="--mdc-icon-size:20px;color:' + unlockIconColor + ';"></ha-icon>'
+             +   '</div>'
              + '</div>';
       ]]]
   state_styles:
@@ -321,13 +354,14 @@
         - color: "rgba(248,113,113,0.80)"
   styles:
     grid:
-      - grid-template-areas: '"i n toggle_pill" "i l toggle_pill"'
-      - grid-template-columns: "30px 1fr 54px"
+      - grid-template-areas: '"i n lock_buttons" "i l lock_buttons"'
+      - grid-template-columns: "30px 1fr auto"
       - grid-template-rows: "auto auto"
-      - column-gap: "8px"
+      - column-gap: "10px"
       - align-items: "center"
     card:
       - padding: "8px 14px 8px 18px"
+      - cursor: "default"
     name:
       - font-size: "15px"
       - font-weight: "600"
@@ -345,7 +379,7 @@
       - width: "24px"
       - align-self: "center"
     custom_fields:
-      toggle_pill:
+      lock_buttons:
         - align-self: "center"
         - justify-self: "end"
   card_mod:
@@ -431,23 +465,29 @@
   hold_action:
     action: none
   custom_fields:
-    toggle_pill: >
+    lock_buttons: >
       [[[
-        return '<div style="position:relative;width:46px;height:24px;'
-             + 'border-radius:12px;background:rgba(255,255,255,0.10);'
-             + 'pointer-events:none;">'
-             +   '<div style="position:absolute;top:2px;left:2px;'
-             +     'width:20px;height:20px;border-radius:50%;'
-             +     'background:rgba(255,255,255,0.35);'
-             +     'box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>'
+        var btnBase = 'width:38px;height:38px;border-radius:12px;'
+                    + 'background:rgba(255,255,255,0.04);'
+                    + 'border:1px solid rgba(255,255,255,0.08);'
+                    + 'display:flex;align-items:center;justify-content:center;'
+                    + 'pointer-events:none;';
+        var iconStyle = '--mdc-icon-size:20px;color:rgba(255,255,255,0.20);';
+        return '<div style="display:flex;gap:6px;">'
+             +   '<div style="' + btnBase + '">'
+             +     '<ha-icon icon="mdi:lock" style="' + iconStyle + '"></ha-icon>'
+             +   '</div>'
+             +   '<div style="' + btnBase + '">'
+             +     '<ha-icon icon="mdi:lock-open-variant" style="' + iconStyle + '"></ha-icon>'
+             +   '</div>'
              + '</div>';
       ]]]
   styles:
     grid:
-      - grid-template-areas: '"i n toggle_pill" "i l toggle_pill"'
-      - grid-template-columns: "30px 1fr 54px"
+      - grid-template-areas: '"i n lock_buttons" "i l lock_buttons"'
+      - grid-template-columns: "30px 1fr auto"
       - grid-template-rows: "auto auto"
-      - column-gap: "8px"
+      - column-gap: "10px"
       - align-items: "center"
     card:
       - padding: "8px 14px 8px 18px"
@@ -471,7 +511,7 @@
       - color: "rgba(255,255,255,0.32)"
       - align-self: "center"
     custom_fields:
-      toggle_pill:
+      lock_buttons:
         - align-self: "center"
         - justify-self: "end"
   card_mod:
@@ -636,12 +676,30 @@
 # --- FIM CÓDIGO COMENTADO ---
 
 
-# 4. TEMPO AGORA — v11 widget rico estilo imagem 1 (replica tpl_sidebar + extras)
-#    Coluna esquerda: emoji (mantido tpl_sidebar) + temperatura grande + sensação
-#    Coluna direita: 4 atributos (Umid / Vento / Nascer / Pôr)
-#    Lê: weather.forecast_casa (temp, apparent_temperature, humidity, wind_speed)
-#         + sun.sun (next_rising, next_setting)
-#    tap_action: popup_weather (radar + chart) — mesmo do tpl_sidebar
+# --- CÓDIGO COMENTADO (v11 — emoji + flex inline nos atributos) ---
+# Substituida por v12 que usa:
+#   1) SVGs animados em /local/svg/weather/ (maiores, 64px)
+#   2) grid 2-col (ícone auto | texto) na coluna direita — alinhamento vertical
+#      dos 4 mini ícones
+# - type: custom:button-card
+#   entity: weather.forecast_casa
+#   triggers_update: [weather.forecast_casa, sun.sun]
+#   show_name: false
+#   show_icon: false
+#   show_state: false
+#   show_label: true
+#   label: >
+#     [[[ ... emoji + flex inline ... ]]]
+#   tap_action: !include ../popup/popup_weather.yaml
+# --- FIM CÓDIGO COMENTADO ---
+
+
+# 4. TEMPO AGORA — v12
+#    - Icone animado SVG grande (/local/svg/weather/*.svg, 64px)
+#    - Coluna esquerda: icone + temp + sensacao (alinhamento vertical central)
+#    - Coluna direita: grid 2-col (icone 18px | texto) — 4 atributos alinhados
+#      verticalmente (Umid / Vento / Nascer / Por)
+#    - Mapeamento HA state -> SVG file via sun.sun (day/night)
 - type: custom:button-card
   entity: weather.forecast_casa
   triggers_update:
@@ -666,12 +724,26 @@
       var wind = (attrs.wind_speed !== undefined && attrs.wind_speed !== null)
         ? Math.round(parseFloat(attrs.wind_speed)) + ' km/h'
         : '-- km/h';
-      var weatherEmoji = {
-        'sunny':'☀️','clear-night':'🌙','partlycloudy':'⛅','cloudy':'☁️',
-        'rainy':'🌧️','snowy':'❄️','windy':'💨','fog':'🌫️',
-        'lightning':'⚡','lightning-rainy':'⛈️','pouring':'🌊'
-      }[state] || '🌡️';
       var sun = states['sun.sun'];
+      var isDay = sun && sun.state === 'above_horizon';
+      // HA weather state -> SVG filename (meteocons em /local/svg/weather/)
+      var svgMap = {
+        'sunny': isDay ? 'clear-day' : 'clear-night',
+        'clear-night': 'clear-night',
+        'partlycloudy': isDay ? 'partly-cloudy-day' : 'partly-cloudy-night',
+        'cloudy': 'cloudy',
+        'rainy': 'rain',
+        'pouring': 'rain',
+        'lightning': 'rain',
+        'lightning-rainy': 'rain',
+        'snowy': 'snow',
+        'snowy-rainy': 'sleet',
+        'fog': 'fog',
+        'windy': 'wind',
+        'windy-variant': 'wind'
+      };
+      var svgFile = svgMap[state] || 'cloudy';
+      var svgUrl = '/local/svg/weather/' + svgFile + '.svg';
       function fmt(iso){
         if (!iso) return '--:--';
         var d = new Date(iso);
@@ -682,52 +754,44 @@
       }
       var rising = sun && sun.attributes ? fmt(sun.attributes.next_rising) : '--:--';
       var setting = sun && sun.attributes ? fmt(sun.attributes.next_setting) : '--:--';
-      var rowStyle = 'display:flex;align-items:center;gap:6px;font-size:11px;'
-                   + 'color:rgba(255,255,255,0.72);line-height:1.4;';
-      var iconStyle = '--mdc-icon-size:14px;';
+      var iconCell = 'justify-self:center;align-self:center;display:flex;';
+      var iconStyle = '--mdc-icon-size:16px;';
       var labelStyle = 'color:rgba(255,255,255,0.42);font-size:10px;'
-                     + 'text-transform:uppercase;letter-spacing:1px;margin-right:2px;';
+                     + 'text-transform:uppercase;letter-spacing:1.2px;'
+                     + 'font-weight:600;';
+      var valStyle = 'color:rgba(255,255,255,0.88);font-size:11px;'
+                   + 'font-weight:500;text-align:right;justify-self:end;';
+      function attrRow(icon, color, label, val){
+        return '<div style="' + iconCell + '">'
+             +   '<ha-icon icon="' + icon + '" style="' + iconStyle
+             +     'color:' + color + ';"></ha-icon>'
+             + '</div>'
+             + '<div style="' + labelStyle + '">' + label + '</div>'
+             + '<div style="' + valStyle + '">' + val + '</div>';
+      }
       return '<div style="font-size:10px;font-weight:700;letter-spacing:2px;'
            + 'color:rgba(255,255,255,0.30);text-transform:uppercase;'
-           + 'margin-bottom:10px;">TEMPO AGORA</div>'
-           + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;'
+           + 'margin-bottom:12px;">TEMPO AGORA</div>'
+           + '<div style="display:grid;grid-template-columns:1fr 1.15fr;gap:14px;'
            +   'align-items:center;">'
-           +   '<div style="display:flex;align-items:center;gap:10px;">'
-           +     '<div style="font-size:42px;line-height:1;">' + weatherEmoji + '</div>'
+           // --- COLUNA ESQUERDA: SVG animado + temp + sensacao ---
+           +   '<div style="display:flex;align-items:center;gap:12px;">'
+           +     '<img src="' + svgUrl + '" alt="' + state + '" '
+           +       'style="width:64px;height:64px;flex-shrink:0;display:block;"/>'
            +     '<div>'
-           +       '<div style="font-size:30px;font-weight:200;line-height:1;'
-           +         'color:rgba(255,255,255,0.92);">' + tempInt + '°</div>'
-           +       '<div style="font-size:10px;color:rgba(255,255,255,0.42);'
-           +         'margin-top:4px;text-transform:capitalize;">' + state + '</div>'
-           +       '<div style="font-size:10px;color:rgba(255,255,255,0.55);'
-           +         'margin-top:4px;">Sensação ' + apparentTxt + '</div>'
+           +       '<div style="font-size:32px;font-weight:200;line-height:1;'
+           +         'color:rgba(255,255,255,0.95);">' + tempInt + '°C</div>'
+           +       '<div style="font-size:11px;color:rgba(255,255,255,0.50);'
+           +         'margin-top:5px;">Sensação ' + apparentTxt + '</div>'
            +     '</div>'
            +   '</div>'
-           +   '<div style="display:flex;flex-direction:column;gap:4px;">'
-           +     '<div style="' + rowStyle + '">'
-           +       '<ha-icon icon="mdi:water-percent" style="' + iconStyle
-           +         'color:#60a5fa;"></ha-icon>'
-           +       '<span style="' + labelStyle + '">Umid</span>'
-           +       '<span>' + humid + '</span>'
-           +     '</div>'
-           +     '<div style="' + rowStyle + '">'
-           +       '<ha-icon icon="mdi:weather-windy" style="' + iconStyle
-           +         'color:#7dd3fc;"></ha-icon>'
-           +       '<span style="' + labelStyle + '">Vento</span>'
-           +       '<span>' + wind + '</span>'
-           +     '</div>'
-           +     '<div style="' + rowStyle + '">'
-           +       '<ha-icon icon="mdi:weather-sunset-up" style="' + iconStyle
-           +         'color:#fb923c;"></ha-icon>'
-           +       '<span style="' + labelStyle + '">Nascer</span>'
-           +       '<span>' + rising + '</span>'
-           +     '</div>'
-           +     '<div style="' + rowStyle + '">'
-           +       '<ha-icon icon="mdi:weather-sunset-down" style="' + iconStyle
-           +         'color:#f97316;"></ha-icon>'
-           +       '<span style="' + labelStyle + '">Pôr</span>'
-           +       '<span>' + setting + '</span>'
-           +     '</div>'
+           // --- COLUNA DIREITA: grid 3-col (icone | label | valor) ---
+           +   '<div style="display:grid;grid-template-columns:20px auto 1fr;'
+           +     'row-gap:5px;column-gap:8px;align-items:center;">'
+           +     attrRow('mdi:water-percent',     '#60a5fa', 'Umid',   humid)
+           +     attrRow('mdi:weather-windy',     '#7dd3fc', 'Vento',  wind)
+           +     attrRow('mdi:weather-sunset-up', '#fb923c', 'Nascer', rising)
+           +     attrRow('mdi:weather-sunset-down','#f97316','Pôr',    setting)
            +   '</div>'
            + '</div>';
     ]]]
@@ -738,7 +802,7 @@
       - border: "none"
       - box-shadow: "none"
       # Padding-bottom maior para deixar respiro acima da curva ::after (56px).
-      - padding: "14px 18px 64px"
+      - padding: "14px 18px 68px"
       - height: "auto"
       - cursor: "pointer"
       - position: "relative"

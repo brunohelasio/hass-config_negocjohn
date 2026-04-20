@@ -12,7 +12,13 @@ card_mod:
       height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: space-between !important;
+      justify-content: stretch !important;
+
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      overflow: visible !important;
 
       /* Remove apenas o fundo fosco */
       background: transparent !important;

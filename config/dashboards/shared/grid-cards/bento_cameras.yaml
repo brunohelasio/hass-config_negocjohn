@@ -486,7 +486,20 @@
 
 
 # === BASE — 4 mini tabs em horizontal-stack ===
+# v8:
+#   - tap_action: call-service -> perform-action (sintaxe HA 2024+)
+#   - mini tab card height: 54px -> 100% (enche horizontal-stack)
+#   - horizontal-stack com card_mod: gap 8px entre tabs + width 100%
 - type: horizontal-stack
+  card_mod:
+    style: |
+      #root {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 8px !important;
+        width: 100% !important;
+        height: 100% !important;
+      }
   cards:
 
     - &mini_tab
@@ -500,9 +513,9 @@
       show_state: false
       show_label: true
       tap_action:
-        action: call-service
-        service: input_select.select_option
-        service_data:
+        action: perform-action
+        perform_action: input_select.select_option
+        data:
           entity_id: input_select.bento_active_camera
           option: camera.sl_camera_2
       variables:
@@ -540,7 +553,7 @@
           - border: "none"
           - box-shadow: "none"
           - padding: "0"
-          - height: "54px"
+          - height: "100%"
           - width: "100%"
           - cursor: "pointer"
           - position: "relative"
@@ -548,6 +561,7 @@
           - grid-template-areas: '"l"'
           - grid-template-rows: "1fr"
           - grid-template-columns: "1fr"
+          - height: "100%"
         label:
           - width: "100%"
           - height: "100%"
@@ -560,9 +574,9 @@
         - camera.vr_camera_2
         - input_select.bento_active_camera
       tap_action:
-        action: call-service
-        service: input_select.select_option
-        service_data:
+        action: perform-action
+        perform_action: input_select.select_option
+        data:
           entity_id: input_select.bento_active_camera
           option: camera.vr_camera_2
       variables:
@@ -575,9 +589,9 @@
         - camera.cz_camera_2
         - input_select.bento_active_camera
       tap_action:
-        action: call-service
-        service: input_select.select_option
-        service_data:
+        action: perform-action
+        perform_action: input_select.select_option
+        data:
           entity_id: input_select.bento_active_camera
           option: camera.cz_camera_2
       variables:
@@ -590,9 +604,9 @@
         - camera.as_camera_2
         - input_select.bento_active_camera
       tap_action:
-        action: call-service
-        service: input_select.select_option
-        service_data:
+        action: perform-action
+        perform_action: input_select.select_option
+        data:
           entity_id: input_select.bento_active_camera
           option: camera.as_camera_2
       variables:

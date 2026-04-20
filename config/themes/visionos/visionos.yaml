@@ -15,7 +15,10 @@ visionos:
       ha-card-background: transparent
       app-theme-color: rgb(0, 0, 0)
   # Global
-  lovelace-background: "linear-gradient(rgba(0, 0, 0, 0.70), rgba(0, 0, 0, 0.70)), var(--background-image)"
+  # --- CÓDIGO ORIGINAL COMENTADO (overlay 70% black sobre home.jpg deixava dashboard escuro) ---
+  # lovelace-background: "linear-gradient(rgba(0, 0, 0, 0.70), rgba(0, 0, 0, 0.70)), var(--background-image)"
+  # --- FIM CÓDIGO ORIGINAL ---
+  lovelace-background: "var(--background-image)"
   light-primary-color: rgb(241, 241, 241) # Icons on sidebar
   divider-color: rgba(152, 152, 157, 0.3) # from Apple systemGray dark mode
   accent-color: var(--primary-color)

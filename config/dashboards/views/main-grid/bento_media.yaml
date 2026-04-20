@@ -3,17 +3,22 @@ view_layout:
   grid-area: media
 card_mod:
   style: |
-    /* 1. Faz o "envelope" do cartão esticar até o fundo da célula do grid */
     :host {
       height: 100% !important;
     }
 
     ha-card {
-      /* 2. Faz o cartão acompanhar o envelope */
+      /* Mantém dimensões originais do bloco Bento */
       height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      justify-content: space-between !important;
+      justify-content: stretch !important;
+
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      overflow: visible !important;
 
       /* 3. O SEU Vidro Perfeito */
       background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;

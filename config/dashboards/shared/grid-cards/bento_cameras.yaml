@@ -1392,7 +1392,7 @@
                 height: 100% !important;
                 display: grid !important;
                 grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-                gap: 8px !important;
+                gap: 6px !important;
                 align-items: center !important;
               }
           cards:
@@ -1415,7 +1415,7 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1 / 1 !important;
+                    aspect-ratio: 1.12 / 1 !important;
                     background: #1b2535 !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}2px solid #60a5fa{% else %}1px solid rgba(255,255,255,0.12){% endif %} !important;
                     box-shadow: none !important;
@@ -1447,7 +1447,7 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1 / 1 !important;
+                    aspect-ratio: 1.12 / 1 !important;
                     background: #1b2535 !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}2px solid #60a5fa{% else %}1px solid rgba(255,255,255,0.12){% endif %} !important;
                     box-shadow: none !important;
@@ -1479,7 +1479,7 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1 / 1 !important;
+                    aspect-ratio: 1.12 / 1 !important;
                     background: #1b2535 !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}2px solid #60a5fa{% else %}1px solid rgba(255,255,255,0.12){% endif %} !important;
                     box-shadow: none !important;
@@ -1511,7 +1511,7 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1 / 1 !important;
+                    aspect-ratio: 1.12 / 1 !important;
                     background: #1b2535 !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}2px solid #60a5fa{% else %}1px solid rgba(255,255,255,0.12){% endif %} !important;
                     box-shadow: none !important;

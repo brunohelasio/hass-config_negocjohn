@@ -34,6 +34,7 @@ card_mod:
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
+      position: relative !important;  /* v10: âncora para ::after da curva decorativa */
 
       /* 3. Vidro Premium — tom azul claro suave (v9)
             Baseline v8 (restore rápido):
@@ -45,11 +46,11 @@ card_mod:
       -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
       border: 1px solid rgba(191,219,254,0.22) !important;
       box-shadow: 0 0 24px rgba(96,165,250,0.06), 0 8px 32px rgba(0,0,0,0.2) !important;
-      
+
       /* 4. Força o arredondamento e IMPEDE que o conteúdo vaze e deixe quadrado */
       border-radius: 18px !important;
       overflow: hidden !important;
-      
+
       /* 5. Desliga a interferência do tema nos filhos */
       --ha-card-glass-tint: transparent !important;
       --ha-card-backdrop-filter: none !important;
@@ -57,8 +58,25 @@ card_mod:
       --ha-card-background: transparent !important;
       --ha-card-border-width: 0 !important;
     }
-    
+
     ha-card::before {
       display: none !important;
+    }
+
+    /* v10: curva decorativa como ::after — sangra nas 3 bordas (esq/dir/inf)
+       garantido, sem depender de margin negativa no button-card filho.
+       SVG inline URL-encoded (gradiente laranja→vermelho estilo lukevink). */
+    ha-card::after {
+      content: '' !important;
+      position: absolute !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      height: 56px !important;
+      pointer-events: none !important;
+      z-index: 1 !important;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 56' preserveAspectRatio='none'><defs><linearGradient id='f' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23fb923c' stop-opacity='0'/><stop offset='55%25' stop-color='%23fb923c' stop-opacity='0.20'/><stop offset='100%25' stop-color='%23ef4444' stop-opacity='0.36'/></linearGradient><linearGradient id='s' x1='0' y1='0' x2='1' y2='0'><stop offset='0%25' stop-color='%23fb923c' stop-opacity='0.55'/><stop offset='50%25' stop-color='%23f97316' stop-opacity='0.85'/><stop offset='100%25' stop-color='%23ef4444' stop-opacity='0.65'/></linearGradient></defs><path d='M0 32 C55 24,110 18,170 22 C230 28,285 36,340 28 C370 24,388 22,400 21 L400 56 L0 56 Z' fill='url(%23f)'/><path d='M0 32 C55 24,110 18,170 22 C230 28,285 36,340 28 C370 24,388 22,400 21' fill='none' stroke='url(%23s)' stroke-width='1.5' stroke-linecap='round'/></svg>") !important;
+      background-size: 100% 100% !important;
+      background-repeat: no-repeat !important;
     }
 cards: !include ../../shared/grid-cards/bento_welcome.yaml

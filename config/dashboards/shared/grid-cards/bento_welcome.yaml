@@ -534,11 +534,119 @@
 #       }
 # --- FIM CÓDIGO ORIGINAL ---
 
-# 4a. TEMPO AGORA — widget compacto (clone direto do tpl_sidebar.yaml linhas 353-362)
+# --- CÓDIGO COMENTADO (v10 — TEMPO AGORA simples, clone tpl_sidebar 353-362) ---
+# - type: custom:button-card
+#   entity: weather.forecast_casa
+#   triggers_update:
+#     - weather.forecast_casa
+#   show_name: false
+#   show_icon: false
+#   show_state: false
+#   show_label: true
+#   label: >
+#     [[[
+#       var state = entity.state;
+#       var tempInt = Math.round(parseFloat(entity.attributes.temperature) || 0);
+#       var weatherEmoji = {
+#         'sunny':'☀️','clear-night':'🌙','partlycloudy':'⛅','cloudy':'☁️',
+#         'rainy':'🌧️','snowy':'❄️','windy':'💨','fog':'🌫️',
+#         'lightning':'⚡','lightning-rainy':'⛈️','pouring':'🌊'
+#       }[state] || '🌡️';
+#       return '<div style="font-size:10px;font-weight:700;letter-spacing:2px;'
+#            + 'color:rgba(255,255,255,0.30);text-transform:uppercase;'
+#            + 'margin-bottom:10px;">TEMPO AGORA</div>'
+#            + '<div style="display:flex;align-items:center;justify-content:space-between;">'
+#            +   '<div>'
+#            +     '<div style="font-size:34px;font-weight:200;color:rgba(255,255,255,0.92);'
+#            +       'line-height:1;">' + tempInt + '°</div>'
+#            +     '<div style="font-size:12px;color:rgba(255,255,255,0.42);'
+#            +       'margin-top:3px;text-transform:capitalize;">' + state + '</div>'
+#            +   '</div>'
+#            +   '<div style="font-size:44px;line-height:1;">' + weatherEmoji + '</div>'
+#            + '</div>';
+#     ]]]
+#   tap_action: !include ../popup/popup_weather.yaml
+#   styles:
+#     card:
+#       - background: "transparent"
+#       - border: "none"
+#       - box-shadow: "none"
+#       - padding: "14px 18px 10px"
+#       - height: "auto"
+#       - cursor: "pointer"
+#     label:
+#       - width: "100%"
+#       - text-align: "left"
+#       - padding: "0"
+# --- FIM CÓDIGO COMENTADO ---
+
+# --- CÓDIGO COMENTADO (v10 — curva como button-card filho com margin negativa) ---
+# A curva decorativa migrou para `ha-card::after` no wrapper bento_welcome.yaml,
+# para sangrar garantido nas 3 bordas (esq/dir/inf). Margin negativa em
+# button-card filho não funcionava bem porque o wrapper interno do button-card
+# constrange o rendering, deixando gaps na direita e na base.
+# - type: custom:button-card
+#   show_name: false
+#   show_icon: false
+#   show_state: false
+#   show_label: true
+#   tap_action:
+#     action: none
+#   label: >
+#     [[[
+#       return '<svg viewBox="0 0 400 48" width="100%" height="48" '
+#            + 'preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" '
+#            + 'style="display:block;">'
+#            + '<defs>'
+#            +   '<linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">'
+#            +     '<stop offset="0%" stop-color="rgba(251,146,60,0.00)"/>'
+#            +     '<stop offset="50%" stop-color="rgba(251,146,60,0.18)"/>'
+#            +     '<stop offset="100%" stop-color="rgba(239,68,68,0.32)"/>'
+#            +   '</linearGradient>'
+#            +   '<linearGradient id="curveStroke" x1="0" y1="0" x2="1" y2="0">'
+#            +     '<stop offset="0%" stop-color="#fb923c" stop-opacity="0.55"/>'
+#            +     '<stop offset="50%" stop-color="#f97316" stop-opacity="0.80"/>'
+#            +     '<stop offset="100%" stop-color="#ef4444" stop-opacity="0.60"/>'
+#            +   '</linearGradient>'
+#            + '</defs>'
+#            + '<path d="M0 28 C55 22,110 18,170 22 C230 26,285 32,340 26 C370 22,388 20,400 19 L400 48 L0 48 Z" '
+#            +  'fill="url(#curveFill)"/>'
+#            + '<path d="M0 28 C55 22,110 18,170 22 C230 26,285 32,340 26 C370 22,388 20,400 19" '
+#            +  'fill="none" stroke="url(#curveStroke)" stroke-width="1.5" '
+#            +  'stroke-linecap="round"/>'
+#            + '</svg>';
+#     ]]]
+#   styles:
+#     card:
+#       - background: "transparent"
+#       - border: "none"
+#       - box-shadow: "none"
+#       - padding: "0"
+#       - margin: "0 -24px -24px -24px"
+#       - width: "calc(100% + 48px)"
+#       - height: "48px"
+#       - overflow: "hidden"
+#       - pointer-events: "none"
+#       - cursor: "default"
+#     label:
+#       - width: "100%"
+#       - height: "48px"
+#       - padding: "0"
+#       - display: "block"
+# --- FIM CÓDIGO COMENTADO ---
+
+
+# 4. TEMPO AGORA — v11 widget rico estilo imagem 1 (replica tpl_sidebar + extras)
+#    Coluna esquerda: emoji (mantido tpl_sidebar) + temperatura grande + sensação
+#    Coluna direita: 4 atributos (Umid / Vento / Nascer / Pôr)
+#    Lê: weather.forecast_casa (temp, apparent_temperature, humidity, wind_speed)
+#         + sun.sun (next_rising, next_setting)
+#    tap_action: popup_weather (radar + chart) — mesmo do tpl_sidebar
 - type: custom:button-card
   entity: weather.forecast_casa
   triggers_update:
     - weather.forecast_casa
+    - sun.sun
   show_name: false
   show_icon: false
   show_state: false
@@ -546,23 +654,81 @@
   label: >
     [[[
       var state = entity.state;
-      var tempInt = Math.round(parseFloat(entity.attributes.temperature) || 0);
+      var attrs = entity.attributes || {};
+      var tempInt = Math.round(parseFloat(attrs.temperature) || 0);
+      var apparent = attrs.apparent_temperature;
+      var apparentTxt = (apparent !== undefined && apparent !== null)
+        ? Math.round(parseFloat(apparent)) + '°C'
+        : '--°C';
+      var humid = (attrs.humidity !== undefined && attrs.humidity !== null)
+        ? Math.round(parseFloat(attrs.humidity)) + '%'
+        : '--%';
+      var wind = (attrs.wind_speed !== undefined && attrs.wind_speed !== null)
+        ? Math.round(parseFloat(attrs.wind_speed)) + ' km/h'
+        : '-- km/h';
       var weatherEmoji = {
         'sunny':'☀️','clear-night':'🌙','partlycloudy':'⛅','cloudy':'☁️',
         'rainy':'🌧️','snowy':'❄️','windy':'💨','fog':'🌫️',
         'lightning':'⚡','lightning-rainy':'⛈️','pouring':'🌊'
       }[state] || '🌡️';
+      var sun = states['sun.sun'];
+      function fmt(iso){
+        if (!iso) return '--:--';
+        var d = new Date(iso);
+        if (isNaN(d.getTime())) return '--:--';
+        var h = String(d.getHours()).padStart(2,'0');
+        var m = String(d.getMinutes()).padStart(2,'0');
+        return h + ':' + m;
+      }
+      var rising = sun && sun.attributes ? fmt(sun.attributes.next_rising) : '--:--';
+      var setting = sun && sun.attributes ? fmt(sun.attributes.next_setting) : '--:--';
+      var rowStyle = 'display:flex;align-items:center;gap:6px;font-size:11px;'
+                   + 'color:rgba(255,255,255,0.72);line-height:1.4;';
+      var iconStyle = '--mdc-icon-size:14px;';
+      var labelStyle = 'color:rgba(255,255,255,0.42);font-size:10px;'
+                     + 'text-transform:uppercase;letter-spacing:1px;margin-right:2px;';
       return '<div style="font-size:10px;font-weight:700;letter-spacing:2px;'
            + 'color:rgba(255,255,255,0.30);text-transform:uppercase;'
            + 'margin-bottom:10px;">TEMPO AGORA</div>'
-           + '<div style="display:flex;align-items:center;justify-content:space-between;">'
-           +   '<div>'
-           +     '<div style="font-size:34px;font-weight:200;color:rgba(255,255,255,0.92);'
-           +       'line-height:1;">' + tempInt + '°</div>'
-           +     '<div style="font-size:12px;color:rgba(255,255,255,0.42);'
-           +       'margin-top:3px;text-transform:capitalize;">' + state + '</div>'
+           + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;'
+           +   'align-items:center;">'
+           +   '<div style="display:flex;align-items:center;gap:10px;">'
+           +     '<div style="font-size:42px;line-height:1;">' + weatherEmoji + '</div>'
+           +     '<div>'
+           +       '<div style="font-size:30px;font-weight:200;line-height:1;'
+           +         'color:rgba(255,255,255,0.92);">' + tempInt + '°</div>'
+           +       '<div style="font-size:10px;color:rgba(255,255,255,0.42);'
+           +         'margin-top:4px;text-transform:capitalize;">' + state + '</div>'
+           +       '<div style="font-size:10px;color:rgba(255,255,255,0.55);'
+           +         'margin-top:4px;">Sensação ' + apparentTxt + '</div>'
+           +     '</div>'
            +   '</div>'
-           +   '<div style="font-size:44px;line-height:1;">' + weatherEmoji + '</div>'
+           +   '<div style="display:flex;flex-direction:column;gap:4px;">'
+           +     '<div style="' + rowStyle + '">'
+           +       '<ha-icon icon="mdi:water-percent" style="' + iconStyle
+           +         'color:#60a5fa;"></ha-icon>'
+           +       '<span style="' + labelStyle + '">Umid</span>'
+           +       '<span>' + humid + '</span>'
+           +     '</div>'
+           +     '<div style="' + rowStyle + '">'
+           +       '<ha-icon icon="mdi:weather-windy" style="' + iconStyle
+           +         'color:#7dd3fc;"></ha-icon>'
+           +       '<span style="' + labelStyle + '">Vento</span>'
+           +       '<span>' + wind + '</span>'
+           +     '</div>'
+           +     '<div style="' + rowStyle + '">'
+           +       '<ha-icon icon="mdi:weather-sunset-up" style="' + iconStyle
+           +         'color:#fb923c;"></ha-icon>'
+           +       '<span style="' + labelStyle + '">Nascer</span>'
+           +       '<span>' + rising + '</span>'
+           +     '</div>'
+           +     '<div style="' + rowStyle + '">'
+           +       '<ha-icon icon="mdi:weather-sunset-down" style="' + iconStyle
+           +         'color:#f97316;"></ha-icon>'
+           +       '<span style="' + labelStyle + '">Pôr</span>'
+           +       '<span>' + setting + '</span>'
+           +     '</div>'
+           +   '</div>'
            + '</div>';
     ]]]
   tap_action: !include ../popup/popup_weather.yaml
@@ -571,62 +737,13 @@
       - background: "transparent"
       - border: "none"
       - box-shadow: "none"
-      - padding: "14px 18px 10px"
+      # Padding-bottom maior para deixar respiro acima da curva ::after (56px).
+      - padding: "14px 18px 64px"
       - height: "auto"
       - cursor: "pointer"
+      - position: "relative"
+      - z-index: "2"
     label:
       - width: "100%"
       - text-align: "left"
       - padding: "0"
-
-# 4b. CURVA DECORATIVA — SVG orange/red, sangra lateral+inferior (lukevink-style)
-- type: custom:button-card
-  show_name: false
-  show_icon: false
-  show_state: false
-  show_label: true
-  tap_action:
-    action: none
-  label: >
-    [[[
-      return '<svg viewBox="0 0 400 48" width="100%" height="48" '
-           + 'preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" '
-           + 'style="display:block;">'
-           + '<defs>'
-           +   '<linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">'
-           +     '<stop offset="0%" stop-color="rgba(251,146,60,0.00)"/>'
-           +     '<stop offset="50%" stop-color="rgba(251,146,60,0.18)"/>'
-           +     '<stop offset="100%" stop-color="rgba(239,68,68,0.32)"/>'
-           +   '</linearGradient>'
-           +   '<linearGradient id="curveStroke" x1="0" y1="0" x2="1" y2="0">'
-           +     '<stop offset="0%" stop-color="#fb923c" stop-opacity="0.55"/>'
-           +     '<stop offset="50%" stop-color="#f97316" stop-opacity="0.80"/>'
-           +     '<stop offset="100%" stop-color="#ef4444" stop-opacity="0.60"/>'
-           +   '</linearGradient>'
-           + '</defs>'
-           + '<path d="M0 28 C55 22,110 18,170 22 C230 26,285 32,340 26 C370 22,388 20,400 19 L400 48 L0 48 Z" '
-           +  'fill="url(#curveFill)"/>'
-           + '<path d="M0 28 C55 22,110 18,170 22 C230 26,285 32,340 26 C370 22,388 20,400 19" '
-           +  'fill="none" stroke="url(#curveStroke)" stroke-width="1.5" '
-           +  'stroke-linecap="round"/>'
-           + '</svg>';
-    ]]]
-  styles:
-    card:
-      - background: "transparent"
-      - border: "none"
-      - box-shadow: "none"
-      - padding: "0"
-      # Sangra nas 3 bordas (esquerda, direita, base) do wrapper stack-in-card.
-      # O overflow:hidden + border-radius:18px do wrapper cuida do clipping.
-      - margin: "0 -24px -24px -24px"
-      - width: "calc(100% + 48px)"
-      - height: "48px"
-      - overflow: "hidden"
-      - pointer-events: "none"
-      - cursor: "default"
-    label:
-      - width: "100%"
-      - height: "48px"
-      - padding: "0"
-      - display: "block"

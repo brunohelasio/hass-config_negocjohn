@@ -14,39 +14,6 @@
 #   com expand/collapse + acoes rapidas         #
 #                                               #
 #################################################
-sidebar_nav_template:
-  show_state: false
-  show_icon: false
-  tap_action:
-    action: none
-  hold_action:
-    action: none
-  name: >
-    [[[
-      const go = (path) => `event.stopPropagation(); window.location.assign('${path}');`;
-      const moreInfo = (entityId) => `event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: '${entityId}'}; this.dispatchEvent(ev);`;
-      return `
-        <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:12px 0;">
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div onclick="${go('/summary')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:home-outline"></ha-icon></div>
-            <div onclick="${go('/mass-media')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:music-note-outline"></ha-icon></div>
-            <div onclick="${go('/mobile-security-cameras')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:shield-home-outline"></ha-icon></div>
-            <div onclick="${moreInfo('vacuum.roborock_s7')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:robot-vacuum"></ha-icon></div>
-            <div onclick="${moreInfo('binary_sensor.unifi_controller_alert')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:router-wireless"></ha-icon></div>
-          </div>
-          <div onclick="${go('/system')}" style="cursor:pointer;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);"><ha-icon icon="mdi:cog-outline"></ha-icon></div>
-        </div>
-      `;
-    ]]]
-  styles:
-    card:
-      - background: "rgb(0, 0, 0)"
-      - border-radius: "0"
-      - border: "none"
-      - box-shadow: "none"
-      - height: "100%"
-      - overflow: "hidden"
-
 sidebar_template:
   show_state: false
   show_icon: false
@@ -54,6 +21,157 @@ sidebar_template:
     action: none
   hold_action:
     action: none
+
+  # --- DEFINIÇÃO DOS BLOCOS (CUSTOM FIELDS) ---
+  custom_fields:
+    # BLOCO DO MEIO: CALENDÁRIO
+    calendario:
+      card:
+        type: custom:calendar-card-pro
+        background_color: transparent
+        # --- NOVAS CONFIGURAÇÕES DE ATUALIZAÇÃO ---
+        refresh_interval: 5         # Atualiza a cada 5 minutos
+        refresh_on_navigate: true   # Força atualização ao navegar
+        
+        tap_action:
+          action: fire-dom-event
+          browser_mod:
+            service: browser_mod.popup
+            data:
+              title: Agenda Mensal
+              size: wide
+              content:
+                type: calendar
+                entities:
+                  - calendar.brunohelasio_gmail_com
+                  - calendar.familia
+                  - calendar.feriados_no_brasil
+                initial_view: dayGridMonth
+                
+        entities:
+          - entity: calendar.brunohelasio_gmail_com
+            color: "#7fdbe9"
+          - entity: calendar.familia
+            color: "#fdd835"
+          - entity: calendar.birthdays
+            color: "#ff6c92"
+          - entity: calendar.feriados_no_brasil
+            color: "#1DB954"
+        days_to_show: 3
+        compact_events_to_show: 4
+        event_color: "rgba(255,255,255,0.9)"
+        time_color: "rgba(255,255,255,0.5)"
+        location_color: "rgba(255,255,255,0.5)"
+        weekday_color: "rgba(255,255,255,0.5)"
+        day_color: "rgba(255,255,255,0.9)"
+        empty_day_color: "rgba(255,255,255,0.4)"
+        day_separator_color: "rgba(255,255,255,0.1)"
+        show_month: false
+        show_location: false
+        event_background_opacity: 0
+
+    # BLOCO DO CHÃO: PESSOAS E CLIMA
+    rodape: >
+      [[[
+        const st  = (e) => states[e]?.state ?? '';
+        const att = (e, a) => states[e]?.attributes?.[a] ?? '';
+        const entitiesCfg = variables.entities || {};
+        const peopleEntities = entitiesCfg.presence || [];
+        
+        let peopleCount = 0;
+        let peopleHomeAvatars = '';
+        peopleEntities.forEach(k => {
+          if(states[k] && states[k].state === 'home') {
+            peopleCount++;
+            let name = states[k].attributes.friendly_name || k;
+            let picture = states[k].attributes.entity_picture || '';
+            peopleHomeAvatars += `
+              <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: '${k}'}; this.dispatchEvent(ev);"
+                   onpointerdown="event.stopPropagation();"
+                   ontouchstart="event.stopPropagation();"
+                   title="${name}"
+                   style="width:42px; height:42px; border-radius:50%; overflow:hidden; border:1px solid rgba(255,255,255,0.35); box-shadow:0 0 10px rgba(0,0,0,0.45); cursor:pointer; flex-shrink:0;">
+                ${picture
+                  ? `<img src="${picture}" alt="${name}" style="width:100%; height:100%; object-fit:cover;" />`
+                  : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:rgba(255,255,255,0.92); background:rgba(255,255,255,0.15);">${name.charAt(0)}</div>`}
+              </div>`;
+          }
+        });
+        if(!peopleHomeAvatars) {
+          peopleHomeAvatars = `<div style="font-size:11px; color:rgba(255,255,255,0.45);">Ninguem em casa</div>`;
+        }
+
+        const weatherState = st('weather.forecast_casa');
+        const tempInt = Math.round(parseFloat(att('weather.forecast_casa','temperature')) || 0);
+        const feelsLike = att('weather.forecast_casa','apparent_temperature');
+        const humidity = att('weather.forecast_casa','humidity');
+        const wind = att('weather.forecast_casa','wind_speed');
+        const formatHHMM = (iso) => {
+          if (!iso) return '--:--';
+          const d = new Date(iso);
+          return Number.isNaN(d.getTime()) ? '--:--' : `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+        };
+        const sunStateObj = states['sun.sun'] || {};
+        const sunState = sunStateObj.state || '';
+        const sunAttrs = sunStateObj.attributes || {};
+        const sunrise = formatHHMM(sunAttrs.next_rising);
+        const sunset = formatHHMM(sunAttrs.next_setting);
+        
+        // --- MAPEAMENTO AJUSTADO EXATAMENTE PARA A SUA PASTA ---
+        const weatherIcon = (() => {
+          const basePath = '/local/svg/weather/';
+          const map = {
+            'sunny': basePath + 'clear-day.svg',
+            'clear-night': basePath + 'clear-night.svg',
+            'partlycloudy': sunState === 'above_horizon' ? basePath + 'partly-cloudy-day.svg' : basePath + 'partly-cloudy-night.svg',
+            'cloudy': basePath + 'cloudy.svg',
+            'rainy': basePath + 'rain.svg',
+            'pouring': basePath + 'rain.svg', // Usando rain.svg como fallback
+            'snowy': basePath + 'snow.svg',
+            'snowy-rainy': basePath + 'sleet.svg',
+            'fog': basePath + 'fog.svg',
+            'windy': basePath + 'wind.svg',
+            'windy-variant': basePath + 'wind.svg',
+            'lightning': basePath + 'rain.svg', // Usando rain.svg como fallback
+            'lightning-rainy': basePath + 'rain.svg', // Usando rain.svg como fallback
+          };
+          return map[weatherState] || basePath + 'cloudy.svg';
+        })();
+
+        return `
+        <div onclick="event.stopPropagation();" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="display:flex;flex-direction:column; padding:0 16px 16px;box-sizing:border-box;font-family:'Poppins',system-ui,sans-serif;">
+            <div style="margin-bottom:0; padding-left:12px;">
+              <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;text-align:center;margin-bottom:10px;">PESSOAS EM CASA</div>
+              <div style="display:flex; align-items:center; gap:8px; min-height:42px; overflow-x:auto; padding-bottom:2px; padding-left:4px;">
+                ${peopleHomeAvatars}
+              </div>
+            </div>
+            
+            <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:transparent; border:none; border-radius:0; box-shadow:none;">
+              <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;text-align:center;margin-bottom:10px;">TEMPO AGORA</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                  
+                  <img src="${weatherIcon}" style="width: 72px; height: 72px; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,.40));" />
+                  
+                  <div>
+                    <div style="font-size:34px;font-weight:200;color:rgba(255,255,255,0.92);line-height:1;">${tempInt}°C</div>
+                    <div style="font-size:12px;color:rgba(255,255,255,0.48);margin-top:4px;">Sensação: ${feelsLike !== '' ? feelsLike : '--'}°C</div>
+                  </div>
+                </div>
+                
+                <div style="font-size:11px;line-height:1.6;color:rgba(255,255,255,0.62);text-align:left;min-width:110px;">
+                  <ha-icon icon="mdi:water-percent" style="--mdc-icon-size:12px; color:#2196f3; margin-right:4px;"></ha-icon> Umid: ${humidity !== '' ? humidity : '--'}%<br>
+                  <ha-icon icon="mdi:weather-windy" style="--mdc-icon-size:12px; color:#9e9e9e; margin-right:4px;"></ha-icon> Vento: ${wind !== '' ? wind : '--'} km/h<br>
+                  <ha-icon icon="mdi:weather-sunset-up" style="--mdc-icon-size:12px; color:#ffc107; margin-right:4px;"></ha-icon> Nascer: ${sunrise}<br>
+                  <ha-icon icon="mdi:weather-sunset-down" style="--mdc-icon-size:12px; color:#ff9800; margin-right:4px;"></ha-icon> Pôr: ${sunset}
+                </div>
+              </div>
+            </div>
+        </div>
+        `;
+      ]]]
+
   variables:
     entities: !include sidebar/_vars.yaml
     header: !include sidebar/_header.yaml
@@ -62,46 +180,51 @@ sidebar_template:
     climate_badge: !include sidebar/_badge_climate.yaml
     presence_badge: !include sidebar/_badge_presence.yaml
     mobile_toggle: !include sidebar/_mobile_toggle.yaml
-  # triggers_update original (lista limitada causava badges "mortos"):
-  # triggers_update:
-  #   - input_select.hemma_expanded_row
-  #   - input_boolean.menu_mobile
-  #   - light.todas_as_luzes
-  #   - media_player.android_tv_192_168_3_17
-  #   - media_player.spotifyplus_bruno_helasio
-  #   - media_player.pioneer
-  #   - weather.forecast_casa
-  #   - person.bruno_helasio
-  # Motivo: o template itera Object.keys(states) para contar TODAS as
-  # luzes/media/clima/pessoas. As entidades dos botoes dos comodos
-  # (light.sala_switch_2, light.cz_luz_principal, etc.) NAO estavam
-  # na lista. Quando acionadas via clique simples no botao do comodo,
-  # o button-card fazia atualizacao parcial do texto mas NAO recriava
-  # o DOM, deixando os onclick dos badges mortos.
-  #
-  # triggers_update: all  ← REMOVIDO — causava re-render a cada mudanca
-  # de estado de QUALQUER entidade, sobrecarregando o tablet e causando
-  # perda de conexao WebSocket. Substituido por lista completa abaixo.
-  # Sidebar custom: prioriza resposta instantânea (sem polling) e re-render
-  # dirigido por entidades-chave, incluindo luzes principais dos cômodos.
+
   triggers_update:
     - input_select.hemma_expanded_row
     - input_boolean.menu_mobile
+    - light.sala_switch_1
     - light.sala_switch_2
+    - light.sala_switch_3
+    - light.sala_2_switch_2
+    - light.sala_2_switch_3
+    - light.varanda_switch_1
+    - light.varanda_switch_2
+    - light.cozinha_switch_1
+    - light.cozinha_switch_2
+    - light.cozinha_switch_3
     - light.cz_luz_principal
+    - light.quarto_casal_switch_1
+    - light.quarto_casal_switch_2
+    - light.quarto_casal_2_switch_2
+    - light.quarto_casal_2_switch_3
+    - light.qc_luz_principal
+    - light.suite_casal_switch_1
+    - light.suite_casal_switch_2
+    - light.quarto_marina_switch_1
+    - light.quarto_marina_switch_2
+    - light.quarto_marina_switch_3
+    - light.quarto_marina_switch_4
+    - light.suite_marina_switch_1
+    - light.suite_marina_switch_2
+    - light.office_switch_1
+    - light.office_switch_2
+    - light.office_switch_3
+    - light.lavabo_switch_1
     - light.lavabo_switch_2
+    - light.lavabo_switch_3
     - light.corredor_switch_1
-    - light.quarto_miguel_switch_2
-    - light.quarto_miguel_2_switch_1
-    - light.quarto_miguel_2_switch_2
-    - light.quarto_miguel_2_switch_3
-    - light.quarto_miguel_switch_1
-    - light.quarto_miguel_switch_3
-    - media_player.android_tv_192_168_3_17
+    - light.todas_as_luzes
+    - media_player.smart_tv_pro_2
+    - climate.ac_quarto_miguel
     - climate.ac_office
     - person.bruno_helasio
     - weather.forecast_casa
+
   extra_styles: !include sidebar/_styles.yaml
+
+  # --- BLOCO DO TOPO: RELÓGIO, BADGES E AÇÕES RÁPIDAS ---
   name: >
     [[[
       window.__hh = hass;
@@ -117,8 +240,7 @@ sidebar_template:
       const isMobileMenuOpen = states['input_boolean.menu_mobile'] && states['input_boolean.menu_mobile'].state === 'on';
       const isSidebarCompact = states['input_boolean.sidebar_compact'] && states['input_boolean.sidebar_compact'].state === 'on';
       const toggleMobileBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.menu_mobile'});`;
-      const toggleSidebarCompactBtn = `event.stopPropagation(); window.__hh.callService('input_boolean', 'toggle', {entity_id: 'input_boolean.sidebar_compact'});`;
-      // Controle de layout 3↔4 colunas no tablet landscape sem "vão".
+      
       try {
         const root = window?.document?.documentElement;
         if (root) {
@@ -126,10 +248,12 @@ sidebar_template:
           root.style.setProperty('--tablet-devices-col', isSidebarCompact ? '1fr' : '0fr');
         }
       } catch (e) {}
+
       const toggle = (row) => {
         const next = expanded === row ? 'none' : row;
         return `event.stopPropagation(); window.__hh.callService('input_select', 'select_option', {entity_id: 'input_select.hemma_expanded_row', option: '${next}'});`;
       };
+
       const now  = new Date();
       const hh   = String(now.getHours()).padStart(2,'0');
       const mm   = String(now.getMinutes()).padStart(2,'0');
@@ -137,13 +261,12 @@ sidebar_template:
       const meses = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
       const greeting = now.getHours() < 12 ? 'Bom dia' : now.getHours() < 18 ? 'Boa tarde' : 'Boa noite';
       const greetingName = headerCfg.greeting_name || 'Bruno';
-      // --- Listas fixas de entidades (evita Object.keys(states) que varre TUDO) ---
-      // ORIGINAL (4x Object.keys loop) comentado no final do arquivo
+
       const lightEntities = entitiesCfg.light || [];
       const mediaEntities = entitiesCfg.media || [];
       const climateEntities = entitiesCfg.climate || [];
-      const peopleEntities = entitiesCfg.presence || [];
-      // 1. LUZES (iteracao direta — sem varrer todas as entidades do HA)
+
+      // 1. LUZES
       let lightsCount = 0;
       let activeLightsHTML = '';
       lightEntities.forEach(k => {
@@ -161,7 +284,8 @@ sidebar_template:
         }
       });
       if(lightsCount === 0) activeLightsHTML = '<div style="font-size:12px; color:rgba(255,255,255,0.5); padding:10px; text-align:center;">Nenhuma luz acesa no momento.</div>';
-      // 2. MÍDIA (iteracao direta)
+
+      // 2. MÍDIA
       let mediaCount = 0;
       let activeMediaHTML = '';
       mediaEntities.forEach(k => {
@@ -193,7 +317,8 @@ sidebar_template:
         }
       });
       if(mediaCount === 0) activeMediaHTML = '<div style="font-size:12px; color:rgba(255,255,255,0.5); padding:10px; text-align:center;">Nenhuma mídia em execução.</div>';
-      // 3. CLIMA (iteracao direta)
+
+      // 3. CLIMA
       let climateCount = 0;
       let climateHTML = '';
       climateEntities.forEach(k => {
@@ -216,37 +341,9 @@ sidebar_template:
         }
       });
       if(climateCount === 0) climateHTML = '<div style="font-size:12px; color:rgba(255,255,255,0.5); padding:10px; text-align:center;">Nenhum sistema de clima ativo.</div>';
-      // 4. PESSOAS (iteracao direta)
-      let peopleCount = 0;
-      peopleEntities.forEach(k => {
-        if(states[k]) {
-          let isHome = states[k].state === 'home';
-          if(isHome) peopleCount++;
-          let name = states[k].attributes.friendly_name || k;
-        }
-      });
-      let peopleHomeAvatars = '';
-      peopleEntities.forEach(k => {
-        if(states[k] && states[k].state === 'home') {
-          let name = states[k].attributes.friendly_name || k;
-          let picture = states[k].attributes.entity_picture || '';
-          peopleHomeAvatars += `
-            <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: '${k}'}; this.dispatchEvent(ev);"
-                 onpointerdown="event.stopPropagation();"
-                 ontouchstart="event.stopPropagation();"
-                 title="${name}"
-                 style="width:42px; height:42px; border-radius:50%; overflow:hidden; border:1px solid rgba(255,255,255,0.35); box-shadow:0 0 10px rgba(0,0,0,0.45); cursor:pointer; flex-shrink:0;">
-              ${picture
-                ? `<img src="${picture}" alt="${name}" style="width:100%; height:100%; object-fit:cover;" />`
-                : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:rgba(255,255,255,0.92); background:rgba(255,255,255,0.15);">${name.charAt(0)}</div>`}
-            </div>`;
-        }
-      });
-      if(!peopleHomeAvatars) {
-        peopleHomeAvatars = `<div style="font-size:11px; color:rgba(255,255,255,0.45);">Ninguem em casa</div>`;
-      }
+
       let outputHtml = `
-        <div onclick="event.stopPropagation();" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="position:relative; display:flex;flex-direction:column;height:100%;padding:20px 16px 16px;box-sizing:border-box;font-family:'Poppins',system-ui,sans-serif;">
+        <div onclick="event.stopPropagation();" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="position:relative; display:flex;flex-direction:column;padding:20px 16px 0;box-sizing:border-box;font-family:'Poppins',system-ui,sans-serif;">
 
           <div style="width: 100%; text-align: center; margin-bottom: 2px;">
             <div style="font-family:'Futura', system-ui, sans-serif; font-size:clamp(56px,5.8vw,74px);font-weight:200;color:rgba(255,255,255,0.92);line-height:1;letter-spacing:-1px;margin-bottom:6px;text-shadow: 5px 3px 20px #000000;">
@@ -255,13 +352,14 @@ sidebar_template:
             <div style="font-size:11px;font-weight:600;letter-spacing:2px;color:rgba(255,255,255,0.38);text-transform:uppercase;margin-bottom:3px;">${dias[now.getDay()]}, ${now.getDate()} DE ${meses[now.getMonth()]}</div>
             <div style="font-size:15px;font-weight:400;color:rgba(255,255,255,0.65);">${greeting}, ${greetingName}.</div>
           </div>
+          <div style="height:1px; margin: 10px 6px 6px; background:linear-gradient(90deg, rgba(255,255,255,0.00), rgba(255,255,255,0.16), rgba(255,255,255,0.00));"></div>
 
           <div class="mobile-toggle-btn" onclick="${toggleMobileBtn}" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
             ${isMobileMenuOpen ? (mobileCfg.close_label || '🔼 Recolher') : (mobileCfg.open_label || '🔽 Status e Ações')}
           </div>
           <div class="sidebar-bottom-section ${isMobileMenuOpen ? 'expanded' : 'collapsed'}">
             <div style="display:flex;flex-direction:column;gap:8px; margin-top:8px;">`;
-      // --- BADGE DE LUZES ---
+            
       if (expanded === 'none' || expanded === 'lights') {
          let iconColor = lightsCount > 0 ? '#fdd835' : 'rgba(255,255,255,0.4)';
          let iconShadow = lightsCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(253,216,53,0.5))' : 'none';
@@ -278,7 +376,7 @@ sidebar_template:
            </div>`;
          if (expanded === 'lights') outputHtml += `<div class="expanded-list" style="pointer-events: auto; position: relative; z-index: 2; max-height:40vh; overflow-y:auto; padding-right:4px; margin-bottom:8px;">${activeLightsHTML}</div>`;
       }
-      // --- BADGE DE MÍDIA ---
+      
       if (expanded === 'none' || expanded === 'media') {
          let iconColor = mediaCount > 0 ? '#1DB954' : 'rgba(255,255,255,0.4)';
          let iconShadow = mediaCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(29,185,84,0.5))' : 'none';
@@ -295,7 +393,7 @@ sidebar_template:
            </div>`;
          if (expanded === 'media') outputHtml += `<div class="expanded-list" style="pointer-events: auto; position: relative; z-index: 2; max-height:40vh; overflow-y:auto; padding-right:4px; margin-bottom:8px;">${activeMediaHTML}</div>`;
       }
-      // --- BADGE DE CLIMA ---
+      
       if (expanded === 'none' || expanded === 'climate') {
          let iconColor = climateCount > 0 ? '#7fdbe9' : 'rgba(255,255,255,0.4)';
          let iconShadow = climateCount > 0 ? 'filter:drop-shadow(0 0 4px rgba(127,219,233,0.5))' : 'none';
@@ -311,200 +409,115 @@ sidebar_template:
            </div>`;
          if (expanded === 'climate') outputHtml += `<div class="expanded-list" style="pointer-events: auto; position: relative; z-index: 2; max-height:40vh; overflow-y:auto; padding-right:4px; margin-bottom:8px;">${climateHTML}</div>`;
       }
-      // BADGE DE PESSOAS removida da pilha principal por diretriz de UX.
+      
       outputHtml += `</div>`;
-      // --- AÇÕES RÁPIDAS (ALINHADO À ESQUERDA) ---
+
+      // --- AÇÕES RÁPIDAS E TÍTULO DO CALENDÁRIO COM ONCLICK NO TÍTULO ---
       if (expanded === 'none') {
          outputHtml += `
-            <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;padding-left:4px;margin-bottom:8px;margin-top:10px;">AÇÕES RÁPIDAS</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div onclick="event.stopPropagation(); const h = window.__hh || document.querySelector('home-assistant')?.hass; const allLights = ${JSON.stringify(lightEntities)}; if(h && allLights.length) h.callService('light','turn_off',{entity_id: allLights});"
+            <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;text-align:center;margin-bottom:12px;margin-top:10px;">AÇÕES RÁPIDAS</div>
+            
+            <div style="display:flex; justify-content:space-between; gap:8px; padding:0 4px; pointer-events: auto; position: relative; z-index: 2;">
+              <div onclick="event.stopPropagation(); const h = window.__hh || document.querySelector('home-assistant')?.hass; if(h) h.callService('homeassistant','turn_off',{entity_id:'light.todas_as_luzes'});" 
                    onpointerdown="event.stopPropagation();"
                    ontouchstart="event.stopPropagation();"
-                   style="pointer-events: auto; position: relative; z-index: 2; display:flex; align-items:center; justify-content: flex-start; gap:16px; padding: 12px 16px; background:transparent; border:none; border-radius:20px; cursor:pointer; transition:all 0.2s ease;">
-                <div style="width:32px; display:flex; justify-content:center; align-items:center; flex-shrink:0;">
-                  <ha-icon icon="mdi:lightbulb-off-outline" style="--mdc-icon-size: 24px; color: rgba(255,255,255,0.8);"></ha-icon>
-                </div>
-                <span style="font-size:14px; font-weight:600; color:rgba(255,255,255,0.9); text-align: left;">Apagar Todas as Luzes</span>
+                   style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; cursor:pointer;">
+                <ha-icon icon="mdi:lightbulb-off-outline" style="--mdc-icon-size: 24px; color:rgba(255,255,255,0.8);"></ha-icon>
               </div>
-            </div>`;
+              
+              <div onclick="event.stopPropagation();" 
+                   onpointerdown="event.stopPropagation();"
+                   ontouchstart="event.stopPropagation();"
+                   style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; cursor:pointer;">
+                <ha-icon icon="mdi:movie-roll" style="--mdc-icon-size: 24px; color:rgba(255,255,255,0.8);"></ha-icon>
+              </div>
+              
+              <div onclick="event.stopPropagation();" 
+                   onpointerdown="event.stopPropagation();"
+                   ontouchstart="event.stopPropagation();"
+                   style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; cursor:pointer;">
+                <ha-icon icon="mdi:laptop" style="--mdc-icon-size: 24px; color:rgba(255,255,255,0.8);"></ha-icon>
+              </div>
+              
+              <div onclick="event.stopPropagation();" 
+                   onpointerdown="event.stopPropagation();"
+                   ontouchstart="event.stopPropagation();"
+                   style="width:52px; height:52px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:14px; cursor:pointer;">
+                <ha-icon icon="mdi:sofa-outline" style="--mdc-icon-size: 24px; color:rgba(255,255,255,0.8);"></ha-icon>
+              </div>
+            </div>
+            
+            <div onclick="event.stopPropagation(); const h = window.__hh || document.querySelector('home-assistant')?.hass; if(h) h.callService('browser_mod', 'popup', {title: 'Agenda Mensal', size: 'wide', content: {type: 'calendar', initial_view: 'dayGridMonth', entities: ['calendar.brunohelasio_gmail_com', 'calendar.familia', 'calendar.feriados_no_brasil']}});" 
+                 style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;text-align:center;margin-bottom:0px;margin-top:16px;cursor:pointer;pointer-events:auto;" 
+                 title="Clique para abrir a Agenda Mensal">
+              PRÓXIMOS EVENTOS
+            </div>
+         `;
       }
-      // --- TEMPO ---
-      const weatherState = st('weather.forecast_casa');
-      const tempInt = Math.round(parseFloat(att('weather.forecast_casa','temperature')) || 0);
-      const weatherEmoji = {'sunny':'☀️','clear-night':'🌙','partlycloudy':'⛅','cloudy':'☁️','rainy':'🌧️','snowy':'❄️','windy':'💨','fog':'🌫️','lightning':'⚡','lightning-rainy':'⛈️','pouring':'🌊'}[weatherState] || '🌡️';
 
-      outputHtml += `
-          <div style="flex:1 1 0;min-height:8px;"></div>
-          <!-- ORIGINAL: sem padding-left no wrapper de presenca (desalinhado com badges)
-          <div style="margin-bottom:0;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;margin-bottom:10px;">PESSOAS EM CASA</div>
-            <div style="display:flex; align-items:center; gap:8px; min-height:42px; overflow-x:auto; padding-bottom:2px;">
-              ${peopleHomeAvatars}
-            </div>
-          </div>
-          FIM ORIGINAL -->
-          <div style="margin-bottom:0; padding-left:12px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;margin-bottom:10px;">PESSOAS EM CASA</div>
-            <div style="display:flex; align-items:center; gap:8px; min-height:42px; overflow-x:auto; padding-bottom:2px; padding-left:4px;">
-              ${peopleHomeAvatars}
-            </div>
-          </div>
-          <div onclick="event.stopPropagation(); let ev = new Event('hass-more-info', {bubbles: true, composed: true}); ev.detail = {entityId: 'weather.forecast_casa'}; this.dispatchEvent(ev);" onpointerdown="event.stopPropagation();" ontouchstart="event.stopPropagation();" style="cursor:pointer; pointer-events:auto; padding:14px 16px; background:transparent; border:none; border-radius:20px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.30);text-transform:uppercase;margin-bottom:10px;">TEMPO AGORA</div>
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-              <div>
-                <div style="font-size:34px;font-weight:200;color:rgba(255,255,255,0.92);line-height:1;">${tempInt}°</div>
-                <div style="font-size:12px;color:rgba(255,255,255,0.42);margin-top:3px;text-transform:capitalize;">${weatherState}</div>
-              </div>
-              <div style="font-size:44px;line-height:1;">${weatherEmoji}</div>
-            </div>
-          </div>
-        </div> </div> <style>@keyframes sb-blink{0%,49%{opacity:.35}50%,100%{opacity:.10}}</style>
+      outputHtml += `</div>
+        <style>@keyframes sb-blink{0%,49%{opacity:.35}50%,100%{opacity:.10}}</style>
       `;
       return outputHtml;
     ]]]
+
   styles:
     card:
-      # --- CÓDIGO ORIGINAL COMENTADO (glassmorphism) ---
-      # - background: "linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))"
-      # - backdrop-filter: "blur(40px)"
-      # - -webkit-backdrop-filter: "blur(40px)"
-      # - border-radius: "28px"
-      # - border: "1px solid rgba(255,255,255,0.12)"
-      # - box-shadow: "0 4px 16px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.08)"
-      # --- FIM CÓDIGO ORIGINAL ---
-      # NOVO: sidebar preta sólida, edge-to-edge, sem bordas arredondadas
-      - background: "rgb(0, 0, 0)"
-      - backdrop-filter: "none"
-      - -webkit-backdrop-filter: "none"
+      # Gradiente usando branco translúcido
+      - background: "linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04))"
+      # Blur um pouco maior para espalhar melhor o fundo
+      - backdrop-filter: "blur(18px) saturate(1.2)"
+      - -webkit-backdrop-filter: "blur(18px) saturate(1.2)"
+      # Adiciona uma borda super sutil para dar reflexo na quina do vidro
+      - border-right: "1px solid rgba(255,255,255,0.08)"
       - border-radius: "0"
-      - border: "none"
+      - border-top: "none"
+      - border-bottom: "none"
+      - border-left: "none"
       - box-shadow: "none"
       - height: "100%"
       - overflow: "hidden"
       - aspect-ratio: "unset"
-
-#################################################
-#                                               #
-#   TEMPLATES ORIGINAIS (ngocjohn/hass-config)  #
-#                                               #
-#################################################
-# --- INICIO CODIGO ORIGINAL sidebar (COMENTADO) ---
-# sidebar:
-#   show_state: false
-#   show_icon: false
-#   tap_action:
-#     action: none
-#   name: >
-#     [[[
-#       if (entity) {
-#           let attr = [];
-#           for (let [k, value] of Object.entries(entity.attributes))
-#               window.navigator.userAgent.match(/iPhone/i)
-#                   ? k !== 'time' && k !== 'date' && value !== false && (attr += `<p>${k === 'greet' ? `<span class="iphone">${value}</span>` : `${value}`}</p>`)
-#                   : value !== false && (attr += `<p>${value}</p>`);
-#           return attr;
-#       }
-#     ]]]
-#   extra_styles: >
-#     #card {
-#       padding: 0;
-#       border-width: 0;
-#       font-family: SF Pro Display, Roboto, system-ui;
-#     }
-#     #container {
-#       display: flex !important;
-#     }
-#     #name {
-#       padding: 1vw 2.5vw 0 var(--custom-layout-card-padding);
-#       white-space: normal;
-#       text-align: left;
-#     }
-#     .iphone {
-#       font-size: 1.2em;
-#       color: rgba(255, 255, 255, 0.8);
-#     }
-#     .time {
-#       font-size: var(--sidebar-time-font-size);
-#       font-weight: 300;
-#       line-height: var(--sidebar-time-line-height);
-#       letter-spacing: 0.11vw;
-#       margin-left: -0.3vw;
-#       color: rgba(255, 255, 255, 0.8);
-#     }
-#     @supports not (-moz-appearance:none) {
-#       .time-colon {
-#         position: relative;
-#         top: -.11em;
-#       }
-#     }
-#     p {
-#       font-size: var(--sidebar-font-size);
-#       line-height: var(--sidebar-line-height);
-#       font-weight: 200;
-#       letter-spacing: 0.07vw;
-#       color: #6a7377;
-#     }
-#     b {
-#       font-weight: 700;
-#     }
-#     p > b {
-#       color: rgba(255, 255, 255, 0.8);
-#     }
-#     /* portrait */
-#     @media screen and (max-width: 1200px) {
-#       .time {
-#         font-size: calc(var(--sidebar-time-font-size) * 1.4 );
-#         line-height: calc(var(--sidebar-time-line-height) * 1.4 );
-#       }
-#       p {
-#         font-size: calc(var(--sidebar-font-size) * 1.4 );
-#         line-height: calc(var(--sidebar-line-height) * 1.4 );
-#       }
-#     }
-#     /* phone */
-#     @media screen and (max-width: 800px) {
-#       .time {
-#         font-size: calc(var(--sidebar-time-font-size) * 2.3 );
-#       }
-#       p {
-#         font-size: calc(var(--sidebar-font-size) * 2.3 );
-#         line-height: calc(var(--sidebar-line-height) * 1.4 );
-#       }
-#       #name {
-#         padding: 0;
-#         text-align: right;
-#       }
-#     }
-# --- FIM CODIGO ORIGINAL sidebar (COMENTADO) ---
-# --- INICIO CODIGO ORIGINAL timesidebar (COMENTADO) ---
-# timesidebar:
-#   show_state: false
-#   show_icon: false
-#   name: >
-#     [[[
-#       if (entity) {
-#           let attr = [];
-#           for (let [k, value] of Object.entries(entity.attributes))
-#             value !== false && (attr += `<p>${value}</p>`);
-#           return attr;
-#       }
-#     ]]]
-#   tap_action:
-#     action: fire-dom-event
-#     browser_mod:
-#       service: browser_mod.javascript
-#       data:
-#         code: location.reload()
-#   extra_styles: |
-#     ... (conteudo omitido por brevidade)
-# --- FIM CODIGO ORIGINAL timesidebar (COMENTADO) ---
-# --- INICIO CODIGO ORIGINAL timeclock (COMENTADO) ---
-# timeclock:
-#   ... (conteudo omitido por brevidade)
-# --- FIM CODIGO ORIGINAL timeclock (COMENTADO) ---
-# --- INICIO CODIGO ORIGINAL wide_timeclock (COMENTADO) ---
-# wide_timeclock:
-#   ... (conteudo omitido por brevidade)
-# --- FIM CODIGO ORIGINAL wide_timeclock (COMENTADO) ---
+      - padding: "0"
+      
+    # --- O CSS GRID NATIVO QUE TRAVA TUDO NO LUGAR ---
+    grid:
+      - display: "grid !important"
+      - grid-template-areas: '"n" "calendario" "rodape"'
+      - grid-template-columns: "100%"
+      - grid-template-rows: "max-content 1fr max-content"
+      - height: "100%"
+      - padding: "0"
+      
+    name:
+      - justify-self: "start"
+      - text-align: "left"
+      - width: "100%"
+      - padding: "0"
+      
+    custom_fields:
+      calendario:
+        - display: >
+            [[[ 
+              return states['input_select.hemma_expanded_row']?.state === 'none' 
+              ? 'block !important' 
+              : 'none !important'; 
+            ]]]
+        - position: "relative !important"
+        - width: "100%"
+        - height: "100%"
+        - overflow-y: "auto"
+        - padding: "0 16px"
+        - box-sizing: "border-box"
+        # --- ESSAS 4 LINHAS MATAM O EFEITO DO VISIONOS ---
+        - --ha-card-backdrop-filter: "none !important"
+        - --ha-card-box-shadow: "none !important"
+        - --ha-card-background: "transparent !important"
+        - --ha-card-border-width: "0 !important"
+        
+      rodape:
+        - position: "relative !important"
+        - display: "block !important"
+        - width: "100%"
+        - padding: "0"
+        - align-self: "end"

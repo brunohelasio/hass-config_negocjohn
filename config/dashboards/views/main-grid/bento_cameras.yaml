@@ -62,40 +62,6 @@ card_mod:
     }
        --- FIM CÓDIGO ORIGINAL --- */
 
-    /* v12 — bloco único 2x2 dentro de mod-card ocupando todo o espaço. */
-    ha-card > hui-mod-card {
-      flex: 1 1 auto !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
-      box-sizing: border-box !important;
-      overflow: hidden !important;
-    }
-
-    ha-card > hui-mod-card hui-grid-card {
-      height: 100% !important;
-      min-height: 0 !important;
-    }
-
-    /* v13.1 debug marker (temporário): confirma visualmente branch/commit carregado. */
-    ha-card::after {
-      content: "CAM v13.1" !important;
-      position: absolute !important;
-      top: 8px !important;
-      right: 10px !important;
-      z-index: 5 !important;
-      font-size: 9px !important;
-      font-weight: 700 !important;
-      letter-spacing: 0.08em !important;
-      color: rgba(147, 197, 253, 0.95) !important;
-      background: rgba(15, 23, 42, 0.75) !important;
-      border: 1px solid rgba(147, 197, 253, 0.45) !important;
-      border-radius: 999px !important;
-      padding: 2px 7px !important;
-      pointer-events: none !important;
-    }
-
     /* v12/v13 — mod-card ocupa toda a área útil do bloco cameras. */
     ha-card > hui-mod-card {
       flex: 1 1 auto !important;
@@ -112,11 +78,10 @@ card_mod:
       min-height: 0 !important;
     }
 
-    /* v13 — empilhamento vertical do preview ativo precisa herdar altura total. */
+    /* v13 — preview ativo usa vertical-stack e precisa herdar altura total. */
     ha-card > hui-mod-card hui-vertical-stack-card,
     ha-card > hui-mod-card hui-vertical-stack-card #root {
       height: 100% !important;
       min-height: 0 !important;
     }
-
 cards: !include ../../shared/grid-cards/bento_cameras.yaml

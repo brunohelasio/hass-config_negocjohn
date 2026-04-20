@@ -1129,12 +1129,11 @@
 #             }
 
 # ─────────────────────────────────────────────────────────────────
-# v12 — REFACTOR FINAL: GRID 2x2 PREENCHENDO 100% DO BLOCO
-# Decisão técnica:
-#   - Removida dependência de câmera ativa + trilha inferior.
-#   - Quatro câmeras simultâneas em grid 2x2 com linhas iguais.
-#   - Sem aspect-ratio fixo nos tiles: cada célula ocupa a área disponível.
-#   - Sem efeitos externos (glow/outline) que possam causar clipping.
+# v13 — LAYOUT DEFINITIVO: DESTAQUE + 4 SELETORES CIRCULARES
+# Motivo técnico:
+#   - Preenche 100% da altura com grid vertical explícito (3fr / 1fr).
+#   - Remove miniaturas retangulares da base (origem do sangramento lateral).
+#   - Mantém as 4 câmeras disponíveis sem recorte do último item.
 # ─────────────────────────────────────────────────────────────────
 
 - type: custom:mod-card
@@ -1150,7 +1149,7 @@
       }
   card:
     type: grid
-    columns: 2
+    columns: 1
     square: false
     card_mod:
       style: |
@@ -1164,70 +1163,259 @@
         #root {
           height: 100% !important;
           display: grid !important;
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+          grid-template-columns: minmax(0, 1fr) !important;
+          grid-template-rows: minmax(0, 3fr) minmax(0, 1fr) !important;
           gap: 8px !important;
         }
     cards:
-      - &cam_tile_v12
-        type: picture-entity
-        entity: camera.sl_camera_2
-        camera_image: camera.sl_camera_2
-        camera_view: auto
-        name: Sala
-        show_name: true
-        show_state: false
-        tap_action:
-          action: more-info
+      - type: custom:mod-card
         card_mod:
-          style: &cam_tile_style_v12 |
+          style: |
             ha-card {
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
               height: 100% !important;
               min-height: 0 !important;
-              border-radius: 12px !important;
-              overflow: hidden !important;
-              border: 1px solid rgba(255,255,255,0.10) !important;
+              margin: 0 !important;
+            }
+        card:
+          type: vertical-stack
+          cards:
+            - type: conditional
+              conditions:
+                - entity: input_select.bento_active_camera
+                  state: camera.sl_camera_2
+              card:
+                type: picture-entity
+                entity: camera.sl_camera_2
+                camera_image: camera.sl_camera_2
+                camera_view: auto
+                name: Sala
+                show_name: true
+                show_state: false
+                tap_action:
+                  action: more-info
+                card_mod:
+                  style: &active_camera_style_v13 |
+                    ha-card {
+                      height: 100% !important;
+                      min-height: 0 !important;
+                      border-radius: 12px !important;
+                      overflow: hidden !important;
+                      border: 1px solid rgba(255,255,255,0.10) !important;
+                      box-shadow: none !important;
+                      background: #1b2535 !important;
+                    }
+                    hui-image,
+                    hui-image img,
+                    hui-image div[style*="background-image"] {
+                      width: 100% !important;
+                      height: 100% !important;
+                      object-fit: cover !important;
+                      background-size: cover !important;
+                      background-position: center !important;
+                    }
+
+            - type: conditional
+              conditions:
+                - entity: input_select.bento_active_camera
+                  state: camera.vr_camera_2
+              card:
+                type: picture-entity
+                entity: camera.vr_camera_2
+                camera_image: camera.vr_camera_2
+                camera_view: auto
+                name: Varanda
+                show_name: true
+                show_state: false
+                tap_action:
+                  action: more-info
+                card_mod:
+                  style: *active_camera_style_v13
+
+            - type: conditional
+              conditions:
+                - entity: input_select.bento_active_camera
+                  state: camera.cz_camera_2
+              card:
+                type: picture-entity
+                entity: camera.cz_camera_2
+                camera_image: camera.cz_camera_2
+                camera_view: auto
+                name: Cozinha
+                show_name: true
+                show_state: false
+                tap_action:
+                  action: more-info
+                card_mod:
+                  style: *active_camera_style_v13
+
+            - type: conditional
+              conditions:
+                - entity: input_select.bento_active_camera
+                  state: camera.as_camera_2
+              card:
+                type: picture-entity
+                entity: camera.as_camera_2
+                camera_image: camera.as_camera_2
+                camera_view: auto
+                name: Área de Serviço
+                show_name: true
+                show_state: false
+                tap_action:
+                  action: more-info
+                card_mod:
+                  style: *active_camera_style_v13
+
+      - type: custom:mod-card
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent !important;
+              border: none !important;
               box-shadow: none !important;
-              background: #1b2535 !important;
-            }
-            hui-image,
-            hui-image img,
-            hui-image div[style*="background-image"] {
               height: 100% !important;
-              width: 100% !important;
-              object-fit: cover !important;
-              background-size: cover !important;
-              background-position: center !important;
+              margin: 0 !important;
+              padding: 0 2px !important;
             }
-            .box {
-              background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0) 100%) !important;
-              padding: 12px 8px 6px !important;
-            }
-            .box .title {
-              font-size: 11px !important;
-              font-weight: 600 !important;
-              color: rgba(255,255,255,0.95) !important;
-              text-align: left !important;
-              letter-spacing: 0.2px !important;
-            }
+        card:
+          type: grid
+          columns: 4
+          square: false
+          card_mod:
+            style: |
+              ha-card {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                height: 100% !important;
+                min-height: 0 !important;
+              }
+              #root {
+                height: 100% !important;
+                display: grid !important;
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+                gap: 8px !important;
+                align-items: center !important;
+              }
+          cards:
+            - &camera_selector_v13
+              type: custom:button-card
+              entity: camera.sl_camera_2
+              show_icon: false
+              show_name: false
+              aspect_ratio: 1/1
+              tap_action:
+                action: perform-action
+                perform_action: input_select.select_option
+                data:
+                  entity_id: input_select.bento_active_camera
+                  option: camera.sl_camera_2
+              styles:
+                card:
+                  - border-radius: 50%
+                  - border: >
+                      [[[
+                        return states['input_select.bento_active_camera']?.state === 'camera.sl_camera_2'
+                          ? '2px solid #60a5fa'
+                          : '1px solid rgba(255,255,255,0.12)';
+                      ]]]
+                  - box-shadow: "none"
+                  - overflow: hidden
+                  - padding: 0
+                  - background-color: "#1b2535"
+                  - background-image: >
+                      [[[
+                        const pic = entity?.attributes?.entity_picture;
+                        return pic ? `url(${pic})` : 'none';
+                      ]]]
+                  - background-size: "cover"
+                  - background-position: "center"
 
-      - <<: *cam_tile_v12
-        entity: camera.vr_camera_2
-        camera_image: camera.vr_camera_2
-        name: Varanda
-        card_mod:
-          style: *cam_tile_style_v12
+            - <<: *camera_selector_v13
+              entity: camera.vr_camera_2
+              tap_action:
+                action: perform-action
+                perform_action: input_select.select_option
+                data:
+                  entity_id: input_select.bento_active_camera
+                  option: camera.vr_camera_2
+              styles:
+                card:
+                  - border-radius: 50%
+                  - border: >
+                      [[[
+                        return states['input_select.bento_active_camera']?.state === 'camera.vr_camera_2'
+                          ? '2px solid #60a5fa'
+                          : '1px solid rgba(255,255,255,0.12)';
+                      ]]]
+                  - box-shadow: "none"
+                  - overflow: hidden
+                  - padding: 0
+                  - background-color: "#1b2535"
+                  - background-image: >
+                      [[[
+                        const pic = entity?.attributes?.entity_picture;
+                        return pic ? `url(${pic})` : 'none';
+                      ]]]
+                  - background-size: "cover"
+                  - background-position: "center"
 
-      - <<: *cam_tile_v12
-        entity: camera.cz_camera_2
-        camera_image: camera.cz_camera_2
-        name: Cozinha
-        card_mod:
-          style: *cam_tile_style_v12
+            - <<: *camera_selector_v13
+              entity: camera.cz_camera_2
+              tap_action:
+                action: perform-action
+                perform_action: input_select.select_option
+                data:
+                  entity_id: input_select.bento_active_camera
+                  option: camera.cz_camera_2
+              styles:
+                card:
+                  - border-radius: 50%
+                  - border: >
+                      [[[
+                        return states['input_select.bento_active_camera']?.state === 'camera.cz_camera_2'
+                          ? '2px solid #60a5fa'
+                          : '1px solid rgba(255,255,255,0.12)';
+                      ]]]
+                  - box-shadow: "none"
+                  - overflow: hidden
+                  - padding: 0
+                  - background-color: "#1b2535"
+                  - background-image: >
+                      [[[
+                        const pic = entity?.attributes?.entity_picture;
+                        return pic ? `url(${pic})` : 'none';
+                      ]]]
+                  - background-size: "cover"
+                  - background-position: "center"
 
-      - <<: *cam_tile_v12
-        entity: camera.as_camera_2
-        camera_image: camera.as_camera_2
-        name: Área de Serviço
-        card_mod:
-          style: *cam_tile_style_v12
+            - <<: *camera_selector_v13
+              entity: camera.as_camera_2
+              tap_action:
+                action: perform-action
+                perform_action: input_select.select_option
+                data:
+                  entity_id: input_select.bento_active_camera
+                  option: camera.as_camera_2
+              styles:
+                card:
+                  - border-radius: 50%
+                  - border: >
+                      [[[
+                        return states['input_select.bento_active_camera']?.state === 'camera.as_camera_2'
+                          ? '2px solid #60a5fa'
+                          : '1px solid rgba(255,255,255,0.12)';
+                      ]]]
+                  - box-shadow: "none"
+                  - overflow: hidden
+                  - padding: 0
+                  - background-color: "#1b2535"
+                  - background-image: >
+                      [[[
+                        const pic = entity?.attributes?.entity_picture;
+                        return pic ? `url(${pic})` : 'none';
+                      ]]]
+                  - background-size: "cover"
+                  - background-position: "center"

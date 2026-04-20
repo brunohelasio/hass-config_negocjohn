@@ -261,6 +261,49 @@ script:
         target:
           entity_id: "{{ states('input_select.media_focus_player') }}"
 
+  media_focus_previous_track:
+    alias: "Media Grid v2 — Previous Track Focused Player"
+    mode: single
+    sequence:
+      - service: media_player.media_previous_track
+        target:
+          entity_id: "{{ states('input_select.media_focus_player') }}"
+
+  media_focus_next_track:
+    alias: "Media Grid v2 — Next Track Focused Player"
+    mode: single
+    sequence:
+      - service: media_player.media_next_track
+        target:
+          entity_id: "{{ states('input_select.media_focus_player') }}"
+
+  media_focus_volume_down:
+    alias: "Media Grid v2 — Volume Down Focused Player"
+    mode: single
+    sequence:
+      - service: media_player.volume_down
+        target:
+          entity_id: "{{ states('input_select.media_focus_player') }}"
+
+  media_focus_volume_up:
+    alias: "Media Grid v2 — Volume Up Focused Player"
+    mode: single
+    sequence:
+      - service: media_player.volume_up
+        target:
+          entity_id: "{{ states('input_select.media_focus_player') }}"
+
+  media_focus_volume_mute:
+    alias: "Media Grid v2 — Mute Focused Player"
+    mode: single
+    sequence:
+      - service: media_player.volume_mute
+        target:
+          entity_id: "{{ states('input_select.media_focus_player') }}"
+        data:
+          is_volume_muted: >
+            {{ not state_attr(states('input_select.media_focus_player'), 'is_volume_muted') | default(false) }}
+
 template:
   - sensor:
       - name: "Media Focus Visuals"

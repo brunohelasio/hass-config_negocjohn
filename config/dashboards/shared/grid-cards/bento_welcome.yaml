@@ -786,8 +786,15 @@
            +     '</div>'
            +   '</div>'
            // --- COLUNA DIREITA: grid 3-col (icone | label | valor) ---
-           +   '<div style="display:grid;grid-template-columns:20px auto 1fr;'
-           +     'row-gap:5px;column-gap:8px;align-items:center;">'
+           // --- CÓDIGO ORIGINAL COMENTADO (v12 — 1fr na ultima col empurrava valores)
+           //   +   '<div style="display:grid;grid-template-columns:20px auto 1fr;'
+           //   +     'row-gap:5px;column-gap:8px;align-items:center;">'
+           // --- FIM CÓDIGO ORIGINAL ---
+           // v13: justify-content:end empurra trio (icone|label|valor) para direita,
+           // aproximando-os dos valores alinhados na margem direita do bloco.
+           +   '<div style="display:grid;grid-template-columns:20px auto auto;'
+           +     'row-gap:5px;column-gap:10px;align-items:center;'
+           +     'justify-content:end;">'
            +     attrRow('mdi:water-percent',     '#60a5fa', 'Umid',   humid)
            +     attrRow('mdi:weather-windy',     '#7dd3fc', 'Vento',  wind)
            +     attrRow('mdi:weather-sunset-up', '#fb923c', 'Nascer', rising)

@@ -1,156 +1,192 @@
-type: vertical-stack
-cards:
-  - type: custom:button-card
-    entity: sensor.media_focus_visuals
-    name: ' '
-    show_icon: false
-    show_state: true
-    show_name: false
-    aspect_ratio: 1/1
-    triggers_update:
-      - sensor.media_focus_visuals
-      - input_select.media_focus_player
-      - media_player.android_tv_192_168_3_17
-      - media_player.echo_show
-      - media_player.spotifyplus_bruno_helasio
-      - media_player.echo_pop_office
-    tap_action:
-      action: call-service
-      service: script.media_focus_play_pause
-      haptic: light
-    hold_action:
-      action: more-info
-    state_display: >
-      [[[
-        if (entity && entity.attributes) {
-          const title = entity.attributes.media_title || '';
-          const artist = entity.attributes.media_artist || '';
-          return (artist && artist !== 'Pronto para tocar') ? artist + ' — ' + title : title;
-        }
-        return 'Sistema de Áudio';
-      ]]]
-    custom_fields:
-      artwork: >
-        [[[
-          if (entity && entity.attributes && entity.attributes.entity_picture) {
-            return '<img src="' + entity.attributes.entity_picture + '" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" />';
-          }
-          return '';
-        ]]]
-    styles:
-      card:
-        - border-radius: 18px 18px 0 0
-        - overflow: hidden
-        - padding: 0
-        - background-color: rgba(115, 115, 115, 0.2)
-      custom_fields:
-        artwork:
-          - position: absolute
-          - top: 0
-          - left: 0
-          - width: 100%
-          - height: 100%
-          - z-index: 0
-          - filter: >
-              [[[
-                if (!entity || !entity.attributes || !entity.attributes.entity_picture) return 'none';
-                const pic = entity.attributes.entity_picture;
-                if (pic.includes('standby_art.jpg')) return 'none';
-                return ['paused', 'idle'].includes(entity.state) ? 'blur(4px) brightness(50%) grayscale(40%)' : 'none';
-              ]]]
-          - transition: filter 0.4s ease
-      state:
-        - position: absolute
-        - bottom: 8%
-        - left: 5%
-        - right: 5%
-        - font-size: 0.9em
-        - color: rgba(255,255,255,0.9)
-        - text-shadow: 1px 1px 3px rgba(0,0,0,0.8)
-        - white-space: nowrap
-        - overflow: hidden
-        - text-overflow: ellipsis
-        - z-index: 1
-      name:
-        - display: none
-
-  - type: custom:mod-card
-    card_mod:
-      style: |
-        ha-card {
-          margin-top: -2px;
-          border-radius: 0 0 18px 18px;
-          padding: 8px 10px;
-          background: rgba(20, 24, 32, 0.58);
-          backdrop-filter: blur(14px) saturate(1.2);
-          -webkit-backdrop-filter: blur(14px) saturate(1.2);
-          border-top: 1px solid rgba(255,255,255,0.08);
-        }
+type: custom:button-card
+entity: sensor.media_focus_visuals
+name: ' '
+show_icon: false
+show_state: true
+show_name: false
+aspect_ratio: 1/1
+triggers_update:
+  - sensor.media_focus_visuals
+  - input_select.media_focus_player
+  - media_player.android_tv_192_168_3_17
+  - media_player.echo_show
+  - media_player.spotifyplus_bruno_helasio
+  - media_player.echo_pop_office
+tap_action:
+  action: call-service
+  service: script.media_focus_play_pause
+  haptic: light
+hold_action:
+  action: more-info
+state_display: >
+  [[[
+    if (entity && entity.attributes) {
+      const title = entity.attributes.media_title || '';
+      const artist = entity.attributes.media_artist || '';
+      return (artist && artist !== 'Pronto para tocar') ? artist + ' — ' + title : title;
+    }
+    return 'Sistema de Áudio';
+  ]]]
+custom_fields:
+  artwork: >
+    [[[
+      if (entity && entity.attributes && entity.attributes.entity_picture) {
+        return '<img src="' + entity.attributes.entity_picture + '" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" />';
+      }
+      return '';
+    ]]]
+  bar_bg: ''
+  vol_down:
     card:
-      type: horizontal-stack
-      cards:
-        - type: custom:button-card
-          icon: mdi:volume-minus
-          show_name: false
-          show_state: false
-          tap_action:
-            action: call-service
-            service: script.media_focus_volume_down
-          styles:
-            card: [background: none, box-shadow: none, border: none, padding: 0]
-            icon: [color: rgba(255,255,255,0.84), width: 22px]
-
-        - type: custom:button-card
-          icon: mdi:volume-plus
-          show_name: false
-          show_state: false
-          tap_action:
-            action: call-service
-            service: script.media_focus_volume_up
-          styles:
-            card: [background: none, box-shadow: none, border: none, padding: 0]
-            icon: [color: rgba(255,255,255,0.84), width: 22px]
-
-        - type: custom:button-card
-          icon: mdi:skip-previous
-          show_name: false
-          show_state: false
-          tap_action:
-            action: call-service
-            service: script.media_focus_previous_track
-          styles:
-            card: [background: none, box-shadow: none, border: none, padding: 0]
-            icon: [color: rgba(255,255,255,0.84), width: 22px]
-
-        - type: custom:button-card
-          icon: mdi:play-pause
-          show_name: false
-          show_state: false
-          tap_action:
-            action: call-service
-            service: script.media_focus_play_pause
-          styles:
-            card: [background: none, box-shadow: none, border: none, padding: 0]
-            icon: [color: rgba(255,255,255,0.95), width: 26px]
-
-        - type: custom:button-card
-          icon: mdi:skip-next
-          show_name: false
-          show_state: false
-          tap_action:
-            action: call-service
-            service: script.media_focus_next_track
-          styles:
-            card: [background: none, box-shadow: none, border: none, padding: 0]
-            icon: [color: rgba(255,255,255,0.84), width: 22px]
-
-        - type: custom:button-card
-          icon: mdi:volume-mute
-          show_name: false
-          show_state: false
-          tap_action:
-            action: call-service
-            service: script.media_focus_volume_mute
-          styles:
-            card: [background: none, box-shadow: none, border: none, padding: 0]
-            icon: [color: rgba(255,255,255,0.84), width: 22px]
+      type: custom:button-card
+      icon: mdi:volume-minus
+      show_name: false
+      show_state: false
+      tap_action:
+        action: call-service
+        service: script.media_focus_volume_down
+      styles:
+        card: [background: none, box-shadow: none, border: none, padding: 0]
+        icon: [color: rgba(255,255,255,0.88), width: 22px]
+  vol_up:
+    card:
+      type: custom:button-card
+      icon: mdi:volume-plus
+      show_name: false
+      show_state: false
+      tap_action:
+        action: call-service
+        service: script.media_focus_volume_up
+      styles:
+        card: [background: none, box-shadow: none, border: none, padding: 0]
+        icon: [color: rgba(255,255,255,0.88), width: 22px]
+  prev:
+    card:
+      type: custom:button-card
+      icon: mdi:skip-previous
+      show_name: false
+      show_state: false
+      tap_action:
+        action: call-service
+        service: script.media_focus_previous_track
+      styles:
+        card: [background: none, box-shadow: none, border: none, padding: 0]
+        icon: [color: rgba(255,255,255,0.88), width: 22px]
+  playpause:
+    card:
+      type: custom:button-card
+      icon: mdi:play-pause
+      show_name: false
+      show_state: false
+      tap_action:
+        action: call-service
+        service: script.media_focus_play_pause
+      styles:
+        card: [background: none, box-shadow: none, border: none, padding: 0]
+        icon: [color: rgba(255,255,255,0.98), width: 26px]
+  next:
+    card:
+      type: custom:button-card
+      icon: mdi:skip-next
+      show_name: false
+      show_state: false
+      tap_action:
+        action: call-service
+        service: script.media_focus_next_track
+      styles:
+        card: [background: none, box-shadow: none, border: none, padding: 0]
+        icon: [color: rgba(255,255,255,0.88), width: 22px]
+  mute:
+    card:
+      type: custom:button-card
+      icon: mdi:volume-mute
+      show_name: false
+      show_state: false
+      tap_action:
+        action: call-service
+        service: script.media_focus_volume_mute
+      styles:
+        card: [background: none, box-shadow: none, border: none, padding: 0]
+        icon: [color: rgba(255,255,255,0.88), width: 22px]
+styles:
+  card:
+    - border-radius: 5%
+    - overflow: hidden
+    - padding: 0
+    - background-color: rgba(115, 115, 115, 0.2)
+  custom_fields:
+    artwork:
+      - position: absolute
+      - top: 0
+      - left: 0
+      - width: 100%
+      - height: 100%
+      - z-index: 0
+      - filter: >
+          [[[
+            if (!entity || !entity.attributes || !entity.attributes.entity_picture) return 'none';
+            const pic = entity.attributes.entity_picture;
+            if (pic.includes('standby_art.jpg')) return 'none';
+            return ['paused', 'idle'].includes(entity.state) ? 'blur(4px) brightness(50%) grayscale(40%)' : 'none';
+          ]]]
+      - transition: filter 0.4s ease
+    bar_bg:
+      - position: absolute
+      - left: 0
+      - right: 0
+      - bottom: 0
+      - height: 24%
+      - z-index: 1
+      - background: linear-gradient(180deg, rgba(20, 24, 32, 0) 0%, rgba(20, 24, 32, 0.66) 35%, rgba(20, 24, 32, 0.74) 100%)
+      - backdrop-filter: blur(10px) saturate(1.2)
+      - -webkit-backdrop-filter: blur(10px) saturate(1.2)
+    vol_down:
+      - position: absolute
+      - left: 8%
+      - bottom: 4%
+      - z-index: 2
+      - width: 10%
+    vol_up:
+      - position: absolute
+      - left: 20%
+      - bottom: 4%
+      - z-index: 2
+      - width: 10%
+    prev:
+      - position: absolute
+      - left: 38%
+      - bottom: 4%
+      - z-index: 2
+      - width: 10%
+    playpause:
+      - position: absolute
+      - left: 50%
+      - bottom: 4%
+      - z-index: 2
+      - width: 10%
+    next:
+      - position: absolute
+      - left: 62%
+      - bottom: 4%
+      - z-index: 2
+      - width: 10%
+    mute:
+      - position: absolute
+      - left: 80%
+      - bottom: 4%
+      - z-index: 2
+      - width: 10%
+  state:
+    - position: absolute
+    - bottom: 12%
+    - left: 5%
+    - right: 5%
+    - font-size: 0.9em
+    - color: rgba(255,255,255,0.95)
+    - text-shadow: 1px 1px 3px rgba(0,0,0,0.85)
+    - white-space: nowrap
+    - overflow: hidden
+    - text-overflow: ellipsis
+    - z-index: 3
+  name:
+    - display: none

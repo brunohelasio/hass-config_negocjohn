@@ -90,17 +90,19 @@ custom_fields:
 
   dots: >
     [[[
-      const pcOn = states['switch.macbook']?.state === 'on';
-      const acOn = !['off','unavailable','unknown',''].includes(states['climate.ac_office']?.state ?? 'off');
-      const speaker = ['playing','on','paused'].includes(states['media_player.echo_pop_office']?.state ?? '');
-      const home = states['person.bruno_helasio']?.state === 'home';
-      const dot = (icon, active, color) =>
-        `<div style="width:26px;height:26px;border-radius:50%;background:${active ? color + '22' : 'rgba(255,255,255,0.08)'};border:1px solid ${active ? color + '55' : 'rgba(255,255,255,0.12)'};display:flex;align-items:center;justify-content:center;">` +
-        `<ha-icon icon="${icon}" style="width:14px;height:14px;color:${active ? color : 'rgba(255,255,255,0.35)'};display:flex;"></ha-icon></div>`;
-      return `<div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;">
-        ${dot('mdi:account', home, '#60a5fa')}
-        ${dot('mdi:desktop-classic', pcOn, '#a78bfa')}
-        ${dot('mdi:snowflake', acOn, '#4facfe')}
-        ${dot('mdi:speaker-wireless', speaker, '#ff9900')}
-      </div>`;
+      const dotBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
+      const iconColor = variables.state_on ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)';
+      const renderDot = (icon) => `
+        <div style="width: 30px; height: 30px; border-radius: 50%; background: ${dotBg}; display: flex; justify-content: center; align-items: center; color: ${iconColor};">
+          <ha-icon icon="${icon}" style="width: 18px; height: 18px; display: flex;"></ha-icon>
+        </div>
+      `;
+      return `
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          ${renderDot('mdi:account')}
+          ${renderDot('mdi:desktop-classic')}
+          ${renderDot('mdi:snowflake')}
+          ${renderDot('mdi:speaker-wireless')}
+        </div>
+      `;
     ]]]

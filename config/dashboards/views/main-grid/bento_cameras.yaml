@@ -3,30 +3,25 @@ view_layout:
   grid-area: cameras
 card_mod:
   style: |
-    /* 1. Faz o "envelope" do cartão esticar até o fundo da célula do grid */
     :host {
       height: 100% !important;
     }
-    
+
     ha-card {
-      /* 2. Faz o cartão acompanhar o envelope */
       height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       padding: 10px !important;
       gap: 8px !important;
 
-      /* 3. O SEU Vidro Perfeito */
       background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;
       backdrop-filter: blur(18px) saturate(1.2) !important;
       -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
       border: 1px solid rgba(255,255,255,0.1) !important;
 
-      /* 4. Força o arredondamento e IMPEDE que o conteúdo vaze e deixe quadrado */
       border-radius: 18px !important;
       overflow: hidden !important;
 
-      /* 5. Desliga a interferência do tema nos filhos */
       --ha-card-glass-tint: transparent !important;
       --ha-card-backdrop-filter: none !important;
       --ha-card-glass-inset-shadow: none !important;
@@ -38,7 +33,7 @@ card_mod:
       display: none !important;
     }
 
-    /* --- CÓDIGO ORIGINAL COMENTADO (v5/v6 — horizontal-stack) ---
+    /* --- CÓDIGO ORIGINAL COMENTADO (v5-v11) ---
     ha-card > hui-conditional-card {
       flex: 1 1 auto !important;
       min-height: 0 !important;
@@ -49,18 +44,6 @@ card_mod:
       min-height: 110px !important;
       width: 100% !important;
     }
-       --- FIM CÓDIGO ORIGINAL --- */
-
-    /* v7 — Substituímos horizontal-stack por type:grid columns:4 na v9 dos
-       mini tabs. O filho agora é hui-grid-card (não hui-horizontal-stack-card).
-       Altura dos tabs é determinada pelo aspect-ratio 16/11 aplicado em cada
-       picture-entity — não precisamos de altura fixa no container.
-       v8: reforço contra bleed do último tab (Área) na margem direita —
-       max-width + min-width + box-sizing no hui-grid-card. */
-    ha-card > hui-conditional-card {
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
-    }
     ha-card > hui-grid-card {
       flex: 0 0 auto !important;
       width: 100% !important;
@@ -68,5 +51,37 @@ card_mod:
       min-width: 0 !important;
       box-sizing: border-box !important;
       overflow: hidden !important;
+    }
+    ha-card > hui-mod-card {
+      flex: 0 0 auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      overflow: visible !important;
+    }
+       --- FIM CÓDIGO ORIGINAL --- */
+
+    /* v12/v13 — mod-card ocupa toda a área útil do bloco cameras. */
+    ha-card > hui-mod-card {
+      flex: 1 1 auto !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+    }
+
+    ha-card > hui-mod-card hui-grid-card {
+      height: 100% !important;
+      min-height: 0 !important;
+    }
+
+    /* v13 — preview ativo usa vertical-stack e precisa herdar altura total. */
+    ha-card > hui-mod-card hui-vertical-stack-card,
+    ha-card > hui-mod-card hui-vertical-stack-card #root {
+      height: 100% !important;
+      min-height: 0 !important;
     }
 cards: !include ../../shared/grid-cards/bento_cameras.yaml

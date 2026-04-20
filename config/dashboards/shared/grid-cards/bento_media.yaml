@@ -1,19 +1,4 @@
 - type: custom:swipe-card
-  card_mod:
-    style: |
-      ha-card {
-        height: 100% !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-      }
-
-      .swiper,
-      .swiper-wrapper,
-      .swiper-slide {
-        height: 100% !important;
-        min-height: 0 !important;
-      }
   parameters:
     pagination:
       type: bullets
@@ -28,13 +13,14 @@
     followFinger: true
     grabCursor: true
   cards:
-    # SLIDE 1 — artwork principal (estrutura original)
+    ########## SLIDE 1: ARTWORK FULLSCREEN ##########
     - type: custom:button-card
       entity: sensor.media_focus_visuals
       name: ' '
       show_icon: false
       show_state: true
       show_name: false
+      aspect_ratio: 1/1
       triggers_update:
         - sensor.media_focus_visuals
         - input_select.media_focus_player
@@ -49,7 +35,7 @@
       hold_action:
         action: more-info
       state_display: >
-        [[[
+        [[[ 
           if (entity && entity.attributes) {
             const title = entity.attributes.media_title || '';
             const artist = entity.attributes.media_artist || '';
@@ -59,7 +45,7 @@
         ]]]
       custom_fields:
         artwork: >
-          [[[
+          [[[ 
             if (entity && entity.attributes && entity.attributes.entity_picture) {
               return '<img src="' + entity.attributes.entity_picture + '" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" />';
             }
@@ -67,9 +53,7 @@
           ]]]
       styles:
         card:
-          - height: 100%
-          - min-height: 0
-          - border-radius: 14px
+          - border-radius: 5%
           - overflow: hidden
           - padding: 0
           - background-color: rgba(115, 115, 115, 0.2)
@@ -81,8 +65,9 @@
             - width: 100%
             - height: 100%
             - z-index: 0
+            # Filtro Inteligente: ignora a imagem standby, aplica na arte em pause
             - filter: >
-                [[[
+                [[[ 
                   if (!entity || !entity.attributes || !entity.attributes.entity_picture) return 'none';
                   const pic = entity.attributes.entity_picture;
                   if (pic.includes('standby_art.jpg')) {
@@ -93,6 +78,7 @@
                   }
                   return 'none';
                 ]]]
+            # Animação suave entre os estados (play <-> pause)
             - transition: filter 0.4s ease
         state:
           - position: absolute
@@ -109,11 +95,12 @@
         name:
           - display: none
 
-    # SLIDE 2 — grid 2x2 (opção conservadora)
+    ########## SLIDE 2: GRID 2x2 ##########
     - type: grid
       columns: 2
       square: false
       cards:
+        # Slot 1: Smart TV
         - type: custom:button-card
           entity: media_player.android_tv_192_168_3_17
           template:
@@ -128,8 +115,12 @@
               option: media_player.android_tv_192_168_3_17
             haptic: light
           hold_action:
-            action: more-info
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data: !include ../popup/media_all_players.yaml
 
+        # Slot 2: Echo Show
         - type: custom:button-card
           entity: media_player.echo_show
           template:
@@ -144,11 +135,15 @@
               option: media_player.echo_show
             haptic: light
           hold_action:
-            action: more-info
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data: !include ../popup/media_all_players.yaml
+          # Esconde duplicidade DE MODO SEGURO (preserva o template nativo se retornar undefined)
           styles:
             card:
               - background-image: >
-                  [[[
+                  [[[ 
                     if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
                       return 'none !important';
                     }
@@ -157,13 +152,14 @@
             custom_fields:
               artwork:
                 - display: >
-                    [[[
+                    [[[ 
                       if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
                         return 'none !important';
                       }
                       return undefined;
                     ]]]
 
+        # Slot 3: Spotify
         - type: custom:button-card
           entity: media_player.spotifyplus_bruno_helasio
           template:
@@ -178,8 +174,12 @@
               option: media_player.spotifyplus_bruno_helasio
             haptic: light
           hold_action:
-            action: more-info
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data: !include ../popup/media_all_players.yaml
 
+        # Slot 4: Echo Pop Office
         - type: custom:button-card
           entity: media_player.echo_pop_office
           template:
@@ -194,11 +194,15 @@
               option: media_player.echo_pop_office
             haptic: light
           hold_action:
-            action: more-info
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data: !include ../popup/media_all_players.yaml
+          # Esconde duplicidade DE MODO SEGURO (preserva o template nativo se retornar undefined)
           styles:
             card:
               - background-image: >
-                  [[[
+                  [[[ 
                     if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
                       return 'none !important';
                     }
@@ -207,7 +211,7 @@
             custom_fields:
               artwork:
                 - display: >
-                    [[[
+                    [[[ 
                       if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
                         return 'none !important';
                       }

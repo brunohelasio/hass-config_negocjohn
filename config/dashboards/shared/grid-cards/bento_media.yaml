@@ -1,28 +1,258 @@
-- type: markdown
-  content: |
-    <small style="letter-spacing:.12em;opacity:.58;">MÍDIA</small>
-
-    <br>
-
-    🎵 **As It Was**
-
-    Harry Styles · Sala
-
-    ⏯ ▶⏭ TV Sala
+- type: custom:mod-card
   card_mod:
     style: |
       ha-card {
-        background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-        backdrop-filter: blur(18px) saturate(1.2);
-        -webkit-backdrop-filter: blur(18px) saturate(1.2);
-        border-right: 1px solid rgba(255,255,255,0.08);
-        border-radius: 0;
-        border-top: none;
-        border-bottom: none;
-        border-left: none;
-        box-shadow: none;
-        height: 100%;
-        overflow: hidden;
-        aspect-ratio: unset;
-        padding: 0;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        height: 100% !important;
+        overflow: visible !important;
+        margin: 0 -14px !important;
+        padding: 0 !important;
       }
+
+      /* Faz o swipe ocupar toda a altura útil do bloco */
+      ha-card > hui-swipe-card,
+      ha-card > hui-swipe-card > div {
+        height: 100% !important;
+        min-height: 0 !important;
+      }
+
+      ha-card .swiper,
+      ha-card .swiper-wrapper,
+      ha-card .swiper-slide {
+        height: 100% !important;
+        min-height: 0 !important;
+      }
+  card:
+    type: custom:swipe-card
+    parameters:
+      pagination:
+        type: bullets
+        clickable: true
+      effect: slide
+      speed: 550
+      spaceBetween: 10
+      threshold: 7
+      autoHeight: false
+      observer: true
+      followFinger: true
+      grabCursor: true
+    cards:
+      # SLIDE 1 — HERO PANORÂMICO (FULL HEIGHT)
+      - type: custom:button-card
+        entity: sensor.media_focus_visuals
+        name: ' '
+        show_icon: false
+        show_state: true
+        show_name: false
+        triggers_update:
+          - sensor.media_focus_visuals
+          - input_select.media_focus_player
+          - media_player.android_tv_192_168_3_17
+          - media_player.echo_show
+          - media_player.spotifyplus_bruno_helasio
+          - media_player.echo_pop_office
+        tap_action:
+          action: call-service
+          service: script.media_focus_play_pause
+          haptic: light
+        hold_action:
+          action: more-info
+        state_display: >
+          [[[ 
+            if (entity && entity.attributes) {
+              const title = entity.attributes.media_title || '';
+              const artist = entity.attributes.media_artist || '';
+              return (artist && artist !== 'Pronto para tocar') ? artist + ' — ' + title : title;
+            }
+            return 'Sistema de Áudio';
+          ]]]
+        custom_fields:
+          artwork: >
+            [[[ 
+              if (entity && entity.attributes && entity.attributes.entity_picture) {
+                return '<img src="' + entity.attributes.entity_picture + '" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />';
+              }
+              return '';
+            ]]]
+          gradient: |
+            [[[ 
+              return '<div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(5,10,18,0.10) 0%, rgba(5,10,18,0.52) 68%, rgba(5,10,18,0.80) 100%);"></div>';
+            ]]]
+        styles:
+          card:
+            - height: 100%
+            - min-height: 0
+            - border-radius: 16px
+            - overflow: hidden
+            - padding: 0
+            - background-color: rgba(115, 115, 115, 0.2)
+          custom_fields:
+            artwork:
+              - position: absolute
+              - inset: 0
+              - z-index: 0
+              - filter: >
+                  [[[ 
+                    if (!entity || !entity.attributes || !entity.attributes.entity_picture) return 'none';
+                    const pic = entity.attributes.entity_picture;
+                    if (pic.includes('standby_art.jpg')) return 'none';
+                    if (entity.state !== 'playing') return 'blur(4px) brightness(50%) grayscale(40%)';
+                    return 'none';
+                  ]]]
+              - transition: filter 0.4s ease
+            gradient:
+              - position: absolute
+              - inset: 0
+              - z-index: 1
+            state:
+              - position: absolute
+              - bottom: 14px
+              - left: 14px
+              - right: 14px
+              - font-size: 0.94em
+              - font-weight: 600
+              - color: rgba(255,255,255,0.93)
+              - text-shadow: 1px 2px 5px rgba(0,0,0,0.72)
+              - white-space: nowrap
+              - overflow: hidden
+              - text-overflow: ellipsis
+              - z-index: 2
+            name:
+              - display: none
+
+      # SLIDE 2 — RAIL HORIZONTAL DOS PLAYERS
+      - type: custom:mod-card
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent !important;
+              border: none !important;
+              box-shadow: none !important;
+              height: 100% !important;
+              padding: 0 !important;
+            }
+
+            ha-card > hui-swipe-card,
+            ha-card > hui-swipe-card > div,
+            ha-card .swiper,
+            ha-card .swiper-wrapper,
+            ha-card .swiper-slide {
+              height: 100% !important;
+              min-height: 0 !important;
+            }
+        card:
+          type: custom:swipe-card
+          parameters:
+            slidesPerView: 2.15
+            spaceBetween: 10
+            freeMode: true
+            mousewheel:
+              forceToAxis: true
+            pagination:
+              type: bullets
+              clickable: true
+            speed: 450
+            autoHeight: false
+            observer: true
+            followFinger: true
+            grabCursor: true
+          cards:
+            - type: custom:button-card
+              entity: media_player.android_tv_192_168_3_17
+              template:
+                - base
+                - media_premium
+                - icon_tv
+              tap_action:
+                action: call-service
+                service: input_select.select_option
+                service_data:
+                  entity_id: input_select.media_focus_player
+                  option: media_player.android_tv_192_168_3_17
+                haptic: light
+              hold_action:
+                action: more-info
+              styles:
+                card:
+                  - height: 100%
+                  - border-radius: 16px
+
+            - type: custom:button-card
+              entity: media_player.echo_show
+              template:
+                - base
+                - media_premium
+                - icon_tv
+              tap_action:
+                action: call-service
+                service: input_select.select_option
+                service_data:
+                  entity_id: input_select.media_focus_player
+                  option: media_player.echo_show
+                haptic: light
+              hold_action:
+                action: more-info
+              styles:
+                card:
+                  - height: 100%
+                  - border-radius: 16px
+                custom_fields:
+                  artwork:
+                    - display: >
+                        [[[ 
+                          if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                            return 'none !important';
+                          }
+                          return undefined;
+                        ]]]
+
+            - type: custom:button-card
+              entity: media_player.spotifyplus_bruno_helasio
+              template:
+                - base
+                - media_premium
+                - icon_spotify
+              tap_action:
+                action: call-service
+                service: input_select.select_option
+                service_data:
+                  entity_id: input_select.media_focus_player
+                  option: media_player.spotifyplus_bruno_helasio
+                haptic: light
+              hold_action:
+                action: more-info
+              styles:
+                card:
+                  - height: 100%
+                  - border-radius: 16px
+
+            - type: custom:button-card
+              entity: media_player.echo_pop_office
+              template:
+                - base
+                - media_premium
+                - icon_tv
+              tap_action:
+                action: call-service
+                service: input_select.select_option
+                service_data:
+                  entity_id: input_select.media_focus_player
+                  option: media_player.echo_pop_office
+                haptic: light
+              hold_action:
+                action: more-info
+              styles:
+                card:
+                  - height: 100%
+                  - border-radius: 16px
+                custom_fields:
+                  artwork:
+                    - display: >
+                        [[[ 
+                          if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                            return 'none !important';
+                          }
+                          return undefined;
+                        ]]]

@@ -1,10 +1,108 @@
-type: markdown
-content: "## Q. Miguel"
-card_mod:
-  style: |
-    ha-card {
-      background: none !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-    }
+type: custom:button-card
+entity: light.grupo_luzes_quarto_miguel
+name: Q. Miguel
+template:
+  - rooms_base
+  - icon_double_bed
+
+variables:
+  state: "[[[ return entity.state; ]]]"
+  state_on: >
+    [[[ 
+      return ['on', 'home', 'active', 'yes'].indexOf(!entity || entity.state) !== -1; 
+    ]]]
+  light_entity: light.grupo_luzes_quarto_miguel
+  active: sensor.quarto_miguel_active
+
+tap_action:
+  action: toggle
+double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
+hold_action:
+  action: perform-action
+  perform_action: light.turn_off
+  data:
+    entity_id: light.grupo_luzes_quarto_miguel
+
+styles:
+  card:
+    - border: "none !important"
+    - box-shadow: "none !important"
+    - padding: "16px !important"
+    - overflow: "visible !important"
+  grid:
+    - grid-template-areas: '"icon temp dots" "n n dots" "s s dots"'
+    - grid-template-columns: "min-content 1fr min-content"
+    - grid-template-rows: "1fr min-content min-content"
+  name:
+    - justify-self: "start"
+    - align-self: "end"
+    - font-size: "15px"
+    - font-weight: "700"
+    - margin-bottom: "2px !important"
+    - color: >
+        [[[ return variables.state_on ? 'black' : 'white'; ]]]
+  state:
+    - justify-self: "start"
+    - align-self: "end"
+    - font-size: "11px"
+    - font-weight: "500"
+    - margin-bottom: "0px !important"
+    - color: >
+        [[[ return variables.state_on ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)'; ]]]
+  custom_fields:
+    icon:
+      - justify-self: "start"
+      - align-self: "start"
+      - width: "65px !important"
+      - height: "65px !important"
+      - margin-top: "0px !important"
+    temp:
+      - justify-self: "start"
+      - align-self: "start"
+      - margin-left: "12px"
+      - margin-top: "4px"
+    dots:
+      - justify-self: "end"
+      - align-self: "start"
+
+custom_fields:
+  temp: >
+    [[[
+      const firstValid = (ids) => {
+        for (const id of ids) {
+          const e = states[id];
+          if (e && !['unknown','unavailable','none',''].includes((e.state || '').toLowerCase())) return e;
+        }
+        return null;
+      };
+      const t = firstValid(['sensor.temperatura_quarto_miguel', 'sensor.qmi_temperatura']);
+      const h = firstValid(['sensor.umidade_quarto_miguel', 'sensor.qmi_umidade']);
+      if (!t) return '';
+      const color = variables.state_on ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)';
+      const subColor = variables.state_on ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.5)';
+      return `
+        <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1;">
+          <span style="font-size: 13px; font-weight: 700; color: ${color};">${t.state}°</span>
+          <span style="font-size: 11px; color: ${subColor};">${h ? h.state + '%' : ''}</span>
+        </div>
+      `;
+    ]]]
+
+  dots: >
+    [[[
+      const dotBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
+      const iconColor = variables.state_on ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)';
+      const renderDot = (icon) => `
+        <div style="width: 30px; height: 30px; border-radius: 50%; background: ${dotBg}; display: flex; justify-content: center; align-items: center; color: ${iconColor};">
+          <ha-icon icon="${icon}" style="width: 18px; height: 18px; display: flex;"></ha-icon>
+        </div>
+      `;
+      return `
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          ${renderDot('mdi:account')}
+          ${renderDot('mdi:lightbulb-on')}
+          ${renderDot('mdi:snowflake')}
+          ${renderDot('mdi:speaker-wireless')}
+        </div>
+      `;
+    ]]]

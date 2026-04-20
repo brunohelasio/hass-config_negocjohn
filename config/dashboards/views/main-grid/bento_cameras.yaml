@@ -38,21 +38,7 @@ card_mod:
       display: none !important;
     }
 
-    /* --- CÓDIGO ORIGINAL COMENTADO (v5 — horizontal-stack 58px muito baixo) ---
-    ha-card > hui-conditional-card {
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
-    }
-    ha-card > hui-horizontal-stack-card {
-      flex: 0 0 auto !important;
-      height: 58px !important;
-      min-height: 58px !important;
-    }
-       --- FIM CÓDIGO ORIGINAL --- */
-
-    /* v6 — mini tabs ocupam mais altura (10px top + 10px bottom mantidos via padding)
-       - conditional (camera grande): flex 1 fr (ocupa espaço restante)
-       - horizontal-stack (mini tabs): altura 110px, full width */
+    /* --- CÓDIGO ORIGINAL COMENTADO (v5/v6 — horizontal-stack) ---
     ha-card > hui-conditional-card {
       flex: 1 1 auto !important;
       min-height: 0 !important;
@@ -61,6 +47,20 @@ card_mod:
       flex: 0 0 auto !important;
       height: 110px !important;
       min-height: 110px !important;
+      width: 100% !important;
+    }
+       --- FIM CÓDIGO ORIGINAL --- */
+
+    /* v7 — Substituímos horizontal-stack por type:grid columns:4 na v9 dos
+       mini tabs. O filho agora é hui-grid-card (não hui-horizontal-stack-card).
+       Altura dos tabs é determinada pelo aspect-ratio 16/11 aplicado em cada
+       picture-entity — não precisamos de altura fixa no container. */
+    ha-card > hui-conditional-card {
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+    }
+    ha-card > hui-grid-card {
+      flex: 0 0 auto !important;
       width: 100% !important;
     }
 cards: !include ../../shared/grid-cards/bento_cameras.yaml

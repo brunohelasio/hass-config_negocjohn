@@ -1,6 +1,11 @@
 type: custom:button-card
 entity: light.grupo_luzes_office
 name: Office
+triggers_update:
+  - switch.macbook
+  - climate.ac_office
+  - media_player.echo_pop_office
+  - person.bruno_helasio
 template:
   - rooms_base
   - icon_office
@@ -11,11 +16,14 @@ variables:
     [[[ 
       return ['on', 'home', 'active', 'yes'].indexOf(!entity || entity.state) !== -1; 
     ]]]
-  light_entity: light.grupo_luzes_office
+  light_entity: light.office_switch_3
   active: sensor.office_active
 
 tap_action:
-  action: toggle
+  action: perform-action
+  perform_action: light.toggle
+  data:
+    entity_id: light.office_switch_3
 double_tap_action: !include ../../shared/popup/rooms/office.yaml
 hold_action:
   action: perform-action
@@ -90,19 +98,23 @@ custom_fields:
 
   dots: >
     [[[
-      const dotBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
-      const iconColor = variables.state_on ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)';
-      const renderDot = (icon) => `
-        <div style="width: 30px; height: 30px; border-radius: 50%; background: ${dotBg}; display: flex; justify-content: center; align-items: center; color: ${iconColor};">
-          <ha-icon icon="${icon}" style="width: 18px; height: 18px; display: flex;"></ha-icon>
+      const home = states['person.bruno_helasio']?.state === 'home';
+      const pcOn = states['switch.macbook']?.state === 'on';
+      const acOn = !['off','unavailable','unknown',''].includes(states['climate.ac_office']?.state ?? 'off');
+      const alexaOn = ['playing','on','paused','idle'].includes(states['media_player.echo_pop_office']?.state ?? '');
+      const baseBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
+      const baseColor = variables.state_on ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.6)';
+      const renderDot = (icon, active, activeColor) => `
+        <div style="width: 30px; height: 30px; border-radius: 50%; background: ${active ? activeColor + '22' : baseBg}; border: 1px solid ${active ? activeColor + '55' : 'transparent'}; display: flex; justify-content: center; align-items: center; color: ${active ? activeColor : baseColor};">
+          <ha-icon icon="${icon}" style="width: 18px; height: 18px; display: flex; color: ${active ? activeColor : baseColor};"></ha-icon>
         </div>
       `;
       return `
         <div style="display: flex; flex-direction: column; gap: 6px;">
-          ${renderDot('mdi:account')}
-          ${renderDot('mdi:desktop-classic')}
-          ${renderDot('mdi:snowflake')}
-          ${renderDot('mdi:speaker-wireless')}
+          ${renderDot('mdi:account', home, '#60a5fa')}
+          ${renderDot('mdi:desktop-classic', pcOn, '#a78bfa')}
+          ${renderDot('mdi:snowflake', acOn, '#4facfe')}
+          ${renderDot('mdi:speaker-wireless', alexaOn, '#ff9900')}
         </div>
       `;
     ]]]

@@ -32,7 +32,10 @@ variables:
 
 # ─── AÇÕES ────────────────────────────────────────────────
 tap_action:
-  action: toggle
+  action: perform-action
+  perform_action: light.toggle
+  data:
+    entity_id: light.cz_luz_principal
 double_tap_action: !include ../../shared/popup/rooms/kitchen.yaml
 hold_action:
   action: perform-action

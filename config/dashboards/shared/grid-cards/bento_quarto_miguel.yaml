@@ -11,11 +11,14 @@ variables:
     [[[ 
       return ['on', 'home', 'active', 'yes'].indexOf(!entity || entity.state) !== -1; 
     ]]]
-  light_entity: light.grupo_luzes_quarto_miguel
+  light_entity: light.quarto_miguel_switch_2
   active: sensor.quarto_miguel_active
 
 tap_action:
-  action: toggle
+  action: perform-action
+  perform_action: light.toggle
+  data:
+    entity_id: light.quarto_miguel_switch_2
 double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
 hold_action:
   action: perform-action

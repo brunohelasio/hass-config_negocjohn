@@ -7,7 +7,7 @@ card_mod:
     :host {
       height: 100% !important;
     }
-    
+
     ha-card {
       /* 2. Faz o cartão acompanhar o envelope */
       height: 100% !important;
@@ -20,11 +20,11 @@ card_mod:
       backdrop-filter: blur(18px) saturate(1.2) !important;
       -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
       border: 1px solid rgba(255,255,255,0.1) !important;
-      
+
       /* 4. Força o arredondamento e IMPEDE que o conteúdo vaze e deixe quadrado */
       border-radius: 18px !important;
       overflow: hidden !important;
-      
+
       /* 5. Desliga a interferência do tema nos filhos */
       --ha-card-glass-tint: transparent !important;
       --ha-card-backdrop-filter: none !important;
@@ -32,7 +32,7 @@ card_mod:
       --ha-card-background: transparent !important;
       --ha-card-border-width: 0 !important;
     }
-    
+
     ha-card::before {
       display: none !important;
     }

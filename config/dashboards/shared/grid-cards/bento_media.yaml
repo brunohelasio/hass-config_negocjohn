@@ -1,28 +1,219 @@
-- type: markdown
-  content: |
-    <small style="letter-spacing:.12em;opacity:.58;">MÍDIA</small>
+- type: custom:swipe-card
+  parameters:
+    pagination:
+      type: bullets
+      clickable: true
+    roundLengths: true
+    effect: slide
+    speed: 600
+    spaceBetween: 12
+    threshold: 7
+    autoHeight: false
+    observer: true
+    followFinger: true
+    grabCursor: true
+  cards:
+    ########## SLIDE 1: ARTWORK FULLSCREEN ##########
+    - type: custom:button-card
+      entity: sensor.media_focus_visuals
+      name: ' '
+      show_icon: false
+      show_state: true
+      show_name: false
+      aspect_ratio: 1/1
+      triggers_update:
+        - sensor.media_focus_visuals
+        - input_select.media_focus_player
+        - media_player.android_tv_192_168_3_17
+        - media_player.echo_show
+        - media_player.spotifyplus_bruno_helasio
+        - media_player.echo_pop_office
+      tap_action:
+        action: call-service
+        service: script.media_focus_play_pause
+        haptic: light
+      hold_action:
+        action: more-info
+      state_display: >
+        [[[ 
+          if (entity && entity.attributes) {
+            const title = entity.attributes.media_title || '';
+            const artist = entity.attributes.media_artist || '';
+            return (artist && artist !== 'Pronto para tocar') ? artist + ' — ' + title : title;
+          }
+          return 'Sistema de Áudio';
+        ]]]
+      custom_fields:
+        artwork: >
+          [[[ 
+            if (entity && entity.attributes && entity.attributes.entity_picture) {
+              return '<img src="' + entity.attributes.entity_picture + '" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" />';
+            }
+            return '';
+          ]]]
+      styles:
+        card:
+          - border-radius: 5%
+          - overflow: hidden
+          - padding: 0
+          - background-color: rgba(115, 115, 115, 0.2)
+        custom_fields:
+          artwork:
+            - position: absolute
+            - top: 0
+            - left: 0
+            - width: 100%
+            - height: 100%
+            - z-index: 0
+            # Filtro Inteligente: ignora a imagem standby, aplica na arte em pause
+            - filter: >
+                [[[ 
+                  if (!entity || !entity.attributes || !entity.attributes.entity_picture) return 'none';
+                  const pic = entity.attributes.entity_picture;
+                  if (pic.includes('standby_art.jpg')) {
+                    return 'none';
+                  }
+                  if (entity.state !== 'playing') {
+                    return 'blur(4px) brightness(50%) grayscale(40%)';
+                  }
+                  return 'none';
+                ]]]
+            # Animação suave entre os estados (play <-> pause)
+            - transition: filter 0.4s ease
+        state:
+          - position: absolute
+          - bottom: 8%
+          - left: 5%
+          - right: 5%
+          - font-size: 0.9em
+          - color: rgba(255,255,255,0.9)
+          - text-shadow: 1px 1px 3px rgba(0,0,0,0.8)
+          - white-space: nowrap
+          - overflow: hidden
+          - text-overflow: ellipsis
+          - z-index: 1
+        name:
+          - display: none
 
-    <br>
+    ########## SLIDE 2: GRID 2x2 ##########
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+        # Slot 1: Smart TV
+        - type: custom:button-card
+          entity: media_player.android_tv_192_168_3_17
+          template:
+            - base
+            - media_premium
+            - icon_tv
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            service_data:
+              entity_id: input_select.media_focus_player
+              option: media_player.android_tv_192_168_3_17
+            haptic: light
+          hold_action:
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data: !include ../popup/media_all_players.yaml
 
-    🎵 **As It Was**
+        # Slot 2: Echo Show
+        - type: custom:button-card
+          entity: media_player.echo_show
+          template:
+            - base
+            - media_premium
+            - icon_tv
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            service_data:
+              entity_id: input_select.media_focus_player
+              option: media_player.echo_show
+            haptic: light
+          hold_action:
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data: !include ../popup/media_all_players.yaml
+          # Esconde duplicidade DE MODO SEGURO (preserva o template nativo se retornar undefined)
+          styles:
+            card:
+              - background-image: >
+                  [[[ 
+                    if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                      return 'none !important';
+                    }
+                    return undefined;
+                  ]]]
+            custom_fields:
+              artwork:
+                - display: >
+                    [[[ 
+                      if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                        return 'none !important';
+                      }
+                      return undefined;
+                    ]]]
 
-    Harry Styles · Sala
+        # Slot 3: Spotify
+        - type: custom:button-card
+          entity: media_player.spotifyplus_bruno_helasio
+          template:
+            - base
+            - media_premium
+            - icon_spotify
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            service_data:
+              entity_id: input_select.media_focus_player
+              option: media_player.spotifyplus_bruno_helasio
+            haptic: light
+          hold_action:
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data: !include ../popup/media_all_players.yaml
 
-    ⏯ ▶⏭ TV Sala
-  card_mod:
-    style: |
-      ha-card {
-        background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
-        backdrop-filter: blur(18px) saturate(1.2);
-        -webkit-backdrop-filter: blur(18px) saturate(1.2);
-        border-right: 1px solid rgba(255,255,255,0.08);
-        border-radius: 0;
-        border-top: none;
-        border-bottom: none;
-        border-left: none;
-        box-shadow: none;
-        height: 100%;
-        overflow: hidden;
-        aspect-ratio: unset;
-        padding: 0;
-      }
+        # Slot 4: Echo Pop Office
+        - type: custom:button-card
+          entity: media_player.echo_pop_office
+          template:
+            - base
+            - media_premium
+            - icon_tv
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            service_data:
+              entity_id: input_select.media_focus_player
+              option: media_player.echo_pop_office
+            haptic: light
+          hold_action:
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data: !include ../popup/media_all_players.yaml
+          # Esconde duplicidade DE MODO SEGURO (preserva o template nativo se retornar undefined)
+          styles:
+            card:
+              - background-image: >
+                  [[[ 
+                    if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                      return 'none !important';
+                    }
+                    return undefined;
+                  ]]]
+            custom_fields:
+              artwork:
+                - display: >
+                    [[[ 
+                      if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                        return 'none !important';
+                      }
+                      return undefined;
+                    ]]]

@@ -648,9 +648,14 @@
             overflow: hidden !important;
             aspect-ratio: 16 / 11 !important;
             background: #1b2535 !important;
-            border: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+            /* v10: outline no lugar de border (não entra no box model,
+               evita bleed do último tab na direita) */
+            outline: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+            outline-offset: -2px !important;
             box-shadow: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
-            transition: border-color 0.2s, box-shadow 0.2s !important;
+            box-sizing: border-box !important;
+            min-width: 0 !important;
+            transition: outline-color 0.2s, box-shadow 0.2s !important;
           }
           hui-image,
           hui-image img,
@@ -693,9 +698,12 @@
             overflow: hidden !important;
             aspect-ratio: 16 / 11 !important;
             background: #1b2535 !important;
-            border: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+            outline: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+            outline-offset: -2px !important;
             box-shadow: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
-            transition: border-color 0.2s, box-shadow 0.2s !important;
+            box-sizing: border-box !important;
+            min-width: 0 !important;
+            transition: outline-color 0.2s, box-shadow 0.2s !important;
           }
           hui-image,
           hui-image img,
@@ -738,9 +746,12 @@
             overflow: hidden !important;
             aspect-ratio: 16 / 11 !important;
             background: #1b2535 !important;
-            border: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+            outline: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+            outline-offset: -2px !important;
             box-shadow: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
-            transition: border-color 0.2s, box-shadow 0.2s !important;
+            box-sizing: border-box !important;
+            min-width: 0 !important;
+            transition: outline-color 0.2s, box-shadow 0.2s !important;
           }
           hui-image,
           hui-image img,
@@ -783,9 +794,12 @@
             overflow: hidden !important;
             aspect-ratio: 16 / 11 !important;
             background: #1b2535 !important;
-            border: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+            outline: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}2px solid #60a5fa{% else %}2px solid rgba(255,255,255,0.08){% endif %} !important;
+            outline-offset: -2px !important;
             box-shadow: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}0 0 12px rgba(96,165,250,0.55){% else %}none{% endif %} !important;
-            transition: border-color 0.2s, box-shadow 0.2s !important;
+            box-sizing: border-box !important;
+            min-width: 0 !important;
+            transition: outline-color 0.2s, box-shadow 0.2s !important;
           }
           hui-image,
           hui-image img,

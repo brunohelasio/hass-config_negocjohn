@@ -18,6 +18,15 @@ input_select:
       - climate
       - presence
     initial: none
+  bento_active_camera:
+    name: Bento Active Camera
+    icon: mdi:cctv
+    options:
+      - camera.sl_camera_2
+      - camera.vr_camera_2
+      - camera.cz_camera_2
+      - camera.as_camera_2
+    initial: camera.sl_camera_2
 
 input_boolean:
   sidebar_compact:

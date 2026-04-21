@@ -1,22 +1,23 @@
 - type: custom:swipe-card
-  card_mod:
-    style: |
-      :host {
-        height: 100% !important;
-        min-height: 0 !important;
-        display: block !important;
-      }
-      .swiper,
-      .swiper-container,
-      .swiper-wrapper,
-      .swiper-slide {
-        height: 100% !important;
-        min-height: 0 !important;
-      }
-      .swiper-slide {
-        display: flex !important;
-        align-items: stretch !important;
-      }
+  # ANTERIOR (tentativa com muito CSS de container):
+  # card_mod:
+  #   style: |
+  #     :host {
+  #       height: 100% !important;
+  #       min-height: 0 !important;
+  #       display: block !important;
+  #     }
+  #     .swiper,
+  #     .swiper-container,
+  #     .swiper-wrapper,
+  #     .swiper-slide {
+  #       height: 100% !important;
+  #       min-height: 0 !important;
+  #     }
+  #     .swiper-slide {
+  #       display: flex !important;
+  #       align-items: stretch !important;
+  #     }
   parameters:
     pagination:
       type: bullets

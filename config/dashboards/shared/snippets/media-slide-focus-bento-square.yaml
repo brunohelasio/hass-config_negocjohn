@@ -1,0 +1,84 @@
+type: custom:button-card
+entity: sensor.media_focus_visuals
+name: ' '
+show_icon: false
+show_state: true
+show_name: false
+aspect_ratio: 1/1
+triggers_update:
+  - sensor.media_focus_visuals
+  - input_select.media_focus_player
+  - media_player.android_tv_192_168_3_17
+  - media_player.echo_show
+  - media_player.spotifyplus_bruno_helasio
+  - media_player.echo_pop_office
+tap_action:
+  action: call-service
+  service: script.media_focus_play_pause
+  haptic: light
+hold_action:
+  action: more-info
+state_display: >
+  [[[ 
+    if (entity && entity.attributes) {
+      const title = entity.attributes.media_title || '';
+      const artist = entity.attributes.media_artist || '';
+      return (artist && artist !== 'Pronto para tocar') ? artist + ' — ' + title : title;
+    }
+    return 'Sistema de Áudio';
+  ]]]
+custom_fields:
+  artwork: >
+    [[[ 
+      if (entity && entity.attributes && entity.attributes.entity_picture) {
+        return '<img src="' + entity.attributes.entity_picture + '" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;" />';
+      }
+      return '';
+    ]]]
+  bar_bg: ''
+styles:
+  card:
+    - border-radius: 5%
+    - overflow: hidden
+    - padding: 0
+    - background-color: rgba(115, 115, 115, 0.2)
+  custom_fields:
+    artwork:
+      - position: absolute
+      - top: 0
+      - left: 0
+      - width: 100%
+      - height: 100%
+      - z-index: 0
+      - filter: >
+          [[[ 
+            if (!entity || !entity.attributes || !entity.attributes.entity_picture) return 'none';
+            const pic = entity.attributes.entity_picture;
+            if (pic.includes('standby_art.jpg')) return 'none';
+            return ['paused', 'idle'].includes(entity.state) ? 'blur(4px) brightness(50%) grayscale(40%)' : 'none';
+          ]]]
+      - transition: filter 0.4s ease
+    bar_bg:
+      - position: absolute
+      - left: 0
+      - right: 0
+      - bottom: 0
+      - height: 30%
+      - z-index: 1
+      - background: linear-gradient(180deg, rgba(20, 24, 32, 0) 0%, rgba(20, 24, 32, 0.66) 35%, rgba(20, 24, 32, 0.74) 100%)
+      - backdrop-filter: blur(10px) saturate(1.2)
+      - -webkit-backdrop-filter: blur(10px) saturate(1.2)
+  state:
+    - position: absolute
+    - bottom: 10%
+    - left: 5%
+    - right: 5%
+    - font-size: 0.9em
+    - color: rgba(255,255,255,0.95)
+    - text-shadow: 1px 1px 3px rgba(0,0,0,0.85)
+    - white-space: nowrap
+    - overflow: hidden
+    - text-overflow: ellipsis
+    - z-index: 3
+  name:
+    - display: none

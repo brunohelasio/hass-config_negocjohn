@@ -1,6 +1,4 @@
-- type: grid
-  columns: 4
-  square: false
+- type: horizontal-stack
   cards:
     - type: custom:button-card
       icon: mdi:lightbulb-off-outline
@@ -14,9 +12,9 @@
         action: none
       styles:
         card:
-          - height: 68px
+          - height: 62px
           - width: 100%
-          - border-radius: 999px
+          - border-radius: 12px
           - background: rgba(255,255,255,0.06)
           - border: 1px solid rgba(255,255,255,0.10)
           - box-shadow: none
@@ -27,8 +25,11 @@
           - width: 24px
         name:
           - color: rgba(255,255,255,0.78)
-          - font-size: 12px
+          - font-size: 13px
           - font-weight: 600
+          - white-space: nowrap
+          - overflow: hidden
+          - text-overflow: ellipsis
     - type: custom:button-card
       icon: mdi:movie-roll
       name: Cinema
@@ -38,9 +39,9 @@
         action: none
       styles:
         card:
-          - height: 68px
+          - height: 62px
           - width: 100%
-          - border-radius: 999px
+          - border-radius: 12px
           - background: rgba(255,255,255,0.06)
           - border: 1px solid rgba(255,255,255,0.10)
           - box-shadow: none
@@ -51,8 +52,11 @@
           - width: 24px
         name:
           - color: rgba(255,255,255,0.78)
-          - font-size: 12px
+          - font-size: 13px
           - font-weight: 600
+          - white-space: nowrap
+          - overflow: hidden
+          - text-overflow: ellipsis
     - type: custom:button-card
       icon: mdi:laptop
       name: Escritório
@@ -62,9 +66,9 @@
         action: none
       styles:
         card:
-          - height: 68px
+          - height: 62px
           - width: 100%
-          - border-radius: 999px
+          - border-radius: 12px
           - background: rgba(255,255,255,0.06)
           - border: 1px solid rgba(255,255,255,0.10)
           - box-shadow: none
@@ -75,8 +79,11 @@
           - width: 24px
         name:
           - color: rgba(255,255,255,0.78)
-          - font-size: 12px
+          - font-size: 13px
           - font-weight: 600
+          - white-space: nowrap
+          - overflow: hidden
+          - text-overflow: ellipsis
     - type: custom:button-card
       icon: mdi:sofa-outline
       name: Sala
@@ -86,9 +93,9 @@
         action: none
       styles:
         card:
-          - height: 68px
+          - height: 62px
           - width: 100%
-          - border-radius: 999px
+          - border-radius: 12px
           - background: rgba(255,255,255,0.06)
           - border: 1px solid rgba(255,255,255,0.10)
           - box-shadow: none
@@ -99,5 +106,8 @@
           - width: 24px
         name:
           - color: rgba(255,255,255,0.78)
-          - font-size: 12px
+          - font-size: 13px
           - font-weight: 600
+          - white-space: nowrap
+          - overflow: hidden
+          - text-overflow: ellipsis

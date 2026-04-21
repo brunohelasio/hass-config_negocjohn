@@ -26,6 +26,9 @@ card_mod:
       display: none !important;
     }
     ha-card #root {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
       width: 100% !important;
       height: 100% !important;
       margin: 0 !important;
@@ -33,7 +36,8 @@ card_mod:
     }
     ha-card #root > * {
       height: 100% !important;
-      width: 100% !important;
+      flex: 1 1 0 !important;
+      min-width: 0 !important;
       margin: 0 !important;
     }
 cards: !include ../../shared/grid-cards/bento_quick_actions.yaml

@@ -1,3 +1,5 @@
+# Bento media — Overlay Dock:
+# carrossel em destaque + controles flutuantes no Slide 1 (sem coluna lateral fixa)
 - type: custom:swipe-card
   parameters:
     pagination:
@@ -61,25 +63,25 @@
               service: browser_mod.popup
               data: !include ../popup/media_all_players.yaml
 
-        # Slot 3: Spotify
-        - type: custom:button-card
-          entity: media_player.spotifyplus_bruno_helasio
-          template:
-            - base
-            - media_premium
-            - icon_spotify
-          tap_action:
-            action: call-service
-            service: input_select.select_option
-            service_data:
-              entity_id: input_select.media_focus_player
-              option: media_player.spotifyplus_bruno_helasio
-            haptic: light
-          hold_action:
-            action: fire-dom-event
-            browser_mod:
-              service: browser_mod.popup
-              data: !include ../popup/media_all_players.yaml
+          # Slot 3: Spotify
+          - type: custom:button-card
+            entity: media_player.spotifyplus_bruno_helasio
+            template:
+              - base
+              - media_premium
+              - icon_spotify
+            tap_action:
+              action: call-service
+              service: input_select.select_option
+              service_data:
+                entity_id: input_select.media_focus_player
+                option: media_player.spotifyplus_bruno_helasio
+              haptic: light
+            hold_action:
+              action: fire-dom-event
+              browser_mod:
+                service: browser_mod.popup
+                data: !include ../popup/media_all_players.yaml
 
         # Slot 4: Echo Pop Office
         - type: custom:button-card

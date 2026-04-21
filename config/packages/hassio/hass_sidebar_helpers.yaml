@@ -43,6 +43,14 @@ input_select:
       - monitor
       - power
     initial: home
+  bento_sidebar_action:
+    name: Bento Sidebar Action Icon
+    icon: mdi:gesture-double-tap
+    options:
+      - none
+      - security
+      - vacuum
+    initial: none
 
 input_boolean:
   sidebar_compact:
@@ -60,7 +68,7 @@ script:
     sequence:
       - service: input_select.select_option
         target:
-          entity_id: input_select.bento_sidebar_active
+          entity_id: input_select.bento_sidebar_action
         data:
           option: security
       - service: browser_mod.popup
@@ -170,7 +178,7 @@ script:
     sequence:
       - service: input_select.select_option
         target:
-          entity_id: input_select.bento_sidebar_active
+          entity_id: input_select.bento_sidebar_action
         data:
           option: vacuum
       # CÓDIGO ANTERIOR (restore rápido): popup via include no botão

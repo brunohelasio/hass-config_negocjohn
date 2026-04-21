@@ -1,0 +1,25 @@
+# Botão lateral Bento (comandos fixos)
+type: custom:button-card
+icon: mdi:volume-plus
+show_name: false
+show_state: false
+tap_action:
+  action: call-service
+  service: script.media_focus_volume_up
+  haptic: light
+hold_action:
+  action: fire-dom-event
+  browser_mod:
+    service: browser_mod.popup
+    data: !include ../popup/media_all_players.yaml
+styles:
+  card:
+    - height: 42px
+    - border-radius: 14px
+    - background: linear-gradient(160deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06))
+    - border: 1px solid rgba(255,255,255,0.14)
+    - box-shadow: none
+    - padding: 0
+  icon:
+    - color: rgba(255,255,255,0.92)
+    - width: 22px

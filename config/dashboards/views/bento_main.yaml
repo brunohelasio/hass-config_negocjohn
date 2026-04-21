@@ -9,7 +9,7 @@ card_mod:
       /* Trava a altura do dashboard exatamente no tamanho da sua tela física */
       height: 100vh !important;
       background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%);
-      padding-bottom: 24px; /* Evita que os cartões de baixo toquem a borda do monitor */
+      padding-bottom: 8px; /* Ajuste para acomodar a linha extra sem criar scroll vertical */
       box-sizing: border-box;
     }
 layout:
@@ -17,8 +17,8 @@ layout:
   padding: 12px
   grid-gap: 10px
   grid-template-columns: 64px repeat(12, minmax(0, 1fr))
-  # PRIMEIRA LINHA: auto (Badges) | MEIO: conteúdo principal | ÚLTIMA: ações rápidas
-  grid-template-rows: auto 1fr 1fr minmax(74px, auto)
+  # PRIMEIRA LINHA: auto (Badges) | LINHAS DE CONTEÚDO FIXADAS | ÚLTIMA: ações rápidas
+  grid-template-rows: auto minmax(0, 36vh) minmax(0, 36vh) 74px
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
     "sidebar welcome welcome welcome welcome sala sala sala comodos comodos comodos comodos comodos"

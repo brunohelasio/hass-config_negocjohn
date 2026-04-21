@@ -1,140 +1,192 @@
-- type: custom:swipe-card
-  parameters:
-    pagination:
-      type: bullets
-      clickable: true
-    roundLengths: true
-    effect: slide
-    speed: 600
-    spaceBetween: 12
-    threshold: 7
-    autoHeight: false
-    observer: true
-    followFinger: true
-    grabCursor: true
+# Bento media — arquitetura dedicada:
+# [coluna esquerda] carrossel quadrado (Slide 1 + Slide 2)
+# [coluna direita] comandos fixos
+- type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: minmax(0, 1fr) 78px
+    grid-template-rows: 1fr
+    grid-template-areas: 'media controls'
+    column-gap: 10px
+    margin: 0
+    padding: 0
   cards:
-    ########## SLIDE 1: ARTWORK + CONTROL BAR ##########
-    - !include ../snippets/media-slide-focus.yaml
+    # ANTERIOR (tentativa): swiper retangular ocupando 100% com controles no rodapé
+    # Mantido como referência histórica no git.
+    - type: custom:mod-card
+      layout:
+        grid-area: media
+      card_mod:
+        style: |
+          :host {
+            min-width: 0 !important;
+          }
+          ha-card {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            overflow: hidden !important;
+          }
+      card:
+        type: custom:swipe-card
+        parameters:
+          pagination:
+            type: bullets
+            clickable: true
+          roundLengths: true
+          effect: slide
+          speed: 600
+          spaceBetween: 12
+          threshold: 7
+          autoHeight: false
+          observer: true
+          followFinger: true
+          grabCursor: true
+        cards:
+          ########## SLIDE 1 (QUADRADO): ARTWORK + INFO ##########
+          - !include ../snippets/media-slide-focus-bento-square.yaml
 
-    ########## SLIDE 2: GRID 2x2 ##########
-    - type: grid
-      columns: 2
-      square: false
+          ########## SLIDE 2 (QUADRADO): GRID 2x2 ##########
+          - type: custom:mod-card
+            card_mod:
+              style: |
+                ha-card {
+                  aspect-ratio: 1 / 1 !important;
+                  height: auto !important;
+                  background: transparent !important;
+                  border: none !important;
+                  box-shadow: none !important;
+                }
+            card:
+              type: grid
+              columns: 2
+              square: true
+              cards:
+                # Slot 1: Smart TV
+                - type: custom:button-card
+                  entity: media_player.android_tv_192_168_3_17
+                  template:
+                    - base
+                    - media_premium
+                    - icon_tv
+                  tap_action:
+                    action: call-service
+                    service: input_select.select_option
+                    service_data:
+                      entity_id: input_select.media_focus_player
+                      option: media_player.android_tv_192_168_3_17
+                    haptic: light
+                  hold_action:
+                    action: fire-dom-event
+                    browser_mod:
+                      service: browser_mod.popup
+                      data: !include ../popup/media_all_players.yaml
+
+                # Slot 2: Echo Show
+                - type: custom:button-card
+                  entity: media_player.echo_show
+                  template:
+                    - base
+                    - media_premium
+                    - icon_tv
+                  tap_action:
+                    action: call-service
+                    service: input_select.select_option
+                    service_data:
+                      entity_id: input_select.media_focus_player
+                      option: media_player.echo_show
+                    haptic: light
+                  hold_action:
+                    action: fire-dom-event
+                    browser_mod:
+                      service: browser_mod.popup
+                      data: !include ../popup/media_all_players.yaml
+                  # Esconde duplicidade DE MODO SEGURO
+                  styles:
+                    card:
+                      - background-image: >
+                          [[[
+                            if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                              return 'none !important';
+                            }
+                            return undefined;
+                          ]]]
+                    custom_fields:
+                      artwork:
+                        - display: >
+                            [[[
+                              if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                                return 'none !important';
+                              }
+                              return undefined;
+                            ]]]
+
+                # Slot 3: Spotify
+                - type: custom:button-card
+                  entity: media_player.spotifyplus_bruno_helasio
+                  template:
+                    - base
+                    - media_premium
+                    - icon_spotify
+                  tap_action:
+                    action: call-service
+                    service: input_select.select_option
+                    service_data:
+                      entity_id: input_select.media_focus_player
+                      option: media_player.spotifyplus_bruno_helasio
+                    haptic: light
+                  hold_action:
+                    action: fire-dom-event
+                    browser_mod:
+                      service: browser_mod.popup
+                      data: !include ../popup/media_all_players.yaml
+
+                # Slot 4: Echo Pop Office
+                - type: custom:button-card
+                  entity: media_player.echo_pop_office
+                  template:
+                    - base
+                    - media_premium
+                    - icon_tv
+                  tap_action:
+                    action: call-service
+                    service: input_select.select_option
+                    service_data:
+                      entity_id: input_select.media_focus_player
+                      option: media_player.echo_pop_office
+                    haptic: light
+                  hold_action:
+                    action: fire-dom-event
+                    browser_mod:
+                      service: browser_mod.popup
+                      data: !include ../popup/media_all_players.yaml
+                  # Esconde duplicidade DE MODO SEGURO
+                  styles:
+                    card:
+                      - background-image: >
+                          [[[
+                            if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                              return 'none !important';
+                            }
+                            return undefined;
+                          ]]]
+                    custom_fields:
+                      artwork:
+                        - display: >
+                            [[[
+                              if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
+                                return 'none !important';
+                              }
+                              return undefined;
+                            ]]]
+
+    - type: vertical-stack
+      layout:
+        grid-area: controls
       cards:
-        # Slot 1: Smart TV
-        - type: custom:button-card
-          entity: media_player.android_tv_192_168_3_17
-          template:
-            - base
-            - media_premium
-            - icon_tv
-          tap_action:
-            action: call-service
-            service: input_select.select_option
-            service_data:
-              entity_id: input_select.media_focus_player
-              option: media_player.android_tv_192_168_3_17
-            haptic: light
-          hold_action:
-            action: fire-dom-event
-            browser_mod:
-              service: browser_mod.popup
-              data: !include ../popup/media_all_players.yaml
-
-        # Slot 2: Echo Show
-        - type: custom:button-card
-          entity: media_player.echo_show
-          template:
-            - base
-            - media_premium
-            - icon_tv
-          tap_action:
-            action: call-service
-            service: input_select.select_option
-            service_data:
-              entity_id: input_select.media_focus_player
-              option: media_player.echo_show
-            haptic: light
-          hold_action:
-            action: fire-dom-event
-            browser_mod:
-              service: browser_mod.popup
-              data: !include ../popup/media_all_players.yaml
-          # Esconde duplicidade DE MODO SEGURO (preserva o template nativo se retornar undefined)
-          styles:
-            card:
-              - background-image: >
-                  [[[ 
-                    if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                      return 'none !important';
-                    }
-                    return undefined;
-                  ]]]
-            custom_fields:
-              artwork:
-                - display: >
-                    [[[ 
-                      if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                        return 'none !important';
-                      }
-                      return undefined;
-                    ]]]
-
-        # Slot 3: Spotify
-        - type: custom:button-card
-          entity: media_player.spotifyplus_bruno_helasio
-          template:
-            - base
-            - media_premium
-            - icon_spotify
-          tap_action:
-            action: call-service
-            service: input_select.select_option
-            service_data:
-              entity_id: input_select.media_focus_player
-              option: media_player.spotifyplus_bruno_helasio
-            haptic: light
-          hold_action:
-            action: fire-dom-event
-            browser_mod:
-              service: browser_mod.popup
-              data: !include ../popup/media_all_players.yaml
-
-        # Slot 4: Echo Pop Office
-        - type: custom:button-card
-          entity: media_player.echo_pop_office
-          template:
-            - base
-            - media_premium
-            - icon_tv
-          tap_action:
-            action: call-service
-            service: input_select.select_option
-            service_data:
-              entity_id: input_select.media_focus_player
-              option: media_player.echo_pop_office
-            haptic: light
-          hold_action:
-            action: fire-dom-event
-            browser_mod:
-              service: browser_mod.popup
-              data: !include ../popup/media_all_players.yaml
-          # Esconde duplicidade DE MODO SEGURO (preserva o template nativo se retornar undefined)
-          styles:
-            card:
-              - background-image: >
-                  [[[ 
-                    if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                      return 'none !important';
-                    }
-                    return undefined;
-                  ]]]
-            custom_fields:
-              artwork:
-                - display: >
-                    [[[ 
-                      if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                        return 'none !important';
-                      }
-                      return undefined;
-                    ]]]
+        - !include ../snippets/media-control-playpause.yaml
+        - !include ../snippets/media-control-prev.yaml
+        - !include ../snippets/media-control-next.yaml
+        - !include ../snippets/media-control-mute.yaml
+        - !include ../snippets/media-control-vol-down.yaml
+        - !include ../snippets/media-control-vol-up.yaml

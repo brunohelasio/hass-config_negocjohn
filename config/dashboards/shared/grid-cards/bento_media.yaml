@@ -13,13 +13,13 @@
     followFinger: true
     grabCursor: true
   cards:
-    ########## SLIDE 1: ARTWORK + CONTROL BAR ##########
+    ########## SLIDE 1: ARTWORK + BARRA TRANSLÚCIDA ORIGINAL ##########
     - !include ../snippets/media-slide-focus.yaml
 
     ########## SLIDE 2: GRID 2x2 ##########
     - type: grid
       columns: 2
-      square: false
+      square: true
       cards:
         # Slot 1: Smart TV
         - type: custom:button-card
@@ -60,11 +60,10 @@
             browser_mod:
               service: browser_mod.popup
               data: !include ../popup/media_all_players.yaml
-          # Esconde duplicidade DE MODO SEGURO (preserva o template nativo se retornar undefined)
           styles:
             card:
               - background-image: >
-                  [[[ 
+                  [[[
                     if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
                       return 'none !important';
                     }
@@ -73,7 +72,7 @@
             custom_fields:
               artwork:
                 - display: >
-                    [[[ 
+                    [[[
                       if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
                         return 'none !important';
                       }
@@ -119,11 +118,10 @@
             browser_mod:
               service: browser_mod.popup
               data: !include ../popup/media_all_players.yaml
-          # Esconde duplicidade DE MODO SEGURO (preserva o template nativo se retornar undefined)
           styles:
             card:
               - background-image: >
-                  [[[ 
+                  [[[
                     if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
                       return 'none !important';
                     }
@@ -132,7 +130,7 @@
             custom_fields:
               artwork:
                 - display: >
-                    [[[ 
+                    [[[
                       if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
                         return 'none !important';
                       }

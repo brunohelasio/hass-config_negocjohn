@@ -19,7 +19,7 @@ card_mod:
     /* NOVO: fundo preto sólido — contraste com sidebar preta vem dos cards */
     hui-grid-layout {
       background: rgb(0, 0, 0);
-      height: 100%;
+      height: 100vh;
     }
 layout:
   # BENTO GRID (FASE 1)
@@ -31,29 +31,31 @@ layout:
   # grid-template-columns: minmax(260px, 25.5%) repeat(3, minmax(0, 1fr)) 0
   # NOVO: sidebar estreita + conteúdo em 12 colunas.
   grid-template-columns: minmax(72px, 88px) repeat(12, minmax(0, 1fr))
-  grid-template-rows: auto minmax(160px, auto) minmax(220px, auto) minmax(220px, auto)
+  grid-template-rows: auto minmax(160px, auto) minmax(220px, auto) minmax(220px, auto) minmax(88px, auto)
   grid-template-areas: |
     "sidebar top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges"
     "sidebar welcome_locks welcome_locks welcome_locks sala_feature sala_feature sala_feature office_tall rooms_grid rooms_grid rooms_grid rooms_grid rooms_grid"
     "sidebar cameras_big   cameras_big   cameras_big   cameras_big   cameras_big   calendar_card calendar_card calendar_card roborock_tall media media media"
     "sidebar cameras_big   cameras_big   cameras_big   cameras_big   cameras_big   calendar_card calendar_card calendar_card roborock_tall media media media"
+    "sidebar quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions"
 
   mediaquery:
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-gap: 0.8rem
       grid-template-columns: minmax(64px, 80px) repeat(12, minmax(0, 1fr))
-      grid-template-rows: auto minmax(140px, auto) minmax(200px, auto) minmax(200px, auto)
+      grid-template-rows: auto minmax(140px, auto) minmax(200px, auto) minmax(200px, auto) minmax(80px, auto)
       grid-template-areas: |
         "sidebar top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges   top_badges"
         "sidebar welcome_locks welcome_locks welcome_locks sala_feature sala_feature sala_feature office_tall rooms_grid rooms_grid rooms_grid rooms_grid rooms_grid"
         "sidebar cameras_big   cameras_big   cameras_big   cameras_big   cameras_big   calendar_card calendar_card calendar_card roborock_tall media media media"
         "sidebar cameras_big   cameras_big   cameras_big   cameras_big   cameras_big   calendar_card calendar_card calendar_card roborock_tall media media media"
+        "sidebar quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions"
     # Mobile fallback simples e estável para evitar quebra.
     '(max-width: 800px) and (min-height: 463px)':
       margin: 0
       grid-gap: 0.9rem
       grid-template-columns: 1fr
-      grid-template-rows: repeat(10, min-content)
+      grid-template-rows: repeat(11, min-content)
       grid-template-areas: |
         "sidebar"
         "top_badges"
@@ -64,6 +66,7 @@ layout:
         "cameras_big"
         "calendar_card"
         "roborock_tall"
+        "quick_actions"
         "media"
     # phone cover screen = place horizontal
     '(max-height: 462px)':

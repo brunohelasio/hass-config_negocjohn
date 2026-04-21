@@ -38,10 +38,37 @@
     - !include ../snippets/media-slide-focus-bento.yaml
 
     ########## SLIDE 2: GRID 2x2 ##########
-    - type: grid
-      columns: 2
-      square: false
-      cards:
+    - type: custom:mod-card
+      card_mod:
+        style: |
+          :host {
+            height: 100% !important;
+            min-height: 0 !important;
+            display: block !important;
+          }
+          ha-card {
+            height: 100% !important;
+            min-height: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            overflow: hidden !important;
+            display: flex !important;
+          }
+          hui-grid-card {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+          }
+          #root {
+            height: 100% !important;
+            min-height: 0 !important;
+            align-content: stretch !important;
+          }
+      card:
+        type: grid
+        columns: 2
+        square: false
+        cards:
         # Slot 1: Smart TV
         - type: custom:button-card
           entity: media_player.android_tv_192_168_3_17

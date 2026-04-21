@@ -17,19 +17,20 @@ layout:
   padding: 12px
   grid-gap: 10px
   grid-template-columns: 64px repeat(12, minmax(0, 1fr))
-  # PRIMEIRA LINHA: auto (Badges) | SEGUNDA E TERCEIRA: 1fr (Dividem o resto da tela em 50/50)
-  grid-template-rows: auto 40vh 40vh
+  # PRIMEIRA LINHA: auto (Badges) | MEIO: conteúdo principal | ÚLTIMA: ações rápidas
+  grid-template-rows: auto 1fr 1fr minmax(74px, auto)
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
     "sidebar welcome welcome welcome welcome sala sala sala comodos comodos comodos comodos comodos"
     "sidebar cameras cameras cameras cameras calendar calendar roborock roborock media media media media"
+    "sidebar quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions"
 
   mediaquery:
     '(max-width: 800px)':
       padding: 8px
       grid-gap: 8px
       grid-template-columns: 1fr
-      grid-template-rows: repeat(9, min-content)
+      grid-template-rows: repeat(10, min-content)
       grid-template-areas: |
         "sidebar"
         "top_badges"
@@ -39,6 +40,7 @@ layout:
         "cameras"
         "calendar"
         "roborock"
+        "quick_actions"
         "media"
 
 cards:
@@ -50,4 +52,5 @@ cards:
   - !include main-grid/bento_cameras.yaml
   - !include main-grid/bento_calendar.yaml
   - !include main-grid/bento_roborock.yaml
+  - !include main-grid/bento_quick_actions.yaml
   - !include main-grid/bento_media.yaml

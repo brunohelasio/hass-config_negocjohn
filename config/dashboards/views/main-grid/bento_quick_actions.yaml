@@ -1,0 +1,29 @@
+type: custom:stack-in-card
+view_layout:
+  grid-area: quick_actions
+card_mod:
+  style: |
+    :host {
+      height: 100% !important;
+    }
+    ha-card {
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 10px 12px !important;
+      display: flex !important;
+      align-items: center !important;
+      background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;
+      backdrop-filter: blur(18px) saturate(1.2) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(1.2) !important;
+      border: 1px solid rgba(255,255,255,0.10) !important;
+      border-radius: 18px !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+      --ha-card-backdrop-filter: none !important;
+      --ha-card-background: transparent !important;
+      --ha-card-border-width: 0 !important;
+    }
+    ha-card::before {
+      display: none !important;
+    }
+cards: !include ../../shared/grid-cards/bento_quick_actions.yaml

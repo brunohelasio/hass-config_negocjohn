@@ -62,33 +62,6 @@
             browser_mod:
               service: browser_mod.popup
               data: !include ../popup/media_all_players.yaml
-          styles:
-            card:
-              - background-image: >
-                  [[[
-                    if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                      return 'none !important';
-                    }
-                    return undefined;
-                  ]]]
-            custom_fields:
-              artwork:
-                - display: >
-                    [[[
-                      if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                        return 'none !important';
-                      }
-                      return undefined;
-                    ]]]
-              custom_fields:
-                artwork:
-                  - display: >
-                      [[[
-                        if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                          return 'none !important';
-                        }
-                        return undefined;
-                      ]]]
 
           # Slot 3: Spotify
           - type: custom:button-card
@@ -129,30 +102,3 @@
             browser_mod:
               service: browser_mod.popup
               data: !include ../popup/media_all_players.yaml
-          styles:
-            card:
-              - background-image: >
-                  [[[
-                    if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                      return 'none !important';
-                    }
-                    return undefined;
-                  ]]]
-            custom_fields:
-              artwork:
-                - display: >
-                    [[[
-                      if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                        return 'none !important';
-                      }
-                      return undefined;
-                    ]]]
-              custom_fields:
-                artwork:
-                  - display: >
-                      [[[
-                        if (states['media_player.spotifyplus_bruno_helasio'] && states['media_player.spotifyplus_bruno_helasio'].state === 'playing') {
-                          return 'none !important';
-                        }
-                        return undefined;
-                      ]]]

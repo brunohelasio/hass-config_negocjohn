@@ -16,15 +16,17 @@ layout:
   padding: 12px
   grid-gap: 10px
   grid-template-columns: 64px repeat(12, minmax(0, 1fr))
-  # Nova composição Bento:
-  # - Linha 3: Cameras + Energia + Midia (inicio)
-  # - Linha 4: Cameras + Agenda + Roborock + Midia (fim)
-  grid-template-rows: auto 40vh 20vh 20vh 74px
+  # Composição alinhada ao mock:
+  # - Cameras com mesma largura de Welcome
+  # - Energia/Agenda/Roborock iniciando no mesmo X de Sala
+  # - Midia ocupando faixa direita dedicada (largura dos 2 blocos finais dos comodos)
+  # - Energia mais baixa; Agenda/Roborock mais altos
+  grid-template-rows: auto 40vh 16vh 24vh 74px
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
-    "sidebar welcome welcome welcome welcome sala sala sala comodos comodos comodos comodos comodos"
-    "sidebar cameras cameras cameras cameras cameras energy energy energy energy media media media"
-    "sidebar cameras cameras cameras cameras cameras calendar calendar roborock roborock media media media"
+    "sidebar welcome welcome welcome welcome sala sala comodos comodos comodos comodos comodos comodos"
+    "sidebar cameras cameras cameras cameras energy energy energy energy media media media media"
+    "sidebar cameras cameras cameras cameras calendar calendar roborock roborock media media media media"
     "sidebar quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions"
 
   mediaquery:

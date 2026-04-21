@@ -1,0 +1,99 @@
+- type: grid
+  columns: 4
+  square: false
+  cards:
+    - type: custom:button-card
+      icon: mdi:lightbulb-off-outline
+      name: Luzes Off
+      tap_action:
+        action: call-service
+        service: homeassistant.turn_off
+        data:
+          entity_id: light.todas_as_luzes
+      hold_action:
+        action: none
+      styles:
+        card:
+          - height: 68px
+          - border-radius: 999px
+          - background: rgba(255,255,255,0.06)
+          - border: 1px solid rgba(255,255,255,0.10)
+          - box-shadow: none
+          - margin: 0
+          - padding: 0 10px
+        icon:
+          - color: rgba(255,255,255,0.85)
+          - width: 24px
+        name:
+          - color: rgba(255,255,255,0.78)
+          - font-size: 12px
+          - font-weight: 600
+    - type: custom:button-card
+      icon: mdi:movie-roll
+      name: Cinema
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      styles:
+        card:
+          - height: 68px
+          - border-radius: 999px
+          - background: rgba(255,255,255,0.06)
+          - border: 1px solid rgba(255,255,255,0.10)
+          - box-shadow: none
+          - margin: 0
+          - padding: 0 10px
+        icon:
+          - color: rgba(255,255,255,0.85)
+          - width: 24px
+        name:
+          - color: rgba(255,255,255,0.78)
+          - font-size: 12px
+          - font-weight: 600
+    - type: custom:button-card
+      icon: mdi:laptop
+      name: Escritório
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      styles:
+        card:
+          - height: 68px
+          - border-radius: 999px
+          - background: rgba(255,255,255,0.06)
+          - border: 1px solid rgba(255,255,255,0.10)
+          - box-shadow: none
+          - margin: 0
+          - padding: 0 10px
+        icon:
+          - color: rgba(255,255,255,0.85)
+          - width: 24px
+        name:
+          - color: rgba(255,255,255,0.78)
+          - font-size: 12px
+          - font-weight: 600
+    - type: custom:button-card
+      icon: mdi:sofa-outline
+      name: Sala
+      tap_action:
+        action: none
+      hold_action:
+        action: none
+      styles:
+        card:
+          - height: 68px
+          - border-radius: 999px
+          - background: rgba(255,255,255,0.06)
+          - border: 1px solid rgba(255,255,255,0.10)
+          - box-shadow: none
+          - margin: 0
+          - padding: 0 10px
+        icon:
+          - color: rgba(255,255,255,0.85)
+          - width: 24px
+        name:
+          - color: rgba(255,255,255,0.78)
+          - font-size: 12px
+          - font-weight: 600

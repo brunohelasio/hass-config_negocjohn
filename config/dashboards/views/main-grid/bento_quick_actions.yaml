@@ -26,7 +26,7 @@ card_mod:
     ha-card::before {
       display: none !important;
     }
-    ha-card > hui-horizontal-stack-card {
+    ha-card > hui-grid-card {
       height: 100% !important;
       width: 100% !important;
       margin: 0 !important;

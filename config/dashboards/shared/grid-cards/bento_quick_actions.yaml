@@ -1,4 +1,6 @@
-- type: horizontal-stack
+- type: grid
+  columns: 4
+  square: false
   cards:
     - type: custom:button-card
       icon: mdi:lightbulb-off-outline
@@ -12,17 +14,16 @@
         action: none
       styles:
         card:
-          - height: 100%
-          - aspect-ratio: 1/1
-          - border-radius: 14px
+          - height: 68px
+          - border-radius: 999px
           - background: rgba(255,255,255,0.06)
           - border: 1px solid rgba(255,255,255,0.10)
           - box-shadow: none
           - margin: 0
-          - padding: 0
+          - padding: 0 10px
         icon:
           - color: rgba(255,255,255,0.85)
-          - width: 22px
+          - width: 24px
         name:
           - color: rgba(255,255,255,0.78)
           - font-size: 12px
@@ -36,17 +37,16 @@
         action: none
       styles:
         card:
-          - height: 100%
-          - aspect-ratio: 1/1
-          - border-radius: 14px
+          - height: 68px
+          - border-radius: 999px
           - background: rgba(255,255,255,0.06)
           - border: 1px solid rgba(255,255,255,0.10)
           - box-shadow: none
           - margin: 0
-          - padding: 0
+          - padding: 0 10px
         icon:
           - color: rgba(255,255,255,0.85)
-          - width: 22px
+          - width: 24px
         name:
           - color: rgba(255,255,255,0.78)
           - font-size: 12px
@@ -60,17 +60,16 @@
         action: none
       styles:
         card:
-          - height: 100%
-          - aspect-ratio: 1/1
-          - border-radius: 14px
+          - height: 68px
+          - border-radius: 999px
           - background: rgba(255,255,255,0.06)
           - border: 1px solid rgba(255,255,255,0.10)
           - box-shadow: none
           - margin: 0
-          - padding: 0
+          - padding: 0 10px
         icon:
           - color: rgba(255,255,255,0.85)
-          - width: 22px
+          - width: 24px
         name:
           - color: rgba(255,255,255,0.78)
           - font-size: 12px
@@ -84,17 +83,16 @@
         action: none
       styles:
         card:
-          - height: 100%
-          - aspect-ratio: 1/1
-          - border-radius: 14px
+          - height: 68px
+          - border-radius: 999px
           - background: rgba(255,255,255,0.06)
           - border: 1px solid rgba(255,255,255,0.10)
           - box-shadow: none
           - margin: 0
-          - padding: 0
+          - padding: 0 10px
         icon:
           - color: rgba(255,255,255,0.85)
-          - width: 22px
+          - width: 24px
         name:
           - color: rgba(255,255,255,0.78)
           - font-size: 12px

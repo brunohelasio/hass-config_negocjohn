@@ -104,7 +104,10 @@
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
+    grid-template-columns: 1fr
     grid-template-rows: auto 1fr auto
+    justify-items: center
+    align-items: start
     height: 100%
     padding: 4px 0 8px 0
   card_mod:
@@ -117,7 +120,14 @@
         overflow: hidden;
       }
   cards:
-    - type: vertical-stack
+    - type: custom:layout-card
+      view_layout:
+        grid-row: 1
+      layout_type: custom:grid-layout
+      layout:
+        grid-template-columns: 1fr
+        justify-items: center
+        grid-row-gap: 6px
       cards:
         # ── home (ativo fixo no painel principal) ───────────────
         - &nav_svg_home
@@ -228,6 +238,9 @@
               ]]]
         # ── segurança ────────────────────────────────────────────
         - <<: *nav_svg
+          entity: input_select.bento_sidebar_action
+          triggers_update:
+            - input_select.bento_sidebar_action
           # CÓDIGO ANTERIOR (restore rápido):
           # tap_action: !include ../popup/cameras_user.yaml
           tap_action:
@@ -257,6 +270,9 @@
               ]]]
         # ── vacuum ──────────────────────────────────────────────
         - <<: *nav_svg
+          entity: input_select.bento_sidebar_action
+          triggers_update:
+            - input_select.bento_sidebar_action
           # CÓDIGO ANTERIOR (restore rápido):
           # tap_action: !include ../popup/footer/footer_vacuum.yaml
           tap_action:
@@ -331,14 +347,25 @@
               ]]]
     # ── espaçador flexível ───────────────────────────────────────
     - type: custom:button-card
+      view_layout:
+        grid-row: 2
+        align-self: stretch
       show_icon: false
       show_name: false
       tap_action: { action: none }
       hold_action: { action: none }
       styles:
-        card: [background: transparent, border: none, box-shadow: none]
+        card: [height: 100%, width: 100%, background: transparent, border: none, box-shadow: none]
     # ── grupo inferior ────────────────────────────────────────────
-    - type: vertical-stack
+    - type: custom:layout-card
+      view_layout:
+        grid-row: 3
+        align-self: end
+      layout_type: custom:grid-layout
+      layout:
+        grid-template-columns: 1fr
+        justify-items: center
+        grid-row-gap: 6px
       cards:
         # ── monitor / dashboard ──────────────────────────────────
         - <<: *nav_svg

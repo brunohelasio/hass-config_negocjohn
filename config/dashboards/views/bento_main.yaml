@@ -9,7 +9,7 @@ card_mod:
       /* Trava a altura do dashboard exatamente no tamanho da sua tela física */
       height: 100vh !important;
       background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%);
-      padding-bottom: 24px; /* Evita que os cartões de baixo toquem a borda do monitor */
+      padding-bottom: 8px; /* Ajuste para acomodar a linha extra sem criar scroll vertical */
       box-sizing: border-box;
     }
 layout:

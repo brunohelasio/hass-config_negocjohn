@@ -36,6 +36,90 @@ custom_fields:
       return '';
     ]]]
   bar_bg: ''
+  dock_bg: ''
+  playpause:
+    card:
+      type: custom:button-card
+      icon: mdi:play-pause
+      show_name: false
+      tap_action:
+        action: call-service
+        service: script.media_focus_play_pause
+      hold_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data: !include ../popup/media_all_players.yaml
+      styles: &dock_btn_styles
+        card:
+          - background: linear-gradient(160deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06))
+          - border: 1px solid rgba(255,255,255,0.20)
+          - border-radius: 12px
+          - box-shadow: none
+          - padding: 0
+        icon:
+          - color: rgba(255,255,255,0.95)
+          - width: 18px
+  prev:
+    card:
+      type: custom:button-card
+      icon: mdi:skip-previous
+      show_name: false
+      tap_action: {action: call-service, service: script.media_focus_previous_track}
+      hold_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data: !include ../popup/media_all_players.yaml
+      styles: *dock_btn_styles
+  next:
+    card:
+      type: custom:button-card
+      icon: mdi:skip-next
+      show_name: false
+      tap_action: {action: call-service, service: script.media_focus_next_track}
+      hold_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data: !include ../popup/media_all_players.yaml
+      styles: *dock_btn_styles
+  mute:
+    card:
+      type: custom:button-card
+      icon: mdi:volume-mute
+      show_name: false
+      tap_action: {action: call-service, service: script.media_focus_volume_mute}
+      hold_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data: !include ../popup/media_all_players.yaml
+      styles: *dock_btn_styles
+  vol_down:
+    card:
+      type: custom:button-card
+      icon: mdi:volume-minus
+      show_name: false
+      tap_action: {action: call-service, service: script.media_focus_volume_down}
+      hold_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data: !include ../popup/media_all_players.yaml
+      styles: *dock_btn_styles
+  vol_up:
+    card:
+      type: custom:button-card
+      icon: mdi:volume-plus
+      show_name: false
+      tap_action: {action: call-service, service: script.media_focus_volume_up}
+      hold_action:
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data: !include ../popup/media_all_players.yaml
+      styles: *dock_btn_styles
 styles:
   card:
     - border-radius: 5%
@@ -63,22 +147,70 @@ styles:
       - left: 0
       - right: 0
       - bottom: 0
-      - height: 30%
+      - height: 32%
       - z-index: 1
-      - background: linear-gradient(180deg, rgba(20, 24, 32, 0) 0%, rgba(20, 24, 32, 0.66) 35%, rgba(20, 24, 32, 0.74) 100%)
+      - background: linear-gradient(180deg, rgba(20,24,32,0) 0%, rgba(20,24,32,0.66) 40%, rgba(20,24,32,0.78) 100%)
       - backdrop-filter: blur(10px) saturate(1.2)
       - -webkit-backdrop-filter: blur(10px) saturate(1.2)
+    dock_bg:
+      - position: absolute
+      - right: 4%
+      - bottom: 20%
+      - width: 25%
+      - height: 38%
+      - z-index: 2
+      - border-radius: 14px
+      - background: linear-gradient(160deg, rgba(12,16,24,0.55), rgba(12,16,24,0.32))
+      - border: 1px solid rgba(255,255,255,0.12)
+      - backdrop-filter: blur(8px)
+      - -webkit-backdrop-filter: blur(8px)
+    playpause: &dock_pos
+      - position: absolute
+      - right: 7%
+      - bottom: 49%
+      - width: 8.5%
+      - z-index: 3
+    prev:
+      - position: absolute
+      - right: 16.5%
+      - bottom: 49%
+      - width: 8.5%
+      - z-index: 3
+    next:
+      - position: absolute
+      - right: 7%
+      - bottom: 38%
+      - width: 8.5%
+      - z-index: 3
+    mute:
+      - position: absolute
+      - right: 16.5%
+      - bottom: 38%
+      - width: 8.5%
+      - z-index: 3
+    vol_down:
+      - position: absolute
+      - right: 7%
+      - bottom: 27%
+      - width: 8.5%
+      - z-index: 3
+    vol_up:
+      - position: absolute
+      - right: 16.5%
+      - bottom: 27%
+      - width: 8.5%
+      - z-index: 3
   state:
     - position: absolute
-    - bottom: 10%
+    - bottom: 9%
     - left: 5%
-    - right: 5%
+    - right: 30%
     - font-size: 0.9em
     - color: rgba(255,255,255,0.95)
     - text-shadow: 1px 1px 3px rgba(0,0,0,0.85)
     - white-space: nowrap
     - overflow: hidden
     - text-overflow: ellipsis
-    - z-index: 3
+    - z-index: 4
   name:
     - display: none

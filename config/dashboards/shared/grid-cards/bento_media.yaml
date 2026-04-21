@@ -1,4 +1,22 @@
 - type: custom:swipe-card
+  card_mod:
+    style: |
+      :host {
+        height: 100% !important;
+        min-height: 0 !important;
+        display: block !important;
+      }
+      .swiper,
+      .swiper-container,
+      .swiper-wrapper,
+      .swiper-slide {
+        height: 100% !important;
+        min-height: 0 !important;
+      }
+      .swiper-slide {
+        display: flex !important;
+        align-items: stretch !important;
+      }
   parameters:
     pagination:
       type: bullets
@@ -14,13 +32,42 @@
     grabCursor: true
   cards:
     ########## SLIDE 1: ARTWORK + CONTROL BAR ##########
-    - !include ../snippets/media-slide-focus.yaml
+    # ANTERIOR: !include ../snippets/media-slide-focus.yaml
+    # Bento precisa de versão retangular sem assumir aspect_ratio 1/1.
+    - !include ../snippets/media-slide-focus-bento.yaml
 
     ########## SLIDE 2: GRID 2x2 ##########
-    - type: grid
-      columns: 2
-      square: false
-      cards:
+    - type: custom:mod-card
+      card_mod:
+        style: |
+          :host {
+            height: 100% !important;
+            min-height: 0 !important;
+            display: block !important;
+          }
+          ha-card {
+            height: 100% !important;
+            min-height: 0 !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            overflow: hidden !important;
+            display: flex !important;
+          }
+          hui-grid-card {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+          }
+          #root {
+            height: 100% !important;
+            min-height: 0 !important;
+            align-content: stretch !important;
+          }
+      card:
+        type: grid
+        columns: 2
+        square: false
+        cards:
         # Slot 1: Smart TV
         - type: custom:button-card
           entity: media_player.android_tv_192_168_3_17
@@ -40,6 +87,11 @@
             browser_mod:
               service: browser_mod.popup
               data: !include ../popup/media_all_players.yaml
+          styles:
+            card:
+              - height: 100%
+              - min-height: 0
+              - aspect-ratio: auto
 
         # Slot 2: Echo Show
         - type: custom:button-card
@@ -70,6 +122,9 @@
                     }
                     return undefined;
                   ]]]
+              - height: 100%
+              - min-height: 0
+              - aspect-ratio: auto
             custom_fields:
               artwork:
                 - display: >
@@ -99,6 +154,11 @@
             browser_mod:
               service: browser_mod.popup
               data: !include ../popup/media_all_players.yaml
+          styles:
+            card:
+              - height: 100%
+              - min-height: 0
+              - aspect-ratio: auto
 
         # Slot 4: Echo Pop Office
         - type: custom:button-card
@@ -129,6 +189,9 @@
                     }
                     return undefined;
                   ]]]
+              - height: 100%
+              - min-height: 0
+              - aspect-ratio: auto
             custom_fields:
               artwork:
                 - display: >

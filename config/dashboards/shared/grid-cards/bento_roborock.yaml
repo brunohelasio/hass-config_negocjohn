@@ -200,6 +200,7 @@
         - justify-self: start
       icon:
         - justify-self: center
+        - margin-top: 6px
       status:
         - justify-self: start
         - align-self: end

@@ -15,7 +15,8 @@ layout:
   margin: 0
   padding: 12px
   grid-gap: 10px
-  grid-template-columns: 64px repeat(12, minmax(0, 1fr))
+  grid-template-columns: 64px repeat(9, minmax(0, 1fr)) repeat(3, minmax(0, 1.12fr))
+  # grid-template-columns: 64px repeat(12, minmax(0, 1fr))
   # Composição reajustada:
   # - Sala mais larga
   # - Comodos proporcionalmente menor

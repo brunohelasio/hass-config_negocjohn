@@ -98,6 +98,7 @@
             - background: rgba(116,108,209,0.48)
             - border: 1px solid rgba(168,157,255,0.45)
             - box-shadow: none
+            - width: 100%
           name:
             - color: rgba(218,210,255,0.95)
             - font-size: 14px
@@ -120,6 +121,7 @@
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
+            - width: 100%
           name:
             - color: rgba(255,255,255,0.55)
             - font-size: 14px
@@ -142,6 +144,7 @@
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
+            - width: 100%
           name:
             - color: rgba(255,255,255,0.55)
             - font-size: 14px
@@ -176,7 +179,8 @@
         - justify-self: start
         - align-self: start
       btn_start:
-        - margin-top: 1px
-      btn_stop: []
+        - margin-top: 8px
+      btn_stop:
+        - margin-top: 8px
       btn_base:
-        - margin-top: 1px
+        - margin-top: 4px

@@ -55,7 +55,7 @@ styles:
   grid:
     - grid-template-areas: '"icon temp dots" "n n dots" "s s dots"'
     - grid-template-columns: "min-content 1fr min-content"
-    - grid-template-rows: "1fr min-content min-content"
+    - grid-template-rows: "0.78fr min-content min-content"
   
   name:
     - justify-self: "start"
@@ -63,7 +63,6 @@ styles:
     - font-size: "15px"
     - font-weight: "700"
     - margin-bottom: "4px !important"
-    - transform: "translateY(-4px)"
     - color: >
         [[[ return variables.state_on ? 'black' : 'white'; ]]]
 
@@ -74,7 +73,6 @@ styles:
     - font-weight: "500"
     # - margin-bottom: "44px !important"  # ORIGINAL — projetado para botão quadrado, subia o texto no retangular
     - margin-bottom: "2px !important"
-    - transform: "translateY(-3px)"
     - color: >
         [[[ return variables.state_on ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)'; ]]]
         

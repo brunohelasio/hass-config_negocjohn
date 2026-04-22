@@ -113,7 +113,8 @@
         - align-self: start
       icon:
         - justify-self: center
-        - align-self: center
+        - align-self: start
+        - margin-top: -2px
       events:
         - align-self: stretch
         - width: 100%

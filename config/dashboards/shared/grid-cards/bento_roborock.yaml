@@ -180,7 +180,16 @@
         - align-self: start
       btn_start:
         - margin-top: 8px
+        - width: 100%
+        - justify-self: stretch
+        - align-self: end
       btn_stop:
         - margin-top: 8px
+        - width: 100%
+        - justify-self: stretch
+        - align-self: end
       btn_base:
         - margin-top: 4px
+        - width: 100%
+        - justify-self: stretch
+        - align-self: end

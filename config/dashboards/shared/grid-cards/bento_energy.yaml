@@ -56,4 +56,6 @@
         - justify-self: start
       chart:
         - align-self: end
-        - width: 100%
+        - width: calc(100% + 44px)
+        - margin-left: -22px
+        - margin-right: -22px

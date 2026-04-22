@@ -27,9 +27,9 @@
       [[[
         const active = ['cleaning','moving','returning','segment_cleaning'].includes(entity?.state);
         if (active) {
-          return '<svg viewBox="0 0 50 50" width="92" height="92"><style>@keyframes spinner{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}@keyframes robot{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}</style><g style="animation:robot 10s infinite ease-in-out;transform-origin:center;transform-box:fill-box"><path fill="#242424" d="M32.91 9.041c-.038.01-.078.116-.078.116l3.389 2.136-.07.078-3.413-2.124s-.073.095-.039.12c2.241 1.627 5.202 3.379 5.202 3.379s-.144.323-.134.497c.01.162.177.466.177.466l-4.476 3.854.089.125 2.962-2.433.053.081-3.006 2.469.14.07 4.601-3.746s.281.226.475.287a.833.833 0 0 0 .573-.02l2.598 5.381.143-.082-1.621-3.524.062-.03 1.659 3.507.135-.06-2.516-5.456s.047-.059.075-.084c0 0 .193-.092.313-.28.073-.113.127-.224.07-.484l.188-.115c1.22-.184 6.06-.892 6.06-.892l-.012-.13-4.057.524-.016-.068 4.097-.558-.002-.135-6.25.75c-.1-.481-.681-.718-.681-.718.272-1.206 1.195-6.174 1.195-6.174s-.068-.044-.073-.02l-.896 3.984-.073.002.829-3.984c.005-.024-.07-.018-.07-.018L39.01 11.85s-.195-.032-.812.356c-.042.026-.147-.003-.147-.003l-5.125-3.159a.02.02 0 0 0-.016-.002Zm6.014 3.717a.357.357 0 1 1 .303.645.357.357 0 0 1-.303-.645Z" style="animation:spinner .8s infinite linear;transform-origin:center;transform-box:fill-box"/><path fill="#9da0a2" stroke="#787878" d="M47.53 24.915c0 .3-.016.61-.047.93-.026.27-1.094-.718-1.14-.436-.041.247-.138.76-.138.76.403.29 1.087 1.11 1.076 1.472-.182 6.02-5.726 12.664-5.726 12.664-5.937 5.656-10.869 6.615-16.526 7.048C13.714 48.22 2.715 36.397 2.815 27.72c0 0-.178-.417.934-1.593 0 0-.02-.688-.05-.99-.033-.33-1.13 1.18-1.148.845-.022-.406 0-1.39 0-1.802 0-12.383 10.094-21.671 22.478-21.671 12.384 0 22.501 10.023 22.501 22.407Z"/><path fill="#787878" d="M28.618 8.842h-7.281c-.623 0-1.127.455-1.127 1.016 0 .561.504 1.016 1.127 1.016h7.281c.622 0 1.127-.455 1.127-1.016 0-.561-.505-1.016-1.127-1.016Z"/><path d="M25.036 27.378a6.563 6.563 0 1 0 0-13.125 6.563 6.563 0 0 0 0 13.125Z" fill="#787878"/><path d="M25.035 26.45a5.635 5.635 0 1 0 0-11.27 5.635 5.635 0 0 0 0 11.27Z" fill="#9da0a2"/></g></svg>';
+          return '<svg viewBox="0 0 50 50" width="72" height="72"><style>@keyframes spinner{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}@keyframes robot{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}</style><g style="animation:robot 10s infinite ease-in-out;transform-origin:center;transform-box:fill-box"><path fill="#242424" d="M32.91 9.041c-.038.01-.078.116-.078.116l3.389 2.136-.07.078-3.413-2.124s-.073.095-.039.12c2.241 1.627 5.202 3.379 5.202 3.379s-.144.323-.134.497c.01.162.177.466.177.466l-4.476 3.854.089.125 2.962-2.433.053.081-3.006 2.469.14.07 4.601-3.746s.281.226.475.287a.833.833 0 0 0 .573-.02l2.598 5.381.143-.082-1.621-3.524.062-.03 1.659 3.507.135-.06-2.516-5.456s.047-.059.075-.084c0 0 .193-.092.313-.28.073-.113.127-.224.07-.484l.188-.115c1.22-.184 6.06-.892 6.06-.892l-.012-.13-4.057.524-.016-.068 4.097-.558-.002-.135-6.25.75c-.1-.481-.681-.718-.681-.718.272-1.206 1.195-6.174 1.195-6.174s-.068-.044-.073-.02l-.896 3.984-.073.002.829-3.984c.005-.024-.07-.018-.07-.018L39.01 11.85s-.195-.032-.812.356c-.042.026-.147-.003-.147-.003l-5.125-3.159a.02.02 0 0 0-.016-.002Zm6.014 3.717a.357.357 0 1 1 .303.645.357.357 0 0 1-.303-.645Z" style="animation:spinner .8s infinite linear;transform-origin:center;transform-box:fill-box"/><path fill="#9da0a2" stroke="#787878" d="M47.53 24.915c0 .3-.016.61-.047.93-.026.27-1.094-.718-1.14-.436-.041.247-.138.76-.138.76.403.29 1.087 1.11 1.076 1.472-.182 6.02-5.726 12.664-5.726 12.664-5.937 5.656-10.869 6.615-16.526 7.048C13.714 48.22 2.715 36.397 2.815 27.72c0 0-.178-.417.934-1.593 0 0-.02-.688-.05-.99-.033-.33-1.13 1.18-1.148.845-.022-.406 0-1.39 0-1.802 0-12.383 10.094-21.671 22.478-21.671 12.384 0 22.501 10.023 22.501 22.407Z"/><path fill="#787878" d="M28.618 8.842h-7.281c-.623 0-1.127.455-1.127 1.016 0 .561.504 1.016 1.127 1.016h7.281c.622 0 1.127-.455 1.127-1.016 0-.561-.505-1.016-1.127-1.016Z"/><path d="M25.036 27.378a6.563 6.563 0 1 0 0-13.125 6.563 6.563 0 0 0 0 13.125Z" fill="#787878"/><path d="M25.035 26.45a5.635 5.635 0 1 0 0-11.27 5.635 5.635 0 0 0 0 11.27Z" fill="#9da0a2"/></g></svg>';
         }
-        return '<svg viewBox="0 0 96 96" width="92" height="92" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="48" cy="48" r="35" stroke="rgba(255,255,255,0.78)" stroke-width="2.5"/><circle cx="48" cy="48" r="27" stroke="rgba(255,255,255,0.42)" stroke-width="1.8"/><circle cx="48" cy="30" r="8" stroke="rgba(255,255,255,0.74)" stroke-width="2.5"/><circle cx="48" cy="48" r="6" stroke="rgba(255,255,255,0.72)" stroke-width="2"/><path d="M26 66C33 72 42 75 48 75C54 75 63 72 70 66" stroke="rgba(143,116,255,0.68)" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6"/></svg>';
+        return '<svg viewBox="0 0 96 96" width="72" height="72" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="48" cy="48" r="35" stroke="rgba(255,255,255,0.78)" stroke-width="2.5"/><circle cx="48" cy="48" r="27" stroke="rgba(255,255,255,0.42)" stroke-width="1.8"/><circle cx="48" cy="30" r="8" stroke="rgba(255,255,255,0.74)" stroke-width="2.5"/><circle cx="48" cy="48" r="6" stroke="rgba(255,255,255,0.72)" stroke-width="2"/><path d="M26 66C33 72 42 75 48 75C54 75 63 72 70 66" stroke="rgba(143,116,255,0.68)" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 6"/></svg>';
       ]]]
     status: |
       [[[
@@ -43,12 +43,42 @@
           segment_cleaning: 'Limpando setor'
         };
         const s = entity?.state || 'unknown';
-        return `<div style="font-size:33px;font-weight:700;line-height:1;color:#fff;">${labels[s] || s}</div>`;
+        return `<div style="font-size:24px;font-weight:700;line-height:1.05;color:#fff;">${labels[s] || s}</div>`;
       ]]]
     location: |
       [[[
         const room = states['sensor.roborock_s7_comodo_atual']?.state;
-        return `<div style="font-size:14px;color:rgba(255,255,255,0.62);">Local: ${room && !['unknown','unavailable'].includes(room) ? room : '--'}</div>`;
+        return `<div style="font-size:13px;color:rgba(255,255,255,0.62);">Local: ${room && !['unknown','unavailable'].includes(room) ? room : '--'}</div>`;
+      ]]]
+    last_clean: |
+      [[[
+        const invalid = ['unknown','unavailable','none',''];
+        const sensors = [
+          'sensor.roborock_s7_last_clean_end',
+          'sensor.roborock_s7_ultima_limpeza',
+          'sensor.roborock_s7_last_cleanup',
+          'sensor.roborock_s7_last_clean'
+        ];
+
+        let raw = '';
+        for (const id of sensors) {
+          const st = states[id]?.state;
+          if (st && !invalid.includes(String(st).toLowerCase())) {
+            raw = st;
+            break;
+          }
+        }
+
+        if (!raw && entity?.attributes?.last_clean_end) raw = entity.attributes.last_clean_end;
+
+        if (!raw) return '<div style="font-size:12px;color:rgba(255,255,255,0.45);">Última limpeza: --</div>';
+
+        const dt = new Date(raw);
+        const pretty = isNaN(dt.getTime())
+          ? raw
+          : dt.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '');
+
+        return `<div style="font-size:12px;color:rgba(255,255,255,0.52);">Última limpeza: ${pretty}</div>`;
       ]]]
     btn_start:
       card:
@@ -63,14 +93,14 @@
             entity_id: vacuum.roborock_s7
         styles:
           card:
-            - height: 44px
-            - border-radius: 13px
+            - height: 36px
+            - border-radius: 11px
             - background: rgba(116,108,209,0.48)
             - border: 1px solid rgba(168,157,255,0.45)
             - box-shadow: none
           name:
             - color: rgba(218,210,255,0.95)
-            - font-size: 17px
+            - font-size: 14px
             - font-weight: 700
     btn_stop:
       card:
@@ -85,14 +115,14 @@
             entity_id: vacuum.roborock_s7
         styles:
           card:
-            - height: 44px
-            - border-radius: 13px
+            - height: 36px
+            - border-radius: 11px
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
           name:
             - color: rgba(255,255,255,0.55)
-            - font-size: 17px
+            - font-size: 14px
             - font-weight: 700
     btn_base:
       card:
@@ -107,26 +137,27 @@
             entity_id: vacuum.roborock_s7
         styles:
           card:
-            - height: 44px
-            - border-radius: 13px
+            - height: 36px
+            - border-radius: 11px
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
           name:
             - color: rgba(255,255,255,0.55)
-            - font-size: 17px
+            - font-size: 14px
             - font-weight: 700
   styles:
     grid:
-      - grid-template-areas: '"header" "icon" "status" "location" "btn_start" "btn_stop" "btn_base"'
-      - grid-template-columns: 1fr
-      - grid-template-rows: min-content min-content min-content min-content 1fr 1fr 1fr
-      - row-gap: 6px
+      - grid-template-areas: '"header header" "icon status" "icon location" "icon last_clean" "btn_start btn_stop" "btn_base btn_base"'
+      - grid-template-columns: 0.92fr 1.08fr
+      - grid-template-rows: min-content 1fr min-content min-content min-content min-content
+      - column-gap: 8px
+      - row-gap: 3px
     card:
       - background: transparent
       - border: none
       - box-shadow: none
-      - padding: 12px 12px 10px
+      - padding: 10px 12px 10px
       - height: 100%
     custom_fields:
       header:
@@ -134,10 +165,18 @@
       icon:
         - justify-self: center
       status:
-        - justify-self: center
+        - justify-self: start
+        - align-self: end
+        - margin-bottom: 2px
       location:
-        - justify-self: center
+        - justify-self: start
+        - align-self: start
+        - margin-top: -1px
+      last_clean:
+        - justify-self: start
+        - align-self: start
       btn_start:
-        - margin-top: 4px
+        - margin-top: 1px
       btn_stop: []
-      btn_base: []
+      btn_base:
+        - margin-top: 1px

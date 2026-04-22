@@ -185,7 +185,7 @@
   styles:
     grid:
       - grid-template-areas: '"header header header" "icon status status" "icon location location" "icon last_clean last_clean" "btn_start btn_stop btn_base"'
-      - grid-template-columns: 0.92fr 1fr 1fr
+      - grid-template-columns: repeat(3, minmax(0, 1fr))
       - grid-template-rows: min-content 1fr min-content min-content min-content
       - column-gap: 8px
       - row-gap: 3px

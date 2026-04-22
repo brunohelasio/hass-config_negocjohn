@@ -35,7 +35,7 @@
             - border: none
             - box-shadow: none
             - padding: 0
-            - margin: 0 auto
+            - margin: 0
             - width: 92px
             - height: 70px
           custom_fields:
@@ -48,7 +48,7 @@
           icon: |
             [[[
               return `
-                <svg viewBox="0 0 96 96" width="72" height="72" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 8px 14px rgba(0,0,0,.30));">
+                <svg viewBox="0 0 96 96" width="72" height="72" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 8px 14px rgba(0,0,0,.30));transform:translateX(-4px);">
                   <rect x="10" y="24" width="76" height="58" rx="16" stroke="rgba(255,255,255,0.78)" stroke-width="2.5"/>
                   <path d="M10 40H86" stroke="rgba(255,255,255,0.60)" stroke-width="2"/>
                   <path d="M30 14V30" stroke="rgba(255,255,255,0.82)" stroke-width="3" stroke-linecap="round"/>

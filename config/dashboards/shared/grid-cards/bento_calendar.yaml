@@ -36,8 +36,8 @@
             - box-shadow: none
             - padding: 0
             - margin: 0 auto
-            - width: 100px
-            - height: 78px
+            - width: 92px
+            - height: 70px
           custom_fields:
             icon:
               - width: 100%
@@ -48,7 +48,7 @@
           icon: |
             [[[
               return `
-                <svg viewBox="0 0 96 96" width="82" height="82" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 8px 14px rgba(0,0,0,.30));">
+                <svg viewBox="0 0 96 96" width="72" height="72" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 8px 14px rgba(0,0,0,.30));">
                   <rect x="10" y="24" width="76" height="58" rx="16" stroke="rgba(255,255,255,0.78)" stroke-width="2.5"/>
                   <path d="M10 40H86" stroke="rgba(255,255,255,0.60)" stroke-width="2"/>
                   <path d="M30 14V30" stroke="rgba(255,255,255,0.82)" stroke-width="3" stroke-linecap="round"/>
@@ -76,7 +76,7 @@
           - entity: calendar.feriados_no_brasil
             color: "#1DB954"
         days_to_show: 3
-        compact_events_to_show: 4
+        compact_events_to_show: 2
         event_color: "rgba(255,255,255,0.92)"
         time_color: "rgba(255,255,255,0.72)"
         location_color: "rgba(255,255,255,0.50)"
@@ -100,12 +100,12 @@
       - grid-template-areas: '"header" "icon" "events"'
       - grid-template-columns: 1fr
       - grid-template-rows: min-content min-content 1fr
-      - row-gap: 8px
+      - row-gap: 6px
     card:
       - background: transparent
       - border: none
       - box-shadow: none
-      - padding: 14px 14px 12px
+      - padding: 14px 14px 8px
       - height: 100%
     custom_fields:
       header:
@@ -115,6 +115,6 @@
         - justify-self: center
         - align-self: center
       events:
-        - align-self: end
+        - align-self: stretch
         - width: 100%
         - overflow: hidden

@@ -43,12 +43,12 @@
           segment_cleaning: 'Limpando setor'
         };
         const s = entity?.state || 'unknown';
-        return `<div style="font-size:33px;font-weight:700;line-height:1;color:#fff;">${labels[s] || s}</div>`;
+        return `<div style="font-size:27px;font-weight:700;line-height:1.05;color:#fff;">${labels[s] || s}</div>`;
       ]]]
     location: |
       [[[
         const room = states['sensor.roborock_s7_comodo_atual']?.state;
-        return `<div style="font-size:14px;color:rgba(255,255,255,0.62);">Local: ${room && !['unknown','unavailable'].includes(room) ? room : '--'}</div>`;
+        return `<div style="font-size:13px;color:rgba(255,255,255,0.62);">Local: ${room && !['unknown','unavailable'].includes(room) ? room : '--'}</div>`;
       ]]]
     btn_start:
       card:
@@ -63,14 +63,14 @@
             entity_id: vacuum.roborock_s7
         styles:
           card:
-            - height: 44px
-            - border-radius: 13px
+            - height: 36px
+            - border-radius: 11px
             - background: rgba(116,108,209,0.48)
             - border: 1px solid rgba(168,157,255,0.45)
             - box-shadow: none
           name:
             - color: rgba(218,210,255,0.95)
-            - font-size: 17px
+            - font-size: 14px
             - font-weight: 700
     btn_stop:
       card:
@@ -85,14 +85,14 @@
             entity_id: vacuum.roborock_s7
         styles:
           card:
-            - height: 44px
-            - border-radius: 13px
+            - height: 36px
+            - border-radius: 11px
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
           name:
             - color: rgba(255,255,255,0.55)
-            - font-size: 17px
+            - font-size: 14px
             - font-weight: 700
     btn_base:
       card:
@@ -107,26 +107,27 @@
             entity_id: vacuum.roborock_s7
         styles:
           card:
-            - height: 44px
-            - border-radius: 13px
+            - height: 36px
+            - border-radius: 11px
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
           name:
             - color: rgba(255,255,255,0.55)
-            - font-size: 17px
+            - font-size: 14px
             - font-weight: 700
   styles:
     grid:
-      - grid-template-areas: '"header" "icon" "status" "location" "btn_start" "btn_stop" "btn_base"'
-      - grid-template-columns: 1fr
-      - grid-template-rows: min-content min-content min-content min-content 1fr 1fr 1fr
-      - row-gap: 6px
+      - grid-template-areas: '"header header" "icon status" "icon location" "btn_start btn_stop" "btn_base btn_base"'
+      - grid-template-columns: 0.95fr 1.05fr
+      - grid-template-rows: min-content 1fr min-content min-content min-content
+      - column-gap: 8px
+      - row-gap: 4px
     card:
       - background: transparent
       - border: none
       - box-shadow: none
-      - padding: 12px 12px 10px
+      - padding: 10px 12px 10px
       - height: 100%
     custom_fields:
       header:
@@ -134,10 +135,13 @@
       icon:
         - justify-self: center
       status:
-        - justify-self: center
+        - justify-self: start
+        - align-self: end
       location:
-        - justify-self: center
+        - justify-self: start
+        - align-self: start
       btn_start:
-        - margin-top: 4px
+        - margin-top: 2px
       btn_stop: []
-      btn_base: []
+      btn_base:
+        - margin-top: 2px

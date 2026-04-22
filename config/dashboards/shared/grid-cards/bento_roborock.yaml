@@ -105,7 +105,7 @@
             - background: rgba(116,108,209,0.48)
             - border: 1px solid rgba(168,157,255,0.45)
             - box-shadow: none
-            - width: 100%
+            - width: 62px
             - padding: 6px 4px 8px
           icon:
             - color: rgba(218,210,255,0.95)
@@ -139,7 +139,7 @@
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
-            - width: 100%
+            - width: 62px
             - padding: 6px 4px 8px
           icon:
             - color: rgba(255,255,255,0.62)
@@ -173,7 +173,7 @@
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
-            - width: 100%
+            - width: 62px
             - padding: 6px 4px 8px
           icon:
             - color: rgba(255,255,255,0.62)
@@ -184,9 +184,9 @@
             - font-weight: 700
   styles:
     grid:
-      - grid-template-areas: '"header header header" "icon status status" "icon location location" "icon last_clean last_clean" "btn_start btn_stop btn_base"'
+      - grid-template-areas: '"header header header" "icon status status" "icon location location" "icon last_clean last_clean" "spacer spacer spacer" "btn_start btn_stop btn_base"'
       - grid-template-columns: repeat(3, minmax(0, 1fr))
-      - grid-template-rows: min-content 1fr min-content min-content min-content
+      - grid-template-rows: min-content min-content min-content min-content 1fr min-content
       - column-gap: 8px
       - row-gap: 3px
     card:
@@ -212,17 +212,14 @@
         - justify-self: start
         - align-self: start
       btn_start:
-        - margin-top: 8px
-        - width: 100%
-        - justify-self: stretch
+        - margin-top: 0
+        - justify-self: center
         - align-self: end
       btn_stop:
-        - margin-top: 8px
-        - width: 100%
-        - justify-self: stretch
+        - margin-top: 0
+        - justify-self: center
         - align-self: end
       btn_base:
-        - margin-top: 8px
-        - width: 100%
-        - justify-self: stretch
+        - margin-top: 0
+        - justify-self: center
         - align-self: end

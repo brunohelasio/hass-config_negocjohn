@@ -85,75 +85,108 @@
         type: custom:button-card
         entity: vacuum.roborock_s7
         name: Iniciar
-        show_icon: false
+        icon: mdi:play
+        show_icon: true
+        show_name: true
         tap_action:
           action: call-service
           service: vacuum.start
           service_data:
             entity_id: vacuum.roborock_s7
         styles:
+          grid:
+            - grid-template-areas: '"i" "n"'
+            - grid-template-columns: 1fr
+            - grid-template-rows: 1fr min-content
+            - row-gap: 3px
           card:
-            - height: 36px
-            - border-radius: 11px
+            - height: 64px
+            - border-radius: 14px
             - background: rgba(116,108,209,0.48)
             - border: 1px solid rgba(168,157,255,0.45)
             - box-shadow: none
             - width: 100%
+            - padding: 6px 4px 8px
+          icon:
+            - color: rgba(218,210,255,0.95)
+            - width: 18px
           name:
             - color: rgba(218,210,255,0.95)
-            - font-size: 14px
+            - font-size: 12px
             - font-weight: 700
     btn_stop:
       card:
         type: custom:button-card
         entity: vacuum.roborock_s7
         name: Parar
-        show_icon: false
+        icon: mdi:stop
+        show_icon: true
+        show_name: true
         tap_action:
           action: call-service
           service: vacuum.stop
           service_data:
             entity_id: vacuum.roborock_s7
         styles:
+          grid:
+            - grid-template-areas: '"i" "n"'
+            - grid-template-columns: 1fr
+            - grid-template-rows: 1fr min-content
+            - row-gap: 3px
           card:
-            - height: 36px
-            - border-radius: 11px
+            - height: 64px
+            - border-radius: 14px
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
             - width: 100%
+            - padding: 6px 4px 8px
+          icon:
+            - color: rgba(255,255,255,0.62)
+            - width: 18px
           name:
-            - color: rgba(255,255,255,0.55)
-            - font-size: 14px
+            - color: rgba(255,255,255,0.62)
+            - font-size: 12px
             - font-weight: 700
     btn_base:
       card:
         type: custom:button-card
         entity: vacuum.roborock_s7
         name: Base
-        show_icon: false
+        icon: mdi:home-map-marker
+        show_icon: true
+        show_name: true
         tap_action:
           action: call-service
           service: vacuum.return_to_base
           service_data:
             entity_id: vacuum.roborock_s7
         styles:
+          grid:
+            - grid-template-areas: '"i" "n"'
+            - grid-template-columns: 1fr
+            - grid-template-rows: 1fr min-content
+            - row-gap: 3px
           card:
-            - height: 36px
-            - border-radius: 11px
+            - height: 64px
+            - border-radius: 14px
             - background: rgba(255,255,255,0.06)
             - border: 1px solid rgba(255,255,255,0.14)
             - box-shadow: none
             - width: 100%
+            - padding: 6px 4px 8px
+          icon:
+            - color: rgba(255,255,255,0.62)
+            - width: 18px
           name:
-            - color: rgba(255,255,255,0.55)
-            - font-size: 14px
+            - color: rgba(255,255,255,0.62)
+            - font-size: 12px
             - font-weight: 700
   styles:
     grid:
-      - grid-template-areas: '"header header" "icon status" "icon location" "icon last_clean" "btn_start btn_stop" "btn_base btn_base"'
-      - grid-template-columns: 0.92fr 1.08fr
-      - grid-template-rows: min-content 1fr min-content min-content min-content min-content
+      - grid-template-areas: '"header header header" "icon status status" "icon location location" "icon last_clean last_clean" "btn_start btn_stop btn_base"'
+      - grid-template-columns: 0.92fr 1fr 1fr
+      - grid-template-rows: min-content 1fr min-content min-content min-content
       - column-gap: 8px
       - row-gap: 3px
     card:
@@ -189,7 +222,7 @@
         - justify-self: stretch
         - align-self: end
       btn_base:
-        - margin-top: 4px
+        - margin-top: 8px
         - width: 100%
         - justify-self: stretch
         - align-self: end

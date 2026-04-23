@@ -22,6 +22,11 @@
       show_name: true
       show_state: false
       name: Sala
+      variables:
+        state_on: >
+          [[[
+            return entity?.state === 'on';
+          ]]]
       triggers_update:
         - light.sala_switch_1
         - light.sala_switch_2
@@ -71,31 +76,88 @@
             const temp = t && t.state && !['unknown','unavailable'].includes(t.state) ? `${t.state}°` : '—';
             const h = states['sensor.sl_sensor_temp_humid_umidade'];
             const hum = h && !['unknown','unavailable'].includes(h.state) ? `${h.state}%` : '';
+            const color = variables.state_on ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.9)';
+            const subColor = variables.state_on ? 'rgba(0,0,0,0.48)' : 'rgba(255,255,255,0.52)';
             return `<div style="display:flex;flex-direction:column;gap:3px;">
-              <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.9);">${temp}</span>
-              <span style="font-size:11px;color:rgba(255,255,255,0.52);">${hum}</span>
+              <span style="font-size:13px;font-weight:700;color:${color};">${temp}</span>
+              <span style="font-size:11px;color:${subColor};">${hum}</span>
             </div>`;
           ]]]
         lights: >
           [[[
-            const raw = states['sensor.living_room_active']?.state;
-            const n = raw != null ? Number(raw) : NaN;
-            let count;
-            if (!Number.isNaN(n) && n > 0) {
-              count = n;
-            } else {
-              const ids = ['light.sala_switch_1','light.sala_switch_2'];
+            // BLOCO ORIGINAL COMENTADO (mantido para rollback rapido)
+            // const raw = states['sensor.living_room_active']?.state;
+            // const n = raw != null ? Number(raw) : NaN;
+            // let count;
+            // if (!Number.isNaN(n) && n > 0) {
+            //   count = n;
+            // } else {
+            //   const ids = ['light.sala_switch_1','light.sala_switch_2'];
+            //   count = ids.filter(id => states[id]?.state === 'on').length;
+            // }
+            // if (count === 0) return '';
+            // const ms = Date.now() - Date.parse(entity?.last_changed ?? '');
+            // const m = Math.floor(ms / 60000);
+            // const h = Math.floor(m / 60);
+            // const d = Math.floor(h / 24);
+            // const timeStr = d > 0 ? `${d}d` : h > 0 ? `${h}h` : m > 0 ? `${m}m` : '<1m';
+            // return `<div style="display:flex;align-items:center;gap:4px;">
+            //   <ha-icon icon="mdi:lightbulb-on" style="width:11px;height:11px;color:#fbbf24;display:flex;"></ha-icon>
+            //   <span style="font-size:10px;font-weight:600;color:#fbbf24;">${count} · ${timeStr}</span>
+            // </div>`;
+
+            // NOVA LOGICA (Opcao A): paridade com rooms_base sem alterar arquitetura da Sala
+            const activeEntity = states['sensor.living_room_active'];
+            const lightsOnCount = activeEntity?.attributes?.lights_on_count;
+            const lightsOn = activeEntity?.attributes?.lights_on;
+            let count = null;
+            if (lightsOnCount != null && lightsOnCount !== '' && !isNaN(lightsOnCount)) {
+              const parsed = parseInt(lightsOnCount, 10);
+              if (!isNaN(parsed)) count = parsed;
+            } else if (Array.isArray(lightsOn)) {
+              count = lightsOn.length;
+            } else if (typeof lightsOn === 'string' && lightsOn.startsWith('[')) {
+              const matches = lightsOn.match(/'/g);
+              if (matches) count = matches.length / 2;
+            }
+
+            const ids = entity?.attributes?.entity_id;
+            if (count === null && Array.isArray(ids)) {
               count = ids.filter(id => states[id]?.state === 'on').length;
             }
-            if (count === 0) return '';
-            const ms = Date.now() - Date.parse(entity?.last_changed ?? '');
-            const m = Math.floor(ms / 60000);
-            const h = Math.floor(m / 60);
-            const d = Math.floor(h / 24);
-            const timeStr = d > 0 ? `${d}d` : h > 0 ? `${h}h` : m > 0 ? `${m}m` : '<1m';
+            if (count === null) {
+              const fallbackIds = ['light.sala_switch_1', 'light.sala_switch_2'];
+              count = fallbackIds.filter(id => states[id]?.state === 'on').length;
+            }
+            if (!count || count <= 0) return '';
+
+            const timeFmt = c => {
+              const m = (c / 6e4), h = (c / 36e5), d = (c / 864e5);
+              return m < 1 ? '<1m'
+                   : m < 60 ? `${parseInt(m)}m`
+                   : h < 24 ? `${parseInt(h)}h`
+                   : `${parseInt(d)}d`;
+            };
+
+            let earliestOn = null;
+            if (Array.isArray(ids)) {
+              ids.forEach(id => {
+                const s = states[id];
+                if (s?.state === 'on' && s?.last_changed) {
+                  const ts = Date.parse(s.last_changed);
+                  if (!isNaN(ts) && (earliestOn === null || ts < earliestOn)) earliestOn = ts;
+                }
+              });
+            }
+            if (earliestOn === null && entity?.last_changed) {
+              const ts = Date.parse(entity.last_changed);
+              if (!isNaN(ts)) earliestOn = ts;
+            }
+            const elapsed = earliestOn !== null ? timeFmt(Date.now() - earliestOn) : '';
+
             return `<div style="display:flex;align-items:center;gap:4px;">
               <ha-icon icon="mdi:lightbulb-on" style="width:11px;height:11px;color:#fbbf24;display:flex;"></ha-icon>
-              <span style="font-size:10px;font-weight:600;color:#fbbf24;">${count} · ${timeStr}</span>
+              <span style="font-size:10px;font-weight:600;color:#fbbf24;">${count}${elapsed ? ' · ' + elapsed : ''}</span>
             </div>`;
           ]]]
         right: >
@@ -116,7 +178,13 @@
           ]]]
       styles:
         card:
-          - background: transparent
+          # - background: transparent  # ORIGINAL — mantido para rollback rapido
+          - background: >
+              [[[
+                return variables.state_on
+                  ? 'rgba(250, 250, 250, 0.75)'
+                  : 'transparent';
+              ]]]
           - border: none
           - box-shadow: none
           - padding: 0
@@ -131,7 +199,11 @@
           - align-self: end
           - font-size: 15px
           - font-weight: 700
-          - color: white
+          # - color: white # ORIGINAL — mantido para rollback rapido
+          - color: >
+              [[[
+                return variables.state_on ? 'black' : 'white';
+              ]]]
           - margin-bottom: 2px
         custom_fields:
           icon:
@@ -394,4 +466,3 @@
           right:
             - justify-self: start
             - align-self: center
-

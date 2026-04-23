@@ -241,6 +241,53 @@ Adiado para momento posterior. A funcionalidade usaria `entity.attributes.entity
 
 ---
 
+## Registro de Implementacao — Opcao A no Bento Sala (2026-04-22)
+
+Escopo autorizado pelo usuario: implementar a **Opcao A** (levar a logica de acendimento
+dos comodos para o botao hero da Sala, sem mudar a arquitetura geral do card).
+
+### Arquivo alterado
+
+- `config/dashboards/shared/grid-cards/bento_sala.yaml`
+
+### O que foi implementado
+
+1. **Variavel de estado visual no hero (`state_on`)**
+   - Adicionada variavel para definir estado ligado/desligado a partir de
+     `light.grupo_luzes_sala`.
+
+2. **Acendimento visual do hero**
+   - `styles.card.background` deixou de ser fixo transparente e passou a alternar:
+     - ligado: `rgba(250, 250, 250, 0.75)` (paridade visual com `rooms_base`);
+     - desligado: `transparent` (mantem linguagem de vidro do container).
+
+3. **Contraste dinamico de texto**
+   - Nome e bloco de temperatura/umidade agora mudam contraste conforme `state_on`
+     (preto quando ligado, branco quando desligado), alinhando com os comodos.
+
+4. **State/lights com logica robusta (paridade com `rooms_base`)**
+   - Mantida compatibilidade com `sensor.living_room_active`.
+   - Ordem de prioridade para contagem:
+     1) `lights_on_count` (atributo),
+     2) `lights_on` (array/string),
+     3) membros do grupo (`entity.attributes.entity_id`),
+     4) fallback fixo `light.sala_switch_1`/`light.sala_switch_2`.
+   - Tempo ligado agora usa o **membro ligado mais antigo** do grupo (e fallback para
+     `entity.last_changed`), evitando inconsistencias conhecidas de group last_changed.
+
+### Regra de rollback rapido
+
+- **Nenhum codigo antigo foi apagado**.
+- Trechos anteriores foram mantidos comentados no proprio `bento_sala.yaml` com marcacao
+  `ORIGINAL — mantido para rollback rapido`.
+- Para restaurar comportamento anterior:
+  1) descomentar bloco antigo do `custom_fields.lights`;
+  2) voltar `styles.card.background: transparent`;
+  3) voltar `name.color: white`;
+  4) comentar os blocos novos da Opcao A.
+
+---
+
 ### Ordem de execucao
 
 | Passo | Etapa | Complexidade | Risco |

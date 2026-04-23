@@ -15,7 +15,8 @@ layout:
   margin: 0
   padding: 12px
   grid-gap: 10px
-  grid-template-columns: 64px repeat(9, minmax(0, 1fr)) repeat(3, minmax(0, 1.12fr))
+  grid-template-columns: 64px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr))
+  # grid-template-columns: 64px repeat(9, minmax(0, 1fr)) repeat(3, minmax(0, 1.12fr))
   # grid-template-columns: 64px repeat(12, minmax(0, 1fr))
   # Composição reajustada:
   # - Sala mais larga
@@ -26,8 +27,8 @@ layout:
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
     "sidebar welcome welcome welcome welcome sala sala sala comodos comodos comodos comodos comodos"
-    "sidebar cameras cameras cameras cameras energy energy energy energy energy media media media"
-    "sidebar cameras cameras cameras cameras calendar calendar roborock roborock roborock media media media"
+    "sidebar media media media energy energy energy energy energy cameras cameras cameras cameras"
+    "sidebar media media media calendar calendar roborock roborock roborock cameras cameras cameras cameras"
     "sidebar quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions"
 
   mediaquery:

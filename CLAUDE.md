@@ -342,6 +342,26 @@ Ajustes aplicados:
      - bloco Corredor (titulo/subtitulo/icone inativo).
    - Objetivo: manter bloco inteiro aceso e preservar legibilidade/padronizacao.
 
+### Ajuste de aderencia ao padrao dos comodos (2026-04-24 — revisao 2)
+
+Feedback do usuario: branco da Sala ainda estava mais forte que os demais comodos e
+o formato/cor do status de iluminacao nao seguia o padrao.
+
+Acoes:
+
+1. Wrapper da Sala (`views/main-grid/bento_sala.yaml`)
+   - Estado ON ajustado de `rgb(250,250,250)` para `rgba(250,250,250,0.75)`,
+     reproduzindo o branco usado pelos cards base de comodos.
+
+2. Status de iluminacao (`shared/grid-cards/bento_sala.yaml`)
+   - Formato padronizado para `1 light` / `N lights` + tempo (`· Xm/Xh/Xd`),
+     alinhado com demais comodos.
+   - Cor do texto do status no estado ON ajustada para contraste escuro.
+
+3. Contraste dos toggles
+   - Toggles de TV, A/C e Corredor agora escurecem trilho/contorno no estado OFF
+     quando a Sala esta acesa, evitando perda de contraste sobre fundo claro.
+
 ---
 
 ### Ordem de execucao

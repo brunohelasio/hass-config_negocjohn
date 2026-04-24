@@ -3,6 +3,7 @@ view_layout:
   grid-area: sala
 card_mod:
   style: |
+    {% set sala_on = is_state('light.grupo_luzes_sala', 'on') %}
     /* 1. Faz o "envelope" do cartão esticar até o fundo da célula do grid */
     :host {
       height: 100% !important;
@@ -15,12 +16,20 @@ card_mod:
       flex-direction: column !important;
       justify-content: space-between !important;
 
-      /* 3. O SEU Vidro Perfeito */
+      /* 3. O SEU Vidro Perfeito (ORIGINAL — mantido comentado para rollback rapido)
       background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;
       backdrop-filter: blur(20px) saturate(1.35) !important;
       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
       border: 1px solid rgba(255,255,255,0.28) !important;
       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+      */
+
+      /* 3b. AJUSTE: acendimento no BLOCO COMPLETO da Sala */
+      background: {% if sala_on %}rgb(250,250,250){% else %}linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)){% endif %} !important;
+      backdrop-filter: {% if sala_on %}none{% else %}blur(20px) saturate(1.35){% endif %} !important;
+      -webkit-backdrop-filter: {% if sala_on %}none{% else %}blur(20px) saturate(1.35){% endif %} !important;
+      border: {% if sala_on %}1px solid rgba(255,255,255,0.92){% else %}1px solid rgba(255,255,255,0.28){% endif %} !important;
+      box-shadow: {% if sala_on %}0 0 16px rgba(255,255,255,0.22), inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 22px rgba(0,0,0,0.10){% else %}0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2){% endif %} !important;
       
       /* 4. Força o arredondamento e IMPEDE que o conteúdo vaze e deixe quadrado */
       border-radius: 18px !important;

@@ -39,55 +39,78 @@ cards:
       - light.corredor_switch_1
       - light.quarto_miguel_switch_1
       - light.quarto_miguel_switch_2
+    variables:
+      s: >
+        [[[
+          const e = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
+          const on = e.filter(id => states[id]?.state === 'on').length;
+          return { is_on: on > 0, sub: on === 0 ? 'All Off' : on === e.length ? 'All On' : `${on} On` };
+        ]]]
     custom_fields:
       badge: >
         [[[
-          const e = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
-          const n = e.filter(id => states[id]?.state === 'on').length;
-          const label = n === 0 ? 'All Off' : n === e.length ? 'All On' : `${n} On`;
-          return `<div class="badge-wrap">
-            <div class="badge-title">Lights</div>
-            <ha-icon class="badge-icon" icon="mdi:lightbulb" style="color:#ffd700;"></ha-icon>
-            <div class="badge-sub">${label}</div>
+          const sub = variables?.s?.sub || 'All Off';
+          return `<div class="badge-row">
+            <ha-icon class="badge-icon" icon="mdi:lightbulb" style="color:#f7c600"></ha-icon>
+            <div class="badge-texts">
+              <div class="badge-title">Lights</div>
+              <div class="badge-sub">${sub}</div>
+            </div>
           </div>`;
         ]]]
     extra_styles: &badge_css |
-      .badge-wrap {
+      .badge-row {
+        display: grid;
+        grid-template-columns: 18px auto;
+        align-items: center;
+        column-gap: 8px;
+        min-width: 72px;
+      }
+      .badge-icon {
+        --mdc-icon-size: 15px;
+        justify-self: center;
+        align-self: center;
+      }
+      .badge-texts {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-width: 74px;
+        align-items: flex-start;
+        line-height: 1.08;
         gap: 2px;
-        line-height: 1.05;
       }
       .badge-title {
         font-size: 10px;
         font-weight: 600;
-        letter-spacing: .02em;
         color: var(--badge-title-color, rgba(255,255,255,0.92));
       }
-      .badge-icon {
-        --mdc-icon-size: 17px;
-        color: var(--hemma-icon-color, rgba(255,255,255,0.85));
-      }
       .badge-sub {
-        font-size: 10px;
-        font-weight: 500;
-        color: var(--badge-sub-color, rgba(255,255,255,0.64));
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--badge-sub-color, rgba(255,255,255,0.72));
       }
     styles: &badge_visual
       card:
         - width: max-content
-        - height: 58px
+        - height: 48px
         - border-radius: 999px
-        - padding: 0 14px
-        - background: rgba(36,33,30,0.82)
-        - border: 1px solid rgba(255,255,255,0.12)
+        - padding: 0 12px
+        - background: >
+            [[[
+              return variables?.s?.is_on ? 'rgba(255,255,255,0.90)' : 'rgba(36,33,30,0.82)';
+            ]]]
+        - border: >
+            [[[
+              return variables?.s?.is_on ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.12)';
+            ]]]
         - box-shadow: none
-        - --badge-title-color: rgba(255,255,255,0.92)
-        - --badge-sub-color: rgba(255,255,255,0.64)
-        - --hemma-icon-color: rgba(255,255,255,0.86)
+        - --badge-title-color: >
+            [[[
+              return variables?.s?.is_on ? 'rgba(0,0,0,0.86)' : 'rgba(255,255,255,0.92)';
+            ]]]
+        - --badge-sub-color: >
+            [[[
+              return variables?.s?.is_on ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.72)';
+            ]]]
       custom_fields:
         badge: [display: flex, align-items: center, height: 100%]
       grid: [grid-template-areas: '"badge"', grid-template-columns: 1fr, grid-template-rows: 1fr]
@@ -102,16 +125,23 @@ cards:
       - media_player.smart_tv_pro_2
       - media_player.spotifyplus_bruno_helasio
       - media_player.echo_show
+    variables:
+      s: >
+        [[[
+          const e = ['media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio','media_player.echo_show'];
+          const on = e.filter(id => ['playing','paused','on'].includes(states[id]?.state ?? '')).length;
+          return { is_on: on > 0, sub: on === 0 ? 'All Off' : `${on} On` };
+        ]]]
     custom_fields:
       badge: >
         [[[
-          const e = ['media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio','media_player.echo_show'];
-          const n = e.filter(id => ['playing','paused','on'].includes(states[id]?.state ?? '')).length;
-          const label = n === 0 ? 'All Off' : `${n} Playing`;
-          return `<div class="badge-wrap">
-            <div class="badge-title">Media</div>
-            <ha-icon class="badge-icon" icon="mdi:speaker-wireless" style="color:#9aa0a6;"></ha-icon>
-            <div class="badge-sub">${label}</div>
+          const sub = variables?.s?.sub || 'All Off';
+          return `<div class="badge-row">
+            <ha-icon class="badge-icon" icon="mdi:speaker-wireless" style="color:#9aa0a6"></ha-icon>
+            <div class="badge-texts">
+              <div class="badge-title">Media</div>
+              <div class="badge-sub">${sub}</div>
+            </div>
           </div>`;
         ]]]
     extra_styles: *badge_css
@@ -127,16 +157,23 @@ cards:
       - climate.sl_ar_condicionado
       - climate.ac_office
       - climate.ac_quarto_miguel
+    variables:
+      s: >
+        [[[
+          const e = ['climate.sl_ar_condicionado','climate.ac_office','climate.ac_quarto_miguel'];
+          const on = e.filter(id => !['off','unavailable','unknown',''].includes(states[id]?.state ?? 'unknown')).length;
+          return { is_on: on > 0, sub: on === 0 ? 'Off' : `${on} On` };
+        ]]]
     custom_fields:
       badge: >
         [[[
-          const e = ['climate.sl_ar_condicionado','climate.ac_office','climate.ac_quarto_miguel'];
-          const n = e.filter(id => !['off','unavailable','unknown',''].includes(states[id]?.state ?? 'unknown')).length;
-          const label = n === 0 ? 'Off' : `${n} On`;
-          return `<div class="badge-wrap">
-            <div class="badge-title">Climate</div>
-            <ha-icon class="badge-icon" icon="mdi:fan" style="color:#56d89b;"></ha-icon>
-            <div class="badge-sub">${label}</div>
+          const sub = variables?.s?.sub || 'Off';
+          return `<div class="badge-row">
+            <ha-icon class="badge-icon" icon="mdi:fan" style="color:#56d89b"></ha-icon>
+            <div class="badge-texts">
+              <div class="badge-title">Climate</div>
+              <div class="badge-sub">${sub}</div>
+            </div>
           </div>`;
         ]]]
     extra_styles: *badge_css

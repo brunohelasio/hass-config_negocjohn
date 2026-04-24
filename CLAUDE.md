@@ -323,6 +323,25 @@ Correcao aplicada:
    - Hero voltou a ficar com `background: transparent` em ambos os estados.
    - Evita acendimento parcial/isolado do topo.
 
+### Ajuste de padronizacao visual/contraste (2026-04-24)
+
+Novo feedback do usuario: quando a Sala acende, a cor estava translúcida/fosca demais
+e o contraste dos elementos internos ficava lavado (diferente do Office).
+
+Ajustes aplicados:
+
+1. `config/dashboards/views/main-grid/bento_sala.yaml`
+   - Estado ON do wrapper alterado para branco real (`rgb(250,250,250)`), sem transparência.
+   - Borda/sombra ajustadas para leitura e padrao de "botao aceso" mais proximo dos demais.
+
+2. `config/dashboards/shared/grid-cards/bento_sala.yaml`
+   - Contraste dinâmico no estado ON da Sala para elementos internos:
+     - hero (nome + temperatura/umidade),
+     - dots laterais,
+     - cards TV e A/C (fundo, borda, icon, name, state, label, controles),
+     - bloco Corredor (titulo/subtitulo/icone inativo).
+   - Objetivo: manter bloco inteiro aceso e preservar legibilidade/padronizacao.
+
 ---
 
 ### Ordem de execucao

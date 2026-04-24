@@ -25,11 +25,11 @@ card_mod:
       */
 
       /* 3b. AJUSTE: acendimento no BLOCO COMPLETO da Sala */
-      background: {% if sala_on %}rgba(250,250,250,0.75){% else %}linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)){% endif %} !important;
+      background: {% if sala_on %}rgb(250,250,250){% else %}linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)){% endif %} !important;
       backdrop-filter: {% if sala_on %}none{% else %}blur(20px) saturate(1.35){% endif %} !important;
       -webkit-backdrop-filter: {% if sala_on %}none{% else %}blur(20px) saturate(1.35){% endif %} !important;
-      border: {% if sala_on %}1px solid rgba(255,255,255,0.55){% else %}1px solid rgba(255,255,255,0.28){% endif %} !important;
-      box-shadow: {% if sala_on %}0 0 24px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.30), 0 8px 24px rgba(0,0,0,0.12){% else %}0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2){% endif %} !important;
+      border: {% if sala_on %}1px solid rgba(255,255,255,0.92){% else %}1px solid rgba(255,255,255,0.28){% endif %} !important;
+      box-shadow: {% if sala_on %}0 0 16px rgba(255,255,255,0.22), inset 0 1px 0 rgba(255,255,255,0.75), 0 8px 22px rgba(0,0,0,0.10){% else %}0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2){% endif %} !important;
       
       /* 4. Força o arredondamento e IMPEDE que o conteúdo vaze e deixe quadrado */
       border-radius: 18px !important;

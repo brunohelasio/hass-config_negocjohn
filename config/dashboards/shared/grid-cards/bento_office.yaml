@@ -105,7 +105,7 @@ custom_fields:
       const baseBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
       const baseColor = variables.state_on ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.6)';
       const renderDot = (icon, active, activeColor) => `
-        <div style="width: 26px; height: 26px; border-radius: 50%; background: ${active ? activeColor + '22' : baseBg}; border: 1px solid ${active ? activeColor + '55' : 'transparent'}; display: flex; justify-content: center; align-items: center; color: ${active ? activeColor : baseColor};">
+        <div style="width: 26px; height: 26px; border-radius: 50%; box-sizing: border-box; background: ${active ? activeColor + '22' : baseBg}; border: 1px solid ${active ? activeColor + '55' : 'rgba(255,255,255,0.12)'}; display: flex; justify-content: center; align-items: center; color: ${active ? activeColor : baseColor};">
           <ha-icon icon="${icon}" style="width: 14px; height: 14px; display: flex; color: ${active ? activeColor : baseColor};"></ha-icon>
         </div>
       `;

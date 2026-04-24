@@ -95,6 +95,13 @@
               box-shadow: none !important;
               padding: 0 !important;
             }
+            :host,
+            .container,
+            .events,
+            .event {
+              text-align: left !important;
+              justify-content: flex-start !important;
+            }
   styles:
     grid:
       - grid-template-areas: '"header" "icon" "events"'
@@ -119,3 +126,4 @@
         - align-self: stretch
         - width: 100%
         - overflow: hidden
+        - justify-self: start

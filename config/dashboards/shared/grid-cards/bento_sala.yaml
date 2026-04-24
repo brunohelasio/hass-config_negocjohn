@@ -8,7 +8,7 @@
       "tv ac"
       "corredor curtain"
     column-gap: 20px
-    row-gap: 10px
+    row-gap: 12px
     height: 100%
     margin: 0
     padding: 12px 14px 12px 14px
@@ -308,9 +308,10 @@
                   : '1px solid rgba(255,255,255,0.14)';
               ]]]
           - border-radius: 18px
-          - padding: 16px
+          - padding: 18px 16px 14px
           - height: 100%
           - box-shadow: none
+          - margin-top: 2px
           # FIX: Subtrai 10px da largura total e compensa no lado direito. Isso trava o cartão.
           - box-sizing: border-box
           - width: calc(100% - 10px) !important
@@ -334,6 +335,7 @@
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
               ]]]
           - justify-self: start
+          - margin-top: 1px
           - margin-bottom: 8px
         name:
           - font-size: 14px
@@ -443,9 +445,10 @@
                   : '1px solid rgba(255,255,255,0.14)';
               ]]]
           - border-radius: 18px
-          - padding: 16px
+          - padding: 18px 16px 14px
           - height: 100%
           - box-shadow: none
+          - margin-top: 2px
           # FIX: Subtrai 10px da largura e aplica 10px de margem na esquerda para formar o túnel de 20px no centro.
           - box-sizing: border-box
           - width: calc(100% - 10px) !important
@@ -469,6 +472,7 @@
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
               ]]]
           - justify-self: start
+          - margin-top: 1px
           - margin-bottom: 8px
         name:
           - font-size: 14px
@@ -521,15 +525,11 @@
             const on = entity?.state === 'on';
             const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
             const titleColor = salaOn ? 'rgba(0,0,0,0.86)' : 'white';
-            const subtitleColor = salaOn ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.45)';
             const iconOff = salaOn ? 'rgba(0,0,0,0.48)' : 'rgba(255,255,255,0.55)';
             return `<div style="display:flex;align-items:center;gap:8px;">
               <!-- ORIGINAL: mdi:lightbulb-outline -->
               <ha-icon icon="mdi:lightbulb-on" style="width:16px;height:16px;color:${on?'#fbbf24':iconOff};"></ha-icon>
-              <div>
-                <div style="font-size:12px;font-weight:700;color:${titleColor};line-height:1.1;">Corredor</div>
-                <div style="font-size:9px;color:${subtitleColor};line-height:1.2;">${on?'Ligado':'Desligado'}</div>
-              </div>
+              <div style="font-size:12px;font-weight:700;color:${titleColor};line-height:1;">Corredor</div>
             </div>`;
           ]]]
         right: >
@@ -552,7 +552,8 @@
           - box-shadow: none
           - padding: 0
           - height: 100%
-          - padding-top: 8px 
+          - padding-top: 10px
+          - margin-top: 2px
         grid:
           - grid-template-areas: '"left right ."'
           - grid-template-columns: max-content max-content 1fr

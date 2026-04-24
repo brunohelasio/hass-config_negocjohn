@@ -43,42 +43,37 @@
           segment_cleaning: 'Limpando setor'
         };
         const s = entity?.state || 'unknown';
-        return `<div style="font-size:24px;font-weight:700;line-height:1.05;color:#fff;">${labels[s] || s}</div>`;
+        return `<div style="font-size:21px;font-weight:700;line-height:1.05;color:#fff;">${labels[s] || s}</div>`;
       ]]]
     location: |
       [[[
         const room = states['sensor.roborock_s7_comodo_atual']?.state;
-        return `<div style="font-size:13px;color:rgba(255,255,255,0.62);">Local: ${room && !['unknown','unavailable'].includes(room) ? room : '--'}</div>`;
+        return `<div style="font-size:15px;color:rgba(255,255,255,0.70);">Local: ${room && !['unknown','unavailable'].includes(room) ? room : '--'}</div>`;
       ]]]
-    last_clean: |
+    battery: |
       [[[
-        const invalid = ['unknown','unavailable','none',''];
-        const sensors = [
-          'sensor.roborock_s7_last_clean_end',
-          'sensor.roborock_s7_ultima_limpeza',
-          'sensor.roborock_s7_last_cleanup',
-          'sensor.roborock_s7_last_clean'
+        const invalid = ['unknown', 'unavailable', 'none', ''];
+        const sensorCandidates = [
+          'sensor.roborock_s7_bateria',
+          'sensor.roborock_s7_battery',
+          'sensor.roborock_s7_battery_level'
         ];
 
-        let raw = '';
-        for (const id of sensors) {
-          const st = states[id]?.state;
-          if (st && !invalid.includes(String(st).toLowerCase())) {
-            raw = st;
-            break;
+        let value = entity?.attributes?.battery_level;
+        if (value == null || invalid.includes(String(value).toLowerCase())) {
+          for (const id of sensorCandidates) {
+            const st = states[id]?.state;
+            if (st && !invalid.includes(String(st).toLowerCase())) {
+              value = st;
+              break;
+            }
           }
         }
 
-        if (!raw && entity?.attributes?.last_clean_end) raw = entity.attributes.last_clean_end;
-
-        if (!raw) return '<div style="font-size:12px;color:rgba(255,255,255,0.45);">Última limpeza: --</div>';
-
-        const dt = new Date(raw);
-        const pretty = isNaN(dt.getTime())
-          ? raw
-          : dt.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(',', '');
-
-        return `<div style="font-size:12px;color:rgba(255,255,255,0.52);">Última limpeza: ${pretty}</div>`;
+        const normalized = value == null || invalid.includes(String(value).toLowerCase())
+          ? '--'
+          : `${String(value).replace('%', '')}%`;
+        return `<div style="font-size:12px;color:rgba(255,255,255,0.52);">Bateria: ${normalized}</div>`;
       ]]]
     btn_start:
       card:
@@ -184,7 +179,7 @@
             - font-weight: 700
   styles:
     grid:
-      - grid-template-areas: '"header header header" "icon status status" "icon location location" "icon last_clean last_clean" "spacer spacer spacer" "btn_start btn_stop btn_base"'
+      - grid-template-areas: '"header header header" "icon status status" "icon location location" "icon battery battery" "spacer spacer spacer" "btn_start btn_stop btn_base"'
       - grid-template-columns: repeat(3, minmax(0, 1fr))
       - grid-template-rows: min-content min-content min-content min-content 1fr min-content
       - column-gap: 8px
@@ -209,7 +204,7 @@
         - justify-self: start
         - align-self: start
         - margin-top: -1px
-      last_clean:
+      battery:
         - justify-self: start
         - align-self: start
       btn_start:

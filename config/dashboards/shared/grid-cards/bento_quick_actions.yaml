@@ -18,11 +18,19 @@
       }
   cards:
     - type: custom:button-card
-      name: Ações rápidas
+      show_name: false
       show_icon: false
       show_state: false
       tap_action: { action: none }
       hold_action: { action: none }
+      custom_fields:
+        title: >
+          [[[
+            return '<div style="display:flex;flex-direction:column;line-height:1.05;">'
+              + '<span style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.46);text-transform:uppercase;">Ações</span>'
+              + '<span style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.46);text-transform:uppercase;">rápidas</span>'
+              + '</div>';
+          ]]]
       styles:
         card:
           - background: transparent
@@ -34,11 +42,10 @@
           - display: flex
           - align-items: center
           - justify-content: flex-start
-        name:
-          - color: rgba(255,255,255,0.90)
-          - font-size: 15px
-          - font-weight: 700
-          - letter-spacing: 0.02em
+        custom_fields:
+          title:
+            - justify-self: start
+            - align-self: center
 
     - type: custom:layout-card
       layout_type: custom:grid-layout

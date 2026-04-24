@@ -35,13 +35,13 @@ styles:
   grid:
     - grid-template-areas: '"icon temp dots" "n n dots" "s s dots"'
     - grid-template-columns: "min-content 1fr min-content"
-    - grid-template-rows: "0.78fr min-content min-content"
+    - grid-template-rows: "0.90fr min-content min-content"
   name:
     - justify-self: "start"
     - align-self: "end"
     - font-size: "15px"
     - font-weight: "700"
-    - margin-bottom: "4px !important"
+    - margin-bottom: "0px !important"
     - color: >
         [[[ return variables.state_on ? 'black' : 'white'; ]]]
   state:
@@ -49,7 +49,7 @@ styles:
     - align-self: "end"
     - font-size: "11px"
     - font-weight: "500"
-    - margin-bottom: "2px !important"
+    - margin-bottom: "-1px !important"
     - color: >
         [[[ return variables.state_on ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)'; ]]]
   custom_fields:
@@ -58,7 +58,7 @@ styles:
       - align-self: "start"
       - width: "65px !important"
       - height: "65px !important"
-      - margin-top: "0px !important"
+      - margin-top: "2px !important"
     temp:
       - justify-self: "start"
       - align-self: "start"
@@ -96,12 +96,12 @@ custom_fields:
       const dotBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
       const iconColor = variables.state_on ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)';
       const renderDot = (icon) => `
-        <div style="width: 30px; height: 30px; border-radius: 50%; background: ${dotBg}; display: flex; justify-content: center; align-items: center; color: ${iconColor};">
-          <ha-icon icon="${icon}" style="width: 18px; height: 18px; display: flex;"></ha-icon>
+        <div style="width: 26px; height: 26px; border-radius: 50%; box-sizing: border-box; background: ${dotBg}; border: 1px solid rgba(255,255,255,0.12); display: flex; justify-content: center; align-items: center; color: ${iconColor};">
+          <ha-icon icon="${icon}" style="width: 14px; height: 14px; display: flex;"></ha-icon>
         </div>
       `;
       return `
-        <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; flex-direction: column; gap: 5px; padding-top: 2px;">
           ${renderDot('mdi:account')}
           ${renderDot('mdi:lightbulb-on')}
           ${renderDot('mdi:snowflake')}

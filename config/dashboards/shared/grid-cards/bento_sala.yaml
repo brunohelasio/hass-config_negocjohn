@@ -2,13 +2,13 @@
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: repeat(2, minmax(0, 1fr))
-    grid-template-rows: 136px minmax(110px, 1fr) 54px
+    grid-template-rows: 142px minmax(110px, 1fr) 50px
     grid-template-areas: |
       "hero hero"
       "tv ac"
       "corredor curtain"
     column-gap: 20px
-    row-gap: 10px
+    row-gap: 12px
     height: 100%
     margin: 0
     padding: 12px 14px 12px 14px
@@ -178,7 +178,7 @@
             const offBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
             const offIcon = salaOn ? 'rgba(0,0,0,0.42)' : 'rgba(255,255,255,0.35)';
             const dot = (icon, active, color) =>
-              `<div style="width:26px;height:26px;border-radius:50%;background:${active?color+'22':offBg};border:1px solid ${active?color+'55':offBorder};display:flex;align-items:center;justify-content:center;">` +
+              `<div style="width:26px;height:26px;border-radius:50%;box-sizing:border-box;background:${active?color+'22':offBg};border:1px solid ${active?color+'55':offBorder};display:flex;align-items:center;justify-content:center;">` +
               `<ha-icon icon="${icon}" style="width:14px;height:14px;color:${active?color:offIcon};display:flex;"></ha-icon></div>`;
             return `<div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;">
               ${dot('mdi:account',          home,  '#60a5fa')}
@@ -308,9 +308,10 @@
                   : '1px solid rgba(255,255,255,0.14)';
               ]]]
           - border-radius: 18px
-          - padding: 16px
+          - padding: 18px 16px 14px
           - height: 100%
           - box-shadow: none
+          - margin-top: 4px
           # FIX: Subtrai 10px da largura total e compensa no lado direito. Isso trava o cartão.
           - box-sizing: border-box
           - width: calc(100% - 10px) !important
@@ -334,6 +335,7 @@
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
               ]]]
           - justify-self: start
+          - margin-top: 1px
           - margin-bottom: 8px
         name:
           - font-size: 14px
@@ -443,9 +445,10 @@
                   : '1px solid rgba(255,255,255,0.14)';
               ]]]
           - border-radius: 18px
-          - padding: 16px
+          - padding: 18px 16px 14px
           - height: 100%
           - box-shadow: none
+          - margin-top: 4px
           # FIX: Subtrai 10px da largura e aplica 10px de margem na esquerda para formar o túnel de 20px no centro.
           - box-sizing: border-box
           - width: calc(100% - 10px) !important
@@ -469,6 +472,7 @@
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
               ]]]
           - justify-self: start
+          - margin-top: 1px
           - margin-bottom: 8px
         name:
           - font-size: 14px
@@ -521,15 +525,11 @@
             const on = entity?.state === 'on';
             const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
             const titleColor = salaOn ? 'rgba(0,0,0,0.86)' : 'white';
-            const subtitleColor = salaOn ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.45)';
             const iconOff = salaOn ? 'rgba(0,0,0,0.48)' : 'rgba(255,255,255,0.55)';
             return `<div style="display:flex;align-items:center;gap:8px;">
               <!-- ORIGINAL: mdi:lightbulb-outline -->
-              <ha-icon icon="mdi:lightbulb-on" style="width:16px;height:16px;color:${on?'#fbbf24':iconOff};"></ha-icon>
-              <div>
-                <div style="font-size:12px;font-weight:700;color:${titleColor};line-height:1.1;">Corredor</div>
-                <div style="font-size:9px;color:${subtitleColor};line-height:1.2;">${on?'Ligado':'Desligado'}</div>
-              </div>
+              <ha-icon icon="mdi:lightbulb-on" style="width:16px;height:16px;color:${on?'#fbbf24':iconOff};display:block;"></ha-icon>
+              <div style="font-size:12px;font-weight:700;color:${titleColor};line-height:1;">Corredor</div>
             </div>`;
           ]]]
         right: >
@@ -552,7 +552,8 @@
           - box-shadow: none
           - padding: 0
           - height: 100%
-          - padding-top: 8px 
+          - padding-top: 4px
+          - margin-top: 0
         grid:
           - grid-template-areas: '"left right ."'
           - grid-template-columns: max-content max-content 1fr

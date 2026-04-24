@@ -17,28 +17,31 @@
         padding: 0 !important;
       }
   cards:
-    - type: custom:button-card
-      name: Ações rápidas
-      show_icon: false
-      show_state: false
-      tap_action: { action: none }
-      hold_action: { action: none }
-      styles:
-        card:
-          - background: transparent
-          - border: none
-          - box-shadow: none
-          - padding: 0
-          - margin: 0
-          - height: 52px
-          - display: flex
-          - align-items: center
-          - justify-content: flex-start
-        name:
-          - color: rgba(255,255,255,0.90)
-          - font-size: 15px
-          - font-weight: 700
-          - letter-spacing: 0.02em
+    - type: markdown
+      content: |
+        <div style="display:flex;flex-direction:column;line-height:1.12;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.46);text-transform:uppercase;">Ações</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.46);text-transform:uppercase;">rápidas</span>
+        </div>
+      card_mod:
+        style: |
+          ha-card {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 56px !important;
+            overflow: visible !important;
+            display: flex !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+          }
+          ha-markdown {
+            padding: 0 !important;
+            width: 100% !important;
+            overflow: visible !important;
+          }
 
     - type: custom:layout-card
       layout_type: custom:grid-layout

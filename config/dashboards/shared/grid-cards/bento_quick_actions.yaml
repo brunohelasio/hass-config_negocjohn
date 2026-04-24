@@ -26,7 +26,7 @@
       custom_fields:
         title: >
           [[[
-            return '<div style="display:flex;flex-direction:column;line-height:1.05;">'
+            return '<div style="display:flex;flex-direction:column;line-height:1.12;">'
               + '<span style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.46);text-transform:uppercase;">Ações</span>'
               + '<span style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.46);text-transform:uppercase;">rápidas</span>'
               + '</div>';
@@ -38,14 +38,15 @@
           - box-shadow: none
           - padding: 0
           - margin: 0
-          - height: 52px
+          - height: 56px
           - display: flex
-          - align-items: center
+          - align-items: flex-start
           - justify-content: flex-start
+          - padding-top: 3px
         custom_fields:
           title:
             - justify-self: start
-            - align-self: center
+            - align-self: start
 
     - type: custom:layout-card
       layout_type: custom:grid-layout

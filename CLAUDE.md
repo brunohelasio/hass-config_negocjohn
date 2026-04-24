@@ -286,6 +286,43 @@ dos comodos para o botao hero da Sala, sem mudar a arquitetura geral do card).
   3) voltar `name.color: white`;
   4) comentar os blocos novos da Opcao A.
 
+### Ajuste fino pos-feedback visual (2026-04-23)
+
+Feedback do usuario: "**muito longe do planejado**" (hero da Sala ficou claro/branco demais).
+
+Ajustes aplicados mantendo a logica da Opcao A:
+
+1. **Acendimento visual suavizado**
+   - Fundo ligado alterado de branco forte `rgba(250,250,250,0.75)` para gradiente leve:
+     `linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.06) 100%)`.
+   - Objetivo: preservar linguagem glass e evitar "bloco branco chapado".
+
+2. **Contraste de texto restaurado ao padrao visual anterior**
+   - Nome voltou para `white` fixo.
+   - Temperatura/umidade voltaram para tons brancos fixos (`0.9`/`0.52`).
+
+3. **Codigo da versao anterior preservado em comentarios**
+   - Regras de nao exclusao e rollback rapido mantidas.
+
+### Correcao estrutural pos-feedback (2026-04-23 — bloco completo)
+
+Novo feedback do usuario: o erro nao era de cor, e sim de escopo de acendimento.
+O hero estava acendendo sozinho; o esperado era acender o **cartao completo da Sala**
+(wrapper que contem hero + TV + A/C + demais elementos).
+
+Correcao aplicada:
+
+1. `config/dashboards/views/main-grid/bento_sala.yaml`
+   - Acendimento movido para o `ha-card` do `stack-in-card` (container total).
+   - Estilo do wrapper agora alterna por estado de `light.grupo_luzes_sala`:
+     - OFF: vidro fosco original;
+     - ON: fundo branco translúcido no bloco inteiro.
+   - Codigo original de vidro mantido comentado para rollback.
+
+2. `config/dashboards/shared/grid-cards/bento_sala.yaml`
+   - Hero voltou a ficar com `background: transparent` em ambos os estados.
+   - Evita acendimento parcial/isolado do topo.
+
 ---
 
 ### Ordem de execucao

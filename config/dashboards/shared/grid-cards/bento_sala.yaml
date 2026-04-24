@@ -76,8 +76,10 @@
             const temp = t && t.state && !['unknown','unavailable'].includes(t.state) ? `${t.state}°` : '—';
             const h = states['sensor.sl_sensor_temp_humid_umidade'];
             const hum = h && !['unknown','unavailable'].includes(h.state) ? `${h.state}%` : '';
-            const color = variables.state_on ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.9)';
-            const subColor = variables.state_on ? 'rgba(0,0,0,0.48)' : 'rgba(255,255,255,0.52)';
+            // const color = variables.state_on ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.9)'; // ORIGINAL Opcao A (comentado)
+            // const subColor = variables.state_on ? 'rgba(0,0,0,0.48)' : 'rgba(255,255,255,0.52)'; // ORIGINAL Opcao A (comentado)
+            const color = 'rgba(255,255,255,0.9)';
+            const subColor = 'rgba(255,255,255,0.52)';
             return `<div style="display:flex;flex-direction:column;gap:3px;">
               <span style="font-size:13px;font-weight:700;color:${color};">${temp}</span>
               <span style="font-size:11px;color:${subColor};">${hum}</span>
@@ -179,11 +181,18 @@
       styles:
         card:
           # - background: transparent  # ORIGINAL — mantido para rollback rapido
+          # - background: >
+          #     [[[
+          #       return variables.state_on
+          #         ? 'rgba(250, 250, 250, 0.75)'
+          #         : 'transparent';
+          #     ]]] # ORIGINAL Opcao A (comentado)
           - background: >
               [[[
-                return variables.state_on
-                  ? 'rgba(250, 250, 250, 0.75)'
-                  : 'transparent';
+                // AJUSTE 2026-04-23 (feedback): hero nao deve acender isolado.
+                // O acendimento passa a ocorrer no bloco completo (wrapper stack-in-card).
+                // Mantemos o hero transparente nos dois estados.
+                return 'transparent';
               ]]]
           - border: none
           - box-shadow: none
@@ -200,10 +209,11 @@
           - font-size: 15px
           - font-weight: 700
           # - color: white # ORIGINAL — mantido para rollback rapido
-          - color: >
-              [[[
-                return variables.state_on ? 'black' : 'white';
-              ]]]
+          # - color: >
+          #     [[[
+          #       return variables.state_on ? 'black' : 'white';
+          #     ]]] # ORIGINAL Opcao A (comentado)
+          - color: white
           - margin-bottom: 2px
         custom_fields:
           icon:

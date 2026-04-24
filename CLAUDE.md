@@ -362,6 +362,20 @@ Acoes:
    - Toggles de TV, A/C e Corredor agora escurecem trilho/contorno no estado OFF
      quando a Sala esta acesa, evitando perda de contraste sobre fundo claro.
 
+### Ajuste solicitado pelo usuario (2026-04-24 — revisao 3)
+
+Demandas:
+1) status de iluminacao da Sala com mesma assinatura visual do Office;
+2) icone de lampada do Corredor igual ao status de luz;
+3) aumentar contraste dos toggles.
+
+Aplicacao:
+- `shared/grid-cards/bento_sala.yaml`
+  - status de luz da Sala com tipografia/cor alinhada ao Office (`11px/500`,
+    contraste `rgba(0,0,0,0.6)` no estado ON);
+  - icone do Corredor alterado para `mdi:lightbulb-on` (igual assinatura do status);
+  - trilhos OFF dos toggles (TV/A-C/Corredor) escurecidos e borda do knob reforcada.
+
 ---
 
 ### Ordem de execucao

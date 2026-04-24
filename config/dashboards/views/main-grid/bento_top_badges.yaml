@@ -49,10 +49,18 @@ cards:
     variables:
       s: >
         [[[
-          const e = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
+          const fallback = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
+          const groupMembers = states['light.todas_as_luzes']?.attributes?.entity_id;
+          const e = (Array.isArray(groupMembers) && groupMembers.length) ? groupMembers : fallback;
           const onE = e.filter(id => states[id]?.state === 'on');
           const exp = states['input_select.hemma_expanded_row']?.state || 'none';
-          const chips = onE.map(id => ({ id, name: states[id]?.attributes?.friendly_name || id }));
+          const chips = onE.map(id => ({
+            id,
+            name: states[id]?.attributes?.friendly_name || id,
+            sub: states[id]?.attributes?.brightness != null
+              ? `${Math.round((states[id].attributes.brightness / 255) * 100)}%`
+              : 'On'
+          }));
           return {
             is_on: onE.length > 0,
             sub: onE.length === 0 ? 'All Off' : onE.length === e.length ? 'All On' : `${onE.length} On`,
@@ -77,7 +85,7 @@ cards:
           if (variables?.s?.exp !== 'lights') return '';
           const chips = variables?.s?.chips || [];
           if (!chips.length) return `<div class="exp-rail"><div class="exp-chip exp-empty">No lights on</div></div>`;
-          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon icon="mdi:lightbulb-on" style="--mdc-icon-size:12px;color:#f7c600"></ha-icon><span>${c.name}</span></div>`).join('')}</div>`;
+          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon class="exp-chip-icon" icon="mdi:lightbulb-on" style="color:#f7c600"></ha-icon><div class="exp-chip-texts"><div class="exp-chip-title">${c.name}</div><div class="exp-chip-sub">${c.sub}</div></div></div>`).join('')}</div>`;
         ]]]
     extra_styles: &badge_css |
       .badge-row {
@@ -88,7 +96,7 @@ cards:
         min-width: 72px;
       }
       .badge-icon {
-        --mdc-icon-size: 15px;
+        --mdc-icon-size: 22px;
         justify-self: center;
         align-self: center;
       }
@@ -122,19 +130,44 @@ cards:
         border: 1px solid rgba(255,255,255,0.14);
       }
       .exp-chip {
-        display: inline-flex;
+        display: inline-grid;
+        grid-template-columns: 22px auto;
         align-items: center;
-        gap: 4px;
-        padding: 4px 8px;
+        column-gap: 8px;
+        height: 48px;
+        padding: 0 12px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.10);
-        border: 1px solid rgba(255,255,255,0.10);
-        font-size: 10px;
-        font-weight: 600;
-        color: rgba(255,255,255,0.88);
+        background: rgba(36,33,30,0.82);
+        border: 1px solid rgba(255,255,255,0.12);
       }
       .exp-empty {
+        display: inline-flex;
+        align-items: center;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(36,33,30,0.82);
+        border: 1px solid rgba(255,255,255,0.12);
         color: rgba(255,255,255,0.56);
+      }
+      .exp-chip-icon {
+        --mdc-icon-size: 22px;
+      }
+      .exp-chip-texts {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        line-height: 1.08;
+      }
+      .exp-chip-title {
+        font-size: 10px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.92);
+      }
+      .exp-chip-sub {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.72);
       }
     styles: &badge_visual
       card:
@@ -190,7 +223,11 @@ cards:
           const e = ['media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio','media_player.echo_show'];
           const onE = e.filter(id => ['playing','paused','on'].includes(states[id]?.state ?? ''));
           const exp = states['input_select.hemma_expanded_row']?.state || 'none';
-          const chips = onE.map(id => ({ id, name: states[id]?.attributes?.friendly_name || id }));
+          const chips = onE.map(id => ({
+            id,
+            name: states[id]?.attributes?.friendly_name || id,
+            sub: String(states[id]?.state || 'on').replace('_', ' ')
+          }));
           return { is_on: onE.length > 0, sub: onE.length === 0 ? 'All Off' : `${onE.length} On`, exp, chips };
         ]]]
     custom_fields:
@@ -210,7 +247,7 @@ cards:
           if (variables?.s?.exp !== 'media') return '';
           const chips = variables?.s?.chips || [];
           if (!chips.length) return `<div class="exp-rail"><div class="exp-chip exp-empty">No media on</div></div>`;
-          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon icon="mdi:music-note" style="--mdc-icon-size:12px;color:#8fdbb9"></ha-icon><span>${c.name}</span></div>`).join('')}</div>`;
+          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon class="exp-chip-icon" icon="mdi:music-note" style="color:#8fdbb9"></ha-icon><div class="exp-chip-texts"><div class="exp-chip-title">${c.name}</div><div class="exp-chip-sub">${c.sub}</div></div></div>`).join('')}</div>`;
         ]]]
     extra_styles: *badge_css
     styles:
@@ -270,7 +307,13 @@ cards:
           const e = ['climate.sl_ar_condicionado','climate.ac_office','climate.ac_quarto_miguel'];
           const onE = e.filter(id => !['off','unavailable','unknown',''].includes(states[id]?.state ?? 'unknown'));
           const exp = states['input_select.hemma_expanded_row']?.state || 'none';
-          const chips = onE.map(id => ({ id, name: states[id]?.attributes?.friendly_name || id }));
+          const chips = onE.map(id => ({
+            id,
+            name: states[id]?.attributes?.friendly_name || id,
+            sub: states[id]?.attributes?.temperature != null
+              ? `${states[id].attributes.temperature}°`
+              : String(states[id]?.state || 'on').replace('_', ' ')
+          }));
           return { is_on: onE.length > 0, sub: onE.length === 0 ? 'Off' : `${onE.length} On`, exp, chips };
         ]]]
     custom_fields:
@@ -290,7 +333,7 @@ cards:
           if (variables?.s?.exp !== 'climate') return '';
           const chips = variables?.s?.chips || [];
           if (!chips.length) return `<div class="exp-rail"><div class="exp-chip exp-empty">No climate on</div></div>`;
-          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon icon="mdi:air-conditioner" style="--mdc-icon-size:12px;color:#56d89b"></ha-icon><span>${c.name}</span></div>`).join('')}</div>`;
+          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon class="exp-chip-icon" icon="mdi:air-conditioner" style="color:#56d89b"></ha-icon><div class="exp-chip-texts"><div class="exp-chip-title">${c.name}</div><div class="exp-chip-sub">${c.sub}</div></div></div>`).join('')}</div>`;
         ]]]
     extra_styles: *badge_css
     styles:

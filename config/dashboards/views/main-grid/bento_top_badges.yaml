@@ -3,14 +3,16 @@ layout_type: custom:grid-layout
 view_layout:
   grid-area: top_badges
 layout:
-  grid-template-columns: max-content max-content max-content 1fr
+  grid-template-columns: max-content max-content max-content minmax(0, 1fr) max-content
   align-items: center
   grid-gap: 8px
   margin: 0
   padding: 0 4px
+  width: 100%
 card_mod:
   style:
     .: |
+      :host { width: 100% !important; }
       ha-card {
         background: transparent !important;
         box-shadow: none !important;
@@ -19,18 +21,15 @@ card_mod:
         width: 100% !important;
       }
     $: |
-      .card-content {
-        padding: 0 !important;
-        margin: 0 !important;
-      }
+      .card-content { padding: 0 !important; margin: 0 !important; }
+
 cards:
   - type: custom:button-card
     show_icon: false
     show_name: false
     show_state: false
-    tap_action: { action: none }
-    hold_action: { action: none }
     triggers_update:
+      - input_select.hemma_expanded_row
       - light.sala_switch_1
       - light.sala_switch_2
       - light.cozinha_switch_1
@@ -39,130 +38,349 @@ cards:
       - light.corredor_switch_1
       - light.quarto_miguel_switch_1
       - light.quarto_miguel_switch_2
+    tap_action:
+      action: call-service
+      service: input_select.select_option
+      service_data:
+        entity_id: input_select.hemma_expanded_row
+        option: >
+          [[[ return states['input_select.hemma_expanded_row']?.state === 'lights' ? 'none' : 'lights'; ]]]
+    hold_action: { action: none }
     variables:
-      ls: >
+      s: >
         [[[
-          const e = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
-          const n = e.filter(id => states[id]?.state === 'on').length;
-          return { a: n > 0, lbl: n === 0 ? 'Off' : n === e.length ? 'All On' : n + ' On' };
+          const fallback = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
+          const groupMembers = states['light.todas_as_luzes']?.attributes?.entity_id;
+          const e = (Array.isArray(groupMembers) && groupMembers.length) ? groupMembers : fallback;
+          const onE = e.filter(id => states[id]?.state === 'on');
+          const exp = states['input_select.hemma_expanded_row']?.state || 'none';
+          const chips = onE.map(id => ({
+            id,
+            name: states[id]?.attributes?.friendly_name || id,
+            sub: states[id]?.attributes?.brightness != null
+              ? `${Math.round((states[id].attributes.brightness / 255) * 100)}%`
+              : 'On'
+          }));
+          return {
+            is_on: onE.length > 0,
+            sub: onE.length === 0 ? 'All Off' : onE.length === e.length ? 'All On' : `${onE.length} On`,
+            exp,
+            chips
+          };
         ]]]
     custom_fields:
       badge: >
         [[[
-          const e = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
-          const n = e.filter(id => states[id]?.state === 'on').length;
-          const a = n > 0;
-          const lbl = n === 0 ? 'Off' : n === e.length ? 'All On' : n + ' On';
-          const ic = a ? '#92400e' : 'rgba(255,255,255,0.52)';
-          const lc = a ? 'rgba(0,0,0,0.52)' : 'rgba(255,255,255,0.52)';
-          const cc = a ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.9)';
-          const svg = '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5C17.61 10.48 18 9.29 18 8A6 6 0 1 0 6 8c0 1.29.39 2.48 1.09 3.5.76.76 1.23 1.52 1.41 2.5"/>';
-          return '<div style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">'
-            + '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ic + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;">' + svg + '</svg>'
-            + '<span style="font-size:9px;font-weight:600;color:' + lc + ';letter-spacing:0.09em;">LUZES</span>'
-            + '<span style="font-size:11px;font-weight:700;color:' + cc + ';">' + lbl + '</span>'
-            + '</div>';
+          const sub = variables?.s?.sub || 'All Off';
+          return `<div class="badge-row">
+            <ha-icon class="badge-icon" icon="mdi:lightbulb" style="color:#f7c600"></ha-icon>
+            <div class="badge-texts">
+              <div class="badge-title">Lights</div>
+              <div class="badge-sub">${sub}</div>
+            </div>
+          </div>`;
         ]]]
-    styles:
+      rail: >
+        [[[
+          if (variables?.s?.exp !== 'lights') return '';
+          const chips = variables?.s?.chips || [];
+          if (!chips.length) return `<div class="exp-rail"><div class="exp-chip exp-empty">No lights on</div></div>`;
+          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon class="exp-chip-icon" icon="mdi:lightbulb-on" style="color:#f7c600"></ha-icon><div class="exp-chip-texts"><div class="exp-chip-title">${c.name}</div><div class="exp-chip-sub">${c.sub}</div></div></div>`).join('')}</div>`;
+        ]]]
+    extra_styles: &badge_css |
+      .badge-row {
+        display: grid;
+        grid-template-columns: 18px auto;
+        align-items: center;
+        column-gap: 8px;
+        min-width: 72px;
+      }
+      .badge-icon {
+        --mdc-icon-size: 22px;
+        justify-self: center;
+        align-self: center;
+      }
+      .badge-texts {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.08;
+        gap: 2px;
+      }
+      .badge-title {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--badge-title-color, rgba(255,255,255,0.92));
+      }
+      .badge-sub {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--badge-sub-color, rgba(255,255,255,0.72));
+      }
+      .exp-rail {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        max-width: min(56vw, 560px);
+        white-space: nowrap;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(22, 22, 25, 0.88);
+        border: 1px solid rgba(255,255,255,0.14);
+      }
+      .exp-chip {
+        display: inline-grid;
+        grid-template-columns: 22px auto;
+        align-items: center;
+        column-gap: 8px;
+        height: 48px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(36,33,30,0.82);
+        border: 1px solid rgba(255,255,255,0.12);
+      }
+      .exp-empty {
+        display: inline-flex;
+        align-items: center;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(36,33,30,0.82);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.56);
+      }
+      .exp-chip-icon {
+        --mdc-icon-size: 22px;
+      }
+      .exp-chip-texts {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        line-height: 1.08;
+      }
+      .exp-chip-title {
+        font-size: 10px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.92);
+      }
+      .exp-chip-sub {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.72);
+      }
+    styles: &badge_visual
       card:
-        - height: 46px
+        - width: max-content
+        - height: 48px
         - border-radius: 999px
-        - padding: 0 14px
-        - background: "[[[ return variables.ls?.a ? 'rgba(250,250,250,0.82)' : 'rgba(0,0,0,0.22)'; ]]]"
-        - border: "[[[ return variables.ls?.a ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.14)'; ]]]"
+        - padding: 0 12px
+        - position: relative
+        - overflow: visible
+        - z-index: >
+            [[[ return variables?.s?.exp === 'lights' || variables?.s?.exp === 'media' || variables?.s?.exp === 'climate' ? '4' : '1'; ]]]
+        - background: >
+            [[[ return variables?.s?.is_on ? 'rgba(255,255,255,0.90)' : 'rgba(36,33,30,0.82)'; ]]]
+        - border: >
+            [[[ return variables?.s?.is_on ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.12)'; ]]]
+        - box-shadow: none
+        - --badge-title-color: >
+            [[[ return variables?.s?.is_on ? 'rgba(0,0,0,0.86)' : 'rgba(255,255,255,0.92)'; ]]]
+        - --badge-sub-color: >
+            [[[ return variables?.s?.is_on ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.72)'; ]]]
       custom_fields:
         badge: [display: flex, align-items: center, height: 100%]
+        rail:
+          - position: absolute
+          - left: calc(100% + 8px)
+          - top: 50%
+          - transform: translateY(-50%)
+          - z-index: 9
+          - display: >
+              [[[ return variables?.s?.exp === 'lights' ? 'inline-flex' : 'none'; ]]]
       grid: [grid-template-areas: '"badge"', grid-template-columns: 1fr, grid-template-rows: 1fr]
 
   - type: custom:button-card
     show_icon: false
     show_name: false
     show_state: false
-    tap_action: { action: none }
-    hold_action: { action: none }
     triggers_update:
+      - input_select.hemma_expanded_row
       - media_player.smart_tv_pro_2
       - media_player.spotifyplus_bruno_helasio
       - media_player.echo_show
+    tap_action:
+      action: call-service
+      service: input_select.select_option
+      service_data:
+        entity_id: input_select.hemma_expanded_row
+        option: >
+          [[[ return states['input_select.hemma_expanded_row']?.state === 'media' ? 'none' : 'media'; ]]]
+    hold_action: { action: none }
     variables:
-      ms: >
+      s: >
         [[[
           const e = ['media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio','media_player.echo_show'];
-          const n = e.filter(id => ['playing','paused','on'].includes(states[id]?.state ?? '')).length;
-          return { a: n > 0, lbl: n === 0 ? 'Off' : n + ' On' };
+          const onE = e.filter(id => ['playing','paused','on'].includes(states[id]?.state ?? ''));
+          const exp = states['input_select.hemma_expanded_row']?.state || 'none';
+          const chips = onE.map(id => ({
+            id,
+            name: states[id]?.attributes?.friendly_name || id,
+            sub: String(states[id]?.state || 'on').replace('_', ' ')
+          }));
+          return { is_on: onE.length > 0, sub: onE.length === 0 ? 'All Off' : `${onE.length} On`, exp, chips };
         ]]]
     custom_fields:
       badge: >
         [[[
-          const e = ['media_player.smart_tv_pro_2','media_player.spotifyplus_bruno_helasio','media_player.echo_show'];
-          const n = e.filter(id => ['playing','paused','on'].includes(states[id]?.state ?? '')).length;
-          const a = n > 0;
-          const lbl = n === 0 ? 'Off' : n + ' On';
-          const ic = a ? '#166534' : 'rgba(255,255,255,0.52)';
-          const lc = a ? 'rgba(0,0,0,0.52)' : 'rgba(255,255,255,0.52)';
-          const cc = a ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.9)';
-          const svg = '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>';
-          return '<div style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">'
-            + '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ic + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;">' + svg + '</svg>'
-            + '<span style="font-size:9px;font-weight:600;color:' + lc + ';letter-spacing:0.09em;">MÍDIA</span>'
-            + '<span style="font-size:11px;font-weight:700;color:' + cc + ';">' + lbl + '</span>'
-            + '</div>';
+          const sub = variables?.s?.sub || 'All Off';
+          return `<div class="badge-row">
+            <ha-icon class="badge-icon" icon="mdi:speaker-wireless" style="color:#9aa0a6"></ha-icon>
+            <div class="badge-texts">
+              <div class="badge-title">Media</div>
+              <div class="badge-sub">${sub}</div>
+            </div>
+          </div>`;
         ]]]
+      rail: >
+        [[[
+          if (variables?.s?.exp !== 'media') return '';
+          const chips = variables?.s?.chips || [];
+          if (!chips.length) return `<div class="exp-rail"><div class="exp-chip exp-empty">No media on</div></div>`;
+          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon class="exp-chip-icon" icon="mdi:music-note" style="color:#8fdbb9"></ha-icon><div class="exp-chip-texts"><div class="exp-chip-title">${c.name}</div><div class="exp-chip-sub">${c.sub}</div></div></div>`).join('')}</div>`;
+        ]]]
+    extra_styles: *badge_css
     styles:
+      <<: *badge_visual
       card:
-        - height: 46px
+        - width: max-content
+        - height: 48px
         - border-radius: 999px
-        - padding: 0 14px
-        - background: "[[[ return variables.ms?.a ? 'rgba(250,250,250,0.82)' : 'rgba(0,0,0,0.22)'; ]]]"
-        - border: "[[[ return variables.ms?.a ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.14)'; ]]]"
+        - padding: 0 12px
+        - position: relative
+        - overflow: visible
+        - z-index: >
+            [[[ return variables?.s?.exp === 'media' ? '4' : '1'; ]]]
+        - display: >
+            [[[ return states['input_select.hemma_expanded_row']?.state === 'lights' ? 'none' : 'inline-flex'; ]]]
+        - background: >
+            [[[ return variables?.s?.is_on ? 'rgba(255,255,255,0.90)' : 'rgba(36,33,30,0.82)'; ]]]
+        - border: >
+            [[[ return variables?.s?.is_on ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.12)'; ]]]
+        - box-shadow: none
+        - --badge-title-color: >
+            [[[ return variables?.s?.is_on ? 'rgba(0,0,0,0.86)' : 'rgba(255,255,255,0.92)'; ]]]
+        - --badge-sub-color: >
+            [[[ return variables?.s?.is_on ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.72)'; ]]]
       custom_fields:
         badge: [display: flex, align-items: center, height: 100%]
+        rail:
+          - position: absolute
+          - left: calc(100% + 8px)
+          - top: 50%
+          - transform: translateY(-50%)
+          - z-index: 9
+          - display: >
+              [[[ return variables?.s?.exp === 'media' ? 'inline-flex' : 'none'; ]]]
       grid: [grid-template-areas: '"badge"', grid-template-columns: 1fr, grid-template-rows: 1fr]
 
   - type: custom:button-card
     show_icon: false
     show_name: false
     show_state: false
-    tap_action: { action: none }
-    hold_action: { action: none }
     triggers_update:
+      - input_select.hemma_expanded_row
       - climate.sl_ar_condicionado
       - climate.ac_office
       - climate.ac_quarto_miguel
+    tap_action:
+      action: call-service
+      service: input_select.select_option
+      service_data:
+        entity_id: input_select.hemma_expanded_row
+        option: >
+          [[[ return states['input_select.hemma_expanded_row']?.state === 'climate' ? 'none' : 'climate'; ]]]
+    hold_action: { action: none }
     variables:
-      cs: >
+      s: >
         [[[
           const e = ['climate.sl_ar_condicionado','climate.ac_office','climate.ac_quarto_miguel'];
-          const n = e.filter(id => !['off','unavailable','unknown',''].includes(states[id]?.state ?? 'unknown')).length;
-          return { a: n > 0, lbl: n === 0 ? 'Off' : n + ' On' };
+          const onE = e.filter(id => !['off','unavailable','unknown',''].includes(states[id]?.state ?? 'unknown'));
+          const exp = states['input_select.hemma_expanded_row']?.state || 'none';
+          const chips = onE.map(id => ({
+            id,
+            name: states[id]?.attributes?.friendly_name || id,
+            sub: states[id]?.attributes?.temperature != null
+              ? `${states[id].attributes.temperature}°`
+              : String(states[id]?.state || 'on').replace('_', ' ')
+          }));
+          return { is_on: onE.length > 0, sub: onE.length === 0 ? 'Off' : `${onE.length} On`, exp, chips };
         ]]]
     custom_fields:
       badge: >
         [[[
-          const e = ['climate.sl_ar_condicionado','climate.ac_office','climate.ac_quarto_miguel'];
-          const n = e.filter(id => !['off','unavailable','unknown',''].includes(states[id]?.state ?? 'unknown')).length;
-          const a = n > 0;
-          const lbl = n === 0 ? 'Off' : n + ' On';
-          const ic = a ? '#075985' : 'rgba(255,255,255,0.52)';
-          const lc = a ? 'rgba(0,0,0,0.52)' : 'rgba(255,255,255,0.52)';
-          const cc = a ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.9)';
-          const svg = '<path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>';
-          return '<div style="display:inline-flex;align-items:center;gap:5px;white-space:nowrap;">'
-            + '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="' + ic + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;">' + svg + '</svg>'
-            + '<span style="font-size:9px;font-weight:600;color:' + lc + ';letter-spacing:0.09em;">CLIMA</span>'
-            + '<span style="font-size:11px;font-weight:700;color:' + cc + ';">' + lbl + '</span>'
-            + '</div>';
+          const sub = variables?.s?.sub || 'Off';
+          return `<div class="badge-row">
+            <ha-icon class="badge-icon" icon="mdi:fan" style="color:#56d89b"></ha-icon>
+            <div class="badge-texts">
+              <div class="badge-title">Climate</div>
+              <div class="badge-sub">${sub}</div>
+            </div>
+          </div>`;
         ]]]
+      rail: >
+        [[[
+          if (variables?.s?.exp !== 'climate') return '';
+          const chips = variables?.s?.chips || [];
+          if (!chips.length) return `<div class="exp-rail"><div class="exp-chip exp-empty">No climate on</div></div>`;
+          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon class="exp-chip-icon" icon="mdi:air-conditioner" style="color:#56d89b"></ha-icon><div class="exp-chip-texts"><div class="exp-chip-title">${c.name}</div><div class="exp-chip-sub">${c.sub}</div></div></div>`).join('')}</div>`;
+        ]]]
+    extra_styles: *badge_css
     styles:
+      <<: *badge_visual
       card:
-        - height: 46px
+        - width: max-content
+        - height: 48px
         - border-radius: 999px
-        - padding: 0 14px
-        - background: "[[[ return variables.cs?.a ? 'rgba(250,250,250,0.82)' : 'rgba(0,0,0,0.22)'; ]]]"
-        - border: "[[[ return variables.cs?.a ? '1px solid rgba(255,255,255,0.35)' : '1px solid rgba(255,255,255,0.14)'; ]]]"
+        - padding: 0 12px
+        - position: relative
+        - overflow: visible
+        - z-index: >
+            [[[ return variables?.s?.exp === 'climate' ? '4' : '1'; ]]]
+        - display: >
+            [[[
+              const e = states['input_select.hemma_expanded_row']?.state;
+              return (e === 'lights' || e === 'media') ? 'none' : 'inline-flex';
+            ]]]
+        - background: >
+            [[[ return variables?.s?.is_on ? 'rgba(255,255,255,0.90)' : 'rgba(36,33,30,0.82)'; ]]]
+        - border: >
+            [[[ return variables?.s?.is_on ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.12)'; ]]]
+        - box-shadow: none
+        - --badge-title-color: >
+            [[[ return variables?.s?.is_on ? 'rgba(0,0,0,0.86)' : 'rgba(255,255,255,0.92)'; ]]]
+        - --badge-sub-color: >
+            [[[ return variables?.s?.is_on ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.72)'; ]]]
       custom_fields:
         badge: [display: flex, align-items: center, height: 100%]
+        rail:
+          - position: absolute
+          - left: calc(100% + 8px)
+          - top: 50%
+          - transform: translateY(-50%)
+          - z-index: 9
+          - display: >
+              [[[ return variables?.s?.exp === 'climate' ? 'inline-flex' : 'none'; ]]]
       grid: [grid-template-areas: '"badge"', grid-template-columns: 1fr, grid-template-rows: 1fr]
+
+  - type: custom:button-card
+    show_name: false
+    show_state: false
+    show_icon: false
+    tap_action: { action: none }
+    hold_action: { action: none }
+    styles:
+      card: [background: transparent, border: none, box-shadow: none, width: 1px, height: 1px, padding: 0]
 
   - type: custom:button-card
     view_layout:
@@ -185,11 +403,11 @@ cards:
         ]]]
     styles:
       card:
-        - width: 46px
-        - height: 46px
+        - width: 40px
+        - height: 40px
         - border-radius: 50%
         - background: rgba(255,255,255,0.12)
-        - border: "1px solid rgba(255,255,255,0.24)"
+        - border: 1px solid rgba(255,255,255,0.24)
         - padding: 0
         - box-shadow: none
       custom_fields:

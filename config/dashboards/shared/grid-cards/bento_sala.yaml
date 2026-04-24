@@ -22,6 +22,11 @@
       show_name: true
       show_state: false
       name: Sala
+      variables:
+        state_on: >
+          [[[
+            return entity?.state === 'on';
+          ]]]
       triggers_update:
         - light.sala_switch_1
         - light.sala_switch_2
@@ -71,31 +76,94 @@
             const temp = t && t.state && !['unknown','unavailable'].includes(t.state) ? `${t.state}°` : '—';
             const h = states['sensor.sl_sensor_temp_humid_umidade'];
             const hum = h && !['unknown','unavailable'].includes(h.state) ? `${h.state}%` : '';
+            // const color = variables.state_on ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.9)'; // ORIGINAL Opcao A (comentado)
+            // const subColor = variables.state_on ? 'rgba(0,0,0,0.48)' : 'rgba(255,255,255,0.52)'; // ORIGINAL Opcao A (comentado)
+            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+            const color = salaOn ? 'rgba(0,0,0,0.88)' : 'rgba(255,255,255,0.9)';
+            const subColor = salaOn ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.52)';
             return `<div style="display:flex;flex-direction:column;gap:3px;">
-              <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.9);">${temp}</span>
-              <span style="font-size:11px;color:rgba(255,255,255,0.52);">${hum}</span>
+              <span style="font-size:13px;font-weight:700;color:${color};">${temp}</span>
+              <span style="font-size:11px;color:${subColor};">${hum}</span>
             </div>`;
           ]]]
         lights: >
           [[[
-            const raw = states['sensor.living_room_active']?.state;
-            const n = raw != null ? Number(raw) : NaN;
-            let count;
-            if (!Number.isNaN(n) && n > 0) {
-              count = n;
-            } else {
-              const ids = ['light.sala_switch_1','light.sala_switch_2'];
+            // BLOCO ORIGINAL COMENTADO (mantido para rollback rapido)
+            // const raw = states['sensor.living_room_active']?.state;
+            // const n = raw != null ? Number(raw) : NaN;
+            // let count;
+            // if (!Number.isNaN(n) && n > 0) {
+            //   count = n;
+            // } else {
+            //   const ids = ['light.sala_switch_1','light.sala_switch_2'];
+            //   count = ids.filter(id => states[id]?.state === 'on').length;
+            // }
+            // if (count === 0) return '';
+            // const ms = Date.now() - Date.parse(entity?.last_changed ?? '');
+            // const m = Math.floor(ms / 60000);
+            // const h = Math.floor(m / 60);
+            // const d = Math.floor(h / 24);
+            // const timeStr = d > 0 ? `${d}d` : h > 0 ? `${h}h` : m > 0 ? `${m}m` : '<1m';
+            // return `<div style="display:flex;align-items:center;gap:4px;">
+            //   <ha-icon icon="mdi:lightbulb-on" style="width:11px;height:11px;color:#fbbf24;display:flex;"></ha-icon>
+            //   <span style="font-size:10px;font-weight:600;color:#fbbf24;">${count} · ${timeStr}</span>
+            // </div>`;
+
+            // NOVA LOGICA (Opcao A): paridade com rooms_base sem alterar arquitetura da Sala
+            const activeEntity = states['sensor.living_room_active'];
+            const lightsOnCount = activeEntity?.attributes?.lights_on_count;
+            const lightsOn = activeEntity?.attributes?.lights_on;
+            let count = null;
+            if (lightsOnCount != null && lightsOnCount !== '' && !isNaN(lightsOnCount)) {
+              const parsed = parseInt(lightsOnCount, 10);
+              if (!isNaN(parsed)) count = parsed;
+            } else if (Array.isArray(lightsOn)) {
+              count = lightsOn.length;
+            } else if (typeof lightsOn === 'string' && lightsOn.startsWith('[')) {
+              const matches = lightsOn.match(/'/g);
+              if (matches) count = matches.length / 2;
+            }
+
+            const ids = entity?.attributes?.entity_id;
+            if (count === null && Array.isArray(ids)) {
               count = ids.filter(id => states[id]?.state === 'on').length;
             }
-            if (count === 0) return '';
-            const ms = Date.now() - Date.parse(entity?.last_changed ?? '');
-            const m = Math.floor(ms / 60000);
-            const h = Math.floor(m / 60);
-            const d = Math.floor(h / 24);
-            const timeStr = d > 0 ? `${d}d` : h > 0 ? `${h}h` : m > 0 ? `${m}m` : '<1m';
+            if (count === null) {
+              const fallbackIds = ['light.sala_switch_1', 'light.sala_switch_2'];
+              count = fallbackIds.filter(id => states[id]?.state === 'on').length;
+            }
+            if (!count || count <= 0) return '';
+
+            const timeFmt = c => {
+              const m = (c / 6e4), h = (c / 36e5), d = (c / 864e5);
+              return m < 1 ? '<1m'
+                   : m < 60 ? `${parseInt(m)}m`
+                   : h < 24 ? `${parseInt(h)}h`
+                   : `${parseInt(d)}d`;
+            };
+
+            let earliestOn = null;
+            if (Array.isArray(ids)) {
+              ids.forEach(id => {
+                const s = states[id];
+                if (s?.state === 'on' && s?.last_changed) {
+                  const ts = Date.parse(s.last_changed);
+                  if (!isNaN(ts) && (earliestOn === null || ts < earliestOn)) earliestOn = ts;
+                }
+              });
+            }
+            if (earliestOn === null && entity?.last_changed) {
+              const ts = Date.parse(entity.last_changed);
+              if (!isNaN(ts)) earliestOn = ts;
+            }
+            const elapsed = earliestOn !== null ? timeFmt(Date.now() - earliestOn) : '';
+
+            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+            const statusColor = salaOn ? 'rgba(0,0,0,0.62)' : '#fbbf24';
+            const label = count === 1 ? '1 light' : `${count} lights`;
             return `<div style="display:flex;align-items:center;gap:4px;">
               <ha-icon icon="mdi:lightbulb-on" style="width:11px;height:11px;color:#fbbf24;display:flex;"></ha-icon>
-              <span style="font-size:10px;font-weight:600;color:#fbbf24;">${count} · ${timeStr}</span>
+              <span style="font-size:10px;font-weight:600;color:${statusColor};">${label}${elapsed ? ' · ' + elapsed : ''}</span>
             </div>`;
           ]]]
         right: >
@@ -104,9 +172,13 @@
             const acOn  = !['off','unavailable','unknown',''].includes(states['climate.sl_ar_condicionado']?.state ?? 'off');
             const alexa = ['playing','on','paused'].includes(states['media_player.echo_show']?.state ?? '');
             const home  = states['person.bruno_helasio']?.state === 'home';
+            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+            const offBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+            const offBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
+            const offIcon = salaOn ? 'rgba(0,0,0,0.42)' : 'rgba(255,255,255,0.35)';
             const dot = (icon, active, color) =>
-              `<div style="width:26px;height:26px;border-radius:50%;background:${active?color+'22':'rgba(255,255,255,0.08)'};border:1px solid ${active?color+'55':'rgba(255,255,255,0.12)'};display:flex;align-items:center;justify-content:center;">` +
-              `<ha-icon icon="${icon}" style="width:14px;height:14px;color:${active?color:'rgba(255,255,255,0.35)'};display:flex;"></ha-icon></div>`;
+              `<div style="width:26px;height:26px;border-radius:50%;background:${active?color+'22':offBg};border:1px solid ${active?color+'55':offBorder};display:flex;align-items:center;justify-content:center;">` +
+              `<ha-icon icon="${icon}" style="width:14px;height:14px;color:${active?color:offIcon};display:flex;"></ha-icon></div>`;
             return `<div style="display:flex;flex-direction:column;gap:5px;padding-top:2px;">
               ${dot('mdi:account',          home,  '#60a5fa')}
               ${dot('mdi:television-classic', tvOn,  '#a78bfa')}
@@ -116,7 +188,20 @@
           ]]]
       styles:
         card:
-          - background: transparent
+          # - background: transparent  # ORIGINAL — mantido para rollback rapido
+          # - background: >
+          #     [[[
+          #       return variables.state_on
+          #         ? 'rgba(250, 250, 250, 0.75)'
+          #         : 'transparent';
+          #     ]]] # ORIGINAL Opcao A (comentado)
+          - background: >
+              [[[
+                // AJUSTE 2026-04-23 (feedback): hero nao deve acender isolado.
+                // O acendimento passa a ocorrer no bloco completo (wrapper stack-in-card).
+                // Mantemos o hero transparente nos dois estados.
+                return 'transparent';
+              ]]]
           - border: none
           - box-shadow: none
           - padding: 0
@@ -131,7 +216,15 @@
           - align-self: end
           - font-size: 15px
           - font-weight: 700
-          - color: white
+          # - color: white # ORIGINAL — mantido para rollback rapido
+          # - color: >
+          #     [[[
+          #       return variables.state_on ? 'black' : 'white';
+          #     ]]] # ORIGINAL Opcao A (comentado)
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.9)' : 'white';
+              ]]]
           - margin-bottom: 2px
         custom_fields:
           icon:
@@ -176,23 +269,41 @@
         toggle_vis: >
           [[[
             const on = entity && entity.state !== 'off';
-            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(167,139,250,0.95)0%,rgba(167,139,250,0.65)100%)':'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'};">
-              <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
+            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+            const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.18)0%,rgba(0,0,0,0.10)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)';
+            const knob = salaOn ? 'rgba(255,255,255,0.95)' : 'white';
+            const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.20)' : 'none';
+            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(167,139,250,0.95)0%,rgba(167,139,250,0.65)100%)':offTrack};">
+              <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:${knob};border:${knobBorder};"></div>
             </div>`;
           ]]]
         controls: >
           [[[
             const on = entity && entity.state !== 'off';
+            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+            const ctrlBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+            const ctrlBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
+            const ctrlColor = salaOn ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.85)';
             if (!on) return '';
             return `<div style="display:flex;flex-direction:row;gap:8px;align-items:center;">
-              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:18px;font-weight:700;">−</div>
-              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:18px;font-weight:700;">+</div>
+              <div style="width:32px;height:32px;border-radius:10px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:18px;font-weight:700;">−</div>
+              <div style="width:32px;height:32px;border-radius:10px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:18px;font-weight:700;">+</div>
             </div>`;
           ]]]
       styles:
         card:
-          - background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)
-          - border: 1px solid rgba(255,255,255,0.14)
+          - background: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on'
+                  ? 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%)'
+                  : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)';
+              ]]]
+          - border: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on'
+                  ? '1px solid rgba(0,0,0,0.16)'
+                  : '1px solid rgba(255,255,255,0.14)';
+              ]]]
           - border-radius: 18px
           - padding: 16px
           - height: 100%
@@ -215,22 +326,35 @@
           - justify-content: flex-start
         icon:
           - width: 22px
-          - color: rgba(255,255,255,0.82)
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
+              ]]]
           - justify-self: start
           - margin-bottom: 8px
         name:
           - font-size: 14px
           - font-weight: 700
           - justify-self: start
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.88)' : 'white';
+              ]]]
         state:
           - font-size: 12px
           - font-weight: 700
-          - color: rgba(255,255,255,0.9)
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.9)';
+              ]]]
           - justify-self: start
           - align-self: end
         label:
           - font-size: 10px
-          - color: rgba(255,255,255,0.4)
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.4)';
+              ]]]
           - justify-self: start
           - margin-top: 2px
         custom_fields:
@@ -278,23 +402,41 @@
         toggle_vis: >
           [[[
             const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
-            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(79,172,254,0.95)0%,rgba(79,172,254,0.65)100%)':'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'};">
-              <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
+            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+            const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.18)0%,rgba(0,0,0,0.10)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)';
+            const knob = salaOn ? 'rgba(255,255,255,0.95)' : 'white';
+            const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.20)' : 'none';
+            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(79,172,254,0.95)0%,rgba(79,172,254,0.65)100%)':offTrack};">
+              <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:${knob};border:${knobBorder};"></div>
             </div>`;
           ]]]
         controls: >
           [[[
             const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+            const ctrlBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+            const ctrlBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
+            const ctrlColor = salaOn ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.85)';
             if (!on) return '';
             return `<div style="display:flex;flex-direction:row;gap:8px;align-items:center;">
-              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:18px;font-weight:700;">−</div>
-              <div style="width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.85);font-size:18px;font-weight:700;">+</div>
+              <div style="width:32px;height:32px;border-radius:10px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:18px;font-weight:700;">−</div>
+              <div style="width:32px;height:32px;border-radius:10px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:18px;font-weight:700;">+</div>
             </div>`;
           ]]]
       styles:
         card:
-          - background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)
-          - border: 1px solid rgba(255,255,255,0.14)
+          - background: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on'
+                  ? 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%)'
+                  : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)';
+              ]]]
+          - border: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on'
+                  ? '1px solid rgba(0,0,0,0.16)'
+                  : '1px solid rgba(255,255,255,0.14)';
+              ]]]
           - border-radius: 18px
           - padding: 16px
           - height: 100%
@@ -317,22 +459,35 @@
           - justify-content: flex-start
         icon:
           - width: 22px
-          - color: rgba(255,255,255,0.82)
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
+              ]]]
           - justify-self: start
           - margin-bottom: 8px
         name:
           - font-size: 14px
           - font-weight: 700
           - justify-self: start
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.88)' : 'white';
+              ]]]
         state:
           - font-size: 12px
           - font-weight: 700
-          - color: rgba(255,255,255,0.9)
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.9)';
+              ]]]
           - justify-self: start
           - align-self: end
         label:
           - font-size: 10px
-          - color: rgba(255,255,255,0.4)
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.4)';
+              ]]]
           - justify-self: start
           - margin-top: 2px
         custom_fields:
@@ -359,19 +514,27 @@
         left: >
           [[[
             const on = entity?.state === 'on';
+            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+            const titleColor = salaOn ? 'rgba(0,0,0,0.86)' : 'white';
+            const subtitleColor = salaOn ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.45)';
+            const iconOff = salaOn ? 'rgba(0,0,0,0.48)' : 'rgba(255,255,255,0.55)';
             return `<div style="display:flex;align-items:center;gap:8px;">
-              <ha-icon icon="mdi:lightbulb-outline" style="width:16px;height:16px;color:${on?'#fbbf24':'rgba(255,255,255,0.55)'};"></ha-icon>
+              <ha-icon icon="mdi:lightbulb-outline" style="width:16px;height:16px;color:${on?'#fbbf24':iconOff};"></ha-icon>
               <div>
-                <div style="font-size:12px;font-weight:700;color:white;line-height:1.1;">Corredor</div>
-                <div style="font-size:9px;color:rgba(255,255,255,0.45);line-height:1.2;">${on?'Ligado':'Desligado'}</div>
+                <div style="font-size:12px;font-weight:700;color:${titleColor};line-height:1.1;">Corredor</div>
+                <div style="font-size:9px;color:${subtitleColor};line-height:1.2;">${on?'Ligado':'Desligado'}</div>
               </div>
             </div>`;
           ]]]
         right: >
           [[[
             const on = entity?.state === 'on';
-            return `<div style="width:34px;height:18px;border-radius:9px;position:relative;background:${on?'linear-gradient(180deg,rgba(251,191,36,0.95)0%,rgba(251,191,36,0.65)100%)':'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'};">
-              <div style="position:absolute;top:1px;left:${on?'17px':'1px'};width:16px;height:16px;border-radius:50%;background:white;"></div>
+            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+            const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.18)0%,rgba(0,0,0,0.10)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)';
+            const knob = salaOn ? 'rgba(255,255,255,0.95)' : 'white';
+            const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.20)' : 'none';
+            return `<div style="width:34px;height:18px;border-radius:9px;position:relative;background:${on?'linear-gradient(180deg,rgba(251,191,36,0.95)0%,rgba(251,191,36,0.65)100%)':offTrack};">
+              <div style="position:absolute;top:1px;left:${on?'17px':'1px'};width:16px;height:16px;border-radius:50%;background:${knob};border:${knobBorder};"></div>
             </div>`;
           ]]]
       styles:
@@ -394,4 +557,3 @@
           right:
             - justify-self: start
             - align-self: center
-

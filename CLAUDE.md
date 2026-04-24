@@ -241,6 +241,129 @@ Adiado para momento posterior. A funcionalidade usaria `entity.attributes.entity
 
 ---
 
+## Registro de Implementacao — Opcao A no Bento Sala (2026-04-22)
+
+Escopo autorizado pelo usuario: implementar a **Opcao A** (levar a logica de acendimento
+dos comodos para o botao hero da Sala, sem mudar a arquitetura geral do card).
+
+### Arquivo alterado
+
+- `config/dashboards/shared/grid-cards/bento_sala.yaml`
+
+### O que foi implementado
+
+1. **Variavel de estado visual no hero (`state_on`)**
+   - Adicionada variavel para definir estado ligado/desligado a partir de
+     `light.grupo_luzes_sala`.
+
+2. **Acendimento visual do hero**
+   - `styles.card.background` deixou de ser fixo transparente e passou a alternar:
+     - ligado: `rgba(250, 250, 250, 0.75)` (paridade visual com `rooms_base`);
+     - desligado: `transparent` (mantem linguagem de vidro do container).
+
+3. **Contraste dinamico de texto**
+   - Nome e bloco de temperatura/umidade agora mudam contraste conforme `state_on`
+     (preto quando ligado, branco quando desligado), alinhando com os comodos.
+
+4. **State/lights com logica robusta (paridade com `rooms_base`)**
+   - Mantida compatibilidade com `sensor.living_room_active`.
+   - Ordem de prioridade para contagem:
+     1) `lights_on_count` (atributo),
+     2) `lights_on` (array/string),
+     3) membros do grupo (`entity.attributes.entity_id`),
+     4) fallback fixo `light.sala_switch_1`/`light.sala_switch_2`.
+   - Tempo ligado agora usa o **membro ligado mais antigo** do grupo (e fallback para
+     `entity.last_changed`), evitando inconsistencias conhecidas de group last_changed.
+
+### Regra de rollback rapido
+
+- **Nenhum codigo antigo foi apagado**.
+- Trechos anteriores foram mantidos comentados no proprio `bento_sala.yaml` com marcacao
+  `ORIGINAL — mantido para rollback rapido`.
+- Para restaurar comportamento anterior:
+  1) descomentar bloco antigo do `custom_fields.lights`;
+  2) voltar `styles.card.background: transparent`;
+  3) voltar `name.color: white`;
+  4) comentar os blocos novos da Opcao A.
+
+### Ajuste fino pos-feedback visual (2026-04-23)
+
+Feedback do usuario: "**muito longe do planejado**" (hero da Sala ficou claro/branco demais).
+
+Ajustes aplicados mantendo a logica da Opcao A:
+
+1. **Acendimento visual suavizado**
+   - Fundo ligado alterado de branco forte `rgba(250,250,250,0.75)` para gradiente leve:
+     `linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.06) 100%)`.
+   - Objetivo: preservar linguagem glass e evitar "bloco branco chapado".
+
+2. **Contraste de texto restaurado ao padrao visual anterior**
+   - Nome voltou para `white` fixo.
+   - Temperatura/umidade voltaram para tons brancos fixos (`0.9`/`0.52`).
+
+3. **Codigo da versao anterior preservado em comentarios**
+   - Regras de nao exclusao e rollback rapido mantidas.
+
+### Correcao estrutural pos-feedback (2026-04-23 — bloco completo)
+
+Novo feedback do usuario: o erro nao era de cor, e sim de escopo de acendimento.
+O hero estava acendendo sozinho; o esperado era acender o **cartao completo da Sala**
+(wrapper que contem hero + TV + A/C + demais elementos).
+
+Correcao aplicada:
+
+1. `config/dashboards/views/main-grid/bento_sala.yaml`
+   - Acendimento movido para o `ha-card` do `stack-in-card` (container total).
+   - Estilo do wrapper agora alterna por estado de `light.grupo_luzes_sala`:
+     - OFF: vidro fosco original;
+     - ON: fundo branco translúcido no bloco inteiro.
+   - Codigo original de vidro mantido comentado para rollback.
+
+2. `config/dashboards/shared/grid-cards/bento_sala.yaml`
+   - Hero voltou a ficar com `background: transparent` em ambos os estados.
+   - Evita acendimento parcial/isolado do topo.
+
+### Ajuste de padronizacao visual/contraste (2026-04-24)
+
+Novo feedback do usuario: quando a Sala acende, a cor estava translúcida/fosca demais
+e o contraste dos elementos internos ficava lavado (diferente do Office).
+
+Ajustes aplicados:
+
+1. `config/dashboards/views/main-grid/bento_sala.yaml`
+   - Estado ON do wrapper alterado para branco real (`rgb(250,250,250)`), sem transparência.
+   - Borda/sombra ajustadas para leitura e padrao de "botao aceso" mais proximo dos demais.
+
+2. `config/dashboards/shared/grid-cards/bento_sala.yaml`
+   - Contraste dinâmico no estado ON da Sala para elementos internos:
+     - hero (nome + temperatura/umidade),
+     - dots laterais,
+     - cards TV e A/C (fundo, borda, icon, name, state, label, controles),
+     - bloco Corredor (titulo/subtitulo/icone inativo).
+   - Objetivo: manter bloco inteiro aceso e preservar legibilidade/padronizacao.
+
+### Ajuste de aderencia ao padrao dos comodos (2026-04-24 — revisao 2)
+
+Feedback do usuario: branco da Sala ainda estava mais forte que os demais comodos e
+o formato/cor do status de iluminacao nao seguia o padrao.
+
+Acoes:
+
+1. Wrapper da Sala (`views/main-grid/bento_sala.yaml`)
+   - Estado ON ajustado de `rgb(250,250,250)` para `rgba(250,250,250,0.75)`,
+     reproduzindo o branco usado pelos cards base de comodos.
+
+2. Status de iluminacao (`shared/grid-cards/bento_sala.yaml`)
+   - Formato padronizado para `1 light` / `N lights` + tempo (`· Xm/Xh/Xd`),
+     alinhado com demais comodos.
+   - Cor do texto do status no estado ON ajustada para contraste escuro.
+
+3. Contraste dos toggles
+   - Toggles de TV, A/C e Corredor agora escurecem trilho/contorno no estado OFF
+     quando a Sala esta acesa, evitando perda de contraste sobre fundo claro.
+
+---
+
 ### Ordem de execucao
 
 | Passo | Etapa | Complexidade | Risco |

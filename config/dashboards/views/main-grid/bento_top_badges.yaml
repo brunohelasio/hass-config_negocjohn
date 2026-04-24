@@ -51,7 +51,18 @@ cards:
         [[[
           const fallback = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
           const groupMembers = states['light.todas_as_luzes']?.attributes?.entity_id;
-          const e = (Array.isArray(groupMembers) && groupMembers.length) ? groupMembers : fallback;
+          const source = (Array.isArray(groupMembers) && groupMembers.length) ? groupMembers : fallback;
+          const seen = new Set();
+          const expandMembers = (ids) => ids.flatMap((id) => {
+            if (!id || seen.has(id)) return [];
+            seen.add(id);
+            const st = states[id];
+            if (!st) return [];
+            const members = st.attributes?.entity_id;
+            if (Array.isArray(members) && members.length) return expandMembers(members);
+            return id.startsWith('light.') ? [id] : [];
+          });
+          const e = [...new Set(expandMembers(source))];
           const onE = e.filter(id => states[id]?.state === 'on');
           const exp = states['input_select.hemma_expanded_row']?.state || 'none';
           const chips = onE.map(id => ({
@@ -124,10 +135,9 @@ cards:
         overflow-x: auto;
         max-width: min(56vw, 560px);
         white-space: nowrap;
-        padding: 6px 10px;
-        border-radius: 999px;
-        background: rgba(22, 22, 25, 0.88);
-        border: 1px solid rgba(255,255,255,0.14);
+        padding: 0;
+        border: none;
+        background: transparent;
       }
       .exp-chip {
         display: inline-grid;

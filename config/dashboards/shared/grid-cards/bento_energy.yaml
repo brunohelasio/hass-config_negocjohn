@@ -202,7 +202,7 @@
             hour24: true
             height: 110
             lower_bound: 0
-            smoothing: true
+            smoothing: false
             line_width: 3
             line_color: '#6FB8FF'
             font_size: 75
@@ -221,7 +221,7 @@
                   border: none !important;
                   box-shadow: none !important;
                   margin-top: -2px;
-                  padding: 0 6px 0 2px;
+                  padding: 0 6px 6px 2px;
                 }
 
         - type: conditional
@@ -240,7 +240,7 @@
             hour24: true
             height: 110
             lower_bound: 0
-            smoothing: true
+            smoothing: false
             line_width: 3
             line_color: '#6FB8FF'
             font_size: 75
@@ -259,7 +259,7 @@
                   border: none !important;
                   box-shadow: none !important;
                   margin-top: -2px;
-                  padding: 0 6px 0 2px;
+                  padding: 0 6px 6px 2px;
                 }
 
         - type: conditional
@@ -278,7 +278,7 @@
             hour24: true
             height: 110
             lower_bound: 0
-            smoothing: true
+            smoothing: false
             line_width: 3
             line_color: '#6FB8FF'
             font_size: 75
@@ -297,5 +297,5 @@
                   border: none !important;
                   box-shadow: none !important;
                   margin-top: -2px;
-                  padding: 0 6px 0 2px;
+                  padding: 0 6px 6px 2px;
                 }

@@ -17,7 +17,6 @@ homeassistant:
     active_player: !include packages/active_player.yaml
     hass_sidebar_helpers: !include packages/hassio/hass_sidebar_helpers.yaml
     energy_estimated: !include packages/energy_estimated.yaml
-    sala_tv_controls: !include packages/sala_tv_controls.yaml
 
 automation: !include automations.yaml
 script: !include scripts.yaml

@@ -1,0 +1,333 @@
+# ============================================================================
+# Pacote: energy_estimated
+# Objetivo: infraestrutura de consumo estimado (Etapa 1)
+# Observação: modelo de tendência/variação visual (não medição elétrica precisa)
+# ============================================================================
+
+input_number:
+  potencia_estimada_luz_unitaria:
+    name: Potência estimada por luz (W)
+    min: 0
+    max: 1000
+    step: 5
+    mode: box
+    unit_of_measurement: W
+    icon: mdi:lightbulb
+    initial: 150
+
+  potencia_estimada_clima_unitaria:
+    name: Potência estimada por AC/Clima ativo (W)
+    min: 0
+    max: 5000
+    step: 10
+    mode: box
+    unit_of_measurement: W
+    icon: mdi:snowflake
+    initial: 1200
+
+  potencia_estimada_midia_unitaria:
+    name: Potência estimada por mídia ativa (W)
+    min: 0
+    max: 2000
+    step: 10
+    mode: box
+    unit_of_measurement: W
+    icon: mdi:television
+    initial: 120
+
+  potencia_estimada_outros_unitaria:
+    name: Potência estimada por dispositivo "outros" ativo (W)
+    min: 0
+    max: 3000
+    step: 10
+    mode: box
+    unit_of_measurement: W
+    icon: mdi:power-plug
+    initial: 80
+
+  potencia_real_tomadas_manual:
+    name: Potência real tomada(s) manual (placeholder)
+    min: 0
+    max: 10000
+    step: 5
+    mode: box
+    unit_of_measurement: W
+    icon: mdi:power-socket
+    initial: 0
+
+input_select:
+  periodo_energia_dashboard:
+    name: Período Energia Dashboard
+    options:
+      - Diário
+      - Semanal
+      - Mensal
+    initial: Diário
+    icon: mdi:calendar-range
+
+template:
+  - sensor:
+      # ----------------------------------------------------------------------
+      # POTÊNCIA ESTIMADA - LUZES
+      # ----------------------------------------------------------------------
+      - name: Potencia Estimada Luzes
+        unique_id: potencia_estimada_luzes
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:lightbulb-group
+        state: >-
+          {% set luzes = [
+            'light.sala_switch_1','light.sala_switch_2','light.sala_switch_3',
+            'light.sala_2_switch_2','light.sala_2_switch_3',
+            'light.varanda_switch_1','light.varanda_switch_2',
+            'light.cozinha_switch_1','light.cozinha_switch_2','light.cozinha_switch_3','light.cz_luz_principal',
+            'light.quarto_casal_switch_1','light.quarto_casal_switch_2','light.quarto_casal_2_switch_2','light.quarto_casal_2_switch_3','light.qc_luz_principal',
+            'light.suite_casal_switch_1','light.suite_casal_switch_2',
+            'light.quarto_marina_switch_1','light.quarto_marina_switch_2','light.quarto_marina_switch_3','light.quarto_marina_switch_4',
+            'light.suite_marina_switch_1','light.suite_marina_switch_2',
+            'light.office_switch_1','light.office_switch_2','light.office_switch_3',
+            'light.lavabo_switch_1','light.lavabo_switch_2','light.lavabo_switch_3',
+            'light.corredor_switch_1',
+            'light.quarto_miguel_switch_1','light.quarto_miguel_switch_2','light.quarto_miguel_switch_3',
+            'light.quarto_miguel_2_switch_1','light.quarto_miguel_2_switch_2','light.quarto_miguel_2_switch_3',
+            'light.utility_room_light'
+          ] %}
+          {% set ligadas = expand(luzes) | selectattr('state','eq','on') | list | count %}
+          {% set p_luz = states('input_number.potencia_estimada_luz_unitaria') | float(150) %}
+          {{ (ligadas * p_luz) | round(2) }}
+        attributes:
+          fontes: "estimativa"
+          categoria: "luzes"
+
+      # ----------------------------------------------------------------------
+      # POTÊNCIA ESTIMADA - CLIMA
+      # ----------------------------------------------------------------------
+      - name: Potencia Estimada Clima
+        unique_id: potencia_estimada_clima
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:air-conditioner
+        state: >-
+          {% set climas = [
+            'climate.sl_ar_condicionado',
+            'climate.ac_office',
+            'climate.ac_quarto_miguel',
+            'climate.sl_ar_condicionado_2'
+          ] %}
+          {% set ativos = climas
+            | map('states')
+            | reject('in',['off','unavailable','unknown','none',''])
+            | list | count %}
+          {% set p_clima = states('input_number.potencia_estimada_clima_unitaria') | float(1200) %}
+          {{ (ativos * p_clima) | round(2) }}
+        attributes:
+          fontes: "estimativa"
+          categoria: "clima"
+
+      # ----------------------------------------------------------------------
+      # POTÊNCIA ESTIMADA - MÍDIA
+      # ----------------------------------------------------------------------
+      - name: Potencia Estimada Midia
+        unique_id: potencia_estimada_midia
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:multimedia
+        state: >-
+          {% set midias = [
+            'media_player.smart_tv_pro_2',
+            'media_player.android_tv_192_168_3_17',
+            'media_player.echo_show',
+            'media_player.echo_pop_office',
+            'media_player.spotifyplus_bruno_helasio',
+            'media_player.living_room_tv',
+            'media_player.bedroom_tv'
+          ] %}
+          {% set estados_ativos = ['on','playing','paused','idle','buffering'] %}
+          {% set ativos = midias | map('states') | select('in', estados_ativos) | list | count %}
+          {% set p_midia = states('input_number.potencia_estimada_midia_unitaria') | float(120) %}
+          {{ (ativos * p_midia) | round(2) }}
+        attributes:
+          fontes: "estimativa"
+          categoria: "midia"
+
+      # ----------------------------------------------------------------------
+      # POTÊNCIA ESTIMADA - OUTROS
+      # ----------------------------------------------------------------------
+      - name: Potencia Estimada Outros
+        unique_id: potencia_estimada_outros
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:power-plug-outline
+        state: >-
+          {% set outros = [
+            'switch.macbook',
+            'switch.lidl_3_gang_socket_l1',
+            'switch.washer_dryer_power',
+            'switch.ps5_power',
+            'switch.quarto_miguel_switch_1','switch.quarto_miguel_switch_2','switch.quarto_miguel_switch_3',
+            'switch.quarto_miguel_2_switch_1','switch.quarto_miguel_2_switch_2','switch.quarto_miguel_2_switch_3',
+            'switch.suite_miguel_switch_1','switch.suite_miguel_switch_2'
+          ] %}
+          {% set ligados = expand(outros) | selectattr('state','eq','on') | list | count %}
+          {% set p_outros = states('input_number.potencia_estimada_outros_unitaria') | float(80) %}
+          {{ (ligados * p_outros) | round(2) }}
+        attributes:
+          fontes: "estimativa"
+          categoria: "outros"
+
+      # ----------------------------------------------------------------------
+      # POTÊNCIA REAL TOMADAS (PLACEHOLDER)
+      # ----------------------------------------------------------------------
+      - name: Potencia Real Tomadas
+        unique_id: potencia_real_tomadas
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:power-socket-eu
+        state: >-
+          {{ states('input_number.potencia_real_tomadas_manual') | float(0) | round(2) }}
+        attributes:
+          fontes: "placeholder_manual"
+          observacao: "Substituir por soma de sensores reais de tomadas inteligentes no futuro."
+
+      # ----------------------------------------------------------------------
+      # POTÊNCIA TOTAL CASA
+      # ----------------------------------------------------------------------
+      - name: Potencia Total Casa
+        unique_id: potencia_total_casa
+        unit_of_measurement: W
+        device_class: power
+        state_class: measurement
+        icon: mdi:home-lightning-bolt-outline
+        state: >-
+          {% set luzes = states('sensor.potencia_estimada_luzes') | float(0) %}
+          {% set clima = states('sensor.potencia_estimada_clima') | float(0) %}
+          {% set midia = states('sensor.potencia_estimada_midia') | float(0) %}
+          {% set outros = states('sensor.potencia_estimada_outros') | float(0) %}
+          {% set tomadas = states('sensor.potencia_real_tomadas') | float(0) %}
+          {{ (luzes + clima + midia + outros + tomadas) | round(2) }}
+        attributes:
+          fontes: "estimativa+real_placeholder"
+
+      # ----------------------------------------------------------------------
+      # SENSOR DE APOIO PARA ETAPA 2 (valor conforme seletor de período)
+      # ----------------------------------------------------------------------
+      - name: Energia Total Casa Periodo Atual
+        unique_id: energia_total_casa_periodo_atual
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total
+        icon: mdi:flash
+        state: >-
+          {% set periodo = states('input_select.periodo_energia_dashboard') %}
+          {% if periodo == 'Semanal' %}
+            {{ states('sensor.energia_total_casa_semanal') | float(0) | round(2) }}
+          {% elif periodo == 'Mensal' %}
+            {{ states('sensor.energia_total_casa_mensal') | float(0) | round(2) }}
+          {% else %}
+            {{ states('sensor.energia_total_casa_diaria') | float(0) | round(2) }}
+          {% endif %}
+        attributes:
+          periodo: "{{ states('input_select.periodo_energia_dashboard') }}"
+
+# ------------------------------------------------------------------------------
+# INTEGRAÇÃO W -> kWh (energia acumulada)
+# ------------------------------------------------------------------------------
+sensor:
+  - platform: integration
+    source: sensor.potencia_estimada_luzes
+    name: Energia Estimada Luzes
+    unique_id: energia_estimada_luzes
+    unit_prefix: k
+    round: 4
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.potencia_estimada_clima
+    name: Energia Estimada Clima
+    unique_id: energia_estimada_clima
+    unit_prefix: k
+    round: 4
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.potencia_estimada_midia
+    name: Energia Estimada Midia
+    unique_id: energia_estimada_midia
+    unit_prefix: k
+    round: 4
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.potencia_estimada_outros
+    name: Energia Estimada Outros
+    unique_id: energia_estimada_outros
+    unit_prefix: k
+    round: 4
+    method: trapezoidal
+
+  - platform: integration
+    source: sensor.potencia_total_casa
+    name: Energia Total Casa
+    unique_id: energia_total_casa
+    unit_prefix: k
+    round: 4
+    method: trapezoidal
+
+# ------------------------------------------------------------------------------
+# Utility meters - diário / semanal / mensal
+# ------------------------------------------------------------------------------
+utility_meter:
+  energia_total_casa_diaria:
+    source: sensor.energia_total_casa
+    cycle: daily
+  energia_total_casa_semanal:
+    source: sensor.energia_total_casa
+    cycle: weekly
+  energia_total_casa_mensal:
+    source: sensor.energia_total_casa
+    cycle: monthly
+
+  energia_luzes_diaria:
+    source: sensor.energia_estimada_luzes
+    cycle: daily
+  energia_luzes_semanal:
+    source: sensor.energia_estimada_luzes
+    cycle: weekly
+  energia_luzes_mensal:
+    source: sensor.energia_estimada_luzes
+    cycle: monthly
+
+  energia_clima_diaria:
+    source: sensor.energia_estimada_clima
+    cycle: daily
+  energia_clima_semanal:
+    source: sensor.energia_estimada_clima
+    cycle: weekly
+  energia_clima_mensal:
+    source: sensor.energia_estimada_clima
+    cycle: monthly
+
+  energia_midia_diaria:
+    source: sensor.energia_estimada_midia
+    cycle: daily
+  energia_midia_semanal:
+    source: sensor.energia_estimada_midia
+    cycle: weekly
+  energia_midia_mensal:
+    source: sensor.energia_estimada_midia
+    cycle: monthly
+
+  energia_outros_diaria:
+    source: sensor.energia_estimada_outros
+    cycle: daily
+  energia_outros_semanal:
+    source: sensor.energia_estimada_outros
+    cycle: weekly
+  energia_outros_mensal:
+    source: sensor.energia_estimada_outros
+    cycle: monthly

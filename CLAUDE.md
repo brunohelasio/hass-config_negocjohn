@@ -1855,3 +1855,44 @@ Solicitação específica do usuário:
 ### Escopo preservado
 - Altura do card TV mantida.
 - Hero mantido sem alterações funcionais.
+
+---
+
+## Registro de Ajuste Estrutural — Sala (2026-04-25, revisão 6)
+
+Solicitação do usuário:
+1) mover `+/-` do A/C para a esquerda (abaixo de ícone/título);
+2) exibir temperatura selecionada ao lado de `+/-`;
+3) aumentar discretamente altura dos botões de streaming (sem mexer na altura do card TV);
+4) garantir corredor com mesma altura visual do A/C e com ícone.
+
+### Implementação aplicada
+- Linha de apps da TV: botões Netflix/Disney/HBO/Prime de `32px` para `34px`.
+- A/C:
+  - layout alterado para `"info power" / "controls power"`;
+  - `controls` movido para a esquerda, abaixo do título;
+  - controles agora em ordem `- [temperatura] +`;
+  - temperatura selecionada exibida em badge central (`xx°`).
+- Corredor:
+  - ícone alterado para `mdi:door-closed`;
+  - altura mínima ajustada para alinhar melhor com o A/C;
+  - centralização explícita de conteúdo no card.
+
+### Escopo preservado
+- Altura do card TV não alterada.
+- Hero sem mudança funcional.
+
+---
+
+## Registro de Ajuste Estrutural — Sala (2026-04-25, revisão 7)
+
+Correção solicitada após revisão 6:
+- Ao elevar discretamente os botões de streaming para `34px`, era necessário elevar proporcionalmente a altura útil do card da TV.
+
+### Ajuste aplicado
+- Grid da Sala: linha 2 (TV) de `minmax(104px, max-content)` para `minmax(110px, max-content)`.
+- Card TV: adicionado `min-height: 112px` para garantir folga vertical estável com os botões de streaming mais altos.
+
+### Escopo preservado
+- Hero sem alterações.
+- Estrutura A/C e Corredor mantida.

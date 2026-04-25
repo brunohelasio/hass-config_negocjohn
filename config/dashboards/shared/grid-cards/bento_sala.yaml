@@ -2,7 +2,7 @@
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: minmax(0, 1.7fr) minmax(74px, 0.7fr)
-    grid-template-rows: 142px minmax(104px, max-content) minmax(98px, 1fr)
+    grid-template-rows: 142px minmax(110px, max-content) minmax(98px, 1fr)
     grid-template-areas: |
       "hero hero"
       "tv tv"
@@ -258,6 +258,7 @@
             box-shadow: none !important;
             padding: 10px 12px 8px 12px !important;
             height: auto !important;
+            min-height: 112px !important;
             box-sizing: border-box;
           }
       cards:
@@ -401,7 +402,7 @@
                     entity_id: script.sala_tv_open_netflix
                 styles:
                   card:
-                    - height: 32px
+                    - height: 34px
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
@@ -423,7 +424,7 @@
                     entity_id: script.sala_tv_open_disney
                 styles:
                   card:
-                    - height: 32px
+                    - height: 34px
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
@@ -445,7 +446,7 @@
                     entity_id: script.sala_tv_open_hbo
                 styles:
                   card:
-                    - height: 32px
+                    - height: 34px
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
@@ -467,7 +468,7 @@
                     entity_id: script.sala_tv_open_prime
                 styles:
                   card:
-                    - height: 32px
+                    - height: 34px
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
@@ -595,7 +596,7 @@
             grid-template-rows: auto auto
             grid-template-areas: |
               "info power"
-              "info controls"
+              "controls power"
             column-gap: 10px
             row-gap: 8px
             margin: 0
@@ -686,7 +687,7 @@
               cards:
                 - type: custom:button-card
                   entity: climate.sl_ar_condicionado
-                  icon: mdi:plus
+                  icon: mdi:minus
                   show_name: false
                   tap_action:
                     action: perform-action
@@ -697,7 +698,7 @@
                       temperature: >
                         [[[
                           const curr = Number(entity?.attributes?.temperature ?? 22);
-                          return Math.min(30, curr + 1);
+                          return Math.max(16, curr - 1);
                         ]]]
                   styles: &ac_step_btn
                     card:
@@ -719,7 +720,38 @@
                           ]]]
                 - type: custom:button-card
                   entity: climate.sl_ar_condicionado
-                  icon: mdi:minus
+                  name: >
+                    [[[
+                      const t = Number(entity?.attributes?.temperature);
+                      return Number.isFinite(t) ? `${t}°` : '—';
+                    ]]]
+                  show_icon: false
+                  show_name: true
+                  tap_action:
+                    action: none
+                  styles:
+                    card:
+                      - min-width: 38px
+                      - height: 30px
+                      - border-radius: 9px
+                      - border: 1px solid rgba(255,255,255,0.10)
+                      - background: >
+                          [[[
+                            return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+                          ]]]
+                      - box-shadow: none
+                      - padding: 0 6px
+                    name:
+                      - font-size: 12px
+                      - font-weight: 700
+                      - justify-self: center
+                      - color: >
+                          [[[
+                            return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.80)' : 'rgba(255,255,255,0.90)';
+                          ]]]
+                - type: custom:button-card
+                  entity: climate.sl_ar_condicionado
+                  icon: mdi:plus
                   show_name: false
                   tap_action:
                     action: perform-action
@@ -730,7 +762,7 @@
                       temperature: >
                         [[[
                           const curr = Number(entity?.attributes?.temperature ?? 22);
-                          return Math.max(16, curr - 1);
+                          return Math.min(30, curr + 1);
                         ]]]
                   styles: *ac_step_btn
 
@@ -739,7 +771,7 @@
       view_layout:
         grid-area: corredor
       entity: light.corredor_switch_1
-      icon: mdi:door
+      icon: mdi:door-closed
       name: Corredor
       show_icon: true
       show_name: false
@@ -765,10 +797,13 @@
           - border-radius: 18px
           - box-shadow: none
           - height: auto
-          - min-height: 78px
+          - min-height: 82px
           - margin: 0 0 12px 2px
+          - display: flex
+          - align-items: center
+          - justify-content: center
         icon:
-          - width: 26px
+          - width: 28px
           - color: >
               [[[
                 return entity?.state === 'on'

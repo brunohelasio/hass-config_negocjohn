@@ -55,6 +55,16 @@ input_number:
     icon: mdi:power-socket
     initial: 0
 
+input_select:
+  periodo_energia_dashboard:
+    name: Período Energia Dashboard
+    options:
+      - Diário
+      - Semanal
+      - Mensal
+    initial: Diário
+    icon: mdi:calendar-range
+
 template:
   - sensor:
       # ----------------------------------------------------------------------
@@ -202,6 +212,27 @@ template:
           {{ (luzes + clima + midia + outros + tomadas) | round(2) }}
         attributes:
           fontes: "estimativa+real_placeholder"
+
+      # ----------------------------------------------------------------------
+      # SENSOR DE APOIO PARA ETAPA 2 (valor conforme seletor de período)
+      # ----------------------------------------------------------------------
+      - name: Energia Total Casa Periodo Atual
+        unique_id: energia_total_casa_periodo_atual
+        unit_of_measurement: kWh
+        device_class: energy
+        state_class: total
+        icon: mdi:flash
+        state: >-
+          {% set periodo = states('input_select.periodo_energia_dashboard') %}
+          {% if periodo == 'Semanal' %}
+            {{ states('sensor.energia_total_casa_semanal') | float(0) | round(2) }}
+          {% elif periodo == 'Mensal' %}
+            {{ states('sensor.energia_total_casa_mensal') | float(0) | round(2) }}
+          {% else %}
+            {{ states('sensor.energia_total_casa_diaria') | float(0) | round(2) }}
+          {% endif %}
+        attributes:
+          periodo: "{{ states('input_select.periodo_energia_dashboard') }}"
 
 # ------------------------------------------------------------------------------
 # INTEGRAÇÃO W -> kWh (energia acumulada)

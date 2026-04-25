@@ -185,195 +185,205 @@
             - justify-self: end
             - align-self: start
 
-    - type: custom:state-switch
-      entity: input_select.periodo_energia_dashboard
-      default: Diário
-      states:
-        Diário:
-          type: custom:apexcharts-card
-          graph_span: 24h
-          span:
-            start: day
-          update_interval: 2min
-          header:
-            show: false
-          show:
-            loading: false
-            last_updated: false
-            legend_value: false
-          yaxis:
-            - id: energia
-              decimals: 1
-          apex_config:
-            chart:
-              height: 120
-              toolbar:
-                show: false
-            grid:
-              borderColor: rgba(255,255,255,0.12)
-              strokeDashArray: 2
-            xaxis:
-              labels:
-                show: true
-                style:
-                  colors: rgba(255,255,255,0.45)
-                  fontSize: 10px
+    - type: vertical-stack
+      cards:
+        - type: conditional
+          conditions:
+            - entity: input_select.periodo_energia_dashboard
+              state: Diário
+          card:
+            type: custom:apexcharts-card
+            graph_span: 24h
+            span:
+              start: day
+            update_interval: 2min
+            header:
+              show: false
+            show:
+              loading: false
+              last_updated: false
+              legend_value: false
             yaxis:
-              labels:
-                show: true
-                style:
-                  colors: rgba(255,255,255,0.45)
-                  fontSize: 10px
-            dataLabels:
-              enabled: false
-            markers:
-              size: 3
-              strokeWidth: 0
-          series:
-            - entity: sensor.energia_total_casa_diaria
-              name: kWh
-              yaxis_id: energia
-              type: area
-              curve: smooth
-              stroke_width: 3
-              color: '#6FB8FF'
-              opacity: 0.22
-              show:
-                extremas: true
-          card_mod:
-            style: |
-              ha-card {
-                background: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-                margin-top: -2px;
-                padding: 0 6px 0 2px;
-              }
+              - id: energia
+                decimals: 1
+            apex_config:
+              chart:
+                height: 120
+                toolbar:
+                  show: false
+              grid:
+                borderColor: "rgba(255,255,255,0.12)"
+                strokeDashArray: 2
+              xaxis:
+                labels:
+                  show: true
+                  style:
+                    colors: "rgba(255,255,255,0.45)"
+                    fontSize: 10px
+              yaxis:
+                labels:
+                  show: true
+                  style:
+                    colors: "rgba(255,255,255,0.45)"
+                    fontSize: 10px
+              dataLabels:
+                enabled: false
+              markers:
+                size: 3
+                strokeWidth: 0
+            series:
+              - entity: sensor.energia_total_casa_diaria
+                name: kWh
+                yaxis_id: energia
+                type: area
+                curve: smooth
+                stroke_width: 3
+                color: '#6FB8FF'
+                opacity: 0.22
+                show:
+                  extremas: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: transparent !important;
+                  border: none !important;
+                  box-shadow: none !important;
+                  margin-top: -2px;
+                  padding: 0 6px 0 2px;
+                }
 
-        Semanal:
-          type: custom:apexcharts-card
-          graph_span: 7d
-          span:
-            end: day
-          update_interval: 15min
-          header:
-            show: false
-          show:
-            loading: false
-            last_updated: false
-            legend_value: false
-          yaxis:
-            - id: energia
-              decimals: 1
-          apex_config:
-            chart:
-              height: 120
-              toolbar:
-                show: false
-            grid:
-              borderColor: rgba(255,255,255,0.12)
-              strokeDashArray: 2
-            xaxis:
-              labels:
-                show: true
-                style:
-                  colors: rgba(255,255,255,0.45)
-                  fontSize: 10px
+        - type: conditional
+          conditions:
+            - entity: input_select.periodo_energia_dashboard
+              state: Semanal
+          card:
+            type: custom:apexcharts-card
+            graph_span: 7d
+            span:
+              end: day
+            update_interval: 15min
+            header:
+              show: false
+            show:
+              loading: false
+              last_updated: false
+              legend_value: false
             yaxis:
-              labels:
-                show: true
-                style:
-                  colors: rgba(255,255,255,0.45)
-                  fontSize: 10px
-            dataLabels:
-              enabled: false
-            markers:
-              size: 3
-              strokeWidth: 0
-          series:
-            - entity: sensor.energia_total_casa_semanal
-              name: kWh
-              yaxis_id: energia
-              type: area
-              curve: smooth
-              stroke_width: 3
-              color: '#6FB8FF'
-              opacity: 0.22
-              group_by:
-                func: max
-                duration: 1d
-              show:
-                extremas: true
-          card_mod:
-            style: |
-              ha-card {
-                background: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-                margin-top: -2px;
-                padding: 0 6px 0 2px;
-              }
+              - id: energia
+                decimals: 1
+            apex_config:
+              chart:
+                height: 120
+                toolbar:
+                  show: false
+              grid:
+                borderColor: "rgba(255,255,255,0.12)"
+                strokeDashArray: 2
+              xaxis:
+                labels:
+                  show: true
+                  style:
+                    colors: "rgba(255,255,255,0.45)"
+                    fontSize: 10px
+              yaxis:
+                labels:
+                  show: true
+                  style:
+                    colors: "rgba(255,255,255,0.45)"
+                    fontSize: 10px
+              dataLabels:
+                enabled: false
+              markers:
+                size: 3
+                strokeWidth: 0
+            series:
+              - entity: sensor.energia_total_casa_semanal
+                name: kWh
+                yaxis_id: energia
+                type: area
+                curve: smooth
+                stroke_width: 3
+                color: '#6FB8FF'
+                opacity: 0.22
+                group_by:
+                  func: max
+                  duration: 1d
+                show:
+                  extremas: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: transparent !important;
+                  border: none !important;
+                  box-shadow: none !important;
+                  margin-top: -2px;
+                  padding: 0 6px 0 2px;
+                }
 
-        Mensal:
-          type: custom:apexcharts-card
-          graph_span: 30d
-          span:
-            end: day
-          update_interval: 30min
-          header:
-            show: false
-          show:
-            loading: false
-            last_updated: false
-            legend_value: false
-          yaxis:
-            - id: energia
-              decimals: 1
-          apex_config:
-            chart:
-              height: 120
-              toolbar:
-                show: false
-            grid:
-              borderColor: rgba(255,255,255,0.12)
-              strokeDashArray: 2
-            xaxis:
-              labels:
-                show: true
-                style:
-                  colors: rgba(255,255,255,0.45)
-                  fontSize: 10px
+        - type: conditional
+          conditions:
+            - entity: input_select.periodo_energia_dashboard
+              state: Mensal
+          card:
+            type: custom:apexcharts-card
+            graph_span: 30d
+            span:
+              end: day
+            update_interval: 30min
+            header:
+              show: false
+            show:
+              loading: false
+              last_updated: false
+              legend_value: false
             yaxis:
-              labels:
-                show: true
-                style:
-                  colors: rgba(255,255,255,0.45)
-                  fontSize: 10px
-            dataLabels:
-              enabled: false
-            markers:
-              size: 3
-              strokeWidth: 0
-          series:
-            - entity: sensor.energia_total_casa_mensal
-              name: kWh
-              yaxis_id: energia
-              type: area
-              curve: smooth
-              stroke_width: 3
-              color: '#6FB8FF'
-              opacity: 0.22
-              group_by:
-                func: max
-                duration: 1d
-              show:
-                extremas: true
-          card_mod:
-            style: |
-              ha-card {
-                background: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-                margin-top: -2px;
-                padding: 0 6px 0 2px;
-              }
+              - id: energia
+                decimals: 1
+            apex_config:
+              chart:
+                height: 120
+                toolbar:
+                  show: false
+              grid:
+                borderColor: "rgba(255,255,255,0.12)"
+                strokeDashArray: 2
+              xaxis:
+                labels:
+                  show: true
+                  style:
+                    colors: "rgba(255,255,255,0.45)"
+                    fontSize: 10px
+              yaxis:
+                labels:
+                  show: true
+                  style:
+                    colors: "rgba(255,255,255,0.45)"
+                    fontSize: 10px
+              dataLabels:
+                enabled: false
+              markers:
+                size: 3
+                strokeWidth: 0
+            series:
+              - entity: sensor.energia_total_casa_mensal
+                name: kWh
+                yaxis_id: energia
+                type: area
+                curve: smooth
+                stroke_width: 3
+                color: '#6FB8FF'
+                opacity: 0.22
+                group_by:
+                  func: max
+                  duration: 1d
+                show:
+                  extremas: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: transparent !important;
+                  border: none !important;
+                  box-shadow: none !important;
+                  margin-top: -2px;
+                  padding: 0 6px 0 2px;
+                }

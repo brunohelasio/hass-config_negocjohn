@@ -194,11 +194,15 @@
           card:
             type: custom:mini-graph-card
             entities:
-              - entity: sensor.energia_total_casa_diaria
-                name: kWh
+              - entity: sensor.potencia_total_casa
+                name: W
                 color: '#6FB8FF'
             hours_to_show: 24
-            points_per_hour: 2
+            points_per_hour: 4
+            hour24: true
+            height: 110
+            lower_bound: 0
+            smoothing: true
             line_width: 3
             line_color: '#6FB8FF'
             font_size: 75
@@ -208,7 +212,7 @@
               state: false
               legend: false
               labels: true
-              points: true
+              points: false
               fill: fade
             card_mod:
               style: |
@@ -233,6 +237,10 @@
             hours_to_show: 168
             aggregate_func: max
             group_by: date
+            hour24: true
+            height: 110
+            lower_bound: 0
+            smoothing: true
             line_width: 3
             line_color: '#6FB8FF'
             font_size: 75
@@ -242,7 +250,7 @@
               state: false
               legend: false
               labels: true
-              points: true
+              points: false
               fill: fade
             card_mod:
               style: |
@@ -267,6 +275,10 @@
             hours_to_show: 720
             aggregate_func: max
             group_by: date
+            hour24: true
+            height: 110
+            lower_bound: 0
+            smoothing: true
             line_width: 3
             line_color: '#6FB8FF'
             font_size: 75
@@ -276,7 +288,7 @@
               state: false
               legend: false
               labels: true
-              points: true
+              points: false
               fill: fade
             card_mod:
               style: |

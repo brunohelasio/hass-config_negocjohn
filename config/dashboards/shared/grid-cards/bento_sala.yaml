@@ -2,7 +2,7 @@
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: minmax(0, 1.7fr) minmax(74px, 0.7fr)
-    grid-template-rows: 142px minmax(96px, 1fr) 94px
+    grid-template-rows: 142px minmax(104px, max-content) minmax(98px, 1fr)
     grid-template-areas: |
       "hero hero"
       "tv tv"
@@ -256,8 +256,8 @@
             border: {% if is_state('light.grupo_luzes_sala','on') %}1px solid rgba(0,0,0,0.16){% else %}1px solid rgba(255,255,255,0.14){% endif %} !important;
             border-radius: 18px !important;
             box-shadow: none !important;
-            padding: 14px 12px 10px 12px !important;
-            height: 100% !important;
+            padding: 10px 12px 8px 12px !important;
+            height: auto !important;
             box-sizing: border-box;
           }
       cards:
@@ -307,7 +307,7 @@
                 name:
                   - justify-self: start
                   - align-self: center
-                  - font-size: 28px
+                  - font-size: 20px
                   - font-weight: 700
                   - color: >
                       [[[
@@ -357,8 +357,8 @@
                 action: more-info
               styles:
                 card:
-                  - width: 38px
-                  - height: 38px
+                  - width: 34px
+                  - height: 34px
                   - border-radius: 12px
                   - background: >
                       [[[
@@ -660,7 +660,7 @@
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
               ]]]
         name:
-          - font-size: 28px
+          - font-size: 20px
           - font-weight: 700
           - justify-self: start
           - align-self: center

@@ -1803,3 +1803,27 @@ Solicitação do usuário após rollback manual para versão funcional:
 ### Escopo preservado
 - Hero mantido intacto (sem mudança funcional/visual de lógica).
 - TV mantida na arquitetura funcional já aprovada (power + apps/controles).
+
+---
+
+## Registro de Correção Estrutural — Sala (2026-04-25, revisão 4)
+
+Objetivo: corrigir empurrão da TV sobre A/C+Corredor sem alterar a linha 1 (Hero).
+
+### Causa-raiz confirmada
+- Linha 2 definida com `1fr` (consumia sobra vertical).
+- Card TV com `height: 100%` (expandia para toda a linha 2).
+- Resultado: espaço vazio na TV e compressão visual da linha 3.
+
+### Correção aplicada (uma passada)
+- `grid-template-rows`: `142px minmax(104px, max-content) minmax(98px, 1fr)`
+  - Linha 2 passa a seguir conteúdo (não sobra).
+  - Linha 3 absorve a sobra restante.
+- TV: `height: auto` e padding vertical reduzido.
+- TV: título reduzido para melhorar densidade sem alterar comportamento.
+- Power da TV reduzido para harmonizar proporção.
+- A/C: título reduzido para aliviar altura útil da linha 3.
+
+### Escopo preservado
+- Hero (linha 1) mantido sem alterações funcionais.
+- Lógica de apps/mini-controles da TV mantida.

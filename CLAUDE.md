@@ -1827,3 +1827,31 @@ Objetivo: corrigir empurrão da TV sobre A/C+Corredor sem alterar a linha 1 (Her
 ### Escopo preservado
 - Hero (linha 1) mantido sem alterações funcionais.
 - Lógica de apps/mini-controles da TV mantida.
+
+---
+
+## Registro de Ajuste Estrutural — Sala (2026-04-25, revisão 5)
+
+Solicitação específica do usuário:
+1. Título `A/C` ao lado do ícone, sem subtítulo.
+2. Substituir toggle por botão de power igual ao da TV, na direita.
+3. Botões `+/-` abaixo do power.
+4. Aumentar gap entre A/C e Corredor.
+5. Aplicar imagens nos botões Disney e Prime.
+6. Evitar sangramento na borda inferior da linha 3 com margem inferior equivalente ao respiro do bloco.
+
+### Implementação aplicada
+- A/C refatorado para `stack-in-card` com layout 2x2:
+  - `info` (ícone + título) à esquerda,
+  - `power` no topo da coluna direita,
+  - `+/-` abaixo do power.
+- Power do A/C usa a mesma linguagem visual do power da TV (dimensão, borda e estado).
+- Botões `+/-` do A/C agora acionam `climate.set_temperature` com incremento/decremento de 1°C (limites 16–30).
+- Gap horizontal global entre A/C e Corredor aumentado (`column-gap: 20px`).
+- Disney: background com `/local/images/dp_bg.jpg`.
+- Prime: background com `/local/images/prime_bg.jpg` + fallback em gradiente.
+- Corredor e A/C com `height: auto` e margem inferior para respiro (`12px`) evitando expansão na borda inferior.
+
+### Escopo preservado
+- Altura do card TV mantida.
+- Hero mantido sem alterações funcionais.

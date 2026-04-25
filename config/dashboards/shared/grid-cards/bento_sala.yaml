@@ -7,7 +7,7 @@
       "hero hero"
       "tv tv"
       "ac corredor"
-    column-gap: 16px
+    column-gap: 20px
     row-gap: 14px
     height: 100%
     margin: 0
@@ -427,7 +427,7 @@
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
-                    - background: linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
+                    - background: center / cover no-repeat url('/local/images/dp_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
                     - box-shadow: none
                   name:
                     - color: rgba(255,255,255,0.92)
@@ -471,7 +471,7 @@
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
-                    - background: linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
+                    - background: center / cover no-repeat url('/local/images/prime_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
                     - box-shadow: none
                   name:
                     - color: rgba(255,255,255,0.92)
@@ -572,117 +572,167 @@
                 styles: *tv_mini_btn
 
     # ── A/C ──────────────────────────────────────────────────────────
-    - type: custom:button-card
+    - type: custom:stack-in-card
       view_layout:
         grid-area: ac
-      entity: climate.sl_ar_condicionado
-      icon: mdi:snowflake
-      name: A/C
-      show_icon: true
-      show_name: true
-      show_state: true
-      show_label: false
-      triggers_update:
-        - climate.sl_ar_condicionado
-      state_display: >
-        [[[
-          const modeMap = {cool:'Frio', heat:'Quente', fan_only:'Ventilar', dry:'Secar', heat_cool:'Auto', auto:'Auto'};
-          const active = ['cool','heat','fan_only','dry','heat_cool','auto'];
-          if (!entity || !active.includes(entity.state)) return 'Desligado';
-          const temp = entity.attributes?.temperature ?? '—';
-          return `${temp}° · ${modeMap[entity.state] ?? entity.state}`;
-        ]]]
-      tap_action:
-        action: perform-action
-        perform_action: "[[[ const on=['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state); return on?'climate.turn_off':'climate.turn_on'; ]]]"
-        target:
-          entity_id: climate.sl_ar_condicionado
-      hold_action:
-        action: more-info
-      custom_fields:
-        toggle_vis: >
-          [[[
-            const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
-            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
-            const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.30)0%,rgba(0,0,0,0.18)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)';
-            const knob = salaOn ? 'rgba(255,255,255,0.95)' : 'white';
-            const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.34)' : 'none';
-            return `<div style="width:40px;height:22px;border-radius:11px;position:relative;background:${on?'linear-gradient(180deg,rgba(79,172,254,0.95)0%,rgba(79,172,254,0.65)100%)':offTrack};">
-              <div style="position:absolute;top:2px;left:${on?'20px':'2px'};width:18px;height:18px;border-radius:50%;background:${knob};border:${knobBorder};"></div>
-            </div>`;
-          ]]]
-        controls: >
-          [[[
-            const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
-            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
-            const ctrlBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
-            const ctrlBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
-            const ctrlColor = salaOn ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.85)';
-            return `<div style="display:flex;flex-direction:row;gap:8px;align-items:center;">
-              <div style="width:28px;height:28px;border-radius:8px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:16px;font-weight:700;">+</div>
-              <div style="width:28px;height:28px;border-radius:8px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:16px;font-weight:700;">−</div>
-            </div>`;
-          ]]]
-      styles:
-        card:
-          - background: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on'
-                  ? 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%)'
-                  : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)';
-              ]]]
-          - border: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on'
-                  ? '1px solid rgba(0,0,0,0.16)'
-                  : '1px solid rgba(255,255,255,0.14)';
-              ]]]
-          - border-radius: 18px
-          - padding: 12px 12px 10px 12px
-          - height: 100%
-          - box-shadow: none
-          - box-sizing: border-box
-          - margin: 1px 2px 0 0
-        grid:
-          - grid-template-areas: |
-              "i toggle_vis controls"
-              "n n n"
-              "s s s"
-          - grid-template-columns: auto auto auto
-          - grid-template-rows: auto auto auto
-          - column-gap: 10px
-        img_cell:
-          - justify-content: flex-start
-        icon:
-          - width: 20px
-          - color: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
-              ]]]
-        name:
-          - font-size: 20px
-          - font-weight: 700
-          - justify-self: start
-          - align-self: center
-          - color: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
-              ]]]
-        state:
-          - font-size: 12px
-          - font-weight: 500
-          - color: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.72)';
-              ]]]
-          - justify-self: start
-        custom_fields:
-          toggle_vis:
-            - justify-self: start
-            - align-self: center
-          controls:
-            - justify-self: start
-            - align-self: center
+      card_mod:
+        style: |
+          ha-card {
+            background: {% if is_state('light.grupo_luzes_sala','on') %}linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%){% else %}linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%){% endif %} !important;
+            border: {% if is_state('light.grupo_luzes_sala','on') %}1px solid rgba(0,0,0,0.16){% else %}1px solid rgba(255,255,255,0.14){% endif %} !important;
+            border-radius: 18px !important;
+            box-shadow: none !important;
+            padding: 8px 10px 8px 10px !important;
+            height: auto !important;
+            box-sizing: border-box;
+            margin: 0 2px 12px 0 !important;
+          }
+      cards:
+        - type: custom:layout-card
+          layout_type: custom:grid-layout
+          layout:
+            grid-template-columns: 1fr 34px
+            grid-template-rows: auto auto
+            grid-template-areas: |
+              "info power"
+              "info controls"
+            column-gap: 10px
+            row-gap: 8px
+            margin: 0
+            padding: 0
+          cards:
+            - type: custom:button-card
+              view_layout:
+                grid-area: info
+              entity: climate.sl_ar_condicionado
+              icon: mdi:snowflake
+              name: A/C
+              show_icon: true
+              show_name: true
+              show_state: false
+              tap_action:
+                action: more-info
+              styles:
+                card:
+                  - background: transparent
+                  - border: none
+                  - box-shadow: none
+                  - padding: 0
+                  - margin: 0
+                grid:
+                  - grid-template-areas: '"i n"'
+                  - grid-template-columns: auto 1fr
+                  - column-gap: 8px
+                icon:
+                  - width: 18px
+                  - color: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
+                      ]]]
+                name:
+                  - justify-self: start
+                  - align-self: center
+                  - font-size: 20px
+                  - font-weight: 700
+                  - color: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
+                      ]]]
+
+            - type: custom:button-card
+              view_layout:
+                grid-area: power
+              entity: climate.sl_ar_condicionado
+              icon: mdi:power
+              show_name: false
+              show_state: false
+              tap_action:
+                action: perform-action
+                perform_action: "[[[ const on=['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state); return on?'climate.turn_off':'climate.turn_on'; ]]]"
+                target:
+                  entity_id: climate.sl_ar_condicionado
+              hold_action:
+                action: more-info
+              styles:
+                card:
+                  - width: 34px
+                  - height: 34px
+                  - border-radius: 12px
+                  - background: >
+                      [[[
+                        const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                        if (on) return 'rgba(79,172,254,0.20)';
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)';
+                      ]]]
+                  - border: >
+                      [[[
+                        const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                        if (on) return '1px solid rgba(79,172,254,0.45)';
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.16)' : '1px solid rgba(255,255,255,0.14)';
+                      ]]]
+                  - box-shadow: none
+                  - padding: 0
+                icon:
+                  - width: 18px
+                  - color: >
+                      [[[
+                        const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                        return on ? '#4facfe' : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.52)' : 'rgba(255,255,255,0.65)');
+                      ]]]
+
+            - type: horizontal-stack
+              view_layout:
+                grid-area: controls
+              cards:
+                - type: custom:button-card
+                  entity: climate.sl_ar_condicionado
+                  icon: mdi:plus
+                  show_name: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: climate.set_temperature
+                    target:
+                      entity_id: climate.sl_ar_condicionado
+                    data:
+                      temperature: >
+                        [[[
+                          const curr = Number(entity?.attributes?.temperature ?? 22);
+                          return Math.min(30, curr + 1);
+                        ]]]
+                  styles: &ac_step_btn
+                    card:
+                      - width: 30px
+                      - height: 30px
+                      - border-radius: 9px
+                      - border: 1px solid rgba(255,255,255,0.12)
+                      - background: >
+                          [[[
+                            return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+                          ]]]
+                      - box-shadow: none
+                      - padding: 0
+                    icon:
+                      - width: 16px
+                      - color: >
+                          [[[
+                            return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
+                          ]]]
+                - type: custom:button-card
+                  entity: climate.sl_ar_condicionado
+                  icon: mdi:minus
+                  show_name: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: climate.set_temperature
+                    target:
+                      entity_id: climate.sl_ar_condicionado
+                    data:
+                      temperature: >
+                        [[[
+                          const curr = Number(entity?.attributes?.temperature ?? 22);
+                          return Math.max(16, curr - 1);
+                        ]]]
+                  styles: *ac_step_btn
 
     # ── Corredor (quick action) ──────────────────────────────────────────────
     - type: custom:button-card
@@ -714,9 +764,9 @@
               ]]]
           - border-radius: 18px
           - box-shadow: none
-          - height: 100%
+          - height: auto
           - min-height: 78px
-          - margin: 1px 0 0 2px
+          - margin: 0 0 12px 2px
         icon:
           - width: 26px
           - color: >

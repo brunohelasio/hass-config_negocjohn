@@ -663,6 +663,7 @@
           - font-size: 28px
           - font-weight: 700
           - justify-self: start
+          - align-self: center
           - color: >
               [[[
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';

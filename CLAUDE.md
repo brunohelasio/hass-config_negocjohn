@@ -1783,3 +1783,43 @@ Implementar o mockup final do bloco Sala no dashboard principal com foco em cont
 ### Observacoes operacionais
 - `media_player.select_source` depende do nome exato em `source_list` da TV.
 - Se algum app nao abrir por nome divergente, ajustar somente o `source` no script correspondente (fallback simples e seguro).
+
+---
+
+## Registro de Ajuste Fino — Bento Sala (2026-04-25, revisão 2)
+
+### Motivo
+Feedback visual após primeira entrega:
+- TV com altura excedente e espaço vazio abaixo dos botões de streaming.
+- Título `TV` e `A/C` grandes demais.
+- Alinhamento horizontal entre botão Power e botão `+` inconsistente.
+- Linha 3 (A/C + Corredor) com densidade visual alta e pouca hierarquia.
+- Necessidade de aplicar imagens também em Disney/Prime.
+
+### Ajustes aplicados
+1. **Grid geral da Sala**
+   - Rebalanceado para reduzir a faixa 2 (TV) e aumentar a faixa 3 (A/C + Corredor).
+   - Ajustado `column-gap` e `row-gap` para melhor respiro.
+
+2. **TV**
+   - Compactação vertical do card (padding menor).
+   - Tipografia reduzida no título e subtítulo.
+   - Power button reduzido (34x34) para harmonizar com a nova densidade.
+   - Faixa inferior migrou de `horizontal-stack` para `layout-card` em grid com coluna de ação fixa à direita.
+     - Objetivo: alinhar com maior precisão a régua de margem direita entre Power e `+`.
+   - Disney recebeu imagem local `/local/images/dp_bg.jpg` com fallback em gradiente.
+   - Prime configurado para `/local/images/prime_bg.jpg` com fallback em gradiente (se imagem não resolver por nome/caminho, mantém legibilidade visual).
+
+3. **A/C**
+   - Tipografia reduzida e grade reorganizada em 2 linhas para diminuir “grude”.
+   - Toggle e botões de ajuste realocados para alinhamento à direita.
+   - Padding interno reduzido para card mais baixo e limpo.
+
+4. **Corredor**
+   - Ícone atualizado para `mdi:door-closed` (paridade visual com Welcome).
+   - Ícone ampliado e altura mínima do botão aumentada para presença visual equilibrada.
+   - Coluna direita ficou mais estreita no grid principal para reduzir largura percebida do botão.
+
+### Rollback rápido desta revisão
+- Restaurar `config/dashboards/shared/grid-cards/bento_sala.yaml` para o commit imediatamente anterior desta revisão.
+- Nenhum ajuste em scripts/helpers foi necessário nesta etapa; pacote `sala_tv_controls` permanece válido.

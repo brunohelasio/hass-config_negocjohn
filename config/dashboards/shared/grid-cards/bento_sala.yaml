@@ -1,13 +1,13 @@
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
-    grid-template-columns: minmax(0, 1fr) 96px
+    grid-template-columns: minmax(0, 1.7fr) minmax(74px, 0.7fr)
     grid-template-rows: 142px minmax(96px, 1fr) 94px
     grid-template-areas: |
       "hero hero"
       "tv tv"
       "ac corredor"
-    column-gap: 14px
+    column-gap: 16px
     row-gap: 14px
     height: 100%
     margin: 0
@@ -256,7 +256,7 @@
             border: {% if is_state('light.grupo_luzes_sala','on') %}1px solid rgba(0,0,0,0.16){% else %}1px solid rgba(255,255,255,0.14){% endif %} !important;
             border-radius: 18px !important;
             box-shadow: none !important;
-            padding: 10px 12px 8px 12px !important;
+            padding: 14px 12px 10px 12px !important;
             height: 100% !important;
             box-sizing: border-box;
           }
@@ -264,13 +264,13 @@
         - type: custom:layout-card
           layout_type: custom:grid-layout
           layout:
-            grid-template-columns: 1fr 38px
+            grid-template-columns: 1fr 42px
             grid-template-rows: auto auto
             grid-template-areas: |
               "info power"
               "subtitle power"
             column-gap: 10px
-            row-gap: 0
+            row-gap: 2px
             margin: 0
             padding: 0
           cards:
@@ -307,7 +307,7 @@
                 name:
                   - justify-self: start
                   - align-self: center
-                  - font-size: 19px
+                  - font-size: 28px
                   - font-weight: 700
                   - color: >
                       [[[
@@ -334,11 +334,11 @@
                   - background: transparent
                   - border: none
                   - box-shadow: none
-                  - padding: 0 0 0 24px
+                  - padding: 0 0 0 26px
                   - margin: 0
                 name:
                   - justify-self: start
-                  - font-size: 11px
+                  - font-size: 12px
                   - font-weight: 500
                   - color: >
                       [[[
@@ -357,8 +357,8 @@
                 action: more-info
               styles:
                 card:
-                  - width: 34px
-                  - height: 34px
+                  - width: 38px
+                  - height: 38px
                   - border-radius: 12px
                   - background: >
                       [[[
@@ -387,19 +387,9 @@
             - entity: input_boolean.sala_tv_controls_expanded
               state: 'off'
           card:
-            type: custom:layout-card
-            layout_type: custom:grid-layout
-            layout:
-              grid-template-columns: repeat(4, minmax(0, max-content)) 1fr max-content
-              grid-template-areas: '"n d h p . plus"'
-              column-gap: 8px
-              row-gap: 0
-              margin: 0
-              padding: 2px 0 0 0
+            type: horizontal-stack
             cards:
               - type: custom:button-card
-                view_layout:
-                  grid-area: n
                 entity: script.sala_tv_open_netflix
                 show_icon: false
                 show_name: true
@@ -422,8 +412,6 @@
                     - font-weight: 700
                     - font-size: 13px
               - type: custom:button-card
-                view_layout:
-                  grid-area: d
                 entity: script.sala_tv_open_disney
                 show_icon: false
                 show_name: true
@@ -435,19 +423,17 @@
                     entity_id: script.sala_tv_open_disney
                 styles:
                   card:
-                    - height: 30px
+                    - height: 32px
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
-                    - background: center / cover no-repeat url('/local/images/dp_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
+                    - background: linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
                     - box-shadow: none
                   name:
                     - color: rgba(255,255,255,0.92)
                     - font-weight: 700
                     - font-size: 13px
               - type: custom:button-card
-                view_layout:
-                  grid-area: h
                 entity: script.sala_tv_open_hbo
                 show_icon: false
                 show_name: true
@@ -470,8 +456,6 @@
                     - font-weight: 700
                     - font-size: 11px
               - type: custom:button-card
-                view_layout:
-                  grid-area: p
                 entity: script.sala_tv_open_prime
                 show_icon: false
                 show_name: true
@@ -483,19 +467,17 @@
                     entity_id: script.sala_tv_open_prime
                 styles:
                   card:
-                    - height: 30px
+                    - height: 32px
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
-                    - background: center / cover no-repeat url('/local/images/prime_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
+                    - background: linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
                     - box-shadow: none
                   name:
                     - color: rgba(255,255,255,0.92)
                     - font-weight: 700
                     - font-size: 13px
               - type: custom:button-card
-                view_layout:
-                  grid-area: plus
                 icon: mdi:plus
                 show_name: false
                 tap_action:
@@ -505,8 +487,8 @@
                     entity_id: input_boolean.sala_tv_controls_expanded
                 styles:
                   card:
-                    - height: 34px
-                    - width: 34px
+                    - height: 32px
+                    - width: 32px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
                     - background: >
@@ -526,19 +508,9 @@
             - entity: input_boolean.sala_tv_controls_expanded
               state: 'on'
           card:
-            type: custom:layout-card
-            layout_type: custom:grid-layout
-            layout:
-              grid-template-columns: repeat(4, minmax(0, max-content)) 1fr max-content
-              grid-template-areas: '"play stop vdown vup . apps"'
-              column-gap: 8px
-              row-gap: 0
-              margin: 0
-              padding: 2px 0 0 0
+            type: horizontal-stack
             cards:
               - type: custom:button-card
-                view_layout:
-                  grid-area: play
                 icon: mdi:play-pause
                 show_name: false
                 tap_action:
@@ -548,7 +520,7 @@
                     entity_id: media_player.smart_tv_pro_2
                 styles: &tv_mini_btn
                   card:
-                    - height: 30px
+                    - height: 32px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
                     - background: >
@@ -563,8 +535,6 @@
                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
                         ]]]
               - type: custom:button-card
-                view_layout:
-                  grid-area: stop
                 icon: mdi:stop
                 show_name: false
                 tap_action:
@@ -574,8 +544,6 @@
                     entity_id: media_player.smart_tv_pro_2
                 styles: *tv_mini_btn
               - type: custom:button-card
-                view_layout:
-                  grid-area: vdown
                 icon: mdi:volume-minus
                 show_name: false
                 tap_action:
@@ -585,8 +553,6 @@
                     entity_id: button.tv_sala_volume_down
                 styles: *tv_mini_btn
               - type: custom:button-card
-                view_layout:
-                  grid-area: vup
                 icon: mdi:volume-plus
                 show_name: false
                 tap_action:
@@ -596,8 +562,6 @@
                     entity_id: button.tv_sala_volume_up
                 styles: *tv_mini_btn
               - type: custom:button-card
-                view_layout:
-                  grid-area: apps
                 icon: mdi:apps
                 show_name: false
                 tap_action:
@@ -674,29 +638,29 @@
                   : '1px solid rgba(255,255,255,0.14)';
               ]]]
           - border-radius: 18px
-          - padding: 10px 11px 8px 11px
+          - padding: 12px 12px 10px 12px
           - height: 100%
           - box-shadow: none
           - box-sizing: border-box
-          - margin: 0
+          - margin: 1px 2px 0 0
         grid:
           - grid-template-areas: |
-              "i n n toggle_vis controls"
-              ". s s s s"
-          - grid-template-columns: auto min-content 1fr auto auto
-          - grid-template-rows: auto auto
-          - column-gap: 8px
-          - row-gap: 3px
+              "i toggle_vis controls"
+              "n n n"
+              "s s s"
+          - grid-template-columns: auto auto auto
+          - grid-template-rows: auto auto auto
+          - column-gap: 10px
         img_cell:
           - justify-content: flex-start
         icon:
-          - width: 18px
+          - width: 20px
           - color: >
               [[[
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
               ]]]
         name:
-          - font-size: 17px
+          - font-size: 28px
           - font-weight: 700
           - justify-self: start
           - align-self: center
@@ -705,7 +669,7 @@
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
               ]]]
         state:
-          - font-size: 11px
+          - font-size: 12px
           - font-weight: 500
           - color: >
               [[[
@@ -714,10 +678,10 @@
           - justify-self: start
         custom_fields:
           toggle_vis:
-            - justify-self: end
+            - justify-self: start
             - align-self: center
           controls:
-            - justify-self: end
+            - justify-self: start
             - align-self: center
 
     # ── Corredor (quick action) ──────────────────────────────────────────────
@@ -725,7 +689,7 @@
       view_layout:
         grid-area: corredor
       entity: light.corredor_switch_1
-      icon: mdi:door-closed
+      icon: mdi:door
       name: Corredor
       show_icon: true
       show_name: false
@@ -751,9 +715,10 @@
           - border-radius: 18px
           - box-shadow: none
           - height: 100%
-          - min-height: 82px
+          - min-height: 78px
+          - margin: 1px 0 0 2px
         icon:
-          - width: 30px
+          - width: 26px
           - color: >
               [[[
                 return entity?.state === 'on'

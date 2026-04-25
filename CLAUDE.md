@@ -1710,3 +1710,116 @@ Para restaurar: descomentar o bloco original e comentar/remover o bloco `# NOVO:
 **Rollback:**
 - `footer-shared.yaml`: Descomentar o bloco `# CÂMERAS POPUP`. Comentar `tap_action: !include ./popup/footer/footer_vacuum.yaml`.
 - `footer_vacuum.yaml`: Reverter para `entity: image.roborock_s7_map_0_custom` (linha comentada disponivel no arquivo).
+
+---
+
+## Registro de Implementacao — Bento Sala TV/A-C/Corredor (2026-04-25)
+
+### Objetivo
+Implementar o mockup final do bloco Sala no dashboard principal com foco em controle rapido real:
+- TV ocupando faixa inteira da linha 2
+- A/C ocupando ~70% na linha 3
+- Botao Corredor como quick action na direita da linha 3
+- Hero mantido funcionalmente intacto (status, icones, acoes)
+
+### Arquivos alterados
+1. `config/dashboards/shared/grid-cards/bento_sala.yaml`
+2. `config/packages/sala_tv_controls.yaml` (novo)
+3. `config/configuration.yaml`
+
+### Decisoes de arquitetura
+
+#### 1) Hero preservado
+- Bloco Hero foi mantido (nao migramos corredor para o hero).
+- Mantida logica de toque/luzes/status e coluna de dots da direita.
+
+#### 2) TV deixou de ser "um botao unico"
+- Antes: `button-card` unico com `tap_action: toggle` no card inteiro.
+- Agora: container `stack-in-card` com elementos interativos independentes:
+  - Header (icone, titulo, subtitulo)
+  - Botao Power independente (canto superior direito)
+  - Faixa inferior dinamica (Apps OU Mini-controles)
+
+#### 3) Toggle Apps <-> Mini-controles
+- Criado helper `input_boolean.sala_tv_controls_expanded`.
+- Quando `off`: exibimos botoes de streaming + botao `+`.
+- Quando `on`: exibimos mini-controles (play/pause, stop, vol-, vol+) + botao de retorno para Apps.
+
+#### 4) Streaming com acao real
+- Criados scripts:
+  - `script.sala_tv_open_netflix`
+  - `script.sala_tv_open_disney`
+  - `script.sala_tv_open_prime`
+  - `script.sala_tv_open_hbo`
+- Fluxo: liga TV se estiver off, aguarda 2s e chama `media_player.select_source`.
+- HBO tenta `Max` primeiro; fallback para `HBO Max`.
+
+#### 5) Reaproveitamento de assets
+- Netflix/HBO usam imagens existentes em `/local/images/`:
+  - `netflix_bg.jpg`
+  - `HBOMax_bg.jpg`
+- Disney/Prime seguem placeholders visuais (D/P) conforme alinhado.
+
+### Ajustes de layout no card Sala
+- Grid principal da Sala ajustado para:
+  - Linha 1: `hero hero`
+  - Linha 2: `tv tv`
+  - Linha 3: `ac corredor`
+- Colunas ajustadas para favorecer A/C + quick action de corredor na ultima linha.
+
+### Rollback rapido
+
+#### Rollback completo do bloco Sala (visual + interacao)
+1. Restaurar `config/dashboards/shared/grid-cards/bento_sala.yaml` para revisao anterior.
+2. Remover include da package em `config/configuration.yaml`:
+   - `sala_tv_controls: !include packages/sala_tv_controls.yaml`
+3. Remover arquivo `config/packages/sala_tv_controls.yaml`.
+
+#### Rollback parcial (manter layout novo sem scripts/apps)
+- Em `bento_sala.yaml`, no bloco TV:
+  - comentar botoes de app que chamam scripts,
+  - manter apenas Power + mini-controles locais.
+
+### Observacoes operacionais
+- `media_player.select_source` depende do nome exato em `source_list` da TV.
+- Se algum app nao abrir por nome divergente, ajustar somente o `source` no script correspondente (fallback simples e seguro).
+
+---
+
+## Registro de Ajuste Fino — Bento Sala (2026-04-25, revisão 2)
+
+### Motivo
+Feedback visual após primeira entrega:
+- TV com altura excedente e espaço vazio abaixo dos botões de streaming.
+- Título `TV` e `A/C` grandes demais.
+- Alinhamento horizontal entre botão Power e botão `+` inconsistente.
+- Linha 3 (A/C + Corredor) com densidade visual alta e pouca hierarquia.
+- Necessidade de aplicar imagens também em Disney/Prime.
+
+### Ajustes aplicados
+1. **Grid geral da Sala**
+   - Rebalanceado para reduzir a faixa 2 (TV) e aumentar a faixa 3 (A/C + Corredor).
+   - Ajustado `column-gap` e `row-gap` para melhor respiro.
+
+2. **TV**
+   - Compactação vertical do card (padding menor).
+   - Tipografia reduzida no título e subtítulo.
+   - Power button reduzido (34x34) para harmonizar com a nova densidade.
+   - Faixa inferior migrou de `horizontal-stack` para `layout-card` em grid com coluna de ação fixa à direita.
+     - Objetivo: alinhar com maior precisão a régua de margem direita entre Power e `+`.
+   - Disney recebeu imagem local `/local/images/dp_bg.jpg` com fallback em gradiente.
+   - Prime configurado para `/local/images/prime_bg.jpg` com fallback em gradiente (se imagem não resolver por nome/caminho, mantém legibilidade visual).
+
+3. **A/C**
+   - Tipografia reduzida e grade reorganizada em 2 linhas para diminuir “grude”.
+   - Toggle e botões de ajuste realocados para alinhamento à direita.
+   - Padding interno reduzido para card mais baixo e limpo.
+
+4. **Corredor**
+   - Ícone atualizado para `mdi:door-closed` (paridade visual com Welcome).
+   - Ícone ampliado e altura mínima do botão aumentada para presença visual equilibrada.
+   - Coluna direita ficou mais estreita no grid principal para reduzir largura percebida do botão.
+
+### Rollback rápido desta revisão
+- Restaurar `config/dashboards/shared/grid-cards/bento_sala.yaml` para o commit imediatamente anterior desta revisão.
+- Nenhum ajuste em scripts/helpers foi necessário nesta etapa; pacote `sala_tv_controls` permanece válido.

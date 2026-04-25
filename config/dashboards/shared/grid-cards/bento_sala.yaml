@@ -1,14 +1,14 @@
 - type: custom:layout-card
   layout_type: custom:grid-layout
   layout:
-    grid-template-columns: repeat(2, minmax(0, 1fr))
-    grid-template-rows: 142px minmax(110px, 1fr) 50px
+    grid-template-columns: minmax(0, 1fr) 96px
+    grid-template-rows: 142px minmax(96px, 1fr) 94px
     grid-template-areas: |
       "hero hero"
-      "tv ac"
-      "corredor curtain"
-    column-gap: 20px
-    row-gap: 12px
+      "tv tv"
+      "ac corredor"
+    column-gap: 14px
+    row-gap: 14px
     height: 100%
     margin: 0
     padding: 12px 14px 12px 14px
@@ -245,130 +245,367 @@
             - align-self: start
             - margin-right: 2px
 
-    # ── TV ───────────────────────────────────────────────────────────
-    - type: custom:button-card
+    # ── TV (container com controles independentes) ──────────────────────────
+    - type: custom:stack-in-card
       view_layout:
         grid-area: tv
-      entity: media_player.smart_tv_pro_2
-      icon: mdi:television-classic
-      name: TV
-      show_icon: true
-      show_name: true
-      show_state: true
-      show_label: true
-      triggers_update:
-        - media_player.smart_tv_pro_2
-      state_display: >
-        [[[ return !entity || entity.state === 'off' ? 'Desligada' : 'Ligada'; ]]]
-      label: >
-        [[[ return entity && entity.state !== 'off' ? 'Controle rápido' : 'Toque para ligar'; ]]]
-      tap_action:
-        action: toggle
-      hold_action:
-        action: more-info
-      custom_fields:
-        toggle_vis: >
-          [[[
-            const on = entity && entity.state !== 'off';
-            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
-            // const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.18)0%,rgba(0,0,0,0.10)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'; // ORIGINAL (comentado)
-            const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.30)0%,rgba(0,0,0,0.18)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)';
-            const knob = salaOn ? 'rgba(255,255,255,0.95)' : 'white';
-            // const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.20)' : 'none'; // ORIGINAL (comentado)
-            const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.34)' : 'none';
-            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(167,139,250,0.95)0%,rgba(167,139,250,0.65)100%)':offTrack};">
-              <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:${knob};border:${knobBorder};"></div>
-            </div>`;
-          ]]]
-        controls: >
-          [[[
-            const on = entity && entity.state !== 'off';
-            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
-            const ctrlBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
-            const ctrlBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
-            const ctrlColor = salaOn ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.85)';
-            if (!on) return '';
-            return `<div style="display:flex;flex-direction:row;gap:8px;align-items:center;">
-              <div style="width:32px;height:32px;border-radius:10px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:18px;font-weight:700;">−</div>
-              <div style="width:32px;height:32px;border-radius:10px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:18px;font-weight:700;">+</div>
-            </div>`;
-          ]]]
-      styles:
-        card:
-          - background: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on'
-                  ? 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%)'
-                  : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)';
-              ]]]
-          - border: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on'
-                  ? '1px solid rgba(0,0,0,0.16)'
-                  : '1px solid rgba(255,255,255,0.14)';
-              ]]]
-          - border-radius: 18px
-          - padding: 18px 16px 14px
-          - height: 100%
-          - box-shadow: none
-          - margin-top: 4px
-          # FIX: Subtrai 10px da largura total e compensa no lado direito. Isso trava o cartão.
-          - box-sizing: border-box
-          - width: calc(100% - 10px) !important
-          - margin: 0 10px 0 0 !important
-        grid:
-          - grid-template-areas: |
-              "i toggle_vis"
-              "n n"
-              "space space"
-              "s controls"
-              "l controls"
-          - grid-template-columns: 1fr auto
-          - grid-template-rows: auto auto 1fr min-content min-content
-        # FIX: Força o contêiner do ícone para a esquerda total.
-        img_cell:
-          - justify-content: flex-start
-        icon:
-          - width: 22px
-          - color: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
-              ]]]
-          - justify-self: start
-          - margin-top: 1px
-          - margin-bottom: 8px
-        name:
-          - font-size: 14px
-          - font-weight: 700
-          - justify-self: start
-          - color: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.88)' : 'white';
-              ]]]
-        state:
-          - font-size: 12px
-          - font-weight: 700
-          - color: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.9)';
-              ]]]
-          - justify-self: start
-          - align-self: end
-        label:
-          - font-size: 10px
-          - color: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.4)';
-              ]]]
-          - justify-self: start
-          - margin-top: 2px
-        custom_fields:
-          toggle_vis:
-            - justify-self: end
-            - align-self: start
-          controls:
-            - justify-self: end
-            - align-self: end
+      card_mod:
+        style: |
+          ha-card {
+            background: {% if is_state('light.grupo_luzes_sala','on') %}linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%){% else %}linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%){% endif %} !important;
+            border: {% if is_state('light.grupo_luzes_sala','on') %}1px solid rgba(0,0,0,0.16){% else %}1px solid rgba(255,255,255,0.14){% endif %} !important;
+            border-radius: 18px !important;
+            box-shadow: none !important;
+            padding: 10px 12px 8px 12px !important;
+            height: 100% !important;
+            box-sizing: border-box;
+          }
+      cards:
+        - type: custom:layout-card
+          layout_type: custom:grid-layout
+          layout:
+            grid-template-columns: 1fr 38px
+            grid-template-rows: auto auto
+            grid-template-areas: |
+              "info power"
+              "subtitle power"
+            column-gap: 10px
+            row-gap: 0
+            margin: 0
+            padding: 0
+          cards:
+            - type: custom:button-card
+              view_layout:
+                grid-area: info
+              entity: media_player.smart_tv_pro_2
+              icon: mdi:television-classic
+              name: TV
+              show_icon: true
+              show_name: true
+              show_state: false
+              tap_action:
+                action: none
+              hold_action:
+                action: none
+              styles:
+                card:
+                  - background: transparent
+                  - border: none
+                  - box-shadow: none
+                  - padding: 0
+                  - margin: 0
+                grid:
+                  - grid-template-areas: '"i n"'
+                  - grid-template-columns: auto 1fr
+                  - column-gap: 8px
+                icon:
+                  - width: 18px
+                  - color: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
+                      ]]]
+                name:
+                  - justify-self: start
+                  - align-self: center
+                  - font-size: 19px
+                  - font-weight: 700
+                  - color: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
+                      ]]]
+            - type: custom:button-card
+              view_layout:
+                grid-area: subtitle
+              entity: media_player.smart_tv_pro_2
+              name: >
+                [[[
+                  const v = entity?.attributes?.friendly_name;
+                  return v && v !== '' ? v : 'Samsung SmartTV';
+                ]]]
+              show_icon: false
+              show_name: true
+              show_state: false
+              tap_action:
+                action: none
+              hold_action:
+                action: none
+              styles:
+                card:
+                  - background: transparent
+                  - border: none
+                  - box-shadow: none
+                  - padding: 0 0 0 24px
+                  - margin: 0
+                name:
+                  - justify-self: start
+                  - font-size: 11px
+                  - font-weight: 500
+                  - color: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.70)';
+                      ]]]
+            - type: custom:button-card
+              view_layout:
+                grid-area: power
+              entity: media_player.smart_tv_pro_2
+              icon: mdi:power
+              show_name: false
+              show_state: false
+              tap_action:
+                action: toggle
+              hold_action:
+                action: more-info
+              styles:
+                card:
+                  - width: 34px
+                  - height: 34px
+                  - border-radius: 12px
+                  - background: >
+                      [[[
+                        const on = entity && entity.state !== 'off';
+                        if (on) return 'rgba(239,68,68,0.20)';
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)';
+                      ]]]
+                  - border: >
+                      [[[
+                        const on = entity && entity.state !== 'off';
+                        if (on) return '1px solid rgba(239,68,68,0.40)';
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.16)' : '1px solid rgba(255,255,255,0.14)';
+                      ]]]
+                  - box-shadow: none
+                  - padding: 0
+                icon:
+                  - width: 19px
+                  - color: >
+                      [[[
+                        const on = entity && entity.state !== 'off';
+                        return on ? '#ef4444' : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.52)' : 'rgba(255,255,255,0.65)');
+                      ]]]
+
+        - type: conditional
+          conditions:
+            - entity: input_boolean.sala_tv_controls_expanded
+              state: 'off'
+          card:
+            type: custom:layout-card
+            layout_type: custom:grid-layout
+            layout:
+              grid-template-columns: repeat(4, minmax(0, max-content)) 1fr max-content
+              grid-template-areas: '"n d h p . plus"'
+              column-gap: 8px
+              row-gap: 0
+              margin: 0
+              padding: 2px 0 0 0
+            cards:
+              - type: custom:button-card
+                view_layout:
+                  grid-area: n
+                entity: script.sala_tv_open_netflix
+                show_icon: false
+                show_name: true
+                name: 'N'
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  target:
+                    entity_id: script.sala_tv_open_netflix
+                styles:
+                  card:
+                    - height: 32px
+                    - min-width: 40px
+                    - border-radius: 10px
+                    - border: 1px solid rgba(255,255,255,0.10)
+                    - background: center / cover no-repeat url('/local/images/netflix_bg.jpg')
+                    - box-shadow: none
+                  name:
+                    - color: rgba(255,255,255,0.92)
+                    - font-weight: 700
+                    - font-size: 13px
+              - type: custom:button-card
+                view_layout:
+                  grid-area: d
+                entity: script.sala_tv_open_disney
+                show_icon: false
+                show_name: true
+                name: 'D'
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  target:
+                    entity_id: script.sala_tv_open_disney
+                styles:
+                  card:
+                    - height: 30px
+                    - min-width: 40px
+                    - border-radius: 10px
+                    - border: 1px solid rgba(255,255,255,0.10)
+                    - background: center / cover no-repeat url('/local/images/dp_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
+                    - box-shadow: none
+                  name:
+                    - color: rgba(255,255,255,0.92)
+                    - font-weight: 700
+                    - font-size: 13px
+              - type: custom:button-card
+                view_layout:
+                  grid-area: h
+                entity: script.sala_tv_open_hbo
+                show_icon: false
+                show_name: true
+                name: HBO
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  target:
+                    entity_id: script.sala_tv_open_hbo
+                styles:
+                  card:
+                    - height: 32px
+                    - min-width: 40px
+                    - border-radius: 10px
+                    - border: 1px solid rgba(255,255,255,0.10)
+                    - background: center / cover no-repeat url('/local/images/HBOMax_bg.jpg')
+                    - box-shadow: none
+                  name:
+                    - color: rgba(255,255,255,0.92)
+                    - font-weight: 700
+                    - font-size: 11px
+              - type: custom:button-card
+                view_layout:
+                  grid-area: p
+                entity: script.sala_tv_open_prime
+                show_icon: false
+                show_name: true
+                name: 'P'
+                tap_action:
+                  action: call-service
+                  service: script.turn_on
+                  target:
+                    entity_id: script.sala_tv_open_prime
+                styles:
+                  card:
+                    - height: 30px
+                    - min-width: 40px
+                    - border-radius: 10px
+                    - border: 1px solid rgba(255,255,255,0.10)
+                    - background: center / cover no-repeat url('/local/images/prime_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
+                    - box-shadow: none
+                  name:
+                    - color: rgba(255,255,255,0.92)
+                    - font-weight: 700
+                    - font-size: 13px
+              - type: custom:button-card
+                view_layout:
+                  grid-area: plus
+                icon: mdi:plus
+                show_name: false
+                tap_action:
+                  action: call-service
+                  service: input_boolean.turn_on
+                  target:
+                    entity_id: input_boolean.sala_tv_controls_expanded
+                styles:
+                  card:
+                    - height: 34px
+                    - width: 34px
+                    - border-radius: 10px
+                    - border: 1px solid rgba(255,255,255,0.10)
+                    - background: >
+                        [[[
+                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+                        ]]]
+                    - box-shadow: none
+                  icon:
+                    - width: 16px
+                    - color: >
+                        [[[
+                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.70)' : 'rgba(255,255,255,0.72)';
+                        ]]]
+
+        - type: conditional
+          conditions:
+            - entity: input_boolean.sala_tv_controls_expanded
+              state: 'on'
+          card:
+            type: custom:layout-card
+            layout_type: custom:grid-layout
+            layout:
+              grid-template-columns: repeat(4, minmax(0, max-content)) 1fr max-content
+              grid-template-areas: '"play stop vdown vup . apps"'
+              column-gap: 8px
+              row-gap: 0
+              margin: 0
+              padding: 2px 0 0 0
+            cards:
+              - type: custom:button-card
+                view_layout:
+                  grid-area: play
+                icon: mdi:play-pause
+                show_name: false
+                tap_action:
+                  action: call-service
+                  service: media_player.media_play_pause
+                  target:
+                    entity_id: media_player.smart_tv_pro_2
+                styles: &tv_mini_btn
+                  card:
+                    - height: 30px
+                    - border-radius: 10px
+                    - border: 1px solid rgba(255,255,255,0.10)
+                    - background: >
+                        [[[
+                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+                        ]]]
+                    - box-shadow: none
+                  icon:
+                    - width: 16px
+                    - color: >
+                        [[[
+                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
+                        ]]]
+              - type: custom:button-card
+                view_layout:
+                  grid-area: stop
+                icon: mdi:stop
+                show_name: false
+                tap_action:
+                  action: call-service
+                  service: media_player.media_stop
+                  target:
+                    entity_id: media_player.smart_tv_pro_2
+                styles: *tv_mini_btn
+              - type: custom:button-card
+                view_layout:
+                  grid-area: vdown
+                icon: mdi:volume-minus
+                show_name: false
+                tap_action:
+                  action: call-service
+                  service: button.press
+                  target:
+                    entity_id: button.tv_sala_volume_down
+                styles: *tv_mini_btn
+              - type: custom:button-card
+                view_layout:
+                  grid-area: vup
+                icon: mdi:volume-plus
+                show_name: false
+                tap_action:
+                  action: call-service
+                  service: button.press
+                  target:
+                    entity_id: button.tv_sala_volume_up
+                styles: *tv_mini_btn
+              - type: custom:button-card
+                view_layout:
+                  grid-area: apps
+                icon: mdi:apps
+                show_name: false
+                tap_action:
+                  action: call-service
+                  service: input_boolean.turn_off
+                  target:
+                    entity_id: input_boolean.sala_tv_controls_expanded
+                styles: *tv_mini_btn
 
     # ── A/C ──────────────────────────────────────────────────────────
     - type: custom:button-card
@@ -380,27 +617,22 @@
       show_icon: true
       show_name: true
       show_state: true
-      show_label: true
+      show_label: false
       triggers_update:
         - climate.sl_ar_condicionado
       state_display: >
         [[[
+          const modeMap = {cool:'Frio', heat:'Quente', fan_only:'Ventilar', dry:'Secar', heat_cool:'Auto', auto:'Auto'};
           const active = ['cool','heat','fan_only','dry','heat_cool','auto'];
           if (!entity || !active.includes(entity.state)) return 'Desligado';
           const temp = entity.attributes?.temperature ?? '—';
-          return `${temp}° · ${entity.state}`;
-        ]]]
-      label: >
-        [[[
-          const active = ['cool','heat','fan_only','dry','heat_cool','auto'];
-          return active.includes(entity?.state) ? 'Controle rápido' : 'Toque para ligar';
+          return `${temp}° · ${modeMap[entity.state] ?? entity.state}`;
         ]]]
       tap_action:
         action: perform-action
         perform_action: "[[[ const on=['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state); return on?'climate.turn_off':'climate.turn_on'; ]]]"
         target:
           entity_id: climate.sl_ar_condicionado
-        haptic: success
       hold_action:
         action: more-info
       custom_fields:
@@ -408,13 +640,11 @@
           [[[
             const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
             const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
-            // const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.18)0%,rgba(0,0,0,0.10)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'; // ORIGINAL (comentado)
             const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.30)0%,rgba(0,0,0,0.18)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)';
             const knob = salaOn ? 'rgba(255,255,255,0.95)' : 'white';
-            // const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.20)' : 'none'; // ORIGINAL (comentado)
             const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.34)' : 'none';
-            return `<div style="width:36px;height:20px;border-radius:10px;position:relative;background:${on?'linear-gradient(180deg,rgba(79,172,254,0.95)0%,rgba(79,172,254,0.65)100%)':offTrack};">
-              <div style="position:absolute;top:2px;left:${on?'18px':'2px'};width:16px;height:16px;border-radius:50%;background:${knob};border:${knobBorder};"></div>
+            return `<div style="width:40px;height:22px;border-radius:11px;position:relative;background:${on?'linear-gradient(180deg,rgba(79,172,254,0.95)0%,rgba(79,172,254,0.65)100%)':offTrack};">
+              <div style="position:absolute;top:2px;left:${on?'20px':'2px'};width:18px;height:18px;border-radius:50%;background:${knob};border:${knobBorder};"></div>
             </div>`;
           ]]]
         controls: >
@@ -424,10 +654,9 @@
             const ctrlBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
             const ctrlBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
             const ctrlColor = salaOn ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.85)';
-            if (!on) return '';
             return `<div style="display:flex;flex-direction:row;gap:8px;align-items:center;">
-              <div style="width:32px;height:32px;border-radius:10px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:18px;font-weight:700;">−</div>
-              <div style="width:32px;height:32px;border-radius:10px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:18px;font-weight:700;">+</div>
+              <div style="width:28px;height:28px;border-radius:8px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:16px;font-weight:700;">+</div>
+              <div style="width:28px;height:28px;border-radius:8px;background:${ctrlBg};border:1px solid ${ctrlBorder};display:flex;align-items:center;justify-content:center;color:${ctrlColor};font-size:16px;font-weight:700;">−</div>
             </div>`;
           ]]]
       styles:
@@ -445,124 +674,89 @@
                   : '1px solid rgba(255,255,255,0.14)';
               ]]]
           - border-radius: 18px
-          - padding: 18px 16px 14px
+          - padding: 10px 11px 8px 11px
           - height: 100%
           - box-shadow: none
-          - margin-top: 4px
-          # FIX: Subtrai 10px da largura e aplica 10px de margem na esquerda para formar o túnel de 20px no centro.
           - box-sizing: border-box
-          - width: calc(100% - 10px) !important
-          - margin: 0 0 0 10px !important
+          - margin: 0
         grid:
           - grid-template-areas: |
-              "i toggle_vis"
-              "n n"
-              "space space"
-              "s controls"
-              "l controls"
-          - grid-template-columns: 1fr auto
-          - grid-template-rows: auto auto 1fr min-content min-content
-        # FIX: Força o contêiner do ícone para a esquerda total.
+              "i n n toggle_vis controls"
+              ". s s s s"
+          - grid-template-columns: auto min-content 1fr auto auto
+          - grid-template-rows: auto auto
+          - column-gap: 8px
+          - row-gap: 3px
         img_cell:
           - justify-content: flex-start
         icon:
-          - width: 22px
+          - width: 18px
           - color: >
               [[[
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.82)';
               ]]]
-          - justify-self: start
-          - margin-top: 1px
-          - margin-bottom: 8px
         name:
-          - font-size: 14px
+          - font-size: 17px
           - font-weight: 700
           - justify-self: start
+          - align-self: center
           - color: >
               [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.88)' : 'white';
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
               ]]]
         state:
-          - font-size: 12px
-          - font-weight: 700
+          - font-size: 11px
+          - font-weight: 500
           - color: >
               [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.9)';
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.72)';
               ]]]
           - justify-self: start
-          - align-self: end
-        label:
-          - font-size: 10px
-          - color: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.4)';
-              ]]]
-          - justify-self: start
-          - margin-top: 2px
         custom_fields:
           toggle_vis:
             - justify-self: end
-            - align-self: start
+            - align-self: center
           controls:
             - justify-self: end
-            - align-self: end
+            - align-self: center
 
-    # ── Corredor ─────────────────────────────────────────────────────
+    # ── Corredor (quick action) ──────────────────────────────────────────────
     - type: custom:button-card
       view_layout:
         grid-area: corredor
       entity: light.corredor_switch_1
-      show_icon: false
+      icon: mdi:door-closed
+      name: Corredor
+      show_icon: true
       show_name: false
       show_state: false
-      triggers_update:
-        - light.corredor_switch_1
       tap_action:
         action: toggle
-      custom_fields:
-        left: >
-          [[[
-            const on = entity?.state === 'on';
-            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
-            const titleColor = salaOn ? 'rgba(0,0,0,0.86)' : 'white';
-            const iconOff = salaOn ? 'rgba(0,0,0,0.48)' : 'rgba(255,255,255,0.55)';
-            return `<div style="display:flex;align-items:center;gap:8px;">
-              <!-- ORIGINAL: mdi:lightbulb-outline -->
-              <ha-icon icon="mdi:lightbulb-on" style="width:16px;height:16px;color:${on?'#fbbf24':iconOff};display:block;"></ha-icon>
-              <div style="font-size:12px;font-weight:700;color:${titleColor};line-height:1;">Corredor</div>
-            </div>`;
-          ]]]
-        right: >
-          [[[
-            const on = entity?.state === 'on';
-            const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
-            // const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.18)0%,rgba(0,0,0,0.10)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)'; // ORIGINAL (comentado)
-            const offTrack = salaOn ? 'linear-gradient(180deg,rgba(0,0,0,0.30)0%,rgba(0,0,0,0.18)100%)' : 'linear-gradient(180deg,rgba(255,255,255,0.20)0%,rgba(255,255,255,0.10)100%)';
-            const knob = salaOn ? 'rgba(255,255,255,0.95)' : 'white';
-            // const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.20)' : 'none'; // ORIGINAL (comentado)
-            const knobBorder = salaOn ? '1px solid rgba(0,0,0,0.34)' : 'none';
-            return `<div style="width:34px;height:18px;border-radius:9px;position:relative;background:${on?'linear-gradient(180deg,rgba(251,191,36,0.95)0%,rgba(251,191,36,0.65)100%)':offTrack};">
-              <div style="position:absolute;top:1px;left:${on?'17px':'1px'};width:16px;height:16px;border-radius:50%;background:${knob};border:${knobBorder};"></div>
-            </div>`;
-          ]]]
+      hold_action:
+        action: more-info
       styles:
         card:
-          - background: transparent
-          - border: none
+          - background: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on'
+                  ? 'linear-gradient(180deg, rgba(0,0,0,0.11) 0%, rgba(0,0,0,0.06) 100%)'
+                  : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%)';
+              ]]]
+          - border: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on'
+                  ? '1px solid rgba(0,0,0,0.16)'
+                  : '1px solid rgba(255,255,255,0.14)';
+              ]]]
+          - border-radius: 18px
           - box-shadow: none
-          - padding: 0
           - height: 100%
-          - padding-top: 4px
-          - margin-top: 0
-        grid:
-          - grid-template-areas: '"left right ."'
-          - grid-template-columns: max-content max-content 1fr
-          - grid-template-rows: 1fr
-          - column-gap: 12px
-        custom_fields:
-          left:
-            - justify-self: start
-            - align-self: center
-          right:
-            - justify-self: start
-            - align-self: center
+          - min-height: 82px
+        icon:
+          - width: 30px
+          - color: >
+              [[[
+                return entity?.state === 'on'
+                  ? '#fbbf24'
+                  : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.62)' : 'rgba(255,255,255,0.72)');
+              ]]]

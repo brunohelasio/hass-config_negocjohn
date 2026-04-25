@@ -1,0 +1,106 @@
+##############################################################################
+# SALA TV QUICK CONTROLS (BENTO)
+# Criado: 2026-04-25
+# Objetivo:
+# - Guardar estado UI (apps vs mini-controles) da TV no bloco Sala
+# - Expor scripts para abrir apps por botões dedicados no card
+##############################################################################
+
+input_boolean:
+  sala_tv_controls_expanded:
+    name: Sala TV - Mostrar mini controles
+    icon: mdi:gesture-tap-button
+    initial: off
+
+script:
+  sala_tv_open_netflix:
+    alias: "Sala TV — Abrir Netflix"
+    mode: restart
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: media_player.smart_tv_pro_2
+                state: "off"
+            sequence:
+              - service: media_player.turn_on
+                target:
+                  entity_id: media_player.smart_tv_pro_2
+              - delay: "00:00:02"
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.smart_tv_pro_2
+        data:
+          source: "Netflix"
+
+  sala_tv_open_disney:
+    alias: "Sala TV — Abrir Disney+"
+    mode: restart
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: media_player.smart_tv_pro_2
+                state: "off"
+            sequence:
+              - service: media_player.turn_on
+                target:
+                  entity_id: media_player.smart_tv_pro_2
+              - delay: "00:00:02"
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.smart_tv_pro_2
+        data:
+          source: "Disney+"
+
+  sala_tv_open_prime:
+    alias: "Sala TV — Abrir Prime Video"
+    mode: restart
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: media_player.smart_tv_pro_2
+                state: "off"
+            sequence:
+              - service: media_player.turn_on
+                target:
+                  entity_id: media_player.smart_tv_pro_2
+              - delay: "00:00:02"
+      - service: media_player.select_source
+        target:
+          entity_id: media_player.smart_tv_pro_2
+        data:
+          source: "Prime Video"
+
+  sala_tv_open_hbo:
+    alias: "Sala TV — Abrir HBO/Max"
+    mode: restart
+    sequence:
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: media_player.smart_tv_pro_2
+                state: "off"
+            sequence:
+              - service: media_player.turn_on
+                target:
+                  entity_id: media_player.smart_tv_pro_2
+              - delay: "00:00:02"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: >-
+                  {{ 'Max' in (state_attr('media_player.smart_tv_pro_2','source_list') or []) }}
+            sequence:
+              - service: media_player.select_source
+                target:
+                  entity_id: media_player.smart_tv_pro_2
+                data:
+                  source: "Max"
+        default:
+          - service: media_player.select_source
+            target:
+              entity_id: media_player.smart_tv_pro_2
+            data:
+              source: "HBO Max"

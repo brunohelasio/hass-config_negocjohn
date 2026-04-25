@@ -192,56 +192,24 @@
             - entity: input_select.periodo_energia_dashboard
               state: Diário
           card:
-            type: custom:apexcharts-card
-            graph_span: 24h
-            span:
-              start: day
-            update_interval: 2min
-            header:
-              show: false
-            show:
-              loading: false
-              last_updated: false
-              legend_value: false
-            yaxis:
-              - id: energia
-                decimals: 1
-            apex_config:
-              chart:
-                height: 120
-                toolbar:
-                  show: false
-              grid:
-                borderColor: "rgba(255,255,255,0.12)"
-                strokeDashArray: 2
-              xaxis:
-                labels:
-                  show: true
-                  style:
-                    colors: "rgba(255,255,255,0.45)"
-                    fontSize: 10px
-              yaxis:
-                labels:
-                  show: true
-                  style:
-                    colors: "rgba(255,255,255,0.45)"
-                    fontSize: 10px
-              dataLabels:
-                enabled: false
-              markers:
-                size: 3
-                strokeWidth: 0
-            series:
+            type: custom:mini-graph-card
+            entities:
               - entity: sensor.energia_total_casa_diaria
                 name: kWh
-                yaxis_id: energia
-                type: area
-                curve: smooth
-                stroke_width: 3
                 color: '#6FB8FF'
-                opacity: 0.22
-                show:
-                  extremas: true
+            hours_to_show: 24
+            points_per_hour: 2
+            line_width: 3
+            line_color: '#6FB8FF'
+            font_size: 75
+            show:
+              name: false
+              icon: false
+              state: false
+              legend: false
+              labels: true
+              points: true
+              fill: fade
             card_mod:
               style: |
                 ha-card {
@@ -257,59 +225,25 @@
             - entity: input_select.periodo_energia_dashboard
               state: Semanal
           card:
-            type: custom:apexcharts-card
-            graph_span: 7d
-            span:
-              end: day
-            update_interval: 15min
-            header:
-              show: false
-            show:
-              loading: false
-              last_updated: false
-              legend_value: false
-            yaxis:
-              - id: energia
-                decimals: 1
-            apex_config:
-              chart:
-                height: 120
-                toolbar:
-                  show: false
-              grid:
-                borderColor: "rgba(255,255,255,0.12)"
-                strokeDashArray: 2
-              xaxis:
-                labels:
-                  show: true
-                  style:
-                    colors: "rgba(255,255,255,0.45)"
-                    fontSize: 10px
-              yaxis:
-                labels:
-                  show: true
-                  style:
-                    colors: "rgba(255,255,255,0.45)"
-                    fontSize: 10px
-              dataLabels:
-                enabled: false
-              markers:
-                size: 3
-                strokeWidth: 0
-            series:
+            type: custom:mini-graph-card
+            entities:
               - entity: sensor.energia_total_casa_semanal
                 name: kWh
-                yaxis_id: energia
-                type: area
-                curve: smooth
-                stroke_width: 3
                 color: '#6FB8FF'
-                opacity: 0.22
-                group_by:
-                  func: max
-                  duration: 1d
-                show:
-                  extremas: true
+            hours_to_show: 168
+            aggregate_func: max
+            group_by: date
+            line_width: 3
+            line_color: '#6FB8FF'
+            font_size: 75
+            show:
+              name: false
+              icon: false
+              state: false
+              legend: false
+              labels: true
+              points: true
+              fill: fade
             card_mod:
               style: |
                 ha-card {
@@ -325,59 +259,25 @@
             - entity: input_select.periodo_energia_dashboard
               state: Mensal
           card:
-            type: custom:apexcharts-card
-            graph_span: 30d
-            span:
-              end: day
-            update_interval: 30min
-            header:
-              show: false
-            show:
-              loading: false
-              last_updated: false
-              legend_value: false
-            yaxis:
-              - id: energia
-                decimals: 1
-            apex_config:
-              chart:
-                height: 120
-                toolbar:
-                  show: false
-              grid:
-                borderColor: "rgba(255,255,255,0.12)"
-                strokeDashArray: 2
-              xaxis:
-                labels:
-                  show: true
-                  style:
-                    colors: "rgba(255,255,255,0.45)"
-                    fontSize: 10px
-              yaxis:
-                labels:
-                  show: true
-                  style:
-                    colors: "rgba(255,255,255,0.45)"
-                    fontSize: 10px
-              dataLabels:
-                enabled: false
-              markers:
-                size: 3
-                strokeWidth: 0
-            series:
+            type: custom:mini-graph-card
+            entities:
               - entity: sensor.energia_total_casa_mensal
                 name: kWh
-                yaxis_id: energia
-                type: area
-                curve: smooth
-                stroke_width: 3
                 color: '#6FB8FF'
-                opacity: 0.22
-                group_by:
-                  func: max
-                  duration: 1d
-                show:
-                  extremas: true
+            hours_to_show: 720
+            aggregate_func: max
+            group_by: date
+            line_width: 3
+            line_color: '#6FB8FF'
+            font_size: 75
+            show:
+              name: false
+              icon: false
+              state: false
+              legend: false
+              labels: true
+              points: true
+              fill: fade
             card_mod:
               style: |
                 ha-card {

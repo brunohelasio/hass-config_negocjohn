@@ -386,7 +386,7 @@
         - type: conditional
           conditions:
             - entity: input_boolean.sala_tv_controls_expanded
-              state: 'off'
+              state_not: 'on'
           card:
             type: horizontal-stack
             cards:

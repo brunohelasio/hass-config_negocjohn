@@ -20,16 +20,16 @@ script:
       - choose:
           - conditions:
               - condition: state
-                entity_id: media_player.smart_tv_pro_2
+                entity_id: media_player.android_tv_192_168_3_17
                 state: "off"
             sequence:
               - service: media_player.turn_on
                 target:
-                  entity_id: media_player.smart_tv_pro_2
+                  entity_id: media_player.android_tv_192_168_3_17
               - delay: "00:00:02"
       - service: media_player.select_source
         target:
-          entity_id: media_player.smart_tv_pro_2
+          entity_id: media_player.android_tv_192_168_3_17
         data:
           source: "Netflix"
 
@@ -40,16 +40,16 @@ script:
       - choose:
           - conditions:
               - condition: state
-                entity_id: media_player.smart_tv_pro_2
+                entity_id: media_player.android_tv_192_168_3_17
                 state: "off"
             sequence:
               - service: media_player.turn_on
                 target:
-                  entity_id: media_player.smart_tv_pro_2
+                  entity_id: media_player.android_tv_192_168_3_17
               - delay: "00:00:02"
       - service: media_player.select_source
         target:
-          entity_id: media_player.smart_tv_pro_2
+          entity_id: media_player.android_tv_192_168_3_17
         data:
           source: "Disney+"
 
@@ -60,16 +60,16 @@ script:
       - choose:
           - conditions:
               - condition: state
-                entity_id: media_player.smart_tv_pro_2
+                entity_id: media_player.android_tv_192_168_3_17
                 state: "off"
             sequence:
               - service: media_player.turn_on
                 target:
-                  entity_id: media_player.smart_tv_pro_2
+                  entity_id: media_player.android_tv_192_168_3_17
               - delay: "00:00:02"
       - service: media_player.select_source
         target:
-          entity_id: media_player.smart_tv_pro_2
+          entity_id: media_player.android_tv_192_168_3_17
         data:
           source: "Prime Video"
 
@@ -80,27 +80,27 @@ script:
       - choose:
           - conditions:
               - condition: state
-                entity_id: media_player.smart_tv_pro_2
+                entity_id: media_player.android_tv_192_168_3_17
                 state: "off"
             sequence:
               - service: media_player.turn_on
                 target:
-                  entity_id: media_player.smart_tv_pro_2
+                  entity_id: media_player.android_tv_192_168_3_17
               - delay: "00:00:02"
       - choose:
           - conditions:
               - condition: template
                 value_template: >-
-                  {{ 'Max' in (state_attr('media_player.smart_tv_pro_2','source_list') or []) }}
+                  {{ 'Max' in (state_attr('media_player.android_tv_192_168_3_17','source_list') or []) }}
             sequence:
               - service: media_player.select_source
                 target:
-                  entity_id: media_player.smart_tv_pro_2
+                  entity_id: media_player.android_tv_192_168_3_17
                 data:
                   source: "Max"
         default:
           - service: media_player.select_source
             target:
-              entity_id: media_player.smart_tv_pro_2
+              entity_id: media_player.android_tv_192_168_3_17
             data:
               source: "HBO Max"

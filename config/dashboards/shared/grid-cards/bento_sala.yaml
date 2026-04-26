@@ -7,11 +7,8 @@
       "hero hero"
       "tv tv"
       "ac corredor"
-    # FALLBACK — column-gap: 20px (gap insuficiente entre A/C e Corredor)
-    # column-gap: 20px
-    # NOVO — 28px (aumenta respiro visual entre os dois cards da linha 3)
-    column-gap: 28px
-    row-gap: 14px
+    column-gap: 24px
+    row-gap: 16px
     height: 100%
     margin: 0
     padding: 12px 14px 12px 14px
@@ -399,21 +396,25 @@
                 show_name: true
                 name: 'N'
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: script.turn_on
-                  # NOVO — perform-action
                   action: perform-action
-                  perform_action: script.turn_on
+                  perform_action: >
+                    [[[
+                      return states['script.sala_tv_open_netflix'] ? 'script.turn_on' : 'media_player.select_source';
+                    ]]]
                   target:
-                    entity_id: script.sala_tv_open_netflix
+                    entity_id: >
+                      [[[
+                        return states['script.sala_tv_open_netflix'] ? 'script.sala_tv_open_netflix' : 'media_player.android_tv_192_168_3_17';
+                      ]]]
+                  data:
+                    source: Netflix
                 styles:
                   card:
                     - height: 42px
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
-                    - background: center / cover no-repeat url('/local/images/netflix_bg.jpg')
+                    - background: center / cover no-repeat url('/local/images/netflix_bg.jpg'), linear-gradient(180deg, rgba(229,9,20,0.62) 0%, rgba(116,8,16,0.72) 100%)
                     - box-shadow: none
                   name:
                     - color: rgba(255,255,255,0.92)
@@ -425,14 +426,18 @@
                 show_name: true
                 name: 'D'
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: script.turn_on
-                  # NOVO — perform-action
                   action: perform-action
-                  perform_action: script.turn_on
+                  perform_action: >
+                    [[[
+                      return states['script.sala_tv_open_disney'] ? 'script.turn_on' : 'media_player.select_source';
+                    ]]]
                   target:
-                    entity_id: script.sala_tv_open_disney
+                    entity_id: >
+                      [[[
+                        return states['script.sala_tv_open_disney'] ? 'script.sala_tv_open_disney' : 'media_player.android_tv_192_168_3_17';
+                      ]]]
+                  data:
+                    source: Disney+
                 styles:
                   card:
                     - height: 42px
@@ -451,21 +456,25 @@
                 show_name: true
                 name: HBO
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: script.turn_on
-                  # NOVO — perform-action
                   action: perform-action
-                  perform_action: script.turn_on
+                  perform_action: >
+                    [[[
+                      return states['script.sala_tv_open_hbo'] ? 'script.turn_on' : 'media_player.select_source';
+                    ]]]
                   target:
-                    entity_id: script.sala_tv_open_hbo
+                    entity_id: >
+                      [[[
+                        return states['script.sala_tv_open_hbo'] ? 'script.sala_tv_open_hbo' : 'media_player.android_tv_192_168_3_17';
+                      ]]]
+                  data:
+                    source: HBO Max
                 styles:
                   card:
                     - height: 42px
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
-                    - background: center / cover no-repeat url('/local/images/HBOMax_bg.jpg')
+                    - background: center / cover no-repeat url('/local/images/HBOMax_bg.jpg'), linear-gradient(180deg, rgba(88,61,140,0.66) 0%, rgba(58,39,97,0.78) 100%)
                     - box-shadow: none
                   name:
                     - color: rgba(255,255,255,0.92)
@@ -477,24 +486,25 @@
                 show_name: true
                 name: 'P'
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: script.turn_on
-                  # NOVO — perform-action
                   action: perform-action
-                  perform_action: script.turn_on
+                  perform_action: >
+                    [[[
+                      return states['script.sala_tv_open_prime'] ? 'script.turn_on' : 'media_player.select_source';
+                    ]]]
                   target:
-                    entity_id: script.sala_tv_open_prime
+                    entity_id: >
+                      [[[
+                        return states['script.sala_tv_open_prime'] ? 'script.sala_tv_open_prime' : 'media_player.android_tv_192_168_3_17';
+                      ]]]
+                  data:
+                    source: Prime Video
                 styles:
                   card:
                     - height: 42px
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
-                    # FALLBACK — prime_bg.jpg (arquivo inexistente em disco)
-                    # - background: center / cover no-repeat url('/local/images/prime_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
-                    # NOVO — prime_video.jpg (nome correto do arquivo em /config/www/images/)
-                    - background: center / cover no-repeat url('/local/images/prime_video.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
+                    - background: center / cover no-repeat url('/local/images/prime_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
                     - box-shadow: none
                   name:
                     - color: rgba(255,255,255,0.92)
@@ -504,12 +514,8 @@
                 icon: mdi:plus
                 show_name: false
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: input_boolean.turn_on
-                  # NOVO — perform-action
-                  action: perform-action
-                  perform_action: input_boolean.turn_on
+                  action: call-service
+                  service: input_boolean.turn_on
                   target:
                     entity_id: input_boolean.sala_tv_controls_expanded
                 styles:
@@ -541,12 +547,8 @@
                 icon: mdi:play-pause
                 show_name: false
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: media_player.media_play_pause
-                  # NOVO — perform-action
-                  action: perform-action
-                  perform_action: media_player.media_play_pause
+                  action: call-service
+                  service: media_player.media_play_pause
                   target:
                     entity_id: media_player.android_tv_192_168_3_17
                 styles: &tv_mini_btn
@@ -569,12 +571,8 @@
                 icon: mdi:stop
                 show_name: false
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: media_player.media_stop
-                  # NOVO — perform-action
-                  action: perform-action
-                  perform_action: media_player.media_stop
+                  action: call-service
+                  service: media_player.media_stop
                   target:
                     entity_id: media_player.android_tv_192_168_3_17
                 styles: *tv_mini_btn
@@ -582,12 +580,8 @@
                 icon: mdi:volume-minus
                 show_name: false
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: button.press
-                  # NOVO — perform-action
-                  action: perform-action
-                  perform_action: button.press
+                  action: call-service
+                  service: button.press
                   target:
                     entity_id: button.tv_sala_volume_down
                 styles: *tv_mini_btn
@@ -595,12 +589,8 @@
                 icon: mdi:volume-plus
                 show_name: false
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: button.press
-                  # NOVO — perform-action
-                  action: perform-action
-                  perform_action: button.press
+                  action: call-service
+                  service: button.press
                   target:
                     entity_id: button.tv_sala_volume_up
                 styles: *tv_mini_btn
@@ -608,12 +598,8 @@
                 icon: mdi:apps
                 show_name: false
                 tap_action:
-                  # FALLBACK — call-service (pré-2024.8)
-                  # action: call-service
-                  # service: input_boolean.turn_off
-                  # NOVO — perform-action
-                  action: perform-action
-                  perform_action: input_boolean.turn_off
+                  action: call-service
+                  service: input_boolean.turn_off
                   target:
                     entity_id: input_boolean.sala_tv_controls_expanded
                 styles: *tv_mini_btn
@@ -632,7 +618,7 @@
             padding: 8px 10px 8px 10px !important;
             height: auto !important;
             box-sizing: border-box;
-            margin: 0 2px 12px 0 !important;
+            margin: 0 4px 0 0 !important;
           }
       cards:
         - type: custom:layout-card
@@ -727,21 +713,18 @@
                         return on ? '#4facfe' : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.52)' : 'rgba(255,255,255,0.65)');
                       ]]]
 
-            # FALLBACK — horizontal-stack (flex:1 no wrapper expandia badge de temperatura)
-            # - type: horizontal-stack
-            #   view_layout:
-            #     grid-area: controls
-            #   cards: [cards preservados intactos abaixo]
-            # NOVO — layout-card com colunas fixas: 30px (−) | auto (badge) | 30px (+)
             - type: custom:layout-card
               view_layout:
                 grid-area: controls
               layout_type: custom:grid-layout
               layout:
-                grid-template-columns: 30px auto 30px
-                column-gap: 4px
+                grid-template-columns: 30px minmax(34px, max-content) 30px
+                column-gap: 8px
+                row-gap: 0
                 margin: 0
                 padding: 0
+                justify-content: start
+                align-items: center
               cards:
                 - type: custom:button-card
                   entity: climate.sl_ar_condicionado
@@ -789,10 +772,7 @@
                     action: none
                   styles:
                     card:
-                      # FALLBACK — min-width: 34px (expandia livremente no flex do horizontal-stack)
-                      # - min-width: 34px
-                      # NOVO — width: 100% (coluna auto do layout-card controla o tamanho)
-                      - width: 100%
+                      - min-width: 34px
                       - height: 30px
                       - border-radius: 9px
                       - border: 1px solid rgba(255,255,255,0.10)
@@ -857,16 +837,12 @@
               ]]]
           - border-radius: 18px
           - box-shadow: none
-          # FALLBACK — height: auto (impedia stretch do CSS Grid — Corredor ficava mais baixo que A/C)
-          # - height: auto
-          # NOVO — height: 100% (permite align-self:stretch do grid, iguala altura ao A/C)
-          - height: 100%
+          - height: auto
           - min-height: 72px
-          - margin: 0 0 12px 2px
-          # FALLBACK — display:flex colapsava shadow DOM do button-card, ícone sumia
-          # - display: flex
-          # - align-items: center
-          # - justify-content: center
+          - margin: 0 0 0 4px
+          - display: flex
+          - align-items: center
+          - justify-content: center
         icon:
           - width: 28px
           - color: >

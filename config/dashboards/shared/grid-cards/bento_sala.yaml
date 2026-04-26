@@ -459,19 +459,25 @@
                 show_icon: false
                 show_name: true
                 name: 'N'
+                # ANTERIOR: button-card não avalia templates dentro de tap_action
+                # tap_action:
+                #   action: perform-action
+                #   perform_action: >
+                #     [[[
+                #       return states['script.sala_tv_open_netflix'] ? 'script.turn_on' : 'media_player.select_source';
+                #     ]]]
+                #   target:
+                #     entity_id: >
+                #       [[[
+                #         return states['script.sala_tv_open_netflix'] ? 'script.sala_tv_open_netflix' : 'media_player.android_tv_192_168_3_17';
+                #       ]]]
+                #   data:
+                #     source: Netflix
                 tap_action:
                   action: perform-action
-                  perform_action: >
-                    [[[
-                      return states['script.sala_tv_open_netflix'] ? 'script.turn_on' : 'media_player.select_source';
-                    ]]]
+                  perform_action: script.turn_on
                   target:
-                    entity_id: >
-                      [[[
-                        return states['script.sala_tv_open_netflix'] ? 'script.sala_tv_open_netflix' : 'media_player.android_tv_192_168_3_17';
-                      ]]]
-                  data:
-                    source: Netflix
+                    entity_id: script.sala_tv_open_netflix
                 styles:
                   card:
                     - height: 42px
@@ -489,19 +495,25 @@
                 show_icon: false
                 show_name: true
                 name: 'D'
+                # ANTERIOR: button-card não avalia templates dentro de tap_action
+                # tap_action:
+                #   action: perform-action
+                #   perform_action: >
+                #     [[[
+                #       return states['script.sala_tv_open_disney'] ? 'script.turn_on' : 'media_player.select_source';
+                #     ]]]
+                #   target:
+                #     entity_id: >
+                #       [[[
+                #         return states['script.sala_tv_open_disney'] ? 'script.sala_tv_open_disney' : 'media_player.android_tv_192_168_3_17';
+                #       ]]]
+                #   data:
+                #     source: Disney+
                 tap_action:
                   action: perform-action
-                  perform_action: >
-                    [[[
-                      return states['script.sala_tv_open_disney'] ? 'script.turn_on' : 'media_player.select_source';
-                    ]]]
+                  perform_action: script.turn_on
                   target:
-                    entity_id: >
-                      [[[
-                        return states['script.sala_tv_open_disney'] ? 'script.sala_tv_open_disney' : 'media_player.android_tv_192_168_3_17';
-                      ]]]
-                  data:
-                    source: Disney+
+                    entity_id: script.sala_tv_open_disney
                 styles:
                   card:
                     - height: 42px
@@ -519,19 +531,25 @@
                 show_icon: false
                 show_name: true
                 name: HBO
+                # ANTERIOR: button-card não avalia templates dentro de tap_action
+                # tap_action:
+                #   action: perform-action
+                #   perform_action: >
+                #     [[[
+                #       return states['script.sala_tv_open_hbo'] ? 'script.turn_on' : 'media_player.select_source';
+                #     ]]]
+                #   target:
+                #     entity_id: >
+                #       [[[
+                #         return states['script.sala_tv_open_hbo'] ? 'script.sala_tv_open_hbo' : 'media_player.android_tv_192_168_3_17';
+                #       ]]]
+                #   data:
+                #     source: HBO Max
                 tap_action:
                   action: perform-action
-                  perform_action: >
-                    [[[
-                      return states['script.sala_tv_open_hbo'] ? 'script.turn_on' : 'media_player.select_source';
-                    ]]]
+                  perform_action: script.turn_on
                   target:
-                    entity_id: >
-                      [[[
-                        return states['script.sala_tv_open_hbo'] ? 'script.sala_tv_open_hbo' : 'media_player.android_tv_192_168_3_17';
-                      ]]]
-                  data:
-                    source: HBO Max
+                    entity_id: script.sala_tv_open_hbo
                 styles:
                   card:
                     - height: 42px
@@ -549,19 +567,25 @@
                 show_icon: false
                 show_name: true
                 name: 'P'
+                # ANTERIOR: button-card não avalia templates dentro de tap_action
+                # tap_action:
+                #   action: perform-action
+                #   perform_action: >
+                #     [[[
+                #       return states['script.sala_tv_open_prime'] ? 'script.turn_on' : 'media_player.select_source';
+                #     ]]]
+                #   target:
+                #     entity_id: >
+                #       [[[
+                #         return states['script.sala_tv_open_prime'] ? 'script.sala_tv_open_prime' : 'media_player.android_tv_192_168_3_17';
+                #       ]]]
+                #   data:
+                #     source: Prime Video
                 tap_action:
                   action: perform-action
-                  perform_action: >
-                    [[[
-                      return states['script.sala_tv_open_prime'] ? 'script.turn_on' : 'media_player.select_source';
-                    ]]]
+                  perform_action: script.turn_on
                   target:
-                    entity_id: >
-                      [[[
-                        return states['script.sala_tv_open_prime'] ? 'script.sala_tv_open_prime' : 'media_player.android_tv_192_168_3_17';
-                      ]]]
-                  data:
-                    source: Prime Video
+                    entity_id: script.sala_tv_open_prime
                 styles:
                   card:
                     - height: 42px
@@ -577,9 +601,15 @@
               - type: custom:button-card
                 icon: mdi:plus
                 show_name: false
+                # ANTERIOR: call-service (API descontinuada)
+                # tap_action:
+                #   action: call-service
+                #   service: input_boolean.turn_on
+                #   target:
+                #     entity_id: input_boolean.sala_tv_controls_expanded
                 tap_action:
-                  action: call-service
-                  service: input_boolean.turn_on
+                  action: perform-action
+                  perform_action: input_boolean.turn_on
                   target:
                     entity_id: input_boolean.sala_tv_controls_expanded
                 styles:
@@ -610,9 +640,15 @@
               - type: custom:button-card
                 icon: mdi:play-pause
                 show_name: false
+                # ANTERIOR: call-service (API descontinuada)
+                # tap_action:
+                #   action: call-service
+                #   service: media_player.media_play_pause
+                #   target:
+                #     entity_id: media_player.android_tv_192_168_3_17
                 tap_action:
-                  action: call-service
-                  service: media_player.media_play_pause
+                  action: perform-action
+                  perform_action: media_player.media_play_pause
                   target:
                     entity_id: media_player.android_tv_192_168_3_17
                 styles: &tv_mini_btn
@@ -634,36 +670,60 @@
               - type: custom:button-card
                 icon: mdi:stop
                 show_name: false
+                # ANTERIOR: call-service (API descontinuada)
+                # tap_action:
+                #   action: call-service
+                #   service: media_player.media_stop
+                #   target:
+                #     entity_id: media_player.android_tv_192_168_3_17
                 tap_action:
-                  action: call-service
-                  service: media_player.media_stop
+                  action: perform-action
+                  perform_action: media_player.media_stop
                   target:
                     entity_id: media_player.android_tv_192_168_3_17
                 styles: *tv_mini_btn
               - type: custom:button-card
                 icon: mdi:volume-minus
                 show_name: false
+                # ANTERIOR: call-service (API descontinuada)
+                # tap_action:
+                #   action: call-service
+                #   service: button.press
+                #   target:
+                #     entity_id: button.tv_sala_volume_down
                 tap_action:
-                  action: call-service
-                  service: button.press
+                  action: perform-action
+                  perform_action: button.press
                   target:
                     entity_id: button.tv_sala_volume_down
                 styles: *tv_mini_btn
               - type: custom:button-card
                 icon: mdi:volume-plus
                 show_name: false
+                # ANTERIOR: call-service (API descontinuada)
+                # tap_action:
+                #   action: call-service
+                #   service: button.press
+                #   target:
+                #     entity_id: button.tv_sala_volume_up
                 tap_action:
-                  action: call-service
-                  service: button.press
+                  action: perform-action
+                  perform_action: button.press
                   target:
                     entity_id: button.tv_sala_volume_up
                 styles: *tv_mini_btn
               - type: custom:button-card
                 icon: mdi:apps
                 show_name: false
+                # ANTERIOR: call-service (API descontinuada)
+                # tap_action:
+                #   action: call-service
+                #   service: input_boolean.turn_off
+                #   target:
+                #     entity_id: input_boolean.sala_tv_controls_expanded
                 tap_action:
-                  action: call-service
-                  service: input_boolean.turn_off
+                  action: perform-action
+                  perform_action: input_boolean.turn_off
                   target:
                     entity_id: input_boolean.sala_tv_controls_expanded
                 styles: *tv_mini_btn
@@ -709,15 +769,16 @@
               show_icon: true
               show_name: true
               show_state: false
-              label: >
-                [[[
-                  const t = Number(entity?.attributes?.temperature);
-                  const tt = Number.isFinite(t) ? `${t}°` : '—';
-                  const m = entity?.state ?? 'off';
-                  const map = { cool: 'Frio', heat: 'Quente', dry: 'Seco', fan_only: 'Vent', off: 'Off' };
-                  return `${tt} · ${map[m] || m}`;
-                ]]]
-              show_label: true
+              # ANTERIOR: label com temperatura/modo removido — card info fica em linha única (show_label causava 2ª row quebrando o single-row layout)
+              # label: >
+              #   [[[
+              #     const t = Number(entity?.attributes?.temperature);
+              #     const tt = Number.isFinite(t) ? `${t}°` : '—';
+              #     const m = entity?.state ?? 'off';
+              #     const map = { cool: 'Frio', heat: 'Quente', dry: 'Seco', fan_only: 'Vent', off: 'Off' };
+              #     return `${tt} · ${map[m] || m}`;
+              #   ]]]
+              # show_label: true
               tap_action:
                 action: more-info
               styles:
@@ -728,34 +789,35 @@
                   - padding: 0
                   - margin: 0
                 grid:
-                  - grid-template-areas: '"i n" "i l"'
+                  - grid-template-areas: '"i n"'
                   - grid-template-columns: auto 1fr
                   - column-gap: 6px
                 icon:
                   - width: 16px
-                  - align-self: start
+                  - align-self: center
                   - color: >
                       [[[
                         return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.74)' : 'rgba(255,255,255,0.82)';
                       ]]]
                 name:
                   - justify-self: start
-                  - align-self: end
+                  - align-self: center
                   - font-size: 20px
                   - font-weight: 700
                   - color: >
                       [[[
                         return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
                       ]]]
-                label:
-                  - justify-self: start
-                  - align-self: start
-                  - margin-top: -2px
-                  - font-size: 11px
-                  - color: >
-                      [[[
-                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.62)' : 'rgba(255,255,255,0.72)';
-                      ]]]
+                # ANTERIOR: label styles removido (label desativado junto com show_label)
+                # label:
+                #   - justify-self: start
+                #   - align-self: start
+                #   - margin-top: -2px
+                #   - font-size: 11px
+                #   - color: >
+                #       [[[
+                #         return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.62)' : 'rgba(255,255,255,0.72)';
+                #       ]]]
 
             - type: custom:button-card
               view_layout:

@@ -2,11 +2,11 @@
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: minmax(0, 1.7fr) minmax(74px, 0.7fr)
-    grid-template-rows: 130px minmax(124px, max-content) minmax(112px, max-content)
+    grid-template-rows: 130px minmax(134px, max-content) 96px
     grid-template-areas: |
       "hero hero"
       "tv tv"
-      "ac corredor"
+      "ac ac"
     column-gap: 24px
     row-gap: 16px
     height: 100%
@@ -187,6 +187,65 @@
               ${dot('mdi:speaker-wireless',   alexa, '#ff9900')}
             </div>`;
           ]]]
+        corredor:
+          card:
+            type: custom:button-card
+            entity: light.corredor_switch_1
+            icon: mdi:door-closed
+            name: Corredor
+            show_icon: true
+            show_name: true
+            show_state: false
+            tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            styles:
+              card:
+                - height: 30px
+                - min-width: 94px
+                - border-radius: 999px
+                - padding: 0 10px
+                - background: >
+                    [[[
+                      return entity?.state === 'on'
+                        ? 'linear-gradient(180deg, rgba(96,165,250,0.24) 0%, rgba(96,165,250,0.16) 100%)'
+                        : (states['light.grupo_luzes_sala']?.state === 'on'
+                          ? 'rgba(0,0,0,0.08)'
+                          : 'rgba(255,255,255,0.10)');
+                    ]]]
+                - border: >
+                    [[[
+                      return entity?.state === 'on'
+                        ? '1px solid rgba(96,165,250,0.44)'
+                        : (states['light.grupo_luzes_sala']?.state === 'on'
+                          ? '1px solid rgba(0,0,0,0.14)'
+                          : '1px solid rgba(255,255,255,0.14)');
+                    ]]]
+                - box-shadow: none
+              grid:
+                - grid-template-areas: '"i n"'
+                - grid-template-columns: auto 1fr
+                - column-gap: 6px
+              icon:
+                - width: 13px
+                - color: >
+                    [[[
+                      return entity?.state === 'on'
+                        ? '#60a5fa'
+                        : (states['light.grupo_luzes_sala']?.state === 'on'
+                          ? 'rgba(0,0,0,0.62)'
+                          : 'rgba(255,255,255,0.78)');
+                    ]]]
+              name:
+                - font-size: 11px
+                - font-weight: 600
+                - color: >
+                    [[[
+                      return states['light.grupo_luzes_sala']?.state === 'on'
+                        ? 'rgba(0,0,0,0.76)'
+                        : 'rgba(255,255,255,0.86)';
+                    ]]]
       styles:
         card:
           # - background: transparent  # ORIGINAL — mantido para rollback rapido
@@ -209,8 +268,9 @@
           - margin: 0
           - height: 100%
         grid:
-          - grid-template-areas: '"icon temp right" "n n right" "lights lights right"'
-          - grid-template-columns: auto 1fr auto
+          # LEGADO (fallback rapido): '"icon temp right" "n n right" "lights lights right"'
+          - grid-template-areas: '"icon temp corredor right" "n n corredor right" "lights lights corredor right"'
+          - grid-template-columns: auto 1fr auto auto
           - grid-template-rows: auto auto 1fr
         name:
           - justify-self: start
@@ -244,6 +304,10 @@
             - justify-self: end
             - align-self: start
             - margin-right: 2px
+          corredor:
+            - justify-self: end
+            - align-self: start
+            - margin-right: 12px
 
     # ── TV (container com controles independentes) ──────────────────────────
     - type: custom:stack-in-card
@@ -618,7 +682,7 @@
             padding: 8px 10px 8px 10px !important;
             height: auto !important;
             box-sizing: border-box;
-            margin: 0 4px 0 0 !important;
+            margin: 0 !important;
           }
       cards:
         - type: custom:layout-card
@@ -807,47 +871,51 @@
                         ]]]
                   styles: *ac_step_btn
 
-    # ── Corredor (quick action) ──────────────────────────────────────────────
-    - type: custom:button-card
-      view_layout:
-        grid-area: corredor
-      entity: light.corredor_switch_1
-      icon: mdi:door-closed
-      name: Corredor
-      show_icon: true
-      show_name: false
-      show_state: false
-      tap_action:
-        action: toggle
-      hold_action:
-        action: more-info
-      styles:
-        card:
-          - background: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on'
-                  ? 'linear-gradient(180deg, rgba(0,0,0,0.11) 0%, rgba(0,0,0,0.06) 100%)'
-                  : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%)';
-              ]]]
-          - border: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on'
-                  ? '1px solid rgba(0,0,0,0.16)'
-                  : '1px solid rgba(255,255,255,0.14)';
-              ]]]
-          - border-radius: 18px
-          - box-shadow: none
-          - height: auto
-          - min-height: 72px
-          - margin: 0 0 0 4px
-          - display: flex
-          - align-items: center
-          - justify-content: center
-        icon:
-          - width: 28px
-          - color: >
-              [[[
-                return entity?.state === 'on'
-                  ? '#fbbf24'
-                  : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.62)' : 'rgba(255,255,255,0.72)');
-              ]]]
+    # ── Corredor (quick action) — LEGADO DESATIVADO (fallback rapido) ───────
+    # REATIVAR EM CASO DE REGRESSAO:
+    # 1) restaurar grid principal para: "ac corredor"
+    # 2) reabilitar o bloco abaixo removendo os comentários
+    #
+    # - type: custom:button-card
+    #   view_layout:
+    #     grid-area: corredor
+    #   entity: light.corredor_switch_1
+    #   icon: mdi:door-closed
+    #   name: Corredor
+    #   show_icon: true
+    #   show_name: false
+    #   show_state: false
+    #   tap_action:
+    #     action: toggle
+    #   hold_action:
+    #     action: more-info
+    #   styles:
+    #     card:
+    #       - background: >
+    #           [[[
+    #             return states['light.grupo_luzes_sala']?.state === 'on'
+    #               ? 'linear-gradient(180deg, rgba(0,0,0,0.11) 0%, rgba(0,0,0,0.06) 100%)'
+    #               : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%)';
+    #           ]]]
+    #       - border: >
+    #           [[[
+    #             return states['light.grupo_luzes_sala']?.state === 'on'
+    #               ? '1px solid rgba(0,0,0,0.16)'
+    #               : '1px solid rgba(255,255,255,0.14)';
+    #           ]]]
+    #       - border-radius: 18px
+    #       - box-shadow: none
+    #       - height: auto
+    #       - min-height: 72px
+    #       - margin: 0 0 0 4px
+    #       - display: flex
+    #       - align-items: center
+    #       - justify-content: center
+    #     icon:
+    #       - width: 28px
+    #       - color: >
+    #           [[[
+    #             return entity?.state === 'on'
+    #               ? '#fbbf24'
+    #               : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.62)' : 'rgba(255,255,255,0.72)');
+    #           ]]]

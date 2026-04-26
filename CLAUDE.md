@@ -1896,3 +1896,37 @@ Correção solicitada após revisão 6:
 ### Escopo preservado
 - Hero sem alterações.
 - Estrutura A/C e Corredor mantida.
+
+---
+
+## Plano de Implementação — Refatoração Sala (2026-04-26, revisão 8)
+
+Solicitação do usuário:
+1) remover o card separado de Corredor da linha 3;
+2) transformar a linha 3 em um único card de A/C full-width;
+3) mover o controle do Corredor para uma pílula no Hero;
+4) aumentar a estabilidade de layout para ajustes de altura da TV;
+5) manter fallback rápido sem apagar código antigo.
+
+### Estratégia aplicada
+- Grid principal da Sala alterado para:
+  - linha 1: `hero hero`
+  - linha 2: `tv tv`
+  - linha 3: `ac ac`
+- Linha 3 fixada em `96px` para reduzir variabilidade vertical.
+- Linha 2 (TV) ampliada para `minmax(134px, max-content)` para maior respiro dos controles.
+- Hero refatorado para 4 colunas internas (`icon/temp`, conteúdo textual, pílula corredor, status).
+- Pílula de Corredor implementada no próprio Hero via `custom_fields.corredor` (toggle + more-info).
+- Card separado de Corredor desativado e preservado integralmente comentado com instruções explícitas de reativação.
+
+### Fallback rápido documentado no código
+- Bloco legado do Corredor foi mantido comentado em `bento_sala.yaml` com cabeçalho:
+  - "LEGADO DESATIVADO (fallback rápido)".
+- Instruções de rollback no próprio arquivo:
+  1) restaurar grid para `"ac corredor"`;
+  2) descomentar o bloco legado.
+
+### Riscos conhecidos
+- Aumento de densidade no Hero (mais elementos interativos na faixa superior).
+- Dependência de contraste da pílula de Corredor em tema claro/escuro.
+- Necessidade de validação visual em dispositivos menores (mobile portrait).

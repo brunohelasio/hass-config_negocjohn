@@ -1930,3 +1930,24 @@ Solicitação do usuário:
 - Aumento de densidade no Hero (mais elementos interativos na faixa superior).
 - Dependência de contraste da pílula de Corredor em tema claro/escuro.
 - Necessidade de validação visual em dispositivos menores (mobile portrait).
+
+---
+
+## Registro de Ajuste de Layout — Sala (2026-04-26, revisão 9)
+
+Ajuste solicitado pelo usuário para aderência à referência visual (imagem 2):
+- A/C em **linha única horizontal** (sem quebra em duas linhas).
+- Redução da altura da linha 3 e do card A/C para evitar aproximação da borda inferior.
+
+### Implementação aplicada
+- Linha 3 ajustada para `84px`.
+- Bloco A/C refatorado para `single-row` com áreas:
+  - `info | toggle | minus | temp | plus`
+- Substituição do power circular isolado por controle visual tipo toggle inline.
+- Bloco anterior (A/C em duas linhas) removido da execução e sinalizado no código como legado/fallback para rollback rápido.
+
+### Fallback rápido
+- Em caso de regressão visual/funcional:
+  1) reativar bloco legado de A/C em duas linhas;
+  2) restaurar altura da linha 3 para valor anterior;
+  3) manter card de corredor legado comentado conforme revisão 8.

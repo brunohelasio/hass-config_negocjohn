@@ -7,7 +7,10 @@
       "hero hero"
       "tv tv"
       "ac corredor"
-    column-gap: 20px
+    # FALLBACK — column-gap: 20px (gap insuficiente entre A/C e Corredor)
+    # column-gap: 20px
+    # NOVO — 28px (aumenta respiro visual entre os dois cards da linha 3)
+    column-gap: 28px
     row-gap: 14px
     height: 100%
     margin: 0
@@ -396,8 +399,12 @@
                 show_name: true
                 name: 'N'
                 tap_action:
-                  action: call-service
-                  service: script.turn_on
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: script.turn_on
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: script.turn_on
                   target:
                     entity_id: script.sala_tv_open_netflix
                 styles:
@@ -418,8 +425,12 @@
                 show_name: true
                 name: 'D'
                 tap_action:
-                  action: call-service
-                  service: script.turn_on
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: script.turn_on
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: script.turn_on
                   target:
                     entity_id: script.sala_tv_open_disney
                 styles:
@@ -440,8 +451,12 @@
                 show_name: true
                 name: HBO
                 tap_action:
-                  action: call-service
-                  service: script.turn_on
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: script.turn_on
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: script.turn_on
                   target:
                     entity_id: script.sala_tv_open_hbo
                 styles:
@@ -462,8 +477,12 @@
                 show_name: true
                 name: 'P'
                 tap_action:
-                  action: call-service
-                  service: script.turn_on
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: script.turn_on
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: script.turn_on
                   target:
                     entity_id: script.sala_tv_open_prime
                 styles:
@@ -472,7 +491,10 @@
                     - min-width: 40px
                     - border-radius: 10px
                     - border: 1px solid rgba(255,255,255,0.10)
-                    - background: center / cover no-repeat url('/local/images/prime_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
+                    # FALLBACK — prime_bg.jpg (arquivo inexistente em disco)
+                    # - background: center / cover no-repeat url('/local/images/prime_bg.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
+                    # NOVO — prime_video.jpg (nome correto do arquivo em /config/www/images/)
+                    - background: center / cover no-repeat url('/local/images/prime_video.jpg'), linear-gradient(180deg, rgba(53,122,209,0.78) 0%, rgba(38,95,168,0.80) 100%)
                     - box-shadow: none
                   name:
                     - color: rgba(255,255,255,0.92)
@@ -482,8 +504,12 @@
                 icon: mdi:plus
                 show_name: false
                 tap_action:
-                  action: call-service
-                  service: input_boolean.turn_on
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: input_boolean.turn_on
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: input_boolean.turn_on
                   target:
                     entity_id: input_boolean.sala_tv_controls_expanded
                 styles:
@@ -515,8 +541,12 @@
                 icon: mdi:play-pause
                 show_name: false
                 tap_action:
-                  action: call-service
-                  service: media_player.media_play_pause
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: media_player.media_play_pause
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: media_player.media_play_pause
                   target:
                     entity_id: media_player.android_tv_192_168_3_17
                 styles: &tv_mini_btn
@@ -539,8 +569,12 @@
                 icon: mdi:stop
                 show_name: false
                 tap_action:
-                  action: call-service
-                  service: media_player.media_stop
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: media_player.media_stop
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: media_player.media_stop
                   target:
                     entity_id: media_player.android_tv_192_168_3_17
                 styles: *tv_mini_btn
@@ -548,8 +582,12 @@
                 icon: mdi:volume-minus
                 show_name: false
                 tap_action:
-                  action: call-service
-                  service: button.press
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: button.press
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: button.press
                   target:
                     entity_id: button.tv_sala_volume_down
                 styles: *tv_mini_btn
@@ -557,8 +595,12 @@
                 icon: mdi:volume-plus
                 show_name: false
                 tap_action:
-                  action: call-service
-                  service: button.press
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: button.press
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: button.press
                   target:
                     entity_id: button.tv_sala_volume_up
                 styles: *tv_mini_btn
@@ -566,8 +608,12 @@
                 icon: mdi:apps
                 show_name: false
                 tap_action:
-                  action: call-service
-                  service: input_boolean.turn_off
+                  # FALLBACK — call-service (pré-2024.8)
+                  # action: call-service
+                  # service: input_boolean.turn_off
+                  # NOVO — perform-action
+                  action: perform-action
+                  perform_action: input_boolean.turn_off
                   target:
                     entity_id: input_boolean.sala_tv_controls_expanded
                 styles: *tv_mini_btn
@@ -681,9 +727,21 @@
                         return on ? '#4facfe' : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.52)' : 'rgba(255,255,255,0.65)');
                       ]]]
 
-            - type: horizontal-stack
+            # FALLBACK — horizontal-stack (flex:1 no wrapper expandia badge de temperatura)
+            # - type: horizontal-stack
+            #   view_layout:
+            #     grid-area: controls
+            #   cards: [cards preservados intactos abaixo]
+            # NOVO — layout-card com colunas fixas: 30px (−) | auto (badge) | 30px (+)
+            - type: custom:layout-card
               view_layout:
                 grid-area: controls
+              layout_type: custom:grid-layout
+              layout:
+                grid-template-columns: 30px auto 30px
+                column-gap: 4px
+                margin: 0
+                padding: 0
               cards:
                 - type: custom:button-card
                   entity: climate.sl_ar_condicionado
@@ -731,7 +789,10 @@
                     action: none
                   styles:
                     card:
-                      - min-width: 34px
+                      # FALLBACK — min-width: 34px (expandia livremente no flex do horizontal-stack)
+                      # - min-width: 34px
+                      # NOVO — width: 100% (coluna auto do layout-card controla o tamanho)
+                      - width: 100%
                       - height: 30px
                       - border-radius: 9px
                       - border: 1px solid rgba(255,255,255,0.10)
@@ -796,12 +857,16 @@
               ]]]
           - border-radius: 18px
           - box-shadow: none
-          - height: auto
+          # FALLBACK — height: auto (impedia stretch do CSS Grid — Corredor ficava mais baixo que A/C)
+          # - height: auto
+          # NOVO — height: 100% (permite align-self:stretch do grid, iguala altura ao A/C)
+          - height: 100%
           - min-height: 72px
           - margin: 0 0 12px 2px
-          - display: flex
-          - align-items: center
-          - justify-content: center
+          # FALLBACK — display:flex colapsava shadow DOM do button-card, ícone sumia
+          # - display: flex
+          # - align-items: center
+          # - justify-content: center
         icon:
           - width: 28px
           - color: >

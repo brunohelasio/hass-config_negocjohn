@@ -1710,3 +1710,223 @@ Para restaurar: descomentar o bloco original e comentar/remover o bloco `# NOVO:
 **Rollback:**
 - `footer-shared.yaml`: Descomentar o bloco `# CÂMERAS POPUP`. Comentar `tap_action: !include ./popup/footer/footer_vacuum.yaml`.
 - `footer_vacuum.yaml`: Reverter para `entity: image.roborock_s7_map_0_custom` (linha comentada disponivel no arquivo).
+
+---
+
+## Registro de Implementacao — Bento Sala TV/A-C/Corredor (2026-04-25)
+
+### Objetivo
+Implementar o mockup final do bloco Sala no dashboard principal com foco em controle rapido real:
+- TV ocupando faixa inteira da linha 2
+- A/C ocupando ~70% na linha 3
+- Botao Corredor como quick action na direita da linha 3
+- Hero mantido funcionalmente intacto (status, icones, acoes)
+
+### Arquivos alterados
+1. `config/dashboards/shared/grid-cards/bento_sala.yaml`
+2. `config/packages/sala_tv_controls.yaml` (novo)
+3. `config/configuration.yaml`
+
+### Decisoes de arquitetura
+
+#### 1) Hero preservado
+- Bloco Hero foi mantido (nao migramos corredor para o hero).
+- Mantida logica de toque/luzes/status e coluna de dots da direita.
+
+#### 2) TV deixou de ser "um botao unico"
+- Antes: `button-card` unico com `tap_action: toggle` no card inteiro.
+- Agora: container `stack-in-card` com elementos interativos independentes:
+  - Header (icone, titulo, subtitulo)
+  - Botao Power independente (canto superior direito)
+  - Faixa inferior dinamica (Apps OU Mini-controles)
+
+#### 3) Toggle Apps <-> Mini-controles
+- Criado helper `input_boolean.sala_tv_controls_expanded`.
+- Quando `off`: exibimos botoes de streaming + botao `+`.
+- Quando `on`: exibimos mini-controles (play/pause, stop, vol-, vol+) + botao de retorno para Apps.
+
+#### 4) Streaming com acao real
+- Criados scripts:
+  - `script.sala_tv_open_netflix`
+  - `script.sala_tv_open_disney`
+  - `script.sala_tv_open_prime`
+  - `script.sala_tv_open_hbo`
+- Fluxo: liga TV se estiver off, aguarda 2s e chama `media_player.select_source`.
+- HBO tenta `Max` primeiro; fallback para `HBO Max`.
+
+#### 5) Reaproveitamento de assets
+- Netflix/HBO usam imagens existentes em `/local/images/`:
+  - `netflix_bg.jpg`
+  - `HBOMax_bg.jpg`
+- Disney/Prime seguem placeholders visuais (D/P) conforme alinhado.
+
+### Ajustes de layout no card Sala
+- Grid principal da Sala ajustado para:
+  - Linha 1: `hero hero`
+  - Linha 2: `tv tv`
+  - Linha 3: `ac corredor`
+- Colunas ajustadas para favorecer A/C + quick action de corredor na ultima linha.
+
+### Rollback rapido
+
+#### Rollback completo do bloco Sala (visual + interacao)
+1. Restaurar `config/dashboards/shared/grid-cards/bento_sala.yaml` para revisao anterior.
+2. Remover include da package em `config/configuration.yaml`:
+   - `sala_tv_controls: !include packages/sala_tv_controls.yaml`
+3. Remover arquivo `config/packages/sala_tv_controls.yaml`.
+
+#### Rollback parcial (manter layout novo sem scripts/apps)
+- Em `bento_sala.yaml`, no bloco TV:
+  - comentar botoes de app que chamam scripts,
+  - manter apenas Power + mini-controles locais.
+
+### Observacoes operacionais
+- `media_player.select_source` depende do nome exato em `source_list` da TV.
+- Se algum app nao abrir por nome divergente, ajustar somente o `source` no script correspondente (fallback simples e seguro).
+
+---
+
+## Registro de Ajuste Pontual — Sala (2026-04-25, revisão 3)
+
+Solicitação do usuário após rollback manual para versão funcional:
+- diminuir apenas a altura da faixa 2 (TV),
+- aumentar proporcionalmente a faixa 3 (A/C + Corredor),
+- reforçar espaçamento (gap) vertical entre TV e linha inferior e gap horizontal entre A/C e Corredor.
+
+### Ajustes aplicados (mínimos)
+- `grid-template-rows`: `142px minmax(96px, 1fr) 94px`
+- `column-gap`: `16px`
+- `row-gap`: `14px`
+- Card A/C recebeu leve margem para abrir respiro no encontro com Corredor.
+- Card Corredor recebeu leve margem e `min-height` ajustado para acompanhar a faixa 3 mais alta.
+
+### Escopo preservado
+- Hero mantido intacto (sem mudança funcional/visual de lógica).
+- TV mantida na arquitetura funcional já aprovada (power + apps/controles).
+
+---
+
+## Registro de Correção Estrutural — Sala (2026-04-25, revisão 4)
+
+Objetivo: corrigir empurrão da TV sobre A/C+Corredor sem alterar a linha 1 (Hero).
+
+### Causa-raiz confirmada
+- Linha 2 definida com `1fr` (consumia sobra vertical).
+- Card TV com `height: 100%` (expandia para toda a linha 2).
+- Resultado: espaço vazio na TV e compressão visual da linha 3.
+
+### Correção aplicada (uma passada)
+- `grid-template-rows`: `142px minmax(104px, max-content) minmax(98px, 1fr)`
+  - Linha 2 passa a seguir conteúdo (não sobra).
+  - Linha 3 absorve a sobra restante.
+- TV: `height: auto` e padding vertical reduzido.
+- TV: título reduzido para melhorar densidade sem alterar comportamento.
+- Power da TV reduzido para harmonizar proporção.
+- A/C: título reduzido para aliviar altura útil da linha 3.
+
+### Escopo preservado
+- Hero (linha 1) mantido sem alterações funcionais.
+- Lógica de apps/mini-controles da TV mantida.
+
+---
+
+## Registro de Ajuste Estrutural — Sala (2026-04-25, revisão 5)
+
+Solicitação específica do usuário:
+1. Título `A/C` ao lado do ícone, sem subtítulo.
+2. Substituir toggle por botão de power igual ao da TV, na direita.
+3. Botões `+/-` abaixo do power.
+4. Aumentar gap entre A/C e Corredor.
+5. Aplicar imagens nos botões Disney e Prime.
+6. Evitar sangramento na borda inferior da linha 3 com margem inferior equivalente ao respiro do bloco.
+
+### Implementação aplicada
+- A/C refatorado para `stack-in-card` com layout 2x2:
+  - `info` (ícone + título) à esquerda,
+  - `power` no topo da coluna direita,
+  - `+/-` abaixo do power.
+- Power do A/C usa a mesma linguagem visual do power da TV (dimensão, borda e estado).
+- Botões `+/-` do A/C agora acionam `climate.set_temperature` com incremento/decremento de 1°C (limites 16–30).
+- Gap horizontal global entre A/C e Corredor aumentado (`column-gap: 20px`).
+- Disney: background com `/local/images/dp_bg.jpg`.
+- Prime: background com `/local/images/prime_bg.jpg` + fallback em gradiente.
+- Corredor e A/C com `height: auto` e margem inferior para respiro (`12px`) evitando expansão na borda inferior.
+
+### Escopo preservado
+- Altura do card TV mantida.
+- Hero mantido sem alterações funcionais.
+
+---
+
+## Registro de Ajuste Estrutural — Sala (2026-04-25, revisão 6)
+
+Solicitação do usuário:
+1) mover `+/-` do A/C para a esquerda (abaixo de ícone/título);
+2) exibir temperatura selecionada ao lado de `+/-`;
+3) aumentar discretamente altura dos botões de streaming (sem mexer na altura do card TV);
+4) garantir corredor com mesma altura visual do A/C e com ícone.
+
+### Implementação aplicada
+- Linha de apps da TV: botões Netflix/Disney/HBO/Prime de `32px` para `34px`.
+- A/C:
+  - layout alterado para `"info power" / "controls power"`;
+  - `controls` movido para a esquerda, abaixo do título;
+  - controles agora em ordem `- [temperatura] +`;
+  - temperatura selecionada exibida em badge central (`xx°`).
+- Corredor:
+  - ícone alterado para `mdi:door-closed`;
+  - altura mínima ajustada para alinhar melhor com o A/C;
+  - centralização explícita de conteúdo no card.
+
+### Escopo preservado
+- Altura do card TV não alterada.
+- Hero sem mudança funcional.
+
+---
+
+## Registro de Ajuste Estrutural — Sala (2026-04-25, revisão 7)
+
+Correção solicitada após revisão 6:
+- Ao elevar discretamente os botões de streaming para `34px`, era necessário elevar proporcionalmente a altura útil do card da TV.
+
+### Ajuste aplicado
+- Grid da Sala: linha 2 (TV) de `minmax(104px, max-content)` para `minmax(110px, max-content)`.
+- Card TV: adicionado `min-height: 112px` para garantir folga vertical estável com os botões de streaming mais altos.
+
+### Escopo preservado
+- Hero sem alterações.
+- Estrutura A/C e Corredor mantida.
+
+---
+
+## Plano de Implementação — Refatoração Sala (2026-04-26, revisão 8)
+
+Solicitação do usuário:
+1) remover o card separado de Corredor da linha 3;
+2) transformar a linha 3 em um único card de A/C full-width;
+3) mover o controle do Corredor para uma pílula no Hero;
+4) aumentar a estabilidade de layout para ajustes de altura da TV;
+5) manter fallback rápido sem apagar código antigo.
+
+### Estratégia aplicada
+- Grid principal da Sala alterado para:
+  - linha 1: `hero hero`
+  - linha 2: `tv tv`
+  - linha 3: `ac ac`
+- Linha 3 fixada em `96px` para reduzir variabilidade vertical.
+- Linha 2 (TV) ampliada para `minmax(134px, max-content)` para maior respiro dos controles.
+- Hero refatorado para 4 colunas internas (`icon/temp`, conteúdo textual, pílula corredor, status).
+- Pílula de Corredor implementada no próprio Hero via `custom_fields.corredor` (toggle + more-info).
+- Card separado de Corredor desativado e preservado integralmente comentado com instruções explícitas de reativação.
+
+### Fallback rápido documentado no código
+- Bloco legado do Corredor foi mantido comentado em `bento_sala.yaml` com cabeçalho:
+  - "LEGADO DESATIVADO (fallback rápido)".
+- Instruções de rollback no próprio arquivo:
+  1) restaurar grid para `"ac corredor"`;
+  2) descomentar o bloco legado.
+
+### Riscos conhecidos
+- Aumento de densidade no Hero (mais elementos interativos na faixa superior).
+- Dependência de contraste da pílula de Corredor em tema claro/escuro.
+- Necessidade de validação visual em dispositivos menores (mobile portrait).

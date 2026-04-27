@@ -6,11 +6,12 @@
 # - Expor scripts para abrir apps por botões dedicados no card
 ##############################################################################
 
-input_boolean:
-  sala_tv_controls_expanded:
-    name: Sala TV - Mostrar mini controles
-    icon: mdi:gesture-tap-button
-    initial: off
+# LEGADO (fallback): estado UI apps vs mini-controles (não utilizado no layout novo)
+# input_boolean:
+#   sala_tv_controls_expanded:
+#     name: Sala TV - Mostrar mini controles
+#     icon: mdi:gesture-tap-button
+#     initial: off
 
 script:
   sala_tv_open_netflix:
@@ -19,14 +20,17 @@ script:
     sequence:
       - choose:
           - conditions:
-              - condition: state
-                entity_id: media_player.android_tv_192_168_3_17
-                state: "off"
+              - condition: template
+                value_template: >-
+                  {{ states('media_player.android_tv_192_168_3_17') in ['off','unknown','unavailable'] }}
             sequence:
               - action: media_player.turn_on
                 target:
                   entity_id: media_player.android_tv_192_168_3_17
-              - delay: "00:00:02"
+              - wait_template: >-
+                  {{ states('media_player.android_tv_192_168_3_17') not in ['off','unknown','unavailable'] }}
+                timeout: "00:00:30"
+              - delay: "00:00:05"
       - action: media_player.select_source
         target:
           entity_id: media_player.android_tv_192_168_3_17
@@ -39,14 +43,17 @@ script:
     sequence:
       - choose:
           - conditions:
-              - condition: state
-                entity_id: media_player.android_tv_192_168_3_17
-                state: "off"
+              - condition: template
+                value_template: >-
+                  {{ states('media_player.android_tv_192_168_3_17') in ['off','unknown','unavailable'] }}
             sequence:
               - action: media_player.turn_on
                 target:
                   entity_id: media_player.android_tv_192_168_3_17
-              - delay: "00:00:02"
+              - wait_template: >-
+                  {{ states('media_player.android_tv_192_168_3_17') not in ['off','unknown','unavailable'] }}
+                timeout: "00:00:30"
+              - delay: "00:00:05"
       - action: media_player.select_source
         target:
           entity_id: media_player.android_tv_192_168_3_17
@@ -59,14 +66,17 @@ script:
     sequence:
       - choose:
           - conditions:
-              - condition: state
-                entity_id: media_player.android_tv_192_168_3_17
-                state: "off"
+              - condition: template
+                value_template: >-
+                  {{ states('media_player.android_tv_192_168_3_17') in ['off','unknown','unavailable'] }}
             sequence:
               - action: media_player.turn_on
                 target:
                   entity_id: media_player.android_tv_192_168_3_17
-              - delay: "00:00:02"
+              - wait_template: >-
+                  {{ states('media_player.android_tv_192_168_3_17') not in ['off','unknown','unavailable'] }}
+                timeout: "00:00:30"
+              - delay: "00:00:05"
       - action: media_player.select_source
         target:
           entity_id: media_player.android_tv_192_168_3_17
@@ -79,14 +89,17 @@ script:
     sequence:
       - choose:
           - conditions:
-              - condition: state
-                entity_id: media_player.android_tv_192_168_3_17
-                state: "off"
+              - condition: template
+                value_template: >-
+                  {{ states('media_player.android_tv_192_168_3_17') in ['off','unknown','unavailable'] }}
             sequence:
               - action: media_player.turn_on
                 target:
                   entity_id: media_player.android_tv_192_168_3_17
-              - delay: "00:00:02"
+              - wait_template: >-
+                  {{ states('media_player.android_tv_192_168_3_17') not in ['off','unknown','unavailable'] }}
+                timeout: "00:00:30"
+              - delay: "00:00:05"
       - choose:
           - conditions:
               - condition: template

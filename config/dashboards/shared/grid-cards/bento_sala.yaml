@@ -2,7 +2,7 @@
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: minmax(0, 1.7fr) minmax(74px, 0.7fr)
-    grid-template-rows: 130px minmax(166px, max-content) 62px
+    grid-template-rows: 130px 1fr 62px
     grid-template-areas: |
       "hero hero"
       "tv tv"
@@ -322,7 +322,7 @@
             box-shadow: none !important;
             padding: 10px 12px 8px 12px !important;
             height: auto !important;
-            min-height: 130px !important;
+            min-height: 110px !important;
             box-sizing: border-box;
           }
       cards:
@@ -330,12 +330,12 @@
           layout_type: custom:grid-layout
           layout:
             grid-template-columns: 1fr 42px
-            grid-template-rows: auto auto
+            grid-template-rows: auto
             grid-template-areas: |
-              "info power"
-              "subtitle power"
+              "info toggle"
             column-gap: 10px
             row-gap: 2px
+            align-items: center
             margin: 0
             padding: 0
           cards:
@@ -359,6 +359,7 @@
                   - box-shadow: none
                   - padding: 0
                   - margin: 0
+                  - height: 24px
                 grid:
                   - grid-template-areas: '"i n"'
                   - grid-template-columns: auto 1fr
@@ -378,42 +379,85 @@
                       [[[
                         return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
                       ]]]
+            # LEGADO (fallback): subtítulo + power circular anterior.
+#             - type: custom:button-card
+#               view_layout:
+#                 grid-area: subtitle
+#               entity: media_player.android_tv_192_168_3_17
+#               name: >
+#                 [[[
+#                   const v = entity?.attributes?.friendly_name;
+#                   return v && v !== '' ? v : 'Samsung SmartTV';
+#                 ]]]
+#               show_icon: false
+#               show_name: true
+#               show_state: false
+#               tap_action:
+#                 action: none
+#               hold_action:
+#                 action: none
+#               styles:
+#                 card:
+#                   - background: transparent
+#                   - border: none
+#                   - box-shadow: none
+#                   - padding: 0 0 0 26px
+#                   - margin: 0
+#                 name:
+#                   - justify-self: start
+#                   - font-size: 12px
+#                   - font-weight: 500
+#                   - color: >
+#                       [[[
+#                         return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.70)';
+#                       ]]]
+#             - type: custom:button-card
+#               view_layout:
+#                 grid-area: power
+#               entity: media_player.android_tv_192_168_3_17
+#               icon: mdi:power
+#               show_name: false
+#               show_state: false
+#               tap_action:
+#                 action: toggle
+#               hold_action:
+#                 action: more-info
+#               styles:
+#                 card:
+#                   - width: 34px
+#                   - height: 34px
+#                   - border-radius: 12px
+#                   - background: >
+#                       [[[
+#                         const on = entity && entity.state !== 'off';
+#                         if (on) return 'rgba(239,68,68,0.20)';
+#                         return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)';
+#                       ]]]
+#                   - border: >
+#                       [[[
+#                         const on = entity && entity.state !== 'off';
+#                         if (on) return '1px solid rgba(239,68,68,0.40)';
+#                         return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.16)' : '1px solid rgba(255,255,255,0.14)';
+#                       ]]]
+#                   - box-shadow: none
+#                   - padding: 0
+#                 icon:
+#                   - width: 19px
+#                   - color: >
+#                       [[[
+#                         const on = entity && entity.state !== 'off';
+#                         return on ? '#ef4444' : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.52)' : 'rgba(255,255,255,0.65)');
+#                       ]]]
+#
             - type: custom:button-card
               view_layout:
-                grid-area: subtitle
+                grid-area: toggle
               entity: media_player.android_tv_192_168_3_17
-              name: >
+              icon: >
                 [[[
-                  const v = entity?.attributes?.friendly_name;
-                  return v && v !== '' ? v : 'Samsung SmartTV';
+                  const on = ['on','playing','paused','idle'].includes(entity?.state);
+                  return on ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline';
                 ]]]
-              show_icon: false
-              show_name: true
-              show_state: false
-              tap_action:
-                action: none
-              hold_action:
-                action: none
-              styles:
-                card:
-                  - background: transparent
-                  - border: none
-                  - box-shadow: none
-                  - padding: 0 0 0 26px
-                  - margin: 0
-                name:
-                  - justify-self: start
-                  - font-size: 12px
-                  - font-weight: 500
-                  - color: >
-                      [[[
-                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.70)';
-                      ]]]
-            - type: custom:button-card
-              view_layout:
-                grid-area: power
-              entity: media_player.android_tv_192_168_3_17
-              icon: mdi:power
               show_name: false
               show_state: false
               tap_action:
@@ -422,31 +466,20 @@
                 action: more-info
               styles:
                 card:
-                  - width: 34px
-                  - height: 34px
-                  - border-radius: 12px
-                  - background: >
-                      [[[
-                        const on = entity && entity.state !== 'off';
-                        if (on) return 'rgba(239,68,68,0.20)';
-                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)';
-                      ]]]
-                  - border: >
-                      [[[
-                        const on = entity && entity.state !== 'off';
-                        if (on) return '1px solid rgba(239,68,68,0.40)';
-                        return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.16)' : '1px solid rgba(255,255,255,0.14)';
-                      ]]]
+                  - background: transparent
+                  - border: none
                   - box-shadow: none
                   - padding: 0
+                  - width: 34px
+                  - height: 24px
+                  - margin-top: 0
                 icon:
-                  - width: 19px
+                  - width: 34px
                   - color: >
                       [[[
-                        const on = entity && entity.state !== 'off';
-                        return on ? '#ef4444' : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.52)' : 'rgba(255,255,255,0.65)');
+                        const on = ['on','playing','paused','idle'].includes(entity?.state);
+                        return on ? '#60a5fa' : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.44)' : 'rgba(255,255,255,0.52)');
                       ]]]
-
         # ANTERIOR: custom:button-card wrapper com custom_fields.card — COMENTADO
         # Causa raiz: o button-card externo registra handler @pointerup no ha-card raiz.
         # Com tap_action:none o evento é absorvido antes de chegar ao card interno.
@@ -455,310 +488,538 @@
         # Substituído por layout-card com filhos diretos — cada botão é custom element
         # independente com seu próprio shadow DOM e event handler intocável.
 
-        # ── NOVO: streaming row — layout-card com botões diretos (sem nesting) ───
-        - type: conditional
-          conditions:
-            - entity: input_boolean.sala_tv_controls_expanded
-              state_not: 'on'
-          card:
-            type: custom:layout-card
-            layout_type: custom:grid-layout
-            layout:
-              grid-template-columns: 1fr 1fr 1fr 1fr 34px
-              grid-auto-rows: auto
-              column-gap: 6px
-              padding: 4px 0 6px 0
-              margin: 0
-              align-items: center
-            cards:
-              - type: custom:button-card
-                entity: script.sala_tv_open_netflix
-                show_icon: false
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: script.turn_on
-                  target:
-                    entity_id: script.sala_tv_open_netflix
-                card_mod:
-                  style: |
-                    :host {
-                      aspect-ratio: 1;
-                    }
-                    ha-card {
-                      height: 100% !important;
-                    }
-                styles:
-                  card:
-                    - border-radius: 14px
-                    - background: center/cover no-repeat url('/local/images/netflix_bg.jpg'), linear-gradient(135deg, #e50914 0%, #8b0000 100%)
-                    - border: none
-                    - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
-                    - overflow: hidden
-                    - padding: 0
-              - type: custom:button-card
-                entity: script.sala_tv_open_disney
-                show_icon: false
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: script.turn_on
-                  target:
-                    entity_id: script.sala_tv_open_disney
-                card_mod:
-                  style: |
-                    :host {
-                      aspect-ratio: 1;
-                    }
-                    ha-card {
-                      height: 100% !important;
-                    }
-                styles:
-                  card:
-                    - border-radius: 14px
-                    - background: center/cover no-repeat url('/local/images/dp_bg.jpg'), linear-gradient(135deg, #113ccf 0%, #1a237e 100%)
-                    - border: none
-                    - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
-                    - overflow: hidden
-                    - padding: 0
-              - type: custom:button-card
-                entity: script.sala_tv_open_hbo
-                show_icon: false
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: script.turn_on
-                  target:
-                    entity_id: script.sala_tv_open_hbo
-                card_mod:
-                  style: |
-                    :host {
-                      aspect-ratio: 1;
-                    }
-                    ha-card {
-                      height: 100% !important;
-                    }
-                styles:
-                  card:
-                    - border-radius: 14px
-                    - background: center/cover no-repeat url('/local/images/HBOMax_bg.jpg'), linear-gradient(135deg, #3d1080 0%, #1a0040 100%)
-                    - border: none
-                    - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
-                    - overflow: hidden
-                    - padding: 0
-              - type: custom:button-card
-                entity: script.sala_tv_open_prime
-                show_icon: false
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: script.turn_on
-                  target:
-                    entity_id: script.sala_tv_open_prime
-                card_mod:
-                  style: |
-                    :host {
-                      aspect-ratio: 1;
-                    }
-                    ha-card {
-                      height: 100% !important;
-                    }
-                styles:
-                  card:
-                    - border-radius: 14px
-                    - background: center/cover no-repeat url('/local/images/prime_bg.jpg'), linear-gradient(135deg, #00a8e1 0%, #005e8a 100%)
-                    - border: none
-                    - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
-                    - overflow: hidden
-                    - padding: 0
-              - type: custom:button-card
-                show_icon: true
-                icon: mdi:plus
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: input_boolean.turn_on
-                  target:
-                    entity_id: input_boolean.sala_tv_controls_expanded
-                styles:
-                  card:
-                    - width: 28px
-                    - height: 28px
-                    - border-radius: 9px
-                    - background: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)';
-                        ]]]
-                    - border: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.18)' : '1px solid rgba(255,255,255,0.16)';
-                        ]]]
-                    - box-shadow: none
-                    - padding: 0
-                  icon:
-                    - width: 15px
-                    - color: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.70)' : 'rgba(255,255,255,0.72)';
-                        ]]]
+        # LEGADO (fallback): blocos condicionais com botão "+" e input_boolean.
+#         # ── NOVO: streaming row — layout-card com botões diretos (sem nesting) ───
+#         - type: conditional
+#           conditions:
+#             - entity: input_boolean.sala_tv_controls_expanded
+#               state_not: 'on'
+#           card:
+#             type: custom:layout-card
+#             layout_type: custom:grid-layout
+#             layout:
+#               grid-template-columns: 1fr 1fr 1fr 1fr 34px
+#               grid-auto-rows: auto
+#               column-gap: 6px
+#               padding: 4px 0 6px 0
+#               margin: 0
+#               align-items: center
+#             cards:
+#               - type: custom:button-card
+#                 entity: script.sala_tv_open_netflix
+#                 show_icon: false
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: script.turn_on
+#                   target:
+#                     entity_id: script.sala_tv_open_netflix
+#                 card_mod:
+#                   style: |
+#                     :host {
+#                       aspect-ratio: 1;
+#                     }
+#                     ha-card {
+#                       height: 100% !important;
+#                     }
+#                 styles:
+#                   card:
+#                     - border-radius: 14px
+#                     - background: center/cover no-repeat url('/local/images/netflix_bg.jpg'), linear-gradient(135deg, #e50914 0%, #8b0000 100%)
+#                     - border: none
+#                     - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
+#                     - overflow: hidden
+#                     - padding: 0
+#               - type: custom:button-card
+#                 entity: script.sala_tv_open_disney
+#                 show_icon: false
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: script.turn_on
+#                   target:
+#                     entity_id: script.sala_tv_open_disney
+#                 card_mod:
+#                   style: |
+#                     :host {
+#                       aspect-ratio: 1;
+#                     }
+#                     ha-card {
+#                       height: 100% !important;
+#                     }
+#                 styles:
+#                   card:
+#                     - border-radius: 14px
+#                     - background: center/cover no-repeat url('/local/images/dp_bg.jpg'), linear-gradient(135deg, #113ccf 0%, #1a237e 100%)
+#                     - border: none
+#                     - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
+#                     - overflow: hidden
+#                     - padding: 0
+#               - type: custom:button-card
+#                 entity: script.sala_tv_open_hbo
+#                 show_icon: false
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: script.turn_on
+#                   target:
+#                     entity_id: script.sala_tv_open_hbo
+#                 card_mod:
+#                   style: |
+#                     :host {
+#                       aspect-ratio: 1;
+#                     }
+#                     ha-card {
+#                       height: 100% !important;
+#                     }
+#                 styles:
+#                   card:
+#                     - border-radius: 14px
+#                     - background: center/cover no-repeat url('/local/images/HBOMax_bg.jpg'), linear-gradient(135deg, #3d1080 0%, #1a0040 100%)
+#                     - border: none
+#                     - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
+#                     - overflow: hidden
+#                     - padding: 0
+#               - type: custom:button-card
+#                 entity: script.sala_tv_open_prime
+#                 show_icon: false
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: script.turn_on
+#                   target:
+#                     entity_id: script.sala_tv_open_prime
+#                 card_mod:
+#                   style: |
+#                     :host {
+#                       aspect-ratio: 1;
+#                     }
+#                     ha-card {
+#                       height: 100% !important;
+#                     }
+#                 styles:
+#                   card:
+#                     - border-radius: 14px
+#                     - background: center/cover no-repeat url('/local/images/prime_bg.jpg'), linear-gradient(135deg, #00a8e1 0%, #005e8a 100%)
+#                     - border: none
+#                     - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
+#                     - overflow: hidden
+#                     - padding: 0
+#               - type: custom:button-card
+#                 show_icon: true
+#                 icon: mdi:plus
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: input_boolean.turn_on
+#                   target:
+#                     entity_id: input_boolean.sala_tv_controls_expanded
+#                 styles:
+#                   card:
+#                     - width: 28px
+#                     - height: 28px
+#                     - border-radius: 9px
+#                     - background: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)';
+#                         ]]]
+#                     - border: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.18)' : '1px solid rgba(255,255,255,0.16)';
+#                         ]]]
+#                     - box-shadow: none
+#                     - padding: 0
+#                   icon:
+#                     - width: 15px
+#                     - color: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.70)' : 'rgba(255,255,255,0.72)';
+#                         ]]]
+#
+#         # ── NOVO: mini-controls row — layout-card com botões diretos ─────────
+#         - type: conditional
+#           conditions:
+#             - entity: input_boolean.sala_tv_controls_expanded
+#               state: 'on'
+#           card:
+#             type: custom:layout-card
+#             layout_type: custom:grid-layout
+#             layout:
+#               grid-template-columns: 1fr 1fr 1fr 1fr 34px
+#               column-gap: 6px
+#               padding: 4px 0 6px 0
+#               margin: 0
+#               align-items: center
+#             cards:
+#               - type: custom:button-card
+#                 icon: mdi:play-pause
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: media_player.media_play_pause
+#                   target:
+#                     entity_id: media_player.android_tv_192_168_3_17
+#                 styles:
+#                   card:
+#                     - height: 34px
+#                     - border-radius: 10px
+#                     - background: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.09)';
+#                         ]]]
+#                     - border: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.12)';
+#                         ]]]
+#                     - box-shadow: none
+#                     - padding: 0
+#                   icon:
+#                     - width: 18px
+#                     - color: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
+#                         ]]]
+#               - type: custom:button-card
+#                 icon: mdi:stop
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: media_player.media_stop
+#                   target:
+#                     entity_id: media_player.android_tv_192_168_3_17
+#                 styles:
+#                   card:
+#                     - height: 34px
+#                     - border-radius: 10px
+#                     - background: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.09)';
+#                         ]]]
+#                     - border: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.12)';
+#                         ]]]
+#                     - box-shadow: none
+#                     - padding: 0
+#                   icon:
+#                     - width: 18px
+#                     - color: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
+#                         ]]]
+#               - type: custom:button-card
+#                 icon: mdi:volume-minus
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: button.press
+#                   target:
+#                     entity_id: button.tv_sala_volume_down
+#                 styles:
+#                   card:
+#                     - height: 34px
+#                     - border-radius: 10px
+#                     - background: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.09)';
+#                         ]]]
+#                     - border: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.12)';
+#                         ]]]
+#                     - box-shadow: none
+#                     - padding: 0
+#                   icon:
+#                     - width: 18px
+#                     - color: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
+#                         ]]]
+#               - type: custom:button-card
+#                 icon: mdi:volume-plus
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: button.press
+#                   target:
+#                     entity_id: button.tv_sala_volume_up
+#                 styles:
+#                   card:
+#                     - height: 34px
+#                     - border-radius: 10px
+#                     - background: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.09)';
+#                         ]]]
+#                     - border: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.12)';
+#                         ]]]
+#                     - box-shadow: none
+#                     - padding: 0
+#                   icon:
+#                     - width: 18px
+#                     - color: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
+#                         ]]]
+#               - type: custom:button-card
+#                 icon: mdi:apps
+#                 show_name: false
+#                 tap_action:
+#                   action: perform-action
+#                   perform_action: input_boolean.turn_off
+#                   target:
+#                     entity_id: input_boolean.sala_tv_controls_expanded
+#                 styles:
+#                   card:
+#                     - width: 28px
+#                     - height: 28px
+#                     - border-radius: 9px
+#                     - background: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)';
+#                         ]]]
+#                     - border: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.18)' : '1px solid rgba(255,255,255,0.16)';
+#                         ]]]
+#                     - box-shadow: none
+#                     - padding: 0
+#                   icon:
+#                     - width: 15px
+#                     - color: >
+#                         [[[
+#                           return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.70)' : 'rgba(255,255,255,0.72)';
+#                         ]]]
+#
 
-        # ── NOVO: mini-controls row — layout-card com botões diretos ─────────
-        - type: conditional
-          conditions:
-            - entity: input_boolean.sala_tv_controls_expanded
-              state: 'on'
-          card:
-            type: custom:layout-card
-            layout_type: custom:grid-layout
-            layout:
-              grid-template-columns: 1fr 1fr 1fr 1fr 34px
-              column-gap: 6px
-              padding: 4px 0 6px 0
-              margin: 0
-              align-items: center
-            cards:
-              - type: custom:button-card
-                icon: mdi:play-pause
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: media_player.media_play_pause
-                  target:
-                    entity_id: media_player.android_tv_192_168_3_17
-                styles:
-                  card:
-                    - height: 34px
-                    - border-radius: 10px
-                    - background: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.09)';
-                        ]]]
-                    - border: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.12)';
-                        ]]]
-                    - box-shadow: none
-                    - padding: 0
-                  icon:
-                    - width: 18px
-                    - color: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
-                        ]]]
-              - type: custom:button-card
-                icon: mdi:stop
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: media_player.media_stop
-                  target:
-                    entity_id: media_player.android_tv_192_168_3_17
-                styles:
-                  card:
-                    - height: 34px
-                    - border-radius: 10px
-                    - background: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.09)';
-                        ]]]
-                    - border: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.12)';
-                        ]]]
-                    - box-shadow: none
-                    - padding: 0
-                  icon:
-                    - width: 18px
-                    - color: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
-                        ]]]
-              - type: custom:button-card
-                icon: mdi:volume-minus
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: button.press
-                  target:
-                    entity_id: button.tv_sala_volume_down
-                styles:
-                  card:
-                    - height: 34px
-                    - border-radius: 10px
-                    - background: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.09)';
-                        ]]]
-                    - border: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.12)';
-                        ]]]
-                    - box-shadow: none
-                    - padding: 0
-                  icon:
-                    - width: 18px
-                    - color: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
-                        ]]]
-              - type: custom:button-card
-                icon: mdi:volume-plus
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: button.press
-                  target:
-                    entity_id: button.tv_sala_volume_up
-                styles:
-                  card:
-                    - height: 34px
-                    - border-radius: 10px
-                    - background: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.09)';
-                        ]]]
-                    - border: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.12)';
-                        ]]]
-                    - box-shadow: none
-                    - padding: 0
-                  icon:
-                    - width: 18px
-                    - color: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
-                        ]]]
-              - type: custom:button-card
-                icon: mdi:apps
-                show_name: false
-                tap_action:
-                  action: perform-action
-                  perform_action: input_boolean.turn_off
-                  target:
-                    entity_id: input_boolean.sala_tv_controls_expanded
-                styles:
-                  card:
-                    - width: 28px
-                    - height: 28px
-                    - border-radius: 9px
-                    - background: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.10)';
-                        ]]]
-                    - border: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.18)' : '1px solid rgba(255,255,255,0.16)';
-                        ]]]
-                    - box-shadow: none
-                    - padding: 0
-                  icon:
-                    - width: 15px
-                    - color: >
-                        [[[
-                          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.70)' : 'rgba(255,255,255,0.72)';
-                        ]]]
+        # ── NOVO: streaming row fixa (4 apps, sem "+") ──────────────────────
+        - type: custom:layout-card
+          layout_type: custom:grid-layout
+          layout:
+            grid-template-columns: repeat(4, 1fr)
+            grid-auto-rows: auto
+            column-gap: 10px
+            row-gap: 8px
+            justify-items: center
+            padding: 0 0 6px 0
+            margin: 0
+            align-items: center
+          cards:
+            - type: custom:button-card
+              entity: script.sala_tv_open_netflix
+              show_icon: false
+              show_name: false
+              tap_action:
+                action: call-service
+                service: script.turn_on
+                service_data:
+                  entity_id: script.sala_tv_open_netflix
+              styles:
+                card:
+                  - width: 46px
+                  - height: 48px
+                  - border-radius: 12px
+                  - background-image: url('/local/images/netflix_bg.jpg')
+                  - background-position: center
+                  - background-repeat: no-repeat
+                  - background-size: cover
+                  - border: none
+                  - box-shadow: 0 2px 8px rgba(0,0,0,0.28)
+                  - overflow: hidden
+                  - padding: 0
+            - type: custom:button-card
+              entity: script.sala_tv_open_disney
+              show_icon: false
+              show_name: false
+              tap_action:
+                action: call-service
+                service: script.turn_on
+                service_data:
+                  entity_id: script.sala_tv_open_disney
+              styles:
+                card:
+                  - width: 46px
+                  - height: 48px
+                  - border-radius: 12px
+                  - background-image: url('/local/images/dp_bg.jpg')
+                  - background-position: center
+                  - background-repeat: no-repeat
+                  - background-size: cover
+                  - border: none
+                  - box-shadow: 0 2px 8px rgba(0,0,0,0.28)
+                  - overflow: hidden
+                  - padding: 0
+            - type: custom:button-card
+              entity: script.sala_tv_open_hbo
+              show_icon: false
+              show_name: false
+              tap_action:
+                action: call-service
+                service: script.turn_on
+                service_data:
+                  entity_id: script.sala_tv_open_hbo
+              styles:
+                card:
+                  - width: 46px
+                  - height: 48px
+                  - border-radius: 12px
+                  - background-image: url('/local/images/HBOMax_bg.jpg')
+                  - background-position: center
+                  - background-repeat: no-repeat
+                  - background-size: cover
+                  - border: none
+                  - box-shadow: 0 2px 8px rgba(0,0,0,0.28)
+                  - overflow: hidden
+                  - padding: 0
+            - type: custom:button-card
+              entity: script.sala_tv_open_prime
+              show_icon: false
+              show_name: false
+              tap_action:
+                action: call-service
+                service: script.turn_on
+                service_data:
+                  entity_id: script.sala_tv_open_prime
+              styles:
+                card:
+                  - width: 46px
+                  - height: 48px
+                  - border-radius: 12px
+                  - background-image: url('/local/images/prime_video.jpg')
+                  - background-position: center
+                  - background-repeat: no-repeat
+                  - background-size: cover
+                  - border: none
+                  - box-shadow: 0 2px 8px rgba(0,0,0,0.28)
+                  - overflow: hidden
+                  - padding: 0
 
+        # ── NOVO: mini-controles fixos (estilo iOS dos streamings) ───────────
+        - type: custom:layout-card
+          layout_type: custom:grid-layout
+          layout:
+            grid-template-columns: repeat(4, 1fr)
+            column-gap: 10px
+            row-gap: 8px
+            justify-items: center
+            padding: 0
+            margin: 0
+            align-items: center
+          cards:
+            - type: custom:button-card
+              icon: mdi:play-pause
+              show_name: false
+              tap_action:
+                action: perform-action
+                perform_action: media_player.media_play_pause
+                target:
+                  entity_id: media_player.android_tv_192_168_3_17
+              styles:
+                card:
+                  - height: 32px
+                  - border-radius: 12px
+                  - background: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.10)';
+                      ]]]
+                  - border: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.14)';
+                      ]]]
+                  - box-shadow: 0 3px 10px rgba(0,0,0,0.20)
+                  - padding: 0
+                icon:
+                  - width: 18px
+                  - color: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.86)';
+                      ]]]
+            - type: custom:button-card
+              icon: mdi:stop
+              show_name: false
+              tap_action:
+                action: perform-action
+                perform_action: media_player.media_stop
+                target:
+                  entity_id: media_player.android_tv_192_168_3_17
+              styles:
+                card:
+                  - height: 32px
+                  - border-radius: 12px
+                  - background: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.10)';
+                      ]]]
+                  - border: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.14)';
+                      ]]]
+                  - box-shadow: 0 3px 10px rgba(0,0,0,0.20)
+                  - padding: 0
+                icon:
+                  - width: 18px
+                  - color: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.86)';
+                      ]]]
+            - type: custom:button-card
+              icon: mdi:volume-minus
+              show_name: false
+              tap_action:
+                action: perform-action
+                perform_action: button.press
+                target:
+                  entity_id: button.tv_sala_volume_down
+              styles:
+                card:
+                  - height: 32px
+                  - border-radius: 12px
+                  - background: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.10)';
+                      ]]]
+                  - border: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.14)';
+                      ]]]
+                  - box-shadow: 0 3px 10px rgba(0,0,0,0.20)
+                  - padding: 0
+                icon:
+                  - width: 18px
+                  - color: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.86)';
+                      ]]]
+            - type: custom:button-card
+              icon: mdi:volume-plus
+              show_name: false
+              tap_action:
+                action: perform-action
+                perform_action: button.press
+                target:
+                  entity_id: button.tv_sala_volume_up
+              styles:
+                card:
+                  - height: 32px
+                  - border-radius: 12px
+                  - background: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.10)';
+                      ]]]
+                  - border: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.14)' : '1px solid rgba(255,255,255,0.14)';
+                      ]]]
+                  - box-shadow: 0 3px 10px rgba(0,0,0,0.20)
+                  - padding: 0
+                icon:
+                  - width: 18px
+                  - color: >
+                      [[[
+                        return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.86)';
+                      ]]]
     # ── A/C (single-row refactor) ────────────────────────────────────────────
     # LEGADO DESATIVADO (fallback rápido): bloco anterior de A/C em duas linhas
     # REATIVAR EM CASO DE REGRESSAO:

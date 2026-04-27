@@ -359,6 +359,7 @@
                   - box-shadow: none
                   - padding: 0
                   - margin: 0
+                  - height: 24px
                 grid:
                   - grid-template-areas: '"i n"'
                   - grid-template-columns: auto 1fr

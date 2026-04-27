@@ -322,7 +322,7 @@
             box-shadow: none !important;
             padding: 10px 12px 8px 12px !important;
             height: auto !important;
-            min-height: 130px !important;
+            min-height: 118px !important;
             box-sizing: border-box;
           }
       cards:
@@ -468,6 +468,7 @@
                   - border: none
                   - box-shadow: none
                   - padding: 0
+                  - margin-top: -2px
                 icon:
                   - width: 34px
                   - color: >
@@ -795,8 +796,9 @@
           layout:
             grid-template-columns: repeat(4, 1fr)
             grid-auto-rows: auto
-            column-gap: 8px
-            padding: 6px 0 8px 0
+            column-gap: 10px
+            row-gap: 8px
+            padding: 4px 0 8px 0
             margin: 0
             align-items: center
           cards:
@@ -805,24 +807,20 @@
               show_icon: false
               show_name: false
               tap_action:
-                action: perform-action
-                perform_action: script.turn_on
-                target:
+                action: call-service
+                service: script.turn_on
+                service_data:
                   entity_id: script.sala_tv_open_netflix
-              card_mod:
-                style: |
-                  :host {
-                    aspect-ratio: 1;
-                  }
-                  ha-card {
-                    height: 100% !important;
-                  }
               styles:
                 card:
-                  - border-radius: 14px
-                  - background: url('/local/images/netflix_bg.jpg') center/cover no-repeat, linear-gradient(135deg, #e50914 0%, #8b0000 100%)
+                  - height: 48px
+                  - border-radius: 12px
+                  - background-image: url('/local/images/netflix_bg.jpg')
+                  - background-position: center
+                  - background-repeat: no-repeat
+                  - background-size: cover
                   - border: none
-                  - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
+                  - box-shadow: 0 2px 8px rgba(0,0,0,0.28)
                   - overflow: hidden
                   - padding: 0
             - type: custom:button-card
@@ -830,24 +828,20 @@
               show_icon: false
               show_name: false
               tap_action:
-                action: perform-action
-                perform_action: script.turn_on
-                target:
+                action: call-service
+                service: script.turn_on
+                service_data:
                   entity_id: script.sala_tv_open_disney
-              card_mod:
-                style: |
-                  :host {
-                    aspect-ratio: 1;
-                  }
-                  ha-card {
-                    height: 100% !important;
-                  }
               styles:
                 card:
-                  - border-radius: 14px
-                  - background: url('/local/images/dp_bg.jpg') center/cover no-repeat, linear-gradient(135deg, #113ccf 0%, #1a237e 100%)
+                  - height: 48px
+                  - border-radius: 12px
+                  - background-image: url('/local/images/dp_bg.jpg')
+                  - background-position: center
+                  - background-repeat: no-repeat
+                  - background-size: cover
                   - border: none
-                  - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
+                  - box-shadow: 0 2px 8px rgba(0,0,0,0.28)
                   - overflow: hidden
                   - padding: 0
             - type: custom:button-card
@@ -855,24 +849,20 @@
               show_icon: false
               show_name: false
               tap_action:
-                action: perform-action
-                perform_action: script.turn_on
-                target:
+                action: call-service
+                service: script.turn_on
+                service_data:
                   entity_id: script.sala_tv_open_hbo
-              card_mod:
-                style: |
-                  :host {
-                    aspect-ratio: 1;
-                  }
-                  ha-card {
-                    height: 100% !important;
-                  }
               styles:
                 card:
-                  - border-radius: 14px
-                  - background: url('/local/images/HBOMax_bg.jpg') center/cover no-repeat, linear-gradient(135deg, #3d1080 0%, #1a0040 100%)
+                  - height: 48px
+                  - border-radius: 12px
+                  - background-image: url('/local/images/HBOMax_bg.jpg')
+                  - background-position: center
+                  - background-repeat: no-repeat
+                  - background-size: cover
                   - border: none
-                  - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
+                  - box-shadow: 0 2px 8px rgba(0,0,0,0.28)
                   - overflow: hidden
                   - padding: 0
             - type: custom:button-card
@@ -880,24 +870,20 @@
               show_icon: false
               show_name: false
               tap_action:
-                action: perform-action
-                perform_action: script.turn_on
-                target:
+                action: call-service
+                service: script.turn_on
+                service_data:
                   entity_id: script.sala_tv_open_prime
-              card_mod:
-                style: |
-                  :host {
-                    aspect-ratio: 1;
-                  }
-                  ha-card {
-                    height: 100% !important;
-                  }
               styles:
                 card:
-                  - border-radius: 14px
-                  - background: url('/local/images/prime_video.jpg') center/cover no-repeat, linear-gradient(135deg, #00a8e1 0%, #005e8a 100%)
+                  - height: 48px
+                  - border-radius: 12px
+                  - background-image: url('/local/images/prime_video.jpg')
+                  - background-position: center
+                  - background-repeat: no-repeat
+                  - background-size: cover
                   - border: none
-                  - box-shadow: 0 3px 10px rgba(0,0,0,0.40)
+                  - box-shadow: 0 2px 8px rgba(0,0,0,0.28)
                   - overflow: hidden
                   - padding: 0
 
@@ -906,8 +892,9 @@
           layout_type: custom:grid-layout
           layout:
             grid-template-columns: repeat(4, 1fr)
-            column-gap: 8px
-            padding: 2px 0 6px 0
+            column-gap: 10px
+            row-gap: 8px
+            padding: 0 0 4px 0
             margin: 0
             align-items: center
           cards:
@@ -921,7 +908,7 @@
                   entity_id: media_player.android_tv_192_168_3_17
               styles:
                 card:
-                  - height: 38px
+                  - height: 32px
                   - border-radius: 12px
                   - background: >
                       [[[
@@ -949,7 +936,7 @@
                   entity_id: media_player.android_tv_192_168_3_17
               styles:
                 card:
-                  - height: 38px
+                  - height: 32px
                   - border-radius: 12px
                   - background: >
                       [[[
@@ -977,7 +964,7 @@
                   entity_id: button.tv_sala_volume_down
               styles:
                 card:
-                  - height: 38px
+                  - height: 32px
                   - border-radius: 12px
                   - background: >
                       [[[
@@ -1005,7 +992,7 @@
                   entity_id: button.tv_sala_volume_up
               styles:
                 card:
-                  - height: 38px
+                  - height: 32px
                   - border-radius: 12px
                   - background: >
                       [[[

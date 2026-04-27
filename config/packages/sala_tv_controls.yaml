@@ -23,11 +23,11 @@ script:
                 entity_id: media_player.android_tv_192_168_3_17
                 state: "off"
             sequence:
-              - service: media_player.turn_on
+              - action: media_player.turn_on
                 target:
                   entity_id: media_player.android_tv_192_168_3_17
               - delay: "00:00:02"
-      - service: media_player.select_source
+      - action: media_player.select_source
         target:
           entity_id: media_player.android_tv_192_168_3_17
         data:
@@ -43,11 +43,11 @@ script:
                 entity_id: media_player.android_tv_192_168_3_17
                 state: "off"
             sequence:
-              - service: media_player.turn_on
+              - action: media_player.turn_on
                 target:
                   entity_id: media_player.android_tv_192_168_3_17
               - delay: "00:00:02"
-      - service: media_player.select_source
+      - action: media_player.select_source
         target:
           entity_id: media_player.android_tv_192_168_3_17
         data:
@@ -63,11 +63,11 @@ script:
                 entity_id: media_player.android_tv_192_168_3_17
                 state: "off"
             sequence:
-              - service: media_player.turn_on
+              - action: media_player.turn_on
                 target:
                   entity_id: media_player.android_tv_192_168_3_17
               - delay: "00:00:02"
-      - service: media_player.select_source
+      - action: media_player.select_source
         target:
           entity_id: media_player.android_tv_192_168_3_17
         data:
@@ -83,7 +83,7 @@ script:
                 entity_id: media_player.android_tv_192_168_3_17
                 state: "off"
             sequence:
-              - service: media_player.turn_on
+              - action: media_player.turn_on
                 target:
                   entity_id: media_player.android_tv_192_168_3_17
               - delay: "00:00:02"
@@ -93,13 +93,13 @@ script:
                 value_template: >-
                   {{ 'Max' in (state_attr('media_player.android_tv_192_168_3_17','source_list') or []) }}
             sequence:
-              - service: media_player.select_source
+              - action: media_player.select_source
                 target:
                   entity_id: media_player.android_tv_192_168_3_17
                 data:
                   source: "Max"
         default:
-          - service: media_player.select_source
+          - action: media_player.select_source
             target:
               entity_id: media_player.android_tv_192_168_3_17
             data:

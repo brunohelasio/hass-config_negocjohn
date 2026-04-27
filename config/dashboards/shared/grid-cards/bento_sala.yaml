@@ -2,7 +2,7 @@
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: minmax(0, 1.7fr) minmax(74px, 0.7fr)
-    grid-template-rows: 130px minmax(134px, max-content) 84px
+    grid-template-rows: 130px minmax(144px, max-content) 74px
     grid-template-areas: |
       "hero hero"
       "tv tv"
@@ -11,7 +11,7 @@
     row-gap: 16px
     height: 100%
     margin: 0
-    padding: 12px 14px 12px 14px
+    padding: 12px 14px 6px 14px
   cards:
     # ── Hero ─────────────────────────────────────────────────────────
     - type: custom:button-card
@@ -762,14 +762,18 @@
       view_layout:
         grid-area: ac
       entity: climate.sl_ar_condicionado
-      icon: mdi:snowflake
+      show_icon: false
       name: A/C
-      show_icon: true
       show_name: true
       show_state: false
       tap_action:
         action: more-info
       custom_fields:
+        acicon: >
+          [[[
+            const color = states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.72)' : 'rgba(255,255,255,0.80)';
+            return `<ha-icon icon="mdi:snowflake" style="width:18px;height:18px;display:flex;color:${color};"></ha-icon>`;
+          ]]]
         toggle:
           card:
             type: custom:button-card
@@ -925,16 +929,10 @@
           - box-sizing: border-box
           - margin: 0
         grid:
-          - grid-template-areas: '"i n toggle minus temp plus"'
+          - grid-template-areas: '"acicon n toggle minus temp plus"'
           - grid-template-columns: auto 1fr auto auto auto auto
           - column-gap: 8px
           - align-items: center
-        icon:
-          - width: 16px
-          - color: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.74)' : 'rgba(255,255,255,0.82)';
-              ]]]
         name:
           - justify-self: start
           - align-self: center
@@ -945,6 +943,9 @@
                 return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
               ]]]
         custom_fields:
+          acicon:
+            - justify-self: start
+            - align-self: center
           toggle:
             - justify-self: end
             - align-self: center

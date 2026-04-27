@@ -755,201 +755,208 @@
     #       layout_type: custom:grid-layout
     #       layout: { grid de 5 colunas }
     #       cards: [ info | toggle | minus | temp | plus ]
-    - type: custom:layout-card
+    # ANTERIOR: layout-card com card_mod — grid interno do layout-card não recebe
+    # dimensões do ha-card estilizado (height/width não propagam via card_mod)
+    # substituído por button-card único com custom_fields (mesmo padrão do Hero)
+    - type: custom:button-card
       view_layout:
         grid-area: ac
-      card_mod:
-        style: |
-          ha-card {
-            background: {% if is_state('light.grupo_luzes_sala','on') %}linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%){% else %}linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%){% endif %} !important;
-            border: {% if is_state('light.grupo_luzes_sala','on') %}1px solid rgba(0,0,0,0.16){% else %}1px solid rgba(255,255,255,0.14){% endif %} !important;
-            border-radius: 18px !important;
-            box-shadow: none !important;
-            padding: 6px 10px !important;
-            height: 100% !important;
-            box-sizing: border-box !important;
-            margin: 0 !important;
-          }
-      layout_type: custom:grid-layout
-      layout:
-        grid-template-columns: minmax(0, 1fr) 44px 30px minmax(36px, max-content) 30px
-        grid-template-areas: "info toggle minus temp plus"
-        column-gap: 8px
-        row-gap: 0
-        margin: 0
-        padding: 0
-        align-items: center
-      cards:
-        - type: custom:button-card
-          view_layout:
-            grid-area: info
-          entity: climate.sl_ar_condicionado
-          icon: mdi:snowflake
-          name: A/C
-          show_icon: true
-          show_name: true
-          show_state: false
-          # ANTERIOR: label com temperatura/modo removido — card info fica em linha única
-          # label: >
-          #   [[[
-          #     const t = Number(entity?.attributes?.temperature);
-          #     const tt = Number.isFinite(t) ? `${t}°` : '—';
-          #     const m = entity?.state ?? 'off';
-          #     const map = { cool: 'Frio', heat: 'Quente', dry: 'Seco', fan_only: 'Vent', off: 'Off' };
-          #     return `${tt} · ${map[m] || m}`;
-          #   ]]]
-          # show_label: true
-          tap_action:
-            action: more-info
-          styles:
-            card:
-              - background: transparent
-              - border: none
-              - box-shadow: none
-              - padding: 0
-              - margin: 0
-            grid:
-              - grid-template-areas: '"i n"'
-              - grid-template-columns: auto 1fr
-              - column-gap: 6px
-            icon:
-              - width: 16px
-              - align-self: center
-              - color: >
+      entity: climate.sl_ar_condicionado
+      icon: mdi:snowflake
+      name: A/C
+      show_icon: true
+      show_name: true
+      show_state: false
+      tap_action:
+        action: more-info
+      custom_fields:
+        toggle:
+          card:
+            type: custom:button-card
+            entity: climate.sl_ar_condicionado
+            icon: >
+              [[[
+                const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                return on ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline';
+              ]]]
+            show_name: false
+            show_state: false
+            tap_action:
+              action: perform-action
+              perform_action: "[[[ const on=['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state); return on?'climate.turn_off':'climate.turn_on'; ]]]"
+              target:
+                entity_id: climate.sl_ar_condicionado
+            hold_action:
+              action: more-info
+            styles:
+              card:
+                - background: transparent
+                - border: none
+                - box-shadow: none
+                - padding: 0
+              icon:
+                - width: 34px
+                - color: >
+                    [[[
+                      const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                      return on ? '#60a5fa' : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.44)' : 'rgba(255,255,255,0.52)');
+                    ]]]
+        minus:
+          card:
+            type: custom:button-card
+            entity: climate.sl_ar_condicionado
+            icon: mdi:minus
+            show_name: false
+            tap_action:
+              action: perform-action
+              perform_action: climate.set_temperature
+              target:
+                entity_id: climate.sl_ar_condicionado
+              data:
+                temperature: >
                   [[[
-                    return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.74)' : 'rgba(255,255,255,0.82)';
+                    const curr = Number(entity?.attributes?.temperature ?? 22);
+                    return Math.max(16, curr - 1);
                   ]]]
-            name:
-              - justify-self: start
-              - align-self: center
-              - font-size: 15px
-              - font-weight: 700
-              - color: >
+            styles:
+              card:
+                - width: 30px
+                - height: 30px
+                - border-radius: 9px
+                - border: 1px solid rgba(255,255,255,0.12)
+                - background: >
+                    [[[
+                      return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+                    ]]]
+                - box-shadow: none
+                - padding: 0
+              icon:
+                - width: 16px
+                - color: >
+                    [[[
+                      return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
+                    ]]]
+        temp:
+          card:
+            type: custom:button-card
+            entity: climate.sl_ar_condicionado
+            name: >
+              [[[
+                const t = Number(entity?.attributes?.temperature);
+                return Number.isFinite(t) ? `${t}°` : '—';
+              ]]]
+            show_icon: false
+            show_name: true
+            tap_action:
+              action: none
+            styles:
+              card:
+                - min-width: 36px
+                - height: 30px
+                - border-radius: 9px
+                - border: 1px solid rgba(255,255,255,0.10)
+                - background: >
+                    [[[
+                      return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+                    ]]]
+                - box-shadow: none
+                - padding: 0 6px
+              name:
+                - font-size: 12px
+                - font-weight: 700
+                - justify-self: center
+                - color: >
+                    [[[
+                      return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.80)' : 'rgba(255,255,255,0.90)';
+                    ]]]
+        plus:
+          card:
+            type: custom:button-card
+            entity: climate.sl_ar_condicionado
+            icon: mdi:plus
+            show_name: false
+            tap_action:
+              action: perform-action
+              perform_action: climate.set_temperature
+              target:
+                entity_id: climate.sl_ar_condicionado
+              data:
+                temperature: >
                   [[[
-                    return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
+                    const curr = Number(entity?.attributes?.temperature ?? 22);
+                    return Math.min(30, curr + 1);
                   ]]]
-
-        - type: custom:button-card
-          view_layout:
-            grid-area: toggle
-          entity: climate.sl_ar_condicionado
-          icon: >
-            [[[
-              const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
-              return on ? 'mdi:toggle-switch' : 'mdi:toggle-switch-off-outline';
-            ]]]
-          show_name: false
-          show_state: false
-          tap_action:
-            action: perform-action
-            perform_action: "[[[ const on=['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state); return on?'climate.turn_off':'climate.turn_on'; ]]]"
-            target:
-              entity_id: climate.sl_ar_condicionado
-          hold_action:
-            action: more-info
-          styles:
-            card:
-              - background: transparent
-              - border: none
-              - box-shadow: none
-              - padding: 0
-              - margin: 0
-            icon:
-              - width: 34px
-              - color: >
-                  [[[
-                    const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
-                    return on ? '#60a5fa' : (states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.44)' : 'rgba(255,255,255,0.52)');
-                  ]]]
-
-        - type: custom:button-card
-          view_layout:
-            grid-area: minus
-          entity: climate.sl_ar_condicionado
-          icon: mdi:minus
-          show_name: false
-          tap_action:
-            action: perform-action
-            perform_action: climate.set_temperature
-            target:
-              entity_id: climate.sl_ar_condicionado
-            data:
-              temperature: >
-                [[[
-                  const curr = Number(entity?.attributes?.temperature ?? 22);
-                  return Math.max(16, curr - 1);
-                ]]]
-          styles: &ac_step_btn
-            card:
-              - width: 30px
-              - height: 30px
-              - border-radius: 9px
-              - border: 1px solid rgba(255,255,255,0.12)
-              - background: >
-                  [[[
-                    return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
-                  ]]]
-              - box-shadow: none
-              - padding: 0
-            icon:
-              - width: 16px
-              - color: >
-                  [[[
-                    return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
-                  ]]]
-
-        - type: custom:button-card
-          view_layout:
-            grid-area: temp
-          entity: climate.sl_ar_condicionado
-          name: >
-            [[[
-              const t = Number(entity?.attributes?.temperature);
-              return Number.isFinite(t) ? `${t}°` : '—';
-            ]]]
-          show_icon: false
-          show_name: true
-          tap_action:
-            action: none
-          styles:
-            card:
-              - min-width: 36px
-              - height: 30px
-              - border-radius: 9px
-              - border: 1px solid rgba(255,255,255,0.10)
-              - background: >
-                  [[[
-                    return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
-                  ]]]
-              - box-shadow: none
-              - padding: 0 6px
-            name:
-              - font-size: 12px
-              - font-weight: 700
-              - justify-self: center
-              - color: >
-                  [[[
-                    return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.80)' : 'rgba(255,255,255,0.90)';
-                  ]]]
-
-        - type: custom:button-card
-          view_layout:
-            grid-area: plus
-          entity: climate.sl_ar_condicionado
-          icon: mdi:plus
-          show_name: false
-          tap_action:
-            action: perform-action
-            perform_action: climate.set_temperature
-            target:
-              entity_id: climate.sl_ar_condicionado
-            data:
-              temperature: >
-                [[[
-                  const curr = Number(entity?.attributes?.temperature ?? 22);
-                  return Math.min(30, curr + 1);
-                ]]]
-          styles: *ac_step_btn
+            styles:
+              card:
+                - width: 30px
+                - height: 30px
+                - border-radius: 9px
+                - border: 1px solid rgba(255,255,255,0.12)
+                - background: >
+                    [[[
+                      return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+                    ]]]
+                - box-shadow: none
+                - padding: 0
+              icon:
+                - width: 16px
+                - color: >
+                    [[[
+                      return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.85)';
+                    ]]]
+      styles:
+        card:
+          - background: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on'
+                  ? 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%)'
+                  : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)';
+              ]]]
+          - border: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on'
+                  ? '1px solid rgba(0,0,0,0.16)'
+                  : '1px solid rgba(255,255,255,0.14)';
+              ]]]
+          - border-radius: 18px
+          - box-shadow: none
+          - padding: 6px 10px
+          - height: 100%
+          - box-sizing: border-box
+          - margin: 0
+        grid:
+          - grid-template-areas: '"i n toggle minus temp plus"'
+          - grid-template-columns: auto 1fr auto auto auto auto
+          - column-gap: 8px
+          - align-items: center
+        icon:
+          - width: 16px
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.74)' : 'rgba(255,255,255,0.82)';
+              ]]]
+        name:
+          - justify-self: start
+          - align-self: center
+          - font-size: 15px
+          - font-weight: 700
+          - color: >
+              [[[
+                return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.90)' : 'white';
+              ]]]
+        custom_fields:
+          toggle:
+            - justify-self: end
+            - align-self: center
+          minus:
+            - justify-self: end
+            - align-self: center
+          temp:
+            - justify-self: center
+            - align-self: center
+          plus:
+            - justify-self: end
+            - align-self: center
 
     # ── Corredor (quick action) — LEGADO DESATIVADO (fallback rapido) ───────
     # REATIVAR EM CASO DE REGRESSAO:

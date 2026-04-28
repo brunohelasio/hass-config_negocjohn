@@ -1,7 +1,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # SUBVIEW — Sala de Estar
 # Etapa 1 / Estrutura base com 6 blocos placeholder
-# Nenhum bloco tem lógica funcional ainda — apenas visual para validação.
+# v2: placeholders sem JavaScript (custom:button-card com nome/label estáticos)
+#     para garantir renderização imediata sem spinner.
 #
 # Próximas etapas (aguardam autorização):
 #   Etapa 2 → Bloco 1 Hero + Bloco 2 Luzes
@@ -9,11 +10,8 @@
 #   Etapa 4 → Bloco 4 Câmeras
 #   Etapa 5 → Bloco 5 TV e Mídia
 #   Etapa 6 → Bloco 6 Spotify
-#   Etapa 7 → Registrar no ui-lovelace-main.yaml
-#   Etapa 8 → Alterar double_tap_action em bento_sala.yaml
-#
-# Para registrar esta subview (Etapa 7), adicionar em ui-lovelace-main.yaml:
-#   - !include subviews/sala_subview.yaml
+#   Etapa 7 → já registrado em ui-lovelace-main.yaml
+#   Etapa 8 → já configurado double_tap_action em bento_sala.yaml
 # ─────────────────────────────────────────────────────────────────────────────
 
 title: Sala de Estar
@@ -36,8 +34,6 @@ layout:
   margin: 0
   padding: 12px
   grid-gap: 10px
-  # 12 colunas iguais — hero ocupa 5, luzes 4, a/c 3 (linha 1)
-  #                     câmeras 4, mídia 4, spotify 4 (linha 2)
   grid-template-columns: repeat(12, minmax(0, 1fr))
   grid-template-rows: 44vh 42vh
   grid-template-areas: |
@@ -45,7 +41,6 @@ layout:
     "cams cams cams cams media media media media spot spot spot spot"
 
   mediaquery:
-    # ── Mobile (≤800px): empilhado verticalmente ───────────────────
     '(max-width: 800px)':
       padding: 8px
       grid-gap: 8px
@@ -59,7 +54,6 @@ layout:
         "media"
         "spot"
 
-    # ── Portrait tablet (801–1440px portrait): 2 colunas ──────────
     '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
       grid-template-columns: repeat(2, minmax(0, 1fr))
       grid-template-rows: repeat(3, min-content)
@@ -70,254 +64,248 @@ layout:
 
 cards:
 
-  # ── BLOCO 1: Hero / Imagem da Sala ──────────────────────────────────────────
-  # Etapa 2: imagem sala_estar.jpg + overlay + pills + botão Voltar + cortina
+  # ── BLOCO 1: Hero ───────────────────────────────────────────────────────────
   - type: custom:button-card
     view_layout:
       grid-area: hero
+    entity: light.grupo_luzes_sala
+    name: Hero
+    label: "Imagem · Pills de status · Cortina"
     show_icon: false
-    show_name: false
+    show_name: true
+    show_label: true
+    show_state: false
     tap_action:
       action: none
     card_mod:
       style: |
         ha-card {
-          background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%) !important;
+          background: rgba(255,255,255,0.06) !important;
           backdrop-filter: blur(20px) saturate(1.35) !important;
           -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
           border: 1px solid rgba(255,255,255,0.10) !important;
           border-radius: 20px !important;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(191,219,254,0.08) !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
           height: 100% !important;
           overflow: hidden !important;
-          box-sizing: border-box;
         }
-    custom_fields:
-      content: >
-        [[[
-          return `<div style="height:100%;min-height:160px;display:flex;flex-direction:column;justify-content:flex-end;padding:18px 20px 20px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.10em;color:rgba(255,255,255,0.40);text-transform:uppercase;margin-bottom:6px;">Sala de Estar</div>
-            <div style="font-size:26px;font-weight:700;color:rgba(255,255,255,0.90);line-height:1.1;margin-bottom:6px;">Hero</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.32);line-height:1.5;">
-              Imagem de fundo · Pills de status<br>Botão Voltar · Painel Cortina
-            </div>
-          </div>`;
-        ]]]
     styles:
       card:
-        - height: 100%
-        - padding: 0
-      custom_fields:
-        content:
-          - height: 100%
-          - display: block
+        - padding: 20px
+        - justify-content: flex-end
+        - align-items: flex-start
+        - flex-direction: column
+      name:
+        - color: rgba(255,255,255,0.90)
+        - font-size: 22px
+        - font-weight: "700"
+        - justify-self: start
+      label:
+        - color: rgba(255,255,255,0.35)
+        - font-size: 12px
+        - justify-self: start
 
   # ── BLOCO 2: Luzes ──────────────────────────────────────────────────────────
-  # Etapa 2: header ON/OFF + 7 botões (Sala 3 + Varanda 4) com templates existentes
   - type: custom:button-card
     view_layout:
       grid-area: lights
+    entity: light.grupo_luzes_sala
+    name: Luzes
+    label: "3 Sala · 4 Varanda"
     show_icon: false
-    show_name: false
+    show_name: true
+    show_label: true
+    show_state: false
     tap_action:
       action: none
     card_mod:
       style: |
         ha-card {
-          background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%) !important;
+          background: rgba(255,255,255,0.06) !important;
           backdrop-filter: blur(20px) saturate(1.35) !important;
           -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
           border: 1px solid rgba(255,255,255,0.10) !important;
           border-radius: 20px !important;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(191,219,254,0.08) !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
           height: 100% !important;
           overflow: hidden !important;
-          box-sizing: border-box;
         }
-    custom_fields:
-      content: >
-        [[[
-          return `<div style="height:100%;min-height:160px;display:flex;flex-direction:column;padding:18px 20px 20px;gap:8px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.10em;color:rgba(255,255,255,0.40);text-transform:uppercase;">Iluminação</div>
-            <div style="font-size:22px;font-weight:700;color:rgba(255,255,255,0.90);">Luzes</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.32);line-height:1.5;">
-              3 botões Sala · 4 botões Varanda<br>light.grupo_luzes_sala
-            </div>
-          </div>`;
-        ]]]
     styles:
       card:
-        - height: 100%
-        - padding: 0
-      custom_fields:
-        content:
-          - height: 100%
-          - display: block
+        - padding: 20px
+        - justify-content: flex-start
+        - align-items: flex-start
+        - flex-direction: column
+      name:
+        - color: rgba(255,255,255,0.90)
+        - font-size: 22px
+        - font-weight: "700"
+        - justify-self: start
+      label:
+        - color: rgba(255,255,255,0.35)
+        - font-size: 12px
+        - justify-self: start
 
-  # ── BLOCO 3: A/C / Conforto ─────────────────────────────────────────────────
-  # Etapa 3: thermostat nativo HA (type: thermostat) + sensores temp/umidade
+  # ── BLOCO 3: A/C ────────────────────────────────────────────────────────────
   - type: custom:button-card
     view_layout:
       grid-area: ac
+    entity: climate.sl_ar_condicionado
+    name: "A/C"
+    label: "climate.sl_ar_condicionado"
     show_icon: false
-    show_name: false
+    show_name: true
+    show_label: true
+    show_state: false
     tap_action:
       action: none
     card_mod:
       style: |
         ha-card {
-          background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%) !important;
+          background: rgba(255,255,255,0.06) !important;
           backdrop-filter: blur(20px) saturate(1.35) !important;
           -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
           border: 1px solid rgba(255,255,255,0.10) !important;
           border-radius: 20px !important;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(191,219,254,0.08) !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
           height: 100% !important;
           overflow: hidden !important;
-          box-sizing: border-box;
         }
-    custom_fields:
-      content: >
-        [[[
-          return `<div style="height:100%;min-height:160px;display:flex;flex-direction:column;padding:18px 20px 20px;gap:8px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.10em;color:rgba(255,255,255,0.40);text-transform:uppercase;">Conforto</div>
-            <div style="font-size:22px;font-weight:700;color:rgba(255,255,255,0.90);">A/C</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.32);line-height:1.5;">
-              climate.sl_ar_condicionado<br>Thermostat nativo HA
-            </div>
-          </div>`;
-        ]]]
     styles:
       card:
-        - height: 100%
-        - padding: 0
-      custom_fields:
-        content:
-          - height: 100%
-          - display: block
+        - padding: 20px
+        - justify-content: flex-start
+        - align-items: flex-start
+        - flex-direction: column
+      name:
+        - color: rgba(255,255,255,0.90)
+        - font-size: 22px
+        - font-weight: "700"
+        - justify-self: start
+      label:
+        - color: rgba(255,255,255,0.35)
+        - font-size: 12px
+        - justify-self: start
 
   # ── BLOCO 4: Câmeras ────────────────────────────────────────────────────────
-  # Etapa 4: 2 câmeras empilhadas (sl_camera_2 + vr_camera_2), picture-entity
   - type: custom:button-card
     view_layout:
       grid-area: cams
+    entity: light.grupo_luzes_sala
+    name: "Câmeras"
+    label: "sl_camera_2 · vr_camera_2"
     show_icon: false
-    show_name: false
+    show_name: true
+    show_label: true
+    show_state: false
     tap_action:
       action: none
     card_mod:
       style: |
         ha-card {
-          background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%) !important;
+          background: rgba(255,255,255,0.06) !important;
           backdrop-filter: blur(20px) saturate(1.35) !important;
           -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
           border: 1px solid rgba(255,255,255,0.10) !important;
           border-radius: 20px !important;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(191,219,254,0.08) !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
           height: 100% !important;
           overflow: hidden !important;
-          box-sizing: border-box;
         }
-    custom_fields:
-      content: >
-        [[[
-          return `<div style="height:100%;min-height:160px;display:flex;flex-direction:column;padding:18px 20px 20px;gap:8px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.10em;color:rgba(255,255,255,0.40);text-transform:uppercase;">Câmeras</div>
-            <div style="font-size:22px;font-weight:700;color:rgba(255,255,255,0.90);">Câmeras</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.32);line-height:1.5;">
-              camera.sl_camera_2<br>camera.vr_camera_2
-            </div>
-          </div>`;
-        ]]]
     styles:
       card:
-        - height: 100%
-        - padding: 0
-      custom_fields:
-        content:
-          - height: 100%
-          - display: block
+        - padding: 20px
+        - justify-content: flex-start
+        - align-items: flex-start
+        - flex-direction: column
+      name:
+        - color: rgba(255,255,255,0.90)
+        - font-size: 22px
+        - font-weight: "700"
+        - justify-self: start
+      label:
+        - color: rgba(255,255,255,0.35)
+        - font-size: 12px
+        - justify-self: start
 
   # ── BLOCO 5: TV e Mídia ─────────────────────────────────────────────────────
-  # Etapa 5: stack-in-card TV (Android TV) + faixa Pioneer/PS5
   - type: custom:button-card
     view_layout:
       grid-area: media
+    entity: media_player.android_tv_192_168_3_17
+    name: "TV e Mídia"
+    label: "Android TV · Pioneer · PS5"
     show_icon: false
-    show_name: false
+    show_name: true
+    show_label: true
+    show_state: false
     tap_action:
       action: none
     card_mod:
       style: |
         ha-card {
-          background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%) !important;
+          background: rgba(255,255,255,0.06) !important;
           backdrop-filter: blur(20px) saturate(1.35) !important;
           -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
           border: 1px solid rgba(255,255,255,0.10) !important;
           border-radius: 20px !important;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(191,219,254,0.08) !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
           height: 100% !important;
           overflow: hidden !important;
-          box-sizing: border-box;
         }
-    custom_fields:
-      content: >
-        [[[
-          return `<div style="height:100%;min-height:160px;display:flex;flex-direction:column;padding:18px 20px 20px;gap:8px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.10em;color:rgba(255,255,255,0.40);text-transform:uppercase;">Mídia</div>
-            <div style="font-size:22px;font-weight:700;color:rgba(255,255,255,0.90);">TV e Mídia</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.32);line-height:1.5;">
-              Android TV · Pioneer<br>media_player.android_tv_192_168_3_17
-            </div>
-          </div>`;
-        ]]]
     styles:
       card:
-        - height: 100%
-        - padding: 0
-      custom_fields:
-        content:
-          - height: 100%
-          - display: block
+        - padding: 20px
+        - justify-content: flex-start
+        - align-items: flex-start
+        - flex-direction: column
+      name:
+        - color: rgba(255,255,255,0.90)
+        - font-size: 22px
+        - font-weight: "700"
+        - justify-self: start
+      label:
+        - color: rgba(255,255,255,0.35)
+        - font-size: 12px
+        - justify-self: start
 
   # ── BLOCO 6: Spotify ────────────────────────────────────────────────────────
-  # Etapa 6: custom:spotifyplus-card com deviceDefaultId: Echo Show
   - type: custom:button-card
     view_layout:
       grid-area: spot
+    entity: media_player.spotifyplus_bruno_helasio
+    name: "Spotify"
+    label: "spotifyplus · Echo Show"
     show_icon: false
-    show_name: false
+    show_name: true
+    show_label: true
+    show_state: false
     tap_action:
       action: none
     card_mod:
       style: |
         ha-card {
-          background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%) !important;
+          background: rgba(255,255,255,0.06) !important;
           backdrop-filter: blur(20px) saturate(1.35) !important;
           -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
           border: 1px solid rgba(255,255,255,0.10) !important;
           border-radius: 20px !important;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(191,219,254,0.08) !important;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
           height: 100% !important;
           overflow: hidden !important;
-          box-sizing: border-box;
         }
-    custom_fields:
-      content: >
-        [[[
-          return `<div style="height:100%;min-height:160px;display:flex;flex-direction:column;padding:18px 20px 20px;gap:8px;">
-            <div style="font-size:10px;font-weight:700;letter-spacing:0.10em;color:rgba(255,255,255,0.40);text-transform:uppercase;">Streaming</div>
-            <div style="font-size:22px;font-weight:700;color:rgba(255,255,255,0.90);">Spotify</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.32);line-height:1.5;">
-              spotifyplus_bruno_helasio<br>deviceDefaultId: Echo Show
-            </div>
-          </div>`;
-        ]]]
     styles:
       card:
-        - height: 100%
-        - padding: 0
-      custom_fields:
-        content:
-          - height: 100%
-          - display: block
+        - padding: 20px
+        - justify-content: flex-start
+        - align-items: flex-start
+        - flex-direction: column
+      name:
+        - color: rgba(255,255,255,0.90)
+        - font-size: 22px
+        - font-weight: "700"
+        - justify-self: start
+      label:
+        - color: rgba(255,255,255,0.35)
+        - font-size: 12px
+        - justify-self: start

@@ -42,7 +42,10 @@
         perform_action: light.toggle
         target:
           entity_id: light.sala_switch_2
-      double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml
+      # double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml  # ORIGINAL — popup sala (rollback: descomentar e remover bloco abaixo)
+      double_tap_action:
+        action: navigate
+        navigation_path: /lovelace/subview-sala
       hold_action:
         action: perform-action
         perform_action: light.turn_off

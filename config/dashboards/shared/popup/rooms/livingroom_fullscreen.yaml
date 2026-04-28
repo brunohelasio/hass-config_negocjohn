@@ -2,13 +2,12 @@
 # POPUP FULLSCREEN — Sala de Estar
 # Etapa 1 / Estrutura base com 6 blocos placeholder
 #
-# browser_mod 2.8+ usa wa-dialog (WebAwesome), não mdc-dialog.
-# O parâmetro nativo `initial_style: fullscreen` cobre toda a tela.
-# Background aplicado via --ha-dialog-surface-background no style:.
-#
-# ANTERIOR (v1) — CSS hacks mdc-dialog, não funciona em 2.8+:
-# card_mod com .mdc-dialog__surface / .mdc-dialog__container
-# style: --popup-width/--popup-max-width/--mdc-theme-surface
+# Histórico de tentativas:
+#   v1: card_mod com .mdc-dialog__surface → mostrou 6 blocos mas não fullscreen
+#   v2: initial_style: fullscreen + novo style → spinner (mudança não isolada)
+#   v3: popup 98vw sem initial_style → não autorizado pelo usuário
+#   v4 (esta): restaura v1 exatamente + adiciona APENAS initial_style: fullscreen
+#              para isolar se o parâmetro funciona com a estrutura que já renderizou
 #
 # Popup original (65vw) mantido íntegro em livingroom.yaml.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -22,7 +21,38 @@ browser_mod:
     dismissable: true
     initial_style: fullscreen
     style: >
-      --ha-dialog-surface-background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%);
+      --popup-width: 100vw;
+      --popup-max-width: 100vw;
+      --popup-background-color: transparent;
+      --mdc-theme-surface: transparent;
+      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.92);
+    card_mod:
+      style:
+        ha-dialog$: |
+          .mdc-dialog__container {
+            padding: 0 !important;
+            align-items: stretch !important;
+            justify-content: stretch !important;
+          }
+          .mdc-dialog__surface {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%) !important;
+            box-shadow: none !important;
+            overflow: hidden !important;
+          }
+          .mdc-dialog__title {
+            display: none !important;
+          }
+          .mdc-dialog__content {
+            padding: 0 !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+          }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
@@ -30,7 +60,7 @@ browser_mod:
         padding: 12px
         grid-gap: 10px
         grid-template-columns: repeat(12, minmax(0, 1fr))
-        grid-template-rows: 44vh 42vh
+        grid-template-rows: 42vh 40vh
         grid-template-areas: |
           "hero hero hero hero hero lights lights lights lights ac ac ac"
           "cams cams cams cams media media media media spot spot spot spot"

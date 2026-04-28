@@ -2,13 +2,11 @@
 # POPUP FULLSCREEN — Sala de Estar
 # Etapa 1 / Estrutura base com 6 blocos placeholder
 #
-# browser_mod 2.8+ usa wa-dialog (WebAwesome), não mdc-dialog.
-# O parâmetro nativo `initial_style: fullscreen` cobre toda a tela.
-# Background aplicado via --ha-dialog-surface-background no style:.
-#
-# ANTERIOR (v1) — CSS hacks mdc-dialog, não funciona em 2.8+:
-# card_mod com .mdc-dialog__surface / .mdc-dialog__container
-# style: --popup-width/--popup-max-width/--mdc-theme-surface
+# Histórico de tentativas:
+#   v1: card_mod com .mdc-dialog__surface → mostrou 6 blocos mas não fullscreen
+#   v2: initial_style: fullscreen → spinner (parâmetro não ativo nesta build)
+#   v3 (esta): sem card_mod, sem initial_style — usa apenas CSS variables
+#              nativas que o browser_mod já consome (--popup-width/--ha-dialog-*)
 #
 # Popup original (65vw) mantido íntegro em livingroom.yaml.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -20,9 +18,14 @@ browser_mod:
     title: " "
     tag: sala_fullscreen
     dismissable: true
-    initial_style: fullscreen
+    # initial_style: fullscreen  # TENTATIVA v2 — causou spinner, comentado
     style: >
+      --popup-width: 98vw;
+      --popup-max-width: 98vw;
       --ha-dialog-surface-background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%);
+      --ha-dialog-width-md: 98vw;
+      --dialog-surface-margin-top: 0px;
+      --vertical-align-dialog: center;
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
@@ -30,7 +33,7 @@ browser_mod:
         padding: 12px
         grid-gap: 10px
         grid-template-columns: repeat(12, minmax(0, 1fr))
-        grid-template-rows: 44vh 42vh
+        grid-template-rows: 42vh 40vh
         grid-template-areas: |
           "hero hero hero hero hero lights lights lights lights ac ac ac"
           "cams cams cams cams media media media media spot spot spot spot"

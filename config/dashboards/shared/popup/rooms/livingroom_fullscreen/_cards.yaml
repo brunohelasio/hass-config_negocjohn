@@ -10,11 +10,30 @@
   show_label: true
   show_state: false
   tap_action:
-    action: navigate
-    navigation_path: summary
+    action: none
   hold_action:
     action: more-info
   custom_fields:
+    back_btn:
+      card:
+        type: custom:button-card
+        name: Voltar
+        show_icon: false
+        show_name: true
+        tap_action:
+          action: navigate
+          navigation_path: bento-lab
+        styles:
+          card:
+            - padding: 8px 14px
+            - border-radius: 999px
+            - background: rgba(0,0,0,0.38)
+            - border: 1px solid rgba(255,255,255,0.25)
+            - box-shadow: none
+          name:
+            - color: rgba(255,255,255,0.92)
+            - font-size: 14px
+            - font-weight: 700
     chips_right: >
       [[[
         const temp = states['sensor.sl_sensor_temp_humid_temperatura']?.state ?? '—';
@@ -30,14 +49,7 @@
             color:rgba(255,255,255,0.95);">
             ${text}
           </span>`;
-        const btn = `<span style="
-          display:inline-flex;align-items:center;justify-content:center;
-          padding:8px 14px;border-radius:999px;
-          font-size:14px;font-weight:700;
-          border:1px solid rgba(255,255,255,0.25);
-          background:rgba(0,0,0,0.38);
-          color:rgba(255,255,255,0.90);">Voltar</span>`;
-        return `<div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:nowrap;">${chip(`${lights} luzes`, true)}${chip(`${temp}°C`, true)}${btn}</div>`;
+        return `<div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:nowrap;">${chip(`${lights} luzes`, true)}${chip(`${temp}°C`, true)}</div>`;
       ]]]
     curtain_bar: >
       [[[
@@ -92,8 +104,8 @@
       }
   styles:
     grid:
-      - grid-template-areas: '"l chips_right" "n chips_right" ". ." "curtain_bar curtain_bar"'
-      - grid-template-columns: 1fr auto
+      - grid-template-areas: '"l chips_right back_btn" "n chips_right back_btn" ". . ." "curtain_bar curtain_bar curtain_bar"'
+      - grid-template-columns: 1fr auto auto
       - grid-template-rows: min-content min-content 1fr min-content
       - column-gap: 16px
       - row-gap: 8px
@@ -118,6 +130,10 @@
       - margin-top: -4px
     custom_fields:
       chips_right:
+        - justify-self: end
+        - align-self: start
+        - margin-top: 2px
+      back_btn:
         - justify-self: end
         - align-self: start
         - margin-top: 2px

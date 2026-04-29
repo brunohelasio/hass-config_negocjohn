@@ -1,0 +1,3 @@
+# DEPRECATED shim: subview modules moved out of shared/popup.
+# Keep temporary include compatibility while references are migrated.
+!include ../../../../subviews/modules/sala/_layout.yaml

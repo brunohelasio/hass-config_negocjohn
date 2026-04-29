@@ -19,6 +19,10 @@ browser_mod:
       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.92);
     card_mod:
       style:
+        .: |
+          ha-dialog > ha-dialog-header {
+            display: none !important;
+          }
         ha-dialog$: |
           .mdc-dialog__container {
             padding: 0 !important;

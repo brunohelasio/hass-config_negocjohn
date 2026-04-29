@@ -145,159 +145,158 @@
         - -webkit-backdrop-filter: blur(10px) saturate(1.35)
 
 # ── BLOCO 2: Iluminação (apenas recheio, sem alterar dimensão do bloco Bento) ──
-- type: vertical-stack
+- type: custom:button-card
   view_layout:
     grid-area: lights
-  cards:
-    - type: custom:button-card
-      entity: light.grupo_luzes_sala
-      show_icon: false
-      show_name: false
-      show_label: false
-      show_state: false
-      tap_action:
-        action: none
-      card_mod:
-        style: |
-          ha-card {
-            background: rgba(255,255,255,0.06) !important;
-            backdrop-filter: blur(20px) saturate(1.35) !important;
-            -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-            border: 1px solid rgba(255,255,255,0.12) !important;
-            border-radius: 20px !important;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
-            height: 100% !important;
-            overflow: hidden !important;
-          }
-      styles:
-        grid:
-          - grid-template-areas: |
-              "title actions"
-              "buttons buttons"
-          - grid-template-columns: 1fr auto
-          - grid-template-rows: min-content 1fr
-          - column-gap: 12px
-          - row-gap: 12px
-        card:
-          - padding: 16px
-          - height: 100%
-        custom_fields:
-          title:
-            - justify-self: start
-            - align-self: start
-          actions:
-            - justify-self: end
-            - align-self: start
-          buttons:
-            - align-self: stretch
-            - margin-top: 2px
-      custom_fields:
-        title: >
-          [[[
-            return `<div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:rgba(255,255,255,0.55);">Iluminação</div>`;
-          ]]]
-        actions:
-          card:
-            type: horizontal-stack
-            cards:
-              - type: custom:button-card
-                name: "ON"
-                show_icon: false
-                show_name: true
-                show_state: false
-                show_label: false
-                tap_action:
-                  action: call-service
-                  service: light.turn_on
-                  service_data:
-                    entity_id: light.grupo_luzes_sala
-                styles:
-                  card:
-                    - width: 62px
-                    - padding: 8px 0
-                    - border-radius: 999px
-                    - background: rgba(22,134,190,0.38)
-                    - border: 1px solid rgba(104,205,255,0.55)
-                    - box-shadow: none
-                  name:
-                    - color: rgba(255,255,255,0.95)
-                    - font-size: 13px
-                    - font-weight: 700
-              - type: custom:button-card
-                name: "OFF"
-                show_icon: false
-                show_name: true
-                show_state: false
-                show_label: false
-                tap_action:
-                  action: call-service
-                  service: light.turn_off
-                  service_data:
-                    entity_id: light.grupo_luzes_sala
-                styles:
-                  card:
-                    - width: 62px
-                    - padding: 8px 0
-                    - border-radius: 999px
-                    - background: rgba(0,0,0,0.28)
-                    - border: 1px solid rgba(255,255,255,0.22)
-                    - box-shadow: none
-                  name:
-                    - color: rgba(255,255,255,0.90)
-                    - font-size: 13px
-                    - font-weight: 700
-        buttons:
-          card:
-            type: grid
-            columns: 3
-            square: true
-            cards:
-              - type: custom:button-card
-                entity: light.sala_switch_2
-                name: Luz Principal
-                template: [tpl_popup_light, circle, icon_light_flush]
-                variables:
-                  circle_input: >
-                    [[[
-                      if (entity && entity.state === 'on') {
-                        const brightness = entity.attributes.brightness;
-                        return brightness != null ? Math.round(brightness / 2.54) : 100;
-                      }
-                      return ' ';
-                    ]]]
-                  circle_input_unit: '%'
-                tap_action:
-                  action: toggle
-              - type: custom:button-card
-                entity: light.sl_leds_direito_e_esquerdo
-                name: LEDs Sala
-                template: [tpl_popup_light, icon_ledstrip]
-                tap_action:
-                  action: toggle
-              - type: custom:button-card
-                entity: light.sala_2_switch_2
-                name: VR Principal
-                template: [tpl_popup_light, icon_light_flush]
-                tap_action:
-                  action: toggle
-              - type: custom:button-card
-                entity: light.sala_2_switch_3
-                name: VR Cristaleira
-                template: [tpl_popup_light, icon_ledstrip]
-                tap_action:
-                  action: toggle
-              - type: custom:button-card
-                entity: light.varanda_switch_1
-                name: VR Gourmet
-                template: [tpl_popup_light, icon_ledstrip]
-                tap_action:
-                  action: toggle
-              - type: custom:button-card
-                entity: light.varanda_switch_2
-                name: VR Pendente
-                template: [tpl_popup_light, icon_pendant]
-                tap_action:
-                  action: toggle
+  entity: light.grupo_luzes_sala
+  show_icon: false
+  show_name: false
+  show_label: false
+  show_state: false
+  tap_action:
+    action: none
+  card_mod:
+    style: |
+      ha-card {
+        background: rgba(255,255,255,0.06) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+  styles:
+    grid:
+      - grid-template-areas: |
+          "title actions"
+          "buttons buttons"
+      - grid-template-columns: 1fr auto
+      - grid-template-rows: min-content 1fr
+      - column-gap: 12px
+      - row-gap: 12px
+    card:
+      - padding: 16px
+      - height: 100%
+    custom_fields:
+      title:
+        - justify-self: start
+        - align-self: start
+      actions:
+        - justify-self: end
+        - align-self: start
+      buttons:
+        - align-self: stretch
+        - height: 100%
+        - margin-top: 2px
+  custom_fields:
+    title: >
+      [[[
+        return `<div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:rgba(255,255,255,0.55);">Iluminação</div>`;
+      ]]]
+    actions:
+      card:
+        type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            name: "ON"
+            show_icon: false
+            show_name: true
+            show_state: false
+            show_label: false
+            tap_action:
+              action: call-service
+              service: light.turn_on
+              service_data:
+                entity_id: light.grupo_luzes_sala
+            styles:
+              card:
+                - width: 62px
+                - padding: 8px 0
+                - border-radius: 999px
+                - background: rgba(22,134,190,0.38)
+                - border: 1px solid rgba(104,205,255,0.55)
+                - box-shadow: none
+              name:
+                - color: rgba(255,255,255,0.95)
+                - font-size: 13px
+                - font-weight: 700
+          - type: custom:button-card
+            name: "OFF"
+            show_icon: false
+            show_name: true
+            show_state: false
+            show_label: false
+            tap_action:
+              action: call-service
+              service: light.turn_off
+              service_data:
+                entity_id: light.grupo_luzes_sala
+            styles:
+              card:
+                - width: 62px
+                - padding: 8px 0
+                - border-radius: 999px
+                - background: rgba(0,0,0,0.28)
+                - border: 1px solid rgba(255,255,255,0.22)
+                - box-shadow: none
+              name:
+                - color: rgba(255,255,255,0.90)
+                - font-size: 13px
+                - font-weight: 700
+    buttons:
+      card:
+        type: grid
+        columns: 3
+        square: true
+        cards:
+          - type: custom:button-card
+            entity: light.sala_switch_2
+            name: Luz Principal
+            template: [tpl_popup_light, circle, icon_light_flush]
+            variables:
+              circle_input: >
+                [[[
+                  if (entity && entity.state === 'on') {
+                    const brightness = entity.attributes.brightness;
+                    return brightness != null ? Math.round(brightness / 2.54) : 100;
+                  }
+                  return ' ';
+                ]]]
+              circle_input_unit: '%'
+            tap_action:
+              action: toggle
+          - type: custom:button-card
+            entity: light.sl_leds_direito_e_esquerdo
+            name: LEDs Sala
+            template: [tpl_popup_light, icon_ledstrip]
+            tap_action:
+              action: toggle
+          - type: custom:button-card
+            entity: light.sala_2_switch_2
+            name: VR Principal
+            template: [tpl_popup_light, icon_light_flush]
+            tap_action:
+              action: toggle
+          - type: custom:button-card
+            entity: light.sala_2_switch_3
+            name: VR Cristaleira
+            template: [tpl_popup_light, icon_ledstrip]
+            tap_action:
+              action: toggle
+          - type: custom:button-card
+            entity: light.varanda_switch_1
+            name: VR Gourmet
+            template: [tpl_popup_light, icon_ledstrip]
+            tap_action:
+              action: toggle
+          - type: custom:button-card
+            entity: light.varanda_switch_2
+            name: VR Pendente
+            template: [tpl_popup_light, icon_pendant]
+            tap_action:
+              action: toggle
 
 - type: custom:button-card
   view_layout:

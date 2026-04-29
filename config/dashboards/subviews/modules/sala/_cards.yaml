@@ -360,11 +360,11 @@
               "cam1 cam1"
               "cam2 cam2"
           - grid-template-columns: 1fr auto
-          - grid-template-rows: min-content min-content 1fr 1fr
-          - row-gap: 10px
+          - grid-template-rows: min-content min-content minmax(118px, 1fr) minmax(118px, 1fr)
+          - row-gap: 8px
           - column-gap: 8px
         card:
-          - padding: 14px
+          - padding: 12px
           - height: 100%
         custom_fields:
           eyebrow:
@@ -378,8 +378,10 @@
             - align-self: start
           cam1:
             - align-self: stretch
+            - min-height: 0
           cam2:
             - align-self: stretch
+            - min-height: 0
       custom_fields:
         eyebrow: >
           [[[
@@ -387,7 +389,7 @@
           ]]]
         title: >
           [[[
-            return `<div style="font-size:34px;font-weight:700;line-height:1.05;color:rgba(255,255,255,0.96);">Sala e varanda</div>`;
+            return `<div style="font-size:20px;font-weight:700;line-height:1.1;color:rgba(255,255,255,0.96);">Sala e varanda</div>`;
           ]]]
         live:
           card:
@@ -420,6 +422,7 @@
                   border: 1px solid rgba(255,255,255,0.12) !important;
                   overflow: hidden !important;
                   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02) !important;
+                  height: 132px !important;
                 }
                 .name {
                   display: none !important;
@@ -467,6 +470,7 @@
                   border: 1px solid rgba(255,255,255,0.12) !important;
                   overflow: hidden !important;
                   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02) !important;
+                  height: 132px !important;
                 }
                 .name {
                   display: none !important;

@@ -11,7 +11,7 @@
   show_state: false
   tap_action:
     action: navigate
-    navigation_path: /lovelace/main
+    navigation_path: /lovelace-yaml/summary
   hold_action:
     action: more-info
   custom_fields:

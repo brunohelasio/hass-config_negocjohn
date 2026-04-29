@@ -45,7 +45,7 @@
       # double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml  # ORIGINAL v1 — popup 65vw
       double_tap_action:
         action: navigate
-        navigation_path: /lovelace/subview-sala
+        navigation_path: /lovelace-yaml/subview-sala
       hold_action:
         action: perform-action
         perform_action: light.turn_off

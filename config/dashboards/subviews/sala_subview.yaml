@@ -50,5 +50,5 @@ cards:
           --ha-card-border-width: 0;
           --ha-card-box-shadow: none;
         }
-    layout: !include ../shared/popup/rooms/livingroom_fullscreen/_layout.yaml
-    cards: !include ../shared/popup/rooms/livingroom_fullscreen/_cards.yaml
+    layout: !include ./modules/sala/_layout.yaml
+    cards: !include ./modules/sala/_cards.yaml

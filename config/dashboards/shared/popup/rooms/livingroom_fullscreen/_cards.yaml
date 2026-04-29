@@ -1,0 +1,240 @@
+# ── BLOCO 1: Hero ────────────────────────────────────────────────────
+- type: custom:button-card
+  view_layout:
+    grid-area: hero
+  entity: light.grupo_luzes_sala
+  name: Hero
+  label: "Imagem · Pills de status · Cortina"
+  show_icon: false
+  show_name: true
+  show_label: true
+  show_state: false
+  tap_action:
+    action: none
+  card_mod:
+    style: |
+      ha-card {
+        background: rgba(255,255,255,0.06) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+  styles:
+    card:
+      - padding: 20px
+      - justify-content: flex-end
+      - align-items: flex-start
+      - flex-direction: column
+    name:
+      - color: rgba(255,255,255,0.90)
+      - font-size: 22px
+      - font-weight: "700"
+      - justify-self: start
+    label:
+      - color: rgba(255,255,255,0.35)
+      - font-size: 12px
+      - justify-self: start
+
+- type: custom:button-card
+  view_layout:
+    grid-area: lights
+  entity: light.grupo_luzes_sala
+  name: Luzes
+  label: "3 Sala · 4 Varanda"
+  show_icon: false
+  show_name: true
+  show_label: true
+  show_state: false
+  tap_action:
+    action: none
+  card_mod:
+    style: |
+      ha-card {
+        background: rgba(255,255,255,0.06) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+  styles:
+    card:
+      - padding: 20px
+      - justify-content: flex-start
+      - align-items: flex-start
+      - flex-direction: column
+    name:
+      - color: rgba(255,255,255,0.90)
+      - font-size: 22px
+      - font-weight: "700"
+      - justify-self: start
+    label:
+      - color: rgba(255,255,255,0.35)
+      - font-size: 12px
+      - justify-self: start
+
+- type: custom:button-card
+  view_layout:
+    grid-area: ac
+  entity: climate.sl_ar_condicionado
+  name: "A/C"
+  label: "climate.sl_ar_condicionado"
+  show_icon: false
+  show_name: true
+  show_label: true
+  show_state: false
+  tap_action:
+    action: none
+  card_mod:
+    style: |
+      ha-card {
+        background: rgba(255,255,255,0.06) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+  styles:
+    card:
+      - padding: 20px
+      - justify-content: flex-start
+      - align-items: flex-start
+      - flex-direction: column
+    name:
+      - color: rgba(255,255,255,0.90)
+      - font-size: 22px
+      - font-weight: "700"
+      - justify-self: start
+    label:
+      - color: rgba(255,255,255,0.35)
+      - font-size: 12px
+      - justify-self: start
+
+- type: custom:button-card
+  view_layout:
+    grid-area: cams
+  entity: light.grupo_luzes_sala
+  name: "Câmeras"
+  label: "sl_camera_2 · vr_camera_2"
+  show_icon: false
+  show_name: true
+  show_label: true
+  show_state: false
+  tap_action:
+    action: none
+  card_mod:
+    style: |
+      ha-card {
+        background: rgba(255,255,255,0.06) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+  styles:
+    card:
+      - padding: 20px
+      - justify-content: flex-start
+      - align-items: flex-start
+      - flex-direction: column
+    name:
+      - color: rgba(255,255,255,0.90)
+      - font-size: 22px
+      - font-weight: "700"
+      - justify-self: start
+    label:
+      - color: rgba(255,255,255,0.35)
+      - font-size: 12px
+      - justify-self: start
+
+- type: custom:button-card
+  view_layout:
+    grid-area: media
+  entity: media_player.android_tv_192_168_3_17
+  name: "TV e Mídia"
+  label: "Android TV · Pioneer · PS5"
+  show_icon: false
+  show_name: true
+  show_label: true
+  show_state: false
+  tap_action:
+    action: none
+  card_mod:
+    style: |
+      ha-card {
+        background: rgba(255,255,255,0.06) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+  styles:
+    card:
+      - padding: 20px
+      - justify-content: flex-start
+      - align-items: flex-start
+      - flex-direction: column
+    name:
+      - color: rgba(255,255,255,0.90)
+      - font-size: 22px
+      - font-weight: "700"
+      - justify-self: start
+    label:
+      - color: rgba(255,255,255,0.35)
+      - font-size: 12px
+      - justify-self: start
+
+- type: custom:button-card
+  view_layout:
+    grid-area: spot
+  entity: media_player.spotifyplus_bruno_helasio
+  name: "Spotify"
+  label: "spotifyplus · Echo Show"
+  show_icon: false
+  show_name: true
+  show_label: true
+  show_state: false
+  tap_action:
+    action: none
+  card_mod:
+    style: |
+      ha-card {
+        background: rgba(255,255,255,0.06) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+  styles:
+    card:
+      - padding: 20px
+      - justify-content: flex-start
+      - align-items: flex-start
+      - flex-direction: column
+    name:
+      - color: rgba(255,255,255,0.90)
+      - font-size: 22px
+      - font-weight: "700"
+      - justify-self: start
+    label:
+      - color: rgba(255,255,255,0.35)
+      - font-size: 12px
+      - justify-self: start

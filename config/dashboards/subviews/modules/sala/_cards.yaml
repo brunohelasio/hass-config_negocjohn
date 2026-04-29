@@ -366,7 +366,6 @@
         card:
           - padding: 12px
           - height: 100%
-          - aspect-ratio: 1 / 1
         custom_fields:
           eyebrow:
             - justify-self: start
@@ -425,6 +424,12 @@
                   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02) !important;
                   height: 156px !important;
                 }
+                hui-image, img, .image {
+                  width: 100% !important;
+                  height: 100% !important;
+                  object-fit: cover !important;
+                  object-position: center center !important;
+                }
                 .name {
                   display: none !important;
                 }
@@ -437,7 +442,7 @@
                   z-index: 2;
                   bottom: 10px;
                   left: 12px;
-                  font-size: 30px;
+                  font-size: 18px;
                   font-weight: 700;
                   line-height: 1.1;
                   color: rgba(255,255,255,0.95);
@@ -461,6 +466,12 @@
                   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02) !important;
                   height: 156px !important;
                 }
+                hui-image, img, .image {
+                  width: 100% !important;
+                  height: 100% !important;
+                  object-fit: cover !important;
+                  object-position: center center !important;
+                }
                 .name {
                   display: none !important;
                 }
@@ -473,7 +484,7 @@
                   z-index: 2;
                   bottom: 10px;
                   left: 12px;
-                  font-size: 30px;
+                  font-size: 18px;
                   font-weight: 700;
                   line-height: 1.1;
                   color: rgba(255,255,255,0.95);

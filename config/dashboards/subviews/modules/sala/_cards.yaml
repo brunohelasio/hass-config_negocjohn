@@ -56,14 +56,7 @@
         const c = states['cover.cortina_sala'];
         const pos = c?.attributes?.current_position ?? 0;
         const p = Math.max(0, Math.min(100, Number(pos)));
-        const curtainIcon = `
-          <svg viewBox="0 0 50 50" width="22" height="22" fill="rgba(255,255,255,0.95)" style="display:block">
-            <path d="M1.77,28.03c.78,0,1.41-.64,1.41-1.4s-.63-1.4-1.41-1.4-1.39,.62-1.39,1.4,.62,1.4,1.39,1.4Z" />
-            <path d="M1.77,18.34c.78,0,1.41-.64,1.41-1.4s-.63-1.39-1.41-1.39-1.39,.62-1.39,1.39,.62,1.4,1.39,1.4Z" />
-            <path d="M1.77,23.19c.78,0,1.41-.66,1.41-1.41s-.63-1.39-1.41-1.39-1.39,.62-1.39,1.39,.62,1.41,1.39,1.41Z" />
-            <path d="M1.77,34.92c-.85,0-1.55,.72-1.55,1.56v5.07c0,.85,.7,1.56,1.55,1.56s1.56-.71,1.56-1.56v-5.07c0-.85-.69-1.56-1.56-1.56Z" />
-            <path d="M42.5,0H1.77C.8,0,0,.81,0,1.78s.8,1.78,1.77,1.78H42.5c.98,0,1.78-.8,1.78-1.78s-.8-1.78-1.78-1.78Z" />
-          </svg>`;
+        const curtainIcon = `<ha-icon icon="mdi:curtains" style="width:34px;height:34px;color:rgba(255,255,255,0.96);display:block;"></ha-icon>`;
         return `<div style="
             width:100%;
             display:grid;
@@ -72,16 +65,16 @@
             column-gap:16px;
             row-gap:6px;
             align-items:center;">
-            <div style="grid-row:1 / span 3;align-self:center;display:flex;align-items:center;justify-content:center;width:34px;height:34px;">${curtainIcon}</div>
+            <div style="grid-row:1 / span 3;align-self:center;display:flex;align-items:center;justify-content:center;width:42px;height:42px;">${curtainIcon}</div>
             <div style="font-size:12px;letter-spacing:.14em;font-weight:600;color:rgba(255,255,255,.50);">CORTINA</div>
             <div style="grid-column:2;display:flex;align-items:end;gap:8px;">
               <span style="font-size:40px;line-height:1;font-weight:700;color:#fff;">${p}%</span>
               <span style="font-size:18px;line-height:1.2;color:rgba(255,255,255,.62)">abertura</span>
             </div>
             <div style="grid-column:3;grid-row:1 / span 3;display:flex;gap:10px;">
-              <span style="padding:9px 18px;border-radius:14px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);font-size:16px;color:#fff;font-weight:600;">Abrir</span>
-              <span style="padding:9px 18px;border-radius:14px;background:rgba(22,134,190,0.45);border:1px solid rgba(104,205,255,0.55);font-size:16px;color:#fff;font-weight:700;">Parar</span>
-              <span style="padding:9px 18px;border-radius:14px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);font-size:16px;color:#fff;font-weight:600;">Fechar</span>
+              <span style="padding:8px 14px;border-radius:13px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);font-size:14px;color:#fff;font-weight:600;white-space:nowrap;">Abrir</span>
+              <span style="padding:8px 14px;border-radius:13px;background:rgba(22,134,190,0.45);border:1px solid rgba(104,205,255,0.55);font-size:14px;color:#fff;font-weight:700;white-space:nowrap;">Parar</span>
+              <span style="padding:8px 14px;border-radius:13px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.18);font-size:14px;color:#fff;font-weight:600;white-space:nowrap;">Fechar</span>
             </div>
             <div style="grid-column:2;grid-column-end:3;height:8px;border-radius:999px;background:rgba(255,255,255,0.25);overflow:hidden;max-width:100%;">
               <div style="height:100%;width:${p}%;background:rgba(255,255,255,0.85);"></div>
@@ -92,11 +85,11 @@
     style: |
       ha-card {
         background:
-          linear-gradient(180deg, rgba(7,14,28,0.18) 0%, rgba(7,14,28,0.35) 58%, rgba(5,10,20,0.62) 100%),
+          linear-gradient(180deg, rgba(7,14,28,0.04) 0%, rgba(7,14,28,0.10) 58%, rgba(5,10,20,0.28) 100%),
           url('/local/images/sala_estar.jpg') center center / cover no-repeat !important;
-        backdrop-filter: saturate(1.08) !important;
-        -webkit-backdrop-filter: saturate(1.08) !important;
-        border: 1px solid rgba(255,255,255,0.10) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
         border-radius: 20px !important;
         box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
         height: 100% !important;
@@ -140,15 +133,16 @@
       curtain_bar:
         - justify-self: stretch
         - align-self: end
-        - width: calc(100% - 8px)
+        - width: auto
         - margin-left: 4px
+        - margin-right: 4px
         - margin-top: 0px
         - padding: 14px 16px
         - border-radius: 22px
-        - border: 1px solid rgba(255,255,255,0.12)
-        - background: linear-gradient(90deg, rgba(13,17,28,0.78) 0%, rgba(10,15,27,0.62) 100%)
-        - backdrop-filter: blur(8px) saturate(1.25)
-        - -webkit-backdrop-filter: blur(8px) saturate(1.25)
+        - border: 1px solid rgba(255,255,255,0.18)
+        - background: linear-gradient(90deg, rgba(18,24,38,0.56) 0%, rgba(15,21,35,0.48) 100%)
+        - backdrop-filter: blur(10px) saturate(1.35)
+        - -webkit-backdrop-filter: blur(10px) saturate(1.35)
 
 - type: custom:button-card
   view_layout:

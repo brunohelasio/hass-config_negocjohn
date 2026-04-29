@@ -3,18 +3,94 @@
   view_layout:
     grid-area: hero
   entity: light.grupo_luzes_sala
-  name: Hero
-  label: "Imagem · Pills de status · Cortina"
+  name: Sala de Estar
+  label: >
+    [[[
+      const p = states['person.bruno_helasio']?.state;
+      if (p === 'home') return 'Bruno em casa';
+      if (p === 'not_home') return 'Bruno fora';
+      return 'Status da sala';
+    ]]]
   show_icon: false
   show_name: true
   show_label: true
   show_state: false
+  show_entity_picture: true
+  entity_picture: /local/images/sala_estar.jpg
   tap_action:
-    action: none
+    action: toggle
+  hold_action:
+    action: more-info
+  double_tap_action:
+    action: navigate
+    navigation_path: /lovelace/main
+  custom_fields:
+    chips: >
+      [[[
+        const temp = states['sensor.sl_sensor_temp_humid_temperatura']?.state;
+        const hum  = states['sensor.sl_sensor_temp_humid_umidade']?.state;
+        const tv   = states['media_player.android_tv_192_168_3_17']?.state;
+        const lightsOn = entity?.state === 'on';
+        const tvOn = tv && !['off','idle','standby','unavailable','unknown'].includes(tv);
+        const chip = (icon, text, on=false) => `
+          <span style="
+            display:inline-flex;align-items:center;gap:6px;
+            padding:4px 10px;border-radius:999px;
+            font-size:11px;font-weight:600;
+            border:1px solid ${on ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.18)'};
+            background:${on ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.28)'};
+            color:rgba(255,255,255,0.92);">
+            <ha-icon icon="${icon}" style="width:13px;height:13px;"></ha-icon>${text}
+          </span>`;
+        return `<div style="display:flex;flex-wrap:wrap;gap:8px;">${
+          chip('mdi:lightbulb-group', lightsOn ? 'Luzes ligadas' : 'Luzes desligadas', lightsOn)
+        }${
+          chip('mdi:television', tvOn ? 'TV ativa' : 'TV off', tvOn)
+        }${
+          chip('mdi:thermometer', temp && temp !== 'unknown' ? `${temp}°C` : '—')
+        }${
+          chip('mdi:water-percent', hum && hum !== 'unknown' ? `${hum}%` : '—')
+        }</div>`;
+      ]]]
+    lights_count: >
+      [[[
+        const active = states['sensor.living_room_active']?.attributes;
+        const count = active?.lights_on_count;
+        const txt = (count !== undefined && count !== null && count !== 'unknown') ? count : '—';
+        return `<span style="font-size:12px;color:rgba(255,255,255,0.86);">Luzes ativas: <b>${txt}</b></span>`;
+      ]]]
+    curtain: >
+      [[[
+        const c = states['cover.cortina_sala'];
+        if (!c) return '';
+        const pos = c.attributes?.current_position;
+        const txt = (pos === undefined || pos === null) ? c.state : `${pos}%`;
+        return `
+          <div style="
+            display:flex;align-items:center;gap:8px;
+            padding:6px 10px;border-radius:10px;
+            background:rgba(0,0,0,0.28);
+            border:1px solid rgba(255,255,255,0.16);
+            color:rgba(255,255,255,0.90);font-size:12px;">
+            <ha-icon icon="mdi:curtains" style="width:14px;height:14px;"></ha-icon>
+            Cortina: ${txt}
+          </div>`;
+      ]]]
+    now_playing: >
+      [[[
+        const tv = states['media_player.android_tv_192_168_3_17'];
+        if (!tv) return '';
+        const app = tv.attributes?.app_name || tv.attributes?.source || '';
+        const state = tv.state;
+        const isOn = !['off','idle','standby','unavailable','unknown'].includes(state);
+        if (!isOn) return '<span style="font-size:11px;color:rgba(255,255,255,0.50);">TV desligada</span>';
+        return `<span style="font-size:11px;color:rgba(255,255,255,0.75);">Agora: ${app || state}</span>`;
+      ]]]
   card_mod:
     style: |
       ha-card {
-        background: rgba(255,255,255,0.06) !important;
+        background: linear-gradient(180deg, rgba(8,12,18,0.12) 0%, rgba(8,12,18,0.70) 65%, rgba(8,12,18,0.92) 100%) !important;
+        background-blend-mode: multiply !important;
         backdrop-filter: blur(20px) saturate(1.35) !important;
         -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
         border: 1px solid rgba(255,255,255,0.10) !important;
@@ -24,6 +100,11 @@
         overflow: hidden !important;
       }
   styles:
+    grid:
+      - grid-template-areas: '"n" "chips" "lights_count" "l" "now_playing" "curtain"'
+      - grid-template-columns: 1fr
+      - grid-template-rows: min-content min-content min-content min-content min-content min-content
+      - row-gap: 8px
     card:
       - padding: 20px
       - justify-content: flex-end
@@ -38,6 +119,15 @@
       - color: rgba(255,255,255,0.35)
       - font-size: 12px
       - justify-self: start
+    custom_fields:
+      chips:
+        - justify-self: start
+      lights_count:
+        - justify-self: start
+      now_playing:
+        - justify-self: start
+      curtain:
+        - justify-self: start
 
 - type: custom:button-card
   view_layout:

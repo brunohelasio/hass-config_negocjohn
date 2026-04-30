@@ -404,96 +404,43 @@
                 - font-weight: 700
         cam_main:
           card:
-            type: vertical-stack
-            cards:
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.sala_camera_swap
-                    state: "off"
-                card:
-                  type: picture-elements
-                  camera_image: camera.sl_camera_2
-                  camera_view: live
-                  elements:
-                    - type: image
-                      entity: camera.vr_camera_2
-                      style:
-                        right: 8%
-                        bottom: 14%
-                        width: 28%
-                        border-radius: 10px
-                        overflow: hidden
-                        border: 1px solid rgba(255,255,255,0.35)
-                        box-shadow: 0 6px 14px rgba(0,0,0,0.45)
-                      tap_action:
-                        action: call-service
-                        service: input_boolean.toggle
-                        target:
-                          entity_id: input_boolean.sala_camera_swap
-                    - type: state-label
-                      entity: camera.sl_camera_2
-                      attribute: friendly_name
-                      style:
-                        left: 14%
-                        bottom: 7%
-                        color: white
-                        font-size: 20px
-                        font-weight: 700
-                        text-shadow: 0 1px 8px rgba(0,0,0,0.6)
-                  tap_action:
-                    action: more-info
-                  card_mod:
-                    style: |
-                      ha-card {
-                        border-radius: 16px !important;
-                        overflow: hidden !important;
-                        border: 1px solid rgba(255,255,255,0.12) !important;
-                        height: 100% !important;
-                      }
-              - type: conditional
-                conditions:
-                  - entity: input_boolean.sala_camera_swap
-                    state: "on"
-                card:
-                  type: picture-elements
-                  camera_image: camera.vr_camera_2
-                  camera_view: live
-                  elements:
-                    - type: image
-                      entity: camera.sl_camera_2
-                      style:
-                        right: 8%
-                        bottom: 14%
-                        width: 28%
-                        border-radius: 10px
-                        overflow: hidden
-                        border: 1px solid rgba(255,255,255,0.35)
-                        box-shadow: 0 6px 14px rgba(0,0,0,0.45)
-                      tap_action:
-                        action: call-service
-                        service: input_boolean.toggle
-                        target:
-                          entity_id: input_boolean.sala_camera_swap
-                    - type: state-label
-                      entity: camera.vr_camera_2
-                      attribute: friendly_name
-                      style:
-                        left: 14%
-                        bottom: 7%
-                        color: white
-                        font-size: 20px
-                        font-weight: 700
-                        text-shadow: 0 1px 8px rgba(0,0,0,0.6)
-                  tap_action:
-                    action: more-info
-                  card_mod:
-                    style: |
-                      ha-card {
-                        border-radius: 16px !important;
-                        overflow: hidden !important;
-                        border: 1px solid rgba(255,255,255,0.12) !important;
-                        height: 100% !important;
-                      }
+            type: picture-elements
+            camera_image: camera.sl_camera_2
+            camera_view: live
+            elements:
+              - type: image
+                entity: camera.vr_camera_2
+                style:
+                  right: 8%
+                  bottom: 14%
+                  width: 28%
+                  border-radius: 10px
+                  overflow: hidden
+                  border: 1px solid rgba(255,255,255,0.35)
+                  box-shadow: 0 6px 14px rgba(0,0,0,0.45)
+                tap_action:
+                  action: more-info
+              - type: state-label
+                entity: camera.sl_camera_2
+                attribute: friendly_name
+                style:
+                  left: 14%
+                  bottom: 7%
+                  color: white
+                  font-size: 20px
+                  font-weight: 700
+                  text-shadow: 0 1px 8px rgba(0,0,0,0.6)
+            tap_action:
+              action: more-info
+            card_mod:
+              style: |
+                ha-card {
+                  border-radius: 16px !important;
+                  overflow: hidden !important;
+                  border: 1px solid rgba(255,255,255,0.12) !important;
+                  height: 100% !important;
+                  min-height: 100% !important;
+                }
 
 - type: custom:button-card
   view_layout:

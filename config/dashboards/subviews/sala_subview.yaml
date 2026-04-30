@@ -39,7 +39,8 @@ cards:
           height: 100% !important;
         }
         ha-card {
-          min-height: 100vh !important;
+          # ORIGINAL: min-height: 100vh — não dá altura fixa ao grid div, align-content: center não funciona
+          height: 100vh !important;
           background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%) !important;
           border-radius: 0 !important;
           box-shadow: none !important;

@@ -144,7 +144,6 @@
         - backdrop-filter: blur(10px) saturate(1.35)
         - -webkit-backdrop-filter: blur(10px) saturate(1.35)
 
-# ── BLOCO 2: Luzes ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
     grid-area: lights
@@ -292,19 +291,18 @@
             tap_action:
               action: toggle
 
-# ── BLOCO 3: AC ────────────────────────────────────────────────────
-- type: custom:button-card
+- type: tile
   view_layout:
     grid-area: ac
   entity: climate.sl_ar_condicionado
-  name: "A/C"
-  label: "climate.sl_ar_condicionado"
-  show_icon: false
-  show_name: true
-  show_label: true
-  show_state: false
-  tap_action:
-    action: none
+  name: Ar Condicionado
+  icon: mdi:air-conditioner
+  features:
+    - type: climate-hvac-modes
+    - type: climate-preset-modes
+      style: dropdown
+    - type: climate-fan-modes
+      style: dropdown
   card_mod:
     style: |
       ha-card {
@@ -315,26 +313,9 @@
         border-radius: 20px !important;
         box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
         height: 100% !important;
-        overflow: hidden !important;
+        overflow: visible !important;
       }
-  styles:
-    card:
-      - padding: 20px
-      - justify-content: flex-start
-      - align-items: flex-start
-      - flex-direction: column
-    name:
-      - color: rgba(255,255,255,0.90)
-      - font-size: 22px
-      - font-weight: "700"
-      - justify-self: start
-    label:
-      - color: rgba(255,255,255,0.35)
-      - font-size: 12px
-      - justify-self: start
 
-
-# ── BLOCO 4: Cameras ────────────────────────────────────────────────────
 - type: vertical-stack
   view_layout:
     grid-area: cams
@@ -408,38 +389,36 @@
                 - font-weight: 700
         cam_main:
           card:
-            type: custom:button-card
-            show_icon: false
-            show_name: false
-            show_state: false
-            tap_action:
-              action: none
-            styles:
-              grid:
-                - grid-template-areas: '"main"'
-                - grid-template-columns: 1fr
-                - grid-template-rows: 1fr
-              card:
-                - padding: 0
-                - height: 100%
-              custom_fields:
-                main:
-                  - position: relative
-                  - height: 100%
-                mini:
-                  - position: absolute
-                  - right: 12px
-                  - bottom: 12px
-                  - width: 32%
-                  - z-index: 3
-            custom_fields:
-              main:
+            type: vertical-stack
+            cards:
+              - type: conditional
+                conditions:
+                  - entity: input_select.bento_active_camera
+                    state: camera.sl_camera_2
                 card:
-                  type: picture-entity
-                  entity: camera.sl_camera_2
+                  type: picture-elements
+                  camera_image: camera.sl_camera_2
                   camera_view: live
-                  show_name: false
-                  show_state: false
+                  elements:
+                    - type: image
+                      entity: camera.vr_camera_2
+                      camera_image: camera.vr_camera_2
+                      camera_view: live
+                      style:
+                        right: 12px
+                        bottom: 12px
+                        width: 32%
+                        transform: none
+                        border-radius: 10px
+                        border: 1px solid rgba(255,255,255,0.35)
+                        box-shadow: 0 6px 14px rgba(0,0,0,0.45)
+                        z-index: 3
+                      tap_action:
+                        action: call-service
+                        service: input_select.select_option
+                        service_data:
+                          entity_id: input_select.bento_active_camera
+                          option: camera.vr_camera_2
                   tap_action:
                     action: more-info
                   card_mod:
@@ -449,46 +428,46 @@
                         overflow: hidden !important;
                         border: 1px solid rgba(255,255,255,0.12) !important;
                         height: 100% !important;
-                        min-height: 100% !important;
                       }
-                      .name {
-                        display: none !important;
-                      }
-                      :host {
-                        position: relative;
-                      }
-                      :host::after {
-                        content: "Sala";
-                        position: absolute;
-                        z-index: 2;
-                        bottom: 10px;
-                        left: 12px;
-                        font-size: 18px;
-                        font-weight: 700;
-                        line-height: 1.1;
-                        color: rgba(255,255,255,0.95);
-                        text-shadow: 0 1px 10px rgba(0,0,0,0.55);
-                      }
-              mini:
+              - type: conditional
+                conditions:
+                  - entity: input_select.bento_active_camera
+                    state: camera.vr_camera_2
                 card:
-                  type: picture-entity
-                  entity: camera.vr_camera_2
+                  type: picture-elements
+                  camera_image: camera.vr_camera_2
                   camera_view: live
-                  show_name: false
-                  show_state: false
+                  elements:
+                    - type: image
+                      entity: camera.sl_camera_2
+                      camera_image: camera.sl_camera_2
+                      camera_view: live
+                      style:
+                        right: 12px
+                        bottom: 12px
+                        width: 32%
+                        transform: none
+                        border-radius: 10px
+                        border: 1px solid rgba(255,255,255,0.35)
+                        box-shadow: 0 6px 14px rgba(0,0,0,0.45)
+                        z-index: 3
+                      tap_action:
+                        action: call-service
+                        service: input_select.select_option
+                        service_data:
+                          entity_id: input_select.bento_active_camera
+                          option: camera.sl_camera_2
                   tap_action:
                     action: more-info
                   card_mod:
                     style: |
                       ha-card {
-                        border-radius: 10px !important;
+                        border-radius: 16px !important;
                         overflow: hidden !important;
-                        border: 1px solid rgba(255,255,255,0.35) !important;
-                        box-shadow: 0 6px 14px rgba(0,0,0,0.45) !important;
-                        height: 92px !important;
+                        border: 1px solid rgba(255,255,255,0.12) !important;
+                        height: 100% !important;
                       }
 
-# ── BLOCO 5: Media ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
     grid-area: media
@@ -529,8 +508,6 @@
       - font-size: 12px
       - justify-self: start
 
-
-# ── BLOCO 6: Spotify ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
     grid-area: spot

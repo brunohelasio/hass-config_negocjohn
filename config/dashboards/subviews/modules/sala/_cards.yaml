@@ -291,12 +291,10 @@
             tap_action:
               action: toggle
 
-- type: tile
+- type: thermostat
   view_layout:
     grid-area: ac
   entity: climate.sl_ar_condicionado
-  name: Ar Condicionado
-  icon: mdi:air-conditioner
   features:
     - type: climate-hvac-modes
     - type: climate-preset-modes
@@ -313,12 +311,21 @@
         border-radius: 20px !important;
         box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
         height: 100% !important;
-        overflow: visible !important;
+        overflow: hidden !important;
       }
 
 - type: vertical-stack
   view_layout:
     grid-area: cams
+  card_mod:
+    style: |
+      .: |
+        #root {
+          gap: 0 !important;
+        }
+        #root > * {
+          margin: 0 !important;
+        }
   cards:
     - type: custom:button-card
       show_icon: false
@@ -401,6 +408,17 @@
                   camera_view: live
                   elements:
                     - type: image
+                      entity: camera.sl_camera_2
+                      camera_image: camera.sl_camera_2
+                      camera_view: live
+                      style:
+                        left: 50%
+                        top: 50%
+                        width: 100%
+                        transform: translate(-50%, -50%)
+                      tap_action:
+                        action: more-info
+                    - type: image
                       entity: camera.vr_camera_2
                       camera_image: camera.vr_camera_2
                       camera_view: live
@@ -419,8 +437,6 @@
                         service_data:
                           entity_id: input_select.bento_active_camera
                           option: camera.vr_camera_2
-                  tap_action:
-                    action: more-info
                   card_mod:
                     style: |
                       ha-card {
@@ -438,6 +454,17 @@
                   camera_image: camera.vr_camera_2
                   camera_view: live
                   elements:
+                    - type: image
+                      entity: camera.vr_camera_2
+                      camera_image: camera.vr_camera_2
+                      camera_view: live
+                      style:
+                        left: 50%
+                        top: 50%
+                        width: 100%
+                        transform: translate(-50%, -50%)
+                      tap_action:
+                        action: more-info
                     - type: image
                       entity: camera.sl_camera_2
                       camera_image: camera.sl_camera_2
@@ -457,8 +484,6 @@
                         service_data:
                           entity_id: input_select.bento_active_camera
                           option: camera.sl_camera_2
-                  tap_action:
-                    action: more-info
                   card_mod:
                     style: |
                       ha-card {

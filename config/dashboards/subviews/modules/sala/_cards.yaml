@@ -291,16 +291,132 @@
             tap_action:
               action: toggle
 
-- type: thermostat
+- type: vertical-stack
   view_layout:
     grid-area: ac
-  entity: climate.sl_ar_condicionado
-  features:
-    - type: climate-hvac-modes
-    - type: climate-preset-modes
-      style: dropdown
-    - type: climate-fan-modes
-      style: dropdown
+  cards:
+    - type: custom:mushroom-climate-card
+      entity: climate.sl_ar_condicionado
+      name: Ar Condicionado
+      icon: mdi:air-conditioner
+      hvac_modes:
+        - 'off'
+        - cool
+        - heat
+        - fan_only
+      primary_info: name
+      secondary_info: state
+      show_temperature_control: false
+      card_mod:
+        style: |
+          mushroom-card {
+            margin: -4px -10px 0 -2px;
+          }
+
+    - type: custom:mushroom-climate-card
+      entity: climate.sl_ar_condicionado
+      icon_type: none
+      secondary_info: none
+      primary_info: none
+      show_temperature_control: true
+      card_mod:
+        style: |
+          mushroom-card {
+            margin: -16px -10px -8px -2px;
+          }
+
+    - type: custom:hui-horizontal-stack-card
+      cards:
+        - type: custom:button-card
+          entity: climate.sl_ar_condicionado
+          name: Low
+          tap_action:
+            action: call-service
+            service: climate.set_fan_mode
+            service_data:
+              entity_id: climate.sl_ar_condicionado
+              fan_mode: low
+          styles:
+            card:
+              - border-radius: 10px
+              - padding: 8px 6px
+              - background-color: >
+                  [[[
+                    return entity?.attributes?.fan_mode === 'low' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
+                  ]]]
+            name:
+              - font-size: 0.8em
+              - font-weight: 600
+        - type: custom:button-card
+          entity: climate.sl_ar_condicionado
+          name: Med
+          tap_action:
+            action: call-service
+            service: climate.set_fan_mode
+            service_data:
+              entity_id: climate.sl_ar_condicionado
+              fan_mode: medium
+          styles:
+            card:
+              - border-radius: 10px
+              - padding: 8px 6px
+              - background-color: >
+                  [[[
+                    return entity?.attributes?.fan_mode === 'medium' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
+                  ]]]
+            name:
+              - font-size: 0.8em
+              - font-weight: 600
+        - type: custom:button-card
+          entity: climate.sl_ar_condicionado
+          name: High
+          tap_action:
+            action: call-service
+            service: climate.set_fan_mode
+            service_data:
+              entity_id: climate.sl_ar_condicionado
+              fan_mode: high
+          styles:
+            card:
+              - border-radius: 10px
+              - padding: 8px 6px
+              - background-color: >
+                  [[[
+                    return entity?.attributes?.fan_mode === 'high' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
+                  ]]]
+            name:
+              - font-size: 0.8em
+              - font-weight: 600
+        - type: custom:button-card
+          entity: climate.sl_ar_condicionado
+          name: Swing
+          tap_action:
+            action: call-service
+            service: climate.set_swing_mode
+            service_data:
+              entity_id: climate.sl_ar_condicionado
+              swing_mode: >
+                [[[
+                  return entity?.attributes?.swing_mode === 'off' ? 'on' : 'off';
+                ]]]
+          styles:
+            card:
+              - border-radius: 10px
+              - padding: 8px 6px
+              - background-color: >
+                  [[[
+                    return entity?.attributes?.swing_mode === 'on' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
+                  ]]]
+            name:
+              - font-size: 0.8em
+              - font-weight: 600
+
+    - type: entities
+      entities:
+        - entity: sensor.sl_sensor_temp_humid_temperatura
+          name: Temperatura média
+        - entity: sensor.sl_sensor_temp_humid_umidade
+          name: Umidade
   card_mod:
     style: |
       ha-card {

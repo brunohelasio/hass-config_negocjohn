@@ -447,7 +447,7 @@
   show_state: false
   tap_action:
     action: none
-  hold_action: !include ../../../../shared/popup/thermostat.yaml
+  hold_action: !include ../../../shared/popup/thermostat.yaml
   triggers_update:
     - climate.sl_ar_condicionado
     - sensor.sl_sensor_temp_humid_temperatura

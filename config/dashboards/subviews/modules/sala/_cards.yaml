@@ -144,6 +144,7 @@
         - backdrop-filter: blur(10px) saturate(1.35)
         - -webkit-backdrop-filter: blur(10px) saturate(1.35)
 
+# ── BLOCO 2: Luzes ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
     grid-area: lights
@@ -291,6 +292,7 @@
             tap_action:
               action: toggle
 
+# ── BLOCO 3: AC ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
     grid-area: ac
@@ -331,6 +333,8 @@
       - font-size: 12px
       - justify-self: start
 
+
+# ── BLOCO 4: Cameras ────────────────────────────────────────────────────
 - type: vertical-stack
   view_layout:
     grid-area: cams
@@ -484,6 +488,7 @@
                         height: 92px !important;
                       }
 
+# ── BLOCO 5: Media ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
     grid-area: media
@@ -524,6 +529,8 @@
       - font-size: 12px
       - justify-self: start
 
+
+# ── BLOCO 6: Spotify ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
     grid-area: spot

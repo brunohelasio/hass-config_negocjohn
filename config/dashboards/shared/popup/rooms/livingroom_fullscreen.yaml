@@ -6,11 +6,42 @@
 #   v1: card_mod com .mdc-dialog__surface → mostrou 6 blocos mas não fullscreen
 #   v2: initial_style: fullscreen + novo style → spinner (mudança não isolada)
 #   v3: popup 98vw sem initial_style → não autorizado pelo usuário
-#   v4 (esta): restaura v1 exatamente + adiciona APENAS initial_style: fullscreen
-#              para isolar se o parâmetro funciona com a estrutura que já renderizou
+#   v4: restaura v1 exatamente + initial_style: fullscreen → spinner (causa isolada)
+#   v5 (esta): remove card_mod COMPLETAMENTE (seletores MDC mortos em HA 2026.3+
+#              — wa-dialog substitui mdc-dialog; card_mod com .mdc-dialog__* trava
+#              a animação do wa-dialog no frame 0, causando spinner infinito).
+#              Usa --ha-dialog-* variables vivas + --ha-dialog-show-duration: 0ms.
+#
+# Causa-raiz confirmada: HA 2026.3+ migrou de MDC (mdc-dialog) para WebAwesome
+# (wa-dialog). Qualquer card_mod injetando CSS em .mdc-dialog__surface /
+# .mdc-dialog__content trava o wa-dialog show @keyframes no frame 0.
 #
 # Popup original (65vw) mantido íntegro em livingroom.yaml.
 # ─────────────────────────────────────────────────────────────────────────────
+
+# --- CÓDIGO ORIGINAL COMENTADO (v4 — card_mod com seletores MDC mortos) ---
+# action: fire-dom-event
+# browser_mod:
+#   service: browser_mod.popup
+#   data:
+#     title: " "
+#     tag: sala_fullscreen
+#     dismissable: true
+#     initial_style: fullscreen
+#     style: >
+#       --popup-width: 100vw;
+#       --popup-max-width: 100vw;
+#       --popup-background-color: transparent;
+#       --mdc-theme-surface: transparent;              ← MORTO em HA 2026.3+
+#       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.92); ← MORTO em HA 2026.3+
+#     card_mod:
+#       style:
+#         ha-dialog$: |
+#           .mdc-dialog__container { ... }   ← MORTO — trava wa-dialog animation
+#           .mdc-dialog__surface { ... }     ← MORTO — trava wa-dialog animation
+#           .mdc-dialog__title { ... }       ← MORTO
+#           .mdc-dialog__content { ... }     ← MORTO — height:100vh trava frame 0
+# --- FIM CÓDIGO ORIGINAL ---
 
 action: fire-dom-event
 browser_mod:
@@ -21,38 +52,11 @@ browser_mod:
     dismissable: true
     initial_style: fullscreen
     style: >
-      --popup-width: 100vw;
-      --popup-max-width: 100vw;
-      --popup-background-color: transparent;
-      --mdc-theme-surface: transparent;
-      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.92);
-    card_mod:
-      style:
-        ha-dialog$: |
-          .mdc-dialog__container {
-            padding: 0 !important;
-            align-items: stretch !important;
-            justify-content: stretch !important;
-          }
-          .mdc-dialog__surface {
-            width: 100vw !important;
-            max-width: 100vw !important;
-            height: 100vh !important;
-            max-height: 100vh !important;
-            border-radius: 0 !important;
-            background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%) !important;
-            box-shadow: none !important;
-            overflow: hidden !important;
-          }
-          .mdc-dialog__title {
-            display: none !important;
-          }
-          .mdc-dialog__content {
-            padding: 0 !important;
-            height: 100vh !important;
-            max-height: 100vh !important;
-            overflow: hidden !important;
-          }
+      --ha-dialog-surface-background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%);
+      --ha-dialog-show-duration: 0ms;
+      --ha-dialog-hide-duration: 0ms;
+      --ha-dialog-border-radius: 0px;
+      --dialog-surface-margin-top: 0px;
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout

@@ -1,7 +1,9 @@
 padding: 12px
 grid-gap: 10px
 grid-template-columns: repeat(12, minmax(0, 1fr))
+# ORIGINAL: grid-template-rows: 42vh 40vh (sem align-content — cards colados no topo)
 grid-template-rows: 42vh 40vh
+align-content: center
 grid-template-areas: |
   "hero hero hero hero hero lights lights lights lights ac ac ac"
   "cams cams cams cams media media media media spot spot spot spot"

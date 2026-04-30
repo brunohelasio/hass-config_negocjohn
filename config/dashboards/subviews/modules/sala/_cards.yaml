@@ -359,7 +359,7 @@
               "title live"
               "cam_main cam_main"
           - grid-template-columns: 1fr auto
-          - grid-template-rows: min-content min-content minmax(320px, 1fr)
+          - grid-template-rows: min-content min-content minmax(120px, 1fr)
           - row-gap: 8px
           - column-gap: 8px
         card:
@@ -404,43 +404,85 @@
                 - font-weight: 700
         cam_main:
           card:
-            type: picture-elements
-            camera_image: camera.sl_camera_2
-            camera_view: live
-            elements:
-              - type: image
-                entity: camera.vr_camera_2
-                style:
-                  right: 8%
-                  bottom: 14%
-                  width: 28%
-                  border-radius: 10px
-                  overflow: hidden
-                  border: 1px solid rgba(255,255,255,0.35)
-                  box-shadow: 0 6px 14px rgba(0,0,0,0.45)
-                tap_action:
-                  action: more-info
-              - type: state-label
-                entity: camera.sl_camera_2
-                attribute: friendly_name
-                style:
-                  left: 14%
-                  bottom: 7%
-                  color: white
-                  font-size: 20px
-                  font-weight: 700
-                  text-shadow: 0 1px 8px rgba(0,0,0,0.6)
+            type: custom:button-card
+            show_icon: false
+            show_name: false
+            show_state: false
             tap_action:
-              action: more-info
-            card_mod:
-              style: |
-                ha-card {
-                  border-radius: 16px !important;
-                  overflow: hidden !important;
-                  border: 1px solid rgba(255,255,255,0.12) !important;
-                  height: 100% !important;
-                  min-height: 100% !important;
-                }
+              action: none
+            styles:
+              grid:
+                - grid-template-areas: '"main"'
+                - grid-template-columns: 1fr
+                - grid-template-rows: 1fr
+              card:
+                - padding: 0
+                - height: 100%
+              custom_fields:
+                main:
+                  - position: relative
+                  - height: 100%
+                mini:
+                  - position: absolute
+                  - right: 12px
+                  - bottom: 12px
+                  - width: 32%
+                  - z-index: 3
+            custom_fields:
+              main:
+                card:
+                  type: picture-entity
+                  entity: camera.sl_camera_2
+                  camera_view: live
+                  show_name: false
+                  show_state: false
+                  tap_action:
+                    action: more-info
+                  card_mod:
+                    style: |
+                      ha-card {
+                        border-radius: 16px !important;
+                        overflow: hidden !important;
+                        border: 1px solid rgba(255,255,255,0.12) !important;
+                        height: 100% !important;
+                        min-height: 100% !important;
+                      }
+                      .name {
+                        display: none !important;
+                      }
+                      :host {
+                        position: relative;
+                      }
+                      :host::after {
+                        content: "Sala";
+                        position: absolute;
+                        z-index: 2;
+                        bottom: 10px;
+                        left: 12px;
+                        font-size: 18px;
+                        font-weight: 700;
+                        line-height: 1.1;
+                        color: rgba(255,255,255,0.95);
+                        text-shadow: 0 1px 10px rgba(0,0,0,0.55);
+                      }
+              mini:
+                card:
+                  type: picture-entity
+                  entity: camera.vr_camera_2
+                  camera_view: live
+                  show_name: false
+                  show_state: false
+                  tap_action:
+                    action: more-info
+                  card_mod:
+                    style: |
+                      ha-card {
+                        border-radius: 10px !important;
+                        overflow: hidden !important;
+                        border: 1px solid rgba(255,255,255,0.35) !important;
+                        box-shadow: 0 6px 14px rgba(0,0,0,0.45) !important;
+                        height: 92px !important;
+                      }
 
 - type: custom:button-card
   view_layout:

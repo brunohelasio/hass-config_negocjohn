@@ -1,0 +1,27 @@
+padding: 12px
+grid-gap: 10px
+grid-template-columns: repeat(12, minmax(0, 1fr))
+grid-template-rows: 42vh 40vh
+grid-template-areas: |
+  "hero hero hero hero hero lights lights lights lights ac ac ac"
+  "cams cams cams cams spot spot spot media media media media media"
+mediaquery:
+  '(max-width: 800px)':
+    padding: 8px
+    grid-gap: 8px
+    grid-template-columns: 1fr
+    grid-template-rows: repeat(6, min-content)
+    grid-template-areas: |
+      "hero"
+      "lights"
+      "ac"
+      "cams"
+      "media"
+      "spot"
+  '(min-width: 801px) and (max-width: 1440px) and (orientation: portrait)':
+    grid-template-columns: repeat(2, minmax(0, 1fr))
+    grid-template-rows: repeat(3, min-content)
+    grid-template-areas: |
+      "hero lights"
+      "ac cams"
+      "media spot"

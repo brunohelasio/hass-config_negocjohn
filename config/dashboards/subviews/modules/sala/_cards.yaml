@@ -291,170 +291,132 @@
             tap_action:
               action: toggle
 
-# ── BLOCO A/C ─────────────────────────────────────────────────────────
-# --- CÓDIGO ORIGINAL COMENTADO (AC, pré-Etapa-3 — vertical-stack com mushroom cards) ---
-# Problema: vertical-stack não segue padrão button-card dos demais blocos (hero/lights/media/spot).
-# mushroom-climate-card renderiza shell próprio conflitando com o shell externo do vertical-stack.
-# Rollback: descomentar este bloco e comentar o bloco NOVO abaixo.
-#
-# - type: vertical-stack
-#   view_layout:
-#     grid-area: ac
-#   cards:
-#     - type: custom:mushroom-climate-card
-#       entity: climate.sl_ar_condicionado
-#       name: Ar Condicionado
-#       icon: mdi:air-conditioner
-#       hvac_modes:
-#         - 'off'
-#         - cool
-#         - heat
-#         - fan_only
-#       primary_info: name
-#       secondary_info: state
-#       show_temperature_control: false
-#       card_mod:
-#         style: |
-#           mushroom-card {
-#             margin: -4px -10px 0 -2px;
-#           }
-#     - type: custom:mushroom-climate-card
-#       entity: climate.sl_ar_condicionado
-#       icon_type: none
-#       secondary_info: none
-#       primary_info: none
-#       show_temperature_control: true
-#       card_mod:
-#         style: |
-#           mushroom-card {
-#             margin: -16px -10px -8px -2px;
-#           }
-#     - type: custom:hui-horizontal-stack-card
-#       cards:
-#         - type: custom:button-card
-#           entity: climate.sl_ar_condicionado
-#           name: Low
-#           tap_action:
-#             action: call-service
-#             service: climate.set_fan_mode
-#             service_data:
-#               entity_id: climate.sl_ar_condicionado
-#               fan_mode: low
-#           styles:
-#             card:
-#               - border-radius: 10px
-#               - padding: 8px 6px
-#               - background-color: >
-#                   [[[
-#                     return entity?.attributes?.fan_mode === 'low' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
-#                   ]]]
-#             name:
-#               - font-size: 0.8em
-#               - font-weight: 600
-#         - type: custom:button-card
-#           entity: climate.sl_ar_condicionado
-#           name: Med
-#           tap_action:
-#             action: call-service
-#             service: climate.set_fan_mode
-#             service_data:
-#               entity_id: climate.sl_ar_condicionado
-#               fan_mode: medium
-#           styles:
-#             card:
-#               - border-radius: 10px
-#               - padding: 8px 6px
-#               - background-color: >
-#                   [[[
-#                     return entity?.attributes?.fan_mode === 'medium' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
-#                   ]]]
-#             name:
-#               - font-size: 0.8em
-#               - font-weight: 600
-#         - type: custom:button-card
-#           entity: climate.sl_ar_condicionado
-#           name: High
-#           tap_action:
-#             action: call-service
-#             service: climate.set_fan_mode
-#             service_data:
-#               entity_id: climate.sl_ar_condicionado
-#               fan_mode: high
-#           styles:
-#             card:
-#               - border-radius: 10px
-#               - padding: 8px 6px
-#               - background-color: >
-#                   [[[
-#                     return entity?.attributes?.fan_mode === 'high' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
-#                   ]]]
-#             name:
-#               - font-size: 0.8em
-#               - font-weight: 600
-#         - type: custom:button-card
-#           entity: climate.sl_ar_condicionado
-#           name: Swing
-#           tap_action:
-#             action: call-service
-#             service: climate.set_swing_mode
-#             service_data:
-#               entity_id: climate.sl_ar_condicionado
-#               swing_mode: >
-#                 [[[
-#                   return entity?.attributes?.swing_mode === 'off' ? 'on' : 'off';
-#                 ]]]
-#           styles:
-#             card:
-#               - border-radius: 10px
-#               - padding: 8px 6px
-#               - background-color: >
-#                   [[[
-#                     return entity?.attributes?.swing_mode === 'on' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
-#                   ]]]
-#             name:
-#               - font-size: 0.8em
-#               - font-weight: 600
-#     - type: entities
-#       entities:
-#         - entity: sensor.sl_sensor_temp_humid_temperatura
-#           name: Temperatura média
-#         - entity: sensor.sl_sensor_temp_humid_umidade
-#           name: Umidade
-#   card_mod:
-#     style: |
-#       ha-card {
-#         background: rgba(255,255,255,0.06) !important;
-#         backdrop-filter: blur(20px) saturate(1.35) !important;
-#         -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-#         border: 1px solid rgba(255,255,255,0.10) !important;
-#         border-radius: 20px !important;
-#         box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
-#         height: 100% !important;
-#         overflow: hidden !important;
-#       }
-# --- FIM CÓDIGO ORIGINAL ---
-
-# NOVO (Fix 3): redesenho A/C com padrão Sagaland — chips de ícone, stepper de temperatura,
-# sensor rows e mini-graph-card. Mantém glass shell idêntico aos demais blocos.
-# --- CÓDIGO ORIGINAL COMENTADO (A/C v1 pré-redesenho — chips texto, sem stepper, sem graph) ---
-# Rollback: descomentar o bloco abaixo e remover este bloco.
-# (bloco comentado preservado na seção anterior deste arquivo)
-# --- FIM REFERÊNCIA ORIGINAL ---
-- type: custom:button-card
+- type: vertical-stack
   view_layout:
     grid-area: ac
-  entity: climate.sl_ar_condicionado
-  show_icon: false
-  show_name: false
-  show_label: false
-  show_state: false
-  tap_action:
-    action: none
-  hold_action: !include ../../../shared/popup/thermostat.yaml
-  triggers_update:
-    - climate.sl_ar_condicionado
-    - sensor.sl_sensor_temp_humid_temperatura
-    - sensor.sl_sensor_temp_humid_umidade
+  cards:
+    - type: custom:mushroom-climate-card
+      entity: climate.sl_ar_condicionado
+      name: Ar Condicionado
+      icon: mdi:air-conditioner
+      hvac_modes:
+        - 'off'
+        - cool
+        - heat
+        - fan_only
+      primary_info: name
+      secondary_info: state
+      show_temperature_control: false
+      card_mod:
+        style: |
+          mushroom-card {
+            margin: -4px -10px 0 -2px;
+          }
+
+    - type: custom:mushroom-climate-card
+      entity: climate.sl_ar_condicionado
+      icon_type: none
+      secondary_info: none
+      primary_info: none
+      show_temperature_control: true
+      card_mod:
+        style: |
+          mushroom-card {
+            margin: -16px -10px -8px -2px;
+          }
+
+    - type: custom:hui-horizontal-stack-card
+      cards:
+        - type: custom:button-card
+          entity: climate.sl_ar_condicionado
+          name: Low
+          tap_action:
+            action: call-service
+            service: climate.set_fan_mode
+            service_data:
+              entity_id: climate.sl_ar_condicionado
+              fan_mode: low
+          styles:
+            card:
+              - border-radius: 10px
+              - padding: 8px 6px
+              - background-color: >
+                  [[[
+                    return entity?.attributes?.fan_mode === 'low' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
+                  ]]]
+            name:
+              - font-size: 0.8em
+              - font-weight: 600
+        - type: custom:button-card
+          entity: climate.sl_ar_condicionado
+          name: Med
+          tap_action:
+            action: call-service
+            service: climate.set_fan_mode
+            service_data:
+              entity_id: climate.sl_ar_condicionado
+              fan_mode: medium
+          styles:
+            card:
+              - border-radius: 10px
+              - padding: 8px 6px
+              - background-color: >
+                  [[[
+                    return entity?.attributes?.fan_mode === 'medium' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
+                  ]]]
+            name:
+              - font-size: 0.8em
+              - font-weight: 600
+        - type: custom:button-card
+          entity: climate.sl_ar_condicionado
+          name: High
+          tap_action:
+            action: call-service
+            service: climate.set_fan_mode
+            service_data:
+              entity_id: climate.sl_ar_condicionado
+              fan_mode: high
+          styles:
+            card:
+              - border-radius: 10px
+              - padding: 8px 6px
+              - background-color: >
+                  [[[
+                    return entity?.attributes?.fan_mode === 'high' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
+                  ]]]
+            name:
+              - font-size: 0.8em
+              - font-weight: 600
+        - type: custom:button-card
+          entity: climate.sl_ar_condicionado
+          name: Swing
+          tap_action:
+            action: call-service
+            service: climate.set_swing_mode
+            service_data:
+              entity_id: climate.sl_ar_condicionado
+              swing_mode: >
+                [[[
+                  return entity?.attributes?.swing_mode === 'off' ? 'on' : 'off';
+                ]]]
+          styles:
+            card:
+              - border-radius: 10px
+              - padding: 8px 6px
+              - background-color: >
+                  [[[
+                    return entity?.attributes?.swing_mode === 'on' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
+                  ]]]
+            name:
+              - font-size: 0.8em
+              - font-weight: 600
+
+    - type: entities
+      entities:
+        - entity: sensor.sl_sensor_temp_humid_temperatura
+          name: Temperatura média
+        - entity: sensor.sl_sensor_temp_humid_umidade
+          name: Umidade
   card_mod:
     style: |
       ha-card {
@@ -467,478 +429,18 @@
         height: 100% !important;
         overflow: hidden !important;
       }
-  styles:
-    grid:
-      - grid-template-areas: '"header header" "stepper stepper" "modes modes" "fan fan" "graph graph"'
-      - grid-template-columns: 1fr 1fr
-      - grid-template-rows: min-content min-content min-content min-content 1fr
-      - column-gap: 0px
-      - row-gap: 8px
-    card:
-      - padding: 14px 16px 10px 16px
-      - height: 100%
-    custom_fields:
-      header:
-        - justify-self: stretch
-        - align-self: start
-      stepper:
-        - justify-self: stretch
-        - align-self: start
-      modes:
-        - justify-self: stretch
-        - align-self: start
-      fan:
-        - justify-self: stretch
-        - align-self: start
-      graph:
-        - justify-self: stretch
-        - align-self: stretch
-        - min-height: 0
-  custom_fields:
-    # ── Header: título + estado + botão power ──
-    header: >
-      [[[
-        const s = entity?.state ?? 'off';
-        const acOn = s !== 'off' && s !== 'unavailable' && s !== 'unknown';
-        const stateMap = {cool:'Cool', fan_only:'Fan', dry:'Dry', heat:'Heat', off:'Off'};
-        const stateLabel = stateMap[s] ?? s;
-        const curTemp = states['sensor.sl_sensor_temp_humid_temperatura']?.state;
-        const tempStr = curTemp && !['unknown','unavailable'].includes(curTemp) ? ` · ${curTemp}°C` : '';
-        return `<div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-          <div>
-            <div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:rgba(255,255,255,0.55);">Ar Condicionado</div>
-            <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.80);margin-top:2px;">${stateLabel}${tempStr}</div>
-          </div>
-        </div>`;
-      ]]]
-    # ── Stepper: botão − | setpoint grande | botão + e umidade ──
-    stepper:
-      card:
-        type: horizontal-stack
-        cards:
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            name: "−"
-            show_icon: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_temperature
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                temperature: >
-                  [[[
-                    const t = entity?.attributes?.temperature ?? 24;
-                    return Math.max(16, t - 1);
-                  ]]]
-            styles:
-              card:
-                - width: 40px
-                - height: 40px
-                - border-radius: 50%
-                - padding: 0
-                - background: rgba(255,255,255,0.06)
-                - border: 1px solid rgba(255,255,255,0.18)
-              name:
-                - font-size: 22px
-                - font-weight: 300
-                - color: rgba(255,255,255,0.85)
-                - line-height: "1"
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            show_icon: false
-            show_name: false
-            show_state: false
-            tap_action:
-              action: none
-            custom_fields:
-              val: >
-                [[[
-                  const t = entity?.attributes?.temperature;
-                  const h = states['sensor.sl_sensor_temp_humid_umidade']?.state;
-                  const acOn = entity?.state && entity.state !== 'off' && entity.state !== 'unavailable';
-                  const tStr = t != null ? `${t}` : '—';
-                  const hStr = h && !['unknown','unavailable'].includes(h) ? `${h}%` : '';
-                  return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-                    <span style="font-size:36px;font-weight:700;line-height:1;color:${acOn ? 'rgba(104,205,255,0.95)' : 'rgba(255,255,255,0.35)'};">${tStr}</span>
-                    ${hStr ? `<span style="font-size:11px;color:rgba(255,255,255,0.42);">${hStr} umidade</span>` : ''}
-                  </div>`;
-                ]]]
-            styles:
-              grid:
-                - grid-template-areas: '"val"'
-              card:
-                - background: transparent
-                - border: none
-                - box-shadow: none
-                - flex: "1"
-                - padding: 0
-              custom_fields:
-                val:
-                  - text-align: center
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            name: "+"
-            show_icon: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_temperature
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                temperature: >
-                  [[[
-                    const t = entity?.attributes?.temperature ?? 24;
-                    return Math.min(30, t + 1);
-                  ]]]
-            styles:
-              card:
-                - width: 40px
-                - height: 40px
-                - border-radius: 50%
-                - padding: 0
-                - background: rgba(255,255,255,0.06)
-                - border: 1px solid rgba(255,255,255,0.18)
-              name:
-                - font-size: 22px
-                - font-weight: 300
-                - color: rgba(255,255,255,0.85)
-                - line-height: "1"
-    # ── Chips de modo HVAC com ícones ──
-    modes:
-      card:
-        type: horizontal-stack
-        cards:
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            show_icon: true
-            icon: mdi:power-off
-            show_name: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_hvac_mode
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                hvac_mode: "off"
-            styles:
-              card:
-                - width: 42px
-                - height: 42px
-                - border-radius: 50%
-                - padding: 0
-                - background: >
-                    [[[
-                      return entity?.state === 'off'
-                        ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.05)';
-                    ]]]
-                - border: >
-                    [[[
-                      return entity?.state === 'off'
-                        ? '1px solid rgba(255,255,255,0.50)' : '1px solid rgba(255,255,255,0.12)';
-                    ]]]
-              icon:
-                - width: 18px
-                - height: 18px
-                - color: >
-                    [[[
-                      return entity?.state === 'off'
-                        ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.40)';
-                    ]]]
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            show_icon: true
-            icon: mdi:snowflake
-            show_name: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_hvac_mode
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                hvac_mode: cool
-            styles:
-              card:
-                - width: 42px
-                - height: 42px
-                - border-radius: 50%
-                - padding: 0
-                - background: >
-                    [[[
-                      return entity?.state === 'cool'
-                        ? 'rgba(22,134,190,0.45)' : 'rgba(255,255,255,0.05)';
-                    ]]]
-                - border: >
-                    [[[
-                      return entity?.state === 'cool'
-                        ? '1px solid rgba(104,205,255,0.65)' : '1px solid rgba(255,255,255,0.12)';
-                    ]]]
-              icon:
-                - width: 18px
-                - height: 18px
-                - color: >
-                    [[[
-                      return entity?.state === 'cool'
-                        ? 'rgba(104,205,255,0.95)' : 'rgba(255,255,255,0.40)';
-                    ]]]
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            show_icon: true
-            icon: mdi:fan
-            show_name: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_hvac_mode
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                hvac_mode: fan_only
-            styles:
-              card:
-                - width: 42px
-                - height: 42px
-                - border-radius: 50%
-                - padding: 0
-                - background: >
-                    [[[
-                      return entity?.state === 'fan_only'
-                        ? 'rgba(22,134,190,0.45)' : 'rgba(255,255,255,0.05)';
-                    ]]]
-                - border: >
-                    [[[
-                      return entity?.state === 'fan_only'
-                        ? '1px solid rgba(104,205,255,0.65)' : '1px solid rgba(255,255,255,0.12)';
-                    ]]]
-              icon:
-                - width: 18px
-                - height: 18px
-                - color: >
-                    [[[
-                      return entity?.state === 'fan_only'
-                        ? 'rgba(104,205,255,0.95)' : 'rgba(255,255,255,0.40)';
-                    ]]]
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            show_icon: true
-            icon: mdi:water-percent
-            show_name: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_hvac_mode
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                hvac_mode: dry
-            styles:
-              card:
-                - width: 42px
-                - height: 42px
-                - border-radius: 50%
-                - padding: 0
-                - background: >
-                    [[[
-                      return entity?.state === 'dry'
-                        ? 'rgba(22,134,190,0.45)' : 'rgba(255,255,255,0.05)';
-                    ]]]
-                - border: >
-                    [[[
-                      return entity?.state === 'dry'
-                        ? '1px solid rgba(104,205,255,0.65)' : '1px solid rgba(255,255,255,0.12)';
-                    ]]]
-              icon:
-                - width: 18px
-                - height: 18px
-                - color: >
-                    [[[
-                      return entity?.state === 'dry'
-                        ? 'rgba(104,205,255,0.95)' : 'rgba(255,255,255,0.40)';
-                    ]]]
-    # ── Fan mode + Swing ──
-    fan:
-      card:
-        type: horizontal-stack
-        cards:
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            name: "Low"
-            show_icon: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_fan_mode
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                fan_mode: low
-            styles:
-              card:
-                - border-radius: 10px
-                - padding: 8px 6px
-                - background: >
-                    [[[
-                      return entity?.attributes?.fan_mode === 'low'
-                        ? 'rgba(22,134,190,0.28)' : 'rgba(255,255,255,0.05)';
-                    ]]]
-                - border: >
-                    [[[
-                      return entity?.attributes?.fan_mode === 'low'
-                        ? '1px solid rgba(104,205,255,0.40)' : '1px solid rgba(255,255,255,0.10)';
-                    ]]]
-              name:
-                - font-size: 12px
-                - font-weight: 600
-                - color: >
-                    [[[
-                      return entity?.attributes?.fan_mode === 'low'
-                        ? 'rgba(104,205,255,0.90)' : 'rgba(255,255,255,0.45)';
-                    ]]]
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            name: "Med"
-            show_icon: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_fan_mode
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                fan_mode: medium
-            styles:
-              card:
-                - border-radius: 10px
-                - padding: 8px 6px
-                - background: >
-                    [[[
-                      return entity?.attributes?.fan_mode === 'medium'
-                        ? 'rgba(22,134,190,0.28)' : 'rgba(255,255,255,0.05)';
-                    ]]]
-                - border: >
-                    [[[
-                      return entity?.attributes?.fan_mode === 'medium'
-                        ? '1px solid rgba(104,205,255,0.40)' : '1px solid rgba(255,255,255,0.10)';
-                    ]]]
-              name:
-                - font-size: 12px
-                - font-weight: 600
-                - color: >
-                    [[[
-                      return entity?.attributes?.fan_mode === 'medium'
-                        ? 'rgba(104,205,255,0.90)' : 'rgba(255,255,255,0.45)';
-                    ]]]
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            name: "High"
-            show_icon: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_fan_mode
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                fan_mode: high
-            styles:
-              card:
-                - border-radius: 10px
-                - padding: 8px 6px
-                - background: >
-                    [[[
-                      return entity?.attributes?.fan_mode === 'high'
-                        ? 'rgba(22,134,190,0.28)' : 'rgba(255,255,255,0.05)';
-                    ]]]
-                - border: >
-                    [[[
-                      return entity?.attributes?.fan_mode === 'high'
-                        ? '1px solid rgba(104,205,255,0.40)' : '1px solid rgba(255,255,255,0.10)';
-                    ]]]
-              name:
-                - font-size: 12px
-                - font-weight: 600
-                - color: >
-                    [[[
-                      return entity?.attributes?.fan_mode === 'high'
-                        ? 'rgba(104,205,255,0.90)' : 'rgba(255,255,255,0.45)';
-                    ]]]
-          - type: custom:button-card
-            entity: climate.sl_ar_condicionado
-            name: "Swing"
-            show_icon: false
-            show_state: false
-            tap_action:
-              action: call-service
-              service: climate.set_swing_mode
-              service_data:
-                entity_id: climate.sl_ar_condicionado
-                swing_mode: >
-                  [[[
-                    return entity?.attributes?.swing_mode === 'off' ? 'on' : 'off';
-                  ]]]
-            styles:
-              card:
-                - border-radius: 10px
-                - padding: 8px 6px
-                - background: >
-                    [[[
-                      return entity?.attributes?.swing_mode === 'on'
-                        ? 'rgba(22,134,190,0.28)' : 'rgba(255,255,255,0.05)';
-                    ]]]
-                - border: >
-                    [[[
-                      return entity?.attributes?.swing_mode === 'on'
-                        ? '1px solid rgba(104,205,255,0.40)' : '1px solid rgba(255,255,255,0.10)';
-                    ]]]
-              name:
-                - font-size: 12px
-                - font-weight: 600
-                - color: >
-                    [[[
-                      return entity?.attributes?.swing_mode === 'on'
-                        ? 'rgba(104,205,255,0.90)' : 'rgba(255,255,255,0.45)';
-                    ]]]
-    # ── Mini-graph de temperatura ambiente (preenche o espaço restante) ──
-    graph:
-      card:
-        type: custom:mini-graph-card
-        entities:
-          - entity: sensor.sl_sensor_temp_humid_temperatura
-            name: Temperatura
-        hours_to_show: 24
-        points_per_hour: 2
-        line_width: 3
-        show:
-          name: false
-          icon: false
-          state: false
-          labels: false
-          legend: false
-          points: false
-          fill: fade
-          extrema: true
-        card_mod:
-          style: |
-            ha-card {
-              background: transparent !important;
-              border: none !important;
-              box-shadow: none !important;
-              padding: 0 !important;
-            }
 
 - type: vertical-stack
   view_layout:
     grid-area: cams
   card_mod:
     style: |
-      ha-card {
-        # ORIGINAL: sem height — vertical-stack não preenchia os 40vh da row, ficava menor que media/spot
-        height: 100% !important;
-        overflow: hidden !important;
-      }
       .: |
         #root {
           gap: 0 !important;
-          height: 100% !important;
         }
         #root > * {
           margin: 0 !important;
-          height: 100% !important;
         }
   cards:
     - type: custom:button-card
@@ -1010,113 +512,102 @@
                 - font-weight: 700
         cam_main:
           card:
-            # ORIGINAL: vertical-stack com dois conditional cards — colapsava em altura zero durante
-            # a troca de câmera, causando salto visual. NOVO: picture-elements único com conditional
-            # ELEMENTS internos. O card picture-elements nunca colapsa; apenas os elementos dentro
-            # dele mudam, mantendo a altura estável.
-            # --- CÓDIGO ORIGINAL COMENTADO (cam_main, pré-Fix-2) ---
-            # type: vertical-stack
-            # card_mod: ... (tentativa de fixar altura via #root — não propagava para conditional-card)
-            # cards:
-            #   - type: conditional (state: camera.sl_camera_2) → picture-elements
-            #   - type: conditional (state: camera.vr_camera_2) → picture-elements
-            # --- FIM CÓDIGO ORIGINAL ---
-            type: picture-elements
-            camera_image: camera.sl_camera_2
-            camera_view: live
-            card_mod:
-              style: |
-                ha-card {
-                  border-radius: 16px !important;
-                  overflow: hidden !important;
-                  border: 1px solid rgba(255,255,255,0.12) !important;
-                  height: 100% !important;
-                }
-            elements:
-              # ── sl_camera_2 ativa: sl como main (full-frame), vr como PiP ──
+            type: vertical-stack
+            cards:
               - type: conditional
                 conditions:
                   - entity: input_select.bento_active_camera
                     state: camera.sl_camera_2
-                element:
-                  type: image
-                  entity: camera.sl_camera_2
+                card:
+                  type: picture-elements
                   camera_image: camera.sl_camera_2
                   camera_view: live
-                  style:
-                    left: 50%
-                    top: 50%
-                    width: 100%
-                    transform: translate(-50%, -50%)
-                    z-index: "1"
-                  tap_action:
-                    action: more-info
-              - type: conditional
-                conditions:
-                  - entity: input_select.bento_active_camera
-                    state: camera.sl_camera_2
-                element:
-                  type: image
-                  entity: camera.vr_camera_2
-                  camera_image: camera.vr_camera_2
-                  camera_view: live
-                  style:
-                    right: 12px
-                    bottom: 12px
-                    width: 32%
-                    transform: none
-                    border-radius: 10px
-                    border: 1px solid rgba(255,255,255,0.35)
-                    box-shadow: 0 6px 14px rgba(0,0,0,0.45)
-                    z-index: "3"
-                  tap_action:
-                    action: call-service
-                    service: input_select.select_option
-                    service_data:
-                      entity_id: input_select.bento_active_camera
-                      option: camera.vr_camera_2
-              # ── vr_camera_2 ativa: vr como main (full-frame), sl como PiP ──
+                  elements:
+                    - type: image
+                      entity: camera.sl_camera_2
+                      camera_image: camera.sl_camera_2
+                      camera_view: live
+                      style:
+                        left: 50%
+                        top: 50%
+                        width: 100%
+                        transform: translate(-50%, -50%)
+                      tap_action:
+                        action: more-info
+                    - type: image
+                      entity: camera.vr_camera_2
+                      camera_image: camera.vr_camera_2
+                      camera_view: live
+                      style:
+                        right: 12px
+                        bottom: 12px
+                        width: 32%
+                        transform: none
+                        border-radius: 10px
+                        border: 1px solid rgba(255,255,255,0.35)
+                        box-shadow: 0 6px 14px rgba(0,0,0,0.45)
+                        z-index: 3
+                      tap_action:
+                        action: call-service
+                        service: input_select.select_option
+                        service_data:
+                          entity_id: input_select.bento_active_camera
+                          option: camera.vr_camera_2
+                  card_mod:
+                    style: |
+                      ha-card {
+                        border-radius: 16px !important;
+                        overflow: hidden !important;
+                        border: 1px solid rgba(255,255,255,0.12) !important;
+                        height: 100% !important;
+                      }
               - type: conditional
                 conditions:
                   - entity: input_select.bento_active_camera
                     state: camera.vr_camera_2
-                element:
-                  type: image
-                  entity: camera.vr_camera_2
+                card:
+                  type: picture-elements
                   camera_image: camera.vr_camera_2
                   camera_view: live
-                  style:
-                    left: 50%
-                    top: 50%
-                    width: 100%
-                    transform: translate(-50%, -50%)
-                    z-index: "1"
-                  tap_action:
-                    action: more-info
-              - type: conditional
-                conditions:
-                  - entity: input_select.bento_active_camera
-                    state: camera.vr_camera_2
-                element:
-                  type: image
-                  entity: camera.sl_camera_2
-                  camera_image: camera.sl_camera_2
-                  camera_view: live
-                  style:
-                    right: 12px
-                    bottom: 12px
-                    width: 32%
-                    transform: none
-                    border-radius: 10px
-                    border: 1px solid rgba(255,255,255,0.35)
-                    box-shadow: 0 6px 14px rgba(0,0,0,0.45)
-                    z-index: "3"
-                  tap_action:
-                    action: call-service
-                    service: input_select.select_option
-                    service_data:
-                      entity_id: input_select.bento_active_camera
-                      option: camera.sl_camera_2
+                  elements:
+                    - type: image
+                      entity: camera.vr_camera_2
+                      camera_image: camera.vr_camera_2
+                      camera_view: live
+                      style:
+                        left: 50%
+                        top: 50%
+                        width: 100%
+                        transform: translate(-50%, -50%)
+                      tap_action:
+                        action: more-info
+                    - type: image
+                      entity: camera.sl_camera_2
+                      camera_image: camera.sl_camera_2
+                      camera_view: live
+                      style:
+                        right: 12px
+                        bottom: 12px
+                        width: 32%
+                        transform: none
+                        border-radius: 10px
+                        border: 1px solid rgba(255,255,255,0.35)
+                        box-shadow: 0 6px 14px rgba(0,0,0,0.45)
+                        z-index: 3
+                      tap_action:
+                        action: call-service
+                        service: input_select.select_option
+                        service_data:
+                          entity_id: input_select.bento_active_camera
+                          option: camera.sl_camera_2
+                  card_mod:
+                    style: |
+                      ha-card {
+                        border-radius: 16px !important;
+                        overflow: hidden !important;
+                        border: 1px solid rgba(255,255,255,0.12) !important;
+                        height: 100% !important;
+                      }
 
 - type: custom:button-card
   view_layout:
@@ -1158,18 +649,39 @@
       - font-size: 12px
       - justify-self: start
 
-- type: custom:button-card
+- type: vertical-stack
   view_layout:
     grid-area: spot
-  entity: media_player.spotifyplus_bruno_helasio
-  name: "Spotify"
-  label: "spotifyplus · Echo Show"
-  show_icon: false
-  show_name: true
-  show_label: true
-  show_state: false
-  tap_action:
-    action: none
+  cards:
+    - type: custom:spotifyplus-card
+      entity: media_player.spotifyplus_bruno_helasio
+      deviceDefaultId: Echo Show
+      deviceControlByName: true
+      sections:
+        - player
+        - devices
+        - userpresets
+      card_mod:
+        style: |
+          ha-card {
+            --ha-card-border-width: 0;
+            background: transparent;
+            max-height: 100%;
+            height: 100%;
+            overflow-y: auto;
+            border-radius: 12px;
+            margin: 0 auto;
+            width: 100%;
+          }
+          .player-background,
+          .player-background img,
+          .player-section .thumbnail,
+          .player-section .thumbnail img {
+            object-fit: cover !important;
+            object-position: center center !important;
+            background-position: center center !important;
+            background-size: cover !important;
+          }
   card_mod:
     style: |
       ha-card {
@@ -1182,18 +694,3 @@
         height: 100% !important;
         overflow: hidden !important;
       }
-  styles:
-    card:
-      - padding: 20px
-      - justify-content: flex-start
-      - align-items: flex-start
-      - flex-direction: column
-    name:
-      - color: rgba(255,255,255,0.90)
-      - font-size: 22px
-      - font-weight: "700"
-      - justify-self: start
-    label:
-      - color: rgba(255,255,255,0.35)
-      - font-size: 12px
-      - justify-self: start

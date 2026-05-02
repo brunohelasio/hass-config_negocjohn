@@ -1,58 +1,91 @@
 # ═══════════════════════════════════════════════════════════════════
-#  BENTO WELCOME — v7
+#  BENTO WELCOME — v13
 #  Arquivo: config/dashboards/shared/grid-cards/bento_welcome.yaml
 #
-#  Mudanças v7:
-#    [1] Porta Serviço: type:markdown (sem button-card, sem grid bug)
-#        → alinhamento correto garantido pelo flexbox do HTML
-#    [2] Weather: substituído por button-card compacto
-#        → sem overflow, sem corte, controle total de altura
-#        → temperatura grande + vento + curva SVG decorativa
-#        → ocupa toda a base do bloco, sangra nas bordas
+#  Mudanças v13:
+#    [1] Layout do Card 1 (data + saudação + relógio) refeito:
+#        → relógio desce para baixo da saudação (grid vertical 3 linhas)
+#        → fonte do relógio aumentada de 52px → 78px, weight 200
+#    [2] Card 2 (Porta Principal) comentado — removido do hero
+#    [3] Card 3 (Porta Serviço) comentado — removido do hero
+#    [4] Card 4 (clima): padding-bottom reduzido (68px → 18px) e
+#        z-index removido — curva ::after desativada no wrapper
+#        Card 4 envolvido em glassmorphism translúcido
 # ═══════════════════════════════════════════════════════════════════
 
 
-# ─────────────────────────────────────────────────────────────────
-# 1. SAUDAÇÃO + RELÓGIO (v9)
-#    - Botão com grid de 2 colunas: [data+saudação] | [relógio]
-#    - Relógio (HH:MM) ocupa as DUAS linhas (grid-row: 1 / span 2)
-#    - Font 52px weight 300 — visual premium
-#    - Atualiza via entity: sensor.time + triggers_update
-# ─────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────────
+# 1. SAUDAÇÃO + RELÓGIO (v13)
+#    Layout anterior (v9): grid 2 colunas — [data+saudação | relógio]
+#    Layout novo    (v13): grid 3 linhas  — data / saudação / relógio
+#    Relógio desce abaixo da saudação; fonte aumentada para 78px.
+# ───────────────────────────────────────────────────────────────────
 
-# --- CÓDIGO ORIGINAL COMENTADO (v8 — type:markdown sem relógio) ---
-# - type: markdown
-#   content: >
-#     {{ now().strftime('%A, %d %b') | upper }}
-#
-#     ## {% set h = now().hour %}{% if h < 12 %}Bom dia{% elif h < 18 %}Boa tarde{% else %}Boa noite{% endif %}, Bruno
-#
-#   card_mod:
-#     style: |
-#       ha-card {
-#         background: transparent !important;
-#         border: none !important;
-#         box-shadow: none !important;
-#         padding: 18px 18px 6px !important;
-#       }
-#       ha-markdown { padding: 0 !important; }
-#       ha-markdown p:first-child {
-#         font-size: 11px !important;
-#         letter-spacing: 0.12em !important;
-#         color: rgba(255,255,255,0.44) !important;
-#         font-weight: 600 !important;
-#         text-transform: uppercase !important;
-#         margin: 0 0 4px !important;
-#       }
-#       ha-markdown h2 {
-#         font-size: 26px !important;
-#         font-weight: 700 !important;
-#         color: white !important;
-#         margin: 0 !important;
-#         padding: 0 !important;
-#         border: none !important;
-#         line-height: 1.15 !important;
-#       }
+# --- CÓDIGO ORIGINAL COMENTADO (v9 — relógio à direita, 2 colunas) ---
+# - type: custom:button-card
+#   entity: sensor.time
+#   triggers_update:
+#     - sensor.time
+#   show_name: false
+#   show_icon: false
+#   show_state: false
+#   show_label: false
+#   tap_action:
+#     action: none
+#   custom_fields:
+#     date_line: >
+#       [[[
+#         var dias = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira',
+#                     'Quinta-feira','Sexta-feira','Sábado'];
+#         var meses = ['Jan','Fev','Mar','Abr','Mai','Jun',
+#                      'Jul','Ago','Set','Out','Nov','Dez'];
+#         var d = new Date();
+#         var s = dias[d.getDay()] + ', ' + d.getDate() + ' ' + meses[d.getMonth()];
+#         return '<div style="font-size:11px;letter-spacing:0.12em;'
+#              + 'color:rgba(255,255,255,0.44);font-weight:600;'
+#              + 'text-transform:uppercase;">' + s + '</div>';
+#       ]]]
+#     greet_line: >
+#       [[[
+#         var h = new Date().getHours();
+#         var g = (h < 12) ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite');
+#         return '<div style="font-size:26px;font-weight:700;color:white;'
+#              + 'line-height:1.15;">' + g + ', Bruno</div>';
+#       ]]]
+#     clock: >
+#       [[[
+#         var d = new Date();
+#         var hh = String(d.getHours()).padStart(2, '0');
+#         var mm = String(d.getMinutes()).padStart(2, '0');
+#         return '<div style="font-size:52px;font-weight:300;line-height:1;'
+#              + 'color:white;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;">'
+#              + hh + ':' + mm + '</div>';
+#       ]]]
+#   styles:
+#     grid:
+#       - grid-template-areas: '"date_line clock" "greet_line clock"'
+#       - grid-template-columns: "1fr auto"
+#       - grid-template-rows: "auto auto"
+#       - column-gap: "14px"
+#       - row-gap: "4px"
+#       - align-items: "center"
+#     card:
+#       - background: "transparent"
+#       - border: "none"
+#       - box-shadow: "none"
+#       - padding: "18px 18px 6px"
+#       - cursor: "default"
+#     custom_fields:
+#       date_line:
+#         - justify-self: "start"
+#         - align-self: "end"
+#       greet_line:
+#         - justify-self: "start"
+#         - align-self: "start"
+#       clock:
+#         - grid-row: "1 / span 2"
+#         - justify-self: "end"
+#         - align-self: "center"
 # --- FIM CÓDIGO ORIGINAL ---
 
 - type: custom:button-card
@@ -83,25 +116,23 @@
         var h = new Date().getHours();
         var g = (h < 12) ? 'Bom dia' : (h < 18 ? 'Boa tarde' : 'Boa noite');
         return '<div style="font-size:26px;font-weight:700;color:white;'
-             + 'line-height:1.15;">' + g + ', Bruno</div>';
+             + 'line-height:1.2;">' + g + ', Bruno</div>';
       ]]]
     clock: >
       [[[
         var d = new Date();
         var hh = String(d.getHours()).padStart(2, '0');
         var mm = String(d.getMinutes()).padStart(2, '0');
-        return '<div style="font-size:52px;font-weight:300;line-height:1;'
-             + 'color:white;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;">'
+        return '<div style="font-size:78px;font-weight:200;line-height:1;'
+             + 'color:white;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;">'
              + hh + ':' + mm + '</div>';
       ]]]
   styles:
     grid:
-      - grid-template-areas: '"date_line clock" "greet_line clock"'
-      - grid-template-columns: "1fr auto"
-      - grid-template-rows: "auto auto"
-      - column-gap: "14px"
-      - row-gap: "4px"
-      - align-items: "center"
+      - grid-template-areas: '"date_line" "greet_line" "clock"'
+      - grid-template-columns: "1fr"
+      - grid-template-rows: "auto auto auto"
+      - row-gap: "6px"
     card:
       - background: "transparent"
       - border: "none"
@@ -111,119 +142,69 @@
     custom_fields:
       date_line:
         - justify-self: "start"
-        - align-self: "end"
       greet_line:
         - justify-self: "start"
-        - align-self: "start"
       clock:
-        - grid-row: "1 / span 2"
-        - justify-self: "end"
-        - align-self: "center"
+        - justify-self: "start"
 
 
-# ─────────────────────────────────────────────────────────────────
-# 2. PORTA PRINCIPAL — button-card com toggle pill iOS (v8)
-#    Controla lock.sl_fechadura_operate_lock via homeassistant.toggle
-#    Verde=trancada, cinza=destrancada. Knob animado (left transition).
-# ─────────────────────────────────────────────────────────────────
+# ───────────────────────────────────────────────────────────────────
+# 2. PORTA PRINCIPAL — comentada (v13)
+#    Removida do hero conforme solicitado.
+#    Para reativar: descomentar bloco abaixo (remover os "# " de cada linha).
+# ───────────────────────────────────────────────────────────────────
 
-# --- CÓDIGO ORIGINAL COMENTADO (v7 — dupla ação, btn_trancar/btn_abrir) ---
+# [PORTA PRINCIPAL DESATIVADA v13 — descomentar para reativar]
 # - type: custom:button-card
 #   entity: lock.sl_fechadura_operate_lock
 #   show_name: true
-#   name: "Porta Principal"
 #   show_icon: true
-#   icon: mdi:door-closed
-#   show_state: false
 #   show_label: true
-#
+#   show_state: false
+#   icon: mdi:door-closed
+#   name: "Porta Principal"
 #   label: >
 #     [[[
 #       if (entity.state === 'locked')   return 'Trancada';
-#       if (entity.state === 'unlocked') return 'Aberta';
+#       if (entity.state === 'unlocked') return 'Destrancada';
 #       return entity.state;
 #     ]]]
-#
-#   custom_fields:
-#     btn_trancar:
-#       card:
-#         type: custom:button-card
-#         entity: lock.sl_fechadura_operate_lock
-#         show_name: false
-#         show_icon: true
-#         icon: mdi:lock
-#         tap_action:
-#           action: call-service
-#           service: lock.lock
-#           service_data:
-#             entity_id: lock.sl_fechadura_operate_lock
-#         styles:
-#           card:
-#             - width: "40px"
-#             - height: "40px"
-#             - border-radius: "13px"
-#             - padding: "0"
-#             - background: >
-#                 [[[
-#                   return entity.state === 'locked'
-#                     ? 'rgba(52,211,153,0.20)'
-#                     : 'rgba(255,255,255,0.07)';
-#                 ]]]
-#             - border: >
-#                 [[[
-#                   return entity.state === 'locked'
-#                     ? '1px solid rgba(52,211,153,0.45)'
-#                     : '1px solid rgba(255,255,255,0.12)';
-#                 ]]]
-#           icon:
-#             - width: "19px"
-#             - color: >
-#                 [[[
-#                   return entity.state === 'locked'
-#                     ? '#34d399'
-#                     : 'rgba(255,255,255,0.35)';
-#                 ]]]
-#     btn_abrir:
-#       card:
-#         type: custom:button-card
-#         entity: lock.sl_fechadura_operate_lock
-#         show_name: false
-#         show_icon: true
-#         icon: mdi:lock-open-variant
-#         tap_action:
-#           action: call-service
-#           service: lock.unlock
-#           service_data:
-#             entity_id: lock.sl_fechadura_operate_lock
-#         styles:
-#           card:
-#             - width: "40px"
-#             - height: "40px"
-#             - border-radius: "13px"
-#             - padding: "0"
-#             - background: >
-#                 [[[
-#                   return entity.state === 'unlocked'
-#                     ? 'rgba(248,113,113,0.20)'
-#                     : 'rgba(255,255,255,0.07)';
-#                 ]]]
-#             - border: >
-#                 [[[
-#                   return entity.state === 'unlocked'
-#                     ? '1px solid rgba(248,113,113,0.45)'
-#                     : '1px solid rgba(255,255,255,0.12)';
-#                 ]]]
-#           icon:
-#             - width: "19px"
-#             - color: >
-#                 [[[
-#                   return entity.state === 'unlocked'
-#                     ? '#f87171'
-#                     : 'rgba(255,255,255,0.35)';
-#                 ]]]
-#
 #   tap_action:
 #     action: none
+#   hold_action:
+#     action: none
+#   custom_fields:
+#     lock_buttons: >
+#       [[[
+#         var locked = entity.state === 'locked';
+#         var lockActive = locked
+#           ? 'background:rgba(34,197,94,0.22);border:1px solid rgba(34,197,94,0.60);'
+#           : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);';
+#         var lockIconColor = locked ? '#22c55e' : 'rgba(255,255,255,0.40)';
+#         var unlockActive = !locked
+#           ? 'background:rgba(251,146,60,0.22);border:1px solid rgba(251,146,60,0.60);'
+#           : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);';
+#         var unlockIconColor = !locked ? '#fb923c' : 'rgba(255,255,255,0.40)';
+#         var btnBase = 'width:38px;height:38px;border-radius:12px;'
+#                     + 'display:flex;align-items:center;justify-content:center;'
+#                     + 'cursor:pointer;transition:all 0.2s;pointer-events:auto;';
+#         var lockClick = "event.stopPropagation();"
+#           + "var ev=new Event('hass-call-service',{bubbles:true,composed:true});"
+#           + "ev.detail={domain:'lock',service:'lock',serviceData:{entity_id:'lock.sl_fechadura_operate_lock'}};"
+#           + "this.dispatchEvent(ev);";
+#         var unlockClick = "event.stopPropagation();"
+#           + "var ev=new Event('hass-call-service',{bubbles:true,composed:true});"
+#           + "ev.detail={domain:'lock',service:'unlock',serviceData:{entity_id:'lock.sl_fechadura_operate_lock'}};"
+#           + "this.dispatchEvent(ev);";
+#         return '<div style="display:flex;gap:6px;">'
+#              +   '<div onclick="' + lockClick + '" style="' + btnBase + lockActive + '">'
+#              +     '<ha-icon icon="mdi:lock" style="--mdc-icon-size:20px;color:' + lockIconColor + ';"></ha-icon>'
+#              +   '</div>'
+#              +   '<div onclick="' + unlockClick + '" style="' + btnBase + unlockActive + '">'
+#              +     '<ha-icon icon="mdi:lock-open-variant" style="--mdc-icon-size:20px;color:' + unlockIconColor + ';"></ha-icon>'
+#              +   '</div>'
+#              + '</div>';
+#       ]]]
 #   state_styles:
 #     locked:
 #       icon:
@@ -231,18 +212,16 @@
 #     unlocked:
 #       icon:
 #         - color: "rgba(248,113,113,0.80)"
-#
 #   styles:
 #     grid:
-#       - grid-template-areas: >
-#           "i n btn_trancar btn_abrir"
-#           "i l btn_trancar btn_abrir"
-#       - grid-template-columns: "30px 1fr 46px 46px"
+#       - grid-template-areas: '"i n lock_buttons" "i l lock_buttons"'
+#       - grid-template-columns: "30px 1fr auto"
 #       - grid-template-rows: "auto auto"
-#       - column-gap: "8px"
+#       - column-gap: "10px"
 #       - align-items: "center"
 #     card:
-#       - padding: "10px 12px 10px 18px"
+#       - padding: "8px 14px 8px 18px"
+#       - cursor: "default"
 #     name:
 #       - font-size: "15px"
 #       - font-weight: "600"
@@ -260,13 +239,9 @@
 #       - width: "24px"
 #       - align-self: "center"
 #     custom_fields:
-#       btn_trancar:
+#       lock_buttons:
 #         - align-self: "center"
-#         - justify-self: "center"
-#       btn_abrir:
-#         - align-self: "center"
-#         - justify-self: "center"
-#
+#         - justify-self: "end"
 #   card_mod:
 #     style: |
 #       ha-card {
@@ -276,430 +251,96 @@
 #         height: auto !important;
 #       }
 #       .name, .label { text-align: left !important; }
-# --- FIM CÓDIGO ORIGINAL ---
 
-# --- CÓDIGO COMENTADO (v8 — toggle pill iOS) ---
-# Substituida por v9: 2 cadeados (trancar + destrancar) por pedido do usuario.
-# Razao: slider "Slide to answer" real requer drag gesture complexo, nao
-# disponivel como card oficial. Fallback autorizado: 2 botoes de cadeado.
+
+# ───────────────────────────────────────────────────────────────────
+# 3. PORTA SERVIÇO — comentada (v13)
+#    Removida do hero conforme solicitado.
+#    Para reativar: descomentar bloco abaixo (remover os "# " de cada linha).
+# ───────────────────────────────────────────────────────────────────
+
+# [PORTA SERVIÇO DESATIVADA v13 — descomentar para reativar]
 # - type: custom:button-card
-#   entity: lock.sl_fechadura_operate_lock
-#   ... (toggle pill completo comentado)
-# --- FIM CÓDIGO COMENTADO ---
-
-# v9 — Porta Principal com 2 cadeados (trancar / destrancar)
-#   - Cadeado 1 (lock): destaca verde quando trancada, pressionavel para trancar
-#   - Cadeado 2 (lock-open): destaca laranja quando destrancada, pressionavel para destrancar
-#   - Card inteiro sem tap_action (evita double-action). Cada cadeado tem sua
-#     propria acao via custom_field com onclick inline.
-- type: custom:button-card
-  entity: lock.sl_fechadura_operate_lock
-  show_name: true
-  show_icon: true
-  show_label: true
-  show_state: false
-  icon: mdi:door-closed
-  name: "Porta Principal"
-  label: >
-    [[[
-      if (entity.state === 'locked')   return 'Trancada';
-      if (entity.state === 'unlocked') return 'Destrancada';
-      return entity.state;
-    ]]]
-  tap_action:
-    action: none
-  hold_action:
-    action: none
-  custom_fields:
-    lock_buttons: >
-      [[[
-        var locked = entity.state === 'locked';
-        var cardEl = this;
-        // IDs unicos para cada cadeado — clique chama hass.callService diretamente
-        // via onclick inline (stopPropagation evita acionar o card inteiro).
-        var lockActive = locked
-          ? 'background:rgba(34,197,94,0.22);border:1px solid rgba(34,197,94,0.60);'
-          : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);';
-        var lockIconColor = locked ? '#22c55e' : 'rgba(255,255,255,0.40)';
-        var unlockActive = !locked
-          ? 'background:rgba(251,146,60,0.22);border:1px solid rgba(251,146,60,0.60);'
-          : 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);';
-        var unlockIconColor = !locked ? '#fb923c' : 'rgba(255,255,255,0.40)';
-        var btnBase = 'width:38px;height:38px;border-radius:12px;'
-                    + 'display:flex;align-items:center;justify-content:center;'
-                    + 'cursor:pointer;transition:all 0.2s;pointer-events:auto;';
-        var lockClick = "event.stopPropagation();"
-          + "var ev=new Event('hass-call-service',{bubbles:true,composed:true});"
-          + "ev.detail={domain:'lock',service:'lock',serviceData:{entity_id:'lock.sl_fechadura_operate_lock'}};"
-          + "this.dispatchEvent(ev);";
-        var unlockClick = "event.stopPropagation();"
-          + "var ev=new Event('hass-call-service',{bubbles:true,composed:true});"
-          + "ev.detail={domain:'lock',service:'unlock',serviceData:{entity_id:'lock.sl_fechadura_operate_lock'}};"
-          + "this.dispatchEvent(ev);";
-        return '<div style="display:flex;gap:6px;">'
-             +   '<div onclick="' + lockClick + '" style="' + btnBase + lockActive + '">'
-             +     '<ha-icon icon="mdi:lock" style="--mdc-icon-size:20px;color:' + lockIconColor + ';"></ha-icon>'
-             +   '</div>'
-             +   '<div onclick="' + unlockClick + '" style="' + btnBase + unlockActive + '">'
-             +     '<ha-icon icon="mdi:lock-open-variant" style="--mdc-icon-size:20px;color:' + unlockIconColor + ';"></ha-icon>'
-             +   '</div>'
-             + '</div>';
-      ]]]
-  state_styles:
-    locked:
-      icon:
-        - color: "rgba(52,211,153,0.80)"
-    unlocked:
-      icon:
-        - color: "rgba(248,113,113,0.80)"
-  styles:
-    grid:
-      - grid-template-areas: '"i n lock_buttons" "i l lock_buttons"'
-      - grid-template-columns: "30px 1fr auto"
-      - grid-template-rows: "auto auto"
-      - column-gap: "10px"
-      - align-items: "center"
-    card:
-      - padding: "8px 14px 8px 18px"
-      - cursor: "default"
-    name:
-      - font-size: "15px"
-      - font-weight: "600"
-      - color: "rgba(255,255,255,0.92)"
-      - text-align: "left"
-      - justify-self: "start"
-      - align-self: "end"
-    label:
-      - font-size: "12px"
-      - color: "rgba(255,255,255,0.40)"
-      - text-align: "left"
-      - justify-self: "start"
-      - align-self: "start"
-    icon:
-      - width: "24px"
-      - align-self: "center"
-    custom_fields:
-      lock_buttons:
-        - align-self: "center"
-        - justify-self: "end"
-  card_mod:
-    style: |
-      ha-card {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        height: auto !important;
-      }
-      .name, .label { text-align: left !important; }
-
-
-# ─────────────────────────────────────────────────────────────────
-# 3. PORTA SERVIÇO — button-card desabilitado (sem entidade) (v8)
-#    Mesmo layout da Porta Principal; toggle pill visualmente OFF,
-#    opacity 0.5, sem tap_action.
-#    Motivo da reescrita: a versao anterior com type:markdown +
-#    HTML inline flex era sanitizada pelo ha-markdown (<p> wrapper
-#    removia display:flex), causando ícone/texto/cadeados empilhados
-#    em fluxo de bloco (imagem 1).
-# ─────────────────────────────────────────────────────────────────
-
-# --- CÓDIGO ORIGINAL COMENTADO (v7 — type:markdown com HTML inline) ---
-# - type: markdown
-#   content: >
-#     <div style="display:flex;align-items:center;gap:8px;
-#     padding:10px 12px 10px 18px;box-sizing:border-box;width:100%;">
-#
-#       <ha-icon icon="mdi:door-closed"
-#         style="--mdc-icon-size:24px;color:rgba(255,255,255,0.28);
-#         flex-shrink:0;"></ha-icon>
-#
-#       <div style="flex:1;min-width:0;">
-#         <div style="font-size:15px;font-weight:600;
-#         color:rgba(255,255,255,0.35);text-align:left;
-#         white-space:nowrap;">Porta Serviço</div>
-#         <div style="font-size:12px;color:rgba(255,255,255,0.20);
-#         text-align:left;">Sem entidade</div>
-#       </div>
-#
-#       <div style="display:flex;gap:6px;flex-shrink:0;">
-#         <div style="width:40px;height:40px;border-radius:13px;
-#         background:rgba(255,255,255,0.04);
-#         border:1px solid rgba(255,255,255,0.08);
-#         display:flex;align-items:center;justify-content:center;">
-#           <ha-icon icon="mdi:lock"
-#             style="--mdc-icon-size:19px;
-#             color:rgba(255,255,255,0.16);"></ha-icon>
-#         </div>
-#         <div style="width:40px;height:40px;border-radius:13px;
-#         background:rgba(255,255,255,0.04);
-#         border:1px solid rgba(255,255,255,0.08);
-#         display:flex;align-items:center;justify-content:center;">
-#           <ha-icon icon="mdi:lock-open-variant"
-#             style="--mdc-icon-size:19px;
-#             color:rgba(255,255,255,0.16);"></ha-icon>
-#         </div>
-#       </div>
-#
-#     </div>
-#
-#   card_mod:
-#     style: |
-#       ha-card {
-#         background: transparent !important;
-#         border: none !important;
-#         box-shadow: none !important;
-#         padding: 0 !important;
-#       }
-#       ha-markdown { padding: 0 !important; }
-# --- FIM CÓDIGO ORIGINAL ---
-
-- type: custom:button-card
-  show_name: true
-  show_icon: true
-  show_label: true
-  icon: mdi:door-closed
-  name: "Porta Serviço"
-  label: "Sem entidade"
-  tap_action:
-    action: none
-  hold_action:
-    action: none
-  custom_fields:
-    lock_buttons: >
-      [[[
-        var btnBase = 'width:38px;height:38px;border-radius:12px;'
-                    + 'background:rgba(255,255,255,0.04);'
-                    + 'border:1px solid rgba(255,255,255,0.08);'
-                    + 'display:flex;align-items:center;justify-content:center;'
-                    + 'pointer-events:none;';
-        var iconStyle = '--mdc-icon-size:20px;color:rgba(255,255,255,0.20);';
-        return '<div style="display:flex;gap:6px;">'
-             +   '<div style="' + btnBase + '">'
-             +     '<ha-icon icon="mdi:lock" style="' + iconStyle + '"></ha-icon>'
-             +   '</div>'
-             +   '<div style="' + btnBase + '">'
-             +     '<ha-icon icon="mdi:lock-open-variant" style="' + iconStyle + '"></ha-icon>'
-             +   '</div>'
-             + '</div>';
-      ]]]
-  styles:
-    grid:
-      - grid-template-areas: '"i n lock_buttons" "i l lock_buttons"'
-      - grid-template-columns: "30px 1fr auto"
-      - grid-template-rows: "auto auto"
-      - column-gap: "10px"
-      - align-items: "center"
-    card:
-      - padding: "8px 14px 8px 18px"
-      - opacity: "0.55"
-      - cursor: "default"
-    name:
-      - font-size: "15px"
-      - font-weight: "600"
-      - color: "rgba(255,255,255,0.45)"
-      - text-align: "left"
-      - justify-self: "start"
-      - align-self: "end"
-    label:
-      - font-size: "12px"
-      - color: "rgba(255,255,255,0.28)"
-      - text-align: "left"
-      - justify-self: "start"
-      - align-self: "start"
-    icon:
-      - width: "24px"
-      - color: "rgba(255,255,255,0.32)"
-      - align-self: "center"
-    custom_fields:
-      lock_buttons:
-        - align-self: "center"
-        - justify-self: "end"
-  card_mod:
-    style: |
-      ha-card {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        height: auto !important;
-      }
-      .name, .label { text-align: left !important; }
-
-
-# ─────────────────────────────────────────────────────────────────
-# 4. CLIMA — v10 "TEMPO AGORA" (clone do tpl_sidebar) + curva decorativa
-#    - Widget compacto com emoji + temperatura + condição (idêntico ao sidebar)
-#    - tap_action abre popup_weather.yaml (radar + forecast + chart)
-#    - Curva decorativa SVG ocupa a base do bloco, SANGRANDO em:
-#        • laterais (negativo em -24px)
-#        • fundo (negativo em -24px + border-radius do wrapper)
-#      estilo lukevink/hass-config-lajv (orange/red gradient)
-# ─────────────────────────────────────────────────────────────────
-
-# --- CÓDIGO ORIGINAL COMENTADO (v9 — custom:weather-forecast-card troinine) ---
-# - type: custom:weather-forecast-card
-#   entity: weather.forecast_casa
-#   show_current: true
-#   show_forecast: true
-#   default_forecast: daily
-#   current:
-#     show_attributes: false
-#   forecast:
-#     mode: chart
-#     daily_slots: 5
-#     show_sun_times: false
-#   card_mod:
-#     style: |
-#       ha-card {
-#         background: transparent !important;
-#         border: none !important;
-#         box-shadow: none !important;
-#         padding: 8px 14px 14px !important;
-#         margin: auto -1px -1px -1px !important;
-#         border-radius: 0 0 17px 17px !important;
-#         overflow: hidden !important;
-#         max-height: 210px !important;
-#         --weather-forecast-card-forecast-conditions-icon-size: 0px;
-#       }
-#       .wfc-forecast ha-state-icon,
-#       .wfc-forecast ha-icon,
-#       .wfc-forecast img,
-#       .wfc-forecast-condition-icon {
-#         display: none !important;
-#       }
-#       .wfc-current-weather {
-#         padding: 0 0 6px 0 !important;
-#       }
-#       .wfc-forecast {
-#         padding: 0 !important;
-#       }
-# --- FIM CÓDIGO ORIGINAL ---
-
-# --- CÓDIGO COMENTADO (v10 — TEMPO AGORA simples, clone tpl_sidebar 353-362) ---
-# - type: custom:button-card
-#   entity: weather.forecast_casa
-#   triggers_update:
-#     - weather.forecast_casa
-#   show_name: false
-#   show_icon: false
-#   show_state: false
+#   show_name: true
+#   show_icon: true
 #   show_label: true
-#   label: >
-#     [[[
-#       var state = entity.state;
-#       var tempInt = Math.round(parseFloat(entity.attributes.temperature) || 0);
-#       var weatherEmoji = {
-#         'sunny':'☀️','clear-night':'🌙','partlycloudy':'⛅','cloudy':'☁️',
-#         'rainy':'🌧️','snowy':'❄️','windy':'💨','fog':'🌫️',
-#         'lightning':'⚡','lightning-rainy':'⛈️','pouring':'🌊'
-#       }[state] || '🌡️';
-#       return '<div style="font-size:10px;font-weight:700;letter-spacing:2px;'
-#            + 'color:rgba(255,255,255,0.30);text-transform:uppercase;'
-#            + 'margin-bottom:10px;">TEMPO AGORA</div>'
-#            + '<div style="display:flex;align-items:center;justify-content:space-between;">'
-#            +   '<div>'
-#            +     '<div style="font-size:34px;font-weight:200;color:rgba(255,255,255,0.92);'
-#            +       'line-height:1;">' + tempInt + '°</div>'
-#            +     '<div style="font-size:12px;color:rgba(255,255,255,0.42);'
-#            +       'margin-top:3px;text-transform:capitalize;">' + state + '</div>'
-#            +   '</div>'
-#            +   '<div style="font-size:44px;line-height:1;">' + weatherEmoji + '</div>'
-#            + '</div>';
-#     ]]]
-#   tap_action: !include ../popup/popup_weather.yaml
-#   styles:
-#     card:
-#       - background: "transparent"
-#       - border: "none"
-#       - box-shadow: "none"
-#       - padding: "14px 18px 10px"
-#       - height: "auto"
-#       - cursor: "pointer"
-#     label:
-#       - width: "100%"
-#       - text-align: "left"
-#       - padding: "0"
-# --- FIM CÓDIGO COMENTADO ---
-
-# --- CÓDIGO COMENTADO (v10 — curva como button-card filho com margin negativa) ---
-# A curva decorativa migrou para `ha-card::after` no wrapper bento_welcome.yaml,
-# para sangrar garantido nas 3 bordas (esq/dir/inf). Margin negativa em
-# button-card filho não funcionava bem porque o wrapper interno do button-card
-# constrange o rendering, deixando gaps na direita e na base.
-# - type: custom:button-card
-#   show_name: false
-#   show_icon: false
-#   show_state: false
-#   show_label: true
+#   icon: mdi:door-closed
+#   name: "Porta Serviço"
+#   label: "Sem entidade"
 #   tap_action:
 #     action: none
-#   label: >
-#     [[[
-#       return '<svg viewBox="0 0 400 48" width="100%" height="48" '
-#            + 'preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" '
-#            + 'style="display:block;">'
-#            + '<defs>'
-#            +   '<linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1">'
-#            +     '<stop offset="0%" stop-color="rgba(251,146,60,0.00)"/>'
-#            +     '<stop offset="50%" stop-color="rgba(251,146,60,0.18)"/>'
-#            +     '<stop offset="100%" stop-color="rgba(239,68,68,0.32)"/>'
-#            +   '</linearGradient>'
-#            +   '<linearGradient id="curveStroke" x1="0" y1="0" x2="1" y2="0">'
-#            +     '<stop offset="0%" stop-color="#fb923c" stop-opacity="0.55"/>'
-#            +     '<stop offset="50%" stop-color="#f97316" stop-opacity="0.80"/>'
-#            +     '<stop offset="100%" stop-color="#ef4444" stop-opacity="0.60"/>'
-#            +   '</linearGradient>'
-#            + '</defs>'
-#            + '<path d="M0 28 C55 22,110 18,170 22 C230 26,285 32,340 26 C370 22,388 20,400 19 L400 48 L0 48 Z" '
-#            +  'fill="url(#curveFill)"/>'
-#            + '<path d="M0 28 C55 22,110 18,170 22 C230 26,285 32,340 26 C370 22,388 20,400 19" '
-#            +  'fill="none" stroke="url(#curveStroke)" stroke-width="1.5" '
-#            +  'stroke-linecap="round"/>'
-#            + '</svg>';
-#     ]]]
+#   hold_action:
+#     action: none
+#   custom_fields:
+#     lock_buttons: >
+#       [[[
+#         var btnBase = 'width:38px;height:38px;border-radius:12px;'
+#                     + 'background:rgba(255,255,255,0.04);'
+#                     + 'border:1px solid rgba(255,255,255,0.08);'
+#                     + 'display:flex;align-items:center;justify-content:center;'
+#                     + 'pointer-events:none;';
+#         var iconStyle = '--mdc-icon-size:20px;color:rgba(255,255,255,0.20);';
+#         return '<div style="display:flex;gap:6px;">'
+#              +   '<div style="' + btnBase + '">'
+#              +     '<ha-icon icon="mdi:lock" style="' + iconStyle + '"></ha-icon>'
+#              +   '</div>'
+#              +   '<div style="' + btnBase + '">'
+#              +     '<ha-icon icon="mdi:lock-open-variant" style="' + iconStyle + '"></ha-icon>'
+#              +   '</div>'
+#              + '</div>';
+#       ]]]
 #   styles:
+#     grid:
+#       - grid-template-areas: '"i n lock_buttons" "i l lock_buttons"'
+#       - grid-template-columns: "30px 1fr auto"
+#       - grid-template-rows: "auto auto"
+#       - column-gap: "10px"
+#       - align-items: "center"
 #     card:
-#       - background: "transparent"
-#       - border: "none"
-#       - box-shadow: "none"
-#       - padding: "0"
-#       - margin: "0 -24px -24px -24px"
-#       - width: "calc(100% + 48px)"
-#       - height: "48px"
-#       - overflow: "hidden"
-#       - pointer-events: "none"
+#       - padding: "8px 14px 8px 18px"
+#       - opacity: "0.55"
 #       - cursor: "default"
+#     name:
+#       - font-size: "15px"
+#       - font-weight: "600"
+#       - color: "rgba(255,255,255,0.45)"
+#       - text-align: "left"
+#       - justify-self: "start"
+#       - align-self: "end"
 #     label:
-#       - width: "100%"
-#       - height: "48px"
-#       - padding: "0"
-#       - display: "block"
-# --- FIM CÓDIGO COMENTADO ---
+#       - font-size: "12px"
+#       - color: "rgba(255,255,255,0.28)"
+#       - text-align: "left"
+#       - justify-self: "start"
+#       - align-self: "start"
+#     icon:
+#       - width: "24px"
+#       - color: "rgba(255,255,255,0.32)"
+#       - align-self: "center"
+#     custom_fields:
+#       lock_buttons:
+#         - align-self: "center"
+#         - justify-self: "end"
+#   card_mod:
+#     style: |
+#       ha-card {
+#         background: transparent !important;
+#         border: none !important;
+#         box-shadow: none !important;
+#         height: auto !important;
+#       }
+#       .name, .label { text-align: left !important; }
 
 
-# --- CÓDIGO COMENTADO (v11 — emoji + flex inline nos atributos) ---
-# Substituida por v12 que usa:
-#   1) SVGs animados em /local/svg/weather/ (maiores, 64px)
-#   2) grid 2-col (ícone auto | texto) na coluna direita — alinhamento vertical
-#      dos 4 mini ícones
-# - type: custom:button-card
-#   entity: weather.forecast_casa
-#   triggers_update: [weather.forecast_casa, sun.sun]
-#   show_name: false
-#   show_icon: false
-#   show_state: false
-#   show_label: true
-#   label: >
-#     [[[ ... emoji + flex inline ... ]]]
-#   tap_action: !include ../popup/popup_weather.yaml
-# --- FIM CÓDIGO COMENTADO ---
+# ───────────────────────────────────────────────────────────────────
+# 4. CLIMA — v13 "TEMPO AGORA"
+#    Mudanças v13:
+#      - padding-bottom: 68px → 18px (curva ::after desativada no wrapper)
+#      - z-index removido (não há mais camada ::after para competir)
+#      - card envolvido em glassmorphism translúcido (mesmo padrão do projeto)
+#    Lógica JavaScript do label: inalterada (v12)
+# ───────────────────────────────────────────────────────────────────
 
-
-# 4. TEMPO AGORA — v12
-#    - Icone animado SVG grande (/local/svg/weather/*.svg, 64px)
-#    - Coluna esquerda: icone + temp + sensacao (alinhamento vertical central)
-#    - Coluna direita: grid 2-col (icone 18px | texto) — 4 atributos alinhados
-#      verticalmente (Umid / Vento / Nascer / Por)
-#    - Mapeamento HA state -> SVG file via sun.sun (day/night)
 - type: custom:button-card
   entity: weather.forecast_casa
   triggers_update:
@@ -726,7 +367,6 @@
         : '-- km/h';
       var sun = states['sun.sun'];
       var isDay = sun && sun.state === 'above_horizon';
-      // HA weather state -> SVG filename (meteocons em /local/svg/weather/)
       var svgMap = {
         'sunny': isDay ? 'clear-day' : 'clear-night',
         'clear-night': 'clear-night',
@@ -774,7 +414,6 @@
            + 'margin-bottom:12px;">TEMPO AGORA</div>'
            + '<div style="display:grid;grid-template-columns:1fr 1.15fr;gap:14px;'
            +   'align-items:center;">'
-           // --- COLUNA ESQUERDA: SVG animado + temp + sensacao ---
            +   '<div style="display:flex;align-items:center;gap:12px;">'
            +     '<img src="' + svgUrl + '" alt="' + state + '" '
            +       'style="width:64px;height:64px;flex-shrink:0;display:block;"/>'
@@ -785,35 +424,31 @@
            +         'margin-top:5px;">Sensação ' + apparentTxt + '</div>'
            +     '</div>'
            +   '</div>'
-           // --- COLUNA DIREITA: grid 3-col (icone | label | valor) ---
-           // --- CÓDIGO ORIGINAL COMENTADO (v12 — 1fr na ultima col empurrava valores)
-           //   +   '<div style="display:grid;grid-template-columns:20px auto 1fr;'
-           //   +     'row-gap:5px;column-gap:8px;align-items:center;">'
-           // --- FIM CÓDIGO ORIGINAL ---
-           // v13: justify-content:end empurra trio (icone|label|valor) para direita,
-           // aproximando-os dos valores alinhados na margem direita do bloco.
            +   '<div style="display:grid;grid-template-columns:20px auto auto;'
            +     'row-gap:5px;column-gap:10px;align-items:center;'
            +     'justify-content:end;">'
-           +     attrRow('mdi:water-percent',     '#60a5fa', 'Umid',   humid)
-           +     attrRow('mdi:weather-windy',     '#7dd3fc', 'Vento',  wind)
-           +     attrRow('mdi:weather-sunset-up', '#fb923c', 'Nascer', rising)
-           +     attrRow('mdi:weather-sunset-down','#f97316','Pôr',    setting)
+           +     attrRow('mdi:water-percent',      '#60a5fa', 'Umid',   humid)
+           +     attrRow('mdi:weather-windy',      '#7dd3fc', 'Vento',  wind)
+           +     attrRow('mdi:weather-sunset-up',  '#fb923c', 'Nascer', rising)
+           +     attrRow('mdi:weather-sunset-down','#f97316', 'Pôr',    setting)
            +   '</div>'
            + '</div>';
     ]]]
   tap_action: !include ../popup/popup_weather.yaml
   styles:
     card:
-      - background: "transparent"
-      - border: "none"
-      - box-shadow: "none"
-      # Padding-bottom maior para deixar respiro acima da curva ::after (56px).
-      - padding: "14px 18px 68px"
+      - background: "linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03))"
+      - backdrop-filter: "blur(18px) saturate(1.2)"
+      - -webkit-backdrop-filter: "blur(18px) saturate(1.2)"
+      - border: "1px solid rgba(255,255,255,0.16)"
+      - border-radius: "14px"
+      - box-shadow: "0 4px 24px rgba(0,0,0,0.18)"
+      # padding-bottom reduzido: curva ::after desativada no wrapper (v13)
+      # Baseline v12 (restore rápido): padding: "14px 18px 68px"
+      - padding: "14px 18px 18px"
       - height: "auto"
       - cursor: "pointer"
-      - position: "relative"
-      - z-index: "2"
+      # z-index removido: não há mais ::after no wrapper para competir
     label:
       - width: "100%"
       - text-align: "left"

@@ -27,22 +27,31 @@ card_mod:
     :host {
       height: 100% !important;
     }
-    
+
     ha-card {
       /* 2. Faz o cartão acompanhar o envelope */
       height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;
-      position: relative !important;  /* v10: âncora para ::after da curva decorativa */
+      position: relative !important;  /* âncora para ::after — mantida para rollback rápido da curva */
 
-      /* 3. Vidro Premium — tom azul reforçado (v10)
-            Baseline v9 (restore rapido):
-              background: linear-gradient(160deg, rgba(186,230,253,0.12), rgba(147,197,253,0.04)) !important;
-              border: 1px solid rgba(191,219,254,0.22) !important;
-              box-shadow: 0 0 24px rgba(96,165,250,0.06), 0 8px 32px rgba(0,0,0,0.2) !important;
+      /* 3. Imagem de fundo + degradê horizontal esquerda→transparente (v11)
+            O gradiente fica na frente (primeira camada) e dissolve para transparente
+            a partir de ~58%, expondo a foto do lado direito do bloco.
+
+            Baseline v10 (restore rápido — 1 linha):
+              background: linear-gradient(160deg, rgba(96,165,250,0.22), rgba(59,130,246,0.08)) !important;
       */
-      background: linear-gradient(160deg, rgba(96,165,250,0.22), rgba(59,130,246,0.08)) !important;
+      background:
+        linear-gradient(
+          to right,
+          rgba(11, 22, 35, 0.96)  0%,
+          rgba(11, 22, 35, 0.85) 30%,
+          rgba(11, 22, 35, 0.40) 58%,
+          rgba(11, 22, 35, 0.00) 78%
+        ),
+        url('/local/images/home_color.jpg') center / cover no-repeat !important;
       backdrop-filter: blur(20px) saturate(1.35) !important;
       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
       border: 1px solid rgba(147,197,253,0.34) !important;
@@ -64,9 +73,10 @@ card_mod:
       display: none !important;
     }
 
-    /* v10: curva decorativa como ::after — sangra nas 3 bordas (esq/dir/inf)
+    /* [CURVA DESATIVADA v11 — comentar para reativar]
+       v10: curva decorativa como ::after — sangra nas 3 bordas (esq/dir/inf)
        garantido, sem depender de margin negativa no button-card filho.
-       SVG inline URL-encoded (gradiente laranja→vermelho estilo lukevink). */
+       SVG inline URL-encoded (gradiente laranja→vermelho estilo lukevink).
     ha-card::after {
       content: '' !important;
       position: absolute !important;
@@ -76,8 +86,9 @@ card_mod:
       height: 56px !important;
       pointer-events: none !important;
       z-index: 1 !important;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 56' preserveAspectRatio='none'><defs><linearGradient id='f' x1='0' y1='0' x2='0' y2='1'><stop offset='0%25' stop-color='%23fb923c' stop-opacity='0'/><stop offset='55%25' stop-color='%23fb923c' stop-opacity='0.20'/><stop offset='100%25' stop-color='%23ef4444' stop-opacity='0.36'/></linearGradient><linearGradient id='s' x1='0' y1='0' x2='1' y2='0'><stop offset='0%25' stop-color='%23fb923c' stop-opacity='0.55'/><stop offset='50%25' stop-color='%23f97316' stop-opacity='0.85'/><stop offset='100%25' stop-color='%23ef4444' stop-opacity='0.65'/></linearGradient></defs><path d='M0 32 C55 24,110 18,170 22 C230 28,285 36,340 28 C370 24,388 22,400 21 L400 56 L0 56 Z' fill='url(%23f)'/><path d='M0 32 C55 24,110 18,170 22 C230 28,285 36,340 28 C370 24,388 22,400 21' fill='none' stroke='url(%23s)' stroke-width='1.5' stroke-linecap='round'/></svg>") !important;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 56' preserveAspectRatio='none'><defs><linearGradient id='f' x1='0' y1='0' x2='0' y2='1[...]");
       background-size: 100% 100% !important;
       background-repeat: no-repeat !important;
     }
+    */
 cards: !include ../../shared/grid-cards/bento_welcome.yaml

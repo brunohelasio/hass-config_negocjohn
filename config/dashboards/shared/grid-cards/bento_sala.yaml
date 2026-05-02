@@ -42,10 +42,10 @@
         perform_action: light.toggle
         target:
           entity_id: light.sala_switch_2
-      # double_tap_action: !include ../../shared/popup/rooms/livingroom.yaml  # ORIGINAL v1 — popup 65vw
       double_tap_action:
         action: navigate
         navigation_path: subview-sala
+      # double_tap_action: !include ../../shared/popup/rooms/livingroom_fullscreen.yaml
       hold_action:
         action: perform-action
         perform_action: light.turn_off
@@ -169,7 +169,7 @@
           card:
             type: custom:button-card
             entity: light.corredor_switch_1
-            icon: mdi:door-closed
+            icon: mdi:door-closed  # Ícone da porta com o traço
             name: Corredor
             show_icon: true
             show_name: true
@@ -203,10 +203,15 @@
                 - box-shadow: none
               grid:
                 - grid-template-areas: '"i n"'
-                - grid-template-columns: auto 1fr
+                - grid-template-columns: 16px auto  # 👈 Aqui estava o segredo: largura travada em 16px
                 - column-gap: 6px
+                - align-items: center
+              img_cell:  # 👈 Garante que a "célula" do botão não esmague o SVG
+                - justify-content: center
+                - width: 16px
               icon:
-                - width: 13px
+                - width: 15px
+                - height: 15px
                 - color: >
                     [[[
                       return entity?.state === 'on'
@@ -271,19 +276,30 @@
             - align-self: start
             - margin-right: 12px
 
-    # ── TV (container com controles independentes) ──────────────────────────
+
+# ── TV (container com controles independentes) ──────────────────────────
     - type: custom:stack-in-card
       view_layout:
         grid-area: tv
       card_mod:
         style: |
           ha-card {
+            /* --- CÓDIGO ANTIGO COMENTADO PARA ROLLBACK ---
             background: {% if is_state('light.grupo_luzes_sala','on') %}linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%){% else %}linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%){% endif %} !important;
             border: {% if is_state('light.grupo_luzes_sala','on') %}1px solid rgba(0,0,0,0.16){% else %}1px solid rgba(255,255,255,0.14){% endif %} !important;
             border-radius: 18px !important;
+            */
+
+            /* --- NOVO: Fundo Transparente e Bordas Divisórias (Cima e Baixo) --- */
+            background: transparent !important;
+            border: none !important;
+            border-top: {% if is_state('light.grupo_luzes_sala','on') %}1px solid rgba(0,0,0,0.08){% else %}1px solid rgba(255,255,255,0.10){% endif %} !important;
+            border-bottom: {% if is_state('light.grupo_luzes_sala','on') %}1px solid rgba(0,0,0,0.08){% else %}1px solid rgba(255,255,255,0.10){% endif %} !important;
+            border-radius: 0px !important;
+
             box-shadow: none !important;
-            /* 👇 Ajustado: Topo reduzido para 6px, base aumentada para 12px */
-            padding: 6px 12px 12px 12px !important;
+            /* 👇 Ajustado: Padding superior aumentado (10px) para afastar o título "TV" da nova linha */
+            padding: 10px 12px 12px 12px !important;
             height: auto !important;
             min-height: 110px !important;
             box-sizing: border-box;
@@ -738,24 +754,32 @@
                     ]]]
       styles:
         card:
-          - background: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on'
-                  ? 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%)'
-                  : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)';
-              ]]]
-          - border: >
-              [[[
-                return states['light.grupo_luzes_sala']?.state === 'on'
-                  ? '1px solid rgba(0,0,0,0.16)'
-                  : '1px solid rgba(255,255,255,0.14)';
-              ]]]
-          - border-radius: 18px
+          # --- CÓDIGO ANTIGO COMENTADO PARA ROLLBACK ---
+          # - background: >
+          #     [[[
+          #       return states['light.grupo_luzes_sala']?.state === 'on'
+          #         ? 'linear-gradient(180deg, rgba(0,0,0,0.10) 0%, rgba(0,0,0,0.06) 55%, rgba(0,0,0,0.04) 100%)'
+          #         : 'linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 55%, rgba(255,255,255,0.08) 100%)';
+          #     ]]]
+          # - border: >
+          #     [[[
+          #       return states['light.grupo_luzes_sala']?.state === 'on'
+          #         ? '1px solid rgba(0,0,0,0.16)'
+          #         : '1px solid rgba(255,255,255,0.14)';
+          #     ]]]
+          # - border-radius: 18px
+          # - margin: -14px 0 0 0
+          
+          # --- NOVO: Visual Transparente Integrado ---
+          - background: transparent
+          - border: none
+          - border-radius: 0px
+          - margin: -12px 0 0 0  # 👈 Margem repuxada para cima para fechar o vão vazio
+          
           - box-shadow: none
           - padding: 4px 10px
           - height: auto
           - box-sizing: border-box
-          - margin: -14px 0 0 0  # 👈 Ajuste agressivo para puxar o cartão para cima
         grid:
           - grid-template-areas: '"acicon n toggle minus temp plus"'
           - grid-template-columns: auto 1fr auto auto auto auto

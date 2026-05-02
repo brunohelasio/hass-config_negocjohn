@@ -27,30 +27,32 @@
       [[[
         const active = ['cleaning','moving','returning','segment_cleaning'].includes(entity?.state);
         if (active) {
-          // --- SVG ANIMADO (MANTIDO INTACTO) ---
-          return '<svg viewBox="0 0 50 50" width="72" height="72"><style>@keyframes spinner{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}@keyframes robot{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}</style><g style="animation:robot 10s infinite ease-in-out;transform-origin:center;transform-box:fill-box"><path fill="#242424" d="M32.91 9.041c-.038.01-.078.116-.078.116l3.389 2.136-.07.078-3.413-2.124s-.073.095-.039.12c2.241 1.627 5.202 3.379 5.202 3.379s-.144.323-.134.497c.01.162.177.466.177.466l-4.476 3.854.089.125 2.962-2.433.053.081-3.006 2.469.14.07 4.601-3.746s.281.226.475.287a.833.833 0 0 0 .573-.02l2.598 5.381.143-.082-1.621-3.524.062-.03 1.659 3.507.135-.06-2.516-5.456s.047-.059.075-.084c0 0 .193-.092.313-.28.073-.113.127-.224.07-.484l.188-.115c1.22-.184 6.06-.892 6.06-.892l-.012-.13-4.057.524-.016-.068 4.097-.558-.002-.135-6.25.75c-.1-.481-.681-.718-.681-.718.272-1.206 1.195-6.174 1.195-6.174s-.068-.044-.073-.02l-.896 3.984-.073.002.829-3.984c.005-.024-.07-.018-.07-.018L39.01 11.85s-.195-.032-.812.356c-.042.026-.147-.003-.147-.003l-5.125-3.159a.02.02 0 0 0-.016-.002Zm6.014 3.717a.357.357 0 1 1 .303.645.357.357 0 0 1-.303-.645Z" style="animation:spinner .8s infinite linear;transform-origin:center;transform-box:fill-box"/><path fill="#9da0a2" stroke="#787878" d="M47.53 24.915c0 .3-.016.61-.047.93-.026.27-1.094-.718-1.14-.436-.041.247-.138.76-.138.76.403.29 1.087 1.11 1.076 1.472-.182 6.02-5.726 12.664-5.726 12.664-5.937 5.656-10.869 6.615-16.526 7.048C13.714 48.22 2.715 36.397 2.815 27.72c0 0-.178-.417.934-1.593 0 0-.02-.688-.05-.99-.033-.33-1.13 1.18-1.148.845-.022-.406 0-1.39 0-1.802 0-12.383 10.094-21.671 22.478-21.671 12.384 0 22.501 10.023 22.501 22.407Z"/><path fill="#787878" d="M28.618 8.842h-7.281c-.623 0-1.127.455-1.127 1.016 0 .561.504 1.016 1.127 1.016h7.281c.622 0 1.127-.455 1.127-1.016 0-.561-.505-1.016-1.127-1.016Z"/><path d="M25.036 27.378a6.563 6.563 0 1 0 0-13.125 6.563 6.563 0 0 0 0 13.125Z" fill="#787878"/><path d="M25.035 26.45a5.635 5.635 0 1 0 0-11.27 5.635 5.635 0 0 0 0 11.27Z" fill="#9da0a2"/></g></svg>';
+          return '<svg viewBox="0 0 50 50" width="72" height="72" style="display: block;"><style>@keyframes spinner{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}@keyframes robot{0%{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}</style><g style="animation:robot 10s infinite ease-in-out;transform-origin:center;transform-box:fill-box"><path fill="#242424" d="M32.91 9.041c-.038.01-.078.116-.078.116l3.389 2.136-.07.078-3.413-2.124s-.073.095-.039.12c2.241 1.627 5.202 3.379 5.202 3.379s-.144.323-.134.497c.01.162.177.466.177.466l-4.476 3.854.089.125 2.962-2.433.053.081-3.006 2.469.14.07 4.601-3.746s.281.226.475.287a.833.833 0 0 0 .573-.02l2.598 5.381.143-.082-1.621-3.524.062-.03 1.659 3.507.135-.06-2.516-5.456s.047-.059.075-.084c0 0 .193-.092.313-.28.073-.113.127-.224.07-.484l.188-.115c1.22-.184 6.06-.892 6.06-.892l-.012-.13-4.057.524-.016-.068 4.097-.558-.002-.135-6.25.75c-.1-.481-.681-.718-.681-.718.272-1.206 1.195-6.174 1.195-6.174s-.068-.044-.073-.02l-.896 3.984-.073.002.829-3.984c.005-.024-.07-.018-.07-.018L39.01 11.85s-.195-.032-.812.356c-.042.026-.147-.003-.147-.003l-5.125-3.159a.02.02 0 0 0-.016-.002Zm6.014 3.717a.357.357 0 1 1 .303.645.357.357 0 0 1-.303-.645Z" style="animation:spinner .8s infinite linear;transform-origin:center;transform-box:fill-box"/><path fill="#9da0a2" stroke="#787878" d="M47.53 24.915c0 .3-.016.61-.047.93-.026.27-1.094-.718-1.14-.436-.041.247-.138.76-.138.76.403.29 1.087 1.11 1.076 1.472-.182 6.02-5.726 12.664-5.726 12.664-5.937 5.656-10.869 6.615-16.526 7.048C13.714 48.22 2.715 36.397 2.815 27.72c0 0-.178-.417.934-1.593 0 0-.02-.688-.05-.99-.033-.33-1.13 1.18-1.148.845-.022-.406 0-1.39 0-1.802 0-12.383 10.094-21.671 22.478-21.671 12.384 0 22.501 10.023 22.501 22.407Z"/><path fill="#787878" d="M28.618 8.842h-7.281c-.623 0-1.127.455-1.127 1.016 0 .561.504 1.016 1.127 1.016h7.281c.622 0 1.127-.455 1.127-1.016 0-.561-.505-1.016-1.127-1.016Z"/><path d="M25.036 27.378a6.563 6.563 0 1 0 0-13.125 6.563 6.563 0 0 0 0 13.125Z" fill="#787878"/><path d="M25.035 26.45a5.635 5.635 0 1 0 0-11.27 5.635 5.635 0 0 0 0 11.27Z" fill="#9da0a2"/></g></svg>';
         }
-        // --- IMAGEM ESTÁTICA PARA TESTE ---
         return '<img src="/local/images/roborock_S7.png" width="72" height="72" style="object-fit: contain; display: block;" />';
       ]]]
     status: |
       [[[
         const labels = {
           cleaning: 'Limpando',
-          returning: 'Retornando à base',
-          docked: 'Parado',
+          returning: 'Retornando',
+          docked: 'Na base',
           idle: 'Parado',
-          paused: 'Pausado',
+          paused: 'Parado',
           moving: 'Em movimento',
-          segment_cleaning: 'Limpando setor'
+          segment_cleaning: 'Limpando'
         };
         const s = entity?.state || 'unknown';
-        return `<div style="font-size:21px;font-weight:700;line-height:1.05;color:#fff;">${labels[s] || s}</div>`;
+        return `<div style="font-size:16px;font-weight:700;line-height:1.1;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">${labels[s] || s}</div>`;
       ]]]
     location: |
       [[[
         const room = states['sensor.roborock_s7_comodo_atual']?.state;
-        return `<div style="font-size:15px;color:rgba(255,255,255,0.70);">Local: ${room && !['unknown','unavailable'].includes(room) ? room : '--'}</div>`;
+        const roomText = room && !['unknown','unavailable'].includes(room) ? room : '--';
+        return `<div style="display:flex;align-items:center;gap:4px;font-size:14px;color:rgba(255,255,255,0.70);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">
+                  <ha-icon icon="mdi:map-marker-radius-outline" style="--mdc-icon-size:16px;flex-shrink:0;"></ha-icon>
+                  <span style="overflow:hidden;text-overflow:ellipsis;">${roomText}</span>
+                </div>`;
       ]]]
     mini_stats: |
       [[[
@@ -60,24 +62,28 @@
         if (batVal == null || invalid.includes(String(batVal).toLowerCase())) {
           batVal = states['sensor.roborock_s7_bateria']?.state || states['sensor.roborock_s7_battery']?.state || '--';
         }
-        const bat = batVal !== '--' ? String(batVal).replace('%', '') : '--';
+        const bat = batVal !== '--' ? Math.round(Number(batVal)) : '--';
         
         let areaVal = entity?.attributes?.cleaning_area;
         if (areaVal == null || invalid.includes(String(areaVal).toLowerCase())) {
           areaVal = states['sensor.roborock_s7_area_limpa']?.state || states['sensor.roborock_s7_cleaning_area']?.state || '--';
         }
-        const area = areaVal !== '--' ? Math.round(areaVal) : '--';
+        const area = areaVal !== '--' && !isNaN(areaVal) ? Number(areaVal).toFixed(1).replace('.0', '') : '--';
 
         let timeVal = entity?.attributes?.cleaning_time;
         if (timeVal == null || invalid.includes(String(timeVal).toLowerCase())) {
           timeVal = states['sensor.roborock_s7_tempo_de_limpeza']?.state || states['sensor.roborock_s7_cleaning_time']?.state || '--';
         }
         let time = timeVal;
-        if(!isNaN(time) && time > 300) time = Math.round(time/60);
+        if(!isNaN(time) && time !== '--') {
+          let t = Number(time);
+          if (t > 300) t = t / 60;
+          time = t.toFixed(1).replace('.0', '');
+        }
 
-        const boxStyle = "background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 6px 0;";
-        const iconStyle = "--mdc-icon-size:16px; color:rgba(255,255,255,0.8); margin-bottom:2px;";
-        const textStyle = "font-size:10px; font-weight:700; color:rgba(255,255,255,0.9);";
+        const boxStyle = "background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 6px 0; overflow:hidden;";
+        const iconStyle = "--mdc-icon-size:16px; color:rgba(255,255,255,0.8); margin-bottom:2px; flex-shrink:0;";
+        const textStyle = "font-size:10px; font-weight:700; color:rgba(255,255,255,0.9); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:90%;";
 
         function makeBox(icon, text) {
            return `<div style="${boxStyle}">
@@ -86,54 +92,105 @@
                    </div>`;
         }
 
-        return `<div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; width: 96px;">
+        return `<div style="display:grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap:6px; width: 96px;">
                   ${makeBox('mdi:lightning-bolt', bat + '%')}
                   ${makeBox('mdi:cube-outline', area + 'm²')}
                   ${makeBox('mdi:timer-outline', time + ' min')}
                 </div>`;
       ]]]
-    
-    action_buttons: |
-      [[[
-        const btnBase = "width: 100%; height: 54px; border-radius: 14px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer;";
-        const iconBase = "--mdc-icon-size: 20px; display: block !important; margin: 0 !important; padding: 0 !important; line-height: 1 !important;";
-        const textBase = "font-size: 12px; font-weight: 700; display: block !important; margin: 0 !important; padding: 0 !important; line-height: 1 !important;";
-        
-        const startCall = "event.stopPropagation(); const ev = new Event('hass-call-service', {bubbles: true, composed: true}); ev.detail = {domain: 'vacuum', service: 'start', serviceData: {entity_id: 'vacuum.roborock_s7'}}; this.dispatchEvent(ev);";
-        const stopCall = "event.stopPropagation(); const ev = new Event('hass-call-service', {bubbles: true, composed: true}); ev.detail = {domain: 'vacuum', service: 'stop', serviceData: {entity_id: 'vacuum.roborock_s7'}}; this.dispatchEvent(ev);";
-        const baseCall = "event.stopPropagation(); const ev = new Event('hass-call-service', {bubbles: true, composed: true}); ev.detail = {domain: 'vacuum', service: 'return_to_base', serviceData: {entity_id: 'vacuum.roborock_s7'}}; this.dispatchEvent(ev);";
 
-        return `
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%;">
+    action_buttons:
+      card:
+        type: horizontal-stack
+        cards:
+          - type: custom:button-card
+            entity: vacuum.roborock_s7
+            name: Iniciar
+            icon: mdi:play
+            show_icon: true
+            show_name: true
+            tap_action:
+              action: call-service
+              service: vacuum.start
+              service_data:
+                entity_id: vacuum.roborock_s7
+            styles:
+              card:
+                - height: 54px
+                - border-radius: 14px
+                - background: rgba(116,108,209,0.48)
+                - border: 1px solid rgba(168,157,255,0.45)
+                - box-shadow: none
+                - box-sizing: border-box
+              icon:
+                - color: rgba(218,210,255,0.95)
+                - width: 22px
+              name:
+                - color: rgba(218,210,255,0.95)
+                - font-size: 12px
+                - font-weight: 700
           
-          <!-- Iniciar -->
-          <div onclick="${startCall}" style="${btnBase} background: rgba(116,108,209,0.48); border: 1px solid rgba(168,157,255,0.45);">
-            <ha-icon icon="mdi:play" style="${iconBase} color: rgba(218,210,255,0.95);"></ha-icon>
-            <span style="${textBase} color: rgba(218,210,255,0.95);">Iniciar</span>
-          </div>
-          
-          <!-- Parar -->
-          <div onclick="${stopCall}" style="${btnBase} background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);">
-            <ha-icon icon="mdi:stop" style="${iconBase} color: rgba(255,255,255,0.62);"></ha-icon>
-            <span style="${textBase} color: rgba(255,255,255,0.62);">Parar</span>
-          </div>
+          - type: custom:button-card
+            entity: vacuum.roborock_s7
+            name: Parar
+            icon: mdi:stop
+            show_icon: true
+            show_name: true
+            tap_action:
+              action: call-service
+              service: vacuum.stop
+              service_data:
+                entity_id: vacuum.roborock_s7
+            styles:
+              card:
+                - height: 54px
+                - border-radius: 14px
+                - background: rgba(255,255,255,0.06)
+                - border: 1px solid rgba(255,255,255,0.14)
+                - box-shadow: none
+                - box-sizing: border-box
+              icon:
+                - color: rgba(255,255,255,0.62)
+                - width: 22px
+              name:
+                - color: rgba(255,255,255,0.62)
+                - font-size: 12px
+                - font-weight: 700
 
-          <!-- Base -->
-          <div onclick="${baseCall}" style="${btnBase} background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);">
-            <ha-icon icon="mdi:home-map-marker" style="${iconBase} color: rgba(255,255,255,0.62);"></ha-icon>
-            <span style="${textBase} color: rgba(255,255,255,0.62);">Base</span>
-          </div>
-          
-        </div>`;
-      ]]]
+          - type: custom:button-card
+            entity: vacuum.roborock_s7
+            name: Base
+            icon: mdi:home-map-marker
+            show_icon: true
+            show_name: true
+            tap_action:
+              action: call-service
+              service: vacuum.return_to_base
+              service_data:
+                entity_id: vacuum.roborock_s7
+            styles:
+              card:
+                - height: 54px
+                - border-radius: 14px
+                - background: rgba(255,255,255,0.06)
+                - border: 1px solid rgba(255,255,255,0.14)
+                - box-shadow: none
+                - box-sizing: border-box
+              icon:
+                - color: rgba(255,255,255,0.62)
+                - width: 22px
+              name:
+                - color: rgba(255,255,255,0.62)
+                - font-size: 12px
+                - font-weight: 700
 
   styles:
     card:
       - height: 100%
+      - width: 100%
       - display: flex
       - flex-direction: column
-      - box-sizing: border-box
-      - padding: 14px 16px 10px
+      - padding: 14px 16px 12px
       - background: transparent
       - border: none
       - box-shadow: none
@@ -142,7 +199,7 @@
       - width: 100%
       - grid-template-areas: '"header header header" "icon status mini_stats" "icon location mini_stats" "spacer spacer spacer" "action_buttons action_buttons action_buttons"'
       - grid-template-columns: repeat(3, 1fr)
-      - grid-template-rows: min-content min-content min-content 1fr 64px 
+      - grid-template-rows: min-content min-content min-content 1fr 64px
       - column-gap: 10px
       - row-gap: 3px
     custom_fields:

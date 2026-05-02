@@ -34,6 +34,14 @@ card_mod:
       --ha-card-border-width: 0 !important;
     }
     
+    /* CORREÇÃO AQUI: Força a div interna a esticar e propagar o flexbox */
+    .card-content, ha-card > div {
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      flex-grow: 1 !important;
+    }
+
     ha-card::before {
       display: none !important;
     }

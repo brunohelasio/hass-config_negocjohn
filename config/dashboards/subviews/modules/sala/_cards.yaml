@@ -1,3 +1,23 @@
+# ── BLOCO 0: Espaçador Transparente (Gambiarra) ────────────────────
+- type: custom:button-card
+  color_type: blank-card
+  view_layout:
+    grid-area: spacer
+  styles:
+    card:
+      - height: 6vh # Ajuste a altura em pixels aqui (ex: 30px, 50px)
+      - margin: 0px
+      - padding: 0px
+  card_mod:
+    style: |
+      ha-card {
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+
 # ── BLOCO 1: Hero ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
@@ -144,6 +164,7 @@
         - backdrop-filter: blur(10px) saturate(1.35)
         - -webkit-backdrop-filter: blur(10px) saturate(1.35)
 
+# ── BLOCO 2: Iluminação ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
     grid-area: lights
@@ -291,324 +312,210 @@
             tap_action:
               action: toggle
 
-- type: vertical-stack
+# ── BLOCO 3: AC ────────────────────────────────────────────────────
+- type: thermostat
   view_layout:
     grid-area: ac
-  cards:
-    - type: custom:mushroom-climate-card
-      entity: climate.sl_ar_condicionado
-      name: Ar Condicionado
-      icon: mdi:air-conditioner
-      hvac_modes:
-        - 'off'
-        - cool
-        - heat
-        - fan_only
-      primary_info: name
-      secondary_info: state
-      show_temperature_control: false
-      card_mod:
-        style: |
-          mushroom-card {
-            margin: -4px -10px 0 -2px;
-          }
-
-    - type: custom:mushroom-climate-card
-      entity: climate.sl_ar_condicionado
-      icon_type: none
-      secondary_info: none
-      primary_info: none
-      show_temperature_control: true
-      card_mod:
-        style: |
-          mushroom-card {
-            margin: -16px -10px -8px -2px;
-          }
-
-    - type: custom:hui-horizontal-stack-card
-      cards:
-        - type: custom:button-card
-          entity: climate.sl_ar_condicionado
-          name: Low
-          tap_action:
-            action: call-service
-            service: climate.set_fan_mode
-            service_data:
-              entity_id: climate.sl_ar_condicionado
-              fan_mode: low
-          styles:
-            card:
-              - border-radius: 10px
-              - padding: 8px 6px
-              - background-color: >
-                  [[[
-                    return entity?.attributes?.fan_mode === 'low' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
-                  ]]]
-            name:
-              - font-size: 0.8em
-              - font-weight: 600
-        - type: custom:button-card
-          entity: climate.sl_ar_condicionado
-          name: Med
-          tap_action:
-            action: call-service
-            service: climate.set_fan_mode
-            service_data:
-              entity_id: climate.sl_ar_condicionado
-              fan_mode: medium
-          styles:
-            card:
-              - border-radius: 10px
-              - padding: 8px 6px
-              - background-color: >
-                  [[[
-                    return entity?.attributes?.fan_mode === 'medium' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
-                  ]]]
-            name:
-              - font-size: 0.8em
-              - font-weight: 600
-        - type: custom:button-card
-          entity: climate.sl_ar_condicionado
-          name: High
-          tap_action:
-            action: call-service
-            service: climate.set_fan_mode
-            service_data:
-              entity_id: climate.sl_ar_condicionado
-              fan_mode: high
-          styles:
-            card:
-              - border-radius: 10px
-              - padding: 8px 6px
-              - background-color: >
-                  [[[
-                    return entity?.attributes?.fan_mode === 'high' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
-                  ]]]
-            name:
-              - font-size: 0.8em
-              - font-weight: 600
-        - type: custom:button-card
-          entity: climate.sl_ar_condicionado
-          name: Swing
-          tap_action:
-            action: call-service
-            service: climate.set_swing_mode
-            service_data:
-              entity_id: climate.sl_ar_condicionado
-              swing_mode: >
-                [[[
-                  return entity?.attributes?.swing_mode === 'off' ? 'on' : 'off';
-                ]]]
-          styles:
-            card:
-              - border-radius: 10px
-              - padding: 8px 6px
-              - background-color: >
-                  [[[
-                    return entity?.attributes?.swing_mode === 'on' ? 'rgba(158, 158, 158, 0.20)' : 'rgba(189, 189, 189, 0.05)';
-                  ]]]
-            name:
-              - font-size: 0.8em
-              - font-weight: 600
-
-    - type: entities
-      entities:
-        - entity: sensor.sl_sensor_temp_humid_temperatura
-          name: Temperatura média
-        - entity: sensor.sl_sensor_temp_humid_umidade
-          name: Umidade
+  entity: climate.sl_ar_condicionado
+  name: "Ar Condicionado" # Trazemos o nome de volta
+  features:
+    - type: climate-hvac-modes
+    - type: climate-preset-modes
+      style: dropdown
+    - type: climate-fan-modes
+      style: dropdown
   card_mod:
     style: |
       ha-card {
-        background: rgba(255,255,255,0.06) !important;
-        backdrop-filter: blur(20px) saturate(1.35) !important;
-        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-        border: 1px solid rgba(255,255,255,0.10) !important;
+        background: linear-gradient(180deg, rgba(15,20,35,0.78) 0%, rgba(20,24,33,0.88) 100%) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
         border-radius: 20px !important;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        box-shadow: 0 0 24px rgba(62,132,255,0.22), 0 0 70px rgba(62,132,255,0.14) !important;
+        height: 100% !important;
+      }
+      
+      /* Pega o título original e aplica o estilo do seu painel */
+      .name {
+        font-size: 12px !important;
+        letter-spacing: .18em !important;
+        text-transform: uppercase !important;
+        font-weight: 600 !important;
+        color: rgba(255,255,255,0.62) !important;
+        position: absolute !important;
+        left: 16px !important;
+        top: 18px !important;
+      }
+
+# ── BLOCO 4: Cameras ────────────────────────────────────────────────────
+- type: custom:button-card
+  view_layout:
+    grid-area: cams
+  show_icon: false
+  show_name: false
+  show_label: false
+  show_state: false
+  tap_action:
+    action: none
+  card_mod:
+    style: |
+      ha-card {
+        background: linear-gradient(180deg, rgba(15,20,35,0.78) 0%, rgba(20,24,33,0.88) 100%) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 20px !important;
+        box-shadow: 0 0 24px rgba(62,132,255,0.18), 0 0 60px rgba(62,132,255,0.10) !important;
         height: 100% !important;
         overflow: hidden !important;
       }
-
-- type: vertical-stack
-  view_layout:
-    grid-area: cams
-  card_mod:
-    style: |
-      .: |
-        #root {
-          gap: 0 !important;
-        }
-        #root > * {
-          margin: 0 !important;
-        }
-  cards:
-    - type: custom:button-card
-      show_icon: false
-      show_name: false
-      show_label: false
-      show_state: false
-      tap_action:
-        action: none
-      card_mod:
-        style: |
-          ha-card {
-            background: linear-gradient(180deg, rgba(15,20,35,0.78) 0%, rgba(20,24,33,0.88) 100%) !important;
-            border: 1px solid rgba(255,255,255,0.12) !important;
-            border-radius: 20px !important;
-            box-shadow: 0 0 24px rgba(62,132,255,0.18), 0 0 60px rgba(62,132,255,0.10) !important;
-            height: 100% !important;
-            overflow: hidden !important;
-          }
-      styles:
-        grid:
-          - grid-template-areas: |
-              "eyebrow live"
-              "title live"
-              "cam_main cam_main"
-          - grid-template-columns: 1fr auto
-          - grid-template-rows: min-content min-content minmax(120px, 1fr)
-          - row-gap: 8px
-          - column-gap: 8px
-        card:
-          - padding: 12px
-          - height: 100%
-        custom_fields:
-          eyebrow:
-            - justify-self: start
-            - align-self: start
-          title:
-            - justify-self: start
-            - align-self: start
-          live:
-            - justify-self: end
-            - align-self: start
-          cam_main:
-            - align-self: stretch
-            - min-height: 0
-      custom_fields:
-        eyebrow: >
-          [[[
-            return `<div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:rgba(255,255,255,0.55);">Câmeras</div>`;
-          ]]]
-        title: >
-          [[[
-            return `<div style="font-size:20px;font-weight:700;line-height:1.1;color:rgba(255,255,255,0.96);">Sala e varanda</div>`;
-          ]]]
-        live:
+  styles:
+    grid:
+      - grid-template-areas: |
+          "eyebrow live"
+          "title live"
+          "cam_main cam_main"
+      - grid-template-columns: 1fr auto
+      - grid-template-rows: min-content min-content minmax(120px, 1fr)
+      - row-gap: 8px
+      - column-gap: 8px
+    card:
+      - padding: 12px
+      - height: 100%
+    custom_fields:
+      eyebrow:
+        - justify-self: start
+        - align-self: start
+      title:
+        - justify-self: start
+        - align-self: start
+      live:
+        - justify-self: end
+        - align-self: start
+      cam_main:
+        - align-self: stretch
+        - min-height: 0
+  custom_fields:
+    eyebrow: >
+      [[[
+        return `<div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:rgba(255,255,255,0.55);">Câmeras</div>`;
+      ]]]
+    title: >
+      [[[
+        return `<div style="font-size:20px;font-weight:700;line-height:1.1;color:rgba(255,255,255,0.96);">Sala e varanda</div>`;
+      ]]]
+    live:
+      card:
+        type: custom:button-card
+        name: Live
+        show_icon: false
+        styles:
           card:
-            type: custom:button-card
-            name: Live
-            show_icon: false
-            styles:
-              card:
-                - padding: 8px 12px
-                - border-radius: 999px
-                - background: rgba(12,90,132,0.42)
-                - border: 1px solid rgba(102,211,255,0.45)
-              name:
-                - color: rgba(255,255,255,0.95)
-                - font-size: 14px
-                - font-weight: 700
-        cam_main:
-          card:
-            type: vertical-stack
-            cards:
-              - type: conditional
-                conditions:
-                  - entity: input_select.bento_active_camera
-                    state: camera.sl_camera_2
-                card:
-                  type: picture-elements
+            - padding: 8px 12px
+            - border-radius: 999px
+            - background: rgba(12,90,132,0.42)
+            - border: 1px solid rgba(102,211,255,0.45)
+          name:
+            - color: rgba(255,255,255,0.95)
+            - font-size: 14px
+            - font-weight: 700
+    cam_main:
+      card:
+        type: vertical-stack
+        cards:
+          - type: conditional
+            conditions:
+              - entity: input_select.bento_active_camera
+                state: camera.sl_camera_2
+            card:
+              type: picture-elements
+              camera_image: camera.sl_camera_2
+              camera_view: live
+              elements:
+                - type: image
+                  entity: camera.sl_camera_2
                   camera_image: camera.sl_camera_2
                   camera_view: live
-                  elements:
-                    - type: image
-                      entity: camera.sl_camera_2
-                      camera_image: camera.sl_camera_2
-                      camera_view: live
-                      style:
-                        left: 50%
-                        top: 50%
-                        width: 100%
-                        transform: translate(-50%, -50%)
-                      tap_action:
-                        action: more-info
-                    - type: image
-                      entity: camera.vr_camera_2
-                      camera_image: camera.vr_camera_2
-                      camera_view: live
-                      style:
-                        right: 12px
-                        bottom: 12px
-                        width: 32%
-                        transform: none
-                        border-radius: 10px
-                        border: 1px solid rgba(255,255,255,0.35)
-                        box-shadow: 0 6px 14px rgba(0,0,0,0.45)
-                        z-index: 3
-                      tap_action:
-                        action: call-service
-                        service: input_select.select_option
-                        service_data:
-                          entity_id: input_select.bento_active_camera
-                          option: camera.vr_camera_2
-                  card_mod:
-                    style: |
-                      ha-card {
-                        border-radius: 16px !important;
-                        overflow: hidden !important;
-                        border: 1px solid rgba(255,255,255,0.12) !important;
-                        height: 100% !important;
-                      }
-              - type: conditional
-                conditions:
-                  - entity: input_select.bento_active_camera
-                    state: camera.vr_camera_2
-                card:
-                  type: picture-elements
+                  style:
+                    left: 50%
+                    top: 50%
+                    width: 100%
+                    transform: translate(-50%, -50%)
+                  tap_action:
+                    action: more-info
+                - type: image
+                  entity: camera.vr_camera_2
                   camera_image: camera.vr_camera_2
                   camera_view: live
-                  elements:
-                    - type: image
-                      entity: camera.vr_camera_2
-                      camera_image: camera.vr_camera_2
-                      camera_view: live
-                      style:
-                        left: 50%
-                        top: 50%
-                        width: 100%
-                        transform: translate(-50%, -50%)
-                      tap_action:
-                        action: more-info
-                    - type: image
-                      entity: camera.sl_camera_2
-                      camera_image: camera.sl_camera_2
-                      camera_view: live
-                      style:
-                        right: 12px
-                        bottom: 12px
-                        width: 32%
-                        transform: none
-                        border-radius: 10px
-                        border: 1px solid rgba(255,255,255,0.35)
-                        box-shadow: 0 6px 14px rgba(0,0,0,0.45)
-                        z-index: 3
-                      tap_action:
-                        action: call-service
-                        service: input_select.select_option
-                        service_data:
-                          entity_id: input_select.bento_active_camera
-                          option: camera.sl_camera_2
-                  card_mod:
-                    style: |
-                      ha-card {
-                        border-radius: 16px !important;
-                        overflow: hidden !important;
-                        border: 1px solid rgba(255,255,255,0.12) !important;
-                        height: 100% !important;
-                      }
+                  style:
+                    right: 12px
+                    bottom: 12px
+                    width: 32%
+                    transform: none
+                    border-radius: 10px
+                    border: 1px solid rgba(255,255,255,0.35)
+                    box-shadow: 0 6px 14px rgba(0,0,0,0.45)
+                    z-index: 3
+                  tap_action:
+                    action: call-service
+                    service: input_select.select_option
+                    service_data:
+                      entity_id: input_select.bento_active_camera
+                      option: camera.vr_camera_2
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 16px !important;
+                    overflow: hidden !important;
+                    border: 1px solid rgba(255,255,255,0.12) !important;
+                    height: 100% !important;
+                  }
+          - type: conditional
+            conditions:
+              - entity: input_select.bento_active_camera
+                state: camera.vr_camera_2
+            card:
+              type: picture-elements
+              camera_image: camera.vr_camera_2
+              camera_view: live
+              elements:
+                - type: image
+                  entity: camera.vr_camera_2
+                  camera_image: camera.vr_camera_2
+                  camera_view: live
+                  style:
+                    left: 50%
+                    top: 50%
+                    width: 100%
+                    transform: translate(-50%, -50%)
+                  tap_action:
+                    action: more-info
+                - type: image
+                  entity: camera.sl_camera_2
+                  camera_image: camera.sl_camera_2
+                  camera_view: live
+                  style:
+                    right: 12px
+                    bottom: 12px
+                    width: 32%
+                    transform: none
+                    border-radius: 10px
+                    border: 1px solid rgba(255,255,255,0.35)
+                    box-shadow: 0 6px 14px rgba(0,0,0,0.45)
+                    z-index: 3
+                  tap_action:
+                    action: call-service
+                    service: input_select.select_option
+                    service_data:
+                      entity_id: input_select.bento_active_camera
+                      option: camera.sl_camera_2
+              card_mod:
+                style: |
+                  ha-card {
+                    border-radius: 16px !important;
+                    overflow: hidden !important;
+                    border: 1px solid rgba(255,255,255,0.12) !important;
+                    height: 100% !important;
+                  }
 
+# ── BLOCO 5: Media ────────────────────────────────────────────────────
 - type: custom:button-card
   view_layout:
     grid-area: media
@@ -649,39 +556,17 @@
       - font-size: 12px
       - justify-self: start
 
-- type: vertical-stack
+# ── BLOCO 6: Spotify ────────────────────────────────────────────────────
+- type: custom:button-card
   view_layout:
     grid-area: spot
-  cards:
-    - type: custom:spotifyplus-card
-      entity: media_player.spotifyplus_bruno_helasio
-      deviceDefaultId: Echo Show
-      deviceControlByName: true
-      sections:
-        - player
-        - devices
-        - userpresets
-      card_mod:
-        style: |
-          ha-card {
-            --ha-card-border-width: 0;
-            background: transparent;
-            max-height: 100%;
-            height: 100%;
-            overflow-y: auto;
-            border-radius: 12px;
-            margin: 0 auto;
-            width: 100%;
-          }
-          .player-background,
-          .player-background img,
-          .player-section .thumbnail,
-          .player-section .thumbnail img {
-            object-fit: cover !important;
-            object-position: center center !important;
-            background-position: center center !important;
-            background-size: cover !important;
-          }
+  entity: media_player.spotifyplus_bruno_helasio
+  show_icon: false
+  show_name: false
+  show_label: false
+  show_state: false
+  tap_action:
+    action: none
   card_mod:
     style: |
       ha-card {
@@ -694,3 +579,61 @@
         height: 100% !important;
         overflow: hidden !important;
       }
+  styles:
+    grid:
+      - grid-template-areas: '"spot"'
+      - grid-template-columns: 1fr
+      - grid-template-rows: 1fr
+    card:
+      - padding: 10px
+      - height: 100%
+      - overflow: hidden
+    custom_fields:
+      spot:
+        - align-self: stretch
+        - justify-self: stretch
+        - height: 100%
+        - overflow: hidden
+  custom_fields:
+    spot:
+      card:
+        type: custom:spotifyplus-card
+        entity: media_player.spotifyplus_bruno_helasio
+        deviceDefaultId: Echo Show
+        deviceControlByName: true
+        sections:
+          - player
+          - userpresets
+        card_mod:
+          style: |
+            ha-card {
+              --ha-card-border-width: 0;
+              background: transparent !important;
+              box-shadow: none !important;
+              border-radius: 12px !important;
+              height: 100% !important;
+              max-height: 100% !important;
+              overflow: hidden !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+
+            /* remove scroll interno e evita "estouro" */
+            .container,
+            .content,
+            .sections {
+              height: 100% !important;
+              max-height: 100% !important;
+              overflow: hidden !important;
+            }
+
+            /* arte centralizada e proporcional no bloco */
+            .player-background,
+            .player-background img,
+            .player-section .thumbnail,
+            .player-section .thumbnail img {
+              object-fit: cover !important;
+              object-position: center center !important;
+              background-position: center center !important;
+              background-size: cover !important;
+            }

@@ -47,10 +47,8 @@
             const v = states['sensor.energia_total_casa_periodo_atual']?.state;
             const num = (v !== undefined && v !== null && !['unknown','unavailable','none'].includes(v)) ? Number(v).toFixed(2) : '0.00';
             const p = states['input_select.periodo_energia_dashboard']?.state || 'Diário';
-            return `<div style="font-size:22px;font-weight:700;color:rgba(255,255,255,0.96);">${p} · ${num} kWh</div>`;
+            return `<div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.96);">${p} · ${num} kWh</div>`;
           ]]]
-        subtitle: |
-          [[[ return '<div style="font-size:13px;color:rgba(255,255,255,0.56);">Consumo estimado (tendência)</div>'; ]]]
         selector:
           card:
             type: horizontal-stack
@@ -164,9 +162,9 @@
                     - font-weight: 700
       styles:
         grid:
-          - grid-template-areas: '"header selector" "value selector" "subtitle selector"'
+          - grid-template-areas: '"header selector" "value selector"'
           - grid-template-columns: 1fr max-content
-          - grid-template-rows: min-content min-content min-content
+          - grid-template-rows: min-content min-content
           - column-gap: 10px
           - row-gap: 4px
         card:
@@ -178,8 +176,6 @@
           header:
             - justify-self: start
           value:
-            - justify-self: start
-          subtitle:
             - justify-self: start
           selector:
             - justify-self: end
@@ -200,7 +196,7 @@
             hours_to_show: 24
             points_per_hour: 4
             hour24: true
-            height: 110
+            height: 90
             lower_bound: -150
             smoothing: false
             line_width: 3
@@ -220,8 +216,8 @@
                   background: transparent !important;
                   border: none !important;
                   box-shadow: none !important;
-                  margin-top: -2px;
-                  padding: 0 6px 10px 2px;
+                  margin-top: -10px;
+                  padding: 0 6px 14px 2px;
                 }
 
         - type: conditional
@@ -238,7 +234,7 @@
             aggregate_func: max
             group_by: date
             hour24: true
-            height: 110
+            height: 90
             lower_bound: -0.05
             smoothing: false
             line_width: 3
@@ -249,7 +245,7 @@
               icon: false
               state: false
               legend: false
-              labels: true
+              labels: false
               points: false
               fill: fade
             card_mod:
@@ -258,8 +254,8 @@
                   background: transparent !important;
                   border: none !important;
                   box-shadow: none !important;
-                  margin-top: -2px;
-                  padding: 0 6px 10px 2px;
+                  margin-top: -10px;
+                  padding: 0 6px 14px 2px;
                 }
 
         - type: conditional
@@ -276,7 +272,7 @@
             aggregate_func: max
             group_by: date
             hour24: true
-            height: 110
+            height: 90
             lower_bound: -0.05
             smoothing: false
             line_width: 3
@@ -296,6 +292,6 @@
                   background: transparent !important;
                   border: none !important;
                   box-shadow: none !important;
-                  margin-top: -2px;
-                  padding: 0 6px 10px 2px;
+                  margin-top: -10px;
+                  padding: 0 6px 14px 2px;
                 }

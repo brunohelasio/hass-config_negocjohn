@@ -38,6 +38,7 @@
             color: "#1DB954"
         days_to_show: 3
         compact_events_to_show: 3
+        day_spacing: 6px # Reduzido para compactar os blocos
         event_color: "rgba(255,255,255,0.92)"
         time_color: "rgba(255,255,255,0.72)"
         location_color: "rgba(255,255,255,0.50)"
@@ -59,22 +60,19 @@
             .day-table {
               margin: 0 !important;
               width: 100% !important;
+              border-collapse: separate !important;
+              /* Reduzido de 10px para 6px para manter a quebra mais sutil */
+              border-spacing: 0 6px !important;
             }
-            
-            /* AJUSTE 1 e 2: Centraliza a data e esmaga o espaço vazio para puxar a linha */
             .date-column {
               text-align: center !important;
               min-width: 32px !important;
               width: 32px !important;
               padding-right: 8px !important;
             }
-            
-            /* AJUSTE 2: Puxa o texto do evento/empty-day para mais perto da linha azul */
             .event-column {
               padding-left: 8px !important;
             }
-
-            /* Proíbe a quebra de linha apenas nas colunas corretas (mantendo o alinhamento à esquerda) */
             .event, .event-title, .summary, .empty-day {
               white-space: nowrap !important;
               text-align: left !important;
@@ -84,7 +82,7 @@
       - grid-template-areas: '"header" "events"'
       - grid-template-columns: 1fr
       - grid-template-rows: min-content 1fr
-      - row-gap: 12px
+      - row-gap: 8px
     card:
       - background: transparent
       - border: none

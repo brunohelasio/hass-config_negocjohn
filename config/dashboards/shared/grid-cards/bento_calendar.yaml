@@ -3,63 +3,24 @@
   show_icon: false
   show_state: false
   tap_action:
-    action: none
+    action: fire-dom-event
+    browser_mod:
+      service: browser_mod.popup
+      data:
+        title: Agenda Mensal
+        size: wide
+        content:
+          type: calendar
+          entities:
+            - calendar.brunohelasio_gmail_com
+            - calendar.familia
+            - calendar.feriados_no_brasil
+          initial_view: dayGridMonth
   custom_fields:
     header: |
       [[[
         return '<div style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:rgba(255,255,255,0.46);text-transform:uppercase;">Agenda</div>';
       ]]]
-    icon:
-      card:
-        type: custom:button-card
-        show_name: false
-        show_icon: false
-        show_state: false
-        tap_action:
-          action: fire-dom-event
-          browser_mod:
-            service: browser_mod.popup
-            data:
-              title: Agenda Mensal
-              size: wide
-              content:
-                type: calendar
-                entities:
-                  - calendar.brunohelasio_gmail_com
-                  - calendar.familia
-                  - calendar.feriados_no_brasil
-                initial_view: dayGridMonth
-        styles:
-          card:
-            - background: transparent
-            - border: none
-            - box-shadow: none
-            - padding: 0
-            - margin: 0
-            - width: 92px
-            - height: 70px
-          custom_fields:
-            icon:
-              - width: 100%
-              - display: flex
-              - justify-content: center
-              - align-items: center
-        custom_fields:
-          icon: |
-            [[[
-              return `
-                <svg viewBox="0 0 96 96" width="72" height="72" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 8px 14px rgba(0,0,0,.30));transform:translateX(-4px);">
-                  <rect x="10" y="24" width="76" height="58" rx="16" stroke="rgba(255,255,255,0.78)" stroke-width="2.5"/>
-                  <path d="M10 40H86" stroke="rgba(255,255,255,0.60)" stroke-width="2"/>
-                  <path d="M30 14V30" stroke="rgba(255,255,255,0.82)" stroke-width="3" stroke-linecap="round"/>
-                  <path d="M66 14V30" stroke="rgba(255,255,255,0.82)" stroke-width="3" stroke-linecap="round"/>
-                  <path d="M24 52H44" stroke="#6FB8FF" stroke-width="3" stroke-linecap="round"/>
-                  <path d="M24 64H54" stroke="#6FB8FF" stroke-width="3" stroke-linecap="round"/>
-                  <circle cx="67" cy="62" r="12" stroke="rgba(255,255,255,0.72)" stroke-width="2.5"/>
-                  <path d="M67 56V62H73" stroke="#FFC857" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              `;
-            ]]]
     events:
       card:
         type: custom:calendar-card-pro
@@ -76,7 +37,7 @@
           - entity: calendar.feriados_no_brasil
             color: "#1DB954"
         days_to_show: 3
-        compact_events_to_show: 2
+        compact_events_to_show: 3
         event_color: "rgba(255,255,255,0.92)"
         time_color: "rgba(255,255,255,0.72)"
         location_color: "rgba(255,255,255,0.50)"
@@ -95,35 +56,49 @@
               box-shadow: none !important;
               padding: 0 !important;
             }
-            :host,
-            .container,
-            .events,
-            .event {
+            .day-table {
+              margin: 0 !important;
+              width: 100% !important;
+            }
+            
+            /* AJUSTE 1 e 2: Centraliza a data e esmaga o espaço vazio para puxar a linha */
+            .date-column {
+              text-align: center !important;
+              min-width: 32px !important;
+              width: 32px !important;
+              padding-right: 8px !important;
+            }
+            
+            /* AJUSTE 2: Puxa o texto do evento/empty-day para mais perto da linha azul */
+            .event-column {
+              padding-left: 8px !important;
+            }
+
+            /* Proíbe a quebra de linha apenas nas colunas corretas (mantendo o alinhamento à esquerda) */
+            .event, .event-title, .summary, .empty-day {
+              white-space: nowrap !important;
               text-align: left !important;
-              justify-content: flex-start !important;
             }
   styles:
     grid:
-      - grid-template-areas: '"header" "icon" "events"'
+      - grid-template-areas: '"header" "events"'
       - grid-template-columns: 1fr
-      - grid-template-rows: min-content min-content 1fr
-      - row-gap: 6px
+      - grid-template-rows: min-content 1fr
+      - row-gap: 12px
     card:
       - background: transparent
       - border: none
       - box-shadow: none
-      - padding: 14px 14px 8px
+      - padding: 14px 16px 14px 14px
       - height: 100%
+      - cursor: pointer
     custom_fields:
       header:
         - justify-self: start
         - align-self: start
-      icon:
-        - justify-self: center
-        - align-self: start
-        - margin-top: -2px
       events:
-        - align-self: stretch
-        - width: 100%
-        - overflow: hidden
+        - align-self: start
         - justify-self: start
+        - width: 100%
+        - display: block
+        - margin-left: -4px

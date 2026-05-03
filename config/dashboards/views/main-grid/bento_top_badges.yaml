@@ -3,7 +3,7 @@ layout_type: custom:grid-layout
 view_layout:
   grid-area: top_badges
 layout:
-  grid-template-columns: max-content max-content max-content minmax(0, 1fr) max-content
+  grid-template-columns: max-content max-content max-content max-content minmax(0, 1fr) max-content
   align-items: center
   grid-gap: 8px
   margin: 0
@@ -416,6 +416,8 @@ cards:
         - overflow: visible
         - z-index: >
             [[[ return variables?.s?.exp === 'security' || variables?.s?.exp === 'lights' || variables?.s?.exp === 'media' || variables?.s?.exp === 'climate' ? '4' : '1'; ]]]
+        - display: >
+            [[[ const e = states['input_select.hemma_expanded_row']?.state; return e === 'security' ? 'none' : 'inline-flex'; ]]]
         - background: >
             [[[ return variables?.s?.is_on ? 'rgba(255,255,255,0.90)' : 'rgba(36,33,30,0.82)'; ]]]
         - border: >

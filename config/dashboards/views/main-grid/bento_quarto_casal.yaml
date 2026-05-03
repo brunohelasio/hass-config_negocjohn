@@ -12,12 +12,12 @@ card_mod:
       display: block !important;
       padding: 0px !important;
 
-      background: linear-gradient(160deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)) !important;
+      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
       backdrop-filter: blur(20px) saturate(1.35) !important;
       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-      border: 1px solid rgba(255,255,255,0.28) !important;
+      border: 1px solid rgba(255,255,255,0.10) !important;
       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
-      border-radius: 18px !important;
+      border-radius: 16px !important;
       overflow: hidden !important;
 
       --ha-card-backdrop-filter: none !important;

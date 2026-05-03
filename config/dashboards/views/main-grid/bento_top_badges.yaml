@@ -14,14 +14,22 @@ card_mod:
     .: |
       :host { width: 100% !important; }
       ha-card {
-        background: transparent !important;
-        box-shadow: none !important;
-        border: none !important;
+        background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+        box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+        border: 1px solid rgba(255,255,255,0.10) !important;
         padding: 0 !important;
+        border-radius: 16px !important;
+        overflow: hidden !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
         width: 100% !important;
       }
     $: |
-      .card-content { padding: 0 !important; margin: 0 !important; }
+      .card-content { padding: 0 !important;
+        border-radius: 16px !important;
+        overflow: hidden !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important; margin: 0 !important; }
 
 cards:
   - type: custom:button-card

@@ -139,7 +139,7 @@ cards:
           if (!chips.length) return `<div class="exp-rail"><div class="exp-chip exp-empty">No security devices</div></div>`;
           return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon class="exp-chip-icon" icon="${c.icon || 'mdi:shield-home'}" style="color:#7ec8ff"></ha-icon><div class="exp-chip-texts"><div class="exp-chip-title">${c.name}</div><div class="exp-chip-sub">${c.sub}</div></div></div>`).join('')}</div>`;
         ]]]
-    extra_styles: &badge_css |
+    extra_styles: &badge_css_security |
       .badge-row {
         display: grid;
         grid-template-columns: 18px auto;
@@ -220,7 +220,7 @@ cards:
         font-weight: 600;
         color: rgba(255,255,255,0.72);
       }
-    styles: &badge_visual
+    styles: &badge_visual_security
       card:
         - width: max-content
         - height: 48px

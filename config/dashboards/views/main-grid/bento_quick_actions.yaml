@@ -11,16 +11,11 @@ card_mod:
       margin: 0 !important;
       padding: 0 !important;
       display: flex !important;
-      align-items: flex-end !important;
-      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
-      backdrop-filter: blur(20px) saturate(1.35) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-      border: 1px solid rgba(255,255,255,0.10) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
-      overflow: hidden !important;
-      --ha-card-backdrop-filter: blur(20px) saturate(1.35) !important;
-      --ha-card-background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+      align-items: center !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      --ha-card-background: transparent !important;
       --ha-card-border-width: 0 !important;
     }
     ha-card::before {

@@ -20,9 +20,9 @@ card_mod:
       background:
         linear-gradient(
           to right,
-          rgba(11, 22, 35, 0.96)  0%,
-          rgba(11, 22, 35, 0.85) 30%,
-          rgba(11, 22, 35, 0.40) 58%,
+          rgba(11, 22, 35, 0.78)  0%,
+          rgba(11, 22, 35, 0.62) 30%,
+          rgba(11, 22, 35, 0.25) 58%,
           rgba(11, 22, 35, 0.00) 78%
         ),
         url('/local/images/home_color.jpg') center / cover no-repeat !important;

@@ -12,7 +12,7 @@ card_mod:
       display: block !important;
       padding: 0px !important;
 
-      background: linear-gradient(160deg, rgba(15,20,35,0.58), rgba(20,24,33,0.42)) !important;
+      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
       backdrop-filter: blur(20px) saturate(1.35) !important;
       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
       border: 1px solid rgba(255,255,255,0.10) !important;

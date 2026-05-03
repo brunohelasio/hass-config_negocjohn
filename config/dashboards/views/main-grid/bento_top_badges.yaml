@@ -3,7 +3,7 @@ layout_type: custom:grid-layout
 view_layout:
   grid-area: top_badges
 layout:
-  grid-template-columns: max-content max-content max-content minmax(0, 1fr) max-content
+  grid-template-columns: max-content max-content max-content max-content minmax(0, 1fr) max-content
   align-items: center
   grid-gap: 8px
   margin: 0
@@ -32,6 +32,225 @@ card_mod:
         -webkit-backdrop-filter: blur(20px) saturate(1.35) !important; margin: 0 !important; }
 
 cards:
+  - type: custom:button-card
+    show_icon: false
+    show_name: false
+    show_state: false
+    triggers_update:
+      - input_select.hemma_expanded_row
+      # TODO: Substituir pelos entity_ids reais de fechadura/portas abaixo.
+      - lock.porta_sala
+      - lock.porta_servico
+    tap_action:
+      action: call-service
+      service: input_select.select_option
+      service_data:
+        entity_id: input_select.hemma_expanded_row
+        option: >
+          [[[ return states['input_select.hemma_expanded_row']?.state === 'security' ? 'none' : 'security'; ]]]
+    hold_action:
+      action: call-service
+      service: browser_mod.popup
+      data:
+        title: Security
+        size: wide
+        content:
+          type: entities
+          entities:
+            # TODO: Trocar para a fechadura principal real.
+            - entity: lock.porta_sala
+              name: Porta da Sala
+            # TODO: Trocar para a fechadura/porta de serviço real.
+            - entity: lock.porta_servico
+              name: Porta de Serviço
+            # TODO: Adicionar/alterar quando houver sensor de abertura da entrada.
+            # - entity: binary_sensor.entrada_porta_aberta
+            #   name: Sensor Porta (Entrada)
+            # TODO: Adicionar/alterar quando houver sensor de movimento da entrada.
+            # - entity: binary_sensor.entrada_movimento
+            #   name: Sensor Movimento (Entrada)
+            # TODO: Adicionar/alterar para entidade de alarme real, se existir.
+            # - entity: alarm_control_panel.casa
+            #   name: Alarme
+    double_tap_action:
+      action: call-service
+      service: lock.toggle
+      target:
+        # TODO: Trocar para entity_id real da fechadura principal.
+        entity_id: lock.porta_sala
+    variables:
+      s: >
+        [[[ 
+          const lockSala = states['lock.porta_sala']; // TODO: Trocar para lock real da porta da sala.
+          const lockServico = states['lock.porta_servico']; // TODO: Trocar para lock/porta real de serviço.
+          const exp = states['input_select.hemma_expanded_row']?.state || 'none';
+          const hasDoorOpenSensor = states['binary_sensor.entrada_porta_aberta']; // TODO: Ativar ao existir sensor real.
+          const hasMotionSensor = states['binary_sensor.entrada_movimento']; // TODO: Ativar ao existir sensor real.
+
+          let sub = 'Locked';
+          let isOn = false;
+
+          if (lockSala?.state === 'unlocked' || lockServico?.state === 'unlocked') {
+            sub = 'Unlocked';
+            isOn = true;
+          }
+          if (hasDoorOpenSensor?.state === 'on') {
+            sub = 'Door Open';
+            isOn = true;
+          }
+          if (hasMotionSensor?.state === 'on') {
+            sub = 'Motion detected';
+            isOn = true;
+          }
+
+          const chips = [
+            {
+              id: 'lock.porta_sala',
+              name: lockSala?.attributes?.friendly_name || 'Porta da Sala',
+              sub: (lockSala?.state || 'unknown').replace('_',' '),
+              icon: (lockSala?.state === 'locked') ? 'mdi:lock' : 'mdi:lock-open-variant'
+            },
+            {
+              id: 'lock.porta_servico',
+              name: lockServico?.attributes?.friendly_name || 'Porta de Serviço',
+              sub: (lockServico?.state || 'unknown').replace('_',' '),
+              icon: (lockServico?.state === 'locked') ? 'mdi:lock' : 'mdi:lock-open-variant'
+            }
+          ];
+
+          return { is_on: isOn, sub, exp, chips };
+        ]]]
+    custom_fields:
+      badge: >
+        [[[ 
+          const sub = variables?.s?.sub || 'Locked';
+          return `<div class="badge-row">
+            <ha-icon class="badge-icon" icon="mdi:shield-lock" style="color:#7ec8ff"></ha-icon>
+            <div class="badge-texts">
+              <div class="badge-title">Security</div>
+              <div class="badge-sub">${sub}</div>
+            </div>
+          </div>`;
+        ]]]
+      rail: >
+        [[[
+          if (variables?.s?.exp !== 'security') return '';
+          const chips = variables?.s?.chips || [];
+          if (!chips.length) return `<div class="exp-rail"><div class="exp-chip exp-empty">No security devices</div></div>`;
+          return `<div class="exp-rail">${chips.map(c => `<div class="exp-chip"><ha-icon class="exp-chip-icon" icon="${c.icon || 'mdi:shield-home'}" style="color:#7ec8ff"></ha-icon><div class="exp-chip-texts"><div class="exp-chip-title">${c.name}</div><div class="exp-chip-sub">${c.sub}</div></div></div>`).join('')}</div>`;
+        ]]]
+    extra_styles: &badge_css_security |
+      .badge-row {
+        display: grid;
+        grid-template-columns: 18px auto;
+        align-items: center;
+        column-gap: 8px;
+        min-width: 72px;
+      }
+      .badge-icon {
+        --mdc-icon-size: 22px;
+        justify-self: center;
+        align-self: center;
+      }
+      .badge-texts {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.08;
+        gap: 2px;
+      }
+      .badge-title {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--badge-title-color, rgba(255,255,255,0.92));
+      }
+      .badge-sub {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--badge-sub-color, rgba(255,255,255,0.72));
+      }
+      .exp-rail {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        overflow-x: auto;
+        max-width: min(56vw, 560px);
+        white-space: nowrap;
+        padding: 0;
+        border: none;
+        background: transparent;
+      }
+      .exp-chip {
+        display: inline-grid;
+        grid-template-columns: 22px auto;
+        align-items: center;
+        column-gap: 8px;
+        height: 48px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(36,33,30,0.82);
+        border: 1px solid rgba(255,255,255,0.12);
+      }
+      .exp-empty {
+        display: inline-flex;
+        align-items: center;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: rgba(36,33,30,0.82);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: rgba(255,255,255,0.56);
+      }
+      .exp-chip-icon {
+        --mdc-icon-size: 22px;
+      }
+      .exp-chip-texts {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        line-height: 1.08;
+      }
+      .exp-chip-title {
+        font-size: 10px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.92);
+      }
+      .exp-chip-sub {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.72);
+      }
+    styles: &badge_visual_security
+      card:
+        - width: max-content
+        - height: 48px
+        - border-radius: 999px
+        - padding: 0 12px
+        - position: relative
+        - overflow: visible
+        - z-index: >
+            [[[ return variables?.s?.exp === 'security' || variables?.s?.exp === 'lights' || variables?.s?.exp === 'media' || variables?.s?.exp === 'climate' ? '4' : '1'; ]]]
+        - background: >
+            [[[ return variables?.s?.is_on ? 'rgba(255,255,255,0.90)' : 'rgba(36,33,30,0.82)'; ]]]
+        - border: >
+            [[[ return variables?.s?.is_on ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.12)'; ]]]
+        - box-shadow: none
+        - --badge-title-color: >
+            [[[ return variables?.s?.is_on ? 'rgba(0,0,0,0.86)' : 'rgba(255,255,255,0.92)'; ]]]
+        - --badge-sub-color: >
+            [[[ return variables?.s?.is_on ? 'rgba(0,0,0,0.58)' : 'rgba(255,255,255,0.72)'; ]]]
+      custom_fields:
+        badge: [display: flex, align-items: center, height: 100%]
+        rail:
+          - position: absolute
+          - left: calc(100% + 8px)
+          - top: 50%
+          - transform: translateY(-50%)
+          - z-index: 9
+          - display: >
+              [[[ return variables?.s?.exp === 'security' ? 'inline-flex' : 'none'; ]]]
+      grid: [grid-template-areas: '"badge"', grid-template-columns: 1fr, grid-template-rows: 1fr]
+
   - type: custom:button-card
     show_icon: false
     show_name: false
@@ -196,7 +415,9 @@ cards:
         - position: relative
         - overflow: visible
         - z-index: >
-            [[[ return variables?.s?.exp === 'lights' || variables?.s?.exp === 'media' || variables?.s?.exp === 'climate' ? '4' : '1'; ]]]
+            [[[ return variables?.s?.exp === 'security' || variables?.s?.exp === 'lights' || variables?.s?.exp === 'media' || variables?.s?.exp === 'climate' ? '4' : '1'; ]]]
+        - display: >
+            [[[ const e = states['input_select.hemma_expanded_row']?.state; return e === 'security' ? 'none' : 'inline-flex'; ]]]
         - background: >
             [[[ return variables?.s?.is_on ? 'rgba(255,255,255,0.90)' : 'rgba(36,33,30,0.82)'; ]]]
         - border: >
@@ -280,7 +501,7 @@ cards:
         - z-index: >
             [[[ return variables?.s?.exp === 'media' ? '4' : '1'; ]]]
         - display: >
-            [[[ return states['input_select.hemma_expanded_row']?.state === 'lights' ? 'none' : 'inline-flex'; ]]]
+            [[[ const e = states['input_select.hemma_expanded_row']?.state; return (e === 'lights' || e === 'security') ? 'none' : 'inline-flex'; ]]]
         - background: >
             [[[ return variables?.s?.is_on ? 'rgba(255,255,255,0.90)' : 'rgba(36,33,30,0.82)'; ]]]
         - border: >
@@ -368,7 +589,7 @@ cards:
         - display: >
             [[[
               const e = states['input_select.hemma_expanded_row']?.state;
-              return (e === 'lights' || e === 'media') ? 'none' : 'inline-flex';
+              return (e === 'lights' || e === 'media' || e === 'security') ? 'none' : 'inline-flex';
             ]]]
         - background: >
             [[[ return variables?.s?.is_on ? 'rgba(255,255,255,0.90)' : 'rgba(36,33,30,0.82)'; ]]]

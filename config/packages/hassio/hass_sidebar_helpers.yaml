@@ -16,6 +16,7 @@ input_select:
       - lights
       - media
       - climate
+      - security
       - presence
     initial: none
   bento_active_camera:

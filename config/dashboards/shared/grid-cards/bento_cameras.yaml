@@ -1262,8 +1262,8 @@
           height: 100% !important;
           display: grid !important;
           grid-template-columns: minmax(0, 1fr) !important;
-          grid-template-rows: minmax(0, 3fr) minmax(0, 1fr) !important;
-          gap: 8px !important;
+          grid-template-rows: minmax(0, 3.45fr) minmax(0, 0.80fr) !important;
+          gap: 1px !important;
         }
     cards:
       - type: custom:mod-card
@@ -1382,13 +1382,16 @@
         card_mod:
           style: |
             ha-card {
-              background: transparent !important;
-              border: none !important;
-              box-shadow: none !important;
+              background: linear-gradient(170deg, rgba(15,23,42,0.58), rgba(15,23,42,0.30)) !important;
+              border: 1px solid rgba(148,163,184,0.20) !important;
+              box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 20px rgba(2,6,23,0.24) !important;
+              backdrop-filter: blur(12px) saturate(1.2) !important;
+              -webkit-backdrop-filter: blur(12px) saturate(1.2) !important;
+              border-radius: 13px !important;
               height: 100% !important;
               min-height: 0 !important;
               margin: 0 !important;
-              padding: 0 2px !important;
+              padding: 0 4px 3px !important;
             }
         card:
           type: grid
@@ -1407,10 +1410,10 @@
                 height: 100% !important;
                 display: grid !important;
                 grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-                gap: 6px !important;
+                gap: 2px !important;
                 align-items: end !important;
-                width: calc(100% + 8px) !important;
-                margin-left: -4px !important;
+                width: 100% !important;
+                margin-left: 0 !important;
               }
           cards:
             - &mini_square_cam_v13
@@ -1432,11 +1435,11 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1.12 / 1 !important;
-                    margin-bottom: -5px !important;
-                    background: #1b2535 !important;
-                    border: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}2px solid #60a5fa{% else %}1px solid rgba(255,255,255,0.12){% endif %} !important;
-                    box-shadow: none !important;
+                    aspect-ratio: 1.22 / 1 !important;
+                    margin-bottom: 0 !important;
+                    background: rgba(15,23,42,0.84) !important;
+                    border: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
+                    box-shadow: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}0 0 0 1px rgba(96,165,250,0.40), 0 0 14px rgba(96,165,250,0.28){% else %}inset 0 -34px 42px rgba(2,6,23,0.40){% endif %} !important;
                     box-sizing: border-box !important;
                     min-width: 0 !important;
                   }
@@ -1477,11 +1480,11 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1.12 / 1 !important;
-                    margin-bottom: -5px !important;
-                    background: #1b2535 !important;
-                    border: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}2px solid #60a5fa{% else %}1px solid rgba(255,255,255,0.12){% endif %} !important;
-                    box-shadow: none !important;
+                    aspect-ratio: 1.22 / 1 !important;
+                    margin-bottom: 0 !important;
+                    background: rgba(15,23,42,0.84) !important;
+                    border: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
+                    box-shadow: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}0 0 0 1px rgba(96,165,250,0.40), 0 0 14px rgba(96,165,250,0.28){% else %}inset 0 -34px 42px rgba(2,6,23,0.40){% endif %} !important;
                     box-sizing: border-box !important;
                     min-width: 0 !important;
                   }
@@ -1522,11 +1525,11 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1.12 / 1 !important;
-                    margin-bottom: -5px !important;
-                    background: #1b2535 !important;
-                    border: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}2px solid #60a5fa{% else %}1px solid rgba(255,255,255,0.12){% endif %} !important;
-                    box-shadow: none !important;
+                    aspect-ratio: 1.22 / 1 !important;
+                    margin-bottom: 0 !important;
+                    background: rgba(15,23,42,0.84) !important;
+                    border: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
+                    box-shadow: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}0 0 0 1px rgba(96,165,250,0.40), 0 0 14px rgba(96,165,250,0.28){% else %}inset 0 -34px 42px rgba(2,6,23,0.40){% endif %} !important;
                     box-sizing: border-box !important;
                     min-width: 0 !important;
                   }
@@ -1567,11 +1570,11 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1.12 / 1 !important;
-                    margin-bottom: -5px !important;
-                    background: #1b2535 !important;
-                    border: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}2px solid #60a5fa{% else %}1px solid rgba(255,255,255,0.12){% endif %} !important;
-                    box-shadow: none !important;
+                    aspect-ratio: 1.22 / 1 !important;
+                    margin-bottom: 0 !important;
+                    background: rgba(15,23,42,0.84) !important;
+                    border: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
+                    box-shadow: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}0 0 0 1px rgba(96,165,250,0.40), 0 0 14px rgba(96,165,250,0.28){% else %}inset 0 -34px 42px rgba(2,6,23,0.40){% endif %} !important;
                     box-sizing: border-box !important;
                     min-width: 0 !important;
                   }

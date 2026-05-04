@@ -298,9 +298,9 @@
       custom_fields:
         img: >
           [[[
-            return `<img src="/local/images/tcl.png" style="width:80px;height:80px;object-fit:contain;object-position:left center;display:block;margin:0;padding:0;">`;
+            return `<img src="/local/images/tcl.png" style="width:85px;height:85px;object-fit:contain;object-position:left center;display:block;margin:0;padding:0;">`;
           ]]]
-        title: TV
+        title: TCL Smart TV
         toggle:
           card:
             type: custom:button-card
@@ -515,9 +515,9 @@
       custom_fields:
         img: >
           [[[
-            return `<img src="/local/images/cassete_gree.png" style="width:80px;height:80px;object-fit:contain;object-position:left center;display:block;margin:0;padding:0;">`;
+            return `<img src="/local/images/cassete_gree.png" style="width:85px;height:85px;object-fit:contain;object-position:left center;display:block;margin:0;padding:0;">`;
           ]]]
-        title: A/C
+        title: A/C Gree
         toggle:
           card:
             type: custom:button-card

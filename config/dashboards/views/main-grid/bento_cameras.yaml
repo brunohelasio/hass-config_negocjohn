@@ -31,19 +31,7 @@ card_mod:
       --ha-card-border-width: 0 !important;
     }
 
-    ha-card::after {
-      content: "";
-      position: absolute;
-      top: -14px;
-      right: -18px;
-      width: clamp(65px, 7vw, 102px);
-      aspect-ratio: 1 / 1;
-      background: url('/local/images/camera_seg.png') no-repeat center / contain;
-      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.32)) drop-shadow(0 0 10px rgba(96,165,250,0.22));
-      opacity: 0.95;
-      z-index: 8;
-      pointer-events: none;
-    }
+    /* PNG decorativo removido a pedido do usuário. */
 
     ha-card::before {
       content: "Câmeras";

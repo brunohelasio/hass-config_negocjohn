@@ -12,8 +12,8 @@ card_mod:
       height: 100% !important;
       display: flex !important;
       flex-direction: column !important;
-      padding: 44px 10px 10px !important;
-      gap: 4px !important;
+      padding: 30px 10px 8px !important;
+      gap: 2px !important;
 
       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
       backdrop-filter: blur(20px) saturate(1.35) !important;
@@ -48,14 +48,15 @@ card_mod:
     ha-card::before {
       content: "Câmeras";
       position: absolute;
-      top: 10px;
+      top: 8px;
       left: 14px;
       z-index: 7;
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: 0.2px;
-      color: rgba(226,232,240,0.95);
-      text-shadow: 0 1px 1px rgba(2,6,23,0.45);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.46);
+      text-shadow: none;
       pointer-events: none;
     }
 

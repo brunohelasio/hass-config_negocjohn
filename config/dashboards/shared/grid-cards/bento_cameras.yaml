@@ -1262,8 +1262,8 @@
           height: 100% !important;
           display: grid !important;
           grid-template-columns: minmax(0, 1fr) !important;
-          grid-template-rows: minmax(0, 3fr) minmax(0, 1fr) !important;
-          gap: 8px !important;
+          grid-template-rows: minmax(0, 3.35fr) minmax(0, 0.65fr) !important;
+          gap: 4px !important;
         }
     cards:
       - type: custom:mod-card
@@ -1436,7 +1436,7 @@
                     border-radius: 10px !important;
                     overflow: hidden !important;
                     aspect-ratio: 1.22 / 1 !important;
-                    margin-bottom: -5px !important;
+                    margin-bottom: 0 !important;
                     background: rgba(15,23,42,0.84) !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
                     box-shadow: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}0 0 0 1px rgba(96,165,250,0.40), 0 0 14px rgba(96,165,250,0.28){% else %}inset 0 -34px 42px rgba(2,6,23,0.40){% endif %} !important;
@@ -1481,7 +1481,7 @@
                     border-radius: 10px !important;
                     overflow: hidden !important;
                     aspect-ratio: 1.22 / 1 !important;
-                    margin-bottom: -5px !important;
+                    margin-bottom: 0 !important;
                     background: rgba(15,23,42,0.84) !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
                     box-shadow: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}0 0 0 1px rgba(96,165,250,0.40), 0 0 14px rgba(96,165,250,0.28){% else %}inset 0 -34px 42px rgba(2,6,23,0.40){% endif %} !important;
@@ -1526,7 +1526,7 @@
                     border-radius: 10px !important;
                     overflow: hidden !important;
                     aspect-ratio: 1.22 / 1 !important;
-                    margin-bottom: -5px !important;
+                    margin-bottom: 0 !important;
                     background: rgba(15,23,42,0.84) !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
                     box-shadow: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}0 0 0 1px rgba(96,165,250,0.40), 0 0 14px rgba(96,165,250,0.28){% else %}inset 0 -34px 42px rgba(2,6,23,0.40){% endif %} !important;
@@ -1571,7 +1571,7 @@
                     border-radius: 10px !important;
                     overflow: hidden !important;
                     aspect-ratio: 1.22 / 1 !important;
-                    margin-bottom: -5px !important;
+                    margin-bottom: 0 !important;
                     background: rgba(15,23,42,0.84) !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
                     box-shadow: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}0 0 0 1px rgba(96,165,250,0.40), 0 0 14px rgba(96,165,250,0.28){% else %}inset 0 -34px 42px rgba(2,6,23,0.40){% endif %} !important;

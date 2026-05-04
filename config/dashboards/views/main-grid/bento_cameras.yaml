@@ -35,7 +35,7 @@ card_mod:
       content: "";
       position: absolute;
       top: -18px;
-      left: -22px;
+      right: -22px;
       width: clamp(72px, 7.8vw, 114px);
       aspect-ratio: 1 / 1;
       background: url('/local/images/camera_seg.png') no-repeat center / contain;

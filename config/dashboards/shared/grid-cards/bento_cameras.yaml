@@ -1410,10 +1410,10 @@
                 height: 100% !important;
                 display: grid !important;
                 grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-                gap: 4px !important;
+                gap: 3px !important;
                 align-items: end !important;
-                width: calc(100% + 8px) !important;
-                margin-left: -4px !important;
+                width: 100% !important;
+                margin-left: 0 !important;
               }
           cards:
             - &mini_square_cam_v13
@@ -1435,7 +1435,7 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1.12 / 1 !important;
+                    aspect-ratio: 1.22 / 1 !important;
                     margin-bottom: -5px !important;
                     background: rgba(15,23,42,0.84) !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.sl_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
@@ -1480,7 +1480,7 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1.12 / 1 !important;
+                    aspect-ratio: 1.22 / 1 !important;
                     margin-bottom: -5px !important;
                     background: rgba(15,23,42,0.84) !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.vr_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
@@ -1525,7 +1525,7 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1.12 / 1 !important;
+                    aspect-ratio: 1.22 / 1 !important;
                     margin-bottom: -5px !important;
                     background: rgba(15,23,42,0.84) !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.cz_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;
@@ -1570,7 +1570,7 @@
                   ha-card {
                     border-radius: 10px !important;
                     overflow: hidden !important;
-                    aspect-ratio: 1.12 / 1 !important;
+                    aspect-ratio: 1.22 / 1 !important;
                     margin-bottom: -5px !important;
                     background: rgba(15,23,42,0.84) !important;
                     border: {% if is_state('input_select.bento_active_camera','camera.as_camera_2') %}1.5px solid rgba(96,165,250,0.92){% else %}1px solid rgba(148,163,184,0.28){% endif %} !important;

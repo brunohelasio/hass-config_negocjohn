@@ -26,7 +26,8 @@ layout:
   grid-template-rows: auto 40vh 16vh 24vh 74px
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
-    "sidebar welcome welcome welcome welcome sala sala sala comodos comodos comodos comodos comodos"
+    # ORIGINAL: "sidebar welcome welcome welcome welcome sala sala sala comodos comodos comodos comodos comodos"
+    "sidebar welcome welcome welcome welcome welcome sala sala comodos comodos comodos comodos comodos"
     "sidebar media media media energy energy energy energy energy cameras cameras cameras cameras"
     "sidebar media media media calendar calendar roborock roborock roborock cameras cameras cameras cameras"
     "sidebar quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions"

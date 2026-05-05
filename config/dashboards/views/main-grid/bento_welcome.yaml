@@ -16,14 +16,16 @@ card_mod:
       justify-content: space-between !important;
       position: relative !important;  /* âncora para ::after — mantida para rollback rápido da curva */
 
-      /* 3. Imagem de fundo + degradê horizontal esquerda→transparente (v11) */
+      /* 3. Imagem de fundo + degradê horizontal esquerda→transparente (v12 — welcome mais largo)
+            v11: rgba(...,0.78) 0% / 0.62 30% / 0.25 58% / 0.00 78%
+            v12: transparência recua para mostrar mais imagem na área extra à direita */
       background:
         linear-gradient(
           to right,
-          rgba(11, 22, 35, 0.78)  0%,
-          rgba(11, 22, 35, 0.62) 30%,
-          rgba(11, 22, 35, 0.25) 58%,
-          rgba(11, 22, 35, 0.00) 78%
+          rgba(11, 22, 35, 0.82)  0%,
+          rgba(11, 22, 35, 0.65) 28%,
+          rgba(11, 22, 35, 0.20) 54%,
+          rgba(11, 22, 35, 0.00) 70%
         ),
         url('/local/images/home_color.jpg') center / cover no-repeat !important;
       backdrop-filter: blur(20px) saturate(1.35) !important;

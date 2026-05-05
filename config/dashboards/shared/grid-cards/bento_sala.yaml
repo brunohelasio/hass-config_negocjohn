@@ -156,77 +156,78 @@
             const dot = (icon, active, color) =>
               `<div style="width:26px;height:26px;border-radius:50%;box-sizing:border-box;background:${active?color+'22':offBg};border:1px solid ${active?color+'55':offBorder};display:flex;align-items:center;justify-content:center;">` +
               `<ha-icon icon="${icon}" style="width:14px;height:14px;color:${active?color:offIcon};display:flex;"></ha-icon></div>`;
-            return `<div style="display:flex;flex-direction:row;justify-content:flex-end;gap:6px;padding-top:2px;">
+            return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding-top:2px;">
               ${dot('mdi:account', home, '#60a5fa')}
               ${dot('mdi:television-classic', tvOn, '#a78bfa')}
               ${dot('mdi:snowflake', acOn, '#4facfe')}
               ${dot('mdi:speaker-wireless', alexa, '#ff9900')}
             </div>`;
           ]]]
-        corredor:
-          card:
-            type: custom:button-card
-            entity: light.corredor_switch_1
-            icon: mdi:door-closed
-            name: Corredor
-            show_icon: true
-            show_name: true
-            show_state: false
-            tap_action:
-              action: toggle
-            hold_action:
-              action: more-info
-            styles:
-              card:
-                - height: 30px
-                - min-width: 94px
-                - border-radius: 999px
-                - padding: 0 10px
-                - background: >
-                    [[[
-                      return entity?.state === 'on'
-                        ? 'linear-gradient(180deg, rgba(96,165,250,0.24) 0%, rgba(96,165,250,0.16) 100%)'
-                        : (states['light.grupo_luzes_sala']?.state === 'on'
-                          ? 'rgba(0,0,0,0.08)'
-                          : 'rgba(255,255,255,0.10)');
-                    ]]]
-                - border: >
-                    [[[
-                      return entity?.state === 'on'
-                        ? '1px solid rgba(96,165,250,0.44)'
-                        : (states['light.grupo_luzes_sala']?.state === 'on'
-                          ? '1px solid rgba(0,0,0,0.14)'
-                          : '1px solid rgba(255,255,255,0.14)');
-                    ]]]
-                - box-shadow: none
-              grid:
-                - grid-template-areas: '"i n"'
-                - grid-template-columns: 16px auto
-                - column-gap: 6px
-                - align-items: center
-              img_cell:
-                - justify-content: center
-                - width: 16px
-              icon:
-                - width: 15px
-                - height: 15px
-                - color: >
-                    [[[
-                      return entity?.state === 'on'
-                        ? '#60a5fa'
-                        : (states['light.grupo_luzes_sala']?.state === 'on'
-                          ? 'rgba(0,0,0,0.62)'
-                          : 'rgba(255,255,255,0.78)');
-                    ]]]
-              name:
-                - font-size: 11px
-                - font-weight: 600
-                - color: >
-                    [[[
-                      return states['light.grupo_luzes_sala']?.state === 'on'
-                        ? 'rgba(0,0,0,0.76)'
-                        : 'rgba(255,255,255,0.86)';
-                    ]]]
+        # CORREDOR PILL MOVIDA PARA A FAIXA DE AÇÕES (revisão vDots-v1) — descomentar para restaurar no hero
+        # corredor:
+        #   card:
+        #     type: custom:button-card
+        #     entity: light.corredor_switch_1
+        #     icon: mdi:door-closed
+        #     name: Corredor
+        #     show_icon: true
+        #     show_name: true
+        #     show_state: false
+        #     tap_action:
+        #       action: toggle
+        #     hold_action:
+        #       action: more-info
+        #     styles:
+        #       card:
+        #         - height: 30px
+        #         - min-width: 94px
+        #         - border-radius: 999px
+        #         - padding: 0 10px
+        #         - background: >
+        #             [[[
+        #               return entity?.state === 'on'
+        #                 ? 'linear-gradient(180deg, rgba(96,165,250,0.24) 0%, rgba(96,165,250,0.16) 100%)'
+        #                 : (states['light.grupo_luzes_sala']?.state === 'on'
+        #                   ? 'rgba(0,0,0,0.08)'
+        #                   : 'rgba(255,255,255,0.10)');
+        #             ]]]
+        #         - border: >
+        #             [[[
+        #               return entity?.state === 'on'
+        #                 ? '1px solid rgba(96,165,250,0.44)'
+        #                 : (states['light.grupo_luzes_sala']?.state === 'on'
+        #                   ? '1px solid rgba(0,0,0,0.14)'
+        #                   : '1px solid rgba(255,255,255,0.14)');
+        #             ]]]
+        #         - box-shadow: none
+        #       grid:
+        #         - grid-template-areas: '"i n"'
+        #         - grid-template-columns: 16px auto
+        #         - column-gap: 6px
+        #         - align-items: center
+        #       img_cell:
+        #         - justify-content: center
+        #         - width: 16px
+        #       icon:
+        #         - width: 15px
+        #         - height: 15px
+        #         - color: >
+        #             [[[
+        #               return entity?.state === 'on'
+        #                 ? '#60a5fa'
+        #                 : (states['light.grupo_luzes_sala']?.state === 'on'
+        #                   ? 'rgba(0,0,0,0.62)'
+        #                   : 'rgba(255,255,255,0.78)');
+        #             ]]]
+        #       name:
+        #         - font-size: 11px
+        #         - font-weight: 600
+        #         - color: >
+        #             [[[
+        #               return states['light.grupo_luzes_sala']?.state === 'on'
+        #                 ? 'rgba(0,0,0,0.76)'
+        #                 : 'rgba(255,255,255,0.86)';
+        #             ]]]
       styles:
         card:
           - background: transparent
@@ -236,10 +237,15 @@
           - margin: 0
           - height: 100%
         grid:
+          # ORIGINAL (com corredor no hero) — restaurar se necessário:
+          # - grid-template-areas: |
+          #     "icon temp right"
+          #     "n n corredor"
+          #     "lights lights corredor"
           - grid-template-areas: |
               "icon temp right"
-              "n n corredor"
-              "lights lights corredor"
+              "n n right"
+              "lights lights right"
           - grid-template-columns: auto 1fr auto
           - grid-template-rows: auto auto 1fr
         name:
@@ -269,11 +275,12 @@
             - justify-self: end
             - align-self: start
             - margin-right: 2px
-          corredor:
-            - justify-self: end
-            - align-self: start
-            - margin-right: 2px
-            - margin-top: 8px
+          # corredor movida para faixa de ações (revisão vDots-v1)
+          # corredor:
+          #   - justify-self: end
+          #   - align-self: start
+          #   - margin-right: 2px
+          #   - margin-top: 8px
 
     # ── Ações Rápidas (TV / A/C / PS5) ───────────────────────────────────
     - view_layout:
@@ -285,6 +292,67 @@
           #root { margin: 0 !important; padding: 0 !important; gap: 0 !important; }
           #root > * { margin: 0 !important; }
       cards:
+        # Corredor (movido do hero — revisão vDots-v1)
+        - type: custom:button-card
+          entity: light.corredor_switch_1
+          show_icon: true
+          show_name: true
+          show_state: false
+          show_label: true
+          icon: mdi:door-closed
+          name: "Corredor"
+          label: >
+            [[[
+              return entity?.state === 'on' ? 'Ligado' : 'Desligado';
+            ]]]
+          tap_action:
+            action: toggle
+          hold_action:
+            action: more-info
+          triggers_update:
+            - light.corredor_switch_1
+            - light.grupo_luzes_sala
+          styles:
+            card:
+              - height: 38px
+              - background: transparent
+              - border: none
+              - border-top: >
+                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
+              - box-shadow: none
+              - padding: 0 6px
+            grid:
+              - grid-template-areas: '"i n l"'
+              - grid-template-columns: "18px 1fr auto"
+              - column-gap: "8px"
+              - align-items: "center"
+            img_cell:
+              - width: "18px"
+              - justify-content: center
+            icon:
+              - width: "16px"
+              - color: >
+                  [[[
+                    const on = entity?.state === 'on';
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    return on ? '#60a5fa' : (sOn ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.38)');
+                  ]]]
+            name:
+              - font-size: "12px"
+              - font-weight: "600"
+              - justify-self: start
+              - color: >
+                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
+            label:
+              - font-size: "11px"
+              - justify-self: end
+              - color: >
+                  [[[
+                    const on = entity?.state === 'on';
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    return on ? '#60a5fa' : (sOn ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.35)');
+                  ]]]
+
         # TV
         - type: custom:button-card
           entity: media_player.android_tv_192_168_3_17

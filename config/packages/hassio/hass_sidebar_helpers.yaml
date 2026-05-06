@@ -94,10 +94,19 @@ script:
         data:
           title: Cameras
           tag: cameras_user
-          size: wide
+          # --- ANTERIOR (size: wide com constraints — causava scroll horizontal e vertical) ---
+          # size: wide
+          # style: >
+          #   --popup-border-width: 0;
+          #   --popup-max-width: 980px;
+          #   --popup-background-color: linear-gradient(180deg, rgba(15, 25, 50, 0.92) 0%, rgba(10, 18, 40, 0.96) 100%);
+          #   --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+          #   --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+          # --- FIM ANTERIOR ---
+          # FULLSCREEN — elimina scroll sem alterar conteúdo ou lógica
+          fullscreen: true
           style: >
             --popup-border-width: 0;
-            --popup-max-width: 980px;
             --popup-background-color: linear-gradient(180deg, rgba(15, 25, 50, 0.92) 0%, rgba(10, 18, 40, 0.96) 100%);
             --mdc-theme-surface: rgba(20, 24, 33, 0.88);
             --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
@@ -117,10 +126,17 @@ script:
                   justify-content: center !important;
                 }
                 .mdc-dialog__surface {
+                  /* --- ANTERIOR (causava scroll) ---
                   width: 65vw !important;
                   max-width: 980px !important;
                   max-height: 88vh !important;
                   overflow-y: auto !important;
+                  --- FIM ANTERIOR --- */
+                  border-radius: 0 !important;
+                  overflow: hidden !important;
+                }
+                .mdc-dialog__content {
+                  padding: 0 !important;
                 }
           content:
             type: custom:layout-card
@@ -205,7 +221,11 @@ script:
       - service: browser_mod.popup
         data:
           title: Roborock S7
-          size: wide
+          # --- ANTERIOR (size: wide — causava corte inferior) ---
+          # size: wide
+          # --- FIM ANTERIOR ---
+          # FULLSCREEN — elimina corte inferior sem alterar conteúdo ou lógica
+          fullscreen: true
           content:
             type: entities
             entities:

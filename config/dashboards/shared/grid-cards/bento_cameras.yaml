@@ -1911,6 +1911,12 @@
                     show_name: false
                     tap_action:
                       action: none
+                    card_mod:
+                      style: |
+                        ha-card {
+                          height: 100% !important;
+                          min-height: 0 !important;
+                        }
                     styles:
                       card:
                         - background: "transparent"
@@ -2133,6 +2139,12 @@
                       perform_action: input_boolean.toggle
                       data:
                         entity_id: input_boolean.bento_cameras_page_2
+                    card_mod:
+                      style: |
+                        ha-card {
+                          height: 100% !important;
+                          min-height: 0 !important;
+                        }
                     styles:
                       card:
                         - background: "rgba(96,165,250,0.12)"
@@ -2187,6 +2199,12 @@
                       perform_action: input_boolean.toggle
                       data:
                         entity_id: input_boolean.bento_cameras_page_2
+                    card_mod:
+                      style: |
+                        ha-card {
+                          height: 100% !important;
+                          min-height: 0 !important;
+                        }
                     styles:
                       card:
                         - background: "rgba(96,165,250,0.12)"
@@ -2406,6 +2424,12 @@
                     show_name: false
                     tap_action:
                       action: none
+                    card_mod:
+                      style: |
+                        ha-card {
+                          height: 100% !important;
+                          min-height: 0 !important;
+                        }
                     styles:
                       card:
                         - background: "transparent"

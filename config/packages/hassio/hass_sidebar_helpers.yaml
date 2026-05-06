@@ -226,6 +226,33 @@ script:
           # --- FIM ANTERIOR ---
           # FULLSCREEN — elimina corte inferior sem alterar conteúdo ou lógica
           fullscreen: true
+          style: >
+            --popup-border-width: 0;
+            --popup-background-color: linear-gradient(180deg, rgba(10, 10, 20, 0.92) 0%, rgba(5, 5, 15, 0.96) 100%);
+            --mdc-theme-surface: rgba(20, 20, 30, 0.88);
+            --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+          card_mod:
+            style:
+              .: |
+                ha-dialog {
+                  backdrop-filter: blur(12px);
+                  -webkit-backdrop-filter: blur(12px);
+                }
+              ha-dialog$: |
+                .mdc-dialog__scrim {
+                  background-color: rgba(0, 0, 0, 0.56) !important;
+                }
+                .mdc-dialog__container {
+                  align-items: center !important;
+                  justify-content: center !important;
+                }
+                .mdc-dialog__surface {
+                  border-radius: 0 !important;
+                  overflow: hidden !important;
+                }
+                .mdc-dialog__content {
+                  padding: 0 !important;
+                }
           content:
             type: entities
             entities:

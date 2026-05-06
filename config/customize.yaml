@@ -1,0 +1,12 @@
+# ─────────────────────────────────────────────────────────────────
+# customize.yaml
+# Personalizações de entidades (ocultar helpers internos, etc.)
+# Referenciado em configuration.yaml via:
+#   homeassistant:
+#     customize: !include customize.yaml
+# ─────────────────────────────────────────────────────────────────
+
+# Helper de paginação do carrossel de câmeras (bento_cameras)
+# Criado em input_boolean — ocultado para não poluir o registro de entidades.
+input_boolean.bento_cameras_page_2:
+  hidden: true

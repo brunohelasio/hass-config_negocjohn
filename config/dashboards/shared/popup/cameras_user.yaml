@@ -1,10 +1,10 @@
-# ══════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════
 # POPUP DE CAMERAS — Apartamento do usuario
 # 8 cameras em layout 3-3-2 (3 colunas, 3 linhas)
 # Entidades: sl_camera_2, vr_camera_2, cz_camera_2, as_camera_2,
 #            of_camera_2, camera_quarto_casal_2, qmi_camera_2, qma_camera_2
 # Estilo baseado no cameras.yaml original do sagaland93/ngocjohn
-# ══════════════════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════
 # --- CÓDIGO ANTERIOR COMENTADO PARA REFERÊNCIA ---
 # Layout anterior: grid 2x4 (2 colunas, 4 linhas) — fazia scroll no tablet
 # grid-template-columns: repeat(2, 1fr)
@@ -18,15 +18,16 @@ browser_mod:
   data:
     title: Cameras
     tag: cameras_user
-    # --- ANTERIOR (size: wide com constraints — causava scroll horizontal e vertical) ---
-    # size: wide
+    # --- ANTERIOR (fullscreen: true — parâmetro inválido nesta versão do browser_mod) ---
+    # fullscreen: true
     # --- FIM ANTERIOR ---
-    # FULLSCREEN — elimina scroll sem alterar conteúdo ou lógica
-    fullscreen: true
+    # FULLSCREEN REAL — initial_style é o parâmetro correto (ver livingroom_fullscreen.yaml)
+    initial_style: fullscreen
+    dismissable: true
     style: >
+      --popup-width: 100vw;
+      --popup-max-width: 100vw;
       --popup-border-width: 0;
-      /* ANTERIOR: --popup-max-width: 980px; */
-      # --popup-background-color: rgba(15, 20, 35, 0.75);
       --popup-background-color: linear-gradient(180deg, rgba(15, 25, 50, 0.92) 0%, rgba(10, 18, 40, 0.96) 100%);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
@@ -37,40 +38,34 @@ browser_mod:
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
           }
+          ha-dialog > ha-dialog-header {
+            display: none !important;
+          }
         ha-dialog$: |
           .mdc-dialog__scrim {
             background-color: rgba(0, 0, 0, 0.56) !important;
           }
-          /* --- ANTERIOR (container: center — popup não ocupava 100vw/100vh) ---
           .mdc-dialog__container {
-            align-items: center !important;
-            justify-content: center !important;
-          }
-          --- FIM ANTERIOR --- */
-          .mdc-dialog__container {
-            width: 100vw !important;
-            height: 100vh !important;
-            max-width: 100vw !important;
-            max-height: 100vh !important;
+            padding: 0 !important;
             align-items: stretch !important;
             justify-content: stretch !important;
           }
-          /* --- ANTERIOR (surface: hidden, sem forçar 100vw/100vh) ---
           .mdc-dialog__surface {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
             border-radius: 0 !important;
             overflow: hidden !important;
           }
-          --- FIM ANTERIOR --- */
-          .mdc-dialog__surface {
-            width: 100vw !important;
-            height: 100vh !important;
-            max-width: 100vw !important;
-            max-height: 100vh !important;
-            border-radius: 0 !important;
-            overflow: auto !important;
+          .mdc-dialog__title {
+            display: none !important;
           }
           .mdc-dialog__content {
             padding: 0 !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
           }
     content:
       type: custom:layout-card

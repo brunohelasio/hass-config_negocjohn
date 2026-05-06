@@ -3,20 +3,53 @@ browser_mod:
   service: browser_mod.popup
   data:
     title: "Roborock S7"
-    size: wide
-    popup_styles:
-      - style: all
-        styles: |
+    # --- ANTERIOR (size: wide + popup_styles — causava corte inferior) ---
+    # size: wide
+    # popup_styles:
+    #   - style: all
+    #     styles: |
+    #       ha-dialog {
+    #         --popup-max-height: 1176px;
+    #         --popup-background-color: rgba(15, 20, 35, 0.75);
+    #         --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+    #         --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+    #         --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+    #         --dialog-content-padding: 8px 8px 4px 8px;
+    #         backdrop-filter: blur(12px);
+    #         -webkit-backdrop-filter: blur(12px);
+    #       }
+    # --- FIM ANTERIOR ---
+    # FULLSCREEN — elimina corte inferior sem alterar conteúdo ou lógica
+    fullscreen: true
+    style: >
+      --popup-border-width: 0;
+      --popup-background-color: rgba(15, 20, 35, 0.75);
+      --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+    card_mod:
+      style:
+        .: |
           ha-dialog {
-            --popup-max-height: 1176px;
-            /* ANTERIOR (para restore): sem --popup-background-color e sem blur */
-            --popup-background-color: rgba(15, 20, 35, 0.75);
-            --mdc-theme-surface: rgba(20, 24, 33, 0.88);
-            --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
-            --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
-            --dialog-content-padding: 8px 8px 4px 8px;
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
+          }
+        ha-dialog$: |
+          .mdc-dialog__scrim {
+            background-color: rgba(0, 0, 0, 0.56) !important;
+          }
+          .mdc-dialog__container {
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          .mdc-dialog__surface {
+            border-radius: 0 !important;
+            overflow: hidden !important;
+          }
+          .mdc-dialog__content {
+            /* padding: 0 necessário em fullscreen — o layout-card interno gerencia
+               seu próprio espaçamento; o padding padrão causaria corte visual
+               ANTERIOR: --dialog-content-padding: 8px 8px 4px 8px via popup_styles */
+            padding: 0 !important;
           }
     content:
       type: custom:layout-card

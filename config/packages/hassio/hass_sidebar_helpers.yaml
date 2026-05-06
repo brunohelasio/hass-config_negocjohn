@@ -23,10 +23,21 @@ input_select:
     name: Bento Active Camera
     icon: mdi:cctv
     options:
+      # --- CÓDIGO ORIGINAL COMENTADO (p1 apenas — 4 câmeras) ---
+      # - camera.sl_camera_2
+      # - camera.vr_camera_2
+      # - camera.cz_camera_2
+      # - camera.as_camera_2
+      # --- FIM CÓDIGO ORIGINAL ---
+      # NOVO v14: todas as 8 câmeras (p1 + p2 para o carrossel)
       - camera.sl_camera_2
       - camera.vr_camera_2
       - camera.cz_camera_2
       - camera.as_camera_2
+      - camera.of_camera_2
+      - camera.camera_quarto_casal_2
+      - camera.qmi_camera_2
+      - camera.qma_camera_2
     initial: camera.sl_camera_2
   bento_sidebar_active:
     name: Bento Sidebar Active Icon
@@ -61,6 +72,13 @@ input_boolean:
   menu_mobile:
     name: Sidebar Menu Mobile
     icon: mdi:menu
+    initial: false
+  # NOVO v14: controla qual página de câmeras está ativa no carrossel do bento
+  # off = página 1 (Sala, Varanda, Cozinha, Área de Serviço)
+  # on  = página 2 (Office, Quarto Casal, Quarto Miguel, Quarto Marina)
+  bento_cameras_page_2:
+    name: Bento Cameras — Página 2
+    icon: mdi:cctv
     initial: false
 
 script:

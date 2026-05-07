@@ -66,6 +66,10 @@ browser_mod:
             height: 100vh !important;
             max-height: 100vh !important;
             overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
           }
     content:
       type: custom:layout-card
@@ -73,17 +77,14 @@ browser_mod:
       layout:
         grid-gap: 5px
         grid-template-columns: repeat(3, minmax(0, 1fr))
-        # ORIGINAL: grid-template-rows: repeat(3, minmax(0, 1fr)) — 1fr sem altura resolvida no container → câmeras usavam tamanho intrínseco 16:9 causando scroll
-        grid-template-rows: repeat(3, calc((100vh - 2rem - 10px) / 3))
-        # ANTERIOR: width: min(92vw, 1480px) — câmeras ficavam largas demais em fullscreen → altura 16:9 × 3 linhas excedia 100vh
-        width: min(80vw, 1180px)
-        height: calc(100vh - 1rem)
-        max-height: calc(100vh - 1rem)
+        # ORIGINAL: grid-template-rows: repeat(3, minmax(0, 1fr)) → repeat(3, calc(...)) — ambos forçavam altura via 100vh; agora auto: aspect_ratio:16:9 determina altura naturalmente
+        grid-template-rows: repeat(3, auto)
+        # ANTERIOR: min(92vw,1480px) → min(80vw,1180px) → min(72vw,1060px): câmeras mais estreitas → altura 16:9 menor → 3 linhas cabem sem scroll
+        width: min(72vw, 1060px)
+        # ANTERIOR: height: calc(100vh - 1rem) — forçava layout a preencher 100vh; removido para deixar aspect_ratio determinar altura
         margin: 0 auto
         padding: 0.5rem
         box-sizing: border-box
-        align-content: center
-        justify-content: center
         overflow: hidden
         mediaquery:
           '(max-width: 800px)':

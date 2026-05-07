@@ -65,15 +65,23 @@ browser_mod:
             padding: 8px 8px 4px 8px !important;
             height: 100vh !important;
             max-height: 100vh !important;
-            overflow: auto !important;
+            overflow: hidden !important;
           }
     content:
       type: custom:layout-card
       layout_type: custom:grid-layout
       layout:
-        grid-template-columns: 320px 1fr 280px
-        grid-template-rows: 1fr
+        grid-template-columns: 300px minmax(0, 1fr) 260px
+        grid-template-rows: minmax(0, 1fr)
         grid-template-areas: '"summary map settings"'
+        grid-gap: 8px
+        height: calc(100vh - 12px)
+        max-height: calc(100vh - 12px)
+        margin: 0
+        padding: 0
+        box-sizing: border-box
+        align-items: start
+        overflow: hidden
       cards:
 
         # ==================================================================
@@ -187,6 +195,9 @@ browser_mod:
           card_mod:
             style: |
               ha-card {
+                height: calc(100vh - 20px) !important;
+                max-height: calc(100vh - 20px) !important;
+                overflow: hidden !important;
                 --map-card-primary-color: #FFFFFF30;
                 --map-card-secondary-color: #FFFFFF10;
                 --map-card-secondary-text-color: #9da0a2;
@@ -197,7 +208,8 @@ browser_mod:
                 box-shadow: none !important;
               }
               div.map-wrapper {
-                padding: 2vw 0px 0.6vw !important;
+                max-height: calc(100vh - 76px) !important;
+                padding: 0.35rem 0 0.25rem !important;
               }
               div.controls-wrapper {
                 padding-top: 0;
@@ -205,15 +217,15 @@ browser_mod:
                 margin: 0;
               }
               div.map-controls-wrapper {
-                padding: 4px 8px;
+                padding: 2px 6px;
               }
               xvmc-zoom-buttons {
                 display: none !important;
               }
               paper-button {
-                --mdc-icon-size: 1.5em;
+                --mdc-icon-size: 1.35em;
                 color: #9da0a2 !important;
-                padding: 0.42em;
+                padding: 0.32em;
               }
               #map-image {
                 filter: brightness(0.7);
@@ -227,6 +239,23 @@ browser_mod:
             grid-area: settings
           title: Settings
           show_header_toggle: false
+          card_mod:
+            style: |
+              ha-card {
+                max-height: calc(100vh - 20px) !important;
+                overflow: hidden !important;
+              }
+              .card-header {
+                padding: 10px 16px 4px !important;
+                font-size: 16px !important;
+                line-height: 20px !important;
+              }
+              .card-content {
+                padding: 4px 12px 8px !important;
+              }
+              #states > * {
+                margin: 0 !important;
+              }
           entities:
             - entity: number.roborock_s7_volume
               name: Volume

@@ -73,6 +73,15 @@ browser_mod:
           }
     content:
       type: custom:layout-card
+      # card_mod no layout-card: restringe o ha-card wrapper (que expande 100% por padrão) à largura desejada
+      card_mod:
+        style: |
+          ha-card {
+            width: min(72vw, 1060px) !important;
+            max-width: min(72vw, 1060px) !important;
+            margin: 0 auto !important;
+            overflow: hidden !important;
+          }
       layout_type: custom:grid-layout
       layout:
         grid-gap: 5px

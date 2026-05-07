@@ -75,7 +75,8 @@ browser_mod:
         grid-template-columns: repeat(3, minmax(0, 1fr))
         # ORIGINAL: grid-template-rows: repeat(3, minmax(0, 1fr)) — 1fr sem altura resolvida no container → câmeras usavam tamanho intrínseco 16:9 causando scroll
         grid-template-rows: repeat(3, calc((100vh - 2rem - 10px) / 3))
-        width: min(92vw, 1480px)
+        # ANTERIOR: width: min(92vw, 1480px) — câmeras ficavam largas demais em fullscreen → altura 16:9 × 3 linhas excedia 100vh
+        width: min(80vw, 1180px)
         height: calc(100vh - 1rem)
         max-height: calc(100vh - 1rem)
         margin: 0 auto
@@ -92,9 +93,11 @@ browser_mod:
       cards:
         # ── Linha 1: 3 cameras ──
         # SL - Camera (Sala)
+        # ANTERIOR: sem aspect_ratio + card_mod height — height em picture-entity não funciona via card_mod (usa padding-bottom internamente)
         - type: picture-entity
           entity: camera.sl_camera_2
           camera_view: auto
+          aspect_ratio: "16:9"
           show_name: true
           show_state: false
           name: SL - Sala
@@ -102,12 +105,12 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
-              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # VR - Camera (Varanda)
         - type: picture-entity
           entity: camera.vr_camera_2
           camera_view: auto
+          aspect_ratio: "16:9"
           show_name: true
           show_state: false
           name: VR - Varanda
@@ -115,12 +118,12 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
-              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # CZ - Camera (Cozinha)
         - type: picture-entity
           entity: camera.cz_camera_2
           camera_view: auto
+          aspect_ratio: "16:9"
           show_name: true
           show_state: false
           name: CZ - Cozinha
@@ -128,13 +131,13 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
-              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # ── Linha 2: 3 cameras ──
         # AS - Camera (Area de Servico)
         - type: picture-entity
           entity: camera.as_camera_2
           camera_view: auto
+          aspect_ratio: "16:9"
           show_name: true
           show_state: false
           name: AS - Area Servico
@@ -142,12 +145,12 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
-              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # OF - Camera (Office)
         - type: picture-entity
           entity: camera.of_camera_2
           camera_view: auto
+          aspect_ratio: "16:9"
           show_name: true
           show_state: false
           name: OF - Office
@@ -155,12 +158,12 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
-              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # QC - Camera (Quarto Casal)
         - type: picture-entity
           entity: camera.camera_quarto_casal_2
           camera_view: auto
+          aspect_ratio: "16:9"
           show_name: true
           show_state: false
           name: QC - Quarto Casal
@@ -168,13 +171,13 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
-              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # ── Linha 3: 2 cameras (ultima linha incompleta) ──
         # QMI - Camera (Quarto Miguel)
         - type: picture-entity
           entity: camera.qmi_camera_2
           camera_view: auto
+          aspect_ratio: "16:9"
           show_name: true
           show_state: false
           name: QMI - Quarto Miguel
@@ -182,12 +185,12 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
-              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }
         # QMA - Camera (Quarto Marina)
         - type: picture-entity
           entity: camera.qma_camera_2
           camera_view: auto
+          aspect_ratio: "16:9"
           show_name: true
           show_state: false
           name: QMA - Quarto Marina
@@ -195,5 +198,4 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
-              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
+              ha-card { border-radius: 10px !important; overflow: hidden; }

@@ -66,6 +66,10 @@ browser_mod:
             height: 100vh !important;
             max-height: 100vh !important;
             overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            justify-content: center !important;
           }
     content:
       type: custom:layout-card
@@ -75,12 +79,14 @@ browser_mod:
         grid-template-rows: minmax(0, 1fr)
         grid-template-areas: '"summary map settings"'
         grid-gap: 8px
-        height: calc(100vh - 12px)
-        max-height: calc(100vh - 12px)
+        # ANTERIOR: height: calc(100vh - 12px) — forçava layout a preencher 100vh; 90vh deixa margem e centering via flex no mdc-dialog__content
+        height: 90vh
+        max-height: 90vh
         margin: 0
         padding: 0
         box-sizing: border-box
-        align-items: start
+        # ANTERIOR: align-items: start — colunas cresciam livremente além da altura do container
+        align-items: stretch
         overflow: hidden
       cards:
 
@@ -195,8 +201,9 @@ browser_mod:
           card_mod:
             style: |
               ha-card {
-                height: calc(100vh - 20px) !important;
-                max-height: calc(100vh - 20px) !important;
+                /* ANTERIOR: height: calc(100vh - 20px) — referenciava 100vh; agora usa 90vh alinhado com o layout */
+                height: calc(90vh - 16px) !important;
+                max-height: calc(90vh - 16px) !important;
                 overflow: hidden !important;
                 --map-card-primary-color: #FFFFFF30;
                 --map-card-secondary-color: #FFFFFF10;
@@ -208,8 +215,9 @@ browser_mod:
                 box-shadow: none !important;
               }
               div.map-wrapper {
-                /* ORIGINAL: max-height: calc(100vh - 76px) — 76px calculado de 100vh mas ha-card é 100vh-20px → descasamento de 20px causava scroll */
-                max-height: calc(100vh - 96px) !important;
+                /* ANTERIOR: calc(100vh - 76/96/130px) — todas baseadas em 100vh; agora usa 90vh alinhado com layout */
+                /* 90vh - 16px ha-card margin - 32px toolbar - 54px controls = 90vh - 102px */
+                max-height: calc(90vh - 112px) !important;
                 padding: 0.35rem 0 0.25rem !important;
               }
               div.controls-wrapper {
@@ -243,7 +251,8 @@ browser_mod:
           card_mod:
             style: |
               ha-card {
-                max-height: calc(100vh - 20px) !important;
+                /* ANTERIOR: max-height: calc(100vh - 20px) — alinhado agora com 90vh do layout */
+                max-height: calc(90vh - 16px) !important;
                 overflow: hidden !important;
               }
               .card-header {

@@ -73,6 +73,16 @@ browser_mod:
           }
     content:
       type: custom:layout-card
+      # card_mod no layout-card: suprime scrollbar residual do ha-card (overflow: auto padrão do tema HA)
+      card_mod:
+        style: |
+          ha-card {
+            overflow: hidden !important;
+            scrollbar-width: none !important;
+          }
+          ha-card::-webkit-scrollbar {
+            display: none !important;
+          }
       layout_type: custom:grid-layout
       layout:
         grid-template-columns: 300px minmax(0, 1fr) 260px

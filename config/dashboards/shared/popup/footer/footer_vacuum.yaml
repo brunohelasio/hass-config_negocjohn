@@ -208,7 +208,8 @@ browser_mod:
                 box-shadow: none !important;
               }
               div.map-wrapper {
-                max-height: calc(100vh - 76px) !important;
+                /* ORIGINAL: max-height: calc(100vh - 76px) — 76px calculado de 100vh mas ha-card é 100vh-20px → descasamento de 20px causava scroll */
+                max-height: calc(100vh - 96px) !important;
                 padding: 0.35rem 0 0.25rem !important;
               }
               div.controls-wrapper {

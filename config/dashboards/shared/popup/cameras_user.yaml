@@ -73,7 +73,8 @@ browser_mod:
       layout:
         grid-gap: 5px
         grid-template-columns: repeat(3, minmax(0, 1fr))
-        grid-template-rows: repeat(3, minmax(0, 1fr))
+        # ORIGINAL: grid-template-rows: repeat(3, minmax(0, 1fr)) — 1fr sem altura resolvida no container → câmeras usavam tamanho intrínseco 16:9 causando scroll
+        grid-template-rows: repeat(3, calc((100vh - 2rem - 10px) / 3))
         width: min(92vw, 1480px)
         height: calc(100vh - 1rem)
         max-height: calc(100vh - 1rem)
@@ -101,7 +102,8 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 10px !important; overflow: hidden; height: 100% !important; }
+              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
+              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
         # VR - Camera (Varanda)
         - type: picture-entity
           entity: camera.vr_camera_2
@@ -113,7 +115,8 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 10px !important; overflow: hidden; height: 100% !important; }
+              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
+              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
         # CZ - Camera (Cozinha)
         - type: picture-entity
           entity: camera.cz_camera_2
@@ -125,7 +128,8 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 10px !important; overflow: hidden; height: 100% !important; }
+              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
+              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
         # ── Linha 2: 3 cameras ──
         # AS - Camera (Area de Servico)
         - type: picture-entity
@@ -138,7 +142,8 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 10px !important; overflow: hidden; height: 100% !important; }
+              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
+              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
         # OF - Camera (Office)
         - type: picture-entity
           entity: camera.of_camera_2
@@ -150,7 +155,8 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 10px !important; overflow: hidden; height: 100% !important; }
+              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
+              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
         # QC - Camera (Quarto Casal)
         - type: picture-entity
           entity: camera.camera_quarto_casal_2
@@ -162,7 +168,8 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 10px !important; overflow: hidden; height: 100% !important; }
+              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
+              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
         # ── Linha 3: 2 cameras (ultima linha incompleta) ──
         # QMI - Camera (Quarto Miguel)
         - type: picture-entity
@@ -175,7 +182,8 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 10px !important; overflow: hidden; height: 100% !important; }
+              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
+              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }
         # QMA - Camera (Quarto Marina)
         - type: picture-entity
           entity: camera.qma_camera_2
@@ -187,4 +195,5 @@ browser_mod:
             action: more-info
           card_mod:
             style: |
-              ha-card { border-radius: 10px !important; overflow: hidden; height: 100% !important; }
+              /* ORIGINAL: height: 100% — dependia de 1fr resolvido; substituído por altura explícita para travar célula */
+              ha-card { border-radius: 10px !important; overflow: hidden; height: calc((100vh - 2rem - 10px) / 3) !important; }

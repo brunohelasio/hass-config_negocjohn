@@ -36,8 +36,12 @@
         - light.sala_switch_1
         - light.sala_switch_2
         - sensor.living_room_active
-        - sensor.sl_sensor_temp_humid_temperatura
-        - sensor.sl_sensor_temp_humid_umidade
+        # ANTERIOR: sensores SL temp/humid substituidos pelo 4-in-1 da Sala
+        # - sensor.sl_sensor_temp_humid_temperatura
+        # - sensor.sl_sensor_temp_humid_umidade
+        - sensor.sensor_4_in_1_sala_temperature
+        - sensor.sensor_4_in_1_sala_humidity
+        - binary_sensor.sensor_4_in_1_sala_presence
         - media_player.android_tv_192_168_3_17
         - climate.sl_ar_condicionado
         - media_player.echo_show
@@ -80,9 +84,11 @@
           ]]]
         temp: >
           [[[
-            const t = states['sensor.sl_sensor_temp_humid_temperatura'];
+            // ANTERIOR: const t = states['sensor.sl_sensor_temp_humid_temperatura'];
+            const t = states['sensor.sensor_4_in_1_sala_temperature'];
             const temp = t && t.state && !['unknown','unavailable'].includes(t.state) ? `${t.state}°` : '—';
-            const h = states['sensor.sl_sensor_temp_humid_umidade'];
+            // ANTERIOR: const h = states['sensor.sl_sensor_temp_humid_umidade'];
+            const h = states['sensor.sensor_4_in_1_sala_humidity'];
             const hum = h && !['unknown','unavailable'].includes(h.state) ? `${h.state}%` : '';
             const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
             const color = salaOn ? 'rgba(0,0,0,0.88)' : 'rgba(255,255,255,0.9)';
@@ -148,7 +154,8 @@
             const tvOn  = ['on','playing','paused','idle'].includes(states['media_player.android_tv_192_168_3_17']?.state ?? '');
             const acOn  = !['off','unavailable','unknown',''].includes(states['climate.sl_ar_condicionado']?.state ?? 'off');
             const alexa = ['playing','on','paused'].includes(states['media_player.echo_show']?.state ?? '');
-            const home  = states['person.bruno_helasio']?.state === 'home';
+            // ANTERIOR: const home = states['person.bruno_helasio']?.state === 'home';
+            const presence = states['binary_sensor.sensor_4_in_1_sala_presence']?.state === 'on';
             const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
             const offBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
             const offBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
@@ -157,7 +164,7 @@
               `<div style="width:26px;height:26px;border-radius:50%;box-sizing:border-box;background:${active?color+'22':offBg};border:1px solid ${active?color+'55':offBorder};display:flex;align-items:center;justify-content:center;">` +
               `<ha-icon icon="${icon}" style="width:14px;height:14px;color:${active?color:offIcon};display:flex;"></ha-icon></div>`;
             return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding-top:2px;">
-              ${dot('mdi:account', home, '#60a5fa')}
+              ${dot('mdi:account', presence, '#60a5fa')}
               ${dot('mdi:television-classic', tvOn, '#a78bfa')}
               ${dot('mdi:snowflake', acOn, '#4facfe')}
               ${dot('mdi:speaker-wireless', alexa, '#ff9900')}

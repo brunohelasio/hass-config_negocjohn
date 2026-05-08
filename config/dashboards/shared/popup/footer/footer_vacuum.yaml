@@ -29,21 +29,24 @@ browser_mod:
       --popup-border-width: 0;
       --popup-background-color: rgba(15, 20, 35, 0.75);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
-      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+      /* ANTERIOR: --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56); */
+      --mdc-dialog-scrim-color: rgba(0, 0, 0, 0);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
     card_mod:
       style:
         .: |
           ha-dialog {
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            /* ANTERIOR: blur(12px) — mantido conceito de vidro fosco, reforcando sem escurecer o scrim */
+            backdrop-filter: blur(24px) saturate(1.45);
+            -webkit-backdrop-filter: blur(24px) saturate(1.45);
           }
           ha-dialog > ha-dialog-header {
             display: none !important;
           }
         ha-dialog$: |
           .mdc-dialog__scrim {
-            background-color: rgba(0, 0, 0, 0.56) !important;
+            /* ANTERIOR: background-color: rgba(0, 0, 0, 0.56) !important; */
+            background-color: rgba(0, 0, 0, 0) !important;
           }
           .mdc-dialog__container {
             padding: 0 !important;

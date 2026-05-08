@@ -6,6 +6,8 @@ triggers_update:
   - climate.ac_office
   - media_player.echo_pop_office
   - person.bruno_helasio
+  - sensor.of_sensor_temp_humid_temperatura
+  - sensor.of_sensor_temp_humid_umidade
 template:
   - rooms_base
   - icon_office
@@ -83,8 +85,9 @@ custom_fields:
         }
         return null;
       };
-      const t = firstValid(['sensor.temperatura_office', 'sensor.office_temperatura', 'sensor.of_temperatura']);
-      const h = firstValid(['sensor.umidade_office', 'sensor.office_umidade', 'sensor.of_umidade']);
+      // ANTERIOR: priorizava sensores genericos/legados de temperatura e umidade do Office.
+      const t = firstValid(['sensor.of_sensor_temp_humid_temperatura', 'sensor.temperatura_office', 'sensor.office_temperatura', 'sensor.of_temperatura']);
+      const h = firstValid(['sensor.of_sensor_temp_humid_umidade', 'sensor.umidade_office', 'sensor.office_umidade', 'sensor.of_umidade']);
       if (!t) return '';
       const color = variables.state_on ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)';
       const subColor = variables.state_on ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.5)';
@@ -98,7 +101,9 @@ custom_fields:
 
   dots: >
     [[[
-      const home = states['person.bruno_helasio']?.state === 'home';
+      // ANTERIOR: const home = states['person.bruno_helasio']?.state === 'home';
+      // Office ainda nao possui sensor real de presenca; manter o dot mdi:account inativo ate existir entidade dedicada.
+      const officePresence = false;
       const pcOn = states['switch.macbook']?.state === 'on';
       const acOn = !['off','unavailable','unknown',''].includes(states['climate.ac_office']?.state ?? 'off');
       const alexaOn = ['playing','on','paused','idle'].includes(states['media_player.echo_pop_office']?.state ?? '');
@@ -111,7 +116,7 @@ custom_fields:
       `;
       return `
         <div style="display: flex; flex-direction: column; gap: 5px; padding-top: 2px;">
-          ${renderDot('mdi:account', home, '#60a5fa')}
+          ${renderDot('mdi:account', officePresence, '#60a5fa')}
           ${renderDot('mdi:desktop-classic', pcOn, '#a78bfa')}
           ${renderDot('mdi:snowflake', acOn, '#4facfe')}
           ${renderDot('mdi:speaker-wireless', alexaOn, '#ff9900')}

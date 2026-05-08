@@ -278,7 +278,8 @@ cards:
         [[[
           const fallback = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
           const groupMembers = states['light.todas_as_luzes']?.attributes?.entity_id;
-          const source = (Array.isArray(groupMembers) && groupMembers.length) ? groupMembers : fallback;
+          // ANTERIOR: quando light.todas_as_luzes existia, fallback era ignorado e podia deixar o corredor fora.
+          const source = [...new Set([...(Array.isArray(groupMembers) ? groupMembers : []), ...fallback])];
           const seen = new Set();
           const expandMembers = (ids) => ids.flatMap((id) => {
             if (!id || seen.has(id)) return [];
@@ -621,6 +622,7 @@ cards:
     styles:
       card: [background: transparent, border: none, box-shadow: none, width: 1px, height: 1px, padding: 0]
 
+  # ANTERIOR: avatar unico Bruno. Mantido conceito, agora agrupado com placeholders D/M sem criar novas colunas.
   - type: custom:button-card
     view_layout:
       justify-self: end
@@ -633,22 +635,31 @@ cards:
     triggers_update:
       - person.bruno_helasio
     custom_fields:
-      avatar: >
+      avatars: >
         [[[
-          const pic = entity?.attributes?.entity_picture || '';
-          return pic
-            ? '<img src="' + pic + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>'
-            : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;background:rgba(255,255,255,0.15);border-radius:50%;">B</div>';
+          const avatar = (initial, pic = '', muted = false) => {
+            const border = muted ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.28)';
+            const bg = muted ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.15)';
+            const color = muted ? 'rgba(255,255,255,0.72)' : 'white';
+            const base = `width:36px;height:36px;border-radius:50%;border:1px solid ${border};background:${bg};box-shadow:0 4px 12px rgba(0,0,0,0.16);overflow:hidden;display:flex;align-items:center;justify-content:center;flex:0 0 36px;box-sizing:border-box;`;
+            if (pic) return `<div style="${base}"><img src="${pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;"/></div>`;
+            return `<div style="${base}color:${color};font-size:11px;font-weight:800;letter-spacing:.02em;">${initial}</div>`;
+          };
+          const brunoPic = entity?.attributes?.entity_picture || '';
+          return `<div style="display:flex;align-items:center;justify-content:flex-end;flex-wrap:nowrap;gap:0;min-width:max-content;">
+            ${avatar('B', brunoPic, false)}
+            <div style="margin-left:-8px;">${avatar('D', '', true)}</div>
+            <div style="margin-left:-8px;">${avatar('M', '', true)}</div>
+          </div>`;
         ]]]
     styles:
       card:
-        - width: 40px
+        - width: max-content
         - height: 40px
-        - border-radius: 50%
-        - background: rgba(255,255,255,0.12)
-        - border: 1px solid rgba(255,255,255,0.24)
+        - background: transparent
+        - border: none
         - padding: 0
         - box-shadow: none
       custom_fields:
-        avatar: [width: 100%, height: 100%, overflow: hidden, border-radius: 50%]
-      grid: [grid-template-areas: '"avatar"', grid-template-columns: 1fr, grid-template-rows: 1fr]
+        avatars: [width: max-content, height: 100%, overflow: visible]
+      grid: [grid-template-areas: '"avatars"', grid-template-columns: 1fr, grid-template-rows: 1fr]

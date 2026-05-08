@@ -93,9 +93,9 @@
             const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
             const color = salaOn ? 'rgba(0,0,0,0.88)' : 'rgba(255,255,255,0.9)';
             const subColor = salaOn ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.52)';
-            return `<div style="display:flex;flex-direction:column;gap:3px;">
-              <span style="font-size:13px;font-weight:700;color:${color};">${temp}</span>
-              <span style="font-size:11px;color:${subColor};">${hum}</span>
+            return `<div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1;">
+              <span style="font-size: 13px; font-weight: 700; color: ${color};">${temp}</span>
+              <span style="font-size: 11px; color: ${subColor};">${hum}</span>
             </div>`;
           ]]]
         lights: >
@@ -144,10 +144,12 @@
             const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
             const statusColor = salaOn ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)';
             const label = count === 1 ? '1 light' : `${count} lights`;
-            return `<div style="display:flex;align-items:center;gap:4px;">
-              <ha-icon icon="mdi:lightbulb-on" style="width:11px;height:11px;color:#fbbf24;display:flex;"></ha-icon>
-              <span style="font-size:11px;font-weight:500;color:${statusColor};">${label}${elapsed ? ' · ' + elapsed : ''}</span>
-            </div>`;
+            // ANTERIOR: status com mini icone de luz antes do texto. Removido para igualar aos demais comodos.
+            // return `<div style="display:flex;align-items:center;gap:4px;">
+            //   <ha-icon icon="mdi:lightbulb-on" style="width:11px;height:11px;color:#fbbf24;display:flex;"></ha-icon>
+            //   <span style="font-size:11px;font-weight:500;color:${statusColor};">${label}${elapsed ? ' · ' + elapsed : ''}</span>
+            // </div>`;
+            return `<span style="font-size:11px;font-weight:500;color:${statusColor};">${label}${elapsed ? ' · ' + elapsed : ''}</span>`;
           ]]]
         right: >
           [[[
@@ -273,7 +275,7 @@
           temp:
             - justify-self: start
             - align-self: start
-            - margin-left: 10px
+            - margin-left: 12px
             - margin-top: 4px
           lights:
             - justify-self: start
@@ -321,13 +323,32 @@
             - light.grupo_luzes_sala
           styles:
             card:
-              - height: 38px
-              - background: transparent
-              - border: none
-              - border-top: >
-                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
-              - box-shadow: none
-              - padding: 0 6px
+              # ANTERIOR: linha transparente com apenas border-top.
+              # - background: transparent
+              # - border: none
+              # - border-top: >
+              #     [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
+              - height: 36px
+              - border-radius: 14px
+              - background: >
+                  [[[
+                    const on = entity?.state === 'on';
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    if (on) return 'linear-gradient(180deg, rgba(96,165,250,0.22) 0%, rgba(96,165,250,0.10) 100%)';
+                    return sOn ? 'linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)';
+                  ]]]
+              - border: >
+                  [[[
+                    const on = entity?.state === 'on';
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    if (on) return '1px solid rgba(96,165,250,0.38)';
+                    return sOn ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.12)';
+                  ]]]
+              - box-shadow: >
+                  [[[ return entity?.state === 'on' ? '0 0 14px rgba(96,165,250,0.14), inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.06)'; ]]]
+              - padding: 0 9px
+              - margin: 1px 0
+              - box-sizing: border-box
             grid:
               - grid-template-areas: '"i n l"'
               - grid-template-columns: "18px 1fr auto"
@@ -386,13 +407,32 @@
             - light.grupo_luzes_sala
           styles:
             card:
-              - height: 38px
-              - background: transparent
-              - border: none
-              - border-top: >
-                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
-              - box-shadow: none
-              - padding: 0 6px
+              # ANTERIOR: linha transparente com apenas border-top.
+              # - background: transparent
+              # - border: none
+              # - border-top: >
+              #     [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
+              - height: 36px
+              - border-radius: 14px
+              - background: >
+                  [[[
+                    const on = ['on','playing','paused','idle'].includes(entity?.state);
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    if (on) return 'linear-gradient(180deg, rgba(167,139,250,0.22) 0%, rgba(167,139,250,0.10) 100%)';
+                    return sOn ? 'linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)';
+                  ]]]
+              - border: >
+                  [[[
+                    const on = ['on','playing','paused','idle'].includes(entity?.state);
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    if (on) return '1px solid rgba(167,139,250,0.38)';
+                    return sOn ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.12)';
+                  ]]]
+              - box-shadow: >
+                  [[[ return ['on','playing','paused','idle'].includes(entity?.state) ? '0 0 14px rgba(167,139,250,0.14), inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.06)'; ]]]
+              - padding: 0 9px
+              - margin: 1px 0
+              - box-sizing: border-box
             grid:
               - grid-template-areas: '"i n l"'
               - grid-template-columns: "18px 1fr auto"
@@ -460,13 +500,32 @@
             - light.grupo_luzes_sala
           styles:
             card:
-              - height: 38px
-              - background: transparent
-              - border: none
-              - border-top: >
-                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
-              - box-shadow: none
-              - padding: 0 6px
+              # ANTERIOR: linha transparente com apenas border-top.
+              # - background: transparent
+              # - border: none
+              # - border-top: >
+              #     [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
+              - height: 36px
+              - border-radius: 14px
+              - background: >
+                  [[[
+                    const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    if (on) return 'linear-gradient(180deg, rgba(79,172,254,0.22) 0%, rgba(79,172,254,0.10) 100%)';
+                    return sOn ? 'linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)';
+                  ]]]
+              - border: >
+                  [[[
+                    const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    if (on) return '1px solid rgba(79,172,254,0.38)';
+                    return sOn ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.12)';
+                  ]]]
+              - box-shadow: >
+                  [[[ return ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state) ? '0 0 14px rgba(79,172,254,0.14), inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.06)'; ]]]
+              - padding: 0 9px
+              - margin: 1px 0
+              - box-sizing: border-box
             grid:
               - grid-template-areas: '"i n l"'
               - grid-template-columns: "18px 1fr auto"
@@ -514,14 +573,22 @@
             action: none
           styles:
             card:
-              - height: 38px
-              - background: transparent
-              - border: none
-              - border-top: >
-                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
-              - box-shadow: none
-              - padding: 0 6px
-              - opacity: "0.38"
+              # ANTERIOR: linha transparente com apenas border-top.
+              # - background: transparent
+              # - border: none
+              # - border-top: >
+              #     [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
+              - height: 36px
+              - border-radius: 14px
+              - background: >
+                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'linear-gradient(180deg, rgba(0,0,0,0.055) 0%, rgba(0,0,0,0.025) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.025) 100%)'; ]]]
+              - border: >
+                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.10)' : '1px solid rgba(255,255,255,0.10)'; ]]]
+              - box-shadow: inset 0 1px 0 rgba(255,255,255,0.05)
+              - padding: 0 9px
+              - margin: 1px 0
+              - box-sizing: border-box
+              - opacity: "0.44"
               - cursor: default
             grid:
               - grid-template-areas: '"i n l"'

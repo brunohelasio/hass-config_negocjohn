@@ -93,9 +93,9 @@
             const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
             const color = salaOn ? 'rgba(0,0,0,0.88)' : 'rgba(255,255,255,0.9)';
             const subColor = salaOn ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.52)';
-            return `<div style="display:flex;flex-direction:column;gap:3px;">
-              <span style="font-size:13px;font-weight:700;color:${color};">${temp}</span>
-              <span style="font-size:11px;color:${subColor};">${hum}</span>
+            return `<div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1;">
+              <span style="font-size: 13px; font-weight: 700; color: ${color};">${temp}</span>
+              <span style="font-size: 11px; color: ${subColor};">${hum}</span>
             </div>`;
           ]]]
         lights: >
@@ -275,7 +275,7 @@
           temp:
             - justify-self: start
             - align-self: start
-            - margin-left: 10px
+            - margin-left: 12px
             - margin-top: 4px
           lights:
             - justify-self: start

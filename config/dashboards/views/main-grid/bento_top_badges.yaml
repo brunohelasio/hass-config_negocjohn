@@ -278,7 +278,8 @@ cards:
         [[[
           const fallback = ['light.sala_switch_1','light.sala_switch_2','light.cozinha_switch_1','light.cozinha_switch_2','light.lavabo_switch_1','light.corredor_switch_1','light.quarto_miguel_switch_1','light.quarto_miguel_switch_2'];
           const groupMembers = states['light.todas_as_luzes']?.attributes?.entity_id;
-          const source = (Array.isArray(groupMembers) && groupMembers.length) ? groupMembers : fallback;
+          // ANTERIOR: quando light.todas_as_luzes existia, fallback era ignorado e podia deixar o corredor fora.
+          const source = [...new Set([...(Array.isArray(groupMembers) ? groupMembers : []), ...fallback])];
           const seen = new Set();
           const expandMembers = (ids) => ids.flatMap((id) => {
             if (!id || seen.has(id)) return [];

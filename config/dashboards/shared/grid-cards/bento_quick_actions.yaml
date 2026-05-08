@@ -106,6 +106,7 @@
       #         type: picture
       #         image: /local/images/wifi_main_scanme.png
       # --- FIM CÓDIGO ORIGINAL ---
+      # include retorna o objeto completo de tap_action (action + browser_mod)
       tap_action: !include ../popup/footer/wifi_qr.yaml
       hold_action:
         action: none

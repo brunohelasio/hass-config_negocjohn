@@ -41,7 +41,11 @@ cards:
         ha-card {
           # ORIGINAL: min-height: 100vh — não dá altura fixa ao grid div, align-content: center não funciona
           height: 100vh !important;
-          background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%) !important;
+          /* ANTERIOR: background: linear-gradient(140deg, #0b1623 0%, #132035 55%, #0b1e30 100%) !important; */
+          /* Mesmo conceito do popup fullscreen Roborock: vidro fosco sem escurecer o fundo. */
+          background: rgba(15, 20, 35, 0.10) !important;
+          backdrop-filter: blur(24px) saturate(1.45) !important;
+          -webkit-backdrop-filter: blur(24px) saturate(1.45) !important;
           border-radius: 0 !important;
           box-shadow: none !important;
           border: none !important;

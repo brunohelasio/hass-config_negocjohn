@@ -52,6 +52,19 @@
         selector:
           card:
             type: horizontal-stack
+            card_mod:
+              style: |
+                #root {
+                  /* ANTERIOR: tres pilulas separadas; agora controle segmentado unico. */
+                  gap: 0 !important;
+                  padding: 3px !important;
+                  border-radius: 999px !important;
+                  background: rgba(0,0,0,0.22) !important;
+                  border: 1px solid rgba(255,255,255,0.16) !important;
+                  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
+                  backdrop-filter: blur(14px) saturate(1.15) !important;
+                  -webkit-backdrop-filter: blur(14px) saturate(1.15) !important;
+                }
             cards:
               - type: custom:button-card
                 name: Diário
@@ -67,19 +80,22 @@
                 styles:
                   card:
                     - height: 24px
+                    - min-width: 48px
                     - border-radius: 999px
                     - background: >
                         [[[
                           const a = states['input_select.periodo_energia_dashboard']?.state === 'Diário';
-                          return a ? 'rgba(255,255,255,0.84)' : 'rgba(0,0,0,0.18)';
+                          return a ? 'rgba(255,255,255,0.88)' : 'transparent';
                         ]]]
-                    - border: >
+                    - border: none
+                    - box-shadow: >
                         [[[
                           const a = states['input_select.periodo_energia_dashboard']?.state === 'Diário';
-                          return a ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.16)';
+                          return a ? '0 2px 8px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.45)' : 'none';
                         ]]]
-                    - box-shadow: none
-                    - padding: 0 8px
+                    - padding: 0 10px
+                    - margin: 0
+                    - box-sizing: border-box
                   name:
                     - color: >
                         [[[
@@ -103,19 +119,22 @@
                 styles:
                   card:
                     - height: 24px
+                    - min-width: 48px
                     - border-radius: 999px
                     - background: >
                         [[[
                           const a = states['input_select.periodo_energia_dashboard']?.state === 'Semanal';
-                          return a ? 'rgba(255,255,255,0.84)' : 'rgba(0,0,0,0.18)';
+                          return a ? 'rgba(255,255,255,0.88)' : 'transparent';
                         ]]]
-                    - border: >
+                    - border: none
+                    - box-shadow: >
                         [[[
                           const a = states['input_select.periodo_energia_dashboard']?.state === 'Semanal';
-                          return a ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.16)';
+                          return a ? '0 2px 8px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.45)' : 'none';
                         ]]]
-                    - box-shadow: none
-                    - padding: 0 8px
+                    - padding: 0 10px
+                    - margin: 0
+                    - box-sizing: border-box
                   name:
                     - color: >
                         [[[
@@ -139,19 +158,22 @@
                 styles:
                   card:
                     - height: 24px
+                    - min-width: 48px
                     - border-radius: 999px
                     - background: >
                         [[[
                           const a = states['input_select.periodo_energia_dashboard']?.state === 'Mensal';
-                          return a ? 'rgba(255,255,255,0.84)' : 'rgba(0,0,0,0.18)';
+                          return a ? 'rgba(255,255,255,0.88)' : 'transparent';
                         ]]]
-                    - border: >
+                    - border: none
+                    - box-shadow: >
                         [[[
                           const a = states['input_select.periodo_energia_dashboard']?.state === 'Mensal';
-                          return a ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.16)';
+                          return a ? '0 2px 8px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.45)' : 'none';
                         ]]]
-                    - box-shadow: none
-                    - padding: 0 8px
+                    - padding: 0 10px
+                    - margin: 0
+                    - box-sizing: border-box
                   name:
                     - color: >
                         [[[

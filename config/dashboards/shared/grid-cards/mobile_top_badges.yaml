@@ -1,0 +1,55 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_top_badges.yaml
+# Criado: 2025-05 — Mobile V2
+# Parte do dashboard mobile (5 abas + pill navbar)
+#
+# ⚠️  REGRA DE OURO: Este arquivo foi criado como ADIÇÃO.
+#     Nenhum arquivo existente foi modificado para criar este.
+#     Rollback: remover o !include correspondente em ui-lovelace-main.yaml
+#               e/ou comentar o !include na view que usa este arquivo.
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Container de scroll horizontal para as badges do topo.
+# O bento_top_badges.yaml tem view_layout: grid-area: top_badges — esse
+# atributo é ignorado aqui pois não estamos dentro do grid principal.
+# ──────────────────────────────────────────────────────────────────────────────
+
+type: custom:mod-card
+card_mod:
+  style: |
+    ha-card {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+      padding: 0 !important;
+    }
+  style:
+    .: |
+      :host {
+        display: block !important;
+        width: 100% !important;
+      }
+    hui-element$: |
+      .card-content {
+        padding: 0 !important;
+      }
+card:
+  type: custom:mod-card
+  card_mod:
+    style: |
+      ha-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        white-space: nowrap !important;
+        padding: 0 14px !important;
+        display: block !important;
+      }
+      ha-card::-webkit-scrollbar {
+        display: none !important;
+      }
+  card: !include ../../views/main-grid/bento_top_badges.yaml

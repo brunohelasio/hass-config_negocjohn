@@ -1,0 +1,49 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile-v2-cameras.yaml
+# Criado: 2025-05 — Mobile V2
+# Parte do dashboard mobile (5 abas + pill navbar)
+#
+# ⚠️  REGRA DE OURO: Este arquivo foi criado como ADIÇÃO.
+#     Nenhum arquivo existente foi modificado para criar este.
+#     Rollback: remover o !include correspondente em ui-lovelace-main.yaml
+#               e/ou comentar o !include na view que usa este arquivo.
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# View da aba Câmeras (mobile-v2).
+# Layout: coluna única, exibe o card de câmeras bento.
+# ──────────────────────────────────────────────────────────────────────────────
+
+title: Câmeras
+path: mobile-v2-cameras
+icon: mdi:camera
+subview: false
+theme: tablet
+
+type: custom:grid-layout
+layout:
+  margin: 0
+  padding: 14px 14px calc(90px + env(safe-area-inset-bottom, 0px)) 14px
+  grid-template-columns: 1fr
+  grid-auto-rows: min-content
+  grid-gap: 10px
+
+card_mod:
+  style: |
+    :host {
+      background: rgb(0,0,0) !important;
+    }
+
+cards:
+  # ── Câmeras (wrapper glass) ──────────────────────────────────────────────
+  - type: custom:mod-card
+    card_mod:
+      style: |
+        ha-card {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          border-radius: 16px !important;
+        }
+    card: !include ../shared/grid-cards/bento_cameras.yaml

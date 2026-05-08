@@ -1,0 +1,122 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile-v2-casa.yaml
+# Criado: 2025-05 — Mobile V2
+# Parte do dashboard mobile (5 abas + pill navbar)
+#
+# ⚠️  REGRA DE OURO: Este arquivo foi criado como ADIÇÃO.
+#     Nenhum arquivo existente foi modificado para criar este.
+#     Rollback: remover o !include correspondente em ui-lovelace-main.yaml
+#               e/ou comentar o !include na view que usa este arquivo.
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# View principal da aba Casa (mobile-v2).
+# Layout: coluna única, badges → welcome → sala → rail cômodos → ações → nav.
+# A pill navbar é position:fixed, portanto a área "nav" é apenas espaçador.
+# Esta view só faz sentido em mobile (≤ 800px).
+# ──────────────────────────────────────────────────────────────────────────────
+
+title: Casa
+path: mobile-v2-casa
+icon: mdi:home-circle
+subview: false
+theme: tablet
+
+type: custom:grid-layout
+layout:
+  margin: 0
+  padding: 14px 14px calc(90px + env(safe-area-inset-bottom, 0px)) 14px
+  grid-template-columns: 1fr
+  grid-template-rows: min-content min-content min-content min-content min-content
+  grid-template-areas: |
+    "badges"
+    "hero"
+    "sala"
+    "comodos_rail"
+    "quick_actions"
+  grid-gap: 10px
+
+card_mod:
+  style: |
+    :host {
+      background: rgb(0,0,0) !important;
+    }
+
+cards:
+  # ── Badges (scroll horizontal) ──────────────────────────────────────────
+  - type: custom:mod-card
+    view_layout:
+      grid-area: badges
+    card_mod:
+      style: |
+        ha-card {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+    card: !include ../shared/grid-cards/mobile_top_badges.yaml
+
+  # ── Hero (Welcome) ──────────────────────────────────────────────────────
+  - type: custom:mod-card
+    view_layout:
+      grid-area: hero
+    card_mod:
+      style: |
+        ha-card {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          height: 120px !important;
+          overflow: hidden !important;
+          border-radius: 16px !important;
+        }
+    card: !include ../shared/grid-cards/bento_welcome.yaml
+
+  # ── Sala ─────────────────────────────────────────────────────────────────
+  - type: custom:mod-card
+    view_layout:
+      grid-area: sala
+    card_mod:
+      style: |
+        ha-card {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+    card: !include ../shared/grid-cards/mobile_sala_wrapper.yaml
+
+  # ── Rail de Cômodos ─────────────────────────────────────────────────────
+  - type: custom:mod-card
+    view_layout:
+      grid-area: comodos_rail
+    card_mod:
+      style: |
+        ha-card {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          overflow: visible !important;
+        }
+    card: !include ../shared/grid-cards/mobile_comodos_rail.yaml
+
+  # ── Quick Actions ────────────────────────────────────────────────────────
+  - type: custom:mod-card
+    view_layout:
+      grid-area: quick_actions
+    card_mod:
+      style: |
+        ha-card {
+          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+          backdrop-filter: blur(20px) saturate(1.35) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          padding: 0 !important;
+          height: auto !important;
+        }
+    card: !include ../shared/grid-cards/bento_quick_actions.yaml

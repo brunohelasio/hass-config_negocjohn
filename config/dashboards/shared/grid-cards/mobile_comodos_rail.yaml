@@ -1,0 +1,157 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_comodos_rail.yaml
+# Criado: 2025-05 — Mobile V2
+# Parte do dashboard mobile (5 abas + pill navbar)
+#
+# ⚠️  REGRA DE OURO: Este arquivo foi criado como ADIÇÃO.
+#     Nenhum arquivo existente foi modificado para criar este.
+#     Rollback: remover o !include correspondente em ui-lovelace-main.yaml
+#               e/ou comentar o !include na view que usa este arquivo.
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Rail horizontal com scroll dos cômodos secundários.
+# Mostra 2 cards + hint do terceiro (largura calc(50vw - 22px) por card).
+# Usa scroll-snap para navegação suave entre os cards.
+# Cômodos incluídos: Office, Cozinha, Lavabo, Q.Casal, Q.Marina, Q.Miguel.
+# ──────────────────────────────────────────────────────────────────────────────
+
+type: custom:mod-card
+card_mod:
+  style: |
+    ha-card {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      overflow-x: scroll !important;
+      overflow-y: visible !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: none !important;
+      scroll-snap-type: x mandatory !important;
+      padding: 0 !important;
+      display: block !important;
+    }
+    ha-card::-webkit-scrollbar {
+      display: none !important;
+    }
+card:
+  type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-auto-flow: column
+    # 22px = 14px container padding + (10px gap / 2) + 2px visual buffer
+    # This ensures exactly 2 cards are fully visible + a peek at the 3rd.
+    grid-auto-columns: calc(50vw - 22px)
+    grid-template-rows: 170px
+    gap: 10px
+    margin: 0
+    padding: 0 14px
+  card_mod:
+    style: |
+      ha-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+      }
+  cards:
+    # ── Office ──────────────────────────────────────────────────────────────
+    - type: custom:mod-card
+      card_mod:
+        style: |
+          ha-card {
+            scroll-snap-align: start !important;
+            min-width: calc(50vw - 22px) !important;
+            width: calc(50vw - 22px) !important;
+            height: 170px !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+          }
+      card: !include ../../views/main-grid/bento_office.yaml
+
+    # ── Cozinha ─────────────────────────────────────────────────────────────
+    - type: custom:mod-card
+      card_mod:
+        style: |
+          ha-card {
+            scroll-snap-align: start !important;
+            min-width: calc(50vw - 22px) !important;
+            width: calc(50vw - 22px) !important;
+            height: 170px !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+          }
+      card: !include ../../views/main-grid/bento_cozinha.yaml
+
+    # ── Lavabo ──────────────────────────────────────────────────────────────
+    - type: custom:mod-card
+      card_mod:
+        style: |
+          ha-card {
+            scroll-snap-align: start !important;
+            min-width: calc(50vw - 22px) !important;
+            width: calc(50vw - 22px) !important;
+            height: 170px !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+          }
+      card: !include ../../views/main-grid/bento_lavabo.yaml
+
+    # ── Quarto Casal ────────────────────────────────────────────────────────
+    - type: custom:mod-card
+      card_mod:
+        style: |
+          ha-card {
+            scroll-snap-align: start !important;
+            min-width: calc(50vw - 22px) !important;
+            width: calc(50vw - 22px) !important;
+            height: 170px !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+          }
+      card: !include ../../views/main-grid/bento_quarto_casal.yaml
+
+    # ── Quarto Marina ───────────────────────────────────────────────────────
+    - type: custom:mod-card
+      card_mod:
+        style: |
+          ha-card {
+            scroll-snap-align: start !important;
+            min-width: calc(50vw - 22px) !important;
+            width: calc(50vw - 22px) !important;
+            height: 170px !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+          }
+      card: !include ../../views/main-grid/bento_quarto_marina.yaml
+
+    # ── Quarto Miguel ───────────────────────────────────────────────────────
+    - type: custom:mod-card
+      card_mod:
+        style: |
+          ha-card {
+            scroll-snap-align: start !important;
+            min-width: calc(50vw - 22px) !important;
+            width: calc(50vw - 22px) !important;
+            height: 170px !important;
+            overflow: hidden !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+          }
+      card: !include ../../views/main-grid/bento_quarto_miguel.yaml

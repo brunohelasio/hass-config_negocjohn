@@ -1,0 +1,27 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_sala_wrapper.yaml
+# Criado: 2025-05 — Mobile V2
+# Parte do dashboard mobile (5 abas + pill navbar)
+#
+# ⚠️  REGRA DE OURO: Este arquivo foi criado como ADIÇÃO.
+#     Nenhum arquivo existente foi modificado para criar este.
+#     Rollback: remover o !include correspondente em ui-lovelace-main.yaml
+#               e/ou comentar o !include na view que usa este arquivo.
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Wrapper para o card da Sala no layout mobile.
+# O bento_sala.yaml tem view_layout: grid-area: sala — aqui não é necessário.
+# O card original (shared/grid-cards/bento_sala.yaml) já contém todo o glass
+# style e a lógica de acendimento quando light.grupo_luzes_sala está on.
+# ──────────────────────────────────────────────────────────────────────────────
+
+type: custom:mod-card
+card_mod:
+  style: |
+    ha-card {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+card: !include ../../shared/grid-cards/bento_sala.yaml

@@ -84,27 +84,30 @@
     - type: custom:button-card
       icon: mdi:wifi
       show_name: false
-      tap_action:
-        action: fire-dom-event
-        browser_mod:
-          service: browser_mod.popup
-          data:
-            title: Wi-Fi
-            tag: wifi_qr
-            size: wide
-            style: >
-              --popup-width: min(420px, 92vw);
-              --popup-max-width: 520px;
-              --popup-background-color: rgba(15, 20, 35, 0.75);
-              --mdc-theme-surface: rgba(20, 24, 33, 0.88);
-              --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
-              --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
-              --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
-            # Mesmo kit de estilo de popup usado no Office
-            card_mod: !include ../snippets/style_popup_complete.yaml
-            content:
-              type: picture
-              image: /local/images/wifi_main_scanme.png
+      # --- CÓDIGO ORIGINAL COMENTADO (popup inline) ---
+      # tap_action:
+      #   action: fire-dom-event
+      #   browser_mod:
+      #     service: browser_mod.popup
+      #     data:
+      #       title: Wi-Fi
+      #       tag: wifi_qr
+      #       size: wide
+      #       style: >
+      #         --popup-width: min(420px, 92vw);
+      #         --popup-max-width: 520px;
+      #         --popup-background-color: rgba(15, 20, 35, 0.75);
+      #         --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+      #         --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+      #         --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
+      #         --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
+      #       card_mod: !include ../snippets/style_popup_complete.yaml
+      #       content:
+      #         type: picture
+      #         image: /local/images/wifi_main_scanme.png
+      # --- FIM CÓDIGO ORIGINAL ---
+      # include retorna o objeto completo de tap_action (action + browser_mod)
+      tap_action: !include ../popup/footer/wifi_qr.yaml
       hold_action:
         action: none
       styles: *quick_icon_styles

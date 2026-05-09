@@ -1,0 +1,105 @@
+# ============================================================================
+# Pacote: kitchen_appliances
+# Objetivo: estados semânticos e consumo real dos eletrodomésticos da cozinha.
+# Mantém a lógica fora dos cards BentoGrid, seguindo o padrão de sensores do
+# dashboard Ngocjohn (room active -> templates visuais -> card enxuto).
+# ============================================================================
+
+input_number:
+  lava_loucas_potencia_limiar_funcionamento:
+    name: Lava-louças - limiar de funcionamento (W)
+    min: 0
+    max: 100
+    step: 1
+    mode: box
+    unit_of_measurement: W
+    icon: mdi:dishwasher
+    initial: 8
+
+template:
+  - sensor:
+      - name: Lava Loucas Operation State
+        unique_id: lava_loucas_operation_state
+        icon: mdi:dishwasher
+        state: >-
+          {% set switch_entity = 'switch.cz_tomada_maq_lav_louca_socket_1' %}
+          {% set power_entity = 'sensor.cz_tomada_maq_lav_louca_potencia' %}
+          {% set threshold = states('input_number.lava_loucas_potencia_limiar_funcionamento') | float(8) %}
+          {% set power_state = states(power_entity) %}
+          {% set switch_state = states(switch_entity) %}
+          {% set power = power_state | float(0) %}
+          {% if power_state in ['unavailable', 'unknown', 'none', ''] and switch_state in ['unavailable', 'unknown', 'none', ''] %}
+            unavailable
+          {% elif power > threshold %}
+            run
+          {% elif switch_state == 'on' %}
+            idle
+          {% else %}
+            off
+          {% endif %}
+        attributes:
+          switch_entity: switch.cz_tomada_maq_lav_louca_socket_1
+          power_entity: sensor.cz_tomada_maq_lav_louca_potencia
+          energy_entity: sensor.cz_tomada_maq_lav_louca_energia_total
+          daily_energy_entity: sensor.cz_tomada_maq_lav_louca_daily_consumption_1
+          threshold_w: "{{ states('input_number.lava_loucas_potencia_limiar_funcionamento') | float(8) }}"
+          power_w: "{{ states('sensor.cz_tomada_maq_lav_louca_potencia') | float(0) | round(2) }}"
+          fonte: "tomada_inteligente_tuya"
+
+      - name: Cozinha Active
+        unique_id: cozinha_active
+        icon: "{{ iif(this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+        state: >-
+          {% if is_state('sensor.lava_loucas_operation_state', 'run') %}
+            dishwashing
+          {% elif not is_state('light.grupo_luzes_cozinha', 'off') %}
+            yes
+          {% else %}
+            no
+          {% endif %}
+        attributes:
+          lights_on: >-
+            {%- set light = expand('light.grupo_luzes_cozinha') | selectattr('state', 'eq', 'on') | map(attribute='name') | list %}
+            {{- light }}
+          lights_on_count: >-
+            {{ expand('light.grupo_luzes_cozinha') | selectattr('state', 'eq', 'on') | list | count }}
+          lights_elapsed: >-
+            {% set lights = expand('light.grupo_luzes_cozinha') | selectattr('state', 'eq', 'on') | list %}
+            {% if lights | count > 0 %}
+              {% set ns = namespace(earliest=none) %}
+              {% for light in lights %}
+                {% set changed = as_timestamp(light.last_changed, none) %}
+                {% if changed is not none and (ns.earliest is none or changed < ns.earliest) %}
+                  {% set ns.earliest = changed %}
+                {% endif %}
+              {% endfor %}
+              {% if ns.earliest is not none %}
+                {% set diff = as_timestamp(now()) - ns.earliest %}
+                {% set minutes = (diff / 60) | int %}
+                {% set hours = (diff / 3600) | int %}
+                {% set days = (diff / 86400) | int %}
+                {% if minutes < 1 %}< 1m
+                {% elif minutes < 60 %}{{ minutes }}m
+                {% elif hours < 24 %}{{ hours }}h
+                {% else %}{{ days }}d
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          dishwasher_running: "{{ is_state('sensor.lava_loucas_operation_state', 'run') }}"
+          dishwasher_elapsed: >-
+            {% if is_state('sensor.lava_loucas_operation_state', 'run') %}
+              {% set changed = as_timestamp(states.sensor.lava_loucas_operation_state.last_changed, none) %}
+              {% if changed is not none %}
+                {% set diff = as_timestamp(now()) - changed %}
+                {% set minutes = (diff / 60) | int %}
+                {% set hours = (diff / 3600) | int %}
+                {% set days = (diff / 86400) | int %}
+                {% if minutes < 1 %}< 1m
+                {% elif minutes < 60 %}{{ minutes }}m
+                {% elif hours < 24 %}{{ hours }}h
+                {% else %}{{ days }}d
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          dishwasher_power_w: "{{ states('sensor.cz_tomada_maq_lav_louca_potencia') | float(0) | round(2) }}"
+          dishwasher_operation_state: "{{ states('sensor.lava_loucas_operation_state') }}"

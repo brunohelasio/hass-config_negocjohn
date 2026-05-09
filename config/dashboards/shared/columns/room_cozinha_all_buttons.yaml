@@ -386,23 +386,22 @@
         card:
           - opacity: "0.45"
           - cursor: "default"
-    # LAVA-LOUCAS — placeholder sem entidade
+    # LAVA-LOUCAS — tomada inteligente real (Tuya/Xtend Tuya)
+    # Substitui o placeholder validado acima preservando o padrão visual do popup.
     - type: custom:button-card
+      entity: switch.cz_tomada_maq_lav_louca_socket_1
       name: Lava-Louças
       template:
         - base
         - icon_dishwasher
       show_icon: false
       tap_action:
-        action: none
+        action: toggle
+        haptic: success
       hold_action:
-        action: none
+        action: more-info
       double_tap_action:
-        action: none
-      styles:
-        card:
-          - opacity: "0.45"
-          - cursor: "default"
+        action: more-info
     # AIR FRYER — placeholder sem entidade
     - type: custom:button-card
       name: Air Fryer

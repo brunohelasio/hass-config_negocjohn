@@ -4,6 +4,14 @@ name: Cozinha
 template:
   - rooms_base
   - icon_noodles
+  - kitchen_bento_status
+
+triggers_update:
+  - sensor.time
+  - sensor.cozinha_active
+  - sensor.lava_loucas_operation_state
+  - sensor.cz_tomada_maq_lav_louca_potencia
+  - light.grupo_luzes_cozinha
 
 # aspect_ratio: false  # COMENTADO — com células ~258×235px (sala=4col, comodos=5col)
 #   o aspect_ratio:1/1 herdado do base cria um quadrado de 258×258px que é clipado
@@ -21,10 +29,12 @@ template:
 
 # ─── VARIÁVEIS CONFORME SEU TPL_BASE ──────────────────────
 variables:
-  state: "[[[ return entity.state; ]]]"
+  state: "[[[ return states['sensor.cozinha_active']?.state || entity.state; ]]]"
   state_on: >
-    [[[ 
-      return ['on', 'home', 'active', 'yes'].indexOf(!entity || entity.state) !== -1; 
+    [[[
+      const activeState = states['sensor.cozinha_active']?.state;
+      const roomOn = ['on', 'home', 'active', 'yes'].indexOf(!entity || entity.state) !== -1;
+      return roomOn || ['dishwashing', 'cooking', 'washing'].includes(activeState);
     ]]]
   light_entity: light.cz_luz_principal
   active: sensor.cozinha_active
@@ -55,14 +65,14 @@ styles:
   grid:
     - grid-template-areas: '"icon temp dots" "n n dots" "s s dots"'
     - grid-template-columns: "min-content 1fr min-content"
-    - grid-template-rows: "0.90fr min-content min-content"
+    - grid-template-rows: "0.82fr min-content min-content"
   
   name:
     - justify-self: "start"
     - align-self: "end"
     - font-size: "15px"
     - font-weight: "700"
-    - margin-bottom: "0px !important"
+    - margin-bottom: "1px !important"
     - color: >
         [[[ return variables.state_on ? 'black' : 'white'; ]]]
 
@@ -72,7 +82,8 @@ styles:
     - font-size: "11px"
     - font-weight: "500"
     # - margin-bottom: "44px !important"  # ORIGINAL — projetado para botão quadrado, subia o texto no retangular
-    - margin-bottom: "-1px !important"
+    # NOVO: status composto (luzes + lava-louças) precisa de duas linhas quando ambos ativos.
+    - margin-bottom: "0px !important"
     - color: >
         [[[ return variables.state_on ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)'; ]]]
         
@@ -105,25 +116,6 @@ custom_fields:
         <div style="display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1;">
           <span style="font-size: 13px; font-weight: 700; color: ${color};">${t.state}°</span>
           <span style="font-size: 11px; color: ${subColor};">${h ? h.state + '%' : ''}</span>
-        </div>
-      `;
-    ]]]
-
-  dots: >
-    [[[
-      const dotBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
-      const iconColor = variables.state_on ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)';
-      const renderDot = (icon) => `
-        <div style="width: 26px; height: 26px; border-radius: 50%; box-sizing: border-box; background: ${dotBg}; border: 1px solid rgba(255,255,255,0.12); display: flex; justify-content: center; align-items: center; color: ${iconColor};">
-          <ha-icon icon="${icon}" style="width: 14px; height: 14px; display: flex;"></ha-icon>
-        </div>
-      `;
-      return `
-        <div style="display: flex; flex-direction: column; gap: 5px; padding-top: 2px;">
-          ${renderDot('mdi:account')}
-          ${renderDot('mdi:dishwasher')}
-          ${renderDot('mdi:washing-machine')}
-          ${renderDot('mdi:air-fryer')}
         </div>
       `;
     ]]]

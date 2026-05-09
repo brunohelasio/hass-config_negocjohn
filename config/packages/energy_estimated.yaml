@@ -180,7 +180,7 @@ template:
           categoria: "outros"
 
       # ----------------------------------------------------------------------
-      # POTÊNCIA REAL TOMADAS (PLACEHOLDER)
+      # POTÊNCIA REAL TOMADAS
       # ----------------------------------------------------------------------
       - name: Potencia Real Tomadas
         unique_id: potencia_real_tomadas
@@ -189,10 +189,14 @@ template:
         state_class: measurement
         icon: mdi:power-socket-eu
         state: >-
-          {{ states('input_number.potencia_real_tomadas_manual') | float(0) | round(2) }}
+          {% set manual = states('input_number.potencia_real_tomadas_manual') | float(0) %}
+          {% set lava_loucas = states('sensor.cz_tomada_maq_lav_louca_potencia') | float(0) %}
+          {{ (manual + lava_loucas) | round(2) }}
         attributes:
-          fontes: "placeholder_manual"
-          observacao: "Substituir por soma de sensores reais de tomadas inteligentes no futuro."
+          fontes: "manual+tomadas_reais"
+          observacao: "Soma o ajuste manual legado com sensores reais de tomadas inteligentes."
+          lava_loucas_power_entity: sensor.cz_tomada_maq_lav_louca_potencia
+          lava_loucas_power_w: "{{ states('sensor.cz_tomada_maq_lav_louca_potencia') | float(0) | round(2) }}"
 
       # ----------------------------------------------------------------------
       # POTÊNCIA TOTAL CASA

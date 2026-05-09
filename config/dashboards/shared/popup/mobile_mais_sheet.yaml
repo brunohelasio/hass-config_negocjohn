@@ -1,0 +1,47 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_mais_sheet.yaml
+# Criado: 2025-05 — Mobile V2
+# Parte do dashboard mobile (5 abas + pill navbar)
+#
+# ⚠️  REGRA DE OURO: Este arquivo foi criado como ADIÇÃO.
+#     Nenhum arquivo existente foi modificado para criar este.
+#     Rollback: remover o !include correspondente em ui-lovelace-main.yaml
+#               e/ou comentar o !include na view que usa este arquivo.
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Conteúdo do popup "Mais" — aberto via tap_action da aba ··· na pill navbar.
+# Inclui: Energia, Roborock e Calendário.
+# Os view_layout: grid-area dos originais são ignorados fora do grid principal.
+# ──────────────────────────────────────────────────────────────────────────────
+
+title: Mais
+content:
+  type: vertical-stack
+  cards:
+    # ── Cabeçalho compacto ───────────────────────────────────────────────────
+    - type: markdown
+      content: >
+        <div style="
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          opacity: 0.5;
+          text-transform: uppercase;
+          padding: 4px 0 8px 0;
+        ">⚙️ Mais opções</div>
+      card_mod:
+        style: |
+          ha-card {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+          }
+
+    # ── Energia ─────────────────────────────────────────────────────────────
+    - !include ../../views/main-grid/bento_energy.yaml
+
+    # ── Roborock ────────────────────────────────────────────────────────────
+    - !include ../../views/main-grid/bento_roborock.yaml
+
+    # ── Calendário ──────────────────────────────────────────────────────────
+    - !include ../../views/main-grid/bento_calendar.yaml

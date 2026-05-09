@@ -12,6 +12,13 @@ views:
   - !include views/mobile-security-cameras.yaml
   - !include views/mobile-masters-rooms.yaml
   - !include views/mobile-climate-media.yaml
+  # ── MOBILE V2 — novas views mobile (2025-05) ──────────────────────────────
+  # Rollback: comentar as 4 linhas abaixo para desativar completamente.
+  - !include views/mobile-v2-casa.yaml
+  - !include views/mobile-v2-comodos.yaml
+  - !include views/mobile-v2-midia.yaml
+  - !include views/mobile-v2-cameras.yaml
+  # ── fim MOBILE V2 ──────────────────────────────────────────────────────────
   - !include views/system.yaml
   - !include views/github-view.yaml
   - !include subviews/movie-panel.yaml

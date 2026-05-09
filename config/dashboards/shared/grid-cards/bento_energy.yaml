@@ -84,6 +84,8 @@
                   show_icon: false
                   show_state: false
                   entity: input_select.periodo_energia_dashboard
+                  variables:
+                    periodo: Diário
                   tap_action:
                     action: perform-action
                     perform_action: input_select.select_option
@@ -97,13 +99,14 @@
                       - border-radius: 999px
                       - background: >
                           [[[
-                            const a = states['input_select.periodo_energia_dashboard']?.state === (this?._config?.name || '');
+                            // ANTERIOR: usava this._config?.name, que nao e confiavel dentro de styles.
+                            const a = states['input_select.periodo_energia_dashboard']?.state === variables.periodo;
                             return a ? 'rgba(255,255,255,0.88)' : 'transparent';
                           ]]]
                       - border: none
                       - box-shadow: >
                           [[[
-                            const a = states['input_select.periodo_energia_dashboard']?.state === (this?._config?.name || '');
+                            const a = states['input_select.periodo_energia_dashboard']?.state === variables.periodo;
                             return a ? '0 2px 8px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.45)' : 'none';
                           ]]]
                       - padding: 0 10px
@@ -112,7 +115,7 @@
                     name:
                       - color: >
                           [[[
-                            const a = states['input_select.periodo_energia_dashboard']?.state === (this?._config?.name || '');
+                            const a = states['input_select.periodo_energia_dashboard']?.state === variables.periodo;
                             return a ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.78)';
                           ]]]
                       - font-size: 10px
@@ -122,6 +125,8 @@
                   show_icon: false
                   show_state: false
                   entity: input_select.periodo_energia_dashboard
+                  variables:
+                    periodo: Semanal
                   tap_action:
                     action: perform-action
                     perform_action: input_select.select_option
@@ -134,6 +139,8 @@
                   show_icon: false
                   show_state: false
                   entity: input_select.periodo_energia_dashboard
+                  variables:
+                    periodo: Mensal
                   tap_action:
                     action: perform-action
                     perform_action: input_select.select_option

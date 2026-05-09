@@ -4,17 +4,36 @@ browser_mod:
   data:
     title: Wi-Fi
     tag: wifi_qr
-    size: wide
+    # ANTERIOR: size: wide deixava o QR em popup grande demais.
     style: >
-      --popup-width: min(420px, 92vw);
-      --popup-max-width: 520px;
+      --popup-width: 450px;
+      --popup-max-width: min(450px, calc(100vw - 32px));
       --popup-background-color: rgba(15, 20, 35, 0.75);
       --mdc-theme-surface: rgba(20, 24, 33, 0.88);
       --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
       --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
       --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
-    # Caminho relativo ao diretório deste arquivo (shared/popup/footer)
-    card_mod: !include ../../snippets/style_popup_complete.yaml
+    card_mod:
+      style:
+        .: |
+          ha-dialog {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+          }
+        ha-dialog$: |
+          .mdc-dialog__scrim {
+            background-color: rgba(0, 0, 0, 0.56) !important;
+          }
+          .mdc-dialog__container {
+            align-items: center !important;
+            justify-content: center !important;
+          }
+          .mdc-dialog__surface {
+            width: 450px !important;
+            max-width: min(450px, calc(100vw - 32px)) !important;
+            max-height: 88vh !important;
+            overflow-y: auto !important;
+          }
     content:
       type: picture
       image: /local/images/wifi_main_scanme.png

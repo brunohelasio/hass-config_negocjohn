@@ -106,7 +106,9 @@ custom_fields:
       const officePresence = false;
       const pcOn = states['switch.macbook']?.state === 'on';
       const acOn = !['off','unavailable','unknown',''].includes(states['climate.ac_office']?.state ?? 'off');
-      const alexaOn = ['playing','on','paused','idle'].includes(states['media_player.echo_pop_office']?.state ?? '');
+      // ANTERIOR: const alexaOn = ['playing','on','paused','idle'].includes(states['media_player.echo_pop_office']?.state ?? '');
+      // Replica o padrao da Sala: idle nao deve manter o status da Alexa aceso.
+      const alexaOn = ['playing','on','paused'].includes(states['media_player.echo_pop_office']?.state ?? '');
       const baseBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
       const baseColor = variables.state_on ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.6)';
       const renderDot = (icon, active, activeColor) => `

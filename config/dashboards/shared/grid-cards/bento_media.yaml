@@ -60,6 +60,26 @@
               browser_mod:
                 service: browser_mod.popup
                 data: !include ../popup/media_all_players.yaml
+            # Estilo local do slide 2x2: nao altera templates base/icon_* compartilhados.
+            styles: &media_grid_player_styles
+              card:
+                - background: >
+                    [[[
+                      if (entity?.attributes?.entity_picture) {
+                        return `linear-gradient(180deg, rgba(7,10,18,0.18) 0%, rgba(7,10,18,0.58) 100%), url("${entity.attributes.entity_picture}") center / cover no-repeat`;
+                      }
+                      const active = ['on','playing','paused'].includes(entity?.state ?? '');
+                      return active
+                        ? 'linear-gradient(160deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.12) 100%)'
+                        : 'linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.045) 100%)';
+                    ]]]
+                - border: 1px solid rgba(255,255,255,0.14)
+                - box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 8px 22px rgba(0,0,0,0.16)
+                - border-radius: 18px
+                - overflow: hidden
+                - backdrop-filter: blur(16px) saturate(1.18)
+                - -webkit-backdrop-filter: blur(16px) saturate(1.18)
+                - box-sizing: border-box
 
           # Slot 2: Echo Show
           - type: custom:button-card
@@ -80,6 +100,7 @@
               browser_mod:
                 service: browser_mod.popup
                 data: !include ../popup/media_all_players.yaml
+            styles: *media_grid_player_styles
 
           # Slot 3: Spotify
           - type: custom:button-card
@@ -100,6 +121,7 @@
               browser_mod:
                 service: browser_mod.popup
                 data: !include ../popup/media_all_players.yaml
+            styles: *media_grid_player_styles
 
           # Slot 4: Echo Pop Office
           - type: custom:button-card
@@ -120,3 +142,4 @@
               browser_mod:
                 service: browser_mod.popup
                 data: !include ../popup/media_all_players.yaml
+            styles: *media_grid_player_styles

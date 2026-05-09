@@ -51,115 +51,103 @@
           ]]]
         selector:
           card:
-            type: horizontal-stack
-            cards:
-              - type: custom:button-card
-                name: Diário
-                show_icon: false
-                show_state: false
-                entity: input_select.periodo_energia_dashboard
-                tap_action:
-                  action: perform-action
-                  perform_action: input_select.select_option
-                  data:
-                    entity_id: input_select.periodo_energia_dashboard
-                    option: Diário
-                styles:
-                  card:
-                    - height: 24px
-                    - border-radius: 999px
-                    - background: >
-                        [[[
-                          const a = states['input_select.periodo_energia_dashboard']?.state === 'Diário';
-                          return a ? 'rgba(255,255,255,0.84)' : 'rgba(0,0,0,0.18)';
-                        ]]]
-                    - border: >
-                        [[[
-                          const a = states['input_select.periodo_energia_dashboard']?.state === 'Diário';
-                          return a ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.16)';
-                        ]]]
-                    - box-shadow: none
-                    - padding: 0 8px
-                  name:
-                    - color: >
-                        [[[
-                          const a = states['input_select.periodo_energia_dashboard']?.state === 'Diário';
-                          return a ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.78)';
-                        ]]]
-                    - font-size: 10px
-                    - font-weight: 700
-
-              - type: custom:button-card
-                name: Semanal
-                show_icon: false
-                show_state: false
-                entity: input_select.periodo_energia_dashboard
-                tap_action:
-                  action: perform-action
-                  perform_action: input_select.select_option
-                  data:
-                    entity_id: input_select.periodo_energia_dashboard
-                    option: Semanal
-                styles:
-                  card:
-                    - height: 24px
-                    - border-radius: 999px
-                    - background: >
-                        [[[
-                          const a = states['input_select.periodo_energia_dashboard']?.state === 'Semanal';
-                          return a ? 'rgba(255,255,255,0.84)' : 'rgba(0,0,0,0.18)';
-                        ]]]
-                    - border: >
-                        [[[
-                          const a = states['input_select.periodo_energia_dashboard']?.state === 'Semanal';
-                          return a ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.16)';
-                        ]]]
-                    - box-shadow: none
-                    - padding: 0 8px
-                  name:
-                    - color: >
-                        [[[
-                          const a = states['input_select.periodo_energia_dashboard']?.state === 'Semanal';
-                          return a ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.78)';
-                        ]]]
-                    - font-size: 10px
-                    - font-weight: 700
-
-              - type: custom:button-card
-                name: Mensal
-                show_icon: false
-                show_state: false
-                entity: input_select.periodo_energia_dashboard
-                tap_action:
-                  action: perform-action
-                  perform_action: input_select.select_option
-                  data:
-                    entity_id: input_select.periodo_energia_dashboard
-                    option: Mensal
-                styles:
-                  card:
-                    - height: 24px
-                    - border-radius: 999px
-                    - background: >
-                        [[[
-                          const a = states['input_select.periodo_energia_dashboard']?.state === 'Mensal';
-                          return a ? 'rgba(255,255,255,0.84)' : 'rgba(0,0,0,0.18)';
-                        ]]]
-                    - border: >
-                        [[[
-                          const a = states['input_select.periodo_energia_dashboard']?.state === 'Mensal';
-                          return a ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(255,255,255,0.16)';
-                        ]]]
-                    - box-shadow: none
-                    - padding: 0 8px
-                  name:
-                    - color: >
-                        [[[
-                          const a = states['input_select.periodo_energia_dashboard']?.state === 'Mensal';
-                          return a ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.78)';
-                        ]]]
-                    - font-size: 10px
-                    - font-weight: 700
+            # ANTERIOR: horizontal-stack com card_mod em #root; alguns wrappers nao aplicavam a pilula externa.
+            type: custom:mod-card
+            card_mod:
+              style: |
+                ha-card {
+                  display: inline-flex !important;
+                  width: max-content !important;
+                  height: 30px !important;
+                  padding: 3px !important;
+                  border-radius: 999px !important;
+                  background: rgba(0,0,0,0.22) !important;
+                  border: 1px solid rgba(255,255,255,0.16) !important;
+                  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
+                  backdrop-filter: blur(14px) saturate(1.15) !important;
+                  -webkit-backdrop-filter: blur(14px) saturate(1.15) !important;
+                  box-sizing: border-box !important;
+                  overflow: hidden !important;
+                }
+            card:
+              type: horizontal-stack
+              card_mod:
+                style: |
+                  #root {
+                    gap: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                  }
+              cards:
+                - type: custom:button-card
+                  name: Diário
+                  show_icon: false
+                  show_state: false
+                  entity: input_select.periodo_energia_dashboard
+                  variables:
+                    periodo: Diário
+                  tap_action:
+                    action: perform-action
+                    perform_action: input_select.select_option
+                    data:
+                      entity_id: input_select.periodo_energia_dashboard
+                      option: Diário
+                  styles: &energy_segment_style
+                    card:
+                      - height: 24px
+                      - min-width: 48px
+                      - border-radius: 999px
+                      - background: >
+                          [[[
+                            // ANTERIOR: usava this._config?.name, que nao e confiavel dentro de styles.
+                            const a = states['input_select.periodo_energia_dashboard']?.state === variables.periodo;
+                            return a ? 'rgba(255,255,255,0.88)' : 'transparent';
+                          ]]]
+                      - border: none
+                      - box-shadow: >
+                          [[[
+                            const a = states['input_select.periodo_energia_dashboard']?.state === variables.periodo;
+                            return a ? '0 2px 8px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.45)' : 'none';
+                          ]]]
+                      - padding: 0 10px
+                      - margin: 0
+                      - box-sizing: border-box
+                    name:
+                      - color: >
+                          [[[
+                            const a = states['input_select.periodo_energia_dashboard']?.state === variables.periodo;
+                            return a ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.78)';
+                          ]]]
+                      - font-size: 10px
+                      - font-weight: 700
+                - type: custom:button-card
+                  name: Semanal
+                  show_icon: false
+                  show_state: false
+                  entity: input_select.periodo_energia_dashboard
+                  variables:
+                    periodo: Semanal
+                  tap_action:
+                    action: perform-action
+                    perform_action: input_select.select_option
+                    data:
+                      entity_id: input_select.periodo_energia_dashboard
+                      option: Semanal
+                  styles: *energy_segment_style
+                - type: custom:button-card
+                  name: Mensal
+                  show_icon: false
+                  show_state: false
+                  entity: input_select.periodo_energia_dashboard
+                  variables:
+                    periodo: Mensal
+                  tap_action:
+                    action: perform-action
+                    perform_action: input_select.select_option
+                    data:
+                      entity_id: input_select.periodo_energia_dashboard
+                      option: Mensal
+                  styles: *energy_segment_style
       styles:
         grid:
           - grid-template-areas: '"header selector" "value selector"'

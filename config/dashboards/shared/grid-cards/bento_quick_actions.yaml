@@ -12,7 +12,7 @@
     align-items: center
     justify-content: start
     margin: 0
-    padding: 0
+    padding: 0 10px
   card_mod:
     style: |
       ha-card {
@@ -39,11 +39,12 @@
           - width: 52px
           - height: 52px
           - border-radius: 14px
-          - background: rgba(255,255,255,0.10)
-          - border: 1px solid rgba(255,255,255,0.18)
-          - backdrop-filter: blur(14px) saturate(1.15)
-          - -webkit-backdrop-filter: blur(14px) saturate(1.15)
-          - box-shadow: none
+          # ANTERIOR: rgba(255,255,255,0.10) + borda simples.
+          - background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30))
+          - border: 1px solid rgba(255,255,255,0.10)
+          - backdrop-filter: blur(20px) saturate(1.35)
+          - -webkit-backdrop-filter: blur(20px) saturate(1.35)
+          - box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.20)
           - margin: 0
           - padding: 0
         icon:
@@ -88,17 +89,36 @@
           data:
             title: Wi-Fi
             tag: wifi_qr
-            size: wide
+            # ANTERIOR: size: wide deixava o QR em popup grande demais.
             style: >
-              --popup-width: min(420px, 92vw);
-              --popup-max-width: 520px;
+              --popup-width: 450px;
+              --popup-max-width: min(450px, calc(100vw - 32px));
               --popup-background-color: rgba(15, 20, 35, 0.75);
               --mdc-theme-surface: rgba(20, 24, 33, 0.88);
               --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
               --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22), 0 0 70px rgba(62, 132, 255, 0.14);
               --tablet-popup-content-padding: 0.4em 0.6em 0.6em 0.5em;
-            # Mesmo kit de estilo de popup usado no Office
-            card_mod: !include ../snippets/style_popup_complete.yaml
+            card_mod:
+              style:
+                .: |
+                  ha-dialog {
+                    backdrop-filter: blur(12px);
+                    -webkit-backdrop-filter: blur(12px);
+                  }
+                ha-dialog$: |
+                  .mdc-dialog__scrim {
+                    background-color: rgba(0, 0, 0, 0.56) !important;
+                  }
+                  .mdc-dialog__container {
+                    align-items: center !important;
+                    justify-content: center !important;
+                  }
+                  .mdc-dialog__surface {
+                    width: 450px !important;
+                    max-width: min(450px, calc(100vw - 32px)) !important;
+                    max-height: 88vh !important;
+                    overflow-y: auto !important;
+                  }
             content:
               type: picture
               image: /local/images/wifi_main_scanme.png

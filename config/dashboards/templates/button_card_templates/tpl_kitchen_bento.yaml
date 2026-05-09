@@ -1,0 +1,71 @@
+# ============================================================================
+# Templates específicos do BentoGrid da Cozinha.
+# Mantêm a composição visual dinâmica (status em duas linhas + badges) fora do
+# card do cômodo, preservando a modularidade do dashboard.
+# ============================================================================
+
+kitchen_bento_status:
+  variables:
+    active: sensor.cozinha_active
+    dishwasher_entity: sensor.lava_loucas_operation_state
+    dishwasher_on: >
+      [[[ return states[variables.dishwasher_entity]?.state === 'run'; ]]]
+  triggers_update:
+    - sensor.time
+    - sensor.cozinha_active
+    - sensor.lava_loucas_operation_state
+    - sensor.cz_tomada_maq_lav_louca_potencia
+    - light.grupo_luzes_cozinha
+  state_display: >
+    [[[
+      const active = states[variables.active];
+      const attrs = active?.attributes || {};
+      const lights = Number(attrs.lights_on_count || 0);
+      const lightsElapsed = attrs.lights_elapsed || '';
+      const dishwasherRunning = attrs.dishwasher_running === true || attrs.dishwasher_running === 'True' || attrs.dishwasher_running === 'true';
+      const dishwasherElapsed = attrs.dishwasher_elapsed || '';
+      const lines = [];
+
+      if (lights > 0) {
+        const label = lights === 1 ? '1 light' : `${lights} lights`;
+        lines.push(`${label}${lightsElapsed ? ` · ${lightsElapsed}` : ''}`);
+      }
+
+      if (dishwasherRunning) {
+        lines.push(`Lavando${dishwasherElapsed ? ` · ${dishwasherElapsed}` : ''}`);
+      }
+
+      if (!lines.length) return ' ';
+      return `<div class="kitchen-status-lines">${lines.map(line => `<div>${line}</div>`).join('')}</div>`;
+    ]]]
+  custom_fields:
+    dots: >
+      [[[
+        const attrs = states[variables.active]?.attributes || {};
+        const dishwasherRunning = attrs.dishwasher_running === true || attrs.dishwasher_running === 'True' || attrs.dishwasher_running === 'true';
+        const lightsOn = Number(attrs.lights_on_count || 0) > 0;
+        const baseBg = variables.state_on ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.08)';
+        const baseIcon = variables.state_on ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.6)';
+        const activeBg = variables.state_on ? 'rgba(255,255,255,0.34)' : 'rgba(62,132,255,0.22)';
+        const activeIcon = variables.state_on ? 'rgba(0,0,0,0.78)' : 'rgba(147,197,253,0.98)';
+        const renderDot = (icon, active = false) => `
+          <div style="width: 26px; height: 26px; border-radius: 50%; box-sizing: border-box; background: ${active ? activeBg : baseBg}; border: 1px solid ${active ? 'rgba(147,197,253,0.42)' : 'rgba(255,255,255,0.12)'}; display: flex; justify-content: center; align-items: center; color: ${active ? activeIcon : baseIcon}; box-shadow: ${active ? '0 0 10px rgba(96,165,250,0.22)' : 'none'};">
+            <ha-icon icon="${icon}" style="width: 14px; height: 14px; display: flex;"></ha-icon>
+          </div>
+        `;
+        return `
+          <div style="display: flex; flex-direction: column; gap: 5px; padding-top: 2px;">
+            ${renderDot('mdi:account')}
+            ${renderDot('mdi:dishwasher', dishwasherRunning)}
+            ${renderDot('mdi:washing-machine')}
+            ${renderDot('mdi:air-fryer')}
+            ${lightsOn ? '' : ''}
+          </div>
+        `;
+      ]]]
+  styles:
+    state:
+      - white-space: normal
+      - line-height: 1.25
+      - overflow: visible
+      - min-height: 28px

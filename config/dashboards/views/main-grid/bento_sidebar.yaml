@@ -53,13 +53,16 @@ view_layout:
 #     }
 # --- FIM CÓDIGO ANTERIOR ---
 
-# NOVO 2026-05-09: ha-card como flex column com space-between + align-items center.
-# - flex column distribui filhos no eixo vertical
-# - justify-content: space-between empurra grupo inferior para a base sem precisar
-#   de spacer 1fr nem propagação de altura através de hui-grid-layout aninhado
-# - align-items: center centraliza horizontalmente cada filho (vertical-stack TOP/BOTTOM),
-#   desde que os filhos não tenham largura 100% (garantido em shared/grid-cards/bento_sidebar.yaml
-#   via :host width 42px nos botões individuais).
+# NOVO 2026-05-09 (revisão): flex aplicado em #root, não em ha-card.
+# CAUSA da regressão observada na primeira tentativa:
+#   custom:stack-in-card envolve TODOS os filhos em um <div id="root"> interno.
+#   Aplicar display:flex em ha-card só fazia o #root ser o único flex item —
+#   align-items:center "centralizava" o div root, mas justify-content:space-between
+#   não tinha o que espaçar (1 só item). Resultado: 11 ícones empilhados no topo.
+# Correção:
+#   - ha-card mantém apenas o glass + altura 100%.
+#   - #root recebe o flex column space-between align-items center
+#     → os 2 vertical-stack viram flex items reais e se distribuem topo/base.
 card_mod:
   style: |
     :host {
@@ -70,11 +73,7 @@ card_mod:
     ha-card {
       height: 100% !important;
       margin: 0 !important;
-      padding: 8px 0 !important;
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      justify-content: space-between !important;
+      padding: 0 !important;
       box-sizing: border-box !important;
       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
       backdrop-filter: blur(18px) saturate(1.2) !important;
@@ -89,10 +88,21 @@ card_mod:
     ha-card::before {
       display: none !important;
     }
-    /* cada filho direto (vertical-stack TOP/BOTTOM) é flex item:
-       não estica, mantém largura natural dos botões (42px). */
-    ha-card > * {
+    /* container real dos filhos do stack-in-card */
+    #root {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      height: 100% !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      padding: 8px 0 !important;
+    }
+    /* cada filho de #root (vertical-stack TOP/BOTTOM) — não estica */
+    #root > * {
       flex: 0 0 auto !important;
+      width: auto !important;
     }
 # Fix 1 (P1): "- !include" criava [[array]] duplo pois bento_sidebar.yaml é sequência YAML
 # ANTERIOR: cards:\n  - !include ../../shared/grid-cards/bento_sidebar.yaml

@@ -1,0 +1,136 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile-v2-comodos.yaml
+# Criado: 2025-05 — Mobile V2
+# Parte do dashboard mobile (5 abas + pill navbar)
+#
+# ⚠️  REGRA DE OURO: Este arquivo foi criado como ADIÇÃO.
+#     Nenhum arquivo existente foi modificado para criar este.
+#     Rollback: remover o !include correspondente em ui-lovelace-main.yaml
+#               e/ou comentar o !include na view que usa este arquivo.
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# View da aba Cômodos (mobile-v2).
+# Layout: 2 colunas iguais, auto-placement dos cards bento.
+# Os cards bento_X.yaml têm view_layout: grid-area: X — fora do grid
+# principal, o grid-layout faz auto-placement automaticamente, que é o
+# comportamento desejado (grade 2×N).
+# ──────────────────────────────────────────────────────────────────────────────
+
+title: Cômodos
+path: mobile-v2-comodos
+icon: mdi:sofa
+subview: false
+theme: tablet
+
+type: custom:grid-layout
+layout:
+  margin: 0
+  padding: 14px 14px calc(90px + env(safe-area-inset-bottom, 0px)) 14px
+  grid-template-columns: 1fr 1fr
+  grid-auto-rows: 160px
+  grid-gap: 10px
+
+card_mod:
+  style: |
+    :host {
+      background: rgb(0,0,0) !important;
+    }
+
+cards:
+  # ── Sala ──────────────────────────────────────────────────────────────────
+  - type: custom:mod-card
+    card_mod:
+      style: |
+        ha-card {
+          height: 160px !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+    card: !include ./main-grid/bento_sala.yaml
+
+  # ── Office ────────────────────────────────────────────────────────────────
+  - type: custom:mod-card
+    card_mod:
+      style: |
+        ha-card {
+          height: 160px !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+    card: !include ./main-grid/bento_office.yaml
+
+  # ── Cozinha ──────────────────────────────────────────────────────────────
+  - type: custom:mod-card
+    card_mod:
+      style: |
+        ha-card {
+          height: 160px !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+    card: !include ./main-grid/bento_cozinha.yaml
+
+  # ── Lavabo ───────────────────────────────────────────────────────────────
+  - type: custom:mod-card
+    card_mod:
+      style: |
+        ha-card {
+          height: 160px !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+    card: !include ./main-grid/bento_lavabo.yaml
+
+  # ── Quarto Casal ─────────────────────────────────────────────────────────
+  - type: custom:mod-card
+    card_mod:
+      style: |
+        ha-card {
+          height: 160px !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+    card: !include ./main-grid/bento_quarto_casal.yaml
+
+  # ── Quarto Marina ────────────────────────────────────────────────────────
+  - type: custom:mod-card
+    card_mod:
+      style: |
+        ha-card {
+          height: 160px !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+    card: !include ./main-grid/bento_quarto_marina.yaml
+
+  # ── Quarto Miguel ────────────────────────────────────────────────────────
+  - type: custom:mod-card
+    card_mod:
+      style: |
+        ha-card {
+          height: 160px !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+    card: !include ./main-grid/bento_quarto_miguel.yaml

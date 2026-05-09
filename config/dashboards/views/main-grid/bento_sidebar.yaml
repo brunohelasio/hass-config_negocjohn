@@ -144,16 +144,27 @@ custom_fields:
           hold_action: { action: none }
           variables:
             nav_key: home
-          # FIX centralização: força :host width 42px (default seria 100%).
-          # Sem isso, o host ocuparia toda a largura do vertical-stack (que
-          # por sua vez ocuparia a coluna inteira), deixando o ha-card de
-          # 42px encostado à esquerda.
+          # FIX centralização: força :host width 42px (default seria 100%)
+          # com margin auto para se centralizar dentro do vertical-stack pai
+          # (que ocupa a largura total da coluna 64px da sidebar).
+          # FIX background falso: --ha-card-background do tema (cor escura) era
+          # herdada pelo ha-card interno mesmo com styles.card.background:transparent
+          # — a variável CSS tem precedência sobre a propriedade quando renderiza.
+          # Override explícito da variável + variantes que algumas versões usam.
           card_mod:
             style: |
               :host {
                 width: 42px !important;
                 display: block !important;
-                margin: 3px 0 !important;
+                margin: 3px auto !important;
+                align-self: center !important;
+                justify-self: center !important;
+                --ha-card-background: transparent !important;
+                --ha-card-background-color: transparent !important;
+                --card-background-color: transparent !important;
+                --primary-background-color: transparent !important;
+                --ha-card-border-width: 0 !important;
+                --ha-card-box-shadow: none !important;
               }
               :host(:active) ha-card {
                 background: rgba(255,255,255,0.14) !important;

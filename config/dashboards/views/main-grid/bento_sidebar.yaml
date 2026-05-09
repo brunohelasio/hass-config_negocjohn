@@ -81,20 +81,17 @@ tap_action:
   action: none
 hold_action:
   action: none
-# FIX largura/altura: força o host do button-card raiz a preencher 100% da
-# grid-area "sidebar" (64px × altura total das 5 rows). Sem isto, o host
-# encolhe para max-content do grid interno e a sidebar fica estreita/curta.
 card_mod:
   style: |
     :host {
-      width: 100% !important;
+      width: 65px !important;
       height: 100% !important;
       display: block !important;
     }
 styles:
   card:
     - height: 100%
-    - width: 100%
+    - width: 65px
     - padding: 8px 0
     - background: 'linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30))'
     - backdrop-filter: blur(18px) saturate(1.2)
@@ -107,8 +104,6 @@ styles:
     - grid-template-areas: '"top" "bottom"'
     - grid-template-columns: 1fr
     - grid-template-rows: max-content 1fr
-    # FIX altura: grid container precisa height/width 100% explicito para o
-    # 1fr da row "bottom" expandir e ancorar o grupo inferior na base.
     - height: 100%
     - width: 100%
   custom_fields:
@@ -144,16 +139,25 @@ custom_fields:
           hold_action: { action: none }
           variables:
             nav_key: home
-          # FIX centralização: força :host width 42px (default seria 100%).
-          # Sem isso, o host ocuparia toda a largura do vertical-stack (que
-          # por sua vez ocuparia a coluna inteira), deixando o ha-card de
-          # 42px encostado à esquerda.
+          extra_styles: |
+            ha-card::before {
+              display: none !important;
+              content: none !important;
+              background: none !important;
+              backdrop-filter: none !important;
+              box-shadow: none !important;
+            }
           card_mod:
             style: |
               :host {
                 width: 42px !important;
                 display: block !important;
                 margin: 3px 0 !important;
+              }
+              ha-card {
+                --ha-card-background: transparent !important;
+                --ha-card-border-width: 0 !important;
+                --ha-card-box-shadow: none !important;
               }
               :host(:active) ha-card {
                 background: rgba(255,255,255,0.14) !important;
@@ -176,10 +180,6 @@ custom_fields:
                       ? 'rgba(255,255,255,0.12)'
                       : 'transparent';
                   ]]]
-              # FIX contornos: backdrop-filter agora condicional ao estado ativo.
-              # Aplicado sempre criava efeito frosted visivel mesmo com
-              # background:transparent — fronteira de cada icone aparecia
-              # como contorno permanente. Solucao: filter:none quando inativo.
               - backdrop-filter: >
                   [[[
                     return entity?.state === variables.nav_key
@@ -196,7 +196,7 @@ custom_fields:
                   [[[
                     return entity?.state === variables.nav_key
                       ? '1px solid rgba(255,255,255,0.18)'
-                      : '1px solid transparent';
+                      : 'none';
                   ]]]
               - box-shadow: >
                   [[[
@@ -325,7 +325,6 @@ custom_fields:
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
               ]]]
   # ──────────────── GRUPO BOTTOM (2 ícones) ────────────────
-  # Ancorado na base via place-self:end center em styles.custom_fields.bottom.
   bottom:
     card:
       type: vertical-stack

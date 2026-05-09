@@ -81,6 +81,16 @@ tap_action:
   action: none
 hold_action:
   action: none
+# FIX largura/altura: força o host do button-card raiz a preencher 100% da
+# grid-area "sidebar" (64px × altura total das 5 rows). Sem isto, o host
+# encolhe para max-content do grid interno e a sidebar fica estreita/curta.
+card_mod:
+  style: |
+    :host {
+      width: 100% !important;
+      height: 100% !important;
+      display: block !important;
+    }
 styles:
   card:
     - height: 100%
@@ -97,6 +107,10 @@ styles:
     - grid-template-areas: '"top" "bottom"'
     - grid-template-columns: 1fr
     - grid-template-rows: max-content 1fr
+    # FIX altura: grid container precisa height/width 100% explicito para o
+    # 1fr da row "bottom" expandir e ancorar o grupo inferior na base.
+    - height: 100%
+    - width: 100%
   custom_fields:
     top:
       - place-self: start center
@@ -162,8 +176,22 @@ custom_fields:
                       ? 'rgba(255,255,255,0.12)'
                       : 'transparent';
                   ]]]
-              - backdrop-filter: blur(12px) saturate(1.15)
-              - -webkit-backdrop-filter: blur(12px) saturate(1.15)
+              # FIX contornos: backdrop-filter agora condicional ao estado ativo.
+              # Aplicado sempre criava efeito frosted visivel mesmo com
+              # background:transparent — fronteira de cada icone aparecia
+              # como contorno permanente. Solucao: filter:none quando inativo.
+              - backdrop-filter: >
+                  [[[
+                    return entity?.state === variables.nav_key
+                      ? 'blur(12px) saturate(1.15)'
+                      : 'none';
+                  ]]]
+              - -webkit-backdrop-filter: >
+                  [[[
+                    return entity?.state === variables.nav_key
+                      ? 'blur(12px) saturate(1.15)'
+                      : 'none';
+                  ]]]
               - border: >
                   [[[
                     return entity?.state === variables.nav_key

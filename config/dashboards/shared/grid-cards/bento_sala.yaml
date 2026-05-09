@@ -157,7 +157,14 @@
             const acOn  = !['off','unavailable','unknown',''].includes(states['climate.sl_ar_condicionado']?.state ?? 'off');
             const alexa = ['playing','on','paused'].includes(states['media_player.echo_show']?.state ?? '');
             // ANTERIOR: const home = states['person.bruno_helasio']?.state === 'home';
-            const presence = states['binary_sensor.sensor_4_in_1_sala_presence']?.state === 'on';
+            // ANTERIOR: const presence = states['binary_sensor.sensor_4_in_1_sala_presence']?.state === 'on';
+            // O sensor 4-in-1 pode permanecer em on por longos periodos; para o dashboard,
+            // considerar presenca apenas quando a deteccao estiver ativa e recente.
+            const presenceEntity = states['binary_sensor.sensor_4_in_1_sala_presence'];
+            const presenceRaw = presenceEntity?.state === 'on';
+            const presenceChanged = presenceEntity?.last_changed ? Date.parse(presenceEntity.last_changed) : NaN;
+            const presenceRecent = !isNaN(presenceChanged) && (Date.now() - presenceChanged) < 10 * 60 * 1000;
+            const presence = presenceRaw && presenceRecent;
             const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
             const offBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
             const offBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';

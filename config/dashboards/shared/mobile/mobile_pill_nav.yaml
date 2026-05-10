@@ -3,10 +3,8 @@
 # Criado: 2026-05-10 — Mobile V3
 #
 # Pill navbar fixa para o dashboard mobile (5 abas).
-# Slug do dashboard confirmado pelo usuario: "ngocjohn-main" → navigation_path
-# usa /ngocjohn-main/<path>.
-# CORRECAO 2026-05-10: slug estava hardcoded como "lovelace" — corrigido para
-# "ngocjohn-main" conforme URL real do dashboard.
+# Slug do dashboard confirmado pelo usuario: "lovelace" → navigation_path
+# usa /lovelace/<path>.
 #
 # REGRA DE OURO: arquivo NOVO (aditivo). Versao V2 antiga em
 #   shared/mobile-pill-nav.yaml permanece intacta como rollback.
@@ -66,7 +64,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /ngocjohn-main/mobile-casa
+          navigation_path: /lovelace/mobile-casa
         styles:
           card:
             - background: >
@@ -119,7 +117,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /ngocjohn-main/mobile-comodos
+          navigation_path: /lovelace/mobile-comodos
         styles:
           card:
             - background: >
@@ -172,7 +170,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /ngocjohn-main/mobile-midia
+          navigation_path: /lovelace/mobile-midia
         styles:
           card:
             - background: >
@@ -225,7 +223,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /ngocjohn-main/mobile-cameras
+          navigation_path: /lovelace/mobile-cameras
         styles:
           card:
             - background: >
@@ -278,7 +276,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /ngocjohn-main/mobile-mais
+          navigation_path: /lovelace/mobile-mais
         styles:
           card:
             - background: >

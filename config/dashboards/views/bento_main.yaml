@@ -51,12 +51,6 @@ layout:
         "quick_actions"
 
 cards:
-  # Auto-redirect mobile: detecta viewport <= 800px e navega para /ngocjohn-main/mobile-casa
-  # O card e invisivel (position: fixed fora da tela, opacity 0). O JS roda pelo
-  # template `name:` do button-card (precisa ser visivel para executar).
-  # Rollback: comentar a linha abaixo.
-  - !include main-grid/zz-mobile-redirect.yaml
-
   - !include main-grid/bento_sidebar.yaml
   - !include main-grid/bento_top_badges.yaml
   - !include main-grid/bento_welcome.yaml

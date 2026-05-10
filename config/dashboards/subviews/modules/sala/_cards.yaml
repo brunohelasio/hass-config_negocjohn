@@ -105,13 +105,14 @@
     style: |
       ha-card {
         background:
+          linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)),
           linear-gradient(180deg, rgba(7,14,28,0.04) 0%, rgba(7,14,28,0.10) 58%, rgba(5,10,20,0.28) 100%),
           url('/local/images/sala_estar.jpg') center center / cover no-repeat !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.28) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
         height: 100% !important;
         overflow: hidden !important;
       }
@@ -178,10 +179,12 @@
   card_mod:
     style: |
       ha-card {
-        background: linear-gradient(180deg, rgba(15,20,35,0.78) 0%, rgba(20,24,33,0.88) 100%) !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 0 24px rgba(62,132,255,0.22), 0 0 70px rgba(62,132,255,0.14) !important;
+        background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.28) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
         height: 100% !important;
         overflow: hidden !important;
       }
@@ -327,10 +330,12 @@
   card_mod:
     style: |
       ha-card {
-        background: linear-gradient(180deg, rgba(15,20,35,0.78) 0%, rgba(20,24,33,0.88) 100%) !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 0 24px rgba(62,132,255,0.22), 0 0 70px rgba(62,132,255,0.14) !important;
+        background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.28) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
         height: 100% !important;
       }
       
@@ -359,10 +364,12 @@
   card_mod:
     style: |
       ha-card {
-        background: linear-gradient(180deg, rgba(15,20,35,0.78) 0%, rgba(20,24,33,0.88) 100%) !important;
-        border: 1px solid rgba(255,255,255,0.12) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 0 24px rgba(62,132,255,0.18), 0 0 60px rgba(62,132,255,0.10) !important;
+        background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+        backdrop-filter: blur(20px) saturate(1.35) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+        border: 1px solid rgba(255,255,255,0.28) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
         height: 100% !important;
         overflow: hidden !important;
       }
@@ -531,12 +538,12 @@
   card_mod:
     style: |
       ha-card {
-        background: rgba(255,255,255,0.06) !important;
+        background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
         backdrop-filter: blur(20px) saturate(1.35) !important;
         -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-        border: 1px solid rgba(255,255,255,0.10) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        border: 1px solid rgba(255,255,255,0.28) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
         height: 100% !important;
         overflow: hidden !important;
       }
@@ -570,14 +577,16 @@
   card_mod:
     style: |
       ha-card {
-        background: rgba(255,255,255,0.06) !important;
+        background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
         backdrop-filter: blur(20px) saturate(1.35) !important;
         -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-        border: 1px solid rgba(255,255,255,0.10) !important;
-        border-radius: 20px !important;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.28) !important;
+        border: 1px solid rgba(255,255,255,0.28) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
         height: 100% !important;
-        overflow: hidden !important;
+        min-height: 430px !important;
+        aspect-ratio: 1 / 1;
+        overflow: visible !important;
       }
   styles:
     grid:
@@ -585,15 +594,17 @@
       - grid-template-columns: 1fr
       - grid-template-rows: 1fr
     card:
-      - padding: 10px
+      - padding: 8px
       - height: 100%
-      - overflow: hidden
+      - min-height: 430px
+      - aspect-ratio: 1 / 1
+      - overflow: visible
     custom_fields:
       spot:
         - align-self: stretch
         - justify-self: stretch
         - height: 100%
-        - overflow: hidden
+        - overflow: visible
   custom_fields:
     spot:
       card:
@@ -611,9 +622,10 @@
               background: transparent !important;
               box-shadow: none !important;
               border-radius: 12px !important;
-              height: 100% !important;
-              max-height: 100% !important;
-              overflow: hidden !important;
+              min-height: 100% !important;
+              height: auto !important;
+              max-height: none !important;
+              overflow: visible !important;
               margin: 0 !important;
               padding: 0 !important;
             }
@@ -622,9 +634,10 @@
             .container,
             .content,
             .sections {
-              height: 100% !important;
-              max-height: 100% !important;
-              overflow: hidden !important;
+              min-height: 100% !important;
+              height: auto !important;
+              max-height: none !important;
+              overflow: visible !important;
             }
 
             /* arte centralizada e proporcional no bloco */

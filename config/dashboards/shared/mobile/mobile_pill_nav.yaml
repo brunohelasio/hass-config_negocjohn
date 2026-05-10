@@ -1,0 +1,321 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_pill_nav.yaml  (V3)
+# Criado: 2026-05-10 — Mobile V3
+#
+# Pill navbar fixa para o dashboard mobile (5 abas).
+# Slug do dashboard confirmado pelo usuario: "lovelace" → navigation_path
+# usa /lovelace/<path>.
+#
+# REGRA DE OURO: arquivo NOVO (aditivo). Versao V2 antiga em
+#   shared/mobile-pill-nav.yaml permanece intacta como rollback.
+#
+# Para usar: incluir como ULTIMO card de cada view mobile via:
+#   - !include ../../shared/mobile/mobile_pill_nav.yaml
+# ══════════════════════════════════════════════════════════════════════════════
+
+type: custom:mod-card
+card_mod:
+  style: |
+    ha-card {
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+card:
+  type: custom:mod-card
+  card_mod:
+    style:
+      .: |
+        :host {
+          position: fixed !important;
+          bottom: 18px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          width: min(380px, calc(100vw - 28px)) !important;
+          z-index: 2147483647 !important;
+          pointer-events: auto !important;
+        }
+        ha-card {
+          border-radius: 9999px !important;
+          backdrop-filter: blur(18px) saturate(180%) !important;
+          -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+          background: rgba(8, 12, 22, 0.62) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+          padding: 6px 10px !important;
+          padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+          overflow: visible !important;
+        }
+      hui-horizontal-stack-card$: |
+        #root {
+          justify-content: space-around !important;
+          gap: 0 !important;
+          align-items: center !important;
+        }
+  card:
+    type: horizontal-stack
+    cards:
+      # ── Aba 1: Casa ────────────────────────────────────────────────────────
+      - type: custom:button-card
+        icon: mdi:home-variant
+        name: Casa
+        show_icon: true
+        show_name: true
+        show_state: false
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/mobile-casa
+        styles:
+          card:
+            - background: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-casa'
+                    ? 'rgba(255,255,255,0.18)'
+                    : 'transparent';
+                ]]]
+            - border-radius: 9999px
+            - border: none
+            - box-shadow: none
+            - padding: 6px 10px
+            - transition: background 0.2s ease
+            - "--mdc-ripple-press-opacity": "0"
+            - "--state-layer-opacity": "0"
+          icon:
+            - width: 20px
+            - height: 20px
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-casa'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - margin-bottom: 2px
+          name:
+            - font-size: 10px
+            - letter-spacing: 0.02em
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-casa'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - line-height: "1.1"
+          grid:
+            - grid-template-areas: '"i" "n"'
+            - grid-template-columns: 1fr
+            - grid-template-rows: auto auto
+
+      # ── Aba 2: Comodos ─────────────────────────────────────────────────────
+      - type: custom:button-card
+        icon: mdi:sofa
+        name: Cômodos
+        show_icon: true
+        show_name: true
+        show_state: false
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/mobile-comodos
+        styles:
+          card:
+            - background: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-comodos'
+                    ? 'rgba(255,255,255,0.18)'
+                    : 'transparent';
+                ]]]
+            - border-radius: 9999px
+            - border: none
+            - box-shadow: none
+            - padding: 6px 10px
+            - transition: background 0.2s ease
+            - "--mdc-ripple-press-opacity": "0"
+            - "--state-layer-opacity": "0"
+          icon:
+            - width: 20px
+            - height: 20px
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-comodos'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - margin-bottom: 2px
+          name:
+            - font-size: 10px
+            - letter-spacing: 0.02em
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-comodos'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - line-height: "1.1"
+          grid:
+            - grid-template-areas: '"i" "n"'
+            - grid-template-columns: 1fr
+            - grid-template-rows: auto auto
+
+      # ── Aba 3: Midia ───────────────────────────────────────────────────────
+      - type: custom:button-card
+        icon: mdi:music
+        name: Mídia
+        show_icon: true
+        show_name: true
+        show_state: false
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/mobile-midia
+        styles:
+          card:
+            - background: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-midia'
+                    ? 'rgba(255,255,255,0.18)'
+                    : 'transparent';
+                ]]]
+            - border-radius: 9999px
+            - border: none
+            - box-shadow: none
+            - padding: 6px 10px
+            - transition: background 0.2s ease
+            - "--mdc-ripple-press-opacity": "0"
+            - "--state-layer-opacity": "0"
+          icon:
+            - width: 20px
+            - height: 20px
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-midia'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - margin-bottom: 2px
+          name:
+            - font-size: 10px
+            - letter-spacing: 0.02em
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-midia'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - line-height: "1.1"
+          grid:
+            - grid-template-areas: '"i" "n"'
+            - grid-template-columns: 1fr
+            - grid-template-rows: auto auto
+
+      # ── Aba 4: Cameras ─────────────────────────────────────────────────────
+      - type: custom:button-card
+        icon: mdi:cctv
+        name: Câmeras
+        show_icon: true
+        show_name: true
+        show_state: false
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/mobile-cameras
+        styles:
+          card:
+            - background: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-cameras'
+                    ? 'rgba(255,255,255,0.18)'
+                    : 'transparent';
+                ]]]
+            - border-radius: 9999px
+            - border: none
+            - box-shadow: none
+            - padding: 6px 10px
+            - transition: background 0.2s ease
+            - "--mdc-ripple-press-opacity": "0"
+            - "--state-layer-opacity": "0"
+          icon:
+            - width: 20px
+            - height: 20px
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-cameras'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - margin-bottom: 2px
+          name:
+            - font-size: 10px
+            - letter-spacing: 0.02em
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-cameras'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - line-height: "1.1"
+          grid:
+            - grid-template-areas: '"i" "n"'
+            - grid-template-columns: 1fr
+            - grid-template-rows: auto auto
+
+      # ── Aba 5: Mais ────────────────────────────────────────────────────────
+      - type: custom:button-card
+        icon: mdi:dots-horizontal-circle
+        name: Mais
+        show_icon: true
+        show_name: true
+        show_state: false
+        tap_action:
+          action: navigate
+          navigation_path: /lovelace/mobile-mais
+        styles:
+          card:
+            - background: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-mais'
+                    ? 'rgba(255,255,255,0.18)'
+                    : 'transparent';
+                ]]]
+            - border-radius: 9999px
+            - border: none
+            - box-shadow: none
+            - padding: 6px 10px
+            - transition: background 0.2s ease
+            - "--mdc-ripple-press-opacity": "0"
+            - "--state-layer-opacity": "0"
+          icon:
+            - width: 20px
+            - height: 20px
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-mais'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - margin-bottom: 2px
+          name:
+            - font-size: 10px
+            - letter-spacing: 0.02em
+            - color: >
+                [[[
+                  var path = location.pathname.split('/').slice(-1)[0];
+                  return path === 'mobile-mais'
+                    ? 'rgba(255,255,255,1)'
+                    : 'rgba(255,255,255,0.55)';
+                ]]]
+            - line-height: "1.1"
+          grid:
+            - grid-template-areas: '"i" "n"'
+            - grid-template-columns: 1fr
+            - grid-template-rows: auto auto

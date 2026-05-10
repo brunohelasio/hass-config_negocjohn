@@ -1,0 +1,47 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_sala_card.yaml  (V3) — card da Sala mobile
+# Criado: 2026-05-10
+#
+# Reusa shared/grid-cards/bento_sala.yaml (estrutura room hero + actions
+# strip) ja consolidada na view tablet/desktop. Wrapper aplica vidro
+# Bento + altura controlada para mobile.
+#
+# IMPORTANTE: o bento_sala interno tem grid-template-rows: 1fr auto
+# (vertical: hero em cima, strip TV/AC/Corredor embaixo). Para o mobile,
+# o card permanece nessa orientacao — o "2x1 horizontal" pedido pelo
+# usuario e atendido visualmente por: (a) o card da Sala ocupa LARGURA
+# TOTAL da view mobile, distinguindo-se do rail 1x1 dos demais comodos;
+# (b) altura compacta (~270px) ao inves dos ~400px desktop.
+#
+# Se for desejado um VERDADEIRO 2x1 (hero esquerda + actions direita),
+# requer espelhar bento_sala.yaml em arquivo proprio — operacao maior
+# que toca duplicacao de templates. Pode ser feito em fase posterior.
+# ══════════════════════════════════════════════════════════════════════════════
+
+type: custom:stack-in-card
+card_mod:
+  style: |
+    :host {
+      height: auto !important;
+      display: block !important;
+    }
+    ha-card {
+      height: auto !important;
+      min-height: 270px !important;
+      display: flex !important;
+      flex-direction: column !important;
+
+      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+      backdrop-filter: blur(20px) saturate(1.35) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+      border: 1px solid rgba(255,255,255,0.10) !important;
+      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+      border-radius: 16px !important;
+      overflow: hidden !important;
+
+      --ha-card-backdrop-filter: none !important;
+      --ha-card-background: transparent !important;
+      --ha-card-border-width: 0 !important;
+    }
+    ha-card::before { display: none !important; }
+cards: !include ../grid-cards/bento_sala.yaml

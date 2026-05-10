@@ -8,17 +8,33 @@ title: Neklanka Home
 views:
   - !include views/main.yaml
   - !include views/bento_main.yaml
-  - !include views/mobile-home.yaml
-  - !include views/mobile-security-cameras.yaml
-  - !include views/mobile-masters-rooms.yaml
-  - !include views/mobile-climate-media.yaml
-  # ── MOBILE V2 — novas views mobile (2025-05) ──────────────────────────────
-  # Rollback: comentar as 4 linhas abaixo para desativar completamente.
-  - !include views/mobile-v2-casa.yaml
-  - !include views/mobile-v2-comodos.yaml
-  - !include views/mobile-v2-midia.yaml
-  - !include views/mobile-v2-cameras.yaml
-  # ── fim MOBILE V2 ──────────────────────────────────────────────────────────
+
+  # ── LEGADO MOBILE V1 (2025) — DESATIVADO em 2026-05-10 ────────────────────
+  # Rollback: descomentar para reativar.
+  # - !include views/mobile-home.yaml
+  # - !include views/mobile-security-cameras.yaml
+  # - !include views/mobile-masters-rooms.yaml
+  # - !include views/mobile-climate-media.yaml
+  # ── fim LEGADO MOBILE V1 ──────────────────────────────────────────────────
+
+  # ── LEGADO MOBILE V2 (2025-05) — DESATIVADO em 2026-05-10 ────────────────
+  # Rollback: descomentar para reativar.
+  # - !include views/mobile-v2-casa.yaml
+  # - !include views/mobile-v2-comodos.yaml
+  # - !include views/mobile-v2-midia.yaml
+  # - !include views/mobile-v2-cameras.yaml
+  # ── fim LEGADO MOBILE V2 ──────────────────────────────────────────────────
+
+  # ── MOBILE V3 (2026-05-10) — 5 abas + pill navbar ─────────────────────────
+  # Slug do dashboard: "lovelace" → URLs em /lovelace/mobile-<aba>
+  # Rollback: comentar as 5 linhas abaixo (e descomentar V1/V2 se desejar).
+  - !include views/mobile/mobile-casa.yaml
+  - !include views/mobile/mobile-comodos.yaml
+  - !include views/mobile/mobile-midia.yaml
+  - !include views/mobile/mobile-cameras.yaml
+  - !include views/mobile/mobile-mais.yaml
+  # ── fim MOBILE V3 ─────────────────────────────────────────────────────────
+
   - !include views/system.yaml
   - !include views/github-view.yaml
   - !include subviews/movie-panel.yaml

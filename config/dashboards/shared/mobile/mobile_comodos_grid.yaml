@@ -1,0 +1,31 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_comodos_grid.yaml  (V3) — grade 2-col com TODOS os comodos
+# Criado: 2026-05-10
+#
+# Reusa os mesmos wrappers mobile_card_<comodo>.yaml usados pelo rail
+# da aba Casa. Sala usa versao COMPACTA (mobile_card_sala_compact.yaml).
+# ══════════════════════════════════════════════════════════════════════════════
+
+type: custom:layout-card
+layout_type: custom:grid-layout
+layout:
+  grid-template-columns: 1fr 1fr
+  grid-auto-rows: 158px
+  gap: 10px
+  margin: 0
+  padding: 0
+card_mod:
+  style: |
+    ha-card {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+cards:
+  - !include mobile_card_sala_compact.yaml
+  - !include mobile_card_office.yaml
+  - !include mobile_card_cozinha.yaml
+  - !include mobile_card_lavabo.yaml
+  - !include mobile_card_quarto_casal.yaml
+  - !include mobile_card_quarto_marina.yaml
+  - !include mobile_card_quarto_miguel.yaml

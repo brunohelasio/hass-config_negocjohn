@@ -1,0 +1,34 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile-comodos.yaml  (V3) — Aba Comodos
+# Criado: 2026-05-10 — Mobile V3
+#
+# Grade 2-col com TODOS os comodos (Sala compacta + 6 outros), reusando
+# os mesmos wrappers mobile_card_<comodo>.yaml do rail da Casa.
+# ══════════════════════════════════════════════════════════════════════════════
+
+title: Cômodos
+path: mobile-comodos
+icon: mdi:sofa
+subview: false
+theme: tablet
+
+type: custom:grid-layout
+card_mod:
+  style: |
+    hui-grid-layout {
+      background: rgb(0, 0, 0);
+      min-height: 100vh;
+    }
+layout:
+  margin: 0
+  padding: 14px 14px calc(96px + env(safe-area-inset-bottom, 0px)) 14px
+  grid-template-columns: 1fr
+  grid-auto-rows: min-content
+  grid-gap: 10px
+
+cards:
+  # ── Grade 2 colunas com todos os comodos ────────────────────────────────
+  - !include ../../shared/mobile/mobile_comodos_grid.yaml
+
+  # ── Pill navbar ─────────────────────────────────────────────────────────
+  - !include ../../shared/mobile/mobile_pill_nav.yaml

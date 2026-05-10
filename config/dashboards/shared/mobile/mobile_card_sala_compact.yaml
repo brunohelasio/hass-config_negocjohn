@@ -1,0 +1,47 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_card_sala_compact.yaml  (V3) — wrapper mobile glass da Sala 1x1
+# Criado: 2026-05-10
+#
+# Versao COMPACTA da Sala para a grade 2-col da aba Comodos.
+# Usa a parte "room hero" do bento_sala (mesmas entidades / templates),
+# reembrulhada como qualquer outro comodo do rail. Difere de
+# mobile_sala_card.yaml: nao mostra strip de TV/AC/Corredor (este card
+# e parte da grade comparativa de comodos).
+#
+# IMPORTANTE: aqui NAO duplicamos o button-card hero — em vez disso
+# reusamos o shared/grid-cards/bento_sala.yaml inteiro (room+actions),
+# mas com altura forcada de 158px e overflow:hidden — o strip de actions
+# e clipado intencionalmente, mostrando so o hero. Padroniza com os
+# outros 6 cards da grade 2-col.
+# ══════════════════════════════════════════════════════════════════════════════
+
+type: custom:stack-in-card
+card_mod:
+  style: |
+    :host {
+      height: 100% !important;
+      margin: 0 !important;
+      display: block !important;
+    }
+    ha-card {
+      height: 100% !important;
+      min-height: 158px !important;
+      max-height: 158px !important;
+      margin: 0 !important;
+      display: block !important;
+      padding: 0 !important;
+
+      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+      backdrop-filter: blur(20px) saturate(1.35) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+      border: 1px solid rgba(255,255,255,0.10) !important;
+      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+      border-radius: 16px !important;
+      overflow: hidden !important;
+
+      --ha-card-backdrop-filter: none !important;
+      --ha-card-background: transparent !important;
+      --ha-card-border-width: 0 !important;
+    }
+    ha-card::before { display: none !important; }
+cards: !include ../grid-cards/bento_sala.yaml

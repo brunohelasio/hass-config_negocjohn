@@ -1951,3 +1951,155 @@ Ajuste solicitado pelo usuário para aderência à referência visual (imagem 2)
   1) reativar bloco legado de A/C em duas linhas;
   2) restaurar altura da linha 3 para valor anterior;
   3) manter card de corredor legado comentado conforme revisão 8.
+
+---
+
+## Registro de Implementacao — Mobile V3 (2026-05-10)
+
+### Contexto
+
+A view principal Bento (desktop/tablet) esta validada e foi mantida 100% intacta.
+As tentativas mobile anteriores (V1 e V2) tinham falhas estruturais documentadas
+no diagnostico tecnico desta sessao:
+
+- Pill navbar V2 nunca foi conectada em nenhuma view (arquivo isolado).
+- `navigation_path` apontava para slug especulativo (`/lovelace-yaml/...`).
+- Wrappers V2 reusavam diretamente `views/main-grid/bento_X.yaml` (com
+  `view_layout: grid-area: X` no topo, calibrado para celulas ~245px) dentro
+  de containers mobile com altura 160-170px → conteudo clipado.
+- Top badges V2 nao rolava horizontalmente (track `1fr` no layout-card matava o
+  overflow).
+- Sala "2x1 horizontal" pedida pelo usuario nao havia sido implementada.
+
+### Slug confirmado pelo usuario
+
+- Dashboard slug: `lovelace`
+- URLs das abas: `/lovelace/mobile-casa`, `/lovelace/mobile-comodos`,
+  `/lovelace/mobile-midia`, `/lovelace/mobile-cameras`, `/lovelace/mobile-mais`.
+
+### Restricoes operacionais aplicadas
+
+- NAO mexer em estrutura tablet/desktop (`views/main.yaml`, `views/main-grid/`,
+  `shared/grid-cards/bento_*.yaml`).
+- NAO mexer em templates globais (`templates/`).
+- Codigo legado mobile (V1 e V2) preservado e apenas comentado.
+- Toda nova arvore mobile e aditiva, isolada em diretorios proprios.
+
+### Estrutura final implementada
+
+```
+config/dashboards/
+├── views/mobile/                       (NOVO — 5 views)
+│   ├── mobile-casa.yaml                badges → hero → sala → rail → quick → navbar
+│   ├── mobile-comodos.yaml             grade 2-col com 7 comodos + navbar
+│   ├── mobile-midia.yaml               wrapper bento_media + navbar
+│   ├── mobile-cameras.yaml             wrapper bento_cameras + navbar
+│   └── mobile-mais.yaml                Energia + Roborock + Calendar + navbar
+│
+├── shared/mobile/                      (NOVO — 16 componentes)
+│   ├── mobile_pill_nav.yaml            navbar 5 abas, slug /lovelace/ hardcoded
+│   ├── mobile_top_badges.yaml          scroll horizontal real (forca min-width: max-content via card_mod)
+│   ├── mobile_hero_welcome.yaml        glass+imagem+conteudo bento_welcome
+│   ├── mobile_sala_card.yaml           wrapper full-width do bento_sala (preserva room+actions)
+│   ├── mobile_rooms_rail.yaml          rail horizontal scroll-snap dos 6 demais comodos
+│   ├── mobile_comodos_grid.yaml        grade 2-col com 7 comodos para aba Comodos
+│   ├── mobile_quick_actions.yaml       wrapper bento_quick_actions com glass mobile
+│   ├── mobile_card_sala_compact.yaml   Sala 1x1 para grade Comodos (height max 158px)
+│   ├── mobile_card_office.yaml         wrapper bento_office
+│   ├── mobile_card_cozinha.yaml        wrapper bento_cozinha
+│   ├── mobile_card_lavabo.yaml         wrapper bento_lavabo
+│   ├── mobile_card_quarto_casal.yaml   wrapper bento_quarto_casal
+│   ├── mobile_card_quarto_marina.yaml  wrapper bento_quarto_marina
+│   ├── mobile_card_quarto_miguel.yaml  wrapper bento_quarto_miguel
+│   ├── mobile_media_card.yaml          wrapper bento_media
+│   ├── mobile_cameras_card.yaml        wrapper bento_cameras
+│   ├── mobile_energy_card.yaml         wrapper bento_energy
+│   ├── mobile_roborock_card.yaml       wrapper bento_roborock
+│   ├── mobile_calendar_card.yaml       wrapper bento_calendar
+│   └── mobile_card_room_compact.yaml   referencia/documentacao do padrao
+│
+└── ui-lovelace-main.yaml               (alterado: bloco V3 adicionado, V1/V2 comentados)
+```
+
+### Principios aplicados
+
+- **P1 — Isolamento total**: arvore `views/mobile/` + `shared/mobile/` separadas.
+  Zero acoplamento ao `views/main-grid/`.
+- **P2 — Reuso somente do conteudo interno** (`shared/grid-cards/bento_*.yaml`),
+  que nao tem `view_layout` e nao assume geometria do main grid.
+- **P3 — Wrappers mobile aplicam glassmorphism + altura controlada** apenas no nivel
+  externo. Conteudo interno permanece inalterado.
+- **P4 — Sem `view_layout: grid-area:`** em fluxo mobile. Apenas `vertical-stack`
+  ou `custom:grid-layout` com colunas explicitas.
+- **P5 — `card_mod` em no maximo 2 camadas** (frame externo + conteudo).
+- **P6 — Pill navbar** parametrizada com slug confirmado, incluida em TODAS as 5 views.
+
+### Decisoes tecnicas relevantes
+
+**1. Top badges com scroll horizontal real**
+O `bento_top_badges.yaml` interno usa `grid-template-columns: ... minmax(0, 1fr) ...`
+que faz o conteudo se contrair em vez de transbordar. Solucao: `mobile_top_badges.yaml`
+aplica via `card_mod` profundo (`hui-card$`) regras `min-width: max-content` no
+`hui-grid-layout` interno, forcando overflow real. Container externo tem `overflow-x: auto`.
+
+**2. Sala "2x1 horizontal" — interpretacao pragmatica**
+O `bento_sala.yaml` shared tem 2618 linhas, com `grid-template-rows: 1fr auto`
+(hero em cima + strip de actions embaixo). Espelhar para layout 2-col horizontal
+exigiria duplicar todo o conteudo (room hero ~290 linhas + actions strip ~2300 linhas),
+multiplicando a manutencao. Solucao adotada:
+- `mobile_sala_card.yaml`: include direto do `bento_sala.yaml` shared inteiro;
+- altura 270px+ (vs ~158px dos demais comodos);
+- ocupa LARGURA TOTAL da view mobile (vs cards 1×1 do rail);
+- distinguindo-se visualmente como "card de destaque".
+
+Caso o usuario queira VERDADEIRO 2×1 horizontal (hero esquerda + actions direita),
+e necessario refatorar `shared/grid-cards/bento_sala.yaml` extraindo room+actions em
+includes separados — operacao maior, requer aprovacao especifica.
+
+**3. Rail horizontal**
+Cada cartao do rail e um `mod-card` (snap target) contendo um wrapper mobile
+(`mobile_card_<comodo>.yaml`) que aplica glass. Largura `calc(50vw - 22px)` para
+mostrar 2 cards completos + peek do terceiro. Scroll touch via `-webkit-overflow-scrolling`.
+
+**4. Aba Comodos — reuso 100%**
+A grade 2-col reusa exatamente os mesmos 6 wrappers do rail + `mobile_card_sala_compact.yaml`
+(versao da Sala com altura forcada de 158px para uniformizar a grade).
+
+**5. Pill navbar**
+- `position: fixed` com `z-index: 2147483647` para escapar de stacking contexts
+  criados por `transform` em ancestrais.
+- Background dinamico por aba via JS template `location.pathname.split('/').slice(-1)[0]`.
+- Botao "Mais" agora navega para a aba `/lovelace/mobile-mais` (V2 abria popup).
+
+### Validacao executada
+
+- 26/26 arquivos YAML validam sintaticamente (parser Python yaml).
+- `git status`: somente `ui-lovelace-main.yaml` modificado; demais alteracoes sao
+  pastas novas. Nenhum arquivo de `views/main.yaml`, `views/main-grid/`,
+  `shared/grid-cards/`, `templates/` foi tocado.
+
+### Rollback
+
+**Rollback completo (1 minuto):**
+1. Em `ui-lovelace-main.yaml`, comentar as 5 linhas do bloco `# ── MOBILE V3 ──`.
+2. (Opcional) descomentar bloco V2 ou V1.
+3. Os arquivos novos em `views/mobile/` e `shared/mobile/` permanecem no disco
+   sem afetar o dashboard ate serem incluidos novamente.
+
+**Rollback granular:**
+- Para desativar uma aba especifica, comentar apenas o `!include` daquela view
+  em `ui-lovelace-main.yaml`.
+- Para substituir um wrapper mobile, editar somente o arquivo em `shared/mobile/`
+  correspondente — wrappers sao independentes entre si.
+
+### Pendencias / Pontos de atencao
+
+| # | Item | Notas |
+|---|------|-------|
+| M1 | Validar visualmente no Galaxy Tab S6 Lite | testar todas as 5 abas |
+| M2 | Confirmar slug `/lovelace/` em produção | se diferir, ajustar `mobile_pill_nav.yaml` |
+| M3 | Sala 2x1 horizontal real | aguardar feedback do usuario apos teste visual da implementacao atual |
+| M4 | `position: fixed` da navbar | se algum tema criar stacking context que capture a navbar, mover para `card_mod` global do tema (requer aprovacao) |
+| M5 | Top badges scroll | se `min-width: max-content` via `card_mod` profundo nao surtir efeito (depende da versao do `card_mod`/`layout-card`), alternativa e refatorar `bento_top_badges` para extrair lista de badges em arquivo proprio (toca codigo desktop — requer aprovacao) |
+| M6 | Wrappers V2 antigos em `shared/grid-cards/mobile_*.yaml` | mantidos no disco, fora do uso. Nao sao referenciados pelo V3 |
+| M7 | Limpeza opcional dos arquivos legados | mover `views/mobile-v2-*.yaml`, `views/mobile-home.yaml`, etc. para `views/disabled/` apos V3 estabilizar (requer aprovacao) |

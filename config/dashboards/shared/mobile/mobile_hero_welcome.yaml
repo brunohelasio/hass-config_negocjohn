@@ -1,0 +1,58 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_hero_welcome.yaml  (V3) — hero compacto mobile
+# Criado: 2026-05-10
+#
+# Reproduz o glassmorphism + imagem de fundo do welcome do desktop
+# (views/main-grid/bento_welcome.yaml), em versao mobile com altura
+# proporcional. O CONTEUDO interno (saudacao + relogio + clima) vem
+# direto de shared/grid-cards/bento_welcome.yaml — sem duplicacao
+# de logica.
+# ══════════════════════════════════════════════════════════════════════════════
+
+type: custom:stack-in-card
+card_mod:
+  style: |
+    :host {
+      height: auto !important;
+      display: block !important;
+    }
+    ha-card {
+      height: auto !important;
+      min-height: 158px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: space-between !important;
+      position: relative !important;
+
+      background:
+        linear-gradient(
+          to right,
+          rgba(11, 22, 35, 0.84) 0%,
+          rgba(11, 22, 35, 0.62) 36%,
+          rgba(11, 22, 35, 0.18) 66%,
+          rgba(11, 22, 35, 0.00) 92%
+        ),
+        url('/local/images/home_color.jpg') center / cover no-repeat !important;
+      backdrop-filter: blur(20px) saturate(1.35) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+      border: 1px solid rgba(255,255,255,0.10) !important;
+      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+
+      border-radius: 16px !important;
+      overflow: hidden !important;
+
+      --ha-card-glass-tint: transparent !important;
+      --ha-card-backdrop-filter: none !important;
+      --ha-card-glass-inset-shadow: none !important;
+      --ha-card-background: transparent !important;
+      --ha-card-border-width: 0 !important;
+    }
+
+    .card-content, ha-card > div {
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    ha-card::before { display: none !important; }
+cards: !include ../grid-cards/bento_welcome.yaml

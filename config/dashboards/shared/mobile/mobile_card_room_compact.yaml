@@ -1,0 +1,45 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_card_room_compact.yaml  (V3)
+# Criado: 2026-05-10 — Mobile V3
+#
+# Componente "card de comodo compacto" para mobile.
+# Aplica o vidro Bento (mesmo glass dos wrappers desktop) com altura
+# controlada e reusa o conteudo original de cada cômodo via includes
+# diretos a shared/grid-cards/bento_<X>.yaml — esses arquivos NAO tem
+# `view_layout` no topo, sao seguros para reuso fora do main grid.
+#
+# Como usar:
+#   - !include ../../shared/mobile/mobile_card_room_compact.yaml: { _src: bento_office.yaml }
+# (mas como o HA YAML nao suporta argumentos de include, este arquivo e
+#  apenas referencia / documentacao do padrao — os wrappers reais ficam em
+#  arquivos separados por cômodo nesse mesmo diretorio.)
+#
+# REGRA DE OURO: arquivo NOVO; aditivo; nada do main-grid foi alterado.
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Padrao usado pelos wrappers individuais:
+#
+# type: custom:stack-in-card
+# card_mod:
+#   style: |
+#     :host { height: 100% !important; margin: 0 !important; display: block !important; }
+#     ha-card {
+#       height: 100% !important;
+#       min-height: 158px !important;
+#       margin: 0 !important;
+#       display: block !important;
+#       padding: 0 !important;
+#       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+#       backdrop-filter: blur(20px) saturate(1.35) !important;
+#       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+#       border: 1px solid rgba(255,255,255,0.10) !important;
+#       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+#       border-radius: 16px !important;
+#       overflow: hidden !important;
+#       --ha-card-backdrop-filter: none !important;
+#       --ha-card-background: transparent !important;
+#       --ha-card-border-width: 0 !important;
+#     }
+#     ha-card::before { display: none !important; }
+# cards:
+#   - !include ../grid-cards/bento_<comodo>.yaml

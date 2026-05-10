@@ -1,22 +1,27 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# mobile_rooms_rail.yaml  (V3) — rail horizontal dos comodos secundarios
-# Criado: 2026-05-10
+# mobile_rooms_rail.yaml  (V3 — revisão 2026-05-10)
 #
-# Office, Cozinha, Lavabo, Quarto Casal, Quarto Marina, Quarto Miguel.
-# Cada item e um wrapper mobile dedicado (mobile_card_<comodo>.yaml) que
-# inclui o respectivo shared/grid-cards/bento_<comodo>.yaml — preserva
-# 100% das entidades, templates, ações e visual definidos no desktop.
+# ABORDAGEM ANTERIOR: cada cômodo era envolto em um mod-card (para scroll-snap)
+# que por sua vez continha um mobile_card_<comodo>.yaml (stack-in-card).
+# O card-mod emitia "You are doing it wrong!" por empilhar mod-card dentro de
+# stack-in-card, e a estilização de glass não era aplicada corretamente.
 #
-# Largura por card: calc(50vw - 22px) — mostra 2 cards completos + peek
-# do terceiro. Scroll horizontal touch via overflow-x: scroll + scroll-snap.
+# ABORDAGEM NOVA: o mod-card externo foi removido. O scroll-snap e a largura
+# fixa são aplicados diretamente no stack-in-card de cada mobile_card_*.yaml
+# (via card_mod:style já presente nesses arquivos — atualizado nesta revisão).
+# O rail usa custom:layout-card com grid-auto-flow: column como container.
+#
+# Rollback: descomentar bloco ANTERIOR no final e comentar o bloco NOVO.
 # ══════════════════════════════════════════════════════════════════════════════
 
+# ── NOVO ────────────────────────────────────────────────────────────────────
 type: custom:mod-card
 card_mod:
   style: |
     :host {
       display: block !important;
       width: 100% !important;
+      max-width: 100% !important;
     }
     ha-card {
       background: transparent !important;
@@ -29,6 +34,7 @@ card_mod:
       scroll-snap-type: x mandatory !important;
       padding: 0 !important;
       display: block !important;
+      max-width: 100% !important;
     }
     ha-card::-webkit-scrollbar { display: none !important; }
 card:
@@ -50,98 +56,68 @@ card:
         overflow: visible !important;
       }
   cards:
-    - type: custom:mod-card
-      card_mod:
-        style: |
-          ha-card {
-            scroll-snap-align: start !important;
-            min-width: calc(50vw - 22px) !important;
-            width: calc(50vw - 22px) !important;
-            height: 168px !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            overflow: visible !important;
-          }
-      card: !include mobile_card_office.yaml
+    - !include mobile_card_office.yaml
+    - !include mobile_card_cozinha.yaml
+    - !include mobile_card_lavabo.yaml
+    - !include mobile_card_quarto_casal.yaml
+    - !include mobile_card_quarto_marina.yaml
+    - !include mobile_card_quarto_miguel.yaml
 
-    - type: custom:mod-card
-      card_mod:
-        style: |
-          ha-card {
-            scroll-snap-align: start !important;
-            min-width: calc(50vw - 22px) !important;
-            width: calc(50vw - 22px) !important;
-            height: 168px !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            overflow: visible !important;
-          }
-      card: !include mobile_card_cozinha.yaml
-
-    - type: custom:mod-card
-      card_mod:
-        style: |
-          ha-card {
-            scroll-snap-align: start !important;
-            min-width: calc(50vw - 22px) !important;
-            width: calc(50vw - 22px) !important;
-            height: 168px !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            overflow: visible !important;
-          }
-      card: !include mobile_card_lavabo.yaml
-
-    - type: custom:mod-card
-      card_mod:
-        style: |
-          ha-card {
-            scroll-snap-align: start !important;
-            min-width: calc(50vw - 22px) !important;
-            width: calc(50vw - 22px) !important;
-            height: 168px !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            overflow: visible !important;
-          }
-      card: !include mobile_card_quarto_casal.yaml
-
-    - type: custom:mod-card
-      card_mod:
-        style: |
-          ha-card {
-            scroll-snap-align: start !important;
-            min-width: calc(50vw - 22px) !important;
-            width: calc(50vw - 22px) !important;
-            height: 168px !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            overflow: visible !important;
-          }
-      card: !include mobile_card_quarto_marina.yaml
-
-    - type: custom:mod-card
-      card_mod:
-        style: |
-          ha-card {
-            scroll-snap-align: start !important;
-            min-width: calc(50vw - 22px) !important;
-            width: calc(50vw - 22px) !important;
-            height: 168px !important;
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            overflow: visible !important;
-          }
-      card: !include mobile_card_quarto_miguel.yaml
+# ── ANTERIOR (rollback rápido) ───────────────────────────────────────────────
+# Para restaurar: comentar o bloco NOVO acima e descomentar abaixo.
+#
+# type: custom:mod-card
+# card_mod:
+#   style: |
+#     :host {
+#       display: block !important;
+#       width: 100% !important;
+#     }
+#     ha-card {
+#       background: transparent !important;
+#       border: none !important;
+#       box-shadow: none !important;
+#       overflow-x: auto !important;
+#       overflow-y: visible !important;
+#       -webkit-overflow-scrolling: touch !important;
+#       scrollbar-width: none !important;
+#       scroll-snap-type: x mandatory !important;
+#       padding: 0 !important;
+#       display: block !important;
+#     }
+#     ha-card::-webkit-scrollbar { display: none !important; }
+# card:
+#   type: custom:layout-card
+#   layout_type: custom:grid-layout
+#   layout:
+#     grid-auto-flow: column
+#     grid-auto-columns: calc(50vw - 22px)
+#     grid-template-rows: 168px
+#     gap: 10px
+#     margin: 0
+#     padding: 0 14px
+#   card_mod:
+#     style: |
+#       ha-card {
+#         background: transparent !important;
+#         border: none !important;
+#         box-shadow: none !important;
+#         overflow: visible !important;
+#       }
+#   cards:
+#     - type: custom:mod-card
+#       card_mod:
+#         style: |
+#           ha-card {
+#             scroll-snap-align: start !important;
+#             min-width: calc(50vw - 22px) !important;
+#             width: calc(50vw - 22px) !important;
+#             height: 168px !important;
+#             background: transparent !important;
+#             border: none !important;
+#             box-shadow: none !important;
+#             padding: 0 !important;
+#             overflow: visible !important;
+#           }
+#       card: !include mobile_card_office.yaml
+#     # ... (demais cômodos com mesmo padrão)

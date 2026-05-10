@@ -2,16 +2,17 @@
 #                                                #
 #         MOBILE AUTO-REDIRECT (V3 — 2026-05-10) #
 #                                                #
-#  Card invisivel inserido apenas para detectar  #
-#  largura de tela <= 800px e redirecionar       #
-#  automaticamente para /lovelace/mobile-casa.   #
+#  Card invisivel que detecta largura <= 800px   #
+#  e redireciona para /lovelace/mobile-casa.     #
 #                                                #
-#  Nao modifica desktop/tablet de forma alguma:  #
-#  - sem grid-area no layout principal;          #
-#  - display: none + 0px em todos os breakpoints;#
-#  - JS so dispara em /lovelace/summary          #
-#    (path padrao do main.yaml) e quando a       #
-#    largura for mobile.                         #
+#  Fix 2026-05-10: removido display:none que     #
+#  bloqueava execucao de templates do            #
+#  button-card. Agora usa show_name: true com    #
+#  template JS no proprio name (button-card so   #
+#  executa templates de campos visiveis).        #
+#  Card e invisivel via dimensoes minimas e      #
+#  opacidade 0 — mas RENDERIZA, garantindo que   #
+#  o JS rode.                                    #
 #                                                #
 #  Rollback: deletar/renomear este arquivo ou    #
 #  comentar este bloco. Nada mais a fazer.       #
@@ -19,51 +20,51 @@
 
 - type: custom:button-card
   show_icon: false
-  show_name: false
   show_state: false
   show_label: false
+  show_name: true
+  name: |
+    [[[
+      try {
+        var path = location.pathname || '';
+        var isMobile = window.matchMedia('(max-width: 800px)').matches;
+        var alreadyOnMobile = path.indexOf('/mobile-') !== -1;
+        var alreadyRedirected = window.__negocjohn_mobile_redirected === true;
+        if (isMobile && !alreadyOnMobile && !alreadyRedirected) {
+          window.__negocjohn_mobile_redirected = true;
+          var parts = path.split('/').filter(function(s){ return s.length > 0; });
+          var slug = parts[0] || 'lovelace';
+          location.replace('/' + slug + '/mobile-casa');
+        }
+      } catch (e) {
+        // Silencioso: nunca quebra o card.
+      }
+      return '';
+    ]]]
   tap_action:
     action: none
-  triggers_update:
-    - sensor.time
+  hold_action:
+    action: none
   card_mod:
     style: |
       :host {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        position: absolute !important;
+        position: fixed !important;
+        top: -9999px !important;
+        left: -9999px !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
         pointer-events: none !important;
-        visibility: hidden !important;
+        z-index: -1 !important;
       }
       ha-card {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
+        width: 1px !important;
+        height: 1px !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
       }
-  custom_fields:
-    redirect: |
-      [[[
-        try {
-          var path = location.pathname || '';
-          var isMobile = window.matchMedia('(max-width: 800px)').matches;
-          var alreadyOnMobile = path.indexOf('/mobile-') !== -1;
-          var alreadyRedirected = window.__negocjohn_mobile_redirected === true;
-          if (isMobile && !alreadyOnMobile && !alreadyRedirected) {
-            window.__negocjohn_mobile_redirected = true;
-            // Mantem o slug do dashboard (lovelace) e troca apenas o path da view.
-            var parts = path.split('/').filter(function(s){ return s.length > 0; });
-            // parts[0] = 'lovelace' (slug do dashboard)
-            var slug = parts[0] || 'lovelace';
-            location.replace('/' + slug + '/mobile-casa');
-          }
-        } catch (e) {
-          // Falha silenciosa: nunca quebra o card desktop.
-        }
-        return '';
-      ]]]

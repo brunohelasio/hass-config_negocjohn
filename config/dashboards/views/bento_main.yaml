@@ -51,6 +51,7 @@ layout:
         "quick_actions"
 
 cards:
+  - !include main-grid/zz-mobile-redirect.yaml
   - !include main-grid/bento_sidebar.yaml
   - !include main-grid/bento_top_badges.yaml
   - !include main-grid/bento_welcome.yaml

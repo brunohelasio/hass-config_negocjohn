@@ -64,7 +64,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /lovelace/mobile-casa
+          navigation_path: /ngocjohn-main/mobile-casa
         styles:
           card:
             - background: >
@@ -117,7 +117,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /lovelace/mobile-comodos
+          navigation_path: /ngocjohn-main/mobile-comodos
         styles:
           card:
             - background: >
@@ -170,7 +170,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /lovelace/mobile-midia
+          navigation_path: /ngocjohn-main/mobile-midia
         styles:
           card:
             - background: >
@@ -223,7 +223,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /lovelace/mobile-cameras
+          navigation_path: /ngocjohn-main/mobile-cameras
         styles:
           card:
             - background: >
@@ -276,7 +276,7 @@ card:
         show_state: false
         tap_action:
           action: navigate
-          navigation_path: /lovelace/mobile-mais
+          navigation_path: /ngocjohn-main/mobile-mais
         styles:
           card:
             - background: >

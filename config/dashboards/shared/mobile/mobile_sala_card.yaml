@@ -1,47 +1,598 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# mobile_sala_card.yaml  (V3) — card da Sala mobile
-# Criado: 2026-05-10
+# mobile_sala_card.yaml  (V3.1) — card da Sala mobile 2×1 horizontal
+# Atualizado: 2026-05-10
 #
-# Reusa shared/grid-cards/bento_sala.yaml (estrutura room hero + actions
-# strip) ja consolidada na view tablet/desktop. Wrapper aplica vidro
-# Bento + altura controlada para mobile.
+# Layout: coluna esquerda = hero da Sala (mesma estrutura/layout dos demais
+# cômodos) + coluna direita = pílulas de ação (Corredor / TV / A/C / PS5).
+# Altura: 168px (igual ao rail de cômodos). Largura: 100% da view mobile.
 #
-# IMPORTANTE: o bento_sala interno tem grid-template-rows: 1fr auto
-# (vertical: hero em cima, strip TV/AC/Corredor embaixo). Para o mobile,
-# o card permanece nessa orientacao — o "2x1 horizontal" pedido pelo
-# usuario e atendido visualmente por: (a) o card da Sala ocupa LARGURA
-# TOTAL da view mobile, distinguindo-se do rail 1x1 dos demais comodos;
-# (b) altura compacta (~270px) ao inves dos ~400px desktop.
-#
-# Se for desejado um VERDADEIRO 2x1 (hero esquerda + actions direita),
-# requer espelhar bento_sala.yaml em arquivo proprio — operacao maior
-# que toca duplicacao de templates. Pode ser feito em fase posterior.
+# REGRA DE OURO: código V3 original mantido comentado abaixo para rollback.
+# Para restaurar versão vertical: comentar bloco NOVO e descomentar ORIGINAL.
 # ══════════════════════════════════════════════════════════════════════════════
 
+# NOVO: card 2×1 horizontal 168px
 type: custom:stack-in-card
 card_mod:
   style: |
     :host {
-      height: auto !important;
+      height: 168px !important;
       display: block !important;
+      margin: 0 !important;
     }
     ha-card {
-      height: auto !important;
-      min-height: 270px !important;
-      display: flex !important;
-      flex-direction: column !important;
-
+      height: 168px !important;
+      overflow: hidden !important;
       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
       backdrop-filter: blur(20px) saturate(1.35) !important;
       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
       border: 1px solid rgba(255,255,255,0.10) !important;
       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
       border-radius: 16px !important;
-      overflow: hidden !important;
-
       --ha-card-backdrop-filter: none !important;
       --ha-card-background: transparent !important;
       --ha-card-border-width: 0 !important;
     }
     ha-card::before { display: none !important; }
-cards: !include ../grid-cards/bento_sala.yaml
+cards:
+  - type: custom:layout-card
+    layout_type: custom:grid-layout
+    layout:
+      grid-template-columns: 1fr 138px
+      grid-template-rows: 168px
+      grid-template-areas: '"hero pills"'
+      margin: 0
+      padding: 0
+      gap: 0
+    card_mod:
+      style: |
+        :host { margin: 0 !important; padding: 0 !important; }
+        ha-card {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          height: 168px !important;
+          overflow: hidden !important;
+          margin: 0 !important;
+        }
+    cards:
+      # ── Hero (coluna esquerda) — mesma estrutura dos demais cômodos ──────────
+      - view_layout:
+          grid-area: hero
+        type: custom:button-card
+        entity: light.grupo_luzes_sala
+        show_icon: false
+        show_name: true
+        show_state: false
+        name: Sala
+        variables:
+          state_on: >
+            [[[
+              return entity?.state === 'on';
+            ]]]
+        triggers_update:
+          - light.sala_switch_1
+          - light.sala_switch_2
+          - sensor.living_room_active
+          - sensor.sensor_4_in_1_sala_temperature
+          - sensor.sensor_4_in_1_sala_humidity
+          - binary_sensor.sensor_4_in_1_sala_presence
+          - media_player.android_tv_192_168_3_17
+          - climate.sl_ar_condicionado
+          - media_player.echo_show
+          - person.bruno_helasio
+          - sensor.time
+        tap_action:
+          action: perform-action
+          perform_action: light.toggle
+          target:
+            entity_id: light.sala_switch_2
+        double_tap_action:
+          action: navigate
+          navigation_path: subview-sala
+        hold_action:
+          action: perform-action
+          perform_action: light.turn_off
+          data:
+            entity_id: light.grupo_luzes_sala
+        custom_fields:
+          icon: >
+            [[[
+              const on = entity?.state === 'on';
+              const f = on ? 'none' : 'grayscale(1) contrast(0.4) brightness(0.8)';
+              return '<svg viewBox="0 0 4.8 4.8" xmlns="http://www.w3.org/2000/svg" style="width:52px;height:52px;filter:' + f + ';display:block;">'
+                + '<path d="M.78 2.565H.69V.87C.69.75.75.51.975.51v.098C.78.608.78.855.78.871v1.695" fill="#666"/>'
+                + '<path d="M1.62.525a.81.81 0 0 0-.188-.09L1.313.052C1.298 0 1.171-.008 1.021.037s-.255.128-.24.18l.128.397S.811.786.804.846c-.022.12.045.472.045.472l1.05-.315c-.007-.007-.172-.39-.278-.48" fill="#94989b"/>'
+                + '<path d="M1.89.998c.03.105-.188.263-.472.345-.292.09-.547.075-.57-.03-.03-.105.188-.263.472-.345.285-.09.547-.075.57.03" fill="#ffe62e"/>'
+                + '<path d="M4.447 3.053a.15.15 0 0 1-.15.15H.502a.15.15 0 0 1-.15-.15v-.975a.15.15 0 0 1 .15-.15h3.803a.15.15 0 0 1 .15.15v.975z" fill="#42ade2"/>'
+                + '<path d="M4.447 3.053a.15.15 0 0 1-.15.15H.502a.15.15 0 0 1-.15-.15v-.975a.15.15 0 0 1 .15-.15h3.803a.15.15 0 0 1 .15.15v.975z" fill="#428bc1" opacity=".5"/>'
+                + '<path d="M3.375 3.203H.352V2.047s.6.69 3.022 1.155" fill="#428bc1"/>'
+                + '<path d="M4.672 2.288c0-.135-.098-.24-.225-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .225-.105.225-.24v-.93" fill="#42ade2"/>'
+                + '<path fill="#8a8e92" d="M.457 4.485H.75V4.8H.457z"/>'
+                + '<path d="M3.375 4.485H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645m0-.646H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645" fill="#428bc1"/>'
+                + '<path fill="#8a8e92" d="M4.05 4.485h.292V4.8H4.05z"/>'
+                + '<path d="M1.425 3.84H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>'
+                + '<path d="M1.425 3.203H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>'
+                + '<path d="M.57 2.288c0-.135-.098-.24-.217-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .217-.105.217-.24v-.93" fill="#42ade2"/>'
+                + '<path d="M4.53 1.965s-.217.187-.255.285c-.075.21-.022.667 0 .892.007.037.037.142.037.142s-.255-.068-.345-.083c-.172-.022-.51.015-.682 0-.075-.007-.3-.06-.3-.06s.195-.09.232-.15c.12-.186.143-.666.158-.891v-.128s.165.052.225.06c.165.015.51-.015.675-.03.06 0 .255-.037.255-.037" fill="#c7e755"/>'
+                + '</svg>';
+            ]]]
+          temp: >
+            [[[
+              const t = states['sensor.sensor_4_in_1_sala_temperature'];
+              const temp = t && t.state && !['unknown','unavailable'].includes(t.state) ? `${t.state}°` : '—';
+              const h = states['sensor.sensor_4_in_1_sala_humidity'];
+              const hum = h && !['unknown','unavailable'].includes(h.state) ? `${h.state}%` : '';
+              const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+              const color = salaOn ? 'rgba(0,0,0,0.88)' : 'rgba(255,255,255,0.9)';
+              const subColor = salaOn ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.52)';
+              return `<div style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.1;">
+                <span style="font-size:13px;font-weight:700;color:${color};">${temp}</span>
+                <span style="font-size:11px;color:${subColor};">${hum}</span>
+              </div>`;
+            ]]]
+          lights: >
+            [[[
+              const activeEntity = states['sensor.living_room_active'];
+              const lightsOnCount = activeEntity?.attributes?.lights_on_count;
+              const lightsOn = activeEntity?.attributes?.lights_on;
+              let count = null;
+              if (lightsOnCount != null && lightsOnCount !== '' && !isNaN(lightsOnCount)) {
+                const parsed = parseInt(lightsOnCount, 10);
+                if (!isNaN(parsed)) count = parsed;
+              } else if (Array.isArray(lightsOn)) {
+                count = lightsOn.length;
+              } else if (typeof lightsOn === 'string' && lightsOn.startsWith('[')) {
+                const matches = lightsOn.match(/'/g);
+                if (matches) count = matches.length / 2;
+              }
+              const ids = entity?.attributes?.entity_id;
+              if (count === null && Array.isArray(ids)) {
+                count = ids.filter(id => states[id]?.state === 'on').length;
+              }
+              if (count === null) {
+                const fallbackIds = ['light.sala_switch_1', 'light.sala_switch_2'];
+                count = fallbackIds.filter(id => states[id]?.state === 'on').length;
+              }
+              if (!count || count <= 0) return '';
+              const timeFmt = c => {
+                const m = (c / 6e4), h = (c / 36e5), d = (c / 864e5);
+                return m < 1 ? '<1m' : m < 60 ? `${parseInt(m)}m` : h < 24 ? `${parseInt(h)}h` : `${parseInt(d)}d`;
+              };
+              let earliestOn = null;
+              if (Array.isArray(ids)) {
+                ids.forEach(id => {
+                  const s = states[id];
+                  if (s?.state === 'on' && s?.last_changed) {
+                    const ts = Date.parse(s.last_changed);
+                    if (!isNaN(ts) && (earliestOn === null || ts < earliestOn)) earliestOn = ts;
+                  }
+                });
+              }
+              if (earliestOn === null && entity?.last_changed) {
+                const ts = Date.parse(entity.last_changed);
+                if (!isNaN(ts)) earliestOn = ts;
+              }
+              const elapsed = earliestOn !== null ? timeFmt(Date.now() - earliestOn) : '';
+              const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+              const statusColor = salaOn ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)';
+              const label = count === 1 ? '1 light' : `${count} lights`;
+              return `<span style="font-size:11px;font-weight:500;color:${statusColor};">${label}${elapsed ? ' · ' + elapsed : ''}</span>`;
+            ]]]
+          right: >
+            [[[
+              const tvOn  = ['on','playing','paused','idle'].includes(states['media_player.android_tv_192_168_3_17']?.state ?? '');
+              const acOn  = !['off','unavailable','unknown',''].includes(states['climate.sl_ar_condicionado']?.state ?? 'off');
+              const alexa = ['playing','on','paused'].includes(states['media_player.echo_show']?.state ?? '');
+              const presenceEntity = states['binary_sensor.sensor_4_in_1_sala_presence'];
+              const presenceRaw = presenceEntity?.state === 'on';
+              const presenceChanged = presenceEntity?.last_changed ? Date.parse(presenceEntity.last_changed) : NaN;
+              const presenceRecent = !isNaN(presenceChanged) && (Date.now() - presenceChanged) < 10 * 60 * 1000;
+              const presence = presenceRaw && presenceRecent;
+              const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+              const offBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+              const offBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
+              const offIcon = salaOn ? 'rgba(0,0,0,0.42)' : 'rgba(255,255,255,0.35)';
+              const dot = (icon, active, color) =>
+                `<div style="width:26px;height:26px;border-radius:50%;box-sizing:border-box;background:${active?color+'22':offBg};border:1px solid ${active?color+'55':offBorder};display:flex;align-items:center;justify-content:center;">` +
+                `<ha-icon icon="${icon}" style="width:14px;height:14px;color:${active?color:offIcon};display:flex;"></ha-icon></div>`;
+              return `<div style="display:flex;flex-direction:column;align-items:center;gap:5px;padding-top:2px;">
+                ${dot('mdi:account', presence, '#60a5fa')}
+                ${dot('mdi:television-classic', tvOn, '#a78bfa')}
+                ${dot('mdi:snowflake', acOn, '#4facfe')}
+                ${dot('mdi:speaker-wireless', alexa, '#ff9900')}
+              </div>`;
+            ]]]
+        styles:
+          card:
+            - background: transparent
+            - border: none
+            - box-shadow: none
+            - padding: 12px 8px 10px 12px
+            - margin: 0
+            - height: 100%
+          grid:
+            - grid-template-areas: |
+                "icon temp right"
+                "n n right"
+                "lights lights right"
+            - grid-template-columns: auto 1fr auto
+            - grid-template-rows: auto auto 1fr
+          name:
+            - justify-self: start
+            - align-self: end
+            - font-size: 15px
+            - font-weight: 700
+            - color: >
+                [[[
+                  return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.9)' : 'white';
+                ]]]
+            - margin-bottom: 2px
+          custom_fields:
+            icon:
+              - justify-self: start
+              - align-self: start
+              - padding-bottom: 8px
+            temp:
+              - justify-self: start
+              - align-self: start
+              - margin-left: 10px
+              - margin-top: 4px
+            lights:
+              - justify-self: start
+              - align-self: start
+            right:
+              - justify-self: end
+              - align-self: start
+              - margin-right: 2px
+
+      # ── Pills (coluna direita) — Corredor / TV / A/C / PS5 ──────────────────
+      - view_layout:
+          grid-area: pills
+        type: vertical-stack
+        card_mod:
+          style: |
+            :host {
+              display: block !important;
+              height: 168px !important;
+              box-sizing: border-box !important;
+              padding: 6px 8px 6px 4px !important;
+              margin: 0 !important;
+            }
+            #root {
+              margin: 0 !important;
+              padding: 0 !important;
+              display: flex !important;
+              flex-direction: column !important;
+              gap: 4px !important;
+              height: 156px !important;
+            }
+            #root > * {
+              margin: 0 !important;
+              flex: 0 0 36px !important;
+            }
+        cards:
+          # Corredor
+          - type: custom:button-card
+            entity: light.corredor_switch_1
+            show_icon: true
+            show_name: true
+            show_state: false
+            show_label: true
+            icon: mdi:door-closed
+            name: "Corredor"
+            label: >
+              [[[
+                return entity?.state === 'on' ? 'Ligado' : 'Desligado';
+              ]]]
+            tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            triggers_update:
+              - light.corredor_switch_1
+              - light.grupo_luzes_sala
+            styles:
+              card:
+                - height: 36px
+                - border-radius: 14px
+                - background: >
+                    [[[
+                      const on = entity?.state === 'on';
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      if (on) return 'linear-gradient(180deg, rgba(96,165,250,0.22) 0%, rgba(96,165,250,0.10) 100%)';
+                      return sOn ? 'linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)';
+                    ]]]
+                - border: >
+                    [[[
+                      const on = entity?.state === 'on';
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      if (on) return '1px solid rgba(96,165,250,0.38)';
+                      return sOn ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: >
+                    [[[ return entity?.state === 'on' ? '0 0 14px rgba(96,165,250,0.14), inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.06)'; ]]]
+                - padding: 0 9px
+                - margin: 0
+                - box-sizing: border-box
+              grid:
+                - grid-template-areas: '"i n l"'
+                - grid-template-columns: "18px 1fr auto"
+                - column-gap: "8px"
+                - align-items: "center"
+              img_cell:
+                - width: "18px"
+                - justify-content: center
+              icon:
+                - width: "16px"
+                - color: >
+                    [[[
+                      const on = entity?.state === 'on';
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      return on ? '#60a5fa' : (sOn ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.38)');
+                    ]]]
+              name:
+                - font-size: "12px"
+                - font-weight: "600"
+                - justify-self: start
+                - color: >
+                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
+              label:
+                - font-size: "11px"
+                - justify-self: end
+                - color: >
+                    [[[
+                      const on = entity?.state === 'on';
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      return on ? '#60a5fa' : (sOn ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.35)');
+                    ]]]
+
+          # TV
+          - type: custom:button-card
+            entity: media_player.android_tv_192_168_3_17
+            show_icon: true
+            show_name: true
+            show_state: false
+            show_label: true
+            icon: mdi:television-classic
+            name: "TV"
+            label: >
+              [[[
+                const s = entity?.state;
+                if (s === 'playing') return 'Reproduzindo';
+                if (s === 'paused') return 'Pausado';
+                if (['on','idle'].includes(s)) return 'Ligada';
+                return 'Desligada';
+              ]]]
+            tap_action:
+              action: toggle
+            hold_action:
+              action: more-info
+            triggers_update:
+              - media_player.android_tv_192_168_3_17
+              - light.grupo_luzes_sala
+            styles:
+              card:
+                - height: 36px
+                - border-radius: 14px
+                - background: >
+                    [[[
+                      const on = ['on','playing','paused','idle'].includes(entity?.state);
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      if (on) return 'linear-gradient(180deg, rgba(167,139,250,0.22) 0%, rgba(167,139,250,0.10) 100%)';
+                      return sOn ? 'linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)';
+                    ]]]
+                - border: >
+                    [[[
+                      const on = ['on','playing','paused','idle'].includes(entity?.state);
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      if (on) return '1px solid rgba(167,139,250,0.38)';
+                      return sOn ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: >
+                    [[[ return ['on','playing','paused','idle'].includes(entity?.state) ? '0 0 14px rgba(167,139,250,0.14), inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.06)'; ]]]
+                - padding: 0 9px
+                - margin: 0
+                - box-sizing: border-box
+              grid:
+                - grid-template-areas: '"i n l"'
+                - grid-template-columns: "18px 1fr auto"
+                - column-gap: "8px"
+                - align-items: "center"
+              img_cell:
+                - width: "18px"
+                - justify-content: center
+              icon:
+                - width: "16px"
+                - color: >
+                    [[[
+                      const on = ['on','playing','paused','idle'].includes(entity?.state);
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      return on ? '#60a5fa' : (sOn ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.38)');
+                    ]]]
+              name:
+                - font-size: "12px"
+                - font-weight: "600"
+                - justify-self: start
+                - color: >
+                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
+              label:
+                - font-size: "11px"
+                - justify-self: end
+                - color: >
+                    [[[
+                      const on = ['on','playing','paused','idle'].includes(entity?.state);
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      return on ? '#60a5fa' : (sOn ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.35)');
+                    ]]]
+
+          # A/C
+          - type: custom:button-card
+            entity: climate.sl_ar_condicionado
+            show_icon: true
+            show_name: true
+            show_state: false
+            show_label: true
+            icon: mdi:snowflake
+            name: "A/C"
+            label: >
+              [[[
+                const s = entity?.state;
+                const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(s);
+                if (on) {
+                  const t = entity?.attributes?.temperature;
+                  return Number.isFinite(Number(t)) ? `${Number(t)}°` : 'Ligado';
+                }
+                return 'Desligado';
+              ]]]
+            tap_action:
+              action: perform-action
+              perform_action: >
+                [[[
+                  const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                  return on ? 'climate.turn_off' : 'climate.turn_on';
+                ]]]
+              target:
+                entity_id: climate.sl_ar_condicionado
+            hold_action:
+              action: more-info
+            triggers_update:
+              - climate.sl_ar_condicionado
+              - light.grupo_luzes_sala
+            styles:
+              card:
+                - height: 36px
+                - border-radius: 14px
+                - background: >
+                    [[[
+                      const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      if (on) return 'linear-gradient(180deg, rgba(79,172,254,0.22) 0%, rgba(79,172,254,0.10) 100%)';
+                      return sOn ? 'linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)';
+                    ]]]
+                - border: >
+                    [[[
+                      const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      if (on) return '1px solid rgba(79,172,254,0.38)';
+                      return sOn ? '1px solid rgba(0,0,0,0.12)' : '1px solid rgba(255,255,255,0.12)';
+                    ]]]
+                - box-shadow: >
+                    [[[ return ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state) ? '0 0 14px rgba(79,172,254,0.14), inset 0 1px 0 rgba(255,255,255,0.08)' : 'inset 0 1px 0 rgba(255,255,255,0.06)'; ]]]
+                - padding: 0 9px
+                - margin: 0
+                - box-sizing: border-box
+              grid:
+                - grid-template-areas: '"i n l"'
+                - grid-template-columns: "18px 1fr auto"
+                - column-gap: "8px"
+                - align-items: "center"
+              img_cell:
+                - width: "18px"
+                - justify-content: center
+              icon:
+                - width: "16px"
+                - color: >
+                    [[[
+                      const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      return on ? '#4facfe' : (sOn ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.38)');
+                    ]]]
+              name:
+                - font-size: "12px"
+                - font-weight: "600"
+                - justify-self: start
+                - color: >
+                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
+              label:
+                - font-size: "11px"
+                - justify-self: end
+                - color: >
+                    [[[
+                      const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                      const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                      return on ? '#4facfe' : (sOn ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.35)');
+                    ]]]
+
+          # PS5 (placeholder — sem entidade confirmada)
+          - type: custom:button-card
+            show_icon: true
+            show_name: true
+            show_state: false
+            show_label: true
+            icon: mdi:sony-playstation
+            name: "PS5"
+            label: "—"
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            triggers_update:
+              - light.grupo_luzes_sala
+            styles:
+              card:
+                - height: 36px
+                - border-radius: 14px
+                - background: >
+                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'linear-gradient(180deg, rgba(0,0,0,0.055) 0%, rgba(0,0,0,0.025) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.055) 0%, rgba(255,255,255,0.025) 100%)'; ]]]
+                - border: >
+                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.10)' : '1px solid rgba(255,255,255,0.10)'; ]]]
+                - box-shadow: inset 0 1px 0 rgba(255,255,255,0.05)
+                - padding: 0 9px
+                - margin: 0
+                - box-sizing: border-box
+                - opacity: "0.44"
+                - cursor: default
+              grid:
+                - grid-template-areas: '"i n l"'
+                - grid-template-columns: "18px 1fr auto"
+                - column-gap: "8px"
+                - align-items: "center"
+              img_cell:
+                - width: "18px"
+                - justify-content: center
+              icon:
+                - width: "16px"
+                - color: >
+                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.50)' : 'rgba(255,255,255,0.50)'; ]]]
+              name:
+                - font-size: "12px"
+                - font-weight: "600"
+                - justify-self: start
+                - color: >
+                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
+              label:
+                - font-size: "11px"
+                - justify-self: end
+                - color: >
+                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.38)' : 'rgba(255,255,255,0.35)'; ]]]
+
+
+# --- CÓDIGO ORIGINAL COMENTADO (V3 vertical — rollback rápido) ---
+# Remover comentário das linhas abaixo e comentar o bloco NOVO acima para restaurar.
+#
+# type: custom:stack-in-card
+# card_mod:
+#   style: |
+#     :host {
+#       height: auto !important;
+#       display: block !important;
+#     }
+#     ha-card {
+#       height: auto !important;
+#       min-height: 270px !important;
+#       display: flex !important;
+#       flex-direction: column !important;
+#       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+#       backdrop-filter: blur(20px) saturate(1.35) !important;
+#       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+#       border: 1px solid rgba(255,255,255,0.10) !important;
+#       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+#       border-radius: 16px !important;
+#       overflow: hidden !important;
+#       --ha-card-backdrop-filter: none !important;
+#       --ha-card-background: transparent !important;
+#       --ha-card-border-width: 0 !important;
+#     }
+#     ha-card::before { display: none !important; }
+# cards: !include ../grid-cards/bento_sala.yaml
+# --- FIM CÓDIGO ORIGINAL ---

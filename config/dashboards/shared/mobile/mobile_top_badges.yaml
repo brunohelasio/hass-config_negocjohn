@@ -38,7 +38,18 @@ card_mod:
     # Forca o conteudo interno a transbordar horizontalmente:
     # neutraliza o `1fr` da coluna do bento_top_badges e empurra o grid
     # para `max-content`, criando overflow scroll.
-    hui-card$: |
+    # ANTERIOR (errado): hui-card$ — custom:layout-card renderiza como
+    # hui-layout-card, nao hui-card. Seletor nao alcancava o elemento certo.
+    # hui-card$: |
+    #   hui-grid-layout {
+    #     min-width: max-content !important;
+    #     width: max-content !important;
+    #   }
+    #   hui-grid-layout::part(container),
+    #   hui-grid-layout > * {
+    #     min-width: max-content !important;
+    #   }
+    hui-layout-card$: |
       hui-grid-layout {
         min-width: max-content !important;
         width: max-content !important;

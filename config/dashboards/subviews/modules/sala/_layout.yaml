@@ -2,7 +2,7 @@
 padding: 75px 12px 12px 12px 
 grid-gap: 10px
 grid-template-columns: repeat(12, minmax(0, 1fr))
-grid-template-rows: minmax(auto, 42vh) minmax(auto, 40vh)
+grid-template-rows: minmax(auto, 42vh) minmax(430px, 44vh)
 align-content: center
 height: 100%
 grid-template-areas: |

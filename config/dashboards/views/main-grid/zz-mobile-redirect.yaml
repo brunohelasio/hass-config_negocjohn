@@ -14,60 +14,66 @@
 #  opacidade 0 — mas RENDERIZA, garantindo que   #
 #  o JS rode.                                    #
 #                                                #
+#  Fix 2026-05-11: removido "-" inicial do YAML  #
+#  (o arquivo era lista; - !include criava lista  #
+#  dentro de lista → Erro de configuracao).       #
+#  Adicionado view_layout para nao renderizar em  #
+#  desktop/tablet (evita botao de erro e scroll). #
+#                                                #
 #  Rollback: deletar/renomear este arquivo ou    #
 #  comentar este bloco. Nada mais a fazer.       #
 ##################################################
 
-- view_layout:
-    show:
-      mediaquery: '(max-width: 800px)'
-  type: custom:button-card
-  show_icon: false
-  show_state: false
-  show_label: false
-  show_name: true
-  name: |
-    [[[
-      try {
-        var path = location.pathname || '';
-        var isMobile = window.matchMedia('(max-width: 800px)').matches;
-        var alreadyOnMobile = path.indexOf('/mobile-') !== -1;
-        var alreadyRedirected = window.__negocjohn_mobile_redirected === true;
-        if (isMobile && !alreadyOnMobile && !alreadyRedirected) {
-          window.__negocjohn_mobile_redirected = true;
-          var parts = path.split('/').filter(function(s){ return s.length > 0; });
-          var slug = parts[0] || 'lovelace';
-          location.replace('/' + slug + '/mobile-casa');
-        }
-      } catch (e) {
-        // Silencioso: nunca quebra o card.
+view_layout:
+  show:
+    mediaquery: '(max-width: 800px)'
+type: custom:button-card
+show_icon: false
+show_state: false
+show_label: false
+show_name: true
+name: |
+  [[[
+    try {
+      var path = location.pathname || '';
+      var isMobile = window.matchMedia('(max-width: 800px)').matches;
+      var alreadyOnMobile = path.indexOf('/mobile-') !== -1;
+      var alreadyRedirected = window.__negocjohn_mobile_redirected === true;
+      if (isMobile && !alreadyOnMobile && !alreadyRedirected) {
+        window.__negocjohn_mobile_redirected = true;
+        var parts = path.split('/').filter(function(s){ return s.length > 0; });
+        var slug = parts[0] || 'lovelace';
+        location.replace('/' + slug + '/mobile-casa');
       }
-      return '';
-    ]]]
-  tap_action:
-    action: none
-  hold_action:
-    action: none
-  card_mod:
-    style: |
-      :host {
-        position: fixed !important;
-        top: -9999px !important;
-        left: -9999px !important;
-        width: 1px !important;
-        height: 1px !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        z-index: -1 !important;
-      }
-      ha-card {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        width: 1px !important;
-        height: 1px !important;
-        min-height: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow: hidden !important;
-      }
+    } catch (e) {
+      // Silencioso: nunca quebra o card.
+    }
+    return '';
+  ]]]
+tap_action:
+  action: none
+hold_action:
+  action: none
+card_mod:
+  style: |
+    :host {
+      position: fixed !important;
+      top: -9999px !important;
+      left: -9999px !important;
+      width: 1px !important;
+      height: 1px !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      z-index: -1 !important;
+    }
+    ha-card {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      width: 1px !important;
+      height: 1px !important;
+      min-height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: hidden !important;
+    }

@@ -37,7 +37,8 @@ cards:
   - type: custom:layout-card
     layout_type: custom:grid-layout
     layout:
-      grid-template-columns: 1fr 138px
+      # ANTERIOR: grid-template-columns: 1fr 138px  — coluna das pílulas muito estreita
+      grid-template-columns: 1fr 155px
       grid-template-rows: 168px
       grid-template-areas: '"hero pills"'
       margin: 0

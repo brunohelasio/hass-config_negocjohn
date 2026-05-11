@@ -1,18 +1,20 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# mobile_card_sala_compact.yaml  (V3) — wrapper mobile glass da Sala 1x1
+# mobile_card_sala_compact.yaml  (V3.1) — wrapper mobile glass da Sala 1x1
 # Criado: 2026-05-10
+# Atualizado: 2026-05-11 — substituído !include bento_sala.yaml por mobile_sala_hero.yaml
 #
 # Versao COMPACTA da Sala para a grade 2-col da aba Comodos.
-# Usa a parte "room hero" do bento_sala (mesmas entidades / templates),
-# reembrulhada como qualquer outro comodo do rail. Difere de
-# mobile_sala_card.yaml: nao mostra strip de TV/AC/Corredor (este card
-# e parte da grade comparativa de comodos).
+# Usa mobile_sala_hero.yaml (hero button-card autónomo) em vez do
+# bento_sala.yaml completo.
 #
-# IMPORTANTE: aqui NAO duplicamos o button-card hero — em vez disso
-# reusamos o shared/grid-cards/bento_sala.yaml inteiro (room+actions),
-# mas com altura forcada de 158px e overflow:hidden — o strip de actions
-# e clipado intencionalmente, mostrando so o hero. Padroniza com os
-# outros 6 cards da grade 2-col.
+# RAZÃO DA MUDANÇA (V3.1):
+#   bento_sala.yaml tem grid-template-rows: 1fr auto onde "auto" é a strip
+#   de actions (≈152px). Num container de 158px o hero ficava com ≈6px de
+#   altura — invisível. Solução: usar só o hero button-card, sem a strip.
+#
+# ROLLBACK RÁPIDO para V3.0:
+#   1. Comentar a linha "cards: !include mobile_sala_hero.yaml"
+#   2. Descomentar a linha "cards: !include ../grid-cards/bento_sala.yaml"
 # ══════════════════════════════════════════════════════════════════════════════
 
 type: custom:stack-in-card
@@ -44,4 +46,11 @@ card_mod:
       --ha-card-border-width: 0 !important;
     }
     ha-card::before { display: none !important; }
-cards: !include ../grid-cards/bento_sala.yaml
+
+# NOVO (V3.1): usa o hero autónomo, sem a strip de actions
+cards: !include mobile_sala_hero.yaml
+
+# --- CÓDIGO ORIGINAL COMENTADO (V3.0 — bento_sala.yaml completo, rollback rápido) ---
+# O hero ficava com ≈6px de altura porque o bento_sala.yaml tem row "auto" de ≈152px.
+# cards: !include ../grid-cards/bento_sala.yaml
+# --- FIM CÓDIGO ORIGINAL ---

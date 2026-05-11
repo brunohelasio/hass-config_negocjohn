@@ -18,7 +18,8 @@ card_mod:
     }
     ha-card {
       height: auto !important;
-      min-height: 158px !important;
+      /* ANTERIOR: min-height: 158px — insuficiente para o conteúdo do welcome (sobreposição). */
+      min-height: 220px !important;
       display: flex !important;
       flex-direction: column !important;
       justify-content: space-between !important;

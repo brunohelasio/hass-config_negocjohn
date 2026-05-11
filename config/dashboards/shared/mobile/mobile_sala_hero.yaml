@@ -1,0 +1,205 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# mobile_sala_hero.yaml  (V3) — hero button-card da Sala para uso 1×1
+# Criado: 2026-05-11
+#
+# Extrai APENAS o bloco hero da Sala (sem strip de TV/AC/Corredor), calibrado
+# para células de 158px de altura na grade 2-col da aba Cômodos.
+#
+# Usado por: mobile_card_sala_compact.yaml
+# Diferencia-se de mobile_sala_card.yaml (layout 2×1 horizontal completo).
+#
+# Entidades:
+#   - light.grupo_luzes_sala — grupo para estado ligado/desligado
+#   - sensor.sensor_4_in_1_sala_temperature / humidity — temperatura e umidade
+#   - sensor.living_room_active — contagem de luzes ativas
+#   - media_player.android_tv_192_168_3_17 — TV
+#   - climate.sl_ar_condicionado — A/C
+#   - media_player.echo_show — Alexa
+#   - binary_sensor.sensor_4_in_1_sala_presence — presença
+# ══════════════════════════════════════════════════════════════════════════════
+
+type: custom:button-card
+entity: light.grupo_luzes_sala
+show_icon: false
+show_name: true
+show_state: false
+name: Sala
+variables:
+  state_on: >
+    [[[
+      return entity?.state === 'on';
+    ]]]
+triggers_update:
+  - light.sala_switch_1
+  - light.sala_switch_2
+  - sensor.living_room_active
+  - sensor.sensor_4_in_1_sala_temperature
+  - sensor.sensor_4_in_1_sala_humidity
+  - binary_sensor.sensor_4_in_1_sala_presence
+  - media_player.android_tv_192_168_3_17
+  - climate.sl_ar_condicionado
+  - media_player.echo_show
+  - sensor.time
+tap_action:
+  action: perform-action
+  perform_action: light.toggle
+  target:
+    entity_id: light.sala_switch_2
+double_tap_action:
+  action: navigate
+  navigation_path: subview-sala
+hold_action:
+  action: perform-action
+  perform_action: light.turn_off
+  data:
+    entity_id: light.grupo_luzes_sala
+custom_fields:
+  icon: >
+    [[[
+      const on = entity?.state === 'on';
+      const f = on ? 'none' : 'grayscale(1) contrast(0.4) brightness(0.8)';
+      return '<svg viewBox="0 0 4.8 4.8" xmlns="http://www.w3.org/2000/svg" style="width:44px;height:44px;filter:' + f + ';display:block;">'
+        + '<path d="M.78 2.565H.69V.87C.69.75.75.51.975.51v.098C.78.608.78.855.78.871v1.695" fill="#666"/>'
+        + '<path d="M1.62.525a.81.81 0 0 0-.188-.09L1.313.052C1.298 0 1.171-.008 1.021.037s-.255.128-.24.18l.128.397S.811.786.804.846c-.022.12.045.472.045.472l1.05-.315c-.007-.007-.172-.39-.278-.48" fill="#94989b"/>'
+        + '<path d="M1.89.998c.03.105-.188.263-.472.345-.292.09-.547.075-.57-.03-.03-.105.188-.263.472-.345.285-.09.547-.075.57.03" fill="#ffe62e"/>'
+        + '<path d="M4.447 3.053a.15.15 0 0 1-.15.15H.502a.15.15 0 0 1-.15-.15v-.975a.15.15 0 0 1 .15-.15h3.803a.15.15 0 0 1 .15.15v.975z" fill="#42ade2"/>'
+        + '<path d="M4.447 3.053a.15.15 0 0 1-.15.15H.502a.15.15 0 0 1-.15-.15v-.975a.15.15 0 0 1 .15-.15h3.803a.15.15 0 0 1 .15.15v.975z" fill="#428bc1" opacity=".5"/>'
+        + '<path d="M3.375 3.203H.352V2.047s.6.69 3.022 1.155" fill="#428bc1"/>'
+        + '<path d="M4.672 2.288c0-.135-.098-.24-.225-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .225-.105.225-.24v-.93" fill="#42ade2"/>'
+        + '<path fill="#8a8e92" d="M.457 4.485H.75V4.8H.457z"/>'
+        + '<path d="M3.375 4.485H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645m0-.646H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645" fill="#428bc1"/>'
+        + '<path fill="#8a8e92" d="M4.05 4.485h.292V4.8H4.05z"/>'
+        + '<path d="M1.425 3.84H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>'
+        + '<path d="M1.425 3.203H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>'
+        + '<path d="M.57 2.288c0-.135-.098-.24-.217-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .217-.105.217-.24v-.93" fill="#42ade2"/>'
+        + '<path d="M4.53 1.965s-.217.187-.255.285c-.075.21-.022.667 0 .892.007.037.037.142.037.142s-.255-.068-.345-.083c-.172-.022-.51.015-.682 0-.075-.007-.3-.06-.3-.06s.195-.09.232-.15c.12-.186.143-.666.158-.891v-.128s.165.052.225.06c.165.015.51-.015.675-.03.06 0 .255-.037.255-.037" fill="#c7e755"/>'
+        + '</svg>';
+    ]]]
+  temp: >
+    [[[
+      const t = states['sensor.sensor_4_in_1_sala_temperature'];
+      const temp = t && t.state && !['unknown','unavailable'].includes(t.state) ? `${t.state}°` : '—';
+      const h = states['sensor.sensor_4_in_1_sala_humidity'];
+      const hum = h && !['unknown','unavailable'].includes(h.state) ? `${h.state}%` : '';
+      const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+      const color = salaOn ? 'rgba(0,0,0,0.88)' : 'rgba(255,255,255,0.9)';
+      const subColor = salaOn ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.52)';
+      return `<div style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.1;">
+        <span style="font-size:12px;font-weight:700;color:${color};">${temp}</span>
+        <span style="font-size:10px;color:${subColor};">${hum}</span>
+      </div>`;
+    ]]]
+  lights: >
+    [[[
+      const activeEntity = states['sensor.living_room_active'];
+      const lightsOnCount = activeEntity?.attributes?.lights_on_count;
+      const lightsOn = activeEntity?.attributes?.lights_on;
+      let count = null;
+      if (lightsOnCount != null && lightsOnCount !== '' && !isNaN(lightsOnCount)) {
+        const parsed = parseInt(lightsOnCount, 10);
+        if (!isNaN(parsed)) count = parsed;
+      } else if (Array.isArray(lightsOn)) {
+        count = lightsOn.length;
+      } else if (typeof lightsOn === 'string' && lightsOn.startsWith('[')) {
+        const matches = lightsOn.match(/'/g);
+        if (matches) count = matches.length / 2;
+      }
+      const ids = entity?.attributes?.entity_id;
+      if (count === null && Array.isArray(ids)) {
+        count = ids.filter(id => states[id]?.state === 'on').length;
+      }
+      if (count === null) {
+        const fallbackIds = ['light.sala_switch_1', 'light.sala_switch_2'];
+        count = fallbackIds.filter(id => states[id]?.state === 'on').length;
+      }
+      if (!count || count <= 0) return '';
+      const timeFmt = c => {
+        const m = (c / 6e4), h = (c / 36e5), d = (c / 864e5);
+        return m < 1 ? '<1m' : m < 60 ? `${parseInt(m)}m` : h < 24 ? `${parseInt(h)}h` : `${parseInt(d)}d`;
+      };
+      let earliestOn = null;
+      if (Array.isArray(ids)) {
+        ids.forEach(id => {
+          const s = states[id];
+          if (s?.state === 'on' && s?.last_changed) {
+            const ts = Date.parse(s.last_changed);
+            if (!isNaN(ts) && (earliestOn === null || ts < earliestOn)) earliestOn = ts;
+          }
+        });
+      }
+      if (earliestOn === null && entity?.last_changed) {
+        const ts = Date.parse(entity.last_changed);
+        if (!isNaN(ts)) earliestOn = ts;
+      }
+      const elapsed = earliestOn !== null ? timeFmt(Date.now() - earliestOn) : '';
+      const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+      const statusColor = salaOn ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)';
+      const label = count === 1 ? '1 light' : `${count} lights`;
+      return `<span style="font-size:10px;font-weight:500;color:${statusColor};">${label}${elapsed ? ' · ' + elapsed : ''}</span>`;
+    ]]]
+  right: >
+    [[[
+      const tvOn  = ['on','playing','paused','idle'].includes(states['media_player.android_tv_192_168_3_17']?.state ?? '');
+      const acOn  = !['off','unavailable','unknown',''].includes(states['climate.sl_ar_condicionado']?.state ?? 'off');
+      const alexa = ['playing','on','paused'].includes(states['media_player.echo_show']?.state ?? '');
+      const presenceEntity = states['binary_sensor.sensor_4_in_1_sala_presence'];
+      const presenceRaw = presenceEntity?.state === 'on';
+      const presenceChanged = presenceEntity?.last_changed ? Date.parse(presenceEntity.last_changed) : NaN;
+      const presenceRecent = !isNaN(presenceChanged) && (Date.now() - presenceChanged) < 10 * 60 * 1000;
+      const presence = presenceRaw && presenceRecent;
+      const salaOn = states['light.grupo_luzes_sala']?.state === 'on';
+      const offBg = salaOn ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)';
+      const offBorder = salaOn ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.12)';
+      const offIcon = salaOn ? 'rgba(0,0,0,0.42)' : 'rgba(255,255,255,0.35)';
+      const dot = (icon, active, color) =>
+        `<div style="width:22px;height:22px;border-radius:50%;box-sizing:border-box;background:${active?color+'22':offBg};border:1px solid ${active?color+'55':offBorder};display:flex;align-items:center;justify-content:center;">` +
+        `<ha-icon icon="${icon}" style="width:12px;height:12px;color:${active?color:offIcon};display:flex;"></ha-icon></div>`;
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:2px;">
+        ${dot('mdi:account', presence, '#60a5fa')}
+        ${dot('mdi:television-classic', tvOn, '#a78bfa')}
+        ${dot('mdi:snowflake', acOn, '#4facfe')}
+        ${dot('mdi:speaker-wireless', alexa, '#ff9900')}
+      </div>`;
+    ]]]
+styles:
+  card:
+    - background: transparent
+    - border: none
+    - box-shadow: none
+    - padding: 10px 8px 8px 10px
+    - margin: 0
+    - height: 100%
+  grid:
+    - grid-template-areas: |
+        "icon temp right"
+        "n n right"
+        "lights lights right"
+    - grid-template-columns: auto 1fr auto
+    - grid-template-rows: auto auto 1fr
+  name:
+    - justify-self: start
+    - align-self: end
+    - font-size: 14px
+    - font-weight: 700
+    - color: >
+        [[[
+          return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.9)' : 'white';
+        ]]]
+    - margin-bottom: 2px
+  custom_fields:
+    icon:
+      - justify-self: start
+      - align-self: start
+      - padding-bottom: 6px
+    temp:
+      - justify-self: start
+      - align-self: start
+      - margin-left: 8px
+      - margin-top: 3px
+    lights:
+      - justify-self: start
+      - align-self: start
+    right:
+      - justify-self: end
+      - align-self: start
+      - margin-right: 2px

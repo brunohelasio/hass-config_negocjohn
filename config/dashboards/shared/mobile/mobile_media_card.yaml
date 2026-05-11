@@ -1,19 +1,70 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# mobile_media_card.yaml  (V3) — wrapper mobile do bloco Midia
+# mobile_media_card.yaml  (V3.1) — wrapper mobile do bloco Midia
 # Criado: 2026-05-10
+# Atualizado: 2026-05-11 — altura fixa para resolver bug de height:100% no swipe-card
+#
 # Reusa shared/grid-cards/bento_media.yaml.
+#
+# CAUSA DO BUG (V3.0 em branco):
+#   bento_media.yaml tem:
+#     custom:mod-card → :host { height: 100% } + ha-card { height: 100%; aspect-ratio: 1/1 }
+#   Com o wrapper V3.0 em height:auto, height:100% resolvia para 0 →
+#   swipe-card ficava com 0×0px → tela em branco.
+#
+# SOLUÇÃO (V3.1):
+#   ha-card com altura fixa = calc(100vw - 28px) — mesma largura do conteúdo
+#   disponível (viewport - 2×14px de padding da view). Isso garante que o
+#   bento_media.yaml receba um parent com altura real, e o mod-card interno
+#   com aspect-ratio: 1/1 renderiza um quadrado que cabe no viewport.
+#
+# ROLLBACK RÁPIDO para V3.0:
+#   Reverter ha-card para: height: auto + min-height: 320px
 # ══════════════════════════════════════════════════════════════════════════════
 
+# --- CÓDIGO ORIGINAL COMENTADO (V3.0 — height:auto, causava tela em branco) ---
+# type: custom:stack-in-card
+# card_mod:
+#   style: |
+#     :host {
+#       height: auto !important;
+#       display: block !important;
+#     }
+#     ha-card {
+#       height: auto !important;
+#       min-height: 320px !important;
+#       display: block !important;
+#       padding: 0 !important;
+#       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+#       backdrop-filter: blur(20px) saturate(1.35) !important;
+#       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+#       border: 1px solid rgba(255,255,255,0.10) !important;
+#       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+#       border-radius: 16px !important;
+#       overflow: hidden !important;
+#       --ha-card-backdrop-filter: none !important;
+#       --ha-card-background: transparent !important;
+#       --ha-card-border-width: 0 !important;
+#     }
+#     ha-card::before { display: none !important; }
+# cards: !include ../grid-cards/bento_media.yaml
+# --- FIM CÓDIGO ORIGINAL ---
+
+# NOVO (V3.1): altura fixa baseada em viewport width
 type: custom:stack-in-card
 card_mod:
   style: |
     :host {
-      height: auto !important;
       display: block !important;
+      width: 100% !important;
     }
     ha-card {
-      height: auto !important;
-      min-height: 320px !important;
+      /* Altura = largura disponível (viewport - 2×14px padding da view).
+         O bento_media.yaml usa aspect-ratio:1/1, portanto a altura precisa
+         ser igual à largura para que o swipe-card renderize como quadrado. */
+      height: calc(100vw - 28px) !important;
+      min-height: calc(100vw - 28px) !important;
+      max-height: calc(100vw - 28px) !important;
+      width: 100% !important;
       display: block !important;
       padding: 0 !important;
 

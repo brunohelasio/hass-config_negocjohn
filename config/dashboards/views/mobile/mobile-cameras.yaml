@@ -17,11 +17,14 @@ card_mod:
     hui-grid-layout {
       background: rgb(0, 0, 0);
       min-height: 100vh;
+      overflow-x: hidden !important;
+      max-width: 100vw !important;
     }
 layout:
   margin: 0
   padding: 14px 14px calc(96px + env(safe-area-inset-bottom, 0px)) 14px
-  grid-template-columns: 1fr
+  # ANTERIOR: grid-template-columns: 1fr
+  grid-template-columns: minmax(0, 1fr)
   grid-auto-rows: min-content
   grid-gap: 10px
 

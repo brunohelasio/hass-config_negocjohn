@@ -49,105 +49,70 @@
             const p = states['input_select.periodo_energia_dashboard']?.state || 'Diário';
             return `<div style="font-size:18px;font-weight:700;color:rgba(255,255,255,0.96);">${p} · ${num} kWh</div>`;
           ]]]
-        selector:
-          card:
-            # ANTERIOR: horizontal-stack com card_mod em #root; alguns wrappers nao aplicavam a pilula externa.
-            type: custom:mod-card
-            card_mod:
-              style: |
-                ha-card {
-                  display: inline-flex !important;
-                  width: max-content !important;
-                  height: 30px !important;
-                  padding: 3px !important;
-                  border-radius: 999px !important;
-                  background: rgba(0,0,0,0.22) !important;
-                  border: 1px solid rgba(255,255,255,0.16) !important;
-                  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08) !important;
-                  backdrop-filter: blur(14px) saturate(1.15) !important;
-                  -webkit-backdrop-filter: blur(14px) saturate(1.15) !important;
-                  box-sizing: border-box !important;
-                  overflow: hidden !important;
-                }
-            card:
-              type: horizontal-stack
-              card_mod:
-                style: |
-                  #root {
-                    gap: 0 !important;
-                    margin: 0 !important;
-                    padding: 0 !important;
-                  }
-              cards:
-                - type: custom:button-card
-                  name: Diário
-                  show_icon: false
-                  show_state: false
-                  entity: input_select.periodo_energia_dashboard
-                  variables:
-                    periodo: Diário
-                  tap_action:
-                    action: perform-action
-                    perform_action: input_select.select_option
-                    data:
-                      entity_id: input_select.periodo_energia_dashboard
-                      option: Diário
-                  styles: &energy_segment_style
-                    card:
-                      - height: 24px
-                      - min-width: 48px
-                      - border-radius: 999px
-                      - background: >
-                          [[[
-                            // ANTERIOR: usava this._config?.name, que nao e confiavel dentro de styles.
-                            const a = states['input_select.periodo_energia_dashboard']?.state === variables.periodo;
-                            return a ? 'rgba(255,255,255,0.88)' : 'transparent';
-                          ]]]
-                      - border: none
-                      - box-shadow: >
-                          [[[
-                            const a = states['input_select.periodo_energia_dashboard']?.state === variables.periodo;
-                            return a ? '0 2px 8px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.45)' : 'none';
-                          ]]]
-                      - padding: 0 10px
-                      - margin: 0
-                      - box-sizing: border-box
-                    name:
-                      - color: >
-                          [[[
-                            const a = states['input_select.periodo_energia_dashboard']?.state === variables.periodo;
-                            return a ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.78)';
-                          ]]]
-                      - font-size: 10px
-                      - font-weight: 700
-                - type: custom:button-card
-                  name: Semanal
-                  show_icon: false
-                  show_state: false
-                  entity: input_select.periodo_energia_dashboard
-                  variables:
-                    periodo: Semanal
-                  tap_action:
-                    action: perform-action
-                    perform_action: input_select.select_option
-                    data:
-                      entity_id: input_select.periodo_energia_dashboard
-                      option: Semanal
-                  styles: *energy_segment_style
-                - type: custom:button-card
-                  name: Mensal
-                  show_icon: false
-                  show_state: false
-                  entity: input_select.periodo_energia_dashboard
-                  variables:
-                    periodo: Mensal
-                  tap_action:
-                    action: perform-action
-                    perform_action: input_select.select_option
-                    data:
-                      entity_id: input_select.periodo_energia_dashboard
-                      option: Mensal
-                  styles: *energy_segment_style
+        selector: |
+          [[[
+            const current = states['input_select.periodo_energia_dashboard']?.state || 'Diário';
+            const items = [
+              { label: 'Dia', option: 'Diário', width: 44 },
+              { label: 'Semana', option: 'Semanal', width: 58 },
+              { label: 'Mês', option: 'Mensal', width: 46 },
+            ];
+            const segments = items.map((item) => {
+              const active = current === item.option;
+              const background = active ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0)';
+              const color = active ? 'rgba(0,0,0,0.84)' : 'rgba(255,255,255,0.80)';
+              const shadow = active
+                ? '0 2px 9px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.55)'
+                : 'none';
+              const option = item.option.replace(/'/g, "\'");
+              return `
+                <button
+                  type="button"
+                  onclick="event.stopPropagation(); const hass = document.querySelector('home-assistant')?.hass; if (hass) hass.callService('input_select','select_option',{entity_id:'input_select.periodo_energia_dashboard', option:'${option}'});"
+                  style="
+                    appearance: none;
+                    -webkit-appearance: none;
+                    width: ${item.width}px;
+                    height: 24px;
+                    margin: 0;
+                    padding: 0 8px;
+                    border: 0;
+                    border-radius: 999px;
+                    background: ${background};
+                    color: ${color};
+                    box-shadow: ${shadow};
+                    font-size: 10px;
+                    font-weight: 700;
+                    line-height: 24px;
+                    text-align: center;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    transition: background .16s ease, color .16s ease, box-shadow .16s ease;
+                  "
+                >${item.label}</button>
+              `;
+            }).join('');
+            return `
+              <div
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 0;
+                  height: 30px;
+                  padding: 3px;
+                  border-radius: 999px;
+                  background: rgba(0,0,0,0.28);
+                  border: 1px solid rgba(255,255,255,0.16);
+                  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+                  box-sizing: border-box;
+                  overflow: hidden;
+                  backdrop-filter: blur(14px) saturate(1.15);
+                  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+                "
+              >${segments}</div>
+            `;
+          ]]]
       styles:
         grid:
           - grid-template-areas: '"header selector" "value selector"'

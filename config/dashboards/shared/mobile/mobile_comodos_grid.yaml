@@ -9,7 +9,9 @@
 type: custom:layout-card
 layout_type: custom:grid-layout
 layout:
-  grid-template-columns: 1fr 1fr
+  # ANTERIOR: grid-template-columns: 1fr 1fr
+  # minmax(0,1fr) previne que conteúdo interno expanda a coluna além do viewport.
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
   grid-auto-rows: 158px
   gap: 10px
   margin: 0

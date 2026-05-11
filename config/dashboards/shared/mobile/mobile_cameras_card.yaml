@@ -1,32 +1,261 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# mobile_cameras_card.yaml  (V3) — wrapper mobile do bloco Cameras
+# mobile_cameras_card.yaml  (V3.1) — lista vertical das 8 câmeras mobile
 # Criado: 2026-05-10
-# Reusa shared/grid-cards/bento_cameras.yaml.
+# Atualizado: 2026-05-11 — substituído bento_cameras.yaml por lista vertical
+#
+# O bento_cameras.yaml (v7/v10) usa input_select.bento_active_camera para
+# mostrar 1 câmera em destaque + 4 miniaturas — padrão de "foco" desenhado
+# para desktop. Na aba Câmeras mobile o usuário quer as 8 câmeras empilhadas
+# verticalmente para scroll completo.
+#
+# Câmeras (8 total, confirmadas em cameras_user.yaml):
+#   sl_camera_2     — Sala
+#   vr_camera_2     — Varanda
+#   cz_camera_2     — Cozinha
+#   as_camera_2     — Área de Serviço
+#   of_camera_2     — Office
+#   camera_quarto_casal_2  — Quarto Casal
+#   qmi_camera_2    — Quarto Miguel
+#   qma_camera_2    — Quarto Marina
+#
+# ROLLBACK RÁPIDO para V3.0 (bento_cameras.yaml):
+#   Descomentar o bloco original no final deste arquivo e comentar o bloco NOVO.
 # ══════════════════════════════════════════════════════════════════════════════
 
-type: custom:stack-in-card
-card_mod:
-  style: |
-    :host {
-      height: auto !important;
-      display: block !important;
-    }
-    ha-card {
-      height: auto !important;
-      display: block !important;
-      padding: 0 !important;
+# --- CÓDIGO ORIGINAL COMENTADO (V3.0 — bento_cameras.yaml, mostrava só 1 câmera) ---
+# type: custom:stack-in-card
+# card_mod:
+#   style: |
+#     :host {
+#       height: auto !important;
+#       display: block !important;
+#     }
+#     ha-card {
+#       height: auto !important;
+#       display: block !important;
+#       padding: 0 !important;
+#       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+#       backdrop-filter: blur(20px) saturate(1.35) !important;
+#       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+#       border: 1px solid rgba(255,255,255,0.10) !important;
+#       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+#       border-radius: 16px !important;
+#       overflow: hidden !important;
+#       --ha-card-backdrop-filter: none !important;
+#       --ha-card-background: transparent !important;
+#       --ha-card-border-width: 0 !important;
+#     }
+#     ha-card::before { display: none !important; }
+# cards: !include ../grid-cards/bento_cameras.yaml
+# --- FIM CÓDIGO ORIGINAL ---
 
-      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
-      backdrop-filter: blur(20px) saturate(1.35) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-      border: 1px solid rgba(255,255,255,0.10) !important;
-      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
-      border-radius: 16px !important;
-      overflow: hidden !important;
+# NOVO (V3.1): lista vertical com as 8 câmeras
+type: vertical-stack
+cards:
+  # ── Sala ─────────────────────────────────────────────────────────────────
+  - type: custom:stack-in-card
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+          backdrop-filter: blur(20px) saturate(1.35) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+          --ha-card-backdrop-filter: none !important;
+          --ha-card-background: transparent !important;
+          --ha-card-border-width: 0 !important;
+        }
+        ha-card::before { display: none !important; }
+    cards:
+      - type: picture-entity
+        entity: camera.sl_camera_2
+        camera_view: live
+        show_state: false
+        show_name: true
+        name: Sala
+        aspect_ratio: 16x9
 
-      --ha-card-backdrop-filter: none !important;
-      --ha-card-background: transparent !important;
-      --ha-card-border-width: 0 !important;
-    }
-    ha-card::before { display: none !important; }
-cards: !include ../grid-cards/bento_cameras.yaml
+  # ── Varanda ───────────────────────────────────────────────────────────────
+  - type: custom:stack-in-card
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+          backdrop-filter: blur(20px) saturate(1.35) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+          --ha-card-backdrop-filter: none !important;
+          --ha-card-background: transparent !important;
+          --ha-card-border-width: 0 !important;
+        }
+        ha-card::before { display: none !important; }
+    cards:
+      - type: picture-entity
+        entity: camera.vr_camera_2
+        camera_view: live
+        show_state: false
+        show_name: true
+        name: Varanda
+        aspect_ratio: 16x9
+
+  # ── Cozinha ───────────────────────────────────────────────────────────────
+  - type: custom:stack-in-card
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+          backdrop-filter: blur(20px) saturate(1.35) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+          --ha-card-backdrop-filter: none !important;
+          --ha-card-background: transparent !important;
+          --ha-card-border-width: 0 !important;
+        }
+        ha-card::before { display: none !important; }
+    cards:
+      - type: picture-entity
+        entity: camera.cz_camera_2
+        camera_view: live
+        show_state: false
+        show_name: true
+        name: Cozinha
+        aspect_ratio: 16x9
+
+  # ── Área de Serviço ───────────────────────────────────────────────────────
+  - type: custom:stack-in-card
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+          backdrop-filter: blur(20px) saturate(1.35) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+          --ha-card-backdrop-filter: none !important;
+          --ha-card-background: transparent !important;
+          --ha-card-border-width: 0 !important;
+        }
+        ha-card::before { display: none !important; }
+    cards:
+      - type: picture-entity
+        entity: camera.as_camera_2
+        camera_view: live
+        show_state: false
+        show_name: true
+        name: Área de Serviço
+        aspect_ratio: 16x9
+
+  # ── Office ────────────────────────────────────────────────────────────────
+  - type: custom:stack-in-card
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+          backdrop-filter: blur(20px) saturate(1.35) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+          --ha-card-backdrop-filter: none !important;
+          --ha-card-background: transparent !important;
+          --ha-card-border-width: 0 !important;
+        }
+        ha-card::before { display: none !important; }
+    cards:
+      - type: picture-entity
+        entity: camera.of_camera_2
+        camera_view: live
+        show_state: false
+        show_name: true
+        name: Office
+        aspect_ratio: 16x9
+
+  # ── Quarto Casal ──────────────────────────────────────────────────────────
+  - type: custom:stack-in-card
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+          backdrop-filter: blur(20px) saturate(1.35) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+          --ha-card-backdrop-filter: none !important;
+          --ha-card-background: transparent !important;
+          --ha-card-border-width: 0 !important;
+        }
+        ha-card::before { display: none !important; }
+    cards:
+      - type: picture-entity
+        entity: camera.camera_quarto_casal_2
+        camera_view: live
+        show_state: false
+        show_name: true
+        name: Quarto Casal
+        aspect_ratio: 16x9
+
+  # ── Quarto Miguel ─────────────────────────────────────────────────────────
+  - type: custom:stack-in-card
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+          backdrop-filter: blur(20px) saturate(1.35) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+          --ha-card-backdrop-filter: none !important;
+          --ha-card-background: transparent !important;
+          --ha-card-border-width: 0 !important;
+        }
+        ha-card::before { display: none !important; }
+    cards:
+      - type: picture-entity
+        entity: camera.qmi_camera_2
+        camera_view: live
+        show_state: false
+        show_name: true
+        name: Quarto Miguel
+        aspect_ratio: 16x9
+
+  # ── Quarto Marina ─────────────────────────────────────────────────────────
+  - type: custom:stack-in-card
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: 16px !important;
+          overflow: hidden !important;
+          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+          backdrop-filter: blur(20px) saturate(1.35) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+          --ha-card-backdrop-filter: none !important;
+          --ha-card-background: transparent !important;
+          --ha-card-border-width: 0 !important;
+        }
+        ha-card::before { display: none !important; }
+    cards:
+      - type: picture-entity
+        entity: camera.qma_camera_2
+        camera_view: live
+        show_state: false
+        show_name: true
+        name: Quarto Marina
+        aspect_ratio: 16x9

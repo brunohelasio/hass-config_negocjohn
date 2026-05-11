@@ -27,6 +27,8 @@ card_mod:
       -webkit-overflow-scrolling: touch !important;
       scrollbar-width: none !important;
       scroll-snap-type: x mandatory !important;
+      /* scroll-padding garante que o snap leve em conta o padding lateral do layout-card */
+      scroll-padding-left: 14px !important;
       padding: 0 !important;
       display: block !important;
     }

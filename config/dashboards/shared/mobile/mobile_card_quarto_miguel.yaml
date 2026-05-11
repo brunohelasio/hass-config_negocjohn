@@ -11,9 +11,6 @@ card_mod:
       height: 100% !important;
       margin: 0 !important;
       display: block !important;
-      scroll-snap-align: start !important;
-      min-width: calc(50vw - 22px) !important;
-      width: calc(50vw - 22px) !important;
     }
     ha-card {
       height: 100% !important;

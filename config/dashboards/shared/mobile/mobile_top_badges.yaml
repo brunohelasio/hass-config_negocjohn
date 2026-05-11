@@ -1,347 +1,61 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# mobile_top_badges.yaml  (V3 — revisão 2026-05-10)
+# mobile_top_badges.yaml  (V3) — barra de badges com scroll horizontal real
+# Criado: 2026-05-10
 #
-# ABORDAGEM ANTERIOR: incluía bento_top_badges.yaml via mod-card + hack de
-# Shadow DOM (hui-card$ selector) para forçar min-width: max-content no
-# hui-grid-layout interno. O selector não alcançava o elemento correto
-# (layout-card usa hui-layout-card, não hui-card), causando vazamento de
-# min-width: max-content para o container pai da view → scroll horizontal
-# global em toda a página.
+# Reusa o conteudo original de views/main-grid/bento_top_badges.yaml — esse
+# arquivo tem `view_layout: grid-area: top_badges` no topo, que e ignorado
+# em silencio quando usado fora do main grid (parent nao e custom:grid-layout).
 #
-# ABORDAGEM NOVA: container próprio com custom:layout-card direto.
-# grid-auto-flow: column + grid-auto-columns: max-content → badges ficam em
-# linha horizontal com largura natural. overflow-x: auto no ha-card externo
-# garante scroll interno sem vazar para a view.
-#
-# Rollback: comentar o bloco NOVO e descomentar o bloco ANTERIOR abaixo.
+# O ponto-chave: o bento_top_badges interno e um custom:layout-card cuja
+# coluna 5 e `minmax(0, 1fr)` — isso faz o conteudo se contrair na largura
+# disponivel em vez de transbordar. Para forcar overflow no mobile, usamos
+# card_mod profundo para neutralizar a coluna 1fr e fixar min-width:max-content
+# no hui-grid-layout interno, criando overflow-x real.
 # ══════════════════════════════════════════════════════════════════════════════
 
-# ── NOVO (2026-05-10) ────────────────────────────────────────────────────────
 type: custom:mod-card
 card_mod:
-  style: |
-    :host {
-      display: block !important;
-      width: 100% !important;
-      max-width: 100% !important;
-    }
-    ha-card {
-      overflow-x: auto !important;
-      overflow-y: visible !important;
-      -webkit-overflow-scrolling: touch !important;
-      scrollbar-width: none !important;
-      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
-      border: 1px solid rgba(255,255,255,0.10) !important;
-      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
-      backdrop-filter: blur(20px) saturate(1.35) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-      border-radius: 16px !important;
-      padding: 0 !important;
-    }
-    ha-card::-webkit-scrollbar { display: none !important; }
-card:
-  type: custom:layout-card
-  layout_type: custom:grid-layout
-  layout:
-    grid-auto-flow: column
-    grid-auto-columns: max-content
-    align-items: center
-    gap: 6px
-    margin: 0
-    padding: 10px 12px
-  card_mod:
-    style: |
+  style:
+    .: |
+      :host {
+        display: block !important;
+        width: 100% !important;
+        overflow: hidden !important;
+      }
       ha-card {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        overflow: visible !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        padding: 0 !important;
       }
-  cards:
-    # ── Badge Security ──────────────────────────────────────────────────────
-    - type: custom:button-card
-      entity: lock.nuki_neklanka_byt_lock
-      show_icon: true
-      show_name: false
-      show_state: false
-      show_label: true
-      icon: mdi:shield-lock
-      label: >
-        [[[
-          const s = entity?.state;
-          return s === 'locked' ? 'Locked' : s === 'unlocked' ? 'Unlocked' : 'Security';
-        ]]]
-      tap_action:
-        action: more-info
-      styles:
-        card:
-          - background: >
-              [[[
-                return entity?.state === 'unlocked'
-                  ? 'rgba(239,68,68,0.18)'
-                  : 'rgba(255,255,255,0.07)';
-              ]]]
-          - border: >
-              [[[
-                return entity?.state === 'unlocked'
-                  ? '1px solid rgba(239,68,68,0.35)'
-                  : '1px solid rgba(255,255,255,0.12)';
-              ]]]
-          - border-radius: 999px
-          - box-shadow: none
-          - padding: 5px 10px 5px 7px
-          - height: 30px
-        grid:
-          - grid-template-areas: '"i l"'
-          - grid-template-columns: 16px auto
-          - column-gap: 5px
-          - align-items: center
-        img_cell:
-          - width: 16px
-          - justify-content: center
-        icon:
-          - width: 14px
-          - color: >
-              [[[
-                return entity?.state === 'unlocked' ? '#ef4444' : '#7ec8ff';
-              ]]]
-        label:
-          - font-size: 12px
-          - font-weight: 500
-          - color: rgba(255,255,255,0.82)
-          - white-space: nowrap
-
-    # ── Badge Lights ────────────────────────────────────────────────────────
-    - type: custom:button-card
-      entity: light.grupo_luzes_sala
-      show_icon: true
-      show_name: false
-      show_state: false
-      show_label: true
-      icon: mdi:lightbulb-on
-      triggers_update:
-        - light.grupo_luzes_sala
-        - light.grupo_luzes_quarto_casal
-        - light.grupo_luzes_quarto_marina
-        - light.grupo_luzes_quarto_miguel
-        - light.corredor_switch_1
-        - sensor.time
-      label: >
-        [[[
-          const groups = [
-            'light.grupo_luzes_sala',
-            'light.grupo_luzes_quarto_casal',
-            'light.grupo_luzes_quarto_marina',
-            'light.grupo_luzes_quarto_miguel',
-            'light.corredor_switch_1',
-          ];
-          const on = groups.filter(id => states[id]?.state === 'on').length;
-          return on > 0 ? `Lights ${on} On` : 'Lights Off';
-        ]]]
-      tap_action:
-        action: navigate
-        navigation_path: /ngocjohn-main/mobile-comodos
-      styles:
-        card:
-          - background: >
-              [[[
-                const groups = ['light.grupo_luzes_sala','light.grupo_luzes_quarto_casal','light.grupo_luzes_quarto_marina','light.grupo_luzes_quarto_miguel','light.corredor_switch_1'];
-                const on = groups.filter(id => states[id]?.state === 'on').length;
-                return on > 0 ? 'rgba(250,191,64,0.18)' : 'rgba(255,255,255,0.07)';
-              ]]]
-          - border: >
-              [[[
-                const groups = ['light.grupo_luzes_sala','light.grupo_luzes_quarto_casal','light.grupo_luzes_quarto_marina','light.grupo_luzes_quarto_miguel','light.corredor_switch_1'];
-                const on = groups.filter(id => states[id]?.state === 'on').length;
-                return on > 0 ? '1px solid rgba(250,191,64,0.35)' : '1px solid rgba(255,255,255,0.12)';
-              ]]]
-          - border-radius: 999px
-          - box-shadow: none
-          - padding: 5px 10px 5px 7px
-          - height: 30px
-        grid:
-          - grid-template-areas: '"i l"'
-          - grid-template-columns: 16px auto
-          - column-gap: 5px
-          - align-items: center
-        img_cell:
-          - width: 16px
-          - justify-content: center
-        icon:
-          - width: 14px
-          - color: >
-              [[[
-                const groups = ['light.grupo_luzes_sala','light.grupo_luzes_quarto_casal','light.grupo_luzes_quarto_marina','light.grupo_luzes_quarto_miguel','light.corredor_switch_1'];
-                const on = groups.filter(id => states[id]?.state === 'on').length;
-                return on > 0 ? '#fbbf40' : 'rgba(255,255,255,0.38)';
-              ]]]
-        label:
-          - font-size: 12px
-          - font-weight: 500
-          - color: rgba(255,255,255,0.82)
-          - white-space: nowrap
-
-    # ── Badge Media ─────────────────────────────────────────────────────────
-    - type: custom:button-card
-      entity: media_player.android_tv_192_168_3_17
-      show_icon: true
-      show_name: false
-      show_state: false
-      show_label: true
-      icon: mdi:play-circle
-      triggers_update:
-        - media_player.android_tv_192_168_3_17
-        - media_player.spotifyplus_bruno_helasio
-        - media_player.echo_show
-      label: >
-        [[[
-          const active = ['playing','on','paused'].includes(states['media_player.android_tv_192_168_3_17']?.state)
-            || ['playing','paused'].includes(states['media_player.spotifyplus_bruno_helasio']?.state)
-            || ['playing','on'].includes(states['media_player.echo_show']?.state);
-          return active ? 'Playing' : 'All Off';
-        ]]]
-      tap_action:
-        action: navigate
-        navigation_path: /ngocjohn-main/mobile-midia
-      styles:
-        card:
-          - background: >
-              [[[
-                const active = ['playing','on','paused'].includes(states['media_player.android_tv_192_168_3_17']?.state)
-                  || ['playing','paused'].includes(states['media_player.spotifyplus_bruno_helasio']?.state)
-                  || ['playing','on'].includes(states['media_player.echo_show']?.state);
-                return active ? 'rgba(139,92,246,0.18)' : 'rgba(255,255,255,0.07)';
-              ]]]
-          - border: >
-              [[[
-                const active = ['playing','on','paused'].includes(states['media_player.android_tv_192_168_3_17']?.state)
-                  || ['playing','paused'].includes(states['media_player.spotifyplus_bruno_helasio']?.state)
-                  || ['playing','on'].includes(states['media_player.echo_show']?.state);
-                return active ? '1px solid rgba(139,92,246,0.35)' : '1px solid rgba(255,255,255,0.12)';
-              ]]]
-          - border-radius: 999px
-          - box-shadow: none
-          - padding: 5px 10px 5px 7px
-          - height: 30px
-        grid:
-          - grid-template-areas: '"i l"'
-          - grid-template-columns: 16px auto
-          - column-gap: 5px
-          - align-items: center
-        img_cell:
-          - width: 16px
-          - justify-content: center
-        icon:
-          - width: 14px
-          - color: >
-              [[[
-                const active = ['playing','on','paused'].includes(states['media_player.android_tv_192_168_3_17']?.state)
-                  || ['playing','paused'].includes(states['media_player.spotifyplus_bruno_helasio']?.state)
-                  || ['playing','on'].includes(states['media_player.echo_show']?.state);
-                return active ? '#a78bfa' : 'rgba(255,255,255,0.38)';
-              ]]]
-        label:
-          - font-size: 12px
-          - font-weight: 500
-          - color: rgba(255,255,255,0.82)
-          - white-space: nowrap
-
-    # ── Badge Climate ───────────────────────────────────────────────────────
-    - type: custom:button-card
-      entity: climate.sl_ar_condicionado
-      show_icon: true
-      show_name: false
-      show_state: false
-      show_label: true
-      icon: mdi:snowflake
-      triggers_update:
-        - climate.sl_ar_condicionado
-        - climate.ac_office
-        - climate.ac_quarto_miguel
-      label: >
-        [[[
-          const acs = ['climate.sl_ar_condicionado','climate.ac_office','climate.ac_quarto_miguel'];
-          const activeStates = ['cool','heat','fan_only','dry','heat_cool','auto'];
-          const on = acs.filter(id => activeStates.includes(states[id]?.state)).length;
-          return on > 0 ? `Climate ${on} On` : 'Climate Off';
-        ]]]
-      tap_action:
-        action: more-info
-      styles:
-        card:
-          - background: >
-              [[[
-                const acs = ['climate.sl_ar_condicionado','climate.ac_office','climate.ac_quarto_miguel'];
-                const activeStates = ['cool','heat','fan_only','dry','heat_cool','auto'];
-                const on = acs.filter(id => activeStates.includes(states[id]?.state)).length;
-                return on > 0 ? 'rgba(79,172,254,0.18)' : 'rgba(255,255,255,0.07)';
-              ]]]
-          - border: >
-              [[[
-                const acs = ['climate.sl_ar_condicionado','climate.ac_office','climate.ac_quarto_miguel'];
-                const activeStates = ['cool','heat','fan_only','dry','heat_cool','auto'];
-                const on = acs.filter(id => activeStates.includes(states[id]?.state)).length;
-                return on > 0 ? '1px solid rgba(79,172,254,0.35)' : '1px solid rgba(255,255,255,0.12)';
-              ]]]
-          - border-radius: 999px
-          - box-shadow: none
-          - padding: 5px 10px 5px 7px
-          - height: 30px
-        grid:
-          - grid-template-areas: '"i l"'
-          - grid-template-columns: 16px auto
-          - column-gap: 5px
-          - align-items: center
-        img_cell:
-          - width: 16px
-          - justify-content: center
-        icon:
-          - width: 14px
-          - color: >
-              [[[
-                const acs = ['climate.sl_ar_condicionado','climate.ac_office','climate.ac_quarto_miguel'];
-                const activeStates = ['cool','heat','fan_only','dry','heat_cool','auto'];
-                const on = acs.filter(id => activeStates.includes(states[id]?.state)).length;
-                return on > 0 ? '#4facfe' : 'rgba(255,255,255,0.38)';
-              ]]]
-        label:
-          - font-size: 12px
-          - font-weight: 500
-          - color: rgba(255,255,255,0.82)
-          - white-space: nowrap
-
-# ── ANTERIOR (rollback rápido) ───────────────────────────────────────────────
-# Descomente o bloco abaixo e comente o bloco NOVO acima para restaurar.
-#
-# type: custom:mod-card
-# card_mod:
-#   style:
-#     .: |
-#       :host {
-#         display: block !important;
-#         width: 100% !important;
-#         overflow: hidden !important;
-#       }
-#       ha-card {
-#         background: transparent !important;
-#         border: none !important;
-#         box-shadow: none !important;
-#         overflow-x: auto !important;
-#         overflow-y: visible !important;
-#         -webkit-overflow-scrolling: touch !important;
-#         scrollbar-width: none !important;
-#         padding: 0 !important;
-#       }
-#       ha-card::-webkit-scrollbar {
-#         display: none !important;
-#       }
-#     hui-card$: |
-#       hui-grid-layout {
-#         min-width: max-content !important;
-#         width: max-content !important;
-#       }
-#       hui-grid-layout::part(container),
-#       hui-grid-layout > * {
-#         min-width: max-content !important;
-#       }
-# card: !include ../../views/main-grid/bento_top_badges.yaml
+      ha-card::-webkit-scrollbar {
+        display: none !important;
+      }
+    # Forca o conteudo interno a transbordar horizontalmente:
+    # neutraliza o `1fr` da coluna do bento_top_badges e empurra o grid
+    # para `max-content`, criando overflow scroll.
+    # ANTERIOR (errado): hui-card$ — custom:layout-card renderiza como
+    # hui-layout-card, nao hui-card. Seletor nao alcancava o elemento certo.
+    # hui-card$: |
+    #   hui-grid-layout {
+    #     min-width: max-content !important;
+    #     width: max-content !important;
+    #   }
+    #   hui-grid-layout::part(container),
+    #   hui-grid-layout > * {
+    #     min-width: max-content !important;
+    #   }
+    hui-layout-card$: |
+      hui-grid-layout {
+        min-width: max-content !important;
+        width: max-content !important;
+      }
+      hui-grid-layout::part(container),
+      hui-grid-layout > * {
+        min-width: max-content !important;
+      }
+card: !include ../../views/main-grid/bento_top_badges.yaml

@@ -3,10 +3,8 @@
 # Criado: 2026-05-10 — Mobile V3
 #
 # Pill navbar fixa para o dashboard mobile (5 abas).
-# Slug do dashboard confirmado pelo usuario: "ngocjohn-main" → navigation_path
-# usa /ngocjohn-main/<path>.
-# CORRECAO 2026-05-10: slug estava hardcoded como "lovelace" — corrigido para
-# "ngocjohn-main" conforme URL real do dashboard.
+# Slug do dashboard confirmado pelo usuario: "lovelace" → navigation_path
+# usa /lovelace/<path>.
 #
 # REGRA DE OURO: arquivo NOVO (aditivo). Versao V2 antiga em
 #   shared/mobile-pill-nav.yaml permanece intacta como rollback.

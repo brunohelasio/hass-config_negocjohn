@@ -5,10 +5,7 @@
 # Estrutura: badges (scroll horiz) → hero compacto → Sala → rail comodos
 #            → quick actions → pill navbar (fixed).
 #
-# Slug do dashboard confirmado: "ngocjohn-main" → URL: /ngocjohn-main/mobile-casa
-# CORRECAO 2026-05-10: slug corrigido + overflow-x: hidden na view para
-# eliminar scroll lateral global (causado por min-width: max-content vazando
-# do mobile_top_badges para o container pai).
+# Slug do dashboard confirmado: "lovelace" → URL: /lovelace/mobile-casa
 #
 # REGRA DE OURO: arquivo NOVO. Nada do views/main.yaml ou main-grid foi
 # alterado. Rollback: comentar !include em ui-lovelace-main.yaml.
@@ -32,7 +29,10 @@ card_mod:
 layout:
   margin: 0
   padding: 14px 14px calc(96px + env(safe-area-inset-bottom, 0px)) 14px
-  grid-template-columns: 1fr
+  # ANTERIOR: grid-template-columns: 1fr
+  # 1fr = minmax(auto,1fr) — min-content de filhos pode expandir a coluna.
+  # minmax(0,1fr) forca o minimo a zero, contendo qualquer overflow horizontal.
+  grid-template-columns: minmax(0, 1fr)
   grid-auto-rows: min-content
   grid-gap: 10px
 

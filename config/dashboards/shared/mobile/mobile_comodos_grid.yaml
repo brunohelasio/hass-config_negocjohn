@@ -14,6 +14,10 @@ layout:
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr)
   grid-auto-rows: 158px
   gap: 10px
+  # align-items/justify-items: stretch garante que cada card preencha
+  # toda a célula do grid (sem desalinhamento esquerdo/direito).
+  align-items: stretch
+  justify-items: stretch
   margin: 0
   padding: 0
 card_mod:

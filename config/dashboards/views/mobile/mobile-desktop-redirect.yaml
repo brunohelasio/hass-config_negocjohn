@@ -1,0 +1,68 @@
+##################################################
+#                                                #
+#    DESKTOP REVERSE-REDIRECT (V3 — 2026-05-11)  #
+#                                                #
+#  Card invisível que detecta largura >= 801px   #
+#  (tablet/desktop) dentro de uma view mobile    #
+#  e redireciona de volta para /slug/bento-lab.  #
+#                                                #
+#  Usado por: mobile-casa.yaml (e outras views   #
+#  mobile se necessário).                        #
+#                                                #
+#  Flag __negocjohn_desktop_redirected evita     #
+#  loop infinito com o zz-mobile-redirect.yaml.  #
+#                                                #
+#  Rollback: comentar !include deste arquivo     #
+#  nas views mobile que o referenciam.           #
+##################################################
+
+- type: custom:button-card
+  show_icon: false
+  show_state: false
+  show_label: false
+  show_name: true
+  name: |
+    [[[
+      try {
+        var path = location.pathname || '';
+        var isDesktop = window.matchMedia('(min-width: 801px)').matches;
+        var onMobile = path.indexOf('/mobile-') !== -1;
+        var alreadyRedirected = window.__negocjohn_desktop_redirected === true;
+        if (isDesktop && onMobile && !alreadyRedirected) {
+          window.__negocjohn_desktop_redirected = true;
+          var parts = path.split('/').filter(function(s){ return s.length > 0; });
+          var slug = parts[0] || 'ngocjohn-main';
+          location.replace('/' + slug + '/bento-lab');
+        }
+      } catch (e) {
+        // Silencioso: nunca quebra o card.
+      }
+      return '';
+    ]]]
+  tap_action:
+    action: none
+  hold_action:
+    action: none
+  card_mod:
+    style: |
+      :host {
+        position: fixed !important;
+        top: -9999px !important;
+        left: -9999px !important;
+        width: 1px !important;
+        height: 1px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -1 !important;
+      }
+      ha-card {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 1px !important;
+        height: 1px !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+      }

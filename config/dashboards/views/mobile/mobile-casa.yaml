@@ -37,6 +37,13 @@ layout:
   grid-gap: 10px
 
 cards:
+  # ── 0) Reverse redirect — envia desktop/tablet de volta para bento-lab ───
+  # Se largura >= 801px (tablet landscape / desktop) e a sessão do HA
+  # tiver persistido a view mobile como última visitada, este card redireciona
+  # de volta para /slug/bento-lab silenciosamente.
+  # Flag __negocjohn_desktop_redirected evita loop com zz-mobile-redirect.
+  - !include ../mobile/mobile-desktop-redirect.yaml
+
   # ── 1) Badges (scroll horizontal) ───────────────────────────────────────
   - !include ../../shared/mobile/mobile_top_badges.yaml
 

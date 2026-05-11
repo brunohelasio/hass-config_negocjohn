@@ -48,7 +48,10 @@ card_mod:
     ha-card::before { display: none !important; }
 
 # NOVO (V3.1): usa o hero autónomo, sem a strip de actions
-cards: !include mobile_sala_hero.yaml
+# CORREÇÃO V3.2: "cards: !include" inclui dict → card_mod interpreta como mapa
+# e não como lista. A sintaxe "cards:\n  - !include" garante lista de 1 item.
+cards:
+  - !include mobile_sala_hero.yaml
 
 # --- CÓDIGO ORIGINAL COMENTADO (V3.0 — bento_sala.yaml completo, rollback rápido) ---
 # O hero ficava com ≈6px de altura porque o bento_sala.yaml tem row "auto" de ≈152px.

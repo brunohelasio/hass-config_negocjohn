@@ -51,11 +51,11 @@ layout:
         "quick_actions"
 
 cards:
-  # DESATIVADO 2026-05-11 — redirect automático causava abertura do modo mobile
-  # em sessões de desktop/tablet (HA persiste a última view visitada e não há
-  # redirect reverso na view mobile-casa).
-  # Rollback: descomentar a linha abaixo.
-  # - !include main-grid/zz-mobile-redirect.yaml
+  # Redirect mobile: detecta largura <= 800px e vai para /slug/mobile-casa.
+  # REATIVADO 2026-05-11 — agora há reverse-redirect em mobile-casa.yaml
+  # que envia sessões de desktop/tablet de volta para bento-lab se necessário.
+  # Para desativar: comentar a linha abaixo.
+  - !include main-grid/zz-mobile-redirect.yaml
   - !include main-grid/bento_sidebar.yaml
   - !include main-grid/bento_top_badges.yaml
   - !include main-grid/bento_welcome.yaml

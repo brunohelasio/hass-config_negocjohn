@@ -319,7 +319,7 @@
           show_state: false
           show_label: true
           template:
-            - icon_light_recessed
+            - icon_ledstrip
           name: "Corredor"
           variables:
             state: >
@@ -348,7 +348,9 @@
               #     [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
               # FALLBACK: altura original antes da redistribuição sem PS5.
               # - height: 36px
-              - height: 48px
+              # AJUSTE v2: 48px testado inicialmente; 52px aproveita o respiro inferior.
+              # - height: 48px
+              - height: 52px
               - border-radius: 14px
               - background: >
                   [[[
@@ -378,8 +380,10 @@
               # - column-gap: "8px"
               - grid-template-areas: '"icon n l"'
               - grid-template-columns: "42px 1fr auto"
+              - grid-template-rows: 1fr
               - column-gap: "9px"
-              - align-items: "center"
+              - align-items: center
+              - height: 100%
             # FALLBACK: estilos do img_cell/icon MDI original.
             # img_cell:
             #   - width: "18px"
@@ -400,15 +404,22 @@
                 - margin-top: 0
                 - align-self: center
                 - justify-self: center
+                - display: flex
+                - align-items: center
+                - justify-content: center
             name:
               - font-size: "12px"
               - font-weight: "600"
               - justify-self: start
+              - align-self: center
+              - line-height: 1
               - color: >
                   [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
             label:
               - font-size: "11px"
               - justify-self: end
+              - align-self: center
+              - line-height: 1
               - color: >
                   [[[
                     const on = entity?.state === 'on';
@@ -460,7 +471,9 @@
               #     [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
               # FALLBACK: altura original antes da redistribuição sem PS5.
               # - height: 36px
-              - height: 48px
+              # AJUSTE v2: 48px testado inicialmente; 52px aproveita o respiro inferior.
+              # - height: 48px
+              - height: 52px
               - border-radius: 14px
               - background: >
                   [[[
@@ -494,8 +507,10 @@
               # - column-gap: "8px"
               - grid-template-areas: '"icon n l"'
               - grid-template-columns: "42px 1fr auto"
+              - grid-template-rows: 1fr
               - column-gap: "9px"
-              - align-items: "center"
+              - align-items: center
+              - height: 100%
             # FALLBACK: estilos do img_cell/icon MDI original.
             # img_cell:
             #   - width: "18px"
@@ -516,15 +531,22 @@
                 - margin-top: 0
                 - align-self: center
                 - justify-self: center
+                - display: flex
+                - align-items: center
+                - justify-content: center
             name:
               - font-size: "12px"
               - font-weight: "600"
               - justify-self: start
+              - align-self: center
+              - line-height: 1
               - color: >
                   [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
             label:
               - font-size: "11px"
               - justify-self: end
+              - align-self: center
+              - line-height: 1
               - color: >
                   [[[
                     const on = ['on','playing','paused','idle'].includes(entity?.state);
@@ -585,7 +607,9 @@
               #     [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.09)'; ]]]
               # FALLBACK: altura original antes da redistribuição sem PS5.
               # - height: 36px
-              - height: 48px
+              # AJUSTE v2: 48px testado inicialmente; 52px aproveita o respiro inferior.
+              # - height: 48px
+              - height: 52px
               - border-radius: 14px
               - background: >
                   [[[
@@ -615,8 +639,10 @@
               # - column-gap: "8px"
               - grid-template-areas: '"icon n l"'
               - grid-template-columns: "42px 1fr auto"
+              - grid-template-rows: 1fr
               - column-gap: "9px"
-              - align-items: "center"
+              - align-items: center
+              - height: 100%
             # FALLBACK: estilos do img_cell/icon MDI original.
             # img_cell:
             #   - width: "18px"
@@ -637,15 +663,22 @@
                 - margin-top: 0
                 - align-self: center
                 - justify-self: center
+                - display: flex
+                - align-items: center
+                - justify-content: center
             name:
               - font-size: "12px"
               - font-weight: "600"
               - justify-self: start
+              - align-self: center
+              - line-height: 1
               - color: >
                   [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
             label:
               - font-size: "11px"
               - justify-self: end
+              - align-self: center
+              - line-height: 1
               - color: >
                   [[[
                     const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);

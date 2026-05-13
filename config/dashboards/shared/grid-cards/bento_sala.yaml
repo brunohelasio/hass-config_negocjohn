@@ -319,7 +319,11 @@
           show_state: false
           show_label: true
           template:
+            # FALLBACK: remover base volta ao uso isolado do SVG, mas perde .light-color/estado branco.
+            - base
             - icon_ledstrip
+          # FALLBACK: base herda aspect_ratio 1/1; false mantém a pílula horizontal.
+          aspect_ratio: false
           name: "Corredor"
           variables:
             state: >
@@ -328,6 +332,7 @@
               [[[ return entity?.state === 'on'; ]]]
             timeout: >
               [[[ return entity?.last_changed ? Date.now() - Date.parse(entity.last_changed) : 999999; ]]]
+            tilt_enable: false
           label: >
             [[[
               return entity?.state === 'on' ? 'Ligado' : 'Desligado';
@@ -356,7 +361,7 @@
                   [[[
                     const on = entity?.state === 'on';
                     const sOn = states['light.grupo_luzes_sala']?.state === 'on';
-                    if (on) return 'linear-gradient(180deg, rgba(96,165,250,0.22) 0%, rgba(96,165,250,0.10) 100%)';
+                    if (on) return 'rgba(250, 250, 250, 0.75)';
                     return sOn ? 'linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)';
                   ]]]
               - border: >
@@ -373,6 +378,7 @@
               - padding: 0 11px
               - margin: 1px 0
               - box-sizing: border-box
+              - aspect-ratio: auto
             grid:
               # FALLBACK: grid original com ícone MDI em "i".
               # - grid-template-areas: '"i n l"'
@@ -414,7 +420,11 @@
               - align-self: center
               - line-height: 1
               - color: >
-                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
+                  [[[
+                    const on = entity?.state === 'on';
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    return (on || sOn) ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)';
+                  ]]]
             label:
               - font-size: "11px"
               - justify-self: end
@@ -438,7 +448,11 @@
           show_state: false
           show_label: true
           template:
+            # FALLBACK: remover base volta ao uso isolado do SVG, mas perde estilo ON/OFF do template.
+            - base
             - icon_tv
+          # FALLBACK: base herda aspect_ratio 1/1; false mantém a pílula horizontal.
+          aspect_ratio: false
           name: "TV"
           variables:
             state: >
@@ -447,6 +461,7 @@
               [[[ return ['on','playing','paused','idle'].includes(entity?.state); ]]]
             timeout: >
               [[[ return entity?.last_changed ? Date.now() - Date.parse(entity.last_changed) : 999999; ]]]
+            tilt_enable: false
           label: >
             [[[
               const s = entity?.state;
@@ -479,7 +494,7 @@
                   [[[
                     const on = ['on','playing','paused','idle'].includes(entity?.state);
                     const sOn = states['light.grupo_luzes_sala']?.state === 'on';
-                    if (on) return 'linear-gradient(180deg, rgba(167,139,250,0.22) 0%, rgba(167,139,250,0.10) 100%)';
+                    if (on) return 'rgba(250, 250, 250, 0.75)';
                     return sOn ? 'linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)';
                   ]]]
               - border: >
@@ -496,6 +511,7 @@
               - padding: 0 11px
               - margin: 1px 0
               - box-sizing: border-box
+              - aspect-ratio: auto
               # FALLBACK: icon_tv adiciona background-image; manter desligado nesta pílula.
               - background-image: none
               - background-size: unset
@@ -541,7 +557,11 @@
               - align-self: center
               - line-height: 1
               - color: >
-                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
+                  [[[
+                    const on = ['on','playing','paused','idle'].includes(entity?.state);
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    return (on || sOn) ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)';
+                  ]]]
             label:
               - font-size: "11px"
               - justify-self: end
@@ -565,7 +585,11 @@
           show_state: false
           show_label: true
           template:
+            # FALLBACK: remover base volta ao uso isolado do SVG, mas perde estilo ON/OFF do template.
+            - base
             - icon_climate
+          # FALLBACK: base herda aspect_ratio 1/1; false mantém a pílula horizontal.
+          aspect_ratio: false
           name: "A/C"
           variables:
             state: >
@@ -574,6 +598,7 @@
               [[[ return ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state); ]]]
             timeout: >
               [[[ return entity?.last_changed ? Date.now() - Date.parse(entity.last_changed) : 999999; ]]]
+            tilt_enable: false
           label: >
             [[[
               const s = entity?.state;
@@ -615,7 +640,7 @@
                   [[[
                     const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
                     const sOn = states['light.grupo_luzes_sala']?.state === 'on';
-                    if (on) return 'linear-gradient(180deg, rgba(79,172,254,0.22) 0%, rgba(79,172,254,0.10) 100%)';
+                    if (on) return 'rgba(250, 250, 250, 0.75)';
                     return sOn ? 'linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%)' : 'linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%)';
                   ]]]
               - border: >
@@ -632,6 +657,7 @@
               - padding: 0 11px
               - margin: 1px 0
               - box-sizing: border-box
+              - aspect-ratio: auto
             grid:
               # FALLBACK: grid original com ícone MDI em "i".
               # - grid-template-areas: '"i n l"'
@@ -673,7 +699,11 @@
               - align-self: center
               - line-height: 1
               - color: >
-                  [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)'; ]]]
+                  [[[
+                    const on = ['cool','heat','fan_only','dry','heat_cool','auto'].includes(entity?.state);
+                    const sOn = states['light.grupo_luzes_sala']?.state === 'on';
+                    return (on || sOn) ? 'rgba(0,0,0,0.82)' : 'rgba(255,255,255,0.82)';
+                  ]]]
             label:
               - font-size: "11px"
               - justify-self: end

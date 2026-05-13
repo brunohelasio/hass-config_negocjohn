@@ -46,9 +46,9 @@
 # cards: !include ../../shared/grid-cards/bento_sidebar.yaml
 # --- FIM ESTRUTURA ANTERIOR ---
 
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 # NOVA ESTRUTURA 2026-05-09 (rev.3): custom:button-card raiz + custom_fields
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════════════════
 # Por que esta estrutura é diferente das anteriores:
 #   • NÃO depende de seletores frágeis de plugin (#root, hui-grid-layout)
 #   • NÃO depende do comportamento interno do custom:stack-in-card
@@ -69,9 +69,6 @@
 #
 # Conteúdo de shared/grid-cards/bento_sidebar.yaml não é mais incluído.
 # Aquele arquivo continua existindo no repo como fallback.
-#
-# 2026-05-13: YAML anchors/aliases removidos completamente.
-# Todos os botões são agora explícitos para evitar "undefined alias" no parser do HA.
 
 type: custom:button-card
 view_layout:
@@ -124,41 +121,52 @@ custom_fields:
     card:
       type: vertical-stack
       cards:
-        # ── home (seleção visual fixa do painel Bento) ──────────────
-        - type: custom:button-card
+        # ── home (anchor base — todos os outros botões fazem merge dele) ─
+        - &nav_btn
+          type: custom:button-card
+          entity: input_select.bento_sidebar_active
+          triggers_update:
+            - input_select.bento_sidebar_active
           show_icon: false
           show_name: false
           show_state: false
           tap_action:
-            action: none
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bento_sidebar_active
+              option: home
           hold_action: { action: none }
           variables:
             nav_key: home
-            force_active: true
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
           card_mod:
             style: |
               :host {
                 width: 42px !important;
                 display: block !important;
-                margin: 3px 0 !important;
+                margin: 3px auto !important;
               }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
+              /* 1. Sua ideia: Limpa o fundo do container interno do button-card */
+              ha-card.button-card-main {
+                background: transparent !important;
+                background-color: transparent !important;
+                box-shadow: none !important;
+                border: none !important;
+              }
+              /* 2. Mata o vidro fantasma injetado pelo tema VisionOS */
+              ha-card::before {
+                display: none !important;
+                content: none !important;
+              }
+              /* 3. Feedback visual ao clicar */
+              :host(:active) ha-card {
+                background: rgba(255,255,255,0.14) !important;
+                transition: background 0.12s ease;
               }
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
               ]]]
           styles:
             card:
@@ -168,31 +176,31 @@ custom_fields:
               - padding: 0
               - background: >
                   [[[
-                    return variables.force_active === true || entity?.state === variables.nav_key
+                    return entity?.state === variables.nav_key
                       ? 'rgba(255,255,255,0.12)'
                       : 'transparent';
                   ]]]
               - backdrop-filter: >
                   [[[
-                    return variables.force_active === true || entity?.state === variables.nav_key
+                    return entity?.state === variables.nav_key
                       ? 'blur(12px) saturate(1.15)'
                       : 'none';
                   ]]]
               - -webkit-backdrop-filter: >
                   [[[
-                    return variables.force_active === true || entity?.state === variables.nav_key
+                    return entity?.state === variables.nav_key
                       ? 'blur(12px) saturate(1.15)'
                       : 'none';
                   ]]]
               - border: >
                   [[[
-                    return variables.force_active === true || entity?.state === variables.nav_key
+                    return entity?.state === variables.nav_key
                       ? '1px solid rgba(255,255,255,0.18)'
-                      : 'none';
+                      : '1px solid transparent';
                   ]]]
               - box-shadow: >
                   [[[
-                    return variables.force_active === true || entity?.state === variables.nav_key
+                    return entity?.state === variables.nav_key
                       ? 'inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 10px rgba(0,0,0,0.20)'
                       : 'none';
                   ]]]
@@ -201,552 +209,153 @@ custom_fields:
               ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
             grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── música ──────────────────────────────────────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
+        - <<: *nav_btn
           tap_action:
-            action: navigate
-            navigation_path: /lovelace/mass-media
-          hold_action: { action: none }
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bento_sidebar_active
+              option: music
           variables:
             nav_key: music
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
               ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
-        # ── câmeras (popup 8 câmeras do apartamento) ────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
+        # ── segurança (popup câmeras) ───────────────────────────────
+        - <<: *nav_btn
           entity: input_select.bento_sidebar_action
           triggers_update:
             - input_select.bento_sidebar_action
           tap_action: !include ../../shared/popup/cameras_user.yaml
-          hold_action: { action: none }
           variables:
             nav_key: security
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7 16 12 23 17V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
               ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
-        # ── system ──────────────────────────────────────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
-          tap_action: !include ../../shared/popup/footer/footer_system.yaml
-          hold_action: { action: none }
-          variables:
-            nav_key: system
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
-          custom_fields:
-            ico: >
-              [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>';
-              ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
-        # ── vacuum (popup roborock) ──────────────────────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
-          tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
-          hold_action: { action: none }
-          variables:
-            nav_key: vacuum
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
-          custom_fields:
-            ico: >
-              [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8.56 2.75c4.37 6.03 6.02 9.42 8.03 17.72m2.54-15.38c-3.72 4.35-8.94 5.66-16.88 5.85m19.5 1.9c-3.5-.93-6.63-.82-8.94 0-2.58.92-5.01 2.86-7.44 6.32"/></svg>';
-              ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
-        # ── wifi ────────────────────────────────────────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
-          tap_action: !include ../../shared/popup/footer/footer_network.yaml
-          hold_action: { action: none }
-          variables:
-            nav_key: wifi
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
-          custom_fields:
-            ico: >
-              [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill="rgba(255,255,255,0.78)"/></svg>';
-              ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
-        # ── refresh ─────────────────────────────────────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
+        # ── atividade / radar ───────────────────────────────────────
+        - <<: *nav_btn
           tap_action:
             action: call-service
-            service: browser_mod.javascript
-            service_data:
-              code: location.reload()
-          hold_action: { action: none }
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bento_sidebar_active
+              option: activity
+          variables:
+            nav_key: activity
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>';
+              ]]]
+        # ── vacuum (popup roborock) ─────────────────────────────────
+        - <<: *nav_btn
+          entity: input_select.bento_sidebar_action
+          triggers_update:
+            - input_select.bento_sidebar_action
+          tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
+          variables:
+            nav_key: vacuum
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="3" x2="12" y2="5"/></svg>';
+              ]]]
+        # ── wifi ────────────────────────────────────────────────────
+        - <<: *nav_btn
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bento_sidebar_active
+              option: wifi
+          variables:
+            nav_key: wifi
+          custom_fields:
+            ico: >
+              [[[
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>';
+              ]]]
+        # ── refresh ─────────────────────────────────────────────────
+        - <<: *nav_btn
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bento_sidebar_active
+              option: refresh
           variables:
             nav_key: refresh
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
               ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
-        # ── updates ─────────────────────────────────────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
-          tap_action: !include ../../shared/popup/footer/footer_updates.yaml
-          hold_action: { action: none }
+        # ── download ────────────────────────────────────────────────
+        - <<: *nav_btn
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bento_sidebar_active
+              option: download
           variables:
-            nav_key: updates
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
+            nav_key: download
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
               ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
-        # ── planta 3D ───────────────────────────────────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
-          tap_action: !include ../../shared/popup/planta_3d.yaml
-          hold_action: { action: none }
+        # ── cubo ────────────────────────────────────────────────────
+        - <<: *nav_btn
+          tap_action:
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bento_sidebar_active
+              option: cube
           variables:
-            nav_key: floorplan_3d
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
+            nav_key: cube
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
               ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
   # ──────────────── GRUPO BOTTOM (2 ícones) ────────────────
   bottom:
     card:
       type: vertical-stack
       cards:
-        # ── monitor / overview reservado ─────────────────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
-          # Reservado para Overview. Não abre popup ainda para evitar adoção sem validação visual.
-          # Futura ação validada, se aprovada:
-          # tap_action: !include ../../shared/popup/footer/footer_overview.yaml
+        # ── monitor / dashboard ─────────────────────────────────────
+        - <<: *nav_btn
           tap_action:
-            action: none
-          hold_action: { action: none }
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bento_sidebar_active
+              option: monitor
           variables:
-            nav_key: overview_reserved
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
+            nav_key: monitor
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
               ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── power ───────────────────────────────────────────────────
-        - type: custom:button-card
-          show_icon: false
-          show_name: false
-          show_state: false
+        - <<: *nav_btn
           tap_action:
-            action: navigate
-            navigation_path: /
-          hold_action: { action: none }
+            action: call-service
+            service: input_select.select_option
+            data:
+              entity_id: input_select.bento_sidebar_active
+              option: power
           variables:
             nav_key: power
-          extra_styles: |
-            ha-card::before {
-              display: none !important;
-              content: none !important;
-              background: none !important;
-              backdrop-filter: none !important;
-              box-shadow: none !important;
-            }
-          card_mod:
-            style: |
-              :host {
-                width: 42px !important;
-                display: block !important;
-                margin: 3px 0 !important;
-              }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
-              }
-              :host(:active) ha-card {
-                background: rgba(255,255,255,0.14) !important;
-                transition: background 0.12s ease;
-              }
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>';
               ]]]
-          styles:
-            card:
-              - width: 42px
-              - height: 42px
-              - border-radius: 12px
-              - padding: 0
-              - background: transparent
-              - backdrop-filter: none
-              - -webkit-backdrop-filter: none
-              - border: none
-              - box-shadow: none
-              - transition: background 0.12s ease
-            custom_fields:
-              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
-            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]

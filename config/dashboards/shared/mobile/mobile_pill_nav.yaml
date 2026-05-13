@@ -32,6 +32,9 @@ card:
           left: 50% !important;
           transform: translateX(-50%) !important;
           width: min(380px, calc(100vw - 28px)) !important;
+          height: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+          min-height: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+          max-height: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
           z-index: 2147483647 !important;
           pointer-events: auto !important;
         }
@@ -42,15 +45,22 @@ card:
           background: rgba(8, 12, 22, 0.62) !important;
           border: 1px solid rgba(255,255,255,0.10) !important;
           box-shadow: 0 8px 32px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+          height: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+          min-height: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+          max-height: calc(62px + env(safe-area-inset-bottom, 0px)) !important;
+          box-sizing: border-box !important;
           padding: 6px 10px !important;
           padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)) !important;
-          overflow: visible !important;
+          overflow: hidden !important;
         }
       hui-horizontal-stack-card$: |
         #root {
           justify-content: space-around !important;
           gap: 0 !important;
           align-items: center !important;
+          height: 50px !important;
+          max-height: 50px !important;
+          overflow: hidden !important;
         }
   card:
     type: horizontal-stack
@@ -77,6 +87,9 @@ card:
             - border-radius: 9999px
             - border: none
             - box-shadow: none
+            - height: 50px
+            - max-height: 50px
+            - box-sizing: border-box
             - padding: 6px 10px
             - transition: background 0.2s ease
             - "--mdc-ripple-press-opacity": "0"
@@ -130,6 +143,9 @@ card:
             - border-radius: 9999px
             - border: none
             - box-shadow: none
+            - height: 50px
+            - max-height: 50px
+            - box-sizing: border-box
             - padding: 6px 10px
             - transition: background 0.2s ease
             - "--mdc-ripple-press-opacity": "0"
@@ -183,6 +199,9 @@ card:
             - border-radius: 9999px
             - border: none
             - box-shadow: none
+            - height: 50px
+            - max-height: 50px
+            - box-sizing: border-box
             - padding: 6px 10px
             - transition: background 0.2s ease
             - "--mdc-ripple-press-opacity": "0"
@@ -236,6 +255,9 @@ card:
             - border-radius: 9999px
             - border: none
             - box-shadow: none
+            - height: 50px
+            - max-height: 50px
+            - box-sizing: border-box
             - padding: 6px 10px
             - transition: background 0.2s ease
             - "--mdc-ripple-press-opacity": "0"
@@ -289,6 +311,9 @@ card:
             - border-radius: 9999px
             - border: none
             - box-shadow: none
+            - height: 50px
+            - max-height: 50px
+            - box-sizing: border-box
             - padding: 6px 10px
             - transition: background 0.2s ease
             - "--mdc-ripple-press-opacity": "0"

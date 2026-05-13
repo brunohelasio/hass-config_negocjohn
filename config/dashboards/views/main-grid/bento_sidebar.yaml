@@ -122,7 +122,7 @@ custom_fields:
       type: vertical-stack
       cards:
         # YAML anchors removidos 2026-05-13: o parser do Home Assistant acusou undefined alias nav_btn.
-        # Cada botão abaixo é explícito para preservar layout sem depender de alias.
+        # Todos os botões abaixo são explícitos (sem âncoras nem aliases) para preservar layout sem depender de alias.
         # ── home (seleção visual fixa do painel Bento) ──────────────────────────────────────────────────
         - type: custom:button-card
           show_icon: false
@@ -200,7 +200,10 @@ custom_fields:
               ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
             grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── música ──────────────────────────────────────────────────
-        - <<: *nav_btn
+        - type: custom:button-card
+          show_icon: false
+          show_name: false
+          show_state: false
           # --- CÓDIGO ANTERIOR COMENTADO (apenas marcava input_select) ---
           # tap_action:
           #   action: call-service
@@ -212,6 +215,7 @@ custom_fields:
           tap_action:
             action: navigate
             navigation_path: /lovelace/mass-media
+          hold_action: { action: none }
           variables:
             nav_key: music
           extra_styles: |
@@ -243,8 +247,26 @@ custom_fields:
               [[[
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
               ]]]
+          styles:
+            card:
+              - width: 42px
+              - height: 42px
+              - border-radius: 12px
+              - padding: 0
+              - background: transparent
+              - backdrop-filter: none
+              - -webkit-backdrop-filter: none
+              - border: none
+              - box-shadow: none
+              - transition: background 0.12s ease
+            custom_fields:
+              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
+            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── câmeras (popup 8 câmeras do apartamento) ────────────────
-        - <<: *nav_btn
+        - type: custom:button-card
+          show_icon: false
+          show_name: false
+          show_state: false
           entity: input_select.bento_sidebar_action
           triggers_update:
             - input_select.bento_sidebar_action
@@ -283,8 +305,26 @@ custom_fields:
                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/> */
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3.5"/><path d="M17.5 10.5h.01"/></svg>';
               ]]]
+          styles:
+            card:
+              - width: 42px
+              - height: 42px
+              - border-radius: 12px
+              - padding: 0
+              - background: transparent
+              - backdrop-filter: none
+              - -webkit-backdrop-filter: none
+              - border: none
+              - box-shadow: none
+              - transition: background 0.12s ease
+            custom_fields:
+              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
+            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── system ──────────────────────────────────────────────────
-        - <<: *nav_btn
+        - type: custom:button-card
+          show_icon: false
+          show_name: false
+          show_state: false
           # --- CÓDIGO ANTERIOR COMENTADO (activity/radar apenas marcava input_select) ---
           # tap_action:
           #   action: call-service
@@ -294,8 +334,33 @@ custom_fields:
           #     option: activity
           # --- FIM CÓDIGO ANTERIOR ---
           tap_action: !include ../../shared/popup/footer/footer_system.yaml
+          hold_action: { action: none }
           variables:
             nav_key: system
+          extra_styles: |
+            ha-card::before {
+              display: none !important;
+              content: none !important;
+              background: none !important;
+              backdrop-filter: none !important;
+              box-shadow: none !important;
+            }
+          card_mod:
+            style: |
+              :host {
+                width: 42px !important;
+                display: block !important;
+                margin: 3px 0 !important;
+              }
+              ha-card {
+                --ha-card-background: transparent !important;
+                --ha-card-border-width: 0 !important;
+                --ha-card-box-shadow: none !important;
+              }
+              :host(:active) ha-card {
+                background: rgba(255,255,255,0.14) !important;
+                transition: background 0.12s ease;
+              }
           custom_fields:
             ico: >
               [[[
@@ -355,7 +420,10 @@ custom_fields:
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="3" x2="12" y2="5"/></svg>';
               ]]]
         # ── wifi ────────────────────────────────────────────────────
-        - <<: *nav_btn
+        - type: custom:button-card
+          show_icon: false
+          show_name: false
+          show_state: false
           # --- CÓDIGO ANTERIOR COMENTADO (apenas marcava input_select) ---
           # tap_action:
           #   action: call-service
@@ -365,6 +433,7 @@ custom_fields:
           #     option: wifi
           # --- FIM CÓDIGO ANTERIOR ---
           tap_action: !include ../../shared/popup/footer/footer_network.yaml
+          hold_action: { action: none }
           variables:
             nav_key: wifi
           extra_styles: |
@@ -396,8 +465,26 @@ custom_fields:
               [[[
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>';
               ]]]
+          styles:
+            card:
+              - width: 42px
+              - height: 42px
+              - border-radius: 12px
+              - padding: 0
+              - background: transparent
+              - backdrop-filter: none
+              - -webkit-backdrop-filter: none
+              - border: none
+              - box-shadow: none
+              - transition: background 0.12s ease
+            custom_fields:
+              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
+            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── refresh ─────────────────────────────────────────────────
-        - <<: *nav_btn
+        - type: custom:button-card
+          show_icon: false
+          show_name: false
+          show_state: false
           # --- CÓDIGO ANTERIOR COMENTADO (apenas marcava input_select) ---
           # tap_action:
           #   action: call-service
@@ -411,6 +498,7 @@ custom_fields:
             service: browser_mod.javascript
             service_data:
               code: location.reload()
+          hold_action: { action: none }
           variables:
             nav_key: refresh
           extra_styles: |
@@ -442,8 +530,26 @@ custom_fields:
               [[[
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
               ]]]
+          styles:
+            card:
+              - width: 42px
+              - height: 42px
+              - border-radius: 12px
+              - padding: 0
+              - background: transparent
+              - backdrop-filter: none
+              - -webkit-backdrop-filter: none
+              - border: none
+              - box-shadow: none
+              - transition: background 0.12s ease
+            custom_fields:
+              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
+            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── updates ─────────────────────────────────────────────────
-        - <<: *nav_btn
+        - type: custom:button-card
+          show_icon: false
+          show_name: false
+          show_state: false
           # --- CÓDIGO ANTERIOR COMENTADO (download apenas marcava input_select) ---
           # tap_action:
           #   action: call-service
@@ -453,15 +559,58 @@ custom_fields:
           #     option: download
           # --- FIM CÓDIGO ANTERIOR ---
           tap_action: !include ../../shared/popup/footer/footer_updates.yaml
+          hold_action: { action: none }
           variables:
             nav_key: updates
+          extra_styles: |
+            ha-card::before {
+              display: none !important;
+              content: none !important;
+              background: none !important;
+              backdrop-filter: none !important;
+              box-shadow: none !important;
+            }
+          card_mod:
+            style: |
+              :host {
+                width: 42px !important;
+                display: block !important;
+                margin: 3px 0 !important;
+              }
+              ha-card {
+                --ha-card-background: transparent !important;
+                --ha-card-border-width: 0 !important;
+                --ha-card-box-shadow: none !important;
+              }
+              :host(:active) ha-card {
+                background: rgba(255,255,255,0.14) !important;
+                transition: background 0.12s ease;
+              }
           custom_fields:
             ico: >
               [[[
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
               ]]]
+          styles:
+            card:
+              - width: 42px
+              - height: 42px
+              - border-radius: 12px
+              - padding: 0
+              - background: transparent
+              - backdrop-filter: none
+              - -webkit-backdrop-filter: none
+              - border: none
+              - box-shadow: none
+              - transition: background 0.12s ease
+            custom_fields:
+              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
+            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── planta 3D ───────────────────────────────────────────────
-        - <<: *nav_btn
+        - type: custom:button-card
+          show_icon: false
+          show_name: false
+          show_state: false
           # --- CÓDIGO ANTERIOR COMENTADO (cube apenas marcava input_select) ---
           # tap_action:
           #   action: call-service
@@ -471,8 +620,33 @@ custom_fields:
           #     option: cube
           # --- FIM CÓDIGO ANTERIOR ---
           tap_action: !include ../../shared/popup/planta_3d.yaml
+          hold_action: { action: none }
           variables:
             nav_key: floorplan_3d
+          extra_styles: |
+            ha-card::before {
+              display: none !important;
+              content: none !important;
+              background: none !important;
+              backdrop-filter: none !important;
+              box-shadow: none !important;
+            }
+          card_mod:
+            style: |
+              :host {
+                width: 42px !important;
+                display: block !important;
+                margin: 3px 0 !important;
+              }
+              ha-card {
+                --ha-card-background: transparent !important;
+                --ha-card-border-width: 0 !important;
+                --ha-card-box-shadow: none !important;
+              }
+              :host(:active) ha-card {
+                background: rgba(255,255,255,0.14) !important;
+                transition: background 0.12s ease;
+              }
           custom_fields:
             ico: >
               [[[
@@ -500,7 +674,10 @@ custom_fields:
       type: vertical-stack
       cards:
         # ── monitor / overview reservado ─────────────────────────────
-        - <<: *nav_btn
+        - type: custom:button-card
+          show_icon: false
+          show_name: false
+          show_state: false
           # Reservado para Overview. Não abre popup ainda para evitar adoção sem validação visual.
           # Futura ação validada, se aprovada:
           # tap_action: !include ../../shared/popup/footer/footer_overview.yaml
@@ -514,15 +691,58 @@ custom_fields:
           # --- FIM CÓDIGO ANTERIOR ---
           tap_action:
             action: none
+          hold_action: { action: none }
           variables:
             nav_key: overview_reserved
+          extra_styles: |
+            ha-card::before {
+              display: none !important;
+              content: none !important;
+              background: none !important;
+              backdrop-filter: none !important;
+              box-shadow: none !important;
+            }
+          card_mod:
+            style: |
+              :host {
+                width: 42px !important;
+                display: block !important;
+                margin: 3px 0 !important;
+              }
+              ha-card {
+                --ha-card-background: transparent !important;
+                --ha-card-border-width: 0 !important;
+                --ha-card-box-shadow: none !important;
+              }
+              :host(:active) ha-card {
+                background: rgba(255,255,255,0.14) !important;
+                transition: background 0.12s ease;
+              }
           custom_fields:
             ico: >
               [[[
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
               ]]]
+          styles:
+            card:
+              - width: 42px
+              - height: 42px
+              - border-radius: 12px
+              - padding: 0
+              - background: transparent
+              - backdrop-filter: none
+              - -webkit-backdrop-filter: none
+              - border: none
+              - box-shadow: none
+              - transition: background 0.12s ease
+            custom_fields:
+              ico: [display: flex, align-items: center, justify-content: center, width: 100%, height: 100%]
+            grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── power ───────────────────────────────────────────────────
-        - <<: *nav_btn
+        - type: custom:button-card
+          show_icon: false
+          show_name: false
+          show_state: false
           # --- CÓDIGO ANTERIOR COMENTADO (apenas marcava input_select) ---
           # tap_action:
           #   action: call-service
@@ -534,6 +754,7 @@ custom_fields:
           tap_action:
             action: navigate
             navigation_path: /
+          hold_action: { action: none }
           variables:
             nav_key: power
           extra_styles: |

@@ -139,6 +139,7 @@ custom_fields:
           hold_action: { action: none }
           variables:
             nav_key: home
+            force_active: true
           extra_styles: |
             ha-card::before {
               display: none !important;
@@ -176,31 +177,31 @@ custom_fields:
               - padding: 0
               - background: >
                   [[[
-                    return entity?.state === variables.nav_key
+                    return variables.force_active === true || entity?.state === variables.nav_key
                       ? 'rgba(255,255,255,0.12)'
                       : 'transparent';
                   ]]]
               - backdrop-filter: >
                   [[[
-                    return entity?.state === variables.nav_key
+                    return variables.force_active === true || entity?.state === variables.nav_key
                       ? 'blur(12px) saturate(1.15)'
                       : 'none';
                   ]]]
               - -webkit-backdrop-filter: >
                   [[[
-                    return entity?.state === variables.nav_key
+                    return variables.force_active === true || entity?.state === variables.nav_key
                       ? 'blur(12px) saturate(1.15)'
                       : 'none';
                   ]]]
               - border: >
                   [[[
-                    return entity?.state === variables.nav_key
+                    return variables.force_active === true || entity?.state === variables.nav_key
                       ? '1px solid rgba(255,255,255,0.18)'
                       : 'none';
                   ]]]
               - box-shadow: >
                   [[[
-                    return entity?.state === variables.nav_key
+                    return variables.force_active === true || entity?.state === variables.nav_key
                       ? 'inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 10px rgba(0,0,0,0.20)'
                       : 'none';
                   ]]]
@@ -210,12 +211,17 @@ custom_fields:
             grid: [grid-template-areas: '"ico"', grid-template-columns: 1fr, grid-template-rows: 1fr, place-items: center]
         # ── música ──────────────────────────────────────────────────
         - <<: *nav_btn
+          # --- CÓDIGO ANTERIOR COMENTADO (apenas marcava input_select) ---
+          # tap_action:
+          #   action: call-service
+          #   service: input_select.select_option
+          #   data:
+          #     entity_id: input_select.bento_sidebar_active
+          #     option: music
+          # --- FIM CÓDIGO ANTERIOR ---
           tap_action:
-            action: call-service
-            service: input_select.select_option
-            data:
-              entity_id: input_select.bento_sidebar_active
-              option: music
+            action: navigate
+            navigation_path: /lovelace/mass-media
           variables:
             nav_key: music
           custom_fields:
@@ -223,7 +229,7 @@ custom_fields:
               [[[
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
               ]]]
-        # ── segurança (popup câmeras) ───────────────────────────────
+        # ── câmeras (popup 8 câmeras do apartamento) ────────────────
         - <<: *nav_btn
           entity: input_select.bento_sidebar_action
           triggers_update:
@@ -234,22 +240,27 @@ custom_fields:
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+                /* ANTERIOR: ícone de escudo/security. Mantido aqui como fallback rápido:
+                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/> */
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3.5"/><path d="M17.5 10.5h.01"/></svg>';
               ]]]
-        # ── atividade / radar ───────────────────────────────────────
+        # ── system ──────────────────────────────────────────────────
         - <<: *nav_btn
-          tap_action:
-            action: call-service
-            service: input_select.select_option
-            data:
-              entity_id: input_select.bento_sidebar_active
-              option: activity
+          # --- CÓDIGO ANTERIOR COMENTADO (activity/radar apenas marcava input_select) ---
+          # tap_action:
+          #   action: call-service
+          #   service: input_select.select_option
+          #   data:
+          #     entity_id: input_select.bento_sidebar_active
+          #     option: activity
+          # --- FIM CÓDIGO ANTERIOR ---
+          tap_action: !include ../../shared/popup/footer/footer_system.yaml
           variables:
-            nav_key: activity
+            nav_key: system
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>';
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>';
               ]]]
         # ── vacuum (popup roborock) ─────────────────────────────────
         - <<: *nav_btn
@@ -266,12 +277,15 @@ custom_fields:
               ]]]
         # ── wifi ────────────────────────────────────────────────────
         - <<: *nav_btn
-          tap_action:
-            action: call-service
-            service: input_select.select_option
-            data:
-              entity_id: input_select.bento_sidebar_active
-              option: wifi
+          # --- CÓDIGO ANTERIOR COMENTADO (apenas marcava input_select) ---
+          # tap_action:
+          #   action: call-service
+          #   service: input_select.select_option
+          #   data:
+          #     entity_id: input_select.bento_sidebar_active
+          #     option: wifi
+          # --- FIM CÓDIGO ANTERIOR ---
+          tap_action: !include ../../shared/popup/footer/footer_network.yaml
           variables:
             nav_key: wifi
           custom_fields:
@@ -281,12 +295,19 @@ custom_fields:
               ]]]
         # ── refresh ─────────────────────────────────────────────────
         - <<: *nav_btn
+          # --- CÓDIGO ANTERIOR COMENTADO (apenas marcava input_select) ---
+          # tap_action:
+          #   action: call-service
+          #   service: input_select.select_option
+          #   data:
+          #     entity_id: input_select.bento_sidebar_active
+          #     option: refresh
+          # --- FIM CÓDIGO ANTERIOR ---
           tap_action:
             action: call-service
-            service: input_select.select_option
-            data:
-              entity_id: input_select.bento_sidebar_active
-              option: refresh
+            service: browser_mod.javascript
+            service_data:
+              code: location.reload()
           variables:
             nav_key: refresh
           custom_fields:
@@ -294,51 +315,65 @@ custom_fields:
               [[[
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
               ]]]
-        # ── download ────────────────────────────────────────────────
+        # ── updates ─────────────────────────────────────────────────
         - <<: *nav_btn
-          tap_action:
-            action: call-service
-            service: input_select.select_option
-            data:
-              entity_id: input_select.bento_sidebar_active
-              option: download
+          # --- CÓDIGO ANTERIOR COMENTADO (download apenas marcava input_select) ---
+          # tap_action:
+          #   action: call-service
+          #   service: input_select.select_option
+          #   data:
+          #     entity_id: input_select.bento_sidebar_active
+          #     option: download
+          # --- FIM CÓDIGO ANTERIOR ---
+          tap_action: !include ../../shared/popup/footer/footer_updates.yaml
           variables:
-            nav_key: download
+            nav_key: updates
           custom_fields:
             ico: >
               [[[
                 return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
               ]]]
-        # ── cubo ────────────────────────────────────────────────────
+        # ── planta 3D ───────────────────────────────────────────────
         - <<: *nav_btn
-          tap_action:
-            action: call-service
-            service: input_select.select_option
-            data:
-              entity_id: input_select.bento_sidebar_active
-              option: cube
+          # --- CÓDIGO ANTERIOR COMENTADO (cube apenas marcava input_select) ---
+          # tap_action:
+          #   action: call-service
+          #   service: input_select.select_option
+          #   data:
+          #     entity_id: input_select.bento_sidebar_active
+          #     option: cube
+          # --- FIM CÓDIGO ANTERIOR ---
+          tap_action: !include ../../shared/popup/planta_3d.yaml
           variables:
-            nav_key: cube
+            nav_key: floorplan_3d
           custom_fields:
             ico: >
               [[[
-                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>';
+                /* ANTERIOR: ícone cube-outline. Novo ícone representa planta/floor-plan. */
+                return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.78)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;display:block;"><path d="M3 21V3h18v18H3z"/><path d="M3 9h7V3M10 9v12M10 15h11M16 15V9h5"/></svg>';
               ]]]
   # ──────────────── GRUPO BOTTOM (2 ícones) ────────────────
   bottom:
     card:
       type: vertical-stack
       cards:
-        # ── monitor / dashboard ─────────────────────────────────────
+        # ── monitor / overview reservado ─────────────────────────────
         - <<: *nav_btn
+          # Reservado para Overview. Não abre popup ainda para evitar adoção sem validação visual.
+          # Futura ação validada, se aprovada:
+          # tap_action: !include ../../shared/popup/footer/footer_overview.yaml
+          # --- CÓDIGO ANTERIOR COMENTADO (apenas marcava input_select) ---
+          # tap_action:
+          #   action: call-service
+          #   service: input_select.select_option
+          #   data:
+          #     entity_id: input_select.bento_sidebar_active
+          #     option: monitor
+          # --- FIM CÓDIGO ANTERIOR ---
           tap_action:
-            action: call-service
-            service: input_select.select_option
-            data:
-              entity_id: input_select.bento_sidebar_active
-              option: monitor
+            action: none
           variables:
-            nav_key: monitor
+            nav_key: overview_reserved
           custom_fields:
             ico: >
               [[[
@@ -346,12 +381,17 @@ custom_fields:
               ]]]
         # ── power ───────────────────────────────────────────────────
         - <<: *nav_btn
+          # --- CÓDIGO ANTERIOR COMENTADO (apenas marcava input_select) ---
+          # tap_action:
+          #   action: call-service
+          #   service: input_select.select_option
+          #   data:
+          #     entity_id: input_select.bento_sidebar_active
+          #     option: power
+          # --- FIM CÓDIGO ANTERIOR ---
           tap_action:
-            action: call-service
-            service: input_select.select_option
-            data:
-              entity_id: input_select.bento_sidebar_active
-              option: power
+            action: navigate
+            navigation_path: /
           variables:
             nav_key: power
           custom_fields:

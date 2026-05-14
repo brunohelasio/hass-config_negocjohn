@@ -3,7 +3,7 @@
 # Atualizado: 2026-05-10
 #
 # Layout: coluna esquerda = hero da Sala (mesma estrutura/layout dos demais
-# cômodos) + coluna direita = pílulas de ação (Corredor / TV / A/C / PS5).
+# cômodos) + coluna direita = pílulas de ação (Corredor / TV / A/C).
 # Altura: 168px (igual ao rail de cômodos). Largura: 100% da view mobile.
 #
 # REGRA DE OURO: código V3 original mantido comentado abaixo para rollback.
@@ -247,9 +247,9 @@ cards:
               - align-self: start
               - margin-right: 2px
 
-      # ── Pills (coluna direita) — Corredor / TV / A/C / PS5 ──────────────────
-      # V3.2: height 32px (era 36px), sem label (icon+name+cor), gap 3px
-      # Cálculo: 4×32 + 3×3 + 2×5 = 128+9+10 = 147px < 168px → 21px de folga
+      # ── Pills (coluna direita) — Corredor / TV / A/C ─────────────────────────
+      # V3.3: PS5 preservado comentado abaixo; 3 pills redistribuídas verticalmente
+      # Cálculo: 3×36 + 2×8 + 2×22 = 168px → margens harmonizadas sem expansão
       - view_layout:
           grid-area: pills
         type: vertical-stack
@@ -259,7 +259,7 @@ cards:
               display: block !important;
               height: 168px !important;
               box-sizing: border-box !important;
-              padding: 5px 8px 5px 4px !important;
+              padding: 22px 10px 22px 4px !important;
               margin: 0 !important;
             }
             #root {
@@ -267,12 +267,13 @@ cards:
               padding: 0 !important;
               display: flex !important;
               flex-direction: column !important;
-              gap: 3px !important;
-              height: 158px !important;
+              gap: 8px !important;
+              height: 124px !important;
+              justify-content: center !important;
             }
             #root > * {
               margin: 0 !important;
-              flex: 0 0 32px !important;
+              flex: 0 0 36px !important;
             }
         cards:
           # Corredor
@@ -293,7 +294,7 @@ cards:
               - light.grupo_luzes_sala
             styles:
               card:
-                - height: 32px
+                - height: 36px
                 - border-radius: 12px
                 - background: >
                     [[[
@@ -352,7 +353,7 @@ cards:
               - light.grupo_luzes_sala
             styles:
               card:
-                - height: 32px
+                - height: 36px
                 - border-radius: 12px
                 - background: >
                     [[[
@@ -418,7 +419,7 @@ cards:
               - light.grupo_luzes_sala
             styles:
               card:
-                - height: 32px
+                - height: 36px
                 - border-radius: 12px
                 - background: >
                     [[[
@@ -459,51 +460,54 @@ cards:
                 - color: >
                     [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.80)' : 'rgba(255,255,255,0.80)'; ]]]
 
-          # PS5 (placeholder — sem entidade confirmada)
-          - type: custom:button-card
-            show_icon: true
-            show_name: true
-            show_state: false
-            show_label: false
-            icon: mdi:sony-playstation
-            name: "PS5"
-            tap_action:
-              action: none
-            hold_action:
-              action: none
-            triggers_update:
-              - light.grupo_luzes_sala
-            styles:
-              card:
-                - height: 32px
-                - border-radius: 12px
-                - background: >
-                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)'; ]]]
-                - border: >
-                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)'; ]]]
-                - padding: 0 8px
-                - margin: 0
-                - box-sizing: border-box
-                - opacity: "0.40"
-                - cursor: default
-              grid:
-                - grid-template-areas: '"i n"'
-                - grid-template-columns: "16px 1fr"
-                - column-gap: "7px"
-                - align-items: "center"
-              img_cell:
-                - width: "16px"
-                - justify-content: center
-              icon:
-                - width: "14px"
-                - color: >
-                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.45)'; ]]]
-              name:
-                - font-size: "11px"
-                - font-weight: "600"
-                - justify-self: start
-                - color: >
-                    [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.75)'; ]]]
+          # --- PS5 REMOVIDO VISUALMENTE (V3.3) — fallback preservado ---
+          # Motivo: objetivo mobile atual pede apenas Corredor / TV / A/C.
+          # Para rollback, descomentar o bloco abaixo e restaurar o cálculo de 4 pills.
+          # # PS5 (placeholder — sem entidade confirmada)
+          # - type: custom:button-card
+          #   show_icon: true
+          #   show_name: true
+          #   show_state: false
+          #   show_label: false
+          #   icon: mdi:sony-playstation
+          #   name: "PS5"
+          #   tap_action:
+          #     action: none
+          #   hold_action:
+          #     action: none
+          #   triggers_update:
+          #     - light.grupo_luzes_sala
+          #   styles:
+          #     card:
+          #       - height: 32px
+          #       - border-radius: 12px
+          #       - background: >
+          #           [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.04)'; ]]]
+          #       - border: >
+          #           [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)'; ]]]
+          #       - padding: 0 8px
+          #       - margin: 0
+          #       - box-sizing: border-box
+          #       - opacity: "0.40"
+          #       - cursor: default
+          #     grid:
+          #       - grid-template-areas: '"i n"'
+          #       - grid-template-columns: "16px 1fr"
+          #       - column-gap: "7px"
+          #       - align-items: "center"
+          #     img_cell:
+          #       - width: "16px"
+          #       - justify-content: center
+          #     icon:
+          #       - width: "14px"
+          #       - color: >
+          #           [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.45)'; ]]]
+          #     name:
+          #       - font-size: "11px"
+          #       - font-weight: "600"
+          #       - justify-self: start
+          #       - color: >
+          #           [[[ return states['light.grupo_luzes_sala']?.state === 'on' ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.75)'; ]]]
 
 
 # --- CÓDIGO ORIGINAL COMENTADO (V3 vertical — rollback rápido) ---

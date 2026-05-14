@@ -14,13 +14,22 @@ grid_office:
     triggers_update:
       - sensor.time
       - sensor.office_active
+      - sensor.office_semantic_state
+      - binary_sensor.office_occupancy
+      - binary_sensor.office_pc_active
+      - binary_sensor.office_working_active
+      - binary_sensor.office_meeting_active
+      - binary_sensor.of_sensor_presenca_movimento
     double_tap_action: !include ../../shared/popup/rooms/office.yaml
     # hold_action: !include ../../shared/honeycomb/office_mode.yaml
     hold_action:
       action: more-info
     template:
       - rooms_base
+      # ANTERIOR: motion comentado enquanto não havia sensor no Office.
       # - motion
+      # NOVO: habilita presença/ocupação consolidada.
+      - motion
       # - macbook
       # - server
       - icon_office
@@ -45,8 +54,9 @@ grid_office:
       active: sensor.office_active
       # AC do office (restaurado sem _2)
       ac_entity: climate.ac_office
-      # Motion: vazio ate sensor chegar
-      motion: ''
+      # ANTERIOR: Motion vazio ate sensor chegar
+      # ANTERIOR: motion: ''
+      motion: binary_sensor.office_occupancy
       # Alexa do Office (Echo Pop Office) — alexa_status mostra icone quando tocando
       alexa_entity: media_player.echo_pop_office
       # tempsensor: sensor.office_temp_humid_temperature

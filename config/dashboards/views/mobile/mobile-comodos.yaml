@@ -30,7 +30,10 @@ layout:
   grid-gap: 10px
 
 cards:
-  # ── Grade 2 colunas com todos os comodos ────────────────────────────────
+  # ── Sala horizontal no topo (mesmo formato da aba Casa) ────────────────
+  - !include ../../shared/mobile/mobile_sala_card.yaml
+
+  # ── Grade 2 colunas com os demais comodos ──────────────────────────────
   - !include ../../shared/mobile/mobile_comodos_grid.yaml
 
   # ── Pill navbar ─────────────────────────────────────────────────────────

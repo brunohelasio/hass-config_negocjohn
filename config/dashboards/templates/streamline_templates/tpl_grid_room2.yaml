@@ -12,12 +12,23 @@ grid_office_room:
     triggers_update:
       - sensor.time
       - sensor.office_active
+      - sensor.office_semantic_state
+      - binary_sensor.office_occupancy
+      - binary_sensor.office_pc_active
+      - binary_sensor.office_working_active
+      - binary_sensor.office_meeting_active
+      - binary_sensor.of_sensor_presenca_movimento
+      - sensor.desktop_melg9vv_office_pc_idle_time
+      - sensor.desktop_melg9vv_office_pc_session_state
       - sensor.roborock_s7_comodo_atual
       - vacuum.roborock_s7
       - media_player.echo_pop_office
     template:
       - rooms_base
       - icon_office
+      # NOVO: presença/ocupação consolidada do Office.
+      # FALLBACK: comentar `- motion` e voltar `motion: ''` abaixo.
+      - motion
       # Status icons — igual ao botao Sala (exibem quando AC estiver ligado)
       - ac_status
       # --- CÓDIGO ORIGINAL COMENTADO (alexa_status faltava — ícone Spotify nunca aparecia) ---
@@ -42,8 +53,9 @@ grid_office_room:
       ac_entity: climate.ac_office
       # Alexa do Office (Echo Pop) — alexa_status mostra icone quando tocando
       alexa_entity: media_player.echo_pop_office
-      # Motion: vazio ate sensor chegar
-      motion: ''
+      # ANTERIOR: motion: '' (placeholder até sensor chegar)
+      # NOVO: usa ocupação consolidada (PIR tratado como mmWave).
+      motion: binary_sensor.office_occupancy
       # Roborock overlay — cômodo mapeado para o Escritório/Office
       vacuum_rooms: 'Escritório'
 

@@ -53,8 +53,10 @@ cards:
   # ── 3) Sala (largura total) ─────────────────────────────────────────────
   - !include ../../shared/mobile/mobile_sala_card.yaml
 
-  # ── 4) Rail horizontal dos demais comodos ───────────────────────────────
-  - !include ../../shared/mobile/mobile_rooms_rail.yaml
+  # ── 4) Carrossel dos demais comodos (2 cards por slide) ─────────────────
+  # ANTERIOR (V3 rail contínuo — rollback rápido):
+  # - !include ../../shared/mobile/mobile_rooms_rail.yaml
+  - !include ../../shared/mobile/mobile_rooms_carousel.yaml
 
   # ── 5) Acoes rapidas ────────────────────────────────────────────────────
   - !include ../../shared/mobile/mobile_quick_actions.yaml

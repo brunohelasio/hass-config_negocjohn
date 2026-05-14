@@ -149,13 +149,21 @@ custom_fields:
               :host {
                 width: 42px !important;
                 display: block !important;
-                margin: 3px 0 !important;
+                margin: 3px auto !important;
               }
-              ha-card {
-                --ha-card-background: transparent !important;
-                --ha-card-border-width: 0 !important;
-                --ha-card-box-shadow: none !important;
+              /* 1. Sua ideia: Limpa o fundo do container interno do button-card */
+              ha-card.button-card-main {
+                background: transparent !important;
+                background-color: transparent !important;
+                box-shadow: none !important;
+                border: none !important;
               }
+              /* 2. Mata o vidro fantasma injetado pelo tema VisionOS */
+              ha-card::before {
+                display: none !important;
+                content: none !important;
+              }
+              /* 3. Feedback visual ao clicar */
               :host(:active) ha-card {
                 background: rgba(255,255,255,0.14) !important;
                 transition: background 0.12s ease;
@@ -260,7 +268,7 @@ custom_fields:
                   [[[
                     return entity?.state === variables.nav_key
                       ? '1px solid rgba(255,255,255,0.18)'
-                      : 'none';
+                      : '1px solid transparent';
                   ]]]
               - box-shadow: >
                   [[[

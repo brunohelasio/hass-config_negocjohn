@@ -218,174 +218,6 @@
       }
 
 
-# ── NOVO: Status Office + HASS.Agent ──
-# FALLBACK: comentar este bloco inteiro para voltar ao popup anterior.
-- type: custom:button-card
-  name: "Status Office"
-  show_state: false
-  show_icon: false
-  tap_action:
-    action: none
-  styles:
-    card:
-      - background: none
-      - box-shadow: none
-      - border: none
-      - padding: 0 4px
-      - height: 30px
-      - min-height: 30px
-    grid:
-      - grid-template-areas: '"n"'
-      - grid-template-columns: 1fr
-    name:
-      - font-size: 11px
-      - color: rgba(255,255,255,0.5)
-      - text-transform: uppercase
-      - letter-spacing: 1.5px
-      - justify-self: start
-      - font-weight: 500
-  card_mod:
-    style: |
-      ha-card::before {
-        content: none !important;
-      }
-
-- type: entities
-  show_header_toggle: false
-  entities:
-    - entity: sensor.office_semantic_state
-      name: Estado
-    - entity: binary_sensor.office_occupancy
-      name: Presença
-    - entity: binary_sensor.office_pc_active
-      name: PC ativo
-    - entity: binary_sensor.office_working_active
-      name: Trabalhando
-    - entity: binary_sensor.office_meeting_active
-      name: Em reunião
-    - entity: sensor.desktop_melg9vv_office_pc_active_window
-      name: Janela ativa
-    - entity: sensor.desktop_melg9vv_office_pc_idle_time
-      name: Última atividade
-    - entity: sensor.of_sensor_presenca_iluminancia
-      name: Iluminância
-    - entity: sensor.of_sensor_presenca_bateria
-      name: Bateria sensor
-  card_mod:
-    style: |
-      ha-card {
-        background: rgba(255,255,255,0.04) !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-        box-shadow: none !important;
-        border-radius: 14px !important;
-        overflow: hidden !important;
-      }
-      ha-card::before {
-        content: none !important;
-      }
-
-# ── NOVO: Comandos HASS.Agent do PC ──
-- type: grid
-  columns: 5
-  square: false
-  card_mod:
-    style: |
-      #root {
-        gap: 4px !important;
-      }
-      @media (max-width: 800px) {
-        #root {
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-          gap: 8px !important;
-        }
-      }
-  cards:
-    - type: custom:button-card
-      entity: button.desktop_melg9vv_pc_office_bloquear
-      name: Bloquear
-      template:
-        - base
-      show_icon: false
-      tap_action:
-        action: perform-action
-        perform_action: button.press
-        target:
-          entity_id: button.desktop_melg9vv_pc_office_bloquear
-        haptic: success
-    - type: custom:button-card
-      entity: button.desktop_melg9vv_pc_office_sleep
-      name: Sleep
-      template:
-        - base
-      show_icon: false
-      tap_action:
-        action: perform-action
-        perform_action: button.press
-        target:
-          entity_id: button.desktop_melg9vv_pc_office_sleep
-        haptic: success
-    - type: custom:button-card
-      entity: button.desktop_melg9vv_pc_office_switch
-      name: Power
-      template:
-        - base
-      show_icon: false
-      tap_action:
-        action: perform-action
-        perform_action: button.press
-        target:
-          entity_id: button.desktop_melg9vv_pc_office_switch
-        haptic: success
-    - type: custom:button-card
-      entity: button.desktop_melg9vv_pc_office_reiniciar
-      name: Reiniciar
-      template:
-        - base
-      show_icon: false
-      tap_action:
-        action: perform-action
-        perform_action: button.press
-        target:
-          entity_id: button.desktop_melg9vv_pc_office_reiniciar
-        haptic: warning
-    - type: custom:button-card
-      entity: button.desktop_melg9vv_pc_office_desliga
-      name: Desligar
-      template:
-        - base
-      show_icon: false
-      tap_action:
-        action: perform-action
-        perform_action: button.press
-        target:
-          entity_id: button.desktop_melg9vv_pc_office_desliga
-        haptic: warning
-
-# ── Divisor Glassmorphism (Status -> Midia & Clima) ──
-- type: custom:button-card
-  color_type: blank-card
-  styles:
-    card:
-      - height: 2px
-      - margin: 4px 8px
-      - background: >-
-          linear-gradient(90deg,
-          rgba(255,255,255,0) 0%,
-          rgba(255,255,255,0.12) 15%,
-          rgba(255,255,255,0.20) 50%,
-          rgba(255,255,255,0.12) 85%,
-          rgba(255,255,255,0) 100%)
-      - border: none
-      - box-shadow: 0 0 6px rgba(62, 132, 255, 0.10)
-      - border-radius: 2px
-      - padding: 0
-      - min-height: auto
-  card_mod:
-    style: |
-      ha-card::before {
-        content: none !important;
-      }
-
 # ── Titulo: Midia & Clima ──
 - type: custom:button-card
   name: "Mídia & Clima"
@@ -500,20 +332,96 @@
         }
       }
   cards:
-    # 1. PC — switch.macbook (icone desktop)
+    # 1. PC — HASS.Agent (icone desktop)
+    # ANTERIOR: entity: switch.macbook + tap_action: toggle.
+    # NOVO: estado visual segue binary_sensor.office_pc_active; 1 toque liga, hold desliga, duplo toque abre controles.
     # Convenção: NUNCA usar mdi: icons — sempre usar icon_* templates de tpl_icons.yaml
     - type: custom:button-card
-      entity: switch.macbook
+      entity: binary_sensor.office_pc_active
       name: PC
       template:
         - base
         - icon_imac
       show_icon: false
+      state_display: >
+        [[[ return entity?.state === 'on' ? 'Ligado' : ' '; ]]]
       tap_action:
-        action: toggle
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.desktop_melg9vv_pc_office_switch
         haptic: success
+      hold_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.desktop_melg9vv_pc_office_desliga
+        haptic: warning
       double_tap_action:
-        action: more-info
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data:
+            title: PC Office
+            tag: office_pc_controls
+            style: >
+              --popup-width: 420px;
+              --popup-max-width: 92vw;
+              --popup-background-color: rgba(15, 20, 35, 0.85);
+              --mdc-theme-surface: rgba(20, 24, 33, 0.92);
+            content:
+              type: grid
+              columns: 2
+              square: false
+              cards:
+                - type: custom:button-card
+                  entity: button.desktop_melg9vv_pc_office_bloquear
+                  name: Bloquear
+                  template:
+                    - base
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: button.press
+                    target:
+                      entity_id: button.desktop_melg9vv_pc_office_bloquear
+                    haptic: success
+                - type: custom:button-card
+                  entity: button.desktop_melg9vv_pc_office_sleep
+                  name: Sleep
+                  template:
+                    - base
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: button.press
+                    target:
+                      entity_id: button.desktop_melg9vv_pc_office_sleep
+                    haptic: success
+                - type: custom:button-card
+                  entity: button.desktop_melg9vv_pc_office_reiniciar
+                  name: Reiniciar
+                  template:
+                    - base
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: button.press
+                    target:
+                      entity_id: button.desktop_melg9vv_pc_office_reiniciar
+                    haptic: warning
+                - type: custom:button-card
+                  entity: button.desktop_melg9vv_pc_office_desliga
+                  name: Desligar
+                  template:
+                    - base
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: button.press
+                    target:
+                      entity_id: button.desktop_melg9vv_pc_office_desliga
+                    haptic: warning
     # 2. MACBOOK — placeholder sem ação (visualização apenas)
     - type: custom:button-card
       name: MacBook

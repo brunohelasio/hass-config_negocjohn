@@ -217,6 +217,7 @@
         content: none !important;
       }
 
+
 # ── Titulo: Midia & Clima ──
 - type: custom:button-card
   name: "Mídia & Clima"
@@ -331,20 +332,96 @@
         }
       }
   cards:
-    # 1. PC — switch.macbook (icone desktop)
+    # 1. PC — HASS.Agent (icone desktop)
+    # ANTERIOR: entity: switch.macbook + tap_action: toggle.
+    # NOVO: estado visual segue binary_sensor.office_pc_active; 1 toque liga, hold desliga, duplo toque abre controles.
     # Convenção: NUNCA usar mdi: icons — sempre usar icon_* templates de tpl_icons.yaml
     - type: custom:button-card
-      entity: switch.macbook
+      entity: binary_sensor.office_pc_active
       name: PC
       template:
         - base
         - icon_imac
       show_icon: false
+      state_display: >
+        [[[ return entity?.state === 'on' ? 'Ligado' : ' '; ]]]
       tap_action:
-        action: toggle
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.desktop_melg9vv_pc_office_switch
         haptic: success
+      hold_action:
+        action: perform-action
+        perform_action: button.press
+        target:
+          entity_id: button.desktop_melg9vv_pc_office_desliga
+        haptic: warning
       double_tap_action:
-        action: more-info
+        action: fire-dom-event
+        browser_mod:
+          service: browser_mod.popup
+          data:
+            title: PC Office
+            tag: office_pc_controls
+            style: >
+              --popup-width: 420px;
+              --popup-max-width: 92vw;
+              --popup-background-color: rgba(15, 20, 35, 0.85);
+              --mdc-theme-surface: rgba(20, 24, 33, 0.92);
+            content:
+              type: grid
+              columns: 2
+              square: false
+              cards:
+                - type: custom:button-card
+                  entity: button.desktop_melg9vv_pc_office_bloquear
+                  name: Bloquear
+                  template:
+                    - base
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: button.press
+                    target:
+                      entity_id: button.desktop_melg9vv_pc_office_bloquear
+                    haptic: success
+                - type: custom:button-card
+                  entity: button.desktop_melg9vv_pc_office_sleep
+                  name: Sleep
+                  template:
+                    - base
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: button.press
+                    target:
+                      entity_id: button.desktop_melg9vv_pc_office_sleep
+                    haptic: success
+                - type: custom:button-card
+                  entity: button.desktop_melg9vv_pc_office_reiniciar
+                  name: Reiniciar
+                  template:
+                    - base
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: button.press
+                    target:
+                      entity_id: button.desktop_melg9vv_pc_office_reiniciar
+                    haptic: warning
+                - type: custom:button-card
+                  entity: button.desktop_melg9vv_pc_office_desliga
+                  name: Desligar
+                  template:
+                    - base
+                  show_icon: false
+                  tap_action:
+                    action: perform-action
+                    perform_action: button.press
+                    target:
+                      entity_id: button.desktop_melg9vv_pc_office_desliga
+                    haptic: warning
     # 2. MACBOOK — placeholder sem ação (visualização apenas)
     - type: custom:button-card
       name: MacBook

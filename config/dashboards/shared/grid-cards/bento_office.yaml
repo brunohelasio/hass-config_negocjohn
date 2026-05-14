@@ -2,24 +2,93 @@ type: custom:button-card
 entity: light.grupo_luzes_office
 name: Office
 triggers_update:
+  - sensor.time
+  - sensor.office_active
+  - sensor.office_semantic_state
+  - binary_sensor.office_occupancy
+  - binary_sensor.office_pc_active
+  - binary_sensor.office_working_active
+  - binary_sensor.office_meeting_active
+  # ANTERIOR: o card só reagia a switch.macbook, AC, Alexa e temp/umidade.
+  # Mantido para fallback/compatibilidade visual do dot PC.
   - switch.macbook
   - climate.ac_office
   - media_player.echo_pop_office
   - person.bruno_helasio
   - sensor.of_sensor_temp_humid_temperatura
   - sensor.of_sensor_temp_humid_umidade
+  # NOVO: PIR tratado como presença/mmWave + sensores HASS.Agent.
+  - binary_sensor.of_sensor_presenca_movimento
+  - sensor.of_sensor_presenca_iluminancia
+  - sensor.of_sensor_presenca_bateria
+  - event.of_sensor_presenca_device_notifications
+  - sensor.desktop_melg9vv_office_pc_session_state
+  - sensor.desktop_melg9vv_office_pc_idle_time
+  - sensor.desktop_melg9vv_office_pc_active_window
+  - binary_sensor.desktop_melg9vv_office_pc_microphone_active
+  - binary_sensor.desktop_melg9vv_office_pc_webcam_active
+  - sensor.desktop_melg9vv_office_pc_teams_active
+  - binary_sensor.desktop_melg9vv_janela_meet
 template:
   - rooms_base
   - icon_office
 
 variables:
-  state: "[[[ return entity.state; ]]]"
+  # ANTERIOR: state usava apenas entity.state (light.grupo_luzes_office).
+  # NOVO: usa sensor.office_active para presença/semântica, com fallback para a luz.
+  state: "[[[ return states['sensor.office_active']?.state || entity.state; ]]]"
   state_on: >
-    [[[ 
-      return ['on', 'home', 'active', 'yes'].indexOf(!entity || entity.state) !== -1; 
+    [[[
+      const activeState = states['sensor.office_active']?.state;
+      const semantic = states['sensor.office_semantic_state']?.state;
+      const lightOn = entity?.state === 'on';
+      return ['on', 'home', 'active', 'yes', 'occupied'].includes(activeState)
+        || ['occupied', 'working', 'meeting'].includes(semantic)
+        || lightOn;
     ]]]
   light_entity: light.office_switch_3
   active: sensor.office_active
+
+state_display: >
+  [[[
+    const semantic = states['sensor.office_semantic_state'];
+    const display = semantic?.attributes?.display;
+    if (display && !['none','unknown','unavailable'].includes((semantic.state || '').toLowerCase())) {
+      return display;
+    }
+
+    // Fallback rápido: replica a leitura básica de luzes do rooms_base quando
+    // não há status semântico ativo.
+    const activeEntity = states['sensor.office_active'];
+    const lightsOnCount = activeEntity?.attributes?.lights_on_count;
+    let count = null;
+    if (lightsOnCount != null && lightsOnCount !== '' && !isNaN(lightsOnCount)) {
+      count = parseInt(lightsOnCount, 10);
+    }
+    const ids = entity?.attributes?.entity_id;
+    if (count === null && Array.isArray(ids)) {
+      count = ids.filter(id => states[id]?.state === 'on').length;
+    }
+    if (!count || count <= 0) return variables.state_on ? 'On' : ' ';
+
+    const timeFmt = c => {
+      const m = (c / 6e4), h = (c / 36e5), d = (c / 864e5);
+      return m < 1 ? '< 1m' : m < 60 ? `${parseInt(m)}m` : h < 24 ? `${parseInt(h)}h` : `${parseInt(d)}d`;
+    };
+    let earliestOn = null;
+    if (Array.isArray(ids)) {
+      ids.forEach(id => {
+        const st = states[id];
+        if (st?.state === 'on' && st.last_changed) {
+          const ts = Date.parse(st.last_changed);
+          if (!isNaN(ts) && (earliestOn === null || ts < earliestOn)) earliestOn = ts;
+        }
+      });
+    }
+    const elapsed = earliestOn !== null ? timeFmt(Date.now() - earliestOn) : '';
+    const label = count === 1 ? '1 light' : `${count} lights`;
+    return elapsed ? `${label} · ${elapsed}` : label;
+  ]]]
 
 tap_action:
   action: perform-action
@@ -102,9 +171,10 @@ custom_fields:
   dots: >
     [[[
       // ANTERIOR: const home = states['person.bruno_helasio']?.state === 'home';
-      // Office ainda nao possui sensor real de presenca; manter o dot mdi:account inativo ate existir entidade dedicada.
-      const officePresence = false;
-      const pcOn = states['switch.macbook']?.state === 'on';
+      // ANTERIOR: const officePresence = false;
+      // NOVO: presença consolidada em binary_sensor.office_occupancy (PIR com delay_off, futuro mmWave).
+      const officePresence = states['binary_sensor.office_occupancy']?.state === 'on';
+      const pcOn = states['binary_sensor.office_pc_active']?.state === 'on' || states['switch.macbook']?.state === 'on';
       const acOn = !['off','unavailable','unknown',''].includes(states['climate.ac_office']?.state ?? 'off');
       // ANTERIOR: const alexaOn = ['playing','on','paused','idle'].includes(states['media_player.echo_pop_office']?.state ?? '');
       // Replica o padrao da Sala: idle nao deve manter o status da Alexa aceso.

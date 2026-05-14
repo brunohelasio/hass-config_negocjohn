@@ -46,13 +46,20 @@ input_select:
       - home
       - music
       - security
+      # Legacy key kept for the shared/grid-cards fallback sidebar.
       - activity
+      - system
       - vacuum
       - wifi
       - refresh
+      # Legacy key kept for the shared/grid-cards fallback sidebar.
       - download
+      - updates
+      # Legacy key kept for the shared/grid-cards fallback sidebar.
       - cube
+      - floorplan_3d
       - monitor
+      - overview_reserved
       - power
     initial: home
   bento_sidebar_action:

@@ -1,5 +1,5 @@
 resources:
-  - url: /local/bento-sidebar-card.js
+  - url: /local/bento-sidebar-card.js?v=20260514
     type: module
 
 button_card_templates: !include_dir_merge_named ./templates/button_card_templates

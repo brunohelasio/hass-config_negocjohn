@@ -1,0 +1,158 @@
+# ==========================================================================
+# Pacote: office_presence
+# Objetivo: camada lógica do Office para presença/PIR tratado como mmWave,
+# HASS.Agent do PC e estados semânticos simples do card Bento.
+#
+# FALLBACK RÁPIDO:
+# - Remover/comentar `office_presence: !include packages/office_presence.yaml`
+#   em configuration.yaml para voltar ao comportamento anterior.
+# - O card Office também mantém comentários ANTERIOR nos pontos alterados.
+# ==========================================================================
+
+template:
+  - binary_sensor:
+      # ANTERIOR: o Office não tinha presença real; o dot ficava fixo em false.
+      # NOVO: enquanto o sensor for PIR, delay_off simula ocupação contínua.
+      # FUTURO mmWave: trocar apenas a entidade abaixo pela entidade de presença mmWave.
+      - name: Office Occupancy
+        unique_id: office_occupancy
+        device_class: occupancy
+        icon: mdi:account
+        state: >-
+          {{ is_state('binary_sensor.of_sensor_presenca_movimento', 'on') }}
+        delay_off:
+          minutes: 10
+        attributes:
+          source_entity: binary_sensor.of_sensor_presenca_movimento
+          mode: pir_as_mmwave
+          fallback_note: "Trocar source_entity pelo mmWave quando instalado."
+          illuminance: "{{ states('sensor.of_sensor_presenca_iluminancia') }}"
+          battery: "{{ states('sensor.of_sensor_presenca_bateria') }}"
+
+      - name: Office PC Active
+        unique_id: office_pc_active
+        icon: mdi:desktop-classic
+        state: >-
+          {% set session = states('sensor.desktop_melg9vv_office_pc_session_state') %}
+          {% set last = as_timestamp(states('sensor.desktop_melg9vv_office_pc_idle_time'), 0) %}
+          {% set recent = last > 0 and (as_timestamp(now()) - last) <= 300 %}
+          {{ session == 'Unlocked' and recent }}
+        attributes:
+          session_state: "{{ states('sensor.desktop_melg9vv_office_pc_session_state') }}"
+          last_activity: "{{ states('sensor.desktop_melg9vv_office_pc_idle_time') }}"
+          active_window: "{{ states('sensor.desktop_melg9vv_office_pc_active_window') }}"
+          active_window_process: "{{ state_attr('sensor.desktop_melg9vv_office_pc_active_window', 'processName') }}"
+          edge_processes: "{{ states('sensor.desktop_melg9vv_office_pc_edge_active') }}"
+          word_processes: "{{ states('sensor.desktop_melg9vv_office_pc_word') }}"
+
+      - name: Office Meeting Active
+        unique_id: office_meeting_active
+        icon: mdi:video-account
+        state: >-
+          {% set session = states('sensor.desktop_melg9vv_office_pc_session_state') %}
+          {% set active_window = states('sensor.desktop_melg9vv_office_pc_active_window') | lower %}
+          {% set teams = states('sensor.desktop_melg9vv_office_pc_teams_active') | float(0) > 0 %}
+          {% set meet = is_state('binary_sensor.desktop_melg9vv_janela_meet', 'on') or ('meet' in active_window) %}
+          {% set meeting_app = teams or meet or ('teams' in active_window) or ('zoom' in active_window) %}
+          {% set av = is_state('binary_sensor.desktop_melg9vv_office_pc_microphone_active', 'on') or is_state('binary_sensor.desktop_melg9vv_office_pc_webcam_active', 'on') %}
+          {{ is_state('binary_sensor.office_occupancy', 'on') and session == 'Unlocked' and meeting_app and av }}
+        attributes:
+          teams_processes: "{{ states('sensor.desktop_melg9vv_office_pc_teams_active') }}"
+          meet_window: "{{ states('binary_sensor.desktop_melg9vv_janela_meet') }}"
+          microphone: "{{ states('binary_sensor.desktop_melg9vv_office_pc_microphone_active') }}"
+          webcam: "{{ states('binary_sensor.desktop_melg9vv_office_pc_webcam_active') }}"
+          active_window: "{{ states('sensor.desktop_melg9vv_office_pc_active_window') }}"
+
+      - name: Office Working Active
+        unique_id: office_working_active
+        icon: mdi:briefcase
+        state: >-
+          {{ is_state('binary_sensor.office_occupancy', 'on') and is_state('binary_sensor.office_pc_active', 'on') }}
+        attributes:
+          pc_active: "{{ states('binary_sensor.office_pc_active') }}"
+          occupancy: "{{ states('binary_sensor.office_occupancy') }}"
+          active_window: "{{ states('sensor.desktop_melg9vv_office_pc_active_window') }}"
+
+  - sensor:
+      - name: Office Semantic State
+        unique_id: office_semantic_state
+        icon: >-
+          {% if is_state('binary_sensor.office_meeting_active', 'on') %}
+            mdi:video-account
+          {% elif is_state('binary_sensor.office_working_active', 'on') %}
+            mdi:briefcase
+          {% elif is_state('binary_sensor.office_occupancy', 'on') %}
+            mdi:account
+          {% else %}
+            mdi:desk
+          {% endif %}
+        state: >-
+          {% if is_state('binary_sensor.office_meeting_active', 'on') %}
+            meeting
+          {% elif is_state('binary_sensor.office_working_active', 'on') %}
+            working
+          {% elif is_state('binary_sensor.office_occupancy', 'on') %}
+            occupied
+          {% else %}
+            none
+          {% endif %}
+        attributes:
+          display: >-
+            {% if is_state('binary_sensor.office_meeting_active', 'on') %}
+              Em reunião
+            {% elif is_state('binary_sensor.office_working_active', 'on') %}
+              Trabalhando
+            {% elif is_state('binary_sensor.office_occupancy', 'on') %}
+              Ocupado
+            {% else %}
+              
+            {% endif %}
+          priority: >-
+            {% if is_state('binary_sensor.office_meeting_active', 'on') %}3
+            {% elif is_state('binary_sensor.office_working_active', 'on') %}2
+            {% elif is_state('binary_sensor.office_occupancy', 'on') %}1
+            {% else %}0
+            {% endif %}
+          occupancy: "{{ states('binary_sensor.office_occupancy') }}"
+          pc_active: "{{ states('binary_sensor.office_pc_active') }}"
+          working: "{{ states('binary_sensor.office_working_active') }}"
+          meeting: "{{ states('binary_sensor.office_meeting_active') }}"
+          active_window: "{{ states('sensor.desktop_melg9vv_office_pc_active_window') }}"
+
+      # ANTERIOR: sensor.office_active considerava apenas luzes, switch.macbook e AC.
+      # NOVO: mantém compatibilidade com rooms_base e adiciona presença/semântica.
+      - name: Office Active
+        unique_id: office_active
+        state: >-
+          {% set ac_on = states('climate.ac_office') in ['cool', 'fan_only', 'dry', 'heat'] %}
+          {% set lights_on = not is_state('light.grupo_luzes_office', 'off') %}
+          {% set pc_on = is_state('binary_sensor.office_pc_active', 'on') or is_state('switch.macbook', 'on') %}
+          {% if is_state('binary_sensor.office_occupancy', 'on') %}
+            occupied
+          {% elif lights_on or pc_on or ac_on or is_state('media_player.echo_pop_office', 'playing') %}
+            yes
+          {% else %}
+            no
+          {% endif %}
+        icon: "{{ iif(this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+        attributes:
+          semantic_state: "{{ states('sensor.office_semantic_state') }}"
+          semantic_display: "{{ state_attr('sensor.office_semantic_state', 'display') }}"
+          occupancy: "{{ states('binary_sensor.office_occupancy') }}"
+          pc_active: "{{ states('binary_sensor.office_pc_active') }}"
+          working: "{{ states('binary_sensor.office_working_active') }}"
+          meeting: "{{ states('binary_sensor.office_meeting_active') }}"
+          session_state: "{{ states('sensor.desktop_melg9vv_office_pc_session_state') }}"
+          last_activity: "{{ states('sensor.desktop_melg9vv_office_pc_idle_time') }}"
+          active_window: "{{ states('sensor.desktop_melg9vv_office_pc_active_window') }}"
+          microphone_active: "{{ states('binary_sensor.desktop_melg9vv_office_pc_microphone_active') }}"
+          webcam_active: "{{ states('binary_sensor.desktop_melg9vv_office_pc_webcam_active') }}"
+          teams_processes: "{{ states('sensor.desktop_melg9vv_office_pc_teams_active') }}"
+          meet_window: "{{ states('binary_sensor.desktop_melg9vv_janela_meet') }}"
+          illuminance: "{{ states('sensor.of_sensor_presenca_iluminancia') }}"
+          battery: "{{ states('sensor.of_sensor_presenca_bateria') }}"
+          lights_on: >-
+            {%- set light = expand('light.grupo_luzes_office') | selectattr('state', 'eq', 'on') | map(attribute='name') | list %}
+            {{- light }}
+          lights_on_count: >-
+            {{ expand('light.grupo_luzes_office') | selectattr('state', 'eq', 'on') | list | count }}

@@ -54,13 +54,15 @@ template:
           {% set teams = states('sensor.desktop_melg9vv_office_pc_teams_active') | float(0) > 0 %}
           {% set meet = is_state('binary_sensor.desktop_melg9vv_janela_meet', 'on') or ('meet' in active_window) %}
           {% set meeting_app = teams or meet or ('teams' in active_window) or ('zoom' in active_window) %}
-          {% set av = is_state('binary_sensor.desktop_melg9vv_office_pc_microphone_active', 'on') or is_state('binary_sensor.desktop_melg9vv_office_pc_webcam_active', 'on') %}
+          {# Reunião automática exige mais camadas para evitar falso positivo de Teams em segundo plano. #}
+          {% set av = is_state('binary_sensor.desktop_melg9vv_office_pc_microphone_active', 'on') and is_state('binary_sensor.desktop_melg9vv_office_pc_webcam_active', 'on') %}
           {{ is_state('binary_sensor.office_occupancy', 'on') and session == 'Unlocked' and meeting_app and av }}
         attributes:
           teams_processes: "{{ states('sensor.desktop_melg9vv_office_pc_teams_active') }}"
           meet_window: "{{ states('binary_sensor.desktop_melg9vv_janela_meet') }}"
           microphone: "{{ states('binary_sensor.desktop_melg9vv_office_pc_microphone_active') }}"
           webcam: "{{ states('binary_sensor.desktop_melg9vv_office_pc_webcam_active') }}"
+          av_requirement: "microphone_and_webcam"
           active_window: "{{ states('sensor.desktop_melg9vv_office_pc_active_window') }}"
 
       - name: Office Working Active

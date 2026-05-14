@@ -39,26 +39,19 @@ variables:
   state: "[[[ return states['sensor.office_active']?.state || entity.state; ]]]"
   state_on: >
     [[[
-      const activeState = states['sensor.office_active']?.state;
-      const semantic = states['sensor.office_semantic_state']?.state;
-      const lightOn = entity?.state === 'on';
-      return ['on', 'home', 'active', 'yes', 'occupied'].includes(activeState)
-        || ['occupied', 'working', 'meeting'].includes(semantic)
-        || lightOn;
+      // Regra visual original preservada: o card só fica branco quando
+      // alguma luz do grupo Office estiver acesa. Presença/semântica
+      // aparecem no status/dots, mas não ligam o fundo do card.
+      return entity?.state === 'on';
     ]]]
   light_entity: light.office_switch_3
   active: sensor.office_active
 
 state_display: >
   [[[
-    const semantic = states['sensor.office_semantic_state'];
-    const display = semantic?.attributes?.display;
-    if (display && !['none','unknown','unavailable'].includes((semantic.state || '').toLowerCase())) {
-      return display;
-    }
+    const lines = [];
 
-    // Fallback rápido: replica a leitura básica de luzes do rooms_base quando
-    // não há status semântico ativo.
+    // Mantém o status de luzes/tempo como informação independente.
     const activeEntity = states['sensor.office_active'];
     const lightsOnCount = activeEntity?.attributes?.lights_on_count;
     let count = null;
@@ -69,25 +62,38 @@ state_display: >
     if (count === null && Array.isArray(ids)) {
       count = ids.filter(id => states[id]?.state === 'on').length;
     }
-    if (!count || count <= 0) return variables.state_on ? 'On' : ' ';
 
-    const timeFmt = c => {
-      const m = (c / 6e4), h = (c / 36e5), d = (c / 864e5);
-      return m < 1 ? '< 1m' : m < 60 ? `${parseInt(m)}m` : h < 24 ? `${parseInt(h)}h` : `${parseInt(d)}d`;
-    };
-    let earliestOn = null;
-    if (Array.isArray(ids)) {
-      ids.forEach(id => {
-        const st = states[id];
-        if (st?.state === 'on' && st.last_changed) {
-          const ts = Date.parse(st.last_changed);
-          if (!isNaN(ts) && (earliestOn === null || ts < earliestOn)) earliestOn = ts;
-        }
-      });
+    if (count && count > 0) {
+      const timeFmt = c => {
+        const m = (c / 6e4), h = (c / 36e5), d = (c / 864e5);
+        return m < 1 ? '< 1m' : m < 60 ? `${parseInt(m)}m` : h < 24 ? `${parseInt(h)}h` : `${parseInt(d)}d`;
+      };
+      let earliestOn = null;
+      if (Array.isArray(ids)) {
+        ids.forEach(id => {
+          const st = states[id];
+          if (st?.state === 'on' && st.last_changed) {
+            const ts = Date.parse(st.last_changed);
+            if (!isNaN(ts) && (earliestOn === null || ts < earliestOn)) earliestOn = ts;
+          }
+        });
+      }
+      const elapsed = earliestOn !== null ? timeFmt(Date.now() - earliestOn) : '';
+      const label = count === 1 ? '1 light' : `${count} lights`;
+      lines.push(elapsed ? `${label} · ${elapsed}` : label);
+    } else if (variables.state_on) {
+      lines.push('On');
     }
-    const elapsed = earliestOn !== null ? timeFmt(Date.now() - earliestOn) : '';
-    const label = count === 1 ? '1 light' : `${count} lights`;
-    return elapsed ? `${label} · ${elapsed}` : label;
+
+    // Sem prioridade: status semântico entra como linha adicional quando ativo.
+    const semantic = states['sensor.office_semantic_state'];
+    const display = semantic?.attributes?.display;
+    if (display && !['none','unknown','unavailable'].includes((semantic.state || '').toLowerCase())) {
+      lines.push(display);
+    }
+
+    if (!lines.length) return ' ';
+    return `<div style="display:flex;flex-direction:column;gap:1px;line-height:1.15;">${lines.map(line => `<span>${line}</span>`).join('')}</div>`;
   ]]]
 
 tap_action:
@@ -125,6 +131,8 @@ styles:
     - align-self: "end"
     - font-size: "11px"
     - font-weight: "500"
+    - line-height: "1.15"
+    - white-space: "normal"
     - margin-bottom: "-1px !important"
     - color: >
         [[[ return variables.state_on ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.4)'; ]]]

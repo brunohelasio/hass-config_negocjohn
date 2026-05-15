@@ -1,3 +1,5 @@
+const BENTO_SIDEBAR_CARD_TAG = 'bento-sidebar-rail-card';
+
 class BentoSidebarCard extends HTMLElement {
   static getStubConfig() {
     return {
@@ -314,13 +316,13 @@ BentoSidebarCard.icons = {
   circle: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>',
 };
 
-if (!customElements.get('bento-sidebar-card')) {
-  customElements.define('bento-sidebar-card', BentoSidebarCard);
+if (!customElements.get(BENTO_SIDEBAR_CARD_TAG)) {
+  customElements.define(BENTO_SIDEBAR_CARD_TAG, BentoSidebarCard);
 }
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: 'bento-sidebar-card',
+  type: BENTO_SIDEBAR_CARD_TAG,
   name: 'Bento Sidebar Card',
   preview: false,
   description: 'Isolated Bento sidebar rail with fixed Home highlight and anchored bottom actions.',

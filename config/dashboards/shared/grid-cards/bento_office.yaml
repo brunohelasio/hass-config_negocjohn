@@ -117,14 +117,14 @@ styles:
         [[[
           const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
             || states['sensor.office_semantic_state']?.state === 'meeting';
-          return meeting ? '1px solid rgba(248,113,113,0.68) !important' : 'none !important';
+          return 'none !important';
         ]]]
     - box-shadow: >
         [[[
           const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
             || states['sensor.office_semantic_state']?.state === 'meeting';
           return meeting
-            ? 'inset 0 0 0 1px rgba(248,113,113,0.74), 0 0 0 1px rgba(248,113,113,0.16), 0 0 18px rgba(239,68,68,0.24), inset 0 0 24px rgba(127,29,29,0.12) !important'
+            ? '0 0 18px rgba(239,68,68,0.22), inset 0 0 28px rgba(127,29,29,0.10) !important'
             : 'none !important';
         ]]]
     - background-image: >
@@ -171,7 +171,7 @@ styles:
           [[[
             const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
               || states['sensor.office_semantic_state']?.state === 'meeting';
-            return meeting ? '0.48' : '1';
+            return meeting ? (variables.state_on ? '0.62' : '0.48') : '1';
           ]]]
       - filter: >
           [[[
@@ -179,22 +179,41 @@ styles:
               || states['sensor.office_semantic_state']?.state === 'meeting';
             if (meeting) {
               return variables.state_on
-                ? 'grayscale(0.85) brightness(0.72) contrast(0.86) drop-shadow(0 0 6px rgba(0,0,0,0.20))'
+                ? 'saturate(0.48) brightness(0.78) contrast(0.9) drop-shadow(0 0 6px rgba(0,0,0,0.20))'
                 : 'grayscale(1) brightness(0.58) contrast(0.82)';
             }
             return variables.state_on ? 'drop-shadow(2px 3px 6px grey) contrast(1.1)' : null;
           ]]]
       - transition: "opacity 140ms ease, filter 140ms ease"
+    meeting_frame:
+      # O wrapper externo corta a base do card; este frame fica levemente
+      # para dentro para manter o brilho inferior visivel sem borda solida.
+      - position: "absolute"
+      - left: "1px"
+      - right: "1px"
+      - top: "1px"
+      - bottom: "10px"
+      - border-radius: "14px"
+      - box-shadow: "inset 0 0 0 1px rgba(248,113,113,0.26), inset 0 0 18px rgba(239,68,68,0.16), 0 0 14px rgba(239,68,68,0.18)"
+      - background: "linear-gradient(145deg, rgba(239,68,68,0.07), rgba(239,68,68,0.015) 58%, rgba(239,68,68,0.055))"
+      - z-index: 1
+      - pointer-events: none
+      - display: >
+          [[[
+            const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
+              || states['sensor.office_semantic_state']?.state === 'meeting';
+            return meeting ? 'block' : 'none';
+          ]]]
     meeting_icon:
       # FALLBACK: comentar este custom_field meeting_icon mantem apenas o
       # icon_office de fundo. O overlay fica absoluto para nao criar coluna/linha
       # extra nem deslocar os dots.
       - position: "absolute"
-      # Calibrado para o centro visual do icon_office, que herda margin-left:-10%.
-      - left: "10px"
-      - top: "14px"
-      - width: "72px !important"
-      - height: "72px !important"
+      # Calibrado para o centro visual do icon_office local.
+      - left: "2px"
+      - top: "6px"
+      - width: "70px !important"
+      - height: "70px !important"
       - z-index: 4
       - pointer-events: none
       - display: >
@@ -213,6 +232,13 @@ styles:
       - align-self: "start"
 
 custom_fields:
+  meeting_frame: >
+    [[[
+      const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
+        || states['sensor.office_semantic_state']?.state === 'meeting';
+      return meeting ? '<span></span>' : '';
+    ]]]
+
   meeting_icon: >
     [[[
       const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'

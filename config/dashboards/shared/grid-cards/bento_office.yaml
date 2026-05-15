@@ -111,21 +111,15 @@ hold_action:
 styles:
   card:
     # ANTERIOR: border/box-shadow sempre removidos.
-    # NOVO: em reunião, mantém fundo original (luz continua controlando o branco)
-    # e adiciona apenas destaque vermelho suave para "não perturbe".
+    # NOVO: o glow de reunião fica no wrapper visível
+    # views/main-grid/bento_office.yaml para não ser cortado na base.
     - border: >
         [[[
-          const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
-            || states['sensor.office_semantic_state']?.state === 'meeting';
-          return meeting ? '1px solid rgba(248,113,113,0.68) !important' : 'none !important';
+          return 'none !important';
         ]]]
     - box-shadow: >
         [[[
-          const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
-            || states['sensor.office_semantic_state']?.state === 'meeting';
-          return meeting
-            ? '0 0 0 1px rgba(248,113,113,0.18), 0 0 22px rgba(239,68,68,0.28), inset 0 0 28px rgba(127,29,29,0.10) !important'
-            : 'none !important';
+          return 'none !important';
         ]]]
     - background-image: >
         [[[
@@ -191,8 +185,8 @@ styles:
       # extra nem deslocar os dots.
       - position: "absolute"
       # Calibrado para o centro visual do icon_office local.
-      - left: "0px"
-      - top: "4px"
+      - left: "-2px"
+      - top: "2px"
       - width: "70px !important"
       - height: "70px !important"
       - z-index: 4

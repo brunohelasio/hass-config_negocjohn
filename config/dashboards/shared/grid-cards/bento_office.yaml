@@ -110,8 +110,29 @@ hold_action:
 
 styles:
   card:
-    - border: "none !important"
-    - box-shadow: "none !important"
+    # ANTERIOR: border/box-shadow sempre removidos.
+    # NOVO: em reunião, mantém fundo original (luz continua controlando o branco)
+    # e adiciona apenas destaque vermelho suave para "não perturbe".
+    - border: >
+        [[[
+          const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
+            || states['sensor.office_semantic_state']?.state === 'meeting';
+          return meeting ? '1px solid rgba(248,113,113,0.68) !important' : 'none !important';
+        ]]]
+    - box-shadow: >
+        [[[
+          const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
+            || states['sensor.office_semantic_state']?.state === 'meeting';
+          return meeting
+            ? '0 0 0 1px rgba(248,113,113,0.18), 0 0 22px rgba(239,68,68,0.28), inset 0 0 28px rgba(127,29,29,0.10) !important'
+            : 'none !important';
+        ]]]
+    - background-image: >
+        [[[
+          const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
+            || states['sensor.office_semantic_state']?.state === 'meeting';
+          return meeting ? 'linear-gradient(145deg, rgba(127,29,29,0.13), rgba(239,68,68,0.04))' : 'none';
+        ]]]
     - padding: "16px !important"
     - overflow: "visible !important"
   grid:
@@ -143,6 +164,17 @@ styles:
       - width: "65px !important"
       - height: "65px !important"
       - margin-top: "2px !important"
+    meeting_icon:
+      # Fallback rápido: comentar todo o custom_field meeting_icon para voltar
+      # integralmente ao icon_office do template global.
+      - grid-area: icon
+      - justify-self: "start"
+      - align-self: "start"
+      - width: "65px !important"
+      - height: "65px !important"
+      - margin-top: "2px !important"
+      - z-index: 3
+      - pointer-events: none
     temp:
       - justify-self: "start"
       - align-self: "start"
@@ -153,6 +185,41 @@ styles:
       - align-self: "start"
 
 custom_fields:
+  meeting_icon: >
+    [[[
+      const meeting = states['binary_sensor.office_meeting_active']?.state === 'on'
+        || states['sensor.office_semantic_state']?.state === 'meeting';
+      if (!meeting) return '';
+
+      // Ícone local do Office em reunião: substitui visualmente o icon_office
+      // sem alterar templates globais nem o template icon_office.
+      return `
+        <svg viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" style="width:65px;height:65px;display:block;filter:drop-shadow(0 0 10px rgba(239,68,68,0.42));">
+          <style>
+            @keyframes officeMeetingPulse {
+              0%, 100% { opacity: .78; transform: scale(.98); }
+              50% { opacity: 1; transform: scale(1.03); }
+            }
+            @keyframes officeMeetingSlash {
+              0%, 100% { stroke-opacity: .82; }
+              50% { stroke-opacity: 1; }
+            }
+            .meeting-pulse {
+              transform-origin: center;
+              animation: officeMeetingPulse 2.6s ease-in-out infinite;
+            }
+            .meeting-slash {
+              animation: officeMeetingSlash 1.8s ease-in-out infinite;
+            }
+          </style>
+          <circle cx="25" cy="25" r="21" fill="rgba(127,29,29,0.34)" stroke="rgba(248,113,113,0.72)" stroke-width="2.5" class="meeting-pulse"/>
+          <circle cx="25" cy="25" r="15.5" fill="none" stroke="rgba(254,202,202,0.92)" stroke-width="4.2"/>
+          <line x1="14.2" y1="14.2" x2="35.8" y2="35.8" stroke="rgba(254,202,202,0.98)" stroke-width="5.2" stroke-linecap="round" class="meeting-slash"/>
+          <circle cx="25" cy="25" r="22.5" fill="none" stroke="rgba(239,68,68,0.22)" stroke-width="5"/>
+        </svg>
+      `;
+    ]]]
+
   temp: >
     [[[
       const firstValid = (ids) => {

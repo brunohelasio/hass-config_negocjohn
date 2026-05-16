@@ -21,9 +21,9 @@ const BRUNO_SALA_ACTION_COOLDOWN = 1200;
 const BRUNO_SALA_CLIMATE_COOLDOWN = 2500;
 const BRUNO_SALA_TV_ANIMATION_MS = 950;
 
-// FALLBACK - Sala controls v20260516-7:
-// Set to false to restore the previous stacked pill structure quickly.
-const BRUNO_SALA_USE_CONTEXT_DOCK = true;
+// FALLBACK - rejected contextual dock experiment:
+// Set to true to compare the docked layout from v20260516-8.
+const BRUNO_SALA_USE_CONTEXT_DOCK = false;
 
 class BrunoSalaCard extends HTMLElement {
   static getStubConfig() {
@@ -433,22 +433,39 @@ class BrunoSalaCard extends HTMLElement {
 
   _actionButton(key, iconName, name, label, active, tone, options = {}) {
     const activeClass = active ? ' is-active' : '';
+    const variant = options.variant || 'pill';
+    const variantClass = ` is-${variant}`;
+    const switchMarkup = variant === 'toggle'
+      ? `
+        <span class="pill-switch" aria-hidden="true">
+          <span class="switch-track">
+            <span class="switch-knob"></span>
+          </span>
+        </span>
+      `
+      : '';
+    const mediaMarkup = variant === 'media'
+      ? '<span class="pill-media-dot" aria-hidden="true"></span>'
+      : '';
     return `
-      <button class="action-pill icon-${iconName} tone-${tone}${activeClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
+      <button class="action-pill icon-${iconName} tone-${tone}${activeClass}${variantClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
         <span class="pill-icon" aria-hidden="true">${BrunoSalaCard._tplIcon(iconName, { active, ...options })}</span>
-        <span class="pill-name">${BrunoSalaCard._escape(name)}</span>
-        <span class="pill-label">${label}</span>
+        <span class="pill-copy">
+          <span class="pill-name">${BrunoSalaCard._escape(name)}</span>
+          <span class="pill-label">${label}</span>
+        </span>
+        ${switchMarkup}
+        ${mediaMarkup}
       </button>
     `;
   }
 
-  // FALLBACK - Sala controls v20260516-7: previous stacked pill structure.
   _legacyActionStrip(model, animateTv) {
     return `
       <div class="action-strip">
-        ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue')}
-        ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple', { animate: animateTv })}
-        ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan')}
+        ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue', { variant: 'toggle' })}
+        ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple', { animate: animateTv, variant: 'media' })}
+        ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan', { variant: 'toggle' })}
       </div>
     `;
   }
@@ -1143,6 +1160,14 @@ class BrunoSalaCard extends HTMLElement {
           filter: brightness(1.05);
         }
 
+        .action-pill.is-media {
+          border-radius: calc(var(--button-radius) + 1px);
+        }
+
+        .action-pill.is-toggle {
+          border-radius: var(--button-radius);
+        }
+
         .action-pill.is-active {
           background:
             radial-gradient(42px 32px at 22% 20%, rgba(255,255,255,0.34), transparent 74%),
@@ -1165,6 +1190,14 @@ class BrunoSalaCard extends HTMLElement {
           align-items: center;
           justify-content: center;
           color: var(--state-icon-color, #9da0a2);
+        }
+
+        .pill-copy {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          line-height: 1;
         }
 
         .action-pill.icon-ledstrip.is-active .pill-icon {
@@ -1193,8 +1226,7 @@ class BrunoSalaCard extends HTMLElement {
         .pill-label {
           min-width: 0;
           max-width: 84px;
-          justify-self: end;
-          text-align: right;
+          text-align: left;
           font-size: 11px;
           line-height: 1;
           font-weight: 600;
@@ -1210,6 +1242,65 @@ class BrunoSalaCard extends HTMLElement {
 
         .action-pill.is-active .pill-label {
           color: rgba(var(--tone),0.98);
+        }
+
+        .pill-switch {
+          justify-self: end;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .action-pill.is-toggle.is-active .switch-track {
+          background:
+            linear-gradient(180deg, rgba(var(--tone),0.82), rgba(var(--tone),0.54));
+          border-color: rgba(var(--tone),0.60);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.18),
+            0 0 12px rgba(var(--tone),0.20);
+        }
+
+        .action-pill.is-toggle.is-active .switch-knob {
+          transform: translateX(14px);
+          background: rgba(255,255,255,0.96);
+        }
+
+        .pill-media-dot {
+          justify-self: end;
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          background: var(--action-label);
+          opacity: 0.58;
+        }
+
+        .action-pill.is-media.is-active .pill-media-dot {
+          background: rgba(var(--tone),0.98);
+          box-shadow: 0 0 12px rgba(var(--tone),0.30);
+          opacity: 1;
+        }
+
+        .sala-card.is-room-on .action-pill {
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.09)),
+            rgba(6,10,16,0.035);
+          border-color: rgba(8,14,22,0.13);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.24),
+            inset 0 -1px 0 rgba(0,0,0,0.05);
+        }
+
+        .sala-card.is-room-on .action-pill.is-active {
+          background:
+            radial-gradient(56px 38px at 18% 18%, rgba(255,255,255,0.30), transparent 76%),
+            radial-gradient(86px 52px at 96% 85%, rgba(var(--tone),0.20), transparent 74%),
+            linear-gradient(180deg, rgba(255,255,255,0.36), rgba(255,255,255,0.14)),
+            rgba(var(--tone),0.08);
+          border-color: rgba(var(--tone),0.46);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.32),
+            inset 0 -1px 0 rgba(0,0,0,0.06),
+            0 0 18px rgba(var(--tone),0.18);
         }
 
         .tpl-icon,

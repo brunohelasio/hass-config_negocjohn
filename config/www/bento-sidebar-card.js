@@ -125,8 +125,6 @@ class BentoSidebarCard extends HTMLElement {
           --group-gap: 6px;
           --glass-line: rgba(255,255,255,0.14);
           --glass-line-soft: rgba(255,255,255,0.07);
-          --glass-hot: rgba(255,255,255,0.72);
-          --glass-cool: rgba(160,205,255,0.34);
           --icon-neutral: rgba(255,255,255,0.74);
           --icon-active: rgba(245,250,255,0.96);
           --accent: 150, 190, 255;
@@ -169,8 +167,7 @@ class BentoSidebarCard extends HTMLElement {
           overflow: hidden;
         }
 
-        .rail::before,
-        .rail::after {
+        .rail::before {
           content: "";
           position: absolute;
           pointer-events: none;
@@ -186,69 +183,6 @@ class BentoSidebarCard extends HTMLElement {
             linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
             linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%);
           opacity: 0.78;
-        }
-
-        .rail::after {
-          inset: 0;
-          border-radius: inherit;
-          background:
-            radial-gradient(40px 20px at 30% 0%, rgba(255,255,255,0.56), transparent 76%),
-            radial-gradient(18px 50px at 0% 11%, rgba(255,255,255,0.34), transparent 72%),
-            radial-gradient(34px 42px at 100% 21%, rgba(var(--accent),0.24), transparent 70%),
-            radial-gradient(48px 26px at 60% 100%, rgba(255,255,255,0.28), transparent 74%);
-          opacity: 0.88;
-          -webkit-mask:
-            linear-gradient(#000 0 0) content-box,
-            linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          padding: 1px;
-        }
-
-        .edge-glint {
-          position: absolute;
-          z-index: 2;
-          pointer-events: none;
-          border-radius: 999px;
-          filter: drop-shadow(0 0 8px rgba(255,255,255,0.22));
-        }
-
-        .edge-glint.top {
-          top: 1px;
-          left: 14px;
-          width: 30px;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, var(--glass-hot), transparent);
-          opacity: 0.88;
-        }
-
-        .edge-glint.corner {
-          top: 4px;
-          left: 5px;
-          width: 18px;
-          height: 28px;
-          border-top: 1px solid rgba(255,255,255,0.42);
-          border-left: 1px solid rgba(255,255,255,0.30);
-          border-radius: 14px 0 0 0;
-          opacity: 0.72;
-        }
-
-        .edge-glint.right {
-          top: 78px;
-          right: -4px;
-          width: 10px;
-          height: 36px;
-          background: radial-gradient(ellipse, var(--glass-cool), transparent 72%);
-          opacity: 0.48;
-        }
-
-        .edge-glint.bottom {
-          left: 18px;
-          bottom: 1px;
-          width: 28px;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.34), transparent);
-          opacity: 0.46;
         }
 
         .group {
@@ -470,10 +404,6 @@ class BentoSidebarCard extends HTMLElement {
         }
       </style>
       <div class="rail" role="navigation" aria-label="Bento sidebar">
-        <span class="edge-glint top" aria-hidden="true"></span>
-        <span class="edge-glint corner" aria-hidden="true"></span>
-        <span class="edge-glint right" aria-hidden="true"></span>
-        <span class="edge-glint bottom" aria-hidden="true"></span>
         <div class="group top">
           ${this._items('top_items').map((item, index) => this._button(item, 'top', index)).join('')}
         </div>

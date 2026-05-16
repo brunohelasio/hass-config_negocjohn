@@ -1,4 +1,4 @@
-const BENTO_SIDEBAR_CARD_TAG = 'bento-sidebar-glass-card';
+const BENTO_SIDEBAR_CARD_TAG = 'bento-sidebar-liquid-card';
 
 class BentoSidebarCard extends HTMLElement {
   static getStubConfig() {
@@ -125,6 +125,8 @@ class BentoSidebarCard extends HTMLElement {
           --group-gap: 6px;
           --glass-line: rgba(255,255,255,0.14);
           --glass-line-soft: rgba(255,255,255,0.07);
+          --glass-hot: rgba(255,255,255,0.72);
+          --glass-cool: rgba(160,205,255,0.34);
           --icon-neutral: rgba(255,255,255,0.74);
           --icon-active: rgba(245,250,255,0.96);
           --accent: 150, 190, 255;
@@ -150,20 +152,25 @@ class BentoSidebarCard extends HTMLElement {
           justify-content: flex-start;
           padding: var(--rail-padding-top) 0 var(--rail-padding-bottom);
           background:
-            linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.045) 34%, rgba(255,255,255,0.075)),
-            linear-gradient(155deg, rgba(24,31,45,0.74), rgba(20,22,29,0.54) 48%, rgba(42,32,24,0.30));
-          backdrop-filter: blur(24px) saturate(1.35) contrast(1.02);
-          -webkit-backdrop-filter: blur(24px) saturate(1.35) contrast(1.02);
-          border: 1px solid var(--glass-line);
+            radial-gradient(54px 120px at 26% -3%, rgba(255,255,255,0.24), rgba(255,255,255,0.06) 42%, transparent 70%),
+            radial-gradient(50px 130px at 92% 86%, rgba(var(--accent),0.12), transparent 68%),
+            linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.048) 34%, rgba(255,255,255,0.082)),
+            linear-gradient(155deg, rgba(26,33,48,0.78), rgba(20,22,29,0.58) 48%, rgba(42,32,24,0.32));
+          backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
+          -webkit-backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
+          border: 1px solid rgba(255,255,255,0.11);
           border-radius: var(--rail-radius);
           box-shadow:
-            inset 1px 1px 0 rgba(255,255,255,0.18),
-            inset -1px -1px 0 rgba(255,255,255,0.035),
-            0 18px 44px rgba(0,0,0,0.24);
+            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 1px 0 0 rgba(255,255,255,0.12),
+            inset -1px -1px 0 rgba(255,255,255,0.030),
+            0 18px 44px rgba(0,0,0,0.24),
+            0 0 24px rgba(110,150,210,0.08);
           overflow: hidden;
         }
 
-        .rail::before {
+        .rail::before,
+        .rail::after {
           content: "";
           position: absolute;
           pointer-events: none;
@@ -174,9 +181,74 @@ class BentoSidebarCard extends HTMLElement {
           inset: 1px;
           border-radius: calc(var(--rail-radius) - 1px);
           background:
-            linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.00) 30%),
-            linear-gradient(90deg, rgba(255,255,255,0.13), rgba(255,255,255,0.00) 46%);
+            radial-gradient(34px 42px at 24% 3%, rgba(255,255,255,0.26), transparent 70%),
+            radial-gradient(42px 70px at 94% 18%, rgba(var(--accent),0.16), transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
+            linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%);
+          opacity: 0.78;
+        }
+
+        .rail::after {
+          inset: 0;
+          border-radius: inherit;
+          background:
+            radial-gradient(40px 20px at 30% 0%, rgba(255,255,255,0.56), transparent 76%),
+            radial-gradient(18px 50px at 0% 11%, rgba(255,255,255,0.34), transparent 72%),
+            radial-gradient(34px 42px at 100% 21%, rgba(var(--accent),0.24), transparent 70%),
+            radial-gradient(48px 26px at 60% 100%, rgba(255,255,255,0.28), transparent 74%);
+          opacity: 0.88;
+          -webkit-mask:
+            linear-gradient(#000 0 0) content-box,
+            linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          padding: 1px;
+        }
+
+        .edge-glint {
+          position: absolute;
+          z-index: 2;
+          pointer-events: none;
+          border-radius: 999px;
+          filter: drop-shadow(0 0 8px rgba(255,255,255,0.22));
+        }
+
+        .edge-glint.top {
+          top: 1px;
+          left: 14px;
+          width: 30px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, var(--glass-hot), transparent);
+          opacity: 0.88;
+        }
+
+        .edge-glint.corner {
+          top: 4px;
+          left: 5px;
+          width: 18px;
+          height: 28px;
+          border-top: 1px solid rgba(255,255,255,0.42);
+          border-left: 1px solid rgba(255,255,255,0.30);
+          border-radius: 14px 0 0 0;
           opacity: 0.72;
+        }
+
+        .edge-glint.right {
+          top: 78px;
+          right: -4px;
+          width: 10px;
+          height: 36px;
+          background: radial-gradient(ellipse, var(--glass-cool), transparent 72%);
+          opacity: 0.48;
+        }
+
+        .edge-glint.bottom {
+          left: 18px;
+          bottom: 1px;
+          width: 28px;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.34), transparent);
+          opacity: 0.46;
         }
 
         .group {
@@ -302,16 +374,19 @@ class BentoSidebarCard extends HTMLElement {
         .nav-button.selected {
           color: var(--icon-active);
           background:
-            linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.075)),
+            radial-gradient(22px 18px at 30% 14%, rgba(255,255,255,0.46), transparent 72%),
+            radial-gradient(30px 30px at 86% 82%, rgba(var(--accent),0.18), transparent 70%),
+            linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0.084)),
             linear-gradient(135deg, rgba(var(--accent),0.26), rgba(255,255,255,0.025));
           backdrop-filter: blur(14px) saturate(1.28);
           -webkit-backdrop-filter: blur(14px) saturate(1.28);
-          border-color: rgba(218,232,255,0.38);
+          border-color: rgba(226,238,255,0.46);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 0 1px 0 rgba(255,255,255,0.30),
+            inset 1px 0 0 rgba(255,255,255,0.12),
             inset 0 -1px 0 rgba(255,255,255,0.06),
             0 8px 18px rgba(0,0,0,0.24),
-            0 0 22px rgba(var(--accent),0.20);
+            0 0 24px rgba(var(--accent),0.24);
           animation: selected-breathe 4.8s ease-in-out infinite;
         }
 
@@ -327,7 +402,9 @@ class BentoSidebarCard extends HTMLElement {
 
         .nav-button.selected:hover {
           background:
-            linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.085)),
+            radial-gradient(22px 18px at 30% 14%, rgba(255,255,255,0.48), transparent 72%),
+            radial-gradient(30px 30px at 86% 82%, rgba(var(--accent),0.20), transparent 70%),
+            linear-gradient(180deg, rgba(255,255,255,0.27), rgba(255,255,255,0.092)),
             linear-gradient(135deg, rgba(var(--accent),0.30), rgba(255,255,255,0.035));
         }
 
@@ -393,6 +470,10 @@ class BentoSidebarCard extends HTMLElement {
         }
       </style>
       <div class="rail" role="navigation" aria-label="Bento sidebar">
+        <span class="edge-glint top" aria-hidden="true"></span>
+        <span class="edge-glint corner" aria-hidden="true"></span>
+        <span class="edge-glint right" aria-hidden="true"></span>
+        <span class="edge-glint bottom" aria-hidden="true"></span>
         <div class="group top">
           ${this._items('top_items').map((item, index) => this._button(item, 'top', index)).join('')}
         </div>

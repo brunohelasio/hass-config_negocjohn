@@ -549,31 +549,39 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .sala-card.is-room-on {
-          --text-main: rgba(0,0,0,0.90);
-          --text-soft: rgba(0,0,0,0.60);
-          --text-muted: rgba(0,0,0,0.55);
-          --action-off-bg: linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.055) 100%);
-          --action-off-border: rgba(0,0,0,0.16);
-          --action-off-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
-          --action-name: rgba(0,0,0,0.82);
-          --action-label: rgba(0,0,0,0.48);
-          --dot-off-bg: rgba(0,0,0,0.08);
-          --dot-off-border: rgba(0,0,0,0.14);
-          --dot-off-icon: rgba(0,0,0,0.42);
+          --text-main: rgba(18,22,28,0.92);
+          --text-soft: rgba(22,26,32,0.60);
+          --text-muted: rgba(22,26,32,0.56);
+          --action-off-bg:
+            linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.10)),
+            linear-gradient(180deg, rgba(6,10,16,0.11), rgba(6,10,16,0.045));
+          --action-off-border: rgba(8,14,22,0.16);
+          --action-off-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.24),
+            inset 0 -1px 0 rgba(0,0,0,0.05);
+          --action-name: rgba(16,20,26,0.86);
+          --action-label: rgba(22,26,32,0.50);
+          --dot-off-bg: rgba(255,255,255,0.16);
+          --dot-off-border: rgba(8,14,22,0.14);
+          --dot-off-icon: rgba(20,24,30,0.46);
           background:
-            radial-gradient(180px 140px at 12% -10%, rgba(255,255,255,0.54), rgba(255,255,255,0.10) 52%, transparent 74%),
-            linear-gradient(180deg, rgba(255,255,255,0.82), rgba(242,246,250,0.72));
-          backdrop-filter: blur(18px) saturate(1.15);
-          -webkit-backdrop-filter: blur(18px) saturate(1.15);
-          border-color: rgba(255,255,255,0.28);
+            radial-gradient(170px 136px at 12% -10%, rgba(255,255,255,0.38), rgba(255,255,255,0.07) 52%, transparent 74%),
+            radial-gradient(150px 140px at 94% 92%, rgba(120,160,210,0.16), transparent 68%),
+            linear-gradient(180deg, rgba(255,255,255,0.54), rgba(238,244,250,0.34) 44%, rgba(212,222,232,0.28)),
+            linear-gradient(155deg, rgba(250,252,255,0.38), rgba(184,198,214,0.22) 52%, rgba(72,84,98,0.10));
+          backdrop-filter: blur(30px) saturate(1.45) contrast(1.04);
+          -webkit-backdrop-filter: blur(30px) saturate(1.45) contrast(1.04);
+          border-color: rgba(255,255,255,0.36);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.28),
-            0 0 20px rgba(255,255,255,0.10),
-            0 8px 24px rgba(0,0,0,0.14);
+            inset 0 1px 0 rgba(255,255,255,0.38),
+            inset 1px 0 0 rgba(255,255,255,0.16),
+            inset 0 -1px 0 rgba(0,0,0,0.08),
+            0 0 20px rgba(255,255,255,0.08),
+            0 14px 34px rgba(0,0,0,0.18);
         }
 
         .sala-card.is-room-on::before {
-          opacity: 0.16;
+          opacity: 0.34;
         }
 
         button {
@@ -790,14 +798,16 @@ class BrunoSalaCard extends HTMLElement {
 
         .action-pill.is-active {
           background:
-            radial-gradient(42px 32px at 22% 20%, rgba(255,255,255,0.44), transparent 74%),
-            radial-gradient(74px 44px at 94% 82%, rgba(var(--tone),0.22), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.88), rgba(235,242,248,0.76));
+            radial-gradient(42px 32px at 22% 20%, rgba(255,255,255,0.34), transparent 74%),
+            radial-gradient(74px 44px at 94% 82%, rgba(var(--tone),0.24), transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.66), rgba(230,239,248,0.46)),
+            linear-gradient(180deg, rgba(var(--tone),0.10), rgba(var(--tone),0.035));
           border-color: rgba(var(--tone),0.58);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.30),
+            inset 0 1px 0 rgba(255,255,255,0.34),
             inset 1px 0 0 rgba(255,255,255,0.12),
-            0 8px 18px rgba(0,0,0,0.18),
+            inset 0 -1px 0 rgba(0,0,0,0.06),
+            0 8px 18px rgba(0,0,0,0.16),
             0 0 22px rgba(var(--tone),0.24);
         }
 

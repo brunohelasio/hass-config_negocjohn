@@ -17,6 +17,9 @@ const BRUNO_SALA_DEFAULT_ENTITIES = {
 const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle'];
 const BRUNO_SALA_CLIMATE_ON_STATES = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
 const BRUNO_SALA_SPEAKER_ON_STATES = ['playing', 'on', 'paused'];
+const BRUNO_SALA_ACTION_COOLDOWN = 1200;
+const BRUNO_SALA_CLIMATE_COOLDOWN = 2500;
+const BRUNO_SALA_TV_ANIMATION_MS = 950;
 
 class BrunoSalaCard extends HTMLElement {
   static getStubConfig() {
@@ -206,6 +209,7 @@ class BrunoSalaCard extends HTMLElement {
     }
 
     if (key === 'corridor') {
+      if (gesture === 'tap' && this._isActionCoolingDown(key)) return;
       if (gesture === 'hold') {
         this._moreInfo(entities.corridor);
         return;
@@ -215,6 +219,7 @@ class BrunoSalaCard extends HTMLElement {
     }
 
     if (key === 'tv') {
+      if (gesture === 'tap' && this._isActionCoolingDown(key)) return;
       if (gesture === 'hold') {
         this._moreInfo(entities.tv);
         return;
@@ -224,6 +229,7 @@ class BrunoSalaCard extends HTMLElement {
     }
 
     if (key === 'climate') {
+      if (gesture === 'tap' && this._isActionCoolingDown(key)) return;
       if (gesture === 'hold') {
         this._moreInfo(entities.climate);
         return;
@@ -233,6 +239,16 @@ class BrunoSalaCard extends HTMLElement {
         : 'climate.turn_on';
       this._callService(service, {}, { entity_id: entities.climate });
     }
+  }
+
+  _isActionCoolingDown(key) {
+    this._lastActionAt = this._lastActionAt || {};
+    const now = Date.now();
+    const previous = this._lastActionAt[key] || 0;
+    const cooldown = key === 'climate' ? BRUNO_SALA_CLIMATE_COOLDOWN : BRUNO_SALA_ACTION_COOLDOWN;
+    if (now - previous < cooldown) return true;
+    this._lastActionAt[key] = now;
+    return false;
   }
 
   _callService(serviceName, data = {}, target = {}) {
@@ -255,11 +271,28 @@ class BrunoSalaCard extends HTMLElement {
 
   _navigate(path) {
     if (!path) return;
+    const resolvedPath = this._resolveNavigationPath(path);
+    const eventPath = path.startsWith('/') ? resolvedPath : path;
     this.dispatchEvent(new CustomEvent('hass-navigate', {
-      detail: { path },
+      detail: { path: eventPath },
       bubbles: true,
       composed: true,
     }));
+
+    window.setTimeout(() => {
+      if (!resolvedPath || window.location?.pathname === resolvedPath) return;
+      if (window.history?.pushState) window.history.pushState(null, '', resolvedPath);
+      window.dispatchEvent?.(new CustomEvent('location-changed', { detail: { replace: false } }));
+    }, 80);
+  }
+
+  _resolveNavigationPath(path) {
+    if (!path) return '';
+    if (path.startsWith('/')) return path;
+
+    const current = window.location?.pathname || '';
+    const dashboard = current.split('/').filter(Boolean)[0];
+    return `/${dashboard || 'ngocjohn-main'}/${path}`;
   }
 
   _moreInfo(entityId) {
@@ -279,7 +312,8 @@ class BrunoSalaCard extends HTMLElement {
     let tapTimer = null;
     let holdFired = false;
     let lastDoubleAt = 0;
-    const tapDelay = 390;
+    let lastTapActionAt = 0;
+    const tapDelay = 520;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -305,7 +339,15 @@ class BrunoSalaCard extends HTMLElement {
       if (now - lastDoubleAt < 300) return;
       lastDoubleAt = now;
       clearTap();
+      lastTapActionAt = now;
       this._runAction(key, 'double');
+    };
+
+    const runTap = () => {
+      const now = Date.now();
+      if (now - lastTapActionAt < 280) return;
+      lastTapActionAt = now;
+      this._runAction(key, 'tap');
     };
 
     button.addEventListener('pointerdown', (event) => {
@@ -340,19 +382,29 @@ class BrunoSalaCard extends HTMLElement {
         tapTimer = window.setTimeout(() => {
           tapTimer = null;
           if (Date.now() - lastDoubleAt < tapDelay) return;
-          this._runAction(key, 'tap');
+          runTap();
         }, tapDelay);
         return;
       }
 
-      this._runAction(key, 'tap');
+      runTap();
+    });
+
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (key === 'room' && event.detail >= 2) {
+        resetPress();
+        runDouble();
+      }
     });
 
     button.addEventListener('dblclick', (event) => {
-      if (key !== 'room') return;
       event.preventDefault();
       event.stopPropagation();
       resetPress();
+      if (key !== 'room') return;
       runDouble();
     });
 
@@ -375,11 +427,11 @@ class BrunoSalaCard extends HTMLElement {
     `;
   }
 
-  _actionButton(key, iconName, name, label, active, tone) {
+  _actionButton(key, iconName, name, label, active, tone, options = {}) {
     const activeClass = active ? ' is-active' : '';
     return `
       <button class="action-pill icon-${iconName} tone-${tone}${activeClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
-        <span class="pill-icon" aria-hidden="true">${BrunoSalaCard._tplIcon(iconName, { active })}</span>
+        <span class="pill-icon" aria-hidden="true">${BrunoSalaCard._tplIcon(iconName, { active, ...options })}</span>
         <span class="pill-name">${BrunoSalaCard._escape(name)}</span>
         <span class="pill-label">${label}</span>
       </button>
@@ -392,6 +444,18 @@ class BrunoSalaCard extends HTMLElement {
 
     const model = this._model();
     const roomActiveClass = model.roomOn ? ' is-room-on' : '';
+    const now = Date.now();
+    const tvStateChanged = Boolean(this._hass && this._lastTvOn !== undefined && this._lastTvOn !== model.tvOn);
+    if (tvStateChanged) {
+      this._tvAnimationUntil = now + BRUNO_SALA_TV_ANIMATION_MS;
+      this._tvAnimationState = model.tvOn;
+    }
+    const animateTv = Boolean(
+      this._hass
+      && this._tvAnimationState === model.tvOn
+      && this._tvAnimationUntil
+      && now < this._tvAnimationUntil,
+    );
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -874,11 +938,13 @@ class BrunoSalaCard extends HTMLElement {
 
         <div class="action-strip">
           ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue')}
-          ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple')}
+          ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple', { animate: animateTv })}
           ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan')}
         </div>
       </div>
     `;
+
+    if (this._hass) this._lastTvOn = model.tvOn;
 
     this.shadowRoot
       .querySelectorAll('[data-action-key]')
@@ -909,9 +975,12 @@ class BrunoSalaCard extends HTMLElement {
 
   static _tplIcon(name, options = {}) {
     const active = Boolean(options.active);
+    const animate = Boolean(options.animate);
     const tvScreen = active
-      ? `<path class="tv-screen-on" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-tv-screen)"/>`
-      : `<path class="tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-tv-screen)"/>`;
+      ? `<path${animate ? ' class="tv-screen-on"' : ''} d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-tv-screen)"/>`
+      : animate
+        ? `<path class="tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-tv-screen)"/>`
+        : '';
     const icons = {
       living_sofa: `
         <svg viewBox="0 0 24 24" class="tpl-icon-svg tpl-icon-living-sofa" aria-hidden="true">

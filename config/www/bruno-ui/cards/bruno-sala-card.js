@@ -16,6 +16,8 @@ const BRUNO_SALA_DEFAULT_ENTITIES = {
 
 const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle'];
 const BRUNO_SALA_CLIMATE_ON_STATES = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
+const BRUNO_SALA_CLIMATE_ACTIVE_ACTIONS = ['cooling', 'heating', 'drying', 'fan', 'preheating'];
+const BRUNO_SALA_CLIMATE_INACTIVE_ACTIONS = ['off', 'idle'];
 const BRUNO_SALA_SPEAKER_ON_STATES = ['playing', 'on', 'paused'];
 const BRUNO_SALA_ACTION_COOLDOWN = 1200;
 const BRUNO_SALA_CLIMATE_COOLDOWN = 2500;
@@ -154,9 +156,24 @@ class BrunoSalaCard extends HTMLElement {
     return 'Desligada';
   }
 
+  _climateAction(entity) {
+    return String(entity?.attributes?.hvac_action || '').toLowerCase();
+  }
+
+  _climateIsActive(entity) {
+    if (this._isUnavailable(entity) || entity.state === 'off') return false;
+
+    const hvacAction = this._climateAction(entity);
+    if (BRUNO_SALA_CLIMATE_ACTIVE_ACTIONS.includes(hvacAction)) return true;
+    if (BRUNO_SALA_CLIMATE_INACTIVE_ACTIONS.includes(hvacAction)) return false;
+
+    return BRUNO_SALA_CLIMATE_ON_STATES.includes(entity?.state || '');
+  }
+
   _climateLabel(entity) {
-    const isOn = BRUNO_SALA_CLIMATE_ON_STATES.includes(entity?.state || '');
-    if (!isOn) return 'Desligado';
+    const hvacAction = this._climateAction(entity);
+    if (hvacAction === 'idle') return 'Em espera';
+    if (!this._climateIsActive(entity)) return 'Desligado';
 
     const temperature = entity?.attributes?.temperature;
     return Number.isFinite(Number(temperature)) ? `${Number(temperature)}&deg;` : 'Ligado';
@@ -171,7 +188,7 @@ class BrunoSalaCard extends HTMLElement {
 
     const roomOn = room?.state === 'on';
     const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tv?.state || '');
-    const climateOn = BRUNO_SALA_CLIMATE_ON_STATES.includes(climate?.state || '');
+    const climateOn = this._climateIsActive(climate);
     const speakerOn = BRUNO_SALA_SPEAKER_ON_STATES.includes(this._state(entities.speaker)?.state || '');
     const corridorOn = corridor?.state === 'on';
     const lights = this._lightsSummary(room);
@@ -234,7 +251,7 @@ class BrunoSalaCard extends HTMLElement {
         this._moreInfo(entities.climate);
         return;
       }
-      const service = BRUNO_SALA_CLIMATE_ON_STATES.includes(this._state(entities.climate)?.state || '')
+      const service = this._climateIsActive(this._state(entities.climate))
         ? 'climate.turn_off'
         : 'climate.turn_on';
       this._callService(service, {}, { entity_id: entities.climate });
@@ -564,35 +581,36 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .sala-card.is-room-on {
-          --text-main: rgba(18,22,28,0.92);
-          --text-soft: rgba(22,26,32,0.60);
-          --text-muted: rgba(22,26,32,0.56);
+          --text-main: rgba(248,251,255,0.96);
+          --text-soft: rgba(255,255,255,0.52);
+          --text-muted: rgba(255,255,255,0.62);
           --action-off-bg:
-            linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.10)),
-            linear-gradient(180deg, rgba(6,10,16,0.11), rgba(6,10,16,0.045));
-          --action-off-border: rgba(8,14,22,0.16);
+            linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.055)),
+            linear-gradient(155deg, rgba(30,38,50,0.42), rgba(12,15,22,0.24));
+          --action-off-border: rgba(255,255,255,0.14);
           --action-off-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.24),
-            inset 0 -1px 0 rgba(0,0,0,0.05);
-          --action-name: rgba(16,20,26,0.86);
-          --action-label: rgba(22,26,32,0.50);
-          --dot-off-bg: rgba(255,255,255,0.16);
-          --dot-off-border: rgba(8,14,22,0.14);
-          --dot-off-icon: rgba(20,24,30,0.46);
+            inset 0 1px 0 rgba(255,255,255,0.18),
+            inset 0 -1px 0 rgba(0,0,0,0.12);
+          --action-name: rgba(248,251,255,0.86);
+          --action-label: rgba(255,255,255,0.46);
+          --dot-off-bg: rgba(255,255,255,0.12);
+          --dot-off-border: rgba(255,255,255,0.16);
+          --dot-off-icon: rgba(255,255,255,0.48);
           background:
-            radial-gradient(170px 136px at 12% -10%, rgba(255,255,255,0.38), rgba(255,255,255,0.07) 52%, transparent 74%),
-            radial-gradient(150px 140px at 94% 92%, rgba(120,160,210,0.16), transparent 68%),
-            linear-gradient(180deg, rgba(255,255,255,0.54), rgba(238,244,250,0.34) 44%, rgba(212,222,232,0.28)),
-            linear-gradient(155deg, rgba(250,252,255,0.38), rgba(184,198,214,0.22) 52%, rgba(72,84,98,0.10));
-          backdrop-filter: blur(30px) saturate(1.45) contrast(1.04);
-          -webkit-backdrop-filter: blur(30px) saturate(1.45) contrast(1.04);
-          border-color: rgba(255,255,255,0.36);
+            radial-gradient(170px 136px at 12% -10%, rgba(255,255,255,0.30), rgba(255,255,255,0.065) 52%, transparent 74%),
+            radial-gradient(160px 140px at 96% 92%, rgba(135,180,235,0.20), transparent 68%),
+            radial-gradient(120px 92px at 28% 20%, rgba(255,231,132,0.075), transparent 70%),
+            linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.062) 42%, rgba(255,255,255,0.085)),
+            linear-gradient(155deg, rgba(34,42,55,0.78), rgba(24,28,37,0.62) 52%, rgba(12,15,22,0.48));
+          backdrop-filter: blur(32px) saturate(1.55) contrast(1.05);
+          -webkit-backdrop-filter: blur(32px) saturate(1.55) contrast(1.05);
+          border-color: rgba(255,255,255,0.22);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.38),
-            inset 1px 0 0 rgba(255,255,255,0.16),
-            inset 0 -1px 0 rgba(0,0,0,0.08),
+            inset 0 1px 0 rgba(255,255,255,0.30),
+            inset 1px 0 0 rgba(255,255,255,0.12),
+            inset 0 -1px 0 rgba(0,0,0,0.18),
             0 0 20px rgba(255,255,255,0.08),
-            0 14px 34px rgba(0,0,0,0.18);
+            0 18px 42px rgba(0,0,0,0.28);
         }
 
         .sala-card.is-room-on::before {
@@ -779,7 +797,20 @@ class BrunoSalaCard extends HTMLElement {
           flex: 0 0 auto;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 7px;
+          gap: 6px;
+        }
+
+        .action-separator {
+          height: 1px;
+          margin: 2px 10px 3px;
+          border-radius: 999px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+          opacity: 0.78;
+        }
+
+        .sala-card.is-room-on .action-separator {
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
+          opacity: 0.82;
         }
 
         .action-pill {
@@ -821,17 +852,17 @@ class BrunoSalaCard extends HTMLElement {
 
         .action-pill.is-active {
           background:
-            radial-gradient(42px 32px at 22% 20%, rgba(255,255,255,0.34), transparent 74%),
-            radial-gradient(74px 44px at 94% 82%, rgba(var(--tone),0.24), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.66), rgba(230,239,248,0.46)),
-            linear-gradient(180deg, rgba(var(--tone),0.10), rgba(var(--tone),0.035));
-          border-color: rgba(var(--tone),0.58);
+            radial-gradient(42px 32px at 22% 20%, rgba(255,255,255,0.22), transparent 74%),
+            radial-gradient(82px 50px at 96% 82%, rgba(var(--tone),0.25), transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.055)),
+            linear-gradient(155deg, rgba(var(--tone),0.12), rgba(12,16,24,0.16));
+          border-color: rgba(var(--tone),0.54);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.34),
-            inset 1px 0 0 rgba(255,255,255,0.12),
-            inset 0 -1px 0 rgba(0,0,0,0.06),
-            0 8px 18px rgba(0,0,0,0.16),
-            0 0 22px rgba(var(--tone),0.24);
+            inset 0 1px 0 rgba(255,255,255,0.24),
+            inset 1px 0 0 rgba(255,255,255,0.10),
+            inset 0 -1px 0 rgba(0,0,0,0.12),
+            0 8px 18px rgba(0,0,0,0.18),
+            0 0 18px rgba(var(--tone),0.20);
         }
 
         .pill-icon {
@@ -888,7 +919,7 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .action-pill.is-active .pill-name {
-          color: rgba(0,0,0,0.82);
+          color: var(--action-name);
         }
 
         .action-pill.is-active .pill-label {
@@ -966,6 +997,19 @@ class BrunoSalaCard extends HTMLElement {
           background: rgba(var(--tone),0.98);
           box-shadow: 0 0 12px rgba(var(--tone),0.30);
           opacity: 1;
+        }
+
+        .sala-card.is-room-on .action-pill.is-active {
+          background:
+            radial-gradient(52px 36px at 18% 18%, rgba(255,255,255,0.20), transparent 76%),
+            radial-gradient(86px 52px at 96% 85%, rgba(var(--tone),0.24), transparent 74%),
+            linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.055)),
+            rgba(var(--tone),0.075);
+          border-color: rgba(var(--tone),0.50);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.24),
+            inset 0 -1px 0 rgba(0,0,0,0.12),
+            0 0 18px rgba(var(--tone),0.18);
         }
 
         .tpl-icon,
@@ -1053,6 +1097,7 @@ class BrunoSalaCard extends HTMLElement {
 
         <div class="action-strip">
           ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue', { variant: 'toggle' })}
+          <div class="action-separator" aria-hidden="true"></div>
           ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple', { animate: animateTv, variant: 'media' })}
           ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan', { variant: 'toggle' })}
         </div>

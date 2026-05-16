@@ -163,8 +163,7 @@ class BentoSidebarCard extends HTMLElement {
           overflow: hidden;
         }
 
-        .rail::before,
-        .rail::after {
+        .rail::before {
           content: "";
           position: absolute;
           pointer-events: none;
@@ -178,16 +177,6 @@ class BentoSidebarCard extends HTMLElement {
             linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.00) 30%),
             linear-gradient(90deg, rgba(255,255,255,0.13), rgba(255,255,255,0.00) 46%);
           opacity: 0.72;
-        }
-
-        .rail::after {
-          top: 12px;
-          right: 7px;
-          bottom: 12px;
-          width: 1px;
-          border-radius: 999px;
-          background: linear-gradient(180deg, rgba(255,255,255,0.00), rgba(255,255,255,0.20), rgba(255,255,255,0.00));
-          opacity: 0.32;
         }
 
         .group {
@@ -225,13 +214,10 @@ class BentoSidebarCard extends HTMLElement {
           margin: 0;
           padding: 0;
           color: var(--icon-neutral);
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018));
-          border: 1px solid rgba(255,255,255,0.055);
+          background: transparent;
+          border: 1px solid transparent;
           border-radius: var(--button-radius);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.055),
-            0 1px 0 rgba(0,0,0,0.12);
+          box-shadow: none;
           outline: none;
           cursor: pointer;
           appearance: none;

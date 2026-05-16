@@ -13,18 +13,86 @@ card_mod:
       display: block !important;
       padding: 0px !important;
 
-      background: {% if meeting %}linear-gradient(145deg, rgba(127,29,29,0.13), rgba(239,68,68,0.04)), linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)){% else %}linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)){% endif %} !important;
-      backdrop-filter: blur(20px) saturate(1.35) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-      border: {% if meeting %}1px solid rgba(248,113,113,0.68){% else %}1px solid rgba(255,255,255,0.10){% endif %} !important;
-      box-shadow: {% if meeting %}0 0 0 1px rgba(248,113,113,0.18), 0 0 22px rgba(239,68,68,0.28), inset 0 0 28px rgba(127,29,29,0.10), 0 8px 32px rgba(0,0,0,0.2){% else %}0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2){% endif %} !important;
-      border-radius: 16px !important;
+      /* PROVA DE CONCEITO — Office Hemma-like
+         Objetivo: validar superfície mais espessa/soft sem tocar na lógica.
+         Mantém meeting-state, estrutura e conteúdo; altera apenas a casca visual.
+      */
+      background:
+        {% if meeting %}
+          linear-gradient(145deg, rgba(132, 36, 36, 0.18), rgba(239, 68, 68, 0.05)),
+          linear-gradient(180deg, rgba(34, 40, 56, 0.66), rgba(20, 24, 34, 0.54))
+        {% else %}
+          linear-gradient(180deg, rgba(38, 44, 60, 0.64), rgba(22, 26, 36, 0.52))
+        {% endif %} !important;
+      backdrop-filter: blur(24px) saturate(1.22) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(1.22) !important;
+      border: {% if meeting %}1px solid rgba(248, 113, 113, 0.34){% else %}1px solid rgba(255,255,255,0.14){% endif %} !important;
+      box-shadow:
+        {% if meeting %}
+          inset 0 1px 0 rgba(255,255,255,0.16),
+          inset 0 0 0 1px rgba(255,255,255,0.03),
+          0 14px 36px rgba(0,0,0,0.24),
+          0 2px 10px rgba(0,0,0,0.10)
+        {% else %}
+          inset 0 1px 0 rgba(255,255,255,0.16),
+          inset 0 0 0 1px rgba(255,255,255,0.03),
+          0 14px 36px rgba(0,0,0,0.24),
+          0 2px 10px rgba(0,0,0,0.10)
+        {% endif %} !important;
+      border-radius: 24px !important;
       overflow: hidden !important;
+      position: relative !important;
 
+      /* Neutraliza o material herdado do theme para evitar vidro duplo */
       --ha-card-backdrop-filter: none !important;
       --ha-card-background: transparent !important;
       --ha-card-border-width: 0 !important;
+      --ha-card-box-shadow: none !important;
     }
-    ha-card::before { display: none !important; }
+
+    /* Borda especular local, inspirada no comportamento visual do Hemma */
+    ha-card::before {
+      content: '' !important;
+      display: block !important;
+      position: absolute !important;
+      inset: 0 !important;
+      border-radius: inherit !important;
+      padding: 1px !important;
+      box-sizing: border-box !important;
+      pointer-events: none !important;
+      background: {% if meeting %}
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,0.26) 0%,
+          rgba(255,255,255,0.08) 28%,
+          rgba(248,113,113,0.12) 58%,
+          rgba(255,255,255,0.18) 100%
+        )
+      {% else %}
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,0.28) 0%,
+          rgba(255,255,255,0.10) 30%,
+          rgba(255,255,255,0.06) 58%,
+          rgba(255,255,255,0.20) 100%
+        )
+      {% endif %} !important;
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0) !important;
+      -webkit-mask-composite: xor !important;
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0) !important;
+      mask-composite: exclude !important;
+      opacity: 1 !important;
+      z-index: 0 !important;
+    }
+
+    /* Garante que o conteúdo fique acima da borda especular */
+    ha-card > * {
+      position: relative !important;
+      z-index: 1 !important;
+    }
 cards:
   - !include ../../shared/grid-cards/bento_office.yaml

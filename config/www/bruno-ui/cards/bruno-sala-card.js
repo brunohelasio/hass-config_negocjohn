@@ -240,7 +240,12 @@ class BrunoSalaCard extends HTMLElement {
     const [domain, service] = serviceName.split('.');
     if (!domain || !service) return;
 
-    this._hass.callService(domain, service, data, target);
+    const serviceData = { ...data };
+    if (target?.entity_id != null && serviceData.entity_id == null) serviceData.entity_id = target.entity_id;
+    if (target?.area_id != null && serviceData.area_id == null) serviceData.area_id = target.area_id;
+    if (target?.device_id != null && serviceData.device_id == null) serviceData.device_id = target.device_id;
+
+    this._hass.callService(domain, service, serviceData, target);
   }
 
   _toggleEntity(entityId) {
@@ -273,6 +278,8 @@ class BrunoSalaCard extends HTMLElement {
     let holdTimer = null;
     let tapTimer = null;
     let holdFired = false;
+    let lastDoubleAt = 0;
+    const tapDelay = 390;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -281,13 +288,30 @@ class BrunoSalaCard extends HTMLElement {
       }
     };
 
+    const clearTap = () => {
+      if (tapTimer) {
+        window.clearTimeout(tapTimer);
+        tapTimer = null;
+      }
+    };
+
     const resetPress = () => {
       clearHold();
       button.classList.remove('is-pressed');
     };
 
+    const runDouble = () => {
+      const now = Date.now();
+      if (now - lastDoubleAt < 300) return;
+      lastDoubleAt = now;
+      clearTap();
+      this._runAction(key, 'double');
+    };
+
     button.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
       holdFired = false;
       button.classList.add('is-pressed');
       button.setPointerCapture?.(event.pointerId);
@@ -301,26 +325,35 @@ class BrunoSalaCard extends HTMLElement {
     });
 
     button.addEventListener('pointerup', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       button.releasePointerCapture?.(event.pointerId);
       resetPress();
       if (holdFired) return;
 
       if (key === 'room') {
         if (tapTimer) {
-          window.clearTimeout(tapTimer);
-          tapTimer = null;
-          this._runAction(key, 'double');
+          runDouble();
           return;
         }
 
         tapTimer = window.setTimeout(() => {
           tapTimer = null;
+          if (Date.now() - lastDoubleAt < tapDelay) return;
           this._runAction(key, 'tap');
-        }, 260);
+        }, tapDelay);
         return;
       }
 
       this._runAction(key, 'tap');
+    });
+
+    button.addEventListener('dblclick', (event) => {
+      if (key !== 'room') return;
+      event.preventDefault();
+      event.stopPropagation();
+      resetPress();
+      runDouble();
     });
 
     button.addEventListener('pointerleave', resetPress);
@@ -346,7 +379,7 @@ class BrunoSalaCard extends HTMLElement {
     const activeClass = active ? ' is-active' : '';
     return `
       <button class="action-pill icon-${iconName} tone-${tone}${activeClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
-        <span class="pill-icon" aria-hidden="true">${BrunoSalaCard._tplIcon(iconName)}</span>
+        <span class="pill-icon" aria-hidden="true">${BrunoSalaCard._tplIcon(iconName, { active })}</span>
         <span class="pill-name">${BrunoSalaCard._escape(name)}</span>
         <span class="pill-label">${label}</span>
       </button>
@@ -363,7 +396,7 @@ class BrunoSalaCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-radius: 16px;
+          --card-radius: 18px;
           --button-radius: 14px;
           --accent: 150, 190, 255;
           --accent-blue: 96, 165, 250;
@@ -377,7 +410,7 @@ class BrunoSalaCard extends HTMLElement {
           --action-off-border: rgba(255,255,255,0.12);
           --action-off-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
           --action-name: rgba(255,255,255,0.82);
-          --action-label: rgba(255,255,255,0.35);
+          --action-label: rgba(255,255,255,0.42);
           --dot-off-bg: rgba(255,255,255,0.08);
           --dot-off-border: rgba(255,255,255,0.12);
           --dot-off-icon: rgba(255,255,255,0.35);
@@ -407,17 +440,20 @@ class BrunoSalaCard extends HTMLElement {
           padding: 12px 14px;
           color: var(--text-main);
           background:
-            radial-gradient(180px 150px at 14% -12%, rgba(255,255,255,0.20), rgba(255,255,255,0.048) 44%, transparent 72%),
-            radial-gradient(180px 160px at 110% 90%, rgba(var(--accent),0.14), transparent 72%),
-            linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30));
-          backdrop-filter: blur(20px) saturate(1.35);
-          -webkit-backdrop-filter: blur(20px) saturate(1.35);
-          border: 1px solid rgba(255,255,255,0.28);
+            radial-gradient(160px 150px at 18% -8%, rgba(255,255,255,0.24), rgba(255,255,255,0.06) 42%, transparent 72%),
+            radial-gradient(150px 150px at 94% 88%, rgba(var(--accent),0.12), transparent 68%),
+            linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.048) 34%, rgba(255,255,255,0.082)),
+            linear-gradient(155deg, rgba(26,33,48,0.78), rgba(20,22,29,0.58) 48%, rgba(42,32,24,0.32));
+          backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
+          -webkit-backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
+          border: 1px solid rgba(255,255,255,0.11);
           border-radius: var(--card-radius);
           box-shadow:
-            0 0 32px rgba(59,130,246,0.12),
-            inset 0 1px 0 rgba(191,219,254,0.15),
-            0 8px 32px rgba(0,0,0,0.20);
+            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 1px 0 0 rgba(255,255,255,0.12),
+            inset -1px -1px 0 rgba(255,255,255,0.030),
+            0 18px 44px rgba(0,0,0,0.24),
+            0 0 24px rgba(110,150,210,0.08);
           overflow: hidden;
         }
 
@@ -433,9 +469,11 @@ class BrunoSalaCard extends HTMLElement {
           inset: 1px;
           border-radius: calc(var(--card-radius) - 1px);
           background:
-            radial-gradient(92px 62px at 18% 0%, rgba(255,255,255,0.18), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0) 40%);
-          opacity: 0.62;
+            radial-gradient(74px 58px at 20% 2%, rgba(255,255,255,0.26), transparent 70%),
+            radial-gradient(76px 84px at 94% 16%, rgba(var(--accent),0.16), transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
+            linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%);
+          opacity: 0.78;
         }
 
         .sala-card::after {
@@ -450,17 +488,19 @@ class BrunoSalaCard extends HTMLElement {
           --text-main: rgba(0,0,0,0.90);
           --text-soft: rgba(0,0,0,0.60);
           --text-muted: rgba(0,0,0,0.55);
-          --action-off-bg: linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%);
-          --action-off-border: rgba(0,0,0,0.12);
+          --action-off-bg: linear-gradient(180deg, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.055) 100%);
+          --action-off-border: rgba(0,0,0,0.16);
           --action-off-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
           --action-name: rgba(0,0,0,0.82);
-          --action-label: rgba(0,0,0,0.38);
+          --action-label: rgba(0,0,0,0.48);
           --dot-off-bg: rgba(0,0,0,0.08);
           --dot-off-border: rgba(0,0,0,0.14);
           --dot-off-icon: rgba(0,0,0,0.42);
-          background: rgba(250,250,250,0.75);
-          backdrop-filter: none;
-          -webkit-backdrop-filter: none;
+          background:
+            radial-gradient(180px 140px at 12% -10%, rgba(255,255,255,0.54), rgba(255,255,255,0.10) 52%, transparent 74%),
+            linear-gradient(180deg, rgba(255,255,255,0.82), rgba(242,246,250,0.72));
+          backdrop-filter: blur(18px) saturate(1.15);
+          -webkit-backdrop-filter: blur(18px) saturate(1.15);
           border-color: rgba(255,255,255,0.28);
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,0.28),
@@ -570,6 +610,7 @@ class BrunoSalaCard extends HTMLElement {
           justify-self: start;
           align-self: end;
           min-width: 0;
+          margin-top: 4px;
           margin-bottom: 2px;
           font-size: 15px;
           line-height: 1.18;
@@ -611,6 +652,7 @@ class BrunoSalaCard extends HTMLElement {
           align-items: center;
           justify-content: center;
           border-radius: 50%;
+          position: relative;
           color: var(--dot-off-icon);
           background: var(--dot-off-bg);
           border: 1px solid var(--dot-off-border);
@@ -619,9 +661,17 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .status-dot ha-icon {
+          --mdc-icon-size: 14px;
           width: 14px;
           height: 14px;
           display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 0;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
         }
 
         .status-dot.is-active {
@@ -642,11 +692,11 @@ class BrunoSalaCard extends HTMLElement {
           flex: 0 0 auto;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 0;
+          gap: 7px;
         }
 
         .action-pill {
-          height: 52px;
+          height: 50px;
           width: 100%;
           display: grid;
           grid-template-columns: 42px minmax(0, 1fr) auto;
@@ -654,7 +704,7 @@ class BrunoSalaCard extends HTMLElement {
           align-items: center;
           column-gap: 9px;
           padding: 0 11px;
-          margin: 1px 0;
+          margin: 0;
           text-align: left;
           background: var(--action-off-bg);
           border: 1px solid var(--action-off-border);
@@ -675,11 +725,16 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .action-pill.is-active {
-          background: rgba(250,250,250,0.75);
-          border-color: rgba(var(--tone),0.38);
+          background:
+            radial-gradient(42px 32px at 22% 20%, rgba(255,255,255,0.44), transparent 74%),
+            radial-gradient(74px 44px at 94% 82%, rgba(var(--tone),0.22), transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.88), rgba(235,242,248,0.76));
+          border-color: rgba(var(--tone),0.58);
           box-shadow:
-            0 0 14px rgba(var(--tone),0.14),
-            inset 0 1px 0 rgba(255,255,255,0.08);
+            inset 0 1px 0 rgba(255,255,255,0.30),
+            inset 1px 0 0 rgba(255,255,255,0.12),
+            0 8px 18px rgba(0,0,0,0.18),
+            0 0 22px rgba(var(--tone),0.24);
         }
 
         .pill-icon {
@@ -749,7 +804,7 @@ class BrunoSalaCard extends HTMLElement {
 
         @media (max-height: 760px) {
           :host {
-            --card-radius: 16px;
+            --card-radius: 18px;
             --button-radius: 14px;
           }
 
@@ -767,7 +822,11 @@ class BrunoSalaCard extends HTMLElement {
           }
 
           .action-pill {
-            height: 48px;
+            height: 47px;
+          }
+
+          .action-strip {
+            gap: 6px;
           }
         }
 
@@ -848,7 +907,11 @@ class BrunoSalaCard extends HTMLElement {
     `;
   }
 
-  static _tplIcon(name) {
+  static _tplIcon(name, options = {}) {
+    const active = Boolean(options.active);
+    const tvScreen = active
+      ? `<path class="tv-screen-on" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-tv-screen)"/>`
+      : `<path class="tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-tv-screen)"/>`;
     const icons = {
       living_sofa: `
         <svg viewBox="0 0 24 24" class="tpl-icon-svg tpl-icon-living-sofa" aria-hidden="true">
@@ -862,7 +925,30 @@ class BrunoSalaCard extends HTMLElement {
       `,
       tv: `
         <svg viewBox="0 0 50 50" class="tpl-icon-svg tpl-icon-tv" aria-hidden="true">
-          <path fill="currentColor" opacity="0.32" d="M2.9,8h44.3v29.9H2.9V8z"/>
+          <style>
+            @keyframes bruno-tv-on {
+              from { transform: scaleY(0); }
+              to { transform: scaleY(1); }
+            }
+            @keyframes bruno-tv-off {
+              from { transform: scaleY(1); }
+              to { transform: scaleY(0); }
+            }
+            .tv-screen-on {
+              animation: bruno-tv-on 900ms cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+              transform-origin: -100% 46%;
+            }
+            .tv-screen-off {
+              animation: bruno-tv-off 650ms cubic-bezier(0.25,0.46,0.45,0.94) both;
+              transform-origin: -100% 46%;
+            }
+          </style>
+          <linearGradient id="bruno-tv-screen" gradientUnits="userSpaceOnUse" x1="5.401" y1="34.714" x2="43.817" y2="11.74">
+            <stop offset="0" stop-color="#64acb7"/>
+            <stop offset="1" stop-color="#7fdbe9"/>
+          </linearGradient>
+          <path d="M2.9,8h44.3v29.9H2.9V8z" fill="#20262890"/>
+          ${tvScreen}
           <path fill="currentColor" d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3zM11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3a1.11 1.11 0 0 0 1.1 1.1z"/>
         </svg>
       `,

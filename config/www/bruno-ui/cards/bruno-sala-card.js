@@ -21,6 +21,10 @@ const BRUNO_SALA_ACTION_COOLDOWN = 1200;
 const BRUNO_SALA_CLIMATE_COOLDOWN = 2500;
 const BRUNO_SALA_TV_ANIMATION_MS = 950;
 
+// FALLBACK - Sala controls v20260516-7:
+// Set to false to restore the previous stacked pill structure quickly.
+const BRUNO_SALA_USE_CONTEXT_DOCK = true;
+
 class BrunoSalaCard extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -438,6 +442,61 @@ class BrunoSalaCard extends HTMLElement {
     `;
   }
 
+  // FALLBACK - Sala controls v20260516-7: previous stacked pill structure.
+  _legacyActionStrip(model, animateTv) {
+    return `
+      <div class="action-strip">
+        ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue')}
+        ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple', { animate: animateTv })}
+        ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan')}
+      </div>
+    `;
+  }
+
+  _switchLine(key, iconName, name, label, active, tone) {
+    const activeClass = active ? ' is-active' : '';
+    return `
+      <button class="dock-control switch-line icon-${iconName} tone-${tone}${activeClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
+        <span class="dock-icon" aria-hidden="true">${BrunoSalaCard._tplIcon(iconName, { active })}</span>
+        <span class="dock-copy">
+          <span class="dock-name">${BrunoSalaCard._escape(name)}</span>
+          <span class="dock-state">${label}</span>
+        </span>
+        <span class="dock-switch" aria-hidden="true">
+          <span class="switch-track">
+            <span class="switch-knob"></span>
+          </span>
+        </span>
+      </button>
+    `;
+  }
+
+  _mediaPill(model, animateTv) {
+    const activeClass = model.tvOn ? ' is-active' : '';
+    return `
+      <button class="dock-control media-pill icon-tv tone-purple${activeClass}" type="button" data-action-key="tv" aria-label="TV">
+        <span class="dock-icon media-icon" aria-hidden="true">${BrunoSalaCard._tplIcon('tv', { active: model.tvOn, animate: animateTv })}</span>
+        <span class="dock-copy">
+          <span class="dock-name">TV</span>
+          <span class="dock-state">${BrunoSalaCard._escape(model.tvLabel)}</span>
+        </span>
+        <span class="media-orb" aria-hidden="true"></span>
+      </button>
+    `;
+  }
+
+  _controlDock(model, animateTv) {
+    return `
+      <div class="control-dock" aria-label="Controles da sala">
+        ${this._mediaPill(model, animateTv)}
+        <div class="toggle-bank" aria-label="Atalhos da sala">
+          ${this._switchLine('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue')}
+          ${this._switchLine('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan')}
+        </div>
+      </div>
+    `;
+  }
+
   _render() {
     if (!this._config) return;
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
@@ -478,6 +537,21 @@ class BrunoSalaCard extends HTMLElement {
           --dot-off-bg: rgba(255,255,255,0.08);
           --dot-off-border: rgba(255,255,255,0.12);
           --dot-off-icon: rgba(255,255,255,0.35);
+          --dock-bg:
+            linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.045)),
+            linear-gradient(155deg, rgba(20,26,38,0.48), rgba(10,12,18,0.30));
+          --dock-border: rgba(255,255,255,0.13);
+          --dock-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.12),
+            inset 0 -1px 0 rgba(0,0,0,0.12);
+          --dock-line: rgba(255,255,255,0.08);
+          --dock-control-bg: rgba(255,255,255,0.045);
+          --dock-control-border: rgba(255,255,255,0.09);
+          --dock-name: rgba(255,255,255,0.84);
+          --dock-state: rgba(255,255,255,0.42);
+          --switch-track-bg: rgba(255,255,255,0.13);
+          --switch-track-border: rgba(255,255,255,0.12);
+          --switch-knob-bg: rgba(230,236,242,0.72);
           display: block;
           height: 100%;
           min-height: 0;
@@ -564,6 +638,21 @@ class BrunoSalaCard extends HTMLElement {
           --dot-off-bg: rgba(255,255,255,0.16);
           --dot-off-border: rgba(8,14,22,0.14);
           --dot-off-icon: rgba(20,24,30,0.46);
+          --dock-bg:
+            linear-gradient(180deg, rgba(255,255,255,0.30), rgba(255,255,255,0.12)),
+            linear-gradient(155deg, rgba(230,238,248,0.24), rgba(86,100,116,0.08));
+          --dock-border: rgba(255,255,255,0.36);
+          --dock-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.34),
+            inset 0 -1px 0 rgba(0,0,0,0.08);
+          --dock-line: rgba(8,14,22,0.09);
+          --dock-control-bg: rgba(255,255,255,0.16);
+          --dock-control-border: rgba(8,14,22,0.11);
+          --dock-name: rgba(16,20,26,0.86);
+          --dock-state: rgba(20,24,30,0.48);
+          --switch-track-bg: rgba(10,16,24,0.14);
+          --switch-track-border: rgba(8,14,22,0.10);
+          --switch-knob-bg: rgba(255,255,255,0.82);
           background:
             radial-gradient(170px 136px at 12% -10%, rgba(255,255,255,0.38), rgba(255,255,255,0.07) 52%, transparent 74%),
             radial-gradient(150px 140px at 94% 92%, rgba(120,160,210,0.16), transparent 68%),
@@ -594,7 +683,8 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .hero-action,
-        .action-pill {
+        .action-pill,
+        .dock-control {
           appearance: none;
           -webkit-appearance: none;
           outline: none;
@@ -631,12 +721,14 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .hero-action.is-pressed,
-        .action-pill.is-pressed {
+        .action-pill.is-pressed,
+        .dock-control.is-pressed {
           transform: translateY(1px) scale(0.985);
         }
 
         .hero-action.is-hold-fired,
-        .action-pill.is-hold-fired {
+        .action-pill.is-hold-fired,
+        .dock-control.is-hold-fired {
           filter: drop-shadow(0 0 18px rgba(var(--accent),0.28));
         }
 
@@ -758,6 +850,261 @@ class BrunoSalaCard extends HTMLElement {
         .tone-cyan { --tone: var(--accent-cyan); }
         .tone-amber { --tone: var(--accent-amber); }
 
+        .sala-card.is-room-on .status-dot {
+          color: var(--dot-off-icon);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.28), rgba(255,255,255,0.10)),
+            rgba(10,16,24,0.035);
+          border-color: var(--dot-off-border);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.28),
+            inset 0 -1px 0 rgba(0,0,0,0.04);
+        }
+
+        .sala-card.is-room-on .status-dot.is-active {
+          color: rgba(var(--tone),0.96);
+          background:
+            radial-gradient(circle at 50% 24%, rgba(255,255,255,0.28), transparent 58%),
+            rgba(var(--tone),0.15);
+          border-color: rgba(var(--tone),0.38);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.30),
+            0 0 12px rgba(var(--tone),0.18);
+        }
+
+        .control-dock {
+          position: relative;
+          z-index: 1;
+          flex: 0 0 auto;
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 7px;
+          padding: 8px;
+          border-radius: 17px;
+          background: var(--dock-bg);
+          border: 1px solid var(--dock-border);
+          box-shadow: var(--dock-shadow);
+          overflow: hidden;
+        }
+
+        .control-dock::before {
+          content: "";
+          position: absolute;
+          inset: 1px;
+          pointer-events: none;
+          border-radius: 16px;
+          background:
+            radial-gradient(90px 42px at 18% 0%, rgba(255,255,255,0.16), transparent 72%),
+            linear-gradient(90deg, rgba(255,255,255,0.08), transparent 42%);
+          opacity: 0.74;
+        }
+
+        .dock-control {
+          min-width: 0;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          color: var(--dock-name);
+          text-align: left;
+          background: transparent;
+          border: 0;
+          border-radius: 13px;
+          overflow: hidden;
+          transition:
+            background 160ms ease,
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            transform 160ms ease,
+            filter 160ms ease;
+        }
+
+        .dock-control:hover {
+          filter: brightness(1.05);
+        }
+
+        .media-pill {
+          height: 48px;
+          display: grid;
+          grid-template-columns: 34px minmax(0, 1fr) 16px;
+          align-items: center;
+          column-gap: 9px;
+          padding: 0 10px;
+          background: var(--dock-control-bg);
+          border: 1px solid var(--dock-control-border);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.10),
+            inset 0 -1px 0 rgba(0,0,0,0.08);
+        }
+
+        .media-pill.is-active {
+          background:
+            radial-gradient(74px 40px at 90% 85%, rgba(var(--tone),0.26), transparent 74%),
+            linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.055)),
+            rgba(var(--tone),0.10);
+          border-color: rgba(var(--tone),0.42);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.20),
+            0 0 18px rgba(var(--tone),0.16);
+        }
+
+        .toggle-bank {
+          position: relative;
+          z-index: 1;
+          display: grid;
+          grid-template-columns: 1fr;
+          border-radius: 13px;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.060), rgba(255,255,255,0.020));
+          border: 1px solid rgba(255,255,255,0.070);
+          overflow: hidden;
+        }
+
+        .sala-card.is-room-on .toggle-bank {
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.052)),
+            rgba(6,10,16,0.025);
+          border-color: rgba(8,14,22,0.09);
+        }
+
+        .switch-line {
+          height: 40px;
+          display: grid;
+          grid-template-columns: 28px minmax(0, 1fr) 34px;
+          align-items: center;
+          column-gap: 8px;
+          padding: 0 9px;
+          border-radius: 0;
+        }
+
+        .switch-line + .switch-line {
+          border-top: 1px solid var(--dock-line);
+        }
+
+        .switch-line.is-active {
+          background:
+            linear-gradient(90deg, rgba(var(--tone),0.13), transparent 72%);
+        }
+
+        .dock-icon {
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--dock-state);
+          opacity: 0.88;
+        }
+
+        .media-icon {
+          width: 32px;
+          height: 32px;
+        }
+
+        .dock-control.is-active .dock-icon {
+          color: rgba(var(--tone),0.98);
+          opacity: 1;
+          filter: drop-shadow(0 0 8px rgba(var(--tone),0.22));
+        }
+
+        .dock-copy {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          line-height: 1;
+        }
+
+        .dock-name {
+          min-width: 0;
+          color: var(--dock-name);
+          font-size: 12px;
+          font-weight: 700;
+          line-height: 1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .dock-state {
+          min-width: 0;
+          color: var(--dock-state);
+          font-size: 10px;
+          font-weight: 620;
+          line-height: 1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .dock-control.is-active .dock-state {
+          color: rgba(var(--tone),0.96);
+        }
+
+        .dock-switch {
+          justify-self: end;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .switch-track {
+          position: relative;
+          width: 32px;
+          height: 18px;
+          display: block;
+          border-radius: 999px;
+          background: var(--switch-track-bg);
+          border: 1px solid var(--switch-track-border);
+          box-shadow:
+            inset 0 1px 1px rgba(0,0,0,0.10),
+            inset 0 -1px 0 rgba(255,255,255,0.08);
+          transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .switch-knob {
+          position: absolute;
+          left: 2px;
+          top: 2px;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: var(--switch-knob-bg);
+          box-shadow:
+            0 1px 3px rgba(0,0,0,0.22),
+            inset 0 1px 0 rgba(255,255,255,0.40);
+          transition: transform 180ms cubic-bezier(0.2,0.8,0.2,1), background 160ms ease;
+        }
+
+        .switch-line.is-active .switch-track {
+          background:
+            linear-gradient(180deg, rgba(var(--tone),0.82), rgba(var(--tone),0.54));
+          border-color: rgba(var(--tone),0.60);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.18),
+            0 0 12px rgba(var(--tone),0.20);
+        }
+
+        .switch-line.is-active .switch-knob {
+          transform: translateX(14px);
+          background: rgba(255,255,255,0.96);
+        }
+
+        .media-orb {
+          justify-self: end;
+          width: 9px;
+          height: 9px;
+          border-radius: 50%;
+          background: var(--dock-state);
+          box-shadow: none;
+          opacity: 0.58;
+        }
+
+        .media-pill.is-active .media-orb {
+          background: rgba(var(--tone),0.98);
+          box-shadow: 0 0 12px rgba(var(--tone),0.30);
+          opacity: 1;
+        }
+
         .action-strip {
           position: relative;
           z-index: 1;
@@ -866,13 +1213,15 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .tpl-icon,
-        .tpl-icon svg {
+        .tpl-icon svg,
+        .tpl-icon-svg {
           display: block;
           width: 100%;
           height: 100%;
         }
 
-        .tpl-icon svg {
+        .tpl-icon svg,
+        .tpl-icon-svg {
           overflow: visible;
         }
 
@@ -902,6 +1251,19 @@ class BrunoSalaCard extends HTMLElement {
           .action-strip {
             gap: 6px;
           }
+
+          .control-dock {
+            gap: 6px;
+            padding: 7px;
+          }
+
+          .media-pill {
+            height: 44px;
+          }
+
+          .switch-line {
+            height: 37px;
+          }
         }
 
         @media (max-width: 800px) {
@@ -917,8 +1279,12 @@ class BrunoSalaCard extends HTMLElement {
         @media (prefers-reduced-motion: reduce) {
           .hero-action,
           .action-pill,
+          .dock-control,
           .status-dot,
-          .pill-icon {
+          .pill-icon,
+          .dock-icon,
+          .switch-track,
+          .switch-knob {
             transition: none !important;
           }
         }
@@ -946,11 +1312,9 @@ class BrunoSalaCard extends HTMLElement {
           </div>
         </button>
 
-        <div class="action-strip">
-          ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue')}
-          ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple', { animate: animateTv })}
-          ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan')}
-        </div>
+        ${BRUNO_SALA_USE_CONTEXT_DOCK
+          ? this._controlDock(model, animateTv)
+          : this._legacyActionStrip(model, animateTv)}
       </div>
     `;
 

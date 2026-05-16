@@ -55,10 +55,6 @@ class BrunoSalaCard extends HTMLElement {
     return !entity || ['unknown', 'unavailable', ''].includes(entity.state);
   }
 
-  _isState(entityId, state) {
-    return this._state(entityId)?.state === state;
-  }
-
   _isAnyState(entityId, states) {
     return states.includes(this._state(entityId)?.state || '');
   }
@@ -118,7 +114,7 @@ class BrunoSalaCard extends HTMLElement {
     return {
       count,
       elapsed,
-      label: count > 0 ? `${label}${elapsed ? ` · ${elapsed}` : ''}` : 'Apagada',
+      label: count > 0 ? `${label}${elapsed ? ` / ${elapsed}` : ''}` : '',
     };
   }
 
@@ -346,15 +342,13 @@ class BrunoSalaCard extends HTMLElement {
     `;
   }
 
-  _actionButton(key, icon, name, label, active, tone) {
+  _actionButton(key, iconName, name, label, active, tone) {
     const activeClass = active ? ' is-active' : '';
     return `
-      <button class="action-pill tone-${tone}${activeClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
-        <span class="pill-icon"><ha-icon icon="${icon}"></ha-icon></span>
-        <span class="pill-copy">
-          <span class="pill-name">${BrunoSalaCard._escape(name)}</span>
-          <span class="pill-label">${label}</span>
-        </span>
+      <button class="action-pill icon-${iconName} tone-${tone}${activeClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
+        <span class="pill-icon" aria-hidden="true">${BrunoSalaCard._tplIcon(iconName)}</span>
+        <span class="pill-name">${BrunoSalaCard._escape(name)}</span>
+        <span class="pill-label">${label}</span>
       </button>
     `;
   }
@@ -365,24 +359,28 @@ class BrunoSalaCard extends HTMLElement {
 
     const model = this._model();
     const roomActiveClass = model.roomOn ? ' is-room-on' : '';
-    const roomState = model.roomOn ? 'Ligada' : 'Apagada';
 
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-radius: 26px;
-          --inner-radius: 22px;
-          --button-radius: 18px;
+          --card-radius: 16px;
+          --button-radius: 14px;
           --accent: 150, 190, 255;
           --accent-blue: 96, 165, 250;
           --accent-purple: 167, 139, 250;
           --accent-cyan: 79, 172, 254;
           --accent-amber: 255, 153, 0;
-          --glass-line: rgba(255,255,255,0.14);
-          --glass-line-soft: rgba(255,255,255,0.075);
           --text-main: rgba(245,250,255,0.96);
-          --text-soft: rgba(226,238,255,0.64);
-          --text-muted: rgba(226,238,255,0.42);
+          --text-soft: rgba(255,255,255,0.40);
+          --text-muted: rgba(255,255,255,0.52);
+          --action-off-bg: linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%);
+          --action-off-border: rgba(255,255,255,0.12);
+          --action-off-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+          --action-name: rgba(255,255,255,0.82);
+          --action-label: rgba(255,255,255,0.35);
+          --dot-off-bg: rgba(255,255,255,0.08);
+          --dot-off-border: rgba(255,255,255,0.12);
+          --dot-off-icon: rgba(255,255,255,0.35);
           display: block;
           height: 100%;
           min-height: 0;
@@ -404,24 +402,22 @@ class BrunoSalaCard extends HTMLElement {
           min-height: 0;
           display: flex;
           flex-direction: column;
-          gap: 10px;
-          padding: 14px;
+          justify-content: space-between;
+          gap: 0;
+          padding: 12px 14px;
           color: var(--text-main);
           background:
-            radial-gradient(180px 160px at 16% -12%, rgba(255,255,255,0.22), rgba(255,255,255,0.055) 42%, transparent 72%),
-            radial-gradient(190px 160px at 108% 88%, rgba(var(--accent),0.17), transparent 70%),
-            linear-gradient(180deg, rgba(255,255,255,0.145), rgba(255,255,255,0.045) 36%, rgba(255,255,255,0.075)),
-            linear-gradient(155deg, rgba(26,33,48,0.82), rgba(20,22,29,0.64) 48%, rgba(42,32,24,0.34));
-          backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
-          -webkit-backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
-          border: 1px solid rgba(255,255,255,0.11);
+            radial-gradient(180px 150px at 14% -12%, rgba(255,255,255,0.20), rgba(255,255,255,0.048) 44%, transparent 72%),
+            radial-gradient(180px 160px at 110% 90%, rgba(var(--accent),0.14), transparent 72%),
+            linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30));
+          backdrop-filter: blur(20px) saturate(1.35);
+          -webkit-backdrop-filter: blur(20px) saturate(1.35);
+          border: 1px solid rgba(255,255,255,0.28);
           border-radius: var(--card-radius);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.22),
-            inset 1px 0 0 rgba(255,255,255,0.10),
-            inset -1px -1px 0 rgba(255,255,255,0.030),
-            0 18px 44px rgba(0,0,0,0.25),
-            0 0 28px rgba(110,150,210,0.10);
+            0 0 32px rgba(59,130,246,0.12),
+            inset 0 1px 0 rgba(191,219,254,0.15),
+            0 8px 32px rgba(0,0,0,0.20);
           overflow: hidden;
         }
 
@@ -437,28 +433,43 @@ class BrunoSalaCard extends HTMLElement {
           inset: 1px;
           border-radius: calc(var(--card-radius) - 1px);
           background:
-            radial-gradient(120px 82px at 18% 0%, rgba(255,255,255,0.26), transparent 72%),
-            radial-gradient(150px 120px at 96% 14%, rgba(var(--accent),0.15), transparent 74%),
-            linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.00) 36%),
-            linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.00) 44%);
-          opacity: 0.78;
+            radial-gradient(92px 62px at 18% 0%, rgba(255,255,255,0.18), transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0) 40%);
+          opacity: 0.62;
         }
 
         .sala-card::after {
-          inset: auto 18px 10px 18px;
+          inset: auto 16px 8px 16px;
           height: 1px;
           border-radius: 999px;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.20), transparent);
-          opacity: 0.42;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+          opacity: 0.34;
         }
 
         .sala-card.is-room-on {
-          border-color: rgba(226,238,255,0.22);
+          --text-main: rgba(0,0,0,0.90);
+          --text-soft: rgba(0,0,0,0.60);
+          --text-muted: rgba(0,0,0,0.55);
+          --action-off-bg: linear-gradient(180deg, rgba(0,0,0,0.075) 0%, rgba(0,0,0,0.035) 100%);
+          --action-off-border: rgba(0,0,0,0.12);
+          --action-off-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+          --action-name: rgba(0,0,0,0.82);
+          --action-label: rgba(0,0,0,0.38);
+          --dot-off-bg: rgba(0,0,0,0.08);
+          --dot-off-border: rgba(0,0,0,0.14);
+          --dot-off-icon: rgba(0,0,0,0.42);
+          background: rgba(250,250,250,0.75);
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+          border-color: rgba(255,255,255,0.28);
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,0.28),
-            inset 1px 0 0 rgba(255,255,255,0.12),
-            0 20px 48px rgba(0,0,0,0.25),
-            0 0 34px rgba(var(--accent-blue),0.17);
+            0 0 20px rgba(255,255,255,0.10),
+            0 8px 24px rgba(0,0,0,0.14);
+        }
+
+        .sala-card.is-room-on::before {
+          opacity: 0.16;
         }
 
         button {
@@ -474,7 +485,6 @@ class BrunoSalaCard extends HTMLElement {
         .action-pill {
           appearance: none;
           -webkit-appearance: none;
-          border: 0;
           outline: none;
           position: relative;
           z-index: 1;
@@ -482,42 +492,30 @@ class BrunoSalaCard extends HTMLElement {
 
         .hero-action {
           flex: 1 1 auto;
-          min-height: 116px;
+          min-height: 132px;
           width: 100%;
           display: grid;
-          grid-template-columns: minmax(0, 1fr) auto;
-          grid-template-rows: auto minmax(0, 1fr) auto;
+          grid-template-columns: auto 1fr auto;
+          grid-template-rows: auto auto 1fr;
           grid-template-areas:
-            "header status"
-            "icon status"
-            "summary status";
-          gap: 8px 12px;
-          padding: 15px 14px 14px;
+            "icon temp right"
+            "title title right"
+            "lights lights right";
+          column-gap: 0;
+          row-gap: 0;
+          align-items: start;
+          padding: 0;
           text-align: left;
-          background:
-            radial-gradient(120px 95px at 8% 8%, rgba(255,255,255,0.12), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.030));
-          border: 1px solid rgba(255,255,255,0.095);
-          border-radius: var(--inner-radius);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.11),
-            inset 0 -1px 0 rgba(255,255,255,0.035);
-          overflow: hidden;
-          transition:
-            background 160ms ease,
-            border-color 160ms ease,
-            box-shadow 160ms ease,
-            transform 160ms ease;
+          background: transparent;
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+          overflow: visible;
+          transition: transform 160ms ease, filter 160ms ease;
         }
 
         .hero-action:hover {
-          background:
-            radial-gradient(120px 95px at 8% 8%, rgba(255,255,255,0.16), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.085), rgba(255,255,255,0.038));
-          border-color: rgba(255,255,255,0.15);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.16),
-            0 8px 18px rgba(0,0,0,0.16);
+          filter: brightness(1.05);
         }
 
         .hero-action.is-pressed,
@@ -527,134 +525,34 @@ class BrunoSalaCard extends HTMLElement {
 
         .hero-action.is-hold-fired,
         .action-pill.is-hold-fired {
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.16),
-            0 0 0 3px rgba(var(--accent),0.13),
-            0 0 24px rgba(var(--accent),0.18);
+          filter: drop-shadow(0 0 18px rgba(var(--accent),0.28));
         }
 
-        .hero-header {
-          grid-area: header;
-          min-width: 0;
-        }
-
-        .eyebrow {
-          font-size: 10px;
-          line-height: 1.1;
-          font-weight: 700;
-          color: var(--text-muted);
-          text-transform: uppercase;
-        }
-
-        .title-row {
-          display: flex;
-          align-items: baseline;
-          gap: 8px;
-          min-width: 0;
-        }
-
-        .title {
-          font-size: 20px;
-          line-height: 1.05;
-          font-weight: 780;
-          color: var(--text-main);
-          white-space: nowrap;
-        }
-
-        .room-state {
-          font-size: 11px;
-          line-height: 1;
-          font-weight: 700;
-          color: var(--text-soft);
-          white-space: nowrap;
-        }
-
-        .hero-icon {
+        .room-icon {
           grid-area: icon;
-          align-self: center;
-          width: 68px;
-          height: 68px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 22px;
-          background:
-            radial-gradient(34px 34px at 28% 16%, rgba(255,255,255,0.28), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.045));
-          border: 1px solid rgba(255,255,255,0.12);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.16),
-            0 9px 20px rgba(0,0,0,0.18);
-        }
-
-        .hero-icon ha-icon {
-          width: 36px;
-          height: 36px;
-          color: rgba(245,250,255,0.92);
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.24));
-          transition: color 160ms ease, filter 160ms ease, transform 160ms ease;
-        }
-
-        .sala-card.is-room-on .hero-icon ha-icon {
-          color: rgba(255,240,190,0.96);
-          filter:
-            drop-shadow(0 0 10px rgba(250,204,21,0.28))
-            drop-shadow(0 2px 4px rgba(0,0,0,0.22));
-        }
-
-        .hero-summary {
-          grid-area: summary;
-          align-self: end;
-          min-width: 0;
-        }
-
-        .summary-main {
-          font-size: 12px;
-          line-height: 1.22;
-          font-weight: 700;
-          color: var(--text-soft);
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .summary-sub {
-          margin-top: 3px;
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          font-size: 11px;
-          line-height: 1.1;
-          color: var(--text-muted);
-          white-space: nowrap;
-        }
-
-        .status-column {
-          grid-area: status;
-          align-self: stretch;
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          justify-content: space-between;
-          gap: 8px;
+          justify-self: start;
+          align-self: start;
+          width: 65px;
+          height: 65px;
+          padding-bottom: 10px;
         }
 
         .metric {
-          min-width: 58px;
-          padding: 8px 9px;
-          border-radius: 16px;
-          text-align: right;
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.095), rgba(255,255,255,0.035));
-          border: 1px solid rgba(255,255,255,0.10);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+          grid-area: temp;
+          justify-self: start;
+          align-self: start;
+          margin-left: 12px;
+          margin-top: 4px;
+          min-width: 48px;
+          text-align: left;
+          line-height: 1.1;
         }
 
         .metric-value {
           display: block;
-          font-size: 14px;
+          font-size: 13px;
           line-height: 1;
-          font-weight: 800;
+          font-weight: 760;
           color: var(--text-main);
         }
 
@@ -663,13 +561,47 @@ class BrunoSalaCard extends HTMLElement {
           margin-top: 4px;
           font-size: 11px;
           line-height: 1;
+          font-weight: 600;
           color: var(--text-muted);
         }
 
-        .dots {
+        .title {
+          grid-area: title;
+          justify-self: start;
+          align-self: end;
+          min-width: 0;
+          margin-bottom: 2px;
+          font-size: 15px;
+          line-height: 1.18;
+          font-weight: 700;
+          color: var(--text-main);
+          white-space: nowrap;
+        }
+
+        .lights-line {
+          grid-area: lights;
+          justify-self: start;
+          align-self: start;
+          min-width: 0;
+          font-size: 11px;
+          line-height: 1.18;
+          font-weight: 500;
+          color: var(--text-soft);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .right-dots {
+          grid-area: right;
+          justify-self: end;
+          align-self: start;
+          margin-right: 2px;
+          padding-top: 2px;
           display: flex;
           flex-direction: column;
-          gap: 6px;
+          align-items: center;
+          gap: 5px;
         }
 
         .status-dot {
@@ -679,27 +611,24 @@ class BrunoSalaCard extends HTMLElement {
           align-items: center;
           justify-content: center;
           border-radius: 50%;
-          color: rgba(226,238,255,0.40);
-          background: rgba(255,255,255,0.070);
-          border: 1px solid rgba(255,255,255,0.10);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
+          color: var(--dot-off-icon);
+          background: var(--dot-off-bg);
+          border: 1px solid var(--dot-off-border);
+          box-shadow: none;
           transition: background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
         }
 
         .status-dot ha-icon {
           width: 14px;
           height: 14px;
+          display: flex;
         }
 
         .status-dot.is-active {
-          color: rgba(245,250,255,0.95);
-          border-color: rgba(226,238,255,0.32);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.18),
-            0 0 16px rgba(var(--tone),0.24);
-          background:
-            radial-gradient(16px 14px at 30% 20%, rgba(255,255,255,0.36), transparent 72%),
-            rgba(var(--tone),0.18);
+          color: rgba(var(--tone),0.98);
+          background: rgba(var(--tone),0.13);
+          border-color: rgba(var(--tone),0.34);
+          box-shadow: 0 0 12px rgba(var(--tone),0.14);
         }
 
         .tone-blue { --tone: var(--accent-blue); }
@@ -713,54 +642,44 @@ class BrunoSalaCard extends HTMLElement {
           flex: 0 0 auto;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 6px;
+          gap: 0;
         }
 
         .action-pill {
           height: 52px;
           width: 100%;
           display: grid;
-          grid-template-columns: 42px minmax(0, 1fr);
+          grid-template-columns: 42px minmax(0, 1fr) auto;
+          grid-template-rows: 1fr;
           align-items: center;
-          gap: 9px;
-          padding: 0 12px;
+          column-gap: 9px;
+          padding: 0 11px;
+          margin: 1px 0;
           text-align: left;
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.035));
-          border: 1px solid rgba(255,255,255,0.11);
+          background: var(--action-off-bg);
+          border: 1px solid var(--action-off-border);
           border-radius: var(--button-radius);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.065);
+          box-shadow: var(--action-off-shadow);
           overflow: hidden;
           transition:
             background 160ms ease,
             border-color 160ms ease,
             box-shadow 160ms ease,
             color 160ms ease,
-            transform 160ms ease;
+            transform 160ms ease,
+            filter 160ms ease;
         }
 
         .action-pill:hover {
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.045));
-          border-color: rgba(255,255,255,0.16);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.11),
-            0 6px 14px rgba(0,0,0,0.14);
+          filter: brightness(1.05);
         }
 
         .action-pill.is-active {
-          color: rgba(245,250,255,0.96);
-          background:
-            radial-gradient(34px 28px at 18% 18%, rgba(255,255,255,0.34), transparent 70%),
-            radial-gradient(62px 44px at 92% 85%, rgba(var(--tone),0.20), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.078)),
-            linear-gradient(135deg, rgba(var(--tone),0.24), rgba(255,255,255,0.025));
-          border-color: rgba(226,238,255,0.36);
+          background: rgba(250,250,250,0.75);
+          border-color: rgba(var(--tone),0.38);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.24),
-            inset 1px 0 0 rgba(255,255,255,0.09),
-            0 8px 18px rgba(0,0,0,0.22),
-            0 0 22px rgba(var(--tone),0.18);
+            0 0 14px rgba(var(--tone),0.14),
+            inset 0 1px 0 rgba(255,255,255,0.08);
         }
 
         .pill-icon {
@@ -769,83 +688,82 @@ class BrunoSalaCard extends HTMLElement {
           display: flex;
           align-items: center;
           justify-content: center;
-          border-radius: 14px;
-          color: rgba(226,238,255,0.58);
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.020));
-          border: 1px solid rgba(255,255,255,0.075);
+          color: var(--state-icon-color, #9da0a2);
         }
 
-        .action-pill.is-active .pill-icon {
-          color: rgba(245,250,255,0.96);
-          background: rgba(var(--tone),0.16);
-          border-color: rgba(var(--tone),0.32);
+        .action-pill.icon-ledstrip.is-active .pill-icon {
+          color: var(--state-icon-active-color, #f0c040);
         }
 
-        .pill-icon ha-icon {
-          width: 19px;
-          height: 19px;
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.24));
+        .action-pill.icon-tv.is-active .pill-icon {
+          color: #616161;
         }
 
-        .pill-copy {
-          min-width: 0;
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          gap: 8px;
+        .action-pill.icon-climate.is-active .pill-icon {
+          color: #3583b6;
         }
 
         .pill-name {
           min-width: 0;
           font-size: 12px;
           line-height: 1;
-          font-weight: 720;
-          color: rgba(245,250,255,0.86);
+          font-weight: 600;
+          color: var(--action-name);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
         .pill-label {
-          flex: 0 0 auto;
+          min-width: 0;
+          max-width: 84px;
+          justify-self: end;
+          text-align: right;
           font-size: 11px;
           line-height: 1;
-          font-weight: 650;
-          color: rgba(226,238,255,0.42);
+          font-weight: 600;
+          color: var(--action-label);
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .action-pill.is-active .pill-name {
+          color: rgba(0,0,0,0.82);
         }
 
         .action-pill.is-active .pill-label {
           color: rgba(var(--tone),0.98);
         }
 
+        .tpl-icon,
+        .tpl-icon svg {
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+
+        .tpl-icon svg {
+          overflow: visible;
+        }
+
         @media (max-height: 760px) {
           :host {
-            --card-radius: 24px;
-            --inner-radius: 20px;
-            --button-radius: 16px;
+            --card-radius: 16px;
+            --button-radius: 14px;
           }
 
           .sala-card {
-            padding: 12px;
-            gap: 8px;
+            padding: 10px 12px;
           }
 
           .hero-action {
-            min-height: 102px;
-            padding: 13px 12px;
+            min-height: 120px;
           }
 
-          .hero-icon {
+          .room-icon {
             width: 58px;
             height: 58px;
-            border-radius: 20px;
-          }
-
-          .hero-icon ha-icon {
-            width: 31px;
-            height: 31px;
           }
 
           .action-pill {
@@ -867,8 +785,7 @@ class BrunoSalaCard extends HTMLElement {
           .hero-action,
           .action-pill,
           .status-dot,
-          .pill-icon,
-          .hero-icon ha-icon {
+          .pill-icon {
             transition: none !important;
           }
         }
@@ -876,44 +793,30 @@ class BrunoSalaCard extends HTMLElement {
 
       <div class="sala-card${roomActiveClass}">
         <button class="hero-action" type="button" data-action-key="room" aria-label="Sala">
-          <div class="hero-header">
-            <div class="eyebrow">Ambiente</div>
-            <div class="title-row">
-              <div class="title">${BrunoSalaCard._escape(this._config.name)}</div>
-              <div class="room-state">${roomState}</div>
-            </div>
+          <div class="room-icon" aria-hidden="true">
+            ${BrunoSalaCard._roomIcon(model.roomOn)}
           </div>
 
-          <div class="hero-icon" aria-hidden="true">
-            <ha-icon icon="mdi:sofa"></ha-icon>
+          <div class="metric">
+            <span class="metric-value">${model.temperature}</span>
+            <span class="metric-sub">${model.humidity}</span>
           </div>
 
-          <div class="hero-summary">
-            <div class="summary-main">${BrunoSalaCard._escape(model.lights.label)}</div>
-            <div class="summary-sub">
-              <span>TV ${BrunoSalaCard._escape(model.tvLabel)}</span>
-              <span>A/C ${model.climateLabel}</span>
-            </div>
-          </div>
+          <div class="title">${BrunoSalaCard._escape(this._config.name)}</div>
+          <div class="lights-line">${BrunoSalaCard._escape(model.lights.label)}</div>
 
-          <div class="status-column">
-            <div class="metric">
-              <span class="metric-value">${model.temperature}</span>
-              <span class="metric-sub">${model.humidity}</span>
-            </div>
-            <div class="dots" aria-label="Status da sala">
-              ${this._statusDot('mdi:account', model.presenceOn, 'Presenca recente', 'blue')}
-              ${this._statusDot('mdi:television-classic', model.tvOn, 'TV ativa', 'purple')}
-              ${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
-              ${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Show ativo', 'amber')}
-            </div>
+          <div class="right-dots" aria-label="Status da sala">
+            ${this._statusDot('mdi:account', model.presenceOn, 'Presenca recente', 'blue')}
+            ${this._statusDot('mdi:television-classic', model.tvOn, 'TV ativa', 'purple')}
+            ${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
+            ${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Show ativo', 'amber')}
           </div>
         </button>
 
         <div class="action-strip">
-          ${this._actionButton('corridor', 'mdi:led-strip-variant', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue')}
-          ${this._actionButton('tv', 'mdi:television-classic', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple')}
-          ${this._actionButton('climate', 'mdi:snowflake', 'A/C', model.climateLabel, model.climateOn, 'cyan')}
+          ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue')}
+          ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple')}
+          ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan')}
         </div>
       </div>
     `;
@@ -921,6 +824,69 @@ class BrunoSalaCard extends HTMLElement {
     this.shadowRoot
       .querySelectorAll('[data-action-key]')
       .forEach((button) => this._wireAction(button));
+  }
+
+  static _roomIcon(active) {
+    const filter = active ? 'none' : 'grayscale(1) contrast(0.4) brightness(0.8)';
+    return `
+      <svg viewBox="0 0 4.8 4.8" xmlns="http://www.w3.org/2000/svg" style="width:65px;height:65px;filter:${filter};display:block;">
+        <path d="M.78 2.565H.69V.87C.69.75.75.51.975.51v.098C.78.608.78.855.78.871v1.695" fill="#666"/>
+        <path d="M1.62.525a.81.81 0 0 0-.188-.09L1.313.052C1.298 0 1.171-.008 1.021.037s-.255.128-.24.18l.128.397S.811.786.804.846c-.022.12.045.472.045.472l1.05-.315c-.007-.007-.172-.39-.278-.48" fill="#94989b"/>
+        <path d="M1.89.998c.03.105-.188.263-.472.345-.292.09-.547.075-.57-.03-.03-.105.188-.263.472-.345.285-.09.547-.075.57.03" fill="#ffe62e"/>
+        <path d="M4.447 3.053a.15.15 0 0 1-.15.15H.502a.15.15 0 0 1-.15-.15v-.975a.15.15 0 0 1 .15-.15h3.803a.15.15 0 0 1 .15.15v.975z" fill="#42ade2"/>
+        <path d="M4.447 3.053a.15.15 0 0 1-.15.15H.502a.15.15 0 0 1-.15-.15v-.975a.15.15 0 0 1 .15-.15h3.803a.15.15 0 0 1 .15.15v.975z" fill="#428bc1" opacity=".5"/>
+        <path d="M3.375 3.203H.352V2.047s.6.69 3.022 1.155" fill="#428bc1"/>
+        <path d="M4.672 2.288c0-.135-.098-.24-.225-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .225-.105.225-.24v-.93" fill="#42ade2"/>
+        <path fill="#8a8e92" d="M.457 4.485H.75V4.8H.457z"/>
+        <path d="M3.375 4.485H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645m0-.646H.3c-.165 0-.3-.142-.3-.322s.135-.322.3-.322h3.075v.645" fill="#428bc1"/>
+        <path fill="#8a8e92" d="M4.05 4.485h.292V4.8H4.05z"/>
+        <path d="M1.425 3.84H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>
+        <path d="M1.425 3.203H4.5c.165 0 .3.142.3.322s-.135.322-.3.322H1.425v-.645" fill="#428bc1"/>
+        <path d="M.57 2.288c0-.135-.098-.24-.217-.24-.12 0-.217.105-.217.24v.93c0 .135.098.24.217.24.12 0 .217-.105.217-.24v-.93" fill="#42ade2"/>
+        <path d="M4.53 1.965s-.217.187-.255.285c-.075.21-.022.667 0 .892.007.037.037.142.037.142s-.255-.068-.345-.083c-.172-.022-.51.015-.682 0-.075-.007-.3-.06-.3-.06s.195-.09.232-.15c.12-.186.143-.666.158-.891v-.128s.165.052.225.06c.165.015.51-.015.675-.03.06 0 .255-.037.255-.037" fill="#c7e755"/>
+      </svg>
+    `;
+  }
+
+  static _tplIcon(name) {
+    const icons = {
+      living_sofa: `
+        <svg viewBox="0 0 24 24" class="tpl-icon-svg tpl-icon-living-sofa" aria-hidden="true">
+          <path fill="currentColor" d="M21,9.75c0.83,0,1.5,0.67,1.5,1.5v4.55c0,0.39-0.31,0.7-0.7,0.7H21v0.75c0,0.83-0.67,1.5-1.5,1.5s-1.5-0.67-1.5-1.5V16.5H6v0.75c0,0.83-0.67,1.5-1.5,1.5S3,18.08,3,17.25V16.5H2.2c-0.39,0-0.7-0.31-0.7-0.7v-4.55c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5v1.5h15v-1.5C19.5,10.42,20.17,9.75,21,9.75z M6,11.25c0-1.66-1.34-3-3-3v-1.5c0-0.83,0.67-1.5,1.5-1.5h15c0.83,0,1.5,0.67,1.5,1.5v1.5c-1.66,0-3,1.34-3,3H6z"/>
+        </svg>
+      `,
+      ledstrip: `
+        <svg viewBox="0 0 32 32" class="tpl-icon-svg tpl-icon-ledstrip" aria-hidden="true">
+          <path fill="currentColor" d="M8.4395,16.668 C8.9795,16.552 9.5115,16.895 9.6285,17.435 C9.7455,17.974 9.4025,18.506 8.8625,18.623 C8.3225,18.74 7.7905,18.397 7.6735,17.857 C7.5565,17.317 7.9005,16.785 8.4395,16.668 M13.3275,15.611 C13.8665,15.495 14.3985,15.838 14.5155,16.377 C14.6325,16.917 14.2895,17.449 13.7505,17.566 C13.2105,17.683 12.6775,17.34 12.5605,16.8 C12.4445,16.261 12.7875,15.729 13.3275,15.611 M18.2135,14.555 C18.7535,14.438 19.2865,14.781 19.4025,15.32 C19.5195,15.86 19.1765,16.393 18.6365,16.51 C18.0965,16.626 17.5645,16.283 17.4485,15.743 C17.3315,15.203 17.6735,14.671 18.2135,14.555 M23.1005,13.498 C23.6405,13.381 24.1725,13.724 24.2905,14.264 C24.4065,14.804 24.0635,15.336 23.5235,15.453 C22.9835,15.569 22.4515,15.227 22.3355,14.687 C22.2175,14.147 22.5615,13.614 23.1005,13.498 M10.6695,20.639 L25.4735,17.444 C26.5535,17.211 27.2405,16.147 27.0065,15.067 C26.4495,12.484 23.9035,10.842 21.3205,11.399 L6.5165,14.594 C5.4365,14.827 4.7505,15.891 4.9835,16.971 C5.5415,19.554 8.0865,21.196 10.6695,20.639 M25,26 C24.447,26 24,25.553 24,25 C24,24.447 24.447,24 25,24 C25.553,24 26,24.447 26,25 C26,25.553 25.553,26 25,26 M20,26 C19.447,26 19,25.553 19,25 C19,24.447 19.447,24 20,24 C20.553,24 21,24.447 21,25 C21,25.553 20.553,26 20,26 M15,26 C14.447,26 14,25.553 14,25 C14,24.447 14.447,24 15,24 C15.553,24 16,24.447 16,25 C16,25.553 15.553,26 15,26 M10,26 C9.447,26 9,25.553 9,25 C9,24.447 9.447,24 10,24 C10.553,24 11,24.447 11,25 C11,25.553 10.553,26 10,26 M27,22 L9,22 C5,22 4,19 4,18 L4,23 C4,25.762 6.238,28 9,28 L27,28 C27.553,28 28,27.553 28,27 L28,23 C28,22.447 27.553,22 27,22 M22,8 C21.447,8 21,7.553 21,7 C21,6.447 21.447,6 22,6 C22.553,6 23,6.447 23,7 C23,7.553 22.553,8 22,8 M17,8 C16.447,8 16,7.553 16,7 C16,6.447 16.447,6 17,6 C17.553,6 18,6.447 18,7 C18,7.553 17.553,8 17,8 M12,8 C11.447,8 11,7.553 11,7 C11,6.447 11.447,6 12,6 C12.553,6 13,6.447 13,7 C13,7.553 12.553,8 12,8 M7,8 C6.447,8 6,7.553 6,7 C6,6.447 6.447,6 7,6 C7.553,6 8,6.447 8,7 C8,7.553 7.553,8 7,8 M23,4 L5,4 C4.447,4 4,4.447 4,5 L4,9 C4,9.553 4.447,10 5,10 L23,10 C27,10 28,13 28,14 L28,9 C28,6.238 25.762,4 23,4"/>
+        </svg>
+      `,
+      tv: `
+        <svg viewBox="0 0 50 50" class="tpl-icon-svg tpl-icon-tv" aria-hidden="true">
+          <path fill="currentColor" opacity="0.32" d="M2.9,8h44.3v29.9H2.9V8z"/>
+          <path fill="currentColor" d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3zM11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3a1.11 1.11 0 0 0 1.1 1.1z"/>
+        </svg>
+      `,
+      climate: `
+        <svg viewBox="0 0 50 50" class="tpl-icon-svg tpl-icon-climate" aria-hidden="true">
+          <path fill="currentColor" d="M36.8 1.2v1.7a5.34 5.34 0 0 1-5.3 5.3H18.4a5.34 5.34 0 0 1-5.3-5.3V1.2c-2.6.4-4.7 2.8-4.7 5.6v36.5c0 3.1 2.6 5.7 5.7 5.7h21.8c3.1 0 5.7-2.6 5.7-5.7V6.8c0-2.8-2.1-5.2-4.8-5.6zm-1.7 35.6c-.2 0-.4 0-.5-.1-.4-.1-1.2-.2-2.4-.6-.5-.2-.8-.3-1.2-.4-.3-.1-.7-.3-1.4-.5-1-.4-1.5-.5-1.9-.6-.5-.1-1.1-.2-1.9-.2s-1.4.2-1.9.4c-1 .3-1.8.7-2.1.9l-.6.3a9.75 9.75 0 0 1-1.4.6c-.3.1-.9.3-1.6.3h-.3c-.4 0-1 0-2-.2-.3-.1-.6-.1-.8-.2v-2.7l1.3.3c.5.1 1.3.2 1.7.2.5 0 .9-.2 1.1-.2.4-.1.6-.2 1-.4.2-.1.4-.2.7-.4.4-.2 1.3-.7 2.5-1 .6-.2 1.4-.4 2.5-.5s2 .1 2.5.2c.6.1 1.2.3 2.2.7l1.5.5c.3.1.6.2 1 .4 1 .3 1.8.5 2.1.5h.1v2.7zm0-6c-.2 0-.4 0-.5-.1-.4-.1-1.2-.2-2.4-.6-.5-.2-.8-.3-1.2-.4-.3-.1-.7-.3-1.4-.5-1-.4-1.5-.5-1.9-.6-.5-.1-1.1-.2-1.9-.2s-1.4.2-1.9.4c-1 .3-1.8.7-2.1.9l-.6.3a9.75 9.75 0 0 1-1.4.6c-.3.1-.9.3-1.6.3h-.3c-.4 0-1 0-2-.2-.3-.1-.6-.1-.8-.2v-2.7l1.3.3c.5.1 1.3.2 1.7.2.5 0 .9-.2 1.1-.2.4-.1.6-.2 1-.4.2-.1.4-.2.7-.4.4-.2 1.3-.7 2.5-1 .6-.2 1.4-.4 2.5-.5s2 .1 2.5.2c.6.1 1.2.3 2.2.7l1.5.5c.3.1.6.2 1 .4 1 .3 1.8.5 2.1.5h.1v2.7zm0-6c-.2 0-.4 0-.5-.1-.4-.1-1.2-.2-2.4-.6-.5-.2-.8-.3-1.2-.4-.3-.1-.7-.3-1.4-.5-1-.4-1.5-.5-1.9-.6-.5-.1-1.1-.2-1.9-.2s-1.4.2-1.9.4c-1 .3-1.8.7-2.1.9l-.6.3c-.4.2-.8.4-1.4.6-.3.1-.9.3-1.6.3h-.3c-.4 0-1 0-2-.2-.3-.1-.6-.1-.8-.2v-2.7l1.3.3c.5.1 1.3.2 1.7.2.5 0 .9-.2 1.1-.2.4-.1.6-.2 1-.4.2-.1.4-.2.7-.4.4-.2 1.3-.7 2.5-1 .6-.2 1.4-.4 2.5-.5s2 .1 2.5.2c.6.1 1.2.3 2.2.7l1.5.5c.3.1.6.2 1 .4 1 .3 1.8.5 2.1.5h.1v2.7zM15.7 1.9v-.8h18.6V3c0 1.5-1.2 2.8-2.8 2.8H18.4c-1.5 0-2.8-1.2-2.8-2.8V1.9z"/>
+        </svg>
+      `,
+      motion: `
+        <svg viewBox="0 0 50 45" class="tpl-icon-svg tpl-icon-motion" aria-hidden="true">
+          <path fill="currentColor" d="M37.85,39.55c1.33,2.67,5.32,1,3.89-1.91l-3.72-7.52c-.28-.56-.65-1.15-1.06-1.76l-2.24-3.19,.09-.3c.56-2,.89-3.13,1.02-5l.37-5.28c.2-2.8-1.52-4.78-4.22-4.78-2.04,0-3.46,1.06-5.24,2.8l-2.8,2.74c-.91,.91-1.28,1.72-1.39,3.04l-.35,4.32c-.11,1.28,.67,2.22,1.87,2.26,1.22,.09,2-.7,2.11-2.02l.39-4.59,1-.89c.28-.26,.74-.13,.7,.33l-.26,3.52c-.15,1.96,.24,3.06,1.78,4.98l3.69,4.63c.33,.41,.39,.54,.56,.89l3.8,7.74Zm-3.67-30.86c2.39,0,4.35-1.96,4.35-4.35s-1.96-4.35-4.35-4.35-4.35,1.96-4.35,4.35,1.96,4.35,4.35,4.35Zm-9.13,31.46l5.5-6.52c.59-.7,.72-.89,.91-1.56l.04-.15-3.41-4.26-.72,3.32-5.35,6.35c-2.04,2.43,1.33,4.85,3.02,2.82Zm19.45-23.23h-4.04l-2.09-2.28-.37,5.26,.13,.13c.65,.65,1.26,.87,2.46,.87h3.91c1.33,0,2.19-.78,2.19-1.98s-.89-2-2.19-2Z"/>
+          <path fill="currentColor" opacity="0.45" d="M1.41,16.58H15.82c.78,0,1.43-.7,1.43-1.52s-.65-1.52-1.43-1.52H1.41c-.78,0-1.41,.7-1.41,1.52s.63,1.52,1.41,1.52ZM10.65,7.54h10.17c.78,0,1.43-.7,1.43-1.52s-.65-1.52-1.43-1.52H10.65c-.8,0-1.46,.7-1.46,1.52s.65,1.52,1.46,1.52ZM2.59,34.66H13.65c.78,0,1.43-.7,1.43-1.52s-.65-1.52-1.43-1.52H2.59c-.8,0-1.46,.7-1.46,1.52s.65,1.52,1.46,1.52Zm6.26-9.04h7.63c.78,0,1.43-.7,1.43-1.52s-.65-1.52-1.43-1.52h-7.63c-.78,0-1.43,.7-1.43,1.52s.65,1.52,1.43,1.52Z"/>
+        </svg>
+      `,
+      homepod: `
+        <svg viewBox="0 0 50 50" class="tpl-icon-svg tpl-icon-homepod" aria-hidden="true">
+          <path fill="currentColor" opacity="0.95" d="M32.7,47.5c6.2,0,8.9-0.8,11.3-3.1c3.5-3.2,5.5-7.8,5.5-12.7c0-4-1.4-7.8-4.1-10.9c-0.6-0.8-1.3-0.8-2-0.4c-2.5,1.9-5.3,2.9-10.8,2.9c-5.5,0-8.3-1-10.9-2.9c-0.7-0.5-1.4-0.4-2,0.4c-2.7,3.1-4.1,6.8-4.1,10.9c0,4.9,2.1,9.5,5.5,12.7C23.8,46.7,26.5,47.5,32.7,47.5z"/>
+          <path fill="currentColor" opacity="0.62" d="M4.7,37.7h9.1c-0.4-1.3-0.7-2.5-0.8-4.1c-3.8-0.2-6.8-3.3-6.8-7.2c0-4,3.2-7.2,7.2-7.2c1.2,0,2.4,0.3,3.3,0.8c2.3-3.1,5.4-4.7,9.6-5.5V9.1c0-2.9-1.5-4.4-4.3-4.4H4.7c-2.8,0-4.3,1.5-4.3,4.4v24.2C0.4,36.2,1.9,37.7,4.7,37.7z M13.4,16.7c-2.2,0-4-1.8-4-3.9c0-2.2,1.8-3.9,4-3.9s4,1.8,4,3.9C17.3,14.9,15.5,16.7,13.4,16.7z M13.4,14.8c1.1,0,2-0.9,2-2c0-1.1-0.9-2-2-2s-2,0.9-2,2C11.4,13.9,12.3,14.8,13.4,14.8z M10.3,26.4c0,1.6,1.2,2.9,2.8,3c0.2-2,0.8-4,1.6-5.8c-0.4-0.2-0.8-0.3-1.3-0.3C11.7,23.4,10.3,24.8,10.3,26.4z"/>
+          <path fill="currentColor" opacity="0.45" d="M32.7,21c4.7,0,8.1-0.9,8.1-2.2c0-1.3-3.3-2.2-8.1-2.2c-4.7,0-8.1,0.9-8.1,2.2C24.7,20.1,28,21,32.7,21z"/>
+        </svg>
+      `,
+    };
+
+    return `<span class="tpl-icon">${icons[name] || icons.living_sofa}</span>`;
   }
 
   static _escape(value) {

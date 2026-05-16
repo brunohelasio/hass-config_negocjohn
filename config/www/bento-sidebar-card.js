@@ -1,4 +1,4 @@
-const BENTO_SIDEBAR_CARD_TAG = 'bento-sidebar-rail-card';
+const BENTO_SIDEBAR_CARD_TAG = 'bento-sidebar-glass-card';
 
 class BentoSidebarCard extends HTMLElement {
   static getStubConfig() {
@@ -115,7 +115,20 @@ class BentoSidebarCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          width: 65px;
+          --rail-width: 65px;
+          --rail-radius: 18px;
+          --rail-padding-top: 12px;
+          --rail-padding-bottom: 14px;
+          --button-size: 42px;
+          --button-radius: 14px;
+          --icon-size: 20px;
+          --group-gap: 6px;
+          --glass-line: rgba(255,255,255,0.14);
+          --glass-line-soft: rgba(255,255,255,0.07);
+          --icon-neutral: rgba(255,255,255,0.74);
+          --icon-active: rgba(245,250,255,0.96);
+          --accent: 150, 190, 255;
+          width: var(--rail-width);
           height: 100%;
           min-height: 0;
           display: block;
@@ -125,22 +138,56 @@ class BentoSidebarCard extends HTMLElement {
         }
 
         .rail {
-          width: 65px;
+          width: var(--rail-width);
           height: 100%;
           min-height: 100%;
           box-sizing: border-box;
+          position: relative;
+          isolation: isolate;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
-          padding: 12px 0 10px;
-          background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30));
-          backdrop-filter: blur(18px) saturate(1.2);
-          -webkit-backdrop-filter: blur(18px) saturate(1.2);
-          border: 1px solid rgba(255,255,255,0.10);
-          border-radius: 16px;
-          box-shadow: none;
+          padding: var(--rail-padding-top) 0 var(--rail-padding-bottom);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.045) 34%, rgba(255,255,255,0.075)),
+            linear-gradient(155deg, rgba(24,31,45,0.74), rgba(20,22,29,0.54) 48%, rgba(42,32,24,0.30));
+          backdrop-filter: blur(24px) saturate(1.35) contrast(1.02);
+          -webkit-backdrop-filter: blur(24px) saturate(1.35) contrast(1.02);
+          border: 1px solid var(--glass-line);
+          border-radius: var(--rail-radius);
+          box-shadow:
+            inset 1px 1px 0 rgba(255,255,255,0.18),
+            inset -1px -1px 0 rgba(255,255,255,0.035),
+            0 18px 44px rgba(0,0,0,0.24);
           overflow: hidden;
+        }
+
+        .rail::before,
+        .rail::after {
+          content: "";
+          position: absolute;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .rail::before {
+          inset: 1px;
+          border-radius: calc(var(--rail-radius) - 1px);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.00) 30%),
+            linear-gradient(90deg, rgba(255,255,255,0.13), rgba(255,255,255,0.00) 46%);
+          opacity: 0.72;
+        }
+
+        .rail::after {
+          top: 12px;
+          right: 7px;
+          bottom: 12px;
+          width: 1px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.00), rgba(255,255,255,0.20), rgba(255,255,255,0.00));
+          opacity: 0.32;
         }
 
         .group {
@@ -149,57 +196,113 @@ class BentoSidebarCard extends HTMLElement {
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
-          gap: 6px;
+          gap: var(--group-gap);
           flex: 0 0 auto;
+          position: relative;
+          z-index: 1;
         }
 
         .spacer {
           width: 100%;
           min-height: 18px;
           flex: 1 1 auto;
+          position: relative;
+          z-index: 1;
         }
 
         .nav-button {
-          width: 42px;
-          height: 42px;
-          min-width: 42px;
-          min-height: 42px;
-          max-width: 42px;
-          max-height: 42px;
+          width: var(--button-size);
+          height: var(--button-size);
+          min-width: var(--button-size);
+          min-height: var(--button-size);
+          max-width: var(--button-size);
+          max-height: var(--button-size);
           box-sizing: border-box;
+          position: relative;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           margin: 0;
           padding: 0;
-          color: rgba(255,255,255,0.78);
-          background: transparent;
-          border: 1px solid transparent;
-          border-radius: 12px;
-          box-shadow: none;
+          color: var(--icon-neutral);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018));
+          border: 1px solid rgba(255,255,255,0.055);
+          border-radius: var(--button-radius);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.055),
+            0 1px 0 rgba(0,0,0,0.12);
           outline: none;
           cursor: pointer;
           appearance: none;
           -webkit-appearance: none;
           line-height: 0;
+          overflow: hidden;
           transition:
-            background 0.12s ease,
-            border-color 0.12s ease,
-            color 0.12s ease,
-            transform 0.12s ease;
+            background 160ms ease,
+            border-color 160ms ease,
+            box-shadow 160ms ease,
+            color 160ms ease,
+            transform 160ms ease;
+        }
+
+        .nav-button::before,
+        .nav-button::after {
+          content: "";
+          position: absolute;
+          pointer-events: none;
+          opacity: 0;
+          transition: opacity 160ms ease, transform 160ms ease;
+        }
+
+        .nav-button::before {
+          inset: 1px;
+          border-radius: calc(var(--button-radius) - 1px);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.00) 58%),
+            linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00));
+          transform: translateY(-3px);
+        }
+
+        .nav-button::after {
+          left: 50%;
+          bottom: 4px;
+          width: 12px;
+          height: 2px;
+          border-radius: 999px;
+          background: rgba(var(--accent), 0.92);
+          box-shadow: 0 0 12px rgba(var(--accent), 0.70);
+          transform: translateX(-50%) scaleX(0.62);
         }
 
         .nav-button:hover {
-          background: rgba(255,255,255,0.08);
+          color: rgba(255,255,255,0.90);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.040));
+          border-color: rgba(255,255,255,0.13);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.11),
+            0 6px 14px rgba(0,0,0,0.16);
+        }
+
+        .nav-button:hover::before {
+          opacity: 0.72;
+          transform: translateY(0);
         }
 
         .nav-button:active {
-          background: rgba(255,255,255,0.14);
-          transform: translateY(1px);
+          transform: translateY(1px) scale(0.98);
+        }
+
+        .nav-button.is-pressed {
+          transform: scale(0.96);
         }
 
         .nav-button:focus-visible {
-          border-color: rgba(255,255,255,0.34);
+          border-color: rgba(var(--accent), 0.52);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.12),
+            0 0 0 3px rgba(var(--accent), 0.16);
         }
 
         .nav-button[aria-disabled="true"] {
@@ -211,31 +314,96 @@ class BentoSidebarCard extends HTMLElement {
         }
 
         .nav-button.selected {
-          color: rgba(255,255,255,0.88);
-          background: rgba(255,255,255,0.12);
-          backdrop-filter: blur(12px) saturate(1.15);
-          -webkit-backdrop-filter: blur(12px) saturate(1.15);
-          border-color: rgba(255,255,255,0.18);
+          color: var(--icon-active);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.075)),
+            linear-gradient(135deg, rgba(var(--accent),0.26), rgba(255,255,255,0.025));
+          backdrop-filter: blur(14px) saturate(1.28);
+          -webkit-backdrop-filter: blur(14px) saturate(1.28);
+          border-color: rgba(218,232,255,0.38);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.12),
-            0 4px 10px rgba(0,0,0,0.20);
+            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 0 -1px 0 rgba(255,255,255,0.06),
+            0 8px 18px rgba(0,0,0,0.24),
+            0 0 22px rgba(var(--accent),0.20);
+          animation: selected-breathe 4.8s ease-in-out infinite;
+        }
+
+        .nav-button.selected::before {
+          opacity: 0.88;
+          transform: translateY(0);
+        }
+
+        .nav-button.selected::after {
+          opacity: 1;
+          transform: translateX(-50%) scaleX(1);
         }
 
         .nav-button.selected:hover {
-          background: rgba(255,255,255,0.12);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.085)),
+            linear-gradient(135deg, rgba(var(--accent),0.30), rgba(255,255,255,0.035));
         }
 
         .nav-button svg {
-          width: 20px;
-          height: 20px;
+          width: var(--icon-size);
+          height: var(--icon-size);
           display: block;
-          flex: 0 0 20px;
+          flex: 0 0 var(--icon-size);
           fill: none;
           stroke: currentColor;
-          stroke-width: 1.5;
+          stroke-width: 1.55;
           stroke-linecap: round;
           stroke-linejoin: round;
           pointer-events: none;
+          position: relative;
+          z-index: 1;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.24));
+        }
+
+        @keyframes selected-breathe {
+          0%, 100% {
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.22),
+              inset 0 -1px 0 rgba(255,255,255,0.06),
+              0 8px 18px rgba(0,0,0,0.24),
+              0 0 18px rgba(var(--accent),0.16);
+          }
+          50% {
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.25),
+              inset 0 -1px 0 rgba(255,255,255,0.08),
+              0 10px 22px rgba(0,0,0,0.26),
+              0 0 28px rgba(var(--accent),0.28);
+          }
+        }
+
+        @media (max-height: 760px) {
+          :host {
+            --rail-padding-top: 10px;
+            --rail-padding-bottom: 12px;
+            --group-gap: 5px;
+          }
+        }
+
+        @media (max-height: 690px), (max-width: 900px) {
+          :host {
+            --rail-width: 61px;
+            --button-size: 40px;
+            --button-radius: 13px;
+            --icon-size: 19px;
+            --group-gap: 5px;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .nav-button,
+          .nav-button::before,
+          .nav-button::after,
+          .nav-button.selected {
+            animation: none !important;
+            transition: none !important;
+          }
         }
       </style>
       <div class="rail" role="navigation" aria-label="Bento sidebar">
@@ -251,6 +419,8 @@ class BentoSidebarCard extends HTMLElement {
 
     this.shadowRoot.querySelectorAll('.nav-button').forEach((button) => {
       button.addEventListener('click', () => {
+        button.classList.add('is-pressed');
+        window.setTimeout(() => button.classList.remove('is-pressed'), 180);
         const section = button.dataset.section;
         const index = Number(button.dataset.index);
         const item = this._items(section)[index];

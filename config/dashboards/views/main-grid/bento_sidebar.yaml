@@ -1,7 +1,7 @@
 # Bento sidebar custom card.
 # The visual rail, selected Home state, icon centering, spacer, and bottom
 # anchoring are owned by config/www/bento-sidebar-card.js.
-type: custom:bento-sidebar-glass-card
+type: custom:bento-sidebar-liquid-card
 view_layout:
   grid-area: sidebar
 top_items:

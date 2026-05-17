@@ -1,29 +1,70 @@
-type: custom:stack-in-card
-card_mod:
-  style: |
-    :host {
-      height: 100% !important;
-      margin: 0 !important;
-      display: block !important;
-    }
-    ha-card {
-      height: 100% !important;
-      margin: 0 !important;
-      display: block !important;
-      padding: 0px !important;
+type: custom:bruno-room-card
+name: Q. Miguel
+icon_size: 74
+entities:
+  room_group: light.grupo_luzes_quarto_miguel
+  room_toggle: light.quarto_miguel_switch_2
+  room_fallback_lights:
+    - light.quarto_miguel_switch_2
+  active_sensor: sensor.quarto_miguel_active
+  temperature:
+    - sensor.temperatura_quarto_miguel
+    - sensor.qmi_temperatura
+  humidity:
+    - sensor.umidade_quarto_miguel
+    - sensor.qmi_umidade
+icon:
+  off: /local/bruno-ui/assets/miguel-bedroom-off.png?v=20260517-1
+  on: /local/bruno-ui/assets/miguel-bedroom-on.png?v=20260517-1
+  fallback: mdi:bed-single-outline
+status_dots:
+  - icon: mdi:account
+    label: Presenca
+    tone: blue
+  - icon: mdi:lightbulb-on
+    label: Luzes
+    tone: amber
+  - icon: mdi:snowflake
+    label: Clima
+    tone: cyan
+  - icon: mdi:speaker-wireless
+    label: Midia
+    tone: purple
+double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
 
-      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
-      backdrop-filter: blur(20px) saturate(1.35) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-      border: 1px solid rgba(255,255,255,0.10) !important;
-      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
-      border-radius: 16px !important;
-      overflow: hidden !important;
-
-      --ha-card-backdrop-filter: none !important;
-      --ha-card-background: transparent !important;
-      --ha-card-border-width: 0 !important;
-    }
-    ha-card::before { display: none !important; }
-cards:
-  - !include ../../shared/grid-cards/bento_quarto_miguel.yaml
+# FALLBACK - Q. Miguel Lovelace/Negocjohn original
+# Para voltar rapidamente:
+# 1. Comentar o bloco custom:bruno-room-card acima.
+# 2. Descomentar o bloco abaixo.
+# O conteudo funcional compartilhado permanece intacto em:
+# ../../shared/grid-cards/bento_quarto_miguel.yaml
+#
+# type: custom:stack-in-card
+# card_mod:
+#   style: |
+#     :host {
+#       height: 100% !important;
+#       margin: 0 !important;
+#       display: block !important;
+#     }
+#     ha-card {
+#       height: 100% !important;
+#       margin: 0 !important;
+#       display: block !important;
+#       padding: 0px !important;
+#
+#       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+#       backdrop-filter: blur(20px) saturate(1.35) !important;
+#       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+#       border: 1px solid rgba(255,255,255,0.10) !important;
+#       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+#       border-radius: 16px !important;
+#       overflow: hidden !important;
+#
+#       --ha-card-backdrop-filter: none !important;
+#       --ha-card-background: transparent !important;
+#       --ha-card-border-width: 0 !important;
+#     }
+#     ha-card::before { display: none !important; }
+# cards:
+#   - !include ../../shared/grid-cards/bento_quarto_miguel.yaml

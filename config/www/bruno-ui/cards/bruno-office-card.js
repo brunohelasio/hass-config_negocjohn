@@ -458,7 +458,9 @@ class BrunoOfficeCard extends HTMLElement {
           --dot-off-border: rgba(255,255,255,0.12);
           --dot-off-icon: rgba(255,255,255,0.35);
           display: block;
+          width: 100%;
           height: 100%;
+          min-width: 0;
           min-height: 0;
           margin: 0;
           padding: 0;
@@ -483,7 +485,9 @@ class BrunoOfficeCard extends HTMLElement {
           position: relative;
           isolation: isolate;
           width: 100%;
+          max-width: 100%;
           height: 100%;
+          min-width: 0;
           min-height: 0;
           color: var(--text-main);
           background: var(--bruno-liquid-surface-off-background,

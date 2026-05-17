@@ -456,7 +456,11 @@ class BrunoSalaCard extends HTMLElement {
           </span>
         </span>
       `
-      : '<span class="pill-media-dot" aria-hidden="true"></span>';
+      : `
+        <span class="pill-power" aria-hidden="true">
+          <ha-icon icon="mdi:power"></ha-icon>
+        </span>
+      `;
 
     return `
       <button class="action-pill icon-${iconName} tone-${tone}${activeClass}${variantClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
@@ -854,7 +858,7 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .action-pill.is-media {
-          grid-template-columns: 42px minmax(0, 1fr) 12px;
+          grid-template-columns: 42px minmax(0, 1fr) 34px;
         }
 
         .action-pill.is-active {
@@ -991,19 +995,51 @@ class BrunoSalaCard extends HTMLElement {
           background: rgba(255,255,255,0.96);
         }
 
-        .pill-media-dot {
+        .pill-power {
           justify-self: end;
-          width: 9px;
-          height: 9px;
+          width: 28px;
+          height: 28px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           border-radius: 50%;
-          background: var(--action-label);
-          opacity: 0.58;
+          color: rgba(255,255,255,0.50);
+          background:
+            radial-gradient(14px 12px at 34% 20%, rgba(255,255,255,0.16), transparent 74%),
+            rgba(255,255,255,0.055);
+          border: 1px solid rgba(255,255,255,0.10);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.12),
+            inset 0 -1px 0 rgba(0,0,0,0.12);
+          transition: background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
         }
 
-        .action-pill.is-media.is-active .pill-media-dot {
-          background: rgba(var(--tone),0.98);
-          box-shadow: 0 0 12px rgba(var(--tone),0.30);
-          opacity: 1;
+        .pill-power ha-icon {
+          --mdc-icon-size: 14px;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .sala-card.is-room-on .pill-power {
+          color: rgba(255,255,255,0.58);
+          background:
+            radial-gradient(14px 12px at 34% 20%, rgba(255,255,255,0.16), transparent 74%),
+            rgba(10,16,24,0.12);
+          border-color: rgba(8,14,22,0.10);
+        }
+
+        .action-pill.is-media.is-active .pill-power {
+          color: rgba(var(--tone),0.98);
+          background:
+            radial-gradient(14px 12px at 34% 20%, rgba(255,255,255,0.22), transparent 74%),
+            rgba(var(--tone),0.15);
+          border-color: rgba(var(--tone),0.36);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.16),
+            0 0 12px rgba(var(--tone),0.24);
         }
 
         .sala-card.is-room-on .action-pill.is-active {

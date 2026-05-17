@@ -536,20 +536,20 @@ class BrunoSalaCard extends HTMLElement {
           padding: 12px 14px;
           color: var(--text-main);
           background:
-            radial-gradient(160px 150px at 18% -8%, rgba(255,255,255,0.24), rgba(255,255,255,0.06) 42%, transparent 72%),
-            radial-gradient(150px 150px at 94% 88%, rgba(var(--accent),0.12), transparent 68%),
-            linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.048) 34%, rgba(255,255,255,0.082)),
-            linear-gradient(155deg, rgba(26,33,48,0.78), rgba(20,22,29,0.58) 48%, rgba(42,32,24,0.32));
-          backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
-          -webkit-backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
-          border: 1px solid rgba(255,255,255,0.11);
+            radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.18), rgba(255,255,255,0.042) 44%, transparent 73%),
+            radial-gradient(150px 150px at 96% 92%, rgba(var(--accent),0.09), transparent 69%),
+            linear-gradient(180deg, rgba(255,255,255,0.118), rgba(255,255,255,0.034) 36%, rgba(255,255,255,0.056)),
+            linear-gradient(155deg, rgba(18,24,36,0.74), rgba(11,14,22,0.61) 49%, rgba(33,27,25,0.32));
+          backdrop-filter: blur(32px) saturate(1.68) contrast(1.06);
+          -webkit-backdrop-filter: blur(32px) saturate(1.68) contrast(1.06);
+          border: 1px solid rgba(255,255,255,0.13);
           border-radius: var(--card-radius);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.22),
-            inset 1px 0 0 rgba(255,255,255,0.12),
-            inset -1px -1px 0 rgba(255,255,255,0.030),
-            0 18px 44px rgba(0,0,0,0.24),
-            0 0 24px rgba(110,150,210,0.08);
+            inset 0 1px 0 rgba(255,255,255,0.18),
+            inset 1px 0 0 rgba(255,255,255,0.10),
+            inset -1px -1px 0 rgba(255,255,255,0.026),
+            0 18px 44px rgba(0,0,0,0.27),
+            0 0 24px rgba(110,150,210,0.055);
           overflow: hidden;
         }
 
@@ -565,11 +565,11 @@ class BrunoSalaCard extends HTMLElement {
           inset: 1px;
           border-radius: calc(var(--card-radius) - 1px);
           background:
-            radial-gradient(74px 58px at 20% 2%, rgba(255,255,255,0.26), transparent 70%),
-            radial-gradient(76px 84px at 94% 16%, rgba(var(--accent),0.16), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
-            linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%);
-          opacity: 0.78;
+            radial-gradient(78px 62px at 19% 2%, rgba(255,255,255,0.20), transparent 72%),
+            radial-gradient(82px 92px at 94% 18%, rgba(var(--accent),0.12), transparent 74%),
+            linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.00) 35%),
+            linear-gradient(90deg, rgba(255,255,255,0.085), rgba(255,255,255,0.00) 48%);
+          opacity: 0.74;
         }
 
         .sala-card::after {
@@ -597,24 +597,31 @@ class BrunoSalaCard extends HTMLElement {
           --dot-off-border: rgba(255,255,255,0.16);
           --dot-off-icon: rgba(255,255,255,0.48);
           background:
-            radial-gradient(170px 136px at 12% -10%, rgba(255,255,255,0.30), rgba(255,255,255,0.065) 52%, transparent 74%),
-            radial-gradient(160px 140px at 96% 92%, rgba(135,180,235,0.20), transparent 68%),
-            radial-gradient(120px 92px at 28% 20%, rgba(255,231,132,0.075), transparent 70%),
-            linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.062) 42%, rgba(255,255,255,0.085)),
-            linear-gradient(155deg, rgba(34,42,55,0.78), rgba(24,28,37,0.62) 52%, rgba(12,15,22,0.48));
-          backdrop-filter: blur(32px) saturate(1.55) contrast(1.05);
-          -webkit-backdrop-filter: blur(32px) saturate(1.55) contrast(1.05);
-          border-color: rgba(255,255,255,0.22);
+            radial-gradient(170px 134px at 12% -10%, rgba(255,255,255,0.38), rgba(255,255,255,0.105) 52%, transparent 75%),
+            radial-gradient(165px 148px at 98% 94%, rgba(135,185,245,0.24), transparent 68%),
+            radial-gradient(122px 96px at 27% 18%, rgba(255,232,126,0.105), transparent 71%),
+            linear-gradient(180deg, rgba(255,255,255,0.225), rgba(255,255,255,0.073) 43%, rgba(255,255,255,0.108)),
+            linear-gradient(155deg, rgba(42,51,65,0.72), rgba(23,28,38,0.58) 52%, rgba(13,16,24,0.44));
+          backdrop-filter: blur(34px) saturate(1.72) contrast(1.05);
+          -webkit-backdrop-filter: blur(34px) saturate(1.72) contrast(1.05);
+          border-color: rgba(255,255,255,0.24);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.30),
-            inset 1px 0 0 rgba(255,255,255,0.12),
+            inset 0 1px 0 rgba(255,255,255,0.32),
+            inset 1px 0 0 rgba(255,255,255,0.13),
             inset 0 -1px 0 rgba(0,0,0,0.18),
-            0 0 20px rgba(255,255,255,0.08),
+            0 0 22px rgba(255,255,255,0.09),
+            0 0 34px rgba(120,170,235,0.10),
             0 18px 42px rgba(0,0,0,0.28);
         }
 
         .sala-card.is-room-on::before {
-          opacity: 0.34;
+          background:
+            radial-gradient(92px 74px at 17% 0%, rgba(255,255,255,0.34), transparent 72%),
+            radial-gradient(118px 110px at 96% 96%, rgba(120,178,245,0.22), transparent 74%),
+            radial-gradient(80px 58px at 27% 18%, rgba(255,232,126,0.095), transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.00) 38%),
+            linear-gradient(90deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00) 50%);
+          opacity: 0.78;
         }
 
         button {

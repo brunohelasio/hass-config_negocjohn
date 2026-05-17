@@ -417,6 +417,16 @@ class BrunoOfficeCard extends HTMLElement {
     });
   }
 
+  _wireAssetFallback() {
+    this.shadowRoot
+      ?.querySelectorAll('.office-asset')
+      .forEach((asset) => {
+        asset.addEventListener('error', () => {
+          asset.closest('.office-icon')?.classList.add('has-image-error');
+        }, { once: true });
+      });
+  }
+
   _statusDot(icon, active, label, tone) {
     const activeClass = active ? ' is-active' : '';
     return `
@@ -645,18 +655,20 @@ class BrunoOfficeCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           position: relative;
-          width: 66px;
-          height: 66px;
-          margin-top: 0;
+          width: 76px;
+          height: 76px;
+          margin-left: -6px;
+          margin-top: -6px;
         }
 
         .office-icon {
-          position: relative;
+          position: absolute;
+          inset: 0;
           z-index: 1;
-          width: 66px;
-          height: 66px;
+          width: 100%;
+          height: 100%;
           display: block;
-          transition: opacity 160ms ease, filter 160ms ease;
+          transition: opacity 180ms ease, filter 180ms ease;
           filter: var(--office-icon-filter, none);
         }
 
@@ -674,13 +686,64 @@ class BrunoOfficeCard extends HTMLElement {
           filter: saturate(0.52) brightness(0.82) contrast(0.94) drop-shadow(0 0 6px rgba(0,0,0,0.22));
         }
 
+        .office-asset-wrap,
+        .office-asset-fallback,
+        .office-asset {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .office-asset {
+          object-fit: contain;
+          opacity: 0;
+          transform: translateZ(0);
+          filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
+          transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
+        }
+
+        .office-asset-off {
+          opacity: 1;
+        }
+
+        .office-card.is-room-on .office-asset-off {
+          opacity: 0;
+        }
+
+        .office-card.is-room-on .office-asset-on {
+          opacity: 1;
+          filter: drop-shadow(0 6px 9px rgba(0,0,0,0.20)) drop-shadow(0 0 12px rgba(255,187,72,0.14));
+          transform: translateY(-1px) scale(1.01);
+        }
+
+        .office-asset-fallback {
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .office-asset-fallback svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .office-icon.has-image-error .office-asset {
+          display: none;
+        }
+
+        .office-icon.has-image-error .office-asset-fallback {
+          opacity: 1;
+        }
+
         .meeting-icon {
           position: absolute;
           z-index: 2;
-          left: -3px;
-          top: -3px;
-          width: 72px;
-          height: 72px;
+          left: -2px;
+          top: -2px;
+          width: 80px;
+          height: 80px;
           pointer-events: none;
           filter: drop-shadow(0 0 10px rgba(var(--accent-red),0.42));
         }
@@ -827,15 +890,14 @@ class BrunoOfficeCard extends HTMLElement {
             padding: 12px 13px;
           }
 
-          .room-icon,
-          .office-icon {
-            width: 60px;
-            height: 60px;
+          .room-icon {
+            width: 68px;
+            height: 68px;
           }
 
           .meeting-icon {
-            width: 66px;
-            height: 66px;
+            width: 72px;
+            height: 72px;
           }
         }
 
@@ -854,7 +916,7 @@ class BrunoOfficeCard extends HTMLElement {
       <div class="office-card${roomActiveClass}${meetingClass}">
         <button class="office-action" type="button" data-action-key="room" aria-label="${BrunoOfficeCard._escape(this._config.name)}">
           <div class="room-icon" aria-hidden="true">
-            <span class="office-icon">${BrunoOfficeCard._officeIcon(model.iconActive)}</span>
+            <span class="office-icon">${BrunoOfficeCard._officeVisual(model.iconActive)}</span>
             ${model.meetingOn ? BrunoOfficeCard._meetingIcon() : ''}
           </div>
 
@@ -879,6 +941,18 @@ class BrunoOfficeCard extends HTMLElement {
     this.shadowRoot
       .querySelectorAll('[data-action-key]')
       .forEach((button) => this._wireAction(button));
+    this._wireAssetFallback();
+  }
+
+  static _officeVisual(active) {
+    const version = '20260517-2';
+    return `
+      <span class="office-asset-wrap">
+        <span class="office-asset-fallback">${BrunoOfficeCard._officeIcon(active)}</span>
+        <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off.png?v=${version}" alt="" loading="eager" decoding="async">
+        <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on.png?v=${version}" alt="" loading="eager" decoding="async">
+      </span>
+    `;
   }
 
   static _officeIcon(active) {

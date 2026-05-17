@@ -22,8 +22,8 @@ entities:
   humidity:
     - sensor.umidade_cozinha
 icon:
-  off: /local/bruno-ui/assets/kitchen-off.png?v=20260517-1
-  on: /local/bruno-ui/assets/kitchen-on.png?v=20260517-1
+  off: /local/bruno-ui/assets/kitchen-off.png?v=20260517-2
+  on: /local/bruno-ui/assets/kitchen-on.png?v=20260517-2
   fallback: mdi:noodles
 status_dots:
   - icon: mdi:account

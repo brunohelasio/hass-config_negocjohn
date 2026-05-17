@@ -14,8 +14,8 @@ entities:
     - sensor.umidade_quarto_miguel
     - sensor.qmi_umidade
 icon:
-  off: /local/bruno-ui/assets/miguel-bedroom-off.png?v=20260517-1
-  on: /local/bruno-ui/assets/miguel-bedroom-on.png?v=20260517-1
+  off: /local/bruno-ui/assets/miguel-bedroom-off.png?v=20260517-2
+  on: /local/bruno-ui/assets/miguel-bedroom-on.png?v=20260517-2
   fallback: mdi:bed-single-outline
 status_dots:
   - icon: mdi:account

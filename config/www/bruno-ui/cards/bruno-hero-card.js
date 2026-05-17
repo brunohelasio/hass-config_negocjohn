@@ -325,7 +325,7 @@ class BrunoHeroCard extends HTMLElement {
       <style>
         :host {
           --hero-radius-left: 18px;
-          --hero-radius-right: 12px;
+          --hero-radius-right: 8px;
           --hero-accent: 150, 190, 255;
           --hero-text: rgba(248,251,255,0.96);
           --hero-muted: rgba(248,251,255,0.54);
@@ -337,7 +337,7 @@ class BrunoHeroCard extends HTMLElement {
           padding: 0;
           overflow: visible;
           position: relative;
-          z-index: 0;
+          z-index: 1;
         }
 
         * {
@@ -367,22 +367,24 @@ class BrunoHeroCard extends HTMLElement {
 
         .hero-clip {
           position: absolute;
-          inset: 0;
+          inset: 0 -18px 0 0;
           z-index: 1;
           overflow: hidden;
           border-radius: inherit;
           background:
-            linear-gradient(90deg, rgba(6,14,24,0.88) 0%, rgba(7,15,26,0.70) 29%, rgba(7,15,26,0.28) 57%, rgba(7,15,26,0.06) 78%, rgba(7,15,26,0.00) 100%),
-            radial-gradient(520px 220px at 18% 6%, rgba(145,185,245,0.22), transparent 62%),
-            radial-gradient(520px 260px at 92% 52%, rgba(255,255,255,0.10), transparent 64%),
+            linear-gradient(90deg, rgba(6,14,24,0.88) 0%, rgba(7,15,26,0.70) 29%, rgba(7,15,26,0.30) 58%, rgba(7,15,26,0.08) 78%, rgba(7,15,26,0.00) 96%),
+            radial-gradient(560px 230px at 18% 6%, rgba(145,185,245,0.22), transparent 62%),
+            radial-gradient(600px 270px at 91% 52%, rgba(255,255,255,0.12), transparent 66%),
             url(${background}) center / cover no-repeat,
             url(${fallbackBackground}) center / cover no-repeat,
             linear-gradient(155deg, rgba(26,33,48,0.90), rgba(16,21,31,0.86));
+          -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 88px), rgba(0,0,0,0.78) calc(100% - 46px), transparent 100%);
+          mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 88px), rgba(0,0,0,0.78) calc(100% - 46px), transparent 100%);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.18),
-            inset 1px 0 0 rgba(255,255,255,0.11),
-            inset 0 -1px 0 rgba(0,0,0,0.18),
-            0 18px 44px rgba(0,0,0,0.20);
+            inset 0 1px 0 rgba(255,255,255,0.06),
+            inset 1px 0 0 rgba(255,255,255,0.055),
+            inset 0 -1px 0 rgba(0,0,0,0.13),
+            0 16px 34px rgba(0,0,0,0.11);
         }
 
         .hero-clip::before,
@@ -402,34 +404,38 @@ class BrunoHeroCard extends HTMLElement {
         }
 
         .hero-clip::after {
-          inset: 0;
+          inset: 0 -28px 0 58%;
           border-radius: inherit;
-          border: 1px solid rgba(255,255,255,0.10);
-          border-right-color: rgba(255,255,255,0.03);
-          box-shadow:
-            inset 0 0 0 1px rgba(255,255,255,0.035),
-            0 0 30px rgba(var(--hero-accent),0.08);
+          background:
+            linear-gradient(90deg, rgba(255,255,255,0.00), rgba(255,255,255,0.05) 46%, rgba(7,15,26,0.00) 100%),
+            radial-gradient(220px 140px at 78% 18%, rgba(var(--hero-accent),0.12), transparent 72%);
+          backdrop-filter: blur(4px) saturate(1.16);
+          -webkit-backdrop-filter: blur(4px) saturate(1.16);
+          opacity: 0.78;
         }
 
         .lateral-veil {
           position: absolute;
-          z-index: 0;
+          z-index: 3;
           top: 0;
-          right: -32px;
+          right: -54px;
           bottom: 0;
-          width: 94px;
+          width: 148px;
           pointer-events: none;
           border-radius: 0 20px 20px 0;
           background:
-            linear-gradient(90deg, rgba(7,15,26,0.58), rgba(7,15,26,0.22) 42%, rgba(7,15,26,0.00) 100%),
-            radial-gradient(110px 120px at 0% 18%, rgba(var(--hero-accent),0.16), transparent 74%);
-          filter: blur(0.2px);
-          opacity: 0.92;
+            linear-gradient(90deg, rgba(12,19,29,0.34), rgba(12,19,29,0.18) 42%, rgba(12,19,29,0.00) 100%),
+            radial-gradient(130px 120px at 8% 18%, rgba(var(--hero-accent),0.16), transparent 74%);
+          -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 14%, rgba(0,0,0,0.72) 56%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0%, #000 14%, rgba(0,0,0,0.72) 56%, transparent 100%);
+          backdrop-filter: blur(12px) saturate(1.22);
+          -webkit-backdrop-filter: blur(12px) saturate(1.22);
+          opacity: 0.86;
         }
 
         .content {
           position: relative;
-          z-index: 2;
+          z-index: 4;
           height: 100%;
           min-height: 0;
           display: flex;

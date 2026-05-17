@@ -1,41 +1,94 @@
-type: custom:stack-in-card
-card_mod:
-  style: |
-    :host {
-      height: 100% !important;
-      margin: 0 !important;
-      display: block !important;
-    }
-    /* #root — COMENTADO: não necessário. O overflow:hidden do ha-card clipa o excesso
-       do quadrado aspect_ratio:1/1 (258px) para a altura da célula (235px).
-       Não precisamos propagar height pelo #root.
-    #root {
-      height: 100% !important;
-      flex: 1 !important;
-    }
-    */
-    ha-card {
-      height: 100% !important;
-      margin: 0 !important;
-      /* SIMPLIFICADO: display:block em vez de flex — com flex+justify-content:center o
-         quadrado seria centralizado verticalmente (clipando 11px em cima E em baixo);
-         com block, o quadrado começa no topo e só os 23px inferiores são clipados. */
-      display: block !important;
-      padding: 0px !important;
-      
-      /* O seu vidro validado */
-      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
-      backdrop-filter: blur(20px) saturate(1.35) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-      border: 1px solid rgba(255,255,255,0.10) !important;
-      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
-      border-radius: 16px !important;
-      overflow: hidden !important;
-      
-      --ha-card-backdrop-filter: none !important;
-      --ha-card-background: transparent !important;
-      --ha-card-border-width: 0 !important;
-    }
-    ha-card::before { display: none !important; }
-cards:
-  - !include ../../shared/grid-cards/bento_cozinha.yaml
+type: custom:bruno-room-card
+name: Cozinha
+icon_size: 74
+room_on_states:
+  - "on"
+  - home
+  - active
+  - yes
+semantic_on_states:
+  - dishwashing
+  - cooking
+  - washing
+entities:
+  room_group: light.grupo_luzes_cozinha
+  room_toggle: light.cz_luz_principal
+  room_fallback_lights:
+    - light.cz_luz_principal
+  active_sensor: sensor.cozinha_active
+  dishwasher: sensor.lava_loucas_operation_state
+  temperature:
+    - sensor.temperatura_cozinha
+  humidity:
+    - sensor.umidade_cozinha
+icon:
+  off: /local/bruno-ui/assets/kitchen-off.png?v=20260517-1
+  on: /local/bruno-ui/assets/kitchen-on.png?v=20260517-1
+  fallback: mdi:noodles
+status_dots:
+  - icon: mdi:account
+    label: Presenca
+    tone: blue
+  - icon: mdi:dishwasher
+    label: Lava-loucas
+    tone: purple
+    entity: sensor.lava_loucas_operation_state
+    states:
+      - run
+    active_attr: dishwasher_running
+  - icon: mdi:washing-machine
+    label: Maquina de lavar
+    tone: cyan
+  - icon: mdi:air-fryer
+    label: Air fryer
+    tone: amber
+double_tap_action: !include ../../shared/popup/rooms/kitchen.yaml
+
+# FALLBACK - Cozinha Lovelace/Negocjohn original
+# Para voltar rapidamente:
+# 1. Comentar o bloco custom:bruno-room-card acima.
+# 2. Descomentar o bloco abaixo.
+# O conteudo funcional compartilhado permanece intacto em:
+# ../../shared/grid-cards/bento_cozinha.yaml
+#
+# type: custom:stack-in-card
+# card_mod:
+#   style: |
+#     :host {
+#       height: 100% !important;
+#       margin: 0 !important;
+#       display: block !important;
+#     }
+#     /* #root - COMENTADO: nao necessario. O overflow:hidden do ha-card clipa o excesso
+#        do quadrado aspect_ratio:1/1 (258px) para a altura da celula (235px).
+#        Nao precisamos propagar height pelo #root.
+#     #root {
+#       height: 100% !important;
+#       flex: 1 !important;
+#     }
+#     */
+#     ha-card {
+#       height: 100% !important;
+#       margin: 0 !important;
+#       /* SIMPLIFICADO: display:block em vez de flex - com flex+justify-content:center o
+#          quadrado seria centralizado verticalmente (clipando 11px em cima E em baixo);
+#          com block, o quadrado comeca no topo e so os 23px inferiores sao clipados. */
+#       display: block !important;
+#       padding: 0px !important;
+#
+#       /* O seu vidro validado */
+#       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+#       backdrop-filter: blur(20px) saturate(1.35) !important;
+#       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+#       border: 1px solid rgba(255,255,255,0.10) !important;
+#       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+#       border-radius: 16px !important;
+#       overflow: hidden !important;
+#
+#       --ha-card-backdrop-filter: none !important;
+#       --ha-card-background: transparent !important;
+#       --ha-card-border-width: 0 !important;
+#     }
+#     ha-card::before { display: none !important; }
+# cards:
+#   - !include ../../shared/grid-cards/bento_cozinha.yaml

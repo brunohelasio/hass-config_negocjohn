@@ -1,40 +1,9 @@
-type: custom:bruno-room-card
-name: Q. Miguel
-icon_size: 74
-entities:
-  room_group: light.grupo_luzes_quarto_miguel
-  room_toggle: light.quarto_miguel_switch_2
-  room_fallback_lights:
-    - light.quarto_miguel_switch_2
-  active_sensor: sensor.quarto_miguel_active
-  temperature:
-    - sensor.temperatura_quarto_miguel
-    - sensor.qmi_temperatura
-  humidity:
-    - sensor.umidade_quarto_miguel
-    - sensor.qmi_umidade
-icon:
-  off: /local/bruno-ui/assets/miguel-bedroom-off.png?v=20260517-2
-  on: /local/bruno-ui/assets/miguel-bedroom-on.png?v=20260517-2
-  fallback: mdi:bed-single-outline
-status_dots:
-  - icon: mdi:account
-    label: Presenca
-    tone: blue
-  - icon: mdi:lightbulb-on
-    label: Luzes
-    tone: amber
-  - icon: mdi:snowflake
-    label: Clima
-    tone: cyan
-  - icon: mdi:speaker-wireless
-    label: Midia
-    tone: purple
+type: custom:bruno-quarto-miguel-card
 double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
 
 # FALLBACK - Q. Miguel Lovelace/Negocjohn original
 # Para voltar rapidamente:
-# 1. Comentar o bloco custom:bruno-room-card acima.
+# 1. Comentar o bloco custom:bruno-quarto-miguel-card acima.
 # 2. Descomentar o bloco abaixo.
 # O conteudo funcional compartilhado permanece intacto em:
 # ../../shared/grid-cards/bento_quarto_miguel.yaml

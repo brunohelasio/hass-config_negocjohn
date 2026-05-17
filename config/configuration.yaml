@@ -15,8 +15,12 @@ frontend:
     - /local/bento-sidebar-card.js?v=20260516-4
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260517-1
     - /local/bruno-ui/cards/bruno-sala-card.js?v=20260517-2
-    - /local/bruno-ui/cards/bruno-office-card.js?v=20260517-4
-    - /local/bruno-ui/cards/bruno-room-card.js?v=20260517-1
+    - /local/bruno-ui/cards/bruno-office-card.js?v=20260517-5
+    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260517-1
+    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260517-1
+    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260517-1
+    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260517-1
+    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260517-1
     - /local/bruno-ui/cards/bruno-hero-card.js?v=20260516-3
 
 homeassistant:

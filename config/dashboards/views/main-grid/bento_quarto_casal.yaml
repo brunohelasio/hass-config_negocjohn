@@ -1,34 +1,9 @@
-type: custom:bruno-room-card
-name: Q. Casal
-icon_size: 74
-entities:
-  room_group: light.grupo_quarto_casal
-  room_toggle: light.qc_luz_principal
-  room_fallback_lights:
-    - light.qc_luz_principal
-  active_sensor: sensor.quarto_casal_active
-icon:
-  off: /local/bruno-ui/assets/couple-bedroom-off.png?v=20260517-2
-  on: /local/bruno-ui/assets/couple-bedroom-on.png?v=20260517-2
-  fallback: mdi:bed-king-outline
-status_dots:
-  - icon: mdi:account
-    label: Presenca
-    tone: blue
-  - icon: mdi:lightbulb-on
-    label: Luzes
-    tone: amber
-  - icon: mdi:snowflake
-    label: Clima
-    tone: cyan
-  - icon: mdi:speaker-wireless
-    label: Midia
-    tone: purple
+type: custom:bruno-quarto-casal-card
 double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml
 
 # FALLBACK - Q. Casal Lovelace/Negocjohn original
 # Para voltar rapidamente:
-# 1. Comentar o bloco custom:bruno-room-card acima.
+# 1. Comentar o bloco custom:bruno-quarto-casal-card acima.
 # 2. Descomentar o bloco abaixo.
 # O conteudo funcional compartilhado permanece intacto em:
 # ../../shared/grid-cards/bento_quarto_casal.yaml

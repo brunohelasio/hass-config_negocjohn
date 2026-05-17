@@ -1,52 +1,80 @@
-const BRUNO_ROOM_CARD_TAG = 'bruno-room-card';
+const BRUNO_QUARTO_CASAL_CARD_TAG = 'bruno-quarto-casal-card';
 
-const BRUNO_ROOM_DEFAULT_CONFIG = {
-  name: 'Ambiente',
-  icon_size: 72,
-  room_on_states: ['on', 'home', 'active', 'yes'],
-  semantic_on_states: [],
-  entities: {
-    room_group: '',
-    room_toggle: '',
-    room_fallback_lights: [],
-    active_sensor: '',
-    temperature: [],
-    humidity: [],
-    dishwasher: '',
+const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
+  "name": "Q. Casal",
+  "icon_size": 74,
+  "room_on_states": [
+    "on",
+    "home",
+    "active",
+    "yes"
+  ],
+  "semantic_on_states": [],
+  "entities": {
+    "room_group": "light.grupo_quarto_casal",
+    "room_toggle": "light.qc_luz_principal",
+    "room_fallback_lights": [
+      "light.qc_luz_principal"
+    ],
+    "active_sensor": "sensor.quarto_casal_active",
+    "temperature": [],
+    "humidity": [],
+    "dishwasher": ""
   },
-  icon: {
-    off: '',
-    on: '',
-    fallback: 'mdi:home-outline',
+  "icon": {
+    "off": "/local/bruno-ui/assets/couple-bedroom-off.png?v=20260517-3",
+    "on": "/local/bruno-ui/assets/couple-bedroom-on.png?v=20260517-3",
+    "fallback": "mdi:bed-king-outline"
   },
-  status_dots: [],
+  "status_dots": [
+    {
+      "icon": "mdi:account",
+      "label": "Presenca",
+      "tone": "blue"
+    },
+    {
+      "icon": "mdi:lightbulb-on",
+      "label": "Luzes",
+      "tone": "amber"
+    },
+    {
+      "icon": "mdi:snowflake",
+      "label": "Clima",
+      "tone": "cyan"
+    },
+    {
+      "icon": "mdi:speaker-wireless",
+      "label": "Midia",
+      "tone": "purple"
+    }
+  ]
 };
 
-const BRUNO_ROOM_ACTION_COOLDOWN = 1200;
+const BRUNO_QUARTO_CASAL_ACTION_COOLDOWN = 1200;
 
-class BrunoRoomCard extends HTMLElement {
+class BrunoQuartoCasalCard extends HTMLElement {
   static getStubConfig() {
     return {};
   }
 
   setConfig(config) {
     const entities = {
-      ...BRUNO_ROOM_DEFAULT_CONFIG.entities,
+      ...BRUNO_QUARTO_CASAL_DEFAULT_CONFIG.entities,
       ...(config?.entities || {}),
     };
     const icon = {
-      ...BRUNO_ROOM_DEFAULT_CONFIG.icon,
+      ...BRUNO_QUARTO_CASAL_DEFAULT_CONFIG.icon,
       ...(config?.icon || {}),
     };
 
     this._config = {
-      ...BRUNO_ROOM_DEFAULT_CONFIG,
+      ...BRUNO_QUARTO_CASAL_DEFAULT_CONFIG,
       ...config,
       entities,
       icon,
-      room_on_states: this._array(config?.room_on_states || BRUNO_ROOM_DEFAULT_CONFIG.room_on_states),
-      semantic_on_states: this._array(config?.semantic_on_states || []),
-      status_dots: Array.isArray(config?.status_dots) ? config.status_dots : [],
+      room_on_states: this._array(config?.room_on_states || BRUNO_QUARTO_CASAL_DEFAULT_CONFIG.room_on_states),
+      semantic_on_states: this._array(config?.semantic_on_states || BRUNO_QUARTO_CASAL_DEFAULT_CONFIG.semantic_on_states || []),
+      status_dots: Array.isArray(config?.status_dots) ? config.status_dots : BRUNO_QUARTO_CASAL_DEFAULT_CONFIG.status_dots,
     };
     this._render();
   }
@@ -158,7 +186,7 @@ class BrunoRoomCard extends HTMLElement {
   _sensorValue(entityIds, suffix = '') {
     const entity = this._firstValid(entityIds);
     if (!entity) return '';
-    return `${BrunoRoomCard._escape(entity.state)}${suffix}`;
+    return `${BrunoQuartoCasalCard._escape(entity.state)}${suffix}`;
   }
 
   _truthy(value) {
@@ -241,7 +269,7 @@ class BrunoRoomCard extends HTMLElement {
     this._lastActionAt = this._lastActionAt || {};
     const now = Date.now();
     const previous = this._lastActionAt[key] || 0;
-    if (now - previous < BRUNO_ROOM_ACTION_COOLDOWN) return true;
+    if (now - previous < BRUNO_QUARTO_CASAL_ACTION_COOLDOWN) return true;
     this._lastActionAt[key] = now;
     return false;
   }
@@ -439,7 +467,7 @@ class BrunoRoomCard extends HTMLElement {
   _statusDot(dot) {
     const activeClass = dot.active ? ' is-active' : '';
     return `
-      <span class="status-dot tone-${dot.tone}${activeClass}" title="${BrunoRoomCard._escape(dot.label)}" aria-label="${BrunoRoomCard._escape(dot.label)}">
+      <span class="status-dot tone-${dot.tone}${activeClass}" title="${BrunoQuartoCasalCard._escape(dot.label)}" aria-label="${BrunoQuartoCasalCard._escape(dot.label)}">
         <ha-icon icon="${dot.icon}"></ha-icon>
       </span>
     `;
@@ -447,14 +475,14 @@ class BrunoRoomCard extends HTMLElement {
 
   _statusLines(lines) {
     if (!lines.length) return '';
-    return lines.map((line) => `<span>${BrunoRoomCard._escape(line)}</span>`).join('');
+    return lines.map((line) => `<span>${BrunoQuartoCasalCard._escape(line)}</span>`).join('');
   }
 
   _assetVisual(active) {
     const icon = this._config.icon;
-    const fallback = BrunoRoomCard._escape(icon.fallback || 'mdi:home-outline');
-    const off = BrunoRoomCard._escape(icon.off || '');
-    const on = BrunoRoomCard._escape(icon.on || '');
+    const fallback = BrunoQuartoCasalCard._escape(icon.fallback || 'mdi:home-outline');
+    const off = BrunoQuartoCasalCard._escape(icon.off || '');
+    const on = BrunoQuartoCasalCard._escape(icon.on || '');
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback"><ha-icon icon="${fallback}"></ha-icon></span>
@@ -471,7 +499,7 @@ class BrunoRoomCard extends HTMLElement {
     const model = this._model();
     const roomActiveClass = model.roomOn ? ' is-room-on' : '';
     const hasMetricClass = model.temperature ? ' has-metric' : '';
-    const iconSize = Number(this._config.icon_size) || BRUNO_ROOM_DEFAULT_CONFIG.icon_size;
+    const iconSize = Number(this._config.icon_size) || BRUNO_QUARTO_CASAL_DEFAULT_CONFIG.icon_size;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -855,7 +883,7 @@ class BrunoRoomCard extends HTMLElement {
       </style>
 
       <div class="room-card${roomActiveClass}" style="--room-icon-size:${iconSize}px;">
-        <button class="room-action${hasMetricClass}" type="button" data-action-key="room" aria-label="${BrunoRoomCard._escape(this._config.name)}">
+        <button class="room-action${hasMetricClass}" type="button" data-action-key="room" aria-label="${BrunoQuartoCasalCard._escape(this._config.name)}">
           <div class="room-icon" aria-hidden="true">${this._assetVisual(model.iconActive)}</div>
 
           <div class="metric">
@@ -863,7 +891,7 @@ class BrunoRoomCard extends HTMLElement {
             <span class="metric-sub">${model.humidity}</span>
           </div>
 
-          <div class="title">${BrunoRoomCard._escape(this._config.name)}</div>
+          <div class="title">${BrunoQuartoCasalCard._escape(this._config.name)}</div>
           <div class="status-lines">${this._statusLines(model.statusLines)}</div>
 
           <div class="right-dots" aria-label="Status do ambiente">
@@ -888,14 +916,14 @@ class BrunoRoomCard extends HTMLElement {
   }
 }
 
-if (!customElements.get(BRUNO_ROOM_CARD_TAG)) {
-  customElements.define(BRUNO_ROOM_CARD_TAG, BrunoRoomCard);
+if (!customElements.get(BRUNO_QUARTO_CASAL_CARD_TAG)) {
+  customElements.define(BRUNO_QUARTO_CASAL_CARD_TAG, BrunoQuartoCasalCard);
 }
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: BRUNO_ROOM_CARD_TAG,
-  name: 'Bruno Room Card',
+  type: BRUNO_QUARTO_CASAL_CARD_TAG,
+  name: 'Bruno Q. Casal Card',
   preview: false,
-  description: 'Reusable Bento room card with preserved Home Assistant actions and Bruno liquid glass visuals.',
+  description: 'Bento Q. Casal card with local room logic and Bruno liquid glass visuals.',
 });

@@ -1,50 +1,86 @@
-const BRUNO_OFFICE_CARD_TAG = 'bruno-office-card';
+const BRUNO_QUARTO_MARINA_CARD_TAG = 'bruno-quarto-marina-card';
 
-const BRUNO_OFFICE_DEFAULT_ENTITIES = {
-  room_group: 'light.grupo_luzes_office',
-  room_toggle: 'light.office_switch_3',
-  room_fallback_lights: ['light.office_switch_1', 'light.office_switch_2', 'light.office_switch_3'],
-  active_sensor: 'sensor.office_active',
-  semantic_sensor: 'sensor.office_semantic_state',
-  occupancy: 'binary_sensor.office_occupancy',
-  pc_active: 'binary_sensor.office_pc_active',
-  pc_fallback: 'switch.macbook',
-  meeting: 'binary_sensor.office_meeting_active',
-  climate: 'climate.ac_office',
-  speaker: 'media_player.echo_pop_office',
-  temperature: [
-    'sensor.of_sensor_temp_humid_temperatura',
-    'sensor.temperatura_office',
-    'sensor.office_temperatura',
-    'sensor.of_temperatura',
+const BRUNO_QUARTO_MARINA_DEFAULT_CONFIG = {
+  "name": "Q. Marina",
+  "icon_size": 74,
+  "room_on_states": [
+    "on",
+    "home",
+    "active",
+    "yes"
   ],
-  humidity: [
-    'sensor.of_sensor_temp_humid_umidade',
-    'sensor.umidade_office',
-    'sensor.office_umidade',
-    'sensor.of_umidade',
-  ],
+  "semantic_on_states": [],
+  "entities": {
+    "room_group": "light.grupo_luzes_quarto_marina",
+    "room_toggle": "light.quarto_marina_switch_4",
+    "room_fallback_lights": [
+      "light.quarto_marina_switch_4"
+    ],
+    "active_sensor": "sensor.quarto_marina_active",
+    "temperature": [
+      "sensor.temperatura_quarto_marina",
+      "sensor.qma_temperatura"
+    ],
+    "humidity": [
+      "sensor.umidade_quarto_marina",
+      "sensor.qma_umidade"
+    ],
+    "dishwasher": ""
+  },
+  "icon": {
+    "off": "/local/bruno-ui/assets/marina-bedroom-off.png?v=20260517-3",
+    "on": "/local/bruno-ui/assets/marina-bedroom-on.png?v=20260517-3",
+    "fallback": "mdi:bed-single-outline"
+  },
+  "status_dots": [
+    {
+      "icon": "mdi:account",
+      "label": "Presenca",
+      "tone": "blue"
+    },
+    {
+      "icon": "mdi:lightbulb-on",
+      "label": "Luzes",
+      "tone": "amber"
+    },
+    {
+      "icon": "mdi:snowflake",
+      "label": "Clima",
+      "tone": "cyan"
+    },
+    {
+      "icon": "mdi:speaker-wireless",
+      "label": "Midia",
+      "tone": "purple"
+    }
+  ]
 };
 
-const BRUNO_OFFICE_CLIMATE_ON_STATES = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
-const BRUNO_OFFICE_SPEAKER_ON_STATES = ['playing', 'on', 'paused'];
-const BRUNO_OFFICE_ACTION_COOLDOWN = 1200;
+const BRUNO_QUARTO_MARINA_ACTION_COOLDOWN = 1200;
 
-class BrunoOfficeCard extends HTMLElement {
+class BrunoQuartoMarinaCard extends HTMLElement {
   static getStubConfig() {
     return {};
   }
 
   setConfig(config) {
     const entities = {
-      ...BRUNO_OFFICE_DEFAULT_ENTITIES,
+      ...BRUNO_QUARTO_MARINA_DEFAULT_CONFIG.entities,
       ...(config?.entities || {}),
+    };
+    const icon = {
+      ...BRUNO_QUARTO_MARINA_DEFAULT_CONFIG.icon,
+      ...(config?.icon || {}),
     };
 
     this._config = {
-      name: 'Office',
+      ...BRUNO_QUARTO_MARINA_DEFAULT_CONFIG,
       ...config,
       entities,
+      icon,
+      room_on_states: this._array(config?.room_on_states || BRUNO_QUARTO_MARINA_DEFAULT_CONFIG.room_on_states),
+      semantic_on_states: this._array(config?.semantic_on_states || BRUNO_QUARTO_MARINA_DEFAULT_CONFIG.semantic_on_states || []),
+      status_dots: Array.isArray(config?.status_dots) ? config.status_dots : BRUNO_QUARTO_MARINA_DEFAULT_CONFIG.status_dots,
     };
     this._render();
   }
@@ -62,17 +98,17 @@ class BrunoOfficeCard extends HTMLElement {
     return entityId ? this._hass?.states?.[entityId] : undefined;
   }
 
-  _isUnavailable(entity) {
-    return !entity || ['unknown', 'unavailable', 'none', ''].includes(String(entity.state || '').toLowerCase());
-  }
-
-  _entityList(value) {
+  _array(value) {
     if (Array.isArray(value)) return value;
     return value ? [value] : [];
   }
 
+  _isUnavailable(entity) {
+    return !entity || ['unknown', 'unavailable', 'none', ''].includes(String(entity.state || '').toLowerCase());
+  }
+
   _firstValid(entityIds) {
-    for (const entityId of this._entityList(entityIds)) {
+    for (const entityId of this._array(entityIds)) {
       const entity = this._state(entityId);
       if (!this._isUnavailable(entity)) return entity;
     }
@@ -82,6 +118,17 @@ class BrunoOfficeCard extends HTMLElement {
   _roomEntityIds(roomEntity) {
     const ids = roomEntity?.attributes?.entity_id;
     return Array.isArray(ids) ? ids : [];
+  }
+
+  _elapsed(delta) {
+    const minute = delta / 60000;
+    const hour = delta / 3600000;
+    const day = delta / 86400000;
+
+    if (minute < 1) return '<1m';
+    if (minute < 60) return `${parseInt(minute, 10)}m`;
+    if (hour < 24) return `${parseInt(hour, 10)}h`;
+    return `${parseInt(day, 10)}d`;
   }
 
   _lightsSummary(roomEntity) {
@@ -105,33 +152,36 @@ class BrunoOfficeCard extends HTMLElement {
       count = ids.filter((id) => this._state(id)?.state === 'on').length;
     }
 
-    const fallbackIds = Array.isArray(entities.room_fallback_lights)
-      ? entities.room_fallback_lights
-      : BRUNO_OFFICE_DEFAULT_ENTITIES.room_fallback_lights;
-    if (count === null) {
+    const fallbackIds = this._array(entities.room_fallback_lights);
+    if (count === null && fallbackIds.length) {
       count = fallbackIds.filter((id) => this._state(id)?.state === 'on').length;
     }
 
-    let earliestOn = null;
-    const elapsedIds = ids.length ? ids : fallbackIds;
-    elapsedIds.forEach((id) => {
-      const stateObj = this._state(id);
-      if (stateObj?.state === 'on' && stateObj.last_changed) {
-        const timestamp = Date.parse(stateObj.last_changed);
-        if (!Number.isNaN(timestamp) && (earliestOn === null || timestamp < earliestOn)) {
-          earliestOn = timestamp;
-        }
-      }
-    });
+    if (count === null) count = roomEntity?.state === 'on' ? 1 : 0;
 
-    if (earliestOn === null && roomEntity?.state === 'on' && roomEntity.last_changed) {
-      const timestamp = Date.parse(roomEntity.last_changed);
-      if (!Number.isNaN(timestamp)) earliestOn = timestamp;
+    let elapsed = activeEntity?.attributes?.lights_elapsed || '';
+    if (!elapsed) {
+      let earliestOn = null;
+      const elapsedIds = ids.length ? ids : fallbackIds;
+      elapsedIds.forEach((id) => {
+        const stateObj = this._state(id);
+        if (stateObj?.state === 'on' && stateObj.last_changed) {
+          const timestamp = Date.parse(stateObj.last_changed);
+          if (!Number.isNaN(timestamp) && (earliestOn === null || timestamp < earliestOn)) {
+            earliestOn = timestamp;
+          }
+        }
+      });
+
+      if (earliestOn === null && roomEntity?.state === 'on' && roomEntity.last_changed) {
+        const timestamp = Date.parse(roomEntity.last_changed);
+        if (!Number.isNaN(timestamp)) earliestOn = timestamp;
+      }
+
+      elapsed = earliestOn !== null ? this._elapsed(Date.now() - earliestOn) : '';
     }
 
-    const elapsed = earliestOn !== null ? this._elapsed(Date.now() - earliestOn) : '';
     const label = count === 1 ? '1 light' : `${count} lights`;
-
     return {
       count,
       elapsed,
@@ -139,70 +189,69 @@ class BrunoOfficeCard extends HTMLElement {
     };
   }
 
-  _elapsed(delta) {
-    const minute = delta / 60000;
-    const hour = delta / 3600000;
-    const day = delta / 86400000;
-
-    if (minute < 1) return '<1m';
-    if (minute < 60) return `${parseInt(minute, 10)}m`;
-    if (hour < 24) return `${parseInt(hour, 10)}h`;
-    return `${parseInt(day, 10)}d`;
-  }
-
   _sensorValue(entityIds, suffix = '') {
     const entity = this._firstValid(entityIds);
-    if (!entity) return '--';
-    return `${BrunoOfficeCard._escape(entity.state)}${suffix}`;
+    if (!entity) return '';
+    return `${BrunoQuartoMarinaCard._escape(entity.state)}${suffix}`;
   }
 
-  _semanticLine() {
-    const semantic = this._state(this._config.entities.semantic_sensor);
-    const semanticState = String(semantic?.state || '').toLowerCase();
-    const display = semantic?.attributes?.display;
-    if (!display || ['none', 'unknown', 'unavailable'].includes(semanticState)) return '';
-    return String(display);
+  _truthy(value) {
+    return value === true || value === 'true' || value === 'True' || value === 'on' || value === 'yes';
   }
 
-  _meetingOn() {
-    return this._state(this._config.entities.meeting)?.state === 'on'
-      || this._state(this._config.entities.semantic_sensor)?.state === 'meeting';
+  _roomOn(roomEntity) {
+    const state = String(roomEntity?.state || '').toLowerCase();
+    const activeState = String(this._state(this._config.entities.active_sensor)?.state || '').toLowerCase();
+    const roomOn = this._config.room_on_states.map((item) => String(item).toLowerCase()).includes(state);
+    const semanticOn = this._config.semantic_on_states.map((item) => String(item).toLowerCase()).includes(activeState);
+    return roomOn || semanticOn;
   }
 
-  _climateOn(entity) {
-    if (this._isUnavailable(entity) || entity.state === 'off') return false;
-    return BRUNO_OFFICE_CLIMATE_ON_STATES.includes(entity.state) || entity.state !== 'off';
+  _dishwasherLine() {
+    const entities = this._config.entities;
+    const active = this._state(entities.active_sensor);
+    const dishwasher = this._state(entities.dishwasher);
+    const running = this._truthy(active?.attributes?.dishwasher_running) || dishwasher?.state === 'run';
+    if (!running) return '';
+    const elapsed = active?.attributes?.dishwasher_elapsed || '';
+    return `Lavando${elapsed ? ` / ${elapsed}` : ''}`;
   }
 
   _model() {
     const entities = this._config.entities;
     const room = this._state(entities.room_group);
-    const climate = this._state(entities.climate);
-    const speaker = this._state(entities.speaker);
-    const roomOn = room?.state === 'on';
-    const pcFallbackOn = this._state(entities.pc_fallback)?.state === 'on';
+    const roomOn = this._roomOn(room);
     const lights = this._lightsSummary(room);
+    const dishwasherLine = this._dishwasherLine();
     const statusLines = [];
-    const semanticLine = this._semanticLine();
 
-    if (lights.label) {
-      statusLines.push(lights.label);
-    } else if (roomOn) {
-      statusLines.push('On');
-    }
-    if (semanticLine) statusLines.push(semanticLine);
+    if (lights.label) statusLines.push(lights.label);
+    if (dishwasherLine) statusLines.push(dishwasherLine);
 
     return {
       roomOn,
-      iconActive: roomOn || pcFallbackOn,
-      meetingOn: this._meetingOn(),
-      presenceOn: this._state(entities.occupancy)?.state === 'on',
-      pcOn: this._state(entities.pc_active)?.state === 'on' || pcFallbackOn,
-      climateOn: this._climateOn(climate),
-      speakerOn: BRUNO_OFFICE_SPEAKER_ON_STATES.includes(speaker?.state || ''),
+      iconActive: roomOn,
       temperature: this._sensorValue(entities.temperature, '&deg;'),
       humidity: this._sensorValue(entities.humidity, '%'),
       statusLines,
+      dots: this._config.status_dots.map((dot) => this._dotModel(dot, roomOn)),
+    };
+  }
+
+  _dotModel(dot, roomOn) {
+    const entity = this._state(dot.entity);
+    const states = this._array(dot.states).map((item) => String(item));
+    const activeFromEntity = entity && states.includes(String(entity.state));
+    const activeEntity = this._state(this._config.entities.active_sensor);
+    const attrValue = dot.active_attr ? activeEntity?.attributes?.[dot.active_attr] : undefined;
+    const active = Boolean(dot.active) || Boolean(activeFromEntity) || this._truthy(attrValue);
+
+    return {
+      icon: dot.icon || 'mdi:circle-small',
+      label: dot.label || '',
+      tone: dot.tone || 'blue',
+      active,
+      mutedOn: Boolean(roomOn && dot.muted_on !== false),
     };
   }
 
@@ -219,14 +268,14 @@ class BrunoOfficeCard extends HTMLElement {
       return;
     }
     if (this._isActionCoolingDown(key)) return;
-    this._callService('light.toggle', {}, { entity_id: entities.room_toggle });
+    this._callService('light.toggle', {}, { entity_id: entities.room_toggle || entities.room_group });
   }
 
   _isActionCoolingDown(key) {
     this._lastActionAt = this._lastActionAt || {};
     const now = Date.now();
     const previous = this._lastActionAt[key] || 0;
-    if (now - previous < BRUNO_OFFICE_ACTION_COOLDOWN) return true;
+    if (now - previous < BRUNO_QUARTO_MARINA_ACTION_COOLDOWN) return true;
     this._lastActionAt[key] = now;
     return false;
   }
@@ -241,23 +290,18 @@ class BrunoOfficeCard extends HTMLElement {
       case 'fire-dom-event':
         this._fireDomEvent(action);
         return;
-
       case 'more-info':
         this._moreInfo(action.entity || fallbackEntityId);
         return;
-
       case 'navigate':
         this._navigate(action.navigation_path || action.path);
         return;
-
       case 'perform-action':
       case 'call-service':
         this._callConfiguredService(action);
         return;
-
       case 'none':
         return;
-
       default:
         this._fireDomEvent(action);
     }
@@ -393,7 +437,6 @@ class BrunoOfficeCard extends HTMLElement {
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-
       if (event.detail >= 2) {
         resetPress();
         runDouble();
@@ -419,28 +462,40 @@ class BrunoOfficeCard extends HTMLElement {
 
   _wireAssetFallback() {
     this.shadowRoot
-      ?.querySelectorAll('.office-asset')
+      ?.querySelectorAll('.room-asset')
       .forEach((asset) => {
         asset.addEventListener('error', () => {
-          asset.closest('.office-icon')?.classList.add('has-image-error');
+          asset.closest('.room-icon')?.classList.add('has-image-error');
         }, { once: true });
       });
   }
 
-  _statusDot(icon, active, label, tone) {
-    const activeClass = active ? ' is-active' : '';
+  _statusDot(dot) {
+    const activeClass = dot.active ? ' is-active' : '';
     return `
-      <span class="status-dot tone-${tone}${activeClass}" title="${BrunoOfficeCard._escape(label)}" aria-label="${BrunoOfficeCard._escape(label)}">
-        <ha-icon icon="${icon}"></ha-icon>
+      <span class="status-dot tone-${dot.tone}${activeClass}" title="${BrunoQuartoMarinaCard._escape(dot.label)}" aria-label="${BrunoQuartoMarinaCard._escape(dot.label)}">
+        <ha-icon icon="${dot.icon}"></ha-icon>
       </span>
     `;
   }
 
   _statusLines(lines) {
     if (!lines.length) return '';
-    return lines
-      .map((line) => `<span>${BrunoOfficeCard._escape(line)}</span>`)
-      .join('');
+    return lines.map((line) => `<span>${BrunoQuartoMarinaCard._escape(line)}</span>`).join('');
+  }
+
+  _assetVisual(active) {
+    const icon = this._config.icon;
+    const fallback = BrunoQuartoMarinaCard._escape(icon.fallback || 'mdi:home-outline');
+    const off = BrunoQuartoMarinaCard._escape(icon.off || '');
+    const on = BrunoQuartoMarinaCard._escape(icon.on || '');
+    return `
+      <span class="room-asset-wrap">
+        <span class="room-asset-fallback"><ha-icon icon="${fallback}"></ha-icon></span>
+        ${off ? `<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async">` : ''}
+        ${on ? `<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async">` : ''}
+      </span>
+    `;
   }
 
   _render() {
@@ -449,7 +504,8 @@ class BrunoOfficeCard extends HTMLElement {
 
     const model = this._model();
     const roomActiveClass = model.roomOn ? ' is-room-on' : '';
-    const meetingClass = model.meetingOn ? ' is-meeting' : '';
+    const hasMetricClass = model.temperature ? ' has-metric' : '';
+    const iconSize = Number(this._config.icon_size) || BRUNO_QUARTO_MARINA_DEFAULT_CONFIG.icon_size;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -460,7 +516,6 @@ class BrunoOfficeCard extends HTMLElement {
           --accent-purple: 167, 139, 250;
           --accent-cyan: 79, 172, 254;
           --accent-amber: 255, 153, 0;
-          --accent-red: 248, 113, 113;
           --text-main: rgba(245,250,255,0.96);
           --text-soft: rgba(255,255,255,0.40);
           --text-muted: rgba(255,255,255,0.52);
@@ -491,11 +546,10 @@ class BrunoOfficeCard extends HTMLElement {
           touch-action: manipulation;
         }
 
-        .office-card {
+        .room-card {
           position: relative;
           isolation: isolate;
           width: 100%;
-          max-width: 100%;
           height: 100%;
           min-width: 0;
           min-height: 0;
@@ -520,15 +574,15 @@ class BrunoOfficeCard extends HTMLElement {
           overflow: hidden;
         }
 
-        .office-card::before,
-        .office-card::after {
+        .room-card::before,
+        .room-card::after {
           content: "";
           position: absolute;
           pointer-events: none;
           z-index: 0;
         }
 
-        .office-card::before {
+        .room-card::before {
           inset: 1px;
           border-radius: calc(var(--card-radius) - 1px);
           background: var(--bruno-liquid-surface-off-sheen,
@@ -540,7 +594,7 @@ class BrunoOfficeCard extends HTMLElement {
           opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.74);
         }
 
-        .office-card::after {
+        .room-card::after {
           inset: auto 16px 8px 16px;
           height: 1px;
           border-radius: 999px;
@@ -548,7 +602,7 @@ class BrunoOfficeCard extends HTMLElement {
           opacity: var(--bruno-liquid-surface-bottom-line-opacity, 0);
         }
 
-        .office-card.is-room-on {
+        .room-card.is-room-on {
           --text-main: rgba(248,251,255,0.96);
           --text-soft: rgba(255,255,255,0.52);
           --text-muted: rgba(255,255,255,0.62);
@@ -575,7 +629,7 @@ class BrunoOfficeCard extends HTMLElement {
           );
         }
 
-        .office-card.is-room-on::before {
+        .room-card.is-room-on::before {
           background: var(--bruno-liquid-surface-on-sheen,
             radial-gradient(92px 74px at 17% 0%, rgba(255,255,255,0.34), transparent 72%),
             radial-gradient(118px 110px at 96% 96%, rgba(120,178,245,0.22), transparent 74%),
@@ -586,29 +640,7 @@ class BrunoOfficeCard extends HTMLElement {
           opacity: var(--bruno-liquid-surface-on-sheen-opacity, 0.78);
         }
 
-        .office-card.is-meeting {
-          --accent: var(--accent-red);
-          border-color: rgba(var(--accent-red),0.38);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.24),
-            inset 1px 0 0 rgba(255,255,255,0.10),
-            inset 0 -1px 0 rgba(0,0,0,0.18),
-            0 0 24px rgba(var(--accent-red),0.20),
-            0 18px 42px rgba(0,0,0,0.30);
-        }
-
-        .office-card.is-meeting .office-action::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          z-index: -1;
-          background:
-            radial-gradient(120px 92px at 13% 8%, rgba(var(--accent-red),0.16), transparent 72%),
-            linear-gradient(145deg, rgba(127,29,29,0.11), rgba(239,68,68,0.035));
-          pointer-events: none;
-        }
-
-        .office-action {
+        .room-action {
           appearance: none;
           -webkit-appearance: none;
           outline: none;
@@ -638,15 +670,15 @@ class BrunoOfficeCard extends HTMLElement {
           transition: transform 160ms ease, filter 160ms ease;
         }
 
-        .office-action:hover {
+        .room-action:hover {
           filter: brightness(1.05);
         }
 
-        .office-action.is-pressed {
+        .room-action.is-pressed {
           transform: translateY(1px) scale(0.985);
         }
 
-        .office-action.is-hold-fired {
+        .room-action.is-hold-fired {
           filter: drop-shadow(0 0 18px rgba(var(--accent),0.28));
         }
 
@@ -655,40 +687,15 @@ class BrunoOfficeCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           position: relative;
-          width: 76px;
-          height: 76px;
-          margin-left: -6px;
-          margin-top: -6px;
+          width: var(--room-icon-size);
+          height: var(--room-icon-size);
+          margin-left: -4px;
+          margin-top: -4px;
         }
 
-        .office-icon {
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-          width: 100%;
-          height: 100%;
-          display: block;
-          transition: opacity 180ms ease, filter 180ms ease;
-          filter: var(--office-icon-filter, none);
-        }
-
-        .office-card.is-room-on .office-icon {
-          --office-icon-filter: drop-shadow(2px 3px 6px rgba(0,0,0,0.32)) contrast(1.1);
-        }
-
-        .office-card.is-meeting .office-icon {
-          opacity: 0.54;
-          filter: grayscale(0.55) brightness(0.72) contrast(0.92);
-        }
-
-        .office-card.is-meeting.is-room-on .office-icon {
-          opacity: 0.68;
-          filter: saturate(0.52) brightness(0.82) contrast(0.94) drop-shadow(0 0 6px rgba(0,0,0,0.22));
-        }
-
-        .office-asset-wrap,
-        .office-asset-fallback,
-        .office-asset {
+        .room-asset-wrap,
+        .room-asset-fallback,
+        .room-asset {
           position: absolute;
           inset: 0;
           width: 100%;
@@ -696,7 +703,7 @@ class BrunoOfficeCard extends HTMLElement {
           display: block;
         }
 
-        .office-asset {
+        .room-asset {
           object-fit: contain;
           opacity: 0;
           transform: translateZ(0);
@@ -704,48 +711,38 @@ class BrunoOfficeCard extends HTMLElement {
           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
         }
 
-        .office-asset-off {
+        .room-asset-off {
           opacity: 1;
         }
 
-        .office-card.is-room-on .office-asset-off {
+        .room-card.is-room-on .room-asset-off {
           opacity: 0;
         }
 
-        .office-card.is-room-on .office-asset-on {
+        .room-card.is-room-on .room-asset-on {
           opacity: 1;
           filter: drop-shadow(0 6px 9px rgba(0,0,0,0.20)) drop-shadow(0 0 12px rgba(255,187,72,0.14));
           transform: translateY(-1px) scale(1.01);
         }
 
-        .office-asset-fallback {
+        .room-asset-fallback {
           opacity: 0;
           pointer-events: none;
+          color: rgba(255,255,255,0.58);
         }
 
-        .office-asset-fallback svg {
+        .room-asset-fallback ha-icon {
+          --mdc-icon-size: 100%;
           width: 100%;
           height: 100%;
-          display: block;
         }
 
-        .office-icon.has-image-error .office-asset {
+        .room-icon.has-image-error .room-asset {
           display: none;
         }
 
-        .office-icon.has-image-error .office-asset-fallback {
+        .room-icon.has-image-error .room-asset-fallback {
           opacity: 1;
-        }
-
-        .meeting-icon {
-          position: absolute;
-          z-index: 2;
-          left: -2px;
-          top: -2px;
-          width: 80px;
-          height: 80px;
-          pointer-events: none;
-          filter: drop-shadow(0 0 10px rgba(var(--accent-red),0.42));
         }
 
         .metric {
@@ -756,6 +753,10 @@ class BrunoOfficeCard extends HTMLElement {
           margin-top: 3px;
           text-align: left;
           line-height: 1.1;
+        }
+
+        .room-action:not(.has-metric) .metric {
+          display: none;
         }
 
         .metric-value {
@@ -807,7 +808,7 @@ class BrunoOfficeCard extends HTMLElement {
 
         .status-lines span {
           display: block;
-          max-width: 120px;
+          max-width: 124px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -866,73 +867,41 @@ class BrunoOfficeCard extends HTMLElement {
         .tone-cyan { --tone: var(--accent-cyan); }
         .tone-amber { --tone: var(--accent-amber); }
 
-        @keyframes officeMeetingPulse {
-          0%, 100% { opacity: .78; transform: scale(.98); }
-          50% { opacity: 1; transform: scale(1.03); }
-        }
-
-        @keyframes officeMeetingSlash {
-          0%, 100% { stroke-opacity: .82; }
-          50% { stroke-opacity: 1; }
-        }
-
-        .meeting-pulse {
-          transform-origin: center;
-          animation: officeMeetingPulse 2.6s ease-in-out infinite;
-        }
-
-        .meeting-slash {
-          animation: officeMeetingSlash 1.8s ease-in-out infinite;
-        }
-
         @media (max-height: 760px) {
-          .office-action {
+          .room-action {
             padding: 12px 13px;
           }
 
           .room-icon {
-            width: 68px;
-            height: 68px;
-          }
-
-          .meeting-icon {
-            width: 72px;
-            height: 72px;
+            width: calc(var(--room-icon-size) - 8px);
+            height: calc(var(--room-icon-size) - 8px);
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .office-action,
+          .room-action,
           .status-dot,
-          .office-icon,
-          .meeting-pulse,
-          .meeting-slash {
+          .room-asset {
             animation: none !important;
             transition: none !important;
           }
         }
       </style>
 
-      <div class="office-card${roomActiveClass}${meetingClass}">
-        <button class="office-action" type="button" data-action-key="room" aria-label="${BrunoOfficeCard._escape(this._config.name)}">
-          <div class="room-icon" aria-hidden="true">
-            <span class="office-icon">${BrunoOfficeCard._officeVisual(model.iconActive)}</span>
-            ${model.meetingOn ? BrunoOfficeCard._meetingIcon() : ''}
-          </div>
+      <div class="room-card${roomActiveClass}" style="--room-icon-size:${iconSize}px;">
+        <button class="room-action${hasMetricClass}" type="button" data-action-key="room" aria-label="${BrunoQuartoMarinaCard._escape(this._config.name)}">
+          <div class="room-icon" aria-hidden="true">${this._assetVisual(model.iconActive)}</div>
 
           <div class="metric">
             <span class="metric-value">${model.temperature}</span>
             <span class="metric-sub">${model.humidity}</span>
           </div>
 
-          <div class="title">${BrunoOfficeCard._escape(this._config.name)}</div>
+          <div class="title">${BrunoQuartoMarinaCard._escape(this._config.name)}</div>
           <div class="status-lines">${this._statusLines(model.statusLines)}</div>
 
-          <div class="right-dots" aria-label="Status do Office">
-            ${this._statusDot('mdi:account', model.presenceOn, 'Presenca no Office', 'blue')}
-            ${this._statusDot('mdi:desktop-classic', model.pcOn, 'PC ativo', 'purple')}
-            ${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
-            ${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Pop ativo', 'amber')}
+          <div class="right-dots" aria-label="Status do ambiente">
+            ${model.dots.map((dot) => this._statusDot(dot)).join('')}
           </div>
         </button>
       </div>
@@ -944,80 +913,6 @@ class BrunoOfficeCard extends HTMLElement {
     this._wireAssetFallback();
   }
 
-  static _officeVisual(active) {
-    const version = '20260517-3';
-    return `
-      <span class="office-asset-wrap">
-        <span class="office-asset-fallback">${BrunoOfficeCard._officeIcon(active)}</span>
-        <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off.png?v=${version}" alt="" loading="eager" decoding="async">
-        <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on.png?v=${version}" alt="" loading="eager" decoding="async">
-      </span>
-    `;
-  }
-
-  static _officeIcon(active) {
-    if (active) {
-      return `
-        <svg data-name="Layer 3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.91 41.91">
-          <defs>
-            <linearGradient id="office-b" x1="29.6" y1="45.46" x2="29.6" y2="6.68" gradientTransform="matrix(1 0 0 -1 0 44.53)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffb900"/><stop offset=".17" stop-color="#ef8400"/><stop offset=".31" stop-color="#e25c01"/><stop offset=".43" stop-color="#db4401"/><stop offset=".5" stop-color="#d83b01"/></linearGradient>
-            <linearGradient id="office-c" x1="22.61" y1="44.09" x2="2.07" y2="14.77" gradientTransform="matrix(1 0 0 -1 0 44.53)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#800600"/><stop offset=".6" stop-color="#c72127"/><stop offset=".73" stop-color="#c13959"/><stop offset=".85" stop-color="#bc4b81"/><stop offset=".94" stop-color="#b95799"/><stop offset="1" stop-color="#b85ba2"/></linearGradient>
-            <linearGradient id="office-d" x1="12.12" y1="8.1" x2="38.93" y2="8.1" gradientTransform="matrix(1 0 0 -1 0 44.53)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f32b44"/><stop offset=".6" stop-color="#a4070a"/></linearGradient>
-            <linearGradient id="office-a" x1="23.03" y1="44.69" x2="18.68" y2="38.48" gradientTransform="matrix(1 0 0 -1 0 44.53)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-opacity=".4"/><stop offset="1" stop-opacity="0"/></linearGradient>
-            <linearGradient id="office-e" x1="30.33" y1="7.5" x2="18.33" y2="8.55" href="#office-a"/>
-          </defs>
-          <g data-name="Icons - Color">
-            <g data-name="Desktop - Full Bleed">
-              <g style="opacity:.2"><path d="M13.05 32.09c-1.16.01-2.1.97-2.09 2.13 0 .74.4 1.42 1.04 1.8l7.44 4.22a4.053 4.053 0 0 0 3.13.37l11.19-3.19c1.71-.49 2.9-2.06 2.9-3.84V32.1H13.05Z" style="fill:#fff"/></g>
-              <g style="opacity:.12"><path d="M13.05 32.09c-1.16.01-2.1.97-2.09 2.13 0 .74.4 1.42 1.04 1.8l7.44 4.22a4.053 4.053 0 0 0 3.13.37l11.19-3.19c1.71-.49 2.9-2.06 2.9-3.84V32.1H13.05Z" style="fill:#fff"/></g>
-              <path d="m22.53 1.31 3.01 6.88v23.9l-2.96 8.51 11.19-3.19c1.71-.49 2.9-2.06 2.9-3.84V8.34c0-1.79-1.19-3.36-2.91-3.85L22.53 1.31Z" style="fill:url(#office-b)"/>
-              <path d="m8.34 31.83 3.27-1.77c.91-.5 1.48-1.46 1.48-2.51V14.69c0-1.2.75-2.27 1.88-2.68l10.56-3.82v-2.9c0-1.85-1.23-3.47-3.01-3.98-.37-.11-.75-.16-1.13-.16-.72 0-1.43.19-2.06.54L7.26 8.59a3.996 3.996 0 0 0-2.02 3.47v17.92c0 1.16.94 2.1 2.1 2.11.35 0 .7-.09 1.01-.25Z" style="fill:url(#office-c)"/>
-              <path d="M25.54 32.09H13.05c-1.16.01-2.1.97-2.09 2.13 0 .74.4 1.42 1.04 1.8l7.44 4.22a4.053 4.053 0 0 0 3.13.37c1.76-.5 2.96-2.1 2.96-3.93V32.1Z" style="fill:url(#office-d)"/>
-              <path d="m8.34 31.83 3.27-1.77c.91-.5 1.48-1.46 1.48-2.51V14.69c0-1.2.75-2.27 1.88-2.68l10.56-3.82v-2.9c0-1.85-1.23-3.47-3.01-3.98-.37-.11-.75-.16-1.13-.16-.72 0-1.43.19-2.06.54L7.26 8.59a3.996 3.996 0 0 0-2.02 3.47v17.92c0 1.16.94 2.1 2.1 2.11.35 0 .7-.09 1.01-.25Z" style="fill:url(#office-a)"/>
-              <path d="M25.54 32.09H13.05c-1.16.01-2.1.97-2.09 2.13 0 .74.4 1.42 1.04 1.8l7.44 4.22a4.053 4.053 0 0 0 3.13.37c1.76-.5 2.96-2.1 2.96-3.93V32.1Z" style="fill:url(#office-e)"/>
-              <path style="fill:none" d="M0 0h41.91v41.91H0z"/>
-            </g>
-          </g>
-        </svg>
-      `;
-    }
-
-    return `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.91 41.91">
-        <defs>
-          <linearGradient id="office-off-d" x1="29.6" y1="414.54" x2="29.6" y2="453.32" gradientTransform="translate(0 -415.47)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#d5d5d5"/><stop offset=".17" stop-color="#bfbfbf"/><stop offset=".31" stop-color="#aeaeae"/><stop offset=".43" stop-color="#a5a5a5"/><stop offset=".5" stop-color="#a0a0a0"/></linearGradient>
-          <linearGradient id="office-off-e" x1="22.61" y1="415.91" x2="2.07" y2="445.23" gradientTransform="translate(0 -415.47)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#7d7d7d"/><stop offset=".6" stop-color="#979797"/><stop offset=".73" stop-color="#a2a2a2"/><stop offset=".85" stop-color="#aaa"/><stop offset=".94" stop-color="#b0b0b0"/><stop offset="1" stop-color="#b2b2b2"/></linearGradient>
-          <linearGradient id="office-off-f" x1="12.12" y1="451.9" x2="38.93" y2="451.9" gradientTransform="translate(0 -415.47)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a5a5a5"/><stop offset=".6" stop-color="#858585"/></linearGradient>
-          <linearGradient id="office-off-g" x1="23.03" y1="415.31" x2="18.68" y2="421.52" gradientTransform="translate(0 -415.47)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#646464" stop-opacity=".4"/><stop offset="1" stop-color="#646464" stop-opacity="0"/></linearGradient>
-          <linearGradient id="office-off-h" x1="30.33" y1="452.51" x2="18.33" y2="451.46" gradientTransform="translate(0 -415.47)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#646464" stop-opacity=".4"/><stop offset="1" stop-color="#646464" stop-opacity="0"/></linearGradient>
-        </defs>
-        <g>
-          <g>
-            <g style="opacity:.2;"><path d="M13.05,32.09c-1.16,0-2.1,.97-2.09,2.13,0,.74,.4,1.42,1.04,1.8l7.44,4.22c.61,.35,1.31,.53,2.01,.53,.38,0,.76-.06,1.12-.16l11.19-3.19c1.71-.49,2.9-2.06,2.9-3.84v-1.48H13.05Z" style="fill:#fff;"/></g>
-            <g style="opacity:.12;"><path d="M13.05,32.09c-1.16,0-2.1,.97-2.09,2.13,0,.74,.4,1.42,1.04,1.8l7.44,4.22c.61,.35,1.31,.53,2.01,.53,.38,0,.76-.06,1.12-.16l11.19-3.19c1.71-.49,2.9-2.06,2.9-3.84v-1.48H13.05Z" style="fill:#fff;"/></g>
-            <path d="M22.53,1.31l3.01,6.88v23.9l-2.96,8.51,11.19-3.19c1.71-.49,2.9-2.06,2.9-3.84V8.34c0-1.79-1.19-3.36-2.91-3.85L22.53,1.31Z" style="fill:url(#office-off-d);"/>
-            <path d="M8.34,31.83l3.27-1.77c.91-.5,1.48-1.46,1.48-2.51V14.69c0-1.2,.75-2.27,1.88-2.68l10.56-3.82v-2.9c0-1.85-1.23-3.47-3.01-3.98-.37-.11-.75-.16-1.13-.16h0c-.72,0-1.43,.19-2.06,.54L7.26,8.59c-1.25,.71-2.02,2.04-2.02,3.47V29.98c0,1.16,.94,2.1,2.1,2.11,.35,0,.7-.09,1.01-.25h-.01Z" style="fill:url(#office-off-e);"/>
-            <path d="M25.54,32.09H13.05c-1.16,0-2.1,.97-2.09,2.13,0,.74,.4,1.42,1.04,1.8l7.44,4.22c.61,.35,1.31,.53,2.01,.53h0c.38,0,.76-.06,1.12-.16,1.76-.5,2.96-2.1,2.96-3.93v-4.58h0Z" style="fill:url(#office-off-f);"/>
-            <path d="M8.34,31.83l3.27-1.77c.91-.5,1.48-1.46,1.48-2.51V14.69c0-1.2,.75-2.27,1.88-2.68l10.56-3.82v-2.9c0-1.85-1.23-3.47-3.01-3.98-.37-.11-.75-.16-1.13-.16h0c-.72,0-1.43,.19-2.06,.54L7.26,8.59c-1.25,.71-2.02,2.04-2.02,3.47V29.98c0,1.16,.94,2.1,2.1,2.11,.35,0,.7-.09,1.01-.25h-.01Z" style="fill:url(#office-off-g);"/>
-            <path d="M25.54,32.09H13.05c-1.16,0-2.1,.97-2.09,2.13,0,.74,.4,1.42,1.04,1.8l7.44,4.22c.61,.35,1.31,.53,2.01,.53h0c.38,0,.76-.06,1.12-.16,1.76-.5,2.96-2.1,2.96-3.93v-4.58h0Z" style="fill:url(#office-off-h);"/>
-            <rect width="41.91" height="41.91" style="fill:none;"/>
-          </g>
-        </g>
-      </svg>
-    `;
-  }
-
-  static _meetingIcon() {
-    return `
-      <svg class="meeting-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <circle cx="25" cy="25" r="21" fill="rgba(127,29,29,0.34)" stroke="rgba(248,113,113,0.72)" stroke-width="2.5" class="meeting-pulse"/>
-        <circle cx="25" cy="25" r="15.5" fill="none" stroke="rgba(254,202,202,0.92)" stroke-width="4.2"/>
-        <line x1="14.2" y1="14.2" x2="35.8" y2="35.8" stroke="rgba(254,202,202,0.98)" stroke-width="5.2" stroke-linecap="round" class="meeting-slash"/>
-        <circle cx="25" cy="25" r="22.5" fill="none" stroke="rgba(239,68,68,0.22)" stroke-width="5"/>
-      </svg>
-    `;
-  }
-
   static _escape(value) {
     return String(value ?? '')
       .replace(/&/g, '&amp;')
@@ -1027,14 +922,14 @@ class BrunoOfficeCard extends HTMLElement {
   }
 }
 
-if (!customElements.get(BRUNO_OFFICE_CARD_TAG)) {
-  customElements.define(BRUNO_OFFICE_CARD_TAG, BrunoOfficeCard);
+if (!customElements.get(BRUNO_QUARTO_MARINA_CARD_TAG)) {
+  customElements.define(BRUNO_QUARTO_MARINA_CARD_TAG, BrunoQuartoMarinaCard);
 }
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: BRUNO_OFFICE_CARD_TAG,
-  name: 'Bruno Office Card',
+  type: BRUNO_QUARTO_MARINA_CARD_TAG,
+  name: 'Bruno Q. Marina Card',
   preview: false,
-  description: 'Isolated Bento Office card with preserved Home Assistant semantics and Bruno liquid glass visuals.',
+  description: 'Bento Q. Marina card with local room logic and Bruno liquid glass visuals.',
 });

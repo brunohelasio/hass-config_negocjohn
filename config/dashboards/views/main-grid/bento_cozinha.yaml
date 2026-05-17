@@ -1,52 +1,9 @@
-type: custom:bruno-room-card
-name: Cozinha
-icon_size: 74
-room_on_states:
-  - "on"
-  - home
-  - active
-  - yes
-semantic_on_states:
-  - dishwashing
-  - cooking
-  - washing
-entities:
-  room_group: light.grupo_luzes_cozinha
-  room_toggle: light.cz_luz_principal
-  room_fallback_lights:
-    - light.cz_luz_principal
-  active_sensor: sensor.cozinha_active
-  dishwasher: sensor.lava_loucas_operation_state
-  temperature:
-    - sensor.temperatura_cozinha
-  humidity:
-    - sensor.umidade_cozinha
-icon:
-  off: /local/bruno-ui/assets/kitchen-off.png?v=20260517-2
-  on: /local/bruno-ui/assets/kitchen-on.png?v=20260517-2
-  fallback: mdi:noodles
-status_dots:
-  - icon: mdi:account
-    label: Presenca
-    tone: blue
-  - icon: mdi:dishwasher
-    label: Lava-loucas
-    tone: purple
-    entity: sensor.lava_loucas_operation_state
-    states:
-      - run
-    active_attr: dishwasher_running
-  - icon: mdi:washing-machine
-    label: Maquina de lavar
-    tone: cyan
-  - icon: mdi:air-fryer
-    label: Air fryer
-    tone: amber
+type: custom:bruno-cozinha-card
 double_tap_action: !include ../../shared/popup/rooms/kitchen.yaml
 
 # FALLBACK - Cozinha Lovelace/Negocjohn original
 # Para voltar rapidamente:
-# 1. Comentar o bloco custom:bruno-room-card acima.
+# 1. Comentar o bloco custom:bruno-cozinha-card acima.
 # 2. Descomentar o bloco abaixo.
 # O conteudo funcional compartilhado permanece intacto em:
 # ../../shared/grid-cards/bento_cozinha.yaml

@@ -474,6 +474,16 @@ class BrunoSalaCard extends HTMLElement {
     `;
   }
 
+  _wireAssetFallback() {
+    this.shadowRoot
+      ?.querySelectorAll('.room-asset')
+      .forEach((asset) => {
+        asset.addEventListener('error', () => {
+          asset.closest('.room-icon')?.classList.add('has-image-error');
+        }, { once: true });
+      });
+  }
+
   _render() {
     if (!this._config) return;
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
@@ -584,7 +594,7 @@ class BrunoSalaCard extends HTMLElement {
           height: 1px;
           border-radius: 999px;
           background: var(--bruno-liquid-surface-bottom-line, linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent));
-          opacity: var(--bruno-liquid-surface-bottom-line-opacity, 0.34);
+          opacity: var(--bruno-liquid-surface-bottom-line-opacity, 0);
         }
 
         .sala-card.is-room-on {
@@ -694,9 +704,60 @@ class BrunoSalaCard extends HTMLElement {
           grid-area: icon;
           justify-self: start;
           align-self: start;
-          width: 65px;
-          height: 65px;
-          padding-bottom: 10px;
+          width: 72px;
+          height: 72px;
+          margin-left: -5px;
+          margin-top: -4px;
+          position: relative;
+        }
+
+        .room-asset-wrap,
+        .room-asset-fallback,
+        .room-asset {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .room-asset-wrap {
+          overflow: visible;
+        }
+
+        .room-asset {
+          object-fit: contain;
+          opacity: 0;
+          transform: translateZ(0);
+          filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
+          transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
+        }
+
+        .room-asset-off {
+          opacity: 1;
+        }
+
+        .sala-card.is-room-on .room-asset-off {
+          opacity: 0;
+        }
+
+        .sala-card.is-room-on .room-asset-on {
+          opacity: 1;
+          filter: drop-shadow(0 6px 9px rgba(0,0,0,0.20)) drop-shadow(0 0 12px rgba(255,187,72,0.16));
+          transform: translateY(-1px) scale(1.01);
+        }
+
+        .room-asset-fallback {
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .room-icon.has-image-error .room-asset {
+          display: none;
+        }
+
+        .room-icon.has-image-error .room-asset-fallback {
+          opacity: 1;
         }
 
         .metric {
@@ -732,7 +793,7 @@ class BrunoSalaCard extends HTMLElement {
           justify-self: start;
           align-self: end;
           min-width: 0;
-          margin-top: 4px;
+          margin-top: 9px;
           margin-bottom: 2px;
           font-size: 15px;
           line-height: 1.18;
@@ -1125,7 +1186,7 @@ class BrunoSalaCard extends HTMLElement {
       <div class="sala-card${roomActiveClass}">
         <button class="hero-action" type="button" data-action-key="room" aria-label="Sala">
           <div class="room-icon" aria-hidden="true">
-            ${BrunoSalaCard._roomIcon(model.roomOn)}
+            ${BrunoSalaCard._roomVisual(model.roomOn)}
           </div>
 
           <div class="metric">
@@ -1158,6 +1219,17 @@ class BrunoSalaCard extends HTMLElement {
     this.shadowRoot
       .querySelectorAll('[data-action-key]')
       .forEach((button) => this._wireAction(button));
+    this._wireAssetFallback();
+  }
+
+  static _roomVisual(active) {
+    return `
+      <span class="room-asset-wrap">
+        <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
+        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off.png?v=20260517-1" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on.png?v=20260517-1" alt="" loading="eager" decoding="async">
+      </span>
+    `;
   }
 
   static _roomIcon(active) {

@@ -8,8 +8,8 @@ entities:
     - light.qc_luz_principal
   active_sensor: sensor.quarto_casal_active
 icon:
-  off: /local/bruno-ui/assets/couple-bedroom-off.png?v=20260517-1
-  on: /local/bruno-ui/assets/couple-bedroom-on.png?v=20260517-1
+  off: /local/bruno-ui/assets/couple-bedroom-off.png?v=20260517-2
+  on: /local/bruno-ui/assets/couple-bedroom-on.png?v=20260517-2
   fallback: mdi:bed-king-outline
 status_dots:
   - icon: mdi:account

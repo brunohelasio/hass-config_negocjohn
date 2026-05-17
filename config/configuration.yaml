@@ -15,7 +15,7 @@ frontend:
     - /local/bento-sidebar-card.js?v=20260516-4
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260517-1
     - /local/bruno-ui/cards/bruno-sala-card.js?v=20260517-2
-    - /local/bruno-ui/cards/bruno-office-card.js?v=20260517-3
+    - /local/bruno-ui/cards/bruno-office-card.js?v=20260517-4
     - /local/bruno-ui/cards/bruno-room-card.js?v=20260517-1
     - /local/bruno-ui/cards/bruno-hero-card.js?v=20260516-3
 

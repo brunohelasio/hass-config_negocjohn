@@ -1,7 +1,7 @@
 type: custom:layout-card
 layout_type: custom:grid-layout
 layout:
-  grid-template-columns: repeat(3, 1fr)
+  grid-template-columns: repeat(3, minmax(0, 1fr))
   # A MÁGICA DA ALTURA: Força as duas linhas a dividirem os 40vh exatos
   grid-template-rows: repeat(2, calc((40vh - 10px) / 2))
   grid-gap: 10px
@@ -22,6 +22,7 @@ card_mod:
     }
     #root > * { 
       height: 100% !important; 
+      min-width: 0 !important;
       margin: 0 !important; 
     }
 cards:

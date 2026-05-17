@@ -1,4 +1,4 @@
-const BRUNO_LIQUID_GLASS_VERSION = '20260516-1';
+const BRUNO_LIQUID_GLASS_VERSION = '20260517-1';
 const BRUNO_LIQUID_GLASS_STYLE_ID = 'bruno-liquid-glass-tokens';
 
 const BRUNO_LIQUID_GLASS_TOKENS = {
@@ -30,7 +30,7 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-surface-off-sheen-opacity': '0.74',
 
   'bruno-liquid-surface-bottom-line': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent)',
-  'bruno-liquid-surface-bottom-line-opacity': '0.34',
+  'bruno-liquid-surface-bottom-line-opacity': '0',
 
   'bruno-liquid-surface-on-background': `
     radial-gradient(170px 134px at 12% -10%, rgba(255,255,255,0.38), rgba(255,255,255,0.105) 52%, transparent 75%),

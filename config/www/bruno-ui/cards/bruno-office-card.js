@@ -535,7 +535,7 @@ class BrunoOfficeCard extends HTMLElement {
           height: 1px;
           border-radius: 999px;
           background: var(--bruno-liquid-surface-bottom-line, linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent));
-          opacity: var(--bruno-liquid-surface-bottom-line-opacity, 0.34);
+          opacity: var(--bruno-liquid-surface-bottom-line-opacity, 0);
         }
 
         .office-card.is-room-on {
@@ -614,10 +614,10 @@ class BrunoOfficeCard extends HTMLElement {
             "icon space dots"
             "title title dots"
             "state state dots";
-          column-gap: 12px;
+          column-gap: 10px;
           row-gap: 0;
           align-items: start;
-          padding: 14px 15px 13px;
+          padding: 14px 13px 13px 11px;
           margin: 0;
           text-align: left;
           background: transparent;

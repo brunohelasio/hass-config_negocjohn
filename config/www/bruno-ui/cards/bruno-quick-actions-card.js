@@ -350,7 +350,7 @@ class BrunoQuickActionsCard extends HTMLElement {
 
         @media (max-width: 800px) {
           .quick-card {
-            justify-content: flex-start;
+            justify-content: center;
             padding: 0 8px;
           }
 

@@ -196,6 +196,12 @@ class BrunoTopBadgesCard extends HTMLElement {
     ];
   }
 
+  _visibleModels(models, expanded) {
+    if (!expanded || expanded === 'none') return models;
+    const index = models.findIndex((model) => model.key === expanded);
+    return index < 0 ? models : models.slice(0, index + 1);
+  }
+
   _openSecurityPopup() {
     const locks = this._config.entities.locks || [];
     this._fireDomEvent({
@@ -309,6 +315,8 @@ class BrunoTopBadgesCard extends HTMLElement {
 
     const expanded = this._expanded();
     const models = this._models();
+    const visibleModels = this._visibleModels(models, expanded);
+    const expandedModel = models.find((model) => model.key === expanded);
     const person = this._state(this._config.entities.person);
     const avatar = person?.attributes?.entity_picture || '';
 
@@ -448,12 +456,13 @@ class BrunoTopBadgesCard extends HTMLElement {
 
         .rail {
           min-width: 0;
+          flex: 1 1 auto;
           display: inline-flex;
           align-items: center;
           gap: 7px;
           overflow-x: auto;
           scrollbar-width: none;
-          max-width: min(54vw, 560px);
+          max-width: min(64vw, 720px);
         }
 
         .rail::-webkit-scrollbar { display: none; }
@@ -562,8 +571,8 @@ class BrunoTopBadgesCard extends HTMLElement {
 
       <div class="badges-card">
         <div class="left">
-          ${models.map((model) => this._badge(model, expanded)).join('')}
-          ${this._expandedRail(models.find((model) => model.key === expanded))}
+          ${visibleModels.map((model) => this._badge(model, expanded)).join('')}
+          ${this._expandedRail(expandedModel)}
         </div>
         <div class="avatars" aria-label="Moradores">
           <span class="avatar">${avatar ? `<img src="${BrunoTopBadgesCard._escapeAttr(avatar)}" alt="Bruno">` : 'B'}</span>

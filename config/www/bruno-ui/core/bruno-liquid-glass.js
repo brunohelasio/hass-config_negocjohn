@@ -1,8 +1,10 @@
-const BRUNO_LIQUID_GLASS_VERSION = '20260517-1';
+const BRUNO_LIQUID_GLASS_VERSION = '20260518-2';
 const BRUNO_LIQUID_GLASS_STYLE_ID = 'bruno-liquid-glass-tokens';
 
 const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-accent': '150, 190, 255',
+  'bruno-liquid-card-radius': '22px',
+  'bruno-liquid-card-radius-compact': '18px',
 
   // Validated on the Sala Bento card. Keep these values stable unless the
   // whole shared glass skin is intentionally revised.
@@ -13,13 +15,14 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
     linear-gradient(155deg, rgba(18,24,36,0.74), rgba(11,14,22,0.61) 49%, rgba(33,27,25,0.32))
   `,
   'bruno-liquid-surface-off-filter': 'blur(32px) saturate(1.68) contrast(1.06)',
-  'bruno-liquid-surface-off-border': '1px solid rgba(255,255,255,0.13)',
+  'bruno-liquid-surface-off-border': '1px solid rgba(255,255,255,0.18)',
   'bruno-liquid-surface-off-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.18),
-    inset 1px 0 0 rgba(255,255,255,0.10),
-    inset -1px -1px 0 rgba(255,255,255,0.026),
-    0 18px 44px rgba(0,0,0,0.27),
-    0 0 24px rgba(110,150,210,0.055)
+    inset 0 0 0 1px rgba(255,255,255,0.075),
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 1px 0 0 rgba(255,255,255,0.13),
+    inset 0 -1px 0 rgba(255,255,255,0.055),
+    0 18px 46px rgba(0,0,0,0.31),
+    0 0 30px rgba(110,150,210,0.075)
   `,
   'bruno-liquid-surface-off-sheen': `
     radial-gradient(78px 62px at 19% 2%, rgba(255,255,255,0.20), transparent 72%),
@@ -27,7 +30,10 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
     linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.00) 35%),
     linear-gradient(90deg, rgba(255,255,255,0.085), rgba(255,255,255,0.00) 48%)
   `,
-  'bruno-liquid-surface-off-sheen-opacity': '0.74',
+  'bruno-liquid-surface-off-sheen-opacity': '0.82',
+  'bruno-liquid-surface-edge-glow': `
+    linear-gradient(125deg, rgba(255,255,255,0.42), rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.028) 58%, rgba(255,190,120,0.24) 100%)
+  `,
 
   'bruno-liquid-surface-bottom-line': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent)',
   'bruno-liquid-surface-bottom-line-opacity': '0',
@@ -40,14 +46,15 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
     linear-gradient(155deg, rgba(42,51,65,0.72), rgba(23,28,38,0.58) 52%, rgba(13,16,24,0.44))
   `,
   'bruno-liquid-surface-on-filter': 'blur(34px) saturate(1.72) contrast(1.05)',
-  'bruno-liquid-surface-on-border-color': 'rgba(255,255,255,0.24)',
+  'bruno-liquid-surface-on-border-color': 'rgba(255,255,255,0.32)',
   'bruno-liquid-surface-on-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.32),
-    inset 1px 0 0 rgba(255,255,255,0.13),
-    inset 0 -1px 0 rgba(0,0,0,0.18),
+    inset 0 0 0 1px rgba(255,255,255,0.11),
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 1px 0 0 rgba(255,255,255,0.16),
+    inset 0 -1px 0 rgba(0,0,0,0.16),
     0 0 22px rgba(255,255,255,0.09),
-    0 0 34px rgba(120,170,235,0.10),
-    0 18px 42px rgba(0,0,0,0.28)
+    0 0 38px rgba(120,170,235,0.12),
+    0 18px 46px rgba(0,0,0,0.30)
   `,
   'bruno-liquid-surface-on-sheen': `
     radial-gradient(92px 74px at 17% 0%, rgba(255,255,255,0.34), transparent 72%),

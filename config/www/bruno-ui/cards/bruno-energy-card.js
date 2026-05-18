@@ -235,7 +235,7 @@ class BrunoEnergyCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-radius: 18px;
+          --card-radius: var(--bruno-liquid-card-radius, 22px);
           --accent: 96, 165, 250;
           --text-main: rgba(246,250,255,0.95);
           --text-soft: rgba(226,232,240,0.62);

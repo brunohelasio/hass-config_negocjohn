@@ -1,0 +1,7 @@
+# NOVO JS - Quick actions mobile.
+# FALLBACK: trocar este include por mobile_quick_actions.yaml.
+type: custom:bruno-mobile-card-frame
+height: 76px
+min_height: 76px
+card:
+  type: custom:bruno-quick-actions-card

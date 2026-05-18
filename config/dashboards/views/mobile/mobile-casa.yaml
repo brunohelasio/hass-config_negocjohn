@@ -45,21 +45,33 @@ cards:
   - !include ../mobile/mobile-desktop-redirect.yaml
 
   # ── 1) Badges (scroll horizontal) ───────────────────────────────────────
-  - !include ../../shared/mobile/mobile_top_badges.yaml
+  - !include ../../shared/mobile/mobile_js_top_badges.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_top_badges.yaml
 
   # ── 2) Hero compacto ────────────────────────────────────────────────────
-  - !include ../../shared/mobile/mobile_hero_welcome.yaml
+  - !include ../../shared/mobile/mobile_js_hero_welcome.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_hero_welcome.yaml
 
   # ── 3) Sala (largura total) ─────────────────────────────────────────────
-  - !include ../../shared/mobile/mobile_sala_card.yaml
+  - !include ../../shared/mobile/mobile_js_sala_card.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_sala_card.yaml
 
   # ── 4) Carrossel dos demais comodos (2 cards por slide) ─────────────────
   # ANTERIOR (V3 rail contínuo — rollback rápido):
   # - !include ../../shared/mobile/mobile_rooms_rail.yaml
-  - !include ../../shared/mobile/mobile_rooms_carousel.yaml
+  - !include ../../shared/mobile/mobile_js_rooms_carousel.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_rooms_carousel.yaml
 
   # ── 5) Acoes rapidas ────────────────────────────────────────────────────
-  - !include ../../shared/mobile/mobile_quick_actions.yaml
+  - !include ../../shared/mobile/mobile_js_quick_actions.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_quick_actions.yaml
 
   # ── 6) Pill navbar (position: fixed — ancora ao final da view) ──────────
-  - !include ../../shared/mobile/mobile_pill_nav.yaml
+  - !include ../../shared/mobile/mobile_js_pill_nav.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_pill_nav.yaml

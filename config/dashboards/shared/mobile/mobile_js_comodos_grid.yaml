@@ -1,0 +1,29 @@
+# NOVO JS - Grade mobile dos comodos.
+# FALLBACK: trocar este include por mobile_comodos_grid.yaml.
+type: custom:bruno-mobile-rooms-card
+mode: grid
+rooms:
+  - tag: bruno-office-card
+    name: Office
+    config:
+      double_tap_action: !include ../popup/rooms/office.yaml
+  - tag: bruno-cozinha-card
+    name: Cozinha
+    config:
+      double_tap_action: !include ../popup/rooms/kitchen.yaml
+  - tag: bruno-lavabo-card
+    name: Lavabo
+    config:
+      double_tap_action: !include ../popup/rooms/lavabo.yaml
+  - tag: bruno-quarto-casal-card
+    name: Q. Casal
+    config:
+      double_tap_action: !include ../popup/rooms/quarto_casal.yaml
+  - tag: bruno-quarto-marina-card
+    name: Q. Marina
+    config:
+      double_tap_action: !include ../popup/rooms/quarto_marina.yaml
+  - tag: bruno-quarto-miguel-card
+    name: Q. Miguel
+    config:
+      double_tap_action: !include ../popup/rooms/quarto_miguel.yaml

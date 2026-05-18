@@ -31,10 +31,16 @@ layout:
 
 cards:
   # ── Sala horizontal no topo (mesmo formato da aba Casa) ────────────────
-  - !include ../../shared/mobile/mobile_sala_card.yaml
+  - !include ../../shared/mobile/mobile_js_sala_card.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_sala_card.yaml
 
   # ── Grade 2 colunas com os demais comodos ──────────────────────────────
-  - !include ../../shared/mobile/mobile_comodos_grid.yaml
+  - !include ../../shared/mobile/mobile_js_comodos_grid.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_comodos_grid.yaml
 
   # ── Pill navbar ─────────────────────────────────────────────────────────
-  - !include ../../shared/mobile/mobile_pill_nav.yaml
+  - !include ../../shared/mobile/mobile_js_pill_nav.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_pill_nav.yaml

@@ -29,5 +29,9 @@ layout:
   grid-gap: 10px
 
 cards:
-  - !include ../../shared/mobile/mobile_cameras_card.yaml
-  - !include ../../shared/mobile/mobile_pill_nav.yaml
+  - !include ../../shared/mobile/mobile_js_cameras_card.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_cameras_card.yaml
+  - !include ../../shared/mobile/mobile_js_pill_nav.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_pill_nav.yaml

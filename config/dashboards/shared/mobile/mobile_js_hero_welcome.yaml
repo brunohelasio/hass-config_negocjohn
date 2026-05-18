@@ -1,0 +1,8 @@
+# NOVO JS - Mobile hero.
+# FALLBACK: trocar este include por mobile_hero_welcome.yaml.
+type: custom:bruno-mobile-card-frame
+height: 240px
+min_height: 240px
+card:
+  type: custom:bruno-hero-card
+  variant: mobile

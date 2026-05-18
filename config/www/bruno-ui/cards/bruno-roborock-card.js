@@ -110,11 +110,29 @@ class BrunoRoborockCard extends HTMLElement {
     };
   }
 
-  _callService(serviceName, data = {}) {
+  _callService(serviceName, data = {}, target = {}) {
     if (!this._hass || !serviceName) return;
     const [domain, service] = serviceName.split('.');
     if (!domain || !service) return;
-    this._hass.callService(domain, service, data);
+
+    const serviceData = { ...data };
+    if (target?.entity_id != null && serviceData.entity_id == null) {
+      serviceData.entity_id = target.entity_id;
+    }
+
+    this._hass.callService(domain, service, serviceData, target);
+  }
+
+  _runVacuumAction(button) {
+    const service = button?.dataset?.service;
+    if (!service) return;
+
+    const now = Date.now();
+    const previous = Number(button.dataset.lastRunAt || 0);
+    if (now - previous < 650) return;
+    button.dataset.lastRunAt = String(now);
+
+    this._callService(service, {}, { entity_id: this._config.entities.vacuum });
   }
 
   _openPopup() {
@@ -155,12 +173,45 @@ class BrunoRoborockCard extends HTMLElement {
     });
 
     this.shadowRoot.querySelectorAll('[data-service]').forEach((button) => {
-      button.addEventListener('click', (event) => {
+      let pointerHandledAt = 0;
+
+      const stopOnly = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        const service = button.dataset.service;
-        if (!service) return;
-        this._callService(service, { entity_id: this._config.entities.vacuum });
+      };
+
+      button.addEventListener('pointerdown', (event) => {
+        stopOnly(event);
+        button.classList.add('is-pressed');
+        button.setPointerCapture?.(event.pointerId);
+      });
+
+      button.addEventListener('pointerup', (event) => {
+        stopOnly(event);
+        button.classList.remove('is-pressed');
+        button.releasePointerCapture?.(event.pointerId);
+        pointerHandledAt = Date.now();
+        this._runVacuumAction(button);
+      });
+
+      button.addEventListener('pointercancel', () => {
+        button.classList.remove('is-pressed');
+      });
+
+      button.addEventListener('pointerleave', () => {
+        button.classList.remove('is-pressed');
+      });
+
+      button.addEventListener('click', (event) => {
+        stopOnly(event);
+        if (Date.now() - pointerHandledAt < 420) return;
+        this._runVacuumAction(button);
+      });
+
+      button.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        stopOnly(event);
+        this._runVacuumAction(button);
       });
     });
 
@@ -328,10 +379,6 @@ class BrunoRoborockCard extends HTMLElement {
           height: 72px;
           display: grid;
           place-items: center;
-          border-radius: 50%;
-          background:
-            radial-gradient(circle at 34% 24%, rgba(255,255,255,0.18), transparent 52%),
-            rgba(255,255,255,0.035);
         }
 
         .robot img {
@@ -339,14 +386,12 @@ class BrunoRoborockCard extends HTMLElement {
           height: 68px;
           display: block;
           object-fit: contain;
-          filter: drop-shadow(0 12px 16px rgba(0,0,0,0.34));
         }
 
         .robot-fallback {
           display: none;
           --mdc-icon-size: 54px;
           color: rgba(226,232,240,0.68);
-          filter: drop-shadow(0 12px 16px rgba(0,0,0,0.34));
         }
 
         .robot.is-fallback .robot-fallback {
@@ -474,6 +519,10 @@ class BrunoRoborockCard extends HTMLElement {
         }
 
         .action:active {
+          transform: translateY(1px) scale(0.985);
+        }
+
+        .action.is-pressed {
           transform: translateY(1px) scale(0.985);
         }
 

@@ -316,22 +316,63 @@ class BrunoEnergyCard extends HTMLElement {
         .header {
           display: grid;
           grid-template-columns: minmax(0, 1fr) auto;
-          grid-template-rows: auto auto;
+          grid-template-rows: auto;
           gap: 5px 10px;
           align-items: start;
         }
 
-        .eyebrow {
+        .header-copy {
           grid-column: 1;
-          font-size: 11px;
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .header-icon {
+          position: relative;
+          flex: 0 0 24px;
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          display: grid;
+          place-items: center;
+          color: rgba(191,219,254,0.86);
+          background: rgba(255,255,255,0.075);
+          border: 1px solid rgba(255,255,255,0.11);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        }
+
+        .header-icon ha-icon {
+          --mdc-icon-size: 14px;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 0;
+          transform: translate(-50%, -50%);
+        }
+
+        .title {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+
+        .title-main {
+          font-size: 12px;
           line-height: 1;
           font-weight: 780;
           text-transform: uppercase;
-          color: rgba(255,255,255,0.48);
+          color: rgba(255,255,255,0.78);
         }
 
         .value {
-          grid-column: 1;
           min-width: 0;
           font-size: 17px;
           line-height: 1.08;
@@ -343,7 +384,7 @@ class BrunoEnergyCard extends HTMLElement {
 
         .selector {
           grid-column: 2;
-          grid-row: 1 / span 2;
+          grid-row: 1;
           align-self: start;
           display: inline-flex;
           align-items: center;
@@ -388,7 +429,7 @@ class BrunoEnergyCard extends HTMLElement {
           align-self: stretch;
           display: flex;
           align-items: stretch;
-          margin: -6px -5px -4px -8px;
+          margin: -7px -15px -9px -15px;
         }
 
         .chart svg {
@@ -414,8 +455,13 @@ class BrunoEnergyCard extends HTMLElement {
 
       <div class="energy-card">
         <div class="header">
-          <div class="eyebrow">${BrunoEnergyCard._escape(this._config.name)}</div>
-          <div class="value">${BrunoEnergyCard._escape(model.period.label)} &middot; ${model.total.toFixed(2)} kWh</div>
+          <div class="header-copy">
+            <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:lightning-bolt"></ha-icon></span>
+            <span class="title">
+              <span class="title-main">${BrunoEnergyCard._escape(this._config.name)}</span>
+              <span class="value">${BrunoEnergyCard._escape(model.period.label)} &middot; ${model.total.toFixed(2)} kWh</span>
+            </span>
+          </div>
           <div class="selector" aria-label="Periodo de energia">
             ${BRUNO_ENERGY_PERIODS.map((period) => this._segment(period, period.option === model.period.option)).join('')}
           </div>
@@ -444,7 +490,7 @@ class BrunoEnergyCard extends HTMLElement {
 
     const width = 360;
     const height = 100;
-    const padX = 12;
+    const padX = 0;
     const padTop = 10;
     const padBottom = 20;
     const values = points.map((point) => point.value);
@@ -489,7 +535,7 @@ class BrunoEnergyCard extends HTMLElement {
         </defs>
         <path d="${area}" fill="url(#bruno-energy-area)"></path>
         <path d="${line}" fill="none" stroke="#6FB8FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#bruno-energy-glow)"></path>
-        <text x="14" y="94" class="axis-label">${BrunoEnergyCard._escape(current)}</text>
+        <text x="18" y="94" class="axis-label">${BrunoEnergyCard._escape(current)}</text>
       </svg>
     `;
   }

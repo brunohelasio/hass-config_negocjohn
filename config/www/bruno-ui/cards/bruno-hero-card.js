@@ -325,7 +325,7 @@ class BrunoHeroCard extends HTMLElement {
       <style>
         :host {
           --hero-radius-left: 18px;
-          --hero-radius-right: 12px;
+          --hero-radius-right: 18px;
           --hero-accent: 150, 190, 255;
           --hero-text: rgba(248,251,255,0.96);
           --hero-muted: rgba(248,251,255,0.54);
@@ -371,6 +371,7 @@ class BrunoHeroCard extends HTMLElement {
           z-index: 1;
           overflow: hidden;
           border-radius: inherit;
+          border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.13));
           background:
             linear-gradient(90deg, rgba(6,14,24,0.88) 0%, rgba(7,15,26,0.70) 29%, rgba(7,15,26,0.28) 57%, rgba(7,15,26,0.06) 78%, rgba(7,15,26,0.00) 100%),
             radial-gradient(520px 220px at 18% 6%, rgba(145,185,245,0.22), transparent 62%),
@@ -379,10 +380,13 @@ class BrunoHeroCard extends HTMLElement {
             url(${fallbackBackground}) center / cover no-repeat,
             linear-gradient(155deg, rgba(26,33,48,0.90), rgba(16,21,31,0.86));
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.10),
-            inset 1px 0 0 rgba(255,255,255,0.06),
-            inset 0 -1px 0 rgba(0,0,0,0.16),
-            0 16px 34px rgba(0,0,0,0.12);
+            var(--bruno-liquid-surface-off-shadow,
+              inset 0 1px 0 rgba(255,255,255,0.18),
+              inset 1px 0 0 rgba(255,255,255,0.10),
+              inset -1px -1px 0 rgba(255,255,255,0.026),
+              0 18px 44px rgba(0,0,0,0.27),
+              0 0 24px rgba(110,150,210,0.055)
+            );
         }
 
         .hero-clip::before,
@@ -405,8 +409,8 @@ class BrunoHeroCard extends HTMLElement {
           inset: 0;
           border-radius: inherit;
           box-shadow:
-            inset 0 0 0 1px rgba(255,255,255,0.025),
-            0 0 30px rgba(var(--hero-accent),0.06);
+            inset 0 0 0 1px rgba(255,255,255,0.05),
+            0 0 30px rgba(var(--hero-accent),0.08);
         }
 
         .lateral-veil {

@@ -331,15 +331,51 @@ class BrunoRoborockCard extends HTMLElement {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 10px;
           min-width: 0;
         }
 
-        .eyebrow {
-          font-size: 11px;
+        .header-copy {
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .header-icon {
+          position: relative;
+          flex: 0 0 24px;
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          display: grid;
+          place-items: center;
+          color: rgba(191,219,254,0.86);
+          background: rgba(255,255,255,0.075);
+          border: 1px solid rgba(255,255,255,0.11);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        }
+
+        .header-icon ha-icon {
+          --mdc-icon-size: 14px;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 0;
+          transform: translate(-50%, -50%);
+        }
+
+        .title-main {
+          font-size: 12px;
           line-height: 1;
           font-weight: 780;
           text-transform: uppercase;
-          color: rgba(255,255,255,0.50);
+          color: rgba(255,255,255,0.78);
         }
 
         .state-pill {
@@ -386,6 +422,8 @@ class BrunoRoborockCard extends HTMLElement {
           height: 68px;
           display: block;
           object-fit: contain;
+          filter: none !important;
+          box-shadow: none !important;
         }
 
         .robot-fallback {
@@ -580,7 +618,10 @@ class BrunoRoborockCard extends HTMLElement {
 
       <div class="roborock-card${activeClass}" role="button" tabindex="0" aria-label="${BrunoRoborockCard._escape(this._config.title)}">
         <div class="header">
-          <span class="eyebrow">${BrunoRoborockCard._escape(this._config.name)}</span>
+          <span class="header-copy">
+            <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:robot-vacuum"></ha-icon></span>
+            <span class="title-main">${BrunoRoborockCard._escape(this._config.name)}</span>
+          </span>
           <span class="state-pill"><span class="state-dot"></span>${BrunoRoborockCard._escape(model.status)}</span>
         </div>
 

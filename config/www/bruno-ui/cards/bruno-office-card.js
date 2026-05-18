@@ -945,7 +945,7 @@ class BrunoOfficeCard extends HTMLElement {
   }
 
   static _officeVisual(active) {
-    const version = '20260517-4';
+    const version = '20260517-5';
     return `
       <span class="office-asset-wrap">
         <span class="office-asset-fallback">${BrunoOfficeCard._officeIcon(active)}</span>

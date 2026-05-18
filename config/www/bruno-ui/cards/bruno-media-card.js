@@ -91,9 +91,12 @@ class BrunoMediaCard extends HTMLElement {
       this._lastArtworkByPlayer[focusId] = rawImage;
     }
     const shouldKeepArtwork = ['paused', 'idle'].includes(state) && this._lastArtworkByPlayer[focusId];
-    const image = shouldKeepArtwork && (!rawImage || this._isStandbyImage(rawImage))
-      ? this._lastArtworkByPlayer[focusId]
-      : rawImage;
+    let image = rawImage;
+    if (shouldKeepArtwork && (!rawImage || this._isStandbyImage(rawImage))) {
+      image = this._lastArtworkByPlayer[focusId];
+    } else if (this._isStandbyImage(rawImage)) {
+      image = '';
+    }
     const title = visual?.attributes?.media_title
       || player?.attributes?.media_title
       || player?.attributes?.friendly_name
@@ -304,6 +307,7 @@ class BrunoMediaCard extends HTMLElement {
     const shell = this.shadowRoot.querySelector('.media-shell');
     const focusSurface = this.shadowRoot.querySelector('.focus-surface');
     if (!shell) return;
+    const isInteractiveTarget = (target) => Boolean(target?.closest?.('button'));
 
     let startX = 0;
     let startY = 0;
@@ -324,7 +328,7 @@ class BrunoMediaCard extends HTMLElement {
 
     shell.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
-      if (event.target.closest('button')) return;
+      if (isInteractiveTarget(event.target)) return;
       tracking = true;
       holdFired = false;
       startX = event.clientX;
@@ -370,21 +374,35 @@ class BrunoMediaCard extends HTMLElement {
 
     let touchStartX = 0;
     let touchStartY = 0;
+    let touchDragging = false;
     shell.addEventListener('touchstart', (event) => {
-      if (event.target.closest('button')) return;
+      if (isInteractiveTarget(event.target)) return;
       const touch = event.touches?.[0];
       if (!touch) return;
       touchStartX = touch.clientX;
       touchStartY = touch.clientY;
+      touchDragging = false;
     }, { passive: true });
 
+    shell.addEventListener('touchmove', (event) => {
+      if (isInteractiveTarget(event.target)) return;
+      const touch = event.touches?.[0];
+      if (!touch) return;
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+        touchDragging = true;
+        event.preventDefault();
+      }
+    }, { passive: false });
+
     shell.addEventListener('touchend', (event) => {
-      if (event.target.closest('button')) return;
+      if (isInteractiveTarget(event.target)) return;
       const touch = event.changedTouches?.[0];
       if (!touch) return;
       const dx = touch.clientX - touchStartX;
       const dy = touch.clientY - touchStartY;
-      if (Math.abs(dx) <= 34 || Math.abs(dx) <= Math.abs(dy)) return;
+      if (!touchDragging && (Math.abs(dx) <= 34 || Math.abs(dx) <= Math.abs(dy))) return;
       event.preventDefault();
       this._setSlide(this._slideIndex + (dx < 0 ? 1 : -1));
     }, { passive: false });
@@ -408,6 +426,7 @@ class BrunoMediaCard extends HTMLElement {
     const focus = this._focusModel();
     const focusImage = focus.image ? `--focus-art: url(&quot;${BrunoMediaCard._escapeAttr(focus.image)}&quot;);` : '';
     const focusSoftClass = focus.isSoftArtwork ? ' is-soft-artwork' : '';
+    const focusEmptyClass = focus.image ? '' : ' is-empty-artwork';
     const players = this._slotPlayerIds().map((id) => this._playerModel(id, focus.entity));
     const slideIndex = this._slideIndex || 0;
 
@@ -572,6 +591,10 @@ class BrunoMediaCard extends HTMLElement {
           --focus-art-transform: scale(1.035);
         }
 
+        .focus-surface.is-empty-artwork {
+          grid-template-rows: 1fr;
+        }
+
         .focus-surface::after {
           content: "";
           position: absolute;
@@ -608,7 +631,8 @@ class BrunoMediaCard extends HTMLElement {
         }
 
         .focus-surface:hover .play-glyph,
-        .focus-surface:focus-visible .play-glyph {
+        .focus-surface:focus-visible .play-glyph,
+        .focus-surface.is-empty-artwork .play-glyph {
           opacity: 1;
           transform: scale(1.03);
         }
@@ -629,6 +653,10 @@ class BrunoMediaCard extends HTMLElement {
             linear-gradient(180deg, rgba(7,10,18,0), rgba(7,10,18,0.50) 30%, rgba(7,10,18,0.64));
           backdrop-filter: blur(8px) saturate(1.14);
           -webkit-backdrop-filter: blur(8px) saturate(1.14);
+        }
+
+        .focus-surface.is-empty-artwork .focus-bottom {
+          display: none;
         }
 
         .focus-title {
@@ -912,7 +940,7 @@ class BrunoMediaCard extends HTMLElement {
           <div class="viewport">
             <div class="slides">
               <section class="slide focus-slide">
-                <div class="focus-surface${focusSoftClass}" role="button" tabindex="0" aria-label="Reproduzir ou pausar midia" style="${focusImage}">
+                <div class="focus-surface${focusSoftClass}${focusEmptyClass}" role="button" tabindex="0" aria-label="Reproduzir ou pausar midia" style="${focusImage}">
                   <span class="play-glyph" aria-hidden="true"><ha-icon icon="${focus.isPlaying ? 'mdi:pause' : 'mdi:play'}"></ha-icon></span>
                   <div class="focus-bottom">
                     <div class="focus-title">

@@ -270,12 +270,13 @@ class BrunoCamerasCard extends HTMLElement {
         }
 
         .header-icon {
+          position: relative;
+          flex: 0 0 24px;
           width: 24px;
           height: 24px;
           border-radius: 999px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          display: grid;
+          place-items: center;
           color: rgba(191,219,254,0.86);
           background: rgba(255,255,255,0.075);
           border: 1px solid rgba(255,255,255,0.11);
@@ -284,6 +285,16 @@ class BrunoCamerasCard extends HTMLElement {
 
         .header-icon ha-icon {
           --mdc-icon-size: 14px;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 0;
+          transform: translate(-50%, -50%);
         }
 
         .title {
@@ -523,6 +534,7 @@ class BrunoCamerasCard extends HTMLElement {
           appearance: none;
           -webkit-appearance: none;
           position: relative;
+          display: block;
           min-width: 0;
           height: 100%;
           padding: 0;
@@ -534,6 +546,7 @@ class BrunoCamerasCard extends HTMLElement {
 
         .thumb-media {
           position: relative;
+          display: block;
           width: 100%;
           height: 100%;
           min-height: 0;

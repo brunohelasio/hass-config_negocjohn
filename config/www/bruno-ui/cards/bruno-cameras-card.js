@@ -37,7 +37,12 @@ class BrunoCamerasCard extends HTMLElement {
     if (this._localActiveCamera && activeState === this._localActiveCamera) {
       this._localActiveCamera = null;
     }
-    this._safeRender();
+
+    if (this.shadowRoot?.querySelector('.cameras-card') && this._renderedWithHass) {
+      this._updateStateOnly();
+    } else {
+      this._safeRender();
+    }
     this._startRefreshTimer();
   }
 
@@ -74,6 +79,58 @@ class BrunoCamerasCard extends HTMLElement {
     }
   }
 
+  _updateStateOnly() {
+    try {
+      const model = this._model();
+      if (model.activeId !== this._lastActiveId) {
+        this._safeRender();
+        return;
+      }
+
+      const active = model.activeCamera;
+      const liveCount = this.shadowRoot.querySelector('.live-count');
+      if (liveCount) {
+        liveCount.innerHTML = `
+          <span class="live-dot${model.onlineCount ? ' is-online' : ''}"></span>
+          ${model.onlineCount}/${model.totalCount} online
+        `;
+      }
+
+      const titleSub = this.shadowRoot.querySelector('.title-sub');
+      if (titleSub) titleSub.textContent = active?.name || '';
+
+      const activeName = this.shadowRoot.querySelector('.active-name');
+      if (activeName) activeName.textContent = active?.name || 'Camera';
+
+      const activeStatus = this.shadowRoot.querySelector('.active-status');
+      if (activeStatus) {
+        activeStatus.innerHTML = `
+          <span class="status-dot${active?.online ? ' is-online' : ''}" data-camera-status="${BrunoCamerasCard._escapeAttr(active?.entity || '')}"></span>
+          ${BrunoCamerasCard._escape(active?.status || 'Indisponivel')}
+        `;
+      }
+
+      model.cameras.forEach((camera) => {
+        const activeClass = camera.entity === model.activeId;
+        this.shadowRoot
+          .querySelectorAll(`.thumb-button[data-camera-id="${BrunoCamerasCard._escapeAttr(camera.entity)}"]`)
+          .forEach((button) => button.classList.toggle('is-active', activeClass));
+
+        this.shadowRoot
+          .querySelectorAll(`img[data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}"]`)
+          .forEach((image) => {
+            if (camera.image) image.dataset.cameraSrcBase = camera.image;
+          });
+
+        this.shadowRoot
+          .querySelectorAll(`.status-dot[data-camera-status="${BrunoCamerasCard._escapeAttr(camera.entity)}"]`)
+          .forEach((dot) => dot.classList.toggle('is-online', camera.online));
+      });
+    } catch (error) {
+      this._renderError(error);
+    }
+  }
+
   _startRefreshTimer() {
     if (this._refreshTimer || !this._config || !this.isConnected) return;
     const refreshInterval = Math.max(4000, Number(this._config.refresh_interval) || BRUNO_CAMERA_REFRESH_MS);
@@ -99,6 +156,7 @@ class BrunoCamerasCard extends HTMLElement {
       const loader = new globalThis.Image();
       loader.onload = () => {
         image.src = nextSrc;
+        image.dataset.hasLoaded = 'true';
         image.classList.remove('is-hidden');
       };
       loader.src = nextSrc;
@@ -208,7 +266,13 @@ class BrunoCamerasCard extends HTMLElement {
     });
 
     root.querySelectorAll('img').forEach((image) => {
-      image.addEventListener('error', () => image.classList.add('is-hidden'), { once: true });
+      image.addEventListener('load', () => {
+        image.dataset.hasLoaded = 'true';
+        image.classList.remove('is-hidden');
+      });
+      image.addEventListener('error', () => {
+        if (image.dataset.hasLoaded !== 'true') image.classList.add('is-hidden');
+      });
     });
   }
 
@@ -754,6 +818,7 @@ class BrunoCamerasCard extends HTMLElement {
     `;
 
     this._wireActions(model.activeId);
+    this._renderedWithHass = Boolean(this._hass);
   }
 
   _renderError(error) {
@@ -807,14 +872,14 @@ class BrunoCamerasCard extends HTMLElement {
     const onlineClass = camera?.online ? ' is-online' : '';
     return `
       <div class="media-frame${hasImage ? ' has-image' : ''}">
-        ${hasImage ? `<img class="camera-image" src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" alt="">` : ''}
+        ${hasImage ? `<img class="camera-image" src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}" alt="">` : ''}
         <div class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></div>
         <div class="preview-scrim"></div>
         <div class="preview-meta">
           <span>
             <span class="active-name">${BrunoCamerasCard._escape(camera?.name || 'Camera')}</span>
             <span class="active-status">
-              <span class="status-dot${onlineClass}"></span>
+              <span class="status-dot${onlineClass}" data-camera-status="${BrunoCamerasCard._escapeAttr(camera?.entity || '')}"></span>
               ${BrunoCamerasCard._escape(camera?.status || 'Indisponivel')}
             </span>
           </span>
@@ -831,11 +896,11 @@ class BrunoCamerasCard extends HTMLElement {
     return `
       <button class="thumb-button${activeClass}" type="button" data-camera-id="${BrunoCamerasCard._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasCard._escapeAttr(camera.name)}">
         <span class="thumb-media${hasImage ? ' has-image' : ''}">
-          ${hasImage ? `<img src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" alt="">` : ''}
+          ${hasImage ? `<img src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}" alt="">` : ''}
           <span class="thumb-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></span>
           <span class="thumb-overlay"></span>
           <span class="thumb-label">
-            <span class="status-dot${onlineClass}"></span>
+            <span class="status-dot${onlineClass}" data-camera-status="${BrunoCamerasCard._escapeAttr(camera.entity)}"></span>
             <span class="thumb-name">${BrunoCamerasCard._escape(camera.short_name || camera.name)}</span>
           </span>
         </span>

@@ -1,48 +1,50 @@
-type: custom:stack-in-card
+type: custom:bruno-roborock-card
 view_layout:
   grid-area: roborock
-card_mod:
-  style: |
-    /* 1. Faz o "envelope" do cartão esticar até o fundo da célula do grid */
-    :host {
-      height: 100% !important;
-    }
-    
-    ha-card {
-      /* 2. Faz o cartão acompanhar o envelope */
-      height: 100% !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: space-between !important;
 
-      /* 3. Vidro Premium — mesmo azul do bloco welcome */
-      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
-      backdrop-filter: blur(20px) saturate(1.35) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-      border: 1px solid rgba(255,255,255,0.10) !important;
-      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
-      
-      /* 4. Força o arredondamento e IMPEDE que o conteúdo vaze e deixe quadrado */
-      border-radius: 16px !important;
-      overflow: hidden !important;
-      
-      /* 5. Desliga a interferência do tema nos filhos */
-      --ha-card-glass-tint: transparent !important;
-      --ha-card-backdrop-filter: none !important;
-      --ha-card-glass-inset-shadow: none !important;
-      --ha-card-background: transparent !important;
-      --ha-card-border-width: 0 !important;
-    }
-    
-    /* CORREÇÃO AQUI: Força a div interna a esticar e propagar o flexbox */
-    .card-content, ha-card > div {
-      height: 100% !important;
-      display: flex !important;
-      flex-direction: column !important;
-      flex-grow: 1 !important;
-    }
-
-    ha-card::before {
-      display: none !important;
-    }
-cards: !include ../../shared/grid-cards/bento_roborock.yaml
+# FALLBACK - Roborock Lovelace/Negocjohn original
+# Para reverter:
+# 1. Comentar o custom:bruno-roborock-card acima.
+# 2. Descomentar o bloco abaixo.
+# O conteudo funcional completo permanece intacto em:
+# ../../shared/grid-cards/bento_roborock.yaml
+#
+# type: custom:stack-in-card
+# view_layout:
+#   grid-area: roborock
+# card_mod:
+#   style: |
+#     :host {
+#       height: 100% !important;
+#     }
+#
+#     ha-card {
+#       height: 100% !important;
+#       display: flex !important;
+#       flex-direction: column !important;
+#       justify-content: space-between !important;
+#       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+#       backdrop-filter: blur(20px) saturate(1.35) !important;
+#       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+#       border: 1px solid rgba(255,255,255,0.10) !important;
+#       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+#       border-radius: 16px !important;
+#       overflow: hidden !important;
+#       --ha-card-glass-tint: transparent !important;
+#       --ha-card-backdrop-filter: none !important;
+#       --ha-card-glass-inset-shadow: none !important;
+#       --ha-card-background: transparent !important;
+#       --ha-card-border-width: 0 !important;
+#     }
+#
+#     .card-content, ha-card > div {
+#       height: 100% !important;
+#       display: flex !important;
+#       flex-direction: column !important;
+#       flex-grow: 1 !important;
+#     }
+#
+#     ha-card::before {
+#       display: none !important;
+#     }
+# cards: !include ../../shared/grid-cards/bento_roborock.yaml

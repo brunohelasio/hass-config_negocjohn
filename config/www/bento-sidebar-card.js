@@ -131,7 +131,9 @@ class BentoSidebarCard extends HTMLElement {
           width: var(--rail-width);
           height: 100%;
           min-height: 0;
-          display: block;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           margin: 0;
           padding: 0;
           contain: layout style;
@@ -139,31 +141,34 @@ class BentoSidebarCard extends HTMLElement {
 
         .rail {
           width: var(--rail-width);
-          height: 100%;
-          min-height: 100%;
+          height: auto;
+          min-height: 0;
+          max-height: calc(100% - 18px);
           box-sizing: border-box;
           position: relative;
           isolation: isolate;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: flex-start;
+          justify-content: center;
           padding: var(--rail-padding-top) 0 var(--rail-padding-bottom);
-          background:
+          background: var(--bruno-liquid-surface-off-background,
             radial-gradient(54px 120px at 26% -3%, rgba(255,255,255,0.24), rgba(255,255,255,0.06) 42%, transparent 70%),
             radial-gradient(50px 130px at 92% 86%, rgba(var(--accent),0.12), transparent 68%),
             linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.048) 34%, rgba(255,255,255,0.082)),
-            linear-gradient(155deg, rgba(26,33,48,0.78), rgba(20,22,29,0.58) 48%, rgba(42,32,24,0.32));
-          backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
-          -webkit-backdrop-filter: blur(30px) saturate(1.58) contrast(1.05);
-          border: 1px solid rgba(255,255,255,0.11);
+            linear-gradient(155deg, rgba(26,33,48,0.78), rgba(20,22,29,0.58) 48%, rgba(42,32,24,0.32))
+          );
+          backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(30px) saturate(1.58) contrast(1.05));
+          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(30px) saturate(1.58) contrast(1.05));
+          border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.11));
           border-radius: var(--rail-radius);
-          box-shadow:
+          box-shadow: var(--bruno-liquid-surface-off-shadow,
             inset 0 1px 0 rgba(255,255,255,0.22),
             inset 1px 0 0 rgba(255,255,255,0.12),
             inset -1px -1px 0 rgba(255,255,255,0.030),
             0 18px 44px rgba(0,0,0,0.24),
-            0 0 24px rgba(110,150,210,0.08);
+            0 0 24px rgba(110,150,210,0.08)
+          );
           overflow: hidden;
         }
 
@@ -198,11 +203,20 @@ class BentoSidebarCard extends HTMLElement {
         }
 
         .spacer {
-          width: 100%;
-          min-height: 18px;
-          flex: 1 1 auto;
+          display: none;
+        }
+
+        .divider {
           position: relative;
           z-index: 1;
+          width: 30px;
+          height: 1px;
+          margin: 5px 0;
+          flex: 0 0 auto;
+          border-radius: 999px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.20), transparent);
+          box-shadow: 0 1px 0 rgba(0,0,0,0.18);
+          opacity: 0.72;
         }
 
         .nav-button {
@@ -446,6 +460,7 @@ class BentoSidebarCard extends HTMLElement {
       >
         ${icon}
       </button>
+      ${item?.divider_after ? '<span class="divider" aria-hidden="true"></span>' : ''}
     `;
   }
 
@@ -464,7 +479,6 @@ BentoSidebarCard.defaultTopItems = [
 ];
 
 BentoSidebarCard.defaultBottomItems = [
-  { key: 'monitor', icon: 'monitor', label: 'Monitor', tap_action: { action: 'none' } },
   { key: 'power', icon: 'power', label: 'Power', tap_action: { action: 'navigate', navigation_path: '/' } },
 ];
 

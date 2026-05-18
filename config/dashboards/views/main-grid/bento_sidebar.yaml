@@ -22,6 +22,7 @@ top_items:
   - key: cameras
     icon: cameras
     label: Cameras
+    divider_after: true
     tap_action: !include ../../shared/popup/cameras_user.yaml
 
   - key: system
@@ -56,15 +57,10 @@ top_items:
   - key: floorplan
     icon: floorplan
     label: Planta 3D
+    divider_after: true
     tap_action: !include ../../shared/popup/planta_3d.yaml
 
 bottom_items:
-  - key: monitor
-    icon: monitor
-    label: Monitor
-    tap_action:
-      action: none
-
   - key: power
     icon: power
     label: Power

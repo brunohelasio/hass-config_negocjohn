@@ -1,102 +1,113 @@
-type: custom:stack-in-card
+type: custom:bruno-cameras-card
 view_layout:
   grid-area: cameras
-card_mod:
-  style: |
-    :host {
-      height: 100% !important;
-    }
 
-    ha-card {
-      position: relative !important;
-      height: 100% !important;
-      display: flex !important;
-      flex-direction: column !important;
-      padding: 30px 10px 8px !important;
-      gap: 2px !important;
-
-      background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
-      backdrop-filter: blur(20px) saturate(1.35) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
-      border: 1px solid rgba(255,255,255,0.10) !important;
-      box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
-
-      border-radius: 16px !important;
-      overflow: hidden !important;
-
-      --ha-card-glass-tint: transparent !important;
-      --ha-card-backdrop-filter: none !important;
-      --ha-card-glass-inset-shadow: none !important;
-      --ha-card-background: transparent !important;
-      --ha-card-border-width: 0 !important;
-    }
-
-    /* PNG decorativo removido a pedido do usuário. */
-
-    ha-card::before {
-      content: "Câmeras";
-      position: absolute;
-      top: 8px;
-      left: 14px;
-      z-index: 7;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.46);
-      text-shadow: none;
-      pointer-events: none;
-    }
-
-    /* --- CÓDIGO ORIGINAL COMENTADO (v5-v11) ---
-    ha-card > hui-conditional-card {
-      flex: 1 1 auto !important;
-      min-height: 0 !important;
-    }
-    ha-card > hui-horizontal-stack-card {
-      flex: 0 0 auto !important;
-      height: 110px !important;
-      min-height: 110px !important;
-      width: 100% !important;
-    }
-    ha-card > hui-grid-card {
-      flex: 0 0 auto !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      min-width: 0 !important;
-      box-sizing: border-box !important;
-      overflow: hidden !important;
-    }
-    ha-card > hui-mod-card {
-      flex: 0 0 auto !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      min-width: 0 !important;
-      box-sizing: border-box !important;
-      overflow: visible !important;
-    }
-       --- FIM CÓDIGO ORIGINAL --- */
-
-    /* v12/v13 — mod-card ocupa toda a área útil do bloco cameras. */
-    ha-card > hui-mod-card {
-      flex: 1 1 auto !important;
-      width: 100% !important;
-      max-width: 100% !important;
-      min-width: 0 !important;
-      min-height: 0 !important;
-      box-sizing: border-box !important;
-      overflow: hidden !important;
-    }
-
-    ha-card > hui-mod-card hui-grid-card {
-      height: 100% !important;
-      min-height: 0 !important;
-    }
-
-    /* v13 — preview ativo usa vertical-stack e precisa herdar altura total. */
-    ha-card > hui-mod-card hui-vertical-stack-card,
-    ha-card > hui-mod-card hui-vertical-stack-card #root {
-      height: 100% !important;
-      min-height: 0 !important;
-    }
-cards: !include ../../shared/grid-cards/bento_cameras.yaml
+# FALLBACK - Cameras Lovelace/Negocjohn original
+# Para reverter:
+# 1. Comentar o custom:bruno-cameras-card acima.
+# 2. Descomentar o bloco abaixo.
+# O conteudo funcional completo permanece intacto em:
+# ../../shared/grid-cards/bento_cameras.yaml
+#
+# type: custom:stack-in-card
+# view_layout:
+#   grid-area: cameras
+# card_mod:
+#   style: |
+#     :host {
+#       height: 100% !important;
+#     }
+#
+#     ha-card {
+#       position: relative !important;
+#       height: 100% !important;
+#       display: flex !important;
+#       flex-direction: column !important;
+#       padding: 30px 10px 8px !important;
+#       gap: 2px !important;
+#
+#       background: linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30)) !important;
+#       backdrop-filter: blur(20px) saturate(1.35) !important;
+#       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
+#       border: 1px solid rgba(255,255,255,0.10) !important;
+#       box-shadow: 0 0 32px rgba(59,130,246,0.12), inset 0 1px 0 rgba(191,219,254,0.15), 0 8px 32px rgba(0,0,0,0.2) !important;
+#
+#       border-radius: 16px !important;
+#       overflow: hidden !important;
+#
+#       --ha-card-glass-tint: transparent !important;
+#       --ha-card-backdrop-filter: none !important;
+#       --ha-card-glass-inset-shadow: none !important;
+#       --ha-card-background: transparent !important;
+#       --ha-card-border-width: 0 !important;
+#     }
+#
+#     /* PNG decorativo removido a pedido do usuario. */
+#
+#     ha-card::before {
+#       content: "Cameras";
+#       position: absolute;
+#       top: 8px;
+#       left: 14px;
+#       z-index: 7;
+#       font-size: 11px;
+#       font-weight: 700;
+#       letter-spacing: 0.14em;
+#       text-transform: uppercase;
+#       color: rgba(255,255,255,0.46);
+#       text-shadow: none;
+#       pointer-events: none;
+#     }
+#
+#     /* --- CODIGO ORIGINAL COMENTADO (v5-v11) ---
+#     ha-card > hui-conditional-card {
+#       flex: 1 1 auto !important;
+#       min-height: 0 !important;
+#     }
+#     ha-card > hui-horizontal-stack-card {
+#       flex: 0 0 auto !important;
+#       height: 110px !important;
+#       min-height: 110px !important;
+#       width: 100% !important;
+#     }
+#     ha-card > hui-grid-card {
+#       flex: 0 0 auto !important;
+#       width: 100% !important;
+#       max-width: 100% !important;
+#       min-width: 0 !important;
+#       box-sizing: border-box !important;
+#       overflow: hidden !important;
+#     }
+#     ha-card > hui-mod-card {
+#       flex: 0 0 auto !important;
+#       width: 100% !important;
+#       max-width: 100% !important;
+#       min-width: 0 !important;
+#       box-sizing: border-box !important;
+#       overflow: visible !important;
+#     }
+#        --- FIM CODIGO ORIGINAL --- */
+#
+#     /* v12/v13 - mod-card ocupa toda a area util do bloco cameras. */
+#     ha-card > hui-mod-card {
+#       flex: 1 1 auto !important;
+#       width: 100% !important;
+#       max-width: 100% !important;
+#       min-width: 0 !important;
+#       min-height: 0 !important;
+#       box-sizing: border-box !important;
+#       overflow: hidden !important;
+#     }
+#
+#     ha-card > hui-mod-card hui-grid-card {
+#       height: 100% !important;
+#       min-height: 0 !important;
+#     }
+#
+#     /* v13 - preview ativo usa vertical-stack e precisa herdar altura total. */
+#     ha-card > hui-mod-card hui-vertical-stack-card,
+#     ha-card > hui-mod-card hui-vertical-stack-card #root {
+#       height: 100% !important;
+#       min-height: 0 !important;
+#     }
+# cards: !include ../../shared/grid-cards/bento_cameras.yaml

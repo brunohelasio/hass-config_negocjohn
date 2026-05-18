@@ -21,6 +21,7 @@ frontend:
     - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260517-2
     - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260517-2
     - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260517-2
+    - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-5
     - /local/bruno-ui/cards/bruno-hero-card.js?v=20260516-3
 
 homeassistant:

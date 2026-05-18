@@ -43,13 +43,13 @@ class BrunoMediaCard extends HTMLElement {
       slots: Array.isArray(config?.slots) ? config.slots : BRUNO_MEDIA_DEFAULT_CONFIG.slots,
       players: Array.isArray(config?.players) ? config.players : BRUNO_MEDIA_DEFAULT_CONFIG.players,
     };
-    this._slideIndex = 0;
-    this._render();
+    this._slideIndex = this._slideIndex || 0;
+    this._safeRender();
   }
 
   set hass(hass) {
     this._hass = hass;
-    this._render();
+    this._safeRender();
   }
 
   getCardSize() {
@@ -58,6 +58,67 @@ class BrunoMediaCard extends HTMLElement {
 
   _state(entityId) {
     return entityId ? this._hass?.states?.[entityId] : undefined;
+  }
+
+  _safeRender() {
+    try {
+      this._render();
+    } catch (error) {
+      this._renderError(error);
+    }
+  }
+
+  _renderError(error) {
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    console.error('[bruno-media-card]', error);
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+        }
+
+        .error-card {
+          width: 100%;
+          height: 100%;
+          min-height: 160px;
+          display: grid;
+          place-items: center;
+          padding: 18px;
+          border-radius: var(--bruno-liquid-card-radius, 22px);
+          border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.18));
+          color: rgba(255,255,255,0.78);
+          background: var(--bruno-liquid-surface-off-background, rgba(12,16,26,0.72));
+          box-shadow: var(--bruno-liquid-surface-off-shadow, 0 18px 46px rgba(0,0,0,0.31));
+          box-sizing: border-box;
+          text-align: center;
+        }
+
+        .title {
+          display: block;
+          color: rgba(255,255,255,0.92);
+          font-size: 13px;
+          font-weight: 780;
+          text-transform: uppercase;
+        }
+
+        .message {
+          display: block;
+          margin-top: 6px;
+          font-size: 11px;
+          font-weight: 620;
+          color: rgba(255,255,255,0.54);
+        }
+      </style>
+      <div class="error-card">
+        <span>
+          <span class="title">Media</span>
+          <span class="message">Aguardando dados dos players</span>
+        </span>
+      </div>
+    `;
   }
 
   _isActive(entityId) {
@@ -424,7 +485,7 @@ class BrunoMediaCard extends HTMLElement {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
 
     const focus = this._focusModel();
-    const focusImage = focus.image ? `--focus-art: url(&quot;${BrunoMediaCard._escapeAttr(focus.image)}&quot;);` : '';
+    const focusImage = focus.image ? `--focus-art: url('${BrunoMediaCard._escapeAttr(BrunoMediaCard._cssUrl(focus.image))}');` : '';
     const focusSoftClass = focus.isSoftArtwork ? ' is-soft-artwork' : '';
     const focusEmptyClass = focus.image ? '' : ' is-empty-artwork';
     const players = this._slotPlayerIds().map((id) => this._playerModel(id, focus.entity));
@@ -993,7 +1054,7 @@ class BrunoMediaCard extends HTMLElement {
     const selected = player.selected ? ' is-selected' : '';
     const active = player.active ? ' is-active' : '';
     const art = player.image ? ' has-art' : '';
-    const style = player.image ? ` style="--player-art: url(&quot;${BrunoMediaCard._escapeAttr(player.image)}&quot;);"` : '';
+    const style = player.image ? ` style="--player-art: url('${BrunoMediaCard._escapeAttr(BrunoMediaCard._cssUrl(player.image))}');"` : '';
     return `
       <button class="player-card${selected}${active}${art}" type="button" data-player-id="${BrunoMediaCard._escapeAttr(player.entity)}"${style} aria-label="${BrunoMediaCard._escapeAttr(player.name)}">
         <span class="player-icon" aria-hidden="true"><ha-icon icon="${BrunoMediaCard._escapeAttr(player.icon)}"></ha-icon></span>
@@ -1015,6 +1076,14 @@ class BrunoMediaCard extends HTMLElement {
 
   static _escapeAttr(value) {
     return BrunoMediaCard._escape(value).replace(/'/g, '&#39;');
+  }
+
+  static _cssUrl(value) {
+    return String(value || '')
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'")
+      .replace(/\)/g, '\\)')
+      .replace(/[\r\n]/g, '');
   }
 }
 

@@ -76,10 +76,10 @@ class BrunoMobileNavCard extends HTMLElement {
         :host {
           position: fixed !important;
           left: 50%;
-          bottom: 18px;
+          bottom: calc(12px + env(safe-area-inset-bottom, 0px));
           z-index: 2147483647;
-          width: min(424px, calc(100vw - 24px));
-          height: calc(76px + env(safe-area-inset-bottom, 0px));
+          width: min(408px, calc(100vw - 32px));
+          height: 78px;
           display: block;
           transform: translateX(-50%);
           pointer-events: auto;
@@ -96,7 +96,7 @@ class BrunoMobileNavCard extends HTMLElement {
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+          padding: 8px 10px;
           border-radius: 999px;
           color: rgba(255,255,255,0.78);
           background:

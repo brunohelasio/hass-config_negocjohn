@@ -562,10 +562,32 @@ class BrunoTopBadgesCard extends HTMLElement {
           .badges-card {
             grid-template-columns: 1fr;
             gap: 8px;
+            min-width: 0;
+            overflow: hidden;
+            padding: 0;
           }
           .avatars { display: none; }
-          .left { overflow-x: auto; scrollbar-width: none; }
+          .left {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+            touch-action: pan-x;
+            padding: 0 1px 2px;
+          }
           .left::-webkit-scrollbar { display: none; }
+          .badge {
+            flex: 0 0 auto;
+            touch-action: pan-x;
+          }
+          .rail {
+            flex: 0 0 auto;
+            max-width: none;
+            touch-action: pan-x;
+          }
         }
       </style>
 

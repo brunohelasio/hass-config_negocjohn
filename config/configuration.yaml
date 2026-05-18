@@ -23,6 +23,8 @@ frontend:
     - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260517-2
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-9
     - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260518-3
+    - /local/bruno-ui/cards/bruno-energy-card.js?v=20260518-1
+    - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-1
     - /local/bruno-ui/cards/bruno-hero-card.js?v=20260516-3
 
 homeassistant:

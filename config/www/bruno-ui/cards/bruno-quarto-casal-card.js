@@ -504,7 +504,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-radius: 18px;
+          --card-radius: var(--bruno-liquid-card-radius, 22px);
           --accent: 150, 190, 255;
           --accent-blue: 96, 165, 250;
           --accent-purple: 167, 139, 250;

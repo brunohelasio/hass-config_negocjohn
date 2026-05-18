@@ -287,7 +287,7 @@ class BrunoCamerasCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-radius: 18px;
+          --card-radius: var(--bruno-liquid-card-radius, 22px);
           --accent: 96, 165, 250;
           --accent-live: 34, 197, 94;
           --accent-idle: 148, 163, 184;

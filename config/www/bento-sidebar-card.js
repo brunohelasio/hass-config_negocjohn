@@ -115,14 +115,14 @@ class BentoSidebarCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --rail-width: 48px;
+          --rail-width: 52px;
           --rail-radius: 999px;
-          --rail-padding-top: 9px;
-          --rail-padding-bottom: 10px;
-          --button-size: 34px;
+          --rail-padding-top: 11px;
+          --rail-padding-bottom: 12px;
+          --button-size: 36px;
           --button-radius: 999px;
-          --icon-size: 17px;
-          --group-gap: 6px;
+          --icon-size: 18px;
+          --group-gap: 7px;
           --glass-line: rgba(255,255,255,0.14);
           --glass-line-soft: rgba(255,255,255,0.07);
           --icon-neutral: rgba(255,255,255,0.74);
@@ -143,7 +143,7 @@ class BentoSidebarCard extends HTMLElement {
           width: var(--rail-width);
           height: auto;
           min-height: 0;
-          max-height: calc(100% - 18px);
+          max-height: calc(100% - 10px);
           box-sizing: border-box;
           position: relative;
           isolation: isolate;
@@ -209,9 +209,9 @@ class BentoSidebarCard extends HTMLElement {
         .divider {
           position: relative;
           z-index: 1;
-          width: 25px;
+          width: 28px;
           height: 1px;
-          margin: 6px 0;
+          margin: 7px 0;
           flex: 0 0 auto;
           border-radius: 999px;
           background: linear-gradient(90deg, transparent, rgba(255,255,255,0.20), transparent);
@@ -399,10 +399,10 @@ class BentoSidebarCard extends HTMLElement {
 
         @media (max-height: 690px), (max-width: 900px) {
           :host {
-            --rail-width: 46px;
-            --button-size: 32px;
+            --rail-width: 48px;
+            --button-size: 33px;
             --icon-size: 16px;
-            --group-gap: 4px;
+            --group-gap: 5px;
           }
         }
 

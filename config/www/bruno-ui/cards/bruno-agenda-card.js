@@ -212,7 +212,7 @@ class BrunoAgendaCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-radius: 18px;
+          --card-radius: var(--bruno-liquid-card-radius, 22px);
           --accent: 150, 190, 255;
           --text-main: rgba(246,250,255,0.95);
           --text-soft: rgba(226,232,240,0.62);
@@ -276,10 +276,19 @@ class BrunoAgendaCard extends HTMLElement {
           opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.74);
         }
 
-        .header,
+        .card-header,
         .events {
           position: relative;
           z-index: 1;
+        }
+
+        .card-header {
+          min-height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 0 2px;
         }
 
         .header-copy {
@@ -315,6 +324,13 @@ class BrunoAgendaCard extends HTMLElement {
           justify-content: center;
           line-height: 0;
           transform: translate(-50%, -50%);
+        }
+
+        .title {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
         }
 
         .title-main {
@@ -424,10 +440,12 @@ class BrunoAgendaCard extends HTMLElement {
       </style>
 
       <div class="agenda-card" role="button" tabindex="0" aria-label="${BrunoAgendaCard._escapeAttr(this._config.title)}">
-        <div class="header">
+        <div class="card-header">
           <div class="header-copy">
             <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:calendar-month-outline"></ha-icon></span>
-            <span class="title-main">${BrunoAgendaCard._escape(this._config.name)}</span>
+            <span class="title">
+              <span class="title-main">${BrunoAgendaCard._escape(this._config.name)}</span>
+            </span>
           </div>
         </div>
         <div class="events">

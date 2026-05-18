@@ -506,7 +506,7 @@ class BrunoSalaCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-radius: 18px;
+          --card-radius: var(--bruno-liquid-card-radius, 22px);
           --button-radius: 14px;
           --accent: 150, 190, 255;
           --accent-blue: 96, 165, 250;
@@ -1135,7 +1135,7 @@ class BrunoSalaCard extends HTMLElement {
 
         @media (max-height: 760px) {
           :host {
-            --card-radius: 18px;
+            --card-radius: var(--bruno-liquid-card-radius, 22px);
             --button-radius: 14px;
           }
 

@@ -232,7 +232,7 @@ class BrunoRoborockCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-radius: 18px;
+          --card-radius: var(--bruno-liquid-card-radius, 22px);
           --accent: 150, 190, 255;
           --accent-purple: 167, 139, 250;
           --text-main: rgba(246,250,255,0.95);

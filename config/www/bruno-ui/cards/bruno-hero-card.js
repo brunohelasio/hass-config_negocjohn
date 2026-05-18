@@ -324,8 +324,8 @@ class BrunoHeroCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --hero-radius-left: 18px;
-          --hero-radius-right: 18px;
+          --hero-radius-left: var(--bruno-liquid-card-radius, 22px);
+          --hero-radius-right: var(--bruno-liquid-card-radius, 22px);
           --hero-accent: 150, 190, 255;
           --hero-text: rgba(248,251,255,0.96);
           --hero-muted: rgba(248,251,255,0.54);
@@ -335,7 +335,7 @@ class BrunoHeroCard extends HTMLElement {
           min-height: 0;
           margin: 0;
           padding: 0;
-          overflow: visible;
+          overflow: hidden;
           position: relative;
           z-index: 0;
         }
@@ -360,7 +360,8 @@ class BrunoHeroCard extends HTMLElement {
           min-height: 0;
           position: relative;
           isolation: isolate;
-          overflow: visible;
+          overflow: hidden;
+          contain: paint;
           color: var(--hero-text);
           border-radius: var(--hero-radius-left) var(--hero-radius-right) var(--hero-radius-right) var(--hero-radius-left);
         }
@@ -371,6 +372,7 @@ class BrunoHeroCard extends HTMLElement {
           z-index: 1;
           overflow: hidden;
           border-radius: inherit;
+          clip-path: inset(0 round var(--hero-radius-left) var(--hero-radius-right) var(--hero-radius-right) var(--hero-radius-left));
           border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.13));
           background:
             linear-gradient(90deg, rgba(6,14,24,0.88) 0%, rgba(7,15,26,0.70) 29%, rgba(7,15,26,0.28) 57%, rgba(7,15,26,0.06) 78%, rgba(7,15,26,0.00) 100%),
@@ -408,9 +410,19 @@ class BrunoHeroCard extends HTMLElement {
         .hero-clip::after {
           inset: 0;
           border-radius: inherit;
-          box-shadow:
-            inset 0 0 0 1px rgba(255,255,255,0.05),
-            0 0 30px rgba(var(--hero-accent),0.08);
+          padding: 1px;
+          background: var(--bruno-liquid-surface-edge-glow,
+            linear-gradient(125deg, rgba(255,255,255,0.42), rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.028) 58%, rgba(255,190,120,0.24) 100%)
+          );
+          -webkit-mask:
+            linear-gradient(#000 0 0) content-box,
+            linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask:
+            linear-gradient(#000 0 0) content-box,
+            linear-gradient(#000 0 0);
+          mask-composite: exclude;
+          opacity: 0.92;
         }
 
         .lateral-veil {
@@ -426,7 +438,8 @@ class BrunoHeroCard extends HTMLElement {
             linear-gradient(90deg, rgba(7,15,26,0.42), rgba(7,15,26,0.16) 42%, rgba(7,15,26,0.00) 100%),
             radial-gradient(110px 120px at 0% 18%, rgba(var(--hero-accent),0.12), transparent 74%);
           filter: blur(0.2px);
-          opacity: 0.74;
+          display: none;
+          opacity: 0;
         }
 
         .content {

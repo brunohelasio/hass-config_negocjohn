@@ -1,52 +1,93 @@
-const BRUNO_ROOM_CARD_TAG = 'bruno-room-card';
+const BRUNO_COZINHA_CARD_TAG = 'bruno-cozinha-card';
 
-const BRUNO_ROOM_DEFAULT_CONFIG = {
-  name: 'Ambiente',
-  icon_size: 72,
-  room_on_states: ['on', 'home', 'active', 'yes'],
-  semantic_on_states: [],
-  entities: {
-    room_group: '',
-    room_toggle: '',
-    room_fallback_lights: [],
-    active_sensor: '',
-    temperature: [],
-    humidity: [],
-    dishwasher: '',
+const BRUNO_COZINHA_DEFAULT_CONFIG = {
+  "name": "Cozinha",
+  "icon_size": 74,
+  "room_on_states": [
+    "on",
+    "home",
+    "active",
+    "yes"
+  ],
+  "semantic_on_states": [
+    "dishwashing",
+    "cooking",
+    "washing"
+  ],
+  "entities": {
+    "room_group": "light.grupo_luzes_cozinha",
+    "room_toggle": "light.cz_luz_principal",
+    "room_fallback_lights": [
+      "light.cz_luz_principal"
+    ],
+    "active_sensor": "sensor.cozinha_active",
+    "temperature": [
+      "sensor.temperatura_cozinha"
+    ],
+    "humidity": [
+      "sensor.umidade_cozinha"
+    ],
+    "dishwasher": "sensor.lava_loucas_operation_state"
   },
-  icon: {
-    off: '',
-    on: '',
-    fallback: 'mdi:home-outline',
+  "icon": {
+    "off": "/local/bruno-ui/assets/kitchen-off.png?v=20260517-4",
+    "on": "/local/bruno-ui/assets/kitchen-on.png?v=20260517-4",
+    "fallback": "mdi:noodles"
   },
-  status_dots: [],
+  "status_dots": [
+    {
+      "icon": "mdi:account",
+      "label": "Presenca",
+      "tone": "blue"
+    },
+    {
+      "icon": "mdi:dishwasher",
+      "label": "Lava-loucas",
+      "tone": "purple",
+      "entity": "sensor.lava_loucas_operation_state",
+      "states": [
+        "run"
+      ],
+      "active_attr": "dishwasher_running"
+    },
+    {
+      "icon": "mdi:washing-machine",
+      "label": "Maquina de lavar",
+      "tone": "cyan"
+    },
+    {
+      "icon": "mdi:air-fryer",
+      "label": "Air fryer",
+      "tone": "amber"
+    }
+  ]
 };
 
-const BRUNO_ROOM_ACTION_COOLDOWN = 1200;
+const BRUNO_COZINHA_ACTION_COOLDOWN = 1200;
 
-class BrunoRoomCard extends HTMLElement {
+class BrunoCozinhaCard extends HTMLElement {
   static getStubConfig() {
     return {};
   }
 
   setConfig(config) {
     const entities = {
-      ...BRUNO_ROOM_DEFAULT_CONFIG.entities,
+      ...BRUNO_COZINHA_DEFAULT_CONFIG.entities,
       ...(config?.entities || {}),
     };
     const icon = {
-      ...BRUNO_ROOM_DEFAULT_CONFIG.icon,
+      ...BRUNO_COZINHA_DEFAULT_CONFIG.icon,
       ...(config?.icon || {}),
     };
 
     this._config = {
-      ...BRUNO_ROOM_DEFAULT_CONFIG,
+      ...BRUNO_COZINHA_DEFAULT_CONFIG,
       ...config,
       entities,
       icon,
-      room_on_states: this._array(config?.room_on_states || BRUNO_ROOM_DEFAULT_CONFIG.room_on_states),
-      semantic_on_states: this._array(config?.semantic_on_states || []),
-      status_dots: Array.isArray(config?.status_dots) ? config.status_dots : [],
+      room_on_states: this._array(config?.room_on_states || BRUNO_COZINHA_DEFAULT_CONFIG.room_on_states),
+      semantic_on_states: this._array(config?.semantic_on_states || BRUNO_COZINHA_DEFAULT_CONFIG.semantic_on_states || []),
+      status_dots: Array.isArray(config?.status_dots) ? config.status_dots : BRUNO_COZINHA_DEFAULT_CONFIG.status_dots,
     };
     this._render();
   }
@@ -158,7 +199,7 @@ class BrunoRoomCard extends HTMLElement {
   _sensorValue(entityIds, suffix = '') {
     const entity = this._firstValid(entityIds);
     if (!entity) return '';
-    return `${BrunoRoomCard._escape(entity.state)}${suffix}`;
+    return `${BrunoCozinhaCard._escape(entity.state)}${suffix}`;
   }
 
   _truthy(value) {
@@ -241,7 +282,7 @@ class BrunoRoomCard extends HTMLElement {
     this._lastActionAt = this._lastActionAt || {};
     const now = Date.now();
     const previous = this._lastActionAt[key] || 0;
-    if (now - previous < BRUNO_ROOM_ACTION_COOLDOWN) return true;
+    if (now - previous < BRUNO_COZINHA_ACTION_COOLDOWN) return true;
     this._lastActionAt[key] = now;
     return false;
   }
@@ -439,7 +480,7 @@ class BrunoRoomCard extends HTMLElement {
   _statusDot(dot) {
     const activeClass = dot.active ? ' is-active' : '';
     return `
-      <span class="status-dot tone-${dot.tone}${activeClass}" title="${BrunoRoomCard._escape(dot.label)}" aria-label="${BrunoRoomCard._escape(dot.label)}">
+      <span class="status-dot tone-${dot.tone}${activeClass}" title="${BrunoCozinhaCard._escape(dot.label)}" aria-label="${BrunoCozinhaCard._escape(dot.label)}">
         <ha-icon icon="${dot.icon}"></ha-icon>
       </span>
     `;
@@ -447,14 +488,14 @@ class BrunoRoomCard extends HTMLElement {
 
   _statusLines(lines) {
     if (!lines.length) return '';
-    return lines.map((line) => `<span>${BrunoRoomCard._escape(line)}</span>`).join('');
+    return lines.map((line) => `<span>${BrunoCozinhaCard._escape(line)}</span>`).join('');
   }
 
   _assetVisual(active) {
     const icon = this._config.icon;
-    const fallback = BrunoRoomCard._escape(icon.fallback || 'mdi:home-outline');
-    const off = BrunoRoomCard._escape(icon.off || '');
-    const on = BrunoRoomCard._escape(icon.on || '');
+    const fallback = BrunoCozinhaCard._escape(icon.fallback || 'mdi:home-outline');
+    const off = BrunoCozinhaCard._escape(icon.off || '');
+    const on = BrunoCozinhaCard._escape(icon.on || '');
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback"><ha-icon icon="${fallback}"></ha-icon></span>
@@ -471,7 +512,7 @@ class BrunoRoomCard extends HTMLElement {
     const model = this._model();
     const roomActiveClass = model.roomOn ? ' is-room-on' : '';
     const hasMetricClass = model.temperature ? ' has-metric' : '';
-    const iconSize = Number(this._config.icon_size) || BRUNO_ROOM_DEFAULT_CONFIG.icon_size;
+    const iconSize = Number(this._config.icon_size) || BRUNO_COZINHA_DEFAULT_CONFIG.icon_size;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -855,7 +896,7 @@ class BrunoRoomCard extends HTMLElement {
       </style>
 
       <div class="room-card${roomActiveClass}" style="--room-icon-size:${iconSize}px;">
-        <button class="room-action${hasMetricClass}" type="button" data-action-key="room" aria-label="${BrunoRoomCard._escape(this._config.name)}">
+        <button class="room-action${hasMetricClass}" type="button" data-action-key="room" aria-label="${BrunoCozinhaCard._escape(this._config.name)}">
           <div class="room-icon" aria-hidden="true">${this._assetVisual(model.iconActive)}</div>
 
           <div class="metric">
@@ -863,7 +904,7 @@ class BrunoRoomCard extends HTMLElement {
             <span class="metric-sub">${model.humidity}</span>
           </div>
 
-          <div class="title">${BrunoRoomCard._escape(this._config.name)}</div>
+          <div class="title">${BrunoCozinhaCard._escape(this._config.name)}</div>
           <div class="status-lines">${this._statusLines(model.statusLines)}</div>
 
           <div class="right-dots" aria-label="Status do ambiente">
@@ -888,14 +929,14 @@ class BrunoRoomCard extends HTMLElement {
   }
 }
 
-if (!customElements.get(BRUNO_ROOM_CARD_TAG)) {
-  customElements.define(BRUNO_ROOM_CARD_TAG, BrunoRoomCard);
+if (!customElements.get(BRUNO_COZINHA_CARD_TAG)) {
+  customElements.define(BRUNO_COZINHA_CARD_TAG, BrunoCozinhaCard);
 }
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: BRUNO_ROOM_CARD_TAG,
-  name: 'Bruno Room Card',
+  type: BRUNO_COZINHA_CARD_TAG,
+  name: 'Bruno Cozinha Card',
   preview: false,
-  description: 'Reusable Bento room card with preserved Home Assistant actions and Bruno liquid glass visuals.',
+  description: 'Bento Cozinha card with local room logic and Bruno liquid glass visuals.',
 });

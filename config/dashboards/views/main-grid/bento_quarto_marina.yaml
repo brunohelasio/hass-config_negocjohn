@@ -1,40 +1,9 @@
-type: custom:bruno-room-card
-name: Q. Marina
-icon_size: 74
-entities:
-  room_group: light.grupo_luzes_quarto_marina
-  room_toggle: light.quarto_marina_switch_4
-  room_fallback_lights:
-    - light.quarto_marina_switch_4
-  active_sensor: sensor.quarto_marina_active
-  temperature:
-    - sensor.temperatura_quarto_marina
-    - sensor.qma_temperatura
-  humidity:
-    - sensor.umidade_quarto_marina
-    - sensor.qma_umidade
-icon:
-  off: /local/bruno-ui/assets/marina-bedroom-off.png?v=20260517-2
-  on: /local/bruno-ui/assets/marina-bedroom-on.png?v=20260517-2
-  fallback: mdi:bed-single-outline
-status_dots:
-  - icon: mdi:account
-    label: Presenca
-    tone: blue
-  - icon: mdi:lightbulb-on
-    label: Luzes
-    tone: amber
-  - icon: mdi:snowflake
-    label: Clima
-    tone: cyan
-  - icon: mdi:speaker-wireless
-    label: Midia
-    tone: purple
+type: custom:bruno-quarto-marina-card
 double_tap_action: !include ../../shared/popup/rooms/quarto_marina.yaml
 
 # FALLBACK - Q. Marina Lovelace/Negocjohn original
 # Para voltar rapidamente:
-# 1. Comentar o bloco custom:bruno-room-card acima.
+# 1. Comentar o bloco custom:bruno-quarto-marina-card acima.
 # 2. Descomentar o bloco abaixo.
 # O conteudo funcional compartilhado permanece intacto em:
 # ../../shared/grid-cards/bento_quarto_marina.yaml

@@ -1,25 +1,9 @@
-type: custom:bruno-room-card
-name: Lavabo
-icon_size: 74
-entities:
-  room_group: light.grupo_luzes_lavabo
-  room_toggle: light.grupo_luzes_lavabo
-  room_fallback_lights:
-    - light.grupo_luzes_lavabo
-  active_sensor: sensor.lavabo_active
-icon:
-  off: /local/bruno-ui/assets/lavabo-off.png?v=20260517-2
-  on: /local/bruno-ui/assets/lavabo-on.png?v=20260517-2
-  fallback: mdi:toilet
-status_dots:
-  - icon: mdi:account
-    label: Presenca
-    tone: blue
+type: custom:bruno-lavabo-card
 double_tap_action: !include ../../shared/popup/rooms/lavabo.yaml
 
 # FALLBACK - Lavabo Lovelace/Negocjohn original
 # Para voltar rapidamente:
-# 1. Comentar o bloco custom:bruno-room-card acima.
+# 1. Comentar o bloco custom:bruno-lavabo-card acima.
 # 2. Descomentar o bloco abaixo.
 # O conteudo funcional compartilhado permanece intacto em:
 # ../../shared/grid-cards/bento_lavabo.yaml

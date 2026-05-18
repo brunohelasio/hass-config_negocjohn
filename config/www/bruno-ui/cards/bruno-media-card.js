@@ -64,6 +64,10 @@ class BrunoMediaCard extends HTMLElement {
     return BRUNO_MEDIA_ACTIVE_STATES.includes(this._state(entityId)?.state || '');
   }
 
+  _isStandbyImage(image) {
+    return String(image || '').includes('standby_art');
+  }
+
   _playerConfig(entityId) {
     return this._config.players.find((player) => player.entity === entityId) || {};
   }
@@ -80,14 +84,22 @@ class BrunoMediaCard extends HTMLElement {
     const player = this._state(focusId);
     const visual = this._state(this._config.focus_sensor);
     const config = this._playerConfig(focusId);
-    const image = visual?.attributes?.entity_picture || player?.attributes?.entity_picture || '';
+    const state = visual?.state || player?.state || 'off';
+    const rawImage = visual?.attributes?.entity_picture || player?.attributes?.entity_picture || '';
+    this._lastArtworkByPlayer = this._lastArtworkByPlayer || {};
+    if (rawImage && !this._isStandbyImage(rawImage)) {
+      this._lastArtworkByPlayer[focusId] = rawImage;
+    }
+    const shouldKeepArtwork = ['paused', 'idle'].includes(state) && this._lastArtworkByPlayer[focusId];
+    const image = shouldKeepArtwork && (!rawImage || this._isStandbyImage(rawImage))
+      ? this._lastArtworkByPlayer[focusId]
+      : rawImage;
     const title = visual?.attributes?.media_title
       || player?.attributes?.media_title
       || player?.attributes?.friendly_name
       || config.name
       || 'Sistema de Audio';
     const artist = visual?.attributes?.media_artist || player?.attributes?.media_artist || '';
-    const state = visual?.state || player?.state || 'off';
 
     return {
       entity: focusId,
@@ -97,6 +109,7 @@ class BrunoMediaCard extends HTMLElement {
       state,
       isPlaying: state === 'playing',
       isActive: BRUNO_MEDIA_ACTIVE_STATES.includes(state),
+      isSoftArtwork: ['paused', 'idle'].includes(state) && Boolean(image) && !this._isStandbyImage(image),
     };
   }
 
@@ -355,6 +368,27 @@ class BrunoMediaCard extends HTMLElement {
       shell.classList.remove('is-pressed');
     });
 
+    let touchStartX = 0;
+    let touchStartY = 0;
+    shell.addEventListener('touchstart', (event) => {
+      if (event.target.closest('button')) return;
+      const touch = event.touches?.[0];
+      if (!touch) return;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+    }, { passive: true });
+
+    shell.addEventListener('touchend', (event) => {
+      if (event.target.closest('button')) return;
+      const touch = event.changedTouches?.[0];
+      if (!touch) return;
+      const dx = touch.clientX - touchStartX;
+      const dy = touch.clientY - touchStartY;
+      if (Math.abs(dx) <= 34 || Math.abs(dx) <= Math.abs(dy)) return;
+      event.preventDefault();
+      this._setSlide(this._slideIndex + (dx < 0 ? 1 : -1));
+    }, { passive: false });
+
     focusSurface?.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
@@ -373,6 +407,7 @@ class BrunoMediaCard extends HTMLElement {
 
     const focus = this._focusModel();
     const focusImage = focus.image ? `--focus-art: url(&quot;${BrunoMediaCard._escapeAttr(focus.image)}&quot;);` : '';
+    const focusSoftClass = focus.isSoftArtwork ? ' is-soft-artwork' : '';
     const players = this._slotPlayerIds().map((id) => this._playerModel(id, focus.entity));
     const slideIndex = this._slideIndex || 0;
 
@@ -467,6 +502,7 @@ class BrunoMediaCard extends HTMLElement {
           aspect-ratio: 1 / 1;
           border-radius: calc(var(--card-radius) - 7px);
           overflow: hidden;
+          touch-action: pan-y;
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,0.10),
             0 10px 24px rgba(0,0,0,0.18);
@@ -514,9 +550,8 @@ class BrunoMediaCard extends HTMLElement {
           overflow: hidden;
           outline: none;
           cursor: pointer;
+          touch-action: pan-y;
           background:
-            linear-gradient(180deg, rgba(3,7,16,0.04), rgba(3,7,16,0.74)),
-            var(--focus-art, none) center / cover no-repeat,
             radial-gradient(circle at 50% 44%, rgba(var(--accent),0.16), transparent 42%),
             linear-gradient(160deg, rgba(12,17,28,0.76), rgba(5,8,15,0.88));
         }
@@ -525,7 +560,25 @@ class BrunoMediaCard extends HTMLElement {
           content: "";
           position: absolute;
           inset: 0;
+          z-index: 0;
+          background: var(--focus-art, none) center / cover no-repeat;
+          filter: var(--focus-art-filter, none);
+          transform: var(--focus-art-transform, scale(1));
+          pointer-events: none;
+        }
+
+        .focus-surface.is-soft-artwork {
+          --focus-art-filter: blur(4px) brightness(0.62) saturate(0.92);
+          --focus-art-transform: scale(1.035);
+        }
+
+        .focus-surface::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 1;
           background:
+            linear-gradient(180deg, rgba(3,7,16,0.04), rgba(3,7,16,0.62)),
             radial-gradient(circle at 50% 50%, rgba(var(--accent),0.16), transparent 30%),
             repeating-radial-gradient(circle at 50% 50%, rgba(180,225,255,0.16) 0 1px, transparent 1px 18px);
           opacity: ${focus.image ? '0.10' : '0.52'};
@@ -534,7 +587,7 @@ class BrunoMediaCard extends HTMLElement {
 
         .play-glyph {
           position: relative;
-          z-index: 1;
+          z-index: 2;
           align-self: center;
           justify-self: center;
           width: 74px;
@@ -566,16 +619,16 @@ class BrunoMediaCard extends HTMLElement {
 
         .focus-bottom {
           position: relative;
-          z-index: 2;
+          z-index: 3;
           min-width: 0;
           display: grid;
           grid-template-rows: auto auto;
-          gap: 8px;
-          padding: 32px 12px 18px;
+          gap: 6px;
+          padding: 18px 11px 14px;
           background:
-            linear-gradient(180deg, rgba(7,10,18,0), rgba(7,10,18,0.62) 32%, rgba(7,10,18,0.72));
-          backdrop-filter: blur(10px) saturate(1.18);
-          -webkit-backdrop-filter: blur(10px) saturate(1.18);
+            linear-gradient(180deg, rgba(7,10,18,0), rgba(7,10,18,0.50) 30%, rgba(7,10,18,0.64));
+          backdrop-filter: blur(8px) saturate(1.14);
+          -webkit-backdrop-filter: blur(8px) saturate(1.14);
         }
 
         .focus-title {
@@ -615,7 +668,7 @@ class BrunoMediaCard extends HTMLElement {
 
         .focus-state {
           flex: 0 0 auto;
-          height: 25px;
+          height: 23px;
           display: inline-flex;
           align-items: center;
           gap: 6px;
@@ -653,7 +706,7 @@ class BrunoMediaCard extends HTMLElement {
         .control {
           appearance: none;
           -webkit-appearance: none;
-          height: 29px;
+          height: 27px;
           min-width: 0;
           display: grid;
           place-items: center;
@@ -839,8 +892,8 @@ class BrunoMediaCard extends HTMLElement {
 
         @media (max-height: 760px) {
           .media-card { padding: 10px; }
-          .focus-bottom { padding: 26px 10px 16px; gap: 6px; }
-          .control { height: 26px; }
+          .focus-bottom { padding: 15px 10px 13px; gap: 5px; }
+          .control { height: 25px; }
           .player-grid { gap: 7px; padding: 7px; }
         }
 
@@ -859,7 +912,7 @@ class BrunoMediaCard extends HTMLElement {
           <div class="viewport">
             <div class="slides">
               <section class="slide focus-slide">
-                <div class="focus-surface" role="button" tabindex="0" aria-label="Reproduzir ou pausar midia" style="${focusImage}">
+                <div class="focus-surface${focusSoftClass}" role="button" tabindex="0" aria-label="Reproduzir ou pausar midia" style="${focusImage}">
                   <span class="play-glyph" aria-hidden="true"><ha-icon icon="${focus.isPlaying ? 'mdi:pause' : 'mdi:play'}"></ha-icon></span>
                   <div class="focus-bottom">
                     <div class="focus-title">

@@ -17,6 +17,7 @@ const BRUNO_CAMERAS_DEFAULT_CONFIG = {
 
 const BRUNO_CAMERA_ONLINE_STATES = ['streaming', 'recording', 'idle', 'on'];
 const BRUNO_CAMERA_UNAVAILABLE_STATES = ['unavailable', 'unknown', ''];
+const BRUNO_CAMERA_REFRESH_MS = 6500;
 
 class BrunoCamerasCard extends HTMLElement {
   static getStubConfig() {
@@ -25,7 +26,9 @@ class BrunoCamerasCard extends HTMLElement {
 
   setConfig(config) {
     this._config = this._normalizeConfig(config);
+    this._refreshSeed = this._refreshSeed || Date.now();
     this._safeRender();
+    this._startRefreshTimer();
   }
 
   set hass(hass) {
@@ -35,6 +38,15 @@ class BrunoCamerasCard extends HTMLElement {
       this._localActiveCamera = null;
     }
     this._safeRender();
+    this._startRefreshTimer();
+  }
+
+  connectedCallback() {
+    this._startRefreshTimer();
+  }
+
+  disconnectedCallback() {
+    this._stopRefreshTimer();
   }
 
   getCardSize() {
@@ -45,6 +57,9 @@ class BrunoCamerasCard extends HTMLElement {
     return {
       ...BRUNO_CAMERAS_DEFAULT_CONFIG,
       ...(config || {}),
+      refresh_interval: Number(config?.refresh_interval) > 0
+        ? Number(config.refresh_interval)
+        : BRUNO_CAMERA_REFRESH_MS,
       cameras: Array.isArray(config?.cameras) && config.cameras.length
         ? config.cameras
         : BRUNO_CAMERAS_DEFAULT_CONFIG.cameras,
@@ -59,6 +74,37 @@ class BrunoCamerasCard extends HTMLElement {
     }
   }
 
+  _startRefreshTimer() {
+    if (this._refreshTimer || !this._config || !this.isConnected) return;
+    const refreshInterval = Math.max(4000, Number(this._config.refresh_interval) || BRUNO_CAMERA_REFRESH_MS);
+    this._refreshTimer = globalThis.setInterval(() => this._refreshCameraImages(), refreshInterval);
+  }
+
+  _stopRefreshTimer() {
+    if (!this._refreshTimer) return;
+    globalThis.clearInterval(this._refreshTimer);
+    this._refreshTimer = null;
+  }
+
+  _refreshCameraImages() {
+    if (!this.shadowRoot || !this._hass || !globalThis.Image) return;
+    const stamp = Date.now();
+    this._refreshSeed = stamp;
+
+    this.shadowRoot.querySelectorAll('img[data-camera-src-base]').forEach((image) => {
+      const baseSrc = image.dataset.cameraSrcBase;
+      if (!baseSrc) return;
+
+      const nextSrc = BrunoCamerasCard._withCacheBust(baseSrc, stamp);
+      const loader = new globalThis.Image();
+      loader.onload = () => {
+        image.src = nextSrc;
+        image.classList.remove('is-hidden');
+      };
+      loader.src = nextSrc;
+    });
+  }
+
   _state(entityId) {
     return entityId ? this._hass?.states?.[entityId] : undefined;
   }
@@ -68,13 +114,17 @@ class BrunoCamerasCard extends HTMLElement {
     const state = entity?.state || '';
     const unavailable = !entity || BRUNO_CAMERA_UNAVAILABLE_STATES.includes(state);
     const online = !unavailable && BRUNO_CAMERA_ONLINE_STATES.includes(state);
-    const image = entity?.attributes?.entity_picture || '';
+    this._lastCameraImages = this._lastCameraImages || {};
+    const liveImage = entity?.attributes?.entity_picture || '';
+    if (liveImage) this._lastCameraImages[camera.entity] = liveImage;
+    const image = liveImage || this._lastCameraImages[camera.entity] || '';
 
     return {
       ...camera,
       entityObj: entity,
       state,
       image,
+      imageUrl: BrunoCamerasCard._withCacheBust(image, this._refreshSeed || Date.now()),
       unavailable,
       online,
       status: BrunoCamerasCard._statusLabel(state, unavailable),
@@ -102,6 +152,7 @@ class BrunoCamerasCard extends HTMLElement {
   _selectCamera(entityId) {
     if (!entityId || entityId === this._model().activeId) return;
     this._localActiveCamera = entityId;
+    this._refreshSeed = Date.now();
     this._safeRender();
     this._callService('input_select', 'select_option', {
       entity_id: this._config.active_entity,
@@ -206,8 +257,8 @@ class BrunoCamerasCard extends HTMLElement {
           height: 100%;
           min-height: 0;
           display: grid;
-          grid-template-rows: auto minmax(0, 1fr) minmax(64px, 0.28fr);
-          gap: 9px;
+          grid-template-rows: auto minmax(0, 1fr) minmax(74px, 0.32fr);
+          gap: 8px;
           padding: 12px;
           color: var(--text-main);
           background: var(--bruno-liquid-surface-off-background,
@@ -502,7 +553,7 @@ class BrunoCamerasCard extends HTMLElement {
         .thumb-shell {
           min-height: 0;
           border-radius: 14px;
-          padding: 6px;
+          padding: 5px;
           background:
             radial-gradient(86px 58px at 14% 8%, rgba(255,255,255,0.10), transparent 72%),
             linear-gradient(170deg, rgba(255,255,255,0.08), rgba(255,255,255,0.034));
@@ -648,7 +699,7 @@ class BrunoCamerasCard extends HTMLElement {
           .cameras-card {
             gap: 7px;
             padding: 10px;
-            grid-template-rows: auto minmax(0, 1fr) minmax(58px, 0.28fr);
+            grid-template-rows: auto minmax(0, 1fr) minmax(68px, 0.30fr);
           }
 
           .active-name {
@@ -663,7 +714,7 @@ class BrunoCamerasCard extends HTMLElement {
 
           .cameras-card {
             min-height: 320px;
-            grid-template-rows: auto minmax(0, 1fr) 72px;
+            grid-template-rows: auto minmax(0, 1fr) 82px;
           }
         }
 
@@ -756,7 +807,7 @@ class BrunoCamerasCard extends HTMLElement {
     const onlineClass = camera?.online ? ' is-online' : '';
     return `
       <div class="media-frame${hasImage ? ' has-image' : ''}">
-        ${hasImage ? `<img class="camera-image" src="${BrunoCamerasCard._escapeAttr(camera.image)}" alt="">` : ''}
+        ${hasImage ? `<img class="camera-image" src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" alt="">` : ''}
         <div class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></div>
         <div class="preview-scrim"></div>
         <div class="preview-meta">
@@ -780,7 +831,7 @@ class BrunoCamerasCard extends HTMLElement {
     return `
       <button class="thumb-button${activeClass}" type="button" data-camera-id="${BrunoCamerasCard._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasCard._escapeAttr(camera.name)}">
         <span class="thumb-media${hasImage ? ' has-image' : ''}">
-          ${hasImage ? `<img src="${BrunoCamerasCard._escapeAttr(camera.image)}" alt="">` : ''}
+          ${hasImage ? `<img src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" alt="">` : ''}
           <span class="thumb-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></span>
           <span class="thumb-overlay"></span>
           <span class="thumb-label">
@@ -799,6 +850,12 @@ class BrunoCamerasCard extends HTMLElement {
     if (state === 'idle' || state === 'on') return 'Online';
     if (state === 'off' || state === 'standby') return 'Em espera';
     return state || 'Online';
+  }
+
+  static _withCacheBust(url, stamp) {
+    if (!url) return '';
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}bruno_refresh=${encodeURIComponent(stamp)}`;
   }
 
   static _escape(value) {

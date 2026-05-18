@@ -5,19 +5,18 @@ const BRUNO_QUICK_ACTIONS_DEFAULT_ITEMS = [
     key: 'lights_off',
     icon: 'mdi:lightbulb-off-outline',
     label: 'Desligar luzes',
+    group: 'actions',
     tap_action: {
       action: 'call-service',
       service: 'homeassistant.turn_off',
       data: { entity_id: 'light.todas_as_luzes' },
     },
   },
-  { key: 'movies', icon: 'mdi:movie-roll', label: 'Filmes', tap_action: { action: 'none' } },
-  { key: 'laptop', icon: 'mdi:laptop', label: 'Notebook', tap_action: { action: 'none' } },
-  { key: 'sofa', icon: 'mdi:sofa-outline', label: 'Sala', tap_action: { action: 'none' } },
   {
     key: 'wifi',
     icon: 'mdi:wifi',
     label: 'Wi-Fi',
+    group: 'actions',
     tap_action: {
       action: 'fire-dom-event',
       browser_mod: {
@@ -40,6 +39,9 @@ const BRUNO_QUICK_ACTIONS_DEFAULT_ITEMS = [
       },
     },
   },
+  { key: 'movies', icon: 'mdi:movie-roll', label: 'Filmes', group: 'scenes', tap_action: { action: 'none' } },
+  { key: 'laptop', icon: 'mdi:laptop', label: 'Notebook', group: 'scenes', tap_action: { action: 'none' } },
+  { key: 'sofa', icon: 'mdi:sofa-outline', label: 'Sala', group: 'scenes', tap_action: { action: 'none' } },
 ];
 
 class BrunoQuickActionsCard extends HTMLElement {
@@ -65,6 +67,25 @@ class BrunoQuickActionsCard extends HTMLElement {
 
   _items() {
     return Array.isArray(this._config?.items) ? this._config.items : BRUNO_QUICK_ACTIONS_DEFAULT_ITEMS;
+  }
+
+  _groupForItem(item) {
+    if (item?.group) return item.group;
+    if (['movies', 'laptop', 'sofa', 'scene', 'scenes'].includes(item?.key)) return 'scenes';
+    return 'actions';
+  }
+
+  _groups() {
+    return this._items().reduce((groups, item, index) => {
+      const key = this._groupForItem(item);
+      let group = groups[groups.length - 1];
+      if (!group || group.key !== key) {
+        group = { key, items: [] };
+        groups.push(group);
+      }
+      group.items.push({ item, index });
+      return groups;
+    }, []);
   }
 
   _runAction(action = {}) {
@@ -108,6 +129,7 @@ class BrunoQuickActionsCard extends HTMLElement {
   _render() {
     if (!this._config) return;
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    const groups = this._groups();
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -127,8 +149,8 @@ class BrunoQuickActionsCard extends HTMLElement {
           height: 100%;
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 0;
+          justify-content: center;
+          padding: 0 10px;
           overflow-x: auto;
           scrollbar-width: none;
         }
@@ -144,44 +166,42 @@ class BrunoQuickActionsCard extends HTMLElement {
           touch-action: manipulation;
         }
 
-        .quick-button {
-          appearance: none;
-          -webkit-appearance: none;
+        .quick-dock {
           position: relative;
           isolation: isolate;
-          flex: 0 0 56px;
-          width: 56px;
-          height: 56px;
-          display: grid;
-          place-items: center;
-          margin: 0;
-          padding: 0;
+          width: max-content;
+          max-width: 100%;
+          min-height: 58px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          padding: 6px;
           color: rgba(255,255,255,0.86);
           border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.18));
-          border-radius: var(--bruno-liquid-card-radius-compact, 18px);
+          border-radius: 999px;
           background: var(--bruno-liquid-surface-off-background,
-            linear-gradient(160deg, rgba(15,20,35,0.46), rgba(20,24,33,0.30))
+            radial-gradient(52px 40px at 18% 4%, rgba(255,255,255,0.22), transparent 70%),
+            linear-gradient(160deg, rgba(15,20,35,0.50), rgba(20,24,33,0.34))
           );
           box-shadow: var(--bruno-liquid-surface-off-shadow,
             inset 0 1px 0 rgba(255,255,255,0.22),
-            0 8px 32px rgba(0,0,0,0.20)
+            0 10px 28px rgba(0,0,0,0.24)
           );
-          backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.4));
-          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.4));
+          backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.42));
+          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.42));
           overflow: hidden;
-          outline: none;
-          transition: transform 160ms ease, filter 160ms ease, border-color 160ms ease;
         }
 
-        .quick-button::before,
-        .quick-button::after {
+        .quick-dock::before,
+        .quick-dock::after {
           content: "";
           position: absolute;
           pointer-events: none;
           border-radius: inherit;
         }
 
-        .quick-button::before {
+        .quick-dock::before {
           inset: 1px;
           z-index: 0;
           background: var(--bruno-liquid-surface-off-sheen,
@@ -190,7 +210,7 @@ class BrunoQuickActionsCard extends HTMLElement {
           opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.82);
         }
 
-        .quick-button::after {
+        .quick-dock::after {
           inset: 0;
           padding: 1px;
           z-index: 1;
@@ -208,9 +228,100 @@ class BrunoQuickActionsCard extends HTMLElement {
           opacity: 0.75;
         }
 
+        .quick-group {
+          position: relative;
+          z-index: 2;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          flex: 0 0 auto;
+        }
+
+        .quick-separator {
+          position: relative;
+          z-index: 2;
+          width: 1px;
+          height: 30px;
+          margin: 0 2px;
+          flex: 0 0 1px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, transparent, rgba(255,255,255,0.22), transparent);
+          box-shadow: 1px 0 0 rgba(0,0,0,0.18);
+          opacity: 0.76;
+        }
+
+        .quick-button {
+          appearance: none;
+          -webkit-appearance: none;
+          position: relative;
+          flex: 0 0 44px;
+          width: 44px;
+          height: 44px;
+          display: grid;
+          place-items: center;
+          margin: 0;
+          padding: 0;
+          color: rgba(255,255,255,0.86);
+          border: 1px solid transparent;
+          border-radius: 999px;
+          background: transparent;
+          box-shadow: none;
+          overflow: hidden;
+          outline: none;
+          transition:
+            transform 160ms ease,
+            background 160ms ease,
+            color 160ms ease,
+            border-color 160ms ease,
+            box-shadow 160ms ease;
+        }
+
+        .quick-button::before,
+        .quick-button::after {
+          content: "";
+          position: absolute;
+          pointer-events: none;
+          border-radius: inherit;
+        }
+
+        .quick-button::before {
+          inset: 1px;
+          z-index: 0;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.00) 58%),
+            linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00));
+          opacity: 0;
+          transform: translateY(-3px);
+          transition: opacity 160ms ease, transform 160ms ease;
+        }
+
+        .quick-button::after {
+          left: 50%;
+          bottom: 5px;
+          width: 11px;
+          height: 2px;
+          border-radius: 999px;
+          background: rgba(var(--accent),0.92);
+          box-shadow: 0 0 12px rgba(var(--accent),0.70);
+          opacity: 0;
+          transform: translateX(-50%) scaleX(0.62);
+          transition: opacity 160ms ease, transform 160ms ease;
+        }
+
         .quick-button:hover {
-          filter: brightness(1.06);
-          border-color: rgba(255,255,255,0.24);
+          color: rgba(255,255,255,0.94);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.04));
+          border-color: rgba(255,255,255,0.13);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.11),
+            0 6px 14px rgba(0,0,0,0.16);
+        }
+
+        .quick-button:hover::before {
+          opacity: 0.72;
+          transform: translateY(0);
         }
 
         .quick-button.is-pressed,
@@ -226,16 +337,45 @@ class BrunoQuickActionsCard extends HTMLElement {
           transform: none;
         }
 
+        .quick-button[aria-disabled="true"]:hover::after {
+          opacity: 0;
+        }
+
         .quick-button ha-icon {
-          --mdc-icon-size: 23px;
+          --mdc-icon-size: 21px;
           position: relative;
           z-index: 2;
           filter: drop-shadow(0 2px 5px rgba(0,0,0,0.24));
         }
+
+        @media (max-width: 800px) {
+          .quick-card {
+            justify-content: flex-start;
+            padding: 0 8px;
+          }
+
+          .quick-dock {
+            min-height: 54px;
+            padding: 5px;
+          }
+
+          .quick-button {
+            width: 41px;
+            height: 41px;
+            flex-basis: 41px;
+          }
+        }
       </style>
 
       <div class="quick-card">
-        ${this._items().map((item, index) => this._button(item, index)).join('')}
+        <div class="quick-dock" aria-label="Acoes rapidas">
+          ${groups.map((group, groupIndex) => `
+            ${groupIndex > 0 ? '<span class="quick-separator" aria-hidden="true"></span>' : ''}
+            <span class="quick-group group-${BrunoQuickActionsCard._escapeAttr(group.key)}">
+              ${group.items.map(({ item, index }) => this._button(item, index)).join('')}
+            </span>
+          `).join('')}
+        </div>
       </div>
     `;
 

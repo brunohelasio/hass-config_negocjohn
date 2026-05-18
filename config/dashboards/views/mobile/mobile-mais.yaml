@@ -30,7 +30,15 @@ layout:
   grid-gap: 10px
 
 cards:
-  - !include ../../shared/mobile/mobile_energy_card.yaml
-  - !include ../../shared/mobile/mobile_roborock_card.yaml
-  - !include ../../shared/mobile/mobile_calendar_card.yaml
-  - !include ../../shared/mobile/mobile_pill_nav.yaml
+  - !include ../../shared/mobile/mobile_js_energy_card.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_energy_card.yaml
+  - !include ../../shared/mobile/mobile_js_roborock_card.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_roborock_card.yaml
+  - !include ../../shared/mobile/mobile_js_calendar_card.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_calendar_card.yaml
+  - !include ../../shared/mobile/mobile_js_pill_nav.yaml
+  # FALLBACK - Mobile Lovelace original:
+  # - !include ../../shared/mobile/mobile_pill_nav.yaml

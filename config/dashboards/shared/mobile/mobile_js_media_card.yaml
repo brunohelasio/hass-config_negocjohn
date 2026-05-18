@@ -1,0 +1,8 @@
+# NOVO JS - Mobile media frame.
+# FALLBACK: trocar este include por mobile_media_card.yaml.
+type: custom:bruno-mobile-card-frame
+height: calc(100vw - 28px)
+min_height: 320px
+max_height: 520px
+card:
+  type: custom:bruno-media-card

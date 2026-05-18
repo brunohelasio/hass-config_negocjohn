@@ -1,0 +1,7 @@
+# NOVO JS - Mobile Roborock frame.
+# FALLBACK: trocar este include por mobile_roborock_card.yaml.
+type: custom:bruno-mobile-card-frame
+height: 196px
+min_height: 196px
+card:
+  type: custom:bruno-roborock-card

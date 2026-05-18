@@ -320,6 +320,8 @@ class BrunoHeroCard extends HTMLElement {
     const weather = this._weatherModel();
     const background = BrunoHeroCard._cssUrl(this._config.background);
     const fallbackBackground = BrunoHeroCard._cssUrl(this._config.fallback_background);
+    const mobileClass = this._config.variant === 'mobile' ? ' is-mobile' : '';
+    const mobileHostMinHeight = this._config.variant === 'mobile' ? '0' : '300px';
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -618,7 +620,7 @@ class BrunoHeroCard extends HTMLElement {
 
         @media (max-width: 800px) {
           :host {
-            min-height: 300px;
+            min-height: ${mobileHostMinHeight};
           }
 
           .hero-stage {
@@ -654,6 +656,71 @@ class BrunoHeroCard extends HTMLElement {
           }
         }
 
+        .hero-stage.is-mobile .content {
+          padding: 14px 16px 14px;
+        }
+
+        .hero-stage.is-mobile .date-line {
+          margin-bottom: 9px;
+          font-size: 10px;
+        }
+
+        .hero-stage.is-mobile .greeting {
+          font-size: 20px;
+          max-width: 300px;
+        }
+
+        .hero-stage.is-mobile .clock {
+          margin-top: 10px;
+          font-size: 58px;
+        }
+
+        .hero-stage.is-mobile .weather-dock {
+          grid-template-columns: minmax(154px, 1fr) minmax(102px, 0.76fr) minmax(102px, 0.76fr);
+          gap: 10px;
+          min-height: 62px;
+        }
+
+        .hero-stage.is-mobile .weather-primary {
+          gap: 10px;
+        }
+
+        .hero-stage.is-mobile .weather-primary img {
+          width: 50px;
+          height: 50px;
+          flex-basis: 50px;
+        }
+
+        .hero-stage.is-mobile .weather-temp {
+          font-size: 26px;
+        }
+
+        .hero-stage.is-mobile .metric-group {
+          gap: 7px;
+        }
+
+        .hero-stage.is-mobile .metric-group.sun {
+          padding-left: 10px;
+        }
+
+        .hero-stage.is-mobile .metric-label {
+          font-size: 9px;
+        }
+
+        .hero-stage.is-mobile .metric-value {
+          font-size: 10px;
+        }
+
+        @media (max-width: 430px) {
+          .hero-stage.is-mobile .weather-dock {
+            grid-template-columns: minmax(150px, 1fr) minmax(92px, 0.7fr);
+          }
+
+          .hero-stage.is-mobile .metric-group.sun {
+            display: none;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .weather-dock {
             transition: none !important;
@@ -661,7 +728,7 @@ class BrunoHeroCard extends HTMLElement {
         }
       </style>
 
-      <section class="hero-stage" aria-label="Hero do dashboard">
+      <section class="hero-stage${mobileClass}" aria-label="Hero do dashboard">
         <div class="lateral-veil" aria-hidden="true"></div>
         <div class="hero-clip" aria-hidden="true"></div>
 

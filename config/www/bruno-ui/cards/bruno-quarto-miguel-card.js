@@ -39,9 +39,9 @@ const BRUNO_QUARTO_MIGUEL_DEFAULT_CONFIG = {
       "tone": "blue"
     },
     {
-      "icon": "mdi:lightbulb-on",
-      "label": "Luzes",
-      "tone": "amber"
+      "icon": "mdi:television-classic",
+      "label": "TV",
+      "tone": "purple"
     },
     {
       "icon": "mdi:snowflake",

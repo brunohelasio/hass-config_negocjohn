@@ -115,14 +115,14 @@ class BentoSidebarCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --rail-width: 54px;
+          --rail-width: 48px;
           --rail-radius: 999px;
-          --rail-padding-top: 10px;
-          --rail-padding-bottom: 12px;
-          --button-size: 36px;
+          --rail-padding-top: 9px;
+          --rail-padding-bottom: 10px;
+          --button-size: 34px;
           --button-radius: 999px;
-          --icon-size: 18px;
-          --group-gap: 5px;
+          --icon-size: 17px;
+          --group-gap: 6px;
           --glass-line: rgba(255,255,255,0.14);
           --glass-line-soft: rgba(255,255,255,0.07);
           --icon-neutral: rgba(255,255,255,0.74);
@@ -133,7 +133,7 @@ class BentoSidebarCard extends HTMLElement {
           min-height: 0;
           display: flex;
           align-items: center;
-          justify-content: center;
+          justify-content: flex-start;
           margin: 0;
           padding: 0;
           contain: layout style;
@@ -153,10 +153,10 @@ class BentoSidebarCard extends HTMLElement {
           justify-content: center;
           padding: var(--rail-padding-top) 0 var(--rail-padding-bottom);
           background: var(--bruno-liquid-surface-off-background,
-            radial-gradient(54px 120px at 26% -3%, rgba(255,255,255,0.24), rgba(255,255,255,0.06) 42%, transparent 70%),
-            radial-gradient(50px 130px at 92% 86%, rgba(var(--accent),0.12), transparent 68%),
-            linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.048) 34%, rgba(255,255,255,0.082)),
-            linear-gradient(155deg, rgba(26,33,48,0.78), rgba(20,22,29,0.58) 48%, rgba(42,32,24,0.32))
+            radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
+            radial-gradient(38px 110px at 92% 86%, rgba(var(--accent),0.10), transparent 68%),
+            linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.038) 34%, rgba(255,255,255,0.065)),
+            linear-gradient(155deg, rgba(22,27,38,0.84), rgba(10,12,18,0.72) 48%, rgba(18,16,17,0.46))
           );
           backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(30px) saturate(1.58) contrast(1.05));
           -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(30px) saturate(1.58) contrast(1.05));
@@ -209,7 +209,7 @@ class BentoSidebarCard extends HTMLElement {
         .divider {
           position: relative;
           z-index: 1;
-          width: 30px;
+          width: 25px;
           height: 1px;
           margin: 6px 0;
           flex: 0 0 auto;
@@ -391,17 +391,17 @@ class BentoSidebarCard extends HTMLElement {
 
         @media (max-height: 760px) {
           :host {
-            --rail-padding-top: 10px;
-            --rail-padding-bottom: 12px;
-            --group-gap: 5px;
+          --rail-padding-top: 8px;
+          --rail-padding-bottom: 9px;
+          --group-gap: 5px;
           }
         }
 
         @media (max-height: 690px), (max-width: 900px) {
           :host {
-            --rail-width: 52px;
-            --button-size: 34px;
-            --icon-size: 17px;
+            --rail-width: 46px;
+            --button-size: 32px;
+            --icon-size: 16px;
             --group-gap: 4px;
           }
         }

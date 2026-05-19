@@ -510,7 +510,7 @@ class BrunoQuartoMiguelCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --card-radius: var(--bruno-liquid-card-radius, 22px);
+          --card-radius: var(--bruno-liquid-room-radius, var(--bruno-liquid-card-radius-compact, 16px));
           --accent: 150, 190, 255;
           --accent-blue: 96, 165, 250;
           --accent-purple: 167, 139, 250;

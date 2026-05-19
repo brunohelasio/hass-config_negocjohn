@@ -34,7 +34,7 @@ layout:
   mediaquery:
     '(max-width: 800px)':
       padding: 8px
-      grid-gap: 8px
+      grid-gap: 10px
       grid-template-columns: 1fr
       grid-template-rows: repeat(11, min-content)
       grid-template-areas: |

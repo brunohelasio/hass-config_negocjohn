@@ -60,4 +60,6 @@ type: panel
 #     cards: !include ./modules/sala/_cards.yaml
 
 cards:
+  # NOVO: subview renderizada via Web Component JS
+  # Implementação: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260519-1
   - type: custom:bruno-sala-subview

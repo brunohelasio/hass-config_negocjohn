@@ -8,27 +8,28 @@ const BRUNO_SALA_DEFAULT_CONFIG = {
   fallback_background: '/local/images/sala_estar.jpg',
   entities: {
     curtain: 'cover.cortina_sala',
-    room_group: 'light.grupo_luzes_sala',
     active_sensor: 'sensor.living_room_active',
     temperature: 'sensor.sl_sensor_temp_humid_temperatura',
     humidity: 'sensor.sl_sensor_temp_humid_umidade',
-    router: '',
-    zigbee_hub: '',
-    ps5: '',
+    room_group: 'light.grupo_luzes_sala',
     camera_main: 'camera.sl_camera_2',
     camera_secondary: 'camera.vr_camera_2',
+    active_camera_select: 'input_select.bento_active_camera',
     tv: 'media_player.android_tv_192_168_3_17',
     spotify: 'media_player.spotifyplus_bruno_helasio',
     climate: 'climate.sl_ar_condicionado',
+    router: '',
+    zigbee_hub: '',
+    ps5: '',
     lights: [
-      { entity: 'light.sala_switch_2', short: 'Spot TV' },
-      { entity: 'light.sl_leds_direito_e_esquerdo', short: 'Fita LED' },
-      { entity: 'light.sala_2_switch_2', short: 'Luz Cortina' },
-      { entity: 'light.sala_2_switch_3', short: 'Luz Estante' },
-      { entity: 'light.varanda_switch_1', short: 'Luz Teto' },
-      { entity: 'light.varanda_switch_2', short: 'Luz Vaso' },
-      { entity: '', short: 'Luz Ambiente', placeholder: true },
-      { entity: '', short: 'Luz Painel', placeholder: true },
+      { entity: 'light.sala_switch_2', name: 'Luz Principal', short: 'Spot TV' },
+      { entity: 'light.sl_leds_direito_e_esquerdo', name: 'LEDs Sala', short: 'Fita LED' },
+      { entity: 'light.sala_2_switch_2', name: 'VR Principal', short: 'Luz Cortina' },
+      { entity: 'light.sala_2_switch_3', name: 'VR Cristaleira', short: 'Luz Estante' },
+      { entity: 'light.varanda_switch_1', name: 'VR Gourmet', short: 'Luz Teto' },
+      { entity: 'light.varanda_switch_2', name: 'VR Pendente', short: 'Luz Vaso' },
+      { entity: '', name: 'Placeholder 7', short: 'Luz Ambiente', placeholder: true },
+      { entity: '', name: 'Placeholder 8', short: 'Luz Painel', placeholder: true },
     ],
   },
 };
@@ -43,6 +44,7 @@ class BrunoSalaSubview extends HTMLElement {
     this._config = { ...BRUNO_SALA_DEFAULT_CONFIG };
     this._hass = null;
     this._bound = false;
+    this._embedded = {};
   }
 
   setConfig(config) {
@@ -67,10 +69,11 @@ class BrunoSalaSubview extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
     this._render();
+    this._updateEmbeddedCards();
   }
 
   getCardSize() {
-    return 14;
+    return 12;
   }
 
   _state(entityId) {
@@ -86,13 +89,8 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _numberState(entityId, fallback = null) {
-    const raw = this._state(entityId)?.state;
-    const num = Number.parseFloat(raw);
-    return Number.isFinite(num) ? num : fallback;
-  }
-
-  _friendly(entityId, fallback = '—') {
-    return this._state(entityId)?.attributes?.friendly_name || fallback;
+    const value = Number.parseFloat(this._state(entityId)?.state);
+    return Number.isFinite(value) ? value : fallback;
   }
 
   _escape(value) {
@@ -138,6 +136,11 @@ class BrunoSalaSubview extends HTMLElement {
     this._callService('light.turn_on', { entity_id: entityId });
   }
 
+  _turnOff(entityId) {
+    if (!entityId) return;
+    this._callService('light.turn_off', { entity_id: entityId });
+  }
+
   _openCover() {
     this._callService('cover.open_cover', { entity_id: this._config.entities.curtain });
   }
@@ -150,13 +153,6 @@ class BrunoSalaSubview extends HTMLElement {
     this._callService('cover.stop_cover', { entity_id: this._config.entities.curtain });
   }
 
-  _greeting() {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Bom dia, Bruno';
-    if (hour < 18) return 'Boa tarde, Bruno';
-    return 'Boa noite, Bruno';
-  }
-
   _clock() {
     const now = new Date();
     return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -165,7 +161,7 @@ class BrunoSalaSubview extends HTMLElement {
   _curtainPosition() {
     const value = this._state(this._config.entities.curtain)?.attributes?.current_position;
     const num = Number(value);
-    if (!Number.isFinite(num)) return 65;
+    if (!Number.isFinite(num)) return 0;
     return Math.max(0, Math.min(100, num));
   }
 
@@ -181,7 +177,7 @@ class BrunoSalaSubview extends HTMLElement {
 
   _temperatureLabel() {
     const value = this._numberState(this._config.entities.temperature, null);
-    return value == null ? '—' : `${Math.round(value * 10) / 10}°`;
+    return value == null ? '—' : `${Math.round(value)}°C`;
   }
 
   _humidityLabel() {
@@ -189,12 +185,14 @@ class BrunoSalaSubview extends HTMLElement {
     return value == null ? '—' : `${Math.round(value)}%`;
   }
 
-  _statusMetric(entityId, fallbackLabel) {
-    if (!entityId) return fallbackLabel;
-    const state = String(this._safeState(entityId, fallbackLabel)).toLowerCase();
-    if (['on', 'home', 'connected', 'online', 'idle'].includes(state)) return 'Online';
-    if (['off', 'not_home', 'disconnected', 'offline'].includes(state)) return 'Offline';
-    return this._safeState(entityId, fallbackLabel);
+  _routerLabel() {
+    if (!this._config.entities.router) return 'Placeholder';
+    return this._safeState(this._config.entities.router, 'Online');
+  }
+
+  _zigbeeLabel() {
+    if (!this._config.entities.zigbee_hub) return 'Placeholder';
+    return this._safeState(this._config.entities.zigbee_hub, 'Online');
   }
 
   _tvModel() {
@@ -203,19 +201,8 @@ class BrunoSalaSubview extends HTMLElement {
     return {
       source: attrs.source || attrs.app_name || 'HDMI 1',
       subtitle: attrs.media_title || attrs.app_name || 'Apple TV 4K',
-      volume: attrs.volume_level != null ? Math.round(attrs.volume_level * 100) : 60,
       poster: attrs.entity_picture || '',
-    };
-  }
-
-  _spotifyModel() {
-    const entity = this._state(this._config.entities.spotify);
-    const attrs = entity?.attributes || {};
-    return {
-      title: attrs.media_title || 'Spotify',
-      artist: attrs.media_artist || 'Sem reprodução',
-      artwork: attrs.entity_picture || '',
-      state: entity?.state || 'idle',
+      volume: attrs.volume_level != null ? Math.round(attrs.volume_level * 100) : 60,
     };
   }
 
@@ -224,28 +211,10 @@ class BrunoSalaSubview extends HTMLElement {
     const attrs = entity?.attributes || {};
     return {
       target: attrs.temperature ?? 23.5,
-      hvacMode: entity?.state || 'cool',
-      fan: attrs.fan_mode || 'Média',
+      hvacMode: entity?.state || 'off',
+      fan: attrs.fan_mode || 'auto',
       swing: attrs.swing_mode || 'Ativada',
-      action: attrs.hvac_action || 'idle',
-    };
-  }
-
-  _ps5Model() {
-    const entityId = this._config.entities.ps5;
-    if (!entityId) {
-      return {
-        placeholder: true,
-        status: 'Entidade a confirmar',
-        mode: '—',
-      };
-    }
-
-    const entity = this._state(entityId);
-    return {
-      placeholder: false,
-      status: entity?.state || 'Ativo',
-      mode: entity?.attributes?.source || 'Performance',
+      action: attrs.hvac_action || entity?.state || 'off',
     };
   }
 
@@ -266,21 +235,21 @@ class BrunoSalaSubview extends HTMLElement {
       case 'router':
         return `<svg ${common}><path d="M5 18h14"/><rect x="4" y="10" width="16" height="6" rx="2"/><path d="M8 6a6 6 0 018 0"/><path d="M10 8a3 3 0 014 0"/></svg>`;
       case 'zigbee':
-        return `<svg ${common}><path d="M12 2l6 4v6l-6 4-6-4V6l6-4z"/><path d="M12 8v8"/><path d="M9 10l6 4"/></svg>`;
-      case 'light':
-        return `<svg ${common}><path d="M9 18h6"/><path d="M10 22h4"/><path d="M8 14c-1.2-1-2-2.5-2-4a6 6 0 1112 0c0 1.5-.8 3-2 4-.7.7-1 1.3-1 2H9c0-.7-.3-1.3-1-2z"/></svg>`;
+        return `<svg ${common}><path d="M12 2l6 4v6l-6 4-6-4V6l6-4z"/><path d="M12 8v8"/></svg>`;
       case 'curtain':
         return `<svg ${common}><path d="M4 4h16"/><path d="M6 4v15"/><path d="M18 4v15"/><path d="M6 8c2 0 2 2 4 2s2-2 4-2 2 2 4 2"/></svg>`;
-      case 'tv':
-        return `<svg ${common}><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/></svg>`;
+      case 'light':
+        return `<svg ${common}><path d="M9 18h6"/><path d="M10 22h4"/><path d="M8 14c-1.2-1-2-2.5-2-4a6 6 0 1112 0c0 1.5-.8 3-2 4-.7.7-1 1.3-1 2H9c0-.7-.3-1.3-1-2z"/></svg>`;
       case 'camera':
         return `<svg ${common}><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`;
+      case 'tv':
+        return `<svg ${common}><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/></svg>`;
       case 'music':
         return `<svg ${common}><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
       case 'ac':
         return `<svg ${common}><path d="M4 8h16"/><path d="M4 12h16"/><path d="M4 16h10"/></svg>`;
       case 'console':
-        return `<svg ${common}><path d="M7 16l-2 2"/><path d="M17 16l2 2"/><rect x="5" y="7" width="14" height="10" rx="3"/><path d="M9 11H7"/><path d="M8 10v2"/></svg>`;
+        return `<svg ${common}><path d="M7 16l-2 2"/><path d="M17 16l2 2"/><rect x="5" y="7" width="14" height="10" rx="3"/></svg>`;
       case 'power':
         return `<svg ${common}><path d="M12 2v10"/><path d="M18.4 6.6a8 8 0 11-12.8 0"/></svg>`;
       case 'play':
@@ -294,33 +263,37 @@ class BrunoSalaSubview extends HTMLElement {
 
   _renderHero() {
     const position = this._curtainPosition();
+    const temp = this._temperatureLabel();
+    const lights = this._activeLightsCount();
 
     return `
       <section class="sala-hero">
         <div class="hero-bg" aria-hidden="true"></div>
 
         <div class="hero-content">
-          <div class="hero-topbar">
-            <button class="back-btn" data-action="navigate" data-path="${this._escape(this._config.navigation_path)}">
-              ${this._icon('back')}
-            </button>
-            <div class="hero-title-wrap">
-              <h1 class="hero-room">${this._escape(this._config.title)}</h1>
-              <div class="hero-subtitle">${this._escape(this._config.subtitle)}</div>
+          <div class="hero-top">
+            <div class="hero-top-left">
+              <button class="back-btn" data-action="navigate" data-path="${this._escape(this._config.navigation_path)}">
+                ${this._icon('back')}
+              </button>
+              <div class="hero-heading">
+                <div class="hero-title">Sala</div>
+                <div class="hero-subtitle">Visão geral</div>
+              </div>
+            </div>
+
+            <div class="hero-chips">
+              <span class="hero-chip">${lights} luzes</span>
+              <span class="hero-chip">${temp}</span>
             </div>
           </div>
 
-          <div class="hero-main">
-            <div class="hero-headline">
-              <div class="hero-greeting">${this._escape(this._greeting())}</div>
-              <div class="hero-clock">${this._escape(this._clock())}</div>
-              <div class="hero-status-line">Ambiente confortável</div>
-              <div class="hero-status-subline">Tudo funcionando perfeitamente.</div>
-            </div>
+          <div class="hero-clock-wrap">
+            <div class="hero-clock">${this._escape(this._clock())}</div>
           </div>
 
           <div class="curtain-dock">
-            <div class="curtain-dock-head">
+            <div class="curtain-head">
               <div class="curtain-head-left">
                 <span class="module-icon">${this._icon('curtain')}</span>
                 <div>
@@ -328,14 +301,24 @@ class BrunoSalaSubview extends HTMLElement {
                   <div class="curtain-subtitle">Controle</div>
                 </div>
               </div>
-              <div class="curtain-chip">Automática • ${position}%</div>
+              <div class="curtain-pill">Automática • ${position}%</div>
             </div>
 
-            <div class="curtain-actions">
-              <button class="curtain-btn" data-action="cover-open">Aberta</button>
-              <button class="curtain-btn" data-action="cover-stop">Semiaberta</button>
-              <button class="curtain-btn" data-action="cover-close">Fechada</button>
-              <button class="curtain-btn is-active" data-action="cover-stop">Automática</button>
+            <div class="curtain-body">
+              <div class="curtain-position">
+                <span class="curtain-value">${position}%</span>
+                <span class="curtain-label">abertura</span>
+              </div>
+
+              <div class="curtain-actions">
+                <button class="curtain-btn" data-action="cover-open">Abrir</button>
+                <button class="curtain-btn is-active" data-action="cover-stop">Parar</button>
+                <button class="curtain-btn" data-action="cover-close">Fechar</button>
+              </div>
+
+              <div class="curtain-progress">
+                <div class="curtain-progress-fill" style="width:${position}%;"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -344,16 +327,8 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _renderStatusRail() {
-    const routerValue = this._config.entities.router
-      ? this._statusMetric(this._config.entities.router, 'Online')
-      : 'Placeholder';
-
-    const zigbeeValue = this._config.entities.zigbee_hub
-      ? this._statusMetric(this._config.entities.zigbee_hub, 'Online')
-      : 'Placeholder';
-
     return `
-      <section class="status-rail">
+      <section class="status-rail module-card">
         <div class="status-pill">
           <span class="status-icon">${this._icon('temp')}</span>
           <div class="status-copy">
@@ -374,7 +349,7 @@ class BrunoSalaSubview extends HTMLElement {
           <span class="status-icon">${this._icon('router')}</span>
           <div class="status-copy">
             <div class="status-value">Roteador</div>
-            <div class="status-label">${this._escape(routerValue)}</div>
+            <div class="status-label">${this._escape(this._routerLabel())}</div>
           </div>
         </div>
 
@@ -382,7 +357,7 @@ class BrunoSalaSubview extends HTMLElement {
           <span class="status-icon">${this._icon('zigbee')}</span>
           <div class="status-copy">
             <div class="status-value">Hub Zigbee</div>
-            <div class="status-label">${this._escape(zigbeeValue)}</div>
+            <div class="status-label">${this._escape(this._zigbeeLabel())}</div>
           </div>
         </div>
       </section>
@@ -396,14 +371,15 @@ class BrunoSalaSubview extends HTMLElement {
     return `
       <section class="module-card lights-card">
         <div class="module-header">
-          <div class="module-header-left">
-            <span class="module-icon">${this._icon('light')}</span>
-            <div>
-              <div class="module-title">Luzes da Sala</div>
-              <div class="module-subtitle">${total} Luzes · ${active} acesas</div>
-            </div>
+          <div>
+            <div class="module-title">Luzes da Sala</div>
+            <div class="module-subtitle">${total} Luzes · ${active} acesas</div>
           </div>
-          <button class="all-on-btn" data-action="lights-on">Todas ON</button>
+
+          <div class="lights-actions">
+            <button class="chip-btn is-on" data-action="lights-on">ON</button>
+            <button class="chip-btn" data-action="lights-off">OFF</button>
+          </div>
         </div>
 
         <div class="lights-grid">
@@ -414,15 +390,15 @@ class BrunoSalaSubview extends HTMLElement {
 
             return `
               <button
-                class="light-tile ${isOn ? 'is-on' : ''} ${placeholder ? 'is-placeholder' : ''}"
+                class="light-card ${isOn ? 'is-on' : ''} ${placeholder ? 'is-placeholder' : ''}"
                 ${light.entity ? `data-action="toggle-light" data-entity="${this._escape(light.entity)}"` : 'disabled'}
               >
-                <div class="light-tile-top">
+                <div class="light-card-head">
                   <span class="module-icon">${this._icon('light')}</span>
-                  <span class="light-switch ${isOn ? 'is-on' : ''}"></span>
+                  <span class="switch-pill ${isOn ? 'is-on' : ''}"></span>
                 </div>
-                <div class="light-name">${this._escape(light.short || 'Luz')}</div>
-                <div class="light-level">${placeholder ? 'Placeholder' : (isOn ? 'Ligada' : 'Desligada')}</div>
+                <div class="light-card-name">${this._escape(light.short)}</div>
+                <div class="light-card-state">${placeholder ? 'Placeholder' : (isOn ? 'Ligada' : 'Desligada')}</div>
               </button>
             `;
           }).join('')}
@@ -435,27 +411,24 @@ class BrunoSalaSubview extends HTMLElement {
     return `
       <section class="module-card cameras-card">
         <div class="module-header">
-          <div class="module-header-left">
-            <span class="module-icon">${this._icon('camera')}</span>
-            <div>
-              <div class="module-title">Câmeras</div>
-              <div class="module-subtitle">2 câmeras</div>
-            </div>
+          <div>
+            <div class="module-title">Câmeras</div>
+            <div class="module-subtitle">2 câmeras</div>
           </div>
           <div class="live-chip">2 online</div>
         </div>
 
-        <div class="camera-stack">
-          <button class="camera-tile" data-action="more-info" data-entity="${this._escape(this._config.entities.camera_main)}">
-            <div class="camera-name">Sala Principal</div>
+        <div class="camera-list">
+          <button class="camera-card" data-action="more-info" data-entity="${this._escape(this._config.entities.camera_main)}">
+            <div class="camera-card-title">Sala Principal</div>
             <img src="${this._escape(this._cameraImage(this._config.entities.camera_main))}" alt="Sala Principal">
-            <div class="camera-foot">Ao vivo</div>
+            <div class="camera-card-foot">Ao vivo</div>
           </button>
 
-          <button class="camera-tile" data-action="more-info" data-entity="${this._escape(this._config.entities.camera_secondary)}">
-            <div class="camera-name">Sala Lateral</div>
+          <button class="camera-card" data-action="more-info" data-entity="${this._escape(this._config.entities.camera_secondary)}">
+            <div class="camera-card-title">Sala Lateral</div>
             <img src="${this._escape(this._cameraImage(this._config.entities.camera_secondary))}" alt="Sala Lateral">
-            <div class="camera-foot">Ao vivo</div>
+            <div class="camera-card-foot">Ao vivo</div>
           </button>
         </div>
       </section>
@@ -468,35 +441,32 @@ class BrunoSalaSubview extends HTMLElement {
     return `
       <section class="module-card tv-card">
         <div class="module-header">
-          <div class="module-header-left">
-            <span class="module-icon">${this._icon('tv')}</span>
-            <div>
-              <div class="module-title">Televisão</div>
-              <div class="module-subtitle">Sala</div>
-            </div>
+          <div>
+            <div class="module-title">Televisão</div>
+            <div class="module-subtitle">Sala</div>
           </div>
         </div>
 
         <div class="tv-body">
-          <div class="tv-copy">
+          <div class="tv-main">
             <div class="tv-source">${this._escape(tv.source)}</div>
-            <div class="tv-meta">${this._escape(tv.subtitle)}</div>
+            <div class="tv-sub">${this._escape(tv.subtitle)}</div>
 
-            <div class="tv-actions">
+            <div class="tv-controls">
               <button class="control-btn" data-action="toggle-tv">${this._icon('power')}</button>
               <button class="control-btn" data-action="more-info" data-entity="${this._escape(this._config.entities.tv)}">${this._icon('tv')}</button>
               <button class="control-btn">${this._icon('play')}</button>
             </div>
 
-            <div class="tv-volume">
-              <span class="tv-volume-label">${tv.volume}%</span>
-              <div class="tv-volume-bar">
-                <div class="tv-volume-fill" style="width:${tv.volume}%;"></div>
+            <div class="volume-row">
+              <span class="volume-label">${tv.volume}%</span>
+              <div class="volume-bar">
+                <div class="volume-fill" style="width:${tv.volume}%;"></div>
               </div>
             </div>
           </div>
 
-          <div class="tv-poster ${tv.poster ? '' : 'is-placeholder'}">
+          <div class="poster-card ${tv.poster ? '' : 'is-placeholder'}">
             ${tv.poster ? `<img src="${this._escape(tv.poster)}" alt="Poster TV">` : '<span>Poster</span>'}
           </div>
         </div>
@@ -505,100 +475,58 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _renderPS5() {
-    const ps5 = this._ps5Model();
-
     return `
-      <section class="module-card ps5-card ${ps5.placeholder ? 'is-placeholder' : ''}">
+      <section class="module-card ps5-card is-placeholder">
         <div class="module-header">
-          <div class="module-header-left">
-            <span class="module-icon">${this._icon('console')}</span>
-            <div>
-              <div class="module-title">PlayStation 5</div>
-              <div class="module-subtitle">Sala</div>
-            </div>
+          <div>
+            <div class="module-title">PlayStation 5</div>
+            <div class="module-subtitle">Sala</div>
           </div>
-          <div class="live-chip ${ps5.placeholder ? 'is-placeholder' : ''}">${ps5.placeholder ? 'Placeholder' : 'Online'}</div>
+          <div class="live-chip is-placeholder">Placeholder</div>
         </div>
 
         <div class="ps5-body">
-          <div class="ps5-copy">
-            <div class="ps5-status">${this._escape(ps5.status)}</div>
-            <div class="ps5-actions-row">
-              <button class="primary-btn" ${ps5.placeholder ? 'disabled' : ''}>Ligar Console</button>
-              <div class="ps5-meta-box">
-                <div class="meta-label">Status</div>
-                <div class="meta-value">${ps5.placeholder ? '—' : 'Ativo'}</div>
-              </div>
-              <div class="ps5-meta-box">
-                <div class="meta-label">Modo</div>
-                <div class="meta-value">${this._escape(ps5.mode)}</div>
-              </div>
+          <div class="ps5-title">Entidade a confirmar</div>
+
+          <div class="ps5-row">
+            <button class="primary-btn" disabled>Ligar Console</button>
+
+            <div class="mini-meta">
+              <div class="mini-meta-label">Status</div>
+              <div class="mini-meta-value">—</div>
+            </div>
+
+            <div class="mini-meta">
+              <div class="mini-meta-label">Modo</div>
+              <div class="mini-meta-value">—</div>
             </div>
           </div>
 
-          <div class="ps5-visual">
-            <div class="ps5-console-shape"></div>
-          </div>
+          <div class="ps5-art"></div>
         </div>
       </section>
     `;
   }
 
-  _renderSpotify() {
-    const spotify = this._spotifyModel();
-
+  _renderSpotifyShell() {
     return `
-      <section class="module-card spotify-card">
-        <div class="module-header">
-          <div class="module-header-left">
-            <span class="module-icon">${this._icon('music')}</span>
-            <div>
-              <div class="module-title">Spotify</div>
-              <div class="module-subtitle">Sala</div>
-            </div>
-          </div>
-          <div class="spot-state">Tocando no Spotify</div>
-        </div>
-
-        <div class="spotify-body">
-          <div class="spot-art ${spotify.artwork ? '' : 'is-placeholder'}">
-            ${spotify.artwork ? `<img src="${this._escape(spotify.artwork)}" alt="Spotify">` : '<span>Cover</span>'}
-          </div>
-
-          <div class="spot-copy">
-            <div class="spot-track">${this._escape(spotify.title)}</div>
-            <div class="spot-artist">${this._escape(spotify.artist)}</div>
-
-            <div class="spot-controls">
-              <button class="control-btn">${this._icon('play')}</button>
-              <button class="control-btn is-primary">${this._icon('pause')}</button>
-              <button class="control-btn">${this._icon('play')}</button>
-            </div>
-
-            <div class="tv-volume">
-              <span class="tv-volume-label">66%</span>
-              <div class="tv-volume-bar is-green">
-                <div class="tv-volume-fill is-green" style="width:66%;"></div>
-              </div>
-            </div>
-          </div>
+      <section class="module-card spotify-shell">
+        <div id="spotify-card-mount" class="spotify-mount">
+          <div class="spotify-fallback">Spotify</div>
         </div>
       </section>
     `;
   }
 
-  _renderClimate() {
+  _renderAC() {
     const climate = this._climateModel();
 
     return `
       <section class="module-card ac-card">
         <div class="module-header">
-          <div class="module-header-left">
-            <span class="module-icon">${this._icon('ac')}</span>
-            <div>
-              <div class="module-title">Ar Condicionado</div>
-              <div class="module-subtitle">Sala</div>
-            </div>
+          <div>
+            <div class="module-title">Ar Condicionado</div>
+            <div class="module-subtitle">Sala</div>
           </div>
         </div>
 
@@ -628,336 +556,870 @@ class BrunoSalaSubview extends HTMLElement {
     `;
   }
 
-  _render() {
-    if (!this._config) return;
-    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+  async _attachSpotifyCard() {
+    const mount = this.shadowRoot?.getElementById('spotify-card-mount');
+    if (!mount || mount.dataset.ready === '1') return;
+    mount.dataset.ready = '1';
 
     try {
-      this.shadowRoot.innerHTML = `
-        <style>
-          :host {
-            display: block;
-            min-height: 100vh;
-            height: 100%;
-            --surface-bg: rgba(14, 18, 28, 0.84);
-            --surface-border: 1px solid rgba(255,255,255,0.09);
-            --surface-shadow: 0 20px 60px rgba(0,0,0,0.34);
-            --text-strong: rgba(255,255,255,0.96);
-            --text-soft: rgba(255,255,255,0.62);
-            --text-dim: rgba(255,255,255,0.46);
-            --accent: #6a5cff;
-            --success: #22c55e;
-            --panel-radius: 22px;
-          }
+      if (!window.loadCardHelpers) {
+        mount.innerHTML = '<div class="spotify-fallback">Spotify indisponível</div>';
+        return;
+      }
 
-          * { box-sizing: border-box; }
+      const helpers = await window.loadCardHelpers();
+      const card = await helpers.createCardElement({
+        type: 'custom:spotifyplus-card',
+        entity: this._config.entities.spotify,
+        deviceDefaultId: 'Echo Show',
+        deviceControlByName: true,
+        sections: ['player', 'userpresets'],
+      });
 
-          ha-card {
-            height: 100vh;
-            margin: 0;
-            border: none;
-            border-radius: 0;
-            background: transparent;
-            box-shadow: none;
-            overflow: auto;
-            --ha-card-background: transparent;
-            --ha-card-border-width: 0;
-            --ha-card-box-shadow: none;
-          }
+      card.hass = this._hass;
+      this._embedded.spotify = card;
+      mount.replaceChildren(card);
+    } catch (error) {
+      mount.innerHTML = '<div class="spotify-fallback">Erro ao carregar Spotify</div>';
+      console.warn('bruno-sala-subview spotify mount failed', error);
+    }
+  }
 
+  _updateEmbeddedCards() {
+    if (this._embedded.spotify) {
+      this._embedded.spotify.hass = this._hass;
+    }
+  }
+
+  _render() {
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          height: 100%;
+          min-height: 100vh;
+          --panel-radius: 20px;
+          --panel-border: 1px solid rgba(255,255,255,0.10);
+          --panel-bg:
+            linear-gradient(180deg, rgba(15,20,35,0.78) 0%, rgba(20,24,33,0.88) 100%);
+          --panel-shadow:
+            0 0 24px rgba(62,132,255,0.18),
+            0 0 60px rgba(62,132,255,0.10);
+          --text-strong: rgba(255,255,255,0.96);
+          --text-soft: rgba(255,255,255,0.62);
+          --text-dim: rgba(255,255,255,0.42);
+        }
+
+        * { box-sizing: border-box; }
+
+        ha-card {
+          height: 100vh;
+          margin: 0;
+          border: none;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          overflow: auto;
+          --ha-card-background: transparent;
+          --ha-card-border-width: 0;
+          --ha-card-box-shadow: none;
+        }
+
+        .subview-shell {
+          min-height: 100%;
+          height: 100%;
+          padding: 10px 10px 10px 10px;
+          display: grid;
+          gap: 10px;
+          grid-template-columns: 1.12fr 0.92fr;
+          grid-template-rows: minmax(300px, 42vh) minmax(290px, 46vh);
+          grid-template-areas:
+            "hero side"
+            "bottom bottom";
+          background:
+            radial-gradient(1000px 280px at 20% 0%, rgba(255,255,255,0.03), transparent 60%),
+            linear-gradient(180deg, rgba(6,8,14,0.97) 0%, rgba(7,10,18,0.99) 100%);
+          overflow: hidden;
+        }
+
+        .hero-wrap { grid-area: hero; min-width: 0; }
+        .side-wrap { grid-area: side; min-width: 0; display: grid; gap: 10px; }
+        .bottom-wrap {
+          grid-area: bottom;
+          min-width: 0;
+          display: grid;
+          gap: 10px;
+          grid-template-columns: 1fr 1.08fr 1.08fr;
+        }
+
+        .stack-col {
+          min-width: 0;
+          display: grid;
+          gap: 10px;
+          grid-template-rows: 1fr 1fr;
+        }
+
+        .sala-hero {
+          position: relative;
+          height: 100%;
+          min-height: 0;
+          overflow: hidden;
+          border-radius: 24px;
+          isolation: isolate;
+        }
+
+        .hero-bg {
+          position: absolute;
+          inset: -16px -100px -16px -10px;
+          pointer-events: none;
+          z-index: 0;
+          background:
+            linear-gradient(90deg,
+              rgba(4,10,18,0.80) 0%,
+              rgba(5,10,18,0.62) 12%,
+              rgba(6,12,20,0.38) 24%,
+              rgba(7,13,22,0.18) 38%,
+              rgba(7,13,22,0.08) 48%,
+              rgba(7,13,22,0.12) 58%,
+              rgba(7,13,22,0.28) 70%,
+              rgba(7,13,22,0.56) 84%,
+              rgba(7,13,22,0.84) 100%
+            ),
+            linear-gradient(180deg,
+              rgba(4,8,14,0.76) 0%,
+              rgba(4,8,14,0.42) 12%,
+              rgba(4,8,14,0.14) 24%,
+              rgba(4,8,14,0.02) 34%,
+              rgba(4,8,14,0.00) 46%,
+              rgba(4,8,14,0.00) 58%,
+              rgba(4,8,14,0.10) 74%,
+              rgba(4,8,14,0.28) 86%,
+              rgba(4,8,14,0.58) 96%,
+              rgba(4,8,14,0.78) 100%
+            ),
+            url('${this._escape(this._config.background)}') left center / auto 100% no-repeat,
+            url('${this._escape(this._config.fallback_background)}') left center / auto 100% no-repeat;
+          filter: saturate(1.02) brightness(0.92);
+        }
+
+        .hero-content {
+          position: relative;
+          z-index: 2;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: 100%;
+          padding: 12px 14px 14px 14px;
+        }
+
+        .hero-top {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .hero-top-left {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+        }
+
+        .back-btn {
+          width: 34px;
+          height: 34px;
+          border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.16);
+          background: rgba(0,0,0,0.24);
+          color: white;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .back-btn svg { width: 18px; height: 18px; }
+
+        .hero-title {
+          font-size: 16px;
+          line-height: 1.1;
+          font-weight: 700;
+          color: var(--text-strong);
+        }
+
+        .hero-subtitle {
+          margin-top: 2px;
+          font-size: 13px;
+          color: var(--text-soft);
+        }
+
+        .hero-chips {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+
+        .hero-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 14px;
+          border-radius: 999px;
+          font-size: 13px;
+          font-weight: 700;
+          border: 1px solid rgba(104,205,255,0.55);
+          background: rgba(22,134,190,0.35);
+          color: rgba(255,255,255,0.95);
+        }
+
+        .hero-clock-wrap {
+          display: flex;
+          align-items: center;
+          flex: 1;
+        }
+
+        .hero-clock {
+          font-size: clamp(54px, 5.2vw, 72px);
+          line-height: 0.95;
+          font-weight: 220;
+          color: rgba(255,255,255,0.95);
+        }
+
+        .curtain-dock,
+        .module-card {
+          border-radius: var(--panel-radius);
+          border: var(--panel-border);
+          background: var(--panel-bg);
+          box-shadow: var(--panel-shadow);
+          overflow: hidden;
+        }
+
+        .curtain-dock {
+          width: min(420px, 100%);
+          padding: 14px 16px;
+        }
+
+        .curtain-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .curtain-head-left,
+        .module-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .module-icon svg {
+          width: 18px;
+          height: 18px;
+          color: rgba(255,255,255,0.92);
+        }
+
+        .curtain-title,
+        .module-title {
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text-strong);
+        }
+
+        .curtain-subtitle,
+        .module-subtitle {
+          margin-top: 2px;
+          font-size: 12px;
+          color: var(--text-soft);
+        }
+
+        .curtain-pill,
+        .live-chip {
+          padding: 8px 12px;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
+        .curtain-pill {
+          color: #ffcf78;
+          background: rgba(255,176,32,0.12);
+          border: 1px solid rgba(255,176,32,0.18);
+        }
+
+        .live-chip {
+          color: #86efac;
+          background: rgba(34,197,94,0.12);
+          border: 1px solid rgba(34,197,94,0.18);
+        }
+
+        .live-chip.is-placeholder {
+          color: var(--text-soft);
+        }
+
+        .curtain-body {
+          margin-top: 12px;
+          display: grid;
+          gap: 10px;
+        }
+
+        .curtain-position {
+          display: flex;
+          align-items: end;
+          gap: 8px;
+        }
+
+        .curtain-value {
+          font-size: 34px;
+          line-height: 1;
+          font-weight: 700;
+          color: #fff;
+        }
+
+        .curtain-label {
+          font-size: 16px;
+          color: rgba(255,255,255,.62);
+        }
+
+        .curtain-actions {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .curtain-btn,
+        .chip-btn,
+        .control-btn,
+        .primary-btn,
+        .ghost-btn,
+        .temp-stepper button {
+          appearance: none;
+          -webkit-appearance: none;
+          border: 1px solid rgba(255,255,255,0.18);
+          background: rgba(255,255,255,0.08);
+          color: #fff;
+          font: inherit;
+          cursor: pointer;
+        }
+
+        .curtain-btn {
+          padding: 8px 14px;
+          border-radius: 13px;
+          font-size: 14px;
+          font-weight: 600;
+        }
+
+        .curtain-btn.is-active,
+        .chip-btn.is-on,
+        .primary-btn {
+          background: rgba(22,134,190,0.45);
+          border-color: rgba(104,205,255,0.55);
+          font-weight: 700;
+        }
+
+        .curtain-progress {
+          height: 8px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.25);
+          overflow: hidden;
+        }
+
+        .curtain-progress-fill {
+          height: 100%;
+          background: rgba(255,255,255,0.85);
+        }
+
+        .module-card {
+          padding: 12px 14px;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .status-rail {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          align-items: center;
+          padding: 8px 10px;
+        }
+
+        .status-pill {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 6px 10px;
+          min-width: 0;
+          border-right: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .status-pill:last-child { border-right: none; }
+
+        .status-pill.is-placeholder .status-label {
+          color: var(--text-dim);
+        }
+
+        .status-copy { min-width: 0; }
+
+        .status-value {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text-strong);
+          white-space: nowrap;
+        }
+
+        .status-label {
+          font-size: 12px;
+          color: var(--text-soft);
+          white-space: nowrap;
+        }
+
+        .lights-card {
+          height: 100%;
+        }
+
+        .lights-actions {
+          display: flex;
+          gap: 8px;
+        }
+
+        .chip-btn {
+          min-width: 60px;
+          padding: 8px 0;
+          border-radius: 999px;
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        .lights-grid {
+          margin-top: 12px;
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 10px;
+          flex: 1;
+        }
+
+        .light-card {
+          min-height: 90px;
+          border-radius: 18px;
+          border: 1px solid rgba(255,176,32,0.12);
+          background: rgba(255,255,255,0.04);
+          color: white;
+          padding: 12px;
+          text-align: left;
+        }
+
+        .light-card.is-on {
+          border-color: rgba(255,176,32,0.28);
+          background: rgba(255,176,32,0.05);
+        }
+
+        .light-card.is-placeholder {
+          opacity: 0.72;
+        }
+
+        .light-card-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 16px;
+        }
+
+        .switch-pill {
+          width: 38px;
+          height: 22px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.12);
+          position: relative;
+        }
+
+        .switch-pill::after {
+          content: "";
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 16px;
+          height: 16px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.78);
+        }
+
+        .switch-pill.is-on {
+          background: rgba(255,176,32,0.88);
+        }
+
+        .switch-pill.is-on::after {
+          transform: translateX(16px);
+          background: white;
+        }
+
+        .light-card-name {
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text-strong);
+        }
+
+        .light-card-state {
+          margin-top: 6px;
+          font-size: 13px;
+          color: #ffca6e;
+        }
+
+        .camera-list,
+        .stack-col {
+          min-height: 0;
+        }
+
+        .camera-list {
+          margin-top: 10px;
+          display: grid;
+          gap: 10px;
+          flex: 1;
+          min-height: 0;
+        }
+
+        .camera-card {
+          position: relative;
+          min-height: 0;
+          overflow: hidden;
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(255,255,255,0.04);
+          padding: 0;
+        }
+
+        .camera-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .camera-card-title,
+        .camera-card-foot {
+          position: absolute;
+          left: 12px;
+          z-index: 2;
+          font-weight: 700;
+          color: white;
+        }
+
+        .camera-card-title {
+          top: 12px;
+          font-size: 13px;
+        }
+
+        .camera-card-foot {
+          bottom: 12px;
+          font-size: 12px;
+          color: #86efac;
+        }
+
+        .tv-body,
+        .ps5-body,
+        .ac-body {
+          margin-top: 10px;
+          display: grid;
+          gap: 12px;
+          min-height: 0;
+          flex: 1;
+        }
+
+        .tv-body {
+          grid-template-columns: 1fr 140px;
+        }
+
+        .tv-source,
+        .ps5-title {
+          font-size: 22px;
+          line-height: 1.05;
+          font-weight: 700;
+          color: var(--text-strong);
+        }
+
+        .tv-sub {
+          margin-top: 6px;
+          font-size: 14px;
+          color: var(--text-soft);
+        }
+
+        .tv-controls,
+        .ps5-row,
+        .ac-controls {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 18px;
+          flex-wrap: wrap;
+        }
+
+        .control-btn {
+          width: 44px;
+          height: 44px;
+          border-radius: 14px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .control-btn svg {
+          width: 18px;
+          height: 18px;
+        }
+
+        .volume-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-top: 14px;
+        }
+
+        .volume-label {
+          min-width: 38px;
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text-strong);
+        }
+
+        .volume-bar {
+          flex: 1;
+          height: 6px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.08);
+          overflow: hidden;
+        }
+
+        .volume-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #735dff, #8b7bff);
+        }
+
+        .poster-card {
+          border-radius: 18px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: rgba(255,255,255,0.04);
+          overflow: hidden;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .poster-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .poster-card.is-placeholder {
+          color: var(--text-dim);
+          font-weight: 700;
+        }
+
+        .spotify-shell {
+          padding: 8px;
+        }
+
+        .spotify-mount {
+          height: 100%;
+          min-height: 0;
+          overflow: hidden;
+          border-radius: 12px;
+        }
+
+        .spotify-mount > * {
+          width: 100%;
+          height: 100%;
+        }
+
+        .spotify-fallback {
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-soft);
+          font-weight: 700;
+        }
+
+        .mini-meta {
+          min-width: 74px;
+          padding: 10px 12px;
+          border-radius: 14px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.03);
+        }
+
+        .mini-meta-label {
+          font-size: 11px;
+          color: var(--text-dim);
+        }
+
+        .mini-meta-value {
+          margin-top: 4px;
+          font-size: 14px;
+          font-weight: 700;
+          color: var(--text-strong);
+        }
+
+        .ps5-art {
+          width: 42px;
+          height: 118px;
+          border-radius: 18px 18px 14px 14px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(220,228,240,0.94));
+          justify-self: end;
+          position: relative;
+        }
+
+        .ps5-art::after {
+          content: "";
+          position: absolute;
+          top: 8px;
+          bottom: 8px;
+          left: 18px;
+          width: 6px;
+          border-radius: 999px;
+          background: rgba(8,10,16,0.8);
+        }
+
+        .ac-body {
+          grid-template-columns: 1fr 180px;
+        }
+
+        .ac-temp {
+          font-size: 54px;
+          line-height: 0.9;
+          font-weight: 240;
+          color: var(--text-strong);
+        }
+
+        .ac-state {
+          margin-top: 8px;
+          color: #60a5fa;
+          font-size: 16px;
+          font-weight: 700;
+        }
+
+        .temp-stepper {
+          display: inline-flex;
+          align-items: center;
+          gap: 16px;
+          padding: 0 12px;
+          min-height: 44px;
+          border-radius: 14px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.03);
+        }
+
+        .temp-stepper button {
+          width: 28px;
+          height: 28px;
+          border: none;
+          background: transparent;
+          font-size: 24px;
+        }
+
+        .ac-meta {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        .ac-meta-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          font-size: 14px;
+          color: var(--text-soft);
+        }
+
+        .ac-meta-row strong {
+          color: var(--text-strong);
+          font-weight: 700;
+        }
+
+        .ghost-btn,
+        .primary-btn {
+          min-height: 42px;
+          padding: 10px 14px;
+          border-radius: 14px;
+          font-size: 13px;
+          font-weight: 700;
+        }
+
+        .ghost-btn {
+          background: rgba(255,255,255,0.05);
+        }
+
+        @media (max-width: 1300px) {
           .subview-shell {
-            min-height: 100%;
-            padding: 16px;
-            display: grid;
-            gap: 14px;
-            grid-template-columns: minmax(0, 1.18fr) minmax(430px, 0.92fr);
-            grid-template-rows: minmax(330px, 1fr) minmax(320px, auto);
+            grid-template-columns: 1fr;
+            grid-template-rows: auto auto auto;
             grid-template-areas:
-              "hero side"
-              "bottom bottom";
-            background:
-              radial-gradient(1200px 380px at 20% 0%, rgba(255,255,255,0.04), transparent 60%),
-              linear-gradient(180deg, rgba(6,8,14,0.96) 0%, rgba(7,10,18,0.98) 100%);
+              "hero"
+              "side"
+              "bottom";
+            overflow: auto;
           }
 
-          .hero-wrap { grid-area: hero; min-width: 0; }
-          .side-wrap { grid-area: side; min-width: 0; display: grid; gap: 14px; align-content: start; }
           .bottom-wrap {
-            grid-area: bottom;
-            min-width: 0;
-            display: grid;
-            gap: 14px;
-            grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1fr) minmax(0, 1fr);
+            grid-template-columns: 1fr;
           }
 
           .stack-col {
-            display: grid;
-            gap: 14px;
-            grid-template-rows: 1fr 1fr;
-            min-width: 0;
+            grid-template-rows: auto auto;
+          }
+        }
+
+        @media (max-width: 900px) {
+          .status-rail {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
-          .sala-hero {
-            position: relative;
-            min-height: 330px;
-            height: 100%;
-            overflow: hidden;
-            border-radius: 28px;
-            isolation: isolate;
+          .lights-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
 
-          .hero-bg {
-            position: absolute;
-            inset: -18px -120px -18px -12px;
-            pointer-events: none;
-            z-index: 0;
-            background:
-              linear-gradient(90deg,
-                rgba(4,10,18,0.80) 0%,
-                rgba(5,10,18,0.62) 12%,
-                rgba(6,12,20,0.38) 24%,
-                rgba(7,13,22,0.18) 38%,
-                rgba(7,13,22,0.08) 48%,
-                rgba(7,13,22,0.12) 58%,
-                rgba(7,13,22,0.28) 70%,
-                rgba(7,13,22,0.56) 84%,
-                rgba(7,13,22,0.84) 100%
-              ),
-              linear-gradient(180deg,
-                rgba(4,8,14,0.76) 0%,
-                rgba(4,8,14,0.42) 12%,
-                rgba(4,8,14,0.14) 24%,
-                rgba(4,8,14,0.02) 34%,
-                rgba(4,8,14,0.00) 46%,
-                rgba(4,8,14,0.00) 58%,
-                rgba(4,8,14,0.10) 74%,
-                rgba(4,8,14,0.28) 86%,
-                rgba(4,8,14,0.58) 96%,
-                rgba(4,8,14,0.78) 100%
-              ),
-              radial-gradient(720px 220px at 10% 2%, rgba(255,255,255,0.08), transparent 58%),
-              radial-gradient(980px 380px at 76% 48%, rgba(255,255,255,0.03), transparent 68%),
-              url('${this._escape(this._config.background)}') left center / auto 100% no-repeat,
-              url('${this._escape(this._config.fallback_background)}') left center / auto 100% no-repeat;
-            filter: saturate(1.02) brightness(0.92);
+          .tv-body,
+          .ac-body {
+            grid-template-columns: 1fr;
           }
+        }
+      </style>
 
-          .hero-content {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-            padding: 14px 18px 18px 18px;
-          }
+      <ha-card>
+        <section class="subview-shell">
+          <div class="hero-wrap">${this._renderHero()}</div>
 
-          .hero-topbar { display: flex; align-items: flex-start; gap: 12px; }
-          .back-btn {
-            width: 34px; height: 34px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(0,0,0,0.22); color: var(--text-strong); display: inline-flex; align-items: center;
-            justify-content: center; cursor: pointer; flex: 0 0 auto;
-          }
-          .back-btn svg { width: 18px; height: 18px; }
-          .hero-room { margin: 0; font-size: 18px; line-height: 1.1; font-weight: 700; color: var(--text-strong); }
-          .hero-subtitle { color: var(--text-soft); font-size: 14px; }
-          .hero-main { display: flex; align-items: center; min-height: 0; }
-          .hero-headline { max-width: 360px; }
-          .hero-greeting { font-size: 26px; line-height: 1.1; font-weight: 720; color: var(--text-strong); }
-          .hero-clock { margin-top: 10px; font-size: clamp(64px, 6vw, 88px); line-height: 0.94; font-weight: 220; color: rgba(255,255,255,0.95); }
-          .hero-status-line { margin-top: 18px; font-size: 15px; font-weight: 650; color: var(--text-strong); }
-          .hero-status-subline { margin-top: 6px; font-size: 14px; color: var(--text-soft); }
+          <div class="side-wrap">
+            ${this._renderStatusRail()}
+            ${this._renderLights()}
+          </div>
 
-          .curtain-dock, .module-card, .status-rail {
-            border-radius: var(--panel-radius);
-            border: var(--surface-border);
-            background: linear-gradient(180deg, rgba(20,24,34,0.76), rgba(14,18,28,0.90));
-            box-shadow: var(--surface-shadow);
-            backdrop-filter: blur(14px) saturate(1.12);
-            -webkit-backdrop-filter: blur(14px) saturate(1.12);
-          }
-
-          .curtain-dock { width: min(420px, 100%); padding: 14px; }
-          .curtain-dock-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-          .curtain-head-left, .module-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-          .curtain-title, .module-title { font-size: 14px; font-weight: 700; color: var(--text-strong); }
-          .curtain-subtitle, .module-subtitle { font-size: 12px; color: var(--text-soft); }
-          .curtain-chip, .live-chip, .spot-state {
-            border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; color: #ffd27d;
-            background: rgba(255,176,32,0.10); border: 1px solid rgba(255,176,32,0.18); white-space: nowrap;
-          }
-          .live-chip { color: #86efac; background: rgba(34,197,94,0.10); border-color: rgba(34,197,94,0.18); }
-          .curtain-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-
-          .curtain-btn, .control-btn, .all-on-btn, .primary-btn, .ghost-btn, .temp-stepper button {
-            appearance: none; -webkit-appearance: none; border: 1px solid rgba(255,255,255,0.10);
-            background: rgba(255,255,255,0.04); color: var(--text-strong); cursor: pointer; font: inherit;
-          }
-
-          .curtain-btn {
-            min-height: 58px; border-radius: 16px; font-size: 13px; color: var(--text-soft);
-          }
-
-          .curtain-btn.is-active, .primary-btn, .control-btn.is-primary {
-            background: linear-gradient(180deg, rgba(108,92,255,0.82), rgba(78,62,235,0.82));
-            border-color: rgba(130,120,255,0.38); color: white;
-          }
-
-          .status-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 10px 12px; }
-          .status-pill {
-            display: flex; align-items: center; gap: 10px; padding: 6px 10px; min-width: 0;
-            border-right: 1px solid rgba(255,255,255,0.06);
-          }
-          .status-pill:last-child { border-right: none; }
-          .status-value { font-size: 13px; font-weight: 700; color: var(--text-strong); }
-          .status-label { font-size: 12px; color: var(--text-soft); }
-
-          .module-card { padding: 14px; min-height: 0; display: flex; flex-direction: column; }
-          .module-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-          .all-on-btn, .ghost-btn, .primary-btn { border-radius: 14px; padding: 10px 14px; font-size: 13px; font-weight: 700; }
-          .ghost-btn { background: rgba(255,255,255,0.05); color: var(--text-soft); }
-
-          .lights-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-          .light-tile {
-            min-height: 104px; border-radius: 18px; border: 1px solid rgba(255,176,32,0.12);
-            background: rgba(255,255,255,0.03); color: var(--text-strong); text-align: left; padding: 12px;
-          }
-          .light-tile.is-on { border-color: rgba(255,176,32,0.24); background: rgba(255,176,32,0.05); }
-          .light-tile.is-placeholder { opacity: 0.74; }
-          .light-tile-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-          .light-switch {
-            width: 38px; height: 22px; border-radius: 999px; background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.12); position: relative; display: inline-block;
-          }
-          .light-switch::after {
-            content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 999px;
-            background: rgba(255,255,255,0.75);
-          }
-          .light-switch.is-on { background: rgba(255,176,32,0.88); }
-          .light-switch.is-on::after { transform: translateX(16px); background: white; }
-          .light-name { font-size: 14px; font-weight: 700; color: var(--text-strong); line-height: 1.1; }
-          .light-level { margin-top: 6px; font-size: 13px; color: #ffca6e; }
-
-          .camera-stack { display: grid; gap: 12px; grid-template-rows: 1fr 1fr; min-height: 0; flex: 1; }
-          .camera-tile {
-            position: relative; overflow: hidden; min-height: 0; border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); padding: 0;
-          }
-          .camera-tile img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0.78; }
-          .camera-name, .camera-foot { position: absolute; left: 12px; z-index: 2; color: white; font-size: 13px; font-weight: 700; }
-          .camera-name { top: 12px; }
-          .camera-foot { bottom: 12px; color: #86efac; font-size: 12px; }
-
-          .tv-body, .spotify-body, .ps5-body, .ac-body { display: grid; gap: 14px; min-height: 0; flex: 1; }
-          .tv-body { grid-template-columns: 1fr 154px; }
-          .spotify-body { grid-template-columns: 120px 1fr; }
-          .ps5-body { grid-template-columns: 1fr 110px; }
-          .ac-body { grid-template-columns: 1fr 190px; }
-
-          .tv-source, .spot-track, .ps5-status { font-size: 22px; line-height: 1.05; font-weight: 700; color: var(--text-strong); }
-          .tv-meta, .spot-artist { margin-top: 6px; font-size: 14px; color: var(--text-soft); }
-          .tv-actions, .spot-controls, .ac-controls, .ps5-actions-row { display: flex; align-items: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-          .control-btn { width: 48px; height: 48px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; }
-          .control-btn svg { width: 18px; height: 18px; }
-          .tv-volume { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
-          .tv-volume-label { font-size: 14px; font-weight: 700; color: var(--text-strong); min-width: 42px; }
-          .tv-volume-bar { flex: 1; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
-          .tv-volume-fill { height: 100%; background: linear-gradient(90deg, #735dff, #8b7bff); }
-          .tv-volume-fill.is-green { background: linear-gradient(90deg, #21c45a, #4ade80); }
-          .tv-poster, .spot-art {
-            border-radius: 18px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
-            overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 0;
-          }
-          .tv-poster img, .spot-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-          .tv-poster.is-placeholder, .spot-art.is-placeholder { color: var(--text-dim); font-size: 13px; font-weight: 700; }
-
-          .ps5-meta-box {
-            min-width: 84px; padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(255,255,255,0.03);
-          }
-          .meta-label { font-size: 11px; color: var(--text-dim); }
-          .meta-value { margin-top: 4px; font-size: 14px; font-weight: 700; color: var(--text-strong); }
-
-          .ps5-visual { display: flex; align-items: center; justify-content: center; }
-          .ps5-console-shape {
-            width: 42px; height: 120px; border-radius: 18px 18px 14px 14px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(220,228,240,0.94));
-            position: relative;
-          }
-          .ps5-console-shape::after {
-            content: ""; position: absolute; top: 8px; bottom: 8px; left: 18px; width: 6px; border-radius: 999px;
-            background: rgba(8,10,16,0.8);
-          }
-
-          .ac-temp { font-size: 58px; line-height: 0.9; font-weight: 240; color: var(--text-strong); }
-          .ac-state { margin-top: 8px; color: #60a5fa; font-size: 16px; font-weight: 700; }
-          .temp-stepper {
-            display: inline-flex; align-items: center; gap: 18px; padding: 0 12px; min-height: 46px;
-            border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
-          }
-          .temp-stepper button { width: 30px; height: 30px; border: none; background: transparent; color: var(--text-strong); font-size: 24px; }
-          .ac-meta { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
-          .ac-meta-row {
-            display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 14px; color: var(--text-soft);
-          }
-          .ac-meta-row strong { color: var(--text-strong); font-weight: 700; }
-
-          @media (max-width: 1320px) {
-            .subview-shell {
-              grid-template-columns: 1fr;
-              grid-template-rows: auto auto auto;
-              grid-template-areas: "hero" "side" "bottom";
-            }
-            .bottom-wrap { grid-template-columns: 1fr; }
-            .stack-col { grid-template-rows: auto auto; }
-          }
-
-          @media (max-width: 900px) {
-            .status-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-            .status-pill { border-right: none; border-radius: 16px; background: rgba(255,255,255,0.02); }
-            .lights-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .curtain-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .tv-body, .spotify-body, .ps5-body, .ac-body { grid-template-columns: 1fr; }
-            .sala-hero { min-height: 420px; }
-          }
-        </style>
-
-        <ha-card>
-          <section class="subview-shell">
-            <div class="hero-wrap">${this._renderHero()}</div>
-
-            <div class="side-wrap">
-              ${this._renderStatusRail()}
-              ${this._renderLights()}
+          <div class="bottom-wrap">
+            ${this._renderCameras()}
+            <div class="stack-col">
+              ${this._renderTV()}
+              ${this._renderPS5()}
             </div>
-
-            <div class="bottom-wrap">
-              ${this._renderCameras()}
-              <div class="stack-col">
-                ${this._renderTV()}
-                ${this._renderPS5()}
-              </div>
-              <div class="stack-col">
-                ${this._renderSpotify()}
-                ${this._renderClimate()}
-              </div>
+            <div class="stack-col">
+              ${this._renderSpotifyShell()}
+              ${this._renderAC()}
             </div>
-          </section>
-        </ha-card>
-      `;
-    } catch (error) {
-      this.shadowRoot.innerHTML = `
-        <ha-card style="padding:16px;background:#220909;color:#fff;border-radius:16px;">
-          <strong>Erro na subview da Sala</strong>
-          <div style="margin-top:8px;font-size:12px;opacity:.85;">${this._escape(error?.message || 'Erro desconhecido')}</div>
-        </ha-card>
-      `;
-      // eslint-disable-next-line no-console
-      console.error('bruno-sala-subview render error', error);
-    }
+          </div>
+        </section>
+      </ha-card>
+    `;
 
     this._bindEvents();
+    this._attachSpotifyCard();
   }
 
   _bindEvents() {
@@ -977,6 +1439,9 @@ class BrunoSalaSubview extends HTMLElement {
           break;
         case 'lights-on':
           this._turnOn(this._config.entities.room_group);
+          break;
+        case 'lights-off':
+          this._turnOff(this._config.entities.room_group);
           break;
         case 'toggle-light':
           this._toggle(entity);
@@ -1025,11 +1490,11 @@ if (!customElements.get(BRUNO_SALA_SUBVIEW_TAG)) {
 }
 
 window.customCards = window.customCards || [];
-if (!window.customCards.find((item) => item.type === BRUNO_SALA_SUBVIEW_TAG)) {
+if (!window.customCards.find((card) => card.type === BRUNO_SALA_SUBVIEW_TAG)) {
   window.customCards.push({
     type: BRUNO_SALA_SUBVIEW_TAG,
     name: 'Bruno Sala Subview',
     preview: true,
-    description: 'Premium Sala subview with atmospheric hero and structured functional layout.',
+    description: 'Sala premium subview aligned with Bento atmospheric hero and original Sala entities.',
   });
 }

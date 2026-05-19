@@ -1,10 +1,11 @@
-const BRUNO_LIQUID_GLASS_VERSION = '20260518-2';
+const BRUNO_LIQUID_GLASS_VERSION = '20260518-3';
 const BRUNO_LIQUID_GLASS_STYLE_ID = 'bruno-liquid-glass-tokens';
 
 const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-accent': '150, 190, 255',
-  'bruno-liquid-card-radius': '22px',
-  'bruno-liquid-card-radius-compact': '18px',
+  'bruno-liquid-card-radius': '18px',
+  'bruno-liquid-card-radius-compact': '16px',
+  'bruno-liquid-room-radius': '16px',
 
   // Validated on the Sala Bento card. Keep these values stable unless the
   // whole shared glass skin is intentionally revised.

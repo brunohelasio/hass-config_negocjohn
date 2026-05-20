@@ -28,6 +28,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
     camera_secondary: 'camera.vr_camera_2',
     active_camera_select: 'input_select.bento_active_camera',
     tv: 'media_player.android_tv_192_168_3_17',
+    tv_remote_player: 'media_player.atv',
+    tv_remote: 'remote.atv',
     spotify: 'media_player.spotifyplus_bruno_helasio',
     speaker: 'media_player.echo_show',
     climate: 'climate.sl_ar_condicionado',
@@ -36,14 +38,19 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
     ps5: 'switch.ps5_power',
     ps5_image: '/local/images/ps5.png',
     lights: [
-      { entity: 'light.sala_switch_2', name: 'Luz Principal', icon_type: 'light_flush' },
-      { entity: 'light.sl_leds_direito_e_esquerdo', name: 'LEDs Sala', icon_type: 'ledstrip' },
-      { entity: 'light.sala_2_switch_2', name: 'VR Principal', icon_type: 'light_flush' },
-      { entity: 'light.sala_2_switch_3', name: 'VR Cristaleira', icon_type: 'ledstrip' },
-      { entity: 'light.varanda_switch_1', name: 'VR Gourmet', icon_type: 'ledstrip' },
-      { entity: 'light.varanda_switch_2', name: 'VR Pendente', icon_type: 'pendant' },
-      { entity: '', name: 'LED Fita TV', icon_type: 'ledstrip', placeholder: true },
-      { entity: '', name: 'Luz Auxiliar', icon_type: 'light_flush', placeholder: true },
+      // FALLBACK - agrupamento antigo da subview:
+      // light.sala_switch_2 / light.sl_leds_direito_e_esquerdo /
+      // light.sala_2_switch_2 / light.sala_2_switch_3 /
+      // light.varanda_switch_1 / light.varanda_switch_2 /
+      // LED Fita TV / Luz Auxiliar.
+      { entity: 'light.sala_switch_2', name: 'SL Luz Principal', icon_type: 'light_flush', zone: 'sala' },
+      { entity: 'light.sala_switch_1', name: 'SL LED Esquerdo', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.sala_switch_3', name: 'SL LED Direito', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: '', name: 'LED Fita TV', icon_type: 'ledstrip', placeholder: true, zone: 'sala' },
+      { entity: 'light.sala_2_switch_2', name: 'VR Luz Principal', icon_type: 'light_flush', zone: 'varanda' },
+      { entity: 'light.varanda_switch_2', name: 'Varanda Pendente', icon_type: 'pendant', zone: 'varanda' },
+      { entity: 'light.varanda_switch_1', name: 'Varanda Area Gourmet', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.sala_2_switch_3', name: 'Varanda Cristaleira', icon_type: 'ledstrip', zone: 'varanda' },
     ],
     cameras: [
       { entity: 'camera.sl_camera_2', name: 'Sala Principal', short_name: 'Sala' },
@@ -71,8 +78,11 @@ class BrunoSalaSubview extends HTMLElement {
     this._hass = null;
     this._refreshSeed = Date.now();
     this._lastCameraImages = {};
+    this._loadedCameraUrls = {};
+    this._cameraBaseUrls = {};
     this._lastMinute = '';
     this._lastActionAt = {};
+    this._spotifyToolsOpen = false;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
   }
@@ -190,6 +200,8 @@ class BrunoSalaSubview extends HTMLElement {
       const nextSrc = BrunoSalaSubview._withCacheBust(baseSrc, stamp);
       const loader = new globalThis.Image();
       loader.onload = () => {
+        const entityId = image.dataset.cameraEntity;
+        if (entityId) this._loadedCameraUrls[entityId] = nextSrc;
         image.src = nextSrc;
         image.classList.remove('is-hidden');
       };
@@ -318,12 +330,17 @@ class BrunoSalaSubview extends HTMLElement {
     if (liveImage) this._lastCameraImages[camera.entity] = liveImage;
 
     const image = liveImage || this._lastCameraImages[camera.entity] || `/api/camera_proxy/${camera.entity}`;
+    if (this._cameraBaseUrls[camera.entity] !== image) {
+      this._cameraBaseUrls[camera.entity] = image;
+      delete this._loadedCameraUrls[camera.entity];
+    }
+
     return {
       ...camera,
       state,
       online,
       image,
-      imageUrl: BrunoSalaSubview._withCacheBust(image, this._refreshSeed),
+      imageUrl: this._loadedCameraUrls[camera.entity] || BrunoSalaSubview._withCacheBust(image, this._refreshSeed),
       status: online ? 'Ao vivo' : (unavailable ? 'Indisponivel' : 'Online'),
     };
   }
@@ -350,7 +367,7 @@ class BrunoSalaSubview extends HTMLElement {
       active,
       source: attrs.source || attrs.app_name || 'HDMI 1',
       title: attrs.media_title || attrs.media_series_title || attrs.app_name || (active ? 'TV ligada' : 'TV desligada'),
-      subtitle: attrs.media_artist || attrs.source || 'Sala',
+      subtitle: attrs.media_artist || '',
       poster: attrs.entity_picture || attrs.media_image_url || '',
       volume: attrs.volume_level != null ? Math.round(Number(attrs.volume_level) * 100) : null,
     };
@@ -361,15 +378,12 @@ class BrunoSalaSubview extends HTMLElement {
     const attrs = entity?.attributes || {};
     const state = entity?.state || 'off';
     const active = BRUNO_SALA_SUBVIEW_MEDIA_ON_STATES.includes(state);
-    const displayName = String(attrs.friendly_name || 'SpotifyPlus')
-      .replace(/\s+Bruno\s+Hel(?:a|\u00e1)sio/i, '')
-      .trim();
     return {
       entity,
       state,
       active,
       playing: state === 'playing',
-      title: attrs.media_title || displayName || 'SpotifyPlus',
+      title: attrs.media_title || 'No Media Playing',
       subtitle: attrs.media_artist || attrs.media_album_name || '',
       artwork: attrs.entity_picture || attrs.media_image_url || '',
       source: attrs.source || this._config.spotify_device_name || 'Echo Show',
@@ -442,6 +456,70 @@ class BrunoSalaSubview extends HTMLElement {
     if (!climate.active) return `Off - ${target}\u00b0C`;
     const action = climate.hvacMode === 'heat' ? 'Heat' : this._climateModeLabel(climate.hvacMode);
     return `${action} - ${target}\u00b0C`;
+  }
+
+  _fireDomEvent(action) {
+    this.dispatchEvent(new CustomEvent('ll-custom', {
+      detail: action,
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
+  _openTvRemotePopup() {
+    this._fireDomEvent({
+      action: 'fire-dom-event',
+      browser_mod: {
+        service: 'browser_mod.popup',
+        data: {
+          title: 'Apple TV',
+          tag: 'sala_tv_remote',
+          style: '--popup-max-width: min(760px, 92vw); --popup-border-width: 0;',
+          content: {
+            type: 'custom:apple-tv-card',
+            full_screen: true,
+            entity: this._config.entities.tv_remote_player || 'media_player.atv',
+            remote: this._config.entities.tv_remote || 'remote.atv',
+            sources: [
+              { source_name: 'Infuse' },
+              { source_name: 'Disney+' },
+              { source_name: 'Netflix' },
+              { source_name: 'Prime Video' },
+              { image: '/local/dashboard-resources/Apple-Tv-Card/logo/youtube.png', source_name: 'YouTube' },
+              { image: '/local/dashboard-resources/Apple-Tv-Card/logo/dazn.png', source_name: 'DAZN' },
+            ],
+          },
+        },
+      },
+    });
+  }
+
+  _openSpotifyPlusPopup(mode = 'full') {
+    const sections = mode === 'devices'
+      ? ['devices']
+      : mode === 'library'
+        ? ['userpresets']
+        : ['player', 'devices', 'userpresets'];
+
+    this._fireDomEvent({
+      action: 'fire-dom-event',
+      browser_mod: {
+        service: 'browser_mod.popup',
+        data: {
+          title: 'Spotify',
+          tag: `spotify_sala_${mode}`,
+          style: '--popup-max-width: min(560px, 92vw); --popup-border-width: 0;',
+          content: {
+            type: 'custom:spotifyplus-card',
+            entity: this._config.entities.spotify,
+            deviceDefaultId: this._config.spotify_device_name,
+            deviceControlByName: true,
+            playerBackgroundImageSize: 'cover',
+            sections,
+          },
+        },
+      },
+    });
   }
 
   _callService(serviceName, data = {}) {
@@ -532,6 +610,27 @@ class BrunoSalaSubview extends HTMLElement {
     }
     if (action === 'toggle-tv' && !this._cooldown('tv')) this._callService('homeassistant.toggle', { entity_id: this._config.entities.tv });
     if (action === 'tv-play-pause') this._callService('media_player.media_play_pause', { entity_id: this._config.entities.tv });
+    if (action === 'tv-remote') {
+      this._openTvRemotePopup();
+      return;
+    }
+    if (action === 'spotify-more') {
+      this._spotifyToolsOpen = !this._spotifyToolsOpen;
+      this._safeRender();
+      return;
+    }
+    if (action === 'spotify-devices') {
+      this._openSpotifyPlusPopup('devices');
+      return;
+    }
+    if (action === 'spotify-library') {
+      this._openSpotifyPlusPopup('library');
+      return;
+    }
+    if (action === 'spotify-plus') {
+      this._openSpotifyPlusPopup('full');
+      return;
+    }
     if (action === 'spotify-prev') this._callService('media_player.media_previous_track', { entity_id: this._config.entities.spotify });
     if (action === 'spotify-next') this._callService('media_player.media_next_track', { entity_id: this._config.entities.spotify });
     if (action === 'spotify-play-pause') {
@@ -675,7 +774,6 @@ class BrunoSalaSubview extends HTMLElement {
                 <div class="module-subtitle">Controle</div>
               </div>
             </div>
-            <div class="curtain-pill">Automatica - ${model.curtainPosition}%</div>
             <div class="curtain-actions">
               <button type="button" class="preset-button" data-action="cover-open">
                 <ha-icon icon="mdi:curtains"></ha-icon><span>Aberta</span>
@@ -689,6 +787,7 @@ class BrunoSalaSubview extends HTMLElement {
               <button type="button" class="preset-button is-primary" data-action="cover-stop">
                 <ha-icon icon="mdi:home-automation"></ha-icon><span>Automatica</span>
               </button>
+              <span class="curtain-pill">Automatica - ${model.curtainPosition}%</span>
             </div>
             <div class="curtain-progress">
               <span style="width:${model.curtainPosition}%"></span>
@@ -745,37 +844,59 @@ class BrunoSalaSubview extends HTMLElement {
     `;
   }
 
+  _lightsSubtitle(total, active) {
+    const lightLabel = total === 1 ? '1 luz' : `${total} luzes`;
+    const activeLabel = active === 1 ? '1 acesa' : `${active} acesas`;
+    return `${lightLabel} - ${activeLabel}`;
+  }
+
+  _renderLightTile(light) {
+    const state = this._state(light.entity);
+    const active = state?.state === 'on';
+    const disabled = !light.entity || light.placeholder;
+
+    return `
+      <button type="button" class="light-tile${active ? ' is-on' : ''}${disabled ? ' is-placeholder' : ''}" ${disabled ? 'disabled' : `data-action="toggle-light" data-entity="${BrunoSalaSubview._escapeAttr(light.entity)}"`}>
+        <span class="light-icon">${BrunoSalaSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
+        <span class="switch-knob${active ? ' is-on' : ''}"></span>
+        <strong>${BrunoSalaSubview._escape(light.name)}</strong>
+        <small>${disabled ? 'Placeholder' : (active ? 'Ligada' : 'Desligada')}</small>
+      </button>
+    `;
+  }
+
   _renderLights(model) {
     const lights = this._config.entities.lights || [];
+    const salaLights = lights.filter((light) => (light.zone || 'sala') === 'sala');
+    const varandaLights = lights.filter((light) => light.zone === 'varanda');
 
     return `
       <div class="glass-card lights-card">
         <div class="module-head">
           <div>
-            <div class="module-title">Luzes da Sala</div>
-            <div class="module-subtitle">${lights.length} luzes - ${model.lights} acesas</div>
+            <div class="module-title">Luzes</div>
+            <div class="module-subtitle">${this._lightsSubtitle(lights.length, model.lights)}</div>
           </div>
           <div class="head-actions">
-            <span class="all-label">Todas</span>
-            <button type="button" class="chip-button is-active" data-action="lights-on">ON</button>
-            <button type="button" class="chip-button" data-action="lights-off">OFF</button>
+            <button type="button" class="chip-button is-active" data-action="lights-on">Todas acesas</button>
+            <button type="button" class="chip-button" data-action="lights-off">Apagar todas</button>
           </div>
         </div>
 
-        <div class="lights-grid">
-          ${lights.map((light) => {
-            const state = this._state(light.entity);
-            const active = state?.state === 'on';
-            const disabled = !light.entity || light.placeholder;
-            return `
-              <button type="button" class="light-tile${active ? ' is-on' : ''}${disabled ? ' is-placeholder' : ''}" ${disabled ? 'disabled' : `data-action="toggle-light" data-entity="${BrunoSalaSubview._escapeAttr(light.entity)}"`}>
-                <span class="light-icon">${BrunoSalaSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
-                <span class="switch-knob${active ? ' is-on' : ''}"></span>
-                <strong>${BrunoSalaSubview._escape(light.name)}</strong>
-                <small>${disabled ? 'Placeholder' : (active ? 'Ligada' : 'Desligada')}</small>
-              </button>
-            `;
-          }).join('')}
+        <div class="lights-groups">
+          <section class="light-group">
+            <span class="light-group-label">Sala</span>
+            <div class="light-group-grid">
+              ${salaLights.map((light) => this._renderLightTile(light)).join('')}
+            </div>
+          </section>
+          <span class="lights-divider" aria-hidden="true"></span>
+          <section class="light-group">
+            <span class="light-group-label">Varanda</span>
+            <div class="light-group-grid">
+              ${varandaLights.map((light) => this._renderLightTile(light)).join('')}
+            </div>
+          </section>
         </div>
       </div>
     `;
@@ -792,7 +913,6 @@ class BrunoSalaSubview extends HTMLElement {
             <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
             <div>
               <div class="module-title">Cameras</div>
-              <div class="module-subtitle">${model.cameras.cameras.length} cameras</div>
             </div>
           </div>
           <div class="online-chip"><span></span>${model.cameras.onlineCount}/${model.cameras.cameras.length} online</div>
@@ -849,7 +969,6 @@ class BrunoSalaSubview extends HTMLElement {
             <span class="micro-icon"><ha-icon icon="mdi:television-classic"></ha-icon></span>
             <div>
               <div class="module-title">Televisao</div>
-              <div class="module-subtitle">Sala</div>
             </div>
           </div>
         </div>
@@ -857,10 +976,10 @@ class BrunoSalaSubview extends HTMLElement {
         <div class="tv-body">
           <div class="tv-main">
             <div class="media-source">${BrunoSalaSubview._escape(tv.source)}</div>
-            <div class="media-subtitle">${BrunoSalaSubview._escape(tv.subtitle)}</div>
+            ${tv.subtitle ? `<div class="media-subtitle">${BrunoSalaSubview._escape(tv.subtitle)}</div>` : ''}
             <div class="control-row">
               <button type="button" class="control-button" data-action="toggle-tv"><ha-icon icon="mdi:power"></ha-icon></button>
-              <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(this._config.entities.tv)}"><ha-icon icon="mdi:remote-tv"></ha-icon></button>
+              <button type="button" class="control-button" data-action="tv-remote"><ha-icon icon="mdi:remote-tv"></ha-icon></button>
               <button type="button" class="control-button" data-action="tv-play-pause"><ha-icon icon="mdi:play-pause"></ha-icon></button>
             </div>
             <div class="volume-row">
@@ -889,20 +1008,19 @@ class BrunoSalaSubview extends HTMLElement {
             <span class="micro-icon"><ha-icon icon="mdi:sony-playstation"></ha-icon></span>
             <div>
               <div class="module-title">PlayStation 5</div>
-              <div class="module-subtitle">Sala</div>
             </div>
           </div>
         </div>
-        <div class="ps5-body">
-          <div class="ps5-copy">
-            <strong>${BrunoSalaSubview._escape(ps5.active ? 'Pronto para jogar' : ps5.title)}</strong>
-            <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>Ligar Console</button>
-            <div class="ps5-meta">
-              <span>Status <strong>${ps5.active ? 'Ativo' : BrunoSalaSubview._escape(ps5.state)}</strong></span>
-              <span>Modo <strong>Performance</strong></span>
+        <!-- FALLBACK - PS5 anterior tinha texto "Console desligado" e caixas Status/Modo. -->
+        <div class="ps5-body ps5-minimal">
+          ${image ? `<img class="ps5-image" src="${image}" alt="">` : ''}
+          <div class="ps5-footer">
+            <span class="device-state"><span class="live-dot"></span>${ps5.active ? 'Online' : 'Offline'}</span>
+            <div class="ps5-actions">
+              <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>${ps5.active ? 'Desligar' : 'Ligar'}</button>
+              <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(ps5.entityId || '')}" ${ps5.configured ? '' : 'disabled'}><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
             </div>
           </div>
-          ${image ? `<img class="ps5-image" src="${image}" alt="">` : ''}
         </div>
       </section>
     `;
@@ -913,6 +1031,19 @@ class BrunoSalaSubview extends HTMLElement {
     const artwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
     const volume = spotify.volume == null ? 66 : spotify.volume;
     const subtitle = spotify.subtitle ? `<div class="media-subtitle">${BrunoSalaSubview._escape(spotify.subtitle)}</div>` : '';
+    const controls = this._spotifyToolsOpen
+      ? `
+        <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
+        <button type="button" class="control-button is-tool" data-action="spotify-devices" title="Dispositivos"><ha-icon icon="mdi:speaker-wireless"></ha-icon></button>
+        <button type="button" class="control-button is-tool" data-action="spotify-library" title="Playlists e fila"><ha-icon icon="mdi:playlist-music"></ha-icon></button>
+        <button type="button" class="control-button is-tool" data-action="spotify-plus" title="Mais opcoes"><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
+      `
+      : `
+        <button type="button" class="control-button" data-action="spotify-prev"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
+        <button type="button" class="control-button is-main" data-action="spotify-play-pause"><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-next"><ha-icon icon="mdi:skip-next"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-more" title="Mais opcoes"><ha-icon icon="mdi:plus"></ha-icon></button>
+      `;
 
     return `
       <section class="glass-card spotify-card${spotify.active ? ' is-active' : ''}">
@@ -934,9 +1065,7 @@ class BrunoSalaSubview extends HTMLElement {
             <div class="media-title">${BrunoSalaSubview._escape(spotify.title)}</div>
             ${subtitle}
             <div class="spotify-controls">
-              <button type="button" class="control-button" data-action="spotify-prev"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
-              <button type="button" class="control-button is-main" data-action="spotify-play-pause"><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
-              <button type="button" class="control-button" data-action="spotify-next"><ha-icon icon="mdi:skip-next"></ha-icon></button>
+              ${controls}
             </div>
             <div class="volume-row spotify-volume">
               <ha-icon icon="mdi:volume-medium"></ha-icon>
@@ -976,7 +1105,6 @@ class BrunoSalaSubview extends HTMLElement {
             <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
             <div>
               <div class="module-title">Ar Condicionado</div>
-              <div class="module-subtitle">Sala</div>
             </div>
           </div>
         </div>
@@ -1067,7 +1195,7 @@ class BrunoSalaSubview extends HTMLElement {
         height: 100vh;
         display: grid;
         grid-template-columns: 64px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-        grid-template-rows: 42px minmax(0, 44fr) minmax(0, 15fr) minmax(0, 23fr) 74px;
+        grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
         grid-template-areas:
           "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top"
           "frame-left hero hero hero hero hero side side side side side side side"
@@ -1095,29 +1223,50 @@ class BrunoSalaSubview extends HTMLElement {
       .room-sidebar {
         position: relative;
         z-index: 3;
+        isolation: isolate;
         align-self: center;
         justify-self: center;
         width: 56px;
         display: grid;
         grid-auto-rows: 39px;
         gap: 8px;
-        padding: 8px;
+        padding: 13px 8px 14px;
         border-radius: 999px;
-        background:
-          radial-gradient(54px 72px at 50% 0%, rgba(255,255,255,0.18), transparent 72%),
-          linear-gradient(180deg, rgba(255,255,255,0.115), rgba(255,255,255,0.035)),
-          rgba(12,15,22,0.58);
-        border: 1px solid rgba(255,255,255,0.16);
-        box-shadow:
+        background: var(--bruno-liquid-surface-off-background,
+          radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
+          radial-gradient(38px 110px at 92% 86%, rgba(var(--accent),0.10), transparent 68%),
+          linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.038) 34%, rgba(255,255,255,0.065)),
+          linear-gradient(155deg, rgba(22,27,38,0.84), rgba(10,12,18,0.72) 48%, rgba(18,16,17,0.46))
+        );
+        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.11));
+        box-shadow: var(--bruno-liquid-surface-off-shadow,
           inset 0 1px 0 rgba(255,255,255,0.18),
           inset 0 -1px 0 rgba(255,255,255,0.045),
-          0 18px 40px rgba(0,0,0,0.36);
-        backdrop-filter: blur(28px) saturate(1.58);
-        -webkit-backdrop-filter: blur(28px) saturate(1.58);
+          0 18px 40px rgba(0,0,0,0.36)
+        );
+        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(30px) saturate(1.58) contrast(1.05));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(30px) saturate(1.58) contrast(1.05));
+        overflow: hidden;
+      }
+
+      .room-sidebar::before {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        z-index: 0;
+        pointer-events: none;
+        border-radius: calc(999px - 1px);
+        background:
+          radial-gradient(34px 42px at 24% 3%, rgba(255,255,255,0.26), transparent 70%),
+          radial-gradient(42px 70px at 94% 18%, rgba(var(--accent),0.16), transparent 72%),
+          linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
+          linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%);
+        opacity: 0.78;
       }
 
       .room-nav-button {
         position: relative;
+        z-index: 1;
         width: 39px;
         height: 39px;
         display: inline-flex;
@@ -1418,10 +1567,10 @@ class BrunoSalaSubview extends HTMLElement {
         grid-column: 1 / -1;
         align-self: end;
         display: grid;
-        grid-template-columns: 1fr auto;
+        grid-template-columns: 1fr;
         grid-template-rows: auto auto;
-        gap: 8px 12px;
-        width: min(520px, 100%);
+        gap: 8px;
+        width: min(500px, 100%);
         padding: 0;
         border-radius: 0;
         background: transparent;
@@ -1460,7 +1609,12 @@ class BrunoSalaSubview extends HTMLElement {
 
       .curtain-pill {
         align-self: center;
-        padding: 8px 11px;
+        justify-self: stretch;
+        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 11px;
         border-radius: 999px;
         color: rgb(255,208,92);
         font-size: 11px;
@@ -1473,17 +1627,17 @@ class BrunoSalaSubview extends HTMLElement {
         grid-column: 1 / -1;
         justify-self: stretch;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(68px, 1fr)) minmax(118px, auto);
         align-items: center;
-        gap: 10px;
+        gap: 8px;
       }
 
       .preset-button {
-        min-height: 58px;
+        min-height: 48px;
         display: grid;
         place-items: center;
-        gap: 6px;
-        padding: 8px 6px;
+        gap: 4px;
+        padding: 6px 6px;
         border-radius: 14px;
         background:
           radial-gradient(74px 44px at 50% 0%, rgba(255,255,255,0.13), transparent 72%),
@@ -1502,11 +1656,11 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .preset-button ha-icon {
-        --mdc-icon-size: 22px;
+        --mdc-icon-size: 19px;
       }
 
       .preset-button span {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
       }
 
@@ -1646,13 +1800,46 @@ class BrunoSalaSubview extends HTMLElement {
         min-width: 52px;
       }
 
-      .lights-grid {
+      .lights-groups {
         position: relative;
         z-index: 1;
-        height: auto;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        grid-auto-rows: minmax(86px, 1fr);
+        grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
+        align-items: stretch;
+        min-height: 0;
+        height: 100%;
+        gap: 12px;
+      }
+
+      .light-group {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 6px;
+      }
+
+      .light-group-label {
+        color: rgba(255,255,255,0.54);
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .lights-divider {
+        align-self: stretch;
+        width: 1px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, transparent, rgba(255,255,255,0.16), rgba(255,183,77,0.26), rgba(255,255,255,0.12), transparent);
+        box-shadow: 0 0 14px rgba(255,183,77,0.10);
+      }
+
+      .light-group-grid {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
         gap: 10px;
       }
 
@@ -2002,6 +2189,14 @@ class BrunoSalaSubview extends HTMLElement {
           0 0 22px rgba(112,88,255,0.26);
       }
 
+      .control-button.is-tool {
+        color: rgba(210,245,230,0.96);
+        background:
+          radial-gradient(circle at 50% 16%, rgba(46,231,122,0.22), transparent 72%),
+          rgba(255,255,255,0.075);
+        border-color: rgba(46,231,122,0.22);
+      }
+
       .volume-row {
         display: grid;
         grid-template-columns: auto auto minmax(0, 1fr) auto;
@@ -2050,7 +2245,7 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .tv-card .tv-body {
-        grid-template-rows: minmax(112px, 1fr) auto;
+        grid-template-rows: minmax(132px, 1fr) auto;
       }
 
       .tv-card .poster-card {
@@ -2072,9 +2267,13 @@ class BrunoSalaSubview extends HTMLElement {
         height: calc(100% - 46px);
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(110px, 1fr) auto;
+        grid-template-rows: minmax(116px, 1fr) auto;
         gap: 10px;
         align-items: stretch;
+      }
+
+      .ps5-minimal {
+        gap: 8px;
       }
 
       .ps5-copy {
@@ -2106,6 +2305,28 @@ class BrunoSalaSubview extends HTMLElement {
         max-height: 100%;
         object-fit: contain;
         filter: drop-shadow(0 18px 28px rgba(0,0,0,0.42));
+      }
+
+      .ps5-footer {
+        min-height: 0;
+        display: grid;
+        gap: 9px;
+      }
+
+      .device-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: fit-content;
+        color: rgba(255,255,255,0.82);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .ps5-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 40px;
+        gap: 8px;
       }
 
       .ps5-meta span,
@@ -2145,9 +2366,9 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(112px, 1fr) auto;
+        grid-template-rows: minmax(132px, 1fr) auto;
         align-items: stretch;
-        gap: 10px;
+        gap: 8px;
       }
 
       .spotify-art {
@@ -2182,7 +2403,7 @@ class BrunoSalaSubview extends HTMLElement {
       .spotify-copy {
         display: grid;
         align-content: start;
-        gap: 9px;
+        gap: 8px;
       }
 
       .spotify-card .media-title {
@@ -2196,8 +2417,14 @@ class BrunoSalaSubview extends HTMLElement {
       .spotify-controls {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-top: 2px;
+        gap: 8px;
+        margin-top: 0;
+      }
+
+      .spotify-controls .control-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 13px;
       }
 
       .state-chip {
@@ -2403,17 +2630,28 @@ class BrunoSalaSubview extends HTMLElement {
         }
 
         .curtain-actions {
-          justify-self: start;
-          flex-wrap: wrap;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .curtain-pill {
+          grid-column: 1 / -1;
         }
 
         .side-panel {
           grid-template-rows: auto;
         }
 
-        .lights-grid {
+        .lights-groups {
           height: auto;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns: 1fr;
+        }
+
+        .lights-divider {
+          display: none;
+        }
+
+        .light-group-grid {
+          grid-template-rows: none;
           grid-auto-rows: minmax(94px, auto);
         }
 

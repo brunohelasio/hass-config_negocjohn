@@ -12,8 +12,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   entities: {
     curtain: 'cover.cortina_sala',
     active_sensor: 'sensor.living_room_active',
-    temperature: 'sensor.sl_sensor_temp_humid_temperatura',
-    humidity: 'sensor.sl_sensor_temp_humid_umidade',
+    temperature: ['sensor.sl_sensor_temp_humid_temperatura', 'sensor.sensor_4_in_1_sala_temperature'],
+    humidity: ['sensor.sl_sensor_temp_humid_umidade', 'sensor.sensor_4_in_1_sala_humidity'],
     room_group: 'light.grupo_luzes_sala',
     camera_main: 'camera.sl_camera_2',
     camera_secondary: 'camera.vr_camera_2',
@@ -25,15 +25,14 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
     router: '',
     zigbee_hub: '',
     ps5: 'switch.ps5_power',
+    ps5_image: '/local/images/ps5.png',
     lights: [
-      { entity: 'light.sala_switch_2', name: 'Luz Principal', short: 'Spot TV', icon: 'mdi:lightbulb-outline' },
-      { entity: 'light.sl_leds_direito_e_esquerdo', name: 'LEDs Sala', short: 'Fita LED', icon: 'mdi:led-strip-variant' },
-      { entity: 'light.sala_2_switch_2', name: 'VR Principal', short: 'Luz Cortina', icon: 'mdi:light-recessed' },
-      { entity: 'light.sala_2_switch_3', name: 'VR Cristaleira', short: 'Luz Estante', icon: 'mdi:led-strip-variant' },
-      { entity: 'light.varanda_switch_1', name: 'VR Gourmet', short: 'Luz Teto', icon: 'mdi:light-recessed' },
-      { entity: 'light.varanda_switch_2', name: 'VR Pendente', short: 'Luz Vaso', icon: 'mdi:ceiling-light' },
-      { entity: '', name: 'Luz Ambiente', short: 'Luz Ambiente', icon: 'mdi:lightbulb-outline', placeholder: true },
-      { entity: '', name: 'Luz Painel', short: 'Luz Painel', icon: 'mdi:lightbulb-outline', placeholder: true },
+      { entity: 'light.sala_switch_2', name: 'Luz Principal', icon_type: 'light_flush' },
+      { entity: 'light.sl_leds_direito_e_esquerdo', name: 'LEDs Sala', icon_type: 'ledstrip' },
+      { entity: 'light.sala_2_switch_2', name: 'VR Principal', icon_type: 'light_flush' },
+      { entity: 'light.sala_2_switch_3', name: 'VR Cristaleira', icon_type: 'ledstrip' },
+      { entity: 'light.varanda_switch_1', name: 'VR Gourmet', icon_type: 'ledstrip' },
+      { entity: 'light.varanda_switch_2', name: 'VR Pendente', icon_type: 'pendant' },
     ],
     cameras: [
       { entity: 'camera.sl_camera_2', name: 'Sala Principal', short_name: 'Sala' },
@@ -187,6 +186,13 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _state(entityId) {
+    if (Array.isArray(entityId)) {
+      const states = entityId
+        .filter(Boolean)
+        .map((id) => this._hass?.states?.[id])
+        .filter(Boolean);
+      return states.find((entity) => !this._isUnavailable(entity)) || states[0];
+    }
     return entityId ? this._hass?.states?.[entityId] : undefined;
   }
 
@@ -337,6 +343,7 @@ class BrunoSalaSubview extends HTMLElement {
       subtitle: attrs.media_artist || attrs.media_album_name || 'Spotify',
       artwork: attrs.entity_picture || attrs.media_image_url || '',
       source: attrs.source || this._config.spotify_device_name || 'Echo Show',
+      volume: attrs.volume_level != null ? Math.round(Number(attrs.volume_level) * 100) : null,
     };
   }
 
@@ -353,6 +360,7 @@ class BrunoSalaSubview extends HTMLElement {
       active,
       title: configured ? (active ? 'Console ligado' : 'Console desligado') : 'Entidade a confirmar',
       chip: configured ? (active ? 'Ligado' : 'Desligado') : 'Placeholder',
+      image: this._config.entities.ps5_image || '/local/images/ps5.png',
     };
   }
 
@@ -395,12 +403,20 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _navigate(path) {
+    if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
+    const eventPath = path.startsWith('/') ? resolvedPath : path;
     this.dispatchEvent(new CustomEvent('hass-navigate', {
-      detail: { path: resolvedPath },
+      detail: { path: eventPath },
       bubbles: true,
       composed: true,
     }));
+
+    globalThis.setTimeout?.(() => {
+      if (!resolvedPath || globalThis.location?.pathname === resolvedPath) return;
+      globalThis.history?.pushState?.(null, '', resolvedPath);
+      globalThis.dispatchEvent?.(new CustomEvent('location-changed', { detail: { replace: false } }));
+    }, 80);
   }
 
   _resolveNavigationPath(path) {
@@ -467,6 +483,21 @@ class BrunoSalaSubview extends HTMLElement {
     }
     if (action === 'toggle-tv' && !this._cooldown('tv')) this._callService('homeassistant.toggle', { entity_id: this._config.entities.tv });
     if (action === 'tv-play-pause') this._callService('media_player.media_play_pause', { entity_id: this._config.entities.tv });
+    if (action === 'spotify-prev') this._callService('media_player.media_previous_track', { entity_id: this._config.entities.spotify });
+    if (action === 'spotify-next') this._callService('media_player.media_next_track', { entity_id: this._config.entities.spotify });
+    if (action === 'spotify-play-pause') {
+      const spotify = this._spotifyModel();
+      if (spotify.playing) {
+        this._callService('media_player.media_pause', { entity_id: this._config.entities.spotify });
+      } else {
+        this._callService('spotifyplus.player_transfer_playback', {
+          entity_id: this._config.entities.spotify,
+          device_name: this._config.spotify_device_name,
+          play: true,
+          force_activate_device: true,
+        });
+      }
+    }
     if (action === 'spotify-play') {
       this._callService('spotifyplus.player_transfer_playback', {
         entity_id: this._config.entities.spotify,
@@ -495,9 +526,24 @@ class BrunoSalaSubview extends HTMLElement {
 
   _handleInput(event) {
     const target = event.target;
-    if (!target?.matches?.('[data-action="brightness"]')) return;
+    if (!target?.matches?.('[data-action]')) return;
     const value = Number(target.value);
     if (!Number.isFinite(value)) return;
+    if (target.dataset.action === 'spotify-volume') {
+      this._callService('media_player.volume_set', {
+        entity_id: this._config.entities.spotify,
+        volume_level: Math.max(0, Math.min(1, value / 100)),
+      });
+      return;
+    }
+    if (target.dataset.action === 'tv-volume') {
+      this._callService('media_player.volume_set', {
+        entity_id: this._config.entities.tv,
+        volume_level: Math.max(0, Math.min(1, value / 100)),
+      });
+      return;
+    }
+    if (target.dataset.action !== 'brightness') return;
     this._callService('light.turn_on', {
       entity_id: this._config.entities.room_group,
       brightness_pct: Math.max(1, Math.min(100, Math.round(value))),
@@ -554,7 +600,6 @@ class BrunoSalaSubview extends HTMLElement {
   _renderHero(model) {
     const title = BrunoSalaSubview._escape(this._config.title);
     const subtitle = BrunoSalaSubview._escape(this._config.subtitle);
-    const greeting = `${this._greeting()}, ${this._config.greeting_name}`;
     const background = BrunoSalaSubview._escapeAttr(this._config.background);
     const lightsLabel = `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`;
 
@@ -574,12 +619,6 @@ class BrunoSalaSubview extends HTMLElement {
 
           <div class="hero-clock" data-clock>${this._lastMinute}</div>
 
-          <div class="hero-greeting">
-            <strong>${BrunoSalaSubview._escape(greeting)}</strong>
-            <span>Ambiente confortavel</span>
-            <small>Tudo funcionando perfeitamente.</small>
-          </div>
-
           <div class="hero-chips">
             <span class="hero-chip is-active">${BrunoSalaSubview._escape(lightsLabel)}</span>
             <span class="hero-chip">${this._temperatureLabel()}</span>
@@ -594,10 +633,6 @@ class BrunoSalaSubview extends HTMLElement {
               </div>
             </div>
             <div class="curtain-pill">Automatica - ${model.curtainPosition}%</div>
-            <div class="curtain-main">
-              <span class="curtain-value">${model.curtainPosition}%</span>
-              <span class="curtain-label">abertura</span>
-            </div>
             <div class="curtain-actions">
               <button type="button" class="preset-button" data-action="cover-open">
                 <ha-icon icon="mdi:curtains"></ha-icon><span>Aberta</span>
@@ -658,6 +693,7 @@ class BrunoSalaSubview extends HTMLElement {
           <div class="head-actions">
             <span class="all-label">Todas</span>
             <button type="button" class="chip-button is-active" data-action="lights-on">ON</button>
+            <button type="button" class="chip-button" data-action="lights-off">OFF</button>
           </div>
         </div>
 
@@ -666,22 +702,15 @@ class BrunoSalaSubview extends HTMLElement {
             const state = this._state(light.entity);
             const active = state?.state === 'on';
             const disabled = !light.entity || light.placeholder;
-            const brightness = this._brightnessPercent(state);
             return `
               <button type="button" class="light-tile${active ? ' is-on' : ''}${disabled ? ' is-placeholder' : ''}" ${disabled ? 'disabled' : `data-action="toggle-light" data-entity="${BrunoSalaSubview._escapeAttr(light.entity)}"`}>
-                <span class="light-icon"><ha-icon icon="${BrunoSalaSubview._escapeAttr(light.icon || 'mdi:lightbulb-outline')}"></ha-icon></span>
+                <span class="light-icon">${BrunoSalaSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
                 <span class="switch-knob${active ? ' is-on' : ''}"></span>
-                <strong>${BrunoSalaSubview._escape(light.short || light.name)}</strong>
-                <small>${disabled ? 'Placeholder' : `${brightness || 0}%`}</small>
+                <strong>${BrunoSalaSubview._escape(light.name)}</strong>
+                <small>${disabled ? 'Placeholder' : (active ? 'Ligada' : 'Desligada')}</small>
               </button>
             `;
           }).join('')}
-        </div>
-
-        <div class="brightness-strip">
-          <ha-icon icon="mdi:white-balance-sunny"></ha-icon>
-          <input type="range" min="1" max="100" value="${this._roomBrightness() || 80}" data-action="brightness" aria-label="Brilho das luzes da sala">
-          <ha-icon icon="mdi:brightness-7"></ha-icon>
         </div>
       </div>
     `;
@@ -731,6 +760,7 @@ class BrunoSalaSubview extends HTMLElement {
   _renderTV(model) {
     const tv = model.tv;
     const poster = tv.poster ? BrunoSalaSubview._resolvePicture(tv.poster) : '';
+    const volume = tv.volume == null ? 60 : tv.volume;
 
     return `
       <section class="glass-card tv-card${tv.active ? ' is-active' : ''}">
@@ -745,14 +775,19 @@ class BrunoSalaSubview extends HTMLElement {
         </div>
 
         <div class="tv-body">
-          <div>
+          <div class="tv-main">
             <div class="media-source">${BrunoSalaSubview._escape(tv.source)}</div>
-            <div class="media-title">${BrunoSalaSubview._escape(tv.title)}</div>
             <div class="media-subtitle">${BrunoSalaSubview._escape(tv.subtitle)}</div>
             <div class="control-row">
               <button type="button" class="control-button" data-action="toggle-tv"><ha-icon icon="mdi:power"></ha-icon></button>
               <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(this._config.entities.tv)}"><ha-icon icon="mdi:remote-tv"></ha-icon></button>
               <button type="button" class="control-button" data-action="tv-play-pause"><ha-icon icon="mdi:play-pause"></ha-icon></button>
+            </div>
+            <div class="volume-row">
+              <ha-icon icon="mdi:volume-medium"></ha-icon>
+              <strong>${volume}%</strong>
+              <input type="range" min="0" max="100" value="${volume}" data-action="tv-volume" aria-label="Volume da TV">
+              <ha-icon icon="mdi:volume-high"></ha-icon>
             </div>
           </div>
           <div class="poster-card${poster ? ' has-poster' : ''}">
@@ -765,6 +800,7 @@ class BrunoSalaSubview extends HTMLElement {
 
   _renderPS5(model) {
     const ps5 = model.ps5;
+    const image = ps5.image ? BrunoSalaSubview._escapeAttr(ps5.image) : '';
 
     return `
       <section class="glass-card ps5-card${ps5.active ? ' is-active' : ''}${ps5.configured ? '' : ' is-placeholder'}">
@@ -779,12 +815,15 @@ class BrunoSalaSubview extends HTMLElement {
           <div class="online-chip is-soft">${BrunoSalaSubview._escape(ps5.chip)}</div>
         </div>
         <div class="ps5-body">
-          <strong>${BrunoSalaSubview._escape(ps5.title)}</strong>
-          <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>Ligar Console</button>
-          <div class="ps5-meta">
-            <span>Status <strong>${BrunoSalaSubview._escape(ps5.state)}</strong></span>
-            <span>Modo <strong>--</strong></span>
+          <div class="ps5-copy">
+            <strong>${BrunoSalaSubview._escape(ps5.active ? 'Pronto para jogar' : ps5.title)}</strong>
+            <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>Ligar Console</button>
+            <div class="ps5-meta">
+              <span>Status <strong>${ps5.active ? 'Ativo' : BrunoSalaSubview._escape(ps5.state)}</strong></span>
+              <span>Modo <strong>Performance</strong></span>
+            </div>
           </div>
+          ${image ? `<img class="ps5-image" src="${image}" alt="">` : ''}
         </div>
       </section>
     `;
@@ -793,24 +832,39 @@ class BrunoSalaSubview extends HTMLElement {
   _renderSpotify(model) {
     const spotify = model.spotify;
     const artwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
+    const volume = spotify.volume == null ? 66 : spotify.volume;
 
     return `
       <section class="glass-card spotify-card${spotify.active ? ' is-active' : ''}">
-        <div class="spotify-art${artwork ? ' has-art' : ''}">
-          ${artwork ? `<img src="${BrunoSalaSubview._escapeAttr(artwork)}" alt="">` : '<ha-icon icon="mdi:music-note"></ha-icon>'}
+        <div class="module-head">
+          <div class="title-with-chip">
+            <span class="micro-icon tone-green"><ha-icon icon="mdi:spotify"></ha-icon></span>
+            <div>
+              <div class="module-title">Spotify</div>
+              <div class="module-subtitle">Sala</div>
+            </div>
+          </div>
+          <span class="state-chip"><span></span>${spotify.playing ? 'Tocando no Spotify' : BrunoSalaSubview._escape(spotify.state)}</span>
         </div>
-        <div class="spotify-overlay">
-          <div>
-            <div class="module-title">Midia</div>
+
+        <div class="spotify-body">
+          <div class="spotify-art${artwork ? ' has-art' : ''}">
+            ${artwork ? `<img src="${BrunoSalaSubview._escapeAttr(artwork)}" alt="">` : '<ha-icon icon="mdi:music-note"></ha-icon>'}
+          </div>
+          <div class="spotify-copy">
             <div class="media-title">${BrunoSalaSubview._escape(spotify.title)}</div>
             <div class="media-subtitle">${BrunoSalaSubview._escape(spotify.subtitle)}</div>
+            <div class="spotify-controls">
+              <button type="button" class="control-button" data-action="spotify-prev"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
+              <button type="button" class="control-button is-main" data-action="spotify-play-pause"><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
+              <button type="button" class="control-button" data-action="spotify-next"><ha-icon icon="mdi:skip-next"></ha-icon></button>
+            </div>
+            <div class="volume-row spotify-volume">
+              <ha-icon icon="mdi:volume-medium"></ha-icon>
+              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify">
+              <strong>${volume}%</strong>
+            </div>
           </div>
-          <div class="spotify-controls">
-            <button type="button" class="control-button" data-action="spotify-play"><ha-icon icon="mdi:play"></ha-icon></button>
-            <button type="button" class="control-button" data-action="spotify-pause"><ha-icon icon="mdi:pause"></ha-icon></button>
-            <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(this._config.entities.spotify)}"><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
-          </div>
-          <span class="state-chip"><span></span>${spotify.playing ? 'Playing' : BrunoSalaSubview._escape(spotify.state)}</span>
         </div>
       </section>
     `;
@@ -819,7 +873,6 @@ class BrunoSalaSubview extends HTMLElement {
   _renderAC(model) {
     const climate = model.climate;
     const target = climate.target == null ? '--' : this._formatNumber(climate.target, 0);
-    const current = climate.current == null ? '--' : this._formatNumber(climate.current, 1);
 
     return `
       <section class="glass-card ac-card${climate.active ? ' is-active' : ''}">
@@ -846,10 +899,9 @@ class BrunoSalaSubview extends HTMLElement {
             </div>
           </div>
           <div class="ac-meta">
-            <span>Atual <strong>${current}\u00b0</strong></span>
-            <span>Modo <strong>${BrunoSalaSubview._escape(climate.hvacMode)}</strong></span>
-            <span>Ventilacao <strong>${BrunoSalaSubview._escape(climate.fan)}</strong></span>
-            <span>Oscilacao <strong>${BrunoSalaSubview._escape(climate.swing)}</strong></span>
+            <span>Modo <strong>${BrunoSalaSubview._escape(climate.hvacMode)} <ha-icon icon="mdi:chevron-right"></ha-icon></strong></span>
+            <span>Ventilacao <strong>${BrunoSalaSubview._escape(climate.fan)} <ha-icon icon="mdi:chevron-right"></ha-icon></strong></span>
+            <span>Oscilacao <strong>${BrunoSalaSubview._escape(climate.swing)} <ha-icon icon="mdi:chevron-right"></ha-icon></strong></span>
             <button type="button" class="soft-button" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(this._config.entities.climate)}">Mais opcoes</button>
           </div>
         </div>
@@ -902,9 +954,9 @@ class BrunoSalaSubview extends HTMLElement {
         height: 100vh;
         display: grid;
         grid-template-columns: repeat(12, minmax(0, 1fr));
-        grid-template-rows: minmax(420px, 52vh) minmax(360px, 1fr);
+        grid-template-rows: minmax(340px, 43vh) minmax(420px, 1fr);
         grid-template-areas:
-          "hero hero hero hero hero hero hero side side side side side"
+          "hero hero hero hero hero side side side side side side side"
           "cams cams cams cams media media media media comfort comfort comfort comfort";
         gap: var(--sala-gap);
         padding: 10px;
@@ -918,8 +970,8 @@ class BrunoSalaSubview extends HTMLElement {
       .hero-panel { grid-area: hero; min-width: 0; min-height: 0; }
       .side-panel { grid-area: side; min-width: 0; min-height: 0; display: grid; grid-template-rows: 72px minmax(0, 1fr); gap: var(--sala-gap); }
       .cameras-card { grid-area: cams; }
-      .media-stack { grid-area: media; min-width: 0; min-height: 0; display: grid; grid-template-rows: 1.15fr 0.85fr; gap: var(--sala-gap); }
-      .comfort-stack { grid-area: comfort; min-width: 0; min-height: 0; display: grid; grid-template-rows: 1.15fr 0.85fr; gap: var(--sala-gap); }
+      .media-stack { grid-area: media; min-width: 0; min-height: 0; display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: var(--sala-gap); }
+      .comfort-stack { grid-area: comfort; min-width: 0; min-height: 0; display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: var(--sala-gap); }
 
       .glass-card,
       .hero-stage {
@@ -973,6 +1025,15 @@ class BrunoSalaSubview extends HTMLElement {
         width: 100%;
         height: 100%;
         contain: paint;
+        background:
+          linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.035)),
+          rgb(20,20,24);
+        border-color: rgba(255,255,255,0.20);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.30),
+          inset 0 -1px 0 rgba(255,255,255,0.060),
+          0 24px 80px rgba(0,0,0,0.46),
+          0 0 0 1px rgba(80,130,180,0.08);
       }
 
       .hero-clip {
@@ -983,10 +1044,12 @@ class BrunoSalaSubview extends HTMLElement {
         overflow: hidden;
         clip-path: inset(0 round var(--sala-radius));
         background:
-          linear-gradient(90deg, rgba(5,11,20,0.90) 0%, rgba(7,13,22,0.60) 35%, rgba(7,13,22,0.20) 63%, rgba(7,13,22,0.02) 100%),
-          linear-gradient(180deg, rgba(0,0,0,0.10), rgba(0,0,0,0.30)),
+          linear-gradient(90deg, rgba(6,14,24,0.90) 0%, rgba(7,15,26,0.70) 30%, rgba(7,15,26,0.30) 58%, rgba(7,15,26,0.08) 78%, rgba(7,15,26,0.00) 100%),
+          radial-gradient(520px 220px at 18% 6%, rgba(145,185,245,0.22), transparent 62%),
+          radial-gradient(520px 260px at 92% 52%, rgba(255,255,255,0.10), transparent 64%),
+          linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.38)),
           var(--hero-image) center center / cover no-repeat;
-        filter: saturate(0.98) contrast(1.02);
+        filter: saturate(1.02) contrast(1.04);
       }
 
       .hero-clip::before {
@@ -1005,9 +1068,9 @@ class BrunoSalaSubview extends HTMLElement {
         height: 100%;
         display: grid;
         grid-template-columns: 1fr auto;
-        grid-template-rows: auto auto minmax(0, 1fr) auto;
-        padding: 18px 20px;
-        gap: 12px;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        padding: 16px 18px;
+        gap: 10px;
       }
 
       .hero-top {
@@ -1056,41 +1119,12 @@ class BrunoSalaSubview extends HTMLElement {
         grid-row: 2;
         align-self: start;
         justify-self: start;
-        margin-top: 38px;
-        font-size: clamp(64px, 7.4vw, 106px);
+        margin-top: 22px;
+        font-size: clamp(54px, 5.7vw, 82px);
         line-height: 0.94;
         font-weight: 200;
         color: rgba(255,255,255,0.92);
         text-shadow: 0 14px 36px rgba(0,0,0,0.28);
-      }
-
-      .hero-greeting {
-        grid-column: 1;
-        grid-row: 3;
-        align-self: start;
-        display: grid;
-        gap: 7px;
-        margin-top: 4px;
-        max-width: 360px;
-      }
-
-      .hero-greeting strong {
-        font-size: 24px;
-        line-height: 1.08;
-        color: rgba(255,255,255,0.96);
-      }
-
-      .hero-greeting span {
-        margin-top: 8px;
-        font-size: 13px;
-        font-weight: 800;
-        color: rgba(255,255,255,0.90);
-      }
-
-      .hero-greeting small {
-        font-size: 12px;
-        font-weight: 600;
-        color: rgba(255,255,255,0.66);
       }
 
       .hero-chips {
@@ -1128,18 +1162,20 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .curtain-dock {
-        grid-row: 4;
+        grid-row: 3;
         grid-column: 1 / -1;
         align-self: end;
         display: grid;
         grid-template-columns: 1fr auto;
         grid-template-rows: auto auto;
-        gap: 10px 14px;
-        width: min(520px, 100%);
-        padding: 14px 16px;
-        border-radius: 22px;
-        background: rgba(7,12,22,0.34);
-        border: 1px solid rgba(255,255,255,0.14);
+        gap: 9px 12px;
+        width: min(480px, 100%);
+        padding: 12px 14px;
+        border-radius: 20px;
+        background:
+          radial-gradient(260px 120px at 4% 0%, rgba(255,255,255,0.13), transparent 68%),
+          linear-gradient(180deg, rgba(16,20,29,0.58), rgba(9,13,22,0.40));
+        border: 1px solid rgba(255,255,255,0.16);
         box-shadow:
           inset 0 1px 0 rgba(255,255,255,0.10),
           0 14px 34px rgba(0,0,0,0.24);
@@ -1185,26 +1221,6 @@ class BrunoSalaSubview extends HTMLElement {
         border: 1px solid rgba(255,183,77,0.25);
       }
 
-      .curtain-main {
-        display: none;
-      }
-
-      .curtain-main {
-        display: none;
-      }
-
-      .curtain-value {
-        font-size: 34px;
-        line-height: 1;
-        font-weight: 800;
-      }
-
-      .curtain-label {
-        color: var(--text-soft);
-        font-size: 14px;
-        padding-bottom: 4px;
-      }
-
       .curtain-actions {
         grid-column: 1 / -1;
         justify-self: stretch;
@@ -1215,11 +1231,11 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .preset-button {
-        min-height: 66px;
+        min-height: 56px;
         display: grid;
         place-items: center;
         gap: 6px;
-        padding: 9px 6px;
+        padding: 8px 6px;
         border-radius: 14px;
         background: rgba(255,255,255,0.065);
         border: 1px solid rgba(255,255,255,0.11);
@@ -1344,7 +1360,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .lights-card {
         display: grid;
-        grid-template-rows: auto minmax(0, 1fr) 42px;
+        grid-template-rows: auto minmax(0, 1fr);
         gap: 10px;
       }
 
@@ -1380,7 +1396,7 @@ class BrunoSalaSubview extends HTMLElement {
         z-index: 1;
         height: auto;
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         grid-auto-rows: minmax(84px, 1fr);
         gap: 10px;
       }
@@ -1421,16 +1437,43 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .light-icon {
-        width: 26px;
-        height: 26px;
+        position: relative;
+        width: 30px;
+        height: 30px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         color: rgba(255,255,255,0.74);
       }
 
-      .light-icon ha-icon {
-        --mdc-icon-size: 17px;
+      .light-tile.is-on .light-icon {
+        color: rgb(255,210,86);
+        filter: drop-shadow(0 0 10px rgba(255,183,77,0.34));
+      }
+
+      .tpl-light-icon {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .tpl-light-icon svg {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+      }
+
+      .tpl-light-glow {
+        position: absolute;
+        inset: 3px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(255,214,99,0.45), transparent 68%);
+        filter: blur(7px);
+        opacity: 0.95;
       }
 
       .switch-knob {
@@ -1474,27 +1517,6 @@ class BrunoSalaSubview extends HTMLElement {
         color: rgba(255,205,95,0.92);
         font-size: 11px;
         font-weight: 700;
-      }
-
-      .brightness-strip {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 12px;
-        min-height: 42px;
-        padding: 0 4px;
-        color: rgb(255,154,18);
-      }
-
-      .brightness-strip ha-icon {
-        --mdc-icon-size: 18px;
-      }
-
-      .brightness-strip input {
-        width: 100%;
-        accent-color: rgb(255,154,18);
       }
 
       .cameras-card {
@@ -1627,15 +1649,22 @@ class BrunoSalaSubview extends HTMLElement {
         z-index: 1;
         height: calc(100% - 46px);
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(112px, 28%);
-        gap: 12px;
+        grid-template-columns: minmax(0, 1fr) minmax(110px, 32%);
+        gap: 14px;
         align-items: stretch;
       }
 
+      .tv-main,
+      .spotify-copy,
+      .ac-main,
+      .ps5-copy {
+        min-width: 0;
+      }
+
       .media-source {
-        margin-top: 4px;
+        margin-top: 2px;
         color: white;
-        font-size: 22px;
+        font-size: 16px;
         font-weight: 800;
       }
 
@@ -1658,7 +1687,50 @@ class BrunoSalaSubview extends HTMLElement {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-top: 22px;
+        margin-top: 18px;
+      }
+
+      .control-button.is-main {
+        background:
+          radial-gradient(circle at 50% 18%, rgba(142,126,255,0.50), transparent 72%),
+          linear-gradient(180deg, rgba(108,88,214,0.74), rgba(60,48,128,0.58));
+        border-color: rgba(160,145,255,0.48);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.22),
+          0 0 22px rgba(112,88,255,0.26);
+      }
+
+      .volume-row {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 9px;
+        margin-top: 16px;
+        color: rgba(255,255,255,0.66);
+      }
+
+      .volume-row ha-icon {
+        --mdc-icon-size: 15px;
+      }
+
+      .volume-row strong {
+        color: rgba(255,255,255,0.88);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .volume-row input {
+        width: 100%;
+        min-width: 0;
+        accent-color: rgb(116,92,255);
+      }
+
+      .spotify-volume {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+      }
+
+      .spotify-volume input {
+        accent-color: rgb(28,214,104);
       }
 
       .poster-card {
@@ -1680,21 +1752,36 @@ class BrunoSalaSubview extends HTMLElement {
         z-index: 1;
         height: calc(100% - 46px);
         display: grid;
-        grid-template-columns: 1fr auto;
-        grid-template-rows: 1fr auto;
-        gap: 12px;
-        align-items: end;
+        grid-template-columns: minmax(0, 1fr) minmax(86px, 34%);
+        gap: 14px;
+        align-items: center;
       }
 
-      .ps5-body > strong {
-        align-self: center;
-        font-size: 21px;
+      .ps5-copy {
+        display: grid;
+        align-content: end;
+        gap: 12px;
+        height: 100%;
+      }
+
+      .ps5-copy > strong {
+        align-self: end;
+        color: rgb(45,225,118);
+        font-size: 15px;
+        font-weight: 800;
       }
 
       .ps5-meta {
-        grid-column: 1 / -1;
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
+      }
+
+      .ps5-image {
+        width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 18px 28px rgba(0,0,0,0.42));
       }
 
       .ps5-meta span,
@@ -1717,12 +1804,21 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .spotify-card {
-        padding: 22px;
+        padding: 14px;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(110px, 150px) minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .spotify-body {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(96px, 128px) minmax(0, 1fr);
         align-items: center;
-        gap: 24px;
+        gap: 20px;
       }
 
       .spotify-art {
@@ -1745,40 +1841,21 @@ class BrunoSalaSubview extends HTMLElement {
         content: "";
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, transparent 45%, rgba(2,8,18,0.86));
+        background: linear-gradient(180deg, transparent 64%, rgba(2,8,18,0.46));
       }
 
       .spotify-art ha-icon {
         --mdc-icon-size: 70px;
       }
 
-      .spotify-overlay {
-        position: relative;
-        inset: auto;
-        z-index: 2;
-        min-height: 0;
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 16px;
-        align-items: center;
-        padding: 0;
-        border-radius: 0;
-        background: transparent;
-        border: 0;
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-      }
-
       .spotify-controls {
         display: flex;
         align-items: center;
         gap: 12px;
-        grid-column: 1 / -1;
         margin-top: 18px;
       }
 
       .state-chip {
-        grid-column: 2;
         align-self: start;
         min-height: 28px;
       }
@@ -1839,7 +1916,21 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .ac-meta span {
+        grid-template-columns: 1fr auto;
+        align-items: center;
         min-width: 0;
+      }
+
+      .ac-meta span strong {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+      }
+
+      .ac-meta ha-icon {
+        --mdc-icon-size: 13px;
+        color: rgb(56,220,116);
       }
 
       @media (max-width: 1180px) {
@@ -1945,6 +2036,40 @@ class BrunoSalaSubview extends HTMLElement {
         }
       }
     `;
+  }
+
+  static _tplLightIcon(type, active = false) {
+    const name = String(type || '').replace(/^mdi:/, '').replace(/[^a-z0-9_-]/gi, '') || 'light_flush';
+    const glow = active
+      ? '<span class="tpl-light-glow" aria-hidden="true"></span>'
+      : '';
+    const icons = {
+      ledstrip: `
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <path fill="currentColor" d="M8.4395,16.668 C8.9795,16.552 9.5115,16.895 9.6285,17.435 C9.7455,17.974 9.4025,18.506 8.8625,18.623 C8.3225,18.74 7.7905,18.397 7.6735,17.857 C7.5565,17.317 7.9005,16.785 8.4395,16.668 M13.3275,15.611 C13.8665,15.495 14.3985,15.838 14.5155,16.377 C14.6325,16.917 14.2895,17.449 13.7505,17.566 C13.2105,17.683 12.6775,17.34 12.5605,16.8 C12.4445,16.261 12.7875,15.729 13.3275,15.611 M18.2135,14.555 C18.7535,14.438 19.2865,14.781 19.4025,15.32 C19.5195,15.86 19.1765,16.393 18.6365,16.51 C18.0965,16.626 17.5645,16.283 17.4485,15.743 C17.3315,15.203 17.6735,14.671 18.2135,14.555 M23.1005,13.498 C23.6405,13.381 24.1725,13.724 24.2905,14.264 C24.4065,14.804 24.0635,15.336 23.5235,15.453 C22.9835,15.569 22.4515,15.227 22.3355,14.687 C22.2175,14.147 22.5615,13.614 23.1005,13.498 M10.6695,20.639 L25.4735,17.444 C26.5535,17.211 27.2405,16.147 27.0065,15.067 C26.4495,12.484 23.9035,10.842 21.3205,11.399 L6.5165,14.594 C5.4365,14.827 4.7505,15.891 4.9835,16.971 C5.5415,19.554 8.0865,21.196 10.6695,20.639 M25,26 C24.447,26 24,25.553 24,25 C24,24.447 24.447,24 25,24 C25.553,24 26,24.447 26,25 C26,25.553 25.553,26 25,26 M20,26 C19.447,26 19,25.553 19,25 C19,24.447 19.447,24 20,24 C20.553,24 21,24.447 21,25 C21,25.553 20.553,26 20,26 M15,26 C14.447,26 14,25.553 14,25 C14,24.447 14.447,24 15,24 C15.553,24 16,24.447 16,25 C16,25.553 15.553,26 15,26 M10,26 C9.447,26 9,25.553 9,25 C9,24.447 9.447,24 10,24 C10.553,24 11,24.447 11,25 C11,25.553 10.553,26 10,26 M27,22 L9,22 C5,22 4,19 4,18 L4,23 C4,25.762 6.238,28 9,28 L27,28 C27.553,28 28,27.553 28,27 L28,23 C28,22.447 27.553,22 27,22 M22,8 C21.447,8 21,7.553 21,7 C21,6.447 21.447,6 22,6 C22.553,6 23,6.447 23,7 C23,7.553 22.553,8 22,8 M17,8 C16.447,8 16,7.553 16,7 C16,6.447 16.447,6 17,6 C17.553,6 18,6.447 18,7 C18,7.553 17.553,8 17,8 M12,8 C11.447,8 11,7.553 11,7 C11,6.447 11.447,6 12,6 C12.553,6 13,6.447 13,7 C13,7.553 12.553,8 12,8 M7,8 C6.447,8 6,7.553 6,7 C6,6.447 6.447,6 7,6 C7.553,6 8,6.447 8,7 C8,7.553 7.553,8 7,8 M23,4 L5,4 C4.447,4 4,4.447 4,5 L4,9 C4,9.553 4.447,10 5,10 L23,10 C27,10 28,13 28,14 L28,9 C28,6.238 25.762,4 23,4"/>
+        </svg>
+      `,
+      pendant: `
+        <svg viewBox="0 0 50 50" aria-hidden="true">
+          <path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" d="M25 4v17"/>
+          <path fill="currentColor" opacity="0.82" d="M22.7 18.2h4.8c1.2 0 2.1 1 2.1 2.2v5.8c0 1.2-.9 2.2-2.1 2.2h-4.8c-1.2 0-2.1-1-2.1-2.2v-5.8c0-1.2.9-2.2 2.1-2.2z"/>
+          <path fill="currentColor" d="M9.1 34.4c-.2-7.3 7.2-14.1 15.9-14.1s16.1 6.8 15.9 14.1c-.1 4.9-2.5 5.5-8.8 5.7-4 .1-10.6.1-14.8 0-5.8-.1-8-.9-8.2-5.7z"/>
+          ${active ? '<path fill="rgba(255,220,86,0.88)" d="M21 42.4c.5-2.7 1.7-3.3 4.2-3.3s3.7.6 4.1 3.1c.4 2.6-1.6 5-4.1 5s-4.7-2.1-4.2-4.8z"/>' : ''}
+        </svg>
+      `,
+      light_flush: `
+        <svg viewBox="0 0 50 50" aria-hidden="true">
+          <g>
+            <path fill="currentColor" opacity="0.78" d="M18.847 21.388C16.243 22.079 14.512 23.149 13.885 24.375C13.793 24.556 13.583 25.038 13.549 25.299C13.435 26.19 14.126 27.242 15.273 28.108C17.273 29.617 20.416 30.441 24.42 30.631L27.42 30.588C32.361 30.176 35.876 28.468 36.452 26.2C36.569 25.739 36.524 25.408 36.27 24.878C36.009 24.33 35.623 23.865 35.053 23.405C33.617 22.248 31.402 21.45 28.355 20.843C25.612 20.19 21.712 20.642 18.847 21.388Z"/>
+            <path fill="currentColor" d="M25.243 17.913C15.653 17.809 8.131 21.052 7.733 25C7.315 29.148 16.07 32.922 25.452 32.922C34.834 32.922 43.112 28.716 42.336 25.07C41.622 21.715 34.903 18.087 25.243 17.913ZM25.417 30.866C16.78 30.771 12.541 27.226 13.405 24.828C13.791 23.847 15.401 21.415 22.459 20.58C26.249 20.248 27.413 20.489 29.761 21.022C36.964 22.661 36.752 25.989 36.752 25.989C36.301 29.257 30.348 30.939 25.418 30.867Z"/>
+            <path fill="currentColor" opacity="0.58" d="M42.316 25.012C41.603 23.019 40.277 22.207 40.277 22.207C36.714 19.347 31.883 18.661 28.947 18.224C25.505 17.712 21.478 18.057 21.478 18.057C15.227 18.68 12.928 19.952 10.795 21.096C10.795 21.096 8.371 23.11 7.808 24.606C7.808 24.606 8.205 22.474 8.531 21.871C9.048 20.912 10.53 19.862 11.002 19.572C16.034 17.047 19.435 16.678 23.652 16.585C24.911 16.557 26.971 16.634 26.971 16.634C31.712 16.954 33.768 17.631 36.597 18.675C36.597 18.675 39.671 20.146 40.678 21.183C41.125 21.643 41.752 22.321 41.956 22.929C42.111 23.459 42.266 24.473 42.316 25.012Z"/>
+            ${active ? '<path opacity="0.88" fill="rgba(255,245,195,0.84)" d="M22.413 22.141C22.413 22.141 16.999 22.946 16.242 25.456C16.242 25.456 15.874 27.586 19.976 28.969C19.976 28.969 22.927 29.685 25.213 29.654C28.288 29.613 30.582 28.904 30.582 28.904C33.865 28.036 33.963 26.03 33.963 26.03C33.882 23.684 30.008 22.583 30.008 22.583C26.164 21.611 24.51 21.844 22.413 22.141Z"/>' : ''}
+          </g>
+        </svg>
+      `,
+    };
+
+    return `<span class="tpl-light-icon icon-${name}${active ? ' is-on' : ''}">${glow}${icons[name] || icons.light_flush}</span>`;
   }
 
   static _resolvePicture(src) {

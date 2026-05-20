@@ -9,6 +9,15 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   fallback_background: '/local/images/sala_estar.jpg',
   refresh_interval: 6500,
   spotify_device_name: 'Echo Show',
+  room_nav: [
+    { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala', active: true },
+    { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office' },
+    { key: 'cozinha', name: 'Cozinha', icon: 'mdi:countertop', path: 'subview-cozinha' },
+    { key: 'lavabo', name: 'Lavabo', icon: 'mdi:toilet', path: 'subview-lavabo', divider_after: true },
+    { key: 'casal', name: 'Q. Casal', icon: 'mdi:bed-king', path: 'subview-quarto-casal' },
+    { key: 'marina', name: 'Q. Marina', icon: 'mdi:bed-single', path: 'subview-quarto-marina' },
+    { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:crib-outline', path: 'subview-quarto-miguel' },
+  ],
   entities: {
     curtain: 'cover.cortina_sala',
     active_sensor: 'sensor.living_room_active',
@@ -108,6 +117,7 @@ class BrunoSalaSubview extends HTMLElement {
       ...BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG,
       ...config,
       refresh_interval: Math.max(4000, Number(config.refresh_interval) || BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG.refresh_interval),
+      room_nav: Array.isArray(config.room_nav) ? config.room_nav : BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG.room_nav,
       entities,
     };
   }
@@ -216,6 +226,21 @@ class BrunoSalaSubview extends HTMLElement {
   _clock() {
     const now = new Date();
     return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  }
+
+  _dateLine() {
+    const days = [
+      'DOMINGO',
+      'SEGUNDA-FEIRA',
+      'TER\u00c7A-FEIRA',
+      'QUARTA-FEIRA',
+      'QUINTA-FEIRA',
+      'SEXTA-FEIRA',
+      'S\u00c1BADO',
+    ];
+    const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+    const now = new Date();
+    return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
   }
 
   _greeting() {
@@ -570,6 +595,8 @@ class BrunoSalaSubview extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
       <main class="sala-subview">
+        ${this._renderRoomSidebar()}
+
         <section class="hero-panel">
           ${this._renderHero(model)}
         </section>
@@ -598,7 +625,6 @@ class BrunoSalaSubview extends HTMLElement {
     const subtitle = BrunoSalaSubview._escape(this._config.subtitle);
     const background = BrunoSalaSubview._escapeAttr(this._config.background);
     const fallbackBackground = BrunoSalaSubview._escapeAttr(this._config.fallback_background || this._config.background);
-    const lightsLabel = `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`;
 
     return `
       <div class="hero-stage">
@@ -614,11 +640,9 @@ class BrunoSalaSubview extends HTMLElement {
             </div>
           </div>
 
-          <div class="hero-clock" data-clock>${this._lastMinute}</div>
-
-          <div class="hero-chips">
-            <span class="hero-chip is-active">${BrunoSalaSubview._escape(lightsLabel)}</span>
-            <span class="hero-chip">${this._temperatureLabel()}</span>
+          <div class="hero-headline">
+            <p class="hero-date-line">${BrunoSalaSubview._escape(this._dateLine())}</p>
+            <div class="hero-clock" data-clock>${this._lastMinute}</div>
           </div>
 
           <div class="curtain-dock">
@@ -653,8 +677,30 @@ class BrunoSalaSubview extends HTMLElement {
     `;
   }
 
+  _renderRoomSidebar() {
+    const items = this._config.room_nav || [];
+
+    return `
+      <nav class="room-sidebar" aria-label="Navegacao de comodos">
+        ${items.map((item) => `
+          <button
+            type="button"
+            class="room-nav-button${item.active ? ' is-active' : ''}${item.divider_after ? ' has-divider' : ''}"
+            data-action="navigate"
+            data-path="${BrunoSalaSubview._escapeAttr(item.path || this._config.navigation_path)}"
+            title="${BrunoSalaSubview._escapeAttr(item.name)}"
+            aria-label="${BrunoSalaSubview._escapeAttr(item.name)}"
+          >
+            <ha-icon icon="${BrunoSalaSubview._escapeAttr(item.icon || 'mdi:square-rounded-outline')}"></ha-icon>
+          </button>
+        `).join('')}
+      </nav>
+    `;
+  }
+
   _renderStatusRail(model) {
     const status = [
+      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: 'Acesas', tone: 'amber' },
       { icon: 'mdi:thermometer', value: this._temperatureLabel(), label: 'Temperatura', tone: 'amber' },
       { icon: 'mdi:water-percent', value: this._humidityLabel(), label: 'Umidade', tone: 'blue' },
       { icon: 'mdi:router-wireless', value: 'Roteador', label: this._networkLabel(this._config.entities.router), tone: 'neutral' },
@@ -824,7 +870,6 @@ class BrunoSalaSubview extends HTMLElement {
               <div class="module-subtitle">Sala</div>
             </div>
           </div>
-          <div class="online-chip is-soft">${BrunoSalaSubview._escape(ps5.chip)}</div>
         </div>
         <div class="ps5-body">
           <div class="ps5-copy">
@@ -966,7 +1011,7 @@ class BrunoSalaSubview extends HTMLElement {
         height: 100vh;
         display: grid;
         grid-template-columns: 64px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-        grid-template-rows: 42px minmax(0, 40fr) minmax(0, 16fr) minmax(0, 24fr) 74px;
+        grid-template-rows: 42px minmax(0, 44fr) minmax(0, 15fr) minmax(0, 23fr) 74px;
         grid-template-areas:
           "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top"
           "frame-left hero hero hero hero hero side side side side side side side"
@@ -984,11 +1029,83 @@ class BrunoSalaSubview extends HTMLElement {
 
       .hero-panel { grid-area: hero; min-width: 0; min-height: 0; }
       .side-panel { grid-area: side; min-width: 0; min-height: 0; display: grid; grid-template-rows: 72px minmax(0, 1fr); gap: var(--sala-gap); }
+      .room-sidebar { grid-area: frame-left; }
       .cameras-card { grid-area: cams; }
       .tv-card { grid-area: tv; }
       .ps5-card { grid-area: ps5; }
       .spotify-card { grid-area: spotify; }
       .ac-card { grid-area: ac; }
+
+      .room-sidebar {
+        position: relative;
+        z-index: 3;
+        align-self: center;
+        justify-self: center;
+        width: 48px;
+        display: grid;
+        grid-auto-rows: 36px;
+        gap: 8px;
+        padding: 8px 5px;
+        border-radius: 999px;
+        background:
+          radial-gradient(54px 72px at 50% 0%, rgba(255,255,255,0.18), transparent 72%),
+          linear-gradient(180deg, rgba(255,255,255,0.115), rgba(255,255,255,0.035)),
+          rgba(12,15,22,0.58);
+        border: 1px solid rgba(255,255,255,0.16);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.18),
+          inset 0 -1px 0 rgba(255,255,255,0.045),
+          0 18px 40px rgba(0,0,0,0.36);
+        backdrop-filter: blur(28px) saturate(1.58);
+        -webkit-backdrop-filter: blur(28px) saturate(1.58);
+      }
+
+      .room-nav-button {
+        position: relative;
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: rgba(255,255,255,0.62);
+        background: transparent;
+        transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+      }
+
+      .room-nav-button::after {
+        content: "";
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        bottom: -5px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.13), transparent);
+        opacity: 0;
+      }
+
+      .room-nav-button.has-divider::after {
+        opacity: 1;
+      }
+
+      .room-nav-button:hover {
+        color: rgba(255,255,255,0.88);
+        background: rgba(255,255,255,0.075);
+      }
+
+      .room-nav-button.is-active {
+        color: white;
+        background:
+          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 62%),
+          linear-gradient(180deg, rgba(105,150,230,0.68), rgba(59,92,178,0.54));
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.32),
+          0 0 20px rgba(96,165,250,0.32);
+      }
+
+      .room-nav-button ha-icon {
+        --mdc-icon-size: 18px;
+      }
 
       .glass-card {
         position: relative;
@@ -1143,7 +1260,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: grid;
         grid-template-columns: 1fr auto;
         grid-template-rows: auto minmax(0, 1fr) auto;
-        padding: 16px 18px;
+        padding: 16px 18px 14px;
         gap: 10px;
       }
 
@@ -1177,6 +1294,7 @@ class BrunoSalaSubview extends HTMLElement {
         line-height: 1.05;
         font-weight: 800;
         color: var(--text-main);
+        white-space: nowrap;
       }
 
       .hero-subtitle,
@@ -1188,28 +1306,32 @@ class BrunoSalaSubview extends HTMLElement {
         color: var(--text-soft);
       }
 
-      .hero-clock {
+      .hero-headline {
         grid-column: 1;
         grid-row: 2;
         align-self: start;
         justify-self: start;
-        margin-top: 22px;
-        font-size: clamp(54px, 5.7vw, 82px);
+        margin-top: 20px;
+      }
+
+      .hero-date-line {
+        margin: 0 0 10px;
+        color: rgba(255,255,255,0.54);
+        font-size: 11px;
+        line-height: 1;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .hero-clock {
+        font-size: clamp(58px, 6.1vw, 86px);
         line-height: 0.94;
         font-weight: 200;
+        font-variant-numeric: tabular-nums;
         color: rgba(255,255,255,0.92);
         text-shadow: 0 14px 36px rgba(0,0,0,0.28);
       }
 
-      .hero-chips {
-        grid-column: 2;
-        grid-row: 1;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .hero-chip,
       .chip-button,
       .online-chip,
       .state-chip {
@@ -1228,7 +1350,6 @@ class BrunoSalaSubview extends HTMLElement {
         white-space: nowrap;
       }
 
-      .hero-chip.is-active,
       .chip-button.is-active,
       .online-chip {
         background: rgba(24,134,190,0.36);
@@ -1242,19 +1363,15 @@ class BrunoSalaSubview extends HTMLElement {
         display: grid;
         grid-template-columns: 1fr auto;
         grid-template-rows: auto auto;
-        gap: 9px 12px;
-        width: min(480px, 100%);
-        padding: 12px 14px;
-        border-radius: 20px;
-        background:
-          radial-gradient(260px 120px at 4% 0%, rgba(255,255,255,0.13), transparent 68%),
-          linear-gradient(180deg, rgba(16,20,29,0.58), rgba(9,13,22,0.40));
-        border: 1px solid rgba(255,255,255,0.16);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.10),
-          0 14px 34px rgba(0,0,0,0.24);
-        backdrop-filter: blur(18px) saturate(1.35);
-        -webkit-backdrop-filter: blur(18px) saturate(1.35);
+        gap: 8px 12px;
+        width: min(520px, 100%);
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .curtain-copy,
@@ -1305,14 +1422,16 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .preset-button {
-        min-height: 56px;
+        min-height: 58px;
         display: grid;
         place-items: center;
         gap: 6px;
         padding: 8px 6px;
         border-radius: 14px;
-        background: rgba(255,255,255,0.065);
-        border: 1px solid rgba(255,255,255,0.11);
+        background:
+          radial-gradient(74px 44px at 50% 0%, rgba(255,255,255,0.13), transparent 72%),
+          rgba(255,255,255,0.058);
+        border: 1px solid rgba(255,255,255,0.12);
         color: rgba(255,255,255,0.72);
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
       }
@@ -1370,7 +1489,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .status-rail {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
         gap: 0;
         padding: 0;
       }
@@ -1380,8 +1499,8 @@ class BrunoSalaSubview extends HTMLElement {
         grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
         min-width: 0;
-        gap: 9px;
-        padding: 0 16px;
+        gap: 8px;
+        padding: 0 13px;
         border-right: 1px solid rgba(255,255,255,0.08);
       }
 
@@ -1435,7 +1554,7 @@ class BrunoSalaSubview extends HTMLElement {
       .lights-card {
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
-        gap: 10px;
+        gap: 7px;
       }
 
       .module-head {
@@ -1446,7 +1565,12 @@ class BrunoSalaSubview extends HTMLElement {
         justify-content: space-between;
         gap: 12px;
         min-height: 34px;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
+      }
+
+      .lights-card .module-head {
+        min-height: 30px;
+        margin-bottom: 0;
       }
 
       .head-actions {
@@ -1471,7 +1595,7 @@ class BrunoSalaSubview extends HTMLElement {
         height: auto;
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        grid-auto-rows: minmax(76px, 1fr);
+        grid-auto-rows: minmax(86px, 1fr);
         gap: 10px;
       }
 
@@ -1481,7 +1605,7 @@ class BrunoSalaSubview extends HTMLElement {
         grid-template-columns: 1fr auto;
         grid-template-rows: auto 1fr auto;
         align-items: start;
-        padding: 12px;
+        padding: 11px 12px;
         text-align: left;
         border-radius: var(--sala-radius-small);
         color: rgba(255,255,255,0.86);
@@ -1893,7 +2017,7 @@ class BrunoSalaSubview extends HTMLElement {
         grid-row: 2;
         display: grid;
         align-content: end;
-        gap: 10px;
+        gap: 9px;
         height: 100%;
       }
 
@@ -1907,7 +2031,7 @@ class BrunoSalaSubview extends HTMLElement {
       .ps5-meta {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 8px;
       }
 
       .ps5-image {
@@ -1924,8 +2048,8 @@ class BrunoSalaSubview extends HTMLElement {
       .ac-meta span {
         display: grid;
         gap: 4px;
-        min-width: 88px;
-        padding: 10px;
+        min-width: 0;
+        padding: 10px 11px;
         border-radius: 12px;
         color: var(--text-soft);
         font-size: 11px;
@@ -1936,7 +2060,11 @@ class BrunoSalaSubview extends HTMLElement {
       .ps5-meta strong,
       .ac-meta strong {
         color: white;
+        min-width: 0;
         font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .spotify-card {
@@ -2002,15 +2130,28 @@ class BrunoSalaSubview extends HTMLElement {
       .ac-body {
         grid-template-columns: 1fr;
         grid-template-rows: auto minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .ac-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: auto auto;
+        column-gap: 12px;
+        align-items: end;
       }
 
       .ac-temp {
+        grid-column: 1;
+        grid-row: 1;
         font-size: clamp(48px, 5vw, 72px);
         line-height: 0.92;
         font-weight: 200;
       }
 
       .ac-state {
+        grid-column: 1;
+        grid-row: 2;
         display: inline-block;
         margin-top: 8px;
         color: rgb(96,190,255);
@@ -2019,10 +2160,14 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .ac-controls {
-        display: flex;
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        align-self: end;
+        display: grid;
+        grid-template-columns: 1fr;
         align-items: center;
-        gap: 10px;
-        margin-top: 18px;
+        gap: 8px;
+        margin-top: 0;
       }
 
       .stepper {
@@ -2030,6 +2175,7 @@ class BrunoSalaSubview extends HTMLElement {
         align-items: center;
         overflow: hidden;
         min-height: 36px;
+        min-width: 116px;
         border-radius: 12px;
         border: 1px solid rgba(255,255,255,0.11);
         background: rgba(255,255,255,0.052);
@@ -2074,6 +2220,10 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       @media (max-width: 1180px) {
+        .room-sidebar {
+          display: none;
+        }
+
         .sala-subview {
           height: auto;
           overflow: auto;
@@ -2091,11 +2241,11 @@ class BrunoSalaSubview extends HTMLElement {
         }
 
         .status-rail {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns: repeat(5, minmax(0, 1fr));
         }
 
-        .status-item:nth-child(2) {
-          border-right: 0;
+        .status-item {
+          padding: 0 10px;
         }
       }
 
@@ -2127,14 +2277,16 @@ class BrunoSalaSubview extends HTMLElement {
           grid-template-columns: 1fr;
         }
 
-        .hero-chips {
-          grid-column: 1;
-          grid-row: auto;
-          justify-self: start;
-        }
-
         .hero-clock {
           font-size: 70px;
+        }
+
+        .status-rail {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .status-item:nth-child(even) {
+          border-right: 0;
         }
 
         .curtain-dock {

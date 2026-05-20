@@ -255,16 +255,22 @@ class BrunoQuickActionsCard extends HTMLElement {
           appearance: none;
           -webkit-appearance: none;
           position: relative;
-          flex: 0 0 44px;
-          width: 44px;
-          height: 44px;
+          flex: 0 0 78px;
+          width: 78px;
+          min-height: 46px;
           display: grid;
-          place-items: center;
+          grid-template-columns: 24px minmax(0, 1fr);
+          grid-template-rows: auto auto;
+          grid-template-areas:
+            "icon label"
+            "icon meta";
+          align-items: center;
+          column-gap: 8px;
           margin: 0;
-          padding: 0;
+          padding: 7px 9px 7px 8px;
           color: rgba(255,255,255,0.86);
           border: 1px solid transparent;
-          border-radius: 999px;
+          border-radius: 17px;
           background: transparent;
           box-shadow: none;
           overflow: hidden;
@@ -343,9 +349,40 @@ class BrunoQuickActionsCard extends HTMLElement {
 
         .quick-button ha-icon {
           --mdc-icon-size: 21px;
+          grid-area: icon;
+          justify-self: center;
           position: relative;
           z-index: 2;
           filter: drop-shadow(0 2px 5px rgba(0,0,0,0.24));
+        }
+
+        .quick-label,
+        .quick-kind {
+          position: relative;
+          z-index: 2;
+          min-width: 0;
+          line-height: 1;
+          text-align: left;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .quick-label {
+          grid-area: label;
+          align-self: end;
+          font-size: 10px;
+          font-weight: 800;
+          color: rgba(255,255,255,0.92);
+        }
+
+        .quick-kind {
+          grid-area: meta;
+          align-self: start;
+          margin-top: 3px;
+          font-size: 9px;
+          font-weight: 700;
+          color: rgba(255,255,255,0.48);
         }
 
         @media (max-width: 800px) {
@@ -360,9 +397,14 @@ class BrunoQuickActionsCard extends HTMLElement {
           }
 
           .quick-button {
-            width: 41px;
-            height: 41px;
-            flex-basis: 41px;
+            width: 72px;
+            flex-basis: 72px;
+            min-height: 44px;
+            padding-inline: 8px;
+          }
+
+          .quick-label {
+            font-size: 9px;
           }
         }
       </style>
@@ -394,8 +436,15 @@ class BrunoQuickActionsCard extends HTMLElement {
         data-action-index="${index}"
       >
         <ha-icon icon="${BrunoQuickActionsCard._escapeAttr(item?.icon || 'mdi:circle-outline')}"></ha-icon>
+        <span class="quick-label">${BrunoQuickActionsCard._escape(item?.label || item?.key || 'Acao')}</span>
+        <span class="quick-kind">${BrunoQuickActionsCard._escape(this._kindLabel(item))}</span>
       </button>
     `;
+  }
+
+  _kindLabel(item) {
+    if (item?.kind_label) return item.kind_label;
+    return item?.group === 'scenes' ? 'Cena' : 'A\u00e7\u00e3o';
   }
 
   static _escape(value) {

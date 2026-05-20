@@ -74,11 +74,11 @@ class BrunoHeroCard extends HTMLElement {
     const days = [
       'Domingo',
       'Segunda-feira',
-      'Ter\u00e7a-feira',
+      'Terça-feira',
       'Quarta-feira',
       'Quinta-feira',
       'Sexta-feira',
-      'S\u00e1bado',
+      'Sábado',
     ];
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     const now = new Date();
@@ -115,8 +115,8 @@ class BrunoHeroCard extends HTMLElement {
     const sun = this._state(this._config.entities.sun);
     const isDay = sun?.state === 'above_horizon';
     const state = weather?.state || 'cloudy';
-    const temperature = this._roundedAttribute(weather, 'temperature', '--', '\u00b0C');
-    const apparent = this._roundedAttribute(weather, 'apparent_temperature', '--\u00b0C', '\u00b0C');
+    const temperature = this._roundedAttribute(weather, 'temperature', '--', '°C');
+    const apparent = this._roundedAttribute(weather, 'apparent_temperature', '--°C', '°C');
     const humidity = this._roundedAttribute(weather, 'humidity', '--%', '%');
     const wind = this._roundedAttribute(weather, 'wind_speed', '-- km/h', ' km/h');
 
@@ -337,7 +337,7 @@ class BrunoHeroCard extends HTMLElement {
           min-height: 0;
           margin: 0;
           padding: 0;
-          overflow: hidden;
+          overflow: visible;
           position: relative;
           z-index: 0;
         }
@@ -362,86 +362,144 @@ class BrunoHeroCard extends HTMLElement {
           min-height: 0;
           position: relative;
           isolation: isolate;
-          overflow: hidden;
-          contain: paint;
+          overflow: visible;
           color: var(--hero-text);
-          border-radius: var(--hero-radius-left) var(--hero-radius-right) var(--hero-radius-right) var(--hero-radius-left);
+          border-radius: 0;
+          z-index: 0;
         }
 
-        .hero-clip {
+        /*
+         * FALLBACK RÁPIDO:
+         * A implementação anterior usava .hero-clip com:
+         * - border
+         * - box-shadow
+         * - background glass
+         * - leitura de card fechado
+         *
+         * Se precisar restaurar rapidamente o visual anterior,
+         * reintroduzir a camada .hero-clip e remover .hero-bg expandida.
+         */
+
+        .hero-bg {
+          position: absolute;
+          pointer-events: none;
+          z-index: 0;
+          top: -18px;
+          bottom: -20px;
+          left: -16px;
+          right: -112px;
+          background:
+            linear-gradient(90deg,
+              rgba(4,10,18,0.82) 0%,
+              rgba(5,10,18,0.66) 12%,
+              rgba(6,12,20,0.42) 24%,
+              rgba(7,13,22,0.22) 38%,
+              rgba(7,13,22,0.10) 50%,
+              rgba(7,13,22,0.14) 60%,
+              rgba(7,13,22,0.30) 70%,
+              rgba(7,13,22,0.54) 82%,
+              rgba(7,13,22,0.80) 92%,
+              rgba(7,13,22,0.94) 100%
+            ),
+            linear-gradient(180deg,
+              rgba(4,8,14,0.78) 0%,
+              rgba(4,8,14,0.46) 10%,
+              rgba(4,8,14,0.18) 22%,
+              rgba(4,8,14,0.04) 34%,
+              rgba(4,8,14,0.00) 46%,
+              rgba(4,8,14,0.00) 58%,
+              rgba(4,8,14,0.10) 72%,
+              rgba(4,8,14,0.28) 84%,
+              rgba(4,8,14,0.56) 94%,
+              rgba(4,8,14,0.78) 100%
+            ),
+            radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
+            radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
+            url(${background}) left center / auto 100% no-repeat,
+            url(${fallbackBackground}) left center / auto 100% no-repeat;
+          opacity: 1;
+          filter: saturate(1.01) brightness(0.90);
+          mask-image:
+            linear-gradient(to right,
+              transparent 0%,
+              rgba(0,0,0,0.84) 4%,
+              rgba(0,0,0,1) 10%,
+              rgba(0,0,0,1) 78%,
+              rgba(0,0,0,0.84) 88%,
+              rgba(0,0,0,0.46) 94%,
+              transparent 100%
+            ),
+            linear-gradient(to bottom,
+              transparent 0%,
+              rgba(0,0,0,0.84) 6%,
+              rgba(0,0,0,1) 14%,
+              rgba(0,0,0,1) 80%,
+              rgba(0,0,0,0.82) 89%,
+              rgba(0,0,0,0.42) 95%,
+              transparent 100%
+            );
+          -webkit-mask-image:
+            linear-gradient(to right,
+              transparent 0%,
+              rgba(0,0,0,0.84) 4%,
+              rgba(0,0,0,1) 10%,
+              rgba(0,0,0,1) 78%,
+              rgba(0,0,0,0.84) 88%,
+              rgba(0,0,0,0.46) 94%,
+              transparent 100%
+            ),
+            linear-gradient(to bottom,
+              transparent 0%,
+              rgba(0,0,0,0.84) 6%,
+              rgba(0,0,0,1) 14%,
+              rgba(0,0,0,1) 80%,
+              rgba(0,0,0,0.82) 89%,
+              rgba(0,0,0,0.42) 95%,
+              transparent 100%
+            );
+          mask-composite: intersect;
+          -webkit-mask-composite: source-in;
+        }
+
+        .hero-bg::before,
+        .hero-bg::after {
+          content: "";
           position: absolute;
           inset: 0;
-          z-index: 1;
-          overflow: hidden;
-          border-radius: inherit;
-          clip-path: inset(0 round var(--hero-radius-left) var(--hero-radius-right) var(--hero-radius-right) var(--hero-radius-left));
-          border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.13));
+          pointer-events: none;
+        }
+
+        .hero-bg::before {
           background:
-            linear-gradient(90deg, rgba(6,14,24,0.88) 0%, rgba(7,15,26,0.70) 29%, rgba(7,15,26,0.28) 57%, rgba(7,15,26,0.06) 78%, rgba(7,15,26,0.00) 100%),
-            radial-gradient(520px 220px at 18% 6%, rgba(145,185,245,0.22), transparent 62%),
-            radial-gradient(520px 260px at 92% 52%, rgba(255,255,255,0.10), transparent 64%),
-            url(${background}) center / cover no-repeat,
-            url(${fallbackBackground}) center / cover no-repeat,
-            linear-gradient(155deg, rgba(26,33,48,0.90), rgba(16,21,31,0.86));
-          box-shadow:
-            var(--bruno-liquid-surface-off-shadow,
-              inset 0 1px 0 rgba(255,255,255,0.18),
-              inset 1px 0 0 rgba(255,255,255,0.10),
-              inset -1px -1px 0 rgba(255,255,255,0.026),
-              0 18px 44px rgba(0,0,0,0.27),
-              0 0 24px rgba(110,150,210,0.055)
+            linear-gradient(90deg,
+              rgba(4,10,18,0.72) 0%,
+              rgba(4,10,18,0.56) 12%,
+              rgba(5,10,18,0.34) 24%,
+              rgba(5,10,18,0.14) 38%,
+              rgba(5,10,18,0.02) 50%,
+              rgba(5,10,18,0.08) 60%,
+              rgba(5,10,18,0.22) 72%,
+              rgba(5,10,18,0.46) 84%,
+              rgba(5,10,18,0.74) 100%
+            ),
+            linear-gradient(180deg,
+              rgba(3,8,14,0.62) 0%,
+              rgba(3,8,14,0.34) 12%,
+              rgba(3,8,14,0.08) 26%,
+              rgba(3,8,14,0.00) 40%,
+              rgba(3,8,14,0.00) 62%,
+              rgba(3,8,14,0.10) 76%,
+              rgba(3,8,14,0.30) 90%,
+              rgba(3,8,14,0.60) 100%
             );
         }
 
-        .hero-clip::before,
-        .hero-clip::after {
-          content: "";
-          position: absolute;
-          pointer-events: none;
-        }
-
-        .hero-clip::before {
-          inset: 0;
+        .hero-bg::after {
           background:
-            radial-gradient(580px 220px at 10% -8%, rgba(255,255,255,0.20), rgba(255,255,255,0.04) 48%, transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.10), transparent 42%),
-            linear-gradient(0deg, rgba(0,0,0,0.34), rgba(0,0,0,0.00) 42%);
-          opacity: 0.82;
-        }
-
-        .hero-clip::after {
-          inset: 0;
-          border-radius: inherit;
-          padding: 1px;
-          background: var(--bruno-liquid-surface-edge-glow,
-            linear-gradient(125deg, rgba(255,255,255,0.42), rgba(255,255,255,0.10) 30%, rgba(255,255,255,0.028) 58%, rgba(255,190,120,0.24) 100%)
-          );
-          -webkit-mask:
-            linear-gradient(#000 0 0) content-box,
-            linear-gradient(#000 0 0);
-          -webkit-mask-composite: xor;
-          mask:
-            linear-gradient(#000 0 0) content-box,
-            linear-gradient(#000 0 0);
-          mask-composite: exclude;
-          opacity: 0.92;
-        }
-
-        .lateral-veil {
-          position: absolute;
-          z-index: 0;
-          top: 0;
-          right: -32px;
-          bottom: 0;
-          width: 94px;
-          pointer-events: none;
-          border-radius: 0 20px 20px 0;
-          background:
-            linear-gradient(90deg, rgba(7,15,26,0.42), rgba(7,15,26,0.16) 42%, rgba(7,15,26,0.00) 100%),
-            radial-gradient(110px 120px at 0% 18%, rgba(var(--hero-accent),0.12), transparent 74%);
-          filter: blur(0.2px);
-          display: none;
-          opacity: 0;
+            radial-gradient(720px 220px at 8% 2%, rgba(255,255,255,0.08), transparent 58%),
+            linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%),
+            linear-gradient(0deg, rgba(0,0,0,0.22), rgba(0,0,0,0.00) 34%);
+          opacity: 0.58;
         }
 
         .content {
@@ -506,6 +564,7 @@ class BrunoHeroCard extends HTMLElement {
           outline: none;
           position: relative;
           transition: filter 180ms ease, transform 180ms ease;
+          z-index: 2;
         }
 
         .weather-dock::before {
@@ -606,6 +665,12 @@ class BrunoHeroCard extends HTMLElement {
             padding: 16px 18px 16px;
           }
 
+          .hero-bg {
+            right: -82px;
+            top: -14px;
+            bottom: -18px;
+          }
+
           .weather-dock {
             grid-template-columns: minmax(180px, 1fr) minmax(120px, 0.86fr) minmax(122px, 0.86fr);
             gap: 13px;
@@ -621,14 +686,40 @@ class BrunoHeroCard extends HTMLElement {
         @media (max-width: 800px) {
           :host {
             min-height: ${mobileHostMinHeight};
+            overflow: hidden;
           }
 
           .hero-stage {
-            border-radius: 18px;
+            overflow: hidden;
           }
 
-          .lateral-veil {
-            display: none;
+          .hero-bg {
+            top: -10px;
+            bottom: -12px;
+            left: -10px;
+            right: -16px;
+            background:
+              linear-gradient(90deg,
+                rgba(4,10,18,0.84) 0%,
+                rgba(5,10,18,0.66) 18%,
+                rgba(6,12,20,0.34) 36%,
+                rgba(6,12,20,0.14) 54%,
+                rgba(6,12,20,0.22) 70%,
+                rgba(6,12,20,0.52) 86%,
+                rgba(6,12,20,0.82) 100%
+              ),
+              linear-gradient(180deg,
+                rgba(4,8,14,0.76) 0%,
+                rgba(4,8,14,0.38) 14%,
+                rgba(4,8,14,0.10) 28%,
+                rgba(4,8,14,0.00) 42%,
+                rgba(4,8,14,0.00) 60%,
+                rgba(4,8,14,0.14) 76%,
+                rgba(4,8,14,0.42) 90%,
+                rgba(4,8,14,0.76) 100%
+              ),
+              url(${background}) left center / auto 100% no-repeat,
+              url(${fallbackBackground}) left center / auto 100% no-repeat;
           }
 
           .content {
@@ -729,8 +820,7 @@ class BrunoHeroCard extends HTMLElement {
       </style>
 
       <section class="hero-stage${mobileClass}" aria-label="Hero do dashboard">
-        <div class="lateral-veil" aria-hidden="true"></div>
-        <div class="hero-clip" aria-hidden="true"></div>
+        <div class="hero-bg" aria-hidden="true"></div>
 
         <div class="content">
           <div class="headline">
@@ -744,7 +834,7 @@ class BrunoHeroCard extends HTMLElement {
               <img src="${BrunoHeroCard._escape(weather.icon)}" alt="${BrunoHeroCard._escape(weather.state)}">
               <span>
                 <span class="weather-temp">${BrunoHeroCard._escape(weather.temperature)}</span>
-                <span class="weather-feels">Sensa\u00e7\u00e3o ${BrunoHeroCard._escape(weather.apparent)}</span>
+                <span class="weather-feels">Sensação ${BrunoHeroCard._escape(weather.apparent)}</span>
               </span>
             </span>
 
@@ -755,7 +845,7 @@ class BrunoHeroCard extends HTMLElement {
 
             <span class="metric-group sun">
               ${this._weatherMetric('mdi:weather-sunset-up', '#fb923c', 'Nascer', weather.rising)}
-              ${this._weatherMetric('mdi:weather-sunset-down', '#f97316', 'P\u00f4r', weather.setting)}
+              ${this._weatherMetric('mdi:weather-sunset-down', '#f97316', 'Pôr', weather.setting)}
             </span>
           </button>
         </div>
@@ -796,5 +886,5 @@ window.customCards.push({
   type: BRUNO_HERO_CARD_TAG,
   name: 'Bruno Hero Card',
   preview: false,
-  description: 'Isolated Bento Hero card with structural lateral blend and preserved weather popup.',
+  description: 'Atmospheric Bento Hero with blended background layer and preserved weather popup.',
 });

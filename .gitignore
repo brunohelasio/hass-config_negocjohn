@@ -22,6 +22,8 @@ config/www/lovelace-media-player-card
 .vscode
 *.sh
 config/www/*
+!config/www/bruno-ui/
+!config/www/bruno-ui/**
 private_repo.sh
 secrets.yaml
 commit-updates.py

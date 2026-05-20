@@ -8,6 +8,33 @@ subview: true
 theme: tablet
 type: panel
 
+# ANTERIOR (mantido para rollback rápido):
+# cards:
+#   - type: custom:layout-card
+#     layout_type: custom:grid-layout
+#     card_mod:
+#       style: |
+#         :host {
+#           display: block !important;
+#           height: 100% !important;
+#         }
+#         ha-card {
+#           height: 100vh !important;
+#           background: rgba(15, 20, 35, 0.10) !important;
+#           backdrop-filter: blur(24px) saturate(1.45) !important;
+#           -webkit-backdrop-filter: blur(24px) saturate(1.45) !important;
+#           border-radius: 0 !important;
+#           box-shadow: none !important;
+#           border: none !important;
+#           overflow: auto !important;
+#           box-sizing: border-box !important;
+#           --ha-card-background: transparent;
+#           --ha-card-border-width: 0;
+#           --ha-card-box-shadow: none;
+#         }
+#     layout: !include ./modules/sala/_layout.yaml
+#     cards: !include ./modules/sala/_cards.yaml
+
 cards:
   - type: custom:bruno-sala-subview
 

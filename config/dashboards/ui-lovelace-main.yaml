@@ -10,8 +10,8 @@ kiosk_mode:
 
 title: Neklanka Home
 views:
-  - !include views/main.yaml
   - !include views/bento_main.yaml
+  - !include views/main.yaml
 
   # ── LEGADO MOBILE V1 (2025) — DESATIVADO em 2026-05-10 ────────────────────
   # Rollback: descomentar para reativar.

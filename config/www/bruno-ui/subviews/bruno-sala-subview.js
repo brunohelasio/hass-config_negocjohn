@@ -33,6 +33,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
       { entity: 'light.sala_2_switch_3', name: 'VR Cristaleira', icon_type: 'ledstrip' },
       { entity: 'light.varanda_switch_1', name: 'VR Gourmet', icon_type: 'ledstrip' },
       { entity: 'light.varanda_switch_2', name: 'VR Pendente', icon_type: 'pendant' },
+      { entity: '', name: 'LED Fita TV', icon_type: 'ledstrip', placeholder: true },
+      { entity: '', name: 'Luz Auxiliar', icon_type: 'light_flush', placeholder: true },
     ],
     cameras: [
       { entity: 'camera.sl_camera_2', name: 'Sala Principal', short_name: 'Sala' },
@@ -578,16 +580,10 @@ class BrunoSalaSubview extends HTMLElement {
         </section>
 
         ${this._renderCameras(model)}
-
-        <section class="media-stack">
-          ${this._renderSpotify(model)}
-          ${this._renderPS5(model)}
-        </section>
-
-        <section class="comfort-stack">
-          ${this._renderTV(model)}
-          ${this._renderAC(model)}
-        </section>
+        ${this._renderTV(model)}
+        ${this._renderPS5(model)}
+        ${this._renderSpotify(model)}
+        ${this._renderAC(model)}
       </main>
     `;
 
@@ -601,11 +597,12 @@ class BrunoSalaSubview extends HTMLElement {
     const title = BrunoSalaSubview._escape(this._config.title);
     const subtitle = BrunoSalaSubview._escape(this._config.subtitle);
     const background = BrunoSalaSubview._escapeAttr(this._config.background);
+    const fallbackBackground = BrunoSalaSubview._escapeAttr(this._config.fallback_background || this._config.background);
     const lightsLabel = `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`;
 
     return `
       <div class="hero-stage">
-        <div class="hero-clip" style="--hero-image: url('${background}');" aria-hidden="true"></div>
+        <div class="hero-bg" style="--hero-image: url('${background}'); --hero-fallback-image: url('${fallbackBackground}');" aria-hidden="true"></div>
         <div class="hero-content">
           <div class="hero-top">
             <button class="back-button" type="button" data-action="navigate" data-path="${BrunoSalaSubview._escapeAttr(this._config.navigation_path)}" aria-label="Voltar">
@@ -717,6 +714,9 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _renderCameras(model) {
+    const active = model.cameras.activeCamera || model.cameras.cameras[0];
+    const secondary = model.cameras.cameras.find((camera) => camera.entity !== active?.entity) || model.cameras.cameras[1];
+
     return `
       <section class="glass-card cameras-card">
         <div class="module-head">
@@ -730,23 +730,35 @@ class BrunoSalaSubview extends HTMLElement {
           <div class="online-chip"><span></span>${model.cameras.onlineCount}/${model.cameras.cameras.length} online</div>
         </div>
 
-        <div class="camera-list">
-          ${model.cameras.cameras.map((camera) => `
-            <button type="button" class="camera-row" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(camera.entity)}">
-              ${this._cameraFrame(camera)}
-              <div class="camera-row-copy">
-                <strong>${BrunoSalaSubview._escape(camera.name)}</strong>
-                <span><span class="live-dot"></span>${BrunoSalaSubview._escape(camera.status)}</span>
-              </div>
-              <ha-icon class="camera-chevron" icon="mdi:chevron-right"></ha-icon>
+        <div class="camera-stage">
+          <button type="button" class="camera-main" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(active?.entity || '')}">
+            ${this._cameraFrame(active)}
+            <div class="camera-row-copy">
+              <strong>${BrunoSalaSubview._escape(active?.name || 'Camera')}</strong>
+              <span><span class="live-dot"></span>${BrunoSalaSubview._escape(active?.status || 'Online')}</span>
+            </div>
+            <ha-icon class="camera-chevron" icon="mdi:chevron-right"></ha-icon>
+          </button>
+
+          ${secondary ? `
+            <button type="button" class="camera-thumb-overlay" data-action="select-camera" data-entity="${BrunoSalaSubview._escapeAttr(secondary.entity)}" aria-label="Expandir ${BrunoSalaSubview._escapeAttr(secondary.name)}">
+              ${this._cameraFrame(secondary)}
+              <span>${BrunoSalaSubview._escape(secondary.short_name || secondary.name)}</span>
             </button>
-          `).join('')}
+          ` : ''}
         </div>
       </section>
     `;
   }
 
   _cameraFrame(camera) {
+    if (!camera) {
+      return `
+        <div class="camera-row-image">
+          <div class="camera-placeholder"><ha-icon icon="mdi:video-outline"></ha-icon></div>
+        </div>
+      `;
+    }
     const image = camera?.imageUrl || '';
     const base = camera?.image || '';
     return `
@@ -953,28 +965,32 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 100vh;
         height: 100vh;
         display: grid;
-        grid-template-columns: repeat(12, minmax(0, 1fr));
-        grid-template-rows: minmax(340px, 43vh) minmax(420px, 1fr);
+        grid-template-columns: 64px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
+        grid-template-rows: 42px minmax(0, 40fr) minmax(0, 16fr) minmax(0, 24fr) 74px;
         grid-template-areas:
-          "hero hero hero hero hero side side side side side side side"
-          "cams cams cams cams media media media media comfort comfort comfort comfort";
+          "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top"
+          "frame-left hero hero hero hero hero side side side side side side side"
+          "frame-left cams cams cams tv tv ps5 ps5 spotify spotify ac ac ac"
+          "frame-left cams cams cams tv tv ps5 ps5 spotify spotify ac ac ac"
+          "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
         gap: var(--sala-gap);
-        padding: 10px;
+        padding: 12px;
         background:
           radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%),
           radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%),
           #020406;
-        overflow: auto;
+        overflow: hidden;
       }
 
       .hero-panel { grid-area: hero; min-width: 0; min-height: 0; }
       .side-panel { grid-area: side; min-width: 0; min-height: 0; display: grid; grid-template-rows: 72px minmax(0, 1fr); gap: var(--sala-gap); }
       .cameras-card { grid-area: cams; }
-      .media-stack { grid-area: media; min-width: 0; min-height: 0; display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: var(--sala-gap); }
-      .comfort-stack { grid-area: comfort; min-width: 0; min-height: 0; display: grid; grid-template-rows: repeat(2, minmax(0, 1fr)); gap: var(--sala-gap); }
+      .tv-card { grid-area: tv; }
+      .ps5-card { grid-area: ps5; }
+      .spotify-card { grid-area: spotify; }
+      .ac-card { grid-area: ac; }
 
-      .glass-card,
-      .hero-stage {
+      .glass-card {
         position: relative;
         isolation: isolate;
         min-width: 0;
@@ -988,8 +1004,7 @@ class BrunoSalaSubview extends HTMLElement {
         box-shadow: var(--bruno-liquid-surface-off-shadow);
       }
 
-      .glass-card::before,
-      .hero-stage::before {
+      .glass-card::before {
         content: "";
         position: absolute;
         inset: 1px;
@@ -1000,8 +1015,7 @@ class BrunoSalaSubview extends HTMLElement {
         opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.82);
       }
 
-      .glass-card::after,
-      .hero-stage::after {
+      .glass-card::after {
         content: "";
         position: absolute;
         inset: 0;
@@ -1022,44 +1036,104 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .hero-stage {
+        position: relative;
+        isolation: isolate;
+        overflow: visible;
         width: 100%;
         height: 100%;
-        contain: paint;
-        background:
-          linear-gradient(135deg, rgba(255,255,255,0.13), rgba(255,255,255,0.035)),
-          rgb(20,20,24);
-        border-color: rgba(255,255,255,0.20);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.30),
-          inset 0 -1px 0 rgba(255,255,255,0.060),
-          0 24px 80px rgba(0,0,0,0.46),
-          0 0 0 1px rgba(80,130,180,0.08);
+        min-height: 0;
+        color: var(--text-main);
+        border-radius: 0;
       }
 
-      .hero-clip {
+      .hero-bg {
         position: absolute;
-        inset: 0;
+        pointer-events: none;
         z-index: 0;
-        border-radius: inherit;
-        overflow: hidden;
-        clip-path: inset(0 round var(--sala-radius));
+        top: -18px;
+        bottom: -20px;
+        left: -16px;
+        right: -86px;
         background:
-          linear-gradient(90deg, rgba(6,14,24,0.90) 0%, rgba(7,15,26,0.70) 30%, rgba(7,15,26,0.30) 58%, rgba(7,15,26,0.08) 78%, rgba(7,15,26,0.00) 100%),
-          radial-gradient(520px 220px at 18% 6%, rgba(145,185,245,0.22), transparent 62%),
-          radial-gradient(520px 260px at 92% 52%, rgba(255,255,255,0.10), transparent 64%),
-          linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.38)),
-          var(--hero-image) center center / cover no-repeat;
-        filter: saturate(1.02) contrast(1.04);
+          linear-gradient(90deg,
+            rgba(4,10,18,0.82) 0%,
+            rgba(5,10,18,0.66) 12%,
+            rgba(6,12,20,0.42) 24%,
+            rgba(7,13,22,0.22) 38%,
+            rgba(7,13,22,0.10) 50%,
+            rgba(7,13,22,0.14) 60%,
+            rgba(7,13,22,0.30) 70%,
+            rgba(7,13,22,0.54) 82%,
+            rgba(7,13,22,0.80) 92%,
+            rgba(7,13,22,0.94) 100%
+          ),
+          linear-gradient(180deg,
+            rgba(4,8,14,0.78) 0%,
+            rgba(4,8,14,0.46) 10%,
+            rgba(4,8,14,0.18) 22%,
+            rgba(4,8,14,0.04) 34%,
+            rgba(4,8,14,0.00) 46%,
+            rgba(4,8,14,0.00) 58%,
+            rgba(4,8,14,0.10) 72%,
+            rgba(4,8,14,0.28) 84%,
+            rgba(4,8,14,0.56) 94%,
+            rgba(4,8,14,0.78) 100%
+          ),
+          radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
+          radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
+          var(--hero-image) left center / auto 100% no-repeat,
+          var(--hero-fallback-image) left center / auto 100% no-repeat;
+        opacity: 1;
+        filter: saturate(1.01) brightness(0.90);
+        mask-image:
+          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 78%, rgba(0,0,0,0.84) 88%, rgba(0,0,0,0.46) 94%, transparent 100%),
+          linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
+        -webkit-mask-image:
+          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 78%, rgba(0,0,0,0.84) 88%, rgba(0,0,0,0.46) 94%, transparent 100%),
+          linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
+        mask-composite: intersect;
+        -webkit-mask-composite: source-in;
       }
 
-      .hero-clip::before {
+      .hero-bg::before,
+      .hero-bg::after {
         content: "";
         position: absolute;
         inset: 0;
+        pointer-events: none;
+      }
+
+      .hero-bg::before {
         background:
-          radial-gradient(520px 200px at 12% -6%, rgba(255,255,255,0.20), transparent 70%),
-          radial-gradient(420px 240px at 94% 20%, rgba(255,210,155,0.16), transparent 72%),
-          linear-gradient(0deg, rgba(0,0,0,0.32), transparent 44%);
+          linear-gradient(90deg,
+            rgba(4,10,18,0.72) 0%,
+            rgba(4,10,18,0.56) 12%,
+            rgba(5,10,18,0.34) 24%,
+            rgba(5,10,18,0.14) 38%,
+            rgba(5,10,18,0.02) 50%,
+            rgba(5,10,18,0.08) 60%,
+            rgba(5,10,18,0.22) 72%,
+            rgba(5,10,18,0.46) 84%,
+            rgba(5,10,18,0.74) 100%
+          ),
+          linear-gradient(180deg,
+            rgba(3,8,14,0.62) 0%,
+            rgba(3,8,14,0.34) 12%,
+            rgba(3,8,14,0.08) 26%,
+            rgba(3,8,14,0.00) 40%,
+            rgba(3,8,14,0.00) 62%,
+            rgba(3,8,14,0.10) 76%,
+            rgba(3,8,14,0.30) 90%,
+            rgba(3,8,14,0.60) 100%
+          );
+      }
+
+      .hero-bg::after {
+        background:
+          radial-gradient(720px 220px at 8% 2%, rgba(255,255,255,0.08), transparent 58%),
+          linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%),
+          linear-gradient(0deg, rgba(0,0,0,0.22), rgba(0,0,0,0.00) 34%);
+        opacity: 0.58;
       }
 
       .hero-content {
@@ -1396,8 +1470,8 @@ class BrunoSalaSubview extends HTMLElement {
         z-index: 1;
         height: auto;
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        grid-auto-rows: minmax(84px, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-auto-rows: minmax(76px, 1fr);
         gap: 10px;
       }
 
@@ -1430,7 +1504,7 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .light-tile:hover,
-      .camera-thumb:hover,
+      .camera-thumb-overlay:hover,
       .soft-button:hover,
       .control-button:hover {
         transform: translateY(-1px);
@@ -1535,20 +1609,20 @@ class BrunoSalaSubview extends HTMLElement {
         box-shadow: 0 0 10px rgba(46,231,122,0.5);
       }
 
-      .camera-list {
+      .camera-stage {
         position: relative;
         z-index: 1;
-        display: grid;
-        grid-template-rows: repeat(2, minmax(0, 1fr));
-        gap: 10px;
         min-height: 0;
+        height: 100%;
       }
 
-      .camera-row {
+      .camera-main {
         position: relative;
         min-width: 0;
         min-height: 0;
         display: block;
+        width: 100%;
+        height: 100%;
         padding: 0;
         overflow: hidden;
         border-radius: var(--sala-radius-small);
@@ -1594,7 +1668,8 @@ class BrunoSalaSubview extends HTMLElement {
         --mdc-icon-size: 36px;
       }
 
-      .camera-row::after {
+      .camera-main::after,
+      .camera-thumb-overlay::after {
         content: "";
         position: absolute;
         inset: 0;
@@ -1636,6 +1711,45 @@ class BrunoSalaSubview extends HTMLElement {
         color: rgba(255,255,255,0.82);
       }
 
+      .camera-thumb-overlay {
+        position: absolute;
+        z-index: 3;
+        right: 12px;
+        bottom: 12px;
+        width: min(44%, 158px);
+        aspect-ratio: 16 / 10;
+        overflow: hidden;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.16);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.10),
+          0 10px 26px rgba(0,0,0,0.36);
+        text-align: left;
+      }
+
+      .camera-thumb-overlay .camera-row-image {
+        border-radius: 14px;
+      }
+
+      .camera-thumb-overlay::after {
+        background: linear-gradient(180deg, rgba(3,8,15,0.06), rgba(3,8,15,0.74));
+      }
+
+      .camera-thumb-overlay span {
+        position: absolute;
+        z-index: 4;
+        left: 10px;
+        bottom: 7px;
+        max-width: calc(100% - 20px);
+        color: rgba(255,255,255,0.92);
+        font-size: 10px;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       .tv-card,
       .ps5-card,
       .spotify-card,
@@ -1649,7 +1763,7 @@ class BrunoSalaSubview extends HTMLElement {
         z-index: 1;
         height: calc(100% - 46px);
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(110px, 32%);
+        grid-template-columns: 1fr;
         gap: 14px;
         align-items: stretch;
       }
@@ -1747,20 +1861,39 @@ class BrunoSalaSubview extends HTMLElement {
         font-weight: 800;
       }
 
+      .tv-card .tv-body {
+        grid-template-rows: minmax(112px, 1fr) auto;
+      }
+
+      .tv-card .poster-card {
+        grid-row: 1;
+        min-height: 0;
+      }
+
+      .tv-card .tv-main {
+        grid-row: 2;
+      }
+
+      .tv-card .control-row {
+        margin-top: 14px;
+      }
+
       .ps5-body {
         position: relative;
         z-index: 1;
         height: calc(100% - 46px);
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(86px, 34%);
-        gap: 14px;
-        align-items: center;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(110px, 1fr) auto;
+        gap: 10px;
+        align-items: stretch;
       }
 
       .ps5-copy {
+        grid-row: 2;
         display: grid;
         align-content: end;
-        gap: 12px;
+        gap: 10px;
         height: 100%;
       }
 
@@ -1778,6 +1911,9 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .ps5-image {
+        grid-row: 1;
+        justify-self: center;
+        align-self: center;
         width: 100%;
         max-height: 100%;
         object-fit: contain;
@@ -1816,16 +1952,19 @@ class BrunoSalaSubview extends HTMLElement {
         z-index: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(96px, 128px) minmax(0, 1fr);
-        align-items: center;
-        gap: 20px;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(96px, 1fr) auto;
+        align-items: stretch;
+        gap: 12px;
       }
 
       .spotify-art {
         position: relative;
         inset: auto;
-        width: 100%;
-        aspect-ratio: 1 / 1;
+        width: min(100%, 132px);
+        height: 100%;
+        min-height: 96px;
+        justify-self: center;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1852,7 +1991,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-top: 18px;
+        margin-top: 14px;
       }
 
       .state-chip {
@@ -1861,7 +2000,8 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .ac-body {
-        grid-template-columns: minmax(0, 1fr) minmax(150px, 42%);
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(0, 1fr);
       }
 
       .ac-temp {
@@ -1882,7 +2022,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-top: 24px;
+        margin-top: 18px;
       }
 
       .stepper {
@@ -1911,7 +2051,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .ac-meta {
         display: grid;
-        align-content: start;
+        align-content: end;
         gap: 8px;
       }
 
@@ -1938,11 +2078,12 @@ class BrunoSalaSubview extends HTMLElement {
           height: auto;
           overflow: auto;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) minmax(320px, auto) minmax(320px, auto);
+          grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
           grid-template-areas:
             "hero side"
             "cams cams"
-            "media comfort";
+            "tv ps5"
+            "spotify ac";
         }
 
         .side-panel {
@@ -1971,8 +2112,10 @@ class BrunoSalaSubview extends HTMLElement {
             "hero"
             "side"
             "cams"
-            "media"
-            "comfort";
+            "tv"
+            "ps5"
+            "spotify"
+            "ac";
           padding: 8px;
         }
 
@@ -2003,9 +2146,7 @@ class BrunoSalaSubview extends HTMLElement {
           flex-wrap: wrap;
         }
 
-        .side-panel,
-        .media-stack,
-        .comfort-stack {
+        .side-panel {
           grid-template-rows: auto;
         }
 

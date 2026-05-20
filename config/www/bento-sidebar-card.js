@@ -320,40 +320,29 @@ class BentoSidebarCard extends HTMLElement {
         }
 
         .nav-button.selected {
-          color: var(--icon-active);
+          color: white;
           background:
-            radial-gradient(22px 18px at 30% 14%, rgba(255,255,255,0.46), transparent 72%),
-            radial-gradient(30px 30px at 86% 82%, rgba(var(--accent),0.18), transparent 70%),
-            linear-gradient(180deg, rgba(255,255,255,0.25), rgba(255,255,255,0.084)),
-            linear-gradient(135deg, rgba(var(--accent),0.26), rgba(255,255,255,0.025));
-          backdrop-filter: blur(14px) saturate(1.28);
-          -webkit-backdrop-filter: blur(14px) saturate(1.28);
-          border-color: rgba(226,238,255,0.46);
+            radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 62%),
+            linear-gradient(180deg, rgba(105,150,230,0.68), rgba(59,92,178,0.54));
+          border-color: rgba(210,228,255,0.38);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.30),
-            inset 1px 0 0 rgba(255,255,255,0.12),
-            inset 0 -1px 0 rgba(255,255,255,0.06),
-            0 8px 18px rgba(0,0,0,0.24),
-            0 0 24px rgba(var(--accent),0.24);
+            inset 0 1px 0 rgba(255,255,255,0.32),
+            0 0 20px rgba(96,165,250,0.32);
           animation: selected-breathe 4.8s ease-in-out infinite;
         }
 
         .nav-button.selected::before {
-          opacity: 0.88;
-          transform: translateY(0);
+          opacity: 0;
         }
 
         .nav-button.selected::after {
-          opacity: 1;
-          transform: translateX(-50%) scaleX(1);
+          opacity: 0;
         }
 
         .nav-button.selected:hover {
           background:
-            radial-gradient(22px 18px at 30% 14%, rgba(255,255,255,0.48), transparent 72%),
-            radial-gradient(30px 30px at 86% 82%, rgba(var(--accent),0.20), transparent 70%),
-            linear-gradient(180deg, rgba(255,255,255,0.27), rgba(255,255,255,0.092)),
-            linear-gradient(135deg, rgba(var(--accent),0.30), rgba(255,255,255,0.035));
+            radial-gradient(circle at 50% 18%, rgba(168,202,255,0.58), transparent 62%),
+            linear-gradient(180deg, rgba(118,164,242,0.72), rgba(66,100,190,0.58));
         }
 
         .nav-button svg {

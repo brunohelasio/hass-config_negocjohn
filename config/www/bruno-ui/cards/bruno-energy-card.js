@@ -526,7 +526,7 @@ class BrunoEnergyCard extends HTMLElement {
             <stop offset="100%" stop-color="rgba(111,184,255,0)"/>
           </linearGradient>
           <filter id="bruno-energy-glow" x="-30%" y="-80%" width="160%" height="260%">
-            <feGaussianBlur stdDeviation="2.8" result="glow"/>
+            <feGaussianBlur stdDeviation="2.15" result="glow"/>
             <feMerge>
               <feMergeNode in="glow"/>
               <feMergeNode in="SourceGraphic"/>
@@ -534,7 +534,7 @@ class BrunoEnergyCard extends HTMLElement {
           </filter>
         </defs>
         <path d="${area}" fill="url(#bruno-energy-area)"></path>
-        <path d="${line}" fill="none" stroke="#6FB8FF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#bruno-energy-glow)"></path>
+        <path d="${line}" fill="none" stroke="#6FB8FF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" filter="url(#bruno-energy-glow)"></path>
         <text x="18" y="94" class="axis-label">${BrunoEnergyCard._escape(current)}</text>
       </svg>
     `;

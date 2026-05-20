@@ -361,13 +361,16 @@ class BrunoSalaSubview extends HTMLElement {
     const attrs = entity?.attributes || {};
     const state = entity?.state || 'off';
     const active = BRUNO_SALA_SUBVIEW_MEDIA_ON_STATES.includes(state);
+    const displayName = String(attrs.friendly_name || 'SpotifyPlus')
+      .replace(/\s+Bruno\s+Hel(?:a|\u00e1)sio/i, '')
+      .trim();
     return {
       entity,
       state,
       active,
       playing: state === 'playing',
-      title: attrs.media_title || attrs.friendly_name || 'No Media Playing',
-      subtitle: attrs.media_artist || attrs.media_album_name || 'Spotify',
+      title: attrs.media_title || displayName || 'SpotifyPlus',
+      subtitle: attrs.media_artist || attrs.media_album_name || '',
       artwork: attrs.entity_picture || attrs.media_image_url || '',
       source: attrs.source || this._config.spotify_device_name || 'Echo Show',
       volume: attrs.volume_level != null ? Math.round(Number(attrs.volume_level) * 100) : null,
@@ -420,6 +423,25 @@ class BrunoSalaSubview extends HTMLElement {
       swing: attrs.swing_mode || 'Ativada',
       action: hvacAction === 'idle' ? 'em espera' : (active ? (hvacAction || 'ligado') : 'off'),
     };
+  }
+
+  _climateModeLabel(mode) {
+    const labels = {
+      off: 'Off',
+      cool: 'Frio',
+      heat: 'Heat',
+      fan_only: 'Fan',
+      dry: 'Dry',
+      heat_cool: 'Auto',
+      auto: 'Auto',
+    };
+    return labels[mode] || mode || '--';
+  }
+
+  _climateSummary(climate, target) {
+    if (!climate.active) return `Off - ${target}\u00b0C`;
+    const action = climate.hvacMode === 'heat' ? 'Heat' : this._climateModeLabel(climate.hvacMode);
+    return `${action} - ${target}\u00b0C`;
   }
 
   _callService(serviceName, data = {}) {
@@ -890,6 +912,7 @@ class BrunoSalaSubview extends HTMLElement {
     const spotify = model.spotify;
     const artwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
     const volume = spotify.volume == null ? 66 : spotify.volume;
+    const subtitle = spotify.subtitle ? `<div class="media-subtitle">${BrunoSalaSubview._escape(spotify.subtitle)}</div>` : '';
 
     return `
       <section class="glass-card spotify-card${spotify.active ? ' is-active' : ''}">
@@ -898,7 +921,6 @@ class BrunoSalaSubview extends HTMLElement {
             <span class="micro-icon tone-green"><ha-icon icon="mdi:spotify"></ha-icon></span>
             <div>
               <div class="module-title">Spotify</div>
-              <div class="module-subtitle">Sala</div>
             </div>
           </div>
           <span class="state-chip"><span></span>${spotify.playing ? 'Tocando no Spotify' : BrunoSalaSubview._escape(spotify.state)}</span>
@@ -910,7 +932,7 @@ class BrunoSalaSubview extends HTMLElement {
           </div>
           <div class="spotify-copy">
             <div class="media-title">${BrunoSalaSubview._escape(spotify.title)}</div>
-            <div class="media-subtitle">${BrunoSalaSubview._escape(spotify.subtitle)}</div>
+            ${subtitle}
             <div class="spotify-controls">
               <button type="button" class="control-button" data-action="spotify-prev"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
               <button type="button" class="control-button is-main" data-action="spotify-play-pause"><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
@@ -930,6 +952,22 @@ class BrunoSalaSubview extends HTMLElement {
   _renderAC(model) {
     const climate = model.climate;
     const target = climate.target == null ? '--' : this._formatNumber(climate.target, 0);
+    const climateEntity = BrunoSalaSubview._escapeAttr(this._config.entities.climate);
+    const activeMode = climate.hvacMode || 'off';
+    const fan = String(climate.fan || 'auto').toLowerCase();
+    const swingActive = String(climate.swing || '').toLowerCase().includes('ativ');
+    const modeButtons = [
+      { key: 'heat', icon: 'mdi:fire', label: 'Heat' },
+      { key: 'cool', icon: 'mdi:snowflake', label: 'Cool' },
+      { key: 'fan_only', icon: 'mdi:fan', label: 'Fan' },
+      { key: 'off', icon: 'mdi:power', label: 'Power', action: 'toggle-climate' },
+    ];
+    const fanButtons = [
+      { key: 'low', label: 'Low', active: fan.includes('low') || fan.includes('baixo') },
+      { key: 'medium', label: 'Med', active: fan.includes('med') },
+      { key: 'high', label: 'High', active: fan.includes('high') || fan.includes('alto') },
+      { key: 'swing', label: 'Swing', active: swingActive },
+    ];
 
     return `
       <section class="glass-card ac-card${climate.active ? ' is-active' : ''}">
@@ -943,23 +981,41 @@ class BrunoSalaSubview extends HTMLElement {
           </div>
         </div>
         <div class="ac-body">
-          <div class="ac-main">
-            <div class="ac-temp">${target}\u00b0</div>
-            <span class="ac-state">${BrunoSalaSubview._escape(climate.action)}</span>
-            <div class="ac-controls">
-              <button type="button" class="primary-button" data-action="toggle-climate">${climate.active ? 'Desligar' : 'Ligar'}</button>
-              <div class="stepper">
-                <button type="button" data-action="temp-down">-</button>
-                <span>${target}\u00b0</span>
-                <button type="button" data-action="temp-up">+</button>
-              </div>
+          <div class="ac-summary">
+            <span class="ac-summary-icon"><ha-icon icon="mdi:fire"></ha-icon></span>
+            <div>
+              <strong>Aircondition</strong>
+              <small>${BrunoSalaSubview._escape(this._climateSummary(climate, target))}</small>
             </div>
           </div>
-          <div class="ac-meta">
-            <span>Modo <strong>${BrunoSalaSubview._escape(climate.hvacMode)} <ha-icon icon="mdi:chevron-right"></ha-icon></strong></span>
-            <span>Ventilacao <strong>${BrunoSalaSubview._escape(climate.fan)} <ha-icon icon="mdi:chevron-right"></ha-icon></strong></span>
-            <span>Oscilacao <strong>${BrunoSalaSubview._escape(climate.swing)} <ha-icon icon="mdi:chevron-right"></ha-icon></strong></span>
-            <button type="button" class="soft-button" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(this._config.entities.climate)}">Mais opcoes</button>
+          <div class="climate-mode-row" aria-label="Modo do ar condicionado">
+            ${modeButtons.map((button) => `
+              <button
+                type="button"
+                class="climate-mode${activeMode === button.key ? ' is-active' : ''}"
+                data-action="${button.action || 'more-info'}"
+                ${button.action ? '' : `data-entity="${climateEntity}"`}
+                title="${BrunoSalaSubview._escapeAttr(button.label)}"
+              >
+                <ha-icon icon="${button.icon}"></ha-icon>
+              </button>
+            `).join('')}
+          </div>
+          <div class="climate-stepper">
+            <button type="button" data-action="temp-down">-</button>
+            <span>${target}</span>
+            <button type="button" data-action="temp-up">+</button>
+          </div>
+          <div class="fan-label">Fan mode</div>
+          <div class="fan-mode-row">
+            ${fanButtons.map((button) => `
+              <button
+                type="button"
+                class="fan-mode${button.active ? ' is-active' : ''}"
+                data-action="more-info"
+                data-entity="${climateEntity}"
+              >${BrunoSalaSubview._escape(button.label)}</button>
+            `).join('')}
           </div>
         </div>
       </section>
@@ -1041,11 +1097,11 @@ class BrunoSalaSubview extends HTMLElement {
         z-index: 3;
         align-self: center;
         justify-self: center;
-        width: 48px;
+        width: 56px;
         display: grid;
-        grid-auto-rows: 36px;
+        grid-auto-rows: 39px;
         gap: 8px;
-        padding: 8px 5px;
+        padding: 8px;
         border-radius: 999px;
         background:
           radial-gradient(54px 72px at 50% 0%, rgba(255,255,255,0.18), transparent 72%),
@@ -1062,8 +1118,8 @@ class BrunoSalaSubview extends HTMLElement {
 
       .room-nav-button {
         position: relative;
-        width: 36px;
-        height: 36px;
+        width: 39px;
+        height: 39px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1104,7 +1160,7 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .room-nav-button ha-icon {
-        --mdc-icon-size: 18px;
+        --mdc-icon-size: 19px;
       }
 
       .glass-card {
@@ -1315,21 +1371,22 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .hero-date-line {
-        margin: 0 0 10px;
+        margin: 0 0 11px;
         color: rgba(255,255,255,0.54);
         font-size: 11px;
         line-height: 1;
-        font-weight: 800;
+        font-weight: 700;
         text-transform: uppercase;
       }
 
       .hero-clock {
-        font-size: clamp(58px, 6.1vw, 86px);
-        line-height: 0.94;
-        font-weight: 200;
+        margin-top: 14px;
+        font-size: clamp(56px, 7.4vh, 78px);
+        line-height: 0.96;
+        font-weight: 220;
         font-variant-numeric: tabular-nums;
-        color: rgba(255,255,255,0.92);
-        text-shadow: 0 14px 36px rgba(0,0,0,0.28);
+        color: rgba(255,255,255,0.95);
+        text-shadow: 0 10px 32px rgba(0,0,0,0.28);
       }
 
       .chip-button,
@@ -1618,9 +1675,16 @@ class BrunoSalaSubview extends HTMLElement {
       .light-tile.is-on {
         color: rgba(255,255,255,0.98);
         background:
-          radial-gradient(80px 48px at 88% 18%, rgba(255,195,72,0.23), transparent 70%),
-          rgba(255,255,255,0.078);
-        border-color: rgba(255,195,72,0.34);
+          radial-gradient(76px 48px at 18% 12%, rgba(255,255,255,0.28), transparent 72%),
+          radial-gradient(96px 58px at 94% 82%, rgba(255,183,77,0.24), transparent 72%),
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.074)),
+          linear-gradient(180deg, rgba(255,183,77,0.10), rgba(255,183,77,0.03));
+        border-color: rgba(255,205,95,0.44);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.22),
+          inset 1px 0 0 rgba(255,255,255,0.08),
+          inset 0 -1px 0 rgba(0,0,0,0.08),
+          0 0 20px rgba(255,183,77,0.17);
       }
 
       .light-tile.is-placeholder {
@@ -2081,17 +2145,17 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(96px, 1fr) auto;
+        grid-template-rows: minmax(112px, 1fr) auto;
         align-items: stretch;
-        gap: 12px;
+        gap: 10px;
       }
 
       .spotify-art {
         position: relative;
         inset: auto;
-        width: min(100%, 132px);
+        width: 100%;
         height: 100%;
-        min-height: 96px;
+        min-height: 0;
         justify-self: center;
         display: flex;
         align-items: center;
@@ -2115,11 +2179,25 @@ class BrunoSalaSubview extends HTMLElement {
         --mdc-icon-size: 70px;
       }
 
+      .spotify-copy {
+        display: grid;
+        align-content: start;
+        gap: 9px;
+      }
+
+      .spotify-card .media-title {
+        margin-top: 0;
+      }
+
+      .spotify-card .media-subtitle {
+        margin-top: -4px;
+      }
+
       .spotify-controls {
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-top: 14px;
+        margin-top: 2px;
       }
 
       .state-chip {
@@ -2129,94 +2207,125 @@ class BrunoSalaSubview extends HTMLElement {
 
       .ac-body {
         grid-template-columns: 1fr;
-        grid-template-rows: auto minmax(0, 1fr);
-        gap: 12px;
+        grid-template-rows: auto auto auto auto minmax(0, 1fr);
+        gap: 10px;
+        align-content: start;
       }
 
-      .ac-main {
+      .ac-summary {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        grid-template-rows: auto auto;
-        column-gap: 12px;
-        align-items: end;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
       }
 
-      .ac-temp {
-        grid-column: 1;
-        grid-row: 1;
-        font-size: clamp(48px, 5vw, 72px);
-        line-height: 0.92;
-        font-weight: 200;
+      .ac-summary-icon {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: rgb(255,116,63);
+        background: rgba(255,92,50,0.16);
       }
 
-      .ac-state {
-        grid-column: 1;
-        grid-row: 2;
-        display: inline-block;
-        margin-top: 8px;
-        color: rgb(96,190,255);
-        font-size: 14px;
+      .ac-summary-icon ha-icon {
+        --mdc-icon-size: 17px;
+      }
+
+      .ac-summary strong,
+      .fan-label {
+        display: block;
+        color: rgba(255,255,255,0.90);
+        font-size: 13px;
         font-weight: 800;
       }
 
-      .ac-controls {
-        grid-column: 2;
-        grid-row: 1 / span 2;
-        align-self: end;
-        display: grid;
-        grid-template-columns: 1fr;
-        align-items: center;
-        gap: 8px;
-        margin-top: 0;
+      .ac-summary small {
+        display: block;
+        margin-top: 3px;
+        color: rgba(255,255,255,0.58);
+        font-size: 11px;
+        font-weight: 700;
       }
 
-      .stepper {
+      .climate-mode-row,
+      .fan-mode-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .climate-mode,
+      .fan-mode,
+      .climate-stepper {
+        min-height: 34px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.09);
+        background: rgba(255,255,255,0.050);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      }
+
+      .climate-mode {
         display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.66);
+      }
+
+      .climate-mode ha-icon {
+        --mdc-icon-size: 17px;
+      }
+
+      .climate-mode.is-active {
+        color: white;
+        background:
+          radial-gradient(circle at 50% 14%, rgba(255,116,63,0.30), transparent 72%),
+          rgba(128,61,42,0.42);
+        border-color: rgba(255,116,63,0.28);
+      }
+
+      .climate-stepper {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) 42px;
         align-items: center;
         overflow: hidden;
-        min-height: 36px;
-        min-width: 116px;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.11);
-        background: rgba(255,255,255,0.052);
       }
 
-      .stepper button {
-        width: 36px;
-        height: 36px;
+      .climate-stepper button {
+        height: 34px;
         background: transparent;
+        color: rgba(255,255,255,0.82);
+        font-size: 17px;
       }
 
-      .stepper span {
-        min-width: 46px;
+      .climate-stepper span {
         text-align: center;
-        color: var(--text-soft);
-        font-size: 12px;
+        color: rgba(255,255,255,0.88);
+        font-size: 13px;
         font-weight: 800;
       }
 
-      .ac-meta {
-        display: grid;
-        align-content: end;
-        gap: 8px;
+      .fan-label {
+        margin-top: 3px;
+        font-size: 12px;
       }
 
-      .ac-meta span {
-        grid-template-columns: 1fr auto;
-        align-items: center;
-        min-width: 0;
+      .fan-mode {
+        color: rgba(255,255,255,0.74);
+        font-size: 11px;
+        font-weight: 800;
       }
 
-      .ac-meta span strong {
-        display: inline-flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 4px;
+      .fan-mode.is-active {
+        color: rgba(255,255,255,0.94);
+        background: rgba(255,255,255,0.11);
+        border-color: rgba(255,255,255,0.16);
       }
 
-      .ac-meta ha-icon {
-        --mdc-icon-size: 13px;
-        color: rgb(56,220,116);
+      .spotify-volume {
+        margin-top: 0;
       }
 
       @media (max-width: 1180px) {

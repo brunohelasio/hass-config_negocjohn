@@ -1,0 +1,22 @@
+title: Office
+path: subview-office
+icon: mdi:desk
+subview: true
+type: panel
+theme: tablet
+cards:
+  - type: custom:bruno-office-subview
+
+# ==========================================================================
+# FALLBACK - Office Lovelace/Negocjohn original
+# ==========================================================================
+# A estrutura anterior do Office permanece preservada nos arquivos abaixo:
+# - config/dashboards/shared/popup/rooms/office.yaml
+# - config/dashboards/shared/columns/room_office_all_buttons.yaml
+# - config/dashboards/shared/columns/room_office_cameras.yaml
+#
+# Fallback rapido:
+# 1. Comentar o card custom:bruno-office-subview acima.
+# 2. Reativar a estrutura popup/columns antiga em uma view/subview temporaria
+#    usando os includes preservados.
+# 3. Nao e necessario desfazer alteracoes em templates globais.

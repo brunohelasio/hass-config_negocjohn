@@ -15,10 +15,11 @@ frontend:
     - /local/bento-sidebar-card.js?v=20260520-1
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260520-1
     - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260521-2
-    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260518-1
+    - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260521-1
+    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260521-1
     - /local/bruno-ui/cards/bruno-office-card.js?v=20260518-1
     - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260518-1
-    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260518-1
+    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260521-1
     - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260518-2
     - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260518-2
     - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260518-2
@@ -56,6 +57,9 @@ homeassistant:
     # NOVO: camada lógica do Office (PIR/mmWave + HASS.Agent).
     # FALLBACK: comentar esta linha para voltar ao Office anterior.
     office_presence: !include packages/office_presence.yaml
+    # NOVO: camada local da Sala para diferenciar passagem de ocupacao real.
+    # FALLBACK: comentar esta linha para voltar ao uso direto do sensor 4-in-1.
+    sala_presence: !include packages/sala_presence.yaml
 
 automation: !include automations.yaml
 script: !include scripts.yaml

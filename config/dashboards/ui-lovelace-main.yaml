@@ -4,6 +4,8 @@ streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 resources:
   - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260521-2
     type: module
+  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260521-1
+    type: module
 
 kiosk_mode:
   kiosk: true
@@ -45,4 +47,5 @@ views:
   - !include subviews/music-assistant.yaml
   - !include subviews/floor-plan.yaml
   - !include subviews/sala_subview.yaml
+  - !include subviews/office_subview.yaml
   # - !include subviews/ytube-music.yaml

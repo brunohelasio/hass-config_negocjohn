@@ -1,0 +1,75 @@
+# ==========================================================================
+# Pacote: sala_presence
+# Objetivo: separar passagem rapida de ocupacao real na Sala.
+#
+# FALLBACK RAPIDO:
+# - Remover/comentar `sala_presence: !include packages/sala_presence.yaml`
+#   em configuration.yaml.
+# - O card Sala volta a usar o fallback do sensor original
+#   binary_sensor.sensor_4_in_1_sala_presence.
+# ==========================================================================
+
+template:
+  - binary_sensor:
+      # ANTERIOR: o card usava diretamente binary_sensor.sensor_4_in_1_sala_presence
+      # e considerava "presenca recente" por tempo desde last_changed.
+      # NOVO: movimento recente representa passagem e alimenta apenas o icone.
+      - name: Sala Motion Recent
+        unique_id: sala_motion_recent
+        device_class: motion
+        icon: mdi:account
+        state: >-
+          {{ is_state('binary_sensor.sensor_4_in_1_sala_presence', 'on') }}
+        delay_off:
+          seconds: 25
+        attributes:
+          source_entity: binary_sensor.sensor_4_in_1_sala_presence
+          semantic_role: passage_indicator
+          fallback_note: "Passagem rapida acende apenas o dot de presenca."
+
+      # Ocupacao exige permanencia antes de ligar. Assim, passar pela Sala
+      # nao gera texto semantico; permanecer gera "Ocupada".
+      - name: Sala Occupancy
+        unique_id: sala_occupancy
+        device_class: occupancy
+        icon: mdi:account
+        state: >-
+          {{ is_state('binary_sensor.sensor_4_in_1_sala_presence', 'on') }}
+        delay_on:
+          minutes: 2
+        delay_off:
+          minutes: 5
+        attributes:
+          source_entity: binary_sensor.sensor_4_in_1_sala_presence
+          semantic_role: real_occupancy
+          fallback_note: "Ajustar delay_on/delay_off quando houver mmWave dedicado."
+
+  - sensor:
+      - name: Sala Semantic State
+        unique_id: sala_semantic_state
+        icon: >-
+          {% if is_state('binary_sensor.sala_occupancy', 'on') %}
+            mdi:account
+          {% else %}
+            mdi:sofa
+          {% endif %}
+        state: >-
+          {% if is_state('binary_sensor.sala_occupancy', 'on') %}
+            occupied
+          {% else %}
+            none
+          {% endif %}
+        attributes:
+          display: >-
+            {% if is_state('binary_sensor.sala_occupancy', 'on') %}
+              Ocupada
+            {% else %}
+
+            {% endif %}
+          priority: >-
+            {% if is_state('binary_sensor.sala_occupancy', 'on') %}1
+            {% else %}0
+            {% endif %}
+          motion_recent: "{{ states('binary_sensor.sala_motion_recent') }}"
+          occupancy: "{{ states('binary_sensor.sala_occupancy') }}"
+          source_entity: binary_sensor.sensor_4_in_1_sala_presence

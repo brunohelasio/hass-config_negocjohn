@@ -5,6 +5,9 @@ const BRUNO_SALA_DEFAULT_ENTITIES = {
   room_toggle: 'light.sala_switch_2',
   room_fallback_lights: ['light.sala_switch_1', 'light.sala_switch_2'],
   active_sensor: 'sensor.living_room_active',
+  semantic_sensor: 'sensor.sala_semantic_state',
+  motion_recent: 'binary_sensor.sala_motion_recent',
+  occupancy: 'binary_sensor.sala_occupancy',
   temperature: 'sensor.sensor_4_in_1_sala_temperature',
   humidity: 'sensor.sensor_4_in_1_sala_humidity',
   presence: 'binary_sensor.sensor_4_in_1_sala_presence',
@@ -141,11 +144,27 @@ class BrunoSalaCard extends HTMLElement {
   }
 
   _presenceRecent() {
+    const motion = this._state(this._config.entities.motion_recent);
+    const occupancy = this._state(this._config.entities.occupancy);
+    if (motion?.state === 'on' || occupancy?.state === 'on') return true;
+
+    // FALLBACK - sensor original da Sala antes da camada de ocupacao.
     const entity = this._state(this._config.entities.presence);
     if (entity?.state !== 'on' || !entity.last_changed) return false;
 
     const changedAt = Date.parse(entity.last_changed);
     return !Number.isNaN(changedAt) && Date.now() - changedAt < 10 * 60 * 1000;
+  }
+
+  _semanticLine() {
+    const occupancy = this._state(this._config.entities.occupancy);
+    if (occupancy?.state === 'on') return 'Ocupada';
+
+    const semantic = this._state(this._config.entities.semantic_sensor);
+    const semanticState = String(semantic?.state || '').toLowerCase();
+    const display = semantic?.attributes?.display;
+    if (!display || ['none', 'unknown', 'unavailable'].includes(semanticState)) return '';
+    return String(display);
   }
 
   _tvLabel(entity) {
@@ -192,6 +211,11 @@ class BrunoSalaCard extends HTMLElement {
     const speakerOn = BRUNO_SALA_SPEAKER_ON_STATES.includes(this._state(entities.speaker)?.state || '');
     const corridorOn = corridor?.state === 'on';
     const lights = this._lightsSummary(room);
+    const statusLines = [];
+    const semanticLine = this._semanticLine();
+
+    if (lights.label) statusLines.push(lights.label);
+    if (semanticLine) statusLines.push(semanticLine);
 
     return {
       roomOn,
@@ -203,6 +227,7 @@ class BrunoSalaCard extends HTMLElement {
       temperature: this._sensorValue(entities.temperature, '&deg;'),
       humidity: this._sensorValue(entities.humidity, '%'),
       lights,
+      statusLines,
       tvLabel: this._tvLabel(tv),
       climateLabel: this._climateLabel(climate),
       corridorLabel: corridorOn ? 'Ligado' : 'Desligado',
@@ -442,6 +467,13 @@ class BrunoSalaCard extends HTMLElement {
         <ha-icon icon="${icon}"></ha-icon>
       </span>
     `;
+  }
+
+  _statusLines(lines) {
+    if (!lines.length) return '';
+    return lines
+      .map((line) => `<span>${BrunoSalaCard._escape(line)}</span>`)
+      .join('');
   }
 
   _actionButton(key, iconName, name, label, active, tone, options = {}) {
@@ -807,13 +839,23 @@ class BrunoSalaCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
           font-size: 11px;
-          line-height: 1.18;
+          line-height: 1.16;
           font-weight: 500;
           color: var(--text-soft);
-          white-space: nowrap;
+          white-space: normal;
+          overflow: hidden;
+        }
+
+        .lights-line span {
+          display: block;
+          max-width: 120px;
           overflow: hidden;
           text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .right-dots {
@@ -1195,10 +1237,10 @@ class BrunoSalaCard extends HTMLElement {
           </div>
 
           <div class="title">${BrunoSalaCard._escape(this._config.name)}</div>
-          <div class="lights-line">${BrunoSalaCard._escape(model.lights.label)}</div>
+          <div class="lights-line">${this._statusLines(model.statusLines)}</div>
 
           <div class="right-dots" aria-label="Status da sala">
-            ${this._statusDot('mdi:account', model.presenceOn, 'Presenca recente', 'blue')}
+            ${this._statusDot('mdi:account', model.presenceOn, 'Presenca na Sala', 'blue')}
             ${this._statusDot('mdi:television-classic', model.tvOn, 'TV ativa', 'purple')}
             ${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
             ${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Show ativo', 'amber')}

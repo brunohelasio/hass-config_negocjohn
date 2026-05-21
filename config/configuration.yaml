@@ -12,9 +12,9 @@ default_config:
 frontend:
   themes: !include_dir_merge_named themes
   extra_module_url:
-    - /local/bento-sidebar-card.js?v=20260518-7
-    - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260518-3
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260520-6
+    - /local/bento-sidebar-card.js?v=20260520-1
+    - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260520-1
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260520-7
     - /local/bruno-ui/cards/bruno-sala-card.js?v=20260518-1
     - /local/bruno-ui/cards/bruno-office-card.js?v=20260518-1
     - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260518-1
@@ -23,12 +23,12 @@ frontend:
     - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260518-2
     - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260518-2
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-10
-    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260518-5
+    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260520-1
     - /local/bruno-ui/cards/bruno-energy-card.js?v=20260518-4
     - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-3
     - /local/bruno-ui/cards/bruno-hero-card.js?v=20260519-3
-    - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260518-3
-    - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260518-4
+    - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260520-1
+    - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260520-1
     - /local/bruno-ui/cards/bruno-media-card.js?v=20260518-5
     - /local/bruno-ui/cards/bruno-mobile-card-frame.js?v=20260518-1
     - /local/bruno-ui/cards/bruno-mobile-nav-card.js?v=20260518-2

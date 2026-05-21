@@ -373,15 +373,17 @@ class BrunoTopBadgesCard extends HTMLElement {
           column-gap: 8px;
           padding: 0 13px;
           border-radius: 999px;
-          border: 1px solid rgba(255,255,255,0.14);
-          background:
+          border: var(--bruno-liquid-chip-border, 1px solid rgba(255,255,255,0.14));
+          background: var(--bruno-liquid-chip-background,
             linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.040)),
-            rgba(16,18,24,0.46);
-          box-shadow:
+            rgba(16,18,24,0.46)
+          );
+          box-shadow: var(--bruno-liquid-chip-shadow,
             inset 0 1px 0 rgba(255,255,255,0.13),
-            0 8px 20px rgba(0,0,0,0.14);
-          backdrop-filter: blur(18px) saturate(1.28);
-          -webkit-backdrop-filter: blur(18px) saturate(1.28);
+            0 8px 20px rgba(0,0,0,0.14)
+          );
+          backdrop-filter: var(--bruno-liquid-chip-filter, blur(18px) saturate(1.28));
+          -webkit-backdrop-filter: var(--bruno-liquid-chip-filter, blur(18px) saturate(1.28));
           transition: transform 160ms ease, background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
         }
 

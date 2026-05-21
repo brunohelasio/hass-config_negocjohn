@@ -1080,8 +1080,6 @@ class BrunoSalaSubview extends HTMLElement {
 
         <div class="tv-body">
           <div class="tv-main">
-            <div class="media-source">${BrunoSalaSubview._escape(tv.source)}</div>
-            ${tv.subtitle ? `<div class="media-subtitle">${BrunoSalaSubview._escape(tv.subtitle)}</div>` : ''}
             <div class="control-row">
               <button type="button" class="control-button" data-action="toggle-tv"><ha-icon icon="mdi:power"></ha-icon></button>
               <button type="button" class="control-button" data-action="tv-remote"><ha-icon icon="mdi:remote-tv"></ha-icon></button>
@@ -1089,9 +1087,8 @@ class BrunoSalaSubview extends HTMLElement {
             </div>
             <div class="volume-row">
               <ha-icon icon="mdi:volume-medium"></ha-icon>
-              <strong>${volume}%</strong>
               <input type="range" min="0" max="100" value="${volume}" data-action="tv-volume" aria-label="Volume da TV">
-              <ha-icon icon="mdi:volume-high"></ha-icon>
+              <strong>${volume}%</strong>
             </div>
           </div>
           <div class="poster-card${poster ? ' has-poster' : ''}">
@@ -1135,8 +1132,6 @@ class BrunoSalaSubview extends HTMLElement {
     const spotify = model.spotify;
     const artwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
     const volume = spotify.volume == null ? 66 : spotify.volume;
-    const subtitle = spotify.subtitle ? `<div class="media-subtitle">${BrunoSalaSubview._escape(spotify.subtitle)}</div>` : '';
-    const titleClass = String(spotify.title || '').length > 24 ? ' is-marquee' : '';
     const controls = this._spotifyToolsOpen
       ? `
         <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
@@ -1168,8 +1163,6 @@ class BrunoSalaSubview extends HTMLElement {
             ${artwork ? `<img src="${BrunoSalaSubview._escapeAttr(artwork)}" alt="">` : '<ha-icon icon="mdi:music-note"></ha-icon>'}
           </div>
           <div class="spotify-copy">
-            <div class="media-title spotify-title${titleClass}"><span>${BrunoSalaSubview._escape(spotify.title)}</span></div>
-            ${subtitle}
             <div class="spotify-controls">
               ${controls}
             </div>
@@ -1193,6 +1186,10 @@ class BrunoSalaSubview extends HTMLElement {
     const activeMode = climate.hvacMode || 'off';
     const fan = String(climate.fan || 'auto').toLowerCase();
     const swingActive = String(climate.swing || '').toLowerCase().includes('ativ');
+    const modeButtonClass = (button) => {
+      if (button.key === 'off') return climate.active ? ' is-power-on' : '';
+      return activeMode === button.key ? ' is-active' : '';
+    };
     const modeButtons = [
       { key: 'heat', icon: 'mdi:fire', label: 'Heat' },
       { key: 'cool', icon: 'mdi:snowflake', label: 'Cool' },
@@ -1208,29 +1205,24 @@ class BrunoSalaSubview extends HTMLElement {
 
     return `
       <section class="glass-card ac-card${climate.active ? ' is-active' : ''}">
-        <div class="module-head">
+        <div class="module-head ac-head">
           <div class="title-with-chip">
             <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
             <div>
               <div class="module-title">Ar Condicionado</div>
             </div>
           </div>
+          <span class="temperature-pill">${current}&deg;</span>
         </div>
         <div class="ac-body">
-          <div class="ac-temperature-panel">
-            <div class="ac-temperature-copy">
-              <strong>${current}&deg;</strong>
-              <span>${BrunoSalaSubview._escape(this._climateModeLabel(climate.hvacMode))}</span>
-            </div>
-            <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
-              <input type="range" min="16" max="30" value="${targetNumber}" data-action="climate-target">
-            </label>
-          </div>
+          <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
+            <input type="range" min="16" max="30" value="${targetNumber}" data-action="climate-target">
+          </label>
           <div class="climate-mode-row" aria-label="Modo do ar condicionado">
             ${modeButtons.map((button) => `
               <button
                 type="button"
-                class="climate-mode${activeMode === button.key ? ' is-active' : ''}"
+                class="climate-mode${modeButtonClass(button)}"
                 data-action="${button.action || 'more-info'}"
                 ${button.action ? '' : `data-entity="${climateEntity}"`}
                 title="${BrunoSalaSubview._escapeAttr(button.label)}"
@@ -2331,7 +2323,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-top: 18px;
+        margin-top: 0;
       }
 
       .control-button.is-main {
@@ -2354,10 +2346,10 @@ class BrunoSalaSubview extends HTMLElement {
 
       .volume-row {
         display: grid;
-        grid-template-columns: auto auto minmax(0, 1fr) auto;
+        grid-template-columns: auto minmax(0, 1fr) 38px;
         align-items: center;
         gap: 9px;
-        margin-top: 16px;
+        margin-top: 0;
         color: rgba(255,255,255,0.66);
       }
 
@@ -2375,10 +2367,6 @@ class BrunoSalaSubview extends HTMLElement {
         width: 100%;
         min-width: 0;
         accent-color: rgb(116,92,255);
-      }
-
-      .spotify-volume {
-        grid-template-columns: auto minmax(0, 1fr) auto;
       }
 
       .spotify-volume input {
@@ -2420,7 +2408,7 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .tv-card .control-row {
-        margin-top: 14px;
+        margin-top: 0;
       }
 
       .ps5-body {
@@ -2585,6 +2573,7 @@ class BrunoSalaSubview extends HTMLElement {
         margin-top: 0;
       }
 
+      .tv-card .control-button,
       .spotify-controls .control-button {
         width: 36px;
         height: 36px;
@@ -2598,36 +2587,26 @@ class BrunoSalaSubview extends HTMLElement {
 
       .ac-body {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto auto;
+        grid-template-rows: auto auto auto auto minmax(64px, 1fr);
         gap: 8px;
         align-content: start;
       }
 
-      .ac-temperature-panel {
-        display: grid;
-        grid-template-columns: 1fr;
-        align-items: stretch;
-        gap: 8px;
-      }
-
-      .ac-temperature-copy {
-        min-width: 0;
-      }
-
-      .ac-temperature-copy strong {
-        display: block;
-        color: rgba(255,255,255,0.95);
-        font-size: 38px;
-        line-height: 0.92;
-        font-weight: 300;
-      }
-
-      .ac-temperature-copy span {
-        display: block;
-        margin-top: 6px;
-        color: rgb(92,190,255);
-        font-size: 12px;
+      .temperature-pill {
+        align-self: start;
+        min-width: 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.92);
+        font-size: 14px;
+        line-height: 1;
         font-weight: 800;
+        background: rgba(255,255,255,0.070);
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
       }
 
       .temperature-slider {
@@ -2684,9 +2663,20 @@ class BrunoSalaSubview extends HTMLElement {
       .climate-mode.is-active {
         color: white;
         background:
-          radial-gradient(circle at 50% 14%, rgba(255,116,63,0.30), transparent 72%),
-          rgba(128,61,42,0.42);
-        border-color: rgba(255,116,63,0.28);
+          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.30), transparent 72%),
+          rgba(42,82,128,0.36);
+        border-color: rgba(96,165,250,0.28);
+      }
+
+      .climate-mode.is-power-on {
+        color: rgba(255,255,255,0.96);
+        background:
+          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
+          rgba(38,92,138,0.38);
+        border-color: rgba(96,165,250,0.32);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.12),
+          0 0 14px rgba(96,165,250,0.16);
       }
 
       .climate-stepper {
@@ -2730,7 +2720,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .climate-trend {
         min-height: 0;
-        height: 86px;
+        height: 90px;
         margin: 2px -14px -14px;
         border-radius: 0 0 calc(var(--sala-radius) - 1px) calc(var(--sala-radius) - 1px);
         overflow: hidden;
@@ -2780,8 +2770,9 @@ class BrunoSalaSubview extends HTMLElement {
       .tv-main,
       .spotify-copy {
         display: grid;
+        grid-template-rows: 36px 24px;
         align-content: start;
-        gap: 7px;
+        gap: 8px;
         min-width: 0;
         overflow: hidden;
       }

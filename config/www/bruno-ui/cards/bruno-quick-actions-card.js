@@ -4,7 +4,7 @@ const BRUNO_QUICK_ACTIONS_DEFAULT_ITEMS = [
   {
     key: 'lights_off',
     icon: 'mdi:lightbulb-off-outline',
-    label: 'Desligar luzes',
+    label: 'Luzes',
     group: 'actions',
     tap_action: {
       action: 'call-service',
@@ -171,12 +171,12 @@ class BrunoQuickActionsCard extends HTMLElement {
           isolation: isolate;
           width: max-content;
           max-width: 100%;
-          min-height: 66px;
+          min-height: 58px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 8px;
-          padding: 7px 9px;
+          gap: 7px;
+          padding: 6px 8px;
           color: rgba(255,255,255,0.86);
           border: var(--bruno-liquid-dock-border, 1px solid rgba(255,255,255,0.17));
           border-radius: 999px;
@@ -238,7 +238,7 @@ class BrunoQuickActionsCard extends HTMLElement {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 6px;
+          gap: 5px;
           flex: 0 0 auto;
         }
 
@@ -246,7 +246,7 @@ class BrunoQuickActionsCard extends HTMLElement {
           position: relative;
           z-index: 2;
           width: 1px;
-          height: 30px;
+          height: 28px;
           margin: 0 2px;
           flex: 0 0 1px;
           border-radius: 999px;
@@ -259,11 +259,11 @@ class BrunoQuickActionsCard extends HTMLElement {
           appearance: none;
           -webkit-appearance: none;
           position: relative;
-          flex: 0 0 96px;
-          width: 96px;
-          min-height: 54px;
+          flex: 0 0 88px;
+          width: 88px;
+          min-height: 46px;
           display: grid;
-          grid-template-columns: 26px minmax(0, 1fr);
+          grid-template-columns: 24px minmax(0, 1fr);
           grid-template-rows: auto auto;
           grid-template-areas:
             "icon label"
@@ -271,7 +271,7 @@ class BrunoQuickActionsCard extends HTMLElement {
           align-items: center;
           column-gap: 8px;
           margin: 0;
-          padding: 8px 10px 8px 9px;
+          padding: 7px 9px 7px 8px;
           color: rgba(255,255,255,0.86);
           border: 1px solid transparent;
           border-radius: 17px;
@@ -352,7 +352,7 @@ class BrunoQuickActionsCard extends HTMLElement {
         }
 
         .quick-button ha-icon {
-          --mdc-icon-size: 22px;
+          --mdc-icon-size: 21px;
           grid-area: icon;
           justify-self: center;
           position: relative;
@@ -371,21 +371,20 @@ class BrunoQuickActionsCard extends HTMLElement {
         .quick-label {
           grid-area: label;
           align-self: end;
-          font-size: 10px;
+          font-size: 9.6px;
           line-height: 1.06;
           font-weight: 800;
           color: rgba(255,255,255,0.92);
           overflow: hidden;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .quick-kind {
           grid-area: meta;
           align-self: start;
-          margin-top: 2px;
-          font-size: 9px;
+          margin-top: 1px;
+          font-size: 8.6px;
           line-height: 1;
           font-weight: 700;
           color: rgba(255,255,255,0.48);
@@ -401,19 +400,19 @@ class BrunoQuickActionsCard extends HTMLElement {
           }
 
           .quick-dock {
-            min-height: 62px;
-            padding: 6px 7px;
+            min-height: 54px;
+            padding: 5px 6px;
           }
 
           .quick-button {
-            width: 88px;
-            flex-basis: 88px;
-            min-height: 52px;
+            width: 80px;
+            flex-basis: 80px;
+            min-height: 44px;
             padding-inline: 8px;
           }
 
           .quick-label {
-            font-size: 9.5px;
+            font-size: 9.1px;
           }
         }
       </style>

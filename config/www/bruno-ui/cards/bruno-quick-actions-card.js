@@ -178,18 +178,20 @@ class BrunoQuickActionsCard extends HTMLElement {
           gap: 7px;
           padding: 6px;
           color: rgba(255,255,255,0.86);
-          border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.18));
+          border: var(--bruno-liquid-dock-border, 1px solid rgba(255,255,255,0.17));
           border-radius: 999px;
-          background: var(--bruno-liquid-surface-off-background,
-            radial-gradient(52px 40px at 18% 4%, rgba(255,255,255,0.22), transparent 70%),
-            linear-gradient(160deg, rgba(15,20,35,0.50), rgba(20,24,33,0.34))
+          background: var(--bruno-liquid-dock-background,
+            radial-gradient(86px 70px at 18% 0%, rgba(255,255,255,0.19), transparent 72%),
+            radial-gradient(98px 82px at 92% 100%, rgba(var(--accent),0.08), transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.106), rgba(255,255,255,0.030) 42%, rgba(255,255,255,0.048)),
+            linear-gradient(155deg, rgba(18,24,36,0.70), rgba(10,13,20,0.60) 52%, rgba(18,16,17,0.42))
           );
-          box-shadow: var(--bruno-liquid-surface-off-shadow,
-            inset 0 1px 0 rgba(255,255,255,0.22),
-            0 10px 28px rgba(0,0,0,0.24)
+          box-shadow: var(--bruno-liquid-dock-shadow,
+            inset 0 1px 0 rgba(255,255,255,0.25),
+            0 14px 34px rgba(0,0,0,0.30)
           );
-          backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.42));
-          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.42));
+          backdrop-filter: var(--bruno-liquid-dock-filter, blur(28px) saturate(1.56) contrast(1.05));
+          -webkit-backdrop-filter: var(--bruno-liquid-dock-filter, blur(28px) saturate(1.56) contrast(1.05));
           overflow: hidden;
         }
 
@@ -204,18 +206,20 @@ class BrunoQuickActionsCard extends HTMLElement {
         .quick-dock::before {
           inset: 1px;
           z-index: 0;
-          background: var(--bruno-liquid-surface-off-sheen,
-            linear-gradient(180deg, rgba(255,255,255,0.18), transparent 42%)
+          background: var(--bruno-liquid-dock-sheen,
+            radial-gradient(58px 42px at 18% 2%, rgba(255,255,255,0.20), transparent 72%),
+            radial-gradient(64px 72px at 92% 18%, rgba(var(--accent),0.10), transparent 74%),
+            linear-gradient(180deg, rgba(255,255,255,0.115), rgba(255,255,255,0.00) 38%)
           );
-          opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.82);
+          opacity: var(--bruno-liquid-dock-sheen-opacity, 0.70);
         }
 
         .quick-dock::after {
           inset: 0;
           padding: 1px;
           z-index: 1;
-          background: var(--bruno-liquid-surface-edge-glow,
-            linear-gradient(125deg, rgba(255,255,255,0.42), rgba(255,255,255,0.08) 36%, rgba(255,190,120,0.20) 100%)
+          background: var(--bruno-liquid-dock-edge-glow,
+            linear-gradient(125deg, rgba(255,255,255,0.34), rgba(255,255,255,0.08) 34%, rgba(255,255,255,0.026) 62%, rgba(255,190,120,0.17) 100%)
           );
           -webkit-mask:
             linear-gradient(#000 0 0) content-box,
@@ -225,7 +229,7 @@ class BrunoQuickActionsCard extends HTMLElement {
             linear-gradient(#000 0 0) content-box,
             linear-gradient(#000 0 0);
           mask-composite: exclude;
-          opacity: 0.75;
+          opacity: 0.64;
         }
 
         .quick-group {

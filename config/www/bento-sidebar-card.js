@@ -152,17 +152,17 @@ class BentoSidebarCard extends HTMLElement {
           align-items: center;
           justify-content: center;
           padding: var(--rail-padding-top) 0 var(--rail-padding-bottom);
-          background: var(--bruno-liquid-surface-off-background,
+          background: var(--bruno-liquid-rail-background,
             radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
             radial-gradient(38px 110px at 92% 86%, rgba(var(--accent),0.10), transparent 68%),
             linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.038) 34%, rgba(255,255,255,0.065)),
             linear-gradient(155deg, rgba(22,27,38,0.84), rgba(10,12,18,0.72) 48%, rgba(18,16,17,0.46))
           );
-          backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(30px) saturate(1.58) contrast(1.05));
-          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(30px) saturate(1.58) contrast(1.05));
-          border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.11));
+          backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
+          -webkit-backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
+          border: var(--bruno-liquid-rail-border, 1px solid rgba(255,255,255,0.11));
           border-radius: var(--rail-radius);
-          box-shadow: var(--bruno-liquid-surface-off-shadow,
+          box-shadow: var(--bruno-liquid-rail-shadow,
             inset 0 1px 0 rgba(255,255,255,0.22),
             inset 1px 0 0 rgba(255,255,255,0.12),
             inset -1px -1px 0 rgba(255,255,255,0.030),
@@ -182,12 +182,13 @@ class BentoSidebarCard extends HTMLElement {
         .rail::before {
           inset: 1px;
           border-radius: calc(var(--rail-radius) - 1px);
-          background:
+          background: var(--bruno-liquid-rail-sheen,
             radial-gradient(34px 42px at 24% 3%, rgba(255,255,255,0.26), transparent 70%),
             radial-gradient(42px 70px at 94% 18%, rgba(var(--accent),0.16), transparent 72%),
             linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
-            linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%);
-          opacity: 0.78;
+            linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%)
+          );
+          opacity: var(--bruno-liquid-rail-sheen-opacity, 0.78);
         }
 
         .group {
@@ -321,13 +322,15 @@ class BentoSidebarCard extends HTMLElement {
 
         .nav-button.selected {
           color: white;
-          background:
+          background: var(--bruno-liquid-selected-blue-background,
             radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 62%),
-            linear-gradient(180deg, rgba(105,150,230,0.68), rgba(59,92,178,0.54));
-          border-color: rgba(210,228,255,0.38);
-          box-shadow:
+            linear-gradient(180deg, rgba(105,150,230,0.68), rgba(59,92,178,0.54))
+          );
+          border-color: var(--bruno-liquid-selected-blue-border, rgba(210,228,255,0.38));
+          box-shadow: var(--bruno-liquid-selected-blue-shadow,
             inset 0 1px 0 rgba(255,255,255,0.32),
-            0 0 20px rgba(96,165,250,0.32);
+            0 0 20px rgba(96,165,250,0.32)
+          );
           animation: selected-breathe 4.8s ease-in-out infinite;
         }
 

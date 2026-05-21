@@ -228,6 +228,9 @@ class BrunoRoborockCard extends HTMLElement {
 
     const model = this._model();
     const activeClass = model.active ? ' is-active' : '';
+    const headerStatus = model.state === 'docked'
+      ? ''
+      : `<span class="state-pill"><span class="state-dot"></span>${BrunoRoborockCard._escape(model.status)}</span>`;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -622,7 +625,7 @@ class BrunoRoborockCard extends HTMLElement {
             <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:robot-vacuum"></ha-icon></span>
             <span class="title-main">${BrunoRoborockCard._escape(this._config.name)}</span>
           </span>
-          <span class="state-pill"><span class="state-dot"></span>${BrunoRoborockCard._escape(model.status)}</span>
+          ${headerStatus}
         </div>
 
         <div class="robot" aria-hidden="true">

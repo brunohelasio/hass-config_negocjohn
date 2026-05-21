@@ -2720,8 +2720,8 @@ class BrunoSalaSubview extends HTMLElement {
 
       .climate-trend {
         min-height: 0;
-        height: 90px;
-        margin: 2px -14px -14px;
+        height: 104px;
+        margin: -8px -14px -14px;
         border-radius: 0 0 calc(var(--sala-radius) - 1px) calc(var(--sala-radius) - 1px);
         overflow: hidden;
         background: transparent;
@@ -2734,13 +2734,13 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .trend-area {
-        fill: rgba(96,165,250,0.13);
+        fill: rgba(96,165,250,0.16);
       }
 
       .trend-line {
         fill: none;
         stroke: rgba(96,165,250,0.76);
-        stroke-width: 2.15;
+        stroke-width: 2.35;
         stroke-linecap: round;
         filter: drop-shadow(0 0 8px rgba(96,165,250,0.32));
       }
@@ -2773,6 +2773,7 @@ class BrunoSalaSubview extends HTMLElement {
         grid-template-rows: 36px 24px;
         align-content: start;
         gap: 8px;
+        padding-top: 12px;
         min-width: 0;
         overflow: hidden;
       }

@@ -1,5 +1,13 @@
 type: custom:bruno-office-card
-double_tap_action: !include ../../shared/popup/rooms/office.yaml
+double_tap_action:
+  action: navigate
+  navigation_path: subview-office
+
+# FALLBACK - duplo clique abrindo popup Lovelace/Negocjohn original
+# Para voltar rapidamente ao comportamento anterior:
+# 1. Comentar o double_tap_action acima.
+# 2. Descomentar a linha abaixo.
+# double_tap_action: !include ../../shared/popup/rooms/office.yaml
 
 # FALLBACK - Office Lovelace/Negocjohn original
 # Para voltar rapidamente:

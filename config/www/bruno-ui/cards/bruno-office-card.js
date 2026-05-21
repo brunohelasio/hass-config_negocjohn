@@ -285,11 +285,28 @@ class BrunoOfficeCard extends HTMLElement {
 
   _navigate(path) {
     if (!path) return;
+    const resolvedPath = this._resolveNavigationPath(path);
+    const eventPath = path.startsWith('/') ? resolvedPath : path;
     this.dispatchEvent(new CustomEvent('hass-navigate', {
-      detail: { path },
+      detail: { path: eventPath },
       bubbles: true,
       composed: true,
     }));
+
+    window.setTimeout(() => {
+      if (!resolvedPath || window.location?.pathname === resolvedPath) return;
+      if (window.history?.pushState) window.history.pushState(null, '', resolvedPath);
+      window.dispatchEvent?.(new CustomEvent('location-changed', { detail: { replace: false } }));
+    }, 80);
+  }
+
+  _resolveNavigationPath(path) {
+    if (!path) return '';
+    if (path.startsWith('/')) return path;
+
+    const current = window.location?.pathname || '';
+    const dashboard = current.split('/').filter(Boolean)[0];
+    return `/${dashboard || 'ngocjohn-main'}/${path}`;
   }
 
   _moreInfo(entityId) {

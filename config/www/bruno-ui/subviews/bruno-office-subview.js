@@ -7,6 +7,7 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
   navigation_path: 'bento-lab',
   background: '/local/images/office.jpg',
   fallback_background: '/local/images/office.jpg',
+  pc_image: '/local/images/office_pc.png',
   refresh_interval: 6500,
   spotify_device_name: 'Echo Pop Office',
   room_nav: [
@@ -97,6 +98,7 @@ class BrunoOfficeSubview extends HTMLElement {
     this._focusStartedAt = null;
     this._focusRemaining = this._focusDuration;
     this._focusRunning = false;
+    this._focusSessions = 0;
     this._hydrationMl = 0;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
@@ -199,7 +201,10 @@ class BrunoOfficeSubview extends HTMLElement {
       if (!this._focusRunning || !this._focusStartedAt) return;
       const elapsed = Math.floor((Date.now() - this._focusStartedAt) / 1000);
       this._focusRemaining = Math.max(0, this._focusDuration - elapsed);
-      if (this._focusRemaining === 0) this._focusRunning = false;
+      if (this._focusRemaining === 0) {
+        this._focusRunning = false;
+        this._focusSessions += 1;
+      }
       this._safeRender();
     }, 1000);
   }
@@ -422,11 +427,15 @@ class BrunoOfficeSubview extends HTMLElement {
     const minutes = Math.floor(remaining / 60);
     const seconds = remaining % 60;
     const progress = 1 - (remaining / this._focusDuration);
+    const elapsed = Math.max(0, this._focusDuration - remaining);
+    const elapsedMinutes = Math.floor(elapsed / 60);
     return {
       running: this._focusRunning,
       label: `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
       progress: Math.max(0, Math.min(1, progress)),
       hydrationMl: this._hydrationMl,
+      sessions: this._focusSessions,
+      focusedLabel: elapsedMinutes > 0 ? `${elapsedMinutes}m` : '0m',
       semantic: this._semanticLine() || 'Disponivel',
     };
   }
@@ -436,6 +445,7 @@ class BrunoOfficeSubview extends HTMLElement {
     const active = this._state(entities.pc_active)?.state === 'on';
     const session = this._safeState(entities.pc_session, active ? 'Ativo' : 'Offline');
     const activeWindow = this._safeState(entities.pc_window, '--');
+    const idle = this._safeState(entities.pc_idle, '--');
     const metrics = [
       { label: 'CPU', value: this._safeState(entities.pc_cpu, '--') },
       { label: 'GPU', value: this._safeState(entities.pc_gpu, '--') },
@@ -447,6 +457,7 @@ class BrunoOfficeSubview extends HTMLElement {
       active,
       session,
       activeWindow,
+      idle,
       metrics,
     };
   }
@@ -676,6 +687,7 @@ class BrunoOfficeSubview extends HTMLElement {
     if (action === 'spotify-pause') this._callService('media_player.media_pause', { entity_id: this._config.entities.spotify });
     if (action === 'focus-start') {
       if (!this._focusRunning) {
+        if (this._focusRemaining <= 0) this._focusRemaining = this._focusDuration;
         this._focusStartedAt = Date.now() - ((this._focusDuration - this._focusRemaining) * 1000);
         this._focusRunning = true;
         this._startFocusTimer();
@@ -913,9 +925,24 @@ class BrunoOfficeSubview extends HTMLElement {
 
   _renderLights(model) {
     const lights = this._config.entities.lights || [];
+    const officeLights = [...lights];
+    while (officeLights.length < 4) {
+      officeLights.push({
+        entity: '',
+        name: 'Placeholder',
+        icon_type: 'ledstrip',
+        placeholder: true,
+      });
+    }
 
     return `
       <div class="glass-card lights-card office-lights-card">
+        <!--
+          FALLBACK - Office lights original:
+          <div class="office-lights-grid">
+            lights.map((light) => this._renderLightTile(light))
+          </div>
+        -->
         <div class="module-head">
           <div>
             <div class="module-title">Luzes</div>
@@ -926,8 +953,13 @@ class BrunoOfficeSubview extends HTMLElement {
           </div>
         </div>
 
-        <div class="office-lights-grid">
-          ${lights.map((light) => this._renderLightTile(light)).join('')}
+        <div class="office-lights-frame">
+          <section class="light-group office-light-group">
+            <span class="light-group-label">Office</span>
+            <div class="office-lights-grid light-group-grid">
+              ${officeLights.slice(0, 4).map((light) => this._renderLightTile(light)).join('')}
+            </div>
+          </section>
         </div>
       </div>
     `;
@@ -936,32 +968,82 @@ class BrunoOfficeSubview extends HTMLElement {
   _renderFocus(model) {
     const focus = model.focus;
     const degrees = Math.round(focus.progress * 360);
+    const mode = String(focus.semantic || '').toLowerCase();
+    const workingActive = mode.includes('trabalh') || focus.running;
+    const meetingActive = mode.includes('reuni');
+    const availableActive = !workingActive && !meetingActive;
 
     return `
       <section class="glass-card focus-card">
-        <div class="module-head">
-          <div class="title-with-chip">
-            <span class="micro-icon tone-amber"><ha-icon icon="mdi:timer-outline"></ha-icon></span>
-            <div>
-              <div class="module-title">Foco</div>
-              <div class="module-subtitle">${BrunoOfficeSubview._escape(focus.semantic)}</div>
+        <!--
+          FALLBACK - Office focus original:
+          title "Foco", circular Pomodoro, buttons Iniciar/Pausar/Hidratar.
+        -->
+        <div class="focus-head">
+          <div class="focus-title">
+            <span class="micro-icon tone-blue"><ha-icon icon="mdi:crosshairs-gps"></ha-icon></span>
+            <strong>Foco & Produtividade</strong>
+          </div>
+          <button type="button" class="focus-more" aria-label="Mais opcoes de foco"><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
+        </div>
+
+        <div class="focus-mode-row">
+          <button type="button" class="focus-mode${workingActive ? ' is-active' : ''}">
+            <ha-icon icon="mdi:account-outline"></ha-icon>
+            <span>Trabalhando</span>
+            <i></i>
+          </button>
+          <button type="button" class="focus-mode${meetingActive ? ' is-active' : ''}">
+            <ha-icon icon="mdi:video-outline"></ha-icon>
+            <span>Em reuniao</span>
+            <i></i>
+          </button>
+          <button type="button" class="focus-mode${availableActive ? ' is-active' : ''}">
+            <ha-icon icon="mdi:account-check-outline"></ha-icon>
+            <span>Disponivel</span>
+            <i></i>
+          </button>
+        </div>
+
+        <div class="focus-dashboard">
+          <div class="focus-ring-panel">
+            <span>Timer de foco</span>
+            <div class="focus-ring" style="--focus-angle:${degrees}deg">
+              <strong>${BrunoOfficeSubview._escape(focus.label)}</strong>
+              <small>${focus.running ? 'em foco' : 'pronto'}</small>
             </div>
           </div>
-          <span class="state-chip"><span></span>${focus.running ? 'ativo' : 'pronto'}</span>
+
+          <div class="focus-side">
+            <div class="focus-next">
+              <span class="micro-icon tone-blue"><ha-icon icon="mdi:calendar-clock"></ha-icon></span>
+              <div>
+                <small>Proximo evento</small>
+                <strong>${meetingActive ? 'Reuniao em andamento' : 'Agenda livre'}</strong>
+                <span>${BrunoOfficeSubview._escape(focus.semantic)}</span>
+              </div>
+            </div>
+            <div class="focus-actions">
+              <button type="button" class="focus-action is-primary" data-action="focus-start">
+                <ha-icon icon="mdi:target"></ha-icon>
+                <span>${focus.running ? 'Retomar' : 'Iniciar foco'}</span>
+              </button>
+              <button type="button" class="focus-action" data-action="focus-pause">
+                <ha-icon icon="mdi:pause-circle-outline"></ha-icon>
+                <span>Pausar</span>
+              </button>
+              <button type="button" class="focus-action" data-action="hydrate-add">
+                <ha-icon icon="mdi:cup-water"></ha-icon>
+                <span>${focus.hydrationMl} ml</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="focus-body">
-          <div class="focus-ring" style="--focus-angle:${degrees}deg">
-            <strong>${BrunoOfficeSubview._escape(focus.label)}</strong>
-            <span>Pomodoro</span>
-          </div>
-          <div class="focus-actions">
-            <button type="button" class="primary-button" data-action="focus-start">${focus.running ? 'Retomar' : 'Iniciar foco'}</button>
-            <button type="button" class="soft-button" data-action="focus-pause">Pausar</button>
-            <button type="button" class="soft-button hydrate-button" data-action="hydrate-add">
-              <ha-icon icon="mdi:cup-water"></ha-icon>
-              <span>${focus.hydrationMl} ml</span>
-            </button>
-          </div>
+
+        <div class="focus-stats">
+          <span><ha-icon icon="mdi:chart-line"></ha-icon><strong>${focus.sessions}</strong><small>sessoes</small></span>
+          <span><ha-icon icon="mdi:clock-outline"></ha-icon><strong>${BrunoOfficeSubview._escape(focus.focusedLabel)}</strong><small>focado</small></span>
+          <span><ha-icon icon="mdi:cup-water"></ha-icon><strong>${focus.hydrationMl} ml</strong><small>hidratacao</small></span>
         </div>
       </section>
     `;
@@ -1074,40 +1156,66 @@ class BrunoOfficeSubview extends HTMLElement {
   _renderPC(model) {
     const pc = model.pc;
     const windowLabel = pc.activeWindow && pc.activeWindow !== '--' ? pc.activeWindow : 'Sistema';
+    const pcImage = BrunoOfficeSubview._escapeAttr(this._config.pc_image || '/local/images/office_pc.png');
 
     return `
       <section class="glass-card pc-card${pc.active ? ' is-active' : ''}">
-        <div class="module-head">
+        <!--
+          FALLBACK - Office PC original:
+          generic monitor icon, metric grid and four simple control buttons.
+        -->
+        <div class="pc-head">
           <div class="title-with-chip">
-            <span class="micro-icon tone-blue"><ha-icon icon="mdi:desktop-classic"></ha-icon></span>
+            <span class="micro-icon tone-blue"><ha-icon icon="mdi:monitor"></ha-icon></span>
             <div>
-              <div class="module-title">PC</div>
-              <div class="module-subtitle">${BrunoOfficeSubview._escape(pc.session)}</div>
+              <div class="module-title">Office PC</div>
+              <div class="module-subtitle"><span class="live-dot"></span>${pc.active ? 'Online' : 'Offline'}</div>
             </div>
           </div>
-          <span class="state-chip"><span></span>${pc.active ? 'online' : 'offline'}</span>
+          <button type="button" class="pc-menu" data-action="pc-lock" aria-label="Bloquear PC">
+            <ha-icon icon="mdi:dots-horizontal"></ha-icon>
+          </button>
         </div>
+
         <div class="pc-body">
           <div class="pc-visual">
-            <ha-icon icon="mdi:monitor-dashboard"></ha-icon>
-            <div>
-              <strong>${pc.active ? 'Workstation ativa' : 'Workstation em espera'}</strong>
-              <span>${BrunoOfficeSubview._escape(windowLabel)}</span>
-            </div>
+            <ha-icon class="pc-visual-fallback" icon="mdi:monitor-dashboard"></ha-icon>
+            <img src="${pcImage}" alt="" loading="lazy">
           </div>
+
+          <div class="pc-actions">
+            <button type="button" class="pc-action is-power" data-action="pc-power">
+              <ha-icon icon="mdi:power"></ha-icon>
+              <span>Ligar</span>
+            </button>
+            <button type="button" class="pc-action" data-action="pc-sleep">
+              <ha-icon icon="mdi:weather-night"></ha-icon>
+              <span>Sleep</span>
+            </button>
+            <button type="button" class="pc-action is-warm" data-action="pc-restart">
+              <ha-icon icon="mdi:restart"></ha-icon>
+              <span>Restart</span>
+            </button>
+            <button type="button" class="pc-action" data-action="pc-shutdown">
+              <ha-icon icon="mdi:power-standby"></ha-icon>
+              <span>Desligar</span>
+            </button>
+          </div>
+
           <div class="pc-metrics">
             ${pc.metrics.map((metric) => `
-              <span>
+              <span class="pc-metric" style="--metric:${BrunoOfficeSubview._metricPercent(metric.value)}%">
                 <small>${BrunoOfficeSubview._escape(metric.label)}</small>
                 <strong>${BrunoOfficeSubview._escape(metric.value)}</strong>
+                <i></i>
               </span>
             `).join('')}
           </div>
-          <div class="pc-actions">
-            <button type="button" class="primary-button" data-action="pc-power">Ligar</button>
-            <button type="button" class="soft-button" data-action="pc-sleep">Sleep</button>
-            <button type="button" class="soft-button" data-action="pc-restart">Reiniciar</button>
-            <button type="button" class="soft-button" data-action="pc-shutdown">Desligar</button>
+
+          <div class="pc-info">
+            <span><ha-icon icon="mdi:application-brackets-outline"></ha-icon><strong>${BrunoOfficeSubview._escape(windowLabel)}</strong></span>
+            <span><ha-icon icon="mdi:timer-outline"></ha-icon><strong>${BrunoOfficeSubview._escape(pc.idle)}</strong></span>
+            <span><ha-icon icon="mdi:lock-outline"></ha-icon><strong>Seguro</strong></span>
           </div>
         </div>
       </section>
@@ -1263,7 +1371,7 @@ class BrunoOfficeSubview extends HTMLElement {
         min-width: 0;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(360px, 0.82fr) minmax(260px, 0.62fr);
+        grid-template-columns: minmax(410px, 420px) minmax(0, 1fr);
         gap: var(--office-gap);
       }
       .room-sidebar { grid-area: frame-left; }
@@ -1431,7 +1539,7 @@ class BrunoOfficeSubview extends HTMLElement {
         top: -18px;
         bottom: -20px;
         left: -16px;
-        right: -86px;
+        right: -150px;
         background:
           linear-gradient(90deg,
             rgba(4,10,18,0.82) 0%,
@@ -1441,9 +1549,9 @@ class BrunoOfficeSubview extends HTMLElement {
             rgba(7,13,22,0.10) 50%,
             rgba(7,13,22,0.14) 60%,
             rgba(7,13,22,0.30) 70%,
-            rgba(7,13,22,0.54) 82%,
-            rgba(7,13,22,0.80) 92%,
-            rgba(7,13,22,0.94) 100%
+            rgba(7,13,22,0.58) 80%,
+            rgba(7,13,22,0.86) 91%,
+            rgba(7,13,22,0.98) 100%
           ),
           linear-gradient(180deg,
             rgba(4,8,14,0.78) 0%,
@@ -1459,15 +1567,15 @@ class BrunoOfficeSubview extends HTMLElement {
           ),
           radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
           radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
-          var(--hero-image) left center / auto 100% no-repeat,
-          var(--hero-fallback-image) left center / auto 100% no-repeat;
+          var(--hero-image) center center / cover no-repeat,
+          var(--hero-fallback-image) center center / cover no-repeat;
         opacity: 1;
-        filter: saturate(1.01) brightness(0.90);
+        filter: saturate(1.02) brightness(0.88);
         mask-image:
-          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 78%, rgba(0,0,0,0.84) 88%, rgba(0,0,0,0.46) 94%, transparent 100%),
+          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 72%, rgba(0,0,0,0.90) 82%, rgba(0,0,0,0.56) 93%, transparent 100%),
           linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
         -webkit-mask-image:
-          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 78%, rgba(0,0,0,0.84) 88%, rgba(0,0,0,0.46) 94%, transparent 100%),
+          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 72%, rgba(0,0,0,0.90) 82%, rgba(0,0,0,0.56) 93%, transparent 100%),
           linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
         mask-composite: intersect;
         -webkit-mask-composite: source-in;
@@ -1490,9 +1598,9 @@ class BrunoOfficeSubview extends HTMLElement {
             rgba(5,10,18,0.14) 38%,
             rgba(5,10,18,0.02) 50%,
             rgba(5,10,18,0.08) 60%,
-            rgba(5,10,18,0.22) 72%,
-            rgba(5,10,18,0.46) 84%,
-            rgba(5,10,18,0.74) 100%
+            rgba(5,10,18,0.28) 70%,
+            rgba(5,10,18,0.58) 84%,
+            rgba(5,10,18,0.88) 100%
           ),
           linear-gradient(180deg,
             rgba(3,8,14,0.62) 0%,
@@ -1905,8 +2013,21 @@ class BrunoOfficeSubview extends HTMLElement {
         min-height: 0;
         height: 100%;
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
         gap: 10px;
+      }
+
+      .office-lights-frame {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        height: 100%;
+        display: grid;
+      }
+
+      .office-light-group {
+        height: 100%;
       }
 
       .office-lights-card .light-tile {
@@ -2077,23 +2198,153 @@ class BrunoOfficeSubview extends HTMLElement {
         min-height: 0;
         padding: 14px;
         display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        gap: 8px;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        gap: 10px;
       }
 
-      .focus-body {
+      .focus-head {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .focus-title {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .focus-title strong {
+        min-width: 0;
+        font-size: 18px;
+        line-height: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .focus-more,
+      .pc-menu {
+        position: relative;
+        z-index: 1;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: rgba(255,255,255,0.72);
+        background: rgba(255,255,255,0.075);
+        border: 1px solid rgba(255,255,255,0.13);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+      }
+
+      .focus-more ha-icon,
+      .pc-menu ha-icon {
+        --mdc-icon-size: 18px;
+      }
+
+      .focus-mode-row {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .focus-mode {
+        min-width: 0;
+        min-height: 44px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 9px;
+        padding: 0 12px;
+        border-radius: 16px;
+        color: rgba(255,255,255,0.68);
+        background: rgba(255,255,255,0.050);
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
+      }
+
+      .focus-mode ha-icon {
+        --mdc-icon-size: 21px;
+      }
+
+      .focus-mode span {
+        min-width: 0;
+        font-size: 12px;
+        font-weight: 750;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .focus-mode i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.30);
+      }
+
+      .focus-mode.is-active {
+        color: rgba(210,232,255,0.98);
+        background:
+          radial-gradient(64px 42px at 12% 6%, rgba(96,165,250,0.20), transparent 74%),
+          rgba(96,165,250,0.085);
+        border-color: rgba(96,165,250,0.42);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.15),
+          0 0 18px rgba(96,165,250,0.14);
+      }
+
+      .focus-mode.is-active i {
+        background: rgb(96,190,255);
+        border-color: rgba(96,190,255,0.88);
+        box-shadow: 0 0 14px rgba(96,190,255,0.45);
+      }
+
+      .focus-dashboard {
         position: relative;
         z-index: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: 130px minmax(0, 1fr);
-        align-items: center;
+        grid-template-columns: minmax(154px, 0.90fr) minmax(0, 1.10fr);
+        align-items: stretch;
         gap: 12px;
       }
 
+      .focus-ring-panel,
+      .focus-next,
+      .focus-stats span {
+        min-width: 0;
+        border-radius: 17px;
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.11);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
+      }
+
+      .focus-ring-panel {
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 8px;
+        padding: 10px;
+      }
+
+      .focus-ring-panel > span {
+        color: var(--text-soft);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
       .focus-ring {
-        width: 126px;
-        height: 126px;
+        width: min(148px, 100%);
+        aspect-ratio: 1;
         border-radius: 50%;
         display: grid;
         place-items: center;
@@ -2109,22 +2360,128 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .focus-ring strong {
-        font-size: 22px;
+        font-size: 28px;
         line-height: 1;
         font-variant-numeric: tabular-nums;
       }
 
-      .focus-ring span {
+      .focus-ring small {
+        color: var(--text-soft);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .focus-side {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        gap: 10px;
+      }
+
+      .focus-next {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .focus-next small,
+      .focus-stats small {
+        display: block;
         color: var(--text-soft);
         font-size: 10px;
         font-weight: 800;
-        text-transform: uppercase;
+      }
+
+      .focus-next strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 14px;
+        line-height: 1.1;
+      }
+
+      .focus-next span:not(.micro-icon) {
+        display: block;
+        margin-top: 6px;
+        color: rgba(126,204,255,0.92);
+        font-size: 11px;
+        font-weight: 700;
       }
 
       .focus-actions {
         min-width: 0;
         display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 8px;
+      }
+
+      .focus-action {
+        min-width: 0;
+        min-height: 48px;
+        display: grid;
+        place-items: center;
+        gap: 5px;
+        padding: 7px 8px;
+        border-radius: 16px;
+        color: rgba(255,255,255,0.78);
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.12);
+      }
+
+      .focus-action.is-primary {
+        color: rgb(126,204,255);
+        background:
+          radial-gradient(56px 36px at 50% 5%, rgba(96,165,250,0.22), transparent 76%),
+          rgba(96,165,250,0.09);
+        border-color: rgba(96,165,250,0.34);
+      }
+
+      .focus-action ha-icon {
+        --mdc-icon-size: 20px;
+      }
+
+      .focus-action span {
+        min-width: 0;
+        font-size: 10px;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .focus-stats {
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .focus-stats span {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        column-gap: 8px;
+        align-items: center;
+        padding: 9px 10px;
+      }
+
+      .focus-stats ha-icon {
+        grid-row: 1 / -1;
+        --mdc-icon-size: 19px;
+        color: rgb(96,190,255);
+      }
+
+      .focus-stats strong {
+        min-width: 0;
+        font-size: 15px;
+        line-height: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .hydrate-button {
@@ -2471,53 +2828,126 @@ class BrunoOfficeSubview extends HTMLElement {
         gap: 10px;
       }
 
+      .pc-head {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .pc-head .module-subtitle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
       .pc-body {
         position: relative;
         z-index: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: 1.05fr 1fr;
-        grid-template-rows: minmax(0, 1fr) auto;
-        gap: 10px;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) 54px minmax(58px, auto) 40px;
+        gap: 9px;
       }
 
       .pc-visual {
         min-width: 0;
         min-height: 0;
-        grid-row: 1 / -1;
-        display: grid;
-        align-content: center;
-        gap: 14px;
-        padding: 16px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 10px 0;
         border-radius: var(--office-radius-small);
         background:
-          radial-gradient(120px 86px at 26% 12%, rgba(96,165,250,0.16), transparent 70%),
-          rgba(255,255,255,0.052);
-        border: 1px solid rgba(255,255,255,0.11);
+          radial-gradient(160px 86px at 70% 26%, rgba(255,255,255,0.13), transparent 72%),
+          radial-gradient(160px 100px at 34% 90%, rgba(96,165,250,0.10), transparent 72%);
+        overflow: hidden;
       }
 
-      .pc-visual ha-icon {
-        --mdc-icon-size: 70px;
+      .pc-visual::after {
+        content: "";
+        position: absolute;
+        inset: auto 10% 2px 10%;
+        height: 18px;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0.38), transparent 70%);
+        filter: blur(10px);
+      }
+
+      .pc-visual img {
+        position: relative;
+        z-index: 1;
+        width: min(94%, 360px);
+        max-height: 100%;
+        object-fit: contain;
+        filter:
+          drop-shadow(0 18px 26px rgba(0,0,0,0.34))
+          drop-shadow(0 0 18px rgba(210,225,245,0.10));
+      }
+
+      .pc-visual-fallback {
+        position: absolute;
+        --mdc-icon-size: 72px;
         color: rgba(180,215,255,0.82);
         filter: drop-shadow(0 0 16px rgba(96,165,250,0.18));
       }
 
-      .pc-visual strong {
-        display: block;
-        font-size: 17px;
-        line-height: 1.08;
+      .pc-visual-fallback {
+        display: none;
       }
 
-      .pc-visual span {
-        display: block;
-        margin-top: 6px;
-        max-width: 100%;
-        color: var(--text-soft);
+      .pc-actions {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .pc-action {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 9px;
+        border-radius: 16px;
+        color: rgba(255,255,255,0.78);
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      }
+
+      .pc-action ha-icon {
+        --mdc-icon-size: 20px;
+      }
+
+      .pc-action span {
+        min-width: 0;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 800;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .pc-action.is-power {
+        color: rgba(126,245,155,0.98);
+        background:
+          radial-gradient(54px 34px at 16% 6%, rgba(74,222,128,0.24), transparent 72%),
+          rgba(74,222,128,0.08);
+        border-color: rgba(74,222,128,0.28);
+      }
+
+      .pc-action.is-warm {
+        color: rgba(255,205,95,0.98);
+        background:
+          radial-gradient(54px 34px at 16% 6%, rgba(255,183,77,0.20), transparent 72%),
+          rgba(255,183,77,0.07);
+        border-color: rgba(255,183,77,0.24);
       }
 
       .pc-metrics {
@@ -2527,12 +2957,14 @@ class BrunoOfficeSubview extends HTMLElement {
         gap: 8px;
       }
 
-      .pc-metrics span {
+      .pc-metric {
         min-width: 0;
         display: grid;
-        align-content: center;
-        gap: 5px;
-        padding: 10px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: auto 5px;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 10px;
         border-radius: 12px;
         background: rgba(255,255,255,0.052);
         border: 1px solid rgba(255,255,255,0.10);
@@ -2547,13 +2979,58 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .pc-metrics strong {
         color: white;
-        font-size: 14px;
+        font-size: 13px;
       }
 
-      .pc-actions {
+      .pc-metric i {
+        grid-column: 1 / -1;
+        height: 5px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.10);
+      }
+
+      .pc-metric i::before {
+        content: "";
+        display: block;
+        width: var(--metric);
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgb(96,165,250), rgb(142,126,255));
+        box-shadow: 0 0 12px rgba(96,165,250,0.24);
+      }
+
+      .pc-info {
+        min-width: 0;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr) minmax(78px, auto) minmax(72px, auto);
         gap: 8px;
+      }
+
+      .pc-info span {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 7px;
+        padding: 0 10px;
+        border-radius: 14px;
+        color: rgba(255,255,255,0.72);
+        background: rgba(255,255,255,0.050);
+        border: 1px solid rgba(255,255,255,0.10);
+      }
+
+      .pc-info ha-icon {
+        --mdc-icon-size: 16px;
+      }
+
+      .pc-info strong {
+        min-width: 0;
+        font-size: 11px;
+        line-height: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .spotify-card {
@@ -3079,6 +3556,14 @@ class BrunoOfficeSubview extends HTMLElement {
     if (!src) return '';
     const joiner = src.includes('?') ? '&' : '?';
     return `${src}${joiner}bruno_t=${stamp || Date.now()}`;
+  }
+
+  static _metricPercent(value) {
+    const match = String(value ?? '').match(/-?\d+(?:[.,]\d+)?/);
+    if (!match) return 0;
+    const number = Number(match[0].replace(',', '.'));
+    if (!Number.isFinite(number)) return 0;
+    return Math.max(0, Math.min(100, Math.round(number)));
   }
 
   static _escape(value) {

@@ -469,6 +469,8 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _openTvRemotePopup() {
+    const remoteCard = this._config.tv_remote_card || this._universalTvRemoteCard();
+
     this._fireDomEvent({
       action: 'fire-dom-event',
       browser_mod: {
@@ -476,46 +478,86 @@ class BrunoSalaSubview extends HTMLElement {
         data: {
           title: 'Smart TV Remote',
           tag: 'tv_remote',
-          style: '--popup-background-color: rgba(21,25,35,1); --popup-min-width: min(380px, 95vw); --popup-max-width: min(420px, 95vw); --popup-border-width: 0;',
-          content: {
-            type: 'vertical-stack',
-            cards: [
-              this._remoteGrid([
-                ['mdi:power', 'button.tv_sala_power'],
-                ['mdi:import', 'button.tv_sala_input'],
-                ['mdi:menu', 'button.tv_sala_menu'],
-              ]),
-              this._remoteGrid([
-                null,
-                ['mdi:arrow-up-drop-circle-outline', 'button.tv_sala_navigate_up'],
-                null,
-              ]),
-              this._remoteGrid([
-                ['mdi:arrow-left-drop-circle-outline', 'button.tv_sala_navigate_left'],
-                ['mdi:radiobox-marked', 'button.tv_sala_ok'],
-                ['mdi:arrow-right-drop-circle-outline', 'button.tv_sala_navigate_right'],
-              ]),
-              this._remoteGrid([
-                null,
-                ['mdi:arrow-down-drop-circle-outline', 'button.tv_sala_navigate_down'],
-                null,
-              ]),
-              this._remoteGrid([
-                ['mdi:keyboard-backspace', 'button.tv_sala_back'],
-                ['mdi:home', 'button.tv_sala_homepage'],
-                ['mdi:volume-mute', 'button.tv_sala_mute'],
-              ]),
-              this._remoteGrid([
-                ['mdi:volume-minus', 'button.tv_sala_volume_down'],
-                ['mdi:volume-plus', 'button.tv_sala_volume_up'],
-                ['mdi:chevron-down', 'button.tv_sala_channel_down'],
-                ['mdi:chevron-up', 'button.tv_sala_channel_up'],
-              ], 4),
-            ],
-          },
+          style: '--popup-background-color: rgba(21,25,35,0.92); --popup-min-width: min(380px, 95vw); --popup-max-width: min(430px, 95vw); --popup-border-width: 0;',
+          content: remoteCard,
         },
       },
     });
+  }
+
+  _universalTvRemoteCard() {
+    return {
+      type: 'custom:universal-remote-card',
+      remote_id: this._config.entities.tv_remote,
+      media_player_id: this._config.entities.tv,
+      rows: [
+        ['power', 'input', 'menu'],
+        ['navigation'],
+        ['back', 'home', 'mute'],
+        ['volume_down', 'volume_up', 'channel_down', 'channel_up'],
+      ],
+      custom_actions: [
+        this._universalRemoteButton('power', 'mdi:power', 'button.tv_sala_power'),
+        this._universalRemoteButton('input', 'mdi:import', 'button.tv_sala_input'),
+        this._universalRemoteButton('menu', 'mdi:menu', 'button.tv_sala_menu'),
+        {
+          type: 'circlepad',
+          name: 'navigation',
+          icon: 'mdi:checkbox-blank-circle',
+          tap_action: this._buttonPressAction('button.tv_sala_ok'),
+          up: { icon: 'mdi:chevron-up', tap_action: this._buttonPressAction('button.tv_sala_navigate_up'), hold_action: { action: 'repeat' } },
+          down: { icon: 'mdi:chevron-down', tap_action: this._buttonPressAction('button.tv_sala_navigate_down'), hold_action: { action: 'repeat' } },
+          left: { icon: 'mdi:chevron-left', tap_action: this._buttonPressAction('button.tv_sala_navigate_left'), hold_action: { action: 'repeat' } },
+          right: { icon: 'mdi:chevron-right', tap_action: this._buttonPressAction('button.tv_sala_navigate_right'), hold_action: { action: 'repeat' } },
+          styles: `
+            :host {
+              width: min(210px, 72vw);
+              margin: 4px auto;
+              --size: 48px;
+              --center-button-relative-size: 42%;
+            }
+            .circlepad {
+              border: 1px solid rgba(255,255,255,0.12);
+              background: radial-gradient(circle at top left, rgba(255,255,255,0.16), rgba(255,255,255,0.045) 58%, rgba(255,255,255,0.025));
+              box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 24px rgba(0,0,0,0.24);
+            }
+          `,
+        },
+        this._universalRemoteButton('back', 'mdi:keyboard-backspace', 'button.tv_sala_back'),
+        this._universalRemoteButton('home', 'mdi:home', 'button.tv_sala_homepage'),
+        this._universalRemoteButton('mute', 'mdi:volume-mute', 'button.tv_sala_mute'),
+        this._universalRemoteButton('volume_down', 'mdi:volume-minus', 'button.tv_sala_volume_down'),
+        this._universalRemoteButton('volume_up', 'mdi:volume-plus', 'button.tv_sala_volume_up'),
+        this._universalRemoteButton('channel_down', 'mdi:chevron-down', 'button.tv_sala_channel_down'),
+        this._universalRemoteButton('channel_up', 'mdi:chevron-up', 'button.tv_sala_channel_up'),
+      ],
+      card_mod: {
+        style: `
+          ha-card {
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
+          }
+        `,
+      },
+    };
+  }
+
+  _universalRemoteButton(name, icon, entityId) {
+    return {
+      type: 'button',
+      name,
+      icon,
+      tap_action: this._buttonPressAction(entityId),
+    };
+  }
+
+  _buttonPressAction(entityId) {
+    return {
+      action: 'perform-action',
+      perform_action: 'button.press',
+      target: { entity_id: entityId },
+    };
   }
 
   _remoteGrid(items, columns = 3) {
@@ -1182,7 +1224,6 @@ class BrunoSalaSubview extends HTMLElement {
             </div>
             <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
               <input type="range" min="16" max="30" value="${targetNumber}" data-action="climate-target">
-              <span>${target}&deg;</span>
             </label>
           </div>
           <div class="climate-mode-row" aria-label="Modo do ar condicionado">
@@ -1236,6 +1277,7 @@ class BrunoSalaSubview extends HTMLElement {
         --accent-blue: 96, 165, 250;
         --accent-cyan: 79, 172, 254;
         --accent-amber: 255, 183, 77;
+        --media-screen-height: 154px;
         --text-main: rgba(245,250,255,0.96);
         --text-soft: rgba(255,255,255,0.62);
         --text-dim: rgba(255,255,255,0.42);
@@ -1973,10 +2015,12 @@ class BrunoSalaSubview extends HTMLElement {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        --light-color: var(--state-icon-color, #9da0a2);
         color: rgba(255,255,255,0.74);
       }
 
       .light-tile.is-on .light-icon {
+        --light-color: var(--state-icon-active-color, #f0c040);
         color: rgb(255,210,86);
         filter: drop-shadow(0 0 10px rgba(255,183,77,0.34));
       }
@@ -1986,6 +2030,7 @@ class BrunoSalaSubview extends HTMLElement {
         width: 100%;
         height: 100%;
         display: block;
+        color: var(--light-color);
       }
 
       .tpl-light-icon svg {
@@ -1997,6 +2042,21 @@ class BrunoSalaSubview extends HTMLElement {
         overflow: visible;
       }
 
+      .tpl-light-icon .light-color {
+        fill: var(--light-color);
+      }
+
+      .tpl-light-icon .flush-beam {
+        transform-origin: -100% 46%;
+        animation: bruno-light-flush-on 2s ease forwards;
+      }
+
+      .tpl-light-icon .pendant-swing {
+        transform-box: fill-box;
+        transform-origin: top center;
+        animation: bruno-light-pendant-on 1.7s ease-in-out;
+      }
+
       .tpl-light-glow {
         position: absolute;
         inset: 3px;
@@ -2004,6 +2064,20 @@ class BrunoSalaSubview extends HTMLElement {
         background: radial-gradient(circle, rgba(255,214,99,0.45), transparent 68%);
         filter: blur(7px);
         opacity: 0.95;
+      }
+
+      @keyframes bruno-light-flush-on {
+        from { transform: scaleY(0); }
+        to { transform: scaleY(1); }
+      }
+
+      @keyframes bruno-light-pendant-on {
+        0% { transform: rotateZ(0deg); }
+        23% { transform: rotateZ(-10deg); }
+        56% { transform: rotateZ(10deg); }
+        70% { transform: rotateZ(-2deg); }
+        85% { transform: rotateZ(2deg); }
+        100% { transform: rotateZ(0deg); }
       }
 
       .switch-knob {
@@ -2325,8 +2399,15 @@ class BrunoSalaSubview extends HTMLElement {
         font-weight: 800;
       }
 
+      .tv-card .poster-card,
+      .spotify-art {
+        height: var(--media-screen-height, 154px);
+        min-height: var(--media-screen-height, 154px);
+        max-height: var(--media-screen-height, 154px);
+      }
+
       .tv-card .tv-body {
-        grid-template-rows: minmax(132px, 1fr) auto;
+        grid-template-rows: var(--media-screen-height, 154px) auto;
       }
 
       .tv-card .poster-card {
@@ -2448,7 +2529,7 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(132px, 1fr) auto;
+        grid-template-rows: var(--media-screen-height, 154px) auto;
         align-items: stretch;
         gap: 8px;
       }
@@ -2457,8 +2538,9 @@ class BrunoSalaSubview extends HTMLElement {
         position: relative;
         inset: auto;
         width: 100%;
-        height: 100%;
-        min-height: 0;
+        height: var(--media-screen-height, 154px);
+        min-height: var(--media-screen-height, 154px);
+        max-height: var(--media-screen-height, 154px);
         justify-self: center;
         display: flex;
         align-items: center;
@@ -2516,16 +2598,16 @@ class BrunoSalaSubview extends HTMLElement {
 
       .ac-body {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto minmax(0, 1fr);
+        grid-template-rows: auto auto auto auto auto;
         gap: 8px;
         align-content: start;
       }
 
       .ac-temperature-panel {
         display: grid;
-        grid-template-columns: minmax(66px, auto) minmax(0, 1fr);
-        align-items: center;
-        gap: 12px;
+        grid-template-columns: 1fr;
+        align-items: stretch;
+        gap: 8px;
       }
 
       .ac-temperature-copy {
@@ -2550,27 +2632,18 @@ class BrunoSalaSubview extends HTMLElement {
 
       .temperature-slider {
         min-width: 0;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 38px;
+        width: 100%;
+        display: block;
         align-items: center;
-        gap: 8px;
-        padding: 8px 10px;
-        border-radius: 13px;
-        background: rgba(255,255,255,0.052);
-        border: 1px solid rgba(255,255,255,0.10);
+        padding: 0;
+        background: transparent;
+        border: 0;
       }
 
       .temperature-slider input {
         width: 100%;
         min-width: 0;
         accent-color: rgb(96,165,250);
-      }
-
-      .temperature-slider span {
-        color: rgba(255,255,255,0.88);
-        text-align: right;
-        font-size: 12px;
-        font-weight: 900;
       }
 
       .fan-label {
@@ -2657,12 +2730,11 @@ class BrunoSalaSubview extends HTMLElement {
 
       .climate-trend {
         min-height: 0;
-        height: 100%;
-        border-radius: 14px;
+        height: 86px;
+        margin: 2px -14px -14px;
+        border-radius: 0 0 calc(var(--sala-radius) - 1px) calc(var(--sala-radius) - 1px);
         overflow: hidden;
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.030), rgba(255,255,255,0.012)),
-          rgba(0,0,0,0.10);
+        background: transparent;
       }
 
       .climate-trend svg {
@@ -2700,7 +2772,7 @@ class BrunoSalaSubview extends HTMLElement {
         height: auto;
         min-height: 0;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(136px, 1fr) auto;
+        grid-template-rows: var(--media-screen-height, 154px) auto;
         gap: 8px;
         align-items: stretch;
       }
@@ -2901,28 +2973,47 @@ class BrunoSalaSubview extends HTMLElement {
     const glow = active
       ? '<span class="tpl-light-glow" aria-hidden="true"></span>'
       : '';
+    const pendantClass = active ? ' class="pendant-swing"' : '';
+    const flushBeam = active
+      ? `
+        <defs>
+          <radialGradient id="bruno-subview-flush-source" cx="25.165" cy="13.615" fx="25.165" fy="13.615" r="7.941" gradientTransform="matrix(-0.00353534,0.70731769,-1.7278701,-0.00863629,48.77824,1.4653142)" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FFF9C3"/>
+            <stop offset="1" stop-color="#FFF9C3" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="bruno-subview-flush-center" cx="24.933" cy="10.064" fx="24.933" fy="10.064" r="13.627" gradientTransform="matrix(-1.3891264,0.01690265,-0.01282326,-1.0538672,59.802527,28.064254)" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FFF9C3"/>
+            <stop offset="1" stop-color="#FFF9C3" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <path class="flush-beam" opacity="0.875" d="M22.413 22.141C22.413 22.141 16.999 22.946 16.242 25.456C16.242 25.456 15.874 27.586 19.976 28.969C19.976 28.969 22.927 29.685 25.213 29.654C28.288 29.613 30.582 28.904 30.582 28.904C33.865 28.036 33.963 26.03 33.963 26.03C33.882 23.684 30.008 22.583 30.008 22.583C26.164 21.611 24.51 21.844 22.413 22.141Z" fill="url(#bruno-subview-flush-source)"/>
+        <path class="flush-beam" d="M25.351 24.016C26.2104 24.016 26.907 23.5719 26.907 23.024C26.907 22.4761 26.2104 22.032 25.351 22.032C24.4916 22.032 23.795 22.4761 23.795 23.024C23.795 23.5719 24.4916 24.016 25.351 24.016Z" fill="url(#bruno-subview-flush-center)"/>
+      `
+      : '';
     const icons = {
       ledstrip: `
         <svg viewBox="0 0 32 32" aria-hidden="true">
-          <path fill="currentColor" d="M8.4395,16.668 C8.9795,16.552 9.5115,16.895 9.6285,17.435 C9.7455,17.974 9.4025,18.506 8.8625,18.623 C8.3225,18.74 7.7905,18.397 7.6735,17.857 C7.5565,17.317 7.9005,16.785 8.4395,16.668 M13.3275,15.611 C13.8665,15.495 14.3985,15.838 14.5155,16.377 C14.6325,16.917 14.2895,17.449 13.7505,17.566 C13.2105,17.683 12.6775,17.34 12.5605,16.8 C12.4445,16.261 12.7875,15.729 13.3275,15.611 M18.2135,14.555 C18.7535,14.438 19.2865,14.781 19.4025,15.32 C19.5195,15.86 19.1765,16.393 18.6365,16.51 C18.0965,16.626 17.5645,16.283 17.4485,15.743 C17.3315,15.203 17.6735,14.671 18.2135,14.555 M23.1005,13.498 C23.6405,13.381 24.1725,13.724 24.2905,14.264 C24.4065,14.804 24.0635,15.336 23.5235,15.453 C22.9835,15.569 22.4515,15.227 22.3355,14.687 C22.2175,14.147 22.5615,13.614 23.1005,13.498 M10.6695,20.639 L25.4735,17.444 C26.5535,17.211 27.2405,16.147 27.0065,15.067 C26.4495,12.484 23.9035,10.842 21.3205,11.399 L6.5165,14.594 C5.4365,14.827 4.7505,15.891 4.9835,16.971 C5.5415,19.554 8.0865,21.196 10.6695,20.639 M25,26 C24.447,26 24,25.553 24,25 C24,24.447 24.447,24 25,24 C25.553,24 26,24.447 26,25 C26,25.553 25.553,26 25,26 M20,26 C19.447,26 19,25.553 19,25 C19,24.447 19.447,24 20,24 C20.553,24 21,24.447 21,25 C21,25.553 20.553,26 20,26 M15,26 C14.447,26 14,25.553 14,25 C14,24.447 14.447,24 15,24 C15.553,24 16,24.447 16,25 C16,25.553 15.553,26 15,26 M10,26 C9.447,26 9,25.553 9,25 C9,24.447 9.447,24 10,24 C10.553,24 11,24.447 11,25 C11,25.553 10.553,26 10,26 M27,22 L9,22 C5,22 4,19 4,18 L4,23 C4,25.762 6.238,28 9,28 L27,28 C27.553,28 28,27.553 28,27 L28,23 C28,22.447 27.553,22 27,22 M22,8 C21.447,8 21,7.553 21,7 C21,6.447 21.447,6 22,6 C22.553,6 23,6.447 23,7 C23,7.553 22.553,8 22,8 M17,8 C16.447,8 16,7.553 16,7 C16,6.447 16.447,6 17,6 C17.553,6 18,6.447 18,7 C18,7.553 17.553,8 17,8 M12,8 C11.447,8 11,7.553 11,7 C11,6.447 11.447,6 12,6 C12.553,6 13,6.447 13,7 C13,7.553 12.553,8 12,8 M7,8 C6.447,8 6,7.553 6,7 C6,6.447 6.447,6 7,6 C7.553,6 8,6.447 8,7 C8,7.553 7.553,8 7,8 M23,4 L5,4 C4.447,4 4,4.447 4,5 L4,9 C4,9.553 4.447,10 5,10 L23,10 C27,10 28,13 28,14 L28,9 C28,6.238 25.762,4 23,4"/>
+          <path class="light-color" d="M8.4395,16.668 C8.9795,16.552 9.5115,16.895 9.6285,17.435 C9.7455,17.974 9.4025,18.506 8.8625,18.623 C8.3225,18.74 7.7905,18.397 7.6735,17.857 C7.5565,17.317 7.9005,16.785 8.4395,16.668 M13.3275,15.611 C13.8665,15.495 14.3985,15.838 14.5155,16.377 C14.6325,16.917 14.2895,17.449 13.7505,17.566 C13.2105,17.683 12.6775,17.34 12.5605,16.8 C12.4445,16.261 12.7875,15.729 13.3275,15.611 M18.2135,14.555 C18.7535,14.438 19.2865,14.781 19.4025,15.32 C19.5195,15.86 19.1765,16.393 18.6365,16.51 C18.0965,16.626 17.5645,16.283 17.4485,15.743 C17.3315,15.203 17.6735,14.671 18.2135,14.555 M23.1005,13.498 C23.6405,13.381 24.1725,13.724 24.2905,14.264 C24.4065,14.804 24.0635,15.336 23.5235,15.453 C22.9835,15.569 22.4515,15.227 22.3355,14.687 C22.2175,14.147 22.5615,13.614 23.1005,13.498 M10.6695,20.639 L25.4735,17.444 C26.5535,17.211 27.2405,16.147 27.0065,15.067 C26.4495,12.484 23.9035,10.842 21.3205,11.399 L6.5165,14.594 C5.4365,14.827 4.7505,15.891 4.9835,16.971 C5.5415,19.554 8.0865,21.196 10.6695,20.639 M25,26 C24.447,26 24,25.553 24,25 C24,24.447 24.447,24 25,24 C25.553,24 26,24.447 26,25 C26,25.553 25.553,26 25,26 M20,26 C19.447,26 19,25.553 19,25 C19,24.447 19.447,24 20,24 C20.553,24 21,24.447 21,25 C21,25.553 20.553,26 20,26 M15,26 C14.447,26 14,25.553 14,25 C14,24.447 14.447,24 15,24 C15.553,24 16,24.447 16,25 C16,25.553 15.553,26 15,26 M10,26 C9.447,26 9,25.553 9,25 C9,24.447 9.447,24 10,24 C10.553,24 11,24.447 11,25 C11,25.553 10.553,26 10,26 M27,22 L9,22 C5,22 4,19 4,18 L4,23 C4,25.762 6.238,28 9,28 L27,28 C27.553,28 28,27.553 28,27 L28,23 C28,22.447 27.553,22 27,22 M22,8 C21.447,8 21,7.553 21,7 C21,6.447 21.447,6 22,6 C22.553,6 23,6.447 23,7 C23,7.553 22.553,8 22,8 M17,8 C16.447,8 16,7.553 16,7 C16,6.447 16.447,6 17,6 C17.553,6 18,6.447 18,7 C18,7.553 17.553,8 17,8 M12,8 C11.447,8 11,7.553 11,7 C11,6.447 11.447,6 12,6 C12.553,6 13,6.447 13,7 C13,7.553 12.553,8 12,8 M7,8 C6.447,8 6,7.553 6,7 C6,6.447 6.447,6 7,6 C7.553,6 8,6.447 8,7 C8,7.553 7.553,8 7,8 M23,4 L5,4 C4.447,4 4,4.447 4,5 L4,9 C4,9.553 4.447,10 5,10 L23,10 C27,10 28,13 28,14 L28,9 C28,6.238 25.762,4 23,4"/>
         </svg>
       `,
       pendant: `
         <svg viewBox="0 0 50 50" aria-hidden="true">
-          <path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" d="M25 4v17"/>
-          <path fill="currentColor" opacity="0.82" d="M22.7 18.2h4.8c1.2 0 2.1 1 2.1 2.2v5.8c0 1.2-.9 2.2-2.1 2.2h-4.8c-1.2 0-2.1-1-2.1-2.2v-5.8c0-1.2.9-2.2 2.1-2.2z"/>
-          <path fill="currentColor" d="M9.1 34.4c-.2-7.3 7.2-14.1 15.9-14.1s16.1 6.8 15.9 14.1c-.1 4.9-2.5 5.5-8.8 5.7-4 .1-10.6.1-14.8 0-5.8-.1-8-.9-8.2-5.7z"/>
-          ${active ? '<path fill="rgba(255,220,86,0.88)" d="M21 42.4c.5-2.7 1.7-3.3 4.2-3.3s3.7.6 4.1 3.1c.4 2.6-1.6 5-4.1 5s-4.7-2.1-4.2-4.8z"/>' : ''}
+          <g${pendantClass}>
+            <path fill="none" stroke="#a0a0a0" stroke-width="2.8" stroke-linecap="round" d="M25 4v17"/>
+            <path fill="#9da0a2" opacity="0.86" d="M22.7 18.2h4.8c1.2 0 2.1 1 2.1 2.2v5.8c0 1.2-.9 2.2-2.1 2.2h-4.8c-1.2 0-2.1-1-2.1-2.2v-5.8c0-1.2.9-2.2 2.1-2.2z"/>
+            <path fill="#9da0a2" d="M9.1 34.4c-.2-7.3 7.2-14.1 15.9-14.1s16.1 6.8 15.9 14.1c-.1 4.9-2.5 5.5-8.8 5.7-4 .1-10.6.1-14.8 0-5.8-.1-8-.9-8.2-5.7z"/>
+            ${active ? '<path class="light-color" d="M21 42.4c.5-2.7 1.7-3.3 4.2-3.3s3.7.6 4.1 3.1c.4 2.6-1.6 5-4.1 5s-4.7-2.1-4.2-4.8z"/>' : ''}
+          </g>
         </svg>
       `,
       light_flush: `
         <svg viewBox="0 0 50 50" aria-hidden="true">
-          <g>
-            <path fill="currentColor" opacity="0.78" d="M18.847 21.388C16.243 22.079 14.512 23.149 13.885 24.375C13.793 24.556 13.583 25.038 13.549 25.299C13.435 26.19 14.126 27.242 15.273 28.108C17.273 29.617 20.416 30.441 24.42 30.631L27.42 30.588C32.361 30.176 35.876 28.468 36.452 26.2C36.569 25.739 36.524 25.408 36.27 24.878C36.009 24.33 35.623 23.865 35.053 23.405C33.617 22.248 31.402 21.45 28.355 20.843C25.612 20.19 21.712 20.642 18.847 21.388Z"/>
-            <path fill="currentColor" d="M25.243 17.913C15.653 17.809 8.131 21.052 7.733 25C7.315 29.148 16.07 32.922 25.452 32.922C34.834 32.922 43.112 28.716 42.336 25.07C41.622 21.715 34.903 18.087 25.243 17.913ZM25.417 30.866C16.78 30.771 12.541 27.226 13.405 24.828C13.791 23.847 15.401 21.415 22.459 20.58C26.249 20.248 27.413 20.489 29.761 21.022C36.964 22.661 36.752 25.989 36.752 25.989C36.301 29.257 30.348 30.939 25.418 30.867Z"/>
-            <path fill="currentColor" opacity="0.58" d="M42.316 25.012C41.603 23.019 40.277 22.207 40.277 22.207C36.714 19.347 31.883 18.661 28.947 18.224C25.505 17.712 21.478 18.057 21.478 18.057C15.227 18.68 12.928 19.952 10.795 21.096C10.795 21.096 8.371 23.11 7.808 24.606C7.808 24.606 8.205 22.474 8.531 21.871C9.048 20.912 10.53 19.862 11.002 19.572C16.034 17.047 19.435 16.678 23.652 16.585C24.911 16.557 26.971 16.634 26.971 16.634C31.712 16.954 33.768 17.631 36.597 18.675C36.597 18.675 39.671 20.146 40.678 21.183C41.125 21.643 41.752 22.321 41.956 22.929C42.111 23.459 42.266 24.473 42.316 25.012Z"/>
-            ${active ? '<path opacity="0.88" fill="rgba(255,245,195,0.84)" d="M22.413 22.141C22.413 22.141 16.999 22.946 16.242 25.456C16.242 25.456 15.874 27.586 19.976 28.969C19.976 28.969 22.927 29.685 25.213 29.654C28.288 29.613 30.582 28.904 30.582 28.904C33.865 28.036 33.963 26.03 33.963 26.03C33.882 23.684 30.008 22.583 30.008 22.583C26.164 21.611 24.51 21.844 22.413 22.141Z"/>' : ''}
+          <g id="body">
+            <path fill="#9da0a2" opacity="0.8" d="M18.847 21.388C16.243 22.079 14.512 23.149 13.885 24.375C13.793 24.556 13.583 25.038 13.549 25.299C13.435 26.19 14.126 27.242 15.273 28.108C17.273 29.617 20.416 30.441 24.42 30.631L27.42 30.588C32.361 30.176 35.876 28.468 36.452 26.2C36.569 25.739 36.524 25.408 36.27 24.878C36.009 24.33 35.623 23.865 35.053 23.405C33.617 22.248 31.402 21.45 28.355 20.843C25.612 20.19 21.712 20.642 18.847 21.388ZM25.183 21.886C25.183 21.886 28.625 21.868 30.593 23.093C31.524 23.672 32.515 24.307 32.437 25.249C32.34 26.42 30.406 27.343 30.406 27.343C28.229 28.29 25.312 28.281 25.312 28.281C22.792 28.344 20.794 27.535 20.794 27.535C18.24 26.593 18.062 25.281 18.062 25.281C18.134 24.175 19.037 23.562 19.843 23.062C21.391 22.101 25.183 21.886 25.183 21.886Z"/>
+            <path fill="#9da0a2" d="M25.243 17.913C15.653 17.809 8.131 21.052 7.733 25C7.315 29.148 16.07 32.922 25.452 32.922C34.834 32.922 43.112 28.716 42.336 25.07C41.622 21.715 34.903 18.087 25.243 17.913ZM25.417 30.866C16.78 30.771 12.541 27.226 13.405 24.828C13.791 23.847 15.401 21.415 22.459 20.58C26.249 20.248 27.413 20.489 29.761 21.022C36.964 22.661 36.752 25.989 36.752 25.989C36.301 29.257 30.348 30.939 25.418 30.867Z"/>
           </g>
+          <path fill="#707070" d="M42.316 25.012C41.603 23.019 40.277 22.207 40.277 22.207C36.714 19.347 31.883 18.661 28.947 18.224C25.505 17.712 21.478 18.057 21.478 18.057C15.227 18.68 12.928 19.952 10.795 21.096C10.795 21.096 8.371 23.11 7.808 24.606C7.808 24.606 8.205 22.474 8.531 21.871C9.048 20.912 10.53 19.862 11.002 19.572C16.034 17.047 19.435 16.678 23.652 16.585C24.911 16.557 26.971 16.634 26.971 16.634C31.712 16.954 33.768 17.631 36.597 18.675C36.597 18.675 39.671 20.146 40.678 21.183C41.125 21.643 41.752 22.321 41.956 22.929C42.111 23.459 42.266 24.473 42.316 25.012Z"/>
+          ${flushBeam}
         </svg>
       `,
     };

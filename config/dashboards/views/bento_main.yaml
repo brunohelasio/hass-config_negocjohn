@@ -14,41 +14,11 @@ card_mod:
       box-sizing: border-box;
     }
 
-    /* HERO STAGE BACKGROUND - fallback rapido:
-       remover este bloco ::before para voltar ao fundo solido anterior. */
+    /* O palco visual do Hero desktop e renderizado pelo bruno-hero-card.
+       Mantemos o ::before desligado para evitar bordas duplicadas no grid. */
     hui-grid-layout::before {
       content: "";
-      position: absolute;
-      display: block;
-      left: 86px;
-      right: 12px;
-      top: 58px;
-      bottom: 84px;
-      border-radius: 32px;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-      background:
-        linear-gradient(90deg,
-          rgba(3,5,9,0.90) 0%,
-          rgba(3,5,9,0.62) 30%,
-          rgba(3,5,9,0.34) 56%,
-          rgba(3,5,9,0.72) 100%
-        ),
-        linear-gradient(0deg, rgba(3,5,9,0.86), rgba(3,5,9,0.06) 48%, rgba(3,5,9,0.34)),
-        radial-gradient(760px 280px at 12% 4%, rgba(255,255,255,0.08), transparent 58%),
-        url('/local/images/home.jpg') center / cover no-repeat;
-      filter: saturate(0.98) contrast(1.05);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.08),
-        inset 0 0 0 1px rgba(255,255,255,0.055),
-        0 24px 70px rgba(0,0,0,0.28);
-    }
-
-    @media (max-width: 800px) {
-      hui-grid-layout::before {
-        display: none;
-      }
+      display: none;
     }
 
     hui-grid-layout > * {

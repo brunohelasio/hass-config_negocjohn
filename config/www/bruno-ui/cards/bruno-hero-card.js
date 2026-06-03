@@ -60,7 +60,7 @@ class BrunoHeroCard extends HTMLElement {
 
     this._config = {
       name: 'Bruno',
-      background: '/local/images/home_color.jpg',
+      background: '/local/images/home.jpg',
       fallback_background: '/local/images/home.jpg',
       ...config,
       calendar: {

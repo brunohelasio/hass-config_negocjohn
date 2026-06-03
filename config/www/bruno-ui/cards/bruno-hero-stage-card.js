@@ -78,73 +78,51 @@ class BrunoHeroStageCard extends HTMLElement {
           left: -16px;
           right: -86px;
           background:
-            linear-gradient(90deg,
-              rgba(4,10,18,0.82) 0%,
-              rgba(5,10,18,0.66) 12%,
-              rgba(6,12,20,0.42) 24%,
-              rgba(7,13,22,0.22) 38%,
-              rgba(7,13,22,0.10) 50%,
-              rgba(7,13,22,0.14) 60%,
-              rgba(7,13,22,0.30) 70%,
-              rgba(7,13,22,0.54) 82%,
-              rgba(7,13,22,0.80) 92%,
-              rgba(7,13,22,0.94) 100%
-            ),
-            linear-gradient(180deg,
-              rgba(4,8,14,0.78) 0%,
-              rgba(4,8,14,0.46) 10%,
-              rgba(4,8,14,0.18) 22%,
-              rgba(4,8,14,0.04) 34%,
-              rgba(4,8,14,0.00) 46%,
-              rgba(4,8,14,0.00) 58%,
-              rgba(4,8,14,0.10) 72%,
-              rgba(4,8,14,0.28) 84%,
-              rgba(4,8,14,0.56) 94%,
-              rgba(4,8,14,0.78) 100%
-            ),
-            radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
-            radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
             url("${background}") left center / auto 100% no-repeat,
             url("${fallbackBackground}") left center / auto 100% no-repeat,
             #020406;
           opacity: 1;
-          filter: saturate(1.01) brightness(0.90);
+          filter: saturate(1.12) brightness(1.02) contrast(1.04);
           mask-image:
             linear-gradient(to right,
               transparent 0%,
-              rgba(0,0,0,0.84) 4%,
-              rgba(0,0,0,1) 10%,
-              rgba(0,0,0,1) 78%,
-              rgba(0,0,0,0.84) 88%,
-              rgba(0,0,0,0.46) 94%,
+              rgba(0,0,0,0.42) 3%,
+              rgba(0,0,0,0.84) 8%,
+              rgba(0,0,0,1) 14%,
+              rgba(0,0,0,1) 82%,
+              rgba(0,0,0,0.78) 91%,
+              rgba(0,0,0,0.34) 96%,
               transparent 100%
             ),
             linear-gradient(to bottom,
               transparent 0%,
-              rgba(0,0,0,0.84) 6%,
-              rgba(0,0,0,1) 14%,
-              rgba(0,0,0,1) 80%,
-              rgba(0,0,0,0.82) 89%,
-              rgba(0,0,0,0.42) 95%,
+              rgba(0,0,0,0.38) 4%,
+              rgba(0,0,0,0.84) 10%,
+              rgba(0,0,0,1) 17%,
+              rgba(0,0,0,1) 76%,
+              rgba(0,0,0,0.76) 87%,
+              rgba(0,0,0,0.28) 95%,
               transparent 100%
             );
           -webkit-mask-image:
             linear-gradient(to right,
               transparent 0%,
-              rgba(0,0,0,0.84) 4%,
-              rgba(0,0,0,1) 10%,
-              rgba(0,0,0,1) 78%,
-              rgba(0,0,0,0.84) 88%,
-              rgba(0,0,0,0.46) 94%,
+              rgba(0,0,0,0.42) 3%,
+              rgba(0,0,0,0.84) 8%,
+              rgba(0,0,0,1) 14%,
+              rgba(0,0,0,1) 82%,
+              rgba(0,0,0,0.78) 91%,
+              rgba(0,0,0,0.34) 96%,
               transparent 100%
             ),
             linear-gradient(to bottom,
               transparent 0%,
-              rgba(0,0,0,0.84) 6%,
-              rgba(0,0,0,1) 14%,
-              rgba(0,0,0,1) 80%,
-              rgba(0,0,0,0.82) 89%,
-              rgba(0,0,0,0.42) 95%,
+              rgba(0,0,0,0.38) 4%,
+              rgba(0,0,0,0.84) 10%,
+              rgba(0,0,0,1) 17%,
+              rgba(0,0,0,1) 76%,
+              rgba(0,0,0,0.76) 87%,
+              rgba(0,0,0,0.28) 95%,
               transparent 100%
             );
           mask-composite: intersect;
@@ -162,34 +140,36 @@ class BrunoHeroStageCard extends HTMLElement {
         .hero-bg::before {
           background:
             linear-gradient(90deg,
-              rgba(4,10,18,0.72) 0%,
-              rgba(4,10,18,0.56) 12%,
-              rgba(5,10,18,0.34) 24%,
-              rgba(5,10,18,0.14) 38%,
-              rgba(5,10,18,0.02) 50%,
-              rgba(5,10,18,0.08) 60%,
-              rgba(5,10,18,0.22) 72%,
-              rgba(5,10,18,0.46) 84%,
-              rgba(5,10,18,0.74) 100%
-            ),
-            linear-gradient(180deg,
-              rgba(3,8,14,0.62) 0%,
-              rgba(3,8,14,0.34) 12%,
-              rgba(3,8,14,0.08) 26%,
-              rgba(3,8,14,0.00) 40%,
-              rgba(3,8,14,0.00) 62%,
-              rgba(3,8,14,0.10) 76%,
-              rgba(3,8,14,0.30) 90%,
-              rgba(3,8,14,0.60) 100%
+              rgba(2,6,11,0.96) 0,
+              rgba(2,6,11,0.90) 82px,
+              rgba(3,8,14,0.74) 160px,
+              rgba(4,9,15,0.46) 250px,
+              rgba(5,10,18,0.18) 340px,
+              rgba(5,10,18,0.04) 410px,
+              rgba(5,10,18,0.00) 470px
             );
         }
 
         .hero-bg::after {
           background:
-            radial-gradient(720px 220px at 8% 2%, rgba(255,255,255,0.08), transparent 58%),
-            linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%),
-            linear-gradient(0deg, rgba(0,0,0,0.22), rgba(0,0,0,0.00) 34%);
-          opacity: 0.58;
+            linear-gradient(90deg,
+              rgba(2,6,11,0.28) 0,
+              rgba(2,6,11,0.08) 92px,
+              rgba(2,6,11,0.00) 210px,
+              rgba(2,6,11,0.00) 78%,
+              rgba(2,6,11,0.22) 90%,
+              rgba(2,6,11,0.72) 100%
+            ),
+            linear-gradient(180deg,
+              rgba(2,6,11,0.84) 0%,
+              rgba(2,6,11,0.50) 7%,
+              rgba(2,6,11,0.18) 16%,
+              rgba(2,6,11,0.00) 28%,
+              rgba(2,6,11,0.00) 66%,
+              rgba(2,6,11,0.20) 79%,
+              rgba(2,6,11,0.58) 91%,
+              rgba(2,6,11,0.90) 100%
+            );
         }
       </style>
 

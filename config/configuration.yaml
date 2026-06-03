@@ -27,7 +27,7 @@ frontend:
     - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260520-1
     - /local/bruno-ui/cards/bruno-energy-card.js?v=20260518-4
     - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-3
-    - /local/bruno-ui/cards/bruno-hero-card.js?v=20260603-hero-stage-8
+    - /local/bruno-ui/cards/bruno-hero-card.js?v=20260603-hero-stage-9
     - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260520-1
     - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260521-1
     - /local/bruno-ui/cards/bruno-media-card.js?v=20260518-5

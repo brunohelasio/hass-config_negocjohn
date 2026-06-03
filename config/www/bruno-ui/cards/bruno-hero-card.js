@@ -684,31 +684,8 @@ class BrunoHeroCard extends HTMLElement {
           left: -20px;
           right: calc(-100vw + 100% + 6px);
           min-width: 100%;
-          background:
-            linear-gradient(90deg,
-              rgba(4,10,18,0.78) 0%,
-              rgba(5,10,18,0.54) 12%,
-              rgba(6,12,20,0.26) 26%,
-              rgba(7,13,22,0.08) 42%,
-              rgba(7,13,22,0.06) 56%,
-              rgba(7,13,22,0.16) 68%,
-              rgba(7,13,22,0.42) 82%,
-              rgba(7,13,22,0.78) 100%
-            ),
-            linear-gradient(180deg,
-              rgba(4,8,14,0.66) 0%,
-              rgba(4,8,14,0.26) 14%,
-              rgba(4,8,14,0.06) 30%,
-              rgba(4,8,14,0.00) 50%,
-              rgba(4,8,14,0.10) 74%,
-              rgba(4,8,14,0.72) 100%
-            ),
-            radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
-            radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
-            url(${background}) center / cover no-repeat,
-            url(${fallbackBackground}) center / cover no-repeat;
+          background: #020406;
           opacity: 1;
-          filter: saturate(1.18) brightness(0.94) contrast(1.04);
           mask-image:
             linear-gradient(to right,
               transparent 0%,
@@ -761,6 +738,33 @@ class BrunoHeroCard extends HTMLElement {
 
         .hero-bg::before {
           background:
+            url(${background}) center / cover no-repeat,
+            url(${fallbackBackground}) center / cover no-repeat;
+          filter: saturate(2.25) brightness(1.06) contrast(1.05);
+        }
+
+        .hero-bg::after {
+          background:
+            linear-gradient(90deg,
+              rgba(4,10,18,0.78) 0%,
+              rgba(5,10,18,0.54) 12%,
+              rgba(6,12,20,0.26) 26%,
+              rgba(7,13,22,0.08) 42%,
+              rgba(7,13,22,0.06) 56%,
+              rgba(7,13,22,0.16) 68%,
+              rgba(7,13,22,0.42) 82%,
+              rgba(7,13,22,0.78) 100%
+            ),
+            linear-gradient(180deg,
+              rgba(4,8,14,0.66) 0%,
+              rgba(4,8,14,0.26) 14%,
+              rgba(4,8,14,0.06) 30%,
+              rgba(4,8,14,0.00) 50%,
+              rgba(4,8,14,0.10) 74%,
+              rgba(4,8,14,0.72) 100%
+            ),
+            radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
+            radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
             linear-gradient(90deg,
               rgba(4,10,18,0.64) 0%,
               rgba(4,10,18,0.44) 12%,
@@ -781,16 +785,11 @@ class BrunoHeroCard extends HTMLElement {
               rgba(3,8,14,0.08) 76%,
               rgba(3,8,14,0.24) 90%,
               rgba(3,8,14,0.54) 100%
-            );
-          opacity: 0.72;
-        }
-
-        .hero-bg::after {
-          background:
+            ),
             radial-gradient(720px 220px at 8% 2%, rgba(255,255,255,0.08), transparent 58%),
             linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%),
             linear-gradient(0deg, rgba(0,0,0,0.22), rgba(0,0,0,0.00) 34%);
-          opacity: 0.52;
+          opacity: 0.88;
         }
 
         .content {
@@ -802,7 +801,7 @@ class BrunoHeroCard extends HTMLElement {
           flex-direction: column;
           justify-content: space-between;
           gap: 18px;
-          padding: 20px 20px 18px;
+          padding: 20px 20px 0;
           overflow: hidden;
         }
 
@@ -1074,7 +1073,7 @@ class BrunoHeroCard extends HTMLElement {
 
         @media (max-height: 760px) {
           .content {
-            padding: 17px 18px 15px;
+            padding: 17px 18px 0;
           }
 
           .clock {

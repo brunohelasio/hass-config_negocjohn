@@ -679,35 +679,118 @@ class BrunoHeroCard extends HTMLElement {
           position: absolute;
           pointer-events: none;
           z-index: 0;
-          top: 0;
-          bottom: 0;
-          left: 0;
-          right: calc(-100vw + 100% + 24px);
+          top: -22px;
+          bottom: -26px;
+          left: -20px;
+          right: calc(-100vw + 100% + 6px);
           min-width: 100%;
-          border-radius: 32px;
-          overflow: hidden;
           background:
             linear-gradient(90deg,
-              rgba(3,5,9,0.68) 0%,
-              rgba(3,5,9,0.42) 22%,
-              rgba(3,5,9,0.18) 46%,
-              rgba(3,5,9,0.28) 66%,
-              rgba(3,5,9,0.70) 100%
+              rgba(4,10,18,0.78) 0%,
+              rgba(5,10,18,0.54) 12%,
+              rgba(6,12,20,0.26) 26%,
+              rgba(7,13,22,0.08) 42%,
+              rgba(7,13,22,0.06) 56%,
+              rgba(7,13,22,0.16) 68%,
+              rgba(7,13,22,0.42) 82%,
+              rgba(7,13,22,0.78) 100%
             ),
             linear-gradient(180deg,
-              rgba(3,5,9,0.56) 0%,
-              rgba(3,5,9,0.10) 34%,
-              rgba(3,5,9,0.12) 62%,
-              rgba(3,5,9,0.72) 100%
+              rgba(4,8,14,0.66) 0%,
+              rgba(4,8,14,0.26) 14%,
+              rgba(4,8,14,0.06) 30%,
+              rgba(4,8,14,0.00) 50%,
+              rgba(4,8,14,0.10) 74%,
+              rgba(4,8,14,0.72) 100%
             ),
-            radial-gradient(760px 280px at 12% 4%, rgba(255,255,255,0.10), transparent 58%),
+            radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
+            radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
             url(${background}) center / cover no-repeat,
             url(${fallbackBackground}) center / cover no-repeat;
-          filter: saturate(0.98) brightness(0.82) contrast(1.05);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.08),
-            inset 0 0 0 1px rgba(255,255,255,0.055),
-            0 24px 70px rgba(0,0,0,0.28);
+          opacity: 1;
+          filter: saturate(1.18) brightness(0.94) contrast(1.04);
+          mask-image:
+            linear-gradient(to right,
+              transparent 0%,
+              rgba(0,0,0,0.84) 4%,
+              rgba(0,0,0,1) 10%,
+              rgba(0,0,0,1) 78%,
+              rgba(0,0,0,0.84) 88%,
+              rgba(0,0,0,0.46) 94%,
+              transparent 100%
+            ),
+            linear-gradient(to bottom,
+              transparent 0%,
+              rgba(0,0,0,0.84) 6%,
+              rgba(0,0,0,1) 14%,
+              rgba(0,0,0,1) 80%,
+              rgba(0,0,0,0.82) 89%,
+              rgba(0,0,0,0.42) 95%,
+              transparent 100%
+            );
+          -webkit-mask-image:
+            linear-gradient(to right,
+              transparent 0%,
+              rgba(0,0,0,0.84) 4%,
+              rgba(0,0,0,1) 10%,
+              rgba(0,0,0,1) 78%,
+              rgba(0,0,0,0.84) 88%,
+              rgba(0,0,0,0.46) 94%,
+              transparent 100%
+            ),
+            linear-gradient(to bottom,
+              transparent 0%,
+              rgba(0,0,0,0.84) 6%,
+              rgba(0,0,0,1) 14%,
+              rgba(0,0,0,1) 80%,
+              rgba(0,0,0,0.82) 89%,
+              rgba(0,0,0,0.42) 95%,
+              transparent 100%
+            );
+          mask-composite: intersect;
+          -webkit-mask-composite: source-in;
+        }
+
+        .hero-bg::before,
+        .hero-bg::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+
+        .hero-bg::before {
+          background:
+            linear-gradient(90deg,
+              rgba(4,10,18,0.64) 0%,
+              rgba(4,10,18,0.44) 12%,
+              rgba(5,10,18,0.22) 24%,
+              rgba(5,10,18,0.08) 38%,
+              rgba(5,10,18,0.00) 50%,
+              rgba(5,10,18,0.06) 60%,
+              rgba(5,10,18,0.18) 72%,
+              rgba(5,10,18,0.38) 84%,
+              rgba(5,10,18,0.66) 100%
+            ),
+            linear-gradient(180deg,
+              rgba(3,8,14,0.52) 0%,
+              rgba(3,8,14,0.24) 12%,
+              rgba(3,8,14,0.04) 26%,
+              rgba(3,8,14,0.00) 40%,
+              rgba(3,8,14,0.00) 62%,
+              rgba(3,8,14,0.08) 76%,
+              rgba(3,8,14,0.24) 90%,
+              rgba(3,8,14,0.54) 100%
+            );
+          opacity: 0.72;
+        }
+
+        .hero-bg::after {
+          background:
+            radial-gradient(720px 220px at 8% 2%, rgba(255,255,255,0.08), transparent 58%),
+            linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%),
+            linear-gradient(0deg, rgba(0,0,0,0.22), rgba(0,0,0,0.00) 34%);
+          opacity: 0.52;
         }
 
         .content {

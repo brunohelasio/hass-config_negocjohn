@@ -7,6 +7,41 @@ entities:
   time: sensor.time
   weather: weather.forecast_casa
   sun: sun.sun
+calendar:
+  compact_events_to_show: 1
+  calendars:
+    - entity: calendar.brunohelasio_gmail_com
+      name: Bruno
+      color: "#7fdbe9"
+    - entity: calendar.familia
+      name: Familia
+      color: "#fdd835"
+    - entity: calendar.birthdays
+      name: Aniversarios
+      color: "#ff6c92"
+    - entity: calendar.feriados_no_brasil
+      name: Feriados
+      color: "#1DB954"
+  popup_calendars:
+    - calendar.brunohelasio_gmail_com
+    - calendar.familia
+    - calendar.feriados_no_brasil
+cameras:
+  active_entity: input_select.bento_active_camera
+  limit: 4
+  items:
+    - entity: camera.sl_camera_2
+      name: Sala
+      short_name: Sala
+    - entity: camera.vr_camera_2
+      name: Varanda
+      short_name: Varanda
+    - entity: camera.cz_camera_2
+      name: Cozinha
+      short_name: Cozinha
+    - entity: camera.as_camera_2
+      name: Area de Servico
+      short_name: Area
 
 # FALLBACK - Hero Lovelace/Negocjohn original
 # Para voltar rapidamente:

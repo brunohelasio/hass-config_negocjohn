@@ -631,6 +631,8 @@ class BrunoHeroCard extends HTMLElement {
     const weather = this._weatherModel();
     const event = this._nextEventModel();
     const cameras = this._cameraModel();
+    const background = BrunoHeroCard._cssUrl(this._config.background);
+    const fallbackBackground = BrunoHeroCard._cssUrl(this._config.fallback_background);
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -645,6 +647,8 @@ class BrunoHeroCard extends HTMLElement {
           margin: 0;
           padding: 0;
           overflow: visible;
+          position: relative;
+          z-index: 0;
         }
 
         * {
@@ -668,9 +672,47 @@ class BrunoHeroCard extends HTMLElement {
           color: var(--hero-text);
           position: relative;
           isolation: isolate;
+          overflow: visible;
+        }
+
+        .hero-bg {
+          position: absolute;
+          pointer-events: none;
+          z-index: 0;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: calc(-100vw + 100% + 24px);
+          min-width: 100%;
+          border-radius: 32px;
+          overflow: hidden;
+          background:
+            linear-gradient(90deg,
+              rgba(3,5,9,0.68) 0%,
+              rgba(3,5,9,0.42) 22%,
+              rgba(3,5,9,0.18) 46%,
+              rgba(3,5,9,0.28) 66%,
+              rgba(3,5,9,0.70) 100%
+            ),
+            linear-gradient(180deg,
+              rgba(3,5,9,0.56) 0%,
+              rgba(3,5,9,0.10) 34%,
+              rgba(3,5,9,0.12) 62%,
+              rgba(3,5,9,0.72) 100%
+            ),
+            radial-gradient(760px 280px at 12% 4%, rgba(255,255,255,0.10), transparent 58%),
+            url(${background}) center / cover no-repeat,
+            url(${fallbackBackground}) center / cover no-repeat;
+          filter: saturate(0.98) brightness(0.82) contrast(1.05);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.08),
+            inset 0 0 0 1px rgba(255,255,255,0.055),
+            0 24px 70px rgba(0,0,0,0.28);
         }
 
         .content {
+          position: relative;
+          z-index: 2;
           height: 100%;
           min-height: 0;
           display: flex;
@@ -971,6 +1013,7 @@ class BrunoHeroCard extends HTMLElement {
       </style>
 
       <section class="hero-stage" aria-label="Hero do dashboard">
+        <div class="hero-bg" aria-hidden="true"></div>
         <div class="content">
           <div class="headline">
             <p class="date-line">${BrunoHeroCard._escape(this._dateLine())}</p>

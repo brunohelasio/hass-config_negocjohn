@@ -60,7 +60,7 @@ class BrunoHeroCard extends HTMLElement {
 
     this._config = {
       name: 'Bruno',
-      background: '/local/images/home.jpg',
+      background: '/local/images/homecolor.jpg',
       fallback_background: '/local/images/home.jpg',
       ...config,
       calendar: {
@@ -738,64 +738,58 @@ class BrunoHeroCard extends HTMLElement {
 
         .hero-bg::before {
           background:
-            url(${background}) left center / auto 100% no-repeat,
-            url(${fallbackBackground}) left center / auto 100% no-repeat;
-          filter: saturate(1.18) brightness(0.94) contrast(1.04);
+            url(${background}) center / cover no-repeat,
+            url(${fallbackBackground}) center / cover no-repeat;
+          filter: saturate(2.25) brightness(1.06) contrast(1.05);
         }
 
         .hero-bg::after {
           background:
             linear-gradient(90deg,
-              rgba(4,10,18,0.82) 0%,
-              rgba(5,10,18,0.66) 12%,
-              rgba(6,12,20,0.42) 24%,
-              rgba(7,13,22,0.22) 38%,
-              rgba(7,13,22,0.10) 50%,
-              rgba(7,13,22,0.14) 60%,
-              rgba(7,13,22,0.30) 70%,
-              rgba(7,13,22,0.54) 82%,
-              rgba(7,13,22,0.80) 92%,
-              rgba(7,13,22,0.94) 100%
+              rgba(4,10,18,0.78) 0%,
+              rgba(5,10,18,0.54) 12%,
+              rgba(6,12,20,0.26) 26%,
+              rgba(7,13,22,0.08) 42%,
+              rgba(7,13,22,0.06) 56%,
+              rgba(7,13,22,0.16) 68%,
+              rgba(7,13,22,0.42) 82%,
+              rgba(7,13,22,0.78) 100%
             ),
             linear-gradient(180deg,
-              rgba(4,8,14,0.78) 0%,
-              rgba(4,8,14,0.46) 10%,
-              rgba(4,8,14,0.18) 22%,
-              rgba(4,8,14,0.04) 34%,
-              rgba(4,8,14,0.00) 46%,
-              rgba(4,8,14,0.00) 58%,
-              rgba(4,8,14,0.10) 72%,
-              rgba(4,8,14,0.28) 84%,
-              rgba(4,8,14,0.56) 94%,
-              rgba(4,8,14,0.78) 100%
+              rgba(4,8,14,0.66) 0%,
+              rgba(4,8,14,0.26) 14%,
+              rgba(4,8,14,0.06) 30%,
+              rgba(4,8,14,0.00) 50%,
+              rgba(4,8,14,0.10) 74%,
+              rgba(4,8,14,0.72) 100%
             ),
             radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
             radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
             linear-gradient(90deg,
-              rgba(4,10,18,0.72) 0%,
-              rgba(4,10,18,0.56) 12%,
-              rgba(5,10,18,0.34) 24%,
-              rgba(5,10,18,0.14) 38%,
-              rgba(5,10,18,0.02) 50%,
-              rgba(5,10,18,0.08) 60%,
-              rgba(5,10,18,0.22) 72%,
-              rgba(5,10,18,0.46) 84%,
-              rgba(5,10,18,0.74) 100%
+              rgba(4,10,18,0.64) 0%,
+              rgba(4,10,18,0.44) 12%,
+              rgba(5,10,18,0.22) 24%,
+              rgba(5,10,18,0.08) 38%,
+              rgba(5,10,18,0.00) 50%,
+              rgba(5,10,18,0.06) 60%,
+              rgba(5,10,18,0.18) 72%,
+              rgba(5,10,18,0.38) 84%,
+              rgba(5,10,18,0.66) 100%
             ),
             linear-gradient(180deg,
-              rgba(3,8,14,0.62) 0%,
-              rgba(3,8,14,0.34) 12%,
-              rgba(3,8,14,0.08) 26%,
+              rgba(3,8,14,0.52) 0%,
+              rgba(3,8,14,0.24) 12%,
+              rgba(3,8,14,0.04) 26%,
               rgba(3,8,14,0.00) 40%,
               rgba(3,8,14,0.00) 62%,
-              rgba(3,8,14,0.10) 76%,
-              rgba(3,8,14,0.30) 90%,
-              rgba(3,8,14,0.60) 100%
+              rgba(3,8,14,0.08) 76%,
+              rgba(3,8,14,0.24) 90%,
+              rgba(3,8,14,0.54) 100%
             ),
             radial-gradient(720px 220px at 8% 2%, rgba(255,255,255,0.08), transparent 58%),
             linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%),
             linear-gradient(0deg, rgba(0,0,0,0.22), rgba(0,0,0,0.00) 34%);
-          opacity: 0.50;
+          opacity: 0.88;
         }
 
         .content {

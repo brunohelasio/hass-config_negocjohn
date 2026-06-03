@@ -20,10 +20,11 @@ card_mod:
     hui-grid-layout::before {
       content: "";
       display: block;
-      grid-column: 2 / -1;
-      grid-row: 2 / 5;
-      align-self: stretch;
-      justify-self: stretch;
+      position: absolute;
+      top: 58px;
+      right: 12px;
+      bottom: 82px;
+      left: 76px;
       pointer-events: none;
       z-index: 0;
       background:
@@ -76,10 +77,11 @@ card_mod:
     hui-grid-layout::after {
       content: "";
       display: block;
-      grid-column: 2 / -1;
-      grid-row: 2 / 5;
-      align-self: stretch;
-      justify-self: stretch;
+      position: absolute;
+      top: 58px;
+      right: 12px;
+      bottom: 82px;
+      left: 76px;
       pointer-events: none;
       z-index: 0;
       background:
@@ -114,6 +116,13 @@ card_mod:
         linear-gradient(to bottom, transparent 0%, #000 6%, #000 95%, transparent 100%);
       mask-composite: intersect;
       -webkit-mask-composite: source-in;
+    }
+
+    @media (max-width: 800px) {
+      hui-grid-layout::before,
+      hui-grid-layout::after {
+        display: none;
+      }
     }
 
     hui-grid-layout > * {

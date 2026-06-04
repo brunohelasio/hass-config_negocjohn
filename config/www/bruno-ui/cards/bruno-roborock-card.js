@@ -268,12 +268,12 @@ class BrunoRoborockCard extends HTMLElement {
           height: 100%;
           min-height: 0;
           display: grid;
-          grid-template-columns: minmax(118px, 0.95fr) minmax(0, 1.25fr) 114px;
-          grid-template-rows: auto minmax(0, 1fr) 58px;
+          grid-template-columns: minmax(126px, 0.92fr) minmax(0, 1fr) 112px;
+          grid-template-rows: auto minmax(0, 1fr) 52px;
           grid-template-areas:
             "header header header"
             "icon status stats"
-            "actions actions actions";
+            "icon actions actions";
           gap: 8px 14px;
           padding: 13px 14px 12px;
           color: var(--text-main);
@@ -414,15 +414,15 @@ class BrunoRoborockCard extends HTMLElement {
           grid-area: icon;
           align-self: center;
           justify-self: center;
-          width: 112px;
-          height: 92px;
+          width: 122px;
+          height: 124px;
           display: grid;
           place-items: center;
         }
 
         .robot img {
-          width: 96px;
-          height: 96px;
+          width: 108px;
+          height: 108px;
           display: block;
           object-fit: contain;
           filter: none !important;
@@ -431,7 +431,7 @@ class BrunoRoborockCard extends HTMLElement {
 
         .robot-fallback {
           display: none;
-          --mdc-icon-size: 74px;
+          --mdc-icon-size: 82px;
           color: rgba(226,232,240,0.68);
         }
 
@@ -536,10 +536,11 @@ class BrunoRoborockCard extends HTMLElement {
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 8px;
           align-self: end;
+          min-width: 0;
         }
 
         .action {
-          height: 54px;
+          height: 48px;
           min-width: 0;
           display: flex;
           flex-direction: column;
@@ -596,19 +597,23 @@ class BrunoRoborockCard extends HTMLElement {
         @media (max-height: 760px) {
           .roborock-card {
             padding: 12px;
-            grid-template-columns: minmax(104px, 0.95fr) minmax(0, 1.2fr) 106px;
-            grid-template-rows: auto minmax(0, 1fr) 54px;
+            grid-template-columns: minmax(112px, 0.9fr) minmax(0, 1fr) 104px;
+            grid-template-rows: auto minmax(0, 1fr) 48px;
+            grid-template-areas:
+              "header header header"
+              "icon status stats"
+              "icon actions actions";
             gap: 7px 12px;
           }
 
           .robot {
-            width: 104px;
-            height: 84px;
+            width: 112px;
+            height: 112px;
           }
 
           .robot img {
-            width: 88px;
-            height: 88px;
+            width: 96px;
+            height: 96px;
           }
 
           .stats {
@@ -624,7 +629,7 @@ class BrunoRoborockCard extends HTMLElement {
           }
 
           .action {
-            height: 50px;
+            height: 44px;
           }
         }
 

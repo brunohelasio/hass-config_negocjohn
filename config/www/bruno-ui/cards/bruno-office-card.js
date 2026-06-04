@@ -634,17 +634,17 @@ class BrunoOfficeCard extends HTMLElement {
           width: 100%;
           height: 100%;
           display: grid;
-          grid-template-columns: auto 1fr auto;
+          grid-template-columns: auto minmax(0, 1fr);
           grid-template-rows: auto 1fr auto auto;
           grid-template-areas:
-            "icon temp dots"
-            "icon space dots"
-            "title title dots"
-            "state state dots";
-          column-gap: 10px;
+            "icon temp"
+            "icon space"
+            "title title"
+            "state state";
+          column-gap: 0;
           row-gap: 0;
           align-items: start;
-          padding: 14px 13px 13px 11px;
+          padding: 14px 48px 13px 11px;
           margin: 0;
           text-align: left;
           background: transparent;
@@ -672,10 +672,10 @@ class BrunoOfficeCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           position: relative;
-          width: 76px;
-          height: 76px;
-          margin-left: -6px;
-          margin-top: -6px;
+          width: 92px;
+          height: 92px;
+          margin-left: -8px;
+          margin-top: -8px;
         }
 
         .office-icon {
@@ -759,8 +759,8 @@ class BrunoOfficeCard extends HTMLElement {
           z-index: 2;
           left: -2px;
           top: -2px;
-          width: 80px;
-          height: 80px;
+          width: 96px;
+          height: 96px;
           pointer-events: none;
           filter: drop-shadow(0 0 10px rgba(var(--accent-red),0.42));
         }
@@ -770,6 +770,7 @@ class BrunoOfficeCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           min-width: 48px;
+          margin-left: 12px;
           margin-top: 3px;
           text-align: left;
           line-height: 1.1;
@@ -831,11 +832,12 @@ class BrunoOfficeCard extends HTMLElement {
         }
 
         .right-dots {
-          grid-area: dots;
-          justify-self: end;
-          align-self: start;
-          margin-right: 1px;
-          padding-top: 1px;
+          position: absolute;
+          z-index: 2;
+          top: 15px;
+          right: 14px;
+          margin: 0;
+          padding-top: 0;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -904,17 +906,22 @@ class BrunoOfficeCard extends HTMLElement {
 
         @media (max-height: 760px) {
           .office-action {
-            padding: 12px 13px;
+            padding: 12px 46px 12px 11px;
           }
 
           .room-icon {
-            width: 68px;
-            height: 68px;
+            width: 82px;
+            height: 82px;
           }
 
           .meeting-icon {
-            width: 72px;
-            height: 72px;
+            width: 86px;
+            height: 86px;
+          }
+
+          .right-dots {
+            top: 13px;
+            right: 13px;
           }
         }
 

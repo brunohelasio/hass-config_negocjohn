@@ -941,12 +941,6 @@ class BrunoOfficeSubview extends HTMLElement {
 
     return `
       <div class="glass-card lights-card office-lights-card">
-        <!--
-          FALLBACK - Office lights original:
-          <div class="office-lights-grid">
-            lights.map((light) => this._renderLightTile(light))
-          </div>
-        -->
         <div class="module-head">
           <div>
             <div class="module-title">Luzes</div>
@@ -978,10 +972,6 @@ class BrunoOfficeSubview extends HTMLElement {
 
     return `
       <section class="glass-card focus-card">
-        <!--
-          FALLBACK - Office focus original:
-          title "Foco", circular Pomodoro, buttons Iniciar/Pausar/Hidratar.
-        -->
         <div class="focus-head">
           <div class="focus-title">
             <span class="micro-icon tone-blue"><ha-icon icon="mdi:crosshairs-gps"></ha-icon></span>
@@ -991,17 +981,14 @@ class BrunoOfficeSubview extends HTMLElement {
 
         <div class="focus-mode-row">
           <button type="button" class="focus-mode${workingActive ? ' is-active' : ''}">
-            <ha-icon icon="mdi:account-outline"></ha-icon>
             <span>Trabalhando</span>
             <i></i>
           </button>
           <button type="button" class="focus-mode${meetingActive ? ' is-active' : ''}">
-            <ha-icon icon="mdi:video-outline"></ha-icon>
             <span>Em reuniao</span>
             <i></i>
           </button>
           <button type="button" class="focus-mode${availableActive ? ' is-active' : ''}">
-            <ha-icon icon="mdi:account-check-outline"></ha-icon>
             <span>Disponivel</span>
             <i></i>
           </button>
@@ -1012,45 +999,35 @@ class BrunoOfficeSubview extends HTMLElement {
             <span>Timer de foco</span>
             <div class="focus-ring" style="--focus-angle:${degrees}deg">
               <strong>${BrunoOfficeSubview._escape(focus.label)}</strong>
-              <small>${focus.running ? 'em foco' : 'pronto'}</small>
-              <ha-icon icon="mdi:waveform"></ha-icon>
+              <small><ha-icon icon="mdi:waveform" style="--mdc-icon-size: 12px; margin-right: 4px;"></ha-icon>${focus.running ? 'em foco' : 'pronto'}</small>
             </div>
           </div>
 
           <div class="focus-side">
-            <div class="focus-next">
-              <ha-icon class="focus-calendar" icon="mdi:calendar-month-outline"></ha-icon>
-              <div>
-                <small>Proximo evento</small>
-                <strong>${meetingActive ? 'Reuniao de projeto' : 'Agenda livre'}</strong>
-                <span>${meetingActive ? '14:30 - 15:00' : BrunoOfficeSubview._escape(focus.semantic)}</span>
-                <em><ha-icon icon="mdi:map-marker-outline"></ha-icon>${meetingActive ? 'Sala Alfa' : 'Office'}</em>
-              </div>
+            <div class="focus-next-minimal">
+              <ha-icon icon="mdi:calendar-month-outline"></ha-icon>
+              <span class="next-label">Prox:</span>
+              <strong class="next-title">${meetingActive ? 'Reuniao de projeto' : 'Agenda livre'}</strong>
+              <span class="next-time">${meetingActive ? '(14:30)' : ''}</span>
             </div>
-            <div class="focus-actions-panel">
-              <small>Acoes rapidas</small>
-              <div class="focus-actions">
-                <button type="button" class="focus-action tone-blue" data-action="focus-start">
-                  <ha-icon icon="mdi:target"></ha-icon>
-                  <span>Cena foco</span>
-                </button>
-                <button type="button" class="focus-action tone-purple">
-                  <ha-icon icon="mdi:account-group-outline"></ha-icon>
-                  <span>Cena reuniao</span>
-                </button>
-                <button type="button" class="focus-action tone-amber" data-action="focus-pause">
-                  <ha-icon icon="mdi:pause-circle-outline"></ha-icon>
-                  <span>Pausa</span>
-                </button>
+            <div class="focus-stats-grid">
+              <div class="stat-box tone-green">
+                <ha-icon icon="mdi:chart-line"></ha-icon>
+                <strong>${focus.sessions}</strong>
+                <small>Sessoes</small>
+              </div>
+              <div class="stat-box tone-blue">
+                <ha-icon icon="mdi:clock-outline"></ha-icon>
+                <strong>${BrunoOfficeSubview._escape(focus.focusedLabel)}</strong>
+                <small>Tempo</small>
+              </div>
+              <div class="stat-box tone-amber">
+                <ha-icon icon="mdi:star-outline"></ha-icon>
+                <strong>82%</strong>
+                <small>Produt.</small>
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="focus-stats">
-          <span class="tone-green"><ha-icon icon="mdi:chart-line"></ha-icon><small>Sessoes hoje</small><strong>${focus.sessions}</strong><em>meta 5</em><i style="--stat-progress:62%"></i></span>
-          <span class="tone-blue"><ha-icon icon="mdi:clock-outline"></ha-icon><small>Tempo focado</small><strong>${BrunoOfficeSubview._escape(focus.focusedLabel)}</strong><em>+18m vs ontem</em></span>
-          <span class="tone-amber"><ha-icon icon="mdi:star-outline"></ha-icon><small>Produtividade</small><strong>82%</strong><em>alto desempenho</em></span>
         </div>
       </section>
     `;
@@ -1178,10 +1155,6 @@ class BrunoOfficeSubview extends HTMLElement {
 
     return `
       <section class="glass-card pc-card${pc.active ? ' is-active' : ''}">
-        <!--
-          FALLBACK - Office PC original:
-          generic monitor icon, metric grid and four simple control buttons.
-        -->
         <div class="pc-head">
           <div class="title-with-chip">
             <span class="micro-icon tone-blue"><ha-icon icon="mdi:monitor"></ha-icon></span>
@@ -1211,12 +1184,6 @@ class BrunoOfficeSubview extends HTMLElement {
                 </span>
               `).join('')}
             </div>
-
-            <div class="pc-camera-row">
-              <span><ha-icon icon="mdi:webcam"></ha-icon><strong>Webcam</strong></span>
-              <em>${pc.webcamActive ? 'On' : 'Off'}</em>
-              <i class="${pc.webcamActive ? 'is-on' : ''}"></i>
-            </div>
           </div>
 
           <div class="pc-actions">
@@ -1239,6 +1206,11 @@ class BrunoOfficeSubview extends HTMLElement {
           </div>
 
           <div class="pc-controls-panel">
+            <div class="pc-camera-row">
+              <span><ha-icon icon="mdi:webcam"></ha-icon><strong>Webcam</strong></span>
+              <em>${pc.webcamActive ? 'On' : 'Off'}</em>
+              <i class="${pc.webcamActive ? 'is-on' : ''}"></i>
+            </div>
             <div class="pc-slider-row">
               <span><ha-icon icon="mdi:volume-high"></ha-icon><strong>Volume</strong></span>
               <i style="--slider:${BrunoOfficeSubview._metricPercent(pc.volume)}%"></i>
@@ -1248,10 +1220,6 @@ class BrunoOfficeSubview extends HTMLElement {
               <span><ha-icon icon="mdi:white-balance-sunny"></ha-icon><strong>Brightness</strong></span>
               <i style="--slider:${BrunoOfficeSubview._metricPercent(pc.brightness)}%"></i>
               <em>${BrunoOfficeSubview._escape(pc.brightness)}</em>
-            </div>
-            <div class="pc-control-actions">
-              <button type="button" data-action="pc-lock"><ha-icon icon="mdi:lock-outline"></ha-icon><strong>Lock / Secure</strong></button>
-              <button type="button"><ha-icon icon="mdi:minus-circle-outline"></ha-icon><strong>Do Not Disturb</strong></button>
             </div>
           </div>
         </div>
@@ -1930,6 +1898,7 @@ class BrunoOfficeSubview extends HTMLElement {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .status-item span:not(.micro-icon) {
@@ -2243,7 +2212,7 @@ class BrunoOfficeSubview extends HTMLElement {
         min-height: 0;
         padding: 15px;
         display: grid;
-        grid-template-rows: 34px 42px minmax(0, 1fr) 60px;
+        grid-template-rows: 34px 38px minmax(0, 1fr);
         gap: 10px;
       }
 
@@ -2264,7 +2233,7 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .focus-title strong {
         min-width: 0;
-        font-size: 20px;
+        font-size: 16px;
         line-height: 1;
         font-weight: 800;
         overflow: hidden;
@@ -2282,12 +2251,12 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .focus-mode {
         min-width: 0;
-        min-height: 42px;
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
+        min-height: 38px;
+        display: flex;
+        justify-content: space-between;
         align-items: center;
         gap: 10px;
-        padding: 0 13px;
+        padding: 0 12px;
         border-radius: 16px;
         color: rgba(255,255,255,0.68);
         background: linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.025));
@@ -2295,14 +2264,10 @@ class BrunoOfficeSubview extends HTMLElement {
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
       }
 
-      .focus-mode ha-icon {
-        --mdc-icon-size: 20px;
-      }
-
       .focus-mode span {
         min-width: 0;
-        font-size: 13px;
-        font-weight: 700;
+        font-size: 11px;
+        font-weight: 800;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -2313,6 +2278,7 @@ class BrunoOfficeSubview extends HTMLElement {
         height: 8px;
         border-radius: 50%;
         border: 1px solid rgba(255,255,255,0.30);
+        flex-shrink: 0;
       }
 
       .focus-mode.is-active {
@@ -2337,15 +2303,13 @@ class BrunoOfficeSubview extends HTMLElement {
         z-index: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
         align-items: stretch;
         gap: 12px;
       }
 
       .focus-ring-panel,
-      .focus-next,
-      .focus-actions-panel,
-      .focus-stats span {
+      .focus-next-minimal {
         min-width: 0;
         border-radius: 18px;
         background: rgba(255,255,255,0.045);
@@ -2368,13 +2332,15 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .focus-ring {
-        width: min(196px, 86%);
+        width: 100%;
+        max-width: 154px;
         aspect-ratio: 1;
         border-radius: 50%;
-        display: grid;
-        place-items: center;
-        align-content: center;
-        gap: 5px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
         background:
           radial-gradient(circle at 50% 50%, rgba(7,10,18,0.78) 0 56%, transparent 57%),
           conic-gradient(rgb(96,165,250) 0 var(--focus-angle), rgba(255,255,255,0.12) var(--focus-angle) 360deg);
@@ -2385,224 +2351,108 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .focus-ring strong {
-        font-size: 38px;
+        font-size: 26px;
         line-height: 1;
         font-weight: 400;
+        margin-top: 2px;
         font-variant-numeric: tabular-nums;
       }
 
       .focus-ring small {
+        display: flex;
+        align-items: center;
         color: rgb(126,204,255);
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 700;
-      }
-
-      .focus-ring ha-icon {
-        --mdc-icon-size: 18px;
-        color: rgb(103,232,249);
       }
 
       .focus-side {
         min-width: 0;
         min-height: 0;
         display: grid;
-        grid-template-rows: minmax(0, 1fr) minmax(82px, 0.84fr);
-        gap: 12px;
-      }
-
-      .focus-next {
-        position: relative;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        align-items: start;
-        padding: 16px 18px;
-      }
-
-      .focus-next small,
-      .focus-stats small {
-        display: block;
-        color: var(--text-soft);
-        font-size: 10px;
-        font-weight: 800;
-      }
-
-      .focus-next strong {
-        display: block;
-        margin-top: 18px;
-        font-size: 18px;
-        line-height: 1.1;
-      }
-
-      .focus-next span:not(.micro-icon),
-      .focus-next em {
-        display: block;
-        margin-top: 8px;
-        font-style: normal;
-        color: rgba(126,204,255,0.92);
-        font-size: 13px;
-        font-weight: 650;
-      }
-
-      .focus-next em {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: rgba(255,255,255,0.48);
-      }
-
-      .focus-next em ha-icon {
-        --mdc-icon-size: 16px;
-      }
-
-      .focus-calendar {
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        --mdc-icon-size: 20px;
-        color: rgba(255,255,255,0.66);
-      }
-
-      .focus-actions-panel {
-        padding: 12px;
-      }
-
-      .focus-actions-panel > small {
-        display: block;
-        margin-bottom: 8px;
-        color: var(--text-soft);
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .focus-actions {
-        display: grid;
-        min-width: 0;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-rows: auto minmax(0, 1fr);
         gap: 10px;
       }
 
-      .focus-action {
-        min-width: 0;
-        min-height: 66px;
-        display: grid;
-        place-items: center;
-        gap: 5px;
-        padding: 8px 7px;
-        border-radius: 15px;
-        color: rgba(255,255,255,0.78);
-        background: linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.025));
-        border: 1px solid rgba(255,255,255,0.13);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+      .focus-next-minimal {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 14px;
+        white-space: nowrap;
+        overflow: hidden;
       }
 
-      .focus-action.tone-blue {
-        color: rgb(103,232,249);
-        border-color: rgba(103,232,249,0.22);
+      .focus-next-minimal ha-icon {
+        --mdc-icon-size: 16px;
+        color: rgba(255,255,255,0.66);
       }
 
-      .focus-action.tone-purple {
-        color: rgb(196,181,253);
-        border-color: rgba(196,181,253,0.22);
+      .focus-next-minimal .next-label {
+        color: var(--text-soft);
+        font-size: 11px;
+        font-weight: 700;
       }
 
-      .focus-action.tone-amber {
-        color: rgb(251,191,36);
-        border-color: rgba(251,191,36,0.22);
-      }
-
-      .focus-action ha-icon {
-        --mdc-icon-size: 25px;
-      }
-
-      .focus-action span {
-        min-width: 0;
-        font-size: 10px;
+      .focus-next-minimal .next-title {
+        color: white;
+        font-size: 12px;
         font-weight: 800;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
       }
 
-      .focus-stats {
-        position: relative;
-        z-index: 1;
-        min-width: 0;
+      .focus-next-minimal .next-time {
+        color: rgba(126,204,255,0.92);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .focus-stats-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+        gap: 8px;
+        flex: 1;
+        align-items: stretch;
       }
 
-      .focus-stats span {
-        position: relative;
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        grid-template-rows: auto auto auto;
-        column-gap: 9px;
+      .stat-box {
+        display: flex;
+        flex-direction: column;
         align-items: center;
-        padding: 9px 12px;
-        overflow: hidden;
+        justify-content: center;
+        text-align: center;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.11);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
+        padding: 10px 4px;
       }
 
-      .focus-stats ha-icon {
-        grid-row: 1 / -1;
-        --mdc-icon-size: 19px;
-        color: rgb(96,190,255);
+      .stat-box ha-icon {
+        --mdc-icon-size: 20px;
+        margin-bottom: 6px;
       }
 
-      .focus-stats .tone-green ha-icon {
-        color: rgb(74,222,128);
-      }
+      .stat-box.tone-green ha-icon { color: rgb(74,222,128); }
+      .stat-box.tone-blue ha-icon { color: rgb(96,190,255); }
+      .stat-box.tone-amber ha-icon { color: rgb(251,191,36); }
 
-      .focus-stats .tone-amber ha-icon {
-        color: rgb(251,191,36);
-      }
-
-      .focus-stats strong {
-        min-width: 0;
-        font-size: 20px;
+      .stat-box strong {
+        font-size: 15px;
         line-height: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        font-weight: 800;
+        color: white;
+        margin-bottom: 3px;
       }
 
-      .focus-stats em {
-        min-width: 0;
-        color: rgba(255,255,255,0.50);
+      .stat-box small {
         font-size: 10px;
-        font-style: normal;
-        font-weight: 650;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .focus-stats .tone-blue em {
-        color: rgba(126,204,255,0.88);
-      }
-
-      .focus-stats .tone-amber em {
-        color: rgba(251,191,36,0.88);
-      }
-
-      .focus-stats i {
-        grid-column: 2;
-        width: 100%;
-        height: 4px;
-        margin-top: 5px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.10);
-      }
-
-      .focus-stats i::before {
-        content: "";
-        display: block;
-        width: var(--stat-progress);
-        height: 100%;
-        border-radius: inherit;
-        background: rgb(74,222,128);
-        box-shadow: 0 0 12px rgba(74,222,128,0.42);
+        font-weight: 700;
+        color: var(--text-soft);
+        line-height: 1;
       }
 
       .cameras-card {
@@ -2974,8 +2824,8 @@ class BrunoOfficeSubview extends HTMLElement {
         z-index: 1;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        grid-template-rows: minmax(0, 1fr) minmax(0, 0.88fr);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+        grid-template-rows: minmax(0, 1.3fr) minmax(0, 1fr);
         grid-template-areas:
           "visual status"
           "actions controls";
@@ -2992,8 +2842,7 @@ class BrunoOfficeSubview extends HTMLElement {
         justify-content: center;
         padding: 0;
         border-radius: var(--office-radius-small);
-        background:
-          radial-gradient(260px 130px at 64% 78%, rgba(96,165,250,0.13), transparent 74%);
+        background: transparent;
         border: 0;
         box-shadow: none;
         overflow: hidden;
@@ -3002,12 +2851,11 @@ class BrunoOfficeSubview extends HTMLElement {
       .pc-hero-visual img {
         position: relative;
         z-index: 1;
-        width: min(128%, 470px);
-        max-width: none;
-        max-height: 124%;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
         filter:
-          drop-shadow(0 22px 32px rgba(0,0,0,0.42))
+          drop-shadow(0 10px 16px rgba(0,0,0,0.42))
           drop-shadow(0 0 20px rgba(96,165,250,0.12));
       }
 
@@ -3026,7 +2874,7 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-area: actions;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 8px;
       }
 
       .pc-action {
@@ -3035,10 +2883,10 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-template-columns: auto minmax(0, 1fr);
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        min-height: 64px;
-        padding: 0 14px;
-        border-radius: 16px;
+        gap: 8px;
+        min-height: 42px;
+        padding: 0 10px;
+        border-radius: 12px;
         color: rgba(255,255,255,0.78);
         background: rgba(255,255,255,0.055);
         border: 1px solid rgba(255,255,255,0.12);
@@ -3046,12 +2894,12 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .pc-action ha-icon {
-        --mdc-icon-size: 26px;
+        --mdc-icon-size: 20px;
       }
 
       .pc-action span {
         min-width: 0;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 800;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -3095,8 +2943,7 @@ class BrunoOfficeSubview extends HTMLElement {
         min-width: 0;
         min-height: 0;
         display: grid;
-        grid-template-rows: minmax(0, 1fr) 50px;
-        gap: 10px;
+        align-content: center;
       }
 
       .pc-metrics {
@@ -3112,9 +2959,9 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-template-columns: auto minmax(0, 1fr) auto;
         grid-template-rows: auto 5px;
         align-items: center;
-        column-gap: 8px;
-        row-gap: 8px;
-        padding: 11px 12px;
+        column-gap: 6px;
+        row-gap: 6px;
+        padding: 8px 10px;
         border-radius: 15px;
         background: rgba(255,255,255,0.052);
         border: 1px solid rgba(255,255,255,0.10);
@@ -3122,21 +2969,21 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .pc-metric ha-icon {
-        --mdc-icon-size: 22px;
+        --mdc-icon-size: 18px;
         grid-row: 1 / -1;
         color: rgba(255,255,255,0.76);
       }
 
       .pc-metrics small {
         color: var(--text-soft);
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 750;
         text-transform: none;
       }
 
       .pc-metrics strong {
         color: white;
-        font-size: 13px;
+        font-size: 12px;
       }
 
       .pc-metric i {
@@ -3178,8 +3025,8 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-template-columns: auto minmax(0, 1fr) auto auto;
         align-items: center;
         gap: 9px;
-        padding: 0 13px;
-        min-height: 48px;
+        padding: 0 10px;
+        min-height: 38px;
         border-radius: 16px;
         background: rgba(255,255,255,0.052);
         border: 1px solid rgba(255,255,255,0.10);
@@ -3242,17 +3089,17 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-area: controls;
         min-width: 0;
         display: grid;
-        grid-template-rows: 1fr 1fr minmax(52px, auto);
+        grid-template-rows: auto auto auto;
         align-content: center;
-        gap: 11px;
+        gap: 14px;
       }
 
       .pc-slider-row {
         min-width: 0;
         display: grid;
-        grid-template-columns: 86px minmax(0, 1fr) 42px;
+        grid-template-columns: 80px minmax(0, 1fr) 36px;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
       }
 
       .pc-slider-row span {
@@ -3310,40 +3157,6 @@ class BrunoOfficeSubview extends HTMLElement {
         font-style: normal;
         font-weight: 800;
         text-align: right;
-      }
-
-      .pc-control-actions {
-        min-width: 0;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      .pc-control-actions button {
-        min-width: 0;
-        min-height: 50px;
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        align-items: center;
-        gap: 9px;
-        padding: 0 12px;
-        border-radius: 15px;
-        color: rgba(255,255,255,0.72);
-        background: rgba(255,255,255,0.050);
-        border: 1px solid rgba(255,255,255,0.10);
-      }
-
-      .pc-control-actions ha-icon {
-        --mdc-icon-size: 20px;
-      }
-
-      .pc-control-actions strong {
-        min-width: 0;
-        font-size: 12px;
-        line-height: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
       }
 
       .spotify-card {

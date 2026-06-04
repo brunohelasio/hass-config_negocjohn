@@ -13,12 +13,14 @@ const BRUNO_OFFICE_DEFAULT_ENTITIES = {
   climate: 'climate.ac_office',
   speaker: 'media_player.echo_pop_office',
   temperature: [
+    'sensor.office_temp_humid_temperature',
     'sensor.of_sensor_temp_humid_temperatura',
     'sensor.temperatura_office',
     'sensor.office_temperatura',
     'sensor.of_temperatura',
   ],
   humidity: [
+    'sensor.office_temp_humid_humidity',
     'sensor.of_sensor_temp_humid_umidade',
     'sensor.umidade_office',
     'sensor.office_umidade',
@@ -672,8 +674,8 @@ class BrunoOfficeCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           position: relative;
-          width: 92px;
-          height: 92px;
+          width: 94px;
+          height: 94px;
           margin-left: -8px;
           margin-top: -8px;
         }
@@ -759,8 +761,8 @@ class BrunoOfficeCard extends HTMLElement {
           z-index: 2;
           left: -2px;
           top: -2px;
-          width: 96px;
-          height: 96px;
+          width: 98px;
+          height: 98px;
           pointer-events: none;
           filter: drop-shadow(0 0 10px rgba(var(--accent-red),0.42));
         }
@@ -910,13 +912,13 @@ class BrunoOfficeCard extends HTMLElement {
           }
 
           .room-icon {
-            width: 82px;
-            height: 82px;
+            width: 86px;
+            height: 86px;
           }
 
           .meeting-icon {
-            width: 86px;
-            height: 86px;
+            width: 90px;
+            height: 90px;
           }
 
           .right-dots {

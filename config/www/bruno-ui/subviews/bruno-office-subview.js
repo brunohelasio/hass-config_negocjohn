@@ -29,12 +29,14 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
     meeting: 'binary_sensor.office_meeting_active',
     working: 'binary_sensor.office_working_active',
     temperature: [
+      'sensor.office_temp_humid_temperature',
       'sensor.of_sensor_temp_humid_temperatura',
       'sensor.temperatura_office',
       'sensor.office_temperatura',
       'sensor.of_temperatura',
     ],
     humidity: [
+      'sensor.office_temp_humid_humidity',
       'sensor.of_sensor_temp_humid_umidade',
       'sensor.umidade_office',
       'sensor.office_umidade',

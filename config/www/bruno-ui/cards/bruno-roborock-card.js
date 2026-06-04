@@ -268,13 +268,13 @@ class BrunoRoborockCard extends HTMLElement {
           height: 100%;
           min-height: 0;
           display: grid;
-          grid-template-columns: minmax(76px, 0.9fr) minmax(0, 1.1fr) 96px;
+          grid-template-columns: minmax(118px, 0.95fr) minmax(0, 1.25fr) 114px;
           grid-template-rows: auto minmax(0, 1fr) 58px;
           grid-template-areas:
             "header header header"
             "icon status stats"
             "actions actions actions";
-          gap: 8px 10px;
+          gap: 8px 14px;
           padding: 13px 14px 12px;
           color: var(--text-main);
           background: var(--bruno-liquid-surface-off-background,
@@ -414,15 +414,15 @@ class BrunoRoborockCard extends HTMLElement {
           grid-area: icon;
           align-self: center;
           justify-self: center;
-          width: 72px;
-          height: 72px;
+          width: 112px;
+          height: 92px;
           display: grid;
           place-items: center;
         }
 
         .robot img {
-          width: 68px;
-          height: 68px;
+          width: 96px;
+          height: 96px;
           display: block;
           object-fit: contain;
           filter: none !important;
@@ -431,7 +431,7 @@ class BrunoRoborockCard extends HTMLElement {
 
         .robot-fallback {
           display: none;
-          --mdc-icon-size: 54px;
+          --mdc-icon-size: 74px;
           color: rgba(226,232,240,0.68);
         }
 
@@ -487,15 +487,15 @@ class BrunoRoborockCard extends HTMLElement {
           grid-area: stats;
           align-self: center;
           justify-self: end;
-          width: 96px;
+          width: 114px;
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 6px;
         }
 
         .stat {
           min-width: 0;
-          height: 42px;
+          height: 38px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -509,12 +509,19 @@ class BrunoRoborockCard extends HTMLElement {
           overflow: hidden;
         }
 
+        .stat:nth-child(3) {
+          grid-column: 1 / -1;
+          height: 34px;
+          flex-direction: row;
+          gap: 6px;
+        }
+
         .stat ha-icon {
           --mdc-icon-size: 15px;
         }
 
         .stat span {
-          max-width: 90%;
+          max-width: 92%;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -589,19 +596,31 @@ class BrunoRoborockCard extends HTMLElement {
         @media (max-height: 760px) {
           .roborock-card {
             padding: 12px;
-            grid-template-columns: 74px minmax(0, 1fr) 92px;
+            grid-template-columns: minmax(104px, 0.95fr) minmax(0, 1.2fr) 106px;
             grid-template-rows: auto minmax(0, 1fr) 54px;
-            gap: 7px;
+            gap: 7px 12px;
           }
 
           .robot {
-            width: 68px;
-            height: 68px;
+            width: 104px;
+            height: 84px;
           }
 
           .robot img {
-            width: 64px;
-            height: 64px;
+            width: 88px;
+            height: 88px;
+          }
+
+          .stats {
+            width: 106px;
+          }
+
+          .stat {
+            height: 36px;
+          }
+
+          .stat:nth-child(3) {
+            height: 32px;
           }
 
           .action {

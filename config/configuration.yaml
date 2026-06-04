@@ -24,7 +24,7 @@ frontend:
     - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260518-2
     - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260518-2
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-10
-    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260604-roborock-layout-1
+    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260604-roborock-layout-2
     - /local/bruno-ui/cards/bruno-energy-card.js?v=20260518-4
     - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-3
     - /local/bruno-ui/cards/bruno-hero-stage-card.js?v=20260603-hero-stage-2

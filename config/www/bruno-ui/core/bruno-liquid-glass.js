@@ -6,11 +6,11 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-warm-accent': '255, 183, 77',
   'bruno-liquid-green-accent': '46, 231, 122',
 
-  'bruno-liquid-card-radius': '18px',
-  'bruno-liquid-card-radius-compact': '16px',
-  'bruno-liquid-room-radius': '16px',
-  'bruno-liquid-cell-radius': '12px',
-  'bruno-liquid-control-radius': '14px',
+  'bruno-liquid-card-radius': '22px',
+  'bruno-liquid-card-radius-compact': '20px',
+  'bruno-liquid-room-radius': '20px',
+  'bruno-liquid-cell-radius': '14px',
+  'bruno-liquid-control-radius': '16px',
   'bruno-liquid-dock-radius': '999px',
   'bruno-liquid-rail-radius': '999px',
 

@@ -22,8 +22,8 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-card-background': `
     radial-gradient(190px 150px at 18% -6%, rgba(255,255,255,0.18), rgba(255,255,255,0.046) 46%, transparent 72%),
     radial-gradient(180px 160px at 98% 98%, rgba(var(--accent, var(--bruno-liquid-accent)),0.060), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,0.118), rgba(255,255,255,0.048) 42%, rgba(255,255,255,0.064)),
-    rgba(8,12,20,0.24)
+    linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.048) 42%, rgba(255,255,255,0.064)),
+    rgba(8,12,20,0.40)
   `,
   'bruno-liquid-card-filter': 'blur(30px) saturate(1.54) contrast(1.04)',
   'bruno-liquid-card-border': '1px solid rgba(255,255,255,0.145)',
@@ -142,19 +142,19 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
     rgba(12,16,24,0.30)
   `,
   'bruno-liquid-surface-on-filter': 'blur(32px) saturate(1.62) contrast(1.04)',
-  'bruno-liquid-surface-on-border-color': 'rgba(255,205,95,0.40)',
+  'bruno-liquid-surface-on-border-color': 'rgba(255,205,95,0.55)',
   'bruno-liquid-surface-on-shadow': `
     inset 0 1px 0 rgba(255,255,255,0.28),
     inset 1px 0 0 rgba(255,255,255,0.105),
     inset 0 -1px 0 rgba(0,0,0,0.10),
-    0 0 24px rgba(var(--bruno-liquid-warm-accent),0.16),
+    0 0 28px rgba(var(--bruno-liquid-warm-accent),0.24),
     0 18px 42px rgba(0,0,0,0.25)
   `,
   'bruno-liquid-surface-on-sheen': `
     radial-gradient(92px 74px at 17% 0%, rgba(255,255,255,0.26), transparent 72%),
-    radial-gradient(118px 110px at 96% 96%, rgba(var(--bruno-liquid-warm-accent),0.18), transparent 74%),
-    linear-gradient(180deg, rgba(255,255,255,0.145), rgba(255,255,255,0.00) 38%),
-    linear-gradient(90deg, rgba(255,255,255,0.075), rgba(255,255,255,0.00) 50%)
+    radial-gradient(118px 110px at 96% 96%, rgba(var(--bruno-liquid-warm-accent),0.28), transparent 74%),
+    linear-gradient(180deg, rgba(255,255,255,0.148), rgba(255,255,255,0.00) 38%),
+    linear-gradient(90deg, rgba(255,255,255,0.078), rgba(255,255,255,0.00) 50%)
   `,
   'bruno-liquid-surface-on-sheen-opacity': '0.78',
 };

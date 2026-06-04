@@ -2,7 +2,7 @@ const BRUNO_QUARTO_MARINA_CARD_TAG = 'bruno-quarto-marina-card';
 
 const BRUNO_QUARTO_MARINA_DEFAULT_CONFIG = {
   "name": "Q. Marina",
-  "icon_size": 74,
+  "icon_size": 94,
   "room_on_states": [
     "on",
     "home",
@@ -649,17 +649,17 @@ class BrunoQuartoMarinaCard extends HTMLElement {
           width: 100%;
           height: 100%;
           display: grid;
-          grid-template-columns: auto 1fr auto;
+          grid-template-columns: auto minmax(0, 1fr);
           grid-template-rows: auto 1fr auto auto;
           grid-template-areas:
-            "icon temp dots"
-            "icon space dots"
-            "title title dots"
-            "state state dots";
-          column-gap: 10px;
+            "icon temp"
+            "icon space"
+            "title title"
+            "state state";
+          column-gap: 0;
           row-gap: 0;
           align-items: start;
-          padding: 14px 13px 13px 11px;
+          padding: 14px 48px 13px 11px;
           margin: 0;
           text-align: left;
           background: transparent;
@@ -750,6 +750,7 @@ class BrunoQuartoMarinaCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           min-width: 48px;
+          margin-left: 12px;
           margin-top: 3px;
           text-align: left;
           line-height: 1.1;
@@ -815,11 +816,12 @@ class BrunoQuartoMarinaCard extends HTMLElement {
         }
 
         .right-dots {
-          grid-area: dots;
-          justify-self: end;
-          align-self: start;
-          margin-right: 1px;
-          padding-top: 1px;
+          position: absolute;
+          z-index: 2;
+          top: 15px;
+          right: 14px;
+          margin: 0;
+          padding-top: 0;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -869,12 +871,17 @@ class BrunoQuartoMarinaCard extends HTMLElement {
 
         @media (max-height: 760px) {
           .room-action {
-            padding: 12px 13px;
+            padding: 12px 46px 12px 11px;
           }
 
           .room-icon {
             width: calc(var(--room-icon-size) - 8px);
             height: calc(var(--room-icon-size) - 8px);
+          }
+
+          .right-dots {
+            top: 13px;
+            right: 13px;
           }
         }
 

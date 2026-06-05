@@ -11,6 +11,12 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   spotify_device_name: 'Echo Show',
   climate_device_name: 'Gree',
   climate_image: '/local/images/ar-condicionado-gree.png',
+  tv_apps: [
+    { key: 'netflix', label: 'Netflix', icon: 'mdi:netflix', script: 'script.sala_tv_open_netflix' },
+    { key: 'prime', label: 'Prime', icon: 'mdi:video-vintage', script: 'script.sala_tv_open_prime' },
+    { key: 'disney', label: 'Disney+', icon: 'mdi:movie-open-star-outline', script: 'script.sala_tv_open_disney' },
+    { key: 'max', label: 'Max', icon: 'mdi:movie-play-outline', script: 'script.sala_tv_open_hbo' },
+  ],
   room_nav: [
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala', active: true },
     { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office' },
@@ -132,6 +138,7 @@ class BrunoSalaSubview extends HTMLElement {
       ...config,
       refresh_interval: Math.max(4000, Number(config.refresh_interval) || BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG.refresh_interval),
       room_nav: Array.isArray(config.room_nav) ? config.room_nav : BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG.room_nav,
+      tv_apps: Array.isArray(config.tv_apps) ? config.tv_apps : BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG.tv_apps,
       entities,
     };
   }
@@ -430,7 +437,7 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _mediaSourceFromAction(action) {
-    if (action === 'toggle-tv' || action === 'tv-play-pause' || action === 'tv-remote') return 'tv';
+    if (action === 'toggle-tv' || action === 'tv-play-pause' || action === 'tv-remote' || action === 'tv-app') return 'tv';
     if (String(action || '').startsWith('spotify-')) return 'spotify';
     if (action === 'toggle-ps5') return 'ps5';
     return '';
@@ -798,6 +805,13 @@ class BrunoSalaSubview extends HTMLElement {
       this._openTvRemotePopup();
       return;
     }
+    if (action === 'tv-app') {
+      const script = target.dataset.script;
+      if (script && !this._cooldown(`tv-app-${script}`, 1200)) {
+        this._callService('script.turn_on', { entity_id: script });
+      }
+      return;
+    }
     if (action === 'spotify-more') {
       this._spotifyToolsOpen = !this._spotifyToolsOpen;
       this._safeRender();
@@ -924,6 +938,23 @@ class BrunoSalaSubview extends HTMLElement {
     this.shadowRoot.removeEventListener('change', this._boundInputHandler);
     this.shadowRoot.addEventListener('click', this._boundActionHandler);
     this.shadowRoot.addEventListener('change', this._boundInputHandler);
+    this._bindImageFallbacks();
+  }
+
+  _bindImageFallbacks() {
+    this.shadowRoot?.querySelectorAll('img[data-fallback-class]').forEach((image) => {
+      const fallbackClass = image.dataset.fallbackClass;
+      const wrapper = image.closest('[data-image-wrapper]');
+      const markFallback = () => {
+        if (fallbackClass) wrapper?.classList.add(fallbackClass);
+        image.setAttribute('hidden', '');
+      };
+
+      image.addEventListener('error', markFallback, { once: true });
+      globalThis.setTimeout?.(() => {
+        if (image.complete && image.naturalWidth === 0) markFallback();
+      }, 80);
+    });
   }
 
   _renderHero(model) {
@@ -1111,9 +1142,6 @@ class BrunoSalaSubview extends HTMLElement {
                   <span><span class="live-dot"></span>${BrunoSalaSubview._escape(camera.status || 'Online')}</span>
                 </div>
               </button>
-              <button type="button" class="camera-select-button" data-action="select-camera" data-entity="${BrunoSalaSubview._escapeAttr(camera.entity || '')}" aria-label="Selecionar ${BrunoSalaSubview._escapeAttr(camera.short_name || camera.name || 'camera')}">
-                <ha-icon icon="mdi:chevron-right"></ha-icon>
-              </button>
             </div>
           `).join('')}
         </div>
@@ -1148,6 +1176,49 @@ class BrunoSalaSubview extends HTMLElement {
     const spotifyArtwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
     const tvVolume = tv.volume == null ? 60 : tv.volume;
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
+    const compactMeta = (...values) => {
+      const seen = new Set();
+      return values
+        .map((value) => String(value || '').trim())
+        .filter((value) => {
+          if (!value) return false;
+          const key = value.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    };
+    const renderMeta = (items) => items.map((item, index) => (
+      index === 0
+        ? `<small>${BrunoSalaSubview._escape(item)}</small>`
+        : `<em>${BrunoSalaSubview._escape(item)}</em>`
+    )).join('');
+    const tvSource = tv.source || 'HDMI 1';
+    const tvMeta = compactMeta(
+      tv.active ? tvSource : 'Controle remoto disponivel',
+      tv.subtitle && tv.subtitle !== tvSource ? tv.subtitle : '',
+    );
+    const spotifyMeta = compactMeta(
+      spotify.subtitle,
+      spotify.source || this._config.spotify_device_name || 'Echo Show',
+    );
+    const ps5Meta = compactMeta(
+      ps5.active ? 'Console ligado' : 'Pronto para ligar',
+      'HDMI 1',
+    );
+    const tvAppButtons = (this._config.tv_apps || []).slice(0, 4).map((app) => `
+      <button
+        type="button"
+        class="tv-app-button"
+        data-action="tv-app"
+        data-script="${BrunoSalaSubview._escapeAttr(app.script || '')}"
+        title="${BrunoSalaSubview._escapeAttr(app.label || 'App')}"
+        ${app.script ? '' : 'disabled'}
+      >
+        <ha-icon icon="${BrunoSalaSubview._escapeAttr(app.icon || 'mdi:apps')}"></ha-icon>
+        <span>${BrunoSalaSubview._escape(app.label || 'App')}</span>
+      </button>
+    `).join('');
     const spotifyControls = this._spotifyToolsOpen
       ? `
         <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
@@ -1169,8 +1240,7 @@ class BrunoSalaSubview extends HTMLElement {
         active: tv.active,
         state: this._mediaStateLabel(tv.state),
         title: tv.title || (tv.active ? 'TV ligada' : 'TV desligada'),
-        subtitle: tv.active ? (tv.source || 'Android TV') : 'Controle remoto disponivel',
-        detail: tv.subtitle || tv.source || 'Android TV',
+        meta: renderMeta(tvMeta),
         visual: tvPoster
           ? `<img src="${BrunoSalaSubview._escapeAttr(tvPoster)}" alt="">`
           : '<ha-icon icon="mdi:television-classic"></ha-icon>',
@@ -1180,10 +1250,15 @@ class BrunoSalaSubview extends HTMLElement {
           <button type="button" class="control-button" data-action="tv-play-pause"><ha-icon icon="mdi:play-pause"></ha-icon></button>
         `,
         extra: `
-          <div class="volume-row">
-            <ha-icon icon="mdi:volume-medium"></ha-icon>
-            <input type="range" min="0" max="100" value="${tvVolume}" data-action="tv-volume" aria-label="Volume da TV">
-            <strong>${tvVolume}%</strong>
+          <div class="tv-extra-stack">
+            <div class="tv-app-row" aria-label="Atalhos da TV">
+              ${tvAppButtons}
+            </div>
+            <div class="volume-row">
+              <ha-icon icon="mdi:volume-medium"></ha-icon>
+              <input type="range" min="0" max="100" value="${tvVolume}" data-action="tv-volume" aria-label="Volume da TV">
+              <strong>${tvVolume}%</strong>
+            </div>
           </div>
         `,
       },
@@ -1194,8 +1269,7 @@ class BrunoSalaSubview extends HTMLElement {
         active: spotify.active,
         state: spotify.playing ? 'Tocando' : this._mediaStateLabel(spotify.state),
         title: spotify.title || 'SpotifyPlus',
-        subtitle: spotify.subtitle || spotify.source || this._config.spotify_device_name,
-        detail: spotify.source || this._config.spotify_device_name || 'Echo Show',
+        meta: renderMeta(spotifyMeta),
         visual: spotifyArtwork
           ? `<img src="${BrunoSalaSubview._escapeAttr(spotifyArtwork)}" alt="">`
           : '<ha-icon icon="mdi:music-note"></ha-icon>',
@@ -1215,8 +1289,7 @@ class BrunoSalaSubview extends HTMLElement {
         active: ps5.active,
         state: ps5.active ? 'Online' : (ps5.configured ? 'Offline' : 'Placeholder'),
         title: ps5.title,
-        subtitle: ps5.active ? 'HDMI 1 - console ligado' : 'HDMI 1 - pronto para ligar',
-        detail: ps5.chip,
+        meta: renderMeta(ps5Meta),
         visual: ps5.image
           ? `<img class="media-ps5-image" src="${BrunoSalaSubview._escapeAttr(ps5.image)}" alt="">`
           : '<ha-icon icon="mdi:sony-playstation"></ha-icon>',
@@ -1224,7 +1297,7 @@ class BrunoSalaSubview extends HTMLElement {
           <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>${ps5.active ? 'Desligar' : 'Ligar'}</button>
           <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(ps5.entityId || '')}" ${ps5.configured ? '' : 'disabled'}><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
         `,
-        extra: '<div class="media-extra-info"><span>Entrada</span><strong>HDMI 1</strong></div>',
+        extra: '',
       },
     };
     const current = sources[selected] || sources.tv;
@@ -1261,10 +1334,8 @@ class BrunoSalaSubview extends HTMLElement {
           </div>
           <div class="media-hub-content">
             <div class="media-details">
-              <span class="state-chip${current.active ? ' is-active' : ' is-muted'}"><span></span>${BrunoSalaSubview._escape(current.state)}</span>
               <strong>${BrunoSalaSubview._escape(current.title)}</strong>
-              <small>${BrunoSalaSubview._escape(current.subtitle)}</small>
-              <em>${BrunoSalaSubview._escape(current.detail)}</em>
+              ${current.meta}
             </div>
             <div class="media-hub-controls control-row">
               ${current.controls}
@@ -1436,7 +1507,14 @@ class BrunoSalaSubview extends HTMLElement {
         </div>
         <div class="ac-body">
           <div class="ac-visual">
-            <div class="ac-image-frame" style="background-image: url('${climateImage}')" aria-hidden="true"></div>
+            <div class="ac-image-shell" data-image-wrapper>
+              <img
+                src="${climateImage}"
+                alt=""
+                data-fallback-class="is-fallback"
+              >
+              <ha-icon class="ac-image-fallback" icon="mdi:air-conditioner"></ha-icon>
+            </div>
             <div class="climate-dial">
               <span>${current}&deg;</span>
               <strong>${target}&deg;</strong>
@@ -3250,16 +3328,16 @@ class BrunoSalaSubview extends HTMLElement {
 
       .sala-subview {
         --sala-gap: 12px;
-        --sala-shell-height: min(696px, calc(100vh - 72px));
+        --sala-shell-height: min(724px, calc(100vh - 44px));
         height: 100vh;
         min-height: 100vh;
-        grid-template-columns: 54px minmax(420px, 540px) minmax(630px, 1fr);
+        grid-template-columns: 56px minmax(420px, 540px) minmax(630px, 1fr);
         grid-template-rows: var(--sala-shell-height);
         grid-template-areas: "frame-left left right";
         align-content: center;
         align-items: stretch;
         gap: var(--sala-gap);
-        padding: clamp(20px, 4.5vh, 38px) 10px;
+        padding: clamp(12px, 2.6vh, 22px) 10px;
       }
 
       .left-column,
@@ -3272,7 +3350,7 @@ class BrunoSalaSubview extends HTMLElement {
       .left-column {
         grid-area: left;
         display: grid;
-        grid-template-rows: minmax(300px, 1.02fr) minmax(230px, 0.82fr);
+        grid-template-rows: minmax(320px, 1.24fr) minmax(250px, 1fr);
         gap: var(--sala-gap);
       }
 
@@ -3288,7 +3366,7 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(292px, 0.55fr);
-        grid-template-rows: minmax(236px, 0.9fr) minmax(260px, 1.1fr);
+        grid-template-rows: minmax(264px, 1fr) minmax(292px, 1fr);
         grid-template-areas:
           "lights ac"
           "media ac";
@@ -3325,15 +3403,21 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .room-sidebar {
-        width: 52px;
-        grid-auto-rows: 36px;
-        gap: 7px;
-        padding: 12px 7px;
+        width: 56px;
+        height: auto;
+        max-height: calc(100% - 6px);
+        grid-auto-rows: 39px;
+        gap: 8px;
+        padding: 13px 8px 14px;
       }
 
       .room-nav-button {
-        width: 36px;
-        height: 36px;
+        width: 39px;
+        height: 39px;
+        min-width: 39px;
+        min-height: 39px;
+        max-width: 39px;
+        max-height: 39px;
       }
 
       .hero-stage {
@@ -3506,29 +3590,9 @@ class BrunoSalaSubview extends HTMLElement {
         display: none;
       }
 
-      .camera-select-button {
-        position: absolute;
-        z-index: 4;
-        top: 12px;
-        right: 12px;
-        width: 34px;
-        height: 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        color: rgba(255,255,255,0.82);
-        background: rgba(255,255,255,0.10);
-        border: 1px solid rgba(255,255,255,0.14);
-      }
-
-      .camera-select-button ha-icon {
-        --mdc-icon-size: 18px;
-      }
-
       .camera-row-copy {
         left: 13px;
-        right: 54px;
+        right: 13px;
         bottom: 13px;
       }
 
@@ -3605,8 +3669,8 @@ class BrunoSalaSubview extends HTMLElement {
         position: relative;
         z-index: 1;
         display: grid;
-        grid-template-columns: minmax(178px, 0.82fr) minmax(0, 1fr);
-        grid-template-rows: minmax(196px, 1fr);
+        grid-template-columns: minmax(186px, 0.86fr) minmax(0, 1fr);
+        grid-template-rows: minmax(206px, 1fr);
         grid-template-areas:
           "visual content";
         align-items: stretch;
@@ -3647,9 +3711,9 @@ class BrunoSalaSubview extends HTMLElement {
         min-width: 0;
         min-height: 0;
         display: grid;
-        grid-template-rows: auto minmax(48px, 1fr) auto;
+        grid-template-rows: auto minmax(46px, 1fr) auto;
         align-content: stretch;
-        gap: 12px;
+        gap: 10px;
       }
 
       .media-ps5-image {
@@ -3665,18 +3729,8 @@ class BrunoSalaSubview extends HTMLElement {
         min-width: 0;
         display: grid;
         align-content: start;
-        gap: 7px;
-        padding-top: 4px;
-      }
-
-      .media-details .state-chip {
-        width: fit-content;
-        max-width: 100%;
-      }
-
-      .media-details .state-chip.is-muted span {
-        background: rgba(255,255,255,0.28);
-        box-shadow: none;
+        gap: 6px;
+        padding-top: 1px;
       }
 
       .media-details strong {
@@ -3712,12 +3766,12 @@ class BrunoSalaSubview extends HTMLElement {
         align-items: center;
         align-self: center;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 9px;
       }
 
       .media-hub-controls .control-button {
-        width: 44px;
-        height: 44px;
+        width: 42px;
+        height: 42px;
       }
 
       .media-hub-controls .control-button ha-icon {
@@ -3733,6 +3787,54 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: auto;
         min-width: 0;
         align-self: end;
+      }
+
+      .tv-extra-stack {
+        min-width: 0;
+        display: grid;
+        gap: 8px;
+      }
+
+      .tv-app-row {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .tv-app-button {
+        min-width: 0;
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 6px;
+        border-radius: 11px;
+        color: rgba(255,255,255,0.78);
+        background: rgba(255,255,255,0.065);
+        border: 1px solid rgba(255,255,255,0.11);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+        font-size: 9px;
+        font-weight: 850;
+        overflow: hidden;
+      }
+
+      .tv-app-button ha-icon {
+        --mdc-icon-size: 15px;
+        flex: 0 0 auto;
+      }
+
+      .tv-app-button span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tv-app-button:disabled {
+        opacity: 0.42;
+        cursor: default;
       }
 
       .media-extra-info {
@@ -3793,37 +3895,62 @@ class BrunoSalaSubview extends HTMLElement {
         height: auto;
         min-height: 0;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(232px, auto) auto auto auto auto auto;
+        grid-template-rows: minmax(266px, auto) auto auto auto auto auto;
         gap: 9px;
         align-content: start;
       }
 
       .ac-visual {
         position: relative;
-        min-height: 230px;
+        min-height: 264px;
         display: grid;
         grid-template-rows: auto auto;
         align-content: start;
         justify-items: center;
-        gap: 0;
+        gap: 8px;
         padding: 0 0 2px;
       }
 
-      .ac-image-frame {
+      .ac-image-shell {
+        position: relative;
         width: 100%;
-        height: 108px;
-        margin: -24px 0 6px;
-        background-repeat: no-repeat;
-        background-position: center -56px;
-        background-size: 270% auto;
+        height: 128px;
+        margin: -4px 0 0;
+        display: grid;
+        place-items: start center;
+        overflow: visible;
+      }
+
+      .ac-image-shell img {
+        width: 100%;
+        height: 122px;
+        display: block;
+        object-fit: contain;
+        object-position: center top;
         filter: drop-shadow(0 18px 26px rgba(0,0,0,0.38));
+      }
+
+      .ac-image-fallback {
+        display: none;
+        --mdc-icon-size: 84px;
+        place-self: center;
+        color: rgba(226,232,240,0.46);
+        filter: drop-shadow(0 14px 22px rgba(0,0,0,0.32));
+      }
+
+      .ac-image-shell.is-fallback img {
+        display: none;
+      }
+
+      .ac-image-shell.is-fallback .ac-image-fallback {
+        display: block;
       }
 
       .climate-dial {
         position: relative;
         right: auto;
         bottom: auto;
-        width: 120px;
+        width: 126px;
         aspect-ratio: 1;
         display: grid;
         place-items: center;

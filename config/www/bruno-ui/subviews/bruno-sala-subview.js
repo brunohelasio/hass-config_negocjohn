@@ -11,6 +11,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   spotify_device_name: 'Echo Show',
   climate_device_name: 'Gree',
   climate_image: '/local/images/ar-condicionado-gree-tight.png',
+  tv_standby_image: '/local/images/tcl.png',
+  spotify_standby_image: '/local/images/echo_pop.png',
   tv_apps: [
     { key: 'netflix', label: 'Netflix', image: '/local/images/netflix_bg.jpg', script: 'script.sala_tv_open_netflix' },
     { key: 'prime', label: 'Prime Video', image: '/local/images/prime_video_tile.png', script: 'script.sala_tv_open_prime' },
@@ -1162,6 +1164,47 @@ class BrunoSalaSubview extends HTMLElement {
     return `${lightLabel} - ${activeLabel}`;
   }
 
+  _lightLevel(light) {
+    const state = this._state(light?.entity);
+    if (!light?.entity || light.placeholder || state?.state !== 'on') return 0;
+
+    const brightness = Number(state?.attributes?.brightness);
+    if (Number.isFinite(brightness)) {
+      return Math.max(1, Math.min(100, Math.round((brightness / 255) * 100)));
+    }
+
+    return 100;
+  }
+
+  _renderLightZoneRail(lights, selectedZone) {
+    const label = selectedZone === 'varanda' ? 'Varanda' : 'Sala';
+    const levels = lights.slice(0, 4).map((light) => ({
+      name: light?.name || 'Luz',
+      level: this._lightLevel(light),
+      disabled: !light?.entity || light.placeholder,
+    }));
+    const activeCount = levels.filter((item) => item.level > 0).length;
+    const activeLabel = `${activeCount}/${levels.length || 0}`;
+
+    return `
+      <aside class="lights-zone-rail" aria-label="${BrunoSalaSubview._escapeAttr(`Resumo de iluminacao ${label}`)}">
+        <span class="rail-zone">${BrunoSalaSubview._escape(label)}</span>
+        <div class="rail-meter" aria-hidden="true">
+          ${levels.map((item) => `
+            <span
+              class="rail-segment${item.level > 0 ? ' is-on' : ''}${item.disabled ? ' is-placeholder' : ''}"
+              title="${BrunoSalaSubview._escapeAttr(item.name)}"
+              style="--level:${item.level}%"
+            >
+              <span></span>
+            </span>
+          `).join('')}
+        </div>
+        <span class="rail-state">${activeLabel}</span>
+      </aside>
+    `;
+  }
+
   _renderLightTile(light) {
     const state = this._state(light.entity);
     const active = state?.state === 'on';
@@ -1199,8 +1242,11 @@ class BrunoSalaSubview extends HTMLElement {
           </div>
         </div>
 
-        <div class="lights-single-grid">
-          ${visibleLights.map((light) => this._renderLightTile(light)).join('')}
+        <div class="lights-body">
+          <div class="lights-single-grid">
+            ${visibleLights.map((light) => this._renderLightTile(light)).join('')}
+          </div>
+          ${this._renderLightZoneRail(visibleLights, selectedZone)}
         </div>
       </div>
     `;
@@ -1264,6 +1310,8 @@ class BrunoSalaSubview extends HTMLElement {
     const ps5 = model.ps5;
     const tvPoster = tv.poster ? BrunoSalaSubview._resolvePicture(tv.poster) : '';
     const spotifyArtwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
+    const tvStandbyImage = this._config.tv_standby_image || '/local/images/tcl.png';
+    const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png';
     const tvVolume = tv.volume == null ? 60 : tv.volume;
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
     const compactMeta = (...values) => {
@@ -1317,7 +1365,16 @@ class BrunoSalaSubview extends HTMLElement {
         <ha-icon icon="${BrunoSalaSubview._escapeAttr(icon)}"></ha-icon>
       </button>
     `;
-    const mediaActionSpacer = '<span class="media-action-spacer" aria-hidden="true"></span>';
+    const mediaIdentityCell = (type, active = false) => `
+      <span class="media-identity-cell is-${BrunoSalaSubview._escapeAttr(type)}${active ? ' is-active' : ''}" aria-hidden="true">
+        ${BrunoSalaSubview._tplMediaIcon(type, active)}
+      </span>
+    `;
+    const standbyImage = (src, className, fallbackIcon) => (
+      src
+        ? `<img class="media-standby-image ${className}" src="${BrunoSalaSubview._escapeAttr(src)}" alt="">`
+        : `<ha-icon icon="${BrunoSalaSubview._escapeAttr(fallbackIcon)}"></ha-icon>`
+    );
     const tvAppButtons = (this._config.tv_apps || []).slice(0, 4).map((app) => {
       const label = app.label || 'App';
       const image = app.image ? BrunoSalaSubview._escapeAttr(app.image) : '';
@@ -1340,16 +1397,16 @@ class BrunoSalaSubview extends HTMLElement {
       `;
     }).join('');
     const tvPrimaryActions = `
+      ${mediaIdentityCell('tv', tv.active)}
       ${mediaActionButton({ action: 'toggle-tv', icon: 'mdi:power', label: tv.active ? 'Desligar TV' : 'Ligar TV' })}
       ${mediaActionButton({ action: 'tv-remote', icon: 'mdi:remote-tv', label: 'Controle remoto' })}
       ${mediaActionButton({ action: 'tv-play-pause', icon: 'mdi:play-pause', label: 'Play pause', className: 'is-main' })}
-      ${mediaActionSpacer}
     `;
     const spotifyPrimaryActions = `
+      ${mediaIdentityCell('spotify', spotify.active || spotify.playing)}
       ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior' })}
       ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main' })}
       ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa' })}
-      ${mediaActionSpacer}
     `;
     const spotifySecondaryActions = `
       ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool' })}
@@ -1368,7 +1425,7 @@ class BrunoSalaSubview extends HTMLElement {
         meta: renderMeta(tvMeta),
         visual: tvPoster
           ? `<img src="${BrunoSalaSubview._escapeAttr(tvPoster)}" alt="">`
-          : '<ha-icon icon="mdi:television-classic"></ha-icon>',
+          : standbyImage(tvStandbyImage, 'media-tv-standby', 'mdi:television-classic'),
         primaryActions: tvPrimaryActions,
         secondaryActions: tvAppButtons,
         extra: `
@@ -1389,7 +1446,7 @@ class BrunoSalaSubview extends HTMLElement {
         meta: renderMeta(spotifyMeta),
         visual: spotifyArtwork
           ? `<img src="${BrunoSalaSubview._escapeAttr(spotifyArtwork)}" alt="">`
-          : '<ha-icon icon="mdi:music-note"></ha-icon>',
+          : standbyImage(spotifyStandbyImage, 'media-spotify-standby', 'mdi:music-note'),
         primaryActions: spotifyPrimaryActions,
         secondaryActions: spotifySecondaryActions,
         extra: `
@@ -1409,7 +1466,7 @@ class BrunoSalaSubview extends HTMLElement {
         title: ps5.title,
         meta: renderMeta(ps5Meta),
         visual: ps5.image
-          ? `<img class="media-ps5-image" src="${BrunoSalaSubview._escapeAttr(ps5.image)}" alt="">`
+          ? `<img class="media-standby-image media-ps5-image" src="${BrunoSalaSubview._escapeAttr(ps5.image)}" alt="">`
           : '<ha-icon icon="mdi:sony-playstation"></ha-icon>',
         primaryClass: 'is-wide',
         primaryActions: `
@@ -1866,7 +1923,7 @@ class BrunoSalaSubview extends HTMLElement {
         --sala-gap: 10px;
         --sala-radius: var(--bruno-liquid-card-radius, 18px);
         --sala-radius-small: var(--bruno-liquid-card-radius-compact, 16px);
-        --sala-cell-radius: 12px;
+        --sala-cell-radius: var(--bruno-liquid-cell-radius, 16px);
         --accent: var(--bruno-liquid-accent, 150, 190, 255);
         --accent-blue: 96, 165, 250;
         --accent-cyan: 79, 172, 254;
@@ -2257,10 +2314,12 @@ class BrunoSalaSubview extends HTMLElement {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 14px;
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.14);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.08));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
       }
 
       .back-button ha-icon,
@@ -2413,13 +2472,14 @@ class BrunoSalaSubview extends HTMLElement {
         place-items: center;
         gap: 4px;
         padding: 6px 6px;
-        border-radius: 14px;
-        background:
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        background: var(--bruno-liquid-control-background,
           radial-gradient(74px 44px at 50% 0%, rgba(255,255,255,0.13), transparent 72%),
-          rgba(255,255,255,0.058);
-        border: 1px solid rgba(255,255,255,0.12);
+          rgba(255,255,255,0.058)
+        );
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.12));
         color: rgba(255,255,255,0.72);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.08));
       }
 
       .preset-button.is-primary {
@@ -2443,9 +2503,10 @@ class BrunoSalaSubview extends HTMLElement {
       .primary-button {
         min-height: 36px;
         padding: 0 14px;
-        border-radius: 12px;
-        background: rgba(255,255,255,0.075);
-        border: 1px solid rgba(255,255,255,0.14);
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.075));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
         color: rgba(255,255,255,0.88);
         font-size: 12px;
         font-weight: 800;
@@ -2453,8 +2514,9 @@ class BrunoSalaSubview extends HTMLElement {
 
       .soft-button.is-primary,
       .primary-button {
-        background: rgba(24,134,190,0.42);
-        border-color: rgba(96,190,255,0.50);
+        background: var(--bruno-liquid-control-blue-background, rgba(24,134,190,0.42));
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,190,255,0.50));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.18));
       }
 
       .curtain-progress {
@@ -2631,7 +2693,7 @@ class BrunoSalaSubview extends HTMLElement {
         column-gap: 15px;
         padding: 13px 16px;
         text-align: left;
-        border-radius: var(--sala-radius-small);
+        border-radius: var(--sala-cell-radius);
         color: rgba(255,255,255,0.86);
         background: var(--bruno-liquid-cell-background, rgba(255,255,255,0.055));
         border: var(--bruno-liquid-cell-border, 1px solid rgba(255,255,255,0.11));
@@ -2654,6 +2716,110 @@ class BrunoSalaSubview extends HTMLElement {
           inset 0 -1px 0 rgba(0,0,0,0.08),
           0 0 20px rgba(255,183,77,0.17)
         );
+      }
+
+      .lights-body {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .lights-zone-rail {
+        position: relative;
+        min-height: 0;
+        display: none;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        justify-items: center;
+        gap: 9px;
+        padding: 10px 8px;
+        overflow: hidden;
+        border-radius: var(--sala-cell-radius);
+        color: rgba(255,255,255,0.74);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.052));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.13));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.10));
+      }
+
+      .lights-zone-rail::before {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        pointer-events: none;
+        border-radius: calc(var(--sala-cell-radius) - 1px);
+        background:
+          radial-gradient(58px 50px at 50% 0%, rgba(255,255,255,0.18), transparent 72%),
+          linear-gradient(180deg, rgba(255,255,255,0.10), transparent 36%);
+        opacity: 0.64;
+      }
+
+      .rail-zone,
+      .rail-state,
+      .rail-meter {
+        position: relative;
+        z-index: 1;
+      }
+
+      .rail-zone {
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 900;
+        color: rgba(255,255,255,0.70);
+      }
+
+      .rail-state {
+        min-width: 38px;
+        min-height: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: rgba(255,205,95,0.95);
+        font-size: 11px;
+        font-weight: 900;
+        background: rgba(255,183,77,0.10);
+        border: 1px solid rgba(255,183,77,0.20);
+      }
+
+      .rail-meter {
+        width: 100%;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: repeat(4, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .rail-segment {
+        position: relative;
+        min-height: 0;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.060);
+        border: 1px solid rgba(255,255,255,0.085);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      }
+
+      .rail-segment span {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: var(--level, 0%);
+        border-radius: inherit;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.48), transparent 60%),
+          linear-gradient(180deg, rgba(255,218,112,0.90), rgba(255,183,77,0.44));
+        box-shadow: 0 0 14px rgba(255,183,77,0.28);
+        opacity: 0;
+        transition: height 220ms ease, opacity 180ms ease;
+      }
+
+      .rail-segment.is-on span {
+        opacity: 1;
+      }
+
+      .rail-segment.is-placeholder {
+        opacity: 0.42;
       }
 
       .light-tile.is-placeholder {
@@ -2975,21 +3141,25 @@ class BrunoSalaSubview extends HTMLElement {
 
       .control-button.is-main {
         color: white;
-        background:
+        background: var(--bruno-liquid-control-blue-background,
           radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 72%),
-          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58));
-        border-color: rgba(150,198,255,0.44);
-        box-shadow:
+          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58))
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(150,198,255,0.44));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
           inset 0 1px 0 rgba(255,255,255,0.22),
-          0 0 22px rgba(96,165,250,0.24);
+          0 0 22px rgba(96,165,250,0.24)
+        );
       }
 
       .control-button.is-tool {
         color: rgba(210,245,230,0.96);
-        background:
+        background: var(--bruno-liquid-control-green-background,
           radial-gradient(circle at 50% 16%, rgba(46,231,122,0.22), transparent 72%),
-          rgba(255,255,255,0.075);
-        border-color: rgba(46,231,122,0.22);
+          rgba(255,255,255,0.075)
+        );
+        border-color: var(--bruno-liquid-control-green-border, rgba(46,231,122,0.22));
+        box-shadow: var(--bruno-liquid-control-green-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
       }
 
       .volume-row {
@@ -3294,10 +3464,12 @@ class BrunoSalaSubview extends HTMLElement {
       .fan-mode,
       .climate-stepper {
         min-height: 34px;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.09);
-        background: rgba(255,255,255,0.050);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.09));
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.050));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.06));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
       }
 
       .climate-mode:disabled,
@@ -3319,24 +3491,28 @@ class BrunoSalaSubview extends HTMLElement {
 
       .climate-mode.is-active {
         color: white;
-        background:
+        background: var(--bruno-liquid-control-blue-background,
           radial-gradient(circle at 50% 14%, rgba(96,183,255,0.34), transparent 72%),
-          rgba(38,92,154,0.42);
-        border-color: rgba(96,183,255,0.34);
-        box-shadow:
+          rgba(38,92,154,0.42)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.34));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
           inset 0 1px 0 rgba(255,255,255,0.14),
-          0 0 14px rgba(96,165,250,0.16);
+          0 0 14px rgba(96,165,250,0.16)
+        );
       }
 
       .climate-mode.is-power-on {
         color: rgba(255,255,255,0.96);
-        background:
+        background: var(--bruno-liquid-control-blue-background,
           radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
-          rgba(38,92,138,0.38);
-        border-color: rgba(96,165,250,0.32);
-        box-shadow:
+          rgba(38,92,138,0.38)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,165,250,0.32));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
           inset 0 1px 0 rgba(255,255,255,0.12),
-          0 0 14px rgba(96,165,250,0.16);
+          0 0 14px rgba(96,165,250,0.16)
+        );
       }
 
       .climate-stepper {
@@ -3374,10 +3550,12 @@ class BrunoSalaSubview extends HTMLElement {
 
       .fan-mode.is-active {
         color: rgba(255,255,255,0.94);
-        background:
+        background: var(--bruno-liquid-control-blue-background,
           radial-gradient(circle at 50% 14%, rgba(96,183,255,0.24), transparent 72%),
-          rgba(38,92,154,0.32);
-        border-color: rgba(96,183,255,0.28);
+          rgba(38,92,154,0.32)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.28));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.14));
       }
 
       .climate-mode:active,
@@ -3840,7 +4018,16 @@ class BrunoSalaSubview extends HTMLElement {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-rows: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 12px 12px;
+      }
+
+      .lights-body {
+        grid-template-columns: minmax(0, 1fr) 68px;
+        gap: 12px;
+      }
+
+      .lights-zone-rail {
+        display: grid;
       }
 
       .lights-groups,
@@ -3851,9 +4038,9 @@ class BrunoSalaSubview extends HTMLElement {
 
       .light-tile {
         min-height: 0;
-        grid-template-columns: 70px minmax(0, 1fr);
-        column-gap: 16px;
-        padding: 12px 17px;
+        grid-template-columns: 64px minmax(0, 1fr);
+        column-gap: 14px;
+        padding: 12px 15px;
       }
 
       .light-icon {
@@ -3862,7 +4049,7 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .light-tile strong {
-        font-size: 14.5px;
+        font-size: 15px;
       }
 
       .camera-list {
@@ -4003,6 +4190,26 @@ class BrunoSalaSubview extends HTMLElement {
         object-fit: cover;
       }
 
+      .media-standby-image {
+        position: static !important;
+        inset: auto !important;
+        width: 92% !important;
+        height: 92% !important;
+        object-fit: contain !important;
+        opacity: 0.96;
+        filter: drop-shadow(0 18px 28px rgba(0,0,0,0.42));
+      }
+
+      .media-tv-standby {
+        width: 96% !important;
+        height: 86% !important;
+      }
+
+      .media-spotify-standby {
+        width: 88% !important;
+        height: 92% !important;
+      }
+
       .media-visual ha-icon {
         --mdc-icon-size: 64px;
       }
@@ -4019,8 +4226,8 @@ class BrunoSalaSubview extends HTMLElement {
 
       .media-ps5-image {
         position: static !important;
-        width: 90% !important;
-        height: 92% !important;
+        width: 108% !important;
+        height: 100% !important;
         object-fit: contain !important;
         filter: drop-shadow(0 18px 26px rgba(0,0,0,0.42));
       }
@@ -4092,11 +4299,12 @@ class BrunoSalaSubview extends HTMLElement {
 
       .media-primary-actions.is-wide .primary-button {
         min-height: var(--media-action-size);
-        border-radius: 14px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
       }
 
       .media-action-button,
-      .media-action-spacer {
+      .media-action-spacer,
+      .media-identity-cell {
         width: var(--media-action-size);
         height: var(--media-action-size);
       }
@@ -4108,11 +4316,13 @@ class BrunoSalaSubview extends HTMLElement {
         justify-content: center;
         padding: 0;
         overflow: hidden;
-        border-radius: 14px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
         color: rgba(255,255,255,0.82);
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.14);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.08));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
       }
 
       .media-action-button ha-icon {
@@ -4121,21 +4331,25 @@ class BrunoSalaSubview extends HTMLElement {
 
       .media-action-button.is-main {
         color: white;
-        background:
+        background: var(--bruno-liquid-control-blue-background,
           radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 72%),
-          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58));
-        border-color: rgba(150,198,255,0.44);
-        box-shadow:
+          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58))
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(150,198,255,0.44));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
           inset 0 1px 0 rgba(255,255,255,0.22),
-          0 0 22px rgba(96,165,250,0.24);
+          0 0 22px rgba(96,165,250,0.24)
+        );
       }
 
       .media-action-button.is-tool {
         color: rgba(210,245,230,0.96);
-        background:
+        background: var(--bruno-liquid-control-green-background,
           radial-gradient(circle at 50% 16%, rgba(46,231,122,0.22), transparent 72%),
-          rgba(255,255,255,0.075);
-        border-color: rgba(46,231,122,0.22);
+          rgba(255,255,255,0.075)
+        );
+        border-color: var(--bruno-liquid-control-green-border, rgba(46,231,122,0.22));
+        box-shadow: var(--bruno-liquid-control-green-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
       }
 
       .media-action-button:disabled {
@@ -4147,6 +4361,41 @@ class BrunoSalaSubview extends HTMLElement {
         display: block;
         pointer-events: none;
         visibility: hidden;
+      }
+
+      .media-identity-cell {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        color: rgba(210,222,236,0.58);
+      }
+
+      .media-identity-cell.is-active {
+        color: rgba(255,255,255,0.96);
+      }
+
+      .tpl-media-icon {
+        width: 38px;
+        height: 38px;
+        display: block;
+        filter: drop-shadow(0 8px 14px rgba(0,0,0,0.30));
+      }
+
+      .media-identity-cell.is-active .tpl-media-icon {
+        filter: drop-shadow(0 0 12px rgba(96,190,255,0.34)) drop-shadow(0 8px 14px rgba(0,0,0,0.30));
+      }
+
+      .tpl-media-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+      }
+
+      .tpl-media-icon.icon-spotify.is-active {
+        color: #1ed760;
+        filter: drop-shadow(0 0 12px rgba(46,231,122,0.36)) drop-shadow(0 8px 14px rgba(0,0,0,0.30));
       }
 
       .media-image-button {
@@ -4213,19 +4462,23 @@ class BrunoSalaSubview extends HTMLElement {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 14px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
         color: rgba(255,255,255,0.74);
-        background: rgba(255,255,255,0.075);
-        border: 1px solid rgba(255,255,255,0.13);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.09);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.075));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.13));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.09));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
       }
 
       .power-button.is-active {
         color: white;
-        background:
+        background: var(--bruno-liquid-control-blue-background,
           radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
-          rgba(38,92,138,0.38);
-        border-color: rgba(96,165,250,0.32);
+          rgba(38,92,138,0.38)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,165,250,0.32));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
       }
 
       .power-button ha-icon {
@@ -4290,7 +4543,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .climate-ring {
         position: relative;
-        width: min(192px, 78%);
+        width: min(210px, 82%);
         aspect-ratio: 1;
         display: block;
         filter: drop-shadow(0 20px 34px rgba(0,0,0,0.36));
@@ -4400,6 +4653,14 @@ class BrunoSalaSubview extends HTMLElement {
             "media ac";
         }
 
+        .lights-body {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .lights-zone-rail {
+          display: none;
+        }
+
         .status-rail {
           min-height: 68px;
         }
@@ -4489,6 +4750,86 @@ class BrunoSalaSubview extends HTMLElement {
         }
       }
     `;
+  }
+
+  static _tplMediaIcon(type, active = false) {
+    const name = String(type || '').replace(/[^a-z0-9_-]/gi, '') || 'tv';
+    const tvScreen = active
+      ? '<path class="media-tv-screen-on" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>'
+      : '<path class="media-tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>';
+    const icons = {
+      tv: `
+        <svg viewBox="0 0 50 50" aria-hidden="true">
+          <style>
+            @keyframes bruno-sala-media-tv-on {
+              from { transform: scaleY(0); }
+              to { transform: scaleY(1); }
+            }
+            @keyframes bruno-sala-media-tv-off {
+              from { transform: scaleY(1); }
+              to { transform: scaleY(0); }
+            }
+            .media-tv-screen-on {
+              animation: bruno-sala-media-tv-on 900ms cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+              transform-origin: -100% 46%;
+            }
+            .media-tv-screen-off {
+              animation: bruno-sala-media-tv-off 650ms cubic-bezier(0.25,0.46,0.45,0.94) both;
+              transform-origin: -100% 46%;
+            }
+          </style>
+          <linearGradient id="bruno-sala-media-tv-screen" gradientUnits="userSpaceOnUse" x1="5.401" y1="34.714" x2="43.817" y2="11.74">
+            <stop offset="0" stop-color="#64acb7"/>
+            <stop offset="1" stop-color="#7fdbe9"/>
+          </linearGradient>
+          <path d="M2.9,8h44.3v29.9H2.9V8z" fill="#20262890"/>
+          ${tvScreen}
+          <path fill="currentColor" d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3zM11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3a1.11 1.11 0 0 0 1.1 1.1z"/>
+        </svg>
+      `,
+      spotify: active
+        ? `
+          <svg viewBox="0 0 42.55 42.55" aria-hidden="true">
+            <style>
+              @keyframes bruno-sala-spotify-bounce {
+                10% { transform: scaleY(0.3); }
+                30% { transform: scaleY(1); opacity: .35; }
+                60% { transform: scaleY(0.5); }
+                80% { transform: scaleY(0.75); opacity: .75; }
+                100% { transform: scaleY(0.6); }
+              }
+              .media-spotify-bars {
+                fill: #ffffff;
+                stroke: #ffffff;
+                stroke-linecap: round;
+                stroke-width: 5px;
+              }
+              .media-spotify-bar {
+                animation: bruno-sala-spotify-bounce 2.2s ease infinite alternate;
+                transform-origin: center;
+              }
+              .media-spotify-bar:nth-child(2) { animation-delay: -2.2s; }
+              .media-spotify-bar:nth-child(3) { animation-delay: -3.2s; }
+              .media-spotify-bar:nth-child(4) { animation-delay: -1.2s; }
+              .media-spotify-bar:nth-child(5) { animation-delay: -2.1s; }
+            </style>
+            <g class="media-spotify-bars">
+              <path class="media-spotify-bar" d="M2.5,18.24v7.87"/>
+              <path class="media-spotify-bar" d="M32.54,18.24v7.87"/>
+              <path class="media-spotify-bar" d="M10.01,10.37v23.61"/>
+              <path class="media-spotify-bar" d="M25.03,10.37v23.61"/>
+              <path class="media-spotify-bar" d="M17.52,2.5V41.85"/>
+            </g>
+          </svg>
+        `
+        : `
+          <svg viewBox="0 0 49.17 49.17" aria-hidden="true">
+            <path fill="currentColor" d="M39.09 21.88c-7.87-4.67-21.02-5.16-28.52-2.83-1.23.37-2.46-.37-2.83-1.47-.37-1.23.37-2.46 1.47-2.83 8.73-2.58 23.11-2.09 32.2 3.32 1.11.61 1.47 2.09.86 3.2-.61.86-2.09 1.23-3.2.61m-.25 6.88c-.61.86-1.72 1.23-2.58.61-6.64-4.06-16.72-5.29-24.46-2.83-.98.25-2.09-.25-2.34-1.23s.25-2.09 1.23-2.34c8.97-2.7 20.04-1.35 27.66 3.32.74.37 1.11 1.6.49 2.46m-2.95 6.76c-.49.74-1.35.98-2.09.49-5.78-3.56-13.03-4.3-21.63-2.34-.86.25-1.6-.37-1.84-1.11-.25-.86.37-1.6 1.11-1.84 9.34-2.09 17.45-1.23 23.85 2.7.86.37.98 1.35.61 2.09M24.58 0C11.06 0 0 11.06 0 24.58s11.06 24.58 24.58 24.58S49.16 38.1 49.16 24.58 38.23 0 24.58 0"/>
+          </svg>
+        `,
+    };
+
+    return `<span class="tpl-media-icon icon-${name}${active ? ' is-active' : ''}">${icons[name] || icons.tv}</span>`;
   }
 
   static _tplLightIcon(type, active = false) {

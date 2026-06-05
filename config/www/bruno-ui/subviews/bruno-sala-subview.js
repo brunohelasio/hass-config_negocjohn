@@ -483,6 +483,9 @@ class BrunoSalaSubview extends HTMLElement {
     const attrs = entity?.attributes || {};
     const target = Number(attrs.temperature);
     const current = Number(attrs.current_temperature);
+    const minTemp = Number(attrs.min_temp);
+    const maxTemp = Number(attrs.max_temp);
+    const targetStep = Number(attrs.target_temp_step);
     const hvacAction = this._climateAction(entity);
     const active = this._climateIsActive(entity);
     return {
@@ -490,11 +493,36 @@ class BrunoSalaSubview extends HTMLElement {
       active,
       target: Number.isFinite(target) ? target : null,
       current: Number.isFinite(current) ? current : null,
+      minTemp: Number.isFinite(minTemp) ? minTemp : 16,
+      maxTemp: Number.isFinite(maxTemp) ? maxTemp : 30,
+      targetStep: Number.isFinite(targetStep) && targetStep > 0 ? targetStep : 1,
       hvacMode: entity?.state || 'off',
       fan: attrs.fan_mode || 'auto',
-      swing: attrs.swing_mode || 'Ativada',
+      swing: attrs.swing_mode || '',
+      hvacModes: Array.isArray(attrs.hvac_modes) ? attrs.hvac_modes : [],
+      fanModes: Array.isArray(attrs.fan_modes) ? attrs.fan_modes : [],
+      swingModes: Array.isArray(attrs.swing_modes) ? attrs.swing_modes : [],
       action: hvacAction === 'idle' ? 'em espera' : (active ? (hvacAction || 'ligado') : 'off'),
     };
+  }
+
+  _climateOption(options, candidates, fallback = '') {
+    const available = Array.isArray(options) ? options.filter(Boolean) : [];
+    if (!available.length) return fallback;
+    const wanted = candidates.map((item) => String(item || '').toLowerCase());
+    return available.find((option) => wanted.includes(String(option || '').toLowerCase())) || '';
+  }
+
+  _setClimateTarget(temperature) {
+    const model = this._climateModel();
+    const value = Number(temperature);
+    if (!Number.isFinite(value)) return;
+    const min = Number.isFinite(model.minTemp) ? model.minTemp : 16;
+    const max = Number.isFinite(model.maxTemp) ? model.maxTemp : 30;
+    this._callService('climate.set_temperature', {
+      entity_id: this._config.entities.climate,
+      temperature: Math.max(min, Math.min(max, value)),
+    });
   }
 
   _climateModeLabel(mode) {
@@ -876,15 +904,42 @@ class BrunoSalaSubview extends HTMLElement {
       const model = this._climateModel();
       this._callService(model.active ? 'climate.turn_off' : 'climate.turn_on', { entity_id: this._config.entities.climate });
     }
-    if (action === 'temp-down' || action === 'temp-up') {
-      const model = this._climateModel();
-      const current = Number(model.target);
-      if (Number.isFinite(current)) {
-        this._callService('climate.set_temperature', {
+    if (action === 'climate-mode') {
+      const hvacMode = target.dataset.mode;
+      if (hvacMode) {
+        this._callService('climate.set_hvac_mode', {
           entity_id: this._config.entities.climate,
-          temperature: action === 'temp-up' ? current + 1 : current - 1,
+          hvac_mode: hvacMode,
         });
       }
+      return;
+    }
+    if (action === 'fan-mode') {
+      const fanMode = target.dataset.mode;
+      if (fanMode) {
+        this._callService('climate.set_fan_mode', {
+          entity_id: this._config.entities.climate,
+          fan_mode: fanMode,
+        });
+      }
+      return;
+    }
+    if (action === 'swing-mode') {
+      const swingMode = target.dataset.mode;
+      if (swingMode) {
+        this._callService('climate.set_swing_mode', {
+          entity_id: this._config.entities.climate,
+          swing_mode: swingMode,
+        });
+      }
+      return;
+    }
+    if (action === 'temp-down' || action === 'temp-up') {
+      const model = this._climateModel();
+      const current = Number.isFinite(Number(model.target)) ? Number(model.target) : 22;
+      const step = Number.isFinite(Number(model.targetStep)) ? Number(model.targetStep) : 1;
+      this._setClimateTarget(action === 'temp-up' ? current + step : current - step);
+      return;
     }
   }
 
@@ -908,10 +963,7 @@ class BrunoSalaSubview extends HTMLElement {
       return;
     }
     if (target.dataset.action === 'climate-target') {
-      this._callService('climate.set_temperature', {
-        entity_id: this._config.entities.climate,
-        temperature: Math.max(16, Math.min(30, Math.round(value))),
-      });
+      this._setClimateTarget(Math.round(value));
       return;
     }
     if (target.dataset.action !== 'brightness') return;
@@ -1044,6 +1096,20 @@ class BrunoSalaSubview extends HTMLElement {
     `;
   }
 
+  static _roomNavIcon(key) {
+    const icons = {
+      sala: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V9.5A3.5 3.5 0 0 1 8.5 6h7A3.5 3.5 0 0 1 19 9.5V11"/><path d="M4 12.5A2.5 2.5 0 0 1 6.5 10H7a2 2 0 0 1 2 2v1h6v-1a2 2 0 0 1 2-2h.5A2.5 2.5 0 0 1 20 12.5V18H4v-5.5z"/><path d="M6 18v2M18 18v2"/></svg>',
+      office: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4z"/><path d="M9 19h6M12 15v4"/><path d="M7 21h10"/></svg>',
+      cozinha: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v15H5z"/><path d="M5 10h14"/><path d="M9 7h.01M15 7h.01"/><path d="M8 14h8v4H8z"/></svg>',
+      lavabo: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v7a4 4 0 0 1-8 0V4z"/><path d="M7 11h10"/><path d="M12 15v5"/><path d="M9 20h6"/></svg>',
+      casal: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11V5h16v6"/><path d="M4 11h16a2 2 0 0 1 2 2v5H2v-5a2 2 0 0 1 2-2z"/><path d="M7 9h3M14 9h3"/><path d="M3 18v2M21 18v2"/></svg>',
+      marina: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
+      miguel: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
+      fallback: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>',
+    };
+    return icons[key] || icons.fallback;
+  }
+
   _renderRoomSidebar() {
     const items = this._config.room_nav || [];
 
@@ -1058,7 +1124,7 @@ class BrunoSalaSubview extends HTMLElement {
             title="${BrunoSalaSubview._escapeAttr(item.name)}"
             aria-label="${BrunoSalaSubview._escapeAttr(item.name)}"
           >
-            <ha-icon icon="${BrunoSalaSubview._escapeAttr(item.icon || 'mdi:square-rounded-outline')}"></ha-icon>
+            ${BrunoSalaSubview._roomNavIcon(item.key || item.icon)}
           </button>
         `).join('')}
       </nav>
@@ -1104,7 +1170,6 @@ class BrunoSalaSubview extends HTMLElement {
     return `
       <button type="button" class="light-tile${active ? ' is-on' : ''}${disabled ? ' is-placeholder' : ''}" ${disabled ? 'disabled' : `data-action="toggle-light" data-entity="${BrunoSalaSubview._escapeAttr(light.entity)}"`}>
         <span class="light-icon">${BrunoSalaSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
-        <span class="switch-knob${active ? ' is-on' : ''}"></span>
         <strong>${BrunoSalaSubview._escape(light.name)}</strong>
         <small>${disabled ? 'Placeholder' : (active ? 'Ligada' : 'Desligada')}</small>
       </button>
@@ -1278,7 +1343,7 @@ class BrunoSalaSubview extends HTMLElement {
     const tvPrimaryActions = `
       ${mediaActionButton({ action: 'toggle-tv', icon: 'mdi:power', label: tv.active ? 'Desligar TV' : 'Ligar TV' })}
       ${mediaActionButton({ action: 'tv-remote', icon: 'mdi:remote-tv', label: 'Controle remoto' })}
-      ${mediaActionButton({ action: 'tv-play-pause', icon: 'mdi:play-pause', label: 'Play pause' })}
+      ${mediaActionButton({ action: 'tv-play-pause', icon: 'mdi:play-pause', label: 'Play pause', className: 'is-main' })}
       ${mediaActionSpacer}
     `;
     const spotifyPrimaryActions = `
@@ -1540,33 +1605,49 @@ class BrunoSalaSubview extends HTMLElement {
     const target = climate.target == null ? '--' : this._formatNumber(climate.target, 0);
     const targetNumber = Number.isFinite(Number(climate.target)) ? Math.round(Number(climate.target)) : 22;
     const current = climate.current == null ? '--' : this._formatNumber(climate.current, 1);
-    const climateEntity = BrunoSalaSubview._escapeAttr(this._config.entities.climate);
+    const minTarget = Number.isFinite(Number(climate.minTemp)) ? Number(climate.minTemp) : 16;
+    const maxTarget = Number.isFinite(Number(climate.maxTemp)) ? Number(climate.maxTemp) : 30;
+    const targetStep = Number.isFinite(Number(climate.targetStep)) ? Number(climate.targetStep) : 1;
     const deviceName = BrunoSalaSubview._escape(this._config.climate_device_name || 'Ar condicionado');
     const climateImage = BrunoSalaSubview._escapeAttr(this._config.climate_image || '/local/images/ar-condicionado-gree-tight.png');
     const activeMode = climate.hvacMode || 'off';
     const fan = String(climate.fan || 'auto').toLowerCase();
-    const swingActive = String(climate.swing || '').toLowerCase().includes('ativ');
-    const summary = this._climateSummary(climate, target);
+    const swing = String(climate.swing || '').toLowerCase();
+    const swingActive = ['on', 'ativo', 'ativada', 'enabled'].includes(swing)
+      || (swing.includes('ativ') && !swing.includes('desativ'));
     const dialMode = activeMode === 'cool'
       ? 'Resfriamento'
       : activeMode === 'heat'
         ? 'Aquecimento'
         : activeMode === 'fan_only'
           ? 'Ventilacao'
-          : 'Desligado';
+          : 'Temperatura';
     const modeButtonClass = (button) => {
       return activeMode === button.key ? ' is-active' : '';
     };
+    const hvacModes = Array.isArray(climate.hvacModes) ? climate.hvacModes : [];
+    const hvacAvailable = (key) => !hvacModes.length || hvacModes.includes(key);
+    const fanMode = (candidates, fallback) => this._climateOption(climate.fanModes, candidates, fallback);
+    const lowMode = fanMode(['low', 'baixo'], 'low');
+    const mediumMode = fanMode(['medium', 'med', 'medio'], 'medium');
+    const highMode = fanMode(['high', 'alto'], 'high');
+    const swingOnMode = this._climateOption(climate.swingModes, ['on', 'ativada', 'ativo', 'enabled'], '');
+    const swingOffMode = this._climateOption(climate.swingModes, ['off', 'desativada', 'desativado', 'disabled'], '');
+    const nextSwingMode = swingActive ? swingOffMode : swingOnMode;
+    const fanActive = (value, aliases = []) => {
+      const normalized = String(value || '').toLowerCase();
+      return Boolean(normalized) && (fan === normalized || aliases.some((alias) => fan.includes(alias)));
+    };
     const modeButtons = [
-      { key: 'cool', icon: 'mdi:snowflake', label: 'Cool' },
-      { key: 'heat', icon: 'mdi:fire', label: 'Heat' },
-      { key: 'fan_only', icon: 'mdi:fan', label: 'Fan' },
+      { key: 'cool', icon: 'mdi:snowflake', label: 'Cool', disabled: !hvacAvailable('cool') },
+      { key: 'heat', icon: 'mdi:fire', label: 'Heat', disabled: !hvacAvailable('heat') },
+      { key: 'fan_only', icon: 'mdi:fan', label: 'Fan', disabled: !hvacAvailable('fan_only') },
     ];
     const fanButtons = [
-      { key: 'low', label: 'Low', active: fan.includes('low') || fan.includes('baixo') },
-      { key: 'medium', label: 'Med', active: fan.includes('med') },
-      { key: 'high', label: 'High', active: fan.includes('high') || fan.includes('alto') },
-      { key: 'swing', label: 'Swing', active: swingActive },
+      { key: 'low', label: 'Low', action: 'fan-mode', mode: lowMode, active: fanActive(lowMode, ['low', 'baixo']) },
+      { key: 'medium', label: 'Med', action: 'fan-mode', mode: mediumMode, active: fanActive(mediumMode, ['med']) },
+      { key: 'high', label: 'High', action: 'fan-mode', mode: highMode, active: fanActive(highMode, ['high', 'alto']) },
+      { key: 'swing', label: 'Swing', action: 'swing-mode', mode: nextSwingMode, active: swingActive },
     ];
 
     return `
@@ -1595,21 +1676,22 @@ class BrunoSalaSubview extends HTMLElement {
             </div>
             <div class="climate-dial">
               <span class="climate-dial-mode">${BrunoSalaSubview._escape(dialMode)}</span>
-              <strong>${current}&deg;</strong>
-              <small>${target === '--' ? BrunoSalaSubview._escape(summary) : `Alvo ${target}&deg;`}</small>
+              <strong>${target}&deg;</strong>
+              <small>Ambiente ${current}&deg;</small>
             </div>
           </div>
           <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
-            <input type="range" min="16" max="30" value="${targetNumber}" data-action="climate-target">
+            <input type="range" min="${BrunoSalaSubview._escapeAttr(minTarget)}" max="${BrunoSalaSubview._escapeAttr(maxTarget)}" step="${BrunoSalaSubview._escapeAttr(targetStep)}" value="${targetNumber}" data-action="climate-target">
           </label>
           <div class="climate-mode-row" aria-label="Modo do ar condicionado">
             ${modeButtons.map((button) => `
               <button
                 type="button"
                 class="climate-mode${modeButtonClass(button)}"
-                data-action="${button.action || 'more-info'}"
-                ${button.action ? '' : `data-entity="${climateEntity}"`}
+                data-action="climate-mode"
+                data-mode="${BrunoSalaSubview._escapeAttr(button.key)}"
                 title="${BrunoSalaSubview._escapeAttr(button.label)}"
+                ${button.disabled ? 'disabled' : ''}
               >
                 <ha-icon icon="${button.icon}"></ha-icon>
               </button>
@@ -1626,8 +1708,9 @@ class BrunoSalaSubview extends HTMLElement {
               <button
                 type="button"
                 class="fan-mode${button.active ? ' is-active' : ''}"
-                data-action="more-info"
-                data-entity="${climateEntity}"
+                data-action="${BrunoSalaSubview._escapeAttr(button.action)}"
+                data-mode="${BrunoSalaSubview._escapeAttr(button.mode)}"
+                ${button.mode ? '' : 'disabled'}
               >${BrunoSalaSubview._escape(button.label)}</button>
             `).join('')}
           </div>
@@ -1799,9 +1882,17 @@ class BrunoSalaSubview extends HTMLElement {
         );
       }
 
-      .room-nav-button ha-icon {
-        --mdc-icon-size: 23px;
-        filter: drop-shadow(0 3px 5px rgba(0,0,0,0.38));
+      .room-nav-button svg {
+        width: 20px;
+        height: 20px;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.55;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.24));
+        pointer-events: none;
       }
 
       .glass-card {
@@ -2389,16 +2480,15 @@ class BrunoSalaSubview extends HTMLElement {
       .light-tile {
         position: relative;
         display: grid;
-        grid-template-columns: 58px minmax(0, 1fr) auto;
-        grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+        grid-template-columns: 66px minmax(0, 1fr);
+        grid-template-rows: auto auto;
         grid-template-areas:
-          "icon . switch"
-          "icon title switch"
-          "icon status switch"
-          "icon . switch";
+          "icon title"
+          "icon status";
         align-items: center;
-        column-gap: 13px;
-        padding: 11px 14px;
+        align-content: center;
+        column-gap: 15px;
+        padding: 13px 16px;
         text-align: left;
         border-radius: var(--sala-radius-small);
         color: rgba(255,255,255,0.86);
@@ -2439,8 +2529,8 @@ class BrunoSalaSubview extends HTMLElement {
       .light-icon {
         grid-area: icon;
         position: relative;
-        width: 54px;
-        height: 54px;
+        width: 62px;
+        height: 62px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -2509,43 +2599,12 @@ class BrunoSalaSubview extends HTMLElement {
         100% { transform: rotateZ(0deg); }
       }
 
-      .switch-knob {
-        grid-area: switch;
-        align-self: start;
-        justify-self: end;
-        width: 34px;
-        height: 20px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.13);
-      }
-
-      .switch-knob::before {
-        content: "";
-        display: block;
-        width: 14px;
-        height: 14px;
-        margin: 2px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.76);
-        transition: transform 160ms ease, background 160ms ease;
-      }
-
-      .switch-knob.is-on {
-        background: rgba(255,183,77,0.88);
-      }
-
-      .switch-knob.is-on::before {
-        transform: translateX(14px);
-        background: #fff;
-      }
-
       .light-tile strong {
         grid-area: title;
         min-width: 0;
         align-self: end;
-        font-size: 13.5px;
-        line-height: 1.1;
+        font-size: 14.5px;
+        line-height: 1.12;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -2555,8 +2614,8 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: status;
         min-width: 0;
         color: rgba(255,205,95,0.92);
-        font-size: 11.2px;
-        font-weight: 700;
+        font-size: 12px;
+        font-weight: 800;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -2774,13 +2833,14 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .control-button.is-main {
+        color: white;
         background:
-          radial-gradient(circle at 50% 18%, rgba(142,126,255,0.50), transparent 72%),
-          linear-gradient(180deg, rgba(108,88,214,0.74), rgba(60,48,128,0.58));
-        border-color: rgba(160,145,255,0.48);
+          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 72%),
+          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58));
+        border-color: rgba(150,198,255,0.44);
         box-shadow:
           inset 0 1px 0 rgba(255,255,255,0.22),
-          0 0 22px rgba(112,88,255,0.26);
+          0 0 22px rgba(96,165,250,0.24);
       }
 
       .control-button.is-tool {
@@ -2813,10 +2873,6 @@ class BrunoSalaSubview extends HTMLElement {
       .volume-row input {
         width: 100%;
         min-width: 0;
-        accent-color: rgb(116,92,255);
-      }
-
-      .spotify-volume input {
         accent-color: rgb(28,214,104);
       }
 
@@ -3082,8 +3138,15 @@ class BrunoSalaSubview extends HTMLElement {
       .climate-mode-row,
       .fan-mode-row {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
+      }
+
+      .climate-mode-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .fan-mode-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .climate-mode,
@@ -3094,6 +3157,12 @@ class BrunoSalaSubview extends HTMLElement {
         border: 1px solid rgba(255,255,255,0.09);
         background: rgba(255,255,255,0.050);
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      }
+
+      .climate-mode:disabled,
+      .fan-mode:disabled {
+        opacity: 0.42;
+        cursor: default;
       }
 
       .climate-mode {
@@ -3110,9 +3179,12 @@ class BrunoSalaSubview extends HTMLElement {
       .climate-mode.is-active {
         color: white;
         background:
-          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.30), transparent 72%),
-          rgba(42,82,128,0.36);
-        border-color: rgba(96,165,250,0.28);
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.34), transparent 72%),
+          rgba(38,92,154,0.42);
+        border-color: rgba(96,183,255,0.34);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.14),
+          0 0 14px rgba(96,165,250,0.16);
       }
 
       .climate-mode.is-power-on {
@@ -3161,8 +3233,17 @@ class BrunoSalaSubview extends HTMLElement {
 
       .fan-mode.is-active {
         color: rgba(255,255,255,0.94);
-        background: rgba(255,255,255,0.11);
-        border-color: rgba(255,255,255,0.16);
+        background:
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.24), transparent 72%),
+          rgba(38,92,154,0.32);
+        border-color: rgba(96,183,255,0.28);
+      }
+
+      .climate-mode:active,
+      .fan-mode:active,
+      .climate-stepper button:active {
+        transform: translateY(1px);
+        border-color: rgba(96,183,255,0.42);
       }
 
       .climate-trend {
@@ -3629,18 +3710,18 @@ class BrunoSalaSubview extends HTMLElement {
 
       .light-tile {
         min-height: 0;
-        grid-template-columns: 66px minmax(0, 1fr) auto;
-        column-gap: 14px;
-        padding: 12px 16px;
+        grid-template-columns: 70px minmax(0, 1fr);
+        column-gap: 16px;
+        padding: 12px 17px;
       }
 
       .light-icon {
-        width: 60px;
-        height: 60px;
+        width: 64px;
+        height: 64px;
       }
 
       .light-tile strong {
-        font-size: 13.5px;
+        font-size: 14.5px;
       }
 
       .camera-list {
@@ -3845,7 +3926,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .media-action-stack {
         grid-area: auto;
-        --media-action-size: 52px;
+        --media-action-size: 55px;
         display: grid;
         align-content: center;
         align-self: center;
@@ -3900,12 +3981,12 @@ class BrunoSalaSubview extends HTMLElement {
       .media-action-button.is-main {
         color: white;
         background:
-          radial-gradient(circle at 50% 18%, rgba(142,126,255,0.50), transparent 72%),
-          linear-gradient(180deg, rgba(108,88,214,0.74), rgba(60,48,128,0.58));
-        border-color: rgba(160,145,255,0.48);
+          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 72%),
+          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58));
+        border-color: rgba(150,198,255,0.44);
         box-shadow:
           inset 0 1px 0 rgba(255,255,255,0.22),
-          0 0 22px rgba(112,88,255,0.26);
+          0 0 22px rgba(96,165,250,0.24);
       }
 
       .media-action-button.is-tool {
@@ -4080,13 +4161,14 @@ class BrunoSalaSubview extends HTMLElement {
         border-radius: 50%;
         text-align: center;
         background:
-          radial-gradient(circle at 50% 44%, rgba(64,158,231,0.24), transparent 35%),
-          radial-gradient(circle at 50% 52%, rgba(16,26,38,0.98) 0 55%, rgba(16,26,38,0.78) 56% 62%, transparent 63%);
+          radial-gradient(circle at 32% 27%, rgba(145,225,255,0.42), transparent 14%),
+          radial-gradient(circle at 68% 68%, rgba(36,125,220,0.54), transparent 34%),
+          linear-gradient(180deg, rgba(77,190,255,0.98), rgba(23,132,219,0.92));
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.16),
-          inset 0 -18px 36px rgba(0,0,0,0.18),
+          inset 0 1px 0 rgba(255,255,255,0.34),
+          inset 0 -22px 42px rgba(5,38,92,0.30),
           0 20px 34px rgba(0,0,0,0.34),
-          0 0 28px rgba(66,153,225,0.16);
+          0 0 30px rgba(66,153,225,0.24);
       }
 
       .climate-dial::before {
@@ -4097,12 +4179,12 @@ class BrunoSalaSubview extends HTMLElement {
         border-radius: inherit;
         background:
           conic-gradient(from 218deg,
-            rgba(74,164,255,0.98) 0deg 244deg,
-            rgba(37,93,143,0.80) 244deg 305deg,
-            rgba(255,255,255,0.09) 305deg 360deg);
+            rgba(123,215,255,0.98) 0deg 244deg,
+            rgba(42,132,220,0.84) 244deg 305deg,
+            rgba(18,42,61,0.50) 305deg 360deg);
         -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 19px), #000 calc(100% - 18px));
         mask: radial-gradient(farthest-side, transparent calc(100% - 19px), #000 calc(100% - 18px));
-        filter: drop-shadow(0 0 14px rgba(74,164,255,0.30));
+        filter: drop-shadow(0 0 14px rgba(74,164,255,0.40));
       }
 
       .climate-dial::after {
@@ -4126,7 +4208,7 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .climate-dial-mode {
-        color: rgba(96,183,255,0.98);
+        color: rgba(223,244,255,0.92);
         font-size: 12px;
         line-height: 1;
         font-weight: 850;
@@ -4134,14 +4216,15 @@ class BrunoSalaSubview extends HTMLElement {
 
       .climate-dial strong {
         color: rgba(255,255,255,0.94);
-        font-size: 32px;
+        font-size: 38px;
         line-height: 1;
         font-weight: 850;
+        text-shadow: 0 3px 12px rgba(6,32,72,0.32);
       }
 
       .climate-dial small {
         max-width: 110px;
-        color: rgba(255,255,255,0.54);
+        color: rgba(232,246,255,0.76);
         font-size: 10px;
         line-height: 1.1;
         font-weight: 750;

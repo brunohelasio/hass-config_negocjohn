@@ -8,7 +8,7 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
 
   'bruno-liquid-card-radius': '22px',
   'bruno-liquid-card-radius-compact': '20px',
-  'bruno-liquid-room-radius': '20px',
+  'bruno-liquid-room-radius': '22px',
   'bruno-liquid-cell-radius': '14px',
   'bruno-liquid-control-radius': '16px',
   'bruno-liquid-dock-radius': '999px',

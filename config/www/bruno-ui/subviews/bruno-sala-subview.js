@@ -1181,6 +1181,7 @@ class BrunoSalaSubview extends HTMLElement {
     const salaLights = lights.filter((light) => (light.zone || 'sala') === 'sala');
     const varandaLights = lights.filter((light) => light.zone === 'varanda');
     const selectedZone = this._selectedLightZone === 'varanda' ? 'varanda' : 'sala';
+    const visibleLights = selectedZone === 'varanda' ? varandaLights : salaLights;
 
     return `
       <div class="glass-card lights-card">

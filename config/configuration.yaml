@@ -14,7 +14,7 @@ frontend:
   extra_module_url:
     - /local/bento-sidebar-card.js?v=20260520-1
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260604-radius-2
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260605-sala-refined-1
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260605-sala-refined-2
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260604-office-sensors-1
     - /local/bruno-ui/cards/bruno-sala-card.js?v=20260604-sala-realistic-1
     - /local/bruno-ui/cards/bruno-office-card.js?v=20260604-room-icons-1

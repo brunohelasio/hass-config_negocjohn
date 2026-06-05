@@ -1060,9 +1060,10 @@ class BrunoSalaSubview extends HTMLElement {
     const varandaLights = lights.filter((light) => light.zone === 'varanda');
     const selectedZone = this._selectedLightZone === 'varanda' ? 'varanda' : 'sala';
     const visibleLights = selectedZone === 'varanda' ? varandaLights : salaLights;
+    const selectedZoneActive = visibleLights.some((light) => !light.placeholder && this._state(light.entity)?.state === 'on');
 
     return `
-      <div class="glass-card lights-card">
+      <div class="glass-card lights-card${selectedZoneActive ? ' is-active' : ''}">
         <div class="module-head">
           <div class="lights-title-row">
             <div class="module-title">Luzes</div>
@@ -1230,7 +1231,7 @@ class BrunoSalaSubview extends HTMLElement {
     const tabs = Object.values(sources);
 
     return `
-      <section class="glass-card media-hub-card is-${BrunoSalaSubview._escapeAttr(current.key)}">
+      <section class="glass-card media-hub-card is-${BrunoSalaSubview._escapeAttr(current.key)}${current.active ? ' is-active' : ''}">
         <div class="module-head media-hub-head">
           <div class="title-with-chip">
             <span class="micro-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
@@ -1258,17 +1259,19 @@ class BrunoSalaSubview extends HTMLElement {
           <div class="media-visual${current.active ? ' is-active' : ''}">
             ${current.visual}
           </div>
-          <div class="media-details">
-            <span class="state-chip${current.active ? ' is-active' : ' is-muted'}"><span></span>${BrunoSalaSubview._escape(current.state)}</span>
-            <strong>${BrunoSalaSubview._escape(current.title)}</strong>
-            <small>${BrunoSalaSubview._escape(current.subtitle)}</small>
-            <em>${BrunoSalaSubview._escape(current.detail)}</em>
-          </div>
-          <div class="media-hub-controls control-row">
-            ${current.controls}
-          </div>
-          <div class="media-hub-extra">
-            ${current.extra}
+          <div class="media-hub-content">
+            <div class="media-details">
+              <span class="state-chip${current.active ? ' is-active' : ' is-muted'}"><span></span>${BrunoSalaSubview._escape(current.state)}</span>
+              <strong>${BrunoSalaSubview._escape(current.title)}</strong>
+              <small>${BrunoSalaSubview._escape(current.subtitle)}</small>
+              <em>${BrunoSalaSubview._escape(current.detail)}</em>
+            </div>
+            <div class="media-hub-controls control-row">
+              ${current.controls}
+            </div>
+            <div class="media-hub-extra">
+              ${current.extra}
+            </div>
           </div>
         </div>
       </section>
@@ -1472,12 +1475,6 @@ class BrunoSalaSubview extends HTMLElement {
               >${BrunoSalaSubview._escape(button.label)}</button>
             `).join('')}
           </div>
-          <div class="climate-trend" aria-hidden="true">
-            <svg viewBox="0 0 260 74" preserveAspectRatio="none">
-              <path class="trend-area" d="M0 54 C56 54 92 53 126 52 C166 50 180 38 206 29 C226 22 242 19 260 19 L260 74 L0 74 Z"></path>
-              <path class="trend-line" d="M0 54 C56 54 92 53 126 52 C166 50 180 38 206 29 C226 22 242 19 260 19"></path>
-            </svg>
-          </div>
         </div>
       </section>
     `;
@@ -1657,42 +1654,93 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
         border-radius: var(--sala-radius);
         overflow: hidden;
-        background: var(--bruno-liquid-surface-off-background);
+        color: var(--text-main);
+        background: var(--bruno-liquid-surface-off-background,
+          radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.18), rgba(255,255,255,0.042) 44%, transparent 73%),
+          radial-gradient(150px 150px at 96% 92%, rgba(var(--accent),0.09), transparent 69%),
+          linear-gradient(180deg, rgba(255,255,255,0.118), rgba(255,255,255,0.034) 36%, rgba(255,255,255,0.056)),
+          linear-gradient(155deg, rgba(18,24,36,0.74), rgba(11,14,22,0.61) 49%, rgba(33,27,25,0.32))
+        );
         backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.68) contrast(1.06));
         -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.68) contrast(1.06));
-        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.18));
-        box-shadow: var(--bruno-liquid-surface-off-shadow);
+        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.13));
+        box-shadow: var(--bruno-liquid-surface-off-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.18),
+          inset 1px 0 0 rgba(255,255,255,0.10),
+          inset -1px -1px 0 rgba(255,255,255,0.026),
+          0 18px 44px rgba(0,0,0,0.27),
+          0 0 24px rgba(110,150,210,0.055)
+        );
+        transition: background var(--bruno-liquid-motion-medium, 220ms cubic-bezier(0.2, 0.8, 0.2, 1)),
+          border-color var(--bruno-liquid-motion-fast, 160ms ease),
+          box-shadow var(--bruno-liquid-motion-medium, 220ms cubic-bezier(0.2, 0.8, 0.2, 1));
       }
 
       .glass-card::before {
         content: "";
         position: absolute;
         inset: 1px;
-        z-index: -1;
+        z-index: 0;
         pointer-events: none;
         border-radius: calc(var(--sala-radius) - 1px);
-        background: var(--bruno-liquid-surface-off-sheen);
-        opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.82);
+        background: var(--bruno-liquid-surface-off-sheen,
+          radial-gradient(78px 62px at 19% 2%, rgba(255,255,255,0.20), transparent 72%),
+          radial-gradient(82px 92px at 94% 18%, rgba(var(--accent),0.12), transparent 74%),
+          linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.00) 35%),
+          linear-gradient(90deg, rgba(255,255,255,0.085), rgba(255,255,255,0.00) 48%)
+        );
+        opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.74);
       }
 
       .glass-card::after {
         content: "";
         position: absolute;
-        inset: 0;
-        z-index: 2;
+        inset: auto 16px 8px 16px;
+        z-index: 0;
+        height: 1px;
         pointer-events: none;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--bruno-liquid-surface-edge-glow);
-        -webkit-mask:
-          linear-gradient(#000 0 0) content-box,
-          linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask:
-          linear-gradient(#000 0 0) content-box,
-          linear-gradient(#000 0 0);
-        mask-composite: exclude;
-        opacity: 0.9;
+        border-radius: 999px;
+        background: var(--bruno-liquid-surface-bottom-line, linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent));
+        opacity: var(--bruno-liquid-surface-bottom-line-opacity, 0);
+      }
+
+      .glass-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .glass-card.is-active {
+        --text-main: rgba(248,251,255,0.96);
+        --text-soft: rgba(255,255,255,0.52);
+        background: var(--bruno-liquid-surface-on-background,
+          radial-gradient(170px 134px at 12% -10%, rgba(255,255,255,0.38), rgba(255,255,255,0.105) 52%, transparent 75%),
+          radial-gradient(165px 148px at 98% 94%, rgba(135,185,245,0.24), transparent 68%),
+          radial-gradient(122px 96px at 27% 18%, rgba(255,232,126,0.105), transparent 71%),
+          linear-gradient(180deg, rgba(255,255,255,0.225), rgba(255,255,255,0.073) 43%, rgba(255,255,255,0.108)),
+          linear-gradient(155deg, rgba(42,51,65,0.72), rgba(23,28,38,0.58) 52%, rgba(13,16,24,0.44))
+        );
+        backdrop-filter: var(--bruno-liquid-surface-on-filter, blur(34px) saturate(1.72) contrast(1.05));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-on-filter, blur(34px) saturate(1.72) contrast(1.05));
+        border-color: var(--bruno-liquid-surface-on-border-color, rgba(255,255,255,0.24));
+        box-shadow: var(--bruno-liquid-surface-on-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.32),
+          inset 1px 0 0 rgba(255,255,255,0.13),
+          inset 0 -1px 0 rgba(0,0,0,0.18),
+          0 0 22px rgba(255,255,255,0.09),
+          0 0 34px rgba(120,170,235,0.10),
+          0 18px 42px rgba(0,0,0,0.28)
+        );
+      }
+
+      .glass-card.is-active::before {
+        background: var(--bruno-liquid-surface-on-sheen,
+          radial-gradient(92px 74px at 17% 0%, rgba(255,255,255,0.34), transparent 72%),
+          radial-gradient(118px 110px at 96% 96%, rgba(120,178,245,0.22), transparent 74%),
+          radial-gradient(80px 58px at 27% 18%, rgba(255,232,126,0.095), transparent 72%),
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.00) 38%),
+          linear-gradient(90deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00) 50%)
+        );
+        opacity: var(--bruno-liquid-surface-on-sheen-opacity, 0.78);
       }
 
       .hero-stage {
@@ -2184,9 +2232,15 @@ class BrunoSalaSubview extends HTMLElement {
       .light-tile {
         position: relative;
         display: grid;
-        grid-template-columns: 1fr auto;
-        grid-template-rows: auto 1fr auto;
-        align-items: start;
+        grid-template-columns: 54px minmax(0, 1fr) auto;
+        grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
+        grid-template-areas:
+          "icon . switch"
+          "icon title switch"
+          "icon status switch"
+          "icon . switch";
+        align-items: center;
+        column-gap: 12px;
         padding: 11px 12px;
         text-align: left;
         border-radius: var(--sala-radius-small);
@@ -2226,9 +2280,10 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .light-icon {
+        grid-area: icon;
         position: relative;
-        width: 34px;
-        height: 34px;
+        width: 48px;
+        height: 48px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -2298,7 +2353,9 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .switch-knob {
-        grid-column: 2;
+        grid-area: switch;
+        align-self: start;
+        justify-self: end;
         width: 34px;
         height: 20px;
         border-radius: 999px;
@@ -2327,17 +2384,25 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .light-tile strong {
-        grid-column: 1 / -1;
+        grid-area: title;
+        min-width: 0;
         align-self: end;
         font-size: 13px;
         line-height: 1.1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .light-tile small {
-        grid-column: 1 / -1;
+        grid-area: status;
+        min-width: 0;
         color: rgba(255,205,95,0.92);
         font-size: 11px;
         font-weight: 700;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .cameras-card {
@@ -3401,11 +3466,18 @@ class BrunoSalaSubview extends HTMLElement {
 
       .light-tile {
         min-height: 0;
-        padding: 11px 12px;
+        grid-template-columns: 58px minmax(0, 1fr) auto;
+        column-gap: 13px;
+        padding: 12px 14px;
+      }
+
+      .light-icon {
+        width: 52px;
+        height: 52px;
       }
 
       .light-tile strong {
-        font-size: 12px;
+        font-size: 12.5px;
       }
 
       .camera-list {
@@ -3533,19 +3605,19 @@ class BrunoSalaSubview extends HTMLElement {
         position: relative;
         z-index: 1;
         display: grid;
-        grid-template-columns: minmax(138px, 0.72fr) minmax(0, 1fr);
-        grid-template-rows: minmax(142px, 1fr) auto auto;
+        grid-template-columns: minmax(178px, 0.82fr) minmax(0, 1fr);
+        grid-template-rows: minmax(196px, 1fr);
         grid-template-areas:
-          "visual details"
-          "controls controls"
-          "extra extra";
-        gap: 10px;
+          "visual content";
+        align-items: stretch;
+        gap: 12px;
       }
 
       .media-visual {
         grid-area: visual;
         position: relative;
         min-height: 0;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -3570,6 +3642,16 @@ class BrunoSalaSubview extends HTMLElement {
         --mdc-icon-size: 64px;
       }
 
+      .media-hub-content {
+        grid-area: content;
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(48px, 1fr) auto;
+        align-content: stretch;
+        gap: 12px;
+      }
+
       .media-ps5-image {
         position: static !important;
         width: 90% !important;
@@ -3579,11 +3661,12 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .media-details {
-        grid-area: details;
+        grid-area: auto;
         min-width: 0;
         display: grid;
-        align-content: center;
+        align-content: start;
         gap: 7px;
+        padding-top: 4px;
       }
 
       .media-details .state-chip {
@@ -3624,19 +3707,32 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .media-hub-controls {
-        grid-area: controls;
+        grid-area: auto;
         display: flex;
         align-items: center;
+        align-self: center;
+        flex-wrap: wrap;
         gap: 8px;
+      }
+
+      .media-hub-controls .control-button {
+        width: 44px;
+        height: 44px;
+      }
+
+      .media-hub-controls .control-button ha-icon {
+        --mdc-icon-size: 19px;
       }
 
       .media-hub-controls .primary-button {
         flex: 1 1 auto;
+        min-height: 42px;
       }
 
       .media-hub-extra {
-        grid-area: extra;
+        grid-area: auto;
         min-width: 0;
+        align-self: end;
       }
 
       .media-extra-info {
@@ -3697,31 +3793,35 @@ class BrunoSalaSubview extends HTMLElement {
         height: auto;
         min-height: 0;
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto auto minmax(70px, 1fr);
-        gap: 10px;
-        align-content: stretch;
+        grid-template-rows: minmax(232px, auto) auto auto auto auto auto;
+        gap: 9px;
+        align-content: start;
       }
 
       .ac-visual {
         position: relative;
-        min-height: 168px;
+        min-height: 232px;
         display: grid;
-        place-items: center;
-        padding: 6px 4px 2px;
+        grid-template-rows: auto auto;
+        align-content: start;
+        justify-items: center;
+        gap: 2px;
+        padding: 0 0 2px;
       }
 
       .ac-image {
-        width: min(92%, 244px);
-        max-height: 132px;
+        width: min(108%, 302px);
+        max-height: 124px;
         object-fit: contain;
+        margin: -6px -2px 0;
         filter: drop-shadow(0 18px 26px rgba(0,0,0,0.38));
       }
 
       .climate-dial {
-        position: absolute;
-        right: 4px;
-        bottom: 0;
-        width: 108px;
+        position: relative;
+        right: auto;
+        bottom: auto;
+        width: 120px;
         aspect-ratio: 1;
         display: grid;
         place-items: center;
@@ -3739,7 +3839,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .climate-dial span {
         color: rgba(255,255,255,0.94);
-        font-size: 23px;
+        font-size: 25px;
         line-height: 1;
         font-weight: 850;
       }
@@ -3766,11 +3866,14 @@ class BrunoSalaSubview extends HTMLElement {
 
       .fan-mode-row {
         grid-template-columns: repeat(4, minmax(0, 1fr));
+        align-items: start;
       }
 
-      .climate-trend {
+      .fan-mode {
+        aspect-ratio: 1;
+        min-height: 0;
         height: auto;
-        min-height: 74px;
+        padding: 0 4px;
       }
 
       @media (max-width: 1180px) {
@@ -3863,12 +3966,14 @@ class BrunoSalaSubview extends HTMLElement {
 
         .media-hub-body {
           grid-template-columns: 1fr;
-          grid-template-rows: minmax(170px, auto) auto auto auto;
+          grid-template-rows: minmax(176px, auto) auto;
           grid-template-areas:
             "visual"
-            "details"
-            "controls"
-            "extra";
+            "content";
+        }
+
+        .media-hub-content {
+          grid-template-rows: auto auto auto;
         }
 
         .camera-list {
@@ -3897,7 +4002,7 @@ class BrunoSalaSubview extends HTMLElement {
         }
 
         .ac-visual {
-          min-height: 190px;
+          min-height: 238px;
         }
       }
     `;

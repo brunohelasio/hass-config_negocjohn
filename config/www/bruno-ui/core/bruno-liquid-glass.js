@@ -1,4 +1,4 @@
-const BRUNO_LIQUID_GLASS_VERSION = '20260520-1';
+const BRUNO_LIQUID_GLASS_VERSION = '20260605-controls-1';
 const BRUNO_LIQUID_GLASS_STYLE_ID = 'bruno-liquid-glass-tokens';
 
 const BRUNO_LIQUID_GLASS_TOKENS = {
@@ -6,11 +6,11 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-warm-accent': '255, 183, 77',
   'bruno-liquid-green-accent': '46, 231, 122',
 
-  'bruno-liquid-card-radius': '22px',
-  'bruno-liquid-card-radius-compact': '20px',
+  'bruno-liquid-card-radius': '24px',
+  'bruno-liquid-card-radius-compact': '22px',
   'bruno-liquid-room-radius': '22px',
-  'bruno-liquid-cell-radius': '14px',
-  'bruno-liquid-control-radius': '16px',
+  'bruno-liquid-cell-radius': '18px',
+  'bruno-liquid-control-radius': '18px',
   'bruno-liquid-dock-radius': '999px',
   'bruno-liquid-rail-radius': '999px',
 
@@ -20,19 +20,20 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   // Shared card skin. Revised for the hero-stage layout: the off state reads
   // as iOS-like frosted glass over the photographic background.
   'bruno-liquid-card-background': `
-    radial-gradient(190px 150px at 18% -6%, rgba(255,255,255,0.18), rgba(255,255,255,0.046) 46%, transparent 72%),
-    radial-gradient(180px 160px at 98% 98%, rgba(var(--accent, var(--bruno-liquid-accent)),0.060), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.048) 42%, rgba(255,255,255,0.064)),
-    rgba(8,12,20,0.40)
+    radial-gradient(220px 162px at 18% -8%, rgba(255,255,255,0.22), rgba(255,255,255,0.060) 45%, transparent 73%),
+    radial-gradient(210px 176px at 99% 99%, rgba(var(--accent, var(--bruno-liquid-accent)),0.072), transparent 72%),
+    linear-gradient(180deg, rgba(255,255,255,0.128), rgba(255,255,255,0.052) 42%, rgba(255,255,255,0.074)),
+    rgba(8,12,20,0.42)
   `,
-  'bruno-liquid-card-filter': 'blur(30px) saturate(1.54) contrast(1.04)',
-  'bruno-liquid-card-border': '1px solid rgba(255,255,255,0.145)',
+  'bruno-liquid-card-filter': 'blur(32px) saturate(1.62) contrast(1.05)',
+  'bruno-liquid-card-border': '1px solid rgba(255,255,255,0.17)',
   'bruno-liquid-card-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.18),
-    inset 1px 0 0 rgba(255,255,255,0.075),
-    inset 0 -1px 0 rgba(255,255,255,0.035),
-    0 18px 42px rgba(0,0,0,0.24),
-    0 0 22px rgba(110,150,210,0.040)
+    inset 0 1px 0 rgba(255,255,255,0.26),
+    inset 1px 0 0 rgba(255,255,255,0.10),
+    inset -1px 0 0 rgba(255,255,255,0.045),
+    inset 0 -1px 0 rgba(255,255,255,0.045),
+    0 20px 46px rgba(0,0,0,0.28),
+    0 0 26px rgba(110,150,210,0.052)
   `,
   'bruno-liquid-card-sheen': `
     radial-gradient(90px 66px at 18% 0%, rgba(255,255,255,0.18), transparent 74%),
@@ -94,11 +95,16 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-rail-sheen-opacity': '0.78',
 
   'bruno-liquid-cell-background': `
-    linear-gradient(180deg, rgba(255,255,255,0.095), rgba(255,255,255,0.040)),
-    linear-gradient(155deg, rgba(26,32,42,0.46), rgba(12,15,22,0.30))
+    radial-gradient(96px 64px at 26% 0%, rgba(255,255,255,0.165), transparent 72%),
+    linear-gradient(180deg, rgba(255,255,255,0.112), rgba(255,255,255,0.044)),
+    linear-gradient(155deg, rgba(28,34,44,0.50), rgba(12,15,22,0.32))
   `,
-  'bruno-liquid-cell-border': '1px solid rgba(255,255,255,0.13)',
-  'bruno-liquid-cell-shadow': 'inset 0 1px 0 rgba(255,255,255,0.08)',
+  'bruno-liquid-cell-border': '1px solid rgba(255,255,255,0.155)',
+  'bruno-liquid-cell-shadow': `
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -1px 0 rgba(0,0,0,0.12),
+    0 8px 18px rgba(0,0,0,0.13)
+  `,
   'bruno-liquid-cell-active-warm-background': `
     radial-gradient(76px 48px at 18% 12%, rgba(255,255,255,0.28), transparent 72%),
     radial-gradient(96px 58px at 94% 82%, rgba(var(--bruno-liquid-warm-accent),0.24), transparent 72%),
@@ -120,6 +126,39 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-chip-border': '1px solid rgba(255,255,255,0.14)',
   'bruno-liquid-chip-shadow': 'inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 20px rgba(0,0,0,0.14)',
   'bruno-liquid-chip-filter': 'blur(18px) saturate(1.28)',
+
+  'bruno-liquid-control-background': `
+    radial-gradient(82px 48px at 50% 0%, rgba(255,255,255,0.18), transparent 72%),
+    linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.044)),
+    rgba(255,255,255,0.052)
+  `,
+  'bruno-liquid-control-border': '1px solid rgba(255,255,255,0.155)',
+  'bruno-liquid-control-shadow': `
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 -1px 0 rgba(0,0,0,0.14),
+    0 8px 18px rgba(0,0,0,0.16)
+  `,
+  'bruno-liquid-control-filter': 'blur(20px) saturate(1.34) contrast(1.04)',
+  'bruno-liquid-control-blue-background': `
+    radial-gradient(circle at 50% 12%, rgba(185,218,255,0.52), transparent 68%),
+    linear-gradient(180deg, rgba(91,159,238,0.78), rgba(33,82,152,0.62))
+  `,
+  'bruno-liquid-control-blue-border': 'rgba(175,214,255,0.48)',
+  'bruno-liquid-control-blue-shadow': `
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 0 -1px 0 rgba(0,0,0,0.16),
+    0 0 22px rgba(96,165,250,0.30)
+  `,
+  'bruno-liquid-control-green-background': `
+    radial-gradient(circle at 50% 13%, rgba(96,255,168,0.28), transparent 70%),
+    linear-gradient(180deg, rgba(38,126,88,0.38), rgba(19,76,54,0.26)),
+    rgba(255,255,255,0.050)
+  `,
+  'bruno-liquid-control-green-border': 'rgba(46,231,122,0.30)',
+  'bruno-liquid-control-green-shadow': `
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    0 0 16px rgba(46,231,122,0.16)
+  `,
 
   'bruno-liquid-selected-blue-background': `
     radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 62%),
@@ -202,6 +241,12 @@ const BRUNO_LIQUID_GLASS_SURFACES = {
     background: 'var(--bruno-liquid-cell-background)',
     border: 'var(--bruno-liquid-cell-border)',
     shadow: 'var(--bruno-liquid-cell-shadow)',
+  },
+  control: {
+    background: 'var(--bruno-liquid-control-background)',
+    border: 'var(--bruno-liquid-control-border)',
+    shadow: 'var(--bruno-liquid-control-shadow)',
+    filter: 'var(--bruno-liquid-control-filter)',
   },
   chip: {
     background: 'var(--bruno-liquid-chip-background)',

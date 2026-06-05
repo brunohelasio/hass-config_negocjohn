@@ -24,7 +24,7 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
     { key: 'lavabo', name: 'Lavabo', icon: 'mdi:toilet', path: 'subview-lavabo', divider_after: true },
     { key: 'casal', name: 'Q. Casal', icon: 'mdi:bed-king', path: 'subview-quarto-casal' },
     { key: 'marina', name: 'Q. Marina', icon: 'mdi:bed-single', path: 'subview-quarto-marina' },
-    { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:crib-outline', path: 'subview-quarto-miguel' },
+    { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:bed-single-outline', path: 'subview-quarto-miguel' },
   ],
   entities: {
     curtain: 'cover.cortina_sala',
@@ -1214,21 +1214,22 @@ class BrunoSalaSubview extends HTMLElement {
           return true;
         });
     };
-    const renderMeta = (items) => items.map((item, index) => (
-      index === 0
-        ? `<small>${BrunoSalaSubview._escape(item)}</small>`
-        : `<em>${BrunoSalaSubview._escape(item)}</em>`
-    )).join('');
-    const tvSource = tv.source || 'HDMI 1';
-    const tvMeta = compactMeta(
-      tv.active ? tvSource : 'Controle remoto disponivel',
-      tv.subtitle && tv.subtitle !== tvSource ? tv.subtitle : '',
+    const metaLine = (...values) => compactMeta(...values).join(' - ');
+    const renderMeta = (value) => (
+      value
+        ? `<small>${BrunoSalaSubview._escape(value)}</small>`
+        : '<small aria-hidden="true">&nbsp;</small>'
     );
-    const spotifyMeta = compactMeta(
+    const tvSource = tv.source || 'HDMI 1';
+    const tvMeta = metaLine(
+      tv.active ? tvSource : 'Controle remoto disponivel',
+      tv.active && tv.subtitle && tv.subtitle !== tvSource ? tv.subtitle : '',
+    );
+    const spotifyMeta = metaLine(
       spotify.subtitle,
       spotify.source || this._config.spotify_device_name || 'Echo Show',
     );
-    const ps5Meta = compactMeta(
+    const ps5Meta = metaLine(
       ps5.active ? 'Console ligado' : 'Pronto para ligar',
       'HDMI 1',
     );
@@ -1546,6 +1547,13 @@ class BrunoSalaSubview extends HTMLElement {
     const fan = String(climate.fan || 'auto').toLowerCase();
     const swingActive = String(climate.swing || '').toLowerCase().includes('ativ');
     const summary = this._climateSummary(climate, target);
+    const dialMode = activeMode === 'cool'
+      ? 'Resfriamento'
+      : activeMode === 'heat'
+        ? 'Aquecimento'
+        : activeMode === 'fan_only'
+          ? 'Ventilacao'
+          : 'Desligado';
     const modeButtonClass = (button) => {
       return activeMode === button.key ? ' is-active' : '';
     };
@@ -1586,9 +1594,9 @@ class BrunoSalaSubview extends HTMLElement {
               <ha-icon class="ac-image-fallback" icon="mdi:air-conditioner"></ha-icon>
             </div>
             <div class="climate-dial">
-              <span>${current}&deg;</span>
-              <strong>${target}&deg;</strong>
-              <small>${BrunoSalaSubview._escape(summary)}</small>
+              <span class="climate-dial-mode">${BrunoSalaSubview._escape(dialMode)}</span>
+              <strong>${current}&deg;</strong>
+              <small>${target === '--' ? BrunoSalaSubview._escape(summary) : `Alvo ${target}&deg;`}</small>
             </div>
           </div>
           <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
@@ -1705,11 +1713,11 @@ class BrunoSalaSubview extends HTMLElement {
         isolation: isolate;
         align-self: center;
         justify-self: center;
-        width: 56px;
+        width: 58px;
         display: grid;
-        grid-auto-rows: 39px;
-        gap: 8px;
-        padding: 13px 8px 14px;
+        grid-auto-rows: 40px;
+        gap: 7px;
+        padding: 12px 8px;
         border-radius: 999px;
         background: var(--bruno-liquid-rail-background,
           radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
@@ -1747,13 +1755,13 @@ class BrunoSalaSubview extends HTMLElement {
       .room-nav-button {
         position: relative;
         z-index: 1;
-        width: 39px;
-        height: 39px;
+        width: 40px;
+        height: 40px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        color: rgba(255,255,255,0.62);
+        color: rgba(255,255,255,0.70);
         background: transparent;
         transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
       }
@@ -1792,7 +1800,8 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .room-nav-button ha-icon {
-        --mdc-icon-size: 19px;
+        --mdc-icon-size: 23px;
+        filter: drop-shadow(0 3px 5px rgba(0,0,0,0.38));
       }
 
       .glass-card {
@@ -2380,7 +2389,7 @@ class BrunoSalaSubview extends HTMLElement {
       .light-tile {
         position: relative;
         display: grid;
-        grid-template-columns: 54px minmax(0, 1fr) auto;
+        grid-template-columns: 58px minmax(0, 1fr) auto;
         grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr);
         grid-template-areas:
           "icon . switch"
@@ -2388,8 +2397,8 @@ class BrunoSalaSubview extends HTMLElement {
           "icon status switch"
           "icon . switch";
         align-items: center;
-        column-gap: 12px;
-        padding: 11px 12px;
+        column-gap: 13px;
+        padding: 11px 14px;
         text-align: left;
         border-radius: var(--sala-radius-small);
         color: rgba(255,255,255,0.86);
@@ -2430,8 +2439,8 @@ class BrunoSalaSubview extends HTMLElement {
       .light-icon {
         grid-area: icon;
         position: relative;
-        width: 48px;
-        height: 48px;
+        width: 54px;
+        height: 54px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -2535,7 +2544,7 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: title;
         min-width: 0;
         align-self: end;
-        font-size: 13px;
+        font-size: 13.5px;
         line-height: 1.1;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -2546,7 +2555,7 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: status;
         min-width: 0;
         color: rgba(255,205,95,0.92);
-        font-size: 11px;
+        font-size: 11.2px;
         font-weight: 700;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -3473,21 +3482,21 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .room-sidebar {
-        width: 56px;
+        width: 58px;
         height: auto;
         max-height: calc(100% - 6px);
-        grid-auto-rows: 39px;
-        gap: 8px;
-        padding: 13px 8px 14px;
+        grid-auto-rows: 40px;
+        gap: 7px;
+        padding: 12px 8px;
       }
 
       .room-nav-button {
-        width: 39px;
-        height: 39px;
-        min-width: 39px;
-        min-height: 39px;
-        max-width: 39px;
-        max-height: 39px;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        max-width: 40px;
+        max-height: 40px;
       }
 
       .hero-stage {
@@ -3620,18 +3629,18 @@ class BrunoSalaSubview extends HTMLElement {
 
       .light-tile {
         min-height: 0;
-        grid-template-columns: 58px minmax(0, 1fr) auto;
-        column-gap: 13px;
-        padding: 12px 14px;
+        grid-template-columns: 66px minmax(0, 1fr) auto;
+        column-gap: 14px;
+        padding: 12px 16px;
       }
 
       .light-icon {
-        width: 52px;
-        height: 52px;
+        width: 60px;
+        height: 60px;
       }
 
       .light-tile strong {
-        font-size: 12.5px;
+        font-size: 13.5px;
       }
 
       .camera-list {
@@ -3781,7 +3790,7 @@ class BrunoSalaSubview extends HTMLElement {
         min-width: 0;
         min-height: 0;
         display: grid;
-        grid-template-rows: auto minmax(110px, 1fr) auto;
+        grid-template-rows: 40px minmax(122px, 1fr) auto;
         align-content: stretch;
         gap: 11px;
       }
@@ -3797,9 +3806,11 @@ class BrunoSalaSubview extends HTMLElement {
       .media-details {
         grid-area: auto;
         min-width: 0;
+        min-height: 40px;
         display: grid;
+        grid-template-rows: 20px 16px;
         align-content: start;
-        gap: 6px;
+        gap: 4px;
         padding-top: 1px;
       }
 
@@ -3811,6 +3822,7 @@ class BrunoSalaSubview extends HTMLElement {
         font-weight: 850;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .media-details small,
@@ -3823,6 +3835,7 @@ class BrunoSalaSubview extends HTMLElement {
         font-weight: 650;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .media-details em {
@@ -3832,7 +3845,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .media-action-stack {
         grid-area: auto;
-        --media-action-size: 48px;
+        --media-action-size: 52px;
         display: grid;
         align-content: center;
         align-self: center;
@@ -4001,19 +4014,19 @@ class BrunoSalaSubview extends HTMLElement {
         height: auto;
         min-height: 0;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(282px, auto) auto auto auto auto auto;
+        grid-template-rows: minmax(320px, auto) auto auto auto auto auto;
         gap: 9px;
         align-content: start;
       }
 
       .ac-visual {
         position: relative;
-        min-height: 282px;
+        min-height: 320px;
         display: grid;
         grid-template-rows: auto auto;
         align-content: start;
         justify-items: center;
-        gap: 10px;
+        gap: 14px;
         padding: 0 0 2px;
       }
 
@@ -4055,42 +4068,83 @@ class BrunoSalaSubview extends HTMLElement {
 
       .climate-dial {
         position: relative;
+        isolation: isolate;
         right: auto;
         bottom: auto;
-        width: 126px;
+        width: 166px;
         aspect-ratio: 1;
         display: grid;
         place-items: center;
         align-content: center;
-        gap: 2px;
+        gap: 5px;
         border-radius: 50%;
         text-align: center;
         background:
-          radial-gradient(circle at 50% 48%, rgba(7,13,24,0.90) 0 54%, transparent 55%),
-          conic-gradient(from 218deg, rgba(96,165,250,0.92), rgba(96,165,250,0.12) 64%, rgba(255,255,255,0.08) 65% 100%);
+          radial-gradient(circle at 50% 44%, rgba(64,158,231,0.24), transparent 35%),
+          radial-gradient(circle at 50% 52%, rgba(16,26,38,0.98) 0 55%, rgba(16,26,38,0.78) 56% 62%, transparent 63%);
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.18),
-          0 14px 28px rgba(0,0,0,0.30);
+          inset 0 1px 0 rgba(255,255,255,0.16),
+          inset 0 -18px 36px rgba(0,0,0,0.18),
+          0 20px 34px rgba(0,0,0,0.34),
+          0 0 28px rgba(66,153,225,0.16);
       }
 
-      .climate-dial span {
-        color: rgba(255,255,255,0.94);
-        font-size: 25px;
+      .climate-dial::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        border-radius: inherit;
+        background:
+          conic-gradient(from 218deg,
+            rgba(74,164,255,0.98) 0deg 244deg,
+            rgba(37,93,143,0.80) 244deg 305deg,
+            rgba(255,255,255,0.09) 305deg 360deg);
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 19px), #000 calc(100% - 18px));
+        mask: radial-gradient(farthest-side, transparent calc(100% - 19px), #000 calc(100% - 18px));
+        filter: drop-shadow(0 0 14px rgba(74,164,255,0.30));
+      }
+
+      .climate-dial::after {
+        content: "";
+        position: absolute;
+        z-index: 2;
+        top: 14px;
+        left: 34px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #eef7ff;
+        box-shadow:
+          0 0 0 3px rgba(74,164,255,0.96),
+          0 0 18px rgba(74,164,255,0.58);
+      }
+
+      .climate-dial > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .climate-dial-mode {
+        color: rgba(96,183,255,0.98);
+        font-size: 12px;
         line-height: 1;
         font-weight: 850;
       }
 
       .climate-dial strong {
-        color: rgba(255,255,255,0.64);
-        font-size: 12px;
+        color: rgba(255,255,255,0.94);
+        font-size: 32px;
         line-height: 1;
+        font-weight: 850;
       }
 
       .climate-dial small {
-        max-width: 78px;
-        color: rgba(255,255,255,0.46);
-        font-size: 9px;
+        max-width: 110px;
+        color: rgba(255,255,255,0.54);
+        font-size: 10px;
         line-height: 1.1;
+        font-weight: 750;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

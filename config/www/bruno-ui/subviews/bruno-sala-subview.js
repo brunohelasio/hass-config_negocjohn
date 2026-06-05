@@ -1436,7 +1436,7 @@ class BrunoSalaSubview extends HTMLElement {
         </div>
         <div class="ac-body">
           <div class="ac-visual">
-            <img class="ac-image" src="${climateImage}" alt="">
+            <div class="ac-image-frame" style="background-image: url('${climateImage}')" aria-hidden="true"></div>
             <div class="climate-dial">
               <span>${current}&deg;</span>
               <strong>${target}&deg;</strong>
@@ -3800,20 +3800,22 @@ class BrunoSalaSubview extends HTMLElement {
 
       .ac-visual {
         position: relative;
-        min-height: 232px;
+        min-height: 230px;
         display: grid;
         grid-template-rows: auto auto;
         align-content: start;
         justify-items: center;
-        gap: 2px;
+        gap: 0;
         padding: 0 0 2px;
       }
 
-      .ac-image {
-        width: min(108%, 302px);
-        max-height: 124px;
-        object-fit: contain;
-        margin: -6px -2px 0;
+      .ac-image-frame {
+        width: 100%;
+        height: 108px;
+        margin: -24px 0 6px;
+        background-repeat: no-repeat;
+        background-position: center -56px;
+        background-size: 270% auto;
         filter: drop-shadow(0 18px 26px rgba(0,0,0,0.38));
       }
 

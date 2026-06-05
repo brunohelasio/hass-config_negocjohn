@@ -9,6 +9,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   fallback_background: '/local/images/sala_estar.jpg',
   refresh_interval: 6500,
   spotify_device_name: 'Echo Show',
+  climate_device_name: 'Gree',
+  climate_image: '/local/images/ar-condicionado-gree.png',
   room_nav: [
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala', active: true },
     { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office' },
@@ -83,6 +85,8 @@ class BrunoSalaSubview extends HTMLElement {
     this._lastMinute = '';
     this._lastActionAt = {};
     this._spotifyToolsOpen = false;
+    this._selectedLightZone = 'sala';
+    this._selectedMediaSource = '';
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
   }
@@ -297,6 +301,21 @@ class BrunoSalaSubview extends HTMLElement {
       .filter((entityId) => this._state(entityId)?.state === 'on').length;
   }
 
+  _activeLightsInZone(zone) {
+    return (this._config.entities.lights || [])
+      .filter((light) => (light.zone || 'sala') === zone)
+      .map((light) => light.entity)
+      .filter(Boolean)
+      .filter((entityId) => this._state(entityId)?.state === 'on').length;
+  }
+
+  _activeLightsByZone() {
+    return {
+      sala: this._activeLightsInZone('sala'),
+      varanda: this._activeLightsInZone('varanda'),
+    };
+  }
+
   _brightnessPercent(entity) {
     if (entity?.attributes?.brightness != null) {
       const value = Math.round(Number(entity.attributes.brightness) / 2.55);
@@ -410,6 +429,36 @@ class BrunoSalaSubview extends HTMLElement {
     };
   }
 
+  _mediaSourceFromAction(action) {
+    if (action === 'toggle-tv' || action === 'tv-play-pause' || action === 'tv-remote') return 'tv';
+    if (String(action || '').startsWith('spotify-')) return 'spotify';
+    if (action === 'toggle-ps5') return 'ps5';
+    return '';
+  }
+
+  _selectedMedia(model) {
+    const valid = ['tv', 'spotify', 'ps5'];
+    if (valid.includes(this._selectedMediaSource)) return this._selectedMediaSource;
+    if (model.spotify?.active) return 'spotify';
+    if (model.tv?.active) return 'tv';
+    if (model.ps5?.active) return 'ps5';
+    return 'tv';
+  }
+
+  _mediaStateLabel(state, fallback = 'Desligada') {
+    const labels = {
+      off: 'Desligada',
+      on: 'Ligada',
+      playing: 'Tocando',
+      paused: 'Pausado',
+      idle: 'Em espera',
+      unavailable: 'Indisponivel',
+      unknown: 'Indisponivel',
+      placeholder: 'Placeholder',
+    };
+    return labels[String(state || '').toLowerCase()] || fallback || state || '--';
+  }
+
   _climateAction(entity) {
     return String(entity?.attributes?.hvac_action || '').toLowerCase();
   }
@@ -458,6 +507,19 @@ class BrunoSalaSubview extends HTMLElement {
     if (!climate.active) return `Off - ${target}\u00b0C`;
     const action = climate.hvacMode === 'heat' ? 'Heat' : this._climateModeLabel(climate.hvacMode);
     return `${action} - ${target}\u00b0C`;
+  }
+
+  _sceneContextLabel(model) {
+    const active = this._state(this._config.entities.active_sensor);
+    const attrs = active?.attributes || {};
+    const configuredLabel = attrs.scene || attrs.active_scene || attrs.mode || attrs.display || attrs.context || attrs.label;
+    if (configuredLabel && !Array.isArray(configuredLabel)) return String(configuredLabel);
+    if (model.spotify?.active) return model.spotify.playing ? 'Spotify tocando' : 'Spotify ativo';
+    if (model.tv?.active) return 'TV ligada';
+    if (model.ps5?.active) return 'PS5 ligado';
+    if (model.climate?.active) return `Clima ${this._climateModeLabel(model.climate.hvacMode)}`;
+    if (model.lights > 0) return 'Sala iluminada';
+    return active?.state === 'yes' ? 'Sala ativa' : 'Sala em repouso';
   }
 
   _fireDomEvent(action) {
@@ -689,6 +751,21 @@ class BrunoSalaSubview extends HTMLElement {
     const action = target.dataset.action;
     const entityId = target.dataset.entity;
 
+    if (action === 'select-light-zone') {
+      this._selectedLightZone = target.dataset.zone === 'varanda' ? 'varanda' : 'sala';
+      this._safeRender();
+      return;
+    }
+    if (action === 'select-media-source') {
+      const source = target.dataset.source;
+      if (['tv', 'spotify', 'ps5'].includes(source)) this._selectedMediaSource = source;
+      this._safeRender();
+      return;
+    }
+
+    const interactedMedia = this._mediaSourceFromAction(action);
+    if (interactedMedia) this._selectedMediaSource = interactedMedia;
+
     if (action === 'navigate') this._navigate(target.dataset.path || this._config.navigation_path);
     if (action === 'more-info') this._moreInfo(entityId);
     if (action === 'cover-open') this._callService('cover.open_cover', { entity_id: this._config.entities.curtain });
@@ -810,6 +887,7 @@ class BrunoSalaSubview extends HTMLElement {
 
     const model = {
       lights: this._activeLightsCount(),
+      lightZones: this._activeLightsByZone(),
       curtainPosition: this._curtainPosition(),
       cameras: this._camerasModel(),
       tv: this._tvModel(),
@@ -824,20 +902,21 @@ class BrunoSalaSubview extends HTMLElement {
       <main class="sala-subview">
         ${this._renderRoomSidebar()}
 
-        <section class="hero-panel">
-          ${this._renderHero(model)}
+        <section class="left-column">
+          <section class="hero-panel">
+            ${this._renderHero(model)}
+          </section>
+          ${this._renderCameras(model)}
         </section>
 
-        <section class="side-panel">
+        <section class="right-column">
           ${this._renderStatusRail(model)}
-          ${this._renderLights(model)}
+          <section class="right-control-grid">
+            ${this._renderLights(model)}
+            ${this._renderMediaHub(model)}
+            ${this._renderAC(model)}
+          </section>
         </section>
-
-        ${this._renderCameras(model)}
-        ${this._renderTV(model)}
-        ${this._renderSpotify(model)}
-        ${this._renderPS5(model)}
-        ${this._renderAC(model)}
       </main>
     `;
 
@@ -870,6 +949,10 @@ class BrunoSalaSubview extends HTMLElement {
           <div class="hero-headline">
             <p class="hero-date-line">${BrunoSalaSubview._escape(this._dateLine())}</p>
             <div class="hero-clock" data-clock>${this._lastMinute}</div>
+            <button type="button" class="scene-pill" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(this._config.entities.active_sensor)}">
+              <ha-icon icon="mdi:movie-open-star"></ha-icon>
+              <span>${BrunoSalaSubview._escape(this._sceneContextLabel(model))}</span>
+            </button>
           </div>
 
           <div class="curtain-dock">
@@ -926,8 +1009,9 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _renderStatusRail(model) {
+    const zones = model.lightZones || { sala: 0, varanda: 0 };
     const status = [
-      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: 'Acesas', tone: 'amber' },
+      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `Sala ${zones.sala} - Varanda ${zones.varanda}`, tone: 'amber' },
       { icon: 'mdi:thermometer', value: this._temperatureLabel(), label: 'Temperatura', tone: 'amber' },
       { icon: 'mdi:water-percent', value: this._humidityLabel(), label: 'Umidade', tone: 'blue' },
       { icon: 'mdi:router-wireless', value: 'Roteador', label: this._networkLabel(this._config.entities.router), tone: 'neutral' },
@@ -943,7 +1027,6 @@ class BrunoSalaSubview extends HTMLElement {
               <strong>${BrunoSalaSubview._escape(item.value)}</strong>
               <span>${BrunoSalaSubview._escape(item.label)}</span>
             </div>
-            <ha-icon class="status-chevron" icon="mdi:chevron-right"></ha-icon>
           </div>
         `).join('')}
       </div>
@@ -975,12 +1058,18 @@ class BrunoSalaSubview extends HTMLElement {
     const lights = this._config.entities.lights || [];
     const salaLights = lights.filter((light) => (light.zone || 'sala') === 'sala');
     const varandaLights = lights.filter((light) => light.zone === 'varanda');
+    const selectedZone = this._selectedLightZone === 'varanda' ? 'varanda' : 'sala';
+    const visibleLights = selectedZone === 'varanda' ? varandaLights : salaLights;
 
     return `
       <div class="glass-card lights-card">
         <div class="module-head">
-          <div>
+          <div class="lights-title-row">
             <div class="module-title">Luzes</div>
+            <div class="zone-toggle" role="tablist" aria-label="Zona das luzes">
+              <button type="button" class="${selectedZone === 'sala' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="sala">Sala</button>
+              <button type="button" class="${selectedZone === 'varanda' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="varanda">Varanda</button>
+            </div>
           </div>
           <div class="head-actions">
             <button type="button" class="chip-button is-active" data-action="lights-on">Todas acesas</button>
@@ -988,20 +1077,8 @@ class BrunoSalaSubview extends HTMLElement {
           </div>
         </div>
 
-        <div class="lights-groups">
-          <section class="light-group">
-            <span class="light-group-label">Sala</span>
-            <div class="light-group-grid">
-              ${salaLights.map((light) => this._renderLightTile(light)).join('')}
-            </div>
-          </section>
-          <span class="lights-divider" aria-hidden="true"></span>
-          <section class="light-group">
-            <span class="light-group-label">Varanda</span>
-            <div class="light-group-grid">
-              ${varandaLights.map((light) => this._renderLightTile(light)).join('')}
-            </div>
-          </section>
+        <div class="lights-single-grid">
+          ${visibleLights.map((light) => this._renderLightTile(light)).join('')}
         </div>
       </div>
     `;
@@ -1009,7 +1086,7 @@ class BrunoSalaSubview extends HTMLElement {
 
   _renderCameras(model) {
     const active = model.cameras.activeCamera || model.cameras.cameras[0];
-    const secondary = model.cameras.cameras.find((camera) => camera.entity !== active?.entity) || model.cameras.cameras[1];
+    const cameras = model.cameras.cameras || [];
 
     return `
       <section class="glass-card cameras-card">
@@ -1023,22 +1100,21 @@ class BrunoSalaSubview extends HTMLElement {
           <div class="online-chip"><span></span>${model.cameras.onlineCount}/${model.cameras.cameras.length} online</div>
         </div>
 
-        <div class="camera-stage">
-          <button type="button" class="camera-main" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(active?.entity || '')}">
-            ${this._cameraFrame(active)}
-            <div class="camera-row-copy">
-              <strong>${BrunoSalaSubview._escape(active?.name || 'Camera')}</strong>
-              <span><span class="live-dot"></span>${BrunoSalaSubview._escape(active?.status || 'Online')}</span>
+        <div class="camera-stage camera-list">
+          ${cameras.map((camera) => `
+            <div class="camera-tile${camera.entity === active?.entity ? ' is-selected' : ''}">
+              <button type="button" class="camera-main" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(camera.entity || '')}">
+                ${this._cameraFrame(camera)}
+                <div class="camera-row-copy">
+                  <strong>${BrunoSalaSubview._escape(camera.name || 'Camera')}</strong>
+                  <span><span class="live-dot"></span>${BrunoSalaSubview._escape(camera.status || 'Online')}</span>
+                </div>
+              </button>
+              <button type="button" class="camera-select-button" data-action="select-camera" data-entity="${BrunoSalaSubview._escapeAttr(camera.entity || '')}" aria-label="Selecionar ${BrunoSalaSubview._escapeAttr(camera.short_name || camera.name || 'camera')}">
+                <ha-icon icon="mdi:chevron-right"></ha-icon>
+              </button>
             </div>
-            <ha-icon class="camera-chevron" icon="mdi:chevron-right"></ha-icon>
-          </button>
-
-          ${secondary ? `
-            <button type="button" class="camera-thumb-overlay" data-action="select-camera" data-entity="${BrunoSalaSubview._escapeAttr(secondary.entity)}" aria-label="Expandir ${BrunoSalaSubview._escapeAttr(secondary.name)}">
-              ${this._cameraFrame(secondary)}
-              <span>${BrunoSalaSubview._escape(secondary.short_name || secondary.name)}</span>
-            </button>
-          ` : ''}
+          `).join('')}
         </div>
       </section>
     `;
@@ -1059,6 +1135,143 @@ class BrunoSalaSubview extends HTMLElement {
         ${image ? `<img src="${BrunoSalaSubview._escapeAttr(image)}" data-camera-src-base="${BrunoSalaSubview._escapeAttr(base)}" data-camera-entity="${BrunoSalaSubview._escapeAttr(camera.entity)}" alt="">` : ''}
         <div class="camera-placeholder"><ha-icon icon="mdi:video-outline"></ha-icon></div>
       </div>
+    `;
+  }
+
+  _renderMediaHub(model) {
+    const selected = this._selectedMedia(model);
+    const tv = model.tv;
+    const spotify = model.spotify;
+    const ps5 = model.ps5;
+    const tvPoster = tv.poster ? BrunoSalaSubview._resolvePicture(tv.poster) : '';
+    const spotifyArtwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
+    const tvVolume = tv.volume == null ? 60 : tv.volume;
+    const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
+    const spotifyControls = this._spotifyToolsOpen
+      ? `
+        <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
+        <button type="button" class="control-button is-tool" data-action="spotify-devices" title="Dispositivos"><ha-icon icon="mdi:speaker-wireless"></ha-icon></button>
+        <button type="button" class="control-button is-tool" data-action="spotify-library" title="Playlists e fila"><ha-icon icon="mdi:playlist-music"></ha-icon></button>
+        <button type="button" class="control-button is-tool" data-action="spotify-plus" title="Mais opcoes"><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
+      `
+      : `
+        <button type="button" class="control-button" data-action="spotify-prev"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
+        <button type="button" class="control-button is-main" data-action="spotify-play-pause"><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-next"><ha-icon icon="mdi:skip-next"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-more" title="Mais opcoes"><ha-icon icon="mdi:plus"></ha-icon></button>
+      `;
+    const sources = {
+      tv: {
+        key: 'tv',
+        label: 'TV',
+        icon: 'mdi:television-classic',
+        active: tv.active,
+        state: this._mediaStateLabel(tv.state),
+        title: tv.title || (tv.active ? 'TV ligada' : 'TV desligada'),
+        subtitle: tv.active ? (tv.source || 'Android TV') : 'Controle remoto disponivel',
+        detail: tv.subtitle || tv.source || 'Android TV',
+        visual: tvPoster
+          ? `<img src="${BrunoSalaSubview._escapeAttr(tvPoster)}" alt="">`
+          : '<ha-icon icon="mdi:television-classic"></ha-icon>',
+        controls: `
+          <button type="button" class="control-button" data-action="toggle-tv"><ha-icon icon="mdi:power"></ha-icon></button>
+          <button type="button" class="control-button" data-action="tv-remote"><ha-icon icon="mdi:remote-tv"></ha-icon></button>
+          <button type="button" class="control-button" data-action="tv-play-pause"><ha-icon icon="mdi:play-pause"></ha-icon></button>
+        `,
+        extra: `
+          <div class="volume-row">
+            <ha-icon icon="mdi:volume-medium"></ha-icon>
+            <input type="range" min="0" max="100" value="${tvVolume}" data-action="tv-volume" aria-label="Volume da TV">
+            <strong>${tvVolume}%</strong>
+          </div>
+        `,
+      },
+      spotify: {
+        key: 'spotify',
+        label: 'Spotify',
+        icon: 'mdi:spotify',
+        active: spotify.active,
+        state: spotify.playing ? 'Tocando' : this._mediaStateLabel(spotify.state),
+        title: spotify.title || 'SpotifyPlus',
+        subtitle: spotify.subtitle || spotify.source || this._config.spotify_device_name,
+        detail: spotify.source || this._config.spotify_device_name || 'Echo Show',
+        visual: spotifyArtwork
+          ? `<img src="${BrunoSalaSubview._escapeAttr(spotifyArtwork)}" alt="">`
+          : '<ha-icon icon="mdi:music-note"></ha-icon>',
+        controls: spotifyControls,
+        extra: `
+          <div class="volume-row spotify-volume">
+            <ha-icon icon="mdi:volume-medium"></ha-icon>
+            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify">
+            <strong>${spotifyVolume}%</strong>
+          </div>
+        `,
+      },
+      ps5: {
+        key: 'ps5',
+        label: 'PS5',
+        icon: 'mdi:sony-playstation',
+        active: ps5.active,
+        state: ps5.active ? 'Online' : (ps5.configured ? 'Offline' : 'Placeholder'),
+        title: ps5.title,
+        subtitle: ps5.active ? 'HDMI 1 - console ligado' : 'HDMI 1 - pronto para ligar',
+        detail: ps5.chip,
+        visual: ps5.image
+          ? `<img class="media-ps5-image" src="${BrunoSalaSubview._escapeAttr(ps5.image)}" alt="">`
+          : '<ha-icon icon="mdi:sony-playstation"></ha-icon>',
+        controls: `
+          <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>${ps5.active ? 'Desligar' : 'Ligar'}</button>
+          <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(ps5.entityId || '')}" ${ps5.configured ? '' : 'disabled'}><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
+        `,
+        extra: '<div class="media-extra-info"><span>Entrada</span><strong>HDMI 1</strong></div>',
+      },
+    };
+    const current = sources[selected] || sources.tv;
+    const tabs = Object.values(sources);
+
+    return `
+      <section class="glass-card media-hub-card is-${BrunoSalaSubview._escapeAttr(current.key)}">
+        <div class="module-head media-hub-head">
+          <div class="title-with-chip">
+            <span class="micro-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
+            <div>
+              <div class="module-title">Hub de midia</div>
+            </div>
+          </div>
+          <div class="media-tabs" role="tablist" aria-label="Fonte de midia">
+            ${tabs.map((source) => `
+              <button
+                type="button"
+                class="${source.key === current.key ? 'is-selected' : ''}${source.active ? ' is-source-active' : ''}"
+                data-action="select-media-source"
+                data-source="${source.key}"
+              >
+                <span class="source-dot"></span>
+                <span>${BrunoSalaSubview._escape(source.label)}</span>
+                <small>${BrunoSalaSubview._escape(source.state)}</small>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="media-hub-body">
+          <div class="media-visual${current.active ? ' is-active' : ''}">
+            ${current.visual}
+          </div>
+          <div class="media-details">
+            <span class="state-chip${current.active ? ' is-active' : ' is-muted'}"><span></span>${BrunoSalaSubview._escape(current.state)}</span>
+            <strong>${BrunoSalaSubview._escape(current.title)}</strong>
+            <small>${BrunoSalaSubview._escape(current.subtitle)}</small>
+            <em>${BrunoSalaSubview._escape(current.detail)}</em>
+          </div>
+          <div class="media-hub-controls control-row">
+            ${current.controls}
+          </div>
+          <div class="media-hub-extra">
+            ${current.extra}
+          </div>
+        </div>
+      </section>
     `;
   }
 
@@ -1183,18 +1396,19 @@ class BrunoSalaSubview extends HTMLElement {
     const targetNumber = Number.isFinite(Number(climate.target)) ? Math.round(Number(climate.target)) : 22;
     const current = climate.current == null ? '--' : this._formatNumber(climate.current, 1);
     const climateEntity = BrunoSalaSubview._escapeAttr(this._config.entities.climate);
+    const deviceName = BrunoSalaSubview._escape(this._config.climate_device_name || 'Ar condicionado');
+    const climateImage = BrunoSalaSubview._escapeAttr(this._config.climate_image || '/local/images/ar-condicionado-gree.png');
     const activeMode = climate.hvacMode || 'off';
     const fan = String(climate.fan || 'auto').toLowerCase();
     const swingActive = String(climate.swing || '').toLowerCase().includes('ativ');
+    const summary = this._climateSummary(climate, target);
     const modeButtonClass = (button) => {
-      if (button.key === 'off') return climate.active ? ' is-power-on' : '';
       return activeMode === button.key ? ' is-active' : '';
     };
     const modeButtons = [
-      { key: 'heat', icon: 'mdi:fire', label: 'Heat' },
       { key: 'cool', icon: 'mdi:snowflake', label: 'Cool' },
+      { key: 'heat', icon: 'mdi:fire', label: 'Heat' },
       { key: 'fan_only', icon: 'mdi:fan', label: 'Fan' },
-      { key: 'off', icon: 'mdi:power', label: 'Power', action: 'toggle-climate' },
     ];
     const fanButtons = [
       { key: 'low', label: 'Low', active: fan.includes('low') || fan.includes('baixo') },
@@ -1210,11 +1424,22 @@ class BrunoSalaSubview extends HTMLElement {
             <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
             <div>
               <div class="module-title">Ar Condicionado</div>
+              <div class="module-subtitle">${deviceName}</div>
             </div>
           </div>
-          <span class="temperature-pill">${current}&deg;</span>
+          <button type="button" class="power-button${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado">
+            <ha-icon icon="mdi:power"></ha-icon>
+          </button>
         </div>
         <div class="ac-body">
+          <div class="ac-visual">
+            <img class="ac-image" src="${climateImage}" alt="">
+            <div class="climate-dial">
+              <span>${current}&deg;</span>
+              <strong>${target}&deg;</strong>
+              <small>${BrunoSalaSubview._escape(summary)}</small>
+            </div>
+          </div>
           <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
             <input type="range" min="16" max="30" value="${targetNumber}" data-action="climate-target">
           </label>
@@ -2955,6 +3180,724 @@ class BrunoSalaSubview extends HTMLElement {
         .tv-body,
         .ac-body {
           grid-template-columns: 1fr;
+        }
+      }
+
+      .sala-subview {
+        --sala-gap: 12px;
+        --sala-shell-height: min(696px, calc(100vh - 72px));
+        height: 100vh;
+        min-height: 100vh;
+        grid-template-columns: 54px minmax(420px, 540px) minmax(630px, 1fr);
+        grid-template-rows: var(--sala-shell-height);
+        grid-template-areas: "frame-left left right";
+        align-content: center;
+        align-items: stretch;
+        gap: var(--sala-gap);
+        padding: clamp(20px, 4.5vh, 38px) 10px;
+      }
+
+      .left-column,
+      .right-column {
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+      }
+
+      .left-column {
+        grid-area: left;
+        display: grid;
+        grid-template-rows: minmax(300px, 1.02fr) minmax(230px, 0.82fr);
+        gap: var(--sala-gap);
+      }
+
+      .right-column {
+        grid-area: right;
+        display: grid;
+        grid-template-rows: 64px minmax(0, 1fr);
+        gap: var(--sala-gap);
+      }
+
+      .right-control-grid {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(292px, 0.55fr);
+        grid-template-rows: minmax(236px, 0.9fr) minmax(260px, 1.1fr);
+        grid-template-areas:
+          "lights ac"
+          "media ac";
+        gap: var(--sala-gap);
+      }
+
+      .hero-panel,
+      .cameras-card,
+      .lights-card,
+      .media-hub-card,
+      .ac-card {
+        min-width: 0;
+        min-height: 0;
+      }
+
+      .hero-panel {
+        grid-area: auto;
+      }
+
+      .cameras-card {
+        grid-area: auto;
+      }
+
+      .lights-card {
+        grid-area: lights;
+      }
+
+      .media-hub-card {
+        grid-area: media;
+      }
+
+      .ac-card {
+        grid-area: ac;
+      }
+
+      .room-sidebar {
+        width: 52px;
+        grid-auto-rows: 36px;
+        gap: 7px;
+        padding: 12px 7px;
+      }
+
+      .room-nav-button {
+        width: 36px;
+        height: 36px;
+      }
+
+      .hero-stage {
+        overflow: visible;
+      }
+
+      .hero-content {
+        padding: 15px 18px 14px;
+        gap: 8px;
+      }
+
+      .hero-headline {
+        margin-top: 12px;
+      }
+
+      .hero-date-line {
+        margin-bottom: 6px;
+      }
+
+      .hero-clock {
+        margin-top: 8px;
+        font-size: clamp(54px, 7.1vh, 74px);
+      }
+
+      .scene-pill {
+        width: fit-content;
+        max-width: min(250px, 100%);
+        min-height: 30px;
+        margin-top: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.88);
+        font-size: 11px;
+        font-weight: 800;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 24px rgba(0,0,0,0.20);
+      }
+
+      .scene-pill ha-icon {
+        --mdc-icon-size: 15px;
+        color: rgb(255,205,95);
+      }
+
+      .curtain-dock {
+        width: min(520px, 100%);
+        gap: 8px;
+      }
+
+      .curtain-actions {
+        grid-template-columns: repeat(4, minmax(70px, 1fr)) minmax(112px, auto);
+      }
+
+      .preset-button {
+        min-height: 46px;
+      }
+
+      .status-rail {
+        min-height: 64px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .status-item {
+        grid-template-columns: auto minmax(0, 1fr);
+        padding: 0 12px;
+      }
+
+      .status-chevron {
+        display: none;
+      }
+
+      .lights-card {
+        gap: 10px;
+      }
+
+      .lights-card .module-head {
+        align-items: start;
+        min-height: 34px;
+      }
+
+      .lights-title-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .zone-toggle,
+      .media-tabs {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px;
+        background: rgba(255,255,255,0.065);
+        border: 1px solid rgba(255,255,255,0.11);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      }
+
+      .zone-toggle button {
+        min-height: 26px;
+        padding: 0 10px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.62);
+        background: transparent;
+        font-size: 10px;
+        font-weight: 900;
+      }
+
+      .zone-toggle button.is-active {
+        color: rgba(255,255,255,0.96);
+        background: rgba(255,255,255,0.12);
+      }
+
+      .lights-single-grid {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .lights-groups,
+      .lights-divider,
+      .light-group-label {
+        display: none;
+      }
+
+      .light-tile {
+        min-height: 0;
+        padding: 11px 12px;
+      }
+
+      .light-tile strong {
+        font-size: 12px;
+      }
+
+      .camera-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .camera-tile {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        border-radius: var(--sala-radius-small);
+      }
+
+      .camera-tile.is-selected {
+        box-shadow: 0 0 0 1px rgba(96,190,255,0.22);
+      }
+
+      .camera-main {
+        height: 100%;
+      }
+
+      .camera-thumb-overlay {
+        display: none;
+      }
+
+      .camera-select-button {
+        position: absolute;
+        z-index: 4;
+        top: 12px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        color: rgba(255,255,255,0.82);
+        background: rgba(255,255,255,0.10);
+        border: 1px solid rgba(255,255,255,0.14);
+      }
+
+      .camera-select-button ha-icon {
+        --mdc-icon-size: 18px;
+      }
+
+      .camera-row-copy {
+        left: 13px;
+        right: 54px;
+        bottom: 13px;
+      }
+
+      .camera-row-copy strong {
+        font-size: 15px;
+        line-height: 1.08;
+      }
+
+      .media-hub-card {
+        padding: 14px;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .media-hub-head {
+        align-items: start;
+        min-height: 38px;
+        margin-bottom: 0;
+      }
+
+      .media-tabs {
+        gap: 2px;
+        max-width: 62%;
+      }
+
+      .media-tabs button {
+        min-width: 0;
+        min-height: 30px;
+        display: grid;
+        grid-template-columns: auto auto;
+        grid-template-rows: auto auto;
+        align-items: center;
+        column-gap: 5px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.58);
+        background: transparent;
+        font-size: 10px;
+        font-weight: 900;
+      }
+
+      .media-tabs button.is-selected {
+        color: rgba(255,255,255,0.96);
+        background: rgba(255,255,255,0.12);
+      }
+
+      .media-tabs small {
+        grid-column: 2;
+        max-width: 66px;
+        color: rgba(255,255,255,0.46);
+        font-size: 8px;
+        line-height: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .source-dot {
+        grid-row: 1 / 3;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.24);
+      }
+
+      .media-tabs button.is-source-active .source-dot {
+        background: #2ee77a;
+        box-shadow: 0 0 10px rgba(46,231,122,0.52);
+      }
+
+      .media-hub-body {
+        min-height: 0;
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(138px, 0.72fr) minmax(0, 1fr);
+        grid-template-rows: minmax(142px, 1fr) auto auto;
+        grid-template-areas:
+          "visual details"
+          "controls controls"
+          "extra extra";
+        gap: 10px;
+      }
+
+      .media-visual {
+        grid-area: visual;
+        position: relative;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: var(--sala-radius-small);
+        color: rgba(255,255,255,0.22);
+        background:
+          radial-gradient(circle at 52% 34%, rgba(96,165,250,0.15), transparent 54%),
+          rgba(5,10,20,0.74);
+        border: 1px solid rgba(255,255,255,0.10);
+      }
+
+      .media-visual img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .media-visual ha-icon {
+        --mdc-icon-size: 64px;
+      }
+
+      .media-ps5-image {
+        position: static !important;
+        width: 90% !important;
+        height: 92% !important;
+        object-fit: contain !important;
+        filter: drop-shadow(0 18px 26px rgba(0,0,0,0.42));
+      }
+
+      .media-details {
+        grid-area: details;
+        min-width: 0;
+        display: grid;
+        align-content: center;
+        gap: 7px;
+      }
+
+      .media-details .state-chip {
+        width: fit-content;
+        max-width: 100%;
+      }
+
+      .media-details .state-chip.is-muted span {
+        background: rgba(255,255,255,0.28);
+        box-shadow: none;
+      }
+
+      .media-details strong {
+        min-width: 0;
+        color: white;
+        font-size: 17px;
+        line-height: 1.08;
+        font-weight: 850;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .media-details small,
+      .media-details em {
+        min-width: 0;
+        color: var(--text-soft);
+        font-size: 12px;
+        line-height: 1.25;
+        font-style: normal;
+        font-weight: 650;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .media-details em {
+        color: rgba(255,255,255,0.48);
+        font-size: 11px;
+      }
+
+      .media-hub-controls {
+        grid-area: controls;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .media-hub-controls .primary-button {
+        flex: 1 1 auto;
+      }
+
+      .media-hub-extra {
+        grid-area: extra;
+        min-width: 0;
+      }
+
+      .media-extra-info {
+        min-height: 34px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        padding: 0 12px;
+        border-radius: 12px;
+        color: var(--text-soft);
+        background: rgba(255,255,255,0.052);
+        border: 1px solid rgba(255,255,255,0.10);
+      }
+
+      .media-extra-info strong {
+        color: rgba(255,255,255,0.88);
+        text-align: right;
+      }
+
+      .ac-card {
+        padding: 14px;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .ac-head {
+        margin-bottom: 0;
+      }
+
+      .power-button {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        color: rgba(255,255,255,0.74);
+        background: rgba(255,255,255,0.075);
+        border: 1px solid rgba(255,255,255,0.13);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.09);
+      }
+
+      .power-button.is-active {
+        color: white;
+        background:
+          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
+          rgba(38,92,138,0.38);
+        border-color: rgba(96,165,250,0.32);
+      }
+
+      .power-button ha-icon {
+        --mdc-icon-size: 18px;
+      }
+
+      .ac-body {
+        height: auto;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto minmax(70px, 1fr);
+        gap: 10px;
+        align-content: stretch;
+      }
+
+      .ac-visual {
+        position: relative;
+        min-height: 168px;
+        display: grid;
+        place-items: center;
+        padding: 6px 4px 2px;
+      }
+
+      .ac-image {
+        width: min(92%, 244px);
+        max-height: 132px;
+        object-fit: contain;
+        filter: drop-shadow(0 18px 26px rgba(0,0,0,0.38));
+      }
+
+      .climate-dial {
+        position: absolute;
+        right: 4px;
+        bottom: 0;
+        width: 108px;
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 2px;
+        border-radius: 50%;
+        text-align: center;
+        background:
+          radial-gradient(circle at 50% 48%, rgba(7,13,24,0.90) 0 54%, transparent 55%),
+          conic-gradient(from 218deg, rgba(96,165,250,0.92), rgba(96,165,250,0.12) 64%, rgba(255,255,255,0.08) 65% 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.18),
+          0 14px 28px rgba(0,0,0,0.30);
+      }
+
+      .climate-dial span {
+        color: rgba(255,255,255,0.94);
+        font-size: 23px;
+        line-height: 1;
+        font-weight: 850;
+      }
+
+      .climate-dial strong {
+        color: rgba(255,255,255,0.64);
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .climate-dial small {
+        max-width: 78px;
+        color: rgba(255,255,255,0.46);
+        font-size: 9px;
+        line-height: 1.1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .climate-mode-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .fan-mode-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .climate-trend {
+        height: auto;
+        min-height: 74px;
+      }
+
+      @media (max-width: 1180px) {
+        :host {
+          height: auto;
+          min-height: 100vh;
+          overflow: visible;
+        }
+
+        .sala-subview {
+          height: auto;
+          min-height: 100vh;
+          overflow: auto;
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto;
+          grid-template-areas:
+            "left"
+            "right";
+          padding: 10px;
+        }
+
+        .room-sidebar {
+          display: none;
+        }
+
+        .left-column {
+          height: auto;
+          grid-template-rows: minmax(340px, 42vh) minmax(270px, 34vh);
+        }
+
+        .right-column {
+          height: auto;
+          grid-template-rows: auto auto;
+        }
+
+        .right-control-grid {
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+          grid-template-rows: minmax(236px, auto) minmax(300px, auto);
+          grid-template-areas:
+            "lights ac"
+            "media ac";
+        }
+
+        .status-rail {
+          min-height: 68px;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .sala-subview {
+          grid-template-columns: 1fr;
+          grid-template-areas:
+            "left"
+            "right";
+          padding: 8px;
+        }
+
+        .left-column {
+          grid-template-rows: minmax(430px, auto) minmax(390px, auto);
+        }
+
+        .right-control-grid {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto;
+          grid-template-areas:
+            "lights"
+            "media"
+            "ac";
+        }
+
+        .status-rail {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          min-height: auto;
+        }
+
+        .status-item {
+          min-height: 58px;
+        }
+
+        .media-tabs {
+          max-width: 100%;
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .media-hub-head {
+          display: grid;
+          gap: 10px;
+        }
+
+        .media-hub-body {
+          grid-template-columns: 1fr;
+          grid-template-rows: minmax(170px, auto) auto auto auto;
+          grid-template-areas:
+            "visual"
+            "details"
+            "controls"
+            "extra";
+        }
+
+        .camera-list {
+          grid-template-columns: 1fr;
+        }
+
+        .lights-title-row,
+        .module-head {
+          flex-wrap: wrap;
+        }
+
+        .head-actions {
+          width: 100%;
+        }
+
+        .head-actions .chip-button {
+          flex: 1 1 0;
+        }
+
+        .curtain-actions {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .curtain-pill {
+          grid-column: 1 / -1;
+        }
+
+        .ac-visual {
+          min-height: 190px;
         }
       }
     `;

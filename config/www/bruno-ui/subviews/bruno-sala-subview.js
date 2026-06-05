@@ -1082,10 +1082,10 @@ class BrunoSalaSubview extends HTMLElement {
               <button type="button" class="preset-button" data-action="cover-close">
                 <ha-icon icon="mdi:curtains-closed"></ha-icon><span>Fechada</span>
               </button>
-              <button type="button" class="preset-button is-primary" data-action="cover-stop">
-                <ha-icon icon="mdi:home-automation"></ha-icon><span>Automatica</span>
+              <button type="button" class="preset-button" data-action="cover-stop">
+                <ha-icon icon="mdi:pause"></ha-icon><span>Parar</span>
               </button>
-              <span class="curtain-pill">Automatica - ${model.curtainPosition}%</span>
+              <span class="curtain-pill">Posicao - ${model.curtainPosition}%</span>
             </div>
             <div class="curtain-progress">
               <span style="width:${model.curtainPosition}%"></span>
@@ -1181,11 +1181,9 @@ class BrunoSalaSubview extends HTMLElement {
     const salaLights = lights.filter((light) => (light.zone || 'sala') === 'sala');
     const varandaLights = lights.filter((light) => light.zone === 'varanda');
     const selectedZone = this._selectedLightZone === 'varanda' ? 'varanda' : 'sala';
-    const visibleLights = selectedZone === 'varanda' ? varandaLights : salaLights;
-    const selectedZoneActive = visibleLights.some((light) => !light.placeholder && this._state(light.entity)?.state === 'on');
 
     return `
-      <div class="glass-card lights-card${selectedZoneActive ? ' is-active' : ''}">
+      <div class="glass-card lights-card">
         <div class="module-head">
           <div class="lights-title-row">
             <div class="module-title">Luzes</div>
@@ -1431,7 +1429,7 @@ class BrunoSalaSubview extends HTMLElement {
     const tabs = Object.values(sources);
 
     return `
-      <section class="glass-card media-hub-card is-${BrunoSalaSubview._escapeAttr(current.key)}${current.active ? ' is-active' : ''}">
+      <section class="glass-card media-hub-card is-${BrunoSalaSubview._escapeAttr(current.key)}">
         <div class="module-head media-hub-head">
           <div class="title-with-chip">
             <span class="micro-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
@@ -1600,6 +1598,152 @@ class BrunoSalaSubview extends HTMLElement {
     `;
   }
 
+  _renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode) {
+    const cx = 200;
+    const cy = 200;
+    const startAngle = 225;
+    const endAngle = 495;
+    const sweep = endAngle - startAngle;
+    const trackRadius = 136;
+    const tickOuterRadius = 160;
+    const targetValue = Number(climate.target);
+    const safeMin = Number.isFinite(Number(minTarget)) ? Number(minTarget) : 16;
+    const safeMax = Number.isFinite(Number(maxTarget)) ? Number(maxTarget) : 30;
+    const safeTarget = Number.isFinite(targetValue)
+      ? Math.max(safeMin, Math.min(safeMax, targetValue))
+      : safeMin + ((safeMax - safeMin) / 2);
+    const range = Math.max(1, safeMax - safeMin);
+    const progress = Math.max(0, Math.min(1, (safeTarget - safeMin) / range));
+    const currentAngle = startAngle + (sweep * progress);
+    const arcAngle = Math.max(startAngle + 0.01, Math.min(endAngle - 0.01, currentAngle));
+    const targetLabel = climate.target == null ? '--' : `${target}\u00b0`;
+    const currentLabel = climate.current == null ? 'Ambiente --' : `Ambiente ${current}\u00b0`;
+
+    const polarToCartesian = (radius, angleDeg) => {
+      const rad = ((angleDeg - 90) * Math.PI) / 180;
+      return {
+        x: cx + (radius * Math.cos(rad)),
+        y: cy + (radius * Math.sin(rad)),
+      };
+    };
+    const describeArc = (radius, start, end) => {
+      const s = polarToCartesian(radius, start);
+      const e = polarToCartesian(radius, end);
+      const large = end - start > 180 ? '1' : '0';
+      return `M ${s.x.toFixed(3)} ${s.y.toFixed(3)} A ${radius} ${radius} 0 ${large} 1 ${e.x.toFixed(3)} ${e.y.toFixed(3)}`;
+    };
+    const activeArc = describeArc(trackRadius, startAngle, arcAngle);
+    const inactiveArc = describeArc(trackRadius, arcAngle, endAngle);
+    const fullArc = describeArc(trackRadius, startAngle, endAngle);
+    const knob = polarToCartesian(trackRadius, arcAngle);
+    const ticks = Array.from({ length: 54 }, (_, i) => {
+      const angle = startAngle + ((sweep / 53) * i);
+      const isMajor = i % 9 === 0;
+      const isMid = i % 3 === 0 && !isMajor;
+      const innerR = isMajor ? 148 : isMid ? 153 : 156;
+      const isActive = angle <= currentAngle;
+      const p1 = polarToCartesian(tickOuterRadius, angle);
+      const p2 = polarToCartesian(innerR, angle);
+      const color = isActive
+        ? isMajor ? 'rgba(130,220,255,0.95)' : isMid ? 'rgba(100,200,255,0.60)' : 'rgba(80,180,255,0.30)'
+        : isMajor ? 'rgba(220,235,255,0.25)' : isMid ? 'rgba(200,220,255,0.13)' : 'rgba(180,210,255,0.07)';
+      return `
+        <line
+          x1="${p1.x.toFixed(3)}" y1="${p1.y.toFixed(3)}"
+          x2="${p2.x.toFixed(3)}" y2="${p2.y.toFixed(3)}"
+          stroke="${color}"
+          stroke-width="${isMajor ? '2.2' : isMid ? '1.5' : '1'}"
+          stroke-linecap="round"
+        ></line>
+      `;
+    }).join('');
+    const scaleLabels = [
+      { angle: startAngle, label: this._formatNumber(safeMin, 0) },
+      { angle: startAngle + (sweep * 0.5), label: this._formatNumber((safeMin + safeMax) / 2, 0) },
+      { angle: endAngle, label: this._formatNumber(safeMax, 0) },
+    ].map(({ angle, label }) => {
+      const pos = polarToCartesian(tickOuterRadius + 14, angle);
+      return `
+        <text
+          x="${pos.x.toFixed(3)}"
+          y="${pos.y.toFixed(3)}"
+          class="climate-ring-scale"
+          text-anchor="middle"
+          dominant-baseline="middle"
+        >${BrunoSalaSubview._escape(label)}&#176;</text>
+      `;
+    }).join('');
+
+    return `
+      <div class="climate-ring">
+        <svg class="climate-ring-svg" viewBox="0 0 400 400" role="img" aria-label="${BrunoSalaSubview._escapeAttr(`Temperatura alvo ${targetLabel}. ${currentLabel}.`)}">
+          <defs>
+            <radialGradient id="climateOuterGlass" cx="44%" cy="32%" r="76%">
+              <stop offset="0%" stop-color="rgba(120,180,245,0.24)"></stop>
+              <stop offset="44%" stop-color="rgba(18,34,58,0.64)"></stop>
+              <stop offset="100%" stop-color="rgba(2,7,16,0.98)"></stop>
+            </radialGradient>
+            <radialGradient id="climateInnerGlass" cx="38%" cy="25%" r="78%">
+              <stop offset="0%" stop-color="rgba(170,220,255,0.25)"></stop>
+              <stop offset="42%" stop-color="rgba(13,29,52,0.76)"></stop>
+              <stop offset="100%" stop-color="rgba(3,8,18,0.98)"></stop>
+            </radialGradient>
+            <linearGradient id="climateArcGrad" gradientUnits="userSpaceOnUse" x1="72" y1="312" x2="326" y2="74">
+              <stop offset="0%" stop-color="#2f8fff"></stop>
+              <stop offset="45%" stop-color="#35c7ff"></stop>
+              <stop offset="100%" stop-color="#8cefff"></stop>
+            </linearGradient>
+            <radialGradient id="climateKnobGrad" cx="35%" cy="28%" r="72%">
+              <stop offset="0%" stop-color="#ffffff"></stop>
+              <stop offset="34%" stop-color="#9eeeff"></stop>
+              <stop offset="100%" stop-color="#1d9dff"></stop>
+            </radialGradient>
+            <filter id="climateDrop" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity="0.48"></feDropShadow>
+            </filter>
+            <filter id="climateArcGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="7" result="b"></feGaussianBlur>
+              <feColorMatrix in="b" type="matrix" values="0 0 0 0 0.03  0 0 0 0 0.48  0 0 0 0 1  0 0 0 0.92 0"></feColorMatrix>
+              <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+            </filter>
+            <filter id="climateKnobGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="b"></feGaussianBlur>
+              <feColorMatrix in="b" type="matrix" values="0 0 0 0 0.03  0 0 0 0 0.48  0 0 0 0 1  0 0 0 0.9 0"></feColorMatrix>
+              <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+            </filter>
+            <filter id="climateTextGlow" x="-40%" y="-40%" width="180%" height="180%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#b9dcff" flood-opacity="0.48"></feDropShadow>
+            </filter>
+            <filter id="climateFaceShade" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.5"></feDropShadow>
+            </filter>
+          </defs>
+          <circle cx="200" cy="200" r="185" fill="url(#climateOuterGlass)" stroke="rgba(150,210,255,0.20)" stroke-width="1.2" filter="url(#climateDrop)"></circle>
+          <circle cx="200" cy="200" r="178" fill="none" stroke="rgba(60,130,210,0.18)" stroke-width="8" opacity="0.45"></circle>
+          <circle cx="200" cy="200" r="184" fill="none" stroke="rgba(160,220,255,0.16)" stroke-width="2"></circle>
+          <path d="${fullArc}" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="22" stroke-linecap="round"></path>
+          <path d="${inactiveArc}" fill="none" stroke="rgba(205,230,255,0.12)" stroke-width="14" stroke-linecap="round"></path>
+          <g>${ticks}</g>
+          <g>${scaleLabels}</g>
+          <path d="${activeArc}" fill="none" stroke="url(#climateArcGrad)" stroke-width="24" stroke-linecap="round" opacity="0.88" filter="url(#climateArcGlow)"></path>
+          <path d="${activeArc}" fill="none" stroke="url(#climateArcGrad)" stroke-width="14" stroke-linecap="round"></path>
+          <circle cx="200" cy="200" r="118" fill="none" stroke="rgba(0,0,0,0.42)" stroke-width="5" opacity="0.55"></circle>
+          <circle cx="200" cy="200" r="112" fill="url(#climateInnerGlass)" stroke="rgba(110,200,255,0.34)" stroke-width="1.4" filter="url(#climateFaceShade)"></circle>
+          <path fill="rgba(185,225,255,0.075)" d="M 104 153 C 134 92, 228 74, 292 132 C 236 110, 164 119, 104 153 Z"></path>
+          <circle cx="200" cy="200" r="116" fill="none" stroke="rgba(145,220,255,0.34)" stroke-width="1"></circle>
+          <text x="200" y="198" class="climate-ring-temp" text-anchor="middle" dominant-baseline="middle" filter="url(#climateTextGlow)">${BrunoSalaSubview._escape(targetLabel)}</text>
+          <text x="200" y="244" class="climate-ring-mode" text-anchor="middle" dominant-baseline="middle">${BrunoSalaSubview._escape(dialMode)}</text>
+          <line x1="158" y1="264" x2="242" y2="264" stroke="rgba(110,180,250,0.22)" stroke-width="1"></line>
+          <circle cx="200" cy="264" r="3" fill="rgba(75,215,255,1)" filter="url(#climateArcGlow)"></circle>
+          <text x="200" y="284" class="climate-ring-meta" text-anchor="middle" dominant-baseline="middle">${BrunoSalaSubview._escape(currentLabel)}</text>
+          <circle cx="${knob.x.toFixed(3)}" cy="${knob.y.toFixed(3)}" r="21" class="climate-ring-knob-aura" fill="rgba(45,180,255,0.36)" filter="url(#climateKnobGlow)"></circle>
+          <circle cx="${knob.x.toFixed(3)}" cy="${knob.y.toFixed(3)}" r="13.5" fill="url(#climateKnobGrad)" stroke="rgba(230,250,255,0.92)" stroke-width="2" filter="url(#climateKnobGlow)"></circle>
+          <circle cx="${(knob.x - 4).toFixed(3)}" cy="${(knob.y - 5).toFixed(3)}" r="4.8" fill="rgba(255,255,255,0.78)" opacity="0.72"></circle>
+        </svg>
+      </div>
+    `;
+  }
+
   _renderAC(model) {
     const climate = model.climate;
     const target = climate.target == null ? '--' : this._formatNumber(climate.target, 0);
@@ -1651,7 +1795,7 @@ class BrunoSalaSubview extends HTMLElement {
     ];
 
     return `
-      <section class="glass-card ac-card${climate.active ? ' is-active' : ''}">
+      <section class="glass-card ac-card">
         <div class="module-head ac-head">
           <div class="title-with-chip">
             <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
@@ -1674,11 +1818,7 @@ class BrunoSalaSubview extends HTMLElement {
               >
               <ha-icon class="ac-image-fallback" icon="mdi:air-conditioner"></ha-icon>
             </div>
-            <div class="climate-dial">
-              <span class="climate-dial-mode">${BrunoSalaSubview._escape(dialMode)}</span>
-              <strong>${target}&deg;</strong>
-              <small>Ambiente ${current}&deg;</small>
-            </div>
+            ${this._renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode)}
           </div>
           <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
             <input type="range" min="${BrunoSalaSubview._escapeAttr(minTarget)}" max="${BrunoSalaSubview._escapeAttr(maxTarget)}" step="${BrunoSalaSubview._escapeAttr(targetStep)}" value="${targetNumber}" data-action="climate-target">
@@ -3930,7 +4070,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: grid;
         align-content: center;
         align-self: center;
-        gap: 10px;
+        gap: 12px;
         min-width: 0;
       }
 
@@ -4147,90 +4287,59 @@ class BrunoSalaSubview extends HTMLElement {
         display: block;
       }
 
-      .climate-dial {
+      .climate-ring {
         position: relative;
-        isolation: isolate;
-        right: auto;
-        bottom: auto;
-        width: 166px;
+        width: min(192px, 78%);
         aspect-ratio: 1;
-        display: grid;
-        place-items: center;
-        align-content: center;
-        gap: 5px;
-        border-radius: 50%;
-        text-align: center;
-        background:
-          radial-gradient(circle at 32% 27%, rgba(145,225,255,0.42), transparent 14%),
-          radial-gradient(circle at 68% 68%, rgba(36,125,220,0.54), transparent 34%),
-          linear-gradient(180deg, rgba(77,190,255,0.98), rgba(23,132,219,0.92));
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.34),
-          inset 0 -22px 42px rgba(5,38,92,0.30),
-          0 20px 34px rgba(0,0,0,0.34),
-          0 0 30px rgba(66,153,225,0.24);
+        display: block;
+        filter: drop-shadow(0 20px 34px rgba(0,0,0,0.36));
       }
 
-      .climate-dial::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        border-radius: inherit;
-        background:
-          conic-gradient(from 218deg,
-            rgba(123,215,255,0.98) 0deg 244deg,
-            rgba(42,132,220,0.84) 244deg 305deg,
-            rgba(18,42,61,0.50) 305deg 360deg);
-        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 19px), #000 calc(100% - 18px));
-        mask: radial-gradient(farthest-side, transparent calc(100% - 19px), #000 calc(100% - 18px));
-        filter: drop-shadow(0 0 14px rgba(74,164,255,0.40));
+      .climate-ring-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
       }
 
-      .climate-dial::after {
-        content: "";
-        position: absolute;
-        z-index: 2;
-        top: 14px;
-        left: 34px;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: #eef7ff;
-        box-shadow:
-          0 0 0 3px rgba(74,164,255,0.96),
-          0 0 18px rgba(74,164,255,0.58);
-      }
-
-      .climate-dial > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .climate-dial-mode {
-        color: rgba(223,244,255,0.92);
-        font-size: 12px;
-        line-height: 1;
-        font-weight: 850;
-      }
-
-      .climate-dial strong {
-        color: rgba(255,255,255,0.94);
-        font-size: 38px;
-        line-height: 1;
-        font-weight: 850;
-        text-shadow: 0 3px 12px rgba(6,32,72,0.32);
-      }
-
-      .climate-dial small {
-        max-width: 110px;
-        color: rgba(232,246,255,0.76);
+      .climate-ring-scale {
+        font-family: "SF Mono", "Cascadia Mono", "Segoe UI", monospace;
         font-size: 10px;
-        line-height: 1.1;
-        font-weight: 750;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        font-weight: 700;
+        fill: rgba(130,185,225,0.42);
+      }
+
+      .climate-ring-temp {
+        font-family: "SF Pro Display", "Inter", "Segoe UI", sans-serif;
+        font-size: 78px;
+        font-weight: 500;
+        letter-spacing: 0;
+        fill: rgba(240,248,255,0.98);
+      }
+
+      .climate-ring-mode {
+        font-family: "SF Mono", "Cascadia Mono", "Segoe UI", monospace;
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: 0;
+        fill: rgba(95,210,255,0.93);
+      }
+
+      .climate-ring-meta {
+        font-family: "SF Mono", "Cascadia Mono", "Segoe UI", monospace;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0;
+        fill: rgba(175,205,230,0.54);
+      }
+
+      .climate-ring-knob-aura {
+        animation: climate-ring-pulse 2.8s ease-in-out infinite;
+      }
+
+      @keyframes climate-ring-pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 0.2; }
       }
 
       .climate-mode-row {

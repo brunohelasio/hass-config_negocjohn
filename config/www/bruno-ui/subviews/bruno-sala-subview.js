@@ -10,12 +10,12 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   refresh_interval: 6500,
   spotify_device_name: 'Echo Show',
   climate_device_name: 'Gree',
-  climate_image: '/local/images/ar-condicionado-gree.png',
+  climate_image: '/local/images/ar-condicionado-gree-tight.png',
   tv_apps: [
-    { key: 'netflix', label: 'Netflix', icon: 'mdi:netflix', script: 'script.sala_tv_open_netflix' },
-    { key: 'prime', label: 'Prime', icon: 'mdi:video-vintage', script: 'script.sala_tv_open_prime' },
-    { key: 'disney', label: 'Disney+', icon: 'mdi:movie-open-star-outline', script: 'script.sala_tv_open_disney' },
-    { key: 'max', label: 'Max', icon: 'mdi:movie-play-outline', script: 'script.sala_tv_open_hbo' },
+    { key: 'netflix', label: 'Netflix', image: '/local/images/netflix_bg.jpg', script: 'script.sala_tv_open_netflix' },
+    { key: 'prime', label: 'Prime Video', image: '/local/images/prime_video_tile.png', script: 'script.sala_tv_open_prime' },
+    { key: 'disney', label: 'Disney+', image: '/local/images/dp_bg.jpg', script: 'script.sala_tv_open_disney' },
+    { key: 'max', label: 'Max', image: '/local/images/HBOMax_bg.jpg', script: 'script.sala_tv_open_hbo' },
   ],
   room_nav: [
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala', active: true },
@@ -653,11 +653,24 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _openSpotifyPlusPopup(mode = 'full') {
-    const sections = mode === 'devices'
-      ? ['devices']
-      : mode === 'library'
-        ? ['userpresets']
-        : ['player', 'devices', 'userpresets'];
+    const sectionSets = {
+      devices: ['devices'],
+      presets: ['userpresets'],
+      library: ['userpresets'],
+      favorites: ['playlistfavorites'],
+      queue: ['player'],
+      full: ['player', 'devices', 'userpresets', 'playlistfavorites', 'searchmedia'],
+    };
+    const sectionDefaults = {
+      devices: 'devices',
+      presets: 'userpresets',
+      library: 'userpresets',
+      favorites: 'playlistfavorites',
+      queue: 'player',
+      full: 'player',
+    };
+    const sections = sectionSets[mode] || sectionSets.full;
+    const sectionDefault = sectionDefaults[mode] || sectionDefaults.full;
 
     this._fireDomEvent({
       action: 'fire-dom-event',
@@ -674,6 +687,7 @@ class BrunoSalaSubview extends HTMLElement {
             deviceControlByName: true,
             playerBackgroundImageSize: 'cover',
             sections,
+            sectionDefault,
           },
         },
       },
@@ -821,8 +835,20 @@ class BrunoSalaSubview extends HTMLElement {
       this._openSpotifyPlusPopup('devices');
       return;
     }
+    if (action === 'spotify-presets') {
+      this._openSpotifyPlusPopup('presets');
+      return;
+    }
+    if (action === 'spotify-queue') {
+      this._openSpotifyPlusPopup('queue');
+      return;
+    }
+    if (action === 'spotify-favorites') {
+      this._openSpotifyPlusPopup('favorites');
+      return;
+    }
     if (action === 'spotify-library') {
-      this._openSpotifyPlusPopup('library');
+      this._openSpotifyPlusPopup('presets');
       return;
     }
     if (action === 'spotify-plus') {
@@ -1206,32 +1232,66 @@ class BrunoSalaSubview extends HTMLElement {
       ps5.active ? 'Console ligado' : 'Pronto para ligar',
       'HDMI 1',
     );
-    const tvAppButtons = (this._config.tv_apps || []).slice(0, 4).map((app) => `
+    const mediaActionButton = ({
+      action,
+      icon,
+      label,
+      className = '',
+      attrs = '',
+      disabled = false,
+    }) => `
       <button
         type="button"
-        class="tv-app-button"
-        data-action="tv-app"
-        data-script="${BrunoSalaSubview._escapeAttr(app.script || '')}"
-        title="${BrunoSalaSubview._escapeAttr(app.label || 'App')}"
-        ${app.script ? '' : 'disabled'}
+        class="media-action-button${className ? ` ${className}` : ''}"
+        data-action="${BrunoSalaSubview._escapeAttr(action)}"
+        title="${BrunoSalaSubview._escapeAttr(label)}"
+        aria-label="${BrunoSalaSubview._escapeAttr(label)}"
+        ${attrs}
+        ${disabled ? 'disabled' : ''}
       >
-        <ha-icon icon="${BrunoSalaSubview._escapeAttr(app.icon || 'mdi:apps')}"></ha-icon>
-        <span>${BrunoSalaSubview._escape(app.label || 'App')}</span>
+        <ha-icon icon="${BrunoSalaSubview._escapeAttr(icon)}"></ha-icon>
       </button>
-    `).join('');
-    const spotifyControls = this._spotifyToolsOpen
-      ? `
-        <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
-        <button type="button" class="control-button is-tool" data-action="spotify-devices" title="Dispositivos"><ha-icon icon="mdi:speaker-wireless"></ha-icon></button>
-        <button type="button" class="control-button is-tool" data-action="spotify-library" title="Playlists e fila"><ha-icon icon="mdi:playlist-music"></ha-icon></button>
-        <button type="button" class="control-button is-tool" data-action="spotify-plus" title="Mais opcoes"><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
-      `
-      : `
-        <button type="button" class="control-button" data-action="spotify-prev"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
-        <button type="button" class="control-button is-main" data-action="spotify-play-pause"><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
-        <button type="button" class="control-button" data-action="spotify-next"><ha-icon icon="mdi:skip-next"></ha-icon></button>
-        <button type="button" class="control-button" data-action="spotify-more" title="Mais opcoes"><ha-icon icon="mdi:plus"></ha-icon></button>
+    `;
+    const mediaActionSpacer = '<span class="media-action-spacer" aria-hidden="true"></span>';
+    const tvAppButtons = (this._config.tv_apps || []).slice(0, 4).map((app) => {
+      const label = app.label || 'App';
+      const image = app.image ? BrunoSalaSubview._escapeAttr(app.image) : '';
+      const keyClass = app.key ? ` app-${BrunoSalaSubview._escapeAttr(app.key)}` : '';
+      return `
+        <button
+          type="button"
+          class="media-action-button media-image-button${keyClass}"
+          data-action="tv-app"
+          data-script="${BrunoSalaSubview._escapeAttr(app.script || '')}"
+          title="${BrunoSalaSubview._escapeAttr(label)}"
+          aria-label="${BrunoSalaSubview._escapeAttr(label)}"
+          ${image ? `style="--media-app-image: url('${image}');"` : ''}
+          ${app.script ? '' : 'disabled'}
+        >
+          ${image
+            ? '<span class="media-button-art" aria-hidden="true"></span>'
+            : `<ha-icon icon="${BrunoSalaSubview._escapeAttr(app.icon || 'mdi:apps')}"></ha-icon>`}
+        </button>
       `;
+    }).join('');
+    const tvPrimaryActions = `
+      ${mediaActionButton({ action: 'toggle-tv', icon: 'mdi:power', label: tv.active ? 'Desligar TV' : 'Ligar TV' })}
+      ${mediaActionButton({ action: 'tv-remote', icon: 'mdi:remote-tv', label: 'Controle remoto' })}
+      ${mediaActionButton({ action: 'tv-play-pause', icon: 'mdi:play-pause', label: 'Play pause' })}
+      ${mediaActionSpacer}
+    `;
+    const spotifyPrimaryActions = `
+      ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior' })}
+      ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main' })}
+      ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa' })}
+      ${mediaActionSpacer}
+    `;
+    const spotifySecondaryActions = `
+      ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'spotify-presets', icon: 'mdi:bookmark-music-outline', label: 'Presets', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'spotify-queue', icon: 'mdi:playlist-play', label: 'Fila', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'spotify-favorites', icon: 'mdi:heart-outline', label: 'Favoritos', className: 'is-tool' })}
+    `;
     const sources = {
       tv: {
         key: 'tv',
@@ -1244,21 +1304,13 @@ class BrunoSalaSubview extends HTMLElement {
         visual: tvPoster
           ? `<img src="${BrunoSalaSubview._escapeAttr(tvPoster)}" alt="">`
           : '<ha-icon icon="mdi:television-classic"></ha-icon>',
-        controls: `
-          <button type="button" class="control-button" data-action="toggle-tv"><ha-icon icon="mdi:power"></ha-icon></button>
-          <button type="button" class="control-button" data-action="tv-remote"><ha-icon icon="mdi:remote-tv"></ha-icon></button>
-          <button type="button" class="control-button" data-action="tv-play-pause"><ha-icon icon="mdi:play-pause"></ha-icon></button>
-        `,
+        primaryActions: tvPrimaryActions,
+        secondaryActions: tvAppButtons,
         extra: `
-          <div class="tv-extra-stack">
-            <div class="tv-app-row" aria-label="Atalhos da TV">
-              ${tvAppButtons}
-            </div>
-            <div class="volume-row">
-              <ha-icon icon="mdi:volume-medium"></ha-icon>
-              <input type="range" min="0" max="100" value="${tvVolume}" data-action="tv-volume" aria-label="Volume da TV">
-              <strong>${tvVolume}%</strong>
-            </div>
+          <div class="volume-row">
+            <ha-icon icon="mdi:volume-medium"></ha-icon>
+            <input type="range" min="0" max="100" value="${tvVolume}" data-action="tv-volume" aria-label="Volume da TV">
+            <strong>${tvVolume}%</strong>
           </div>
         `,
       },
@@ -1273,7 +1325,8 @@ class BrunoSalaSubview extends HTMLElement {
         visual: spotifyArtwork
           ? `<img src="${BrunoSalaSubview._escapeAttr(spotifyArtwork)}" alt="">`
           : '<ha-icon icon="mdi:music-note"></ha-icon>',
-        controls: spotifyControls,
+        primaryActions: spotifyPrimaryActions,
+        secondaryActions: spotifySecondaryActions,
         extra: `
           <div class="volume-row spotify-volume">
             <ha-icon icon="mdi:volume-medium"></ha-icon>
@@ -1293,10 +1346,18 @@ class BrunoSalaSubview extends HTMLElement {
         visual: ps5.image
           ? `<img class="media-ps5-image" src="${BrunoSalaSubview._escapeAttr(ps5.image)}" alt="">`
           : '<ha-icon icon="mdi:sony-playstation"></ha-icon>',
-        controls: `
+        primaryClass: 'is-wide',
+        primaryActions: `
           <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>${ps5.active ? 'Desligar' : 'Ligar'}</button>
-          <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(ps5.entityId || '')}" ${ps5.configured ? '' : 'disabled'}><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
+          ${mediaActionButton({
+            action: 'more-info',
+            icon: 'mdi:dots-horizontal',
+            label: 'Mais detalhes',
+            attrs: `data-entity="${BrunoSalaSubview._escapeAttr(ps5.entityId || '')}"`,
+            disabled: !ps5.configured,
+          })}
         `,
+        secondaryActions: '',
         extra: '',
       },
     };
@@ -1337,12 +1398,21 @@ class BrunoSalaSubview extends HTMLElement {
               <strong>${BrunoSalaSubview._escape(current.title)}</strong>
               ${current.meta}
             </div>
-            <div class="media-hub-controls control-row">
-              ${current.controls}
+            <div class="media-action-stack${current.secondaryActions ? ' has-secondary' : ''}">
+              <div class="media-primary-actions${current.primaryClass ? ` ${current.primaryClass}` : ''}">
+                ${current.primaryActions}
+              </div>
+              ${current.secondaryActions ? `
+                <div class="media-secondary-actions">
+                  ${current.secondaryActions}
+                </div>
+              ` : ''}
             </div>
-            <div class="media-hub-extra">
-              ${current.extra}
-            </div>
+            ${current.extra ? `
+              <div class="media-hub-extra">
+                ${current.extra}
+              </div>
+            ` : ''}
           </div>
         </div>
       </section>
@@ -1471,7 +1541,7 @@ class BrunoSalaSubview extends HTMLElement {
     const current = climate.current == null ? '--' : this._formatNumber(climate.current, 1);
     const climateEntity = BrunoSalaSubview._escapeAttr(this._config.entities.climate);
     const deviceName = BrunoSalaSubview._escape(this._config.climate_device_name || 'Ar condicionado');
-    const climateImage = BrunoSalaSubview._escapeAttr(this._config.climate_image || '/local/images/ar-condicionado-gree.png');
+    const climateImage = BrunoSalaSubview._escapeAttr(this._config.climate_image || '/local/images/ar-condicionado-gree-tight.png');
     const activeMode = climate.hvacMode || 'off';
     const fan = String(climate.fan || 'auto').toLowerCase();
     const swingActive = String(climate.swing || '').toLowerCase().includes('ativ');
@@ -3711,9 +3781,9 @@ class BrunoSalaSubview extends HTMLElement {
         min-width: 0;
         min-height: 0;
         display: grid;
-        grid-template-rows: auto minmax(46px, 1fr) auto;
+        grid-template-rows: auto minmax(110px, 1fr) auto;
         align-content: stretch;
-        gap: 10px;
+        gap: 11px;
       }
 
       .media-ps5-image {
@@ -3760,81 +3830,117 @@ class BrunoSalaSubview extends HTMLElement {
         font-size: 11px;
       }
 
-      .media-hub-controls {
+      .media-action-stack {
         grid-area: auto;
-        display: flex;
-        align-items: center;
+        --media-action-size: 48px;
+        display: grid;
+        align-content: center;
         align-self: center;
-        flex-wrap: wrap;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .media-primary-actions,
+      .media-secondary-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, var(--media-action-size));
+        align-items: center;
+        justify-content: space-between;
+        min-width: 0;
+      }
+
+      .media-primary-actions.is-wide {
+        grid-template-columns: minmax(0, 1fr) var(--media-action-size);
         gap: 9px;
       }
 
-      .media-hub-controls .control-button {
-        width: 42px;
-        height: 42px;
+      .media-primary-actions.is-wide .primary-button {
+        min-height: var(--media-action-size);
+        border-radius: 14px;
       }
 
-      .media-hub-controls .control-button ha-icon {
-        --mdc-icon-size: 19px;
+      .media-action-button,
+      .media-action-spacer {
+        width: var(--media-action-size);
+        height: var(--media-action-size);
       }
 
-      .media-hub-controls .primary-button {
-        flex: 1 1 auto;
-        min-height: 42px;
+      .media-action-button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        overflow: hidden;
+        border-radius: 14px;
+        color: rgba(255,255,255,0.82);
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+      }
+
+      .media-action-button ha-icon {
+        --mdc-icon-size: 20px;
+      }
+
+      .media-action-button.is-main {
+        color: white;
+        background:
+          radial-gradient(circle at 50% 18%, rgba(142,126,255,0.50), transparent 72%),
+          linear-gradient(180deg, rgba(108,88,214,0.74), rgba(60,48,128,0.58));
+        border-color: rgba(160,145,255,0.48);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.22),
+          0 0 22px rgba(112,88,255,0.26);
+      }
+
+      .media-action-button.is-tool {
+        color: rgba(210,245,230,0.96);
+        background:
+          radial-gradient(circle at 50% 16%, rgba(46,231,122,0.22), transparent 72%),
+          rgba(255,255,255,0.075);
+        border-color: rgba(46,231,122,0.22);
+      }
+
+      .media-action-button:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .media-action-spacer {
+        display: block;
+        pointer-events: none;
+        visibility: hidden;
+      }
+
+      .media-image-button {
+        background: rgba(255,255,255,0.07);
+      }
+
+      .media-button-art {
+        position: absolute;
+        inset: 0;
+        background-image: var(--media-app-image);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+
+      .media-image-button::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border-radius: inherit;
+        background: linear-gradient(180deg, rgba(255,255,255,0.10), transparent 42%);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
       }
 
       .media-hub-extra {
         grid-area: auto;
         min-width: 0;
         align-self: end;
-      }
-
-      .tv-extra-stack {
-        min-width: 0;
-        display: grid;
-        gap: 8px;
-      }
-
-      .tv-app-row {
-        min-width: 0;
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 7px;
-      }
-
-      .tv-app-button {
-        min-width: 0;
-        min-height: 32px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        padding: 0 6px;
-        border-radius: 11px;
-        color: rgba(255,255,255,0.78);
-        background: rgba(255,255,255,0.065);
-        border: 1px solid rgba(255,255,255,0.11);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-        font-size: 9px;
-        font-weight: 850;
-        overflow: hidden;
-      }
-
-      .tv-app-button ha-icon {
-        --mdc-icon-size: 15px;
-        flex: 0 0 auto;
-      }
-
-      .tv-app-button span {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .tv-app-button:disabled {
-        opacity: 0.42;
-        cursor: default;
       }
 
       .media-extra-info {
@@ -3859,7 +3965,7 @@ class BrunoSalaSubview extends HTMLElement {
         padding: 14px;
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
-        gap: 10px;
+        gap: 6px;
       }
 
       .ac-head {
@@ -3895,27 +4001,27 @@ class BrunoSalaSubview extends HTMLElement {
         height: auto;
         min-height: 0;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(266px, auto) auto auto auto auto auto;
+        grid-template-rows: minmax(282px, auto) auto auto auto auto auto;
         gap: 9px;
         align-content: start;
       }
 
       .ac-visual {
         position: relative;
-        min-height: 264px;
+        min-height: 282px;
         display: grid;
         grid-template-rows: auto auto;
         align-content: start;
         justify-items: center;
-        gap: 8px;
+        gap: 10px;
         padding: 0 0 2px;
       }
 
       .ac-image-shell {
         position: relative;
         width: 100%;
-        height: 128px;
-        margin: -4px 0 0;
+        height: 116px;
+        margin: -2px 0 0;
         display: grid;
         place-items: start center;
         overflow: visible;
@@ -3923,7 +4029,8 @@ class BrunoSalaSubview extends HTMLElement {
 
       .ac-image-shell img {
         width: 100%;
-        height: 122px;
+        height: auto;
+        max-height: 116px;
         display: block;
         object-fit: contain;
         object-position: center top;

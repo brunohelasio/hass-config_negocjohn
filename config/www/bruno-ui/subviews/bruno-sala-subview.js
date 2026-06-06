@@ -11,7 +11,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   spotify_device_name: 'Echo Show',
   climate_device_name: 'Gree',
   climate_image: '/local/images/ar-condicionado-gree-tight.png',
-  tv_standby_image: '/local/images/tcl.png',
+  climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1',
+  tv_standby_image: '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1',
   spotify_standby_image: '/local/images/echo_pop.png',
   tv_apps: [
     { key: 'netflix', label: 'Netflix', image: '/local/images/netflix_bg.jpg', script: 'script.sala_tv_open_netflix' },
@@ -76,6 +77,7 @@ const BRUNO_SALA_SUBVIEW_TV_ON_STATES = ['on', 'playing', 'paused', 'idle'];
 const BRUNO_SALA_SUBVIEW_MEDIA_ON_STATES = ['playing', 'paused', 'on', 'idle'];
 const BRUNO_SALA_SUBVIEW_CAMERA_ONLINE_STATES = ['streaming', 'recording', 'idle', 'on'];
 const BRUNO_SALA_SUBVIEW_UNAVAILABLE_STATES = ['unavailable', 'unknown', '', 'none', 'null'];
+const BRUNO_SALA_SUBVIEW_TV_ICON_ANIMATION_MS = 1000;
 
 class BrunoSalaSubview extends HTMLElement {
   static getStubConfig() {
@@ -95,6 +97,9 @@ class BrunoSalaSubview extends HTMLElement {
     this._spotifyToolsOpen = false;
     this._selectedLightZone = 'sala';
     this._selectedMediaSource = '';
+    this._lastMediaTvOn = undefined;
+    this._mediaTvAnimationUntil = 0;
+    this._mediaTvAnimationState = undefined;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
   }
@@ -1180,27 +1185,38 @@ class BrunoSalaSubview extends HTMLElement {
     const label = selectedZone === 'varanda' ? 'Varanda' : 'Sala';
     const levels = lights.slice(0, 4).map((light) => ({
       name: light?.name || 'Luz',
+      entity: light?.entity || '',
       level: this._lightLevel(light),
       disabled: !light?.entity || light.placeholder,
+      dimmable: Boolean(this._state(light?.entity)?.attributes?.brightness != null),
     }));
     const activeCount = levels.filter((item) => item.level > 0).length;
-    const activeLabel = `${activeCount}/${levels.length || 0}`;
+    const total = levels.length || 0;
+    const fillPercent = total
+      ? Math.round(levels.reduce((sum, item) => sum + item.level, 0) / total)
+      : 0;
+    const isOff = fillPercent <= 0;
+    const isFull = fillPercent >= 100;
+    const dimmerTarget = levels.find((item) => item.dimmable && !item.disabled) || levels.find((item) => !item.disabled);
+    const ariaLabel = `${label}: ${activeCount} de ${total} luzes acesas. Segurar para futuro dimmer da zona.`;
 
     return `
-      <aside class="lights-zone-rail" aria-label="${BrunoSalaSubview._escapeAttr(`Resumo de iluminacao ${label}`)}">
+      <aside
+        class="lights-zone-rail${isOff ? ' is-off' : ''}${isFull ? ' is-full' : ''}"
+        aria-label="${BrunoSalaSubview._escapeAttr(ariaLabel)}"
+        title="${BrunoSalaSubview._escapeAttr(ariaLabel)}"
+        data-zone="${BrunoSalaSubview._escapeAttr(selectedZone)}"
+        data-dimmer-entity="${BrunoSalaSubview._escapeAttr(dimmerTarget?.entity || '')}"
+        data-dimmer-level="${BrunoSalaSubview._escapeAttr(String(fillPercent))}"
+        style="--rail-fill:${fillPercent}%; --rail-glow:${isOff ? '0' : '1'}; --rail-ambient-height:${Math.max(22, fillPercent * 2.1)}px;"
+      >
         <span class="rail-zone">${BrunoSalaSubview._escape(label)}</span>
-        <div class="rail-meter" aria-hidden="true">
-          ${levels.map((item) => `
-            <span
-              class="rail-segment${item.level > 0 ? ' is-on' : ''}${item.disabled ? ' is-placeholder' : ''}"
-              title="${BrunoSalaSubview._escapeAttr(item.name)}"
-              style="--level:${item.level}%"
-            >
-              <span></span>
-            </span>
-          `).join('')}
+        <div class="rail-track" aria-hidden="true">
+          <span class="rail-ambient-glow"></span>
+          <span class="rail-fill"></span>
+          <span class="rail-dimmer-ghost"></span>
         </div>
-        <span class="rail-state">${activeLabel}</span>
+        <span class="rail-state"><strong>${activeCount}</strong><span>/${total}</span></span>
       </aside>
     `;
   }
@@ -1308,9 +1324,22 @@ class BrunoSalaSubview extends HTMLElement {
     const tv = model.tv;
     const spotify = model.spotify;
     const ps5 = model.ps5;
+    const now = Date.now();
+    const tvStateChanged = Boolean(this._hass && this._lastMediaTvOn !== undefined && this._lastMediaTvOn !== tv.active);
+    if (tvStateChanged) {
+      this._mediaTvAnimationUntil = now + BRUNO_SALA_SUBVIEW_TV_ICON_ANIMATION_MS;
+      this._mediaTvAnimationState = tv.active;
+    }
+    const animateTvIcon = Boolean(
+      this._hass
+      && this._mediaTvAnimationState === tv.active
+      && this._mediaTvAnimationUntil
+      && now < this._mediaTvAnimationUntil,
+    );
+    if (this._hass) this._lastMediaTvOn = tv.active;
     const tvPoster = tv.poster ? BrunoSalaSubview._resolvePicture(tv.poster) : '';
     const spotifyArtwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
-    const tvStandbyImage = this._config.tv_standby_image || '/local/images/tcl.png';
+    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1';
     const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png';
     const tvVolume = tv.volume == null ? 60 : tv.volume;
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
@@ -1365,9 +1394,9 @@ class BrunoSalaSubview extends HTMLElement {
         <ha-icon icon="${BrunoSalaSubview._escapeAttr(icon)}"></ha-icon>
       </button>
     `;
-    const mediaIdentityCell = (type, active = false) => `
+    const mediaIdentityCell = (type, active = false, options = {}) => `
       <span class="media-identity-cell is-${BrunoSalaSubview._escapeAttr(type)}${active ? ' is-active' : ''}" aria-hidden="true">
-        ${BrunoSalaSubview._tplMediaIcon(type, active)}
+        ${BrunoSalaSubview._tplMediaIcon(type, { active, animate: Boolean(options.animate) })}
       </span>
     `;
     const standbyImage = (src, className, fallbackIcon) => (
@@ -1397,7 +1426,7 @@ class BrunoSalaSubview extends HTMLElement {
       `;
     }).join('');
     const tvPrimaryActions = `
-      ${mediaIdentityCell('tv', tv.active)}
+      ${mediaIdentityCell('tv', tv.active, { animate: animateTvIcon })}
       ${mediaActionButton({ action: 'toggle-tv', icon: 'mdi:power', label: tv.active ? 'Desligar TV' : 'Ligar TV' })}
       ${mediaActionButton({ action: 'tv-remote', icon: 'mdi:remote-tv', label: 'Controle remoto' })}
       ${mediaActionButton({ action: 'tv-play-pause', icon: 'mdi:play-pause', label: 'Play pause', className: 'is-main' })}
@@ -1693,6 +1722,7 @@ class BrunoSalaSubview extends HTMLElement {
     const activeArc = describeArc(trackRadius, startAngle, arcAngle);
     const inactiveArc = describeArc(trackRadius, arcAngle, endAngle);
     const fullArc = describeArc(trackRadius, startAngle, endAngle);
+    const rimArc = describeArc(184, 300, 420);
     const knob = polarToCartesian(trackRadius, arcAngle);
     const ticks = Array.from({ length: 54 }, (_, i) => {
       const angle = startAngle + ((sweep / 53) * i);
@@ -1736,16 +1766,26 @@ class BrunoSalaSubview extends HTMLElement {
       <div class="climate-ring">
         <svg class="climate-ring-svg" viewBox="0 0 400 400" role="img" aria-label="${BrunoSalaSubview._escapeAttr(`Temperatura alvo ${targetLabel}. ${currentLabel}.`)}">
           <defs>
-            <radialGradient id="climateOuterGlass" cx="44%" cy="32%" r="76%">
-              <stop offset="0%" stop-color="rgba(120,180,245,0.24)"></stop>
-              <stop offset="44%" stop-color="rgba(18,34,58,0.64)"></stop>
-              <stop offset="100%" stop-color="rgba(2,7,16,0.98)"></stop>
+            <radialGradient id="climateOuterGlass" cx="50%" cy="44%" r="52%">
+              <stop offset="0%" stop-color="rgba(38,72,128,0.18)"></stop>
+              <stop offset="55%" stop-color="rgba(8,16,30,0.55)"></stop>
+              <stop offset="82%" stop-color="rgba(4,9,18,0.28)"></stop>
+              <stop offset="100%" stop-color="rgba(3,7,13,0.00)"></stop>
             </radialGradient>
             <radialGradient id="climateInnerGlass" cx="38%" cy="25%" r="78%">
               <stop offset="0%" stop-color="rgba(170,220,255,0.25)"></stop>
               <stop offset="42%" stop-color="rgba(13,29,52,0.76)"></stop>
               <stop offset="100%" stop-color="rgba(3,8,18,0.98)"></stop>
             </radialGradient>
+            <radialGradient id="climateVignette" cx="50%" cy="50%" r="50%">
+              <stop offset="60%" stop-color="rgba(0,0,0,0)"></stop>
+              <stop offset="100%" stop-color="rgba(0,0,0,0.62)"></stop>
+            </radialGradient>
+            <linearGradient id="climateRimSpecular" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="rgba(160,210,255,0.28)"></stop>
+              <stop offset="22%" stop-color="rgba(100,160,220,0.08)"></stop>
+              <stop offset="100%" stop-color="rgba(0,0,0,0)"></stop>
+            </linearGradient>
             <linearGradient id="climateArcGrad" gradientUnits="userSpaceOnUse" x1="72" y1="312" x2="326" y2="74">
               <stop offset="0%" stop-color="#2f8fff"></stop>
               <stop offset="45%" stop-color="#35c7ff"></stop>
@@ -1756,9 +1796,6 @@ class BrunoSalaSubview extends HTMLElement {
               <stop offset="34%" stop-color="#9eeeff"></stop>
               <stop offset="100%" stop-color="#1d9dff"></stop>
             </radialGradient>
-            <filter id="climateDrop" x="-30%" y="-30%" width="160%" height="160%">
-              <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity="0.48"></feDropShadow>
-            </filter>
             <filter id="climateArcGlow" x="-80%" y="-80%" width="260%" height="260%">
               <feGaussianBlur stdDeviation="7" result="b"></feGaussianBlur>
               <feColorMatrix in="b" type="matrix" values="0 0 0 0 0.03  0 0 0 0 0.48  0 0 0 0 1  0 0 0 0.92 0"></feColorMatrix>
@@ -1776,9 +1813,9 @@ class BrunoSalaSubview extends HTMLElement {
               <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.5"></feDropShadow>
             </filter>
           </defs>
-          <circle cx="200" cy="200" r="185" fill="url(#climateOuterGlass)" stroke="rgba(150,210,255,0.20)" stroke-width="1.2" filter="url(#climateDrop)"></circle>
-          <circle cx="200" cy="200" r="178" fill="none" stroke="rgba(60,130,210,0.18)" stroke-width="8" opacity="0.45"></circle>
-          <circle cx="200" cy="200" r="184" fill="none" stroke="rgba(160,220,255,0.16)" stroke-width="2"></circle>
+          <circle cx="200" cy="200" r="185" fill="url(#climateOuterGlass)"></circle>
+          <circle cx="200" cy="200" r="185" fill="url(#climateVignette)"></circle>
+          <path d="${rimArc}" fill="none" stroke="url(#climateRimSpecular)" stroke-width="1.2" stroke-linecap="round" opacity="0.7"></path>
           <path d="${fullArc}" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="22" stroke-linecap="round"></path>
           <path d="${inactiveArc}" fill="none" stroke="rgba(205,230,255,0.12)" stroke-width="14" stroke-linecap="round"></path>
           <g>${ticks}</g>
@@ -1789,11 +1826,11 @@ class BrunoSalaSubview extends HTMLElement {
           <circle cx="200" cy="200" r="112" fill="url(#climateInnerGlass)" stroke="rgba(110,200,255,0.34)" stroke-width="1.4" filter="url(#climateFaceShade)"></circle>
           <path fill="rgba(185,225,255,0.075)" d="M 104 153 C 134 92, 228 74, 292 132 C 236 110, 164 119, 104 153 Z"></path>
           <circle cx="200" cy="200" r="116" fill="none" stroke="rgba(145,220,255,0.34)" stroke-width="1"></circle>
-          <text x="200" y="198" class="climate-ring-temp" text-anchor="middle" dominant-baseline="middle" filter="url(#climateTextGlow)">${BrunoSalaSubview._escape(targetLabel)}</text>
+          <text x="200" y="201" class="climate-ring-temp" text-anchor="middle" dominant-baseline="middle" filter="url(#climateTextGlow)">${BrunoSalaSubview._escape(targetLabel)}</text>
           <text x="200" y="244" class="climate-ring-mode" text-anchor="middle" dominant-baseline="middle">${BrunoSalaSubview._escape(dialMode)}</text>
           <line x1="158" y1="264" x2="242" y2="264" stroke="rgba(110,180,250,0.22)" stroke-width="1"></line>
           <circle cx="200" cy="264" r="3" fill="rgba(75,215,255,1)" filter="url(#climateArcGlow)"></circle>
-          <text x="200" y="284" class="climate-ring-meta" text-anchor="middle" dominant-baseline="middle">${BrunoSalaSubview._escape(currentLabel)}</text>
+          <text x="200" y="283" class="climate-ring-meta" text-anchor="middle" dominant-baseline="middle">${BrunoSalaSubview._escape(currentLabel)}</text>
           <circle cx="${knob.x.toFixed(3)}" cy="${knob.y.toFixed(3)}" r="21" class="climate-ring-knob-aura" fill="rgba(45,180,255,0.36)" filter="url(#climateKnobGlow)"></circle>
           <circle cx="${knob.x.toFixed(3)}" cy="${knob.y.toFixed(3)}" r="13.5" fill="url(#climateKnobGrad)" stroke="rgba(230,250,255,0.92)" stroke-width="2" filter="url(#climateKnobGlow)"></circle>
           <circle cx="${(knob.x - 4).toFixed(3)}" cy="${(knob.y - 5).toFixed(3)}" r="4.8" fill="rgba(255,255,255,0.78)" opacity="0.72"></circle>
@@ -1812,6 +1849,7 @@ class BrunoSalaSubview extends HTMLElement {
     const targetStep = Number.isFinite(Number(climate.targetStep)) ? Number(climate.targetStep) : 1;
     const deviceName = BrunoSalaSubview._escape(this._config.climate_device_name || 'Ar condicionado');
     const climateImage = BrunoSalaSubview._escapeAttr(this._config.climate_image || '/local/images/ar-condicionado-gree-tight.png');
+    const climateActiveImage = BrunoSalaSubview._escapeAttr(this._config.climate_active_image || '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1');
     const activeMode = climate.hvacMode || 'off';
     const fan = String(climate.fan || 'auto').toLowerCase();
     const swing = String(climate.swing || '').toLowerCase();
@@ -1868,11 +1906,17 @@ class BrunoSalaSubview extends HTMLElement {
         </div>
         <div class="ac-body">
           <div class="ac-visual">
-            <div class="ac-image-shell" data-image-wrapper>
+            <div class="ac-image-shell${climate.active ? ' is-on' : ''}" data-image-wrapper>
               <img
+                class="ac-unit-image ac-unit-image-off"
                 src="${climateImage}"
                 alt=""
                 data-fallback-class="is-fallback"
+              >
+              <img
+                class="ac-unit-image ac-unit-image-on"
+                src="${climateActiveImage}"
+                alt=""
               >
               <ha-icon class="ac-image-fallback" icon="mdi:air-conditioner"></ha-icon>
             </div>
@@ -2731,14 +2775,21 @@ class BrunoSalaSubview extends HTMLElement {
         display: none;
         grid-template-rows: auto minmax(0, 1fr) auto;
         justify-items: center;
-        gap: 9px;
-        padding: 10px 8px;
+        gap: 10px;
+        padding: 9px 7px;
         overflow: hidden;
         border-radius: var(--sala-cell-radius);
         color: rgba(255,255,255,0.74);
-        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.052));
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.13));
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.10));
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.072), rgba(255,255,255,0.026)),
+          rgba(8,14,26,0.50);
+        border: 1px solid rgba(255,224,160,0.13);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.13),
+          inset 0 -1px 0 rgba(255,200,100,0.045),
+          0 12px 26px rgba(0,0,0,0.20);
+        backdrop-filter: blur(22px) saturate(1.34);
+        -webkit-backdrop-filter: blur(22px) saturate(1.34);
       }
 
       .lights-zone-rail::before {
@@ -2748,14 +2799,14 @@ class BrunoSalaSubview extends HTMLElement {
         pointer-events: none;
         border-radius: calc(var(--sala-cell-radius) - 1px);
         background:
-          radial-gradient(58px 50px at 50% 0%, rgba(255,255,255,0.18), transparent 72%),
-          linear-gradient(180deg, rgba(255,255,255,0.10), transparent 36%);
-        opacity: 0.64;
+          radial-gradient(52px 78px at 50% 20%, rgba(255,191,74,0.10), transparent 66%),
+          linear-gradient(135deg, rgba(255,255,255,0.11), transparent 34%, transparent 70%, rgba(255,188,65,0.05));
+        opacity: 0.88;
       }
 
       .rail-zone,
       .rail-state,
-      .rail-meter {
+      .rail-track {
         position: relative;
         z-index: 1;
       }
@@ -2764,12 +2815,13 @@ class BrunoSalaSubview extends HTMLElement {
         font-size: 10px;
         line-height: 1;
         font-weight: 900;
-        color: rgba(255,255,255,0.70);
+        color: rgba(255,231,176,0.68);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.34);
       }
 
       .rail-state {
-        min-width: 38px;
-        min-height: 22px;
+        min-width: 36px;
+        min-height: 21px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -2779,47 +2831,131 @@ class BrunoSalaSubview extends HTMLElement {
         font-weight: 900;
         background: rgba(255,183,77,0.10);
         border: 1px solid rgba(255,183,77,0.20);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.12),
+          0 0 calc(14px * var(--rail-glow, 0)) rgba(255,183,77,0.18);
       }
 
-      .rail-meter {
-        width: 100%;
-        min-height: 0;
-        display: grid;
-        grid-template-rows: repeat(4, minmax(0, 1fr));
-        gap: 7px;
+      .rail-state strong {
+        font-size: 11px;
+        color: rgba(255,235,177,0.98);
       }
 
-      .rail-segment {
+      .rail-track {
         position: relative;
-        min-height: 0;
+        width: 42px;
+        height: 100%;
+        min-height: 124px;
         overflow: hidden;
         border-radius: 999px;
-        background: rgba(255,255,255,0.060);
-        border: 1px solid rgba(255,255,255,0.085);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-      }
-
-      .rail-segment span {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: var(--level, 0%);
-        border-radius: inherit;
         background:
-          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.48), transparent 60%),
-          linear-gradient(180deg, rgba(255,218,112,0.90), rgba(255,183,77,0.44));
-        box-shadow: 0 0 14px rgba(255,183,77,0.28);
-        opacity: 0;
-        transition: height 220ms ease, opacity 180ms ease;
+          linear-gradient(180deg, rgba(255,245,210,0.10), rgba(255,196,83,0.035)),
+          radial-gradient(circle at 50% 8%, rgba(255,255,255,0.16), transparent 30%),
+          rgba(8,15,28,0.72);
+        border: 1px solid rgba(255,222,152,0.30);
+        box-shadow:
+          inset 0 0 16px rgba(255,228,170,0.10),
+          inset 6px 0 14px rgba(255,255,255,0.035),
+          inset -8px 0 16px rgba(0,0,0,0.28),
+          0 0 calc(18px * var(--rail-glow, 0)) rgba(255,187,67,0.18),
+          0 0 calc(42px * var(--rail-glow, 0)) rgba(255,158,35,0.12);
       }
 
-      .rail-segment.is-on span {
-        opacity: 1;
+      .rail-track::before {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: inherit;
+        border: 1px solid rgba(255,255,255,0.08);
+        pointer-events: none;
+        z-index: 4;
       }
 
-      .rail-segment.is-placeholder {
+      .rail-track::after {
+        content: "";
+        position: absolute;
+        top: 11px;
+        left: 10px;
+        width: 13px;
+        height: 72%;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.034), transparent);
         opacity: 0.42;
+        pointer-events: none;
+        z-index: 5;
+        filter: blur(0.2px);
+      }
+
+      .rail-fill {
+        position: absolute;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        height: var(--rail-fill, 0%);
+        min-height: calc(24px * var(--rail-glow, 0));
+        border-radius: 999px;
+        background:
+          radial-gradient(circle at 40% 12%, rgba(255,255,255,0.95), transparent 20%),
+          linear-gradient(180deg, #fff6c9 0%, #ffe18a 24%, #ffc247 58%, #ff9f1f 100%);
+        box-shadow:
+          0 0 calc(16px * var(--rail-glow, 0)) rgba(255,226,138,0.70),
+          0 0 calc(34px * var(--rail-glow, 0)) rgba(255,184,61,0.44),
+          0 0 calc(64px * var(--rail-glow, 0)) rgba(255,145,31,0.25);
+        opacity: var(--rail-glow, 0);
+        transition:
+          height 550ms cubic-bezier(.22,.9,.32,1),
+          min-height 350ms ease,
+          opacity 350ms ease,
+          box-shadow 450ms ease;
+      }
+
+      .rail-fill::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 6px;
+        right: 6px;
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.82);
+        filter: blur(3px);
+        opacity: 0.90;
+      }
+
+      .rail-fill::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(255,255,255,0.25), transparent 38%, rgba(255,255,255,0.18));
+        opacity: 0.70;
+        mix-blend-mode: screen;
+      }
+
+      .rail-ambient-glow {
+        position: absolute;
+        left: 50%;
+        bottom: 20px;
+        width: 86px;
+        height: var(--rail-ambient-height, 22px);
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: radial-gradient(ellipse at center, rgba(255,183,55,0.30), rgba(255,139,22,0.12), transparent 72%);
+        filter: blur(16px);
+        opacity: var(--rail-glow, 0);
+        pointer-events: none;
+        transition:
+          height 550ms cubic-bezier(.22,.9,.32,1),
+          opacity 350ms ease;
+      }
+
+      .rail-dimmer-ghost {
+        position: absolute;
+        inset: 7px;
+        border-radius: inherit;
+        border: 1px dashed rgba(255,255,255,0.12);
+        opacity: 0;
+        pointer-events: none;
       }
 
       .light-tile.is-placeholder {
@@ -4018,12 +4154,12 @@ class BrunoSalaSubview extends HTMLElement {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-rows: repeat(2, minmax(0, 1fr));
-        gap: 12px 12px;
+        gap: 14px 10px;
       }
 
       .lights-body {
-        grid-template-columns: minmax(0, 1fr) 68px;
-        gap: 12px;
+        grid-template-columns: minmax(0, 1fr) 60px;
+        gap: 10px;
       }
 
       .lights-zone-rail {
@@ -4038,18 +4174,18 @@ class BrunoSalaSubview extends HTMLElement {
 
       .light-tile {
         min-height: 0;
-        grid-template-columns: 64px minmax(0, 1fr);
-        column-gap: 14px;
-        padding: 12px 15px;
+        grid-template-columns: 60px minmax(0, 1fr);
+        column-gap: 11px;
+        padding: 11px 12px;
       }
 
       .light-icon {
-        width: 64px;
-        height: 64px;
+        width: 60px;
+        height: 60px;
       }
 
       .light-tile strong {
-        font-size: 15px;
+        font-size: 14.8px;
       }
 
       .camera-list {
@@ -4206,8 +4342,8 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .media-spotify-standby {
-        width: 88% !important;
-        height: 92% !important;
+        width: 78% !important;
+        height: 84% !important;
       }
 
       .media-visual ha-icon {
@@ -4376,8 +4512,8 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .tpl-media-icon {
-        width: 38px;
-        height: 38px;
+        width: 44px;
+        height: 44px;
         display: block;
         filter: drop-shadow(0 8px 14px rgba(0,0,0,0.30));
       }
@@ -4515,14 +4651,36 @@ class BrunoSalaSubview extends HTMLElement {
         overflow: visible;
       }
 
-      .ac-image-shell img {
+      .ac-unit-image {
+        position: absolute;
+        inset: 0;
         width: 100%;
-        height: auto;
-        max-height: 116px;
+        height: 100%;
         display: block;
         object-fit: contain;
         object-position: center top;
         filter: drop-shadow(0 18px 26px rgba(0,0,0,0.38));
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 260ms ease, transform 320ms ease, filter 260ms ease;
+      }
+
+      .ac-unit-image-on {
+        opacity: 0;
+        transform: translateY(2px);
+        filter:
+          drop-shadow(0 18px 26px rgba(0,0,0,0.38))
+          drop-shadow(0 0 18px rgba(110,200,255,0.12));
+      }
+
+      .ac-image-shell.is-on .ac-unit-image-off {
+        opacity: 0;
+        transform: translateY(-1px);
+      }
+
+      .ac-image-shell.is-on .ac-unit-image-on {
+        opacity: 1;
+        transform: translateY(0);
       }
 
       .ac-image-fallback {
@@ -4533,7 +4691,7 @@ class BrunoSalaSubview extends HTMLElement {
         filter: drop-shadow(0 14px 22px rgba(0,0,0,0.32));
       }
 
-      .ac-image-shell.is-fallback img {
+      .ac-image-shell.is-fallback .ac-unit-image {
         display: none;
       }
 
@@ -4559,14 +4717,14 @@ class BrunoSalaSubview extends HTMLElement {
       .climate-ring-scale {
         font-family: "SF Mono", "Cascadia Mono", "Segoe UI", monospace;
         font-size: 10px;
-        font-weight: 700;
+        font-weight: 500;
         fill: rgba(130,185,225,0.42);
       }
 
       .climate-ring-temp {
         font-family: "SF Pro Display", "Inter", "Segoe UI", sans-serif;
-        font-size: 78px;
-        font-weight: 500;
+        font-size: 86px;
+        font-weight: 300;
         letter-spacing: 0;
         fill: rgba(240,248,255,0.98);
       }
@@ -4574,7 +4732,7 @@ class BrunoSalaSubview extends HTMLElement {
       .climate-ring-mode {
         font-family: "SF Mono", "Cascadia Mono", "Segoe UI", monospace;
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 600;
         letter-spacing: 0;
         fill: rgba(95,210,255,0.93);
       }
@@ -4582,9 +4740,9 @@ class BrunoSalaSubview extends HTMLElement {
       .climate-ring-meta {
         font-family: "SF Mono", "Cascadia Mono", "Segoe UI", monospace;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 500;
         letter-spacing: 0;
-        fill: rgba(175,205,230,0.54);
+        fill: rgba(175,205,230,0.45);
       }
 
       .climate-ring-knob-aura {
@@ -4752,11 +4910,15 @@ class BrunoSalaSubview extends HTMLElement {
     `;
   }
 
-  static _tplMediaIcon(type, active = false) {
+  static _tplMediaIcon(type, options = {}) {
     const name = String(type || '').replace(/[^a-z0-9_-]/gi, '') || 'tv';
+    const active = typeof options === 'boolean' ? options : Boolean(options.active);
+    const animate = typeof options === 'object' && Boolean(options.animate);
     const tvScreen = active
-      ? '<path class="media-tv-screen-on" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>'
-      : '<path class="media-tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>';
+      ? `<path${animate ? ' class="media-tv-screen-on"' : ''} d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>`
+      : animate
+        ? '<path class="media-tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>'
+        : '';
     const icons = {
       tv: `
         <svg viewBox="0 0 50 50" aria-hidden="true">

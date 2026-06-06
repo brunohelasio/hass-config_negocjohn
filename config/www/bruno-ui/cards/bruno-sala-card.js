@@ -717,7 +717,7 @@ class BrunoSalaCard extends HTMLElement {
           column-gap: 6px;
           row-gap: 0;
           align-items: start;
-          padding: 0 0 18px;
+          padding: 0 0 16px;
           text-align: left;
           background: transparent;
           border: 0;
@@ -1226,7 +1226,7 @@ class BrunoSalaCard extends HTMLElement {
           .hero-action {
             min-height: 120px;
             grid-template-columns: 98px minmax(0, 1fr) 34px;
-            padding-bottom: 15px;
+            padding-bottom: 14px;
           }
 
           .room-icon {

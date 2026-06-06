@@ -1686,15 +1686,29 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode) {
-    const cx = 200;
-    const cy = 200;
-    const startAngle = 225;
-    const endAngle = 495;
+    // --- ORIGINAL anel circular (comentado para rollback) ---
+    // const cxOld = 200;
+    // const cyOld = 200;
+    // const startAngleOld = 225;
+    // const endAngleOld = 495;
+    // const sweepOld = endAngleOld - startAngleOld;
+    // const trackRadius = 136;
+    // const tickOuterRadius = 160;
+    // ...
+    // (corpo completo do anel original preservado neste comentario-bloco para rollback;
+    //  ver historico Git anterior a substituicao pelo gauge semicircular)
+    // --- FIM ORIGINAL ---
+
+    // --- NOVO: gauge semicircular integrado (sem container/background proprio) ---
+    const cx = 360;
+    const cy = 410;
+    const radius = 285;
+    const startAngle = -180;
+    const endAngle = 0;
     const sweep = endAngle - startAngle;
-    const trackRadius = 136;
-    const tickOuterRadius = 160;
+
     const targetValue = Number(climate.target);
-    const safeMin = Number.isFinite(Number(minTarget)) ? Number(minTarget) : 16;
+    const safeMin = Number.isFinite(Number(minTarget)) ? Number(minTarget) : 12;
     const safeMax = Number.isFinite(Number(maxTarget)) ? Number(maxTarget) : 30;
     const safeTarget = Number.isFinite(targetValue)
       ? Math.max(safeMin, Math.min(safeMax, targetValue))
@@ -1702,139 +1716,112 @@ class BrunoSalaSubview extends HTMLElement {
     const range = Math.max(1, safeMax - safeMin);
     const progress = Math.max(0, Math.min(1, (safeTarget - safeMin) / range));
     const currentAngle = startAngle + (sweep * progress);
-    const arcAngle = Math.max(startAngle + 0.01, Math.min(endAngle - 0.01, currentAngle));
-    const targetLabel = climate.target == null ? '--' : `${target}\u00b0`;
-    const currentLabel = climate.current == null ? 'Ambiente --' : `Ambiente ${current}\u00b0`;
 
-    const polarToCartesian = (radius, angleDeg) => {
-      const rad = ((angleDeg - 90) * Math.PI) / 180;
+    const targetLabel = climate.target == null ? '--' : `${target}`;
+    const ambientLabel = climate.current == null ? '--' : `${current}`;
+    const modeLabel = String(dialMode || '').toUpperCase();
+
+    const polarToCartesian = (r, angleDeg) => {
+      const rad = (angleDeg * Math.PI) / 180;
       return {
-        x: cx + (radius * Math.cos(rad)),
-        y: cy + (radius * Math.sin(rad)),
+        x: cx + (r * Math.cos(rad)),
+        y: cy + (r * Math.sin(rad)),
       };
     };
-    const describeArc = (radius, start, end) => {
-      const s = polarToCartesian(radius, start);
-      const e = polarToCartesian(radius, end);
-      const large = end - start > 180 ? '1' : '0';
-      return `M ${s.x.toFixed(3)} ${s.y.toFixed(3)} A ${radius} ${radius} 0 ${large} 1 ${e.x.toFixed(3)} ${e.y.toFixed(3)}`;
+    const describeArc = (r, start, end) => {
+      const s = polarToCartesian(r, start);
+      const e = polarToCartesian(r, end);
+      const large = Math.abs(end - start) <= 180 ? '0' : '1';
+      return `M ${s.x.toFixed(3)} ${s.y.toFixed(3)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(3)} ${e.y.toFixed(3)}`;
     };
-    const activeArc = describeArc(trackRadius, startAngle, arcAngle);
-    const inactiveArc = describeArc(trackRadius, arcAngle, endAngle);
-    const fullArc = describeArc(trackRadius, startAngle, endAngle);
-    const rimArc = describeArc(184, 300, 420);
-    const knob = polarToCartesian(trackRadius, arcAngle);
-    const ticks = Array.from({ length: 54 }, (_, i) => {
-      const angle = startAngle + ((sweep / 53) * i);
-      const isMajor = i % 9 === 0;
-      const isMid = i % 3 === 0 && !isMajor;
-      const innerR = isMajor ? 148 : isMid ? 153 : 156;
-      const isActive = angle <= currentAngle;
-      const p1 = polarToCartesian(tickOuterRadius, angle);
-      const p2 = polarToCartesian(innerR, angle);
-      const color = isActive
-        ? isMajor ? 'rgba(130,220,255,0.95)' : isMid ? 'rgba(100,200,255,0.60)' : 'rgba(80,180,255,0.30)'
-        : isMajor ? 'rgba(220,235,255,0.25)' : isMid ? 'rgba(200,220,255,0.13)' : 'rgba(180,210,255,0.07)';
-      return `
-        <line
-          x1="${p1.x.toFixed(3)}" y1="${p1.y.toFixed(3)}"
-          x2="${p2.x.toFixed(3)}" y2="${p2.y.toFixed(3)}"
-          stroke="${color}"
-          stroke-width="${isMajor ? '2.2' : isMid ? '1.5' : '1'}"
-          stroke-linecap="round"
-        ></line>
-      `;
-    }).join('');
-    const scaleLabels = [
-      { angle: startAngle, label: this._formatNumber(safeMin, 0) },
-      { angle: startAngle + (sweep * 0.5), label: this._formatNumber((safeMin + safeMax) / 2, 0) },
-      { angle: endAngle, label: this._formatNumber(safeMax, 0) },
-    ].map(({ angle, label }) => {
-      const pos = polarToCartesian(tickOuterRadius + 14, angle);
-      return `
-        <text
-          x="${pos.x.toFixed(3)}"
-          y="${pos.y.toFixed(3)}"
-          class="climate-ring-scale"
-          text-anchor="middle"
-          dominant-baseline="middle"
-        >${BrunoSalaSubview._escape(label)}&#176;</text>
-      `;
+
+    const activeArc = describeArc(radius, startAngle, currentAngle);
+    const inactiveArc = describeArc(radius, currentAngle, endAngle);
+    const fullArc = describeArc(radius, startAngle, endAngle);
+    const marker = polarToCartesian(radius, currentAngle);
+
+    const outerTicks = (() => {
+      const total = 90;
+      const parts = [];
+      for (let i = 0; i <= total; i++) {
+        const tp = i / total;
+        const angle = startAngle + (sweep * tp);
+        const isMajor = i % 15 === 0;
+        const isMedium = i % 5 === 0;
+        const outer = radius + 34;
+        const inner = isMajor ? radius + 8 : isMedium ? radius + 14 : radius + 21;
+        const p1 = polarToCartesian(outer, angle);
+        const p2 = polarToCartesian(inner, angle);
+        const cls = isMajor ? 'icg-tick major' : isMedium ? 'icg-tick medium' : 'icg-tick minor';
+        parts.push(`<line x1="${p1.x.toFixed(3)}" y1="${p1.y.toFixed(3)}" x2="${p2.x.toFixed(3)}" y2="${p2.y.toFixed(3)}" class="${cls}"></line>`);
+      }
+      return parts.join('');
+    })();
+
+    const innerTicks = (() => {
+      const total = 72;
+      const parts = [];
+      for (let i = 0; i <= total; i++) {
+        const tp = i / total;
+        const angle = startAngle + (sweep * tp);
+        const outer = radius - 18;
+        const inner = radius - 34;
+        const p1 = polarToCartesian(outer, angle);
+        const p2 = polarToCartesian(inner, angle);
+        parts.push(`<line x1="${p1.x.toFixed(3)}" y1="${p1.y.toFixed(3)}" x2="${p2.x.toFixed(3)}" y2="${p2.y.toFixed(3)}" class="icg-inner-tick"></line>`);
+      }
+      return parts.join('');
+    })();
+
+    const labels = [
+      { text: `${this._formatNumber(safeMin, 0)}°`, angle: -180, r: radius + 52, cls: 'edge' },
+      { text: '10', angle: -148, r: radius + 58, cls: '' },
+      { text: '20', angle: -90, r: radius + 52, cls: 'top' },
+      { text: '25', angle: -32, r: radius + 58, cls: '' },
+      { text: `${this._formatNumber(safeMax, 0)}°`, angle: 0, r: radius + 52, cls: 'edge' },
+    ];
+    const labelMarkup = labels.map((label) => {
+      const p = polarToCartesian(label.r, label.angle);
+      return `<text x="${p.x.toFixed(3)}" y="${p.y.toFixed(3)}" text-anchor="middle" dominant-baseline="middle" class="icg-label ${label.cls}">${BrunoSalaSubview._escape(label.text)}</text>`;
     }).join('');
 
     return `
-      <div class="climate-ring">
-        <svg class="climate-ring-svg" viewBox="0 0 400 400" role="img" aria-label="${BrunoSalaSubview._escapeAttr(`Temperatura alvo ${targetLabel}. ${currentLabel}.`)}">
-          <defs>
-            <radialGradient id="climateOuterGlass" cx="50%" cy="44%" r="52%">
-              <stop offset="0%" stop-color="rgba(38,72,128,0.18)"></stop>
-              <stop offset="55%" stop-color="rgba(8,16,30,0.55)"></stop>
-              <stop offset="82%" stop-color="rgba(4,9,18,0.28)"></stop>
-              <stop offset="100%" stop-color="rgba(3,7,13,0.00)"></stop>
-            </radialGradient>
-            <radialGradient id="climateInnerGlass" cx="38%" cy="25%" r="78%">
-              <stop offset="0%" stop-color="rgba(170,220,255,0.25)"></stop>
-              <stop offset="42%" stop-color="rgba(13,29,52,0.76)"></stop>
-              <stop offset="100%" stop-color="rgba(3,8,18,0.98)"></stop>
-            </radialGradient>
-            <radialGradient id="climateVignette" cx="50%" cy="50%" r="50%">
-              <stop offset="60%" stop-color="rgba(0,0,0,0)"></stop>
-              <stop offset="100%" stop-color="rgba(0,0,0,0.62)"></stop>
-            </radialGradient>
-            <linearGradient id="climateRimSpecular" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="rgba(160,210,255,0.28)"></stop>
-              <stop offset="22%" stop-color="rgba(100,160,220,0.08)"></stop>
-              <stop offset="100%" stop-color="rgba(0,0,0,0)"></stop>
-            </linearGradient>
-            <linearGradient id="climateArcGrad" gradientUnits="userSpaceOnUse" x1="72" y1="312" x2="326" y2="74">
-              <stop offset="0%" stop-color="#2f8fff"></stop>
-              <stop offset="45%" stop-color="#35c7ff"></stop>
-              <stop offset="100%" stop-color="#8cefff"></stop>
-            </linearGradient>
-            <radialGradient id="climateKnobGrad" cx="35%" cy="28%" r="72%">
-              <stop offset="0%" stop-color="#ffffff"></stop>
-              <stop offset="34%" stop-color="#9eeeff"></stop>
-              <stop offset="100%" stop-color="#1d9dff"></stop>
-            </radialGradient>
-            <filter id="climateArcGlow" x="-80%" y="-80%" width="260%" height="260%">
-              <feGaussianBlur stdDeviation="7" result="b"></feGaussianBlur>
-              <feColorMatrix in="b" type="matrix" values="0 0 0 0 0.03  0 0 0 0 0.48  0 0 0 0 1  0 0 0 0.92 0"></feColorMatrix>
-              <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
-            </filter>
-            <filter id="climateKnobGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="6" result="b"></feGaussianBlur>
-              <feColorMatrix in="b" type="matrix" values="0 0 0 0 0.03  0 0 0 0 0.48  0 0 0 0 1  0 0 0 0.9 0"></feColorMatrix>
-              <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
-            </filter>
-            <filter id="climateTextGlow" x="-40%" y="-40%" width="180%" height="180%">
-              <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#b9dcff" flood-opacity="0.48"></feDropShadow>
-            </filter>
-            <filter id="climateFaceShade" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.5"></feDropShadow>
-            </filter>
-          </defs>
-          <circle cx="200" cy="200" r="185" fill="url(#climateOuterGlass)"></circle>
-          <circle cx="200" cy="200" r="185" fill="url(#climateVignette)"></circle>
-          <path d="${rimArc}" fill="none" stroke="url(#climateRimSpecular)" stroke-width="1.2" stroke-linecap="round" opacity="0.7"></path>
-          <path d="${fullArc}" fill="none" stroke="rgba(0,0,0,0.45)" stroke-width="22" stroke-linecap="round"></path>
-          <path d="${inactiveArc}" fill="none" stroke="rgba(205,230,255,0.12)" stroke-width="14" stroke-linecap="round"></path>
-          <g>${ticks}</g>
-          <g>${scaleLabels}</g>
-          <path d="${activeArc}" fill="none" stroke="url(#climateArcGrad)" stroke-width="24" stroke-linecap="round" opacity="0.88" filter="url(#climateArcGlow)"></path>
-          <path d="${activeArc}" fill="none" stroke="url(#climateArcGrad)" stroke-width="14" stroke-linecap="round"></path>
-          <circle cx="200" cy="200" r="118" fill="none" stroke="rgba(0,0,0,0.42)" stroke-width="5" opacity="0.55"></circle>
-          <circle cx="200" cy="200" r="112" fill="url(#climateInnerGlass)" stroke="rgba(110,200,255,0.34)" stroke-width="1.4" filter="url(#climateFaceShade)"></circle>
-          <path fill="rgba(185,225,255,0.075)" d="M 104 153 C 134 92, 228 74, 292 132 C 236 110, 164 119, 104 153 Z"></path>
-          <circle cx="200" cy="200" r="116" fill="none" stroke="rgba(145,220,255,0.34)" stroke-width="1"></circle>
-          <text x="200" y="201" class="climate-ring-temp" text-anchor="middle" dominant-baseline="middle" filter="url(#climateTextGlow)">${BrunoSalaSubview._escape(targetLabel)}</text>
-          <text x="200" y="244" class="climate-ring-mode" text-anchor="middle" dominant-baseline="middle">${BrunoSalaSubview._escape(dialMode)}</text>
-          <line x1="158" y1="264" x2="242" y2="264" stroke="rgba(110,180,250,0.22)" stroke-width="1"></line>
-          <circle cx="200" cy="264" r="3" fill="rgba(75,215,255,1)" filter="url(#climateArcGlow)"></circle>
-          <text x="200" y="283" class="climate-ring-meta" text-anchor="middle" dominant-baseline="middle">${BrunoSalaSubview._escape(currentLabel)}</text>
-          <circle cx="${knob.x.toFixed(3)}" cy="${knob.y.toFixed(3)}" r="21" class="climate-ring-knob-aura" fill="rgba(45,180,255,0.36)" filter="url(#climateKnobGlow)"></circle>
-          <circle cx="${knob.x.toFixed(3)}" cy="${knob.y.toFixed(3)}" r="13.5" fill="url(#climateKnobGrad)" stroke="rgba(230,250,255,0.92)" stroke-width="2" filter="url(#climateKnobGlow)"></circle>
-          <circle cx="${(knob.x - 4).toFixed(3)}" cy="${(knob.y - 5).toFixed(3)}" r="4.8" fill="rgba(255,255,255,0.78)" opacity="0.72"></circle>
-        </svg>
+      <div class="icg-root">
+        <div class="icg-shell">
+          <svg class="icg-svg" viewBox="0 0 720 460" role="img" aria-label="${BrunoSalaSubview._escapeAttr(`Temperatura alvo ${targetLabel}°. Ambiente ${ambientLabel}°.`)}">
+            <defs>
+              <linearGradient id="icgActiveBlue" x1="90" y1="340" x2="560" y2="90">
+                <stop offset="0%" stop-color="#0078ff"></stop>
+                <stop offset="38%" stop-color="#1fb7ff"></stop>
+                <stop offset="72%" stop-color="#3ed6ff"></stop>
+                <stop offset="100%" stop-color="#96f0ff"></stop>
+              </linearGradient>
+              <filter id="icgBlueGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="7" result="blur"></feGaussianBlur>
+                <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.02  0 0 0 0 0.42  0 0 0 0 1  0 0 0 0.95 0"></feColorMatrix>
+                <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+              </filter>
+              <filter id="icgTextGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#dcecff" flood-opacity="0.24"></feDropShadow>
+              </filter>
+            </defs>
+            <g>${outerTicks}</g>
+            <g>${innerTicks}</g>
+            <path d="${fullArc}" class="icg-track-shadow"></path>
+            <path d="${inactiveArc}" class="icg-track-muted"></path>
+            <path d="${activeArc}" class="icg-active-glow"></path>
+            <path d="${activeArc}" class="icg-active-arc"></path>
+            ${labelMarkup}
+            <circle cx="${marker.x.toFixed(3)}" cy="${marker.y.toFixed(3)}" r="21" class="icg-marker-glow"></circle>
+            <circle cx="${marker.x.toFixed(3)}" cy="${marker.y.toFixed(3)}" r="13" class="icg-marker-ring"></circle>
+            <circle cx="${(marker.x - 4).toFixed(3)}" cy="${(marker.y - 5).toFixed(3)}" r="4" class="icg-marker-highlight"></circle>
+            <text x="${cx}" y="260" text-anchor="middle" dominant-baseline="middle" class="icg-center-mode">${BrunoSalaSubview._escape(modeLabel)}</text>
+            <text x="${cx}" y="328" text-anchor="middle" dominant-baseline="middle" class="icg-center-temp">${BrunoSalaSubview._escape(targetLabel)}°</text>
+            <text x="${cx}" y="382" text-anchor="middle" dominant-baseline="middle" class="icg-center-sub">SET TEMPERATURE</text>
+            <line x1="${cx - 28}" y1="408" x2="${cx + 28}" y2="408" class="icg-center-line"></line>
+            <text x="${cx}" y="432" text-anchor="middle" dominant-baseline="middle" class="icg-ambient">Ambient ${BrunoSalaSubview._escape(ambientLabel)}°</text>
+          </svg>
+        </div>
       </div>
     `;
   }
@@ -4699,6 +4686,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: block;
       }
 
+      /* --- ORIGINAL CSS anel circular (comentado para rollback) ---
       .climate-ring {
         position: relative;
         width: min(210px, 82%);
@@ -4752,6 +4740,164 @@ class BrunoSalaSubview extends HTMLElement {
       @keyframes climate-ring-pulse {
         0%, 100% { opacity: 0.5; }
         50% { opacity: 0.2; }
+      }
+      --- FIM ORIGINAL --- */
+
+      /* --- NOVO: gauge semicircular integrado (icg-*) --- */
+      .icg-root {
+        width: 100%;
+        background: transparent;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: visible;
+      }
+
+      .icg-shell {
+        width: min(100%, 820px);
+        aspect-ratio: 16 / 9;
+        position: relative;
+        background: transparent;
+      }
+
+      .icg-svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        display: block;
+        background: transparent;
+      }
+
+      .icg-track-shadow {
+        fill: none;
+        stroke: rgba(0, 0, 0, 0.34);
+        stroke-width: 16;
+        stroke-linecap: round;
+      }
+
+      .icg-track-muted {
+        fill: none;
+        stroke: rgba(112, 136, 164, 0.38);
+        stroke-width: 8;
+        stroke-linecap: round;
+      }
+
+      .icg-active-glow {
+        fill: none;
+        stroke: url(#icgActiveBlue);
+        stroke-width: 18;
+        stroke-linecap: round;
+        opacity: 0.74;
+        filter: url(#icgBlueGlow);
+      }
+
+      .icg-active-arc {
+        fill: none;
+        stroke: url(#icgActiveBlue);
+        stroke-width: 8;
+        stroke-linecap: round;
+      }
+
+      .icg-tick {
+        stroke-linecap: round;
+      }
+
+      .icg-tick.minor {
+        stroke: rgba(145, 176, 214, 0.34);
+        stroke-width: 1.2;
+      }
+
+      .icg-tick.medium {
+        stroke: rgba(190, 214, 240, 0.50);
+        stroke-width: 1.6;
+      }
+
+      .icg-tick.major {
+        stroke: rgba(238, 247, 255, 0.88);
+        stroke-width: 2.5;
+      }
+
+      .icg-inner-tick {
+        stroke: rgba(40, 145, 255, 0.24);
+        stroke-width: 1;
+        stroke-linecap: round;
+      }
+
+      .icg-label {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: 1.4px;
+        fill: rgba(224, 235, 248, 0.74);
+      }
+
+      .icg-label.edge {
+        font-size: 22px;
+        fill: rgba(230, 240, 252, 0.82);
+      }
+
+      .icg-label.top {
+        font-size: 19px;
+        fill: rgba(235, 245, 255, 0.90);
+      }
+
+      .icg-marker-glow {
+        fill: rgba(40, 175, 255, 0.28);
+        filter: url(#icgBlueGlow);
+      }
+
+      .icg-marker-ring {
+        fill: rgba(5, 10, 18, 0.94);
+        stroke: rgba(92, 210, 255, 0.98);
+        stroke-width: 4;
+        filter: url(#icgBlueGlow);
+      }
+
+      .icg-marker-highlight {
+        fill: rgba(255, 255, 255, 0.62);
+        opacity: 0.62;
+      }
+
+      .icg-center-mode {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 9px;
+        fill: rgba(38, 190, 255, 0.96);
+        text-transform: uppercase;
+      }
+
+      .icg-center-temp {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 96px;
+        font-weight: 300;
+        letter-spacing: -8px;
+        fill: rgba(246, 250, 255, 0.98);
+        filter: url(#icgTextGlow);
+      }
+
+      .icg-center-sub {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 9px;
+        fill: rgba(190, 204, 220, 0.72);
+        text-transform: uppercase;
+      }
+
+      .icg-center-line {
+        stroke: rgba(36, 195, 255, 0.95);
+        stroke-width: 2;
+        stroke-linecap: round;
+        filter: url(#icgBlueGlow);
+      }
+
+      .icg-ambient {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 1.8px;
+        fill: rgba(176, 196, 220, 0.60);
       }
 
       .climate-mode-row {

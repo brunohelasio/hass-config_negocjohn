@@ -529,6 +529,7 @@ class BrunoSalaCard extends HTMLElement {
 
     const model = this._model();
     const roomActiveClass = model.roomOn ? ' is-room-on' : '';
+    const statusStackClass = model.statusLines.length > 1 ? ' has-status-stack' : '';
     const now = Date.now();
     const tvStateChanged = Boolean(this._hass && this._lastTvOn !== undefined && this._lastTvOn !== model.tvOn);
     if (tvStateChanged) {
@@ -560,9 +561,9 @@ class BrunoSalaCard extends HTMLElement {
           --action-off-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.18));
           --action-name: rgba(255,255,255,0.82);
           --action-label: rgba(255,255,255,0.42);
-          --dot-off-bg: rgba(255,255,255,0.08);
-          --dot-off-border: rgba(255,255,255,0.12);
-          --dot-off-icon: rgba(255,255,255,0.35);
+          --dot-off-bg: rgba(255,255,255,0.075);
+          --dot-off-border: rgba(255,255,255,0.14);
+          --dot-off-icon: rgba(255,255,255,0.48);
           display: block;
           height: 100%;
           min-height: 0;
@@ -649,9 +650,9 @@ class BrunoSalaCard extends HTMLElement {
             inset 0 -1px 0 rgba(0,0,0,0.12);
           --action-name: rgba(248,251,255,0.86);
           --action-label: rgba(255,255,255,0.46);
-          --dot-off-bg: rgba(255,255,255,0.12);
-          --dot-off-border: rgba(255,255,255,0.16);
-          --dot-off-icon: rgba(255,255,255,0.48);
+          --dot-off-bg: rgba(8,12,20,0.22);
+          --dot-off-border: rgba(255,255,255,0.20);
+          --dot-off-icon: rgba(255,255,255,0.66);
           background: var(--bruno-liquid-surface-on-background,
             radial-gradient(170px 134px at 12% -10%, rgba(255,255,255,0.38), rgba(255,255,255,0.105) 52%, transparent 75%),
             radial-gradient(165px 148px at 98% 94%, rgba(135,185,245,0.24), transparent 68%),
@@ -706,8 +707,8 @@ class BrunoSalaCard extends HTMLElement {
           min-height: 132px;
           width: 100%;
           display: grid;
-          grid-template-columns: auto minmax(0, 1fr) 40px;
-          grid-template-rows: auto auto 1fr;
+          grid-template-columns: auto minmax(0, 1fr) 34px;
+          grid-template-rows: 90px auto minmax(0, 1fr);
           grid-template-areas:
             "icon temp right"
             "title title right"
@@ -745,10 +746,10 @@ class BrunoSalaCard extends HTMLElement {
           grid-area: icon;
           justify-self: start;
           align-self: start;
-          width: 80px;
-          height: 80px;
-          margin-left: -8px;
-          margin-top: -7px;
+          width: 104px;
+          height: 104px;
+          margin-left: -15px;
+          margin-top: -13px;
           position: relative;
         }
 
@@ -834,7 +835,7 @@ class BrunoSalaCard extends HTMLElement {
           justify-self: start;
           align-self: end;
           min-width: 0;
-          margin-top: 9px;
+          margin-top: 4px;
           margin-bottom: 2px;
           font-size: 15px;
           line-height: 1.18;
@@ -879,6 +880,7 @@ class BrunoSalaCard extends HTMLElement {
           flex-direction: column;
           align-items: center;
           gap: 5px;
+          transform: translateX(2px);
         }
 
         .status-dot {
@@ -916,15 +918,27 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .status-dot.is-active {
-          color: rgba(var(--tone),0.98);
+          color: rgb(var(--tone));
           background:
-            radial-gradient(16px 14px at 35% 18%, rgba(255,255,255,0.25), transparent 72%),
-            linear-gradient(180deg, rgba(var(--tone),0.25), rgba(var(--tone),0.10));
-          border-color: rgba(var(--tone),0.44);
+            radial-gradient(17px 15px at 50% 44%, rgba(var(--tone),0.24), transparent 72%),
+            rgba(6,10,18,0.28);
+          border-color: rgba(var(--tone),0.60);
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,0.18),
-            0 0 14px rgba(var(--tone),0.22);
-          transform: translateZ(0) scale(1.02);
+            0 0 8px rgba(var(--tone),0.34),
+            0 0 18px rgba(var(--tone),0.24),
+            0 0 30px rgba(var(--tone),0.12);
+          transform: translateZ(0) scale(1.04);
+        }
+
+        .status-dot.is-active ha-icon {
+          filter: drop-shadow(0 0 5px rgba(var(--tone),0.56));
+        }
+
+        .sala-card.has-status-stack .lights-line {
+          max-height: 25px;
+          font-size: 10.6px;
+          line-height: 1.08;
         }
 
         .tone-blue { --tone: var(--accent-blue); }
@@ -1213,8 +1227,10 @@ class BrunoSalaCard extends HTMLElement {
           }
 
           .room-icon {
-            width: 64px;
-            height: 64px;
+            width: 92px;
+            height: 92px;
+            margin-left: -13px;
+            margin-top: -11px;
           }
 
           .action-pill {
@@ -1248,7 +1264,7 @@ class BrunoSalaCard extends HTMLElement {
         }
       </style>
 
-      <div class="sala-card${roomActiveClass}">
+      <div class="sala-card${roomActiveClass}${statusStackClass}">
         <button class="hero-action" type="button" data-action-key="room" aria-label="Sala">
           <div class="room-icon" aria-hidden="true">
             ${BrunoSalaCard._roomVisual(model.roomOn)}

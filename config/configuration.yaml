@@ -13,24 +13,24 @@ frontend:
   themes: !include_dir_merge_named themes
   extra_module_url:
     - /local/bento-sidebar-card.js?v=20260520-1
-    - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260605-controls-1
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260606-sala-ruler-ring-3
+    - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260606-sala-ruler-ring-4
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260604-office-sensors-1
-    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260604-sala-realistic-1
-    - /local/bruno-ui/cards/bruno-office-card.js?v=20260604-room-icons-1
-    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260604-room-icons-1
-    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260604-room-icons-1
-    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260604-room-icons-1
-    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260604-room-icons-1
-    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260604-room-icons-1
+    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260606-main-room-2
+    - /local/bruno-ui/cards/bruno-office-card.js?v=20260606-room-status-2
+    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260606-room-status-2
+    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260606-room-status-2
+    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260606-room-status-2
+    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260606-room-status-2
+    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260606-room-status-2
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-10
-    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260604-roborock-layout-2
+    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260606-roborock-map-1
     - /local/bruno-ui/cards/bruno-energy-card.js?v=20260518-4
     - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-3
     - /local/bruno-ui/cards/bruno-hero-stage-card.js?v=20260603-hero-stage-2
     - /local/bruno-ui/cards/bruno-hero-card.js?v=20260603-hero-stage-9
     - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260520-1
-    - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260521-1
+    - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260606-quick-rail-1
     - /local/bruno-ui/cards/bruno-media-card.js?v=20260518-5
     - /local/bruno-ui/cards/bruno-mobile-card-frame.js?v=20260518-1
     - /local/bruno-ui/cards/bruno-mobile-nav-card.js?v=20260518-2

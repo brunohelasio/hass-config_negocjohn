@@ -2,7 +2,7 @@ button_card_templates: !include_dir_merge_named ./templates/button_card_template
 streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 
 resources:
-  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260606-sala-ruler-ring-2
+  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260606-sala-ruler-ring-3
     type: module
   - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260522-1
     type: module

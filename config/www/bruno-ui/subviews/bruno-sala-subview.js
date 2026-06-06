@@ -1208,7 +1208,7 @@ class BrunoSalaSubview extends HTMLElement {
         data-zone="${BrunoSalaSubview._escapeAttr(selectedZone)}"
         data-dimmer-entity="${BrunoSalaSubview._escapeAttr(dimmerTarget?.entity || '')}"
         data-dimmer-level="${BrunoSalaSubview._escapeAttr(String(fillPercent))}"
-        style="--rail-fill:${fillPercent}%; --rail-glow:${isOff ? '0' : '1'}; --rail-ambient-height:${Math.max(22, fillPercent * 2.1)}px;"
+        style="--rail-fill:${fillPercent}%; --rail-fill-ratio:${(fillPercent / 100).toFixed(3)}; --rail-glow:${isOff ? '0' : '1'}; --rail-ambient-height:${Math.max(22, fillPercent * 1.9)}px;"
       >
         <span class="rail-zone">${BrunoSalaSubview._escape(label)}</span>
         <div class="rail-track" aria-hidden="true">
@@ -2891,7 +2891,7 @@ class BrunoSalaSubview extends HTMLElement {
         left: 5px;
         right: 5px;
         bottom: 5px;
-        height: var(--rail-fill, 0%);
+        height: calc((100% - 10px) * var(--rail-fill-ratio, 0));
         min-height: calc(24px * var(--rail-glow, 0));
         border-radius: 999px;
         background:
@@ -4342,8 +4342,8 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .media-spotify-standby {
-        width: 78% !important;
-        height: 84% !important;
+        width: 72% !important;
+        height: 78% !important;
       }
 
       .media-visual ha-icon {

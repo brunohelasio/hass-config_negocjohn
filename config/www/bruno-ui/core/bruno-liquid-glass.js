@@ -299,9 +299,20 @@ html.bruno-liquid-route-transition::after {
   }
 }
 
+@keyframes bruno-liquid-route-fade-reduced {
+  0% {
+    opacity: 0.16;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.bruno-liquid-route-transition::after {
-    display: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    animation: bruno-liquid-route-fade-reduced 180ms ease-out both;
   }
 }
 `;

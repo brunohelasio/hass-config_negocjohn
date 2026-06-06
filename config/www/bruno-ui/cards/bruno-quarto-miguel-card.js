@@ -608,9 +608,9 @@ class BrunoQuartoMiguelCard extends HTMLElement {
           --text-main: rgba(248,251,255,0.96);
           --text-soft: rgba(255,255,255,0.52);
           --text-muted: rgba(255,255,255,0.62);
-          --dot-off-bg: rgba(255,255,255,0.12);
-          --dot-off-border: rgba(255,255,255,0.16);
-          --dot-off-icon: rgba(255,255,255,0.48);
+          --dot-off-bg: rgba(8,12,20,0.22);
+          --dot-off-border: rgba(255,255,255,0.20);
+          --dot-off-icon: rgba(255,255,255,0.66);
           background: var(--bruno-liquid-surface-on-background,
             radial-gradient(170px 134px at 12% -10%, rgba(255,255,255,0.38), rgba(255,255,255,0.105) 52%, transparent 75%),
             radial-gradient(165px 148px at 98% 94%, rgba(135,185,245,0.24), transparent 68%),
@@ -823,7 +823,7 @@ class BrunoQuartoMiguelCard extends HTMLElement {
           position: absolute;
           z-index: 2;
           top: 15px;
-          right: 16px;
+          right: 13px;
           margin: 0;
           padding-top: 0;
           display: flex;
@@ -867,15 +867,21 @@ class BrunoQuartoMiguelCard extends HTMLElement {
         }
 
         .status-dot.is-active {
-          color: rgba(var(--tone),0.98);
+          color: rgb(var(--tone));
           background:
-            radial-gradient(16px 14px at 35% 18%, rgba(255,255,255,0.25), transparent 72%),
-            linear-gradient(180deg, rgba(var(--tone),0.25), rgba(var(--tone),0.10));
-          border-color: rgba(var(--tone),0.44);
+            radial-gradient(17px 15px at 50% 44%, rgba(var(--tone),0.24), transparent 72%),
+            rgba(6,10,18,0.28);
+          border-color: rgba(var(--tone),0.60);
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,0.18),
-            0 0 14px rgba(var(--tone),0.22);
-          transform: translateZ(0) scale(1.02);
+            0 0 8px rgba(var(--tone),0.34),
+            0 0 18px rgba(var(--tone),0.24),
+            0 0 30px rgba(var(--tone),0.12);
+          transform: translateZ(0) scale(1.04);
+        }
+
+        .status-dot.is-active ha-icon {
+          filter: drop-shadow(0 0 5px rgba(var(--tone),0.56));
         }
 
         .tone-blue { --tone: var(--accent-blue); }
@@ -895,7 +901,7 @@ class BrunoQuartoMiguelCard extends HTMLElement {
 
           .right-dots {
             top: 13px;
-            right: 15px;
+            right: 12px;
           }
         }
 

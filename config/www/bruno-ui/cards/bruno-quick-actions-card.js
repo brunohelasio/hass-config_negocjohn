@@ -44,6 +44,15 @@ const BRUNO_QUICK_ACTIONS_DEFAULT_ITEMS = [
   { key: 'sofa', icon: 'mdi:sofa-outline', label: 'Sala', group: 'scenes', tap_action: { action: 'none' } },
 ];
 
+const BRUNO_QUICK_ACTIONS_INLINE_ICONS = {
+  lights_off: '<svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M2 2l20 20"/><path d="M8.3 5.7A6 6 0 0 1 18 10c0 2.2-1.2 3.2-2.2 4.2-.5.5-.8 1.1-.8 1.8"/><path d="M10.2 14.2c-.9-.9-2.2-1.9-2.2-4.2 0-.8.2-1.5.5-2.2"/></svg>',
+  wifi: '<svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
+  movies: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 8h16M4 16h16M8 4v16M16 4v16"/></svg>',
+  laptop: '<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="10" rx="1.6"/><path d="M3 18h18"/><path d="M7 18l1.2-4h7.6L17 18"/></svg>',
+  sofa: '<svg viewBox="0 0 24 24"><path d="M6 11V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3"/><path d="M4 12a2 2 0 0 0-2 2v5h20v-5a2 2 0 0 0-2-2"/><path d="M7 19v2M17 19v2"/></svg>',
+  circle: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>',
+};
+
 class BrunoQuickActionsCard extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -115,13 +124,56 @@ class BrunoQuickActionsCard extends HTMLElement {
 
   _wireActions() {
     this.shadowRoot.querySelectorAll('[data-action-index]').forEach((button) => {
-      button.addEventListener('click', (event) => {
+      let pointerHandledAt = 0;
+      const run = () => {
+        if (button.getAttribute('aria-disabled') === 'true') return;
+        const item = this._items()[Number(button.dataset.actionIndex)];
+        globalThis.BrunoLiquidGlass?.feedback?.('tap');
+        this._runAction(item?.tap_action || item?.action);
+      };
+      const stopOnly = (event) => {
         event.preventDefault();
         event.stopPropagation();
-        const item = this._items()[Number(button.dataset.actionIndex)];
+      };
+
+      button.addEventListener('pointerdown', (event) => {
+        stopOnly(event);
+        if (button.getAttribute('aria-disabled') === 'true') return;
+        button.classList.add('is-pressed');
+        button.setPointerCapture?.(event.pointerId);
+      });
+
+      button.addEventListener('pointerup', (event) => {
+        stopOnly(event);
+        if (button.getAttribute('aria-disabled') === 'true') return;
+        button.classList.remove('is-pressed');
+        button.releasePointerCapture?.(event.pointerId);
+        pointerHandledAt = Date.now();
+        run();
+      });
+
+      button.addEventListener('pointercancel', () => {
+        button.classList.remove('is-pressed');
+      });
+
+      button.addEventListener('pointerleave', () => {
+        button.classList.remove('is-pressed');
+      });
+
+      button.addEventListener('click', (event) => {
+        stopOnly(event);
+        if (Date.now() - pointerHandledAt < 420) return;
         button.classList.add('is-pressed');
         window.setTimeout(() => button.classList.remove('is-pressed'), 180);
-        this._runAction(item?.tap_action || item?.action);
+        run();
+      });
+
+      button.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        stopOnly(event);
+        button.classList.add('is-pressed');
+        window.setTimeout(() => button.classList.remove('is-pressed'), 180);
+        run();
       });
     });
   }
@@ -134,6 +186,10 @@ class BrunoQuickActionsCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
+          --rail-size: 56px;
+          --button-size: 39px;
+          --button-radius: 999px;
+          --icon-size: 19px;
           --accent: 150, 190, 255;
           display: block;
           width: 100%;
@@ -171,27 +227,31 @@ class BrunoQuickActionsCard extends HTMLElement {
           isolation: isolate;
           width: max-content;
           max-width: 100%;
-          min-height: 58px;
+          height: var(--rail-size);
+          min-height: var(--rail-size);
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 7px;
-          padding: 6px 8px;
+          gap: 8px;
+          padding: 0 8px;
           color: rgba(255,255,255,0.86);
-          border: var(--bruno-liquid-dock-border, 1px solid rgba(255,255,255,0.17));
+          border: var(--bruno-liquid-rail-border, 1px solid rgba(255,255,255,0.16));
           border-radius: 999px;
-          background: var(--bruno-liquid-dock-background,
-            radial-gradient(86px 70px at 18% 0%, rgba(255,255,255,0.19), transparent 72%),
-            radial-gradient(98px 82px at 92% 100%, rgba(var(--accent),0.08), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.106), rgba(255,255,255,0.030) 42%, rgba(255,255,255,0.048)),
-            linear-gradient(155deg, rgba(18,24,36,0.70), rgba(10,13,20,0.60) 52%, rgba(18,16,17,0.42))
+          background: var(--bruno-liquid-rail-background,
+            radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
+            radial-gradient(38px 110px at 92% 86%, rgba(var(--accent),0.10), transparent 68%),
+            linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.038) 34%, rgba(255,255,255,0.065)),
+            linear-gradient(155deg, rgba(22,27,38,0.84), rgba(10,12,18,0.72) 48%, rgba(18,16,17,0.46))
           );
-          box-shadow: var(--bruno-liquid-dock-shadow,
-            inset 0 1px 0 rgba(255,255,255,0.25),
-            0 14px 34px rgba(0,0,0,0.30)
+          box-shadow: var(--bruno-liquid-rail-shadow,
+            inset 0 1px 0 rgba(255,255,255,0.23),
+            inset 1px 0 0 rgba(255,255,255,0.11),
+            inset -1px -1px 0 rgba(255,255,255,0.026),
+            0 18px 44px rgba(0,0,0,0.31),
+            0 0 24px rgba(110,150,210,0.075)
           );
-          backdrop-filter: var(--bruno-liquid-dock-filter, blur(28px) saturate(1.56) contrast(1.05));
-          -webkit-backdrop-filter: var(--bruno-liquid-dock-filter, blur(28px) saturate(1.56) contrast(1.05));
+          backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
+          -webkit-backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
           overflow: hidden;
         }
 
@@ -206,12 +266,13 @@ class BrunoQuickActionsCard extends HTMLElement {
         .quick-dock::before {
           inset: 1px;
           z-index: 0;
-          background: var(--bruno-liquid-dock-sheen,
-            radial-gradient(58px 42px at 18% 2%, rgba(255,255,255,0.20), transparent 72%),
-            radial-gradient(64px 72px at 92% 18%, rgba(var(--accent),0.10), transparent 74%),
-            linear-gradient(180deg, rgba(255,255,255,0.115), rgba(255,255,255,0.00) 38%)
+          background: var(--bruno-liquid-rail-sheen,
+            radial-gradient(34px 42px at 24% 3%, rgba(255,255,255,0.26), transparent 70%),
+            radial-gradient(42px 70px at 94% 18%, rgba(var(--accent),0.16), transparent 72%),
+            linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
+            linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%)
           );
-          opacity: var(--bruno-liquid-dock-sheen-opacity, 0.70);
+          opacity: var(--bruno-liquid-rail-sheen-opacity, 0.78);
         }
 
         .quick-dock::after {
@@ -259,22 +320,21 @@ class BrunoQuickActionsCard extends HTMLElement {
           appearance: none;
           -webkit-appearance: none;
           position: relative;
-          flex: 0 0 88px;
-          width: 88px;
-          min-height: 46px;
-          display: grid;
-          grid-template-columns: 24px minmax(0, 1fr);
-          grid-template-rows: auto auto;
-          grid-template-areas:
-            "icon label"
-            "icon meta";
+          flex: 0 0 var(--button-size);
+          width: var(--button-size);
+          height: var(--button-size);
+          min-width: var(--button-size);
+          min-height: var(--button-size);
+          max-width: var(--button-size);
+          max-height: var(--button-size);
+          display: inline-flex;
           align-items: center;
-          column-gap: 8px;
+          justify-content: center;
           margin: 0;
-          padding: 7px 9px 7px 8px;
+          padding: 0;
           color: rgba(255,255,255,0.86);
           border: 1px solid transparent;
-          border-radius: 17px;
+          border-radius: var(--button-radius);
           background: transparent;
           box-shadow: none;
           overflow: hidden;
@@ -336,7 +396,7 @@ class BrunoQuickActionsCard extends HTMLElement {
 
         .quick-button.is-pressed,
         .quick-button:active {
-          transform: translateY(1px) scale(0.98);
+          transform: scale(0.96);
         }
 
         .quick-button[aria-disabled="true"] {
@@ -351,10 +411,17 @@ class BrunoQuickActionsCard extends HTMLElement {
           opacity: 0;
         }
 
-        .quick-button ha-icon {
-          --mdc-icon-size: 21px;
-          grid-area: icon;
-          justify-self: center;
+        .quick-button svg {
+          width: var(--icon-size);
+          height: var(--icon-size);
+          flex: 0 0 var(--icon-size);
+          display: block;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.55;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          pointer-events: none;
           position: relative;
           z-index: 2;
           filter: drop-shadow(0 2px 5px rgba(0,0,0,0.24));
@@ -362,6 +429,7 @@ class BrunoQuickActionsCard extends HTMLElement {
 
         .quick-label,
         .quick-kind {
+          display: none;
           position: relative;
           z-index: 2;
           min-width: 0;
@@ -400,19 +468,10 @@ class BrunoQuickActionsCard extends HTMLElement {
           }
 
           .quick-dock {
-            min-height: 54px;
-            padding: 5px 6px;
-          }
-
-          .quick-button {
-            width: 80px;
-            flex-basis: 80px;
-            min-height: 44px;
-            padding-inline: 8px;
-          }
-
-          .quick-label {
-            font-size: 9.1px;
+            --rail-size: 50px;
+            --button-size: 35px;
+            --icon-size: 17px;
+            padding: 0 6px;
           }
         }
       </style>
@@ -443,7 +502,7 @@ class BrunoQuickActionsCard extends HTMLElement {
         ${disabled ? 'aria-disabled="true"' : ''}
         data-action-index="${index}"
       >
-        <ha-icon icon="${BrunoQuickActionsCard._escapeAttr(item?.icon || 'mdi:circle-outline')}"></ha-icon>
+        ${BrunoQuickActionsCard._icon(item)}
         <span class="quick-label">${BrunoQuickActionsCard._escape(item?.label || item?.key || 'Acao')}</span>
         <span class="quick-kind">${BrunoQuickActionsCard._escape(this._kindLabel(item))}</span>
       </button>
@@ -465,6 +524,11 @@ class BrunoQuickActionsCard extends HTMLElement {
 
   static _escapeAttr(value) {
     return BrunoQuickActionsCard._escape(value).replace(/'/g, '&#39;');
+  }
+
+  static _icon(item) {
+    const key = item?.icon_key || item?.key || String(item?.icon || '').replace(/^mdi:/, '');
+    return BRUNO_QUICK_ACTIONS_INLINE_ICONS[key] || BRUNO_QUICK_ACTIONS_INLINE_ICONS.circle;
   }
 }
 

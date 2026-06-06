@@ -707,13 +707,14 @@ class BrunoSalaCard extends HTMLElement {
           min-height: 132px;
           width: 100%;
           display: grid;
-          grid-template-columns: auto minmax(0, 1fr) 34px;
-          grid-template-rows: 90px auto minmax(0, 1fr);
+          grid-template-columns: 110px minmax(0, 1fr) 34px;
+          grid-template-rows: auto minmax(0, 1fr) auto auto;
           grid-template-areas:
             "icon temp right"
+            "icon space right"
             "title title right"
             "lights lights right";
-          column-gap: 2px;
+          column-gap: 6px;
           row-gap: 0;
           align-items: start;
           padding: 0;
@@ -748,8 +749,8 @@ class BrunoSalaCard extends HTMLElement {
           align-self: start;
           width: 104px;
           height: 104px;
-          margin-left: -15px;
-          margin-top: -13px;
+          margin-left: 0;
+          margin-top: -8px;
           position: relative;
         }
 
@@ -806,7 +807,7 @@ class BrunoSalaCard extends HTMLElement {
           grid-area: temp;
           justify-self: start;
           align-self: start;
-          margin-left: 12px;
+          margin-left: 0;
           margin-top: 4px;
           min-width: 48px;
           text-align: left;
@@ -835,7 +836,7 @@ class BrunoSalaCard extends HTMLElement {
           justify-self: start;
           align-self: end;
           min-width: 0;
-          margin-top: 4px;
+          margin-top: 0;
           margin-bottom: 2px;
           font-size: 15px;
           line-height: 1.18;
@@ -1224,13 +1225,14 @@ class BrunoSalaCard extends HTMLElement {
 
           .hero-action {
             min-height: 120px;
+            grid-template-columns: 98px minmax(0, 1fr) 34px;
           }
 
           .room-icon {
             width: 92px;
             height: 92px;
-            margin-left: -13px;
-            margin-top: -11px;
+            margin-left: 0;
+            margin-top: -7px;
           }
 
           .action-pill {

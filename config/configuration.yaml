@@ -16,7 +16,7 @@ frontend:
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
     - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260606-sala-ruler-ring-4
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260604-office-sensors-1
-    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260606-main-room-2
+    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260606-main-room-3
     - /local/bruno-ui/cards/bruno-office-card.js?v=20260606-room-status-2
     - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260606-room-status-2
     - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260606-room-status-2
@@ -24,7 +24,7 @@ frontend:
     - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260606-room-status-2
     - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260606-room-status-2
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-10
-    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260606-roborock-map-1
+    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260606-roborock-map-2
     - /local/bruno-ui/cards/bruno-energy-card.js?v=20260518-4
     - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-3
     - /local/bruno-ui/cards/bruno-hero-stage-card.js?v=20260603-hero-stage-2

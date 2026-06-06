@@ -25,6 +25,7 @@ const BRUNO_SALA_SPEAKER_ON_STATES = ['playing', 'on', 'paused'];
 const BRUNO_SALA_ACTION_COOLDOWN = 1200;
 const BRUNO_SALA_CLIMATE_COOLDOWN = 2500;
 const BRUNO_SALA_TV_ANIMATION_MS = 950;
+const BRUNO_SALA_PRESENCE_FALLBACK_MS = 10 * 60 * 1000;
 
 class BrunoSalaCard extends HTMLElement {
   static getStubConfig() {
@@ -153,18 +154,19 @@ class BrunoSalaCard extends HTMLElement {
     if (entity?.state !== 'on' || !entity.last_changed) return false;
 
     const changedAt = Date.parse(entity.last_changed);
-    return !Number.isNaN(changedAt) && Date.now() - changedAt < 10 * 60 * 1000;
+    return !Number.isNaN(changedAt) && Date.now() - changedAt < BRUNO_SALA_PRESENCE_FALLBACK_MS;
   }
 
   _semanticLine() {
-    const occupancy = this._state(this._config.entities.occupancy);
-    if (occupancy?.state === 'on') return 'Ocupada';
-
     const semantic = this._state(this._config.entities.semantic_sensor);
     const semanticState = String(semantic?.state || '').toLowerCase();
     const display = semantic?.attributes?.display;
-    if (!display || ['none', 'unknown', 'unavailable'].includes(semanticState)) return '';
-    return String(display);
+    if (display && !['none', 'unknown', 'unavailable'].includes(semanticState)) {
+      return String(display).trim();
+    }
+
+    const occupancy = this._state(this._config.entities.occupancy);
+    return occupancy?.state === 'on' ? 'Ocupada' : '';
   }
 
   _tvLabel(entity) {
@@ -315,6 +317,7 @@ class BrunoSalaCard extends HTMLElement {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
     const eventPath = path.startsWith('/') ? resolvedPath : path;
+    globalThis.BrunoLiquidGlass?.routeTransition?.();
     this.dispatchEvent(new CustomEvent('hass-navigate', {
       detail: { path: eventPath },
       bubbles: true,
@@ -382,6 +385,7 @@ class BrunoSalaCard extends HTMLElement {
       lastDoubleAt = now;
       clearTap();
       lastTapActionAt = now;
+      globalThis.BrunoLiquidGlass?.feedback?.('tap');
       this._runAction(key, 'double');
     };
 
@@ -389,6 +393,7 @@ class BrunoSalaCard extends HTMLElement {
       const now = Date.now();
       if (now - lastTapActionAt < 280) return;
       lastTapActionAt = now;
+      globalThis.BrunoLiquidGlass?.feedback?.('tap');
       this._runAction(key, 'tap');
     };
 
@@ -404,6 +409,7 @@ class BrunoSalaCard extends HTMLElement {
         holdFired = true;
         button.classList.add('is-hold-fired');
         window.setTimeout(() => button.classList.remove('is-hold-fired'), 260);
+        globalThis.BrunoLiquidGlass?.feedback?.('hold');
         this._runAction(key, 'hold');
       }, 560);
     });
@@ -456,6 +462,7 @@ class BrunoSalaCard extends HTMLElement {
     button.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
+      globalThis.BrunoLiquidGlass?.feedback?.('tap');
       this._runAction(key, 'tap');
     });
   }
@@ -548,9 +555,9 @@ class BrunoSalaCard extends HTMLElement {
           --text-main: rgba(245,250,255,0.96);
           --text-soft: rgba(255,255,255,0.40);
           --text-muted: rgba(255,255,255,0.52);
-          --action-off-bg: linear-gradient(180deg, rgba(255,255,255,0.075) 0%, rgba(255,255,255,0.035) 100%);
-          --action-off-border: rgba(255,255,255,0.12);
-          --action-off-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+          --action-off-bg: var(--bruno-liquid-control-background, linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.045)));
+          --action-off-border: rgba(255,255,255,0.18);
+          --action-off-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.18), 0 10px 22px rgba(0,0,0,0.18));
           --action-name: rgba(255,255,255,0.82);
           --action-label: rgba(255,255,255,0.42);
           --dot-off-bg: rgba(255,255,255,0.08);
@@ -699,13 +706,13 @@ class BrunoSalaCard extends HTMLElement {
           min-height: 132px;
           width: 100%;
           display: grid;
-          grid-template-columns: auto 1fr auto;
+          grid-template-columns: auto minmax(0, 1fr) 40px;
           grid-template-rows: auto auto 1fr;
           grid-template-areas:
             "icon temp right"
             "title title right"
             "lights lights right";
-          column-gap: 0;
+          column-gap: 2px;
           row-gap: 0;
           align-items: start;
           padding: 0;
@@ -715,7 +722,9 @@ class BrunoSalaCard extends HTMLElement {
           border-radius: 0;
           box-shadow: none;
           overflow: visible;
-          transition: transform 160ms ease, filter 160ms ease;
+          transition:
+            transform var(--bruno-liquid-motion-fast, 160ms ease),
+            filter var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
         .hero-action:hover {
@@ -848,11 +857,13 @@ class BrunoSalaCard extends HTMLElement {
           color: var(--text-soft);
           white-space: normal;
           overflow: hidden;
+          max-height: 28px;
+          padding-right: 4px;
         }
 
         .lights-line span {
           display: block;
-          max-width: 120px;
+          max-width: 142px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -860,9 +871,9 @@ class BrunoSalaCard extends HTMLElement {
 
         .right-dots {
           grid-area: right;
-          justify-self: end;
+          justify-self: center;
           align-self: start;
-          margin-right: 2px;
+          margin-right: 0;
           padding-top: 2px;
           display: flex;
           flex-direction: column;
@@ -882,7 +893,12 @@ class BrunoSalaCard extends HTMLElement {
           background: var(--dot-off-bg);
           border: 1px solid var(--dot-off-border);
           box-shadow: none;
-          transition: background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+          transition:
+            background var(--bruno-liquid-motion-fast, 160ms ease),
+            border-color var(--bruno-liquid-motion-fast, 160ms ease),
+            color var(--bruno-liquid-motion-fast, 160ms ease),
+            box-shadow var(--bruno-liquid-motion-fast, 160ms ease),
+            transform var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
         .status-dot ha-icon {
@@ -901,9 +917,14 @@ class BrunoSalaCard extends HTMLElement {
 
         .status-dot.is-active {
           color: rgba(var(--tone),0.98);
-          background: rgba(var(--tone),0.13);
-          border-color: rgba(var(--tone),0.34);
-          box-shadow: 0 0 12px rgba(var(--tone),0.14);
+          background:
+            radial-gradient(16px 14px at 35% 18%, rgba(255,255,255,0.25), transparent 72%),
+            linear-gradient(180deg, rgba(var(--tone),0.25), rgba(var(--tone),0.10));
+          border-color: rgba(var(--tone),0.44);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.18),
+            0 0 14px rgba(var(--tone),0.22);
+          transform: translateZ(0) scale(1.02);
         }
 
         .tone-blue { --tone: var(--accent-blue); }
@@ -949,13 +970,15 @@ class BrunoSalaCard extends HTMLElement {
           border-radius: var(--button-radius);
           box-shadow: var(--action-off-shadow);
           overflow: hidden;
+          backdrop-filter: var(--bruno-liquid-control-filter, blur(20px) saturate(1.34) contrast(1.04));
+          -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(20px) saturate(1.34) contrast(1.04));
           transition:
-            background 160ms ease,
-            border-color 160ms ease,
-            box-shadow 160ms ease,
-            color 160ms ease,
-            transform 160ms ease,
-            filter 160ms ease;
+            background var(--bruno-liquid-motion-fast, 160ms ease),
+            border-color var(--bruno-liquid-motion-fast, 160ms ease),
+            box-shadow var(--bruno-liquid-motion-fast, 160ms ease),
+            color var(--bruno-liquid-motion-fast, 160ms ease),
+            transform var(--bruno-liquid-motion-fast, 160ms ease),
+            filter var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
         .action-pill:hover {

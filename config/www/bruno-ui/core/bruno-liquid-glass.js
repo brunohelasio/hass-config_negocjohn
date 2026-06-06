@@ -1,4 +1,4 @@
-const BRUNO_LIQUID_GLASS_VERSION = '20260605-controls-1';
+const BRUNO_LIQUID_GLASS_VERSION = '20260606-main-view-1';
 const BRUNO_LIQUID_GLASS_STYLE_ID = 'bruno-liquid-glass-tokens';
 
 const BRUNO_LIQUID_GLASS_TOKENS = {
@@ -20,27 +20,27 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   // Shared card skin. Revised for the hero-stage layout: the off state reads
   // as iOS-like frosted glass over the photographic background.
   'bruno-liquid-card-background': `
-    radial-gradient(220px 162px at 18% -8%, rgba(255,255,255,0.22), rgba(255,255,255,0.060) 45%, transparent 73%),
-    radial-gradient(210px 176px at 99% 99%, rgba(var(--accent, var(--bruno-liquid-accent)),0.072), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,0.128), rgba(255,255,255,0.052) 42%, rgba(255,255,255,0.074)),
-    rgba(8,12,20,0.42)
+    radial-gradient(240px 174px at 18% -8%, rgba(255,255,255,0.255), rgba(255,255,255,0.070) 45%, transparent 73%),
+    radial-gradient(218px 182px at 99% 99%, rgba(var(--accent, var(--bruno-liquid-accent)),0.084), transparent 72%),
+    linear-gradient(180deg, rgba(255,255,255,0.146), rgba(255,255,255,0.058) 42%, rgba(255,255,255,0.082)),
+    rgba(8,12,20,0.44)
   `,
-  'bruno-liquid-card-filter': 'blur(32px) saturate(1.62) contrast(1.05)',
-  'bruno-liquid-card-border': '1px solid rgba(255,255,255,0.17)',
+  'bruno-liquid-card-filter': 'blur(34px) saturate(1.70) contrast(1.06)',
+  'bruno-liquid-card-border': '1px solid rgba(255,255,255,0.185)',
   'bruno-liquid-card-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.26),
-    inset 1px 0 0 rgba(255,255,255,0.10),
-    inset -1px 0 0 rgba(255,255,255,0.045),
-    inset 0 -1px 0 rgba(255,255,255,0.045),
-    0 20px 46px rgba(0,0,0,0.28),
-    0 0 26px rgba(110,150,210,0.052)
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 1px 0 0 rgba(255,255,255,0.12),
+    inset -1px 0 0 rgba(255,255,255,0.055),
+    inset 0 -1px 0 rgba(255,255,255,0.050),
+    0 20px 48px rgba(0,0,0,0.30),
+    0 0 28px rgba(110,150,210,0.070)
   `,
   'bruno-liquid-card-sheen': `
-    radial-gradient(90px 66px at 18% 0%, rgba(255,255,255,0.18), transparent 74%),
-    linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.00) 38%),
-    linear-gradient(90deg, rgba(255,255,255,0.060), rgba(255,255,255,0.00) 50%)
+    radial-gradient(98px 70px at 18% 0%, rgba(255,255,255,0.22), transparent 74%),
+    linear-gradient(180deg, rgba(255,255,255,0.128), rgba(255,255,255,0.00) 38%),
+    linear-gradient(90deg, rgba(255,255,255,0.070), rgba(255,255,255,0.00) 50%)
   `,
-  'bruno-liquid-card-sheen-opacity': '0.70',
+  'bruno-liquid-card-sheen-opacity': '0.76',
   'bruno-liquid-card-edge-glow': `
     linear-gradient(125deg, rgba(255,255,255,0.30), rgba(255,255,255,0.075) 34%, rgba(255,255,255,0.020) 62%, rgba(255,190,120,0.105) 100%)
   `,
@@ -128,17 +128,19 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-chip-filter': 'blur(18px) saturate(1.28)',
 
   'bruno-liquid-control-background': `
-    radial-gradient(82px 48px at 50% 0%, rgba(255,255,255,0.18), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.044)),
-    rgba(255,255,255,0.052)
+    radial-gradient(94px 56px at 50% -4%, rgba(255,255,255,0.24), transparent 72%),
+    radial-gradient(68px 42px at 90% 92%, rgba(var(--accent, var(--bruno-liquid-accent)),0.070), transparent 74%),
+    linear-gradient(180deg, rgba(255,255,255,0.132), rgba(255,255,255,0.050)),
+    rgba(255,255,255,0.058)
   `,
-  'bruno-liquid-control-border': '1px solid rgba(255,255,255,0.155)',
+  'bruno-liquid-control-border': '1px solid rgba(255,255,255,0.18)',
   'bruno-liquid-control-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.18),
-    inset 0 -1px 0 rgba(0,0,0,0.14),
-    0 8px 18px rgba(0,0,0,0.16)
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 1px 0 0 rgba(255,255,255,0.075),
+    inset 0 -1px 0 rgba(0,0,0,0.16),
+    0 10px 22px rgba(0,0,0,0.18)
   `,
-  'bruno-liquid-control-filter': 'blur(20px) saturate(1.34) contrast(1.04)',
+  'bruno-liquid-control-filter': 'blur(22px) saturate(1.42) contrast(1.05)',
   'bruno-liquid-control-blue-background': `
     radial-gradient(circle at 50% 12%, rgba(185,218,255,0.52), transparent 68%),
     linear-gradient(180deg, rgba(91,159,238,0.78), rgba(33,82,152,0.62))
@@ -270,6 +272,40 @@ const BRUNO_LIQUID_GLASS_STATES = {
   },
 };
 
+const BRUNO_LIQUID_GLASS_GLOBAL_CSS = `
+html.bruno-liquid-route-transition::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
+  background:
+    radial-gradient(420px 300px at 50% 36%, rgba(255,255,255,0.055), transparent 68%),
+    rgba(4,7,12,0.10);
+  -webkit-backdrop-filter: blur(7px) saturate(1.10);
+  backdrop-filter: blur(7px) saturate(1.10);
+  animation: bruno-liquid-route-fade 260ms ease both;
+}
+
+@keyframes bruno-liquid-route-fade {
+  0% {
+    opacity: 0;
+  }
+  36% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.bruno-liquid-route-transition::after {
+    display: none;
+  }
+}
+`;
+
 function brunoLiquidGlassSerialize(tokens) {
   return Object.entries(tokens)
     .map(([name, value]) => `  --${name}: ${String(value).trim().replace(/\s+/g, ' ')};`)
@@ -286,8 +322,34 @@ function brunoLiquidGlassApply(root = globalThis.document) {
     root.head.appendChild(style);
   }
 
-  style.textContent = `:root {\n${brunoLiquidGlassSerialize(BRUNO_LIQUID_GLASS_TOKENS)}\n}`;
+  style.textContent = `:root {\n${brunoLiquidGlassSerialize(BRUNO_LIQUID_GLASS_TOKENS)}\n}\n${BRUNO_LIQUID_GLASS_GLOBAL_CSS}`;
   return style;
+}
+
+function brunoLiquidGlassFeedback(kind = 'tap') {
+  const vibrate = globalThis.navigator?.vibrate;
+  if (typeof vibrate !== 'function') return false;
+
+  const pattern = kind === 'hold' ? [12, 24, 12] : 10;
+  try {
+    vibrate.call(globalThis.navigator, pattern);
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+function brunoLiquidGlassRouteTransition(duration = 280) {
+  const root = globalThis.document?.documentElement;
+  if (!root) return;
+
+  root.classList.remove('bruno-liquid-route-transition');
+  // Force a new animation frame when navigating rapidly between views.
+  void root.offsetWidth;
+  root.classList.add('bruno-liquid-route-transition');
+  globalThis.setTimeout?.(() => {
+    root.classList.remove('bruno-liquid-route-transition');
+  }, duration);
 }
 
 globalThis.BrunoLiquidGlass = {
@@ -296,6 +358,8 @@ globalThis.BrunoLiquidGlass = {
   surfaces: BRUNO_LIQUID_GLASS_SURFACES,
   states: BRUNO_LIQUID_GLASS_STATES,
   apply: brunoLiquidGlassApply,
+  feedback: brunoLiquidGlassFeedback,
+  routeTransition: brunoLiquidGlassRouteTransition,
 };
 
 brunoLiquidGlassApply();

@@ -1,5 +1,5 @@
 const BRUNO_ROBOROCK_CARD_TAG = 'bruno-roborock-card';
-const BRUNO_ROBOROCK_ASSET_VERSION = '20260606-main-view-3';
+const BRUNO_ROBOROCK_ASSET_VERSION = '20260606-main-view-4';
 
 const BRUNO_ROBOROCK_DEFAULT_ENTITIES = {
   vacuum: 'vacuum.roborock_s7',
@@ -118,6 +118,7 @@ class BrunoRoborockCard extends HTMLElement {
       battery: typeof battery === 'number' ? `${Math.round(battery)}%` : '--',
       area: typeof area === 'number' ? `${Number(area).toFixed(1).replace('.0', '')}m²` : '--m²',
       time: typeof time === 'number' ? `${Number(time).toFixed(1).replace('.0', '')} min` : '-- min',
+      stateMetric: state === 'docked' ? 'Idle' : (this._isInvalid(state) ? 'Indisp.' : (labels[state] || state || '--')),
     };
   }
 
@@ -283,14 +284,14 @@ class BrunoRoborockCard extends HTMLElement {
           height: 100%;
           min-height: 0;
           display: grid;
-          grid-template-columns: 154px minmax(0, 1fr);
-          grid-template-rows: 48px minmax(0, 1fr) 48px;
+          grid-template-columns: 148px minmax(0, 1fr);
+          grid-template-rows: 40px minmax(0, 1fr) 48px;
           grid-template-areas:
             "header stats"
             "icon status"
             "icon actions";
-          gap: 8px 14px;
-          padding: 13px 15px 13px;
+          gap: 8px 10px;
+          padding: 13px 14px 13px 12px;
           color: var(--text-main);
           background: var(--bruno-liquid-surface-off-background,
             radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.18), rgba(255,255,255,0.042) 44%, transparent 73%),
@@ -453,7 +454,7 @@ class BrunoRoborockCard extends HTMLElement {
           height: 150px;
           display: grid;
           place-items: center;
-          transform: translateY(2px);
+          transform: translate(-4px, -5px);
         }
 
         .robot img {
@@ -488,6 +489,7 @@ class BrunoRoborockCard extends HTMLElement {
           flex-direction: column;
           gap: 6px;
           padding-left: 0;
+          transform: translateX(-1px);
         }
 
         .status-main {
@@ -538,52 +540,52 @@ class BrunoRoborockCard extends HTMLElement {
           width: 100%;
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 6px;
+          align-items: start;
+          gap: 8px;
         }
 
         .stat {
           min-width: 0;
-          height: 48px;
+          height: 40px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 1px;
-          padding: 5px 3px 6px;
-          border-radius: 12px;
-          color: rgba(255,255,255,0.84);
-          background: var(--bruno-liquid-control-background, rgba(255,255,255,0.07));
-          border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.13));
-          box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.10));
-          overflow: hidden;
+          justify-content: flex-start;
+          gap: 2px;
+          padding: 1px 0 0;
+          color: rgba(255,255,255,0.88);
+          background: transparent;
+          border: 0;
+          box-shadow: none;
+          overflow: visible;
+          text-shadow: 0 1px 8px rgba(0,0,0,0.34);
         }
 
         .stat ha-icon {
-          --mdc-icon-size: 14px;
-          color: rgba(255,222,178,0.86);
+          --mdc-icon-size: 17px;
+          color: rgba(255,222,178,0.92);
+          filter: drop-shadow(0 0 8px rgba(255,171,72,0.22));
         }
 
         .stat-value {
-          max-width: 92%;
+          max-width: 100%;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          font-size: 11.3px;
+          font-size: 12px;
           line-height: 1;
           font-weight: 760;
-          margin-top: -1px;
         }
 
         .stat-label {
-          max-width: 92%;
+          max-width: 100%;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          font-size: 8.2px;
+          font-size: 8.8px;
           line-height: 1;
           font-weight: 680;
-          color: var(--text-muted);
-          margin-top: 1px;
+          color: rgba(226,232,240,0.58);
         }
 
         .actions {
@@ -655,19 +657,20 @@ class BrunoRoborockCard extends HTMLElement {
 
         @media (max-height: 760px) {
           .roborock-card {
-            padding: 12px;
-            grid-template-columns: 140px minmax(0, 1fr);
-            grid-template-rows: 44px minmax(0, 1fr) 44px;
+            padding: 12px 12px 12px 10px;
+            grid-template-columns: 134px minmax(0, 1fr);
+            grid-template-rows: 38px minmax(0, 1fr) 44px;
             grid-template-areas:
               "header stats"
               "icon status"
               "icon actions";
-            gap: 7px 12px;
+            gap: 7px 9px;
           }
 
           .robot {
             width: 138px;
             height: 138px;
+            transform: translate(-3px, -4px);
           }
 
           .robot img {
@@ -676,7 +679,7 @@ class BrunoRoborockCard extends HTMLElement {
           }
 
           .stat {
-            height: 44px;
+            height: 38px;
           }
 
           .action {
@@ -720,7 +723,7 @@ class BrunoRoborockCard extends HTMLElement {
           ${this._stat('mdi:lightning-bolt', model.battery, 'Bateria')}
           ${this._stat('mdi:cube-outline', model.area, 'Area limpa')}
           ${this._stat('mdi:timer-outline', model.time, 'Tempo')}
-          ${this._stat('mdi:pulse', model.state === 'docked' ? 'Idle' : model.status, 'Status')}
+          ${this._stat('mdi:pulse', model.stateMetric, 'Status')}
         </div>
 
         <div class="actions">

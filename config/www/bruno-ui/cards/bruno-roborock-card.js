@@ -285,7 +285,7 @@ class BrunoRoborockCard extends HTMLElement {
           min-height: 0;
           display: grid;
           grid-template-columns: 148px minmax(0, 1fr);
-          grid-template-rows: 40px minmax(0, 1fr) 48px;
+          grid-template-rows: 44px minmax(0, 1fr) 48px;
           grid-template-areas:
             "header stats"
             "icon status"
@@ -541,18 +541,18 @@ class BrunoRoborockCard extends HTMLElement {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           align-items: start;
-          gap: 8px;
+          gap: 5px;
         }
 
         .stat {
           min-width: 0;
-          height: 40px;
+          height: 44px;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
-          gap: 2px;
-          padding: 1px 0 0;
+          gap: 1px;
+          padding: 0;
           color: rgba(255,255,255,0.88);
           background: transparent;
           border: 0;
@@ -562,7 +562,7 @@ class BrunoRoborockCard extends HTMLElement {
         }
 
         .stat ha-icon {
-          --mdc-icon-size: 17px;
+          --mdc-icon-size: 18px;
           color: rgba(255,222,178,0.92);
           filter: drop-shadow(0 0 8px rgba(255,171,72,0.22));
         }
@@ -572,8 +572,8 @@ class BrunoRoborockCard extends HTMLElement {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          font-size: 12px;
-          line-height: 1;
+          font-size: 12.6px;
+          line-height: 1.03;
           font-weight: 760;
         }
 
@@ -582,10 +582,10 @@ class BrunoRoborockCard extends HTMLElement {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          font-size: 8.8px;
-          line-height: 1;
+          font-size: 9px;
+          line-height: 1.05;
           font-weight: 680;
-          color: rgba(226,232,240,0.58);
+          color: rgba(226,232,240,0.68);
         }
 
         .actions {
@@ -659,7 +659,7 @@ class BrunoRoborockCard extends HTMLElement {
           .roborock-card {
             padding: 12px 12px 12px 10px;
             grid-template-columns: 134px minmax(0, 1fr);
-            grid-template-rows: 38px minmax(0, 1fr) 44px;
+            grid-template-rows: 42px minmax(0, 1fr) 44px;
             grid-template-areas:
               "header stats"
               "icon status"
@@ -679,7 +679,19 @@ class BrunoRoborockCard extends HTMLElement {
           }
 
           .stat {
-            height: 38px;
+            height: 42px;
+          }
+
+          .stat ha-icon {
+            --mdc-icon-size: 17px;
+          }
+
+          .stat-value {
+            font-size: 12px;
+          }
+
+          .stat-label {
+            font-size: 8.7px;
           }
 
           .action {

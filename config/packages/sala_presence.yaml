@@ -28,7 +28,9 @@ template:
           fallback_note: "Passagem rapida acende apenas o dot de presenca."
 
       # Ocupacao exige permanencia antes de ligar. Assim, passar pela Sala
-      # nao gera texto semantico; permanecer gera "Ocupada".
+      # nao gera texto semantico; permanecer gera "Ocupada". Como a fonte
+      # atual ainda e PIR/movimento, o desligamento precisa ser curto para
+      # evitar que a Sala pareca ocupada por varios minutos sem ninguem.
       - name: Sala Occupancy
         unique_id: sala_occupancy
         device_class: occupancy
@@ -38,7 +40,7 @@ template:
         delay_on:
           minutes: 2
         delay_off:
-          minutes: 5
+          seconds: 90
         attributes:
           source_entity: binary_sensor.sensor_4_in_1_sala_presence
           semantic_role: real_occupancy

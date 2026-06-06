@@ -251,6 +251,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
   _runAction(key, gesture) {
     if (key !== 'room') return;
+    globalThis.BrunoLiquidGlass?.feedback?.(gesture === 'hold' ? 'hold' : 'tap');
 
     const entities = this._config.entities;
     if (gesture === 'double') {
@@ -323,6 +324,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
   _navigate(path) {
     if (!path) return;
+    globalThis.BrunoLiquidGlass?.routeTransition?.();
     this.dispatchEvent(new CustomEvent('hass-navigate', {
       detail: { path },
       bubbles: true,
@@ -653,7 +655,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
           column-gap: 0;
           row-gap: 0;
           align-items: start;
-          padding: 14px 48px 13px 11px;
+          padding: 14px 54px 13px 11px;
           margin: 0;
           text-align: left;
           background: transparent;
@@ -661,7 +663,9 @@ class BrunoQuartoCasalCard extends HTMLElement {
           border-radius: var(--card-radius);
           box-shadow: none;
           overflow: hidden;
-          transition: transform 160ms ease, filter 160ms ease;
+          transition:
+            transform var(--bruno-liquid-motion-fast, 160ms ease),
+            filter var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
         .room-action:hover {
@@ -744,7 +748,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           min-width: 48px;
-          margin-left: 12px;
+          margin-left: 6px;
           margin-top: 3px;
           text-align: left;
           line-height: 1.1;
@@ -803,7 +807,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
         .status-lines span {
           display: block;
-          max-width: 124px;
+          max-width: 136px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -813,7 +817,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
           position: absolute;
           z-index: 2;
           top: 15px;
-          right: 14px;
+          right: 16px;
           margin: 0;
           padding-top: 0;
           display: flex;
@@ -834,7 +838,12 @@ class BrunoQuartoCasalCard extends HTMLElement {
           background: var(--dot-off-bg);
           border: 1px solid var(--dot-off-border);
           box-shadow: none;
-          transition: background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+          transition:
+            background var(--bruno-liquid-motion-fast, 160ms ease),
+            border-color var(--bruno-liquid-motion-fast, 160ms ease),
+            color var(--bruno-liquid-motion-fast, 160ms ease),
+            box-shadow var(--bruno-liquid-motion-fast, 160ms ease),
+            transform var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
         .status-dot ha-icon {
@@ -853,9 +862,14 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
         .status-dot.is-active {
           color: rgba(var(--tone),0.98);
-          background: rgba(var(--tone),0.13);
-          border-color: rgba(var(--tone),0.34);
-          box-shadow: 0 0 12px rgba(var(--tone),0.14);
+          background:
+            radial-gradient(16px 14px at 35% 18%, rgba(255,255,255,0.25), transparent 72%),
+            linear-gradient(180deg, rgba(var(--tone),0.25), rgba(var(--tone),0.10));
+          border-color: rgba(var(--tone),0.44);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.18),
+            0 0 14px rgba(var(--tone),0.22);
+          transform: translateZ(0) scale(1.02);
         }
 
         .tone-blue { --tone: var(--accent-blue); }
@@ -865,7 +879,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
         @media (max-height: 760px) {
           .room-action {
-            padding: 12px 46px 12px 11px;
+            padding: 12px 52px 12px 11px;
           }
 
           .room-icon {
@@ -875,7 +889,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
           .right-dots {
             top: 13px;
-            right: 13px;
+            right: 15px;
           }
         }
 

@@ -367,11 +367,13 @@ class BrunoRoborockCard extends HTMLElement {
 
         .header {
           grid-area: header;
+          align-self: start;
           display: flex;
           align-items: center;
           justify-content: flex-start;
           gap: 10px;
           min-width: 0;
+          height: 26px;
         }
 
         .header-copy {
@@ -451,6 +453,7 @@ class BrunoRoborockCard extends HTMLElement {
           height: 150px;
           display: grid;
           place-items: center;
+          transform: translateY(2px);
         }
 
         .robot img {
@@ -545,7 +548,8 @@ class BrunoRoborockCard extends HTMLElement {
           flex-direction: column;
           align-items: center;
           justify-content: center;
-          gap: 2px;
+          gap: 1px;
+          padding: 5px 3px 6px;
           border-radius: 12px;
           color: rgba(255,255,255,0.84);
           background: var(--bruno-liquid-control-background, rgba(255,255,255,0.07));
@@ -567,6 +571,7 @@ class BrunoRoborockCard extends HTMLElement {
           font-size: 11.3px;
           line-height: 1;
           font-weight: 760;
+          margin-top: -1px;
         }
 
         .stat-label {
@@ -578,6 +583,7 @@ class BrunoRoborockCard extends HTMLElement {
           line-height: 1;
           font-weight: 680;
           color: var(--text-muted);
+          margin-top: 1px;
         }
 
         .actions {
@@ -635,7 +641,7 @@ class BrunoRoborockCard extends HTMLElement {
         }
 
         .action ha-icon {
-          --mdc-icon-size: 21px;
+          --mdc-icon-size: 23px;
         }
 
         .action span {

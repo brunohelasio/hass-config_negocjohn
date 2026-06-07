@@ -829,12 +829,15 @@ class BrunoHeroCard extends HTMLElement {
         }
 
         .camera-strip {
-          height: 88px;
-          min-height: 88px;
-          padding: 7px;
+          width: calc(100% + 16px);
+          height: 96px;
+          min-height: 96px;
+          margin-right: -16px;
+          padding: 8px;
           display: grid;
-          grid-template-columns: repeat(${Math.max(1, cameras.length)}, minmax(0, 1fr));
-          gap: 7px;
+          grid-template-columns: minmax(78px, 0.78fr) repeat(${Math.max(1, cameras.length)}, minmax(0, 1fr));
+          align-items: stretch;
+          gap: 8px;
           border-radius: 20px;
           border: 1px solid rgba(255,255,255,0.15);
           background:
@@ -845,6 +848,47 @@ class BrunoHeroCard extends HTMLElement {
           box-shadow:
             inset 0 1px 0 rgba(255,255,255,0.14),
             0 20px 54px rgba(0,0,0,0.25);
+        }
+
+        .camera-strip-asset {
+          position: relative;
+          min-width: 0;
+          height: 100%;
+          display: grid;
+          place-items: center;
+          overflow: hidden;
+          border-radius: 15px;
+          border: 1px solid rgba(255,255,255,0.10);
+          background:
+            radial-gradient(circle at 52% 20%, rgba(120,185,255,0.16), transparent 58%),
+            linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.026)),
+            rgba(4,8,14,0.30);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.09),
+            0 10px 22px rgba(0,0,0,0.18);
+        }
+
+        .camera-strip-asset::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.08), transparent 42%),
+            radial-gradient(circle at 50% 100%, rgba(0,0,0,0.30), transparent 66%);
+        }
+
+        .camera-strip-asset img {
+          position: relative;
+          z-index: 1;
+          width: 96%;
+          height: 96%;
+          display: block;
+          object-fit: contain;
+          filter:
+            drop-shadow(0 12px 20px rgba(0,0,0,0.36))
+            saturate(1.04)
+            contrast(1.04);
         }
 
         .camera-thumb {
@@ -962,8 +1006,8 @@ class BrunoHeroCard extends HTMLElement {
           }
 
           .camera-strip {
-            height: 80px;
-            min-height: 80px;
+            height: 86px;
+            min-height: 86px;
           }
         }
 
@@ -996,6 +1040,9 @@ class BrunoHeroCard extends HTMLElement {
             </button>
 
             <div class="camera-strip" aria-label="Mini cameras">
+              <span class="camera-strip-asset" aria-hidden="true">
+                <img src="/local/images/camera_seg.png?v=20260607-main-strip-1" alt="">
+              </span>
               ${cameras.map((camera) => BrunoHeroCard._miniCamera(camera)).join('')}
             </div>
           </div>

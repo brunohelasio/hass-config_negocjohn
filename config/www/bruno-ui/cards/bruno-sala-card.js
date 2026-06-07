@@ -750,7 +750,7 @@ class BrunoSalaCard extends HTMLElement {
           width: 104px;
           height: 104px;
           margin-left: 0;
-          margin-top: -8px;
+          margin-top: 0;
           position: relative;
         }
 
@@ -1233,7 +1233,7 @@ class BrunoSalaCard extends HTMLElement {
             width: 92px;
             height: 92px;
             margin-left: 0;
-            margin-top: -7px;
+            margin-top: 0;
           }
 
           .action-pill {
@@ -1310,8 +1310,8 @@ class BrunoSalaCard extends HTMLElement {
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
-        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off.png?v=20260607-sala-contrast-1" alt="" loading="eager" decoding="async">
-        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on.png?v=20260607-sala-contrast-1" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off.png?v=20260607-sala-contrast-2" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on.png?v=20260607-sala-contrast-2" alt="" loading="eager" decoding="async">
       </span>
     `;
   }

@@ -678,8 +678,8 @@ class BrunoOfficeCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           position: relative;
-          width: 94px;
-          height: 94px;
+          width: 90px;
+          height: 90px;
           margin-left: -8px;
           margin-top: -8px;
         }

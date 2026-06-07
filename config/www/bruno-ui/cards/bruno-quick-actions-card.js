@@ -303,12 +303,30 @@ class BrunoQuickActionsCard extends HTMLElement {
           flex: 0 0 auto;
         }
 
+        .quick-section-label {
+          position: relative;
+          z-index: 2;
+          flex: 0 0 auto;
+          height: var(--button-size);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0 4px 0 6px;
+          color: rgba(248,251,255,0.56);
+          font-size: 10px;
+          line-height: 1;
+          font-weight: 820;
+          text-transform: uppercase;
+          white-space: nowrap;
+          text-shadow: 0 2px 10px rgba(0,0,0,0.24);
+        }
+
         .quick-separator {
           position: relative;
           z-index: 2;
           width: 1px;
           height: 28px;
-          margin: 0 2px;
+          margin: 0 3px;
           flex: 0 0 1px;
           border-radius: 999px;
           background: linear-gradient(180deg, transparent, rgba(255,255,255,0.22), transparent);
@@ -472,6 +490,12 @@ class BrunoQuickActionsCard extends HTMLElement {
             --button-size: 35px;
             --icon-size: 17px;
             padding: 0 6px;
+            gap: 6px;
+          }
+
+          .quick-section-label {
+            font-size: 9px;
+            padding: 0 2px 0 4px;
           }
         }
       </style>
@@ -480,6 +504,7 @@ class BrunoQuickActionsCard extends HTMLElement {
         <div class="quick-dock" aria-label="Acoes rapidas">
           ${groups.map((group, groupIndex) => `
             ${groupIndex > 0 ? '<span class="quick-separator" aria-hidden="true"></span>' : ''}
+            <span class="quick-section-label">${BrunoQuickActionsCard._escape(this._groupTitle(group.key))}</span>
             <span class="quick-group group-${BrunoQuickActionsCard._escapeAttr(group.key)}">
               ${group.items.map(({ item, index }) => this._button(item, index)).join('')}
             </span>
@@ -512,6 +537,10 @@ class BrunoQuickActionsCard extends HTMLElement {
   _kindLabel(item) {
     if (item?.kind_label) return item.kind_label;
     return item?.group === 'scenes' ? 'Cena' : 'A\u00e7\u00e3o';
+  }
+
+  _groupTitle(key) {
+    return key === 'scenes' ? 'Cenas' : 'A\u00e7\u00f5es r\u00e1pidas';
   }
 
   static _escape(value) {

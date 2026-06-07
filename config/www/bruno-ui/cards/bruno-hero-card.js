@@ -856,37 +856,18 @@ class BrunoHeroCard extends HTMLElement {
           height: 100%;
           display: grid;
           place-items: center;
-          overflow: hidden;
-          border-radius: 15px;
-          border: 1px solid rgba(255,255,255,0.10);
-          background:
-            radial-gradient(circle at 52% 20%, rgba(120,185,255,0.16), transparent 58%),
-            linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.026)),
-            rgba(4,8,14,0.30);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.09),
-            0 10px 22px rgba(0,0,0,0.18);
-        }
-
-        .camera-strip-asset::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.08), transparent 42%),
-            radial-gradient(circle at 50% 100%, rgba(0,0,0,0.30), transparent 66%);
+          overflow: visible;
         }
 
         .camera-strip-asset img {
-          position: relative;
-          z-index: 1;
-          width: 96%;
-          height: 96%;
+          width: 100%;
+          height: 100%;
+          max-width: 100%;
+          max-height: 100%;
           display: block;
           object-fit: contain;
           filter:
-            drop-shadow(0 12px 20px rgba(0,0,0,0.36))
+            drop-shadow(0 11px 18px rgba(0,0,0,0.36))
             saturate(1.04)
             contrast(1.04);
         }

@@ -856,16 +856,9 @@ class BrunoHeroCard extends HTMLElement {
           height: 100%;
           display: grid;
           place-items: center;
-          overflow: visible;
-        }
-
-        .camera-strip-asset img {
-          width: 100%;
-          height: 100%;
-          max-width: 100%;
-          max-height: 100%;
-          display: block;
-          object-fit: contain;
+          overflow: hidden;
+          background:
+            url('/local/images/camera_seg_strip.png?v=20260607-main-strip-4') center center / contain no-repeat;
           filter:
             drop-shadow(0 11px 18px rgba(0,0,0,0.36))
             saturate(1.04)
@@ -1021,9 +1014,7 @@ class BrunoHeroCard extends HTMLElement {
             </button>
 
             <div class="camera-strip" aria-label="Mini cameras">
-              <span class="camera-strip-asset" aria-hidden="true">
-                <img src="/local/images/camera_seg.png?v=20260607-main-strip-1" alt="">
-              </span>
+              <span class="camera-strip-asset" aria-hidden="true"></span>
               ${cameras.map((camera) => BrunoHeroCard._miniCamera(camera)).join('')}
             </div>
           </div>

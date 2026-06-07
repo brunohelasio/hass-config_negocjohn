@@ -28,8 +28,8 @@ const BRUNO_QUARTO_MARINA_DEFAULT_CONFIG = {
     "dishwasher": ""
   },
   "icon": {
-    "off": "/local/bruno-ui/assets/marina-bedroom-off.png?v=20260517-4",
-    "on": "/local/bruno-ui/assets/marina-bedroom-on.png?v=20260517-4",
+    "off": "/local/bruno-ui/assets/marina-bedroom-off.png?v=20260607-room-assets-contrast-1",
+    "on": "/local/bruno-ui/assets/marina-bedroom-on.png?v=20260607-room-assets-contrast-1",
     "fallback": "mdi:bed-single-outline"
   },
   "status_dots": [

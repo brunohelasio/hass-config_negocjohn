@@ -3930,7 +3930,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .sala-subview {
         --sala-gap: 12px;
-        --sala-shell-height: min(734px, calc(100vh - 34px));
+        --sala-shell-height: min(724px, calc(100vh - 44px));
         height: 100vh;
         min-height: 100vh;
         grid-template-columns: 56px minmax(420px, 540px) minmax(630px, 1fr);
@@ -3939,7 +3939,7 @@ class BrunoSalaSubview extends HTMLElement {
         align-content: center;
         align-items: stretch;
         gap: var(--sala-gap);
-        padding: 12px 10px 22px;
+        padding: clamp(12px, 2.6vh, 22px) 10px;
       }
 
       .left-column,
@@ -3952,7 +3952,7 @@ class BrunoSalaSubview extends HTMLElement {
       .left-column {
         grid-area: left;
         display: grid;
-        grid-template-rows: minmax(328px, 1.24fr) minmax(250px, 1fr);
+        grid-template-rows: minmax(320px, 1.24fr) minmax(250px, 1fr);
         gap: var(--sala-gap);
       }
 
@@ -3968,7 +3968,7 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(292px, 0.55fr);
-        grid-template-rows: minmax(282px, 1.08fr) minmax(286px, 0.92fr);
+        grid-template-rows: minmax(264px, 1fr) minmax(292px, 1fr);
         grid-template-areas:
           "lights ac"
           "media ac";
@@ -4100,7 +4100,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .lights-card .module-head {
         align-items: start;
-        min-height: 40px;
+        min-height: 34px;
       }
 
       .lights-title-row {
@@ -4122,18 +4122,13 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .zone-toggle button {
-        min-height: 30px;
-        padding: 0 12px;
+        min-height: 26px;
+        padding: 0 10px;
         border-radius: 999px;
         color: rgba(255,255,255,0.62);
         background: transparent;
         font-size: 10px;
         font-weight: 900;
-      }
-
-      .head-actions .chip-button {
-        min-height: 34px;
-        padding: 0 14px;
       }
 
       .zone-toggle button.is-active {
@@ -4146,7 +4141,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         grid-template-rows: repeat(2, minmax(0, 1fr));
-        gap: 15px 10px;
+        gap: 14px 10px;
       }
 
       .lights-body {
@@ -4618,16 +4613,8 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
         grid-template-columns: 1fr;
         grid-template-rows: minmax(320px, auto) auto auto auto auto auto;
-        gap: 10px;
+        gap: 9px;
         align-content: start;
-      }
-
-      .temperature-slider {
-        margin-bottom: 3px;
-      }
-
-      .climate-stepper {
-        margin-bottom: 4px;
       }
 
       .ac-visual {

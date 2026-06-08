@@ -22,8 +22,8 @@ const BRUNO_LAVABO_DEFAULT_CONFIG = {
     "dishwasher": ""
   },
   "icon": {
-    "off": "/local/bruno-ui/assets/lavabo-off.png?v=20260607-room-assets-contrast-1",
-    "on": "/local/bruno-ui/assets/lavabo-on.png?v=20260607-room-assets-contrast-1",
+    "off": "/local/bruno-ui/assets/lavabo-off.png?v=20260608-room-assets-uniform-1",
+    "on": "/local/bruno-ui/assets/lavabo-on.png?v=20260608-room-assets-uniform-1",
     "fallback": "mdi:toilet"
   },
   "status_dots": [

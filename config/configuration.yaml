@@ -16,7 +16,7 @@ frontend:
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
     - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260607-sala-vertical-lift-1
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260604-office-sensors-1
-    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260608-room-assets-uniform-1
+    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260608-sala-shift-1
     - /local/bruno-ui/cards/bruno-office-card.js?v=20260608-room-assets-uniform-1
     - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260608-room-assets-uniform-1
     - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260608-room-assets-uniform-1
@@ -35,7 +35,7 @@ frontend:
     - /local/bruno-ui/cards/bruno-mobile-card-frame.js?v=20260518-1
     - /local/bruno-ui/cards/bruno-mobile-nav-card.js?v=20260518-2
     - /local/bruno-ui/cards/bruno-mobile-rooms-card.js?v=20260518-1
-    - /local/bruno-ui/cards/bruno-mobile-sala-card.js?v=20260608-room-assets-uniform-1
+    - /local/bruno-ui/cards/bruno-mobile-sala-card.js?v=20260608-sala-shift-1
     - /local/bruno-ui/cards/bruno-mobile-cameras-list-card.js?v=20260518-1
 
 homeassistant:

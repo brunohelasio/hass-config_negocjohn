@@ -28,8 +28,8 @@ const BRUNO_QUARTO_MIGUEL_DEFAULT_CONFIG = {
     "dishwasher": ""
   },
   "icon": {
-    "off": "/local/bruno-ui/assets/miguel-bedroom-off.png?v=20260607-room-assets-contrast-1",
-    "on": "/local/bruno-ui/assets/miguel-bedroom-on.png?v=20260607-room-assets-contrast-1",
+    "off": "/local/bruno-ui/assets/miguel-bedroom-off.png?v=20260608-room-assets-uniform-1",
+    "on": "/local/bruno-ui/assets/miguel-bedroom-on.png?v=20260608-room-assets-uniform-1",
     "fallback": "mdi:bed-single-outline"
   },
   "status_dots": [

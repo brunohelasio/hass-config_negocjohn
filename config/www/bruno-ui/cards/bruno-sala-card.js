@@ -485,30 +485,16 @@ class BrunoSalaCard extends HTMLElement {
 
   _actionButton(key, iconName, name, label, active, tone, options = {}) {
     const activeClass = active ? ' is-active' : '';
-    const variant = options.variant || 'pill';
-    const variantClass = ` is-${variant}`;
-    const indicator = variant === 'toggle'
-      ? `
-        <span class="pill-switch" aria-hidden="true">
-          <span class="switch-track">
-            <span class="switch-knob"></span>
-          </span>
-        </span>
-      `
-      : `
-        <span class="pill-power" aria-hidden="true">
-          <ha-icon icon="mdi:power"></ha-icon>
-        </span>
-      `;
+    const category = options.category || '';
 
     return `
-      <button class="action-pill icon-${iconName} tone-${tone}${activeClass}${variantClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
-        <span class="pill-icon" aria-hidden="true">${BrunoSalaCard._tplIcon(iconName, { active, ...options })}</span>
-        <span class="pill-copy">
-          <span class="pill-name">${BrunoSalaCard._escape(name)}</span>
-          <span class="pill-label">${label}</span>
+      <button class="command-row icon-${iconName} tone-${tone}${activeClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(name)}">
+        <span class="command-icon" aria-hidden="true">${BrunoSalaCard._tplIcon(iconName, { active, ...options })}</span>
+        <span class="command-copy">
+          <span class="command-name">${BrunoSalaCard._escape(name)}</span>
+          <span class="command-category">${BrunoSalaCard._escape(category)}</span>
         </span>
-        ${indicator}
+        <span class="command-state">${label}</span>
       </button>
     `;
   }
@@ -694,7 +680,7 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .hero-action,
-        .action-pill {
+        .command-row {
           appearance: none;
           -webkit-appearance: none;
           outline: none;
@@ -704,17 +690,17 @@ class BrunoSalaCard extends HTMLElement {
 
         .hero-action {
           flex: 1 1 auto;
-          min-height: 132px;
+          min-height: 142px;
           width: 100%;
           display: grid;
-          grid-template-columns: 110px minmax(0, 1fr) 34px;
+          grid-template-columns: 118px minmax(0, 1fr) 38px;
           grid-template-rows: auto minmax(0, 1fr) auto auto;
           grid-template-areas:
-            "icon temp right"
+            "icon space right"
             "icon space right"
             "title title right"
             "lights lights right";
-          column-gap: 6px;
+          column-gap: 4px;
           row-gap: 0;
           align-items: start;
           padding: 0 0 16px;
@@ -734,12 +720,12 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .hero-action.is-pressed,
-        .action-pill.is-pressed {
+        .command-row.is-pressed {
           transform: translateY(1px) scale(0.985);
         }
 
         .hero-action.is-hold-fired,
-        .action-pill.is-hold-fired {
+        .command-row.is-hold-fired {
           filter: drop-shadow(0 0 18px rgba(var(--accent),0.28));
         }
 
@@ -747,10 +733,10 @@ class BrunoSalaCard extends HTMLElement {
           grid-area: icon;
           justify-self: start;
           align-self: start;
-          width: 104px;
-          height: 104px;
-          margin-left: 0;
-          margin-top: 0;
+          width: 116px;
+          height: 116px;
+          margin-left: -4px;
+          margin-top: -3px;
           position: relative;
         }
 
@@ -804,19 +790,14 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .metric {
-          grid-area: temp;
-          justify-self: start;
-          align-self: start;
-          margin-left: 0;
-          margin-top: 4px;
-          min-width: 48px;
-          text-align: left;
+          min-width: 36px;
+          text-align: center;
           line-height: 1.1;
         }
 
         .metric-value {
           display: block;
-          font-size: 13px;
+          font-size: 13.5px;
           line-height: 1;
           font-weight: 760;
           color: var(--text-main);
@@ -825,7 +806,7 @@ class BrunoSalaCard extends HTMLElement {
         .metric-sub {
           display: block;
           margin-top: 4px;
-          font-size: 11px;
+          font-size: 11.2px;
           line-height: 1;
           font-weight: 600;
           color: var(--text-muted);
@@ -871,17 +852,24 @@ class BrunoSalaCard extends HTMLElement {
           white-space: nowrap;
         }
 
-        .right-dots {
+        .right-rail {
           grid-area: right;
           justify-self: center;
           align-self: start;
           margin-right: 0;
-          padding-top: 2px;
+          padding-top: 1px;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 5px;
+          gap: 7px;
           transform: translateX(2px);
+        }
+
+        .status-stack {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
         }
 
         .status-dot {
@@ -953,253 +941,179 @@ class BrunoSalaCard extends HTMLElement {
           flex: 0 0 auto;
           display: grid;
           grid-template-columns: 1fr;
-          gap: 6px;
+          gap: 0;
+          padding: 0 1px 1px;
         }
 
-        .action-separator {
-          height: 1px;
-          margin: 2px 10px 3px;
-          border-radius: 999px;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
-          opacity: 0.78;
-        }
-
-        .sala-card.is-room-on .action-separator {
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent);
-          opacity: 0.82;
-        }
-
-        .action-pill {
-          height: 50px;
+        .command-row {
+          --command-accent: rgb(var(--tone));
+          height: 43px;
           width: 100%;
           display: grid;
-          grid-template-columns: 42px minmax(0, 1fr) auto;
+          grid-template-columns: 36px minmax(0, 1fr) minmax(62px, auto);
           grid-template-rows: 1fr;
           align-items: center;
           column-gap: 9px;
-          padding: 0 11px;
+          padding: 0 8px 0 9px;
           margin: 0;
           text-align: left;
-          background: var(--action-off-bg);
-          border: 1px solid var(--action-off-border);
-          border-radius: var(--button-radius);
-          box-shadow: var(--action-off-shadow);
+          color: var(--action-name);
+          background:
+            linear-gradient(90deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018) 50%, rgba(255,255,255,0.00)),
+            rgba(5,8,13,0.03);
+          border: 0;
+          border-radius: 12px;
+          box-shadow: none;
           overflow: hidden;
-          backdrop-filter: var(--bruno-liquid-control-filter, blur(20px) saturate(1.34) contrast(1.04));
-          -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(20px) saturate(1.34) contrast(1.04));
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
           transition:
             background var(--bruno-liquid-motion-fast, 160ms ease),
-            border-color var(--bruno-liquid-motion-fast, 160ms ease),
             box-shadow var(--bruno-liquid-motion-fast, 160ms ease),
             color var(--bruno-liquid-motion-fast, 160ms ease),
             transform var(--bruno-liquid-motion-fast, 160ms ease),
             filter var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
-        .action-pill:hover {
+        .command-row:not(:last-child)::after {
+          content: "";
+          position: absolute;
+          left: 42px;
+          right: 8px;
+          bottom: 0;
+          height: 1px;
+          border-radius: 999px;
+          background: linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.07), transparent);
+          opacity: 0.62;
+        }
+
+        .command-row::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: 9px;
+          bottom: 9px;
+          width: 2px;
+          border-radius: 999px;
+          background: linear-gradient(180deg, rgba(var(--tone),0.00), rgba(var(--tone),0.92), rgba(var(--tone),0.00));
+          box-shadow: 0 0 12px rgba(var(--tone),0.00);
+          opacity: 0;
+          transform: scaleY(0.74);
+          transition:
+            opacity var(--bruno-liquid-motion-fast, 160ms ease),
+            transform var(--bruno-liquid-motion-fast, 160ms ease),
+            box-shadow var(--bruno-liquid-motion-fast, 160ms ease);
+        }
+
+        .command-row:hover {
           filter: brightness(1.05);
         }
 
-        .action-pill.is-toggle {
-          grid-template-columns: 42px minmax(0, 1fr) 34px;
-        }
-
-        .action-pill.is-media {
-          grid-template-columns: 42px minmax(0, 1fr) 34px;
-        }
-
-        .action-pill.is-active {
+        .command-row.is-active {
           background:
-            radial-gradient(42px 32px at 22% 20%, rgba(255,255,255,0.22), transparent 74%),
-            radial-gradient(82px 50px at 96% 82%, rgba(var(--tone),0.25), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.055)),
-            linear-gradient(155deg, rgba(var(--tone),0.12), rgba(12,16,24,0.16));
-          border-color: rgba(var(--tone),0.54);
+            radial-gradient(92px 38px at 12% 48%, rgba(var(--tone),0.14), transparent 68%),
+            linear-gradient(90deg, rgba(var(--tone),0.105), rgba(255,255,255,0.035) 45%, rgba(255,255,255,0.00)),
+            rgba(4,8,14,0.04);
           box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.24),
-            inset 1px 0 0 rgba(255,255,255,0.10),
-            inset 0 -1px 0 rgba(0,0,0,0.12),
-            0 8px 18px rgba(0,0,0,0.18),
-            0 0 18px rgba(var(--tone),0.20);
+            inset 0 1px 0 rgba(255,255,255,0.08),
+            0 0 14px rgba(var(--tone),0.10);
         }
 
-        .pill-icon {
-          width: 38px;
-          height: 38px;
+        .command-row.is-active::before {
+          opacity: 1;
+          transform: scaleY(1);
+          box-shadow:
+            0 0 10px rgba(var(--tone),0.44),
+            0 0 20px rgba(var(--tone),0.18);
+        }
+
+        .command-icon {
+          width: 30px;
+          height: 30px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--state-icon-color, #9da0a2);
+          color: rgba(255,255,255,0.56);
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
+          transition: color 160ms ease, filter 160ms ease, opacity 160ms ease;
         }
 
-        .pill-copy {
+        .command-copy {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 4px;
+          gap: 3px;
           line-height: 1;
         }
 
-        .action-pill.icon-ledstrip.is-active .pill-icon {
+        .command-row.icon-ledstrip.is-active .command-icon {
           color: var(--state-icon-active-color, #f0c040);
         }
 
-        .action-pill.icon-tv.is-active .pill-icon {
-          color: #616161;
+        .command-row.icon-tv.is-active .command-icon {
+          color: rgb(var(--tone));
         }
 
-        .action-pill.icon-climate.is-active .pill-icon {
-          color: #3583b6;
+        .command-row.icon-climate.is-active .command-icon {
+          color: rgb(var(--tone));
         }
 
-        .pill-name {
+        .command-row.is-active .command-icon {
+          filter:
+            drop-shadow(0 1px 2px rgba(0,0,0,0.18))
+            drop-shadow(0 0 8px rgba(var(--tone),0.32));
+        }
+
+        .command-name {
           min-width: 0;
           font-size: 12px;
           line-height: 1;
-          font-weight: 600;
+          font-weight: 680;
           color: var(--action-name);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        .pill-label {
+        .command-category {
           min-width: 0;
-          max-width: 84px;
           text-align: left;
-          font-size: 11px;
+          font-size: 10.4px;
           line-height: 1;
-          font-weight: 600;
+          font-weight: 560;
           color: var(--action-label);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
 
-        .action-pill.is-active .pill-name {
+        .command-state {
+          justify-self: end;
+          min-width: 0;
+          max-width: 68px;
+          text-align: right;
+          font-size: 10px;
+          line-height: 1;
+          font-weight: 720;
+          color: rgba(255,255,255,0.38);
+          text-transform: uppercase;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          transition: color 160ms ease, filter 160ms ease;
+        }
+
+        .command-row.is-active .command-name {
           color: var(--action-name);
         }
 
-        .action-pill.is-active .pill-label {
-          color: rgba(var(--tone),0.98);
-        }
-
-        .pill-switch {
-          justify-self: end;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .switch-track {
-          position: relative;
-          width: 32px;
-          height: 18px;
-          display: block;
-          border-radius: 999px;
-          background: rgba(255,255,255,0.13);
-          border: 1px solid rgba(255,255,255,0.12);
-          box-shadow:
-            inset 0 1px 1px rgba(0,0,0,0.10),
-            inset 0 -1px 0 rgba(255,255,255,0.08);
-          transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-        }
-
-        .switch-knob {
-          position: absolute;
-          left: 2px;
-          top: 2px;
-          width: 12px;
-          height: 12px;
-          border-radius: 50%;
-          background: rgba(230,236,242,0.72);
-          box-shadow:
-            0 1px 3px rgba(0,0,0,0.22),
-            inset 0 1px 0 rgba(255,255,255,0.40);
-          transition: transform 180ms cubic-bezier(0.2,0.8,0.2,1), background 160ms ease;
-        }
-
-        .sala-card.is-room-on .switch-track {
-          background: rgba(10,16,24,0.14);
-          border-color: rgba(8,14,22,0.10);
-        }
-
-        .sala-card.is-room-on .switch-knob {
-          background: rgba(255,255,255,0.82);
-        }
-
-        .action-pill.is-toggle.is-active .switch-track {
-          background:
-            linear-gradient(180deg, rgba(var(--tone),0.82), rgba(var(--tone),0.54));
-          border-color: rgba(var(--tone),0.60);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.18),
-            0 0 12px rgba(var(--tone),0.20);
-        }
-
-        .action-pill.is-toggle.is-active .switch-knob {
-          transform: translateX(14px);
-          background: rgba(255,255,255,0.96);
-        }
-
-        .pill-power {
-          justify-self: end;
-          width: 28px;
-          height: 28px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          color: rgba(255,255,255,0.50);
-          background:
-            radial-gradient(14px 12px at 34% 20%, rgba(255,255,255,0.16), transparent 74%),
-            rgba(255,255,255,0.055);
-          border: 1px solid rgba(255,255,255,0.10);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.12),
-            inset 0 -1px 0 rgba(0,0,0,0.12);
-          transition: background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
-        }
-
-        .pill-power ha-icon {
-          --mdc-icon-size: 14px;
-          width: 14px;
-          height: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .sala-card.is-room-on .pill-power {
+        .command-row.is-active .command-category {
           color: rgba(255,255,255,0.58);
-          background:
-            radial-gradient(14px 12px at 34% 20%, rgba(255,255,255,0.16), transparent 74%),
-            rgba(10,16,24,0.12);
-          border-color: rgba(8,14,22,0.10);
         }
 
-        .action-pill.is-media.is-active .pill-power {
+        .command-row.is-active .command-state {
           color: rgba(var(--tone),0.98);
-          background:
-            radial-gradient(14px 12px at 34% 20%, rgba(255,255,255,0.22), transparent 74%),
-            rgba(var(--tone),0.15);
-          border-color: rgba(var(--tone),0.36);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.16),
-            0 0 12px rgba(var(--tone),0.24);
-        }
-
-        .sala-card.is-room-on .action-pill.is-active {
-          background:
-            radial-gradient(52px 36px at 18% 18%, rgba(255,255,255,0.20), transparent 76%),
-            radial-gradient(86px 52px at 96% 85%, rgba(var(--tone),0.24), transparent 74%),
-            linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.055)),
-            rgba(var(--tone),0.075);
-          border-color: rgba(var(--tone),0.50);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.24),
-            inset 0 -1px 0 rgba(0,0,0,0.12),
-            0 0 18px rgba(var(--tone),0.18);
+          filter: drop-shadow(0 0 7px rgba(var(--tone),0.25));
         }
 
         .tpl-icon,
@@ -1224,24 +1138,37 @@ class BrunoSalaCard extends HTMLElement {
           }
 
           .hero-action {
-            min-height: 120px;
-            grid-template-columns: 98px minmax(0, 1fr) 34px;
-            padding-bottom: 14px;
+            min-height: 134px;
+            grid-template-columns: 106px minmax(0, 1fr) 36px;
+            padding-bottom: 12px;
           }
 
           .room-icon {
-            width: 92px;
-            height: 92px;
-            margin-left: 0;
-            margin-top: 0;
+            width: 104px;
+            height: 104px;
+            margin-left: -4px;
+            margin-top: -3px;
           }
 
-          .action-pill {
-            height: 47px;
+          .command-row {
+            height: 40px;
+            grid-template-columns: 32px minmax(0, 1fr) minmax(58px, auto);
+            column-gap: 8px;
+            padding-left: 8px;
           }
 
-          .action-strip {
-            gap: 6px;
+          .command-icon {
+            width: 27px;
+            height: 27px;
+          }
+
+          .command-name {
+            font-size: 11.6px;
+          }
+
+          .command-category,
+          .command-state {
+            font-size: 9.8px;
           }
         }
 
@@ -1257,11 +1184,9 @@ class BrunoSalaCard extends HTMLElement {
 
         @media (prefers-reduced-motion: reduce) {
           .hero-action,
-          .action-pill,
+          .command-row,
           .status-dot,
-          .pill-icon,
-          .switch-track,
-          .switch-knob {
+          .command-icon {
             transition: none !important;
           }
         }
@@ -1273,27 +1198,27 @@ class BrunoSalaCard extends HTMLElement {
             ${BrunoSalaCard._roomVisual(model.roomOn)}
           </div>
 
-          <div class="metric">
-            <span class="metric-value">${model.temperature}</span>
-            <span class="metric-sub">${model.humidity}</span>
-          </div>
-
           <div class="title">${BrunoSalaCard._escape(this._config.name)}</div>
           <div class="lights-line">${this._statusLines(model.statusLines)}</div>
 
-          <div class="right-dots" aria-label="Status da sala">
-            ${this._statusDot('mdi:account', model.presenceOn, 'Presenca na Sala', 'blue')}
-            ${this._statusDot('mdi:television-classic', model.tvOn, 'TV ativa', 'purple')}
-            ${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
-            ${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Show ativo', 'amber')}
+          <div class="right-rail" aria-label="Status da sala">
+            <div class="metric" aria-label="Temperatura e umidade">
+              <span class="metric-value">${model.temperature}</span>
+              <span class="metric-sub">${model.humidity}</span>
+            </div>
+            <div class="status-stack">
+              ${this._statusDot('mdi:account', model.presenceOn, 'Presenca na Sala', 'blue')}
+              ${this._statusDot('mdi:television-classic', model.tvOn, 'TV ativa', 'purple')}
+              ${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
+              ${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Show ativo', 'amber')}
+            </div>
           </div>
         </button>
 
         <div class="action-strip">
-          ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue', { variant: 'toggle' })}
-          <div class="action-separator" aria-hidden="true"></div>
-          ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple', { animate: animateTv, variant: 'media' })}
-          ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan', { variant: 'toggle' })}
+          ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue', { category: 'Iluminação' })}
+          ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple', { animate: animateTv, category: 'Entretenimento' })}
+          ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan', { category: 'Climatização' })}
         </div>
       </div>
     `;

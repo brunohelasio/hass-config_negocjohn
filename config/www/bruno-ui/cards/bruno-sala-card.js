@@ -1006,6 +1006,10 @@ class BrunoSalaCard extends HTMLElement {
         column-gap: 14px;
         padding: 0 6px 0 12px;
         --- FIM ORIGINAL --- */
+        /* --- ORIGINAL .command-row v2 (rollback) ---
+        column-gap: 10px;
+        padding: 0 4px 0 8px;
+        --- FIM ORIGINAL --- */
 
         .command-row {
           --command-accent: rgb(var(--tone));
@@ -1015,8 +1019,8 @@ class BrunoSalaCard extends HTMLElement {
           grid-template-columns: 40px minmax(0, 1fr) 44px;
           grid-template-rows: 1fr;
           align-items: center;
-          column-gap: 10px;
-          padding: 0 4px 0 8px;
+          column-gap: 6px;
+          padding: 0 4px 0 4px;
           margin: 0;
           text-align: left;
           color: var(--action-name);
@@ -1056,11 +1060,12 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         /* NOVO: glow line inferior quando ativo (estilo mockup react .rail-line) */
+        /* offsets ajustados v2: icone termina em 44px (padding 4 + col 40), state comeca em 48px (padding 4 + col 44) */
         .command-row::after {
           content: "";
           position: absolute;
-          left: 50px;
-          right: 50px;
+          left: 46px;
+          right: 46px;
           bottom: 0;
           height: 1px;
           background: linear-gradient(
@@ -1183,10 +1188,11 @@ class BrunoSalaCard extends HTMLElement {
           text-shadow: 0 0 10px rgba(255,255,255,0.08);
         }
 
+        /* --- ORIGINAL .command-category v1 (rollback): font-size 11px --- */
         .command-category {
           min-width: 0;
           text-align: left;
-          font-size: 11px;
+          font-size: 10.5px;
           line-height: 1;
           font-weight: 400;
           color: rgba(255,255,255,0.45);
@@ -1284,13 +1290,13 @@ class BrunoSalaCard extends HTMLElement {
           .command-row {
             height: 52px;
             grid-template-columns: 36px minmax(0, 1fr) 40px;
-            column-gap: 8px;
-            padding: 0 4px 0 6px;
+            column-gap: 5px;
+            padding: 0 3px 0 4px;
           }
 
           .command-row::after {
-            left: 44px;
-            right: 44px;
+            left: 40px;
+            right: 40px;
           }
 
           .command-icon {

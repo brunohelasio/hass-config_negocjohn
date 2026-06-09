@@ -230,9 +230,14 @@ class BrunoSalaCard extends HTMLElement {
       humidity: this._sensorValue(entities.humidity, '%'),
       lights,
       statusLines,
+      // ORIGINAL labels (rollback): mantidos para aria-label/tooltip futuro
       tvLabel: this._tvLabel(tv),
       climateLabel: this._climateLabel(climate),
       corridorLabel: corridorOn ? 'Ligado' : 'Desligado',
+      // NOVO: labels compactos ON/OFF para command-state (mockup react)
+      tvStateLabel: tvOn ? 'ON' : 'OFF',
+      climateStateLabel: climateOn ? 'ON' : 'OFF',
+      corridorStateLabel: corridorOn ? 'ON' : 'OFF',
     };
   }
 
@@ -688,6 +693,7 @@ class BrunoSalaCard extends HTMLElement {
           z-index: 1;
         }
 
+        /* --- ORIGINAL .hero-action (rollback rapido) ---
         .hero-action {
           flex: 1 1 auto;
           min-height: 142px;
@@ -704,6 +710,26 @@ class BrunoSalaCard extends HTMLElement {
           row-gap: 0;
           align-items: start;
           padding: 0 0 16px;
+          ...
+        }
+        --- FIM ORIGINAL --- */
+
+        .hero-action {
+          flex: 1 1 auto;
+          min-height: 130px;
+          width: 100%;
+          display: grid;
+          grid-template-columns: 124px minmax(0, 1fr) 40px;
+          grid-template-rows: auto minmax(0, 1fr) auto auto;
+          grid-template-areas:
+            "icon space right"
+            "icon space right"
+            "title title right"
+            "lights lights right";
+          column-gap: 6px;
+          row-gap: 0;
+          align-items: start;
+          padding: 0 0 8px;
           text-align: left;
           background: transparent;
           border: 0;
@@ -729,14 +755,24 @@ class BrunoSalaCard extends HTMLElement {
           filter: drop-shadow(0 0 18px rgba(var(--accent),0.28));
         }
 
+        /* --- ORIGINAL .room-icon (rollback rapido) ---
         .room-icon {
           grid-area: icon;
-          justify-self: start;
-          align-self: start;
           width: 116px;
           height: 116px;
           margin-left: -4px;
           margin-top: -3px;
+        }
+        --- FIM ORIGINAL --- */
+
+        .room-icon {
+          grid-area: icon;
+          justify-self: start;
+          align-self: start;
+          width: 120px;
+          height: 80px;
+          margin-left: 0;
+          margin-top: 1px;
           position: relative;
         }
 
@@ -844,9 +880,13 @@ class BrunoSalaCard extends HTMLElement {
           padding-right: 4px;
         }
 
+        /* --- ORIGINAL .lights-line span max-width (rollback) ---
+        .lights-line span { max-width: 142px; }
+        --- FIM ORIGINAL --- */
+
         .lights-line span {
           display: block;
-          max-width: 142px;
+          max-width: 158px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -935,6 +975,22 @@ class BrunoSalaCard extends HTMLElement {
         .tone-cyan { --tone: var(--accent-cyan); }
         .tone-amber { --tone: var(--accent-amber); }
 
+        /* --- ORIGINAL .action-strip + .command-row (rollback rapido) ---
+        .action-strip { padding: 0 1px 1px; }
+        .command-row {
+          height: 43px;
+          grid-template-columns: 36px minmax(0,1fr) minmax(62px, auto);
+          column-gap: 9px;
+          padding: 0 8px 0 9px;
+          border-radius: 12px;
+          background: linear-gradient(...), rgba(5,8,13,0.03);
+        }
+        .command-row:not(:last-child)::after { background: linear-gradient(90deg, ...); }
+        .command-row::before { top: 9px; bottom: 9px; }
+        .command-row.is-active { background: radial-gradient(...) + ... }
+        .command-row.is-active::before { box-shadow: 0 0 10px rgba(var(--tone),0.44), 0 0 20px rgba(var(--tone),0.18); }
+        --- FIM ORIGINAL --- */
+
         .action-strip {
           position: relative;
           z-index: 1;
@@ -942,107 +998,112 @@ class BrunoSalaCard extends HTMLElement {
           display: grid;
           grid-template-columns: 1fr;
           gap: 0;
-          padding: 0 1px 1px;
+          padding: 0;
         }
 
         .command-row {
           --command-accent: rgb(var(--tone));
-          height: 43px;
+          height: 60px;
           width: 100%;
           display: grid;
-          grid-template-columns: 36px minmax(0, 1fr) minmax(62px, auto);
+          grid-template-columns: 44px minmax(0, 1fr) minmax(58px, auto);
           grid-template-rows: 1fr;
           align-items: center;
-          column-gap: 9px;
-          padding: 0 8px 0 9px;
+          column-gap: 14px;
+          padding: 0 6px 0 12px;
           margin: 0;
           text-align: left;
           color: var(--action-name);
-          background:
-            linear-gradient(90deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018) 50%, rgba(255,255,255,0.00)),
-            rgba(5,8,13,0.03);
+          background: transparent;
           border: 0;
-          border-radius: 12px;
+          border-radius: 0;
           box-shadow: none;
-          overflow: hidden;
+          overflow: visible;
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
           transition:
             background var(--bruno-liquid-motion-fast, 160ms ease),
-            box-shadow var(--bruno-liquid-motion-fast, 160ms ease),
             color var(--bruno-liquid-motion-fast, 160ms ease),
             transform var(--bruno-liquid-motion-fast, 160ms ease),
             filter var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
-        .command-row:not(:last-child)::after {
-          content: "";
-          position: absolute;
-          left: 42px;
-          right: 8px;
-          bottom: 0;
-          height: 1px;
-          border-radius: 999px;
-          background: linear-gradient(90deg, rgba(255,255,255,0.18), rgba(255,255,255,0.07), transparent);
-          opacity: 0.62;
+        .command-row + .command-row {
+          border-top: 1px solid rgba(255,255,255,0.105);
         }
 
         .command-row::before {
           content: "";
           position: absolute;
-          left: 0;
-          top: 9px;
-          bottom: 9px;
+          left: -2px;
+          top: 14px;
+          bottom: 14px;
           width: 2px;
           border-radius: 999px;
-          background: linear-gradient(180deg, rgba(var(--tone),0.00), rgba(var(--tone),0.92), rgba(var(--tone),0.00));
-          box-shadow: 0 0 12px rgba(var(--tone),0.00);
+          background: rgb(var(--tone));
+          box-shadow: 0 0 0 rgba(var(--tone),0);
           opacity: 0;
           transform: scaleY(0.74);
           transition:
             opacity var(--bruno-liquid-motion-fast, 160ms ease),
-            transform var(--bruno-liquid-motion-fast, 160ms ease),
-            box-shadow var(--bruno-liquid-motion-fast, 160ms ease);
+            transform var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
         .command-row:hover {
-          filter: brightness(1.05);
+          background: linear-gradient(90deg, rgba(255,255,255,0.045), rgba(255,255,255,0.014));
         }
 
         .command-row.is-active {
-          background:
-            radial-gradient(92px 38px at 12% 48%, rgba(var(--tone),0.14), transparent 68%),
-            linear-gradient(90deg, rgba(var(--tone),0.105), rgba(255,255,255,0.035) 45%, rgba(255,255,255,0.00)),
-            rgba(4,8,14,0.04);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.08),
-            0 0 14px rgba(var(--tone),0.10);
+          background: transparent;
         }
 
         .command-row.is-active::before {
           opacity: 1;
           transform: scaleY(1);
-          box-shadow:
-            0 0 10px rgba(var(--tone),0.44),
-            0 0 20px rgba(var(--tone),0.18);
+          animation: brunoSalaRailPulse 2.4s ease-in-out infinite;
         }
 
+        @keyframes brunoSalaRailPulse {
+          0%, 100% {
+            opacity: 0.78;
+            box-shadow:
+              0 0 10px rgba(var(--tone),0.62),
+              0 0 24px rgba(var(--tone),0.26);
+          }
+          50% {
+            opacity: 1;
+            box-shadow:
+              0 0 12px rgba(var(--tone),0.95),
+              0 0 32px rgba(var(--tone),0.48);
+          }
+        }
+
+        /* --- ORIGINAL .command-icon (rollback) --- width/height 30px --- */
         .command-icon {
-          width: 30px;
-          height: 30px;
+          width: 40px;
+          height: 40px;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: rgba(255,255,255,0.56);
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18));
-          transition: color 160ms ease, filter 160ms ease, opacity 160ms ease;
+          color: rgba(245,240,232,0.58);
+          filter: drop-shadow(0 3px 8px rgba(0,0,0,0.24));
+          transform: scale(0.96);
+          transition:
+            color 320ms ease,
+            filter 320ms ease,
+            transform 320ms ease,
+            opacity 320ms ease;
+        }
+
+        .command-row.is-active .command-icon {
+          transform: scale(1.04);
         }
 
         .command-copy {
           min-width: 0;
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 4px;
           line-height: 1;
         }
 
@@ -1064,57 +1125,83 @@ class BrunoSalaCard extends HTMLElement {
             drop-shadow(0 0 8px rgba(var(--tone),0.32));
         }
 
+        /* --- ORIGINAL .command-name / .command-category / .command-state (rollback) ---
+        font-size 12 / 10.4 / 10; weight 680/560/720; state max-width 68px sem border-left
+        --- FIM ORIGINAL --- */
+
         .command-name {
           min-width: 0;
-          font-size: 12px;
-          line-height: 1;
-          font-weight: 680;
-          color: var(--action-name);
+          font-size: 14px;
+          line-height: 1.05;
+          font-weight: 500;
+          letter-spacing: -0.2px;
+          color: rgba(255,255,255,0.88);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .command-row.is-active .command-name {
+          color: rgba(255,255,255,0.96);
+          text-shadow: 0 0 10px rgba(255,255,255,0.08);
         }
 
         .command-category {
           min-width: 0;
           text-align: left;
-          font-size: 10.4px;
+          font-size: 11px;
           line-height: 1;
-          font-weight: 560;
-          color: var(--action-label);
+          font-weight: 400;
+          color: rgba(255,255,255,0.45);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          transition: color 0.3s ease;
+        }
+
+        .command-row.is-active .command-category {
+          color: rgba(210,236,255,0.60);
         }
 
         .command-state {
           justify-self: end;
           min-width: 0;
-          max-width: 68px;
+          max-width: 56px;
+          padding-left: 12px;
+          border-left: 1px solid rgba(255,255,255,0.11);
           text-align: right;
-          font-size: 10px;
+          font-size: 11px;
           line-height: 1;
-          font-weight: 720;
-          color: rgba(255,255,255,0.38);
+          font-weight: 600;
+          letter-spacing: 1.1px;
+          color: rgba(255,255,255,0.36);
           text-transform: uppercase;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          transition: color 160ms ease, filter 160ms ease;
+          transition:
+            color 0.3s ease,
+            text-shadow 0.3s ease,
+            border-color 0.3s ease;
         }
 
-        .command-row.is-active .command-name {
-          color: var(--action-name);
+        .command-row.is-active .command-state {
+          color: rgba(92,194,255,0.98);
+          text-shadow:
+            0 0 10px rgba(45,170,255,0.42),
+            0 0 22px rgba(45,170,255,0.16);
+          border-left-color: rgba(120,205,255,0.20);
         }
 
-        .command-row.is-active .command-category {
-          color: rgba(255,255,255,0.58);
-        }
-
+        /* --- ORIGINAL is-active overrides (rollback) ---
+        .command-row.is-active .command-name { color: var(--action-name); }
+        .command-row.is-active .command-category { color: rgba(255,255,255,0.58); }
         .command-row.is-active .command-state {
           color: rgba(var(--tone),0.98);
           filter: drop-shadow(0 0 7px rgba(var(--tone),0.25));
         }
+        --- FIM ORIGINAL --- */
 
         .tpl-icon,
         .tpl-icon svg {
@@ -1127,6 +1214,11 @@ class BrunoSalaCard extends HTMLElement {
           overflow: visible;
         }
 
+        /* --- ORIGINAL @media (max-height: 760px) (rollback) ---
+        hero-action min-height 134, col 106; room-icon 104x104 margin -4/-3;
+        command-row 40px / 32px col / 8gap; icon 27px; fonts 11.6/9.8/9.8
+        --- FIM ORIGINAL --- */
+
         @media (max-height: 760px) {
           :host {
             --card-radius: var(--bruno-liquid-card-radius, 22px);
@@ -1138,37 +1230,42 @@ class BrunoSalaCard extends HTMLElement {
           }
 
           .hero-action {
-            min-height: 134px;
-            grid-template-columns: 106px minmax(0, 1fr) 36px;
-            padding-bottom: 12px;
+            min-height: 120px;
+            grid-template-columns: 112px minmax(0, 1fr) 38px;
+            padding-bottom: 6px;
           }
 
           .room-icon {
-            width: 104px;
-            height: 104px;
-            margin-left: -4px;
-            margin-top: -3px;
+            width: 108px;
+            height: 72px;
+            margin-left: 0;
+            margin-top: 1px;
           }
 
           .command-row {
-            height: 40px;
-            grid-template-columns: 32px minmax(0, 1fr) minmax(58px, auto);
-            column-gap: 8px;
-            padding-left: 8px;
+            height: 52px;
+            grid-template-columns: 36px minmax(0, 1fr) minmax(54px, auto);
+            column-gap: 12px;
+            padding: 0 6px 0 10px;
           }
 
           .command-icon {
-            width: 27px;
-            height: 27px;
+            width: 34px;
+            height: 34px;
           }
 
           .command-name {
-            font-size: 11.6px;
+            font-size: 13px;
           }
 
-          .command-category,
+          .command-category {
+            font-size: 10.4px;
+          }
+
           .command-state {
-            font-size: 9.8px;
+            font-size: 10px;
+            padding-left: 10px;
+            max-width: 52px;
           }
         }
 
@@ -1215,10 +1312,11 @@ class BrunoSalaCard extends HTMLElement {
           </div>
         </button>
 
+        <!-- ORIGINAL action-strip (rollback): usava model.corridorLabel/tvLabel/climateLabel (Ligado/Desligado etc) -->
         <div class="action-strip">
-          ${this._actionButton('corridor', 'ledstrip', 'Corredor', BrunoSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue', { category: 'Iluminação' })}
-          ${this._actionButton('tv', 'tv', 'TV', BrunoSalaCard._escape(model.tvLabel), model.tvOn, 'purple', { animate: animateTv, category: 'Entretenimento' })}
-          ${this._actionButton('climate', 'climate', 'A/C', model.climateLabel, model.climateOn, 'cyan', { category: 'Climatização' })}
+          ${this._actionButton('corridor', 'ledstrip', 'Corredor', model.corridorStateLabel, model.corridorOn, 'blue', { category: 'Iluminação' })}
+          ${this._actionButton('tv', 'tv', 'TV', model.tvStateLabel, model.tvOn, 'purple', { animate: animateTv, category: 'Entretenimento' })}
+          ${this._actionButton('climate', 'climate', 'A/C', model.climateStateLabel, model.climateOn, 'cyan', { category: 'Climatização' })}
         </div>
       </div>
     `;
@@ -1231,12 +1329,25 @@ class BrunoSalaCard extends HTMLElement {
     this._wireAssetFallback();
   }
 
-  static _roomVisual(active) {
+  /* --- ORIGINAL _roomVisual (rollback rapido — assets nao-trimados) ---
+  static _roomVisualOriginal(active) {
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
         <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off.png?v=20260608-sala-shift-1" alt="" loading="eager" decoding="async">
         <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on.png?v=20260608-sala-shift-1" alt="" loading="eager" decoding="async">
+      </span>
+    `;
+  }
+  */
+
+  // NOVO: assets tight (trim de borda transparente) — sofa ocupa ~100% do conteiner
+  static _roomVisual(active) {
+    return `
+      <span class="room-asset-wrap">
+        <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
+        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260609-sala-shift-2" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260609-sala-shift-2" alt="" loading="eager" decoding="async">
       </span>
     `;
   }

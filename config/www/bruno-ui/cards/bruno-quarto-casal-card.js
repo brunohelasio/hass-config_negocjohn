@@ -22,8 +22,10 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
     "dishwasher": ""
   },
   "icon": {
-    "off": "/local/bruno-ui/assets/couple-bedroom-off.png?v=20260608-room-assets-uniform-1",
-    "on": "/local/bruno-ui/assets/couple-bedroom-on.png?v=20260608-room-assets-uniform-1",
+    // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/couple-bedroom-off.png?v=20260608-room-assets-uniform-1",
+    "off": "/local/bruno-ui/assets/couple-bedroom-off-tight.png?v=20260609-rail-dynamic-1",
+    // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/couple-bedroom-on.png?v=20260608-room-assets-uniform-1",
+    "on": "/local/bruno-ui/assets/couple-bedroom-on-tight.png?v=20260609-rail-dynamic-1",
     "fallback": "mdi:bed-king-outline"
   },
   "status_dots": [
@@ -645,6 +647,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
           width: 100%;
           height: 100%;
           display: grid;
+          /* --- ORIGINAL grid 2 colunas (rollback rapido) ---
           grid-template-columns: auto minmax(0, 1fr);
           grid-template-rows: auto 1fr auto auto;
           grid-template-areas:
@@ -656,6 +659,18 @@ class BrunoQuartoCasalCard extends HTMLElement {
           row-gap: 0;
           align-items: start;
           padding: 14px 54px 13px 11px;
+          --- FIM ORIGINAL --- */
+          grid-template-columns: 124px minmax(0, 1fr) 40px;
+          grid-template-rows: auto minmax(0, 1fr) auto auto;
+          grid-template-areas:
+            "icon space right"
+            "icon space right"
+            "title title right"
+            "state state right";
+          column-gap: 6px;
+          row-gap: 0;
+          align-items: start;
+          padding: 14px 10px 13px 11px;
           margin: 0;
           text-align: left;
           background: transparent;
@@ -680,6 +695,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
           filter: drop-shadow(0 0 18px rgba(var(--accent),0.28));
         }
 
+        /* --- ORIGINAL .room-icon 94x94 (rollback rapido) ---
         .room-icon {
           grid-area: icon;
           justify-self: start;
@@ -689,6 +705,18 @@ class BrunoQuartoCasalCard extends HTMLElement {
           height: var(--room-icon-size);
           margin-left: -4px;
           margin-top: -4px;
+        }
+        --- FIM ORIGINAL --- */
+
+        .room-icon {
+          grid-area: icon;
+          justify-self: start;
+          align-self: start;
+          position: relative;
+          width: 120px;
+          height: 80px;
+          margin-left: 0;
+          margin-top: 1px;
         }
 
         .room-asset-wrap,
@@ -703,6 +731,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
         .room-asset {
           object-fit: contain;
+          object-position: left top; /* NOVO: ancora asset tight no topo-esquerdo */
           opacity: 0;
           transform: translateZ(0);
           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
@@ -743,6 +772,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
           opacity: 1;
         }
 
+        /* --- ORIGINAL .metric grid-area temp (rollback rapido) ---
         .metric {
           grid-area: temp;
           justify-self: start;
@@ -751,6 +781,13 @@ class BrunoQuartoCasalCard extends HTMLElement {
           margin-left: 6px;
           margin-top: 3px;
           text-align: left;
+          line-height: 1.1;
+        }
+        --- FIM ORIGINAL --- */
+
+        .metric {
+          min-width: 36px;
+          text-align: center;
           line-height: 1.1;
         }
 
@@ -813,6 +850,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
           white-space: nowrap;
         }
 
+        /* --- ORIGINAL .right-dots absoluto (rollback rapido) ---
         .right-dots {
           position: absolute;
           z-index: 2;
@@ -825,7 +863,28 @@ class BrunoQuartoCasalCard extends HTMLElement {
           align-items: center;
           gap: 5px;
         }
+        --- FIM ORIGINAL --- */
 
+        .right-rail {
+          grid-area: right;
+          justify-self: center;
+          align-self: start;
+          margin: 0;
+          padding-top: 1px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 7px;
+        }
+
+        .status-stack {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+        }
+
+        /* --- ORIGINAL .status-dot vidro fosco (rollback rapido) ---
         .status-dot {
           width: 26px;
           height: 26px;
@@ -846,20 +905,6 @@ class BrunoQuartoCasalCard extends HTMLElement {
             transform var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
-        .status-dot ha-icon {
-          --mdc-icon-size: 14px;
-          width: 14px;
-          height: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          line-height: 0;
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -50%);
-        }
-
         .status-dot.is-active {
           color: rgb(var(--tone));
           background:
@@ -877,12 +922,55 @@ class BrunoQuartoCasalCard extends HTMLElement {
         .status-dot.is-active ha-icon {
           filter: drop-shadow(0 0 5px rgba(var(--tone),0.56));
         }
+        --- FIM ORIGINAL --- */
+
+        .status-dot {
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          position: relative;
+          color: #ffffff;
+          background:
+            linear-gradient(135deg, rgba(255,255,255,0.20), rgba(0,0,0,0.16)),
+            rgb(var(--tone));
+          border: none;
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.28),
+            0 2px 6px rgba(0,0,0,0.25),
+            0 0 12px rgba(var(--tone),0.35);
+          animation: brunoRoomDotIn 240ms ease;
+        }
+
+        @keyframes brunoRoomDotIn {
+          from { opacity: 0; transform: scale(0.55); }
+          to { opacity: 1; transform: scale(1); }
+        }
+
+        .status-dot ha-icon {
+          --mdc-icon-size: 14px;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 0;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          color: #ffffff;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.28));
+        }
 
         .tone-blue { --tone: var(--accent-blue); }
         .tone-purple { --tone: var(--accent-purple); }
         .tone-cyan { --tone: var(--accent-cyan); }
         .tone-amber { --tone: var(--accent-amber); }
 
+        /* --- ORIGINAL media max-height 760 (rollback rapido) ---
         @media (max-height: 760px) {
           .room-action {
             padding: 12px 52px 12px 11px;
@@ -896,6 +984,18 @@ class BrunoQuartoCasalCard extends HTMLElement {
           .right-dots {
             top: 13px;
             right: 12px;
+          }
+        }
+        --- FIM ORIGINAL --- */
+
+        @media (max-height: 760px) {
+          .room-action {
+            padding: 12px 8px 12px 11px;
+          }
+
+          .room-icon {
+            width: 108px;
+            height: 72px;
           }
         }
 
@@ -913,16 +1013,29 @@ class BrunoQuartoCasalCard extends HTMLElement {
         <button class="room-action${hasMetricClass}" type="button" data-action-key="room" aria-label="${BrunoQuartoCasalCard._escape(this._config.name)}">
           <div class="room-icon" aria-hidden="true">${this._assetVisual(model.iconActive)}</div>
 
+          <!-- ORIGINAL metric topo-esquerdo (rollback rapido):
           <div class="metric">
-            <span class="metric-value">${model.temperature}</span>
-            <span class="metric-sub">${model.humidity}</span>
+            <span class="metric-value">\${model.temperature}</span>
+            <span class="metric-sub">\${model.humidity}</span>
           </div>
+          FIM ORIGINAL -->
 
           <div class="title">${BrunoQuartoCasalCard._escape(this._config.name)}</div>
           <div class="status-lines">${this._statusLines(model.statusLines)}</div>
 
+          <!-- ORIGINAL right-dots fixos (rollback rapido):
           <div class="right-dots" aria-label="Status do ambiente">
-            ${model.dots.map((dot) => this._statusDot(dot)).join('')}
+            \${model.dots.map((dot) => this._statusDot(dot)).join('')}
+          </div>
+          FIM ORIGINAL -->
+          <div class="right-rail" aria-label="Status do ambiente">
+            <div class="metric" aria-label="Temperatura e umidade">
+              <span class="metric-value">${model.temperature}</span>
+              <span class="metric-sub">${model.humidity}</span>
+            </div>
+            <div class="status-stack">
+              ${model.dots.filter((dot) => dot.active).map((dot) => this._statusDot(dot)).join('')}
+            </div>
           </div>
         </button>
       </div>

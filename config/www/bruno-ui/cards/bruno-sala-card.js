@@ -1001,16 +1001,22 @@ class BrunoSalaCard extends HTMLElement {
           padding: 0;
         }
 
+        /* --- ORIGINAL .command-row v1 (rollback rapido) ---
+        grid-template-columns: 44px minmax(0,1fr) minmax(58px, auto);
+        column-gap: 14px;
+        padding: 0 6px 0 12px;
+        --- FIM ORIGINAL --- */
+
         .command-row {
           --command-accent: rgb(var(--tone));
           height: 60px;
           width: 100%;
           display: grid;
-          grid-template-columns: 44px minmax(0, 1fr) minmax(58px, auto);
+          grid-template-columns: 40px minmax(0, 1fr) 44px;
           grid-template-rows: 1fr;
           align-items: center;
-          column-gap: 14px;
-          padding: 0 6px 0 12px;
+          column-gap: 10px;
+          padding: 0 4px 0 8px;
           margin: 0;
           text-align: left;
           color: var(--action-name);
@@ -1047,6 +1053,36 @@ class BrunoSalaCard extends HTMLElement {
           transition:
             opacity var(--bruno-liquid-motion-fast, 160ms ease),
             transform var(--bruno-liquid-motion-fast, 160ms ease);
+        }
+
+        /* NOVO: glow line inferior quando ativo (estilo mockup react .rail-line) */
+        .command-row::after {
+          content: "";
+          position: absolute;
+          left: 50px;
+          right: 50px;
+          bottom: 0;
+          height: 1px;
+          background: linear-gradient(
+            90deg,
+            rgba(var(--tone), 0),
+            rgba(var(--tone), 0.62),
+            rgba(var(--tone), 0)
+          );
+          box-shadow: 0 0 10px rgba(var(--tone), 0.28);
+          opacity: 0;
+          transform: scaleX(0.72);
+          transform-origin: left;
+          transition:
+            opacity 350ms ease,
+            transform 350ms ease;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .command-row.is-active::after {
+          opacity: 1;
+          transform: scaleX(1);
         }
 
         .command-row:hover {
@@ -1164,11 +1200,14 @@ class BrunoSalaCard extends HTMLElement {
           color: rgba(210,236,255,0.60);
         }
 
+        /* --- ORIGINAL .command-state v1 (rollback) ---
+        justify-self: end; max-width: 56px; padding-left: 12px;
+        Problema: largura variavel ON/OFF deslocava border-left.
+        --- FIM ORIGINAL --- */
+
         .command-state {
-          justify-self: end;
-          min-width: 0;
-          max-width: 56px;
-          padding-left: 12px;
+          width: 100%;
+          padding-left: 10px;
           border-left: 1px solid rgba(255,255,255,0.11);
           text-align: right;
           font-size: 11px;
@@ -1244,9 +1283,14 @@ class BrunoSalaCard extends HTMLElement {
 
           .command-row {
             height: 52px;
-            grid-template-columns: 36px minmax(0, 1fr) minmax(54px, auto);
-            column-gap: 12px;
-            padding: 0 6px 0 10px;
+            grid-template-columns: 36px minmax(0, 1fr) 40px;
+            column-gap: 8px;
+            padding: 0 4px 0 6px;
+          }
+
+          .command-row::after {
+            left: 44px;
+            right: 44px;
           }
 
           .command-icon {
@@ -1264,8 +1308,8 @@ class BrunoSalaCard extends HTMLElement {
 
           .command-state {
             font-size: 10px;
-            padding-left: 10px;
-            max-width: 52px;
+            padding-left: 8px;
+            width: 100%;
           }
         }
 

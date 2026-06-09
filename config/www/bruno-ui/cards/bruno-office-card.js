@@ -638,6 +638,7 @@ class BrunoOfficeCard extends HTMLElement {
           width: 100%;
           height: 100%;
           display: grid;
+          /* --- ORIGINAL grid 2 colunas (rollback rapido) ---
           grid-template-columns: auto minmax(0, 1fr);
           grid-template-rows: auto 1fr auto auto;
           grid-template-areas:
@@ -649,6 +650,18 @@ class BrunoOfficeCard extends HTMLElement {
           row-gap: 0;
           align-items: start;
           padding: 14px 54px 13px 11px;
+          --- FIM ORIGINAL --- */
+          grid-template-columns: 124px minmax(0, 1fr) 40px;
+          grid-template-rows: auto minmax(0, 1fr) auto auto;
+          grid-template-areas:
+            "icon space right"
+            "icon space right"
+            "title title right"
+            "state state right";
+          column-gap: 6px;
+          row-gap: 0;
+          align-items: start;
+          padding: 14px 10px 13px 11px;
           margin: 0;
           text-align: left;
           background: transparent;
@@ -673,6 +686,7 @@ class BrunoOfficeCard extends HTMLElement {
           filter: drop-shadow(0 0 18px rgba(var(--accent),0.28));
         }
 
+        /* --- ORIGINAL .room-icon 90x90 (rollback rapido) ---
         .room-icon {
           grid-area: icon;
           justify-self: start;
@@ -682,6 +696,18 @@ class BrunoOfficeCard extends HTMLElement {
           height: 90px;
           margin-left: -8px;
           margin-top: -8px;
+        }
+        --- FIM ORIGINAL --- */
+
+        .room-icon {
+          grid-area: icon;
+          justify-self: start;
+          align-self: start;
+          position: relative;
+          width: 120px;
+          height: 80px;
+          margin-left: 0;
+          margin-top: 1px;
         }
 
         .office-icon {
@@ -721,6 +747,7 @@ class BrunoOfficeCard extends HTMLElement {
 
         .office-asset {
           object-fit: contain;
+          object-position: left top; /* NOVO: ancora asset tight no topo-esquerdo */
           opacity: 0;
           transform: translateZ(0);
           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
@@ -760,6 +787,7 @@ class BrunoOfficeCard extends HTMLElement {
           opacity: 1;
         }
 
+        /* --- ORIGINAL .meeting-icon 98x98 sobre icone 90x90 (rollback rapido) ---
         .meeting-icon {
           position: absolute;
           z-index: 2;
@@ -770,7 +798,20 @@ class BrunoOfficeCard extends HTMLElement {
           pointer-events: none;
           filter: drop-shadow(0 0 10px rgba(var(--accent-red),0.42));
         }
+        --- FIM ORIGINAL --- */
 
+        .meeting-icon {
+          position: absolute;
+          z-index: 2;
+          left: -3px;
+          top: -3px;
+          width: 126px;
+          height: 86px;
+          pointer-events: none;
+          filter: drop-shadow(0 0 10px rgba(var(--accent-red),0.42));
+        }
+
+        /* --- ORIGINAL .metric grid-area temp (rollback rapido) ---
         .metric {
           grid-area: temp;
           justify-self: start;
@@ -779,6 +820,13 @@ class BrunoOfficeCard extends HTMLElement {
           margin-left: 6px;
           margin-top: 3px;
           text-align: left;
+          line-height: 1.1;
+        }
+        --- FIM ORIGINAL --- */
+
+        .metric {
+          min-width: 36px;
+          text-align: center;
           line-height: 1.1;
         }
 
@@ -837,6 +885,7 @@ class BrunoOfficeCard extends HTMLElement {
           white-space: nowrap;
         }
 
+        /* --- ORIGINAL .right-dots absoluto (rollback rapido) ---
         .right-dots {
           position: absolute;
           z-index: 2;
@@ -849,7 +898,28 @@ class BrunoOfficeCard extends HTMLElement {
           align-items: center;
           gap: 5px;
         }
+        --- FIM ORIGINAL --- */
 
+        .right-rail {
+          grid-area: right;
+          justify-self: center;
+          align-self: start;
+          margin: 0;
+          padding-top: 1px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 7px;
+        }
+
+        .status-stack {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+        }
+
+        /* --- ORIGINAL .status-dot vidro fosco (rollback rapido) ---
         .status-dot {
           width: 26px;
           height: 26px;
@@ -870,20 +940,6 @@ class BrunoOfficeCard extends HTMLElement {
             transform var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
-        .status-dot ha-icon {
-          --mdc-icon-size: 14px;
-          width: 14px;
-          height: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          line-height: 0;
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -50%);
-        }
-
         .status-dot.is-active {
           color: rgb(var(--tone));
           background:
@@ -900,6 +956,48 @@ class BrunoOfficeCard extends HTMLElement {
 
         .status-dot.is-active ha-icon {
           filter: drop-shadow(0 0 5px rgba(var(--tone),0.56));
+        }
+        --- FIM ORIGINAL --- */
+
+        .status-dot {
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          position: relative;
+          color: #ffffff;
+          background:
+            linear-gradient(135deg, rgba(255,255,255,0.20), rgba(0,0,0,0.16)),
+            rgb(var(--tone));
+          border: none;
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.28),
+            0 2px 6px rgba(0,0,0,0.25),
+            0 0 12px rgba(var(--tone),0.35);
+          animation: brunoRoomDotIn 240ms ease;
+        }
+
+        @keyframes brunoRoomDotIn {
+          from { opacity: 0; transform: scale(0.55); }
+          to { opacity: 1; transform: scale(1); }
+        }
+
+        .status-dot ha-icon {
+          --mdc-icon-size: 14px;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 0;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          color: #ffffff;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.28));
         }
 
         .tone-blue { --tone: var(--accent-blue); }
@@ -926,6 +1024,7 @@ class BrunoOfficeCard extends HTMLElement {
           animation: officeMeetingSlash 1.8s ease-in-out infinite;
         }
 
+        /* --- ORIGINAL media max-height 760 (rollback rapido) ---
         @media (max-height: 760px) {
           .office-action {
             padding: 12px 52px 12px 11px;
@@ -944,6 +1043,23 @@ class BrunoOfficeCard extends HTMLElement {
           .right-dots {
             top: 13px;
             right: 12px;
+          }
+        }
+        --- FIM ORIGINAL --- */
+
+        @media (max-height: 760px) {
+          .office-action {
+            padding: 12px 8px 12px 11px;
+          }
+
+          .room-icon {
+            width: 108px;
+            height: 72px;
+          }
+
+          .meeting-icon {
+            width: 114px;
+            height: 78px;
           }
         }
 
@@ -966,19 +1082,37 @@ class BrunoOfficeCard extends HTMLElement {
             ${model.meetingOn ? BrunoOfficeCard._meetingIcon() : ''}
           </div>
 
+          <!-- ORIGINAL metric topo-esquerdo + right-dots fixos (rollback rapido):
           <div class="metric">
-            <span class="metric-value">${model.temperature}</span>
-            <span class="metric-sub">${model.humidity}</span>
+            <span class="metric-value">\${model.temperature}</span>
+            <span class="metric-sub">\${model.humidity}</span>
           </div>
+          <div class="right-dots" aria-label="Status do Office">
+            \${this._statusDot('mdi:account', model.presenceOn, 'Presenca no Office', 'blue')}
+            \${this._statusDot('mdi:desktop-classic', model.pcOn, 'PC ativo', 'purple')}
+            \${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
+            \${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Pop ativo', 'amber')}
+          </div>
+          FIM ORIGINAL -->
 
           <div class="title">${BrunoOfficeCard._escape(this._config.name)}</div>
           <div class="status-lines">${this._statusLines(model.statusLines)}</div>
 
-          <div class="right-dots" aria-label="Status do Office">
-            ${this._statusDot('mdi:account', model.presenceOn, 'Presenca no Office', 'blue')}
-            ${this._statusDot('mdi:desktop-classic', model.pcOn, 'PC ativo', 'purple')}
-            ${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
-            ${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Pop ativo', 'amber')}
+          <div class="right-rail" aria-label="Status do Office">
+            <div class="metric" aria-label="Temperatura e umidade">
+              <span class="metric-value">${model.temperature}</span>
+              <span class="metric-sub">${model.humidity}</span>
+            </div>
+            <div class="status-stack">
+              ${[
+                { icon: 'mdi:account', active: model.presenceOn, label: 'Presenca no Office', tone: 'blue' },
+                { icon: 'mdi:desktop-classic', active: model.pcOn, label: 'PC ativo', tone: 'purple' },
+                { icon: 'mdi:snowflake', active: model.climateOn, label: 'Ar condicionado ativo', tone: 'cyan' },
+                { icon: 'mdi:speaker-wireless', active: model.speakerOn, label: 'Echo Pop ativo', tone: 'amber' },
+              ].filter((dot) => dot.active)
+                .map((dot) => this._statusDot(dot.icon, dot.active, dot.label, dot.tone))
+                .join('')}
+            </div>
           </div>
         </button>
       </div>
@@ -991,12 +1125,15 @@ class BrunoOfficeCard extends HTMLElement {
   }
 
   static _officeVisual(active) {
-    const version = '20260608-room-assets-uniform-1';
+    // ORIGINAL (rollback rapido):
+    // const version = '20260608-room-assets-uniform-1';
+    // src="/local/bruno-ui/assets/office-off.png?v=${version}" / office-on.png
+    const version = '20260609-rail-dynamic-1';
     return `
       <span class="office-asset-wrap">
         <span class="office-asset-fallback">${BrunoOfficeCard._officeIcon(active)}</span>
-        <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off.png?v=${version}" alt="" loading="eager" decoding="async">
-        <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on.png?v=${version}" alt="" loading="eager" decoding="async">
+        <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=${version}" alt="" loading="eager" decoding="async">
+        <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=${version}" alt="" loading="eager" decoding="async">
       </span>
     `;
   }

@@ -912,6 +912,7 @@ class BrunoSalaCard extends HTMLElement {
           gap: 4px;
         }
 
+        /* --- ORIGINAL .status-dot vidro fosco (rollback rapido) ---
         .status-dot {
           width: 26px;
           height: 26px;
@@ -932,20 +933,6 @@ class BrunoSalaCard extends HTMLElement {
             transform var(--bruno-liquid-motion-fast, 160ms ease);
         }
 
-        .status-dot ha-icon {
-          --mdc-icon-size: 14px;
-          width: 14px;
-          height: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          line-height: 0;
-          position: absolute;
-          left: 50%;
-          top: 50%;
-          transform: translate(-50%, -50%);
-        }
-
         .status-dot.is-active {
           color: rgb(var(--tone));
           background:
@@ -962,6 +949,48 @@ class BrunoSalaCard extends HTMLElement {
 
         .status-dot.is-active ha-icon {
           filter: drop-shadow(0 0 5px rgba(var(--tone),0.56));
+        }
+        --- FIM ORIGINAL --- */
+
+        .status-dot {
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          position: relative;
+          color: #ffffff;
+          background:
+            linear-gradient(135deg, rgba(255,255,255,0.20), rgba(0,0,0,0.16)),
+            rgb(var(--tone));
+          border: none;
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.28),
+            0 2px 6px rgba(0,0,0,0.25),
+            0 0 12px rgba(var(--tone),0.35);
+          animation: brunoSalaDotIn 240ms ease;
+        }
+
+        @keyframes brunoSalaDotIn {
+          from { opacity: 0; transform: scale(0.55); }
+          to { opacity: 1; transform: scale(1); }
+        }
+
+        .status-dot ha-icon {
+          --mdc-icon-size: 14px;
+          width: 14px;
+          height: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 0;
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%);
+          color: #ffffff;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.28));
         }
 
         .sala-card.has-status-stack .lights-line {
@@ -1353,11 +1382,21 @@ class BrunoSalaCard extends HTMLElement {
               <span class="metric-value">${model.temperature}</span>
               <span class="metric-sub">${model.humidity}</span>
             </div>
+            <!-- ORIGINAL dots fixos (rollback rapido):
+            \${this._statusDot('mdi:account', model.presenceOn, 'Presenca na Sala', 'blue')}
+            \${this._statusDot('mdi:television-classic', model.tvOn, 'TV ativa', 'purple')}
+            \${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
+            \${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Show ativo', 'amber')}
+            FIM ORIGINAL -->
             <div class="status-stack">
-              ${this._statusDot('mdi:account', model.presenceOn, 'Presenca na Sala', 'blue')}
-              ${this._statusDot('mdi:television-classic', model.tvOn, 'TV ativa', 'purple')}
-              ${this._statusDot('mdi:snowflake', model.climateOn, 'Ar condicionado ativo', 'cyan')}
-              ${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Show ativo', 'amber')}
+              ${[
+                { icon: 'mdi:account', active: model.presenceOn, label: 'Presenca na Sala', tone: 'blue' },
+                { icon: 'mdi:television-classic', active: model.tvOn, label: 'TV ativa', tone: 'purple' },
+                { icon: 'mdi:snowflake', active: model.climateOn, label: 'Ar condicionado ativo', tone: 'cyan' },
+                { icon: 'mdi:speaker-wireless', active: model.speakerOn, label: 'Echo Show ativo', tone: 'amber' },
+              ].filter((dot) => dot.active)
+                .map((dot) => this._statusDot(dot.icon, dot.active, dot.label, dot.tone))
+                .join('')}
             </div>
           </div>
         </button>

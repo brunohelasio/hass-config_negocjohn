@@ -17,7 +17,8 @@ frontend:
     - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260607-sala-vertical-lift-1
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260604-office-sensors-1
     - /local/bruno-ui/cards/bruno-sala-card.js?v=20260608-sala-command-list-1
-    - /local/bruno-ui/cards/bruno-office-card.js?v=20260608-room-assets-uniform-1
+    # ORIGINAL: - /local/bruno-ui/cards/bruno-office-card.js?v=20260608-room-assets-uniform-1
+    - /local/bruno-ui/cards/bruno-office-card.js?v=20260610-office-rail-fluid-1
     - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260608-room-assets-uniform-1
     - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260608-room-assets-uniform-1
     - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260608-room-assets-uniform-1

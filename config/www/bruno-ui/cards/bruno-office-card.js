@@ -988,7 +988,7 @@ class BrunoOfficeCard extends HTMLElement {
         }
         --- FIM ORIGINAL --- */
 
-        /* NOVO: padrao da barra fixa lateral — icone colorido no tom + glow, sem fundo solido */
+        /* --- TENTATIVA ANTERIOR (icone colorido sem circulo — rejeitada) ---
         .status-dot {
           width: 26px;
           height: 26px;
@@ -1000,6 +1000,28 @@ class BrunoOfficeCard extends HTMLElement {
           background: transparent;
           border: none;
           box-shadow: none;
+        }
+        --- FIM TENTATIVA ANTERIOR --- */
+
+        /* NOVO: padrao .nav-button.selected da barra fixa —
+           circulo mantido, fundo tonal translucido em gradiente (nao solido),
+           borda clara, icone branco, glow suave */
+        .status-dot {
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          position: relative;
+          color: #ffffff;
+          background:
+            radial-gradient(circle at 50% 18%, rgba(255,255,255,0.30), transparent 62%),
+            linear-gradient(180deg, rgba(var(--tone),0.68), rgba(var(--tone),0.40));
+          border: 1px solid rgba(255,255,255,0.38);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.32),
+            0 0 12px rgba(var(--tone),0.32);
         }
 
         @keyframes brunoRoomDotIn {
@@ -1019,9 +1041,9 @@ class BrunoOfficeCard extends HTMLElement {
           left: 50%;
           top: 50%;
           transform: translate(-50%, -50%);
-          /* ORIGINAL: color: #ffffff; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.28)); */
-          color: rgb(var(--tone));
-          filter: drop-shadow(0 0 4px rgba(var(--tone),0.5));
+          /* TENTATIVA ANTERIOR (rejeitada): color: rgb(var(--tone)); filter: drop-shadow(0 0 4px rgba(var(--tone),0.5)); */
+          color: #ffffff;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.28));
         }
 
         .tone-blue { --tone: var(--accent-blue); }

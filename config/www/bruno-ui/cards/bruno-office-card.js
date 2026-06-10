@@ -665,8 +665,8 @@ class BrunoOfficeCard extends HTMLElement {
           column-gap: 6px;
           row-gap: 0;
           align-items: start;
-          /* ORIGINAL padding-right: 10px */
-          padding: 14px 14px 13px 11px;
+          /* ORIGINAL padding-right: 10px; depois 14px */
+          padding: 14px 11px 13px 11px;
           margin: 0;
           text-align: left;
           background: transparent;
@@ -967,6 +967,7 @@ class BrunoOfficeCard extends HTMLElement {
         }
         --- FIM ORIGINAL --- */
 
+        /* --- ORIGINAL .status-dot flat colorido solido (rollback rapido) ---
         .status-dot {
           width: 26px;
           height: 26px;
@@ -984,7 +985,21 @@ class BrunoOfficeCard extends HTMLElement {
             inset 0 1px 0 rgba(255,255,255,0.28),
             0 2px 6px rgba(0,0,0,0.25),
             0 0 12px rgba(var(--tone),0.35);
-          /* animation: brunoRoomDotIn 240ms ease; — removido: replay no hass() causava piscar */
+        }
+        --- FIM ORIGINAL --- */
+
+        /* NOVO: padrao da barra fixa lateral — icone colorido no tom + glow, sem fundo solido */
+        .status-dot {
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          position: relative;
+          background: transparent;
+          border: none;
+          box-shadow: none;
         }
 
         @keyframes brunoRoomDotIn {
@@ -1004,8 +1019,9 @@ class BrunoOfficeCard extends HTMLElement {
           left: 50%;
           top: 50%;
           transform: translate(-50%, -50%);
-          color: #ffffff;
-          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.28));
+          /* ORIGINAL: color: #ffffff; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.28)); */
+          color: rgb(var(--tone));
+          filter: drop-shadow(0 0 4px rgba(var(--tone),0.5));
         }
 
         .tone-blue { --tone: var(--accent-blue); }

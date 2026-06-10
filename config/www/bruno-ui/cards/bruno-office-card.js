@@ -661,7 +661,8 @@ class BrunoOfficeCard extends HTMLElement {
           column-gap: 6px;
           row-gap: 0;
           align-items: start;
-          padding: 14px 10px 13px 11px;
+          /* ORIGINAL padding-right: 10px */
+          padding: 14px 14px 13px 11px;
           margin: 0;
           text-align: left;
           background: transparent;
@@ -976,7 +977,7 @@ class BrunoOfficeCard extends HTMLElement {
             inset 0 1px 0 rgba(255,255,255,0.28),
             0 2px 6px rgba(0,0,0,0.25),
             0 0 12px rgba(var(--tone),0.35);
-          animation: brunoRoomDotIn 240ms ease;
+          /* animation: brunoRoomDotIn 240ms ease; — removido: replay no hass() causava piscar */
         }
 
         @keyframes brunoRoomDotIn {
@@ -1049,7 +1050,8 @@ class BrunoOfficeCard extends HTMLElement {
 
         @media (max-height: 760px) {
           .office-action {
-            padding: 12px 8px 12px 11px;
+            /* ORIGINAL padding-right: 8px */
+            padding: 12px 11px 12px 11px;
           }
 
           .room-icon {

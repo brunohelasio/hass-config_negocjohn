@@ -651,7 +651,11 @@ class BrunoOfficeCard extends HTMLElement {
           align-items: start;
           padding: 14px 54px 13px 11px;
           --- FIM ORIGINAL --- */
-          grid-template-columns: 124px minmax(0, 1fr) 40px;
+          /* ORIGINAL: grid-template-columns: 124px minmax(0, 1fr) 40px;
+             Coluna fixa 124px estourava a largura real do card (~183px):
+             124+40+gaps+padding = 201px -> coluna direita clipada pelo overflow:hidden.
+             minmax(0, 124px) deixa a coluna do icone absorver o deficit. */
+          grid-template-columns: minmax(0, 124px) minmax(0, 1fr) 40px;
           grid-template-rows: auto minmax(0, 1fr) auto auto;
           grid-template-areas:
             "icon space right"
@@ -705,7 +709,9 @@ class BrunoOfficeCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           position: relative;
-          width: 120px;
+          /* ORIGINAL: width: 120px; — fixo transbordava quando a track encolhe */
+          width: 100%;
+          max-width: 120px;
           height: 80px;
           margin-left: 0;
           margin-top: 1px;
@@ -806,7 +812,8 @@ class BrunoOfficeCard extends HTMLElement {
           z-index: 2;
           left: -3px;
           top: -3px;
-          width: 126px;
+          /* ORIGINAL: width: 126px; — acompanha agora o room-icon fluido */
+          width: calc(100% + 6px);
           height: 86px;
           pointer-events: none;
           filter: drop-shadow(0 0 10px rgba(var(--accent-red),0.42));
@@ -1055,12 +1062,15 @@ class BrunoOfficeCard extends HTMLElement {
           }
 
           .room-icon {
-            width: 108px;
+            /* ORIGINAL: width: 108px; */
+            width: 100%;
+            max-width: 108px;
             height: 72px;
           }
 
           .meeting-icon {
-            width: 114px;
+            /* ORIGINAL: width: 114px; */
+            width: calc(100% + 6px);
             height: 78px;
           }
         }

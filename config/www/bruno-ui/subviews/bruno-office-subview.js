@@ -10,6 +10,9 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
   pc_image: '/local/images/office_pc.png',
   refresh_interval: 6500,
   spotify_device_name: 'Echo Pop Office',
+  climate_device_name: 'Gree',
+  climate_image: '/local/images/ar-condicionado-gree-tight.png',
+  climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1',
   room_nav: [
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala' },
     { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office', active: true },
@@ -100,6 +103,7 @@ class BrunoOfficeSubview extends HTMLElement {
     this._lastMinute = '';
     this._lastActionAt = {};
     this._spotifyToolsOpen = false;
+    this._selectedWorkspaceSource = '';
     this._focusDuration = 25 * 60;
     this._focusStartedAt = null;
     this._focusRemaining = this._focusDuration;
@@ -487,6 +491,9 @@ class BrunoOfficeSubview extends HTMLElement {
     const attrs = entity?.attributes || {};
     const target = Number(attrs.temperature);
     const current = Number(attrs.current_temperature);
+    const minTemp = Number(attrs.min_temp);
+    const maxTemp = Number(attrs.max_temp);
+    const targetStep = Number(attrs.target_temp_step);
     const hvacAction = this._climateAction(entity);
     const active = this._climateIsActive(entity);
     return {
@@ -494,11 +501,36 @@ class BrunoOfficeSubview extends HTMLElement {
       active,
       target: Number.isFinite(target) ? target : null,
       current: Number.isFinite(current) ? current : null,
+      minTemp: Number.isFinite(minTemp) ? minTemp : 16,
+      maxTemp: Number.isFinite(maxTemp) ? maxTemp : 30,
+      targetStep: Number.isFinite(targetStep) && targetStep > 0 ? targetStep : 1,
       hvacMode: entity?.state || 'off',
       fan: attrs.fan_mode || 'auto',
-      swing: attrs.swing_mode || 'Ativada',
+      swing: attrs.swing_mode || '',
+      hvacModes: Array.isArray(attrs.hvac_modes) ? attrs.hvac_modes : [],
+      fanModes: Array.isArray(attrs.fan_modes) ? attrs.fan_modes : [],
+      swingModes: Array.isArray(attrs.swing_modes) ? attrs.swing_modes : [],
       action: hvacAction === 'idle' ? 'em espera' : (active ? (hvacAction || 'ligado') : 'off'),
     };
+  }
+
+  _climateOption(options, candidates, fallback = '') {
+    const available = Array.isArray(options) ? options.filter(Boolean) : [];
+    if (!available.length) return fallback;
+    const wanted = candidates.map((item) => String(item || '').toLowerCase());
+    return available.find((option) => wanted.includes(String(option || '').toLowerCase())) || '';
+  }
+
+  _setClimateTarget(temperature) {
+    const model = this._climateModel();
+    const value = Number(temperature);
+    if (!Number.isFinite(value)) return;
+    const min = Number.isFinite(model.minTemp) ? model.minTemp : 16;
+    const max = Number.isFinite(model.maxTemp) ? model.maxTemp : 30;
+    this._callService('climate.set_temperature', {
+      entity_id: this._config.entities.climate,
+      temperature: Math.max(min, Math.min(max, value)),
+    });
   }
 
   _climateModeLabel(mode) {
@@ -518,6 +550,44 @@ class BrunoOfficeSubview extends HTMLElement {
     if (!climate.active) return `Off - ${target}\u00b0C`;
     const action = climate.hvacMode === 'heat' ? 'Heat' : this._climateModeLabel(climate.hvacMode);
     return `${action} - ${target}\u00b0C`;
+  }
+
+  _workspaceSourceFromAction(action) {
+    const value = String(action || '');
+    if (value.startsWith('spotify-')) return 'spotify';
+    if (value.startsWith('pc-')) return 'pc';
+    return '';
+  }
+
+  _selectedWorkspace(model) {
+    const valid = ['pc', 'spotify'];
+    if (valid.includes(this._selectedWorkspaceSource)) return this._selectedWorkspaceSource;
+    return 'pc';
+  }
+
+  _mediaStateLabel(state, fallback = 'Desligado') {
+    const value = String(state || '').toLowerCase();
+    if (!value || BRUNO_OFFICE_SUBVIEW_UNAVAILABLE_STATES.includes(value)) return fallback;
+    if (value === 'playing') return 'Tocando';
+    if (value === 'paused') return 'Pausado';
+    if (value === 'on' || value === 'idle') return 'Ativo';
+    if (value === 'off') return fallback;
+    return state;
+  }
+
+  _sceneContextLabel(model) {
+    const active = this._state(this._config.entities.active_sensor);
+    const attrs = active?.attributes || {};
+    const configuredLabel = attrs.scene || attrs.active_scene || attrs.mode || attrs.display || attrs.context || attrs.label;
+    if (configuredLabel && !Array.isArray(configuredLabel)) return String(configuredLabel);
+    const semantic = String(model.focus?.semantic || '');
+    if (semantic && semantic !== 'Disponivel') return semantic;
+    if (model.pc?.active) return 'Trabalhando';
+    if (model.spotify?.active) return model.spotify.playing ? 'Spotify tocando' : 'Spotify ativo';
+    if (model.climate?.active) return `Clima ${this._climateModeLabel(model.climate.hvacMode)}`;
+    if (model.lights > 0) return 'Office iluminado';
+    if (semantic) return semantic;
+    return active?.state === 'yes' ? 'Office ativo' : 'Disponivel';
   }
 
   _fireDomEvent(action) {
@@ -660,6 +730,14 @@ class BrunoOfficeSubview extends HTMLElement {
       }
       return;
     }
+    if (action === 'select-workspace-source') {
+      const source = target.dataset.source;
+      if (['pc', 'spotify'].includes(source)) this._selectedWorkspaceSource = source;
+      this._safeRender();
+      return;
+    }
+    const interactedWorkspace = this._workspaceSourceFromAction(action);
+    if (interactedWorkspace) this._selectedWorkspaceSource = interactedWorkspace;
     if (action === 'spotify-more') {
       this._spotifyToolsOpen = !this._spotifyToolsOpen;
       this._safeRender();
@@ -719,14 +797,41 @@ class BrunoOfficeSubview extends HTMLElement {
       const model = this._climateModel();
       this._callService(model.active ? 'climate.turn_off' : 'climate.turn_on', { entity_id: this._config.entities.climate });
     }
+    if (action === 'climate-mode') {
+      const hvacMode = target.dataset.mode;
+      if (hvacMode) {
+        this._callService('climate.set_hvac_mode', {
+          entity_id: this._config.entities.climate,
+          hvac_mode: hvacMode,
+        });
+      }
+      return;
+    }
+    if (action === 'fan-mode') {
+      const fanMode = target.dataset.mode;
+      if (fanMode) {
+        this._callService('climate.set_fan_mode', {
+          entity_id: this._config.entities.climate,
+          fan_mode: fanMode,
+        });
+      }
+      return;
+    }
+    if (action === 'swing-mode') {
+      const swingMode = target.dataset.mode;
+      if (swingMode) {
+        this._callService('climate.set_swing_mode', {
+          entity_id: this._config.entities.climate,
+          swing_mode: swingMode,
+        });
+      }
+      return;
+    }
     if (action === 'temp-down' || action === 'temp-up') {
       const model = this._climateModel();
       const current = Number(model.target);
       if (Number.isFinite(current)) {
-        this._callService('climate.set_temperature', {
-          entity_id: this._config.entities.climate,
-          temperature: action === 'temp-up' ? current + 1 : current - 1,
-        });
+        this._setClimateTarget(action === 'temp-up' ? current + model.targetStep : current - model.targetStep);
       }
     }
   }
@@ -744,10 +849,7 @@ class BrunoOfficeSubview extends HTMLElement {
       return;
     }
     if (target.dataset.action === 'climate-target') {
-      this._callService('climate.set_temperature', {
-        entity_id: this._config.entities.climate,
-        temperature: Math.max(16, Math.min(30, Math.round(value))),
-      });
+      this._setClimateTarget(value);
       return;
     }
     if (target.dataset.action !== 'brightness') return;
@@ -777,22 +879,24 @@ class BrunoOfficeSubview extends HTMLElement {
       <main class="office-subview">
         ${this._renderRoomSidebar()}
 
-        <section class="hero-panel">
-          ${this._renderHero(model)}
-        </section>
-
-        <section class="side-panel">
-          ${this._renderStatusRail(model)}
-          <div class="office-work-panel">
-            ${this._renderLights(model)}
+        <section class="left-column">
+          <section class="hero-panel">
+            ${this._renderHero(model)}
+          </section>
+          <section class="lower-left-grid">
+            ${this._renderCameras(model)}
             ${this._renderFocus(model)}
-          </div>
+          </section>
         </section>
 
-        ${this._renderCameras(model)}
-        ${this._renderSpotify(model)}
-        ${this._renderPC(model)}
-        ${this._renderAC(model)}
+        <section class="right-column">
+          ${this._renderStatusRail(model)}
+          <section class="right-control-grid">
+            ${this._renderLights(model)}
+            ${this._renderWorkspaceHub(model)}
+            ${this._renderAC(model)}
+          </section>
+        </section>
       </main>
     `;
 
@@ -825,6 +929,10 @@ class BrunoOfficeSubview extends HTMLElement {
           <div class="hero-headline">
             <p class="hero-date-line">${BrunoOfficeSubview._escape(this._dateLine())}</p>
             <div class="hero-clock" data-clock>${this._lastMinute}</div>
+            <button type="button" class="scene-pill" data-action="more-info" data-entity="${BrunoOfficeSubview._escapeAttr(this._config.entities.active_sensor)}">
+              <ha-icon icon="mdi:briefcase-clock"></ha-icon>
+              <span>${BrunoOfficeSubview._escape(this._sceneContextLabel(model))}</span>
+            </button>
           </div>
 
           <div class="curtain-dock">
@@ -899,7 +1007,6 @@ class BrunoOfficeSubview extends HTMLElement {
               <strong>${BrunoOfficeSubview._escape(item.value)}</strong>
               <span>${BrunoOfficeSubview._escape(item.label)}</span>
             </div>
-            <ha-icon class="status-chevron" icon="mdi:chevron-right"></ha-icon>
           </div>
         `).join('')}
       </div>
@@ -1001,14 +1108,18 @@ class BrunoOfficeSubview extends HTMLElement {
               <strong>${BrunoOfficeSubview._escape(focus.label)}</strong>
               <small><ha-icon icon="mdi:waveform" style="--mdc-icon-size: 12px; margin-right: 4px;"></ha-icon>${focus.running ? 'em foco' : 'pronto'}</small>
             </div>
+            <button type="button" class="focus-toggle" data-action="${focus.running ? 'focus-pause' : 'focus-start'}">
+              <ha-icon icon="${focus.running ? 'mdi:pause' : 'mdi:play'}"></ha-icon>
+              <span>${focus.running ? 'Pausar' : 'Iniciar'}</span>
+            </button>
           </div>
 
           <div class="focus-side">
             <div class="focus-next-minimal">
               <ha-icon icon="mdi:calendar-month-outline"></ha-icon>
-              <span class="next-label">Prox:</span>
-              <strong class="next-title">${meetingActive ? 'Reuniao de projeto' : 'Agenda livre'}</strong>
-              <span class="next-time">${meetingActive ? '(14:30)' : ''}</span>
+              <span class="next-label">Status:</span>
+              <strong class="next-title">${meetingActive ? 'Em reuniao' : 'Agenda livre'}</strong>
+              <span class="next-time">${focus.running ? 'Foco ativo' : ''}</span>
             </div>
             <div class="focus-stats-grid">
               <div class="stat-box tone-green">
@@ -1021,11 +1132,6 @@ class BrunoOfficeSubview extends HTMLElement {
                 <strong>${BrunoOfficeSubview._escape(focus.focusedLabel)}</strong>
                 <small>Tempo</small>
               </div>
-              <div class="stat-box tone-amber">
-                <ha-icon icon="mdi:star-outline"></ha-icon>
-                <strong>82%</strong>
-                <small>Produt.</small>
-              </div>
             </div>
           </div>
         </div>
@@ -1035,7 +1141,6 @@ class BrunoOfficeSubview extends HTMLElement {
 
   _renderCameras(model) {
     const active = model.cameras.activeCamera || model.cameras.cameras[0];
-    const secondary = model.cameras.cameras.find((camera) => camera.entity !== active?.entity) || model.cameras.cameras[1];
 
     return `
       <section class="glass-card cameras-card">
@@ -1058,13 +1163,6 @@ class BrunoOfficeSubview extends HTMLElement {
             </div>
             <ha-icon class="camera-chevron" icon="mdi:chevron-right"></ha-icon>
           </button>
-
-          ${secondary ? `
-            <button type="button" class="camera-thumb-overlay" data-action="select-camera" data-entity="${BrunoOfficeSubview._escapeAttr(secondary.entity)}" aria-label="Expandir ${BrunoOfficeSubview._escapeAttr(secondary.name)}">
-              ${this._cameraFrame(secondary)}
-              <span>${BrunoOfficeSubview._escape(secondary.short_name || secondary.name)}</span>
-            </button>
-          ` : ''}
         </div>
       </section>
     `;
@@ -1085,6 +1183,172 @@ class BrunoOfficeSubview extends HTMLElement {
         ${image ? `<img src="${BrunoOfficeSubview._escapeAttr(image)}" data-camera-src-base="${BrunoOfficeSubview._escapeAttr(base)}" data-camera-entity="${BrunoOfficeSubview._escapeAttr(camera.entity)}" alt="">` : ''}
         <div class="camera-placeholder"><ha-icon icon="mdi:video-outline"></ha-icon></div>
       </div>
+    `;
+  }
+
+  _renderWorkspaceHub(model) {
+    const selected = this._selectedWorkspace(model);
+    const pc = model.pc;
+    const spotify = model.spotify;
+    const pcImage = BrunoOfficeSubview._escapeAttr(this._config.pc_image || '/local/images/office_pc.png');
+    const spotifyArtwork = spotify.artwork ? BrunoOfficeSubview._resolvePicture(spotify.artwork) : '';
+    const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
+    const metricIcon = {
+      cpu: 'mdi:cpu-64-bit',
+      ram: 'mdi:memory',
+      gpu_temp: 'mdi:thermometer',
+      network: 'mdi:wifi',
+    };
+    const metricTone = {
+      cpu: 'blue',
+      ram: 'purple',
+      gpu_temp: 'amber',
+      network: 'green',
+    };
+    const mediaActionButton = ({ action, icon, label, className = '', disabled = false }) => `
+      <button
+        type="button"
+        class="media-action-button${className ? ` ${className}` : ''}"
+        data-action="${BrunoOfficeSubview._escapeAttr(action)}"
+        title="${BrunoOfficeSubview._escapeAttr(label)}"
+        aria-label="${BrunoOfficeSubview._escapeAttr(label)}"
+        ${disabled ? 'disabled' : ''}
+      >
+        <ha-icon icon="${BrunoOfficeSubview._escapeAttr(icon)}"></ha-icon>
+      </button>
+    `;
+    const pcControls = `
+      ${mediaActionButton({ action: 'pc-power', icon: 'mdi:power', label: 'Ligar', className: 'is-main' })}
+      ${mediaActionButton({ action: 'pc-sleep', icon: 'mdi:weather-night', label: 'Sleep' })}
+      ${mediaActionButton({ action: 'pc-restart', icon: 'mdi:restart', label: 'Reiniciar', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'pc-shutdown', icon: 'mdi:power-standby', label: 'Desligar' })}
+    `;
+    const spotifyControls = this._spotifyToolsOpen
+      ? `
+        ${mediaActionButton({ action: 'spotify-more', icon: 'mdi:chevron-left', label: 'Voltar' })}
+        ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool' })}
+        ${mediaActionButton({ action: 'spotify-library', icon: 'mdi:playlist-music', label: 'Biblioteca', className: 'is-tool' })}
+        ${mediaActionButton({ action: 'spotify-plus', icon: 'mdi:dots-horizontal', label: 'Mais opcoes', className: 'is-tool' })}
+      `
+      : `
+        ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior' })}
+        ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main' })}
+        ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa' })}
+        ${mediaActionButton({ action: 'spotify-more', icon: 'mdi:plus', label: 'Mais opcoes', className: 'is-tool' })}
+      `;
+    const pcMetrics = `
+      <div class="workspace-metrics">
+        ${pc.metrics.map((metric) => `
+          <span class="pc-metric tone-${metricTone[metric.key] || 'blue'}" style="--metric:${BrunoOfficeSubview._metricPercent(metric.value)}%">
+            <ha-icon icon="${metricIcon[metric.key] || 'mdi:chart-line'}"></ha-icon>
+            <small>${BrunoOfficeSubview._escape(metric.label)}</small>
+            <strong>${BrunoOfficeSubview._escape(metric.value)}</strong>
+            <i></i>
+          </span>
+        `).join('')}
+      </div>
+      <div class="workspace-control-list">
+        <div class="pc-camera-row">
+          <span><ha-icon icon="mdi:webcam"></ha-icon><strong>Webcam</strong></span>
+          <em>${pc.webcamActive ? 'On' : 'Off'}</em>
+          <i class="${pc.webcamActive ? 'is-on' : ''}"></i>
+        </div>
+        <div class="pc-slider-row">
+          <span><ha-icon icon="mdi:volume-high"></ha-icon><strong>Volume</strong></span>
+          <i style="--slider:${BrunoOfficeSubview._metricPercent(pc.volume)}%"></i>
+          <em>${BrunoOfficeSubview._escape(pc.volume)}</em>
+        </div>
+        <div class="pc-slider-row">
+          <span><ha-icon icon="mdi:white-balance-sunny"></ha-icon><strong>Brilho</strong></span>
+          <i style="--slider:${BrunoOfficeSubview._metricPercent(pc.brightness)}%"></i>
+          <em>${BrunoOfficeSubview._escape(pc.brightness)}</em>
+        </div>
+      </div>
+    `;
+    const spotifyExtra = `
+      <div class="volume-row spotify-volume">
+        <ha-icon icon="mdi:volume-medium"></ha-icon>
+        <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify">
+        <strong>${spotifyVolume}%</strong>
+      </div>
+    `;
+    const sources = [
+      { key: 'pc', label: 'PC', active: pc.active, state: pc.active ? 'Ativo' : 'Offline' },
+      { key: 'spotify', label: 'Spotify', active: spotify.active || spotify.playing, state: spotify.playing ? 'Tocando' : this._mediaStateLabel(spotify.state, 'Off') },
+    ];
+    const current = selected === 'spotify'
+      ? {
+        key: 'spotify',
+        icon: 'mdi:spotify',
+        active: spotify.active || spotify.playing,
+        state: spotify.playing ? 'Tocando' : this._mediaStateLabel(spotify.state, 'Off'),
+        title: spotify.title || 'SpotifyPlus',
+        meta: spotify.subtitle || spotify.source || this._config.spotify_device_name || '',
+        visual: spotifyArtwork
+          ? `<img src="${BrunoOfficeSubview._escapeAttr(spotifyArtwork)}" alt="">`
+          : '<ha-icon icon="mdi:music-note"></ha-icon>',
+        actions: spotifyControls,
+        extra: spotifyExtra,
+      }
+      : {
+        key: 'pc',
+        icon: 'mdi:monitor-dashboard',
+        active: pc.active,
+        state: pc.active ? 'Ativo' : 'Offline',
+        title: 'Office PC',
+        meta: pc.active ? ((pc.activeWindow && pc.activeWindow !== '--') ? pc.activeWindow : (pc.session || 'Em uso')) : (pc.session || 'Offline'),
+        visual: `<img class="media-standby-image media-pc-standby" src="${pcImage}" alt="">`,
+        actions: pcControls,
+        extra: pcMetrics,
+      };
+
+    return `
+      <section class="glass-card media-hub-card workspace-hub-card is-${BrunoOfficeSubview._escapeAttr(current.key)}">
+        <div class="module-head media-hub-head">
+          <div class="title-with-chip">
+            <span class="micro-icon"><ha-icon icon="mdi:desk"></ha-icon></span>
+            <div>
+              <div class="module-title">Estacao de trabalho</div>
+              <div class="module-subtitle">${BrunoOfficeSubview._escape(current.state)}</div>
+            </div>
+          </div>
+          <div class="media-tabs" role="tablist" aria-label="Fonte da estacao">
+            ${sources.map((source) => `
+              <button
+                type="button"
+                class="${source.key === selected ? 'is-selected ' : ''}${source.active ? 'is-source-active' : ''}"
+                data-action="select-workspace-source"
+                data-source="${BrunoOfficeSubview._escapeAttr(source.key)}"
+                role="tab"
+                aria-selected="${source.key === selected ? 'true' : 'false'}"
+              >
+                <span class="source-dot"></span>
+                <span>${BrunoOfficeSubview._escape(source.label)}</span>
+                <small>${BrunoOfficeSubview._escape(source.state)}</small>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="media-hub-body">
+          <div class="media-visual${current.active ? ' is-active' : ''}">
+            ${current.visual}
+          </div>
+          <div class="media-hub-content">
+            <div class="media-details">
+              <strong>${BrunoOfficeSubview._escape(current.title)}</strong>
+              <small>${BrunoOfficeSubview._escape(current.meta || current.state)}</small>
+            </div>
+            <div class="media-action-stack">
+              <div class="media-primary-actions">
+                ${current.actions}
+              </div>
+            </div>
+            <div class="media-hub-extra">
+              ${current.extra}
+            </div>
+          </div>
+        </div>
+      </section>
     `;
   }
 
@@ -1227,30 +1491,171 @@ class BrunoOfficeSubview extends HTMLElement {
     `;
   }
 
+  _renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode) {
+    const cx = 360;
+    const cy = 410;
+    const radius = 285;
+    const startAngle = -180;
+    const endAngle = 0;
+    const sweep = endAngle - startAngle;
+    const targetValue = Number(climate.target);
+    const safeMin = Number.isFinite(Number(minTarget)) ? Number(minTarget) : 16;
+    const safeMax = Number.isFinite(Number(maxTarget)) ? Number(maxTarget) : 30;
+    const safeTarget = Number.isFinite(targetValue)
+      ? Math.max(safeMin, Math.min(safeMax, targetValue))
+      : safeMin + ((safeMax - safeMin) / 2);
+    const range = Math.max(1, safeMax - safeMin);
+    const progress = Math.max(0, Math.min(1, (safeTarget - safeMin) / range));
+    const currentAngle = startAngle + (sweep * progress);
+    const targetLabel = climate.target == null ? '--' : `${target}`;
+    const ambientLabel = climate.current == null ? '--' : `${current}`;
+    const modeLabel = String(dialMode || '').toUpperCase();
+    const polarToCartesian = (r, angleDeg) => {
+      const rad = (angleDeg * Math.PI) / 180;
+      return {
+        x: cx + (r * Math.cos(rad)),
+        y: cy + (r * Math.sin(rad)),
+      };
+    };
+    const describeArc = (r, start, end) => {
+      const s = polarToCartesian(r, start);
+      const e = polarToCartesian(r, end);
+      const large = Math.abs(end - start) <= 180 ? '0' : '1';
+      return `M ${s.x.toFixed(3)} ${s.y.toFixed(3)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(3)} ${e.y.toFixed(3)}`;
+    };
+    const activeArc = describeArc(radius, startAngle, currentAngle);
+    const inactiveArc = describeArc(radius, currentAngle, endAngle);
+    const fullArc = describeArc(radius, startAngle, endAngle);
+    const marker = polarToCartesian(radius, currentAngle);
+    const outerTicks = (() => {
+      const total = 90;
+      const parts = [];
+      for (let i = 0; i <= total; i += 1) {
+        const tp = i / total;
+        const angle = startAngle + (sweep * tp);
+        const isMajor = i % 15 === 0;
+        const isMedium = i % 5 === 0;
+        const outer = radius + 34;
+        const inner = isMajor ? radius + 8 : isMedium ? radius + 14 : radius + 21;
+        const p1 = polarToCartesian(outer, angle);
+        const p2 = polarToCartesian(inner, angle);
+        const cls = isMajor ? 'icg-tick major' : isMedium ? 'icg-tick medium' : 'icg-tick minor';
+        parts.push(`<line x1="${p1.x.toFixed(3)}" y1="${p1.y.toFixed(3)}" x2="${p2.x.toFixed(3)}" y2="${p2.y.toFixed(3)}" class="${cls}"></line>`);
+      }
+      return parts.join('');
+    })();
+    const innerTicks = (() => {
+      const total = 72;
+      const parts = [];
+      for (let i = 0; i <= total; i += 1) {
+        const tp = i / total;
+        const angle = startAngle + (sweep * tp);
+        const p1 = polarToCartesian(radius - 18, angle);
+        const p2 = polarToCartesian(radius - 34, angle);
+        parts.push(`<line x1="${p1.x.toFixed(3)}" y1="${p1.y.toFixed(3)}" x2="${p2.x.toFixed(3)}" y2="${p2.y.toFixed(3)}" class="icg-inner-tick"></line>`);
+      }
+      return parts.join('');
+    })();
+    const labels = [
+      { text: `${this._formatNumber(safeMin, 0)}\u00b0`, angle: -180, r: radius + 52, cls: 'edge' },
+      { text: '20', angle: -90, r: radius + 52, cls: 'top' },
+      { text: `${this._formatNumber(safeMax, 0)}\u00b0`, angle: 0, r: radius + 52, cls: 'edge' },
+    ];
+    const labelMarkup = labels.map((label) => {
+      const p = polarToCartesian(label.r, label.angle);
+      return `<text x="${p.x.toFixed(3)}" y="${p.y.toFixed(3)}" text-anchor="middle" dominant-baseline="middle" class="icg-label ${label.cls}">${BrunoOfficeSubview._escape(label.text)}</text>`;
+    }).join('');
+
+    return `
+      <div class="icg-root">
+        <div class="icg-shell">
+          <svg class="icg-svg" viewBox="0 0 720 460" role="img" aria-label="${BrunoOfficeSubview._escapeAttr(`Temperatura alvo ${targetLabel}. Ambiente ${ambientLabel}.`)}">
+            <defs>
+              <linearGradient id="icgOfficeActiveBlue" x1="90" y1="340" x2="560" y2="90">
+                <stop offset="0%" stop-color="#0078ff"></stop>
+                <stop offset="38%" stop-color="#1fb7ff"></stop>
+                <stop offset="72%" stop-color="#3ed6ff"></stop>
+                <stop offset="100%" stop-color="#96f0ff"></stop>
+              </linearGradient>
+              <filter id="icgOfficeBlueGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="7" result="blur"></feGaussianBlur>
+                <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.02  0 0 0 0 0.42  0 0 0 0 1  0 0 0 0.95 0"></feColorMatrix>
+                <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
+              </filter>
+              <filter id="icgOfficeTextGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#dcecff" flood-opacity="0.24"></feDropShadow>
+              </filter>
+            </defs>
+            <g>${outerTicks}</g>
+            <g>${innerTicks}</g>
+            <path d="${fullArc}" class="icg-track-shadow"></path>
+            <path d="${inactiveArc}" class="icg-track-muted"></path>
+            <path d="${activeArc}" class="icg-active-glow"></path>
+            <path d="${activeArc}" class="icg-active-arc"></path>
+            ${labelMarkup}
+            <circle cx="${marker.x.toFixed(3)}" cy="${marker.y.toFixed(3)}" r="21" class="icg-marker-glow"></circle>
+            <circle cx="${marker.x.toFixed(3)}" cy="${marker.y.toFixed(3)}" r="13" class="icg-marker-ring"></circle>
+            <circle cx="${(marker.x - 4).toFixed(3)}" cy="${(marker.y - 5).toFixed(3)}" r="4" class="icg-marker-highlight"></circle>
+            <text x="${cx}" y="260" text-anchor="middle" dominant-baseline="middle" class="icg-center-mode">${BrunoOfficeSubview._escape(modeLabel)}</text>
+            <text x="${cx}" y="328" text-anchor="middle" dominant-baseline="middle" class="icg-center-temp">${BrunoOfficeSubview._escape(targetLabel)}\u00b0</text>
+            <text x="${cx}" y="382" text-anchor="middle" dominant-baseline="middle" class="icg-center-sub">SET TEMPERATURE</text>
+            <line x1="${cx - 28}" y1="408" x2="${cx + 28}" y2="408" class="icg-center-line"></line>
+            <text x="${cx}" y="432" text-anchor="middle" dominant-baseline="middle" class="icg-ambient">Ambient ${BrunoOfficeSubview._escape(ambientLabel)}\u00b0</text>
+          </svg>
+        </div>
+      </div>
+    `;
+  }
+
   _renderAC(model) {
     const climate = model.climate;
     const target = climate.target == null ? '--' : this._formatNumber(climate.target, 0);
     const targetNumber = Number.isFinite(Number(climate.target)) ? Math.round(Number(climate.target)) : 22;
     const current = climate.current == null ? '--' : this._formatNumber(climate.current, 1);
-    const climateEntity = BrunoOfficeSubview._escapeAttr(this._config.entities.climate);
+    const minTarget = Number.isFinite(Number(climate.minTemp)) ? Number(climate.minTemp) : 16;
+    const maxTarget = Number.isFinite(Number(climate.maxTemp)) ? Number(climate.maxTemp) : 30;
+    const targetStep = Number.isFinite(Number(climate.targetStep)) ? Number(climate.targetStep) : 1;
+    const deviceName = BrunoOfficeSubview._escape(this._config.climate_device_name || 'Ar condicionado');
+    const climateImage = BrunoOfficeSubview._escapeAttr(this._config.climate_image || '/local/images/ar-condicionado-gree-tight.png');
+    const climateActiveImage = BrunoOfficeSubview._escapeAttr(this._config.climate_active_image || '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1');
     const activeMode = climate.hvacMode || 'off';
     const fan = String(climate.fan || 'auto').toLowerCase();
-    const swingActive = String(climate.swing || '').toLowerCase().includes('ativ');
+    const swing = String(climate.swing || '').toLowerCase();
+    const swingActive = ['on', 'ativo', 'ativada', 'enabled'].includes(swing)
+      || (swing.includes('ativ') && !swing.includes('desativ'));
+    const dialMode = activeMode === 'cool'
+      ? 'Resfriamento'
+      : activeMode === 'heat'
+        ? 'Aquecimento'
+        : activeMode === 'fan_only'
+          ? 'Ventilacao'
+          : 'Temperatura';
     const modeButtonClass = (button) => {
-      if (button.key === 'off') return climate.active ? ' is-power-on' : '';
       return activeMode === button.key ? ' is-active' : '';
     };
+    const hvacModes = Array.isArray(climate.hvacModes) ? climate.hvacModes : [];
+    const hvacAvailable = (key) => !hvacModes.length || hvacModes.includes(key);
+    const fanMode = (candidates, fallback) => this._climateOption(climate.fanModes, candidates, fallback);
+    const lowMode = fanMode(['low', 'baixo'], 'low');
+    const mediumMode = fanMode(['medium', 'med', 'medio'], 'medium');
+    const highMode = fanMode(['high', 'alto'], 'high');
+    const swingOnMode = this._climateOption(climate.swingModes, ['on', 'ativada', 'ativo', 'enabled'], '');
+    const swingOffMode = this._climateOption(climate.swingModes, ['off', 'desativada', 'desativado', 'disabled'], '');
+    const nextSwingMode = swingActive ? swingOffMode : swingOnMode;
+    const fanActive = (value, aliases = []) => {
+      const normalized = String(value || '').toLowerCase();
+      return Boolean(normalized) && (fan === normalized || aliases.some((alias) => fan.includes(alias)));
+    };
     const modeButtons = [
-      { key: 'heat', icon: 'mdi:fire', label: 'Heat' },
-      { key: 'cool', icon: 'mdi:snowflake', label: 'Cool' },
-      { key: 'fan_only', icon: 'mdi:fan', label: 'Fan' },
-      { key: 'off', icon: 'mdi:power', label: 'Power', action: 'toggle-climate' },
+      { key: 'cool', icon: 'mdi:snowflake', label: 'Cool', disabled: !hvacAvailable('cool') },
+      { key: 'heat', icon: 'mdi:fire', label: 'Heat', disabled: !hvacAvailable('heat') },
+      { key: 'fan_only', icon: 'mdi:fan', label: 'Fan', disabled: !hvacAvailable('fan_only') },
     ];
     const fanButtons = [
-      { key: 'low', label: 'Low', active: fan.includes('low') || fan.includes('baixo') },
-      { key: 'medium', label: 'Med', active: fan.includes('med') },
-      { key: 'high', label: 'High', active: fan.includes('high') || fan.includes('alto') },
-      { key: 'swing', label: 'Swing', active: swingActive },
+      { key: 'low', label: 'Low', action: 'fan-mode', mode: lowMode, active: fanActive(lowMode, ['low', 'baixo']) },
+      { key: 'medium', label: 'Med', action: 'fan-mode', mode: mediumMode, active: fanActive(mediumMode, ['med']) },
+      { key: 'high', label: 'High', action: 'fan-mode', mode: highMode, active: fanActive(highMode, ['high', 'alto']) },
+      { key: 'swing', label: 'Swing', action: 'swing-mode', mode: nextSwingMode, active: swingActive },
     ];
 
     return `
@@ -1260,22 +1665,43 @@ class BrunoOfficeSubview extends HTMLElement {
             <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
             <div>
               <div class="module-title">Ar Condicionado</div>
+              <div class="module-subtitle">${deviceName}</div>
             </div>
           </div>
-          <span class="temperature-pill">${current}&deg;</span>
+          <button type="button" class="power-button${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado">
+            <ha-icon icon="mdi:power"></ha-icon>
+          </button>
         </div>
         <div class="ac-body">
+          <div class="ac-visual">
+            <div class="ac-image-shell${climate.active ? ' is-on' : ''}" data-image-wrapper>
+              <img
+                class="ac-unit-image ac-unit-image-off"
+                src="${climateImage}"
+                alt=""
+                data-fallback-class="is-fallback"
+              >
+              <img
+                class="ac-unit-image ac-unit-image-on"
+                src="${climateActiveImage}"
+                alt=""
+              >
+              <ha-icon class="ac-image-fallback" icon="mdi:air-conditioner"></ha-icon>
+            </div>
+            ${this._renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode)}
+          </div>
           <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
-            <input type="range" min="16" max="30" value="${targetNumber}" data-action="climate-target">
+            <input type="range" min="${BrunoOfficeSubview._escapeAttr(minTarget)}" max="${BrunoOfficeSubview._escapeAttr(maxTarget)}" step="${BrunoOfficeSubview._escapeAttr(targetStep)}" value="${targetNumber}" data-action="climate-target">
           </label>
           <div class="climate-mode-row" aria-label="Modo do ar condicionado">
             ${modeButtons.map((button) => `
               <button
                 type="button"
                 class="climate-mode${modeButtonClass(button)}"
-                data-action="${button.action || 'more-info'}"
-                ${button.action ? '' : `data-entity="${climateEntity}"`}
+                data-action="climate-mode"
+                data-mode="${BrunoOfficeSubview._escapeAttr(button.key)}"
                 title="${BrunoOfficeSubview._escapeAttr(button.label)}"
+                ${button.disabled ? 'disabled' : ''}
               >
                 <ha-icon icon="${button.icon}"></ha-icon>
               </button>
@@ -1292,16 +1718,11 @@ class BrunoOfficeSubview extends HTMLElement {
               <button
                 type="button"
                 class="fan-mode${button.active ? ' is-active' : ''}"
-                data-action="more-info"
-                data-entity="${climateEntity}"
+                data-action="${BrunoOfficeSubview._escapeAttr(button.action)}"
+                data-mode="${BrunoOfficeSubview._escapeAttr(button.mode)}"
+                ${button.mode ? '' : 'disabled'}
               >${BrunoOfficeSubview._escape(button.label)}</button>
             `).join('')}
-          </div>
-          <div class="climate-trend" aria-hidden="true">
-            <svg viewBox="0 0 260 74" preserveAspectRatio="none">
-              <path class="trend-area" d="M0 54 C56 54 92 53 126 52 C166 50 180 38 206 29 C226 22 242 19 260 19 L260 74 L0 74 Z"></path>
-              <path class="trend-line" d="M0 54 C56 54 92 53 126 52 C166 50 180 38 206 29 C226 22 242 19 260 19"></path>
-            </svg>
           </div>
         </div>
       </section>
@@ -1349,20 +1770,18 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .office-subview {
+        --office-shell-height: min(734px, calc(100vh - 34px));
         width: 100%;
         min-height: 100vh;
         height: 100vh;
         display: grid;
-        grid-template-columns: 64px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-        grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
-        grid-template-areas:
-          "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top"
-          "frame-left hero hero hero hero hero side side side side side side side"
-          "frame-left cams cams cams spotify spotify pc pc pc pc ac ac ac"
-          "frame-left cams cams cams spotify spotify pc pc pc pc ac ac ac"
-          "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
+        grid-template-columns: 56px minmax(420px, 540px) minmax(630px, 1fr);
+        grid-template-rows: var(--office-shell-height);
+        grid-template-areas: "frame-left left right";
+        align-content: center;
+        align-items: stretch;
         gap: var(--office-gap);
-        padding: 12px;
+        padding: 12px 10px 22px;
         background:
           radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%),
           radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%),
@@ -1370,19 +1789,59 @@ class BrunoOfficeSubview extends HTMLElement {
         overflow: hidden;
       }
 
-      .hero-panel { grid-area: hero; min-width: 0; min-height: 0; }
-      .side-panel { grid-area: side; min-width: 0; min-height: 0; display: grid; grid-template-rows: 72px minmax(0, 1fr); gap: var(--office-gap); }
-      .office-work-panel {
+      .left-column,
+      .right-column {
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+      }
+
+      .left-column {
+        grid-area: left;
+        display: grid;
+        grid-template-rows: minmax(320px, 1.24fr) minmax(250px, 1fr);
+        gap: var(--office-gap);
+      }
+
+      .right-column {
+        grid-area: right;
+        display: grid;
+        grid-template-rows: 64px minmax(0, 1fr);
+        gap: var(--office-gap);
+      }
+
+      .right-control-grid {
         min-width: 0;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(410px, 420px) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) minmax(292px, 0.55fr);
+        grid-template-rows: minmax(264px, 1fr) minmax(292px, 1fr);
+        grid-template-areas:
+          "lights ac"
+          "media ac";
         gap: var(--office-gap);
       }
+
+      .lower-left-grid {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(250px, 0.92fr);
+        gap: var(--office-gap);
+      }
+
       .room-sidebar { grid-area: frame-left; }
-      .cameras-card { grid-area: cams; }
-      .spotify-card { grid-area: spotify; }
-      .pc-card { grid-area: pc; }
+      .hero-panel,
+      .cameras-card,
+      .focus-card,
+      .lights-card,
+      .media-hub-card,
+      .ac-card {
+        min-width: 0;
+        min-height: 0;
+      }
+      .lights-card { grid-area: lights; }
+      .media-hub-card { grid-area: media; }
       .ac-card { grid-area: ac; }
 
       .room-sidebar {
@@ -1710,6 +2169,29 @@ class BrunoOfficeSubview extends HTMLElement {
         text-shadow: 0 10px 32px rgba(0,0,0,0.28);
       }
 
+      .scene-pill {
+        width: fit-content;
+        max-width: min(250px, 100%);
+        min-height: 30px;
+        margin-top: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.88);
+        font-size: 11px;
+        font-weight: 800;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 24px rgba(0,0,0,0.20);
+      }
+
+      .scene-pill ha-icon {
+        --mdc-icon-size: 15px;
+        color: rgb(255,205,95);
+      }
+
       .chip-button,
       .online-chip,
       .state-chip {
@@ -1879,7 +2361,7 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .status-item {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-columns: auto minmax(0, 1fr);
         align-items: center;
         min-width: 0;
         gap: 8px;
@@ -1909,11 +2391,6 @@ class BrunoOfficeSubview extends HTMLElement {
         color: var(--text-soft);
       }
 
-      .status-chevron {
-        --mdc-icon-size: 17px;
-        color: rgba(255,255,255,0.58);
-      }
-
       .micro-icon.tone-amber {
         color: rgb(255,183,77);
         background: rgba(255,183,77,0.10);
@@ -1928,9 +2405,11 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .lights-card,
       .cameras-card,
+      .focus-card,
       .tv-card,
       .pc-card,
       .spotify-card,
+      .media-hub-card,
       .ac-card {
         padding: 14px;
       }
@@ -2333,7 +2812,7 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .focus-ring {
         width: 100%;
-        max-width: 154px;
+        max-width: 136px;
         aspect-ratio: 1;
         border-radius: 50%;
         display: flex;
@@ -2364,6 +2843,26 @@ class BrunoOfficeSubview extends HTMLElement {
         color: rgb(126,204,255);
         font-size: 10px;
         font-weight: 700;
+      }
+
+      .focus-toggle {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.90);
+        font-size: 11px;
+        font-weight: 850;
+        background: rgba(96,165,250,0.16);
+        border: 1px solid rgba(96,165,250,0.30);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+      }
+
+      .focus-toggle ha-icon {
+        --mdc-icon-size: 14px;
       }
 
       .focus-side {
@@ -2412,7 +2911,7 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .focus-stats-grid {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
         flex: 1;
         align-items: stretch;
@@ -2758,6 +3257,250 @@ class BrunoOfficeSubview extends HTMLElement {
         color: rgba(255,255,255,0.82);
         font-size: 11px;
         font-weight: 800;
+      }
+
+      .media-hub-card {
+        padding: 14px;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .media-hub-head {
+        align-items: start;
+        min-height: 38px;
+        margin-bottom: 0;
+      }
+
+      .media-tabs {
+        gap: 2px;
+        max-width: 62%;
+      }
+
+      .media-tabs button {
+        min-width: 0;
+        min-height: 30px;
+        display: grid;
+        grid-template-columns: auto auto;
+        grid-template-rows: auto auto;
+        align-items: center;
+        column-gap: 5px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.58);
+        background: transparent;
+        font-size: 10px;
+        font-weight: 900;
+      }
+
+      .media-tabs button.is-selected {
+        color: rgba(255,255,255,0.96);
+        background: rgba(255,255,255,0.12);
+      }
+
+      .media-tabs small {
+        grid-column: 2;
+        max-width: 66px;
+        color: rgba(255,255,255,0.46);
+        font-size: 8px;
+        line-height: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .source-dot {
+        grid-row: 1 / 3;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.24);
+      }
+
+      .media-tabs button.is-source-active .source-dot {
+        background: #2ee77a;
+        box-shadow: 0 0 10px rgba(46,231,122,0.52);
+      }
+
+      .media-hub-body {
+        min-height: 0;
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: minmax(186px, 0.86fr) minmax(0, 1fr);
+        grid-template-rows: minmax(206px, 1fr);
+        grid-template-areas: "visual content";
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .media-visual {
+        grid-area: visual;
+        position: relative;
+        min-height: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: var(--office-radius-small);
+        color: rgba(255,255,255,0.22);
+        background:
+          radial-gradient(circle at 52% 34%, rgba(96,165,250,0.15), transparent 54%),
+          rgba(5,10,20,0.74);
+        border: 1px solid rgba(255,255,255,0.10);
+      }
+
+      .media-visual img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .media-standby-image {
+        position: static !important;
+        inset: auto !important;
+        width: 92% !important;
+        height: 92% !important;
+        object-fit: contain !important;
+        opacity: 0.96;
+        filter: drop-shadow(0 18px 28px rgba(0,0,0,0.42));
+      }
+
+      .media-pc-standby {
+        width: 104% !important;
+        height: 94% !important;
+      }
+
+      .media-visual ha-icon {
+        --mdc-icon-size: 64px;
+      }
+
+      .media-hub-content {
+        grid-area: content;
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: 40px minmax(88px, auto) minmax(0, 1fr);
+        align-content: stretch;
+        gap: 11px;
+      }
+
+      .media-details {
+        min-width: 0;
+        min-height: 40px;
+        display: grid;
+        grid-template-rows: 20px 16px;
+        align-content: start;
+        gap: 4px;
+        padding-top: 1px;
+      }
+
+      .media-details strong {
+        min-width: 0;
+        color: white;
+        font-size: 17px;
+        line-height: 1.08;
+        font-weight: 850;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .media-details small {
+        min-width: 0;
+        color: var(--text-soft);
+        font-size: 12px;
+        line-height: 1.25;
+        font-weight: 650;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .media-action-stack {
+        --media-action-size: 55px;
+        display: grid;
+        align-content: center;
+        align-self: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .media-primary-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, var(--media-action-size));
+        align-items: center;
+        justify-content: space-between;
+        min-width: 0;
+      }
+
+      .media-action-button {
+        position: relative;
+        width: var(--media-action-size);
+        height: var(--media-action-size);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        overflow: hidden;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        color: rgba(255,255,255,0.82);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.08));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+      }
+
+      .media-action-button ha-icon {
+        --mdc-icon-size: 20px;
+      }
+
+      .media-action-button.is-main {
+        color: white;
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 72%),
+          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58))
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(150,198,255,0.44));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.22),
+          0 0 22px rgba(96,165,250,0.24)
+        );
+      }
+
+      .media-action-button.is-tool {
+        color: rgba(210,245,230,0.96);
+        background: var(--bruno-liquid-control-green-background,
+          radial-gradient(circle at 50% 16%, rgba(46,231,122,0.22), transparent 72%),
+          rgba(255,255,255,0.075)
+        );
+        border-color: var(--bruno-liquid-control-green-border, rgba(46,231,122,0.22));
+        box-shadow: var(--bruno-liquid-control-green-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+      }
+
+      .media-hub-extra {
+        min-width: 0;
+        align-self: end;
+        display: grid;
+        gap: 10px;
+      }
+
+      .workspace-metrics {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .workspace-control-list {
+        min-width: 0;
+        display: grid;
+        gap: 7px;
       }
 
       .ac-meta span {
@@ -3243,26 +3986,250 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .ac-body {
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto auto minmax(64px, 1fr);
-        gap: 8px;
+        grid-template-rows: minmax(0, 1fr) auto auto auto auto;
+        gap: 10px;
         align-content: start;
       }
 
-      .temperature-pill {
-        align-self: start;
-        min-width: 58px;
+      .power-button {
+        width: 40px;
+        height: 40px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 7px 12px;
-        border-radius: 999px;
-        color: rgba(255,255,255,0.92);
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        color: rgba(255,255,255,0.74);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.075));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.13));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.09));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+      }
+
+      .power-button.is-active {
+        color: white;
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
+          rgba(38,92,138,0.38)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,165,250,0.32));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+      }
+
+      .power-button ha-icon {
+        --mdc-icon-size: 18px;
+      }
+
+      .ac-visual {
+        position: relative;
+        min-height: 320px;
+        display: grid;
+        grid-template-rows: auto auto;
+        align-content: start;
+        justify-items: center;
+        gap: 14px;
+        padding: 0 0 2px;
+      }
+
+      .ac-image-shell {
+        position: relative;
+        width: 100%;
+        height: 116px;
+        margin: -2px 0 0;
+        display: grid;
+        place-items: start center;
+        overflow: visible;
+      }
+
+      .ac-unit-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: contain;
+        object-position: center top;
+        filter: drop-shadow(0 18px 26px rgba(0,0,0,0.38));
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 260ms ease, transform 320ms ease, filter 260ms ease;
+      }
+
+      .ac-unit-image-on {
+        opacity: 0;
+        transform: translateY(2px);
+        filter:
+          drop-shadow(0 18px 26px rgba(0,0,0,0.38))
+          drop-shadow(0 0 18px rgba(110,200,255,0.12));
+      }
+
+      .ac-image-shell.is-on .ac-unit-image-off {
+        opacity: 0;
+        transform: translateY(-1px);
+      }
+
+      .ac-image-shell.is-on .ac-unit-image-on {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .ac-image-fallback {
+        display: none;
+        --mdc-icon-size: 84px;
+        place-self: center;
+        color: rgba(226,232,240,0.46);
+        filter: drop-shadow(0 14px 22px rgba(0,0,0,0.32));
+      }
+
+      .icg-root {
+        width: 100%;
+        background: transparent;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: visible;
+      }
+
+      .icg-shell {
+        width: min(100%, 820px);
+        aspect-ratio: 16 / 9;
+        position: relative;
+        background: transparent;
+      }
+
+      .icg-svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+        display: block;
+        background: transparent;
+      }
+
+      .icg-track-shadow {
+        fill: none;
+        stroke: rgba(0, 0, 0, 0.34);
+        stroke-width: 16;
+        stroke-linecap: round;
+      }
+
+      .icg-track-muted {
+        fill: none;
+        stroke: rgba(112, 136, 164, 0.38);
+        stroke-width: 8;
+        stroke-linecap: round;
+      }
+
+      .icg-active-glow {
+        fill: none;
+        stroke: url(#icgOfficeActiveBlue);
+        stroke-width: 18;
+        stroke-linecap: round;
+        opacity: 0.74;
+        filter: url(#icgOfficeBlueGlow);
+      }
+
+      .icg-active-arc {
+        fill: none;
+        stroke: url(#icgOfficeActiveBlue);
+        stroke-width: 8;
+        stroke-linecap: round;
+      }
+
+      .icg-tick {
+        stroke-linecap: round;
+      }
+
+      .icg-tick.minor {
+        stroke: rgba(145, 176, 214, 0.34);
+        stroke-width: 1.2;
+      }
+
+      .icg-tick.medium {
+        stroke: rgba(190, 214, 240, 0.50);
+        stroke-width: 1.6;
+      }
+
+      .icg-tick.major {
+        stroke: rgba(238, 247, 255, 0.88);
+        stroke-width: 2.5;
+      }
+
+      .icg-inner-tick {
+        stroke: rgba(40, 145, 255, 0.24);
+        stroke-width: 1;
+        stroke-linecap: round;
+      }
+
+      .icg-label {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 18px;
+        font-weight: 500;
+        fill: rgba(224, 235, 248, 0.74);
+      }
+
+      .icg-label.edge {
+        font-size: 22px;
+        fill: rgba(230, 240, 252, 0.82);
+      }
+
+      .icg-label.top {
+        font-size: 19px;
+        fill: rgba(235, 245, 255, 0.90);
+      }
+
+      .icg-marker-glow {
+        fill: rgba(40, 175, 255, 0.28);
+        filter: url(#icgOfficeBlueGlow);
+      }
+
+      .icg-marker-ring {
+        fill: rgba(5, 10, 18, 0.94);
+        stroke: rgba(92, 210, 255, 0.98);
+        stroke-width: 4;
+        filter: url(#icgOfficeBlueGlow);
+      }
+
+      .icg-marker-highlight {
+        fill: rgba(255, 255, 255, 0.62);
+        opacity: 0.62;
+      }
+
+      .icg-center-mode {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+        fill: rgba(38, 190, 255, 0.96);
+        text-transform: uppercase;
+      }
+
+      .icg-center-temp {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 96px;
+        font-weight: 300;
+        fill: rgba(246, 250, 255, 0.98);
+        filter: url(#icgOfficeTextGlow);
+      }
+
+      .icg-center-sub {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 15px;
+        font-weight: 500;
+        fill: rgba(190, 204, 220, 0.72);
+        text-transform: uppercase;
+      }
+
+      .icg-center-line {
+        stroke: rgba(36, 195, 255, 0.95);
+        stroke-width: 2;
+        stroke-linecap: round;
+        filter: url(#icgOfficeBlueGlow);
+      }
+
+      .icg-ambient {
+        font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 14px;
-        line-height: 1;
-        font-weight: 800;
-        background: rgba(255,255,255,0.070);
-        border: 1px solid rgba(255,255,255,0.12);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        font-weight: 500;
+        fill: rgba(176, 196, 220, 0.60);
       }
 
       .temperature-slider {
@@ -3291,8 +4258,15 @@ class BrunoOfficeSubview extends HTMLElement {
       .climate-mode-row,
       .fan-mode-row {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 8px;
+      }
+
+      .climate-mode-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .fan-mode-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .climate-mode,
@@ -3310,6 +4284,12 @@ class BrunoOfficeSubview extends HTMLElement {
         align-items: center;
         justify-content: center;
         color: rgba(255,255,255,0.66);
+      }
+
+      .climate-mode:disabled,
+      .fan-mode:disabled {
+        opacity: 0.42;
+        cursor: default;
       }
 
       .climate-mode ha-icon {
@@ -3365,40 +4345,16 @@ class BrunoOfficeSubview extends HTMLElement {
         color: rgba(255,255,255,0.74);
         font-size: 11px;
         font-weight: 800;
-        min-height: 30px;
+        min-height: 0;
+        aspect-ratio: 1;
+        height: auto;
+        padding: 0 4px;
       }
 
       .fan-mode.is-active {
         color: rgba(255,255,255,0.94);
         background: rgba(255,255,255,0.11);
         border-color: rgba(255,255,255,0.16);
-      }
-
-      .climate-trend {
-        min-height: 0;
-        height: 104px;
-        margin: -8px -14px -14px;
-        border-radius: 0 0 calc(var(--office-radius) - 1px) calc(var(--office-radius) - 1px);
-        overflow: hidden;
-        background: transparent;
-      }
-
-      .climate-trend svg {
-        display: block;
-        width: 100%;
-        height: 100%;
-      }
-
-      .trend-area {
-        fill: rgba(96,165,250,0.16);
-      }
-
-      .trend-line {
-        fill: none;
-        stroke: rgba(96,165,250,0.76);
-        stroke-width: 2.35;
-        stroke-linecap: round;
-        filter: drop-shadow(0 0 8px rgba(96,165,250,0.32));
       }
 
       .spotify-volume {
@@ -3501,17 +4457,34 @@ class BrunoOfficeSubview extends HTMLElement {
         .office-subview {
           height: auto;
           overflow: auto;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto;
           grid-template-areas:
-            "hero side"
-            "cams cams"
-            "spotify pc"
-            "ac ac";
+            "left"
+            "right";
+          align-content: start;
+          padding: 10px;
         }
 
-        .side-panel {
-          grid-template-rows: auto minmax(0, 1fr);
+        .left-column {
+          grid-template-rows: minmax(330px, 46vh) minmax(300px, auto);
+        }
+
+        .right-column {
+          grid-template-rows: auto minmax(0, auto);
+        }
+
+        .lower-left-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          min-height: 300px;
+        }
+
+        .right-control-grid {
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
+          grid-template-rows: minmax(280px, auto) minmax(320px, auto);
+          grid-template-areas:
+            "lights ac"
+            "media ac";
         }
 
         .status-rail {
@@ -3533,13 +4506,30 @@ class BrunoOfficeSubview extends HTMLElement {
           grid-template-columns: 1fr;
           grid-template-rows: auto;
           grid-template-areas:
-            "hero"
-            "side"
-            "cams"
-            "spotify"
-            "pc"
-            "ac";
+            "left"
+            "right";
           padding: 8px;
+        }
+
+        .left-column {
+          grid-template-rows: auto auto;
+        }
+
+        .right-column {
+          grid-template-rows: auto auto;
+        }
+
+        .lower-left-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .right-control-grid {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto;
+          grid-template-areas:
+            "lights"
+            "media"
+            "ac";
         }
 
         .hero-stage {
@@ -3574,22 +4564,25 @@ class BrunoOfficeSubview extends HTMLElement {
           grid-column: 1 / -1;
         }
 
-        .side-panel {
-          grid-template-rows: auto;
-        }
-
-        .office-work-panel,
-        .pc-body {
+        .media-hub-body {
           grid-template-columns: 1fr;
-        }
-
-        .pc-body {
+          grid-template-rows: minmax(210px, auto) auto;
           grid-template-areas:
             "visual"
-            "status"
-            "actions"
-            "controls";
-          grid-template-rows: minmax(170px, auto) auto auto auto;
+            "content";
+        }
+
+        .media-tabs {
+          max-width: 100%;
+        }
+
+        .media-primary-actions {
+          grid-template-columns: repeat(4, minmax(44px, 1fr));
+          gap: 8px;
+        }
+
+        .media-action-button {
+          width: 100%;
         }
 
         .lights-groups {
@@ -3610,19 +4603,21 @@ class BrunoOfficeSubview extends HTMLElement {
           min-height: 390px;
         }
 
-        .pc-card,
-        .spotify-card,
+        .media-hub-card,
         .ac-card {
           min-height: 260px;
         }
 
-        .spotify-card {
+        .media-hub-card {
           min-height: 360px;
         }
 
-        .tv-body,
         .ac-body {
           grid-template-columns: 1fr;
+        }
+
+        .ac-visual {
+          min-height: 280px;
         }
       }
     `;

@@ -19,11 +19,11 @@ frontend:
     - /local/bruno-ui/cards/bruno-sala-card.js?v=20260608-sala-command-list-1
     # ORIGINAL: - /local/bruno-ui/cards/bruno-office-card.js?v=20260608-room-assets-uniform-1
     - /local/bruno-ui/cards/bruno-office-card.js?v=20260610-office-rail-fluid-3
-    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260608-room-assets-uniform-1
-    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260608-room-assets-uniform-1
-    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260608-room-assets-uniform-1
-    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260608-room-assets-uniform-1
-    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260608-room-assets-uniform-1
+    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260611-room-nav-1
+    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260611-room-nav-1
+    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260611-room-nav-1
+    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260611-room-nav-1
+    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260611-room-nav-1
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-10
     - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260606-roborock-map-5
     - /local/bruno-ui/cards/bruno-energy-card.js?v=20260518-4

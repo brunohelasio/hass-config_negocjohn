@@ -23,9 +23,9 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
   },
   "icon": {
     // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/couple-bedroom-off.png?v=20260608-room-assets-uniform-1",
-    "off": "/local/bruno-ui/assets/couple-bedroom-off-tight.png?v=20260609-rail-dynamic-1",
+    "off": "/local/bruno-ui/assets/couple-bedroom-off-tight.png?v=20260611-q-casal-tight-1",
     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/couple-bedroom-on.png?v=20260608-room-assets-uniform-1",
-    "on": "/local/bruno-ui/assets/couple-bedroom-on-tight.png?v=20260609-rail-dynamic-1",
+    "on": "/local/bruno-ui/assets/couple-bedroom-on-tight.png?v=20260611-q-casal-tight-1",
     "fallback": "mdi:bed-king-outline"
   },
   "status_dots": [

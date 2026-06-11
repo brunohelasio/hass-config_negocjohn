@@ -770,8 +770,8 @@ class BrunoQuartoCasalCard extends HTMLElement {
           align-self: start;
           position: relative;
           /* ORIGINAL: width: 120px; height: 80px; */
-          width: 92px;
-          height: 92px;
+          width: 115px;
+          height: 75px;
           margin-left: 0;
           margin-top: 1px;
         }
@@ -1106,8 +1106,8 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
           .room-icon {
             /* ORIGINAL: width: 108px; height: 72px; */
-            width: 80px;
-            height: 80px;
+            width: 115px;
+            height: 75px;
           }
         }
 

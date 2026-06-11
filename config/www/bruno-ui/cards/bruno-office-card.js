@@ -213,16 +213,19 @@ class BrunoOfficeCard extends HTMLElement {
     globalThis.BrunoLiquidGlass?.feedback?.(gesture === 'hold' ? 'hold' : 'tap');
 
     const entities = this._config.entities;
-    if (gesture === 'double') {
-      this._runConfiguredAction(this._config.double_tap_action, entities.room_group);
-      return;
-    }
     if (gesture === 'hold') {
       this._callService('light.turn_off', {}, { entity_id: entities.room_group });
       return;
     }
+
     if (this._isActionCoolingDown(key)) return;
     this._callService('light.toggle', {}, { entity_id: entities.room_toggle });
+  }
+
+  _runRoomSubview() {
+    const entities = this._config.entities;
+    globalThis.BrunoLiquidGlass?.feedback?.('tap');
+    this._runConfiguredAction(this._config.double_tap_action, entities.room_group);
   }
 
   _isActionCoolingDown(key) {
@@ -335,11 +338,8 @@ class BrunoOfficeCard extends HTMLElement {
     if (!key) return;
 
     let holdTimer = null;
-    let tapTimer = null;
     let holdFired = false;
-    let lastDoubleAt = 0;
-    let lastTapActionAt = 0;
-    const tapDelay = 520;
+    let pointerDown = false;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -348,38 +348,18 @@ class BrunoOfficeCard extends HTMLElement {
       }
     };
 
-    const clearTap = () => {
-      if (tapTimer) {
-        window.clearTimeout(tapTimer);
-        tapTimer = null;
-      }
-    };
-
     const resetPress = () => {
       clearHold();
+      pointerDown = false;
       button.classList.remove('is-pressed');
-    };
-
-    const runDouble = () => {
-      const now = Date.now();
-      if (now - lastDoubleAt < 300) return;
-      lastDoubleAt = now;
-      clearTap();
-      lastTapActionAt = now;
-      this._runAction(key, 'double');
-    };
-
-    const runTap = () => {
-      const now = Date.now();
-      if (now - lastTapActionAt < 280) return;
-      lastTapActionAt = now;
-      this._runAction(key, 'tap');
     };
 
     button.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
       event.preventDefault();
       event.stopPropagation();
+
+      pointerDown = true;
       holdFired = false;
       button.classList.add('is-pressed');
       button.setPointerCapture?.(event.pointerId);
@@ -396,36 +376,22 @@ class BrunoOfficeCard extends HTMLElement {
       event.preventDefault();
       event.stopPropagation();
       button.releasePointerCapture?.(event.pointerId);
+
+      const wasPointerDown = pointerDown;
       resetPress();
-      if (holdFired) return;
 
-      if (tapTimer) {
-        runDouble();
-        return;
-      }
-
-      tapTimer = window.setTimeout(() => {
-        tapTimer = null;
-        if (Date.now() - lastDoubleAt < tapDelay) return;
-        runTap();
-      }, tapDelay);
+      if (!wasPointerDown || holdFired) return;
+      this._runAction(key, 'tap');
     });
 
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-
-      if (event.detail >= 2) {
-        resetPress();
-        runDouble();
-      }
     });
 
     button.addEventListener('dblclick', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      resetPress();
-      runDouble();
     });
 
     button.addEventListener('pointerleave', resetPress);
@@ -435,6 +401,77 @@ class BrunoOfficeCard extends HTMLElement {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
       this._runAction(key, 'tap');
+    });
+  }
+
+  _wireRoomNavZone(zone) {
+    if (!zone) return;
+
+    let holdTimer = null;
+    let holdFired = false;
+    let pointerDown = false;
+
+    const clearHold = () => {
+      if (holdTimer) {
+        window.clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+    };
+
+    const resetPress = () => {
+      clearHold();
+      pointerDown = false;
+      zone.classList.remove('is-pressed');
+    };
+
+    zone.addEventListener('pointerdown', (event) => {
+      if (event.button != null && event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+
+      pointerDown = true;
+      holdFired = false;
+      zone.classList.add('is-pressed');
+      zone.setPointerCapture?.(event.pointerId);
+
+      holdTimer = window.setTimeout(() => {
+        holdFired = true;
+        zone.classList.add('is-hold-fired');
+        window.setTimeout(() => zone.classList.remove('is-hold-fired'), 260);
+        this._runAction('room', 'hold');
+      }, 560);
+    });
+
+    zone.addEventListener('pointerup', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      zone.releasePointerCapture?.(event.pointerId);
+
+      const wasPointerDown = pointerDown;
+      resetPress();
+
+      if (!wasPointerDown || holdFired) return;
+      this._runRoomSubview();
+    });
+
+    zone.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+
+    zone.addEventListener('dblclick', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+
+    zone.addEventListener('pointerleave', resetPress);
+    zone.addEventListener('pointercancel', resetPress);
+
+    zone.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      event.stopPropagation();
+      this._runRoomSubview();
     });
   }
 
@@ -711,8 +748,8 @@ class BrunoOfficeCard extends HTMLElement {
           position: relative;
           /* ORIGINAL: width: 120px; — fixo transbordava quando a track encolhe */
           width: 100%;
-          max-width: 120px;
-          height: 80px;
+          max-width: 122px;
+          height: 82px;
           margin-left: 0;
           margin-top: 1px;
         }
@@ -756,7 +793,7 @@ class BrunoOfficeCard extends HTMLElement {
           object-fit: contain;
           object-position: left top; /* NOVO: ancora asset tight no topo-esquerdo */
           opacity: 0;
-          transform: translateZ(0);
+          transform: translateZ(0) scale(1.06);
           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
         }
@@ -772,7 +809,7 @@ class BrunoOfficeCard extends HTMLElement {
         .office-card.is-room-on .office-asset-on {
           opacity: 1;
           filter: drop-shadow(0 6px 9px rgba(0,0,0,0.20)) drop-shadow(0 0 12px rgba(255,187,72,0.14));
-          transform: translateY(-1px) scale(1.01);
+          transform: translateZ(0) scale(1.06);
         }
 
         .office-asset-fallback {
@@ -855,24 +892,78 @@ class BrunoOfficeCard extends HTMLElement {
           color: var(--text-muted);
         }
 
-        .title {
-          grid-area: title;
+        .room-nav-zone {
+          grid-column: 1 / 3;
+          grid-row: 3 / 5;
           justify-self: start;
           align-self: end;
+          position: relative;
+          z-index: 4;
           min-width: 0;
-          margin-top: 4px;
-          margin-bottom: 2px;
+          width: min(136px, 100%);
+          min-height: 56px;
+          padding: 2px 24px 2px 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          outline: none;
+          cursor: pointer;
+          user-select: none;
+          -webkit-user-select: none;
+          touch-action: manipulation;
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        .room-title-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+        }
+
+        .title {
+          display: block;
+          min-width: 0;
+          margin: 0 0 2px 0;
           font-size: 15px;
           line-height: 1.18;
           font-weight: 700;
           color: var(--text-main);
           white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .room-chevron {
+          flex: 0 0 auto;
+          font-size: 23px;
+          line-height: 1;
+          font-weight: 700;
+          color: rgba(255,255,255,0.56);
+          transform: translateY(-1px);
+          transition:
+            color var(--bruno-liquid-motion-fast, 140ms ease),
+            transform var(--bruno-liquid-motion-fast, 140ms ease),
+            filter var(--bruno-liquid-motion-fast, 140ms ease);
+        }
+
+        .room-nav-zone.is-pressed .title,
+        .room-nav-zone.is-pressed .status-lines {
+          filter: brightness(1.13);
+        }
+
+        .room-nav-zone.is-pressed .room-chevron {
+          color: rgba(255,255,255,0.96);
+          transform: translate(2px, -1px);
+          filter: drop-shadow(0 0 8px rgba(255,255,255,0.26));
+        }
+
+        .room-nav-zone.is-hold-fired .room-chevron {
+          color: rgba(255,214,150,0.98);
+          filter: drop-shadow(0 0 10px rgba(255,190,90,0.34));
         }
 
         .status-lines {
-          grid-area: state;
-          justify-self: start;
-          align-self: start;
           min-width: 0;
           display: flex;
           flex-direction: column;
@@ -918,6 +1009,7 @@ class BrunoOfficeCard extends HTMLElement {
           flex-direction: column;
           align-items: center;
           gap: 7px;
+          transform: translate(5px, -3px);
         }
 
         .status-stack {
@@ -1145,8 +1237,13 @@ class BrunoOfficeCard extends HTMLElement {
           </div>
           FIM ORIGINAL -->
 
-          <div class="title">${BrunoOfficeCard._escape(this._config.name)}</div>
-          <div class="status-lines">${this._statusLines(model.statusLines)}</div>
+          <span class="room-nav-zone" data-room-nav role="button" tabindex="0" aria-label="Abrir ${BrunoOfficeCard._escape(this._config.name)}">
+            <span class="room-title-row">
+              <span class="title">${BrunoOfficeCard._escape(this._config.name)}</span>
+              <span class="room-chevron" aria-hidden="true">›</span>
+            </span>
+            <span class="status-lines">${this._statusLines(model.statusLines)}</span>
+          </span>
 
           <div class="right-rail" aria-label="Status do Office">
             <div class="metric" aria-label="Temperatura e umidade">
@@ -1171,6 +1268,7 @@ class BrunoOfficeCard extends HTMLElement {
     this.shadowRoot
       .querySelectorAll('[data-action-key]')
       .forEach((button) => this._wireAction(button));
+    this._wireRoomNavZone(this.shadowRoot.querySelector('[data-room-nav]'));
     this._wireAssetFallback();
   }
 

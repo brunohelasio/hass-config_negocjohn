@@ -859,6 +859,7 @@ class BrunoSalaCard extends HTMLElement {
           line-height: 1.1;
         }
 
+        /* --- ORIGINAL .metric-value/.metric-sub 13.5/11.2px (rollback rapido) ---
         .metric-value {
           display: block;
           font-size: 13.5px;
@@ -871,6 +872,25 @@ class BrunoSalaCard extends HTMLElement {
           display: block;
           margin-top: 4px;
           font-size: 11.2px;
+          line-height: 1;
+          font-weight: 600;
+          color: var(--text-muted);
+        }
+        --- FIM ORIGINAL --- */
+
+        /* NOVO: paridade com Office (13px/11px) */
+        .metric-value {
+          display: block;
+          font-size: 13px;
+          line-height: 1;
+          font-weight: 760;
+          color: var(--text-main);
+        }
+
+        .metric-sub {
+          display: block;
+          margin-top: 4px;
+          font-size: 11px;
           line-height: 1;
           font-weight: 600;
           color: var(--text-muted);
@@ -974,6 +994,7 @@ class BrunoSalaCard extends HTMLElement {
           white-space: nowrap;
         }
 
+        /* --- ORIGINAL .right-rail translateX(2px) (rollback rapido) ---
         .right-rail {
           grid-area: right;
           justify-self: center;
@@ -985,6 +1006,21 @@ class BrunoSalaCard extends HTMLElement {
           align-items: center;
           gap: 7px;
           transform: translateX(2px);
+        }
+        --- FIM ORIGINAL --- */
+
+        /* NOVO: paridade de posicionamento com Office (translate(5px, -3px)) */
+        .right-rail {
+          grid-area: right;
+          justify-self: center;
+          align-self: start;
+          margin: 0;
+          padding-top: 1px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 7px;
+          transform: translate(5px, -3px);
         }
 
         .status-stack {
@@ -1034,6 +1070,7 @@ class BrunoSalaCard extends HTMLElement {
         }
         --- FIM ORIGINAL --- */
 
+        /* --- ORIGINAL .status-dot flat colorido solido (rollback rapido) ---
         .status-dot {
           width: 26px;
           height: 26px;
@@ -1051,6 +1088,27 @@ class BrunoSalaCard extends HTMLElement {
             inset 0 1px 0 rgba(255,255,255,0.28),
             0 2px 6px rgba(0,0,0,0.25),
             0 0 12px rgba(var(--tone),0.35);
+        }
+        --- FIM ORIGINAL --- */
+
+        /* NOVO: paridade com Office — padrao .nav-button.selected da barra fixa
+           (fundo tonal translucido em gradiente, borda clara, icone branco, glow suave) */
+        .status-dot {
+          width: 26px;
+          height: 26px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          position: relative;
+          color: #ffffff;
+          background:
+            radial-gradient(circle at 50% 18%, rgba(255,255,255,0.30), transparent 62%),
+            linear-gradient(180deg, rgba(var(--tone),0.68), rgba(var(--tone),0.40));
+          border: 1px solid rgba(255,255,255,0.38);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.32),
+            0 0 12px rgba(var(--tone),0.32);
           /* animation: brunoSalaDotIn 240ms ease; — removido: replay no hass() causava piscar */
         }
 

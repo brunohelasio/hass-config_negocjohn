@@ -4399,7 +4399,17 @@ class BrunoOfficeSubview extends HTMLElement {
         margin-bottom: 0;
       }
 
+      /* ANTERIOR (rollback): apenas gap + max-width — sem display, sem pill visual.
+         Causava renderizacao vertical dos tabs (PC / Spotify empilhados).
+         NOVO (paridade Sala): inline-flex + pill identico ao .media-tabs da Sala. */
       .media-tabs {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px;
+        background: rgba(255,255,255,0.065);
+        border: 1px solid rgba(255,255,255,0.11);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         gap: 2px;
         max-width: 62%;
       }

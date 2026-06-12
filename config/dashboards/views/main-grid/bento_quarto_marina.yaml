@@ -1,5 +1,10 @@
 type: custom:bruno-quarto-marina-card
-double_tap_action: !include ../../shared/popup/rooms/quarto_marina.yaml
+double_tap_action:
+  action: navigate
+  navigation_path: subview-quarto-marina
+
+# FALLBACK - popup original do Q. Marina
+# double_tap_action: !include ../../shared/popup/rooms/quarto_marina.yaml
 
 # FALLBACK - Q. Marina Lovelace/Negocjohn original
 # Para voltar rapidamente:

@@ -833,7 +833,7 @@ class BrunoOfficeSubview extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = resolvedPath;
+    const eventPath = path.startsWith('/') ? resolvedPath : path;
     this.dispatchEvent(new CustomEvent('hass-navigate', {
       detail: { path: eventPath },
       bubbles: true,

@@ -2,15 +2,15 @@ button_card_templates: !include_dir_merge_named ./templates/button_card_template
 streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 
 resources:
-  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260612-nav-absolute-1
+  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260612-ac-spacing-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260612-nav-absolute-1
+  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260612-office-ac-gauge-2
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260612-bedroom-subviews-nav-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260612-bedroom-subviews-inline-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260612-bedroom-subviews-nav-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260612-bedroom-subviews-inline-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260612-bedroom-subviews-nav-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260612-bedroom-subviews-inline-1
     type: module
 
 kiosk_mode:
@@ -54,7 +54,28 @@ views:
   - !include subviews/floor-plan.yaml
   - !include subviews/sala_subview.yaml
   - !include subviews/office_subview.yaml
-  - !include subviews/quarto_casal_subview.yaml
-  - !include subviews/quarto_marina_subview.yaml
-  - !include subviews/quarto_miguel_subview.yaml
+  - title: Q. Casal
+    path: subview-quarto-casal
+    icon: mdi:bed-king
+    subview: true
+    type: panel
+    theme: tablet
+    cards:
+      - type: custom:bruno-quarto-casal-subview
+  - title: Q. Marina
+    path: subview-quarto-marina
+    icon: mdi:bed-single
+    subview: true
+    type: panel
+    theme: tablet
+    cards:
+      - type: custom:bruno-quarto-marina-subview
+  - title: Q. Miguel
+    path: subview-quarto-miguel
+    icon: mdi:bed-single-outline
+    subview: true
+    type: panel
+    theme: tablet
+    cards:
+      - type: custom:bruno-quarto-miguel-subview
   # - !include subviews/ytube-music.yaml

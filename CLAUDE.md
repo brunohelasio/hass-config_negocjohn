@@ -2103,3 +2103,93 @@ A grade 2-col reusa exatamente os mesmos 6 wrappers do rail + `mobile_card_sala_
 | M5 | Top badges scroll | se `min-width: max-content` via `card_mod` profundo nao surtir efeito (depende da versao do `card_mod`/`layout-card`), alternativa e refatorar `bento_top_badges` para extrair lista de badges em arquivo proprio (toca codigo desktop — requer aprovacao) |
 | M6 | Wrappers V2 antigos em `shared/grid-cards/mobile_*.yaml` | mantidos no disco, fora do uso. Nao sao referenciados pelo V3 |
 | M7 | Limpeza opcional dos arquivos legados | mover `views/mobile-v2-*.yaml`, `views/mobile-home.yaml`, etc. para `views/disabled/` apos V3 estabilizar (requer aprovacao) |
+
+---
+
+## Registro de Implementacao — Paridade Subview Office com Sala + Focus v2 (2026-06-12)
+
+### Diretriz do usuario
+
+A subview do Office (`bruno-office-subview.js`) deve ser **reproducao fiel** da subview
+da Sala (`bruno-sala-subview.js`, padrao) em layout, cor, visual, tamanho, dimensao e
+posicionamento. Unicas diferencas autorizadas: entidades; bloco de cameras com 1 camera
+(espaco restante vira bloco "Foco & Produtividade"); hub de midia sem PS5 (Spotify
+identico + PC no lugar da TV). Navegar entre subviews nao pode dar sensacao de "degrau".
+
+Decisoes do usuario nesta sessao:
+1. Curtain dock: identico ao da Sala, porem inerte (`entities.curtain: ''`).
+2. Focus card: redesign aprovado (mini calendario semanal + status de reuniao + timer).
+
+### Arquivo alterado
+
+- `config/www/bruno-ui/subviews/bruno-office-subview.js` (unico arquivo tocado)
+
+### A) Correcoes de paridade visual (valores da Sala transpostos verbatim)
+
+| Item | ANTERIOR (Office) | NOVO (= Sala) |
+|------|-------------------|---------------|
+| `.glass-card` (todos os cards) | tokens sem fallback, sem color/transition, sheen `z-index:-1`, `::after` edge-glow | skin completo da Sala: fallbacks, `color: var(--text-main)`, transition, sheen `z-index:0` op. 0.74, `::after` bottom-line, `> *` z-index 1, estados `.is-active` |
+| `.hero-bg` | `center/cover`, insets ~0, fades proprios | `left center / auto 100%`, insets -18/-86/-20/-16, fades/masks da Sala; `::before` sem inset estendido nem radial extra |
+| Tipografia hero | clock `clamp(56,7.4vh,78)` mt14, headline mt20, content 16/10 | clock `clamp(54,7.1vh,74)` mt8, headline mt12, date-line mb6, content `15px 18px 14px`/gap 8 |
+| Curtain dock | 500px, cols 68/118, 4o botao "Automatica" is-primary, pill "Automatica" | 520px, cols 70/112, botao "Parar" (mdi:pause), pill "Posicao - X%", preset-button tokens + 46px |
+| Status rail | 6 itens (com "Clima"), sem min-height | 5 itens (Clima comentado), `repeat(5)`, min-height 64 (68 @1180), item padding 12 |
+| Sidebar nav | `ha-icon` mdi generico, 56/39px, cor 0.62 | SVGs custom `_roomNavIcon` (transportado), 58/40px, gap 7, cor 0.70, `.room-nav-button svg` |
+| Light tiles | radius 22px (radius-compact), 66px col, pad 13/16, strong branco 850 15px, small 11 | radius `--office-cell-radius` = `var(--bruno-liquid-cell-radius,16px)`, 60px col, gap 11, pad 11/12, strong 14.8/1.12 herdado, small 12, icon 60px, card gap 10, module-head 40px |
+| Grid de luzes 2x2 | 3 tiles + buraco (filtro descartava placeholders) | 4o tile placeholder "OF Luz Auxiliar" (padrao "LED Fita TV" da Sala); filtro removido |
+| Controles | hardcoded: radius 12-14, sem blur; is-main/volume ROXOS | tokens liquid (`control-*`) com blur; is-main/volume/climate/fan AZUL/VERDE padrao Sala |
+| AC | ac-card sem grid, ac-body `minmax(0,1fr)` + `calc(100%-46px)` | ac-card grid `auto minmax(0,1fr)` gap 6, ac-head mb0, ac-body `minmax(320px,auto)` height auto; icg letter-spacing -8px/1.8px; stepper mb4; slider mb3; fallback `.ac-image-shell.is-fallback` |
+| Shell | `--office-gap: 10px` | `--office-gap: 12px` no `.office-subview` (= Sala) |
+| Camera | copy 14px sem right, strong 17px | copy 13px com right, strong 15px/1.08 |
+| Spotify meta | fallback literal 'Echo Show' | 'Echo Pop Office' |
+
+### B) Funcionais
+
+1. **`_bindImageFallbacks()` transportado** da Sala + chamada no `_render()`.
+2. **Standby do hub (PC/Spotify)** agora usa `media-standby-shell` com
+   `data-image-wrapper` + icone fallback (`display: contents`): se
+   `/local/images/office_pc.png` ou `echo_pop.png` derem 404, aparece o icone
+   em vez de imagem quebrada. NOTA: `office_pc.png` ainda nao existe em
+   `config/www/images/` — subir o asset quando disponivel.
+3. Regras `.ac-image-shell.is-fallback` adicionadas (faltavam no Office).
+
+### C) Focus card v2 (redesign aprovado)
+
+- **Header**: `module-head` padrao + chip de status (`.focus-status-chip`):
+  "Em reuniao" (ambar, `binary_sensor.office_meeting_active`) > "Trabalhando"
+  (azul, `binary_sensor.office_working_active`) > "Livre" (verde).
+- **Mini calendario**: strip semanal seg-dom, hoje em pill azul (tokens liquid),
+  dots coloridos por dia com evento. Fontes: `calendar.brunohelasio_gmail_com`
+  (#7fdbe9) + `calendar.familia` (#fdd835), configuravel via `config.calendars`.
+- **Proximo evento**: linha "PROXIMO/AGORA" com hora + titulo + calendario.
+- **Timer**: linha unica `mm:ss` + pill Iniciar/Pausar (azul padrao) + botao
+  reset (acao nova `focus-reset`) + meta "N sessoes · Xm".
+- **Infra**: `_loadCalendarEvents`/`_fetchCalendarEvents` (WS
+  `calendar/list_events` + fallback REST, mesmo padrao do `bruno-agenda-card`),
+  cache 5 min com timer proprio, falha silenciosa ("Agenda livre").
+- Os 3 botoes mortos "Trabalhando/Em reuniao/Disponivel" sairam (status virou chip).
+
+### Rollback
+
+- Todos os blocos substituidos estao comentados in-place com marcadores
+  `ANTERIOR (rollback)` / `NOVO (paridade Sala)` no proprio
+  `bruno-office-subview.js` (JS: `//` ou `/* */`; CSS: `/* */`).
+- Focus v1 completo (markup + CSS) preservado em dois blocos
+  `ANTERIOR (rollback) — Focus card v1`.
+- Alternativa: `git revert` do commit desta sessao.
+
+### Validacao
+
+- `node --check` OK.
+- Diff programatico de CSS efetivo (Sala normalizada vs Office): seletores
+  compartilhados identicos, exceto equivalencias (`margin: 0 0 6px` ≡
+  `margin-bottom: 6px`; `height: auto` default) e o rename intencional dos IDs
+  de defs SVG do anel (`icgOffice*`).
+
+### Pendencias
+
+| # | Item | Nota |
+|---|------|------|
+| O1 | Asset `/local/images/office_pc.png` | nao existe; fallback gracioso cobre ate o upload |
+| O2 | Entidades temp/umidade do Office | config ainda lista 5 nomes candidatos por sensor; confirmar os reais no HA |
+| O3 | Cortina do Office | dock identico-inerte; mapear `entities.curtain` quando houver entidade |
+| O4 | Validacao visual no tablet | comparar Sala ↔ Office lado a lado (sem "degrau") |

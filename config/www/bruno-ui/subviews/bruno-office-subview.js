@@ -14,6 +14,12 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
   climate_device_name: 'Gree',
   climate_image: '/local/images/ar-condicionado-gree-tight.png',
   climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1',
+  // NOVO (Foco & Produtividade): calendarios usados no mini calendario do bloco Foco.
+  // Mesmas entidades/cores do bruno-agenda-card.
+  calendars: [
+    { entity: 'calendar.brunohelasio_gmail_com', name: 'Bruno', color: '#7fdbe9' },
+    { entity: 'calendar.familia', name: 'Familia', color: '#fdd835' },
+  ],
   room_nav: [
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala' },
     { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office', active: true },
@@ -74,6 +80,9 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
       { entity: 'light.office_switch_3', name: 'OF Luz central', icon_type: 'light_flush', zone: 'office' },
       { entity: 'light.office_switch_2', name: 'OF Luz ambiente', icon_type: 'ledstrip', zone: 'office' },
       { entity: 'light.office_switch_1', name: 'OF Luz estante', icon_type: 'ledstrip', zone: 'office' },
+      // NOVO (paridade Sala): 4o tile placeholder para fechar o grid 2x2,
+      // mesmo padrao do "LED Fita TV" na Sala.
+      { entity: '', name: 'OF Luz Auxiliar', icon_type: 'ledstrip', placeholder: true, zone: 'office' },
     ],
     cameras: [
       { entity: 'camera.of_camera_2', name: 'Office', short_name: 'Office' },
@@ -110,6 +119,10 @@ class BrunoOfficeSubview extends HTMLElement {
     this._focusRemaining = this._focusDuration;
     this._focusRunning = false;
     this._focusSessions = 0;
+    // NOVO (Foco & Produtividade): cache de eventos do calendario.
+    this._calendarEvents = [];
+    this._calendarLoadedAt = 0;
+    this._calendarLoading = false;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
   }
@@ -124,18 +137,21 @@ class BrunoOfficeSubview extends HTMLElement {
     this._hass = hass;
     this._safeRender();
     this._startRefreshTimer();
+    this._maybeLoadCalendarEvents();
   }
 
   connectedCallback() {
     globalThis.BrunoLiquidGlass?.apply?.();
     this._startRefreshTimer();
     this._startClockTimer();
+    this._startCalendarTimer();
   }
 
   disconnectedCallback() {
     this._stopRefreshTimer();
     this._stopClockTimer();
     this._stopFocusTimer();
+    this._stopCalendarTimer();
   }
 
   getCardSize() {
@@ -223,6 +239,93 @@ class BrunoOfficeSubview extends HTMLElement {
     if (!this._focusTimer) return;
     globalThis.clearInterval(this._focusTimer);
     this._focusTimer = null;
+  }
+
+  // NOVO (Foco & Produtividade): carga periodica de eventos de calendario.
+  // Mesmo mecanismo do bruno-agenda-card (WS calendar/list_events + fallback REST).
+  _startCalendarTimer() {
+    if (this._calendarTimer) return;
+    this._calendarTimer = globalThis.setInterval(() => this._maybeLoadCalendarEvents(true), 5 * 60 * 1000);
+  }
+
+  _stopCalendarTimer() {
+    if (!this._calendarTimer) return;
+    globalThis.clearInterval(this._calendarTimer);
+    this._calendarTimer = null;
+  }
+
+  _maybeLoadCalendarEvents(force = false) {
+    if (!this._hass || this._calendarLoading) return;
+    const stale = (Date.now() - this._calendarLoadedAt) > 5 * 60 * 1000;
+    if (!force && !stale) return;
+    this._loadCalendarEvents();
+  }
+
+  async _loadCalendarEvents() {
+    const calendars = Array.isArray(this._config.calendars) ? this._config.calendars : [];
+    if (!this._hass || !calendars.length) return;
+    this._calendarLoading = true;
+    try {
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const weekday = (start.getDay() + 6) % 7; // 0 = segunda
+      start.setDate(start.getDate() - weekday);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+
+      const eventsByCalendar = await Promise.all(
+        calendars.map((calendar) => this._fetchCalendarEvents(calendar, start, end)),
+      );
+      this._calendarEvents = eventsByCalendar
+        .flat()
+        .filter((event) => event && event.start)
+        .sort((a, b) => a.start - b.start);
+      this._calendarLoadedAt = Date.now();
+      this._safeRender();
+    } catch (error) {
+      // Falha silenciosa: o bloco Foco renderiza "Agenda livre" sem eventos.
+    } finally {
+      this._calendarLoading = false;
+    }
+  }
+
+  async _fetchCalendarEvents(calendar, start, end) {
+    const entityId = calendar?.entity;
+    if (!entityId || !this._state(entityId)) return [];
+
+    let rows = [];
+    try {
+      const response = await this._hass.callWS({
+        type: 'calendar/list_events',
+        entity_id: entityId,
+        start: start.toISOString(),
+        end: end.toISOString(),
+      });
+      rows = Array.isArray(response?.events) ? response.events : [];
+    } catch (error) {
+      try {
+        const path = `calendars/${encodeURIComponent(entityId)}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`;
+        const response = await this._hass.callApi('GET', path);
+        rows = Array.isArray(response) ? response : [];
+      } catch (innerError) {
+        rows = [];
+      }
+    }
+
+    return rows.map((row) => {
+      const startRaw = row?.start?.dateTime || row?.start?.date || row?.start;
+      const endRaw = row?.end?.dateTime || row?.end?.date || row?.end;
+      const allDay = Boolean(row?.start?.date && !row?.start?.dateTime);
+      const startDate = startRaw ? new Date(startRaw) : null;
+      return {
+        title: String(row?.summary || row?.title || 'Evento'),
+        start: startDate && !Number.isNaN(startDate.getTime()) ? startDate : null,
+        end: endRaw ? new Date(endRaw) : null,
+        allDay,
+        calendar: calendar.name || entityId,
+        color: calendar.color || '#7fdbe9',
+      };
+    }).filter((event) => event.start);
   }
 
   _startRefreshTimer() {
@@ -447,6 +550,56 @@ class BrunoOfficeSubview extends HTMLElement {
       focusedLabel: elapsedMinutes > 0 ? `${elapsedMinutes}m` : '0m',
       semantic: this._semanticLine() || 'Disponivel',
     };
+  }
+
+  // NOVO (Foco & Produtividade): semana atual + proximo evento para o mini calendario.
+  _calendarModel() {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
+    const labels = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+    const events = Array.isArray(this._calendarEvents) ? this._calendarEvents : [];
+
+    const days = labels.map((label, index) => {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + index);
+      const nextDate = new Date(date);
+      nextDate.setDate(date.getDate() + 1);
+      const dayEvents = events.filter((event) => event.start >= date && event.start < nextDate);
+      const dots = [];
+      dayEvents.forEach((event) => {
+        if (dots.length < 2 && !dots.includes(event.color)) dots.push(event.color);
+      });
+      return {
+        label,
+        day: date.getDate(),
+        isToday: date.toDateString() === now.toDateString(),
+        dots,
+      };
+    });
+
+    const upcoming = events.find((event) => !event.allDay && event.end && event.end > now && event.start.getTime() - now.getTime() < 7 * 24 * 3600 * 1000)
+      || events.find((event) => event.start > now);
+    let nextEvent = null;
+    if (upcoming) {
+      const sameDay = upcoming.start.toDateString() === now.toDateString();
+      const dayLabel = sameDay
+        ? ''
+        : upcoming.start.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+      const timeLabel = upcoming.allDay
+        ? 'Dia todo'
+        : upcoming.start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      nextEvent = {
+        title: upcoming.title,
+        time: dayLabel ? `${dayLabel} ${timeLabel}` : timeLabel,
+        calendar: upcoming.calendar,
+        color: upcoming.color,
+        ongoing: upcoming.start <= now && upcoming.end && upcoming.end > now,
+      };
+    }
+
+    return { days, nextEvent, loaded: this._calendarLoadedAt > 0 };
   }
 
   _pcModel() {
@@ -826,6 +979,13 @@ class BrunoOfficeSubview extends HTMLElement {
       this._focusRunning = false;
       this._safeRender();
     }
+    // NOVO (Foco & Produtividade): reset do timer pomodoro.
+    if (action === 'focus-reset') {
+      this._focusRunning = false;
+      this._focusStartedAt = null;
+      this._focusRemaining = this._focusDuration;
+      this._safeRender();
+    }
     if (action === 'pc-power') this._callService('button.press', { entity_id: this._config.entities.pc_power });
     if (action === 'pc-sleep') this._callService('button.press', { entity_id: this._config.entities.pc_sleep });
     if (action === 'pc-restart') this._callService('button.press', { entity_id: this._config.entities.pc_restart });
@@ -942,6 +1102,25 @@ class BrunoOfficeSubview extends HTMLElement {
     this.shadowRoot.removeEventListener('change', this._boundInputHandler);
     this.shadowRoot.addEventListener('click', this._boundActionHandler);
     this.shadowRoot.addEventListener('change', this._boundInputHandler);
+    this._bindImageFallbacks();
+  }
+
+  // NOVO (paridade Sala): fallback gracioso para imagens 404
+  // (transportado de bruno-sala-subview.js).
+  _bindImageFallbacks() {
+    this.shadowRoot?.querySelectorAll('img[data-fallback-class]').forEach((image) => {
+      const fallbackClass = image.dataset.fallbackClass;
+      const wrapper = image.closest('[data-image-wrapper]');
+      const markFallback = () => {
+        if (fallbackClass) wrapper?.classList.add(fallbackClass);
+        image.setAttribute('hidden', '');
+      };
+
+      image.addEventListener('error', markFallback, { once: true });
+      globalThis.setTimeout?.(() => {
+        if (image.complete && image.naturalWidth === 0) markFallback();
+      }, 80);
+    });
   }
 
   _renderHero(model) {
@@ -973,6 +1152,11 @@ class BrunoOfficeSubview extends HTMLElement {
             </button>
           </div>
 
+          <!-- Curtain dock identico ao da Sala. Office nao tem entidade de cortina
+               (entities.curtain: '') — o bloco fica visualmente identico porem inerte
+               ate uma cortina ser mapeada. Decisao do usuario em 2026-06-12.
+               ANTERIOR (rollback): 4o botao "Automatica" (is-primary, mdi:home-automation)
+               e pill "Automatica - X%". -->
           <div class="curtain-dock">
             <div class="curtain-copy">
               <span class="module-icon"><ha-icon icon="mdi:curtains"></ha-icon></span>
@@ -991,10 +1175,10 @@ class BrunoOfficeSubview extends HTMLElement {
               <button type="button" class="preset-button" data-action="cover-close">
                 <ha-icon icon="mdi:curtains-closed"></ha-icon><span>Fechada</span>
               </button>
-              <button type="button" class="preset-button is-primary" data-action="cover-stop">
-                <ha-icon icon="mdi:home-automation"></ha-icon><span>Automatica</span>
+              <button type="button" class="preset-button" data-action="cover-stop">
+                <ha-icon icon="mdi:pause"></ha-icon><span>Parar</span>
               </button>
-              <span class="curtain-pill">Automatica - ${model.curtainPosition}%</span>
+              <span class="curtain-pill">Posicao - ${model.curtainPosition}%</span>
             </div>
             <div class="curtain-progress">
               <span style="width:${model.curtainPosition}%"></span>
@@ -1003,6 +1187,22 @@ class BrunoOfficeSubview extends HTMLElement {
         </div>
       </div>
     `;
+  }
+
+  // NOVO (paridade Sala): icones SVG custom da barra de navegacao,
+  // transportados de bruno-sala-subview.js.
+  static _roomNavIcon(key) {
+    const icons = {
+      sala: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V9.5A3.5 3.5 0 0 1 8.5 6h7A3.5 3.5 0 0 1 19 9.5V11"/><path d="M4 12.5A2.5 2.5 0 0 1 6.5 10H7a2 2 0 0 1 2 2v1h6v-1a2 2 0 0 1 2-2h.5A2.5 2.5 0 0 1 20 12.5V18H4v-5.5z"/><path d="M6 18v2M18 18v2"/></svg>',
+      office: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4z"/><path d="M9 19h6M12 15v4"/><path d="M7 21h10"/></svg>',
+      cozinha: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v15H5z"/><path d="M5 10h14"/><path d="M9 7h.01M15 7h.01"/><path d="M8 14h8v4H8z"/></svg>',
+      lavabo: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v7a4 4 0 0 1-8 0V4z"/><path d="M7 11h10"/><path d="M12 15v5"/><path d="M9 20h6"/></svg>',
+      casal: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11V5h16v6"/><path d="M4 11h16a2 2 0 0 1 2 2v5H2v-5a2 2 0 0 1 2-2z"/><path d="M7 9h3M14 9h3"/><path d="M3 18v2M21 18v2"/></svg>',
+      marina: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
+      miguel: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
+      fallback: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>',
+    };
+    return icons[key] || icons.fallback;
   }
 
   _renderRoomSidebar() {
@@ -1019,19 +1219,23 @@ class BrunoOfficeSubview extends HTMLElement {
             title="${BrunoOfficeSubview._escapeAttr(item.name)}"
             aria-label="${BrunoOfficeSubview._escapeAttr(item.name)}"
           >
-            <ha-icon icon="${BrunoOfficeSubview._escapeAttr(item.icon || 'mdi:square-rounded-outline')}"></ha-icon>
+            ${BrunoOfficeSubview._roomNavIcon(item.key || item.icon)}
           </button>
         `).join('')}
       </nav>
     `;
+    // ANTERIOR (rollback): icone generico ha-icon no lugar do SVG custom:
+    // <ha-icon icon="${BrunoOfficeSubview._escapeAttr(item.icon || 'mdi:square-rounded-outline')}"></ha-icon>
   }
 
   _renderStatusRail(model) {
+    // NOVO (paridade Sala): 5 itens, mesma composicao da Sala.
+    // ANTERIOR (rollback): havia um 6o item "Clima" entre Umidade e Roteador:
+    // { icon: 'mdi:snowflake', value: 'Clima', label: this._climateModeLabel(model.climate.hvacMode), tone: 'blue' },
     const status = [
       { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: 'Acesas', tone: 'amber' },
       { icon: 'mdi:thermometer', value: this._temperatureLabel(), label: 'Temperatura', tone: 'amber' },
       { icon: 'mdi:water-percent', value: this._humidityLabel(), label: 'Umidade', tone: 'blue' },
-      { icon: 'mdi:snowflake', value: 'Clima', label: this._climateModeLabel(model.climate.hvacMode), tone: 'blue' },
       { icon: 'mdi:router-wireless', value: 'Roteador', label: this._networkLabel(this._config.entities.router), tone: 'neutral' },
       { icon: 'mdi:zigbee', value: 'Hub Zigbee', label: this._networkLabel(this._config.entities.zigbee_hub), tone: 'neutral' },
     ];
@@ -1118,9 +1322,14 @@ class BrunoOfficeSubview extends HTMLElement {
   }
 
   _renderLights(model) {
-    const visibleLights = (this._config.entities.lights || [])
-      .filter((light) => light?.entity && !light.placeholder)
-      .slice(0, 4);
+    // ANTERIOR (rollback): placeholders eram filtrados, deixando a 4a celula
+    // do grid 2x2 vazia:
+    // const visibleLights = (this._config.entities.lights || [])
+    //   .filter((light) => light?.entity && !light.placeholder)
+    //   .slice(0, 4);
+    // NOVO (paridade Sala): placeholders renderizam como tile desabilitado,
+    // mesmo padrao do "LED Fita TV" na Sala.
+    const visibleLights = (this._config.entities.lights || []).slice(0, 4);
 
     return `
       <div class="glass-card lights-card office-lights-card">
@@ -1144,6 +1353,11 @@ class BrunoOfficeSubview extends HTMLElement {
     `;
   }
 
+  /* =====================================================================
+     ANTERIOR (rollback) — Focus card v1 (mode-row + ring grande + stat boxes).
+     Substituido em 2026-06-12 pelo redesign aprovado pelo usuario
+     (mini calendario + chip de reuniao + timer compacto).
+
   _renderFocus(model) {
     const focus = model.focus;
     const degrees = Math.round(focus.progress * 360);
@@ -1152,7 +1366,7 @@ class BrunoOfficeSubview extends HTMLElement {
     const meetingActive = mode.includes('reuni');
     const availableActive = !workingActive && !meetingActive;
 
-    return `
+    return \`
       <section class="glass-card focus-card">
         <div class="focus-head">
           <div class="focus-title">
@@ -1162,15 +1376,15 @@ class BrunoOfficeSubview extends HTMLElement {
         </div>
 
         <div class="focus-mode-row">
-          <button type="button" class="focus-mode${workingActive ? ' is-active' : ''}">
+          <button type="button" class="focus-mode\${workingActive ? ' is-active' : ''}">
             <span>Trabalhando</span>
             <i></i>
           </button>
-          <button type="button" class="focus-mode${meetingActive ? ' is-active' : ''}">
+          <button type="button" class="focus-mode\${meetingActive ? ' is-active' : ''}">
             <span>Em reuniao</span>
             <i></i>
           </button>
-          <button type="button" class="focus-mode${availableActive ? ' is-active' : ''}">
+          <button type="button" class="focus-mode\${availableActive ? ' is-active' : ''}">
             <span>Disponivel</span>
             <i></i>
           </button>
@@ -1179,13 +1393,13 @@ class BrunoOfficeSubview extends HTMLElement {
         <div class="focus-dashboard">
           <div class="focus-ring-panel">
             <span>Timer de foco</span>
-            <div class="focus-ring" style="--focus-angle:${degrees}deg">
-              <strong>${BrunoOfficeSubview._escape(focus.label)}</strong>
-              <small><ha-icon icon="mdi:waveform" style="--mdc-icon-size: 12px; margin-right: 4px;"></ha-icon>${focus.running ? 'em foco' : 'pronto'}</small>
+            <div class="focus-ring" style="--focus-angle:\${degrees}deg">
+              <strong>\${BrunoOfficeSubview._escape(focus.label)}</strong>
+              <small><ha-icon icon="mdi:waveform" style="--mdc-icon-size: 12px; margin-right: 4px;"></ha-icon>\${focus.running ? 'em foco' : 'pronto'}</small>
             </div>
-            <button type="button" class="focus-toggle" data-action="${focus.running ? 'focus-pause' : 'focus-start'}">
-              <ha-icon icon="${focus.running ? 'mdi:pause' : 'mdi:play'}"></ha-icon>
-              <span>${focus.running ? 'Pausar' : 'Iniciar'}</span>
+            <button type="button" class="focus-toggle" data-action="\${focus.running ? 'focus-pause' : 'focus-start'}">
+              <ha-icon icon="\${focus.running ? 'mdi:pause' : 'mdi:play'}"></ha-icon>
+              <span>\${focus.running ? 'Pausar' : 'Iniciar'}</span>
             </button>
           </div>
 
@@ -1193,22 +1407,95 @@ class BrunoOfficeSubview extends HTMLElement {
             <div class="focus-next-minimal">
               <ha-icon icon="mdi:calendar-month-outline"></ha-icon>
               <span class="next-label">Status:</span>
-              <strong class="next-title">${meetingActive ? 'Em reuniao' : 'Agenda livre'}</strong>
-              <span class="next-time">${focus.running ? 'Foco ativo' : ''}</span>
+              <strong class="next-title">\${meetingActive ? 'Em reuniao' : 'Agenda livre'}</strong>
+              <span class="next-time">\${focus.running ? 'Foco ativo' : ''}</span>
             </div>
             <div class="focus-stats-grid">
               <div class="stat-box tone-green">
                 <ha-icon icon="mdi:chart-line"></ha-icon>
-                <strong>${focus.sessions}</strong>
+                <strong>\${focus.sessions}</strong>
                 <small>Sessoes</small>
               </div>
               <div class="stat-box tone-blue">
                 <ha-icon icon="mdi:clock-outline"></ha-icon>
-                <strong>${BrunoOfficeSubview._escape(focus.focusedLabel)}</strong>
+                <strong>\${BrunoOfficeSubview._escape(focus.focusedLabel)}</strong>
                 <small>Tempo</small>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+    \`;
+  }
+  ===================================================================== */
+
+  // NOVO — Focus card v2: header com chip de status, strip semanal do
+  // calendario, proximo evento e timer pomodoro compacto em linha unica.
+  _renderFocus(model) {
+    const focus = model.focus;
+    const calendar = this._calendarModel();
+    const meetingActive = this._state(this._config.entities.meeting)?.state === 'on';
+    const workingActive = this._state(this._config.entities.working)?.state === 'on';
+    const chip = meetingActive
+      ? { label: 'Em reuniao', tone: 'amber' }
+      : workingActive
+        ? { label: 'Trabalhando', tone: 'blue' }
+        : { label: 'Livre', tone: 'green' };
+    const sessionsLabel = focus.sessions === 1 ? '1 sessao' : `${focus.sessions} sessoes`;
+    const next = calendar.nextEvent;
+
+    return `
+      <section class="glass-card focus-card">
+        <div class="module-head focus-head">
+          <div class="title-with-chip">
+            <span class="micro-icon tone-blue"><ha-icon icon="mdi:crosshairs-gps"></ha-icon></span>
+            <div>
+              <div class="module-title">Foco</div>
+            </div>
+          </div>
+          <span class="focus-status-chip tone-${chip.tone}"><span></span>${BrunoOfficeSubview._escape(chip.label)}</span>
+        </div>
+
+        <div class="focus-week" aria-label="Semana atual">
+          ${calendar.days.map((day) => `
+            <span class="focus-week-day${day.isToday ? ' is-today' : ''}">
+              <small>${day.label}</small>
+              <strong>${day.day}</strong>
+              <span class="focus-week-dots">
+                ${day.dots.map((color) => `<i style="background:${BrunoOfficeSubview._escapeAttr(color)}"></i>`).join('')}
+              </span>
+            </span>
+          `).join('')}
+        </div>
+
+        <div class="focus-next">
+          <span class="focus-next-label">${next ? (next.ongoing ? 'AGORA' : 'PROXIMO') : 'AGENDA'}</span>
+          ${next ? `
+            <span class="focus-next-time" style="--event-color:${BrunoOfficeSubview._escapeAttr(next.color)}">${BrunoOfficeSubview._escape(next.time)}</span>
+            <span class="focus-next-copy">
+              <strong>${BrunoOfficeSubview._escape(next.title)}</strong>
+              <small>${BrunoOfficeSubview._escape(next.calendar)}</small>
+            </span>
+          ` : `
+            <span class="focus-next-copy is-empty">
+              <strong>${calendar.loaded ? 'Agenda livre' : 'Carregando agenda...'}</strong>
+            </span>
+          `}
+        </div>
+
+        <div class="focus-timer-row">
+          <span class="focus-timer-time${focus.running ? ' is-running' : ''}">
+            <ha-icon icon="mdi:timer-outline"></ha-icon>
+            <strong>${BrunoOfficeSubview._escape(focus.label)}</strong>
+          </span>
+          <button type="button" class="focus-timer-toggle${focus.running ? ' is-running' : ''}" data-action="${focus.running ? 'focus-pause' : 'focus-start'}">
+            <ha-icon icon="${focus.running ? 'mdi:pause' : 'mdi:play'}"></ha-icon>
+            <span>${focus.running ? 'Pausar' : 'Iniciar'}</span>
+          </button>
+          <button type="button" class="focus-timer-reset" data-action="focus-reset" title="Reiniciar timer" aria-label="Reiniciar timer">
+            <ha-icon icon="mdi:restart"></ha-icon>
+          </button>
+          <span class="focus-timer-meta">${BrunoOfficeSubview._escape(sessionsLabel)} · ${BrunoOfficeSubview._escape(focus.focusedLabel)}</span>
         </div>
       </section>
     `;
@@ -1318,9 +1605,21 @@ class BrunoOfficeSubview extends HTMLElement {
         ${BrunoOfficeSubview._tplMediaIcon(type, { active, animate: Boolean(options.animate) })}
       </span>
     `;
+    // ANTERIOR (rollback): img sem fallback — asset 404 ficava como imagem quebrada.
+    // const standbyImage = (src, className, fallbackIcon) => (
+    //   src
+    //     ? `<img class="media-standby-image ${className}" src="${BrunoOfficeSubview._escapeAttr(src)}" alt="">`
+    //     : `<ha-icon icon="${BrunoOfficeSubview._escapeAttr(fallbackIcon)}"></ha-icon>`
+    // );
+    // NOVO: wrapper com fallback gracioso via _bindImageFallbacks (paridade Sala).
     const standbyImage = (src, className, fallbackIcon) => (
       src
-        ? `<img class="media-standby-image ${className}" src="${BrunoOfficeSubview._escapeAttr(src)}" alt="">`
+        ? `
+          <span class="media-standby-shell" data-image-wrapper>
+            <img class="media-standby-image ${className}" src="${BrunoOfficeSubview._escapeAttr(src)}" alt="" data-fallback-class="is-fallback">
+            <ha-icon class="media-standby-fallback" icon="${BrunoOfficeSubview._escapeAttr(fallbackIcon)}"></ha-icon>
+          </span>
+        `
         : `<ha-icon icon="${BrunoOfficeSubview._escapeAttr(fallbackIcon)}"></ha-icon>`
     );
     const fillActionRow = (items) => {
@@ -1335,7 +1634,9 @@ class BrunoOfficeSubview extends HTMLElement {
     );
     const spotifyMeta = metaLine(
       spotify.subtitle,
-      spotify.source || this._config.spotify_device_name || 'Echo Show',
+      // ANTERIOR (rollback): fallback literal 'Echo Show' herdado da Sala.
+      // spotify.source || this._config.spotify_device_name || 'Echo Show',
+      spotify.source || this._config.spotify_device_name || 'Echo Pop Office',
     );
     const pcMeta = metaLine(
       pc.active ? 'Ativo' : 'Offline',
@@ -1809,6 +2110,8 @@ class BrunoOfficeSubview extends HTMLElement {
       { key: 'swing', label: 'Swing', action: 'swing-mode', mode: nextSwingMode, active: swingActive },
     ];
 
+    /* ANTERIOR (rollback): class="glass-card ac-card${climate.active ? ' is-active' : ''}"
+       Sala nunca usa is-active no root do ac-card — o card nao acende com o AC ligado. */
     return `
       <section class="glass-card ac-card">
         <div class="module-head ac-head">
@@ -1886,7 +2189,9 @@ class BrunoOfficeSubview extends HTMLElement {
         --office-gap: 10px;
         --office-radius: var(--bruno-liquid-card-radius, 18px);
         --office-radius-small: var(--bruno-liquid-card-radius-compact, 16px);
-        --office-cell-radius: 12px;
+        /* ANTERIOR (rollback): --office-cell-radius: 12px; */
+        /* NOVO (paridade Sala): mesmo token de raio de celula da Sala. */
+        --office-cell-radius: var(--bruno-liquid-cell-radius, 16px);
         --accent: var(--bruno-liquid-accent, 150, 190, 255);
         --accent-blue: 96, 165, 250;
         --accent-cyan: 79, 172, 254;
@@ -1922,6 +2227,8 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .office-subview {
         --office-shell-height: min(734px, calc(100vh - 34px));
+        /* NOVO (paridade Sala): a Sala usa gap 12px no shell (override final). */
+        --office-gap: 12px;
         width: 100%;
         min-height: 100vh;
         height: 100vh;
@@ -2001,11 +2308,13 @@ class BrunoOfficeSubview extends HTMLElement {
         isolation: isolate;
         align-self: center;
         justify-self: center;
-        width: 56px;
+        /* ANTERIOR (rollback): width 56px; rows 39px; gap 8px; padding 13px 8px 14px; */
+        width: 58px;
+        max-height: calc(100% - 6px);
         display: grid;
-        grid-auto-rows: 39px;
-        gap: 8px;
-        padding: 13px 8px 14px;
+        grid-auto-rows: 40px;
+        gap: 7px;
+        padding: 12px 8px;
         border-radius: 999px;
         background: var(--bruno-liquid-rail-background,
           radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
@@ -2043,15 +2352,34 @@ class BrunoOfficeSubview extends HTMLElement {
       .room-nav-button {
         position: relative;
         z-index: 1;
-        width: 39px;
-        height: 39px;
+        /* ANTERIOR (rollback): width/height 39px; color rgba(255,255,255,0.62); */
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        max-width: 40px;
+        max-height: 40px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        color: rgba(255,255,255,0.62);
+        color: rgba(255,255,255,0.70);
         background: transparent;
         transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+      }
+
+      /* NOVO (paridade Sala): estilos do SVG custom da navegacao. */
+      .room-nav-button svg {
+        width: 20px;
+        height: 20px;
+        display: block;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.55;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.24));
+        pointer-events: none;
       }
 
       .room-nav-button::after {
@@ -2090,6 +2418,10 @@ class BrunoOfficeSubview extends HTMLElement {
       .room-nav-button ha-icon {
         --mdc-icon-size: 19px;
       }
+
+      /* =================================================================
+         ANTERIOR (rollback) — skin glass-card v1 (geracao bento: tokens sem
+         fallback, sheen atras do fundo e edge-glow no ::after):
 
       .glass-card {
         position: relative;
@@ -2135,6 +2467,105 @@ class BrunoOfficeSubview extends HTMLElement {
         mask-composite: exclude;
         opacity: 0.9;
       }
+      ================================================================= */
+
+      /* NOVO (paridade Sala): skin glass-card transposto verbatim de
+         bruno-sala-subview.js (bloco final/efetivo). */
+      .glass-card {
+        position: relative;
+        isolation: isolate;
+        min-width: 0;
+        min-height: 0;
+        border-radius: var(--office-radius);
+        overflow: hidden;
+        color: var(--text-main);
+        background: var(--bruno-liquid-surface-off-background,
+          radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.18), rgba(255,255,255,0.042) 44%, transparent 73%),
+          radial-gradient(150px 150px at 96% 92%, rgba(var(--accent),0.09), transparent 69%),
+          linear-gradient(180deg, rgba(255,255,255,0.118), rgba(255,255,255,0.034) 36%, rgba(255,255,255,0.056)),
+          linear-gradient(155deg, rgba(18,24,36,0.74), rgba(11,14,22,0.61) 49%, rgba(33,27,25,0.32))
+        );
+        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.68) contrast(1.06));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.68) contrast(1.06));
+        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.13));
+        box-shadow: var(--bruno-liquid-surface-off-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.18),
+          inset 1px 0 0 rgba(255,255,255,0.10),
+          inset -1px -1px 0 rgba(255,255,255,0.026),
+          0 18px 44px rgba(0,0,0,0.27),
+          0 0 24px rgba(110,150,210,0.055)
+        );
+        transition: background var(--bruno-liquid-motion-medium, 220ms cubic-bezier(0.2, 0.8, 0.2, 1)),
+          border-color var(--bruno-liquid-motion-fast, 160ms ease),
+          box-shadow var(--bruno-liquid-motion-medium, 220ms cubic-bezier(0.2, 0.8, 0.2, 1));
+      }
+
+      .glass-card::before {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        z-index: 0;
+        pointer-events: none;
+        border-radius: calc(var(--office-radius) - 1px);
+        background: var(--bruno-liquid-surface-off-sheen,
+          radial-gradient(78px 62px at 19% 2%, rgba(255,255,255,0.20), transparent 72%),
+          radial-gradient(82px 92px at 94% 18%, rgba(var(--accent),0.12), transparent 74%),
+          linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.00) 35%),
+          linear-gradient(90deg, rgba(255,255,255,0.085), rgba(255,255,255,0.00) 48%)
+        );
+        opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.74);
+      }
+
+      .glass-card::after {
+        content: "";
+        position: absolute;
+        inset: auto 16px 8px 16px;
+        z-index: 0;
+        height: 1px;
+        pointer-events: none;
+        border-radius: 999px;
+        background: var(--bruno-liquid-surface-bottom-line, linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent));
+        opacity: var(--bruno-liquid-surface-bottom-line-opacity, 0);
+      }
+
+      .glass-card > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .glass-card.is-active {
+        --text-main: rgba(248,251,255,0.96);
+        --text-soft: rgba(255,255,255,0.52);
+        background: var(--bruno-liquid-surface-on-background,
+          radial-gradient(170px 134px at 12% -10%, rgba(255,255,255,0.38), rgba(255,255,255,0.105) 52%, transparent 75%),
+          radial-gradient(165px 148px at 98% 94%, rgba(135,185,245,0.24), transparent 68%),
+          radial-gradient(122px 96px at 27% 18%, rgba(255,232,126,0.105), transparent 71%),
+          linear-gradient(180deg, rgba(255,255,255,0.225), rgba(255,255,255,0.073) 43%, rgba(255,255,255,0.108)),
+          linear-gradient(155deg, rgba(42,51,65,0.72), rgba(23,28,38,0.58) 52%, rgba(13,16,24,0.44))
+        );
+        backdrop-filter: var(--bruno-liquid-surface-on-filter, blur(34px) saturate(1.72) contrast(1.05));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-on-filter, blur(34px) saturate(1.72) contrast(1.05));
+        border-color: var(--bruno-liquid-surface-on-border-color, rgba(255,255,255,0.24));
+        box-shadow: var(--bruno-liquid-surface-on-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.32),
+          inset 1px 0 0 rgba(255,255,255,0.13),
+          inset 0 -1px 0 rgba(0,0,0,0.18),
+          0 0 22px rgba(255,255,255,0.09),
+          0 0 34px rgba(120,170,235,0.10),
+          0 18px 42px rgba(0,0,0,0.28)
+        );
+      }
+
+      .glass-card.is-active::before {
+        background: var(--bruno-liquid-surface-on-sheen,
+          radial-gradient(92px 74px at 17% 0%, rgba(255,255,255,0.34), transparent 72%),
+          radial-gradient(118px 110px at 96% 96%, rgba(120,178,245,0.22), transparent 74%),
+          radial-gradient(80px 58px at 27% 18%, rgba(255,232,126,0.095), transparent 72%),
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.00) 38%),
+          linear-gradient(90deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00) 50%)
+        );
+        opacity: var(--bruno-liquid-surface-on-sheen-opacity, 0.78);
+      }
 
       .hero-stage {
         position: relative;
@@ -2147,6 +2578,10 @@ class BrunoOfficeSubview extends HTMLElement {
         border-radius: 0;
       }
 
+      /* =================================================================
+         ANTERIOR (rollback) — hero-bg v1 (center/cover, insets quase zero,
+         fades proprios na direita):
+
       .hero-bg {
         position: absolute;
         pointer-events: none;
@@ -2156,30 +2591,8 @@ class BrunoOfficeSubview extends HTMLElement {
         left: -10px;
         right: -2px;
         background:
-          linear-gradient(90deg,
-            rgba(4,10,18,0.82) 0%,
-            rgba(5,10,18,0.66) 12%,
-            rgba(6,12,20,0.42) 24%,
-            rgba(7,13,22,0.22) 38%,
-            rgba(7,13,22,0.10) 50%,
-            rgba(7,13,22,0.08) 64%,
-            rgba(7,13,22,0.16) 76%,
-            rgba(7,13,22,0.38) 86%,
-            rgba(7,13,22,0.72) 94%,
-            rgba(7,13,22,0.98) 100%
-          ),
-          linear-gradient(180deg,
-            rgba(4,8,14,0.78) 0%,
-            rgba(4,8,14,0.46) 10%,
-            rgba(4,8,14,0.18) 22%,
-            rgba(4,8,14,0.04) 34%,
-            rgba(4,8,14,0.00) 46%,
-            rgba(4,8,14,0.00) 58%,
-            rgba(4,8,14,0.10) 72%,
-            rgba(4,8,14,0.28) 84%,
-            rgba(4,8,14,0.56) 94%,
-            rgba(4,8,14,0.78) 100%
-          ),
+          linear-gradient(90deg, rgba(4,10,18,0.82) 0%, rgba(5,10,18,0.66) 12%, rgba(6,12,20,0.42) 24%, rgba(7,13,22,0.22) 38%, rgba(7,13,22,0.10) 50%, rgba(7,13,22,0.08) 64%, rgba(7,13,22,0.16) 76%, rgba(7,13,22,0.38) 86%, rgba(7,13,22,0.72) 94%, rgba(7,13,22,0.98) 100%),
+          linear-gradient(180deg, rgba(4,8,14,0.78) 0%, rgba(4,8,14,0.46) 10%, rgba(4,8,14,0.18) 22%, rgba(4,8,14,0.04) 34%, rgba(4,8,14,0.00) 46%, rgba(4,8,14,0.00) 58%, rgba(4,8,14,0.10) 72%, rgba(4,8,14,0.28) 84%, rgba(4,8,14,0.56) 94%, rgba(4,8,14,0.78) 100%),
           radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
           radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
           var(--hero-image) center center / cover no-repeat,
@@ -2195,6 +2608,58 @@ class BrunoOfficeSubview extends HTMLElement {
         mask-composite: intersect;
         -webkit-mask-composite: source-in;
       }
+      ================================================================= */
+
+      /* NOVO (paridade Sala): hero-bg transposto verbatim da Sala —
+         foto ancorada a esquerda (auto 100%) com overhang a direita. */
+      .hero-bg {
+        position: absolute;
+        pointer-events: none;
+        z-index: 0;
+        top: -18px;
+        bottom: -20px;
+        left: -16px;
+        right: -86px;
+        background:
+          linear-gradient(90deg,
+            rgba(4,10,18,0.82) 0%,
+            rgba(5,10,18,0.66) 12%,
+            rgba(6,12,20,0.42) 24%,
+            rgba(7,13,22,0.22) 38%,
+            rgba(7,13,22,0.10) 50%,
+            rgba(7,13,22,0.14) 60%,
+            rgba(7,13,22,0.30) 70%,
+            rgba(7,13,22,0.54) 82%,
+            rgba(7,13,22,0.80) 92%,
+            rgba(7,13,22,0.94) 100%
+          ),
+          linear-gradient(180deg,
+            rgba(4,8,14,0.78) 0%,
+            rgba(4,8,14,0.46) 10%,
+            rgba(4,8,14,0.18) 22%,
+            rgba(4,8,14,0.04) 34%,
+            rgba(4,8,14,0.00) 46%,
+            rgba(4,8,14,0.00) 58%,
+            rgba(4,8,14,0.10) 72%,
+            rgba(4,8,14,0.28) 84%,
+            rgba(4,8,14,0.56) 94%,
+            rgba(4,8,14,0.78) 100%
+          ),
+          radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
+          radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
+          var(--hero-image) left center / auto 100% no-repeat,
+          var(--hero-fallback-image) left center / auto 100% no-repeat;
+        opacity: 1;
+        filter: saturate(1.01) brightness(0.90);
+        mask-image:
+          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 78%, rgba(0,0,0,0.84) 88%, rgba(0,0,0,0.46) 94%, transparent 100%),
+          linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
+        -webkit-mask-image:
+          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 78%, rgba(0,0,0,0.84) 88%, rgba(0,0,0,0.46) 94%, transparent 100%),
+          linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
+        mask-composite: intersect;
+        -webkit-mask-composite: source-in;
+      }
 
       .hero-bg::before,
       .hero-bg::after {
@@ -2204,8 +2669,11 @@ class BrunoOfficeSubview extends HTMLElement {
         pointer-events: none;
       }
 
+      /* ANTERIOR (rollback) — hero-bg::before v1 tinha inset estendido
+         (-8px -172px -18px 0), rampa propria no eixo X e um radial extra:
+         radial-gradient(320px 220px at 78% 48%, rgba(2,6,12,0.28), transparent 68%). */
+      /* NOVO (paridade Sala): gradientes identicos aos da Sala, inset herdado (0). */
       .hero-bg::before {
-        inset: -8px -172px -18px 0;
         background:
           linear-gradient(90deg,
             rgba(4,10,18,0.72) 0%,
@@ -2213,10 +2681,10 @@ class BrunoOfficeSubview extends HTMLElement {
             rgba(5,10,18,0.34) 24%,
             rgba(5,10,18,0.14) 38%,
             rgba(5,10,18,0.02) 50%,
-            rgba(5,10,18,0.03) 66%,
-            rgba(5,10,18,0.18) 80%,
-            rgba(5,10,18,0.44) 90%,
-            rgba(5,10,18,0.88) 100%
+            rgba(5,10,18,0.08) 60%,
+            rgba(5,10,18,0.22) 72%,
+            rgba(5,10,18,0.46) 84%,
+            rgba(5,10,18,0.74) 100%
           ),
           linear-gradient(180deg,
             rgba(3,8,14,0.62) 0%,
@@ -2227,8 +2695,7 @@ class BrunoOfficeSubview extends HTMLElement {
             rgba(3,8,14,0.10) 76%,
             rgba(3,8,14,0.30) 90%,
             rgba(3,8,14,0.60) 100%
-          ),
-          radial-gradient(320px 220px at 78% 48%, rgba(2,6,12,0.28), transparent 68%);
+          );
       }
 
       .hero-bg::after {
@@ -2247,8 +2714,9 @@ class BrunoOfficeSubview extends HTMLElement {
         display: grid;
         grid-template-columns: 1fr auto;
         grid-template-rows: auto minmax(0, 1fr) auto;
-        padding: 16px 18px 14px;
-        gap: 10px;
+        /* ANTERIOR (rollback): padding: 16px 18px 14px; gap: 10px; */
+        padding: 15px 18px 14px;
+        gap: 8px;
       }
 
       .hero-top {
@@ -2257,6 +2725,8 @@ class BrunoOfficeSubview extends HTMLElement {
         gap: 10px;
       }
 
+      /* ANTERIOR (rollback): valores hardcoded (radius 14px fixo, sem blur). */
+      /* NOVO (paridade Sala): tokens liquid com fallbacks + backdrop-filter. */
       .back-button,
       .control-button {
         width: 40px;
@@ -2264,10 +2734,12 @@ class BrunoOfficeSubview extends HTMLElement {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 14px;
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.14);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.08));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
       }
 
       .back-button ha-icon,
@@ -2298,11 +2770,13 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-row: 2;
         align-self: start;
         justify-self: start;
-        margin-top: 20px;
+        /* ANTERIOR (rollback): margin-top: 20px; */
+        margin-top: 12px;
       }
 
       .hero-date-line {
-        margin: 0 0 11px;
+        /* ANTERIOR (rollback): margin: 0 0 11px; */
+        margin: 0 0 6px;
         color: rgba(255,255,255,0.54);
         font-size: 11px;
         line-height: 1;
@@ -2311,8 +2785,9 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .hero-clock {
-        margin-top: 14px;
-        font-size: clamp(56px, 7.4vh, 78px);
+        /* ANTERIOR (rollback): margin-top: 14px; font-size: clamp(56px, 7.4vh, 78px); */
+        margin-top: 8px;
+        font-size: clamp(54px, 7.1vh, 74px);
         line-height: 0.96;
         font-weight: 220;
         font-variant-numeric: tabular-nums;
@@ -2375,7 +2850,8 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-template-columns: 1fr;
         grid-template-rows: auto auto;
         gap: 8px;
-        width: min(500px, 100%);
+        /* ANTERIOR (rollback): width: min(500px, 100%); */
+        width: min(520px, 100%);
         padding: 0;
         border-radius: 0;
         background: transparent;
@@ -2432,24 +2908,28 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-column: 1 / -1;
         justify-self: stretch;
         display: grid;
-        grid-template-columns: repeat(4, minmax(68px, 1fr)) minmax(118px, auto);
+        /* ANTERIOR (rollback): repeat(4, minmax(68px, 1fr)) minmax(118px, auto); */
+        grid-template-columns: repeat(4, minmax(70px, 1fr)) minmax(112px, auto);
         align-items: center;
         gap: 8px;
       }
 
+      /* ANTERIOR (rollback): min-height 48px, valores hardcoded sem tokens liquid. */
+      /* NOVO (paridade Sala): tokens liquid com fallbacks, min-height 46px. */
       .preset-button {
-        min-height: 48px;
+        min-height: 46px;
         display: grid;
         place-items: center;
         gap: 4px;
         padding: 6px 6px;
-        border-radius: 14px;
-        background:
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        background: var(--bruno-liquid-control-background,
           radial-gradient(74px 44px at 50% 0%, rgba(255,255,255,0.13), transparent 72%),
-          rgba(255,255,255,0.058);
-        border: 1px solid rgba(255,255,255,0.12);
+          rgba(255,255,255,0.058)
+        );
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.12));
         color: rgba(255,255,255,0.72);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.08));
       }
 
       .preset-button.is-primary {
@@ -2470,12 +2950,14 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .soft-button,
+      /* ANTERIOR (rollback): radius 12px e cores hardcoded. */
+      /* NOVO (paridade Sala): tokens liquid. */
       .primary-button {
         min-height: 36px;
         padding: 0 14px;
-        border-radius: 12px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
         background: rgba(255,255,255,0.075);
-        border: 1px solid rgba(255,255,255,0.14);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
         color: rgba(255,255,255,0.88);
         font-size: 12px;
         font-weight: 800;
@@ -2483,8 +2965,9 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .soft-button.is-primary,
       .primary-button {
-        background: rgba(24,134,190,0.42);
-        border-color: rgba(96,190,255,0.50);
+        background: var(--bruno-liquid-control-blue-background, rgba(24,134,190,0.42));
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,190,255,0.50));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.18));
       }
 
       .curtain-progress {
@@ -2505,7 +2988,9 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .status-rail {
         display: grid;
-        grid-template-columns: repeat(6, minmax(0, 1fr));
+        /* ANTERIOR (rollback): repeat(6, minmax(0, 1fr)) — havia 6o item Clima. */
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        min-height: 64px;
         gap: 0;
         padding: 0;
       }
@@ -2516,7 +3001,8 @@ class BrunoOfficeSubview extends HTMLElement {
         align-items: center;
         min-width: 0;
         gap: 8px;
-        padding: 0 13px;
+        /* ANTERIOR (rollback): padding: 0 13px; */
+        padding: 0 12px;
         border-right: 1px solid rgba(255,255,255,0.08);
       }
 
@@ -2563,12 +3049,23 @@ class BrunoOfficeSubview extends HTMLElement {
       .media-hub-card,
       .ac-card {
         padding: 14px;
+        /* NOVO (paridade Sala): grid explicito head + corpo. */
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        /* ANTERIOR (rollback): gap: 6px; */
+        gap: 8px;
+      }
+
+      /* NOVO (paridade Sala) */
+      .ac-head {
+        margin-bottom: 0;
       }
 
       .lights-card {
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
-        gap: 7px;
+        /* ANTERIOR (rollback): gap: 7px; */
+        gap: 10px;
       }
 
       .module-head {
@@ -2583,7 +3080,9 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .lights-card .module-head {
-        min-height: 30px;
+        /* ANTERIOR (rollback): min-height: 30px; */
+        min-height: 40px;
+        align-items: start;
         margin-bottom: 0;
       }
 
@@ -2603,6 +3102,17 @@ class BrunoOfficeSubview extends HTMLElement {
         min-width: 52px;
       }
 
+      /* NOVO (paridade Sala): pílulas "Todas acesas"/"Apagar todas" com mesma
+         altura e padding que a Sala (min-height 34px / padding 0 14px).
+         Sem este override ficavam 4px mais baixas (base .chip-button = 30px). */
+      .head-actions .chip-button {
+        min-height: 34px;
+        padding: 0 14px;
+      }
+
+      /* NOTA (2026-06-12): .lights-groups/.lights-divider/.light-group-grid sao
+         CSS herdado da Sala sem markup correspondente no Office (codigo morto,
+         sem efeito visual). Mantido por rastreabilidade — Regra de Ouro. */
       .lights-groups {
         position: relative;
         z-index: 1;
@@ -2669,18 +3179,20 @@ class BrunoOfficeSubview extends HTMLElement {
       .light-tile {
         position: relative;
         display: grid;
-        grid-template-columns: 66px minmax(0, 1fr);
+        /* ANTERIOR (rollback): grid-template-columns: 66px minmax(0, 1fr); */
+        grid-template-columns: 60px minmax(0, 1fr);
         grid-template-rows: auto auto;
         grid-template-areas:
           "icon title"
           "icon status";
         align-items: center;
         align-content: center;
-        column-gap: 15px;
+        /* ANTERIOR (rollback): column-gap 15px; padding 13px 16px; radius var(--office-radius-small); */
+        column-gap: 11px;
         min-height: 0;
-        padding: 13px 16px;
+        padding: 11px 12px;
         text-align: left;
-        border-radius: var(--office-radius-small);
+        border-radius: var(--office-cell-radius);
         color: rgba(255,255,255,0.86);
         background: var(--bruno-liquid-cell-background, rgba(255,255,255,0.055));
         border: var(--bruno-liquid-cell-border, 1px solid rgba(255,255,255,0.11));
@@ -2714,7 +3226,8 @@ class BrunoOfficeSubview extends HTMLElement {
         gap: 10px;
         padding: 9px 7px;
         overflow: hidden;
-        border-radius: var(--office-radius-small);
+        /* ANTERIOR (rollback): border-radius: var(--office-radius-small); */
+        border-radius: var(--office-cell-radius);
         color: rgba(255,255,255,0.74);
         background:
           linear-gradient(145deg, rgba(255,255,255,0.072), rgba(255,255,255,0.026)),
@@ -2733,7 +3246,8 @@ class BrunoOfficeSubview extends HTMLElement {
         position: absolute;
         inset: 1px;
         pointer-events: none;
-        border-radius: calc(var(--office-radius-small) - 1px);
+        /* ANTERIOR (rollback): calc(var(--office-radius-small) - 1px); */
+        border-radius: calc(var(--office-cell-radius) - 1px);
         background:
           radial-gradient(52px 78px at 50% 20%, rgba(255,191,74,0.10), transparent 66%),
           linear-gradient(135deg, rgba(255,255,255,0.11), transparent 34%, transparent 70%, rgba(255,188,65,0.05));
@@ -2907,8 +3421,9 @@ class BrunoOfficeSubview extends HTMLElement {
       .light-icon {
         grid-area: icon;
         position: relative;
-        width: 62px;
-        height: 62px;
+        /* ANTERIOR (rollback): width/height 62px; */
+        width: 60px;
+        height: 60px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -3010,10 +3525,9 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-area: title;
         min-width: 0;
         align-self: end;
-        color: white;
-        font-size: 15px;
-        line-height: 1.1;
-        font-weight: 850;
+        /* ANTERIOR (rollback): color: white; font-size: 15px; line-height: 1.1; font-weight: 850; */
+        font-size: 14.8px;
+        line-height: 1.12;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -3023,12 +3537,17 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-area: status;
         min-width: 0;
         color: rgba(255,205,95,0.92);
-        font-size: 11px;
+        /* ANTERIOR (rollback): font-size: 11px; */
+        font-size: 12px;
         font-weight: 800;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+
+      /* =================================================================
+         ANTERIOR (rollback) — CSS do Focus card v1 (mode-row, ring grande,
+         stat boxes). Substituido em 2026-06-12 pelo redesign v2.
 
       .focus-card {
         min-width: 0;
@@ -3297,6 +3816,269 @@ class BrunoOfficeSubview extends HTMLElement {
         color: var(--text-soft);
         line-height: 1;
       }
+      ================================================================= */
+
+      /* NOVO — Focus card v2: header padrao + chip de status, strip semanal
+         do calendario, proximo evento e timer compacto (visual limpo, sem
+         sub-paineis aninhados — paridade com a linguagem dos cards da Sala). */
+      .focus-card {
+        min-width: 0;
+        min-height: 0;
+        padding: 14px;
+        display: grid;
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        gap: 10px;
+      }
+
+      .focus-head {
+        margin-bottom: 0;
+      }
+
+      .focus-status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        color: rgba(255,255,255,0.88);
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        white-space: nowrap;
+      }
+
+      .focus-status-chip > span {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .focus-status-chip.tone-green > span {
+        background: rgb(74,222,128);
+        box-shadow: 0 0 10px rgba(74,222,128,0.55);
+      }
+
+      .focus-status-chip.tone-blue > span {
+        background: rgb(96,190,255);
+        box-shadow: 0 0 10px rgba(96,190,255,0.55);
+      }
+
+      .focus-status-chip.tone-amber > span {
+        background: rgb(251,191,36);
+        box-shadow: 0 0 10px rgba(251,191,36,0.55);
+      }
+
+      .focus-week {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 4px;
+      }
+
+      .focus-week-day {
+        min-width: 0;
+        display: grid;
+        justify-items: center;
+        gap: 2px;
+        padding: 6px 0 5px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+      }
+
+      .focus-week-day small {
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+      }
+
+      .focus-week-day strong {
+        font-size: 13px;
+        line-height: 1;
+        font-weight: 700;
+        color: rgba(255,255,255,0.82);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .focus-week-day.is-today {
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.34), transparent 72%),
+          rgba(38,92,154,0.42)
+        );
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.34));
+      }
+
+      .focus-week-day.is-today small,
+      .focus-week-day.is-today strong {
+        color: white;
+      }
+
+      .focus-week-dots {
+        min-height: 5px;
+        display: inline-flex;
+        gap: 3px;
+      }
+
+      .focus-week-dots i {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+      }
+
+      .focus-next {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        overflow: hidden;
+      }
+
+      .focus-next-label {
+        flex-shrink: 0;
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        color: var(--text-dim);
+      }
+
+      .focus-next-time {
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 13px;
+        font-weight: 800;
+        color: rgba(255,255,255,0.92);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .focus-next-time::before {
+        content: "";
+        width: 3px;
+        height: 16px;
+        border-radius: 999px;
+        background: var(--event-color, rgb(127,219,233));
+      }
+
+      .focus-next-copy {
+        min-width: 0;
+        display: grid;
+        gap: 1px;
+      }
+
+      .focus-next-copy strong {
+        min-width: 0;
+        font-size: 12.5px;
+        line-height: 1.15;
+        font-weight: 800;
+        color: white;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .focus-next-copy small {
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--text-soft);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .focus-next-copy.is-empty strong {
+        color: rgba(255,255,255,0.72);
+        font-weight: 700;
+      }
+
+      .focus-timer-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        padding-top: 9px;
+        border-top: 1px solid rgba(255,255,255,0.09);
+      }
+
+      .focus-timer-time {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: rgba(255,255,255,0.88);
+      }
+
+      .focus-timer-time ha-icon {
+        --mdc-icon-size: 15px;
+        color: rgba(255,255,255,0.55);
+      }
+
+      .focus-timer-time strong {
+        font-size: 16px;
+        line-height: 1;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .focus-timer-time.is-running ha-icon {
+        color: rgb(126,204,255);
+      }
+
+      .focus-timer-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 0 13px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 850;
+        color: white;
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 72%),
+          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58))
+        );
+        border: 1px solid var(--bruno-liquid-control-blue-border, rgba(150,198,255,0.44));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.22),
+          0 0 22px rgba(96,165,250,0.24)
+        );
+      }
+
+      .focus-timer-toggle ha-icon {
+        --mdc-icon-size: 14px;
+      }
+
+      .focus-timer-reset {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        color: rgba(255,255,255,0.62);
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.12);
+      }
+
+      .focus-timer-reset ha-icon {
+        --mdc-icon-size: 14px;
+      }
+
+      .focus-timer-meta {
+        margin-left: auto;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--text-soft);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
       .cameras-card {
         display: grid;
@@ -3390,14 +4172,18 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .camera-row-copy {
-        left: 14px;
-        bottom: 14px;
+        /* ANTERIOR (rollback): left/bottom 14px, sem right. */
+        left: 13px;
+        right: 13px;
+        bottom: 13px;
         display: grid;
         gap: 4px;
       }
 
       .camera-row-copy strong {
-        font-size: 17px;
+        /* ANTERIOR (rollback): font-size: 17px; */
+        font-size: 15px;
+        line-height: 1.08;
       }
 
       .camera-row-copy span,
@@ -3466,7 +4252,9 @@ class BrunoOfficeSubview extends HTMLElement {
       .ac-body {
         position: relative;
         z-index: 1;
-        height: calc(100% - 46px);
+        /* ANTERIOR (rollback): height: calc(100% - 46px); */
+        height: auto;
+        min-height: 0;
         display: grid;
         grid-template-columns: 1fr;
         gap: 14px;
@@ -3508,6 +4296,7 @@ class BrunoOfficeSubview extends HTMLElement {
         margin-top: 0;
       }
 
+      /* ANTERIOR (rollback) — acento roxo:
       .control-button.is-main {
         background:
           radial-gradient(circle at 50% 18%, rgba(142,126,255,0.50), transparent 72%),
@@ -3516,6 +4305,20 @@ class BrunoOfficeSubview extends HTMLElement {
         box-shadow:
           inset 0 1px 0 rgba(255,255,255,0.22),
           0 0 22px rgba(112,88,255,0.26);
+      }
+      */
+      /* NOVO (paridade Sala): azul padrao. */
+      .control-button.is-main {
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 72%),
+          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58))
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(150,198,255,0.44));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.22),
+          0 0 22px rgba(96,165,250,0.24)
+        );
+        color: white;
       }
 
       .control-button.is-tool {
@@ -3548,7 +4351,8 @@ class BrunoOfficeSubview extends HTMLElement {
       .volume-row input {
         width: 100%;
         min-width: 0;
-        accent-color: rgb(116,92,255);
+        /* ANTERIOR (rollback): accent-color: rgb(116,92,255); (roxo) */
+        accent-color: rgb(28,214,104);
       }
 
       .spotify-volume input {
@@ -3616,7 +4420,17 @@ class BrunoOfficeSubview extends HTMLElement {
         margin-bottom: 0;
       }
 
+      /* ANTERIOR (rollback): apenas gap + max-width — sem display, sem pill visual.
+         Causava renderizacao vertical dos tabs (PC / Spotify empilhados).
+         NOVO (paridade Sala): inline-flex + pill identico ao .media-tabs da Sala. */
       .media-tabs {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px;
+        background: rgba(255,255,255,0.065);
+        border: 1px solid rgba(255,255,255,0.11);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         gap: 2px;
         max-width: 62%;
       }
@@ -3711,6 +4525,21 @@ class BrunoOfficeSubview extends HTMLElement {
         object-fit: contain !important;
         opacity: 0.96;
         filter: drop-shadow(0 18px 28px rgba(0,0,0,0.42));
+      }
+
+      /* NOVO: shell de fallback do visual standby (PC/Spotify).
+         Se a imagem falhar (404), _bindImageFallbacks marca .is-fallback
+         e o icone substitui a imagem quebrada. */
+      .media-standby-shell {
+        display: contents;
+      }
+
+      .media-standby-shell .media-standby-fallback {
+        display: none;
+      }
+
+      .media-standby-shell.is-fallback .media-standby-fallback {
+        display: inline-flex;
       }
 
       .media-pc-standby {
@@ -4541,6 +5370,17 @@ class BrunoOfficeSubview extends HTMLElement {
         filter: drop-shadow(0 14px 22px rgba(0,0,0,0.32));
       }
 
+      /* NOVO (paridade Sala): regras que ativam o fallback do AC quando a
+         imagem falha — na Sala existem, no Office faltavam (o binder
+         _bindImageFallbacks tambem foi transportado nesta sessao). */
+      .ac-image-shell.is-fallback .ac-unit-image {
+        display: none;
+      }
+
+      .ac-image-shell.is-fallback .ac-image-fallback {
+        display: block;
+      }
+
       .icg-root {
         width: 100%;
         background: transparent;
@@ -4624,6 +5464,8 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 18px;
         font-weight: 500;
+        /* NOVO (paridade Sala): letter-spacing ausente causava numerais da escala colapsados. */
+        letter-spacing: 1.4px;
         fill: rgba(224, 235, 248, 0.74);
       }
 
@@ -4658,6 +5500,8 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 15px;
         font-weight: 500;
+        /* NOVO (paridade Sala): letter-spacing ausente colapsava o label do modo (COOL/OFF). */
+        letter-spacing: 9px;
         fill: rgba(38, 190, 255, 0.96);
         text-transform: uppercase;
       }
@@ -4666,6 +5510,8 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 96px;
         font-weight: 300;
+        /* NOVO (paridade Sala) */
+        letter-spacing: -8px;
         fill: rgba(246, 250, 255, 0.98);
         filter: url(#icgTextGlow);
       }
@@ -4674,6 +5520,8 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 15px;
         font-weight: 500;
+        /* NOVO (paridade Sala): letter-spacing ausente colapsava "SET TEMPERATURE". */
+        letter-spacing: 9px;
         fill: rgba(190, 204, 220, 0.72);
         text-transform: uppercase;
       }
@@ -4689,6 +5537,8 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 14px;
         font-weight: 500;
+        /* NOVO (paridade Sala) */
+        letter-spacing: 1.8px;
         fill: rgba(176, 196, 220, 0.60);
       }
 
@@ -4700,6 +5550,8 @@ class BrunoOfficeSubview extends HTMLElement {
         padding: 0;
         background: transparent;
         border: 0;
+        /* NOVO (paridade Sala) */
+        margin-bottom: 3px;
       }
 
       .temperature-slider input {
@@ -4727,16 +5579,22 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .fan-mode-row {
         grid-template-columns: repeat(4, minmax(0, 1fr));
+        /* NOVO (paridade Sala) */
+        align-items: start;
       }
 
+      /* ANTERIOR (rollback): radius 12px e valores hardcoded sem tokens/blur. */
+      /* NOVO (paridade Sala): tokens liquid com fallbacks + backdrop-filter. */
       .climate-mode,
       .fan-mode,
       .climate-stepper {
         min-height: 34px;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.09);
-        background: rgba(255,255,255,0.050);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.09));
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.050));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.06));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
       }
 
       .climate-mode {
@@ -4756,12 +5614,18 @@ class BrunoOfficeSubview extends HTMLElement {
         --mdc-icon-size: 17px;
       }
 
+      /* ANTERIOR (rollback): azul hardcoded sem tokens/box-shadow. */
       .climate-mode.is-active {
         color: white;
-        background:
-          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.30), transparent 72%),
-          rgba(42,82,128,0.36);
-        border-color: rgba(96,165,250,0.28);
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.34), transparent 72%),
+          rgba(38,92,154,0.42)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.34));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.14),
+          0 0 14px rgba(96,165,250,0.16)
+        );
       }
 
       .climate-mode.is-power-on {
@@ -4780,6 +5644,8 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-template-columns: 42px minmax(0, 1fr) 42px;
         align-items: center;
         overflow: hidden;
+        /* NOVO (paridade Sala) */
+        margin-bottom: 4px;
       }
 
       .climate-stepper button {
@@ -4811,10 +5677,16 @@ class BrunoOfficeSubview extends HTMLElement {
         padding: 0 4px;
       }
 
+      /* ANTERIOR (rollback): destaque neutro (branco translucido). */
+      /* NOVO (paridade Sala): destaque azul com tokens. */
       .fan-mode.is-active {
         color: rgba(255,255,255,0.94);
-        background: rgba(255,255,255,0.11);
-        border-color: rgba(255,255,255,0.16);
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.24), transparent 72%),
+          rgba(38,92,154,0.32)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.28));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.14));
       }
 
       .spotify-volume {
@@ -4939,6 +5811,8 @@ class BrunoOfficeSubview extends HTMLElement {
           min-height: 300px;
         }
 
+        /* ANTERIOR (rollback): cols 0.55fr, rows 280/320px.
+           NOVO (paridade Sala): cols 0.72fr, rows 236/300px — iguais à Sala ≤1180px. */
         .right-control-grid {
           grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
           grid-template-rows: minmax(280px, auto) minmax(320px, auto);
@@ -4947,12 +5821,18 @@ class BrunoOfficeSubview extends HTMLElement {
             "media ac";
         }
 
+        /* ANTERIOR (rollback):
         .status-rail {
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
         .status-item {
           padding: 0 10px;
+        }
+        */
+        /* NOVO (paridade Sala): rail mantem 5 colunas, so cresce a altura. */
+        .status-rail {
+          min-height: 68px;
         }
       }
 
@@ -5076,8 +5956,10 @@ class BrunoOfficeSubview extends HTMLElement {
           grid-template-columns: 1fr;
         }
 
+        /* ANTERIOR (rollback): min-height 280px.
+           NOVO (paridade Sala): min-height 238px — igual à Sala ≤760px. */
         .ac-visual {
-          min-height: 280px;
+          min-height: 238px;
         }
       }
     `;

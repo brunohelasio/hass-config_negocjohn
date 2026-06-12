@@ -56,8 +56,8 @@ styles:
     icon:
       - justify-self: "start"
       - align-self: "start"
-      - width: "65px !important"
-      - height: "65px !important"
+      - width: "115px !important"
+      - height: "75px !important"
       - margin-top: "2px !important"
     temp:
       - justify-self: "start"

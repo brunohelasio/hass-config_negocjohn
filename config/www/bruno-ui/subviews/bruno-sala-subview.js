@@ -4577,7 +4577,8 @@ class BrunoSalaSubview extends HTMLElement {
         padding: 14px;
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
-        gap: 6px;
+        /* ANTERIOR (rollback): gap: 6px; */
+        gap: 8px;
       }
 
       .ac-head {
@@ -4617,7 +4618,8 @@ class BrunoSalaSubview extends HTMLElement {
         height: auto;
         min-height: 0;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(320px, auto) auto auto auto auto auto;
+        /* ANTERIOR (rollback): grid-template-rows: minmax(320px, auto) auto auto auto auto auto; */
+        grid-template-rows: minmax(320px, 1fr) auto auto auto auto auto;
         gap: 10px;
         align-content: start;
       }

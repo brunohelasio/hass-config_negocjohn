@@ -1,5 +1,10 @@
 type: custom:bruno-quarto-casal-card
-double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml
+double_tap_action:
+  action: navigate
+  navigation_path: subview-quarto-casal
+
+# FALLBACK - duplo clique abrindo popup Q. Casal
+# double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml
 
 # FALLBACK - Q. Casal Lovelace/Negocjohn original
 # Para voltar rapidamente:

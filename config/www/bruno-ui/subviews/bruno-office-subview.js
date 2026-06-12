@@ -1941,7 +1941,8 @@ class BrunoOfficeSubview extends HTMLElement {
     const endAngle = 0;
     const sweep = endAngle - startAngle;
     const targetValue = Number(climate.target);
-    const safeMin = Number.isFinite(Number(minTarget)) ? Number(minTarget) : 16;
+    /* ANTERIOR (rollback): fallback 16. NOVO (paridade Sala): fallback 12. */
+    const safeMin = Number.isFinite(Number(minTarget)) ? Number(minTarget) : 12;
     const safeMax = Number.isFinite(Number(maxTarget)) ? Number(maxTarget) : 30;
     const safeTarget = Number.isFinite(targetValue)
       ? Math.max(safeMin, Math.min(safeMax, targetValue))
@@ -1998,9 +1999,18 @@ class BrunoOfficeSubview extends HTMLElement {
       }
       return parts.join('');
     })();
+    /* ANTERIOR (rollback): apenas 3 labels \u2014 min\u00b0, 20, max\u00b0 (intermediarios ausentes).
     const labels = [
       { text: `${this._formatNumber(safeMin, 0)}\u00b0`, angle: -180, r: radius + 52, cls: 'edge' },
       { text: '20', angle: -90, r: radius + 52, cls: 'top' },
+      { text: `${this._formatNumber(safeMax, 0)}\u00b0`, angle: 0, r: radius + 52, cls: 'edge' },
+    ]; */
+    /* NOVO (paridade Sala): 5 labels com intermediarios 10 e 25 iguais \u00e0 Sala. */
+    const labels = [
+      { text: `${this._formatNumber(safeMin, 0)}\u00b0`, angle: -180, r: radius + 52, cls: 'edge' },
+      { text: '10', angle: -148, r: radius + 58, cls: '' },
+      { text: '20', angle: -90, r: radius + 52, cls: 'top' },
+      { text: '25', angle: -32, r: radius + 58, cls: '' },
       { text: `${this._formatNumber(safeMax, 0)}\u00b0`, angle: 0, r: radius + 52, cls: 'edge' },
     ];
     const labelMarkup = labels.map((label) => {
@@ -2100,8 +2110,10 @@ class BrunoOfficeSubview extends HTMLElement {
       { key: 'swing', label: 'Swing', action: 'swing-mode', mode: nextSwingMode, active: swingActive },
     ];
 
+    /* ANTERIOR (rollback): class="glass-card ac-card${climate.active ? ' is-active' : ''}"
+       Sala nunca usa is-active no root do ac-card — o card nao acende com o AC ligado. */
     return `
-      <section class="glass-card ac-card${climate.active ? ' is-active' : ''}">
+      <section class="glass-card ac-card">
         <div class="module-head ac-head">
           <div class="title-with-chip">
             <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
@@ -3087,6 +3099,14 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .chip-button {
         min-width: 52px;
+      }
+
+      /* NOVO (paridade Sala): pílulas "Todas acesas"/"Apagar todas" com mesma
+         altura e padding que a Sala (min-height 34px / padding 0 14px).
+         Sem este override ficavam 4px mais baixas (base .chip-button = 30px). */
+      .head-actions .chip-button {
+        min-height: 34px;
+        padding: 0 14px;
       }
 
       /* NOTA (2026-06-12): .lights-groups/.lights-divider/.light-group-grid sao
@@ -5445,6 +5465,8 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 18px;
         font-weight: 500;
+        /* NOVO (paridade Sala): letter-spacing ausente causava numerais da escala colapsados. */
+        letter-spacing: 1.4px;
         fill: rgba(224, 235, 248, 0.74);
       }
 
@@ -5479,6 +5501,8 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 15px;
         font-weight: 500;
+        /* NOVO (paridade Sala): letter-spacing ausente colapsava o label do modo (COOL/OFF). */
+        letter-spacing: 9px;
         fill: rgba(38, 190, 255, 0.96);
         text-transform: uppercase;
       }
@@ -5497,6 +5521,8 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 15px;
         font-weight: 500;
+        /* NOVO (paridade Sala): letter-spacing ausente colapsava "SET TEMPERATURE". */
+        letter-spacing: 9px;
         fill: rgba(190, 204, 220, 0.72);
         text-transform: uppercase;
       }
@@ -5786,9 +5812,11 @@ class BrunoOfficeSubview extends HTMLElement {
           min-height: 300px;
         }
 
+        /* ANTERIOR (rollback): cols 0.55fr, rows 280/320px.
+           NOVO (paridade Sala): cols 0.72fr, rows 236/300px — iguais à Sala ≤1180px. */
         .right-control-grid {
-          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
-          grid-template-rows: minmax(280px, auto) minmax(320px, auto);
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+          grid-template-rows: minmax(236px, auto) minmax(300px, auto);
           grid-template-areas:
             "lights ac"
             "media ac";
@@ -5929,8 +5957,10 @@ class BrunoOfficeSubview extends HTMLElement {
           grid-template-columns: 1fr;
         }
 
+        /* ANTERIOR (rollback): min-height 280px.
+           NOVO (paridade Sala): min-height 238px — igual à Sala ≤760px. */
         .ac-visual {
-          min-height: 280px;
+          min-height: 238px;
         }
       }
     `;

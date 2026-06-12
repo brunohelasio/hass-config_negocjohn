@@ -4436,7 +4436,7 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .ac-body {
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(0, 1fr) auto auto auto auto;
+        grid-template-rows: minmax(320px, auto) auto auto auto auto auto;
         gap: 10px;
         align-content: start;
       }
@@ -4930,8 +4930,8 @@ class BrunoOfficeSubview extends HTMLElement {
         }
 
         .right-control-grid {
-          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
-          grid-template-rows: minmax(280px, auto) minmax(320px, auto);
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+          grid-template-rows: minmax(236px, auto) minmax(300px, auto);
           grid-template-areas:
             "lights ac"
             "media ac";

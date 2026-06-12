@@ -1934,6 +1934,7 @@ class BrunoOfficeSubview extends HTMLElement {
   }
 
   _renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode) {
+    // --- NOVO: gauge semicircular integrado (sem container/background proprio) ---
     const cx = 360;
     const cy = 410;
     const radius = 285;
@@ -1941,7 +1942,6 @@ class BrunoOfficeSubview extends HTMLElement {
     const endAngle = 0;
     const sweep = endAngle - startAngle;
     const targetValue = Number(climate.target);
-    /* ANTERIOR (rollback): fallback 16. NOVO (paridade Sala): fallback 12. */
     const safeMin = Number.isFinite(Number(minTarget)) ? Number(minTarget) : 12;
     const safeMax = Number.isFinite(Number(maxTarget)) ? Number(maxTarget) : 30;
     const safeTarget = Number.isFinite(targetValue)
@@ -1950,9 +1950,11 @@ class BrunoOfficeSubview extends HTMLElement {
     const range = Math.max(1, safeMax - safeMin);
     const progress = Math.max(0, Math.min(1, (safeTarget - safeMin) / range));
     const currentAngle = startAngle + (sweep * progress);
+
     const targetLabel = climate.target == null ? '--' : `${target}`;
     const ambientLabel = climate.current == null ? '--' : `${current}`;
     const modeLabel = String(dialMode || '').toUpperCase();
+
     const polarToCartesian = (r, angleDeg) => {
       const rad = (angleDeg * Math.PI) / 180;
       return {
@@ -1970,10 +1972,11 @@ class BrunoOfficeSubview extends HTMLElement {
     const inactiveArc = describeArc(radius, currentAngle, endAngle);
     const fullArc = describeArc(radius, startAngle, endAngle);
     const marker = polarToCartesian(radius, currentAngle);
+
     const outerTicks = (() => {
       const total = 90;
       const parts = [];
-      for (let i = 0; i <= total; i += 1) {
+      for (let i = 0; i <= total; i++) {
         const tp = i / total;
         const angle = startAngle + (sweep * tp);
         const isMajor = i % 15 === 0;
@@ -1987,25 +1990,22 @@ class BrunoOfficeSubview extends HTMLElement {
       }
       return parts.join('');
     })();
+
     const innerTicks = (() => {
       const total = 72;
       const parts = [];
-      for (let i = 0; i <= total; i += 1) {
+      for (let i = 0; i <= total; i++) {
         const tp = i / total;
         const angle = startAngle + (sweep * tp);
-        const p1 = polarToCartesian(radius - 18, angle);
-        const p2 = polarToCartesian(radius - 34, angle);
+        const outer = radius - 18;
+        const inner = radius - 34;
+        const p1 = polarToCartesian(outer, angle);
+        const p2 = polarToCartesian(inner, angle);
         parts.push(`<line x1="${p1.x.toFixed(3)}" y1="${p1.y.toFixed(3)}" x2="${p2.x.toFixed(3)}" y2="${p2.y.toFixed(3)}" class="icg-inner-tick"></line>`);
       }
       return parts.join('');
     })();
-    /* ANTERIOR (rollback): apenas 3 labels \u2014 min\u00b0, 20, max\u00b0 (intermediarios ausentes).
-    const labels = [
-      { text: `${this._formatNumber(safeMin, 0)}\u00b0`, angle: -180, r: radius + 52, cls: 'edge' },
-      { text: '20', angle: -90, r: radius + 52, cls: 'top' },
-      { text: `${this._formatNumber(safeMax, 0)}\u00b0`, angle: 0, r: radius + 52, cls: 'edge' },
-    ]; */
-    /* NOVO (paridade Sala): 5 labels com intermediarios 10 e 25 iguais \u00e0 Sala. */
+
     const labels = [
       { text: `${this._formatNumber(safeMin, 0)}\u00b0`, angle: -180, r: radius + 52, cls: 'edge' },
       { text: '10', angle: -148, r: radius + 58, cls: '' },
@@ -2021,20 +2021,20 @@ class BrunoOfficeSubview extends HTMLElement {
     return `
       <div class="icg-root">
         <div class="icg-shell">
-          <svg class="icg-svg" viewBox="0 0 720 460" role="img" aria-label="${BrunoOfficeSubview._escapeAttr(`Temperatura alvo ${targetLabel}. Ambiente ${ambientLabel}.`)}">
+          <svg class="icg-svg" viewBox="0 0 720 460" role="img" aria-label="${BrunoOfficeSubview._escapeAttr(`Temperatura alvo ${targetLabel}\u00b0. Ambiente ${ambientLabel}\u00b0.`)}">
             <defs>
-              <linearGradient id="icgOfficeActiveBlue" x1="90" y1="340" x2="560" y2="90">
+              <linearGradient id="icgActiveBlue" x1="90" y1="340" x2="560" y2="90">
                 <stop offset="0%" stop-color="#0078ff"></stop>
                 <stop offset="38%" stop-color="#1fb7ff"></stop>
                 <stop offset="72%" stop-color="#3ed6ff"></stop>
                 <stop offset="100%" stop-color="#96f0ff"></stop>
               </linearGradient>
-              <filter id="icgOfficeBlueGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <filter id="icgBlueGlow" x="-80%" y="-80%" width="260%" height="260%">
                 <feGaussianBlur stdDeviation="7" result="blur"></feGaussianBlur>
                 <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.02  0 0 0 0 0.42  0 0 0 0 1  0 0 0 0.95 0"></feColorMatrix>
                 <feMerge><feMergeNode></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge>
               </filter>
-              <filter id="icgOfficeTextGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <filter id="icgTextGlow" x="-50%" y="-50%" width="200%" height="200%">
                 <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#dcecff" flood-opacity="0.24"></feDropShadow>
               </filter>
             </defs>
@@ -5275,7 +5275,7 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .ac-body {
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(320px, auto) auto auto auto auto auto;
+        grid-template-rows: minmax(0, 1fr) auto auto auto auto;
         gap: 10px;
         align-content: start;
       }
@@ -5421,16 +5421,16 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .icg-active-glow {
         fill: none;
-        stroke: url(#icgOfficeActiveBlue);
+        stroke: url(#icgActiveBlue);
         stroke-width: 18;
         stroke-linecap: round;
         opacity: 0.74;
-        filter: url(#icgOfficeBlueGlow);
+        filter: url(#icgBlueGlow);
       }
 
       .icg-active-arc {
         fill: none;
-        stroke: url(#icgOfficeActiveBlue);
+        stroke: url(#icgActiveBlue);
         stroke-width: 8;
         stroke-linecap: round;
       }
@@ -5481,14 +5481,14 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .icg-marker-glow {
         fill: rgba(40, 175, 255, 0.28);
-        filter: url(#icgOfficeBlueGlow);
+        filter: url(#icgBlueGlow);
       }
 
       .icg-marker-ring {
         fill: rgba(5, 10, 18, 0.94);
         stroke: rgba(92, 210, 255, 0.98);
         stroke-width: 4;
-        filter: url(#icgOfficeBlueGlow);
+        filter: url(#icgBlueGlow);
       }
 
       .icg-marker-highlight {
@@ -5513,7 +5513,7 @@ class BrunoOfficeSubview extends HTMLElement {
         /* NOVO (paridade Sala) */
         letter-spacing: -8px;
         fill: rgba(246, 250, 255, 0.98);
-        filter: url(#icgOfficeTextGlow);
+        filter: url(#icgTextGlow);
       }
 
       .icg-center-sub {
@@ -5814,8 +5814,8 @@ class BrunoOfficeSubview extends HTMLElement {
         /* ANTERIOR (rollback): cols 0.55fr, rows 280/320px.
            NOVO (paridade Sala): cols 0.72fr, rows 236/300px — iguais à Sala ≤1180px. */
         .right-control-grid {
-          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
-          grid-template-rows: minmax(236px, auto) minmax(300px, auto);
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
+          grid-template-rows: minmax(280px, auto) minmax(320px, auto);
           grid-template-areas:
             "lights ac"
             "media ac";

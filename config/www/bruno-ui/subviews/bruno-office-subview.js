@@ -5275,10 +5275,7 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .ac-body {
         grid-template-columns: 1fr;
-        /* ANTERIOR (rollback): minmax(0, 1fr) auto auto auto auto; */
-        /* NOVO (paridade Sala): visual do AC com altura minima garantida. */
-        /* ANTERIOR (rollback): grid-template-rows: minmax(320px, auto) auto auto auto auto auto; */
-        grid-template-rows: minmax(320px, 1fr) auto auto auto auto auto;
+        grid-template-rows: minmax(320px, auto) auto auto auto auto auto;
         gap: 10px;
         align-content: start;
       }

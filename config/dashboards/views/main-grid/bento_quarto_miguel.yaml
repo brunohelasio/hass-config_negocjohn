@@ -1,5 +1,10 @@
 type: custom:bruno-quarto-miguel-card
-double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
+double_tap_action:
+  action: navigate
+  navigation_path: subview-quarto-miguel
+
+# FALLBACK - duplo clique abrindo popup Q. Miguel
+# double_tap_action: !include ../../shared/popup/rooms/quarto_miguel.yaml
 
 # FALLBACK - Q. Miguel Lovelace/Negocjohn original
 # Para voltar rapidamente:

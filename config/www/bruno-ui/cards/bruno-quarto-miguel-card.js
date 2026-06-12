@@ -335,7 +335,7 @@ class BrunoQuartoMiguelCard extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = resolvedPath;
+    const eventPath = path.startsWith('/') ? resolvedPath : path;
     globalThis.BrunoLiquidGlass?.routeTransition?.();
     this.dispatchEvent(new CustomEvent('hass-navigate', {
       detail: { path: eventPath },

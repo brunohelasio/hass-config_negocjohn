@@ -3052,7 +3052,8 @@ class BrunoOfficeSubview extends HTMLElement {
         /* NOVO (paridade Sala): grid explicito head + corpo. */
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
-        gap: 6px;
+        /* ANTERIOR (rollback): gap: 6px; */
+        gap: 8px;
       }
 
       /* NOVO (paridade Sala) */
@@ -5276,7 +5277,8 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-template-columns: 1fr;
         /* ANTERIOR (rollback): minmax(0, 1fr) auto auto auto auto; */
         /* NOVO (paridade Sala): visual do AC com altura minima garantida. */
-        grid-template-rows: minmax(320px, auto) auto auto auto auto auto;
+        /* ANTERIOR (rollback): grid-template-rows: minmax(320px, auto) auto auto auto auto auto; */
+        grid-template-rows: minmax(320px, 1fr) auto auto auto auto auto;
         gap: 10px;
         align-content: start;
       }

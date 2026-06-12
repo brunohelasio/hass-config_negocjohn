@@ -6,6 +6,12 @@ resources:
     type: module
   - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260612-office-ac-gauge-2
     type: module
+  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260612-bedroom-subviews-1
+    type: module
+  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260612-bedroom-subviews-1
+    type: module
+  - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260612-bedroom-subviews-1
+    type: module
 
 kiosk_mode:
   kiosk: true
@@ -48,4 +54,7 @@ views:
   - !include subviews/floor-plan.yaml
   - !include subviews/sala_subview.yaml
   - !include subviews/office_subview.yaml
+  - !include subviews/quarto_casal_subview.yaml
+  - !include subviews/quarto_marina_subview.yaml
+  - !include subviews/quarto_miguel_subview.yaml
   # - !include subviews/ytube-music.yaml

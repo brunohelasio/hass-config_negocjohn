@@ -1,0 +1,8 @@
+title: Q. Marina
+path: subview-quarto-marina
+icon: mdi:bed-single
+subview: true
+type: panel
+theme: tablet
+cards:
+  - type: custom:bruno-quarto-marina-subview

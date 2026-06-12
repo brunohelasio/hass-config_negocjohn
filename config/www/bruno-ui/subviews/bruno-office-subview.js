@@ -10,6 +10,7 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
   pc_image: '/local/images/office_pc.png',
   refresh_interval: 6500,
   spotify_device_name: 'Echo Pop Office',
+  spotify_standby_image: '/local/images/echo_pop.png',
   climate_device_name: 'Gree',
   climate_image: '/local/images/ar-condicionado-gree-tight.png',
   climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1',
@@ -454,11 +455,19 @@ class BrunoOfficeSubview extends HTMLElement {
     const session = this._safeState(entities.pc_session, active ? 'Ativo' : 'Offline');
     const activeWindow = this._safeState(entities.pc_window, '--');
     const idle = this._safeState(entities.pc_idle, '--');
+    const configuredState = (entityId, fallback = '--') => (entityId ? this._safeState(entityId, fallback) : '');
     const metrics = [
-      { key: 'cpu', label: 'CPU Usage', value: this._safeState(entities.pc_cpu, '--') },
-      { key: 'ram', label: 'RAM Usage', value: this._safeState(entities.pc_ram, '--') },
-      { key: 'gpu_temp', label: 'GPU Temp', value: this._safeState(entities.pc_temperature, this._safeState(entities.pc_gpu, '--')) },
-      { key: 'network', label: 'Network', value: this._safeState(entities.pc_network, '--') },
+      { key: 'cpu', label: 'CPU Usage', entity: entities.pc_cpu, value: configuredState(entities.pc_cpu) },
+      { key: 'ram', label: 'RAM Usage', entity: entities.pc_ram, value: configuredState(entities.pc_ram) },
+      {
+        key: 'gpu_temp',
+        label: 'GPU Temp',
+        entity: entities.pc_temperature || entities.pc_gpu,
+        value: entities.pc_temperature
+          ? this._safeState(entities.pc_temperature, '--')
+          : configuredState(entities.pc_gpu),
+      },
+      { key: 'network', label: 'Network', entity: entities.pc_network, value: configuredState(entities.pc_network) },
     ];
     const webcamState = String(this._state(entities.pc_webcam)?.state || '').toLowerCase();
 
@@ -468,9 +477,10 @@ class BrunoOfficeSubview extends HTMLElement {
       activeWindow,
       idle,
       metrics,
-      volume: this._safeState(entities.pc_volume, '60%'),
-      brightness: this._safeState(entities.pc_brightness, '45%'),
-      webcamActive: webcamState ? webcamState === 'on' : active,
+      volume: configuredState(entities.pc_volume),
+      brightness: configuredState(entities.pc_brightness),
+      webcamConfigured: Boolean(entities.pc_webcam),
+      webcamActive: Boolean(entities.pc_webcam) && webcamState === 'on',
     };
   }
 
@@ -562,6 +572,8 @@ class BrunoOfficeSubview extends HTMLElement {
   _selectedWorkspace(model) {
     const valid = ['pc', 'spotify'];
     if (valid.includes(this._selectedWorkspaceSource)) return this._selectedWorkspaceSource;
+    if (model.spotify?.active) return 'spotify';
+    if (model.pc?.active) return 'pc';
     return 'pc';
   }
 
@@ -599,11 +611,24 @@ class BrunoOfficeSubview extends HTMLElement {
   }
 
   _openSpotifyPlusPopup(mode = 'full') {
-    const sections = mode === 'devices'
-      ? ['devices']
-      : mode === 'library'
-        ? ['userpresets']
-        : ['player', 'devices', 'userpresets'];
+    const sectionSets = {
+      devices: ['devices'],
+      presets: ['userpresets'],
+      library: ['userpresets'],
+      favorites: ['playlistfavorites'],
+      queue: ['player'],
+      full: ['player', 'devices', 'userpresets', 'playlistfavorites', 'searchmedia'],
+    };
+    const sectionDefaults = {
+      devices: 'devices',
+      presets: 'userpresets',
+      library: 'userpresets',
+      favorites: 'playlistfavorites',
+      queue: 'player',
+      full: 'player',
+    };
+    const sections = sectionSets[mode] || sectionSets.full;
+    const sectionDefault = sectionDefaults[mode] || sectionDefaults.full;
 
     this._fireDomEvent({
       action: 'fire-dom-event',
@@ -620,6 +645,7 @@ class BrunoOfficeSubview extends HTMLElement {
             deviceControlByName: true,
             playerBackgroundImageSize: 'cover',
             sections,
+            sectionDefault,
           },
         },
       },
@@ -749,6 +775,18 @@ class BrunoOfficeSubview extends HTMLElement {
     }
     if (action === 'spotify-library') {
       this._openSpotifyPlusPopup('library');
+      return;
+    }
+    if (action === 'spotify-presets') {
+      this._openSpotifyPlusPopup('presets');
+      return;
+    }
+    if (action === 'spotify-queue') {
+      this._openSpotifyPlusPopup('queue');
+      return;
+    }
+    if (action === 'spotify-favorites') {
+      this._openSpotifyPlusPopup('favorites');
       return;
     }
     if (action === 'spotify-plus') {
@@ -1019,6 +1057,52 @@ class BrunoOfficeSubview extends HTMLElement {
     return `${lightLabel} - ${activeLabel}`;
   }
 
+  _lightLevel(light) {
+    const state = this._state(light?.entity);
+    if (!light?.entity || light.placeholder || state?.state !== 'on') return 0;
+    return this._brightnessPercent(state);
+  }
+
+  _renderLightZoneRail(lights) {
+    const label = 'Office';
+    const levels = lights.slice(0, 4).map((light) => ({
+      name: light?.name || 'Luz',
+      entity: light?.entity || '',
+      level: this._lightLevel(light),
+      disabled: !light?.entity || light.placeholder,
+      dimmable: Boolean(this._state(light?.entity)?.attributes?.brightness != null),
+    }));
+    const activeCount = levels.filter((item) => item.level > 0).length;
+    const total = levels.length || 0;
+    const fillPercent = total
+      ? Math.round(levels.reduce((sum, item) => sum + item.level, 0) / total)
+      : 0;
+    const isOff = fillPercent <= 0;
+    const isFull = fillPercent >= 100;
+    const dimmerTarget = levels.find((item) => item.dimmable && !item.disabled) || levels.find((item) => !item.disabled);
+    const ariaLabel = `${label}: ${activeCount} de ${total} luzes acesas. Segurar para futuro dimmer da zona.`;
+
+    return `
+      <aside
+        class="lights-zone-rail${isOff ? ' is-off' : ''}${isFull ? ' is-full' : ''}"
+        aria-label="${BrunoOfficeSubview._escapeAttr(ariaLabel)}"
+        title="${BrunoOfficeSubview._escapeAttr(ariaLabel)}"
+        data-zone="office"
+        data-dimmer-entity="${BrunoOfficeSubview._escapeAttr(dimmerTarget?.entity || '')}"
+        data-dimmer-level="${BrunoOfficeSubview._escapeAttr(String(fillPercent))}"
+        style="--rail-fill:${fillPercent}%; --rail-fill-ratio:${(fillPercent / 100).toFixed(3)}; --rail-glow:${isOff ? '0' : '1'}; --rail-ambient-height:${Math.max(22, fillPercent * 1.9)}px;"
+      >
+        <span class="rail-zone">${BrunoOfficeSubview._escape(label)}</span>
+        <div class="rail-track" aria-hidden="true">
+          <span class="rail-ambient-glow"></span>
+          <span class="rail-fill"></span>
+          <span class="rail-dimmer-ghost"></span>
+        </div>
+        <span class="rail-state"><strong>${activeCount}</strong><span>/${total}</span></span>
+      </aside>
+    `;
+  }
+
   _renderLightTile(light) {
     const state = this._state(light.entity);
     const active = state?.state === 'on';
@@ -1027,7 +1111,6 @@ class BrunoOfficeSubview extends HTMLElement {
     return `
       <button type="button" class="light-tile${active ? ' is-on' : ''}${disabled ? ' is-placeholder' : ''}" ${disabled ? 'disabled' : `data-action="toggle-light" data-entity="${BrunoOfficeSubview._escapeAttr(light.entity)}"`}>
         <span class="light-icon">${BrunoOfficeSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
-        <span class="switch-knob${active ? ' is-on' : ''}"></span>
         <strong>${BrunoOfficeSubview._escape(light.name)}</strong>
         <small>${disabled ? 'Placeholder' : (active ? 'Ligada' : 'Desligada')}</small>
       </button>
@@ -1035,16 +1118,9 @@ class BrunoOfficeSubview extends HTMLElement {
   }
 
   _renderLights(model) {
-    const lights = this._config.entities.lights || [];
-    const officeLights = [...lights];
-    while (officeLights.length < 4) {
-      officeLights.push({
-        entity: '',
-        name: 'Placeholder',
-        icon_type: 'ledstrip',
-        placeholder: true,
-      });
-    }
+    const visibleLights = (this._config.entities.lights || [])
+      .filter((light) => light?.entity && !light.placeholder)
+      .slice(0, 4);
 
     return `
       <div class="glass-card lights-card office-lights-card">
@@ -1058,12 +1134,11 @@ class BrunoOfficeSubview extends HTMLElement {
           </div>
         </div>
 
-        <div class="office-lights-frame">
-          <section class="light-group office-light-group">
-            <div class="office-lights-grid light-group-grid">
-              ${officeLights.slice(0, 4).map((light) => this._renderLightTile(light)).join('')}
-            </div>
-          </section>
+        <div class="lights-body office-lights-body">
+          <div class="lights-single-grid office-lights-grid">
+            ${visibleLights.map((light) => this._renderLightTile(light)).join('')}
+          </div>
+          ${this._renderLightZoneRail(visibleLights)}
         </div>
       </div>
     `;
@@ -1192,6 +1267,7 @@ class BrunoOfficeSubview extends HTMLElement {
     const spotify = model.spotify;
     const pcImage = BrunoOfficeSubview._escapeAttr(this._config.pc_image || '/local/images/office_pc.png');
     const spotifyArtwork = spotify.artwork ? BrunoOfficeSubview._resolvePicture(spotify.artwork) : '';
+    const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png';
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
     const metricIcon = {
       cpu: 'mdi:cpu-64-bit',
@@ -1199,108 +1275,169 @@ class BrunoOfficeSubview extends HTMLElement {
       gpu_temp: 'mdi:thermometer',
       network: 'mdi:wifi',
     };
-    const metricTone = {
-      cpu: 'blue',
-      ram: 'purple',
-      gpu_temp: 'amber',
-      network: 'green',
+    const compactMeta = (...values) => {
+      const seen = new Set();
+      return values
+        .map((value) => String(value || '').trim())
+        .filter((value) => {
+          if (!value || value === '--') return false;
+          const key = value.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
     };
-    const mediaActionButton = ({ action, icon, label, className = '', disabled = false }) => `
+    const metaLine = (...values) => compactMeta(...values).join(' - ');
+    const renderMeta = (value) => (
+      value
+        ? `<small>${BrunoOfficeSubview._escape(value)}</small>`
+        : '<small aria-hidden="true">&nbsp;</small>'
+    );
+    const mediaActionButton = ({
+      action,
+      icon,
+      label,
+      className = '',
+      attrs = '',
+      disabled = false,
+    }) => `
       <button
         type="button"
         class="media-action-button${className ? ` ${className}` : ''}"
         data-action="${BrunoOfficeSubview._escapeAttr(action)}"
         title="${BrunoOfficeSubview._escapeAttr(label)}"
         aria-label="${BrunoOfficeSubview._escapeAttr(label)}"
+        ${attrs}
         ${disabled ? 'disabled' : ''}
       >
         <ha-icon icon="${BrunoOfficeSubview._escapeAttr(icon)}"></ha-icon>
       </button>
     `;
-    const pcControls = `
-      ${mediaActionButton({ action: 'pc-power', icon: 'mdi:power', label: 'Ligar', className: 'is-main' })}
-      ${mediaActionButton({ action: 'pc-sleep', icon: 'mdi:weather-night', label: 'Sleep' })}
-      ${mediaActionButton({ action: 'pc-restart', icon: 'mdi:restart', label: 'Reiniciar', className: 'is-tool' })}
-      ${mediaActionButton({ action: 'pc-shutdown', icon: 'mdi:power-standby', label: 'Desligar' })}
+    const mediaIdentityCell = (type, active = false, options = {}) => `
+      <span class="media-identity-cell is-${BrunoOfficeSubview._escapeAttr(type)}${active ? ' is-active' : ''}" aria-hidden="true">
+        ${BrunoOfficeSubview._tplMediaIcon(type, { active, animate: Boolean(options.animate) })}
+      </span>
     `;
-    const spotifyControls = this._spotifyToolsOpen
-      ? `
-        ${mediaActionButton({ action: 'spotify-more', icon: 'mdi:chevron-left', label: 'Voltar' })}
-        ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool' })}
-        ${mediaActionButton({ action: 'spotify-library', icon: 'mdi:playlist-music', label: 'Biblioteca', className: 'is-tool' })}
-        ${mediaActionButton({ action: 'spotify-plus', icon: 'mdi:dots-horizontal', label: 'Mais opcoes', className: 'is-tool' })}
-      `
-      : `
-        ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior' })}
-        ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main' })}
-        ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa' })}
-        ${mediaActionButton({ action: 'spotify-more', icon: 'mdi:plus', label: 'Mais opcoes', className: 'is-tool' })}
-      `;
-    const pcMetrics = `
-      <div class="workspace-metrics">
-        ${pc.metrics.map((metric) => `
-          <span class="pc-metric tone-${metricTone[metric.key] || 'blue'}" style="--metric:${BrunoOfficeSubview._metricPercent(metric.value)}%">
-            <ha-icon icon="${metricIcon[metric.key] || 'mdi:chart-line'}"></ha-icon>
-            <small>${BrunoOfficeSubview._escape(metric.label)}</small>
-            <strong>${BrunoOfficeSubview._escape(metric.value)}</strong>
-            <i></i>
-          </span>
-        `).join('')}
-      </div>
-      <div class="workspace-control-list">
-        <div class="pc-camera-row">
-          <span><ha-icon icon="mdi:webcam"></ha-icon><strong>Webcam</strong></span>
-          <em>${pc.webcamActive ? 'On' : 'Off'}</em>
-          <i class="${pc.webcamActive ? 'is-on' : ''}"></i>
-        </div>
-        <div class="pc-slider-row">
-          <span><ha-icon icon="mdi:volume-high"></ha-icon><strong>Volume</strong></span>
-          <i style="--slider:${BrunoOfficeSubview._metricPercent(pc.volume)}%"></i>
-          <em>${BrunoOfficeSubview._escape(pc.volume)}</em>
-        </div>
-        <div class="pc-slider-row">
-          <span><ha-icon icon="mdi:white-balance-sunny"></ha-icon><strong>Brilho</strong></span>
-          <i style="--slider:${BrunoOfficeSubview._metricPercent(pc.brightness)}%"></i>
-          <em>${BrunoOfficeSubview._escape(pc.brightness)}</em>
-        </div>
-      </div>
+    const standbyImage = (src, className, fallbackIcon) => (
+      src
+        ? `<img class="media-standby-image ${className}" src="${BrunoOfficeSubview._escapeAttr(src)}" alt="">`
+        : `<ha-icon icon="${BrunoOfficeSubview._escapeAttr(fallbackIcon)}"></ha-icon>`
+    );
+    const fillActionRow = (items) => {
+      const visible = items.filter(Boolean).slice(0, 4);
+      while (visible.length < 4) visible.push('<span class="media-action-spacer"></span>');
+      return visible.join('');
+    };
+    const configuredButton = ({ entity, action, icon, label, className = '' }) => (
+      entity
+        ? mediaActionButton({ action, icon, label, className })
+        : ''
+    );
+    const spotifyMeta = metaLine(
+      spotify.subtitle,
+      spotify.source || this._config.spotify_device_name || 'Echo Show',
+    );
+    const pcMeta = metaLine(
+      pc.active ? 'Ativo' : 'Offline',
+      pc.activeWindow,
+      pc.session,
+    );
+    const spotifyPrimaryActions = `
+      ${mediaIdentityCell('spotify', spotify.active || spotify.playing)}
+      ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior' })}
+      ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main' })}
+      ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa' })}
     `;
-    const spotifyExtra = `
-      <div class="volume-row spotify-volume">
-        <ha-icon icon="mdi:volume-medium"></ha-icon>
-        <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify">
-        <strong>${spotifyVolume}%</strong>
-      </div>
+    const spotifySecondaryActions = `
+      ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'spotify-presets', icon: 'mdi:bookmark-music-outline', label: 'Presets', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'spotify-queue', icon: 'mdi:playlist-play', label: 'Fila', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'spotify-favorites', icon: 'mdi:heart-outline', label: 'Favoritos', className: 'is-tool' })}
     `;
-    const sources = [
-      { key: 'pc', label: 'PC', active: pc.active, state: pc.active ? 'Ativo' : 'Offline' },
-      { key: 'spotify', label: 'Spotify', active: spotify.active || spotify.playing, state: spotify.playing ? 'Tocando' : this._mediaStateLabel(spotify.state, 'Off') },
-    ];
-    const current = selected === 'spotify'
-      ? {
-        key: 'spotify',
-        icon: 'mdi:spotify',
-        active: spotify.active || spotify.playing,
-        state: spotify.playing ? 'Tocando' : this._mediaStateLabel(spotify.state, 'Off'),
-        title: spotify.title || 'SpotifyPlus',
-        meta: spotify.subtitle || spotify.source || this._config.spotify_device_name || '',
-        visual: spotifyArtwork
-          ? `<img src="${BrunoOfficeSubview._escapeAttr(spotifyArtwork)}" alt="">`
-          : '<ha-icon icon="mdi:music-note"></ha-icon>',
-        actions: spotifyControls,
-        extra: spotifyExtra,
-      }
-      : {
+    const pcPrimaryActions = fillActionRow([
+      mediaIdentityCell('pc', pc.active),
+      configuredButton({ entity: this._config.entities.pc_power, action: 'pc-power', icon: 'mdi:power', label: 'Ligar', className: 'is-main' }),
+      configuredButton({ entity: this._config.entities.pc_sleep, action: 'pc-sleep', icon: 'mdi:weather-night', label: 'Sleep' }),
+      configuredButton({ entity: this._config.entities.pc_restart, action: 'pc-restart', icon: 'mdi:restart', label: 'Reiniciar', className: 'is-tool' }),
+    ]);
+    const pcSecondaryButtons = [
+      configuredButton({ entity: this._config.entities.pc_shutdown, action: 'pc-shutdown', icon: 'mdi:power-standby', label: 'Desligar' }),
+      configuredButton({ entity: this._config.entities.pc_lock, action: 'pc-lock', icon: 'mdi:lock-outline', label: 'Bloquear' }),
+    ].filter(Boolean);
+    const pcFacts = [
+      this._config.entities.pc_session && pc.session && pc.session !== '--'
+        ? { icon: 'mdi:account-clock-outline', label: 'Sessao', value: pc.session }
+        : null,
+      this._config.entities.pc_idle && pc.idle && pc.idle !== '--'
+        ? { icon: 'mdi:timer-sand', label: 'Inativo', value: pc.idle }
+        : null,
+      pc.webcamConfigured
+        ? { icon: 'mdi:webcam', label: 'Webcam', value: pc.webcamActive ? 'On' : 'Off', active: pc.webcamActive }
+        : null,
+      this._config.entities.pc_volume && pc.volume && pc.volume !== '--'
+        ? { icon: 'mdi:volume-high', label: 'Volume', value: pc.volume }
+        : null,
+      this._config.entities.pc_brightness && pc.brightness && pc.brightness !== '--'
+        ? { icon: 'mdi:white-balance-sunny', label: 'Brilho', value: pc.brightness }
+        : null,
+      ...pc.metrics
+        .filter((metric) => metric.entity && metric.value && metric.value !== '--')
+        .map((metric) => ({
+          icon: metricIcon[metric.key] || 'mdi:chart-line',
+          label: metric.label,
+          value: metric.value,
+        })),
+    ].filter(Boolean);
+    const sources = {
+      pc: {
         key: 'pc',
+        label: 'PC',
         icon: 'mdi:monitor-dashboard',
         active: pc.active,
         state: pc.active ? 'Ativo' : 'Offline',
         title: 'Office PC',
-        meta: pc.active ? ((pc.activeWindow && pc.activeWindow !== '--') ? pc.activeWindow : (pc.session || 'Em uso')) : (pc.session || 'Offline'),
-        visual: `<img class="media-standby-image media-pc-standby" src="${pcImage}" alt="">`,
-        actions: pcControls,
-        extra: pcMetrics,
-      };
+        meta: renderMeta(pcMeta),
+        visual: standbyImage(pcImage, 'media-pc-standby', 'mdi:monitor-dashboard'),
+        primaryActions: pcPrimaryActions,
+        secondaryActions: pcSecondaryButtons.length ? fillActionRow(pcSecondaryButtons) : '',
+        extra: pcFacts.length
+          ? `
+            <div class="workspace-facts">
+              ${pcFacts.slice(0, 4).map((fact) => `
+                <span class="${fact.active ? 'is-active' : ''}">
+                  <ha-icon icon="${BrunoOfficeSubview._escapeAttr(fact.icon)}"></ha-icon>
+                  <small>${BrunoOfficeSubview._escape(fact.label)}</small>
+                  <strong>${BrunoOfficeSubview._escape(fact.value)}</strong>
+                </span>
+              `).join('')}
+            </div>
+          `
+          : '',
+      },
+      spotify: {
+        key: 'spotify',
+        label: 'Spotify',
+        icon: 'mdi:spotify',
+        active: spotify.active,
+        state: spotify.playing ? 'Tocando' : this._mediaStateLabel(spotify.state, 'Off'),
+        title: spotify.title || 'SpotifyPlus',
+        meta: renderMeta(spotifyMeta),
+        visual: spotifyArtwork
+          ? `<img src="${BrunoOfficeSubview._escapeAttr(spotifyArtwork)}" alt="">`
+          : standbyImage(spotifyStandbyImage, 'media-spotify-standby', 'mdi:music-note'),
+        primaryActions: spotifyPrimaryActions,
+        secondaryActions: spotifySecondaryActions,
+        extra: `
+          <div class="volume-row spotify-volume">
+            <ha-icon icon="mdi:volume-medium"></ha-icon>
+            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify">
+            <strong>${spotifyVolume}%</strong>
+          </div>
+        `,
+      },
+    };
+    const current = sources[selected] || sources.pc;
+    const tabs = Object.values(sources);
 
     return `
       <section class="glass-card media-hub-card workspace-hub-card is-${BrunoOfficeSubview._escapeAttr(current.key)}">
@@ -1309,18 +1446,15 @@ class BrunoOfficeSubview extends HTMLElement {
             <span class="micro-icon"><ha-icon icon="mdi:desk"></ha-icon></span>
             <div>
               <div class="module-title">Estacao de trabalho</div>
-              <div class="module-subtitle">${BrunoOfficeSubview._escape(current.state)}</div>
             </div>
           </div>
           <div class="media-tabs" role="tablist" aria-label="Fonte da estacao">
-            ${sources.map((source) => `
+            ${tabs.map((source) => `
               <button
                 type="button"
-                class="${source.key === selected ? 'is-selected ' : ''}${source.active ? 'is-source-active' : ''}"
+                class="${source.key === current.key ? 'is-selected' : ''}${source.active ? ' is-source-active' : ''}"
                 data-action="select-workspace-source"
                 data-source="${BrunoOfficeSubview._escapeAttr(source.key)}"
-                role="tab"
-                aria-selected="${source.key === selected ? 'true' : 'false'}"
               >
                 <span class="source-dot"></span>
                 <span>${BrunoOfficeSubview._escape(source.label)}</span>
@@ -1336,16 +1470,23 @@ class BrunoOfficeSubview extends HTMLElement {
           <div class="media-hub-content">
             <div class="media-details">
               <strong>${BrunoOfficeSubview._escape(current.title)}</strong>
-              <small>${BrunoOfficeSubview._escape(current.meta || current.state)}</small>
+              ${current.meta}
             </div>
-            <div class="media-action-stack">
-              <div class="media-primary-actions">
-                ${current.actions}
+            <div class="media-action-stack${current.secondaryActions ? ' has-secondary' : ''}">
+              <div class="media-primary-actions${current.primaryClass ? ` ${current.primaryClass}` : ''}">
+                ${current.primaryActions}
               </div>
+              ${current.secondaryActions ? `
+                <div class="media-secondary-actions">
+                  ${current.secondaryActions}
+                </div>
+              ` : ''}
             </div>
-            <div class="media-hub-extra">
-              ${current.extra}
-            </div>
+            ${current.extra ? `
+              <div class="media-hub-extra">
+                ${current.extra}
+              </div>
+            ` : ''}
           </div>
         </div>
       </section>
@@ -2495,9 +2636,18 @@ class BrunoOfficeSubview extends HTMLElement {
         gap: 10px;
       }
 
-      .office-lights-grid {
+      .lights-body {
         position: relative;
         z-index: 1;
+        min-height: 0;
+        height: 100%;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 60px;
+        gap: 10px;
+      }
+
+      .lights-single-grid,
+      .office-lights-grid {
         min-height: 0;
         height: 100%;
         display: grid;
@@ -2506,34 +2656,19 @@ class BrunoOfficeSubview extends HTMLElement {
         gap: 10px;
       }
 
-      .office-lights-frame {
-        position: relative;
-        z-index: 1;
-        min-height: 0;
-        height: 100%;
-        display: grid;
-      }
-
-      .office-light-group {
-        height: 100%;
-        grid-template-rows: minmax(0, 1fr);
-      }
-
-      .office-light-group .light-group-grid {
-        height: 100%;
-      }
-
-      .office-lights-card .light-tile {
-        min-height: 0;
-      }
-
       .light-tile {
         position: relative;
         display: grid;
-        grid-template-columns: 1fr auto;
-        grid-template-rows: auto 1fr auto;
-        align-items: start;
-        padding: 11px 12px;
+        grid-template-columns: 66px minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        grid-template-areas:
+          "icon title"
+          "icon status";
+        align-items: center;
+        align-content: center;
+        column-gap: 15px;
+        min-height: 0;
+        padding: 13px 16px;
         text-align: left;
         border-radius: var(--office-radius-small);
         color: rgba(255,255,255,0.86);
@@ -2560,6 +2695,194 @@ class BrunoOfficeSubview extends HTMLElement {
         );
       }
 
+      .lights-zone-rail {
+        position: relative;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        justify-items: center;
+        gap: 10px;
+        padding: 9px 7px;
+        overflow: hidden;
+        border-radius: var(--office-radius-small);
+        color: rgba(255,255,255,0.74);
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.072), rgba(255,255,255,0.026)),
+          rgba(8,14,26,0.50);
+        border: 1px solid rgba(255,224,160,0.13);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.13),
+          inset 0 -1px 0 rgba(255,200,100,0.045),
+          0 12px 26px rgba(0,0,0,0.20);
+        backdrop-filter: blur(22px) saturate(1.34);
+        -webkit-backdrop-filter: blur(22px) saturate(1.34);
+      }
+
+      .lights-zone-rail::before {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        pointer-events: none;
+        border-radius: calc(var(--office-radius-small) - 1px);
+        background:
+          radial-gradient(52px 78px at 50% 20%, rgba(255,191,74,0.10), transparent 66%),
+          linear-gradient(135deg, rgba(255,255,255,0.11), transparent 34%, transparent 70%, rgba(255,188,65,0.05));
+        opacity: 0.88;
+      }
+
+      .rail-zone,
+      .rail-state,
+      .rail-track {
+        position: relative;
+        z-index: 1;
+      }
+
+      .rail-zone {
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 900;
+        color: rgba(255,231,176,0.68);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.34);
+      }
+
+      .rail-state {
+        min-width: 36px;
+        min-height: 21px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: rgba(255,205,95,0.95);
+        font-size: 11px;
+        font-weight: 900;
+        background: rgba(255,183,77,0.10);
+        border: 1px solid rgba(255,183,77,0.20);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.12),
+          0 0 calc(14px * var(--rail-glow, 0)) rgba(255,183,77,0.18);
+      }
+
+      .rail-state strong {
+        font-size: 11px;
+        color: rgba(255,235,177,0.98);
+      }
+
+      .rail-track {
+        width: 42px;
+        height: 100%;
+        min-height: 124px;
+        overflow: hidden;
+        border-radius: 999px;
+        background:
+          linear-gradient(180deg, rgba(255,245,210,0.10), rgba(255,196,83,0.035)),
+          radial-gradient(circle at 50% 8%, rgba(255,255,255,0.16), transparent 30%),
+          rgba(8,15,28,0.72);
+        border: 1px solid rgba(255,222,152,0.30);
+        box-shadow:
+          inset 0 0 16px rgba(255,228,170,0.10),
+          inset 6px 0 14px rgba(255,255,255,0.035),
+          inset -8px 0 16px rgba(0,0,0,0.28),
+          0 0 calc(18px * var(--rail-glow, 0)) rgba(255,187,67,0.18),
+          0 0 calc(42px * var(--rail-glow, 0)) rgba(255,158,35,0.12);
+      }
+
+      .rail-track::before {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: inherit;
+        border: 1px solid rgba(255,255,255,0.08);
+        pointer-events: none;
+        z-index: 4;
+      }
+
+      .rail-track::after {
+        content: "";
+        position: absolute;
+        top: 11px;
+        left: 10px;
+        width: 13px;
+        height: 72%;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.20), rgba(255,255,255,0.034), transparent);
+        opacity: 0.42;
+        pointer-events: none;
+        z-index: 5;
+        filter: blur(0.2px);
+      }
+
+      .rail-fill {
+        position: absolute;
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        height: calc((100% - 10px) * var(--rail-fill-ratio, 0));
+        min-height: calc(24px * var(--rail-glow, 0));
+        border-radius: 999px;
+        background:
+          radial-gradient(circle at 40% 12%, rgba(255,255,255,0.95), transparent 20%),
+          linear-gradient(180deg, #fff6c9 0%, #ffe18a 24%, #ffc247 58%, #ff9f1f 100%);
+        box-shadow:
+          0 0 calc(16px * var(--rail-glow, 0)) rgba(255,226,138,0.70),
+          0 0 calc(34px * var(--rail-glow, 0)) rgba(255,184,61,0.44),
+          0 0 calc(64px * var(--rail-glow, 0)) rgba(255,145,31,0.25);
+        opacity: var(--rail-glow, 0);
+        transition:
+          height 550ms cubic-bezier(.22,.9,.32,1),
+          min-height 350ms ease,
+          opacity 350ms ease,
+          box-shadow 450ms ease;
+      }
+
+      .rail-fill::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 6px;
+        right: 6px;
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.82);
+        filter: blur(3px);
+        opacity: 0.90;
+      }
+
+      .rail-fill::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(255,255,255,0.25), transparent 38%, rgba(255,255,255,0.18));
+        opacity: 0.70;
+        mix-blend-mode: screen;
+      }
+
+      .rail-ambient-glow {
+        position: absolute;
+        left: 50%;
+        bottom: 20px;
+        width: 86px;
+        height: var(--rail-ambient-height, 22px);
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: radial-gradient(ellipse at center, rgba(255,183,55,0.30), rgba(255,139,22,0.12), transparent 72%);
+        filter: blur(16px);
+        opacity: var(--rail-glow, 0);
+        pointer-events: none;
+        transition:
+          height 550ms cubic-bezier(.22,.9,.32,1),
+          opacity 350ms ease;
+      }
+
+      .rail-dimmer-ghost {
+        position: absolute;
+        inset: 7px;
+        border-radius: inherit;
+        border: 1px dashed rgba(255,255,255,0.12);
+        opacity: 0;
+        pointer-events: none;
+      }
+
       .light-tile.is-placeholder {
         opacity: 0.55;
       }
@@ -2572,9 +2895,10 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .light-icon {
+        grid-area: icon;
         position: relative;
-        width: 34px;
-        height: 34px;
+        width: 62px;
+        height: 62px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -2673,17 +2997,27 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .light-tile strong {
-        grid-column: 1 / -1;
+        grid-area: title;
+        min-width: 0;
         align-self: end;
-        font-size: 13px;
+        color: white;
+        font-size: 15px;
         line-height: 1.1;
+        font-weight: 850;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .light-tile small {
-        grid-column: 1 / -1;
+        grid-area: status;
+        min-width: 0;
         color: rgba(255,205,95,0.92);
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .focus-card {
@@ -3374,6 +3708,11 @@ class BrunoOfficeSubview extends HTMLElement {
         height: 94% !important;
       }
 
+      .media-spotify-standby {
+        width: 72% !important;
+        height: 78% !important;
+      }
+
       .media-visual ha-icon {
         --mdc-icon-size: 64px;
       }
@@ -3383,7 +3722,7 @@ class BrunoOfficeSubview extends HTMLElement {
         min-width: 0;
         min-height: 0;
         display: grid;
-        grid-template-rows: 40px minmax(88px, auto) minmax(0, 1fr);
+        grid-template-rows: 40px minmax(122px, 1fr) auto;
         align-content: stretch;
         gap: 11px;
       }
@@ -3421,6 +3760,7 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .media-action-stack {
+        grid-area: auto;
         --media-action-size: 55px;
         display: grid;
         align-content: center;
@@ -3429,7 +3769,8 @@ class BrunoOfficeSubview extends HTMLElement {
         min-width: 0;
       }
 
-      .media-primary-actions {
+      .media-primary-actions,
+      .media-secondary-actions {
         width: 100%;
         display: grid;
         grid-template-columns: repeat(4, var(--media-action-size));
@@ -3438,10 +3779,15 @@ class BrunoOfficeSubview extends HTMLElement {
         min-width: 0;
       }
 
-      .media-action-button {
-        position: relative;
+      .media-action-button,
+      .media-action-spacer,
+      .media-identity-cell {
         width: var(--media-action-size);
         height: var(--media-action-size);
+      }
+
+      .media-action-button {
+        position: relative;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -3483,11 +3829,115 @@ class BrunoOfficeSubview extends HTMLElement {
         box-shadow: var(--bruno-liquid-control-green-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
       }
 
+      .media-action-button:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .media-action-spacer {
+        display: block;
+        pointer-events: none;
+        visibility: hidden;
+      }
+
+      .media-identity-cell {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        color: rgba(210,222,236,0.58);
+      }
+
+      .media-identity-cell.is-active {
+        color: rgba(255,255,255,0.96);
+      }
+
+      .tpl-media-icon {
+        width: 44px;
+        height: 44px;
+        display: block;
+        filter: drop-shadow(0 8px 14px rgba(0,0,0,0.30));
+      }
+
+      .media-identity-cell.is-active .tpl-media-icon {
+        filter: drop-shadow(0 0 12px rgba(96,190,255,0.34)) drop-shadow(0 8px 14px rgba(0,0,0,0.30));
+      }
+
+      .tpl-media-icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+      }
+
+      .tpl-media-icon.icon-spotify.is-active {
+        color: #1ed760;
+        filter: drop-shadow(0 0 12px rgba(46,231,122,0.36)) drop-shadow(0 8px 14px rgba(0,0,0,0.30));
+      }
+
       .media-hub-extra {
+        grid-area: auto;
         min-width: 0;
         align-self: end;
         display: grid;
         gap: 10px;
+      }
+
+      .workspace-facts {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .workspace-facts span {
+        min-width: 0;
+        min-height: 42px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        align-items: center;
+        column-gap: 8px;
+        row-gap: 2px;
+        padding: 7px 10px;
+        border-radius: 12px;
+        color: var(--text-soft);
+        background: rgba(255,255,255,0.052);
+        border: 1px solid rgba(255,255,255,0.10);
+      }
+
+      .workspace-facts span.is-active {
+        color: rgba(210,245,230,0.96);
+        background:
+          radial-gradient(circle at 12% 12%, rgba(46,231,122,0.16), transparent 72%),
+          rgba(255,255,255,0.058);
+        border-color: rgba(46,231,122,0.20);
+      }
+
+      .workspace-facts ha-icon {
+        --mdc-icon-size: 18px;
+        grid-row: 1 / -1;
+      }
+
+      .workspace-facts small,
+      .workspace-facts strong {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .workspace-facts small {
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 750;
+      }
+
+      .workspace-facts strong {
+        color: rgba(255,255,255,0.90);
+        font-size: 12px;
+        line-height: 1.1;
+        font-weight: 850;
       }
 
       .workspace-metrics {
@@ -4621,6 +5071,65 @@ class BrunoOfficeSubview extends HTMLElement {
         }
       }
     `;
+  }
+
+  static _tplMediaIcon(type, options = {}) {
+    const name = String(type || '').replace(/[^a-z0-9_-]/gi, '') || 'pc';
+    const active = typeof options === 'boolean' ? options : Boolean(options.active);
+    const icons = {
+      pc: `
+        <svg viewBox="0 0 50 50" aria-hidden="true">
+          <linearGradient id="bruno-office-media-pc-screen" gradientUnits="userSpaceOnUse" x1="6" y1="34" x2="44" y2="12">
+            <stop offset="0" stop-color="#60a5fa"/>
+            <stop offset="1" stop-color="#7dd3fc"/>
+          </linearGradient>
+          <path d="M4 8.5h42v29H4v-29z" fill="${active ? 'url(#bruno-office-media-pc-screen)' : '#20262890'}"/>
+          <path fill="currentColor" d="M45.8 7H4.2C2.9 7 2 8 2 9.2v27.6C2 38 2.9 39 4.2 39h41.6c1.2 0 2.2-1 2.2-2.2V9.2C48 8 47 7 45.8 7zm-.4 29.2H4.6V9.8h40.8v26.4zM18.7 42.2h12.6l1.6 3.1h5.8c.7 0 1.2.5 1.2 1.1v.3c0 .7-.5 1.2-1.2 1.2H11.3c-.7 0-1.2-.5-1.2-1.1v-.3c0-.7.5-1.2 1.2-1.2h5.8l1.6-3.1z"/>
+        </svg>
+      `,
+      spotify: active
+        ? `
+          <svg viewBox="0 0 42.55 42.55" aria-hidden="true">
+            <style>
+              @keyframes bruno-office-spotify-bounce {
+                10% { transform: scaleY(0.3); }
+                30% { transform: scaleY(1); opacity: .35; }
+                60% { transform: scaleY(0.5); }
+                80% { transform: scaleY(0.75); opacity: .75; }
+                100% { transform: scaleY(0.6); }
+              }
+              .media-spotify-bars {
+                fill: #ffffff;
+                stroke: #ffffff;
+                stroke-linecap: round;
+                stroke-width: 5px;
+              }
+              .media-spotify-bar {
+                animation: bruno-office-spotify-bounce 2.2s ease infinite alternate;
+                transform-origin: center;
+              }
+              .media-spotify-bar:nth-child(2) { animation-delay: -2.2s; }
+              .media-spotify-bar:nth-child(3) { animation-delay: -3.2s; }
+              .media-spotify-bar:nth-child(4) { animation-delay: -1.2s; }
+              .media-spotify-bar:nth-child(5) { animation-delay: -2.1s; }
+            </style>
+            <g class="media-spotify-bars">
+              <path class="media-spotify-bar" d="M2.5,18.24v7.87"/>
+              <path class="media-spotify-bar" d="M32.54,18.24v7.87"/>
+              <path class="media-spotify-bar" d="M10.01,10.37v23.61"/>
+              <path class="media-spotify-bar" d="M25.03,10.37v23.61"/>
+              <path class="media-spotify-bar" d="M17.52,2.5V41.85"/>
+            </g>
+          </svg>
+        `
+        : `
+          <svg viewBox="0 0 49.17 49.17" aria-hidden="true">
+            <path fill="currentColor" d="M39.09 21.88c-7.87-4.67-21.02-5.16-28.52-2.83-1.23.37-2.46-.37-2.83-1.47-.37-1.23.37-2.46 1.47-2.83 8.73-2.58 23.11-2.09 32.2 3.32 1.11.61 1.47 2.09.86 3.2-.61.86-2.09 1.23-3.2.61m-.25 6.88c-.61.86-1.72 1.23-2.58.61-6.64-4.06-16.72-5.29-24.46-2.83-.98.25-2.09-.25-2.34-1.23s.25-2.09 1.23-2.34c8.97-2.7 20.04-1.35 27.66 3.32.74.37 1.11 1.6.49 2.46m-2.95 6.76c-.49.74-1.35.98-2.09.49-5.78-3.56-13.03-4.3-21.63-2.34-.86.25-1.6-.37-1.84-1.11-.25-.86.37-1.6 1.11-1.84 9.34-2.09 17.45-1.23 23.85 2.7.86.37.98 1.35.61 2.09M24.58 0C11.06 0 0 11.06 0 24.58s11.06 24.58 24.58 24.58S49.16 38.1 49.16 24.58 38.23 0 24.58 0"/>
+          </svg>
+        `,
+    };
+
+    return `<span class="tpl-media-icon icon-${name}${active ? ' is-active' : ''}">${icons[name] || icons.pc}</span>`;
   }
 
   static _tplLightIcon(type, active = false) {

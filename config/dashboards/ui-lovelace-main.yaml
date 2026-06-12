@@ -2,15 +2,15 @@ button_card_templates: !include_dir_merge_named ./templates/button_card_template
 streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 
 resources:
-  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260612-ac-spacing-1
+  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260612-bedroom-subviews-parity-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260612-office-ac-gauge-2
+  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260612-bedroom-subviews-parity-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260612-bedroom-subviews-inline-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260612-bedroom-subviews-parity-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260612-bedroom-subviews-inline-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260612-bedroom-subviews-parity-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260612-bedroom-subviews-inline-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260612-bedroom-subviews-parity-1
     type: module
 
 kiosk_mode:

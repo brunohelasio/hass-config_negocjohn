@@ -757,9 +757,8 @@ class BrunoSalaSubview extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = path.startsWith('/') ? resolvedPath : path;
     this.dispatchEvent(new CustomEvent('hass-navigate', {
-      detail: { path: eventPath },
+      detail: { path: resolvedPath },
       bubbles: true,
       composed: true,
     }));

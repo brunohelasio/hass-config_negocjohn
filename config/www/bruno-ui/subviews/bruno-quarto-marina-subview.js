@@ -44,16 +44,16 @@ const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
     tv_remote: '',
     spotify: 'media_player.spotifyplus_bruno_helasio',
     speaker: 'media_player.echo_pop_marina',
-    climate: '',
+    climate: 'climate.ac_quarto_marina',
     router: '',
     zigbee_hub: '',
     lights: [
-      { entity: 'light.quarto_marina_switch_4', name: 'QMA Luz principal', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.quarto_marina_switch_1', name: 'QMA Arandela', icon_type: 'pendant', zone: 'sala' },
-      { entity: 'light.quarto_marina_switch_2', name: 'QMA Estante', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.quarto_marina_switch_3', name: 'QMA Luz cortineiro', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.suite_marina_switch_2', name: 'QMAS Luz principal', icon_type: 'light_flush', zone: 'varanda' },
-      { entity: 'light.suite_marina_switch_1', name: 'QMAS Luz azul', icon_type: 'light_flush', zone: 'varanda' },
+      { entity: 'light.quarto_marina_switch_4', name: 'Luz principal', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.quarto_marina_switch_1', name: 'Arandela', icon_type: 'pendant', zone: 'sala' },
+      { entity: 'light.quarto_marina_switch_2', name: 'Estante', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.quarto_marina_switch_3', name: 'Luz cortineiro', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.suite_marina_switch_2', name: 'Luz principal', icon_type: 'light_flush', zone: 'varanda' },
+      { entity: 'light.suite_marina_switch_1', name: 'Luz azul', icon_type: 'light_flush', zone: 'varanda' },
     ],
     cameras: [
       { entity: 'camera.qma_camera_2', name: 'Quarto Marina', short_name: 'Marina' },
@@ -2187,8 +2187,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           ),
           radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
           radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
-          var(--hero-image) left center / auto 100% no-repeat,
-          var(--hero-fallback-image) left center / auto 100% no-repeat;
+          var(--hero-image) center center / cover no-repeat,
+          var(--hero-fallback-image) center center / cover no-repeat;
         opacity: 1;
         filter: saturate(1.01) brightness(0.90);
         mask-image:

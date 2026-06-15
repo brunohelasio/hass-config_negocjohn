@@ -14,11 +14,11 @@ frontend:
   extra_module_url:
     - /local/bento-sidebar-card.js?v=20260520-1
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260612-bedroom-subviews-parity-1
-    - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260612-bedroom-subviews-parity-1
-    - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260612-bedroom-subviews-loader-1
-    - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260612-bedroom-subviews-loader-1
-    - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260612-bedroom-subviews-loader-1
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260615-room-labels-1
+    - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260615-room-labels-1
+    - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260615-bedroom-subviews-1
+    - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260615-bedroom-subviews-1
+    - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260615-bedroom-subviews-1
     # ORIGINAL: - /local/bruno-ui/cards/bruno-sala-card.js?v=20260608-sala-command-list-1
     - /local/bruno-ui/cards/bruno-sala-card.js?v=20260611-sala-rail-office-parity-1
     # ORIGINAL: - /local/bruno-ui/cards/bruno-office-card.js?v=20260608-room-assets-uniform-1
@@ -26,9 +26,9 @@ frontend:
     - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260611-room-nav-1
     - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260611-room-nav-1
     # ORIGINAL (cache stale no tablet — JS antigo com icone 92/80px): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260611-room-nav-1
-    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260611-room-nav-2
-    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260611-room-nav-1
-    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260611-room-nav-1
+    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260615-bedroom-status-icons-1
+    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260615-bedroom-status-icons-1
+    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260615-bedroom-status-icons-1
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-10
     - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260606-roborock-map-5
     - /local/bruno-ui/cards/bruno-energy-card.js?v=20260518-4

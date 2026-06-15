@@ -48,14 +48,14 @@ const BRUNO_QUARTO_MIGUEL_SUBVIEW_DEFAULT_CONFIG = {
     router: '',
     zigbee_hub: '',
     lights: [
-      { entity: 'light.quarto_miguel_switch_2', name: 'QMI Luz principal', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.quarto_miguel_2_switch_1', name: 'QMI Luzes armario', icon_type: 'light_flush', zone: 'sala' },
-      { entity: 'light.quarto_miguel_2_switch_2', name: 'QMI Arandela poltrona', icon_type: 'pendant', zone: 'sala' },
-      { entity: 'light.quarto_miguel_2_switch_3', name: 'QMI Arandela berco', icon_type: 'pendant', zone: 'sala' },
-      { entity: 'light.quarto_miguel_switch_1', name: 'QMI Luz prateleiras', icon_type: 'ledstrip', zone: 'varanda' },
-      { entity: 'light.quarto_miguel_switch_3', name: 'QMI Luz cortineiro', icon_type: 'ledstrip', zone: 'varanda' },
-      { entity: 'light.suite_miguel_switch_1', name: 'QMIS Luz principal', icon_type: 'ledstrip', zone: 'varanda' },
-      { entity: 'light.suite_miguel_switch_2', name: 'QMIS Luz azul', icon_type: 'light_flush', zone: 'varanda' },
+      { entity: 'light.quarto_miguel_switch_2', name: 'Luz principal', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.quarto_miguel_2_switch_1', name: 'Luzes armario', icon_type: 'light_flush', zone: 'sala' },
+      { entity: 'light.quarto_miguel_2_switch_2', name: 'Arandela poltrona', icon_type: 'pendant', zone: 'sala' },
+      { entity: 'light.quarto_miguel_2_switch_3', name: 'Arandela berco', icon_type: 'pendant', zone: 'sala' },
+      { entity: 'light.quarto_miguel_switch_1', name: 'Luz prateleiras', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.quarto_miguel_switch_3', name: 'Luz cortineiro', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.suite_miguel_switch_1', name: 'Luz principal', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.suite_miguel_switch_2', name: 'Luz azul', icon_type: 'light_flush', zone: 'varanda' },
     ],
     cameras: [
       { entity: 'camera.qmi_camera_2', name: 'Quarto Miguel', short_name: 'Miguel' },
@@ -2189,8 +2189,8 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
           ),
           radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
           radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
-          var(--hero-image) left center / auto 100% no-repeat,
-          var(--hero-fallback-image) left center / auto 100% no-repeat;
+          var(--hero-image) center center / cover no-repeat,
+          var(--hero-fallback-image) center center / cover no-repeat;
         opacity: 1;
         filter: saturate(1.01) brightness(0.90);
         mask-image:

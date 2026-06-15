@@ -54,14 +54,14 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
       // light.sala_2_switch_2 / light.sala_2_switch_3 /
       // light.varanda_switch_1 / light.varanda_switch_2 /
       // LED Fita TV / Luz Auxiliar.
-      { entity: 'light.sala_switch_2', name: 'SL Luz Principal', icon_type: 'light_flush', zone: 'sala' },
-      { entity: 'light.sala_switch_1', name: 'SL LED Esquerdo', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.sala_switch_3', name: 'SL LED Direito', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.sala_switch_2', name: 'Luz principal', icon_type: 'light_flush', zone: 'sala' },
+      { entity: 'light.sala_switch_1', name: 'LED esquerdo', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.sala_switch_3', name: 'LED direito', icon_type: 'ledstrip', zone: 'sala' },
       { entity: '', name: 'LED Fita TV', icon_type: 'ledstrip', placeholder: true, zone: 'sala' },
-      { entity: 'light.sala_2_switch_2', name: 'VR Luz Principal', icon_type: 'light_flush', zone: 'varanda' },
-      { entity: 'light.varanda_switch_2', name: 'Varanda Pendente', icon_type: 'pendant', zone: 'varanda' },
-      { entity: 'light.varanda_switch_1', name: 'Varanda Area Gourmet', icon_type: 'ledstrip', zone: 'varanda' },
-      { entity: 'light.sala_2_switch_3', name: 'Varanda Cristaleira', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.sala_2_switch_2', name: 'Luz principal', icon_type: 'light_flush', zone: 'varanda' },
+      { entity: 'light.varanda_switch_2', name: 'Pendente', icon_type: 'pendant', zone: 'varanda' },
+      { entity: 'light.varanda_switch_1', name: 'Area gourmet', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.sala_2_switch_3', name: 'Cristaleira', icon_type: 'ledstrip', zone: 'varanda' },
     ],
     cameras: [
       { entity: 'camera.sl_camera_2', name: 'Sala Principal', short_name: 'Sala' },

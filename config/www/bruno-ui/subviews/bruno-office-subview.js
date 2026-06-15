@@ -77,12 +77,12 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
     pc_brightness: '',
     pc_webcam: '',
     lights: [
-      { entity: 'light.office_switch_3', name: 'OF Luz central', icon_type: 'light_flush', zone: 'office' },
-      { entity: 'light.office_switch_2', name: 'OF Luz ambiente', icon_type: 'ledstrip', zone: 'office' },
-      { entity: 'light.office_switch_1', name: 'OF Luz estante', icon_type: 'ledstrip', zone: 'office' },
+      { entity: 'light.office_switch_3', name: 'Luz central', icon_type: 'light_flush', zone: 'office' },
+      { entity: 'light.office_switch_2', name: 'Luz ambiente', icon_type: 'ledstrip', zone: 'office' },
+      { entity: 'light.office_switch_1', name: 'Luz estante', icon_type: 'ledstrip', zone: 'office' },
       // NOVO (paridade Sala): 4o tile placeholder para fechar o grid 2x2,
       // mesmo padrao do "LED Fita TV" na Sala.
-      { entity: '', name: 'OF Luz Auxiliar', icon_type: 'ledstrip', placeholder: true, zone: 'office' },
+      { entity: '', name: 'Luz auxiliar', icon_type: 'ledstrip', placeholder: true, zone: 'office' },
     ],
     cameras: [
       { entity: 'camera.of_camera_2', name: 'Office', short_name: 'Office' },

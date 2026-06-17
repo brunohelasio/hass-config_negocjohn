@@ -2,13 +2,13 @@ button_card_templates: !include_dir_merge_named ./templates/button_card_template
 streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 
 resources:
-  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260615-room-labels-1
+  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260617-room-spotify-local-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260615-room-labels-1
+  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260617-room-spotify-local-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260615-bedroom-subviews-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260617-room-spotify-local-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260615-bedroom-subviews-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260617-room-spotify-local-1
     type: module
   - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260615-bedroom-subviews-1
     type: module

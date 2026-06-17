@@ -23,9 +23,9 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
   },
   "icon": {
     // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/couple-bedroom-off.png?v=20260608-room-assets-uniform-1",
-    "off": "/local/bruno-ui/assets/couple-bedroom-off-tight.png?v=20260609-rail-dynamic-1",
+    "off": "/local/bruno-ui/assets/couple-bedroom-off-tight.png?v=20260617-qcasal-asset-1",
     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/couple-bedroom-on.png?v=20260608-room-assets-uniform-1",
-    "on": "/local/bruno-ui/assets/couple-bedroom-on-tight.png?v=20260609-rail-dynamic-1",
+    "on": "/local/bruno-ui/assets/couple-bedroom-on-tight.png?v=20260617-qcasal-asset-1",
     "fallback": "mdi:bed-king-outline"
   },
   "status_dots": [
@@ -48,7 +48,7 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
       "icon": "mdi:speaker-wireless",
       "label": "Midia",
       "tone": "purple",
-      "entity": "media_player.spotifyplus_bruno_helasio",
+      "entity": "media_player.echo_pop_quarto_casal",
       "states": [
         "playing",
         "paused",

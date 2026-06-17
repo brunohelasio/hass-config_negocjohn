@@ -26,8 +26,8 @@ frontend:
     - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260611-room-nav-1
     - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260611-room-nav-1
     # ORIGINAL (cache stale no tablet — JS antigo com icone 92/80px): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260611-room-nav-1
-    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260615-bedroom-status-icons-1
-    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260615-bedroom-status-icons-1
+    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260617-bedroom-status-icons-1
+    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260617-bedroom-status-icons-1
     - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260615-bedroom-status-icons-1
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-10
     - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260606-roborock-map-5

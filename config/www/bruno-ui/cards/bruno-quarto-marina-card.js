@@ -63,7 +63,7 @@ const BRUNO_QUARTO_MARINA_DEFAULT_CONFIG = {
       "icon": "mdi:speaker-wireless",
       "label": "Midia",
       "tone": "purple",
-      "entity": "media_player.spotifyplus_bruno_helasio",
+      "entity": "media_player.echo_pop_marina",
       "states": [
         "playing",
         "paused",

@@ -1276,7 +1276,7 @@ class BrunoSalaSubview extends HTMLElement {
         <rect x="26" y="13" width="8" height="22" rx="1.5"></rect>
       `,
     };
-    const size = type === 'main' ? 32 : 26;
+    const size = type === 'main' ? 17 : 16;
     return `
       <svg class="curtain-svg is-${BrunoSalaSubview._escapeAttr(type)}" viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true">
         ${pathSets[type] || pathSets.main}
@@ -2617,7 +2617,7 @@ class BrunoSalaSubview extends HTMLElement {
         align-self: end;
         display: grid;
         grid-template-columns: 1fr;
-        gap: 14px;
+        gap: 11px;
         width: min(540px, 100%);
         padding: 0;
         border-radius: 0;
@@ -2630,9 +2630,9 @@ class BrunoSalaSubview extends HTMLElement {
 
       .curtain-control-row {
         display: grid;
-        grid-template-columns: auto minmax(86px, 1fr) auto;
+        grid-template-columns: minmax(94px, auto) minmax(96px, 1fr) auto;
         align-items: center;
-        gap: 14px;
+        gap: 18px;
         min-width: 0;
       }
 
@@ -2640,13 +2640,13 @@ class BrunoSalaSubview extends HTMLElement {
       .title-with-chip {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
         min-width: 0;
       }
 
       .curtain-icon-shell {
-        width: 48px;
-        height: 48px;
+        width: 28px;
+        height: 28px;
         display: grid;
         place-items: center;
         flex: 0 0 auto;
@@ -2655,31 +2655,29 @@ class BrunoSalaSubview extends HTMLElement {
           radial-gradient(circle at 50% 0%, rgba(255,255,255,0.17), rgba(255,255,255,0.04) 56%, rgba(0,0,0,0.18)),
           rgba(18,20,21,0.52);
         border: 1px solid rgba(255,255,255,0.16);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 8px 22px rgba(0,0,0,0.28);
-        backdrop-filter: blur(14px) saturate(1.2);
-        -webkit-backdrop-filter: blur(14px) saturate(1.2);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        backdrop-filter: blur(12px) saturate(1.18);
+        -webkit-backdrop-filter: blur(12px) saturate(1.18);
       }
 
       .curtain-title {
-        font-size: 18px;
-        line-height: 1;
+        font-size: 13px;
+        line-height: 1.05;
         font-weight: 800;
         letter-spacing: 0;
         color: rgba(255,255,255,0.96);
-        text-shadow: 0 3px 10px rgba(0,0,0,0.42);
         white-space: nowrap;
       }
 
       .curtain-status {
         justify-self: center;
         display: flex;
-        align-items: baseline;
-        gap: 6px;
+        align-items: center;
+        gap: 5px;
         min-width: 0;
-        font-size: 16px;
-        line-height: 1;
-        font-weight: 700;
-        text-shadow: 0 3px 12px rgba(0,0,0,0.42);
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
         white-space: nowrap;
       }
 
@@ -2689,25 +2687,25 @@ class BrunoSalaSubview extends HTMLElement {
 
       .curtain-status-percent {
         color: rgba(255,255,255,0.78);
-        font-weight: 600;
+        font-weight: 800;
       }
 
       .curtain-main-actions {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        gap: 8px;
+        gap: 7px;
         min-width: 0;
       }
 
       .curtain-action-button {
-        height: 46px;
-        min-width: 86px;
+        width: 78px;
+        height: 40px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 0 13px;
+        gap: 5px;
+        padding: 0 9px;
         border-radius: var(--bruno-liquid-control-radius, 14px);
         border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
         background: var(--bruno-liquid-control-background,
@@ -2718,23 +2716,31 @@ class BrunoSalaSubview extends HTMLElement {
         backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
         -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
         color: rgba(255,255,255,0.88);
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 700;
         letter-spacing: 0;
         white-space: nowrap;
       }
 
       .curtain-action-button.is-muted {
-        color: rgba(255,255,255,0.48);
-        border-color: rgba(255,255,255,0.09);
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)),
-          rgba(18,19,20,0.45);
+        color: rgba(255,255,255,0.88);
       }
 
       .curtain-action-button.is-active {
         color: var(--curtain-gold);
         border-color: rgba(242,194,102,0.38);
+        background:
+          radial-gradient(72px 42px at 50% 0%, rgba(242,194,102,0.24), transparent 70%),
+          rgba(88,66,24,0.26);
+      }
+
+      .curtain-action-button:active {
+        transform: translateY(1px);
+        color: var(--curtain-gold);
+        border-color: rgba(242,194,102,0.42);
+        background:
+          radial-gradient(72px 42px at 50% 0%, rgba(242,194,102,0.22), transparent 70%),
+          rgba(88,66,24,0.22);
       }
 
       .curtain-action-button:disabled,
@@ -2748,7 +2754,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: block;
         fill: rgba(255,255,255,0.70);
         stroke: rgba(255,255,255,0.58);
-        stroke-width: 1.8;
+        stroke-width: 2.1;
         stroke-linecap: round;
         stroke-linejoin: round;
         flex: 0 0 auto;
@@ -2760,8 +2766,8 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .curtain-svg.is-stop {
-        fill: rgba(255,255,255,0.36);
-        stroke: rgba(255,255,255,0.34);
+        fill: rgba(255,255,255,0.64);
+        stroke: rgba(255,255,255,0.54);
       }
 
       .curtain-slider-zone {
@@ -2774,12 +2780,12 @@ class BrunoSalaSubview extends HTMLElement {
       .curtain-slider-glow {
         position: absolute;
         left: 0;
-        top: -5px;
+        top: -4px;
         width: var(--curtain-position);
-        height: 22px;
+        height: 14px;
         border-radius: 999px;
-        background: linear-gradient(90deg, rgba(242,194,102,0.30), rgba(242,194,102,0.06));
-        filter: blur(13px);
+        background: linear-gradient(90deg, rgba(242,194,102,0.24), rgba(242,194,102,0.05));
+        filter: blur(10px);
         pointer-events: none;
       }
 
@@ -2787,7 +2793,7 @@ class BrunoSalaSubview extends HTMLElement {
         position: relative;
         z-index: 1;
         width: 100%;
-        height: 7px;
+        height: 4px;
         margin: 0;
         appearance: none;
         -webkit-appearance: none;
@@ -2795,50 +2801,50 @@ class BrunoSalaSubview extends HTMLElement {
         border: 1px solid rgba(255,255,255,0.08);
         background:
           linear-gradient(90deg, var(--curtain-gold) 0 var(--curtain-position), rgba(242,194,102,0.45) var(--curtain-position), rgba(255,255,255,0.10) var(--curtain-position) 100%);
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.35);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.34);
         cursor: pointer;
         accent-color: var(--curtain-gold);
       }
 
       .curtain-range::-webkit-slider-runnable-track {
-        height: 7px;
+        height: 4px;
         border-radius: 999px;
         background: transparent;
       }
 
       .curtain-range::-webkit-slider-thumb {
-        width: 24px;
-        height: 24px;
-        margin-top: -9px;
+        width: 18px;
+        height: 18px;
+        margin-top: -7px;
         -webkit-appearance: none;
         appearance: none;
         border-radius: 50%;
         border: 1px solid rgba(255,255,255,0.34);
         background:
           radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
-        box-shadow: 0 0 12px rgba(242,194,102,0.38), 0 2px 10px rgba(0,0,0,0.48);
+        box-shadow: 0 0 9px rgba(242,194,102,0.34), 0 2px 8px rgba(0,0,0,0.44);
       }
 
       .curtain-range::-moz-range-track {
-        height: 7px;
+        height: 4px;
         border-radius: 999px;
         background: transparent;
       }
 
       .curtain-range::-moz-range-progress {
-        height: 7px;
+        height: 4px;
         border-radius: 999px;
         background: linear-gradient(90deg, var(--curtain-gold), rgba(242,194,102,0.45));
       }
 
       .curtain-range::-moz-range-thumb {
-        width: 24px;
-        height: 24px;
+        width: 18px;
+        height: 18px;
         border-radius: 50%;
         border: 1px solid rgba(255,255,255,0.34);
         background:
           radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
-        box-shadow: 0 0 12px rgba(242,194,102,0.38), 0 2px 10px rgba(0,0,0,0.48);
+        box-shadow: 0 0 9px rgba(242,194,102,0.34), 0 2px 8px rgba(0,0,0,0.44);
       }
 
       .curtain-chips {

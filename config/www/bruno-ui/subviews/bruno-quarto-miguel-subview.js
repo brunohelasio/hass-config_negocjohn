@@ -5,8 +5,8 @@ const BRUNO_QUARTO_MIGUEL_SUBVIEW_DEFAULT_CONFIG = {
   subtitle: 'Visao geral',
   greeting_name: 'Bruno',
   navigation_path: 'bento-lab',
-  background: '/local/bruno-ui/assets/miguel-bedroom-on-tight.png?v=20260609-rail-dynamic-1',
-  fallback_background: '/local/bruno-ui/assets/miguel-bedroom-off-tight.png?v=20260609-rail-dynamic-1',
+  background: '/local/images/quarto_miguel.jpg',
+  fallback_background: '/local/images/quarto_miguel.jpg',
   refresh_interval: 6500,
   spotify_device_name: '',
   climate_device_name: 'Gree',
@@ -14,7 +14,13 @@ const BRUNO_QUARTO_MIGUEL_SUBVIEW_DEFAULT_CONFIG = {
   climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1',
   tv_standby_image: '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1',
   spotify_standby_image: '/local/images/echo_pop.png',
-  tv_apps: [],
+  tv_apps: [
+    { key: 'netflix', label: 'Netflix', image: '/local/images/netflix_bg.jpg', script: '' },
+    { key: 'prime', label: 'Prime Video', image: '/local/images/prime_video_tile.png', script: '' },
+    { key: 'disney', label: 'Disney+', image: '/local/images/dp_bg.jpg', script: '' },
+    { key: 'max', label: 'Max', image: '/local/images/HBOMax_bg.jpg', script: '' },
+  ],
+  light_zone_labels: { sala: 'Grupo 1', varanda: 'Grupo 2' },
   room_nav: [
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala', active: false },
     { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office', active: false },
@@ -42,14 +48,14 @@ const BRUNO_QUARTO_MIGUEL_SUBVIEW_DEFAULT_CONFIG = {
     router: '',
     zigbee_hub: '',
     lights: [
-      { entity: 'light.quarto_miguel_switch_2', name: 'QMI Luz principal', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.quarto_miguel_2_switch_1', name: 'QMI Luzes armario', icon_type: 'light_flush', zone: 'sala' },
-      { entity: 'light.quarto_miguel_2_switch_2', name: 'QMI Arandela poltrona', icon_type: 'pendant', zone: 'sala' },
-      { entity: 'light.quarto_miguel_2_switch_3', name: 'QMI Arandela berco', icon_type: 'pendant', zone: 'sala' },
-      { entity: 'light.quarto_miguel_switch_1', name: 'QMI Luz prateleiras', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.quarto_miguel_switch_3', name: 'QMI Luz cortineiro', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.suite_miguel_switch_1', name: 'QMIS Luz principal', icon_type: 'ledstrip', zone: 'varanda' },
-      { entity: 'light.suite_miguel_switch_2', name: 'QMIS Luz azul', icon_type: 'light_flush', zone: 'varanda' },
+      { entity: 'light.quarto_miguel_switch_2', name: 'Luz principal', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.quarto_miguel_2_switch_1', name: 'Luzes armario', icon_type: 'light_flush', zone: 'sala' },
+      { entity: 'light.quarto_miguel_2_switch_2', name: 'Arandela poltrona', icon_type: 'pendant', zone: 'sala' },
+      { entity: 'light.quarto_miguel_2_switch_3', name: 'Arandela berco', icon_type: 'pendant', zone: 'sala' },
+      { entity: 'light.quarto_miguel_switch_1', name: 'Luz prateleiras', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.quarto_miguel_switch_3', name: 'Luz cortineiro', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.suite_miguel_switch_1', name: 'Luz principal', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.suite_miguel_switch_2', name: 'Luz azul', icon_type: 'light_flush', zone: 'varanda' },
     ],
     cameras: [
       { entity: 'camera.qmi_camera_2', name: 'Quarto Miguel', short_name: 'Miguel' },
@@ -160,7 +166,7 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
           font: 600 13px/1.45 var(--primary-font-family, inherit);
         }
       </style>
-      <div class="error">Erro na subview Sala: ${BrunoQuartoMiguelSubview._escape(error?.message || error)}</div>
+      <div class="error">Erro na subview Q. Miguel: ${BrunoQuartoMiguelSubview._escape(error?.message || error)}</div>
     `;
   }
 
@@ -491,6 +497,7 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
   }
 
   _setClimateTarget(temperature) {
+    if (!this._config.entities.climate) return;
     const model = this._climateModel();
     const value = Number(temperature);
     if (!Number.isFinite(value)) return;
@@ -727,9 +734,8 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = resolvedPath;
     this.dispatchEvent(new CustomEvent('hass-navigate', {
-      detail: { path: eventPath },
+      detail: { path: resolvedPath },
       bubbles: true,
       composed: true,
     }));
@@ -1111,8 +1117,11 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
 
   _renderStatusRail(model) {
     const zones = model.lightZones || { sala: 0, varanda: 0 };
+    const zoneLabels = this._config.light_zone_labels || {};
+    const salaLabel = zoneLabels.sala || 'Quarto';
+    const varandaLabel = zoneLabels.varanda || 'Suite';
     const status = [
-      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `Sala ${zones.sala} - Varanda ${zones.varanda}`, tone: 'amber' },
+      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `${salaLabel} ${zones.sala} - ${varandaLabel} ${zones.varanda}`, tone: 'amber' },
       { icon: 'mdi:thermometer', value: this._temperatureLabel(), label: 'Temperatura', tone: 'amber' },
       { icon: 'mdi:water-percent', value: this._humidityLabel(), label: 'Umidade', tone: 'blue' },
       { icon: 'mdi:router-wireless', value: 'Roteador', label: this._networkLabel(this._config.entities.router), tone: 'neutral' },
@@ -1153,7 +1162,8 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
   }
 
   _renderLightZoneRail(lights, selectedZone) {
-    const label = selectedZone === 'varanda' ? 'Suite' : 'Quarto';
+    const zoneLabels = this._config.light_zone_labels || {};
+    const label = zoneLabels[selectedZone] || (selectedZone === 'varanda' ? 'Suite' : 'Quarto');
     const levels = lights.slice(0, 4).map((light) => ({
       name: light?.name || 'Luz',
       entity: light?.entity || '',
@@ -1212,6 +1222,9 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
     const varandaLights = lights.filter((light) => light.zone === 'varanda');
     const selectedZone = this._selectedLightZone === 'varanda' ? 'varanda' : 'sala';
     const visibleLights = selectedZone === 'varanda' ? varandaLights : salaLights;
+    const zoneLabels = this._config.light_zone_labels || {};
+    const salaLabel = zoneLabels.sala || 'Quarto';
+    const varandaLabel = zoneLabels.varanda || 'Suite';
 
     return `
       <div class="glass-card lights-card">
@@ -1219,8 +1232,8 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
           <div class="lights-title-row">
             <div class="module-title">Luzes</div>
             <div class="zone-toggle" role="tablist" aria-label="Zona das luzes">
-              <button type="button" class="${selectedZone === 'sala' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="sala">Quarto</button>
-              <button type="button" class="${selectedZone === 'varanda' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="varanda">Suite</button>
+              <button type="button" class="${selectedZone === 'sala' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="sala">${BrunoQuartoMiguelSubview._escape(salaLabel)}</button>
+              <button type="button" class="${selectedZone === 'varanda' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="varanda">${BrunoQuartoMiguelSubview._escape(varandaLabel)}</button>
             </div>
           </div>
           <div class="head-actions">
@@ -1838,9 +1851,9 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
             `).join('')}
           </div>
           <div class="climate-stepper">
-            <button type="button" data-action="temp-down">-</button>
+            <button type="button" data-action="temp-down" ${climateConfigured ? '' : 'disabled'}>-</button>
             <span>${target}</span>
-            <button type="button" data-action="temp-up">+</button>
+            <button type="button" data-action="temp-up" ${climateConfigured ? '' : 'disabled'}>+</button>
           </div>
           <div class="fan-label">Fan mode</div>
           <div class="fan-mode-row">
@@ -2176,8 +2189,8 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
           ),
           radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
           radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
-          var(--hero-image) left center / auto 100% no-repeat,
-          var(--hero-fallback-image) left center / auto 100% no-repeat;
+          var(--hero-image) center center / cover no-repeat,
+          var(--hero-fallback-image) center center / cover no-repeat;
         opacity: 1;
         filter: saturate(1.01) brightness(0.90);
         mask-image:
@@ -3215,6 +3228,192 @@ class BrunoQuartoMiguelSubview extends HTMLElement {
         width: 100%;
         min-width: 0;
         accent-color: rgb(28,214,104);
+      }
+
+      .ac-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto minmax(64px, 1fr);
+        gap: 8px;
+        align-content: start;
+      }
+
+      .temperature-pill {
+        align-self: start;
+        min-width: 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.92);
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 800;
+        background: rgba(255,255,255,0.070);
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+      }
+
+      .temperature-slider {
+        min-width: 0;
+        width: 100%;
+        display: block;
+        align-items: center;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .temperature-slider input {
+        width: 100%;
+        min-width: 0;
+        accent-color: rgb(96,165,250);
+      }
+
+      .fan-label {
+        display: block;
+        color: rgba(255,255,255,0.90);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .climate-mode-row,
+      .fan-mode-row {
+        display: grid;
+        gap: 8px;
+      }
+
+      .climate-mode-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .fan-mode-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .climate-mode,
+      .fan-mode,
+      .climate-stepper {
+        min-height: 34px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.09));
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.050));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.06));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+      }
+
+      .climate-mode:disabled,
+      .fan-mode:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .climate-mode {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.66);
+      }
+
+      .climate-mode ha-icon {
+        --mdc-icon-size: 17px;
+      }
+
+      .climate-mode.is-active {
+        color: white;
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.34), transparent 72%),
+          rgba(38,92,154,0.42)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.34));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.14),
+          0 0 14px rgba(96,165,250,0.16)
+        );
+      }
+
+      .climate-mode.is-power-on {
+        color: rgba(255,255,255,0.96);
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
+          rgba(38,92,138,0.38)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,165,250,0.32));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.12),
+          0 0 14px rgba(96,165,250,0.16)
+        );
+      }
+
+      .climate-stepper {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) 42px;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .climate-stepper button {
+        height: 34px;
+        background: transparent;
+        color: rgba(255,255,255,0.82);
+        font-size: 17px;
+      }
+
+      .climate-stepper button:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .climate-stepper span {
+        text-align: center;
+        color: rgba(255,255,255,0.88);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .fan-label {
+        margin-top: 3px;
+        font-size: 12px;
+      }
+
+      .fan-mode {
+        color: rgba(255,255,255,0.74);
+        font-size: 11px;
+        font-weight: 800;
+        min-height: 30px;
+      }
+
+      .fan-mode.is-active {
+        color: rgba(255,255,255,0.94);
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.24), transparent 72%),
+          rgba(38,92,154,0.32)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.28));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.14));
+      }
+
+      .climate-mode:active,
+      .fan-mode:active,
+      .climate-stepper button:active {
+        transform: translateY(1px);
+        border-color: rgba(96,183,255,0.42);
+      }
+
+      .climate-trend {
+        min-height: 0;
+        height: 104px;
+        margin: -8px -14px -14px;
+        border-radius: 0 0 calc(var(--sala-radius) - 1px) calc(var(--sala-radius) - 1px);
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .climate-trend svg {
+        display: block;
+        width: 100%;
+        height: 100%;
       }
 
       .poster-card {

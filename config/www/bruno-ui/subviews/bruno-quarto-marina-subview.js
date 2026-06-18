@@ -5,8 +5,8 @@ const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
   subtitle: 'Visao geral',
   greeting_name: 'Bruno',
   navigation_path: 'bento-lab',
-  background: '/local/bruno-ui/assets/marina-bedroom-on-tight.png?v=20260609-rail-dynamic-1',
-  fallback_background: '/local/bruno-ui/assets/marina-bedroom-off-tight.png?v=20260609-rail-dynamic-1',
+  background: '/local/images/quarto_marina.jpg',
+  fallback_background: '/local/images/quarto_marina.jpg',
   refresh_interval: 6500,
   spotify_device_name: 'Echo Pop Marina',
   climate_device_name: 'Gree',
@@ -14,7 +14,13 @@ const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
   climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1',
   tv_standby_image: '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1',
   spotify_standby_image: '/local/images/echo_pop.png',
-  tv_apps: [],
+  tv_apps: [
+    { key: 'netflix', label: 'Netflix', image: '/local/images/netflix_bg.jpg', script: '' },
+    { key: 'prime', label: 'Prime Video', image: '/local/images/prime_video_tile.png', script: '' },
+    { key: 'disney', label: 'Disney+', image: '/local/images/dp_bg.jpg', script: '' },
+    { key: 'max', label: 'Max', image: '/local/images/HBOMax_bg.jpg', script: '' },
+  ],
+  light_zone_labels: { sala: 'Quarto', varanda: 'Suite' },
   room_nav: [
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala', active: false },
     { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office', active: false },
@@ -38,16 +44,16 @@ const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
     tv_remote: '',
     spotify: 'media_player.spotifyplus_bruno_helasio',
     speaker: 'media_player.echo_pop_marina',
-    climate: '',
+    climate: 'climate.ac_quarto_marina',
     router: '',
     zigbee_hub: '',
     lights: [
-      { entity: 'light.quarto_marina_switch_4', name: 'QMA Luz principal', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.quarto_marina_switch_1', name: 'QMA Arandela', icon_type: 'pendant', zone: 'sala' },
-      { entity: 'light.quarto_marina_switch_2', name: 'QMA Estante', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.quarto_marina_switch_3', name: 'QMA Luz cortineiro', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.suite_marina_switch_2', name: 'QMAS Luz principal', icon_type: 'light_flush', zone: 'varanda' },
-      { entity: 'light.suite_marina_switch_1', name: 'QMAS Luz azul', icon_type: 'light_flush', zone: 'varanda' },
+      { entity: 'light.quarto_marina_switch_4', name: 'Luz principal', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.quarto_marina_switch_1', name: 'Arandela', icon_type: 'pendant', zone: 'sala' },
+      { entity: 'light.quarto_marina_switch_2', name: 'Estante', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.quarto_marina_switch_3', name: 'Luz cortineiro', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.suite_marina_switch_2', name: 'Luz principal', icon_type: 'light_flush', zone: 'varanda' },
+      { entity: 'light.suite_marina_switch_1', name: 'Luz azul', icon_type: 'light_flush', zone: 'varanda' },
     ],
     cameras: [
       { entity: 'camera.qma_camera_2', name: 'Quarto Marina', short_name: 'Marina' },
@@ -158,7 +164,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           font: 600 13px/1.45 var(--primary-font-family, inherit);
         }
       </style>
-      <div class="error">Erro na subview Sala: ${BrunoQuartoMarinaSubview._escape(error?.message || error)}</div>
+      <div class="error">Erro na subview Q. Marina: ${BrunoQuartoMarinaSubview._escape(error?.message || error)}</div>
     `;
   }
 
@@ -391,22 +397,76 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     };
   }
 
+  _normalizeMediaDevice(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  _spotifySourceMatchesRoom(attrs = {}) {
+    const expected = this._normalizeMediaDevice(this._config.spotify_device_name);
+    if (!expected) return true;
+    return [
+      attrs.source,
+      attrs.source_name,
+      attrs.device_name,
+      attrs.active_device_name,
+      attrs.spotify_device_name,
+      attrs.media_player,
+      attrs.media_player_name,
+    ].some((value) => {
+      const normalized = this._normalizeMediaDevice(value);
+      return normalized && (
+        normalized === expected
+        || normalized.includes(expected)
+        || (normalized.length >= 10 && expected.includes(normalized))
+      );
+    });
+  }
+
+  _spotifySpeakerMatchesRoom(spotifyAttrs = {}) {
+    const speaker = this._state(this._config.entities.speaker);
+    const speakerState = String(speaker?.state || '').toLowerCase();
+    if (!['playing', 'paused'].includes(speakerState)) return false;
+    const attrs = speaker.attributes || {};
+    const speakerApp = this._normalizeMediaDevice([
+      attrs.app_name,
+      attrs.source,
+      attrs.media_content_type,
+      attrs.media_channel,
+    ].join(' '));
+    if (speakerApp.includes('spotify')) return true;
+    const speakerTitle = this._normalizeMediaDevice(attrs.media_title);
+    const spotifyTitle = this._normalizeMediaDevice(spotifyAttrs.media_title);
+    if (speakerTitle && spotifyTitle && speakerTitle === spotifyTitle) return true;
+    const speakerArtist = this._normalizeMediaDevice(attrs.media_artist);
+    const spotifyArtist = this._normalizeMediaDevice(spotifyAttrs.media_artist);
+    return Boolean(speakerTitle && spotifyTitle && speakerTitle.includes(spotifyTitle) && speakerArtist && spotifyArtist && speakerArtist === spotifyArtist);
+  }
+
   _spotifyModel() {
     const entity = this._state(this._config.entities.spotify);
     const attrs = entity?.attributes || {};
     const state = entity?.state || 'off';
-    const active = BRUNO_QUARTO_MARINA_SUBVIEW_MEDIA_ON_STATES.includes(state);
+    const globalActive = BRUNO_QUARTO_MARINA_SUBVIEW_MEDIA_ON_STATES.includes(state);
+    const active = globalActive && (this._spotifySourceMatchesRoom(attrs) || this._spotifySpeakerMatchesRoom(attrs));
     const rawTitle = attrs.media_title || 'SpotifyPlus';
     const title = /^SpotifyPlus\s+Bruno/i.test(rawTitle) ? 'SpotifyPlus' : rawTitle;
+    const roomSource = this._config.spotify_device_name || attrs.source || 'Echo Pop Marina';
     return {
       entity,
-      state,
+      state: active ? state : 'off',
+      globalState: state,
+      globalActive,
       active,
-      playing: state === 'playing',
-      title,
-      subtitle: attrs.media_artist || attrs.media_album_name || '',
-      artwork: attrs.entity_picture || attrs.media_image_url || '',
-      source: attrs.source || this._config.spotify_device_name || 'Echo Show',
+      playing: active && state === 'playing',
+      title: active ? title : 'SpotifyPlus',
+      subtitle: active ? (attrs.media_artist || attrs.media_album_name || '') : '',
+      artwork: active ? (attrs.entity_picture || attrs.media_image_url || '') : '',
+      source: active ? (attrs.source || roomSource) : roomSource,
       volume: attrs.volume_level != null ? Math.round(Number(attrs.volume_level) * 100) : null,
     };
   }
@@ -489,6 +549,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   }
 
   _setClimateTarget(temperature) {
+    if (!this._config.entities.climate) return;
     const model = this._climateModel();
     const value = Number(temperature);
     if (!Number.isFinite(value)) return;
@@ -725,9 +786,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = resolvedPath;
     this.dispatchEvent(new CustomEvent('hass-navigate', {
-      detail: { path: eventPath },
+      detail: { path: resolvedPath },
       bubbles: true,
       composed: true,
     }));
@@ -858,6 +918,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       this._openSpotifyPlusPopup('full');
       return;
     }
+    if (['spotify-prev', 'spotify-next', 'spotify-play-pause', 'spotify-pause'].includes(action) && !this._spotifyModel().active) return;
     if (action === 'spotify-prev') this._callService('media_player.media_previous_track', { entity_id: this._config.entities.spotify });
     if (action === 'spotify-next') this._callService('media_player.media_next_track', { entity_id: this._config.entities.spotify });
     if (action === 'spotify-play-pause') {
@@ -924,6 +985,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     if (!Number.isFinite(value)) return;
     if (target.dataset.action === 'spotify-volume') {
       if (!this._config.entities.spotify) return;
+      if (!this._spotifyModel().active) return;
       this._callService('media_player.volume_set', {
         entity_id: this._config.entities.spotify,
         volume_level: Math.max(0, Math.min(1, value / 100)),
@@ -1109,8 +1171,11 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
 
   _renderStatusRail(model) {
     const zones = model.lightZones || { sala: 0, varanda: 0 };
+    const zoneLabels = this._config.light_zone_labels || {};
+    const salaLabel = zoneLabels.sala || 'Quarto';
+    const varandaLabel = zoneLabels.varanda || 'Suite';
     const status = [
-      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `Sala ${zones.sala} - Varanda ${zones.varanda}`, tone: 'amber' },
+      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `${salaLabel} ${zones.sala} - ${varandaLabel} ${zones.varanda}`, tone: 'amber' },
       { icon: 'mdi:thermometer', value: this._temperatureLabel(), label: 'Temperatura', tone: 'amber' },
       { icon: 'mdi:water-percent', value: this._humidityLabel(), label: 'Umidade', tone: 'blue' },
       { icon: 'mdi:router-wireless', value: 'Roteador', label: this._networkLabel(this._config.entities.router), tone: 'neutral' },
@@ -1151,7 +1216,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   }
 
   _renderLightZoneRail(lights, selectedZone) {
-    const label = selectedZone === 'varanda' ? 'Suite' : 'Quarto';
+    const zoneLabels = this._config.light_zone_labels || {};
+    const label = zoneLabels[selectedZone] || (selectedZone === 'varanda' ? 'Suite' : 'Quarto');
     const levels = lights.slice(0, 4).map((light) => ({
       name: light?.name || 'Luz',
       entity: light?.entity || '',
@@ -1210,6 +1276,9 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     const varandaLights = lights.filter((light) => light.zone === 'varanda');
     const selectedZone = this._selectedLightZone === 'varanda' ? 'varanda' : 'sala';
     const visibleLights = selectedZone === 'varanda' ? varandaLights : salaLights;
+    const zoneLabels = this._config.light_zone_labels || {};
+    const salaLabel = zoneLabels.sala || 'Quarto';
+    const varandaLabel = zoneLabels.varanda || 'Suite';
 
     return `
       <div class="glass-card lights-card">
@@ -1217,8 +1286,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           <div class="lights-title-row">
             <div class="module-title">Luzes</div>
             <div class="zone-toggle" role="tablist" aria-label="Zona das luzes">
-              <button type="button" class="${selectedZone === 'sala' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="sala">Quarto</button>
-              <button type="button" class="${selectedZone === 'varanda' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="varanda">Suite</button>
+              <button type="button" class="${selectedZone === 'sala' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="sala">${BrunoQuartoMarinaSubview._escape(salaLabel)}</button>
+              <button type="button" class="${selectedZone === 'varanda' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="varanda">${BrunoQuartoMarinaSubview._escape(varandaLabel)}</button>
             </div>
           </div>
           <div class="head-actions">
@@ -1290,6 +1359,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     const spotify = model.spotify;
     const tvConfigured = Boolean(this._config.entities.tv);
     const spotifyConfigured = Boolean(this._config.entities.spotify);
+    const spotifyTransportDisabled = !spotifyConfigured || !spotify.active;
     const now = Date.now();
     const tvStateChanged = Boolean(this._hass && this._lastMediaTvOn !== undefined && this._lastMediaTvOn !== tv.active);
     if (tvStateChanged) {
@@ -1334,7 +1404,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     );
     const spotifyMeta = metaLine(
       spotify.subtitle,
-      spotify.source || this._config.spotify_device_name || 'Echo Show',
+      spotify.source || this._config.spotify_device_name || 'Echo Pop Marina',
     );
     const mediaActionButton = ({
       action,
@@ -1395,9 +1465,9 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     `;
     const spotifyPrimaryActions = `
       ${mediaIdentityCell('spotify', spotify.active || spotify.playing)}
-      ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior', disabled: !spotifyConfigured })}
-      ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main', disabled: !spotifyConfigured })}
-      ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa', disabled: !spotifyConfigured })}
+      ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior', disabled: spotifyTransportDisabled })}
+      ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main', disabled: spotifyTransportDisabled })}
+      ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa', disabled: spotifyTransportDisabled })}
     `;
     const spotifySecondaryActions = `
       ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool', disabled: !spotifyConfigured })}
@@ -1443,7 +1513,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         extra: `
           <div class="volume-row spotify-volume">
             <ha-icon icon="mdi:volume-medium"></ha-icon>
-            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotifyConfigured ? '' : 'disabled'}>
+            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotifyTransportDisabled ? 'disabled' : ''}>
             <strong>${spotifyVolume}%</strong>
           </div>
         `,
@@ -1548,6 +1618,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     const spotify = model.spotify;
     const artwork = spotify.artwork ? BrunoQuartoMarinaSubview._resolvePicture(spotify.artwork) : '';
     const volume = spotify.volume == null ? 66 : spotify.volume;
+    const transportDisabled = spotify.active ? '' : ' disabled';
     const controls = this._spotifyToolsOpen
       ? `
         <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
@@ -1556,9 +1627,9 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         <button type="button" class="control-button is-tool" data-action="spotify-plus" title="Mais opcoes"><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
       `
       : `
-        <button type="button" class="control-button" data-action="spotify-prev"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
-        <button type="button" class="control-button is-main" data-action="spotify-play-pause"><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
-        <button type="button" class="control-button" data-action="spotify-next"><ha-icon icon="mdi:skip-next"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-prev"${transportDisabled}><ha-icon icon="mdi:skip-previous"></ha-icon></button>
+        <button type="button" class="control-button is-main" data-action="spotify-play-pause"${transportDisabled}><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-next"${transportDisabled}><ha-icon icon="mdi:skip-next"></ha-icon></button>
         <button type="button" class="control-button" data-action="spotify-more" title="Mais opcoes"><ha-icon icon="mdi:plus"></ha-icon></button>
       `;
 
@@ -1584,7 +1655,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
             </div>
             <div class="volume-row spotify-volume">
               <ha-icon icon="mdi:volume-medium"></ha-icon>
-              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify">
+              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify"${transportDisabled}>
               <strong>${volume}%</strong>
             </div>
           </div>
@@ -1836,9 +1907,9 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
             `).join('')}
           </div>
           <div class="climate-stepper">
-            <button type="button" data-action="temp-down">-</button>
+            <button type="button" data-action="temp-down" ${climateConfigured ? '' : 'disabled'}>-</button>
             <span>${target}</span>
-            <button type="button" data-action="temp-up">+</button>
+            <button type="button" data-action="temp-up" ${climateConfigured ? '' : 'disabled'}>+</button>
           </div>
           <div class="fan-label">Fan mode</div>
           <div class="fan-mode-row">
@@ -2174,8 +2245,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           ),
           radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
           radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
-          var(--hero-image) left center / auto 100% no-repeat,
-          var(--hero-fallback-image) left center / auto 100% no-repeat;
+          var(--hero-image) center center / cover no-repeat,
+          var(--hero-fallback-image) center center / cover no-repeat;
         opacity: 1;
         filter: saturate(1.01) brightness(0.90);
         mask-image:
@@ -3213,6 +3284,192 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         width: 100%;
         min-width: 0;
         accent-color: rgb(28,214,104);
+      }
+
+      .ac-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto minmax(64px, 1fr);
+        gap: 8px;
+        align-content: start;
+      }
+
+      .temperature-pill {
+        align-self: start;
+        min-width: 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.92);
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 800;
+        background: rgba(255,255,255,0.070);
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+      }
+
+      .temperature-slider {
+        min-width: 0;
+        width: 100%;
+        display: block;
+        align-items: center;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .temperature-slider input {
+        width: 100%;
+        min-width: 0;
+        accent-color: rgb(96,165,250);
+      }
+
+      .fan-label {
+        display: block;
+        color: rgba(255,255,255,0.90);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .climate-mode-row,
+      .fan-mode-row {
+        display: grid;
+        gap: 8px;
+      }
+
+      .climate-mode-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .fan-mode-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .climate-mode,
+      .fan-mode,
+      .climate-stepper {
+        min-height: 34px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.09));
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.050));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.06));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+      }
+
+      .climate-mode:disabled,
+      .fan-mode:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .climate-mode {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.66);
+      }
+
+      .climate-mode ha-icon {
+        --mdc-icon-size: 17px;
+      }
+
+      .climate-mode.is-active {
+        color: white;
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.34), transparent 72%),
+          rgba(38,92,154,0.42)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.34));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.14),
+          0 0 14px rgba(96,165,250,0.16)
+        );
+      }
+
+      .climate-mode.is-power-on {
+        color: rgba(255,255,255,0.96);
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
+          rgba(38,92,138,0.38)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,165,250,0.32));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.12),
+          0 0 14px rgba(96,165,250,0.16)
+        );
+      }
+
+      .climate-stepper {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) 42px;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .climate-stepper button {
+        height: 34px;
+        background: transparent;
+        color: rgba(255,255,255,0.82);
+        font-size: 17px;
+      }
+
+      .climate-stepper button:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .climate-stepper span {
+        text-align: center;
+        color: rgba(255,255,255,0.88);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .fan-label {
+        margin-top: 3px;
+        font-size: 12px;
+      }
+
+      .fan-mode {
+        color: rgba(255,255,255,0.74);
+        font-size: 11px;
+        font-weight: 800;
+        min-height: 30px;
+      }
+
+      .fan-mode.is-active {
+        color: rgba(255,255,255,0.94);
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.24), transparent 72%),
+          rgba(38,92,154,0.32)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.28));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.14));
+      }
+
+      .climate-mode:active,
+      .fan-mode:active,
+      .climate-stepper button:active {
+        transform: translateY(1px);
+        border-color: rgba(96,183,255,0.42);
+      }
+
+      .climate-trend {
+        min-height: 0;
+        height: 104px;
+        margin: -8px -14px -14px;
+        border-radius: 0 0 calc(var(--sala-radius) - 1px) calc(var(--sala-radius) - 1px);
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .climate-trend svg {
+        display: block;
+        width: 100%;
+        height: 100%;
       }
 
       .poster-card {

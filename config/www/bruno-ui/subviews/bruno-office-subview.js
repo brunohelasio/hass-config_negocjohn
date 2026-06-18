@@ -77,12 +77,12 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
     pc_brightness: '',
     pc_webcam: '',
     lights: [
-      { entity: 'light.office_switch_3', name: 'OF Luz central', icon_type: 'light_flush', zone: 'office' },
-      { entity: 'light.office_switch_2', name: 'OF Luz ambiente', icon_type: 'ledstrip', zone: 'office' },
-      { entity: 'light.office_switch_1', name: 'OF Luz estante', icon_type: 'ledstrip', zone: 'office' },
+      { entity: 'light.office_switch_3', name: 'Luz central', icon_type: 'light_flush', zone: 'office' },
+      { entity: 'light.office_switch_2', name: 'Luz ambiente', icon_type: 'ledstrip', zone: 'office' },
+      { entity: 'light.office_switch_1', name: 'Luz estante', icon_type: 'ledstrip', zone: 'office' },
       // NOVO (paridade Sala): 4o tile placeholder para fechar o grid 2x2,
       // mesmo padrao do "LED Fita TV" na Sala.
-      { entity: '', name: 'OF Luz Auxiliar', icon_type: 'ledstrip', placeholder: true, zone: 'office' },
+      { entity: '', name: 'Luz auxiliar', icon_type: 'ledstrip', placeholder: true, zone: 'office' },
     ],
     cameras: [
       { entity: 'camera.of_camera_2', name: 'Office', short_name: 'Office' },
@@ -507,22 +507,76 @@ class BrunoOfficeSubview extends HTMLElement {
     };
   }
 
+  _normalizeMediaDevice(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  _spotifySourceMatchesRoom(attrs = {}) {
+    const expected = this._normalizeMediaDevice(this._config.spotify_device_name);
+    if (!expected) return true;
+    return [
+      attrs.source,
+      attrs.source_name,
+      attrs.device_name,
+      attrs.active_device_name,
+      attrs.spotify_device_name,
+      attrs.media_player,
+      attrs.media_player_name,
+    ].some((value) => {
+      const normalized = this._normalizeMediaDevice(value);
+      return normalized && (
+        normalized === expected
+        || normalized.includes(expected)
+        || (normalized.length >= 10 && expected.includes(normalized))
+      );
+    });
+  }
+
+  _spotifySpeakerMatchesRoom(spotifyAttrs = {}) {
+    const speaker = this._state(this._config.entities.speaker);
+    const speakerState = String(speaker?.state || '').toLowerCase();
+    if (!['playing', 'paused'].includes(speakerState)) return false;
+    const attrs = speaker.attributes || {};
+    const speakerApp = this._normalizeMediaDevice([
+      attrs.app_name,
+      attrs.source,
+      attrs.media_content_type,
+      attrs.media_channel,
+    ].join(' '));
+    if (speakerApp.includes('spotify')) return true;
+    const speakerTitle = this._normalizeMediaDevice(attrs.media_title);
+    const spotifyTitle = this._normalizeMediaDevice(spotifyAttrs.media_title);
+    if (speakerTitle && spotifyTitle && speakerTitle === spotifyTitle) return true;
+    const speakerArtist = this._normalizeMediaDevice(attrs.media_artist);
+    const spotifyArtist = this._normalizeMediaDevice(spotifyAttrs.media_artist);
+    return Boolean(speakerTitle && spotifyTitle && speakerTitle.includes(spotifyTitle) && speakerArtist && spotifyArtist && speakerArtist === spotifyArtist);
+  }
+
   _spotifyModel() {
     const entity = this._state(this._config.entities.spotify);
     const attrs = entity?.attributes || {};
     const state = entity?.state || 'off';
-    const active = BRUNO_OFFICE_SUBVIEW_MEDIA_ON_STATES.includes(state);
+    const globalActive = BRUNO_OFFICE_SUBVIEW_MEDIA_ON_STATES.includes(state);
+    const active = globalActive && (this._spotifySourceMatchesRoom(attrs) || this._spotifySpeakerMatchesRoom(attrs));
+    const roomSource = this._config.spotify_device_name || attrs.source || 'Echo Pop Office';
     const rawTitle = attrs.media_title || 'SpotifyPlus';
     const title = /^SpotifyPlus\s+Bruno/i.test(rawTitle) ? 'SpotifyPlus' : rawTitle;
     return {
       entity,
-      state,
+      state: active ? state : 'off',
+      globalState: state,
+      globalActive,
       active,
-      playing: state === 'playing',
-      title,
-      subtitle: attrs.media_artist || attrs.media_album_name || '',
-      artwork: attrs.entity_picture || attrs.media_image_url || '',
-      source: attrs.source || this._config.spotify_device_name || 'Echo Show',
+      playing: active && state === 'playing',
+      title: active ? title : 'SpotifyPlus',
+      subtitle: active ? (attrs.media_artist || attrs.media_album_name || '') : '',
+      artwork: active ? (attrs.entity_picture || attrs.media_image_url || '') : '',
+      source: active ? (attrs.source || roomSource) : roomSource,
       volume: attrs.volume_level != null ? Math.round(Number(attrs.volume_level) * 100) : null,
     };
   }
@@ -833,9 +887,8 @@ class BrunoOfficeSubview extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = resolvedPath;
     this.dispatchEvent(new CustomEvent('hass-navigate', {
-      detail: { path: eventPath },
+      detail: { path: resolvedPath },
       bubbles: true,
       composed: true,
     }));
@@ -946,6 +999,7 @@ class BrunoOfficeSubview extends HTMLElement {
       this._openSpotifyPlusPopup('full');
       return;
     }
+    if (['spotify-prev', 'spotify-next', 'spotify-play-pause', 'spotify-pause'].includes(action) && !this._spotifyModel().active) return;
     if (action === 'spotify-prev') this._callService('media_player.media_previous_track', { entity_id: this._config.entities.spotify });
     if (action === 'spotify-next') this._callService('media_player.media_next_track', { entity_id: this._config.entities.spotify });
     if (action === 'spotify-play-pause') {
@@ -1040,6 +1094,7 @@ class BrunoOfficeSubview extends HTMLElement {
     const value = Number(target.value);
     if (!Number.isFinite(value)) return;
     if (target.dataset.action === 'spotify-volume') {
+      if (!this._spotifyModel().active) return;
       this._callService('media_player.volume_set', {
         entity_id: this._config.entities.spotify,
         volume_level: Math.max(0, Math.min(1, value / 100)),
@@ -1643,11 +1698,12 @@ class BrunoOfficeSubview extends HTMLElement {
       pc.activeWindow,
       pc.session,
     );
+    const spotifyTransportDisabled = !spotify.active;
     const spotifyPrimaryActions = `
       ${mediaIdentityCell('spotify', spotify.active || spotify.playing)}
-      ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior' })}
-      ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main' })}
-      ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa' })}
+      ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior', disabled: spotifyTransportDisabled })}
+      ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main', disabled: spotifyTransportDisabled })}
+      ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa', disabled: spotifyTransportDisabled })}
     `;
     const spotifySecondaryActions = `
       ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool' })}
@@ -1731,7 +1787,7 @@ class BrunoOfficeSubview extends HTMLElement {
         extra: `
           <div class="volume-row spotify-volume">
             <ha-icon icon="mdi:volume-medium"></ha-icon>
-            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify">
+            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotifyTransportDisabled ? 'disabled' : ''}>
             <strong>${spotifyVolume}%</strong>
           </div>
         `,
@@ -1798,6 +1854,7 @@ class BrunoOfficeSubview extends HTMLElement {
     const spotify = model.spotify;
     const artwork = spotify.artwork ? BrunoOfficeSubview._resolvePicture(spotify.artwork) : '';
     const volume = spotify.volume == null ? 66 : spotify.volume;
+    const transportDisabled = spotify.active ? '' : ' disabled';
     const controls = this._spotifyToolsOpen
       ? `
         <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
@@ -1806,9 +1863,9 @@ class BrunoOfficeSubview extends HTMLElement {
         <button type="button" class="control-button is-tool" data-action="spotify-plus" title="Mais opcoes"><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
       `
       : `
-        <button type="button" class="control-button" data-action="spotify-prev"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
-        <button type="button" class="control-button is-main" data-action="spotify-play-pause"><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
-        <button type="button" class="control-button" data-action="spotify-next"><ha-icon icon="mdi:skip-next"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-prev"${transportDisabled}><ha-icon icon="mdi:skip-previous"></ha-icon></button>
+        <button type="button" class="control-button is-main" data-action="spotify-play-pause"${transportDisabled}><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-next"${transportDisabled}><ha-icon icon="mdi:skip-next"></ha-icon></button>
         <button type="button" class="control-button" data-action="spotify-more" title="Mais opcoes"><ha-icon icon="mdi:plus"></ha-icon></button>
       `;
 
@@ -1834,7 +1891,7 @@ class BrunoOfficeSubview extends HTMLElement {
             </div>
             <div class="volume-row spotify-volume">
               <ha-icon icon="mdi:volume-medium"></ha-icon>
-              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify">
+              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify"${transportDisabled}>
               <strong>${volume}%</strong>
             </div>
           </div>

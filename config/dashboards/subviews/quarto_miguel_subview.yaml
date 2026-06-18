@@ -1,8 +1,0 @@
-title: Q. Miguel
-path: subview-quarto-miguel
-icon: mdi:bed-single-outline
-subview: true
-type: panel
-theme: tablet
-cards:
-  - type: custom:bruno-quarto-miguel-subview

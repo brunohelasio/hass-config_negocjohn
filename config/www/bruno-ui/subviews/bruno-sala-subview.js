@@ -30,7 +30,7 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
     { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:bed-single-outline', path: 'subview-quarto-miguel' },
   ],
   entities: {
-    curtain: 'cover.cortina_sala',
+    curtain: 'cover.cortina_varanda_cortina_2',
     active_sensor: 'sensor.living_room_active',
     temperature: ['sensor.sl_sensor_temp_humid_temperatura', 'sensor.sensor_4_in_1_sala_temperature'],
     humidity: ['sensor.sl_sensor_temp_humid_umidade', 'sensor.sensor_4_in_1_sala_humidity'],
@@ -102,6 +102,7 @@ class BrunoSalaSubview extends HTMLElement {
     this._mediaTvAnimationState = undefined;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
+    this._boundLiveInputHandler = (event) => this._handleLiveInput(event);
   }
 
   setConfig(config) {
@@ -123,6 +124,9 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.shadowRoot?.removeEventListener('input', this._boundLiveInputHandler);
+    this.shadowRoot?.removeEventListener('change', this._boundInputHandler);
+    this.shadowRoot?.removeEventListener('click', this._boundActionHandler);
     this._stopRefreshTimer();
     this._stopClockTimer();
   }
@@ -296,10 +300,46 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _curtainPosition() {
-    const value = this._state(this._config.entities.curtain)?.attributes?.current_position;
+    const value = this._curtainModel().position;
     const number = Number(value);
     if (!Number.isFinite(number)) return 0;
     return Math.max(0, Math.min(100, Math.round(number)));
+  }
+
+  _curtainModel() {
+    const entityId = this._config.entities.curtain;
+    const entity = this._state(entityId);
+    const configured = Boolean(entityId);
+    const unavailable = configured && Boolean(this._hass) && this._isUnavailable(entity);
+    const state = String(entity?.state || (configured ? 'unknown' : 'unavailable')).toLowerCase();
+    const attrs = entity?.attributes || {};
+    const rawPosition = Number(attrs.current_position);
+    let position = Number.isFinite(rawPosition) ? rawPosition : null;
+
+    if (position == null) {
+      if (state === 'open') position = 100;
+      else if (state === 'closed') position = 0;
+      else position = 0;
+    }
+
+    const safePosition = Math.max(0, Math.min(100, Math.round(position)));
+    let status = 'Posicao';
+    if (!configured || unavailable) status = 'Indisponivel';
+    else if (state === 'opening') status = 'Abrindo';
+    else if (state === 'closing') status = 'Fechando';
+    else if (state === 'closed' || safePosition <= 3) status = 'Fechada';
+    else if (state === 'open' || safePosition >= 97) status = 'Aberta';
+
+    return {
+      entity,
+      entityId,
+      state,
+      configured,
+      available: configured && !unavailable,
+      moving: state === 'opening' || state === 'closing',
+      position: safePosition,
+      status,
+    };
   }
 
   _activeLightsCount() {
@@ -583,6 +623,16 @@ class BrunoSalaSubview extends HTMLElement {
     this._callService('climate.set_temperature', {
       entity_id: this._config.entities.climate,
       temperature: Math.max(min, Math.min(max, value)),
+    });
+  }
+
+  _setCurtainPosition(position) {
+    if (!this._config.entities.curtain) return;
+    const value = Math.max(0, Math.min(100, Math.round(Number(position))));
+    if (!Number.isFinite(value)) return;
+    this._callService('cover.set_cover_position', {
+      entity_id: this._config.entities.curtain,
+      position: value,
     });
   }
 
@@ -883,10 +933,7 @@ class BrunoSalaSubview extends HTMLElement {
     if (action === 'cover-position') {
       const position = Number(target.dataset.position);
       if (Number.isFinite(position)) {
-        this._callService('cover.set_cover_position', {
-          entity_id: this._config.entities.curtain,
-          position,
-        });
+        this._setCurtainPosition(position);
       }
     }
     if (action === 'lights-on') this._callService('light.turn_on', { entity_id: this._config.entities.room_group });
@@ -1009,6 +1056,10 @@ class BrunoSalaSubview extends HTMLElement {
     if (!target?.matches?.('[data-action]')) return;
     const value = Number(target.value);
     if (!Number.isFinite(value)) return;
+    if (target.dataset.action === 'curtain-target') {
+      this._setCurtainPosition(value);
+      return;
+    }
     if (target.dataset.action === 'spotify-volume') {
       if (!this._spotifyModel().active) return;
       this._callService('media_player.volume_set', {
@@ -1035,6 +1086,21 @@ class BrunoSalaSubview extends HTMLElement {
     });
   }
 
+  _handleLiveInput(event) {
+    const target = event.target;
+    if (!target?.matches?.('[data-action="curtain-target"]')) return;
+    const value = Math.max(0, Math.min(100, Math.round(Number(target.value))));
+    if (!Number.isFinite(value)) return;
+    const root = target.closest('.curtain-dock');
+    root?.style.setProperty('--curtain-position', `${value}%`);
+    root?.querySelector('.curtain-status-percent')?.replaceChildren(document.createTextNode(`- ${value}%`));
+    const status = value <= 3 ? 'Fechada' : (value >= 97 ? 'Aberta' : 'Posicao');
+    root?.querySelector('.curtain-status-text')?.replaceChildren(document.createTextNode(status));
+    root?.querySelectorAll('.curtain-chip').forEach((chip) => {
+      chip.classList.toggle('is-active', Number(chip.dataset.position) === value);
+    });
+  }
+
   _render() {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     globalThis.BrunoLiquidGlass?.apply?.();
@@ -1042,7 +1108,7 @@ class BrunoSalaSubview extends HTMLElement {
     const model = {
       lights: this._activeLightsCount(),
       lightZones: this._activeLightsByZone(),
-      curtainPosition: this._curtainPosition(),
+      curtain: this._curtainModel(),
       cameras: this._camerasModel(),
       tv: this._tvModel(),
       spotify: this._spotifyModel(),
@@ -1076,8 +1142,10 @@ class BrunoSalaSubview extends HTMLElement {
 
     this.shadowRoot.removeEventListener('click', this._boundActionHandler);
     this.shadowRoot.removeEventListener('change', this._boundInputHandler);
+    this.shadowRoot.removeEventListener('input', this._boundLiveInputHandler);
     this.shadowRoot.addEventListener('click', this._boundActionHandler);
     this.shadowRoot.addEventListener('change', this._boundInputHandler);
+    this.shadowRoot.addEventListener('input', this._boundLiveInputHandler);
     this._bindImageFallbacks();
   }
 
@@ -1102,6 +1170,18 @@ class BrunoSalaSubview extends HTMLElement {
     const subtitle = BrunoSalaSubview._escape(this._config.subtitle);
     const background = BrunoSalaSubview._escapeAttr(this._config.background);
     const fallbackBackground = BrunoSalaSubview._escapeAttr(this._config.fallback_background || this._config.background);
+    const curtain = model.curtain || this._curtainModel();
+    const curtainPosition = Number.isFinite(Number(curtain.position)) ? Number(curtain.position) : 0;
+    const curtainDisabled = curtain.available ? '' : 'disabled';
+    const curtainChips = [25, 50, 75].map((position) => `
+      <button
+        type="button"
+        class="curtain-chip${curtainPosition === position ? ' is-active' : ''}"
+        data-action="cover-position"
+        data-position="${position}"
+        ${curtainDisabled}
+      >${position}%</button>
+    `).join('');
 
     return `
       <div class="hero-stage">
@@ -1126,35 +1206,81 @@ class BrunoSalaSubview extends HTMLElement {
             </button>
           </div>
 
-          <div class="curtain-dock">
-            <div class="curtain-copy">
-              <span class="module-icon"><ha-icon icon="mdi:curtains"></ha-icon></span>
-              <div>
-                <div class="module-title">Cortinas</div>
-                <div class="module-subtitle">Controle</div>
+          <div class="curtain-dock${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainPosition}%;">
+            <div class="curtain-control-row">
+              <div class="curtain-identity">
+                <span class="curtain-icon-shell">${BrunoSalaSubview._curtainSvg('main')}</span>
+                <span class="curtain-title">Cortina</span>
+              </div>
+              <div class="curtain-status" aria-live="polite">
+                <span class="curtain-status-text">${BrunoSalaSubview._escape(curtain.status)}</span>
+                <span class="curtain-status-percent">- ${curtainPosition}%</span>
+              </div>
+              <div class="curtain-main-actions">
+                <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
+                  ${BrunoSalaSubview._curtainSvg('open')}<span>Abrir</span>
+                </button>
+                <button type="button" class="curtain-action-button is-muted${curtain.moving ? ' is-active' : ''}" data-action="cover-stop" ${curtainDisabled}>
+                  ${BrunoSalaSubview._curtainSvg('stop')}<span>Parar</span>
+                </button>
+                <button type="button" class="curtain-action-button" data-action="cover-close" ${curtainDisabled}>
+                  ${BrunoSalaSubview._curtainSvg('close')}<span>Fechar</span>
+                </button>
               </div>
             </div>
-            <div class="curtain-actions">
-              <button type="button" class="preset-button" data-action="cover-open">
-                <ha-icon icon="mdi:curtains"></ha-icon><span>Aberta</span>
-              </button>
-              <button type="button" class="preset-button" data-action="cover-position" data-position="50">
-                <ha-icon icon="mdi:curtains"></ha-icon><span>Semiaberta</span>
-              </button>
-              <button type="button" class="preset-button" data-action="cover-close">
-                <ha-icon icon="mdi:curtains-closed"></ha-icon><span>Fechada</span>
-              </button>
-              <button type="button" class="preset-button" data-action="cover-stop">
-                <ha-icon icon="mdi:pause"></ha-icon><span>Parar</span>
-              </button>
-              <span class="curtain-pill">Posicao - ${model.curtainPosition}%</span>
-            </div>
-            <div class="curtain-progress">
-              <span style="width:${model.curtainPosition}%"></span>
+            <div class="curtain-slider-zone">
+              <div class="curtain-slider-glow" aria-hidden="true"></div>
+              <input
+                class="curtain-range"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="${curtainPosition}"
+                data-action="curtain-target"
+                aria-label="Posicao da cortina"
+                ${curtainDisabled}
+              >
+              <div class="curtain-chips">
+                ${curtainChips}
+              </div>
             </div>
           </div>
         </div>
       </div>
+    `;
+  }
+
+  static _curtainSvg(type = 'main') {
+    const pathSets = {
+      main: `
+        <path d="M9 7h30"></path>
+        <path d="M14 10v27c4.5-2.8 6.8-7.3 6.8-13.5S18.5 12.8 14 10Z"></path>
+        <path d="M34 10v27c-4.5-2.8-6.8-7.3-6.8-13.5S29.5 12.8 34 10Z"></path>
+        <path d="M24 10v29"></path>
+      `,
+      open: `
+        <path d="M8 8h32"></path>
+        <path d="M14 11v26c5-3 7.5-7.4 7.5-13.2S19 14 14 11Z"></path>
+        <path d="M34 11v26c-5-3-7.5-7.4-7.5-13.2S29 14 34 11Z"></path>
+        <path d="M24 13v23"></path>
+      `,
+      close: `
+        <path d="M8 8h32"></path>
+        <path d="M19 11v26c-4.2-2.5-6.4-6.8-6.4-13S14.8 13.6 19 11Z"></path>
+        <path d="M29 11v26c4.2-2.5 6.4-6.8 6.4-13S33.2 13.6 29 11Z"></path>
+        <path d="M23.7 11v27M24.3 11v27"></path>
+      `,
+      stop: `
+        <rect x="14" y="13" width="8" height="22" rx="1.5"></rect>
+        <rect x="26" y="13" width="8" height="22" rx="1.5"></rect>
+      `,
+    };
+    const size = type === 'main' ? 32 : 26;
+    return `
+      <svg class="curtain-svg is-${BrunoSalaSubview._escapeAttr(type)}" viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true">
+        ${pathSets[type] || pathSets.main}
+      </svg>
     `;
   }
 
@@ -2485,14 +2611,14 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .curtain-dock {
+        --curtain-gold: rgb(242,194,102);
         grid-row: 3;
         grid-column: 1 / -1;
         align-self: end;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
-        gap: 8px;
-        width: min(500px, 100%);
+        gap: 14px;
+        width: min(540px, 100%);
         padding: 0;
         border-radius: 0;
         background: transparent;
@@ -2502,12 +2628,244 @@ class BrunoSalaSubview extends HTMLElement {
         -webkit-backdrop-filter: none;
       }
 
-      .curtain-copy,
+      .curtain-control-row {
+        display: grid;
+        grid-template-columns: auto minmax(86px, 1fr) auto;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+      }
+
+      .curtain-identity,
       .title-with-chip {
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 12px;
         min-width: 0;
+      }
+
+      .curtain-icon-shell {
+        width: 48px;
+        height: 48px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.17), rgba(255,255,255,0.04) 56%, rgba(0,0,0,0.18)),
+          rgba(18,20,21,0.52);
+        border: 1px solid rgba(255,255,255,0.16);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 8px 22px rgba(0,0,0,0.28);
+        backdrop-filter: blur(14px) saturate(1.2);
+        -webkit-backdrop-filter: blur(14px) saturate(1.2);
+      }
+
+      .curtain-title {
+        font-size: 18px;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: 0;
+        color: rgba(255,255,255,0.96);
+        text-shadow: 0 3px 10px rgba(0,0,0,0.42);
+        white-space: nowrap;
+      }
+
+      .curtain-status {
+        justify-self: center;
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        min-width: 0;
+        font-size: 16px;
+        line-height: 1;
+        font-weight: 700;
+        text-shadow: 0 3px 12px rgba(0,0,0,0.42);
+        white-space: nowrap;
+      }
+
+      .curtain-status-text {
+        color: var(--curtain-gold);
+      }
+
+      .curtain-status-percent {
+        color: rgba(255,255,255,0.78);
+        font-weight: 600;
+      }
+
+      .curtain-main-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .curtain-action-button {
+        height: 46px;
+        min-width: 86px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 13px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
+        background: var(--bruno-liquid-control-background,
+          linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025)),
+          rgba(22,23,24,0.50)
+        );
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 18px rgba(0,0,0,0.22));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        color: rgba(255,255,255,0.88);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0;
+        white-space: nowrap;
+      }
+
+      .curtain-action-button.is-muted {
+        color: rgba(255,255,255,0.48);
+        border-color: rgba(255,255,255,0.09);
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)),
+          rgba(18,19,20,0.45);
+      }
+
+      .curtain-action-button.is-active {
+        color: var(--curtain-gold);
+        border-color: rgba(242,194,102,0.38);
+      }
+
+      .curtain-action-button:disabled,
+      .curtain-chip:disabled,
+      .curtain-range:disabled {
+        opacity: 0.46;
+        cursor: not-allowed;
+      }
+
+      .curtain-svg {
+        display: block;
+        fill: rgba(255,255,255,0.70);
+        stroke: rgba(255,255,255,0.58);
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: 0 0 auto;
+      }
+
+      .curtain-svg.is-main {
+        fill: rgba(255,255,255,0.78);
+        stroke: rgba(255,255,255,0.54);
+      }
+
+      .curtain-svg.is-stop {
+        fill: rgba(255,255,255,0.36);
+        stroke: rgba(255,255,255,0.34);
+      }
+
+      .curtain-slider-zone {
+        position: relative;
+        display: grid;
+        gap: 0;
+        min-width: 0;
+      }
+
+      .curtain-slider-glow {
+        position: absolute;
+        left: 0;
+        top: -5px;
+        width: var(--curtain-position);
+        height: 22px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(242,194,102,0.30), rgba(242,194,102,0.06));
+        filter: blur(13px);
+        pointer-events: none;
+      }
+
+      .curtain-range {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 7px;
+        margin: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background:
+          linear-gradient(90deg, var(--curtain-gold) 0 var(--curtain-position), rgba(242,194,102,0.45) var(--curtain-position), rgba(255,255,255,0.10) var(--curtain-position) 100%);
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.35);
+        cursor: pointer;
+        accent-color: var(--curtain-gold);
+      }
+
+      .curtain-range::-webkit-slider-runnable-track {
+        height: 7px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .curtain-range::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+        margin-top: -9px;
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.34);
+        background:
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
+        box-shadow: 0 0 12px rgba(242,194,102,0.38), 0 2px 10px rgba(0,0,0,0.48);
+      }
+
+      .curtain-range::-moz-range-track {
+        height: 7px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .curtain-range::-moz-range-progress {
+        height: 7px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--curtain-gold), rgba(242,194,102,0.45));
+      }
+
+      .curtain-range::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.34);
+        background:
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
+        box-shadow: 0 0 12px rgba(242,194,102,0.38), 0 2px 10px rgba(0,0,0,0.48);
+      }
+
+      .curtain-chips {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        justify-content: center;
+      }
+
+      .curtain-chip {
+        flex: 1 1 0;
+        min-height: 31px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.052);
+        color: rgba(255,255,255,0.48);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0;
+        cursor: pointer;
+      }
+
+      .curtain-chip.is-active {
+        border-color: rgba(242,194,102,0.50);
+        background: rgba(242,194,102,0.10);
+        color: var(--curtain-gold);
       }
 
       .module-icon,
@@ -2529,64 +2887,6 @@ class BrunoSalaSubview extends HTMLElement {
         --mdc-icon-size: 15px;
       }
 
-      .curtain-pill {
-        align-self: center;
-        justify-self: stretch;
-        min-height: 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 11px;
-        border-radius: 999px;
-        color: rgb(255,208,92);
-        font-size: 11px;
-        font-weight: 800;
-        background: rgba(255,183,77,0.12);
-        border: 1px solid rgba(255,183,77,0.25);
-      }
-
-      .curtain-actions {
-        grid-column: 1 / -1;
-        justify-self: stretch;
-        display: grid;
-        grid-template-columns: repeat(4, minmax(68px, 1fr)) minmax(118px, auto);
-        align-items: center;
-        gap: 8px;
-      }
-
-      .preset-button {
-        min-height: 48px;
-        display: grid;
-        place-items: center;
-        gap: 4px;
-        padding: 6px 6px;
-        border-radius: var(--bruno-liquid-control-radius, 14px);
-        background: var(--bruno-liquid-control-background,
-          radial-gradient(74px 44px at 50% 0%, rgba(255,255,255,0.13), transparent 72%),
-          rgba(255,255,255,0.058)
-        );
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.12));
-        color: rgba(255,255,255,0.72);
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.08));
-      }
-
-      .preset-button.is-primary {
-        color: rgba(136,122,255,0.98);
-        background:
-          radial-gradient(64px 46px at 50% 0%, rgba(136,122,255,0.32), transparent 72%),
-          rgba(88,72,185,0.22);
-        border-color: rgba(136,122,255,0.44);
-      }
-
-      .preset-button ha-icon {
-        --mdc-icon-size: 19px;
-      }
-
-      .preset-button span {
-        font-size: 10px;
-        font-weight: 700;
-      }
-
       .soft-button,
       .primary-button {
         min-height: 36px;
@@ -2605,22 +2905,6 @@ class BrunoSalaSubview extends HTMLElement {
         background: var(--bruno-liquid-control-blue-background, rgba(24,134,190,0.42));
         border-color: var(--bruno-liquid-control-blue-border, rgba(96,190,255,0.50));
         box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.18));
-      }
-
-      .curtain-progress {
-        display: none;
-        grid-column: 1 / -1;
-        height: 7px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.16);
-      }
-
-      .curtain-progress span {
-        display: block;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, rgba(255,255,255,0.94), rgba(126,204,255,0.78));
       }
 
       .status-rail {
@@ -3938,12 +4222,23 @@ class BrunoSalaSubview extends HTMLElement {
           grid-template-columns: 1fr;
         }
 
-        .curtain-actions {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .curtain-control-row {
+          grid-template-columns: 1fr;
+          align-items: stretch;
+          gap: 10px;
         }
 
-        .curtain-pill {
-          grid-column: 1 / -1;
+        .curtain-status {
+          justify-self: start;
+        }
+
+        .curtain-main-actions {
+          justify-content: stretch;
+        }
+
+        .curtain-action-button {
+          flex: 1 1 0;
+          min-width: 0;
         }
 
         .side-panel {
@@ -4126,15 +4421,11 @@ class BrunoSalaSubview extends HTMLElement {
 
       .curtain-dock {
         width: min(520px, 100%);
-        gap: 8px;
+        gap: 12px;
       }
 
-      .curtain-actions {
-        grid-template-columns: repeat(4, minmax(70px, 1fr)) minmax(112px, auto);
-      }
-
-      .preset-button {
-        min-height: 46px;
+      .curtain-action-button {
+        min-width: 78px;
       }
 
       .status-rail {
@@ -5113,12 +5404,22 @@ class BrunoSalaSubview extends HTMLElement {
           flex: 1 1 0;
         }
 
-        .curtain-actions {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .curtain-control-row {
+          grid-template-columns: 1fr;
+          gap: 10px;
         }
 
-        .curtain-pill {
-          grid-column: 1 / -1;
+        .curtain-status {
+          justify-self: start;
+        }
+
+        .curtain-main-actions {
+          justify-content: stretch;
+        }
+
+        .curtain-action-button {
+          flex: 1 1 0;
+          min-width: 0;
         }
 
         .ac-visual {

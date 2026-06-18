@@ -14,7 +14,7 @@ frontend:
   extra_module_url:
     - /local/bento-sidebar-card.js?v=20260520-1
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260618-sala-curtain-control-1
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260618-sala-curtain-control-2
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260612-nav-absolute-1
     - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260612-bedroom-subviews-nav-1
     - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260612-bedroom-subviews-nav-1

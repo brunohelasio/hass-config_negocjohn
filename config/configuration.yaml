@@ -14,7 +14,7 @@ frontend:
   extra_module_url:
     - /local/bento-sidebar-card.js?v=20260520-1
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260618-sala-curtain-control-2
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260619-sala-curtain-calibrated-1
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260612-nav-absolute-1
     - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260612-bedroom-subviews-nav-1
     - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260612-bedroom-subviews-nav-1
@@ -35,7 +35,7 @@ frontend:
     - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-3
     - /local/bruno-ui/cards/bruno-hero-stage-card.js?v=20260603-hero-stage-2
     - /local/bruno-ui/cards/bruno-hero-card.js?v=20260607-main-camera-strip-4
-    - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260520-1
+    - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260619-curtain-badge-1
     - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260607-quick-labels-1
     - /local/bruno-ui/cards/bruno-media-card.js?v=20260518-5
     - /local/bruno-ui/cards/bruno-mobile-card-frame.js?v=20260518-1

@@ -1,4 +1,16 @@
 const BRUNO_SALA_SUBVIEW_TAG = 'bruno-sala-subview';
+const BRUNO_SALA_CURTAIN_CALIBRATION = [
+  { visual: 0, position: 0 },
+  { visual: 25, position: 33 },
+  { visual: 50, position: 65 },
+  { visual: 75, position: 98 },
+  { visual: 100, position: 100 },
+];
+const BRUNO_SALA_CURTAIN_PRESETS = [
+  { label: 25, position: 33 },
+  { label: 50, position: 65 },
+  { label: 75, position: 98 },
+];
 
 const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   title: 'Sala',
@@ -31,6 +43,7 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   ],
   entities: {
     curtain: 'cover.cortina_varanda_cortina_2',
+    curtain_percent_control: 'number.cortina_varanda_percent_control',
     active_sensor: 'sensor.living_room_active',
     temperature: ['sensor.sl_sensor_temp_humid_temperatura', 'sensor.sensor_4_in_1_sala_temperature'],
     humidity: ['sensor.sl_sensor_temp_humid_umidade', 'sensor.sensor_4_in_1_sala_humidity'],
@@ -246,6 +259,55 @@ class BrunoSalaSubview extends HTMLElement {
     return !entity || BRUNO_SALA_SUBVIEW_UNAVAILABLE_STATES.includes(String(entity.state || '').toLowerCase());
   }
 
+  _toCurtainPercent(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    return Math.max(0, Math.min(100, Math.round(number)));
+  }
+
+  _curtainOpenPositionFromState(entity, percentEntity, state) {
+    const percentControl = this._isUnavailable(percentEntity) ? null : this._toCurtainPercent(percentEntity?.state);
+    if (percentControl != null) return 100 - percentControl;
+
+    const coverPosition = this._toCurtainPercent(entity?.attributes?.current_position);
+    if (coverPosition != null) return coverPosition;
+
+    if (state === 'open') return 100;
+    if (state === 'closed') return 0;
+    return 0;
+  }
+
+  _interpolateCurtainPercent(value, fromKey, toKey) {
+    const percent = this._toCurtainPercent(value) ?? 0;
+    const points = BRUNO_SALA_CURTAIN_CALIBRATION;
+
+    if (percent <= points[0][fromKey]) return points[0][toKey];
+    for (let index = 1; index < points.length; index += 1) {
+      const previous = points[index - 1];
+      const next = points[index];
+      if (percent <= next[fromKey]) {
+        const span = next[fromKey] - previous[fromKey];
+        if (span === 0) return next[toKey];
+        const ratio = (percent - previous[fromKey]) / span;
+        return this._toCurtainPercent(previous[toKey] + ((next[toKey] - previous[toKey]) * ratio)) ?? next[toKey];
+      }
+    }
+
+    return points[points.length - 1][toKey];
+  }
+
+  _curtainDisplayOpenPosition(openPosition) {
+    return this._interpolateCurtainPercent(openPosition, 'position', 'visual');
+  }
+
+  _curtainCommandOpenPosition(displayPosition) {
+    return this._interpolateCurtainPercent(displayPosition, 'visual', 'position');
+  }
+
+  _curtainClosedVisualPosition(openPosition) {
+    return 100 - this._curtainDisplayOpenPosition(openPosition);
+  }
+
   _safeState(entityId, fallback = '--') {
     const entity = this._state(entityId);
     if (this._isUnavailable(entity)) return fallback;
@@ -301,28 +363,20 @@ class BrunoSalaSubview extends HTMLElement {
 
   _curtainPosition() {
     const value = this._curtainModel().position;
-    const number = Number(value);
-    if (!Number.isFinite(number)) return 0;
-    return Math.max(0, Math.min(100, Math.round(number)));
+    return this._toCurtainPercent(value) ?? 0;
   }
 
   _curtainModel() {
     const entityId = this._config.entities.curtain;
     const entity = this._state(entityId);
+    const percentEntityId = this._config.entities.curtain_percent_control;
+    const percentEntity = this._state(percentEntityId);
     const configured = Boolean(entityId);
     const unavailable = configured && Boolean(this._hass) && this._isUnavailable(entity);
     const state = String(entity?.state || (configured ? 'unknown' : 'unavailable')).toLowerCase();
-    const attrs = entity?.attributes || {};
-    const rawPosition = Number(attrs.current_position);
-    let position = Number.isFinite(rawPosition) ? rawPosition : null;
-
-    if (position == null) {
-      if (state === 'open') position = 100;
-      else if (state === 'closed') position = 0;
-      else position = 0;
-    }
-
-    const safePosition = Math.max(0, Math.min(100, Math.round(position)));
+    const safePosition = this._curtainOpenPositionFromState(entity, percentEntity, state);
+    const displayPosition = this._curtainDisplayOpenPosition(safePosition);
+    const visualPosition = this._curtainClosedVisualPosition(safePosition);
     let status = 'Posicao';
     if (!configured || unavailable) status = 'Indisponivel';
     else if (state === 'opening') status = 'Abrindo';
@@ -338,6 +392,8 @@ class BrunoSalaSubview extends HTMLElement {
       available: configured && !unavailable,
       moving: state === 'opening' || state === 'closing',
       position: safePosition,
+      displayPosition,
+      visualPosition,
       status,
     };
   }
@@ -628,8 +684,8 @@ class BrunoSalaSubview extends HTMLElement {
 
   _setCurtainPosition(position) {
     if (!this._config.entities.curtain) return;
-    const value = Math.max(0, Math.min(100, Math.round(Number(position))));
-    if (!Number.isFinite(value)) return;
+    const value = this._toCurtainPercent(position);
+    if (value == null) return;
     this._callService('cover.set_cover_position', {
       entity_id: this._config.entities.curtain,
       position: value,
@@ -1057,7 +1113,8 @@ class BrunoSalaSubview extends HTMLElement {
     const value = Number(target.value);
     if (!Number.isFinite(value)) return;
     if (target.dataset.action === 'curtain-target') {
-      this._setCurtainPosition(value);
+      const visualOpen = 100 - (this._toCurtainPercent(value) ?? 0);
+      this._setCurtainPosition(this._curtainCommandOpenPosition(visualOpen));
       return;
     }
     if (target.dataset.action === 'spotify-volume') {
@@ -1089,15 +1146,17 @@ class BrunoSalaSubview extends HTMLElement {
   _handleLiveInput(event) {
     const target = event.target;
     if (!target?.matches?.('[data-action="curtain-target"]')) return;
-    const value = Math.max(0, Math.min(100, Math.round(Number(target.value))));
-    if (!Number.isFinite(value)) return;
+    const value = this._toCurtainPercent(target.value);
+    if (value == null) return;
+    const displayOpen = 100 - value;
+    const commandOpen = this._curtainCommandOpenPosition(displayOpen);
     const root = target.closest('.curtain-dock');
     root?.style.setProperty('--curtain-position', `${value}%`);
-    root?.querySelector('.curtain-status-percent')?.replaceChildren(document.createTextNode(`- ${value}%`));
-    const status = value <= 3 ? 'Fechada' : (value >= 97 ? 'Aberta' : 'Posicao');
+    root?.querySelector('.curtain-status-percent')?.replaceChildren(document.createTextNode(`- ${displayOpen}%`));
+    const status = displayOpen <= 3 ? 'Fechada' : 'Aberta';
     root?.querySelector('.curtain-status-text')?.replaceChildren(document.createTextNode(status));
     root?.querySelectorAll('.curtain-chip').forEach((chip) => {
-      chip.classList.toggle('is-active', Number(chip.dataset.position) === value);
+      chip.classList.toggle('is-active', Math.abs(Number(chip.dataset.position) - commandOpen) <= 1);
     });
   }
 
@@ -1172,15 +1231,17 @@ class BrunoSalaSubview extends HTMLElement {
     const fallbackBackground = BrunoSalaSubview._escapeAttr(this._config.fallback_background || this._config.background);
     const curtain = model.curtain || this._curtainModel();
     const curtainPosition = Number.isFinite(Number(curtain.position)) ? Number(curtain.position) : 0;
+    const curtainDisplayPosition = Number.isFinite(Number(curtain.displayPosition)) ? Number(curtain.displayPosition) : curtainPosition;
+    const curtainVisualPosition = Number.isFinite(Number(curtain.visualPosition)) ? Number(curtain.visualPosition) : this._curtainClosedVisualPosition(curtainPosition);
     const curtainDisabled = curtain.available ? '' : 'disabled';
-    const curtainChips = [25, 50, 75].map((position) => `
+    const curtainChips = BRUNO_SALA_CURTAIN_PRESETS.map((preset) => `
       <button
         type="button"
-        class="curtain-chip${curtainPosition === position ? ' is-active' : ''}"
+        class="curtain-chip${Math.abs(curtainPosition - preset.position) <= 1 ? ' is-active' : ''}"
         data-action="cover-position"
-        data-position="${position}"
+        data-position="${preset.position}"
         ${curtainDisabled}
-      >${position}%</button>
+      >${preset.label}%</button>
     `).join('');
 
     return `
@@ -1206,7 +1267,7 @@ class BrunoSalaSubview extends HTMLElement {
             </button>
           </div>
 
-          <div class="curtain-dock${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainPosition}%;">
+          <div class="curtain-dock${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
             <div class="curtain-control-row">
               <div class="curtain-identity">
                 <span class="curtain-icon-shell">${BrunoSalaSubview._curtainSvg('main')}</span>
@@ -1214,7 +1275,7 @@ class BrunoSalaSubview extends HTMLElement {
               </div>
               <div class="curtain-status" aria-live="polite">
                 <span class="curtain-status-text">${BrunoSalaSubview._escape(curtain.status)}</span>
-                <span class="curtain-status-percent">- ${curtainPosition}%</span>
+                <span class="curtain-status-percent">- ${curtainDisplayPosition}%</span>
               </div>
               <div class="curtain-main-actions">
                 <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
@@ -1236,9 +1297,9 @@ class BrunoSalaSubview extends HTMLElement {
                 min="0"
                 max="100"
                 step="1"
-                value="${curtainPosition}"
+                value="${curtainVisualPosition}"
                 data-action="curtain-target"
-                aria-label="Posicao da cortina"
+                aria-label="Fechamento da cortina"
                 ${curtainDisabled}
               >
               <div class="curtain-chips">

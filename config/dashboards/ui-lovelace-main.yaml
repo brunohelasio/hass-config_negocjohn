@@ -2,15 +2,17 @@ button_card_templates: !include_dir_merge_named ./templates/button_card_template
 streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 
 resources:
-  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260619-sala-curtain-calibrated-1
+  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260620-dashboard-refinements-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260617-room-spotify-local-1
+  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260620-dashboard-refinements-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260617-room-spotify-local-1
+  - url: /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260620-dashboard-refinements-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260617-room-spotify-local-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260620-dashboard-refinements-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260615-bedroom-subviews-1
+  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260620-dashboard-refinements-1
+    type: module
+  - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1
     type: module
 
 kiosk_mode:
@@ -54,6 +56,14 @@ views:
   - !include subviews/floor-plan.yaml
   - !include subviews/sala_subview.yaml
   - !include subviews/office_subview.yaml
+  - title: Cozinha
+    path: subview-cozinha
+    icon: mdi:countertop
+    subview: true
+    type: panel
+    theme: tablet
+    cards:
+      - type: custom:bruno-cozinha-subview
   - title: Q. Casal
     path: subview-quarto-casal
     icon: mdi:bed-king

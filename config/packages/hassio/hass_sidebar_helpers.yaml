@@ -14,6 +14,7 @@ input_select:
     options:
       - none
       - lights
+      - curtains
       - media
       - climate
       - security

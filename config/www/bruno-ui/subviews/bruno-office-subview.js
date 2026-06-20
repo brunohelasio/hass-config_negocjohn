@@ -1093,6 +1093,14 @@ class BrunoOfficeSubview extends HTMLElement {
     if (!target?.matches?.('[data-action]')) return;
     const value = Number(target.value);
     if (!Number.isFinite(value)) return;
+    if (target.dataset.action === 'curtain-target') {
+      if (!this._config.entities.curtain) return;
+      this._callService('cover.set_cover_position', {
+        entity_id: this._config.entities.curtain,
+        position: Math.max(0, Math.min(100, Math.round(100 - value))),
+      });
+      return;
+    }
     if (target.dataset.action === 'spotify-volume') {
       if (!this._spotifyModel().active) return;
       this._callService('media_player.volume_set', {
@@ -1183,6 +1191,12 @@ class BrunoOfficeSubview extends HTMLElement {
     const subtitle = BrunoOfficeSubview._escape(this._config.subtitle);
     const background = BrunoOfficeSubview._escapeAttr(this._config.background);
     const fallbackBackground = BrunoOfficeSubview._escapeAttr(this._config.fallback_background || this._config.background);
+    const curtainConfigured = Boolean(this._config.entities.curtain);
+    const curtainPosition = Math.max(0, Math.min(100, Number(model.curtainPosition) || 0));
+    const curtainVisualPosition = curtainConfigured ? 100 - curtainPosition : 0;
+    const curtainDisabled = curtainConfigured ? '' : 'disabled';
+    const curtainStatus = curtainConfigured ? (curtainPosition <= 3 ? 'Fechada' : 'Aberta') : 'Sem cortina';
+    const curtainPercent = curtainConfigured ? `- ${curtainPosition}%` : '- --';
 
     return `
       <div class="hero-stage">
@@ -1212,31 +1226,36 @@ class BrunoOfficeSubview extends HTMLElement {
                ate uma cortina ser mapeada. Decisao do usuario em 2026-06-12.
                ANTERIOR (rollback): 4o botao "Automatica" (is-primary, mdi:home-automation)
                e pill "Automatica - X%". -->
-          <div class="curtain-dock">
-            <div class="curtain-copy">
-              <span class="module-icon"><ha-icon icon="mdi:curtains"></ha-icon></span>
-              <div>
-                <div class="module-title">Cortinas</div>
-                <div class="module-subtitle">Controle</div>
+          <div class="curtain-dock${curtainConfigured ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
+            <div class="curtain-control-row">
+              <div class="curtain-identity">
+                <span class="curtain-icon-shell">${BrunoOfficeSubview._curtainSvg('main')}</span>
+                <span class="curtain-title">Cortina</span>
+              </div>
+              <div class="curtain-status" aria-live="polite">
+                <span class="curtain-status-text">${BrunoOfficeSubview._escape(curtainStatus)}</span>
+                <span class="curtain-status-percent">${BrunoOfficeSubview._escape(curtainPercent)}</span>
+              </div>
+              <div class="curtain-main-actions">
+                <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
+                  ${BrunoOfficeSubview._curtainSvg('open')}<span>Abrir</span>
+                </button>
+                <button type="button" class="curtain-action-button is-muted" data-action="cover-stop" ${curtainDisabled}>
+                  ${BrunoOfficeSubview._curtainSvg('stop')}<span>Parar</span>
+                </button>
+                <button type="button" class="curtain-action-button" data-action="cover-close" ${curtainDisabled}>
+                  ${BrunoOfficeSubview._curtainSvg('close')}<span>Fechar</span>
+                </button>
               </div>
             </div>
-            <div class="curtain-actions">
-              <button type="button" class="preset-button" data-action="cover-open">
-                <ha-icon icon="mdi:curtains"></ha-icon><span>Aberta</span>
-              </button>
-              <button type="button" class="preset-button" data-action="cover-position" data-position="50">
-                <ha-icon icon="mdi:curtains"></ha-icon><span>Semiaberta</span>
-              </button>
-              <button type="button" class="preset-button" data-action="cover-close">
-                <ha-icon icon="mdi:curtains-closed"></ha-icon><span>Fechada</span>
-              </button>
-              <button type="button" class="preset-button" data-action="cover-stop">
-                <ha-icon icon="mdi:pause"></ha-icon><span>Parar</span>
-              </button>
-              <span class="curtain-pill">Posicao - ${model.curtainPosition}%</span>
-            </div>
-            <div class="curtain-progress">
-              <span style="width:${model.curtainPosition}%"></span>
+            <div class="curtain-slider-zone">
+              <div class="curtain-slider-glow" aria-hidden="true"></div>
+              <input class="curtain-range" type="range" min="0" max="100" step="1" value="${curtainVisualPosition}" data-action="curtain-target" aria-label="Fechamento da cortina" ${curtainDisabled}>
+              <div class="curtain-chips">
+                <button type="button" class="curtain-chip" data-action="cover-position" data-position="25" ${curtainDisabled}>25%</button>
+                <button type="button" class="curtain-chip" data-action="cover-position" data-position="50" ${curtainDisabled}>50%</button>
+                <button type="button" class="curtain-chip" data-action="cover-position" data-position="75" ${curtainDisabled}>75%</button>
+              </div>
             </div>
           </div>
         </div>
@@ -3041,6 +3060,194 @@ class BrunoOfficeSubview extends HTMLElement {
         height: 100%;
         border-radius: inherit;
         background: linear-gradient(90deg, rgba(255,255,255,0.94), rgba(126,204,255,0.78));
+      }
+
+      .curtain-dock {
+        width: min(520px, 100%);
+        grid-template-rows: auto auto;
+        gap: 11px;
+        --curtain-gold: rgb(242,194,102);
+      }
+
+      .curtain-dock.is-disabled {
+        opacity: 0.72;
+      }
+
+      .curtain-control-row {
+        display: grid;
+        grid-template-columns: minmax(116px, auto) minmax(86px, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .curtain-identity {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .curtain-icon-shell {
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.17), rgba(255,255,255,0.04) 56%, rgba(0,0,0,0.18)),
+          rgba(18,20,21,0.52);
+        border: 1px solid rgba(255,255,255,0.16);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+      }
+
+      .curtain-title {
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        color: rgba(255,255,255,0.96);
+        white-space: nowrap;
+      }
+
+      .curtain-status {
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .curtain-status-text { color: var(--curtain-gold); }
+      .curtain-status-percent { color: rgba(255,255,255,0.78); }
+
+      .curtain-main-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        min-width: 0;
+      }
+
+      .curtain-action-button {
+        width: 78px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 9px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
+        background: var(--bruno-liquid-control-background,
+          linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025)),
+          rgba(22,23,24,0.50)
+        );
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 18px rgba(0,0,0,0.22));
+        color: rgba(255,255,255,0.88);
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .curtain-action-button:disabled,
+      .curtain-chip:disabled,
+      .curtain-range:disabled {
+        opacity: 0.46;
+        cursor: not-allowed;
+      }
+
+      .curtain-svg {
+        display: block;
+        width: 19px;
+        height: 19px;
+        fill: rgba(255,255,255,0.70);
+        stroke: rgba(255,255,255,0.58);
+        stroke-width: 2.1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: 0 0 auto;
+      }
+
+      .curtain-icon-shell .curtain-svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .curtain-slider-zone {
+        position: relative;
+        display: grid;
+        gap: 0;
+        min-width: 0;
+      }
+
+      .curtain-slider-glow {
+        position: absolute;
+        left: 0;
+        top: -4px;
+        width: var(--curtain-position);
+        height: 14px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(242,194,102,0.24), rgba(242,194,102,0.05));
+        filter: blur(10px);
+        pointer-events: none;
+      }
+
+      .curtain-range {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 4px;
+        margin: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: linear-gradient(90deg, var(--curtain-gold) 0 var(--curtain-position), rgba(242,194,102,0.45) var(--curtain-position), rgba(255,255,255,0.10) var(--curtain-position) 100%);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.34);
+        accent-color: var(--curtain-gold);
+      }
+
+      .curtain-range::-webkit-slider-runnable-track {
+        height: 4px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .curtain-range::-webkit-slider-thumb {
+        width: 18px;
+        height: 18px;
+        margin-top: -7px;
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.34);
+        background:
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
+        box-shadow: 0 0 9px rgba(242,194,102,0.34), 0 2px 8px rgba(0,0,0,0.44);
+      }
+
+      .curtain-chips {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        justify-content: center;
+      }
+
+      .curtain-chip {
+        flex: 1 1 0;
+        min-height: 31px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.052);
+        color: rgba(255,255,255,0.48);
+        font-size: 12px;
+        font-weight: 700;
       }
 
       .status-rail {
@@ -6132,6 +6339,35 @@ class BrunoOfficeSubview extends HTMLElement {
     };
 
     return `<span class="tpl-light-icon icon-${name}${active ? ' is-on' : ''}">${glow}${icons[name] || icons.light_flush}</span>`;
+  }
+
+  static _curtainSvg(type = 'main') {
+    const pathSets = {
+      main: `
+        <path d="M9 7h30"></path>
+        <path d="M14 10v27c4.5-2.8 6.8-7.3 6.8-13.5S18.5 12.8 14 10Z"></path>
+        <path d="M34 10v27c-4.5-2.8-6.8-7.3-6.8-13.5S29.5 12.8 34 10Z"></path>
+        <path d="M24 10v29"></path>
+      `,
+      open: `
+        <path d="M8 8h32"></path>
+        <path d="M14 11v26c5-3 7.5-7.4 7.5-13.2S19 14 14 11Z"></path>
+        <path d="M34 11v26c-5-3-7.5-7.4-7.5-13.2S29 14 34 11Z"></path>
+        <path d="M24 13v23"></path>
+      `,
+      close: `
+        <path d="M8 8h32"></path>
+        <path d="M19 11v26c-4.2-2.5-6.4-6.8-6.4-13S14.8 13.6 19 11Z"></path>
+        <path d="M29 11v26c4.2-2.5 6.4-6.8 6.4-13S33.2 13.6 29 11Z"></path>
+        <path d="M23.7 11v27M24.3 11v27"></path>
+      `,
+      stop: `
+        <rect x="14" y="13" width="8" height="22" rx="1.5"></rect>
+        <rect x="26" y="13" width="8" height="22" rx="1.5"></rect>
+      `,
+    };
+    const safeType = pathSets[type] ? type : 'main';
+    return `<svg class="curtain-svg is-${safeType}" viewBox="0 0 48 48" aria-hidden="true">${pathSets[safeType]}</svg>`;
   }
 
   static _resolvePicture(src) {

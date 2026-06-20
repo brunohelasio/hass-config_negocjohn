@@ -2,8 +2,8 @@ const BRUNO_TOP_BADGES_CARD_TAG = 'bruno-top-badges-card';
 const BRUNO_TOP_BADGES_CURTAIN_CALIBRATION = [
   { visual: 0, position: 0 },
   { visual: 25, position: 33 },
-  { visual: 50, position: 65 },
-  { visual: 75, position: 98 },
+  { visual: 50, position: 47 },
+  { visual: 75, position: 70 },
   { visual: 100, position: 100 },
 ];
 
@@ -279,21 +279,17 @@ class BrunoTopBadgesCard extends HTMLElement {
         icon: displayPosition != null && displayPosition <= 3 ? 'mdi:curtains-closed' : 'mdi:curtains',
         title: item.title || this._entityName(entityId),
         sub: displayPosition == null ? 'indisponivel' : `${displayPosition}% aberta`,
-        active: available && (state === 'opening' || state === 'closing' || displayPosition < 97),
+        active: available && (state === 'opening' || state === 'closing'),
       };
     });
-    const active = chips.filter((chip) => chip.active);
-    const sub = chips.length === 1
-      ? chips[0].sub
-      : (active.length ? `${active.length} ajustada${active.length > 1 ? 's' : ''}` : 'Todas abertas');
 
     return {
       key: 'curtains',
       title: 'Cortinas',
-      sub,
+      sub: '',
       icon: 'mdi:curtains',
       tone: 'amber',
-      active: active.length > 0,
+      active: false,
       chips,
     };
   }
@@ -729,7 +725,7 @@ class BrunoTopBadgesCard extends HTMLElement {
         <span class="badge-icon" aria-hidden="true"><ha-icon icon="${model.icon}"></ha-icon></span>
         <span class="badge-text">
           <span class="badge-title">${BrunoTopBadgesCard._escape(model.title)}</span>
-          <span class="badge-sub">${BrunoTopBadgesCard._escape(model.sub)}</span>
+          ${model.sub ? `<span class="badge-sub">${BrunoTopBadgesCard._escape(model.sub)}</span>` : ''}
         </span>
       </button>
     `;

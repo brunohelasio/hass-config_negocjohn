@@ -2,14 +2,14 @@ const BRUNO_SALA_SUBVIEW_TAG = 'bruno-sala-subview';
 const BRUNO_SALA_CURTAIN_CALIBRATION = [
   { visual: 0, position: 0 },
   { visual: 25, position: 33 },
-  { visual: 50, position: 65 },
-  { visual: 75, position: 98 },
+  { visual: 50, position: 47 },
+  { visual: 75, position: 70 },
   { visual: 100, position: 100 },
 ];
 const BRUNO_SALA_CURTAIN_PRESETS = [
   { label: 25, position: 33 },
-  { label: 50, position: 65 },
-  { label: 75, position: 98 },
+  { label: 50, position: 47 },
+  { label: 75, position: 70 },
 ];
 
 const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {

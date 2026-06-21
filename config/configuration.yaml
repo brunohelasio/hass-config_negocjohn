@@ -16,7 +16,7 @@ frontend:
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
     - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260621-sala-curtain-status-1
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260620-dashboard-refinements-1
-    - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260621-kitchen-office-structure-2
+    - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260621-kitchen-office-structure-3
     - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260620-dashboard-refinements-1
     - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260620-dashboard-refinements-1
     - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1

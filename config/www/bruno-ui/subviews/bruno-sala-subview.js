@@ -377,12 +377,10 @@ class BrunoSalaSubview extends HTMLElement {
     const safePosition = this._curtainOpenPositionFromState(entity, percentEntity, state);
     const displayPosition = this._curtainDisplayOpenPosition(safePosition);
     const visualPosition = this._curtainClosedVisualPosition(safePosition);
-    let status = 'Posicao';
+    let status = 'Aberta';
     if (!configured || unavailable) status = 'Indisponivel';
     else if (state === 'opening') status = 'Abrindo';
     else if (state === 'closing') status = 'Fechando';
-    else if (state === 'closed' || safePosition <= 3) status = 'Fechada';
-    else if (state === 'open' || safePosition >= 97) status = 'Aberta';
 
     return {
       entity,

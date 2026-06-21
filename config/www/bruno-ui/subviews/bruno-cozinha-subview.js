@@ -24,6 +24,7 @@ const BRUNO_COZINHA_SUBVIEW_DEFAULT_CONFIG = {
       { entity: 'light.cozinha_switch_2', name: 'Luz principal 1', icon_type: 'ledstrip', area: 'cozinha' },
       { entity: 'light.cozinha_switch_3', name: 'Luz principal 2', icon_type: 'ledstrip', area: 'cozinha' },
       { entity: 'light.cozinha_switch_1', name: 'Lavanderia', icon_type: 'pendant', area: 'lavanderia' },
+      { entity: '', name: 'Reserva', icon_type: 'pendant', area: 'cozinha', placeholder: true },
     ],
     dishwasher: 'switch.cz_tomada_maq_lav_louca_socket_1',
     washer: '',
@@ -328,36 +329,34 @@ class BrunoCozinhaSubview extends HTMLElement {
     const fallbackBackground = BrunoCozinhaSubview._escapeAttr(this._config.fallback_background || this._config.background);
 
     return `
-      <section class="hero-panel">
-        <div class="hero-stage">
-          <div class="hero-bg" style="--hero-image: url('${background}'); --hero-fallback-image: url('${fallbackBackground}');" aria-hidden="true"></div>
-          <div class="hero-content">
-            <div class="hero-top">
-              <button class="back-button" type="button" data-action="navigate" data-path="${BrunoCozinhaSubview._escapeAttr(this._config.navigation_path)}" aria-label="Voltar">
-                <ha-icon icon="mdi:arrow-left"></ha-icon>
-              </button>
-              <div>
-                <div class="hero-title">${title}</div>
-                <div class="hero-subtitle">${subtitle}</div>
-              </div>
-            </div>
-
-            <div class="hero-headline">
-              <p class="hero-date-line">${BrunoCozinhaSubview._escape(this._dateLine())}</p>
-              <div class="hero-clock" data-clock>${this._lastMinute}</div>
-              <button type="button" class="scene-pill" data-action="more-info" data-entity="${BrunoCozinhaSubview._escapeAttr(this._config.entities.active_sensor)}">
-                <ha-icon icon="mdi:silverware-fork-knife"></ha-icon>
-                <span>${BrunoCozinhaSubview._escape(this._sceneContextLabel())}</span>
-              </button>
-            </div>
-
-            <div class="hero-metrics">
-              <span><ha-icon icon="mdi:lightbulb-on-outline"></ha-icon>${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}</span>
-              <span><ha-icon icon="mdi:power-plug-outline"></ha-icon>${model.activeAppliances} ativos</span>
+      <div class="hero-stage">
+        <div class="hero-bg" style="--hero-image: url('${background}'); --hero-fallback-image: url('${fallbackBackground}');" aria-hidden="true"></div>
+        <div class="hero-content">
+          <div class="hero-top">
+            <button class="back-button" type="button" data-action="navigate" data-path="${BrunoCozinhaSubview._escapeAttr(this._config.navigation_path)}" aria-label="Voltar">
+              <ha-icon icon="mdi:arrow-left"></ha-icon>
+            </button>
+            <div>
+              <div class="hero-title">${title}</div>
+              <div class="hero-subtitle">${subtitle}</div>
             </div>
           </div>
+
+          <div class="hero-headline">
+            <p class="hero-date-line">${BrunoCozinhaSubview._escape(this._dateLine())}</p>
+            <div class="hero-clock" data-clock>${this._lastMinute}</div>
+            <button type="button" class="scene-pill" data-action="more-info" data-entity="${BrunoCozinhaSubview._escapeAttr(this._config.entities.active_sensor)}">
+              <ha-icon icon="mdi:silverware-fork-knife"></ha-icon>
+              <span>${BrunoCozinhaSubview._escape(this._sceneContextLabel())}</span>
+            </button>
+          </div>
+
+          <div class="hero-metrics">
+            <span><ha-icon icon="mdi:lightbulb-on-outline"></ha-icon>${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}</span>
+            <span><ha-icon icon="mdi:power-plug-outline"></ha-icon>${model.activeAppliances} ativos</span>
+          </div>
         </div>
-      </section>
+      </div>
     `;
   }
 
@@ -401,6 +400,7 @@ class BrunoCozinhaSubview extends HTMLElement {
       { icon: 'mdi:thermometer', value: 'Temperatura', label: this._temperatureLabel(), tone: 'amber' },
       { icon: 'mdi:dishwasher', value: 'Lava-loucas', label: model.dishwasher.label, tone: model.dishwasher.active ? 'blue' : 'neutral' },
       { icon: 'mdi:washing-machine', value: 'Lavadora', label: model.washer.status, tone: model.washer.active ? 'blue' : 'neutral' },
+      { icon: 'mdi:home-lightning-bolt-outline', value: 'Eletrodomesticos', label: `${model.activeAppliances} ativos`, tone: model.activeAppliances ? 'amber' : 'neutral' },
     ];
 
     return `
@@ -464,13 +464,7 @@ class BrunoCozinhaSubview extends HTMLElement {
     const disabled = !light.entity || light.placeholder;
 
     return `
-      <button
-        type="button"
-        class="light-tile${active ? ' is-on' : ''}${disabled ? ' is-disabled' : ''}"
-        data-action="toggle-light"
-        data-entity="${BrunoCozinhaSubview._escapeAttr(light.entity || '')}"
-        ${disabled ? 'disabled' : ''}
-      >
+      <button type="button" class="light-tile${active ? ' is-on' : ''}${disabled ? ' is-placeholder' : ''}" ${disabled ? 'disabled' : `data-action="toggle-light" data-entity="${BrunoCozinhaSubview._escapeAttr(light.entity)}"`}>
         <span class="light-icon">${BrunoCozinhaSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
         <strong>${BrunoCozinhaSubview._escape(light.name)}</strong>
         <small>${disabled ? 'Placeholder' : active ? 'Ligada' : 'Desligada'}</small>
@@ -615,10 +609,14 @@ class BrunoCozinhaSubview extends HTMLElement {
       <style>${this._styles()}</style>
       <main class="cozinha-subview">
         ${this._renderRoomSidebar()}
-        ${this._renderHero(model)}
+        <section class="hero-panel">
+          ${this._renderHero(model)}
+        </section>
         ${this._renderStatusRail(model)}
-        ${this._renderLights(model)}
-        ${this._renderWasher(model)}
+        <section class="right-control-grid">
+          ${this._renderLights(model)}
+          ${this._renderWasher(model)}
+        </section>
         ${this._renderApplianceHub(model)}
       </main>
     `;
@@ -631,17 +629,29 @@ class BrunoCozinhaSubview extends HTMLElement {
   _styles() {
     return `
       :host {
-        display: block;
-        min-height: 100vh;
-        font-family: "Inter", "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: rgba(255,255,255,0.92);
-        --accent: 242,194,102;
+        --office-gap: 10px;
+        --office-radius: var(--bruno-liquid-card-radius, 18px);
+        --office-radius-small: var(--bruno-liquid-card-radius-compact, 16px);
+        --office-cell-radius: var(--bruno-liquid-cell-radius, 16px);
+        --accent: var(--bruno-liquid-accent, 150, 190, 255);
         --accent-blue: 96,190,255;
+        --accent-amber: 255,183,77;
+        --text-main: rgba(245,250,255,0.96);
         --text-soft: rgba(255,255,255,0.58);
-        --card-radius: 22px;
+        --text-dim: rgba(255,255,255,0.42);
+        display: block;
+        width: 100%;
+        height: 100vh;
+        min-height: 100vh;
+        color: var(--text-main);
+        font-family: var(--primary-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+        overflow: hidden;
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+        letter-spacing: 0;
+      }
 
       button {
         font: inherit;
@@ -661,15 +671,12 @@ class BrunoCozinhaSubview extends HTMLElement {
       .cozinha-subview {
         --office-shell-height: min(734px, calc(100vh - 34px));
         --office-gap: 12px;
-        --kitchen-track-space: calc(var(--office-shell-height) - 64px - (2 * var(--office-gap)));
-        --kitchen-main-row: calc(var(--kitchen-track-space) * 0.554);
-        --kitchen-bottom-row: calc(var(--kitchen-track-space) * 0.446);
         width: 100%;
         min-height: 100vh;
         height: 100vh;
         display: grid;
-        grid-template-columns: 56px minmax(420px, 540px) minmax(340px, 1fr) minmax(292px, 0.55fr);
-        grid-template-rows: 64px minmax(320px, var(--kitchen-main-row)) minmax(250px, var(--kitchen-bottom-row));
+        grid-template-columns: 56px minmax(420px, 540px) minmax(0, 1fr) minmax(292px, 0.55fr);
+        grid-template-rows: 64px minmax(264px, 1fr) minmax(292px, 1fr);
         grid-template-areas:
           "frame-left hero status status"
           "frame-left hero lights washer"
@@ -691,6 +698,10 @@ class BrunoCozinhaSubview extends HTMLElement {
       .lights-card { grid-area: lights; }
       .washer-card { grid-area: washer; }
       .appliances-hub-card { grid-area: appliances; }
+
+      .right-control-grid {
+        display: contents;
+      }
 
       .hero-panel,
       .status-rail,
@@ -723,80 +734,258 @@ class BrunoCozinhaSubview extends HTMLElement {
         border: var(--bruno-liquid-rail-border, 1px solid rgba(255,255,255,0.11));
         box-shadow: var(--bruno-liquid-rail-shadow,
           inset 0 1px 0 rgba(255,255,255,0.18),
-          inset 0 -1px 0 rgba(255,255,255,0.035),
-          0 16px 34px rgba(0,0,0,0.36)
+          inset 0 -1px 0 rgba(255,255,255,0.045),
+          0 18px 40px rgba(0,0,0,0.36)
         );
-        backdrop-filter: blur(22px) saturate(1.45);
-        -webkit-backdrop-filter: blur(22px) saturate(1.45);
+        backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
+        -webkit-backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
+        overflow: hidden;
+      }
+
+      .room-sidebar::before {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        z-index: 0;
+        pointer-events: none;
+        border-radius: calc(999px - 1px);
+        background: var(--bruno-liquid-rail-sheen,
+          radial-gradient(34px 42px at 24% 3%, rgba(255,255,255,0.26), transparent 70%),
+          radial-gradient(42px 70px at 94% 18%, rgba(var(--accent),0.16), transparent 72%),
+          linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
+          linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%)
+        );
+        opacity: var(--bruno-liquid-rail-sheen-opacity, 0.78);
       }
 
       .room-nav-button {
+        position: relative;
+        z-index: 1;
         width: 40px;
         height: 40px;
-        display: grid;
-        place-items: center;
-        border-radius: 16px;
-        background: rgba(255,255,255,0.045);
-        color: rgba(214,226,238,0.78);
-        border: 1px solid rgba(255,255,255,0.08);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-        transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+        min-width: 40px;
+        min-height: 40px;
+        max-width: 40px;
+        max-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: rgba(255,255,255,0.70);
+        background: transparent;
+        transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
       }
 
       .room-nav-button svg {
-        width: 19px;
-        height: 19px;
+        width: 20px;
+        height: 20px;
+        display: block;
         fill: none;
         stroke: currentColor;
-        stroke-width: 1.8;
+        stroke-width: 1.55;
         stroke-linecap: round;
         stroke-linejoin: round;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.24));
+        pointer-events: none;
+      }
+
+      .room-nav-button::after {
+        content: "";
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        bottom: -5px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.13), transparent);
+        opacity: 0;
+      }
+
+      .room-nav-button.has-divider::after {
+        opacity: 1;
+      }
+
+      .room-nav-button:hover {
+        color: rgba(255,255,255,0.88);
+        background: rgba(255,255,255,0.075);
       }
 
       .room-nav-button.is-active {
-        color: rgb(var(--accent));
-        background:
-          radial-gradient(36px 36px at 50% 18%, rgba(var(--accent),0.22), transparent 70%),
-          rgba(var(--accent),0.10);
-        border-color: rgba(var(--accent),0.40);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 20px rgba(var(--accent),0.12);
+        color: white;
+        background: var(--bruno-liquid-selected-blue-background,
+          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 62%),
+          linear-gradient(180deg, rgba(105,150,230,0.68), rgba(59,92,178,0.54))
+        );
+        border: 1px solid var(--bruno-liquid-selected-blue-border, rgba(210,228,255,0.38));
+        box-shadow: var(--bruno-liquid-selected-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.32),
+          0 0 20px rgba(96,165,250,0.32)
+        );
       }
 
       .room-nav-button.has-divider {
         margin-bottom: 9px;
       }
 
+      .room-nav-button ha-icon {
+        --mdc-icon-size: 19px;
+      }
+
       .glass-card,
       .hero-stage {
         position: relative;
+        isolation: isolate;
+        min-width: 0;
+        min-height: 0;
         overflow: hidden;
-        border-radius: var(--card-radius);
-        border: 1px solid rgba(255,255,255,0.13);
-        background:
-          radial-gradient(210px 160px at 12% -10%, rgba(255,255,255,0.18), transparent 68%),
-          linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.038)),
-          rgba(12,15,22,0.56);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 18px 44px rgba(0,0,0,0.24);
-        backdrop-filter: blur(28px) saturate(1.36);
-        -webkit-backdrop-filter: blur(28px) saturate(1.36);
+        border-radius: var(--office-radius);
+        color: var(--text-main);
+        background: var(--bruno-liquid-surface-off-background,
+          radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.18), rgba(255,255,255,0.042) 44%, transparent 73%),
+          radial-gradient(150px 150px at 96% 92%, rgba(var(--accent),0.09), transparent 69%),
+          linear-gradient(180deg, rgba(255,255,255,0.118), rgba(255,255,255,0.034) 36%, rgba(255,255,255,0.056)),
+          linear-gradient(155deg, rgba(18,24,36,0.74), rgba(11,14,22,0.61) 49%, rgba(33,27,25,0.32))
+        );
+        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.68) contrast(1.06));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.68) contrast(1.06));
+        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.13));
+        box-shadow: var(--bruno-liquid-surface-off-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.18),
+          inset 1px 0 0 rgba(255,255,255,0.10),
+          inset -1px -1px 0 rgba(255,255,255,0.026),
+          0 18px 44px rgba(0,0,0,0.27),
+          0 0 24px rgba(110,150,210,0.055)
+        );
+      }
+
+      .glass-card::before,
+      .hero-stage::before {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        z-index: 0;
+        pointer-events: none;
+        border-radius: calc(var(--office-radius) - 1px);
+        background: var(--bruno-liquid-surface-off-sheen,
+          radial-gradient(78px 62px at 19% 2%, rgba(255,255,255,0.20), transparent 72%),
+          radial-gradient(82px 92px at 94% 18%, rgba(var(--accent),0.12), transparent 74%),
+          linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.00) 35%),
+          linear-gradient(90deg, rgba(255,255,255,0.085), rgba(255,255,255,0.00) 48%)
+        );
+        opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.74);
+      }
+
+      .glass-card > *,
+      .hero-stage > * {
+        position: relative;
+        z-index: 1;
       }
 
       .hero-stage {
+        isolation: isolate;
+        overflow: visible;
         width: 100%;
         height: 100%;
         min-height: 0;
+        border-radius: 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+
+      .hero-stage::before {
+        display: none;
       }
 
       .hero-bg {
         position: absolute;
+        pointer-events: none;
+        z-index: 0;
+        top: -18px;
+        bottom: -20px;
+        left: -16px;
+        right: -86px;
+        background:
+          linear-gradient(90deg,
+            rgba(4,10,18,0.82) 0%,
+            rgba(5,10,18,0.66) 12%,
+            rgba(6,12,20,0.42) 24%,
+            rgba(7,13,22,0.22) 38%,
+            rgba(7,13,22,0.10) 50%,
+            rgba(7,13,22,0.14) 60%,
+            rgba(7,13,22,0.30) 70%,
+            rgba(7,13,22,0.54) 82%,
+            rgba(7,13,22,0.80) 92%,
+            rgba(7,13,22,0.94) 100%
+          ),
+          linear-gradient(180deg,
+            rgba(4,8,14,0.78) 0%,
+            rgba(4,8,14,0.46) 10%,
+            rgba(4,8,14,0.18) 22%,
+            rgba(4,8,14,0.04) 34%,
+            rgba(4,8,14,0.00) 46%,
+            rgba(4,8,14,0.00) 58%,
+            rgba(4,8,14,0.10) 72%,
+            rgba(4,8,14,0.28) 84%,
+            rgba(4,8,14,0.56) 94%,
+            rgba(4,8,14,0.78) 100%
+          ),
+          radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
+          radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
+          var(--hero-image) left center / auto 100% no-repeat,
+          var(--hero-fallback-image) left center / auto 100% no-repeat;
+        opacity: 1;
+        filter: saturate(1.01) brightness(0.90);
+        mask-image:
+          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 78%, rgba(0,0,0,0.84) 88%, rgba(0,0,0,0.46) 94%, transparent 100%),
+          linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
+        -webkit-mask-image:
+          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 78%, rgba(0,0,0,0.84) 88%, rgba(0,0,0,0.46) 94%, transparent 100%),
+          linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
+        mask-composite: intersect;
+        -webkit-mask-composite: source-in;
+      }
+
+      .hero-bg::before,
+      .hero-bg::after {
+        content: "";
+        position: absolute;
         inset: 0;
-        background-image:
-          linear-gradient(90deg, rgba(4,7,12,0.74), rgba(4,7,12,0.32) 46%, rgba(4,7,12,0.18)),
-          var(--hero-image),
-          var(--hero-fallback-image);
-        background-size: cover;
-        background-position: center;
-        transform: scale(1.01);
+        pointer-events: none;
+      }
+
+      .hero-bg::before {
+        background:
+          linear-gradient(90deg,
+            rgba(4,10,18,0.72) 0%,
+            rgba(4,10,18,0.56) 12%,
+            rgba(5,10,18,0.34) 24%,
+            rgba(5,10,18,0.14) 38%,
+            rgba(5,10,18,0.02) 50%,
+            rgba(5,10,18,0.08) 60%,
+            rgba(5,10,18,0.22) 72%,
+            rgba(5,10,18,0.46) 84%,
+            rgba(5,10,18,0.74) 100%
+          ),
+          linear-gradient(180deg,
+            rgba(3,8,14,0.62) 0%,
+            rgba(3,8,14,0.34) 12%,
+            rgba(3,8,14,0.08) 26%,
+            rgba(3,8,14,0.00) 40%,
+            rgba(3,8,14,0.00) 62%,
+            rgba(3,8,14,0.10) 76%,
+            rgba(3,8,14,0.30) 90%,
+            rgba(3,8,14,0.60) 100%
+          );
+      }
+
+      .hero-bg::after {
+        background:
+          radial-gradient(720px 220px at 8% 2%, rgba(255,255,255,0.08), transparent 58%),
+          linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%),
+          linear-gradient(0deg, rgba(0,0,0,0.22), rgba(0,0,0,0.00) 34%);
+        opacity: 0.58;
       }
 
       .hero-content {
@@ -804,8 +993,10 @@ class BrunoCozinhaSubview extends HTMLElement {
         z-index: 1;
         height: 100%;
         display: grid;
-        grid-template-rows: auto 1fr auto;
-        padding: 18px;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        padding: 15px 18px 14px;
+        gap: 8px;
       }
 
       .hero-top {
@@ -815,108 +1006,127 @@ class BrunoCozinhaSubview extends HTMLElement {
       }
 
       .back-button {
-        width: 44px;
-        height: 44px;
-        display: grid;
-        place-items: center;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.22);
-        background: rgba(255,255,255,0.10);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.08));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
       }
 
-      .back-button ha-icon { --mdc-icon-size: 22px; }
+      .back-button ha-icon { --mdc-icon-size: 18px; }
 
       .hero-title,
       .module-title {
-        font-size: 14px;
-        line-height: 1;
-        font-weight: 850;
-        color: rgba(255,255,255,0.96);
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        color: var(--text-main);
+        white-space: nowrap;
       }
 
       .hero-subtitle,
       .module-subtitle {
         margin-top: 4px;
-        font-size: 10px;
+        font-size: 11px;
         line-height: 1;
-        font-weight: 700;
-        color: rgba(255,255,255,0.58);
+        font-weight: 600;
+        color: var(--text-soft);
       }
 
       .hero-headline {
-        align-self: center;
+        grid-column: 1;
+        grid-row: 2;
+        align-self: start;
+        justify-self: start;
         display: grid;
-        gap: 8px;
+        margin-top: 12px;
+        gap: 0;
         justify-items: start;
       }
 
       .hero-date-line {
-        margin: 0;
-        font-size: 11px;
-        font-weight: 850;
+        margin: 0 0 6px;
         color: rgba(255,255,255,0.54);
+        font-size: 11px;
+        line-height: 1;
+        font-weight: 700;
+        text-transform: uppercase;
       }
 
       .hero-clock {
-        font-size: 68px;
-        line-height: 0.94;
-        font-weight: 300;
-        color: rgba(255,255,255,0.98);
-      }
-
-      .scene-pill,
-      .hero-metrics span,
-      .chip-button {
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.14);
-        background: rgba(255,255,255,0.075);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-        backdrop-filter: blur(18px) saturate(1.24);
-        -webkit-backdrop-filter: blur(18px) saturate(1.24);
+        margin-top: 8px;
+        font-size: clamp(54px, 7.1vh, 74px);
+        line-height: 0.96;
+        font-weight: 220;
+        font-variant-numeric: tabular-nums;
+        color: rgba(255,255,255,0.95);
+        text-shadow: 0 10px 32px rgba(0,0,0,0.28);
       }
 
       .scene-pill {
+        width: fit-content;
+        max-width: min(250px, 100%);
         min-height: 30px;
+        margin-top: 12px;
         display: inline-flex;
         align-items: center;
         gap: 7px;
         padding: 0 12px;
-        color: rgba(255,255,255,0.86);
+        border-radius: 999px;
+        color: rgba(255,255,255,0.88);
         font-size: 11px;
         font-weight: 800;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 24px rgba(0,0,0,0.20);
       }
 
       .scene-pill ha-icon {
-        --mdc-icon-size: 16px;
-        color: rgb(var(--accent));
+        --mdc-icon-size: 15px;
+        color: rgb(255,205,95);
       }
 
       .hero-metrics {
+        grid-column: 1 / -1;
+        grid-row: 3;
         display: flex;
         gap: 8px;
         align-items: center;
       }
 
-      .hero-metrics span {
-        min-height: 30px;
+      .hero-metrics span,
+      .chip-button {
         display: inline-flex;
         align-items: center;
-        gap: 7px;
-        padding: 0 11px;
+        justify-content: center;
+        gap: 6px;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
         font-size: 11px;
-        font-weight: 780;
-        color: rgba(255,255,255,0.76);
+        font-weight: 850;
+        color: rgba(255,255,255,0.86);
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 24px rgba(0,0,0,0.20);
+        white-space: nowrap;
       }
 
       .hero-metrics ha-icon {
         --mdc-icon-size: 15px;
-        color: rgb(var(--accent));
+        color: rgb(255,205,95);
       }
 
       .status-rail {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        min-height: 64px;
         gap: 0;
         padding: 0;
       }
@@ -926,8 +1136,8 @@ class BrunoCozinhaSubview extends HTMLElement {
         grid-template-columns: auto minmax(0, 1fr);
         align-items: center;
         min-width: 0;
-        gap: 10px;
-        padding: 0 20px;
+        gap: 8px;
+        padding: 0 12px;
         border-right: 1px solid rgba(255,255,255,0.08);
       }
 
@@ -946,8 +1156,8 @@ class BrunoCozinhaSubview extends HTMLElement {
 
       .status-item span:not(.micro-icon) {
         display: block;
-        margin-top: 5px;
-        font-size: 11px;
+        margin-top: 4px;
+        font-size: 10px;
         line-height: 1;
         color: var(--text-soft);
       }
@@ -969,9 +1179,9 @@ class BrunoCozinhaSubview extends HTMLElement {
       }
 
       .micro-icon.tone-amber {
-        color: rgb(var(--accent));
-        background: rgba(var(--accent),0.10);
-        border-color: rgba(var(--accent),0.26);
+        color: rgb(255,183,77);
+        background: rgba(255,183,77,0.10);
+        border-color: rgba(255,183,77,0.22);
       }
 
       .micro-icon.tone-blue {
@@ -988,153 +1198,304 @@ class BrunoCozinhaSubview extends HTMLElement {
       .appliances-hub-card {
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
-        gap: 12px;
+        gap: 8px;
         padding: 14px;
       }
 
       .module-head {
+        position: relative;
+        z-index: 1;
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        min-height: 36px;
+        min-height: 34px;
+        margin-bottom: 8px;
+      }
+
+      .lights-card .module-head {
+        min-height: 40px;
+        align-items: start;
+        margin-bottom: 0;
       }
 
       .head-actions,
       .title-with-chip {
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 8px;
         min-width: 0;
       }
 
       .chip-button {
-        min-height: 32px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
+        min-width: 52px;
+      }
+
+      .head-actions .chip-button {
+        min-height: 34px;
         padding: 0 14px;
-        color: rgba(255,255,255,0.80);
-        font-size: 11px;
-        font-weight: 800;
-        white-space: nowrap;
       }
 
       .chip-button.is-active {
-        color: rgb(var(--accent));
-        background: rgba(var(--accent),0.13);
-        border-color: rgba(var(--accent),0.44);
+        background: rgba(24,134,190,0.36);
+        border-color: rgba(96,190,255,0.46);
       }
 
       .lights-body {
+        position: relative;
+        z-index: 1;
         min-width: 0;
         min-height: 0;
+        height: 100%;
         display: grid;
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1fr) 60px;
         gap: 10px;
       }
 
       .lights-single-grid {
         min-width: 0;
         min-height: 0;
+        height: 100%;
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 10px;
       }
 
       .light-tile {
+        position: relative;
         min-width: 0;
         min-height: 0;
         display: grid;
-        grid-template-rows: minmax(0, 1fr) auto auto auto;
-        justify-items: center;
+        grid-template-columns: 60px minmax(0, 1fr);
+        grid-template-rows: auto auto;
+        grid-template-areas:
+          "icon title"
+          "icon status";
         align-items: center;
-        gap: 5px;
-        padding: 16px 10px 13px;
-        border-radius: 18px;
-        border: 1px solid rgba(255,255,255,0.13);
-        background:
-          radial-gradient(150px 120px at 50% -6%, rgba(255,255,255,0.16), transparent 68%),
-          rgba(255,255,255,0.046);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        align-content: center;
+        column-gap: 11px;
+        padding: 11px 12px;
+        text-align: left;
+        border-radius: var(--office-cell-radius);
+        color: rgba(255,255,255,0.86);
+        background: var(--bruno-liquid-cell-background, rgba(255,255,255,0.055));
+        border: var(--bruno-liquid-cell-border, 1px solid rgba(255,255,255,0.11));
+        box-shadow: var(--bruno-liquid-cell-shadow, inset 0 1px 0 rgba(255,255,255,0.08));
+        transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
       }
 
       .light-tile.is-on {
-        border-color: rgba(var(--accent),0.44);
-        background:
-          radial-gradient(180px 120px at 50% 12%, rgba(var(--accent),0.24), transparent 70%),
-          rgba(var(--accent),0.055);
+        color: rgba(255,255,255,0.98);
+        background: var(--bruno-liquid-cell-active-warm-background,
+          radial-gradient(76px 48px at 18% 12%, rgba(255,255,255,0.28), transparent 72%),
+          radial-gradient(96px 58px at 94% 82%, rgba(255,183,77,0.24), transparent 72%),
+          linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.074)),
+          linear-gradient(180deg, rgba(255,183,77,0.10), rgba(255,183,77,0.03))
+        );
+        border-color: var(--bruno-liquid-cell-active-warm-border, rgba(255,205,95,0.44));
+        box-shadow: var(--bruno-liquid-cell-active-warm-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.22),
+          inset 1px 0 0 rgba(255,255,255,0.08),
+          inset 0 -1px 0 rgba(0,0,0,0.08),
+          0 0 20px rgba(255,183,77,0.17)
+        );
       }
 
-      .light-tile.is-disabled {
-        opacity: 0.48;
+      .light-tile.is-placeholder {
+        opacity: 0.58;
       }
 
       .light-icon {
-        width: 84px;
-        height: 74px;
+        grid-area: icon;
+        width: 52px;
+        height: 52px;
         display: grid;
         place-items: center;
+        justify-self: center;
+        --light-color: var(--state-icon-color, #9da0a2);
+        color: rgba(255,255,255,0.74);
       }
 
-      .light-tile strong,
-      .appliance-tile strong {
-        width: 100%;
+      .light-tile.is-on .light-icon {
+        --light-color: var(--state-icon-active-color, #f0c040);
+        color: rgb(255,210,86);
+        filter: drop-shadow(0 0 10px rgba(255,183,77,0.34));
+      }
+
+      .light-tile strong {
+        grid-area: title;
         min-width: 0;
-        text-align: center;
-        font-size: 14px;
-        line-height: 1.05;
+        font-size: 13px;
+        line-height: 1.1;
         font-weight: 850;
-        color: rgba(255,255,255,0.92);
+        color: rgba(255,255,255,0.88);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
-      .light-tile small,
-      .appliance-tile small {
-        width: 100%;
-        text-align: center;
+      .light-tile small {
+        grid-area: status;
         font-size: 11px;
         line-height: 1;
         font-weight: 800;
-        color: rgb(var(--accent));
+        color: rgb(255,205,95);
       }
 
       .lights-zone-rail {
+        position: relative;
+        min-height: 0;
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 8px;
-        min-height: 34px;
-        padding: 0 10px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.055);
-        border: 1px solid rgba(255,255,255,0.10);
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        justify-items: center;
+        gap: 10px;
+        padding: 9px 7px;
+        overflow: hidden;
+        border-radius: var(--office-cell-radius);
+        color: rgba(255,255,255,0.74);
+        background:
+          linear-gradient(145deg, rgba(255,255,255,0.072), rgba(255,255,255,0.026)),
+          rgba(8,14,26,0.50);
+        border: 1px solid rgba(255,224,160,0.13);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.13),
+          inset 0 -1px 0 rgba(255,200,100,0.045),
+          0 12px 26px rgba(0,0,0,0.20);
+        backdrop-filter: blur(22px) saturate(1.34);
+        -webkit-backdrop-filter: blur(22px) saturate(1.34);
+      }
+
+      .lights-zone-rail::before {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        pointer-events: none;
+        border-radius: calc(var(--office-cell-radius) - 1px);
+        background:
+          radial-gradient(52px 78px at 50% 20%, rgba(255,191,74,0.10), transparent 66%),
+          linear-gradient(135deg, rgba(255,255,255,0.11), transparent 34%, transparent 70%, rgba(255,188,65,0.05));
+        opacity: 0.88;
       }
 
       .rail-zone,
-      .rail-state {
+      .rail-state,
+      .rail-track {
+        position: relative;
+        z-index: 1;
+      }
+
+      .rail-zone {
         font-size: 10px;
-        font-weight: 850;
-        color: rgba(255,255,255,0.70);
+        line-height: 1;
+        font-weight: 900;
+        color: rgba(255,231,176,0.68);
+        text-shadow: 0 1px 2px rgba(0,0,0,0.34);
+      }
+
+      .rail-state {
+        min-width: 36px;
+        min-height: 21px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        color: rgba(255,205,95,0.95);
+        font-size: 11px;
+        font-weight: 900;
+        background: rgba(255,183,77,0.10);
+        border: 1px solid rgba(255,183,77,0.20);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.12),
+          0 0 calc(14px * var(--rail-glow, 0)) rgba(255,183,77,0.18);
+      }
+
+      .rail-state strong {
+        font-size: 11px;
+        color: rgba(255,235,177,0.98);
       }
 
       .rail-track {
         position: relative;
-        height: 5px;
+        width: 42px;
+        height: 100%;
+        min-height: 124px;
         overflow: hidden;
         border-radius: 999px;
-        background: rgba(255,255,255,0.12);
+        background:
+          linear-gradient(180deg, rgba(255,245,210,0.10), rgba(255,196,83,0.035)),
+          radial-gradient(circle at 50% 8%, rgba(255,255,255,0.16), transparent 30%),
+          rgba(8,15,28,0.72);
+        border: 1px solid rgba(255,222,152,0.30);
+        box-shadow:
+          inset 0 0 16px rgba(255,228,170,0.10),
+          inset 6px 0 14px rgba(255,255,255,0.035),
+          inset -8px 0 16px rgba(0,0,0,0.28),
+          0 0 calc(18px * var(--rail-glow, 0)) rgba(255,187,67,0.18),
+          0 0 calc(42px * var(--rail-glow, 0)) rgba(255,158,35,0.12);
       }
 
       .rail-fill {
         position: absolute;
-        inset: 0 auto 0 0;
-        width: var(--rail-fill);
+        left: 5px;
+        right: 5px;
+        bottom: 5px;
+        height: calc((100% - 10px) * var(--rail-fill-ratio, 0));
+        min-height: calc(24px * var(--rail-glow, 0));
         border-radius: inherit;
-        background: linear-gradient(90deg, rgba(var(--accent),0.70), rgba(255,232,180,0.95));
+        background:
+          radial-gradient(circle at 40% 12%, rgba(255,255,255,0.95), transparent 20%),
+          linear-gradient(180deg, #fff6c9 0%, #ffe18a 24%, #ffc247 58%, #ff9f1f 100%);
+        box-shadow:
+          0 0 calc(16px * var(--rail-glow, 0)) rgba(255,226,138,0.70),
+          0 0 calc(34px * var(--rail-glow, 0)) rgba(255,184,61,0.44),
+          0 0 calc(64px * var(--rail-glow, 0)) rgba(255,145,31,0.25);
+        opacity: var(--rail-glow, 0);
+      }
+
+      .rail-fill::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 6px;
+        right: 6px;
+        height: 32%;
+        border-radius: inherit;
+        background: linear-gradient(180deg, rgba(255,255,255,0.62), transparent);
+        opacity: 0.58;
+      }
+
+      .rail-fill::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(255,255,255,0.25), transparent 38%, rgba(255,255,255,0.18));
+        opacity: 0.70;
+        mix-blend-mode: screen;
+      }
+
+      .rail-ambient-glow {
+        position: absolute;
+        left: 50%;
+        bottom: 20px;
+        width: 86px;
+        height: var(--rail-ambient-height, 22px);
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: radial-gradient(ellipse at center, rgba(255,183,55,0.30), rgba(255,139,22,0.12), transparent 72%);
+        filter: blur(16px);
+        opacity: var(--rail-glow, 0);
+        pointer-events: none;
+      }
+
+      .rail-dimmer-ghost {
+        position: absolute;
+        inset: 7px;
+        border-radius: inherit;
+        border: 1px dashed rgba(255,255,255,0.12);
+        opacity: 0;
+        pointer-events: none;
       }
 
       .washer-card {
@@ -1318,6 +1679,28 @@ class BrunoCozinhaSubview extends HTMLElement {
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
       }
 
+      .appliance-tile strong {
+        width: 100%;
+        min-width: 0;
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.05;
+        font-weight: 850;
+        color: rgba(255,255,255,0.92);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .appliance-tile small {
+        width: 100%;
+        text-align: center;
+        font-size: 11px;
+        line-height: 1;
+        font-weight: 800;
+        color: rgb(255,205,95);
+      }
+
       .appliance-tile.is-on {
         border-color: rgba(var(--accent),0.46);
         background:
@@ -1363,29 +1746,31 @@ class BrunoCozinhaSubview extends HTMLElement {
 
       .tpl-light-icon {
         position: relative;
-        width: 72px;
-        height: 64px;
-        display: grid;
-        place-items: center;
-        color: rgba(194,202,209,0.62);
+        width: 100%;
+        height: 100%;
+        display: block;
+        color: var(--light-color, #9da0a2);
       }
 
       .tpl-light-icon svg {
+        position: relative;
+        z-index: 1;
         width: 100%;
         height: 100%;
-        filter: drop-shadow(0 7px 9px rgba(0,0,0,0.30));
+        display: block;
+        overflow: visible;
       }
 
       .tpl-light-icon .light-color {
-        fill: rgba(194,202,209,0.64);
+        fill: var(--light-color, #9da0a2);
       }
 
       .tpl-light-icon.is-on {
-        color: rgb(var(--accent));
+        color: rgb(255,210,86);
       }
 
       .tpl-light-icon.is-on .light-color {
-        fill: rgb(var(--accent));
+        fill: rgb(255,210,86);
       }
 
       .tpl-light-glow {

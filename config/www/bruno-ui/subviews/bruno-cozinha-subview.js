@@ -503,7 +503,7 @@ class BrunoCozinhaSubview extends HTMLElement {
 
     return `
       <section class="glass-card washer-card">
-        <div class="washer-head">
+        <div class="module-head washer-head ac-head">
           <div class="washer-title">
             <span class="micro-icon tone-neutral"><ha-icon icon="mdi:washing-machine"></ha-icon></span>
             <div>
@@ -511,7 +511,7 @@ class BrunoCozinhaSubview extends HTMLElement {
               <div class="module-state">${BrunoCozinhaSubview._escape(washer.status)}</div>
             </div>
           </div>
-          <button type="button" class="washer-power${washer.active ? ' is-on' : ''}" data-action="toggle-appliance" data-entity="${BrunoCozinhaSubview._escapeAttr(washer.entityId || '')}" ${disabled} aria-label="Ligar lavadora">
+          <button type="button" class="power-button washer-power${washer.active ? ' is-active' : ''}" data-action="toggle-appliance" data-entity="${BrunoCozinhaSubview._escapeAttr(washer.entityId || '')}" ${disabled} aria-label="Ligar lavadora">
             <ha-icon icon="mdi:power"></ha-icon>
           </button>
         </div>
@@ -609,15 +609,17 @@ class BrunoCozinhaSubview extends HTMLElement {
       <style>${this._styles()}</style>
       <main class="cozinha-subview">
         ${this._renderRoomSidebar()}
-        <section class="hero-panel">
-          ${this._renderHero(model)}
+        <section class="kitchen-shell">
+          <section class="hero-panel">
+            ${this._renderHero(model)}
+          </section>
+          ${this._renderStatusRail(model)}
+          <section class="right-control-grid">
+            ${this._renderLights(model)}
+            ${this._renderWasher(model)}
+          </section>
+          ${this._renderApplianceHub(model)}
         </section>
-        ${this._renderStatusRail(model)}
-        <section class="right-control-grid">
-          ${this._renderLights(model)}
-          ${this._renderWasher(model)}
-        </section>
-        ${this._renderApplianceHub(model)}
       </main>
     `;
 
@@ -675,12 +677,9 @@ class BrunoCozinhaSubview extends HTMLElement {
         min-height: 100vh;
         height: 100vh;
         display: grid;
-        grid-template-columns: 56px minmax(420px, 540px) minmax(0, 1fr) minmax(292px, 0.55fr);
-        grid-template-rows: 64px minmax(264px, 1fr) minmax(292px, 1fr);
-        grid-template-areas:
-          "frame-left hero status status"
-          "frame-left hero lights washer"
-          "frame-left appliances appliances washer";
+        grid-template-columns: 56px minmax(0, 1fr);
+        grid-template-rows: var(--office-shell-height);
+        grid-template-areas: "frame-left shell";
         align-content: center;
         align-items: stretch;
         gap: var(--office-gap);
@@ -693,6 +692,22 @@ class BrunoCozinhaSubview extends HTMLElement {
       }
 
       .room-sidebar { grid-area: frame-left; }
+
+      .kitchen-shell {
+        grid-area: shell;
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+        display: grid;
+        grid-template-columns: minmax(420px, 540px) minmax(0, 1fr) minmax(292px, 0.55fr);
+        grid-template-rows: 64px minmax(264px, 1fr) minmax(292px, 1fr);
+        grid-template-areas:
+          "hero status status"
+          "hero lights washer"
+          "appliances appliances washer";
+        gap: var(--office-gap);
+      }
+
       .hero-panel { grid-area: hero; }
       .status-rail { grid-area: status; }
       .lights-card { grid-area: lights; }
@@ -1501,8 +1516,8 @@ class BrunoCozinhaSubview extends HTMLElement {
       .washer-card {
         display: grid;
         grid-template-rows: auto minmax(0, 1fr) auto auto;
-        gap: 12px;
-        padding: 18px;
+        gap: 10px;
+        padding: 14px;
       }
 
       .washer-head,
@@ -1525,26 +1540,37 @@ class BrunoCozinhaSubview extends HTMLElement {
         color: rgb(36,220,128);
       }
 
-      .washer-power {
-        width: 48px;
-        height: 48px;
-        display: grid;
-        place-items: center;
-        border-radius: 50%;
-        color: rgba(255,255,255,0.88);
-        background:
-          radial-gradient(circle at 50% 16%, rgba(116,165,255,0.44), transparent 70%),
-          rgba(56,110,190,0.34);
-        border: 1px solid rgba(116,165,255,0.42);
-        box-shadow: 0 0 26px rgba(96,165,250,0.18), inset 0 1px 0 rgba(255,255,255,0.20);
+      .power-button {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        color: rgba(255,255,255,0.74);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.075));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.13));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.09));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+      }
+
+      .power-button.is-active {
+        color: white;
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
+          rgba(38,92,138,0.38)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,165,250,0.32));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+      }
+
+      .power-button ha-icon {
+        --mdc-icon-size: 18px;
       }
 
       .washer-power:disabled {
         opacity: 0.48;
-      }
-
-      .washer-power ha-icon {
-        --mdc-icon-size: 22px;
       }
 
       .washer-image {
@@ -1552,12 +1578,12 @@ class BrunoCozinhaSubview extends HTMLElement {
         min-height: 0;
         display: grid;
         place-items: center;
-        padding: 2px 12px 0;
+        padding: 0;
       }
 
       .washer-image img {
-        width: min(94%, 330px);
-        height: min(100%, 330px);
+        width: min(112%, 390px);
+        height: min(100%, 390px);
         object-fit: contain;
         filter: drop-shadow(0 22px 26px rgba(0,0,0,0.46));
       }
@@ -1577,14 +1603,14 @@ class BrunoCozinhaSubview extends HTMLElement {
       .washer-info-panel {
         display: grid;
         gap: 0;
-        padding: 10px 12px;
-        border-radius: 16px;
+        padding: 8px 12px;
+        border-radius: var(--office-radius-small);
         border: 1px solid rgba(255,255,255,0.10);
         background: rgba(255,255,255,0.045);
       }
 
       .washer-info-row {
-        min-height: 37px;
+        min-height: 34px;
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
@@ -1625,32 +1651,32 @@ class BrunoCozinhaSubview extends HTMLElement {
       .washer-actions {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 10px;
+        gap: 8px;
       }
 
       .washer-actions button {
-        min-height: 48px;
+        min-height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        border-radius: 18px;
-        border: 1px solid rgba(255,255,255,0.12);
-        background:
-          radial-gradient(90px 54px at 50% 0%, rgba(255,255,255,0.14), transparent 72%),
-          rgba(255,255,255,0.060);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.11);
-        color: rgba(255,255,255,0.82);
-        font-size: 12px;
-        font-weight: 820;
+        gap: 6px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.09));
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.050));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.06));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        color: rgba(255,255,255,0.74);
+        font-size: 11px;
+        font-weight: 800;
       }
 
       .washer-actions button:disabled {
-        opacity: 0.50;
+        opacity: 0.42;
       }
 
       .washer-actions ha-icon {
-        --mdc-icon-size: 18px;
+        --mdc-icon-size: 17px;
       }
 
       .appliances-grid {
@@ -1738,8 +1764,8 @@ class BrunoCozinhaSubview extends HTMLElement {
       }
 
       .appliance-image img {
-        max-width: 74%;
-        max-height: 112px;
+        max-width: 84%;
+        max-height: 152px;
         object-fit: contain;
         filter: drop-shadow(0 16px 18px rgba(0,0,0,0.44));
       }
@@ -1784,14 +1810,20 @@ class BrunoCozinhaSubview extends HTMLElement {
       @media (max-width: 1100px) {
         .cozinha-subview {
           grid-template-columns: 52px minmax(0, 1fr);
+          grid-template-rows: auto;
+          grid-template-areas: "frame-left shell";
+          overflow-y: auto;
+        }
+
+        .kitchen-shell {
+          grid-template-columns: minmax(0, 1fr);
           grid-template-rows: auto auto auto auto auto;
           grid-template-areas:
-            "frame-left hero"
-            "frame-left status"
-            "frame-left lights"
-            "frame-left washer"
-            "frame-left appliances";
-          overflow-y: auto;
+            "hero"
+            "status"
+            "lights"
+            "washer"
+            "appliances";
         }
 
         .status-rail,

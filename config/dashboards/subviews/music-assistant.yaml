@@ -1,9 +1,7 @@
 type: panel
 path: mass-media
-title: Musica
+title: Music Assistant
 icon: si:applemusic
-subview: true
-theme: tablet
 cards:
-  - type: custom:bruno-music-subview
-    ingress_url: /api/hassio_ingress/DxjwvCHHhrKMJQKVZKPsf-69nPQW-hrXk4iJ09PqKgQ/
+  - type: iframe
+    url: /api/hassio_ingress/DxjwvCHHhrKMJQKVZKPsf-69nPQW-hrXk4iJ09PqKgQ/

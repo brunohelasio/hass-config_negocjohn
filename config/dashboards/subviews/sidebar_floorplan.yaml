@@ -1,9 +1,0 @@
-title: Planta 3D
-path: sidebar-floorplan
-icon: mdi:floor-plan
-subview: true
-theme: tablet
-type: panel
-cards:
-  - type: custom:bruno-floorplan-subview
-

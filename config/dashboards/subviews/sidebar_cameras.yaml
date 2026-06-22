@@ -1,9 +1,0 @@
-title: Cameras
-path: sidebar-cameras
-icon: mdi:cctv
-subview: true
-theme: tablet
-type: panel
-cards:
-  - type: custom:bruno-cameras-subview
-

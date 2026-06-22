@@ -1,4 +1,4 @@
-const BRUNO_SIDEBAR_PANELS_VERSION = '20260622-sidebar-panels-1';
+const BRUNO_SIDEBAR_PANELS_VERSION = '20260622-sidebar-panels-2';
 const BRUNO_PANEL_INVALID_STATES = ['unknown', 'unavailable', 'none', 'null', ''];
 
 class BrunoSidebarPanelBase extends HTMLElement {

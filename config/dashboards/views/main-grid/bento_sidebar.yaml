@@ -9,13 +9,13 @@ top_items:
     icon: home
     label: Home
     active_paths:
-      - /lovelace
-      - /lovelace/bento-lab
       - /ngocjohn-main
       - /ngocjohn-main/bento-lab
+      - /lovelace
+      - /lovelace/bento-lab
     tap_action:
       action: navigate
-      navigation_path: /lovelace/bento-lab
+      navigation_path: /ngocjohn-main/bento-lab
 
   - key: music
     icon: music
@@ -25,7 +25,7 @@ top_items:
       - /ngocjohn-main/mass-media
     tap_action:
       action: navigate
-      navigation_path: /lovelace/mass-media
+      navigation_path: /ngocjohn-main/mass-media
 
   - key: cameras
     icon: cameras
@@ -36,7 +36,7 @@ top_items:
     divider_after: true
     tap_action:
       action: navigate
-      navigation_path: /lovelace/sidebar-cameras
+      navigation_path: /ngocjohn-main/sidebar-cameras
 
   - key: system
     icon: system
@@ -51,7 +51,7 @@ top_items:
       - /ngocjohn-main/sidebar-roborock
     tap_action:
       action: navigate
-      navigation_path: /lovelace/sidebar-roborock
+      navigation_path: /ngocjohn-main/sidebar-roborock
 
   - key: network
     icon: network
@@ -81,7 +81,7 @@ top_items:
     divider_after: true
     tap_action:
       action: navigate
-      navigation_path: /lovelace/sidebar-floorplan
+      navigation_path: /ngocjohn-main/sidebar-floorplan
 
 bottom_items:
   - key: power

@@ -1,0 +1,9 @@
+title: Roborock S7
+path: sidebar-roborock
+icon: mdi:robot-vacuum
+subview: true
+theme: tablet
+type: panel
+cards:
+  - type: custom:bruno-roborock-subview
+

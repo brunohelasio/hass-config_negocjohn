@@ -48,12 +48,27 @@ const BRUNO_QUARTO_MARINA_DEFAULT_CONFIG = {
     {
       "icon": "mdi:snowflake",
       "label": "Clima",
-      "tone": "cyan"
+      "tone": "cyan",
+      "entity": "climate.ac_quarto_marina",
+      "states": [
+        "cool",
+        "heat",
+        "fan_only",
+        "dry",
+        "heat_cool",
+        "auto"
+      ]
     },
     {
       "icon": "mdi:speaker-wireless",
       "label": "Midia",
-      "tone": "purple"
+      "tone": "purple",
+      "entity": "media_player.echo_pop_marina",
+      "states": [
+        "playing",
+        "paused",
+        "on"
+      ]
     }
   ]
 };
@@ -242,8 +257,8 @@ class BrunoQuartoMarinaCard extends HTMLElement {
 
   _dotModel(dot, roomOn) {
     const entity = this._state(dot.entity);
-    const states = this._array(dot.states).map((item) => String(item));
-    const activeFromEntity = entity && states.includes(String(entity.state));
+    const states = this._array(dot.states).map((item) => String(item).toLowerCase());
+    const activeFromEntity = entity && states.includes(String(entity.state || '').toLowerCase());
     const activeEntity = this._state(this._config.entities.active_sensor);
     const attrValue = dot.active_attr ? activeEntity?.attributes?.[dot.active_attr] : undefined;
     const active = Boolean(dot.active) || Boolean(activeFromEntity) || this._truthy(attrValue);
@@ -335,7 +350,7 @@ class BrunoQuartoMarinaCard extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = resolvedPath;
+    const eventPath = path.startsWith('/') ? resolvedPath : path;
     globalThis.BrunoLiquidGlass?.routeTransition?.();
     this.dispatchEvent(new CustomEvent('hass-navigate', {
       detail: { path: eventPath },

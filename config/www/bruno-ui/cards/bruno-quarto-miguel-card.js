@@ -48,7 +48,16 @@ const BRUNO_QUARTO_MIGUEL_DEFAULT_CONFIG = {
     {
       "icon": "mdi:snowflake",
       "label": "Clima",
-      "tone": "cyan"
+      "tone": "cyan",
+      "entity": "climate.ac_quarto_miguel",
+      "states": [
+        "cool",
+        "heat",
+        "fan_only",
+        "dry",
+        "heat_cool",
+        "auto"
+      ]
     },
     {
       "icon": "mdi:speaker-wireless",
@@ -242,8 +251,8 @@ class BrunoQuartoMiguelCard extends HTMLElement {
 
   _dotModel(dot, roomOn) {
     const entity = this._state(dot.entity);
-    const states = this._array(dot.states).map((item) => String(item));
-    const activeFromEntity = entity && states.includes(String(entity.state));
+    const states = this._array(dot.states).map((item) => String(item).toLowerCase());
+    const activeFromEntity = entity && states.includes(String(entity.state || '').toLowerCase());
     const activeEntity = this._state(this._config.entities.active_sensor);
     const attrValue = dot.active_attr ? activeEntity?.attributes?.[dot.active_attr] : undefined;
     const active = Boolean(dot.active) || Boolean(activeFromEntity) || this._truthy(attrValue);
@@ -335,7 +344,7 @@ class BrunoQuartoMiguelCard extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = resolvedPath;
+    const eventPath = path.startsWith('/') ? resolvedPath : path;
     globalThis.BrunoLiquidGlass?.routeTransition?.();
     this.dispatchEvent(new CustomEvent('hass-navigate', {
       detail: { path: eventPath },
@@ -721,7 +730,7 @@ class BrunoQuartoMiguelCard extends HTMLElement {
           padding: 14px 54px 13px 11px;
           --- FIM ORIGINAL --- */
           /* ORIGINAL grid-template-columns: 124px minmax(0, 1fr) 40px; */
-          grid-template-columns: 96px minmax(0, 1fr) 40px;
+          grid-template-columns: 112px minmax(0, 1fr) 40px;
           grid-template-rows: auto minmax(0, 1fr) auto auto;
           grid-template-areas:
             "icon space right"
@@ -776,8 +785,8 @@ class BrunoQuartoMiguelCard extends HTMLElement {
           align-self: start;
           position: relative;
           /* ORIGINAL: width: 120px; height: 80px; */
-          width: 92px;
-          height: 92px;
+          width: 120px;
+          height: 80px;
           margin-left: 0;
           margin-top: 1px;
         }
@@ -1112,7 +1121,7 @@ class BrunoQuartoMiguelCard extends HTMLElement {
 
           .room-icon {
             /* ORIGINAL: width: 108px; height: 72px; */
-            width: 80px;
+            width: 120px;
             height: 80px;
           }
         }

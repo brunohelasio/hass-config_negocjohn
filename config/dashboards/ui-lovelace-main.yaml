@@ -12,6 +12,10 @@ resources:
     type: module
   - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260612-bedroom-subviews-nav-1
     type: module
+  - url: /local/bruno-ui/subviews/bruno-sidebar-subviews.js?v=20260622-sidebar-subviews-1
+    type: module
+  - url: /local/bruno-ui/cards/bruno-sidebar-panels.js?v=20260622-sidebar-panels-1
+    type: module
 
 kiosk_mode:
   kiosk: true
@@ -51,6 +55,9 @@ views:
   - !include views/github-view.yaml
   - !include subviews/movie-panel.yaml
   - !include subviews/music-assistant.yaml
+  - !include subviews/sidebar_cameras.yaml
+  - !include subviews/sidebar_roborock.yaml
+  - !include subviews/sidebar_floorplan.yaml
   - !include subviews/floor-plan.yaml
   - !include subviews/sala_subview.yaml
   - !include subviews/office_subview.yaml

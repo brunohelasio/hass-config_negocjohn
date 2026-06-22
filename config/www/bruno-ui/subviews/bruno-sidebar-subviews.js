@@ -1,4 +1,4 @@
-const BRUNO_SIDEBAR_SUBVIEWS_VERSION = '20260622-sidebar-subviews-1';
+const BRUNO_SIDEBAR_SUBVIEWS_VERSION = '20260622-sidebar-subviews-2';
 
 const BRUNO_SIDEBAR_INVALID_STATES = ['unknown', 'unavailable', 'none', 'null', ''];
 const BRUNO_SIDEBAR_CAMERA_ONLINE_STATES = ['streaming', 'recording', 'idle', 'on'];
@@ -117,7 +117,7 @@ class BrunoSidebarBaseSubview extends HTMLElement {
     this._hass.callService(domain, service, payload, target);
   }
 
-  _navigate(path = '/lovelace/bento-lab') {
+  _navigate(path = '/ngocjohn-main/bento-lab') {
     globalThis.BrunoLiquidGlass?.routeTransition?.();
     this.dispatchEvent(new CustomEvent('hass-navigate', {
       detail: { path },
@@ -130,7 +130,7 @@ class BrunoSidebarBaseSubview extends HTMLElement {
     const current = window.location.pathname || '';
     if (current.startsWith('/ngocjohn-main')) return '/ngocjohn-main/bento-lab';
     if (current.startsWith('/lovelace')) return '/lovelace/bento-lab';
-    return '/lovelace/bento-lab';
+    return '/ngocjohn-main/bento-lab';
   }
 
   _wireShellActions() {

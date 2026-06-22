@@ -14,9 +14,9 @@ resources:
     type: module
   - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-sidebar-subviews.js?v=20260622-sidebar-subviews-1
+  - url: /local/bruno-ui/subviews/bruno-sidebar-subviews.js?v=20260622-sidebar-subviews-2
     type: module
-  - url: /local/bruno-ui/cards/bruno-sidebar-panels.js?v=20260622-sidebar-panels-1
+  - url: /local/bruno-ui/cards/bruno-sidebar-panels.js?v=20260622-sidebar-panels-2
     type: module
 
 kiosk_mode:

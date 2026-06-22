@@ -12,14 +12,15 @@ default_config:
 frontend:
   themes: !include_dir_merge_named themes
   extra_module_url:
-    - /local/bento-sidebar-card.js?v=20260622-sidebar-active-state-1
+    - /local/bento-sidebar-card.js?v=20260622-sidebar-active-state-2
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260612-nav-absolute-1
-    - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260612-nav-absolute-1
-    - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260612-bedroom-subviews-nav-1
-    - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260612-bedroom-subviews-nav-1
-    - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260612-bedroom-subviews-nav-1
-    - /local/bruno-ui/subviews/bruno-sidebar-subviews.js?v=20260622-sidebar-subviews-1
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260621-sala-curtain-status-1
+    - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260620-dashboard-refinements-1
+    - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260621-kitchen-office-structure-3
+    - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260620-dashboard-refinements-1
+    - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260620-dashboard-refinements-1
+    - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1
+    - /local/bruno-ui/subviews/bruno-sidebar-subviews.js?v=20260622-sidebar-subviews-2
     # ORIGINAL: - /local/bruno-ui/cards/bruno-sala-card.js?v=20260608-sala-command-list-1
     - /local/bruno-ui/cards/bruno-sala-card.js?v=20260611-sala-rail-office-parity-1
     # ORIGINAL: - /local/bruno-ui/cards/bruno-office-card.js?v=20260608-room-assets-uniform-1
@@ -31,8 +32,8 @@ frontend:
     - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260617-bedroom-status-icons-1
     - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260615-bedroom-status-icons-1
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260518-10
-    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260606-roborock-map-5
-    - /local/bruno-ui/cards/bruno-sidebar-panels.js?v=20260622-sidebar-panels-1
+    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260620-dashboard-refinements-1
+    - /local/bruno-ui/cards/bruno-sidebar-panels.js?v=20260622-sidebar-panels-2
     - /local/bruno-ui/cards/bruno-energy-card.js?v=20260518-4
     - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-3
     - /local/bruno-ui/cards/bruno-hero-stage-card.js?v=20260603-hero-stage-2

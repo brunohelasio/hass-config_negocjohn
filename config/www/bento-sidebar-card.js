@@ -656,15 +656,15 @@ BentoSidebarCard.defaultTopItems = [
     icon: 'home',
     label: 'Home',
     selected: true,
-    active_paths: ['/lovelace', '/lovelace/bento-lab', '/ngocjohn-main', '/ngocjohn-main/bento-lab'],
-    tap_action: { action: 'navigate', navigation_path: '/lovelace/bento-lab' },
+    active_paths: ['/ngocjohn-main', '/ngocjohn-main/bento-lab', '/lovelace', '/lovelace/bento-lab'],
+    tap_action: { action: 'navigate', navigation_path: '/ngocjohn-main/bento-lab' },
   },
   {
     key: 'music',
     icon: 'music',
     label: 'Musica',
-    active_paths: ['/lovelace/mass-media', '/ngocjohn-main/mass-media'],
-    tap_action: { action: 'navigate', navigation_path: '/lovelace/mass-media' },
+    active_paths: ['/ngocjohn-main/mass-media', '/lovelace/mass-media'],
+    tap_action: { action: 'navigate', navigation_path: '/ngocjohn-main/mass-media' },
   },
 ];
 

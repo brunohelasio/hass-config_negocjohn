@@ -8,35 +8,22 @@ top_items:
   - key: home
     icon: home
     label: Home
-    active_paths:
-      - /ngocjohn-main
-      - /ngocjohn-main/bento-lab
-      - /lovelace
-      - /lovelace/bento-lab
+    selected: true
     tap_action:
-      action: navigate
-      navigation_path: /ngocjohn-main/bento-lab
+      action: none
 
   - key: music
     icon: music
     label: Musica
-    active_paths:
-      - /lovelace/mass-media
-      - /ngocjohn-main/mass-media
     tap_action:
       action: navigate
-      navigation_path: /ngocjohn-main/mass-media
+      navigation_path: /lovelace/mass-media
 
   - key: cameras
     icon: cameras
     label: Cameras
-    active_paths:
-      - /lovelace/sidebar-cameras
-      - /ngocjohn-main/sidebar-cameras
     divider_after: true
-    tap_action:
-      action: navigate
-      navigation_path: /ngocjohn-main/sidebar-cameras
+    tap_action: !include ../../shared/popup/cameras_user.yaml
 
   - key: system
     icon: system
@@ -46,12 +33,7 @@ top_items:
   - key: vacuum
     icon: vacuum
     label: Aspirador
-    active_paths:
-      - /lovelace/sidebar-roborock
-      - /ngocjohn-main/sidebar-roborock
-    tap_action:
-      action: navigate
-      navigation_path: /ngocjohn-main/sidebar-roborock
+    tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
 
   - key: network
     icon: network
@@ -75,13 +57,8 @@ top_items:
   - key: floorplan
     icon: floorplan
     label: Planta 3D
-    active_paths:
-      - /lovelace/sidebar-floorplan
-      - /ngocjohn-main/sidebar-floorplan
     divider_after: true
-    tap_action:
-      action: navigate
-      navigation_path: /ngocjohn-main/sidebar-floorplan
+    tap_action: !include ../../shared/popup/planta_3d.yaml
 
 bottom_items:
   - key: power

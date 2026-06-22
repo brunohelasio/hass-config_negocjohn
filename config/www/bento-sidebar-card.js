@@ -8,17 +8,6 @@ class BentoSidebarCard extends HTMLElement {
     };
   }
 
-  constructor() {
-    super();
-    this._overlayActiveKey = '';
-    this._routeActiveKey = '';
-    this._dialogWatchTimer = null;
-    this._dialogWatchStartedAt = 0;
-    this._dialogWasSeen = false;
-    this._boundLocationChange = () => this._updateSelection();
-    this._boundDialogMaybeClosed = () => this._scheduleDialogClosedCheck();
-  }
-
   setConfig(config) {
     this._config = {
       top_items: BentoSidebarCard.defaultTopItems,
@@ -26,30 +15,10 @@ class BentoSidebarCard extends HTMLElement {
       ...config,
     };
     this._render();
-    this._updateSelection();
   }
 
   set hass(hass) {
     this._hass = hass;
-    this._updateSelection();
-  }
-
-  connectedCallback() {
-    window.addEventListener('location-changed', this._boundLocationChange);
-    window.addEventListener('popstate', this._boundLocationChange);
-    document.addEventListener('closed', this._boundDialogMaybeClosed, true);
-    document.addEventListener('dialog-closed', this._boundDialogMaybeClosed, true);
-    document.addEventListener('iron-overlay-closed', this._boundDialogMaybeClosed, true);
-    this._updateSelection();
-  }
-
-  disconnectedCallback() {
-    window.removeEventListener('location-changed', this._boundLocationChange);
-    window.removeEventListener('popstate', this._boundLocationChange);
-    document.removeEventListener('closed', this._boundDialogMaybeClosed, true);
-    document.removeEventListener('dialog-closed', this._boundDialogMaybeClosed, true);
-    document.removeEventListener('iron-overlay-closed', this._boundDialogMaybeClosed, true);
-    this._stopDialogWatch();
   }
 
   getCardSize() {
@@ -63,7 +32,6 @@ class BentoSidebarCard extends HTMLElement {
 
   _handleAction(item) {
     const action = item?.tap_action || item?.action || { action: 'none' };
-    const key = item?.key || '';
 
     switch (action.action) {
       case undefined:
@@ -71,10 +39,6 @@ class BentoSidebarCard extends HTMLElement {
         return;
 
       case 'navigate':
-        this._overlayActiveKey = '';
-        this._routeActiveKey = key;
-        this._updateButtons();
-        globalThis.BrunoLiquidGlass?.routeTransition?.();
         this._navigate(action.navigation_path || action.path);
         return;
 
@@ -83,7 +47,6 @@ class BentoSidebarCard extends HTMLElement {
         return;
 
       case 'call-service':
-        this._pulseKey(key);
         this._callService(action);
         return;
 
@@ -92,7 +55,6 @@ class BentoSidebarCard extends HTMLElement {
         return;
 
       case 'fire-dom-event':
-        if (this._isPopupAction(action)) this._setOverlayActive(key);
         this._fireDomEvent(action);
         return;
 
@@ -145,154 +107,10 @@ class BentoSidebarCard extends HTMLElement {
     }));
   }
 
-  _isPopupAction(action) {
-    const service = action?.browser_mod?.service || action?.browser_mod?.command || '';
-    return String(service).includes('browser_mod.popup') || String(service) === 'popup';
-  }
-
-  _setOverlayActive(key) {
-    if (!key) return;
-    this._overlayActiveKey = key;
-    this._updateButtons();
-    this._startDialogWatch();
-  }
-
-  _clearOverlayActive() {
-    if (!this._overlayActiveKey) return;
-    this._overlayActiveKey = '';
-    this._updateButtons();
-  }
-
-  _pulseKey(key) {
-    if (!key) return;
-    this._overlayActiveKey = key;
-    this._updateButtons();
-    window.setTimeout(() => {
-      if (this._overlayActiveKey !== key) return;
-      this._overlayActiveKey = '';
-      this._updateButtons();
-    }, 420);
-  }
-
-  _startDialogWatch() {
-    this._stopDialogWatch();
-    this._dialogWatchStartedAt = Date.now();
-    this._dialogWasSeen = false;
-    this._dialogWatchTimer = window.setInterval(() => this._watchDialogState(), 180);
-    window.setTimeout(() => this._watchDialogState(), 80);
-  }
-
-  _stopDialogWatch() {
-    if (!this._dialogWatchTimer) return;
-    window.clearInterval(this._dialogWatchTimer);
-    this._dialogWatchTimer = null;
-  }
-
-  _scheduleDialogClosedCheck() {
-    window.setTimeout(() => {
-      if (!this._hasOpenDialog()) this._clearOverlayActive();
-    }, 120);
-  }
-
-  _watchDialogState() {
-    const open = this._hasOpenDialog();
-    const elapsed = Date.now() - this._dialogWatchStartedAt;
-    if (open) {
-      this._dialogWasSeen = true;
-      return;
-    }
-
-    if ((this._dialogWasSeen && elapsed > 360) || elapsed > 2600) {
-      this._stopDialogWatch();
-      this._clearOverlayActive();
-    }
-  }
-
-  _hasOpenDialog() {
-    const selectors = [
-      'ha-dialog[open]',
-      'mwc-dialog[open]',
-      'dialog[open]',
-      '.mdc-dialog.mdc-dialog--open',
-      'ha-dialog .mdc-dialog--open',
-    ];
-    return selectors.some((selector) => document.querySelector(selector));
-  }
-
-  _allItems() {
-    return [...this._items('top_items'), ...this._items('bottom_items')];
-  }
-
-  _normalizePath(path) {
-    if (!path) return '';
-    const value = String(path);
-    if (value.startsWith('http')) return value;
-    return value.startsWith('/') ? value : `/${value}`;
-  }
-
-  _currentPath() {
-    return `${window.location.pathname || ''}${window.location.hash || ''}`;
-  }
-
-  _matchesPath(configuredPath, currentPath) {
-    const target = this._normalizePath(configuredPath);
-    if (!target) return false;
-    const current = this._normalizePath(currentPath);
-    if (current === target) return true;
-
-    const targetTail = target.split('/').filter(Boolean).pop();
-    const currentTail = current.split('/').filter(Boolean).pop();
-    return Boolean(targetTail && currentTail && targetTail === currentTail);
-  }
-
-  _routeKeyFromLocation() {
-    const currentPath = this._currentPath();
-    const items = this._allItems();
-
-    for (const item of items) {
-      const paths = [
-        ...(Array.isArray(item?.active_paths) ? item.active_paths : []),
-        item?.tap_action?.navigation_path,
-        item?.action?.navigation_path,
-      ].filter(Boolean);
-
-      if (paths.some((path) => this._matchesPath(path, currentPath))) {
-        return item.key || '';
-      }
-    }
-
-    const home = items.find((item) => item?.key === 'home' || item?.selected);
-    return home?.key || '';
-  }
-
-  _activeKey() {
-    if (this._overlayActiveKey) return this._overlayActiveKey;
-    return this._routeKeyFromLocation() || this._routeActiveKey || 'home';
-  }
-
-  _updateSelection() {
-    const nextKey = this._routeKeyFromLocation();
-    if (nextKey) this._routeActiveKey = nextKey;
-    this._updateButtons();
-  }
-
-  _updateButtons() {
-    if (!this.shadowRoot) return;
-    const activeKey = this._activeKey();
-    this.shadowRoot.querySelectorAll('.nav-button').forEach((button) => {
-      const isSelected = button.dataset.key === activeKey;
-      button.classList.toggle('selected', isSelected);
-      if (isSelected) button.setAttribute('aria-current', 'page');
-      else button.removeAttribute('aria-current');
-    });
-  }
-
   _render() {
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
-
-    const activeKey = this._activeKey();
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -592,11 +410,11 @@ class BentoSidebarCard extends HTMLElement {
       </style>
       <div class="rail" role="navigation" aria-label="Bento sidebar">
         <div class="group top">
-          ${this._items('top_items').map((item, index) => this._button(item, 'top', index, activeKey)).join('')}
+          ${this._items('top_items').map((item, index) => this._button(item, 'top', index)).join('')}
         </div>
         <div class="spacer" aria-hidden="true"></div>
         <div class="group bottom">
-          ${this._items('bottom_items').map((item, index) => this._button(item, 'bottom', index, activeKey)).join('')}
+          ${this._items('bottom_items').map((item, index) => this._button(item, 'bottom', index)).join('')}
         </div>
       </div>
     `;
@@ -613,15 +431,13 @@ class BentoSidebarCard extends HTMLElement {
     });
   }
 
-  _button(item, section, index, activeKey) {
-    const key = item?.key || '';
-    const selected = (activeKey ? key === activeKey : item?.selected) ? ' selected' : '';
+  _button(item, section, index) {
+    const selected = item?.selected ? ' selected' : '';
     const label = BentoSidebarCard._escape(item?.label || item?.key || item?.icon || 'Item');
     const icon = BentoSidebarCard.icons[item?.icon] || BentoSidebarCard.icons.circle;
     const action = item?.tap_action || item?.action || {};
     const disabled = action.action === 'none';
     const ariaDisabled = disabled ? ' aria-disabled="true" tabindex="-1"' : '';
-    const ariaCurrent = selected ? ' aria-current="page"' : '';
 
     return `
       <button
@@ -629,10 +445,8 @@ class BentoSidebarCard extends HTMLElement {
         type="button"
         title="${label}"
         aria-label="${label}"
-        data-key="${BentoSidebarCard._escape(key)}"
         data-section="${section}_items"
         data-index="${index}"
-        ${ariaCurrent}
         ${ariaDisabled}
       >
         ${icon}
@@ -651,21 +465,8 @@ class BentoSidebarCard extends HTMLElement {
 }
 
 BentoSidebarCard.defaultTopItems = [
-  {
-    key: 'home',
-    icon: 'home',
-    label: 'Home',
-    selected: true,
-    active_paths: ['/ngocjohn-main', '/ngocjohn-main/bento-lab', '/lovelace', '/lovelace/bento-lab'],
-    tap_action: { action: 'navigate', navigation_path: '/ngocjohn-main/bento-lab' },
-  },
-  {
-    key: 'music',
-    icon: 'music',
-    label: 'Musica',
-    active_paths: ['/ngocjohn-main/mass-media', '/lovelace/mass-media'],
-    tap_action: { action: 'navigate', navigation_path: '/ngocjohn-main/mass-media' },
-  },
+  { key: 'home', icon: 'home', label: 'Home', selected: true, tap_action: { action: 'none' } },
+  { key: 'music', icon: 'music', label: 'Musica', tap_action: { action: 'navigate', navigation_path: '/lovelace/mass-media' } },
 ];
 
 BentoSidebarCard.defaultBottomItems = [

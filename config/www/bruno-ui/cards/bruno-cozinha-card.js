@@ -2,6 +2,7 @@ const BRUNO_COZINHA_CARD_TAG = 'bruno-cozinha-card';
 
 const BRUNO_COZINHA_DEFAULT_CONFIG = {
   "name": "Cozinha",
+  "navigation_path": "subview-cozinha",
   "icon_size": 94,
   "room_on_states": [
     "on",
@@ -280,6 +281,10 @@ class BrunoCozinhaCard extends HTMLElement {
   _runRoomSubview() {
     const entities = this._config.entities;
     globalThis.BrunoLiquidGlass?.feedback?.('tap');
+    if (this._config.navigation_path) {
+      this._navigate(this._config.navigation_path);
+      return;
+    }
     this._runConfiguredAction(this._config.double_tap_action, entities.room_group);
   }
 

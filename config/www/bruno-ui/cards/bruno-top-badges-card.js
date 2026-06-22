@@ -1,4 +1,11 @@
 const BRUNO_TOP_BADGES_CARD_TAG = 'bruno-top-badges-card';
+const BRUNO_TOP_BADGES_CURTAIN_CALIBRATION = [
+  { visual: 0, position: 0 },
+  { visual: 25, position: 33 },
+  { visual: 50, position: 47 },
+  { visual: 75, position: 70 },
+  { visual: 100, position: 100 },
+];
 
 const BRUNO_TOP_BADGES_DEFAULT_ENTITIES = {
   expanded: 'input_select.hemma_expanded_row',
@@ -26,6 +33,13 @@ const BRUNO_TOP_BADGES_DEFAULT_ENTITIES = {
     'climate.sl_ar_condicionado',
     'climate.ac_office',
     'climate.ac_quarto_miguel',
+  ],
+  curtains: [
+    {
+      title: 'Sala',
+      entity: 'cover.cortina_varanda_cortina_2',
+      percent_control: 'number.cortina_varanda_percent_control',
+    },
   ],
 };
 
@@ -61,7 +75,12 @@ class BrunoTopBadgesCard extends HTMLElement {
     return entityId ? this._hass?.states?.[entityId] : undefined;
   }
 
+  _isUnavailable(entity) {
+    return !entity || BRUNO_TOP_BADGES_OFF_STATES.includes(String(entity.state || '').toLowerCase());
+  }
+
   _expanded() {
+    if (this._localExpanded && this._localExpanded !== 'none') return this._localExpanded;
     return this._state(this._config.entities.expanded)?.state || 'none';
   }
 
@@ -69,13 +88,54 @@ class BrunoTopBadgesCard extends HTMLElement {
     return this._state(entityId)?.attributes?.friendly_name || entityId;
   }
 
+  _toPercent(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    return Math.max(0, Math.min(100, Math.round(number)));
+  }
+
+  _interpolateCurtainPercent(value, fromKey, toKey) {
+    const percent = this._toPercent(value) ?? 0;
+    const points = BRUNO_TOP_BADGES_CURTAIN_CALIBRATION;
+
+    if (percent <= points[0][fromKey]) return points[0][toKey];
+    for (let index = 1; index < points.length; index += 1) {
+      const previous = points[index - 1];
+      const next = points[index];
+      if (percent <= next[fromKey]) {
+        const span = next[fromKey] - previous[fromKey];
+        if (span === 0) return next[toKey];
+        const ratio = (percent - previous[fromKey]) / span;
+        return this._toPercent(previous[toKey] + ((next[toKey] - previous[toKey]) * ratio)) ?? next[toKey];
+      }
+    }
+
+    return points[points.length - 1][toKey];
+  }
+
+  _curtainDisplayOpenPosition(openPosition) {
+    return this._interpolateCurtainPercent(openPosition, 'position', 'visual');
+  }
+
   _setExpanded(value) {
     const entityId = this._config.entities.expanded;
-    if (!entityId || !this._hass) return;
+    if (!entityId || !this._hass) {
+      this._localExpanded = this._localExpanded === value ? 'none' : value;
+      this._render();
+      return;
+    }
     const current = this._expanded();
+    const option = current === value ? 'none' : value;
+    const options = this._state(entityId)?.attributes?.options || [];
+    if (!options.includes(option)) {
+      this._localExpanded = option;
+      this._render();
+      return;
+    }
+    this._localExpanded = 'none';
     this._hass.callService('input_select', 'select_option', {
       entity_id: entityId,
-      option: current === value ? 'none' : value,
+      option,
     });
   }
 
@@ -187,9 +247,57 @@ class BrunoTopBadgesCard extends HTMLElement {
     };
   }
 
+  _curtainOpenPosition(item) {
+    const entityId = item.entity || item.cover;
+    const cover = this._state(entityId);
+    const state = String(cover?.state || '').toLowerCase();
+    const percentEntity = this._state(item.percent_control || item.percentControl);
+    const percentControl = this._isUnavailable(percentEntity) ? null : this._toPercent(percentEntity?.state);
+    if (percentControl != null) return 100 - percentControl;
+
+    const coverPosition = this._toPercent(cover?.attributes?.current_position);
+    if (coverPosition != null) return coverPosition;
+
+    if (state === 'open') return 100;
+    if (state === 'closed') return 0;
+    return 0;
+  }
+
+  _curtainsModel() {
+    const curtains = (this._config.entities.curtains || [])
+      .map((item) => (typeof item === 'string' ? { entity: item } : item))
+      .filter((item) => item?.entity || item?.cover);
+
+    const chips = curtains.map((item) => {
+      const entityId = item.entity || item.cover;
+      const cover = this._state(entityId);
+      const state = String(cover?.state || '').toLowerCase();
+      const available = !this._isUnavailable(cover);
+      const openPosition = available ? this._curtainOpenPosition(item) : null;
+      const displayPosition = openPosition == null ? null : this._curtainDisplayOpenPosition(openPosition);
+      return {
+        icon: displayPosition != null && displayPosition <= 3 ? 'mdi:curtains-closed' : 'mdi:curtains',
+        title: item.title || this._entityName(entityId),
+        sub: displayPosition == null ? 'indisponivel' : `${displayPosition}% aberta`,
+        active: available && (state === 'opening' || state === 'closing'),
+      };
+    });
+
+    return {
+      key: 'curtains',
+      title: 'Cortinas',
+      sub: '',
+      icon: 'mdi:curtains',
+      tone: 'amber',
+      active: false,
+      chips,
+    };
+  }
+
   _models() {
     return [
       this._securityModel(),
+      this._curtainsModel(),
       this._lightsModel(),
       this._mediaModel(),
       this._climateModel(),
@@ -617,7 +725,7 @@ class BrunoTopBadgesCard extends HTMLElement {
         <span class="badge-icon" aria-hidden="true"><ha-icon icon="${model.icon}"></ha-icon></span>
         <span class="badge-text">
           <span class="badge-title">${BrunoTopBadgesCard._escape(model.title)}</span>
-          <span class="badge-sub">${BrunoTopBadgesCard._escape(model.sub)}</span>
+          ${model.sub ? `<span class="badge-sub">${BrunoTopBadgesCard._escape(model.sub)}</span>` : ''}
         </span>
       </button>
     `;

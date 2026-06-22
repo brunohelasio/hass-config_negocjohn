@@ -1,4 +1,16 @@
 const BRUNO_SALA_SUBVIEW_TAG = 'bruno-sala-subview';
+const BRUNO_SALA_CURTAIN_CALIBRATION = [
+  { visual: 0, position: 0 },
+  { visual: 25, position: 33 },
+  { visual: 50, position: 47 },
+  { visual: 75, position: 70 },
+  { visual: 100, position: 100 },
+];
+const BRUNO_SALA_CURTAIN_PRESETS = [
+  { label: 25, position: 33 },
+  { label: 50, position: 47 },
+  { label: 75, position: 70 },
+];
 
 const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   title: 'Sala',
@@ -30,7 +42,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
     { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:bed-single-outline', path: 'subview-quarto-miguel' },
   ],
   entities: {
-    curtain: 'cover.cortina_sala',
+    curtain: 'cover.cortina_varanda_cortina_2',
+    curtain_percent_control: 'number.cortina_varanda_percent_control',
     active_sensor: 'sensor.living_room_active',
     temperature: ['sensor.sl_sensor_temp_humid_temperatura', 'sensor.sensor_4_in_1_sala_temperature'],
     humidity: ['sensor.sl_sensor_temp_humid_umidade', 'sensor.sensor_4_in_1_sala_humidity'],
@@ -54,14 +67,14 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
       // light.sala_2_switch_2 / light.sala_2_switch_3 /
       // light.varanda_switch_1 / light.varanda_switch_2 /
       // LED Fita TV / Luz Auxiliar.
-      { entity: 'light.sala_switch_2', name: 'SL Luz Principal', icon_type: 'light_flush', zone: 'sala' },
-      { entity: 'light.sala_switch_1', name: 'SL LED Esquerdo', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.sala_switch_3', name: 'SL LED Direito', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.sala_switch_2', name: 'Luz principal', icon_type: 'light_flush', zone: 'sala' },
+      { entity: 'light.sala_switch_1', name: 'LED esquerdo', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.sala_switch_3', name: 'LED direito', icon_type: 'ledstrip', zone: 'sala' },
       { entity: '', name: 'LED Fita TV', icon_type: 'ledstrip', placeholder: true, zone: 'sala' },
-      { entity: 'light.sala_2_switch_2', name: 'VR Luz Principal', icon_type: 'light_flush', zone: 'varanda' },
-      { entity: 'light.varanda_switch_2', name: 'Varanda Pendente', icon_type: 'pendant', zone: 'varanda' },
-      { entity: 'light.varanda_switch_1', name: 'Varanda Area Gourmet', icon_type: 'ledstrip', zone: 'varanda' },
-      { entity: 'light.sala_2_switch_3', name: 'Varanda Cristaleira', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.sala_2_switch_2', name: 'Luz principal', icon_type: 'light_flush', zone: 'varanda' },
+      { entity: 'light.varanda_switch_2', name: 'Pendente', icon_type: 'pendant', zone: 'varanda' },
+      { entity: 'light.varanda_switch_1', name: 'Area gourmet', icon_type: 'ledstrip', zone: 'varanda' },
+      { entity: 'light.sala_2_switch_3', name: 'Cristaleira', icon_type: 'ledstrip', zone: 'varanda' },
     ],
     cameras: [
       { entity: 'camera.sl_camera_2', name: 'Sala Principal', short_name: 'Sala' },
@@ -102,6 +115,7 @@ class BrunoSalaSubview extends HTMLElement {
     this._mediaTvAnimationState = undefined;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
+    this._boundLiveInputHandler = (event) => this._handleLiveInput(event);
   }
 
   setConfig(config) {
@@ -123,6 +137,9 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.shadowRoot?.removeEventListener('input', this._boundLiveInputHandler);
+    this.shadowRoot?.removeEventListener('change', this._boundInputHandler);
+    this.shadowRoot?.removeEventListener('click', this._boundActionHandler);
     this._stopRefreshTimer();
     this._stopClockTimer();
   }
@@ -242,6 +259,55 @@ class BrunoSalaSubview extends HTMLElement {
     return !entity || BRUNO_SALA_SUBVIEW_UNAVAILABLE_STATES.includes(String(entity.state || '').toLowerCase());
   }
 
+  _toCurtainPercent(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    return Math.max(0, Math.min(100, Math.round(number)));
+  }
+
+  _curtainOpenPositionFromState(entity, percentEntity, state) {
+    const percentControl = this._isUnavailable(percentEntity) ? null : this._toCurtainPercent(percentEntity?.state);
+    if (percentControl != null) return 100 - percentControl;
+
+    const coverPosition = this._toCurtainPercent(entity?.attributes?.current_position);
+    if (coverPosition != null) return coverPosition;
+
+    if (state === 'open') return 100;
+    if (state === 'closed') return 0;
+    return 0;
+  }
+
+  _interpolateCurtainPercent(value, fromKey, toKey) {
+    const percent = this._toCurtainPercent(value) ?? 0;
+    const points = BRUNO_SALA_CURTAIN_CALIBRATION;
+
+    if (percent <= points[0][fromKey]) return points[0][toKey];
+    for (let index = 1; index < points.length; index += 1) {
+      const previous = points[index - 1];
+      const next = points[index];
+      if (percent <= next[fromKey]) {
+        const span = next[fromKey] - previous[fromKey];
+        if (span === 0) return next[toKey];
+        const ratio = (percent - previous[fromKey]) / span;
+        return this._toCurtainPercent(previous[toKey] + ((next[toKey] - previous[toKey]) * ratio)) ?? next[toKey];
+      }
+    }
+
+    return points[points.length - 1][toKey];
+  }
+
+  _curtainDisplayOpenPosition(openPosition) {
+    return this._interpolateCurtainPercent(openPosition, 'position', 'visual');
+  }
+
+  _curtainCommandOpenPosition(displayPosition) {
+    return this._interpolateCurtainPercent(displayPosition, 'visual', 'position');
+  }
+
+  _curtainClosedVisualPosition(openPosition) {
+    return 100 - this._curtainDisplayOpenPosition(openPosition);
+  }
+
   _safeState(entityId, fallback = '--') {
     const entity = this._state(entityId);
     if (this._isUnavailable(entity)) return fallback;
@@ -296,10 +362,38 @@ class BrunoSalaSubview extends HTMLElement {
   }
 
   _curtainPosition() {
-    const value = this._state(this._config.entities.curtain)?.attributes?.current_position;
-    const number = Number(value);
-    if (!Number.isFinite(number)) return 0;
-    return Math.max(0, Math.min(100, Math.round(number)));
+    const value = this._curtainModel().position;
+    return this._toCurtainPercent(value) ?? 0;
+  }
+
+  _curtainModel() {
+    const entityId = this._config.entities.curtain;
+    const entity = this._state(entityId);
+    const percentEntityId = this._config.entities.curtain_percent_control;
+    const percentEntity = this._state(percentEntityId);
+    const configured = Boolean(entityId);
+    const unavailable = configured && Boolean(this._hass) && this._isUnavailable(entity);
+    const state = String(entity?.state || (configured ? 'unknown' : 'unavailable')).toLowerCase();
+    const safePosition = this._curtainOpenPositionFromState(entity, percentEntity, state);
+    const displayPosition = this._curtainDisplayOpenPosition(safePosition);
+    const visualPosition = this._curtainClosedVisualPosition(safePosition);
+    let status = 'Aberta';
+    if (!configured || unavailable) status = 'Indisponivel';
+    else if (state === 'opening') status = 'Abrindo';
+    else if (state === 'closing') status = 'Fechando';
+
+    return {
+      entity,
+      entityId,
+      state,
+      configured,
+      available: configured && !unavailable,
+      moving: state === 'opening' || state === 'closing',
+      position: safePosition,
+      displayPosition,
+      visualPosition,
+      status,
+    };
   }
 
   _activeLightsCount() {
@@ -406,22 +500,76 @@ class BrunoSalaSubview extends HTMLElement {
     };
   }
 
+  _normalizeMediaDevice(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  _spotifySourceMatchesRoom(attrs = {}) {
+    const expected = this._normalizeMediaDevice(this._config.spotify_device_name);
+    if (!expected) return true;
+    return [
+      attrs.source,
+      attrs.source_name,
+      attrs.device_name,
+      attrs.active_device_name,
+      attrs.spotify_device_name,
+      attrs.media_player,
+      attrs.media_player_name,
+    ].some((value) => {
+      const normalized = this._normalizeMediaDevice(value);
+      return normalized && (
+        normalized === expected
+        || normalized.includes(expected)
+        || (normalized.length >= 10 && expected.includes(normalized))
+      );
+    });
+  }
+
+  _spotifySpeakerMatchesRoom(spotifyAttrs = {}) {
+    const speaker = this._state(this._config.entities.speaker);
+    const speakerState = String(speaker?.state || '').toLowerCase();
+    if (!['playing', 'paused'].includes(speakerState)) return false;
+    const attrs = speaker.attributes || {};
+    const speakerApp = this._normalizeMediaDevice([
+      attrs.app_name,
+      attrs.source,
+      attrs.media_content_type,
+      attrs.media_channel,
+    ].join(' '));
+    if (speakerApp.includes('spotify')) return true;
+    const speakerTitle = this._normalizeMediaDevice(attrs.media_title);
+    const spotifyTitle = this._normalizeMediaDevice(spotifyAttrs.media_title);
+    if (speakerTitle && spotifyTitle && speakerTitle === spotifyTitle) return true;
+    const speakerArtist = this._normalizeMediaDevice(attrs.media_artist);
+    const spotifyArtist = this._normalizeMediaDevice(spotifyAttrs.media_artist);
+    return Boolean(speakerTitle && spotifyTitle && speakerTitle.includes(spotifyTitle) && speakerArtist && spotifyArtist && speakerArtist === spotifyArtist);
+  }
+
   _spotifyModel() {
     const entity = this._state(this._config.entities.spotify);
     const attrs = entity?.attributes || {};
     const state = entity?.state || 'off';
-    const active = BRUNO_SALA_SUBVIEW_MEDIA_ON_STATES.includes(state);
+    const globalActive = BRUNO_SALA_SUBVIEW_MEDIA_ON_STATES.includes(state);
+    const active = globalActive && (this._spotifySourceMatchesRoom(attrs) || this._spotifySpeakerMatchesRoom(attrs));
+    const roomSource = this._config.spotify_device_name || attrs.source || 'Echo Show';
     const rawTitle = attrs.media_title || 'SpotifyPlus';
     const title = /^SpotifyPlus\s+Bruno/i.test(rawTitle) ? 'SpotifyPlus' : rawTitle;
     return {
       entity,
-      state,
+      state: active ? state : 'off',
+      globalState: state,
+      globalActive,
       active,
-      playing: state === 'playing',
-      title,
-      subtitle: attrs.media_artist || attrs.media_album_name || '',
-      artwork: attrs.entity_picture || attrs.media_image_url || '',
-      source: attrs.source || this._config.spotify_device_name || 'Echo Show',
+      playing: active && state === 'playing',
+      title: active ? title : 'SpotifyPlus',
+      subtitle: active ? (attrs.media_artist || attrs.media_album_name || '') : '',
+      artwork: active ? (attrs.entity_picture || attrs.media_image_url || '') : '',
+      source: active ? (attrs.source || roomSource) : roomSource,
       volume: attrs.volume_level != null ? Math.round(Number(attrs.volume_level) * 100) : null,
     };
   }
@@ -529,6 +677,16 @@ class BrunoSalaSubview extends HTMLElement {
     this._callService('climate.set_temperature', {
       entity_id: this._config.entities.climate,
       temperature: Math.max(min, Math.min(max, value)),
+    });
+  }
+
+  _setCurtainPosition(position) {
+    if (!this._config.entities.curtain) return;
+    const value = this._toCurtainPercent(position);
+    if (value == null) return;
+    this._callService('cover.set_cover_position', {
+      entity_id: this._config.entities.curtain,
+      position: value,
     });
   }
 
@@ -757,9 +915,8 @@ class BrunoSalaSubview extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = resolvedPath;
     this.dispatchEvent(new CustomEvent('hass-navigate', {
-      detail: { path: eventPath },
+      detail: { path: resolvedPath },
       bubbles: true,
       composed: true,
     }));
@@ -830,10 +987,7 @@ class BrunoSalaSubview extends HTMLElement {
     if (action === 'cover-position') {
       const position = Number(target.dataset.position);
       if (Number.isFinite(position)) {
-        this._callService('cover.set_cover_position', {
-          entity_id: this._config.entities.curtain,
-          position,
-        });
+        this._setCurtainPosition(position);
       }
     }
     if (action === 'lights-on') this._callService('light.turn_on', { entity_id: this._config.entities.room_group });
@@ -890,6 +1044,7 @@ class BrunoSalaSubview extends HTMLElement {
       this._openSpotifyPlusPopup('full');
       return;
     }
+    if (['spotify-prev', 'spotify-next', 'spotify-play-pause', 'spotify-pause'].includes(action) && !this._spotifyModel().active) return;
     if (action === 'spotify-prev') this._callService('media_player.media_previous_track', { entity_id: this._config.entities.spotify });
     if (action === 'spotify-next') this._callService('media_player.media_next_track', { entity_id: this._config.entities.spotify });
     if (action === 'spotify-play-pause') {
@@ -955,7 +1110,13 @@ class BrunoSalaSubview extends HTMLElement {
     if (!target?.matches?.('[data-action]')) return;
     const value = Number(target.value);
     if (!Number.isFinite(value)) return;
+    if (target.dataset.action === 'curtain-target') {
+      const visualOpen = 100 - (this._toCurtainPercent(value) ?? 0);
+      this._setCurtainPosition(this._curtainCommandOpenPosition(visualOpen));
+      return;
+    }
     if (target.dataset.action === 'spotify-volume') {
+      if (!this._spotifyModel().active) return;
       this._callService('media_player.volume_set', {
         entity_id: this._config.entities.spotify,
         volume_level: Math.max(0, Math.min(1, value / 100)),
@@ -980,6 +1141,23 @@ class BrunoSalaSubview extends HTMLElement {
     });
   }
 
+  _handleLiveInput(event) {
+    const target = event.target;
+    if (!target?.matches?.('[data-action="curtain-target"]')) return;
+    const value = this._toCurtainPercent(target.value);
+    if (value == null) return;
+    const displayOpen = 100 - value;
+    const commandOpen = this._curtainCommandOpenPosition(displayOpen);
+    const root = target.closest('.curtain-dock');
+    root?.style.setProperty('--curtain-position', `${value}%`);
+    root?.querySelector('.curtain-status-percent')?.replaceChildren(document.createTextNode(`- ${displayOpen}%`));
+    const status = displayOpen <= 3 ? 'Fechada' : 'Aberta';
+    root?.querySelector('.curtain-status-text')?.replaceChildren(document.createTextNode(status));
+    root?.querySelectorAll('.curtain-chip').forEach((chip) => {
+      chip.classList.toggle('is-active', Math.abs(Number(chip.dataset.position) - commandOpen) <= 1);
+    });
+  }
+
   _render() {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     globalThis.BrunoLiquidGlass?.apply?.();
@@ -987,7 +1165,7 @@ class BrunoSalaSubview extends HTMLElement {
     const model = {
       lights: this._activeLightsCount(),
       lightZones: this._activeLightsByZone(),
-      curtainPosition: this._curtainPosition(),
+      curtain: this._curtainModel(),
       cameras: this._camerasModel(),
       tv: this._tvModel(),
       spotify: this._spotifyModel(),
@@ -1021,8 +1199,10 @@ class BrunoSalaSubview extends HTMLElement {
 
     this.shadowRoot.removeEventListener('click', this._boundActionHandler);
     this.shadowRoot.removeEventListener('change', this._boundInputHandler);
+    this.shadowRoot.removeEventListener('input', this._boundLiveInputHandler);
     this.shadowRoot.addEventListener('click', this._boundActionHandler);
     this.shadowRoot.addEventListener('change', this._boundInputHandler);
+    this.shadowRoot.addEventListener('input', this._boundLiveInputHandler);
     this._bindImageFallbacks();
   }
 
@@ -1047,6 +1227,20 @@ class BrunoSalaSubview extends HTMLElement {
     const subtitle = BrunoSalaSubview._escape(this._config.subtitle);
     const background = BrunoSalaSubview._escapeAttr(this._config.background);
     const fallbackBackground = BrunoSalaSubview._escapeAttr(this._config.fallback_background || this._config.background);
+    const curtain = model.curtain || this._curtainModel();
+    const curtainPosition = Number.isFinite(Number(curtain.position)) ? Number(curtain.position) : 0;
+    const curtainDisplayPosition = Number.isFinite(Number(curtain.displayPosition)) ? Number(curtain.displayPosition) : curtainPosition;
+    const curtainVisualPosition = Number.isFinite(Number(curtain.visualPosition)) ? Number(curtain.visualPosition) : this._curtainClosedVisualPosition(curtainPosition);
+    const curtainDisabled = curtain.available ? '' : 'disabled';
+    const curtainChips = BRUNO_SALA_CURTAIN_PRESETS.map((preset) => `
+      <button
+        type="button"
+        class="curtain-chip${Math.abs(curtainPosition - preset.position) <= 1 ? ' is-active' : ''}"
+        data-action="cover-position"
+        data-position="${preset.position}"
+        ${curtainDisabled}
+      >${preset.label}%</button>
+    `).join('');
 
     return `
       <div class="hero-stage">
@@ -1071,35 +1265,81 @@ class BrunoSalaSubview extends HTMLElement {
             </button>
           </div>
 
-          <div class="curtain-dock">
-            <div class="curtain-copy">
-              <span class="module-icon"><ha-icon icon="mdi:curtains"></ha-icon></span>
-              <div>
-                <div class="module-title">Cortinas</div>
-                <div class="module-subtitle">Controle</div>
+          <div class="curtain-dock${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
+            <div class="curtain-control-row">
+              <div class="curtain-identity">
+                <span class="curtain-icon-shell">${BrunoSalaSubview._curtainSvg('main')}</span>
+                <span class="curtain-title">Cortina</span>
+              </div>
+              <div class="curtain-status" aria-live="polite">
+                <span class="curtain-status-text">${BrunoSalaSubview._escape(curtain.status)}</span>
+                <span class="curtain-status-percent">- ${curtainDisplayPosition}%</span>
+              </div>
+              <div class="curtain-main-actions">
+                <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
+                  ${BrunoSalaSubview._curtainSvg('open')}<span>Abrir</span>
+                </button>
+                <button type="button" class="curtain-action-button is-muted${curtain.moving ? ' is-active' : ''}" data-action="cover-stop" ${curtainDisabled}>
+                  ${BrunoSalaSubview._curtainSvg('stop')}<span>Parar</span>
+                </button>
+                <button type="button" class="curtain-action-button" data-action="cover-close" ${curtainDisabled}>
+                  ${BrunoSalaSubview._curtainSvg('close')}<span>Fechar</span>
+                </button>
               </div>
             </div>
-            <div class="curtain-actions">
-              <button type="button" class="preset-button" data-action="cover-open">
-                <ha-icon icon="mdi:curtains"></ha-icon><span>Aberta</span>
-              </button>
-              <button type="button" class="preset-button" data-action="cover-position" data-position="50">
-                <ha-icon icon="mdi:curtains"></ha-icon><span>Semiaberta</span>
-              </button>
-              <button type="button" class="preset-button" data-action="cover-close">
-                <ha-icon icon="mdi:curtains-closed"></ha-icon><span>Fechada</span>
-              </button>
-              <button type="button" class="preset-button" data-action="cover-stop">
-                <ha-icon icon="mdi:pause"></ha-icon><span>Parar</span>
-              </button>
-              <span class="curtain-pill">Posicao - ${model.curtainPosition}%</span>
-            </div>
-            <div class="curtain-progress">
-              <span style="width:${model.curtainPosition}%"></span>
+            <div class="curtain-slider-zone">
+              <div class="curtain-slider-glow" aria-hidden="true"></div>
+              <input
+                class="curtain-range"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="${curtainVisualPosition}"
+                data-action="curtain-target"
+                aria-label="Fechamento da cortina"
+                ${curtainDisabled}
+              >
+              <div class="curtain-chips">
+                ${curtainChips}
+              </div>
             </div>
           </div>
         </div>
       </div>
+    `;
+  }
+
+  static _curtainSvg(type = 'main') {
+    const pathSets = {
+      main: `
+        <path d="M9 7h30"></path>
+        <path d="M14 10v27c4.5-2.8 6.8-7.3 6.8-13.5S18.5 12.8 14 10Z"></path>
+        <path d="M34 10v27c-4.5-2.8-6.8-7.3-6.8-13.5S29.5 12.8 34 10Z"></path>
+        <path d="M24 10v29"></path>
+      `,
+      open: `
+        <path d="M8 8h32"></path>
+        <path d="M14 11v26c5-3 7.5-7.4 7.5-13.2S19 14 14 11Z"></path>
+        <path d="M34 11v26c-5-3-7.5-7.4-7.5-13.2S29 14 34 11Z"></path>
+        <path d="M24 13v23"></path>
+      `,
+      close: `
+        <path d="M8 8h32"></path>
+        <path d="M19 11v26c-4.2-2.5-6.4-6.8-6.4-13S14.8 13.6 19 11Z"></path>
+        <path d="M29 11v26c4.2-2.5 6.4-6.8 6.4-13S33.2 13.6 29 11Z"></path>
+        <path d="M23.7 11v27M24.3 11v27"></path>
+      `,
+      stop: `
+        <rect x="14" y="13" width="8" height="22" rx="1.5"></rect>
+        <rect x="26" y="13" width="8" height="22" rx="1.5"></rect>
+      `,
+    };
+    const size = type === 'main' ? 17 : 16;
+    return `
+      <svg class="curtain-svg is-${BrunoSalaSubview._escapeAttr(type)}" viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true">
+        ${pathSets[type] || pathSets.main}
+      </svg>
     `;
   }
 
@@ -1324,6 +1564,7 @@ class BrunoSalaSubview extends HTMLElement {
     const tv = model.tv;
     const spotify = model.spotify;
     const ps5 = model.ps5;
+    const spotifyTransportDisabled = !spotify.active;
     const now = Date.now();
     const tvStateChanged = Boolean(this._hass && this._lastMediaTvOn !== undefined && this._lastMediaTvOn !== tv.active);
     if (tvStateChanged) {
@@ -1433,9 +1674,9 @@ class BrunoSalaSubview extends HTMLElement {
     `;
     const spotifyPrimaryActions = `
       ${mediaIdentityCell('spotify', spotify.active || spotify.playing)}
-      ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior' })}
-      ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main' })}
-      ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa' })}
+      ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior', disabled: spotifyTransportDisabled })}
+      ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main', disabled: spotifyTransportDisabled })}
+      ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa', disabled: spotifyTransportDisabled })}
     `;
     const spotifySecondaryActions = `
       ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool' })}
@@ -1481,7 +1722,7 @@ class BrunoSalaSubview extends HTMLElement {
         extra: `
           <div class="volume-row spotify-volume">
             <ha-icon icon="mdi:volume-medium"></ha-icon>
-            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify">
+            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotify.active ? '' : 'disabled'}>
             <strong>${spotifyVolume}%</strong>
           </div>
         `,
@@ -1640,6 +1881,7 @@ class BrunoSalaSubview extends HTMLElement {
     const spotify = model.spotify;
     const artwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
     const volume = spotify.volume == null ? 66 : spotify.volume;
+    const transportDisabled = spotify.active ? '' : ' disabled';
     const controls = this._spotifyToolsOpen
       ? `
         <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
@@ -1648,9 +1890,9 @@ class BrunoSalaSubview extends HTMLElement {
         <button type="button" class="control-button is-tool" data-action="spotify-plus" title="Mais opcoes"><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
       `
       : `
-        <button type="button" class="control-button" data-action="spotify-prev"><ha-icon icon="mdi:skip-previous"></ha-icon></button>
-        <button type="button" class="control-button is-main" data-action="spotify-play-pause"><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
-        <button type="button" class="control-button" data-action="spotify-next"><ha-icon icon="mdi:skip-next"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-prev"${transportDisabled}><ha-icon icon="mdi:skip-previous"></ha-icon></button>
+        <button type="button" class="control-button is-main" data-action="spotify-play-pause"${transportDisabled}><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-next"${transportDisabled}><ha-icon icon="mdi:skip-next"></ha-icon></button>
         <button type="button" class="control-button" data-action="spotify-more" title="Mais opcoes"><ha-icon icon="mdi:plus"></ha-icon></button>
       `;
 
@@ -1676,7 +1918,7 @@ class BrunoSalaSubview extends HTMLElement {
             </div>
             <div class="volume-row spotify-volume">
               <ha-icon icon="mdi:volume-medium"></ha-icon>
-              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify">
+              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotify.active ? '' : 'disabled'}>
               <strong>${volume}%</strong>
             </div>
           </div>
@@ -2428,14 +2670,14 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .curtain-dock {
+        --curtain-gold: rgb(242,194,102);
         grid-row: 3;
         grid-column: 1 / -1;
         align-self: end;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
-        gap: 8px;
-        width: min(500px, 100%);
+        gap: 11px;
+        width: min(540px, 100%);
         padding: 0;
         border-radius: 0;
         background: transparent;
@@ -2445,12 +2687,250 @@ class BrunoSalaSubview extends HTMLElement {
         -webkit-backdrop-filter: none;
       }
 
-      .curtain-copy,
+      .curtain-control-row {
+        display: grid;
+        grid-template-columns: minmax(94px, auto) minmax(96px, 1fr) auto;
+        align-items: center;
+        gap: 18px;
+        min-width: 0;
+      }
+
+      .curtain-identity,
       .title-with-chip {
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 8px;
         min-width: 0;
+      }
+
+      .curtain-icon-shell {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.17), rgba(255,255,255,0.04) 56%, rgba(0,0,0,0.18)),
+          rgba(18,20,21,0.52);
+        border: 1px solid rgba(255,255,255,0.16);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        backdrop-filter: blur(12px) saturate(1.18);
+        -webkit-backdrop-filter: blur(12px) saturate(1.18);
+      }
+
+      .curtain-title {
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        letter-spacing: 0;
+        color: rgba(255,255,255,0.96);
+        white-space: nowrap;
+      }
+
+      .curtain-status {
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .curtain-status-text {
+        color: var(--curtain-gold);
+      }
+
+      .curtain-status-percent {
+        color: rgba(255,255,255,0.78);
+        font-weight: 800;
+      }
+
+      .curtain-main-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        min-width: 0;
+      }
+
+      .curtain-action-button {
+        width: 78px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 9px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
+        background: var(--bruno-liquid-control-background,
+          linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025)),
+          rgba(22,23,24,0.50)
+        );
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 18px rgba(0,0,0,0.22));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        color: rgba(255,255,255,0.88);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0;
+        white-space: nowrap;
+      }
+
+      .curtain-action-button.is-muted {
+        color: rgba(255,255,255,0.88);
+      }
+
+      .curtain-action-button.is-active {
+        color: var(--curtain-gold);
+        border-color: rgba(242,194,102,0.38);
+        background:
+          radial-gradient(72px 42px at 50% 0%, rgba(242,194,102,0.24), transparent 70%),
+          rgba(88,66,24,0.26);
+      }
+
+      .curtain-action-button:active {
+        transform: translateY(1px);
+        color: var(--curtain-gold);
+        border-color: rgba(242,194,102,0.42);
+        background:
+          radial-gradient(72px 42px at 50% 0%, rgba(242,194,102,0.22), transparent 70%),
+          rgba(88,66,24,0.22);
+      }
+
+      .curtain-action-button:disabled,
+      .curtain-chip:disabled,
+      .curtain-range:disabled {
+        opacity: 0.46;
+        cursor: not-allowed;
+      }
+
+      .curtain-svg {
+        display: block;
+        fill: rgba(255,255,255,0.70);
+        stroke: rgba(255,255,255,0.58);
+        stroke-width: 2.1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: 0 0 auto;
+      }
+
+      .curtain-svg.is-main {
+        fill: rgba(255,255,255,0.78);
+        stroke: rgba(255,255,255,0.54);
+      }
+
+      .curtain-svg.is-stop {
+        fill: rgba(255,255,255,0.64);
+        stroke: rgba(255,255,255,0.54);
+      }
+
+      .curtain-slider-zone {
+        position: relative;
+        display: grid;
+        gap: 0;
+        min-width: 0;
+      }
+
+      .curtain-slider-glow {
+        position: absolute;
+        left: 0;
+        top: -4px;
+        width: var(--curtain-position);
+        height: 14px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(242,194,102,0.24), rgba(242,194,102,0.05));
+        filter: blur(10px);
+        pointer-events: none;
+      }
+
+      .curtain-range {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 4px;
+        margin: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background:
+          linear-gradient(90deg, var(--curtain-gold) 0 var(--curtain-position), rgba(242,194,102,0.45) var(--curtain-position), rgba(255,255,255,0.10) var(--curtain-position) 100%);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.34);
+        cursor: pointer;
+        accent-color: var(--curtain-gold);
+      }
+
+      .curtain-range::-webkit-slider-runnable-track {
+        height: 4px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .curtain-range::-webkit-slider-thumb {
+        width: 18px;
+        height: 18px;
+        margin-top: -7px;
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.34);
+        background:
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
+        box-shadow: 0 0 9px rgba(242,194,102,0.34), 0 2px 8px rgba(0,0,0,0.44);
+      }
+
+      .curtain-range::-moz-range-track {
+        height: 4px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .curtain-range::-moz-range-progress {
+        height: 4px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--curtain-gold), rgba(242,194,102,0.45));
+      }
+
+      .curtain-range::-moz-range-thumb {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.34);
+        background:
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
+        box-shadow: 0 0 9px rgba(242,194,102,0.34), 0 2px 8px rgba(0,0,0,0.44);
+      }
+
+      .curtain-chips {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+        justify-content: center;
+      }
+
+      .curtain-chip {
+        flex: 1 1 0;
+        min-height: 31px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.10);
+        background: rgba(255,255,255,0.052);
+        color: rgba(255,255,255,0.48);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0;
+        cursor: pointer;
+      }
+
+      .curtain-chip.is-active {
+        border-color: rgba(242,194,102,0.50);
+        background: rgba(242,194,102,0.10);
+        color: var(--curtain-gold);
       }
 
       .module-icon,
@@ -2472,64 +2952,6 @@ class BrunoSalaSubview extends HTMLElement {
         --mdc-icon-size: 15px;
       }
 
-      .curtain-pill {
-        align-self: center;
-        justify-self: stretch;
-        min-height: 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 11px;
-        border-radius: 999px;
-        color: rgb(255,208,92);
-        font-size: 11px;
-        font-weight: 800;
-        background: rgba(255,183,77,0.12);
-        border: 1px solid rgba(255,183,77,0.25);
-      }
-
-      .curtain-actions {
-        grid-column: 1 / -1;
-        justify-self: stretch;
-        display: grid;
-        grid-template-columns: repeat(4, minmax(68px, 1fr)) minmax(118px, auto);
-        align-items: center;
-        gap: 8px;
-      }
-
-      .preset-button {
-        min-height: 48px;
-        display: grid;
-        place-items: center;
-        gap: 4px;
-        padding: 6px 6px;
-        border-radius: var(--bruno-liquid-control-radius, 14px);
-        background: var(--bruno-liquid-control-background,
-          radial-gradient(74px 44px at 50% 0%, rgba(255,255,255,0.13), transparent 72%),
-          rgba(255,255,255,0.058)
-        );
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.12));
-        color: rgba(255,255,255,0.72);
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.08));
-      }
-
-      .preset-button.is-primary {
-        color: rgba(136,122,255,0.98);
-        background:
-          radial-gradient(64px 46px at 50% 0%, rgba(136,122,255,0.32), transparent 72%),
-          rgba(88,72,185,0.22);
-        border-color: rgba(136,122,255,0.44);
-      }
-
-      .preset-button ha-icon {
-        --mdc-icon-size: 19px;
-      }
-
-      .preset-button span {
-        font-size: 10px;
-        font-weight: 700;
-      }
-
       .soft-button,
       .primary-button {
         min-height: 36px;
@@ -2548,22 +2970,6 @@ class BrunoSalaSubview extends HTMLElement {
         background: var(--bruno-liquid-control-blue-background, rgba(24,134,190,0.42));
         border-color: var(--bruno-liquid-control-blue-border, rgba(96,190,255,0.50));
         box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.18));
-      }
-
-      .curtain-progress {
-        display: none;
-        grid-column: 1 / -1;
-        height: 7px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.16);
-      }
-
-      .curtain-progress span {
-        display: block;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, rgba(255,255,255,0.94), rgba(126,204,255,0.78));
       }
 
       .status-rail {
@@ -3881,12 +4287,23 @@ class BrunoSalaSubview extends HTMLElement {
           grid-template-columns: 1fr;
         }
 
-        .curtain-actions {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .curtain-control-row {
+          grid-template-columns: 1fr;
+          align-items: stretch;
+          gap: 10px;
         }
 
-        .curtain-pill {
-          grid-column: 1 / -1;
+        .curtain-status {
+          justify-self: start;
+        }
+
+        .curtain-main-actions {
+          justify-content: stretch;
+        }
+
+        .curtain-action-button {
+          flex: 1 1 0;
+          min-width: 0;
         }
 
         .side-panel {
@@ -4069,15 +4486,11 @@ class BrunoSalaSubview extends HTMLElement {
 
       .curtain-dock {
         width: min(520px, 100%);
-        gap: 8px;
+        gap: 12px;
       }
 
-      .curtain-actions {
-        grid-template-columns: repeat(4, minmax(70px, 1fr)) minmax(112px, auto);
-      }
-
-      .preset-button {
-        min-height: 46px;
+      .curtain-action-button {
+        min-width: 78px;
       }
 
       .status-rail {
@@ -5056,12 +5469,22 @@ class BrunoSalaSubview extends HTMLElement {
           flex: 1 1 0;
         }
 
-        .curtain-actions {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .curtain-control-row {
+          grid-template-columns: 1fr;
+          gap: 10px;
         }
 
-        .curtain-pill {
-          grid-column: 1 / -1;
+        .curtain-status {
+          justify-self: start;
+        }
+
+        .curtain-main-actions {
+          justify-content: stretch;
+        }
+
+        .curtain-action-button {
+          flex: 1 1 0;
+          min-width: 0;
         }
 
         .ac-visual {

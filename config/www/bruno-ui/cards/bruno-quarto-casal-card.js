@@ -23,9 +23,9 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
   },
   "icon": {
     // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/couple-bedroom-off.png?v=20260608-room-assets-uniform-1",
-    "off": "/local/bruno-ui/assets/couple-bedroom-off-tight.png?v=20260609-rail-dynamic-1",
+    "off": "/local/bruno-ui/assets/couple-bedroom-off-generated-v3.png?v=20260617-qcasal-generated-v3-1",
     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/couple-bedroom-on.png?v=20260608-room-assets-uniform-1",
-    "on": "/local/bruno-ui/assets/couple-bedroom-on-tight.png?v=20260609-rail-dynamic-1",
+    "on": "/local/bruno-ui/assets/couple-bedroom-on-generated-v3.png?v=20260617-qcasal-generated-v3-1",
     "fallback": "mdi:bed-king-outline"
   },
   "status_dots": [
@@ -47,7 +47,13 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
     {
       "icon": "mdi:speaker-wireless",
       "label": "Midia",
-      "tone": "purple"
+      "tone": "purple",
+      "entity": "media_player.echo_pop_quarto_casal",
+      "states": [
+        "playing",
+        "paused",
+        "on"
+      ]
     }
   ]
 };
@@ -236,8 +242,8 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
   _dotModel(dot, roomOn) {
     const entity = this._state(dot.entity);
-    const states = this._array(dot.states).map((item) => String(item));
-    const activeFromEntity = entity && states.includes(String(entity.state));
+    const states = this._array(dot.states).map((item) => String(item).toLowerCase());
+    const activeFromEntity = entity && states.includes(String(entity.state || '').toLowerCase());
     const activeEntity = this._state(this._config.entities.active_sensor);
     const attrValue = dot.active_attr ? activeEntity?.attributes?.[dot.active_attr] : undefined;
     const active = Boolean(dot.active) || Boolean(activeFromEntity) || this._truthy(attrValue);
@@ -329,7 +335,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
   _navigate(path) {
     if (!path) return;
     const resolvedPath = this._resolveNavigationPath(path);
-    const eventPath = resolvedPath;
+    const eventPath = path.startsWith('/') ? resolvedPath : path;
     globalThis.BrunoLiquidGlass?.routeTransition?.();
     this.dispatchEvent(new CustomEvent('hass-navigate', {
       detail: { path: eventPath },
@@ -715,7 +721,7 @@ class BrunoQuartoCasalCard extends HTMLElement {
           padding: 14px 54px 13px 11px;
           --- FIM ORIGINAL --- */
           /* ORIGINAL grid-template-columns: 124px minmax(0, 1fr) 40px; */
-          grid-template-columns: 96px minmax(0, 1fr) 40px;
+          grid-template-columns: 112px minmax(0, 1fr) 40px;
           grid-template-rows: auto minmax(0, 1fr) auto auto;
           grid-template-areas:
             "icon space right"
@@ -770,8 +776,8 @@ class BrunoQuartoCasalCard extends HTMLElement {
           align-self: start;
           position: relative;
           /* ORIGINAL: width: 120px; height: 80px; */
-          width: 115px;
-          height: 75px;
+          width: 120px;
+          height: 80px;
           margin-left: 0;
           margin-top: 1px;
         }
@@ -1106,8 +1112,8 @@ class BrunoQuartoCasalCard extends HTMLElement {
 
           .room-icon {
             /* ORIGINAL: width: 108px; height: 72px; */
-            width: 115px;
-            height: 75px;
+            width: 120px;
+            height: 80px;
           }
         }
 

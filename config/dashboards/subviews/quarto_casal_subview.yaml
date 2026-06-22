@@ -1,8 +1,0 @@
-title: Q. Casal
-path: subview-quarto-casal
-icon: mdi:bed-king
-subview: true
-type: panel
-theme: tablet
-cards:
-  - type: custom:bruno-quarto-casal-subview

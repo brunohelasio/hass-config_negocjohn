@@ -31,6 +31,11 @@ class BentoSidebarCard extends HTMLElement {
   }
 
   _handleAction(item) {
+    if (item?.key === 'cameras') {
+      this._navigate(item.navigation_path || this._config?.camera_navigation_path || '/lovelace/cameras-security');
+      return;
+    }
+
     const action = item?.tap_action || item?.action || { action: 'none' };
 
     switch (action.action) {

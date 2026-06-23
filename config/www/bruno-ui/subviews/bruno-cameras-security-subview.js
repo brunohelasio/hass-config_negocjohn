@@ -53,10 +53,41 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._render();
   }
 
+  // --- ORIGINAL (rollback): re-render total a cada update de hass ---
+  // set hass(hass) {
+  //   this._hass = hass;
+  //   this._render();
+  //   this._startRefreshTimer();
+  // }
+  // --- FIM ORIGINAL ---
+  // NOVO (anti-flicker): so reconstroi o shadow DOM quando algo ESTRUTURAL muda
+  // (camera ativa, disponibilidade, online/status). O HA chama set hass com alta
+  // frequencia; reconstruir os <img> a cada chamada fazia as cameras piscarem.
+  // Updates triviais (ex.: token rotativo de entity_picture) NAO re-renderizam:
+  // a imagem ao vivo e atualizada por _refreshCameraImages() (preload + swap, sem
+  // piscar) e o relogio pelo clock timer.
   set hass(hass) {
     this._hass = hass;
+    const signature = this._renderSignature();
+    if (this.shadowRoot && this._renderedSignature === signature) {
+      this._startRefreshTimer();
+      return;
+    }
     this._render();
     this._startRefreshTimer();
+  }
+
+  _renderSignature() {
+    if (!this._hass || !this._config) return 'pending';
+    return BrunoCamerasSecuritySubview._signatureFromModel(this._model());
+  }
+
+  static _signatureFromModel(model) {
+    if (!model) return 'pending';
+    const cams = (model.cameras || [])
+      .map((c) => `${c.entity}:${c.online ? 1 : 0}:${c.unavailable ? 1 : 0}:${c.image ? 1 : 0}:${c.status}`)
+      .join('|');
+    return `${model.activeId}#${cams}`;
   }
 
   _normalizeConfig(config = {}) {
@@ -334,6 +365,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       this.shadowRoot.addEventListener('click', this._boundClick);
       this.shadowRoot.addEventListener('keydown', this._boundKeydown);
       this._bindImages();
+      // NOVO (anti-flicker): registra a assinatura estrutural ja renderizada,
+      // para que set hass evite reconstruir o DOM quando nada estrutural muda.
+      this._renderedSignature = BrunoCamerasSecuritySubview._signatureFromModel(model);
     } catch (error) {
       this._renderError(error);
     }
@@ -390,9 +424,16 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   _styles() {
     return `
       :host {
+        /* ORIGINAL (rollback):
         --security-accent: 96, 165, 250;
         --security-live: 34, 197, 94;
         --security-warn: 251, 191, 36;
+        */
+        /* NOVO: acentos ligados aos tokens do bruno-liquid-glass.js (padrao das
+           demais subviews). Mantem o formato "R, G, B" usado em rgba(var(...)). */
+        --security-accent: var(--bruno-liquid-accent, 150, 190, 255);
+        --security-live: var(--bruno-liquid-green-accent, 46, 231, 122);
+        --security-warn: var(--bruno-liquid-warm-accent, 255, 183, 77);
         --security-panel: rgba(10, 15, 22, 0.68);
         --security-border: rgba(255,255,255,0.14);
         display: block;
@@ -428,7 +469,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         overflow: hidden;
         background:
           radial-gradient(520px 320px at 18% 0%, rgba(var(--security-accent),0.15), transparent 72%),
-          radial-gradient(480px 360px at 94% 94%, rgba(251,191,36,0.08), transparent 68%),
+          /* ORIGINAL (rollback): rgba(251,191,36,0.08) (amber hardcoded) */
+          radial-gradient(480px 360px at 94% 94%, rgba(var(--security-warn),0.08), transparent 68%),
           linear-gradient(150deg, rgba(12,18,28,0.96), rgba(13,17,24,0.92) 47%, rgba(24,20,18,0.92));
       }
 
@@ -439,6 +481,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         align-items: center;
         gap: 12px;
         padding: 0 8px;
+        /* ORIGINAL (rollback): skin bespoke (gradiente/borda/sombra/blur fixos).
         border-radius: 20px;
         background:
           linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035)),
@@ -449,6 +492,18 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           0 14px 28px rgba(0,0,0,0.22);
         backdrop-filter: blur(24px) saturate(1.4);
         -webkit-backdrop-filter: blur(24px) saturate(1.4);
+        */
+        /* NOVO: superficie glass compartilhada (tokens do bruno-liquid-glass.js). */
+        border-radius: var(--bruno-liquid-card-radius-compact, 20px);
+        background: var(--bruno-liquid-surface-off-background,
+          linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035)),
+          rgba(6,10,18,0.52));
+        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.10));
+        box-shadow: var(--bruno-liquid-surface-off-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.13),
+          0 14px 28px rgba(0,0,0,0.22));
+        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.4));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.4));
       }
 
       .icon-button {
@@ -521,6 +576,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         line-height: 1;
       }
 
+      /* --- ORIGINAL (rollback): side-rail e bottom-strip dimensionados por
+         mecanismos diferentes (1fr esticado vs clamp), gerando tiles laterais
+         quase quadrados e inferiores retangulares. ---
       .security-grid {
         min-width: 0;
         min-height: 0;
@@ -530,6 +588,25 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         grid-template-areas:
           "main side"
           "strip strip";
+        gap: 10px;
+      }
+      --- FIM ORIGINAL --- */
+      /* NOVO: grade uniforme 4 colunas x 4 linhas. O feed principal ocupa o
+         bloco 3x3 (main) e cada thumbnail (lateral ou inferior) ocupa exatamente
+         1 coluna (1fr) x 1 linha (1fr) => TODOS os mini-tiles tem a MESMA
+         dimensao. Os gaps internos das trilhas (10px) batem com o gap externo,
+         garantindo a equalizacao. */
+      .security-grid {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-rows: repeat(4, minmax(0, 1fr));
+        grid-template-areas:
+          "main main main side"
+          "main main main side"
+          "main main main side"
+          "strip strip strip strip";
         gap: 10px;
       }
 
@@ -557,6 +634,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         gap: 10px;
       }
 
+      /* ORIGINAL (rollback): skin bespoke com gradientes/borda/sombra fixos.
       .feed-card,
       .camera-tile {
         position: relative;
@@ -583,6 +661,37 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         display: grid;
         grid-template-rows: minmax(0, 1fr) auto;
         border-radius: 22px;
+      }
+      --- FIM ORIGINAL --- */
+      /* NOVO: superficie glass compartilhada (mesma assinatura .glass-card das
+         demais subviews) lendo os tokens --bruno-liquid-surface-off-* e os raios
+         de --bruno-liquid-cell-radius / --bruno-liquid-card-radius-compact. */
+      .feed-card,
+      .camera-tile {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        border-radius: var(--bruno-liquid-cell-radius, 18px);
+        background: var(--bruno-liquid-surface-off-background,
+          radial-gradient(180px 110px at 16% 8%, rgba(255,255,255,0.10), transparent 72%),
+          linear-gradient(155deg, rgba(255,255,255,0.10), rgba(255,255,255,0.034)),
+          var(--security-panel));
+        border: var(--bruno-liquid-surface-off-border, 1px solid var(--security-border));
+        box-shadow: var(--bruno-liquid-surface-off-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.13),
+          inset 0 -1px 0 rgba(0,0,0,0.26),
+          0 18px 38px rgba(0,0,0,0.26));
+        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(28px) saturate(1.52));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(28px) saturate(1.52));
+      }
+
+      .feed-card {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        border-radius: var(--bruno-liquid-card-radius-compact, 22px);
       }
 
       .image-stage {
@@ -934,8 +1043,10 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           min-height: 560px;
         }
 
+        /* ORIGINAL (rollback): grid-template-rows: minmax(0, 1fr) clamp(94px, 18vh, 130px); */
+        /* NOVO: mantem a grade uniforme 4x4 tambem em telas baixas. */
         .security-grid {
-          grid-template-rows: minmax(0, 1fr) clamp(94px, 18vh, 130px);
+          grid-template-rows: repeat(4, minmax(0, 1fr));
         }
 
         .feed-footer {

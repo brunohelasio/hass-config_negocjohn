@@ -23,7 +23,9 @@ top_items:
     icon: cameras
     label: Cameras
     divider_after: true
-    tap_action: !include ../../shared/popup/cameras_user.yaml
+    tap_action:
+      action: navigate
+      navigation_path: /lovelace/cameras-security
 
   - key: system
     icon: system

@@ -14,6 +14,8 @@ resources:
     type: module
   - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1
     type: module
+  - url: /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260623-cameras-security-1
+    type: module
 
 kiosk_mode:
   kiosk: true
@@ -53,6 +55,7 @@ views:
   - !include views/github-view.yaml
   - !include subviews/movie-panel.yaml
   - !include subviews/music-assistant.yaml
+  - !include subviews/cameras-security.yaml
   - !include subviews/floor-plan.yaml
   - !include subviews/sala_subview.yaml
   - !include subviews/office_subview.yaml

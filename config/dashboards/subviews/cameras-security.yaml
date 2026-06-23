@@ -1,0 +1,8 @@
+title: Cameras
+path: cameras-security
+icon: mdi:cctv
+subview: true
+theme: tablet
+type: panel
+cards:
+  - type: custom:bruno-cameras-security-subview

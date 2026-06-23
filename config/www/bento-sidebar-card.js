@@ -63,13 +63,43 @@ class BentoSidebarCard extends HTMLElement {
     }
   }
 
+  // --- CÓDIGO ORIGINAL COMENTADO (so disparava hass-navigate; nao roteava no HA) ---
+  // _navigate(path) {
+  //   if (!path) return;
+  //   this.dispatchEvent(new CustomEvent('hass-navigate', {
+  //     detail: { path },
+  //     bubbles: true,
+  //     composed: true,
+  //   }));
+  // }
+  // --- FIM CÓDIGO ORIGINAL ---
+
+  // NOVO: mesmo mecanismo das subviews (bruno-*-subview.js). Alem do evento
+  // hass-navigate, faz history.pushState + location-changed (que o roteador do
+  // HA realmente reconhece) e resolve paths relativos contra o dashboard atual.
   _navigate(path) {
     if (!path) return;
+    const resolvedPath = this._resolveNavigationPath(path);
     this.dispatchEvent(new CustomEvent('hass-navigate', {
-      detail: { path },
+      detail: { path: resolvedPath },
       bubbles: true,
       composed: true,
     }));
+
+    globalThis.setTimeout?.(() => {
+      if (!resolvedPath || globalThis.location?.pathname === resolvedPath) return;
+      globalThis.history?.pushState?.(null, '', resolvedPath);
+      globalThis.dispatchEvent?.(new CustomEvent('location-changed', { detail: { replace: false } }));
+    }, 80);
+  }
+
+  _resolveNavigationPath(path) {
+    if (!path) return '/';
+    if (path.startsWith('/')) return path;
+
+    const current = globalThis.location?.pathname || '';
+    const first = current.split('/').filter(Boolean)[0];
+    return `/${first || 'ngocjohn-main'}/${path}`;
   }
 
   _openUrl(url) {

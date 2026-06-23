@@ -17,7 +17,10 @@ top_items:
     label: Musica
     tap_action:
       action: navigate
-      navigation_path: /lovelace/mass-media
+      # ANTERIOR: navigation_path: /lovelace/mass-media
+      # (slug errado — o dashboard YAML esta em /ngocjohn-main, nao /lovelace)
+      # NOVO: path relativo, resolvido contra o dashboard atual pelo card.
+      navigation_path: mass-media
 
   - key: cameras
     icon: cameras
@@ -25,7 +28,10 @@ top_items:
     divider_after: true
     tap_action:
       action: navigate
-      navigation_path: /lovelace/cameras-security
+      # ANTERIOR: navigation_path: /lovelace/cameras-security
+      # (slug errado — a view cameras-security vive no dashboard /ngocjohn-main)
+      # NOVO: path relativo, resolvido contra o dashboard atual pelo card.
+      navigation_path: cameras-security
 
   - key: system
     icon: system

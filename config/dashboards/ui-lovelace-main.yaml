@@ -14,7 +14,7 @@ resources:
     type: module
   - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1
     type: module
-  - url: /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260623-cameras-security-1
+  - url: /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260623-cameras-security-2
     type: module
 
 kiosk_mode:

@@ -329,7 +329,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         <main class="security-subview">
           <header class="security-topbar">
             <button class="icon-button" type="button" data-action="navigate-home" aria-label="Voltar para o painel principal">
-              <ha-icon icon="mdi:menu"></ha-icon>
+              <!-- ORIGINAL (rollback): <ha-icon icon="mdi:menu"></ha-icon> (hamburguer) -->
+              <!-- NOVO: setinha de voltar, igual as demais subviews -->
+              <ha-icon icon="mdi:arrow-left"></ha-icon>
             </button>
 
             <div class="brand">
@@ -434,7 +436,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         --security-accent: var(--bruno-liquid-accent, 150, 190, 255);
         --security-live: var(--bruno-liquid-green-accent, 46, 231, 122);
         --security-warn: var(--bruno-liquid-warm-accent, 255, 183, 77);
-        --security-panel: rgba(10, 15, 22, 0.68);
+        /* ORIGINAL (rollback): --security-panel: rgba(10, 15, 22, 0.68); (slate/azul) */
+        --security-panel: rgba(7, 9, 12, 0.66);
         --security-border: rgba(255,255,255,0.14);
         display: block;
         width: 100%;
@@ -467,11 +470,25 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         gap: 10px;
         padding: 8px;
         overflow: hidden;
+        /* ORIGINAL (rollback): fundo slate/azulado chapado, sem foto ambiente.
         background:
           radial-gradient(520px 320px at 18% 0%, rgba(var(--security-accent),0.15), transparent 72%),
-          /* ORIGINAL (rollback): rgba(251,191,36,0.08) (amber hardcoded) */
           radial-gradient(480px 360px at 94% 94%, rgba(var(--security-warn),0.08), transparent 68%),
           linear-gradient(150deg, rgba(12,18,28,0.96), rgba(13,17,24,0.92) 47%, rgba(24,20,18,0.92));
+        */
+        /* NOVO: mesmo padrao do painel principal (bruno-hero-stage-card.js) —
+           foto ambiente da casa atras da grade (home_color.jpg -> fallback
+           home.jpg), com veu escuro NEUTRO por cima para as superficies glass
+           frostarem QUENTE (identidade do dashboard, sem dominante azul). As
+           imagens das cameras cobrem a maior parte; a foto aparece nas lacunas,
+           topbar e rodape, exatamente onde faltava calor. */
+        background:
+          radial-gradient(620px 380px at 16% 2%, rgba(var(--security-accent),0.10), transparent 72%),
+          radial-gradient(680px 420px at 96% 96%, rgba(var(--security-warn),0.12), transparent 74%),
+          linear-gradient(180deg, rgba(3,5,8,0.74), rgba(3,5,8,0.82)),
+          url("/local/images/home_color.jpg") center / cover no-repeat,
+          url("/local/images/home.jpg") center / cover no-repeat,
+          #020406;
       }
 
       .security-topbar {
@@ -702,9 +719,10 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         min-width: 0;
         min-height: 0;
         overflow: hidden;
+        /* ORIGINAL (rollback): linear-gradient(145deg, rgba(15,23,42,0.92), rgba(2,6,23,0.82)) (slate/azul) */
         background:
           radial-gradient(260px 160px at 22% 12%, rgba(255,255,255,0.07), transparent 72%),
-          linear-gradient(145deg, rgba(15,23,42,0.92), rgba(2,6,23,0.82));
+          linear-gradient(145deg, rgba(12,13,16,0.92), rgba(4,6,9,0.82));
       }
 
       .camera-image {
@@ -740,9 +758,10 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         position: absolute;
         inset: 0;
         pointer-events: none;
+        /* ORIGINAL (rollback): scrims em rgba(2,6,23,...) (slate/azul) */
         background:
-          linear-gradient(180deg, rgba(2,6,23,0.52), transparent 22%),
-          linear-gradient(0deg, rgba(2,6,23,0.78), rgba(2,6,23,0.20) 38%, transparent 70%);
+          linear-gradient(180deg, rgba(4,6,9,0.52), transparent 22%),
+          linear-gradient(0deg, rgba(4,6,9,0.78), rgba(4,6,9,0.20) 38%, transparent 70%);
       }
 
       .feed-title {
@@ -756,7 +775,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         padding: 7px 11px;
         border-radius: 999px;
         color: rgba(255,255,255,0.94);
-        background: rgba(2,6,23,0.46);
+        /* ORIGINAL (rollback): background: rgba(2,6,23,0.46); (slate/azul) */
+        background: rgba(6,8,11,0.44);
         border: 1px solid rgba(255,255,255,0.14);
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 24px rgba(0,0,0,0.24);
         backdrop-filter: blur(14px) saturate(1.24);
@@ -804,7 +824,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         padding: 0 13px;
         border-radius: 999px;
         color: rgba(255,255,255,0.90);
-        background: rgba(2,6,23,0.48);
+        /* ORIGINAL (rollback): background: rgba(2,6,23,0.48); (slate/azul) */
+        background: rgba(6,8,11,0.46);
         border: 1px solid rgba(255,255,255,0.16);
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 22px rgba(0,0,0,0.25);
         backdrop-filter: blur(14px) saturate(1.24);
@@ -832,9 +853,10 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         align-items: center;
         gap: 12px;
         padding: 12px 16px;
+        /* ORIGINAL (rollback): base rgba(2,6,23,0.48) (slate/azul) */
         background:
           linear-gradient(180deg, rgba(255,255,255,0.070), rgba(255,255,255,0.030)),
-          rgba(2,6,23,0.48);
+          rgba(6,8,11,0.46);
         border-top: 1px solid rgba(255,255,255,0.09);
       }
 
@@ -913,7 +935,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         padding: 5px 7px;
         border-radius: 999px;
         color: rgba(255,255,255,0.92);
-        background: rgba(2,6,23,0.46);
+        /* ORIGINAL (rollback): background: rgba(2,6,23,0.46); (slate/azul) */
+        background: rgba(6,8,11,0.44);
         border: 1px solid rgba(255,255,255,0.10);
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
         backdrop-filter: blur(12px) saturate(1.2);

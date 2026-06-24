@@ -1,0 +1,73 @@
+# Variante do bento_sidebar para a subview de Cameras (Opcao A).
+# Identica a views/main-grid/bento_sidebar.yaml, EXCETO o estado ativo:
+#   - "home" deixa de ser selected e passa a navegar de volta para bento-lab;
+#   - "cameras" fica selected (item ativo) com tap_action: none.
+# Mantida em sincronia manual com bento_sidebar.yaml (mesma rail da Home).
+type: custom:bento-sidebar-liquid-card
+view_layout:
+  grid-area: sidebar
+top_items:
+  - key: home
+    icon: home
+    label: Home
+    tap_action:
+      action: navigate
+      navigation_path: bento-lab
+
+  - key: music
+    icon: music
+    label: Musica
+    tap_action:
+      action: navigate
+      navigation_path: mass-media
+
+  - key: cameras
+    icon: cameras
+    label: Cameras
+    selected: true
+    divider_after: true
+    tap_action:
+      action: none
+
+  - key: system
+    icon: system
+    label: Sistema
+    tap_action: !include ../../shared/popup/footer/footer_system.yaml
+
+  - key: vacuum
+    icon: vacuum
+    label: Aspirador
+    tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
+
+  - key: network
+    icon: network
+    label: Rede
+    tap_action: !include ../../shared/popup/footer/footer_network.yaml
+
+  - key: refresh
+    icon: refresh
+    label: Atualizar
+    tap_action:
+      action: call-service
+      service: browser_mod.javascript
+      service_data:
+        code: location.reload()
+
+  - key: updates
+    icon: updates
+    label: Updates
+    tap_action: !include ../../shared/popup/footer/footer_updates.yaml
+
+  - key: floorplan
+    icon: floorplan
+    label: Planta 3D
+    divider_after: true
+    tap_action: !include ../../shared/popup/planta_3d.yaml
+
+bottom_items:
+  - key: power
+    icon: power
+    label: Power
+    tap_action:
+      action: navigate
+      navigation_path: /

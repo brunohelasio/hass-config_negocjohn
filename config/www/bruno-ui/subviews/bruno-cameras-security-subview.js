@@ -329,15 +329,13 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         <main class="security-subview">
           <header class="security-topbar">
             <button class="icon-button" type="button" data-action="navigate-home" aria-label="Voltar para o painel principal">
-              <!-- ORIGINAL (rollback): <ha-icon icon="mdi:menu"></ha-icon> (hamburguer) -->
-              <!-- NOVO: setinha de voltar, igual as demais subviews -->
               <ha-icon icon="mdi:arrow-left"></ha-icon>
             </button>
 
             <div class="brand">
-              <span>${BrunoCamerasSecuritySubview._escape(this._config.title)}</span>
-              <span class="divider"></span>
-              <strong>${BrunoCamerasSecuritySubview._escape(this._config.section)}</strong>
+              <span class="brand-main">Residência</span>
+              <span class="brand-sep" aria-hidden="true">·</span>
+              <strong class="brand-strong">Segurança</strong>
             </div>
 
             <div class="clock-block" aria-label="Horario atual">
@@ -359,6 +357,13 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
               ${model.bottomCameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'bottom')).join('')}
             </section>
           </section>
+
+          <footer class="security-footer">
+            <span class="enc-note">
+              <ha-icon icon="mdi:shield-lock-outline" aria-hidden="true"></ha-icon>
+              Todas as câmeras estão protegidas com criptografia de ponta a ponta
+            </span>
+          </footer>
         </main>
       `;
 
@@ -441,7 +446,11 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         --security-border: rgba(255,255,255,0.14);
         display: block;
         width: 100%;
-        min-height: 100vh;
+        /* ORIGINAL (rollback): min-height: 100vh; (console ocupava a tela toda) */
+        height: 100%;
+        min-height: 0;
+        /* NOVO (Opcao A): transparente — a shell da view fornece o grafite da Home */
+        background: transparent;
         color: rgba(246,250,255,0.94);
         font-family: var(--paper-font-body1_-_font-family, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
         contain: layout style;
@@ -461,66 +470,41 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         touch-action: manipulation;
       }
 
+      /* ORIGINAL (rollback): shell com topbar 44px + grade, fundo proprio (foto/veu).
+         grid-template-rows: 44px minmax(0,1fr); padding: 8px; background: <foto+veu>. */
       .security-subview {
         width: 100%;
-        height: min(100vh, 100dvh);
-        min-height: 620px;
+        height: 100%;
+        min-height: 0;
         display: grid;
-        grid-template-rows: 44px minmax(0, 1fr);
+        /* NOVO (Opcao A): header (altura da barra de badges) / grade / rodape */
+        grid-template-rows: clamp(50px, 6.4vh, 60px) minmax(0, 1fr) clamp(38px, 4.8vh, 48px);
         gap: 10px;
-        padding: 8px;
+        padding: 0;
         overflow: hidden;
-        /* ORIGINAL (rollback): fundo slate/azulado chapado, sem foto ambiente.
-        background:
-          radial-gradient(520px 320px at 18% 0%, rgba(var(--security-accent),0.15), transparent 72%),
-          radial-gradient(480px 360px at 94% 94%, rgba(var(--security-warn),0.08), transparent 68%),
-          linear-gradient(150deg, rgba(12,18,28,0.96), rgba(13,17,24,0.92) 47%, rgba(24,20,18,0.92));
-        */
-        /* NOVO: mesmo padrao do painel principal (bruno-hero-stage-card.js) —
-           foto ambiente da casa atras da grade (home_color.jpg -> fallback
-           home.jpg), com veu escuro NEUTRO por cima para as superficies glass
-           frostarem QUENTE (identidade do dashboard, sem dominante azul). As
-           imagens das cameras cobrem a maior parte; a foto aparece nas lacunas,
-           topbar e rodape, exatamente onde faltava calor. */
-        background:
-          radial-gradient(620px 380px at 16% 2%, rgba(var(--security-accent),0.10), transparent 72%),
-          radial-gradient(680px 420px at 96% 96%, rgba(var(--security-warn),0.12), transparent 74%),
-          linear-gradient(180deg, rgba(3,5,8,0.74), rgba(3,5,8,0.82)),
-          url("/local/images/home_color.jpg") center / cover no-repeat,
-          url("/local/images/home.jpg") center / cover no-repeat,
-          #020406;
+        /* NOVO: transparente — a shell da view (cameras-security.yaml) fornece o
+           grafite quente da Home atras do rail + console. */
+        background: transparent;
       }
 
+      /* ORIGINAL (rollback): topbar com skin glass forte (surface-off tokens). */
       .security-topbar {
         min-width: 0;
         display: grid;
-        grid-template-columns: 44px minmax(0, 1fr) auto;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
         align-items: center;
         gap: 12px;
-        padding: 0 8px;
-        /* ORIGINAL (rollback): skin bespoke (gradiente/borda/sombra/blur fixos).
-        border-radius: 20px;
+        padding: 0 14px;
+        border-radius: var(--bruno-liquid-card-radius-compact, 18px);
+        /* NOVO (Opcao A): header LEVE, escuro e translucido (altura da barra de
+           badges da Home), em vez de uma barra glass pesada. */
         background:
-          linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035)),
-          rgba(6,10,18,0.52);
-        border: 1px solid rgba(255,255,255,0.10);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.13),
-          0 14px 28px rgba(0,0,0,0.22);
-        backdrop-filter: blur(24px) saturate(1.4);
-        -webkit-backdrop-filter: blur(24px) saturate(1.4);
-        */
-        /* NOVO: superficie glass compartilhada (tokens do bruno-liquid-glass.js). */
-        border-radius: var(--bruno-liquid-card-radius-compact, 20px);
-        background: var(--bruno-liquid-surface-off-background,
-          linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035)),
-          rgba(6,10,18,0.52));
-        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.10));
-        box-shadow: var(--bruno-liquid-surface-off-shadow,
-          inset 0 1px 0 rgba(255,255,255,0.13),
-          0 14px 28px rgba(0,0,0,0.22));
-        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.4));
-        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(24px) saturate(1.4));
+          linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
+          rgba(8,11,16,0.28);
+        border: 1px solid rgba(255,255,255,0.07);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
+        backdrop-filter: blur(20px) saturate(1.3);
+        -webkit-backdrop-filter: blur(20px) saturate(1.3);
       }
 
       .icon-button {
@@ -554,25 +538,30 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 12px;
+        gap: 8px;
         color: rgba(226,232,240,0.72);
-        font-size: 15px;
+        font-size: 14px;
         line-height: 1;
-        text-transform: uppercase;
+        letter-spacing: 0.04em;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
-      .brand strong {
-        color: rgba(255,255,255,0.88);
-        font-weight: 720;
+      /* ORIGINAL (rollback): .brand strong / .divider (titulo TITLE | SECTION) */
+      .brand-main {
+        color: rgba(226,232,240,0.74);
+        font-weight: 600;
       }
 
-      .divider {
-        width: 1px;
-        height: 20px;
-        background: rgba(255,255,255,0.16);
+      .brand-strong {
+        color: rgba(255,255,255,0.92);
+        font-weight: 760;
+      }
+
+      .brand-sep {
+        color: rgba(255,255,255,0.32);
+        font-weight: 600;
       }
 
       .clock-block {
@@ -703,12 +692,13 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(28px) saturate(1.52));
       }
 
+      /* ORIGINAL (rollback): .feed-card em grid (imagem 1fr + rodape preto). */
+      /* NOVO (redesign): hero ocupa tudo, cantos amplos da Home, sem rodape. */
       .feed-card {
         width: 100%;
         height: 100%;
-        display: grid;
-        grid-template-rows: minmax(0, 1fr) auto;
-        border-radius: var(--bruno-liquid-card-radius-compact, 22px);
+        display: block;
+        border-radius: var(--bruno-liquid-card-radius, 24px);
       }
 
       .image-stage {
@@ -753,41 +743,88 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         filter: drop-shadow(0 14px 22px rgba(0,0,0,0.38));
       }
 
-      .feed-scrim,
-      .tile-scrim {
+      /* ORIGINAL (rollback): .feed-scrim/.tile-scrim (scrim preto pesado). */
+      /* NOVO (redesign): vinheta MUITO discreta nas extremidades — preserva a
+         leitura do video; sem aplicar tom por cima da imagem. */
+      .feed-vignette,
+      .tile-vignette {
         position: absolute;
         inset: 0;
         pointer-events: none;
-        /* ORIGINAL (rollback): scrims em rgba(2,6,23,...) (slate/azul) */
         background:
-          linear-gradient(180deg, rgba(4,6,9,0.52), transparent 22%),
-          linear-gradient(0deg, rgba(4,6,9,0.78), rgba(4,6,9,0.20) 38%, transparent 70%);
+          radial-gradient(120% 120% at 50% 42%, transparent 60%, rgba(0,0,0,0.26) 100%),
+          linear-gradient(0deg, rgba(0,0,0,0.34), rgba(0,0,0,0.05) 24%, transparent 44%);
       }
 
-      .feed-title {
+      /* ORIGINAL (rollback): .feed-title (pilula unica topo-esquerda). */
+      /* NOVO (redesign): faixa de overlay no topo do hero (nome a esq., REC a dir.). */
+      .feed-overlay-top {
         position: absolute;
-        left: 18px;
-        top: 16px;
+        left: 16px;
+        right: 16px;
+        top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        pointer-events: none;
+      }
+
+      .cam-pill {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        max-width: calc(100% - 36px);
-        padding: 7px 11px;
+        min-width: 0;
+        max-width: calc(100% - 130px);
+        padding: 7px 12px;
         border-radius: 999px;
-        color: rgba(255,255,255,0.94);
-        /* ORIGINAL (rollback): background: rgba(2,6,23,0.46); (slate/azul) */
-        background: rgba(6,8,11,0.44);
-        border: 1px solid rgba(255,255,255,0.14);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 24px rgba(0,0,0,0.24);
-        backdrop-filter: blur(14px) saturate(1.24);
-        -webkit-backdrop-filter: blur(14px) saturate(1.24);
-        font-size: 12px;
+        color: rgba(255,255,255,0.95);
+        background: rgba(6,8,11,0.42);
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 22px rgba(0,0,0,0.26);
+        backdrop-filter: blur(14px) saturate(1.22);
+        -webkit-backdrop-filter: blur(14px) saturate(1.22);
+        font-size: 12.5px;
+        line-height: 1;
+        font-weight: 720;
+      }
+
+      .cam-pill-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .rec-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 6px 11px;
+        border-radius: 999px;
+        color: rgba(255,236,236,0.96);
+        background: rgba(220,38,38,0.22);
+        border: 1px solid rgba(248,113,113,0.46);
+        box-shadow: 0 0 16px rgba(239,68,68,0.26);
+        font-size: 11px;
         line-height: 1;
         font-weight: 760;
         text-transform: uppercase;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        letter-spacing: 0.04em;
+      }
+
+      .rec-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: rgb(239,68,68);
+        box-shadow: 0 0 10px rgba(239,68,68,0.8);
+        animation: rec-blink 1.4s ease-in-out infinite;
+      }
+
+      @keyframes rec-blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.35; }
       }
 
       .status-dot {
@@ -804,99 +841,86 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         box-shadow: 0 0 12px rgba(var(--security-live),0.62);
       }
 
-      .feed-actions {
+      /* NOVO (disciplina de cor): vermelho SO em gravacao/alerta real. */
+      .status-dot.is-recording {
+        background: rgb(239,68,68);
+        box-shadow: 0 0 12px rgba(239,68,68,0.7);
+      }
+
+      /* ORIGINAL (rollback): .feed-actions/.action-pill fixos sempre visiveis. */
+      /* NOVO (redesign): controles flutuantes minimizados no canto do hero,
+         faintes por padrao (acessiveis ao toque) e plenos em hover/foco. */
+      .feed-controls {
         position: absolute;
-        right: 16px;
-        bottom: 16px;
+        right: 14px;
+        bottom: 14px;
         display: flex;
         align-items: center;
         gap: 8px;
+        opacity: 0.4;
+        transition: opacity 180ms ease;
       }
 
-      .action-pill {
+      .feed-card:hover .feed-controls,
+      .feed-card:focus-within .feed-controls {
+        opacity: 1;
+      }
+
+      .hc-btn {
         appearance: none;
         -webkit-appearance: none;
-        height: 36px;
+        width: 34px;
+        height: 34px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 0 13px;
+        padding: 0;
         border-radius: 999px;
-        color: rgba(255,255,255,0.90);
-        /* ORIGINAL (rollback): background: rgba(2,6,23,0.48); (slate/azul) */
-        background: rgba(6,8,11,0.46);
+        color: rgba(255,255,255,0.92);
+        background: rgba(6,8,11,0.5);
         border: 1px solid rgba(255,255,255,0.16);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 22px rgba(0,0,0,0.25);
-        backdrop-filter: blur(14px) saturate(1.24);
-        -webkit-backdrop-filter: blur(14px) saturate(1.24);
-        font-size: 11px;
-        line-height: 1;
-        font-weight: 720;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 20px rgba(0,0,0,0.28);
+        backdrop-filter: blur(14px) saturate(1.22);
+        -webkit-backdrop-filter: blur(14px) saturate(1.22);
       }
 
-      .action-pill:hover,
-      .action-pill:focus-visible {
-        border-color: rgba(var(--security-accent),0.46);
-        background: rgba(var(--security-accent),0.18);
+      .hc-btn span {
+        display: none;
+      }
+
+      .hc-btn:hover,
+      .hc-btn:focus-visible {
+        border-color: rgba(var(--security-accent),0.5);
+        background: rgba(var(--security-accent),0.2);
         outline: none;
       }
 
-      .action-pill ha-icon {
+      .hc-btn ha-icon {
         --mdc-icon-size: 16px;
       }
 
-      .feed-footer {
-        min-height: 66px;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 12px;
-        padding: 12px 16px;
-        /* ORIGINAL (rollback): base rgba(2,6,23,0.48) (slate/azul) */
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.070), rgba(255,255,255,0.030)),
-          rgba(6,8,11,0.46);
-        border-top: 1px solid rgba(255,255,255,0.09);
-      }
-
-      .active-name {
-        display: block;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        font-size: 17px;
-        line-height: 1.1;
-        font-weight: 780;
-        color: rgba(255,255,255,0.96);
-      }
-
-      .active-sub {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 5px;
-        color: rgba(226,232,240,0.66);
-        font-size: 11px;
-        line-height: 1;
-        font-weight: 640;
-      }
-
-      .system-summary {
+      /* ORIGINAL (rollback): .feed-footer / .active-name / .active-sub /
+         .system-summary (rodape preto grande do hero). Substituidos por
+         .feed-status (contagem online discreta sobreposta ao video). */
+      .feed-status {
+        position: absolute;
+        left: 16px;
+        bottom: 14px;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        height: 32px;
-        padding: 0 12px;
+        padding: 6px 11px;
         border-radius: 999px;
-        color: rgba(220,252,231,0.93);
-        background: rgba(var(--security-live),0.10);
-        border: 1px solid rgba(var(--security-live),0.20);
+        color: rgba(220,252,231,0.92);
+        background: rgba(6,8,11,0.4);
+        border: 1px solid rgba(255,255,255,0.10);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        backdrop-filter: blur(12px) saturate(1.2);
+        -webkit-backdrop-filter: blur(12px) saturate(1.2);
         font-size: 11px;
         line-height: 1;
         font-weight: 720;
-        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
       }
 
       .camera-tile {
@@ -922,25 +946,37 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         transform: translateY(1px) scale(0.992);
       }
 
-      .tile-label {
+      /* ORIGINAL (rollback): .tile-label (barra inferior larga, centralizada). */
+      /* NOVO (redesign): pilula compacta integrada, ancorada a esquerda. */
+      .tile-pill {
         position: absolute;
-        left: 8px;
-        right: 8px;
+        left: 7px;
         bottom: 7px;
-        display: flex;
+        max-width: calc(100% - 14px);
+        display: inline-flex;
         align-items: center;
-        justify-content: center;
         gap: 6px;
         min-width: 0;
-        padding: 5px 7px;
+        padding: 4px 9px;
         border-radius: 999px;
         color: rgba(255,255,255,0.92);
-        /* ORIGINAL (rollback): background: rgba(2,6,23,0.46); (slate/azul) */
-        background: rgba(6,8,11,0.44);
+        background: rgba(6,8,11,0.42);
         border: 1px solid rgba(255,255,255,0.10);
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
         backdrop-filter: blur(12px) saturate(1.2);
         -webkit-backdrop-filter: blur(12px) saturate(1.2);
+      }
+
+      .tile-rec {
+        flex: 0 0 auto;
+        padding: 1px 5px;
+        border-radius: 999px;
+        font-size: 8.5px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        color: rgba(255,236,236,0.96);
+        background: rgba(220,38,38,0.30);
+        border: 1px solid rgba(248,113,113,0.5);
       }
 
       .tile-name {
@@ -956,6 +992,33 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
       .side .tile-name {
         font-size: 10px;
+      }
+
+      /* NOVO (redesign): rodape transparente na altura do footer da Home, com
+         frase translucida centralizada + cadeado (preenche o espaco, sem peso). */
+      .security-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+      }
+
+      .enc-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: rgba(226,232,240,0.46);
+        font-size: 12px;
+        line-height: 1;
+        font-weight: 560;
+        letter-spacing: 0.02em;
+        text-align: center;
+      }
+
+      .enc-note ha-icon {
+        --mdc-icon-size: 16px;
+        color: rgba(226,232,240,0.5);
+        flex: 0 0 auto;
       }
 
       @media (max-width: 980px) {
@@ -995,9 +1058,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         }
 
         .security-subview {
-          padding: 6px;
+          padding: 0;
           gap: 8px;
-          grid-template-rows: 42px minmax(0, 1fr);
+          grid-template-rows: clamp(46px, 8vh, 54px) minmax(0, 1fr) clamp(34px, 5vh, 44px);
         }
 
         .security-topbar {
@@ -1008,13 +1071,15 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         }
 
         .brand {
-          justify-content: flex-start;
+          justify-content: center;
           font-size: 12px;
-          gap: 8px;
+          gap: 7px;
         }
 
-        .brand span:first-child {
-          display: none;
+        /* ORIGINAL (rollback): .brand span:first-child { display: none; }
+           — escondia a primeira palavra; agora "Residência · Segurança" e curto. */
+        .brand-sep {
+          margin: 0 -1px;
         }
 
         .clock-block {
@@ -1087,7 +1152,49 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     `;
   }
 
+  // NOVO (redesign Opcao A): hero de seguranca — sem rodape preto. Nome/status
+  // sobrepostos ao video (topo), pilula de gravacao (vermelha) so quando
+  // gravando, contagem "N/N online" discreta no rodape do video e controles
+  // flutuantes (Detalhes/Atualizar) que aparecem em hover/foco.
+  // ORIGINAL (rollback) preservado em _mainFeedLegacy() abaixo.
   static _mainFeed(camera, model) {
+    const hasImage = Boolean(camera?.image);
+    const onlineClass = camera?.online ? ' is-online' : '';
+    const recording = camera?.state === 'recording';
+    return `
+      <article class="feed-card">
+        <div class="image-stage${hasImage ? ' has-image' : ''}">
+          ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image') : ''}
+          <div class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:cctv"></ha-icon></div>
+          <div class="feed-vignette" aria-hidden="true"></div>
+          <div class="feed-overlay-top">
+            <span class="cam-pill">
+              <span class="status-dot${onlineClass}"></span>
+              <span class="cam-pill-name">${BrunoCamerasSecuritySubview._escape(camera?.name || 'Camera')}</span>
+            </span>
+            ${recording ? '<span class="rec-pill"><span class="rec-dot"></span>Gravando</span>' : ''}
+          </div>
+          <div class="feed-controls">
+            <button class="hc-btn" type="button" data-action="more-info" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera?.entity || '')}" aria-label="Abrir detalhes da camera">
+              <ha-icon icon="mdi:magnify-plus-outline"></ha-icon>
+              <span>Detalhes</span>
+            </button>
+            <button class="hc-btn" type="button" data-action="refresh" aria-label="Atualizar cameras">
+              <ha-icon icon="mdi:refresh"></ha-icon>
+              <span>Atualizar</span>
+            </button>
+          </div>
+          <div class="feed-status">
+            <span class="status-dot${model.onlineCount ? ' is-online' : ''}"></span>
+            <span>${model.onlineCount}/${model.totalCount} online</span>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  /* ORIGINAL (rollback): hero com rodape preto grande.
+  static _mainFeedLegacy(camera, model) {
     const hasImage = Boolean(camera?.image);
     const onlineClass = camera?.online ? ' is-online' : '';
     return `
@@ -1096,50 +1203,31 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image') : ''}
           <div class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:cctv"></ha-icon></div>
           <div class="feed-scrim"></div>
-          <div class="feed-title">
-            <span class="status-dot${onlineClass}"></span>
-            <span>${BrunoCamerasSecuritySubview._escape(camera?.name || 'Camera')}</span>
-          </div>
-          <div class="feed-actions">
-            <button class="action-pill" type="button" data-action="more-info" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera?.entity || '')}" aria-label="Abrir detalhes da camera">
-              <ha-icon icon="mdi:magnify-plus-outline"></ha-icon>
-              <span>Detalhes</span>
-            </button>
-            <button class="action-pill" type="button" data-action="refresh" aria-label="Atualizar cameras">
-              <ha-icon icon="mdi:refresh"></ha-icon>
-              <span>Atualizar</span>
-            </button>
-          </div>
+          <div class="feed-title">...</div>
+          <div class="feed-actions">...Detalhes/Atualizar...</div>
         </div>
-        <footer class="feed-footer">
-          <span>
-            <span class="active-name">${BrunoCamerasSecuritySubview._escape(camera?.short_name || camera?.name || 'Camera')}</span>
-            <span class="active-sub">
-              <span class="status-dot${onlineClass}"></span>
-              ${BrunoCamerasSecuritySubview._escape(camera?.status || 'Indisponivel')}
-            </span>
-          </span>
-          <span class="system-summary">
-            <span class="status-dot${model.onlineCount ? ' is-online' : ''}"></span>
-            ${model.onlineCount}/${model.totalCount} online
-          </span>
-        </footer>
+        <footer class="feed-footer">...active-name / active-sub / system-summary...</footer>
       </article>
     `;
   }
+  */
 
+  // NOVO (redesign Opcao A): secundaria sem barra pesada — apenas uma pilula
+  // inferior compacta integrada (ponto de status + nome + "REC" se gravando).
   static _tile(camera, position) {
     const hasImage = Boolean(camera?.image);
     const onlineClass = camera?.online ? ' is-online' : '';
+    const recording = camera?.state === 'recording';
     return `
       <button class="camera-tile ${BrunoCamerasSecuritySubview._escapeAttr(position)}" type="button" data-action="select-camera" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasSecuritySubview._escapeAttr(camera.name)}">
         <span class="image-stage${hasImage ? ' has-image' : ''}">
           ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image') : ''}
           <span class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></span>
-          <span class="tile-scrim"></span>
-          <span class="tile-label">
-            <span class="status-dot${onlineClass}"></span>
+          <span class="tile-vignette" aria-hidden="true"></span>
+          <span class="tile-pill">
+            <span class="status-dot${onlineClass}${recording ? ' is-recording' : ''}"></span>
             <span class="tile-name">${BrunoCamerasSecuritySubview._escape(camera.short_name || camera.name)}</span>
+            ${recording ? '<span class="tile-rec">REC</span>' : ''}
           </span>
         </span>
       </button>

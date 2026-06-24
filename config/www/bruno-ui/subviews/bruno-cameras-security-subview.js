@@ -446,10 +446,17 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         --security-border: rgba(255,255,255,0.14);
         display: block;
         width: 100%;
-        /* ORIGINAL (rollback): min-height: 100vh; (console ocupava a tela toda) */
-        height: 100%;
+        /* ORIGINAL (rollback): height: 100% / min-height:100vh.
+           O 1fr dependia da altura do container; em subview o container nao
+           recebia altura de viewport e a linha colapsava (conteudo achatado no
+           topo, rail sem espaco para centralizar). */
+        /* NOVO (feedback): altura DEFINIDA de viewport (desconta o padding de
+           12px da shell, topo+base = 24px). Isso forca a linha a crescer => a
+           celula da rail fica cheia e a rail centraliza sozinha, e o miolo
+           ocupa quase todo o painel. Uso vh (nao dvh) por compat. com o tablet. */
+        height: calc(100vh - 24px);
         min-height: 0;
-        /* NOVO (Opcao A): transparente — a shell da view fornece o grafite da Home */
+        /* transparente — a shell da view fornece o grafite da Home */
         background: transparent;
         color: rgba(246,250,255,0.94);
         font-family: var(--paper-font-body1_-_font-family, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
@@ -477,8 +484,10 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         height: 100%;
         min-height: 0;
         display: grid;
-        /* NOVO (Opcao A): header (altura da barra de badges) / grade / rodape */
-        grid-template-rows: clamp(50px, 6.4vh, 60px) minmax(0, 1fr) clamp(38px, 4.8vh, 48px);
+        /* NOVO (feedback): faixa superior na altura da barra de badges (64px),
+           miolo que cresce (1fr) e faixa inferior na altura da barra de cenas/
+           acoes da Home (74px). */
+        grid-template-rows: 64px minmax(0, 1fr) 74px;
         gap: 10px;
         padding: 0;
         overflow: hidden;
@@ -487,45 +496,46 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         background: transparent;
       }
 
-      /* ORIGINAL (rollback): topbar com skin glass forte (surface-off tokens). */
+      /* ORIGINAL (rollback): topbar com skin glass (caixa/janela translucida). */
+      /* NOVO (feedback): faixa superior 100% TRANSPARENTE — sem caixa, sem
+         janela, sem blur. Apenas seta (esq.) + titulo centralizado + relogio
+         (dir.), igual ao "topo sem conteudo" das demais subviews. */
       .security-topbar {
         min-width: 0;
         display: grid;
         grid-template-columns: 40px minmax(0, 1fr) auto;
         align-items: center;
         gap: 12px;
-        padding: 0 14px;
-        border-radius: var(--bruno-liquid-card-radius-compact, 18px);
-        /* NOVO (Opcao A): header LEVE, escuro e translucido (altura da barra de
-           badges da Home), em vez de uma barra glass pesada. */
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
-          rgba(8,11,16,0.28);
-        border: 1px solid rgba(255,255,255,0.07);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
-        backdrop-filter: blur(20px) saturate(1.3);
-        -webkit-backdrop-filter: blur(20px) saturate(1.3);
+        padding: 0 6px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
+      /* NOVO (feedback): botao de voltar "fantasma" — sem caixa, so o icone.
+         Ganha um leve realce (azul = interacao) em hover/foco. */
       .icon-button {
         appearance: none;
         -webkit-appearance: none;
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
         display: grid;
         place-items: center;
         padding: 0;
-        border-radius: 14px;
-        border: 1px solid rgba(255,255,255,0.10);
-        background: rgba(255,255,255,0.065);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        border-radius: 999px;
+        border: none;
+        background: transparent;
+        box-shadow: none;
         color: rgba(226,232,240,0.82);
+        transition: background 160ms ease, color 160ms ease;
       }
 
       .icon-button:hover,
       .icon-button:focus-visible {
-        border-color: rgba(var(--security-accent),0.44);
         background: rgba(var(--security-accent),0.16);
+        color: rgba(245,250,255,0.96);
         outline: none;
       }
 

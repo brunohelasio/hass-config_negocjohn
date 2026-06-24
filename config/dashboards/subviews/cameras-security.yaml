@@ -1,8 +1,49 @@
+# --- ORIGINAL (rollback): view em type: panel com card unico ---
+# title: Cameras
+# path: cameras-security
+# icon: mdi:cctv
+# subview: true
+# theme: tablet
+# type: panel
+# cards:
+#   - type: custom:bruno-cameras-security-subview
+# --- FIM ORIGINAL ---
+#
+# NOVO (Opcao A): mesma SHELL da Home — rail real (bento_sidebar com Cameras
+# ativo) na coluna 64px + console na area de conteudo, sobre o mesmo fundo
+# grafite quente do painel principal (bento_main.yaml).
 title: Cameras
 path: cameras-security
 icon: mdi:cctv
 subview: true
 theme: tablet
-type: panel
+type: custom:grid-layout
+card_mod:
+  style: |
+    hui-grid-layout {
+      height: 100vh !important;
+      width: 100%;
+      max-width: 100vw;
+      position: relative;
+      isolation: isolate;
+      background: linear-gradient(140deg, #07090d 0%, #111722 55%, #07090d 100%);
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    hui-grid-layout > * {
+      position: relative;
+      z-index: 1;
+    }
+layout:
+  margin: 0
+  padding: 12px
+  grid-gap: 10px
+  grid-template-columns: 64px minmax(0, 1fr)
+  grid-template-rows: minmax(0, 1fr)
+  grid-template-areas: |
+    "sidebar console"
 cards:
+  - !include ../views/main-grid/bento_sidebar_cameras.yaml
   - type: custom:bruno-cameras-security-subview
+    view_layout:
+      grid-area: console

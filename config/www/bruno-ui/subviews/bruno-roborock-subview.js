@@ -35,6 +35,9 @@ const BRUNO_ROBOROCK_SUBVIEW_DEFAULTS = {
     count_total: 'sensor.roborock_s7_contagem_total_de_limpeza',
   },
   // Mapa: IDENTICO ao footer_vacuum.yaml (nao alterar entidades).
+  // card_mod adaptado do popup: limita a ALTURA da imagem (div.map-wrapper) para
+  // SOBRAR espaco a barra de controles nativa (modo/zona/executar) dentro do
+  // slot — base 100% (altura do slot) em vez de 90vh do popup.
   map: {
     type: 'custom:xiaomi-vacuum-map-card',
     vacuum_platform: 'Roborock',
@@ -44,6 +47,32 @@ const BRUNO_ROBOROCK_SUBVIEW_DEFAULTS = {
     map_locked: true,
     tiles: [],
     icons: [],
+    card_mod: {
+      style: `
+        ha-card {
+          height: 100% !important;
+          max-height: 100% !important;
+          overflow: hidden !important;
+          --map-card-primary-color: #FFFFFF30;
+          --map-card-secondary-color: #FFFFFF10;
+          --map-card-secondary-text-color: #9da0a2;
+          --map-card-zoomer-background: none;
+          --map-card-internal-big-radius: 0.6em !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+        div.map-wrapper {
+          max-height: calc(100% - 96px) !important;
+          padding: 0.35rem 0 0.25rem !important;
+        }
+        div.controls-wrapper { padding-top: 0; padding-bottom: 0; margin: 0; }
+        div.map-controls-wrapper { padding: 2px 6px; }
+        xvmc-zoom-buttons { display: none !important; }
+        paper-button { --mdc-icon-size: 1.35em; color: #9da0a2 !important; padding: 0.32em; }
+        #map-image { filter: brightness(0.78); }
+      `,
+    },
   },
   navigation_path: 'bento-lab',
 };

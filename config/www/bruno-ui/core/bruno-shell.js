@@ -245,19 +245,12 @@ class BrunoShell extends HTMLElement {
         min-width: 0;
         min-height: 0;
         overflow: hidden;
-        /* Fundo CENTRAL das secoes (padrao unico, nao por arquivo). Vem do token
-           do core --bruno-section-backdrop; o fallback abaixo (fundo ambiente
-           quente da Home) vale ate o core definir o token. Assim, mudar o fundo
-           de TODAS as secoes = mudar 1 lugar. As secoes ficam transparentes e
-           frostam este fundo (coloracao igual a Home). */
-        background: var(--bruno-section-backdrop,
-          linear-gradient(180deg, rgba(8,11,16,0.56), rgba(8,11,16,0.68)),
-          url("/local/images/home_color.jpg") center / cover no-repeat,
-          url("/local/images/home.jpg") center / cover no-repeat,
-          #0a0e16);
+        /* Fundo CENTRAL das secoes (padrao unico, nao por arquivo): por padrao
+           TRANSPARENTE -> mostra o grafite do :host (o "escuro atras do hero").
+           Para trocar o fundo de TODAS as secoes de uma vez, basta definir
+           --bruno-section-backdrop no core (bruno-liquid-glass.js). */
+        background: var(--bruno-section-backdrop, transparent);
       }
-      /* A Home tem fundo proprio (hero/grafite) — nao recebe o backdrop. */
-      .content-slot[data-section="home"] { background: transparent; }
 
       /* A secao ativa preenche a regiao de conteudo. */
       .content-slot > * {

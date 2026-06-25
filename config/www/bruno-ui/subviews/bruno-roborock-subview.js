@@ -218,6 +218,13 @@ class BrunoRoborockSubview extends HTMLElement {
             ${BrunoRoborockSubview._statRow('Nº de Limpezas', 'count_total')}
           </section>
         </section>
+
+        <footer class="rb-footer">
+          <span class="rb-foot-note">
+            <ha-icon icon="mdi:robot-vacuum" aria-hidden="true"></ha-icon>
+            <span data-bind="foot">Roborock S7</span>
+          </span>
+        </footer>
       </main>
     `;
 
@@ -262,6 +269,7 @@ class BrunoRoborockSubview extends HTMLElement {
     this._setText(r, 'status-sub', this._state('room', '—'));
     const dot = r.querySelector('[data-bind="status-dot"]');
     if (dot) dot.className = `rb-status-dot tone-${meta.tone}`;
+    this._setText(r, 'foot', `Roborock S7 · ${meta.label}`);
     const batt = this._num('battery', 0, '--');
     this._setText(r, 'battery', batt === '--' ? '--' : `${batt}%`);
 
@@ -517,7 +525,14 @@ class BrunoRoborockSubview extends HTMLElement {
         width: 100%;
         height: 100%;
         min-height: 0;
-        background: transparent;
+        /* NOVO (ajuste 2): fundo ambiente quente igual a Home — assim os
+           paineis glass frostam quente e batem com a coloracao dos blocos do
+           painel principal (em vez de escurecerem sobre o grafite). */
+        background:
+          linear-gradient(180deg, rgba(8,11,16,0.56), rgba(8,11,16,0.68)),
+          url("/local/images/home_color.jpg") center / cover no-repeat,
+          url("/local/images/home.jpg") center / cover no-repeat,
+          #0a0e16;
         color: rgba(246,250,255,0.94);
         font-family: var(--primary-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
       }
@@ -527,9 +542,30 @@ class BrunoRoborockSubview extends HTMLElement {
       .rb-shell {
         height: 100%;
         display: grid;
-        grid-template-rows: 56px minmax(0, 1fr);
+        /* NOVO (ajuste 1): topo (altura das badges) / conteudo / rodape (altura
+           da barra de acoes da Home) — igual as Cameras. As faixas de topo e
+           base ficam reservadas; o conteudo NAO invade a base. */
+        grid-template-rows: 64px minmax(0, 1fr) 74px;
         gap: 10px;
       }
+
+      /* Rodape transparente (faixa inferior reservada, info simples). */
+      .rb-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+      }
+      .rb-foot-note {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: rgba(226,232,240,0.46);
+        font-size: 12px;
+        font-weight: 560;
+        letter-spacing: 0.02em;
+      }
+      .rb-foot-note ha-icon { --mdc-icon-size: 16px; color: rgba(226,232,240,0.5); flex: 0 0 auto; }
 
       /* Header transparente (igual as demais subviews) */
       .rb-header {

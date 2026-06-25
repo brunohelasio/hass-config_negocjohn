@@ -33,12 +33,18 @@ const BRUNO_ROBOROCK_SUBVIEW_DEFAULTS = {
     area_total: 'sensor.roborock_s7_area_total_de_limpeza',
     time_total: 'sensor.roborock_s7_tempo_total_de_limpeza',
     count_total: 'sensor.roborock_s7_contagem_total_de_limpeza',
+    // Consumiveis / agua (na coluna da esquerda, onde ha espaco).
+    brush_main: 'sensor.roborock_s7_tempo_restante_da_escova_principal',
+    brush_side: 'sensor.roborock_s7_tempo_restante_da_escova_lateral',
+    filter: 'sensor.roborock_s7_tempo_restante_do_filtro',
+    sensor_life: 'sensor.roborock_s7_tempo_restante_do_sensor',
+    water_box: 'binary_sensor.roborock_s7_water_box_attached',
+    water_short: 'binary_sensor.roborock_s7_water_shortage',
   },
   // Mapa: IDENTICO ao footer_vacuum.yaml (nao alterar entidades).
-  // NOTA: tentamos um card_mod para encolher a imagem e mostrar os controles,
-  // mas ele coincidiu com "Calibracao invalida" no card do mapa — entao foi
-  // REVERTIDO. O mapa volta ao estado que funcionava (controles podem ficar
-  // parcialmente cortados na base do slot).
+  // card_mod com base VH (sempre positivo, como o popup), para SOBRAR espaco a
+  // barra de controles nativa (zona/segmento/executar) SEM quebrar a calibracao.
+  // (A tentativa anterior com calc(100% - 96px) degenerava p/ 0 na init -> erro.)
   map: {
     type: 'custom:xiaomi-vacuum-map-card',
     vacuum_platform: 'Roborock',
@@ -48,6 +54,32 @@ const BRUNO_ROBOROCK_SUBVIEW_DEFAULTS = {
     map_locked: true,
     tiles: [],
     icons: [],
+    card_mod: {
+      style: `
+        ha-card {
+          height: calc(100vh - 182px) !important;
+          max-height: calc(100vh - 182px) !important;
+          overflow: hidden !important;
+          --map-card-primary-color: #FFFFFF30;
+          --map-card-secondary-color: #FFFFFF10;
+          --map-card-secondary-text-color: #9da0a2;
+          --map-card-zoomer-background: none;
+          --map-card-internal-big-radius: 0.6em !important;
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+        div.map-wrapper {
+          max-height: calc(100vh - 290px) !important;
+          padding: 0.35rem 0 0.25rem !important;
+        }
+        div.controls-wrapper { padding-top: 0; padding-bottom: 0; margin: 0; }
+        div.map-controls-wrapper { padding: 2px 6px; }
+        xvmc-zoom-buttons { display: none !important; }
+        paper-button { --mdc-icon-size: 1.35em; color: #9da0a2 !important; padding: 0.32em; }
+        #map-image { filter: brightness(0.85); }
+      `,
+    },
   },
   navigation_path: 'bento-lab',
 };
@@ -185,6 +217,17 @@ class BrunoRoborockSubview extends HTMLElement {
             ${this._selectRow('Intensidade do Mop', 'mop_intensity')}
             ${this._selectRow('Modo do Mop', 'mop_mode')}
 
+            <div class="rb-divider"></div>
+            <div class="rb-col-title">Consumíveis</div>
+            <div class="rb-rows">
+              ${BrunoRoborockSubview._infoRow('Escova principal', 'brush_main')}
+              ${BrunoRoborockSubview._infoRow('Escova lateral', 'brush_side')}
+              ${BrunoRoborockSubview._infoRow('Filtro', 'filter')}
+              ${BrunoRoborockSubview._infoRow('Sensor', 'sensor_life')}
+              ${BrunoRoborockSubview._infoRow('Caixa d\'água', 'water_box')}
+              ${BrunoRoborockSubview._infoRow('Falta de água', 'water_short')}
+            </div>
+
             <div class="rb-controls">
               <button class="rb-ctrl" type="button" data-action="play-pause">
                 <ha-icon icon="mdi:play-pause"></ha-icon><span data-bind="play-label">Iniciar</span>
@@ -284,6 +327,14 @@ class BrunoRoborockSubview extends HTMLElement {
     this._setText(r, 'row-battery2', batt === '--' ? '--' : `${batt}%`);
     this._setText(r, 'row-fan', BrunoRoborockSubview._cap(this._vacAttr('fan_speed')));
 
+    // Consumiveis / agua (coluna esquerda)
+    this._setText(r, 'row-brush_main', this._withUnit('brush_main'));
+    this._setText(r, 'row-brush_side', this._withUnit('brush_side'));
+    this._setText(r, 'row-filter', this._withUnit('filter'));
+    this._setText(r, 'row-sensor_life', this._withUnit('sensor_life'));
+    this._setText(r, 'row-water_box', this._binYesNo('water_box'));
+    this._setText(r, 'row-water_short', this._binYesNo('water_short'));
+
     // Selects
     this._syncSelect(r, 'mop_intensity');
     this._syncSelect(r, 'mop_mode');
@@ -317,6 +368,12 @@ class BrunoRoborockSubview extends HTMLElement {
     if (v === '--') return '--';
     const u = this._unit(key);
     return u ? `${v} ${u}` : v;
+  }
+
+  _binYesNo(key) {
+    const s = this._st(key);
+    if (!s || ['unknown', 'unavailable', 'none', ''].includes(s.state)) return '--';
+    return s.state === 'on' ? 'Sim' : 'Não';
   }
 
   _setText(root, bind, value) {

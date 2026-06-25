@@ -38,7 +38,12 @@ top_items:
   - key: vacuum
     icon: vacuum
     label: Aspirador
-    tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
+    # ANTERIOR (rollback): abria o popup footer_vacuum.yaml.
+    # tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
+    # NOVO: troca para a secao #roborock da shell (mesmo padrao das Cameras).
+    tap_action:
+      action: fire-dom-event
+      bruno_section: roborock
 
   - key: network
     icon: network

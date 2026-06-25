@@ -22,6 +22,7 @@ frontend:
     - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260620-dashboard-refinements-1
     - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1
     - /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260624-cameras-shell-2
+    - /local/bruno-ui/subviews/bruno-roborock-subview.js?v=20260625-roborock-shell-1
     # ORIGINAL: - /local/bruno-ui/cards/bruno-sala-card.js?v=20260608-sala-command-list-1
     - /local/bruno-ui/cards/bruno-sala-card.js?v=20260611-sala-rail-office-parity-1
     # ORIGINAL: - /local/bruno-ui/cards/bruno-office-card.js?v=20260608-room-assets-uniform-1

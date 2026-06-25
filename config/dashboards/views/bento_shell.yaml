@@ -1,9 +1,12 @@
-# View-shell (Etapa 1) — PARALELA ao bento_main, que permanece INTOCADO.
-# Acesso para validacao: /ngocjohn-main/bento-shell  (alterna #home / #cameras).
+# View-shell (Etapa 2) — PAINEL PADRAO. Assumiu o path `bento-lab` (antes do
+# bento_main, agora comentado). Assim, "voltar ao painel principal" a partir de
+# qualquer subview (que navega para `bento-lab`) cai DENTRO da shell.
+# Alterna secoes por hash: bento-lab#home / bento-lab#cameras.
 # type: panel => 1 unico card (a shell) ocupando a tela toda. Como a view e
 # unica, a rail (dentro da shell) nunca re-monta ao alternar de secao.
-title: Shell
-path: bento-shell
+# Rollback: voltar path para `bento-shell` e descomentar bento_main em ui-lovelace-main.yaml.
+title: Home
+path: bento-lab
 subview: false
 theme: tablet
 type: panel

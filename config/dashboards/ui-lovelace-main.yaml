@@ -1,32 +1,39 @@
 button_card_templates: !include_dir_merge_named ./templates/button_card_templates
 streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 
-resources:
-  - url: /local/bruno-ui/core/bruno-shell.js?v=20260624-shell-1
-    type: module
-  - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260621-sala-curtain-status-1
-    type: module
-  - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260620-dashboard-refinements-1
-    type: module
-  - url: /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260621-kitchen-office-structure-3
-    type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260620-dashboard-refinements-1
-    type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260620-dashboard-refinements-1
-    type: module
-  - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1
-    type: module
-  - url: /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260624-cameras-shell-2
-    type: module
+# ── DEDUP (2026-06-24): bloco `resources:` comentado. TODOS estes JS ja sao
+#    carregados por frontend.extra_module_url (configuration.yaml) com as MESMAS
+#    versoes. Carrega-los tambem aqui fazia o tablet baixar cada modulo DUAS
+#    vezes (dobrava a carga no WebView do Fully Kiosk → contribuia para os
+#    "erro de configuracao" intermitentes). Rollback: descomentar este bloco.
+# resources:
+#   - url: /local/bruno-ui/core/bruno-shell.js?v=20260624-shell-1
+#     type: module
+#   - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260621-sala-curtain-status-1
+#     type: module
+#   - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260620-dashboard-refinements-1
+#     type: module
+#   - url: /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260621-kitchen-office-structure-3
+#     type: module
+#   - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260620-dashboard-refinements-1
+#     type: module
+#   - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260620-dashboard-refinements-1
+#     type: module
+#   - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1
+#     type: module
+#   - url: /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260624-cameras-shell-2
+#     type: module
 
 kiosk_mode:
   kiosk: true
 
 title: Neklanka Home
 views:
-  - !include views/bento_main.yaml
-  # NOVO (Etapa 1 — app-shell): view PARALELA p/ validacao em /ngocjohn-main/bento-shell.
-  # bento_main acima permanece INTOCADO. Rollback: comentar a linha abaixo.
+  # ── ETAPA 2 (2026-06-24): a SHELL virou o painel padrao (assumiu o path
+  #    `bento-lab` em views/bento_shell.yaml). O bento_main original fica
+  #    comentado para rollback rapido (descomentar a linha e reverter o path
+  #    da shell para `bento-shell`).
+  # - !include views/bento_main.yaml
   - !include views/bento_shell.yaml
   - !include views/main.yaml
 

@@ -38,8 +38,12 @@ const BRUNO_ROBOROCK_SUBVIEW_DEFAULTS = {
     brush_side: 'sensor.roborock_s7_tempo_restante_da_escova_lateral',
     filter: 'sensor.roborock_s7_tempo_restante_do_filtro',
     sensor_life: 'sensor.roborock_s7_tempo_restante_do_sensor',
-    water_box: 'binary_sensor.roborock_s7_water_box_attached',
-    water_short: 'binary_sensor.roborock_s7_water_shortage',
+    // ORIGINAL (rollback 1a): consumiveis "Caixa d'agua" / "Falta de agua".
+    // Retirados da exibicao (geravam scroll vertical na coluna). As chaves ficam
+    // aqui comentadas para reativacao rapida (descomentar + re-adicionar o
+    // _infoRow correspondente no markup e o _setText em _update).
+    // water_box: 'binary_sensor.roborock_s7_water_box_attached',
+    // water_short: 'binary_sensor.roborock_s7_water_shortage',
   },
   // Mapa: IDENTICO ao footer_vacuum.yaml (nao alterar entidades).
   // card_mod com base VH (sempre positivo, como o popup), para SOBRAR espaco a
@@ -224,8 +228,6 @@ class BrunoRoborockSubview extends HTMLElement {
               ${BrunoRoborockSubview._infoRow('Escova lateral', 'brush_side')}
               ${BrunoRoborockSubview._infoRow('Filtro', 'filter')}
               ${BrunoRoborockSubview._infoRow('Sensor', 'sensor_life')}
-              ${BrunoRoborockSubview._infoRow('Caixa d\'água', 'water_box')}
-              ${BrunoRoborockSubview._infoRow('Falta de água', 'water_short')}
             </div>
 
             <div class="rb-controls">
@@ -332,8 +334,6 @@ class BrunoRoborockSubview extends HTMLElement {
     this._setText(r, 'row-brush_side', this._withUnit('brush_side'));
     this._setText(r, 'row-filter', this._withUnit('filter'));
     this._setText(r, 'row-sensor_life', this._withUnit('sensor_life'));
-    this._setText(r, 'row-water_box', this._binYesNo('water_box'));
-    this._setText(r, 'row-water_short', this._binYesNo('water_short'));
 
     // Selects
     this._syncSelect(r, 'mop_intensity');
@@ -690,7 +690,6 @@ class BrunoRoborockSubview extends HTMLElement {
 
       .rb-rows { display: flex; flex-direction: column; }
       .rb-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; padding: 4px 2px; }
-      .rb-row + .rb-row { border-top: 1px solid rgba(255,255,255,0.05); }
       .rb-row-label { font-size: 12.5px; color: rgba(226,232,240,0.72); }
       .rb-row-label em { font-style: normal; color: rgba(255,255,255,0.9); font-weight: 700; }
       .rb-row-value { font-size: 12.5px; font-weight: 640; color: rgba(255,255,255,0.92); text-align: right; }

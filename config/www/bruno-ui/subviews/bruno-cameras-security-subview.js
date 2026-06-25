@@ -149,15 +149,39 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     };
   }
 
+  // --- ORIGINAL (rollback): re-render TOTAL ao trocar de camera. Reconstruia o
+  //     shadow DOM inteiro -> todos os <img> recriados -> TODAS as cameras
+  //     piscavam (apagavam/acendiam) a cada clique. ---
+  // _selectCamera(entityId) {
+  //   if (!entityId) return;
+  //   const model = this._model();
+  //   if (entityId === model.activeId) return;
+  //   this._localActiveCamera = entityId;
+  //   this._refreshSeed = Date.now();
+  //   globalThis.BrunoLiquidGlass?.feedback?.('tap');
+  //   this._render();
+  //   const activeEntity = this._config?.active_entity;
+  //   if (activeEntity && this._hass?.states?.[activeEntity]) {
+  //     this._callService('input_select', 'select_option', { entity_id: activeEntity, option: entityId });
+  //   }
+  // }
+  // --- FIM ORIGINAL ---
+  // NOVO (2b): troca SO o slot principal <-> o tile clicado, no lugar, sem
+  // reconstruir o DOM. Os demais tiles permanecem intactos (sem piscar). As duas
+  // imagens trocadas usam preload+swap (sem blank). Se o DOM ainda nao existir,
+  // cai no render completo (caso raro de primeiro clique antes do mount).
   _selectCamera(entityId) {
     if (!entityId) return;
     const model = this._model();
     if (entityId === model.activeId) return;
-
-    this._localActiveCamera = entityId;
-    this._refreshSeed = Date.now();
     globalThis.BrunoLiquidGlass?.feedback?.('tap');
-    this._render();
+
+    const swapped = this._swapActive(entityId);
+    if (!swapped) {
+      this._localActiveCamera = entityId;
+      this._refreshSeed = Date.now();
+      this._render();
+    }
 
     const activeEntity = this._config?.active_entity;
     if (activeEntity && this._hass?.states?.[activeEntity]) {
@@ -166,6 +190,92 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         option: entityId,
       });
     }
+  }
+
+  // NOVO (2b): executa a troca principal <-> tile clicado no DOM existente.
+  // Localiza o tile pelo seu data-camera-id ATUAL (= camera clicada), reescreve
+  // o slot principal para a camera clicada e o tile clicado para a camera que
+  // estava no principal. Atualiza so esses dois slots; nada mais re-renderiza.
+  _swapActive(newActiveId) {
+    const root = this.shadowRoot;
+    if (!root) return false;
+
+    const model = this._model();
+    const oldActive = model.activeCamera;
+    if (!oldActive || newActiveId === oldActive.entity) return false;
+
+    const tileEl = root.querySelector(`.camera-tile[data-camera-id="${newActiveId}"]`);
+    const mainStage = root.querySelector('.main-feed .image-stage');
+    if (!tileEl || !mainStage) return false;
+
+    const newCam = model.cameras.find((camera) => camera.entity === newActiveId);
+    if (!newCam) return false;
+
+    // Confirma a troca: a partir daqui o modelo reflete a nova camera ativa.
+    this._localActiveCamera = newActiveId;
+    this._refreshSeed = Date.now();
+
+    // 1) Slot principal -> camera clicada.
+    this._updateStage(mainStage, newCam);
+    this._updateSlotPill(root.querySelector('.main-feed [data-feed-pill]'), newCam, false);
+    const moreBtn = root.querySelector('.main-feed [data-action="more-info"]');
+    if (moreBtn) moreBtn.dataset.cameraId = newCam.entity;
+
+    // 2) Tile clicado -> camera que estava no principal.
+    this._updateStage(tileEl.querySelector('.image-stage'), oldActive);
+    this._updateSlotPill(tileEl.querySelector('.tile-pill'), oldActive, true);
+    tileEl.dataset.cameraId = oldActive.entity;
+    tileEl.setAttribute('aria-label', oldActive.name || '');
+
+    // Mantem a assinatura estrutural coerente para que `set hass` nao dispare um
+    // re-render completo (que reordenaria os tiles pela ordem do config).
+    this._renderedSignature = BrunoCamerasSecuritySubview._signatureFromModel(this._model());
+    return true;
+  }
+
+  // NOVO (2b): atualiza a imagem de um slot (principal ou tile) sem blank —
+  // preload da nova frame e so entao troca o src (a frame antiga fica visivel
+  // ate a nova carregar). Cria o <img> se o slot estava em placeholder.
+  _updateStage(stageEl, camera) {
+    if (!stageEl) return;
+    const hasImage = Boolean(camera?.image);
+    stageEl.classList.toggle('has-image', hasImage);
+
+    let img = stageEl.querySelector('img.camera-image');
+    if (!hasImage) {
+      if (img) img.classList.add('is-hidden');
+      return;
+    }
+
+    const baseSrc = camera.image;
+    const nextSrc = BrunoCamerasSecuritySubview._withCacheBust(baseSrc, this._refreshSeed);
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'camera-image is-hidden';
+      img.alt = '';
+      stageEl.insertBefore(img, stageEl.firstChild);
+      this._bindImageElement(img);
+    }
+    img.dataset.cameraSrcBase = baseSrc;
+    img.dataset.cameraEntity = camera.entity;
+
+    if (globalThis.Image) {
+      const loader = new globalThis.Image();
+      loader.onload = () => {
+        img.src = nextSrc;
+        img.dataset.hasLoaded = 'true';
+        img.classList.remove('is-hidden');
+      };
+      loader.src = nextSrc;
+    } else {
+      img.src = nextSrc;
+    }
+  }
+
+  // NOVO (2b): reescreve so o conteudo da pilula (sem imagens) -> nao pisca.
+  _updateSlotPill(pillEl, camera, compact) {
+    if (!pillEl) return;
+    pillEl.innerHTML = BrunoCamerasSecuritySubview._pillInner(camera, compact);
   }
 
   _openMoreInfo(entityId) {
@@ -303,14 +413,19 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   }
 
   _bindImages() {
-    this.shadowRoot?.querySelectorAll('img[data-camera-src-base]').forEach((image) => {
-      image.addEventListener('load', () => {
-        image.dataset.hasLoaded = 'true';
-        image.classList.remove('is-hidden');
-      });
-      image.addEventListener('error', () => {
-        if (image.dataset.hasLoaded !== 'true') image.classList.add('is-hidden');
-      });
+    this.shadowRoot?.querySelectorAll('img[data-camera-src-base]')
+      .forEach((image) => this._bindImageElement(image));
+  }
+
+  // NOVO (2b): liga load/error de UM <img> (reutilizado por _updateStage ao
+  // criar uma imagem nova durante a troca de slot).
+  _bindImageElement(image) {
+    image.addEventListener('load', () => {
+      image.dataset.hasLoaded = 'true';
+      image.classList.remove('is-hidden');
+    });
+    image.addEventListener('error', () => {
+      if (image.dataset.hasLoaded !== 'true') image.classList.add('is-hidden');
     });
   }
 
@@ -346,7 +461,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
           <section class="security-grid">
             <section class="main-feed">
-              ${BrunoCamerasSecuritySubview._mainFeed(active, model)}
+              ${BrunoCamerasSecuritySubview._mainFeed(active)}
             </section>
 
             <aside class="side-rail" aria-label="Cameras principais">
@@ -956,6 +1071,40 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         transform: translateY(1px) scale(0.992);
       }
 
+      /* NOVO (2a): pilula do feed PRINCIPAL — mesmo padrao das secundarias
+         (.tile-pill), ancorada no canto inferior esquerdo, so um pouco maior por
+         ser o hero. Substitui o antigo overlay do topo + contagem "N/N online".
+         As regras antigas (.feed-overlay-top, .cam-pill, .rec-pill, .feed-status)
+         permanecem abaixo como inertes (nao ha mais markup que as use). */
+      .feed-pill {
+        position: absolute;
+        left: 16px;
+        bottom: 14px;
+        max-width: calc(100% - 120px);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        padding: 7px 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.95);
+        background: rgba(6,8,11,0.42);
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 22px rgba(0,0,0,0.26);
+        backdrop-filter: blur(14px) saturate(1.22);
+        -webkit-backdrop-filter: blur(14px) saturate(1.22);
+        font-size: 12.5px;
+        line-height: 1;
+        font-weight: 720;
+      }
+
+      .feed-pill .cam-pill-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       /* ORIGINAL (rollback): .tile-label (barra inferior larga, centralizada). */
       /* NOVO (redesign): pilula compacta integrada, ancorada a esquerda. */
       .tile-pill {
@@ -1162,27 +1311,34 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     `;
   }
 
-  // NOVO (redesign Opcao A): hero de seguranca — sem rodape preto. Nome/status
-  // sobrepostos ao video (topo), pilula de gravacao (vermelha) so quando
-  // gravando, contagem "N/N online" discreta no rodape do video e controles
-  // flutuantes (Detalhes/Atualizar) que aparecem em hover/foco.
-  // ORIGINAL (rollback) preservado em _mainFeedLegacy() abaixo.
-  static _mainFeed(camera, model) {
+  // --- ORIGINAL (rollback 2a): hero com faixa de overlay no topo (.feed-overlay-top
+  //     com .cam-pill + .rec-pill "Gravando") e contagem "N/N online" (.feed-status)
+  //     no rodape do video. Assinatura era _mainFeed(camera, model). ---
+  //   <div class="feed-overlay-top">
+  //     <span class="cam-pill"><span class="status-dot${onlineClass}"></span>
+  //       <span class="cam-pill-name">${...camera.name...}</span></span>
+  //     ${recording ? '<span class="rec-pill"><span class="rec-dot"></span>Gravando</span>' : ''}
+  //   </div>
+  //   ...controles flutuantes...
+  //   <div class="feed-status"><span class="status-dot..."></span>
+  //     <span>${model.onlineCount}/${model.totalCount} online</span></div>
+  // --- FIM ORIGINAL ---
+  // NOVO (2a): a camera principal segue o MESMO padrao das secundarias — uma
+  // unica pilula no canto inferior ESQUERDO (status + nome + REC), via
+  // _pillInner (compartilhado com os tiles). REMOVIDOS: overlay do topo
+  // (.feed-overlay-top) e contagem "N/N online" (.feed-status). MANTIDOS: os
+  // controles flutuantes (Detalhes/Atualizar) no canto inferior direito.
+  // A pilula tem data-feed-pill para a troca in-place (2b) localiza-la.
+  static _mainFeed(camera) {
     const hasImage = Boolean(camera?.image);
-    const onlineClass = camera?.online ? ' is-online' : '';
-    const recording = camera?.state === 'recording';
     return `
       <article class="feed-card">
         <div class="image-stage${hasImage ? ' has-image' : ''}">
           ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image') : ''}
           <div class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:cctv"></ha-icon></div>
           <div class="feed-vignette" aria-hidden="true"></div>
-          <div class="feed-overlay-top">
-            <span class="cam-pill">
-              <span class="status-dot${onlineClass}"></span>
-              <span class="cam-pill-name">${BrunoCamerasSecuritySubview._escape(camera?.name || 'Camera')}</span>
-            </span>
-            ${recording ? '<span class="rec-pill"><span class="rec-dot"></span>Gravando</span>' : ''}
+          <div class="feed-pill" data-feed-pill>
+            ${BrunoCamerasSecuritySubview._pillInner(camera, false)}
           </div>
           <div class="feed-controls">
             <button class="hc-btn" type="button" data-action="more-info" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera?.entity || '')}" aria-label="Abrir detalhes da camera">
@@ -1194,13 +1350,24 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
               <span>Atualizar</span>
             </button>
           </div>
-          <div class="feed-status">
-            <span class="status-dot${model.onlineCount ? ' is-online' : ''}"></span>
-            <span>${model.onlineCount}/${model.totalCount} online</span>
-          </div>
         </div>
       </article>
     `;
+  }
+
+  // NOVO (2a/2b): conteudo da pilula compartilhado pelo principal e pelos tiles
+  // (ponto de status + nome + "REC" quando gravando). compact=false usa o nome
+  // longo (principal); compact=true usa short_name (tiles).
+  static _pillInner(camera, compact) {
+    const onlineClass = camera?.online ? ' is-online' : '';
+    const recording = camera?.state === 'recording';
+    const recClass = recording ? ' is-recording' : '';
+    const name = compact
+      ? (camera?.short_name || camera?.name || 'Camera')
+      : (camera?.name || 'Camera');
+    const nameClass = compact ? 'tile-name' : 'cam-pill-name';
+    const rec = recording ? '<span class="tile-rec">REC</span>' : '';
+    return `<span class="status-dot${onlineClass}${recClass}"></span><span class="${nameClass}">${BrunoCamerasSecuritySubview._escape(name)}</span>${rec}`;
   }
 
   /* ORIGINAL (rollback): hero com rodape preto grande.
@@ -1226,8 +1393,6 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   // inferior compacta integrada (ponto de status + nome + "REC" se gravando).
   static _tile(camera, position) {
     const hasImage = Boolean(camera?.image);
-    const onlineClass = camera?.online ? ' is-online' : '';
-    const recording = camera?.state === 'recording';
     return `
       <button class="camera-tile ${BrunoCamerasSecuritySubview._escapeAttr(position)}" type="button" data-action="select-camera" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasSecuritySubview._escapeAttr(camera.name)}">
         <span class="image-stage${hasImage ? ' has-image' : ''}">
@@ -1235,9 +1400,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           <span class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></span>
           <span class="tile-vignette" aria-hidden="true"></span>
           <span class="tile-pill">
-            <span class="status-dot${onlineClass}${recording ? ' is-recording' : ''}"></span>
-            <span class="tile-name">${BrunoCamerasSecuritySubview._escape(camera.short_name || camera.name)}</span>
-            ${recording ? '<span class="tile-rec">REC</span>' : ''}
+            ${BrunoCamerasSecuritySubview._pillInner(camera, true)}
           </span>
         </span>
       </button>

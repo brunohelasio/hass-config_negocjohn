@@ -233,12 +233,19 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     return true;
   }
 
-  // NOVO (2b): atualiza a imagem de um slot (principal ou tile) sem blank —
-  // preload da nova frame e so entao troca o src (a frame antiga fica visivel
-  // ate a nova carregar). Cria o <img> se o slot estava em placeholder.
+  // NOVO (2b, corrigido): atualiza a imagem de um slot (principal ou tile) na
+  // troca. Le SEMPRE o entity_picture mais recente do hass (token novo — o token
+  // do camera_proxy rotaciona em minutos; reusar o base antigo congelava a
+  // imagem). Aplica o src DIRETO (acao deliberada do clique): garante a troca
+  // visivel mesmo se um preload falhasse silenciosamente. Cria o <img> se o slot
+  // estava em placeholder.
+  // ORIGINAL (rollback): so aplicava o src dentro de loader.onload; se o preload
+  // falhava (token expirado), o onload nunca disparava e a frame antiga
+  // permanecia -> "o nome muda mas a imagem nao".
   _updateStage(stageEl, camera) {
     if (!stageEl) return;
-    const hasImage = Boolean(camera?.image);
+    const baseSrc = this._liveImageBase(camera);
+    const hasImage = Boolean(baseSrc);
     stageEl.classList.toggle('has-image', hasImage);
 
     let img = stageEl.querySelector('img.camera-image');
@@ -247,7 +254,6 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       return;
     }
 
-    const baseSrc = camera.image;
     const nextSrc = BrunoCamerasSecuritySubview._withCacheBust(baseSrc, this._refreshSeed);
     if (!img) {
       img = document.createElement('img');
@@ -258,18 +264,16 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     }
     img.dataset.cameraSrcBase = baseSrc;
     img.dataset.cameraEntity = camera.entity;
+    img.src = nextSrc; // direto: o load/error ja estao ligados (mostra/oculta)
+  }
 
-    if (globalThis.Image) {
-      const loader = new globalThis.Image();
-      loader.onload = () => {
-        img.src = nextSrc;
-        img.dataset.hasLoaded = 'true';
-        img.classList.remove('is-hidden');
-      };
-      loader.src = nextSrc;
-    } else {
-      img.src = nextSrc;
-    }
+  // NOVO: retorna o entity_picture VIVO da camera (token atual do hass). Se o
+  // hass ainda nao tiver, cai para o ultimo conhecido / o que veio no modelo.
+  _liveImageBase(camera) {
+    if (!camera) return '';
+    const live = this._hass?.states?.[camera.entity]?.attributes?.entity_picture || '';
+    if (live) this._lastCameraImages[camera.entity] = live;
+    return live || camera.image || this._lastCameraImages[camera.entity] || '';
   }
 
   // NOVO (2b): reescreve so o conteudo da pilula (sem imagens) -> nao pisca.
@@ -358,8 +362,14 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._refreshSeed = stamp;
 
     this.shadowRoot.querySelectorAll('img[data-camera-src-base]').forEach((image) => {
-      const baseSrc = image.dataset.cameraSrcBase;
+      // CORRECAO (static): le o entity_picture ATUAL do hass (token novo). O
+      // base congelado no primeiro render expira em minutos -> 401 -> a imagem
+      // travava. Atualiza o data-camera-src-base com o token vivo.
+      const entityId = image.dataset.cameraEntity;
+      const live = entityId ? this._hass.states?.[entityId]?.attributes?.entity_picture : '';
+      const baseSrc = live || image.dataset.cameraSrcBase;
       if (!baseSrc) return;
+      if (live && live !== image.dataset.cameraSrcBase) image.dataset.cameraSrcBase = live;
 
       const nextSrc = BrunoCamerasSecuritySubview._withCacheBust(baseSrc, stamp);
       const loader = new globalThis.Image();

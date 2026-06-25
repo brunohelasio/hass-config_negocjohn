@@ -525,14 +525,9 @@ class BrunoRoborockSubview extends HTMLElement {
         width: 100%;
         height: 100%;
         min-height: 0;
-        /* NOVO (ajuste 2): fundo ambiente quente igual a Home — assim os
-           paineis glass frostam quente e batem com a coloracao dos blocos do
-           painel principal (em vez de escurecerem sobre o grafite). */
-        background:
-          linear-gradient(180deg, rgba(8,11,16,0.56), rgba(8,11,16,0.68)),
-          url("/local/images/home_color.jpg") center / cover no-repeat,
-          url("/local/images/home.jpg") center / cover no-repeat,
-          #0a0e16;
+        /* Transparente: o FUNDO e central (na shell, via --bruno-section-backdrop).
+           A secao so consome o padrao do core — sem hardcode por arquivo. */
+        background: transparent;
         color: rgba(246,250,255,0.94);
         font-family: var(--primary-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
       }

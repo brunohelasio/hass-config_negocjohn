@@ -156,6 +156,10 @@ class BrunoShell extends HTMLElement {
 
     const content = this.shadowRoot && this.shadowRoot.getElementById('content');
     if (!content) return;
+    // Fundo da regiao de conteudo e CENTRAL (na shell), por secao: a Home fica
+    // transparente (usa o grafite/hero proprio); as demais secoes recebem o
+    // fundo ambiente do token --bruno-section-backdrop (ver _styles).
+    content.dataset.section = key;
 
     try {
       const el = await this._createCard(config);
@@ -241,7 +245,19 @@ class BrunoShell extends HTMLElement {
         min-width: 0;
         min-height: 0;
         overflow: hidden;
+        /* Fundo CENTRAL das secoes (padrao unico, nao por arquivo). Vem do token
+           do core --bruno-section-backdrop; o fallback abaixo (fundo ambiente
+           quente da Home) vale ate o core definir o token. Assim, mudar o fundo
+           de TODAS as secoes = mudar 1 lugar. As secoes ficam transparentes e
+           frostam este fundo (coloracao igual a Home). */
+        background: var(--bruno-section-backdrop,
+          linear-gradient(180deg, rgba(8,11,16,0.56), rgba(8,11,16,0.68)),
+          url("/local/images/home_color.jpg") center / cover no-repeat,
+          url("/local/images/home.jpg") center / cover no-repeat,
+          #0a0e16);
       }
+      /* A Home tem fundo proprio (hero/grafite) — nao recebe o backdrop. */
+      .content-slot[data-section="home"] { background: transparent; }
 
       /* A secao ativa preenche a regiao de conteudo. */
       .content-slot > * {

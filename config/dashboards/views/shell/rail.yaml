@@ -35,7 +35,9 @@ top_items:
     label: Sistema
     tap_action: !include ../../shared/popup/footer/footer_system.yaml
 
-  - key: vacuum
+  # key = roborock para casar com a secao/hash (#roborock) e ACENDER o item
+  # ativo (a shell marca selected por data-key === chave da secao). icon: vacuum.
+  - key: roborock
     icon: vacuum
     label: Aspirador
     # ANTERIOR (rollback): abria o popup footer_vacuum.yaml.

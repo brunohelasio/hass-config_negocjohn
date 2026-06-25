@@ -17,4 +17,8 @@ cards:
     sections:
       home: !include shell/section_home.yaml
       cameras: !include shell/section_cameras.yaml
-      roborock: !include shell/section_roborock.yaml
+      # ROBOROCK inline (evita "Unable to read file" caso o arquivo novo
+      # shell/section_roborock.yaml nao tenha sincronizado no /config). Conteudo
+      # identico ao do arquivo (mantido como referencia/rollback).
+      roborock:
+        type: custom:bruno-roborock-subview

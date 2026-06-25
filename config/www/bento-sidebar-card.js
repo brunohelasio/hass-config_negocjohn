@@ -477,6 +477,7 @@ class BentoSidebarCard extends HTMLElement {
         aria-label="${label}"
         data-section="${section}_items"
         data-index="${index}"
+        data-key="${BentoSidebarCard._escape(item?.key || '')}"
         ${ariaDisabled}
       >
         ${icon}

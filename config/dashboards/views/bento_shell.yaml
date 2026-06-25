@@ -1,0 +1,16 @@
+# View-shell (Etapa 1) — PARALELA ao bento_main, que permanece INTOCADO.
+# Acesso para validacao: /ngocjohn-main/bento-shell  (alterna #home / #cameras).
+# type: panel => 1 unico card (a shell) ocupando a tela toda. Como a view e
+# unica, a rail (dentro da shell) nunca re-monta ao alternar de secao.
+title: Shell
+path: bento-shell
+subview: false
+theme: tablet
+type: panel
+cards:
+  - type: custom:bruno-shell
+    default_section: home
+    rail: !include shell/rail.yaml
+    sections:
+      home: !include shell/section_home.yaml
+      cameras: !include shell/section_cameras.yaml

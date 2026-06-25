@@ -2,6 +2,8 @@ button_card_templates: !include_dir_merge_named ./templates/button_card_template
 streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 
 resources:
+  - url: /local/bruno-ui/core/bruno-shell.js?v=20260624-shell-1
+    type: module
   - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260621-sala-curtain-status-1
     type: module
   - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260620-dashboard-refinements-1
@@ -23,6 +25,9 @@ kiosk_mode:
 title: Neklanka Home
 views:
   - !include views/bento_main.yaml
+  # NOVO (Etapa 1 — app-shell): view PARALELA p/ validacao em /ngocjohn-main/bento-shell.
+  # bento_main acima permanece INTOCADO. Rollback: comentar a linha abaixo.
+  - !include views/bento_shell.yaml
   - !include views/main.yaml
 
   # ── LEGADO MOBILE V1 (2025) — DESATIVADO em 2026-05-10 ────────────────────

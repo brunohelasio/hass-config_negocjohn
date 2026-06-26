@@ -1178,10 +1178,10 @@ class BrunoSalaSubview extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
       <main class="sala-subview">
-        <!-- NOVO (réplica): rail = o PRÓPRIO componente do painel principal
-             (bento-sidebar-liquid-card), montado aqui via JS em _mountRoomRail().
-             Substitui o rail bespoke (_renderRoomSidebar), que divergia. -->
-        <div class="room-rail-mount" data-rail-mount></div>
+        <!-- NOVO (Etapa B): a Sala é SEÇÃO da shell -> o RAIL é fornecido pela
+             shell (à esquerda). A subview NÃO desenha rail próprio; renderiza só
+             a moldura interna (faixas topo/rodapé) + o conteúdo. ROLLBACK:
+             restaurar <div data-rail-mount> + _mountRoomRail() + coluna frame-left. -->
         ${this._renderFrameTop()}
         ${this._renderFrameBottom()}
 
@@ -1210,7 +1210,8 @@ class BrunoSalaSubview extends HTMLElement {
     this.shadowRoot.addEventListener('change', this._boundInputHandler);
     this.shadowRoot.addEventListener('input', this._boundLiveInputHandler);
     this._bindImageFallbacks();
-    this._mountRoomRail();
+    // NOVO (Etapa B): rail é da shell -> não montamos rail próprio aqui.
+    // (_mountRoomRail/_roomRailConfig mantidos no arquivo para rollback.)
   }
 
   // NOVO (réplica): monta o componente REAL do rail (bento-sidebar-liquid-card)
@@ -2293,8 +2294,10 @@ class BrunoSalaSubview extends HTMLElement {
         --text-dim: rgba(255,255,255,0.42);
         display: block;
         width: 100%;
-        height: 100vh;
-        min-height: 100vh;
+        /* NOVO (Etapa B): como SEÇÃO da shell, preenche o content-slot (100%),
+           não a viewport (100vh). ORIGINAL: height/min-height 100vh. */
+        height: 100%;
+        min-height: 0;
         color: var(--text-main);
         font-family: var(--primary-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
         overflow: hidden;
@@ -4506,21 +4509,23 @@ class BrunoSalaSubview extends HTMLElement {
          com o rail (frame-left) atravessando as 3 linhas (cluster centralizado).
          ORIGINAL: rail 56px, linha única "frame-left left right", shell-height
          min(734px, 100vh-34px). */
+      /* NOVO (Etapa B): SEÇÃO da shell (conteúdo-only). SEM coluna frame-left (o
+         rail é da shell). Preenche o content-slot (height 100%). Régua das faixas
+         = a do painel principal: superior 48px, inferior 74px. Padding 0 (o
+         content-slot da shell já dá 12px de respiro). */
       .sala-subview {
         --sala-gap: 12px;
-        --sala-shell-height: min(734px, calc(100vh - 150px));
-        height: 100vh;
-        min-height: 100vh;
-        grid-template-columns: 88px minmax(420px, 540px) minmax(630px, 1fr);
-        grid-template-rows: 40px var(--sala-shell-height) 56px;
+        height: 100%;
+        min-height: 0;
+        grid-template-columns: minmax(420px, 540px) minmax(630px, 1fr);
+        grid-template-rows: 48px minmax(0, 1fr) 74px;
         grid-template-areas:
-          "frame-left frame-top    frame-top"
-          "frame-left left         right"
-          "frame-left frame-bottom frame-bottom";
-        align-content: center;
+          "frame-top    frame-top"
+          "left         right"
+          "frame-bottom frame-bottom";
         align-items: stretch;
         gap: var(--sala-gap);
-        padding: 10px 10px 14px;
+        padding: 0;
       }
 
       .left-column,

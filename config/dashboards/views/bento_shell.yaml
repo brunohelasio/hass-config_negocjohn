@@ -13,7 +13,17 @@ type: panel
 cards:
   - type: custom:bruno-shell
     default_section: home
-    rail: !include shell/rail.yaml
+    # NOVO (Etapa A/B): rail POR SEÇÃO. `default` (app-nav) nas seções gerais;
+    # `rooms` (Home + cômodos) nas seções de cômodo. A shell troca os ITENS no
+    # MESMO elemento (moldura/posição fixas; Home ancorado).
+    # ROLLBACK: voltar para `rail: !include shell/rail.yaml` e remover rails/
+    # section_rails + a seção `sala`.
+    rails:
+      default: !include shell/rail.yaml
+      rooms: !include shell/rail_rooms.yaml
+    default_rail: default
+    section_rails:
+      sala: rooms
     sections:
       home: !include shell/section_home.yaml
       cameras: !include shell/section_cameras.yaml
@@ -22,3 +32,7 @@ cards:
       # identico ao do arquivo (mantido como referencia/rollback).
       roborock:
         type: custom:bruno-roborock-subview
+      # NOVO (Etapa B): a Sala vira SEÇÃO da mesma shell (conteúdo-only; rail é da
+      # shell, via section_rails: rooms).
+      sala:
+        type: custom:bruno-sala-subview

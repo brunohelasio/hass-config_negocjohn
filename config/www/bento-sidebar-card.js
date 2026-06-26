@@ -437,6 +437,77 @@ class BentoSidebarCard extends HTMLElement {
             transition: none !important;
           }
         }
+
+        /* ============================================================
+           NOVO — CAMINHO 2 (rail rente, integrado, com rótulos e
+           seleção discreta). Bloco ADITIVO (regra de ouro): fica ABAIXO
+           e sobrepõe o visual de pílula flutuante definido acima, sem
+           apagar nada. ROLLBACK: remover este bloco + o <span class="nav-label">
+           em _button() => volta à pílula só-ícone original.
+           ============================================================ */
+        :host {
+          --rail-width: 86px;
+          --button-radius: 13px;
+          --icon-neutral: rgba(255,255,255,0.60);
+          align-items: stretch;
+          justify-content: stretch;
+        }
+        .rail {
+          width: 100%;
+          height: 100%;
+          max-height: none;
+          justify-content: flex-start;
+          padding: 14px 8px 12px;
+          background: transparent;        /* integra com o fundo do painel */
+          border: none;
+          border-radius: 0;               /* sem pílula */
+          box-shadow: none;
+        }
+        .rail::before { display: none; }  /* remove o brilho/sheen da cápsula */
+        .group { align-items: stretch; }
+        .spacer { display: block; flex: 1 1 auto; }  /* empurra o grupo inferior p/ baixo */
+        .divider { width: 64%; margin: 8px auto; }
+        .nav-button {
+          width: 100%;
+          height: auto;
+          min-width: 0; min-height: 0; max-width: none; max-height: none;
+          flex-direction: column;
+          gap: 4px;
+          padding: 8px 2px 7px;
+          border-radius: var(--button-radius);
+          line-height: 0;
+        }
+        .nav-button::before,
+        .nav-button::after { display: none; }   /* sem brilho/sublinhado */
+        .nav-button:hover {
+          background: rgba(255,255,255,0.05);
+          border-color: transparent;
+          box-shadow: none;
+        }
+        .nav-button.selected {                  /* seleção DISCRETA */
+          background: rgba(255,255,255,0.075);
+          border-color: transparent;
+          box-shadow: none;
+          animation: none;
+        }
+        .nav-button.selected svg { stroke: rgb(var(--accent)); }
+        .nav-label {
+          display: block;
+          margin-top: 1px;
+          font-size: 9.5px;
+          line-height: 1.05;
+          font-weight: 600;
+          color: inherit;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          text-align: center;
+        }
+        /* sobrepõe a media query que estreitava o rail (50px) p/ manter rótulo */
+        @media (max-height: 690px), (max-width: 900px) {
+          :host { --rail-width: 86px; --button-size: 36px; --icon-size: 18px; }
+        }
       </style>
       <div class="rail" role="navigation" aria-label="Bento sidebar">
         <div class="group top">
@@ -481,6 +552,9 @@ class BentoSidebarCard extends HTMLElement {
         ${ariaDisabled}
       >
         ${icon}
+        <!-- NOVO (Caminho 2): rótulo sob o ícone. Rollback: remover este span
+             e o bloco de estilo "Caminho 2" no <style>. -->
+        <span class="nav-label">${label}</span>
       </button>
       ${item?.divider_after ? '<span class="divider" aria-hidden="true"></span>' : ''}
     `;

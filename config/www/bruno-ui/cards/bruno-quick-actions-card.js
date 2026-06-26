@@ -222,10 +222,23 @@ class BrunoQuickActionsCard extends HTMLElement {
           touch-action: manipulation;
         }
 
+        /* ORIGINAL (rollback — dock em PÍLULA flutuante):
+        .quick-dock {
+          width: max-content;  border-radius: 999px;
+          border: var(--bruno-liquid-rail-border, ...);
+          background: var(--bruno-liquid-rail-background, ...glass...);
+          box-shadow: var(--bruno-liquid-rail-shadow, ...);
+          backdrop-filter: var(--bruno-liquid-rail-filter, ...);
+          overflow: hidden;
+        }
+        (valores completos preservados no histórico git; rollback: restaurar este bloco
+         e reverter ::before/::after abaixo) */
+        /* NOVO (Caminho 2): dock RENTE — faixa cheia, sem pílula, integrada ao
+           painel, com filete superior (mais forte no centro). */
         .quick-dock {
           position: relative;
           isolation: isolate;
-          width: max-content;
+          width: 100%;
           max-width: 100%;
           height: var(--rail-size);
           min-height: var(--rail-size);
@@ -235,24 +248,13 @@ class BrunoQuickActionsCard extends HTMLElement {
           gap: 8px;
           padding: 0 8px;
           color: rgba(255,255,255,0.86);
-          border: var(--bruno-liquid-rail-border, 1px solid rgba(255,255,255,0.16));
-          border-radius: 999px;
-          background: var(--bruno-liquid-rail-background,
-            radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
-            radial-gradient(38px 110px at 92% 86%, rgba(var(--accent),0.10), transparent 68%),
-            linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.038) 34%, rgba(255,255,255,0.065)),
-            linear-gradient(155deg, rgba(22,27,38,0.84), rgba(10,12,18,0.72) 48%, rgba(18,16,17,0.46))
-          );
-          box-shadow: var(--bruno-liquid-rail-shadow,
-            inset 0 1px 0 rgba(255,255,255,0.23),
-            inset 1px 0 0 rgba(255,255,255,0.11),
-            inset -1px -1px 0 rgba(255,255,255,0.026),
-            0 18px 44px rgba(0,0,0,0.31),
-            0 0 24px rgba(110,150,210,0.075)
-          );
-          backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
-          -webkit-backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
-          overflow: hidden;
+          border: none;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+          overflow: visible;
         }
 
         .quick-dock::before,
@@ -263,16 +265,17 @@ class BrunoQuickActionsCard extends HTMLElement {
           border-radius: inherit;
         }
 
+        /* NOVO (Caminho 2): em vez do sheen da pílula, o ::before vira o filete
+           superior do dock (mais forte no centro). ROLLBACK: restaurar o sheen. */
         .quick-dock::before {
-          inset: 1px;
+          inset: auto;
+          left: 0;
+          right: 0;
+          top: 0;
+          height: 1px;
           z-index: 0;
-          background: var(--bruno-liquid-rail-sheen,
-            radial-gradient(34px 42px at 24% 3%, rgba(255,255,255,0.26), transparent 70%),
-            radial-gradient(42px 70px at 94% 18%, rgba(var(--accent),0.16), transparent 72%),
-            linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
-            linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%)
-          );
-          opacity: var(--bruno-liquid-rail-sheen-opacity, 0.78);
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16) 50%, transparent);
+          opacity: 1;
         }
 
         .quick-dock::after {
@@ -290,7 +293,8 @@ class BrunoQuickActionsCard extends HTMLElement {
             linear-gradient(#000 0 0) content-box,
             linear-gradient(#000 0 0);
           mask-composite: exclude;
-          opacity: 0.64;
+          /* NOVO (Caminho 2): sem edge-glow de pílula. ROLLBACK: voltar a 0.64. */
+          opacity: 0;
         }
 
         .quick-group {

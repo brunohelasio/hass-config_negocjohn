@@ -13,7 +13,7 @@ frontend:
   themes: !include_dir_merge_named themes
   extra_module_url:
     - /local/bento-sidebar-card.js?v=20260626-rail-caminho2-4-rooms
-    - /local/bruno-ui/core/bruno-shell.js?v=20260626-shell-railflush-2
+    - /local/bruno-ui/core/bruno-shell.js?v=20260626-shell-railperseection-1
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
     - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260626-sala-rail-replica-1
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260620-dashboard-refinements-1

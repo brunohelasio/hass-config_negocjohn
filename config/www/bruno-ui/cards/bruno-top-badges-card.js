@@ -699,6 +699,67 @@ class BrunoTopBadgesCard extends HTMLElement {
             touch-action: pan-x;
           }
         }
+
+        /* ============================================================
+           NOVO — FAIXA DE STATUS (re-skin savant). Bloco ADITIVO/CSS-only:
+           a LÓGICA (modelos, contagem, .is-active aceso/apagado, expandir/
+           colapsar via input_select, gestos) NÃO é tocada — só restilizo as
+           classes vindas do JS. ROLLBACK: remover este bloco => volta às pílulas.
+           Estado "aceso" no estilo mais premium/savant: SEM pill branco; o grupo
+           ACENDE na sua cor de acento (--tone), com leve glow no ícone e a
+           contagem na cor do grupo. "Apagado" = cinza sóbrio. Separação por
+           filete fino entre badges (linguagem do rail/dock).
+           ============================================================ */
+        .left { gap: 0; }
+        .left .badge + .badge {
+          border-left: 1px solid rgba(255,255,255,0.10);   /* filete entre badges */
+        }
+        .badge {
+          border: none;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+          padding: 0 16px;
+          column-gap: 9px;
+          color: rgba(255,255,255,0.92);
+        }
+        /* APAGADO (sóbrio) */
+        .badge .badge-icon { color: rgba(255,255,255,0.44); }
+        .badge .badge-title { color: rgba(255,255,255,0.60); font-weight: 600; }
+        .badge .badge-sub { color: rgba(255,255,255,0.42); font-weight: 600; }
+        /* ACESO (premium/savant): acende na cor do grupo, sem pill branco */
+        .badge.is-active {
+          background: transparent;
+          border: none;
+          box-shadow: none;
+          color: inherit;
+        }
+        .badge.is-active .badge-icon {
+          color: rgb(var(--tone));
+          filter: drop-shadow(0 0 8px rgba(var(--tone),0.45));
+        }
+        .badge.is-active .badge-title { color: rgba(255,255,255,0.94); }
+        .badge.is-active .badge-sub { color: rgb(var(--tone)); }
+        /* EXPANDIDO: aba ativa discreta (sublinhado de acento + leve tinte) */
+        .badge.is-expanded {
+          background: linear-gradient(180deg, rgba(var(--tone),0.10), rgba(var(--tone),0.03));
+          border: none;
+          box-shadow: inset 0 -2px 0 rgba(var(--tone),0.55);
+        }
+        .badge.is-pressed { transform: scale(0.99); }
+        /* chips (lista expandida) — flat, mesma linguagem */
+        .rail { gap: 8px; }
+        .chip {
+          height: 38px;
+          border-radius: 12px;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.09);
+          box-shadow: none;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
       </style>
 
       <div class="badges-card">

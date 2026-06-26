@@ -517,7 +517,9 @@ class BrunoQuickActionsCard extends HTMLElement {
           height: 100%;          /* ocupa os 74px da faixa */
           min-height: 0;
           align-items: center;   /* centraliza o conteúdo verticalmente */
+          gap: 14px;             /* respiro entre seções/separador */
         }
+        .quick-group { gap: 12px; }   /* respiro lateral entre botões (corrige "Notebook" cortado) */
         .quick-button {
           width: auto;
           min-width: var(--button-size);
@@ -526,7 +528,8 @@ class BrunoQuickActionsCard extends HTMLElement {
           max-height: none;
           flex-direction: column;     /* ícone em cima, rótulo embaixo */
           gap: 4px;
-          padding: 7px 6px 6px;
+          padding: 7px 10px 6px;
+          min-width: 54px;            /* garante espaço p/ o rótulo (ex.: Notebook) */
           border-radius: 13px;        /* = rail (flat, sem pílula) */
           color: rgba(255,255,255,0.60);  /* = --icon-neutral do rail */
           -webkit-tap-highlight-color: transparent;
@@ -551,7 +554,7 @@ class BrunoQuickActionsCard extends HTMLElement {
           align-self: center;
           grid-area: auto;
           margin: 0;
-          max-width: 76px;
+          max-width: 88px;
           font-size: 9.5px;
           line-height: 1.05;
           font-weight: 600;

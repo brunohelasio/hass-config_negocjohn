@@ -41,7 +41,17 @@ class BrunoShell extends HTMLElement {
     this._config = config;
     this._sections = config.sections || {};
     this._defaultSection = config.default_section || Object.keys(this._sections)[0] || 'home';
-    this._railConfig = config.rail || null;
+    // NOVO (Etapa A): rail por SEÇÃO (mantém retrocompat com `rail` único).
+    //  - `rails`: mapa de configs de rail (ex.: { default: <app-nav>, rooms: <Home+cômodos> });
+    //  - `section_rails`: { <secao>: <nome-do-rail> };
+    //  - `default_rail`: nome do rail padrão.
+    // Sem `rails` no config => mecanismo DORMENTE (rail único de hoje, inalterado).
+    this._rails = config.rails || null;
+    this._sectionRails = config.section_rails || {};
+    this._defaultRailName = config.default_rail || 'default';
+    this._railConfig = config.rail
+      || (this._rails ? this._rails[this._defaultRailName] : null);
+    this._currentRailName = null;
     this._built = false;
     this._build();
   }
@@ -109,6 +119,7 @@ class BrunoShell extends HTMLElement {
     try {
       if (this._railConfig) {
         this._railEl = await this._createCard(this._railConfig);
+        this._currentRailName = this._rails ? this._defaultRailName : null;
         const railSlot = this.shadowRoot.getElementById('rail');
         if (railSlot) railSlot.replaceChildren(this._railEl);
       }
@@ -161,6 +172,10 @@ class BrunoShell extends HTMLElement {
     // fundo ambiente do token --bruno-section-backdrop (ver _styles).
     content.dataset.section = key;
 
+    // NOVO (Etapa A): troca os ITENS do rail conforme a seção (sem recriar o
+    // elemento) ANTES de montar o conteúdo, para a moldura não "saltar".
+    this._applyRailForSection(key);
+
     try {
       const el = await this._createCard(config);
       // Se a secao mudou de novo enquanto criava, aborta.
@@ -172,6 +187,27 @@ class BrunoShell extends HTMLElement {
     }
 
     this._updateRailSelection(key);
+  }
+
+  // NOVO (Etapa A): troca os ITENS do rail conforme a seção, SEM recriar o
+  // elemento — a moldura/posição não se move; só os botões internos mudam
+  // (ex.: app-nav nas seções gerais; Home + cômodos nas seções de cômodo).
+  // O Home permanece ancorado no topo (item 0 das duas listas).
+  _applyRailForSection(key) {
+    if (!this._rails || !this._railEl) return;        // dormente -> rail único fixo
+    const railName = this._sectionRails[key] || this._defaultRailName;
+    if (railName === this._currentRailName) return;   // já está nesse rail
+    const cfg = this._rails[railName] || this._rails[this._defaultRailName];
+    if (!cfg) return;
+    this._currentRailName = railName;
+    try {
+      this._railEl.setConfig(cfg);
+      if (this._hass) this._railEl.hass = this._hass;
+    } catch (error) {
+      // não derruba a shell por erro de rail
+      // eslint-disable-next-line no-console
+      console.warn('bruno-shell: falha ao trocar rail da secao', key, error);
+    }
   }
 
   // Atualiza o item ativo da rail SEM reconstrui-la (so alterna a classe .selected

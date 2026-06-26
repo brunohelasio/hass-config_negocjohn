@@ -1179,6 +1179,8 @@ class BrunoSalaSubview extends HTMLElement {
       <style>${this._styles()}</style>
       <main class="sala-subview">
         ${this._renderRoomSidebar()}
+        ${this._renderFrameTop()}
+        ${this._renderFrameBottom()}
 
         <section class="left-column">
           <section class="hero-panel">
@@ -1247,23 +1249,9 @@ class BrunoSalaSubview extends HTMLElement {
       <div class="hero-stage">
         <div class="hero-bg" style="--hero-image: url('${background}'); --hero-fallback-image: url('${fallbackBackground}');" aria-hidden="true"></div>
         <div class="hero-content">
-          <div class="hero-top">
-            <!-- NOVO: seta "Voltar" removida — o botão Home do rail assume o retorno
-                 ao painel principal. ROLLBACK: restaurar o <button class="back-button">. -->
-            <div>
-              <div class="hero-title">${title}</div>
-              <div class="hero-subtitle">${subtitle}</div>
-            </div>
-          </div>
-
-          <div class="hero-headline">
-            <p class="hero-date-line">${BrunoSalaSubview._escape(this._dateLine())}</p>
-            <div class="hero-clock" data-clock>${this._lastMinute}</div>
-            <button type="button" class="scene-pill" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(this._config.entities.active_sensor)}">
-              <ha-icon icon="mdi:movie-open-star"></ha-icon>
-              <span>${BrunoSalaSubview._escape(this._sceneContextLabel(model))}</span>
-            </button>
-          </div>
+          <!-- NOVO: hero LIMPO — nome/relógio/data/cena migraram para as faixas
+               topo/rodapé da shell; o hero mantém SÓ os controles de cortina
+               (ancorados embaixo). ROLLBACK: restaurar .hero-top e .hero-headline. -->
 
           <div class="curtain-dock${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
             <div class="curtain-control-row">
@@ -1356,6 +1344,48 @@ class BrunoSalaSubview extends HTMLElement {
       fallback: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>',
     };
     return icons[key] || icons.fallback;
+  }
+
+  // NOVO: faixa SUPERIOR da shell (frame-top) — nome do cômodo centralizado +
+  // data/hora à direita, no padrão visual de Câmeras/Roborock (transparente, leve).
+  _renderFrameTop() {
+    return `
+      <header class="subview-topbar">
+        <span class="subview-room">${BrunoSalaSubview._escape(this._config.title)}</span>
+        <div class="subview-clock" aria-label="Data e hora">
+          <span data-clock>${this._lastMinute}</span>
+          <small>${BrunoSalaSubview._escape(this._dateLine())}</small>
+        </div>
+      </header>
+    `;
+  }
+
+  // NOVO: faixa INFERIOR da shell (frame-bottom) — presença / última atividade,
+  // no mesmo padrão discreto de Câmeras/Roborock.
+  _renderFrameBottom() {
+    return `
+      <footer class="subview-footer">
+        <span class="subview-presence">
+          <ha-icon icon="mdi:motion-sensor" aria-hidden="true"></ha-icon>
+          ${BrunoSalaSubview._escape(this._presenceLine())}
+        </span>
+      </footer>
+    `;
+  }
+
+  // Presença/última atividade. Sem sensor de presença dedicado, usa last_changed
+  // do sensor de atividade (ou do grupo de luzes) como "última atividade".
+  _presenceLine() {
+    const ids = [this._config.entities.active_sensor, this._config.entities.room_group].filter(Boolean);
+    for (const id of ids) {
+      const st = this._hass?.states?.[id];
+      const ts = st?.last_changed || st?.last_updated;
+      if (!ts) continue;
+      const mins = Math.max(0, Math.round((Date.now() - Date.parse(ts)) / 60000));
+      const rel = mins < 1 ? 'agora mesmo' : mins < 60 ? `há ${mins} min` : `há ${Math.round(mins / 60)} h`;
+      return `Última atividade ${rel}`;
+    }
+    return 'Sem atividade recente';
   }
 
   _renderRoomSidebar() {
@@ -2281,6 +2311,73 @@ class BrunoSalaSubview extends HTMLElement {
       .spotify-card { grid-area: spotify; }
       .ac-card { grid-area: ac; }
 
+      /* NOVO: faixas TOPO/RODAPÉ da shell (padrão Câmeras/Roborock: transparente,
+         leve). Topo = nome do cômodo centralizado + data/hora à direita.
+         Rodapé = presença/última atividade, discreto e centralizado. */
+      .subview-topbar {
+        grid-area: frame-top;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 10px;
+        padding: 0 10px;
+        background: transparent;
+      }
+      .subview-room {
+        grid-column: 2;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: rgba(226,232,240,0.82);
+        white-space: nowrap;
+      }
+      .subview-clock {
+        grid-column: 3;
+        justify-self: end;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+        font-variant-numeric: tabular-nums;
+        color: rgba(255,255,255,0.86);
+        font-size: 12px;
+        line-height: 1;
+      }
+      .subview-clock small {
+        color: rgba(226,232,240,0.55);
+        font-size: 10px;
+        line-height: 1;
+      }
+      .subview-footer {
+        grid-area: frame-bottom;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        background: transparent;
+      }
+      .subview-presence {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(226,232,240,0.46);
+        font-size: 12px;
+        font-weight: 560;
+        letter-spacing: 0.02em;
+      }
+      .subview-presence ha-icon {
+        --mdc-icon-size: 16px;
+        color: rgba(226,232,240,0.5);
+        flex: 0 0 auto;
+      }
+      /* hero LIMPO: cortina ancorada embaixo */
+      .hero-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+
       /* NOVO (Caminho 2): cluster CENTRALIZADO, FLAT/integrado (sem pílula/blur),
          com rótulos. Mesma linguagem do rail do painel principal.
          ORIGINAL (pílula glass) preservado no histórico git. */
@@ -2290,11 +2387,14 @@ class BrunoSalaSubview extends HTMLElement {
         isolation: isolate;
         align-self: center;
         justify-self: center;
-        width: 82px;
-        display: grid;
-        grid-auto-rows: min-content;
+        width: 84px;
+        /* CORRECAO: flex em coluna estica os botões à largura total (antes era
+           grid sem coluna -> encolhia ao ícone e cortava o rótulo). */
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
         gap: 10px;
-        padding: 8px 2px;
+        padding: 8px 1px;
         background: transparent;
         border: none;
         border-radius: 0;
@@ -2362,8 +2462,8 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .room-nav-button svg {
-        width: 20px;
-        height: 20px;
+        width: 19px;
+        height: 19px;
         display: block;
         fill: none;
         stroke: currentColor;
@@ -4353,18 +4453,26 @@ class BrunoSalaSubview extends HTMLElement {
         }
       }
 
+      /* GRID ATIVO. NOVO (Caminho 2): rail 56px -> 88px (acomoda rótulos) e
+         adicionadas as faixas TOPO/RODAPÉ da shell (frame-top/frame-bottom),
+         com o rail (frame-left) atravessando as 3 linhas (cluster centralizado).
+         ORIGINAL: rail 56px, linha única "frame-left left right", shell-height
+         min(734px, 100vh-34px). */
       .sala-subview {
         --sala-gap: 12px;
-        --sala-shell-height: min(734px, calc(100vh - 34px));
+        --sala-shell-height: min(734px, calc(100vh - 150px));
         height: 100vh;
         min-height: 100vh;
-        grid-template-columns: 56px minmax(420px, 540px) minmax(630px, 1fr);
-        grid-template-rows: var(--sala-shell-height);
-        grid-template-areas: "frame-left left right";
+        grid-template-columns: 88px minmax(420px, 540px) minmax(630px, 1fr);
+        grid-template-rows: 40px var(--sala-shell-height) 56px;
+        grid-template-areas:
+          "frame-left frame-top    frame-top"
+          "frame-left left         right"
+          "frame-left frame-bottom frame-bottom";
         align-content: center;
         align-items: stretch;
         gap: var(--sala-gap);
-        padding: 12px 10px 22px;
+        padding: 10px 10px 14px;
       }
 
       .left-column,
@@ -5372,6 +5480,12 @@ class BrunoSalaSubview extends HTMLElement {
         }
 
         .room-sidebar {
+          display: none;
+        }
+
+        /* NOVO: no mobile (rail oculto) as faixas topo/rodapé da shell saem. */
+        .subview-topbar,
+        .subview-footer {
           display: none;
         }
 

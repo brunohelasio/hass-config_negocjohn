@@ -1178,7 +1178,10 @@ class BrunoSalaSubview extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
       <main class="sala-subview">
-        ${this._renderRoomSidebar()}
+        <!-- NOVO (réplica): rail = o PRÓPRIO componente do painel principal
+             (bento-sidebar-liquid-card), montado aqui via JS em _mountRoomRail().
+             Substitui o rail bespoke (_renderRoomSidebar), que divergia. -->
+        <div class="room-rail-mount" data-rail-mount></div>
         ${this._renderFrameTop()}
         ${this._renderFrameBottom()}
 
@@ -1207,6 +1210,40 @@ class BrunoSalaSubview extends HTMLElement {
     this.shadowRoot.addEventListener('change', this._boundInputHandler);
     this.shadowRoot.addEventListener('input', this._boundLiveInputHandler);
     this._bindImageFallbacks();
+    this._mountRoomRail();
+  }
+
+  // NOVO (réplica): monta o componente REAL do rail (bento-sidebar-liquid-card)
+  // na faixa frame-left, com os itens [Home + cômodos]. É o MESMO componente do
+  // painel principal -> ícones/tamanho/cor/seleção/texto idênticos por construção.
+  _roomRailConfig() {
+    const rooms = (this._config.room_nav || []).map((r) => ({
+      key: r.key,
+      icon: r.key,                 // casa com o icon-set do componente
+      label: r.name,
+      selected: !!r.active,        // cômodo atual destacado
+      tap_action: { action: 'navigate', navigation_path: r.path || this._config.navigation_path },
+    }));
+    return {
+      top_items: [
+        { key: 'home', icon: 'home', label: 'Home',
+          tap_action: { action: 'navigate', navigation_path: this._config.navigation_path } },
+        ...rooms,
+      ],
+      bottom_items: [],            // top-anchored (réplica do principal)
+    };
+  }
+
+  _mountRoomRail() {
+    const mount = this.shadowRoot?.querySelector('[data-rail-mount]');
+    if (!mount) return;
+    if (!globalThis.customElements || !customElements.get('bento-sidebar-liquid-card')) return;
+    if (!this._railEl) {
+      this._railEl = document.createElement('bento-sidebar-liquid-card');
+      this._railEl.setConfig(this._roomRailConfig());
+    }
+    if (this._hass) this._railEl.hass = this._hass;
+    if (this._railEl.parentNode !== mount) mount.appendChild(this._railEl);
   }
 
   _bindImageFallbacks() {
@@ -2310,6 +2347,17 @@ class BrunoSalaSubview extends HTMLElement {
       .ps5-card { grid-area: ps5; }
       .spotify-card { grid-area: spotify; }
       .ac-card { grid-area: ac; }
+
+      /* NOVO (réplica): ponto de montagem do componente REAL do rail. Ocupa a
+         coluna frame-left inteira; o próprio componente renderiza o rail. */
+      .room-rail-mount {
+        grid-area: frame-left;
+        min-width: 0;
+        min-height: 0;
+        position: relative;
+        z-index: 3;
+      }
+      .room-rail-mount > * { height: 100%; }
 
       /* NOVO: faixas TOPO/RODAPÉ da shell (padrão Câmeras/Roborock: transparente,
          leve). Topo = nome do cômodo centralizado + data/hora à direita.

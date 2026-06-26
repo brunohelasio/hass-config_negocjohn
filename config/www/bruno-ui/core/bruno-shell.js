@@ -216,8 +216,12 @@ class BrunoShell extends HTMLElement {
         width: 100%;
         height: 100vh;
         overflow: hidden;
-        /* Mesmo fundo grafite do painel principal (bento_main). */
-        background: linear-gradient(140deg, #07090d 0%, #111722 55%, #07090d 100%);
+        /* ORIGINAL (rollback): gradiente 140deg deixava a BORDA ESQUERDA (onde
+           fica o rail) mais escura que o miolo -> rail parecia uma faixa marcada.
+           background: linear-gradient(140deg, #07090d 0%, #111722 55%, #07090d 100%); */
+        /* NOVO: gradiente VERTICAL (uniforme no eixo X) -> a coluna do rail tem o
+           MESMO tom do fundo ao lado, ajudando o rail a fundir com o painel. */
+        background: linear-gradient(180deg, #0a0e15 0%, #11161f 100%);
         color: rgba(246,250,255,0.94);
         font-family: var(--primary-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
       }

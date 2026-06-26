@@ -502,6 +502,73 @@ class BrunoQuickActionsCard extends HTMLElement {
             padding: 0 2px 0 4px;
           }
         }
+
+        /* ============================================================
+           NOVO — PADRONIZAÇÃO COM O RAIL (bloco ADITIVO, regra de ouro).
+           ROLLBACK: remover este bloco => volta aos botões em pílula.
+           - ícones com a MESMA cor/peso/tratamento do rail (sóbrio 0.60, flat);
+           - estrutura ÍCONE em cima + RÓTULO curto embaixo (labels já curtos);
+           - dock ocupa a faixa INTEIRA e CENTRALIZA o conteúdo no eixo vertical
+             (corrige o viés p/ cima: antes o dock de 56px ficava centrado nos
+             74px e a divisória no topo dele -> sobrava mais espaço embaixo);
+           - títulos de seção pequenos mantidos + separador discreto mantido.
+           ============================================================ */
+        .quick-dock {
+          height: 100%;          /* ocupa os 74px da faixa */
+          min-height: 0;
+          align-items: center;   /* centraliza o conteúdo verticalmente */
+        }
+        .quick-button {
+          width: auto;
+          min-width: var(--button-size);
+          max-width: none;
+          height: auto;
+          max-height: none;
+          flex-direction: column;     /* ícone em cima, rótulo embaixo */
+          gap: 4px;
+          padding: 7px 6px 6px;
+          border-radius: 13px;        /* = rail (flat, sem pílula) */
+          color: rgba(255,255,255,0.60);  /* = --icon-neutral do rail */
+          -webkit-tap-highlight-color: transparent;
+        }
+        .quick-button::before,
+        .quick-button::after { display: none; }   /* sem sheen/sublinhado (= rail) */
+        .quick-button:hover,
+        .quick-button:focus,
+        .quick-button:focus-visible {
+          background: rgba(255,255,255,0.05);
+          border-color: transparent;
+          box-shadow: none;
+          color: rgba(255,255,255,0.92);
+          outline: none;
+        }
+        .quick-button svg {
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.24));  /* = rail */
+        }
+        .quick-button .quick-label {
+          display: block;
+          position: static;
+          align-self: center;
+          grid-area: auto;
+          margin: 0;
+          max-width: 76px;
+          font-size: 9.5px;
+          line-height: 1.05;
+          font-weight: 600;
+          color: inherit;
+          text-align: center;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .quick-button .quick-kind { display: none; }   /* só um rótulo curto */
+        /* título de seção pequeno, alinhado ao centro vertical do conteúdo */
+        .quick-section-label {
+          height: auto;
+          align-self: center;
+          color: rgba(248,251,255,0.46);
+        }
+        .quick-separator { align-self: center; }  /* separador discreto mantido */
       </style>
 
       <div class="quick-card">

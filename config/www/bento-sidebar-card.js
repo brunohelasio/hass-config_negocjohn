@@ -462,6 +462,8 @@ class BentoSidebarCard extends HTMLElement {
           border: none;
           border-radius: 0;               /* sem pílula */
           box-shadow: none;
+          backdrop-filter: none;          /* CHAVE: sem blur/saturate -> funde com o fundo do painel (igual ao dock) */
+          -webkit-backdrop-filter: none;
         }
         .rail::before { display: none; }  /* remove o brilho/sheen da cápsula */
         .group { align-items: stretch; }
@@ -476,21 +478,33 @@ class BentoSidebarCard extends HTMLElement {
           padding: 8px 2px 7px;
           border-radius: var(--button-radius);
           line-height: 0;
+          -webkit-tap-highlight-color: transparent;  /* sem flash de toque no tablet */
         }
         .nav-button::before,
         .nav-button::after { display: none; }   /* sem brilho/sublinhado */
-        .nav-button:hover {
+        /* hover/foco/toque DISCRETOS e IGUAIS em PC e tablet. */
+        .nav-button:hover,
+        .nav-button:focus,
+        .nav-button:focus-visible {
           background: rgba(255,255,255,0.05);
           border-color: transparent;
           box-shadow: none;
+          outline: none;
         }
-        .nav-button.selected {                  /* seleção DISCRETA */
-          background: rgba(255,255,255,0.075);
+        /* seleção DISCRETA. IMPORTANTE incluir :hover/:focus do selecionado —
+           no tablet o toque dispara :hover "grudado" (sticky hover) e sem isto o
+           azul ANTIGO de .selected:hover reaparecia (so no toque). */
+        .nav-button.selected,
+        .nav-button.selected:hover,
+        .nav-button.selected:focus,
+        .nav-button.selected:focus-visible {
+          background: rgba(255,255,255,0.085);
           border-color: transparent;
           box-shadow: none;
           animation: none;
         }
-        .nav-button.selected svg { stroke: rgb(var(--accent)); }
+        .nav-button.selected svg,
+        .nav-button.selected:hover svg { stroke: rgb(var(--accent)); }
         .nav-label {
           display: block;
           margin-top: 1px;

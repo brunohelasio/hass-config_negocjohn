@@ -5,7 +5,9 @@ const BRUNO_CAMERAS_SECURITY_DEFAULT_CONFIG = {
   section: 'Cameras',
   active_entity: 'input_select.bento_active_camera',
   navigation_path: 'bento-lab',
-  refresh_interval: 6500,
+  // NOVO: secundarias atualizam a cada 3s (snapshot). O feed principal e stream
+  // ao vivo (hui-image), independente deste intervalo.
+  refresh_interval: 3000,
   cameras: [
     { entity: 'camera.sl_camera_2', name: 'PRINCIPAL: SALA', short_name: 'SL - Sala' },
     { entity: 'camera.vr_camera_2', name: 'VR - Varanda', short_name: 'VR - Varanda' },
@@ -34,6 +36,11 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._boundClick = (event) => this._handleClick(event);
     this._boundKeydown = (event) => this._handleKeydown(event);
     this._boundClock = () => this._updateClock();
+    // NOVO (live): elemento de stream AO VIVO do feed principal (hui-image nativo
+    // do HA, cameraView: live). Instanciado uma vez e reaproveitado entre renders
+    // e trocas (sem recriar o stream a cada clique). As secundarias continuam em
+    // snapshot (refresh periodico).
+    this._liveEl = null;
   }
 
   connectedCallback() {
@@ -68,6 +75,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   // piscar) e o relogio pelo clock timer.
   set hass(hass) {
     this._hass = hass;
+    // NOVO (live): mantem o hass do stream sempre atual, mesmo quando o render
+    // estrutural e pulado (anti-flicker) — senao o stream perde o contexto/token.
+    if (this._liveEl) this._liveEl.hass = hass;
     const signature = this._renderSignature();
     if (this.shadowRoot && this._renderedSignature === signature) {
       this._startRefreshTimer();
@@ -215,8 +225,13 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._localActiveCamera = newActiveId;
     this._refreshSeed = Date.now();
 
-    // 1) Slot principal -> camera clicada.
-    this._updateStage(mainStage, newCam);
+    // 1) Slot principal -> camera clicada. STREAM ao vivo: so reaponta o
+    //    hui-image (sem recriar). Em fallback (sem hui-image), atualiza o
+    //    snapshot do ponto de montagem.
+    if (!this._setLiveCamera(newCam.entity)) {
+      const liveMount = root.querySelector('.main-feed [data-live-mount]');
+      this._updateStage(liveMount, newCam);
+    }
     this._updateSlotPill(root.querySelector('.main-feed [data-feed-pill]'), newCam, false);
     const moreBtn = root.querySelector('.main-feed [data-action="more-info"]');
     if (moreBtn) moreBtn.dataset.cameraId = newCam.entity;
@@ -233,12 +248,19 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     return true;
   }
 
-  // NOVO (2b): atualiza a imagem de um slot (principal ou tile) sem blank —
-  // preload da nova frame e so entao troca o src (a frame antiga fica visivel
-  // ate a nova carregar). Cria o <img> se o slot estava em placeholder.
+  // NOVO (2b, corrigido): atualiza a imagem de um slot (principal ou tile) na
+  // troca. Le SEMPRE o entity_picture mais recente do hass (token novo — o token
+  // do camera_proxy rotaciona em minutos; reusar o base antigo congelava a
+  // imagem). Aplica o src DIRETO (acao deliberada do clique): garante a troca
+  // visivel mesmo se um preload falhasse silenciosamente. Cria o <img> se o slot
+  // estava em placeholder.
+  // ORIGINAL (rollback): so aplicava o src dentro de loader.onload; se o preload
+  // falhava (token expirado), o onload nunca disparava e a frame antiga
+  // permanecia -> "o nome muda mas a imagem nao".
   _updateStage(stageEl, camera) {
     if (!stageEl) return;
-    const hasImage = Boolean(camera?.image);
+    const baseSrc = this._liveImageBase(camera);
+    const hasImage = Boolean(baseSrc);
     stageEl.classList.toggle('has-image', hasImage);
 
     let img = stageEl.querySelector('img.camera-image');
@@ -247,7 +269,6 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       return;
     }
 
-    const baseSrc = camera.image;
     const nextSrc = BrunoCamerasSecuritySubview._withCacheBust(baseSrc, this._refreshSeed);
     if (!img) {
       img = document.createElement('img');
@@ -258,18 +279,16 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     }
     img.dataset.cameraSrcBase = baseSrc;
     img.dataset.cameraEntity = camera.entity;
+    img.src = nextSrc; // direto: o load/error ja estao ligados (mostra/oculta)
+  }
 
-    if (globalThis.Image) {
-      const loader = new globalThis.Image();
-      loader.onload = () => {
-        img.src = nextSrc;
-        img.dataset.hasLoaded = 'true';
-        img.classList.remove('is-hidden');
-      };
-      loader.src = nextSrc;
-    } else {
-      img.src = nextSrc;
-    }
+  // NOVO: retorna o entity_picture VIVO da camera (token atual do hass). Se o
+  // hass ainda nao tiver, cai para o ultimo conhecido / o que veio no modelo.
+  _liveImageBase(camera) {
+    if (!camera) return '';
+    const live = this._hass?.states?.[camera.entity]?.attributes?.entity_picture || '';
+    if (live) this._lastCameraImages[camera.entity] = live;
+    return live || camera.image || this._lastCameraImages[camera.entity] || '';
   }
 
   // NOVO (2b): reescreve so o conteudo da pilula (sem imagens) -> nao pisca.
@@ -342,7 +361,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
   _startRefreshTimer() {
     if (this._refreshTimer || !this.isConnected) return;
-    const interval = Math.max(4000, Number(this._config?.refresh_interval) || BRUNO_CAMERAS_SECURITY_DEFAULT_CONFIG.refresh_interval);
+    const interval = Math.max(3000, Number(this._config?.refresh_interval) || BRUNO_CAMERAS_SECURITY_DEFAULT_CONFIG.refresh_interval);
     this._refreshTimer = globalThis.setInterval(() => this._refreshCameraImages(), interval);
   }
 
@@ -358,8 +377,14 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._refreshSeed = stamp;
 
     this.shadowRoot.querySelectorAll('img[data-camera-src-base]').forEach((image) => {
-      const baseSrc = image.dataset.cameraSrcBase;
+      // CORRECAO (static): le o entity_picture ATUAL do hass (token novo). O
+      // base congelado no primeiro render expira em minutos -> 401 -> a imagem
+      // travava. Atualiza o data-camera-src-base com o token vivo.
+      const entityId = image.dataset.cameraEntity;
+      const live = entityId ? this._hass.states?.[entityId]?.attributes?.entity_picture : '';
+      const baseSrc = live || image.dataset.cameraSrcBase;
       if (!baseSrc) return;
+      if (live && live !== image.dataset.cameraSrcBase) image.dataset.cameraSrcBase = live;
 
       const nextSrc = BrunoCamerasSecuritySubview._withCacheBust(baseSrc, stamp);
       const loader = new globalThis.Image();
@@ -487,12 +512,61 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       this.shadowRoot.addEventListener('click', this._boundClick);
       this.shadowRoot.addEventListener('keydown', this._boundKeydown);
       this._bindImages();
+      // NOVO (live): (re)monta o stream do feed principal no novo DOM.
+      this._mountLiveFeed(model.activeId);
       // NOVO (anti-flicker): registra a assinatura estrutural ja renderizada,
       // para que set hass evite reconstruir o DOM quando nada estrutural muda.
       this._renderedSignature = BrunoCamerasSecuritySubview._signatureFromModel(model);
     } catch (error) {
       this._renderError(error);
     }
+  }
+
+  // NOVO (live): cria (uma vez) o elemento de stream ao vivo. Usa o hui-image
+  // nativo do HA (cameraView: live) — ele resolve HLS/WebRTC e ja faz fallback
+  // para snapshot internamente. Se o hui-image nao estiver registrado, retorna
+  // null e o chamador cai no snapshot.
+  _ensureLiveEl() {
+    if (this._liveEl) return this._liveEl;
+    if (!globalThis.customElements || !customElements.get('hui-image')) return null;
+    const el = document.createElement('hui-image');
+    el.classList.add('camera-live-el');
+    el.cameraView = 'live';
+    // fitMode 'cover' existe em HA recente; try/catch p/ versoes sem a prop.
+    try { el.fitMode = 'cover'; } catch (error) { /* ignore */ }
+    this._liveEl = el;
+    return el;
+  }
+
+  // NOVO (live): aponta o stream para a camera ativa (sem recriar o elemento).
+  _setLiveCamera(entityId) {
+    const el = this._liveEl;
+    if (!el) return false;
+    el.hass = this._hass;
+    if (el.cameraImage !== entityId) el.cameraImage = entityId;
+    return true;
+  }
+
+  // NOVO (live): (re)insere o stream no ponto de montagem do feed principal apos
+  // cada _render (o innerHTML recria o DOM e desanexa o elemento). Em fallback
+  // (sem hui-image), monta um snapshot do principal — atualizado pelo timer.
+  _mountLiveFeed(activeId) {
+    const mount = this.shadowRoot?.querySelector('.main-feed [data-live-mount]');
+    if (!mount) return;
+    const el = this._ensureLiveEl();
+    if (el) {
+      if (el.parentNode !== mount) mount.appendChild(el);
+      mount.classList.remove('is-fallback');
+      this._setLiveCamera(activeId);
+      return;
+    }
+    // Fallback: hui-image indisponivel -> snapshot do principal.
+    const cam = (this._model().cameras || []).find((c) => c.entity === activeId);
+    mount.classList.add('is-fallback');
+    mount.innerHTML = cam && cam.image
+      ? BrunoCamerasSecuritySubview._image(cam, 'camera-image')
+      : '';
+    this._bindImages();
   }
 
   _renderError(error) {
@@ -853,6 +927,32 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       .camera-image.is-hidden,
       .image-stage:not(.has-image) .camera-image {
         display: none;
+      }
+
+      /* NOVO (live): ponto de montagem do stream do feed principal. Fica ACIMA
+         da placeholder e ABAIXO da vinheta/pilula/controles. Forca o hui-image
+         (e o <video> interno) a preencher o palco cobrindo a area. */
+      .camera-live {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        z-index: 0;
+        background: transparent;
+      }
+
+      .camera-live > *,
+      .camera-live hui-image,
+      .camera-live-el {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      .camera-live video,
+      .camera-live img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
       }
 
       .camera-placeholder {
@@ -1329,13 +1429,16 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   // (.feed-overlay-top) e contagem "N/N online" (.feed-status). MANTIDOS: os
   // controles flutuantes (Detalhes/Atualizar) no canto inferior direito.
   // A pilula tem data-feed-pill para a troca in-place (2b) localiza-la.
+  // NOVO (live): o feed principal e STREAM AO VIVO. O <img> de snapshot foi
+  // trocado por um ponto de montagem [data-live-mount] onde _mountLiveFeed insere
+  // o <hui-image cameraView="live"> (ou, se indisponivel, um snapshot fallback).
+  // A placeholder fica ATRAS do stream; a vinheta/pilula/controles, na frente.
   static _mainFeed(camera) {
-    const hasImage = Boolean(camera?.image);
     return `
       <article class="feed-card">
-        <div class="image-stage${hasImage ? ' has-image' : ''}">
-          ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image') : ''}
+        <div class="image-stage has-image">
           <div class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:cctv"></ha-icon></div>
+          <div class="camera-live" data-live-mount aria-hidden="true"></div>
           <div class="feed-vignette" aria-hidden="true"></div>
           <div class="feed-pill" data-feed-pill>
             ${BrunoCamerasSecuritySubview._pillInner(camera, false)}

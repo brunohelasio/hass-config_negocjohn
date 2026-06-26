@@ -224,19 +224,39 @@ class BrunoShell extends HTMLElement {
 
       * { box-sizing: border-box; }
 
+      /* ORIGINAL (rollback): rail flutuante 64px, gap 10px, padding 12px na shell.
+        .shell { grid-template-columns: 64px minmax(0,1fr); gap:10px; padding:12px; }
+        .rail-slot { grid-column:1; }
+        .content-slot { grid-column:2; }
+      */
+      /* NOVO (Caminho 2): rail RENTE — coluna 86px colada na borda (gap 0, sem
+         padding na shell). O respiro migra para o .content-slot (padding 12px).
+         Uma fina divisoria vertical (mais forte no centro) separa rail/conteudo. */
       .shell {
         height: 100%;
         display: grid;
-        grid-template-columns: 64px minmax(0, 1fr);
+        grid-template-columns: 86px minmax(0, 1fr);
         grid-template-rows: minmax(0, 1fr);
-        gap: 10px;
-        padding: 12px;
+        gap: 0;
+        padding: 0;
       }
 
       .rail-slot {
         grid-column: 1;
+        position: relative;
         min-width: 0;
         min-height: 0;
+      }
+
+      .rail-slot::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 1px;
+        height: 100%;
+        pointer-events: none;
+        background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.16) 50%, transparent 100%);
       }
 
       .content-slot {
@@ -245,6 +265,7 @@ class BrunoShell extends HTMLElement {
         min-width: 0;
         min-height: 0;
         overflow: hidden;
+        padding: 12px;
         /* Fundo CENTRAL das secoes (padrao unico, nao por arquivo): por padrao
            TRANSPARENTE -> mostra o grafite do :host (o "escuro atras do hero").
            Para trocar o fundo de TODAS as secoes de uma vez, basta definir

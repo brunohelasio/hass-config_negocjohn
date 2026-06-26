@@ -607,6 +607,14 @@ BentoSidebarCard.icons = {
   floorplan: '<svg viewBox="0 0 24 24"><path d="M3 21V3h18v18H3z"/><path d="M3 9h7V3M10 9v12M10 15h11M16 15V9h5"/></svg>',
   monitor: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
   power: '<svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>',
+  // NOVO: ícones de CÔMODO (para reusar este componente como rail das subviews).
+  // Mesmo estilo SVG (stroke) dos demais -> réplica perfeita do rail principal.
+  sala: '<svg viewBox="0 0 24 24"><path d="M5 11V9.5A3.5 3.5 0 0 1 8.5 6h7A3.5 3.5 0 0 1 19 9.5V11"/><path d="M4 12.5A2.5 2.5 0 0 1 6.5 10H7a2 2 0 0 1 2 2v1h6v-1a2 2 0 0 1 2-2h.5A2.5 2.5 0 0 1 20 12.5V18H4v-5.5z"/><path d="M6 18v2M18 18v2"/></svg>',
+  office: '<svg viewBox="0 0 24 24"><path d="M4 5h16v10H4z"/><path d="M9 19h6M12 15v4"/><path d="M7 21h10"/></svg>',
+  cozinha: '<svg viewBox="0 0 24 24"><path d="M5 5h14v15H5z"/><path d="M5 10h14"/><path d="M9 7h.01M15 7h.01"/><path d="M8 14h8v4H8z"/></svg>',
+  casal: '<svg viewBox="0 0 24 24"><path d="M4 11V5h16v6"/><path d="M4 11h16a2 2 0 0 1 2 2v5H2v-5a2 2 0 0 1 2-2z"/><path d="M7 9h3M14 9h3"/><path d="M3 18v2M21 18v2"/></svg>',
+  marina: '<svg viewBox="0 0 24 24"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
+  miguel: '<svg viewBox="0 0 24 24"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
   circle: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>',
 };
 

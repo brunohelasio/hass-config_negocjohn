@@ -2,7 +2,7 @@ type: custom:bruno-hero-stage-card
 view_layout:
   grid-column: "2 / -1"
   grid-row: "2 / 5"
-background: /local/images/home_color.jpg
+background: /local/images/home_savant.jpg
 fallback_background: /local/images/home.jpg
 card_mod:
   style: |

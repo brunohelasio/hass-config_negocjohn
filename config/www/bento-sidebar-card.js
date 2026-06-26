@@ -449,6 +449,9 @@ class BentoSidebarCard extends HTMLElement {
           --rail-width: 86px;
           --button-radius: 13px;
           --icon-neutral: rgba(255,255,255,0.60);
+          /* NOVO: espaçamento uniforme um pouco maior (era 8px) agora que os
+             separadores foram removidos. */
+          --group-gap: 10px;
           align-items: stretch;
           justify-content: stretch;
         }

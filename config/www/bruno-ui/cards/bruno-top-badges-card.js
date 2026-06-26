@@ -749,16 +749,29 @@ class BrunoTopBadgesCard extends HTMLElement {
           box-shadow: inset 0 -2px 0 rgba(var(--tone),0.55);
         }
         .badge.is-pressed { transform: scale(0.99); }
-        /* chips (lista expandida) — flat, mesma linguagem */
-        .rail { gap: 8px; }
+        /* lista expandida: RESPIRO + filete separando a badge ativa dos itens
+           (antes a lista colava na badge e a borda do 1º chip encostava no
+           acento/glow). */
+        .left .rail {
+          gap: 0;
+          margin-left: 14px;
+          padding-left: 14px;
+          border-left: 1px solid rgba(255,255,255,0.12);
+        }
+        /* chips FLAT (mesmo idioma da faixa): SEM caixa/pílula, só ícone + nome,
+           separados por filete fino — continuação natural da ribbon. */
         .chip {
-          height: 38px;
-          border-radius: 12px;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.09);
+          height: 40px;
+          padding: 0 12px;
+          border: none;
+          border-radius: 0;
+          background: transparent;
           box-shadow: none;
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
+        }
+        .rail .chip + .chip {
+          border-left: 1px solid rgba(255,255,255,0.10);
         }
       </style>
 

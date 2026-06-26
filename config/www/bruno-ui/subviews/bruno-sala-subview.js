@@ -4526,6 +4526,10 @@ class BrunoSalaSubview extends HTMLElement {
         align-items: stretch;
         gap: var(--sala-gap);
         padding: 0;
+        /* NOVO (Etapa B): TRANSPARENTE -> mostra o MESMO fundo da shell que o
+           rail mostra (unifica a cor rail × conteúdo). Antes herdava #020406 do
+           grid morto, ficando mais escuro que o rail. */
+        background: transparent;
       }
 
       .left-column,

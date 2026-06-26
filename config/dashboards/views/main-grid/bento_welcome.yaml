@@ -1,7 +1,7 @@
 type: custom:bruno-hero-card
 view_layout:
   grid-area: welcome
-background: /local/images/home_color.jpg
+background: /local/images/home_savant.jpg
 fallback_background: /local/images/home.jpg
 entities:
   time: sensor.time

@@ -36,7 +36,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala', active: true },
     { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office' },
     { key: 'cozinha', name: 'Cozinha', icon: 'mdi:countertop', path: 'subview-cozinha' },
-    { key: 'lavabo', name: 'Lavabo', icon: 'mdi:toilet', path: 'subview-lavabo', divider_after: true },
+    // NOVO: lavabo removido do rail (abre POPUP, não subview). ROLLBACK: descomentar.
+    // { key: 'lavabo', name: 'Lavabo', icon: 'mdi:toilet', path: 'subview-lavabo', divider_after: true },
     { key: 'casal', name: 'Q. Casal', icon: 'mdi:bed-king', path: 'subview-quarto-casal' },
     { key: 'marina', name: 'Q. Marina', icon: 'mdi:bed-single', path: 'subview-quarto-marina' },
     { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:bed-single-outline', path: 'subview-quarto-miguel' },
@@ -1247,9 +1248,8 @@ class BrunoSalaSubview extends HTMLElement {
         <div class="hero-bg" style="--hero-image: url('${background}'); --hero-fallback-image: url('${fallbackBackground}');" aria-hidden="true"></div>
         <div class="hero-content">
           <div class="hero-top">
-            <button class="back-button" type="button" data-action="navigate" data-path="${BrunoSalaSubview._escapeAttr(this._config.navigation_path)}" aria-label="Voltar">
-              <ha-icon icon="mdi:arrow-left"></ha-icon>
-            </button>
+            <!-- NOVO: seta "Voltar" removida — o botão Home do rail assume o retorno
+                 ao painel principal. ROLLBACK: restaurar o <button class="back-button">. -->
             <div>
               <div class="hero-title">${title}</div>
               <div class="hero-subtitle">${subtitle}</div>
@@ -1345,6 +1345,7 @@ class BrunoSalaSubview extends HTMLElement {
 
   static _roomNavIcon(key) {
     const icons = {
+      home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
       sala: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V9.5A3.5 3.5 0 0 1 8.5 6h7A3.5 3.5 0 0 1 19 9.5V11"/><path d="M4 12.5A2.5 2.5 0 0 1 6.5 10H7a2 2 0 0 1 2 2v1h6v-1a2 2 0 0 1 2-2h.5A2.5 2.5 0 0 1 20 12.5V18H4v-5.5z"/><path d="M6 18v2M18 18v2"/></svg>',
       office: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4z"/><path d="M9 19h6M12 15v4"/><path d="M7 21h10"/></svg>',
       cozinha: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v15H5z"/><path d="M5 10h14"/><path d="M9 7h.01M15 7h.01"/><path d="M8 14h8v4H8z"/></svg>',
@@ -1360,18 +1361,36 @@ class BrunoSalaSubview extends HTMLElement {
   _renderRoomSidebar() {
     const items = this._config.room_nav || [];
 
+    // NOVO (Caminho 2): botão Home no TOPO do cluster (volta ao painel principal),
+    // com respiro p/ os cômodos; cada botão ganha rótulo curto sob o ícone.
+    const homeButton = `
+      <button
+        type="button"
+        class="room-nav-button room-nav-home"
+        data-action="navigate"
+        data-path="${BrunoSalaSubview._escapeAttr(this._config.navigation_path)}"
+        title="Home"
+        aria-label="Home"
+      >
+        ${BrunoSalaSubview._roomNavIcon('home')}
+        <span class="room-nav-label">Home</span>
+      </button>
+    `;
+
     return `
       <nav class="room-sidebar" aria-label="Navegacao de comodos">
+        ${homeButton}
         ${items.map((item) => `
           <button
             type="button"
-            class="room-nav-button${item.active ? ' is-active' : ''}${item.divider_after ? ' has-divider' : ''}"
+            class="room-nav-button${item.active ? ' is-active' : ''}"
             data-action="navigate"
             data-path="${BrunoSalaSubview._escapeAttr(item.path || this._config.navigation_path)}"
             title="${BrunoSalaSubview._escapeAttr(item.name)}"
             aria-label="${BrunoSalaSubview._escapeAttr(item.name)}"
           >
             ${BrunoSalaSubview._roomNavIcon(item.key || item.icon)}
+            <span class="room-nav-label">${BrunoSalaSubview._escape(item.name)}</span>
           </button>
         `).join('')}
       </nav>
@@ -2235,7 +2254,8 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 100vh;
         height: 100vh;
         display: grid;
-        grid-template-columns: 64px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
+        /* NOVO (Caminho 2): coluna do rail 64px -> 88px (acomoda rótulos). */
+        grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
         grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
         grid-template-areas:
           "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top"
@@ -2261,96 +2281,84 @@ class BrunoSalaSubview extends HTMLElement {
       .spotify-card { grid-area: spotify; }
       .ac-card { grid-area: ac; }
 
+      /* NOVO (Caminho 2): cluster CENTRALIZADO, FLAT/integrado (sem pílula/blur),
+         com rótulos. Mesma linguagem do rail do painel principal.
+         ORIGINAL (pílula glass) preservado no histórico git. */
       .room-sidebar {
         position: relative;
         z-index: 3;
         isolation: isolate;
         align-self: center;
         justify-self: center;
-        width: 58px;
+        width: 82px;
         display: grid;
-        grid-auto-rows: 40px;
-        gap: 7px;
-        padding: 12px 8px;
-        border-radius: 999px;
-        background: var(--bruno-liquid-rail-background,
-          radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
-          radial-gradient(38px 110px at 92% 86%, rgba(var(--accent),0.10), transparent 68%),
-          linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.038) 34%, rgba(255,255,255,0.065)),
-          linear-gradient(155deg, rgba(22,27,38,0.84), rgba(10,12,18,0.72) 48%, rgba(18,16,17,0.46))
-        );
-        border: var(--bruno-liquid-rail-border, 1px solid rgba(255,255,255,0.11));
-        box-shadow: var(--bruno-liquid-rail-shadow,
-          inset 0 1px 0 rgba(255,255,255,0.18),
-          inset 0 -1px 0 rgba(255,255,255,0.045),
-          0 18px 40px rgba(0,0,0,0.36)
-        );
-        backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
-        -webkit-backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
-        overflow: hidden;
+        grid-auto-rows: min-content;
+        gap: 10px;
+        padding: 8px 2px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        overflow: visible;
       }
 
-      .room-sidebar::before {
-        content: "";
-        position: absolute;
-        inset: 1px;
-        z-index: 0;
-        pointer-events: none;
-        border-radius: calc(999px - 1px);
-        background: var(--bruno-liquid-rail-sheen,
-          radial-gradient(34px 42px at 24% 3%, rgba(255,255,255,0.26), transparent 70%),
-          radial-gradient(42px 70px at 94% 18%, rgba(var(--accent),0.16), transparent 72%),
-          linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
-          linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%)
-        );
-        opacity: var(--bruno-liquid-rail-sheen-opacity, 0.78);
-      }
+      .room-sidebar::before { display: none; }
 
+      /* NOVO (Caminho 2): botão FLAT — ícone em cima + rótulo embaixo, cor sóbria,
+         seleção DISCRETA (sem o azul antigo). */
       .room-nav-button {
         position: relative;
         z-index: 1;
-        width: 40px;
-        height: 40px;
-        display: inline-flex;
+        width: 100%;
+        height: auto;
+        display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
-        color: rgba(255,255,255,0.70);
+        gap: 4px;
+        padding: 8px 2px 7px;
+        border-radius: 13px;
+        color: rgba(255,255,255,0.60);
         background: transparent;
-        transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 160ms ease, color 160ms ease;
       }
 
-      .room-nav-button::after {
-        content: "";
-        position: absolute;
-        left: 7px;
-        right: 7px;
-        bottom: -5px;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.13), transparent);
-        opacity: 0;
-      }
+      .room-nav-button::after { display: none; }
 
-      .room-nav-button.has-divider::after {
-        opacity: 1;
-      }
-
-      .room-nav-button:hover {
-        color: rgba(255,255,255,0.88);
-        background: rgba(255,255,255,0.075);
+      .room-nav-button:hover,
+      .room-nav-button:focus,
+      .room-nav-button:focus-visible {
+        color: rgba(255,255,255,0.92);
+        background: rgba(255,255,255,0.05);
+        outline: none;
       }
 
       .room-nav-button.is-active {
-        color: white;
-        background: var(--bruno-liquid-selected-blue-background,
-          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 62%),
-          linear-gradient(180deg, rgba(105,150,230,0.68), rgba(59,92,178,0.54))
-        );
-        border: 1px solid var(--bruno-liquid-selected-blue-border, rgba(210,228,255,0.38));
-        box-shadow: var(--bruno-liquid-selected-blue-shadow,
-          inset 0 1px 0 rgba(255,255,255,0.32),
-          0 0 20px rgba(96,165,250,0.32)
-        );
+        color: #fff;
+        background: rgba(255,255,255,0.085);
+        border: none;
+        box-shadow: none;
+      }
+
+      .room-nav-button.is-active svg { stroke: rgb(var(--accent)); }
+
+      /* respiro separando o Home dos cômodos */
+      .room-nav-home { margin-bottom: 8px; }
+
+      .room-nav-label {
+        display: block;
+        font-size: 9.5px;
+        line-height: 1.05;
+        font-weight: 600;
+        color: inherit;
+        text-align: center;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .room-nav-button svg {

@@ -41,6 +41,9 @@ class BrunoSalaCard extends HTMLElement {
     this._config = {
       name: 'Sala',
       navigation_path: 'subview-sala',
+      // NOVO (Etapa B): a Sala é SEÇÃO da shell. O chevron abre a seção #sala (sem
+      // trocar de view). Se `section` for removido, volta a navegar p/ navigation_path.
+      section: 'sala',
       ...config,
       entities,
     };
@@ -288,6 +291,18 @@ class BrunoSalaCard extends HTMLElement {
 
   _runRoomSubview() {
     globalThis.BrunoLiquidGlass?.feedback?.('tap');
+    // NOVO (Etapa B): se houver `section`, abre a SEÇÃO da shell (mesma mecânica
+    // do rail: fire-dom-event bruno_section) — sem trocar de view, sem salto.
+    // Caso contrário, mantém o comportamento antigo (navegar para a subview).
+    const section = this._config?.section;
+    if (section) {
+      this.dispatchEvent(new CustomEvent('ll-custom', {
+        detail: { action: 'fire-dom-event', bruno_section: section },
+        bubbles: true,
+        composed: true,
+      }));
+      return;
+    }
     this._navigate(this._config.navigation_path);
   }
 

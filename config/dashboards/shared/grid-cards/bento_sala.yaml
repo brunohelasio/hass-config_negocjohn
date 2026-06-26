@@ -52,9 +52,12 @@
         perform_action: light.toggle
         target:
           entity_id: light.sala_switch_2
+      # NOVO (Etapa B): a Sala virou SEÇÃO da mesma shell. Em vez de navegar para
+      # a view separada (subview-sala), troca a seção #sala na shell (sem salto).
+      # ROLLBACK: voltar para action: navigate / navigation_path: subview-sala.
       double_tap_action:
-        action: navigate
-        navigation_path: subview-sala
+        action: fire-dom-event
+        bruno_section: sala
       hold_action:
         action: perform-action
         perform_action: light.turn_off

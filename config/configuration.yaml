@@ -15,7 +15,7 @@ frontend:
     - /local/bento-sidebar-card.js?v=20260627-fullbleed-rail-transp-2
     - /local/bruno-ui/core/bruno-shell.js?v=20260627-fullbleed-vignette-3
     - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260606-main-view-3
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260627-sala-ac-media-reaccommodate-1
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260627-sala-fullbleed-skeleton-1
     - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260620-dashboard-refinements-1
     - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260621-kitchen-office-structure-3
     - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260620-dashboard-refinements-1

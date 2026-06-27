@@ -352,6 +352,9 @@ class BrunoShell extends HTMLElement {
         min-height: 0;
       }
 
+      /* Filete divisor do rail (vertical, mais claro no centro, sumindo nas pontas)
+         — mesma linguagem do filete acima do dock. Reforçado (0.16 -> 0.30) porque
+         o rail agora é transparente sobre a foto e a linha sumia. */
       .rail-slot::after {
         content: "";
         position: absolute;
@@ -360,7 +363,7 @@ class BrunoShell extends HTMLElement {
         width: 1px;
         height: 100%;
         pointer-events: none;
-        background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.16) 50%, transparent 100%);
+        background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.30) 50%, transparent 100%);
       }
 
       .content-slot {

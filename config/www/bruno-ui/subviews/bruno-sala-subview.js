@@ -4518,7 +4518,8 @@ class BrunoSalaSubview extends HTMLElement {
         height: 100%;
         min-height: 0;
         grid-template-columns: minmax(420px, 540px) minmax(630px, 1fr);
-        grid-template-rows: 48px minmax(0, 1fr) 74px;
+        /* NOVO (E1): faixa inferior 74px -> 54px (régua compartilhada com a Home). */
+        grid-template-rows: 48px minmax(0, 1fr) 54px;
         grid-template-areas:
           "frame-top    frame-top"
           "left         right"

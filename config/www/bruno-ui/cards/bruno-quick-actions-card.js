@@ -243,10 +243,12 @@ class BrunoQuickActionsCard extends HTMLElement {
           height: var(--rail-size);
           min-height: var(--rail-size);
           display: inline-flex;
-          align-items: center;
+          /* NOVO: conteúdo ancorado na BASE (era center) p/ alinhar com o botão
+             Power, que fica no fundo do rail. ANTERIOR (rollback): align-items: center; */
+          align-items: flex-end;
           justify-content: center;
           gap: 8px;
-          padding: 0 8px;
+          padding: 0 8px 3px;
           color: rgba(255,255,255,0.86);
           border: none;
           /* TRANSPARENTE: dock funde com a imagem; legibilidade pela BORDA

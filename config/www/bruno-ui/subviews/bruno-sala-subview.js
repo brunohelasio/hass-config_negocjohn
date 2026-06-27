@@ -1182,23 +1182,27 @@ class BrunoSalaSubview extends HTMLElement {
              shell (à esquerda). A subview NÃO desenha rail próprio; renderiza só
              a moldura interna (faixas topo/rodapé) + o conteúdo. ROLLBACK:
              restaurar <div data-rail-mount> + _mountRoomRail() + coluna frame-left. -->
-        ${this._renderFrameTop()}
-        ${this._renderFrameBottom()}
+        <!-- NOVO (full-bleed subview, Passada 1) — nova estrutura:
+             topband (status chips + relógio) | content-left (hero atmosfera +
+             cortina full-width + [câmeras|mídia]) | right (Iluminação alta + AC).
+             ANTERIOR (rollback): frame-top/frame-bottom + left-column(hero+cams) +
+             right-column(status-rail + right-control-grid lights/media/ac). -->
+        ${this._renderTopBand(model)}
 
-        <section class="left-column">
+        <section class="content-left">
           <section class="hero-panel">
             ${this._renderHero(model)}
           </section>
-          ${this._renderCameras(model)}
+          ${this._renderCurtain(model)}
+          <div class="cams-media-row">
+            ${this._renderCameras(model)}
+            ${this._renderMediaHub(model)}
+          </div>
         </section>
 
         <section class="right-column">
-          ${this._renderStatusRail(model)}
-          <section class="right-control-grid">
-            ${this._renderLights(model)}
-            ${this._renderMediaHub(model)}
-            ${this._renderAC(model)}
-          </section>
+          ${this._renderLights(model)}
+          ${this._renderAC(model)}
         </section>
       </main>
     `;
@@ -1263,11 +1267,40 @@ class BrunoSalaSubview extends HTMLElement {
     });
   }
 
+  // NOVO (full-bleed subview): HERO vira ATMOSFERA (transparente sobre o backdrop
+  // da shell — sem .hero-bg próprio). Conteúdo: Cena (placeholder) + Presença.
+  // A CORTINA saiu daqui para um bloco full-width próprio (_renderCurtain).
+  // ROLLBACK: restaurar o _renderHero anterior (com .hero-bg + curtain-dock).
   _renderHero(model) {
-    const title = BrunoSalaSubview._escape(this._config.title);
-    const subtitle = BrunoSalaSubview._escape(this._config.subtitle);
-    const background = BrunoSalaSubview._escapeAttr(this._config.background);
-    const fallbackBackground = BrunoSalaSubview._escapeAttr(this._config.fallback_background || this._config.background);
+    const presence = BrunoSalaSubview._escape(this._presenceLine());
+    return `
+      <div class="hero-stage hero-atmosphere">
+        <div class="hero-content">
+          <div class="hero-scene">
+            <span class="hero-scene-label">Cena</span>
+            <button type="button" class="hero-scene-name" data-action="none" title="Cena (em breve)">
+              <span>Relaxar</span>
+              <ha-icon icon="mdi:chevron-down"></ha-icon>
+            </button>
+            <button type="button" class="hero-scene-edit" data-action="none" title="Editar cena (em breve)">
+              <ha-icon icon="mdi:pencil-outline"></ha-icon><span>Editar cena</span>
+            </button>
+          </div>
+          <div class="hero-presence">
+            <ha-icon icon="mdi:account-group" aria-hidden="true"></ha-icon>
+            <div>
+              <span class="hero-presence-label">Presença</span>
+              <strong class="hero-presence-value">${presence}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // NOVO (full-bleed subview): bloco da CORTINA full-width (extraído do hero),
+  // posicionado logo acima de [câmeras | mídia]. Mesma marcação/ações de antes.
+  _renderCurtain(model) {
     const curtain = model.curtain || this._curtainModel();
     const curtainPosition = Number.isFinite(Number(curtain.position)) ? Number(curtain.position) : 0;
     const curtainDisplayPosition = Number.isFinite(Number(curtain.displayPosition)) ? Number(curtain.displayPosition) : curtainPosition;
@@ -1284,55 +1317,83 @@ class BrunoSalaSubview extends HTMLElement {
     `).join('');
 
     return `
-      <div class="hero-stage">
-        <div class="hero-bg" style="--hero-image: url('${background}'); --hero-fallback-image: url('${fallbackBackground}');" aria-hidden="true"></div>
-        <div class="hero-content">
-          <!-- NOVO: hero LIMPO — nome/relógio/data/cena migraram para as faixas
-               topo/rodapé da shell; o hero mantém SÓ os controles de cortina
-               (ancorados embaixo). ROLLBACK: restaurar .hero-top e .hero-headline. -->
-
-          <div class="curtain-dock${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
-            <div class="curtain-control-row">
-              <div class="curtain-identity">
-                <span class="curtain-icon-shell">${BrunoSalaSubview._curtainSvg('main')}</span>
-                <span class="curtain-title">Cortina</span>
-              </div>
-              <div class="curtain-status" aria-live="polite">
-                <span class="curtain-status-text">${BrunoSalaSubview._escape(curtain.status)}</span>
-                <span class="curtain-status-percent">- ${curtainDisplayPosition}%</span>
-              </div>
-              <div class="curtain-main-actions">
-                <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
-                  ${BrunoSalaSubview._curtainSvg('open')}<span>Abrir</span>
-                </button>
-                <button type="button" class="curtain-action-button is-muted${curtain.moving ? ' is-active' : ''}" data-action="cover-stop" ${curtainDisabled}>
-                  ${BrunoSalaSubview._curtainSvg('stop')}<span>Parar</span>
-                </button>
-                <button type="button" class="curtain-action-button" data-action="cover-close" ${curtainDisabled}>
-                  ${BrunoSalaSubview._curtainSvg('close')}<span>Fechar</span>
-                </button>
-              </div>
+      <section class="glass-card curtain-card">
+        <div class="curtain-dock${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
+          <div class="curtain-control-row">
+            <div class="curtain-identity">
+              <span class="curtain-icon-shell">${BrunoSalaSubview._curtainSvg('main')}</span>
+              <span class="curtain-title">Cortina</span>
             </div>
-            <div class="curtain-slider-zone">
-              <div class="curtain-slider-glow" aria-hidden="true"></div>
-              <input
-                class="curtain-range"
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                value="${curtainVisualPosition}"
-                data-action="curtain-target"
-                aria-label="Fechamento da cortina"
-                ${curtainDisabled}
-              >
-              <div class="curtain-chips">
-                ${curtainChips}
-              </div>
+            <div class="curtain-status" aria-live="polite">
+              <span class="curtain-status-text">${BrunoSalaSubview._escape(curtain.status)}</span>
+              <span class="curtain-status-percent">- ${curtainDisplayPosition}%</span>
+            </div>
+            <div class="curtain-main-actions">
+              <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
+                ${BrunoSalaSubview._curtainSvg('open')}<span>Abrir</span>
+              </button>
+              <button type="button" class="curtain-action-button is-muted${curtain.moving ? ' is-active' : ''}" data-action="cover-stop" ${curtainDisabled}>
+                ${BrunoSalaSubview._curtainSvg('stop')}<span>Parar</span>
+              </button>
+              <button type="button" class="curtain-action-button" data-action="cover-close" ${curtainDisabled}>
+                ${BrunoSalaSubview._curtainSvg('close')}<span>Fechar</span>
+              </button>
+            </div>
+          </div>
+          <div class="curtain-slider-zone">
+            <div class="curtain-slider-glow" aria-hidden="true"></div>
+            <input
+              class="curtain-range"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value="${curtainVisualPosition}"
+              data-action="curtain-target"
+              aria-label="Fechamento da cortina"
+              ${curtainDisabled}
+            >
+            <div class="curtain-chips">
+              ${curtainChips}
             </div>
           </div>
         </div>
-      </div>
+      </section>
+    `;
+  }
+
+  // NOVO (full-bleed subview): FAIXA SUPERIOR fixa — chips de status (luzes da
+  // sala/varanda, temp, umidade, rede) à esquerda + relógio/data à direita.
+  // Mesma linguagem da status bar do painel principal; transparente (legibilidade
+  // pela borda atmosférica do backdrop). Substitui o antigo _renderStatusRail
+  // (que ficava na coluna direita) e o _renderFrameTop.
+  _renderTopBand(model) {
+    const zones = model.lightZones || { sala: 0, varanda: 0 };
+    const status = [
+      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `Sala ${zones.sala} · Varanda ${zones.varanda}`, tone: 'amber' },
+      { icon: 'mdi:thermometer', value: this._temperatureLabel(), label: 'Temperatura', tone: 'amber' },
+      { icon: 'mdi:water-percent', value: this._humidityLabel(), label: 'Umidade', tone: 'blue' },
+      { icon: 'mdi:router-wireless', value: 'Roteador', label: this._networkLabel(this._config.entities.router), tone: 'neutral' },
+      { icon: 'mdi:zigbee', value: 'Hub Zigbee', label: this._networkLabel(this._config.entities.zigbee_hub), tone: 'neutral' },
+    ];
+    return `
+      <header class="subview-topband">
+        <div class="topband-chips">
+          ${status.map((item) => `
+            <div class="topband-chip">
+              <span class="micro-icon tone-${item.tone}"><ha-icon icon="${item.icon}"></ha-icon></span>
+              <div>
+                <strong>${BrunoSalaSubview._escape(item.value)}</strong>
+                <span>${BrunoSalaSubview._escape(item.label)}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="topband-clock" aria-label="Data e hora">
+          <span data-clock>${this._lastMinute}</span>
+          <small>${BrunoSalaSubview._escape(this._dateLine())}</small>
+        </div>
+      </header>
     `;
   }
 
@@ -4538,44 +4599,55 @@ class BrunoSalaSubview extends HTMLElement {
          rail é da shell). Preenche o content-slot (height 100%). Régua das faixas
          = a do painel principal: superior 48px, inferior 74px. Padding 0 (o
          content-slot da shell já dá 12px de respiro). */
+      /* NOVO (full-bleed subview, Passada 1): topband full-width + conteúdo
+         (hero/cortina/[câmeras|mídia]) à esquerda + direita (Iluminação/AC).
+         ANTERIOR (rollback): grid "frame-top / left right / frame-bottom",
+         colunas minmax(420,540)+minmax(630,1fr), linhas 48/1fr/54. */
       .sala-subview {
         --sala-gap: 12px;
+        display: grid;
         height: 100%;
         min-height: 0;
-        grid-template-columns: minmax(420px, 540px) minmax(630px, 1fr);
-        /* NOVO (E1): faixa inferior 74px -> 54px (régua compartilhada com a Home). */
-        grid-template-rows: 48px minmax(0, 1fr) 54px;
+        grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
+        grid-template-rows: 48px minmax(0, 1fr);
         grid-template-areas:
-          "frame-top    frame-top"
-          "left         right"
-          "frame-bottom frame-bottom";
+          "topband topband"
+          "content right";
         align-items: stretch;
         gap: var(--sala-gap);
         padding: 0;
-        /* NOVO (Etapa B): TRANSPARENTE -> mostra o MESMO fundo da shell que o
-           rail mostra (unifica a cor rail × conteúdo). Antes herdava #020406 do
-           grid morto, ficando mais escuro que o rail. */
         background: transparent;
       }
 
-      .left-column,
+      .content-left,
       .right-column {
         min-width: 0;
         min-height: 0;
         height: 100%;
       }
 
-      .left-column {
-        grid-area: left;
+      /* Conteúdo-esquerda: hero (alto) -> cortina (fina) -> [câmeras | mídia]. */
+      .content-left {
+        grid-area: content;
         display: grid;
-        grid-template-rows: minmax(320px, 1.24fr) minmax(250px, 1fr);
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1.3fr) auto minmax(280px, 1fr);
         gap: var(--sala-gap);
       }
 
+      .cams-media-row {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--sala-gap);
+      }
+
+      /* Direita: Iluminação ALTA + AC médio-alto (não nivela com câmeras/mídia). */
       .right-column {
         grid-area: right;
         display: grid;
-        grid-template-rows: 64px minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1.28fr) minmax(0, 1fr);
         gap: var(--sala-gap);
       }
 
@@ -4600,25 +4672,86 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
       }
 
-      .hero-panel {
+      /* NOVO (Passada 1): blocos auto-posicionados pela ordem do DOM dentro de
+         .content-left (hero, cortina, [câmeras|mídia]) e .right-column (lights, ac).
+         ANTERIOR (rollback): lights->lights, media->media, ac->ac. */
+      .hero-panel,
+      .cameras-card,
+      .lights-card,
+      .media-hub-card,
+      .ac-card,
+      .curtain-card {
         grid-area: auto;
       }
 
-      .cameras-card {
-        grid-area: auto;
+      /* ===== NOVO (Passada 1): Topband (faixa de status) ===== */
+      .subview-topband {
+        grid-area: topband;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
       }
+      .topband-chips {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow: hidden;
+      }
+      .topband-chip {
+        display: grid;
+        grid-template-columns: 22px auto;
+        align-items: center;
+        column-gap: 8px;
+        height: 44px;
+        padding: 0 13px;
+        border-radius: 14px;
+        background: rgba(16,18,24,0.42);
+        border: 1px solid rgba(255,255,255,0.12);
+        backdrop-filter: blur(16px) saturate(1.2);
+        -webkit-backdrop-filter: blur(16px) saturate(1.2);
+      }
+      .topband-chip strong { display: block; font-size: 13px; font-weight: 800; color: var(--text-main); line-height: 1.05; }
+      .topband-chip span { display: block; font-size: 10px; font-weight: 600; color: var(--text-soft); }
+      .topband-clock { text-align: right; line-height: 1.05; white-space: nowrap; }
+      .topband-clock span[data-clock] { font-size: 22px; font-weight: 800; color: var(--text-main); }
+      .topband-clock small { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-soft); }
 
-      .lights-card {
-        grid-area: lights;
+      /* ===== NOVO (Passada 1): Hero atmosfera (transparente sobre o backdrop) ===== */
+      .hero-atmosphere { height: 100%; }
+      .hero-atmosphere .hero-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 4px 6px;
       }
+      .hero-scene { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+      .hero-scene-label { font-size: 13px; font-weight: 600; color: var(--text-soft); letter-spacing: 0.04em; }
+      .hero-scene-name {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 30px; font-weight: 800; color: #fff;
+        background: none; border: none; padding: 0; cursor: pointer;
+        text-shadow: 0 2px 18px rgba(0,0,0,0.55);
+      }
+      .hero-scene-name ha-icon { --mdc-icon-size: 22px; color: rgba(255,255,255,0.7); }
+      .hero-scene-edit {
+        display: inline-flex; align-items: center; gap: 7px;
+        margin-top: 2px; padding: 7px 12px; border-radius: 999px;
+        font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.9);
+        background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer;
+      }
+      .hero-scene-edit ha-icon { --mdc-icon-size: 15px; }
+      .hero-presence { display: flex; align-items: center; gap: 10px; }
+      .hero-presence ha-icon { --mdc-icon-size: 22px; color: rgba(255,255,255,0.78); }
+      .hero-presence-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-soft); }
+      .hero-presence-value { display: block; font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 10px rgba(0,0,0,0.5); }
 
-      .media-hub-card {
-        grid-area: media;
-      }
-
-      .ac-card {
-        grid-area: ac;
-      }
+      /* ===== NOVO (Passada 1): Cortina full-width ===== */
+      .curtain-card { padding: 12px 14px; }
 
       .room-sidebar {
         width: 58px;

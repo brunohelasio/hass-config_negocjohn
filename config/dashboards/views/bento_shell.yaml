@@ -29,7 +29,8 @@ cards:
     # ROLLBACK: comentar este bloco `backdrops` (volta ao fundo grafite de hoje).
     backdrops:
       home: /local/images/home_savant.jpg
-      sala: /local/images/sala_estar.jpg
+      # Cache-bust da imagem da Sala (atualizada pelo usuário em 2026-06-27).
+      sala: /local/images/sala_estar.jpg?v=20260627-1
     sections:
       home: !include shell/section_home.yaml
       cameras: !include shell/section_cameras.yaml

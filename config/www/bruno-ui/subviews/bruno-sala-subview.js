@@ -1193,7 +1193,6 @@ class BrunoSalaSubview extends HTMLElement {
           <section class="hero-panel">
             ${this._renderHero(model)}
           </section>
-          ${this._renderCurtain(model)}
           <div class="cams-media-row">
             ${this._renderCameras(model)}
             ${this._renderMediaHub(model)}
@@ -1204,6 +1203,8 @@ class BrunoSalaSubview extends HTMLElement {
           ${this._renderLights(model)}
           ${this._renderAC(model)}
         </section>
+
+        ${this._renderFrameBottom()}
       </main>
     `;
 
@@ -1267,39 +1268,21 @@ class BrunoSalaSubview extends HTMLElement {
     });
   }
 
-  // NOVO (full-bleed subview): HERO vira ATMOSFERA (transparente sobre o backdrop
-  // da shell — sem .hero-bg próprio). Conteúdo: Cena (placeholder) + Presença.
-  // A CORTINA saiu daqui para um bloco full-width próprio (_renderCurtain).
-  // ROLLBACK: restaurar o _renderHero anterior (com .hero-bg + curtain-dock).
+  // NOVO (full-bleed subview): HERO = ATMOSFERA transparente (sem .hero-bg; o
+  // backdrop da shell aparece). Os CONTROLES DE CORTINA voltam SOBREPOSTOS ao
+  // hero (transparente, sem caixa), ancorados embaixo — como era antes.
+  // ROLLBACK: restaurar o _renderHero anterior (com .hero-bg).
   _renderHero(model) {
-    const presence = BrunoSalaSubview._escape(this._presenceLine());
     return `
       <div class="hero-stage hero-atmosphere">
         <div class="hero-content">
-          <div class="hero-scene">
-            <span class="hero-scene-label">Cena</span>
-            <button type="button" class="hero-scene-name" data-action="none" title="Cena (em breve)">
-              <span>Relaxar</span>
-              <ha-icon icon="mdi:chevron-down"></ha-icon>
-            </button>
-            <button type="button" class="hero-scene-edit" data-action="none" title="Editar cena (em breve)">
-              <ha-icon icon="mdi:pencil-outline"></ha-icon><span>Editar cena</span>
-            </button>
-          </div>
-          <div class="hero-presence">
-            <ha-icon icon="mdi:account-group" aria-hidden="true"></ha-icon>
-            <div>
-              <span class="hero-presence-label">Presença</span>
-              <strong class="hero-presence-value">${presence}</strong>
-            </div>
-          </div>
+          ${this._renderCurtain(model)}
         </div>
       </div>
     `;
   }
 
-  // NOVO (full-bleed subview): bloco da CORTINA full-width (extraído do hero),
-  // posicionado logo acima de [câmeras | mídia]. Mesma marcação/ações de antes.
+  // Controles de cortina (SEM caixa/card). Renderizados sobrepostos ao hero.
   _renderCurtain(model) {
     const curtain = model.curtain || this._curtainModel();
     const curtainPosition = Number.isFinite(Number(curtain.position)) ? Number(curtain.position) : 0;
@@ -1317,8 +1300,7 @@ class BrunoSalaSubview extends HTMLElement {
     `).join('');
 
     return `
-      <section class="glass-card curtain-card">
-        <div class="curtain-dock${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
+      <div class="curtain-dock curtain-overlay${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
           <div class="curtain-control-row">
             <div class="curtain-identity">
               <span class="curtain-icon-shell">${BrunoSalaSubview._curtainSvg('main')}</span>
@@ -1357,8 +1339,7 @@ class BrunoSalaSubview extends HTMLElement {
               ${curtainChips}
             </div>
           </div>
-        </div>
-      </section>
+      </div>
     `;
   }
 
@@ -1369,23 +1350,25 @@ class BrunoSalaSubview extends HTMLElement {
   // (que ficava na coluna direita) e o _renderFrameTop.
   _renderTopBand(model) {
     const zones = model.lightZones || { sala: 0, varanda: 0 };
-    const status = [
-      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `Sala ${zones.sala} · Varanda ${zones.varanda}`, tone: 'amber' },
-      { icon: 'mdi:thermometer', value: this._temperatureLabel(), label: 'Temperatura', tone: 'amber' },
-      { icon: 'mdi:water-percent', value: this._humidityLabel(), label: 'Umidade', tone: 'blue' },
-      { icon: 'mdi:router-wireless', value: 'Roteador', label: this._networkLabel(this._config.entities.router), tone: 'neutral' },
-      { icon: 'mdi:zigbee', value: 'Hub Zigbee', label: this._networkLabel(this._config.entities.zigbee_hub), tone: 'neutral' },
+    // MESMA IDENTIDADE das badges do painel principal (bruno-top-badges-card):
+    // título (categoria) + sub (estado), ícone colorido por --tone, pill glass.
+    const badges = [
+      { icon: 'mdi:lightbulb', title: 'Luzes', sub: `Sala ${zones.sala} · Varanda ${zones.varanda}`, tone: '247,198,0', active: (model.lights || 0) > 0 },
+      { icon: 'mdi:thermometer', title: 'Temperatura', sub: this._temperatureLabel(), tone: '247,170,90' },
+      { icon: 'mdi:water-percent', title: 'Umidade', sub: this._humidityLabel(), tone: '127,200,233' },
+      { icon: 'mdi:router-wireless', title: 'Roteador', sub: this._networkLabel(this._config.entities.router), tone: '154,160,166' },
+      { icon: 'mdi:zigbee', title: 'Hub Zigbee', sub: this._networkLabel(this._config.entities.zigbee_hub), tone: '154,160,166' },
     ];
     return `
       <header class="subview-topband">
-        <div class="topband-chips">
-          ${status.map((item) => `
-            <div class="topband-chip">
-              <span class="micro-icon tone-${item.tone}"><ha-icon icon="${item.icon}"></ha-icon></span>
-              <div>
-                <strong>${BrunoSalaSubview._escape(item.value)}</strong>
-                <span>${BrunoSalaSubview._escape(item.label)}</span>
-              </div>
+        <div class="topband-badges">
+          ${badges.map((b) => `
+            <div class="tb-badge${b.active ? ' is-active' : ''}" style="--tone: ${b.tone};">
+              <span class="tb-badge-icon"><ha-icon icon="${b.icon}"></ha-icon></span>
+              <span class="tb-badge-text">
+                <span class="tb-badge-title">${BrunoSalaSubview._escape(b.title)}</span>
+                <span class="tb-badge-sub">${BrunoSalaSubview._escape(b.sub)}</span>
+              </span>
             </div>
           `).join('')}
         </div>
@@ -4609,10 +4592,12 @@ class BrunoSalaSubview extends HTMLElement {
         height: 100%;
         min-height: 0;
         grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
-        grid-template-rows: 48px minmax(0, 1fr);
+        /* Régua da shell (igual ao painel principal): topo 48px, base 54px. */
+        grid-template-rows: 48px minmax(0, 1fr) 54px;
         grid-template-areas:
-          "topband topband"
-          "content right";
+          "topband    topband"
+          "content    right"
+          "bottomband bottomband";
         align-items: stretch;
         gap: var(--sala-gap);
         padding: 0;
@@ -4626,12 +4611,12 @@ class BrunoSalaSubview extends HTMLElement {
         height: 100%;
       }
 
-      /* Conteúdo-esquerda: hero (alto) -> cortina (fina) -> [câmeras | mídia]. */
+      /* Conteúdo-esquerda: hero (alto, com a cortina sobreposta) -> [câmeras | mídia]. */
       .content-left {
         grid-area: content;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(0, 1.3fr) auto minmax(280px, 1fr);
+        grid-template-rows: minmax(0, 1.35fr) minmax(280px, 1fr);
         gap: var(--sala-gap);
       }
 
@@ -4643,11 +4628,12 @@ class BrunoSalaSubview extends HTMLElement {
         gap: var(--sala-gap);
       }
 
-      /* Direita: Iluminação ALTA + AC médio-alto (não nivela com câmeras/mídia). */
+      /* Direita: Iluminação (luzes) ABSORVE a redução de altura (faixa inferior de
+         volta); AC MANTÉM a altura (linha auto, conteúdo natural). */
       .right-column {
         grid-area: right;
         display: grid;
-        grid-template-rows: minmax(0, 1.28fr) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr) auto;
         gap: var(--sala-gap);
       }
 
@@ -4684,7 +4670,7 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: auto;
       }
 
-      /* ===== NOVO (Passada 1): Topband (faixa de status) ===== */
+      /* ===== Topband (faixa de status) — IDENTIDADE das badges do painel principal ===== */
       .subview-topband {
         grid-area: topband;
         min-width: 0;
@@ -4693,65 +4679,93 @@ class BrunoSalaSubview extends HTMLElement {
         justify-content: space-between;
         gap: 12px;
       }
-      .topband-chips {
+      .topband-badges {
         min-width: 0;
         display: flex;
         align-items: center;
         gap: 8px;
         overflow: hidden;
       }
-      .topband-chip {
+      /* .tb-badge: cópia fiel do .badge do bruno-top-badges-card. */
+      .tb-badge {
+        --tone: 150,190,255;
+        height: 46px;
+        min-width: 0;
         display: grid;
         grid-template-columns: 22px auto;
         align-items: center;
         column-gap: 8px;
-        height: 44px;
         padding: 0 13px;
-        border-radius: 14px;
-        background: rgba(16,18,24,0.42);
-        border: 1px solid rgba(255,255,255,0.12);
-        backdrop-filter: blur(16px) saturate(1.2);
-        -webkit-backdrop-filter: blur(16px) saturate(1.2);
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.14);
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.040)),
+          rgba(16,18,24,0.46);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 20px rgba(0,0,0,0.14);
+        backdrop-filter: blur(18px) saturate(1.28);
+        -webkit-backdrop-filter: blur(18px) saturate(1.28);
+        color: rgba(248,251,255,0.96);
       }
-      .topband-chip strong { display: block; font-size: 13px; font-weight: 800; color: var(--text-main); line-height: 1.05; }
-      .topband-chip span { display: block; font-size: 10px; font-weight: 600; color: var(--text-soft); }
+      .tb-badge.is-active {
+        background:
+          radial-gradient(30px 24px at 22% 16%, rgba(255,255,255,0.62), transparent 74%),
+          linear-gradient(180deg, rgba(255,255,255,0.92), rgba(246,248,252,0.78));
+        border-color: rgba(255,255,255,0.42);
+        color: rgba(14,18,24,0.88);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.48), 0 10px 22px rgba(0,0,0,0.16), 0 0 20px rgba(var(--tone),0.18);
+      }
+      .tb-badge-icon {
+        width: 22px; height: 22px;
+        display: grid; place-items: center;
+        color: rgba(var(--tone),0.98);
+      }
+      .tb-badge-icon ha-icon { --mdc-icon-size: 18px; }
+      .tb-badge-text { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; line-height: 1.02; }
+      .tb-badge-title { font-size: 10px; line-height: 1; font-weight: 760; color: currentColor; }
+      .tb-badge-sub { font-size: 11px; line-height: 1; font-weight: 650; color: rgba(255,255,255,0.66); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+      .tb-badge.is-active .tb-badge-sub { color: rgba(16,20,26,0.54); }
       .topband-clock { text-align: right; line-height: 1.05; white-space: nowrap; }
-      .topband-clock span[data-clock] { font-size: 22px; font-weight: 800; color: var(--text-main); }
+      .topband-clock span[data-clock] { font-size: 22px; font-weight: 800; color: rgba(248,251,255,0.96); }
       .topband-clock small { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-soft); }
 
-      /* ===== NOVO (Passada 1): Hero atmosfera (transparente sobre o backdrop) ===== */
+      /* ===== Hero atmosfera (transparente) — cortina sobreposta, ancorada embaixo ===== */
       .hero-atmosphere { height: 100%; }
       .hero-atmosphere .hero-content {
         height: 100%;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
-        padding: 4px 6px;
+        justify-content: flex-end;
+        padding: 0;
       }
-      .hero-scene { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
-      .hero-scene-label { font-size: 13px; font-weight: 600; color: var(--text-soft); letter-spacing: 0.04em; }
-      .hero-scene-name {
-        display: inline-flex; align-items: center; gap: 8px;
-        font-size: 30px; font-weight: 800; color: #fff;
-        background: none; border: none; padding: 0; cursor: pointer;
-        text-shadow: 0 2px 18px rgba(0,0,0,0.55);
+      /* Cortina SOBREPOSTA ao hero, SEM caixa (transparente). */
+      .curtain-overlay {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        padding: 0;
       }
-      .hero-scene-name ha-icon { --mdc-icon-size: 22px; color: rgba(255,255,255,0.7); }
-      .hero-scene-edit {
-        display: inline-flex; align-items: center; gap: 7px;
-        margin-top: 2px; padding: 7px 12px; border-radius: 999px;
-        font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.9);
-        background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16);
-        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer;
-      }
-      .hero-scene-edit ha-icon { --mdc-icon-size: 15px; }
-      .hero-presence { display: flex; align-items: center; gap: 10px; }
-      .hero-presence ha-icon { --mdc-icon-size: 22px; color: rgba(255,255,255,0.78); }
-      .hero-presence-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-soft); }
-      .hero-presence-value { display: block; font-size: 14px; font-weight: 800; color: #fff; text-shadow: 0 1px 10px rgba(0,0,0,0.5); }
 
-      /* ===== NOVO (Passada 1): Cortina full-width ===== */
-      .curtain-card { padding: 12px 14px; }
+      /* ===== Faixa inferior (54px) — presença/última atividade, translúcida ===== */
+      .subview-footer {
+        grid-area: bottomband;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: transparent;
+      }
+      .subview-presence {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.52);
+      }
+      .subview-presence ha-icon { --mdc-icon-size: 16px; color: rgba(255,255,255,0.42); }
 
       .room-sidebar {
         width: 58px;

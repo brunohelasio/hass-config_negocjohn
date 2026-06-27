@@ -2288,7 +2288,8 @@ class BrunoSalaSubview extends HTMLElement {
         --accent-blue: 96, 165, 250;
         --accent-cyan: 79, 172, 254;
         --accent-amber: 255, 183, 77;
-        --media-screen-height: 154px;
+        /* ANTERIOR (rollback): --media-screen-height: 154px; */
+        --media-screen-height: 168px;
         --text-main: rgba(245,250,255,0.96);
         --text-soft: rgba(255,255,255,0.62);
         --text-dim: rgba(255,255,255,0.42);
@@ -4019,11 +4020,15 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: var(--media-screen-height, 154px) auto;
+        /* ANTERIOR (rollback): grid-template-rows: var(--media-screen-height, 154px) auto; */
+        /* NOVO — 1a faixa acompanha a arte quadrada (auto) em vez de altura fixa. */
+        grid-template-rows: auto auto;
         align-items: stretch;
         gap: 8px;
       }
 
+      /* ANTERIOR (rollback) — arte com altura fixa (154px) desacoplada da largura:
+         virava retângulo quando a geometria do cartão mudou (E1).
       .spotify-art {
         position: relative;
         inset: auto;
@@ -4031,6 +4036,24 @@ class BrunoSalaSubview extends HTMLElement {
         height: var(--media-screen-height, 154px);
         min-height: var(--media-screen-height, 154px);
         max-height: var(--media-screen-height, 154px);
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        ...
+      }
+      */
+      /* NOVO — caixa da arte é QUADRADA (aspect-ratio 1/1), dimensionada pela
+         altura disponível e centrada na coluna; largura segue a altura. */
+      .spotify-art {
+        position: relative;
+        inset: auto;
+        aspect-ratio: 1 / 1;
+        height: var(--media-screen-height, 168px);
+        min-height: var(--media-screen-height, 168px);
+        max-height: var(--media-screen-height, 168px);
+        width: auto;
+        max-width: 100%;
         justify-self: center;
         display: flex;
         align-items: center;
@@ -4151,7 +4174,8 @@ class BrunoSalaSubview extends HTMLElement {
       .climate-mode,
       .fan-mode,
       .climate-stepper {
-        min-height: 34px;
+        /* ANTERIOR (rollback): min-height: 34px; */
+        min-height: 38px;
         border-radius: var(--bruno-liquid-control-radius, 14px);
         border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.09));
         background: var(--bruno-liquid-control-background, rgba(255,255,255,0.050));
@@ -4211,7 +4235,8 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .climate-stepper button {
-        height: 34px;
+        /* ANTERIOR (rollback): height: 34px; */
+        height: 38px;
         background: transparent;
         color: rgba(255,255,255,0.82);
         font-size: 17px;
@@ -5201,14 +5226,27 @@ class BrunoSalaSubview extends HTMLElement {
         --mdc-icon-size: 18px;
       }
 
+      /* ANTERIOR (rollback) — sobra de altura empoçava no 1fr da .ac-visual,
+         criando vácuo entre o gauge e o slider:
       .ac-body {
         height: auto;
         min-height: 0;
         grid-template-columns: 1fr;
-        /* ANTERIOR (rollback): grid-template-rows: minmax(320px, auto) auto auto auto auto auto; */
         grid-template-rows: minmax(320px, 1fr) auto auto auto auto auto;
         gap: 10px;
         align-content: start;
+      }
+      */
+      /* NOVO — corpo preenche o cartão (height:100%) e distribui a folga do E1
+         igualmente entre TODAS as linhas (space-between), em vez de jogar tudo
+         num único vão. Linhas em auto: nenhuma faixa engole sozinha o excedente. */
+      .ac-body {
+        height: 100%;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto auto;
+        gap: 12px;
+        align-content: space-between;
       }
 
       .temperature-slider {
@@ -5219,6 +5257,8 @@ class BrunoSalaSubview extends HTMLElement {
         margin-bottom: 4px;
       }
 
+      /* ANTERIOR (rollback): min-height 320px + align-content:start empurrava
+         imagem+gauge pro topo e deixava o resto vazio embaixo.
       .ac-visual {
         position: relative;
         min-height: 320px;
@@ -5227,6 +5267,18 @@ class BrunoSalaSubview extends HTMLElement {
         align-content: start;
         justify-items: center;
         gap: 14px;
+        padding: 0 0 2px;
+      }
+      */
+      /* NOVO — centraliza imagem+gauge no espaço da faixa, sem vão interno. */
+      .ac-visual {
+        position: relative;
+        min-height: 300px;
+        display: grid;
+        grid-template-rows: auto auto;
+        align-content: center;
+        justify-items: center;
+        gap: 16px;
         padding: 0 0 2px;
       }
 
@@ -5357,7 +5409,9 @@ class BrunoSalaSubview extends HTMLElement {
 
       .icg-shell {
         width: min(100%, 820px);
-        aspect-ratio: 16 / 9;
+        /* ANTERIOR (rollback): aspect-ratio: 16 / 9; */
+        /* NOVO — proporção mais alta = semicírculo um pouco maior p/ mesma largura. */
+        aspect-ratio: 16 / 10;
         position: relative;
         background: transparent;
       }

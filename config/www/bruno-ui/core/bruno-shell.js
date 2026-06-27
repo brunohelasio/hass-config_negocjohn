@@ -49,6 +49,11 @@ class BrunoShell extends HTMLElement {
     this._rails = config.rails || null;
     this._sectionRails = config.section_rails || {};
     this._defaultRailName = config.default_rail || 'default';
+    // NOVO (full-bleed): imagem de fundo da SHELL inteira por seção. A imagem
+    // sangra por baixo do rail + faixas + blocos. Sem `backdrops` no config =>
+    // camada fica transparente (comportamento de hoje, inalterado).
+    //   backdrops: { home: <url>, sala: <url>, ... , default: <url opcional> }
+    this._backdrops = config.backdrops || null;
     this._railConfig = config.rail
       || (this._rails ? this._rails[this._defaultRailName] : null);
     this._currentRailName = null;
@@ -110,10 +115,12 @@ class BrunoShell extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${BrunoShell._styles()}</style>
       <div class="shell">
+        <div class="backdrop" id="backdrop"></div>
         <div class="rail-slot" id="rail"></div>
         <div class="content-slot" id="content"></div>
       </div>
     `;
+    this._backdropEl = this.shadowRoot.getElementById('backdrop');
 
     // Rail: criada UMA vez e mantida viva (nunca recriada).
     try {
@@ -172,6 +179,9 @@ class BrunoShell extends HTMLElement {
     // fundo ambiente do token --bruno-section-backdrop (ver _styles).
     content.dataset.section = key;
 
+    // NOVO (full-bleed): troca a imagem de fundo da shell conforme a seção.
+    this._applyBackdrop(key);
+
     // NOVO (Etapa A): troca os ITENS do rail conforme a seção (sem recriar o
     // elemento) ANTES de montar o conteúdo, para a moldura não "saltar".
     this._applyRailForSection(key);
@@ -187,6 +197,20 @@ class BrunoShell extends HTMLElement {
     }
 
     this._updateRailSelection(key);
+  }
+
+  // NOVO (full-bleed): aplica a imagem de fundo da seção na camada .backdrop
+  // (atrás do rail + conteúdo). Sem `backdrops` no config => transparente.
+  _applyBackdrop(key) {
+    if (!this._backdropEl) return;
+    const url = this._backdrops && (this._backdrops[key] || this._backdrops.default);
+    if (url) {
+      this._backdropEl.style.backgroundImage = `url("${url}")`;
+      this._backdropEl.dataset.active = '1';
+    } else {
+      this._backdropEl.style.backgroundImage = 'none';
+      delete this._backdropEl.dataset.active;
+    }
   }
 
   // NOVO (Etapa A): troca os ITENS do rail conforme a seção, SEM recriar o
@@ -279,11 +303,37 @@ class BrunoShell extends HTMLElement {
         grid-template-rows: minmax(0, 1fr);
         gap: 0;
         padding: 0;
+        position: relative;
       }
+
+      /* NOVO (full-bleed): imagem da seção sangrando por TODA a shell (sob rail,
+         faixas e blocos). z-index 0 -> tudo o resto fica acima (z-index 1).
+         O ::after dá um leve escurecimento global para legibilidade — o blur
+         "pesado" fica nas faixas fixas (top/dock), não aqui. */
+      .backdrop {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-image: none;
+        transition: background-image 0.35s ease;
+      }
+      .backdrop::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(6,9,14,0.30) 0%, rgba(6,9,14,0.18) 42%, rgba(6,9,14,0.42) 100%);
+      }
+      /* Sem imagem (seção sem backdrop): camada some e o :host (grafite) aparece. */
+      .backdrop:not([data-active])::after { background: none; }
 
       .rail-slot {
         grid-column: 1;
         position: relative;
+        z-index: 1;
         min-width: 0;
         min-height: 0;
       }
@@ -302,6 +352,7 @@ class BrunoShell extends HTMLElement {
       .content-slot {
         grid-column: 2;
         position: relative;
+        z-index: 1;
         min-width: 0;
         min-height: 0;
         overflow: hidden;

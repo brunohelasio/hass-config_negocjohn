@@ -438,6 +438,14 @@ class BrunoTopBadgesCard extends HTMLElement {
           height: 48px;
           min-height: 0;
           contain: layout style;
+          /* NOVO (full-bleed): a barra de status é FAIXA FIXA sobre a foto. Recebe
+             um backing translúcido + blur na REGIÃO (não nos badges, que já têm
+             vidro próprio) para o relógio e os vãos lerem sobre a imagem.
+             ROLLBACK: remover as 4 linhas abaixo (volta a faixa transparente). */
+          background: var(--bruno-liquid-band-background, rgba(8,11,17,0.30));
+          backdrop-filter: var(--bruno-liquid-band-filter, blur(20px) saturate(1.15));
+          -webkit-backdrop-filter: var(--bruno-liquid-band-filter, blur(20px) saturate(1.15));
+          border-radius: 16px;
         }
 
         * { box-sizing: border-box; letter-spacing: 0; }

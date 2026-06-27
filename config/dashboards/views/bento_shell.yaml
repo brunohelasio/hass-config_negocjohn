@@ -24,6 +24,12 @@ cards:
     default_rail: default
     section_rails:
       sala: rooms
+    # NOVO (full-bleed): imagem de fundo da shell por seção (sangra sob rail +
+    # faixas + blocos). Seção sem entrada aqui => camada transparente (grafite).
+    # ROLLBACK: comentar este bloco `backdrops` (volta ao fundo grafite de hoje).
+    backdrops:
+      home: /local/images/home_savant.jpg
+      sala: /local/images/sala_estar.jpg
     sections:
       home: !include shell/section_home.yaml
       cameras: !include shell/section_cameras.yaml

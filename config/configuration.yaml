@@ -40,7 +40,7 @@ frontend:
     - /local/bruno-ui/cards/bruno-hero-stage-card.js?v=20260603-hero-stage-2
     - /local/bruno-ui/cards/bruno-hero-card.js?v=20260607-main-camera-strip-4
     - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260627-fullbleed-transp-2
-    - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260627-fullbleed-dockalign-3
+    - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260627-fullbleed-dock54-4
     - /local/bruno-ui/cards/bruno-media-card.js?v=20260518-5
     - /local/bruno-ui/cards/bruno-mobile-card-frame.js?v=20260518-1
     - /local/bruno-ui/cards/bruno-mobile-nav-card.js?v=20260518-2

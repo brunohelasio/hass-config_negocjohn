@@ -186,7 +186,10 @@ class BrunoQuickActionsCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>
         :host {
-          --rail-size: 56px;
+          /* PADRONIZAÇÃO: dock = 54px, igual à linha da faixa inferior da régua da
+             shell (topo 48 / base 54) e à faixa inferior das subviews. ANTERIOR:
+             56px (estourava 2px a linha de 54px e desalinhava o filete). */
+          --rail-size: 54px;
           --button-size: 39px;
           --button-radius: 999px;
           --icon-size: 19px;

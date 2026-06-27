@@ -28,7 +28,11 @@ layout:
 cards:
   # Redirect mobile preservado (vinha do bento_main): so renderiza/age em <=800px.
   - !include ../main-grid/zz-mobile-redirect.yaml
-  - !include ../main-grid/bento_hero_stage.yaml
+  # NOVO (full-bleed): a imagem migrou para a camada .backdrop da SHELL (sangra
+  # sob o rail). O hero_stage cobria só o conteúdo (col 2/-1), deixando seam na
+  # borda do rail. Desativado. ROLLBACK: descomentar a linha abaixo e comentar o
+  # bloco `backdrops` em bento_shell.yaml.
+  # - !include ../main-grid/bento_hero_stage.yaml
   - !include ../main-grid/bento_top_badges.yaml
   - !include ../main-grid/bento_welcome.yaml
   - !include ../main-grid/bento_sala.yaml

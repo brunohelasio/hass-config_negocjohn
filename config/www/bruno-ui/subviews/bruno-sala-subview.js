@@ -4628,12 +4628,14 @@ class BrunoSalaSubview extends HTMLElement {
         gap: var(--sala-gap);
       }
 
-      /* Direita: Iluminação (luzes) ABSORVE a redução de altura (faixa inferior de
-         volta); AC MANTÉM a altura (linha auto, conteúdo natural). */
+      /* Direita: Iluminação (luzes) em cima + AC embaixo. AMBOS visíveis (sem
+         colapso). Luzes um pouco maior; absorve a maior parte da redução da faixa
+         inferior. ANTERIOR (bug): "minmax(0,1fr) auto" -> AC pegava o natural
+         (alto) e a Iluminação colapsava/sumia. */
       .right-column {
         grid-area: right;
         display: grid;
-        grid-template-rows: minmax(0, 1fr) auto;
+        grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
         gap: var(--sala-gap);
       }
 
@@ -4670,7 +4672,9 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: auto;
       }
 
-      /* ===== Topband (faixa de status) — IDENTIDADE das badges do painel principal ===== */
+      /* ===== Topband — FAIXA de status (re-skin savant, IGUAL ao painel principal):
+         badges FLAT (sem pílula/caixa), separadas por filete; apagado = cinza
+         sóbrio; aceso = acende na cor do grupo (--tone), sem pill branco. ===== */
       .subview-topband {
         grid-area: topband;
         min-width: 0;
@@ -4683,62 +4687,46 @@ class BrunoSalaSubview extends HTMLElement {
         min-width: 0;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 0;
         overflow: hidden;
       }
-      /* .tb-badge: cópia fiel do .badge do bruno-top-badges-card. */
       .tb-badge {
-        --tone: 150,190,255;
+        --tone: 154,160,166;
         height: 46px;
-        min-width: 0;
         display: grid;
         grid-template-columns: 22px auto;
         align-items: center;
-        column-gap: 8px;
-        padding: 0 13px;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.14);
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.040)),
-          rgba(16,18,24,0.46);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 20px rgba(0,0,0,0.14);
-        backdrop-filter: blur(18px) saturate(1.28);
-        -webkit-backdrop-filter: blur(18px) saturate(1.28);
-        color: rgba(248,251,255,0.96);
+        column-gap: 9px;
+        padding: 0 16px;
+        color: rgba(255,255,255,0.92);
       }
-      .tb-badge.is-active {
-        background:
-          radial-gradient(30px 24px at 22% 16%, rgba(255,255,255,0.62), transparent 74%),
-          linear-gradient(180deg, rgba(255,255,255,0.92), rgba(246,248,252,0.78));
-        border-color: rgba(255,255,255,0.42);
-        color: rgba(14,18,24,0.88);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.48), 0 10px 22px rgba(0,0,0,0.16), 0 0 20px rgba(var(--tone),0.18);
-      }
-      .tb-badge-icon {
-        width: 22px; height: 22px;
-        display: grid; place-items: center;
-        color: rgba(var(--tone),0.98);
-      }
+      .tb-badge + .tb-badge { border-left: 1px solid rgba(255,255,255,0.10); }
+      .tb-badge-icon { width: 22px; height: 22px; display: grid; place-items: center; color: rgba(255,255,255,0.44); }
       .tb-badge-icon ha-icon { --mdc-icon-size: 18px; }
       .tb-badge-text { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; line-height: 1.02; }
-      .tb-badge-title { font-size: 10px; line-height: 1; font-weight: 760; color: currentColor; }
-      .tb-badge-sub { font-size: 11px; line-height: 1; font-weight: 650; color: rgba(255,255,255,0.66); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
-      .tb-badge.is-active .tb-badge-sub { color: rgba(16,20,26,0.54); }
+      .tb-badge-title { font-size: 10px; line-height: 1; font-weight: 600; color: rgba(255,255,255,0.60); }
+      .tb-badge-sub { font-size: 11px; line-height: 1; font-weight: 600; color: rgba(255,255,255,0.42); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+      .tb-badge.is-active .tb-badge-icon { color: rgb(var(--tone)); filter: drop-shadow(0 0 8px rgba(var(--tone),0.45)); }
+      .tb-badge.is-active .tb-badge-title { color: rgba(255,255,255,0.94); }
+      .tb-badge.is-active .tb-badge-sub { color: rgb(var(--tone)); }
       .topband-clock { text-align: right; line-height: 1.05; white-space: nowrap; }
       .topband-clock span[data-clock] { font-size: 22px; font-weight: 800; color: rgba(248,251,255,0.96); }
       .topband-clock small { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-soft); }
 
-      /* ===== Hero atmosfera (transparente) — cortina sobreposta, ancorada embaixo ===== */
+      /* ===== Hero atmosfera (transparente) — cortina sobreposta, ancorada embaixo À ESQUERDA ===== */
       .hero-atmosphere { height: 100%; }
       .hero-atmosphere .hero-content {
         height: 100%;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
+        align-items: flex-start;
         padding: 0;
       }
-      /* Cortina SOBREPOSTA ao hero, SEM caixa (transparente). */
+      /* Cortina SOBREPOSTA ao hero, SEM caixa (transparente) e ALINHADA À ESQUERDA.
+         (Bug: align-self:end do dock antigo, em flex-column, jogava p/ a direita.) */
       .curtain-overlay {
+        align-self: flex-start;
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
@@ -4747,15 +4735,26 @@ class BrunoSalaSubview extends HTMLElement {
         padding: 0;
       }
 
-      /* ===== Faixa inferior (54px) — presença/última atividade, translúcida ===== */
+      /* ===== Faixa inferior (54px) — presença/última atividade, translúcida, com
+         o MESMO filete divisor do dock do painel principal (mais claro no centro). ===== */
       .subview-footer {
         grid-area: bottomband;
+        position: relative;
         min-width: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         background: transparent;
+      }
+      .subview-footer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 8px;
+        right: 8px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16) 50%, transparent);
       }
       .subview-presence {
         display: inline-flex;

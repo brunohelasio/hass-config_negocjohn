@@ -4587,7 +4587,9 @@ class BrunoSalaSubview extends HTMLElement {
          ANTERIOR (rollback): grid "frame-top / left right / frame-bottom",
          colunas minmax(420,540)+minmax(630,1fr), linhas 48/1fr/54. */
       .sala-subview {
-        --sala-gap: 12px;
+        /* Igual ao painel principal (section_home grid-gap: 10px) — padronização
+           da régua. ANTERIOR: 12px. */
+        --sala-gap: 10px;
         display: grid;
         height: 100%;
         min-height: 0;

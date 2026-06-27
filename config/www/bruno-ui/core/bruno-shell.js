@@ -320,12 +320,22 @@ class BrunoShell extends HTMLElement {
         background-image: none;
         transition: background-image 0.35s ease;
       }
+      /* NOVO: BORDA ATMOSFÉRICA escurecida no PERÍMETRO da imagem. É ela que dá
+         legibilidade às regiões fixas (rail à esquerda, status no topo, dock na
+         base) — por isso essas regiões voltam a ser transparentes. As bordas
+         esquerda/topo/base são mais fortes (onde ficam as faixas fixas); a
+         direita é mais suave. Um leve escurecimento geral fecha o contraste. */
       .backdrop::after {
         content: "";
         position: absolute;
         inset: 0;
         pointer-events: none;
-        background: linear-gradient(180deg, rgba(6,9,14,0.30) 0%, rgba(6,9,14,0.18) 42%, rgba(6,9,14,0.42) 100%);
+        background:
+          linear-gradient(90deg,  rgba(4,7,11,0.78) 0%, rgba(4,7,11,0.34) 6%, rgba(4,7,11,0.00) 16%),
+          linear-gradient(270deg, rgba(4,7,11,0.42) 0%, rgba(4,7,11,0.00) 12%),
+          linear-gradient(180deg, rgba(4,7,11,0.66) 0%, rgba(4,7,11,0.00) 11%),
+          linear-gradient(0deg,   rgba(4,7,11,0.66) 0%, rgba(4,7,11,0.00) 12%),
+          linear-gradient(180deg, rgba(6,9,14,0.16) 0%, rgba(6,9,14,0.06) 45%, rgba(6,9,14,0.16) 100%);
       }
       /* Sem imagem (seção sem backdrop): camada some e o :host (grafite) aparece. */
       .backdrop:not([data-active])::after { background: none; }

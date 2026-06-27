@@ -461,19 +461,12 @@ class BentoSidebarCard extends HTMLElement {
           max-height: none;
           justify-content: flex-start;
           padding: 14px 8px 12px;
-          /* ORIGINAL (rollback) — rail fundia com o grafite (sem imagem atrás):
+          /* TRANSPARENTE: a legibilidade do rail sobre a foto é garantida pela
+             BORDA ATMOSFÉRICA escurecida do backdrop (vinheta na shell), não por
+             faixa/blur aqui. Rail funde com a imagem. */
           background: transparent;
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
-          */
-          /* NOVO (full-bleed): com a foto sangrando sob o rail, ele vira FAIXA
-             FIXA translúcida + blur para os ícones/rótulos lerem sobre a imagem.
-             Sem imagem (seções sem backdrop) fica como um leve véu sobre o grafite. */
-          background: var(--bruno-liquid-rail-background,
-            linear-gradient(180deg, rgba(10,13,19,0.46) 0%, rgba(10,13,19,0.40) 100%)
-          );
-          backdrop-filter: var(--bruno-liquid-rail-filter, blur(26px) saturate(1.22));
-          -webkit-backdrop-filter: var(--bruno-liquid-rail-filter, blur(26px) saturate(1.22));
           border: none;
           border-radius: 0;               /* sem pílula */
           box-shadow: none;

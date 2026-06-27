@@ -249,18 +249,12 @@ class BrunoQuickActionsCard extends HTMLElement {
           padding: 0 8px;
           color: rgba(255,255,255,0.86);
           border: none;
-          /* ORIGINAL (rollback) — dock rente, fundia com o painel (sem imagem):
+          /* TRANSPARENTE: dock funde com a imagem; legibilidade pela BORDA
+             ATMOSFÉRICA escurecida do backdrop (vinheta inferior). */
           border-radius: 0;
           background: transparent;
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
-          */
-          /* NOVO (full-bleed): dock vira FAIXA FIXA translúcida + blur sobre a
-             foto, para ícones/rótulos lerem. Mesmo tratamento da top status bar. */
-          border-radius: 16px;
-          background: var(--bruno-liquid-band-background, rgba(8,11,17,0.30));
-          backdrop-filter: var(--bruno-liquid-band-filter, blur(20px) saturate(1.15));
-          -webkit-backdrop-filter: var(--bruno-liquid-band-filter, blur(20px) saturate(1.15));
           box-shadow: none;
           overflow: visible;
         }

@@ -1175,32 +1175,6 @@ class BrunoSalaSubview extends HTMLElement {
     });
   }
 
-  // NOVO (Etapa 1 faixa alinhada): altura da FAIXA inferior (Câmeras|Mídia|A/C)
-  // = altura do bloco de luzes com a MAIOR zona expandida. Calculada dos dados
-  // (escala para os demais cômodos). Exposta como --band-h (lida no CSS).
-  // Constantes em px espelham o CSS das luzes; ajuste fino aqui se preciso.
-  _applyBandHeight() {
-    const lights = this._config.entities.lights || [];
-    const byZone = {};
-    for (const l of lights) {
-      if (!l.entity || l.placeholder) continue;
-      const zk = l.zone || 'sala';
-      byZone[zk] = (byZone[zk] || 0) + 1;
-    }
-    const counts = Object.values(byZone);
-    const zoneCount = counts.length;
-    const maxRows = counts.length ? Math.max(...counts) : 0;
-    const CARD_PAD_V = 32;     // glass-card (topo+base)
-    const HEAD = 46;           // cabeçalho "Iluminação" + margem
-    const ZONE_HEAD = 58;      // .zone-header
-    const ROW = 52;            // .light-row
-    const ZONE_GAP = 10;       // gap entre zonas
-    const ZONE_PAD_BOTTOM = 6; // .zone-lights base
-    const h = CARD_PAD_V + HEAD + (zoneCount * ZONE_HEAD)
-      + (Math.max(0, zoneCount - 1) * ZONE_GAP) + (maxRows * ROW) + ZONE_PAD_BOTTOM;
-    if (Number.isFinite(h) && h > 0) this.style.setProperty('--band-h', `${h}px`);
-  }
-
   _render() {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     globalThis.BrunoLiquidGlass?.apply?.();
@@ -1216,7 +1190,6 @@ class BrunoSalaSubview extends HTMLElement {
       climate: this._climateModel(),
     };
     this._lastMinute = this._clock();
-    this._applyBandHeight();
 
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
@@ -2420,9 +2393,9 @@ class BrunoSalaSubview extends HTMLElement {
         /* Tamanho FIXO do quadrado da arte (padrão). ANTERIOR: 168px (cortava
            arte/volume com a faixa mais baixa). */
         --media-screen-height: 150px;
-        /* Altura da FAIXA inferior (Câmeras|Mídia|A/C). Default; o JS sobrescreve
-           via _applyBandHeight() = altura das luzes com a maior zona expandida. */
-        --band-h: 400px;
+        /* Altura FIXA do bloco de A/C (ancorado na base da coluna direita).
+           Fácil de afinar aqui. As luzes acima continuam dinâmicas (auto). */
+        --ac-h: 290px;
         --text-main: rgba(245,250,255,0.96);
         --text-soft: rgba(255,255,255,0.62);
         --text-dim: rgba(255,255,255,0.42);
@@ -4712,9 +4685,8 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: content;
         display: grid;
         grid-template-columns: 1fr;
-        /* NOVO (Etapa 1 faixa alinhada): câmeras/mídia com a MESMA altura da faixa
-           (= bloco de luzes com a maior zona expandida). Hero absorve o resto. */
-        grid-template-rows: minmax(0, 1fr) var(--band-h, 400px);
+        /* Câmeras/mídia intactos (não mexer). Hero absorve o resto. */
+        grid-template-rows: minmax(0, 1.5fr) minmax(272px, 0.94fr);
         gap: var(--sala-gap);
       }
 
@@ -4730,23 +4702,15 @@ class BrunoSalaSubview extends HTMLElement {
          colapso). Luzes um pouco maior; absorve a maior parte da redução da faixa
          inferior. ANTERIOR (bug): "minmax(0,1fr) auto" -> AC pegava o natural
          (alto) e a Iluminação colapsava/sumia. */
-      /* NOVO (Etapa 1 faixa alinhada): coluna em FLEX. Luzes abraçam o conteúdo
-         (e rolam em telas curtas); A/C com altura FIXA da faixa (= câmeras/mídia),
-         ANCORADO na base (margin-top:auto). O respiro variável fica entre os dois.
-         ANTERIOR: grid "auto minmax(0,1fr)" (AC absorvia o resto e oscilava). */
+      /* ÚNICO ajuste: luzes seguem ABRAÇANDO o conteúdo (auto, como já funcionava)
+         no topo; o A/C ganha ALTURA FIXA (--ac-h) e fica ANCORADO na base
+         (align-content: space-between). O respiro variável fica entre os dois.
+         Câmeras/mídia e luzes NÃO foram alterados. */
       .right-column {
         grid-area: right;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-      }
-      .right-column > .lights-card {
-        flex: 0 1 auto;
-        min-height: 0;
-      }
-      .right-column > .ac-card {
-        flex: 0 0 var(--band-h, 400px);
-        margin-top: auto;
+        display: grid;
+        grid-template-rows: auto var(--ac-h, 290px);
+        align-content: space-between;
       }
 
       .right-control-grid {

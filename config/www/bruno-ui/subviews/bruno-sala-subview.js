@@ -2393,9 +2393,10 @@ class BrunoSalaSubview extends HTMLElement {
         /* Tamanho FIXO do quadrado da arte (padrão). ANTERIOR: 168px (cortava
            arte/volume com a faixa mais baixa). */
         --media-screen-height: 150px;
-        /* Altura FIXA do bloco de A/C (ancorado na base da coluna direita).
-           Fácil de afinar aqui. As luzes acima continuam dinâmicas (auto). */
-        --ac-h: 290px;
+        /* Altura FIXA do bloco de A/C (ancorado na base) — câmeras/mídia seguem o
+           MESMO valor. Subir/baixar aqui reduz/aumenta o vão luzes↔A/C.
+           As luzes acima continuam dinâmicas (auto) — NÃO mexer nelas. */
+        --ac-h: 320px;
         --text-main: rgba(245,250,255,0.96);
         --text-soft: rgba(255,255,255,0.62);
         --text-dim: rgba(255,255,255,0.42);
@@ -4685,8 +4686,9 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: content;
         display: grid;
         grid-template-columns: 1fr;
-        /* Câmeras/mídia intactos (não mexer). Hero absorve o resto. */
-        grid-template-rows: minmax(0, 1.5fr) minmax(272px, 0.94fr);
+        /* Câmeras/mídia ACOMPANHAM a altura do A/C (mesmo --ac-h) -> faixa inferior
+           alinhada. Hero absorve o resto. */
+        grid-template-rows: minmax(0, 1fr) var(--ac-h, 320px);
         gap: var(--sala-gap);
       }
 

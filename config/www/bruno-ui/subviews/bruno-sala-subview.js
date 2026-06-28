@@ -970,6 +970,23 @@ class BrunoSalaSubview extends HTMLElement {
       this._safeRender();
       return;
     }
+    // NOVO (Passada 2): acordeão de zonas — expandir/colapsar uma zona.
+    if (action === 'toggle-zone') {
+      const zk = target.dataset.zone;
+      if (!this._expandedZones) this._expandedZones = new Set();
+      if (this._expandedZones.has(zk)) this._expandedZones.delete(zk);
+      else this._expandedZones.add(zk);
+      this._safeRender();
+      return;
+    }
+    // NOVO (Passada 2): apagar todas as luzes (reais) de uma zona.
+    if (action === 'zone-off') {
+      const ids = (this._config.entities.lights || [])
+        .filter((l) => (l.zone || 'sala') === target.dataset.zone && l.entity && !l.placeholder)
+        .map((l) => l.entity);
+      if (ids.length) this._callService('light.turn_off', { entity_id: ids });
+      return;
+    }
     if (action === 'select-media-source') {
       const source = target.dataset.source;
       if (['tv', 'spotify', 'ps5'].includes(source)) this._selectedMediaSource = source;
@@ -1606,36 +1623,83 @@ class BrunoSalaSubview extends HTMLElement {
     `;
   }
 
+  // ANTERIOR (rollback) — abas Sala/Varanda + tiles 2x2 + coluna vertical N/4.
+  // Métodos _renderLightTile/_renderLightZoneRail mantidos acima para rollback.
+  // NOVO (Passada 2): acordeão de ZONAS. Cada zona com luzes REAIS (sem
+  // placeholders falsos): cabeçalho (nome + N/M acesas + apagar zona + chevron)
+  // e, quando expandida, linhas individuais com toggle. 1 zona => sempre expandida.
   _renderLights(model) {
     const lights = this._config.entities.lights || [];
-    const salaLights = lights.filter((light) => (light.zone || 'sala') === 'sala');
-    const varandaLights = lights.filter((light) => light.zone === 'varanda');
-    const selectedZone = this._selectedLightZone === 'varanda' ? 'varanda' : 'sala';
-    const visibleLights = selectedZone === 'varanda' ? varandaLights : salaLights;
+    const zoneLabels = { sala: 'Sala', varanda: 'Varanda' };
+    const zoneIcons = { sala: 'mdi:sofa-outline', varanda: 'mdi:string-lights' };
+
+    const zoneOrder = [];
+    for (const l of lights) {
+      const zk = l.zone || 'sala';
+      if (!zoneOrder.includes(zk)) zoneOrder.push(zk);
+    }
+    const zones = zoneOrder
+      .map((zk) => {
+        const zl = lights.filter((l) => (l.zone || 'sala') === zk && l.entity && !l.placeholder);
+        const onCount = zl.filter((l) => this._state(l.entity)?.state === 'on').length;
+        return { key: zk, name: zoneLabels[zk] || zk, icon: zoneIcons[zk] || 'mdi:lightbulb-group', lights: zl, onCount, total: zl.length };
+      })
+      .filter((z) => z.total > 0);
+
+    if (!this._expandedZones) {
+      this._expandedZones = new Set(zones.length ? [zones[0].key] : []);
+    }
+    const onlyOne = zones.length === 1;
+    const isExpanded = (zk) => onlyOne || this._expandedZones.has(zk);
 
     return `
       <div class="glass-card lights-card">
-        <div class="module-head">
-          <div class="lights-title-row">
-            <div class="module-title">Luzes</div>
-            <div class="zone-toggle" role="tablist" aria-label="Zona das luzes">
-              <button type="button" class="${selectedZone === 'sala' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="sala">Sala</button>
-              <button type="button" class="${selectedZone === 'varanda' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="varanda">Varanda</button>
-            </div>
+        <div class="module-head lights-head">
+          <div class="title-with-chip">
+            <span class="micro-icon tone-amber"><ha-icon icon="mdi:lightbulb-group"></ha-icon></span>
+            <div class="module-title">Iluminação</div>
           </div>
           <div class="head-actions">
             <button type="button" class="chip-button is-active" data-action="lights-on">Todas acesas</button>
             <button type="button" class="chip-button" data-action="lights-off">Apagar todas</button>
           </div>
         </div>
-
-        <div class="lights-body">
-          <div class="lights-single-grid">
-            ${visibleLights.map((light) => this._renderLightTile(light)).join('')}
-          </div>
-          ${this._renderLightZoneRail(visibleLights, selectedZone)}
+        <div class="lights-zones">
+          ${zones.map((z) => this._renderLightZone(z, isExpanded(z.key), onlyOne)).join('')}
         </div>
       </div>
+    `;
+  }
+
+  _renderLightZone(zone, expanded, onlyOne) {
+    const zoneKey = BrunoSalaSubview._escapeAttr(zone.key);
+    return `
+      <section class="light-zone${expanded ? ' is-expanded' : ''}">
+        <div class="zone-header" ${onlyOne ? '' : `role="button" data-action="toggle-zone" data-zone="${zoneKey}"`}>
+          <span class="zone-icon"><ha-icon icon="${zone.icon}"></ha-icon></span>
+          <span class="zone-id">
+            <strong>${BrunoSalaSubview._escape(zone.name)}</strong>
+            <small>${zone.onCount}/${zone.total} acesas</small>
+          </span>
+          ${expanded ? `<span class="zone-off" role="button" data-action="zone-off" data-zone="${zoneKey}">Apagar ${BrunoSalaSubview._escape(zone.name.toLowerCase())}</span>` : ''}
+          ${onlyOne ? '' : `<ha-icon class="zone-chevron" icon="${expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>`}
+        </div>
+        ${expanded
+          ? `<div class="zone-lights">${zone.lights.map((l) => this._renderLightRow(l)).join('')}</div>`
+          : `<div class="zone-preview">${zone.lights.map((l) => BrunoSalaSubview._escape(l.name)).join(' · ')}</div>`}
+      </section>
+    `;
+  }
+
+  _renderLightRow(light) {
+    const active = this._state(light.entity)?.state === 'on';
+    return `
+      <button type="button" class="light-row${active ? ' is-on' : ''}" data-action="toggle-light" data-entity="${BrunoSalaSubview._escapeAttr(light.entity)}">
+        <span class="light-row-icon">${BrunoSalaSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
+        <span class="light-row-name">${BrunoSalaSubview._escape(light.name)}</span>
+        <span class="light-row-state">${active ? 'Ligada' : 'Desligada'}</span>
+        <span class="ios-toggle${active ? ' is-on' : ''}"><span class="ios-knob"></span></span>
+      </button>
     `;
   }
 
@@ -4728,7 +4792,11 @@ class BrunoSalaSubview extends HTMLElement {
       /* Cortina SOBREPOSTA ao hero, SEM caixa (transparente) e ALINHADA À ESQUERDA.
          (Bug: align-self:end do dock antigo, em flex-column, jogava p/ a direita.) */
       .curtain-overlay {
-        align-self: flex-start;
+        align-self: stretch;
+        /* Ocupa TODA a largura do hero (= largura de câmeras+mídia). ANTERIOR do
+           .curtain-dock: width: min(540px,100%). */
+        width: 100% !important;
+        max-width: 100% !important;
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
@@ -4767,6 +4835,60 @@ class BrunoSalaSubview extends HTMLElement {
         color: rgba(255,255,255,0.52);
       }
       .subview-presence ha-icon { --mdc-icon-size: 16px; color: rgba(255,255,255,0.42); }
+
+      /* ===== NOVO (Passada 2): Iluminação — acordeão de zonas ===== */
+      .lights-card { display: flex; flex-direction: column; min-height: 0; }
+      .lights-head { flex: 0 0 auto; }
+      .lights-zones { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding-right: 2px; }
+      .lights-zones::-webkit-scrollbar { width: 0; }
+      .light-zone {
+        border-radius: 16px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        overflow: hidden;
+      }
+      .light-zone.is-expanded { background: rgba(255,255,255,0.055); }
+      .zone-header {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        cursor: pointer;
+      }
+      .zone-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; background: rgba(255,255,255,0.06); color: rgba(255,196,90,0.92); }
+      .zone-icon ha-icon { --mdc-icon-size: 19px; }
+      .zone-id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .zone-id strong { font-size: 14px; font-weight: 700; color: var(--text-main); }
+      .zone-id small { font-size: 11px; font-weight: 600; color: var(--text-soft); }
+      .zone-off { font-size: 11px; font-weight: 700; color: rgba(255,196,90,0.92); white-space: nowrap; cursor: pointer; }
+      .zone-chevron { --mdc-icon-size: 20px; color: var(--text-soft); }
+      .zone-preview { padding: 0 14px 12px; font-size: 11px; font-weight: 600; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .zone-lights { display: flex; flex-direction: column; padding: 0 6px 6px; }
+      .light-row {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) auto 40px;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        background: transparent;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        color: var(--text-main);
+        text-align: left;
+      }
+      .light-row:hover { background: rgba(255,255,255,0.04); }
+      .light-row-icon { width: 28px; height: 28px; display: grid; place-items: center; color: rgba(255,255,255,0.5); }
+      .light-row.is-on .light-row-icon { color: rgba(255,196,90,0.95); }
+      .light-row-icon svg { width: 22px; height: 22px; }
+      .light-row-name { min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .light-row-state { font-size: 11px; font-weight: 600; color: rgba(255,196,90,0.62); }
+      .light-row.is-on .light-row-state { color: rgba(255,196,90,0.95); }
+      .ios-toggle { width: 38px; height: 22px; border-radius: 999px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.16); position: relative; transition: background 0.2s ease; flex: 0 0 auto; justify-self: end; }
+      .ios-toggle.is-on { background: rgba(96,165,250,0.9); border-color: rgba(150,198,255,0.5); }
+      .ios-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s ease; }
+      .ios-toggle.is-on .ios-knob { transform: translateX(16px); }
 
       .room-sidebar {
         width: 58px;

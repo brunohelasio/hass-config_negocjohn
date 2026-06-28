@@ -1660,8 +1660,8 @@ class BrunoSalaSubview extends HTMLElement {
             <div class="module-title">Iluminação</div>
           </div>
           <div class="head-actions">
-            <button type="button" class="chip-button is-active" data-action="lights-on">Todas acesas</button>
-            <button type="button" class="chip-button" data-action="lights-off">Apagar todas</button>
+            <button type="button" class="chip-button chip-button-icon is-active" data-action="lights-on"><ha-icon icon="mdi:white-balance-sunny"></ha-icon>Todas acesas</button>
+            <button type="button" class="chip-button chip-button-icon" data-action="lights-off"><ha-icon icon="mdi:moon-waning-crescent"></ha-icon>Apagar todas</button>
           </div>
         </div>
         <div class="lights-zones">
@@ -1697,8 +1697,7 @@ class BrunoSalaSubview extends HTMLElement {
       <button type="button" class="light-row${active ? ' is-on' : ''}" data-action="toggle-light" data-entity="${BrunoSalaSubview._escapeAttr(light.entity)}">
         <span class="light-row-icon">${BrunoSalaSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
         <span class="light-row-name">${BrunoSalaSubview._escape(light.name)}</span>
-        <span class="light-row-state">${active ? 'Ligada' : 'Desligada'}</span>
-        <span class="ios-toggle${active ? ' is-on' : ''}"><span class="ios-knob"></span></span>
+        <span class="light-bar" aria-hidden="true"></span>
       </button>
     `;
   }
@@ -4705,10 +4704,11 @@ class BrunoSalaSubview extends HTMLElement {
       .right-column {
         grid-area: right;
         display: grid;
-        /* NOVO: Iluminação levemente mais alta (acomoda a 4ª luz da Varanda /
-           Cristaleira por completo); AC reduz na mesma medida (comporta).
-           ANTERIOR: minmax(0,1.15fr) minmax(0,1fr). */
-        grid-template-rows: minmax(0, 1.28fr) minmax(0, 0.94fr);
+        /* NOVO: Iluminação ABRAÇA o conteúdo (auto) -> sem vazio abaixo e sem
+           corte, em qualquer altura de tela. O AC absorve TODO o resto (1fr),
+           exatamente como pedido. ANTERIOR: minmax(0,1.28fr) minmax(0,0.94fr)
+           (fr proporcional deixava vazio em telas altas). */
+        grid-template-rows: auto minmax(0, 1fr);
         gap: var(--sala-gap);
       }
 
@@ -4857,13 +4857,13 @@ class BrunoSalaSubview extends HTMLElement {
       .light-zone.is-expanded { background: rgba(255,255,255,0.055); }
       .zone-header {
         display: grid;
-        grid-template-columns: 30px minmax(0, 1fr) auto auto;
+        grid-template-columns: 34px minmax(0, 1fr) auto auto;
         align-items: center;
-        gap: 10px;
+        gap: 11px;
         padding: 12px 14px;
         cursor: pointer;
       }
-      .zone-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; background: rgba(255,255,255,0.06); color: rgba(255,196,90,0.92); }
+      .zone-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(255,196,90,0.30); background: rgba(255,196,90,0.08); color: rgba(255,196,90,0.92); }
       .zone-icon ha-icon { --mdc-icon-size: 19px; }
       .zone-id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
       .zone-id strong { font-size: 14px; font-weight: 700; color: var(--text-main); }
@@ -4872,12 +4872,16 @@ class BrunoSalaSubview extends HTMLElement {
       .zone-chevron { --mdc-icon-size: 20px; color: var(--text-soft); }
       .zone-preview { padding: 0 14px 12px; font-size: 11px; font-weight: 600; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .zone-lights { display: flex; flex-direction: column; padding: 0 6px 6px; }
+      /* NOVO: linha = ícone (em círculo) | nome | BARRA LUMINOSA read-only.
+         ANTERIOR: ícone | nome | estado | toggle. */
       .light-row {
         display: grid;
-        grid-template-columns: 30px minmax(0, 1fr) auto 40px;
+        /* nome com largura FIXA p/ todas as barras alinharem (cada linha é um
+           grid próprio; 'auto' desalinharia conforme o tamanho do nome). */
+        grid-template-columns: 38px 120px minmax(0, 1fr);
         align-items: center;
-        gap: 10px;
-        padding: 9px 10px;
+        gap: 12px;
+        padding: 8px 10px;
         background: transparent;
         border: none;
         border-radius: 12px;
@@ -4886,25 +4890,41 @@ class BrunoSalaSubview extends HTMLElement {
         text-align: left;
       }
       .light-row:hover { background: rgba(255,255,255,0.04); }
-      /* PADRONIZAÇÃO do ícone animado (_tplLightIcon): o desenho pinta com
-         fill: var(--light-color) (via .tpl-light-icon .light-color). Basta o
-         wrapper definir --light-color (apagado) e a variante .is-on (aceso) —
-         mesmo contrato dos tiles (.light-icon / .light-tile.is-on). */
+      /* PADRONIZAÇÃO do ícone animado (_tplLightIcon): pinta com fill:
+         var(--light-color). Wrapper agora é CIRCULAR (extra premium, imagem 3). */
       .light-row-icon {
-        width: 28px; height: 28px;
+        width: 36px; height: 36px;
         display: grid; place-items: center;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.13);
+        background: rgba(255,255,255,0.04);
         --light-color: #9da0a2;
         color: var(--light-color);
       }
-      .light-row.is-on .light-row-icon { --light-color: #f0c040; color: var(--light-color); }
-      .light-row-icon svg { width: 24px; height: 24px; }
+      .light-row.is-on .light-row-icon {
+        --light-color: #f0c040;
+        color: var(--light-color);
+        border-color: rgba(240,192,64,0.35);
+        background: rgba(240,192,64,0.10);
+      }
+      .light-row-icon svg { width: 21px; height: 21px; }
       .light-row-name { min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .light-row-state { font-size: 11px; font-weight: 600; color: rgba(255,196,90,0.62); }
-      .light-row.is-on .light-row-state { color: rgba(255,196,90,0.95); }
-      .ios-toggle { width: 38px; height: 22px; border-radius: 999px; background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.16); position: relative; transition: background 0.2s ease; flex: 0 0 auto; justify-self: end; }
-      .ios-toggle.is-on { background: rgba(96,165,250,0.9); border-color: rgba(150,198,255,0.5); }
-      .ios-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s ease; }
-      .ios-toggle.is-on .ios-knob { transform: translateX(16px); }
+      /* BARRA LUMINOSA read-only (não é slider): apagada = pílula escura;
+         acesa = gradiente âmbar com glow. O toque é da LINHA (toggle-light). */
+      .light-bar {
+        height: 11px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.09);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
+        pointer-events: none;
+        transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      }
+      .light-row.is-on .light-bar {
+        background: linear-gradient(90deg, rgba(255,176,54,0.96), rgba(255,206,120,0.96));
+        border-color: rgba(255,196,90,0.55);
+        box-shadow: 0 0 12px rgba(255,176,54,0.55), 0 0 4px rgba(255,176,54,0.6), inset 0 1px 0 rgba(255,255,255,0.45);
+      }
 
       /* ===== NOVO (Passada 2): AC enxuto (layout imagem 4) ===== */
       .ac-card-lean { display: flex; flex-direction: column; min-height: 0; gap: 10px; }
@@ -5063,6 +5083,13 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 34px;
         padding: 0 14px;
       }
+      /* NOVO (extra premium): chips com ícone sol/lua. */
+      .chip-button-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .chip-button-icon ha-icon { --mdc-icon-size: 15px; }
 
       .zone-toggle button.is-active {
         color: rgba(255,255,255,0.96);

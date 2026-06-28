@@ -2333,43 +2333,48 @@ class BrunoSalaSubview extends HTMLElement {
     const stateLabel = climate.active ? 'Ligado' : 'Desligado';
     const humidity = this._humidityLabel();
     const climateEntity = BrunoSalaSubview._escapeAttr(this._config.entities.climate || '');
-    const acActions = [
-      { icon: 'mdi:thermostat-auto', label: 'Modo', value: modeLabel },
-      { icon: 'mdi:fan', label: 'Ventilação', value: fanLabel },
-      { icon: 'mdi:cog-transfer-outline', label: 'Swing', value: swingLabel },
-    ];
+    const deviceShort = BrunoSalaSubview._escape(this._config.climate_device_name || deviceName);
 
     return `
       <section class="glass-card ac-card ac-card-lean">
-        <div class="module-head ac-head">
-          <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
-            <div>
-              <div class="module-title">Ar-condicionado</div>
-              <div class="module-subtitle">${deviceName} · ${stateLabel}${climate.active ? ` · ${BrunoSalaSubview._escape(modeLabel)}` : ''}</div>
-            </div>
-          </div>
-          <button type="button" class="power-button${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado">
-            <ha-icon icon="mdi:power"></ha-icon>
+        <div class="ac-lean-head">
+          <div class="module-title">Ar-condicionado</div>
+          <button type="button" class="ac-status-chip" data-action="more-info" data-entity="${climateEntity}">
+            <span class="ac-status-dot${climate.active ? ' is-on' : ''}"></span>
+            <span class="ac-status-text">
+              <strong>${deviceShort}</strong>
+              <small>${stateLabel}${climate.active ? ` · ${BrunoSalaSubview._escape(target)}° · ${BrunoSalaSubview._escape(modeLabel)}` : ''}</small>
+            </span>
+            <ha-icon icon="mdi:chevron-right"></ha-icon>
           </button>
         </div>
-        <div class="ac-lean-body">
-          <div class="ac-readout">
-            <div class="ac-read"><ha-icon icon="mdi:thermometer"></ha-icon><div><small>Ambiente</small><strong>${current}°</strong></div></div>
-            <div class="ac-read"><ha-icon icon="mdi:water-percent"></ha-icon><div><small>Umidade</small><strong>${BrunoSalaSubview._escape(humidity)}</strong></div></div>
+        <div class="ac-lean-mid">
+          <div class="ac-side-read ac-side-left">
+            <ha-icon icon="mdi:water-percent"></ha-icon>
+            <small>Umidade</small>
+            <strong>${BrunoSalaSubview._escape(humidity)}</strong>
           </div>
           <div class="ac-ring">
             ${this._renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode)}
           </div>
-          <div class="ac-actions">
-            ${acActions.map((a) => `
-              <button type="button" class="ac-action" data-action="more-info" data-entity="${climateEntity}">
-                <span class="ac-action-icon"><ha-icon icon="${a.icon}"></ha-icon></span>
-                <span class="ac-action-text"><small>${BrunoSalaSubview._escape(a.label)}</small><strong>${BrunoSalaSubview._escape(a.value)}</strong></span>
-                <ha-icon class="ac-action-chev" icon="mdi:chevron-right"></ha-icon>
-              </button>
-            `).join('')}
+          <div class="ac-side-read ac-side-right">
+            <ha-icon icon="mdi:thermometer"></ha-icon>
+            <small>Atual</small>
+            <strong>${current}°</strong>
           </div>
+        </div>
+        <div class="ac-lean-foot">
+          <button type="button" class="ac-power-btn${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado">
+            <ha-icon icon="mdi:power"></ha-icon>
+          </button>
+          <button type="button" class="ac-action" data-action="more-info" data-entity="${climateEntity}">
+            <span class="ac-action-icon"><ha-icon icon="mdi:thermostat-auto"></ha-icon></span>
+            <span class="ac-action-text"><small>Modo</small><strong>${BrunoSalaSubview._escape(modeLabel)}</strong></span>
+          </button>
+          <button type="button" class="ac-action" data-action="more-info" data-entity="${climateEntity}">
+            <span class="ac-action-icon"><ha-icon icon="mdi:fan"></ha-icon></span>
+            <span class="ac-action-text"><small>Ventilação</small><strong>${BrunoSalaSubview._escape(fanLabel)}</strong></span>
+          </button>
         </div>
       </section>
     `;
@@ -2386,8 +2391,9 @@ class BrunoSalaSubview extends HTMLElement {
         --accent-blue: 96, 165, 250;
         --accent-cyan: 79, 172, 254;
         --accent-amber: 255, 183, 77;
-        /* ANTERIOR (rollback): --media-screen-height: 154px; */
-        --media-screen-height: 168px;
+        /* Tamanho FIXO do quadrado da arte (padrão). ANTERIOR: 168px (cortava
+           arte/volume com a faixa mais baixa). */
+        --media-screen-height: 150px;
         --text-main: rgba(245,250,255,0.96);
         --text-soft: rgba(255,255,255,0.62);
         --text-dim: rgba(255,255,255,0.42);
@@ -3990,9 +3996,14 @@ class BrunoSalaSubview extends HTMLElement {
 
       .tv-card .poster-card,
       .spotify-art {
-        height: var(--media-screen-height, 154px);
-        min-height: var(--media-screen-height, 154px);
-        max-height: var(--media-screen-height, 154px);
+        /* PADRÃO QUADRADO FIXO da arte (TV e Spotify): largura segue a altura. */
+        aspect-ratio: 1 / 1;
+        height: var(--media-screen-height, 150px);
+        min-height: var(--media-screen-height, 150px);
+        max-height: var(--media-screen-height, 150px);
+        width: auto;
+        max-width: 100%;
+        justify-self: center;
       }
 
       .tv-card .tv-body {
@@ -4672,10 +4683,10 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: content;
         display: grid;
         grid-template-columns: 1fr;
-        /* NOVO (Passada 2): câmeras/mídia um pouco mais baixos (arte volta a
-           quadrada); o hero cresce e a cortina (ancorada no rodapé do hero) desce
-           junto. ANTERIOR: minmax(0,1.35fr) minmax(280px,1fr). */
-        grid-template-rows: minmax(0, 1.55fr) minmax(238px, 0.86fr);
+        /* NOVO (Passada 2, ajuste): câmeras/mídia LEVEMENTE mais altos que o 238
+           (que cortava arte/volume), sem voltar ao 280 anterior. Arte quadrada
+           fixa (150px) cabe com o volume. */
+        grid-template-rows: minmax(0, 1.5fr) minmax(272px, 0.94fr);
         gap: var(--sala-gap);
       }
 
@@ -4832,7 +4843,7 @@ class BrunoSalaSubview extends HTMLElement {
       /* ===== NOVO (Passada 2): Iluminação — acordeão de zonas ===== */
       .lights-card { display: flex; flex-direction: column; min-height: 0; }
       .lights-head { flex: 0 0 auto; }
-      .lights-zones { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding-right: 2px; }
+      .lights-zones { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding: 8px 2px 6px 0; }
       .lights-zones::-webkit-scrollbar { width: 0; }
       .light-zone {
         border-radius: 16px;
@@ -4857,7 +4868,7 @@ class BrunoSalaSubview extends HTMLElement {
       .zone-off { font-size: 11px; font-weight: 700; color: rgba(255,196,90,0.92); white-space: nowrap; cursor: pointer; }
       .zone-chevron { --mdc-icon-size: 20px; color: var(--text-soft); }
       .zone-preview { padding: 0 14px 12px; font-size: 11px; font-weight: 600; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .zone-lights { display: flex; flex-direction: column; padding: 0 6px 6px; }
+      .zone-lights { display: flex; flex-direction: column; padding: 2px 6px 10px; }
       .light-row {
         display: grid;
         grid-template-columns: 30px minmax(0, 1fr) auto 40px;
@@ -4892,25 +4903,35 @@ class BrunoSalaSubview extends HTMLElement {
       .ios-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s ease; }
       .ios-toggle.is-on .ios-knob { transform: translateX(16px); }
 
-      /* ===== NOVO (Passada 2): AC enxuto ===== */
-      .ac-card-lean { display: flex; flex-direction: column; min-height: 0; }
-      .ac-lean-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
-      .ac-readout { display: flex; gap: 10px; }
-      .ac-read { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
-      .ac-read ha-icon { --mdc-icon-size: 18px; color: rgba(255,255,255,0.6); flex: 0 0 auto; }
-      .ac-read small { display: block; font-size: 10px; font-weight: 600; color: var(--text-soft); }
-      .ac-read strong { display: block; font-size: 15px; font-weight: 800; color: var(--text-main); }
-      .ac-ring { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-      .ac-ring .icg-shell { width: min(100%, 300px); }
-      .ac-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-      .ac-action { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 11px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); cursor: pointer; color: var(--text-main); text-align: left; }
+      /* ===== NOVO (Passada 2): AC enxuto (layout imagem 4) ===== */
+      .ac-card-lean { display: flex; flex-direction: column; min-height: 0; gap: 10px; }
+      .ac-lean-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .ac-lean-head .module-title { font-size: 14px; font-weight: 800; color: var(--text-main); }
+      .ac-status-chip { display: flex; align-items: center; gap: 8px; max-width: 64%; padding: 6px 10px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); cursor: pointer; color: var(--text-main); }
+      .ac-status-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); flex: 0 0 auto; }
+      .ac-status-dot.is-on { background: #56d89b; box-shadow: 0 0 8px rgba(86,216,155,0.6); }
+      .ac-status-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; text-align: left; }
+      .ac-status-text strong { font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .ac-status-text small { font-size: 10px; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .ac-status-chip > ha-icon { --mdc-icon-size: 16px; color: var(--text-soft); flex: 0 0 auto; }
+      .ac-lean-mid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+      .ac-side-read { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 56px; }
+      .ac-side-read ha-icon { --mdc-icon-size: 18px; color: rgba(255,255,255,0.6); }
+      .ac-side-read small { font-size: 10px; font-weight: 600; color: var(--text-soft); }
+      .ac-side-read strong { font-size: 15px; font-weight: 800; color: var(--text-main); }
+      .ac-ring { min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      .ac-ring .icg-shell { width: min(100%, 260px); }
+      .ac-lean-foot { display: grid; grid-template-columns: auto 1fr 1fr; gap: 8px; }
+      .ac-power-btn { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-soft); cursor: pointer; }
+      .ac-power-btn.is-active { background: rgba(96,165,250,0.85); border-color: rgba(150,198,255,0.5); color: #fff; }
+      .ac-power-btn ha-icon { --mdc-icon-size: 20px; }
+      .ac-action { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); cursor: pointer; color: var(--text-main); text-align: left; min-width: 0; }
       .ac-action:hover { background: rgba(255,255,255,0.07); }
-      .ac-action-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: rgba(96,165,250,0.16); color: rgba(150,198,255,0.95); }
+      .ac-action-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: rgba(96,165,250,0.16); color: rgba(150,198,255,0.95); flex: 0 0 auto; }
       .ac-action-icon ha-icon { --mdc-icon-size: 18px; }
       .ac-action-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
       .ac-action-text small { font-size: 10px; font-weight: 600; color: var(--text-soft); }
-      .ac-action-text strong { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-      .ac-action-chev { display: none; }
+      .ac-action-text strong { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
       .room-sidebar {
         width: 58px;

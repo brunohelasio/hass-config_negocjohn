@@ -335,11 +335,11 @@ class BrunoShell extends HTMLElement {
            Um véu uniforme leve (flat, não-direcional) fecha o contraste sem
            privilegiar nenhuma borda. */
         background:
-          linear-gradient(90deg,  rgba(4,7,11,0.70) 0%, rgba(4,7,11,0.30) 6%, rgba(4,7,11,0.00) 14%),
-          linear-gradient(270deg, rgba(4,7,11,0.70) 0%, rgba(4,7,11,0.30) 6%, rgba(4,7,11,0.00) 14%),
-          linear-gradient(180deg, rgba(4,7,11,0.70) 0%, rgba(4,7,11,0.30) 6%, rgba(4,7,11,0.00) 14%),
-          linear-gradient(0deg,   rgba(4,7,11,0.70) 0%, rgba(4,7,11,0.30) 6%, rgba(4,7,11,0.00) 14%),
-          rgba(6,9,14,0.08);
+          linear-gradient(90deg,  rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
+          linear-gradient(270deg, rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
+          linear-gradient(180deg, rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
+          linear-gradient(0deg,   rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
+          rgba(6,9,14,0.10);
       }
       /* Sem imagem (seção sem backdrop): camada some e o :host (grafite) aparece. */
       .backdrop:not([data-active])::after { background: none; }

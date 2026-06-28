@@ -4705,7 +4705,10 @@ class BrunoSalaSubview extends HTMLElement {
       .right-column {
         grid-area: right;
         display: grid;
-        grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
+        /* NOVO: Iluminação levemente mais alta (acomoda a 4ª luz da Varanda /
+           Cristaleira por completo); AC reduz na mesma medida (comporta).
+           ANTERIOR: minmax(0,1.15fr) minmax(0,1fr). */
+        grid-template-rows: minmax(0, 1.28fr) minmax(0, 0.94fr);
         gap: var(--sala-gap);
       }
 
@@ -4843,7 +4846,7 @@ class BrunoSalaSubview extends HTMLElement {
       /* ===== NOVO (Passada 2): Iluminação — acordeão de zonas ===== */
       .lights-card { display: flex; flex-direction: column; min-height: 0; }
       .lights-head { flex: 0 0 auto; }
-      .lights-zones { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding: 8px 2px 6px 0; }
+      .lights-zones { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding: 0 2px 0 0; }
       .lights-zones::-webkit-scrollbar { width: 0; }
       .light-zone {
         border-radius: 16px;
@@ -4868,7 +4871,7 @@ class BrunoSalaSubview extends HTMLElement {
       .zone-off { font-size: 11px; font-weight: 700; color: rgba(255,196,90,0.92); white-space: nowrap; cursor: pointer; }
       .zone-chevron { --mdc-icon-size: 20px; color: var(--text-soft); }
       .zone-preview { padding: 0 14px 12px; font-size: 11px; font-weight: 600; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .zone-lights { display: flex; flex-direction: column; padding: 2px 6px 10px; }
+      .zone-lights { display: flex; flex-direction: column; padding: 0 6px 6px; }
       .light-row {
         display: grid;
         grid-template-columns: 30px minmax(0, 1fr) auto 40px;

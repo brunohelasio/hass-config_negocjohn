@@ -1793,8 +1793,13 @@ class BrunoSalaSubview extends HTMLElement {
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
     const tvSource = tv.source || 'HDMI 1';
     const tvPlaying = tv.state === 'playing';
-    // Segunda linha (cinza) do estado expandido — fonte/app + "Em reprodução".
-    const tvSubLine = [tvSource, tvPlaying ? 'Em reprodução' : ''].filter(Boolean).join(' · ');
+    // 2ª linha (cinza) SEM redundância: a fonte já vai na 1ª linha; aqui só
+    // mostramos um PROGRAMA real (título distinto da fonte e não-genérico).
+    const tvGeneric = !tv.title
+      || /^TV (ligada|desligada)$/i.test(tv.title)
+      || tv.title === tvSource;
+    const tvProgram = (!tvGeneric && tvPlaying) ? tv.title : '';
+    const tvSubLine = tvProgram ? `${tvProgram} · Em reprodução` : '';
     // Barra de progresso do Spotify (posição/duração nativas do media_player).
     const spotifyAttrs = spotify.entity?.attributes || {};
     const spotifyDuration = Number(spotifyAttrs.media_duration) || 0;
@@ -1817,10 +1822,13 @@ class BrunoSalaSubview extends HTMLElement {
       </div>
     `;
 
-    const btn = (action, label, opts = {}) => `
+    // iconOnly (ou plus) => só ícone (resolve truncamento; title/aria mantêm a11y).
+    const btn = (action, label, opts = {}) => {
+      const iconOnly = Boolean(opts.iconOnly || opts.plus);
+      return `
       <button
         type="button"
-        class="mh-btn${opts.main ? ' is-main' : ''}${opts.plus ? ' is-plus' : ''}"
+        class="mh-btn${opts.main ? ' is-main' : ''}${opts.plus ? ' is-plus' : ''}${iconOnly ? ' is-icon' : ''}"
         data-action="${escA(action)}"
         ${opts.entity ? `data-entity="${escA(opts.entity)}"` : ''}
         title="${escA(label)}"
@@ -1828,16 +1836,17 @@ class BrunoSalaSubview extends HTMLElement {
         ${opts.disabled ? 'disabled' : ''}
       >
         ${opts.icon ? `<ha-icon icon="${escA(opts.icon)}"></ha-icon>` : ''}
-        ${opts.plus ? '' : `<span>${esc(label)}</span>`}
+        ${iconOnly ? '' : `<span>${esc(label)}</span>`}
       </button>
     `;
+    };
 
-    // Imagem contextual à direita: integrada ao fundo (sem moldura), num
-    // "bolsão de luz quente" (glow âmbar) que sangra no card. shape: 'wide'
-    // (16:9, contain) ou 'square'. cover=true => thumb/arte real (cantos suaves).
+    // Imagem contextual à direita: APENAS o PNG transparente, sobreposto ao
+    // bloco — sem glow, sem fundo, sem moldura. A imagem é posicionada de forma
+    // ABSOLUTA (no CSS) para NUNCA ditar a altura da linha (evita empurrar o
+    // botão para fora). shape: 'wide' (16:9) ou 'square'. cover=true => thumb/arte.
     const art = (src, shape, fallbackIcon, cover = false) => `
       <div class="mh-art mh-art-${shape}${cover ? ' is-cover' : ' is-standby'}">
-        <span class="mh-art-glow" aria-hidden="true"></span>
         ${src
           ? `<img src="${escA(src)}" alt="" loading="lazy">`
           : `<ha-icon icon="${escA(fallbackIcon)}"></ha-icon>`}
@@ -1850,15 +1859,15 @@ class BrunoSalaSubview extends HTMLElement {
       ? `
         <div class="mh-left">
           <div class="mh-info">
-            <small>${dot(true)} Ligada</small>
+            <small>${dot(true)} Ligada · ${esc(tvSource)}</small>
             ${tvSubLine ? `<em>${esc(tvSubLine)}</em>` : ''}
           </div>
           <div class="mh-controls">
             ${volRow('tv-volume', tvVolume)}
             <div class="mh-btn-row mh-btn-row-3">
-              ${btn('tv-play-pause', 'Pausar', { icon: 'mdi:pause' })}
-              ${btn('tv-remote', 'Controle remoto', { icon: 'mdi:remote-tv' })}
-              ${btn('tv-apps', 'Apps', { icon: 'mdi:apps' })}
+              ${btn('tv-play-pause', 'Pausar', { icon: 'mdi:pause', iconOnly: true })}
+              ${btn('tv-remote', 'Controle remoto', { icon: 'mdi:remote-tv', iconOnly: true })}
+              ${btn('tv-apps', 'Apps', { icon: 'mdi:apps', iconOnly: true })}
             </div>
           </div>
         </div>
@@ -1882,17 +1891,17 @@ class BrunoSalaSubview extends HTMLElement {
     const spotifyButtons = this._spotifyToolsOpen
       ? `
         <div class="mh-btn-row mh-btn-row-4">
-          ${btn('spotify-devices', 'Disp.', { icon: 'mdi:speaker-wireless' })}
-          ${btn('spotify-presets', 'Presets', { icon: 'mdi:bookmark-music-outline' })}
-          ${btn('spotify-queue', 'Fila', { icon: 'mdi:playlist-play' })}
+          ${btn('spotify-devices', 'Dispositivos', { icon: 'mdi:speaker-wireless', iconOnly: true })}
+          ${btn('spotify-presets', 'Presets', { icon: 'mdi:bookmark-music-outline', iconOnly: true })}
+          ${btn('spotify-queue', 'Fila', { icon: 'mdi:playlist-play', iconOnly: true })}
           ${btn('spotify-more', 'Voltar', { icon: 'mdi:chevron-left', plus: true })}
         </div>
       `
       : `
         <div class="mh-btn-row mh-btn-row-4">
-          ${btn('spotify-prev', 'Anterior', { icon: 'mdi:skip-previous' })}
-          ${btn('spotify-play-pause', spotify.playing ? 'Pausar' : 'Tocar', { icon: spotify.playing ? 'mdi:pause' : 'mdi:play' })}
-          ${btn('spotify-next', 'Próxima', { icon: 'mdi:skip-next' })}
+          ${btn('spotify-prev', 'Anterior', { icon: 'mdi:skip-previous', iconOnly: true })}
+          ${btn('spotify-play-pause', spotify.playing ? 'Pausar' : 'Tocar', { icon: spotify.playing ? 'mdi:pause' : 'mdi:play', iconOnly: true })}
+          ${btn('spotify-next', 'Próxima', { icon: 'mdi:skip-next', iconOnly: true })}
           ${btn('spotify-more', 'Mais', { icon: 'mdi:plus', plus: true })}
         </div>
       `;
@@ -1936,9 +1945,9 @@ class BrunoSalaSubview extends HTMLElement {
           <div class="mh-controls">
             ${volRow('tv-volume', tvVolume)}
             <div class="mh-btn-row mh-btn-row-3">
-              ${btn('toggle-ps5', 'Desligar', { icon: 'mdi:power', entity: ps5.entityId || '' })}
-              ${btn('ps5-source', 'Abrir fonte', { icon: 'mdi:import' })}
-              ${btn('ps5-control', 'Controle', { icon: 'mdi:gamepad-variant' })}
+              ${btn('toggle-ps5', 'Desligar', { icon: 'mdi:power', iconOnly: true, entity: ps5.entityId || '' })}
+              ${btn('ps5-source', 'Abrir fonte', { icon: 'mdi:import', iconOnly: true })}
+              ${btn('ps5-control', 'Controle', { icon: 'mdi:gamepad-variant', iconOnly: true })}
             </div>
           </div>
         </div>
@@ -2012,8 +2021,8 @@ class BrunoSalaSubview extends HTMLElement {
       <section class="glass-card media-hub-card mh-accordion${sourceMeta[selected]?.active ? ' is-playing' : ''}">
         <div class="mh-head">
           <div class="mh-head-title">
-            <span class="mh-head-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
-            <span>Hub de Mídia</span>
+            <span class="micro-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
+            <div class="module-title">Hub de Mídia</div>
           </div>
           <button type="button" class="mh-menu" data-action="media-menu" title="Opções" aria-label="Opções">
             <ha-icon icon="mdi:dots-vertical"></ha-icon>
@@ -5835,30 +5844,14 @@ class BrunoSalaSubview extends HTMLElement {
         padding: 0 10px 0 14px;
       }
 
+      /* Cabeçalho padronizado: micro-icon (círculo) + module-title, idêntico aos
+         demais blocos (Iluminação/Câmeras/A-C). */
       .mh-head-title {
         display: inline-flex;
         align-items: center;
         gap: 10px;
         min-width: 0;
-        font-size: 14px;
-        font-weight: 850;
-        color: var(--text-main);
-        letter-spacing: 0.2px;
       }
-
-      /* Ícone de mídia do cabeçalho como tile âmbar discreto (conceito). */
-      .mh-head-icon {
-        width: 30px;
-        height: 30px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 9px;
-        color: #f2c266;
-        background: rgba(242,194,102,0.12);
-        border: 1px solid rgba(242,194,102,0.22);
-      }
-      .mh-head-icon ha-icon { --mdc-icon-size: 17px; }
 
       .mh-menu {
         width: 30px;
@@ -5920,15 +5913,15 @@ class BrunoSalaSubview extends HTMLElement {
         text-align: left;
       }
 
-      /* Ícone da fonte como tile (app-icon). */
+      /* Ícone da fonte em CÍRCULO (coerência com o micro-icon do cabeçalho). */
       .mh-src-icon {
         width: 30px;
         height: 30px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 9px;
-        --mdc-icon-size: 18px;
+        border-radius: 50%;
+        --mdc-icon-size: 17px;
         color: rgba(255,255,255,0.62);
         background: rgba(255,255,255,0.06);
         border: 1px solid rgba(255,255,255,0.09);
@@ -5980,11 +5973,13 @@ class BrunoSalaSubview extends HTMLElement {
         padding: 2px 14px 10px;
       }
 
+      /* Conteúdo CENTRADO na vertical (sem space-between) — elimina o vão vazio
+         dos estados leves e aproxima progresso↔volume no Spotify. */
       .mh-left {
         min-width: 0;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: center;
         gap: 7px;
       }
 
@@ -5992,7 +5987,7 @@ class BrunoSalaSubview extends HTMLElement {
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 2px;
       }
 
       .mh-info small {
@@ -6059,7 +6054,7 @@ class BrunoSalaSubview extends HTMLElement {
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 7px;
+        gap: 6px;
       }
 
       /* Volume dentro de caixa arredondada (conceito). */
@@ -6068,7 +6063,7 @@ class BrunoSalaSubview extends HTMLElement {
         grid-template-columns: auto auto minmax(0, 1fr);
         align-items: center;
         gap: 9px;
-        min-height: 32px;
+        min-height: 30px;
         padding: 0 12px;
         border-radius: 12px;
         color: var(--text-soft);
@@ -6112,26 +6107,31 @@ class BrunoSalaSubview extends HTMLElement {
       .mh-btn-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .mh-btn-row-4 { grid-template-columns: repeat(3, minmax(0, 1fr)) 40px; }
 
+      /* Botões finos, translúcidos e premium (sai do vidro escuro/colorido core):
+         fundo bem translúcido, borda sutil, sem sombra pesada. */
       .mh-btn {
-        min-height: 36px;
+        min-height: 33px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
         padding: 0 8px;
-        border-radius: var(--bruno-liquid-control-radius, 13px);
-        color: rgba(255,255,255,0.86);
+        border-radius: 12px;
+        color: rgba(255,255,255,0.88);
         font-size: 11.5px;
-        font-weight: 750;
-        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.07));
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.13));
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.09));
-        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.2));
-        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.2));
+        font-weight: 700;
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.10);
+        box-shadow: none;
+        backdrop-filter: blur(14px) saturate(1.1);
+        -webkit-backdrop-filter: blur(14px) saturate(1.1);
         white-space: nowrap;
         overflow: hidden;
       }
-      .mh-btn ha-icon { --mdc-icon-size: 17px; flex: 0 0 auto; color: #f2c266; }
+      /* Icon-only: quadrado compacto e centrado. */
+      .mh-btn.is-icon { padding: 0; gap: 0; }
+      .mh-btn ha-icon { --mdc-icon-size: 18px; flex: 0 0 auto; color: rgba(255,255,255,0.9); }
+      .mh-btn:hover { background: rgba(255,255,255,0.07); }
       .mh-btn span {
         min-width: 0;
         overflow: hidden;
@@ -6158,61 +6158,44 @@ class BrunoSalaSubview extends HTMLElement {
         color: rgba(255,255,255,0.72);
       }
 
-      /* Imagem contextual: bolsão de luz quente atrás + sangramento no fundo
-         (sem moldura). Ativo: thumb/arte com cantos suaves + sombra. */
+      /* Imagem contextual: APENAS o PNG/arte, sobreposto ao bloco — SEM glow,
+         SEM fundo, SEM moldura. A imagem é ABSOLUTA dentro da célula, então
+         NUNCA infla a altura da linha (não empurra o botão para fora). */
       .mh-art {
         position: relative;
         min-width: 0;
         align-self: stretch;
         height: 100%;
-        max-height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: visible;
-        padding: 4px 0;
-      }
-      .mh-art-glow {
-        position: absolute;
-        inset: -18% -22%;
-        z-index: 0;
-        pointer-events: none;
-        background: radial-gradient(circle at 52% 46%,
-          rgba(247,200,120,0.22),
-          rgba(247,170,90,0.09) 44%,
-          transparent 72%);
-        filter: blur(6px);
-      }
-      .mh-art img,
-      .mh-art ha-icon {
-        position: relative;
-        z-index: 1;
+        overflow: hidden;
+        background: transparent;
+        border: 0;
       }
       .mh-art img {
-        max-width: 100%;
-        max-height: 100%;
+        position: absolute;
+        inset: 6px 0;
+        width: 100%;
+        height: calc(100% - 12px);
         object-fit: contain;
       }
       .mh-art ha-icon {
-        --mdc-icon-size: 58px;
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        --mdc-icon-size: 56px;
         color: rgba(255,255,255,0.22);
       }
-      /* Standby (PNG): bordas enfumaçadas — funde no glow, sem moldura. */
+      /* Standby (PNG transparente): leve sombra para dar profundidade, sem caixa. */
       .mh-art.is-standby img {
-        filter: drop-shadow(0 14px 22px rgba(0,0,0,0.4));
-        -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 62%, transparent 92%);
-        mask-image: radial-gradient(circle at 50% 50%, #000 62%, transparent 92%);
+        filter: drop-shadow(0 12px 20px rgba(0,0,0,0.42));
       }
       /* Ativo: thumb/arte real com cantos suaves + sombra de apoio. */
       .mh-art.is-cover img {
+        object-fit: cover;
         box-shadow: 0 12px 26px rgba(0,0,0,0.46);
       }
-      .mh-art-square.is-cover img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 13px;
-      }
+      .mh-art-square.is-cover img { border-radius: 13px; }
       .mh-art-wide.is-cover img { border-radius: 11px; }
 
       .ac-card {

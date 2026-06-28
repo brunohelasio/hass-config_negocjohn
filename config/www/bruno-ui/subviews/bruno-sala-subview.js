@@ -5827,12 +5827,26 @@ class BrunoSalaSubview extends HTMLElement {
          cabeçalho da faixa). Accent/volume/progresso dourado #f2c266;
          ícone Spotify monocromático. Imagem em "bolsão de luz quente".
          ============================================================ */
+      /* 1.1 — Override específico do Hub (Savant Light): mais translúcido,
+         neutro (sem dominante quente/amarronzado), bordas finas, premium.
+         Atenua o sheen quente do glass-card base só neste bloco. */
       .media-hub-card.mh-accordion {
         padding: 0;
         grid-template-rows: 44px minmax(0, 1fr);
         gap: 0;
         overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.022) 42%, rgba(255,255,255,0.035)),
+          rgba(20,24,32,0.34);
+        border: 1px solid rgba(255,255,255,0.09);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.13),
+          0 16px 40px rgba(0,0,0,0.22);
+        backdrop-filter: blur(34px) saturate(1.35);
+        -webkit-backdrop-filter: blur(34px) saturate(1.35);
       }
+      .media-hub-card.mh-accordion::before { opacity: 0.34; }
+      .media-hub-card.mh-accordion::after { display: none; }
 
       .mh-head {
         position: relative;
@@ -5877,8 +5891,8 @@ class BrunoSalaSubview extends HTMLElement {
         padding: 0 10px 10px;
       }
 
-      /* Cada fonte é um cartão arredondado (pill quando recolhida,
-         card-in-card destacado quando expandida). */
+      /* 1.2 — Recolhidas: faixas MUITO sutis (quase etéreas), baixo contraste
+         e baixo peso. Só a expandida ganha presença marcante. */
       .mh-source {
         position: relative;
         flex: 0 0 38px;
@@ -5886,53 +5900,58 @@ class BrunoSalaSubview extends HTMLElement {
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        border-radius: 15px;
-        background: rgba(255,255,255,0.038);
-        border: 1px solid rgba(255,255,255,0.08);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        border-radius: 14px;
+        background: rgba(255,255,255,0.018);
+        border: 1px solid rgba(255,255,255,0.045);
+        box-shadow: none;
         transition: background 180ms ease, border-color 180ms ease;
       }
       .mh-source.is-open {
         flex: 1 1 auto;
         background:
-          radial-gradient(120% 90% at 88% 30%, rgba(247,190,110,0.07), transparent 60%),
-          rgba(255,255,255,0.055);
-        border-color: rgba(255,255,255,0.13);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 26px rgba(0,0,0,0.22);
+          linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.045)),
+          rgba(255,255,255,0.018);
+        border-color: rgba(255,255,255,0.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 28px rgba(0,0,0,0.24);
       }
 
+      /* 2.1 — Faixas individuais: SÓ o ícone (sem bolha/círculo) + texto colado.
+         Apenas o cabeçalho geral do Hub mantém ícone em bolha (micro-icon).
+         --mh-indent = recuo p/ alinhar info ao INÍCIO do texto do título. */
       .mh-source-head {
+        --mh-indent: 26px;
         flex: 0 0 38px;
         height: 38px;
         display: grid;
-        grid-template-columns: 32px minmax(0, auto) minmax(0, 1fr) 18px;
+        grid-template-columns: 20px minmax(0, auto) minmax(0, 1fr) 16px;
         align-items: center;
-        gap: 10px;
-        padding: 0 12px 0 8px;
+        gap: 6px;
+        padding: 0 12px 0 14px;
         background: transparent;
         text-align: left;
       }
+      /* Aberta: ícone com espaçamento superior = lateral esquerdo (simétrico). */
+      .mh-source.is-open .mh-source-head {
+        flex: 0 0 auto;
+        height: auto;
+        align-items: start;
+        padding-top: 14px;
+      }
 
-      /* Ícone da fonte em CÍRCULO (coerência com o micro-icon do cabeçalho). */
       .mh-src-icon {
-        width: 30px;
-        height: 30px;
+        width: 20px;
+        height: 20px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
-        --mdc-icon-size: 17px;
-        color: rgba(255,255,255,0.62);
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(255,255,255,0.09);
+        --mdc-icon-size: 18px;
+        color: rgba(255,255,255,0.6);
+        background: transparent;
+        border: 0;
       }
       .mh-icon-spotify { color: rgba(255,255,255,0.66); }
       .mh-source.is-active .mh-src-icon,
-      .mh-source.is-active .mh-icon-spotify {
-        color: #f2c266;
-        background: rgba(242,194,102,0.14);
-        border-color: rgba(242,194,102,0.30);
-      }
+      .mh-source.is-active .mh-icon-spotify { color: #f2c266; }
 
       .mh-src-name {
         min-width: 0;
@@ -5973,21 +5992,24 @@ class BrunoSalaSubview extends HTMLElement {
         padding: 2px 14px 10px;
       }
 
-      /* Conteúdo CENTRADO na vertical (sem space-between) — elimina o vão vazio
-         dos estados leves e aproxima progresso↔volume no Spotify. */
+      /* 2.2 — Conteúdo no TOPO: título (no head) → música → artista → progresso
+         logo abaixo; volume/botões seguem. */
       .mh-left {
         min-width: 0;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        gap: 7px;
+        justify-content: flex-start;
+        gap: 8px;
       }
 
+      /* Info (música/artista/progresso/estado) recuada para alinhar com o
+         INÍCIO do texto do título; volume/botões mantêm o alinhamento atual. */
       .mh-info {
         min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 2px;
+        padding-left: 26px;
       }
 
       .mh-info small {
@@ -6065,7 +6087,7 @@ class BrunoSalaSubview extends HTMLElement {
         gap: 9px;
         min-height: 30px;
         padding: 0 12px;
-        border-radius: 12px;
+        border-radius: 9px;
         color: var(--text-soft);
         background: rgba(255,255,255,0.045);
         border: 1px solid rgba(255,255,255,0.09);
@@ -6107,8 +6129,8 @@ class BrunoSalaSubview extends HTMLElement {
       .mh-btn-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .mh-btn-row-4 { grid-template-columns: repeat(3, minmax(0, 1fr)) 40px; }
 
-      /* Botões finos, translúcidos e premium (sai do vidro escuro/colorido core):
-         fundo bem translúcido, borda sutil, sem sombra pesada. */
+      /* 2.3 — Botões com o MESMO tratamento translúcido do container de volume:
+         fundo suave, glass discreto, baixa opacidade, arredondamento menor. */
       .mh-btn {
         min-height: 33px;
         display: inline-flex;
@@ -6116,12 +6138,12 @@ class BrunoSalaSubview extends HTMLElement {
         justify-content: center;
         gap: 6px;
         padding: 0 8px;
-        border-radius: 12px;
+        border-radius: 9px;
         color: rgba(255,255,255,0.88);
         font-size: 11.5px;
         font-weight: 700;
         background: rgba(255,255,255,0.045);
-        border: 1px solid rgba(255,255,255,0.10);
+        border: 1px solid rgba(255,255,255,0.09);
         box-shadow: none;
         backdrop-filter: blur(14px) saturate(1.1);
         -webkit-backdrop-filter: blur(14px) saturate(1.1);
@@ -6140,18 +6162,22 @@ class BrunoSalaSubview extends HTMLElement {
       .mh-btn:active { transform: translateY(1px); }
       .mh-btn:disabled { opacity: 0.42; cursor: default; }
 
-      /* Botão principal: contorno âmbar + preenchimento translúcido + texto
-         branco + glow (estilo do conceito, não dourado chapado). */
-      .mh-controls > .mh-btn.is-main { min-height: 44px; }
-      .mh-btn.is-main {
-        color: #ffffff;
-        background:
-          radial-gradient(120% 140% at 50% -10%, rgba(247,208,137,0.34), transparent 68%),
-          rgba(242,194,102,0.12);
-        border: 1px solid rgba(242,194,102,0.55);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 0 22px rgba(242,194,102,0.28);
+      /* 3.3 — CTA principal (Ligar TV/PS5 / Dispositivos): elegante, minimalista,
+         ~50% da largura, mais fino, dourado discreto (menos saturado, Savant). */
+      .mh-controls > .mh-btn.is-main {
+        align-self: flex-start;
+        width: 52%;
+        min-width: 140px;
+        min-height: 36px;
       }
-      .mh-btn.is-main ha-icon { color: #f7d089; }
+      .mh-btn.is-main {
+        color: rgba(255,255,255,0.94);
+        background: rgba(242,194,102,0.085);
+        border: 1px solid rgba(242,194,102,0.30);
+        border-radius: 9px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+      }
+      .mh-btn.is-main ha-icon { color: rgba(242,194,102,0.82); }
 
       .mh-btn.is-plus {
         padding: 0;
@@ -6190,13 +6216,26 @@ class BrunoSalaSubview extends HTMLElement {
       .mh-art.is-standby img {
         filter: drop-shadow(0 12px 20px rgba(0,0,0,0.42));
       }
-      /* Ativo: thumb/arte real com cantos suaves + sombra de apoio. */
-      .mh-art.is-cover img {
+      /* Ativo: thumb/arte real com cantos suaves. */
+      .mh-art.is-cover img { object-fit: cover; }
+      /* 2.4 — Arte QUADRADA de verdade (aspect-ratio 1/1, dirigida pela altura),
+         centralizada na vertical, sem excedente/sombra inferior deformando. */
+      .mh-art-square.is-cover img {
+        inset: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: auto;
+        height: calc(100% - 12px);
+        aspect-ratio: 1 / 1;
         object-fit: cover;
-        box-shadow: 0 12px 26px rgba(0,0,0,0.46);
+        border-radius: 12px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.30);
       }
-      .mh-art-square.is-cover img { border-radius: 13px; }
-      .mh-art-wide.is-cover img { border-radius: 11px; }
+      .mh-art-wide.is-cover img {
+        border-radius: 11px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.40);
+      }
 
       .ac-card {
         padding: 14px;

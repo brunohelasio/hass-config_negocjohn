@@ -1660,8 +1660,8 @@ class BrunoSalaSubview extends HTMLElement {
             <div class="module-title">Iluminação</div>
           </div>
           <div class="head-actions">
-            <button type="button" class="chip-button chip-button-icon is-active" data-action="lights-on"><ha-icon icon="mdi:white-balance-sunny"></ha-icon>Todas acesas</button>
-            <button type="button" class="chip-button chip-button-icon" data-action="lights-off"><ha-icon icon="mdi:moon-waning-crescent"></ha-icon>Apagar todas</button>
+            <button type="button" class="chip-button is-active" data-action="lights-on">Todas acesas</button>
+            <button type="button" class="chip-button" data-action="lights-off">Apagar todas</button>
           </div>
         </div>
         <div class="lights-zones">
@@ -4907,7 +4907,11 @@ class BrunoSalaSubview extends HTMLElement {
         border-color: rgba(240,192,64,0.35);
         background: rgba(240,192,64,0.10);
       }
-      .light-row-icon svg { width: 21px; height: 21px; }
+      /* CENTRALIZAÇÃO: o wrapper do ícone animado ocupava 100% do círculo em
+         display:block, jogando o svg p/ o canto. Constrange a 22px e o
+         place-items:center do círculo centraliza. */
+      .light-row-icon .tpl-light-icon { width: 22px; height: 22px; }
+      .light-row-icon svg { width: 100%; height: 100%; }
       .light-row-name { min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       /* BARRA LUMINOSA read-only (não é slider): apagada = pílula escura;
          acesa = gradiente âmbar com glow. O toque é da LINHA (toggle-light). */

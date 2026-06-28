@@ -970,12 +970,11 @@ class BrunoSalaSubview extends HTMLElement {
       this._safeRender();
       return;
     }
-    // NOVO (Passada 2): acordeão de zonas — expandir/colapsar uma zona.
+    // NOVO (Passada 2): acordeão SINGLE-OPEN — só uma zona aberta por vez.
+    // Expandir uma colapsa a outra; clicar na aberta colapsa.
     if (action === 'toggle-zone') {
       const zk = target.dataset.zone;
-      if (!this._expandedZones) this._expandedZones = new Set();
-      if (this._expandedZones.has(zk)) this._expandedZones.delete(zk);
-      else this._expandedZones.add(zk);
+      this._expandedZone = this._expandedZone === zk ? null : zk;
       this._safeRender();
       return;
     }
@@ -1646,11 +1645,12 @@ class BrunoSalaSubview extends HTMLElement {
       })
       .filter((z) => z.total > 0);
 
-    if (!this._expandedZones) {
-      this._expandedZones = new Set(zones.length ? [zones[0].key] : []);
+    // Single-open: 1 zona aberta por vez. Default = 1ª zona.
+    if (this._expandedZone === undefined) {
+      this._expandedZone = zones.length ? zones[0].key : null;
     }
     const onlyOne = zones.length === 1;
-    const isExpanded = (zk) => onlyOne || this._expandedZones.has(zk);
+    const isExpanded = (zk) => onlyOne || this._expandedZone === zk;
 
     return `
       <div class="glass-card lights-card">
@@ -1686,7 +1686,7 @@ class BrunoSalaSubview extends HTMLElement {
         </div>
         ${expanded
           ? `<div class="zone-lights">${zone.lights.map((l) => this._renderLightRow(l)).join('')}</div>`
-          : `<div class="zone-preview">${zone.lights.map((l) => BrunoSalaSubview._escape(l.name)).join(' · ')}</div>`}
+          : ''}
       </section>
     `;
   }
@@ -2314,70 +2314,60 @@ class BrunoSalaSubview extends HTMLElement {
       { key: 'swing', label: 'Swing', action: 'swing-mode', mode: nextSwingMode, active: swingActive },
     ];
 
+    // NOVO (Passada 2): AC ENXUTO (proposta imagem 5) — cabeçalho (estado/modo) +
+    // power; leitura Ambiente/Umidade; semi-anel (Desejada); 3 botões (Modo /
+    // Ventilação / Swing) que abrem o controle detalhado (more-info do climate).
+    // ANTERIOR (rollback): imagem grande do aparelho + slider + modos + stepper +
+    // fan-row (bloco alto). Preservado no histórico git.
+    const cap = (s) => {
+      const t = String(s || '').replace(/_/g, ' ').trim();
+      return t ? t.charAt(0).toUpperCase() + t.slice(1) : '—';
+    };
+    const modeLabel = !climate.active || activeMode === 'off'
+      ? 'Desligado'
+      : activeMode === 'fan_only' ? 'Ventilar'
+      : activeMode === 'heat_cool' || activeMode === 'auto' ? 'Auto'
+      : cap(activeMode);
+    const fanLabel = cap(fan);
+    const swingLabel = swing ? cap(swing) : (swingActive ? 'On' : 'Off');
+    const stateLabel = climate.active ? 'Ligado' : 'Desligado';
+    const humidity = this._humidityLabel();
+    const climateEntity = BrunoSalaSubview._escapeAttr(this._config.entities.climate || '');
+    const acActions = [
+      { icon: 'mdi:thermostat-auto', label: 'Modo', value: modeLabel },
+      { icon: 'mdi:fan', label: 'Ventilação', value: fanLabel },
+      { icon: 'mdi:cog-transfer-outline', label: 'Swing', value: swingLabel },
+    ];
+
     return `
-      <section class="glass-card ac-card">
+      <section class="glass-card ac-card ac-card-lean">
         <div class="module-head ac-head">
           <div class="title-with-chip">
             <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
             <div>
-              <div class="module-title">Ar Condicionado</div>
-              <div class="module-subtitle">${deviceName}</div>
+              <div class="module-title">Ar-condicionado</div>
+              <div class="module-subtitle">${deviceName} · ${stateLabel}${climate.active ? ` · ${BrunoSalaSubview._escape(modeLabel)}` : ''}</div>
             </div>
           </div>
           <button type="button" class="power-button${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado">
             <ha-icon icon="mdi:power"></ha-icon>
           </button>
         </div>
-        <div class="ac-body">
-          <div class="ac-visual">
-            <div class="ac-image-shell${climate.active ? ' is-on' : ''}" data-image-wrapper>
-              <img
-                class="ac-unit-image ac-unit-image-off"
-                src="${climateImage}"
-                alt=""
-                data-fallback-class="is-fallback"
-              >
-              <img
-                class="ac-unit-image ac-unit-image-on"
-                src="${climateActiveImage}"
-                alt=""
-              >
-              <ha-icon class="ac-image-fallback" icon="mdi:air-conditioner"></ha-icon>
-            </div>
+        <div class="ac-lean-body">
+          <div class="ac-readout">
+            <div class="ac-read"><ha-icon icon="mdi:thermometer"></ha-icon><div><small>Ambiente</small><strong>${current}°</strong></div></div>
+            <div class="ac-read"><ha-icon icon="mdi:water-percent"></ha-icon><div><small>Umidade</small><strong>${BrunoSalaSubview._escape(humidity)}</strong></div></div>
+          </div>
+          <div class="ac-ring">
             ${this._renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode)}
           </div>
-          <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
-            <input type="range" min="${BrunoSalaSubview._escapeAttr(minTarget)}" max="${BrunoSalaSubview._escapeAttr(maxTarget)}" step="${BrunoSalaSubview._escapeAttr(targetStep)}" value="${targetNumber}" data-action="climate-target">
-          </label>
-          <div class="climate-mode-row" aria-label="Modo do ar condicionado">
-            ${modeButtons.map((button) => `
-              <button
-                type="button"
-                class="climate-mode${modeButtonClass(button)}"
-                data-action="climate-mode"
-                data-mode="${BrunoSalaSubview._escapeAttr(button.key)}"
-                title="${BrunoSalaSubview._escapeAttr(button.label)}"
-                ${button.disabled ? 'disabled' : ''}
-              >
-                <ha-icon icon="${button.icon}"></ha-icon>
+          <div class="ac-actions">
+            ${acActions.map((a) => `
+              <button type="button" class="ac-action" data-action="more-info" data-entity="${climateEntity}">
+                <span class="ac-action-icon"><ha-icon icon="${a.icon}"></ha-icon></span>
+                <span class="ac-action-text"><small>${BrunoSalaSubview._escape(a.label)}</small><strong>${BrunoSalaSubview._escape(a.value)}</strong></span>
+                <ha-icon class="ac-action-chev" icon="mdi:chevron-right"></ha-icon>
               </button>
-            `).join('')}
-          </div>
-          <div class="climate-stepper">
-            <button type="button" data-action="temp-down">-</button>
-            <span>${target}</span>
-            <button type="button" data-action="temp-up">+</button>
-          </div>
-          <div class="fan-label">Fan mode</div>
-          <div class="fan-mode-row">
-            ${fanButtons.map((button) => `
-              <button
-                type="button"
-                class="fan-mode${button.active ? ' is-active' : ''}"
-                data-action="${BrunoSalaSubview._escapeAttr(button.action)}"
-                data-mode="${BrunoSalaSubview._escapeAttr(button.mode)}"
-                ${button.mode ? '' : 'disabled'}
-              >${BrunoSalaSubview._escape(button.label)}</button>
             `).join('')}
           </div>
         </div>
@@ -4682,7 +4672,10 @@ class BrunoSalaSubview extends HTMLElement {
         grid-area: content;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: minmax(0, 1.35fr) minmax(280px, 1fr);
+        /* NOVO (Passada 2): câmeras/mídia um pouco mais baixos (arte volta a
+           quadrada); o hero cresce e a cortina (ancorada no rodapé do hero) desce
+           junto. ANTERIOR: minmax(0,1.35fr) minmax(280px,1fr). */
+        grid-template-rows: minmax(0, 1.55fr) minmax(238px, 0.86fr);
         gap: var(--sala-gap);
       }
 
@@ -4839,7 +4832,7 @@ class BrunoSalaSubview extends HTMLElement {
       /* ===== NOVO (Passada 2): Iluminação — acordeão de zonas ===== */
       .lights-card { display: flex; flex-direction: column; min-height: 0; }
       .lights-head { flex: 0 0 auto; }
-      .lights-zones { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding-right: 2px; }
+      .lights-zones { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding-right: 2px; }
       .lights-zones::-webkit-scrollbar { width: 0; }
       .light-zone {
         border-radius: 16px;
@@ -4879,9 +4872,18 @@ class BrunoSalaSubview extends HTMLElement {
         text-align: left;
       }
       .light-row:hover { background: rgba(255,255,255,0.04); }
-      .light-row-icon { width: 28px; height: 28px; display: grid; place-items: center; color: rgba(255,255,255,0.5); }
-      .light-row.is-on .light-row-icon { color: rgba(255,196,90,0.95); }
-      .light-row-icon svg { width: 22px; height: 22px; }
+      /* PADRONIZAÇÃO do ícone animado (_tplLightIcon): o desenho pinta com
+         fill: var(--light-color) (via .tpl-light-icon .light-color). Basta o
+         wrapper definir --light-color (apagado) e a variante .is-on (aceso) —
+         mesmo contrato dos tiles (.light-icon / .light-tile.is-on). */
+      .light-row-icon {
+        width: 28px; height: 28px;
+        display: grid; place-items: center;
+        --light-color: #9da0a2;
+        color: var(--light-color);
+      }
+      .light-row.is-on .light-row-icon { --light-color: #f0c040; color: var(--light-color); }
+      .light-row-icon svg { width: 24px; height: 24px; }
       .light-row-name { min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .light-row-state { font-size: 11px; font-weight: 600; color: rgba(255,196,90,0.62); }
       .light-row.is-on .light-row-state { color: rgba(255,196,90,0.95); }
@@ -4889,6 +4891,26 @@ class BrunoSalaSubview extends HTMLElement {
       .ios-toggle.is-on { background: rgba(96,165,250,0.9); border-color: rgba(150,198,255,0.5); }
       .ios-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s ease; }
       .ios-toggle.is-on .ios-knob { transform: translateX(16px); }
+
+      /* ===== NOVO (Passada 2): AC enxuto ===== */
+      .ac-card-lean { display: flex; flex-direction: column; min-height: 0; }
+      .ac-lean-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+      .ac-readout { display: flex; gap: 10px; }
+      .ac-read { flex: 1 1 0; min-width: 0; display: flex; align-items: center; gap: 9px; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+      .ac-read ha-icon { --mdc-icon-size: 18px; color: rgba(255,255,255,0.6); flex: 0 0 auto; }
+      .ac-read small { display: block; font-size: 10px; font-weight: 600; color: var(--text-soft); }
+      .ac-read strong { display: block; font-size: 15px; font-weight: 800; color: var(--text-main); }
+      .ac-ring { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+      .ac-ring .icg-shell { width: min(100%, 300px); }
+      .ac-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .ac-action { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 11px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); cursor: pointer; color: var(--text-main); text-align: left; }
+      .ac-action:hover { background: rgba(255,255,255,0.07); }
+      .ac-action-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: rgba(96,165,250,0.16); color: rgba(150,198,255,0.95); }
+      .ac-action-icon ha-icon { --mdc-icon-size: 18px; }
+      .ac-action-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+      .ac-action-text small { font-size: 10px; font-weight: 600; color: var(--text-soft); }
+      .ac-action-text strong { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+      .ac-action-chev { display: none; }
 
       .room-sidebar {
         width: 58px;

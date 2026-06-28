@@ -54,6 +54,7 @@ class BrunoShell extends HTMLElement {
     // camada fica transparente (comportamento de hoje, inalterado).
     //   backdrops: { home: <url>, sala: <url>, ... , default: <url opcional> }
     this._backdrops = config.backdrops || null;
+    this._preloadBackdrops();
     this._railConfig = config.rail
       || (this._rails ? this._rails[this._defaultRailName] : null);
     this._currentRailName = null;
@@ -115,12 +116,17 @@ class BrunoShell extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${BrunoShell._styles()}</style>
       <div class="shell">
-        <div class="backdrop" id="backdrop"></div>
+        <div class="backdrop" id="backdrop">
+          <div class="backdrop-layer" data-layer="0"></div>
+          <div class="backdrop-layer" data-layer="1"></div>
+        </div>
         <div class="rail-slot" id="rail"></div>
         <div class="content-slot" id="content"></div>
       </div>
     `;
     this._backdropEl = this.shadowRoot.getElementById('backdrop');
+    this._bdLayers = Array.from(this.shadowRoot.querySelectorAll('.backdrop-layer'));
+    this._bdActive = -1; // nenhuma camada ativa ainda
 
     // Rail: criada UMA vez e mantida viva (nunca recriada).
     try {
@@ -199,18 +205,50 @@ class BrunoShell extends HTMLElement {
     this._updateRailSelection(key);
   }
 
-  // NOVO (full-bleed): aplica a imagem de fundo da seção na camada .backdrop
-  // (atrás do rail + conteúdo). Sem `backdrops` no config => transparente.
-  _applyBackdrop(key) {
-    if (!this._backdropEl) return;
-    const url = this._backdrops && (this._backdrops[key] || this._backdrops.default);
-    if (url) {
-      this._backdropEl.style.backgroundImage = `url("${url}")`;
-      this._backdropEl.dataset.active = '1';
-    } else {
-      this._backdropEl.style.backgroundImage = 'none';
-      delete this._backdropEl.dataset.active;
+  // NOVO (full-bleed): PRÉ-CARREGA todas as imagens de backdrop no setConfig para
+  // a troca de seção ser instantânea (sem o atraso de buscar a imagem na hora).
+  _preloadBackdrops() {
+    if (!this._backdrops) return;
+    this._backdropCache = this._backdropCache || {};
+    for (const k of Object.keys(this._backdrops)) {
+      const url = this._backdrops[k];
+      if (url && !this._backdropCache[url]) {
+        const img = new Image();
+        img.src = url;
+        this._backdropCache[url] = img;
+      }
     }
+  }
+
+  // NOVO (full-bleed): aplica a imagem da seção com CROSSFADE real entre duas
+  // camadas (opacity é animável; background-image não é). Sem `backdrops` =>
+  // ambas as camadas transparentes (grafite do :host aparece).
+  _applyBackdrop(key) {
+    if (!this._backdropEl || !this._bdLayers || this._bdLayers.length < 2) return;
+    const url = this._backdrops && (this._backdrops[key] || this._backdrops.default);
+
+    if (!url) {
+      // some sem imagem: apaga as duas camadas + desliga a vinheta.
+      this._bdLayers.forEach((l) => { l.style.opacity = '0'; });
+      delete this._backdropEl.dataset.active;
+      this._bdActive = -1;
+      return;
+    }
+
+    const next = this._bdActive === 0 ? 1 : 0;   // camada que vai receber a nova imagem
+    const nextLayer = this._bdLayers[next];
+    const curLayer = this._bdActive >= 0 ? this._bdLayers[this._bdActive] : null;
+    // Se já é a mesma imagem na camada ativa, não faz nada.
+    if (curLayer && curLayer.dataset.url === url) { this._backdropEl.dataset.active = '1'; return; }
+
+    nextLayer.dataset.url = url;
+    nextLayer.style.backgroundImage = `url("${url}")`;
+    // força reflow para garantir a transição de opacidade
+    void nextLayer.offsetWidth;
+    nextLayer.style.opacity = '1';
+    if (curLayer) curLayer.style.opacity = '0';
+    this._backdropEl.dataset.active = '1';
+    this._bdActive = next;
   }
 
   // NOVO (Etapa A): troca os ITENS do rail conforme a seção, SEM recriar o
@@ -314,11 +352,16 @@ class BrunoShell extends HTMLElement {
         position: absolute;
         inset: 0;
         z-index: 0;
+      }
+      /* Duas camadas para CROSSFADE por opacidade (background-image não anima). */
+      .backdrop-layer {
+        position: absolute;
+        inset: 0;
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        background-image: none;
-        transition: background-image 0.35s ease;
+        opacity: 0;
+        transition: opacity 0.45s ease;
       }
       /* NOVO: BORDA ATMOSFÉRICA escurecida no PERÍMETRO da imagem. É ela que dá
          legibilidade às regiões fixas (rail à esquerda, status no topo, dock na

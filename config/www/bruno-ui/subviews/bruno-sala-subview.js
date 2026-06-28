@@ -599,13 +599,30 @@ class BrunoSalaSubview extends HTMLElement {
     return '';
   }
 
+  // ANTERIOR (rollback) — prioridade antiga (Spotify > TV > PS5) sem "retomada
+  // por nova ativação". Substituída pela lógica de acordeão (2026-06-28).
+  // _selectedMedia(model) {
+  //   const valid = ['tv', 'spotify', 'ps5'];
+  //   if (valid.includes(this._selectedMediaSource)) return this._selectedMediaSource;
+  //   if (model.spotify?.active) return 'spotify';
+  //   if (model.tv?.active) return 'tv';
+  //   if (model.ps5?.active) return 'ps5';
+  //   return 'tv';
+  // }
+  // NOVO (2026-06-28): acordeão — ordem fixa TV → Spotify → PS5.
+  // - Seleção manual (clique no cabeçalho) persiste em this._selectedMediaSource.
+  // - Quando uma fonte SE TORNA ativa (nova ativação real), reseta a seleção
+  //   manual para retomar a prioridade automática.
+  // - Sem seleção válida: primeira fonte ativa pela ordem; nenhuma ativa → 'tv'.
   _selectedMedia(model) {
-    const valid = ['tv', 'spotify', 'ps5'];
-    if (valid.includes(this._selectedMediaSource)) return this._selectedMediaSource;
-    if (model.spotify?.active) return 'spotify';
-    if (model.tv?.active) return 'tv';
-    if (model.ps5?.active) return 'ps5';
-    return 'tv';
+    const order = ['tv', 'spotify', 'ps5'];
+    const activeKeys = order.filter((k) => model[k]?.active);
+    const prev = this._lastActiveMediaKeys || [];
+    const gainedActivation = activeKeys.some((k) => !prev.includes(k));
+    this._lastActiveMediaKeys = activeKeys;
+    if (gainedActivation) this._selectedMediaSource = '';
+    if (order.includes(this._selectedMediaSource)) return this._selectedMediaSource;
+    return activeKeys[0] || 'tv';
   }
 
   _mediaStateLabel(state, fallback = 'Desligada') {
@@ -1753,7 +1770,249 @@ class BrunoSalaSubview extends HTMLElement {
     `;
   }
 
+  // NOVO (2026-06-28): Hub de Mídia refatorado como ACORDEÃO verdadeiro
+  // (ordem fixa TV → Spotify → PS5). Spec: hemmahubmidiaprompt.md.
+  // Restrições: 320px fixos (--ac-h), sem overflow; só o Hub muda — nenhum
+  // outro bloco/shell/rail/topband/backdrop é tocado. Cores: accent/volume
+  // dourado #f2c266; ícone Spotify monocromático (sem verde). Apenas UMA fonte
+  // expandida por vez, no próprio lugar (nunca promovida ao topo).
   _renderMediaHub(model) {
+    const selected = this._selectedMedia(model);
+    const tv = model.tv;
+    const spotify = model.spotify;
+    const ps5 = model.ps5;
+    const esc = (v) => BrunoSalaSubview._escape(v);
+    const escA = (v) => BrunoSalaSubview._escapeAttr(v);
+
+    const tvPoster = tv.poster ? BrunoSalaSubview._resolvePicture(tv.poster) : '';
+    const spotifyArtwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
+    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1';
+    const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png';
+    const ps5Image = ps5.image || '/local/images/ps5.png';
+    const tvVolume = tv.volume == null ? 60 : tv.volume;
+    const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
+    const tvSource = tv.source || 'HDMI 1';
+
+    const dot = (on) => `<span class="mh-dot${on ? ' is-on' : ''}" aria-hidden="true"></span>`;
+
+    const volRow = (action, vol, disabled = false) => `
+      <div class="mh-vol${disabled ? ' is-disabled' : ''}">
+        <ha-icon icon="mdi:volume-medium"></ha-icon>
+        <span class="mh-vol-label">Volume ${vol}%</span>
+        <input type="range" min="0" max="100" value="${vol}" data-action="${escA(action)}" aria-label="Volume" ${disabled ? 'disabled' : ''}>
+      </div>
+    `;
+
+    const btn = (action, label, opts = {}) => `
+      <button
+        type="button"
+        class="mh-btn${opts.main ? ' is-main' : ''}${opts.plus ? ' is-plus' : ''}"
+        data-action="${escA(action)}"
+        ${opts.entity ? `data-entity="${escA(opts.entity)}"` : ''}
+        title="${escA(label)}"
+        aria-label="${escA(label)}"
+        ${opts.disabled ? 'disabled' : ''}
+      >
+        ${opts.icon ? `<ha-icon icon="${escA(opts.icon)}"></ha-icon>` : ''}
+        ${opts.plus ? '' : `<span>${esc(label)}</span>`}
+      </button>
+    `;
+
+    // Imagem contextual à direita: integrada ao fundo (sem moldura), com respiro.
+    // shape: 'wide' (16:9, contain) ou 'square'. cover=true usa thumb/arte real.
+    const art = (src, shape, fallbackIcon, cover = false) => `
+      <div class="mh-art mh-art-${shape}${cover ? ' is-cover' : ' is-standby'}">
+        ${src
+          ? `<img src="${escA(src)}" alt="" loading="lazy">`
+          : `<ha-icon icon="${escA(fallbackIcon)}"></ha-icon>`}
+      </div>
+    `;
+
+    // ----- Corpo expandido: TV -----
+    const tvBody = tv.active
+      ? `
+        <div class="mh-left">
+          <div class="mh-info">
+            <strong>TV da sala</strong>
+            <small>${dot(true)} Ligada${tvSource ? ` · ${esc(tvSource)}` : ''}</small>
+          </div>
+          <div class="mh-controls">
+            ${volRow('tv-volume', tvVolume)}
+            <div class="mh-btn-row mh-btn-row-3">
+              ${btn('tv-play-pause', 'Pausar', { icon: 'mdi:pause' })}
+              ${btn('tv-remote', 'Controle remoto', { icon: 'mdi:remote-tv' })}
+              ${btn('tv-apps', 'Apps', { icon: 'mdi:apps' })}
+            </div>
+          </div>
+        </div>
+        ${art(tvPoster || tvStandbyImage, 'wide', 'mdi:television-classic', Boolean(tvPoster))}
+      `
+      : `
+        <div class="mh-left">
+          <div class="mh-info">
+            <strong>TV da sala</strong>
+            <small>${dot(false)} Desligada</small>
+            <em>HDMI 1 disponível</em>
+          </div>
+          <div class="mh-controls">
+            ${btn('toggle-tv', 'Ligar TV', { icon: 'mdi:power', main: true })}
+          </div>
+        </div>
+        ${art(tvStandbyImage, 'wide', 'mdi:television-classic', false)}
+      `;
+
+    // ----- Corpo expandido: Spotify -----
+    const spotifyArtist = spotify.subtitle || '';
+    const spotifyTitleLine = [spotify.title, spotifyArtist].filter(Boolean).join(' · ');
+    const spotifyButtons = this._spotifyToolsOpen
+      ? `
+        <div class="mh-btn-row mh-btn-row-4">
+          ${btn('spotify-devices', 'Disp.', { icon: 'mdi:speaker-wireless' })}
+          ${btn('spotify-presets', 'Presets', { icon: 'mdi:bookmark-music-outline' })}
+          ${btn('spotify-queue', 'Fila', { icon: 'mdi:playlist-play' })}
+          ${btn('spotify-more', 'Voltar', { icon: 'mdi:chevron-left', plus: true })}
+        </div>
+      `
+      : `
+        <div class="mh-btn-row mh-btn-row-4">
+          ${btn('spotify-prev', 'Anterior', { icon: 'mdi:skip-previous' })}
+          ${btn('spotify-play-pause', spotify.playing ? 'Pausar' : 'Tocar', { icon: spotify.playing ? 'mdi:pause' : 'mdi:play' })}
+          ${btn('spotify-next', 'Próxima', { icon: 'mdi:skip-next' })}
+          ${btn('spotify-more', 'Mais', { icon: 'mdi:plus', plus: true })}
+        </div>
+      `;
+    const spotifyBody = spotify.active
+      ? `
+        <div class="mh-left">
+          <div class="mh-info">
+            <strong>Spotify</strong>
+            <small>${esc(spotifyTitleLine || 'Tocando')}</small>
+          </div>
+          <div class="mh-controls">
+            ${volRow('spotify-volume', spotifyVolume)}
+            ${spotifyButtons}
+          </div>
+        </div>
+        ${art(spotifyArtwork || spotifyStandbyImage, 'square', 'mdi:music-note', Boolean(spotifyArtwork))}
+      `
+      : `
+        <div class="mh-left">
+          <div class="mh-info">
+            <strong>Spotify</strong>
+            <small>${dot(false)} Desligada</small>
+          </div>
+          <div class="mh-controls">
+            ${btn('spotify-devices', 'Dispositivos', { icon: 'mdi:speaker-wireless', main: true })}
+          </div>
+        </div>
+        ${art(spotifyStandbyImage, 'square', 'mdi:music-note', false)}
+      `;
+
+    // ----- Corpo expandido: PS5 -----
+    const ps5Body = ps5.active
+      ? `
+        <div class="mh-left">
+          <div class="mh-info">
+            <strong>PS5</strong>
+            <small>${dot(true)} Ligada · HDMI 1</small>
+          </div>
+          <div class="mh-controls">
+            ${volRow('tv-volume', tvVolume)}
+            <div class="mh-btn-row mh-btn-row-3">
+              ${btn('toggle-ps5', 'Desligar', { icon: 'mdi:power', entity: ps5.entityId || '' })}
+              ${btn('ps5-source', 'Abrir fonte', { icon: 'mdi:import' })}
+              ${btn('ps5-control', 'Controle', { icon: 'mdi:gamepad-variant' })}
+            </div>
+          </div>
+        </div>
+        ${art(ps5Image, 'square', 'mdi:sony-playstation', false)}
+      `
+      : `
+        <div class="mh-left">
+          <div class="mh-info">
+            <strong>PS5</strong>
+            <small>${dot(false)} Desligada</small>
+            <em>HDMI 1 disponível</em>
+          </div>
+          <div class="mh-controls">
+            ${btn('toggle-ps5', 'Ligar PS5', { icon: 'mdi:power', main: true, disabled: !ps5.configured, entity: ps5.entityId || '' })}
+          </div>
+        </div>
+        ${art(ps5Image, 'square', 'mdi:sony-playstation', false)}
+      `;
+
+    const sourceMeta = {
+      tv: {
+        label: 'TV da sala',
+        icon: 'mdi:television-classic',
+        summary: tv.active ? `Ligada · ${tvSource}` : 'Desligada',
+        active: tv.active,
+        body: tvBody,
+      },
+      spotify: {
+        label: 'Spotify',
+        icon: 'mdi:spotify',
+        summary: spotify.active ? (spotify.title || 'Tocando') : 'Nenhuma faixa',
+        active: spotify.active,
+        body: spotifyBody,
+      },
+      ps5: {
+        label: 'PS5',
+        icon: 'mdi:sony-playstation',
+        summary: ps5.active ? 'Online' : 'Offline',
+        active: ps5.active,
+        body: ps5Body,
+      },
+    };
+    const order = ['tv', 'spotify', 'ps5'];
+
+    const renderSource = (key) => {
+      const s = sourceMeta[key];
+      const isOpen = key === selected;
+      // Ícone do Spotify monocromático (sem verde): ha-icon herda a cor do CSS.
+      const iconHtml = key === 'spotify'
+        ? '<ha-icon class="mh-src-icon mh-icon-spotify" icon="mdi:spotify"></ha-icon>'
+        : `<ha-icon class="mh-src-icon" icon="${escA(s.icon)}"></ha-icon>`;
+      return `
+        <div class="mh-source${isOpen ? ' is-open' : ''}${s.active ? ' is-active' : ''}">
+          <button
+            type="button"
+            class="mh-source-head"
+            data-action="select-media-source"
+            data-source="${key}"
+            aria-expanded="${isOpen ? 'true' : 'false'}"
+          >
+            ${iconHtml}
+            <span class="mh-src-name">${esc(s.label)}</span>
+            <span class="mh-src-summary">${esc(s.summary)}</span>
+            <ha-icon class="mh-src-chevron" icon="${isOpen ? 'mdi:chevron-down' : 'mdi:chevron-right'}"></ha-icon>
+          </button>
+          ${isOpen ? `<div class="mh-source-body">${s.body}</div>` : ''}
+        </div>
+      `;
+    };
+
+    return `
+      <section class="glass-card media-hub-card mh-accordion${sourceMeta[selected]?.active ? ' is-playing' : ''}">
+        <div class="mh-head">
+          <div class="mh-head-title">
+            <span class="mh-head-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
+            <span>Hub de Mídia</span>
+          </div>
+          <button type="button" class="mh-menu" data-action="media-menu" title="Opções" aria-label="Opções">
+            <ha-icon icon="mdi:dots-vertical"></ha-icon>
+          </button>
+        </div>
+        <div class="mh-sources">
+          ${order.map(renderSource).join('')}
+        </div>
+      </section>
+    `;
+  }
+
+  // LEGADO (rollback): versão anterior do Hub baseada em ABAS (tabs).
+  // Preservada intacta; NÃO é referenciada por nenhum call site.
+  _renderMediaHubLegacy(model) {
     const selected = this._selectedMedia(model);
     const tv = model.tv;
     const spotify = model.spotify;
@@ -5533,6 +5792,313 @@ class BrunoSalaSubview extends HTMLElement {
       .media-extra-info strong {
         color: rgba(255,255,255,0.88);
         text-align: right;
+      }
+
+      /* ============================================================
+         Hub de Mídia — ACORDEÃO (NOVO 2026-06-28)
+         320px fixos (herda --ac-h via .cams-media-row). Sem overflow.
+         44px cabeçalho + 1fr fontes (276px); 2 recolhidas 38px cada +
+         1 expandida (~200px). Accent/volume dourado #f2c266.
+         ============================================================ */
+      .media-hub-card.mh-accordion {
+        padding: 0;
+        grid-template-rows: 44px minmax(0, 1fr);
+        gap: 0;
+        overflow: hidden;
+      }
+
+      .mh-head {
+        position: relative;
+        z-index: 1;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px 0 14px;
+      }
+
+      .mh-head-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+        font-size: 13px;
+        font-weight: 850;
+        color: var(--text-main);
+        letter-spacing: 0.2px;
+      }
+
+      .mh-head-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.66);
+      }
+      .mh-head-icon ha-icon { --mdc-icon-size: 18px; }
+
+      .mh-menu {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        color: rgba(255,255,255,0.52);
+        background: transparent;
+      }
+      .mh-menu ha-icon { --mdc-icon-size: 19px; }
+      .mh-menu:active { background: rgba(255,255,255,0.08); }
+
+      .mh-sources {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .mh-source {
+        position: relative;
+        flex: 0 0 38px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        border-top: 1px solid rgba(255,255,255,0.07);
+      }
+      .mh-source:first-child { border-top: 0; }
+      .mh-source.is-open { flex: 1 1 auto; }
+
+      .mh-source-head {
+        flex: 0 0 38px;
+        height: 38px;
+        display: grid;
+        grid-template-columns: 20px minmax(0, auto) minmax(0, 1fr) 18px;
+        align-items: center;
+        gap: 9px;
+        padding: 0 12px 0 14px;
+        background: transparent;
+        text-align: left;
+      }
+
+      .mh-src-icon { --mdc-icon-size: 18px; color: rgba(255,255,255,0.5); }
+      .mh-source.is-active .mh-src-icon,
+      .mh-source.is-active .mh-icon-spotify { color: #f2c266; }
+      .mh-icon-spotify { color: rgba(255,255,255,0.6); }
+
+      .mh-src-name {
+        min-width: 0;
+        font-size: 12.5px;
+        font-weight: 800;
+        color: rgba(255,255,255,0.9);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-src-summary {
+        min-width: 0;
+        justify-self: end;
+        max-width: 100%;
+        font-size: 11px;
+        font-weight: 650;
+        color: rgba(255,255,255,0.44);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mh-source.is-open .mh-src-summary { display: none; }
+
+      .mh-src-chevron {
+        --mdc-icon-size: 18px;
+        color: rgba(255,255,255,0.4);
+      }
+      .mh-source.is-open .mh-src-chevron { color: rgba(255,255,255,0.62); }
+
+      .mh-source-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 144px;
+        gap: 12px;
+        padding: 2px 14px 12px;
+      }
+
+      .mh-left {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .mh-info {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .mh-info strong {
+        font-size: 16px;
+        font-weight: 850;
+        color: white;
+        line-height: 1.05;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-info small {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12.5px;
+        font-weight: 650;
+        color: var(--text-soft);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-info em {
+        font-style: normal;
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.42);
+      }
+
+      .mh-dot {
+        flex: 0 0 auto;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.26);
+      }
+      .mh-dot.is-on {
+        background: #f2c266;
+        box-shadow: 0 0 9px rgba(242,194,102,0.6);
+      }
+
+      .mh-controls {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .mh-vol {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        color: var(--text-soft);
+      }
+      .mh-vol ha-icon { --mdc-icon-size: 17px; }
+      .mh-vol-label { font-size: 11px; font-weight: 700; white-space: nowrap; }
+      .mh-vol input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.16);
+        accent-color: #f2c266;
+      }
+      .mh-vol input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #f2c266;
+        box-shadow: 0 0 8px rgba(242,194,102,0.5);
+        cursor: pointer;
+      }
+      .mh-vol input[type="range"]::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border: 0;
+        border-radius: 50%;
+        background: #f2c266;
+      }
+      .mh-vol.is-disabled { opacity: 0.4; }
+
+      .mh-btn-row {
+        display: grid;
+        gap: 7px;
+      }
+      .mh-btn-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .mh-btn-row-4 { grid-template-columns: repeat(3, minmax(0, 1fr)) 38px; }
+
+      .mh-btn {
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 8px;
+        border-radius: var(--bruno-liquid-control-radius, 13px);
+        color: rgba(255,255,255,0.84);
+        font-size: 11.5px;
+        font-weight: 750;
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.07));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.13));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.09));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.2));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.2));
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      .mh-btn ha-icon { --mdc-icon-size: 17px; flex: 0 0 auto; }
+      .mh-btn span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mh-btn:active { transform: translateY(1px); }
+      .mh-btn:disabled { opacity: 0.42; cursor: default; }
+
+      .mh-btn.is-main {
+        color: #1b1205;
+        background: linear-gradient(180deg, #f7d089, #f2c266);
+        border-color: rgba(242,194,102,0.5);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 0 16px rgba(242,194,102,0.22);
+      }
+
+      .mh-btn.is-plus {
+        padding: 0;
+        color: rgba(255,255,255,0.7);
+      }
+
+      .mh-art {
+        min-width: 0;
+        align-self: center;
+        height: 100%;
+        max-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 6px 0;
+      }
+      .mh-art img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+      }
+      .mh-art ha-icon {
+        --mdc-icon-size: 56px;
+        color: rgba(255,255,255,0.2);
+      }
+      .mh-art-square.is-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+      }
+      .mh-art-wide.is-cover img { border-radius: 10px; }
+      .mh-art.is-standby img {
+        filter: drop-shadow(0 14px 22px rgba(0,0,0,0.4));
       }
 
       .ac-card {

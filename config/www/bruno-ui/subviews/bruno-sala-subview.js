@@ -1792,6 +1792,20 @@ class BrunoSalaSubview extends HTMLElement {
     const tvVolume = tv.volume == null ? 60 : tv.volume;
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
     const tvSource = tv.source || 'HDMI 1';
+    const tvPlaying = tv.state === 'playing';
+    // Segunda linha (cinza) do estado expandido — fonte/app + "Em reprodução".
+    const tvSubLine = [tvSource, tvPlaying ? 'Em reprodução' : ''].filter(Boolean).join(' · ');
+    // Barra de progresso do Spotify (posição/duração nativas do media_player).
+    const spotifyAttrs = spotify.entity?.attributes || {};
+    const spotifyDuration = Number(spotifyAttrs.media_duration) || 0;
+    const spotifyPosition = Number(spotifyAttrs.media_position) || 0;
+    const spotifyProgress = spotifyDuration > 0
+      ? Math.max(0, Math.min(100, (spotifyPosition / spotifyDuration) * 100))
+      : 0;
+    // PS5 ativo — jogo em execução (quando a entidade expõe), para a 2ª linha.
+    const ps5Attrs = this._state(ps5.entityId)?.attributes || {};
+    const ps5Game = ps5Attrs.media_title || ps5Attrs.app_name || '';
+    const ps5SubLine = [ps5Game, ps5Game ? 'Em jogo' : ''].filter(Boolean).join(' · ');
 
     const dot = (on) => `<span class="mh-dot${on ? ' is-on' : ''}" aria-hidden="true"></span>`;
 
@@ -1818,23 +1832,26 @@ class BrunoSalaSubview extends HTMLElement {
       </button>
     `;
 
-    // Imagem contextual à direita: integrada ao fundo (sem moldura), com respiro.
-    // shape: 'wide' (16:9, contain) ou 'square'. cover=true usa thumb/arte real.
+    // Imagem contextual à direita: integrada ao fundo (sem moldura), num
+    // "bolsão de luz quente" (glow âmbar) que sangra no card. shape: 'wide'
+    // (16:9, contain) ou 'square'. cover=true => thumb/arte real (cantos suaves).
     const art = (src, shape, fallbackIcon, cover = false) => `
       <div class="mh-art mh-art-${shape}${cover ? ' is-cover' : ' is-standby'}">
+        <span class="mh-art-glow" aria-hidden="true"></span>
         ${src
           ? `<img src="${escA(src)}" alt="" loading="lazy">`
           : `<ha-icon icon="${escA(fallbackIcon)}"></ha-icon>`}
       </div>
     `;
 
-    // ----- Corpo expandido: TV -----
+    // ----- Corpo expandido: TV ----- (sem título repetido — o nome já está no
+    // cabeçalho da faixa; o corpo começa direto no estado).
     const tvBody = tv.active
       ? `
         <div class="mh-left">
           <div class="mh-info">
-            <strong>TV da sala</strong>
-            <small>${dot(true)} Ligada${tvSource ? ` · ${esc(tvSource)}` : ''}</small>
+            <small>${dot(true)} Ligada</small>
+            ${tvSubLine ? `<em>${esc(tvSubLine)}</em>` : ''}
           </div>
           <div class="mh-controls">
             ${volRow('tv-volume', tvVolume)}
@@ -1850,7 +1867,6 @@ class BrunoSalaSubview extends HTMLElement {
       : `
         <div class="mh-left">
           <div class="mh-info">
-            <strong>TV da sala</strong>
             <small>${dot(false)} Desligada</small>
             <em>HDMI 1 disponível</em>
           </div>
@@ -1863,7 +1879,6 @@ class BrunoSalaSubview extends HTMLElement {
 
     // ----- Corpo expandido: Spotify -----
     const spotifyArtist = spotify.subtitle || '';
-    const spotifyTitleLine = [spotify.title, spotifyArtist].filter(Boolean).join(' · ');
     const spotifyButtons = this._spotifyToolsOpen
       ? `
         <div class="mh-btn-row mh-btn-row-4">
@@ -1881,12 +1896,15 @@ class BrunoSalaSubview extends HTMLElement {
           ${btn('spotify-more', 'Mais', { icon: 'mdi:plus', plus: true })}
         </div>
       `;
+    // (sem título repetido — "Spotify" já está no cabeçalho. No estado ativo o
+    // corpo mostra FAIXA + ARTISTA em duas linhas + barra de progresso.)
     const spotifyBody = spotify.active
       ? `
         <div class="mh-left">
           <div class="mh-info">
-            <strong>Spotify</strong>
-            <small>${esc(spotifyTitleLine || 'Tocando')}</small>
+            <small class="mh-track-title">${esc(spotify.title || 'Tocando')}</small>
+            ${spotifyArtist ? `<em class="mh-track-artist">${esc(spotifyArtist)}</em>` : ''}
+            <div class="mh-progress" aria-hidden="true"><span style="width:${spotifyProgress}%"></span></div>
           </div>
           <div class="mh-controls">
             ${volRow('spotify-volume', spotifyVolume)}
@@ -1898,7 +1916,6 @@ class BrunoSalaSubview extends HTMLElement {
       : `
         <div class="mh-left">
           <div class="mh-info">
-            <strong>Spotify</strong>
             <small>${dot(false)} Desligada</small>
           </div>
           <div class="mh-controls">
@@ -1908,13 +1925,13 @@ class BrunoSalaSubview extends HTMLElement {
         ${art(spotifyStandbyImage, 'square', 'mdi:music-note', false)}
       `;
 
-    // ----- Corpo expandido: PS5 -----
+    // ----- Corpo expandido: PS5 ----- (sem título repetido)
     const ps5Body = ps5.active
       ? `
         <div class="mh-left">
           <div class="mh-info">
-            <strong>PS5</strong>
             <small>${dot(true)} Ligada · HDMI 1</small>
+            ${ps5SubLine ? `<em>${esc(ps5SubLine)}</em>` : ''}
           </div>
           <div class="mh-controls">
             ${volRow('tv-volume', tvVolume)}
@@ -1930,7 +1947,6 @@ class BrunoSalaSubview extends HTMLElement {
       : `
         <div class="mh-left">
           <div class="mh-info">
-            <strong>PS5</strong>
             <small>${dot(false)} Desligada</small>
             <em>HDMI 1 disponível</em>
           </div>
@@ -5795,10 +5811,12 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       /* ============================================================
-         Hub de Mídia — ACORDEÃO (NOVO 2026-06-28)
+         Hub de Mídia — ACORDEÃO (NOVO 2026-06-28 · re-skin conceito)
          320px fixos (herda --ac-h via .cams-media-row). Sem overflow.
-         44px cabeçalho + 1fr fontes (276px); 2 recolhidas 38px cada +
-         1 expandida (~200px). Accent/volume dourado #f2c266.
+         44px cabeçalho + fontes (276px): 2 recolhidas (pills 38px) +
+         1 expandida (card-in-card). Sem título repetido (o nome vive no
+         cabeçalho da faixa). Accent/volume/progresso dourado #f2c266;
+         ícone Spotify monocromático. Imagem em "bolsão de luz quente".
          ============================================================ */
       .media-hub-card.mh-accordion {
         padding: 0;
@@ -5820,21 +5838,27 @@ class BrunoSalaSubview extends HTMLElement {
       .mh-head-title {
         display: inline-flex;
         align-items: center;
-        gap: 9px;
+        gap: 10px;
         min-width: 0;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 850;
         color: var(--text-main);
         letter-spacing: 0.2px;
       }
 
+      /* Ícone de mídia do cabeçalho como tile âmbar discreto (conceito). */
       .mh-head-icon {
+        width: 30px;
+        height: 30px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: rgba(255,255,255,0.66);
+        border-radius: 9px;
+        color: #f2c266;
+        background: rgba(242,194,102,0.12);
+        border: 1px solid rgba(242,194,102,0.22);
       }
-      .mh-head-icon ha-icon { --mdc-icon-size: 18px; }
+      .mh-head-icon ha-icon { --mdc-icon-size: 17px; }
 
       .mh-menu {
         width: 30px;
@@ -5849,57 +5873,90 @@ class BrunoSalaSubview extends HTMLElement {
       .mh-menu ha-icon { --mdc-icon-size: 19px; }
       .mh-menu:active { background: rgba(255,255,255,0.08); }
 
+      /* Faixas inset 10px; pills com respiro de 6px entre si. */
       .mh-sources {
         position: relative;
         z-index: 1;
         min-height: 0;
         display: flex;
         flex-direction: column;
+        gap: 6px;
+        padding: 0 10px 10px;
       }
 
+      /* Cada fonte é um cartão arredondado (pill quando recolhida,
+         card-in-card destacado quando expandida). */
       .mh-source {
         position: relative;
         flex: 0 0 38px;
         min-height: 0;
         display: flex;
         flex-direction: column;
-        border-top: 1px solid rgba(255,255,255,0.07);
+        overflow: hidden;
+        border-radius: 15px;
+        background: rgba(255,255,255,0.038);
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        transition: background 180ms ease, border-color 180ms ease;
       }
-      .mh-source:first-child { border-top: 0; }
-      .mh-source.is-open { flex: 1 1 auto; }
+      .mh-source.is-open {
+        flex: 1 1 auto;
+        background:
+          radial-gradient(120% 90% at 88% 30%, rgba(247,190,110,0.07), transparent 60%),
+          rgba(255,255,255,0.055);
+        border-color: rgba(255,255,255,0.13);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 26px rgba(0,0,0,0.22);
+      }
 
       .mh-source-head {
         flex: 0 0 38px;
         height: 38px;
         display: grid;
-        grid-template-columns: 20px minmax(0, auto) minmax(0, 1fr) 18px;
+        grid-template-columns: 32px minmax(0, auto) minmax(0, 1fr) 18px;
         align-items: center;
-        gap: 9px;
-        padding: 0 12px 0 14px;
+        gap: 10px;
+        padding: 0 12px 0 8px;
         background: transparent;
         text-align: left;
       }
 
-      .mh-src-icon { --mdc-icon-size: 18px; color: rgba(255,255,255,0.5); }
+      /* Ícone da fonte como tile (app-icon). */
+      .mh-src-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        --mdc-icon-size: 18px;
+        color: rgba(255,255,255,0.62);
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.09);
+      }
+      .mh-icon-spotify { color: rgba(255,255,255,0.66); }
       .mh-source.is-active .mh-src-icon,
-      .mh-source.is-active .mh-icon-spotify { color: #f2c266; }
-      .mh-icon-spotify { color: rgba(255,255,255,0.6); }
+      .mh-source.is-active .mh-icon-spotify {
+        color: #f2c266;
+        background: rgba(242,194,102,0.14);
+        border-color: rgba(242,194,102,0.30);
+      }
 
       .mh-src-name {
         min-width: 0;
-        font-size: 12.5px;
+        font-size: 14px;
         font-weight: 800;
-        color: rgba(255,255,255,0.9);
+        color: rgba(255,255,255,0.92);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
+      .mh-source.is-open .mh-src-name { font-size: 15px; }
 
       .mh-src-summary {
         min-width: 0;
         justify-self: end;
         max-width: 100%;
-        font-size: 11px;
+        font-size: 11.5px;
         font-weight: 650;
         color: rgba(255,255,255,0.44);
         white-space: nowrap;
@@ -5912,15 +5969,15 @@ class BrunoSalaSubview extends HTMLElement {
         --mdc-icon-size: 18px;
         color: rgba(255,255,255,0.4);
       }
-      .mh-source.is-open .mh-src-chevron { color: rgba(255,255,255,0.62); }
+      .mh-source.is-open .mh-src-chevron { color: #f2c266; }
 
       .mh-source-body {
         flex: 1 1 auto;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 144px;
+        grid-template-columns: minmax(0, 1fr) clamp(150px, 36%, 240px);
         gap: 12px;
-        padding: 2px 14px 12px;
+        padding: 2px 14px 10px;
       }
 
       .mh-left {
@@ -5928,7 +5985,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 8px;
+        gap: 7px;
       }
 
       .mh-info {
@@ -5938,23 +5995,13 @@ class BrunoSalaSubview extends HTMLElement {
         gap: 3px;
       }
 
-      .mh-info strong {
-        font-size: 16px;
-        font-weight: 850;
-        color: white;
-        line-height: 1.05;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
       .mh-info small {
         display: inline-flex;
         align-items: center;
         gap: 7px;
-        font-size: 12.5px;
-        font-weight: 650;
-        color: var(--text-soft);
+        font-size: 13px;
+        font-weight: 700;
+        color: #f2c266;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -5962,9 +6009,37 @@ class BrunoSalaSubview extends HTMLElement {
 
       .mh-info em {
         font-style: normal;
-        font-size: 11px;
+        font-size: 11.5px;
         font-weight: 600;
-        color: rgba(255,255,255,0.42);
+        color: rgba(255,255,255,0.46);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Spotify ativo: faixa (âmbar) + artista (cinza) + barra de progresso. */
+      .mh-track-title {
+        color: #f3c87a !important;
+        font-size: 14.5px !important;
+        font-weight: 800 !important;
+      }
+      .mh-track-artist {
+        color: rgba(255,255,255,0.5) !important;
+        font-size: 11.5px !important;
+      }
+      .mh-progress {
+        margin-top: 3px;
+        max-width: 78%;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.14);
+        overflow: hidden;
+      }
+      .mh-progress span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #f2c266, #f7d089);
       }
 
       .mh-dot {
@@ -5972,36 +6047,43 @@ class BrunoSalaSubview extends HTMLElement {
         width: 7px;
         height: 7px;
         border-radius: 50%;
-        background: rgba(255,255,255,0.26);
-      }
-      .mh-dot.is-on {
         background: #f2c266;
-        box-shadow: 0 0 9px rgba(242,194,102,0.6);
+        box-shadow: 0 0 9px rgba(242,194,102,0.55);
+      }
+      .mh-dot:not(.is-on) {
+        background: rgba(242,194,102,0.55);
+        box-shadow: none;
       }
 
       .mh-controls {
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 7px;
       }
 
+      /* Volume dentro de caixa arredondada (conceito). */
       .mh-vol {
         display: grid;
         grid-template-columns: auto auto minmax(0, 1fr);
         align-items: center;
-        gap: 8px;
+        gap: 9px;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 12px;
         color: var(--text-soft);
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.09);
       }
-      .mh-vol ha-icon { --mdc-icon-size: 17px; }
-      .mh-vol-label { font-size: 11px; font-weight: 700; white-space: nowrap; }
+      .mh-vol ha-icon { --mdc-icon-size: 17px; color: #f2c266; }
+      .mh-vol-label { font-size: 11.5px; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,0.7); }
       .mh-vol input[type="range"] {
         -webkit-appearance: none;
         appearance: none;
         width: 100%;
         height: 4px;
         border-radius: 999px;
-        background: rgba(255,255,255,0.16);
+        background: rgba(255,255,255,0.18);
         accent-color: #f2c266;
       }
       .mh-vol input[type="range"]::-webkit-slider-thumb {
@@ -6028,7 +6110,7 @@ class BrunoSalaSubview extends HTMLElement {
         gap: 7px;
       }
       .mh-btn-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .mh-btn-row-4 { grid-template-columns: repeat(3, minmax(0, 1fr)) 38px; }
+      .mh-btn-row-4 { grid-template-columns: repeat(3, minmax(0, 1fr)) 40px; }
 
       .mh-btn {
         min-height: 36px;
@@ -6038,7 +6120,7 @@ class BrunoSalaSubview extends HTMLElement {
         gap: 6px;
         padding: 0 8px;
         border-radius: var(--bruno-liquid-control-radius, 13px);
-        color: rgba(255,255,255,0.84);
+        color: rgba(255,255,255,0.86);
         font-size: 11.5px;
         font-weight: 750;
         background: var(--bruno-liquid-control-background, rgba(255,255,255,0.07));
@@ -6049,7 +6131,7 @@ class BrunoSalaSubview extends HTMLElement {
         white-space: nowrap;
         overflow: hidden;
       }
-      .mh-btn ha-icon { --mdc-icon-size: 17px; flex: 0 0 auto; }
+      .mh-btn ha-icon { --mdc-icon-size: 17px; flex: 0 0 auto; color: #f2c266; }
       .mh-btn span {
         min-width: 0;
         overflow: hidden;
@@ -6058,28 +6140,53 @@ class BrunoSalaSubview extends HTMLElement {
       .mh-btn:active { transform: translateY(1px); }
       .mh-btn:disabled { opacity: 0.42; cursor: default; }
 
+      /* Botão principal: contorno âmbar + preenchimento translúcido + texto
+         branco + glow (estilo do conceito, não dourado chapado). */
+      .mh-controls > .mh-btn.is-main { min-height: 44px; }
       .mh-btn.is-main {
-        color: #1b1205;
-        background: linear-gradient(180deg, #f7d089, #f2c266);
-        border-color: rgba(242,194,102,0.5);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 0 16px rgba(242,194,102,0.22);
+        color: #ffffff;
+        background:
+          radial-gradient(120% 140% at 50% -10%, rgba(247,208,137,0.34), transparent 68%),
+          rgba(242,194,102,0.12);
+        border: 1px solid rgba(242,194,102,0.55);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 0 22px rgba(242,194,102,0.28);
       }
+      .mh-btn.is-main ha-icon { color: #f7d089; }
 
       .mh-btn.is-plus {
         padding: 0;
-        color: rgba(255,255,255,0.7);
+        color: rgba(255,255,255,0.72);
       }
 
+      /* Imagem contextual: bolsão de luz quente atrás + sangramento no fundo
+         (sem moldura). Ativo: thumb/arte com cantos suaves + sombra. */
       .mh-art {
+        position: relative;
         min-width: 0;
-        align-self: center;
+        align-self: stretch;
         height: 100%;
         max-height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
-        padding: 6px 0;
+        overflow: visible;
+        padding: 4px 0;
+      }
+      .mh-art-glow {
+        position: absolute;
+        inset: -18% -22%;
+        z-index: 0;
+        pointer-events: none;
+        background: radial-gradient(circle at 52% 46%,
+          rgba(247,200,120,0.22),
+          rgba(247,170,90,0.09) 44%,
+          transparent 72%);
+        filter: blur(6px);
+      }
+      .mh-art img,
+      .mh-art ha-icon {
+        position: relative;
+        z-index: 1;
       }
       .mh-art img {
         max-width: 100%;
@@ -6087,19 +6194,26 @@ class BrunoSalaSubview extends HTMLElement {
         object-fit: contain;
       }
       .mh-art ha-icon {
-        --mdc-icon-size: 56px;
-        color: rgba(255,255,255,0.2);
+        --mdc-icon-size: 58px;
+        color: rgba(255,255,255,0.22);
+      }
+      /* Standby (PNG): bordas enfumaçadas — funde no glow, sem moldura. */
+      .mh-art.is-standby img {
+        filter: drop-shadow(0 14px 22px rgba(0,0,0,0.4));
+        -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 62%, transparent 92%);
+        mask-image: radial-gradient(circle at 50% 50%, #000 62%, transparent 92%);
+      }
+      /* Ativo: thumb/arte real com cantos suaves + sombra de apoio. */
+      .mh-art.is-cover img {
+        box-shadow: 0 12px 26px rgba(0,0,0,0.46);
       }
       .mh-art-square.is-cover img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        border-radius: 12px;
+        border-radius: 13px;
       }
-      .mh-art-wide.is-cover img { border-radius: 10px; }
-      .mh-art.is-standby img {
-        filter: drop-shadow(0 14px 22px rgba(0,0,0,0.4));
-      }
+      .mh-art-wide.is-cover img { border-radius: 11px; }
 
       .ac-card {
         padding: 14px;

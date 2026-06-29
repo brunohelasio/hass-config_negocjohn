@@ -1793,13 +1793,13 @@ class BrunoSalaSubview extends HTMLElement {
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
     const tvSource = tv.source || 'HDMI 1';
     const tvPlaying = tv.state === 'playing';
-    // 2ª linha (cinza) SEM redundância: a fonte já vai na 1ª linha; aqui só
-    // mostramos um PROGRAMA real (título distinto da fonte e não-genérico).
+    // TV ligada (item 5): 2ª linha = app/fonte (Google TV, Netflix, HDMI 1...),
+    // preferindo um programa real quando houver.
     const tvGeneric = !tv.title
       || /^TV (ligada|desligada)$/i.test(tv.title)
       || tv.title === tvSource;
     const tvProgram = (!tvGeneric && tvPlaying) ? tv.title : '';
-    const tvSubLine = tvProgram ? `${tvProgram} · Em reprodução` : '';
+    const tvSubLine = tvProgram || tvSource;
     // Barra de progresso do Spotify (posição/duração nativas do media_player).
     const spotifyAttrs = spotify.entity?.attributes || {};
     const spotifyDuration = Number(spotifyAttrs.media_duration) || 0;
@@ -1807,12 +1807,12 @@ class BrunoSalaSubview extends HTMLElement {
     const spotifyProgress = spotifyDuration > 0
       ? Math.max(0, Math.min(100, (spotifyPosition / spotifyDuration) * 100))
       : 0;
+    // Spotify desligado (item 5): 2ª linha = dispositivo/integração (à la Sala).
+    const spotifyDeviceLabel = this._config.spotify_device_name || spotify.source || 'SpotifyPlus';
     // PS5 ativo — jogo em execução (quando a entidade expõe), para a 2ª linha.
     const ps5Attrs = this._state(ps5.entityId)?.attributes || {};
     const ps5Game = ps5Attrs.media_title || ps5Attrs.app_name || '';
     const ps5SubLine = [ps5Game, ps5Game ? 'Em jogo' : ''].filter(Boolean).join(' · ');
-
-    const dot = (on) => `<span class="mh-dot${on ? ' is-on' : ''}" aria-hidden="true"></span>`;
 
     const volRow = (action, vol, disabled = false) => `
       <div class="mh-vol${disabled ? ' is-disabled' : ''}">
@@ -1859,7 +1859,7 @@ class BrunoSalaSubview extends HTMLElement {
       ? `
         <div class="mh-left">
           <div class="mh-info">
-            <small>${dot(true)} Ligada · ${esc(tvSource)}</small>
+            <small>Ligada</small>
             ${tvSubLine ? `<em>${esc(tvSubLine)}</em>` : ''}
           </div>
           <div class="mh-controls">
@@ -1876,7 +1876,7 @@ class BrunoSalaSubview extends HTMLElement {
       : `
         <div class="mh-left">
           <div class="mh-info">
-            <small>${dot(false)} Desligada</small>
+            <small>Desligada</small>
             <em>HDMI 1 disponível</em>
           </div>
           <div class="mh-controls">
@@ -1911,8 +1911,8 @@ class BrunoSalaSubview extends HTMLElement {
       ? `
         <div class="mh-left">
           <div class="mh-info">
-            <small class="mh-track-title">${esc(spotify.title || 'Tocando')}</small>
-            ${spotifyArtist ? `<em class="mh-track-artist">${esc(spotifyArtist)}</em>` : ''}
+            <small>${esc(spotify.title || 'Tocando')}</small>
+            ${spotifyArtist ? `<em>${esc(spotifyArtist)}</em>` : ''}
             <div class="mh-progress" aria-hidden="true"><span style="width:${spotifyProgress}%"></span></div>
           </div>
           <div class="mh-controls">
@@ -1925,7 +1925,8 @@ class BrunoSalaSubview extends HTMLElement {
       : `
         <div class="mh-left">
           <div class="mh-info">
-            <small>${dot(false)} Desligada</small>
+            <small>Desligada</small>
+            <em>${esc(spotifyDeviceLabel)}</em>
           </div>
           <div class="mh-controls">
             ${btn('spotify-devices', 'Dispositivos', { icon: 'mdi:speaker-wireless', main: true })}
@@ -1939,7 +1940,7 @@ class BrunoSalaSubview extends HTMLElement {
       ? `
         <div class="mh-left">
           <div class="mh-info">
-            <small>${dot(true)} Ligada · HDMI 1</small>
+            <small>Ligada · HDMI 1</small>
             ${ps5SubLine ? `<em>${esc(ps5SubLine)}</em>` : ''}
           </div>
           <div class="mh-controls">
@@ -1956,7 +1957,7 @@ class BrunoSalaSubview extends HTMLElement {
       : `
         <div class="mh-left">
           <div class="mh-info">
-            <small>${dot(false)} Desligada</small>
+            <small>Desligada</small>
             <em>HDMI 1 disponível</em>
           </div>
           <div class="mh-controls">
@@ -2010,7 +2011,7 @@ class BrunoSalaSubview extends HTMLElement {
             ${iconHtml}
             <span class="mh-src-name">${esc(s.label)}</span>
             <span class="mh-src-summary">${esc(s.summary)}</span>
-            <ha-icon class="mh-src-chevron" icon="${isOpen ? 'mdi:chevron-down' : 'mdi:chevron-right'}"></ha-icon>
+            ${isOpen ? '' : '<ha-icon class="mh-src-chevron" icon="mdi:chevron-right"></ha-icon>'}
           </button>
           ${isOpen ? `<div class="mh-source-body">${s.body}</div>` : ''}
         </div>
@@ -5830,22 +5831,25 @@ class BrunoSalaSubview extends HTMLElement {
       /* 1.1 — Override específico do Hub (Savant Light): mais translúcido,
          neutro (sem dominante quente/amarronzado), bordas finas, premium.
          Atenua o sheen quente do glass-card base só neste bloco. */
+      /* Item 8 — Savant-like: bem mais translúcido (a foto atrás aparece), mas
+         NÃO totalmente vazado — a base escura leve (0.20) + blur menor (16px)
+         preservam a legibilidade das informações. */
       .media-hub-card.mh-accordion {
         padding: 0;
         grid-template-rows: 44px minmax(0, 1fr);
         gap: 0;
         overflow: hidden;
         background:
-          linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.022) 42%, rgba(255,255,255,0.035)),
-          rgba(20,24,32,0.34);
-        border: 1px solid rgba(255,255,255,0.09);
+          linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014) 45%, rgba(255,255,255,0.026)),
+          rgba(18,22,30,0.20);
+        border: 1px solid rgba(255,255,255,0.085);
         box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.13),
-          0 16px 40px rgba(0,0,0,0.22);
-        backdrop-filter: blur(34px) saturate(1.35);
-        -webkit-backdrop-filter: blur(34px) saturate(1.35);
+          inset 0 1px 0 rgba(255,255,255,0.11),
+          0 16px 40px rgba(0,0,0,0.20);
+        backdrop-filter: blur(16px) saturate(1.2);
+        -webkit-backdrop-filter: blur(16px) saturate(1.2);
       }
-      .media-hub-card.mh-accordion::before { opacity: 0.34; }
+      .media-hub-card.mh-accordion::before { opacity: 0.18; }
       .media-hub-card.mh-accordion::after { display: none; }
 
       .mh-head {
@@ -5930,12 +5934,13 @@ class BrunoSalaSubview extends HTMLElement {
         background: transparent;
         text-align: left;
       }
-      /* Aberta: ícone com espaçamento superior = lateral esquerdo (simétrico). */
+      /* Aberta (item 1): ícone e título alinhados pelo EIXO CENTRAL (align-items
+         center). Altura 46px → espaçamento superior do ícone ≈ 13px, próximo do
+         lateral (14px), sem ficar colado no topo. Idêntico em todas as faixas. */
       .mh-source.is-open .mh-source-head {
-        flex: 0 0 auto;
-        height: auto;
-        align-items: start;
-        padding-top: 14px;
+        flex: 0 0 46px;
+        height: 46px;
+        align-items: center;
       }
 
       .mh-src-icon {
@@ -5957,6 +5962,7 @@ class BrunoSalaSubview extends HTMLElement {
         min-width: 0;
         font-size: 14px;
         font-weight: 800;
+        line-height: 1;
         color: rgba(255,255,255,0.92);
         white-space: nowrap;
         overflow: hidden;
@@ -6012,38 +6018,32 @@ class BrunoSalaSubview extends HTMLElement {
         padding-left: 26px;
       }
 
+      /* Item 7 — escala ÚNICA p/ todas as faixas (sem bolinha de status):
+         Info primária (música/estado) e secundária (artista/app/dispositivo)
+         distinguem-se por cor e tamanho, idênticas em TV/Spotify/PS5. */
       .mh-info small {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        font-size: 13px;
-        font-weight: 700;
-        color: #f2c266;
+        display: block;
+        font-size: 13.5px;
+        font-weight: 750;
+        line-height: 1.15;
+        color: rgba(255,255,255,0.92);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .mh-info em {
+        display: block;
         font-style: normal;
         font-size: 11.5px;
         font-weight: 600;
-        color: rgba(255,255,255,0.46);
+        line-height: 1.2;
+        color: rgba(255,255,255,0.5);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
-      /* Spotify ativo: faixa (âmbar) + artista (cinza) + barra de progresso. */
-      .mh-track-title {
-        color: #f3c87a !important;
-        font-size: 14.5px !important;
-        font-weight: 800 !important;
-      }
-      .mh-track-artist {
-        color: rgba(255,255,255,0.5) !important;
-        font-size: 11.5px !important;
-      }
       .mh-progress {
         margin-top: 3px;
         max-width: 78%;
@@ -6059,21 +6059,12 @@ class BrunoSalaSubview extends HTMLElement {
         background: linear-gradient(90deg, #f2c266, #f7d089);
       }
 
-      .mh-dot {
-        flex: 0 0 auto;
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: #f2c266;
-        box-shadow: 0 0 9px rgba(242,194,102,0.55);
-      }
-      .mh-dot:not(.is-on) {
-        background: rgba(242,194,102,0.55);
-        box-shadow: none;
-      }
-
+      /* Item 3/5 — controles SEMPRE ancorados na base (margin-top:auto): info no
+         topo, volume+botões fixos embaixo. Aparecendo ou não todas as linhas de
+         info, os controles NÃO se deslocam. Posição idêntica em TV e Spotify. */
       .mh-controls {
         min-width: 0;
+        margin-top: auto;
         display: flex;
         flex-direction: column;
         gap: 6px;
@@ -6212,14 +6203,11 @@ class BrunoSalaSubview extends HTMLElement {
         --mdc-icon-size: 56px;
         color: rgba(255,255,255,0.22);
       }
-      /* Standby (PNG transparente): leve sombra para dar profundidade, sem caixa. */
-      .mh-art.is-standby img {
-        filter: drop-shadow(0 12px 20px rgba(0,0,0,0.42));
-      }
-      /* Ativo: thumb/arte real com cantos suaves. */
+      /* Item 4 — Standby: PNG 100% transparente, SEM sombra/halo (sem filtro). */
+      .mh-art.is-standby img { filter: none; }
       .mh-art.is-cover img { object-fit: cover; }
       /* 2.4 — Arte QUADRADA de verdade (aspect-ratio 1/1, dirigida pela altura),
-         centralizada na vertical, sem excedente/sombra inferior deformando. */
+         centralizada na vertical. Item 6: SEM box-shadow (sombra quadrada). */
       .mh-art-square.is-cover img {
         inset: auto;
         top: 50%;
@@ -6230,11 +6218,21 @@ class BrunoSalaSubview extends HTMLElement {
         aspect-ratio: 1 / 1;
         object-fit: cover;
         border-radius: 12px;
-        box-shadow: 0 6px 18px rgba(0,0,0,0.30);
+        box-shadow: none;
       }
+      /* Item 6 — Thumb da TV em 16:9 real (dirigido pela largura), centralizado,
+         SEM box-shadow. */
       .mh-art-wide.is-cover img {
+        inset: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
         border-radius: 11px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.40);
+        box-shadow: none;
       }
 
       .ac-card {

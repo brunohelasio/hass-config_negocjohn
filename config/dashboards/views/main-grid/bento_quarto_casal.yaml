@@ -1,7 +1,8 @@
 type: custom:bruno-quarto-casal-card
+section: casal
 double_tap_action:
-  action: navigate
-  navigation_path: subview-quarto-casal
+  action: fire-dom-event
+  bruno_section: casal
 
 # FALLBACK - popup original do Q. Casal
 # double_tap_action: !include ../../shared/popup/rooms/quarto_casal.yaml

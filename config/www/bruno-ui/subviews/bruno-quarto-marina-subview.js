@@ -1,12 +1,30 @@
 const BRUNO_QUARTO_MARINA_SUBVIEW_TAG = 'bruno-quarto-marina-subview';
+const BRUNO_QUARTO_MARINA_CURTAIN_CALIBRATION = [
+  { visual: 0, position: 0 },
+  { visual: 25, position: 33 },
+  { visual: 50, position: 47 },
+  { visual: 75, position: 70 },
+  { visual: 100, position: 100 },
+];
+const BRUNO_QUARTO_MARINA_CURTAIN_PRESETS = [
+  { label: 0, closed: 0, position: 100 },
+  { label: 25, closed: 25, position: 70 },
+  { label: 50, closed: 50, position: 47 },
+  { label: 75, closed: 75, position: 33 },
+  { label: 100, closed: 100, position: 0 },
+];
+const BRUNO_QUARTO_MARINA_CURTAIN_TRAVEL_MS = 30000;
+const BRUNO_QUARTO_MARINA_CURTAIN_MIN_MOTION_MS = 1200;
+const BRUNO_QUARTO_MARINA_CURTAIN_MOTION_TICK_MS = 350;
+const BRUNO_QUARTO_MARINA_CURTAIN_TARGET_TOLERANCE = 2;
 
 const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
   title: 'Q. Marina',
   subtitle: 'Visao geral',
   greeting_name: 'Bruno',
   navigation_path: 'bento-lab',
-  background: '/local/images/quarto_marina.jpg',
-  fallback_background: '/local/images/quarto_marina.jpg',
+  background: '/local/images/quarto_marina.jpg?v=20260701-qmarina-bg-1',
+  fallback_background: '/local/images/quarto_marina.jpg?v=20260701-qmarina-bg-1',
   refresh_interval: 6500,
   spotify_device_name: 'Echo Pop Marina',
   climate_device_name: 'Gree',
@@ -20,18 +38,18 @@ const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
     { key: 'disney', label: 'Disney+', image: '/local/images/dp_bg.jpg', script: '' },
     { key: 'max', label: 'Max', image: '/local/images/HBOMax_bg.jpg', script: '' },
   ],
-  light_zone_labels: { sala: 'Quarto', varanda: 'Suite' },
+  light_zone_labels: { sala: 'Quarto', varanda: 'Suíte' },
   room_nav: [
-    { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala', active: false },
-    { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office', active: false },
-    { key: 'cozinha', name: 'Cozinha', icon: 'mdi:countertop', path: 'subview-cozinha', active: false },
-    { key: 'lavabo', name: 'Lavabo', icon: 'mdi:toilet', path: 'subview-lavabo', divider_after: true, active: false },
-    { key: 'casal', name: 'Q. Casal', icon: 'mdi:bed-king', path: 'subview-quarto-casal', active: false },
+    { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala' },
+    { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office' },
+    { key: 'cozinha', name: 'Cozinha', icon: 'mdi:countertop', path: 'subview-cozinha' },
+    { key: 'casal', name: 'Q. Casal', icon: 'mdi:bed-king', path: 'subview-quarto-casal' },
     { key: 'marina', name: 'Q. Marina', icon: 'mdi:bed-single', path: 'subview-quarto-marina', active: true },
-    { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:bed-single-outline', path: 'subview-quarto-miguel', active: false },
+    { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:bed-single-outline', path: 'subview-quarto-miguel' },
   ],
   entities: {
     curtain: '',
+    curtain_percent_control: '',
     active_sensor: 'sensor.quarto_marina_active',
     temperature: ['sensor.temperatura_quarto_marina', 'sensor.qma_temperatura'],
     humidity: ['sensor.umidade_quarto_marina', 'sensor.qma_umidade'],
@@ -47,6 +65,8 @@ const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
     climate: 'climate.ac_quarto_marina',
     router: '',
     zigbee_hub: '',
+    ps5: '',
+    ps5_image: '',
     lights: [
       { entity: 'light.quarto_marina_switch_4', name: 'Luz principal', icon_type: 'ledstrip', zone: 'sala' },
       { entity: 'light.quarto_marina_switch_1', name: 'Arandela', icon_type: 'pendant', zone: 'sala' },
@@ -56,7 +76,12 @@ const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
       { entity: 'light.suite_marina_switch_1', name: 'Luz azul', icon_type: 'light_flush', zone: 'varanda' },
     ],
     cameras: [
-      { entity: 'camera.qma_camera_2', name: 'Quarto Marina', short_name: 'Marina' },
+      {
+        entity: 'camera.qma_camera_2',
+        name: 'Quarto Marina',
+        short_name: 'Marina',
+        controls: [],
+      },
     ],
   },
 };
@@ -86,13 +111,21 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     this._lastMinute = '';
     this._lastActionAt = {};
     this._spotifyToolsOpen = false;
+    this._mediaMenuOpen = false;
     this._selectedLightZone = 'sala';
     this._selectedMediaSource = '';
     this._lastMediaTvOn = undefined;
     this._mediaTvAnimationUntil = 0;
     this._mediaTvAnimationState = undefined;
+    this._curtainMotion = null;
+    this._curtainMotionTimer = null;
+    this._selectedClimatePanel = '';
+    this._activeCameraEntity = '';
+    this._cameraControlsOpen = false;
+    this._expandedZone = null;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
+    this._boundLiveInputHandler = (event) => this._handleLiveInput(event);
   }
 
   setConfig(config) {
@@ -114,8 +147,12 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this.shadowRoot?.removeEventListener('input', this._boundLiveInputHandler);
+    this.shadowRoot?.removeEventListener('change', this._boundInputHandler);
+    this.shadowRoot?.removeEventListener('click', this._boundActionHandler);
     this._stopRefreshTimer();
     this._stopClockTimer();
+    this._stopCurtainMotionTimer();
   }
 
   getCardSize() {
@@ -233,6 +270,163 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     return !entity || BRUNO_QUARTO_MARINA_SUBVIEW_UNAVAILABLE_STATES.includes(String(entity.state || '').toLowerCase());
   }
 
+  _toCurtainPercent(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    return Math.max(0, Math.min(100, Math.round(number)));
+  }
+
+  _curtainOpenPositionFromState(entity, percentEntity, state) {
+    const percentControl = this._isUnavailable(percentEntity) ? null : this._toCurtainPercent(percentEntity?.state);
+    if (percentControl != null) return 100 - percentControl;
+
+    const coverPosition = this._toCurtainPercent(entity?.attributes?.current_position);
+    if (coverPosition != null) {
+      if (state === 'open' && coverPosition <= 1) return 100;
+      if (state === 'closed' && coverPosition >= 99) return 0;
+      return coverPosition;
+    }
+
+    if (state === 'open') return 100;
+    if (state === 'closed') return 0;
+
+    return 0;
+  }
+
+  _interpolateCurtainPercent(value, fromKey, toKey) {
+    const percent = this._toCurtainPercent(value) ?? 0;
+    const points = BRUNO_QUARTO_MARINA_CURTAIN_CALIBRATION;
+
+    if (percent <= points[0][fromKey]) return points[0][toKey];
+    for (let index = 1; index < points.length; index += 1) {
+      const previous = points[index - 1];
+      const next = points[index];
+      if (percent <= next[fromKey]) {
+        const span = next[fromKey] - previous[fromKey];
+        if (span === 0) return next[toKey];
+        const ratio = (percent - previous[fromKey]) / span;
+        return this._toCurtainPercent(previous[toKey] + ((next[toKey] - previous[toKey]) * ratio)) ?? next[toKey];
+      }
+    }
+
+    return points[points.length - 1][toKey];
+  }
+
+  _curtainDisplayOpenPosition(openPosition) {
+    return this._interpolateCurtainPercent(openPosition, 'position', 'visual');
+  }
+
+  _curtainCommandOpenPosition(displayPosition) {
+    return this._interpolateCurtainPercent(displayPosition, 'visual', 'position');
+  }
+
+  _curtainClosedVisualPosition(openPosition) {
+    return 100 - this._curtainDisplayOpenPosition(openPosition);
+  }
+
+  _curtainMotionDuration(startClosed, targetClosed) {
+    const start = this._toCurtainPercent(startClosed) ?? 0;
+    const target = this._toCurtainPercent(targetClosed) ?? start;
+    const distance = Math.abs(target - start);
+    return Math.max(BRUNO_QUARTO_MARINA_CURTAIN_MIN_MOTION_MS, BRUNO_QUARTO_MARINA_CURTAIN_TRAVEL_MS * (distance / 100));
+  }
+
+  _curtainMotionClosedPosition(motion = this._curtainMotion, now = Date.now()) {
+    if (!motion) return null;
+    if (motion.hold) return this._toCurtainPercent(motion.closed);
+
+    const duration = Math.max(1, Number(motion.duration) || BRUNO_QUARTO_MARINA_CURTAIN_MIN_MOTION_MS);
+    const elapsed = Math.max(0, now - motion.startedAt);
+    const progress = Math.min(1, elapsed / duration);
+    const value = motion.startClosed + ((motion.targetClosed - motion.startClosed) * progress);
+    return this._toCurtainPercent(value);
+  }
+
+  _curtainMotionDisplayPosition(entityId, state, reportedClosed) {
+    const motion = this._curtainMotion;
+    if (!motion || motion.entityId !== entityId) return null;
+
+    const now = Date.now();
+    if (motion.hold) return this._toCurtainPercent(motion.closed);
+
+    const estimatedClosed = this._curtainMotionClosedPosition(motion, now);
+    const reported = this._toCurtainPercent(reportedClosed);
+    const elapsed = now - motion.startedAt;
+    const progress = Math.min(1, Math.max(0, elapsed / Math.max(1, motion.duration)));
+    const moving = state === 'opening' || state === 'closing';
+    const reportedAtTarget = reported != null && Math.abs(reported - motion.targetClosed) <= BRUNO_QUARTO_MARINA_CURTAIN_TARGET_TOLERANCE;
+
+    if (moving && reported != null && !reportedAtTarget) {
+      motion.lastClosed = reported;
+      return reported;
+    }
+
+    if (progress >= 1) {
+      this._curtainMotion = null;
+      this._stopCurtainMotionTimer();
+      return motion.targetClosed;
+    }
+
+    return estimatedClosed;
+  }
+
+  _startCurtainMotionTimer() {
+    if (this._curtainMotionTimer || !this.isConnected) return;
+    this._curtainMotionTimer = globalThis.setInterval(() => {
+      if (!this._curtainMotion || this._curtainMotion.hold) {
+        this._stopCurtainMotionTimer();
+        return;
+      }
+      this._safeRender();
+    }, BRUNO_QUARTO_MARINA_CURTAIN_MOTION_TICK_MS);
+  }
+
+  _stopCurtainMotionTimer() {
+    if (!this._curtainMotionTimer) return;
+    globalThis.clearInterval(this._curtainMotionTimer);
+    this._curtainMotionTimer = null;
+  }
+
+  _beginCurtainMotion(targetClosed, direction = 'position') {
+    const entityId = this._config.entities.curtain;
+    if (!entityId) return;
+
+    const activeClosed = this._curtainMotionClosedPosition();
+    const modelClosed = this._curtainModel({ ignoreMotion: true }).visualPosition;
+    const startClosed = this._toCurtainPercent(activeClosed ?? modelClosed) ?? 0;
+    const target = this._toCurtainPercent(targetClosed);
+    if (target == null) return;
+
+    this._curtainMotion = {
+      entityId,
+      direction,
+      startClosed,
+      targetClosed: target,
+      startedAt: Date.now(),
+      duration: this._curtainMotionDuration(startClosed, target),
+      hold: false,
+    };
+    this._startCurtainMotionTimer();
+    this._safeRender();
+  }
+
+  _holdCurtainMotion() {
+    const entityId = this._config.entities.curtain;
+    if (!entityId) return;
+
+    const activeClosed = this._curtainMotionClosedPosition();
+    const modelClosed = this._curtainModel({ ignoreMotion: true }).visualPosition;
+    const closed = this._toCurtainPercent(activeClosed ?? modelClosed) ?? 0;
+    this._curtainMotion = {
+      entityId,
+      closed,
+      updatedAt: Date.now(),
+      hold: true,
+    };
+    this._stopCurtainMotionTimer();
+    this._safeRender();
+  }
+
   _safeState(entityId, fallback = '--') {
     const entity = this._state(entityId);
     if (this._isUnavailable(entity)) return fallback;
@@ -276,6 +470,15 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     return Number(value).toFixed(digits).replace(/\.0+$/, '');
   }
 
+  _formatMediaTime(seconds) {
+    const safe = Math.max(0, Math.floor(Number(seconds) || 0));
+    const hours = Math.floor(safe / 3600);
+    const minutes = Math.floor((safe % 3600) / 60);
+    const secs = safe % 60;
+    if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    return `${minutes}:${String(secs).padStart(2, '0')}`;
+  }
+
   _temperatureLabel() {
     const value = this._numberState(this._config.entities.temperature, null);
     return value == null ? '--' : `${this._formatNumber(value, 1)}\u00b0`;
@@ -287,10 +490,46 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   }
 
   _curtainPosition() {
-    const value = this._state(this._config.entities.curtain)?.attributes?.current_position;
-    const number = Number(value);
-    if (!Number.isFinite(number)) return 0;
-    return Math.max(0, Math.min(100, Math.round(number)));
+    const value = this._curtainModel().position;
+    return this._toCurtainPercent(value) ?? 0;
+  }
+
+  _curtainModel(options = {}) {
+    const entityId = this._config.entities.curtain;
+    const entity = this._state(entityId);
+    const percentEntityId = this._config.entities.curtain_percent_control;
+    const percentEntity = this._state(percentEntityId);
+    const configured = Boolean(entityId);
+    const unavailable = configured && Boolean(this._hass) && this._isUnavailable(entity);
+    const state = String(entity?.state || (configured ? 'unknown' : 'unavailable')).toLowerCase();
+    const safePosition = this._curtainOpenPositionFromState(entity, percentEntity, state);
+    const openDisplayPosition = this._curtainDisplayOpenPosition(safePosition);
+    let displayPosition = 100 - openDisplayPosition;
+    let visualPosition = displayPosition;
+    const motionPosition = options.ignoreMotion ? null : this._curtainMotionDisplayPosition(entityId, state, displayPosition);
+    if (motionPosition != null) {
+      displayPosition = motionPosition;
+      visualPosition = motionPosition;
+    }
+    const localMoving = Boolean(this._curtainMotion && this._curtainMotion.entityId === entityId && !this._curtainMotion.hold);
+    let status = 'Fechada';
+    if (!configured || unavailable) status = 'Indisponivel';
+    else if (state === 'opening' || (localMoving && this._curtainMotion?.targetClosed < this._curtainMotion?.startClosed)) status = 'Abrindo';
+    else if (state === 'closing' || (localMoving && this._curtainMotion?.targetClosed > this._curtainMotion?.startClosed)) status = 'Fechando';
+
+    return {
+      entity,
+      entityId,
+      state,
+      configured,
+      available: configured && !unavailable,
+      moving: state === 'opening' || state === 'closing' || localMoving,
+      position: safePosition,
+      openDisplayPosition,
+      displayPosition,
+      visualPosition,
+      status,
+    };
   }
 
   _activeLightsCount() {
@@ -372,7 +611,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   _camerasModel() {
     const cameras = (this._config.entities.cameras || []).map((camera) => this._cameraState(camera));
     const activeId = this._state(this._config.entities.active_camera_select)?.state;
-    const activeCamera = cameras.find((camera) => camera.entity === activeId) || cameras[0];
+    const localActiveId = cameras.some((camera) => camera.entity === this._activeCameraEntity) ? this._activeCameraEntity : '';
+    const activeCamera = cameras.find((camera) => camera.entity === (localActiveId || activeId)) || cameras[0];
     return {
       cameras,
       activeCamera,
@@ -453,9 +693,9 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     const state = entity?.state || 'off';
     const globalActive = BRUNO_QUARTO_MARINA_SUBVIEW_MEDIA_ON_STATES.includes(state);
     const active = globalActive && (this._spotifySourceMatchesRoom(attrs) || this._spotifySpeakerMatchesRoom(attrs));
+    const roomSource = this._config.spotify_device_name || attrs.source || 'Echo Show';
     const rawTitle = attrs.media_title || 'SpotifyPlus';
     const title = /^SpotifyPlus\s+Bruno/i.test(rawTitle) ? 'SpotifyPlus' : rawTitle;
-    const roomSource = this._config.spotify_device_name || attrs.source || 'Echo Pop Marina';
     return {
       entity,
       state: active ? state : 'off',
@@ -471,18 +711,53 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     };
   }
 
+  _ps5Model() {
+    const entityId = this._config.entities.ps5;
+    const entity = this._state(entityId);
+    const configured = Boolean(entityId);
+    const state = entity?.state || (configured ? 'unknown' : 'placeholder');
+    const active = state === 'on';
+    return {
+      entityId,
+      configured,
+      state,
+      active,
+      title: configured ? (active ? 'Console ligado' : 'Console desligado') : 'Entidade a confirmar',
+      chip: configured ? (active ? 'Ligado' : 'Desligado') : 'Placeholder',
+      image: this._config.entities.ps5_image || '/local/images/ps5.png',
+    };
+  }
+
   _mediaSourceFromAction(action) {
     if (action === 'toggle-tv' || action === 'tv-play-pause' || action === 'tv-remote' || action === 'tv-app') return 'tv';
     if (String(action || '').startsWith('spotify-')) return 'spotify';
     return '';
   }
 
+  // ANTERIOR (rollback) — prioridade antiga (Spotify > TV > PS5) sem "retomada
+  // por nova ativação". Substituída pela lógica de acordeão (2026-06-28).
+  // _selectedMedia(model) {
+  //   const valid = ['tv', 'spotify', 'ps5'];
+  //   if (valid.includes(this._selectedMediaSource)) return this._selectedMediaSource;
+  //   if (model.spotify?.active) return 'spotify';
+  //   if (model.tv?.active) return 'tv';
+  //   if (model.ps5?.active) return 'ps5';
+  //   return 'tv';
+  // }
+  // NOVO (2026-06-28): acordeão — ordem fixa TV → Spotify → PS5.
+  // - Seleção manual (clique no cabeçalho) persiste em this._selectedMediaSource.
+  // - Quando uma fonte SE TORNA ativa (nova ativação real), reseta a seleção
+  //   manual para retomar a prioridade automática.
+  // - Sem seleção válida: primeira fonte ativa pela ordem; nenhuma ativa → 'tv'.
   _selectedMedia(model) {
-    const valid = ['tv', 'spotify'];
-    if (valid.includes(this._selectedMediaSource)) return this._selectedMediaSource;
-    if (model.spotify?.active) return 'spotify';
-    if (model.tv?.active) return 'tv';
-    return 'tv';
+    const order = ['tv', 'spotify'];
+    const activeKeys = order.filter((k) => model[k]?.active);
+    const prev = this._lastActiveMediaKeys || [];
+    const gainedActivation = activeKeys.some((k) => !prev.includes(k));
+    this._lastActiveMediaKeys = activeKeys;
+    if (gainedActivation) this._selectedMediaSource = '';
+    if (order.includes(this._selectedMediaSource)) return this._selectedMediaSource;
+    return activeKeys[0] || 'tv';
   }
 
   _mediaStateLabel(state, fallback = 'Desligada') {
@@ -512,7 +787,6 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   }
 
   _climateModel() {
-    const configured = Boolean(this._config.entities.climate);
     const entity = this._state(this._config.entities.climate);
     const attrs = entity?.attributes || {};
     const target = Number(attrs.temperature);
@@ -524,7 +798,6 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     const active = this._climateIsActive(entity);
     return {
       entity,
-      configured,
       active,
       target: Number.isFinite(target) ? target : null,
       current: Number.isFinite(current) ? current : null,
@@ -549,7 +822,6 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   }
 
   _setClimateTarget(temperature) {
-    if (!this._config.entities.climate) return;
     const model = this._climateModel();
     const value = Number(temperature);
     if (!Number.isFinite(value)) return;
@@ -558,6 +830,16 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     this._callService('climate.set_temperature', {
       entity_id: this._config.entities.climate,
       temperature: Math.max(min, Math.min(max, value)),
+    });
+  }
+
+  _setCurtainPosition(position) {
+    if (!this._config.entities.curtain) return;
+    const value = this._toCurtainPercent(position);
+    if (value == null) return;
+    this._callService('cover.set_cover_position', {
+      entity_id: this._config.entities.curtain,
+      position: value,
     });
   }
 
@@ -587,9 +869,10 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     if (configuredLabel && !Array.isArray(configuredLabel)) return String(configuredLabel);
     if (model.spotify?.active) return model.spotify.playing ? 'Spotify tocando' : 'Spotify ativo';
     if (model.tv?.active) return 'TV ligada';
-        if (model.climate?.active) return `Clima ${this._climateModeLabel(model.climate.hvacMode)}`;
-    if (model.lights > 0) return 'Q. Marina iluminado';
-    return active?.state === 'yes' ? 'Q. Marina ativo' : 'Q. Marina em repouso';
+    if (model.ps5?.active) return 'PS5 ligado';
+    if (model.climate?.active) return `Clima ${this._climateModeLabel(model.climate.hvacMode)}`;
+    if (model.lights > 0) return 'Sala iluminada';
+    return active?.state === 'yes' ? 'Sala ativa' : 'Sala em repouso';
   }
 
   _fireDomEvent(action) {
@@ -759,7 +1042,6 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
 
   _callService(serviceName, data = {}) {
     if (!this._hass || !serviceName) return;
-    if (data && Object.prototype.hasOwnProperty.call(data, 'entity_id') && !data.entity_id) return;
     const [domain, service] = serviceName.split('.');
     if (!domain || !service) return;
     this._hass.callService(domain, service, data);
@@ -840,9 +1122,35 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       this._safeRender();
       return;
     }
+    // NOVO (Passada 2): acordeão SINGLE-OPEN — só uma zona aberta por vez.
+    // Expandir uma colapsa a outra; clicar na aberta colapsa.
+    if (action === 'toggle-zone') {
+      const zk = target.dataset.zone;
+      this._expandedZone = this._expandedZone === zk ? null : zk;
+      this._safeRender();
+      return;
+    }
+    // NOVO (Passada 2): apagar todas as luzes (reais) de uma zona.
+    if (action === 'zone-off') {
+      const ids = (this._config.entities.lights || [])
+        .filter((l) => (l.zone || 'sala') === target.dataset.zone && l.entity && !l.placeholder)
+        .map((l) => l.entity);
+      if (ids.length) this._callService('light.turn_off', { entity_id: ids });
+      return;
+    }
     if (action === 'select-media-source') {
       const source = target.dataset.source;
-      if (['tv', 'spotify'].includes(source)) this._selectedMediaSource = source;
+      if (['tv', 'spotify'].includes(source)) {
+        this._selectedMediaSource = source;
+        this._mediaTransitionSource = source;
+        this._mediaMenuOpen = false;
+      }
+      this._safeRender();
+      this._mediaTransitionSource = '';
+      return;
+    }
+    if (action === 'media-menu') {
+      this._mediaMenuOpen = !this._mediaMenuOpen;
       this._safeRender();
       return;
     }
@@ -851,23 +1159,57 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     if (interactedMedia) this._selectedMediaSource = interactedMedia;
 
     if (action === 'navigate') this._navigate(target.dataset.path || this._config.navigation_path);
-    if (action === 'more-info') this._moreInfo(entityId);
-    if (action === 'cover-open' && this._config.entities.curtain) this._callService('cover.open_cover', { entity_id: this._config.entities.curtain });
-    if (action === 'cover-close' && this._config.entities.curtain) this._callService('cover.close_cover', { entity_id: this._config.entities.curtain });
-    if (action === 'cover-stop' && this._config.entities.curtain) this._callService('cover.stop_cover', { entity_id: this._config.entities.curtain });
+    if (action === 'more-info') {
+      this._mediaMenuOpen = false;
+      this._selectedClimatePanel = '';
+      this._moreInfo(entityId);
+      return;
+    }
+    if (action === 'toggle-climate-panel') {
+      const panel = target.dataset.panel;
+      this._selectedClimatePanel = this._selectedClimatePanel === panel ? '' : panel;
+      this._safeRender();
+      return;
+    }
+    if (action === 'cover-open') {
+      this._beginCurtainMotion(0, 'opening');
+      this._callService('cover.open_cover', { entity_id: this._config.entities.curtain });
+    }
+    if (action === 'cover-close') {
+      this._beginCurtainMotion(100, 'closing');
+      this._callService('cover.close_cover', { entity_id: this._config.entities.curtain });
+    }
+    if (action === 'cover-stop') {
+      this._holdCurtainMotion();
+      this._callService('cover.stop_cover', { entity_id: this._config.entities.curtain });
+    }
     if (action === 'cover-position') {
       const position = Number(target.dataset.position);
-      if (Number.isFinite(position) && this._config.entities.curtain) {
-        this._callService('cover.set_cover_position', {
-          entity_id: this._config.entities.curtain,
-          position,
-        });
+      const closed = Number(target.dataset.closed);
+      if (Number.isFinite(position)) {
+        if (Number.isFinite(closed)) this._beginCurtainMotion(closed, 'position');
+        this._setCurtainPosition(position);
       }
     }
     if (action === 'lights-on') this._callService('light.turn_on', { entity_id: this._config.entities.room_group });
     if (action === 'lights-off') this._callService('light.turn_off', { entity_id: this._config.entities.room_group });
     if (action === 'toggle-light') this._callService('homeassistant.toggle', { entity_id: entityId });
+    if (action === 'toggle-camera-control') {
+      if (entityId && !this._cooldown(`camera-control-${entityId}`, 600)) {
+        this._callService('homeassistant.toggle', { entity_id: entityId });
+      }
+      return;
+    }
+    if (action === 'toggle-camera-controls') {
+      this._cameraControlsOpen = !this._cameraControlsOpen;
+      this._safeRender();
+      return;
+    }
     if (action === 'select-camera') {
+      if (entityId) {
+        this._activeCameraEntity = entityId;
+        this._safeRender();
+      }
       if (this._config.entities.active_camera_select && entityId) {
         this._callService('input_select.select_option', {
           entity_id: this._config.entities.active_camera_select,
@@ -935,37 +1277,45 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       this._playSpotify();
     }
     if (action === 'spotify-pause') this._callService('media_player.media_pause', { entity_id: this._config.entities.spotify });
-    if (action === 'toggle-climate' && this._config.entities.climate && !this._cooldown('climate', 1800)) {
+    if (action === 'toggle-ps5' && this._config.entities.ps5) this._callService('homeassistant.toggle', { entity_id: this._config.entities.ps5 });
+    if (action === 'toggle-climate' && !this._cooldown('climate', 1800)) {
       const model = this._climateModel();
+      this._selectedClimatePanel = '';
       this._callService(model.active ? 'climate.turn_off' : 'climate.turn_on', { entity_id: this._config.entities.climate });
     }
     if (action === 'climate-mode') {
       const hvacMode = target.dataset.mode;
       if (hvacMode) {
+        this._selectedClimatePanel = '';
         this._callService('climate.set_hvac_mode', {
           entity_id: this._config.entities.climate,
           hvac_mode: hvacMode,
         });
+        this._safeRender();
       }
       return;
     }
     if (action === 'fan-mode') {
       const fanMode = target.dataset.mode;
       if (fanMode) {
+        this._selectedClimatePanel = '';
         this._callService('climate.set_fan_mode', {
           entity_id: this._config.entities.climate,
           fan_mode: fanMode,
         });
+        this._safeRender();
       }
       return;
     }
     if (action === 'swing-mode') {
       const swingMode = target.dataset.mode;
       if (swingMode) {
+        this._selectedClimatePanel = '';
         this._callService('climate.set_swing_mode', {
           entity_id: this._config.entities.climate,
           swing_mode: swingMode,
         });
+        this._safeRender();
       }
       return;
     }
@@ -984,15 +1334,13 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     const value = Number(target.value);
     if (!Number.isFinite(value)) return;
     if (target.dataset.action === 'curtain-target') {
-      if (!this._config.entities.curtain) return;
-      this._callService('cover.set_cover_position', {
-        entity_id: this._config.entities.curtain,
-        position: Math.max(0, Math.min(100, Math.round(100 - value))),
-      });
+      const closed = this._toCurtainPercent(value);
+      const visualOpen = 100 - (this._toCurtainPercent(value) ?? 0);
+      if (closed != null) this._beginCurtainMotion(closed, 'position');
+      this._setCurtainPosition(this._curtainCommandOpenPosition(visualOpen));
       return;
     }
     if (target.dataset.action === 'spotify-volume') {
-      if (!this._config.entities.spotify) return;
       if (!this._spotifyModel().active) return;
       this._callService('media_player.volume_set', {
         entity_id: this._config.entities.spotify,
@@ -1001,7 +1349,6 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       return;
     }
     if (target.dataset.action === 'tv-volume') {
-      if (!this._config.entities.tv) return;
       this._callService('media_player.volume_set', {
         entity_id: this._config.entities.tv,
         volume_level: Math.max(0, Math.min(1, value / 100)),
@@ -1009,7 +1356,6 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       return;
     }
     if (target.dataset.action === 'climate-target') {
-      if (!this._config.entities.climate) return;
       this._setClimateTarget(Math.round(value));
       return;
     }
@@ -1020,6 +1366,23 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     });
   }
 
+  _handleLiveInput(event) {
+    const target = event.target;
+    if (!target?.matches?.('[data-action="curtain-target"]')) return;
+    const value = this._toCurtainPercent(target.value);
+    if (value == null) return;
+    const displayOpen = 100 - value;
+    const commandOpen = this._curtainCommandOpenPosition(displayOpen);
+    const root = target.closest('.curtain-dock');
+    root?.style.setProperty('--curtain-position', `${value}%`);
+    root?.querySelector('.curtain-status-percent')?.replaceChildren(document.createTextNode(`- ${value}%`));
+    const status = 'Fechada';
+    root?.querySelector('.curtain-status-text')?.replaceChildren(document.createTextNode(status));
+    root?.querySelectorAll('.curtain-mark').forEach((mark) => {
+      mark.classList.toggle('is-active', Math.abs(Number(mark.dataset.closed) - value) <= 1 || Math.abs(Number(mark.dataset.position) - commandOpen) <= 1);
+    });
+  }
+
   _render() {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     globalThis.BrunoLiquidGlass?.apply?.();
@@ -1027,42 +1390,90 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     const model = {
       lights: this._activeLightsCount(),
       lightZones: this._activeLightsByZone(),
-      curtainPosition: this._curtainPosition(),
+      curtain: this._curtainModel(),
       cameras: this._camerasModel(),
       tv: this._tvModel(),
       spotify: this._spotifyModel(),
+      ps5: this._ps5Model(),
       climate: this._climateModel(),
     };
     this._lastMinute = this._clock();
 
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
-      <main class="sala-subview">
-        ${this._renderRoomSidebar()}
+      <main class="quarto-marina-subview">
+        <!-- NOVO (Etapa B): a Sala é SEÇÃO da shell -> o RAIL é fornecido pela
+             shell (à esquerda). A subview NÃO desenha rail próprio; renderiza só
+             a moldura interna (faixas topo/rodapé) + o conteúdo. ROLLBACK:
+             restaurar <div data-rail-mount> + _mountRoomRail() + coluna frame-left. -->
+        <!-- NOVO (full-bleed subview, Passada 1) — nova estrutura:
+             topband (status chips + relógio) | content-left (hero atmosfera +
+             cortina full-width + [câmeras|mídia]) | right (Iluminação alta + AC).
+             ANTERIOR (rollback): frame-top/frame-bottom + left-column(hero+cams) +
+             right-column(status-rail + right-control-grid lights/media/ac). -->
+        ${this._renderTopBand(model)}
 
-        <section class="left-column">
+        <section class="content-left">
           <section class="hero-panel">
             ${this._renderHero(model)}
           </section>
-          ${this._renderCameras(model)}
+          <div class="cams-media-row">
+            ${this._renderCameras(model)}
+            ${this._renderMediaHub(model)}
+          </div>
         </section>
 
         <section class="right-column">
-          ${this._renderStatusRail(model)}
-          <section class="right-control-grid">
-            ${this._renderLights(model)}
-            ${this._renderMediaHub(model)}
-            ${this._renderAC(model)}
-          </section>
+          ${this._renderLights(model)}
+          ${this._renderAC(model)}
         </section>
+
+        ${this._renderFrameBottom()}
       </main>
     `;
 
     this.shadowRoot.removeEventListener('click', this._boundActionHandler);
     this.shadowRoot.removeEventListener('change', this._boundInputHandler);
+    this.shadowRoot.removeEventListener('input', this._boundLiveInputHandler);
     this.shadowRoot.addEventListener('click', this._boundActionHandler);
     this.shadowRoot.addEventListener('change', this._boundInputHandler);
+    this.shadowRoot.addEventListener('input', this._boundLiveInputHandler);
     this._bindImageFallbacks();
+    // NOVO (Etapa B): rail é da shell -> não montamos rail próprio aqui.
+    // (_mountRoomRail/_roomRailConfig mantidos no arquivo para rollback.)
+  }
+
+  // NOVO (réplica): monta o componente REAL do rail (bento-sidebar-liquid-card)
+  // na faixa frame-left, com os itens [Home + cômodos]. É o MESMO componente do
+  // painel principal -> ícones/tamanho/cor/seleção/texto idênticos por construção.
+  _roomRailConfig() {
+    const rooms = (this._config.room_nav || []).map((r) => ({
+      key: r.key,
+      icon: r.key,                 // casa com o icon-set do componente
+      label: r.name,
+      selected: !!r.active,        // cômodo atual destacado
+      tap_action: { action: 'navigate', navigation_path: r.path || this._config.navigation_path },
+    }));
+    return {
+      top_items: [
+        { key: 'home', icon: 'home', label: 'Home',
+          tap_action: { action: 'navigate', navigation_path: this._config.navigation_path } },
+        ...rooms,
+      ],
+      bottom_items: [],            // top-anchored (réplica do principal)
+    };
+  }
+
+  _mountRoomRail() {
+    const mount = this.shadowRoot?.querySelector('[data-rail-mount]');
+    if (!mount) return;
+    if (!globalThis.customElements || !customElements.get('bento-sidebar-liquid-card')) return;
+    if (!this._railEl) {
+      this._railEl = document.createElement('bento-sidebar-liquid-card');
+      this._railEl.setConfig(this._roomRailConfig());
+    }
+    if (this._hass) this._railEl.hass = this._hass;
+    if (this._railEl.parentNode !== mount) mount.appendChild(this._railEl);
   }
 
   _bindImageFallbacks() {
@@ -1081,80 +1492,156 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     });
   }
 
+  // NOVO (full-bleed subview): HERO = ATMOSFERA transparente (sem .hero-bg; o
+  // backdrop da shell aparece). Os CONTROLES DE CORTINA voltam SOBREPOSTOS ao
+  // hero (transparente, sem caixa), ancorados embaixo — como era antes.
+  // ROLLBACK: restaurar o _renderHero anterior (com .hero-bg).
   _renderHero(model) {
-    const title = BrunoQuartoMarinaSubview._escape(this._config.title);
-    const subtitle = BrunoQuartoMarinaSubview._escape(this._config.subtitle);
-    const background = BrunoQuartoMarinaSubview._escapeAttr(this._config.background);
-    const fallbackBackground = BrunoQuartoMarinaSubview._escapeAttr(this._config.fallback_background || this._config.background);
-    const curtainConfigured = Boolean(this._config.entities.curtain);
-    const curtainPosition = Math.max(0, Math.min(100, Number(model.curtainPosition) || 0));
-    const curtainVisualPosition = curtainConfigured ? 100 - curtainPosition : 0;
-    const curtainDisabled = curtainConfigured ? '' : 'disabled';
-    const curtainStatus = curtainConfigured ? (curtainPosition <= 3 ? 'Fechada' : 'Aberta') : 'Sem cortina';
-    const curtainPercent = curtainConfigured ? `- ${curtainPosition}%` : '- --';
-
     return `
-      <div class="hero-stage">
-        <div class="hero-bg" style="--hero-image: url('${background}'); --hero-fallback-image: url('${fallbackBackground}');" aria-hidden="true"></div>
+      <div class="hero-stage hero-atmosphere">
         <div class="hero-content">
-          <div class="hero-top">
-            <button class="back-button" type="button" data-action="navigate" data-path="${BrunoQuartoMarinaSubview._escapeAttr(this._config.navigation_path)}" aria-label="Voltar">
-              <ha-icon icon="mdi:arrow-left"></ha-icon>
-            </button>
-            <div>
-              <div class="hero-title">${title}</div>
-              <div class="hero-subtitle">${subtitle}</div>
-            </div>
-          </div>
-
-          <div class="hero-headline">
-            <p class="hero-date-line">${BrunoQuartoMarinaSubview._escape(this._dateLine())}</p>
-            <div class="hero-clock" data-clock>${this._lastMinute}</div>
-            <button type="button" class="scene-pill" data-action="more-info" data-entity="${BrunoQuartoMarinaSubview._escapeAttr(this._config.entities.active_sensor)}">
-              <ha-icon icon="mdi:movie-open-star"></ha-icon>
-              <span>${BrunoQuartoMarinaSubview._escape(this._sceneContextLabel(model))}</span>
-            </button>
-          </div>
-
-          <div class="curtain-dock${curtainConfigured ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
-            <div class="curtain-control-row">
-              <div class="curtain-identity">
-                <span class="curtain-icon-shell">${BrunoQuartoMarinaSubview._curtainSvg('main')}</span>
-                <span class="curtain-title">Cortina</span>
-              </div>
-              <div class="curtain-status" aria-live="polite">
-                <span class="curtain-status-text">${BrunoQuartoMarinaSubview._escape(curtainStatus)}</span>
-                <span class="curtain-status-percent">${BrunoQuartoMarinaSubview._escape(curtainPercent)}</span>
-              </div>
-              <div class="curtain-main-actions">
-                <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
-                  ${BrunoQuartoMarinaSubview._curtainSvg('open')}<span>Abrir</span>
-                </button>
-                <button type="button" class="curtain-action-button is-muted" data-action="cover-stop" ${curtainDisabled}>
-                  ${BrunoQuartoMarinaSubview._curtainSvg('stop')}<span>Parar</span>
-                </button>
-                <button type="button" class="curtain-action-button" data-action="cover-close" ${curtainDisabled}>
-                  ${BrunoQuartoMarinaSubview._curtainSvg('close')}<span>Fechar</span>
-                </button>
-              </div>
-            </div>
-            <div class="curtain-slider-zone">
-              <div class="curtain-slider-glow" aria-hidden="true"></div>
-              <input class="curtain-range" type="range" min="0" max="100" step="1" value="${curtainVisualPosition}" data-action="curtain-target" aria-label="Fechamento da cortina" ${curtainDisabled}>
-              <div class="curtain-chips">
-                <button type="button" class="curtain-chip" data-action="cover-position" data-position="25" ${curtainDisabled}>25%</button>
-                <button type="button" class="curtain-chip" data-action="cover-position" data-position="50" ${curtainDisabled}>50%</button>
-                <button type="button" class="curtain-chip" data-action="cover-position" data-position="75" ${curtainDisabled}>75%</button>
-              </div>
-            </div>
-          </div>
+          ${this._renderCurtain(model)}
         </div>
       </div>
     `;
   }
 
+  // Controles de cortina (SEM caixa/card). Renderizados sobrepostos ao hero.
+  _renderCurtain(model) {
+    const curtain = model.curtain || this._curtainModel();
+    const curtainPosition = Number.isFinite(Number(curtain.position)) ? Number(curtain.position) : 0;
+    const curtainDisplayPosition = Number.isFinite(Number(curtain.displayPosition)) ? Number(curtain.displayPosition) : curtainPosition;
+    const curtainVisualPosition = Number.isFinite(Number(curtain.visualPosition)) ? Number(curtain.visualPosition) : this._curtainClosedVisualPosition(curtainPosition);
+    const curtainDisabled = curtain.available ? '' : 'disabled';
+    const curtainMarks = BRUNO_QUARTO_MARINA_CURTAIN_PRESETS.map((preset) => `
+      <button
+        type="button"
+        class="curtain-mark${Math.abs(curtainVisualPosition - preset.closed) <= 1 ? ' is-active' : ''}"
+        data-action="cover-position"
+        data-position="${preset.position}"
+        data-closed="${preset.closed}"
+        aria-label="${preset.label}% fechada"
+        ${curtainDisabled}
+      >${preset.label}%</button>
+    `).join('');
+
+    return `
+      <div class="curtain-dock curtain-overlay${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
+          <div class="curtain-control-row">
+            <div class="curtain-identity">
+              <span class="curtain-icon-shell">${BrunoQuartoMarinaSubview._curtainSvg('main')}</span>
+              <span class="curtain-title">Cortina</span>
+            </div>
+            <div class="curtain-status" aria-live="polite">
+              <span class="curtain-status-text">${BrunoQuartoMarinaSubview._escape(curtain.status)}</span>
+              <span class="curtain-status-percent">- ${curtainDisplayPosition}%</span>
+            </div>
+            <div class="curtain-main-actions">
+              <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
+                ${BrunoQuartoMarinaSubview._curtainSvg('open')}<span>Abrir</span>
+              </button>
+              <button type="button" class="curtain-action-button is-muted${curtain.moving ? ' is-active' : ''}" data-action="cover-stop" ${curtainDisabled}>
+                ${BrunoQuartoMarinaSubview._curtainSvg('stop')}<span>Parar</span>
+              </button>
+              <button type="button" class="curtain-action-button" data-action="cover-close" ${curtainDisabled}>
+                ${BrunoQuartoMarinaSubview._curtainSvg('close')}<span>Fechar</span>
+              </button>
+            </div>
+          </div>
+          <div class="curtain-slider-zone">
+            <div class="curtain-slider-glow" aria-hidden="true"></div>
+            <input
+              class="curtain-range"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value="${curtainVisualPosition}"
+              data-action="curtain-target"
+              aria-label="Fechamento da cortina"
+              ${curtainDisabled}
+            >
+            <div class="curtain-marks">
+              ${curtainMarks}
+            </div>
+          </div>
+      </div>
+    `;
+  }
+
+  // NOVO (full-bleed subview): FAIXA SUPERIOR fixa — chips de status (luzes da
+  // sala/varanda, temp, umidade, rede) à esquerda + relógio/data à direita.
+  // Mesma linguagem da status bar do painel principal; transparente (legibilidade
+  // pela borda atmosférica do backdrop). Substitui o antigo _renderStatusRail
+  // (que ficava na coluna direita) e o _renderFrameTop.
+  _renderTopBand(model) {
+    const zones = model.lightZones || { sala: 0, varanda: 0 };
+    // MESMA IDENTIDADE das badges do painel principal (bruno-top-badges-card):
+    // título (categoria) + sub (estado), ícone colorido por --tone, pill glass.
+    const badges = [
+      { icon: 'mdi:lightbulb', title: 'Luzes', sub: `Sala ${zones.sala} · Varanda ${zones.varanda}`, tone: '247,198,0', active: (model.lights || 0) > 0 },
+      { icon: 'mdi:thermometer', title: 'Temperatura', sub: this._temperatureLabel(), tone: '247,170,90' },
+      { icon: 'mdi:water-percent', title: 'Umidade', sub: this._humidityLabel(), tone: '127,200,233' },
+      { icon: 'mdi:router-wireless', title: 'Roteador', sub: this._networkLabel(this._config.entities.router), tone: '154,160,166' },
+      { icon: 'mdi:zigbee', title: 'Hub Zigbee', sub: this._networkLabel(this._config.entities.zigbee_hub), tone: '154,160,166' },
+    ];
+    return `
+      <header class="subview-topband">
+        <div class="topband-badges">
+          ${badges.map((b) => `
+            <div class="tb-badge${b.active ? ' is-active' : ''}" style="--tone: ${b.tone};">
+              <span class="tb-badge-icon"><ha-icon icon="${b.icon}"></ha-icon></span>
+              <span class="tb-badge-text">
+                <span class="tb-badge-title">${BrunoQuartoMarinaSubview._escape(b.title)}</span>
+                <span class="tb-badge-sub">${BrunoQuartoMarinaSubview._escape(b.sub)}</span>
+              </span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="topband-clock" aria-label="Data e hora">
+          <span data-clock>${this._lastMinute}</span>
+          <small>${BrunoQuartoMarinaSubview._escape(this._dateLine())}</small>
+        </div>
+      </header>
+    `;
+  }
+
+  static _curtainSvg(type = 'main') {
+    const pathSets = {
+      main: `
+        <path d="M9 7h30"></path>
+        <path d="M14 10v27c4.5-2.8 6.8-7.3 6.8-13.5S18.5 12.8 14 10Z"></path>
+        <path d="M34 10v27c-4.5-2.8-6.8-7.3-6.8-13.5S29.5 12.8 34 10Z"></path>
+        <path d="M24 10v29"></path>
+      `,
+      open: `
+        <path d="M8 8h32"></path>
+        <path d="M14 11v26c5-3 7.5-7.4 7.5-13.2S19 14 14 11Z"></path>
+        <path d="M34 11v26c-5-3-7.5-7.4-7.5-13.2S29 14 34 11Z"></path>
+        <path d="M24 13v23"></path>
+      `,
+      close: `
+        <path d="M8 8h32"></path>
+        <path d="M19 11v26c-4.2-2.5-6.4-6.8-6.4-13S14.8 13.6 19 11Z"></path>
+        <path d="M29 11v26c4.2-2.5 6.4-6.8 6.4-13S33.2 13.6 29 11Z"></path>
+        <path d="M23.7 11v27M24.3 11v27"></path>
+      `,
+      stop: `
+        <rect x="14" y="13" width="8" height="22" rx="1.5"></rect>
+        <rect x="26" y="13" width="8" height="22" rx="1.5"></rect>
+      `,
+    };
+    const size = type === 'main' ? 17 : 16;
+    return `
+      <svg class="curtain-svg is-${BrunoQuartoMarinaSubview._escapeAttr(type)}" viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true">
+        ${pathSets[type] || pathSets.main}
+      </svg>
+    `;
+  }
+
   static _roomNavIcon(key) {
     const icons = {
+      home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
       sala: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V9.5A3.5 3.5 0 0 1 8.5 6h7A3.5 3.5 0 0 1 19 9.5V11"/><path d="M4 12.5A2.5 2.5 0 0 1 6.5 10H7a2 2 0 0 1 2 2v1h6v-1a2 2 0 0 1 2-2h.5A2.5 2.5 0 0 1 20 12.5V18H4v-5.5z"/><path d="M6 18v2M18 18v2"/></svg>',
       office: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4z"/><path d="M9 19h6M12 15v4"/><path d="M7 21h10"/></svg>',
       cozinha: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v15H5z"/><path d="M5 10h14"/><path d="M9 7h.01M15 7h.01"/><path d="M8 14h8v4H8z"/></svg>',
@@ -1167,21 +1654,81 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     return icons[key] || icons.fallback;
   }
 
+  // NOVO: faixa SUPERIOR da shell (frame-top) — nome do cômodo centralizado +
+  // data/hora à direita, no padrão visual de Câmeras/Roborock (transparente, leve).
+  _renderFrameTop() {
+    return `
+      <header class="subview-topbar">
+        <span class="subview-room">${BrunoQuartoMarinaSubview._escape(this._config.title)}</span>
+        <div class="subview-clock" aria-label="Data e hora">
+          <span data-clock>${this._lastMinute}</span>
+          <small>${BrunoQuartoMarinaSubview._escape(this._dateLine())}</small>
+        </div>
+      </header>
+    `;
+  }
+
+  // NOVO: faixa INFERIOR da shell (frame-bottom) — presença / última atividade,
+  // no mesmo padrão discreto de Câmeras/Roborock.
+  _renderFrameBottom() {
+    return `
+      <footer class="subview-footer">
+        <span class="subview-presence">
+          <ha-icon icon="mdi:motion-sensor" aria-hidden="true"></ha-icon>
+          ${BrunoQuartoMarinaSubview._escape(this._presenceLine())}
+        </span>
+      </footer>
+    `;
+  }
+
+  // Presença/última atividade. Sem sensor de presença dedicado, usa last_changed
+  // do sensor de atividade (ou do grupo de luzes) como "última atividade".
+  _presenceLine() {
+    const ids = [this._config.entities.active_sensor, this._config.entities.room_group].filter(Boolean);
+    for (const id of ids) {
+      const st = this._hass?.states?.[id];
+      const ts = st?.last_changed || st?.last_updated;
+      if (!ts) continue;
+      const mins = Math.max(0, Math.round((Date.now() - Date.parse(ts)) / 60000));
+      const rel = mins < 1 ? 'agora mesmo' : mins < 60 ? `há ${mins} min` : `há ${Math.round(mins / 60)} h`;
+      return `Última atividade ${rel}`;
+    }
+    return 'Sem atividade recente';
+  }
+
   _renderRoomSidebar() {
     const items = this._config.room_nav || [];
 
+    // NOVO (Caminho 2): botão Home no TOPO do cluster (volta ao painel principal),
+    // com respiro p/ os cômodos; cada botão ganha rótulo curto sob o ícone.
+    const homeButton = `
+      <button
+        type="button"
+        class="room-nav-button room-nav-home"
+        data-action="navigate"
+        data-path="${BrunoQuartoMarinaSubview._escapeAttr(this._config.navigation_path)}"
+        title="Home"
+        aria-label="Home"
+      >
+        ${BrunoQuartoMarinaSubview._roomNavIcon('home')}
+        <span class="room-nav-label">Home</span>
+      </button>
+    `;
+
     return `
       <nav class="room-sidebar" aria-label="Navegacao de comodos">
+        ${homeButton}
         ${items.map((item) => `
           <button
             type="button"
-            class="room-nav-button${item.active ? ' is-active' : ''}${item.divider_after ? ' has-divider' : ''}"
+            class="room-nav-button${item.active ? ' is-active' : ''}"
             data-action="navigate"
             data-path="${BrunoQuartoMarinaSubview._escapeAttr(item.path || this._config.navigation_path)}"
             title="${BrunoQuartoMarinaSubview._escapeAttr(item.name)}"
             aria-label="${BrunoQuartoMarinaSubview._escapeAttr(item.name)}"
           >
             ${BrunoQuartoMarinaSubview._roomNavIcon(item.key || item.icon)}
+            <span class="room-nav-label">${BrunoQuartoMarinaSubview._escape(item.name)}</span>
           </button>
         `).join('')}
       </nav>
@@ -1190,11 +1737,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
 
   _renderStatusRail(model) {
     const zones = model.lightZones || { sala: 0, varanda: 0 };
-    const zoneLabels = this._config.light_zone_labels || {};
-    const salaLabel = zoneLabels.sala || 'Quarto';
-    const varandaLabel = zoneLabels.varanda || 'Suite';
     const status = [
-      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `${salaLabel} ${zones.sala} - ${varandaLabel} ${zones.varanda}`, tone: 'amber' },
+      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `Sala ${zones.sala} - Varanda ${zones.varanda}`, tone: 'amber' },
       { icon: 'mdi:thermometer', value: this._temperatureLabel(), label: 'Temperatura', tone: 'amber' },
       { icon: 'mdi:water-percent', value: this._humidityLabel(), label: 'Umidade', tone: 'blue' },
       { icon: 'mdi:router-wireless', value: 'Roteador', label: this._networkLabel(this._config.entities.router), tone: 'neutral' },
@@ -1235,8 +1779,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   }
 
   _renderLightZoneRail(lights, selectedZone) {
-    const zoneLabels = this._config.light_zone_labels || {};
-    const label = zoneLabels[selectedZone] || (selectedZone === 'varanda' ? 'Suite' : 'Quarto');
+    const label = selectedZone === 'varanda' ? 'Varanda' : 'Sala';
     const levels = lights.slice(0, 4).map((light) => ({
       name: light?.name || 'Luz',
       entity: light?.entity || '',
@@ -1289,68 +1832,255 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     `;
   }
 
+  // ANTERIOR (rollback) — abas Sala/Varanda + tiles 2x2 + coluna vertical N/4.
+  // Métodos _renderLightTile/_renderLightZoneRail mantidos acima para rollback.
+  // NOVO (Passada 2): acordeão de ZONAS. Cada zona com luzes REAIS (sem
+  // placeholders falsos): cabeçalho (nome + N/M acesas + apagar zona + chevron)
+  // e, quando expandida, linhas individuais com toggle. 1 zona => sempre expandida.
   _renderLights(model) {
     const lights = this._config.entities.lights || [];
-    const salaLights = lights.filter((light) => (light.zone || 'sala') === 'sala');
-    const varandaLights = lights.filter((light) => light.zone === 'varanda');
-    const selectedZone = this._selectedLightZone === 'varanda' ? 'varanda' : 'sala';
-    const visibleLights = selectedZone === 'varanda' ? varandaLights : salaLights;
-    const zoneLabels = this._config.light_zone_labels || {};
-    const salaLabel = zoneLabels.sala || 'Quarto';
-    const varandaLabel = zoneLabels.varanda || 'Suite';
+    const zoneLabels = { sala: 'Sala', varanda: 'Varanda', ...(this._config.light_zone_labels || {}) };
+    const zoneIcons = { sala: 'mdi:sofa-outline', varanda: 'mdi:string-lights' };
+
+    const zoneOrder = [];
+    for (const l of lights) {
+      const zk = l.zone || 'sala';
+      if (!zoneOrder.includes(zk)) zoneOrder.push(zk);
+    }
+    const zones = zoneOrder
+      .map((zk) => {
+        const zl = lights.filter((l) => (l.zone || 'sala') === zk && l.entity && !l.placeholder);
+        const onCount = zl.filter((l) => this._state(l.entity)?.state === 'on').length;
+        return { key: zk, name: zoneLabels[zk] || zk, icon: zoneIcons[zk] || 'mdi:lightbulb-group', lights: zl, onCount, total: zl.length };
+      })
+      .filter((z) => z.total > 0);
+
+    // Single-open: 1 zona aberta por vez. Default = zonas fechadas.
+    if (this._expandedZone === undefined) {
+      this._expandedZone = null;
+    }
+    const onlyOne = zones.length === 1;
+    const isExpanded = (zk) => onlyOne || this._expandedZone === zk;
 
     return `
       <div class="glass-card lights-card">
-        <div class="module-head">
-          <div class="lights-title-row">
-            <div class="module-title">Luzes</div>
-            <div class="zone-toggle" role="tablist" aria-label="Zona das luzes">
-              <button type="button" class="${selectedZone === 'sala' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="sala">${BrunoQuartoMarinaSubview._escape(salaLabel)}</button>
-              <button type="button" class="${selectedZone === 'varanda' ? 'is-active' : ''}" data-action="select-light-zone" data-zone="varanda">${BrunoQuartoMarinaSubview._escape(varandaLabel)}</button>
-            </div>
+        <div class="module-head lights-head">
+          <div class="title-with-chip">
+            <span class="micro-icon tone-amber"><ha-icon icon="mdi:lightbulb-group"></ha-icon></span>
+            <div class="module-title">Iluminação</div>
           </div>
           <div class="head-actions">
             <button type="button" class="chip-button is-active" data-action="lights-on">Todas acesas</button>
             <button type="button" class="chip-button" data-action="lights-off">Apagar todas</button>
           </div>
         </div>
-
-        <div class="lights-body">
-          <div class="lights-single-grid">
-            ${visibleLights.map((light) => this._renderLightTile(light)).join('')}
-          </div>
-          ${this._renderLightZoneRail(visibleLights, selectedZone)}
+        <div class="lights-zones">
+          ${zones.map((z) => this._renderLightZone(z, isExpanded(z.key), onlyOne)).join('')}
         </div>
       </div>
     `;
   }
 
-  _renderCameras(model) {
-    const active = model.cameras.activeCamera || model.cameras.cameras[0];
-
+  _renderLightZone(zone, expanded, onlyOne) {
+    const zoneKey = BrunoQuartoMarinaSubview._escapeAttr(zone.key);
     return `
-      <section class="glass-card cameras-card">
-        <div class="module-head">
-          <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
-            <div>
-              <div class="module-title">Cameras</div>
+      <section class="light-zone${expanded ? ' is-expanded' : ''}">
+        <div class="zone-header" ${onlyOne ? '' : `role="button" data-action="toggle-zone" data-zone="${zoneKey}"`}>
+          <span class="zone-icon"><ha-icon icon="${zone.icon}"></ha-icon></span>
+          <span class="zone-id">
+            <strong>${BrunoQuartoMarinaSubview._escape(zone.name)}</strong>
+            <small>${zone.onCount}/${zone.total} acesas</small>
+          </span>
+          ${expanded ? `<span class="zone-off" role="button" data-action="zone-off" data-zone="${zoneKey}">Apagar ${BrunoQuartoMarinaSubview._escape(zone.name.toLowerCase())}</span>` : ''}
+          ${onlyOne ? '' : `<ha-icon class="zone-chevron" icon="${expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>`}
+        </div>
+        ${expanded
+          ? `<div class="zone-lights">${zone.lights.map((l) => this._renderLightRow(l)).join('')}</div>`
+          : ''}
+      </section>
+    `;
+  }
+
+  _renderLightRow(light) {
+    const active = this._state(light.entity)?.state === 'on';
+    return `
+      <button type="button" class="light-row${active ? ' is-on' : ''}" data-action="toggle-light" data-entity="${BrunoQuartoMarinaSubview._escapeAttr(light.entity)}">
+        <span class="light-row-icon">${BrunoQuartoMarinaSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
+        <span class="light-row-name">${BrunoQuartoMarinaSubview._escape(light.name)}</span>
+        <span class="light-bar" aria-hidden="true"></span>
+      </button>
+    `;
+  }
+
+  _cameraControlState(camera, key) {
+    const controls = Array.isArray(camera?.controls) ? camera.controls.filter((control) => control?.entity) : [];
+    const normalizedKey = String(key || '').toLowerCase();
+    const control = controls.find((item) => String(item.key || '').toLowerCase() === normalizedKey);
+    if (!control) return null;
+
+    const entity = this._state(control.entity);
+    const unavailable = this._isUnavailable(entity);
+    const active = !unavailable && String(entity?.state || '').toLowerCase() === 'on';
+    const labels = {
+      sound: 'Som',
+      motion: 'Movimento',
+      privacy: 'Privacidade',
+    };
+
+    return {
+      ...control,
+      active,
+      unavailable,
+      label: labels[normalizedKey] || control.label || control.description || 'Controle',
+    };
+  }
+
+  _cameraStatusLine(camera) {
+    if (!camera) return 'Indisponível';
+
+    const unavailable = this._isUnavailable(this._state(camera.entity));
+    const privacy = this._cameraControlState(camera, 'privacy');
+    if (privacy?.active) return 'Modo privacidade ativo';
+
+    return camera.online ? 'Ao vivo' : (unavailable ? 'Indisponível' : (camera.status || 'Online'));
+  }
+
+  _renderCameraFeed(camera, options = {}) {
+    const pip = Boolean(options.pip);
+    const cameraName = camera?.short_name || camera?.name || 'Câmera';
+    const unavailable = !camera || this._isUnavailable(this._state(camera.entity));
+    const privacy = this._cameraControlState(camera, 'privacy');
+    const privateMode = Boolean(privacy?.active);
+    const classes = [
+      'camera-main',
+      'camera-feed',
+      pip ? 'camera-pip-feed' : 'camera-primary-feed',
+      privateMode ? 'is-private' : '',
+      unavailable ? 'is-unavailable' : '',
+    ].filter(Boolean).join(' ');
+    const overlay = unavailable
+      ? `
+        <div class="camera-state-surface">
+          <ha-icon icon="mdi:video-off-outline"></ha-icon>
+          <span>Indisponível</span>
+        </div>
+      `
+      : privateMode
+        ? `
+          <div class="camera-state-surface">
+            <ha-icon icon="mdi:eye-off-outline"></ha-icon>
+            <span>Modo privacidade ativo</span>
+          </div>
+        `
+        : '';
+    const content = `
+      ${this._cameraFrame(camera)}
+      ${overlay}
+      <div class="camera-row-copy">
+        <strong>${BrunoQuartoMarinaSubview._escape(cameraName)}</strong>
+      </div>
+    `;
+
+    if (pip && camera?.entity) {
+      return `
+        <button
+          type="button"
+          class="${classes}"
+          data-action="select-camera"
+          data-entity="${BrunoQuartoMarinaSubview._escapeAttr(camera.entity)}"
+          aria-label="Mostrar câmera ${BrunoQuartoMarinaSubview._escapeAttr(cameraName)}"
+        >
+          ${content}
+        </button>
+      `;
+    }
+
+    return `<div class="${classes}" aria-label="Câmera ${BrunoQuartoMarinaSubview._escapeAttr(cameraName)}">${content}</div>`;
+  }
+
+  _renderCameras(model) {
+    const cameras = model.cameras.cameras || [];
+    if (!cameras.length) {
+      return `
+        <section class="glass-card cameras-card cameras-card-controls">
+          <div class="mh-head cameras-head">
+            <div class="mh-head-title">
+              <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
+              <div class="module-title">Câmeras</div>
             </div>
           </div>
-          <div class="online-chip"><span></span>${model.cameras.onlineCount}/${model.cameras.cameras.length} online</div>
-        </div>
+          <div class="camera-stage camera-pip-stage">
+            ${this._renderCameraFeed(null)}
+          </div>
+        </section>
+      `;
+    }
 
-        <div class="camera-stage camera-single">
-          <button type="button" class="camera-main" data-action="more-info" data-entity="${BrunoQuartoMarinaSubview._escapeAttr(active?.entity || '')}">
-            ${this._cameraFrame(active)}
-            <div class="camera-row-copy">
-              <strong>${BrunoQuartoMarinaSubview._escape(active?.name || 'Camera')}</strong>
-              <span><span class="live-dot"></span>${BrunoQuartoMarinaSubview._escape(active?.status || 'Online')}</span>
-            </div>
-            <ha-icon class="camera-chevron" icon="mdi:chevron-right"></ha-icon>
+    const selected = model.cameras.activeCamera || cameras[0];
+    const onlineFallback = cameras.find((camera) => camera.online);
+    const active = selected?.online || !onlineFallback ? selected : onlineFallback;
+    const pip = cameras.find((camera) => camera.entity !== active?.entity) || null;
+    const controlsOpen = Boolean(this._cameraControlsOpen);
+
+    return `
+      <section class="glass-card cameras-card cameras-card-controls">
+        <!-- Mesmo cabeçalho de 44px do Hub de Mídia e do ar-condicionado. -->
+        <div class="mh-head cameras-head">
+          <div class="mh-head-title">
+            <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
+            <div class="module-title">Câmeras</div>
+          </div>
+          <button
+            type="button"
+            class="mh-menu camera-settings-button${controlsOpen ? ' is-active' : ''}"
+            data-action="toggle-camera-controls"
+            title="Controles"
+            aria-label="${controlsOpen ? 'Fechar controles das câmeras' : 'Abrir controles das câmeras'}"
+            aria-expanded="${controlsOpen ? 'true' : 'false'}"
+          >
+            <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </button>
         </div>
+
+        <div class="camera-stage camera-pip-stage${controlsOpen ? ' is-controls-open' : ''}">
+          ${this._renderCameraFeed(active)}
+          ${pip ? this._renderCameraFeed(pip, { pip: true }) : ''}
+          ${controlsOpen ? this._renderCameraControls(active) : ''}
+        </div>
       </section>
+    `;
+  }
+
+  _renderCameraControls(camera) {
+    const controls = ['sound', 'motion', 'privacy']
+      .map((key) => this._cameraControlState(camera, key))
+      .filter((control) => control?.entity);
+    if (!controls.length) return '';
+
+    const cameraName = camera?.short_name || camera?.name || 'Câmera';
+    const controlMarkup = controls.map((control) => {
+      const description = control.description || control.label || 'Controle';
+      const ariaLabel = `${description} — câmera ${cameraName}`;
+      return `
+        <button
+          type="button"
+          class="camera-control${control.active ? ' is-on' : ''}${control.unavailable ? ' is-unavailable' : ''}"
+          ${control.unavailable ? 'disabled' : `data-action="toggle-camera-control" data-entity="${BrunoQuartoMarinaSubview._escapeAttr(control.entity)}"`}
+          aria-pressed="${control.active ? 'true' : 'false'}"
+          aria-label="${BrunoQuartoMarinaSubview._escapeAttr(ariaLabel)}"
+          title="${BrunoQuartoMarinaSubview._escapeAttr(ariaLabel)}"
+        >
+          <ha-icon icon="${BrunoQuartoMarinaSubview._escapeAttr(control.icon || 'mdi:toggle-switch-outline')}"></ha-icon>
+          <span class="camera-control-label">${BrunoQuartoMarinaSubview._escape(control.label || description)}</span>
+          <span class="camera-control-switch" aria-hidden="true"></span>
+        </button>
+      `;
+    }).join('');
+
+    return `
+      <div class="camera-control-strip" aria-label="Controles da câmera ${BrunoQuartoMarinaSubview._escapeAttr(cameraName)}">
+        <div class="camera-controls">${controlMarkup}</div>
+      </div>
     `;
   }
 
@@ -1372,13 +2102,298 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     `;
   }
 
+  // NOVO (2026-06-28): Hub de Mídia refatorado como ACORDEÃO verdadeiro
+  // (ordem fixa TV → Spotify → PS5). Spec: hemmahubmidiaprompt.md.
+  // Restrições: 320px fixos (--ac-h), sem overflow; só o Hub muda — nenhum
+  // outro bloco/shell/rail/topband/backdrop é tocado. Cores: accent/volume
+  // dourado #f2c266; ícone Spotify monocromático (sem verde). Apenas UMA fonte
+  // expandida por vez, no próprio lugar (nunca promovida ao topo).
   _renderMediaHub(model) {
     const selected = this._selectedMedia(model);
     const tv = model.tv;
     const spotify = model.spotify;
-    const tvConfigured = Boolean(this._config.entities.tv);
-    const spotifyConfigured = Boolean(this._config.entities.spotify);
-    const spotifyTransportDisabled = !spotifyConfigured || !spotify.active;
+    const ps5 = model.ps5;
+    const esc = (v) => BrunoQuartoMarinaSubview._escape(v);
+    const escA = (v) => BrunoQuartoMarinaSubview._escapeAttr(v);
+
+    const tvPoster = tv.poster ? BrunoQuartoMarinaSubview._resolvePicture(tv.poster) : '';
+    const spotifyArtwork = spotify.artwork ? BrunoQuartoMarinaSubview._resolvePicture(spotify.artwork) : '';
+    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1';
+    const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png';
+    const tvVolume = tv.volume == null ? 60 : tv.volume;
+    const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
+    const tvSource = tv.source || 'HDMI 1';
+    const tvPlaying = tv.state === 'playing';
+    // TV ligada (item 5): 2ª linha = app/fonte (Google TV, Netflix, HDMI 1...),
+    // preferindo um programa real quando houver.
+    const tvGeneric = !tv.title
+      || /^TV (ligada|desligada)$/i.test(tv.title)
+      || tv.title === tvSource;
+    const tvProgram = (!tvGeneric && tvPlaying) ? tv.title : '';
+    const tvSubLine = tvProgram || tvSource;
+    // Barra de progresso do Spotify (posição/duração nativas do media_player).
+    const spotifyAttrs = spotify.entity?.attributes || {};
+    const spotifyDuration = Number(spotifyAttrs.media_duration) || 0;
+    const spotifyPosition = Number(spotifyAttrs.media_position) || 0;
+    const spotifyUpdatedAt = Date.parse(spotifyAttrs.media_position_updated_at || '');
+    const spotifyLivePosition = spotify.playing && Number.isFinite(spotifyUpdatedAt)
+      ? spotifyPosition + ((Date.now() - spotifyUpdatedAt) / 1000)
+      : spotifyPosition;
+    const spotifyDisplayPosition = spotifyDuration > 0
+      ? Math.max(0, Math.min(spotifyDuration, spotifyLivePosition))
+      : Math.max(0, spotifyLivePosition);
+    const spotifyProgress = spotifyDuration > 0
+      ? Math.max(0, Math.min(100, (spotifyDisplayPosition / spotifyDuration) * 100))
+      : 0;
+    const spotifyElapsedLabel = this._formatMediaTime(spotifyDisplayPosition);
+    const spotifyDurationLabel = spotifyDuration > 0 ? this._formatMediaTime(spotifyDuration) : '--:--';
+    // Spotify desligado (item 5): 2ª linha = dispositivo/integração (à la Sala).
+    const spotifyDeviceLabel = this._config.spotify_device_name || spotify.source || 'SpotifyPlus';
+    // PS5 ativo — jogo em execução (quando a entidade expõe), para a 2ª linha.
+    const ps5Attrs = this._state(ps5.entityId)?.attributes || {};
+    const ps5Game = ps5Attrs.media_title || ps5Attrs.app_name || '';
+    const ps5Status = ps5.configured ? (ps5.active ? 'Online' : 'Offline') : 'Não configurado';
+    const ps5Detail = ps5Game || ps5Status;
+
+    const volRow = (action, vol, disabled = false) => `
+      <div class="mh-vol${disabled ? ' is-disabled' : ''}">
+        <ha-icon icon="mdi:volume-medium"></ha-icon>
+        <span class="mh-vol-label">Volume ${vol}%</span>
+        <input type="range" min="0" max="100" value="${vol}" data-action="${escA(action)}" aria-label="Volume" ${disabled ? 'disabled' : ''}>
+      </div>
+    `;
+
+    // iconOnly (ou plus) => só ícone (resolve truncamento; title/aria mantêm a11y).
+    const btn = (action, label, opts = {}) => {
+      const iconOnly = Boolean(opts.iconOnly || opts.plus);
+      return `
+      <button
+        type="button"
+        class="mh-btn${opts.main ? ' is-main' : ''}${opts.plus ? ' is-plus' : ''}${iconOnly ? ' is-icon' : ''}"
+        data-action="${escA(action)}"
+        ${opts.entity ? `data-entity="${escA(opts.entity)}"` : ''}
+        title="${escA(label)}"
+        aria-label="${escA(label)}"
+        ${opts.disabled ? 'disabled' : ''}
+      >
+        ${opts.icon ? `<ha-icon icon="${escA(opts.icon)}"></ha-icon>` : ''}
+        ${iconOnly ? '' : `<span>${esc(label)}</span>`}
+      </button>
+    `;
+    };
+
+    // Imagem contextual à direita: APENAS o PNG transparente, sobreposto ao
+    // bloco — sem glow, sem fundo, sem moldura. A imagem é posicionada de forma
+    // ABSOLUTA (no CSS) para NUNCA ditar a altura da linha (evita empurrar o
+    // botão para fora). shape: 'wide' (16:9) ou 'square'. cover=true => thumb/arte.
+    const art = (src, shape, fallbackIcon, cover = false) => `
+      <div class="mh-art mh-art-${shape}${cover ? ' is-cover' : ' is-standby'}">
+        ${src
+          ? `<img src="${escA(src)}" alt="" loading="lazy">`
+          : `<ha-icon icon="${escA(fallbackIcon)}"></ha-icon>`}
+      </div>
+    `;
+
+    // ----- Corpo expandido: TV ----- (sem título repetido — o nome já está no
+    // cabeçalho da faixa; o corpo começa direto no estado).
+    const tvBody = tv.active
+      ? `
+        <div class="mh-left">
+          <div class="mh-info">
+            <small>Ligada</small>
+            ${tvSubLine ? `<em>${esc(tvSubLine)}</em>` : ''}
+          </div>
+          <div class="mh-controls">
+            ${volRow('tv-volume', tvVolume)}
+            <div class="mh-btn-row mh-btn-row-3">
+              ${btn('tv-play-pause', 'Pausar', { icon: 'mdi:pause', iconOnly: true })}
+              ${btn('tv-remote', 'Controle remoto', { icon: 'mdi:remote-tv', iconOnly: true })}
+              ${btn('tv-apps', 'Apps', { icon: 'mdi:apps', iconOnly: true })}
+            </div>
+          </div>
+        </div>
+        ${art(tvPoster || tvStandbyImage, 'wide', 'mdi:television-classic', Boolean(tvPoster))}
+      `
+      : `
+        <div class="mh-left">
+          <div class="mh-info">
+            <small>Desligada</small>
+            <em>HDMI 1 disponível</em>
+          </div>
+          <div class="mh-controls">
+            ${btn('toggle-tv', 'Ligar TV', { icon: 'mdi:power', main: true })}
+          </div>
+        </div>
+        ${art(tvStandbyImage, 'wide', 'mdi:television-classic', false)}
+      `;
+
+    // ----- Corpo expandido: Spotify -----
+    const spotifyArtist = spotify.subtitle || '';
+    const spotifyButtons = this._spotifyToolsOpen
+      ? `
+        <div class="mh-btn-row mh-btn-row-4">
+          ${btn('spotify-devices', 'Dispositivos', { icon: 'mdi:speaker-wireless', iconOnly: true })}
+          ${btn('spotify-presets', 'Presets', { icon: 'mdi:bookmark-music-outline', iconOnly: true })}
+          ${btn('spotify-queue', 'Fila', { icon: 'mdi:playlist-play', iconOnly: true })}
+          ${btn('spotify-more', 'Voltar', { icon: 'mdi:chevron-left', plus: true })}
+        </div>
+      `
+      : `
+        <div class="mh-btn-row mh-btn-row-4">
+          ${btn('spotify-prev', 'Anterior', { icon: 'mdi:skip-previous', iconOnly: true })}
+          ${btn('spotify-play-pause', spotify.playing ? 'Pausar' : 'Tocar', { icon: spotify.playing ? 'mdi:pause' : 'mdi:play', iconOnly: true })}
+          ${btn('spotify-next', 'Próxima', { icon: 'mdi:skip-next', iconOnly: true })}
+          ${btn('spotify-more', 'Mais', { icon: 'mdi:plus', plus: true })}
+        </div>
+      `;
+    // (sem título repetido — "Spotify" já está no cabeçalho. No estado ativo o
+    // corpo mostra FAIXA + ARTISTA em duas linhas + barra de progresso.)
+    const spotifyBody = spotify.active
+      ? `
+        <div class="mh-left">
+          <div class="mh-info">
+            <small>${esc(spotify.title || 'Tocando')}</small>
+            ${spotifyArtist ? `<em>${esc(spotifyArtist)}</em>` : ''}
+            <div class="mh-progress-wrap" aria-label="Progresso da faixa">
+              <span class="mh-progress-time">${spotifyElapsedLabel}</span>
+              <div class="mh-progress" aria-hidden="true"><span style="width:${spotifyProgress}%"></span></div>
+              <span class="mh-progress-time">${spotifyDurationLabel}</span>
+            </div>
+          </div>
+          <div class="mh-controls">
+            ${volRow('spotify-volume', spotifyVolume)}
+            ${spotifyButtons}
+          </div>
+        </div>
+        ${art(spotifyArtwork || spotifyStandbyImage, 'square', 'mdi:music-note', Boolean(spotifyArtwork))}
+      `
+      : `
+        <div class="mh-left">
+          <div class="mh-info">
+            <small>Desligada</small>
+            <em>${esc(spotifyDeviceLabel)}</em>
+          </div>
+          <div class="mh-controls">
+            ${btn('spotify-devices', 'Dispositivos', { icon: 'mdi:speaker-wireless', main: true })}
+          </div>
+        </div>
+        ${art(spotifyStandbyImage, 'square', 'mdi:music-note', false)}
+      `;
+
+    const mediaMenu = this._mediaMenuOpen
+      ? `
+        <div class="mh-overflow-panel" role="menu" aria-label="Opções de mídia">
+          <div class="mh-overflow-item">
+            <span class="mh-overflow-icon"><ha-icon icon="mdi:sony-playstation"></ha-icon></span>
+            <span class="mh-overflow-copy">
+              <strong>PS5</strong>
+              <small>${esc(ps5Detail)}</small>
+            </span>
+            <button
+              type="button"
+              class="mh-overflow-action${ps5.active ? ' is-active' : ''}"
+              data-action="toggle-ps5"
+              title="${ps5.active ? 'Desligar PS5' : 'Ligar PS5'}"
+              aria-label="${ps5.active ? 'Desligar PS5' : 'Ligar PS5'}"
+              ${ps5.configured ? '' : 'disabled'}
+            >
+              <ha-icon icon="mdi:power"></ha-icon>
+            </button>
+            <button
+              type="button"
+              class="mh-overflow-action"
+              data-action="more-info"
+              data-entity="${escA(ps5.entityId || '')}"
+              title="Detalhes"
+              aria-label="Detalhes do PS5"
+              ${ps5.configured ? '' : 'disabled'}
+            >
+              <ha-icon icon="mdi:dots-horizontal"></ha-icon>
+            </button>
+          </div>
+        </div>
+      `
+      : '';
+
+    const sourceMeta = {
+      tv: {
+        label: 'TV da sala',
+        icon: 'mdi:television-classic',
+        summary: tv.active ? `Ligada · ${tvSource}` : 'Desligada',
+        active: tv.active,
+        body: tvBody,
+      },
+      spotify: {
+        label: 'Spotify',
+        icon: 'mdi:spotify',
+        summary: spotify.active ? (spotify.title || 'Tocando') : 'Nenhuma faixa',
+        active: spotify.active,
+        body: spotifyBody,
+      },
+    };
+    const order = ['tv', 'spotify'];
+
+    const renderSource = (key) => {
+      const s = sourceMeta[key];
+      const isOpen = key === selected;
+      const isSwitching = isOpen && key === this._mediaTransitionSource;
+      // Ícone do Spotify monocromático (sem verde): ha-icon herda a cor do CSS.
+      const iconHtml = key === 'spotify'
+        ? '<ha-icon class="mh-src-icon mh-icon-spotify" icon="mdi:spotify"></ha-icon>'
+        : `<ha-icon class="mh-src-icon" icon="${escA(s.icon)}"></ha-icon>`;
+      return `
+        <div class="mh-source${isOpen ? ' is-open' : ''}${s.active ? ' is-active' : ''}${isSwitching ? ' is-switching' : ''}">
+          <button
+            type="button"
+            class="mh-source-head"
+            data-action="select-media-source"
+            data-source="${key}"
+            aria-expanded="${isOpen ? 'true' : 'false'}"
+          >
+            ${iconHtml}
+            <span class="mh-src-name">${esc(s.label)}</span>
+            <span class="mh-src-summary">${esc(s.summary)}</span>
+            ${isOpen ? '' : '<ha-icon class="mh-src-chevron" icon="mdi:chevron-right"></ha-icon>'}
+          </button>
+          ${isOpen ? `<div class="mh-source-body">${s.body}</div>` : ''}
+        </div>
+      `;
+    };
+
+    return `
+      <section class="glass-card media-hub-card mh-accordion${sourceMeta[selected]?.active ? ' is-playing' : ''}${this._mediaMenuOpen ? ' is-menu-open' : ''}">
+        <div class="mh-head">
+          <div class="mh-head-title">
+            <span class="micro-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
+            <div class="module-title">Hub de Mídia</div>
+          </div>
+          <button
+            type="button"
+            class="mh-menu${this._mediaMenuOpen ? ' is-active' : ''}"
+            data-action="media-menu"
+            title="Opções"
+            aria-label="Opções"
+            aria-expanded="${this._mediaMenuOpen ? 'true' : 'false'}"
+          >
+            <ha-icon icon="mdi:dots-vertical"></ha-icon>
+          </button>
+        </div>
+        ${mediaMenu}
+        <div class="mh-sources">
+          ${order.map(renderSource).join('')}
+        </div>
+      </section>
+    `;
+  }
+
+  // LEGADO (rollback): versão anterior do Hub baseada em ABAS (tabs).
+  // Preservada intacta; NÃO é referenciada por nenhum call site.
+  _renderMediaHubLegacy(model) {
+    const selected = this._selectedMedia(model);
+    const tv = model.tv;
+    const spotify = model.spotify;
+    const ps5 = model.ps5;
+    const spotifyTransportDisabled = !spotify.active;
     const now = Date.now();
     const tvStateChanged = Boolean(this._hass && this._lastMediaTvOn !== undefined && this._lastMediaTvOn !== tv.active);
     if (tvStateChanged) {
@@ -1423,7 +2438,11 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     );
     const spotifyMeta = metaLine(
       spotify.subtitle,
-      spotify.source || this._config.spotify_device_name || 'Echo Pop Marina',
+      spotify.source || this._config.spotify_device_name || 'Echo Show',
+    );
+    const ps5Meta = metaLine(
+      ps5.active ? 'Console ligado' : 'Pronto para ligar',
+      'HDMI 1',
     );
     const mediaActionButton = ({
       action,
@@ -1478,9 +2497,9 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     }).join('');
     const tvPrimaryActions = `
       ${mediaIdentityCell('tv', tv.active, { animate: animateTvIcon })}
-      ${mediaActionButton({ action: 'toggle-tv', icon: 'mdi:power', label: tv.active ? 'Desligar TV' : 'Ligar TV', disabled: !tvConfigured })}
-      ${mediaActionButton({ action: 'tv-remote', icon: 'mdi:remote-tv', label: 'Controle remoto', disabled: !tvConfigured })}
-      ${mediaActionButton({ action: 'tv-play-pause', icon: 'mdi:play-pause', label: 'Play pause', className: 'is-main', disabled: !tvConfigured })}
+      ${mediaActionButton({ action: 'toggle-tv', icon: 'mdi:power', label: tv.active ? 'Desligar TV' : 'Ligar TV' })}
+      ${mediaActionButton({ action: 'tv-remote', icon: 'mdi:remote-tv', label: 'Controle remoto' })}
+      ${mediaActionButton({ action: 'tv-play-pause', icon: 'mdi:play-pause', label: 'Play pause', className: 'is-main' })}
     `;
     const spotifyPrimaryActions = `
       ${mediaIdentityCell('spotify', spotify.active || spotify.playing)}
@@ -1489,10 +2508,10 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa', disabled: spotifyTransportDisabled })}
     `;
     const spotifySecondaryActions = `
-      ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool', disabled: !spotifyConfigured })}
-      ${mediaActionButton({ action: 'spotify-presets', icon: 'mdi:bookmark-music-outline', label: 'Presets', className: 'is-tool', disabled: !spotifyConfigured })}
-      ${mediaActionButton({ action: 'spotify-queue', icon: 'mdi:playlist-play', label: 'Fila', className: 'is-tool', disabled: !spotifyConfigured })}
-      ${mediaActionButton({ action: 'spotify-favorites', icon: 'mdi:heart-outline', label: 'Favoritos', className: 'is-tool', disabled: !spotifyConfigured })}
+      ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'spotify-presets', icon: 'mdi:bookmark-music-outline', label: 'Presets', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'spotify-queue', icon: 'mdi:playlist-play', label: 'Fila', className: 'is-tool' })}
+      ${mediaActionButton({ action: 'spotify-favorites', icon: 'mdi:heart-outline', label: 'Favoritos', className: 'is-tool' })}
     `;
     const sources = {
       tv: {
@@ -1511,7 +2530,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         extra: `
           <div class="volume-row">
             <ha-icon icon="mdi:volume-medium"></ha-icon>
-            <input type="range" min="0" max="100" value="${tvVolume}" data-action="tv-volume" aria-label="Volume da TV" ${tvConfigured ? '' : 'disabled'}>
+            <input type="range" min="0" max="100" value="${tvVolume}" data-action="tv-volume" aria-label="Volume da TV">
             <strong>${tvVolume}%</strong>
           </div>
         `,
@@ -1532,10 +2551,35 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         extra: `
           <div class="volume-row spotify-volume">
             <ha-icon icon="mdi:volume-medium"></ha-icon>
-            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotifyTransportDisabled ? 'disabled' : ''}>
+            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotify.active ? '' : 'disabled'}>
             <strong>${spotifyVolume}%</strong>
           </div>
         `,
+      },
+      ps5: {
+        key: 'ps5',
+        label: 'PS5',
+        icon: 'mdi:sony-playstation',
+        active: ps5.active,
+        state: ps5.active ? 'Online' : (ps5.configured ? 'Offline' : 'Placeholder'),
+        title: ps5.title,
+        meta: renderMeta(ps5Meta),
+        visual: ps5.image
+          ? `<img class="media-standby-image media-ps5-image" src="${BrunoQuartoMarinaSubview._escapeAttr(ps5.image)}" alt="">`
+          : '<ha-icon icon="mdi:sony-playstation"></ha-icon>',
+        primaryClass: 'is-wide',
+        primaryActions: `
+          <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>${ps5.active ? 'Desligar' : 'Ligar'}</button>
+          ${mediaActionButton({
+            action: 'more-info',
+            icon: 'mdi:dots-horizontal',
+            label: 'Mais detalhes',
+            attrs: `data-entity="${BrunoQuartoMarinaSubview._escapeAttr(ps5.entityId || '')}"`,
+            disabled: !ps5.configured,
+          })}
+        `,
+        secondaryActions: '',
+        extra: '',
       },
     };
     const current = sources[selected] || sources.tv;
@@ -1633,6 +2677,35 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     `;
   }
 
+  _renderPS5(model) {
+    const ps5 = model.ps5;
+    const image = ps5.image ? BrunoQuartoMarinaSubview._escapeAttr(ps5.image) : '';
+
+    return `
+      <section class="glass-card ps5-card${ps5.active ? ' is-active' : ''}${ps5.configured ? '' : ' is-placeholder'}">
+        <div class="module-head">
+          <div class="title-with-chip">
+            <span class="micro-icon"><ha-icon icon="mdi:sony-playstation"></ha-icon></span>
+            <div>
+              <div class="module-title">PlayStation 5</div>
+            </div>
+          </div>
+        </div>
+        <!-- FALLBACK - PS5 anterior tinha texto "Console desligado" e caixas Status/Modo. -->
+        <div class="ps5-body ps5-minimal">
+          ${image ? `<img class="ps5-image" src="${image}" alt="">` : ''}
+          <div class="ps5-footer">
+            <span class="device-state"><span class="live-dot"></span>${ps5.active ? 'Online' : 'Offline'}</span>
+            <div class="ps5-actions">
+              <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>${ps5.active ? 'Desligar' : 'Ligar'}</button>
+              <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoQuartoMarinaSubview._escapeAttr(ps5.entityId || '')}" ${ps5.configured ? '' : 'disabled'}><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
   _renderSpotify(model) {
     const spotify = model.spotify;
     const artwork = spotify.artwork ? BrunoQuartoMarinaSubview._resolvePicture(spotify.artwork) : '';
@@ -1674,7 +2747,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
             </div>
             <div class="volume-row spotify-volume">
               <ha-icon icon="mdi:volume-medium"></ha-icon>
-              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify"${transportDisabled}>
+              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotify.active ? '' : 'disabled'}>
               <strong>${volume}%</strong>
             </div>
           </div>
@@ -1826,16 +2899,10 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
 
   _renderAC(model) {
     const climate = model.climate;
-    const climateConfigured = Boolean(climate.configured);
     const target = climate.target == null ? '--' : this._formatNumber(climate.target, 0);
-    const targetNumber = Number.isFinite(Number(climate.target)) ? Math.round(Number(climate.target)) : 22;
     const current = climate.current == null ? '--' : this._formatNumber(climate.current, 1);
     const minTarget = Number.isFinite(Number(climate.minTemp)) ? Number(climate.minTemp) : 16;
     const maxTarget = Number.isFinite(Number(climate.maxTemp)) ? Number(climate.maxTemp) : 30;
-    const targetStep = Number.isFinite(Number(climate.targetStep)) ? Number(climate.targetStep) : 1;
-    const deviceName = BrunoQuartoMarinaSubview._escape(this._config.climate_device_name || 'Ar condicionado');
-    const climateImage = BrunoQuartoMarinaSubview._escapeAttr(this._config.climate_image || '/local/images/ar-condicionado-gree-tight.png');
-    const climateActiveImage = BrunoQuartoMarinaSubview._escapeAttr(this._config.climate_active_image || '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1');
     const activeMode = climate.hvacMode || 'off';
     const fan = String(climate.fan || 'auto').toLowerCase();
     const swing = String(climate.swing || '').toLowerCase();
@@ -1848,100 +2915,166 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         : activeMode === 'fan_only'
           ? 'Ventilacao'
           : 'Temperatura';
-    const modeButtonClass = (button) => {
-      return activeMode === button.key ? ' is-active' : '';
+
+    // NOVO (Passada 2): AC ENXUTO (proposta imagem 5) — cabeçalho (estado/modo) +
+    // power; leitura Ambiente/Umidade; semi-anel (Desejada); 3 botões (Modo /
+    // Ventilação / Swing) que abrem o controle detalhado (more-info do climate).
+    // ANTERIOR (rollback): imagem grande do aparelho + slider + modos + stepper +
+    // fan-row (bloco alto). Preservado no histórico git.
+    const cap = (s) => {
+      const t = String(s || '').replace(/_/g, ' ').trim();
+      return t ? t.charAt(0).toUpperCase() + t.slice(1) : '—';
     };
-    const hvacModes = Array.isArray(climate.hvacModes) ? climate.hvacModes : [];
-    const hvacAvailable = (key) => !hvacModes.length || hvacModes.includes(key);
-    const fanMode = (candidates, fallback) => this._climateOption(climate.fanModes, candidates, fallback);
-    const lowMode = fanMode(['low', 'baixo'], 'low');
-    const mediumMode = fanMode(['medium', 'med', 'medio'], 'medium');
-    const highMode = fanMode(['high', 'alto'], 'high');
-    const swingOnMode = this._climateOption(climate.swingModes, ['on', 'ativada', 'ativo', 'enabled'], '');
-    const swingOffMode = this._climateOption(climate.swingModes, ['off', 'desativada', 'desativado', 'disabled'], '');
-    const nextSwingMode = swingActive ? swingOffMode : swingOnMode;
-    const fanActive = (value, aliases = []) => {
-      const normalized = String(value || '').toLowerCase();
-      return Boolean(normalized) && (fan === normalized || aliases.some((alias) => fan.includes(alias)));
+    const normalize = (value) => String(value || '').toLowerCase();
+    const unique = (items) => [...new Set((items || []).filter(Boolean))];
+    const hvacOptions = unique(climate.hvacModes);
+    const fanOptions = unique(climate.fanModes);
+    const swingOptions = unique(climate.swingModes);
+    const modeIcon = (mode) => {
+      const value = normalize(mode);
+      return ({
+        off: 'mdi:power',
+        cool: 'mdi:snowflake',
+        heat: 'mdi:fire',
+        fan_only: 'mdi:fan',
+        dry: 'mdi:water-percent',
+        auto: 'mdi:autorenew',
+        heat_cool: 'mdi:autorenew',
+      }[value] || 'mdi:thermostat');
     };
-    const modeButtons = [
-      { key: 'cool', icon: 'mdi:snowflake', label: 'Cool', disabled: !hvacAvailable('cool') },
-      { key: 'heat', icon: 'mdi:fire', label: 'Heat', disabled: !hvacAvailable('heat') },
-      { key: 'fan_only', icon: 'mdi:fan', label: 'Fan', disabled: !hvacAvailable('fan_only') },
-    ];
-    const fanButtons = [
-      { key: 'low', label: 'Low', action: 'fan-mode', mode: lowMode, active: fanActive(lowMode, ['low', 'baixo']) },
-      { key: 'medium', label: 'Med', action: 'fan-mode', mode: mediumMode, active: fanActive(mediumMode, ['med']) },
-      { key: 'high', label: 'High', action: 'fan-mode', mode: highMode, active: fanActive(highMode, ['high', 'alto']) },
-      { key: 'swing', label: 'Swing', action: 'swing-mode', mode: nextSwingMode, active: swingActive },
-    ];
+    const fanIcon = (mode) => {
+      const value = normalize(mode);
+      if (value.includes('auto')) return 'mdi:fan-auto';
+      if (value.includes('low') || value.includes('baixo')) return 'mdi:fan-speed-1';
+      if (value.includes('med')) return 'mdi:fan-speed-2';
+      if (value.includes('high') || value.includes('alto') || value.includes('fort')) return 'mdi:fan-speed-3';
+      return 'mdi:fan';
+    };
+    const modeLabelFor = (mode) => {
+      const value = normalize(mode);
+      return ({
+        off: 'Desligado',
+        cool: 'Frio',
+        heat: 'Aquecimento',
+        fan_only: 'Ventilar',
+        dry: 'Secar',
+        heat_cool: 'Auto',
+        auto: 'Auto',
+      }[value] || cap(mode));
+    };
+    const fanLabelFor = (mode) => {
+      const value = normalize(mode);
+      if (value === 'auto') return 'Auto';
+      if (value.includes('low') || value.includes('baixo')) return 'Baixa';
+      if (value.includes('med')) return 'Média';
+      if (value.includes('high') || value.includes('alto')) return 'Alta';
+      if (value.includes('fort')) return 'Forte';
+      return cap(mode);
+    };
+    const swingLabelFor = (mode) => {
+      const value = normalize(mode);
+      if (!value) return 'Indisponível';
+      if (['off', 'desativado', 'desativada', 'disabled'].includes(value)) return 'Desligado';
+      if (['on', 'ativo', 'ativada', 'enabled'].includes(value)) return 'Ativo';
+      return cap(mode);
+    };
+    const modeLabel = !climate.active || activeMode === 'off'
+      ? 'Desligado'
+      : modeLabelFor(activeMode);
+    const fanLabel = fanLabelFor(fan);
+    const swingLabel = swing ? swingLabelFor(swing) : (swingActive ? 'Ativo' : 'Desligado');
+    const climateEntity = BrunoQuartoMarinaSubview._escapeAttr(this._config.entities.climate || '');
+    const climateDisabled = this._isUnavailable(climate.entity) ? ' disabled' : '';
+    const selectedPanel = this._selectedClimatePanel;
+    const renderOption = ({ action, mode, label, icon, active }) => `
+      <button
+        type="button"
+        class="ac-popover-option${active ? ' is-active' : ''}"
+        data-action="${action}"
+        data-mode="${BrunoQuartoMarinaSubview._escapeAttr(mode)}"
+        role="menuitem"
+      >
+        <ha-icon icon="${BrunoQuartoMarinaSubview._escapeAttr(icon)}"></ha-icon>
+        <span>${BrunoQuartoMarinaSubview._escape(label)}</span>
+      </button>
+    `;
+    const renderPopover = (panel, options) => {
+      if (selectedPanel !== panel) return '';
+      if (!options.length) {
+        return `
+          <div class="ac-popover" role="menu">
+            <button type="button" class="ac-popover-option" disabled>
+              <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+              <span>Indisponível</span>
+            </button>
+          </div>
+        `;
+      }
+      return `<div class="ac-popover" role="menu">${options.map(renderOption).join('')}</div>`;
+    };
+    const modeOptions = hvacOptions.map((mode) => ({
+      action: 'climate-mode',
+      mode,
+      label: modeLabelFor(mode),
+      icon: modeIcon(mode),
+      active: normalize(mode) === normalize(activeMode),
+    }));
+    const fanControlOptions = fanOptions.map((mode) => ({
+      action: 'fan-mode',
+      mode,
+      label: fanLabelFor(mode),
+      icon: fanIcon(mode),
+      active: normalize(mode) === fan,
+    }));
+    const swingControlOptions = swingOptions.map((mode) => ({
+      action: 'swing-mode',
+      mode,
+      label: swingLabelFor(mode),
+      icon: normalize(mode) === 'off' ? 'mdi:air-conditioner' : 'mdi:swap-vertical',
+      active: normalize(mode) === swing,
+    }));
+    const controlButton = ({ panel, icon, title, value, options }) => `
+      <div class="ac-control-wrap">
+        <button
+          type="button"
+          class="ac-action${selectedPanel === panel ? ' is-open' : ''}"
+          data-action="toggle-climate-panel"
+          data-panel="${panel}"
+          aria-expanded="${selectedPanel === panel ? 'true' : 'false'}"
+          ${climateDisabled}
+        >
+          <span class="ac-action-icon"><ha-icon icon="${icon}"></ha-icon></span>
+          <span class="ac-action-text"><small>${title}</small><strong>${BrunoQuartoMarinaSubview._escape(value)}</strong></span>
+        </button>
+        ${renderPopover(panel, options)}
+      </div>
+    `;
 
     return `
-      <section class="glass-card ac-card">
-        <div class="module-head ac-head">
-          <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
-            <div>
-              <div class="module-title">Ar Condicionado</div>
-              <div class="module-subtitle">${deviceName}</div>
-            </div>
+      <section class="glass-card ac-card ac-card-lean">
+        <div class="ac-lean-head">
+          <div class="mh-head-title ac-head-title">
+            <span class="micro-icon tone-blue"><ha-icon icon="mdi:air-conditioner"></ha-icon></span>
+            <div class="module-title">Ar-condicionado</div>
           </div>
-          <button type="button" class="power-button${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado" ${climateConfigured ? '' : 'disabled'}>
-            <ha-icon icon="mdi:power"></ha-icon>
-          </button>
+          <div class="ac-top-stack">
+            <button type="button" class="mh-menu ac-more-button" data-action="more-info" data-entity="${climateEntity}" title="Mais detalhes" aria-label="Mais detalhes">
+              <ha-icon icon="mdi:dots-vertical"></ha-icon>
+            </button>
+            <button type="button" class="ac-power-floating${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado" ${climateDisabled}>
+              <ha-icon icon="mdi:power"></ha-icon>
+            </button>
+          </div>
         </div>
-        <div class="ac-body">
-          <div class="ac-visual">
-            <div class="ac-image-shell${climate.active ? ' is-on' : ''}" data-image-wrapper>
-              <img
-                class="ac-unit-image ac-unit-image-off"
-                src="${climateImage}"
-                alt=""
-                data-fallback-class="is-fallback"
-              >
-              <img
-                class="ac-unit-image ac-unit-image-on"
-                src="${climateActiveImage}"
-                alt=""
-              >
-              <ha-icon class="ac-image-fallback" icon="mdi:air-conditioner"></ha-icon>
-            </div>
+        <div class="ac-lean-mid">
+          <div class="ac-ring">
             ${this._renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode)}
           </div>
-          <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
-            <input type="range" min="${BrunoQuartoMarinaSubview._escapeAttr(minTarget)}" max="${BrunoQuartoMarinaSubview._escapeAttr(maxTarget)}" step="${BrunoQuartoMarinaSubview._escapeAttr(targetStep)}" value="${targetNumber}" data-action="climate-target" ${climateConfigured ? '' : 'disabled'}>
-          </label>
-          <div class="climate-mode-row" aria-label="Modo do ar condicionado">
-            ${modeButtons.map((button) => `
-              <button
-                type="button"
-                class="climate-mode${modeButtonClass(button)}"
-                data-action="climate-mode"
-                data-mode="${BrunoQuartoMarinaSubview._escapeAttr(button.key)}"
-                title="${BrunoQuartoMarinaSubview._escapeAttr(button.label)}"
-                ${button.disabled || !climateConfigured ? 'disabled' : ''}
-              >
-                <ha-icon icon="${button.icon}"></ha-icon>
-              </button>
-            `).join('')}
-          </div>
-          <div class="climate-stepper">
-            <button type="button" data-action="temp-down" ${climateConfigured ? '' : 'disabled'}>-</button>
-            <span>${target}</span>
-            <button type="button" data-action="temp-up" ${climateConfigured ? '' : 'disabled'}>+</button>
-          </div>
-          <div class="fan-label">Fan mode</div>
-          <div class="fan-mode-row">
-            ${fanButtons.map((button) => `
-              <button
-                type="button"
-                class="fan-mode${button.active ? ' is-active' : ''}"
-                data-action="${BrunoQuartoMarinaSubview._escapeAttr(button.action)}"
-                data-mode="${BrunoQuartoMarinaSubview._escapeAttr(button.mode)}"
-                ${button.mode && climateConfigured ? '' : 'disabled'}
-              >${BrunoQuartoMarinaSubview._escape(button.label)}</button>
-            `).join('')}
-          </div>
+        </div>
+        <div class="ac-lean-foot">
+          ${controlButton({ panel: 'mode', icon: 'mdi:thermostat-auto', title: 'Modo', value: modeLabel, options: modeOptions })}
+          ${controlButton({ panel: 'fan', icon: 'mdi:fan', title: 'Ventilação', value: fanLabel, options: fanControlOptions })}
+          ${controlButton({ panel: 'swing', icon: 'mdi:air-conditioner', title: 'Swing', value: swingLabel, options: swingControlOptions })}
         </div>
       </section>
     `;
@@ -1950,22 +3083,30 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
   _styles() {
     return `
       :host {
-        --sala-gap: 10px;
-        --sala-radius: var(--bruno-liquid-card-radius, 18px);
-        --sala-radius-small: var(--bruno-liquid-card-radius-compact, 16px);
-        --sala-cell-radius: var(--bruno-liquid-cell-radius, 16px);
+        --qmarina-gap: 10px;
+        --qmarina-radius: var(--bruno-liquid-card-radius, 18px);
+        --qmarina-radius-small: var(--bruno-liquid-card-radius-compact, 16px);
+        --qmarina-cell-radius: var(--bruno-liquid-cell-radius, 16px);
         --accent: var(--bruno-liquid-accent, 150, 190, 255);
         --accent-blue: 96, 165, 250;
         --accent-cyan: 79, 172, 254;
         --accent-amber: 255, 183, 77;
-        --media-screen-height: 154px;
+        /* Tamanho FIXO do quadrado da arte (padrão). ANTERIOR: 168px (cortava
+           arte/volume com a faixa mais baixa). */
+        --media-screen-height: 150px;
+        /* Altura FIXA do bloco de A/C (ancorado na base) — câmeras/mídia seguem o
+           MESMO valor. Subir/baixar aqui reduz/aumenta o vão luzes↔A/C.
+           As luzes acima continuam dinâmicas (auto) — NÃO mexer nelas. */
+        --ac-h: 320px;
         --text-main: rgba(245,250,255,0.96);
         --text-soft: rgba(255,255,255,0.62);
         --text-dim: rgba(255,255,255,0.42);
         display: block;
         width: 100%;
-        height: 100vh;
-        min-height: 100vh;
+        /* NOVO (Etapa B): como SEÇÃO da shell, preenche o content-slot (100%),
+           não a viewport (100vh). ORIGINAL: height/min-height 100vh. */
+        height: 100%;
+        min-height: 0;
         color: var(--text-main);
         font-family: var(--primary-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
         overflow: hidden;
@@ -1987,20 +3128,21 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         touch-action: manipulation;
       }
 
-      .sala-subview {
+      .quarto-marina-subview {
         width: 100%;
         min-height: 100vh;
         height: 100vh;
         display: grid;
-        grid-template-columns: 64px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
+        /* NOVO (Caminho 2): coluna do rail 64px -> 88px (acomoda rótulos). */
+        grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
         grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
         grid-template-areas:
           "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top"
           "frame-left hero hero hero hero hero side side side side side side side"
-          "frame-left cams cams cams tv tv spotify spotify ac ac ac ac ac"
-          "frame-left cams cams cams tv tv spotify spotify ac ac ac ac ac"
+          "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac"
+          "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac"
           "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
-        gap: var(--sala-gap);
+        gap: var(--qmarina-gap);
         padding: 12px;
         background:
           radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%),
@@ -2010,108 +3152,178 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       }
 
       .hero-panel { grid-area: hero; min-width: 0; min-height: 0; }
-      .side-panel { grid-area: side; min-width: 0; min-height: 0; display: grid; grid-template-rows: 72px minmax(0, 1fr); gap: var(--sala-gap); }
+      .side-panel { grid-area: side; min-width: 0; min-height: 0; display: grid; grid-template-rows: 72px minmax(0, 1fr); gap: var(--qmarina-gap); }
       .room-sidebar { grid-area: frame-left; }
       .cameras-card { grid-area: cams; }
       .tv-card { grid-area: tv; }
+      .ps5-card { grid-area: ps5; }
       .spotify-card { grid-area: spotify; }
       .ac-card { grid-area: ac; }
 
+      /* NOVO (réplica): ponto de montagem do componente REAL do rail. Ocupa a
+         coluna frame-left inteira; o próprio componente renderiza o rail. */
+      .room-rail-mount {
+        grid-area: frame-left;
+        min-width: 0;
+        min-height: 0;
+        position: relative;
+        z-index: 3;
+      }
+      .room-rail-mount > * { height: 100%; }
+
+      /* NOVO: faixas TOPO/RODAPÉ da shell (padrão Câmeras/Roborock: transparente,
+         leve). Topo = nome do cômodo centralizado + data/hora à direita.
+         Rodapé = presença/última atividade, discreto e centralizado. */
+      .subview-topbar {
+        grid-area: frame-top;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 10px;
+        padding: 0 10px;
+        background: transparent;
+      }
+      .subview-room {
+        grid-column: 2;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: rgba(226,232,240,0.82);
+        white-space: nowrap;
+      }
+      .subview-clock {
+        grid-column: 3;
+        justify-self: end;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+        font-variant-numeric: tabular-nums;
+        color: rgba(255,255,255,0.86);
+        font-size: 12px;
+        line-height: 1;
+      }
+      .subview-clock small {
+        color: rgba(226,232,240,0.55);
+        font-size: 10px;
+        line-height: 1;
+      }
+      .subview-footer {
+        grid-area: frame-bottom;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        background: transparent;
+      }
+      .subview-presence {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(226,232,240,0.46);
+        font-size: 12px;
+        font-weight: 560;
+        letter-spacing: 0.02em;
+      }
+      .subview-presence ha-icon {
+        --mdc-icon-size: 16px;
+        color: rgba(226,232,240,0.5);
+        flex: 0 0 auto;
+      }
+      /* hero LIMPO: cortina ancorada embaixo */
+      .hero-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+
+      /* NOVO (Caminho 2): cluster CENTRALIZADO, FLAT/integrado (sem pílula/blur),
+         com rótulos. Mesma linguagem do rail do painel principal.
+         ORIGINAL (pílula glass) preservado no histórico git. */
       .room-sidebar {
         position: relative;
         z-index: 3;
         isolation: isolate;
         align-self: center;
         justify-self: center;
-        width: 58px;
-        display: grid;
-        grid-auto-rows: 40px;
-        gap: 7px;
-        padding: 12px 8px;
-        border-radius: 999px;
-        background: var(--bruno-liquid-rail-background,
-          radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
-          radial-gradient(38px 110px at 92% 86%, rgba(var(--accent),0.10), transparent 68%),
-          linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.038) 34%, rgba(255,255,255,0.065)),
-          linear-gradient(155deg, rgba(22,27,38,0.84), rgba(10,12,18,0.72) 48%, rgba(18,16,17,0.46))
-        );
-        border: var(--bruno-liquid-rail-border, 1px solid rgba(255,255,255,0.11));
-        box-shadow: var(--bruno-liquid-rail-shadow,
-          inset 0 1px 0 rgba(255,255,255,0.18),
-          inset 0 -1px 0 rgba(255,255,255,0.045),
-          0 18px 40px rgba(0,0,0,0.36)
-        );
-        backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
-        -webkit-backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
-        overflow: hidden;
+        width: 84px;
+        /* CORRECAO: flex em coluna estica os botões à largura total (antes era
+           grid sem coluna -> encolhia ao ícone e cortava o rótulo). */
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 8px 1px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        overflow: visible;
       }
 
-      .room-sidebar::before {
-        content: "";
-        position: absolute;
-        inset: 1px;
-        z-index: 0;
-        pointer-events: none;
-        border-radius: calc(999px - 1px);
-        background: var(--bruno-liquid-rail-sheen,
-          radial-gradient(34px 42px at 24% 3%, rgba(255,255,255,0.26), transparent 70%),
-          radial-gradient(42px 70px at 94% 18%, rgba(var(--accent),0.16), transparent 72%),
-          linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
-          linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%)
-        );
-        opacity: var(--bruno-liquid-rail-sheen-opacity, 0.78);
-      }
+      .room-sidebar::before { display: none; }
 
+      /* NOVO (Caminho 2): botão FLAT — ícone em cima + rótulo embaixo, cor sóbria,
+         seleção DISCRETA (sem o azul antigo). */
       .room-nav-button {
         position: relative;
         z-index: 1;
-        width: 40px;
-        height: 40px;
-        display: inline-flex;
+        width: 100%;
+        height: auto;
+        display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
-        color: rgba(255,255,255,0.70);
+        gap: 4px;
+        padding: 8px 2px 7px;
+        border-radius: 13px;
+        color: rgba(255,255,255,0.60);
         background: transparent;
-        transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 160ms ease, color 160ms ease;
       }
 
-      .room-nav-button::after {
-        content: "";
-        position: absolute;
-        left: 7px;
-        right: 7px;
-        bottom: -5px;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.13), transparent);
-        opacity: 0;
-      }
+      .room-nav-button::after { display: none; }
 
-      .room-nav-button.has-divider::after {
-        opacity: 1;
-      }
-
-      .room-nav-button:hover {
-        color: rgba(255,255,255,0.88);
-        background: rgba(255,255,255,0.075);
+      .room-nav-button:hover,
+      .room-nav-button:focus,
+      .room-nav-button:focus-visible {
+        color: rgba(255,255,255,0.92);
+        background: rgba(255,255,255,0.05);
+        outline: none;
       }
 
       .room-nav-button.is-active {
-        color: white;
-        background: var(--bruno-liquid-selected-blue-background,
-          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 62%),
-          linear-gradient(180deg, rgba(105,150,230,0.68), rgba(59,92,178,0.54))
-        );
-        border: 1px solid var(--bruno-liquid-selected-blue-border, rgba(210,228,255,0.38));
-        box-shadow: var(--bruno-liquid-selected-blue-shadow,
-          inset 0 1px 0 rgba(255,255,255,0.32),
-          0 0 20px rgba(96,165,250,0.32)
-        );
+        color: #fff;
+        background: rgba(255,255,255,0.085);
+        border: none;
+        box-shadow: none;
+      }
+
+      .room-nav-button.is-active svg { stroke: rgb(var(--accent)); }
+
+      /* respiro separando o Home dos cômodos */
+      .room-nav-home { margin-bottom: 8px; }
+
+      .room-nav-label {
+        display: block;
+        font-size: 9.5px;
+        line-height: 1.05;
+        font-weight: 600;
+        color: inherit;
+        text-align: center;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .room-nav-button svg {
-        width: 20px;
-        height: 20px;
+        width: 19px;
+        height: 19px;
         display: block;
         fill: none;
         stroke: currentColor;
@@ -2127,7 +3339,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         isolation: isolate;
         min-width: 0;
         min-height: 0;
-        border-radius: var(--sala-radius);
+        border-radius: var(--qmarina-radius);
         overflow: hidden;
         color: var(--text-main);
         background: var(--bruno-liquid-surface-off-background,
@@ -2157,7 +3369,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         inset: 1px;
         z-index: 0;
         pointer-events: none;
-        border-radius: calc(var(--sala-radius) - 1px);
+        border-radius: calc(var(--qmarina-radius) - 1px);
         background: var(--bruno-liquid-surface-off-sheen,
           radial-gradient(78px 62px at 19% 2%, rgba(255,255,255,0.20), transparent 72%),
           radial-gradient(82px 92px at 94% 18%, rgba(var(--accent),0.12), transparent 74%),
@@ -2264,8 +3476,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           ),
           radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
           radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
-          var(--hero-image) center center / cover no-repeat,
-          var(--hero-fallback-image) center center / cover no-repeat;
+          var(--hero-image) left center / auto 100% no-repeat,
+          var(--hero-fallback-image) left center / auto 100% no-repeat;
         opacity: 1;
         filter: saturate(1.01) brightness(0.90);
         mask-image:
@@ -2426,14 +3638,15 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       }
 
       .curtain-dock {
+        --curtain-gold-rgb: var(--bruno-liquid-warm-accent, 242,194,102);
+        --curtain-gold: rgb(var(--curtain-gold-rgb));
         grid-row: 3;
         grid-column: 1 / -1;
         align-self: end;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
-        gap: 8px;
-        width: min(500px, 100%);
+        gap: 11px;
+        width: min(540px, 100%);
         padding: 0;
         border-radius: 0;
         background: transparent;
@@ -2443,12 +3656,262 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         -webkit-backdrop-filter: none;
       }
 
-      .curtain-copy,
+      .curtain-control-row {
+        display: grid;
+        grid-template-columns: minmax(94px, auto) minmax(96px, 1fr) auto;
+        align-items: center;
+        gap: 18px;
+        min-width: 0;
+      }
+
+      .curtain-identity,
       .title-with-chip {
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 8px;
         min-width: 0;
+      }
+
+      .curtain-icon-shell {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.17), rgba(255,255,255,0.04) 56%, rgba(0,0,0,0.18)),
+          rgba(18,20,21,0.52);
+        border: 1px solid rgba(255,255,255,0.16);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        backdrop-filter: blur(12px) saturate(1.18);
+        -webkit-backdrop-filter: blur(12px) saturate(1.18);
+      }
+
+      .curtain-title {
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        letter-spacing: 0;
+        color: rgba(255,255,255,0.96);
+        white-space: nowrap;
+      }
+
+      .curtain-status {
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .curtain-status-text {
+        color: var(--curtain-gold);
+      }
+
+      .curtain-status-percent {
+        color: rgba(255,255,255,0.78);
+        font-weight: 800;
+      }
+
+      .curtain-main-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        min-width: 0;
+      }
+
+      .curtain-action-button {
+        width: 76px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 9px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
+        background: var(--bruno-liquid-control-background,
+          linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018)),
+          rgba(255,255,255,0.030)
+        );
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        color: rgba(255,255,255,0.88);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0;
+        white-space: nowrap;
+      }
+
+      .curtain-action-button.is-muted {
+        color: rgba(255,255,255,0.88);
+      }
+
+      .curtain-action-button.is-active {
+        color: var(--curtain-gold);
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(var(--curtain-gold-rgb),0.180));
+        background: var(--bruno-liquid-control-warm-background, rgba(var(--curtain-gold-rgb),0.038));
+        box-shadow: var(--bruno-liquid-control-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+      }
+
+      .curtain-action-button:active {
+        transform: translateY(1px);
+        color: var(--curtain-gold);
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(var(--curtain-gold-rgb),0.180));
+        background: var(--bruno-liquid-control-warm-background, rgba(var(--curtain-gold-rgb),0.038));
+      }
+
+      .curtain-action-button:disabled,
+      .curtain-mark:disabled,
+      .curtain-range:disabled {
+        opacity: 0.46;
+        cursor: not-allowed;
+      }
+
+      .curtain-svg {
+        display: block;
+        fill: rgba(255,255,255,0.70);
+        stroke: rgba(255,255,255,0.58);
+        stroke-width: 2.1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: 0 0 auto;
+      }
+
+      .curtain-svg.is-main {
+        fill: rgba(255,255,255,0.78);
+        stroke: rgba(255,255,255,0.54);
+      }
+
+      .curtain-svg.is-stop {
+        fill: rgba(255,255,255,0.64);
+        stroke: rgba(255,255,255,0.54);
+      }
+
+      .curtain-slider-zone {
+        position: relative;
+        display: grid;
+        gap: 0;
+        min-width: 0;
+      }
+
+      .curtain-slider-glow {
+        position: absolute;
+        left: 0;
+        top: -3px;
+        width: var(--curtain-position);
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(var(--curtain-gold-rgb),0.11), rgba(var(--curtain-gold-rgb),0.020));
+        filter: blur(8px);
+        pointer-events: none;
+      }
+
+      .curtain-range {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 3px;
+        margin: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.055);
+        background:
+          linear-gradient(90deg, rgba(var(--curtain-gold-rgb),0.62) 0 var(--curtain-position), rgba(var(--curtain-gold-rgb),0.24) var(--curtain-position), rgba(255,255,255,0.11) var(--curtain-position) 100%);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.24);
+        cursor: pointer;
+        accent-color: var(--curtain-gold);
+      }
+
+      .curtain-range::-webkit-slider-runnable-track {
+        height: 3px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .curtain-range::-webkit-slider-thumb {
+        width: 12px;
+        height: 12px;
+        margin-top: -4.5px;
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.30);
+        background:
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.86), rgba(var(--curtain-gold-rgb),0.74) 58%, rgba(20,20,20,0.78));
+        box-shadow: 0 0 7px rgba(var(--curtain-gold-rgb),0.22), 0 2px 6px rgba(0,0,0,0.34);
+      }
+
+      .curtain-range::-moz-range-track {
+        height: 3px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .curtain-range::-moz-range-progress {
+        height: 3px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(var(--curtain-gold-rgb),0.62), rgba(var(--curtain-gold-rgb),0.24));
+      }
+
+      .curtain-range::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.30);
+        background:
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.86), rgba(var(--curtain-gold-rgb),0.74) 58%, rgba(20,20,20,0.78));
+        box-shadow: 0 0 7px rgba(var(--curtain-gold-rgb),0.22), 0 2px 6px rgba(0,0,0,0.34);
+      }
+
+      .curtain-marks {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin-top: 7px;
+      }
+
+      .curtain-mark {
+        position: relative;
+        min-width: 0;
+        height: 22px;
+        padding: 8px 0 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255,255,255,0.42);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0;
+        cursor: pointer;
+      }
+
+      .curtain-mark::before {
+        content: "";
+        position: absolute;
+        top: 1px;
+        left: 50%;
+        width: 1px;
+        height: 4px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: rgba(255,255,255,0.28);
+      }
+
+      .curtain-mark.is-active {
+        color: var(--curtain-gold);
+      }
+
+      .curtain-mark.is-active::before {
+        background: rgba(var(--curtain-gold-rgb),0.72);
       }
 
       .module-icon,
@@ -2467,65 +3930,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
 
       .module-icon ha-icon,
       .micro-icon ha-icon {
-        --mdc-icon-size: 15px;
-      }
-
-      .curtain-pill {
-        align-self: center;
-        justify-self: stretch;
-        min-height: 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 11px;
-        border-radius: 999px;
-        color: rgb(255,208,92);
-        font-size: 11px;
-        font-weight: 800;
-        background: rgba(255,183,77,0.12);
-        border: 1px solid rgba(255,183,77,0.25);
-      }
-
-      .curtain-actions {
-        grid-column: 1 / -1;
-        justify-self: stretch;
-        display: grid;
-        grid-template-columns: repeat(4, minmax(68px, 1fr)) minmax(118px, auto);
-        align-items: center;
-        gap: 8px;
-      }
-
-      .preset-button {
-        min-height: 48px;
-        display: grid;
-        place-items: center;
-        gap: 4px;
-        padding: 6px 6px;
-        border-radius: var(--bruno-liquid-control-radius, 14px);
-        background: var(--bruno-liquid-control-background,
-          radial-gradient(74px 44px at 50% 0%, rgba(255,255,255,0.13), transparent 72%),
-          rgba(255,255,255,0.058)
-        );
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.12));
-        color: rgba(255,255,255,0.72);
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.08));
-      }
-
-      .preset-button.is-primary {
-        color: rgba(136,122,255,0.98);
-        background:
-          radial-gradient(64px 46px at 50% 0%, rgba(136,122,255,0.32), transparent 72%),
-          rgba(88,72,185,0.22);
-        border-color: rgba(136,122,255,0.44);
-      }
-
-      .preset-button ha-icon {
-        --mdc-icon-size: 19px;
-      }
-
-      .preset-button span {
-        font-size: 10px;
-        font-weight: 700;
+        --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
       }
 
       .soft-button,
@@ -2546,210 +3951,6 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         background: var(--bruno-liquid-control-blue-background, rgba(24,134,190,0.42));
         border-color: var(--bruno-liquid-control-blue-border, rgba(96,190,255,0.50));
         box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.18));
-      }
-
-      .curtain-progress {
-        display: none;
-        grid-column: 1 / -1;
-        height: 7px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.16);
-      }
-
-      .curtain-progress span {
-        display: block;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, rgba(255,255,255,0.94), rgba(126,204,255,0.78));
-      }
-
-      .curtain-dock {
-        width: min(520px, 100%);
-        grid-template-rows: auto auto;
-        gap: 11px;
-        --curtain-gold: rgb(242,194,102);
-      }
-
-      .curtain-dock.is-disabled {
-        opacity: 0.72;
-      }
-
-      .curtain-control-row {
-        display: grid;
-        grid-template-columns: minmax(116px, auto) minmax(86px, 1fr) auto;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-      }
-
-      .curtain-identity {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-      }
-
-      .curtain-icon-shell {
-        width: 30px;
-        height: 30px;
-        display: grid;
-        place-items: center;
-        flex: 0 0 auto;
-        border-radius: 50%;
-        background:
-          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.17), rgba(255,255,255,0.04) 56%, rgba(0,0,0,0.18)),
-          rgba(18,20,21,0.52);
-        border: 1px solid rgba(255,255,255,0.16);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
-      }
-
-      .curtain-title {
-        font-size: 13px;
-        line-height: 1.05;
-        font-weight: 800;
-        color: rgba(255,255,255,0.96);
-        white-space: nowrap;
-      }
-
-      .curtain-status {
-        justify-self: center;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        min-width: 0;
-        font-size: 13px;
-        line-height: 1.05;
-        font-weight: 800;
-        white-space: nowrap;
-      }
-
-      .curtain-status-text { color: var(--curtain-gold); }
-      .curtain-status-percent { color: rgba(255,255,255,0.78); }
-
-      .curtain-main-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 7px;
-        min-width: 0;
-      }
-
-      .curtain-action-button {
-        width: 78px;
-        height: 40px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        padding: 0 9px;
-        border-radius: var(--bruno-liquid-control-radius, 14px);
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
-        background: var(--bruno-liquid-control-background,
-          linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025)),
-          rgba(22,23,24,0.50)
-        );
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 18px rgba(0,0,0,0.22));
-        color: rgba(255,255,255,0.88);
-        font-size: 12px;
-        font-weight: 700;
-        white-space: nowrap;
-      }
-
-      .curtain-action-button:disabled,
-      .curtain-chip:disabled,
-      .curtain-range:disabled {
-        opacity: 0.46;
-        cursor: not-allowed;
-      }
-
-      .curtain-svg {
-        display: block;
-        width: 19px;
-        height: 19px;
-        fill: rgba(255,255,255,0.70);
-        stroke: rgba(255,255,255,0.58);
-        stroke-width: 2.1;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        flex: 0 0 auto;
-      }
-
-      .curtain-icon-shell .curtain-svg {
-        width: 18px;
-        height: 18px;
-      }
-
-      .curtain-slider-zone {
-        position: relative;
-        display: grid;
-        gap: 0;
-        min-width: 0;
-      }
-
-      .curtain-slider-glow {
-        position: absolute;
-        left: 0;
-        top: -4px;
-        width: var(--curtain-position);
-        height: 14px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, rgba(242,194,102,0.24), rgba(242,194,102,0.05));
-        filter: blur(10px);
-        pointer-events: none;
-      }
-
-      .curtain-range {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        height: 4px;
-        margin: 0;
-        appearance: none;
-        -webkit-appearance: none;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: linear-gradient(90deg, var(--curtain-gold) 0 var(--curtain-position), rgba(242,194,102,0.45) var(--curtain-position), rgba(255,255,255,0.10) var(--curtain-position) 100%);
-        box-shadow: inset 0 1px 2px rgba(0,0,0,0.34);
-        accent-color: var(--curtain-gold);
-      }
-
-      .curtain-range::-webkit-slider-runnable-track {
-        height: 4px;
-        border-radius: 999px;
-        background: transparent;
-      }
-
-      .curtain-range::-webkit-slider-thumb {
-        width: 18px;
-        height: 18px;
-        margin-top: -7px;
-        -webkit-appearance: none;
-        appearance: none;
-        border-radius: 50%;
-        border: 1px solid rgba(255,255,255,0.34);
-        background:
-          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
-        box-shadow: 0 0 9px rgba(242,194,102,0.34), 0 2px 8px rgba(0,0,0,0.44);
-      }
-
-      .curtain-chips {
-        display: flex;
-        gap: 8px;
-        margin-top: 14px;
-        justify-content: center;
-      }
-
-      .curtain-chip {
-        flex: 1 1 0;
-        min-height: 31px;
-        padding: 0 12px;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.10);
-        background: rgba(255,255,255,0.052);
-        color: rgba(255,255,255,0.48);
-        font-size: 12px;
-        font-weight: 700;
       }
 
       .status-rail {
@@ -2810,6 +4011,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       .lights-card,
       .cameras-card,
       .tv-card,
+      .ps5-card,
       .spotify-card,
       .ac-card {
         padding: 14px;
@@ -2909,7 +4111,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         column-gap: 15px;
         padding: 13px 16px;
         text-align: left;
-        border-radius: var(--sala-cell-radius);
+        border-radius: var(--qmarina-cell-radius);
         color: rgba(255,255,255,0.86);
         background: var(--bruno-liquid-cell-background, rgba(255,255,255,0.055));
         border: var(--bruno-liquid-cell-border, 1px solid rgba(255,255,255,0.11));
@@ -2950,7 +4152,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         gap: 10px;
         padding: 9px 7px;
         overflow: hidden;
-        border-radius: var(--sala-cell-radius);
+        border-radius: var(--qmarina-cell-radius);
         color: rgba(255,255,255,0.74);
         background:
           linear-gradient(145deg, rgba(255,255,255,0.072), rgba(255,255,255,0.026)),
@@ -2969,7 +4171,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         position: absolute;
         inset: 1px;
         pointer-events: none;
-        border-radius: calc(var(--sala-cell-radius) - 1px);
+        border-radius: calc(var(--qmarina-cell-radius) - 1px);
         background:
           radial-gradient(52px 78px at 50% 20%, rgba(255,191,74,0.10), transparent 66%),
           linear-gradient(135deg, rgba(255,255,255,0.11), transparent 34%, transparent 70%, rgba(255,188,65,0.05));
@@ -3268,7 +4470,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         height: 100%;
         padding: 0;
         overflow: hidden;
-        border-radius: var(--sala-radius-small);
+        border-radius: var(--qmarina-radius-small);
         background: rgba(255,255,255,0.045);
         border: 1px solid rgba(255,255,255,0.11);
         text-align: left;
@@ -3279,7 +4481,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         width: 100%;
         height: 100%;
         overflow: hidden;
-        border-radius: var(--sala-radius-small);
+        border-radius: var(--qmarina-radius-small);
         background: radial-gradient(circle at 50% 45%, rgba(70,86,116,0.20), rgba(5,9,20,0.84));
       }
 
@@ -3394,6 +4596,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       }
 
       .tv-card,
+      .ps5-card,
       .spotify-card,
       .ac-card {
         min-height: 0;
@@ -3412,7 +4615,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
 
       .tv-main,
       .spotify-copy,
-      .ac-main {
+      .ac-main,
+      .ps5-copy {
         min-width: 0;
       }
 
@@ -3493,6 +4697,245 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         accent-color: rgb(28,214,104);
       }
 
+      .poster-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--qmarina-radius-small);
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: var(--text-dim);
+        overflow: hidden;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .tv-card .poster-card,
+      .spotify-art {
+        /* PADRÃO QUADRADO FIXO da arte (TV e Spotify): largura segue a altura. */
+        aspect-ratio: 1 / 1;
+        height: var(--media-screen-height, 150px);
+        min-height: var(--media-screen-height, 150px);
+        max-height: var(--media-screen-height, 150px);
+        width: auto;
+        max-width: 100%;
+        justify-self: center;
+      }
+
+      .tv-card .tv-body {
+        grid-template-rows: var(--media-screen-height, 154px) auto;
+      }
+
+      .tv-card .poster-card {
+        grid-row: 1;
+        min-height: 0;
+      }
+
+      .tv-card .tv-main {
+        grid-row: 2;
+      }
+
+      .tv-card .control-row {
+        margin-top: 0;
+      }
+
+      .ps5-body {
+        position: relative;
+        z-index: 1;
+        height: calc(100% - 46px);
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(116px, 1fr) auto;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .ps5-minimal {
+        gap: 8px;
+      }
+
+      .ps5-copy {
+        grid-row: 2;
+        display: grid;
+        align-content: end;
+        gap: 9px;
+        height: 100%;
+      }
+
+      .ps5-copy > strong {
+        align-self: end;
+        color: rgb(45,225,118);
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .ps5-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .ps5-image {
+        grid-row: 1;
+        justify-self: center;
+        align-self: center;
+        width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transform: scale(1.08);
+        filter: drop-shadow(0 18px 28px rgba(0,0,0,0.42));
+      }
+
+      .ps5-footer {
+        min-height: 0;
+        display: grid;
+        gap: 9px;
+      }
+
+      .device-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: fit-content;
+        color: rgba(255,255,255,0.82);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .ps5-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 40px;
+        gap: 8px;
+      }
+
+      .ps5-meta span,
+      .ac-meta span {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+        padding: 10px 11px;
+        border-radius: 12px;
+        color: var(--text-soft);
+        font-size: 11px;
+        background: rgba(255,255,255,0.052);
+        border: 1px solid rgba(255,255,255,0.10);
+      }
+
+      .ps5-meta strong,
+      .ac-meta strong {
+        color: white;
+        min-width: 0;
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .spotify-card {
+        padding: 14px;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .spotify-body {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        /* ANTERIOR (rollback): grid-template-rows: var(--media-screen-height, 154px) auto; */
+        /* NOVO — 1a faixa acompanha a arte quadrada (auto) em vez de altura fixa. */
+        grid-template-rows: auto auto;
+        align-items: stretch;
+        gap: 8px;
+      }
+
+      /* ANTERIOR (rollback) — arte com altura fixa (154px) desacoplada da largura:
+         virava retângulo quando a geometria do cartão mudou (E1).
+      .spotify-art {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        height: var(--media-screen-height, 154px);
+        min-height: var(--media-screen-height, 154px);
+        max-height: var(--media-screen-height, 154px);
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        ...
+      }
+      */
+      /* NOVO — caixa da arte é QUADRADA (aspect-ratio 1/1), dimensionada pela
+         altura disponível e centrada na coluna; largura segue a altura. */
+      .spotify-art {
+        position: relative;
+        inset: auto;
+        aspect-ratio: 1 / 1;
+        height: var(--media-screen-height, 168px);
+        min-height: var(--media-screen-height, 168px);
+        max-height: var(--media-screen-height, 168px);
+        width: auto;
+        max-width: 100%;
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--qmarina-radius-small);
+        background:
+          radial-gradient(circle at 50% 45%, rgba(96,165,250,0.14), transparent 42%),
+          rgba(5,10,20,0.72);
+        overflow: hidden;
+        color: rgba(255,255,255,0.22);
+      }
+
+      .spotify-art.has-art::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 64%, rgba(2,8,18,0.46));
+      }
+
+      .spotify-art ha-icon {
+        --mdc-icon-size: 70px;
+      }
+
+      .spotify-copy {
+        display: grid;
+        align-content: start;
+        gap: 8px;
+      }
+
+      .spotify-card .media-title {
+        margin-top: 0;
+      }
+
+      .spotify-card .media-subtitle {
+        margin-top: -4px;
+      }
+
+      .spotify-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 0;
+      }
+
+      .tv-card .control-button,
+      .spotify-controls .control-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 13px;
+      }
+
+      .state-chip {
+        align-self: start;
+        min-height: 28px;
+      }
+
       .ac-body {
         grid-template-columns: 1fr;
         grid-template-rows: auto auto auto auto minmax(64px, 1fr);
@@ -3557,7 +5000,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       .climate-mode,
       .fan-mode,
       .climate-stepper {
-        min-height: 34px;
+        /* ANTERIOR (rollback): min-height: 34px; */
+        min-height: 38px;
         border-radius: var(--bruno-liquid-control-radius, 14px);
         border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.09));
         background: var(--bruno-liquid-control-background, rgba(255,255,255,0.050));
@@ -3617,15 +5061,11 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       }
 
       .climate-stepper button {
-        height: 34px;
+        /* ANTERIOR (rollback): height: 34px; */
+        height: 38px;
         background: transparent;
         color: rgba(255,255,255,0.82);
         font-size: 17px;
-      }
-
-      .climate-stepper button:disabled {
-        opacity: 0.42;
-        cursor: default;
       }
 
       .climate-stepper span {
@@ -3668,7 +5108,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         min-height: 0;
         height: 104px;
         margin: -8px -14px -14px;
-        border-radius: 0 0 calc(var(--sala-radius) - 1px) calc(var(--sala-radius) - 1px);
+        border-radius: 0 0 calc(var(--qmarina-radius) - 1px) calc(var(--qmarina-radius) - 1px);
         overflow: hidden;
         background: transparent;
       }
@@ -3679,43 +5119,65 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         height: 100%;
       }
 
-      .poster-card {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: var(--sala-radius-small);
-        background: rgba(255,255,255,0.055);
-        border: 1px solid rgba(255,255,255,0.12);
-        color: var(--text-dim);
-        overflow: hidden;
-        font-size: 12px;
-        font-weight: 800;
+      .trend-area {
+        fill: rgba(96,165,250,0.16);
       }
 
-      .tv-card .poster-card,
-      .spotify-art {
-        height: var(--media-screen-height, 154px);
-        min-height: var(--media-screen-height, 154px);
-        max-height: var(--media-screen-height, 154px);
+      .trend-line {
+        fill: none;
+        stroke: rgba(96,165,250,0.76);
+        stroke-width: 2.35;
+        stroke-linecap: round;
+        filter: drop-shadow(0 0 8px rgba(96,165,250,0.32));
       }
 
-      .tv-card .tv-body {
-        grid-template-rows: var(--media-screen-height, 154px) auto;
-      }
-
-      .tv-card .poster-card {
-        grid-row: 1;
-        min-height: 0;
-      }
-
-      .tv-card .tv-main {
-        grid-row: 2;
-      }
-
-      .tv-card .control-row {
+      .spotify-volume {
         margin-top: 0;
       }
+
+      .tv-card,
+      .spotify-card {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 8px;
+        overflow: hidden;
+      }
+
+      .tv-body,
+      .spotify-body {
+        height: auto;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: var(--media-screen-height, 154px) auto;
+        gap: 8px;
+        align-items: stretch;
+      }
+
+      .tv-main,
+      .spotify-copy {
+        display: grid;
+        grid-template-rows: 36px 24px;
+        align-content: start;
+        gap: 8px;
+        padding-top: 12px;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .tv-card .control-row,
+      .spotify-controls {
+        margin-top: 2px;
+      }
+
+      .tv-card .volume-row,
+      .spotify-volume {
+        margin-top: 2px;
+      }
+
+      .media-source {
+        font-size: 14px;
+      }
+
       .spotify-card .media-title,
       .spotify-title {
         max-width: 100%;
@@ -3738,7 +5200,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         max-width: none;
         min-width: 100%;
         padding-right: 34px;
-        animation: bruno-sala-marquee 10s linear infinite;
+        animation: bruno-qmarina-marquee 10s linear infinite;
       }
 
       .spotify-card .media-subtitle {
@@ -3756,7 +5218,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         white-space: nowrap;
       }
 
-      @keyframes bruno-sala-marquee {
+      @keyframes bruno-qmarina-marquee {
         0%, 18% { transform: translateX(0); }
         82%, 100% { transform: translateX(calc(-100% + 100px)); }
       }
@@ -3766,7 +5228,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           display: none;
         }
 
-        .sala-subview {
+        .quarto-marina-subview {
           height: auto;
           overflow: auto;
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3775,7 +5237,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
             "hero side"
             "cams cams"
             "tv spotify"
-            "media ac";
+            "ps5 ac";
         }
 
         .side-panel {
@@ -3797,7 +5259,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           overflow: visible;
         }
 
-        .sala-subview {
+        .quarto-marina-subview {
           grid-template-columns: 1fr;
           grid-template-rows: auto;
           grid-template-areas:
@@ -3806,6 +5268,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
             "cams"
             "tv"
             "spotify"
+            "ps5"
             "ac";
           padding: 8px;
         }
@@ -3834,12 +5297,23 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           grid-template-columns: 1fr;
         }
 
-        .curtain-actions {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .curtain-control-row {
+          grid-template-columns: 1fr;
+          align-items: stretch;
+          gap: 10px;
         }
 
-        .curtain-pill {
-          grid-column: 1 / -1;
+        .curtain-status {
+          justify-self: start;
+        }
+
+        .curtain-main-actions {
+          justify-content: stretch;
+        }
+
+        .curtain-action-button {
+          flex: 1 1 0;
+          min-width: 0;
         }
 
         .side-panel {
@@ -3865,6 +5339,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         }
 
         .tv-card,
+        .ps5-card,
         .spotify-card,
         .ac-card {
           min-height: 260px;
@@ -3880,39 +5355,78 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         }
       }
 
-      .sala-subview {
-        --sala-gap: 12px;
-        --sala-shell-height: min(734px, calc(100vh - 34px));
-        height: 100vh;
-        min-height: 100vh;
-        grid-template-columns: 56px minmax(420px, 540px) minmax(630px, 1fr);
-        grid-template-rows: var(--sala-shell-height);
-        grid-template-areas: "frame-left left right";
-        align-content: center;
+      /* GRID ATIVO. NOVO (Caminho 2): rail 56px -> 88px (acomoda rótulos) e
+         adicionadas as faixas TOPO/RODAPÉ da shell (frame-top/frame-bottom),
+         com o rail (frame-left) atravessando as 3 linhas (cluster centralizado).
+         ORIGINAL: rail 56px, linha única "frame-left left right", shell-height
+         min(734px, 100vh-34px). */
+      /* NOVO (Etapa B): SEÇÃO da shell (conteúdo-only). SEM coluna frame-left (o
+         rail é da shell). Preenche o content-slot (height 100%). Régua das faixas
+         = a do painel principal: superior 48px, inferior 74px. Padding 0 (o
+         content-slot da shell já dá 12px de respiro). */
+      /* NOVO (full-bleed subview, Passada 1): topband full-width + conteúdo
+         (hero/cortina/[câmeras|mídia]) à esquerda + direita (Iluminação/AC).
+         ANTERIOR (rollback): grid "frame-top / left right / frame-bottom",
+         colunas minmax(420,540)+minmax(630,1fr), linhas 48/1fr/54. */
+      .quarto-marina-subview {
+        /* Igual ao painel principal (section_home grid-gap: 10px) — padronização
+           da régua. ANTERIOR: 12px. */
+        --qmarina-gap: 10px;
+        display: grid;
+        height: 100%;
+        min-height: 0;
+        grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
+        /* Régua da shell (igual ao painel principal): topo 48px, base 54px. */
+        grid-template-rows: 48px minmax(0, 1fr) 54px;
+        grid-template-areas:
+          "topband    topband"
+          "content    right"
+          "bottomband bottomband";
         align-items: stretch;
-        gap: var(--sala-gap);
-        padding: 12px 10px 22px;
+        gap: var(--qmarina-gap);
+        padding: 0;
+        background: transparent;
       }
 
-      .left-column,
+      .content-left,
       .right-column {
         min-width: 0;
         min-height: 0;
         height: 100%;
       }
 
-      .left-column {
-        grid-area: left;
+      /* Conteúdo-esquerda: hero (alto, com a cortina sobreposta) -> [câmeras | mídia]. */
+      .content-left {
+        grid-area: content;
         display: grid;
-        grid-template-rows: minmax(320px, 1.24fr) minmax(250px, 1fr);
-        gap: var(--sala-gap);
+        grid-template-columns: 1fr;
+        /* Câmeras/mídia ACOMPANHAM a altura do A/C (mesmo --ac-h) -> faixa inferior
+           alinhada. Hero absorve o resto. */
+        grid-template-rows: minmax(0, 1fr) var(--ac-h, 320px);
+        gap: var(--qmarina-gap);
       }
 
+      .cams-media-row {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--qmarina-gap);
+      }
+
+      /* Direita: Iluminação (luzes) em cima + AC embaixo. AMBOS visíveis (sem
+         colapso). Luzes um pouco maior; absorve a maior parte da redução da faixa
+         inferior. ANTERIOR (bug): "minmax(0,1fr) auto" -> AC pegava o natural
+         (alto) e a Iluminação colapsava/sumia. */
+      /* ÚNICO ajuste: luzes seguem ABRAÇANDO o conteúdo (auto, como já funcionava)
+         no topo; o A/C ganha ALTURA FIXA (--ac-h) e fica ANCORADO na base
+         (align-content: space-between). O respiro variável fica entre os dois.
+         Câmeras/mídia e luzes NÃO foram alterados. */
       .right-column {
         grid-area: right;
         display: grid;
-        grid-template-rows: 64px minmax(0, 1fr);
-        gap: var(--sala-gap);
+        grid-template-rows: auto var(--ac-h, 290px);
+        align-content: space-between;
       }
 
       .right-control-grid {
@@ -3924,7 +5438,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         grid-template-areas:
           "lights ac"
           "media ac";
-        gap: var(--sala-gap);
+        gap: var(--qmarina-gap);
       }
 
       .hero-panel,
@@ -3936,24 +5450,465 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         min-height: 0;
       }
 
-      .hero-panel {
+      /* NOVO (Passada 1): blocos auto-posicionados pela ordem do DOM dentro de
+         .content-left (hero, cortina, [câmeras|mídia]) e .right-column (lights, ac).
+         ANTERIOR (rollback): lights->lights, media->media, ac->ac. */
+      .hero-panel,
+      .cameras-card,
+      .lights-card,
+      .media-hub-card,
+      .ac-card,
+      .curtain-card {
         grid-area: auto;
       }
 
-      .cameras-card {
-        grid-area: auto;
+      /* ===== Topband — FAIXA de status (re-skin savant, IGUAL ao painel principal):
+         badges FLAT (sem pílula/caixa), separadas por filete; apagado = cinza
+         sóbrio; aceso = acende na cor do grupo (--tone), sem pill branco. ===== */
+      .subview-topband {
+        grid-area: topband;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .topband-badges {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        overflow: hidden;
+      }
+      .tb-badge {
+        --tone: 154,160,166;
+        height: 46px;
+        display: grid;
+        grid-template-columns: 22px auto;
+        align-items: center;
+        column-gap: 9px;
+        padding: 0 16px;
+        color: rgba(255,255,255,0.92);
+      }
+      .tb-badge + .tb-badge { border-left: 1px solid rgba(255,255,255,0.10); }
+      .tb-badge-icon { width: 22px; height: 22px; display: grid; place-items: center; color: rgba(255,255,255,0.44); }
+      .tb-badge-icon ha-icon { --mdc-icon-size: 18px; }
+      .tb-badge-text { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; line-height: 1.02; }
+      .tb-badge-title { font-size: 10px; line-height: 1; font-weight: 600; color: rgba(255,255,255,0.60); }
+      .tb-badge-sub { font-size: 11px; line-height: 1; font-weight: 600; color: rgba(255,255,255,0.42); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+      .tb-badge.is-active .tb-badge-icon { color: rgb(var(--tone)); filter: drop-shadow(0 0 8px rgba(var(--tone),0.45)); }
+      .tb-badge.is-active .tb-badge-title { color: rgba(255,255,255,0.94); }
+      .tb-badge.is-active .tb-badge-sub { color: rgb(var(--tone)); }
+      .topband-clock { text-align: right; line-height: 1.05; white-space: nowrap; }
+      .topband-clock span[data-clock] { font-size: 22px; font-weight: 800; color: rgba(248,251,255,0.96); }
+      .topband-clock small { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-soft); }
+
+      /* ===== Hero atmosfera (transparente) — cortina sobreposta, ancorada embaixo À ESQUERDA ===== */
+      .hero-atmosphere { height: 100%; }
+      .hero-atmosphere .hero-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-start;
+        padding: 0;
+      }
+      /* Cortina SOBREPOSTA ao hero, SEM caixa (transparente) e ALINHADA À ESQUERDA.
+         (Bug: align-self:end do dock antigo, em flex-column, jogava p/ a direita.) */
+      .curtain-overlay {
+        align-self: stretch;
+        /* Ocupa TODA a largura do hero (= largura de câmeras+mídia). ANTERIOR do
+           .curtain-dock: width: min(540px,100%). */
+        width: 100% !important;
+        max-width: 100% !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        padding: 0;
       }
 
-      .lights-card {
-        grid-area: lights;
+      /* ===== Faixa inferior (54px) — presença/última atividade, translúcida, com
+         o MESMO filete divisor do dock do painel principal (mais claro no centro). ===== */
+      .subview-footer {
+        grid-area: bottomband;
+        position: relative;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: transparent;
+      }
+      .subview-footer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 8px;
+        right: 8px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16) 50%, transparent);
+      }
+      .subview-presence {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.52);
+      }
+      .subview-presence ha-icon { --mdc-icon-size: 16px; color: rgba(255,255,255,0.42); }
+
+      /* ===== NOVO (Passada 2): Iluminação — acordeão de zonas ===== */
+      .lights-card { display: flex; flex-direction: column; min-height: 0; }
+      .lights-head { flex: 0 0 auto; }
+      .lights-zones { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding: 0 2px 0 0; }
+      .lights-zones::-webkit-scrollbar { width: 0; }
+      .light-zone {
+        border-radius: 16px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        overflow: hidden;
+      }
+      .light-zone.is-expanded { background: rgba(255,255,255,0.055); }
+      .zone-header {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 11px;
+        padding: 12px 14px;
+        cursor: pointer;
+      }
+      .zone-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(255,196,90,0.30); background: rgba(255,196,90,0.08); color: rgba(255,196,90,0.92); }
+      .zone-icon ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
+      .zone-id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .zone-id strong { font-size: 14px; font-weight: 700; color: var(--text-main); }
+      .zone-id small { font-size: 11px; font-weight: 600; color: var(--text-soft); }
+      .zone-off { font-size: 11px; font-weight: 700; color: rgba(255,196,90,0.92); white-space: nowrap; cursor: pointer; }
+      .zone-chevron { --mdc-icon-size: 20px; color: var(--text-soft); }
+      .zone-preview { padding: 0 14px 12px; font-size: 11px; font-weight: 600; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .zone-lights { display: flex; flex-direction: column; padding: 0 6px 6px; }
+      /* NOVO: linha = ícone (em círculo) | nome | BARRA LUMINOSA read-only.
+         ANTERIOR: ícone | nome | estado | toggle. */
+      .light-row {
+        display: grid;
+        /* nome com largura FIXA p/ todas as barras alinharem (cada linha é um
+           grid próprio; 'auto' desalinharia conforme o tamanho do nome). */
+        grid-template-columns: 38px 120px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        padding: 8px 10px;
+        background: transparent;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        color: var(--text-main);
+        text-align: left;
+      }
+      .light-row:hover { background: rgba(255,255,255,0.04); }
+      /* PADRONIZAÇÃO do ícone animado (_tplLightIcon): pinta com fill:
+         var(--light-color). Wrapper agora é CIRCULAR (extra premium, imagem 3). */
+      .light-row-icon {
+        width: 36px; height: 36px;
+        display: grid; place-items: center;
+        --light-color: #9da0a2;
+        color: var(--light-color);
+      }
+      .light-row.is-on .light-row-icon {
+        --light-color: #f0c040;
+        color: var(--light-color);
+        filter: drop-shadow(0 0 7px rgba(240,192,64,0.28));
+      }
+      /* CENTRALIZAÇÃO: o wrapper do ícone animado ocupava 100% do círculo em
+         display:block, jogando o svg p/ o canto. Constrange a 22px e o
+         place-items:center do círculo centraliza. */
+      .light-row-icon .tpl-light-icon {
+        width: var(--bruno-liquid-icon-control, 23px);
+        height: var(--bruno-liquid-icon-control, 23px);
+      }
+      .light-row-icon svg { width: 100%; height: 100%; }
+      .light-row-name { min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* BARRA LUMINOSA read-only (não é slider): apagada = pílula escura;
+         acesa = gradiente âmbar com glow. O toque é da LINHA (toggle-light). */
+      .light-bar {
+        height: 11px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.09);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
+        pointer-events: none;
+        transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      }
+      .light-row.is-on .light-bar {
+        background: linear-gradient(90deg, rgba(255,176,54,0.96), rgba(255,206,120,0.96));
+        border-color: rgba(255,196,90,0.55);
+        box-shadow: 0 0 12px rgba(255,176,54,0.55), 0 0 4px rgba(255,176,54,0.6), inset 0 1px 0 rgba(255,255,255,0.45);
       }
 
-      .media-hub-card {
-        grid-area: media;
+      /* ===== A/C premium: cabecalho e controles alinhados ao Hub de Midia ===== */
+      .ac-card.ac-card-lean {
+        display: grid;
+        grid-template-rows: 44px minmax(0, 1fr) 64px;
+        gap: 0;
+        min-height: 0;
+        padding: 0;
+        overflow: hidden;
       }
 
-      .ac-card {
-        grid-area: ac;
+      .ac-lean-head {
+        position: relative;
+        z-index: 3;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px 0 14px;
+      }
+
+      .ac-head-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .ac-top-stack {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        z-index: 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .ac-more-button {
+        flex: 0 0 auto;
+      }
+
+      .ac-power-floating {
+        width: 46px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 0;
+        background: transparent;
+        color: rgba(255,255,255,0.66);
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+      }
+
+      .ac-power-floating ha-icon {
+        --mdc-icon-size: 34px;
+      }
+
+      .ac-power-floating:hover,
+      .ac-power-floating:focus-visible {
+        color: rgba(255,255,255,0.92);
+        background: rgba(255,255,255,0.045);
+      }
+
+      .ac-power-floating.is-active {
+        color: rgba(150,205,255,0.98);
+        background: rgba(96,165,250,0.075);
+        box-shadow: 0 0 18px rgba(44,175,255,0.22);
+      }
+
+      .ac-power-floating:active {
+        transform: translateY(1px);
+      }
+
+      .ac-power-floating:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .ac-lean-mid {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px 2px;
+      }
+
+      .ac-ring {
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+      }
+
+      .ac-ring .icg-shell {
+        width: min(94%, 334px);
+        transform: translateY(3px);
+      }
+
+      .ac-lean-foot {
+        position: relative;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding: 0 10px 10px;
+        align-items: end;
+      }
+
+      .ac-control-wrap {
+        position: relative;
+        min-width: 0;
+      }
+
+      .ac-action {
+        width: 100%;
+        min-width: 0;
+        min-height: 50px;
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        gap: 9px;
+        padding: 7px 10px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        cursor: pointer;
+        color: var(--text-main);
+        text-align: left;
+      }
+
+      .ac-action:hover,
+      .ac-action.is-open {
+        background: var(--bruno-liquid-control-warm-background, rgba(242,194,102,0.038));
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(242,194,102,0.180));
+      }
+
+      .ac-action:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .ac-action-icon {
+        width: 32px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        color: rgba(255,255,255,0.82);
+        flex: 0 0 auto;
+      }
+
+      .ac-action:hover .ac-action-icon,
+      .ac-action.is-open .ac-action-icon {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
+      }
+
+      .ac-action-icon ha-icon {
+        --mdc-icon-size: var(--bruno-liquid-icon-control, 23px);
+      }
+
+      .ac-action-text {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .ac-action-text small {
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 650;
+        color: rgba(255,255,255,0.58);
+      }
+
+      .ac-action-text strong {
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        color: rgba(255,255,255,0.94);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ac-popover {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(100% + 8px);
+        z-index: 12;
+        display: grid;
+        gap: 4px;
+        padding: 6px;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        /* Não reutilizar o fundo do card: esta é uma superfície de escolha
+           temporária e precisa sobrepor o gauge com leitura inequívoca. */
+        background: var(--bruno-liquid-popup-background,
+          linear-gradient(180deg, rgba(34,31,30,0.720), rgba(12,13,16,0.660))
+        );
+        border: var(--bruno-liquid-popup-border, 1px solid rgba(255,255,255,0.115));
+        box-shadow: var(--bruno-liquid-popup-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.100),
+          0 18px 36px rgba(0,0,0,0.300)
+        );
+        backdrop-filter: var(--bruno-liquid-popup-filter, blur(22px) saturate(1.04) brightness(0.96));
+        -webkit-backdrop-filter: var(--bruno-liquid-popup-filter, blur(22px) saturate(1.04) brightness(0.96));
+      }
+
+      .ac-popover-option {
+        min-width: 0;
+        min-height: 32px;
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        align-items: center;
+        gap: 7px;
+        padding: 0 8px;
+        border-radius: 9px;
+        border: 0;
+        background: var(--bruno-liquid-popup-option-background, rgba(255,255,255,0.035));
+        color: rgba(255,255,255,0.82);
+        font-size: 11px;
+        font-weight: 750;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .ac-popover-option ha-icon {
+        --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px);
+        color: rgba(255,255,255,0.72);
+      }
+
+      .ac-popover-option span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .ac-popover-option:hover,
+      .ac-popover-option.is-active {
+        color: rgba(255,255,255,0.98);
+        background: var(--bruno-liquid-popup-option-hover-background, rgba(242,194,102,0.115));
+      }
+
+      .ac-popover-option:hover ha-icon,
+      .ac-popover-option.is-active ha-icon {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
+      }
+
+      .ac-popover-option:disabled {
+        opacity: 0.48;
+        cursor: default;
       }
 
       .room-sidebar {
@@ -4021,15 +5976,11 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
 
       .curtain-dock {
         width: min(520px, 100%);
-        gap: 8px;
+        gap: 12px;
       }
 
-      .curtain-actions {
-        grid-template-columns: repeat(4, minmax(70px, 1fr)) minmax(112px, auto);
-      }
-
-      .preset-button {
-        min-height: 46px;
+      .curtain-action-button {
+        min-width: 78px;
       }
 
       .status-rail {
@@ -4087,6 +6038,13 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         min-height: 34px;
         padding: 0 14px;
       }
+      /* NOVO (extra premium): chips com ícone sol/lua. */
+      .chip-button-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .chip-button-icon ha-icon { --mdc-icon-size: 15px; }
 
       .zone-toggle button.is-active {
         color: rgba(255,255,255,0.96);
@@ -4132,37 +6090,266 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         font-size: 14.8px;
       }
 
-      .camera-list,
-      .camera-single {
+      /* ===== Câmeras — feed principal + PiP + controles contextuais ===== */
+      .cameras-card.cameras-card-controls {
+        padding: 0;
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
-
-      .camera-tile {
-        position: relative;
-        min-width: 0;
-        min-height: 0;
+        grid-template-rows: 44px minmax(0, 1fr);
+        gap: 0;
         overflow: hidden;
-        border-radius: var(--sala-radius-small);
       }
 
-      .camera-tile.is-selected {
-        box-shadow: 0 0 0 1px rgba(96,190,255,0.22);
+      .cameras-head {
+        flex: 0 0 auto;
       }
 
-      .camera-main {
+      .camera-settings-button.is-active {
+        color: rgba(255,255,255,0.86);
+        background: rgba(255,255,255,0.055);
+      }
+
+      .camera-pip-stage {
+        box-sizing: border-box;
+        position: relative;
+        z-index: 1;
+        min-height: 0;
         height: 100%;
+        padding: 0 10px 10px;
       }
 
-      .camera-thumb-overlay {
+      .camera-feed {
+        height: 100%;
+        transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+      }
+
+      .camera-primary-feed {
+        width: 100%;
+      }
+
+      .camera-pip-feed {
+        position: absolute;
+        z-index: 5;
+        right: 20px;
+        bottom: 22px;
+        width: min(36%, 150px);
+        height: 86px;
+        border-radius: 13px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.34), 0 0 0 1px rgba(255,255,255,0.10);
+      }
+
+      .camera-pip-stage.is-controls-open .camera-pip-feed {
+        bottom: 76px;
+      }
+
+      .camera-pip-feed .camera-row-copy {
+        left: 9px;
+        right: 9px;
+        bottom: 8px;
+        gap: 0;
+      }
+
+      .camera-pip-feed .camera-row-copy strong {
+        max-width: 100%;
+        font-size: 11px;
+        line-height: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .camera-pip-feed .camera-row-copy span {
         display: none;
       }
 
+      .camera-pip-feed::after {
+        background: linear-gradient(180deg, rgba(4,8,16,0.04), rgba(4,8,16,0.52));
+      }
+
+      .camera-state-surface {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 8px;
+        padding: 16px;
+        color: rgba(255,255,255,0.78);
+        text-align: center;
+        background:
+          radial-gradient(circle at 50% 42%, rgba(96,165,250,0.12), transparent 58%),
+          rgba(5,8,14,0.76);
+        backdrop-filter: blur(8px) saturate(0.9);
+        -webkit-backdrop-filter: blur(8px) saturate(0.9);
+      }
+
+      .camera-state-surface ha-icon {
+        --mdc-icon-size: 32px;
+        color: rgba(255,255,255,0.64);
+      }
+
+      .camera-state-surface span {
+        font-size: 12px;
+        font-weight: 760;
+        line-height: 1.1;
+      }
+
+      .camera-pip-feed .camera-state-surface {
+        gap: 4px;
+        padding: 8px;
+      }
+
+      .camera-pip-feed .camera-state-surface ha-icon {
+        --mdc-icon-size: 22px;
+      }
+
+      .camera-pip-feed .camera-state-surface span {
+        font-size: 9px;
+      }
+
+      .camera-feed.is-private .camera-row-image img,
+      .camera-feed.is-unavailable .camera-row-image img {
+        opacity: 0;
+      }
+
+      .live-dot.is-muted {
+        background: rgba(255,255,255,0.34);
+        box-shadow: none;
+      }
+
+      .camera-control-strip {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        z-index: 7;
+        min-height: 58px;
+        display: grid;
+        align-items: stretch;
+        padding: 4px 0;
+        border: 0;
+        border-radius: 0;
+        background:
+          linear-gradient(180deg, rgba(3,7,13,0.08), rgba(3,7,13,0.40)),
+          rgba(6,8,12,0.18);
+        backdrop-filter: blur(10px) saturate(0.95);
+        -webkit-backdrop-filter: blur(10px) saturate(0.95);
+      }
+
+      .camera-controls {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: stretch;
+      }
+
+      .camera-control {
+        position: relative;
+        min-width: 0;
+        min-height: 50px;
+        display: grid;
+        grid-template-columns: 18px auto 28px;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255,255,255,0.62);
+        cursor: pointer;
+        text-align: left;
+        transition: color 160ms ease, background 160ms ease, opacity 160ms ease;
+      }
+
+      .camera-control + .camera-control::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 11px;
+        bottom: 11px;
+        width: 1px;
+        background: rgba(255,255,255,0.105);
+      }
+
+      .camera-control:hover,
+      .camera-control:focus-visible {
+        color: rgba(255,255,255,0.90);
+        background: rgba(255,255,255,0.036);
+        outline: none;
+      }
+
+      .camera-control:focus-visible {
+        box-shadow: inset 0 0 0 1px rgba(138,196,255,0.42);
+      }
+
+      .camera-control ha-icon {
+        --mdc-icon-size: 17px;
+      }
+
+      .camera-control-label {
+        min-width: 0;
+        font-size: 11px;
+        font-weight: 760;
+        line-height: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .camera-control-switch {
+        position: relative;
+        justify-self: start;
+        width: 26px;
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.16);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+        transition: background 160ms ease, box-shadow 160ms ease;
+      }
+
+      .camera-control-switch::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.74);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.30);
+        transition: transform 160ms ease, background 160ms ease;
+      }
+
+      .camera-control.is-on {
+        color: rgba(218,248,230,0.94);
+      }
+
+      .camera-control.is-on .camera-control-switch {
+        background: rgba(46,231,122,0.58);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.18), 0 0 8px rgba(46,231,122,0.18);
+      }
+
+      .camera-control.is-on .camera-control-switch::after {
+        transform: translateX(12px);
+        background: rgba(255,255,255,0.96);
+      }
+
+      .camera-control.is-unavailable,
+      .camera-control:disabled {
+        opacity: 0.34;
+        cursor: not-allowed;
+      }
+
       .camera-row-copy {
-        left: 13px;
-        right: 13px;
-        bottom: 13px;
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        transition: bottom 220ms ease;
+      }
+
+      .camera-pip-stage.is-controls-open .camera-primary-feed .camera-row-copy {
+        bottom: 76px;
       }
 
       .camera-row-copy strong {
@@ -4255,7 +6442,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        border-radius: var(--sala-radius-small);
+        border-radius: var(--qmarina-radius-small);
         color: rgba(255,255,255,0.22);
         background:
           radial-gradient(circle at 52% 34%, rgba(96,165,250,0.15), transparent 54%),
@@ -4303,6 +6490,14 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         grid-template-rows: 40px minmax(122px, 1fr) auto;
         align-content: stretch;
         gap: 11px;
+      }
+
+      .media-ps5-image {
+        position: static !important;
+        width: 108% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        filter: drop-shadow(0 18px 26px rgba(0,0,0,0.42));
       }
 
       .media-details {
@@ -4518,6 +6713,594 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         text-align: right;
       }
 
+      /* ============================================================
+         Hub de Mídia — ACORDEÃO (NOVO 2026-06-28 · re-skin conceito)
+         320px fixos (herda --ac-h via .cams-media-row). Sem overflow.
+         44px cabeçalho + fontes (276px): 2 recolhidas (pills 38px) +
+         1 expandida (card-in-card). Sem título repetido (o nome vive no
+         cabeçalho da faixa). Accent/volume/progresso dourado #f2c266;
+         ícone Spotify monocromático. Imagem em "bolsão de luz quente".
+         ============================================================ */
+      /* 1.1 — Override específico do Hub (Savant Light): mais translúcido,
+         neutro (sem dominante quente/amarronzado), bordas finas, premium.
+         Atenua o sheen quente do glass-card base só neste bloco. */
+      /* Item 8 — Savant-like: bem mais translúcido (a foto atrás aparece), mas
+         NÃO totalmente vazado — a base escura leve (0.20) + blur menor (16px)
+         preservam a legibilidade das informações. */
+      .media-hub-card.mh-accordion {
+        position: relative;
+        padding: 0;
+        grid-template-rows: 44px minmax(0, 1fr);
+        gap: 0;
+        overflow: hidden;
+        border-radius: var(--bruno-liquid-card-radius, 18px);
+        background: var(--bruno-liquid-surface-off-background,
+          linear-gradient(180deg, rgba(255,255,255,0.040), rgba(255,255,255,0.010) 46%, rgba(0,0,0,0.030)),
+          rgba(9,11,15,0.105)
+        );
+        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-surface-off-shadow, inset 0 1px 0 rgba(255,255,255,0.090), 0 10px 28px rgba(0,0,0,0.145));
+        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(18px) saturate(0.92) brightness(1.05) contrast(1.02));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(18px) saturate(0.92) brightness(1.05) contrast(1.02));
+      }
+      .media-hub-card.mh-accordion::before { opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.10); }
+      .media-hub-card.mh-accordion::after { display: none; }
+
+      .mh-head {
+        position: relative;
+        z-index: 1;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px 0 14px;
+      }
+
+      /* Cabeçalho padronizado: micro-icon (círculo) + module-title, idêntico aos
+         demais blocos (Iluminação/Câmeras/A-C). */
+      .mh-head-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .mh-menu {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        color: rgba(255,255,255,0.52);
+        background: transparent;
+      }
+      .mh-menu ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
+      .media-hub-card .mh-menu.is-active {
+        color: rgba(255,255,255,0.82);
+        background: rgba(255,255,255,0.072);
+      }
+      .mh-menu:active { background: rgba(255,255,255,0.08); }
+
+      .mh-overflow-panel {
+        position: absolute;
+        z-index: 5;
+        top: 42px;
+        right: 10px;
+        width: min(280px, calc(100% - 20px));
+        padding: 7px;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        background: linear-gradient(180deg, rgba(34,31,30,0.72), rgba(12,13,16,0.66));
+        border: 1px solid rgba(255,255,255,0.115);
+        box-shadow: 0 18px 36px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.10);
+        backdrop-filter: blur(22px) saturate(1.04) brightness(0.96);
+        -webkit-backdrop-filter: blur(22px) saturate(1.04) brightness(0.96);
+      }
+
+      .mh-overflow-item {
+        min-height: 52px;
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) 34px 34px;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 5px;
+      }
+
+      .mh-overflow-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.86);
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.075);
+      }
+      .mh-overflow-icon ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
+
+      .mh-overflow-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .mh-overflow-copy strong {
+        font-size: 12.5px;
+        line-height: 1.05;
+        font-weight: 800;
+        color: rgba(255,255,255,0.92);
+      }
+      .mh-overflow-copy small {
+        min-width: 0;
+        font-size: 10.5px;
+        line-height: 1.1;
+        font-weight: 650;
+        color: rgba(255,255,255,0.54);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-overflow-action {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        color: rgba(255,255,255,0.72);
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.075);
+      }
+      .mh-overflow-action ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
+      .mh-overflow-action.is-active {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
+        border-color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.24);
+        background: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.075);
+      }
+      .mh-overflow-action:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      /* Faixas inset 10px; pills com respiro de 6px entre si. */
+      .mh-sources {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 0 10px 10px;
+      }
+
+      /* 1.2 — Recolhidas: faixas MUITO sutis (quase etéreas), baixo contraste
+         e baixo peso. Só a expandida ganha presença marcante. */
+      .mh-source {
+        position: relative;
+        flex: 0 0 42px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        background: var(--bruno-liquid-band-background, rgba(255,255,255,0.010));
+        border: var(--bruno-liquid-band-border, 1px solid rgba(255,255,255,0.035));
+        box-shadow: var(--bruno-liquid-band-shadow, none);
+        transition:
+          flex-basis 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          flex-grow 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          background 220ms ease,
+          border-color 220ms ease,
+          box-shadow 220ms ease;
+        will-change: flex-basis, flex-grow, background, border-color;
+      }
+      .mh-source.is-open {
+        flex: 1 1 0;
+        background: var(--bruno-liquid-band-open-background,
+          linear-gradient(180deg, rgba(255,255,255,0.044), rgba(255,255,255,0.012) 54%, rgba(255,255,255,0.018)),
+          rgba(9,11,15,0.052)
+        );
+        border-color: var(--bruno-liquid-band-open-border-color, rgba(255,255,255,0.092));
+        box-shadow: var(--bruno-liquid-band-open-shadow, inset 0 1px 0 rgba(255,255,255,0.066), 0 6px 16px rgba(0,0,0,0.105));
+      }
+      .mh-source.is-switching {
+        animation: mh-source-open 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      /* 2.1 — Faixas individuais: SÓ o ícone (sem bolha/círculo) + texto colado.
+         Apenas o cabeçalho geral do Hub mantém ícone em bolha (micro-icon).
+         --mh-indent = recuo p/ alinhar info ao INÍCIO do texto do título. */
+      .mh-source-head {
+        --mh-indent: 26px;
+        flex: 0 0 42px;
+        height: 42px;
+        display: grid;
+        grid-template-columns: 20px minmax(0, auto) minmax(0, 1fr) 16px;
+        align-items: center;
+        gap: 6px;
+        padding: 0 12px 0 14px;
+        background: transparent;
+        text-align: left;
+        transition: flex-basis 220ms ease, height 220ms ease;
+      }
+      /* Aberta (item 1): ícone e título alinhados pelo EIXO CENTRAL (align-items
+         center). Altura 46px → espaçamento superior do ícone ≈ 13px, próximo do
+         lateral (14px), sem ficar colado no topo. Idêntico em todas as faixas. */
+      .mh-source.is-open .mh-source-head {
+        flex: 0 0 48px;
+        height: 48px;
+        align-items: center;
+      }
+
+      .mh-src-icon {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        --mdc-icon-size: var(--bruno-liquid-icon-section, 20px);
+        color: rgba(255,255,255,0.6);
+        background: transparent;
+        border: 0;
+      }
+      .mh-icon-spotify { color: rgba(255,255,255,0.66); }
+      .mh-source.is-active .mh-src-icon,
+      .mh-source.is-active .mh-icon-spotify { color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
+
+      .mh-src-name {
+        min-width: 0;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1;
+        color: rgba(255,255,255,0.92);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mh-source.is-open .mh-src-name { font-size: 15px; }
+
+      .mh-src-summary {
+        min-width: 0;
+        justify-self: end;
+        max-width: 100%;
+        font-size: 11.5px;
+        font-weight: 650;
+        color: rgba(255,255,255,0.50);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mh-source.is-open .mh-src-summary { display: none; }
+
+      .mh-src-chevron {
+        --mdc-icon-size: 18px;
+        color: rgba(255,255,255,0.4);
+      }
+      .mh-source.is-open .mh-src-chevron { color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
+
+      .mh-source-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) clamp(168px, 40%, 260px);
+        gap: 14px;
+        padding: 2px 16px 14px;
+      }
+      .mh-source.is-switching .mh-source-body {
+        opacity: 0;
+        transform: translateY(5px);
+        animation: mh-source-body-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) 55ms both;
+      }
+
+      /* 2.2 — Conteúdo no TOPO: título (no head) → música → artista → progresso
+         logo abaixo; volume/botões seguem. */
+      .mh-left {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 10px;
+      }
+      .mh-source.is-switching .mh-left {
+        animation: mh-source-content-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) 75ms both;
+      }
+
+      /* Info (música/artista/progresso/estado) recuada para alinhar com o
+         INÍCIO do texto do título; volume/botões mantêm o alinhamento atual. */
+      .mh-info {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding-left: 26px;
+      }
+
+      /* Item 7 — escala ÚNICA p/ todas as faixas (sem bolinha de status):
+         Info primária (música/estado) e secundária (artista/app/dispositivo)
+         distinguem-se por cor e tamanho, idênticas em TV/Spotify/PS5. */
+      .mh-info small {
+        display: block;
+        font-size: 13.5px;
+        font-weight: 750;
+        line-height: 1.15;
+        color: rgba(255,255,255,0.92);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-info em {
+        display: block;
+        font-style: normal;
+        font-size: 11.5px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: rgba(255,255,255,0.5);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-progress-wrap {
+        width: min(100%, 94%);
+        margin-top: 5px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .mh-progress-time {
+        font-size: 9.5px;
+        line-height: 1;
+        font-weight: 700;
+        color: rgba(255,255,255,0.48);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .mh-progress {
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.14);
+        overflow: hidden;
+      }
+      .mh-progress span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgb(var(--bruno-liquid-warm-accent, 242,194,102)), rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.88));
+      }
+
+      /* Item 3/5 — controles SEMPRE ancorados na base (margin-top:auto): info no
+         topo, volume+botões fixos embaixo. Aparecendo ou não todas as linhas de
+         info, os controles NÃO se deslocam. Posição idêntica em TV e Spotify. */
+      .mh-controls {
+        min-width: 0;
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      /* Volume dentro de caixa arredondada (conceito). */
+      .mh-vol {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr);
+        align-items: center;
+        gap: 9px;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        color: var(--text-soft);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-control-shadow, none);
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+      }
+      .mh-vol ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-status, 15px); color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
+      .mh-vol-label { font-size: 11.5px; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,0.7); }
+      .mh-vol input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.18);
+        accent-color: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
+      }
+      .mh-vol input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
+        box-shadow: 0 0 8px rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.5);
+        cursor: pointer;
+      }
+      .mh-vol input[type="range"]::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border: 0;
+        border-radius: 50%;
+        background: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
+      }
+      .mh-vol.is-disabled { opacity: 0.4; }
+
+      .mh-btn-row {
+        display: grid;
+        gap: 8px;
+      }
+      .mh-btn-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .mh-btn-row-4 { grid-template-columns: repeat(3, minmax(0, 1fr)) 42px; }
+
+      /* 2.3 — Botões com o MESMO tratamento translúcido do container de volume:
+         fundo suave, glass discreto, baixa opacidade, arredondamento menor. */
+      .mh-btn {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 8px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        color: rgba(255,255,255,0.88);
+        font-size: 11.5px;
+        font-weight: 700;
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-control-shadow, none);
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      /* Icon-only: quadrado compacto e centrado. */
+      .mh-btn.is-icon { padding: 0; gap: 0; }
+      .mh-btn ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-control, 23px); flex: 0 0 auto; color: rgba(255,255,255,0.9); }
+      .mh-btn:hover { background: rgba(255,255,255,0.052); }
+      .mh-btn span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mh-btn:active { transform: translateY(1px); }
+      .mh-btn:disabled { opacity: 0.42; cursor: default; }
+
+      /* 3.3 — CTA principal (Ligar TV/PS5 / Dispositivos): elegante, minimalista,
+         ~50% da largura, mais fino, dourado discreto (menos saturado, Savant). */
+      .mh-controls > .mh-btn.is-main {
+        align-self: flex-start;
+        width: 50%;
+        min-width: 140px;
+        min-height: 40px;
+      }
+      .mh-btn.is-main {
+        color: rgba(255,255,255,0.94);
+        background: var(--bruno-liquid-control-warm-background, rgba(242,194,102,0.038));
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(242,194,102,0.180));
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        box-shadow: var(--bruno-liquid-control-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+      }
+      .mh-btn.is-main ha-icon { color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.82); }
+
+      .mh-btn.is-plus {
+        padding: 0;
+        color: rgba(255,255,255,0.72);
+      }
+
+      /* Imagem contextual: APENAS o PNG/arte, sobreposto ao bloco — SEM glow,
+         SEM fundo, SEM moldura. A imagem é ABSOLUTA dentro da célula, então
+         NUNCA infla a altura da linha (não empurra o botão para fora). */
+      .mh-art {
+        position: relative;
+        min-width: 0;
+        align-self: stretch;
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+        border: 0;
+      }
+      .mh-source.is-switching .mh-art {
+        animation: mh-source-art-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) 85ms both;
+      }
+      .mh-art img {
+        position: absolute;
+        inset: 6px 0;
+        width: 100%;
+        height: calc(100% - 12px);
+        object-fit: contain;
+      }
+      .mh-art ha-icon {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        --mdc-icon-size: 56px;
+        color: rgba(255,255,255,0.22);
+      }
+      /* Item 4 — Standby: PNG 100% transparente, SEM sombra/halo (sem filtro). */
+      .mh-art.is-standby img { filter: none; }
+      .mh-art.is-cover img { object-fit: cover; }
+      /* 2.4 — Arte QUADRADA de verdade (aspect-ratio 1/1, dirigida pela altura),
+         centralizada na vertical. Item 6: SEM box-shadow (sombra quadrada). */
+      .mh-art-square.is-cover img {
+        inset: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: auto;
+        height: calc(100% - 10px);
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: none;
+      }
+      /* Item 6 — Thumb da TV em 16:9 real (dirigido pela largura), centralizado,
+         SEM box-shadow. */
+      .mh-art-wide.is-cover img {
+        inset: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        border-radius: 11px;
+        box-shadow: none;
+      }
+
+      @keyframes mh-source-open {
+        from {
+          flex-grow: 0;
+          flex-basis: 42px;
+          border-color: var(--bruno-liquid-band-border-color, rgba(255,255,255,0.040));
+          box-shadow: var(--bruno-liquid-band-shadow, none);
+        }
+        to {
+          flex-grow: 1;
+          flex-basis: 0;
+          border-color: var(--bruno-liquid-band-open-border-color, rgba(255,255,255,0.092));
+          box-shadow: var(--bruno-liquid-band-open-shadow, inset 0 1px 0 rgba(255,255,255,0.066), 0 6px 16px rgba(0,0,0,0.105));
+        }
+      }
+
+      @keyframes mh-source-body-in {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes mh-source-content-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes mh-source-art-in {
+        from { opacity: 0; transform: translateY(4px) scale(0.985); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .mh-source,
+        .mh-source-head,
+        .mh-source-body,
+        .mh-left,
+        .mh-art,
+        .mh-btn {
+          transition: none !important;
+          animation: none !important;
+        }
+        .mh-source-body {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
       .ac-card {
         padding: 14px;
         display: grid;
@@ -4559,14 +7342,27 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         --mdc-icon-size: 18px;
       }
 
+      /* ANTERIOR (rollback) — sobra de altura empoçava no 1fr da .ac-visual,
+         criando vácuo entre o gauge e o slider:
       .ac-body {
         height: auto;
         min-height: 0;
         grid-template-columns: 1fr;
-        /* ANTERIOR (rollback): grid-template-rows: minmax(320px, auto) auto auto auto auto auto; */
         grid-template-rows: minmax(320px, 1fr) auto auto auto auto auto;
         gap: 10px;
         align-content: start;
+      }
+      */
+      /* NOVO — corpo preenche o cartão (height:100%) e distribui a folga do E1
+         igualmente entre TODAS as linhas (space-between), em vez de jogar tudo
+         num único vão. Linhas em auto: nenhuma faixa engole sozinha o excedente. */
+      .ac-body {
+        height: 100%;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto auto;
+        gap: 12px;
+        align-content: space-between;
       }
 
       .temperature-slider {
@@ -4577,6 +7373,8 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         margin-bottom: 4px;
       }
 
+      /* ANTERIOR (rollback): min-height 320px + align-content:start empurrava
+         imagem+gauge pro topo e deixava o resto vazio embaixo.
       .ac-visual {
         position: relative;
         min-height: 320px;
@@ -4585,6 +7383,18 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         align-content: start;
         justify-items: center;
         gap: 14px;
+        padding: 0 0 2px;
+      }
+      */
+      /* NOVO — centraliza imagem+gauge no espaço da faixa, sem vão interno. */
+      .ac-visual {
+        position: relative;
+        min-height: 300px;
+        display: grid;
+        grid-template-rows: auto auto;
+        align-content: center;
+        justify-items: center;
+        gap: 16px;
         padding: 0 0 2px;
       }
 
@@ -4715,7 +7525,9 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
 
       .icg-shell {
         width: min(100%, 820px);
-        aspect-ratio: 16 / 9;
+        /* ANTERIOR (rollback): aspect-ratio: 16 / 9; */
+        /* NOVO — proporção mais alta = semicírculo um pouco maior p/ mesma largura. */
+        aspect-ratio: 16 / 10;
         position: relative;
         background: transparent;
       }
@@ -4883,7 +7695,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           overflow: visible;
         }
 
-        .sala-subview {
+        .quarto-marina-subview {
           height: auto;
           min-height: 100vh;
           overflow: auto;
@@ -4896,6 +7708,12 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         }
 
         .room-sidebar {
+          display: none;
+        }
+
+        /* NOVO: no mobile (rail oculto) as faixas topo/rodapé da shell saem. */
+        .subview-topbar,
+        .subview-footer {
           display: none;
         }
 
@@ -4931,7 +7749,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
       }
 
       @media (max-width: 760px) {
-        .sala-subview {
+        .quarto-marina-subview {
           grid-template-columns: 1fr;
           grid-template-areas:
             "left"
@@ -5001,12 +7819,22 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
           flex: 1 1 0;
         }
 
-        .curtain-actions {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .curtain-control-row {
+          grid-template-columns: 1fr;
+          gap: 10px;
         }
 
-        .curtain-pill {
-          grid-column: 1 / -1;
+        .curtain-status {
+          justify-self: start;
+        }
+
+        .curtain-main-actions {
+          justify-content: stretch;
+        }
+
+        .curtain-action-button {
+          flex: 1 1 0;
+          min-width: 0;
         }
 
         .ac-visual {
@@ -5021,32 +7849,32 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     const active = typeof options === 'boolean' ? options : Boolean(options.active);
     const animate = typeof options === 'object' && Boolean(options.animate);
     const tvScreen = active
-      ? `<path${animate ? ' class="media-tv-screen-on"' : ''} d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>`
+      ? `<path${animate ? ' class="media-tv-screen-on"' : ''} d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-qmarina-media-tv-screen)"/>`
       : animate
-        ? '<path class="media-tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>'
+        ? '<path class="media-tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-qmarina-media-tv-screen)"/>'
         : '';
     const icons = {
       tv: `
         <svg viewBox="0 0 50 50" aria-hidden="true">
           <style>
-            @keyframes bruno-sala-media-tv-on {
+            @keyframes bruno-qmarina-media-tv-on {
               from { transform: scaleY(0); }
               to { transform: scaleY(1); }
             }
-            @keyframes bruno-sala-media-tv-off {
+            @keyframes bruno-qmarina-media-tv-off {
               from { transform: scaleY(1); }
               to { transform: scaleY(0); }
             }
             .media-tv-screen-on {
-              animation: bruno-sala-media-tv-on 900ms cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+              animation: bruno-qmarina-media-tv-on 900ms cubic-bezier(0.25,0.46,0.45,0.94) forwards;
               transform-origin: -100% 46%;
             }
             .media-tv-screen-off {
-              animation: bruno-sala-media-tv-off 650ms cubic-bezier(0.25,0.46,0.45,0.94) both;
+              animation: bruno-qmarina-media-tv-off 650ms cubic-bezier(0.25,0.46,0.45,0.94) both;
               transform-origin: -100% 46%;
             }
           </style>
-          <linearGradient id="bruno-sala-media-tv-screen" gradientUnits="userSpaceOnUse" x1="5.401" y1="34.714" x2="43.817" y2="11.74">
+          <linearGradient id="bruno-qmarina-media-tv-screen" gradientUnits="userSpaceOnUse" x1="5.401" y1="34.714" x2="43.817" y2="11.74">
             <stop offset="0" stop-color="#64acb7"/>
             <stop offset="1" stop-color="#7fdbe9"/>
           </linearGradient>
@@ -5059,7 +7887,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
         ? `
           <svg viewBox="0 0 42.55 42.55" aria-hidden="true">
             <style>
-              @keyframes bruno-sala-spotify-bounce {
+              @keyframes bruno-qmarina-spotify-bounce {
                 10% { transform: scaleY(0.3); }
                 30% { transform: scaleY(1); opacity: .35; }
                 60% { transform: scaleY(0.5); }
@@ -5073,7 +7901,7 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
                 stroke-width: 5px;
               }
               .media-spotify-bar {
-                animation: bruno-sala-spotify-bounce 2.2s ease infinite alternate;
+                animation: bruno-qmarina-spotify-bounce 2.2s ease infinite alternate;
                 transform-origin: center;
               }
               .media-spotify-bar:nth-child(2) { animation-delay: -2.2s; }
@@ -5153,35 +7981,6 @@ class BrunoQuartoMarinaSubview extends HTMLElement {
     return `<span class="tpl-light-icon icon-${name}${active ? ' is-on' : ''}">${glow}${icons[name] || icons.light_flush}</span>`;
   }
 
-  static _curtainSvg(type = 'main') {
-    const pathSets = {
-      main: `
-        <path d="M9 7h30"></path>
-        <path d="M14 10v27c4.5-2.8 6.8-7.3 6.8-13.5S18.5 12.8 14 10Z"></path>
-        <path d="M34 10v27c-4.5-2.8-6.8-7.3-6.8-13.5S29.5 12.8 34 10Z"></path>
-        <path d="M24 10v29"></path>
-      `,
-      open: `
-        <path d="M8 8h32"></path>
-        <path d="M14 11v26c5-3 7.5-7.4 7.5-13.2S19 14 14 11Z"></path>
-        <path d="M34 11v26c-5-3-7.5-7.4-7.5-13.2S29 14 34 11Z"></path>
-        <path d="M24 13v23"></path>
-      `,
-      close: `
-        <path d="M8 8h32"></path>
-        <path d="M19 11v26c-4.2-2.5-6.4-6.8-6.4-13S14.8 13.6 19 11Z"></path>
-        <path d="M29 11v26c4.2-2.5 6.4-6.8 6.4-13S33.2 13.6 29 11Z"></path>
-        <path d="M23.7 11v27M24.3 11v27"></path>
-      `,
-      stop: `
-        <rect x="14" y="13" width="8" height="22" rx="1.5"></rect>
-        <rect x="26" y="13" width="8" height="22" rx="1.5"></rect>
-      `,
-    };
-    const safeType = pathSets[type] ? type : 'main';
-    return `<svg class="curtain-svg is-${safeType}" viewBox="0 0 48 48" aria-hidden="true">${pathSets[safeType]}</svg>`;
-  }
-
   static _resolvePicture(src) {
     if (!src) return '';
     if (src.startsWith('http') || src.startsWith('/')) return src;
@@ -5214,7 +8013,7 @@ if (!customElements.get(BRUNO_QUARTO_MARINA_SUBVIEW_TAG)) {
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: BRUNO_QUARTO_MARINA_SUBVIEW_TAG,
-  name: 'Bruno Sala Subview',
+  name: 'Bruno Q. Marina Subview',
   preview: false,
-  description: 'Sala subview rebuilt as an isolated Bruno Liquid Glass Web Component.',
+  description: 'Q. Marina subview rebuilt as an isolated Bruno Liquid Glass Web Component.',
 });

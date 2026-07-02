@@ -1,0 +1,4 @@
+type: custom:bruno-home-camera-card
+view_layout:
+  grid-area: camera
+

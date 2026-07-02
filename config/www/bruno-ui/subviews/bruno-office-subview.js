@@ -1,38 +1,49 @@
 const BRUNO_OFFICE_SUBVIEW_TAG = 'bruno-office-subview';
+const BRUNO_OFFICE_CURTAIN_CALIBRATION = [
+  { visual: 0, position: 0 },
+  { visual: 25, position: 33 },
+  { visual: 50, position: 47 },
+  { visual: 75, position: 70 },
+  { visual: 100, position: 100 },
+];
+const BRUNO_OFFICE_CURTAIN_PRESETS = [
+  { label: 0, closed: 0, position: 100 },
+  { label: 25, closed: 25, position: 70 },
+  { label: 50, closed: 50, position: 47 },
+  { label: 75, closed: 75, position: 33 },
+  { label: 100, closed: 100, position: 0 },
+];
+const BRUNO_OFFICE_CURTAIN_TRAVEL_MS = 30000;
+const BRUNO_OFFICE_CURTAIN_MIN_MOTION_MS = 1200;
+const BRUNO_OFFICE_CURTAIN_MOTION_TICK_MS = 350;
+const BRUNO_OFFICE_CURTAIN_TARGET_TOLERANCE = 2;
 
 const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
   title: 'Office',
   subtitle: 'Visao geral',
   greeting_name: 'Bruno',
   navigation_path: 'bento-lab',
-  background: '/local/images/office.jpg',
-  fallback_background: '/local/images/office.jpg',
-  pc_image: '/local/images/office_pc.png',
+  background: '/local/images/office.jpg?v=20260701-office-bg-refresh-3',
+  fallback_background: '/local/images/office.jpg?v=20260701-office-bg-refresh-3',
   refresh_interval: 6500,
   spotify_device_name: 'Echo Pop Office',
-  spotify_standby_image: '/local/images/echo_pop.png',
   climate_device_name: 'Gree',
   climate_image: '/local/images/ar-condicionado-gree-tight.png',
   climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1',
-  // NOVO (Foco & Produtividade): calendarios usados no mini calendario do bloco Foco.
-  // Mesmas entidades/cores do bruno-agenda-card.
-  calendars: [
-    { entity: 'calendar.brunohelasio_gmail_com', name: 'Bruno', color: '#7fdbe9' },
-    { entity: 'calendar.familia', name: 'Familia', color: '#fdd835' },
-  ],
+  pc_image: '/local/images/office_pc.png',
+  spotify_standby_image: '/local/images/echo_pop.png',
+  tv_apps: [],
   room_nav: [
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala' },
     { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office', active: true },
     { key: 'cozinha', name: 'Cozinha', icon: 'mdi:countertop', path: 'subview-cozinha' },
-    { key: 'lavabo', name: 'Lavabo', icon: 'mdi:toilet', path: 'subview-lavabo', divider_after: true },
     { key: 'casal', name: 'Q. Casal', icon: 'mdi:bed-king', path: 'subview-quarto-casal' },
     { key: 'marina', name: 'Q. Marina', icon: 'mdi:bed-single', path: 'subview-quarto-marina' },
-    { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:crib-outline', path: 'subview-quarto-miguel' },
+    { key: 'miguel', name: 'Q. Miguel', icon: 'mdi:bed-single-outline', path: 'subview-quarto-miguel' },
   ],
   entities: {
-    // FALLBACK - Office nao tem cortina dedicada mapeada no repositorio.
-    // Mantem a estrutura visual da Sala sem disparar comandos se a entidade estiver vazia.
     curtain: '',
+    curtain_percent_control: '',
     active_sensor: 'sensor.office_active',
     semantic_sensor: 'sensor.office_semantic_state',
     occupancy: 'binary_sensor.office_occupancy',
@@ -53,12 +64,19 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
       'sensor.of_umidade',
     ],
     room_group: 'light.grupo_luzes_office',
+    camera_main: 'camera.of_camera_2',
+    camera_secondary: '',
     active_camera_select: '',
+    tv: '',
+    tv_remote_player: '',
+    tv_remote: '',
     spotify: 'media_player.spotifyplus_bruno_helasio',
     speaker: 'media_player.echo_pop_office',
     climate: 'climate.ac_office',
     router: '',
     zigbee_hub: '',
+    ps5: '',
+    ps5_image: '',
     pc_active: 'binary_sensor.office_pc_active',
     pc_power: 'button.desktop_melg9vv_pc_office_switch',
     pc_shutdown: 'button.desktop_melg9vv_pc_office_desliga',
@@ -80,22 +98,32 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
       { entity: 'light.office_switch_3', name: 'Luz central', icon_type: 'light_flush', zone: 'office' },
       { entity: 'light.office_switch_2', name: 'Luz ambiente', icon_type: 'ledstrip', zone: 'office' },
       { entity: 'light.office_switch_1', name: 'Luz estante', icon_type: 'ledstrip', zone: 'office' },
-      // NOVO (paridade Sala): 4o tile placeholder para fechar o grid 2x2,
-      // mesmo padrao do "LED Fita TV" na Sala.
-      { entity: '', name: 'Luz auxiliar', icon_type: 'ledstrip', placeholder: true, zone: 'office' },
     ],
     cameras: [
-      { entity: 'camera.of_camera_2', name: 'Office', short_name: 'Office' },
+      {
+        entity: 'camera.of_camera_2',
+        name: 'Office',
+        short_name: 'Office',
+        controls: [
+          { key: 'sound', label: 'Som', description: 'Detecção de som', icon: 'mdi:microphone-outline', entity: 'switch.of_camera_deteccao_de_som' },
+          { key: 'motion', label: 'Mov.', description: 'Alarme de movimento', icon: 'mdi:run-fast', entity: 'switch.of_camera_alarme_de_movimento' },
+          { key: 'privacy', label: 'Priv.', description: 'Modo de privacidade', icon: 'mdi:eye-off-outline', entity: 'switch.of_camera_modo_de_privacidade' },
+        ],
+      },
     ],
   },
 };
 
+
+
 const BRUNO_OFFICE_SUBVIEW_CLIMATE_ON_STATES = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
 const BRUNO_OFFICE_SUBVIEW_CLIMATE_ACTIVE_ACTIONS = ['cooling', 'heating', 'drying', 'fan', 'preheating'];
 const BRUNO_OFFICE_SUBVIEW_CLIMATE_INACTIVE_ACTIONS = ['off', 'idle'];
+const BRUNO_OFFICE_SUBVIEW_TV_ON_STATES = ['on', 'playing', 'paused', 'idle'];
 const BRUNO_OFFICE_SUBVIEW_MEDIA_ON_STATES = ['playing', 'paused', 'on', 'idle'];
 const BRUNO_OFFICE_SUBVIEW_CAMERA_ONLINE_STATES = ['streaming', 'recording', 'idle', 'on'];
 const BRUNO_OFFICE_SUBVIEW_UNAVAILABLE_STATES = ['unavailable', 'unknown', '', 'none', 'null'];
+const BRUNO_OFFICE_SUBVIEW_TV_ICON_ANIMATION_MS = 1000;
 
 class BrunoOfficeSubview extends HTMLElement {
   static getStubConfig() {
@@ -113,18 +141,21 @@ class BrunoOfficeSubview extends HTMLElement {
     this._lastMinute = '';
     this._lastActionAt = {};
     this._spotifyToolsOpen = false;
-    this._selectedWorkspaceSource = '';
-    this._focusDuration = 25 * 60;
-    this._focusStartedAt = null;
-    this._focusRemaining = this._focusDuration;
-    this._focusRunning = false;
-    this._focusSessions = 0;
-    // NOVO (Foco & Produtividade): cache de eventos do calendario.
-    this._calendarEvents = [];
-    this._calendarLoadedAt = 0;
-    this._calendarLoading = false;
+    this._mediaMenuOpen = false;
+    this._selectedLightZone = 'office';
+    this._selectedMediaSource = '';
+    this._lastMediaTvOn = undefined;
+    this._mediaTvAnimationUntil = 0;
+    this._mediaTvAnimationState = undefined;
+    this._curtainMotion = null;
+    this._curtainMotionTimer = null;
+    this._selectedClimatePanel = '';
+    this._activeCameraEntity = '';
+    this._cameraControlsOpen = false;
+    this._expandedZone = null;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
+    this._boundLiveInputHandler = (event) => this._handleLiveInput(event);
   }
 
   setConfig(config) {
@@ -137,21 +168,21 @@ class BrunoOfficeSubview extends HTMLElement {
     this._hass = hass;
     this._safeRender();
     this._startRefreshTimer();
-    this._maybeLoadCalendarEvents();
   }
 
   connectedCallback() {
     globalThis.BrunoLiquidGlass?.apply?.();
     this._startRefreshTimer();
     this._startClockTimer();
-    this._startCalendarTimer();
   }
 
   disconnectedCallback() {
+    this.shadowRoot?.removeEventListener('input', this._boundLiveInputHandler);
+    this.shadowRoot?.removeEventListener('change', this._boundInputHandler);
+    this.shadowRoot?.removeEventListener('click', this._boundActionHandler);
     this._stopRefreshTimer();
     this._stopClockTimer();
-    this._stopFocusTimer();
-    this._stopCalendarTimer();
+    this._stopCurtainMotionTimer();
   }
 
   getCardSize() {
@@ -172,6 +203,7 @@ class BrunoOfficeSubview extends HTMLElement {
       ...config,
       refresh_interval: Math.max(4000, Number(config.refresh_interval) || BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG.refresh_interval),
       room_nav: Array.isArray(config.room_nav) ? config.room_nav : BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG.room_nav,
+      tv_apps: Array.isArray(config.tv_apps) ? config.tv_apps : BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG.tv_apps,
       entities,
     };
   }
@@ -199,7 +231,7 @@ class BrunoOfficeSubview extends HTMLElement {
           font: 600 13px/1.45 var(--primary-font-family, inherit);
         }
       </style>
-      <div class="error">Erro na subview Office: ${BrunoOfficeSubview._escape(error?.message || error)}</div>
+      <div class="error">Erro na subview Sala: ${BrunoOfficeSubview._escape(error?.message || error)}</div>
     `;
   }
 
@@ -219,113 +251,6 @@ class BrunoOfficeSubview extends HTMLElement {
     if (!this._clockTimer) return;
     globalThis.clearInterval(this._clockTimer);
     this._clockTimer = null;
-  }
-
-  _startFocusTimer() {
-    if (this._focusTimer) return;
-    this._focusTimer = globalThis.setInterval(() => {
-      if (!this._focusRunning || !this._focusStartedAt) return;
-      const elapsed = Math.floor((Date.now() - this._focusStartedAt) / 1000);
-      this._focusRemaining = Math.max(0, this._focusDuration - elapsed);
-      if (this._focusRemaining === 0) {
-        this._focusRunning = false;
-        this._focusSessions += 1;
-      }
-      this._safeRender();
-    }, 1000);
-  }
-
-  _stopFocusTimer() {
-    if (!this._focusTimer) return;
-    globalThis.clearInterval(this._focusTimer);
-    this._focusTimer = null;
-  }
-
-  // NOVO (Foco & Produtividade): carga periodica de eventos de calendario.
-  // Mesmo mecanismo do bruno-agenda-card (WS calendar/list_events + fallback REST).
-  _startCalendarTimer() {
-    if (this._calendarTimer) return;
-    this._calendarTimer = globalThis.setInterval(() => this._maybeLoadCalendarEvents(true), 5 * 60 * 1000);
-  }
-
-  _stopCalendarTimer() {
-    if (!this._calendarTimer) return;
-    globalThis.clearInterval(this._calendarTimer);
-    this._calendarTimer = null;
-  }
-
-  _maybeLoadCalendarEvents(force = false) {
-    if (!this._hass || this._calendarLoading) return;
-    const stale = (Date.now() - this._calendarLoadedAt) > 5 * 60 * 1000;
-    if (!force && !stale) return;
-    this._loadCalendarEvents();
-  }
-
-  async _loadCalendarEvents() {
-    const calendars = Array.isArray(this._config.calendars) ? this._config.calendars : [];
-    if (!this._hass || !calendars.length) return;
-    this._calendarLoading = true;
-    try {
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
-      const weekday = (start.getDay() + 6) % 7; // 0 = segunda
-      start.setDate(start.getDate() - weekday);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 7);
-
-      const eventsByCalendar = await Promise.all(
-        calendars.map((calendar) => this._fetchCalendarEvents(calendar, start, end)),
-      );
-      this._calendarEvents = eventsByCalendar
-        .flat()
-        .filter((event) => event && event.start)
-        .sort((a, b) => a.start - b.start);
-      this._calendarLoadedAt = Date.now();
-      this._safeRender();
-    } catch (error) {
-      // Falha silenciosa: o bloco Foco renderiza "Agenda livre" sem eventos.
-    } finally {
-      this._calendarLoading = false;
-    }
-  }
-
-  async _fetchCalendarEvents(calendar, start, end) {
-    const entityId = calendar?.entity;
-    if (!entityId || !this._state(entityId)) return [];
-
-    let rows = [];
-    try {
-      const response = await this._hass.callWS({
-        type: 'calendar/list_events',
-        entity_id: entityId,
-        start: start.toISOString(),
-        end: end.toISOString(),
-      });
-      rows = Array.isArray(response?.events) ? response.events : [];
-    } catch (error) {
-      try {
-        const path = `calendars/${encodeURIComponent(entityId)}?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`;
-        const response = await this._hass.callApi('GET', path);
-        rows = Array.isArray(response) ? response : [];
-      } catch (innerError) {
-        rows = [];
-      }
-    }
-
-    return rows.map((row) => {
-      const startRaw = row?.start?.dateTime || row?.start?.date || row?.start;
-      const endRaw = row?.end?.dateTime || row?.end?.date || row?.end;
-      const allDay = Boolean(row?.start?.date && !row?.start?.dateTime);
-      const startDate = startRaw ? new Date(startRaw) : null;
-      return {
-        title: String(row?.summary || row?.title || 'Evento'),
-        start: startDate && !Number.isNaN(startDate.getTime()) ? startDate : null,
-        end: endRaw ? new Date(endRaw) : null,
-        allDay,
-        calendar: calendar.name || entityId,
-        color: calendar.color || '#7fdbe9',
-      };
-    }).filter((event) => event.start);
   }
 
   _startRefreshTimer() {
@@ -375,6 +300,163 @@ class BrunoOfficeSubview extends HTMLElement {
     return !entity || BRUNO_OFFICE_SUBVIEW_UNAVAILABLE_STATES.includes(String(entity.state || '').toLowerCase());
   }
 
+  _toCurtainPercent(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    return Math.max(0, Math.min(100, Math.round(number)));
+  }
+
+  _curtainOpenPositionFromState(entity, percentEntity, state) {
+    const percentControl = this._isUnavailable(percentEntity) ? null : this._toCurtainPercent(percentEntity?.state);
+    if (percentControl != null) return 100 - percentControl;
+
+    const coverPosition = this._toCurtainPercent(entity?.attributes?.current_position);
+    if (coverPosition != null) {
+      if (state === 'open' && coverPosition <= 1) return 100;
+      if (state === 'closed' && coverPosition >= 99) return 0;
+      return coverPosition;
+    }
+
+    if (state === 'open') return 100;
+    if (state === 'closed') return 0;
+
+    return 0;
+  }
+
+  _interpolateCurtainPercent(value, fromKey, toKey) {
+    const percent = this._toCurtainPercent(value) ?? 0;
+    const points = BRUNO_OFFICE_CURTAIN_CALIBRATION;
+
+    if (percent <= points[0][fromKey]) return points[0][toKey];
+    for (let index = 1; index < points.length; index += 1) {
+      const previous = points[index - 1];
+      const next = points[index];
+      if (percent <= next[fromKey]) {
+        const span = next[fromKey] - previous[fromKey];
+        if (span === 0) return next[toKey];
+        const ratio = (percent - previous[fromKey]) / span;
+        return this._toCurtainPercent(previous[toKey] + ((next[toKey] - previous[toKey]) * ratio)) ?? next[toKey];
+      }
+    }
+
+    return points[points.length - 1][toKey];
+  }
+
+  _curtainDisplayOpenPosition(openPosition) {
+    return this._interpolateCurtainPercent(openPosition, 'position', 'visual');
+  }
+
+  _curtainCommandOpenPosition(displayPosition) {
+    return this._interpolateCurtainPercent(displayPosition, 'visual', 'position');
+  }
+
+  _curtainClosedVisualPosition(openPosition) {
+    return 100 - this._curtainDisplayOpenPosition(openPosition);
+  }
+
+  _curtainMotionDuration(startClosed, targetClosed) {
+    const start = this._toCurtainPercent(startClosed) ?? 0;
+    const target = this._toCurtainPercent(targetClosed) ?? start;
+    const distance = Math.abs(target - start);
+    return Math.max(BRUNO_OFFICE_CURTAIN_MIN_MOTION_MS, BRUNO_OFFICE_CURTAIN_TRAVEL_MS * (distance / 100));
+  }
+
+  _curtainMotionClosedPosition(motion = this._curtainMotion, now = Date.now()) {
+    if (!motion) return null;
+    if (motion.hold) return this._toCurtainPercent(motion.closed);
+
+    const duration = Math.max(1, Number(motion.duration) || BRUNO_OFFICE_CURTAIN_MIN_MOTION_MS);
+    const elapsed = Math.max(0, now - motion.startedAt);
+    const progress = Math.min(1, elapsed / duration);
+    const value = motion.startClosed + ((motion.targetClosed - motion.startClosed) * progress);
+    return this._toCurtainPercent(value);
+  }
+
+  _curtainMotionDisplayPosition(entityId, state, reportedClosed) {
+    const motion = this._curtainMotion;
+    if (!motion || motion.entityId !== entityId) return null;
+
+    const now = Date.now();
+    if (motion.hold) return this._toCurtainPercent(motion.closed);
+
+    const estimatedClosed = this._curtainMotionClosedPosition(motion, now);
+    const reported = this._toCurtainPercent(reportedClosed);
+    const elapsed = now - motion.startedAt;
+    const progress = Math.min(1, Math.max(0, elapsed / Math.max(1, motion.duration)));
+    const moving = state === 'opening' || state === 'closing';
+    const reportedAtTarget = reported != null && Math.abs(reported - motion.targetClosed) <= BRUNO_OFFICE_CURTAIN_TARGET_TOLERANCE;
+
+    if (moving && reported != null && !reportedAtTarget) {
+      motion.lastClosed = reported;
+      return reported;
+    }
+
+    if (progress >= 1) {
+      this._curtainMotion = null;
+      this._stopCurtainMotionTimer();
+      return motion.targetClosed;
+    }
+
+    return estimatedClosed;
+  }
+
+  _startCurtainMotionTimer() {
+    if (this._curtainMotionTimer || !this.isConnected) return;
+    this._curtainMotionTimer = globalThis.setInterval(() => {
+      if (!this._curtainMotion || this._curtainMotion.hold) {
+        this._stopCurtainMotionTimer();
+        return;
+      }
+      this._safeRender();
+    }, BRUNO_OFFICE_CURTAIN_MOTION_TICK_MS);
+  }
+
+  _stopCurtainMotionTimer() {
+    if (!this._curtainMotionTimer) return;
+    globalThis.clearInterval(this._curtainMotionTimer);
+    this._curtainMotionTimer = null;
+  }
+
+  _beginCurtainMotion(targetClosed, direction = 'position') {
+    const entityId = this._config.entities.curtain;
+    if (!entityId) return;
+
+    const activeClosed = this._curtainMotionClosedPosition();
+    const modelClosed = this._curtainModel({ ignoreMotion: true }).visualPosition;
+    const startClosed = this._toCurtainPercent(activeClosed ?? modelClosed) ?? 0;
+    const target = this._toCurtainPercent(targetClosed);
+    if (target == null) return;
+
+    this._curtainMotion = {
+      entityId,
+      direction,
+      startClosed,
+      targetClosed: target,
+      startedAt: Date.now(),
+      duration: this._curtainMotionDuration(startClosed, target),
+      hold: false,
+    };
+    this._startCurtainMotionTimer();
+    this._safeRender();
+  }
+
+  _holdCurtainMotion() {
+    const entityId = this._config.entities.curtain;
+    if (!entityId) return;
+
+    const activeClosed = this._curtainMotionClosedPosition();
+    const modelClosed = this._curtainModel({ ignoreMotion: true }).visualPosition;
+    const closed = this._toCurtainPercent(activeClosed ?? modelClosed) ?? 0;
+    this._curtainMotion = {
+      entityId,
+      closed,
+      updatedAt: Date.now(),
+      hold: true,
+    };
+    this._stopCurtainMotionTimer();
+    this._safeRender();
+  }
+
   _safeState(entityId, fallback = '--') {
     const entity = this._state(entityId);
     if (this._isUnavailable(entity)) return fallback;
@@ -418,6 +500,15 @@ class BrunoOfficeSubview extends HTMLElement {
     return Number(value).toFixed(digits).replace(/\.0+$/, '');
   }
 
+  _formatMediaTime(seconds) {
+    const safe = Math.max(0, Math.floor(Number(seconds) || 0));
+    const hours = Math.floor(safe / 3600);
+    const minutes = Math.floor((safe % 3600) / 60);
+    const secs = safe % 60;
+    if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    return `${minutes}:${String(secs).padStart(2, '0')}`;
+  }
+
   _temperatureLabel() {
     const value = this._numberState(this._config.entities.temperature, null);
     return value == null ? '--' : `${this._formatNumber(value, 1)}\u00b0`;
@@ -429,10 +520,46 @@ class BrunoOfficeSubview extends HTMLElement {
   }
 
   _curtainPosition() {
-    const value = this._state(this._config.entities.curtain)?.attributes?.current_position;
-    const number = Number(value);
-    if (!Number.isFinite(number)) return 0;
-    return Math.max(0, Math.min(100, Math.round(number)));
+    const value = this._curtainModel().position;
+    return this._toCurtainPercent(value) ?? 0;
+  }
+
+  _curtainModel(options = {}) {
+    const entityId = this._config.entities.curtain;
+    const entity = this._state(entityId);
+    const percentEntityId = this._config.entities.curtain_percent_control;
+    const percentEntity = this._state(percentEntityId);
+    const configured = Boolean(entityId);
+    const unavailable = configured && Boolean(this._hass) && this._isUnavailable(entity);
+    const state = String(entity?.state || (configured ? 'unknown' : 'unavailable')).toLowerCase();
+    const safePosition = this._curtainOpenPositionFromState(entity, percentEntity, state);
+    const openDisplayPosition = this._curtainDisplayOpenPosition(safePosition);
+    let displayPosition = 100 - openDisplayPosition;
+    let visualPosition = displayPosition;
+    const motionPosition = options.ignoreMotion ? null : this._curtainMotionDisplayPosition(entityId, state, displayPosition);
+    if (motionPosition != null) {
+      displayPosition = motionPosition;
+      visualPosition = motionPosition;
+    }
+    const localMoving = Boolean(this._curtainMotion && this._curtainMotion.entityId === entityId && !this._curtainMotion.hold);
+    let status = 'Fechada';
+    if (!configured || unavailable) status = 'Indisponivel';
+    else if (state === 'opening' || (localMoving && this._curtainMotion?.targetClosed < this._curtainMotion?.startClosed)) status = 'Abrindo';
+    else if (state === 'closing' || (localMoving && this._curtainMotion?.targetClosed > this._curtainMotion?.startClosed)) status = 'Fechando';
+
+    return {
+      entity,
+      entityId,
+      state,
+      configured,
+      available: configured && !unavailable,
+      moving: state === 'opening' || state === 'closing' || localMoving,
+      position: safePosition,
+      openDisplayPosition,
+      displayPosition,
+      visualPosition,
+      status,
+    };
   }
 
   _activeLightsCount() {
@@ -446,6 +573,21 @@ class BrunoOfficeSubview extends HTMLElement {
       .map((item) => item.entity)
       .filter(Boolean)
       .filter((entityId) => this._state(entityId)?.state === 'on').length;
+  }
+
+  _activeLightsInZone(zone) {
+    return (this._config.entities.lights || [])
+      .filter((light) => (light.zone || 'sala') === zone)
+      .map((light) => light.entity)
+      .filter(Boolean)
+      .filter((entityId) => this._state(entityId)?.state === 'on').length;
+  }
+
+  _activeLightsByZone() {
+    return {
+      sala: this._activeLightsInZone('sala'),
+      varanda: this._activeLightsInZone('varanda'),
+    };
   }
 
   _brightnessPercent(entity) {
@@ -499,13 +641,15 @@ class BrunoOfficeSubview extends HTMLElement {
   _camerasModel() {
     const cameras = (this._config.entities.cameras || []).map((camera) => this._cameraState(camera));
     const activeId = this._state(this._config.entities.active_camera_select)?.state;
-    const activeCamera = cameras.find((camera) => camera.entity === activeId) || cameras[0];
+    const localActiveId = cameras.some((camera) => camera.entity === this._activeCameraEntity) ? this._activeCameraEntity : '';
+    const activeCamera = cameras.find((camera) => camera.entity === (localActiveId || activeId)) || cameras[0];
     return {
       cameras,
       activeCamera,
       onlineCount: cameras.filter((camera) => camera.online).length,
     };
   }
+
 
   _normalizeMediaDevice(value) {
     return String(value || '')
@@ -563,7 +707,7 @@ class BrunoOfficeSubview extends HTMLElement {
     const state = entity?.state || 'off';
     const globalActive = BRUNO_OFFICE_SUBVIEW_MEDIA_ON_STATES.includes(state);
     const active = globalActive && (this._spotifySourceMatchesRoom(attrs) || this._spotifySpeakerMatchesRoom(attrs));
-    const roomSource = this._config.spotify_device_name || attrs.source || 'Echo Pop Office';
+    const roomSource = this._config.spotify_device_name || attrs.source || 'Echo Show';
     const rawTitle = attrs.media_title || 'SpotifyPlus';
     const title = /^SpotifyPlus\s+Bruno/i.test(rawTitle) ? 'SpotifyPlus' : rawTitle;
     return {
@@ -581,79 +725,35 @@ class BrunoOfficeSubview extends HTMLElement {
     };
   }
 
-  _semanticLine() {
-    const semantic = this._state(this._config.entities.semantic_sensor);
-    const semanticState = String(semantic?.state || '').toLowerCase();
-    const display = semantic?.attributes?.display;
-    if (!display || ['none', 'unknown', 'unavailable'].includes(semanticState)) return '';
-    return String(display);
+_mediaSourceFromAction(action) {
+    const value = String(action || '');
+    if (value.startsWith('pc-')) return 'pc';
+    if (value.startsWith('spotify-')) return 'spotify';
+    return '';
+  }
+  _selectedMedia(model) {
+    const order = ['pc', 'spotify'];
+    const activeKeys = order.filter((key) => model[key]?.active);
+    const previous = this._lastActiveMediaKeys || [];
+    const gainedActivation = activeKeys.some((key) => !previous.includes(key));
+    this._lastActiveMediaKeys = activeKeys;
+    if (gainedActivation) this._selectedMediaSource = '';
+    if (order.includes(this._selectedMediaSource)) return this._selectedMediaSource;
+    return activeKeys[0] || 'pc';
   }
 
-  _focusModel() {
-    const remaining = Math.max(0, this._focusRemaining);
-    const minutes = Math.floor(remaining / 60);
-    const seconds = remaining % 60;
-    const progress = 1 - (remaining / this._focusDuration);
-    const elapsed = Math.max(0, this._focusDuration - remaining);
-    const elapsedMinutes = Math.floor(elapsed / 60);
-    return {
-      running: this._focusRunning,
-      label: `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
-      progress: Math.max(0, Math.min(1, progress)),
-      sessions: this._focusSessions,
-      focusedLabel: elapsedMinutes > 0 ? `${elapsedMinutes}m` : '0m',
-      semantic: this._semanticLine() || 'Disponivel',
+  _mediaStateLabel(state, fallback = 'Desligada') {
+    const labels = {
+      off: 'Desligada',
+      on: 'Ligada',
+      playing: 'Tocando',
+      paused: 'Pausado',
+      idle: 'Em espera',
+      unavailable: 'Indisponivel',
+      unknown: 'Indisponivel',
+      placeholder: 'Placeholder',
     };
-  }
-
-  // NOVO (Foco & Produtividade): semana atual + proximo evento para o mini calendario.
-  _calendarModel() {
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setHours(0, 0, 0, 0);
-    startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
-    const labels = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
-    const events = Array.isArray(this._calendarEvents) ? this._calendarEvents : [];
-
-    const days = labels.map((label, index) => {
-      const date = new Date(startOfWeek);
-      date.setDate(startOfWeek.getDate() + index);
-      const nextDate = new Date(date);
-      nextDate.setDate(date.getDate() + 1);
-      const dayEvents = events.filter((event) => event.start >= date && event.start < nextDate);
-      const dots = [];
-      dayEvents.forEach((event) => {
-        if (dots.length < 2 && !dots.includes(event.color)) dots.push(event.color);
-      });
-      return {
-        label,
-        day: date.getDate(),
-        isToday: date.toDateString() === now.toDateString(),
-        dots,
-      };
-    });
-
-    const upcoming = events.find((event) => !event.allDay && event.end && event.end > now && event.start.getTime() - now.getTime() < 7 * 24 * 3600 * 1000)
-      || events.find((event) => event.start > now);
-    let nextEvent = null;
-    if (upcoming) {
-      const sameDay = upcoming.start.toDateString() === now.toDateString();
-      const dayLabel = sameDay
-        ? ''
-        : upcoming.start.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-      const timeLabel = upcoming.allDay
-        ? 'Dia todo'
-        : upcoming.start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      nextEvent = {
-        title: upcoming.title,
-        time: dayLabel ? `${dayLabel} ${timeLabel}` : timeLabel,
-        calendar: upcoming.calendar,
-        color: upcoming.color,
-        ongoing: upcoming.start <= now && upcoming.end && upcoming.end > now,
-      };
-    }
-
-    return { days, nextEvent, loaded: this._calendarLoadedAt > 0 };
+    return labels[String(state || '').toLowerCase()] || fallback || state || '--';
   }
 
   _pcModel() {
@@ -690,6 +790,7 @@ class BrunoOfficeSubview extends HTMLElement {
       webcamActive: Boolean(entities.pc_webcam) && webcamState === 'on',
     };
   }
+
 
   _climateAction(entity) {
     return String(entity?.attributes?.hvac_action || '').toLowerCase();
@@ -750,6 +851,16 @@ class BrunoOfficeSubview extends HTMLElement {
     });
   }
 
+  _setCurtainPosition(position) {
+    if (!this._config.entities.curtain) return;
+    const value = this._toCurtainPercent(position);
+    if (value == null) return;
+    this._callService('cover.set_cover_position', {
+      entity_id: this._config.entities.curtain,
+      position: value,
+    });
+  }
+
   _climateModeLabel(mode) {
     const labels = {
       off: 'Off',
@@ -767,31 +878,6 @@ class BrunoOfficeSubview extends HTMLElement {
     if (!climate.active) return `Off - ${target}\u00b0C`;
     const action = climate.hvacMode === 'heat' ? 'Heat' : this._climateModeLabel(climate.hvacMode);
     return `${action} - ${target}\u00b0C`;
-  }
-
-  _workspaceSourceFromAction(action) {
-    const value = String(action || '');
-    if (value.startsWith('spotify-')) return 'spotify';
-    if (value.startsWith('pc-')) return 'pc';
-    return '';
-  }
-
-  _selectedWorkspace(model) {
-    const valid = ['pc', 'spotify'];
-    if (valid.includes(this._selectedWorkspaceSource)) return this._selectedWorkspaceSource;
-    if (model.spotify?.active) return 'spotify';
-    if (model.pc?.active) return 'pc';
-    return 'pc';
-  }
-
-  _mediaStateLabel(state, fallback = 'Desligado') {
-    const value = String(state || '').toLowerCase();
-    if (!value || BRUNO_OFFICE_SUBVIEW_UNAVAILABLE_STATES.includes(value)) return fallback;
-    if (value === 'playing') return 'Tocando';
-    if (value === 'paused') return 'Pausado';
-    if (value === 'on' || value === 'idle') return 'Ativo';
-    if (value === 'off') return fallback;
-    return state;
   }
 
   _sceneContextLabel(model) {
@@ -815,6 +901,38 @@ class BrunoOfficeSubview extends HTMLElement {
       bubbles: true,
       composed: true,
     }));
+  }
+
+
+  _buttonPressAction(entityId) {
+    return {
+      action: 'perform-action',
+      perform_action: 'button.press',
+      target: { entity_id: entityId },
+    };
+  }
+
+  _remoteGrid(items, columns = 3) {
+    return {
+      type: 'grid',
+      columns,
+      square: false,
+      cards: items.map((item) => {
+        if (!item) return { type: 'custom:button-card', color_type: 'blank-card' };
+        return {
+          type: 'custom:button-card',
+          icon: item[0],
+          tap_action: {
+            action: 'call-service',
+            service: 'button.press',
+            service_data: { entity_id: item[1] },
+          },
+          template: item[0]?.includes('arrow') || item[0] === 'mdi:radiobox-marked'
+            ? 'remote_icon_arrow'
+            : 'remote_icon_only',
+        };
+      }),
+    };
   }
 
   _openSpotifyPlusPopup(mode = 'full') {
@@ -936,24 +1054,99 @@ class BrunoOfficeSubview extends HTMLElement {
     const action = target.dataset.action;
     const entityId = target.dataset.entity;
 
+    if (action === 'select-light-zone') {
+      this._selectedLightZone = target.dataset.zone === 'varanda' ? 'varanda' : 'sala';
+      this._safeRender();
+      return;
+    }
+    // NOVO (Passada 2): acordeão SINGLE-OPEN — só uma zona aberta por vez.
+    // Expandir uma colapsa a outra; clicar na aberta colapsa.
+    if (action === 'toggle-zone') {
+      const zk = target.dataset.zone;
+      this._expandedZone = this._expandedZone === zk ? null : zk;
+      this._safeRender();
+      return;
+    }
+    // NOVO (Passada 2): apagar todas as luzes (reais) de uma zona.
+    if (action === 'zone-off') {
+      const ids = (this._config.entities.lights || [])
+        .filter((l) => (l.zone || 'sala') === target.dataset.zone && l.entity && !l.placeholder)
+        .map((l) => l.entity);
+      if (ids.length) this._callService('light.turn_off', { entity_id: ids });
+      return;
+    }
+    if (action === 'select-media-source') {
+      const source = target.dataset.source;
+      if (['pc', 'spotify'].includes(source)) {
+        this._selectedMediaSource = source;
+        this._mediaTransitionSource = source;
+        this._mediaMenuOpen = false;
+      }
+      this._safeRender();
+      this._mediaTransitionSource = '';
+      return;
+    }
+    if (action === 'media-menu') {
+      this._mediaMenuOpen = !this._mediaMenuOpen;
+      this._safeRender();
+      return;
+    }
+
+    const interactedMedia = this._mediaSourceFromAction(action);
+    if (interactedMedia) this._selectedMediaSource = interactedMedia;
+
     if (action === 'navigate') this._navigate(target.dataset.path || this._config.navigation_path);
-    if (action === 'more-info') this._moreInfo(entityId);
-    if (action === 'cover-open' && this._config.entities.curtain) this._callService('cover.open_cover', { entity_id: this._config.entities.curtain });
-    if (action === 'cover-close' && this._config.entities.curtain) this._callService('cover.close_cover', { entity_id: this._config.entities.curtain });
-    if (action === 'cover-stop' && this._config.entities.curtain) this._callService('cover.stop_cover', { entity_id: this._config.entities.curtain });
+    if (action === 'more-info') {
+      this._mediaMenuOpen = false;
+      this._selectedClimatePanel = '';
+      this._moreInfo(entityId);
+      return;
+    }
+    if (action === 'toggle-climate-panel') {
+      const panel = target.dataset.panel;
+      this._selectedClimatePanel = this._selectedClimatePanel === panel ? '' : panel;
+      this._safeRender();
+      return;
+    }
+    if (action === 'cover-open') {
+      this._beginCurtainMotion(0, 'opening');
+      this._callService('cover.open_cover', { entity_id: this._config.entities.curtain });
+    }
+    if (action === 'cover-close') {
+      this._beginCurtainMotion(100, 'closing');
+      this._callService('cover.close_cover', { entity_id: this._config.entities.curtain });
+    }
+    if (action === 'cover-stop') {
+      this._holdCurtainMotion();
+      this._callService('cover.stop_cover', { entity_id: this._config.entities.curtain });
+    }
     if (action === 'cover-position') {
       const position = Number(target.dataset.position);
-      if (Number.isFinite(position) && this._config.entities.curtain) {
-        this._callService('cover.set_cover_position', {
-          entity_id: this._config.entities.curtain,
-          position,
-        });
+      const closed = Number(target.dataset.closed);
+      if (Number.isFinite(position)) {
+        if (Number.isFinite(closed)) this._beginCurtainMotion(closed, 'position');
+        this._setCurtainPosition(position);
       }
     }
     if (action === 'lights-on') this._callService('light.turn_on', { entity_id: this._config.entities.room_group });
     if (action === 'lights-off') this._callService('light.turn_off', { entity_id: this._config.entities.room_group });
     if (action === 'toggle-light') this._callService('homeassistant.toggle', { entity_id: entityId });
+    if (action === 'toggle-camera-control') {
+      if (entityId && !this._cooldown(`camera-control-${entityId}`, 600)) {
+        this._callService('homeassistant.toggle', { entity_id: entityId });
+      }
+      return;
+    }
+    if (action === 'toggle-camera-controls') {
+      this._cameraControlsOpen = !this._cameraControlsOpen;
+      this._safeRender();
+      return;
+    }
     if (action === 'select-camera') {
+      if (entityId) {
+        this._activeCameraEntity = entityId;
+        this._safeRender();
+      }
       if (this._config.entities.active_camera_select && entityId) {
         this._callService('input_select.select_option', {
           entity_id: this._config.entities.active_camera_select,
@@ -962,14 +1155,26 @@ class BrunoOfficeSubview extends HTMLElement {
       }
       return;
     }
-    if (action === 'select-workspace-source') {
-      const source = target.dataset.source;
-      if (['pc', 'spotify'].includes(source)) this._selectedWorkspaceSource = source;
-      this._safeRender();
+    if (action === 'pc-power') {
+      this._callService('button.press', { entity_id: this._config.entities.pc_power });
       return;
     }
-    const interactedWorkspace = this._workspaceSourceFromAction(action);
-    if (interactedWorkspace) this._selectedWorkspaceSource = interactedWorkspace;
+    if (action === 'pc-sleep') {
+      this._callService('button.press', { entity_id: this._config.entities.pc_sleep });
+      return;
+    }
+    if (action === 'pc-restart') {
+      this._callService('button.press', { entity_id: this._config.entities.pc_restart });
+      return;
+    }
+    if (action === 'pc-shutdown') {
+      this._callService('button.press', { entity_id: this._config.entities.pc_shutdown });
+      return;
+    }
+    if (action === 'pc-lock') {
+      this._callService('button.press', { entity_id: this._config.entities.pc_lock });
+      return;
+    }
     if (action === 'spotify-more') {
       this._spotifyToolsOpen = !this._spotifyToolsOpen;
       this._safeRender();
@@ -977,10 +1182,6 @@ class BrunoOfficeSubview extends HTMLElement {
     }
     if (action === 'spotify-devices') {
       this._openSpotifyPlusPopup('devices');
-      return;
-    }
-    if (action === 'spotify-library') {
-      this._openSpotifyPlusPopup('library');
       return;
     }
     if (action === 'spotify-presets') {
@@ -993,6 +1194,10 @@ class BrunoOfficeSubview extends HTMLElement {
     }
     if (action === 'spotify-favorites') {
       this._openSpotifyPlusPopup('favorites');
+      return;
+    }
+    if (action === 'spotify-library') {
+      this._openSpotifyPlusPopup('presets');
       return;
     }
     if (action === 'spotify-plus') {
@@ -1016,75 +1221,53 @@ class BrunoOfficeSubview extends HTMLElement {
       this._playSpotify();
     }
     if (action === 'spotify-pause') this._callService('media_player.media_pause', { entity_id: this._config.entities.spotify });
-    if (action === 'focus-start') {
-      if (!this._focusRunning) {
-        if (this._focusRemaining <= 0) this._focusRemaining = this._focusDuration;
-        this._focusStartedAt = Date.now() - ((this._focusDuration - this._focusRemaining) * 1000);
-        this._focusRunning = true;
-        this._startFocusTimer();
-        this._safeRender();
-      }
-    }
-    if (action === 'focus-pause') {
-      if (this._focusRunning && this._focusStartedAt) {
-        const elapsed = Math.floor((Date.now() - this._focusStartedAt) / 1000);
-        this._focusRemaining = Math.max(0, this._focusDuration - elapsed);
-      }
-      this._focusRunning = false;
-      this._safeRender();
-    }
-    // NOVO (Foco & Produtividade): reset do timer pomodoro.
-    if (action === 'focus-reset') {
-      this._focusRunning = false;
-      this._focusStartedAt = null;
-      this._focusRemaining = this._focusDuration;
-      this._safeRender();
-    }
-    if (action === 'pc-power') this._callService('button.press', { entity_id: this._config.entities.pc_power });
-    if (action === 'pc-sleep') this._callService('button.press', { entity_id: this._config.entities.pc_sleep });
-    if (action === 'pc-restart') this._callService('button.press', { entity_id: this._config.entities.pc_restart });
-    if (action === 'pc-shutdown') this._callService('button.press', { entity_id: this._config.entities.pc_shutdown });
-    if (action === 'pc-lock') this._callService('button.press', { entity_id: this._config.entities.pc_lock });
     if (action === 'toggle-climate' && !this._cooldown('climate', 1800)) {
       const model = this._climateModel();
+      this._selectedClimatePanel = '';
       this._callService(model.active ? 'climate.turn_off' : 'climate.turn_on', { entity_id: this._config.entities.climate });
     }
     if (action === 'climate-mode') {
       const hvacMode = target.dataset.mode;
       if (hvacMode) {
+        this._selectedClimatePanel = '';
         this._callService('climate.set_hvac_mode', {
           entity_id: this._config.entities.climate,
           hvac_mode: hvacMode,
         });
+        this._safeRender();
       }
       return;
     }
     if (action === 'fan-mode') {
       const fanMode = target.dataset.mode;
       if (fanMode) {
+        this._selectedClimatePanel = '';
         this._callService('climate.set_fan_mode', {
           entity_id: this._config.entities.climate,
           fan_mode: fanMode,
         });
+        this._safeRender();
       }
       return;
     }
     if (action === 'swing-mode') {
       const swingMode = target.dataset.mode;
       if (swingMode) {
+        this._selectedClimatePanel = '';
         this._callService('climate.set_swing_mode', {
           entity_id: this._config.entities.climate,
           swing_mode: swingMode,
         });
+        this._safeRender();
       }
       return;
     }
     if (action === 'temp-down' || action === 'temp-up') {
       const model = this._climateModel();
-      const current = Number(model.target);
-      if (Number.isFinite(current)) {
-        this._setClimateTarget(action === 'temp-up' ? current + model.targetStep : current - model.targetStep);
-      }
+      const current = Number.isFinite(Number(model.target)) ? Number(model.target) : 22;
+      const step = Number.isFinite(Number(model.targetStep)) ? Number(model.targetStep) : 1;
+      this._setClimateTarget(action === 'temp-up' ? current + step : current - step);
+      return;
     }
   }
 
@@ -1095,10 +1278,10 @@ class BrunoOfficeSubview extends HTMLElement {
     if (!Number.isFinite(value)) return;
     if (target.dataset.action === 'curtain-target') {
       if (!this._config.entities.curtain) return;
-      this._callService('cover.set_cover_position', {
-        entity_id: this._config.entities.curtain,
-        position: Math.max(0, Math.min(100, Math.round(100 - value))),
-      });
+      const closed = this._toCurtainPercent(value);
+      const visualOpen = 100 - (this._toCurtainPercent(value) ?? 0);
+      if (closed != null) this._beginCurtainMotion(closed, 'position');
+      this._setCurtainPosition(this._curtainCommandOpenPosition(visualOpen));
       return;
     }
     if (target.dataset.action === 'spotify-volume') {
@@ -1110,7 +1293,7 @@ class BrunoOfficeSubview extends HTMLElement {
       return;
     }
     if (target.dataset.action === 'climate-target') {
-      this._setClimateTarget(value);
+      this._setClimateTarget(Math.round(value));
       return;
     }
     if (target.dataset.action !== 'brightness') return;
@@ -1120,17 +1303,33 @@ class BrunoOfficeSubview extends HTMLElement {
     });
   }
 
+  _handleLiveInput(event) {
+    const target = event.target;
+    if (!target?.matches?.('[data-action="curtain-target"]')) return;
+    const value = this._toCurtainPercent(target.value);
+    if (value == null) return;
+    const displayOpen = 100 - value;
+    const commandOpen = this._curtainCommandOpenPosition(displayOpen);
+    const root = target.closest('.curtain-dock');
+    root?.style.setProperty('--curtain-position', `${value}%`);
+    root?.querySelector('.curtain-status-percent')?.replaceChildren(document.createTextNode(`- ${value}%`));
+    const status = 'Fechada';
+    root?.querySelector('.curtain-status-text')?.replaceChildren(document.createTextNode(status));
+    root?.querySelectorAll('.curtain-mark').forEach((mark) => {
+      mark.classList.toggle('is-active', Math.abs(Number(mark.dataset.closed) - value) <= 1 || Math.abs(Number(mark.dataset.position) - commandOpen) <= 1);
+    });
+  }
+
   _render() {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     globalThis.BrunoLiquidGlass?.apply?.();
 
     const model = {
       lights: this._activeLightsCount(),
-      curtainPosition: this._curtainPosition(),
+      curtain: this._curtainModel(),
       cameras: this._camerasModel(),
-      spotify: this._spotifyModel(),
-      focus: this._focusModel(),
       pc: this._pcModel(),
+      spotify: this._spotifyModel(),
       climate: this._climateModel(),
     };
     this._lastMinute = this._clock();
@@ -1138,38 +1337,80 @@ class BrunoOfficeSubview extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
       <main class="office-subview">
-        ${this._renderRoomSidebar()}
+        <!-- NOVO (Etapa B): a Sala é SEÇÃO da shell -> o RAIL é fornecido pela
+             shell (à esquerda). A subview NÃO desenha rail próprio; renderiza só
+             a moldura interna (faixas topo/rodapé) + o conteúdo. ROLLBACK:
+             restaurar <div data-rail-mount> + _mountRoomRail() + coluna frame-left. -->
+        <!-- NOVO (full-bleed subview, Passada 1) — nova estrutura:
+             topband (status chips + relógio) | content-left (hero atmosfera +
+             cortina full-width + [câmeras|mídia]) | right (Iluminação alta + AC).
+             ANTERIOR (rollback): frame-top/frame-bottom + left-column(hero+cams) +
+             right-column(status-rail + right-control-grid lights/media/ac). -->
+        ${this._renderTopBand(model)}
 
-        <section class="left-column">
+        <section class="content-left">
           <section class="hero-panel">
             ${this._renderHero(model)}
           </section>
-          <section class="lower-left-grid">
+          <div class="cams-media-row">
             ${this._renderCameras(model)}
-            ${this._renderFocus(model)}
-          </section>
+            ${this._renderMediaHub(model)}
+          </div>
         </section>
 
         <section class="right-column">
-          ${this._renderStatusRail(model)}
-          <section class="right-control-grid">
-            ${this._renderLights(model)}
-            ${this._renderWorkspaceHub(model)}
-            ${this._renderAC(model)}
-          </section>
+          ${this._renderLights(model)}
+          ${this._renderAC(model)}
         </section>
+
+        ${this._renderFrameBottom()}
       </main>
     `;
 
     this.shadowRoot.removeEventListener('click', this._boundActionHandler);
     this.shadowRoot.removeEventListener('change', this._boundInputHandler);
+    this.shadowRoot.removeEventListener('input', this._boundLiveInputHandler);
     this.shadowRoot.addEventListener('click', this._boundActionHandler);
     this.shadowRoot.addEventListener('change', this._boundInputHandler);
+    this.shadowRoot.addEventListener('input', this._boundLiveInputHandler);
     this._bindImageFallbacks();
+    // NOVO (Etapa B): rail é da shell -> não montamos rail próprio aqui.
+    // (_mountRoomRail/_roomRailConfig mantidos no arquivo para rollback.)
   }
 
-  // NOVO (paridade Sala): fallback gracioso para imagens 404
-  // (transportado de bruno-sala-subview.js).
+  // NOVO (réplica): monta o componente REAL do rail (bento-sidebar-liquid-card)
+  // na faixa frame-left, com os itens [Home + cômodos]. É o MESMO componente do
+  // painel principal -> ícones/tamanho/cor/seleção/texto idênticos por construção.
+  _roomRailConfig() {
+    const rooms = (this._config.room_nav || []).map((r) => ({
+      key: r.key,
+      icon: r.key,                 // casa com o icon-set do componente
+      label: r.name,
+      selected: !!r.active,        // cômodo atual destacado
+      tap_action: { action: 'navigate', navigation_path: r.path || this._config.navigation_path },
+    }));
+    return {
+      top_items: [
+        { key: 'home', icon: 'home', label: 'Home',
+          tap_action: { action: 'navigate', navigation_path: this._config.navigation_path } },
+        ...rooms,
+      ],
+      bottom_items: [],            // top-anchored (réplica do principal)
+    };
+  }
+
+  _mountRoomRail() {
+    const mount = this.shadowRoot?.querySelector('[data-rail-mount]');
+    if (!mount) return;
+    if (!globalThis.customElements || !customElements.get('bento-sidebar-liquid-card')) return;
+    if (!this._railEl) {
+      this._railEl = document.createElement('bento-sidebar-liquid-card');
+      this._railEl.setConfig(this._roomRailConfig());
+    }
+    if (this._hass) this._railEl.hass = this._hass;
+    if (this._railEl.parentNode !== mount) mount.appendChild(this._railEl);
+  }
+
   _bindImageFallbacks() {
     this.shadowRoot?.querySelectorAll('img[data-fallback-class]').forEach((image) => {
       const fallbackClass = image.dataset.fallbackClass;
@@ -1186,87 +1427,155 @@ class BrunoOfficeSubview extends HTMLElement {
     });
   }
 
+  // NOVO (full-bleed subview): HERO = ATMOSFERA transparente (sem .hero-bg; o
+  // backdrop da shell aparece). Os CONTROLES DE CORTINA voltam SOBREPOSTOS ao
+  // hero (transparente, sem caixa), ancorados embaixo — como era antes.
+  // ROLLBACK: restaurar o _renderHero anterior (com .hero-bg).
   _renderHero(model) {
-    const title = BrunoOfficeSubview._escape(this._config.title);
-    const subtitle = BrunoOfficeSubview._escape(this._config.subtitle);
-    const background = BrunoOfficeSubview._escapeAttr(this._config.background);
-    const fallbackBackground = BrunoOfficeSubview._escapeAttr(this._config.fallback_background || this._config.background);
-    const curtainConfigured = Boolean(this._config.entities.curtain);
-    const curtainPosition = Math.max(0, Math.min(100, Number(model.curtainPosition) || 0));
-    const curtainVisualPosition = curtainConfigured ? 100 - curtainPosition : 0;
-    const curtainDisabled = curtainConfigured ? '' : 'disabled';
-    const curtainStatus = curtainConfigured ? (curtainPosition <= 3 ? 'Fechada' : 'Aberta') : 'Sem cortina';
-    const curtainPercent = curtainConfigured ? `- ${curtainPosition}%` : '- --';
-
     return `
-      <div class="hero-stage">
-        <div class="hero-bg" style="--hero-image: url('${background}'); --hero-fallback-image: url('${fallbackBackground}');" aria-hidden="true"></div>
+      <div class="hero-stage hero-atmosphere">
         <div class="hero-content">
-          <div class="hero-top">
-            <button class="back-button" type="button" data-action="navigate" data-path="${BrunoOfficeSubview._escapeAttr(this._config.navigation_path)}" aria-label="Voltar">
-              <ha-icon icon="mdi:arrow-left"></ha-icon>
-            </button>
-            <div>
-              <div class="hero-title">${title}</div>
-              <div class="hero-subtitle">${subtitle}</div>
-            </div>
-          </div>
-
-          <div class="hero-headline">
-            <p class="hero-date-line">${BrunoOfficeSubview._escape(this._dateLine())}</p>
-            <div class="hero-clock" data-clock>${this._lastMinute}</div>
-            <button type="button" class="scene-pill" data-action="more-info" data-entity="${BrunoOfficeSubview._escapeAttr(this._config.entities.active_sensor)}">
-              <ha-icon icon="mdi:briefcase-clock"></ha-icon>
-              <span>${BrunoOfficeSubview._escape(this._sceneContextLabel(model))}</span>
-            </button>
-          </div>
-
-          <!-- Curtain dock identico ao da Sala. Office nao tem entidade de cortina
-               (entities.curtain: '') — o bloco fica visualmente identico porem inerte
-               ate uma cortina ser mapeada. Decisao do usuario em 2026-06-12.
-               ANTERIOR (rollback): 4o botao "Automatica" (is-primary, mdi:home-automation)
-               e pill "Automatica - X%". -->
-          <div class="curtain-dock${curtainConfigured ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
-            <div class="curtain-control-row">
-              <div class="curtain-identity">
-                <span class="curtain-icon-shell">${BrunoOfficeSubview._curtainSvg('main')}</span>
-                <span class="curtain-title">Cortina</span>
-              </div>
-              <div class="curtain-status" aria-live="polite">
-                <span class="curtain-status-text">${BrunoOfficeSubview._escape(curtainStatus)}</span>
-                <span class="curtain-status-percent">${BrunoOfficeSubview._escape(curtainPercent)}</span>
-              </div>
-              <div class="curtain-main-actions">
-                <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
-                  ${BrunoOfficeSubview._curtainSvg('open')}<span>Abrir</span>
-                </button>
-                <button type="button" class="curtain-action-button is-muted" data-action="cover-stop" ${curtainDisabled}>
-                  ${BrunoOfficeSubview._curtainSvg('stop')}<span>Parar</span>
-                </button>
-                <button type="button" class="curtain-action-button" data-action="cover-close" ${curtainDisabled}>
-                  ${BrunoOfficeSubview._curtainSvg('close')}<span>Fechar</span>
-                </button>
-              </div>
-            </div>
-            <div class="curtain-slider-zone">
-              <div class="curtain-slider-glow" aria-hidden="true"></div>
-              <input class="curtain-range" type="range" min="0" max="100" step="1" value="${curtainVisualPosition}" data-action="curtain-target" aria-label="Fechamento da cortina" ${curtainDisabled}>
-              <div class="curtain-chips">
-                <button type="button" class="curtain-chip" data-action="cover-position" data-position="25" ${curtainDisabled}>25%</button>
-                <button type="button" class="curtain-chip" data-action="cover-position" data-position="50" ${curtainDisabled}>50%</button>
-                <button type="button" class="curtain-chip" data-action="cover-position" data-position="75" ${curtainDisabled}>75%</button>
-              </div>
-            </div>
-          </div>
+          ${this._renderCurtain(model)}
         </div>
       </div>
     `;
   }
 
-  // NOVO (paridade Sala): icones SVG custom da barra de navegacao,
-  // transportados de bruno-sala-subview.js.
+  // Controles de cortina (SEM caixa/card). Renderizados sobrepostos ao hero.
+  _renderCurtain(model) {
+    const curtain = model.curtain || this._curtainModel();
+    const curtainPosition = Number.isFinite(Number(curtain.position)) ? Number(curtain.position) : 0;
+    const curtainDisplayPosition = Number.isFinite(Number(curtain.displayPosition)) ? Number(curtain.displayPosition) : curtainPosition;
+    const curtainVisualPosition = Number.isFinite(Number(curtain.visualPosition)) ? Number(curtain.visualPosition) : this._curtainClosedVisualPosition(curtainPosition);
+    const curtainDisabled = curtain.available ? '' : 'disabled';
+    const curtainStatusLabel = curtain.available ? curtain.status : 'Sem cortina';
+    const curtainPercentLabel = curtain.available ? `${curtainPercentLabel}` : '- --';
+    const curtainMarks = BRUNO_OFFICE_CURTAIN_PRESETS.map((preset) => `
+      <button
+        type="button"
+        class="curtain-mark${Math.abs(curtainVisualPosition - preset.closed) <= 1 ? ' is-active' : ''}"
+        data-action="cover-position"
+        data-position="${preset.position}"
+        data-closed="${preset.closed}"
+        aria-label="${preset.label}% fechada"
+        ${curtainDisabled}
+      >${preset.label}%</button>
+    `).join('');
+
+    return `
+      <div class="curtain-dock curtain-overlay${curtain.available ? '' : ' is-disabled'}" style="--curtain-position: ${curtainVisualPosition}%;">
+          <div class="curtain-control-row">
+            <div class="curtain-identity">
+              <span class="curtain-icon-shell">${BrunoOfficeSubview._curtainSvg('main')}</span>
+              <span class="curtain-title">Cortina</span>
+            </div>
+            <div class="curtain-status" aria-live="polite">
+              <span class="curtain-status-text">${BrunoOfficeSubview._escape(curtainStatusLabel)}</span>
+              <span class="curtain-status-percent">- ${curtainDisplayPosition}%</span>
+            </div>
+            <div class="curtain-main-actions">
+              <button type="button" class="curtain-action-button" data-action="cover-open" ${curtainDisabled}>
+                ${BrunoOfficeSubview._curtainSvg('open')}<span>Abrir</span>
+              </button>
+              <button type="button" class="curtain-action-button is-muted${curtain.moving ? ' is-active' : ''}" data-action="cover-stop" ${curtainDisabled}>
+                ${BrunoOfficeSubview._curtainSvg('stop')}<span>Parar</span>
+              </button>
+              <button type="button" class="curtain-action-button" data-action="cover-close" ${curtainDisabled}>
+                ${BrunoOfficeSubview._curtainSvg('close')}<span>Fechar</span>
+              </button>
+            </div>
+          </div>
+          <div class="curtain-slider-zone">
+            <div class="curtain-slider-glow" aria-hidden="true"></div>
+            <input
+              class="curtain-range"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value="${curtainVisualPosition}"
+              data-action="curtain-target"
+              aria-label="Fechamento da cortina"
+              ${curtainDisabled}
+            >
+            <div class="curtain-marks">
+              ${curtainMarks}
+            </div>
+          </div>
+      </div>
+    `;
+  }
+
+  // NOVO (full-bleed subview): FAIXA SUPERIOR fixa — chips de status (luzes da
+  // sala/varanda, temp, umidade, rede) à esquerda + relógio/data à direita.
+  // Mesma linguagem da status bar do painel principal; transparente (legibilidade
+  // pela borda atmosférica do backdrop). Substitui o antigo _renderStatusRail
+  // (que ficava na coluna direita) e o _renderFrameTop.
+  _renderTopBand(model) {
+    const badges = [
+      { icon: 'mdi:lightbulb', title: 'Luzes', sub: `Office ${model.lights || 0}`, tone: '247,198,0', active: (model.lights || 0) > 0 },
+      { icon: 'mdi:thermometer', title: 'Temperatura', sub: this._temperatureLabel(), tone: '247,170,90' },
+      { icon: 'mdi:water-percent', title: 'Umidade', sub: this._humidityLabel(), tone: '127,200,233' },
+      { icon: 'mdi:router-wireless', title: 'Roteador', sub: this._networkLabel(this._config.entities.router), tone: '154,160,166' },
+      { icon: 'mdi:zigbee', title: 'Hub Zigbee', sub: this._networkLabel(this._config.entities.zigbee_hub), tone: '154,160,166' },
+    ];
+    return `
+      <header class="subview-topband">
+        <div class="topband-badges">
+          ${badges.map((badge) => `
+            <div class="tb-badge${badge.active ? ' is-active' : ''}" style="--tone: ${badge.tone};">
+              <span class="tb-badge-icon"><ha-icon icon="${badge.icon}"></ha-icon></span>
+              <span class="tb-badge-text">
+                <span class="tb-badge-title">${BrunoOfficeSubview._escape(badge.title)}</span>
+                <span class="tb-badge-sub">${BrunoOfficeSubview._escape(badge.sub)}</span>
+              </span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="topband-clock" aria-label="Data e hora">
+          <span data-clock>${this._lastMinute}</span>
+          <small>${BrunoOfficeSubview._escape(this._dateLine())}</small>
+        </div>
+      </header>
+    `;
+  }
+
+  static _curtainSvg(type = 'main') {
+    const pathSets = {
+      main: `
+        <path d="M9 7h30"></path>
+        <path d="M14 10v27c4.5-2.8 6.8-7.3 6.8-13.5S18.5 12.8 14 10Z"></path>
+        <path d="M34 10v27c-4.5-2.8-6.8-7.3-6.8-13.5S29.5 12.8 34 10Z"></path>
+        <path d="M24 10v29"></path>
+      `,
+      open: `
+        <path d="M8 8h32"></path>
+        <path d="M14 11v26c5-3 7.5-7.4 7.5-13.2S19 14 14 11Z"></path>
+        <path d="M34 11v26c-5-3-7.5-7.4-7.5-13.2S29 14 34 11Z"></path>
+        <path d="M24 13v23"></path>
+      `,
+      close: `
+        <path d="M8 8h32"></path>
+        <path d="M19 11v26c-4.2-2.5-6.4-6.8-6.4-13S14.8 13.6 19 11Z"></path>
+        <path d="M29 11v26c4.2-2.5 6.4-6.8 6.4-13S33.2 13.6 29 11Z"></path>
+        <path d="M23.7 11v27M24.3 11v27"></path>
+      `,
+      stop: `
+        <rect x="14" y="13" width="8" height="22" rx="1.5"></rect>
+        <rect x="26" y="13" width="8" height="22" rx="1.5"></rect>
+      `,
+    };
+    const size = type === 'main' ? 17 : 16;
+    return `
+      <svg class="curtain-svg is-${BrunoOfficeSubview._escapeAttr(type)}" viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true">
+        ${pathSets[type] || pathSets.main}
+      </svg>
+    `;
+  }
+
   static _roomNavIcon(key) {
     const icons = {
+      home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
       sala: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V9.5A3.5 3.5 0 0 1 8.5 6h7A3.5 3.5 0 0 1 19 9.5V11"/><path d="M4 12.5A2.5 2.5 0 0 1 6.5 10H7a2 2 0 0 1 2 2v1h6v-1a2 2 0 0 1 2-2h.5A2.5 2.5 0 0 1 20 12.5V18H4v-5.5z"/><path d="M6 18v2M18 18v2"/></svg>',
       office: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4z"/><path d="M9 19h6M12 15v4"/><path d="M7 21h10"/></svg>',
       cozinha: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v15H5z"/><path d="M5 10h14"/><path d="M9 7h.01M15 7h.01"/><path d="M8 14h8v4H8z"/></svg>',
@@ -1279,35 +1588,91 @@ class BrunoOfficeSubview extends HTMLElement {
     return icons[key] || icons.fallback;
   }
 
+  // NOVO: faixa SUPERIOR da shell (frame-top) — nome do cômodo centralizado +
+  // data/hora à direita, no padrão visual de Câmeras/Roborock (transparente, leve).
+  _renderFrameTop() {
+    return `
+      <header class="subview-topbar">
+        <span class="subview-room">${BrunoOfficeSubview._escape(this._config.title)}</span>
+        <div class="subview-clock" aria-label="Data e hora">
+          <span data-clock>${this._lastMinute}</span>
+          <small>${BrunoOfficeSubview._escape(this._dateLine())}</small>
+        </div>
+      </header>
+    `;
+  }
+
+  // NOVO: faixa INFERIOR da shell (frame-bottom) — presença / última atividade,
+  // no mesmo padrão discreto de Câmeras/Roborock.
+  _renderFrameBottom() {
+    return `
+      <footer class="subview-footer">
+        <span class="subview-presence">
+          <ha-icon icon="mdi:motion-sensor" aria-hidden="true"></ha-icon>
+          ${BrunoOfficeSubview._escape(this._presenceLine())}
+        </span>
+      </footer>
+    `;
+  }
+
+  // Presença/última atividade. Sem sensor de presença dedicado, usa last_changed
+  // do sensor de atividade (ou do grupo de luzes) como "última atividade".
+  _presenceLine() {
+    const ids = [this._config.entities.active_sensor, this._config.entities.room_group].filter(Boolean);
+    for (const id of ids) {
+      const st = this._hass?.states?.[id];
+      const ts = st?.last_changed || st?.last_updated;
+      if (!ts) continue;
+      const mins = Math.max(0, Math.round((Date.now() - Date.parse(ts)) / 60000));
+      const rel = mins < 1 ? 'agora mesmo' : mins < 60 ? `há ${mins} min` : `há ${Math.round(mins / 60)} h`;
+      return `Última atividade ${rel}`;
+    }
+    return 'Sem atividade recente';
+  }
+
   _renderRoomSidebar() {
     const items = this._config.room_nav || [];
 
+    // NOVO (Caminho 2): botão Home no TOPO do cluster (volta ao painel principal),
+    // com respiro p/ os cômodos; cada botão ganha rótulo curto sob o ícone.
+    const homeButton = `
+      <button
+        type="button"
+        class="room-nav-button room-nav-home"
+        data-action="navigate"
+        data-path="${BrunoOfficeSubview._escapeAttr(this._config.navigation_path)}"
+        title="Home"
+        aria-label="Home"
+      >
+        ${BrunoOfficeSubview._roomNavIcon('home')}
+        <span class="room-nav-label">Home</span>
+      </button>
+    `;
+
     return `
       <nav class="room-sidebar" aria-label="Navegacao de comodos">
+        ${homeButton}
         ${items.map((item) => `
           <button
             type="button"
-            class="room-nav-button${item.active ? ' is-active' : ''}${item.divider_after ? ' has-divider' : ''}"
+            class="room-nav-button${item.active ? ' is-active' : ''}"
             data-action="navigate"
             data-path="${BrunoOfficeSubview._escapeAttr(item.path || this._config.navigation_path)}"
             title="${BrunoOfficeSubview._escapeAttr(item.name)}"
             aria-label="${BrunoOfficeSubview._escapeAttr(item.name)}"
           >
             ${BrunoOfficeSubview._roomNavIcon(item.key || item.icon)}
+            <span class="room-nav-label">${BrunoOfficeSubview._escape(item.name)}</span>
           </button>
         `).join('')}
       </nav>
     `;
-    // ANTERIOR (rollback): icone generico ha-icon no lugar do SVG custom:
-    // <ha-icon icon="${BrunoOfficeSubview._escapeAttr(item.icon || 'mdi:square-rounded-outline')}"></ha-icon>
   }
 
   _renderStatusRail(model) {
-    // NOVO (paridade Sala): 5 itens, mesma composicao da Sala.
-    // ANTERIOR (rollback): havia um 6o item "Clima" entre Umidade e Roteador:
-    // { icon: 'mdi:snowflake', value: 'Clima', label: this._climateModeLabel(model.climate.hvacMode), tone: 'blue' },
+    const zones = model.lightZones || { sala: 0, varanda: 0 };
     const status = [
-      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: 'Acesas', tone: 'amber' },
+      { icon: 'mdi:lightbulb-on', value: `${model.lights} ${model.lights === 1 ? 'luz' : 'luzes'}`, label: `Sala ${zones.sala} - Varanda ${zones.varanda}`, tone: 'amber' },
       { icon: 'mdi:thermometer', value: this._temperatureLabel(), label: 'Temperatura', tone: 'amber' },
       { icon: 'mdi:water-percent', value: this._humidityLabel(), label: 'Umidade', tone: 'blue' },
       { icon: 'mdi:router-wireless', value: 'Roteador', label: this._networkLabel(this._config.entities.router), tone: 'neutral' },
@@ -1338,11 +1703,17 @@ class BrunoOfficeSubview extends HTMLElement {
   _lightLevel(light) {
     const state = this._state(light?.entity);
     if (!light?.entity || light.placeholder || state?.state !== 'on') return 0;
-    return this._brightnessPercent(state);
+
+    const brightness = Number(state?.attributes?.brightness);
+    if (Number.isFinite(brightness)) {
+      return Math.max(1, Math.min(100, Math.round((brightness / 255) * 100)));
+    }
+
+    return 100;
   }
 
-  _renderLightZoneRail(lights) {
-    const label = 'Office';
+  _renderLightZoneRail(lights, selectedZone) {
+    const label = selectedZone === 'varanda' ? 'Varanda' : 'Sala';
     const levels = lights.slice(0, 4).map((light) => ({
       name: light?.name || 'Luz',
       entity: light?.entity || '',
@@ -1365,7 +1736,7 @@ class BrunoOfficeSubview extends HTMLElement {
         class="lights-zone-rail${isOff ? ' is-off' : ''}${isFull ? ' is-full' : ''}"
         aria-label="${BrunoOfficeSubview._escapeAttr(ariaLabel)}"
         title="${BrunoOfficeSubview._escapeAttr(ariaLabel)}"
-        data-zone="office"
+        data-zone="${BrunoOfficeSubview._escapeAttr(selectedZone)}"
         data-dimmer-entity="${BrunoOfficeSubview._escapeAttr(dimmerTarget?.entity || '')}"
         data-dimmer-level="${BrunoOfficeSubview._escapeAttr(String(fillPercent))}"
         style="--rail-fill:${fillPercent}%; --rail-fill-ratio:${(fillPercent / 100).toFixed(3)}; --rail-glow:${isOff ? '0' : '1'}; --rail-ambient-height:${Math.max(22, fillPercent * 1.9)}px;"
@@ -1395,21 +1766,22 @@ class BrunoOfficeSubview extends HTMLElement {
     `;
   }
 
+  // ANTERIOR (rollback) — abas Sala/Varanda + tiles 2x2 + coluna vertical N/4.
+  // Métodos _renderLightTile/_renderLightZoneRail mantidos acima para rollback.
+  // NOVO (Passada 2): acordeão de ZONAS. Cada zona com luzes REAIS (sem
+  // placeholders falsos): cabeçalho (nome + N/M acesas + apagar zona + chevron)
+  // e, quando expandida, linhas individuais com toggle. 1 zona => sempre expandida.
   _renderLights(model) {
-    // ANTERIOR (rollback): placeholders eram filtrados, deixando a 4a celula
-    // do grid 2x2 vazia:
-    // const visibleLights = (this._config.entities.lights || [])
-    //   .filter((light) => light?.entity && !light.placeholder)
-    //   .slice(0, 4);
-    // NOVO (paridade Sala): placeholders renderizam como tile desabilitado,
-    // mesmo padrao do "LED Fita TV" na Sala.
-    const visibleLights = (this._config.entities.lights || []).slice(0, 4);
+    const visibleLights = (this._config.entities.lights || [])
+      .filter((light) => light?.entity && !light.placeholder)
+      .slice(0, 3);
 
     return `
       <div class="glass-card lights-card office-lights-card">
-        <div class="module-head">
-          <div>
-            <div class="module-title">Luzes</div>
+        <div class="module-head lights-head">
+          <div class="title-with-chip">
+            <span class="micro-icon tone-amber"><ha-icon icon="mdi:lightbulb-group"></ha-icon></span>
+            <div class="module-title">Iluminação</div>
           </div>
           <div class="head-actions">
             <button type="button" class="chip-button is-active" data-action="lights-on">Todas acesas</button>
@@ -1417,190 +1789,213 @@ class BrunoOfficeSubview extends HTMLElement {
           </div>
         </div>
 
-        <div class="lights-body office-lights-body">
-          <div class="lights-single-grid office-lights-grid">
-            ${visibleLights.map((light) => this._renderLightTile(light)).join('')}
-          </div>
-          ${this._renderLightZoneRail(visibleLights)}
+        <div class="office-light-list">
+          ${visibleLights.map((light) => this._renderLightRow(light)).join('')}
         </div>
       </div>
     `;
   }
 
-  /* =====================================================================
-     ANTERIOR (rollback) — Focus card v1 (mode-row + ring grande + stat boxes).
-     Substituido em 2026-06-12 pelo redesign aprovado pelo usuario
-     (mini calendario + chip de reuniao + timer compacto).
-
-  _renderFocus(model) {
-    const focus = model.focus;
-    const degrees = Math.round(focus.progress * 360);
-    const mode = String(focus.semantic || '').toLowerCase();
-    const workingActive = mode.includes('trabalh') || focus.running;
-    const meetingActive = mode.includes('reuni');
-    const availableActive = !workingActive && !meetingActive;
-
-    return \`
-      <section class="glass-card focus-card">
-        <div class="focus-head">
-          <div class="focus-title">
-            <span class="micro-icon tone-blue"><ha-icon icon="mdi:crosshairs-gps"></ha-icon></span>
-            <strong>Foco & Produtividade</strong>
-          </div>
+  _renderLightZone(zone, expanded, onlyOne) {
+    const zoneKey = BrunoOfficeSubview._escapeAttr(zone.key);
+    return `
+      <section class="light-zone${expanded ? ' is-expanded' : ''}">
+        <div class="zone-header" ${onlyOne ? '' : `role="button" data-action="toggle-zone" data-zone="${zoneKey}"`}>
+          <span class="zone-icon"><ha-icon icon="${zone.icon}"></ha-icon></span>
+          <span class="zone-id">
+            <strong>${BrunoOfficeSubview._escape(zone.name)}</strong>
+            <small>${zone.onCount}/${zone.total} acesas</small>
+          </span>
+          ${expanded ? `<span class="zone-off" role="button" data-action="zone-off" data-zone="${zoneKey}">Apagar ${BrunoOfficeSubview._escape(zone.name.toLowerCase())}</span>` : ''}
+          ${onlyOne ? '' : `<ha-icon class="zone-chevron" icon="${expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>`}
         </div>
-
-        <div class="focus-mode-row">
-          <button type="button" class="focus-mode\${workingActive ? ' is-active' : ''}">
-            <span>Trabalhando</span>
-            <i></i>
-          </button>
-          <button type="button" class="focus-mode\${meetingActive ? ' is-active' : ''}">
-            <span>Em reuniao</span>
-            <i></i>
-          </button>
-          <button type="button" class="focus-mode\${availableActive ? ' is-active' : ''}">
-            <span>Disponivel</span>
-            <i></i>
-          </button>
-        </div>
-
-        <div class="focus-dashboard">
-          <div class="focus-ring-panel">
-            <span>Timer de foco</span>
-            <div class="focus-ring" style="--focus-angle:\${degrees}deg">
-              <strong>\${BrunoOfficeSubview._escape(focus.label)}</strong>
-              <small><ha-icon icon="mdi:waveform" style="--mdc-icon-size: 12px; margin-right: 4px;"></ha-icon>\${focus.running ? 'em foco' : 'pronto'}</small>
-            </div>
-            <button type="button" class="focus-toggle" data-action="\${focus.running ? 'focus-pause' : 'focus-start'}">
-              <ha-icon icon="\${focus.running ? 'mdi:pause' : 'mdi:play'}"></ha-icon>
-              <span>\${focus.running ? 'Pausar' : 'Iniciar'}</span>
-            </button>
-          </div>
-
-          <div class="focus-side">
-            <div class="focus-next-minimal">
-              <ha-icon icon="mdi:calendar-month-outline"></ha-icon>
-              <span class="next-label">Status:</span>
-              <strong class="next-title">\${meetingActive ? 'Em reuniao' : 'Agenda livre'}</strong>
-              <span class="next-time">\${focus.running ? 'Foco ativo' : ''}</span>
-            </div>
-            <div class="focus-stats-grid">
-              <div class="stat-box tone-green">
-                <ha-icon icon="mdi:chart-line"></ha-icon>
-                <strong>\${focus.sessions}</strong>
-                <small>Sessoes</small>
-              </div>
-              <div class="stat-box tone-blue">
-                <ha-icon icon="mdi:clock-outline"></ha-icon>
-                <strong>\${BrunoOfficeSubview._escape(focus.focusedLabel)}</strong>
-                <small>Tempo</small>
-              </div>
-            </div>
-          </div>
-        </div>
+        ${expanded
+          ? `<div class="zone-lights">${zone.lights.map((l) => this._renderLightRow(l)).join('')}</div>`
+          : ''}
       </section>
-    \`;
+    `;
   }
-  ===================================================================== */
 
-  // NOVO — Focus card v2: header com chip de status, strip semanal do
-  // calendario, proximo evento e timer pomodoro compacto em linha unica.
-  _renderFocus(model) {
-    const focus = model.focus;
-    const calendar = this._calendarModel();
-    const meetingActive = this._state(this._config.entities.meeting)?.state === 'on';
-    const workingActive = this._state(this._config.entities.working)?.state === 'on';
-    const chip = meetingActive
-      ? { label: 'Em reuniao', tone: 'amber' }
-      : workingActive
-        ? { label: 'Trabalhando', tone: 'blue' }
-        : { label: 'Livre', tone: 'green' };
-    const sessionsLabel = focus.sessions === 1 ? '1 sessao' : `${focus.sessions} sessoes`;
-    const next = calendar.nextEvent;
+  _renderLightRow(light) {
+    const active = this._state(light.entity)?.state === 'on';
+    return `
+      <button type="button" class="light-row${active ? ' is-on' : ''}" data-action="toggle-light" data-entity="${BrunoOfficeSubview._escapeAttr(light.entity)}">
+        <span class="light-row-icon">${BrunoOfficeSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
+        <span class="light-row-name">${BrunoOfficeSubview._escape(light.name)}</span>
+        <span class="light-bar" aria-hidden="true"></span>
+      </button>
+    `;
+  }
+
+  _cameraControlState(camera, key) {
+    const controls = Array.isArray(camera?.controls) ? camera.controls.filter((control) => control?.entity) : [];
+    const normalizedKey = String(key || '').toLowerCase();
+    const control = controls.find((item) => String(item.key || '').toLowerCase() === normalizedKey);
+    if (!control) return null;
+
+    const entity = this._state(control.entity);
+    const unavailable = this._isUnavailable(entity);
+    const active = !unavailable && String(entity?.state || '').toLowerCase() === 'on';
+    const labels = {
+      sound: 'Som',
+      motion: 'Movimento',
+      privacy: 'Privacidade',
+    };
+
+    return {
+      ...control,
+      active,
+      unavailable,
+      label: labels[normalizedKey] || control.label || control.description || 'Controle',
+    };
+  }
+
+  _cameraStatusLine(camera) {
+    if (!camera) return 'Indisponível';
+
+    const unavailable = this._isUnavailable(this._state(camera.entity));
+    const privacy = this._cameraControlState(camera, 'privacy');
+    if (privacy?.active) return 'Modo privacidade ativo';
+
+    return camera.online ? 'Ao vivo' : (unavailable ? 'Indisponível' : (camera.status || 'Online'));
+  }
+
+  _renderCameraFeed(camera, options = {}) {
+    const pip = Boolean(options.pip);
+    const cameraName = camera?.short_name || camera?.name || 'Câmera';
+    const unavailable = !camera || this._isUnavailable(this._state(camera.entity));
+    const privacy = this._cameraControlState(camera, 'privacy');
+    const privateMode = Boolean(privacy?.active);
+    const classes = [
+      'camera-main',
+      'camera-feed',
+      pip ? 'camera-pip-feed' : 'camera-primary-feed',
+      privateMode ? 'is-private' : '',
+      unavailable ? 'is-unavailable' : '',
+    ].filter(Boolean).join(' ');
+    const overlay = unavailable
+      ? `
+        <div class="camera-state-surface">
+          <ha-icon icon="mdi:video-off-outline"></ha-icon>
+          <span>Indisponível</span>
+        </div>
+      `
+      : privateMode
+        ? `
+          <div class="camera-state-surface">
+            <ha-icon icon="mdi:eye-off-outline"></ha-icon>
+            <span>Modo privacidade ativo</span>
+          </div>
+        `
+        : '';
+    const content = `
+      ${this._cameraFrame(camera)}
+      ${overlay}
+      <div class="camera-row-copy">
+        <strong>${BrunoOfficeSubview._escape(cameraName)}</strong>
+      </div>
+    `;
+
+    if (pip && camera?.entity) {
+      return `
+        <button
+          type="button"
+          class="${classes}"
+          data-action="select-camera"
+          data-entity="${BrunoOfficeSubview._escapeAttr(camera.entity)}"
+          aria-label="Mostrar câmera ${BrunoOfficeSubview._escapeAttr(cameraName)}"
+        >
+          ${content}
+        </button>
+      `;
+    }
+
+    return `<div class="${classes}" aria-label="Câmera ${BrunoOfficeSubview._escapeAttr(cameraName)}">${content}</div>`;
+  }
+
+  _renderCameras(model) {
+    const cameras = model.cameras.cameras || [];
+    if (!cameras.length) {
+      return `
+        <section class="glass-card cameras-card cameras-card-controls">
+          <div class="mh-head cameras-head">
+            <div class="mh-head-title">
+              <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
+              <div class="module-title">Câmera</div>
+            </div>
+          </div>
+          <div class="camera-stage camera-pip-stage">
+            ${this._renderCameraFeed(null)}
+          </div>
+        </section>
+      `;
+    }
+
+    const selected = model.cameras.activeCamera || cameras[0];
+    const onlineFallback = cameras.find((camera) => camera.online);
+    const active = selected?.online || !onlineFallback ? selected : onlineFallback;
+    const pip = null;
+    const controlsOpen = Boolean(this._cameraControlsOpen);
 
     return `
-      <section class="glass-card focus-card">
-        <div class="module-head focus-head">
-          <div class="title-with-chip">
-            <span class="micro-icon tone-blue"><ha-icon icon="mdi:crosshairs-gps"></ha-icon></span>
-            <div>
-              <div class="module-title">Foco</div>
-            </div>
+      <section class="glass-card cameras-card cameras-card-controls">
+        <!-- Mesmo cabeçalho de 44px do Hub de Mídia e do ar-condicionado. -->
+        <div class="mh-head cameras-head">
+          <div class="mh-head-title">
+            <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
+            <div class="module-title">Câmera</div>
           </div>
-          <span class="focus-status-chip tone-${chip.tone}"><span></span>${BrunoOfficeSubview._escape(chip.label)}</span>
-        </div>
-
-        <div class="focus-week" aria-label="Semana atual">
-          ${calendar.days.map((day) => `
-            <span class="focus-week-day${day.isToday ? ' is-today' : ''}">
-              <small>${day.label}</small>
-              <strong>${day.day}</strong>
-              <span class="focus-week-dots">
-                ${day.dots.map((color) => `<i style="background:${BrunoOfficeSubview._escapeAttr(color)}"></i>`).join('')}
-              </span>
-            </span>
-          `).join('')}
-        </div>
-
-        <div class="focus-next">
-          <span class="focus-next-label">${next ? (next.ongoing ? 'AGORA' : 'PROXIMO') : 'AGENDA'}</span>
-          ${next ? `
-            <span class="focus-next-time" style="--event-color:${BrunoOfficeSubview._escapeAttr(next.color)}">${BrunoOfficeSubview._escape(next.time)}</span>
-            <span class="focus-next-copy">
-              <strong>${BrunoOfficeSubview._escape(next.title)}</strong>
-              <small>${BrunoOfficeSubview._escape(next.calendar)}</small>
-            </span>
-          ` : `
-            <span class="focus-next-copy is-empty">
-              <strong>${calendar.loaded ? 'Agenda livre' : 'Carregando agenda...'}</strong>
-            </span>
-          `}
-        </div>
-
-        <div class="focus-timer-row">
-          <span class="focus-timer-time${focus.running ? ' is-running' : ''}">
-            <ha-icon icon="mdi:timer-outline"></ha-icon>
-            <strong>${BrunoOfficeSubview._escape(focus.label)}</strong>
-          </span>
-          <button type="button" class="focus-timer-toggle${focus.running ? ' is-running' : ''}" data-action="${focus.running ? 'focus-pause' : 'focus-start'}">
-            <ha-icon icon="${focus.running ? 'mdi:pause' : 'mdi:play'}"></ha-icon>
-            <span>${focus.running ? 'Pausar' : 'Iniciar'}</span>
+          <button
+            type="button"
+            class="mh-menu camera-settings-button${controlsOpen ? ' is-active' : ''}"
+            data-action="toggle-camera-controls"
+            title="Controles"
+            aria-label="${controlsOpen ? 'Fechar controles das câmera' : 'Abrir controles das câmera'}"
+            aria-expanded="${controlsOpen ? 'true' : 'false'}"
+          >
+            <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </button>
-          <button type="button" class="focus-timer-reset" data-action="focus-reset" title="Reiniciar timer" aria-label="Reiniciar timer">
-            <ha-icon icon="mdi:restart"></ha-icon>
-          </button>
-          <span class="focus-timer-meta">${BrunoOfficeSubview._escape(sessionsLabel)} · ${BrunoOfficeSubview._escape(focus.focusedLabel)}</span>
+        </div>
+
+        <div class="camera-stage camera-pip-stage${controlsOpen ? ' is-controls-open' : ''}">
+          ${this._renderCameraFeed(active)}
+          ${pip ? this._renderCameraFeed(pip, { pip: true }) : ''}
+          ${controlsOpen ? this._renderCameraControls(active) : ''}
         </div>
       </section>
     `;
   }
 
-  _renderCameras(model) {
-    const active = model.cameras.activeCamera || model.cameras.cameras[0];
+  _renderCameraControls(camera) {
+    const controls = ['sound', 'motion', 'privacy']
+      .map((key) => this._cameraControlState(camera, key))
+      .filter((control) => control?.entity);
+    if (!controls.length) return '';
+
+    const cameraName = camera?.short_name || camera?.name || 'Câmera';
+    const controlMarkup = controls.map((control) => {
+      const description = control.description || control.label || 'Controle';
+      const ariaLabel = `${description} — câmera ${cameraName}`;
+      return `
+        <button
+          type="button"
+          class="camera-control${control.active ? ' is-on' : ''}${control.unavailable ? ' is-unavailable' : ''}"
+          ${control.unavailable ? 'disabled' : `data-action="toggle-camera-control" data-entity="${BrunoOfficeSubview._escapeAttr(control.entity)}"`}
+          aria-pressed="${control.active ? 'true' : 'false'}"
+          aria-label="${BrunoOfficeSubview._escapeAttr(ariaLabel)}"
+          title="${BrunoOfficeSubview._escapeAttr(ariaLabel)}"
+        >
+          <ha-icon icon="${BrunoOfficeSubview._escapeAttr(control.icon || 'mdi:toggle-switch-outline')}"></ha-icon>
+          <span class="camera-control-label">${BrunoOfficeSubview._escape(control.label || description)}</span>
+          <span class="camera-control-switch" aria-hidden="true"></span>
+        </button>
+      `;
+    }).join('');
 
     return `
-      <section class="glass-card cameras-card">
-        <div class="module-head">
-          <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
-            <div>
-              <div class="module-title">Cameras</div>
-            </div>
-          </div>
-          <div class="online-chip"><span></span>${model.cameras.onlineCount}/${model.cameras.cameras.length} online</div>
-        </div>
-
-        <div class="camera-stage">
-          <button type="button" class="camera-main" data-action="more-info" data-entity="${BrunoOfficeSubview._escapeAttr(active?.entity || '')}">
-            ${this._cameraFrame(active)}
-            <div class="camera-row-copy">
-              <strong>${BrunoOfficeSubview._escape(active?.name || 'Camera')}</strong>
-              <span><span class="live-dot"></span>${BrunoOfficeSubview._escape(active?.status || 'Online')}</span>
-            </div>
-            <ha-icon class="camera-chevron" icon="mdi:chevron-right"></ha-icon>
-          </button>
-        </div>
-      </section>
+      <div class="camera-control-strip" aria-label="Controles da câmera ${BrunoOfficeSubview._escapeAttr(cameraName)}">
+        <div class="camera-controls">${controlMarkup}</div>
+      </div>
     `;
   }
 
@@ -1622,252 +2017,217 @@ class BrunoOfficeSubview extends HTMLElement {
     `;
   }
 
-  _renderWorkspaceHub(model) {
-    const selected = this._selectedWorkspace(model);
+  // NOVO (2026-06-28): Hub de Mídia refatorado como ACORDEÃO verdadeiro
+  // (ordem fixa TV → Spotify → PS5). Spec: hemmahubmidiaprompt.md.
+  // Restrições: 320px fixos (--ac-h), sem overflow; só o Hub muda — nenhum
+  // outro bloco/shell/rail/topband/backdrop é tocado. Cores: accent/volume
+  // dourado #f2c266; ícone Spotify monocromático (sem verde). Apenas UMA fonte
+  // expandida por vez, no próprio lugar (nunca promovida ao topo).
+  _renderMediaHub(model) {
+    const selected = this._selectedMedia(model);
     const pc = model.pc;
     const spotify = model.spotify;
-    const pcImage = BrunoOfficeSubview._escapeAttr(this._config.pc_image || '/local/images/office_pc.png');
+    const esc = (value) => BrunoOfficeSubview._escape(value);
+    const escAttr = (value) => BrunoOfficeSubview._escapeAttr(value);
+    const pcImage = this._config.pc_image || '/local/images/office_pc.png';
     const spotifyArtwork = spotify.artwork ? BrunoOfficeSubview._resolvePicture(spotify.artwork) : '';
     const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png';
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
-    const metricIcon = {
-      cpu: 'mdi:cpu-64-bit',
-      ram: 'mdi:memory',
-      gpu_temp: 'mdi:thermometer',
-      network: 'mdi:wifi',
-    };
-    const compactMeta = (...values) => {
-      const seen = new Set();
-      return values
-        .map((value) => String(value || '').trim())
-        .filter((value) => {
-          if (!value || value === '--') return false;
-          const key = value.toLowerCase();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-    };
-    const metaLine = (...values) => compactMeta(...values).join(' - ');
-    const renderMeta = (value) => (
-      value
-        ? `<small>${BrunoOfficeSubview._escape(value)}</small>`
-        : '<small aria-hidden="true">&nbsp;</small>'
-    );
-    const mediaActionButton = ({
-      action,
-      icon,
-      label,
-      className = '',
-      attrs = '',
-      disabled = false,
-    }) => `
-      <button
-        type="button"
-        class="media-action-button${className ? ` ${className}` : ''}"
-        data-action="${BrunoOfficeSubview._escapeAttr(action)}"
-        title="${BrunoOfficeSubview._escapeAttr(label)}"
-        aria-label="${BrunoOfficeSubview._escapeAttr(label)}"
-        ${attrs}
-        ${disabled ? 'disabled' : ''}
-      >
-        <ha-icon icon="${BrunoOfficeSubview._escapeAttr(icon)}"></ha-icon>
-      </button>
-    `;
-    const mediaIdentityCell = (type, active = false, options = {}) => `
-      <span class="media-identity-cell is-${BrunoOfficeSubview._escapeAttr(type)}${active ? ' is-active' : ''}" aria-hidden="true">
-        ${BrunoOfficeSubview._tplMediaIcon(type, { active, animate: Boolean(options.animate) })}
-      </span>
-    `;
-    // ANTERIOR (rollback): img sem fallback — asset 404 ficava como imagem quebrada.
-    // const standbyImage = (src, className, fallbackIcon) => (
-    //   src
-    //     ? `<img class="media-standby-image ${className}" src="${BrunoOfficeSubview._escapeAttr(src)}" alt="">`
-    //     : `<ha-icon icon="${BrunoOfficeSubview._escapeAttr(fallbackIcon)}"></ha-icon>`
-    // );
-    // NOVO: wrapper com fallback gracioso via _bindImageFallbacks (paridade Sala).
-    const standbyImage = (src, className, fallbackIcon) => (
-      src
-        ? `
-          <span class="media-standby-shell" data-image-wrapper>
-            <img class="media-standby-image ${className}" src="${BrunoOfficeSubview._escapeAttr(src)}" alt="" data-fallback-class="is-fallback">
-            <ha-icon class="media-standby-fallback" icon="${BrunoOfficeSubview._escapeAttr(fallbackIcon)}"></ha-icon>
-          </span>
-        `
-        : `<ha-icon icon="${BrunoOfficeSubview._escapeAttr(fallbackIcon)}"></ha-icon>`
-    );
-    const fillActionRow = (items) => {
-      const visible = items.filter(Boolean).slice(0, 4);
-      while (visible.length < 4) visible.push('<span class="media-action-spacer"></span>');
-      return visible.join('');
-    };
-    const configuredButton = ({ entity, action, icon, label, className = '' }) => (
-      entity
-        ? mediaActionButton({ action, icon, label, className })
-        : ''
-    );
-    const spotifyMeta = metaLine(
-      spotify.subtitle,
-      // ANTERIOR (rollback): fallback literal 'Echo Show' herdado da Sala.
-      // spotify.source || this._config.spotify_device_name || 'Echo Show',
-      spotify.source || this._config.spotify_device_name || 'Echo Pop Office',
-    );
-    const pcMeta = metaLine(
-      pc.active ? 'Ativo' : 'Offline',
-      pc.activeWindow,
-      pc.session,
-    );
-    const spotifyTransportDisabled = !spotify.active;
-    const spotifyPrimaryActions = `
-      ${mediaIdentityCell('spotify', spotify.active || spotify.playing)}
-      ${mediaActionButton({ action: 'spotify-prev', icon: 'mdi:skip-previous', label: 'Faixa anterior', disabled: spotifyTransportDisabled })}
-      ${mediaActionButton({ action: 'spotify-play-pause', icon: spotify.playing ? 'mdi:pause' : 'mdi:play', label: spotify.playing ? 'Pausar' : 'Tocar', className: 'is-main', disabled: spotifyTransportDisabled })}
-      ${mediaActionButton({ action: 'spotify-next', icon: 'mdi:skip-next', label: 'Proxima faixa', disabled: spotifyTransportDisabled })}
-    `;
-    const spotifySecondaryActions = `
-      ${mediaActionButton({ action: 'spotify-devices', icon: 'mdi:speaker-wireless', label: 'Dispositivos', className: 'is-tool' })}
-      ${mediaActionButton({ action: 'spotify-presets', icon: 'mdi:bookmark-music-outline', label: 'Presets', className: 'is-tool' })}
-      ${mediaActionButton({ action: 'spotify-queue', icon: 'mdi:playlist-play', label: 'Fila', className: 'is-tool' })}
-      ${mediaActionButton({ action: 'spotify-favorites', icon: 'mdi:heart-outline', label: 'Favoritos', className: 'is-tool' })}
-    `;
-    const pcPrimaryActions = fillActionRow([
-      mediaIdentityCell('pc', pc.active),
-      configuredButton({ entity: this._config.entities.pc_power, action: 'pc-power', icon: 'mdi:power', label: 'Ligar', className: 'is-main' }),
-      configuredButton({ entity: this._config.entities.pc_sleep, action: 'pc-sleep', icon: 'mdi:weather-night', label: 'Sleep' }),
-      configuredButton({ entity: this._config.entities.pc_restart, action: 'pc-restart', icon: 'mdi:restart', label: 'Reiniciar', className: 'is-tool' }),
-    ]);
-    const pcSecondaryButtons = [
-      configuredButton({ entity: this._config.entities.pc_shutdown, action: 'pc-shutdown', icon: 'mdi:power-standby', label: 'Desligar' }),
-      configuredButton({ entity: this._config.entities.pc_lock, action: 'pc-lock', icon: 'mdi:lock-outline', label: 'Bloquear' }),
-    ].filter(Boolean);
-    const pcFacts = [
-      this._config.entities.pc_session && pc.session && pc.session !== '--'
-        ? { icon: 'mdi:account-clock-outline', label: 'Sessao', value: pc.session }
-        : null,
-      this._config.entities.pc_idle && pc.idle && pc.idle !== '--'
-        ? { icon: 'mdi:timer-sand', label: 'Inativo', value: pc.idle }
-        : null,
-      pc.webcamConfigured
-        ? { icon: 'mdi:webcam', label: 'Webcam', value: pc.webcamActive ? 'On' : 'Off', active: pc.webcamActive }
-        : null,
-      this._config.entities.pc_volume && pc.volume && pc.volume !== '--'
-        ? { icon: 'mdi:volume-high', label: 'Volume', value: pc.volume }
-        : null,
-      this._config.entities.pc_brightness && pc.brightness && pc.brightness !== '--'
-        ? { icon: 'mdi:white-balance-sunny', label: 'Brilho', value: pc.brightness }
-        : null,
-      ...pc.metrics
-        .filter((metric) => metric.entity && metric.value && metric.value !== '--')
-        .map((metric) => ({
-          icon: metricIcon[metric.key] || 'mdi:chart-line',
-          label: metric.label,
-          value: metric.value,
-        })),
-    ].filter(Boolean);
-    const sources = {
-      pc: {
-        key: 'pc',
-        label: 'PC',
-        icon: 'mdi:monitor-dashboard',
-        active: pc.active,
-        state: pc.active ? 'Ativo' : 'Offline',
-        title: 'Office PC',
-        meta: renderMeta(pcMeta),
-        visual: standbyImage(pcImage, 'media-pc-standby', 'mdi:monitor-dashboard'),
-        primaryActions: pcPrimaryActions,
-        secondaryActions: pcSecondaryButtons.length ? fillActionRow(pcSecondaryButtons) : '',
-        extra: pcFacts.length
-          ? `
-            <div class="workspace-facts">
-              ${pcFacts.slice(0, 4).map((fact) => `
-                <span class="${fact.active ? 'is-active' : ''}">
-                  <ha-icon icon="${BrunoOfficeSubview._escapeAttr(fact.icon)}"></ha-icon>
-                  <small>${BrunoOfficeSubview._escape(fact.label)}</small>
-                  <strong>${BrunoOfficeSubview._escape(fact.value)}</strong>
-                </span>
-              `).join('')}
-            </div>
-          `
-          : '',
-      },
-      spotify: {
-        key: 'spotify',
-        label: 'Spotify',
-        icon: 'mdi:spotify',
-        active: spotify.active,
-        state: spotify.playing ? 'Tocando' : this._mediaStateLabel(spotify.state, 'Off'),
-        title: spotify.title || 'SpotifyPlus',
-        meta: renderMeta(spotifyMeta),
-        visual: spotifyArtwork
-          ? `<img src="${BrunoOfficeSubview._escapeAttr(spotifyArtwork)}" alt="">`
-          : standbyImage(spotifyStandbyImage, 'media-spotify-standby', 'mdi:music-note'),
-        primaryActions: spotifyPrimaryActions,
-        secondaryActions: spotifySecondaryActions,
-        extra: `
-          <div class="volume-row spotify-volume">
-            <ha-icon icon="mdi:volume-medium"></ha-icon>
-            <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotifyTransportDisabled ? 'disabled' : ''}>
-            <strong>${spotifyVolume}%</strong>
-          </div>
-        `,
-      },
-    };
-    const current = sources[selected] || sources.pc;
-    const tabs = Object.values(sources);
+    const spotifyAttrs = spotify.entity?.attributes || {};
+    const spotifyDuration = Number(spotifyAttrs.media_duration) || 0;
+    const spotifyPosition = Number(spotifyAttrs.media_position) || 0;
+    const spotifyUpdatedAt = Date.parse(spotifyAttrs.media_position_updated_at || '');
+    const spotifyLivePosition = spotify.playing && Number.isFinite(spotifyUpdatedAt)
+      ? spotifyPosition + ((Date.now() - spotifyUpdatedAt) / 1000)
+      : spotifyPosition;
+    const spotifyDisplayPosition = spotifyDuration > 0
+      ? Math.max(0, Math.min(spotifyDuration, spotifyLivePosition))
+      : Math.max(0, spotifyLivePosition);
+    const spotifyProgress = spotifyDuration > 0
+      ? Math.max(0, Math.min(100, (spotifyDisplayPosition / spotifyDuration) * 100))
+      : 0;
+    const spotifyElapsedLabel = this._formatMediaTime(spotifyDisplayPosition);
+    const spotifyDurationLabel = spotifyDuration > 0 ? this._formatMediaTime(spotifyDuration) : '--:--';
+    const spotifyDeviceLabel = this._config.spotify_device_name || spotify.source || 'Spotify Office';
 
-    return `
-      <section class="glass-card media-hub-card workspace-hub-card is-${BrunoOfficeSubview._escapeAttr(current.key)}">
-        <div class="module-head media-hub-head">
-          <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:desk"></ha-icon></span>
-            <div>
-              <div class="module-title">Estacao de trabalho</div>
+    const volRow = (action, volume, disabled = false) => `
+      <div class="mh-vol${disabled ? ' is-disabled' : ''}">
+        <ha-icon icon="mdi:volume-medium"></ha-icon>
+        <span class="mh-vol-label">Volume ${volume}%</span>
+        <input type="range" min="0" max="100" value="${volume}" data-action="${escAttr(action)}" aria-label="Volume" ${disabled ? 'disabled' : ''}>
+      </div>
+    `;
+
+    const btn = (action, label, opts = {}) => {
+      const iconOnly = Boolean(opts.iconOnly || opts.plus);
+      return `
+        <button
+          type="button"
+          class="mh-btn${opts.main ? ' is-main' : ''}${opts.plus ? ' is-plus' : ''}${iconOnly ? ' is-icon' : ''}${opts.className ? ` ${opts.className}` : ''}"
+          ${action ? `data-action="${escAttr(action)}"` : ''}
+          title="${escAttr(label)}"
+          aria-label="${escAttr(label)}"
+          ${opts.disabled ? 'disabled' : ''}
+        >
+          ${opts.icon ? `<ha-icon icon="${escAttr(opts.icon)}"></ha-icon>` : ''}
+          ${iconOnly ? '' : `<span>${esc(label)}</span>`}
+        </button>
+      `;
+    };
+
+    const art = (src, shape, fallbackIcon, cover = false) => `
+      <div class="mh-art mh-art-${shape}${cover ? ' is-cover' : ' is-standby'}">
+        ${src
+          ? `<img src="${escAttr(src)}" alt="" loading="lazy">`
+          : `<ha-icon icon="${escAttr(fallbackIcon)}"></ha-icon>`}
+      </div>
+    `;
+
+    const pcDetail = pc.active
+      ? [pc.session, pc.activeWindow].filter((item) => item && item !== '--').slice(0, 1).join('') || 'Sessão ativa'
+      : 'Pronto para ligar';
+    const pcControls = pc.active
+      ? `
+        <div class="mh-btn-row mh-btn-row-5 office-pc-actions">
+          ${btn('pc-sleep', 'Sleep', { icon: 'mdi:weather-night', iconOnly: true })}
+          ${btn('pc-restart', 'Reiniciar', { icon: 'mdi:restart', iconOnly: true })}
+          ${btn('pc-shutdown', 'Desligar', { icon: 'mdi:power-standby', iconOnly: true })}
+          ${btn('pc-lock', 'Bloquear', { icon: 'mdi:lock-outline', iconOnly: true })}
+          ${btn('', pc.session && pc.session !== '--' ? pc.session : 'Sessão', { icon: 'mdi:account-clock-outline', iconOnly: true, disabled: true, className: 'is-session' })}
+        </div>
+      `
+      : `
+        <div class="mh-btn-row mh-btn-row-3">
+          ${btn('pc-power', 'Ligar PC', { icon: 'mdi:power', main: true })}
+        </div>
+      `;
+
+    const pcBody = `
+      <div class="mh-left">
+        <div class="mh-info">
+          <small>${pc.active ? 'Ligado' : 'Desligado'}</small>
+          <em>${esc(pcDetail)}</em>
+        </div>
+        <div class="mh-controls">
+          ${pcControls}
+        </div>
+      </div>
+      ${art(pcImage, 'wide', 'mdi:desktop-tower', false)}
+    `;
+
+    const spotifyButtons = this._spotifyToolsOpen
+      ? `
+        <div class="mh-btn-row mh-btn-row-4">
+          ${btn('spotify-devices', 'Dispositivos', { icon: 'mdi:speaker-wireless', iconOnly: true })}
+          ${btn('spotify-presets', 'Presets', { icon: 'mdi:bookmark-music-outline', iconOnly: true })}
+          ${btn('spotify-queue', 'Fila', { icon: 'mdi:playlist-play', iconOnly: true })}
+          ${btn('spotify-more', 'Voltar', { icon: 'mdi:chevron-left', plus: true })}
+        </div>
+      `
+      : `
+        <div class="mh-btn-row mh-btn-row-4">
+          ${btn('spotify-prev', 'Anterior', { icon: 'mdi:skip-previous', iconOnly: true })}
+          ${btn('spotify-play-pause', spotify.playing ? 'Pausar' : 'Tocar', { icon: spotify.playing ? 'mdi:pause' : 'mdi:play', iconOnly: true })}
+          ${btn('spotify-next', 'Próxima', { icon: 'mdi:skip-next', iconOnly: true })}
+          ${btn('spotify-more', 'Mais', { icon: 'mdi:plus', plus: true })}
+        </div>
+      `;
+    const spotifyBody = spotify.active
+      ? `
+        <div class="mh-left">
+          <div class="mh-info">
+            <small>${esc(spotify.title || 'Tocando')}</small>
+            ${spotify.subtitle ? `<em>${esc(spotify.subtitle)}</em>` : ''}
+            <div class="mh-progress-wrap" aria-label="Progresso da faixa">
+              <span class="mh-progress-time">${spotifyElapsedLabel}</span>
+              <div class="mh-progress" aria-hidden="true"><span style="width:${spotifyProgress}%"></span></div>
+              <span class="mh-progress-time">${spotifyDurationLabel}</span>
             </div>
           </div>
-          <div class="media-tabs" role="tablist" aria-label="Fonte da estacao">
-            ${tabs.map((source) => `
-              <button
-                type="button"
-                class="${source.key === current.key ? 'is-selected' : ''}${source.active ? ' is-source-active' : ''}"
-                data-action="select-workspace-source"
-                data-source="${BrunoOfficeSubview._escapeAttr(source.key)}"
-              >
-                <span class="source-dot"></span>
-                <span>${BrunoOfficeSubview._escape(source.label)}</span>
-                <small>${BrunoOfficeSubview._escape(source.state)}</small>
-              </button>
-            `).join('')}
+          <div class="mh-controls">
+            ${volRow('spotify-volume', spotifyVolume)}
+            ${spotifyButtons}
           </div>
         </div>
-        <div class="media-hub-body">
-          <div class="media-visual${current.active ? ' is-active' : ''}">
-            ${current.visual}
+        ${art(spotifyArtwork || spotifyStandbyImage, 'square', 'mdi:music-note', Boolean(spotifyArtwork))}
+      `
+      : `
+        <div class="mh-left">
+          <div class="mh-info">
+            <small>Desligada</small>
+            <em>${esc(spotifyDeviceLabel)}</em>
           </div>
-          <div class="media-hub-content">
-            <div class="media-details">
-              <strong>${BrunoOfficeSubview._escape(current.title)}</strong>
-              ${current.meta}
-            </div>
-            <div class="media-action-stack${current.secondaryActions ? ' has-secondary' : ''}">
-              <div class="media-primary-actions${current.primaryClass ? ` ${current.primaryClass}` : ''}">
-                ${current.primaryActions}
-              </div>
-              ${current.secondaryActions ? `
-                <div class="media-secondary-actions">
-                  ${current.secondaryActions}
-                </div>
-              ` : ''}
-            </div>
-            ${current.extra ? `
-              <div class="media-hub-extra">
-                ${current.extra}
-              </div>
-            ` : ''}
+          <div class="mh-controls">
+            ${btn('spotify-devices', 'Dispositivos', { icon: 'mdi:speaker-wireless', main: true })}
           </div>
+        </div>
+        ${art(spotifyStandbyImage, 'square', 'mdi:music-note', false)}
+      `;
+
+    const sourceMeta = {
+      pc: {
+        label: 'PC',
+        icon: 'mdi:desktop-tower',
+        summary: pc.active ? 'Ligado' : 'Desligado',
+        active: pc.active,
+        body: pcBody,
+      },
+      spotify: {
+        label: 'Spotify',
+        icon: 'mdi:spotify',
+        summary: spotify.active ? (spotify.title || 'Tocando') : 'Nenhuma faixa',
+        active: spotify.active,
+        body: spotifyBody,
+      },
+    };
+    const order = ['pc', 'spotify'];
+
+    const renderSource = (key) => {
+      const source = sourceMeta[key];
+      const isOpen = key === selected;
+      const iconHtml = key === 'spotify'
+        ? '<ha-icon class="mh-src-icon mh-icon-spotify" icon="mdi:spotify"></ha-icon>'
+        : `<ha-icon class="mh-src-icon" icon="${escAttr(source.icon)}"></ha-icon>`;
+      return `
+        <div class="mh-source${isOpen ? ' is-open' : ''}${source.active ? ' is-active' : ''}">
+          <button
+            type="button"
+            class="mh-source-head"
+            data-action="select-media-source"
+            data-source="${key}"
+            aria-expanded="${isOpen ? 'true' : 'false'}"
+          >
+            ${iconHtml}
+            <span class="mh-src-name">${esc(source.label)}</span>
+            <span class="mh-src-summary">${esc(source.summary)}</span>
+            ${isOpen ? '' : '<ha-icon class="mh-src-chevron" icon="mdi:chevron-right"></ha-icon>'}
+          </button>
+          ${isOpen ? `<div class="mh-source-body">${source.body}</div>` : ''}
+        </div>
+      `;
+    };
+
+    return `
+      <section class="glass-card media-hub-card workspace-hub-card mh-accordion${sourceMeta[selected]?.active ? ' is-playing' : ''}">
+        <div class="mh-head">
+          <div class="mh-head-title">
+            <span class="micro-icon"><ha-icon icon="mdi:desk"></ha-icon></span>
+            <div class="module-title">Estação de Trabalho</div>
+          </div>
+          <span class="mh-menu is-static" aria-hidden="true">
+            <ha-icon icon="mdi:dots-vertical"></ha-icon>
+          </span>
+        </div>
+        <div class="mh-sources">
+          ${order.map(renderSource).join('')}
         </div>
       </section>
     `;
   }
+
+  // LEGADO (rollback): versão anterior do Hub baseada em ABAS (tabs).
+  // Preservada intacta; NÃO é referenciada por nenhum call site.
+
 
   _renderSpotify(model) {
     const spotify = model.spotify;
@@ -1910,7 +2270,7 @@ class BrunoOfficeSubview extends HTMLElement {
             </div>
             <div class="volume-row spotify-volume">
               <ha-icon icon="mdi:volume-medium"></ha-icon>
-              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify"${transportDisabled}>
+              <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotify.active ? '' : 'disabled'}>
               <strong>${volume}%</strong>
             </div>
           </div>
@@ -1919,97 +2279,20 @@ class BrunoOfficeSubview extends HTMLElement {
     `;
   }
 
-  _renderPC(model) {
-    const pc = model.pc;
-    const pcImage = BrunoOfficeSubview._escapeAttr(this._config.pc_image || '/local/images/office_pc.png');
-    const metricIcon = {
-      cpu: 'mdi:cpu-64-bit',
-      ram: 'mdi:memory',
-      gpu_temp: 'mdi:thermometer',
-      network: 'mdi:wifi',
-    };
-    const metricTone = {
-      cpu: 'blue',
-      ram: 'purple',
-      gpu_temp: 'amber',
-      network: 'green',
-    };
-
-    return `
-      <section class="glass-card pc-card${pc.active ? ' is-active' : ''}">
-        <div class="pc-head">
-          <div class="title-with-chip">
-            <span class="micro-icon tone-blue"><ha-icon icon="mdi:monitor"></ha-icon></span>
-            <div>
-              <div class="pc-title-line">
-                <div class="module-title">Office PC</div>
-                <span class="pc-state-dot${pc.active ? ' is-on' : ''}"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="pc-body">
-          <div class="pc-hero-visual">
-            <ha-icon class="pc-visual-fallback" icon="mdi:monitor-dashboard"></ha-icon>
-            <img src="${pcImage}" alt="" loading="lazy">
-          </div>
-
-          <div class="pc-status-panel">
-            <div class="pc-metrics">
-              ${pc.metrics.map((metric) => `
-                <span class="pc-metric tone-${metricTone[metric.key] || 'blue'}" style="--metric:${BrunoOfficeSubview._metricPercent(metric.value)}%">
-                  <ha-icon icon="${metricIcon[metric.key] || 'mdi:chart-line'}"></ha-icon>
-                  <small>${BrunoOfficeSubview._escape(metric.label)}</small>
-                  <strong>${BrunoOfficeSubview._escape(metric.value)}</strong>
-                  <i></i>
-                </span>
-              `).join('')}
-            </div>
-          </div>
-
-          <div class="pc-actions">
-            <button type="button" class="pc-action is-power" data-action="pc-power">
-              <ha-icon icon="mdi:power"></ha-icon>
-              <span>Ligar</span>
-            </button>
-            <button type="button" class="pc-action is-sleep" data-action="pc-sleep">
-              <ha-icon icon="mdi:weather-night"></ha-icon>
-              <span>Sleep</span>
-            </button>
-            <button type="button" class="pc-action is-warm" data-action="pc-restart">
-              <ha-icon icon="mdi:restart"></ha-icon>
-              <span>Restart</span>
-            </button>
-            <button type="button" class="pc-action is-danger" data-action="pc-shutdown">
-              <ha-icon icon="mdi:power-standby"></ha-icon>
-              <span>Shut Down</span>
-            </button>
-          </div>
-
-          <div class="pc-controls-panel">
-            <div class="pc-camera-row">
-              <span><ha-icon icon="mdi:webcam"></ha-icon><strong>Webcam</strong></span>
-              <em>${pc.webcamActive ? 'On' : 'Off'}</em>
-              <i class="${pc.webcamActive ? 'is-on' : ''}"></i>
-            </div>
-            <div class="pc-slider-row">
-              <span><ha-icon icon="mdi:volume-high"></ha-icon><strong>Volume</strong></span>
-              <i style="--slider:${BrunoOfficeSubview._metricPercent(pc.volume)}%"></i>
-              <em>${BrunoOfficeSubview._escape(pc.volume)}</em>
-            </div>
-            <div class="pc-slider-row">
-              <span><ha-icon icon="mdi:white-balance-sunny"></ha-icon><strong>Brightness</strong></span>
-              <i style="--slider:${BrunoOfficeSubview._metricPercent(pc.brightness)}%"></i>
-              <em>${BrunoOfficeSubview._escape(pc.brightness)}</em>
-            </div>
-          </div>
-        </div>
-      </section>
-    `;
-  }
-
   _renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode) {
+    // --- ORIGINAL anel circular (comentado para rollback) ---
+    // const cxOld = 200;
+    // const cyOld = 200;
+    // const startAngleOld = 225;
+    // const endAngleOld = 495;
+    // const sweepOld = endAngleOld - startAngleOld;
+    // const trackRadius = 136;
+    // const tickOuterRadius = 160;
+    // ...
+    // (corpo completo do anel original preservado neste comentario-bloco para rollback;
+    //  ver historico Git anterior a substituicao pelo gauge semicircular)
+    // --- FIM ORIGINAL ---
+
     // --- NOVO: gauge semicircular integrado (sem container/background proprio) ---
     const cx = 360;
     const cy = 410;
@@ -2017,6 +2300,7 @@ class BrunoOfficeSubview extends HTMLElement {
     const startAngle = -180;
     const endAngle = 0;
     const sweep = endAngle - startAngle;
+
     const targetValue = Number(climate.target);
     const safeMin = Number.isFinite(Number(minTarget)) ? Number(minTarget) : 12;
     const safeMax = Number.isFinite(Number(maxTarget)) ? Number(maxTarget) : 30;
@@ -2044,6 +2328,7 @@ class BrunoOfficeSubview extends HTMLElement {
       const large = Math.abs(end - start) <= 180 ? '0' : '1';
       return `M ${s.x.toFixed(3)} ${s.y.toFixed(3)} A ${r} ${r} 0 ${large} 1 ${e.x.toFixed(3)} ${e.y.toFixed(3)}`;
     };
+
     const activeArc = describeArc(radius, startAngle, currentAngle);
     const inactiveArc = describeArc(radius, currentAngle, endAngle);
     const fullArc = describeArc(radius, startAngle, endAngle);
@@ -2083,11 +2368,11 @@ class BrunoOfficeSubview extends HTMLElement {
     })();
 
     const labels = [
-      { text: `${this._formatNumber(safeMin, 0)}\u00b0`, angle: -180, r: radius + 52, cls: 'edge' },
+      { text: `${this._formatNumber(safeMin, 0)}°`, angle: -180, r: radius + 52, cls: 'edge' },
       { text: '10', angle: -148, r: radius + 58, cls: '' },
       { text: '20', angle: -90, r: radius + 52, cls: 'top' },
       { text: '25', angle: -32, r: radius + 58, cls: '' },
-      { text: `${this._formatNumber(safeMax, 0)}\u00b0`, angle: 0, r: radius + 52, cls: 'edge' },
+      { text: `${this._formatNumber(safeMax, 0)}°`, angle: 0, r: radius + 52, cls: 'edge' },
     ];
     const labelMarkup = labels.map((label) => {
       const p = polarToCartesian(label.r, label.angle);
@@ -2097,7 +2382,7 @@ class BrunoOfficeSubview extends HTMLElement {
     return `
       <div class="icg-root">
         <div class="icg-shell">
-          <svg class="icg-svg" viewBox="0 0 720 460" role="img" aria-label="${BrunoOfficeSubview._escapeAttr(`Temperatura alvo ${targetLabel}\u00b0. Ambiente ${ambientLabel}\u00b0.`)}">
+          <svg class="icg-svg" viewBox="0 0 720 460" role="img" aria-label="${BrunoOfficeSubview._escapeAttr(`Temperatura alvo ${targetLabel}°. Ambiente ${ambientLabel}°.`)}">
             <defs>
               <linearGradient id="icgActiveBlue" x1="90" y1="340" x2="560" y2="90">
                 <stop offset="0%" stop-color="#0078ff"></stop>
@@ -2125,10 +2410,10 @@ class BrunoOfficeSubview extends HTMLElement {
             <circle cx="${marker.x.toFixed(3)}" cy="${marker.y.toFixed(3)}" r="13" class="icg-marker-ring"></circle>
             <circle cx="${(marker.x - 4).toFixed(3)}" cy="${(marker.y - 5).toFixed(3)}" r="4" class="icg-marker-highlight"></circle>
             <text x="${cx}" y="260" text-anchor="middle" dominant-baseline="middle" class="icg-center-mode">${BrunoOfficeSubview._escape(modeLabel)}</text>
-            <text x="${cx}" y="328" text-anchor="middle" dominant-baseline="middle" class="icg-center-temp">${BrunoOfficeSubview._escape(targetLabel)}\u00b0</text>
+            <text x="${cx}" y="328" text-anchor="middle" dominant-baseline="middle" class="icg-center-temp">${BrunoOfficeSubview._escape(targetLabel)}°</text>
             <text x="${cx}" y="382" text-anchor="middle" dominant-baseline="middle" class="icg-center-sub">SET TEMPERATURE</text>
             <line x1="${cx - 28}" y1="408" x2="${cx + 28}" y2="408" class="icg-center-line"></line>
-            <text x="${cx}" y="432" text-anchor="middle" dominant-baseline="middle" class="icg-ambient">Ambient ${BrunoOfficeSubview._escape(ambientLabel)}\u00b0</text>
+            <text x="${cx}" y="432" text-anchor="middle" dominant-baseline="middle" class="icg-ambient">Ambient ${BrunoOfficeSubview._escape(ambientLabel)}°</text>
           </svg>
         </div>
       </div>
@@ -2138,14 +2423,9 @@ class BrunoOfficeSubview extends HTMLElement {
   _renderAC(model) {
     const climate = model.climate;
     const target = climate.target == null ? '--' : this._formatNumber(climate.target, 0);
-    const targetNumber = Number.isFinite(Number(climate.target)) ? Math.round(Number(climate.target)) : 22;
     const current = climate.current == null ? '--' : this._formatNumber(climate.current, 1);
     const minTarget = Number.isFinite(Number(climate.minTemp)) ? Number(climate.minTemp) : 16;
     const maxTarget = Number.isFinite(Number(climate.maxTemp)) ? Number(climate.maxTemp) : 30;
-    const targetStep = Number.isFinite(Number(climate.targetStep)) ? Number(climate.targetStep) : 1;
-    const deviceName = BrunoOfficeSubview._escape(this._config.climate_device_name || 'Ar condicionado');
-    const climateImage = BrunoOfficeSubview._escapeAttr(this._config.climate_image || '/local/images/ar-condicionado-gree-tight.png');
-    const climateActiveImage = BrunoOfficeSubview._escapeAttr(this._config.climate_active_image || '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1');
     const activeMode = climate.hvacMode || 'off';
     const fan = String(climate.fan || 'auto').toLowerCase();
     const swing = String(climate.swing || '').toLowerCase();
@@ -2158,102 +2438,166 @@ class BrunoOfficeSubview extends HTMLElement {
         : activeMode === 'fan_only'
           ? 'Ventilacao'
           : 'Temperatura';
-    const modeButtonClass = (button) => {
-      return activeMode === button.key ? ' is-active' : '';
-    };
-    const hvacModes = Array.isArray(climate.hvacModes) ? climate.hvacModes : [];
-    const hvacAvailable = (key) => !hvacModes.length || hvacModes.includes(key);
-    const fanMode = (candidates, fallback) => this._climateOption(climate.fanModes, candidates, fallback);
-    const lowMode = fanMode(['low', 'baixo'], 'low');
-    const mediumMode = fanMode(['medium', 'med', 'medio'], 'medium');
-    const highMode = fanMode(['high', 'alto'], 'high');
-    const swingOnMode = this._climateOption(climate.swingModes, ['on', 'ativada', 'ativo', 'enabled'], '');
-    const swingOffMode = this._climateOption(climate.swingModes, ['off', 'desativada', 'desativado', 'disabled'], '');
-    const nextSwingMode = swingActive ? swingOffMode : swingOnMode;
-    const fanActive = (value, aliases = []) => {
-      const normalized = String(value || '').toLowerCase();
-      return Boolean(normalized) && (fan === normalized || aliases.some((alias) => fan.includes(alias)));
-    };
-    const modeButtons = [
-      { key: 'cool', icon: 'mdi:snowflake', label: 'Cool', disabled: !hvacAvailable('cool') },
-      { key: 'heat', icon: 'mdi:fire', label: 'Heat', disabled: !hvacAvailable('heat') },
-      { key: 'fan_only', icon: 'mdi:fan', label: 'Fan', disabled: !hvacAvailable('fan_only') },
-    ];
-    const fanButtons = [
-      { key: 'low', label: 'Low', action: 'fan-mode', mode: lowMode, active: fanActive(lowMode, ['low', 'baixo']) },
-      { key: 'medium', label: 'Med', action: 'fan-mode', mode: mediumMode, active: fanActive(mediumMode, ['med']) },
-      { key: 'high', label: 'High', action: 'fan-mode', mode: highMode, active: fanActive(highMode, ['high', 'alto']) },
-      { key: 'swing', label: 'Swing', action: 'swing-mode', mode: nextSwingMode, active: swingActive },
-    ];
 
-    /* ANTERIOR (rollback): class="glass-card ac-card${climate.active ? ' is-active' : ''}"
-       Sala nunca usa is-active no root do ac-card — o card nao acende com o AC ligado. */
-    return `
-      <section class="glass-card ac-card">
-        <div class="module-head ac-head">
-          <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:snowflake"></ha-icon></span>
-            <div>
-              <div class="module-title">Ar Condicionado</div>
-              <div class="module-subtitle">${deviceName}</div>
-            </div>
+    // NOVO (Passada 2): AC ENXUTO (proposta imagem 5) — cabeçalho (estado/modo) +
+    // power; leitura Ambiente/Umidade; semi-anel (Desejada); 3 botões (Modo /
+    // Ventilação / Swing) que abrem o controle detalhado (more-info do climate).
+    // ANTERIOR (rollback): imagem grande do aparelho + slider + modos + stepper +
+    // fan-row (bloco alto). Preservado no histórico git.
+    const cap = (s) => {
+      const t = String(s || '').replace(/_/g, ' ').trim();
+      return t ? t.charAt(0).toUpperCase() + t.slice(1) : '—';
+    };
+    const normalize = (value) => String(value || '').toLowerCase();
+    const unique = (items) => [...new Set((items || []).filter(Boolean))];
+    const hvacOptions = unique(climate.hvacModes);
+    const fanOptions = unique(climate.fanModes);
+    const swingOptions = unique(climate.swingModes);
+    const modeIcon = (mode) => {
+      const value = normalize(mode);
+      return ({
+        off: 'mdi:power',
+        cool: 'mdi:snowflake',
+        heat: 'mdi:fire',
+        fan_only: 'mdi:fan',
+        dry: 'mdi:water-percent',
+        auto: 'mdi:autorenew',
+        heat_cool: 'mdi:autorenew',
+      }[value] || 'mdi:thermostat');
+    };
+    const fanIcon = (mode) => {
+      const value = normalize(mode);
+      if (value.includes('auto')) return 'mdi:fan-auto';
+      if (value.includes('low') || value.includes('baixo')) return 'mdi:fan-speed-1';
+      if (value.includes('med')) return 'mdi:fan-speed-2';
+      if (value.includes('high') || value.includes('alto') || value.includes('fort')) return 'mdi:fan-speed-3';
+      return 'mdi:fan';
+    };
+    const modeLabelFor = (mode) => {
+      const value = normalize(mode);
+      return ({
+        off: 'Desligado',
+        cool: 'Frio',
+        heat: 'Aquecimento',
+        fan_only: 'Ventilar',
+        dry: 'Secar',
+        heat_cool: 'Auto',
+        auto: 'Auto',
+      }[value] || cap(mode));
+    };
+    const fanLabelFor = (mode) => {
+      const value = normalize(mode);
+      if (value === 'auto') return 'Auto';
+      if (value.includes('low') || value.includes('baixo')) return 'Baixa';
+      if (value.includes('med')) return 'Média';
+      if (value.includes('high') || value.includes('alto')) return 'Alta';
+      if (value.includes('fort')) return 'Forte';
+      return cap(mode);
+    };
+    const swingLabelFor = (mode) => {
+      const value = normalize(mode);
+      if (!value) return 'Indisponível';
+      if (['off', 'desativado', 'desativada', 'disabled'].includes(value)) return 'Desligado';
+      if (['on', 'ativo', 'ativada', 'enabled'].includes(value)) return 'Ativo';
+      return cap(mode);
+    };
+    const modeLabel = !climate.active || activeMode === 'off'
+      ? 'Desligado'
+      : modeLabelFor(activeMode);
+    const fanLabel = fanLabelFor(fan);
+    const swingLabel = swing ? swingLabelFor(swing) : (swingActive ? 'Ativo' : 'Desligado');
+    const climateEntity = BrunoOfficeSubview._escapeAttr(this._config.entities.climate || '');
+    const climateDisabled = this._isUnavailable(climate.entity) ? ' disabled' : '';
+    const selectedPanel = this._selectedClimatePanel;
+    const renderOption = ({ action, mode, label, icon, active }) => `
+      <button
+        type="button"
+        class="ac-popover-option${active ? ' is-active' : ''}"
+        data-action="${action}"
+        data-mode="${BrunoOfficeSubview._escapeAttr(mode)}"
+        role="menuitem"
+      >
+        <ha-icon icon="${BrunoOfficeSubview._escapeAttr(icon)}"></ha-icon>
+        <span>${BrunoOfficeSubview._escape(label)}</span>
+      </button>
+    `;
+    const renderPopover = (panel, options) => {
+      if (selectedPanel !== panel) return '';
+      if (!options.length) {
+        return `
+          <div class="ac-popover" role="menu">
+            <button type="button" class="ac-popover-option" disabled>
+              <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+              <span>Indisponível</span>
+            </button>
           </div>
-          <button type="button" class="power-button${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado">
-            <ha-icon icon="mdi:power"></ha-icon>
-          </button>
+        `;
+      }
+      return `<div class="ac-popover" role="menu">${options.map(renderOption).join('')}</div>`;
+    };
+    const modeOptions = hvacOptions.map((mode) => ({
+      action: 'climate-mode',
+      mode,
+      label: modeLabelFor(mode),
+      icon: modeIcon(mode),
+      active: normalize(mode) === normalize(activeMode),
+    }));
+    const fanControlOptions = fanOptions.map((mode) => ({
+      action: 'fan-mode',
+      mode,
+      label: fanLabelFor(mode),
+      icon: fanIcon(mode),
+      active: normalize(mode) === fan,
+    }));
+    const swingControlOptions = swingOptions.map((mode) => ({
+      action: 'swing-mode',
+      mode,
+      label: swingLabelFor(mode),
+      icon: normalize(mode) === 'off' ? 'mdi:air-conditioner' : 'mdi:swap-vertical',
+      active: normalize(mode) === swing,
+    }));
+    const controlButton = ({ panel, icon, title, value, options }) => `
+      <div class="ac-control-wrap">
+        <button
+          type="button"
+          class="ac-action${selectedPanel === panel ? ' is-open' : ''}"
+          data-action="toggle-climate-panel"
+          data-panel="${panel}"
+          aria-expanded="${selectedPanel === panel ? 'true' : 'false'}"
+          ${climateDisabled}
+        >
+          <span class="ac-action-icon"><ha-icon icon="${icon}"></ha-icon></span>
+          <span class="ac-action-text"><small>${title}</small><strong>${BrunoOfficeSubview._escape(value)}</strong></span>
+        </button>
+        ${renderPopover(panel, options)}
+      </div>
+    `;
+
+    return `
+      <section class="glass-card ac-card ac-card-lean">
+        <div class="ac-lean-head">
+          <div class="mh-head-title ac-head-title">
+            <span class="micro-icon tone-blue"><ha-icon icon="mdi:air-conditioner"></ha-icon></span>
+            <div class="module-title">Ar-condicionado</div>
+          </div>
+          <div class="ac-top-stack">
+            <button type="button" class="mh-menu ac-more-button" data-action="more-info" data-entity="${climateEntity}" title="Mais detalhes" aria-label="Mais detalhes">
+              <ha-icon icon="mdi:dots-vertical"></ha-icon>
+            </button>
+            <button type="button" class="ac-power-floating${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado" ${climateDisabled}>
+              <ha-icon icon="mdi:power"></ha-icon>
+            </button>
+          </div>
         </div>
-        <div class="ac-body">
-          <div class="ac-visual">
-            <div class="ac-image-shell${climate.active ? ' is-on' : ''}" data-image-wrapper>
-              <img
-                class="ac-unit-image ac-unit-image-off"
-                src="${climateImage}"
-                alt=""
-                data-fallback-class="is-fallback"
-              >
-              <img
-                class="ac-unit-image ac-unit-image-on"
-                src="${climateActiveImage}"
-                alt=""
-              >
-              <ha-icon class="ac-image-fallback" icon="mdi:air-conditioner"></ha-icon>
-            </div>
+        <div class="ac-lean-mid">
+          <div class="ac-ring">
             ${this._renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode)}
           </div>
-          <label class="temperature-slider" aria-label="Temperatura do ar condicionado">
-            <input type="range" min="${BrunoOfficeSubview._escapeAttr(minTarget)}" max="${BrunoOfficeSubview._escapeAttr(maxTarget)}" step="${BrunoOfficeSubview._escapeAttr(targetStep)}" value="${targetNumber}" data-action="climate-target">
-          </label>
-          <div class="climate-mode-row" aria-label="Modo do ar condicionado">
-            ${modeButtons.map((button) => `
-              <button
-                type="button"
-                class="climate-mode${modeButtonClass(button)}"
-                data-action="climate-mode"
-                data-mode="${BrunoOfficeSubview._escapeAttr(button.key)}"
-                title="${BrunoOfficeSubview._escapeAttr(button.label)}"
-                ${button.disabled ? 'disabled' : ''}
-              >
-                <ha-icon icon="${button.icon}"></ha-icon>
-              </button>
-            `).join('')}
-          </div>
-          <div class="climate-stepper">
-            <button type="button" data-action="temp-down">-</button>
-            <span>${target}</span>
-            <button type="button" data-action="temp-up">+</button>
-          </div>
-          <div class="fan-label">Fan mode</div>
-          <div class="fan-mode-row">
-            ${fanButtons.map((button) => `
-              <button
-                type="button"
-                class="fan-mode${button.active ? ' is-active' : ''}"
-                data-action="${BrunoOfficeSubview._escapeAttr(button.action)}"
-                data-mode="${BrunoOfficeSubview._escapeAttr(button.mode)}"
-                ${button.mode ? '' : 'disabled'}
-              >${BrunoOfficeSubview._escape(button.label)}</button>
-            `).join('')}
-          </div>
+        </div>
+        <div class="ac-lean-foot">
+          ${controlButton({ panel: 'mode', icon: 'mdi:thermostat-auto', title: 'Modo', value: modeLabel, options: modeOptions })}
+          ${controlButton({ panel: 'fan', icon: 'mdi:fan', title: 'Ventilação', value: fanLabel, options: fanControlOptions })}
+          ${controlButton({ panel: 'swing', icon: 'mdi:air-conditioner', title: 'Swing', value: swingLabel, options: swingControlOptions })}
         </div>
       </section>
     `;
@@ -2265,21 +2609,27 @@ class BrunoOfficeSubview extends HTMLElement {
         --office-gap: 10px;
         --office-radius: var(--bruno-liquid-card-radius, 18px);
         --office-radius-small: var(--bruno-liquid-card-radius-compact, 16px);
-        /* ANTERIOR (rollback): --office-cell-radius: 12px; */
-        /* NOVO (paridade Sala): mesmo token de raio de celula da Sala. */
         --office-cell-radius: var(--bruno-liquid-cell-radius, 16px);
         --accent: var(--bruno-liquid-accent, 150, 190, 255);
         --accent-blue: 96, 165, 250;
         --accent-cyan: 79, 172, 254;
         --accent-amber: 255, 183, 77;
-        --media-screen-height: 154px;
+        /* Tamanho FIXO do quadrado da arte (padrão). ANTERIOR: 168px (cortava
+           arte/volume com a faixa mais baixa). */
+        --media-screen-height: 150px;
+        /* Altura FIXA do bloco de A/C (ancorado na base) — câmeras/mídia seguem o
+           MESMO valor. Subir/baixar aqui reduz/aumenta o vão luzes↔A/C.
+           As luzes acima continuam dinâmicas (auto) — NÃO mexer nelas. */
+        --ac-h: 320px;
         --text-main: rgba(245,250,255,0.96);
         --text-soft: rgba(255,255,255,0.62);
         --text-dim: rgba(255,255,255,0.42);
         display: block;
         width: 100%;
-        height: 100vh;
-        min-height: 100vh;
+        /* NOVO (Etapa B): como SEÇÃO da shell, preenche o content-slot (100%),
+           não a viewport (100vh). ORIGINAL: height/min-height 100vh. */
+        height: 100%;
+        min-height: 0;
         color: var(--text-main);
         font-family: var(--primary-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
         overflow: hidden;
@@ -2302,20 +2652,21 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .office-subview {
-        --office-shell-height: min(734px, calc(100vh - 34px));
-        /* NOVO (paridade Sala): a Sala usa gap 12px no shell (override final). */
-        --office-gap: 12px;
         width: 100%;
         min-height: 100vh;
         height: 100vh;
         display: grid;
-        grid-template-columns: 56px minmax(420px, 540px) minmax(630px, 1fr);
-        grid-template-rows: var(--office-shell-height);
-        grid-template-areas: "frame-left left right";
-        align-content: center;
-        align-items: stretch;
+        /* NOVO (Caminho 2): coluna do rail 64px -> 88px (acomoda rótulos). */
+        grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
+        grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
+        grid-template-areas:
+          "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top"
+          "frame-left hero hero hero hero hero side side side side side side side"
+          "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac"
+          "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac"
+          "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
         gap: var(--office-gap);
-        padding: 12px 10px 22px;
+        padding: 12px;
         background:
           radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%),
           radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%),
@@ -2323,131 +2674,179 @@ class BrunoOfficeSubview extends HTMLElement {
         overflow: hidden;
       }
 
-      .left-column,
-      .right-column {
-        min-width: 0;
-        min-height: 0;
-        height: 100%;
-      }
-
-      .left-column {
-        grid-area: left;
-        display: grid;
-        grid-template-rows: minmax(320px, 1.24fr) minmax(250px, 1fr);
-        gap: var(--office-gap);
-      }
-
-      .right-column {
-        grid-area: right;
-        display: grid;
-        grid-template-rows: 64px minmax(0, 1fr);
-        gap: var(--office-gap);
-      }
-
-      .right-control-grid {
-        min-width: 0;
-        min-height: 0;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(292px, 0.55fr);
-        grid-template-rows: minmax(264px, 1fr) minmax(292px, 1fr);
-        grid-template-areas:
-          "lights ac"
-          "media ac";
-        gap: var(--office-gap);
-      }
-
-      .lower-left-grid {
-        min-width: 0;
-        min-height: 0;
-        display: grid;
-        grid-template-columns: minmax(0, 1.08fr) minmax(250px, 0.92fr);
-        gap: var(--office-gap);
-      }
-
+      .hero-panel { grid-area: hero; min-width: 0; min-height: 0; }
+      .side-panel { grid-area: side; min-width: 0; min-height: 0; display: grid; grid-template-rows: 72px minmax(0, 1fr); gap: var(--office-gap); }
       .room-sidebar { grid-area: frame-left; }
-      .hero-panel,
-      .cameras-card,
-      .focus-card,
-      .lights-card,
-      .media-hub-card,
-      .ac-card {
-        min-width: 0;
-        min-height: 0;
-      }
-      .lights-card { grid-area: lights; }
-      .media-hub-card { grid-area: media; }
+      .cameras-card { grid-area: cams; }
+      .tv-card { grid-area: tv; }
+      .ps5-card { grid-area: ps5; }
+      .spotify-card { grid-area: spotify; }
       .ac-card { grid-area: ac; }
 
+      /* NOVO (réplica): ponto de montagem do componente REAL do rail. Ocupa a
+         coluna frame-left inteira; o próprio componente renderiza o rail. */
+      .room-rail-mount {
+        grid-area: frame-left;
+        min-width: 0;
+        min-height: 0;
+        position: relative;
+        z-index: 3;
+      }
+      .room-rail-mount > * { height: 100%; }
+
+      /* NOVO: faixas TOPO/RODAPÉ da shell (padrão Câmeras/Roborock: transparente,
+         leve). Topo = nome do cômodo centralizado + data/hora à direita.
+         Rodapé = presença/última atividade, discreto e centralizado. */
+      .subview-topbar {
+        grid-area: frame-top;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 10px;
+        padding: 0 10px;
+        background: transparent;
+      }
+      .subview-room {
+        grid-column: 2;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: rgba(226,232,240,0.82);
+        white-space: nowrap;
+      }
+      .subview-clock {
+        grid-column: 3;
+        justify-self: end;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+        font-variant-numeric: tabular-nums;
+        color: rgba(255,255,255,0.86);
+        font-size: 12px;
+        line-height: 1;
+      }
+      .subview-clock small {
+        color: rgba(226,232,240,0.55);
+        font-size: 10px;
+        line-height: 1;
+      }
+      .subview-footer {
+        grid-area: frame-bottom;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 12px;
+        background: transparent;
+      }
+      .subview-presence {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: rgba(226,232,240,0.46);
+        font-size: 12px;
+        font-weight: 560;
+        letter-spacing: 0.02em;
+      }
+      .subview-presence ha-icon {
+        --mdc-icon-size: 16px;
+        color: rgba(226,232,240,0.5);
+        flex: 0 0 auto;
+      }
+      /* hero LIMPO: cortina ancorada embaixo */
+      .hero-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+
+      /* NOVO (Caminho 2): cluster CENTRALIZADO, FLAT/integrado (sem pílula/blur),
+         com rótulos. Mesma linguagem do rail do painel principal.
+         ORIGINAL (pílula glass) preservado no histórico git. */
       .room-sidebar {
         position: relative;
         z-index: 3;
         isolation: isolate;
         align-self: center;
         justify-self: center;
-        /* ANTERIOR (rollback): width 56px; rows 39px; gap 8px; padding 13px 8px 14px; */
-        width: 58px;
-        max-height: calc(100% - 6px);
-        display: grid;
-        grid-auto-rows: 40px;
-        gap: 7px;
-        padding: 12px 8px;
-        border-radius: 999px;
-        background: var(--bruno-liquid-rail-background,
-          radial-gradient(38px 94px at 26% -3%, rgba(255,255,255,0.22), rgba(255,255,255,0.05) 42%, transparent 70%),
-          radial-gradient(38px 110px at 92% 86%, rgba(var(--accent),0.10), transparent 68%),
-          linear-gradient(180deg, rgba(255,255,255,0.13), rgba(255,255,255,0.038) 34%, rgba(255,255,255,0.065)),
-          linear-gradient(155deg, rgba(22,27,38,0.84), rgba(10,12,18,0.72) 48%, rgba(18,16,17,0.46))
-        );
-        border: var(--bruno-liquid-rail-border, 1px solid rgba(255,255,255,0.11));
-        box-shadow: var(--bruno-liquid-rail-shadow,
-          inset 0 1px 0 rgba(255,255,255,0.18),
-          inset 0 -1px 0 rgba(255,255,255,0.045),
-          0 18px 40px rgba(0,0,0,0.36)
-        );
-        backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
-        -webkit-backdrop-filter: var(--bruno-liquid-rail-filter, blur(30px) saturate(1.58) contrast(1.05));
-        overflow: hidden;
+        width: 84px;
+        /* CORRECAO: flex em coluna estica os botões à largura total (antes era
+           grid sem coluna -> encolhia ao ícone e cortava o rótulo). */
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 8px 1px;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        overflow: visible;
       }
 
-      .room-sidebar::before {
-        content: "";
-        position: absolute;
-        inset: 1px;
-        z-index: 0;
-        pointer-events: none;
-        border-radius: calc(999px - 1px);
-        background: var(--bruno-liquid-rail-sheen,
-          radial-gradient(34px 42px at 24% 3%, rgba(255,255,255,0.26), transparent 70%),
-          radial-gradient(42px 70px at 94% 18%, rgba(var(--accent),0.16), transparent 72%),
-          linear-gradient(180deg, rgba(255,255,255,0.19), rgba(255,255,255,0.00) 34%),
-          linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.00) 48%)
-        );
-        opacity: var(--bruno-liquid-rail-sheen-opacity, 0.78);
-      }
+      .room-sidebar::before { display: none; }
 
+      /* NOVO (Caminho 2): botão FLAT — ícone em cima + rótulo embaixo, cor sóbria,
+         seleção DISCRETA (sem o azul antigo). */
       .room-nav-button {
         position: relative;
         z-index: 1;
-        /* ANTERIOR (rollback): width/height 39px; color rgba(255,255,255,0.62); */
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-        max-width: 40px;
-        max-height: 40px;
-        display: inline-flex;
+        width: 100%;
+        height: auto;
+        display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
-        color: rgba(255,255,255,0.70);
+        gap: 4px;
+        padding: 8px 2px 7px;
+        border-radius: 13px;
+        color: rgba(255,255,255,0.60);
         background: transparent;
-        transition: background 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+        -webkit-tap-highlight-color: transparent;
+        transition: background 160ms ease, color 160ms ease;
       }
 
-      /* NOVO (paridade Sala): estilos do SVG custom da navegacao. */
+      .room-nav-button::after { display: none; }
+
+      .room-nav-button:hover,
+      .room-nav-button:focus,
+      .room-nav-button:focus-visible {
+        color: rgba(255,255,255,0.92);
+        background: rgba(255,255,255,0.05);
+        outline: none;
+      }
+
+      .room-nav-button.is-active {
+        color: #fff;
+        background: rgba(255,255,255,0.085);
+        border: none;
+        box-shadow: none;
+      }
+
+      .room-nav-button.is-active svg { stroke: rgb(var(--accent)); }
+
+      /* respiro separando o Home dos cômodos */
+      .room-nav-home { margin-bottom: 8px; }
+
+      .room-nav-label {
+        display: block;
+        font-size: 9.5px;
+        line-height: 1.05;
+        font-weight: 600;
+        color: inherit;
+        text-align: center;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       .room-nav-button svg {
-        width: 20px;
-        height: 20px;
+        width: 19px;
+        height: 19px;
         display: block;
         fill: none;
         stroke: currentColor;
@@ -2458,95 +2857,6 @@ class BrunoOfficeSubview extends HTMLElement {
         pointer-events: none;
       }
 
-      .room-nav-button::after {
-        content: "";
-        position: absolute;
-        left: 7px;
-        right: 7px;
-        bottom: -5px;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.13), transparent);
-        opacity: 0;
-      }
-
-      .room-nav-button.has-divider::after {
-        opacity: 1;
-      }
-
-      .room-nav-button:hover {
-        color: rgba(255,255,255,0.88);
-        background: rgba(255,255,255,0.075);
-      }
-
-      .room-nav-button.is-active {
-        color: white;
-        background: var(--bruno-liquid-selected-blue-background,
-          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 62%),
-          linear-gradient(180deg, rgba(105,150,230,0.68), rgba(59,92,178,0.54))
-        );
-        border: 1px solid var(--bruno-liquid-selected-blue-border, rgba(210,228,255,0.38));
-        box-shadow: var(--bruno-liquid-selected-blue-shadow,
-          inset 0 1px 0 rgba(255,255,255,0.32),
-          0 0 20px rgba(96,165,250,0.32)
-        );
-      }
-
-      .room-nav-button ha-icon {
-        --mdc-icon-size: 19px;
-      }
-
-      /* =================================================================
-         ANTERIOR (rollback) — skin glass-card v1 (geracao bento: tokens sem
-         fallback, sheen atras do fundo e edge-glow no ::after):
-
-      .glass-card {
-        position: relative;
-        isolation: isolate;
-        min-width: 0;
-        min-height: 0;
-        border-radius: var(--office-radius);
-        overflow: hidden;
-        background: var(--bruno-liquid-surface-off-background);
-        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.68) contrast(1.06));
-        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.68) contrast(1.06));
-        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.18));
-        box-shadow: var(--bruno-liquid-surface-off-shadow);
-      }
-
-      .glass-card::before {
-        content: "";
-        position: absolute;
-        inset: 1px;
-        z-index: -1;
-        pointer-events: none;
-        border-radius: calc(var(--office-radius) - 1px);
-        background: var(--bruno-liquid-surface-off-sheen);
-        opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.82);
-      }
-
-      .glass-card::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        z-index: 2;
-        pointer-events: none;
-        border-radius: inherit;
-        padding: 1px;
-        background: var(--bruno-liquid-surface-edge-glow);
-        -webkit-mask:
-          linear-gradient(#000 0 0) content-box,
-          linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask:
-          linear-gradient(#000 0 0) content-box,
-          linear-gradient(#000 0 0);
-        mask-composite: exclude;
-        opacity: 0.9;
-      }
-      ================================================================= */
-
-      /* NOVO (paridade Sala): skin glass-card transposto verbatim de
-         bruno-sala-subview.js (bloco final/efetivo). */
       .glass-card {
         position: relative;
         isolation: isolate;
@@ -2654,40 +2964,6 @@ class BrunoOfficeSubview extends HTMLElement {
         border-radius: 0;
       }
 
-      /* =================================================================
-         ANTERIOR (rollback) — hero-bg v1 (center/cover, insets quase zero,
-         fades proprios na direita):
-
-      .hero-bg {
-        position: absolute;
-        pointer-events: none;
-        z-index: 0;
-        top: 0;
-        bottom: 0;
-        left: -10px;
-        right: -2px;
-        background:
-          linear-gradient(90deg, rgba(4,10,18,0.82) 0%, rgba(5,10,18,0.66) 12%, rgba(6,12,20,0.42) 24%, rgba(7,13,22,0.22) 38%, rgba(7,13,22,0.10) 50%, rgba(7,13,22,0.08) 64%, rgba(7,13,22,0.16) 76%, rgba(7,13,22,0.38) 86%, rgba(7,13,22,0.72) 94%, rgba(7,13,22,0.98) 100%),
-          linear-gradient(180deg, rgba(4,8,14,0.78) 0%, rgba(4,8,14,0.46) 10%, rgba(4,8,14,0.18) 22%, rgba(4,8,14,0.04) 34%, rgba(4,8,14,0.00) 46%, rgba(4,8,14,0.00) 58%, rgba(4,8,14,0.10) 72%, rgba(4,8,14,0.28) 84%, rgba(4,8,14,0.56) 94%, rgba(4,8,14,0.78) 100%),
-          radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
-          radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
-          var(--hero-image) center center / cover no-repeat,
-          var(--hero-fallback-image) center center / cover no-repeat;
-        opacity: 1;
-        filter: saturate(1.02) brightness(0.88);
-        mask-image:
-          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 72%, rgba(0,0,0,0.90) 82%, rgba(0,0,0,0.56) 93%, transparent 100%),
-          linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
-        -webkit-mask-image:
-          linear-gradient(to right, transparent 0%, rgba(0,0,0,0.84) 4%, rgba(0,0,0,1) 10%, rgba(0,0,0,1) 72%, rgba(0,0,0,0.90) 82%, rgba(0,0,0,0.56) 93%, transparent 100%),
-          linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.84) 6%, rgba(0,0,0,1) 14%, rgba(0,0,0,1) 80%, rgba(0,0,0,0.82) 89%, rgba(0,0,0,0.42) 95%, transparent 100%);
-        mask-composite: intersect;
-        -webkit-mask-composite: source-in;
-      }
-      ================================================================= */
-
-      /* NOVO (paridade Sala): hero-bg transposto verbatim da Sala —
-         foto ancorada a esquerda (auto 100%) com overhang a direita. */
       .hero-bg {
         position: absolute;
         pointer-events: none;
@@ -2745,10 +3021,6 @@ class BrunoOfficeSubview extends HTMLElement {
         pointer-events: none;
       }
 
-      /* ANTERIOR (rollback) — hero-bg::before v1 tinha inset estendido
-         (-8px -172px -18px 0), rampa propria no eixo X e um radial extra:
-         radial-gradient(320px 220px at 78% 48%, rgba(2,6,12,0.28), transparent 68%). */
-      /* NOVO (paridade Sala): gradientes identicos aos da Sala, inset herdado (0). */
       .hero-bg::before {
         background:
           linear-gradient(90deg,
@@ -2775,7 +3047,6 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .hero-bg::after {
-        inset: 0;
         background:
           radial-gradient(720px 220px at 8% 2%, rgba(255,255,255,0.08), transparent 58%),
           linear-gradient(180deg, rgba(255,255,255,0.03), transparent 20%),
@@ -2790,9 +3061,8 @@ class BrunoOfficeSubview extends HTMLElement {
         display: grid;
         grid-template-columns: 1fr auto;
         grid-template-rows: auto minmax(0, 1fr) auto;
-        /* ANTERIOR (rollback): padding: 16px 18px 14px; gap: 10px; */
-        padding: 15px 18px 14px;
-        gap: 8px;
+        padding: 16px 18px 14px;
+        gap: 10px;
       }
 
       .hero-top {
@@ -2801,8 +3071,6 @@ class BrunoOfficeSubview extends HTMLElement {
         gap: 10px;
       }
 
-      /* ANTERIOR (rollback): valores hardcoded (radius 14px fixo, sem blur). */
-      /* NOVO (paridade Sala): tokens liquid com fallbacks + backdrop-filter. */
       .back-button,
       .control-button {
         width: 40px;
@@ -2846,13 +3114,11 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-row: 2;
         align-self: start;
         justify-self: start;
-        /* ANTERIOR (rollback): margin-top: 20px; */
-        margin-top: 12px;
+        margin-top: 20px;
       }
 
       .hero-date-line {
-        /* ANTERIOR (rollback): margin: 0 0 11px; */
-        margin: 0 0 6px;
+        margin: 0 0 11px;
         color: rgba(255,255,255,0.54);
         font-size: 11px;
         line-height: 1;
@@ -2861,37 +3127,13 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .hero-clock {
-        /* ANTERIOR (rollback): margin-top: 14px; font-size: clamp(56px, 7.4vh, 78px); */
-        margin-top: 8px;
-        font-size: clamp(54px, 7.1vh, 74px);
+        margin-top: 14px;
+        font-size: clamp(56px, 7.4vh, 78px);
         line-height: 0.96;
         font-weight: 220;
         font-variant-numeric: tabular-nums;
         color: rgba(255,255,255,0.95);
         text-shadow: 0 10px 32px rgba(0,0,0,0.28);
-      }
-
-      .scene-pill {
-        width: fit-content;
-        max-width: min(250px, 100%);
-        min-height: 30px;
-        margin-top: 12px;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        padding: 0 12px;
-        border-radius: 999px;
-        color: rgba(255,255,255,0.88);
-        font-size: 11px;
-        font-weight: 800;
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.14);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 24px rgba(0,0,0,0.20);
-      }
-
-      .scene-pill ha-icon {
-        --mdc-icon-size: 15px;
-        color: rgb(255,205,95);
       }
 
       .chip-button,
@@ -2919,15 +3161,15 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .curtain-dock {
+        --curtain-gold-rgb: var(--bruno-liquid-warm-accent, 242,194,102);
+        --curtain-gold: rgb(var(--curtain-gold-rgb));
         grid-row: 3;
         grid-column: 1 / -1;
         align-self: end;
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
-        gap: 8px;
-        /* ANTERIOR (rollback): width: min(500px, 100%); */
-        width: min(520px, 100%);
+        gap: 11px;
+        width: min(540px, 100%);
         padding: 0;
         border-radius: 0;
         background: transparent;
@@ -2937,12 +3179,262 @@ class BrunoOfficeSubview extends HTMLElement {
         -webkit-backdrop-filter: none;
       }
 
-      .curtain-copy,
+      .curtain-control-row {
+        display: grid;
+        grid-template-columns: minmax(94px, auto) minmax(96px, 1fr) auto;
+        align-items: center;
+        gap: 18px;
+        min-width: 0;
+      }
+
+      .curtain-identity,
       .title-with-chip {
         display: flex;
         align-items: center;
-        gap: 9px;
+        gap: 8px;
         min-width: 0;
+      }
+
+      .curtain-icon-shell {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.17), rgba(255,255,255,0.04) 56%, rgba(0,0,0,0.18)),
+          rgba(18,20,21,0.52);
+        border: 1px solid rgba(255,255,255,0.16);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        backdrop-filter: blur(12px) saturate(1.18);
+        -webkit-backdrop-filter: blur(12px) saturate(1.18);
+      }
+
+      .curtain-title {
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        letter-spacing: 0;
+        color: rgba(255,255,255,0.96);
+        white-space: nowrap;
+      }
+
+      .curtain-status {
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .curtain-status-text {
+        color: var(--curtain-gold);
+      }
+
+      .curtain-status-percent {
+        color: rgba(255,255,255,0.78);
+        font-weight: 800;
+      }
+
+      .curtain-main-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 7px;
+        min-width: 0;
+      }
+
+      .curtain-action-button {
+        width: 76px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0 9px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
+        background: var(--bruno-liquid-control-background,
+          linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018)),
+          rgba(255,255,255,0.030)
+        );
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        color: rgba(255,255,255,0.88);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0;
+        white-space: nowrap;
+      }
+
+      .curtain-action-button.is-muted {
+        color: rgba(255,255,255,0.88);
+      }
+
+      .curtain-action-button.is-active {
+        color: var(--curtain-gold);
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(var(--curtain-gold-rgb),0.180));
+        background: var(--bruno-liquid-control-warm-background, rgba(var(--curtain-gold-rgb),0.038));
+        box-shadow: var(--bruno-liquid-control-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+      }
+
+      .curtain-action-button:active {
+        transform: translateY(1px);
+        color: var(--curtain-gold);
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(var(--curtain-gold-rgb),0.180));
+        background: var(--bruno-liquid-control-warm-background, rgba(var(--curtain-gold-rgb),0.038));
+      }
+
+      .curtain-action-button:disabled,
+      .curtain-mark:disabled,
+      .curtain-range:disabled {
+        opacity: 0.46;
+        cursor: not-allowed;
+      }
+
+      .curtain-svg {
+        display: block;
+        fill: rgba(255,255,255,0.70);
+        stroke: rgba(255,255,255,0.58);
+        stroke-width: 2.1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: 0 0 auto;
+      }
+
+      .curtain-svg.is-main {
+        fill: rgba(255,255,255,0.78);
+        stroke: rgba(255,255,255,0.54);
+      }
+
+      .curtain-svg.is-stop {
+        fill: rgba(255,255,255,0.64);
+        stroke: rgba(255,255,255,0.54);
+      }
+
+      .curtain-slider-zone {
+        position: relative;
+        display: grid;
+        gap: 0;
+        min-width: 0;
+      }
+
+      .curtain-slider-glow {
+        position: absolute;
+        left: 0;
+        top: -3px;
+        width: var(--curtain-position);
+        height: 8px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(var(--curtain-gold-rgb),0.11), rgba(var(--curtain-gold-rgb),0.020));
+        filter: blur(8px);
+        pointer-events: none;
+      }
+
+      .curtain-range {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 3px;
+        margin: 0;
+        appearance: none;
+        -webkit-appearance: none;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.055);
+        background:
+          linear-gradient(90deg, rgba(var(--curtain-gold-rgb),0.62) 0 var(--curtain-position), rgba(var(--curtain-gold-rgb),0.24) var(--curtain-position), rgba(255,255,255,0.11) var(--curtain-position) 100%);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.24);
+        cursor: pointer;
+        accent-color: var(--curtain-gold);
+      }
+
+      .curtain-range::-webkit-slider-runnable-track {
+        height: 3px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .curtain-range::-webkit-slider-thumb {
+        width: 12px;
+        height: 12px;
+        margin-top: -4.5px;
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.30);
+        background:
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.86), rgba(var(--curtain-gold-rgb),0.74) 58%, rgba(20,20,20,0.78));
+        box-shadow: 0 0 7px rgba(var(--curtain-gold-rgb),0.22), 0 2px 6px rgba(0,0,0,0.34);
+      }
+
+      .curtain-range::-moz-range-track {
+        height: 3px;
+        border-radius: 999px;
+        background: transparent;
+      }
+
+      .curtain-range::-moz-range-progress {
+        height: 3px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(var(--curtain-gold-rgb),0.62), rgba(var(--curtain-gold-rgb),0.24));
+      }
+
+      .curtain-range::-moz-range-thumb {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,0.30);
+        background:
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.86), rgba(var(--curtain-gold-rgb),0.74) 58%, rgba(20,20,20,0.78));
+        box-shadow: 0 0 7px rgba(var(--curtain-gold-rgb),0.22), 0 2px 6px rgba(0,0,0,0.34);
+      }
+
+      .curtain-marks {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin-top: 7px;
+      }
+
+      .curtain-mark {
+        position: relative;
+        min-width: 0;
+        height: 22px;
+        padding: 8px 0 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255,255,255,0.42);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0;
+        cursor: pointer;
+      }
+
+      .curtain-mark::before {
+        content: "";
+        position: absolute;
+        top: 1px;
+        left: 50%;
+        width: 1px;
+        height: 4px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: rgba(255,255,255,0.28);
+      }
+
+      .curtain-mark.is-active {
+        color: var(--curtain-gold);
+      }
+
+      .curtain-mark.is-active::before {
+        background: rgba(var(--curtain-gold-rgb),0.72);
       }
 
       .module-icon,
@@ -2961,79 +3453,17 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .module-icon ha-icon,
       .micro-icon ha-icon {
-        --mdc-icon-size: 15px;
-      }
-
-      .curtain-pill {
-        align-self: center;
-        justify-self: stretch;
-        min-height: 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 11px;
-        border-radius: 999px;
-        color: rgb(255,208,92);
-        font-size: 11px;
-        font-weight: 800;
-        background: rgba(255,183,77,0.12);
-        border: 1px solid rgba(255,183,77,0.25);
-      }
-
-      .curtain-actions {
-        grid-column: 1 / -1;
-        justify-self: stretch;
-        display: grid;
-        /* ANTERIOR (rollback): repeat(4, minmax(68px, 1fr)) minmax(118px, auto); */
-        grid-template-columns: repeat(4, minmax(70px, 1fr)) minmax(112px, auto);
-        align-items: center;
-        gap: 8px;
-      }
-
-      /* ANTERIOR (rollback): min-height 48px, valores hardcoded sem tokens liquid. */
-      /* NOVO (paridade Sala): tokens liquid com fallbacks, min-height 46px. */
-      .preset-button {
-        min-height: 46px;
-        display: grid;
-        place-items: center;
-        gap: 4px;
-        padding: 6px 6px;
-        border-radius: var(--bruno-liquid-control-radius, 14px);
-        background: var(--bruno-liquid-control-background,
-          radial-gradient(74px 44px at 50% 0%, rgba(255,255,255,0.13), transparent 72%),
-          rgba(255,255,255,0.058)
-        );
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.12));
-        color: rgba(255,255,255,0.72);
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.08));
-      }
-
-      .preset-button.is-primary {
-        color: rgba(136,122,255,0.98);
-        background:
-          radial-gradient(64px 46px at 50% 0%, rgba(136,122,255,0.32), transparent 72%),
-          rgba(88,72,185,0.22);
-        border-color: rgba(136,122,255,0.44);
-      }
-
-      .preset-button ha-icon {
-        --mdc-icon-size: 19px;
-      }
-
-      .preset-button span {
-        font-size: 10px;
-        font-weight: 700;
+        --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
       }
 
       .soft-button,
-      /* ANTERIOR (rollback): radius 12px e cores hardcoded. */
-      /* NOVO (paridade Sala): tokens liquid. */
       .primary-button {
         min-height: 36px;
         padding: 0 14px;
         border-radius: var(--bruno-liquid-control-radius, 14px);
-        background: rgba(255,255,255,0.075);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.075));
         border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
         color: rgba(255,255,255,0.88);
         font-size: 12px;
         font-weight: 800;
@@ -3046,227 +3476,20 @@ class BrunoOfficeSubview extends HTMLElement {
         box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.18));
       }
 
-      .curtain-progress {
-        display: none;
-        grid-column: 1 / -1;
-        height: 7px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.16);
-      }
-
-      .curtain-progress span {
-        display: block;
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, rgba(255,255,255,0.94), rgba(126,204,255,0.78));
-      }
-
-      .curtain-dock {
-        width: min(520px, 100%);
-        grid-template-rows: auto auto;
-        gap: 11px;
-        --curtain-gold: rgb(242,194,102);
-      }
-
-      .curtain-dock.is-disabled {
-        opacity: 0.72;
-      }
-
-      .curtain-control-row {
-        display: grid;
-        grid-template-columns: minmax(116px, auto) minmax(86px, 1fr) auto;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-      }
-
-      .curtain-identity {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-      }
-
-      .curtain-icon-shell {
-        width: 30px;
-        height: 30px;
-        display: grid;
-        place-items: center;
-        flex: 0 0 auto;
-        border-radius: 50%;
-        background:
-          radial-gradient(circle at 50% 0%, rgba(255,255,255,0.17), rgba(255,255,255,0.04) 56%, rgba(0,0,0,0.18)),
-          rgba(18,20,21,0.52);
-        border: 1px solid rgba(255,255,255,0.16);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
-      }
-
-      .curtain-title {
-        font-size: 13px;
-        line-height: 1.05;
-        font-weight: 800;
-        color: rgba(255,255,255,0.96);
-        white-space: nowrap;
-      }
-
-      .curtain-status {
-        justify-self: center;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        min-width: 0;
-        font-size: 13px;
-        line-height: 1.05;
-        font-weight: 800;
-        white-space: nowrap;
-      }
-
-      .curtain-status-text { color: var(--curtain-gold); }
-      .curtain-status-percent { color: rgba(255,255,255,0.78); }
-
-      .curtain-main-actions {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 7px;
-        min-width: 0;
-      }
-
-      .curtain-action-button {
-        width: 78px;
-        height: 40px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-        padding: 0 9px;
-        border-radius: var(--bruno-liquid-control-radius, 14px);
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
-        background: var(--bruno-liquid-control-background,
-          linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025)),
-          rgba(22,23,24,0.50)
-        );
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 18px rgba(0,0,0,0.22));
-        color: rgba(255,255,255,0.88);
-        font-size: 12px;
-        font-weight: 700;
-        white-space: nowrap;
-      }
-
-      .curtain-action-button:disabled,
-      .curtain-chip:disabled,
-      .curtain-range:disabled {
-        opacity: 0.46;
-        cursor: not-allowed;
-      }
-
-      .curtain-svg {
-        display: block;
-        width: 19px;
-        height: 19px;
-        fill: rgba(255,255,255,0.70);
-        stroke: rgba(255,255,255,0.58);
-        stroke-width: 2.1;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        flex: 0 0 auto;
-      }
-
-      .curtain-icon-shell .curtain-svg {
-        width: 18px;
-        height: 18px;
-      }
-
-      .curtain-slider-zone {
-        position: relative;
-        display: grid;
-        gap: 0;
-        min-width: 0;
-      }
-
-      .curtain-slider-glow {
-        position: absolute;
-        left: 0;
-        top: -4px;
-        width: var(--curtain-position);
-        height: 14px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, rgba(242,194,102,0.24), rgba(242,194,102,0.05));
-        filter: blur(10px);
-        pointer-events: none;
-      }
-
-      .curtain-range {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        height: 4px;
-        margin: 0;
-        appearance: none;
-        -webkit-appearance: none;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: linear-gradient(90deg, var(--curtain-gold) 0 var(--curtain-position), rgba(242,194,102,0.45) var(--curtain-position), rgba(255,255,255,0.10) var(--curtain-position) 100%);
-        box-shadow: inset 0 1px 2px rgba(0,0,0,0.34);
-        accent-color: var(--curtain-gold);
-      }
-
-      .curtain-range::-webkit-slider-runnable-track {
-        height: 4px;
-        border-radius: 999px;
-        background: transparent;
-      }
-
-      .curtain-range::-webkit-slider-thumb {
-        width: 18px;
-        height: 18px;
-        margin-top: -7px;
-        -webkit-appearance: none;
-        appearance: none;
-        border-radius: 50%;
-        border: 1px solid rgba(255,255,255,0.34);
-        background:
-          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
-        box-shadow: 0 0 9px rgba(242,194,102,0.34), 0 2px 8px rgba(0,0,0,0.44);
-      }
-
-      .curtain-chips {
-        display: flex;
-        gap: 8px;
-        margin-top: 14px;
-        justify-content: center;
-      }
-
-      .curtain-chip {
-        flex: 1 1 0;
-        min-height: 31px;
-        padding: 0 12px;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.10);
-        background: rgba(255,255,255,0.052);
-        color: rgba(255,255,255,0.48);
-        font-size: 12px;
-        font-weight: 700;
-      }
-
       .status-rail {
         display: grid;
-        /* ANTERIOR (rollback): repeat(6, minmax(0, 1fr)) — havia 6o item Clima. */
         grid-template-columns: repeat(5, minmax(0, 1fr));
-        min-height: 64px;
         gap: 0;
         padding: 0;
       }
 
       .status-item {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-columns: auto minmax(0, 1fr) auto;
         align-items: center;
         min-width: 0;
         gap: 8px;
-        /* ANTERIOR (rollback): padding: 0 13px; */
-        padding: 0 12px;
+        padding: 0 13px;
         border-right: 1px solid rgba(255,255,255,0.08);
       }
 
@@ -3281,7 +3504,6 @@ class BrunoOfficeSubview extends HTMLElement {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
       }
 
       .status-item span:not(.micro-icon) {
@@ -3290,6 +3512,11 @@ class BrunoOfficeSubview extends HTMLElement {
         font-size: 10px;
         line-height: 1;
         color: var(--text-soft);
+      }
+
+      .status-chevron {
+        --mdc-icon-size: 17px;
+        color: rgba(255,255,255,0.58);
       }
 
       .micro-icon.tone-amber {
@@ -3306,30 +3533,17 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .lights-card,
       .cameras-card,
-      .focus-card,
       .tv-card,
-      .pc-card,
+      .ps5-card,
       .spotify-card,
-      .media-hub-card,
       .ac-card {
         padding: 14px;
-        /* NOVO (paridade Sala): grid explicito head + corpo. */
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        /* ANTERIOR (rollback): gap: 6px; */
-        gap: 8px;
-      }
-
-      /* NOVO (paridade Sala) */
-      .ac-head {
-        margin-bottom: 0;
       }
 
       .lights-card {
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
-        /* ANTERIOR (rollback): gap: 7px; */
-        gap: 10px;
+        gap: 7px;
       }
 
       .module-head {
@@ -3344,9 +3558,7 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .lights-card .module-head {
-        /* ANTERIOR (rollback): min-height: 30px; */
-        min-height: 40px;
-        align-items: start;
+        min-height: 30px;
         margin-bottom: 0;
       }
 
@@ -3366,17 +3578,6 @@ class BrunoOfficeSubview extends HTMLElement {
         min-width: 52px;
       }
 
-      /* NOVO (paridade Sala): pílulas "Todas acesas"/"Apagar todas" com mesma
-         altura e padding que a Sala (min-height 34px / padding 0 14px).
-         Sem este override ficavam 4px mais baixas (base .chip-button = 30px). */
-      .head-actions .chip-button {
-        min-height: 34px;
-        padding: 0 14px;
-      }
-
-      /* NOTA (2026-06-12): .lights-groups/.lights-divider/.light-group-grid sao
-         CSS herdado da Sala sem markup correspondente no Office (codigo morto,
-         sem efeito visual). Mantido por rastreabilidade — Regra de Ouro. */
       .lights-groups {
         position: relative;
         z-index: 1;
@@ -3420,41 +3621,18 @@ class BrunoOfficeSubview extends HTMLElement {
         gap: 10px;
       }
 
-      .lights-body {
-        position: relative;
-        z-index: 1;
-        min-height: 0;
-        height: 100%;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 60px;
-        gap: 10px;
-      }
-
-      .lights-single-grid,
-      .office-lights-grid {
-        min-height: 0;
-        height: 100%;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        grid-template-rows: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-
       .light-tile {
         position: relative;
         display: grid;
-        /* ANTERIOR (rollback): grid-template-columns: 66px minmax(0, 1fr); */
-        grid-template-columns: 60px minmax(0, 1fr);
+        grid-template-columns: 66px minmax(0, 1fr);
         grid-template-rows: auto auto;
         grid-template-areas:
           "icon title"
           "icon status";
         align-items: center;
         align-content: center;
-        /* ANTERIOR (rollback): column-gap 15px; padding 13px 16px; radius var(--office-radius-small); */
-        column-gap: 11px;
-        min-height: 0;
-        padding: 11px 12px;
+        column-gap: 15px;
+        padding: 13px 16px;
         text-align: left;
         border-radius: var(--office-cell-radius);
         color: rgba(255,255,255,0.86);
@@ -3481,16 +3659,22 @@ class BrunoOfficeSubview extends HTMLElement {
         );
       }
 
+      .lights-body {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+      }
+
       .lights-zone-rail {
         position: relative;
         min-height: 0;
-        display: grid;
+        display: none;
         grid-template-rows: auto minmax(0, 1fr) auto;
         justify-items: center;
         gap: 10px;
         padding: 9px 7px;
         overflow: hidden;
-        /* ANTERIOR (rollback): border-radius: var(--office-radius-small); */
         border-radius: var(--office-cell-radius);
         color: rgba(255,255,255,0.74);
         background:
@@ -3510,7 +3694,6 @@ class BrunoOfficeSubview extends HTMLElement {
         position: absolute;
         inset: 1px;
         pointer-events: none;
-        /* ANTERIOR (rollback): calc(var(--office-radius-small) - 1px); */
         border-radius: calc(var(--office-cell-radius) - 1px);
         background:
           radial-gradient(52px 78px at 50% 20%, rgba(255,191,74,0.10), transparent 66%),
@@ -3556,6 +3739,7 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .rail-track {
+        position: relative;
         width: 42px;
         height: 100%;
         min-height: 124px;
@@ -3685,9 +3869,8 @@ class BrunoOfficeSubview extends HTMLElement {
       .light-icon {
         grid-area: icon;
         position: relative;
-        /* ANTERIOR (rollback): width/height 62px; */
-        width: 60px;
-        height: 60px;
+        width: 62px;
+        height: 62px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -3756,41 +3939,11 @@ class BrunoOfficeSubview extends HTMLElement {
         100% { transform: rotateZ(0deg); }
       }
 
-      .switch-knob {
-        grid-column: 2;
-        width: 34px;
-        height: 20px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.12);
-        border: 1px solid rgba(255,255,255,0.13);
-      }
-
-      .switch-knob::before {
-        content: "";
-        display: block;
-        width: 14px;
-        height: 14px;
-        margin: 2px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.76);
-        transition: transform 160ms ease, background 160ms ease;
-      }
-
-      .switch-knob.is-on {
-        background: rgba(255,183,77,0.88);
-      }
-
-      .switch-knob.is-on::before {
-        transform: translateX(14px);
-        background: #fff;
-      }
-
       .light-tile strong {
         grid-area: title;
         min-width: 0;
         align-self: end;
-        /* ANTERIOR (rollback): color: white; font-size: 15px; line-height: 1.1; font-weight: 850; */
-        font-size: 14.8px;
+        font-size: 14.5px;
         line-height: 1.12;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -3801,547 +3954,11 @@ class BrunoOfficeSubview extends HTMLElement {
         grid-area: status;
         min-width: 0;
         color: rgba(255,205,95,0.92);
-        /* ANTERIOR (rollback): font-size: 11px; */
         font-size: 12px;
         font-weight: 800;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-      }
-
-      /* =================================================================
-         ANTERIOR (rollback) — CSS do Focus card v1 (mode-row, ring grande,
-         stat boxes). Substituido em 2026-06-12 pelo redesign v2.
-
-      .focus-card {
-        min-width: 0;
-        min-height: 0;
-        padding: 15px;
-        display: grid;
-        grid-template-rows: 34px 38px minmax(0, 1fr);
-        gap: 10px;
-      }
-
-      .focus-head {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-      }
-
-      .focus-title {
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .focus-title strong {
-        min-width: 0;
-        font-size: 16px;
-        line-height: 1;
-        font-weight: 800;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .focus-mode-row {
-        position: relative;
-        z-index: 1;
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .focus-mode {
-        min-width: 0;
-        min-height: 38px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-        padding: 0 12px;
-        border-radius: 16px;
-        color: rgba(255,255,255,0.68);
-        background: linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.025));
-        border: 1px solid rgba(255,255,255,0.14);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-      }
-
-      .focus-mode span {
-        min-width: 0;
-        font-size: 11px;
-        font-weight: 800;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .focus-mode i {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        border: 1px solid rgba(255,255,255,0.30);
-        flex-shrink: 0;
-      }
-
-      .focus-mode.is-active {
-        color: rgba(210,232,255,0.98);
-        background:
-          radial-gradient(64px 42px at 12% 6%, rgba(96,165,250,0.20), transparent 74%),
-          rgba(96,165,250,0.085);
-        border-color: rgba(96,165,250,0.42);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.15),
-          0 0 18px rgba(96,165,250,0.14);
-      }
-
-      .focus-mode.is-active i {
-        background: rgb(96,190,255);
-        border-color: rgba(96,190,255,0.88);
-        box-shadow: 0 0 14px rgba(96,190,255,0.45);
-      }
-
-      .focus-dashboard {
-        position: relative;
-        z-index: 1;
-        min-height: 0;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-        align-items: stretch;
-        gap: 12px;
-      }
-
-      .focus-ring-panel,
-      .focus-next-minimal {
-        min-width: 0;
-        border-radius: 18px;
-        background: rgba(255,255,255,0.045);
-        border: 1px solid rgba(255,255,255,0.11);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
-      }
-
-      .focus-ring-panel {
-        display: grid;
-        place-items: center;
-        align-content: center;
-        gap: 8px;
-        padding: 10px;
-      }
-
-      .focus-ring-panel > span {
-        color: var(--text-soft);
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .focus-ring {
-        width: 100%;
-        max-width: 136px;
-        aspect-ratio: 1;
-        border-radius: 50%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        background:
-          radial-gradient(circle at 50% 50%, rgba(7,10,18,0.78) 0 56%, transparent 57%),
-          conic-gradient(rgb(96,165,250) 0 var(--focus-angle), rgba(255,255,255,0.12) var(--focus-angle) 360deg);
-        border: 1px solid rgba(255,255,255,0.13);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.14),
-          0 0 28px rgba(96,165,250,0.30);
-      }
-
-      .focus-ring strong {
-        font-size: 26px;
-        line-height: 1;
-        font-weight: 400;
-        margin-top: 2px;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .focus-ring small {
-        display: flex;
-        align-items: center;
-        color: rgb(126,204,255);
-        font-size: 10px;
-        font-weight: 700;
-      }
-
-      .focus-toggle {
-        min-height: 32px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        padding: 0 12px;
-        border-radius: 999px;
-        color: rgba(255,255,255,0.90);
-        font-size: 11px;
-        font-weight: 850;
-        background: rgba(96,165,250,0.16);
-        border: 1px solid rgba(96,165,250,0.30);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-      }
-
-      .focus-toggle ha-icon {
-        --mdc-icon-size: 14px;
-      }
-
-      .focus-side {
-        min-width: 0;
-        min-height: 0;
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        gap: 10px;
-      }
-
-      .focus-next-minimal {
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        border-radius: 14px;
-        white-space: nowrap;
-        overflow: hidden;
-      }
-
-      .focus-next-minimal ha-icon {
-        --mdc-icon-size: 16px;
-        color: rgba(255,255,255,0.66);
-      }
-
-      .focus-next-minimal .next-label {
-        color: var(--text-soft);
-        font-size: 11px;
-        font-weight: 700;
-      }
-
-      .focus-next-minimal .next-title {
-        color: white;
-        font-size: 12px;
-        font-weight: 800;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .focus-next-minimal .next-time {
-        color: rgba(126,204,255,0.92);
-        font-size: 11px;
-        font-weight: 700;
-      }
-
-      .focus-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-        flex: 1;
-        align-items: stretch;
-      }
-
-      .stat-box {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        border-radius: 14px;
-        background: rgba(255,255,255,0.045);
-        border: 1px solid rgba(255,255,255,0.11);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
-        padding: 10px 4px;
-      }
-
-      .stat-box ha-icon {
-        --mdc-icon-size: 20px;
-        margin-bottom: 6px;
-      }
-
-      .stat-box.tone-green ha-icon { color: rgb(74,222,128); }
-      .stat-box.tone-blue ha-icon { color: rgb(96,190,255); }
-      .stat-box.tone-amber ha-icon { color: rgb(251,191,36); }
-
-      .stat-box strong {
-        font-size: 15px;
-        line-height: 1;
-        font-weight: 800;
-        color: white;
-        margin-bottom: 3px;
-      }
-
-      .stat-box small {
-        font-size: 10px;
-        font-weight: 700;
-        color: var(--text-soft);
-        line-height: 1;
-      }
-      ================================================================= */
-
-      /* NOVO — Focus card v2: header padrao + chip de status, strip semanal
-         do calendario, proximo evento e timer compacto (visual limpo, sem
-         sub-paineis aninhados — paridade com a linguagem dos cards da Sala). */
-      .focus-card {
-        min-width: 0;
-        min-height: 0;
-        padding: 14px;
-        display: grid;
-        grid-template-rows: auto auto minmax(0, 1fr) auto;
-        gap: 10px;
-      }
-
-      .focus-head {
-        margin-bottom: 0;
-      }
-
-      .focus-status-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        min-height: 30px;
-        padding: 0 12px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 800;
-        color: rgba(255,255,255,0.88);
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.14);
-        white-space: nowrap;
-      }
-
-      .focus-status-chip > span {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-
-      .focus-status-chip.tone-green > span {
-        background: rgb(74,222,128);
-        box-shadow: 0 0 10px rgba(74,222,128,0.55);
-      }
-
-      .focus-status-chip.tone-blue > span {
-        background: rgb(96,190,255);
-        box-shadow: 0 0 10px rgba(96,190,255,0.55);
-      }
-
-      .focus-status-chip.tone-amber > span {
-        background: rgb(251,191,36);
-        box-shadow: 0 0 10px rgba(251,191,36,0.55);
-      }
-
-      .focus-week {
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 4px;
-      }
-
-      .focus-week-day {
-        min-width: 0;
-        display: grid;
-        justify-items: center;
-        gap: 2px;
-        padding: 6px 0 5px;
-        border-radius: 12px;
-        border: 1px solid transparent;
-      }
-
-      .focus-week-day small {
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.4px;
-        color: var(--text-dim);
-        text-transform: uppercase;
-      }
-
-      .focus-week-day strong {
-        font-size: 13px;
-        line-height: 1;
-        font-weight: 700;
-        color: rgba(255,255,255,0.82);
-        font-variant-numeric: tabular-nums;
-      }
-
-      .focus-week-day.is-today {
-        background: var(--bruno-liquid-control-blue-background,
-          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.34), transparent 72%),
-          rgba(38,92,154,0.42)
-        );
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
-        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.34));
-      }
-
-      .focus-week-day.is-today small,
-      .focus-week-day.is-today strong {
-        color: white;
-      }
-
-      .focus-week-dots {
-        min-height: 5px;
-        display: inline-flex;
-        gap: 3px;
-      }
-
-      .focus-week-dots i {
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-      }
-
-      .focus-next {
-        min-width: 0;
-        min-height: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        overflow: hidden;
-      }
-
-      .focus-next-label {
-        flex-shrink: 0;
-        font-size: 9px;
-        font-weight: 800;
-        letter-spacing: 0.8px;
-        color: var(--text-dim);
-      }
-
-      .focus-next-time {
-        flex-shrink: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        font-size: 13px;
-        font-weight: 800;
-        color: rgba(255,255,255,0.92);
-        font-variant-numeric: tabular-nums;
-      }
-
-      .focus-next-time::before {
-        content: "";
-        width: 3px;
-        height: 16px;
-        border-radius: 999px;
-        background: var(--event-color, rgb(127,219,233));
-      }
-
-      .focus-next-copy {
-        min-width: 0;
-        display: grid;
-        gap: 1px;
-      }
-
-      .focus-next-copy strong {
-        min-width: 0;
-        font-size: 12.5px;
-        line-height: 1.15;
-        font-weight: 800;
-        color: white;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .focus-next-copy small {
-        font-size: 10.5px;
-        font-weight: 700;
-        color: var(--text-soft);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .focus-next-copy.is-empty strong {
-        color: rgba(255,255,255,0.72);
-        font-weight: 700;
-      }
-
-      .focus-timer-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        min-width: 0;
-        padding-top: 9px;
-        border-top: 1px solid rgba(255,255,255,0.09);
-      }
-
-      .focus-timer-time {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: rgba(255,255,255,0.88);
-      }
-
-      .focus-timer-time ha-icon {
-        --mdc-icon-size: 15px;
-        color: rgba(255,255,255,0.55);
-      }
-
-      .focus-timer-time strong {
-        font-size: 16px;
-        line-height: 1;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-
-      .focus-timer-time.is-running ha-icon {
-        color: rgb(126,204,255);
-      }
-
-      .focus-timer-toggle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        min-height: 30px;
-        padding: 0 13px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 850;
-        color: white;
-        background: var(--bruno-liquid-control-blue-background,
-          radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 72%),
-          linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58))
-        );
-        border: 1px solid var(--bruno-liquid-control-blue-border, rgba(150,198,255,0.44));
-        box-shadow: var(--bruno-liquid-control-blue-shadow,
-          inset 0 1px 0 rgba(255,255,255,0.22),
-          0 0 22px rgba(96,165,250,0.24)
-        );
-      }
-
-      .focus-timer-toggle ha-icon {
-        --mdc-icon-size: 14px;
-      }
-
-      .focus-timer-reset {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        color: rgba(255,255,255,0.62);
-        background: rgba(255,255,255,0.07);
-        border: 1px solid rgba(255,255,255,0.12);
-      }
-
-      .focus-timer-reset ha-icon {
-        --mdc-icon-size: 14px;
-      }
-
-      .focus-timer-meta {
-        margin-left: auto;
-        font-size: 10.5px;
-        font-weight: 700;
-        color: var(--text-soft);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
 
       .cameras-card {
@@ -4436,18 +4053,14 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .camera-row-copy {
-        /* ANTERIOR (rollback): left/bottom 14px, sem right. */
-        left: 13px;
-        right: 13px;
-        bottom: 13px;
+        left: 14px;
+        bottom: 14px;
         display: grid;
         gap: 4px;
       }
 
       .camera-row-copy strong {
-        /* ANTERIOR (rollback): font-size: 17px; */
-        font-size: 15px;
-        line-height: 1.08;
+        font-size: 17px;
       }
 
       .camera-row-copy span,
@@ -4506,7 +4119,7 @@ class BrunoOfficeSubview extends HTMLElement {
       }
 
       .tv-card,
-      .pc-card,
+      .ps5-card,
       .spotify-card,
       .ac-card {
         min-height: 0;
@@ -4516,9 +4129,7 @@ class BrunoOfficeSubview extends HTMLElement {
       .ac-body {
         position: relative;
         z-index: 1;
-        /* ANTERIOR (rollback): height: calc(100% - 46px); */
-        height: auto;
-        min-height: 0;
+        height: calc(100% - 46px);
         display: grid;
         grid-template-columns: 1fr;
         gap: 14px;
@@ -4527,7 +4138,8 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .tv-main,
       .spotify-copy,
-      .ac-main {
+      .ac-main,
+      .ps5-copy {
         min-width: 0;
       }
 
@@ -4560,19 +4172,8 @@ class BrunoOfficeSubview extends HTMLElement {
         margin-top: 0;
       }
 
-      /* ANTERIOR (rollback) — acento roxo:
       .control-button.is-main {
-        background:
-          radial-gradient(circle at 50% 18%, rgba(142,126,255,0.50), transparent 72%),
-          linear-gradient(180deg, rgba(108,88,214,0.74), rgba(60,48,128,0.58));
-        border-color: rgba(160,145,255,0.48);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.22),
-          0 0 22px rgba(112,88,255,0.26);
-      }
-      */
-      /* NOVO (paridade Sala): azul padrao. */
-      .control-button.is-main {
+        color: white;
         background: var(--bruno-liquid-control-blue-background,
           radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 72%),
           linear-gradient(180deg, rgba(80,145,230,0.74), rgba(37,86,154,0.58))
@@ -4582,15 +4183,16 @@ class BrunoOfficeSubview extends HTMLElement {
           inset 0 1px 0 rgba(255,255,255,0.22),
           0 0 22px rgba(96,165,250,0.24)
         );
-        color: white;
       }
 
       .control-button.is-tool {
         color: rgba(210,245,230,0.96);
-        background:
+        background: var(--bruno-liquid-control-green-background,
           radial-gradient(circle at 50% 16%, rgba(46,231,122,0.22), transparent 72%),
-          rgba(255,255,255,0.075);
-        border-color: rgba(46,231,122,0.22);
+          rgba(255,255,255,0.075)
+        );
+        border-color: var(--bruno-liquid-control-green-border, rgba(46,231,122,0.22));
+        box-shadow: var(--bruno-liquid-control-green-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
       }
 
       .volume-row {
@@ -4615,11 +4217,6 @@ class BrunoOfficeSubview extends HTMLElement {
       .volume-row input {
         width: 100%;
         min-width: 0;
-        /* ANTERIOR (rollback): accent-color: rgb(116,92,255); (roxo) */
-        accent-color: rgb(28,214,104);
-      }
-
-      .spotify-volume input {
         accent-color: rgb(28,214,104);
       }
 
@@ -4639,9 +4236,14 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .tv-card .poster-card,
       .spotify-art {
-        height: var(--media-screen-height, 154px);
-        min-height: var(--media-screen-height, 154px);
-        max-height: var(--media-screen-height, 154px);
+        /* PADRÃO QUADRADO FIXO da arte (TV e Spotify): largura segue a altura. */
+        aspect-ratio: 1 / 1;
+        height: var(--media-screen-height, 150px);
+        min-height: var(--media-screen-height, 150px);
+        max-height: var(--media-screen-height, 150px);
+        width: auto;
+        max-width: 100%;
+        justify-self: center;
       }
 
       .tv-card .tv-body {
@@ -4661,6 +4263,59 @@ class BrunoOfficeSubview extends HTMLElement {
         margin-top: 0;
       }
 
+      .ps5-body {
+        position: relative;
+        z-index: 1;
+        height: calc(100% - 46px);
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(116px, 1fr) auto;
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .ps5-minimal {
+        gap: 8px;
+      }
+
+      .ps5-copy {
+        grid-row: 2;
+        display: grid;
+        align-content: end;
+        gap: 9px;
+        height: 100%;
+      }
+
+      .ps5-copy > strong {
+        align-self: end;
+        color: rgb(45,225,118);
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .ps5-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .ps5-image {
+        grid-row: 1;
+        justify-self: center;
+        align-self: center;
+        width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transform: scale(1.08);
+        filter: drop-shadow(0 18px 28px rgba(0,0,0,0.42));
+      }
+
+      .ps5-footer {
+        min-height: 0;
+        display: grid;
+        gap: 9px;
+      }
+
       .device-state {
         display: inline-flex;
         align-items: center;
@@ -4669,6 +4324,1560 @@ class BrunoOfficeSubview extends HTMLElement {
         color: rgba(255,255,255,0.82);
         font-size: 11px;
         font-weight: 800;
+      }
+
+      .ps5-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 40px;
+        gap: 8px;
+      }
+
+      .ps5-meta span,
+      .ac-meta span {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+        padding: 10px 11px;
+        border-radius: 12px;
+        color: var(--text-soft);
+        font-size: 11px;
+        background: rgba(255,255,255,0.052);
+        border: 1px solid rgba(255,255,255,0.10);
+      }
+
+      .ps5-meta strong,
+      .ac-meta strong {
+        color: white;
+        min-width: 0;
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .spotify-card {
+        padding: 14px;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .spotify-body {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        /* ANTERIOR (rollback): grid-template-rows: var(--media-screen-height, 154px) auto; */
+        /* NOVO — 1a faixa acompanha a arte quadrada (auto) em vez de altura fixa. */
+        grid-template-rows: auto auto;
+        align-items: stretch;
+        gap: 8px;
+      }
+
+      /* ANTERIOR (rollback) — arte com altura fixa (154px) desacoplada da largura:
+         virava retângulo quando a geometria do cartão mudou (E1).
+      .spotify-art {
+        position: relative;
+        inset: auto;
+        width: 100%;
+        height: var(--media-screen-height, 154px);
+        min-height: var(--media-screen-height, 154px);
+        max-height: var(--media-screen-height, 154px);
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        ...
+      }
+      */
+      /* NOVO — caixa da arte é QUADRADA (aspect-ratio 1/1), dimensionada pela
+         altura disponível e centrada na coluna; largura segue a altura. */
+      .spotify-art {
+        position: relative;
+        inset: auto;
+        aspect-ratio: 1 / 1;
+        height: var(--media-screen-height, 168px);
+        min-height: var(--media-screen-height, 168px);
+        max-height: var(--media-screen-height, 168px);
+        width: auto;
+        max-width: 100%;
+        justify-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--office-radius-small);
+        background:
+          radial-gradient(circle at 50% 45%, rgba(96,165,250,0.14), transparent 42%),
+          rgba(5,10,20,0.72);
+        overflow: hidden;
+        color: rgba(255,255,255,0.22);
+      }
+
+      .spotify-art.has-art::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 64%, rgba(2,8,18,0.46));
+      }
+
+      .spotify-art ha-icon {
+        --mdc-icon-size: 70px;
+      }
+
+      .spotify-copy {
+        display: grid;
+        align-content: start;
+        gap: 8px;
+      }
+
+      .spotify-card .media-title {
+        margin-top: 0;
+      }
+
+      .spotify-card .media-subtitle {
+        margin-top: -4px;
+      }
+
+      .spotify-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 0;
+      }
+
+      .tv-card .control-button,
+      .spotify-controls .control-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 13px;
+      }
+
+      .state-chip {
+        align-self: start;
+        min-height: 28px;
+      }
+
+      .ac-body {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto minmax(64px, 1fr);
+        gap: 8px;
+        align-content: start;
+      }
+
+      .temperature-pill {
+        align-self: start;
+        min-width: 58px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 7px 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.92);
+        font-size: 14px;
+        line-height: 1;
+        font-weight: 800;
+        background: rgba(255,255,255,0.070);
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+      }
+
+      .temperature-slider {
+        min-width: 0;
+        width: 100%;
+        display: block;
+        align-items: center;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .temperature-slider input {
+        width: 100%;
+        min-width: 0;
+        accent-color: rgb(96,165,250);
+      }
+
+      .fan-label {
+        display: block;
+        color: rgba(255,255,255,0.90);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .climate-mode-row,
+      .fan-mode-row {
+        display: grid;
+        gap: 8px;
+      }
+
+      .climate-mode-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .fan-mode-row {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .climate-mode,
+      .fan-mode,
+      .climate-stepper {
+        /* ANTERIOR (rollback): min-height: 34px; */
+        min-height: 38px;
+        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.09));
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.050));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.06));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+      }
+
+      .climate-mode:disabled,
+      .fan-mode:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .climate-mode {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.66);
+      }
+
+      .climate-mode ha-icon {
+        --mdc-icon-size: 17px;
+      }
+
+      .climate-mode.is-active {
+        color: white;
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.34), transparent 72%),
+          rgba(38,92,154,0.42)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.34));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.14),
+          0 0 14px rgba(96,165,250,0.16)
+        );
+      }
+
+      .climate-mode.is-power-on {
+        color: rgba(255,255,255,0.96);
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
+          rgba(38,92,138,0.38)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,165,250,0.32));
+        box-shadow: var(--bruno-liquid-control-blue-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.12),
+          0 0 14px rgba(96,165,250,0.16)
+        );
+      }
+
+      .climate-stepper {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) 42px;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .climate-stepper button {
+        /* ANTERIOR (rollback): height: 34px; */
+        height: 38px;
+        background: transparent;
+        color: rgba(255,255,255,0.82);
+        font-size: 17px;
+      }
+
+      .climate-stepper span {
+        text-align: center;
+        color: rgba(255,255,255,0.88);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .fan-label {
+        margin-top: 3px;
+        font-size: 12px;
+      }
+
+      .fan-mode {
+        color: rgba(255,255,255,0.74);
+        font-size: 11px;
+        font-weight: 800;
+        min-height: 30px;
+      }
+
+      .fan-mode.is-active {
+        color: rgba(255,255,255,0.94);
+        background: var(--bruno-liquid-control-blue-background,
+          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.24), transparent 72%),
+          rgba(38,92,154,0.32)
+        );
+        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.28));
+        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.14));
+      }
+
+      .climate-mode:active,
+      .fan-mode:active,
+      .climate-stepper button:active {
+        transform: translateY(1px);
+        border-color: rgba(96,183,255,0.42);
+      }
+
+      .climate-trend {
+        min-height: 0;
+        height: 104px;
+        margin: -8px -14px -14px;
+        border-radius: 0 0 calc(var(--office-radius) - 1px) calc(var(--office-radius) - 1px);
+        overflow: hidden;
+        background: transparent;
+      }
+
+      .climate-trend svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .trend-area {
+        fill: rgba(96,165,250,0.16);
+      }
+
+      .trend-line {
+        fill: none;
+        stroke: rgba(96,165,250,0.76);
+        stroke-width: 2.35;
+        stroke-linecap: round;
+        filter: drop-shadow(0 0 8px rgba(96,165,250,0.32));
+      }
+
+      .spotify-volume {
+        margin-top: 0;
+      }
+
+      .tv-card,
+      .spotify-card {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 8px;
+        overflow: hidden;
+      }
+
+      .tv-body,
+      .spotify-body {
+        height: auto;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: var(--media-screen-height, 154px) auto;
+        gap: 8px;
+        align-items: stretch;
+      }
+
+      .tv-main,
+      .spotify-copy {
+        display: grid;
+        grid-template-rows: 36px 24px;
+        align-content: start;
+        gap: 8px;
+        padding-top: 12px;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .tv-card .control-row,
+      .spotify-controls {
+        margin-top: 2px;
+      }
+
+      .tv-card .volume-row,
+      .spotify-volume {
+        margin-top: 2px;
+      }
+
+      .media-source {
+        font-size: 14px;
+      }
+
+      .spotify-card .media-title,
+      .spotify-title {
+        max-width: 100%;
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.05;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .spotify-title span {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: top;
+      }
+
+      .spotify-title.is-marquee span {
+        max-width: none;
+        min-width: 100%;
+        padding-right: 34px;
+        animation: bruno-sala-marquee 10s linear infinite;
+      }
+
+      .spotify-card .media-subtitle {
+        margin-top: -2px;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .state-chip {
+        max-width: 76px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      @keyframes bruno-sala-marquee {
+        0%, 18% { transform: translateX(0); }
+        82%, 100% { transform: translateX(calc(-100% + 100px)); }
+      }
+
+      @media (max-width: 1180px) {
+        .room-sidebar {
+          display: none;
+        }
+
+        .office-subview {
+          height: auto;
+          overflow: auto;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
+          grid-template-areas:
+            "hero side"
+            "cams cams"
+            "tv spotify"
+            "ps5 ac";
+        }
+
+        .side-panel {
+          grid-template-rows: auto minmax(0, 1fr);
+        }
+
+        .status-rail {
+          grid-template-columns: repeat(5, minmax(0, 1fr));
+        }
+
+        .status-item {
+          padding: 0 10px;
+        }
+      }
+
+      @media (max-width: 760px) {
+        :host {
+          height: auto;
+          overflow: visible;
+        }
+
+        .office-subview {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto;
+          grid-template-areas:
+            "hero"
+            "side"
+            "cams"
+            "tv"
+            "spotify"
+            "ps5"
+            "ac";
+          padding: 8px;
+        }
+
+        .hero-stage {
+          min-height: 430px;
+        }
+
+        .hero-content {
+          grid-template-columns: 1fr;
+        }
+
+        .hero-clock {
+          font-size: 70px;
+        }
+
+        .status-rail {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .status-item:nth-child(even) {
+          border-right: 0;
+        }
+
+        .curtain-dock {
+          grid-template-columns: 1fr;
+        }
+
+        .curtain-control-row {
+          grid-template-columns: 1fr;
+          align-items: stretch;
+          gap: 10px;
+        }
+
+        .curtain-status {
+          justify-self: start;
+        }
+
+        .curtain-main-actions {
+          justify-content: stretch;
+        }
+
+        .curtain-action-button {
+          flex: 1 1 0;
+          min-width: 0;
+        }
+
+        .side-panel {
+          grid-template-rows: auto;
+        }
+
+        .lights-groups {
+          height: auto;
+          grid-template-columns: 1fr;
+        }
+
+        .lights-divider {
+          display: none;
+        }
+
+        .light-group-grid {
+          grid-template-rows: none;
+          grid-auto-rows: minmax(94px, auto);
+        }
+
+        .cameras-card {
+          min-height: 390px;
+        }
+
+        .tv-card,
+        .ps5-card,
+        .spotify-card,
+        .ac-card {
+          min-height: 260px;
+        }
+
+        .spotify-card {
+          min-height: 360px;
+        }
+
+        .tv-body,
+        .ac-body {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* GRID ATIVO. NOVO (Caminho 2): rail 56px -> 88px (acomoda rótulos) e
+         adicionadas as faixas TOPO/RODAPÉ da shell (frame-top/frame-bottom),
+         com o rail (frame-left) atravessando as 3 linhas (cluster centralizado).
+         ORIGINAL: rail 56px, linha única "frame-left left right", shell-height
+         min(734px, 100vh-34px). */
+      /* NOVO (Etapa B): SEÇÃO da shell (conteúdo-only). SEM coluna frame-left (o
+         rail é da shell). Preenche o content-slot (height 100%). Régua das faixas
+         = a do painel principal: superior 48px, inferior 74px. Padding 0 (o
+         content-slot da shell já dá 12px de respiro). */
+      /* NOVO (full-bleed subview, Passada 1): topband full-width + conteúdo
+         (hero/cortina/[câmeras|mídia]) à esquerda + direita (Iluminação/AC).
+         ANTERIOR (rollback): grid "frame-top / left right / frame-bottom",
+         colunas minmax(420,540)+minmax(630,1fr), linhas 48/1fr/54. */
+      .office-subview {
+        /* Igual ao painel principal (section_home grid-gap: 10px) — padronização
+           da régua. ANTERIOR: 12px. */
+        --office-gap: 10px;
+        display: grid;
+        height: 100%;
+        min-height: 0;
+        grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
+        /* Régua da shell (igual ao painel principal): topo 48px, base 54px. */
+        grid-template-rows: 48px minmax(0, 1fr) 54px;
+        grid-template-areas:
+          "topband    topband"
+          "content    right"
+          "bottomband bottomband";
+        align-items: stretch;
+        gap: var(--office-gap);
+        padding: 0;
+        background: transparent;
+      }
+
+      .content-left,
+      .right-column {
+        min-width: 0;
+        min-height: 0;
+        height: 100%;
+      }
+
+      /* Conteúdo-esquerda: hero (alto, com a cortina sobreposta) -> [câmeras | mídia]. */
+      .content-left {
+        grid-area: content;
+        display: grid;
+        grid-template-columns: 1fr;
+        /* Câmeras/mídia ACOMPANHAM a altura do A/C (mesmo --ac-h) -> faixa inferior
+           alinhada. Hero absorve o resto. */
+        grid-template-rows: minmax(0, 1fr) var(--ac-h, 320px);
+        gap: var(--office-gap);
+      }
+
+      .cams-media-row {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--office-gap);
+      }
+
+      /* Direita: Iluminação (luzes) em cima + AC embaixo. AMBOS visíveis (sem
+         colapso). Luzes um pouco maior; absorve a maior parte da redução da faixa
+         inferior. ANTERIOR (bug): "minmax(0,1fr) auto" -> AC pegava o natural
+         (alto) e a Iluminação colapsava/sumia. */
+      /* ÚNICO ajuste: luzes seguem ABRAÇANDO o conteúdo (auto, como já funcionava)
+         no topo; o A/C ganha ALTURA FIXA (--ac-h) e fica ANCORADO na base
+         (align-content: space-between). O respiro variável fica entre os dois.
+         Câmeras/mídia e luzes NÃO foram alterados. */
+      .right-column {
+        grid-area: right;
+        display: grid;
+        grid-template-rows: auto var(--ac-h, 290px);
+        align-content: space-between;
+      }
+
+      .right-control-grid {
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(292px, 0.55fr);
+        grid-template-rows: minmax(264px, 1fr) minmax(292px, 1fr);
+        grid-template-areas:
+          "lights ac"
+          "media ac";
+        gap: var(--office-gap);
+      }
+
+      .hero-panel,
+      .cameras-card,
+      .lights-card,
+      .media-hub-card,
+      .ac-card {
+        min-width: 0;
+        min-height: 0;
+      }
+
+      /* NOVO (Passada 1): blocos auto-posicionados pela ordem do DOM dentro de
+         .content-left (hero, cortina, [câmeras|mídia]) e .right-column (lights, ac).
+         ANTERIOR (rollback): lights->lights, media->media, ac->ac. */
+      .hero-panel,
+      .cameras-card,
+      .lights-card,
+      .media-hub-card,
+      .ac-card,
+      .curtain-card {
+        grid-area: auto;
+      }
+
+      /* ===== Topband — FAIXA de status (re-skin savant, IGUAL ao painel principal):
+         badges FLAT (sem pílula/caixa), separadas por filete; apagado = cinza
+         sóbrio; aceso = acende na cor do grupo (--tone), sem pill branco. ===== */
+      .subview-topband {
+        grid-area: topband;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .topband-badges {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        overflow: hidden;
+      }
+      .tb-badge {
+        --tone: 154,160,166;
+        height: 46px;
+        display: grid;
+        grid-template-columns: 22px auto;
+        align-items: center;
+        column-gap: 9px;
+        padding: 0 16px;
+        color: rgba(255,255,255,0.92);
+      }
+      .tb-badge + .tb-badge { border-left: 1px solid rgba(255,255,255,0.10); }
+      .tb-badge-icon { width: 22px; height: 22px; display: grid; place-items: center; color: rgba(255,255,255,0.44); }
+      .tb-badge-icon ha-icon { --mdc-icon-size: 18px; }
+      .tb-badge-text { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; line-height: 1.02; }
+      .tb-badge-title { font-size: 10px; line-height: 1; font-weight: 600; color: rgba(255,255,255,0.60); }
+      .tb-badge-sub { font-size: 11px; line-height: 1; font-weight: 600; color: rgba(255,255,255,0.42); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+      .tb-badge.is-active .tb-badge-icon { color: rgb(var(--tone)); filter: drop-shadow(0 0 8px rgba(var(--tone),0.45)); }
+      .tb-badge.is-active .tb-badge-title { color: rgba(255,255,255,0.94); }
+      .tb-badge.is-active .tb-badge-sub { color: rgb(var(--tone)); }
+      .topband-clock { text-align: right; line-height: 1.05; white-space: nowrap; }
+      .topband-clock span[data-clock] { font-size: 22px; font-weight: 800; color: rgba(248,251,255,0.96); }
+      .topband-clock small { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-soft); }
+
+      /* ===== Hero atmosfera (transparente) — cortina sobreposta, ancorada embaixo À ESQUERDA ===== */
+      .hero-atmosphere { height: 100%; }
+      .hero-atmosphere .hero-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-start;
+        padding: 0;
+      }
+      /* Cortina SOBREPOSTA ao hero, SEM caixa (transparente) e ALINHADA À ESQUERDA.
+         (Bug: align-self:end do dock antigo, em flex-column, jogava p/ a direita.) */
+      .curtain-overlay {
+        align-self: stretch;
+        /* Ocupa TODA a largura do hero (= largura de câmeras+mídia). ANTERIOR do
+           .curtain-dock: width: min(540px,100%). */
+        width: 100% !important;
+        max-width: 100% !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        padding: 0;
+      }
+
+      /* ===== Faixa inferior (54px) — presença/última atividade, translúcida, com
+         o MESMO filete divisor do dock do painel principal (mais claro no centro). ===== */
+      .subview-footer {
+        grid-area: bottomband;
+        position: relative;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: transparent;
+      }
+      .subview-footer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 8px;
+        right: 8px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16) 50%, transparent);
+      }
+      .subview-presence {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.52);
+      }
+      .subview-presence ha-icon { --mdc-icon-size: 16px; color: rgba(255,255,255,0.42); }
+
+      /* ===== NOVO (Passada 2): Iluminação — acordeão de zonas ===== */
+      .lights-card { display: flex; flex-direction: column; min-height: 0; }
+      .lights-head { flex: 0 0 auto; }
+      .lights-zones { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; padding: 0 2px 0 0; }
+      .lights-zones::-webkit-scrollbar { width: 0; }
+      .light-zone {
+        border-radius: 16px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        overflow: hidden;
+      }
+      .light-zone.is-expanded { background: rgba(255,255,255,0.055); }
+      .zone-header {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) auto auto;
+        align-items: center;
+        gap: 11px;
+        padding: 12px 14px;
+        cursor: pointer;
+      }
+      .zone-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(255,196,90,0.30); background: rgba(255,196,90,0.08); color: rgba(255,196,90,0.92); }
+      .zone-icon ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
+      .zone-id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .zone-id strong { font-size: 14px; font-weight: 700; color: var(--text-main); }
+      .zone-id small { font-size: 11px; font-weight: 600; color: var(--text-soft); }
+      .zone-off { font-size: 11px; font-weight: 700; color: rgba(255,196,90,0.92); white-space: nowrap; cursor: pointer; }
+      .zone-chevron { --mdc-icon-size: 20px; color: var(--text-soft); }
+      .zone-preview { padding: 0 14px 12px; font-size: 11px; font-weight: 600; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .zone-lights { display: flex; flex-direction: column; padding: 0 6px 6px; }
+      /* NOVO: linha = ícone (em círculo) | nome | BARRA LUMINOSA read-only.
+         ANTERIOR: ícone | nome | estado | toggle. */
+      .light-row {
+        display: grid;
+        /* nome com largura FIXA p/ todas as barras alinharem (cada linha é um
+           grid próprio; 'auto' desalinharia conforme o tamanho do nome). */
+        grid-template-columns: 38px 120px minmax(0, 1fr);
+        align-items: center;
+        gap: 12px;
+        padding: 8px 10px;
+        background: transparent;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        color: var(--text-main);
+        text-align: left;
+      }
+      .light-row:hover { background: rgba(255,255,255,0.04); }
+      /* PADRONIZAÇÃO do ícone animado (_tplLightIcon): pinta com fill:
+         var(--light-color). Wrapper agora é CIRCULAR (extra premium, imagem 3). */
+      .light-row-icon {
+        width: 36px; height: 36px;
+        display: grid; place-items: center;
+        --light-color: #9da0a2;
+        color: var(--light-color);
+      }
+      .light-row.is-on .light-row-icon {
+        --light-color: #f0c040;
+        color: var(--light-color);
+        filter: drop-shadow(0 0 7px rgba(240,192,64,0.28));
+      }
+      /* CENTRALIZAÇÃO: o wrapper do ícone animado ocupava 100% do círculo em
+         display:block, jogando o svg p/ o canto. Constrange a 22px e o
+         place-items:center do círculo centraliza. */
+      .light-row-icon .tpl-light-icon {
+        width: var(--bruno-liquid-icon-control, 23px);
+        height: var(--bruno-liquid-icon-control, 23px);
+      }
+      .light-row-icon svg { width: 100%; height: 100%; }
+      .light-row-name { min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* BARRA LUMINOSA read-only (não é slider): apagada = pílula escura;
+         acesa = gradiente âmbar com glow. O toque é da LINHA (toggle-light). */
+      .light-bar {
+        height: 11px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.09);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
+        pointer-events: none;
+        transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      }
+      .light-row.is-on .light-bar {
+        background: linear-gradient(90deg, rgba(255,176,54,0.96), rgba(255,206,120,0.96));
+        border-color: rgba(255,196,90,0.55);
+        box-shadow: 0 0 12px rgba(255,176,54,0.55), 0 0 4px rgba(255,176,54,0.6), inset 0 1px 0 rgba(255,255,255,0.45);
+      }
+
+      /* ===== A/C premium: cabecalho e controles alinhados ao Hub de Midia ===== */
+      .ac-card.ac-card-lean {
+        display: grid;
+        grid-template-rows: 44px minmax(0, 1fr) 64px;
+        gap: 0;
+        min-height: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .ac-lean-head {
+        position: relative;
+        z-index: 3;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px 0 14px;
+      }
+
+      .ac-head-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .ac-top-stack {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        z-index: 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .ac-more-button {
+        flex: 0 0 auto;
+      }
+
+      .ac-power-floating {
+        width: 46px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 0;
+        background: transparent;
+        color: rgba(255,255,255,0.66);
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+      }
+
+      .ac-power-floating ha-icon {
+        --mdc-icon-size: 34px;
+      }
+
+      .ac-power-floating:hover,
+      .ac-power-floating:focus-visible {
+        color: rgba(255,255,255,0.92);
+        background: rgba(255,255,255,0.045);
+      }
+
+      .ac-power-floating.is-active {
+        color: rgba(150,205,255,0.98);
+        background: rgba(96,165,250,0.075);
+        box-shadow: 0 0 18px rgba(44,175,255,0.22);
+      }
+
+      .ac-power-floating:active {
+        transform: translateY(1px);
+      }
+
+      .ac-power-floating:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .ac-lean-mid {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px 2px;
+      }
+
+      .ac-ring {
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+      }
+
+      .ac-ring .icg-shell {
+        width: min(94%, 334px);
+        transform: translateY(3px);
+      }
+
+      .ac-lean-foot {
+        position: relative;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding: 0 10px 10px;
+        align-items: end;
+      }
+
+      .ac-control-wrap {
+        position: relative;
+        min-width: 0;
+      }
+
+      .ac-action {
+        width: 100%;
+        min-width: 0;
+        min-height: 50px;
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        gap: 9px;
+        padding: 7px 10px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        cursor: pointer;
+        color: var(--text-main);
+        text-align: left;
+      }
+
+      .ac-action:hover,
+      .ac-action.is-open {
+        background: var(--bruno-liquid-control-warm-background, rgba(242,194,102,0.038));
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(242,194,102,0.180));
+      }
+
+      .ac-action:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .ac-action-icon {
+        width: 32px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        color: rgba(255,255,255,0.82);
+        flex: 0 0 auto;
+      }
+
+      .ac-action:hover .ac-action-icon,
+      .ac-action.is-open .ac-action-icon {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
+      }
+
+      .ac-action-icon ha-icon {
+        --mdc-icon-size: var(--bruno-liquid-icon-control, 23px);
+      }
+
+      .ac-action-text {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .ac-action-text small {
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 650;
+        color: rgba(255,255,255,0.58);
+      }
+
+      .ac-action-text strong {
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        color: rgba(255,255,255,0.94);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ac-popover {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(100% + 8px);
+        z-index: 12;
+        display: grid;
+        gap: 4px;
+        padding: 6px;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        /* Não reutilizar o fundo do card: esta é uma superfície de escolha
+           temporária e precisa sobrepor o gauge com leitura inequívoca. */
+        background: var(--bruno-liquid-popup-background,
+          linear-gradient(180deg, rgba(34,31,30,0.720), rgba(12,13,16,0.660))
+        );
+        border: var(--bruno-liquid-popup-border, 1px solid rgba(255,255,255,0.115));
+        box-shadow: var(--bruno-liquid-popup-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.100),
+          0 18px 36px rgba(0,0,0,0.300)
+        );
+        backdrop-filter: var(--bruno-liquid-popup-filter, blur(22px) saturate(1.04) brightness(0.96));
+        -webkit-backdrop-filter: var(--bruno-liquid-popup-filter, blur(22px) saturate(1.04) brightness(0.96));
+      }
+
+      .ac-popover-option {
+        min-width: 0;
+        min-height: 32px;
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        align-items: center;
+        gap: 7px;
+        padding: 0 8px;
+        border-radius: 9px;
+        border: 0;
+        background: var(--bruno-liquid-popup-option-background, rgba(255,255,255,0.035));
+        color: rgba(255,255,255,0.82);
+        font-size: 11px;
+        font-weight: 750;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .ac-popover-option ha-icon {
+        --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px);
+        color: rgba(255,255,255,0.72);
+      }
+
+      .ac-popover-option span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .ac-popover-option:hover,
+      .ac-popover-option.is-active {
+        color: rgba(255,255,255,0.98);
+        background: var(--bruno-liquid-popup-option-hover-background, rgba(242,194,102,0.115));
+      }
+
+      .ac-popover-option:hover ha-icon,
+      .ac-popover-option.is-active ha-icon {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
+      }
+
+      .ac-popover-option:disabled {
+        opacity: 0.48;
+        cursor: default;
+      }
+
+      .room-sidebar {
+        width: 58px;
+        height: auto;
+        max-height: calc(100% - 6px);
+        grid-auto-rows: 40px;
+        gap: 7px;
+        padding: 12px 8px;
+      }
+
+      .room-nav-button {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        max-width: 40px;
+        max-height: 40px;
+      }
+
+      .hero-stage {
+        overflow: visible;
+      }
+
+      .hero-content {
+        padding: 15px 18px 14px;
+        gap: 8px;
+      }
+
+      .hero-headline {
+        margin-top: 12px;
+      }
+
+      .hero-date-line {
+        margin-bottom: 6px;
+      }
+
+      .hero-clock {
+        margin-top: 8px;
+        font-size: clamp(54px, 7.1vh, 74px);
+      }
+
+      .scene-pill {
+        width: fit-content;
+        max-width: min(250px, 100%);
+        min-height: 30px;
+        margin-top: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 0 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.88);
+        font-size: 11px;
+        font-weight: 800;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.14);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 24px rgba(0,0,0,0.20);
+      }
+
+      .scene-pill ha-icon {
+        --mdc-icon-size: 15px;
+        color: rgb(255,205,95);
+      }
+
+      .curtain-dock {
+        width: min(520px, 100%);
+        gap: 12px;
+      }
+
+      .curtain-action-button {
+        min-width: 78px;
+      }
+
+      .status-rail {
+        min-height: 64px;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      .status-item {
+        grid-template-columns: auto minmax(0, 1fr);
+        padding: 0 12px;
+      }
+
+      .status-chevron {
+        display: none;
+      }
+
+      .lights-card {
+        gap: 10px;
+      }
+
+      .lights-card .module-head {
+        align-items: start;
+        min-height: 40px;
+      }
+
+      .lights-title-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .zone-toggle,
+      .media-tabs {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 3px;
+        background: rgba(255,255,255,0.065);
+        border: 1px solid rgba(255,255,255,0.11);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+      }
+
+      .zone-toggle button {
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        color: rgba(255,255,255,0.62);
+        background: transparent;
+        font-size: 10px;
+        font-weight: 900;
+      }
+
+      .head-actions .chip-button {
+        min-height: 34px;
+        padding: 0 14px;
+      }
+      /* NOVO (extra premium): chips com ícone sol/lua. */
+      .chip-button-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .chip-button-icon ha-icon { --mdc-icon-size: 15px; }
+
+      .zone-toggle button.is-active {
+        color: rgba(255,255,255,0.96);
+        background: rgba(255,255,255,0.12);
+      }
+
+      .lights-single-grid {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 14px 10px;
+      }
+
+      .lights-body {
+        grid-template-columns: minmax(0, 1fr) 60px;
+        gap: 10px;
+      }
+
+      .lights-zone-rail {
+        display: grid;
+      }
+
+      .lights-groups,
+      .lights-divider,
+      .light-group-label {
+        display: none;
+      }
+
+      .light-tile {
+        min-height: 0;
+        grid-template-columns: 60px minmax(0, 1fr);
+        column-gap: 11px;
+        padding: 11px 12px;
+      }
+
+      .light-icon {
+        width: 60px;
+        height: 60px;
+      }
+
+      .light-tile strong {
+        font-size: 14.8px;
+      }
+
+      /* ===== Câmeras — feed principal + PiP + controles contextuais ===== */
+      .cameras-card.cameras-card-controls {
+        padding: 0;
+        display: grid;
+        grid-template-rows: 44px minmax(0, 1fr);
+        gap: 0;
+        overflow: hidden;
+      }
+
+      .cameras-head {
+        flex: 0 0 auto;
+      }
+
+      .camera-settings-button.is-active {
+        color: rgba(255,255,255,0.86);
+        background: rgba(255,255,255,0.055);
+      }
+
+      .camera-pip-stage {
+        box-sizing: border-box;
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        height: 100%;
+        padding: 0 10px 10px;
+      }
+
+      .camera-feed {
+        height: 100%;
+        transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+      }
+
+      .camera-primary-feed {
+        width: 100%;
+      }
+
+      .camera-pip-feed {
+        position: absolute;
+        z-index: 5;
+        right: 20px;
+        bottom: 22px;
+        width: min(36%, 150px);
+        height: 86px;
+        border-radius: 13px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.34), 0 0 0 1px rgba(255,255,255,0.10);
+      }
+
+      .camera-pip-stage.is-controls-open .camera-pip-feed {
+        bottom: 76px;
+      }
+
+      .camera-pip-feed .camera-row-copy {
+        left: 9px;
+        right: 9px;
+        bottom: 8px;
+        gap: 0;
+      }
+
+      .camera-pip-feed .camera-row-copy strong {
+        max-width: 100%;
+        font-size: 11px;
+        line-height: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .camera-pip-feed .camera-row-copy span {
+        display: none;
+      }
+
+      .camera-pip-feed::after {
+        background: linear-gradient(180deg, rgba(4,8,16,0.04), rgba(4,8,16,0.52));
+      }
+
+      .camera-state-surface {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 8px;
+        padding: 16px;
+        color: rgba(255,255,255,0.78);
+        text-align: center;
+        background:
+          radial-gradient(circle at 50% 42%, rgba(96,165,250,0.12), transparent 58%),
+          rgba(5,8,14,0.76);
+        backdrop-filter: blur(8px) saturate(0.9);
+        -webkit-backdrop-filter: blur(8px) saturate(0.9);
+      }
+
+      .camera-state-surface ha-icon {
+        --mdc-icon-size: 32px;
+        color: rgba(255,255,255,0.64);
+      }
+
+      .camera-state-surface span {
+        font-size: 12px;
+        font-weight: 760;
+        line-height: 1.1;
+      }
+
+      .camera-pip-feed .camera-state-surface {
+        gap: 4px;
+        padding: 8px;
+      }
+
+      .camera-pip-feed .camera-state-surface ha-icon {
+        --mdc-icon-size: 22px;
+      }
+
+      .camera-pip-feed .camera-state-surface span {
+        font-size: 9px;
+      }
+
+      .camera-feed.is-private .camera-row-image img,
+      .camera-feed.is-unavailable .camera-row-image img {
+        opacity: 0;
+      }
+
+      .live-dot.is-muted {
+        background: rgba(255,255,255,0.34);
+        box-shadow: none;
+      }
+
+      .camera-control-strip {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        z-index: 7;
+        min-height: 58px;
+        display: grid;
+        align-items: stretch;
+        padding: 4px 0;
+        border: 0;
+        border-radius: 0;
+        background:
+          linear-gradient(180deg, rgba(3,7,13,0.08), rgba(3,7,13,0.40)),
+          rgba(6,8,12,0.18);
+        backdrop-filter: blur(10px) saturate(0.95);
+        -webkit-backdrop-filter: blur(10px) saturate(0.95);
+      }
+
+      .camera-controls {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: stretch;
+      }
+
+      .camera-control {
+        position: relative;
+        min-width: 0;
+        min-height: 50px;
+        display: grid;
+        grid-template-columns: 18px auto 28px;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255,255,255,0.62);
+        cursor: pointer;
+        text-align: left;
+        transition: color 160ms ease, background 160ms ease, opacity 160ms ease;
+      }
+
+      .camera-control + .camera-control::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 11px;
+        bottom: 11px;
+        width: 1px;
+        background: rgba(255,255,255,0.105);
+      }
+
+      .camera-control:hover,
+      .camera-control:focus-visible {
+        color: rgba(255,255,255,0.90);
+        background: rgba(255,255,255,0.036);
+        outline: none;
+      }
+
+      .camera-control:focus-visible {
+        box-shadow: inset 0 0 0 1px rgba(138,196,255,0.42);
+      }
+
+      .camera-control ha-icon {
+        --mdc-icon-size: 17px;
+      }
+
+      .camera-control-label {
+        min-width: 0;
+        font-size: 11px;
+        font-weight: 760;
+        line-height: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .camera-control-switch {
+        position: relative;
+        justify-self: start;
+        width: 26px;
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.16);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+        transition: background 160ms ease, box-shadow 160ms ease;
+      }
+
+      .camera-control-switch::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.74);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.30);
+        transition: transform 160ms ease, background 160ms ease;
+      }
+
+      .camera-control.is-on {
+        color: rgba(218,248,230,0.94);
+      }
+
+      .camera-control.is-on .camera-control-switch {
+        background: rgba(46,231,122,0.58);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.18), 0 0 8px rgba(46,231,122,0.18);
+      }
+
+      .camera-control.is-on .camera-control-switch::after {
+        transform: translateX(12px);
+        background: rgba(255,255,255,0.96);
+      }
+
+      .camera-control.is-unavailable,
+      .camera-control:disabled {
+        opacity: 0.34;
+        cursor: not-allowed;
+      }
+
+      .camera-row-copy {
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        transition: bottom 220ms ease;
+      }
+
+      .camera-pip-stage.is-controls-open .camera-primary-feed .camera-row-copy {
+        bottom: 76px;
+      }
+
+      .camera-row-copy strong {
+        font-size: 15px;
+        line-height: 1.08;
       }
 
       .media-hub-card {
@@ -4684,17 +5893,7 @@ class BrunoOfficeSubview extends HTMLElement {
         margin-bottom: 0;
       }
 
-      /* ANTERIOR (rollback): apenas gap + max-width — sem display, sem pill visual.
-         Causava renderizacao vertical dos tabs (PC / Spotify empilhados).
-         NOVO (paridade Sala): inline-flex + pill identico ao .media-tabs da Sala. */
       .media-tabs {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 3px;
-        background: rgba(255,255,255,0.065);
-        border: 1px solid rgba(255,255,255,0.11);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         gap: 2px;
         max-width: 62%;
       }
@@ -4751,7 +5950,8 @@ class BrunoOfficeSubview extends HTMLElement {
         display: grid;
         grid-template-columns: minmax(186px, 0.86fr) minmax(0, 1fr);
         grid-template-rows: minmax(206px, 1fr);
-        grid-template-areas: "visual content";
+        grid-template-areas:
+          "visual content";
         align-items: stretch;
         gap: 12px;
       }
@@ -4791,24 +5991,9 @@ class BrunoOfficeSubview extends HTMLElement {
         filter: drop-shadow(0 18px 28px rgba(0,0,0,0.42));
       }
 
-      /* NOVO: shell de fallback do visual standby (PC/Spotify).
-         Se a imagem falhar (404), _bindImageFallbacks marca .is-fallback
-         e o icone substitui a imagem quebrada. */
-      .media-standby-shell {
-        display: contents;
-      }
-
-      .media-standby-shell .media-standby-fallback {
-        display: none;
-      }
-
-      .media-standby-shell.is-fallback .media-standby-fallback {
-        display: inline-flex;
-      }
-
-      .media-pc-standby {
-        width: 104% !important;
-        height: 94% !important;
+      .media-tv-standby {
+        width: 96% !important;
+        height: 86% !important;
       }
 
       .media-spotify-standby {
@@ -4830,7 +6015,16 @@ class BrunoOfficeSubview extends HTMLElement {
         gap: 11px;
       }
 
+      .media-ps5-image {
+        position: static !important;
+        width: 108% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        filter: drop-shadow(0 18px 26px rgba(0,0,0,0.42));
+      }
+
       .media-details {
+        grid-area: auto;
         min-width: 0;
         min-height: 40px;
         display: grid;
@@ -4851,15 +6045,22 @@ class BrunoOfficeSubview extends HTMLElement {
         white-space: nowrap;
       }
 
-      .media-details small {
+      .media-details small,
+      .media-details em {
         min-width: 0;
         color: var(--text-soft);
         font-size: 12px;
         line-height: 1.25;
+        font-style: normal;
         font-weight: 650;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .media-details em {
+        color: rgba(255,255,255,0.48);
+        font-size: 11px;
       }
 
       .media-action-stack {
@@ -4880,6 +6081,16 @@ class BrunoOfficeSubview extends HTMLElement {
         align-items: center;
         justify-content: space-between;
         min-width: 0;
+      }
+
+      .media-primary-actions.is-wide {
+        grid-template-columns: minmax(0, 1fr) var(--media-action-size);
+        gap: 9px;
+      }
+
+      .media-primary-actions.is-wide .primary-button {
+        min-height: var(--media-action-size);
+        border-radius: var(--bruno-liquid-control-radius, 14px);
       }
 
       .media-action-button,
@@ -4978,570 +6189,663 @@ class BrunoOfficeSubview extends HTMLElement {
         filter: drop-shadow(0 0 12px rgba(46,231,122,0.36)) drop-shadow(0 8px 14px rgba(0,0,0,0.30));
       }
 
+      .media-image-button {
+        background: rgba(255,255,255,0.07);
+      }
+
+      .media-button-art {
+        position: absolute;
+        inset: 0;
+        background-image: var(--media-app-image);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+
+      .media-image-button::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        border-radius: inherit;
+        background: linear-gradient(180deg, rgba(255,255,255,0.10), transparent 42%);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+      }
+
       .media-hub-extra {
         grid-area: auto;
         min-width: 0;
         align-self: end;
-        display: grid;
-        gap: 10px;
       }
 
-      .workspace-facts {
-        min-width: 0;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .workspace-facts span {
-        min-width: 0;
-        min-height: 42px;
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        grid-template-rows: auto auto;
-        align-items: center;
-        column-gap: 8px;
-        row-gap: 2px;
-        padding: 7px 10px;
-        border-radius: 12px;
-        color: var(--text-soft);
-        background: rgba(255,255,255,0.052);
-        border: 1px solid rgba(255,255,255,0.10);
-      }
-
-      .workspace-facts span.is-active {
-        color: rgba(210,245,230,0.96);
-        background:
-          radial-gradient(circle at 12% 12%, rgba(46,231,122,0.16), transparent 72%),
-          rgba(255,255,255,0.058);
-        border-color: rgba(46,231,122,0.20);
-      }
-
-      .workspace-facts ha-icon {
-        --mdc-icon-size: 18px;
-        grid-row: 1 / -1;
-      }
-
-      .workspace-facts small,
-      .workspace-facts strong {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .workspace-facts small {
-        font-size: 10px;
-        line-height: 1;
-        font-weight: 750;
-      }
-
-      .workspace-facts strong {
-        color: rgba(255,255,255,0.90);
-        font-size: 12px;
-        line-height: 1.1;
-        font-weight: 850;
-      }
-
-      .workspace-metrics {
-        min-height: 0;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .workspace-control-list {
-        min-width: 0;
-        display: grid;
-        gap: 7px;
-      }
-
-      .ac-meta span {
-        display: grid;
-        gap: 4px;
-        min-width: 0;
-        padding: 10px 11px;
-        border-radius: 12px;
-        color: var(--text-soft);
-        font-size: 11px;
-        background: rgba(255,255,255,0.052);
-        border: 1px solid rgba(255,255,255,0.10);
-      }
-
-      .ac-meta strong {
-        color: white;
-        min-width: 0;
-        font-size: 13px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .pc-card {
-        padding: 14px;
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        gap: 10px;
-      }
-
-      .pc-head {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .pc-title-line {
-        display: inline-flex;
-        align-items: center;
-        gap: 9px;
-      }
-
-      .pc-title-line .module-title {
-        font-size: 16px;
-      }
-
-      .pc-state-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.22);
-      }
-
-      .pc-state-dot.is-on {
-        background: rgb(74,222,128);
-        box-shadow: 0 0 13px rgba(74,222,128,0.72);
-      }
-
-      .pc-body {
-        position: relative;
-        z-index: 1;
-        min-height: 0;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
-        grid-template-rows: minmax(0, 1.3fr) minmax(0, 1fr);
-        grid-template-areas:
-          "visual status"
-          "actions controls";
-        gap: 12px;
-      }
-
-      .pc-hero-visual {
-        grid-area: visual;
-        min-width: 0;
-        min-height: 0;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        border-radius: var(--office-radius-small);
-        background: transparent;
-        border: 0;
-        box-shadow: none;
-        overflow: hidden;
-      }
-
-      .pc-hero-visual img {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-        filter:
-          drop-shadow(0 10px 16px rgba(0,0,0,0.42))
-          drop-shadow(0 0 20px rgba(96,165,250,0.12));
-      }
-
-      .pc-visual-fallback {
-        position: absolute;
-        --mdc-icon-size: 72px;
-        color: rgba(180,215,255,0.82);
-        filter: drop-shadow(0 0 16px rgba(96,165,250,0.18));
-      }
-
-      .pc-visual-fallback {
-        display: none;
-      }
-
-      .pc-actions {
-        grid-area: actions;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .pc-action {
-        min-width: 0;
+      .media-extra-info {
+        min-height: 34px;
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
         align-items: center;
-        justify-content: center;
-        gap: 8px;
-        min-height: 42px;
-        padding: 0 10px;
-        border-radius: 12px;
-        color: rgba(255,255,255,0.78);
-        background: rgba(255,255,255,0.055);
-        border: 1px solid rgba(255,255,255,0.12);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-      }
-
-      .pc-action ha-icon {
-        --mdc-icon-size: 20px;
-      }
-
-      .pc-action span {
-        min-width: 0;
-        font-size: 11px;
-        font-weight: 800;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .pc-action.is-power {
-        color: rgba(126,245,155,0.98);
-        background:
-          radial-gradient(54px 34px at 16% 6%, rgba(74,222,128,0.24), transparent 72%),
-          rgba(74,222,128,0.08);
-        border-color: rgba(74,222,128,0.28);
-      }
-
-      .pc-action.is-warm {
-        color: rgba(255,205,95,0.98);
-        background:
-          radial-gradient(54px 34px at 16% 6%, rgba(255,183,77,0.20), transparent 72%),
-          rgba(255,183,77,0.07);
-        border-color: rgba(255,183,77,0.24);
-      }
-
-      .pc-action.is-sleep {
-        color: rgba(139,180,255,0.98);
-        background:
-          radial-gradient(54px 34px at 16% 6%, rgba(96,165,250,0.18), transparent 72%),
-          rgba(96,165,250,0.065);
-        border-color: rgba(96,165,250,0.22);
-      }
-
-      .pc-action.is-danger {
-        color: rgba(255,112,102,0.98);
-        background:
-          radial-gradient(54px 34px at 16% 6%, rgba(248,113,113,0.18), transparent 72%),
-          rgba(248,113,113,0.06);
-        border-color: rgba(248,113,113,0.22);
-      }
-
-      .pc-status-panel {
-        grid-area: status;
-        min-width: 0;
-        min-height: 0;
-        display: grid;
-        align-content: center;
-      }
-
-      .pc-metrics {
-        min-height: 0;
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
-      }
-
-      .pc-metric {
-        min-width: 0;
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        grid-template-rows: auto 5px;
-        align-items: center;
-        column-gap: 6px;
-        row-gap: 6px;
-        padding: 8px 10px;
-        border-radius: 15px;
-        background: rgba(255,255,255,0.052);
-        border: 1px solid rgba(255,255,255,0.10);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
-      }
-
-      .pc-metric ha-icon {
-        --mdc-icon-size: 18px;
-        grid-row: 1 / -1;
-        color: rgba(255,255,255,0.76);
-      }
-
-      .pc-metrics small {
+        padding: 0 12px;
+        border-radius: 12px;
         color: var(--text-soft);
-        font-size: 10px;
-        font-weight: 750;
-        text-transform: none;
-      }
-
-      .pc-metrics strong {
-        color: white;
-        font-size: 12px;
-      }
-
-      .pc-metric i {
-        grid-column: 2 / -1;
-        height: 5px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.10);
-      }
-
-      .pc-metric i::before {
-        content: "";
-        display: block;
-        width: var(--metric);
-        height: 100%;
-        border-radius: inherit;
-        background: linear-gradient(90deg, rgb(96,165,250), rgb(142,126,255));
-        box-shadow: 0 0 12px rgba(96,165,250,0.24);
-      }
-
-      .pc-metric.tone-amber i::before {
-        background: linear-gradient(90deg, rgb(255,183,77), rgb(255,139,82));
-        box-shadow: 0 0 12px rgba(255,183,77,0.22);
-      }
-
-      .pc-metric.tone-purple i::before {
-        background: linear-gradient(90deg, rgb(157,124,255), rgb(196,112,255));
-        box-shadow: 0 0 12px rgba(157,124,255,0.22);
-      }
-
-      .pc-metric.tone-green i::before {
-        background: linear-gradient(90deg, rgb(74,222,128), rgb(45,212,191));
-        box-shadow: 0 0 12px rgba(74,222,128,0.22);
-      }
-
-      .pc-camera-row {
-        min-width: 0;
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto auto;
-        align-items: center;
-        gap: 9px;
-        padding: 0 10px;
-        min-height: 38px;
-        border-radius: 16px;
         background: rgba(255,255,255,0.052);
         border: 1px solid rgba(255,255,255,0.10);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07);
       }
 
-      .pc-camera-row span {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 9px;
-      }
-
-      .pc-camera-row ha-icon {
-        --mdc-icon-size: 20px;
-        color: rgba(255,255,255,0.76);
-      }
-
-      .pc-camera-row strong,
-      .pc-camera-row em {
-        min-width: 0;
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 800;
-      }
-
-      .pc-camera-row em {
-        color: rgba(126,245,155,0.92);
-      }
-
-      .pc-camera-row i {
-        width: 34px;
-        height: 20px;
-        padding: 2px;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.10);
-        border: 1px solid rgba(255,255,255,0.12);
-      }
-
-      .pc-camera-row i::before {
-        content: "";
-        display: block;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.72);
-        transition: transform 160ms ease;
-      }
-
-      .pc-camera-row i.is-on {
-        background: rgba(74,222,128,0.68);
-      }
-
-      .pc-camera-row i.is-on::before {
-        transform: translateX(14px);
-        background: white;
-      }
-
-      .pc-controls-panel {
-        grid-area: controls;
-        min-width: 0;
-        display: grid;
-        grid-template-rows: auto auto auto;
-        align-content: center;
-        gap: 14px;
-      }
-
-      .pc-slider-row {
-        min-width: 0;
-        display: grid;
-        grid-template-columns: 80px minmax(0, 1fr) 36px;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .pc-slider-row span {
-        min-width: 0;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: rgba(255,255,255,0.70);
-      }
-
-      .pc-slider-row ha-icon {
-        --mdc-icon-size: 19px;
-      }
-
-      .pc-slider-row strong {
-        font-size: 11px;
-        font-weight: 750;
-        white-space: nowrap;
-      }
-
-      .pc-slider-row > i {
-        position: relative;
-        height: 6px;
-        overflow: visible;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.12);
-      }
-
-      .pc-slider-row > i::before {
-        content: "";
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: var(--slider);
-        border-radius: inherit;
-        background: rgb(96,165,250);
-        box-shadow: 0 0 12px rgba(96,165,250,0.50);
-      }
-
-      .pc-slider-row > i::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: var(--slider);
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: white;
-        transform: translate(-50%, -50%);
-        box-shadow: 0 2px 9px rgba(0,0,0,0.35);
-      }
-
-      .pc-slider-row em {
-        color: rgb(96,165,250);
-        font-size: 12px;
-        font-style: normal;
-        font-weight: 800;
+      .media-extra-info strong {
+        color: rgba(255,255,255,0.88);
         text-align: right;
       }
 
-      .spotify-card {
-        padding: 14px;
-        min-height: 0;
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        gap: 10px;
+      /* ============================================================
+         Hub de Mídia — ACORDEÃO (NOVO 2026-06-28 · re-skin conceito)
+         320px fixos (herda --ac-h via .cams-media-row). Sem overflow.
+         44px cabeçalho + fontes (276px): 2 recolhidas (pills 38px) +
+         1 expandida (card-in-card). Sem título repetido (o nome vive no
+         cabeçalho da faixa). Accent/volume/progresso dourado #f2c266;
+         ícone Spotify monocromático. Imagem em "bolsão de luz quente".
+         ============================================================ */
+      /* 1.1 — Override específico do Hub (Savant Light): mais translúcido,
+         neutro (sem dominante quente/amarronzado), bordas finas, premium.
+         Atenua o sheen quente do glass-card base só neste bloco. */
+      /* Item 8 — Savant-like: bem mais translúcido (a foto atrás aparece), mas
+         NÃO totalmente vazado — a base escura leve (0.20) + blur menor (16px)
+         preservam a legibilidade das informações. */
+      .media-hub-card.mh-accordion {
+        position: relative;
+        padding: 0;
+        grid-template-rows: 44px minmax(0, 1fr);
+        gap: 0;
+        overflow: hidden;
+        border-radius: var(--bruno-liquid-card-radius, 18px);
+        background: var(--bruno-liquid-surface-off-background,
+          linear-gradient(180deg, rgba(255,255,255,0.040), rgba(255,255,255,0.010) 46%, rgba(0,0,0,0.030)),
+          rgba(9,11,15,0.105)
+        );
+        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-surface-off-shadow, inset 0 1px 0 rgba(255,255,255,0.090), 0 10px 28px rgba(0,0,0,0.145));
+        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(18px) saturate(0.92) brightness(1.05) contrast(1.02));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(18px) saturate(0.92) brightness(1.05) contrast(1.02));
+      }
+      .media-hub-card.mh-accordion::before { opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.10); }
+      .media-hub-card.mh-accordion::after { display: none; }
+
+      .mh-head {
+        position: relative;
+        z-index: 1;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px 0 14px;
       }
 
-      .spotify-body {
+      /* Cabeçalho padronizado: micro-icon (círculo) + module-title, idêntico aos
+         demais blocos (Iluminação/Câmeras/A-C). */
+      .mh-head-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .mh-menu {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        color: rgba(255,255,255,0.52);
+        background: transparent;
+      }
+      .mh-menu ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
+      .media-hub-card .mh-menu.is-active {
+        color: rgba(255,255,255,0.82);
+        background: rgba(255,255,255,0.072);
+      }
+      .mh-menu:active { background: rgba(255,255,255,0.08); }
+
+      .mh-overflow-panel {
+        position: absolute;
+        z-index: 5;
+        top: 42px;
+        right: 10px;
+        width: min(280px, calc(100% - 20px));
+        padding: 7px;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        background: linear-gradient(180deg, rgba(34,31,30,0.72), rgba(12,13,16,0.66));
+        border: 1px solid rgba(255,255,255,0.115);
+        box-shadow: 0 18px 36px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.10);
+        backdrop-filter: blur(22px) saturate(1.04) brightness(0.96);
+        -webkit-backdrop-filter: blur(22px) saturate(1.04) brightness(0.96);
+      }
+
+      .mh-overflow-item {
+        min-height: 52px;
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) 34px 34px;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 5px;
+      }
+
+      .mh-overflow-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.86);
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.075);
+      }
+      .mh-overflow-icon ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
+
+      .mh-overflow-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .mh-overflow-copy strong {
+        font-size: 12.5px;
+        line-height: 1.05;
+        font-weight: 800;
+        color: rgba(255,255,255,0.92);
+      }
+      .mh-overflow-copy small {
+        min-width: 0;
+        font-size: 10.5px;
+        line-height: 1.1;
+        font-weight: 650;
+        color: rgba(255,255,255,0.54);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-overflow-action {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        color: rgba(255,255,255,0.72);
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.075);
+      }
+      .mh-overflow-action ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
+      .mh-overflow-action.is-active {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
+        border-color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.24);
+        background: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.075);
+      }
+      .mh-overflow-action:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      /* Faixas inset 10px; pills com respiro de 6px entre si. */
+      .mh-sources {
         position: relative;
         z-index: 1;
         min-height: 0;
-        display: grid;
-        grid-template-columns: 1fr;
-        grid-template-rows: var(--media-screen-height, 154px) auto;
-        align-items: stretch;
+        display: flex;
+        flex-direction: column;
         gap: 8px;
+        padding: 0 10px 10px;
       }
 
-      .spotify-art {
+      /* 1.2 — Recolhidas: faixas MUITO sutis (quase etéreas), baixo contraste
+         e baixo peso. Só a expandida ganha presença marcante. */
+      .mh-source {
         position: relative;
-        inset: auto;
+        flex: 0 0 42px;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        background: var(--bruno-liquid-band-background, rgba(255,255,255,0.010));
+        border: var(--bruno-liquid-band-border, 1px solid rgba(255,255,255,0.035));
+        box-shadow: var(--bruno-liquid-band-shadow, none);
+        transition:
+          flex-basis 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          flex-grow 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          background 220ms ease,
+          border-color 220ms ease,
+          box-shadow 220ms ease;
+        will-change: flex-basis, flex-grow, background, border-color;
+      }
+      .mh-source.is-open {
+        flex: 1 1 0;
+        background: var(--bruno-liquid-band-open-background,
+          linear-gradient(180deg, rgba(255,255,255,0.044), rgba(255,255,255,0.012) 54%, rgba(255,255,255,0.018)),
+          rgba(9,11,15,0.052)
+        );
+        border-color: var(--bruno-liquid-band-open-border-color, rgba(255,255,255,0.092));
+        box-shadow: var(--bruno-liquid-band-open-shadow, inset 0 1px 0 rgba(255,255,255,0.066), 0 6px 16px rgba(0,0,0,0.105));
+      }
+      .mh-source.is-switching {
+        animation: mh-source-open 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+
+      /* 2.1 — Faixas individuais: SÓ o ícone (sem bolha/círculo) + texto colado.
+         Apenas o cabeçalho geral do Hub mantém ícone em bolha (micro-icon).
+         --mh-indent = recuo p/ alinhar info ao INÍCIO do texto do título. */
+      .mh-source-head {
+        --mh-indent: 26px;
+        flex: 0 0 42px;
+        height: 42px;
+        display: grid;
+        grid-template-columns: 20px minmax(0, auto) minmax(0, 1fr) 16px;
+        align-items: center;
+        gap: 6px;
+        padding: 0 12px 0 14px;
+        background: transparent;
+        text-align: left;
+        transition: flex-basis 220ms ease, height 220ms ease;
+      }
+      /* Aberta (item 1): ícone e título alinhados pelo EIXO CENTRAL (align-items
+         center). Altura 46px → espaçamento superior do ícone ≈ 13px, próximo do
+         lateral (14px), sem ficar colado no topo. Idêntico em todas as faixas. */
+      .mh-source.is-open .mh-source-head {
+        flex: 0 0 48px;
+        height: 48px;
+        align-items: center;
+      }
+
+      .mh-src-icon {
+        width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        --mdc-icon-size: var(--bruno-liquid-icon-section, 20px);
+        color: rgba(255,255,255,0.6);
+        background: transparent;
+        border: 0;
+      }
+      .mh-icon-spotify { color: rgba(255,255,255,0.66); }
+      .mh-source.is-active .mh-src-icon,
+      .mh-source.is-active .mh-icon-spotify { color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
+
+      .mh-src-name {
+        min-width: 0;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1;
+        color: rgba(255,255,255,0.92);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mh-source.is-open .mh-src-name { font-size: 15px; }
+
+      .mh-src-summary {
+        min-width: 0;
+        justify-self: end;
+        max-width: 100%;
+        font-size: 11.5px;
+        font-weight: 650;
+        color: rgba(255,255,255,0.50);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mh-source.is-open .mh-src-summary { display: none; }
+
+      .mh-src-chevron {
+        --mdc-icon-size: 18px;
+        color: rgba(255,255,255,0.4);
+      }
+      .mh-source.is-open .mh-src-chevron { color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
+
+      .mh-source-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) clamp(168px, 40%, 260px);
+        gap: 14px;
+        padding: 2px 16px 14px;
+      }
+      .mh-source.is-switching .mh-source-body {
+        opacity: 0;
+        transform: translateY(5px);
+        animation: mh-source-body-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) 55ms both;
+      }
+
+      /* 2.2 — Conteúdo no TOPO: título (no head) → música → artista → progresso
+         logo abaixo; volume/botões seguem. */
+      .mh-left {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 10px;
+      }
+      .mh-source.is-switching .mh-left {
+        animation: mh-source-content-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) 75ms both;
+      }
+
+      /* Info (música/artista/progresso/estado) recuada para alinhar com o
+         INÍCIO do texto do título; volume/botões mantêm o alinhamento atual. */
+      .mh-info {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding-left: 26px;
+      }
+
+      /* Item 7 — escala ÚNICA p/ todas as faixas (sem bolinha de status):
+         Info primária (música/estado) e secundária (artista/app/dispositivo)
+         distinguem-se por cor e tamanho, idênticas em TV/Spotify/PS5. */
+      .mh-info small {
+        display: block;
+        font-size: 13.5px;
+        font-weight: 750;
+        line-height: 1.15;
+        color: rgba(255,255,255,0.92);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-info em {
+        display: block;
+        font-style: normal;
+        font-size: 11.5px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: rgba(255,255,255,0.5);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-progress-wrap {
+        width: min(100%, 94%);
+        margin-top: 5px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .mh-progress-time {
+        font-size: 9.5px;
+        line-height: 1;
+        font-weight: 700;
+        color: rgba(255,255,255,0.48);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .mh-progress {
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.14);
+        overflow: hidden;
+      }
+      .mh-progress span {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgb(var(--bruno-liquid-warm-accent, 242,194,102)), rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.88));
+      }
+
+      /* Item 3/5 — controles SEMPRE ancorados na base (margin-top:auto): info no
+         topo, volume+botões fixos embaixo. Aparecendo ou não todas as linhas de
+         info, os controles NÃO se deslocam. Posição idêntica em TV e Spotify. */
+      .mh-controls {
+        min-width: 0;
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      /* Volume dentro de caixa arredondada (conceito). */
+      .mh-vol {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr);
+        align-items: center;
+        gap: 9px;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        color: var(--text-soft);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-control-shadow, none);
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+      }
+      .mh-vol ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-status, 15px); color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
+      .mh-vol-label { font-size: 11.5px; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,0.7); }
+      .mh-vol input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
         width: 100%;
-        height: var(--media-screen-height, 154px);
-        min-height: var(--media-screen-height, 154px);
-        max-height: var(--media-screen-height, 154px);
-        justify-self: center;
+        height: 4px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.18);
+        accent-color: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
+      }
+      .mh-vol input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
+        box-shadow: 0 0 8px rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.5);
+        cursor: pointer;
+      }
+      .mh-vol input[type="range"]::-moz-range-thumb {
+        width: 14px;
+        height: 14px;
+        border: 0;
+        border-radius: 50%;
+        background: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
+      }
+      .mh-vol.is-disabled { opacity: 0.4; }
+
+      .mh-btn-row {
+        display: grid;
+        gap: 8px;
+      }
+      .mh-btn-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .mh-btn-row-4 { grid-template-columns: repeat(3, minmax(0, 1fr)) 42px; }
+      .mh-btn-row-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .office-light-list {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 0;
+        padding: 0 2px 0 0;
+      }
+      .office-pc-actions .mh-btn {
+        min-width: 0;
+      }
+
+      /* 2.3 — Botões com o MESMO tratamento translúcido do container de volume:
+         fundo suave, glass discreto, baixa opacidade, arredondamento menor. */
+      .mh-btn {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0 8px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        color: rgba(255,255,255,0.88);
+        font-size: 11.5px;
+        font-weight: 700;
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-control-shadow, none);
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      /* Icon-only: quadrado compacto e centrado. */
+      .mh-btn.is-icon { padding: 0; gap: 0; }
+      .mh-btn ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-control, 23px); flex: 0 0 auto; color: rgba(255,255,255,0.9); }
+      .mh-btn:hover { background: rgba(255,255,255,0.052); }
+      .mh-btn span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mh-btn:active { transform: translateY(1px); }
+      .mh-btn:disabled { opacity: 0.42; cursor: default; }
+
+      /* 3.3 — CTA principal (Ligar TV/PS5 / Dispositivos): elegante, minimalista,
+         ~50% da largura, mais fino, dourado discreto (menos saturado, Savant). */
+      .mh-controls > .mh-btn.is-main {
+        align-self: flex-start;
+        width: 50%;
+        min-width: 140px;
+        min-height: 40px;
+      }
+      .mh-btn.is-main {
+        color: rgba(255,255,255,0.94);
+        background: var(--bruno-liquid-control-warm-background, rgba(242,194,102,0.038));
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(242,194,102,0.180));
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        box-shadow: var(--bruno-liquid-control-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+      }
+      .mh-btn.is-main ha-icon { color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.82); }
+
+      .mh-btn.is-plus {
+        padding: 0;
+        color: rgba(255,255,255,0.72);
+      }
+
+      /* Imagem contextual: APENAS o PNG/arte, sobreposto ao bloco — SEM glow,
+         SEM fundo, SEM moldura. A imagem é ABSOLUTA dentro da célula, então
+         NUNCA infla a altura da linha (não empurra o botão para fora). */
+      .mh-art {
+        position: relative;
+        min-width: 0;
+        align-self: stretch;
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+        border: 0;
+      }
+      .mh-source.is-switching .mh-art {
+        animation: mh-source-art-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) 85ms both;
+      }
+      .mh-art img {
+        position: absolute;
+        inset: 6px 0;
+        width: 100%;
+        height: calc(100% - 12px);
+        object-fit: contain;
+      }
+      .mh-art ha-icon {
+        position: absolute;
+        inset: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: var(--office-radius-small);
-        background:
-          radial-gradient(circle at 50% 45%, rgba(96,165,250,0.14), transparent 42%),
-          rgba(5,10,20,0.72);
-        overflow: hidden;
+        --mdc-icon-size: 56px;
         color: rgba(255,255,255,0.22);
       }
-
-      .spotify-art.has-art::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(180deg, transparent 64%, rgba(2,8,18,0.46));
+      /* Item 4 — Standby: PNG 100% transparente, SEM sombra/halo (sem filtro). */
+      .mh-art.is-standby img { filter: none; }
+      .mh-art.is-cover img { object-fit: cover; }
+      /* 2.4 — Arte QUADRADA de verdade (aspect-ratio 1/1, dirigida pela altura),
+         centralizada na vertical. Item 6: SEM box-shadow (sombra quadrada). */
+      .mh-art-square.is-cover img {
+        inset: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: auto;
+        height: calc(100% - 10px);
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: none;
+      }
+      /* Item 6 — Thumb da TV em 16:9 real (dirigido pela largura), centralizado,
+         SEM box-shadow. */
+      .mh-art-wide.is-cover img {
+        inset: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+        border-radius: 11px;
+        box-shadow: none;
       }
 
-      .spotify-art ha-icon {
-        --mdc-icon-size: 70px;
+      @keyframes mh-source-open {
+        from {
+          flex-grow: 0;
+          flex-basis: 42px;
+          border-color: var(--bruno-liquid-band-border-color, rgba(255,255,255,0.040));
+          box-shadow: var(--bruno-liquid-band-shadow, none);
+        }
+        to {
+          flex-grow: 1;
+          flex-basis: 0;
+          border-color: var(--bruno-liquid-band-open-border-color, rgba(255,255,255,0.092));
+          box-shadow: var(--bruno-liquid-band-open-shadow, inset 0 1px 0 rgba(255,255,255,0.066), 0 6px 16px rgba(0,0,0,0.105));
+        }
       }
 
-      .spotify-copy {
+      @keyframes mh-source-body-in {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes mh-source-content-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes mh-source-art-in {
+        from { opacity: 0; transform: translateY(4px) scale(0.985); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .mh-source,
+        .mh-source-head,
+        .mh-source-body,
+        .mh-left,
+        .mh-art,
+        .mh-btn {
+          transition: none !important;
+          animation: none !important;
+        }
+        .mh-source-body {
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      .ac-card {
+        padding: 14px;
         display: grid;
-        align-content: start;
+        grid-template-rows: auto minmax(0, 1fr);
+        /* ANTERIOR (rollback): gap: 6px; */
         gap: 8px;
       }
 
-      .spotify-card .media-title {
-        margin-top: 0;
-      }
-
-      .spotify-card .media-subtitle {
-        margin-top: -4px;
-      }
-
-      .spotify-controls {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 0;
-      }
-
-      .tv-card .control-button,
-      .spotify-controls .control-button {
-        width: 36px;
-        height: 36px;
-        border-radius: 13px;
-      }
-
-      .state-chip {
-        align-self: start;
-        min-height: 28px;
-      }
-
-      .ac-body {
-        grid-template-columns: 1fr;
-        grid-template-rows: minmax(0, 1fr) auto auto auto auto;
-        gap: 10px;
-        align-content: start;
+      .ac-head {
+        margin-bottom: 0;
       }
 
       .power-button {
@@ -5573,6 +6877,39 @@ class BrunoOfficeSubview extends HTMLElement {
         --mdc-icon-size: 18px;
       }
 
+      /* ANTERIOR (rollback) — sobra de altura empoçava no 1fr da .ac-visual,
+         criando vácuo entre o gauge e o slider:
+      .ac-body {
+        height: auto;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(320px, 1fr) auto auto auto auto auto;
+        gap: 10px;
+        align-content: start;
+      }
+      */
+      /* NOVO — corpo preenche o cartão (height:100%) e distribui a folga do E1
+         igualmente entre TODAS as linhas (space-between), em vez de jogar tudo
+         num único vão. Linhas em auto: nenhuma faixa engole sozinha o excedente. */
+      .ac-body {
+        height: 100%;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto auto auto auto;
+        gap: 12px;
+        align-content: space-between;
+      }
+
+      .temperature-slider {
+        margin-bottom: 3px;
+      }
+
+      .climate-stepper {
+        margin-bottom: 4px;
+      }
+
+      /* ANTERIOR (rollback): min-height 320px + align-content:start empurrava
+         imagem+gauge pro topo e deixava o resto vazio embaixo.
       .ac-visual {
         position: relative;
         min-height: 320px;
@@ -5581,6 +6918,18 @@ class BrunoOfficeSubview extends HTMLElement {
         align-content: start;
         justify-items: center;
         gap: 14px;
+        padding: 0 0 2px;
+      }
+      */
+      /* NOVO — centraliza imagem+gauge no espaço da faixa, sem vão interno. */
+      .ac-visual {
+        position: relative;
+        min-height: 300px;
+        display: grid;
+        grid-template-rows: auto auto;
+        align-content: center;
+        justify-items: center;
+        gap: 16px;
         padding: 0 0 2px;
       }
 
@@ -5634,9 +6983,6 @@ class BrunoOfficeSubview extends HTMLElement {
         filter: drop-shadow(0 14px 22px rgba(0,0,0,0.32));
       }
 
-      /* NOVO (paridade Sala): regras que ativam o fallback do AC quando a
-         imagem falha — na Sala existem, no Office faltavam (o binder
-         _bindImageFallbacks tambem foi transportado nesta sessao). */
       .ac-image-shell.is-fallback .ac-unit-image {
         display: none;
       }
@@ -5645,6 +6991,64 @@ class BrunoOfficeSubview extends HTMLElement {
         display: block;
       }
 
+      /* --- ORIGINAL CSS anel circular (comentado para rollback) ---
+      .climate-ring {
+        position: relative;
+        width: min(210px, 82%);
+        aspect-ratio: 1;
+        display: block;
+        filter: drop-shadow(0 20px 34px rgba(0,0,0,0.36));
+      }
+
+      .climate-ring-svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+        overflow: visible;
+      }
+
+      .climate-ring-scale {
+        font-family: "SF Mono", "Cascadia Mono", "Segoe UI", monospace;
+        font-size: 10px;
+        font-weight: 500;
+        fill: rgba(130,185,225,0.42);
+      }
+
+      .climate-ring-temp {
+        font-family: "SF Pro Display", "Inter", "Segoe UI", sans-serif;
+        font-size: 86px;
+        font-weight: 300;
+        letter-spacing: 0;
+        fill: rgba(240,248,255,0.98);
+      }
+
+      .climate-ring-mode {
+        font-family: "SF Mono", "Cascadia Mono", "Segoe UI", monospace;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0;
+        fill: rgba(95,210,255,0.93);
+      }
+
+      .climate-ring-meta {
+        font-family: "SF Mono", "Cascadia Mono", "Segoe UI", monospace;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0;
+        fill: rgba(175,205,230,0.45);
+      }
+
+      .climate-ring-knob-aura {
+        animation: climate-ring-pulse 2.8s ease-in-out infinite;
+      }
+
+      @keyframes climate-ring-pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 0.2; }
+      }
+      --- FIM ORIGINAL --- */
+
+      /* --- NOVO: gauge semicircular integrado (icg-*) --- */
       .icg-root {
         width: 100%;
         background: transparent;
@@ -5656,7 +7060,9 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .icg-shell {
         width: min(100%, 820px);
-        aspect-ratio: 16 / 9;
+        /* ANTERIOR (rollback): aspect-ratio: 16 / 9; */
+        /* NOVO — proporção mais alta = semicírculo um pouco maior p/ mesma largura. */
+        aspect-ratio: 16 / 10;
         position: relative;
         background: transparent;
       }
@@ -5728,7 +7134,6 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 18px;
         font-weight: 500;
-        /* NOVO (paridade Sala): letter-spacing ausente causava numerais da escala colapsados. */
         letter-spacing: 1.4px;
         fill: rgba(224, 235, 248, 0.74);
       }
@@ -5764,7 +7169,6 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 15px;
         font-weight: 500;
-        /* NOVO (paridade Sala): letter-spacing ausente colapsava o label do modo (COOL/OFF). */
         letter-spacing: 9px;
         fill: rgba(38, 190, 255, 0.96);
         text-transform: uppercase;
@@ -5774,7 +7178,6 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 96px;
         font-weight: 300;
-        /* NOVO (paridade Sala) */
         letter-spacing: -8px;
         fill: rgba(246, 250, 255, 0.98);
         filter: url(#icgTextGlow);
@@ -5784,7 +7187,6 @@ class BrunoOfficeSubview extends HTMLElement {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 15px;
         font-weight: 500;
-        /* NOVO (paridade Sala): letter-spacing ausente colapsava "SET TEMPERATURE". */
         letter-spacing: 9px;
         fill: rgba(190, 204, 220, 0.72);
         text-transform: uppercase;
@@ -5794,47 +7196,15 @@ class BrunoOfficeSubview extends HTMLElement {
         stroke: rgba(36, 195, 255, 0.95);
         stroke-width: 2;
         stroke-linecap: round;
-        filter: url(#icgOfficeBlueGlow);
+        filter: url(#icgBlueGlow);
       }
 
       .icg-ambient {
         font-family: Inter, "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 14px;
         font-weight: 500;
-        /* NOVO (paridade Sala) */
         letter-spacing: 1.8px;
         fill: rgba(176, 196, 220, 0.60);
-      }
-
-      .temperature-slider {
-        min-width: 0;
-        width: 100%;
-        display: block;
-        align-items: center;
-        padding: 0;
-        background: transparent;
-        border: 0;
-        /* NOVO (paridade Sala) */
-        margin-bottom: 3px;
-      }
-
-      .temperature-slider input {
-        width: 100%;
-        min-width: 0;
-        accent-color: rgb(96,165,250);
-      }
-
-      .fan-label {
-        display: block;
-        color: rgba(255,255,255,0.90);
-        font-size: 13px;
-        font-weight: 800;
-      }
-
-      .climate-mode-row,
-      .fan-mode-row {
-        display: grid;
-        gap: 8px;
       }
 
       .climate-mode-row {
@@ -5843,272 +7213,79 @@ class BrunoOfficeSubview extends HTMLElement {
 
       .fan-mode-row {
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        /* NOVO (paridade Sala) */
         align-items: start;
       }
 
-      /* ANTERIOR (rollback): radius 12px e valores hardcoded sem tokens/blur. */
-      /* NOVO (paridade Sala): tokens liquid com fallbacks + backdrop-filter. */
-      .climate-mode,
-      .fan-mode,
-      .climate-stepper {
-        min-height: 34px;
-        border-radius: var(--bruno-liquid-control-radius, 14px);
-        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.09));
-        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.050));
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.06));
-        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
-        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
-      }
-
-      .climate-mode {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255,255,255,0.66);
-      }
-
-      .climate-mode:disabled,
-      .fan-mode:disabled {
-        opacity: 0.42;
-        cursor: default;
-      }
-
-      .climate-mode ha-icon {
-        --mdc-icon-size: 17px;
-      }
-
-      /* ANTERIOR (rollback): azul hardcoded sem tokens/box-shadow. */
-      .climate-mode.is-active {
-        color: white;
-        background: var(--bruno-liquid-control-blue-background,
-          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.34), transparent 72%),
-          rgba(38,92,154,0.42)
-        );
-        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.34));
-        box-shadow: var(--bruno-liquid-control-blue-shadow,
-          inset 0 1px 0 rgba(255,255,255,0.14),
-          0 0 14px rgba(96,165,250,0.16)
-        );
-      }
-
-      .climate-mode.is-power-on {
-        color: rgba(255,255,255,0.96);
-        background:
-          radial-gradient(circle at 50% 14%, rgba(96,165,250,0.34), transparent 72%),
-          rgba(38,92,138,0.38);
-        border-color: rgba(96,165,250,0.32);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.12),
-          0 0 14px rgba(96,165,250,0.16);
-      }
-
-      .climate-stepper {
-        display: grid;
-        grid-template-columns: 42px minmax(0, 1fr) 42px;
-        align-items: center;
-        overflow: hidden;
-        /* NOVO (paridade Sala) */
-        margin-bottom: 4px;
-      }
-
-      .climate-stepper button {
-        height: 34px;
-        background: transparent;
-        color: rgba(255,255,255,0.82);
-        font-size: 17px;
-      }
-
-      .climate-stepper span {
-        text-align: center;
-        color: rgba(255,255,255,0.88);
-        font-size: 13px;
-        font-weight: 800;
-      }
-
-      .fan-label {
-        margin-top: 3px;
-        font-size: 12px;
-      }
-
       .fan-mode {
-        color: rgba(255,255,255,0.74);
-        font-size: 11px;
-        font-weight: 800;
-        min-height: 0;
         aspect-ratio: 1;
+        min-height: 0;
         height: auto;
         padding: 0 4px;
       }
 
-      /* ANTERIOR (rollback): destaque neutro (branco translucido). */
-      /* NOVO (paridade Sala): destaque azul com tokens. */
-      .fan-mode.is-active {
-        color: rgba(255,255,255,0.94);
-        background: var(--bruno-liquid-control-blue-background,
-          radial-gradient(circle at 50% 14%, rgba(96,183,255,0.24), transparent 72%),
-          rgba(38,92,154,0.32)
-        );
-        border-color: var(--bruno-liquid-control-blue-border, rgba(96,183,255,0.28));
-        box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.14));
-      }
-
-      .spotify-volume {
-        margin-top: 0;
-      }
-
-      .tv-card,
-      .spotify-card {
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        gap: 8px;
-        overflow: hidden;
-      }
-
-      .tv-body,
-      .spotify-body {
-        height: auto;
-        min-height: 0;
-        grid-template-columns: 1fr;
-        grid-template-rows: var(--media-screen-height, 154px) auto;
-        gap: 8px;
-        align-items: stretch;
-      }
-
-      .tv-main,
-      .spotify-copy {
-        display: grid;
-        grid-template-rows: 36px 24px;
-        align-content: start;
-        gap: 8px;
-        padding-top: 12px;
-        min-width: 0;
-        overflow: hidden;
-      }
-
-      .tv-card .control-row,
-      .spotify-controls {
-        margin-top: 2px;
-      }
-
-      .tv-card .volume-row,
-      .spotify-volume {
-        margin-top: 2px;
-      }
-
-      .media-source {
-        font-size: 14px;
-      }
-
-      .spotify-card .media-title,
-      .spotify-title {
-        max-width: 100%;
-        min-width: 0;
-        font-size: 13px;
-        line-height: 1.05;
-        white-space: nowrap;
-        overflow: hidden;
-      }
-
-      .spotify-title span {
-        display: inline-block;
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        vertical-align: top;
-      }
-
-      .spotify-title.is-marquee span {
-        max-width: none;
-        min-width: 100%;
-        padding-right: 34px;
-        animation: bruno-office-marquee 10s linear infinite;
-      }
-
-      .spotify-card .media-subtitle {
-        margin-top: -2px;
-        max-width: 100%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .state-chip {
-        max-width: 76px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      @keyframes bruno-office-marquee {
-        0%, 18% { transform: translateX(0); }
-        82%, 100% { transform: translateX(calc(-100% + 100px)); }
-      }
-
       @media (max-width: 1180px) {
-        .room-sidebar {
-          display: none;
+        :host {
+          height: auto;
+          min-height: 100vh;
+          overflow: visible;
         }
 
         .office-subview {
           height: auto;
+          min-height: 100vh;
           overflow: auto;
           grid-template-columns: 1fr;
           grid-template-rows: auto auto;
           grid-template-areas:
             "left"
             "right";
-          align-content: start;
           padding: 10px;
         }
 
+        .room-sidebar {
+          display: none;
+        }
+
+        /* NOVO: no mobile (rail oculto) as faixas topo/rodapé da shell saem. */
+        .subview-topbar,
+        .subview-footer {
+          display: none;
+        }
+
         .left-column {
-          grid-template-rows: minmax(330px, 46vh) minmax(300px, auto);
+          height: auto;
+          grid-template-rows: minmax(340px, 42vh) minmax(270px, 34vh);
         }
 
         .right-column {
-          grid-template-rows: auto minmax(0, auto);
+          height: auto;
+          grid-template-rows: auto auto;
         }
 
-        .lower-left-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          min-height: 300px;
-        }
-
-        /* ANTERIOR (rollback): cols 0.55fr, rows 280/320px.
-           NOVO (paridade Sala): cols 0.72fr, rows 236/300px — iguais à Sala ≤1180px. */
         .right-control-grid {
-          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.55fr);
-          grid-template-rows: minmax(280px, auto) minmax(320px, auto);
+          grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+          grid-template-rows: minmax(236px, auto) minmax(300px, auto);
           grid-template-areas:
             "lights ac"
             "media ac";
         }
 
-        /* ANTERIOR (rollback):
-        .status-rail {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+        .lights-body {
+          grid-template-columns: minmax(0, 1fr);
         }
 
-        .status-item {
-          padding: 0 10px;
+        .lights-zone-rail {
+          display: none;
         }
-        */
-        /* NOVO (paridade Sala): rail mantem 5 colunas, so cresce a altura. */
+
         .status-rail {
           min-height: 68px;
         }
       }
 
       @media (max-width: 760px) {
-        :host {
-          height: auto;
-          overflow: visible;
-        }
-
         .office-subview {
           grid-template-columns: 1fr;
-          grid-template-rows: auto;
           grid-template-areas:
             "left"
             "right";
@@ -6116,15 +7293,7 @@ class BrunoOfficeSubview extends HTMLElement {
         }
 
         .left-column {
-          grid-template-rows: auto auto;
-        }
-
-        .right-column {
-          grid-template-rows: auto auto;
-        }
-
-        .lower-left-grid {
-          grid-template-columns: 1fr;
+          grid-template-rows: minmax(430px, auto) minmax(390px, auto);
         }
 
         .right-control-grid {
@@ -6136,92 +7305,73 @@ class BrunoOfficeSubview extends HTMLElement {
             "ac";
         }
 
-        .hero-stage {
-          min-height: 430px;
-        }
-
-        .hero-content {
-          grid-template-columns: 1fr;
-        }
-
-        .hero-clock {
-          font-size: 70px;
-        }
-
         .status-rail {
           grid-template-columns: repeat(2, minmax(0, 1fr));
+          min-height: auto;
         }
 
-        .status-item:nth-child(even) {
-          border-right: 0;
+        .status-item {
+          min-height: 58px;
         }
 
-        .curtain-dock {
-          grid-template-columns: 1fr;
+        .media-tabs {
+          max-width: 100%;
+          width: 100%;
+          justify-content: space-between;
         }
 
-        .curtain-actions {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .curtain-pill {
-          grid-column: 1 / -1;
+        .media-hub-head {
+          display: grid;
+          gap: 10px;
         }
 
         .media-hub-body {
           grid-template-columns: 1fr;
-          grid-template-rows: minmax(210px, auto) auto;
+          grid-template-rows: minmax(176px, auto) auto;
           grid-template-areas:
             "visual"
             "content";
         }
 
-        .media-tabs {
-          max-width: 100%;
+        .media-hub-content {
+          grid-template-rows: auto auto auto;
         }
 
-        .media-primary-actions {
-          grid-template-columns: repeat(4, minmax(44px, 1fr));
-          gap: 8px;
+        .camera-list {
+          grid-template-columns: 1fr;
         }
 
-        .media-action-button {
+        .lights-title-row,
+        .module-head {
+          flex-wrap: wrap;
+        }
+
+        .head-actions {
           width: 100%;
         }
 
-        .lights-groups {
-          height: auto;
+        .head-actions .chip-button {
+          flex: 1 1 0;
+        }
+
+        .curtain-control-row {
           grid-template-columns: 1fr;
+          gap: 10px;
         }
 
-        .lights-divider {
-          display: none;
+        .curtain-status {
+          justify-self: start;
         }
 
-        .light-group-grid {
-          grid-template-rows: none;
-          grid-auto-rows: minmax(94px, auto);
+        .curtain-main-actions {
+          justify-content: stretch;
         }
 
-        .cameras-card {
-          min-height: 390px;
+        .curtain-action-button {
+          flex: 1 1 0;
+          min-width: 0;
         }
 
-        .media-hub-card,
-        .ac-card {
-          min-height: 260px;
-        }
-
-        .media-hub-card {
-          min-height: 360px;
-        }
-
-        .ac-body {
-          grid-template-columns: 1fr;
-        }
-
-        /* ANTERIOR (rollback): min-height 280px.
-           NOVO (paridade Sala): min-height 238px — igual à Sala ≤760px. */
         .ac-visual {
           min-height: 238px;
         }
@@ -6230,24 +7380,49 @@ class BrunoOfficeSubview extends HTMLElement {
   }
 
   static _tplMediaIcon(type, options = {}) {
-    const name = String(type || '').replace(/[^a-z0-9_-]/gi, '') || 'pc';
+    const name = String(type || '').replace(/[^a-z0-9_-]/gi, '') || 'tv';
     const active = typeof options === 'boolean' ? options : Boolean(options.active);
+    const animate = typeof options === 'object' && Boolean(options.animate);
+    const tvScreen = active
+      ? `<path${animate ? ' class="media-tv-screen-on"' : ''} d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>`
+      : animate
+        ? '<path class="media-tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-sala-media-tv-screen)"/>'
+        : '';
     const icons = {
-      pc: `
+      tv: `
         <svg viewBox="0 0 50 50" aria-hidden="true">
-          <linearGradient id="bruno-office-media-pc-screen" gradientUnits="userSpaceOnUse" x1="6" y1="34" x2="44" y2="12">
-            <stop offset="0" stop-color="#60a5fa"/>
-            <stop offset="1" stop-color="#7dd3fc"/>
+          <style>
+            @keyframes bruno-sala-media-tv-on {
+              from { transform: scaleY(0); }
+              to { transform: scaleY(1); }
+            }
+            @keyframes bruno-sala-media-tv-off {
+              from { transform: scaleY(1); }
+              to { transform: scaleY(0); }
+            }
+            .media-tv-screen-on {
+              animation: bruno-sala-media-tv-on 900ms cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+              transform-origin: -100% 46%;
+            }
+            .media-tv-screen-off {
+              animation: bruno-sala-media-tv-off 650ms cubic-bezier(0.25,0.46,0.45,0.94) both;
+              transform-origin: -100% 46%;
+            }
+          </style>
+          <linearGradient id="bruno-sala-media-tv-screen" gradientUnits="userSpaceOnUse" x1="5.401" y1="34.714" x2="43.817" y2="11.74">
+            <stop offset="0" stop-color="#64acb7"/>
+            <stop offset="1" stop-color="#7fdbe9"/>
           </linearGradient>
-          <path d="M4 8.5h42v29H4v-29z" fill="${active ? 'url(#bruno-office-media-pc-screen)' : '#20262890'}"/>
-          <path fill="currentColor" d="M45.8 7H4.2C2.9 7 2 8 2 9.2v27.6C2 38 2.9 39 4.2 39h41.6c1.2 0 2.2-1 2.2-2.2V9.2C48 8 47 7 45.8 7zm-.4 29.2H4.6V9.8h40.8v26.4zM18.7 42.2h12.6l1.6 3.1h5.8c.7 0 1.2.5 1.2 1.1v.3c0 .7-.5 1.2-1.2 1.2H11.3c-.7 0-1.2-.5-1.2-1.1v-.3c0-.7.5-1.2 1.2-1.2h5.8l1.6-3.1z"/>
+          <path d="M2.9,8h44.3v29.9H2.9V8z" fill="#20262890"/>
+          ${tvScreen}
+          <path fill="currentColor" d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3zM11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3a1.11 1.11 0 0 0 1.1 1.1z"/>
         </svg>
       `,
       spotify: active
         ? `
           <svg viewBox="0 0 42.55 42.55" aria-hidden="true">
             <style>
-              @keyframes bruno-office-spotify-bounce {
+              @keyframes bruno-sala-spotify-bounce {
                 10% { transform: scaleY(0.3); }
                 30% { transform: scaleY(1); opacity: .35; }
                 60% { transform: scaleY(0.5); }
@@ -6261,7 +7436,7 @@ class BrunoOfficeSubview extends HTMLElement {
                 stroke-width: 5px;
               }
               .media-spotify-bar {
-                animation: bruno-office-spotify-bounce 2.2s ease infinite alternate;
+                animation: bruno-sala-spotify-bounce 2.2s ease infinite alternate;
                 transform-origin: center;
               }
               .media-spotify-bar:nth-child(2) { animation-delay: -2.2s; }
@@ -6285,7 +7460,7 @@ class BrunoOfficeSubview extends HTMLElement {
         `,
     };
 
-    return `<span class="tpl-media-icon icon-${name}${active ? ' is-active' : ''}">${icons[name] || icons.pc}</span>`;
+    return `<span class="tpl-media-icon icon-${name}${active ? ' is-active' : ''}">${icons[name] || icons.tv}</span>`;
   }
 
   static _tplLightIcon(type, active = false) {
@@ -6341,35 +7516,6 @@ class BrunoOfficeSubview extends HTMLElement {
     return `<span class="tpl-light-icon icon-${name}${active ? ' is-on' : ''}">${glow}${icons[name] || icons.light_flush}</span>`;
   }
 
-  static _curtainSvg(type = 'main') {
-    const pathSets = {
-      main: `
-        <path d="M9 7h30"></path>
-        <path d="M14 10v27c4.5-2.8 6.8-7.3 6.8-13.5S18.5 12.8 14 10Z"></path>
-        <path d="M34 10v27c-4.5-2.8-6.8-7.3-6.8-13.5S29.5 12.8 34 10Z"></path>
-        <path d="M24 10v29"></path>
-      `,
-      open: `
-        <path d="M8 8h32"></path>
-        <path d="M14 11v26c5-3 7.5-7.4 7.5-13.2S19 14 14 11Z"></path>
-        <path d="M34 11v26c-5-3-7.5-7.4-7.5-13.2S29 14 34 11Z"></path>
-        <path d="M24 13v23"></path>
-      `,
-      close: `
-        <path d="M8 8h32"></path>
-        <path d="M19 11v26c-4.2-2.5-6.4-6.8-6.4-13S14.8 13.6 19 11Z"></path>
-        <path d="M29 11v26c4.2-2.5 6.4-6.8 6.4-13S33.2 13.6 29 11Z"></path>
-        <path d="M23.7 11v27M24.3 11v27"></path>
-      `,
-      stop: `
-        <rect x="14" y="13" width="8" height="22" rx="1.5"></rect>
-        <rect x="26" y="13" width="8" height="22" rx="1.5"></rect>
-      `,
-    };
-    const safeType = pathSets[type] ? type : 'main';
-    return `<svg class="curtain-svg is-${safeType}" viewBox="0 0 48 48" aria-hidden="true">${pathSets[safeType]}</svg>`;
-  }
-
   static _resolvePicture(src) {
     if (!src) return '';
     if (src.startsWith('http') || src.startsWith('/')) return src;
@@ -6380,14 +7526,6 @@ class BrunoOfficeSubview extends HTMLElement {
     if (!src) return '';
     const joiner = src.includes('?') ? '&' : '?';
     return `${src}${joiner}bruno_t=${stamp || Date.now()}`;
-  }
-
-  static _metricPercent(value) {
-    const match = String(value ?? '').match(/-?\d+(?:[.,]\d+)?/);
-    if (!match) return 0;
-    const number = Number(match[0].replace(',', '.'));
-    if (!Number.isFinite(number)) return 0;
-    return Math.max(0, Math.min(100, Math.round(number)));
   }
 
   static _escape(value) {
@@ -6410,7 +7548,7 @@ if (!customElements.get(BRUNO_OFFICE_SUBVIEW_TAG)) {
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: BRUNO_OFFICE_SUBVIEW_TAG,
-  name: 'Bruno Office Subview',
+  name: 'Bruno Sala Subview',
   preview: false,
-  description: 'Office subview rebuilt as an isolated Bruno Liquid Glass Web Component.',
+  description: 'Office subview rebuilt from Sala matrix as an isolated Bruno Liquid Glass Web Component.',
 });

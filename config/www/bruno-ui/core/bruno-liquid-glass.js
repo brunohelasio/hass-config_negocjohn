@@ -1,48 +1,48 @@
-const BRUNO_LIQUID_GLASS_VERSION = '20260606-main-view-1';
+const BRUNO_LIQUID_GLASS_VERSION = '20260630-icon-scale-1';
 const BRUNO_LIQUID_GLASS_STYLE_ID = 'bruno-liquid-glass-tokens';
 
 const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-accent': '150, 190, 255',
-  'bruno-liquid-warm-accent': '255, 183, 77',
+  'bruno-liquid-warm-accent': '242, 194, 102',
   'bruno-liquid-green-accent': '46, 231, 122',
 
-  'bruno-liquid-card-radius': '24px',
-  'bruno-liquid-card-radius-compact': '22px',
-  'bruno-liquid-room-radius': '22px',
-  'bruno-liquid-cell-radius': '18px',
-  'bruno-liquid-control-radius': '18px',
+  'bruno-liquid-card-radius': '18px',
+  'bruno-liquid-card-radius-compact': '16px',
+  'bruno-liquid-room-radius': '18px',
+  'bruno-liquid-cell-radius': '13px',
+  'bruno-liquid-control-radius': '12px',
+  'bruno-liquid-control-radius-compact': '9px',
   'bruno-liquid-dock-radius': '999px',
   'bruno-liquid-rail-radius': '999px',
 
   'bruno-liquid-motion-fast': '160ms ease',
   'bruno-liquid-motion-medium': '220ms cubic-bezier(0.2, 0.8, 0.2, 1)',
 
-  // Shared card skin. Revised for the hero-stage layout: the off state reads
-  // as iOS-like frosted glass over the photographic background.
+  'bruno-liquid-icon-title': '16px',
+  'bruno-liquid-icon-section': '20px',
+  'bruno-liquid-icon-control': '23px',
+  'bruno-liquid-icon-status': '15px',
+  'bruno-liquid-icon-overflow': '19px',
+
+  // Shared premium block skin: neutral real glass, thin borders and low-fill
+  // surfaces so the photo reads through without turning the cards brown.
   'bruno-liquid-card-background': `
-    radial-gradient(240px 174px at 18% -8%, rgba(255,255,255,0.255), rgba(255,255,255,0.070) 45%, transparent 73%),
-    radial-gradient(218px 182px at 99% 99%, rgba(var(--accent, var(--bruno-liquid-accent)),0.084), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,0.146), rgba(255,255,255,0.058) 42%, rgba(255,255,255,0.082)),
-    rgba(8,12,20,0.44)
+    linear-gradient(180deg, rgba(255,255,255,0.040), rgba(255,255,255,0.010) 46%, rgba(0,0,0,0.030)),
+    rgba(9,11,15,0.105)
   `,
-  'bruno-liquid-card-filter': 'blur(34px) saturate(1.70) contrast(1.06)',
-  'bruno-liquid-card-border': '1px solid rgba(255,255,255,0.185)',
+  'bruno-liquid-card-filter': 'blur(18px) saturate(0.92) brightness(1.05) contrast(1.02)',
+  'bruno-liquid-card-border-color': 'rgba(255,255,255,0.070)',
+  'bruno-liquid-card-border': '1px solid var(--bruno-liquid-card-border-color)',
   'bruno-liquid-card-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.30),
-    inset 1px 0 0 rgba(255,255,255,0.12),
-    inset -1px 0 0 rgba(255,255,255,0.055),
-    inset 0 -1px 0 rgba(255,255,255,0.050),
-    0 20px 48px rgba(0,0,0,0.30),
-    0 0 28px rgba(110,150,210,0.070)
+    inset 0 1px 0 rgba(255,255,255,0.090),
+    0 10px 28px rgba(0,0,0,0.145)
   `,
   'bruno-liquid-card-sheen': `
-    radial-gradient(98px 70px at 18% 0%, rgba(255,255,255,0.22), transparent 74%),
-    linear-gradient(180deg, rgba(255,255,255,0.128), rgba(255,255,255,0.00) 38%),
-    linear-gradient(90deg, rgba(255,255,255,0.070), rgba(255,255,255,0.00) 50%)
+    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00) 42%)
   `,
-  'bruno-liquid-card-sheen-opacity': '0.76',
+  'bruno-liquid-card-sheen-opacity': '0.10',
   'bruno-liquid-card-edge-glow': `
-    linear-gradient(125deg, rgba(255,255,255,0.30), rgba(255,255,255,0.075) 34%, rgba(255,255,255,0.020) 62%, rgba(255,190,120,0.105) 100%)
+    linear-gradient(125deg, rgba(255,255,255,0.11), rgba(255,255,255,0.026) 38%, rgba(255,255,255,0.010) 100%)
   `,
 
   'bruno-liquid-dock-background': `
@@ -95,109 +95,112 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-rail-sheen-opacity': '0.78',
 
   'bruno-liquid-cell-background': `
-    radial-gradient(96px 64px at 26% 0%, rgba(255,255,255,0.165), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,0.112), rgba(255,255,255,0.044)),
-    linear-gradient(155deg, rgba(28,34,44,0.50), rgba(12,15,22,0.32))
+    linear-gradient(180deg, rgba(255,255,255,0.022), rgba(255,255,255,0.006)),
+    rgba(9,11,15,0.030)
   `,
-  'bruno-liquid-cell-border': '1px solid rgba(255,255,255,0.155)',
+  'bruno-liquid-cell-border-color': 'rgba(255,255,255,0.050)',
+  'bruno-liquid-cell-border': '1px solid var(--bruno-liquid-cell-border-color)',
   'bruno-liquid-cell-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.16),
-    inset 0 -1px 0 rgba(0,0,0,0.12),
-    0 8px 18px rgba(0,0,0,0.13)
+    inset 0 1px 0 rgba(255,255,255,0.040)
   `,
   'bruno-liquid-cell-active-warm-background': `
-    radial-gradient(76px 48px at 18% 12%, rgba(255,255,255,0.28), transparent 72%),
-    radial-gradient(96px 58px at 94% 82%, rgba(var(--bruno-liquid-warm-accent),0.24), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.074)),
-    linear-gradient(180deg, rgba(var(--bruno-liquid-warm-accent),0.10), rgba(var(--bruno-liquid-warm-accent),0.03))
+    linear-gradient(180deg, rgba(255,255,255,0.042), rgba(255,255,255,0.012)),
+    rgba(var(--bruno-liquid-warm-accent),0.030)
   `,
-  'bruno-liquid-cell-active-warm-border': 'rgba(255,205,95,0.44)',
+  'bruno-liquid-cell-active-warm-border': 'rgba(var(--bruno-liquid-warm-accent),0.180)',
   'bruno-liquid-cell-active-warm-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.22),
-    inset 1px 0 0 rgba(255,255,255,0.08),
-    inset 0 -1px 0 rgba(0,0,0,0.08),
-    0 0 20px rgba(var(--bruno-liquid-warm-accent),0.17)
+    inset 0 1px 0 rgba(255,255,255,0.060),
+    0 0 12px rgba(var(--bruno-liquid-warm-accent),0.060)
   `,
 
   'bruno-liquid-chip-background': `
-    linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.040)),
-    rgba(16,18,24,0.46)
+    linear-gradient(180deg, rgba(255,255,255,0.036), rgba(255,255,255,0.012)),
+    rgba(9,11,15,0.060)
   `,
-  'bruno-liquid-chip-border': '1px solid rgba(255,255,255,0.14)',
-  'bruno-liquid-chip-shadow': 'inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 20px rgba(0,0,0,0.14)',
-  'bruno-liquid-chip-filter': 'blur(18px) saturate(1.28)',
+  'bruno-liquid-chip-border': '1px solid rgba(255,255,255,0.070)',
+  'bruno-liquid-chip-shadow': 'inset 0 1px 0 rgba(255,255,255,0.060)',
+  'bruno-liquid-chip-filter': 'blur(12px) saturate(0.96) brightness(1.04)',
 
   'bruno-liquid-control-background': `
-    radial-gradient(94px 56px at 50% -4%, rgba(255,255,255,0.24), transparent 72%),
-    radial-gradient(68px 42px at 90% 92%, rgba(var(--accent, var(--bruno-liquid-accent)),0.070), transparent 74%),
-    linear-gradient(180deg, rgba(255,255,255,0.132), rgba(255,255,255,0.050)),
-    rgba(255,255,255,0.058)
+    linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018)),
+    rgba(255,255,255,0.030)
   `,
-  'bruno-liquid-control-border': '1px solid rgba(255,255,255,0.18)',
+  'bruno-liquid-control-border-color': 'rgba(255,255,255,0.070)',
+  'bruno-liquid-control-border': '1px solid var(--bruno-liquid-control-border-color)',
   'bruno-liquid-control-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    inset 1px 0 0 rgba(255,255,255,0.075),
-    inset 0 -1px 0 rgba(0,0,0,0.16),
-    0 10px 22px rgba(0,0,0,0.18)
+    inset 0 1px 0 rgba(255,255,255,0.060)
   `,
-  'bruno-liquid-control-filter': 'blur(22px) saturate(1.42) contrast(1.05)',
+  'bruno-liquid-control-filter': 'blur(12px) saturate(0.96) brightness(1.04)',
+  'bruno-liquid-control-warm-background': 'rgba(var(--bruno-liquid-warm-accent),0.038)',
+  'bruno-liquid-control-warm-border': '1px solid rgba(var(--bruno-liquid-warm-accent),0.180)',
+  'bruno-liquid-control-warm-shadow': 'inset 0 1px 0 rgba(255,255,255,0.060)',
   'bruno-liquid-control-blue-background': `
-    radial-gradient(circle at 50% 12%, rgba(185,218,255,0.52), transparent 68%),
-    linear-gradient(180deg, rgba(91,159,238,0.78), rgba(33,82,152,0.62))
+    linear-gradient(180deg, rgba(96,165,250,0.42), rgba(38,92,138,0.24)),
+    rgba(255,255,255,0.030)
   `,
-  'bruno-liquid-control-blue-border': 'rgba(175,214,255,0.48)',
+  'bruno-liquid-control-blue-border': 'rgba(96,165,250,0.320)',
   'bruno-liquid-control-blue-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.30),
-    inset 0 -1px 0 rgba(0,0,0,0.16),
-    0 0 22px rgba(96,165,250,0.30)
+    inset 0 1px 0 rgba(255,255,255,0.100),
+    0 0 14px rgba(96,165,250,0.120)
   `,
   'bruno-liquid-control-green-background': `
-    radial-gradient(circle at 50% 13%, rgba(96,255,168,0.28), transparent 70%),
-    linear-gradient(180deg, rgba(38,126,88,0.38), rgba(19,76,54,0.26)),
-    rgba(255,255,255,0.050)
+    linear-gradient(180deg, rgba(46,231,122,0.160), rgba(19,76,54,0.080)),
+    rgba(255,255,255,0.030)
   `,
-  'bruno-liquid-control-green-border': 'rgba(46,231,122,0.30)',
+  'bruno-liquid-control-green-border': 'rgba(46,231,122,0.220)',
   'bruno-liquid-control-green-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.16),
-    0 0 16px rgba(46,231,122,0.16)
+    inset 0 1px 0 rgba(255,255,255,0.080),
+    0 0 12px rgba(46,231,122,0.080)
   `,
 
   'bruno-liquid-selected-blue-background': `
-    radial-gradient(circle at 50% 18%, rgba(155,190,255,0.54), transparent 62%),
-    linear-gradient(180deg, rgba(105,150,230,0.68), rgba(59,92,178,0.54))
+    linear-gradient(180deg, rgba(105,150,230,0.440), rgba(59,92,178,0.300)),
+    rgba(255,255,255,0.028)
   `,
-  'bruno-liquid-selected-blue-border': 'rgba(210,228,255,0.38)',
+  'bruno-liquid-selected-blue-border': 'rgba(210,228,255,0.300)',
   'bruno-liquid-selected-blue-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.32),
-    0 0 20px rgba(96,165,250,0.32)
+    inset 0 1px 0 rgba(255,255,255,0.110),
+    0 0 14px rgba(96,165,250,0.140)
   `,
+
+  // Dedicated transient surface: used by compact selectors/popovers that need
+  // markedly stronger contrast than the shared translucent card skin.
+  'bruno-liquid-popup-background': `
+    linear-gradient(180deg, rgba(34,31,30,0.720), rgba(12,13,16,0.660))
+  `,
+  'bruno-liquid-popup-border': '1px solid rgba(255,255,255,0.115)',
+  'bruno-liquid-popup-shadow': `
+    inset 0 1px 0 rgba(255,255,255,0.100),
+    0 18px 36px rgba(0,0,0,0.300)
+  `,
+  'bruno-liquid-popup-filter': 'blur(22px) saturate(1.04) brightness(0.96)',
+  'bruno-liquid-popup-option-background': 'rgba(255,255,255,0.045)',
+  'bruno-liquid-popup-option-hover-background': 'rgba(var(--bruno-liquid-warm-accent),0.115)',
 
   'bruno-liquid-surface-bottom-line': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent)',
   'bruno-liquid-surface-bottom-line-opacity': '0',
 
   'bruno-liquid-surface-on-background': `
-    radial-gradient(180px 140px at 14% -8%, rgba(255,255,255,0.30), rgba(255,255,255,0.090) 52%, transparent 75%),
-    radial-gradient(170px 148px at 98% 94%, rgba(var(--bruno-liquid-warm-accent),0.20), transparent 70%),
-    radial-gradient(124px 96px at 28% 18%, rgba(255,232,126,0.090), transparent 72%),
-    linear-gradient(180deg, rgba(255,255,255,0.188), rgba(255,255,255,0.070) 44%, rgba(255,255,255,0.100)),
-    rgba(12,16,24,0.30)
+    linear-gradient(180deg, rgba(255,255,255,0.044), rgba(255,255,255,0.012) 54%, rgba(255,255,255,0.018)),
+    rgba(9,11,15,0.052)
   `,
-  'bruno-liquid-surface-on-filter': 'blur(32px) saturate(1.62) contrast(1.04)',
-  'bruno-liquid-surface-on-border-color': 'rgba(255,205,95,0.55)',
+  'bruno-liquid-surface-on-filter': 'blur(18px) saturate(0.92) brightness(1.05) contrast(1.02)',
+  'bruno-liquid-surface-on-border-color': 'rgba(255,255,255,0.092)',
   'bruno-liquid-surface-on-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.28),
-    inset 1px 0 0 rgba(255,255,255,0.105),
-    inset 0 -1px 0 rgba(0,0,0,0.10),
-    0 0 28px rgba(var(--bruno-liquid-warm-accent),0.24),
-    0 18px 42px rgba(0,0,0,0.25)
+    inset 0 1px 0 rgba(255,255,255,0.066),
+    0 6px 16px rgba(0,0,0,0.105)
   `,
   'bruno-liquid-surface-on-sheen': `
-    radial-gradient(92px 74px at 17% 0%, rgba(255,255,255,0.26), transparent 72%),
-    radial-gradient(118px 110px at 96% 96%, rgba(var(--bruno-liquid-warm-accent),0.28), transparent 74%),
-    linear-gradient(180deg, rgba(255,255,255,0.148), rgba(255,255,255,0.00) 38%),
-    linear-gradient(90deg, rgba(255,255,255,0.078), rgba(255,255,255,0.00) 50%)
+    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00) 42%)
   `,
-  'bruno-liquid-surface-on-sheen-opacity': '0.78',
+  'bruno-liquid-surface-on-sheen-opacity': '0.12',
+  'bruno-liquid-band-background': 'rgba(255,255,255,0.010)',
+  'bruno-liquid-band-border-color': 'rgba(255,255,255,0.035)',
+  'bruno-liquid-band-border': '1px solid var(--bruno-liquid-band-border-color)',
+  'bruno-liquid-band-shadow': 'none',
+  'bruno-liquid-band-open-background': 'var(--bruno-liquid-surface-on-background)',
+  'bruno-liquid-band-open-border-color': 'var(--bruno-liquid-surface-on-border-color)',
+  'bruno-liquid-band-open-shadow': 'var(--bruno-liquid-surface-on-shadow)',
 };
 
 Object.assign(BRUNO_LIQUID_GLASS_TOKENS, {

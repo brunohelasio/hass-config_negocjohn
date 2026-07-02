@@ -117,6 +117,10 @@ class BrunoCamerasCard extends HTMLElement {
           .forEach((button) => button.classList.toggle('is-active', activeClass));
 
         this.shadowRoot
+          .querySelectorAll(`.camera-menu-option[data-camera-id="${BrunoCamerasCard._escapeAttr(camera.entity)}"]`)
+          .forEach((button) => button.classList.toggle('is-active', activeClass));
+
+        this.shadowRoot
           .querySelectorAll(`img[data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}"]`)
           .forEach((image) => {
             if (camera.image) image.dataset.cameraSrcBase = camera.image;
@@ -210,6 +214,7 @@ class BrunoCamerasCard extends HTMLElement {
   _selectCamera(entityId) {
     if (!entityId || entityId === this._model().activeId) return;
     this._localActiveCamera = entityId;
+    this._cameraMenuOpen = false;
     this._refreshSeed = Date.now();
     this._safeRender();
     this._callService('input_select', 'select_option', {
@@ -265,6 +270,27 @@ class BrunoCamerasCard extends HTMLElement {
       });
     });
 
+    root.querySelector('[data-action="camera-menu"]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this._cameraMenuOpen = !this._cameraMenuOpen;
+      this._safeRender();
+    });
+
+    root.querySelectorAll('.camera-menu-option').forEach((button) => {
+      const entityId = button.dataset.cameraId;
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this._selectCamera(entityId);
+      });
+      button.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        this._selectCamera(entityId);
+      });
+    });
+
     root.querySelectorAll('img').forEach((image) => {
       image.addEventListener('load', () => {
         image.dataset.hasLoaded = 'true';
@@ -282,6 +308,16 @@ class BrunoCamerasCard extends HTMLElement {
 
     const model = this._model();
     const active = model.activeCamera;
+    const isSingle = this._config.variant === 'single';
+    const singleClass = isSingle ? ' is-single' : '';
+    const menuOpenClass = this._cameraMenuOpen ? ' is-menu-open' : '';
+    const cameraMenu = isSingle && this._cameraMenuOpen
+      ? `
+        <div class="camera-menu" role="menu" aria-label="Selecionar camera">
+          ${model.cameras.map((camera) => BrunoCamerasCard._menuOption(camera, camera.entity === model.activeId)).join('')}
+        </div>
+      `
+      : '';
     this._lastActiveId = model.activeId;
 
     this.shadowRoot.innerHTML = `
@@ -363,7 +399,8 @@ class BrunoCamerasCard extends HTMLElement {
 
         .card-header,
         .preview-action,
-        .thumb-shell {
+        .thumb-shell,
+        .camera-menu {
           position: relative;
           z-index: 1;
         }
@@ -451,6 +488,38 @@ class BrunoCamerasCard extends HTMLElement {
           line-height: 1;
           font-weight: 700;
           white-space: nowrap;
+        }
+
+        .header-actions {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          flex: 0 0 auto;
+        }
+
+        .card-menu {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 28px;
+          height: 28px;
+          display: grid;
+          place-items: center;
+          padding: 0;
+          border: 0;
+          border-radius: 999px;
+          color: rgba(255,255,255,0.62);
+          background: transparent;
+          outline: none;
+        }
+
+        .card-menu:hover,
+        .card-menu.is-open {
+          color: rgba(255,255,255,0.90);
+          background: rgba(255,255,255,0.055);
+        }
+
+        .card-menu ha-icon {
+          --mdc-icon-size: 19px;
         }
 
         .live-dot,
@@ -759,6 +828,96 @@ class BrunoCamerasCard extends HTMLElement {
           flex: 0 0 auto;
         }
 
+        .cameras-card.is-single {
+          grid-template-rows: auto minmax(0, 1fr);
+          gap: 8px;
+          padding: 12px;
+        }
+
+        .cameras-card.is-single .card-header {
+          min-height: 28px;
+        }
+
+        .cameras-card.is-single .title-sub {
+          display: none;
+        }
+
+        .cameras-card.is-single .preview-action {
+          border-radius: 16px;
+        }
+
+        .cameras-card.is-single .media-frame {
+          border-radius: 16px;
+        }
+
+        .cameras-card.is-single .preview-badge {
+          display: none;
+        }
+
+        .cameras-card.is-single .active-status {
+          color: rgba(226,232,240,0.82);
+        }
+
+        .camera-menu {
+          position: absolute;
+          top: 44px;
+          right: 11px;
+          z-index: 6;
+          width: min(190px, calc(100% - 22px));
+          max-height: calc(100% - 58px);
+          display: grid;
+          gap: 4px;
+          padding: 6px;
+          overflow: auto;
+          border-radius: var(--bruno-liquid-cell-radius, 13px);
+          background: var(--bruno-liquid-popup-background,
+            linear-gradient(180deg, rgba(34,31,30,0.720), rgba(12,13,16,0.660))
+          );
+          border: var(--bruno-liquid-popup-border, 1px solid rgba(255,255,255,0.115));
+          box-shadow: var(--bruno-liquid-popup-shadow,
+            inset 0 1px 0 rgba(255,255,255,0.100),
+            0 18px 36px rgba(0,0,0,0.300)
+          );
+          backdrop-filter: var(--bruno-liquid-popup-filter, blur(22px) saturate(1.04) brightness(0.96));
+          -webkit-backdrop-filter: var(--bruno-liquid-popup-filter, blur(22px) saturate(1.04) brightness(0.96));
+        }
+
+        .camera-menu-option {
+          min-width: 0;
+          min-height: 32px;
+          display: grid;
+          grid-template-columns: 16px minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 7px;
+          padding: 0 8px;
+          border: 0;
+          border-radius: 9px;
+          background: var(--bruno-liquid-popup-option-background, rgba(255,255,255,0.035));
+          color: rgba(255,255,255,0.82);
+          text-align: left;
+        }
+
+        .camera-menu-option:hover,
+        .camera-menu-option.is-active {
+          color: rgba(255,255,255,0.98);
+          background: var(--bruno-liquid-popup-option-hover-background, rgba(242,194,102,0.115));
+        }
+
+        .camera-menu-option ha-icon {
+          --mdc-icon-size: 16px;
+          color: rgba(255,255,255,0.68);
+        }
+
+        .camera-menu-option span {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 11px;
+          line-height: 1;
+          font-weight: 760;
+        }
+
         @media (max-height: 760px) {
           .cameras-card {
             gap: 7px;
@@ -790,7 +949,7 @@ class BrunoCamerasCard extends HTMLElement {
         }
       </style>
 
-      <div class="cameras-card">
+      <div class="cameras-card${singleClass}${menuOpenClass}">
         <div class="card-header">
           <div class="header-copy">
             <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:cctv"></ha-icon></span>
@@ -799,9 +958,16 @@ class BrunoCamerasCard extends HTMLElement {
               <span class="title-sub">${BrunoCamerasCard._escape(active?.name || '')}</span>
             </span>
           </div>
-          <span class="live-count" title="${model.onlineCount} cameras online">
-            <span class="live-dot${model.onlineCount ? ' is-online' : ''}"></span>
-            ${model.onlineCount}/${model.totalCount} online
+          <span class="header-actions">
+            <span class="live-count" title="${model.onlineCount} cameras online">
+              <span class="live-dot${model.onlineCount ? ' is-online' : ''}"></span>
+              ${model.onlineCount}/${model.totalCount} online
+            </span>
+            ${isSingle ? `
+              <button class="card-menu${this._cameraMenuOpen ? ' is-open' : ''}" type="button" data-action="camera-menu" aria-label="Selecionar camera" aria-expanded="${this._cameraMenuOpen ? 'true' : 'false'}">
+                <ha-icon icon="mdi:dots-vertical"></ha-icon>
+              </button>
+            ` : ''}
           </span>
         </div>
 
@@ -809,11 +975,13 @@ class BrunoCamerasCard extends HTMLElement {
           ${BrunoCamerasCard._preview(active)}
         </button>
 
-        <div class="thumb-shell" aria-label="Selecionar camera">
-          <div class="thumb-strip">
-            ${model.cameras.map((camera) => BrunoCamerasCard._thumbnail(camera, camera.entity === model.activeId)).join('')}
+        ${isSingle ? cameraMenu : `
+          <div class="thumb-shell" aria-label="Selecionar camera">
+            <div class="thumb-strip">
+              ${model.cameras.map((camera) => BrunoCamerasCard._thumbnail(camera, camera.entity === model.activeId)).join('')}
+            </div>
           </div>
-        </div>
+        `}
       </div>
     `;
 
@@ -904,6 +1072,18 @@ class BrunoCamerasCard extends HTMLElement {
             <span class="thumb-name">${BrunoCamerasCard._escape(camera.short_name || camera.name)}</span>
           </span>
         </span>
+      </button>
+    `;
+  }
+
+  static _menuOption(camera, active) {
+    const activeClass = active ? ' is-active' : '';
+    const onlineClass = camera.online ? ' is-online' : '';
+    return `
+      <button class="camera-menu-option${activeClass}" type="button" role="menuitem" data-camera-id="${BrunoCamerasCard._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasCard._escapeAttr(camera.name)}">
+        <ha-icon icon="mdi:cctv"></ha-icon>
+        <span>${BrunoCamerasCard._escape(camera.name || camera.short_name || 'Camera')}</span>
+        <span class="status-dot${onlineClass}" data-camera-status="${BrunoCamerasCard._escapeAttr(camera.entity)}"></span>
       </button>
     `;
   }

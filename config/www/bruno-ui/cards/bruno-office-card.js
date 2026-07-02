@@ -225,6 +225,15 @@ class BrunoOfficeCard extends HTMLElement {
   _runRoomSubview() {
     const entities = this._config.entities;
     globalThis.BrunoLiquidGlass?.feedback?.('tap');
+    const section = this._config?.section;
+    if (section) {
+      this.dispatchEvent(new CustomEvent('ll-custom', {
+        detail: { action: 'fire-dom-event', bruno_section: section },
+        bubbles: true,
+        composed: true,
+      }));
+      return;
+    }
     this._runConfiguredAction(this._config.double_tap_action, entities.room_group);
   }
 

@@ -326,14 +326,14 @@ class BrunoEnergyCard extends HTMLElement {
           min-width: 0;
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
         }
 
         .header-icon {
           position: relative;
-          flex: 0 0 24px;
-          width: 24px;
-          height: 24px;
+          flex: 0 0 28px;
+          width: 28px;
+          height: 28px;
           border-radius: 999px;
           display: grid;
           place-items: center;
@@ -344,12 +344,12 @@ class BrunoEnergyCard extends HTMLElement {
         }
 
         .header-icon ha-icon {
-          --mdc-icon-size: 14px;
+          --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
           position: absolute;
           left: 50%;
           top: 50%;
-          width: 14px;
-          height: 14px;
+          width: 16px;
+          height: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -365,18 +365,17 @@ class BrunoEnergyCard extends HTMLElement {
         }
 
         .title-main {
-          font-size: 12px;
-          line-height: 1;
-          font-weight: 780;
-          text-transform: uppercase;
-          color: rgba(255,255,255,0.78);
+          font-size: 13px;
+          line-height: 1.05;
+          font-weight: 800;
+          color: rgba(255,255,255,0.93);
         }
 
         .value {
           min-width: 0;
-          font-size: 17px;
+          font-size: 15px;
           line-height: 1.08;
-          font-weight: 760;
+          font-weight: 740;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;

@@ -26,8 +26,8 @@ layout:
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
     "sidebar welcome welcome welcome welcome welcome sala sala comodos comodos comodos comodos comodos"
-    "sidebar welcome welcome welcome welcome welcome energy energy energy energy media media media"
-    "sidebar welcome welcome welcome welcome welcome roborock roborock roborock roborock media media media"
+    "sidebar welcome welcome welcome welcome welcome energy energy energy energy roborock roborock roborock"
+    "sidebar welcome welcome welcome welcome welcome media media media media camera camera camera"
     "sidebar quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions"
 cards:
   # Redirect mobile preservado (vinha do bento_main): so renderiza/age em <=800px.
@@ -43,5 +43,6 @@ cards:
   - !include ../main-grid/bento_comodos.yaml
   - !include ../main-grid/bento_energy.yaml
   - !include ../main-grid/bento_roborock.yaml
+  - !include ../main-grid/bento_camera.yaml
   - !include ../main-grid/bento_quick_actions.yaml
   - !include ../main-grid/bento_media.yaml

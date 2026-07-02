@@ -256,10 +256,15 @@ class BrunoTopBadgesCard extends HTMLElement {
     if (percentControl != null) return 100 - percentControl;
 
     const coverPosition = this._toPercent(cover?.attributes?.current_position);
-    if (coverPosition != null) return coverPosition;
+    if (coverPosition != null) {
+      if (state === 'open' && coverPosition <= 1) return 100;
+      if (state === 'closed' && coverPosition >= 99) return 0;
+      return coverPosition;
+    }
 
     if (state === 'open') return 100;
     if (state === 'closed') return 0;
+
     return 0;
   }
 
@@ -274,11 +279,12 @@ class BrunoTopBadgesCard extends HTMLElement {
       const state = String(cover?.state || '').toLowerCase();
       const available = !this._isUnavailable(cover);
       const openPosition = available ? this._curtainOpenPosition(item) : null;
-      const displayPosition = openPosition == null ? null : this._curtainDisplayOpenPosition(openPosition);
+      const displayOpenPosition = openPosition == null ? null : this._curtainDisplayOpenPosition(openPosition);
+      const displayClosedPosition = displayOpenPosition == null ? null : 100 - displayOpenPosition;
       return {
-        icon: displayPosition != null && displayPosition <= 3 ? 'mdi:curtains-closed' : 'mdi:curtains',
+        icon: displayClosedPosition != null && displayClosedPosition >= 97 ? 'mdi:curtains-closed' : 'mdi:curtains',
         title: item.title || this._entityName(entityId),
-        sub: displayPosition == null ? 'indisponivel' : `${displayPosition}% aberta`,
+        sub: displayClosedPosition == null ? 'indisponivel' : `${displayClosedPosition}% fechada`,
         active: available && (state === 'opening' || state === 'closing'),
       };
     });

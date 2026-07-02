@@ -1,6 +1,7 @@
 type: custom:bruno-roborock-card
 view_layout:
   grid-area: roborock
+variant: compact
 
 # FALLBACK - Roborock Lovelace/Negocjohn original
 # Para reverter:

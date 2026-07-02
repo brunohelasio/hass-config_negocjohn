@@ -240,6 +240,30 @@ class BrunoHeroCard extends HTMLElement {
     };
   }
 
+  _eventModels(limit = 1) {
+    const count = Math.max(1, Math.min(3, Number(limit) || 1));
+    const events = Array.isArray(this._events) ? this._events.slice(0, count) : [];
+    if (!events.length) return [this._nextEventModel()];
+
+    return events.map((event, index) => ({
+      empty: false,
+      label: index === 0 ? 'Proximo evento' : (event.calendarName || 'Agenda'),
+      summary: event.summary,
+      time: this._eventTimeLabel(event),
+      color: event.color || '#7fdbe9',
+    }));
+  }
+
+  _renderEventLine(event) {
+    return `
+      <button class="event-line" type="button" aria-label="Abrir agenda" style="--event-color:${BrunoHeroCard._escapeAttr(event.color)}">
+        <span>${BrunoHeroCard._escape(event.label)}</span>
+        <strong>${BrunoHeroCard._escape(event.summary)}</strong>
+        <small>${BrunoHeroCard._escape(event.time)}</small>
+      </button>
+    `;
+  }
+
   _eventTimeLabel(event) {
     if (!event?.start) return event?.calendarName || 'Agenda';
     if (event.allDay) return event.calendarName || 'Dia todo';
@@ -629,8 +653,9 @@ class BrunoHeroCard extends HTMLElement {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
 
     const weather = this._weatherModel();
-    const event = this._nextEventModel();
-    const cameras = this._cameraModel();
+    const events = this._eventModels(this._config.calendar?.compact_events_to_show);
+    const showCameras = this._config.cameras?.show !== false && this._config.cameras?.enabled !== false;
+    const cameras = showCameras ? this._cameraModel() : [];
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -725,29 +750,23 @@ class BrunoHeroCard extends HTMLElement {
           -webkit-appearance: none;
           width: fit-content;
           max-width: 100%;
-          min-height: 30px;
+          min-height: 0;
           margin-top: 15px;
-          padding: 0 12px 0 9px;
+          padding: 0;
           display: inline-flex;
           align-items: center;
           gap: 8px;
           text-align: left;
-          border-radius: 999px;
-          border: 1px solid rgba(255,255,255,0.12);
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.105), rgba(255,255,255,0.040)),
-            rgba(8,12,18,0.22);
-          backdrop-filter: blur(18px) saturate(1.32);
-          -webkit-backdrop-filter: blur(18px) saturate(1.32);
-          box-shadow:
-            inset 0 1px 0 rgba(255,255,255,0.13),
-            0 10px 24px rgba(0,0,0,0.18);
-          transition: filter 160ms ease, transform 160ms ease, border-color 160ms ease;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          text-shadow: 0 3px 14px rgba(0,0,0,0.38);
+          transition: filter 160ms ease, transform 160ms ease;
         }
 
         .inline-weather:hover {
           filter: brightness(1.07);
-          border-color: rgba(255,255,255,0.18);
         }
 
         .inline-weather:active {
@@ -783,8 +802,19 @@ class BrunoHeroCard extends HTMLElement {
         .hero-bottom {
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 9px;
           min-height: 0;
+          padding-bottom: 54px;
+        }
+
+        .hero-bottom.has-cameras {
+          padding-bottom: 0;
+        }
+
+        .event-stack {
+          display: grid;
+          gap: 7px;
+          min-width: 0;
         }
 
         .event-line {
@@ -1006,17 +1036,17 @@ class BrunoHeroCard extends HTMLElement {
             </button>
           </div>
 
-          <div class="hero-bottom">
-            <button class="event-line" type="button" aria-label="Abrir agenda" style="--event-color:${BrunoHeroCard._escapeAttr(event.color)}">
-              <span>${BrunoHeroCard._escape(event.label)}</span>
-              <strong>${BrunoHeroCard._escape(event.summary)}</strong>
-              <small>${BrunoHeroCard._escape(event.time)}</small>
-            </button>
-
-            <div class="camera-strip" aria-label="Mini cameras">
-              <span class="camera-strip-asset" aria-hidden="true"></span>
-              ${cameras.map((camera) => BrunoHeroCard._miniCamera(camera)).join('')}
+          <div class="hero-bottom${showCameras ? ' has-cameras' : ''}">
+            <div class="event-stack">
+              ${events.map((event) => this._renderEventLine(event)).join('')}
             </div>
+
+            ${showCameras ? `
+              <div class="camera-strip" aria-label="Mini cameras">
+                <span class="camera-strip-asset" aria-hidden="true"></span>
+                ${cameras.map((camera) => BrunoHeroCard._miniCamera(camera)).join('')}
+              </div>
+            ` : ''}
           </div>
         </div>
       </section>
@@ -1028,11 +1058,11 @@ class BrunoHeroCard extends HTMLElement {
       this._openWeatherPopup();
     });
 
-    this.shadowRoot.querySelector('.event-line')?.addEventListener('click', (eventClick) => {
+    this.shadowRoot.querySelectorAll('.event-line').forEach((button) => button.addEventListener('click', (eventClick) => {
       eventClick.preventDefault();
       eventClick.stopPropagation();
       this._openAgendaPopup();
-    });
+    }));
 
     this.shadowRoot.querySelectorAll('.camera-thumb').forEach((button) => {
       button.addEventListener('click', (eventClick) => {
@@ -1042,7 +1072,7 @@ class BrunoHeroCard extends HTMLElement {
       });
     });
 
-    this._updateCameraImages();
+    if (showCameras) this._updateCameraImages();
   }
 
   _render() {

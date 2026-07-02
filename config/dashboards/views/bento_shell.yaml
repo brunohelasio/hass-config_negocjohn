@@ -24,6 +24,10 @@ cards:
     default_rail: default
     section_rails:
       sala: rooms
+      office: rooms
+      casal: rooms
+      marina: rooms
+      miguel: rooms
     # NOVO (full-bleed): imagem de fundo da shell por seção (sangra sob rail +
     # faixas + blocos). Seção sem entrada aqui => camada transparente (grafite).
     # ROLLBACK: comentar este bloco `backdrops` (volta ao fundo grafite de hoje).
@@ -31,6 +35,10 @@ cards:
       home: /local/images/home_savant.jpg
       # Cache-bust da imagem da Sala (atualizada pelo usuário em 2026-06-27).
       sala: /local/images/sala_estar.jpg?v=20260627-1
+      office: /local/images/office.jpg?v=20260701-office-bg-refresh-3
+      casal: /local/images/quarto_casal.jpg?v=20260701-qcasal-bg-1
+      marina: /local/images/quarto_marina.jpg?v=20260701-qmarina-bg-1
+      miguel: /local/images/quarto_miguel.jpg?v=20260701-qmiguel-bg-1
     sections:
       home: !include shell/section_home.yaml
       cameras: !include shell/section_cameras.yaml
@@ -43,3 +51,11 @@ cards:
       # shell, via section_rails: rooms).
       sala:
         type: custom:bruno-sala-subview
+      office:
+        type: custom:bruno-office-subview
+      casal:
+        type: custom:bruno-quarto-casal-subview
+      marina:
+        type: custom:bruno-quarto-marina-subview
+      miguel:
+        type: custom:bruno-quarto-miguel-subview

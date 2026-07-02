@@ -1,7 +1,8 @@
 type: custom:bruno-office-card
+section: office
 double_tap_action:
-  action: navigate
-  navigation_path: subview-office
+  action: fire-dom-event
+  bruno_section: office
 
 # FALLBACK - duplo clique abrindo popup Lovelace/Negocjohn original
 # Para voltar rapidamente ao comportamento anterior:

@@ -1,7 +1,8 @@
 type: custom:bruno-quarto-marina-card
+section: marina
 double_tap_action:
-  action: navigate
-  navigation_path: subview-quarto-marina
+  action: fire-dom-event
+  bruno_section: marina
 
 # FALLBACK - popup original do Q. Marina
 # double_tap_action: !include ../../shared/popup/rooms/quarto_marina.yaml

@@ -7,10 +7,16 @@ const BRUNO_SALA_CURTAIN_CALIBRATION = [
   { visual: 100, position: 100 },
 ];
 const BRUNO_SALA_CURTAIN_PRESETS = [
-  { label: 25, position: 33 },
-  { label: 50, position: 47 },
-  { label: 75, position: 70 },
+  { label: 0, closed: 0, position: 100 },
+  { label: 25, closed: 25, position: 70 },
+  { label: 50, closed: 50, position: 47 },
+  { label: 75, closed: 75, position: 33 },
+  { label: 100, closed: 100, position: 0 },
 ];
+const BRUNO_SALA_CURTAIN_TRAVEL_MS = 30000;
+const BRUNO_SALA_CURTAIN_MIN_MOTION_MS = 1200;
+const BRUNO_SALA_CURTAIN_MOTION_TICK_MS = 350;
+const BRUNO_SALA_CURTAIN_TARGET_TOLERANCE = 2;
 
 const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
   title: 'Sala',
@@ -78,8 +84,26 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
       { entity: 'light.sala_2_switch_3', name: 'Cristaleira', icon_type: 'ledstrip', zone: 'varanda' },
     ],
     cameras: [
-      { entity: 'camera.sl_camera_2', name: 'Sala Principal', short_name: 'Sala' },
-      { entity: 'camera.vr_camera_2', name: 'Sala Lateral', short_name: 'Varanda' },
+      {
+        entity: 'camera.sl_camera_2',
+        name: 'Sala Principal',
+        short_name: 'Sala',
+        controls: [
+          { key: 'sound', label: 'Som', description: 'Detecção de som', icon: 'mdi:microphone-outline', entity: 'switch.sl_camera_deteccao_de_som' },
+          { key: 'motion', label: 'Mov.', description: 'Alarme de movimento', icon: 'mdi:run-fast', entity: 'switch.sl_camera_alarme_de_movimento' },
+          { key: 'privacy', label: 'Priv.', description: 'Modo de privacidade', icon: 'mdi:eye-off-outline', entity: 'switch.sl_camera_modo_de_privacidade' },
+        ],
+      },
+      {
+        entity: 'camera.vr_camera_2',
+        name: 'Sala Lateral',
+        short_name: 'Varanda',
+        controls: [
+          { key: 'sound', label: 'Som', description: 'Detecção de som', icon: 'mdi:microphone-outline', entity: 'switch.vr_camera_deteccao_de_som' },
+          { key: 'motion', label: 'Mov.', description: 'Alarme de movimento', icon: 'mdi:run-fast', entity: 'switch.vr_camera_alarme_de_movimento' },
+          { key: 'privacy', label: 'Priv.', description: 'Modo de privacidade', icon: 'mdi:eye-off-outline', entity: 'switch.vr_camera_modo_de_privacidade' },
+        ],
+      },
     ],
   },
 };
@@ -109,11 +133,18 @@ class BrunoSalaSubview extends HTMLElement {
     this._lastMinute = '';
     this._lastActionAt = {};
     this._spotifyToolsOpen = false;
+    this._mediaMenuOpen = false;
     this._selectedLightZone = 'sala';
     this._selectedMediaSource = '';
     this._lastMediaTvOn = undefined;
     this._mediaTvAnimationUntil = 0;
     this._mediaTvAnimationState = undefined;
+    this._curtainMotion = null;
+    this._curtainMotionTimer = null;
+    this._selectedClimatePanel = '';
+    this._activeCameraEntity = '';
+    this._cameraControlsOpen = false;
+    this._expandedZone = null;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
     this._boundLiveInputHandler = (event) => this._handleLiveInput(event);
@@ -143,6 +174,7 @@ class BrunoSalaSubview extends HTMLElement {
     this.shadowRoot?.removeEventListener('click', this._boundActionHandler);
     this._stopRefreshTimer();
     this._stopClockTimer();
+    this._stopCurtainMotionTimer();
   }
 
   getCardSize() {
@@ -271,10 +303,15 @@ class BrunoSalaSubview extends HTMLElement {
     if (percentControl != null) return 100 - percentControl;
 
     const coverPosition = this._toCurtainPercent(entity?.attributes?.current_position);
-    if (coverPosition != null) return coverPosition;
+    if (coverPosition != null) {
+      if (state === 'open' && coverPosition <= 1) return 100;
+      if (state === 'closed' && coverPosition >= 99) return 0;
+      return coverPosition;
+    }
 
     if (state === 'open') return 100;
     if (state === 'closed') return 0;
+
     return 0;
   }
 
@@ -307,6 +344,109 @@ class BrunoSalaSubview extends HTMLElement {
 
   _curtainClosedVisualPosition(openPosition) {
     return 100 - this._curtainDisplayOpenPosition(openPosition);
+  }
+
+  _curtainMotionDuration(startClosed, targetClosed) {
+    const start = this._toCurtainPercent(startClosed) ?? 0;
+    const target = this._toCurtainPercent(targetClosed) ?? start;
+    const distance = Math.abs(target - start);
+    return Math.max(BRUNO_SALA_CURTAIN_MIN_MOTION_MS, BRUNO_SALA_CURTAIN_TRAVEL_MS * (distance / 100));
+  }
+
+  _curtainMotionClosedPosition(motion = this._curtainMotion, now = Date.now()) {
+    if (!motion) return null;
+    if (motion.hold) return this._toCurtainPercent(motion.closed);
+
+    const duration = Math.max(1, Number(motion.duration) || BRUNO_SALA_CURTAIN_MIN_MOTION_MS);
+    const elapsed = Math.max(0, now - motion.startedAt);
+    const progress = Math.min(1, elapsed / duration);
+    const value = motion.startClosed + ((motion.targetClosed - motion.startClosed) * progress);
+    return this._toCurtainPercent(value);
+  }
+
+  _curtainMotionDisplayPosition(entityId, state, reportedClosed) {
+    const motion = this._curtainMotion;
+    if (!motion || motion.entityId !== entityId) return null;
+
+    const now = Date.now();
+    if (motion.hold) return this._toCurtainPercent(motion.closed);
+
+    const estimatedClosed = this._curtainMotionClosedPosition(motion, now);
+    const reported = this._toCurtainPercent(reportedClosed);
+    const elapsed = now - motion.startedAt;
+    const progress = Math.min(1, Math.max(0, elapsed / Math.max(1, motion.duration)));
+    const moving = state === 'opening' || state === 'closing';
+    const reportedAtTarget = reported != null && Math.abs(reported - motion.targetClosed) <= BRUNO_SALA_CURTAIN_TARGET_TOLERANCE;
+
+    if (moving && reported != null && !reportedAtTarget) {
+      motion.lastClosed = reported;
+      return reported;
+    }
+
+    if (progress >= 1) {
+      this._curtainMotion = null;
+      this._stopCurtainMotionTimer();
+      return motion.targetClosed;
+    }
+
+    return estimatedClosed;
+  }
+
+  _startCurtainMotionTimer() {
+    if (this._curtainMotionTimer || !this.isConnected) return;
+    this._curtainMotionTimer = globalThis.setInterval(() => {
+      if (!this._curtainMotion || this._curtainMotion.hold) {
+        this._stopCurtainMotionTimer();
+        return;
+      }
+      this._safeRender();
+    }, BRUNO_SALA_CURTAIN_MOTION_TICK_MS);
+  }
+
+  _stopCurtainMotionTimer() {
+    if (!this._curtainMotionTimer) return;
+    globalThis.clearInterval(this._curtainMotionTimer);
+    this._curtainMotionTimer = null;
+  }
+
+  _beginCurtainMotion(targetClosed, direction = 'position') {
+    const entityId = this._config.entities.curtain;
+    if (!entityId) return;
+
+    const activeClosed = this._curtainMotionClosedPosition();
+    const modelClosed = this._curtainModel({ ignoreMotion: true }).visualPosition;
+    const startClosed = this._toCurtainPercent(activeClosed ?? modelClosed) ?? 0;
+    const target = this._toCurtainPercent(targetClosed);
+    if (target == null) return;
+
+    this._curtainMotion = {
+      entityId,
+      direction,
+      startClosed,
+      targetClosed: target,
+      startedAt: Date.now(),
+      duration: this._curtainMotionDuration(startClosed, target),
+      hold: false,
+    };
+    this._startCurtainMotionTimer();
+    this._safeRender();
+  }
+
+  _holdCurtainMotion() {
+    const entityId = this._config.entities.curtain;
+    if (!entityId) return;
+
+    const activeClosed = this._curtainMotionClosedPosition();
+    const modelClosed = this._curtainModel({ ignoreMotion: true }).visualPosition;
+    const closed = this._toCurtainPercent(activeClosed ?? modelClosed) ?? 0;
+    this._curtainMotion = {
+      entityId,
+      closed,
+      updatedAt: Date.now(),
+      hold: true,
+    };
+    this._stopCurtainMotionTimer();
+    this._safeRender();
   }
 
   _safeState(entityId, fallback = '--') {
@@ -352,6 +492,15 @@ class BrunoSalaSubview extends HTMLElement {
     return Number(value).toFixed(digits).replace(/\.0+$/, '');
   }
 
+  _formatMediaTime(seconds) {
+    const safe = Math.max(0, Math.floor(Number(seconds) || 0));
+    const hours = Math.floor(safe / 3600);
+    const minutes = Math.floor((safe % 3600) / 60);
+    const secs = safe % 60;
+    if (hours > 0) return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    return `${minutes}:${String(secs).padStart(2, '0')}`;
+  }
+
   _temperatureLabel() {
     const value = this._numberState(this._config.entities.temperature, null);
     return value == null ? '--' : `${this._formatNumber(value, 1)}\u00b0`;
@@ -367,7 +516,7 @@ class BrunoSalaSubview extends HTMLElement {
     return this._toCurtainPercent(value) ?? 0;
   }
 
-  _curtainModel() {
+  _curtainModel(options = {}) {
     const entityId = this._config.entities.curtain;
     const entity = this._state(entityId);
     const percentEntityId = this._config.entities.curtain_percent_control;
@@ -376,12 +525,19 @@ class BrunoSalaSubview extends HTMLElement {
     const unavailable = configured && Boolean(this._hass) && this._isUnavailable(entity);
     const state = String(entity?.state || (configured ? 'unknown' : 'unavailable')).toLowerCase();
     const safePosition = this._curtainOpenPositionFromState(entity, percentEntity, state);
-    const displayPosition = this._curtainDisplayOpenPosition(safePosition);
-    const visualPosition = this._curtainClosedVisualPosition(safePosition);
-    let status = 'Aberta';
+    const openDisplayPosition = this._curtainDisplayOpenPosition(safePosition);
+    let displayPosition = 100 - openDisplayPosition;
+    let visualPosition = displayPosition;
+    const motionPosition = options.ignoreMotion ? null : this._curtainMotionDisplayPosition(entityId, state, displayPosition);
+    if (motionPosition != null) {
+      displayPosition = motionPosition;
+      visualPosition = motionPosition;
+    }
+    const localMoving = Boolean(this._curtainMotion && this._curtainMotion.entityId === entityId && !this._curtainMotion.hold);
+    let status = 'Fechada';
     if (!configured || unavailable) status = 'Indisponivel';
-    else if (state === 'opening') status = 'Abrindo';
-    else if (state === 'closing') status = 'Fechando';
+    else if (state === 'opening' || (localMoving && this._curtainMotion?.targetClosed < this._curtainMotion?.startClosed)) status = 'Abrindo';
+    else if (state === 'closing' || (localMoving && this._curtainMotion?.targetClosed > this._curtainMotion?.startClosed)) status = 'Fechando';
 
     return {
       entity,
@@ -389,8 +545,9 @@ class BrunoSalaSubview extends HTMLElement {
       state,
       configured,
       available: configured && !unavailable,
-      moving: state === 'opening' || state === 'closing',
+      moving: state === 'opening' || state === 'closing' || localMoving,
       position: safePosition,
+      openDisplayPosition,
       displayPosition,
       visualPosition,
       status,
@@ -476,7 +633,8 @@ class BrunoSalaSubview extends HTMLElement {
   _camerasModel() {
     const cameras = (this._config.entities.cameras || []).map((camera) => this._cameraState(camera));
     const activeId = this._state(this._config.entities.active_camera_select)?.state;
-    const activeCamera = cameras.find((camera) => camera.entity === activeId) || cameras[0];
+    const localActiveId = cameras.some((camera) => camera.entity === this._activeCameraEntity) ? this._activeCameraEntity : '';
+    const activeCamera = cameras.find((camera) => camera.entity === (localActiveId || activeId)) || cameras[0];
     return {
       cameras,
       activeCamera,
@@ -595,7 +753,6 @@ class BrunoSalaSubview extends HTMLElement {
   _mediaSourceFromAction(action) {
     if (action === 'toggle-tv' || action === 'tv-play-pause' || action === 'tv-remote' || action === 'tv-app') return 'tv';
     if (String(action || '').startsWith('spotify-')) return 'spotify';
-    if (action === 'toggle-ps5') return 'ps5';
     return '';
   }
 
@@ -615,7 +772,7 @@ class BrunoSalaSubview extends HTMLElement {
   //   manual para retomar a prioridade automática.
   // - Sem seleção válida: primeira fonte ativa pela ordem; nenhuma ativa → 'tv'.
   _selectedMedia(model) {
-    const order = ['tv', 'spotify', 'ps5'];
+    const order = ['tv', 'spotify'];
     const activeKeys = order.filter((k) => model[k]?.active);
     const prev = this._lastActiveMediaKeys || [];
     const gainedActivation = activeKeys.some((k) => !prev.includes(k));
@@ -1005,7 +1162,17 @@ class BrunoSalaSubview extends HTMLElement {
     }
     if (action === 'select-media-source') {
       const source = target.dataset.source;
-      if (['tv', 'spotify', 'ps5'].includes(source)) this._selectedMediaSource = source;
+      if (['tv', 'spotify'].includes(source)) {
+        this._selectedMediaSource = source;
+        this._mediaTransitionSource = source;
+        this._mediaMenuOpen = false;
+      }
+      this._safeRender();
+      this._mediaTransitionSource = '';
+      return;
+    }
+    if (action === 'media-menu') {
+      this._mediaMenuOpen = !this._mediaMenuOpen;
       this._safeRender();
       return;
     }
@@ -1014,20 +1181,57 @@ class BrunoSalaSubview extends HTMLElement {
     if (interactedMedia) this._selectedMediaSource = interactedMedia;
 
     if (action === 'navigate') this._navigate(target.dataset.path || this._config.navigation_path);
-    if (action === 'more-info') this._moreInfo(entityId);
-    if (action === 'cover-open') this._callService('cover.open_cover', { entity_id: this._config.entities.curtain });
-    if (action === 'cover-close') this._callService('cover.close_cover', { entity_id: this._config.entities.curtain });
-    if (action === 'cover-stop') this._callService('cover.stop_cover', { entity_id: this._config.entities.curtain });
+    if (action === 'more-info') {
+      this._mediaMenuOpen = false;
+      this._selectedClimatePanel = '';
+      this._moreInfo(entityId);
+      return;
+    }
+    if (action === 'toggle-climate-panel') {
+      const panel = target.dataset.panel;
+      this._selectedClimatePanel = this._selectedClimatePanel === panel ? '' : panel;
+      this._safeRender();
+      return;
+    }
+    if (action === 'cover-open') {
+      this._beginCurtainMotion(0, 'opening');
+      this._callService('cover.open_cover', { entity_id: this._config.entities.curtain });
+    }
+    if (action === 'cover-close') {
+      this._beginCurtainMotion(100, 'closing');
+      this._callService('cover.close_cover', { entity_id: this._config.entities.curtain });
+    }
+    if (action === 'cover-stop') {
+      this._holdCurtainMotion();
+      this._callService('cover.stop_cover', { entity_id: this._config.entities.curtain });
+    }
     if (action === 'cover-position') {
       const position = Number(target.dataset.position);
+      const closed = Number(target.dataset.closed);
       if (Number.isFinite(position)) {
+        if (Number.isFinite(closed)) this._beginCurtainMotion(closed, 'position');
         this._setCurtainPosition(position);
       }
     }
     if (action === 'lights-on') this._callService('light.turn_on', { entity_id: this._config.entities.room_group });
     if (action === 'lights-off') this._callService('light.turn_off', { entity_id: this._config.entities.room_group });
     if (action === 'toggle-light') this._callService('homeassistant.toggle', { entity_id: entityId });
+    if (action === 'toggle-camera-control') {
+      if (entityId && !this._cooldown(`camera-control-${entityId}`, 600)) {
+        this._callService('homeassistant.toggle', { entity_id: entityId });
+      }
+      return;
+    }
+    if (action === 'toggle-camera-controls') {
+      this._cameraControlsOpen = !this._cameraControlsOpen;
+      this._safeRender();
+      return;
+    }
     if (action === 'select-camera') {
+      if (entityId) {
+        this._activeCameraEntity = entityId;
+        this._safeRender();
+      }
       if (this._config.entities.active_camera_select && entityId) {
         this._callService('input_select.select_option', {
           entity_id: this._config.entities.active_camera_select,
@@ -1098,35 +1302,42 @@ class BrunoSalaSubview extends HTMLElement {
     if (action === 'toggle-ps5' && this._config.entities.ps5) this._callService('homeassistant.toggle', { entity_id: this._config.entities.ps5 });
     if (action === 'toggle-climate' && !this._cooldown('climate', 1800)) {
       const model = this._climateModel();
+      this._selectedClimatePanel = '';
       this._callService(model.active ? 'climate.turn_off' : 'climate.turn_on', { entity_id: this._config.entities.climate });
     }
     if (action === 'climate-mode') {
       const hvacMode = target.dataset.mode;
       if (hvacMode) {
+        this._selectedClimatePanel = '';
         this._callService('climate.set_hvac_mode', {
           entity_id: this._config.entities.climate,
           hvac_mode: hvacMode,
         });
+        this._safeRender();
       }
       return;
     }
     if (action === 'fan-mode') {
       const fanMode = target.dataset.mode;
       if (fanMode) {
+        this._selectedClimatePanel = '';
         this._callService('climate.set_fan_mode', {
           entity_id: this._config.entities.climate,
           fan_mode: fanMode,
         });
+        this._safeRender();
       }
       return;
     }
     if (action === 'swing-mode') {
       const swingMode = target.dataset.mode;
       if (swingMode) {
+        this._selectedClimatePanel = '';
         this._callService('climate.set_swing_mode', {
           entity_id: this._config.entities.climate,
           swing_mode: swingMode,
         });
+        this._safeRender();
       }
       return;
     }
@@ -1145,7 +1356,9 @@ class BrunoSalaSubview extends HTMLElement {
     const value = Number(target.value);
     if (!Number.isFinite(value)) return;
     if (target.dataset.action === 'curtain-target') {
+      const closed = this._toCurtainPercent(value);
       const visualOpen = 100 - (this._toCurtainPercent(value) ?? 0);
+      if (closed != null) this._beginCurtainMotion(closed, 'position');
       this._setCurtainPosition(this._curtainCommandOpenPosition(visualOpen));
       return;
     }
@@ -1184,11 +1397,11 @@ class BrunoSalaSubview extends HTMLElement {
     const commandOpen = this._curtainCommandOpenPosition(displayOpen);
     const root = target.closest('.curtain-dock');
     root?.style.setProperty('--curtain-position', `${value}%`);
-    root?.querySelector('.curtain-status-percent')?.replaceChildren(document.createTextNode(`- ${displayOpen}%`));
-    const status = displayOpen <= 3 ? 'Fechada' : 'Aberta';
+    root?.querySelector('.curtain-status-percent')?.replaceChildren(document.createTextNode(`- ${value}%`));
+    const status = 'Fechada';
     root?.querySelector('.curtain-status-text')?.replaceChildren(document.createTextNode(status));
-    root?.querySelectorAll('.curtain-chip').forEach((chip) => {
-      chip.classList.toggle('is-active', Math.abs(Number(chip.dataset.position) - commandOpen) <= 1);
+    root?.querySelectorAll('.curtain-mark').forEach((mark) => {
+      mark.classList.toggle('is-active', Math.abs(Number(mark.dataset.closed) - value) <= 1 || Math.abs(Number(mark.dataset.position) - commandOpen) <= 1);
     });
   }
 
@@ -1322,12 +1535,14 @@ class BrunoSalaSubview extends HTMLElement {
     const curtainDisplayPosition = Number.isFinite(Number(curtain.displayPosition)) ? Number(curtain.displayPosition) : curtainPosition;
     const curtainVisualPosition = Number.isFinite(Number(curtain.visualPosition)) ? Number(curtain.visualPosition) : this._curtainClosedVisualPosition(curtainPosition);
     const curtainDisabled = curtain.available ? '' : 'disabled';
-    const curtainChips = BRUNO_SALA_CURTAIN_PRESETS.map((preset) => `
+    const curtainMarks = BRUNO_SALA_CURTAIN_PRESETS.map((preset) => `
       <button
         type="button"
-        class="curtain-chip${Math.abs(curtainPosition - preset.position) <= 1 ? ' is-active' : ''}"
+        class="curtain-mark${Math.abs(curtainVisualPosition - preset.closed) <= 1 ? ' is-active' : ''}"
         data-action="cover-position"
         data-position="${preset.position}"
+        data-closed="${preset.closed}"
+        aria-label="${preset.label}% fechada"
         ${curtainDisabled}
       >${preset.label}%</button>
     `).join('');
@@ -1368,8 +1583,8 @@ class BrunoSalaSubview extends HTMLElement {
               aria-label="Fechamento da cortina"
               ${curtainDisabled}
             >
-            <div class="curtain-chips">
-              ${curtainChips}
+            <div class="curtain-marks">
+              ${curtainMarks}
             </div>
           </div>
       </div>
@@ -1662,9 +1877,9 @@ class BrunoSalaSubview extends HTMLElement {
       })
       .filter((z) => z.total > 0);
 
-    // Single-open: 1 zona aberta por vez. Default = 1ª zona.
+    // Single-open: 1 zona aberta por vez. Default = zonas fechadas.
     if (this._expandedZone === undefined) {
-      this._expandedZone = zones.length ? zones[0].key : null;
+      this._expandedZone = null;
     }
     const onlyOne = zones.length === 1;
     const isExpanded = (zk) => onlyOne || this._expandedZone === zk;
@@ -1719,36 +1934,175 @@ class BrunoSalaSubview extends HTMLElement {
     `;
   }
 
-  _renderCameras(model) {
-    const active = model.cameras.activeCamera || model.cameras.cameras[0];
-    const cameras = model.cameras.cameras || [];
+  _cameraControlState(camera, key) {
+    const controls = Array.isArray(camera?.controls) ? camera.controls.filter((control) => control?.entity) : [];
+    const normalizedKey = String(key || '').toLowerCase();
+    const control = controls.find((item) => String(item.key || '').toLowerCase() === normalizedKey);
+    if (!control) return null;
 
-    return `
-      <section class="glass-card cameras-card">
-        <div class="module-head">
-          <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
-            <div>
-              <div class="module-title">Cameras</div>
+    const entity = this._state(control.entity);
+    const unavailable = this._isUnavailable(entity);
+    const active = !unavailable && String(entity?.state || '').toLowerCase() === 'on';
+    const labels = {
+      sound: 'Som',
+      motion: 'Movimento',
+      privacy: 'Privacidade',
+    };
+
+    return {
+      ...control,
+      active,
+      unavailable,
+      label: labels[normalizedKey] || control.label || control.description || 'Controle',
+    };
+  }
+
+  _cameraStatusLine(camera) {
+    if (!camera) return 'Indisponível';
+
+    const unavailable = this._isUnavailable(this._state(camera.entity));
+    const privacy = this._cameraControlState(camera, 'privacy');
+    if (privacy?.active) return 'Modo privacidade ativo';
+
+    return camera.online ? 'Ao vivo' : (unavailable ? 'Indisponível' : (camera.status || 'Online'));
+  }
+
+  _renderCameraFeed(camera, options = {}) {
+    const pip = Boolean(options.pip);
+    const cameraName = camera?.short_name || camera?.name || 'Câmera';
+    const unavailable = !camera || this._isUnavailable(this._state(camera.entity));
+    const privacy = this._cameraControlState(camera, 'privacy');
+    const privateMode = Boolean(privacy?.active);
+    const classes = [
+      'camera-main',
+      'camera-feed',
+      pip ? 'camera-pip-feed' : 'camera-primary-feed',
+      privateMode ? 'is-private' : '',
+      unavailable ? 'is-unavailable' : '',
+    ].filter(Boolean).join(' ');
+    const overlay = unavailable
+      ? `
+        <div class="camera-state-surface">
+          <ha-icon icon="mdi:video-off-outline"></ha-icon>
+          <span>Indisponível</span>
+        </div>
+      `
+      : privateMode
+        ? `
+          <div class="camera-state-surface">
+            <ha-icon icon="mdi:eye-off-outline"></ha-icon>
+            <span>Modo privacidade ativo</span>
+          </div>
+        `
+        : '';
+    const content = `
+      ${this._cameraFrame(camera)}
+      ${overlay}
+      <div class="camera-row-copy">
+        <strong>${BrunoSalaSubview._escape(cameraName)}</strong>
+      </div>
+    `;
+
+    if (pip && camera?.entity) {
+      return `
+        <button
+          type="button"
+          class="${classes}"
+          data-action="select-camera"
+          data-entity="${BrunoSalaSubview._escapeAttr(camera.entity)}"
+          aria-label="Mostrar câmera ${BrunoSalaSubview._escapeAttr(cameraName)}"
+        >
+          ${content}
+        </button>
+      `;
+    }
+
+    return `<div class="${classes}" aria-label="Câmera ${BrunoSalaSubview._escapeAttr(cameraName)}">${content}</div>`;
+  }
+
+  _renderCameras(model) {
+    const cameras = model.cameras.cameras || [];
+    if (!cameras.length) {
+      return `
+        <section class="glass-card cameras-card cameras-card-controls">
+          <div class="mh-head cameras-head">
+            <div class="mh-head-title">
+              <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
+              <div class="module-title">Câmeras</div>
             </div>
           </div>
-          <div class="online-chip"><span></span>${model.cameras.onlineCount}/${model.cameras.cameras.length} online</div>
+          <div class="camera-stage camera-pip-stage">
+            ${this._renderCameraFeed(null)}
+          </div>
+        </section>
+      `;
+    }
+
+    const selected = model.cameras.activeCamera || cameras[0];
+    const onlineFallback = cameras.find((camera) => camera.online);
+    const active = selected?.online || !onlineFallback ? selected : onlineFallback;
+    const pip = cameras.find((camera) => camera.entity !== active?.entity) || null;
+    const controlsOpen = Boolean(this._cameraControlsOpen);
+
+    return `
+      <section class="glass-card cameras-card cameras-card-controls">
+        <!-- Mesmo cabeçalho de 44px do Hub de Mídia e do ar-condicionado. -->
+        <div class="mh-head cameras-head">
+          <div class="mh-head-title">
+            <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
+            <div class="module-title">Câmeras</div>
+          </div>
+          <button
+            type="button"
+            class="mh-menu camera-settings-button${controlsOpen ? ' is-active' : ''}"
+            data-action="toggle-camera-controls"
+            title="Controles"
+            aria-label="${controlsOpen ? 'Fechar controles das câmeras' : 'Abrir controles das câmeras'}"
+            aria-expanded="${controlsOpen ? 'true' : 'false'}"
+          >
+            <ha-icon icon="mdi:dots-vertical"></ha-icon>
+          </button>
         </div>
 
-        <div class="camera-stage camera-list">
-          ${cameras.map((camera) => `
-            <div class="camera-tile${camera.entity === active?.entity ? ' is-selected' : ''}">
-              <button type="button" class="camera-main" data-action="more-info" data-entity="${BrunoSalaSubview._escapeAttr(camera.entity || '')}">
-                ${this._cameraFrame(camera)}
-                <div class="camera-row-copy">
-                  <strong>${BrunoSalaSubview._escape(camera.name || 'Camera')}</strong>
-                  <span><span class="live-dot"></span>${BrunoSalaSubview._escape(camera.status || 'Online')}</span>
-                </div>
-              </button>
-            </div>
-          `).join('')}
+        <div class="camera-stage camera-pip-stage${controlsOpen ? ' is-controls-open' : ''}">
+          ${this._renderCameraFeed(active)}
+          ${pip ? this._renderCameraFeed(pip, { pip: true }) : ''}
+          ${controlsOpen ? this._renderCameraControls(active) : ''}
         </div>
       </section>
+    `;
+  }
+
+  _renderCameraControls(camera) {
+    const controls = ['sound', 'motion', 'privacy']
+      .map((key) => this._cameraControlState(camera, key))
+      .filter((control) => control?.entity);
+    if (!controls.length) return '';
+
+    const cameraName = camera?.short_name || camera?.name || 'Câmera';
+    const controlMarkup = controls.map((control) => {
+      const description = control.description || control.label || 'Controle';
+      const ariaLabel = `${description} — câmera ${cameraName}`;
+      return `
+        <button
+          type="button"
+          class="camera-control${control.active ? ' is-on' : ''}${control.unavailable ? ' is-unavailable' : ''}"
+          ${control.unavailable ? 'disabled' : `data-action="toggle-camera-control" data-entity="${BrunoSalaSubview._escapeAttr(control.entity)}"`}
+          aria-pressed="${control.active ? 'true' : 'false'}"
+          aria-label="${BrunoSalaSubview._escapeAttr(ariaLabel)}"
+          title="${BrunoSalaSubview._escapeAttr(ariaLabel)}"
+        >
+          <ha-icon icon="${BrunoSalaSubview._escapeAttr(control.icon || 'mdi:toggle-switch-outline')}"></ha-icon>
+          <span class="camera-control-label">${BrunoSalaSubview._escape(control.label || description)}</span>
+          <span class="camera-control-switch" aria-hidden="true"></span>
+        </button>
+      `;
+    }).join('');
+
+    return `
+      <div class="camera-control-strip" aria-label="Controles da câmera ${BrunoSalaSubview._escapeAttr(cameraName)}">
+        <div class="camera-controls">${controlMarkup}</div>
+      </div>
     `;
   }
 
@@ -1788,7 +2142,6 @@ class BrunoSalaSubview extends HTMLElement {
     const spotifyArtwork = spotify.artwork ? BrunoSalaSubview._resolvePicture(spotify.artwork) : '';
     const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1';
     const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png';
-    const ps5Image = ps5.image || '/local/images/ps5.png';
     const tvVolume = tv.volume == null ? 60 : tv.volume;
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
     const tvSource = tv.source || 'HDMI 1';
@@ -1804,15 +2157,25 @@ class BrunoSalaSubview extends HTMLElement {
     const spotifyAttrs = spotify.entity?.attributes || {};
     const spotifyDuration = Number(spotifyAttrs.media_duration) || 0;
     const spotifyPosition = Number(spotifyAttrs.media_position) || 0;
+    const spotifyUpdatedAt = Date.parse(spotifyAttrs.media_position_updated_at || '');
+    const spotifyLivePosition = spotify.playing && Number.isFinite(spotifyUpdatedAt)
+      ? spotifyPosition + ((Date.now() - spotifyUpdatedAt) / 1000)
+      : spotifyPosition;
+    const spotifyDisplayPosition = spotifyDuration > 0
+      ? Math.max(0, Math.min(spotifyDuration, spotifyLivePosition))
+      : Math.max(0, spotifyLivePosition);
     const spotifyProgress = spotifyDuration > 0
-      ? Math.max(0, Math.min(100, (spotifyPosition / spotifyDuration) * 100))
+      ? Math.max(0, Math.min(100, (spotifyDisplayPosition / spotifyDuration) * 100))
       : 0;
+    const spotifyElapsedLabel = this._formatMediaTime(spotifyDisplayPosition);
+    const spotifyDurationLabel = spotifyDuration > 0 ? this._formatMediaTime(spotifyDuration) : '--:--';
     // Spotify desligado (item 5): 2ª linha = dispositivo/integração (à la Sala).
     const spotifyDeviceLabel = this._config.spotify_device_name || spotify.source || 'SpotifyPlus';
     // PS5 ativo — jogo em execução (quando a entidade expõe), para a 2ª linha.
     const ps5Attrs = this._state(ps5.entityId)?.attributes || {};
     const ps5Game = ps5Attrs.media_title || ps5Attrs.app_name || '';
-    const ps5SubLine = [ps5Game, ps5Game ? 'Em jogo' : ''].filter(Boolean).join(' · ');
+    const ps5Status = ps5.configured ? (ps5.active ? 'Online' : 'Offline') : 'Não configurado';
+    const ps5Detail = ps5Game || ps5Status;
 
     const volRow = (action, vol, disabled = false) => `
       <div class="mh-vol${disabled ? ' is-disabled' : ''}">
@@ -1913,7 +2276,11 @@ class BrunoSalaSubview extends HTMLElement {
           <div class="mh-info">
             <small>${esc(spotify.title || 'Tocando')}</small>
             ${spotifyArtist ? `<em>${esc(spotifyArtist)}</em>` : ''}
-            <div class="mh-progress" aria-hidden="true"><span style="width:${spotifyProgress}%"></span></div>
+            <div class="mh-progress-wrap" aria-label="Progresso da faixa">
+              <span class="mh-progress-time">${spotifyElapsedLabel}</span>
+              <div class="mh-progress" aria-hidden="true"><span style="width:${spotifyProgress}%"></span></div>
+              <span class="mh-progress-time">${spotifyDurationLabel}</span>
+            </div>
           </div>
           <div class="mh-controls">
             ${volRow('spotify-volume', spotifyVolume)}
@@ -1935,37 +2302,40 @@ class BrunoSalaSubview extends HTMLElement {
         ${art(spotifyStandbyImage, 'square', 'mdi:music-note', false)}
       `;
 
-    // ----- Corpo expandido: PS5 ----- (sem título repetido)
-    const ps5Body = ps5.active
+    const mediaMenu = this._mediaMenuOpen
       ? `
-        <div class="mh-left">
-          <div class="mh-info">
-            <small>Ligada · HDMI 1</small>
-            ${ps5SubLine ? `<em>${esc(ps5SubLine)}</em>` : ''}
-          </div>
-          <div class="mh-controls">
-            ${volRow('tv-volume', tvVolume)}
-            <div class="mh-btn-row mh-btn-row-3">
-              ${btn('toggle-ps5', 'Desligar', { icon: 'mdi:power', iconOnly: true, entity: ps5.entityId || '' })}
-              ${btn('ps5-source', 'Abrir fonte', { icon: 'mdi:import', iconOnly: true })}
-              ${btn('ps5-control', 'Controle', { icon: 'mdi:gamepad-variant', iconOnly: true })}
-            </div>
+        <div class="mh-overflow-panel" role="menu" aria-label="Opções de mídia">
+          <div class="mh-overflow-item">
+            <span class="mh-overflow-icon"><ha-icon icon="mdi:sony-playstation"></ha-icon></span>
+            <span class="mh-overflow-copy">
+              <strong>PS5</strong>
+              <small>${esc(ps5Detail)}</small>
+            </span>
+            <button
+              type="button"
+              class="mh-overflow-action${ps5.active ? ' is-active' : ''}"
+              data-action="toggle-ps5"
+              title="${ps5.active ? 'Desligar PS5' : 'Ligar PS5'}"
+              aria-label="${ps5.active ? 'Desligar PS5' : 'Ligar PS5'}"
+              ${ps5.configured ? '' : 'disabled'}
+            >
+              <ha-icon icon="mdi:power"></ha-icon>
+            </button>
+            <button
+              type="button"
+              class="mh-overflow-action"
+              data-action="more-info"
+              data-entity="${escA(ps5.entityId || '')}"
+              title="Detalhes"
+              aria-label="Detalhes do PS5"
+              ${ps5.configured ? '' : 'disabled'}
+            >
+              <ha-icon icon="mdi:dots-horizontal"></ha-icon>
+            </button>
           </div>
         </div>
-        ${art(ps5Image, 'square', 'mdi:sony-playstation', false)}
       `
-      : `
-        <div class="mh-left">
-          <div class="mh-info">
-            <small>Desligada</small>
-            <em>HDMI 1 disponível</em>
-          </div>
-          <div class="mh-controls">
-            ${btn('toggle-ps5', 'Ligar PS5', { icon: 'mdi:power', main: true, disabled: !ps5.configured, entity: ps5.entityId || '' })}
-          </div>
-        </div>
-        ${art(ps5Image, 'square', 'mdi:sony-playstation', false)}
-      `;
+      : '';
 
     const sourceMeta = {
       tv: {
@@ -1982,25 +2352,19 @@ class BrunoSalaSubview extends HTMLElement {
         active: spotify.active,
         body: spotifyBody,
       },
-      ps5: {
-        label: 'PS5',
-        icon: 'mdi:sony-playstation',
-        summary: ps5.active ? 'Online' : 'Offline',
-        active: ps5.active,
-        body: ps5Body,
-      },
     };
-    const order = ['tv', 'spotify', 'ps5'];
+    const order = ['tv', 'spotify'];
 
     const renderSource = (key) => {
       const s = sourceMeta[key];
       const isOpen = key === selected;
+      const isSwitching = isOpen && key === this._mediaTransitionSource;
       // Ícone do Spotify monocromático (sem verde): ha-icon herda a cor do CSS.
       const iconHtml = key === 'spotify'
         ? '<ha-icon class="mh-src-icon mh-icon-spotify" icon="mdi:spotify"></ha-icon>'
         : `<ha-icon class="mh-src-icon" icon="${escA(s.icon)}"></ha-icon>`;
       return `
-        <div class="mh-source${isOpen ? ' is-open' : ''}${s.active ? ' is-active' : ''}">
+        <div class="mh-source${isOpen ? ' is-open' : ''}${s.active ? ' is-active' : ''}${isSwitching ? ' is-switching' : ''}">
           <button
             type="button"
             class="mh-source-head"
@@ -2019,16 +2383,24 @@ class BrunoSalaSubview extends HTMLElement {
     };
 
     return `
-      <section class="glass-card media-hub-card mh-accordion${sourceMeta[selected]?.active ? ' is-playing' : ''}">
+      <section class="glass-card media-hub-card mh-accordion${sourceMeta[selected]?.active ? ' is-playing' : ''}${this._mediaMenuOpen ? ' is-menu-open' : ''}">
         <div class="mh-head">
           <div class="mh-head-title">
             <span class="micro-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
             <div class="module-title">Hub de Mídia</div>
           </div>
-          <button type="button" class="mh-menu" data-action="media-menu" title="Opções" aria-label="Opções">
+          <button
+            type="button"
+            class="mh-menu${this._mediaMenuOpen ? ' is-active' : ''}"
+            data-action="media-menu"
+            title="Opções"
+            aria-label="Opções"
+            aria-expanded="${this._mediaMenuOpen ? 'true' : 'false'}"
+          >
             <ha-icon icon="mdi:dots-vertical"></ha-icon>
           </button>
         </div>
+        ${mediaMenu}
         <div class="mh-sources">
           ${order.map(renderSource).join('')}
         </div>
@@ -2550,14 +2922,9 @@ class BrunoSalaSubview extends HTMLElement {
   _renderAC(model) {
     const climate = model.climate;
     const target = climate.target == null ? '--' : this._formatNumber(climate.target, 0);
-    const targetNumber = Number.isFinite(Number(climate.target)) ? Math.round(Number(climate.target)) : 22;
     const current = climate.current == null ? '--' : this._formatNumber(climate.current, 1);
     const minTarget = Number.isFinite(Number(climate.minTemp)) ? Number(climate.minTemp) : 16;
     const maxTarget = Number.isFinite(Number(climate.maxTemp)) ? Number(climate.maxTemp) : 30;
-    const targetStep = Number.isFinite(Number(climate.targetStep)) ? Number(climate.targetStep) : 1;
-    const deviceName = BrunoSalaSubview._escape(this._config.climate_device_name || 'Ar condicionado');
-    const climateImage = BrunoSalaSubview._escapeAttr(this._config.climate_image || '/local/images/ar-condicionado-gree-tight.png');
-    const climateActiveImage = BrunoSalaSubview._escapeAttr(this._config.climate_active_image || '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1');
     const activeMode = climate.hvacMode || 'off';
     const fan = String(climate.fan || 'auto').toLowerCase();
     const swing = String(climate.swing || '').toLowerCase();
@@ -2570,33 +2937,6 @@ class BrunoSalaSubview extends HTMLElement {
         : activeMode === 'fan_only'
           ? 'Ventilacao'
           : 'Temperatura';
-    const modeButtonClass = (button) => {
-      return activeMode === button.key ? ' is-active' : '';
-    };
-    const hvacModes = Array.isArray(climate.hvacModes) ? climate.hvacModes : [];
-    const hvacAvailable = (key) => !hvacModes.length || hvacModes.includes(key);
-    const fanMode = (candidates, fallback) => this._climateOption(climate.fanModes, candidates, fallback);
-    const lowMode = fanMode(['low', 'baixo'], 'low');
-    const mediumMode = fanMode(['medium', 'med', 'medio'], 'medium');
-    const highMode = fanMode(['high', 'alto'], 'high');
-    const swingOnMode = this._climateOption(climate.swingModes, ['on', 'ativada', 'ativo', 'enabled'], '');
-    const swingOffMode = this._climateOption(climate.swingModes, ['off', 'desativada', 'desativado', 'disabled'], '');
-    const nextSwingMode = swingActive ? swingOffMode : swingOnMode;
-    const fanActive = (value, aliases = []) => {
-      const normalized = String(value || '').toLowerCase();
-      return Boolean(normalized) && (fan === normalized || aliases.some((alias) => fan.includes(alias)));
-    };
-    const modeButtons = [
-      { key: 'cool', icon: 'mdi:snowflake', label: 'Cool', disabled: !hvacAvailable('cool') },
-      { key: 'heat', icon: 'mdi:fire', label: 'Heat', disabled: !hvacAvailable('heat') },
-      { key: 'fan_only', icon: 'mdi:fan', label: 'Fan', disabled: !hvacAvailable('fan_only') },
-    ];
-    const fanButtons = [
-      { key: 'low', label: 'Low', action: 'fan-mode', mode: lowMode, active: fanActive(lowMode, ['low', 'baixo']) },
-      { key: 'medium', label: 'Med', action: 'fan-mode', mode: mediumMode, active: fanActive(mediumMode, ['med']) },
-      { key: 'high', label: 'High', action: 'fan-mode', mode: highMode, active: fanActive(highMode, ['high', 'alto']) },
-      { key: 'swing', label: 'Swing', action: 'swing-mode', mode: nextSwingMode, active: swingActive },
-    ];
 
     // NOVO (Passada 2): AC ENXUTO (proposta imagem 5) — cabeçalho (estado/modo) +
     // power; leitura Ambiente/Umidade; semi-anel (Desejada); 3 botões (Modo /
@@ -2607,58 +2947,156 @@ class BrunoSalaSubview extends HTMLElement {
       const t = String(s || '').replace(/_/g, ' ').trim();
       return t ? t.charAt(0).toUpperCase() + t.slice(1) : '—';
     };
+    const normalize = (value) => String(value || '').toLowerCase();
+    const unique = (items) => [...new Set((items || []).filter(Boolean))];
+    const hvacOptions = unique(climate.hvacModes);
+    const fanOptions = unique(climate.fanModes);
+    const swingOptions = unique(climate.swingModes);
+    const modeIcon = (mode) => {
+      const value = normalize(mode);
+      return ({
+        off: 'mdi:power',
+        cool: 'mdi:snowflake',
+        heat: 'mdi:fire',
+        fan_only: 'mdi:fan',
+        dry: 'mdi:water-percent',
+        auto: 'mdi:autorenew',
+        heat_cool: 'mdi:autorenew',
+      }[value] || 'mdi:thermostat');
+    };
+    const fanIcon = (mode) => {
+      const value = normalize(mode);
+      if (value.includes('auto')) return 'mdi:fan-auto';
+      if (value.includes('low') || value.includes('baixo')) return 'mdi:fan-speed-1';
+      if (value.includes('med')) return 'mdi:fan-speed-2';
+      if (value.includes('high') || value.includes('alto') || value.includes('fort')) return 'mdi:fan-speed-3';
+      return 'mdi:fan';
+    };
+    const modeLabelFor = (mode) => {
+      const value = normalize(mode);
+      return ({
+        off: 'Desligado',
+        cool: 'Frio',
+        heat: 'Aquecimento',
+        fan_only: 'Ventilar',
+        dry: 'Secar',
+        heat_cool: 'Auto',
+        auto: 'Auto',
+      }[value] || cap(mode));
+    };
+    const fanLabelFor = (mode) => {
+      const value = normalize(mode);
+      if (value === 'auto') return 'Auto';
+      if (value.includes('low') || value.includes('baixo')) return 'Baixa';
+      if (value.includes('med')) return 'Média';
+      if (value.includes('high') || value.includes('alto')) return 'Alta';
+      if (value.includes('fort')) return 'Forte';
+      return cap(mode);
+    };
+    const swingLabelFor = (mode) => {
+      const value = normalize(mode);
+      if (!value) return 'Indisponível';
+      if (['off', 'desativado', 'desativada', 'disabled'].includes(value)) return 'Desligado';
+      if (['on', 'ativo', 'ativada', 'enabled'].includes(value)) return 'Ativo';
+      return cap(mode);
+    };
     const modeLabel = !climate.active || activeMode === 'off'
       ? 'Desligado'
-      : activeMode === 'fan_only' ? 'Ventilar'
-      : activeMode === 'heat_cool' || activeMode === 'auto' ? 'Auto'
-      : cap(activeMode);
-    const fanLabel = cap(fan);
-    const swingLabel = swing ? cap(swing) : (swingActive ? 'On' : 'Off');
-    const stateLabel = climate.active ? 'Ligado' : 'Desligado';
-    const humidity = this._humidityLabel();
+      : modeLabelFor(activeMode);
+    const fanLabel = fanLabelFor(fan);
+    const swingLabel = swing ? swingLabelFor(swing) : (swingActive ? 'Ativo' : 'Desligado');
     const climateEntity = BrunoSalaSubview._escapeAttr(this._config.entities.climate || '');
-    const deviceShort = BrunoSalaSubview._escape(this._config.climate_device_name || deviceName);
+    const climateDisabled = this._isUnavailable(climate.entity) ? ' disabled' : '';
+    const selectedPanel = this._selectedClimatePanel;
+    const renderOption = ({ action, mode, label, icon, active }) => `
+      <button
+        type="button"
+        class="ac-popover-option${active ? ' is-active' : ''}"
+        data-action="${action}"
+        data-mode="${BrunoSalaSubview._escapeAttr(mode)}"
+        role="menuitem"
+      >
+        <ha-icon icon="${BrunoSalaSubview._escapeAttr(icon)}"></ha-icon>
+        <span>${BrunoSalaSubview._escape(label)}</span>
+      </button>
+    `;
+    const renderPopover = (panel, options) => {
+      if (selectedPanel !== panel) return '';
+      if (!options.length) {
+        return `
+          <div class="ac-popover" role="menu">
+            <button type="button" class="ac-popover-option" disabled>
+              <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+              <span>Indisponível</span>
+            </button>
+          </div>
+        `;
+      }
+      return `<div class="ac-popover" role="menu">${options.map(renderOption).join('')}</div>`;
+    };
+    const modeOptions = hvacOptions.map((mode) => ({
+      action: 'climate-mode',
+      mode,
+      label: modeLabelFor(mode),
+      icon: modeIcon(mode),
+      active: normalize(mode) === normalize(activeMode),
+    }));
+    const fanControlOptions = fanOptions.map((mode) => ({
+      action: 'fan-mode',
+      mode,
+      label: fanLabelFor(mode),
+      icon: fanIcon(mode),
+      active: normalize(mode) === fan,
+    }));
+    const swingControlOptions = swingOptions.map((mode) => ({
+      action: 'swing-mode',
+      mode,
+      label: swingLabelFor(mode),
+      icon: normalize(mode) === 'off' ? 'mdi:air-conditioner' : 'mdi:swap-vertical',
+      active: normalize(mode) === swing,
+    }));
+    const controlButton = ({ panel, icon, title, value, options }) => `
+      <div class="ac-control-wrap">
+        <button
+          type="button"
+          class="ac-action${selectedPanel === panel ? ' is-open' : ''}"
+          data-action="toggle-climate-panel"
+          data-panel="${panel}"
+          aria-expanded="${selectedPanel === panel ? 'true' : 'false'}"
+          ${climateDisabled}
+        >
+          <span class="ac-action-icon"><ha-icon icon="${icon}"></ha-icon></span>
+          <span class="ac-action-text"><small>${title}</small><strong>${BrunoSalaSubview._escape(value)}</strong></span>
+        </button>
+        ${renderPopover(panel, options)}
+      </div>
+    `;
 
     return `
       <section class="glass-card ac-card ac-card-lean">
         <div class="ac-lean-head">
-          <div class="module-title">Ar-condicionado</div>
-          <button type="button" class="ac-status-chip" data-action="more-info" data-entity="${climateEntity}">
-            <span class="ac-status-dot${climate.active ? ' is-on' : ''}"></span>
-            <span class="ac-status-text">
-              <strong>${deviceShort}</strong>
-              <small>${stateLabel}${climate.active ? ` · ${BrunoSalaSubview._escape(target)}° · ${BrunoSalaSubview._escape(modeLabel)}` : ''}</small>
-            </span>
-            <ha-icon icon="mdi:chevron-right"></ha-icon>
-          </button>
+          <div class="mh-head-title ac-head-title">
+            <span class="micro-icon tone-blue"><ha-icon icon="mdi:air-conditioner"></ha-icon></span>
+            <div class="module-title">Ar-condicionado</div>
+          </div>
+          <div class="ac-top-stack">
+            <button type="button" class="mh-menu ac-more-button" data-action="more-info" data-entity="${climateEntity}" title="Mais detalhes" aria-label="Mais detalhes">
+              <ha-icon icon="mdi:dots-vertical"></ha-icon>
+            </button>
+            <button type="button" class="ac-power-floating${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado" ${climateDisabled}>
+              <ha-icon icon="mdi:power"></ha-icon>
+            </button>
+          </div>
         </div>
         <div class="ac-lean-mid">
-          <div class="ac-side-read ac-side-left">
-            <ha-icon icon="mdi:water-percent"></ha-icon>
-            <small>Umidade</small>
-            <strong>${BrunoSalaSubview._escape(humidity)}</strong>
-          </div>
           <div class="ac-ring">
             ${this._renderClimateRing(climate, target, current, minTarget, maxTarget, dialMode)}
           </div>
-          <div class="ac-side-read ac-side-right">
-            <ha-icon icon="mdi:thermometer"></ha-icon>
-            <small>Atual</small>
-            <strong>${current}°</strong>
-          </div>
         </div>
         <div class="ac-lean-foot">
-          <button type="button" class="ac-power-btn${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado">
-            <ha-icon icon="mdi:power"></ha-icon>
-          </button>
-          <button type="button" class="ac-action" data-action="more-info" data-entity="${climateEntity}">
-            <span class="ac-action-icon"><ha-icon icon="mdi:thermostat-auto"></ha-icon></span>
-            <span class="ac-action-text"><small>Modo</small><strong>${BrunoSalaSubview._escape(modeLabel)}</strong></span>
-          </button>
-          <button type="button" class="ac-action" data-action="more-info" data-entity="${climateEntity}">
-            <span class="ac-action-icon"><ha-icon icon="mdi:fan"></ha-icon></span>
-            <span class="ac-action-text"><small>Ventilação</small><strong>${BrunoSalaSubview._escape(fanLabel)}</strong></span>
-          </button>
+          ${controlButton({ panel: 'mode', icon: 'mdi:thermostat-auto', title: 'Modo', value: modeLabel, options: modeOptions })}
+          ${controlButton({ panel: 'fan', icon: 'mdi:fan', title: 'Ventilação', value: fanLabel, options: fanControlOptions })}
+          ${controlButton({ panel: 'swing', icon: 'mdi:air-conditioner', title: 'Swing', value: swingLabel, options: swingControlOptions })}
         </div>
       </section>
     `;
@@ -3222,7 +3660,8 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .curtain-dock {
-        --curtain-gold: rgb(242,194,102);
+        --curtain-gold-rgb: var(--bruno-liquid-warm-accent, 242,194,102);
+        --curtain-gold: rgb(var(--curtain-gold-rgb));
         grid-row: 3;
         grid-column: 1 / -1;
         align-self: end;
@@ -3310,24 +3749,24 @@ class BrunoSalaSubview extends HTMLElement {
       }
 
       .curtain-action-button {
-        width: 78px;
-        height: 40px;
+        width: 76px;
+        height: 36px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 5px;
         padding: 0 9px;
-        border-radius: var(--bruno-liquid-control-radius, 14px);
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
         border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
         background: var(--bruno-liquid-control-background,
-          linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.025)),
-          rgba(22,23,24,0.50)
+          linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018)),
+          rgba(255,255,255,0.030)
         );
-        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 18px rgba(0,0,0,0.22));
-        backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
-        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
         color: rgba(255,255,255,0.88);
-        font-size: 12px;
+        font-size: 11.5px;
         font-weight: 700;
         letter-spacing: 0;
         white-space: nowrap;
@@ -3339,23 +3778,20 @@ class BrunoSalaSubview extends HTMLElement {
 
       .curtain-action-button.is-active {
         color: var(--curtain-gold);
-        border-color: rgba(242,194,102,0.38);
-        background:
-          radial-gradient(72px 42px at 50% 0%, rgba(242,194,102,0.24), transparent 70%),
-          rgba(88,66,24,0.26);
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(var(--curtain-gold-rgb),0.180));
+        background: var(--bruno-liquid-control-warm-background, rgba(var(--curtain-gold-rgb),0.038));
+        box-shadow: var(--bruno-liquid-control-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
       }
 
       .curtain-action-button:active {
         transform: translateY(1px);
         color: var(--curtain-gold);
-        border-color: rgba(242,194,102,0.42);
-        background:
-          radial-gradient(72px 42px at 50% 0%, rgba(242,194,102,0.22), transparent 70%),
-          rgba(88,66,24,0.22);
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(var(--curtain-gold-rgb),0.180));
+        background: var(--bruno-liquid-control-warm-background, rgba(var(--curtain-gold-rgb),0.038));
       }
 
       .curtain-action-button:disabled,
-      .curtain-chip:disabled,
+      .curtain-mark:disabled,
       .curtain-range:disabled {
         opacity: 0.46;
         cursor: not-allowed;
@@ -3391,12 +3827,12 @@ class BrunoSalaSubview extends HTMLElement {
       .curtain-slider-glow {
         position: absolute;
         left: 0;
-        top: -4px;
+        top: -3px;
         width: var(--curtain-position);
-        height: 14px;
+        height: 8px;
         border-radius: 999px;
-        background: linear-gradient(90deg, rgba(242,194,102,0.24), rgba(242,194,102,0.05));
-        filter: blur(10px);
+        background: linear-gradient(90deg, rgba(var(--curtain-gold-rgb),0.11), rgba(var(--curtain-gold-rgb),0.020));
+        filter: blur(8px);
         pointer-events: none;
       }
 
@@ -3404,85 +3840,100 @@ class BrunoSalaSubview extends HTMLElement {
         position: relative;
         z-index: 1;
         width: 100%;
-        height: 4px;
+        height: 3px;
         margin: 0;
         appearance: none;
         -webkit-appearance: none;
         border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.055);
         background:
-          linear-gradient(90deg, var(--curtain-gold) 0 var(--curtain-position), rgba(242,194,102,0.45) var(--curtain-position), rgba(255,255,255,0.10) var(--curtain-position) 100%);
-        box-shadow: inset 0 1px 2px rgba(0,0,0,0.34);
+          linear-gradient(90deg, rgba(var(--curtain-gold-rgb),0.62) 0 var(--curtain-position), rgba(var(--curtain-gold-rgb),0.24) var(--curtain-position), rgba(255,255,255,0.11) var(--curtain-position) 100%);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.24);
         cursor: pointer;
         accent-color: var(--curtain-gold);
       }
 
       .curtain-range::-webkit-slider-runnable-track {
-        height: 4px;
+        height: 3px;
         border-radius: 999px;
         background: transparent;
       }
 
       .curtain-range::-webkit-slider-thumb {
-        width: 18px;
-        height: 18px;
-        margin-top: -7px;
+        width: 12px;
+        height: 12px;
+        margin-top: -4.5px;
         -webkit-appearance: none;
         appearance: none;
         border-radius: 50%;
-        border: 1px solid rgba(255,255,255,0.34);
+        border: 1px solid rgba(255,255,255,0.30);
         background:
-          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
-        box-shadow: 0 0 9px rgba(242,194,102,0.34), 0 2px 8px rgba(0,0,0,0.44);
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.86), rgba(var(--curtain-gold-rgb),0.74) 58%, rgba(20,20,20,0.78));
+        box-shadow: 0 0 7px rgba(var(--curtain-gold-rgb),0.22), 0 2px 6px rgba(0,0,0,0.34);
       }
 
       .curtain-range::-moz-range-track {
-        height: 4px;
+        height: 3px;
         border-radius: 999px;
         background: transparent;
       }
 
       .curtain-range::-moz-range-progress {
-        height: 4px;
+        height: 3px;
         border-radius: 999px;
-        background: linear-gradient(90deg, var(--curtain-gold), rgba(242,194,102,0.45));
+        background: linear-gradient(90deg, rgba(var(--curtain-gold-rgb),0.62), rgba(var(--curtain-gold-rgb),0.24));
       }
 
       .curtain-range::-moz-range-thumb {
-        width: 18px;
-        height: 18px;
+        width: 12px;
+        height: 12px;
         border-radius: 50%;
-        border: 1px solid rgba(255,255,255,0.34);
+        border: 1px solid rgba(255,255,255,0.30);
         background:
-          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.95), rgba(235,190,100,0.72) 55%, rgba(20,20,20,0.85));
-        box-shadow: 0 0 9px rgba(242,194,102,0.34), 0 2px 8px rgba(0,0,0,0.44);
+          radial-gradient(circle at 40% 30%, rgba(255,255,255,0.86), rgba(var(--curtain-gold-rgb),0.74) 58%, rgba(20,20,20,0.78));
+        box-shadow: 0 0 7px rgba(var(--curtain-gold-rgb),0.22), 0 2px 6px rgba(0,0,0,0.34);
       }
 
-      .curtain-chips {
-        display: flex;
-        gap: 8px;
-        margin-top: 14px;
-        justify-content: center;
+      .curtain-marks {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        margin-top: 7px;
       }
 
-      .curtain-chip {
-        flex: 1 1 0;
-        min-height: 31px;
-        padding: 0 12px;
-        border-radius: 999px;
-        border: 1px solid rgba(255,255,255,0.10);
-        background: rgba(255,255,255,0.052);
-        color: rgba(255,255,255,0.48);
-        font-size: 12px;
+      .curtain-mark {
+        position: relative;
+        min-width: 0;
+        height: 22px;
+        padding: 8px 0 0;
+        border: 0;
+        background: transparent;
+        color: rgba(255,255,255,0.42);
+        font-size: 10px;
         font-weight: 700;
         letter-spacing: 0;
         cursor: pointer;
       }
 
-      .curtain-chip.is-active {
-        border-color: rgba(242,194,102,0.50);
-        background: rgba(242,194,102,0.10);
+      .curtain-mark::before {
+        content: "";
+        position: absolute;
+        top: 1px;
+        left: 50%;
+        width: 1px;
+        height: 4px;
+        transform: translateX(-50%);
+        border-radius: 999px;
+        background: rgba(255,255,255,0.28);
+      }
+
+      .curtain-mark.is-active {
         color: var(--curtain-gold);
+      }
+
+      .curtain-mark.is-active::before {
+        background: rgba(var(--curtain-gold-rgb),0.72);
       }
 
       .module-icon,
@@ -3501,7 +3952,7 @@ class BrunoSalaSubview extends HTMLElement {
 
       .module-icon ha-icon,
       .micro-icon ha-icon {
-        --mdc-icon-size: 15px;
+        --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
       }
 
       .soft-button,
@@ -5152,7 +5603,7 @@ class BrunoSalaSubview extends HTMLElement {
         cursor: pointer;
       }
       .zone-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(255,196,90,0.30); background: rgba(255,196,90,0.08); color: rgba(255,196,90,0.92); }
-      .zone-icon ha-icon { --mdc-icon-size: 19px; }
+      .zone-icon ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
       .zone-id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
       .zone-id strong { font-size: 14px; font-weight: 700; color: var(--text-main); }
       .zone-id small { font-size: 11px; font-weight: 600; color: var(--text-soft); }
@@ -5183,22 +5634,21 @@ class BrunoSalaSubview extends HTMLElement {
       .light-row-icon {
         width: 36px; height: 36px;
         display: grid; place-items: center;
-        border-radius: 50%;
-        border: 1px solid rgba(255,255,255,0.13);
-        background: rgba(255,255,255,0.04);
         --light-color: #9da0a2;
         color: var(--light-color);
       }
       .light-row.is-on .light-row-icon {
         --light-color: #f0c040;
         color: var(--light-color);
-        border-color: rgba(240,192,64,0.35);
-        background: rgba(240,192,64,0.10);
+        filter: drop-shadow(0 0 7px rgba(240,192,64,0.28));
       }
       /* CENTRALIZAÇÃO: o wrapper do ícone animado ocupava 100% do círculo em
          display:block, jogando o svg p/ o canto. Constrange a 22px e o
          place-items:center do círculo centraliza. */
-      .light-row-icon .tpl-light-icon { width: 22px; height: 22px; }
+      .light-row-icon .tpl-light-icon {
+        width: var(--bruno-liquid-icon-control, 23px);
+        height: var(--bruno-liquid-icon-control, 23px);
+      }
       .light-row-icon svg { width: 100%; height: 100%; }
       .light-row-name { min-width: 0; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       /* BARRA LUMINOSA read-only (não é slider): apagada = pílula escura;
@@ -5218,35 +5668,270 @@ class BrunoSalaSubview extends HTMLElement {
         box-shadow: 0 0 12px rgba(255,176,54,0.55), 0 0 4px rgba(255,176,54,0.6), inset 0 1px 0 rgba(255,255,255,0.45);
       }
 
-      /* ===== NOVO (Passada 2): AC enxuto (layout imagem 4) ===== */
-      .ac-card-lean { display: flex; flex-direction: column; min-height: 0; gap: 10px; }
-      .ac-lean-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-      .ac-lean-head .module-title { font-size: 14px; font-weight: 800; color: var(--text-main); }
-      .ac-status-chip { display: flex; align-items: center; gap: 8px; max-width: 64%; padding: 6px 10px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); cursor: pointer; color: var(--text-main); }
-      .ac-status-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); flex: 0 0 auto; }
-      .ac-status-dot.is-on { background: #56d89b; box-shadow: 0 0 8px rgba(86,216,155,0.6); }
-      .ac-status-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; text-align: left; }
-      .ac-status-text strong { font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .ac-status-text small { font-size: 10px; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .ac-status-chip > ha-icon { --mdc-icon-size: 16px; color: var(--text-soft); flex: 0 0 auto; }
-      .ac-lean-mid { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
-      .ac-side-read { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 56px; }
-      .ac-side-read ha-icon { --mdc-icon-size: 18px; color: rgba(255,255,255,0.6); }
-      .ac-side-read small { font-size: 10px; font-weight: 600; color: var(--text-soft); }
-      .ac-side-read strong { font-size: 15px; font-weight: 800; color: var(--text-main); }
-      .ac-ring { min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-      .ac-ring .icg-shell { width: min(100%, 260px); }
-      .ac-lean-foot { display: grid; grid-template-columns: auto 1fr 1fr; gap: 8px; }
-      .ac-power-btn { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: var(--text-soft); cursor: pointer; }
-      .ac-power-btn.is-active { background: rgba(96,165,250,0.85); border-color: rgba(150,198,255,0.5); color: #fff; }
-      .ac-power-btn ha-icon { --mdc-icon-size: 20px; }
-      .ac-action { display: flex; align-items: center; gap: 9px; padding: 8px 11px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); cursor: pointer; color: var(--text-main); text-align: left; min-width: 0; }
-      .ac-action:hover { background: rgba(255,255,255,0.07); }
-      .ac-action-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; background: rgba(96,165,250,0.16); color: rgba(150,198,255,0.95); flex: 0 0 auto; }
-      .ac-action-icon ha-icon { --mdc-icon-size: 18px; }
-      .ac-action-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-      .ac-action-text small { font-size: 10px; font-weight: 600; color: var(--text-soft); }
-      .ac-action-text strong { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* ===== A/C premium: cabecalho e controles alinhados ao Hub de Midia ===== */
+      .ac-card.ac-card-lean {
+        display: grid;
+        grid-template-rows: 44px minmax(0, 1fr) 64px;
+        gap: 0;
+        min-height: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .ac-lean-head {
+        position: relative;
+        z-index: 3;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px 0 14px;
+      }
+
+      .ac-head-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .ac-top-stack {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        z-index: 4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .ac-more-button {
+        flex: 0 0 auto;
+      }
+
+      .ac-power-floating {
+        width: 46px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 0;
+        background: transparent;
+        color: rgba(255,255,255,0.66);
+        cursor: pointer;
+        transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+      }
+
+      .ac-power-floating ha-icon {
+        --mdc-icon-size: 34px;
+      }
+
+      .ac-power-floating:hover,
+      .ac-power-floating:focus-visible {
+        color: rgba(255,255,255,0.92);
+        background: rgba(255,255,255,0.045);
+      }
+
+      .ac-power-floating.is-active {
+        color: rgba(150,205,255,0.98);
+        background: rgba(96,165,250,0.075);
+        box-shadow: 0 0 18px rgba(44,175,255,0.22);
+      }
+
+      .ac-power-floating:active {
+        transform: translateY(1px);
+      }
+
+      .ac-power-floating:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .ac-lean-mid {
+        position: relative;
+        z-index: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px 2px;
+      }
+
+      .ac-ring {
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible;
+      }
+
+      .ac-ring .icg-shell {
+        width: min(94%, 334px);
+        transform: translateY(3px);
+      }
+
+      .ac-lean-foot {
+        position: relative;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        padding: 0 10px 10px;
+        align-items: end;
+      }
+
+      .ac-control-wrap {
+        position: relative;
+        min-width: 0;
+      }
+
+      .ac-action {
+        width: 100%;
+        min-width: 0;
+        min-height: 50px;
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr);
+        align-items: center;
+        gap: 9px;
+        padding: 7px 10px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        cursor: pointer;
+        color: var(--text-main);
+        text-align: left;
+      }
+
+      .ac-action:hover,
+      .ac-action.is-open {
+        background: var(--bruno-liquid-control-warm-background, rgba(242,194,102,0.038));
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(242,194,102,0.180));
+      }
+
+      .ac-action:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
+
+      .ac-action-icon {
+        width: 32px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        color: rgba(255,255,255,0.82);
+        flex: 0 0 auto;
+      }
+
+      .ac-action:hover .ac-action-icon,
+      .ac-action.is-open .ac-action-icon {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
+      }
+
+      .ac-action-icon ha-icon {
+        --mdc-icon-size: var(--bruno-liquid-icon-control, 23px);
+      }
+
+      .ac-action-text {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .ac-action-text small {
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 650;
+        color: rgba(255,255,255,0.58);
+      }
+
+      .ac-action-text strong {
+        min-width: 0;
+        font-size: 13px;
+        line-height: 1.05;
+        font-weight: 800;
+        color: rgba(255,255,255,0.94);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ac-popover {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(100% + 8px);
+        z-index: 12;
+        display: grid;
+        gap: 4px;
+        padding: 6px;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        /* Não reutilizar o fundo do card: esta é uma superfície de escolha
+           temporária e precisa sobrepor o gauge com leitura inequívoca. */
+        background: var(--bruno-liquid-popup-background,
+          linear-gradient(180deg, rgba(34,31,30,0.720), rgba(12,13,16,0.660))
+        );
+        border: var(--bruno-liquid-popup-border, 1px solid rgba(255,255,255,0.115));
+        box-shadow: var(--bruno-liquid-popup-shadow,
+          inset 0 1px 0 rgba(255,255,255,0.100),
+          0 18px 36px rgba(0,0,0,0.300)
+        );
+        backdrop-filter: var(--bruno-liquid-popup-filter, blur(22px) saturate(1.04) brightness(0.96));
+        -webkit-backdrop-filter: var(--bruno-liquid-popup-filter, blur(22px) saturate(1.04) brightness(0.96));
+      }
+
+      .ac-popover-option {
+        min-width: 0;
+        min-height: 32px;
+        display: grid;
+        grid-template-columns: 18px minmax(0, 1fr);
+        align-items: center;
+        gap: 7px;
+        padding: 0 8px;
+        border-radius: 9px;
+        border: 0;
+        background: var(--bruno-liquid-popup-option-background, rgba(255,255,255,0.035));
+        color: rgba(255,255,255,0.82);
+        font-size: 11px;
+        font-weight: 750;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .ac-popover-option ha-icon {
+        --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px);
+        color: rgba(255,255,255,0.72);
+      }
+
+      .ac-popover-option span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .ac-popover-option:hover,
+      .ac-popover-option.is-active {
+        color: rgba(255,255,255,0.98);
+        background: var(--bruno-liquid-popup-option-hover-background, rgba(242,194,102,0.115));
+      }
+
+      .ac-popover-option:hover ha-icon,
+      .ac-popover-option.is-active ha-icon {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
+      }
+
+      .ac-popover-option:disabled {
+        opacity: 0.48;
+        cursor: default;
+      }
 
       .room-sidebar {
         width: 58px;
@@ -5427,36 +6112,266 @@ class BrunoSalaSubview extends HTMLElement {
         font-size: 14.8px;
       }
 
-      .camera-list {
+      /* ===== Câmeras — feed principal + PiP + controles contextuais ===== */
+      .cameras-card.cameras-card-controls {
+        padding: 0;
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      .camera-tile {
-        position: relative;
-        min-width: 0;
-        min-height: 0;
+        grid-template-rows: 44px minmax(0, 1fr);
+        gap: 0;
         overflow: hidden;
-        border-radius: var(--sala-radius-small);
       }
 
-      .camera-tile.is-selected {
-        box-shadow: 0 0 0 1px rgba(96,190,255,0.22);
+      .cameras-head {
+        flex: 0 0 auto;
       }
 
-      .camera-main {
+      .camera-settings-button.is-active {
+        color: rgba(255,255,255,0.86);
+        background: rgba(255,255,255,0.055);
+      }
+
+      .camera-pip-stage {
+        box-sizing: border-box;
+        position: relative;
+        z-index: 1;
+        min-height: 0;
         height: 100%;
+        padding: 0 10px 10px;
       }
 
-      .camera-thumb-overlay {
+      .camera-feed {
+        height: 100%;
+        transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+      }
+
+      .camera-primary-feed {
+        width: 100%;
+      }
+
+      .camera-pip-feed {
+        position: absolute;
+        z-index: 5;
+        right: 20px;
+        bottom: 22px;
+        width: min(36%, 150px);
+        height: 86px;
+        border-radius: 13px;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.34), 0 0 0 1px rgba(255,255,255,0.10);
+      }
+
+      .camera-pip-stage.is-controls-open .camera-pip-feed {
+        bottom: 76px;
+      }
+
+      .camera-pip-feed .camera-row-copy {
+        left: 9px;
+        right: 9px;
+        bottom: 8px;
+        gap: 0;
+      }
+
+      .camera-pip-feed .camera-row-copy strong {
+        max-width: 100%;
+        font-size: 11px;
+        line-height: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .camera-pip-feed .camera-row-copy span {
         display: none;
       }
 
+      .camera-pip-feed::after {
+        background: linear-gradient(180deg, rgba(4,8,16,0.04), rgba(4,8,16,0.52));
+      }
+
+      .camera-state-surface {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 8px;
+        padding: 16px;
+        color: rgba(255,255,255,0.78);
+        text-align: center;
+        background:
+          radial-gradient(circle at 50% 42%, rgba(96,165,250,0.12), transparent 58%),
+          rgba(5,8,14,0.76);
+        backdrop-filter: blur(8px) saturate(0.9);
+        -webkit-backdrop-filter: blur(8px) saturate(0.9);
+      }
+
+      .camera-state-surface ha-icon {
+        --mdc-icon-size: 32px;
+        color: rgba(255,255,255,0.64);
+      }
+
+      .camera-state-surface span {
+        font-size: 12px;
+        font-weight: 760;
+        line-height: 1.1;
+      }
+
+      .camera-pip-feed .camera-state-surface {
+        gap: 4px;
+        padding: 8px;
+      }
+
+      .camera-pip-feed .camera-state-surface ha-icon {
+        --mdc-icon-size: 22px;
+      }
+
+      .camera-pip-feed .camera-state-surface span {
+        font-size: 9px;
+      }
+
+      .camera-feed.is-private .camera-row-image img,
+      .camera-feed.is-unavailable .camera-row-image img {
+        opacity: 0;
+      }
+
+      .live-dot.is-muted {
+        background: rgba(255,255,255,0.34);
+        box-shadow: none;
+      }
+
+      .camera-control-strip {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        z-index: 7;
+        min-height: 58px;
+        display: grid;
+        align-items: stretch;
+        padding: 4px 0;
+        border: 0;
+        border-radius: 0;
+        background:
+          linear-gradient(180deg, rgba(3,7,13,0.08), rgba(3,7,13,0.40)),
+          rgba(6,8,12,0.18);
+        backdrop-filter: blur(10px) saturate(0.95);
+        -webkit-backdrop-filter: blur(10px) saturate(0.95);
+      }
+
+      .camera-controls {
+        min-width: 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        align-items: stretch;
+      }
+
+      .camera-control {
+        position: relative;
+        min-width: 0;
+        min-height: 50px;
+        display: grid;
+        grid-template-columns: 18px auto 28px;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: rgba(255,255,255,0.62);
+        cursor: pointer;
+        text-align: left;
+        transition: color 160ms ease, background 160ms ease, opacity 160ms ease;
+      }
+
+      .camera-control + .camera-control::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 11px;
+        bottom: 11px;
+        width: 1px;
+        background: rgba(255,255,255,0.105);
+      }
+
+      .camera-control:hover,
+      .camera-control:focus-visible {
+        color: rgba(255,255,255,0.90);
+        background: rgba(255,255,255,0.036);
+        outline: none;
+      }
+
+      .camera-control:focus-visible {
+        box-shadow: inset 0 0 0 1px rgba(138,196,255,0.42);
+      }
+
+      .camera-control ha-icon {
+        --mdc-icon-size: 17px;
+      }
+
+      .camera-control-label {
+        min-width: 0;
+        font-size: 11px;
+        font-weight: 760;
+        line-height: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .camera-control-switch {
+        position: relative;
+        justify-self: start;
+        width: 26px;
+        height: 14px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.16);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+        transition: background 160ms ease, box-shadow 160ms ease;
+      }
+
+      .camera-control-switch::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.74);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.30);
+        transition: transform 160ms ease, background 160ms ease;
+      }
+
+      .camera-control.is-on {
+        color: rgba(218,248,230,0.94);
+      }
+
+      .camera-control.is-on .camera-control-switch {
+        background: rgba(46,231,122,0.58);
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.18), 0 0 8px rgba(46,231,122,0.18);
+      }
+
+      .camera-control.is-on .camera-control-switch::after {
+        transform: translateX(12px);
+        background: rgba(255,255,255,0.96);
+      }
+
+      .camera-control.is-unavailable,
+      .camera-control:disabled {
+        opacity: 0.34;
+        cursor: not-allowed;
+      }
+
       .camera-row-copy {
-        left: 13px;
-        right: 13px;
-        bottom: 13px;
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        transition: bottom 220ms ease;
+      }
+
+      .camera-pip-stage.is-controls-open .camera-primary-feed .camera-row-copy {
+        bottom: 76px;
       }
 
       .camera-row-copy strong {
@@ -5835,21 +6750,22 @@ class BrunoSalaSubview extends HTMLElement {
          NÃO totalmente vazado — a base escura leve (0.20) + blur menor (16px)
          preservam a legibilidade das informações. */
       .media-hub-card.mh-accordion {
+        position: relative;
         padding: 0;
         grid-template-rows: 44px minmax(0, 1fr);
         gap: 0;
         overflow: hidden;
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.014) 45%, rgba(255,255,255,0.026)),
-          rgba(18,22,30,0.20);
-        border: 1px solid rgba(255,255,255,0.085);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.11),
-          0 16px 40px rgba(0,0,0,0.20);
-        backdrop-filter: blur(16px) saturate(1.2);
-        -webkit-backdrop-filter: blur(16px) saturate(1.2);
+        border-radius: var(--bruno-liquid-card-radius, 18px);
+        background: var(--bruno-liquid-surface-off-background,
+          linear-gradient(180deg, rgba(255,255,255,0.040), rgba(255,255,255,0.010) 46%, rgba(0,0,0,0.030)),
+          rgba(9,11,15,0.105)
+        );
+        border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-surface-off-shadow, inset 0 1px 0 rgba(255,255,255,0.090), 0 10px 28px rgba(0,0,0,0.145));
+        backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(18px) saturate(0.92) brightness(1.05) contrast(1.02));
+        -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(18px) saturate(0.92) brightness(1.05) contrast(1.02));
       }
-      .media-hub-card.mh-accordion::before { opacity: 0.18; }
+      .media-hub-card.mh-accordion::before { opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.10); }
       .media-hub-card.mh-accordion::after { display: none; }
 
       .mh-head {
@@ -5881,8 +6797,94 @@ class BrunoSalaSubview extends HTMLElement {
         color: rgba(255,255,255,0.52);
         background: transparent;
       }
-      .mh-menu ha-icon { --mdc-icon-size: 19px; }
+      .mh-menu ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
+      .media-hub-card .mh-menu.is-active {
+        color: rgba(255,255,255,0.82);
+        background: rgba(255,255,255,0.072);
+      }
       .mh-menu:active { background: rgba(255,255,255,0.08); }
+
+      .mh-overflow-panel {
+        position: absolute;
+        z-index: 5;
+        top: 42px;
+        right: 10px;
+        width: min(280px, calc(100% - 20px));
+        padding: 7px;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        background: linear-gradient(180deg, rgba(34,31,30,0.72), rgba(12,13,16,0.66));
+        border: 1px solid rgba(255,255,255,0.115);
+        box-shadow: 0 18px 36px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.10);
+        backdrop-filter: blur(22px) saturate(1.04) brightness(0.96);
+        -webkit-backdrop-filter: blur(22px) saturate(1.04) brightness(0.96);
+      }
+
+      .mh-overflow-item {
+        min-height: 52px;
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) 34px 34px;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 5px;
+      }
+
+      .mh-overflow-icon {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.86);
+        background: rgba(255,255,255,0.055);
+        border: 1px solid rgba(255,255,255,0.075);
+      }
+      .mh-overflow-icon ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
+
+      .mh-overflow-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .mh-overflow-copy strong {
+        font-size: 12.5px;
+        line-height: 1.05;
+        font-weight: 800;
+        color: rgba(255,255,255,0.92);
+      }
+      .mh-overflow-copy small {
+        min-width: 0;
+        font-size: 10.5px;
+        line-height: 1.1;
+        font-weight: 650;
+        color: rgba(255,255,255,0.54);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .mh-overflow-action {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        color: rgba(255,255,255,0.72);
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.075);
+      }
+      .mh-overflow-action ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
+      .mh-overflow-action.is-active {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
+        border-color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.24);
+        background: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.075);
+      }
+      .mh-overflow-action:disabled {
+        opacity: 0.42;
+        cursor: default;
+      }
 
       /* Faixas inset 10px; pills com respiro de 6px entre si. */
       .mh-sources {
@@ -5891,7 +6893,7 @@ class BrunoSalaSubview extends HTMLElement {
         min-height: 0;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         padding: 0 10px 10px;
       }
 
@@ -5899,24 +6901,34 @@ class BrunoSalaSubview extends HTMLElement {
          e baixo peso. Só a expandida ganha presença marcante. */
       .mh-source {
         position: relative;
-        flex: 0 0 38px;
+        flex: 0 0 42px;
         min-height: 0;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        border-radius: 14px;
-        background: rgba(255,255,255,0.018);
-        border: 1px solid rgba(255,255,255,0.045);
-        box-shadow: none;
-        transition: background 180ms ease, border-color 180ms ease;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        background: var(--bruno-liquid-band-background, rgba(255,255,255,0.010));
+        border: var(--bruno-liquid-band-border, 1px solid rgba(255,255,255,0.035));
+        box-shadow: var(--bruno-liquid-band-shadow, none);
+        transition:
+          flex-basis 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          flex-grow 260ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          background 220ms ease,
+          border-color 220ms ease,
+          box-shadow 220ms ease;
+        will-change: flex-basis, flex-grow, background, border-color;
       }
       .mh-source.is-open {
-        flex: 1 1 auto;
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.045)),
-          rgba(255,255,255,0.018);
-        border-color: rgba(255,255,255,0.14);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 28px rgba(0,0,0,0.24);
+        flex: 1 1 0;
+        background: var(--bruno-liquid-band-open-background,
+          linear-gradient(180deg, rgba(255,255,255,0.044), rgba(255,255,255,0.012) 54%, rgba(255,255,255,0.018)),
+          rgba(9,11,15,0.052)
+        );
+        border-color: var(--bruno-liquid-band-open-border-color, rgba(255,255,255,0.092));
+        box-shadow: var(--bruno-liquid-band-open-shadow, inset 0 1px 0 rgba(255,255,255,0.066), 0 6px 16px rgba(0,0,0,0.105));
+      }
+      .mh-source.is-switching {
+        animation: mh-source-open 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
       }
 
       /* 2.1 — Faixas individuais: SÓ o ícone (sem bolha/círculo) + texto colado.
@@ -5924,8 +6936,8 @@ class BrunoSalaSubview extends HTMLElement {
          --mh-indent = recuo p/ alinhar info ao INÍCIO do texto do título. */
       .mh-source-head {
         --mh-indent: 26px;
-        flex: 0 0 38px;
-        height: 38px;
+        flex: 0 0 42px;
+        height: 42px;
         display: grid;
         grid-template-columns: 20px minmax(0, auto) minmax(0, 1fr) 16px;
         align-items: center;
@@ -5933,13 +6945,14 @@ class BrunoSalaSubview extends HTMLElement {
         padding: 0 12px 0 14px;
         background: transparent;
         text-align: left;
+        transition: flex-basis 220ms ease, height 220ms ease;
       }
       /* Aberta (item 1): ícone e título alinhados pelo EIXO CENTRAL (align-items
          center). Altura 46px → espaçamento superior do ícone ≈ 13px, próximo do
          lateral (14px), sem ficar colado no topo. Idêntico em todas as faixas. */
       .mh-source.is-open .mh-source-head {
-        flex: 0 0 46px;
-        height: 46px;
+        flex: 0 0 48px;
+        height: 48px;
         align-items: center;
       }
 
@@ -5949,14 +6962,14 @@ class BrunoSalaSubview extends HTMLElement {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        --mdc-icon-size: 18px;
+        --mdc-icon-size: var(--bruno-liquid-icon-section, 20px);
         color: rgba(255,255,255,0.6);
         background: transparent;
         border: 0;
       }
       .mh-icon-spotify { color: rgba(255,255,255,0.66); }
       .mh-source.is-active .mh-src-icon,
-      .mh-source.is-active .mh-icon-spotify { color: #f2c266; }
+      .mh-source.is-active .mh-icon-spotify { color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
 
       .mh-src-name {
         min-width: 0;
@@ -5976,7 +6989,7 @@ class BrunoSalaSubview extends HTMLElement {
         max-width: 100%;
         font-size: 11.5px;
         font-weight: 650;
-        color: rgba(255,255,255,0.44);
+        color: rgba(255,255,255,0.50);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -5987,15 +7000,20 @@ class BrunoSalaSubview extends HTMLElement {
         --mdc-icon-size: 18px;
         color: rgba(255,255,255,0.4);
       }
-      .mh-source.is-open .mh-src-chevron { color: #f2c266; }
+      .mh-source.is-open .mh-src-chevron { color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
 
       .mh-source-body {
         flex: 1 1 auto;
         min-height: 0;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) clamp(150px, 36%, 240px);
-        gap: 12px;
-        padding: 2px 14px 10px;
+        grid-template-columns: minmax(0, 1fr) clamp(168px, 40%, 260px);
+        gap: 14px;
+        padding: 2px 16px 14px;
+      }
+      .mh-source.is-switching .mh-source-body {
+        opacity: 0;
+        transform: translateY(5px);
+        animation: mh-source-body-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) 55ms both;
       }
 
       /* 2.2 — Conteúdo no TOPO: título (no head) → música → artista → progresso
@@ -6005,7 +7023,10 @@ class BrunoSalaSubview extends HTMLElement {
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
-        gap: 8px;
+        gap: 10px;
+      }
+      .mh-source.is-switching .mh-left {
+        animation: mh-source-content-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) 75ms both;
       }
 
       /* Info (música/artista/progresso/estado) recuada para alinhar com o
@@ -6044,9 +7065,24 @@ class BrunoSalaSubview extends HTMLElement {
         text-overflow: ellipsis;
       }
 
+      .mh-progress-wrap {
+        width: min(100%, 94%);
+        margin-top: 5px;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 7px;
+      }
+
+      .mh-progress-time {
+        font-size: 9.5px;
+        line-height: 1;
+        font-weight: 700;
+        color: rgba(255,255,255,0.48);
+        font-variant-numeric: tabular-nums;
+      }
+
       .mh-progress {
-        margin-top: 3px;
-        max-width: 78%;
         height: 4px;
         border-radius: 999px;
         background: rgba(255,255,255,0.14);
@@ -6056,7 +7092,7 @@ class BrunoSalaSubview extends HTMLElement {
         display: block;
         height: 100%;
         border-radius: 999px;
-        background: linear-gradient(90deg, #f2c266, #f7d089);
+        background: linear-gradient(90deg, rgb(var(--bruno-liquid-warm-accent, 242,194,102)), rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.88));
       }
 
       /* Item 3/5 — controles SEMPRE ancorados na base (margin-top:auto): info no
@@ -6076,14 +7112,17 @@ class BrunoSalaSubview extends HTMLElement {
         grid-template-columns: auto auto minmax(0, 1fr);
         align-items: center;
         gap: 9px;
-        min-height: 30px;
+        min-height: 32px;
         padding: 0 12px;
-        border-radius: 9px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
         color: var(--text-soft);
-        background: rgba(255,255,255,0.045);
-        border: 1px solid rgba(255,255,255,0.09);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-control-shadow, none);
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
       }
-      .mh-vol ha-icon { --mdc-icon-size: 17px; color: #f2c266; }
+      .mh-vol ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-status, 15px); color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
       .mh-vol-label { font-size: 11.5px; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,0.7); }
       .mh-vol input[type="range"] {
         -webkit-appearance: none;
@@ -6092,7 +7131,7 @@ class BrunoSalaSubview extends HTMLElement {
         height: 4px;
         border-radius: 999px;
         background: rgba(255,255,255,0.18);
-        accent-color: #f2c266;
+        accent-color: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
       }
       .mh-vol input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
@@ -6100,8 +7139,8 @@ class BrunoSalaSubview extends HTMLElement {
         width: 14px;
         height: 14px;
         border-radius: 50%;
-        background: #f2c266;
-        box-shadow: 0 0 8px rgba(242,194,102,0.5);
+        background: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
+        box-shadow: 0 0 8px rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.5);
         cursor: pointer;
       }
       .mh-vol input[type="range"]::-moz-range-thumb {
@@ -6109,42 +7148,42 @@ class BrunoSalaSubview extends HTMLElement {
         height: 14px;
         border: 0;
         border-radius: 50%;
-        background: #f2c266;
+        background: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
       }
       .mh-vol.is-disabled { opacity: 0.4; }
 
       .mh-btn-row {
         display: grid;
-        gap: 7px;
+        gap: 8px;
       }
       .mh-btn-row-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .mh-btn-row-4 { grid-template-columns: repeat(3, minmax(0, 1fr)) 40px; }
+      .mh-btn-row-4 { grid-template-columns: repeat(3, minmax(0, 1fr)) 42px; }
 
       /* 2.3 — Botões com o MESMO tratamento translúcido do container de volume:
          fundo suave, glass discreto, baixa opacidade, arredondamento menor. */
       .mh-btn {
-        min-height: 33px;
+        min-height: 40px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
         padding: 0 8px;
-        border-radius: 9px;
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
         color: rgba(255,255,255,0.88);
         font-size: 11.5px;
         font-weight: 700;
-        background: rgba(255,255,255,0.045);
-        border: 1px solid rgba(255,255,255,0.09);
-        box-shadow: none;
-        backdrop-filter: blur(14px) saturate(1.1);
-        -webkit-backdrop-filter: blur(14px) saturate(1.1);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        box-shadow: var(--bruno-liquid-control-shadow, none);
+        backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+        -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
         white-space: nowrap;
         overflow: hidden;
       }
       /* Icon-only: quadrado compacto e centrado. */
       .mh-btn.is-icon { padding: 0; gap: 0; }
-      .mh-btn ha-icon { --mdc-icon-size: 18px; flex: 0 0 auto; color: rgba(255,255,255,0.9); }
-      .mh-btn:hover { background: rgba(255,255,255,0.07); }
+      .mh-btn ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-control, 23px); flex: 0 0 auto; color: rgba(255,255,255,0.9); }
+      .mh-btn:hover { background: rgba(255,255,255,0.052); }
       .mh-btn span {
         min-width: 0;
         overflow: hidden;
@@ -6157,18 +7196,18 @@ class BrunoSalaSubview extends HTMLElement {
          ~50% da largura, mais fino, dourado discreto (menos saturado, Savant). */
       .mh-controls > .mh-btn.is-main {
         align-self: flex-start;
-        width: 52%;
+        width: 50%;
         min-width: 140px;
-        min-height: 36px;
+        min-height: 40px;
       }
       .mh-btn.is-main {
         color: rgba(255,255,255,0.94);
-        background: rgba(242,194,102,0.085);
-        border: 1px solid rgba(242,194,102,0.30);
-        border-radius: 9px;
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        background: var(--bruno-liquid-control-warm-background, rgba(242,194,102,0.038));
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(242,194,102,0.180));
+        border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+        box-shadow: var(--bruno-liquid-control-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
       }
-      .mh-btn.is-main ha-icon { color: rgba(242,194,102,0.82); }
+      .mh-btn.is-main ha-icon { color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.82); }
 
       .mh-btn.is-plus {
         padding: 0;
@@ -6186,6 +7225,9 @@ class BrunoSalaSubview extends HTMLElement {
         overflow: hidden;
         background: transparent;
         border: 0;
+      }
+      .mh-source.is-switching .mh-art {
+        animation: mh-source-art-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1) 85ms both;
       }
       .mh-art img {
         position: absolute;
@@ -6214,7 +7256,7 @@ class BrunoSalaSubview extends HTMLElement {
         left: 50%;
         transform: translate(-50%, -50%);
         width: auto;
-        height: calc(100% - 12px);
+        height: calc(100% - 10px);
         aspect-ratio: 1 / 1;
         object-fit: cover;
         border-radius: 12px;
@@ -6233,6 +7275,52 @@ class BrunoSalaSubview extends HTMLElement {
         object-fit: cover;
         border-radius: 11px;
         box-shadow: none;
+      }
+
+      @keyframes mh-source-open {
+        from {
+          flex-grow: 0;
+          flex-basis: 42px;
+          border-color: var(--bruno-liquid-band-border-color, rgba(255,255,255,0.040));
+          box-shadow: var(--bruno-liquid-band-shadow, none);
+        }
+        to {
+          flex-grow: 1;
+          flex-basis: 0;
+          border-color: var(--bruno-liquid-band-open-border-color, rgba(255,255,255,0.092));
+          box-shadow: var(--bruno-liquid-band-open-shadow, inset 0 1px 0 rgba(255,255,255,0.066), 0 6px 16px rgba(0,0,0,0.105));
+        }
+      }
+
+      @keyframes mh-source-body-in {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes mh-source-content-in {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes mh-source-art-in {
+        from { opacity: 0; transform: translateY(4px) scale(0.985); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .mh-source,
+        .mh-source-head,
+        .mh-source-body,
+        .mh-left,
+        .mh-art,
+        .mh-btn {
+          transition: none !important;
+          animation: none !important;
+        }
+        .mh-source-body {
+          opacity: 1;
+          transform: none;
+        }
       }
 
       .ac-card {

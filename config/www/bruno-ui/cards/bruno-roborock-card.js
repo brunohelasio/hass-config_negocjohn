@@ -246,6 +246,7 @@ class BrunoRoborockCard extends HTMLElement {
 
     const model = this._model();
     const activeClass = model.active ? ' is-active' : '';
+    const compactClass = this._config.variant === 'compact' ? ' is-compact' : '';
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -357,6 +358,114 @@ class BrunoRoborockCard extends HTMLElement {
             0 0 26px rgba(var(--accent-warm),0.18);
         }
 
+        .roborock-card.is-compact {
+          grid-template-columns: minmax(98px, 0.48fr) minmax(0, 1fr) minmax(82px, 0.42fr);
+          grid-template-rows: 28px minmax(0, 1fr) 42px;
+          grid-template-areas:
+            "header header header"
+            "icon status stats"
+            "icon actions actions";
+          gap: 7px 12px;
+          padding: 12px 13px 12px 12px;
+          background: var(--bruno-liquid-surface-off-background,
+            radial-gradient(150px 105px at 14% 0%, rgba(255,255,255,0.13), transparent 72%),
+            linear-gradient(155deg, rgba(18,24,36,0.56), rgba(11,14,22,0.50) 50%, rgba(33,27,25,0.26))
+          );
+        }
+
+        .roborock-card.is-compact::after {
+          display: none;
+        }
+
+        .roborock-card.is-compact .header {
+          height: 28px;
+        }
+
+        .roborock-card.is-compact .robot {
+          width: min(110px, 100%);
+          height: min(110px, 100%);
+          justify-self: center;
+          align-self: center;
+          transform: none;
+        }
+
+        .roborock-card.is-compact .robot img {
+          width: min(106px, 100%);
+          height: min(106px, 100%);
+        }
+
+        .roborock-card.is-compact .robot-fallback {
+          --mdc-icon-size: 72px;
+        }
+
+        .roborock-card.is-compact .status {
+          align-self: center;
+          justify-content: center;
+          gap: 5px;
+          padding: 0 12px 0 0;
+          transform: none;
+        }
+
+        .roborock-card.is-compact .status-main {
+          font-size: 17px;
+        }
+
+        .roborock-card.is-compact .status-detail {
+          display: none;
+        }
+
+        .roborock-card.is-compact .location {
+          font-size: 11px;
+        }
+
+        .roborock-card.is-compact .stats {
+          align-self: stretch;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding-left: 14px;
+          border-left: 1px solid rgba(255,255,255,0.090);
+          transform: none;
+        }
+
+        .roborock-card.is-compact .stats .stat:nth-child(n+2) {
+          display: none;
+        }
+
+        .roborock-card.is-compact .stat {
+          height: auto;
+          justify-content: center;
+        }
+
+        .roborock-card.is-compact .stat ha-icon {
+          --mdc-icon-size: 28px;
+        }
+
+        .roborock-card.is-compact .stat-value {
+          font-size: 17px;
+        }
+
+        .roborock-card.is-compact .stat-label {
+          font-size: 10px;
+        }
+
+        .roborock-card.is-compact .actions {
+          align-self: stretch;
+          gap: 10px;
+          padding-top: 10px;
+          border-top: 1px solid rgba(255,255,255,0.085);
+          transform: none;
+        }
+
+        .roborock-card.is-compact .action {
+          height: 36px;
+          border-radius: var(--bruno-liquid-control-radius, 14px);
+        }
+
+        .roborock-card.is-compact .action ha-icon {
+          --mdc-icon-size: 20px;
+        }
+
         .header,
         .robot,
         .status,
@@ -381,14 +490,14 @@ class BrunoRoborockCard extends HTMLElement {
           min-width: 0;
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
         }
 
         .header-icon {
           position: relative;
-          flex: 0 0 24px;
-          width: 24px;
-          height: 24px;
+          flex: 0 0 28px;
+          width: 28px;
+          height: 28px;
           border-radius: 999px;
           display: grid;
           place-items: center;
@@ -399,12 +508,12 @@ class BrunoRoborockCard extends HTMLElement {
         }
 
         .header-icon ha-icon {
-          --mdc-icon-size: 14px;
+          --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
           position: absolute;
           left: 50%;
           top: 50%;
-          width: 14px;
-          height: 14px;
+          width: 16px;
+          height: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -413,11 +522,10 @@ class BrunoRoborockCard extends HTMLElement {
         }
 
         .title-main {
-          font-size: 12px;
-          line-height: 1;
-          font-weight: 780;
-          text-transform: uppercase;
-          color: rgba(255,255,255,0.78);
+          font-size: 13px;
+          line-height: 1.05;
+          font-weight: 800;
+          color: rgba(255,255,255,0.93);
         }
 
         .state-pill {
@@ -699,6 +807,36 @@ class BrunoRoborockCard extends HTMLElement {
           .action {
             height: 44px;
           }
+
+          .roborock-card.is-compact {
+            grid-template-columns: minmax(86px, 0.42fr) minmax(0, 1fr) minmax(74px, 0.38fr);
+            grid-template-rows: 26px minmax(0, 1fr) 36px;
+            grid-template-areas:
+              "header header header"
+              "icon status stats"
+              "icon actions actions";
+            gap: 6px 9px;
+            padding: 10px 11px;
+          }
+
+          .roborock-card.is-compact .robot {
+            width: min(92px, 100%);
+            height: min(92px, 100%);
+            transform: none;
+          }
+
+          .roborock-card.is-compact .robot img {
+            width: min(88px, 100%);
+            height: min(88px, 100%);
+          }
+
+          .roborock-card.is-compact .status-main {
+            font-size: 15px;
+          }
+
+          .roborock-card.is-compact .action {
+            height: 32px;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -711,7 +849,7 @@ class BrunoRoborockCard extends HTMLElement {
         }
       </style>
 
-      <div class="roborock-card${activeClass}" role="button" tabindex="0" aria-label="${BrunoRoborockCard._escape(this._config.title)}">
+      <div class="roborock-card${activeClass}${compactClass}" role="button" tabindex="0" aria-label="${BrunoRoborockCard._escape(this._config.title)}">
         <div class="header">
           <span class="header-copy">
             <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:robot-vacuum"></ha-icon></span>

@@ -8,7 +8,7 @@ entities:
   weather: weather.forecast_casa
   sun: sun.sun
 calendar:
-  compact_events_to_show: 1
+  compact_events_to_show: 3
   calendars:
     - entity: calendar.brunohelasio_gmail_com
       name: Bruno
@@ -27,6 +27,7 @@ calendar:
     - calendar.familia
     - calendar.feriados_no_brasil
 cameras:
+  show: false
   active_entity: input_select.bento_active_camera
   limit: 4
   items:

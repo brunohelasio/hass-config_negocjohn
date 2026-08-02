@@ -5,6 +5,8 @@ const BRUNO_MOBILE_SALA_DEFAULT_ENTITIES = {
   room_toggle: 'light.sala_switch_2',
   room_fallback_lights: ['light.sala_switch_1', 'light.sala_switch_2'],
   active_sensor: 'sensor.living_room_active',
+  semantic_sensor: 'sensor.sala_semantic_state_supervised',
+  motion_recent: 'binary_sensor.sala_motion_recent',
   temperature: 'sensor.sensor_4_in_1_sala_temperature',
   humidity: 'sensor.sensor_4_in_1_sala_humidity',
   presence: 'binary_sensor.sensor_4_in_1_sala_presence',
@@ -125,10 +127,24 @@ class BrunoMobileSalaCard extends HTMLElement {
   }
 
   _presenceRecent() {
+    // NOVO (2026-07-12): usa somente a presenca supervisionada.
+    const supervisedMotion = this._state(this._config.entities.motion_recent);
+    return supervisedMotion?.state === 'on';
+
+    /* ANTERIOR (rollback): presence bruta com janela artificial de 10 minutos.
     const entity = this._state(this._config.entities.presence);
     if (entity?.state !== 'on' || !entity.last_changed) return false;
     const changedAt = Date.parse(entity.last_changed);
     return !Number.isNaN(changedAt) && Date.now() - changedAt < 10 * 60 * 1000;
+    */
+  }
+
+  _semanticLine() {
+    const semantic = this._state(this._config.entities.semantic_sensor);
+    const state = String(semantic?.state || '').toLowerCase();
+    const display = String(semantic?.attributes?.display || '').trim();
+    if (display && !['none', 'unknown', 'unavailable'].includes(state)) return display;
+    return '';
   }
 
   _climateAction(entity) {
@@ -174,6 +190,7 @@ class BrunoMobileSalaCard extends HTMLElement {
       speakerOn: BRUNO_MOBILE_SALA_SPEAKER_ON_STATES.includes(this._state(entities.speaker)?.state || ''),
       corridorOn: corridor?.state === 'on',
       presenceOn: this._presenceRecent(),
+      semanticLine: this._semanticLine(),
       temperature: this._sensorValue(entities.temperature, '\u00b0'),
       humidity: this._sensorValue(entities.humidity, '%'),
       lights: this._lightsSummary(room),
@@ -333,7 +350,7 @@ class BrunoMobileSalaCard extends HTMLElement {
   _statusDot(icon, active, label, tone) {
     return `
       <span class="status-dot tone-${tone}${active ? ' is-active' : ''}" title="${BrunoMobileSalaCard._escape(label)}">
-        <ha-icon icon="${icon}"></ha-icon>
+        <bruno-icon icon="${icon}"></bruno-icon>
       </span>
     `;
   }
@@ -341,7 +358,7 @@ class BrunoMobileSalaCard extends HTMLElement {
   _actionButton(key, icon, name, label, active, tone) {
     return `
       <button class="action-pill tone-${tone}${active ? ' is-active' : ''}" type="button" data-action-key="${key}" aria-label="${BrunoMobileSalaCard._escapeAttr(name)}">
-        <span class="pill-icon"><ha-icon icon="${icon}"></ha-icon></span>
+        <span class="pill-icon"><bruno-icon icon="${icon}"></bruno-icon></span>
         <span class="pill-text">
           <span class="pill-name">${BrunoMobileSalaCard._escape(name)}</span>
           <span class="pill-label">${label}</span>
@@ -508,7 +525,7 @@ class BrunoMobileSalaCard extends HTMLElement {
           transition: background 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
         }
 
-        .status-dot ha-icon {
+        .status-dot bruno-icon {
           --mdc-icon-size: 14px;
           width: 14px;
           height: 14px;
@@ -606,7 +623,7 @@ class BrunoMobileSalaCard extends HTMLElement {
           background: rgba(var(--tone),0.18);
         }
 
-        .pill-icon ha-icon {
+        .pill-icon bruno-icon {
           --mdc-icon-size: 20px;
         }
 
@@ -665,7 +682,7 @@ class BrunoMobileSalaCard extends HTMLElement {
             ${this._statusDot('mdi:speaker-wireless', model.speakerOn, 'Echo Show ativo', 'amber')}
           </div>
           <div class="title">${BrunoMobileSalaCard._escape(this._config.name)}</div>
-          <div class="lights">${BrunoMobileSalaCard._escape(model.lights.label)}</div>
+          <div class="lights">${BrunoMobileSalaCard._escape(model.semanticLine || model.lights.label)}</div>
         </button>
         <div class="actions">
           ${this._actionButton('corridor', 'mdi:led-strip-variant', 'Corredor', BrunoMobileSalaCard._escape(model.corridorLabel), model.corridorOn, 'blue')}

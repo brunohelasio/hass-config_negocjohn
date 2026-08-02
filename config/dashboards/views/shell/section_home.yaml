@@ -4,13 +4,22 @@
 # em 0px — ja que a rail agora vive na moldura da shell. Os cards de conteudo sao
 # reaproveitados por include, SEM edicao (mesmos arquivos do bento_main).
 #   - NAO inclui bento_sidebar (a rail e da shell).
-#   - NAO inclui zz-mobile-redirect (mobile segue tratado fora da shell).
+#   - ANTERIOR: "NAO inclui zz-mobile-redirect (mobile segue tratado fora da
+#     shell)". DESDE 2026-07-09 o mobile e tratado DENTRO da shell (Opcao A):
+#     redirect desativado + bloco mediaquery phone abaixo.
 type: custom:layout-card
 layout_type: custom:grid-layout
 card_mod:
   style: |
     :host { height: 100% !important; }
     #root { height: 100% !important; }
+    /* NOVO (2026-07-09) — MODO PHONE: altura livre para a home empilhada
+       rolar dentro do content-slot da shell (que vira overflow-y: auto).
+       ROLLBACK: remover este bloco @media. */
+    @media (max-width: 800px) {
+      :host { height: auto !important; min-height: 100% !important; }
+      #root { height: auto !important; }
+    }
 layout:
   margin: 0
   padding: 0
@@ -29,9 +38,44 @@ layout:
     "sidebar welcome welcome welcome welcome welcome energy energy energy energy roborock roborock roborock"
     "sidebar welcome welcome welcome welcome welcome media media media media camera camera camera"
     "sidebar quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions quick_actions"
+  # NOVO (2026-07-09) — MODO PHONE (Opcao A mobile): em <=800px a home vira
+  # 1 COLUNA empilhada, rolavel (a shell libera overflow-y no content-slot).
+  # Estrategia Sagaland preservada: TODAS as grid-areas existem tambem aqui
+  # (sidebar fica como linha de altura 0 — nenhum card renderiza nela).
+  # Alturas minimas por bloco garantem que cards JS que dependem da celula
+  # nao colapsem. ROLLBACK: remover este bloco mediaquery.
+  mediaquery:
+    '(max-width: 800px)':
+      grid-gap: 10px
+      grid-template-columns: minmax(0, 1fr)
+      # Fase 2 (2026-07-09): home enxuta — roborock/camera/quick_actions viram
+      # linhas 0px (cards ocultos via view_layout show mediaquery nos proprios
+      # arquivos — estrategia Sagaland: area existe, card nao renderiza).
+      # welcome/sala com minimo livre (os cards JS compactam via @media proprio).
+      # ANTERIOR (Fase 1): minmax(44px, auto) minmax(300px, auto) minmax(240px, auto) auto minmax(140px, auto) minmax(150px, auto) minmax(180px, auto) minmax(210px, auto) minmax(64px, auto) 0px
+      # ANTERIOR (rollback): minmax(44px, auto) minmax(0, auto) minmax(0, auto) auto minmax(140px, auto) 0px minmax(180px, auto) 0px 0px 0px
+      # NOVO (2026-07-22) — consolidacao mobile: a terceira linha e o card
+      # Sala, agora com a mesma altura externa (176px) dos cards de comodo.
+      # Energia e Midia continuam em linhas independentes.
+      grid-template-rows: minmax(44px, auto) minmax(0, auto) 176px auto minmax(140px, auto) 0px minmax(180px, auto) 0px 0px 0px
+      grid-template-areas: |
+        "top_badges"
+        "welcome"
+        "sala"
+        "comodos"
+        "energy"
+        "roborock"
+        "media"
+        "camera"
+        "quick_actions"
+        "sidebar"
 cards:
-  # Redirect mobile preservado (vinha do bento_main): so renderiza/age em <=800px.
-  - !include ../main-grid/zz-mobile-redirect.yaml
+  # ANTERIOR (rollback): redirect mobile que expulsava celulares da shell para
+  # /slug/mobile-casa (mundo mobile V3 paralelo). DESATIVADO em 2026-07-09 —
+  # Opcao A mobile: a propria shell agora se adapta a telas <=800px (dock
+  # inferior + 1 coluna), entao o celular DEVE permanecer aqui.
+  # ROLLBACK: descomentar a linha abaixo (e remover o bloco mediaquery acima).
+  # - !include ../main-grid/zz-mobile-redirect.yaml
   # NOVO (full-bleed): a imagem migrou para a camada .backdrop da SHELL (sangra
   # sob o rail). O hero_stage cobria só o conteúdo (col 2/-1), deixando seam na
   # borda do rail. Desativado. ROLLBACK: descomentar a linha abaixo e comentar o

@@ -171,7 +171,7 @@ class BrunoMobileNavCard extends HTMLElement {
           transform: translateY(1px) scale(0.98);
         }
 
-        ha-icon {
+        bruno-icon {
           --mdc-icon-size: 22px;
           filter: drop-shadow(0 3px 6px rgba(0,0,0,0.26));
         }
@@ -191,7 +191,7 @@ class BrunoMobileNavCard extends HTMLElement {
         <div class="nav-list">
           ${items.map((item) => `
             <button class="${current === item.path ? 'is-active' : ''}" type="button" data-mobile-path="${BrunoMobileNavCard._escapeAttr(item.path)}" aria-label="${BrunoMobileNavCard._escapeAttr(item.label)}">
-              <ha-icon icon="${BrunoMobileNavCard._escapeAttr(item.icon)}"></ha-icon>
+              <bruno-icon icon="${BrunoMobileNavCard._escapeAttr(item.icon)}"></bruno-icon>
               <span class="label">${BrunoMobileNavCard._escape(item.label)}</span>
             </button>
           `).join('')}

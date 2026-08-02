@@ -1,6 +1,13 @@
 type: custom:bruno-quick-actions-card
 view_layout:
   grid-area: quick_actions
+  # NOVO (2026-07-09) — Fase 2 mobile: oculto no phone (<=800px) — empilhado
+  # acima do dock formava dois grupos de botoes redundantes (feedback do
+  # usuario). Realocacao (menu expansivel no hero) fica para fase propria.
+  # Linha "quick_actions" vira 0px no bloco phone da section_home.
+  # ROLLBACK: remover o bloco show abaixo.
+  show:
+    mediaquery: '(min-width: 801px)'
 
 # FALLBACK - Quick Actions Lovelace/Negocjohn original
 # Para reverter: comentar o custom card acima e descomentar o bloco abaixo.

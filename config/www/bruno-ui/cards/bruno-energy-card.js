@@ -6,6 +6,9 @@ const BRUNO_ENERGY_DEFAULT_ENTITIES = {
   daily: 'sensor.potencia_total_casa',
   weekly: 'sensor.energia_total_casa_semanal',
   monthly: 'sensor.energia_total_casa_mensal',
+  daily_total: 'sensor.energia_total_casa_diaria',
+  weekly_total: 'sensor.energia_total_casa_semanal',
+  monthly_total: 'sensor.energia_total_casa_mensal',
 };
 
 const BRUNO_ENERGY_PERIODS = [
@@ -18,6 +21,8 @@ const BRUNO_ENERGY_PERIODS = [
     hours: 24,
     lowerBound: -150,
     aggregate: 'raw',
+    totalEntityKey: 'daily_total',
+    comparisonLabel: 'ontem',
   },
   {
     option: 'Semanal',
@@ -28,6 +33,8 @@ const BRUNO_ENERGY_PERIODS = [
     hours: 168,
     lowerBound: -0.05,
     aggregate: 'day-max',
+    totalEntityKey: 'weekly_total',
+    comparisonLabel: 'semana anterior',
   },
   {
     option: 'Mensal',
@@ -38,6 +45,8 @@ const BRUNO_ENERGY_PERIODS = [
     hours: 720,
     lowerBound: -0.05,
     aggregate: 'day-max',
+    totalEntityKey: 'monthly_total',
+    comparisonLabel: 'm\u00eas anterior',
   },
 ];
 
@@ -47,6 +56,10 @@ const BRUNO_ENERGY_HISTORY_TTL = 60 * 1000;
 class BrunoEnergyCard extends HTMLElement {
   static getStubConfig() {
     return {};
+  }
+
+  connectedCallback() {
+    this._render();
   }
 
   setConfig(config) {
@@ -94,6 +107,9 @@ class BrunoEnergyCard extends HTMLElement {
     const graphEntity = this._config.entities[period.entityKey];
     const graphState = this._state(graphEntity)?.state;
     const graphCurrent = this._isInvalid(graphState) ? null : Number(graphState);
+    const periodTotal = this._state(this._config.entities[period.totalEntityKey]);
+    const previousState = periodTotal?.attributes?.last_period;
+    const previousTotal = this._isInvalid(previousState) ? null : Number(previousState);
     const cacheKey = this._historyKey(period, graphEntity);
     const cached = this._historyCache?.[cacheKey]?.points || [];
 
@@ -103,6 +119,7 @@ class BrunoEnergyCard extends HTMLElement {
       cacheKey,
       total: Number.isFinite(total) ? total : 0,
       graphCurrent: Number.isFinite(graphCurrent) ? graphCurrent : null,
+      previousTotal: Number.isFinite(previousTotal) ? previousTotal : null,
       points: cached,
     };
   }
@@ -225,6 +242,23 @@ class BrunoEnergyCard extends HTMLElement {
     return points.filter((_, index) => index % stride === 0);
   }
 
+  _formatEnergy(value) {
+    return new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(value) || 0);
+  }
+
+  _comparison(model) {
+    const current = Number(model.total);
+    const previous = Number(model.previousTotal);
+    if (!Number.isFinite(current) || !Number.isFinite(previous) || previous <= 0) return 'Sem comparativo';
+    const percentage = ((current - previous) / previous) * 100;
+    const rounded = Math.round(Math.abs(percentage));
+    const signal = percentage < 0 ? '\u2212' : percentage > 0 ? '+' : '';
+    return `${signal}${rounded}% vs. ${model.period.comparisonLabel}`;
+  }
+
   _render() {
     if (!this._config) return;
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
@@ -337,13 +371,14 @@ class BrunoEnergyCard extends HTMLElement {
           border-radius: 999px;
           display: grid;
           place-items: center;
-          color: rgba(191,219,254,0.86);
+          /* ANTERIOR: color: rgba(191,219,254,0.86); (azul, herdado sem intencao) */
+          color: rgba(134,224,152,0.86);
           background: rgba(255,255,255,0.075);
           border: 1px solid rgba(255,255,255,0.11);
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
         }
 
-        .header-icon ha-icon {
+        .header-icon bruno-icon {
           --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
           position: absolute;
           left: 50%;
@@ -373,9 +408,10 @@ class BrunoEnergyCard extends HTMLElement {
 
         .value {
           min-width: 0;
-          font-size: 15px;
-          line-height: 1.08;
-          font-weight: 740;
+          font-size: 11px;
+          line-height: 1.16;
+          font-weight: 500;
+          color: var(--text-soft);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -445,6 +481,12 @@ class BrunoEnergyCard extends HTMLElement {
           fill: rgba(226,232,240,0.46);
         }
 
+        .comparison-label {
+          font-size: 10px;
+          font-weight: 680;
+          fill: rgba(226,232,240,0.56);
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .segment {
             transition: none !important;
@@ -455,10 +497,10 @@ class BrunoEnergyCard extends HTMLElement {
       <div class="energy-card">
         <div class="header">
           <div class="header-copy">
-            <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:lightning-bolt"></ha-icon></span>
+            <span class="header-icon" aria-hidden="true"><bruno-icon icon="mdi:lightning-bolt"></bruno-icon></span>
             <span class="title">
               <span class="title-main">${BrunoEnergyCard._escape(this._config.name)}</span>
-              <span class="value">${BrunoEnergyCard._escape(model.period.label)} &middot; ${model.total.toFixed(2)} kWh</span>
+              <span class="value">Consumo parcial &middot; ${BrunoEnergyCard._escape(this._formatEnergy(model.total))} kWh</span>
             </span>
           </div>
           <div class="selector" aria-label="Periodo de energia">
@@ -483,9 +525,8 @@ class BrunoEnergyCard extends HTMLElement {
   }
 
   _chart(model) {
-    const points = model.points.length
-      ? model.points
-      : [{ value: model.graphCurrent ?? 0, time: Date.now() - 1 }, { value: model.graphCurrent ?? 0, time: Date.now() }];
+    const fallbackPoints = [{ value: model.graphCurrent ?? 0, time: Date.now() - 1 }, { value: model.graphCurrent ?? 0, time: Date.now() }];
+    const points = model.points.length >= 2 ? model.points : fallbackPoints;
 
     const width = 360;
     const height = 100;
@@ -515,6 +556,7 @@ class BrunoEnergyCard extends HTMLElement {
     const current = model.graphCurrent == null
       ? '--'
       : `${Number(model.graphCurrent).toFixed(model.period.unit === 'W' ? 0 : 2).replace('.00', '')} ${model.period.unit}`;
+    const comparison = this._comparison(model);
 
     return `
       <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${BrunoEnergyCard._escapeAttr(current)}">
@@ -535,6 +577,7 @@ class BrunoEnergyCard extends HTMLElement {
         <path d="${area}" fill="url(#bruno-energy-area)"></path>
         <path d="${line}" fill="none" stroke="#6FB8FF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" filter="url(#bruno-energy-glow)"></path>
         <text x="18" y="94" class="axis-label">${BrunoEnergyCard._escape(current)}</text>
+        <text x="342" y="94" text-anchor="end" class="comparison-label">${BrunoEnergyCard._escape(comparison)}</text>
       </svg>
     `;
   }

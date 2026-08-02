@@ -1,0 +1,282 @@
+# ==========================================================================
+# HOME V2/V3 — BLOCO INFERIOR UNIFICADO (7 cômodos + Ações Rápidas).
+#
+# REV.8 (2026-07-26) — HOME V3: a pele da banda e dos cômodos passou a vir
+# de TOKENS DE TEMA. Os defaults abaixo reproduzem a moldura em cartela de
+# hoje, então iOS / visionOS / Liquid Glass ficam idênticos. Somente o
+# Josh.ai declara os tokens novos e vira tiles + banda full-bleed.
+#
+# --------------------------------------------------------------------------
+# INVARIANTE CRÍTICA — leia antes de mexer em blur nesta banda
+# --------------------------------------------------------------------------
+# A faixa Josh usa uma superficie estatica autonoma, sem backdrop-filter.
+# Isso evita backdrop roots e torna a composicao deterministica em PC/tablet.
+# Os demais temas continuam usando os defaults de cartela deste arquivo.
+# --------------------------------------------------------------------------
+#
+# GEOMETRIA (determinística — nada depende de height:100%, que não resolve
+# nesta base por causa do <hui-card> do HA 2026.3):
+#   banda     = calc(23vh + 52px)      [linha `bottom_block` da seção]
+#   padding   = 12px laterais/topo, 0 embaixo  ->  o dock encosta na base e
+#               mantém o alinhamento com o botão Power da rail.
+#   conteúdo  = calc(23vh + 40px) = linha cômodos calc(23vh - 24px)
+#               + gap 10px + linha dock 54px
+#   sangramento lateral = --bruno-strip-bleed (0 default; 12px no Josh)
+#               12px alcançam a borda da rail (86px) e a do viewport, pois o
+#               content-slot da shell tem padding 12px e corta na padding box.
+#   Verticalmente a banda NÃO sangra — preserva o alinhamento do dock.
+#
+# ROLLBACK: em shell/section_home_v2.yaml, voltar às áreas separadas
+# `comodos` + `quick_actions` (bento_comodos_strip.yaml e
+# bento_quick_actions_v2.yaml seguem preservados no disco).
+# ==========================================================================
+type: custom:mod-card
+view_layout:
+  grid-area: bottom_block
+  show:
+    mediaquery: '(min-width: 801px)'
+card_mod:
+  style: |
+    :host {
+      display: block;
+      height: 100%;
+      min-height: 0;
+    }
+    ha-card {
+      position: relative;
+      isolation: isolate;
+      height: 100%;
+      box-sizing: border-box;
+      /* Sem padding inferior: o dock encosta na base (alinhamento c/ Power). */
+      padding: 12px 12px 0;
+      /* ---- Chrome por TOKEN. Defaults = moldura em cartela de hoje. ----
+         No Josh.ai o elemento externo e neutralizado; a tinta e os dois
+         filetes sao desenhados pelos pseudo-elementos abaixo. */
+      border-radius: var(--bruno-strip-frame-radius, 22px);
+      border: var(--bruno-strip-frame-border, 1px solid rgba(255,255,255,0.10)) !important;
+      background: var(--bruno-strip-frame-background,
+        linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018))) !important;
+      /* Default `none` por causa da INVARIANTE no cabeçalho deste arquivo. */
+      backdrop-filter: var(--bruno-strip-frame-filter, none) !important;
+      -webkit-backdrop-filter: var(--bruno-strip-frame-filter, none) !important;
+      box-shadow: var(--bruno-strip-frame-shadow,
+        inset 0 1px 0 rgba(255,255,255,0.12)) !important;
+      /* Sangramento lateral ASSIMETRICO (0 = comportamento atual).
+         O grid da secao tem uma coluna `sidebar` de 0px seguida de um gap de
+         10px — espaco morto entre a rail e a faixa. O sangramento de inicio
+         recupera esse gap; o de fim leva a faixa ate a borda do viewport.
+         Os tokens -start/-end caem no simetrico quando nao definidos. */
+      margin:
+        0
+        calc(-1 * var(--bruno-strip-bleed-end, var(--bruno-strip-bleed, 0px)))
+        0
+        calc(-1 * var(--bruno-strip-bleed-start, var(--bruno-strip-bleed, 0px)));
+      width: calc(100%
+        + var(--bruno-strip-bleed-start, var(--bruno-strip-bleed, 0px))
+        + var(--bruno-strip-bleed-end, var(--bruno-strip-bleed, 0px)));
+      /* Pontas dissolvendo na borda atmosférica da shell (none = reto). */
+      -webkit-mask-image: var(--bruno-strip-mask, none);
+      mask-image: var(--bruno-strip-mask, none);
+      overflow: hidden;
+    }
+    /* Camadas opcionais da faixa Josh. Nos demais temas os defaults
+       transparentes preservam integralmente a cartela existente. */
+    ha-card::before,
+    ha-card::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      border-radius: inherit;
+    }
+    ha-card::before {
+      inset: 0;
+      z-index: 0;
+      background: var(--bruno-strip-frame-fill, none);
+      opacity: var(--bruno-strip-frame-fill-opacity, 0);
+      -webkit-mask-image: var(--bruno-strip-frame-fill-fade, none);
+      mask-image: var(--bruno-strip-frame-fill-fade, none);
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+    }
+    ha-card::after {
+      inset: 0;
+      z-index: 4;
+      padding: 0;
+      background:
+        var(--bruno-strip-frame-top-line, linear-gradient(transparent, transparent)) top center / 100% 1px no-repeat,
+        var(--bruno-strip-frame-bottom-line, linear-gradient(transparent, transparent)) bottom center / 100% 1px no-repeat;
+      -webkit-mask: none;
+      mask: none;
+      opacity: var(--bruno-strip-frame-lines-opacity, 0);
+    }
+    ha-card > * {
+      position: relative;
+      z-index: 1;
+      display: block;
+      height: 100%;
+      min-height: 0;
+    }
+card:
+  type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: minmax(0, 1fr)
+    # Linha 1: cômodos (mesma altura de sempre). Linha 2: dock de 54px.
+    grid-template-rows: calc(23vh - 24px) 54px
+    grid-gap: 10px
+    margin: 0
+    padding: 0
+  cards:
+    # ---- Faixa dos 7 cômodos ----------------------------------------
+    - type: custom:layout-card
+      layout_type: custom:grid-layout
+      layout:
+        # ANTERIOR (7 tiles): repeat(7, minmax(0, 1fr))
+        # NOVO (2026-07-29): 8 colunas — o Corredor virou tile proprio. Das
+        # tres alternativas estudadas (partir o tile do Lavabo, mover para a
+        # rail, ou tile proprio), esta e a unica que preserva a homogeneidade
+        # da serie, que e a regra que sustenta o visual de tiles + filetes.
+        # O clique unico do Corredor vem da mecanica que ja existe: o tap do
+        # tile e toggle da luz do comodo.
+        grid-template-columns: repeat(8, minmax(0, 1fr))
+        grid-template-rows: calc(23vh - 24px)
+        # Gap por TOKEN: 10px (cartela, como hoje) / 0 no Josh, onde o filete
+        # vertical de 1px do tile substitui o gap.
+        grid-gap: var(--bruno-tile-gap, 10px)
+        margin: 0
+        # No Josh, gap 0 devolveria os 60px dos antigos gaps para as tracks.
+        # Start + end continuam somando 60px, preservando ~161px por coluna;
+        # os demais temas continuam usando o fallback simetrico existente.
+        padding: 0 var(--bruno-tile-grid-inset-end, var(--bruno-tile-grid-inline-inset, 0px)) 0 var(--bruno-tile-grid-inset-start, var(--bruno-tile-grid-inline-inset, 0px))
+      cards:
+        # ATENÇÃO: os 7 cards são declarados INLINE aqui, e não por
+        # `!include ../bento_*.yaml`, porque a flag `variant: tile` não pode
+        # entrar nos wrappers compartilhados — eles também alimentam a matriz
+        # do phone (shared/grid-cards/bento_comodos_matriz.yaml) e a Home V1,
+        # que devem permanecer idênticas. A config abaixo replica exatamente
+        # a dos wrappers, apenas somando as flags de tile.
+        # `divider_left` em todos MENOS o primeiro (Sala).
+        - type: custom:bruno-sala-room-card
+          section: sala
+          variant: tile
+        - type: custom:bruno-office-card
+          section: office
+          double_tap_action:
+            action: fire-dom-event
+            bruno_section: office
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-cozinha-card
+          section: cozinha
+          double_tap_action:
+            action: fire-dom-event
+            bruno_section: cozinha
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-lavabo-card
+          double_tap_action: !include ../../../shared/popup/rooms/lavabo.yaml
+          variant: tile
+          divider_left: true
+        # Corredor: 8o tile. Sem subview propria (nao tem uma) e sem popup —
+        # o valor dele e o toggle direto. Estrutura, presenca e estado
+        # semantico identicos aos demais (ver bruno-corredor-card.js).
+        - type: custom:bruno-corredor-card
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-quarto-casal-card
+          section: casal
+          double_tap_action:
+            action: fire-dom-event
+            bruno_section: casal
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-quarto-marina-card
+          section: marina
+          double_tap_action:
+            action: fire-dom-event
+            bruno_section: marina
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-quarto-miguel-card
+          section: miguel
+          double_tap_action:
+            action: fire-dom-event
+            bruno_section: miguel
+          variant: tile
+          divider_left: true
+
+    # ---- Dock de ações rápidas (dentro da mesma banda) ----------------
+    # Mesmo conteúdo de v2/bento_quick_actions_v2.yaml, sem view_layout
+    # (aqui ele é filho do bloco, não uma área do grid da seção).
+    # Intocado pela Home V3: 54px, alinhado ao botão Power da rail.
+    - type: custom:bruno-quick-actions-card
+      items:
+        - key: lights_off
+          icon: mdi:lightbulb-off-outline
+          label: Luzes
+          group: actions
+          tap_action:
+            action: call-service
+            service: homeassistant.turn_off
+            data:
+              entity_id: light.todas_as_luzes
+        - key: wifi
+          icon: mdi:wifi
+          label: Wi-Fi
+          group: actions
+          tap_action:
+            action: fire-dom-event
+            browser_mod:
+              service: browser_mod.popup
+              data:
+                title: Wi-Fi
+                tag: wifi_qr
+                style: |
+                  --popup-width: 450px;
+                  --popup-max-width: min(450px, calc(100vw - 32px));
+                  --popup-background-color: rgba(15, 20, 35, 0.75);
+                  --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+                  --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+                content:
+                  type: picture
+                  image: /local/images/wifi_main_scanme.png
+        - key: refresh
+          icon: mdi:refresh
+          label: Atualizar
+          group: actions
+          tap_action:
+            action: fire-dom-event
+            bruno_action: refresh
+        # --- Sala (comandos migrados do card especial) ---
+        - key: sala_corredor
+          icon_key: bulb
+          label: Corredor
+          group: sala
+          kind_label: Sala
+          tap_action:
+            action: call-service
+            service: homeassistant.toggle
+            data:
+              entity_id: light.corredor_switch_1
+        - key: sala_tv
+          icon_key: tv
+          label: TV
+          group: sala
+          kind_label: Sala
+          tap_action:
+            action: call-service
+            service: homeassistant.toggle
+            data:
+              entity_id: media_player.android_tv_192_168_3_17
+        - key: sala_ac
+          icon_key: smart-ac
+          label: A/C
+          group: sala
+          kind_label: Sala
+          tap_action:
+            action: call-service
+            service: climate.toggle
+            data:
+              entity_id: climate.sl_ar_condicionado

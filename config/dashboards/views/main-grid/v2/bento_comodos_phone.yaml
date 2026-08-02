@@ -1,0 +1,31 @@
+# HOME V2 — Matriz de cômodos no PHONE (layout mobile intocado).
+# Cópia funcional de views/main-grid/bento_comodos.yaml (mesma matriz
+# compartilhada, que já tem o bloco mediaquery phone 2x3 de 176px), com
+# show max-800: no desktop/tablet a aba usa a FAIXA horizontal
+# (v2/bento_comodos_strip.yaml) na mesma grid-area `comodos`.
+type: grid
+columns: 1
+square: false
+view_layout:
+  grid-area: comodos
+  show:
+    mediaquery: '(max-width: 800px)'
+card_mod:
+  style: |
+    :host {
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    #root {
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      gap: 0 !important;
+    }
+    #root > * {
+      height: 100% !important;
+      margin: 0 !important;
+    }
+cards:
+  - !include ../../../shared/grid-cards/bento_comodos_matriz.yaml

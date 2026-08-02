@@ -1,0 +1,750 @@
+# ============================================================================
+# Pacote: presence_supervision (2026-07-12)
+#
+# Contrato comum para os sensores 4-em-1 e para o PIR do Corredor.
+#
+# Problemas tratados:
+# - um valor MQTT restaurado no boot nao pode virar ocupacao valida;
+# - unknown/unavailable nao pode virar "comodo vazio";
+# - um estado dinamico congelado nao pode alimentar automacoes indefinidamente;
+# - temperatura, umidade, iluminancia, bateria e parametros de deteccao ficam
+#   reunidos em uma entidade de diagnostico por ambiente.
+#
+# Os packages antigos continuam sendo a camada funcional e recebem availability
+# a partir de sensor.<comodo>_presence_health. Para rollback, comentar apenas o
+# include presence_supervision em configuration.yaml e remover os guards de
+# availability adicionados aos packages antigos.
+# ============================================================================
+
+template:
+  # --------------------------------------------------------------------------
+  # SALA - o primeiro bloco declara os anchors reutilizados pelos demais.
+  # --------------------------------------------------------------------------
+  - trigger:
+      - platform: homeassistant
+        event: start
+        id: reset
+      - platform: event
+        event_type: event_template_reloaded
+        id: reset
+      - platform: state
+        entity_id:
+          - binary_sensor.sensor_4_in_1_sala_presence
+          - sensor.sensor_4_in_1_sala_motion_state
+        id: evidence
+      - platform: state
+        entity_id:
+          - sensor.sensor_4_in_1_sala_temperature
+          - sensor.sensor_4_in_1_sala_humidity
+          - sensor.sensor_4_in_1_sala_illuminance
+          - sensor.sensor_4_in_1_sala_battery
+        id: telemetry
+      - platform: time_pattern
+        minutes: "/1"
+        id: tick
+    variables:
+      source_entity: binary_sensor.sensor_4_in_1_sala_presence
+      motion_entity: sensor.sensor_4_in_1_sala_motion_state
+      temperature_entity: sensor.sensor_4_in_1_sala_temperature
+      humidity_entity: sensor.sensor_4_in_1_sala_humidity
+      illuminance_entity: sensor.sensor_4_in_1_sala_illuminance
+      battery_entity: sensor.sensor_4_in_1_sala_battery
+      fading_entity: number.sensor_4_in_1_sala_fading_time
+      mode_entity: select.sensor_4_in_1_sala_motion_detection_mode
+      motion_sensitivity_entity: number.sensor_4_in_1_sala_motion_detection_sensitivity
+      static_distance_entity: number.sensor_4_in_1_sala_static_detection_distance
+      static_sensitivity_entity: number.sensor_4_in_1_sala_static_detection_sensitivity
+      linkquality_entity: sensor.sensor_4_in_1_sala_linkquality
+      is_passive: false
+      stale_after_seconds: 900
+      active_stuck_after_seconds: 900
+      passive_stuck_after_seconds: 300
+      inconsistency_after_seconds: 60
+      startup_grace_seconds: 30
+    sensor:
+      - name: Sala Presence Health
+        default_entity_id: sensor.sala_presence_health
+        unique_id: sala_presence_health
+        icon: mdi:shield-home-outline
+        state: &presence_health_state >-
+          {% set invalid = ['unknown', 'unavailable', ''] %}
+          {% set active_motion = ['small', 'large', 'static'] %}
+          {% set source = states(source_entity) | lower %}
+          {% set motion = states(motion_entity) | lower if motion_entity else 'none' %}
+          {% set previous = this.state | default('unknown') | lower %}
+          {% set trigger_id = trigger.id | default('') %}
+          {% set from_value = trigger.from_state.state | lower
+              if trigger.from_state is defined and trigger.from_state is not none else '' %}
+          {% set to_value = trigger.to_state.state | lower
+              if trigger.to_state is defined and trigger.to_state is not none else '' %}
+          {% set reset_at = as_timestamp(this.attributes.reset_at | default(0), 0) %}
+          {% set grace_ok = reset_at == 0 or (as_timestamp(now()) - reset_at) >= startup_grace_seconds %}
+          {% set evidence_live = trigger_id == 'evidence'
+              and from_value not in invalid and to_value not in invalid and grace_ok %}
+          {% set telemetry_live = trigger_id == 'telemetry'
+              and from_value not in invalid and to_value not in invalid and grace_ok %}
+          {% set source_obj = expand(source_entity) | first | default(none) %}
+          {% set motion_obj = expand(motion_entity) | first | default(none) if motion_entity else none %}
+          {% set source_age = (as_timestamp(now()) - as_timestamp(source_obj.last_changed, 0)) | int
+              if source_obj is not none else 999999 %}
+          {% set motion_age = (as_timestamp(now()) - as_timestamp(motion_obj.last_changed, 0)) | int
+              if motion_obj is not none else 999999 %}
+          {% set source_update_age = (as_timestamp(now()) - as_timestamp(source_obj.last_updated, 0)) | int
+              if source_obj is not none else 999999 %}
+          {% set motion_update_age = (as_timestamp(now()) - as_timestamp(motion_obj.last_updated, 0)) | int
+              if motion_obj is not none else 999999 %}
+          {% set tracked = [source_entity, motion_entity, temperature_entity,
+                            humidity_entity, illuminance_entity, battery_entity]
+                            | reject('equalto', '') | list %}
+          {% set fresh = namespace(latest=0) %}
+          {% for item in expand(tracked) %}
+            {% set updated = as_timestamp(item.last_updated, 0) %}
+            {% if updated > fresh.latest %}{% set fresh.latest = updated %}{% endif %}
+          {% endfor %}
+          {% set freshness = (as_timestamp(now()) - fresh.latest) | int if fresh.latest > 0 else 999999 %}
+          {% set mismatch = not is_passive and
+              ((source == 'on' and motion == 'none') or
+               (source == 'off' and motion in active_motion)) %}
+          {% set mismatch_persistent = mismatch and ([source_age, motion_age] | min) >= inconsistency_after_seconds %}
+          {% set active_stuck =
+              (is_passive and source == 'on' and source_update_age >= passive_stuck_after_seconds) or
+              (not is_passive and source == 'on' and motion in ['small', 'large']
+               and source_update_age >= active_stuck_after_seconds
+               and motion_update_age >= active_stuck_after_seconds) %}
+          {% if source == 'unavailable' or (not is_passive and motion == 'unavailable') %}
+            unavailable
+          {% elif source in ['unknown', ''] or (not is_passive and motion in ['unknown', '']) %}
+            unknown
+          {% elif not is_passive and freshness >= stale_after_seconds %}
+            stale
+          {% elif active_stuck or mismatch_persistent %}
+            degraded
+          {% elif mismatch %}
+            {{ previous if previous in ['ok', 'initializing'] else 'initializing' }}
+          {% elif is_passive and source == 'off' %}
+            ok
+          {% elif not is_passive and source == 'off' and motion == 'none' %}
+            {% if trigger_id == 'reset' %}initializing
+            {% elif previous == 'ok' or evidence_live or telemetry_live %}ok
+            {% else %}initializing
+            {% endif %}
+          {% elif trigger_id == 'reset' %}
+            initializing
+          {% elif previous == 'ok' or evidence_live %}
+            ok
+          {% else %}
+            initializing
+          {% endif %}
+        attributes: &presence_health_attributes
+          contract_version: 1
+          source_entity: "{{ source_entity }}"
+          motion_entity: "{{ motion_entity }}"
+          source_state: "{{ states(source_entity) }}"
+          motion_state: "{{ states(motion_entity) if motion_entity else 'not_applicable' }}"
+          temperature: "{{ states(temperature_entity) if temperature_entity else 'not_applicable' }}"
+          temperature_entity: "{{ temperature_entity }}"
+          humidity: "{{ states(humidity_entity) if humidity_entity else 'not_applicable' }}"
+          humidity_entity: "{{ humidity_entity }}"
+          illuminance: "{{ states(illuminance_entity) if illuminance_entity else 'not_applicable' }}"
+          illuminance_entity: "{{ illuminance_entity }}"
+          battery: "{{ states(battery_entity) if battery_entity else 'not_applicable' }}"
+          battery_entity: "{{ battery_entity }}"
+          linkquality: "{{ states(linkquality_entity) if linkquality_entity else 'not_applicable' }}"
+          linkquality_entity: "{{ linkquality_entity }}"
+          fading_time: "{{ states(fading_entity) if fading_entity else 'not_applicable' }}"
+          motion_detection_mode: "{{ states(mode_entity) if mode_entity else 'not_applicable' }}"
+          motion_detection_sensitivity: "{{ states(motion_sensitivity_entity) if motion_sensitivity_entity else 'not_applicable' }}"
+          static_detection_distance: "{{ states(static_distance_entity) if static_distance_entity else 'not_applicable' }}"
+          static_detection_sensitivity: "{{ states(static_sensitivity_entity) if static_sensitivity_entity else 'not_applicable' }}"
+          freshness_seconds: >-
+            {% set tracked = [source_entity, motion_entity, temperature_entity,
+                              humidity_entity, illuminance_entity, battery_entity]
+                              | reject('equalto', '') | list %}
+            {% set fresh = namespace(latest=0) %}
+            {% for item in expand(tracked) %}
+              {% set updated = as_timestamp(item.last_updated, 0) %}
+              {% if updated > fresh.latest %}{% set fresh.latest = updated %}{% endif %}
+            {% endfor %}
+            {{ ((as_timestamp(now()) - fresh.latest) | int) if fresh.latest > 0 else -1 }}
+          presence_age_seconds: >-
+            {% set item = expand(source_entity) | first | default(none) %}
+            {{ ((as_timestamp(now()) - as_timestamp(item.last_changed, 0)) | int) if item is not none else -1 }}
+          motion_age_seconds: >-
+            {% set item = expand(motion_entity) | first | default(none) if motion_entity else none %}
+            {{ ((as_timestamp(now()) - as_timestamp(item.last_changed, 0)) | int) if item is not none else -1 }}
+          presence_update_age_seconds: >-
+            {% set item = expand(source_entity) | first | default(none) %}
+            {{ ((as_timestamp(now()) - as_timestamp(item.last_updated, 0)) | int) if item is not none else -1 }}
+          motion_update_age_seconds: >-
+            {% set item = expand(motion_entity) | first | default(none) if motion_entity else none %}
+            {{ ((as_timestamp(now()) - as_timestamp(item.last_updated, 0)) | int) if item is not none else -1 }}
+          last_device_update: >-
+            {% set tracked = [source_entity, motion_entity, temperature_entity,
+                              humidity_entity, illuminance_entity, battery_entity]
+                              | reject('equalto', '') | list %}
+            {% set fresh = namespace(latest=0) %}
+            {% for item in expand(tracked) %}
+              {% set updated = as_timestamp(item.last_updated, 0) %}
+              {% if updated > fresh.latest %}{% set fresh.latest = updated %}{% endif %}
+            {% endfor %}
+            {{ as_datetime(fresh.latest).isoformat() if fresh.latest > 0 else '' }}
+          reset_at: >-
+            {% set source = states(source_entity) | lower %}
+            {% set motion = states(motion_entity) | lower if motion_entity else 'none' %}
+            {% if trigger.id | default('') == 'reset' or source in ['unknown', 'unavailable', '']
+                  or (not is_passive and motion in ['unknown', 'unavailable', '']) %}
+              {{ now().isoformat() }}
+            {% else %}
+              {{ this.attributes.reset_at | default('') }}
+            {% endif %}
+          last_evidence_at: >-
+            {% set invalid = ['unknown', 'unavailable', ''] %}
+            {% set from_value = trigger.from_state.state | lower
+                if trigger.from_state is defined and trigger.from_state is not none else '' %}
+            {% set to_value = trigger.to_state.state | lower
+                if trigger.to_state is defined and trigger.to_state is not none else '' %}
+            {% if trigger.id | default('') == 'evidence'
+                  and from_value not in invalid and to_value not in invalid %}
+              {{ now().isoformat() }}
+            {% else %}
+              {{ this.attributes.last_evidence_at | default('') }}
+            {% endif %}
+          policy: >-
+            {{ 'passive_motion' if is_passive else '4in1_presence_and_motion' }}
+          stale_after_seconds: "{{ 0 if is_passive else stale_after_seconds }}"
+          active_stuck_after_seconds: >-
+            {{ passive_stuck_after_seconds if is_passive else active_stuck_after_seconds }}
+
+  # --------------------------------------------------------------------------
+  # OFFICE
+  # --------------------------------------------------------------------------
+  - trigger:
+      - platform: homeassistant
+        event: start
+        id: reset
+      - platform: event
+        event_type: event_template_reloaded
+        id: reset
+      - platform: state
+        entity_id:
+          - binary_sensor.sensor_4_in_1_office_presence
+          - sensor.sensor_4_in_1_office_motion_state
+        id: evidence
+      - platform: state
+        entity_id:
+          - sensor.sensor_4_in_1_office_temperature
+          - sensor.sensor_4_in_1_office_humidity
+          - sensor.sensor_4_in_1_office_illuminance
+          - sensor.sensor_4_in_1_office_battery
+        id: telemetry
+      - platform: time_pattern
+        minutes: "/1"
+        id: tick
+    variables:
+      source_entity: binary_sensor.sensor_4_in_1_office_presence
+      motion_entity: sensor.sensor_4_in_1_office_motion_state
+      temperature_entity: sensor.sensor_4_in_1_office_temperature
+      humidity_entity: sensor.sensor_4_in_1_office_humidity
+      illuminance_entity: sensor.sensor_4_in_1_office_illuminance
+      battery_entity: sensor.sensor_4_in_1_office_battery
+      fading_entity: number.sensor_4_in_1_office_fading_time
+      mode_entity: select.sensor_4_in_1_office_motion_detection_mode
+      motion_sensitivity_entity: number.sensor_4_in_1_office_motion_detection_sensitivity
+      static_distance_entity: number.sensor_4_in_1_office_static_detection_distance
+      static_sensitivity_entity: number.sensor_4_in_1_office_static_detection_sensitivity
+      linkquality_entity: sensor.sensor_4_in_1_office_linkquality
+      is_passive: false
+      stale_after_seconds: 900
+      active_stuck_after_seconds: 900
+      passive_stuck_after_seconds: 300
+      inconsistency_after_seconds: 60
+      startup_grace_seconds: 30
+    sensor:
+      - name: Office Presence Health
+        default_entity_id: sensor.office_presence_health
+        unique_id: office_presence_health
+        icon: mdi:shield-home-outline
+        state: *presence_health_state
+        attributes: *presence_health_attributes
+
+  # --------------------------------------------------------------------------
+  # COZINHA
+  # --------------------------------------------------------------------------
+  - trigger:
+      - platform: homeassistant
+        event: start
+        id: reset
+      - platform: event
+        event_type: event_template_reloaded
+        id: reset
+      - platform: state
+        entity_id:
+          - binary_sensor.sensor_4_in_1_cozinha_presence
+          - sensor.sensor_4_in_1_cozinha_motion_state
+        id: evidence
+      - platform: state
+        entity_id:
+          - sensor.sensor_4_in_1_cozinha_temperature
+          - sensor.sensor_4_in_1_cozinha_humidity
+          - sensor.sensor_4_in_1_cozinha_illuminance
+          - sensor.sensor_4_in_1_cozinha_battery
+        id: telemetry
+      - platform: time_pattern
+        minutes: "/1"
+        id: tick
+    variables:
+      source_entity: binary_sensor.sensor_4_in_1_cozinha_presence
+      motion_entity: sensor.sensor_4_in_1_cozinha_motion_state
+      temperature_entity: sensor.sensor_4_in_1_cozinha_temperature
+      humidity_entity: sensor.sensor_4_in_1_cozinha_humidity
+      illuminance_entity: sensor.sensor_4_in_1_cozinha_illuminance
+      battery_entity: sensor.sensor_4_in_1_cozinha_battery
+      fading_entity: number.sensor_4_in_1_cozinha_fading_time
+      mode_entity: select.sensor_4_in_1_cozinha_motion_detection_mode
+      motion_sensitivity_entity: number.sensor_4_in_1_cozinha_motion_detection_sensitivity
+      static_distance_entity: number.sensor_4_in_1_cozinha_static_detection_distance
+      static_sensitivity_entity: number.sensor_4_in_1_cozinha_static_detection_sensitivity
+      linkquality_entity: sensor.sensor_4_in_1_cozinha_linkquality
+      is_passive: false
+      stale_after_seconds: 900
+      active_stuck_after_seconds: 900
+      passive_stuck_after_seconds: 300
+      inconsistency_after_seconds: 60
+      startup_grace_seconds: 30
+    sensor:
+      - name: Cozinha Presence Health
+        default_entity_id: sensor.cozinha_presence_health
+        unique_id: cozinha_presence_health
+        icon: mdi:shield-home-outline
+        state: *presence_health_state
+        attributes: *presence_health_attributes
+
+  # --------------------------------------------------------------------------
+  # Q. CASAL
+  # --------------------------------------------------------------------------
+  - trigger:
+      - platform: homeassistant
+        event: start
+        id: reset
+      - platform: event
+        event_type: event_template_reloaded
+        id: reset
+      - platform: state
+        entity_id:
+          - binary_sensor.sensor_4_in_1_q_casal_presence
+          - sensor.sensor_4_in_1_q_casal_motion_state
+        id: evidence
+      - platform: state
+        entity_id:
+          - sensor.sensor_4_in_1_q_casal_temperature
+          - sensor.sensor_4_in_1_q_casal_humidity
+          - sensor.sensor_4_in_1_q_casal_illuminance
+          - sensor.sensor_4_in_1_q_casal_battery
+        id: telemetry
+      - platform: time_pattern
+        minutes: "/1"
+        id: tick
+    variables:
+      source_entity: binary_sensor.sensor_4_in_1_q_casal_presence
+      motion_entity: sensor.sensor_4_in_1_q_casal_motion_state
+      temperature_entity: sensor.sensor_4_in_1_q_casal_temperature
+      humidity_entity: sensor.sensor_4_in_1_q_casal_humidity
+      illuminance_entity: sensor.sensor_4_in_1_q_casal_illuminance
+      battery_entity: sensor.sensor_4_in_1_q_casal_battery
+      fading_entity: number.sensor_4_in_1_q_casal_fading_time
+      mode_entity: select.sensor_4_in_1_q_casal_motion_detection_mode
+      motion_sensitivity_entity: number.sensor_4_in_1_q_casal_motion_detection_sensitivity
+      static_distance_entity: number.sensor_4_in_1_q_casal_static_detection_distance
+      static_sensitivity_entity: number.sensor_4_in_1_q_casal_static_detection_sensitivity
+      linkquality_entity: sensor.sensor_4_in_1_q_casal_linkquality
+      is_passive: false
+      stale_after_seconds: 900
+      active_stuck_after_seconds: 900
+      passive_stuck_after_seconds: 300
+      inconsistency_after_seconds: 60
+      startup_grace_seconds: 30
+    sensor:
+      - name: Q Casal Presence Health
+        default_entity_id: sensor.q_casal_presence_health
+        unique_id: q_casal_presence_health
+        icon: mdi:shield-home-outline
+        state: *presence_health_state
+        attributes: *presence_health_attributes
+
+  # --------------------------------------------------------------------------
+  # Q. MARINA
+  # --------------------------------------------------------------------------
+  - trigger:
+      - platform: homeassistant
+        event: start
+        id: reset
+      - platform: event
+        event_type: event_template_reloaded
+        id: reset
+      - platform: state
+        entity_id:
+          - binary_sensor.sensor_4_in_1_q_marina_presence
+          - sensor.sensor_4_in_1_q_marina_motion_state
+        id: evidence
+      - platform: state
+        entity_id:
+          - sensor.sensor_4_in_1_q_marina_temperature
+          - sensor.sensor_4_in_1_q_marina_humidity
+          - sensor.sensor_4_in_1_q_marina_illuminance
+          - sensor.sensor_4_in_1_q_marina_battery
+        id: telemetry
+      - platform: time_pattern
+        minutes: "/1"
+        id: tick
+    variables:
+      source_entity: binary_sensor.sensor_4_in_1_q_marina_presence
+      motion_entity: sensor.sensor_4_in_1_q_marina_motion_state
+      temperature_entity: sensor.sensor_4_in_1_q_marina_temperature
+      humidity_entity: sensor.sensor_4_in_1_q_marina_humidity
+      illuminance_entity: sensor.sensor_4_in_1_q_marina_illuminance
+      battery_entity: sensor.sensor_4_in_1_q_marina_battery
+      fading_entity: number.sensor_4_in_1_q_marina_fading_time
+      mode_entity: select.sensor_4_in_1_q_marina_motion_detection_mode
+      motion_sensitivity_entity: number.sensor_4_in_1_q_marina_motion_detection_sensitivity
+      static_distance_entity: number.sensor_4_in_1_q_marina_static_detection_distance
+      static_sensitivity_entity: number.sensor_4_in_1_q_marina_static_detection_sensitivity
+      linkquality_entity: sensor.sensor_4_in_1_q_marina_linkquality
+      is_passive: false
+      stale_after_seconds: 900
+      active_stuck_after_seconds: 900
+      passive_stuck_after_seconds: 300
+      inconsistency_after_seconds: 60
+      startup_grace_seconds: 30
+    sensor:
+      - name: Q Marina Presence Health
+        default_entity_id: sensor.q_marina_presence_health
+        unique_id: q_marina_presence_health
+        icon: mdi:shield-home-outline
+        state: *presence_health_state
+        attributes: *presence_health_attributes
+
+  # --------------------------------------------------------------------------
+  # Q. MIGUEL
+  # --------------------------------------------------------------------------
+  - trigger:
+      - platform: homeassistant
+        event: start
+        id: reset
+      - platform: event
+        event_type: event_template_reloaded
+        id: reset
+      - platform: state
+        entity_id:
+          - binary_sensor.sensor_4_in_1_q_miguel_presence
+          - sensor.sensor_4_in_1_q_miguel_motion_state
+        id: evidence
+      - platform: state
+        entity_id:
+          - sensor.sensor_4_in_1_q_miguel_temperature
+          - sensor.sensor_4_in_1_q_miguel_humidity
+          - sensor.sensor_4_in_1_q_miguel_illuminance
+          - sensor.sensor_4_in_1_q_miguel_battery
+        id: telemetry
+      - platform: time_pattern
+        minutes: "/1"
+        id: tick
+    variables:
+      source_entity: binary_sensor.sensor_4_in_1_q_miguel_presence
+      motion_entity: sensor.sensor_4_in_1_q_miguel_motion_state
+      temperature_entity: sensor.sensor_4_in_1_q_miguel_temperature
+      humidity_entity: sensor.sensor_4_in_1_q_miguel_humidity
+      illuminance_entity: sensor.sensor_4_in_1_q_miguel_illuminance
+      battery_entity: sensor.sensor_4_in_1_q_miguel_battery
+      fading_entity: number.sensor_4_in_1_q_miguel_fading_time
+      mode_entity: select.sensor_4_in_1_q_miguel_motion_detection_mode
+      motion_sensitivity_entity: number.sensor_4_in_1_q_miguel_motion_detection_sensitivity
+      static_distance_entity: number.sensor_4_in_1_q_miguel_static_detection_distance
+      static_sensitivity_entity: number.sensor_4_in_1_q_miguel_static_detection_sensitivity
+      linkquality_entity: sensor.sensor_4_in_1_q_miguel_linkquality
+      is_passive: false
+      stale_after_seconds: 900
+      active_stuck_after_seconds: 900
+      passive_stuck_after_seconds: 300
+      inconsistency_after_seconds: 60
+      startup_grace_seconds: 30
+    sensor:
+      - name: Q Miguel Presence Health
+        default_entity_id: sensor.q_miguel_presence_health
+        unique_id: q_miguel_presence_health
+        icon: mdi:shield-home-outline
+        state: *presence_health_state
+        attributes: *presence_health_attributes
+
+  # --------------------------------------------------------------------------
+  # CORREDOR - PIR passivo: o segundo sensor fica diagnostico ate conhecermos
+  # o enum real publicado pelo dispositivo.
+  # --------------------------------------------------------------------------
+  - trigger:
+      - platform: homeassistant
+        event: start
+        id: reset
+      - platform: event
+        event_type: event_template_reloaded
+        id: reset
+      - platform: state
+        entity_id: binary_sensor.pir_motion_sensor_corredor_movimento
+        id: evidence
+      - platform: state
+        entity_id: sensor.pir_motion_sensor_corredor_pir
+        id: telemetry
+      - platform: time_pattern
+        minutes: "/1"
+        id: tick
+    variables:
+      source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+      motion_entity: sensor.pir_motion_sensor_corredor_pir
+      temperature_entity: ''
+      humidity_entity: ''
+      illuminance_entity: ''
+      battery_entity: ''
+      fading_entity: ''
+      mode_entity: ''
+      motion_sensitivity_entity: ''
+      static_distance_entity: ''
+      static_sensitivity_entity: ''
+      linkquality_entity: ''
+      is_passive: true
+      stale_after_seconds: 0
+      active_stuck_after_seconds: 0
+      passive_stuck_after_seconds: 300
+      inconsistency_after_seconds: 60
+      startup_grace_seconds: 30
+    sensor:
+      - name: Corredor Presence Health
+        default_entity_id: sensor.corredor_presence_health
+        unique_id: corredor_presence_health
+        icon: mdi:shield-home-outline
+        state: *presence_health_state
+        attributes: *presence_health_attributes
+
+  # --------------------------------------------------------------------------
+  # Estado semantico supervisionado. A versao anterior de cada package fica
+  # preservada como rollback; cards e subviews passam a consumir esta camada.
+  # --------------------------------------------------------------------------
+  - sensor:
+      - name: Sala Semantic State Supervised
+        default_entity_id: sensor.sala_semantic_state_supervised
+        unique_id: sala_semantic_state_supervised
+        variables:
+          health_entity: sensor.sala_presence_health
+          motion_entity: binary_sensor.sala_motion_recent
+          occupancy_entity: binary_sensor.sala_occupancy
+          meeting_entity: ''
+          working_entity: ''
+          occupied_label: Ocupada
+          idle_icon: mdi:sofa
+        icon: &presence_semantic_icon >-
+          {% set health = states(health_entity) %}
+          {% if health in ['unavailable', 'unknown', 'stale', 'degraded'] %}
+            mdi:alert-circle-outline
+          {% elif health == 'initializing' %}
+            mdi:progress-clock
+          {% elif meeting_entity and is_state(meeting_entity, 'on') %}
+            mdi:video-account
+          {% elif working_entity and is_state(working_entity, 'on') %}
+            mdi:briefcase
+          {% elif is_state(motion_entity, 'on') and is_state(occupancy_entity, 'on') %}
+            mdi:account
+          {% elif is_state(motion_entity, 'on') %}
+            mdi:walk
+          {% elif is_state(occupancy_entity, 'on') %}
+            mdi:clock-outline
+          {% else %}
+            {{ idle_icon }}
+          {% endif %}
+        state: &presence_semantic_state >-
+          {% set health = states(health_entity) %}
+          {% if health == 'unavailable' %}offline
+          {% elif health == 'unknown' %}unknown_source
+          {% elif health == 'initializing' %}initializing
+          {% elif health == 'stale' %}stale
+          {% elif health == 'degraded' %}degraded
+          {% elif meeting_entity and is_state(meeting_entity, 'on') %}meeting
+          {% elif working_entity and is_state(working_entity, 'on') %}working
+          {% elif is_state(motion_entity, 'on') and is_state(occupancy_entity, 'on') %}occupied
+          {% elif is_state(motion_entity, 'on') %}motion
+          {% elif is_state(occupancy_entity, 'on') %}recent
+          {% else %}none
+          {% endif %}
+        attributes: &presence_semantic_attributes
+          display: >-
+            {% set health = states(health_entity) %}
+            {% if health == 'unavailable' %}Sensor indisponível
+            {% elif health == 'unknown' %}Estado desconhecido
+            {% elif health == 'initializing' %}Inicializando sensor
+            {% elif health == 'stale' %}Dados desatualizados
+            {% elif health == 'degraded' %}Sensor instável
+            {% elif meeting_entity and is_state(meeting_entity, 'on') %}Em reunião
+            {% elif working_entity and is_state(working_entity, 'on') %}Trabalhando
+            {% elif is_state(motion_entity, 'on') and is_state(occupancy_entity, 'on') %}{{ occupied_label }}
+            {% elif is_state(motion_entity, 'on') %}Presença
+            {% elif is_state(occupancy_entity, 'on') %}Ocupação recente
+            {% else %}
+            {% endif %}
+          priority: >-
+            {% if states(health_entity) in ['unavailable', 'unknown', 'stale', 'degraded'] %}4
+            {% elif meeting_entity and is_state(meeting_entity, 'on') %}3
+            {% elif working_entity and is_state(working_entity, 'on') %}2
+            {% elif is_state(occupancy_entity, 'on') %}1
+            {% else %}0
+            {% endif %}
+          health: "{{ states(health_entity) }}"
+          health_entity: "{{ health_entity }}"
+          motion_recent: "{{ states(motion_entity) }}"
+          motion_entity: "{{ motion_entity }}"
+          occupancy: "{{ states(occupancy_entity) }}"
+          occupancy_entity: "{{ occupancy_entity }}"
+
+      - name: Office Semantic State Supervised
+        default_entity_id: sensor.office_semantic_state_supervised
+        unique_id: office_semantic_state_supervised
+        variables:
+          health_entity: sensor.office_presence_health
+          motion_entity: binary_sensor.office_motion_recent
+          occupancy_entity: binary_sensor.office_occupancy
+          meeting_entity: binary_sensor.office_meeting_active
+          working_entity: binary_sensor.office_working_active
+          occupied_label: Ocupado
+          idle_icon: mdi:desk
+        icon: *presence_semantic_icon
+        state: *presence_semantic_state
+        attributes: *presence_semantic_attributes
+
+      - name: Cozinha Semantic State Supervised
+        default_entity_id: sensor.cozinha_semantic_state_supervised
+        unique_id: cozinha_semantic_state_supervised
+        variables:
+          health_entity: sensor.cozinha_presence_health
+          motion_entity: binary_sensor.cozinha_motion_recent
+          occupancy_entity: binary_sensor.cozinha_occupancy
+          meeting_entity: ''
+          working_entity: ''
+          occupied_label: Ocupada
+          idle_icon: mdi:silverware-fork-knife
+        icon: *presence_semantic_icon
+        state: *presence_semantic_state
+        attributes: *presence_semantic_attributes
+
+      - name: Q Casal Semantic State Supervised
+        default_entity_id: sensor.q_casal_semantic_state_supervised
+        unique_id: q_casal_semantic_state_supervised
+        variables:
+          health_entity: sensor.q_casal_presence_health
+          motion_entity: binary_sensor.q_casal_motion_recent
+          occupancy_entity: binary_sensor.q_casal_occupancy
+          meeting_entity: ''
+          working_entity: ''
+          occupied_label: Ocupado
+          idle_icon: mdi:bed-king
+        icon: *presence_semantic_icon
+        state: *presence_semantic_state
+        attributes: *presence_semantic_attributes
+
+      - name: Q Marina Semantic State Supervised
+        default_entity_id: sensor.q_marina_semantic_state_supervised
+        unique_id: q_marina_semantic_state_supervised
+        variables:
+          health_entity: sensor.q_marina_presence_health
+          motion_entity: binary_sensor.q_marina_motion_recent
+          occupancy_entity: binary_sensor.q_marina_occupancy
+          meeting_entity: ''
+          working_entity: ''
+          occupied_label: Ocupada
+          idle_icon: mdi:bed-single
+        icon: *presence_semantic_icon
+        state: *presence_semantic_state
+        attributes: *presence_semantic_attributes
+
+      - name: Q Miguel Semantic State Supervised
+        default_entity_id: sensor.q_miguel_semantic_state_supervised
+        unique_id: q_miguel_semantic_state_supervised
+        variables:
+          health_entity: sensor.q_miguel_presence_health
+          motion_entity: binary_sensor.q_miguel_motion_recent
+          occupancy_entity: binary_sensor.q_miguel_occupancy
+          meeting_entity: ''
+          working_entity: ''
+          occupied_label: Ocupado
+          idle_icon: mdi:bed-single
+        icon: *presence_semantic_icon
+        state: *presence_semantic_state
+        attributes: *presence_semantic_attributes
+
+  # --------------------------------------------------------------------------
+  # Entidades funcionais do Corredor. Para automacoes de luz imediata, usar
+  # corredor_motion_recent; para liberacao suave, corredor_occupancy.
+  # --------------------------------------------------------------------------
+  - binary_sensor:
+      - name: Corredor Motion Recent
+        default_entity_id: binary_sensor.corredor_motion_recent
+        unique_id: corredor_motion_recent
+        device_class: motion
+        icon: mdi:motion-sensor
+        availability: >-
+          {{ is_state('sensor.corredor_presence_health', 'ok') }}
+        state: >-
+          {{ is_state('binary_sensor.pir_motion_sensor_corredor_movimento', 'on') }}
+        delay_off:
+          seconds: 5
+        attributes:
+          source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+          pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
+          pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"
+          semantic_role: immediate_motion
+
+      - name: Corredor Occupancy
+        default_entity_id: binary_sensor.corredor_occupancy
+        unique_id: corredor_occupancy
+        device_class: occupancy
+        icon: mdi:motion-sensor
+        availability: >-
+          {{ is_state('sensor.corredor_presence_health', 'ok') }}
+        state: >-
+          {{ is_state('binary_sensor.pir_motion_sensor_corredor_movimento', 'on') }}
+        delay_off:
+          seconds: 60
+        attributes:
+          source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+          pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
+          pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"
+          semantic_role: corridor_occupancy
+
+  - sensor:
+      - name: Corredor Semantic State
+        default_entity_id: sensor.corredor_semantic_state
+        unique_id: corredor_semantic_state
+        icon: mdi:motion-sensor
+        state: >-
+          {% set health = states('sensor.corredor_presence_health') %}
+          {% if health == 'unavailable' %}offline
+          {% elif health == 'unknown' %}unknown_source
+          {% elif health == 'initializing' %}initializing
+          {% elif health == 'stale' %}stale
+          {% elif health == 'degraded' %}degraded
+          {% elif is_state('binary_sensor.corredor_motion_recent', 'on') %}motion
+          {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}recent
+          {% else %}none
+          {% endif %}
+        attributes:
+          display: >-
+            {% set state = states('sensor.corredor_presence_health') %}
+            {% if state == 'unavailable' %}Sensor indisponível
+            {% elif state == 'unknown' %}Estado desconhecido
+            {% elif state == 'initializing' %}Inicializando sensor
+            {% elif state == 'stale' %}Dados desatualizados
+            {% elif state == 'degraded' %}Sensor instável
+            {% elif is_state('binary_sensor.corredor_motion_recent', 'on') %}Movimento
+            {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}Movimento recente
+            {% else %}
+            {% endif %}
+          health: "{{ states('sensor.corredor_presence_health') }}"
+          motion_recent: "{{ states('binary_sensor.corredor_motion_recent') }}"
+          occupancy: "{{ states('binary_sensor.corredor_occupancy') }}"
+          source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+          pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
+          pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"

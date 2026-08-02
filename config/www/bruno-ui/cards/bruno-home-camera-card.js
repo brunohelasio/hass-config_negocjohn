@@ -39,6 +39,7 @@ class BrunoHomeCameraCard extends HTMLElement {
     this._lastCameraImages = this._lastCameraImages || {};
     this._cameraBaseUrls = this._cameraBaseUrls || {};
     this._loadedCameraUrls = this._loadedCameraUrls || {};
+    this._cameraLoads = this._cameraLoads || {};
     this._menuOpen = false;
     this._render();
     this._startRefreshTimer();
@@ -50,7 +51,13 @@ class BrunoHomeCameraCard extends HTMLElement {
     if (this._localActiveCamera && activeState === this._localActiveCamera) {
       this._localActiveCamera = '';
     }
-    this._render();
+    const model = this._model();
+    const renderSignature = this._renderSignature(model);
+    if (!this.shadowRoot || this._lastRenderSignature !== renderSignature) {
+      this._render();
+    } else {
+      this._syncDynamic(model);
+    }
     this._startRefreshTimer();
   }
 
@@ -117,8 +124,15 @@ class BrunoHomeCameraCard extends HTMLElement {
     };
   }
 
+  _renderSignature(model) {
+    const availability = (model?.cameras || [])
+      .map((camera) => `${camera.unavailable ? 'u' : 'a'}${camera.online ? '1' : '0'}`)
+      .join('');
+    return `${model?.activeId || ''}|${availability}`;
+  }
+
   _selectCamera(entityId) {
-    if (!entityId || entityId === this._model().activeId) return;
+    if (!entityId) return;
     this._localActiveCamera = entityId;
     this._menuOpen = false;
     this._refreshSeed = Date.now();
@@ -160,16 +174,43 @@ class BrunoHomeCameraCard extends HTMLElement {
       const baseSrc = image.dataset.cameraSrcBase;
       const entityId = image.dataset.cameraEntity;
       if (!baseSrc || !entityId) return;
+      if (this._cameraLoads[entityId]) return;
       const nextSrc = BrunoHomeCameraCard._withCacheBust(baseSrc, stamp);
       const loader = new globalThis.Image();
+      this._cameraLoads[entityId] = loader;
       loader.onload = () => {
+        delete this._cameraLoads[entityId];
         this._loadedCameraUrls[entityId] = nextSrc;
+        if (!image.isConnected || image.dataset.cameraEntity !== entityId) return;
         image.src = nextSrc;
         image.dataset.hasLoaded = 'true';
         image.classList.remove('is-hidden');
       };
+      loader.onerror = () => {
+        delete this._cameraLoads[entityId];
+      };
       loader.src = nextSrc;
     });
+  }
+
+  _syncDynamic(model = this._model()) {
+    if (!this.shadowRoot || !model?.activeCamera) return;
+    const online = this.shadowRoot.querySelector('.online-chip');
+    if (online) {
+      online.classList.toggle('is-online', model.onlineCount > 0);
+      const text = online.querySelector('.online-count');
+      if (text) text.textContent = `${model.onlineCount}/${model.totalCount || 0} online`;
+    }
+    const status = this.shadowRoot.querySelector('.camera-row-copy span');
+    if (status) {
+      status.lastChild.textContent = model.activeCamera.status || 'Online';
+      status.querySelector('.live-dot')?.classList.toggle('is-muted', !model.activeCamera.online);
+    }
+    const image = this.shadowRoot.querySelector('img[data-camera-entity]');
+    if (image && model.activeCamera.image && image.dataset.cameraSrcBase !== model.activeCamera.image) {
+      image.dataset.cameraSrcBase = model.activeCamera.image;
+      this._refreshCameraImages();
+    }
   }
 
   _wireActions(activeId) {
@@ -207,7 +248,7 @@ class BrunoHomeCameraCard extends HTMLElement {
     if (!camera) {
       return `
         <div class="camera-row-image">
-          <div class="camera-placeholder"><ha-icon icon="mdi:video-outline"></ha-icon></div>
+          <div class="camera-placeholder" aria-hidden="true"></div>
         </div>
       `;
     }
@@ -216,7 +257,7 @@ class BrunoHomeCameraCard extends HTMLElement {
     return `
       <div class="camera-row-image">
         ${image ? `<img src="${BrunoHomeCameraCard._escapeAttr(image)}" data-camera-src-base="${BrunoHomeCameraCard._escapeAttr(base)}" data-camera-entity="${BrunoHomeCameraCard._escapeAttr(camera.entity)}" alt="">` : ''}
-        <div class="camera-placeholder"><ha-icon icon="mdi:video-outline"></ha-icon></div>
+        <div class="camera-placeholder" aria-hidden="true"></div>
       </div>
     `;
   }
@@ -225,6 +266,7 @@ class BrunoHomeCameraCard extends HTMLElement {
     const cameraName = camera?.short_name || camera?.name || 'Camera';
     const unavailable = !camera || camera.unavailable;
     const onlineClass = camera?.online ? '' : ' is-muted';
+    const cameraStatus = camera?.status || 'Online';
     const classes = [
       'camera-main',
       'camera-feed',
@@ -235,16 +277,16 @@ class BrunoHomeCameraCard extends HTMLElement {
       <button class="${classes}" type="button" aria-label="Abrir camera ${BrunoHomeCameraCard._escapeAttr(cameraName)}">
         ${unavailable ? `
           <div class="camera-state-surface">
-            <ha-icon icon="mdi:video-off-outline"></ha-icon>
+            <bruno-icon icon="mdi:video-off-outline"></bruno-icon>
             <span>Imagem indisponivel</span>
           </div>
         ` : ''}
         ${this._cameraFrame(camera)}
         <div class="camera-row-copy">
           <strong>${BrunoHomeCameraCard._escape(cameraName)}</strong>
-          <span><i class="live-dot${onlineClass}" aria-hidden="true"></i>${BrunoHomeCameraCard._escape(camera?.status || 'Online')}</span>
+          <span><i class="live-dot${onlineClass}" aria-hidden="true"></i>${BrunoHomeCameraCard._escape(cameraStatus)}</span>
         </div>
-        <span class="fullscreen-chip" aria-hidden="true"><ha-icon icon="mdi:fullscreen"></ha-icon></span>
+
       </button>
     `;
   }
@@ -254,6 +296,8 @@ class BrunoHomeCameraCard extends HTMLElement {
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
 
     const model = this._model();
+    this._lastRenderedActiveId = model.activeId;
+    this._lastRenderSignature = this._renderSignature(model);
     const camera = model.activeCamera || {};
     const onlineText = `${model.onlineCount}/${model.totalCount || 0} online`;
     const onlineClass = model.onlineCount > 0 ? ' is-online' : '';
@@ -267,7 +311,8 @@ class BrunoHomeCameraCard extends HTMLElement {
       <style>
         :host {
           --card-radius: var(--bruno-liquid-card-radius, 18px);
-          --accent: var(--bruno-liquid-warm-accent, 242,194,102);
+          /* ANTERIOR: --accent: var(--bruno-liquid-warm-accent, 242,194,102); (ambar — cameras deve ser azul, padronizacao) */
+          --accent: 180, 215, 255;
           --accent-live: var(--bruno-liquid-green-accent, 46,231,122);
           display: block;
           width: 100%;
@@ -361,7 +406,7 @@ class BrunoHomeCameraCard extends HTMLElement {
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         }
 
-        .micro-icon ha-icon {
+        .micro-icon bruno-icon {
           --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
         }
 
@@ -427,7 +472,7 @@ class BrunoHomeCameraCard extends HTMLElement {
           background: transparent;
         }
 
-        .mh-menu ha-icon {
+        .mh-menu bruno-icon {
           --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px);
         }
 
@@ -468,8 +513,8 @@ class BrunoHomeCameraCard extends HTMLElement {
           overflow: hidden;
           border-radius: inherit;
           background:
-            radial-gradient(160px 120px at 18% 12%, rgba(255,255,255,0.06), transparent 70%),
-            rgba(8,10,14,0.16);
+            radial-gradient(160px 120px at 18% 12%, rgba(255,255,255,0.045), transparent 70%),
+            rgba(255,255,255,0.018);
         }
 
         .camera-row-image img {
@@ -496,7 +541,7 @@ class BrunoHomeCameraCard extends HTMLElement {
           color: rgba(226,232,240,0.30);
         }
 
-        .camera-placeholder ha-icon {
+        .camera-placeholder bruno-icon {
           --mdc-icon-size: 42px;
         }
 
@@ -514,7 +559,7 @@ class BrunoHomeCameraCard extends HTMLElement {
           position: absolute;
           z-index: 3;
           left: 14px;
-          right: 68px;
+          right: 14px;
           bottom: 13px;
           min-width: 0;
           display: grid;
@@ -548,28 +593,6 @@ class BrunoHomeCameraCard extends HTMLElement {
           color: rgba(255,255,255,0.74);
         }
 
-        .fullscreen-chip {
-          position: absolute;
-          z-index: 4;
-          left: 50%;
-          bottom: 10px;
-          width: 44px;
-          height: 34px;
-          display: grid;
-          place-items: center;
-          transform: translateX(-50%);
-          border-radius: var(--bruno-liquid-control-radius, 12px);
-          color: rgba(255,255,255,0.86);
-          background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
-          border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
-          box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
-          backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
-          -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
-        }
-
-        .fullscreen-chip ha-icon {
-          --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px);
-        }
 
         .camera-state-surface {
           position: absolute;
@@ -582,14 +605,12 @@ class BrunoHomeCameraCard extends HTMLElement {
           padding: 16px;
           color: rgba(255,255,255,0.78);
           text-align: center;
-          background:
-            radial-gradient(circle at 50% 42%, rgba(96,165,250,0.12), transparent 58%),
-            rgba(5,8,14,0.56);
+          background: rgba(255,255,255,0.025);
           backdrop-filter: blur(8px) saturate(0.9);
           -webkit-backdrop-filter: blur(8px) saturate(0.9);
         }
 
-        .camera-state-surface ha-icon {
+        .camera-state-surface bruno-icon {
           --mdc-icon-size: 32px;
           color: rgba(255,255,255,0.64);
         }
@@ -644,7 +665,7 @@ class BrunoHomeCameraCard extends HTMLElement {
           background: var(--bruno-liquid-popup-option-hover-background, rgba(242,194,102,0.115));
         }
 
-        .camera-option ha-icon {
+        .camera-option bruno-icon {
           --mdc-icon-size: var(--bruno-liquid-icon-status, 15px);
         }
 
@@ -676,11 +697,11 @@ class BrunoHomeCameraCard extends HTMLElement {
       <section class="glass-card cameras-card">
         <div class="mh-head cameras-head">
           <div class="mh-head-title">
-            <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
+            <span class="micro-icon"><bruno-icon icon="mdi:cctv"></bruno-icon></span>
             <div class="module-title">${BrunoHomeCameraCard._escape(this._config.name || 'Monitoramento')}</div>
           </div>
           <div class="head-right">
-            <span class="online-chip${onlineClass}">${BrunoHomeCameraCard._escape(onlineText)}<i class="live-dot${onlineClass ? '' : ' is-muted'}" aria-hidden="true"></i></span>
+            <span class="online-chip${onlineClass}"><span class="online-count">${BrunoHomeCameraCard._escape(onlineText)}</span><i class="live-dot${onlineClass ? '' : ' is-muted'}" aria-hidden="true"></i></span>
             <button
               type="button"
               class="mh-menu${this._menuOpen ? ' is-active' : ''}"
@@ -689,7 +710,7 @@ class BrunoHomeCameraCard extends HTMLElement {
               aria-label="Selecionar camera"
               aria-expanded="${this._menuOpen ? 'true' : 'false'}"
             >
-              <ha-icon icon="mdi:dots-vertical"></ha-icon>
+              <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
             </button>
           </div>
         </div>
@@ -709,7 +730,7 @@ class BrunoHomeCameraCard extends HTMLElement {
     const onlineClass = camera.online ? '' : ' is-muted';
     return `
       <button class="camera-option${activeClass}" type="button" role="menuitem" data-camera-id="${BrunoHomeCameraCard._escapeAttr(camera.entity)}">
-        <ha-icon icon="mdi:cctv"></ha-icon>
+        <bruno-icon icon="mdi:cctv"></bruno-icon>
         <span>${BrunoHomeCameraCard._escape(camera.name || camera.short_name || 'Camera')}</span>
         <i class="live-dot${onlineClass}" aria-hidden="true"></i>
       </button>

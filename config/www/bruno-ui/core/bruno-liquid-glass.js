@@ -1,17 +1,50 @@
-const BRUNO_LIQUID_GLASS_VERSION = '20260630-icon-scale-1';
+const BRUNO_LIQUID_GLASS_VERSION = '20260723-liquid-performance-1';
 const BRUNO_LIQUID_GLASS_STYLE_ID = 'bruno-liquid-glass-tokens';
 
 const BRUNO_LIQUID_GLASS_TOKENS = {
-  'bruno-liquid-accent': '150, 190, 255',
-  'bruno-liquid-warm-accent': '242, 194, 102',
-  'bruno-liquid-green-accent': '46, 231, 122',
+  'bruno-liquid-accent': '255, 159, 10',
+  'bruno-liquid-warm-accent': '255, 214, 10',
+  'bruno-liquid-green-accent': '50, 215, 75',
 
-  'bruno-liquid-card-radius': '18px',
-  'bruno-liquid-card-radius-compact': '16px',
-  'bruno-liquid-room-radius': '18px',
-  'bruno-liquid-cell-radius': '13px',
-  'bruno-liquid-control-radius': '12px',
-  'bruno-liquid-control-radius-compact': '9px',
+  // Home Assistant theme values mirrored from Liquid Glass.yaml.
+  'background-image': "center / cover no-repeat fixed url('https://raw.githubusercontent.com/Nezz/homeassistant-visionos-theme/refs/heads/static/macOS_26_Dark.webp')",
+  'primary-background-color': 'rgb(18, 11, 25)',
+  'secondary-background-color': 'rgb(18, 11, 25)',
+  'app-header-background-color': 'rgba(18, 11, 25, 0.3)',
+  'ha-card-background': 'rgba(0, 0, 0, 0.38)',
+  'app-theme-color': 'rgb(0, 0, 0)',
+  'primary-text-color': 'rgba(255, 255, 255, 0.96)',
+  'secondary-text-color': 'rgba(222, 222, 222, 0.96)',
+  'divider-color': 'rgba(152, 152, 157, 0.3)',
+  'ha-card-border-radius': '34px',
+  'ha-card-features-border-radius': 'var(--ha-card-border-radius)',
+  'ha-card-border-width': '0',
+  'ha-card-backdrop-filter': 'blur(5px)',
+  'ha-card-box-shadow': `
+    3px 3px 0.5px -3.5px rgba(255,255,255,0.30) inset,
+    -2px -2px 0.5px -2px rgba(255,255,255,0.30) inset,
+    0 0 8px 1px rgba(255,255,255,0.10) inset,
+    0 0 2px 0 rgba(0,0,0,0.10)
+  `,
+  'red-color': '#FF453A',
+  'pink-color': '#FF375F',
+  'purple-color': '#BF5AF2',
+  'indigo-color': '#5E5CE6',
+  'blue-color': '#0A84FF',
+  'cyan-color': '#5AC8F5',
+  'green-color': '#32D74B',
+  'yellow-color': '#FFD60A',
+  'orange-color': '#FF9F0A',
+  'brown-color': '#AC8E68',
+  'primary-color': 'var(--orange-color)',
+
+
+  'bruno-liquid-card-radius': '34px',
+  'bruno-liquid-card-radius-compact': '24px',
+  'bruno-liquid-room-radius': '24px',
+  'bruno-liquid-cell-radius': '18px',
+  'bruno-liquid-control-radius': '18px',
+  'bruno-liquid-control-radius-compact': '14px',
   'bruno-liquid-dock-radius': '999px',
   'bruno-liquid-rail-radius': '999px',
 
@@ -27,24 +60,18 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   // Shared premium block skin: neutral real glass, thin borders and low-fill
   // surfaces so the photo reads through without turning the cards brown.
   'bruno-liquid-card-background': `
-    linear-gradient(180deg, rgba(255,255,255,0.040), rgba(255,255,255,0.010) 46%, rgba(0,0,0,0.030)),
-    rgba(9,11,15,0.105)
+    linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012) 48%, rgba(0,0,0,0.045)),
+    var(--ha-card-background, rgba(0,0,0,0.380))
   `,
-  'bruno-liquid-card-filter': 'blur(18px) saturate(0.92) brightness(1.05) contrast(1.02)',
-  'bruno-liquid-card-border-color': 'rgba(255,255,255,0.070)',
+  'bruno-liquid-card-filter': 'var(--ha-card-backdrop-filter, blur(5px)) saturate(1.06) brightness(1.02)',
+  'bruno-liquid-card-border-color': 'rgba(255,255,255,0.120)',
   'bruno-liquid-card-border': '1px solid var(--bruno-liquid-card-border-color)',
-  'bruno-liquid-card-shadow': `
-    inset 0 1px 0 rgba(255,255,255,0.090),
-    0 10px 28px rgba(0,0,0,0.145)
-  `,
+  'bruno-liquid-card-shadow': 'var(--ha-card-box-shadow)',
   'bruno-liquid-card-sheen': `
-    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00) 42%)
+    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00) 38%)
   `,
-  'bruno-liquid-card-sheen-opacity': '0.10',
-  'bruno-liquid-card-edge-glow': `
-    linear-gradient(125deg, rgba(255,255,255,0.11), rgba(255,255,255,0.026) 38%, rgba(255,255,255,0.010) 100%)
-  `,
-
+  'bruno-liquid-card-sheen-opacity': '0.08',
+  'bruno-liquid-card-edge-glow': 'none',
   'bruno-liquid-dock-background': `
     radial-gradient(86px 70px at 18% 0%, rgba(255,255,255,0.19), transparent 72%),
     radial-gradient(98px 82px at 92% 100%, rgba(var(--accent, var(--bruno-liquid-accent)),0.08), transparent 72%),
@@ -138,10 +165,10 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
     linear-gradient(180deg, rgba(96,165,250,0.42), rgba(38,92,138,0.24)),
     rgba(255,255,255,0.030)
   `,
-  'bruno-liquid-control-blue-border': 'rgba(96,165,250,0.320)',
+  'bruno-liquid-control-blue-border': 'rgba(10,132,255,0.320)',
   'bruno-liquid-control-blue-shadow': `
     inset 0 1px 0 rgba(255,255,255,0.100),
-    0 0 14px rgba(96,165,250,0.120)
+    0 0 14px rgba(10,132,255,0.120)
   `,
   'bruno-liquid-control-green-background': `
     linear-gradient(180deg, rgba(46,231,122,0.160), rgba(19,76,54,0.080)),
@@ -160,7 +187,7 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'bruno-liquid-selected-blue-border': 'rgba(210,228,255,0.300)',
   'bruno-liquid-selected-blue-shadow': `
     inset 0 1px 0 rgba(255,255,255,0.110),
-    0 0 14px rgba(96,165,250,0.140)
+    0 0 14px rgba(10,132,255,0.140)
   `,
 
   // Dedicated transient surface: used by compact selectors/popovers that need
@@ -173,34 +200,78 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
     inset 0 1px 0 rgba(255,255,255,0.100),
     0 18px 36px rgba(0,0,0,0.300)
   `,
-  'bruno-liquid-popup-filter': 'blur(22px) saturate(1.04) brightness(0.96)',
+  'bruno-liquid-popup-filter': 'blur(20px) saturate(1.16) brightness(0.94)',
   'bruno-liquid-popup-option-background': 'rgba(255,255,255,0.045)',
   'bruno-liquid-popup-option-hover-background': 'rgba(var(--bruno-liquid-warm-accent),0.115)',
 
   'bruno-liquid-surface-bottom-line': 'linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent)',
   'bruno-liquid-surface-bottom-line-opacity': '0',
 
+  /* NOVO (2026-07-23): estado "aceso" deixou de ser quase igual ao "apagado"
+     (ambos eram preto translucido, diferenca imperceptivel). Por pedido do
+     usuario, o aceso agora usa o MESMO tratamento do estado apagado do tema
+     "Liquid Glass - iOS" (vidro claro/frosted) — o apagado deste tema
+     continua intocado, so o aceso foi trocado. Fonte: bruno-liquid-glass-ios.js,
+     bloco 'bruno-liquid-surface-off-*'. */
+  /* ANTERIOR (rollback):
   'bruno-liquid-surface-on-background': `
-    linear-gradient(180deg, rgba(255,255,255,0.044), rgba(255,255,255,0.012) 54%, rgba(255,255,255,0.018)),
-    rgba(9,11,15,0.052)
+    linear-gradient(180deg, rgba(255,255,255,0.048), rgba(255,255,255,0.014) 54%, rgba(255,255,255,0.020)),
+    rgba(9,11,15,0.260)
   `,
-  'bruno-liquid-surface-on-filter': 'blur(18px) saturate(0.92) brightness(1.05) contrast(1.02)',
+  'bruno-liquid-surface-on-filter': 'blur(6px) saturate(1.02) brightness(1.03) contrast(1.01)',
   'bruno-liquid-surface-on-border-color': 'rgba(255,255,255,0.092)',
   'bruno-liquid-surface-on-shadow': `
     inset 0 1px 0 rgba(255,255,255,0.066),
     0 6px 16px rgba(0,0,0,0.105)
   `,
   'bruno-liquid-surface-on-sheen': `
-    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.00) 42%)
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.00) 38%)
   `,
-  'bruno-liquid-surface-on-sheen-opacity': '0.12',
+  'bruno-liquid-surface-on-sheen-opacity': '0.08',
+  --- FIM ANTERIOR --- */
+  'bruno-liquid-surface-on-background': `
+    radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 46%, transparent 73%),
+    linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 40%, rgba(255,255,255,0.07)),
+    linear-gradient(155deg, rgba(255,255,255,0.11), rgba(255,255,255,0.055))
+  `,
+  'bruno-liquid-surface-on-filter': 'blur(14px) saturate(1.28) brightness(1.04)',
+  'bruno-liquid-surface-on-border-color': 'rgba(255,255,255,0.16)',
+  'bruno-liquid-surface-on-shadow': `
+    inset 0 1px 0 rgba(255,255,255,0.36),
+    inset 1px 0 0 rgba(255,255,255,0.12),
+    inset -1px 0 0 rgba(255,255,255,0.07),
+    inset 0 -1px 0 rgba(255,255,255,0.04),
+    0 8px 24px rgba(0,0,0,0.32)
+  `,
+  'bruno-liquid-surface-on-sheen': `
+    radial-gradient(112px 72px at 16% 0%, rgba(255,255,255,0.40), transparent 72%),
+    linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.00) 38%),
+    linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.00) 48%)
+  `,
+  'bruno-liquid-surface-on-sheen-opacity': '0.85',
   'bruno-liquid-band-background': 'rgba(255,255,255,0.010)',
   'bruno-liquid-band-border-color': 'rgba(255,255,255,0.035)',
   'bruno-liquid-band-border': '1px solid var(--bruno-liquid-band-border-color)',
   'bruno-liquid-band-shadow': 'none',
+  /* ANTERIOR (rollback): band-open apontava para --bruno-liquid-surface-on-*,
+     que agora e o vidro claro emprestado do tema iOS (luz acesa). Como
+     "band-open" e sobre secao/aba EXPANDIDA (sem relacao com luz), isso
+     fazia o acordeao das subviews herdar o vidro claro por engano.
+     Desacoplado com valor proprio — o mesmo visual escuro sutil que
+     --bruno-liquid-surface-on-* tinha antes desta sessao.
   'bruno-liquid-band-open-background': 'var(--bruno-liquid-surface-on-background)',
   'bruno-liquid-band-open-border-color': 'var(--bruno-liquid-surface-on-border-color)',
   'bruno-liquid-band-open-shadow': 'var(--bruno-liquid-surface-on-shadow)',
+  --- FIM ANTERIOR --- */
+  'bruno-liquid-band-open-background': `
+    linear-gradient(180deg, rgba(255,255,255,0.048), rgba(255,255,255,0.014) 54%, rgba(255,255,255,0.020)),
+    rgba(9,11,15,0.260)
+  `,
+  'bruno-liquid-band-open-border-color': 'rgba(255,255,255,0.092)',
+  'bruno-liquid-band-open-shadow': `
+    inset 0 1px 0 rgba(255,255,255,0.066),
+    0 6px 16px rgba(0,0,0,0.105)
+  `,
 };
 
 Object.assign(BRUNO_LIQUID_GLASS_TOKENS, {
@@ -366,7 +437,7 @@ function brunoLiquidGlassRouteTransition(duration = 280) {
   }, duration);
 }
 
-globalThis.BrunoLiquidGlass = {
+const BRUNO_LIQUID_GLASS_API = {
   version: BRUNO_LIQUID_GLASS_VERSION,
   tokens: BRUNO_LIQUID_GLASS_TOKENS,
   surfaces: BRUNO_LIQUID_GLASS_SURFACES,
@@ -376,4 +447,13 @@ globalThis.BrunoLiquidGlass = {
   routeTransition: brunoLiquidGlassRouteTransition,
 };
 
-brunoLiquidGlassApply();
+// Depois da inicialização, apenas o theme manager pode escrever no style
+// compartilhado. Se este módulo terminar de carregar tardiamente, registre a
+// API original sem substituir o proxy nem reaplicar Liquid Glass sobre o tema
+// selecionado (Josh/VisionOS inclusive).
+if (globalThis.BrunoThemeManager) {
+  globalThis.BrunoLiquidGlassOriginal = BRUNO_LIQUID_GLASS_API;
+} else {
+  globalThis.BrunoLiquidGlass = BRUNO_LIQUID_GLASS_API;
+  brunoLiquidGlassApply();
+}

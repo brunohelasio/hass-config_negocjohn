@@ -24,9 +24,75 @@ class BrunoShell extends HTMLElement {
     this._sectionEl = null;
     this._helpers = null;
     this._built = false;
+    // Navegacao persistente: `_activeKey` e a secao VISIVEL; `_requestedKey`
+    // e apenas o destino em carregamento. A troca visual so ocorre quando o
+    // card de destino estiver pronto, evitando o estado intermediario escuro.
+    this._requestedKey = null;
+    this._sectionCache = new Map();
+    this._sectionPromises = new Map();
+    this._sectionScroll = new Map();
+    this._sectionGeneration = 0;
+    this._sectionRequestId = 0;
+    this._buildRequestId = 0;
+    this._configSignature = null;
+    this._sectionErrorEl = null;
+    this._configSection = '';
+    this._wallpaperSection = 'home';
+    this._wallpaperMessage = '';
     this._onHashChange = () => this._syncFromHash();
+    this._onSectionNavigationClick = (event) => this._handleSectionNavigationClick(event);
+    this._onHassNavigate = (event) => this._handleHassNavigate(event);
+    this._onConfigClick = (event) => this._handleConfigClick(event);
+    this._onConfigChange = (event) => this._handleConfigChange(event);
+    this._onThemeChanged = (event) => {
+      this._syncConfigOverlayTheme(event?.detail?.key);
+      if (this._configOverlayEl?.dataset.panel === 'config') this._renderConfigPanel();
+    };
+    this._onWallpaperChanged = (event) => {
+      const key = event?.detail?.key;
+      if (!key || key === this._activeKey) this._applyBackdrop(this._activeKey);
+      if (this._configOverlayEl?.dataset.panel === 'config' && this._configSection === 'wallpaper') {
+        this._renderConfigPanel();
+      }
+    };
     this._onLlCustom = (event) => {
-      const key = event && event.detail && event.detail.bruno_section;
+      const detail = (event && event.detail) || {};
+      if (detail.bruno_config === 'open' || detail.bruno_action === 'config') {
+        event.stopPropagation();
+        this._openConfigPanel();
+        return;
+      }
+      if (detail.bruno_action === 'refresh') {
+        event.stopPropagation();
+        globalThis.location?.reload?.();
+        return;
+      }
+      if (detail.bruno_action === 'scenes') {
+        event.stopPropagation();
+        this._openScenesPanel();
+        return;
+      }
+      if (detail.bruno_action === 'system') {
+        event.stopPropagation();
+        this._openSystemPanel();
+        return;
+      }
+      if (detail.bruno_action === 'network') {
+        event.stopPropagation();
+        this._openNetworkPanel();
+        return;
+      }
+      if (detail.bruno_updates === 'open' || detail.bruno_action === 'updates') {
+        event.stopPropagation();
+        this._openUpdatesPanel();
+        return;
+      }
+      if (detail.bruno_action === 'spotify') {
+        event.stopPropagation();
+        this._openSpotifyPanel(detail.bruno_spotify_config || {});
+        return;
+      }
+      const key = detail.bruno_section;
       if (key) {
         event.stopPropagation();
         this._goToSection(key);
@@ -38,6 +104,8 @@ class BrunoShell extends HTMLElement {
 
   setConfig(config) {
     if (!config) throw new Error('bruno-shell: config ausente');
+    const signature = this._configFingerprint(config);
+    const sameConfig = signature === this._configSignature;
     this._config = config;
     this._sections = config.sections || {};
     this._defaultSection = config.default_section || Object.keys(this._sections)[0] || 'home';
@@ -54,9 +122,32 @@ class BrunoShell extends HTMLElement {
     // camada fica transparente (comportamento de hoje, inalterado).
     //   backdrops: { home: <url>, sala: <url>, ... , default: <url opcional> }
     this._backdrops = config.backdrops || null;
+    this._backdropEffects = config.backdrop_effects || null;
     this._preloadBackdrops();
     this._railConfig = config.rail
       || (this._rails ? this._rails[this._defaultRailName] : null);
+    // ORIGINAL (rollback): todo setConfig reconstruia shadow DOM, rail e Home.
+    // this._currentRailName = null;
+    // this._built = false;
+    // this._build();
+
+    // O HA pode repetir setConfig com um objeto novo, mas semanticamente igual.
+    // Nessa situacao a instancia montada e os caches permanecem intactos.
+    if (sameConfig) {
+      if (this._built) this._syncFromHash();
+      return;
+    }
+
+    this._configSignature = signature;
+    this._sectionGeneration += 1;
+    this._sectionRequestId += 1;
+    this._sectionCache.clear();
+    this._sectionPromises.clear();
+    this._sectionScroll.clear();
+    this._activeKey = null;
+    this._requestedKey = null;
+    this._sectionEl = null;
+    this._sectionErrorEl = null;
     this._currentRailName = null;
     this._built = false;
     this._build();
@@ -64,8 +155,34 @@ class BrunoShell extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    globalThis.BrunoWallpaperManager?.sections?.forEach?.((section) => {
+      globalThis.BrunoWallpaperManager.clearPending?.(hass, section.key);
+    });
+    this._preloadResolvedBackdrops();
     if (this._railEl) this._railEl.hass = hass;
+    // ORIGINAL (rollback): apenas a secao visivel recebia hass.
+    // if (this._sectionEl) this._sectionEl.hass = hass;
     if (this._sectionEl) this._sectionEl.hass = hass;
+    const homeEl = this._sectionCache.get(this._homeSectionKey());
+    if (homeEl && homeEl !== this._sectionEl) homeEl.hass = hass;
+    if (this._activeKey) this._applyBackdrop(this._activeKey);
+    if (this._configOverlayEl?.dataset.panel === 'config'
+      && this._configSection === 'updates'
+      && !this._configOverlayEl.hidden) {
+      this._renderConfigPanel({ preserveScroll: true });
+    }
+    if (this._configOverlayEl?.dataset.panel === 'updates' && !this._configOverlayEl.hidden) {
+      this._renderUpdatesPanel({ preserveScroll: true });
+    }
+    if (this._configOverlayEl?.dataset.panel === 'system' && !this._configOverlayEl.hidden) {
+      this._renderSystemPanel({ preserveScroll: true });
+    }
+    if (this._configOverlayEl?.dataset.panel === 'network' && !this._configOverlayEl.hidden) {
+      this._renderNetworkPanel({ preserveScroll: true });
+    }
+    if (this._configOverlayEl?.dataset.panel === 'spotify' && this._spotifyPanelCard) {
+      this._spotifyPanelCard.hass = hass;
+    }
   }
 
   getCardSize() {
@@ -78,17 +195,36 @@ class BrunoShell extends HTMLElement {
     globalThis.BrunoLiquidGlass && globalThis.BrunoLiquidGlass.apply && globalThis.BrunoLiquidGlass.apply();
     globalThis.addEventListener('hashchange', this._onHashChange);
     globalThis.addEventListener('location-changed', this._onHashChange);
+    globalThis.addEventListener('bruno-theme-changed', this._onThemeChanged);
+    globalThis.addEventListener('bruno-wallpaper-changed', this._onWallpaperChanged);
     this.addEventListener('ll-custom', this._onLlCustom);
+    // Captura antes das subviews: impede que fallbacks locais troquem a view do HA.
+    this.addEventListener('click', this._onSectionNavigationClick, true);
+    this.addEventListener('hass-navigate', this._onHassNavigate, true);
     if (this._built) this._syncFromHash();
   }
 
   disconnectedCallback() {
     globalThis.removeEventListener('hashchange', this._onHashChange);
     globalThis.removeEventListener('location-changed', this._onHashChange);
+    globalThis.removeEventListener('bruno-theme-changed', this._onThemeChanged);
+    globalThis.removeEventListener('bruno-wallpaper-changed', this._onWallpaperChanged);
     this.removeEventListener('ll-custom', this._onLlCustom);
+    this.removeEventListener('click', this._onSectionNavigationClick, true);
+    this.removeEventListener('hass-navigate', this._onHassNavigate, true);
   }
 
   // --- Helpers ---------------------------------------------------------------
+
+  _configFingerprint(config) {
+    try {
+      return JSON.stringify(config);
+    } catch (_error) {
+      // Configs Lovelace normais sao serializaveis. Este fallback conserva a
+      // seguranca caso algum integrador injete um valor nao serializavel.
+      return config;
+    }
+  }
 
   async _ensureHelpers() {
     if (!this._helpers && globalThis.loadCardHelpers) {
@@ -112,6 +248,7 @@ class BrunoShell extends HTMLElement {
   // --- Construcao da moldura -------------------------------------------------
 
   async _build() {
+    const buildRequestId = ++this._buildRequestId;
     if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
     this.shadowRoot.innerHTML = `
       <style>${BrunoShell._styles()}</style>
@@ -122,24 +259,36 @@ class BrunoShell extends HTMLElement {
         </div>
         <div class="rail-slot" id="rail"></div>
         <div class="content-slot" id="content"></div>
+        <div class="config-overlay" id="configOverlay" hidden></div>
       </div>
     `;
     this._backdropEl = this.shadowRoot.getElementById('backdrop');
+    this._configOverlayEl = this.shadowRoot.getElementById('configOverlay');
+    this._syncConfigOverlayTheme();
+    this._configOverlayEl?.removeEventListener('click', this._onConfigClick);
+    this._configOverlayEl?.addEventListener('click', this._onConfigClick);
+    this._configOverlayEl?.removeEventListener('change', this._onConfigChange);
+    this._configOverlayEl?.addEventListener('change', this._onConfigChange);
     this._bdLayers = Array.from(this.shadowRoot.querySelectorAll('.backdrop-layer'));
     this._bdActive = -1; // nenhuma camada ativa ainda
 
     // Rail: criada UMA vez e mantida viva (nunca recriada).
     try {
       if (this._railConfig) {
-        this._railEl = await this._createCard(this._railConfig);
+        // ORIGINAL (rollback): this._railEl = await this._createCard(this._railConfig);
+        const railEl = await this._createCard(this._railConfig);
+        if (buildRequestId !== this._buildRequestId) return;
+        this._railEl = railEl;
         this._currentRailName = this._rails ? this._defaultRailName : null;
         const railSlot = this.shadowRoot.getElementById('rail');
         if (railSlot) railSlot.replaceChildren(this._railEl);
       }
     } catch (error) {
+      if (buildRequestId !== this._buildRequestId) return;
       this._renderRailError(error);
     }
 
+    if (buildRequestId !== this._buildRequestId) return;
     this._built = true;
     this._syncFromHash();
   }
@@ -152,13 +301,95 @@ class BrunoShell extends HTMLElement {
     return this._sections && this._sections[key] ? key : this._defaultSection;
   }
 
+  _homeSectionKey() {
+    return this._sections?.home ? 'home' : this._defaultSection;
+  }
+
+  _navigationSectionKey(path) {
+    if (typeof path !== 'string' || !path.trim() || !this._sections) return null;
+    const raw = path.trim();
+    if (raw.startsWith('#')) {
+      const hashKey = raw.replace(/^#/, '').split(/[?&]/, 1)[0];
+      return this._sections[hashKey] ? hashKey : null;
+    }
+
+    const pathOnly = raw.split(/[?#]/, 1)[0].replace(/\/+$/, '');
+    const parts = pathOnly.split('/').filter(Boolean);
+    if (!parts.length) return null;
+
+    // Nao captura rotas absolutas de outro dashboard/integracao.
+    const currentParts = (globalThis.location?.pathname || '').split('/').filter(Boolean);
+    if (parts.length > 1 && currentParts.length && parts[0] !== currentParts[0]) return null;
+
+    let slug = parts[parts.length - 1];
+    try { slug = decodeURIComponent(slug); } catch (_error) { /* mantem o slug bruto */ }
+    const aliases = {
+      'bento-lab': this._homeSectionKey(),
+      'subview-sala': 'sala',
+      'subview-office': 'office',
+      'subview-cozinha': 'cozinha',
+      'subview-quarto-casal': 'casal',
+      'subview-quarto-marina': 'marina',
+      'subview-quarto-miguel': 'miguel',
+      'cameras-security': 'cameras',
+      'floor-plan': 'floorplan',
+    };
+    const key = aliases[slug] || (this._sections[slug] ? slug : null);
+    return key && this._sections[key] ? key : null;
+  }
+
+  _handleSectionNavigationClick(event) {
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    let key = null;
+
+    for (const node of path) {
+      if (!node || !node.dataset) continue;
+      if (node.dataset.action === 'navigate-home') {
+        key = this._homeSectionKey();
+        break;
+      }
+      if (node.dataset.action === 'navigate' && node.dataset.path) {
+        key = this._navigationSectionKey(node.dataset.path);
+        if (key) break;
+      }
+      if (node.classList?.contains('nav-button') && node.dataset.key && this._sections?.[node.dataset.key]) {
+        key = node.dataset.key;
+        break;
+      }
+    }
+
+    if (!key) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+    this._goToSection(key);
+  }
+
+  _handleHassNavigate(event) {
+    const detail = event?.detail || {};
+    const key = this._navigationSectionKey(detail.path || detail.navigate || detail.navigation_path);
+    if (!key) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+    this._goToSection(key);
+  }
+
   _syncFromHash() {
     if (!this._built) return;
     const key = this._currentHashKey();
-    if (key === this._activeKey) {
+    // ORIGINAL (rollback): comparava apenas com a chave marcada ativa antes do
+    // await, misturando destino solicitado com secao realmente visivel.
+    // if (key === this._activeKey) {
+    //   this._updateRailSelection(key);
+    //   return;
+    // }
+    // this._setSection(key);
+    if (key === this._activeKey && !this._requestedKey) {
       this._updateRailSelection(key);
       return;
     }
+    if (key === this._requestedKey) return;
     this._setSection(key);
   }
 
@@ -173,7 +404,8 @@ class BrunoShell extends HTMLElement {
     }
   }
 
-  async _setSection(key) {
+  // ORIGINAL (rollback): recriava o card e removia a Home com replaceChildren.
+  async _setSectionOriginalRollback(key) {
     const config = this._sections && this._sections[key];
     if (!config) return;
     this._activeKey = key;
@@ -207,27 +439,178 @@ class BrunoShell extends HTMLElement {
 
   // NOVO (full-bleed): PRÉ-CARREGA todas as imagens de backdrop no setConfig para
   // a troca de seção ser instantânea (sem o atraso de buscar a imagem na hora).
+  _sectionElement(key, config, generation) {
+    const cached = this._sectionCache.get(key);
+    if (cached) return Promise.resolve(cached);
+    const pending = this._sectionPromises.get(key);
+    if (pending) return pending;
+
+    const promise = this._createCard(config).then((el) => {
+      if (generation === this._sectionGeneration) {
+        el.dataset.brunoSection = key;
+        this._sectionCache.set(key, el);
+      }
+      return el;
+    }).finally(() => {
+      if (this._sectionPromises.get(key) === promise) this._sectionPromises.delete(key);
+    });
+    this._sectionPromises.set(key, promise);
+    return promise;
+  }
+
+  _setSectionVisibility(el, visible) {
+    if (!el) return;
+    el.hidden = !visible;
+    if (visible) {
+      el.removeAttribute('aria-hidden');
+      el.removeAttribute('inert');
+      if ('inert' in el) el.inert = false;
+    } else {
+      el.setAttribute('aria-hidden', 'true');
+      if ('inert' in el) el.inert = true;
+      else el.setAttribute('inert', '');
+    }
+  }
+
+  _activateSection({ key, el, homeKey, homeEl, content, requestId }) {
+    if (this._activeKey) this._sectionScroll.set(this._activeKey, content.scrollTop || 0);
+    this._clearSectionError();
+
+    const previousEl = this._sectionEl;
+    if (previousEl && previousEl !== homeEl && previousEl !== el && previousEl.parentNode === content) {
+      this._setSectionVisibility(previousEl, false);
+      content.removeChild(previousEl);
+    }
+
+    // A Home permanece conectada durante toda a vida da Shell. Fora dela fica
+    // hidden + inert; as demais secoes sao cacheadas e desconectadas ao sair.
+    if (homeEl.parentNode !== content) content.appendChild(homeEl);
+    this._setSectionVisibility(homeEl, key === homeKey);
+    if (el !== homeEl) {
+      if (el.parentNode !== content) content.appendChild(el);
+      this._setSectionVisibility(el, true);
+    }
+
+    this._activeKey = key;
+    this._requestedKey = null;
+    this._sectionEl = el;
+    content.dataset.section = key;
+    if (this._hass) el.hass = this._hass;
+
+    // Backdrop, rail e conteudo mudam juntos, depois do destino estar pronto.
+    this._applyBackdrop(key);
+    this._applyRailForSection(key);
+    this._updateRailSelection(key);
+
+    const scrollTop = this._sectionScroll.get(key) || 0;
+    content.scrollTop = scrollTop;
+    globalThis.requestAnimationFrame?.(() => {
+      if (requestId === this._sectionRequestId && this._activeKey === key) content.scrollTop = scrollTop;
+    });
+  }
+
+  async _setSection(key) {
+    const config = this._sections && this._sections[key];
+    if (!config) return;
+    const content = this.shadowRoot && this.shadowRoot.getElementById('content');
+    if (!content) return;
+
+    const requestId = ++this._sectionRequestId;
+    const generation = this._sectionGeneration;
+    this._requestedKey = key;
+    const homeKey = this._homeSectionKey();
+    const homeConfig = this._sections[homeKey];
+
+    try {
+      // Home e criada no primeiro acesso a Shell mesmo em deep-link; depois
+      // permanece montada. Destinos adicionais entram no cache sob demanda.
+      const homePromise = this._sectionElement(homeKey, homeConfig, generation);
+      const sectionPromise = key === homeKey
+        ? homePromise
+        : this._sectionElement(key, config, generation);
+      const [homeEl, el] = await Promise.all([homePromise, sectionPromise]);
+      if (requestId !== this._sectionRequestId
+        || generation !== this._sectionGeneration
+        || this._requestedKey !== key) return;
+      this._activateSection({ key, el, homeKey, homeEl, content, requestId });
+    } catch (error) {
+      if (requestId !== this._sectionRequestId || generation !== this._sectionGeneration) return;
+      this._requestedKey = null;
+      this._renderSectionError(content, error);
+      this._updateRailSelection(this._activeKey || key);
+    }
+  }
+
   _preloadBackdrops() {
     if (!this._backdrops) return;
-    this._backdropCache = this._backdropCache || {};
     for (const k of Object.keys(this._backdrops)) {
       const url = this._backdrops[k];
-      if (url && !this._backdropCache[url]) {
-        const img = new Image();
-        img.src = url;
-        this._backdropCache[url] = img;
-      }
+      if (url) this._loadBackdrop(url);
     }
+  }
+
+  _preloadResolvedBackdrops() {
+    if (!this._hass || !this._backdrops) return;
+    for (const key of Object.keys(this._backdrops)) {
+      const fallback = this._backdrops[key] || this._backdrops.default;
+      const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
+      if (url) this._loadBackdrop(url);
+    }
+  }
+
+  _loadBackdrop(url) {
+    if (!url) return Promise.resolve(null);
+    if (!(this._backdropCache instanceof Map)) this._backdropCache = new Map();
+    const cached = this._backdropCache.get(url);
+    if (cached) return cached.promise;
+
+    const image = new Image();
+    image.decoding = 'async';
+    const promise = new Promise((resolve) => {
+      let settled = false;
+      const finish = async (loaded) => {
+        if (settled) return;
+        settled = true;
+        if (loaded && typeof image.decode === 'function') {
+          try { await image.decode(); } catch (_error) { /* load concluido; decode e apenas uma otimizacao */ }
+        }
+        resolve(loaded ? url : null);
+      };
+      image.addEventListener('load', () => finish(true), { once: true });
+      image.addEventListener('error', () => finish(false), { once: true });
+      image.src = url;
+      if (image.complete) finish(image.naturalWidth > 0);
+    });
+    this._backdropCache.set(url, { image, promise });
+    return promise;
   }
 
   // NOVO (full-bleed): aplica a imagem da seção com CROSSFADE real entre duas
   // camadas (opacity é animável; background-image não é). Sem `backdrops` =>
   // ambas as camadas transparentes (grafite do :host aparece).
+  _applyBackdropEffect(key) {
+    if (!this._backdropEl) return;
+    const effect = (this._backdropEffects && (this._backdropEffects[key] || this._backdropEffects.default)) || {};
+    const setVar = (name, value, fallback) => {
+      const next = value === undefined || value === null || value === '' ? fallback : String(value);
+      this._backdropEl.style.setProperty(name, next);
+    };
+    setVar('--bruno-backdrop-blur', effect.blur, 'var(--bruno-theme-backdrop-blur, 0px)');
+    setVar('--bruno-backdrop-scale', effect.scale, 'var(--bruno-theme-backdrop-scale, 1)');
+    setVar('--bruno-backdrop-saturate', effect.saturate, 'var(--bruno-theme-backdrop-saturate, 1)');
+    setVar('--bruno-backdrop-brightness', effect.brightness, 'var(--bruno-theme-backdrop-brightness, 1)');
+    setVar('--bruno-backdrop-dim', effect.dim, 'var(--bruno-theme-backdrop-dim, 0.10)');
+  }
+
   _applyBackdrop(key) {
     if (!this._backdropEl || !this._bdLayers || this._bdLayers.length < 2) return;
-    const url = this._backdrops && (this._backdrops[key] || this._backdrops.default);
+    this._applyBackdropEffect(key);
+    const fallback = this._backdrops && (this._backdrops[key] || this._backdrops.default);
+    const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
 
     if (!url) {
+      this._backdropRequestId = (this._backdropRequestId || 0) + 1;
+      this._backdropTargetUrl = '';
       // some sem imagem: apaga as duas camadas + desliga a vinheta.
       this._bdLayers.forEach((l) => { l.style.opacity = '0'; });
       delete this._backdropEl.dataset.active;
@@ -235,20 +618,39 @@ class BrunoShell extends HTMLElement {
       return;
     }
 
-    const next = this._bdActive === 0 ? 1 : 0;   // camada que vai receber a nova imagem
-    const nextLayer = this._bdLayers[next];
     const curLayer = this._bdActive >= 0 ? this._bdLayers[this._bdActive] : null;
-    // Se já é a mesma imagem na camada ativa, não faz nada.
-    if (curLayer && curLayer.dataset.url === url) { this._backdropEl.dataset.active = '1'; return; }
+    if (curLayer && curLayer.dataset.url === url) {
+      this._backdropTargetUrl = '';
+      this._backdropEl.dataset.active = '1';
+      return;
+    }
+    if (this._backdropTargetUrl === url) return;
 
-    nextLayer.dataset.url = url;
-    nextLayer.style.backgroundImage = `url("${url}")`;
-    // força reflow para garantir a transição de opacidade
-    void nextLayer.offsetWidth;
-    nextLayer.style.opacity = '1';
-    if (curLayer) curLayer.style.opacity = '0';
-    this._backdropEl.dataset.active = '1';
-    this._bdActive = next;
+    const requestId = (this._backdropRequestId || 0) + 1;
+    this._backdropRequestId = requestId;
+    this._backdropTargetUrl = url;
+    this._loadBackdrop(url).then((loadedUrl) => {
+      if (!loadedUrl
+        || requestId !== this._backdropRequestId
+        || this._activeKey !== key
+        || this._backdropTargetUrl !== url) return;
+
+      const current = this._bdActive >= 0 ? this._bdLayers[this._bdActive] : null;
+      const next = this._bdActive === 0 ? 1 : 0;
+      const nextLayer = this._bdLayers[next];
+      nextLayer.style.opacity = '0';
+      nextLayer.dataset.url = url;
+      nextLayer.style.backgroundImage = `url("${url}")`;
+
+      globalThis.requestAnimationFrame?.(() => {
+        if (requestId !== this._backdropRequestId || this._activeKey !== key) return;
+        nextLayer.style.opacity = '1';
+        if (current && current !== nextLayer) current.style.opacity = '0';
+        this._backdropEl.dataset.active = '1';
+        this._bdActive = next;
+        this._backdropTargetUrl = '';
+      });
+    });
   }
 
   // NOVO (Etapa A): troca os ITENS do rail conforme a seção, SEM recriar o
@@ -302,7 +704,558 @@ class BrunoShell extends HTMLElement {
   }
 
   _renderSectionError(content, error) {
-    content.innerHTML = `<div class="err">secao: ${BrunoShell._escape(error && error.message || error)}</div>`;
+    // ORIGINAL (rollback): apagava Home e qualquer secao montada.
+    // content.innerHTML = `<div class="err">secao: ${BrunoShell._escape(error && error.message || error)}</div>`;
+    this._clearSectionError();
+    const errorEl = document.createElement('div');
+    errorEl.className = 'err section-error';
+    errorEl.textContent = `secao: ${error && error.message || error}`;
+    content.appendChild(errorEl);
+    this._sectionErrorEl = errorEl;
+  }
+
+  _clearSectionError() {
+    if (this._sectionErrorEl?.parentNode) this._sectionErrorEl.parentNode.removeChild(this._sectionErrorEl);
+    this._sectionErrorEl = null;
+  }
+
+  // --- Configuracoes ---------------------------------------------------------
+
+  _syncConfigOverlayTheme(themeKey = '') {
+    if (!this._configOverlayEl) return;
+    const key = themeKey || globalThis.BrunoThemeManager?.current?.() || '';
+    this._configOverlayEl.dataset.brunoPopupTheme = key === 'josh' ? 'josh' : 'default';
+  }
+
+  _openConfigPanel() {
+    if (!this._configOverlayEl) return;
+    this._syncConfigOverlayTheme();
+    this._configSection = '';
+    this._wallpaperMessage = '';
+    this._configOverlayEl.hidden = false;
+    this._configOverlayEl.dataset.open = '1';
+    this._configOverlayEl.dataset.panel = 'config';
+    this._renderConfigPanel();
+  }
+
+  _closeConfigPanel() {
+    if (!this._configOverlayEl) return;
+    this._spotifyPanelCard = null;
+    this._spotifyPanelConfig = null;
+    this._configSection = '';
+    this._wallpaperMessage = '';
+    delete this._configOverlayEl.dataset.open;
+    delete this._configOverlayEl.dataset.panel;
+    this._configOverlayEl.hidden = true;
+    this._configOverlayEl.replaceChildren();
+  }
+
+  _renderConfigPanel({ preserveScroll = false } = {}) {
+    if (!this._configOverlayEl || this._configOverlayEl.hidden) return;
+    const previousScrollTop = preserveScroll
+      ? this._configOverlayEl.querySelector('.updates-scroll')?.scrollTop || 0
+      : 0;
+    const manager = globalThis.BrunoThemeManager;
+    const wallpaperManager = globalThis.BrunoWallpaperManager;
+    const updateCount = this._pendingUpdatesCount();
+    const child = this._renderConfigChild();
+
+    this._configOverlayEl.innerHTML = `
+      <div class="config-scrim" data-config-action="close"></div>
+      <section class="config-panel config-root-panel${child ? ' has-child' : ''}" role="dialog" aria-modal="true" aria-label="Configuracoes">
+        <header class="config-header">
+          <span class="config-icon" aria-hidden="true">
+            ${globalThis.BrunoIcons?.render('settings') || ''}
+          </span>
+          <div class="config-title">
+            <strong>Config</strong>
+            <span>Preferencias do painel</span>
+          </div>
+          <button class="config-close" type="button" data-config-action="close" aria-label="Fechar">&times;</button>
+        </header>
+        <div class="config-section config-menu-section">
+          <div class="config-menu-list">
+            <button class="config-menu-item" type="button" data-config-action="open-section" data-section="themes">
+              <span class="config-menu-icon" aria-hidden="true">
+                ${globalThis.BrunoIcons?.render('palette') || ''}
+              </span>
+              <span class="config-menu-copy"><strong>Themes</strong><small>${BrunoShell._escape(manager?.activeLabel?.() || 'VisionOS')}</small></span>
+              <span class="config-menu-chevron" aria-hidden="true">&rsaquo;</span>
+            </button>
+            <button class="config-menu-item" type="button" data-config-action="open-section" data-section="wallpaper">
+              <span class="config-menu-icon" aria-hidden="true">
+                ${globalThis.BrunoIcons?.render('wallpaper') || ''}
+              </span>
+              <span class="config-menu-copy"><strong>Wallpaper</strong><small>${wallpaperManager ? 'Shell e subviews' : 'Modulo indisponivel'}</small></span>
+              <span class="config-menu-chevron" aria-hidden="true">&rsaquo;</span>
+            </button>
+            <button class="config-menu-item" type="button" data-config-action="open-section" data-section="updates">
+              <span class="config-menu-icon" aria-hidden="true">
+                ${globalThis.BrunoIcons?.render('updates') || ''}
+              </span>
+              <span class="config-menu-copy"><strong>Updates</strong><small>${updateCount ? `${updateCount} ${updateCount === 1 ? 'pendente' : 'pendentes'}` : 'Abrir central'}</small></span>
+              ${updateCount ? `<span class="config-menu-count">${updateCount > 99 ? '99+' : updateCount}</span>` : '<span class="config-menu-chevron" aria-hidden="true">&rsaquo;</span>'}
+            </button>
+          </div>
+        </div>
+      </section>
+      ${child}
+    `;
+    if (preserveScroll && previousScrollTop) {
+      const scrollEl = this._configOverlayEl.querySelector('.updates-scroll');
+      if (scrollEl) scrollEl.scrollTop = previousScrollTop;
+    }
+  }
+
+  _renderConfigChild() {
+    if (!this._configSection) return '';
+    if (this._configSection === 'themes') return this._renderThemesChild();
+    if (this._configSection === 'wallpaper') return this._renderWallpaperChild();
+    if (this._configSection === 'updates') {
+      if (globalThis.BrunoUpdatesPanel?.render) {
+        return globalThis.BrunoUpdatesPanel.render({ hass: this._hass, embedded: true });
+      }
+      return `
+        <section class="config-panel config-child-panel" role="dialog" aria-modal="true" aria-label="Updates">
+          <header class="config-header">
+            <span class="config-icon" aria-hidden="true">!</span>
+            <div class="config-title"><strong>Updates</strong><span>Modulo indisponivel</span></div>
+            <button class="config-close" type="button" data-config-action="child-close" aria-label="Fechar">&times;</button>
+          </header>
+        </section>
+      `;
+    }
+    return '';
+  }
+
+  _renderThemesChild() {
+    const manager = globalThis.BrunoThemeManager;
+    const themes = manager?.list?.() || [];
+    const current = manager?.current?.() || 'visionos';
+    return `
+      <section class="config-panel config-child-panel" role="dialog" aria-modal="true" aria-label="Themes">
+        <header class="config-header">
+          <span class="config-icon" aria-hidden="true">
+            ${globalThis.BrunoIcons?.render('palette') || ''}
+          </span>
+          <div class="config-title"><strong>Themes</strong><span>${BrunoShell._escape(manager?.activeLabel?.() || current)}</span></div>
+          <button class="config-close" type="button" data-config-action="child-close" aria-label="Fechar">&times;</button>
+        </header>
+        <div class="config-section">
+          <div class="theme-list">
+            ${themes.map((theme) => `
+              <button class="theme-option${theme.key === current ? ' is-selected' : ''}" type="button"
+                data-config-action="theme" data-theme="${BrunoShell._escapeAttr(theme.key)}" ${theme.available ? '' : 'disabled'}>
+                <span>${BrunoShell._escape(theme.label)}</span>
+                <small>${theme.key === current ? 'Atual' : (theme.available ? 'Disponivel' : 'Indisponivel')}</small>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+        <footer class="config-footer"><button class="config-refresh" type="button" data-config-action="reload">Atualizar</button></footer>
+      </section>
+    `;
+  }
+
+  _renderWallpaperChild() {
+    const manager = globalThis.BrunoWallpaperManager;
+    const sections = manager?.sections || [];
+    const selected = manager?.section?.(this._wallpaperSection) || sections[0] || { key: 'home', label: 'Painel principal' };
+    this._wallpaperSection = selected.key;
+    const value = manager?.value?.(this._hass, selected.key) || '';
+    const fallback = (this._backdrops && (this._backdrops[selected.key] || this._backdrops.default)) || '';
+    const preview = manager?.resolve?.(this._hass, selected.key, fallback) || fallback;
+    const helperAvailable = Boolean(this._hass?.states?.[selected.entity]);
+    return `
+      <section class="config-panel config-child-panel wallpaper-panel" role="dialog" aria-modal="true" aria-label="Wallpaper">
+        <header class="config-header">
+          <span class="config-icon" aria-hidden="true">
+            ${globalThis.BrunoIcons?.render('wallpaper') || ''}
+          </span>
+          <div class="config-title"><strong>Wallpaper</strong><span>Shell e subviews</span></div>
+          <button class="config-close" type="button" data-config-action="child-close" aria-label="Fechar">&times;</button>
+        </header>
+        <div class="config-section wallpaper-content">
+          <div class="wallpaper-field">
+            <span>Area</span>
+            <div class="wallpaper-area-list" role="listbox" aria-label="Area do wallpaper">
+              ${sections.map((section) => `
+                <button class="wallpaper-area-option${section.key === selected.key ? ' is-selected' : ''}" type="button"
+                  data-config-action="wallpaper-area" data-wallpaper-key="${BrunoShell._escapeAttr(section.key)}"
+                  role="option" aria-selected="${section.key === selected.key ? 'true' : 'false'}">
+                  ${BrunoShell._escape(section.label)}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          <div class="wallpaper-preview${preview ? ' has-image' : ''}" style="${preview ? `--wallpaper-preview:url('${BrunoShell._escapeAttr(BrunoShell._cssUrl(preview))}')` : ''}" aria-hidden="true"></div>
+          <input id="wallpaperFile" class="wallpaper-file-input" type="file" accept="image/jpeg,image/png,image/gif" data-config-action="wallpaper-file">
+          <button class="wallpaper-file-button" type="button" data-config-action="wallpaper-pick">Selecionar imagem</button>
+          <label class="wallpaper-field">
+            <span>URL opcional</span>
+            <input id="wallpaperUrl" type="text" spellcheck="false" value="${BrunoShell._escapeAttr(value)}" placeholder="${BrunoShell._escapeAttr(fallback)}">
+          </label>
+          <small class="wallpaper-help">A imagem selecionada e armazenada pelo Home Assistant e aplicada sem editar codigo nem fazer cache buster.</small>
+          ${helperAvailable ? '' : '<small class="wallpaper-message is-warning">Helpers serao ativados apos reiniciar o Home Assistant.</small>'}
+          ${this._wallpaperMessage ? `<small class="wallpaper-message">${BrunoShell._escape(this._wallpaperMessage)}</small>` : ''}
+        </div>
+        <footer class="config-footer wallpaper-footer">
+          <button class="config-secondary" type="button" data-config-action="wallpaper-default">Usar padrao</button>
+          <button class="config-refresh" type="button" data-config-action="wallpaper-save">Aplicar</button>
+        </footer>
+      </section>
+    `;
+  }
+
+  _pendingUpdatesCount() {
+    const states = this._hass?.states || {};
+    const entityCount = Object.entries(states)
+      .filter(([entityId, state]) => entityId.startsWith('update.') && state?.state === 'on')
+      .length;
+    const aggregate = Number(states['sensor.hassio_updates_available']?.state) || 0;
+    return Math.max(entityCount, aggregate);
+  }
+
+  _refreshUpdatesPanel({ preserveScroll = true } = {}) {
+    if (this._configOverlayEl?.dataset.panel === 'config' && this._configSection === 'updates') {
+      this._renderConfigPanel({ preserveScroll });
+      return;
+    }
+    this._renderUpdatesPanel({ preserveScroll });
+  }
+
+  _openUpdatesPanel() {
+    if (!this._configOverlayEl) return;
+    this._configOverlayEl.hidden = false;
+    this._configOverlayEl.dataset.open = '1';
+    this._configOverlayEl.dataset.panel = 'updates';
+    this._renderUpdatesPanel();
+  }
+
+  _renderUpdatesPanel({ preserveScroll = false } = {}) {
+    if (!this._configOverlayEl || this._configOverlayEl.hidden || this._configOverlayEl.dataset.panel !== 'updates') return;
+    const previousScrollTop = preserveScroll
+      ? this._configOverlayEl.querySelector('.updates-scroll')?.scrollTop || 0
+      : 0;
+    if (!globalThis.BrunoUpdatesPanel?.render) {
+      this._configOverlayEl.innerHTML = `
+        <div class="config-scrim" data-updates-action="close"></div>
+        <section class="config-panel" role="dialog" aria-modal="true" aria-label="Updates">
+          <header class="config-header">
+            <span class="config-icon" aria-hidden="true">!</span>
+            <div class="config-title">
+              <strong>Updates</strong>
+              <span>Modulo de updates indisponivel</span>
+            </div>
+            <button class="config-close" type="button" data-updates-action="close" aria-label="Fechar">&times;</button>
+          </header>
+        </section>
+      `;
+      return;
+    }
+    this._configOverlayEl.innerHTML = globalThis.BrunoUpdatesPanel.render({ hass: this._hass });
+    if (preserveScroll && previousScrollTop) {
+      const scrollEl = this._configOverlayEl.querySelector('.updates-scroll');
+      if (scrollEl) scrollEl.scrollTop = previousScrollTop;
+    }
+  }
+
+  _openSystemPanel() {
+    if (!this._configOverlayEl) return;
+    this._syncConfigOverlayTheme();
+    this._configOverlayEl.hidden = false;
+    this._configOverlayEl.dataset.open = '1';
+    this._configOverlayEl.dataset.panel = 'system';
+    this._renderSystemPanel();
+  }
+
+  _renderSystemPanel({ preserveScroll = false } = {}) {
+    if (!this._configOverlayEl || this._configOverlayEl.hidden || this._configOverlayEl.dataset.panel !== 'system') return;
+    const previousScrollTop = preserveScroll
+      ? this._configOverlayEl.querySelector('.system-scroll')?.scrollTop || 0
+      : 0;
+    if (!globalThis.BrunoSystemPanel?.render) {
+      this._configOverlayEl.innerHTML = `
+        <div class="config-scrim" data-system-action="close"></div>
+        <section class="config-panel" role="dialog" aria-modal="true" aria-label="Sistema">
+          <header class="config-header">
+            <span class="config-icon" aria-hidden="true">!</span>
+            <div class="config-title"><strong>Sistema</strong><span>Modulo indisponivel</span></div>
+            <button class="config-close" type="button" data-system-action="close" aria-label="Fechar">&times;</button>
+          </header>
+        </section>
+      `;
+      return;
+    }
+    this._configOverlayEl.innerHTML = globalThis.BrunoSystemPanel.render({ hass: this._hass });
+    if (preserveScroll && previousScrollTop) {
+      const scrollEl = this._configOverlayEl.querySelector('.system-scroll');
+      if (scrollEl) scrollEl.scrollTop = previousScrollTop;
+    }
+  }
+
+  _openNetworkPanel() {
+    if (!this._configOverlayEl) return;
+    this._syncConfigOverlayTheme();
+    this._configOverlayEl.hidden = false;
+    this._configOverlayEl.dataset.open = '1';
+    this._configOverlayEl.dataset.panel = 'network';
+    this._renderNetworkPanel();
+  }
+
+  _openScenesPanel() {
+    if (!this._configOverlayEl) return;
+    this._syncConfigOverlayTheme();
+    this._configOverlayEl.hidden = false;
+    this._configOverlayEl.dataset.open = '1';
+    this._configOverlayEl.dataset.panel = 'scenes';
+    if (globalThis.BrunoScenesPanel?.render) {
+      this._configOverlayEl.innerHTML = globalThis.BrunoScenesPanel.render({ hass: this._hass });
+      return;
+    }
+    this._configOverlayEl.innerHTML = `
+      <div class="config-scrim" data-scenes-action="close"></div>
+      <section class="config-panel" role="dialog" aria-modal="true" aria-label="Cenas">
+        <header class="config-header">
+          <span class="config-icon" aria-hidden="true">!</span>
+          <div class="config-title"><strong>Cenas</strong><span>Modulo indisponivel</span></div>
+          <button class="config-close" type="button" data-scenes-action="close" aria-label="Fechar">&times;</button>
+        </header>
+      </section>
+    `;
+  }
+
+  async _openSpotifyPanel(config = {}) {
+    if (!this._configOverlayEl) return;
+    this._spotifyPanelConfig = {
+      entity: config.entity || 'media_player.spotifyplus_bruno_helasio',
+      deviceDefaultId: config.deviceDefaultId || 'Echo Show',
+    };
+    this._configOverlayEl.hidden = false;
+    this._configOverlayEl.dataset.open = '1';
+    this._configOverlayEl.dataset.panel = 'spotify';
+    this._configOverlayEl.innerHTML = `
+      <div class="config-scrim" data-spotify-action="close"></div>
+      <section class="config-panel spotify-panel" role="dialog" aria-modal="true" aria-label="Escolher midia">
+        <header class="config-header">
+          <span class="config-icon spotify-panel-icon" aria-hidden="true">
+            ${globalThis.BrunoIcons?.render('spotify') || ''}
+          </span>
+          <div class="config-title">
+            <strong>Spotify</strong>
+            <span>Escolher midia</span>
+          </div>
+          <button class="config-close" type="button" data-spotify-action="close" aria-label="Fechar">&times;</button>
+        </header>
+        <div class="spotify-panel-body">
+          <div class="spotify-card-host" id="spotifyCardHost">
+            <span class="spotify-panel-loading">Carregando biblioteca...</span>
+          </div>
+        </div>
+      </section>
+    `;
+
+    try {
+      const card = await this._createCard({
+        type: 'custom:spotifyplus-card',
+        cardUniqueId: 'bruno-shell-spotify-panel',
+        entity: this._spotifyPanelConfig.entity,
+        deviceDefaultId: this._spotifyPanelConfig.deviceDefaultId,
+        deviceControlByName: true,
+        width: 'fill',
+        playerBackgroundImageSize: 'cover',
+        sections: ['player', 'devices', 'userpresets', 'playlistfavorites', 'searchmedia'],
+        sectionDefault: 'player',
+      });
+      if (this._configOverlayEl.hidden || this._configOverlayEl.dataset.panel !== 'spotify') return;
+      this._spotifyPanelCard = card;
+      if (this._hass) card.hass = this._hass;
+      this._configOverlayEl.querySelector('#spotifyCardHost')?.replaceChildren(card);
+    } catch (error) {
+      const host = this._configOverlayEl.querySelector('#spotifyCardHost');
+      if (host) host.innerHTML = `<span class="spotify-panel-loading">${BrunoShell._escape(error?.message || 'Spotify indisponivel')}</span>`;
+    }
+  }
+
+  _renderNetworkPanel({ preserveScroll = false } = {}) {
+    if (!this._configOverlayEl || this._configOverlayEl.hidden || this._configOverlayEl.dataset.panel !== 'network') return;
+    const previousScrollTop = preserveScroll
+      ? this._configOverlayEl.querySelector('.network-scroll')?.scrollTop || 0
+      : 0;
+    if (!globalThis.BrunoNetworkPanel?.render) {
+      this._configOverlayEl.innerHTML = `
+        <div class="config-scrim" data-network-action="close"></div>
+        <section class="config-panel" role="dialog" aria-modal="true" aria-label="Rede">
+          <header class="config-header">
+            <span class="config-icon" aria-hidden="true">!</span>
+            <div class="config-title"><strong>Rede</strong><span>Modulo indisponivel</span></div>
+            <button class="config-close" type="button" data-network-action="close" aria-label="Fechar">&times;</button>
+          </header>
+        </section>
+      `;
+      return;
+    }
+    this._configOverlayEl.innerHTML = globalThis.BrunoNetworkPanel.render({ hass: this._hass });
+    if (preserveScroll && previousScrollTop) {
+      const scrollEl = this._configOverlayEl.querySelector('.network-scroll');
+      if (scrollEl) scrollEl.scrollTop = previousScrollTop;
+    }
+  }
+
+  _handleConfigClick(event) {
+    const scenesTarget = event.target?.closest?.('[data-scenes-action]');
+    if (scenesTarget) {
+      event.preventDefault();
+      event.stopPropagation();
+      globalThis.BrunoScenesPanel?.handleAction?.({
+        target: scenesTarget,
+        hass: this._hass,
+        host: this,
+      });
+      if (scenesTarget.dataset.scenesAction === 'close' && !globalThis.BrunoScenesPanel?.handleAction) {
+        this._closeConfigPanel();
+      }
+      return;
+    }
+
+    const spotifyTarget = event.target?.closest?.('[data-spotify-action]');
+    if (spotifyTarget) {
+      event.preventDefault();
+      event.stopPropagation();
+      const action = spotifyTarget.dataset.spotifyAction;
+      if (action === 'close') {
+        this._closeConfigPanel();
+        return;
+      }
+      return;
+    }
+
+    const systemTarget = event.target?.closest?.('[data-system-action]');
+    if (systemTarget) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (systemTarget.dataset.systemAction === 'close') {
+        this._closeConfigPanel();
+        return;
+      }
+      globalThis.BrunoSystemPanel?.handleAction?.({ target: systemTarget, hass: this._hass, host: this });
+      return;
+    }
+
+    const networkTarget = event.target?.closest?.('[data-network-action]');
+    if (networkTarget) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (networkTarget.dataset.networkAction === 'close') {
+        this._closeConfigPanel();
+        return;
+      }
+      globalThis.BrunoNetworkPanel?.handleAction?.({ target: networkTarget, hass: this._hass, host: this });
+      return;
+    }
+
+    const updatesTarget = event.target?.closest?.('[data-updates-action]');
+    if (updatesTarget) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (updatesTarget.dataset.updatesAction === 'close') {
+        this._closeConfigPanel();
+        return;
+      }
+      globalThis.BrunoUpdatesPanel?.handleAction?.({
+        target: updatesTarget,
+        hass: this._hass,
+        host: this,
+      });
+      return;
+    }
+
+    const target = event.target?.closest?.('[data-config-action]');
+    if (!target) return;
+    const action = target.dataset.configAction;
+    if (action === 'close') {
+      this._closeConfigPanel();
+      return;
+    }
+    if (action === 'open-section') {
+      this._configSection = target.dataset.section || '';
+      this._wallpaperMessage = '';
+      this._renderConfigPanel();
+      return;
+    }
+    if (action === 'child-close') {
+      this._configSection = '';
+      this._wallpaperMessage = '';
+      this._renderConfigPanel();
+      return;
+    }
+    if (action === 'theme') {
+      const theme = target.dataset.theme;
+      globalThis.BrunoThemeManager?.apply?.(theme);
+      this._renderConfigPanel();
+      return;
+    }
+    if (action === 'wallpaper-save') {
+      this._saveWallpaper();
+      return;
+    }
+    if (action === 'wallpaper-area') {
+      this._wallpaperSection = target.dataset.wallpaperKey || 'home';
+      this._wallpaperMessage = '';
+      this._renderConfigPanel();
+      return;
+    }
+    if (action === 'wallpaper-pick') {
+      this._configOverlayEl?.querySelector('#wallpaperFile')?.click?.();
+      return;
+    }
+    if (action === 'wallpaper-default') {
+      this._saveWallpaper('');
+      return;
+    }
+    if (action === 'reload') {
+      globalThis.location?.reload?.();
+    }
+  }
+
+  _handleConfigChange(event) {
+    const target = event.target?.closest?.('[data-config-action]');
+    if (!target) return;
+    if (target.dataset.configAction === 'wallpaper-file') {
+      const file = target.files?.[0];
+      target.value = '';
+      if (file) this._uploadWallpaper(file);
+    }
+  }
+
+  async _uploadWallpaper(file) {
+    const manager = globalThis.BrunoWallpaperManager;
+    if (!manager?.upload) return;
+    this._wallpaperMessage = 'Enviando imagem...';
+    this._renderConfigPanel();
+    try {
+      await manager.upload({ hass: this._hass, key: this._wallpaperSection, file });
+      this._wallpaperMessage = 'Wallpaper aplicado.';
+    } catch (error) {
+      this._wallpaperMessage = error?.message || 'Nao foi possivel enviar a imagem.';
+    }
+    this._renderConfigPanel();
+  }
+
+  async _saveWallpaper(forcedValue) {
+    const manager = globalThis.BrunoWallpaperManager;
+    if (!manager?.save) return;
+    const input = this._configOverlayEl?.querySelector('#wallpaperUrl');
+    const value = forcedValue === undefined ? input?.value || '' : forcedValue;
+    this._wallpaperMessage = 'Salvando...';
+    this._renderConfigPanel();
+    try {
+      await manager.save({ hass: this._hass, key: this._wallpaperSection, url: value });
+      this._wallpaperMessage = value ? 'Wallpaper aplicado.' : 'Wallpaper padrao restaurado.';
+    } catch (error) {
+      this._wallpaperMessage = error?.message || 'Nao foi possivel salvar o wallpaper.';
+    }
+    this._renderConfigPanel();
   }
 
   // --- Estilo da moldura -----------------------------------------------------
@@ -349,9 +1302,15 @@ class BrunoShell extends HTMLElement {
          O ::after dá um leve escurecimento global para legibilidade — o blur
          "pesado" fica nas faixas fixas (top/dock), não aqui. */
       .backdrop {
+        --bruno-backdrop-blur: 0px;
+        --bruno-backdrop-scale: 1;
+        --bruno-backdrop-saturate: 1;
+        --bruno-backdrop-brightness: 1;
+        --bruno-backdrop-dim: 0.10;
         position: absolute;
         inset: 0;
         z-index: 0;
+        overflow: hidden;
       }
       /* Duas camadas para CROSSFADE por opacidade (background-image não anima). */
       .backdrop-layer {
@@ -361,7 +1320,10 @@ class BrunoShell extends HTMLElement {
         background-position: center;
         background-repeat: no-repeat;
         opacity: 0;
-        transition: opacity 0.45s ease;
+        transform: scale(var(--bruno-backdrop-scale, 1));
+        filter: blur(var(--bruno-backdrop-blur, 0px)) saturate(var(--bruno-backdrop-saturate, 1)) brightness(var(--bruno-backdrop-brightness, 1));
+        transition: opacity 0.28s ease-out, filter 0.22s ease-out, transform 0.22s ease-out;
+        will-change: opacity;
       }
       /* NOVO: BORDA ATMOSFÉRICA escurecida no PERÍMETRO da imagem. É ela que dá
          legibilidade às regiões fixas (rail à esquerda, status no topo, dock na
@@ -382,7 +1344,7 @@ class BrunoShell extends HTMLElement {
           linear-gradient(270deg, rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
           linear-gradient(180deg, rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
           linear-gradient(0deg,   rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
-          rgba(6,9,14,0.10);
+          rgba(6,9,14,var(--bruno-backdrop-dim, 0.10));
       }
       /* Sem imagem (seção sem backdrop): camada some e o :host (grafite) aparece. */
       .backdrop:not([data-active])::after { background: none; }
@@ -407,6 +1369,9 @@ class BrunoShell extends HTMLElement {
         height: 100%;
         pointer-events: none;
         background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.30) 50%, transparent 100%);
+        /* NOVO (2026-07-24) — feedback Home V2: rail SEM filete divisor.
+           ROLLBACK: remover a linha abaixo (o gradiente acima volta a valer). */
+        display: none;
       }
 
       .content-slot {
@@ -432,10 +1397,636 @@ class BrunoShell extends HTMLElement {
         min-height: 0;
       }
 
+      /* display:block acima tem a mesma origem autoral do atributo hidden e
+         pode vence-lo no cascade. Esta regra garante que a Home persistente
+         fique realmente invisivel e sem ocupar layout fora da secao Home. */
+      .content-slot > [hidden] {
+        display: none !important;
+      }
+
+      .content-slot > .section-error {
+        position: absolute;
+        inset: 12px;
+        z-index: 3;
+        height: auto;
+        pointer-events: none;
+      }
+
+      .config-overlay[hidden] {
+        display: none;
+      }
+
+      .config-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        pointer-events: auto;
+      }
+
+      .config-scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.08);
+        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(2px);
+      }
+
+      .config-panel {
+        position: absolute;
+        left: 94px;
+        bottom: 74px;
+        width: min(360px, calc(100vw - 124px));
+        border-radius: var(--bruno-liquid-card-radius-compact, 24px);
+        border: var(--bruno-liquid-popup-border, 1px solid rgba(255,255,255,0.115));
+        background: var(--bruno-liquid-popup-background, linear-gradient(180deg, rgba(34,31,30,0.720), rgba(12,13,16,0.660)));
+        box-shadow: var(--bruno-liquid-popup-shadow, 0 18px 36px rgba(0,0,0,0.30));
+        -webkit-backdrop-filter: var(--bruno-liquid-popup-filter, blur(20px) saturate(1.16) brightness(0.94));
+        backdrop-filter: var(--bruno-liquid-popup-filter, blur(20px) saturate(1.16) brightness(0.94));
+        color: rgba(255,255,255,0.92);
+        overflow: hidden;
+      }
+
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="config"] > .config-panel,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="system"] > .config-panel,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="network"] > .config-panel,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="scenes"] > .config-panel {
+        --bruno-popup-inner-background: var(--bruno-liquid-control-background);
+        --bruno-popup-inner-filter: var(--bruno-liquid-control-filter);
+        --bruno-popup-inner-border: var(--bruno-liquid-control-border);
+        --bruno-popup-inner-shadow: var(--bruno-liquid-control-shadow);
+        --bruno-popup-inner-radius: var(--bruno-liquid-control-radius-compact, 12px);
+        --bruno-popup-inner-warm-background: var(--bruno-liquid-control-warm-background, var(--bruno-liquid-control-background));
+        --bruno-popup-inner-warm-border: var(--bruno-liquid-control-warm-border, var(--bruno-liquid-control-border));
+        --bruno-popup-inner-warm-shadow: var(--bruno-liquid-control-warm-shadow, var(--bruno-liquid-control-shadow));
+        --bruno-popup-action-radius: var(--bruno-liquid-control-radius-compact, 12px);
+        --bruno-popup-banner-border: var(--bruno-liquid-control-border);
+        --bruno-popup-banner-radius: var(--bruno-liquid-control-radius-compact, 12px);
+        --bruno-popup-banner-shadow: var(--bruno-liquid-control-shadow);
+        border: var(--bruno-josh-popup-border, var(--bruno-liquid-popup-border));
+        background: var(--bruno-josh-popup-background, var(--bruno-liquid-popup-background));
+        box-shadow: var(--bruno-josh-popup-shadow, var(--bruno-liquid-popup-shadow));
+        -webkit-backdrop-filter: var(--bruno-josh-popup-filter, var(--bruno-liquid-popup-filter));
+        backdrop-filter: var(--bruno-josh-popup-filter, var(--bruno-liquid-popup-filter));
+        isolation: isolate;
+      }
+
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="config"] > .config-panel::before,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="system"] > .config-panel::before,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="network"] > .config-panel::before,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="scenes"] > .config-panel::before {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        z-index: 0;
+        border-radius: inherit;
+        background: var(--bruno-josh-popup-sheen, none);
+        opacity: var(--bruno-josh-popup-sheen-opacity, 0.13);
+        pointer-events: none;
+      }
+
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="config"] > .config-panel::after,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="system"] > .config-panel::after,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="network"] > .config-panel::after,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="scenes"] > .config-panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        padding: 1px;
+        border-radius: inherit;
+        background: var(--bruno-josh-popup-edge-glow, none);
+        opacity: var(--bruno-josh-popup-edge-opacity, 0.70);
+        pointer-events: none;
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+      }
+
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="config"] > .config-panel > *,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="system"] > .config-panel > *,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="network"] > .config-panel > *,
+      .config-overlay[data-bruno-popup-theme="josh"][data-panel="scenes"] > .config-panel > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .config-child-panel {
+        left: 466px;
+        width: min(430px, calc(100vw - 496px));
+      }
+
+      .config-child-panel.updates-panel {
+        width: min(520px, calc(100vw - 496px));
+      }
+
+      .config-header {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) 32px;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 14px 12px;
+      }
+
+      .config-icon {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        border: 1px solid rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.30);
+        background: rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.08);
+        color: rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.92);
+      }
+
+      .config-icon svg,
+      .config-close svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .config-icon svg {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .config-title {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .config-title strong {
+        font-size: 13px;
+        line-height: 1.1;
+        font-weight: 800;
+      }
+
+      .config-title span,
+      .config-section-title small,
+      .theme-option small {
+        font-size: 10px;
+        line-height: 1.1;
+        color: rgba(255,255,255,0.58);
+      }
+
+      .config-close {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.045);
+        color: rgba(255,255,255,0.66);
+        font-size: 21px;
+        line-height: 1;
+        cursor: pointer;
+      }
+
+      .config-section {
+        padding: 0 14px 14px;
+      }
+
+      .config-menu-section {
+        padding-top: 2px;
+      }
+
+      .config-menu-list {
+        display: grid;
+      }
+
+      .config-menu-item {
+        min-height: 54px;
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 3px;
+        border: 0;
+        border-top: 1px solid rgba(255,255,255,0.060);
+        background: transparent;
+        color: rgba(255,255,255,0.88);
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .config-menu-item:first-child {
+        border-top: 0;
+      }
+
+      .config-menu-item:hover,
+      .config-menu-item:focus-visible {
+        background: rgba(255,255,255,0.035);
+      }
+
+      .config-menu-icon {
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        color: rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.88);
+      }
+
+      .config-menu-icon svg {
+        width: 19px;
+        height: 19px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.65;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .config-menu-copy {
+        min-width: 0;
+        display: grid;
+        gap: 3px;
+      }
+
+      .config-menu-copy strong {
+        font-size: 12px;
+        line-height: 1.1;
+        font-weight: 800;
+      }
+
+      .config-menu-copy small {
+        min-width: 0;
+        font-size: 9px;
+        line-height: 1.1;
+        color: rgba(255,255,255,0.54);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .config-menu-chevron {
+        color: rgba(255,255,255,0.44);
+        font-size: 22px;
+        line-height: 1;
+      }
+
+      .config-menu-count {
+        min-width: 21px;
+        height: 21px;
+        display: grid;
+        place-items: center;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.16);
+        color: rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.96);
+        font-size: 9px;
+        font-weight: 900;
+      }
+
+      .config-section-title {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 2px 8px;
+      }
+
+      .config-section-title span {
+        font-size: 11px;
+        font-weight: 800;
+        color: rgba(255,255,255,0.82);
+      }
+
+      .theme-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .theme-option {
+        min-height: 46px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        border-radius: var(--bruno-liquid-control-radius-compact, 14px);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+        color: rgba(255,255,255,0.86);
+        padding: 9px 11px;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .theme-option span {
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .theme-option.is-selected {
+        background: var(--bruno-liquid-selected-blue-background, rgba(96,165,250,0.34));
+        border-color: var(--bruno-liquid-selected-blue-border, rgba(210,228,255,0.30));
+        box-shadow: var(--bruno-liquid-selected-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.10));
+      }
+
+      .theme-option:disabled {
+        opacity: 0.44;
+        cursor: default;
+      }
+
+      .config-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 0 14px 14px;
+      }
+
+      .config-refresh {
+        min-height: 34px;
+        border: var(--bruno-liquid-control-warm-border, 1px solid rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.18));
+        border-radius: var(--bruno-liquid-control-radius-compact, 14px);
+        background: var(--bruno-liquid-control-warm-background, rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.038));
+        box-shadow: var(--bruno-liquid-control-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+        color: rgba(255,255,255,0.86);
+        padding: 0 14px;
+        font-size: 11px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .config-secondary {
+        min-height: 34px;
+        border: 1px solid rgba(255,255,255,0.070);
+        border-radius: var(--bruno-liquid-control-radius-compact, 14px);
+        background: rgba(255,255,255,0.026);
+        color: rgba(255,255,255,0.64);
+        padding: 0 12px;
+        font-size: 10px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      .wallpaper-content {
+        display: grid;
+        gap: 12px;
+      }
+
+      .wallpaper-field {
+        display: grid;
+        gap: 6px;
+      }
+
+      .wallpaper-field > span {
+        font-size: 10px;
+        font-weight: 800;
+        color: rgba(255,255,255,0.72);
+      }
+
+      .wallpaper-field select,
+      .wallpaper-field input {
+        width: 100%;
+        min-height: 40px;
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        border-radius: var(--bruno-liquid-control-radius-compact, 14px);
+        background: rgba(10,12,16,0.22);
+        color: rgba(255,255,255,0.86);
+        padding: 0 11px;
+        font: inherit;
+        font-size: 11px;
+        outline: none;
+      }
+
+      .wallpaper-area-list {
+        max-height: 162px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px;
+        overflow-y: auto;
+        padding-right: 2px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.20) transparent;
+      }
+
+      .wallpaper-area-option,
+      .wallpaper-file-button {
+        min-height: 34px;
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        border-radius: var(--bruno-liquid-control-radius-compact, 12px);
+        background: var(--bruno-liquid-control-background, rgba(255,255,255,0.030));
+        color: rgba(255,255,255,0.76);
+        padding: 0 9px;
+        font: inherit;
+        font-size: 10px;
+        font-weight: 760;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .wallpaper-area-option.is-selected {
+        color: rgba(255,255,255,0.96);
+        border-color: rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.28);
+        background: rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.08);
+      }
+
+      .wallpaper-preview {
+        height: 92px;
+        border-radius: var(--bruno-liquid-cell-radius, 13px);
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        background: rgba(255,255,255,0.025);
+        overflow: hidden;
+      }
+
+      .wallpaper-preview.has-image {
+        background: var(--wallpaper-preview) center / cover no-repeat;
+      }
+
+      .wallpaper-file-input {
+        display: none;
+      }
+
+      .wallpaper-file-button {
+        width: 100%;
+        min-height: 38px;
+        color: rgba(255,255,255,0.88);
+        text-align: center;
+      }
+
+      .wallpaper-field input:focus,
+      .wallpaper-field select:focus {
+        border-color: rgba(var(--bruno-liquid-warm-accent, 255,214,10),0.32);
+      }
+
+      .wallpaper-help,
+      .wallpaper-message {
+        font-size: 9px;
+        line-height: 1.35;
+        color: rgba(255,255,255,0.50);
+      }
+
+      .wallpaper-message {
+        color: rgba(124,236,169,0.82);
+      }
+
+      .wallpaper-message.is-warning {
+        color: rgba(255,210,122,0.78);
+      }
+
+      .wallpaper-footer {
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .config-panel.spotify-panel {
+        left: 50%;
+        top: 50%;
+        bottom: auto;
+        width: min(590px, calc(100vw - 132px));
+        max-height: min(680px, calc(100vh - 64px));
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        transform: translate(-50%, -50%);
+      }
+
+      .spotify-panel-icon {
+        color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.94);
+      }
+
+      .spotify-panel-body {
+        min-height: 0;
+        overflow: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.24) transparent;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 12px 14px;
+      }
+
+      .spotify-panel-body::-webkit-scrollbar {
+        width: 5px;
+      }
+
+      .spotify-panel-body::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .spotify-panel-body::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(255,255,255,0.24);
+      }
+
+      .spotify-card-host {
+        min-height: 260px;
+        overflow: hidden;
+        border-radius: var(--bruno-liquid-cell-radius, 14px);
+        background: var(--bruno-liquid-popup-option-background, rgba(255,255,255,0.025));
+        border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.070));
+        --ha-card-background: transparent;
+        --card-background-color: transparent;
+        --ha-card-border-width: 0;
+        --ha-card-border-color: transparent;
+        --ha-card-box-shadow: none;
+        --ha-card-border-radius: 0;
+        --primary-background-color: transparent;
+        --secondary-background-color: transparent;
+      }
+
+      .spotify-card-host > * {
+        display: block;
+        width: 100%;
+      }
+
+      .spotify-panel-loading {
+        min-height: 260px;
+        display: grid;
+        place-items: center;
+        padding: 20px;
+        color: rgba(255,255,255,0.58);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
       .err {
         padding: 16px;
         color: #ffd9df;
         font: 600 13px/1.4 var(--primary-font-family, inherit);
+      }
+
+      /* ============================================================
+         NOVO (2026-07-09) — MODO PHONE (<=800px, Opcao A mobile).
+         A MESMA shell se reorganiza em telas estreitas:
+           - grid vira 1 COLUNA com 2 linhas: conteudo em cima + rail
+             embaixo (o bento-sidebar-card "deita" e vira dock via
+             media query propria — ver bento-sidebar-card.js);
+           - .content-slot passa a ROLAR verticalmente (no tablet ele
+             e fixo, overflow hidden);
+           - as secoes deixam de ser esticadas a 100% da altura
+             (height auto + min-height 100%) para empilhar em coluna;
+           - o painel de Config ancora acima do dock (no tablet ele
+             ancora ao lado da rail esquerda).
+         Bloco ADITIVO (regra de ouro): nada acima foi alterado.
+         ROLLBACK: remover este bloco @media => shell volta a ser
+         tablet-only (rail lateral em qualquer largura).
+         ============================================================ */
+      @media (max-width: 800px) {
+        :host {
+          height: 100vh;
+          height: 100dvh;
+        }
+        .shell {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-rows: minmax(0, 1fr) auto;
+        }
+        .rail-slot {
+          grid-column: 1;
+          grid-row: 2;
+          /* Fase 2: acima do content-slot (z 1) para o menu "Mais" do dock
+             abrir SOBRE o conteudo, nao por baixo. */
+          z-index: 2;
+        }
+        .rail-slot::after {
+          top: 0;
+          left: 0;
+          right: auto;
+          width: 100%;
+          height: 1px;
+          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.30) 50%, transparent 100%);
+        }
+        .content-slot {
+          grid-column: 1;
+          grid-row: 1;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+          padding: 10px 10px 6px;
+        }
+        .content-slot > * {
+          height: auto;
+          min-height: 100%;
+        }
+        .config-panel {
+          left: 12px;
+          right: 12px;
+          bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+          width: auto;
+        }
+
+        .config-root-panel.has-child {
+          display: none;
+        }
+
+        .config-child-panel,
+        .config-child-panel.updates-panel {
+          left: 12px;
+          right: 12px;
+          width: auto;
+        }
+
+        .config-panel.spotify-panel {
+          left: 12px;
+          right: 12px;
+          top: 12px;
+          bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+          width: auto;
+          height: auto;
+          max-height: none;
+          transform: none;
+        }
       }
     `;
   }
@@ -445,6 +2036,16 @@ class BrunoShell extends HTMLElement {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
+  }
+
+  static _escapeAttr(value) {
+    return BrunoShell._escape(value).replace(/"/g, '&quot;');
+  }
+
+  static _cssUrl(value) {
+    return String(value == null ? '' : value)
+      .replace(/\\/g, '\\\\')
+      .replace(/'/g, "\\'");
   }
 }
 

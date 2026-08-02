@@ -19,6 +19,10 @@ input_select:
       - climate
       - security
       - presence
+      # NOVO (2026-07-25) — HOME V2 item 3: badge de Energia na barra superior.
+      # Sem esta opcao o card usa expansao LOCAL (funciona, mas nao sincroniza
+      # entre dispositivos). FALLBACK: remover a linha abaixo.
+      - energy
     initial: none
   bento_active_camera:
     name: Bento Active Camera

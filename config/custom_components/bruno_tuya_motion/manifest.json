@@ -1,0 +1,12 @@
+{
+  "domain": "bruno_tuya_motion",
+  "name": "Bruno Tuya Motion Bridge",
+  "version": "1.0.0",
+  "codeowners": [],
+  "documentation": "https://github.com/brunohelasio/hass-config_negocjohn",
+  "dependencies": ["tuya"],
+  "after_dependencies": ["xtend_tuya"],
+  "integration_type": "service",
+  "requirements": [],
+  "iot_class": "cloud_push"
+}

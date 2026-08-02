@@ -1,0 +1,39 @@
+input_text:
+  bruno_wallpaper_home:
+    name: Bruno wallpaper - Painel principal
+    max: 255
+  bruno_wallpaper_sala:
+    name: Bruno wallpaper - Sala
+    max: 255
+  bruno_wallpaper_office:
+    name: Bruno wallpaper - Office
+    max: 255
+  bruno_wallpaper_cozinha:
+    name: Bruno wallpaper - Cozinha
+    max: 255
+  bruno_wallpaper_casal:
+    name: Bruno wallpaper - Quarto Casal
+    max: 255
+  bruno_wallpaper_marina:
+    name: Bruno wallpaper - Quarto Marina
+    max: 255
+  bruno_wallpaper_miguel:
+    name: Bruno wallpaper - Quarto Miguel
+    max: 255
+  bruno_wallpaper_cameras:
+    name: Bruno wallpaper - Cameras
+    max: 255
+  bruno_wallpaper_roborock:
+    name: Bruno wallpaper - Aspirador
+    max: 255
+  bruno_wallpaper_floorplan:
+    name: Bruno wallpaper - Planta 3D
+    max: 255
+
+input_number:
+  bruno_wallpaper_revision:
+    name: Bruno wallpaper - Revisao
+    min: 0
+    max: 999999
+    step: 1
+    mode: box

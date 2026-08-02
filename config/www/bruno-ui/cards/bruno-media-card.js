@@ -1,8 +1,11 @@
 const BRUNO_MEDIA_CARD_TAG = 'bruno-media-card';
+const BRUNO_MEDIA_HISTORY_KEY = 'bruno-ui:media-history:v3';
 
 const BRUNO_MEDIA_DEFAULT_CONFIG = {
   focus_sensor: 'sensor.media_focus_visuals',
   focus_select: 'input_select.media_focus_player',
+  spotify_entity: 'media_player.spotifyplus_bruno_helasio',
+  spotify_device_name: 'Echo Show',
   slots: [
     'input_select.media_slot_1',
     'input_select.media_slot_2',
@@ -21,11 +24,11 @@ const BRUNO_MEDIA_DEFAULT_CONFIG = {
     { entity: 'media_player.android_tv_192_168_3_17', name: 'TV', icon: 'mdi:television-classic', section: 'sala', path: 'subview-sala' },
     { entity: 'media_player.echo_show', name: 'Echo Show', icon: 'mdi:speaker-wireless', section: 'sala', path: 'subview-sala' },
     { entity: 'media_player.spotifyplus_bruno_helasio', name: 'Spotify', icon: 'mdi:spotify', section: 'sala', path: 'subview-sala' },
-    { entity: 'media_player.echo_pop_office', name: 'Office', icon: 'mdi:speaker', path: 'subview-office' },
+    { entity: 'media_player.echo_pop_office', name: 'Office', icon: 'mdi:speaker', section: 'office', path: 'subview-office' },
   ],
 };
 
-const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused', 'on', 'idle'];
+const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];
 
 class BrunoMediaCard extends HTMLElement {
   static getStubConfig() {
@@ -45,6 +48,8 @@ class BrunoMediaCard extends HTMLElement {
     };
     this._slideIndex = this._slideIndex || 0;
     this._mediaMenuOpen = this._mediaMenuOpen || false;
+    if (this._mediaHistory === undefined) this._mediaHistory = this._readMediaHistory();
+    this._lastValidMedia = this._latestMediaSnapshot();
     this._safeRender();
   }
 
@@ -55,6 +60,7 @@ class BrunoMediaCard extends HTMLElement {
       this._localFocusEntity = '';
       this._localFocusAt = 0;
     }
+    this._capturePlayerHistory();
     this._safeRender();
   }
 
@@ -135,6 +141,87 @@ class BrunoMediaCard extends HTMLElement {
     return String(image || '').includes('standby_art');
   }
 
+  _readMediaHistory() {
+    try {
+      const raw = globalThis.localStorage?.getItem(BRUNO_MEDIA_HISTORY_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch (_error) {
+      return {};
+    }
+  }
+
+  _storeLastValidMedia(snapshot) {
+    if (!snapshot?.entity || (!snapshot.image && !snapshot.title)) return;
+    this._mediaHistory = this._mediaHistory || {};
+    const previous = this._mediaHistory[snapshot.entity];
+    const comparable = (value) => JSON.stringify({
+      ...(value || {}),
+      savedAt: 0,
+    });
+    if (comparable(previous) === comparable(snapshot)) return;
+    this._mediaHistory[snapshot.entity] = snapshot;
+    this._lastValidMedia = this._latestMediaSnapshot();
+    try {
+      globalThis.localStorage?.setItem(BRUNO_MEDIA_HISTORY_KEY, JSON.stringify(this._mediaHistory));
+    } catch (_error) {
+      // Private WebViews can reject storage; the in-memory history remains valid.
+    }
+  }
+
+  _latestMediaSnapshot() {
+    return Object.values(this._mediaHistory || {})
+      .filter((item) => item?.entity && (item.image || item.title))
+      .sort((left, right) => Number(right.savedAt || 0) - Number(left.savedAt || 0))[0] || null;
+  }
+
+  _capturePlayerHistory() {
+    if (!this._config || !this._hass) return;
+    this._allPlayerIds().forEach((entityId) => {
+      const entity = this._state(entityId);
+      const attrs = entity?.attributes || {};
+      const state = String(entity?.state || '').toLowerCase();
+      const config = this._playerConfig(entityId);
+      const title = this._cleanText(attrs.media_title);
+      const rawImage = attrs.media_image_url || attrs.entity_picture || '';
+      const image = this._isStandbyImage(rawImage) ? '' : rawImage;
+      const appName = this._cleanText(attrs.app_name);
+      const source = this._cleanText(attrs.source);
+      const contentType = String(attrs.media_content_type || appName || '').toLowerCase();
+
+      const previous = this._mediaHistory?.[entityId];
+      if (previous && image && image !== previous.image && !['unknown', 'unavailable'].includes(state)) {
+        this._storeLastValidMedia({ ...previous, image, savedAt: previous.savedAt || Date.now() });
+      }
+      if (!this._hasPlayback(state, title, image, appName, source, entityId, config, contentType, attrs)) return;
+
+      const serviceName = this._mediaServiceName(entityId, config, contentType, appName, source);
+      const spotifyTarget = serviceName === 'Spotify' ? this._spotifyRoomTarget(attrs) : null;
+      const effectiveConfig = spotifyTarget ? { ...config, ...spotifyTarget } : config;
+      const roomName = this._mediaRoomName(effectiveConfig);
+      const artist = this._cleanText(attrs.media_artist);
+      const album = this._cleanText(attrs.media_album_name);
+      const series = this._cleanText(attrs.media_series_title);
+      const channel = this._cleanText(attrs.media_channel);
+      const fallbackTitle = this._fallbackMediaTitle(serviceName, roomName, entityId);
+      const liveTitle = this._firstText([title, fallbackTitle, this._playerName(entityId)]);
+      const secondary = this._firstText([artist, album, series, channel], [liveTitle]);
+      this._storeLastValidMedia({
+        entity: entityId,
+        image,
+        title: liveTitle,
+        artist: artist && artist !== 'Pronto para tocar' ? artist : '',
+        secondary,
+        context: [serviceName, roomName].filter(Boolean).join(' '),
+        serviceName,
+        serviceIcon: config.icon || this._playerIcon(entityId),
+        path: effectiveConfig.path || effectiveConfig.navigation_path || '',
+        section: effectiveConfig.section || '',
+        savedAt: Date.now(),
+      });
+    });
+  }
+
   _visualBelongsToFocus(visual, focusId) {
     const attrs = visual?.attributes || {};
     const linked = [
@@ -159,10 +246,42 @@ class BrunoMediaCard extends HTMLElement {
       this._localFocusEntity = '';
       this._localFocusAt = 0;
     }
+
+    const livePlayer = this._allPlayerIds()
+      .map((entityId) => ({
+        entity: entityId,
+        score: this._playbackPriority(entityId),
+        updatedAt: Date.parse(this._state(entityId)?.last_updated || '') || 0,
+      }))
+      .filter((player) => player.score > 0)
+      .sort((left, right) => right.score - left.score || right.updatedAt - left.updatedAt)[0];
+    if (livePlayer?.entity) return livePlayer.entity;
+
     const selected = this._state(this._config.focus_select)?.state;
     if (selected && this._state(selected)) return selected;
-    const active = this._config.players.find((player) => this._isActive(player.entity));
-    return active?.entity || this._config.players[0]?.entity;
+    return this._config.players[0]?.entity;
+  }
+
+  _playbackPriority(entityId) {
+    const entity = this._state(entityId);
+    const state = String(entity?.state || '').toLowerCase();
+    if (state === 'playing') return 4;
+    if (state === 'paused') return 2;
+    const config = this._playerConfig(entityId);
+    const attrs = entity?.attributes || {};
+    const contentType = String(attrs.media_content_type || attrs.app_name || '').toLowerCase();
+    const image = this._isStandbyImage(attrs.entity_picture) ? '' : (attrs.entity_picture || '');
+    return this._hasPlayback(
+      state,
+      this._cleanText(attrs.media_title),
+      image,
+      attrs.app_name,
+      attrs.source,
+      entityId,
+      config,
+      contentType,
+      attrs,
+    ) ? 3 : 0;
   }
 
   _focusModel() {
@@ -172,7 +291,10 @@ class BrunoMediaCard extends HTMLElement {
     const useVisual = this._visualBelongsToFocus(visual, focusId);
     const config = this._playerConfig(focusId);
     const state = (useVisual ? visual?.state : '') || player?.state || 'off';
-    const rawImage = (useVisual ? visual?.attributes?.entity_picture : '') || player?.attributes?.entity_picture || '';
+    const rawImage = (useVisual ? (visual?.attributes?.media_image_url || visual?.attributes?.entity_picture) : '')
+      || player?.attributes?.media_image_url
+      || player?.attributes?.entity_picture
+      || '';
     this._lastArtworkByPlayer = this._lastArtworkByPlayer || {};
     if (rawImage && !this._isStandbyImage(rawImage)) {
       this._lastArtworkByPlayer[focusId] = rawImage;
@@ -207,38 +329,72 @@ class BrunoMediaCard extends HTMLElement {
     }
     if (Number.isFinite(duration) && duration > 0) position = Math.min(position, duration);
     const serviceName = this._mediaServiceName(focusId, config, contentType, appName, source);
-    const roomName = this._mediaRoomName(config);
-    const hasPlayback = this._hasPlayback(state, rawTitle, rawImage, appName, source, focusId, config, contentType);
-    if (!hasPlayback) image = '';
+    const targetAttributes = {
+      ...(player?.attributes || {}),
+      ...(useVisual ? (visual?.attributes || {}) : {}),
+    };
+    const spotifyTarget = serviceName === 'Spotify' ? this._spotifyRoomTarget(targetAttributes) : null;
+    const effectiveConfig = spotifyTarget ? { ...config, ...spotifyTarget } : config;
+    const roomName = this._mediaRoomName(effectiveConfig);
+    const hasPlayback = this._hasPlayback(state, rawTitle, rawImage, appName, source, focusId, config, contentType, targetAttributes);
     const fallbackTitle = this._fallbackMediaTitle(serviceName, roomName, focusId);
-    const title = hasPlayback
+    const liveTitle = hasPlayback
       ? this._firstText([rawTitle, appName, source, fallbackTitle, this._playerName(focusId)])
       : '';
-    const secondary = hasPlayback
-      ? this._firstText([artist, album, seriesTitle, channel, appName, source, this._stateLabel(state)], [title])
+    const liveSecondary = hasPlayback
+      ? this._firstText([artist, album, seriesTitle, channel, appName, source, this._stateLabel(state)], [liveTitle])
       : '';
+    const liveContext = hasPlayback ? [serviceName, roomName].filter(Boolean).join(' ') : '';
+    const serviceIcon = config.icon || this._playerIcon(focusId);
+    const path = effectiveConfig.path || effectiveConfig.navigation_path || '';
+    const section = effectiveConfig.section || '';
+
+    if (hasPlayback && ['playing', 'paused'].includes(String(state).toLowerCase())) {
+      this._storeLastValidMedia({
+        entity: focusId,
+        image,
+        title: liveTitle,
+        artist: artist && artist !== 'Pronto para tocar' ? artist : '',
+        secondary: liveSecondary,
+        context: liveContext,
+        serviceName,
+        serviceIcon,
+        path,
+        section,
+        savedAt: Date.now(),
+      });
+    }
+
+    const persisted = hasPlayback
+      ? null
+      : (this._mediaHistory?.[focusId] || this._latestMediaSnapshot());
+    const displayImage = hasPlayback ? image : (persisted?.image || '');
+    const displayTitle = hasPlayback ? liveTitle : (persisted?.title || '');
+    const displaySecondary = hasPlayback ? liveSecondary : (persisted?.secondary || persisted?.artist || '');
+    const displayContext = hasPlayback ? liveContext : (persisted?.context || '');
 
     return {
-      entity: focusId,
-      image,
-      title,
-      artist: artist && artist !== 'Pronto para tocar' ? artist : '',
-      secondary,
-      context: hasPlayback ? [serviceName, roomName].filter(Boolean).join(' ') : '',
-      statusLabel: hasPlayback ? (state === 'paused' ? 'Pausado' : (['on', 'idle'].includes(state) ? this._stateLabel(state) : 'Reproduzindo agora')) : 'Nada reproduzindo',
+      entity: hasPlayback ? focusId : (persisted?.entity || focusId),
+      image: displayImage,
+      title: displayTitle,
+      artist: hasPlayback ? (artist && artist !== 'Pronto para tocar' ? artist : '') : (persisted?.artist || ''),
+      secondary: displaySecondary,
+      context: displayContext,
+      statusLabel: hasPlayback ? (state === 'paused' ? 'Pausado' : (state === 'on' ? this._stateLabel(state) : 'Reproduzindo agora')) : 'Nenhuma m\u00eddia ativa',
       state,
-      serviceName,
-      serviceIcon: config.icon || this._playerIcon(focusId),
-      path: config.path || config.navigation_path || '',
-      section: config.section || '',
+      serviceName: hasPlayback ? serviceName : (persisted?.serviceName || serviceName),
+      serviceIcon: hasPlayback ? serviceIcon : (persisted?.serviceIcon || serviceIcon),
+      path: hasPlayback ? path : (persisted?.path || path),
+      section: hasPlayback ? section : (persisted?.section || section),
       duration: Number.isFinite(duration) ? duration : 0,
       position: Number.isFinite(position) ? Math.max(0, position) : 0,
       volumePercent: Number.isFinite(volume) ? Math.max(0, Math.min(100, Math.round(volume * 100))) : 0,
       isVideo,
       isPlaying: state === 'playing',
-      isActive: BRUNO_MEDIA_ACTIVE_STATES.includes(state),
+      isActive: hasPlayback,
       hasPlayback,
-      isSoftArtwork: ['paused', 'idle'].includes(state) && Boolean(image) && !this._isStandbyImage(image),
+      hasLastMedia: Boolean(persisted && (persisted.image || persisted.title)),
+      isSoftArtwork: (state === 'paused' || !hasPlayback) && Boolean(displayImage),
     };
   }
 
@@ -249,8 +405,20 @@ class BrunoMediaCard extends HTMLElement {
       ids.push(entityId);
     };
 
-    (this._config.slots || []).forEach((slotId) => push(this._state(slotId)?.state));
-    (this._config.players || []).forEach((player) => push(player.entity));
+    const recent = Object.values(this._mediaHistory || {})
+      .sort((left, right) => Number(right.savedAt || 0) - Number(left.savedAt || 0));
+    recent.forEach((snapshot) => push(snapshot?.entity));
+
+    this._allPlayerIds()
+      .filter((entityId) => this._playbackPriority(entityId) > 0)
+      .forEach(push);
+
+    if (!ids.length) {
+      (this._config.slots || []).forEach((slotId) => {
+        const entityId = this._state(slotId)?.state;
+        if (this._mediaHistory?.[entityId] || this._playbackPriority(entityId) > 0) push(entityId);
+      });
+    }
     return ids.slice(0, limit);
   }
 
@@ -378,6 +546,21 @@ class BrunoMediaCard extends HTMLElement {
     }));
   }
 
+  _openSpotifyPlusPopup() {
+    this.dispatchEvent(new CustomEvent('ll-custom', {
+      detail: {
+        action: 'fire-dom-event',
+        bruno_action: 'spotify',
+        bruno_spotify_config: {
+          entity: this._config.spotify_entity,
+          deviceDefaultId: this._config.spotify_device_name,
+        },
+      },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
   _playerName(entityId) {
     const entity = this._state(entityId);
     const config = this._playerConfig(entityId);
@@ -397,6 +580,41 @@ class BrunoMediaCard extends HTMLElement {
     return text;
   }
 
+  _normalizeMediaDevice(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  _spotifyRoomTarget(attrs = {}) {
+    const candidates = [
+      attrs.source,
+      attrs.source_name,
+      attrs.device_name,
+      attrs.active_device_name,
+      attrs.spotify_device_name,
+      attrs.media_player,
+      attrs.media_player_name,
+    ].map((value) => this._normalizeMediaDevice(value)).filter(Boolean);
+    if (!candidates.length) return null;
+
+    const targets = [
+      { section: 'office', path: 'subview-office', room: 'office', aliases: ['echo pop office', 'office'] },
+      { section: 'casal', path: 'subview-quarto-casal', room: 'q. casal', aliases: ['echo pop quarto casal', 'quarto casal'] },
+      { section: 'marina', path: 'subview-quarto-marina', room: 'q. marina', aliases: ['echo pop marina', 'quarto marina'] },
+      { section: 'sala', path: 'subview-sala', room: 'sala', aliases: ['echo show', 'sala'] },
+    ];
+
+    return targets.find((target) => candidates.some((candidate) => target.aliases.some((alias) => (
+      candidate === alias
+      || candidate.includes(alias)
+      || (candidate.length >= 8 && alias.includes(candidate))
+    )))) || null;
+  }
+
   _firstText(values, excludes = []) {
     const blocked = excludes.map((item) => this._cleanText(item).toLowerCase()).filter(Boolean);
     for (const value of values) {
@@ -408,13 +626,20 @@ class BrunoMediaCard extends HTMLElement {
     return '';
   }
 
-  _hasPlayback(state, title, image, appName, source, entityId = '', config = {}, contentType = '') {
+  _hasPlayback(state, title, image, appName, source, entityId = '', config = {}, contentType = '', attributes = {}) {
     const normalized = String(state || '').toLowerCase();
-    if (['playing', 'paused'].includes(normalized)) return true;
-    if (['off', 'standby', 'unavailable', 'unknown', ''].includes(normalized)) return false;
-    const hasMetadata = Boolean(this._cleanText(title) || (image && !this._isStandbyImage(image)) || this._cleanText(appName) || this._cleanText(source));
-    if (hasMetadata) return true;
-    return ['on', 'idle'].includes(normalized) && this._isVideoPlayer(entityId, config, contentType, appName, source);
+    const shellText = `${title || ''} ${appName || ''} ${source || ''}`.toLowerCase();
+    const isShell = ['google tv launcher', 'android tv launcher', 'launcher', 'ambient mode', 'backdrop', 'home screen']
+      .some((term) => shellText.includes(term));
+    if (isShell) return false;
+    if (['playing', 'paused'].includes(normalized)) return Boolean(this._cleanText(title) || image || this._cleanText(appName));
+    if (normalized !== 'on') return false;
+    const hasMediaTitle = Boolean(this._cleanText(title));
+    const hasTimedMedia = Number(attributes?.media_duration) > 0 || Number(attributes?.media_position) > 0;
+    const hasArtwork = Boolean(image && !this._isStandbyImage(image));
+    return hasMediaTitle
+      && (hasArtwork || hasTimedMedia || ['video', 'movie', 'episode', 'tvshow'].some((term) => String(contentType).includes(term)))
+      && this._isVideoPlayer(entityId, config, contentType, appName, source);
   }
 
   _isVideoPlayer(entityId = '', config = {}, contentType = '', appName = '', source = '') {
@@ -463,24 +688,30 @@ class BrunoMediaCard extends HTMLElement {
 
   _playerModel(entityId, focusId) {
     const entity = this._state(entityId);
-    const state = entity?.state || 'off';
-    const title = entity?.attributes?.media_title || this._playerName(entityId);
-    const artist = entity?.attributes?.media_artist || '';
-    const subtitle = artist && state !== 'off'
-      ? artist
-      : BRUNO_MEDIA_ACTIVE_STATES.includes(state)
-        ? state.replace('_', ' ')
-        : 'Off';
+    const state = String(entity?.state || 'off').toLowerCase();
+    const attrs = entity?.attributes || {};
+    const config = this._playerConfig(entityId);
+    const rawImage = attrs.media_image_url || attrs.entity_picture || '';
+    const image = this._isStandbyImage(rawImage) ? '' : rawImage;
+    const contentType = String(attrs.media_content_type || attrs.app_name || '').toLowerCase();
+    const active = this._hasPlayback(state, attrs.media_title, image, attrs.app_name, attrs.source, entityId, config, contentType, attrs);
+    const history = this._mediaHistory?.[entityId];
+    const title = active
+      ? (this._cleanText(attrs.media_title) || this._playerName(entityId))
+      : (history?.title || this._playerName(entityId));
+    const subtitle = active
+      ? (this._cleanText(attrs.media_artist) || this._stateLabel(state))
+      : (history?.secondary || history?.context || 'Ultima reproducao');
 
     return {
       entity: entityId,
-      image: entity?.attributes?.entity_picture || '',
+      image: active ? image : (history?.image || ''),
       name: this._playerName(entityId),
       title,
       subtitle,
       state,
       icon: this._playerIcon(entityId),
-      active: BRUNO_MEDIA_ACTIVE_STATES.includes(state),
+      active,
       selected: entityId === focusId,
     };
   }
@@ -574,6 +805,17 @@ class BrunoMediaCard extends HTMLElement {
         event.currentTarget.dataset.mediaSection || ''
       );
     });
+
+    this.shadowRoot.querySelector('[data-action="choose-media"]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this._openSpotifyPlusPopup();
+    });
+
+    this.shadowRoot.querySelector('.wide-art img')?.addEventListener('error', (event) => {
+      event.currentTarget.remove();
+      this.shadowRoot.querySelector('.wide-art')?.classList.remove('has-art');
+    }, { once: true });
 
     const shell = this.shadowRoot.querySelector('.media-shell');
     const focusSurface = this.shadowRoot.querySelector('.focus-surface');
@@ -700,9 +942,12 @@ class BrunoMediaCard extends HTMLElement {
     const focusImage = focus.image ? `--focus-art: url('${BrunoMediaCard._escapeAttr(BrunoMediaCard._cssUrl(focus.image))}');` : '';
     const focusSoftClass = focus.isSoftArtwork ? ' is-soft-artwork' : '';
     const focusEmptyClass = focus.image ? '' : ' is-empty-artwork';
-    const slideIndex = this._slideIndex || 0;
+    const focusPausedClass = focus.state === 'paused' ? ' is-paused-media' : '';
+    const focusInactiveClass = focus.hasPlayback ? '' : ' is-inactive-media';
     const isWide = this._config.variant === 'wide';
     const players = this._slotPlayerIds(focus.entity, isWide ? 2 : 4).map((id) => this._playerModel(id, focus.entity));
+    const slideIndex = players.length ? (this._slideIndex || 0) : 0;
+    if (!players.length && this._slideIndex) this._slideIndex = 0;
     const wideClass = isWide ? ' is-wide' : '';
     const focusSurfaceAttrs = isWide
       ? 'aria-label="Resumo de mídia"'
@@ -732,7 +977,7 @@ class BrunoMediaCard extends HTMLElement {
         <div class="wide-focus">
           <div class="media-headline">
             <span class="headline-left">
-              <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:music-note"></ha-icon></span>
+              <span class="header-icon" aria-hidden="true"><bruno-icon icon="mdi:music-note"></bruno-icon></span>
               <span class="title">
                 <span class="title-main">Mídia</span>
               </span>
@@ -744,11 +989,11 @@ class BrunoMediaCard extends HTMLElement {
               aria-label="Abrir mídia"
               aria-expanded="${this._mediaMenuOpen ? 'true' : 'false'}"
             >
-              <ha-icon icon="mdi:dots-vertical"></ha-icon>
+              <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
             </button>
           </div>
           <div class="wide-copy">
-            ${focus.hasPlayback ? `
+            ${focus.hasPlayback || focus.hasLastMedia ? `
               <strong class="wide-primary">${BrunoMediaCard._escape(focus.title)}</strong>
               <span class="wide-secondary">${BrunoMediaCard._escape(focus.secondary)}</span>
               <span class="wide-context">${BrunoMediaCard._escape(focus.context)}</span>
@@ -758,17 +1003,24 @@ class BrunoMediaCard extends HTMLElement {
             class="wide-art${artwork ? ' has-art' : ''}"
             aria-hidden="true"
           >
-            ${artwork ? `<img src="${artwork}" alt="">` : `<ha-icon icon="${BrunoMediaCard._escapeAttr(focus.serviceIcon || 'mdi:music-note')}"></ha-icon>`}
+            ${artwork ? `<img src="${artwork}" alt="">` : `<bruno-icon icon="${BrunoMediaCard._escapeAttr(focus.serviceIcon || 'mdi:music-note')}"></bruno-icon>`}
           </div>
-          <div class="wide-progress" style="--media-progress:${progress.toFixed(2)}%;">
-            <span class="status-label${focus.hasPlayback ? '' : ' is-muted'}"><i aria-hidden="true"></i>${BrunoMediaCard._escape(focus.statusLabel)}</span>
-            <span class="progress-track"><span></span></span>
-          </div>
+          ${focus.hasPlayback ? `
+            <div class="wide-progress" style="--media-progress:${progress.toFixed(2)}%;">
+              <span class="status-label"><i aria-hidden="true"></i>${BrunoMediaCard._escape(focus.statusLabel)}</span>
+              <span class="progress-track"><span></span></span>
+            </div>
+          ` : `
+            <div class="wide-progress is-inactive">
+              <span class="status-label is-muted"><i aria-hidden="true"></i>${BrunoMediaCard._escape(focus.statusLabel)}</span>
+              <button class="choose-media" type="button" data-action="choose-media">Escolher m\u00eddia</button>
+            </div>
+          `}
           ${mediaMenu}
         </div>
       `
       : `
-        <span class="play-glyph" aria-hidden="true"><ha-icon icon="${focus.isPlaying ? 'mdi:pause' : 'mdi:play'}"></ha-icon></span>
+        <span class="play-glyph" aria-hidden="true"><bruno-icon icon="${focus.isPlaying ? 'mdi:pause' : 'mdi:play'}"></bruno-icon></span>
         <div class="focus-bottom">
           <div class="focus-title">
             <span class="media-copy">
@@ -996,7 +1248,7 @@ class BrunoMediaCard extends HTMLElement {
           transform: scale(1.03);
         }
 
-        .play-glyph ha-icon {
+        .play-glyph bruno-icon {
           --mdc-icon-size: 34px;
         }
 
@@ -1116,11 +1368,11 @@ class BrunoMediaCard extends HTMLElement {
           transform: scale(0.97);
         }
 
-        .control ha-icon {
+        .control bruno-icon {
           --mdc-icon-size: 17px;
         }
 
-        .control.play ha-icon {
+        .control.play bruno-icon {
           --mdc-icon-size: 20px;
         }
 
@@ -1193,7 +1445,7 @@ class BrunoMediaCard extends HTMLElement {
           -webkit-backdrop-filter: blur(10px) saturate(1.18);
         }
 
-        .player-icon ha-icon {
+        .player-icon bruno-icon {
           --mdc-icon-size: 17px;
         }
 
@@ -1315,7 +1567,7 @@ class BrunoMediaCard extends HTMLElement {
           height: 100%;
           min-height: 0;
           display: grid;
-          grid-template-columns: minmax(0, 1fr) minmax(132px, 40%);
+          grid-template-columns: minmax(0, 1fr) minmax(148px, 44%);
           grid-template-rows: 44px minmax(0, 1fr) auto;
           grid-template-areas:
             "head head"
@@ -1365,7 +1617,7 @@ class BrunoMediaCard extends HTMLElement {
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
         }
 
-        .header-icon ha-icon {
+        .header-icon bruno-icon {
           --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
           position: absolute;
           left: 50%;
@@ -1414,7 +1666,7 @@ class BrunoMediaCard extends HTMLElement {
           outline: none;
         }
 
-        .mh-menu ha-icon {
+        .mh-menu bruno-icon {
           --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px);
         }
 
@@ -1509,7 +1761,8 @@ class BrunoMediaCard extends HTMLElement {
           grid-area: art;
           align-self: end;
           justify-self: end;
-          width: min(100%, 168px);
+          position: relative;
+          width: min(100%, 180px);
           aspect-ratio: 1 / 1;
           display: grid;
           place-items: center;
@@ -1518,20 +1771,70 @@ class BrunoMediaCard extends HTMLElement {
           overflow: hidden;
           border-radius: 18px;
           color: rgba(255,255,255,0.50);
-          background: var(--bruno-liquid-cell-background, rgba(255,255,255,0.018));
+          background:
+            linear-gradient(145deg, rgba(255,255,255,0.052), rgba(255,255,255,0.016) 46%, rgba(0,0,0,0.110)),
+            rgba(12,13,15,0.135);
           border: 1px solid rgba(255,255,255,0.12);
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 12px 24px rgba(0,0,0,0.18);
         }
 
+        .wide-art:not(.has-art) {
+          background:
+            radial-gradient(90% 72% at 68% 24%, rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.150), transparent 62%),
+            radial-gradient(78% 72% at 20% 82%, rgba(160,178,190,0.080), transparent 64%),
+            linear-gradient(145deg, rgba(255,255,255,0.070), rgba(255,255,255,0.018) 45%, rgba(0,0,0,0.155)),
+            rgba(14,13,13,0.185);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.105),
+            inset 0 -22px 48px rgba(0,0,0,0.105),
+            0 12px 24px rgba(0,0,0,0.16);
+        }
+
+        .wide-art::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          background:
+            linear-gradient(135deg, rgba(255,255,255,0.120), transparent 34%),
+            linear-gradient(315deg, transparent 58%, rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.055));
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .wide-art:not(.has-art)::before {
+          opacity: 0.44;
+        }
+
         .wide-art img {
+          position: relative;
+          z-index: 1;
           width: 100%;
           height: 100%;
           display: block;
           object-fit: cover;
         }
 
-        .wide-art ha-icon {
+        .focus-surface.is-paused-media .wide-art.has-art img {
+          filter: blur(2.8px) brightness(0.78) saturate(0.90);
+          transform: scale(1.035);
+        }
+
+        .focus-surface.is-inactive-media .wide-art.has-art img {
+          filter: blur(3.2px) brightness(0.72) saturate(0.46);
+          transform: scale(1.04);
+        }
+
+        .wide-art bruno-icon {
+          position: relative;
+          z-index: 1;
           --mdc-icon-size: 44px;
+          color: rgba(255,255,255,0.46);
+          filter: drop-shadow(0 6px 18px rgba(0,0,0,0.32));
+        }
+
+        .wide-art:not(.has-art) bruno-icon {
+          display: none;
         }
 
         .wide-progress {
@@ -1539,6 +1842,44 @@ class BrunoMediaCard extends HTMLElement {
           display: grid;
           gap: 8px;
           align-self: end;
+        }
+
+        .wide-progress.is-inactive {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-rows: auto auto;
+          justify-items: start;
+          align-items: end;
+          gap: 5px;
+        }
+
+        .wide-progress.is-inactive .status-label {
+          width: 100%;
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .choose-media {
+          appearance: none;
+          -webkit-appearance: none;
+          min-height: 28px;
+          padding: 0 10px;
+          border-radius: var(--bruno-liquid-control-radius, 10px);
+          color: rgba(255,255,255,0.82);
+          background: var(--bruno-liquid-control-background, rgba(255,255,255,0.040));
+          border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.090));
+          box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+          font-size: 10px;
+          line-height: 1;
+          font-weight: 760;
+          white-space: nowrap;
+        }
+
+        .choose-media:hover,
+        .choose-media:focus-visible {
+          color: rgba(255,255,255,0.96);
+          background: var(--bruno-liquid-popup-option-hover-background, rgba(242,194,102,0.115));
+          outline: none;
         }
 
         .status-label {
@@ -1594,8 +1935,8 @@ class BrunoMediaCard extends HTMLElement {
         .media-card.is-wide .player-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
           grid-template-rows: minmax(0, 1fr);
-          gap: 12px;
-          padding: 0;
+          gap: 10px;
+          padding: 9px;
           background: transparent;
         }
 
@@ -1667,22 +2008,24 @@ class BrunoMediaCard extends HTMLElement {
           <div class="viewport">
             <div class="slides">
               <section class="slide focus-slide">
-                <div class="focus-surface${focusSoftClass}${focusEmptyClass}" ${focusSurfaceAttrs} style="${focusImage}">
+                <div class="focus-surface${focusSoftClass}${focusEmptyClass}${focusPausedClass}${focusInactiveClass}" ${focusSurfaceAttrs} style="${focusImage}">
                   ${focusContent}
                 </div>
               </section>
 
-              <section class="slide players-slide">
-                <div class="player-grid" aria-label="Players recentes">
-                  ${players.map((player) => this._playerButton(player)).join('')}
-                </div>
-              </section>
+              ${players.length ? `
+                <section class="slide players-slide">
+                  <div class="player-grid" aria-label="Players recentes">
+                    ${players.map((player) => this._playerButton(player)).join('')}
+                  </div>
+                </section>
+              ` : ''}
             </div>
           </div>
 
           <div class="pagination" aria-label="Slides de midia">
             <button class="dot${slideIndex === 0 ? ' is-active' : ''}" type="button" data-slide-index="0" aria-label="Slide principal"></button>
-            <button class="dot${slideIndex === 1 ? ' is-active' : ''}" type="button" data-slide-index="1" aria-label="Players recentes"></button>
+            ${players.length ? `<button class="dot${slideIndex === 1 ? ' is-active' : ''}" type="button" data-slide-index="1" aria-label="Players recentes"></button>` : ''}
           </div>
         </div>
       </div>
@@ -1694,7 +2037,7 @@ class BrunoMediaCard extends HTMLElement {
   _control(key, icon, label, extraClass = '') {
     return `
       <button class="control ${extraClass}" type="button" data-script-key="${key}" aria-label="${BrunoMediaCard._escapeAttr(label)}">
-        <ha-icon icon="${icon}"></ha-icon>
+        <bruno-icon icon="${icon}"></bruno-icon>
       </button>
     `;
   }
@@ -1706,7 +2049,7 @@ class BrunoMediaCard extends HTMLElement {
     const style = player.image ? ` style="--player-art: url('${BrunoMediaCard._escapeAttr(BrunoMediaCard._cssUrl(player.image))}');"` : '';
     return `
       <button class="player-card${selected}${active}${art}" type="button" data-player-id="${BrunoMediaCard._escapeAttr(player.entity)}"${style} aria-label="${BrunoMediaCard._escapeAttr(player.name)}">
-        <span class="player-icon" aria-hidden="true"><ha-icon icon="${BrunoMediaCard._escapeAttr(player.icon)}"></ha-icon></span>
+        <span class="player-icon" aria-hidden="true"><bruno-icon icon="${BrunoMediaCard._escapeAttr(player.icon)}"></bruno-icon></span>
         <span class="player-meta">
           <span class="player-name">${BrunoMediaCard._escape(player.name)}</span>
           <span class="player-sub">${BrunoMediaCard._escape(player.subtitle)}</span>

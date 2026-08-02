@@ -1,0 +1,70 @@
+# ==========================================================================
+# Pacote: lavabo_presence
+# Objetivo: camada logica do Lavabo para presenca e sensor.lavabo_active.
+#
+# FALLBACK RAPIDO:
+# - Remover/comentar `lavabo_presence: !include packages/lavabo_presence.yaml`
+#   em configuration.yaml para voltar ao comportamento anterior.
+# ==========================================================================
+
+template:
+  - binary_sensor:
+      # NOVO (2026-07-03 — molde unico): presenca imediata para o dot do card.
+      # O dot deixa de ler lavabo_occupancy (que segurava o icone aceso por
+      # minutos apos a saida) e passa a ler este espelho do sensor bruto.
+      - name: Lavabo Motion Recent
+        unique_id: lavabo_motion_recent
+        device_class: motion
+        icon: mdi:account
+        state: >-
+          {{ is_state('binary_sensor.lv_sensor_presenca_movimento', 'on') }}
+        delay_off:
+          seconds: 5
+        attributes:
+          source_entity: binary_sensor.lv_sensor_presenca_movimento
+          pir: "{{ states('sensor.lv_sensor_presenca_pir') }}"
+          illuminance: "{{ states('sensor.lv_sensor_presenca_iluminancia') }}"
+          semantic_role: passage_indicator
+
+      - name: Lavabo Occupancy
+        unique_id: lavabo_occupancy
+        device_class: occupancy
+        icon: mdi:account
+        state: >-
+          {{ is_state('binary_sensor.lv_sensor_presenca_movimento', 'on') }}
+        # ANTERIOR (2026-07-03): delay_off de 3 minutos (mantinha o dot aceso
+        # muito tempo apos a saida — o dot agora usa lavabo_motion_recent).
+        # delay_off:
+        #   minutes: 3
+        # NOVO: ocupacao do lavabo serve para automacao de luz; 2 min bastam.
+        delay_off:
+          seconds: 120
+        attributes:
+          source_entity: binary_sensor.lv_sensor_presenca_movimento
+          pir: "{{ states('sensor.lv_sensor_presenca_pir') }}"
+          illuminance: "{{ states('sensor.lv_sensor_presenca_iluminancia') }}"
+
+  - sensor:
+      - name: Lavabo Active
+        unique_id: lavabo_active
+        state: >-
+          {% set lights_on = not is_state('light.grupo_luzes_lavabo', 'off') %}
+          {% if is_state('binary_sensor.lavabo_occupancy', 'on') %}
+            yes
+          {% elif lights_on %}
+            yes
+          {% else %}
+            no
+          {% endif %}
+        icon: "{{ iif(this.state == 'no', 'mdi:thumb-down', 'mdi:thumb-up') }}"
+        attributes:
+          occupancy: "{{ states('binary_sensor.lavabo_occupancy') }}"
+          presence: "{{ states('binary_sensor.lv_sensor_presenca_movimento') }}"
+          pir: "{{ states('sensor.lv_sensor_presenca_pir') }}"
+          illuminance: "{{ states('sensor.lv_sensor_presenca_iluminancia') }}"
+          source_entity: binary_sensor.lv_sensor_presenca_movimento
+          lights_on: >-
+            {%- set light = expand('light.grupo_luzes_lavabo') | selectattr('state', 'eq', 'on') | map(attribute='name') | list %}
+            {{- light }}
+          lights_on_count: >-
+            {{ expand('light.grupo_luzes_lavabo') | selectattr('state', 'eq', 'on') | list | count }}

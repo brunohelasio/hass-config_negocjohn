@@ -7,6 +7,18 @@ layout:
   grid-gap: 10px
   margin: 0px !important
   padding: 0px !important
+  # NOVO (2026-07-09) — MODO PHONE (Opcao A mobile): em <=800px a matriz vira
+  # 2 colunas x 3 linhas com altura FIXA por card (as linhas de 40vh do tablet
+  # dependiam da celula do grid da home, que no phone e empilhada/auto).
+  # ROLLBACK: remover este bloco mediaquery.
+  mediaquery:
+    '(max-width: 800px)':
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+      # Fase 2 (2026-07-09): 150px cortava status semanticos e o 4o indicador
+      # (feedback do usuario). 176px + PNG reduzido nos cards resolve.
+      # ANTERIOR (Fase 1): repeat(3, 150px)
+      grid-template-rows: repeat(3, 176px)
+      grid-gap: 10px
 card_mod:
   style: |
     :host { 

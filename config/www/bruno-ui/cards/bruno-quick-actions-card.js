@@ -39,19 +39,25 @@ const BRUNO_QUICK_ACTIONS_DEFAULT_ITEMS = [
       },
     },
   },
-  { key: 'movies', icon: 'mdi:movie-roll', label: 'Filmes', group: 'scenes', tap_action: { action: 'none' } },
-  { key: 'laptop', icon: 'mdi:laptop', label: 'Notebook', group: 'scenes', tap_action: { action: 'none' } },
-  { key: 'sofa', icon: 'mdi:sofa-outline', label: 'Sala', group: 'scenes', tap_action: { action: 'none' } },
+  {
+    key: 'refresh',
+    icon: 'mdi:refresh',
+    label: 'Atualizar',
+    group: 'actions',
+    tap_action: {
+      action: 'fire-dom-event',
+      bruno_action: 'refresh',
+    },
+  },
 ];
 
-const BRUNO_QUICK_ACTIONS_INLINE_ICONS = {
-  lights_off: '<svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M2 2l20 20"/><path d="M8.3 5.7A6 6 0 0 1 18 10c0 2.2-1.2 3.2-2.2 4.2-.5.5-.8 1.1-.8 1.8"/><path d="M10.2 14.2c-.9-.9-2.2-1.9-2.2-4.2 0-.8.2-1.5.5-2.2"/></svg>',
-  wifi: '<svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
-  movies: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 8h16M4 16h16M8 4v16M16 4v16"/></svg>',
-  laptop: '<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="10" rx="1.6"/><path d="M3 18h18"/><path d="M7 18l1.2-4h7.6L17 18"/></svg>',
-  sofa: '<svg viewBox="0 0 24 24"><path d="M6 11V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3"/><path d="M4 12a2 2 0 0 0-2 2v5h20v-5a2 2 0 0 0-2-2"/><path d="M7 19v2M17 19v2"/></svg>',
-  circle: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>',
-};
+const BRUNO_QUICK_ACTIONS_INLINE_ICONS = new Proxy({}, {
+  get(_target, key) {
+    return globalThis.BrunoIcons?.render(String(key || 'circle'))
+      || globalThis.BrunoIcons?.render('circle')
+      || '';
+  },
+});
 
 class BrunoQuickActionsCard extends HTMLElement {
   static getStubConfig() {
@@ -579,6 +585,11 @@ class BrunoQuickActionsCard extends HTMLElement {
           color: rgba(248,251,255,0.46);
         }
         .quick-separator { align-self: center; }  /* separador discreto mantido */
+        /* NOVO (2026-07-24) — feedback Home V2: dock SEM linhas divisórias
+           (filete superior + separador vertical entre grupos removidos).
+           ROLLBACK: remover estas duas regras. */
+        .quick-dock::before { display: none; }
+        .quick-separator { display: none; }
       </style>
 
       <div class="quick-card">
@@ -621,7 +632,12 @@ class BrunoQuickActionsCard extends HTMLElement {
   }
 
   _groupTitle(key) {
-    return key === 'scenes' ? 'Cenas' : 'A\u00e7\u00f5es r\u00e1pidas';
+    // ANTERIOR (rollback): return key === 'scenes' ? 'Cenas' : 'A\u00e7\u00f5es r\u00e1pidas';
+    // NOVO (2026-07-24) \u2014 HOME V2: grupo 'sala' rotulado "Sala" (controles
+    // rapidos Corredor/TV/A-C migrados do card especial da Sala para o dock).
+    if (key === 'scenes') return 'Cenas';
+    if (key === 'sala') return 'Sala';
+    return 'A\u00e7\u00f5es r\u00e1pidas';
   }
 
   static _escape(value) {

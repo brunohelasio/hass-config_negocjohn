@@ -17,22 +17,56 @@ const BRUNO_TOP_BADGES_DEFAULT_ENTITIES = {
   lights: [
     'light.sala_switch_1',
     'light.sala_switch_2',
+    'light.sala_switch_3',
+    'light.sala_2_switch_2',
+    'light.sala_2_switch_3',
+    'light.varanda_switch_1',
+    'light.varanda_switch_2',
     'light.cozinha_switch_1',
     'light.cozinha_switch_2',
+    'light.cozinha_switch_3',
+    'light.cz_luz_principal',
+    'light.quarto_casal_switch_1',
+    'light.quarto_casal_switch_2',
+    'light.quarto_casal_2_switch_2',
+    'light.quarto_casal_2_switch_3',
+    'light.qc_luz_principal',
+    'light.suite_casal_switch_1',
+    'light.suite_casal_switch_2',
+    'light.quarto_marina_switch_1',
+    'light.quarto_marina_switch_2',
+    'light.quarto_marina_switch_3',
+    'light.quarto_marina_switch_4',
+    'light.suite_marina_switch_1',
+    'light.suite_marina_switch_2',
+    'light.office_switch_1',
+    'light.office_switch_2',
+    'light.office_switch_3',
     'light.lavabo_switch_1',
+    'light.lavabo_switch_2',
+    'light.lavabo_switch_3',
     'light.corredor_switch_1',
     'light.quarto_miguel_switch_1',
     'light.quarto_miguel_switch_2',
+    'light.quarto_miguel_switch_3',
+    'light.quarto_miguel_2_switch_1',
+    'light.quarto_miguel_2_switch_2',
+    'light.quarto_miguel_2_switch_3',
   ],
   media: [
+    'media_player.android_tv_192_168_3_17',
     'media_player.smart_tv_pro_2',
     'media_player.spotifyplus_bruno_helasio',
     'media_player.echo_show',
+    'media_player.echo_pop_office',
+    'media_player.echo_pop_quarto_casal',
+    'media_player.echo_pop_marina',
   ],
   climate: [
     'climate.sl_ar_condicionado',
     'climate.ac_office',
     'climate.ac_quarto_miguel',
+    'climate.ac_quarto_marina',
   ],
   curtains: [
     {
@@ -163,6 +197,8 @@ class BrunoTopBadgesCard extends HTMLElement {
           icon: state === 'locked' ? 'mdi:lock' : 'mdi:lock-open-variant',
           title: this._entityName(id),
           sub: state.replace('_', ' '),
+          entityId: id,
+          action: state === 'unlocked' ? 'lock' : '',
         };
       }),
     };
@@ -203,6 +239,8 @@ class BrunoTopBadgesCard extends HTMLElement {
           icon: 'mdi:lightbulb-on',
           title: this._entityName(id),
           sub: brightness != null ? `${Math.round((Number(brightness) / 255) * 100)}%` : 'On',
+          entityId: id,
+          action: 'toggle-light',
         };
       }),
     };
@@ -222,6 +260,8 @@ class BrunoTopBadgesCard extends HTMLElement {
         icon: 'mdi:music-note',
         title: this._entityName(id),
         sub: (this._state(id)?.state || 'on').replace('_', ' '),
+        entityId: id,
+        action: 'play-pause-media',
       })),
     };
   }
@@ -242,6 +282,8 @@ class BrunoTopBadgesCard extends HTMLElement {
           icon: 'mdi:air-conditioner',
           title: this._entityName(id),
           sub: temperature != null ? `${temperature}\u00b0` : (this._state(id)?.state || 'on').replace('_', ' '),
+          entityId: id,
+          action: 'toggle-climate',
         };
       }),
     };
@@ -286,6 +328,9 @@ class BrunoTopBadgesCard extends HTMLElement {
         title: item.title || this._entityName(entityId),
         sub: displayClosedPosition == null ? 'indisponivel' : `${displayClosedPosition}% fechada`,
         active: available && (state === 'opening' || state === 'closing'),
+        entityId,
+        action: available ? 'toggle-curtain' : '',
+        value: displayClosedPosition,
       };
     });
 
@@ -307,7 +352,59 @@ class BrunoTopBadgesCard extends HTMLElement {
       this._lightsModel(),
       this._mediaModel(),
       this._climateModel(),
-    ];
+      // NOVO (2026-07-25) — HOME V2 item 3: o card de energia saiu da Home,
+      // então o resumo de consumo passou a viver aqui. Se o package
+      // home_insights nao estiver carregado, o badge se omite (ver
+      // _energyModel -> retorno null filtrado abaixo).
+      this._energyModel(),
+    ].filter(Boolean);
+  }
+
+  // NOVO (2026-07-25) — Badge de Energia.
+  // TODA a matemática (kW + desvio %) vem do backend, em
+  // sensor.home_energy_status (package home_insights.yaml) — fonte única
+  // compartilhada com as linhas inteligentes do hero. Aqui só se exibe.
+  _energyModel() {
+    const status = this._state(this._config.entities.energy_status
+      || 'sensor.home_energy_status');
+    if (!status || ['unknown', 'unavailable'].includes(String(status.state).toLowerCase())) {
+      return null;
+    }
+
+    const attributes = status.attributes || {};
+    const deltaRaw = attributes.delta_pct;
+    const delta = Number.parseInt(deltaRaw, 10);
+    const hasDelta = Number.isFinite(delta);
+    const chips = [];
+
+    const addChip = (entityId, title, icon) => {
+      const entity = this._state(entityId);
+      if (!entity || this._isUnavailable(entity)) return;
+      const value = Number.parseFloat(entity.state);
+      chips.push({
+        icon,
+        title,
+        sub: Number.isFinite(value) ? `${value.toFixed(1).replace('.', ',')} kWh` : entity.state,
+        entityId,
+      });
+    };
+
+    addChip('sensor.energia_total_casa_diaria', 'Hoje', 'mdi:calendar-today');
+    addChip('sensor.energia_total_casa_semanal', 'Semana', 'mdi:calendar-week');
+    addChip('sensor.energia_total_casa_mensal', 'Mes', 'mdi:calendar-month');
+    addChip('sensor.energia_luzes_diaria', 'Luzes', 'mdi:lightbulb');
+    addChip('sensor.energia_clima_diaria', 'Clima', 'mdi:air-conditioner');
+
+    return {
+      key: 'energy',
+      title: 'Energy',
+      sub: attributes.badge_sub || `${status.state} kW`,
+      icon: 'mdi:flash',
+      tone: 'amber',
+      // Aceso apenas quando o consumo está acima do esperado para o horário.
+      active: hasDelta && delta > 15,
+      chips,
+    };
   }
 
   _visibleModels(models, expanded) {
@@ -338,6 +435,58 @@ class BrunoTopBadgesCard extends HTMLElement {
     const entityId = (this._config.entities.locks || [])[0];
     if (!entityId || !this._hass) return;
     this._hass.callService('lock', 'toggle', { entity_id: entityId }, { entity_id: entityId });
+  }
+
+  _callService(domainService, data = {}) {
+    if (!this._hass || !domainService) return;
+    const [domain, service] = String(domainService).split('.');
+    if (!domain || !service) return;
+    this._hass.callService(domain, service, data);
+  }
+
+  _runChipAction(action, entityId, value) {
+    if (!action || !entityId) return;
+    globalThis.BrunoLiquidGlass?.feedback?.('tap');
+
+    if (action === 'toggle-light') {
+      this._callService('light.toggle', { entity_id: entityId });
+      return;
+    }
+
+    if (action === 'play-pause-media') {
+      const state = String(this._state(entityId)?.state || '').toLowerCase();
+      if (!BRUNO_TOP_BADGES_MEDIA_ON_STATES.includes(state)) return;
+      this._callService('media_player.media_play_pause', { entity_id: entityId });
+      return;
+    }
+
+    if (action === 'toggle-climate') {
+      const entity = this._state(entityId);
+      const state = String(entity?.state || '').toLowerCase();
+      if (!entity || ['unavailable', 'unknown', '', 'none'].includes(state)) return;
+      const service = state === 'off' ? 'climate.turn_on' : 'climate.turn_off';
+      this._callService(service, { entity_id: entityId });
+      return;
+    }
+
+    if (action === 'toggle-curtain') {
+      const state = String(this._state(entityId)?.state || '').toLowerCase();
+      const closedPercent = Number(value);
+      const service = state === 'closed'
+        ? 'cover.open_cover'
+        : state === 'open'
+          ? 'cover.close_cover'
+          : Number.isFinite(closedPercent) && closedPercent >= 50
+            ? 'cover.open_cover'
+            : 'cover.close_cover';
+      this._callService(service, { entity_id: entityId });
+      return;
+    }
+
+    if (action === 'lock') {
+      if (this._state(entityId)?.state !== 'unlocked') return;
+      this._callService('lock.lock', { entity_id: entityId });
+    }
   }
 
   _runAction(key, gesture) {
@@ -419,6 +568,29 @@ class BrunoTopBadgesCard extends HTMLElement {
       button.addEventListener('pointerleave', () => {
         clearHold();
         button.classList.remove('is-pressed');
+      });
+    });
+  }
+
+  _wireChipActions() {
+    this.shadowRoot.querySelectorAll('button[data-chip-action][data-chip-entity]').forEach((button) => {
+      const clearPress = () => button.classList.remove('is-pressed');
+
+      button.addEventListener('pointerdown', (event) => {
+        if (event.button != null && event.button !== 0) return;
+        event.stopPropagation();
+        button.classList.add('is-pressed');
+      });
+
+      button.addEventListener('pointerup', clearPress);
+      button.addEventListener('pointerleave', clearPress);
+      button.addEventListener('pointercancel', clearPress);
+
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        clearPress();
+        this._runChipAction(button.dataset.chipAction, button.dataset.chipEntity, button.dataset.chipValue);
       });
     });
   }
@@ -537,7 +709,7 @@ class BrunoTopBadgesCard extends HTMLElement {
           color: rgba(var(--tone),0.98);
         }
 
-        .badge-icon ha-icon {
+        .badge-icon bruno-icon {
           --mdc-icon-size: 18px;
           position: absolute;
           left: 50%;
@@ -599,7 +771,20 @@ class BrunoTopBadgesCard extends HTMLElement {
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
         }
 
-        .chip ha-icon {
+        button.chip {
+          appearance: none;
+          -webkit-appearance: none;
+          font: inherit;
+          color: inherit;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        button.chip:focus {
+          outline: none;
+        }
+
+        .chip bruno-icon {
           --mdc-icon-size: 18px;
           color: rgba(var(--tone),0.95);
         }
@@ -797,6 +982,7 @@ class BrunoTopBadgesCard extends HTMLElement {
     `;
 
     this._wireActions();
+    this._wireChipActions();
   }
 
   _badge(model, expanded) {
@@ -804,7 +990,7 @@ class BrunoTopBadgesCard extends HTMLElement {
     const expandedClass = expanded === model.key ? ' is-expanded' : '';
     return `
       <button class="badge tone-${model.tone}${activeClass}${expandedClass}" type="button" data-badge-key="${model.key}" aria-label="${BrunoTopBadgesCard._escapeAttr(model.title)}">
-        <span class="badge-icon" aria-hidden="true"><ha-icon icon="${model.icon}"></ha-icon></span>
+        <span class="badge-icon" aria-hidden="true"><bruno-icon icon="${model.icon}"></bruno-icon></span>
         <span class="badge-text">
           <span class="badge-title">${BrunoTopBadgesCard._escape(model.title)}</span>
           ${model.sub ? `<span class="badge-sub">${BrunoTopBadgesCard._escape(model.sub)}</span>` : ''}
@@ -818,17 +1004,28 @@ class BrunoTopBadgesCard extends HTMLElement {
     if (!model.chips?.length) {
       return `<div class="rail tone-${model.tone}"><span class="chip empty-chip">Nada ativo</span></div>`;
     }
+    const renderChip = (chip) => {
+      const body = `
+        <bruno-icon icon="${chip.icon}"></bruno-icon>
+        <span class="chip-text">
+          <span class="chip-title">${BrunoTopBadgesCard._escape(chip.title)}</span>
+          <span class="chip-sub">${BrunoTopBadgesCard._escape(chip.sub)}</span>
+        </span>
+      `;
+      if (!chip.action || !chip.entityId) {
+        return `<span class="chip">${body}</span>`;
+      }
+      const valueAttr = chip.value == null ? '' : ` data-chip-value="${BrunoTopBadgesCard._escapeAttr(chip.value)}"`;
+      const label = [chip.title, chip.sub].filter(Boolean).join(' - ');
+      return `
+        <button class="chip" type="button" data-chip-action="${BrunoTopBadgesCard._escapeAttr(chip.action)}" data-chip-entity="${BrunoTopBadgesCard._escapeAttr(chip.entityId)}"${valueAttr} aria-label="${BrunoTopBadgesCard._escapeAttr(label)}">
+          ${body}
+        </button>
+      `;
+    };
     return `
       <div class="rail tone-${model.tone}">
-        ${model.chips.map((chip) => `
-          <span class="chip">
-            <ha-icon icon="${chip.icon}"></ha-icon>
-            <span class="chip-text">
-              <span class="chip-title">${BrunoTopBadgesCard._escape(chip.title)}</span>
-              <span class="chip-sub">${BrunoTopBadgesCard._escape(chip.sub)}</span>
-            </span>
-          </span>
-        `).join('')}
+        ${model.chips.map((chip) => renderChip(chip)).join('')}
       </div>
     `;
   }

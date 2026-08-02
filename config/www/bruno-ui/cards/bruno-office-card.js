@@ -5,32 +5,25 @@ const BRUNO_OFFICE_DEFAULT_ENTITIES = {
   room_toggle: 'light.office_switch_3',
   room_fallback_lights: ['light.office_switch_1', 'light.office_switch_2', 'light.office_switch_3'],
   active_sensor: 'sensor.office_active',
-  semantic_sensor: 'sensor.office_semantic_state',
+  // ANTERIOR (rollback): semantic_sensor: 'sensor.office_semantic_state',
+  semantic_sensor: 'sensor.office_semantic_state_supervised',
+  motion_recent: 'binary_sensor.office_motion_recent',
   occupancy: 'binary_sensor.office_occupancy',
   pc_active: 'binary_sensor.office_pc_active',
   pc_fallback: 'switch.macbook',
   meeting: 'binary_sensor.office_meeting_active',
   climate: 'climate.ac_office',
   speaker: 'media_player.echo_pop_office',
-  temperature: [
-    'sensor.office_temp_humid_temperature',
-    'sensor.of_sensor_temp_humid_temperatura',
-    'sensor.temperatura_office',
-    'sensor.office_temperatura',
-    'sensor.of_temperatura',
-  ],
-  humidity: [
-    'sensor.office_temp_humid_humidity',
-    'sensor.of_sensor_temp_humid_umidade',
-    'sensor.umidade_office',
-    'sensor.office_umidade',
-    'sensor.of_umidade',
-  ],
+  presence: 'binary_sensor.sensor_4_in_1_office_presence',
+  illuminance: 'sensor.sensor_4_in_1_office_illuminance',
+  temperature: ['sensor.sensor_4_in_1_office_temperature'],
+  humidity: ['sensor.sensor_4_in_1_office_humidity'],
 };
 
 const BRUNO_OFFICE_CLIMATE_ON_STATES = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
 const BRUNO_OFFICE_SPEAKER_ON_STATES = ['playing', 'on', 'paused'];
 const BRUNO_OFFICE_ACTION_COOLDOWN = 1200;
+const BRUNO_OFFICE_PRESENCE_FALLBACK_MS = 10 * 60 * 1000;
 
 class BrunoOfficeCard extends HTMLElement {
   static getStubConfig() {
@@ -60,6 +53,61 @@ class BrunoOfficeCard extends HTMLElement {
     return 3;
   }
 
+  // ==== HOME V3 - MODO TILE (2026-07-26) ==================================
+  // Duas condicoes INDEPENDENTES, ambas necessarias:
+  //  1) POSICAO - `variant: tile` vem do YAML e e passado APENAS pelos
+  //     includes da faixa de comodos do desktop V2
+  //     (views/main-grid/v2/bento_bottom_block.yaml). O phone
+  //     (v2/bento_comodos_phone.yaml) e a Home V1 NAO passam a flag, entao
+  //     nunca viram tile.
+  //  2) TEMA - o tema ativo declara `--bruno-tile-mode: on`. Hoje somente o
+  //     Josh.ai declara. Em qualquer outro tema o modo nao liga e o render
+  //     fica IDENTICO ao atual. Assim o visual novo pertence ao TEMA e nao
+  //     ao layout, e um tema futuro adota o tile sem tocar em JS.
+  // ROLLBACK: remover `variant: tile` do YAML OU o token do tema.
+  // =======================================================================
+  _themeTileMode() {
+    if (this._tileModeCache !== undefined) return this._tileModeCache;
+    let value = '';
+    try {
+      value = getComputedStyle(this).getPropertyValue('--bruno-tile-mode').trim();
+    } catch (_error) {
+      value = '';
+    }
+    this._tileModeCache = value === 'on';
+    return this._tileModeCache;
+  }
+
+  _tileClasses() {
+    if (this._config?.variant !== 'tile' || !this._themeTileMode()) return '';
+    return this._config?.divider_left ? ' is-tile has-divider' : ' is-tile';
+  }
+
+  _tileDivider() {
+    return this._tileClasses().indexOf('has-divider') >= 0
+      ? '<span class="tile-divider" aria-hidden="true"></span>'
+      : '';
+  }
+
+  connectedCallback() {
+    // Trocar de tema (Config > Themes) precisa reavaliar o modo tile.
+    if (!this._onBrunoThemeChanged) {
+      this._onBrunoThemeChanged = () => {
+        this._tileModeCache = undefined;
+        this._render();
+      };
+    }
+    globalThis.addEventListener?.('bruno-theme-changed', this._onBrunoThemeChanged);
+    // O primeiro render pode ocorrer antes do attach; ali getComputedStyle
+    // ainda nao ve os tokens do tema. Invalida e repinta ja conectado.
+    this._tileModeCache = undefined;
+    this._render();
+  }
+
+  disconnectedCallback() {
+    if (!this._onBrunoThemeChanged) return;
+    globalThis.removeEventListener?.('bruno-theme-changed', this._onBrunoThemeChanged);
+  }
   _state(entityId) {
     return entityId ? this._hass?.states?.[entityId] : undefined;
   }
@@ -176,6 +224,30 @@ class BrunoOfficeCard extends HTMLElement {
     return BRUNO_OFFICE_CLIMATE_ON_STATES.includes(entity.state) || entity.state !== 'off';
   }
 
+  _presenceRecent() {
+    // NOVO (2026-07-12): fail-closed. Sem fallback para presence bruta.
+    const supervisedMotion = this._state(this._config.entities.motion_recent);
+    return supervisedMotion?.state === 'on';
+
+    /* ANTERIOR (rollback): fallbacks para occupancy e presence bruta.
+    const entities = this._config.entities;
+    // ANTERIOR (rollback): dot tambem acendia com occupancy — apos a saida, o
+    // delay_off da ocupacao (minutos) segurava o dot aceso com presence ja false.
+    // if (motion?.state === 'on' || occupancy?.state === 'on') return true;
+    // if (motion || occupancy) return false;
+    // NOVO (2026-07-03): dot = presenca imediata APENAS (regra: saiu -> apaga rapido).
+    const motion = this._state(entities.motion_recent);
+    if (motion) return motion.state === 'on';
+    const occupancy = this._state(entities.occupancy);
+    if (occupancy) return occupancy.state === 'on';
+
+    const entity = this._state(entities.presence);
+    if (entity?.state !== 'on' || !entity.last_changed) return false;
+
+    const changedAt = Date.parse(entity.last_changed);
+    return !Number.isNaN(changedAt) && Date.now() - changedAt < BRUNO_OFFICE_PRESENCE_FALLBACK_MS;
+    */
+  }
   _model() {
     const entities = this._config.entities;
     const room = this._state(entities.room_group);
@@ -198,7 +270,7 @@ class BrunoOfficeCard extends HTMLElement {
       roomOn,
       iconActive: roomOn || pcFallbackOn,
       meetingOn: this._meetingOn(),
-      presenceOn: this._state(entities.occupancy)?.state === 'on',
+      presenceOn: this._presenceRecent(),
       pcOn: this._state(entities.pc_active)?.state === 'on' || pcFallbackOn,
       climateOn: this._climateOn(climate),
       speakerOn: BRUNO_OFFICE_SPEAKER_ON_STATES.includes(speaker?.state || ''),
@@ -349,6 +421,13 @@ class BrunoOfficeCard extends HTMLElement {
     let holdTimer = null;
     let holdFired = false;
     let pointerDown = false;
+    // NOVO (2026-07-22) — consolidacao mobile: separa tap intencional de
+    // arraste iniciado sobre o card sem bloquear o scroll nativo.
+    const dragCancelThreshold = 10;
+    let activePointerId = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerMoved = false;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -360,20 +439,35 @@ class BrunoOfficeCard extends HTMLElement {
     const resetPress = () => {
       clearHold();
       pointerDown = false;
+      pointerMoved = false;
+      activePointerId = null;
       button.classList.remove('is-pressed');
     };
 
     button.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
-      event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: serializa o gesto; pointers
+      // adicionais nao substituem o pointer/timer que iniciou a interacao.
+      // ANTERIOR (rollback): if (activePointerId !== null) return;
+      if (activePointerId !== null) {
+        event.stopPropagation();
+        return;
+      }
+      // ANTERIOR (rollback): event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: libera o pan da shell.
       event.stopPropagation();
 
       pointerDown = true;
       holdFired = false;
+      activePointerId = event.pointerId;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerMoved = false;
       button.classList.add('is-pressed');
-      button.setPointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): button.setPointerCapture?.(event.pointerId);
 
       holdTimer = window.setTimeout(() => {
+        if (!pointerDown || pointerMoved) return;
         holdFired = true;
         button.classList.add('is-hold-fired');
         window.setTimeout(() => button.classList.remove('is-hold-fired'), 260);
@@ -381,15 +475,36 @@ class BrunoOfficeCard extends HTMLElement {
       }, 560);
     });
 
+    // NOVO (2026-07-22) — consolidacao mobile: deslocamento acima da
+    // tolerancia cancela tap/hold; deliberadamente nao usa preventDefault().
+    button.addEventListener('pointermove', (event) => {
+      if (!pointerDown || event.pointerId !== activePointerId) return;
+      const movedX = Math.abs(event.clientX - pointerStartX);
+      const movedY = Math.abs(event.clientY - pointerStartY);
+      if (movedX <= dragCancelThreshold && movedY <= dragCancelThreshold) return;
+      pointerMoved = true;
+      clearHold();
+      button.classList.remove('is-pressed');
+    });
+
     button.addEventListener('pointerup', (event) => {
+      // NOVO (2026-07-22) — consolidacao mobile: somente o pointer que abriu
+      // o gesto pode conclui-lo e executar a acao.
+      // ANTERIOR (rollback): if (event.pointerId !== activePointerId) return;
+      if (event.pointerId !== activePointerId) {
+        event.stopPropagation();
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
-      button.releasePointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): button.releasePointerCapture?.(event.pointerId);
 
       const wasPointerDown = pointerDown;
+      const wasPointerMoved = pointerMoved;
       resetPress();
 
-      if (!wasPointerDown || holdFired) return;
+      // ANTERIOR (rollback): if (!wasPointerDown || holdFired) return;
+      if (!wasPointerDown || wasPointerMoved || holdFired) return;
       this._runAction(key, 'tap');
     });
 
@@ -404,7 +519,11 @@ class BrunoOfficeCard extends HTMLElement {
     });
 
     button.addEventListener('pointerleave', resetPress);
-    button.addEventListener('pointercancel', resetPress);
+    // ANTERIOR (rollback): button.addEventListener('pointercancel', resetPress);
+    button.addEventListener('pointercancel', (event) => {
+      if (event.pointerId !== activePointerId) return;
+      resetPress();
+    });
 
     button.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -419,6 +538,13 @@ class BrunoOfficeCard extends HTMLElement {
     let holdTimer = null;
     let holdFired = false;
     let pointerDown = false;
+    // NOVO (2026-07-22) — consolidacao mobile: a zona de navegacao adota
+    // a mesma tolerancia do toque principal.
+    const dragCancelThreshold = 10;
+    let activePointerId = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerMoved = false;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -430,20 +556,35 @@ class BrunoOfficeCard extends HTMLElement {
     const resetPress = () => {
       clearHold();
       pointerDown = false;
+      pointerMoved = false;
+      activePointerId = null;
       zone.classList.remove('is-pressed');
     };
 
     zone.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
-      event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: mantem um unico pointer
+      // responsavel pela navegacao/hold ate o encerramento do gesto.
+      // ANTERIOR (rollback): if (activePointerId !== null) return;
+      if (activePointerId !== null) {
+        event.stopPropagation();
+        return;
+      }
+      // ANTERIOR (rollback): event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: preserva o scroll nativo.
       event.stopPropagation();
 
       pointerDown = true;
       holdFired = false;
+      activePointerId = event.pointerId;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerMoved = false;
       zone.classList.add('is-pressed');
-      zone.setPointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): zone.setPointerCapture?.(event.pointerId);
 
       holdTimer = window.setTimeout(() => {
+        if (!pointerDown || pointerMoved) return;
         holdFired = true;
         zone.classList.add('is-hold-fired');
         window.setTimeout(() => zone.classList.remove('is-hold-fired'), 260);
@@ -451,16 +592,39 @@ class BrunoOfficeCard extends HTMLElement {
       }, 560);
     });
 
+    // NOVO (2026-07-22) — consolidacao mobile: movimento cancela navegacao
+    // e hold sem interferir no pan vertical ou horizontal.
+    zone.addEventListener('pointermove', (event) => {
+      if (!pointerDown || event.pointerId !== activePointerId) return;
+      const movedX = Math.abs(event.clientX - pointerStartX);
+      const movedY = Math.abs(event.clientY - pointerStartY);
+      if (movedX <= dragCancelThreshold && movedY <= dragCancelThreshold) return;
+      pointerMoved = true;
+      clearHold();
+      zone.classList.remove('is-pressed');
+    });
+
     zone.addEventListener('pointerup', (event) => {
+      // NOVO (2026-07-22) — consolidacao mobile: pointer secundario nao pode
+      // concluir a navegacao iniciada por outro toque.
+      // ANTERIOR (rollback): if (event.pointerId !== activePointerId) return;
+      if (event.pointerId !== activePointerId) {
+        event.stopPropagation();
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
-      zone.releasePointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): zone.releasePointerCapture?.(event.pointerId);
 
       const wasPointerDown = pointerDown;
+      const wasPointerMoved = pointerMoved;
       resetPress();
 
-      if (!wasPointerDown || holdFired) return;
-      this._runRoomSubview();
+      // ANTERIOR (rollback): if (!wasPointerDown || holdFired) return;
+      if (!wasPointerDown || wasPointerMoved || holdFired) return;
+      zone.classList.add('is-navigating');
+      window.setTimeout(() => zone.classList.remove('is-navigating'), 420);
+      window.setTimeout(() => this._runRoomSubview(), 90);
     });
 
     zone.addEventListener('click', (event) => {
@@ -474,13 +638,19 @@ class BrunoOfficeCard extends HTMLElement {
     });
 
     zone.addEventListener('pointerleave', resetPress);
-    zone.addEventListener('pointercancel', resetPress);
+    // ANTERIOR (rollback): zone.addEventListener('pointercancel', resetPress);
+    zone.addEventListener('pointercancel', (event) => {
+      if (event.pointerId !== activePointerId) return;
+      resetPress();
+    });
 
     zone.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
       event.stopPropagation();
-      this._runRoomSubview();
+      zone.classList.add('is-navigating');
+      window.setTimeout(() => zone.classList.remove('is-navigating'), 420);
+      window.setTimeout(() => this._runRoomSubview(), 90);
     });
   }
 
@@ -498,7 +668,7 @@ class BrunoOfficeCard extends HTMLElement {
     const activeClass = active ? ' is-active' : '';
     return `
       <span class="status-dot tone-${tone}${activeClass}" title="${BrunoOfficeCard._escape(label)}" aria-label="${BrunoOfficeCard._escape(label)}">
-        <ha-icon icon="${icon}"></ha-icon>
+        <bruno-icon icon="${icon}"></bruno-icon>
       </span>
     `;
   }
@@ -799,6 +969,8 @@ class BrunoOfficeCard extends HTMLElement {
         }
 
         .office-asset {
+          width: 94%;
+          height: 94%;
           object-fit: contain;
           object-position: left top; /* NOVO: ancora asset tight no topo-esquerdo */
           opacity: 0;
@@ -865,6 +1037,16 @@ class BrunoOfficeCard extends HTMLElement {
           filter: drop-shadow(0 0 10px rgba(var(--accent-red),0.42));
         }
 
+        /* NOVO: espessura optica — mesmo peso visual dos icones da rail
+           (bento-sidebar-card.js: 19px exibido, stroke-width 1.55 => ~1.227px
+           na tela). Exibido a 86px aqui, entao stroke-width em unidades de
+           viewBox precisa ser bem menor: 1.227 * 24/86 ≈ 0.34. Repetido dentro
+           do media query abaixo (78px) com o valor recalculado. */
+        .meeting-icon g,
+        .meeting-icon path {
+          stroke-width: 0.34;
+        }
+
         /* --- ORIGINAL .metric grid-area temp (rollback rapido) ---
         .metric {
           grid-area: temp;
@@ -909,7 +1091,7 @@ class BrunoOfficeCard extends HTMLElement {
           position: relative;
           z-index: 4;
           min-width: 0;
-          width: min(136px, 100%);
+          width: 100%;
           min-height: 56px;
           padding: 2px 24px 2px 0;
           display: flex;
@@ -970,6 +1152,16 @@ class BrunoOfficeCard extends HTMLElement {
         .room-nav-zone.is-hold-fired .room-chevron {
           color: rgba(255,214,150,0.98);
           filter: drop-shadow(0 0 10px rgba(255,190,90,0.34));
+        }
+
+        .room-nav-zone.is-navigating .room-chevron {
+          animation: brunoRoomChevronNavigate 360ms ease both;
+        }
+
+        @keyframes brunoRoomChevronNavigate {
+          0% { transform: translate(0, -1px); }
+          52% { transform: translate(5px, -1px); }
+          100% { transform: translate(2px, -1px); }
         }
 
         .status-lines {
@@ -1063,7 +1255,7 @@ class BrunoOfficeCard extends HTMLElement {
           transform: translateZ(0) scale(1.04);
         }
 
-        .status-dot.is-active ha-icon {
+        .status-dot.is-active bruno-icon {
           filter: drop-shadow(0 0 5px rgba(var(--tone),0.56));
         }
         --- FIM ORIGINAL --- */
@@ -1130,7 +1322,7 @@ class BrunoOfficeCard extends HTMLElement {
           to { opacity: 1; transform: scale(1); }
         }
 
-        .status-dot ha-icon {
+        .status-dot bruno-icon {
           --mdc-icon-size: 14px;
           width: 14px;
           height: 14px;
@@ -1212,6 +1404,28 @@ class BrunoOfficeCard extends HTMLElement {
             width: calc(100% + 6px);
             height: 78px;
           }
+
+          /* NOVO: espessura optica recalculada para 78px (ver comentario na
+             regra base): 1.227 * 24/78 ≈ 0.38. */
+          .meeting-icon g,
+          .meeting-icon path {
+            stroke-width: 0.38;
+          }
+        }
+
+        /* NOVO (2026-07-09) — Fase 2 mobile: card de comodo no phone.
+           PNG menor + padding reduzido => sobra altura para os status
+           semanticos e para a coluna direita de indicadores (que estavam
+           sendo cortados). ROLLBACK: remover este bloco @media. */
+        @media (max-width: 800px) {
+          .room-action {
+            padding: 11px 12px 10px 10px;
+          }
+
+          .room-icon {
+            max-width: 100px;
+            height: 62px;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1224,9 +1438,81 @@ class BrunoOfficeCard extends HTMLElement {
             transition: none !important;
           }
         }
+        /* ==== HOME V3 - MODO TILE (2026-07-26) ==========================
+           Ativo somente quando o card recebe 'variant: tile' (faixa de
+           comodos do desktop V2) E o tema declara --bruno-tile-mode: on
+           (hoje: apenas Josh.ai). Nos demais temas estas classes nunca
+           aparecem no elemento - phone e Home V1 ficam identicos.
+           Calibravel por tema via --bruno-tile-*; os fallbacks abaixo ja
+           sao o visual de tile aprovado no mockup.
+           INVARIANTE (rev.7): o tile perde o backdrop-filter aqui, e e isso
+           que autoriza a BANDA a ter blur. Se o tile voltar a filtrar, o
+           blur da banda sai no MESMO commit - senao volta o borrao sobre
+           borrao. Ver v2/bento_bottom_block.yaml.
+           ROLLBACK: remover 'variant: tile' do YAML ou o token do tema.
+           =============================================================== */
+        .office-card.is-tile,
+        .office-card.is-tile.is-room-on {
+          background: var(--bruno-tile-background, none);
+          border: var(--bruno-tile-border, 0);
+          border-radius: var(--bruno-tile-radius, 0);
+          box-shadow: var(--bruno-tile-shadow, none);
+          backdrop-filter: var(--bruno-tile-filter, none);
+          -webkit-backdrop-filter: var(--bruno-tile-filter, none);
+        }
+
+        .office-card.is-tile::before,
+        .office-card.is-tile.is-room-on::before {
+          opacity: var(--bruno-tile-sheen-opacity, 0);
+        }
+
+        /* Filete vertical no lugar do gap (gap vira 0 via --bruno-tile-gap). */
+        .office-card.is-tile.has-divider .tile-divider {
+          position: absolute;
+          left: 0;
+          top: 8px;
+          bottom: 8px;
+          width: 1px;
+          z-index: 2;
+          pointer-events: none;
+          background: var(--bruno-tile-divider, linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.19) 22%, rgba(255,255,255,0.19) 78%, rgba(255,255,255,0) 100%));
+        }
+
+        /* ON sem vidro: filete quente na base (reaproveita o ::after que ja
+           existe com opacidade 0) + brilho difuso sob o titulo. */
+        .office-card.is-tile.is-room-on::after {
+          inset: auto 14px 0 14px;
+          opacity: 1;
+          background: var(--bruno-tile-on-line, linear-gradient(90deg, rgba(255,187,72,0) 0%, rgba(255,187,72,0.42) 50%, rgba(255,187,72,0) 100%));
+        }
+
+        .office-card.is-tile .room-action {
+          position: relative;
+        }
+
+        .office-card.is-tile.is-room-on .room-action::after {
+          content: "";
+          position: absolute;
+          left: 8px;
+          right: 8px;
+          bottom: 0;
+          height: 46px;
+          z-index: 0;
+          pointer-events: none;
+          background: var(--bruno-tile-on-glow, radial-gradient(60px 30px at 50% 100%, rgba(255,187,72,0.10), transparent 72%));
+        }
+
+        /* Josh.ai: material flat dos dots, restrito aos tiles da Home. */
+        .office-card.is-tile .status-dot.is-active {
+          background: rgba(var(--tone), var(--bruno-tile-status-dot-fill-alpha));
+          border: var(--bruno-tile-status-dot-border);
+          box-shadow: 0 0 var(--bruno-tile-status-dot-halo-size)
+            rgba(var(--tone), var(--bruno-tile-status-dot-halo-alpha));
+        }
       </style>
 
-      <div class="office-card${roomActiveClass}${meetingClass}">
+      <div class="office-card${roomActiveClass}${meetingClass}${this._tileClasses()}">
+        ${this._tileDivider()}
         <button class="office-action" type="button" data-action-key="room" aria-label="${BrunoOfficeCard._escape(this._config.name)}">
           <div class="room-icon" aria-hidden="true">
             <span class="office-icon">${BrunoOfficeCard._officeVisual(model.iconActive)}</span>
@@ -1284,13 +1570,13 @@ class BrunoOfficeCard extends HTMLElement {
   static _officeVisual(active) {
     // ORIGINAL (rollback rapido):
     // const version = '20260608-room-assets-uniform-1';
-    // src="/local/bruno-ui/assets/office-off.png?v=${version}" / office-on.png
+    // src="/local/bruno-ui/assets/office-off.png?v=20260702-all-images-1" / office-on.png
     const version = '20260609-rail-dynamic-1';
     return `
       <span class="office-asset-wrap">
         <span class="office-asset-fallback">${BrunoOfficeCard._officeIcon(active)}</span>
-        <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=${version}" alt="" loading="eager" decoding="async">
-        <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=${version}" alt="" loading="eager" decoding="async">
+        <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
+        <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
       </span>
     `;
   }
@@ -1348,14 +1634,7 @@ class BrunoOfficeCard extends HTMLElement {
   }
 
   static _meetingIcon() {
-    return `
-      <svg class="meeting-icon" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <circle cx="25" cy="25" r="21" fill="rgba(127,29,29,0.34)" stroke="rgba(248,113,113,0.72)" stroke-width="2.5" class="meeting-pulse"/>
-        <circle cx="25" cy="25" r="15.5" fill="none" stroke="rgba(254,202,202,0.92)" stroke-width="4.2"/>
-        <line x1="14.2" y1="14.2" x2="35.8" y2="35.8" stroke="rgba(254,202,202,0.98)" stroke-width="5.2" stroke-linecap="round" class="meeting-slash"/>
-        <circle cx="25" cy="25" r="22.5" fill="none" stroke="rgba(239,68,68,0.22)" stroke-width="5"/>
-      </svg>
-    `;
+    return globalThis.BrunoIcons?.render('meeting-off', { className: 'meeting-icon' }) || '';
   }
 
   static _escape(value) {

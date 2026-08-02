@@ -23,22 +23,23 @@ const BRUNO_QUARTO_CASAL_SUBVIEW_DEFAULT_CONFIG = {
   subtitle: 'Visao geral',
   greeting_name: 'Bruno',
   navigation_path: 'bento-lab',
-  background: '/local/images/quarto_casal.jpg?v=20260701-qcasal-bg-1',
-  fallback_background: '/local/images/quarto_casal.jpg?v=20260701-qcasal-bg-1',
+  background: '/local/images/quarto_casal.jpg?v=20260702-all-images-1',
+  fallback_background: '/local/images/quarto_casal.jpg?v=20260702-all-images-1',
   refresh_interval: 6500,
   spotify_device_name: 'Echo Pop Quarto Casal',
   climate_device_name: 'Gree',
-  climate_image: '/local/images/ar-condicionado-gree-tight.png',
-  climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260606-on-1',
-  tv_standby_image: '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1',
-  spotify_standby_image: '/local/images/echo_pop.png',
+  climate_image: '/local/images/ar-condicionado-gree-tight.png?v=20260702-all-images-1',
+  climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260702-all-images-1',
+  tv_standby_image: '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260702-all-images-1',
+  spotify_standby_image: '/local/images/echo_pop.png?v=20260702-all-images-1',
   tv_apps: [
-    { key: 'netflix', label: 'Netflix', image: '/local/images/netflix_bg.jpg', script: '' },
-    { key: 'prime', label: 'Prime Video', image: '/local/images/prime_video_tile.png', script: '' },
-    { key: 'disney', label: 'Disney+', image: '/local/images/dp_bg.jpg', script: '' },
-    { key: 'max', label: 'Max', image: '/local/images/HBOMax_bg.jpg', script: '' },
+    { key: 'netflix', label: 'Netflix', image: '/local/images/netflix_bg.jpg?v=20260702-all-images-1', script: '' },
+    { key: 'prime', label: 'Prime Video', image: '/local/images/prime_video_tile.png?v=20260702-all-images-1', script: '' },
+    { key: 'disney', label: 'Disney+', image: '/local/images/dp_bg.jpg?v=20260702-all-images-1', script: '' },
+    { key: 'max', label: 'Max', image: '/local/images/HBOMax_bg.jpg?v=20260702-all-images-1', script: '' },
   ],
   light_zone_labels: { sala: 'Quarto', varanda: 'Suíte' },
+  light_zone_icons: { varanda: 'hugeicons:shower-head' },
   room_nav: [
     { key: 'sala', name: 'Sala', icon: 'mdi:sofa', path: 'subview-sala' },
     { key: 'office', name: 'Office', icon: 'mdi:desk', path: 'subview-office' },
@@ -51,8 +52,14 @@ const BRUNO_QUARTO_CASAL_SUBVIEW_DEFAULT_CONFIG = {
     curtain: '',
     curtain_percent_control: '',
     active_sensor: 'sensor.quarto_casal_active',
-    temperature: [],
-    humidity: [],
+    semantic_sensor: 'sensor.q_casal_semantic_state_supervised',
+    motion_recent: 'binary_sensor.q_casal_motion_recent',
+    occupancy: 'binary_sensor.q_casal_occupancy',
+    presence: 'binary_sensor.sensor_4_in_1_q_casal_presence',
+    illuminance: 'sensor.sensor_4_in_1_q_casal_illuminance',
+    // ANTERIOR (rollback): temperature: [], humidity: [],
+    temperature: ['sensor.sensor_4_in_1_q_casal_temperature'],
+    humidity: ['sensor.sensor_4_in_1_q_casal_humidity'],
     room_group: 'light.grupo_quarto_casal',
     camera_main: 'camera.camera_quarto_casal_2',
     camera_secondary: '',
@@ -62,7 +69,7 @@ const BRUNO_QUARTO_CASAL_SUBVIEW_DEFAULT_CONFIG = {
     tv_remote: '',
     spotify: 'media_player.spotifyplus_bruno_helasio',
     speaker: 'media_player.echo_pop_quarto_casal',
-    climate: '',
+    climate: 'climate.qc_ar_condicionado',
     router: '',
     zigbee_hub: '',
     ps5: '',
@@ -70,10 +77,12 @@ const BRUNO_QUARTO_CASAL_SUBVIEW_DEFAULT_CONFIG = {
     lights: [
       { entity: 'light.qc_luz_principal', name: 'Luz principal', icon_type: 'ledstrip', zone: 'sala' },
       { entity: 'light.quarto_casal_switch_1', name: 'Luzes quadros', icon_type: 'light_flush', zone: 'sala' },
-      { entity: 'light.quarto_casal_2_switch_2', name: 'Luz sanca', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.quarto_casal_2_switch_2', name: 'Luz sanca', icon_type: 'light_flush', zone: 'sala' },
       { entity: 'light.quarto_casal_switch_2', name: 'Luzes closet', icon_type: 'light_flush', zone: 'sala' },
-      { entity: 'light.quarto_casal_2_switch_3', name: 'Luz cortineiro', icon_type: 'ledstrip', zone: 'sala' },
-      { entity: 'light.suite_casal_switch_1', name: 'Luz principal', icon_type: 'ledstrip', zone: 'varanda' },
+      // NOVO (grade 2-col): 5ª luz "cortineiro" NÃO existe no HA — removida da lista.
+      // ANTERIOR:
+      // { entity: 'light.quarto_casal_2_switch_3', name: 'Luz cortineiro', icon_type: 'ledstrip', zone: 'sala' },
+      { entity: 'light.suite_casal_switch_1', name: 'Luz principal', icon_type: 'light_flush', zone: 'varanda' },
       { entity: 'light.suite_casal_switch_2', name: 'Luz azul', icon_type: 'light_flush', zone: 'varanda' },
     ],
     cameras: [
@@ -109,6 +118,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     this._lastCameraImages = {};
     this._loadedCameraUrls = {};
     this._cameraBaseUrls = {};
+    this._liveCameraEls = new Map();
     this._lastMinute = '';
     this._lastActionAt = {};
     this._spotifyToolsOpen = false;
@@ -124,6 +134,9 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     this._activeCameraEntity = '';
     this._cameraControlsOpen = false;
     this._expandedZone = null;
+    // NOVO (2026-07-29, rev.9): o dock da Iluminacao entra COLAPSADO e
+    // permanece aberto enquanto o usuario estiver na subview.
+    this._lightsOpen = false;
     this._boundActionHandler = (event) => this._handleAction(event);
     this._boundInputHandler = (event) => this._handleInput(event);
     this._boundLiveInputHandler = (event) => this._handleLiveInput(event);
@@ -137,23 +150,27 @@ class BrunoQuartoCasalSubview extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    this._syncLiveCameraHass();
     this._safeRender();
     this._startRefreshTimer();
   }
 
   connectedCallback() {
     globalThis.BrunoLiquidGlass?.apply?.();
+    globalThis.BrunoSurfaceMaterial?.connect?.(this);
     this._startRefreshTimer();
     this._startClockTimer();
   }
 
   disconnectedCallback() {
+    globalThis.BrunoSurfaceMaterial?.disconnect?.(this);
     this.shadowRoot?.removeEventListener('input', this._boundLiveInputHandler);
     this.shadowRoot?.removeEventListener('change', this._boundInputHandler);
     this.shadowRoot?.removeEventListener('click', this._boundActionHandler);
     this._stopRefreshTimer();
     this._stopClockTimer();
     this._stopCurtainMotionTimer();
+    this._liveCameraEls?.clear();
   }
 
   getCardSize() {
@@ -250,7 +267,10 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         const entityId = image.dataset.cameraEntity;
         if (entityId) this._loadedCameraUrls[entityId] = nextSrc;
         image.src = nextSrc;
+        image.removeAttribute('hidden');
+        image.classList.add('is-loaded');
         image.classList.remove('is-hidden');
+        image.closest('.camera-main')?.classList.add('has-loaded-image');
       };
       loader.src = nextSrc;
     });
@@ -725,7 +745,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       active,
       title: configured ? (active ? 'Console ligado' : 'Console desligado') : 'Entidade a confirmar',
       chip: configured ? (active ? 'Ligado' : 'Desligado') : 'Placeholder',
-      image: this._config.entities.ps5_image || '/local/images/ps5.png',
+      image: this._config.entities.ps5_image || '/local/images/ps5.png?v=20260702-all-images-1',
     };
   }
 
@@ -1000,43 +1020,13 @@ class BrunoQuartoCasalSubview extends HTMLElement {
   }
 
   _openSpotifyPlusPopup(mode = 'full') {
-    const sectionSets = {
-      devices: ['devices'],
-      presets: ['userpresets'],
-      library: ['userpresets'],
-      favorites: ['playlistfavorites'],
-      queue: ['player'],
-      full: ['player', 'devices', 'userpresets', 'playlistfavorites', 'searchmedia'],
-    };
-    const sectionDefaults = {
-      devices: 'devices',
-      presets: 'userpresets',
-      library: 'userpresets',
-      favorites: 'playlistfavorites',
-      queue: 'player',
-      full: 'player',
-    };
-    const sections = sectionSets[mode] || sectionSets.full;
-    const sectionDefault = sectionDefaults[mode] || sectionDefaults.full;
-
     this._fireDomEvent({
       action: 'fire-dom-event',
-      browser_mod: {
-        service: 'browser_mod.popup',
-        data: {
-          title: 'Spotify',
-          tag: `spotify_quarto_casal_${mode}`,
-          style: '--popup-max-width: min(560px, 92vw); --popup-border-width: 0;',
-          content: {
-            type: 'custom:spotifyplus-card',
-            entity: this._config.entities.spotify,
-            deviceDefaultId: this._config.spotify_device_name,
-            deviceControlByName: true,
-            playerBackgroundImageSize: 'cover',
-            sections,
-            sectionDefault,
-          },
-        },
+      bruno_action: 'spotify',
+      bruno_spotify_config: {
+        entity: this._config.entities.spotify,
+        deviceDefaultId: this._config.spotify_device_name,
+        mode,
       },
     });
   }
@@ -1055,15 +1045,16 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     const spotify = this._spotifyModel();
     const preferredSource = this._config.spotify_device_name || spotify.source;
     if (preferredSource) {
-      this._callService('media_player.select_source', {
+      this._callService('spotifyplus.player_transfer_playback', {
         entity_id: entityId,
-        source: preferredSource,
+        device_id: preferredSource,
+        play: true,
+        delay: 0.75,
+        force_activate_device: true,
       });
+      return;
     }
-
-    globalThis.setTimeout?.(() => {
-      this._callService('media_player.media_play', { entity_id: entityId });
-    }, preferredSource ? 260 : 0);
+    this._callService('media_player.media_play', { entity_id: entityId });
   }
 
   _navigate(path) {
@@ -1125,6 +1116,11 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     }
     // NOVO (Passada 2): acordeão SINGLE-OPEN — só uma zona aberta por vez.
     // Expandir uma colapsa a outra; clicar na aberta colapsa.
+if (action === 'toggle-lights-panel') {
+      this._lightsOpen = !this._lightsOpen;
+      this._safeRender();
+      return;
+    }
     if (action === 'toggle-zone') {
       const zk = target.dataset.zone;
       this._expandedZone = this._expandedZone === zk ? null : zk;
@@ -1415,7 +1411,8 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         ${this._renderTopBand(model)}
 
         <section class="content-left">
-          <section class="hero-panel">
+          <!-- ANTERIOR (rollback): <section class="hero-panel"> -->
+          <section class="hero-panel${this._config.entities.curtain ? '' : ' is-unconfigured'}">
             ${this._renderHero(model)}
           </section>
           <div class="cams-media-row">
@@ -1429,7 +1426,11 @@ class BrunoQuartoCasalSubview extends HTMLElement {
           ${this._renderAC(model)}
         </section>
 
-        ${this._renderFrameBottom()}
+        <!-- ANTERIOR (rollback 2026-07-29): rodapé de presença (54px) na área
+             "bottomband". Saiu para a faixa de tiles encostar na base do painel;
+             a presença virou badge da barra superior. _renderFrameBottom() segue
+             definido: para reverter, restaurar a linha do grid e devolver aqui a
+             interpolação this._renderFrameBottom(). -->
       </main>
     `;
 
@@ -1440,6 +1441,10 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     this.shadowRoot.addEventListener('change', this._boundInputHandler);
     this.shadowRoot.addEventListener('input', this._boundLiveInputHandler);
     this._bindImageFallbacks();
+    // ANTERIOR (rollback 2026-07-29, rev.9): a altura do bloco era travada
+    // em faixas inteiras por medicao em JS. O dock resolve isso em CSS
+    // (max-height na coluna + overflow no conteudo). Metodo preservado.
+    // this._clampExpandedLights();
     // NOVO (Etapa B): rail é da shell -> não montamos rail próprio aqui.
     // (_mountRoomRail/_roomRailConfig mantidos no arquivo para rollback.)
   }
@@ -1477,6 +1482,108 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     if (this._railEl.parentNode !== mount) mount.appendChild(this._railEl);
   }
 
+  // NOVO (2ª passada): rótulo "ligado há" — pega a luz ACESA mais antiga da seção
+  // (last_changed) e formata compacto (Xm/Xh/Xd), igual ao painel principal.
+  _zoneOnLabel(zoneLights) {
+    const times = (zoneLights || [])
+      .map((l) => this._state(l.entity))
+      .filter((s) => s && s.state === 'on')
+      .map((s) => Date.parse(s.last_changed || s.last_updated))
+      .filter((t) => Number.isFinite(t));
+    if (!times.length) return '';
+    return this._fmtElapsed(Date.now() - Math.min(...times));
+  }
+
+  _fmtElapsed(ms) {
+    const totalMin = Math.floor(Math.max(0, ms) / 60000);
+    if (totalMin < 1) return 'agora';
+    if (totalMin < 60) return `${totalMin}m`;
+    const h = Math.floor(totalMin / 60);
+    if (h < 24) return `${h}h`;
+    return `${Math.floor(h / 24)}d`;
+  }
+
+  // NOVO (grade 2-col — opção B): garante que a seção EXPANDIDA só exiba FAIXAS
+  // INTEIRAS. Layout-agnóstico: mede o limite inferior da COLUNA (parent do card),
+  // descontando os blocos que vêm depois do card (ex.: A/C) + um respiro mínimo,
+  // e o que já é ocupado dentro do card (cabeçalhos + zonas fechadas abaixo). Se
+  // as linhas da grade não couberem, trava num múltiplo exato de faixa + scroll —
+  // nunca meia faixa cortada. Funciona tanto no acordeão (.zone-lights) quanto na
+  // lista única (.office-light-list). 92px/12px em sincronia com o CSS.
+  _clampExpandedLights() {
+    const root = this.shadowRoot;
+    if (!root || !globalThis.requestAnimationFrame) return;
+    requestAnimationFrame(() => {
+      const card = root.querySelector('.lights-card');
+      if (!card) return;
+      const expandedZone = card.querySelector('.light-zone.is-expanded');
+      const grid = (expandedZone && expandedZone.querySelector('.zone-lights'))
+        || card.querySelector('.office-light-list')
+        || card.querySelector('.zone-lights');
+      if (!grid) return;
+
+      const TILE_H = 92;    // == CSS --zl-tile-h
+      const GAP = 12;       // == CSS --zl-gap
+      const MIN_GAP = 12;   // respiro mínimo entre o card e o bloco de baixo (A/C)
+      const num = (v) => parseFloat(v) || 0;
+
+      grid.style.maxHeight = '';
+      grid.style.overflowY = '';
+
+      const parent = card.parentElement;
+      if (!parent) return;
+      const parentStyle = getComputedStyle(parent);
+      const parentGap = num(parentStyle.rowGap) || num(parentStyle.gap);
+      const parentRect = parent.getBoundingClientRect();
+      const parentPadBottom = num(parentStyle.paddingBottom);
+
+      let afterCard = 0;
+      for (let sib = card.nextElementSibling; sib; sib = sib.nextElementSibling) {
+        const r = sib.getBoundingClientRect();
+        if (r.height > 0) afterCard += r.height + parentGap;
+      }
+
+      const cardPadBottom = num(getComputedStyle(card).paddingBottom);
+      const allowedCardBottom = parentRect.bottom - parentPadBottom - afterCard - MIN_GAP;
+
+      let belowInCard = 0;
+      if (expandedZone) {
+        const zones = card.querySelector('.lights-zones');
+        if (zones) {
+          const zs = getComputedStyle(zones);
+          const zonesGap = num(zs.rowGap) || num(zs.gap);
+          for (let sib = expandedZone.nextElementSibling; sib; sib = sib.nextElementSibling) {
+            belowInCard += sib.getBoundingClientRect().height + zonesGap;
+          }
+          belowInCard += num(zs.paddingBottom);
+        }
+      }
+
+      const gridStyle = getComputedStyle(grid);
+      const gridPadTop = num(gridStyle.paddingTop);
+      const gridPadBottom = num(gridStyle.paddingBottom);
+      const gridRect = grid.getBoundingClientRect();
+
+      const available = allowedCardBottom - cardPadBottom - gridRect.top
+        - belowInCard - gridPadTop - gridPadBottom;
+
+      const rowUnit = TILE_H + GAP;
+      let rowsThatFit = Math.floor((available + GAP) / rowUnit);
+      if (!isFinite(rowsThatFit) || rowsThatFit < 1) rowsThatFit = 1;
+
+      const tiles = grid.querySelectorAll('.zl-tile').length;
+      const isOdd = tiles % 2 === 1;
+      const totalRows = isOdd ? (1 + Math.ceil((tiles - 1) / 2)) : (tiles / 2);
+
+      if (rowsThatFit < totalRows) {
+        const visRows = Math.max(2, rowsThatFit);
+        const clampH = visRows * TILE_H + (visRows - 1) * GAP + gridPadTop + gridPadBottom;
+        grid.style.maxHeight = `${clampH}px`;
+        grid.style.overflowY = 'auto';
+      }
+    });
+  }
+
   _bindImageFallbacks() {
     this.shadowRoot?.querySelectorAll('img[data-fallback-class]').forEach((image) => {
       const fallbackClass = image.dataset.fallbackClass;
@@ -1490,6 +1597,27 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       globalThis.setTimeout?.(() => {
         if (image.complete && image.naturalWidth === 0) markFallback();
       }, 80);
+    });
+
+    this.shadowRoot?.querySelectorAll('img[data-camera-src-base]').forEach((image) => {
+      const feed = image.closest('.camera-main');
+      const markLoaded = () => {
+        image.removeAttribute('hidden');
+        image.classList.add('is-loaded');
+        feed?.classList.add('has-loaded-image');
+      };
+      const markUnavailable = () => {
+        image.classList.remove('is-loaded');
+        feed?.classList.remove('has-loaded-image');
+        image.setAttribute('hidden', '');
+      };
+
+      image.addEventListener('load', markLoaded, { once: true });
+      image.addEventListener('error', markUnavailable, { once: true });
+      if (image.complete) {
+        if (image.naturalWidth > 0) markLoaded();
+        else markUnavailable();
+      }
     });
   }
 
@@ -1580,18 +1708,29 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     // MESMA IDENTIDADE das badges do painel principal (bruno-top-badges-card):
     // título (categoria) + sub (estado), ícone colorido por --tone, pill glass.
     const badges = [
+      // NOVO (2026-07-29): a presença sobe do rodapé (removido) para a barra de
+      // status, como primeira badge — é o estado mais contextual do cômodo e
+      // fica junto das demais métricas do ambiente, antes da infraestrutura.
+      // Azul idêntico ao dot de presença dos cards de cômodo (--accent-blue:
+      // 96,165,250) e MESMA fonte de verdade (_presenceLine / motion_recent),
+      // para painel e subview nunca discordarem.
+      // phoneHide: no phone o rodapé já era oculto; a badge herda esse contrato.
+      { icon: 'mdi:motion-sensor', title: 'Presença', sub: this._presenceLine(), tone: '96,165,250', active: this._presenceActive(), phoneHide: true },
       { icon: 'mdi:lightbulb', title: 'Luzes', sub: `Sala ${zones.sala} · Varanda ${zones.varanda}`, tone: '247,198,0', active: (model.lights || 0) > 0 },
       { icon: 'mdi:thermometer', title: 'Temperatura', sub: this._temperatureLabel(), tone: '247,170,90' },
       { icon: 'mdi:water-percent', title: 'Umidade', sub: this._humidityLabel(), tone: '127,200,233' },
-      { icon: 'mdi:router-wireless', title: 'Roteador', sub: this._networkLabel(this._config.entities.router), tone: '154,160,166' },
-      { icon: 'mdi:zigbee', title: 'Hub Zigbee', sub: this._networkLabel(this._config.entities.zigbee_hub), tone: '154,160,166' },
+      // phoneHide nas duas de infraestrutura: elas já saíam no phone pela regra
+      // posicional nth-child(n + 4). Com a Presença no início a posição mudou,
+      // então a marcação passou a ser explícita (ver media query do phone).
+      { icon: 'mdi:router-wireless', title: 'Roteador', sub: this._networkLabel(this._config.entities.router), tone: '154,160,166', phoneHide: true },
+      { icon: 'mdi:zigbee', title: 'Hub Zigbee', sub: this._networkLabel(this._config.entities.zigbee_hub), tone: '154,160,166', phoneHide: true },
     ];
     return `
       <header class="subview-topband">
         <div class="topband-badges">
           ${badges.map((b) => `
-            <div class="tb-badge${b.active ? ' is-active' : ''}" style="--tone: ${b.tone};">
-              <span class="tb-badge-icon"><ha-icon icon="${b.icon}"></ha-icon></span>
+            <div class="tb-badge${b.active ? ' is-active' : ''}"${b.phoneHide ? ' data-phone-hide' : ''} style="--tone: ${b.tone};">
+              <span class="tb-badge-icon"><bruno-icon icon="${b.icon}"></bruno-icon></span>
               <span class="tb-badge-text">
                 <span class="tb-badge-title">${BrunoQuartoCasalSubview._escape(b.title)}</span>
                 <span class="tb-badge-sub">${BrunoQuartoCasalSubview._escape(b.sub)}</span>
@@ -1608,51 +1747,23 @@ class BrunoQuartoCasalSubview extends HTMLElement {
   }
 
   static _curtainSvg(type = 'main') {
-    const pathSets = {
-      main: `
-        <path d="M9 7h30"></path>
-        <path d="M14 10v27c4.5-2.8 6.8-7.3 6.8-13.5S18.5 12.8 14 10Z"></path>
-        <path d="M34 10v27c-4.5-2.8-6.8-7.3-6.8-13.5S29.5 12.8 34 10Z"></path>
-        <path d="M24 10v29"></path>
-      `,
-      open: `
-        <path d="M8 8h32"></path>
-        <path d="M14 11v26c5-3 7.5-7.4 7.5-13.2S19 14 14 11Z"></path>
-        <path d="M34 11v26c-5-3-7.5-7.4-7.5-13.2S29 14 34 11Z"></path>
-        <path d="M24 13v23"></path>
-      `,
-      close: `
-        <path d="M8 8h32"></path>
-        <path d="M19 11v26c-4.2-2.5-6.4-6.8-6.4-13S14.8 13.6 19 11Z"></path>
-        <path d="M29 11v26c4.2-2.5 6.4-6.8 6.4-13S33.2 13.6 29 11Z"></path>
-        <path d="M23.7 11v27M24.3 11v27"></path>
-      `,
-      stop: `
-        <rect x="14" y="13" width="8" height="22" rx="1.5"></rect>
-        <rect x="26" y="13" width="8" height="22" rx="1.5"></rect>
-      `,
-    };
+    const icon = {
+      main: 'curtain',
+      open: 'curtain-open',
+      close: 'curtain-close',
+      stop: 'curtain-stop',
+    }[type] || 'curtain';
     const size = type === 'main' ? 17 : 16;
-    return `
-      <svg class="curtain-svg is-${BrunoQuartoCasalSubview._escapeAttr(type)}" viewBox="0 0 48 48" width="${size}" height="${size}" aria-hidden="true">
-        ${pathSets[type] || pathSets.main}
-      </svg>
-    `;
+    return globalThis.BrunoIcons?.render(icon, {
+      className: `curtain-svg is-${String(type).replace(/[^a-z0-9_-]/gi, '')}`,
+      size,
+    }) || '';
   }
 
   static _roomNavIcon(key) {
-    const icons = {
-      home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>',
-      sala: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V9.5A3.5 3.5 0 0 1 8.5 6h7A3.5 3.5 0 0 1 19 9.5V11"/><path d="M4 12.5A2.5 2.5 0 0 1 6.5 10H7a2 2 0 0 1 2 2v1h6v-1a2 2 0 0 1 2-2h.5A2.5 2.5 0 0 1 20 12.5V18H4v-5.5z"/><path d="M6 18v2M18 18v2"/></svg>',
-      office: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4z"/><path d="M9 19h6M12 15v4"/><path d="M7 21h10"/></svg>',
-      cozinha: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v15H5z"/><path d="M5 10h14"/><path d="M9 7h.01M15 7h.01"/><path d="M8 14h8v4H8z"/></svg>',
-      lavabo: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v7a4 4 0 0 1-8 0V4z"/><path d="M7 11h10"/><path d="M12 15v5"/><path d="M9 20h6"/></svg>',
-      casal: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11V5h16v6"/><path d="M4 11h16a2 2 0 0 1 2 2v5H2v-5a2 2 0 0 1 2-2z"/><path d="M7 9h3M14 9h3"/><path d="M3 18v2M21 18v2"/></svg>',
-      marina: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
-      miguel: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
-      fallback: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>',
-    };
-    return icons[key] || icons.fallback;
+    return globalThis.BrunoIcons?.render(key || 'circle')
+      || globalThis.BrunoIcons?.render('circle')
+      || '';
   }
 
   // NOVO: faixa SUPERIOR da shell (frame-top) — nome do cômodo centralizado +
@@ -1675,16 +1786,43 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     return `
       <footer class="subview-footer">
         <span class="subview-presence">
-          <ha-icon icon="mdi:motion-sensor" aria-hidden="true"></ha-icon>
+          <bruno-icon icon="mdi:motion-sensor" aria-hidden="true"></bruno-icon>
           ${BrunoQuartoCasalSubview._escape(this._presenceLine())}
         </span>
       </footer>
     `;
   }
 
-  // Presença/última atividade. Sem sensor de presença dedicado, usa last_changed
-  // do sensor de atividade (ou do grupo de luzes) como "última atividade".
+  // NOVO (2026-07-29): booleano de acendimento da badge de Presença na barra de
+  // status. Lê a MESMA entidade que acende o dot dos cards de cômodo
+  // (motion_recent), e não a ocupação — o contrato do projeto é: dot/acendimento
+  // imediato pela presença, texto pela ocupação (ver registro de 2026-07-03).
+  _presenceActive() {
+    const st = this._hass?.states?.[this._config.entities.motion_recent];
+    return String(st?.state || '').toLowerCase() === 'on';
+  }
+
+  // ANTERIOR (rollback): o rodape usava luzes/active_sensor como atividade.
+  // NOVO (2026-07-12): estado semantico e tempo da presenca supervisionada.
   _presenceLine() {
+    // NOVO (2026-07-12): presenca vem apenas do contrato supervisionado.
+    const semantic = this._hass?.states?.[this._config.entities.semantic_sensor];
+    const semanticState = String(semantic?.state || '').toLowerCase();
+    const display = String(semantic?.attributes?.display || '').trim();
+    if (display && !['none', 'unknown', 'unavailable'].includes(semanticState)) return display;
+    if (!semantic || ['unknown', 'unavailable'].includes(semanticState)) return 'Sensor indisponível';
+
+    const motion = this._hass?.states?.[this._config.entities.motion_recent];
+    if (!motion || ['unknown', 'unavailable'].includes(String(motion.state || '').toLowerCase())) {
+      return 'Sensor indisponível';
+    }
+    const ts = motion.last_changed || motion.last_updated;
+    if (!ts) return 'Sem presença recente';
+    const mins = Math.max(0, Math.round((Date.now() - Date.parse(ts)) / 60000));
+    const rel = mins < 1 ? 'agora mesmo' : mins < 60 ? `há ${mins} min` : `há ${Math.round(mins / 60)} h`;
+    return `Última presença ${rel}`;
+
+    /* ANTERIOR (rollback): usava luzes/active_sensor como "atividade".
     const ids = [this._config.entities.active_sensor, this._config.entities.room_group].filter(Boolean);
     for (const id of ids) {
       const st = this._hass?.states?.[id];
@@ -1695,6 +1833,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       return `Última atividade ${rel}`;
     }
     return 'Sem atividade recente';
+    */
   }
 
   _renderRoomSidebar() {
@@ -1750,7 +1889,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       <div class="glass-card status-rail">
         ${status.map((item) => `
           <div class="status-item">
-            <span class="micro-icon tone-${item.tone}"><ha-icon icon="${item.icon}"></ha-icon></span>
+            <span class="micro-icon tone-${item.tone}"><bruno-icon icon="${item.icon}"></bruno-icon></span>
             <div>
               <strong>${BrunoQuartoCasalSubview._escape(item.value)}</strong>
               <span>${BrunoQuartoCasalSubview._escape(item.label)}</span>
@@ -1838,10 +1977,111 @@ class BrunoQuartoCasalSubview extends HTMLElement {
   // NOVO (Passada 2): acordeão de ZONAS. Cada zona com luzes REAIS (sem
   // placeholders falsos): cabeçalho (nome + N/M acesas + apagar zona + chevron)
   // e, quando expandida, linhas individuais com toggle. 1 zona => sempre expandida.
+  // NOVO (2026-07-29, rev.9) — CASCA DO DOCK DA ILUMINACAO.
+  // O corpo vem PRIMEIRO no DOM e a faixa por ultimo: o card e ancorado pela
+  // borda inferior (CSS), entao o conteudo cresce para cima, sobre o hero, sem
+  // deslocar a cortina, a faixa de tiles ou qualquer outro componente.
+  // As pilhas "Todas acesas"/"Apagar todas" agem no estado colapsado; so o
+  // titulo e o chevron alternam o painel.
+  // NOVO (2026-07-29, rev.9) — CASCA DO DOCK DA ILUMINACAO.
+  // REV.10: a FAIXA vem primeiro no DOM e o corpo depois. Como o card e
+  // ancorado pela borda INFERIOR (CSS), o conteudo cresce para cima e o
+  // cabecalho VIAJA JUNTO ate o topo da janela aberta. Colapsado ele continua
+  // na base, porque ai o card e so o cabecalho.
+  // ANTERIOR (rollback rev.9): corpo primeiro, faixa por ultimo — o cabecalho
+  // ficava preso na base mesmo com o bloco aberto.
+  // O chevron saiu da direita e entrou no grupo do titulo; as pilulas seguem
+  // agindo no estado colapsado, e so titulo/chevron alternam o painel.
+  _renderLightsDock(body) {
+    const open = this._lightsOpen === true;
+    return `
+      <div class="glass-card lights-card${open ? ' is-open' : ''}">
+        <div class="lights-dock">
+          <button type="button" class="lights-dock-id" data-action="toggle-lights-panel" aria-expanded="${open ? 'true' : 'false'}">
+            <span class="micro-icon tone-amber"><bruno-icon icon="mdi:lightbulb-group"></bruno-icon></span>
+            <span class="module-title">Iluminação</span>
+            <span class="lights-dock-chevron" aria-hidden="true"><bruno-icon icon="mdi:chevron-up"></bruno-icon></span>
+          </button>
+          <div class="lights-dock-actions">
+            <button type="button" class="chip-button is-active" data-action="lights-on">Todas acesas</button>
+            <button type="button" class="chip-button" data-action="lights-off">Apagar todas</button>
+          </div>
+        </div>
+        <div class="lights-body">
+          <div class="lights-body-clip">
+            <div class="lights-scroll">${body}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Secao de ambiente: icone, titulo, contagem e (so quando ha mais de uma
+  // secao) a acao "Apagar <zona>". Em Office/Cozinha nao ha secoes, entao a
+  // faixa de titulo do dock ja cumpre esse papel e a acao nao se repete.
+  _renderLightSection(zone, showZoneAction) {
+    const zoneKey = BrunoQuartoCasalSubview._escapeAttr(zone.key);
+    const isOdd = zone.lights.length % 2 === 1;
+    const onLabel = this._zoneOnLabel(zone.lights);
+    return `
+      <section class="light-section">
+        <div class="section-head">
+          <span class="zone-icon"><bruno-icon icon="${zone.icon}"></bruno-icon></span>
+          <span class="zone-id">
+            <strong>${BrunoQuartoCasalSubview._escape(zone.name)}</strong>
+            <small>${zone.onCount}/${zone.total} acesas${onLabel ? ` · ${onLabel}` : ''}</small>
+          </span>
+          ${showZoneAction
+            ? `<button type="button" class="zone-off" data-action="zone-off" data-zone="${zoneKey}">Apagar ${BrunoQuartoCasalSubview._escape(zone.name.toLowerCase())}</button>`
+            : ''}
+        </div>
+        <div class="light-grid">
+          ${zone.lights.map((l, i) => this._renderLightCell(l, i, isOdd)).join('')}
+        </div>
+      </section>
+    `;
+  }
+
+  // Divisorias: em vez de gap + fundo (que vazaria sob as celulas), cada
+  // celula recebe o filete de que precisa. Como a luz principal ocupa a linha
+  // inteira quando a contagem e impar, linha e coluna sao calculadas aqui.
+  _lightCellFlags(index, isOdd) {
+    if (isOdd && index === 0) return { wide: true, ruleTop: false, ruleLeft: false };
+    const seq = isOdd ? index - 1 : index;
+    const row = Math.floor(seq / 2) + (isOdd ? 1 : 0);
+    return { wide: false, ruleTop: row > 0, ruleLeft: (seq % 2) === 1 };
+  }
+
+  // Celula SEM card: icone + nome + toggle, separada apenas por filetes.
+  _renderLightCell(light, index, isOdd) {
+    const active = this._state(light.entity)?.state === 'on';
+    const f = this._lightCellFlags(index, isOdd);
+    const cls = [
+      'light-cell',
+      active ? 'is-on' : '',
+      f.wide ? 'is-wide' : '',
+      f.ruleTop ? 'has-rule-top' : '',
+      f.ruleLeft ? 'has-rule-left' : '',
+    ].filter(Boolean).join(' ');
+    return `
+      <button type="button" class="${cls}"
+        data-action="toggle-light"
+        data-entity="${BrunoQuartoCasalSubview._escapeAttr(light.entity)}"
+        role="switch" aria-checked="${active ? 'true' : 'false'}"
+        aria-label="${BrunoQuartoCasalSubview._escapeAttr(light.name)}">
+        <span class="lc-icon">${BrunoQuartoCasalSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
+        <span class="lc-name">${BrunoQuartoCasalSubview._escape(light.name)}</span>
+        <span class="lc-switch" aria-hidden="true"><span class="lc-knob"></span></span>
+      </button>
+    `;
+  }
+
   _renderLights(model) {
+
     const lights = this._config.entities.lights || [];
     const zoneLabels = { sala: 'Sala', varanda: 'Varanda', ...(this._config.light_zone_labels || {}) };
-    const zoneIcons = { sala: 'mdi:sofa-outline', varanda: 'mdi:string-lights' };
+    // ANTERIOR (rollback): varanda: 'mdi:string-lights' (luminaria pisca-pisca, nao representava a suite/banheiro)
+    const zoneIcons = { sala: 'mdi:sofa-outline', varanda: 'mdi:string-lights', ...(this._config.light_zone_icons || {}) };
 
     const zoneOrder = [];
     for (const l of lights) {
@@ -1860,58 +2100,71 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     if (this._expandedZone === undefined) {
       this._expandedZone = null;
     }
-    const onlyOne = zones.length === 1;
-    const isExpanded = (zk) => onlyOne || this._expandedZone === zk;
-
-    return `
-      <div class="glass-card lights-card">
-        <div class="module-head lights-head">
-          <div class="title-with-chip">
-            <span class="micro-icon tone-amber"><ha-icon icon="mdi:lightbulb-group"></ha-icon></span>
-            <div class="module-title">Iluminação</div>
-          </div>
-          <div class="head-actions">
-            <button type="button" class="chip-button is-active" data-action="lights-on">Todas acesas</button>
-            <button type="button" class="chip-button" data-action="lights-off">Apagar todas</button>
-          </div>
-        </div>
-        <div class="lights-zones">
-          ${zones.map((z) => this._renderLightZone(z, isExpanded(z.key), onlyOne)).join('')}
-        </div>
-      </div>
-    `;
+    // ANTERIOR (rollback 2026-07-29, rev.9): acordeao single-open, uma zona
+    // aberta por vez, dentro de um card em fluxo na coluna direita. Os metodos
+    // _renderLightZone / _renderZoneTile seguem no arquivo para rollback.
+    // NOVO: todas as secoes visiveis ao mesmo tempo, dentro do dock.
+    return this._renderLightsDock(
+      zones.map((z) => this._renderLightSection(z, zones.length > 1)).join('')
+    );
   }
 
   _renderLightZone(zone, expanded, onlyOne) {
     const zoneKey = BrunoQuartoCasalSubview._escapeAttr(zone.key);
+    // NOVO (grade 2-col): ímpar => 1ª luz (principal) ocupa a linha inteira.
+    const isOdd = zone.lights.length % 2 === 1;
+    // NOVO (2ª passada): tempo da luz acesa mais antiga da zona (ex.: "· 2h").
+    const onLabel = this._zoneOnLabel(zone.lights);
     return `
       <section class="light-zone${expanded ? ' is-expanded' : ''}">
         <div class="zone-header" ${onlyOne ? '' : `role="button" data-action="toggle-zone" data-zone="${zoneKey}"`}>
-          <span class="zone-icon"><ha-icon icon="${zone.icon}"></ha-icon></span>
+          <span class="zone-icon"><bruno-icon icon="${zone.icon}"></bruno-icon></span>
           <span class="zone-id">
             <strong>${BrunoQuartoCasalSubview._escape(zone.name)}</strong>
-            <small>${zone.onCount}/${zone.total} acesas</small>
+            <small>${zone.onCount}/${zone.total} acesas${onLabel ? ` · ${onLabel}` : ''}</small>
           </span>
           ${expanded ? `<span class="zone-off" role="button" data-action="zone-off" data-zone="${zoneKey}">Apagar ${BrunoQuartoCasalSubview._escape(zone.name.toLowerCase())}</span>` : ''}
-          ${onlyOne ? '' : `<ha-icon class="zone-chevron" icon="${expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></ha-icon>`}
+          ${onlyOne ? '' : `<bruno-icon class="zone-chevron" icon="${expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}"></bruno-icon>`}
         </div>
         ${expanded
-          ? `<div class="zone-lights">${zone.lights.map((l) => this._renderLightRow(l)).join('')}</div>`
+          ? `<div class="zone-lights">${zone.lights.map((l, i) => this._renderZoneTile(l, isOdd && i === 0)).join('')}</div>`
           : ''}
       </section>
     `;
   }
 
-  _renderLightRow(light) {
+  // NOVO (grade 2-col): tile compacto (ícone + toggle em cima; nome + status
+  // embaixo). Quando `wide`, vira faixa horizontal ocupando as 2 colunas.
+  _renderZoneTile(light, wide) {
     const active = this._state(light.entity)?.state === 'on';
     return `
-      <button type="button" class="light-row${active ? ' is-on' : ''}" data-action="toggle-light" data-entity="${BrunoQuartoCasalSubview._escapeAttr(light.entity)}">
-        <span class="light-row-icon">${BrunoQuartoCasalSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
-        <span class="light-row-name">${BrunoQuartoCasalSubview._escape(light.name)}</span>
-        <span class="light-bar" aria-hidden="true"></span>
+      <button type="button"
+        class="zl-tile${active ? ' is-on' : ''}${wide ? ' is-wide' : ''}"
+        data-action="toggle-light"
+        data-entity="${BrunoQuartoCasalSubview._escapeAttr(light.entity)}"
+        role="switch" aria-checked="${active ? 'true' : 'false'}"
+        aria-label="${BrunoQuartoCasalSubview._escapeAttr(light.name)}">
+        <span class="zl-icon">${BrunoQuartoCasalSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
+        <span class="zl-switch" aria-hidden="true"><span class="zl-knob"></span></span>
+        <span class="zl-name">${BrunoQuartoCasalSubview._escape(light.name)}</span>
       </button>
     `;
+    // ANTERIOR (rollback): antes de </button> havia
+    // <span class="zl-status">${active ? 'Ligada' : 'Desligada'}</span>.
+    // Removido — estado on/off já vem do toggle + realce; tempo ligado no cabeçalho.
   }
+
+  // ANTERIOR (rollback) — linha vertical: ícone | nome | barra luminosa read-only.
+  // _renderLightRow(light) {
+  //   const active = this._state(light.entity)?.state === 'on';
+  //   return `
+  //     <button type="button" class="light-row${active ? ' is-on' : ''}" data-action="toggle-light" data-entity="${BrunoQuartoCasalSubview._escapeAttr(light.entity)}">
+  //       <span class="light-row-icon">${BrunoQuartoCasalSubview._tplLightIcon(light.icon_type || light.icon, active)}</span>
+  //       <span class="light-row-name">${BrunoQuartoCasalSubview._escape(light.name)}</span>
+  //       <span class="light-bar" aria-hidden="true"></span>
+  //     </button>
+  //   `;
+  // }
 
   _cameraControlState(camera, key) {
     const controls = Array.isArray(camera?.controls) ? camera.controls.filter((control) => control?.entity) : [];
@@ -1936,6 +2189,37 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     };
   }
 
+  _syncLiveCameraHass() {
+    this._liveCameraEls?.forEach((element) => {
+      element.hass = this._hass;
+    });
+  }
+
+  _ensureLiveCameraElement(entityId) {
+    if (!entityId || !globalThis.customElements || !customElements.get('hui-image')) return null;
+    if (!this._liveCameraEls) this._liveCameraEls = new Map();
+    let element = this._liveCameraEls.get(entityId);
+    if (!element) {
+      element = document.createElement('hui-image');
+      element.classList.add('camera-live-el');
+      element.cameraView = 'live';
+      try { element.fitMode = 'cover'; } catch (error) { /* ignore older HA builds */ }
+      this._liveCameraEls.set(entityId, element);
+    }
+    element.hass = this._hass;
+    if (element.cameraImage !== entityId) element.cameraImage = entityId;
+    return element;
+  }
+
+  _mountLiveCameraFeeds() {
+    if (!this.shadowRoot || !this._hass) return;
+    this.shadowRoot.querySelectorAll('[data-camera-live-mount]').forEach((mount) => {
+      const entityId = mount.dataset.cameraLiveMount;
+      const element = this._ensureLiveCameraElement(entityId);
+      if (!element) return;
+      if (element.parentNode !== mount) mount.replaceChildren(element);
+    });
+  }
   _cameraStatusLine(camera) {
     if (!camera) return 'Indisponível';
 
@@ -1962,14 +2246,14 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     const overlay = unavailable
       ? `
         <div class="camera-state-surface">
-          <ha-icon icon="mdi:video-off-outline"></ha-icon>
+          <bruno-icon icon="mdi:video-off-outline"></bruno-icon>
           <span>Indisponível</span>
         </div>
       `
       : privateMode
         ? `
           <div class="camera-state-surface">
-            <ha-icon icon="mdi:eye-off-outline"></ha-icon>
+            <bruno-icon icon="mdi:eye-off-outline"></bruno-icon>
             <span>Modo privacidade ativo</span>
           </div>
         `
@@ -2006,7 +2290,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         <section class="glass-card cameras-card cameras-card-controls">
           <div class="mh-head cameras-head">
             <div class="mh-head-title">
-              <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
+              <span class="micro-icon tone-blue"><bruno-icon icon="mdi:cctv"></bruno-icon></span>
               <div class="module-title">Câmeras</div>
             </div>
           </div>
@@ -2028,7 +2312,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         <!-- Mesmo cabeçalho de 44px do Hub de Mídia e do ar-condicionado. -->
         <div class="mh-head cameras-head">
           <div class="mh-head-title">
-            <span class="micro-icon"><ha-icon icon="mdi:cctv"></ha-icon></span>
+            <span class="micro-icon tone-blue"><bruno-icon icon="mdi:cctv"></bruno-icon></span>
             <div class="module-title">Câmeras</div>
           </div>
           <button
@@ -2039,7 +2323,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
             aria-label="${controlsOpen ? 'Fechar controles das câmeras' : 'Abrir controles das câmeras'}"
             aria-expanded="${controlsOpen ? 'true' : 'false'}"
           >
-            <ha-icon icon="mdi:dots-vertical"></ha-icon>
+            <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
           </button>
         </div>
 
@@ -2071,7 +2355,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
           aria-label="${BrunoQuartoCasalSubview._escapeAttr(ariaLabel)}"
           title="${BrunoQuartoCasalSubview._escapeAttr(ariaLabel)}"
         >
-          <ha-icon icon="${BrunoQuartoCasalSubview._escapeAttr(control.icon || 'mdi:toggle-switch-outline')}"></ha-icon>
+          <bruno-icon icon="${BrunoQuartoCasalSubview._escapeAttr(control.icon || 'mdi:toggle-switch-outline')}"></bruno-icon>
           <span class="camera-control-label">${BrunoQuartoCasalSubview._escape(control.label || description)}</span>
           <span class="camera-control-switch" aria-hidden="true"></span>
         </button>
@@ -2089,7 +2373,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     if (!camera) {
       return `
         <div class="camera-row-image">
-          <div class="camera-placeholder"><ha-icon icon="mdi:video-outline"></ha-icon></div>
+          <div class="camera-placeholder" aria-hidden="true"></div>
         </div>
       `;
     }
@@ -2098,11 +2382,10 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     return `
       <div class="camera-row-image">
         ${image ? `<img src="${BrunoQuartoCasalSubview._escapeAttr(image)}" data-camera-src-base="${BrunoQuartoCasalSubview._escapeAttr(base)}" data-camera-entity="${BrunoQuartoCasalSubview._escapeAttr(camera.entity)}" alt="">` : ''}
-        <div class="camera-placeholder"><ha-icon icon="mdi:video-outline"></ha-icon></div>
+        <div class="camera-placeholder" aria-hidden="true"></div>
       </div>
     `;
   }
-
   // NOVO (2026-06-28): Hub de Mídia refatorado como ACORDEÃO verdadeiro
   // (ordem fixa TV → Spotify → PS5). Spec: hemmahubmidiaprompt.md.
   // Restrições: 320px fixos (--ac-h), sem overflow; só o Hub muda — nenhum
@@ -2119,8 +2402,8 @@ class BrunoQuartoCasalSubview extends HTMLElement {
 
     const tvPoster = tv.poster ? BrunoQuartoCasalSubview._resolvePicture(tv.poster) : '';
     const spotifyArtwork = spotify.artwork ? BrunoQuartoCasalSubview._resolvePicture(spotify.artwork) : '';
-    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1';
-    const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png';
+    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260702-all-images-1';
+    const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png?v=20260702-all-images-1';
     const tvVolume = tv.volume == null ? 60 : tv.volume;
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
     const tvSource = tv.source || 'HDMI 1';
@@ -2158,7 +2441,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
 
     const volRow = (action, vol, disabled = false) => `
       <div class="mh-vol${disabled ? ' is-disabled' : ''}">
-        <ha-icon icon="mdi:volume-medium"></ha-icon>
+        <bruno-icon icon="mdi:volume-medium"></bruno-icon>
         <span class="mh-vol-label">Volume ${vol}%</span>
         <input type="range" min="0" max="100" value="${vol}" data-action="${escA(action)}" aria-label="Volume" ${disabled ? 'disabled' : ''}>
       </div>
@@ -2177,7 +2460,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         aria-label="${escA(label)}"
         ${opts.disabled ? 'disabled' : ''}
       >
-        ${opts.icon ? `<ha-icon icon="${escA(opts.icon)}"></ha-icon>` : ''}
+        ${opts.icon ? `<bruno-icon icon="${escA(opts.icon)}"></bruno-icon>` : ''}
         ${iconOnly ? '' : `<span>${esc(label)}</span>`}
       </button>
     `;
@@ -2191,7 +2474,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       <div class="mh-art mh-art-${shape}${cover ? ' is-cover' : ' is-standby'}">
         ${src
           ? `<img src="${escA(src)}" alt="" loading="lazy">`
-          : `<ha-icon icon="${escA(fallbackIcon)}"></ha-icon>`}
+          : `<bruno-icon icon="${escA(fallbackIcon)}"></bruno-icon>`}
       </div>
     `;
 
@@ -2285,7 +2568,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       ? `
         <div class="mh-overflow-panel" role="menu" aria-label="Opções de mídia">
           <div class="mh-overflow-item">
-            <span class="mh-overflow-icon"><ha-icon icon="mdi:sony-playstation"></ha-icon></span>
+            <span class="mh-overflow-icon"><bruno-icon icon="mdi:sony-playstation"></bruno-icon></span>
             <span class="mh-overflow-copy">
               <strong>PS5</strong>
               <small>${esc(ps5Detail)}</small>
@@ -2298,7 +2581,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
               aria-label="${ps5.active ? 'Desligar PS5' : 'Ligar PS5'}"
               ${ps5.configured ? '' : 'disabled'}
             >
-              <ha-icon icon="mdi:power"></ha-icon>
+              <bruno-icon icon="mdi:power"></bruno-icon>
             </button>
             <button
               type="button"
@@ -2309,7 +2592,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
               aria-label="Detalhes do PS5"
               ${ps5.configured ? '' : 'disabled'}
             >
-              <ha-icon icon="mdi:dots-horizontal"></ha-icon>
+              <bruno-icon icon="mdi:dots-horizontal"></bruno-icon>
             </button>
           </div>
         </div>
@@ -2338,10 +2621,10 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       const s = sourceMeta[key];
       const isOpen = key === selected;
       const isSwitching = isOpen && key === this._mediaTransitionSource;
-      // Ícone do Spotify monocromático (sem verde): ha-icon herda a cor do CSS.
+      // Ícone do Spotify monocromático (sem verde): bruno-icon herda a cor do CSS.
       const iconHtml = key === 'spotify'
-        ? '<ha-icon class="mh-src-icon mh-icon-spotify" icon="mdi:spotify"></ha-icon>'
-        : `<ha-icon class="mh-src-icon" icon="${escA(s.icon)}"></ha-icon>`;
+        ? '<bruno-icon class="mh-src-icon mh-icon-spotify" icon="mdi:spotify"></bruno-icon>'
+        : `<bruno-icon class="mh-src-icon" icon="${escA(s.icon)}"></bruno-icon>`;
       return `
         <div class="mh-source${isOpen ? ' is-open' : ''}${s.active ? ' is-active' : ''}${isSwitching ? ' is-switching' : ''}">
           <button
@@ -2354,7 +2637,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
             ${iconHtml}
             <span class="mh-src-name">${esc(s.label)}</span>
             <span class="mh-src-summary">${esc(s.summary)}</span>
-            ${isOpen ? '' : '<ha-icon class="mh-src-chevron" icon="mdi:chevron-right"></ha-icon>'}
+            ${isOpen ? '' : '<bruno-icon class="mh-src-chevron" icon="mdi:chevron-right"></bruno-icon>'}
           </button>
           ${isOpen ? `<div class="mh-source-body">${s.body}</div>` : ''}
         </div>
@@ -2365,7 +2648,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       <section class="glass-card media-hub-card mh-accordion${sourceMeta[selected]?.active ? ' is-playing' : ''}${this._mediaMenuOpen ? ' is-menu-open' : ''}">
         <div class="mh-head">
           <div class="mh-head-title">
-            <span class="micro-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
+            <span class="micro-icon tone-amber"><bruno-icon icon="mdi:multimedia"></bruno-icon></span>
             <div class="module-title">Hub de Mídia</div>
           </div>
           <button
@@ -2376,7 +2659,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
             aria-label="Opções"
             aria-expanded="${this._mediaMenuOpen ? 'true' : 'false'}"
           >
-            <ha-icon icon="mdi:dots-vertical"></ha-icon>
+            <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
           </button>
         </div>
         ${mediaMenu}
@@ -2410,8 +2693,8 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     if (this._hass) this._lastMediaTvOn = tv.active;
     const tvPoster = tv.poster ? BrunoQuartoCasalSubview._resolvePicture(tv.poster) : '';
     const spotifyArtwork = spotify.artwork ? BrunoQuartoCasalSubview._resolvePicture(spotify.artwork) : '';
-    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260606-tv-off-1';
-    const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png';
+    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260702-all-images-1';
+    const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png?v=20260702-all-images-1';
     const tvVolume = tv.volume == null ? 60 : tv.volume;
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
     const compactMeta = (...values) => {
@@ -2462,7 +2745,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         ${attrs}
         ${disabled ? 'disabled' : ''}
       >
-        <ha-icon icon="${BrunoQuartoCasalSubview._escapeAttr(icon)}"></ha-icon>
+        <bruno-icon icon="${BrunoQuartoCasalSubview._escapeAttr(icon)}"></bruno-icon>
       </button>
     `;
     const mediaIdentityCell = (type, active = false, options = {}) => `
@@ -2473,7 +2756,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     const standbyImage = (src, className, fallbackIcon) => (
       src
         ? `<img class="media-standby-image ${className}" src="${BrunoQuartoCasalSubview._escapeAttr(src)}" alt="">`
-        : `<ha-icon icon="${BrunoQuartoCasalSubview._escapeAttr(fallbackIcon)}"></ha-icon>`
+        : `<bruno-icon icon="${BrunoQuartoCasalSubview._escapeAttr(fallbackIcon)}"></bruno-icon>`
     );
     const tvAppButtons = (this._config.tv_apps || []).slice(0, 4).map((app) => {
       const label = app.label || 'App';
@@ -2492,7 +2775,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         >
           ${image
             ? '<span class="media-button-art" aria-hidden="true"></span>'
-            : `<ha-icon icon="${BrunoQuartoCasalSubview._escapeAttr(app.icon || 'mdi:apps')}"></ha-icon>`}
+            : `<bruno-icon icon="${BrunoQuartoCasalSubview._escapeAttr(app.icon || 'mdi:apps')}"></bruno-icon>`}
         </button>
       `;
     }).join('');
@@ -2530,7 +2813,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         secondaryActions: tvAppButtons,
         extra: `
           <div class="volume-row">
-            <ha-icon icon="mdi:volume-medium"></ha-icon>
+            <bruno-icon icon="mdi:volume-medium"></bruno-icon>
             <input type="range" min="0" max="100" value="${tvVolume}" data-action="tv-volume" aria-label="Volume da TV">
             <strong>${tvVolume}%</strong>
           </div>
@@ -2551,7 +2834,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         secondaryActions: spotifySecondaryActions,
         extra: `
           <div class="volume-row spotify-volume">
-            <ha-icon icon="mdi:volume-medium"></ha-icon>
+            <bruno-icon icon="mdi:volume-medium"></bruno-icon>
             <input type="range" min="0" max="100" value="${spotifyVolume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotify.active ? '' : 'disabled'}>
             <strong>${spotifyVolume}%</strong>
           </div>
@@ -2567,7 +2850,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         meta: renderMeta(ps5Meta),
         visual: ps5.image
           ? `<img class="media-standby-image media-ps5-image" src="${BrunoQuartoCasalSubview._escapeAttr(ps5.image)}" alt="">`
-          : '<ha-icon icon="mdi:sony-playstation"></ha-icon>',
+          : '<bruno-icon icon="mdi:sony-playstation"></bruno-icon>',
         primaryClass: 'is-wide',
         primaryActions: `
           <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>${ps5.active ? 'Desligar' : 'Ligar'}</button>
@@ -2590,7 +2873,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       <section class="glass-card media-hub-card is-${BrunoQuartoCasalSubview._escapeAttr(current.key)}">
         <div class="module-head media-hub-head">
           <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:multimedia"></ha-icon></span>
+            <span class="micro-icon tone-amber"><bruno-icon icon="mdi:multimedia"></bruno-icon></span>
             <div>
               <div class="module-title">Hub de midia</div>
             </div>
@@ -2650,7 +2933,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       <section class="glass-card tv-card${tv.active ? ' is-active' : ''}">
         <div class="module-head">
           <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:television-classic"></ha-icon></span>
+            <span class="micro-icon"><bruno-icon icon="mdi:television-classic"></bruno-icon></span>
             <div>
               <div class="module-title">Televisao</div>
             </div>
@@ -2660,12 +2943,12 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         <div class="tv-body">
           <div class="tv-main">
             <div class="control-row">
-              <button type="button" class="control-button" data-action="toggle-tv"><ha-icon icon="mdi:power"></ha-icon></button>
-              <button type="button" class="control-button" data-action="tv-remote"><ha-icon icon="mdi:remote-tv"></ha-icon></button>
-              <button type="button" class="control-button" data-action="tv-play-pause"><ha-icon icon="mdi:play-pause"></ha-icon></button>
+              <button type="button" class="control-button" data-action="toggle-tv"><bruno-icon icon="mdi:power"></bruno-icon></button>
+              <button type="button" class="control-button" data-action="tv-remote"><bruno-icon icon="mdi:remote-tv"></bruno-icon></button>
+              <button type="button" class="control-button" data-action="tv-play-pause"><bruno-icon icon="mdi:play-pause"></bruno-icon></button>
             </div>
             <div class="volume-row">
-              <ha-icon icon="mdi:volume-medium"></ha-icon>
+              <bruno-icon icon="mdi:volume-medium"></bruno-icon>
               <input type="range" min="0" max="100" value="${volume}" data-action="tv-volume" aria-label="Volume da TV">
               <strong>${volume}%</strong>
             </div>
@@ -2686,7 +2969,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       <section class="glass-card ps5-card${ps5.active ? ' is-active' : ''}${ps5.configured ? '' : ' is-placeholder'}">
         <div class="module-head">
           <div class="title-with-chip">
-            <span class="micro-icon"><ha-icon icon="mdi:sony-playstation"></ha-icon></span>
+            <span class="micro-icon"><bruno-icon icon="mdi:sony-playstation"></bruno-icon></span>
             <div>
               <div class="module-title">PlayStation 5</div>
             </div>
@@ -2699,7 +2982,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
             <span class="device-state"><span class="live-dot"></span>${ps5.active ? 'Online' : 'Offline'}</span>
             <div class="ps5-actions">
               <button type="button" class="primary-button" data-action="toggle-ps5" ${ps5.configured ? '' : 'disabled'}>${ps5.active ? 'Desligar' : 'Ligar'}</button>
-              <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoQuartoCasalSubview._escapeAttr(ps5.entityId || '')}" ${ps5.configured ? '' : 'disabled'}><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
+              <button type="button" class="control-button" data-action="more-info" data-entity="${BrunoQuartoCasalSubview._escapeAttr(ps5.entityId || '')}" ${ps5.configured ? '' : 'disabled'}><bruno-icon icon="mdi:dots-horizontal"></bruno-icon></button>
             </div>
           </div>
         </div>
@@ -2714,23 +2997,23 @@ class BrunoQuartoCasalSubview extends HTMLElement {
     const transportDisabled = spotify.active ? '' : ' disabled';
     const controls = this._spotifyToolsOpen
       ? `
-        <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><ha-icon icon="mdi:chevron-left"></ha-icon></button>
-        <button type="button" class="control-button is-tool" data-action="spotify-devices" title="Dispositivos"><ha-icon icon="mdi:speaker-wireless"></ha-icon></button>
-        <button type="button" class="control-button is-tool" data-action="spotify-library" title="Playlists e fila"><ha-icon icon="mdi:playlist-music"></ha-icon></button>
-        <button type="button" class="control-button is-tool" data-action="spotify-plus" title="Mais opcoes"><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-more" title="Voltar"><bruno-icon icon="mdi:chevron-left"></bruno-icon></button>
+        <button type="button" class="control-button is-tool" data-action="spotify-devices" title="Dispositivos"><bruno-icon icon="mdi:speaker-wireless"></bruno-icon></button>
+        <button type="button" class="control-button is-tool" data-action="spotify-library" title="Playlists e fila"><bruno-icon icon="mdi:playlist-music"></bruno-icon></button>
+        <button type="button" class="control-button is-tool" data-action="spotify-plus" title="Mais opcoes"><bruno-icon icon="mdi:dots-horizontal"></bruno-icon></button>
       `
       : `
-        <button type="button" class="control-button" data-action="spotify-prev"${transportDisabled}><ha-icon icon="mdi:skip-previous"></ha-icon></button>
-        <button type="button" class="control-button is-main" data-action="spotify-play-pause"${transportDisabled}><ha-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></ha-icon></button>
-        <button type="button" class="control-button" data-action="spotify-next"${transportDisabled}><ha-icon icon="mdi:skip-next"></ha-icon></button>
-        <button type="button" class="control-button" data-action="spotify-more" title="Mais opcoes"><ha-icon icon="mdi:plus"></ha-icon></button>
+        <button type="button" class="control-button" data-action="spotify-prev"${transportDisabled}><bruno-icon icon="mdi:skip-previous"></bruno-icon></button>
+        <button type="button" class="control-button is-main" data-action="spotify-play-pause"${transportDisabled}><bruno-icon icon="${spotify.playing ? 'mdi:pause' : 'mdi:play'}"></bruno-icon></button>
+        <button type="button" class="control-button" data-action="spotify-next"${transportDisabled}><bruno-icon icon="mdi:skip-next"></bruno-icon></button>
+        <button type="button" class="control-button" data-action="spotify-more" title="Mais opcoes"><bruno-icon icon="mdi:plus"></bruno-icon></button>
       `;
 
     return `
       <section class="glass-card spotify-card${spotify.active ? ' is-active' : ''}">
         <div class="module-head">
           <div class="title-with-chip">
-            <span class="micro-icon tone-green"><ha-icon icon="mdi:spotify"></ha-icon></span>
+            <span class="micro-icon tone-amber"><bruno-icon icon="mdi:spotify"></bruno-icon></span>
             <div>
               <div class="module-title">Spotify</div>
             </div>
@@ -2740,14 +3023,14 @@ class BrunoQuartoCasalSubview extends HTMLElement {
 
         <div class="spotify-body">
           <div class="spotify-art${artwork ? ' has-art' : ''}">
-            ${artwork ? `<img src="${BrunoQuartoCasalSubview._escapeAttr(artwork)}" alt="">` : '<ha-icon icon="mdi:music-note"></ha-icon>'}
+            ${artwork ? `<img src="${BrunoQuartoCasalSubview._escapeAttr(artwork)}" alt="">` : '<bruno-icon icon="mdi:music-note"></bruno-icon>'}
           </div>
           <div class="spotify-copy">
             <div class="spotify-controls">
               ${controls}
             </div>
             <div class="volume-row spotify-volume">
-              <ha-icon icon="mdi:volume-medium"></ha-icon>
+              <bruno-icon icon="mdi:volume-medium"></bruno-icon>
               <input type="range" min="0" max="100" value="${volume}" data-action="spotify-volume" aria-label="Volume do Spotify" ${spotify.active ? '' : 'disabled'}>
               <strong>${volume}%</strong>
             </div>
@@ -2995,7 +3278,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         data-mode="${BrunoQuartoCasalSubview._escapeAttr(mode)}"
         role="menuitem"
       >
-        <ha-icon icon="${BrunoQuartoCasalSubview._escapeAttr(icon)}"></ha-icon>
+        <bruno-icon icon="${BrunoQuartoCasalSubview._escapeAttr(icon)}"></bruno-icon>
         <span>${BrunoQuartoCasalSubview._escape(label)}</span>
       </button>
     `;
@@ -3005,7 +3288,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         return `
           <div class="ac-popover" role="menu">
             <button type="button" class="ac-popover-option" disabled>
-              <ha-icon icon="mdi:alert-circle-outline"></ha-icon>
+              <bruno-icon icon="mdi:alert-circle-outline"></bruno-icon>
               <span>Indisponível</span>
             </button>
           </div>
@@ -3044,7 +3327,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
           aria-expanded="${selectedPanel === panel ? 'true' : 'false'}"
           ${climateDisabled}
         >
-          <span class="ac-action-icon"><ha-icon icon="${icon}"></ha-icon></span>
+          <span class="ac-action-icon"><bruno-icon icon="${icon}"></bruno-icon></span>
           <span class="ac-action-text"><small>${title}</small><strong>${BrunoQuartoCasalSubview._escape(value)}</strong></span>
         </button>
         ${renderPopover(panel, options)}
@@ -3055,15 +3338,15 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       <section class="glass-card ac-card ac-card-lean">
         <div class="ac-lean-head">
           <div class="mh-head-title ac-head-title">
-            <span class="micro-icon tone-blue"><ha-icon icon="mdi:air-conditioner"></ha-icon></span>
+            <span class="micro-icon tone-cyan"><bruno-icon icon="mdi:air-conditioner"></bruno-icon></span>
             <div class="module-title">Ar-condicionado</div>
           </div>
           <div class="ac-top-stack">
             <button type="button" class="mh-menu ac-more-button" data-action="more-info" data-entity="${climateEntity}" title="Mais detalhes" aria-label="Mais detalhes">
-              <ha-icon icon="mdi:dots-vertical"></ha-icon>
+              <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
             </button>
             <button type="button" class="ac-power-floating${climate.active ? ' is-active' : ''}" data-action="toggle-climate" aria-label="Ligar ar condicionado" ${climateDisabled}>
-              <ha-icon icon="mdi:power"></ha-icon>
+              <bruno-icon icon="mdi:power"></bruno-icon>
             </button>
           </div>
         </div>
@@ -3227,7 +3510,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         font-weight: 560;
         letter-spacing: 0.02em;
       }
-      .subview-presence ha-icon {
+      .subview-presence bruno-icon {
         --mdc-icon-size: 16px;
         color: rgba(226,232,240,0.5);
         flex: 0 0 auto;
@@ -3383,13 +3666,19 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       .glass-card::after {
         content: "";
         position: absolute;
-        inset: auto 16px 8px 16px;
-        z-index: 0;
-        height: 1px;
+        inset: var(--bruno-subview-card-edge-inset, auto 16px 8px 16px);
+        z-index: var(--bruno-subview-card-edge-z, 0);
+        height: var(--bruno-subview-card-edge-height, 1px);
+        padding: var(--bruno-subview-card-edge-padding, 0);
+        box-sizing: border-box;
         pointer-events: none;
-        border-radius: 999px;
-        background: var(--bruno-liquid-surface-bottom-line, linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent));
-        opacity: var(--bruno-liquid-surface-bottom-line-opacity, 0);
+        border-radius: var(--bruno-subview-card-edge-radius, 999px);
+        background: var(--bruno-subview-card-edge-background, var(--bruno-liquid-surface-bottom-line, linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent)));
+        -webkit-mask: var(--bruno-subview-card-edge-mask, none);
+        -webkit-mask-composite: var(--bruno-subview-card-edge-webkit-composite, source-over);
+        mask: var(--bruno-subview-card-edge-mask, none);
+        mask-composite: var(--bruno-subview-card-edge-composite, add);
+        opacity: var(--bruno-subview-card-edge-opacity, var(--bruno-liquid-surface-bottom-line-opacity, 0));
       }
 
       .glass-card > * {
@@ -3564,8 +3853,8 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
       }
 
-      .back-button ha-icon,
-      .control-button ha-icon {
+      .back-button bruno-icon,
+      .control-button bruno-icon {
         --mdc-icon-size: 18px;
       }
 
@@ -3780,7 +4069,10 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         display: block;
         fill: rgba(255,255,255,0.70);
         stroke: rgba(255,255,255,0.58);
-        stroke-width: 2.1;
+        /* NOVO (ANTERIOR: 2.1) — espessura optica, mesmo peso visual dos icones
+           da rail (ver comentario em .zl-icon abaixo). Exibido a 16-17px aqui:
+           1.227 * 24/16.5 ≈ 1.78 (media dos 2 tamanhos usados). */
+        stroke-width: 1.78;
         stroke-linecap: round;
         stroke-linejoin: round;
         flex: 0 0 auto;
@@ -3929,8 +4221,8 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         color: rgba(210,225,240,0.82);
       }
 
-      .module-icon ha-icon,
-      .micro-icon ha-icon {
+      .module-icon bruno-icon,
+      .micro-icon bruno-icon {
         --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
       }
 
@@ -4007,6 +4299,20 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         color: rgb(180,215,255);
         background: rgba(96,165,250,0.10);
         border-color: rgba(96,165,250,0.20);
+      }
+
+      /* NOVO: padronizacao de cores dos dots de titulo por conceito
+         (midia/iluminacao=ambar, cameras=azul, clima=ciano, energia=verde). */
+      .micro-icon.tone-cyan {
+        color: rgb(111,224,241);
+        background: rgba(111,224,241,0.10);
+        border-color: rgba(111,224,241,0.20);
+      }
+
+      .micro-icon.tone-green {
+        color: rgb(134,224,152);
+        background: rgba(134,224,152,0.10);
+        border-color: rgba(134,224,152,0.20);
       }
 
       .lights-card,
@@ -4483,7 +4789,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         height: 100%;
         overflow: hidden;
         border-radius: var(--qcasal-radius-small);
-        background: radial-gradient(circle at 50% 45%, rgba(70,86,116,0.20), rgba(5,9,20,0.84));
+        background: rgba(255,255,255,0.018);
       }
 
       .camera-row-image img,
@@ -4498,7 +4804,12 @@ class BrunoQuartoCasalSubview extends HTMLElement {
 
       .camera-row-image img {
         z-index: 1;
+        opacity: 0;
         filter: brightness(0.86) saturate(0.94);
+      }
+
+      .camera-row-image img.is-loaded {
+        opacity: 1;
       }
 
       .camera-placeholder {
@@ -4510,7 +4821,8 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         color: rgba(255,255,255,0.18);
       }
 
-      .camera-placeholder ha-icon {
+      .camera-placeholder bruno-icon {
+        display: none;
         --mdc-icon-size: 36px;
       }
 
@@ -4521,6 +4833,11 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         inset: 0;
         z-index: 1;
         pointer-events: none;
+        background: transparent;
+      }
+
+      .camera-main.has-loaded-image::after,
+      .camera-thumb-overlay.has-loaded-image::after {
         background: linear-gradient(90deg, rgba(4,8,16,0.52), rgba(4,8,16,0.10) 68%, rgba(4,8,16,0.42));
       }
 
@@ -4682,7 +4999,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         color: rgba(255,255,255,0.66);
       }
 
-      .volume-row ha-icon {
+      .volume-row bruno-icon {
         --mdc-icon-size: 15px;
       }
 
@@ -4900,7 +5217,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         background: linear-gradient(180deg, transparent 64%, rgba(2,8,18,0.46));
       }
 
-      .spotify-art ha-icon {
+      .spotify-art bruno-icon {
         --mdc-icon-size: 70px;
       }
 
@@ -5024,7 +5341,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         color: rgba(255,255,255,0.66);
       }
 
-      .climate-mode ha-icon {
+      .climate-mode bruno-icon {
         --mdc-icon-size: 17px;
       }
 
@@ -5377,12 +5694,23 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         height: 100%;
         min-height: 0;
         grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
-        /* Régua da shell (igual ao painel principal): topo 48px, base 54px. */
-        grid-template-rows: 48px minmax(0, 1fr) 54px;
+        /* ANTERIOR (rollback 2026-07-29): régua com rodapé de 54px.
+           grid-template-rows: 48px minmax(0, 1fr) 54px;
+           grid-template-areas:
+             "topband    topband"
+             "content    right"
+             "bottomband bottomband";
+           A linha "bottomband" só carregava o status de presença. Ela saiu para
+           que a faixa de tiles encoste na base do painel (mesma decisão da Home);
+           a presença subiu para a barra superior como badge. Ganho: 64px de
+           altura útil (54px da faixa + 10px do gap) — é o que tira a rolagem da
+           Iluminação no Q. Miguel. Para reverter: restaurar as duas declarações
+           acima, devolver a chamada de _renderFrameBottom() em _render() e voltar
+           o default de --bruno-subview-band-height em bruno-surface-material.js. */
+        grid-template-rows: 48px minmax(0, 1fr);
         grid-template-areas:
-          "topband    topband"
-          "content    right"
-          "bottomband bottomband";
+          "topband topband"
+          "content right";
         align-items: stretch;
         gap: var(--qcasal-gap);
         padding: 0;
@@ -5423,12 +5751,18 @@ class BrunoQuartoCasalSubview extends HTMLElement {
          no topo; o A/C ganha ALTURA FIXA (--ac-h) e fica ANCORADO na base
          (align-content: space-between). O respiro variável fica entre os dois.
          Câmeras/mídia e luzes NÃO foram alterados. */
+      /* REV.9 (2026-07-29): a coluna vira o bloco de contencao do dock da
+         Iluminacao, que passou a ser absoluto e ancorado pela borda inferior.
+         ANTERIOR (rollback): mesma regra, sem position e sem --lights-dock-bottom. */
       .right-column {
         grid-area: right;
+        position: relative;
         display: grid;
         grid-template-rows: auto var(--ac-h, 290px);
         align-content: space-between;
+        --lights-dock-bottom: calc(var(--ac-h, 320px) + 7px);
       }
+
 
       .right-control-grid {
         min-width: 0;
@@ -5493,7 +5827,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       }
       .tb-badge + .tb-badge { border-left: 1px solid rgba(255,255,255,0.10); }
       .tb-badge-icon { width: 22px; height: 22px; display: grid; place-items: center; color: rgba(255,255,255,0.44); }
-      .tb-badge-icon ha-icon { --mdc-icon-size: 18px; }
+      .tb-badge-icon bruno-icon { --mdc-icon-size: 18px; }
       .tb-badge-text { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; line-height: 1.02; }
       .tb-badge-title { font-size: 10px; line-height: 1; font-weight: 600; color: rgba(255,255,255,0.60); }
       .tb-badge-sub { font-size: 11px; line-height: 1; font-weight: 600; color: rgba(255,255,255,0.42); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
@@ -5501,7 +5835,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       .tb-badge.is-active .tb-badge-title { color: rgba(255,255,255,0.94); }
       .tb-badge.is-active .tb-badge-sub { color: rgb(var(--tone)); }
       .topband-clock { text-align: right; line-height: 1.05; white-space: nowrap; }
-      .topband-clock span[data-clock] { font-size: 22px; font-weight: 800; color: rgba(248,251,255,0.96); }
+      .topband-clock span[data-clock] { font-size: 12px; font-weight: 800; color: rgba(248,251,255,0.96); }
       .topband-clock small { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-soft); }
 
       /* ===== Hero atmosfera (transparente) — cortina sobreposta, ancorada embaixo À ESQUERDA ===== */
@@ -5559,12 +5893,13 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         font-weight: 600;
         color: rgba(255,255,255,0.52);
       }
-      .subview-presence ha-icon { --mdc-icon-size: 16px; color: rgba(255,255,255,0.42); }
+      .subview-presence bruno-icon { --mdc-icon-size: 16px; color: rgba(255,255,255,0.42); }
 
       /* ===== NOVO (Passada 2): Iluminação — acordeão de zonas ===== */
       .lights-card { display: flex; flex-direction: column; min-height: 0; }
       .lights-head { flex: 0 0 auto; }
-      .lights-zones { flex: 1 1 auto; display: flex; flex-direction: column; gap: 7px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 0 2px 0 0; }
+      /* NOVO (2ª passada): gap 7px -> 10px, padronizado com Sala/Marina (fim do "efeito escada"). */
+      .lights-zones { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 0 2px 0 0; }
       .lights-zones::-webkit-scrollbar { width: 0; }
       .light-zone {
         border-radius: 16px;
@@ -5582,14 +5917,130 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         cursor: pointer;
       }
       .zone-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(255,196,90,0.30); background: rgba(255,196,90,0.08); color: rgba(255,196,90,0.92); }
-      .zone-icon ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
+      .zone-icon bruno-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
       .zone-id { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
       .zone-id strong { font-size: 14px; font-weight: 700; color: var(--text-main); }
       .zone-id small { font-size: 11px; font-weight: 600; color: var(--text-soft); }
       .zone-off { font-size: 11px; font-weight: 700; color: rgba(255,196,90,0.92); white-space: nowrap; cursor: pointer; }
       .zone-chevron { --mdc-icon-size: 20px; color: var(--text-soft); }
       .zone-preview { padding: 0 14px 12px; font-size: 11px; font-weight: 600; color: var(--text-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .zone-lights { display: flex; flex-direction: column; max-height: calc(44px * 5 + 2px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 0 5px 5px; }
+      /* ANTERIOR (rollback): .zone-lights { display: flex; flex-direction: column; max-height: calc(44px * 5 + 2px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 0 5px 5px; } */
+      /* NOVO (grade 2-col): 2 colunas fixas, faixas de 92px. 1º tile (principal)
+         ocupa a linha inteira quando a contagem é ímpar (.zl-tile.is-wide).
+         A altura é controlada pelo _clampExpandedLights (faixas inteiras + scroll). */
+      .zone-lights {
+        --zl-tile-h: 92px;
+        --zl-gap: 12px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: var(--zl-tile-h);
+        gap: var(--zl-gap);
+        padding: 0 6px 6px;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+      /* NOVO (2ª passada): sem status "Ligada/Desligada". Compacto = ícone +
+         toggle em cima, nome embaixo (mais respiro ícone↔nome, ícone maior,
+         alinhado à esquerda). Largo = LINHA ÚNICA ícone | nome | toggle.
+         ANTERIOR: rows "auto 1fr auto auto" + area "status status"; wide 2 linhas
+         com "status"; ícone 36px/glifo 23px centrado; regras .zl-status. */
+      .zl-tile {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto 1fr auto;
+        grid-template-areas:
+          "icon sw"
+          ".    ."
+          "name name";
+        align-items: center;
+        text-align: left;
+        padding: 12px 14px;
+        border-radius: 16px;
+        color: var(--text-main);
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease;
+      }
+      .zl-tile:hover { background: rgba(255,255,255,0.06); }
+      .zl-tile.is-on {
+        background: rgba(255,183,77,0.10);
+        border-color: rgba(255,205,95,0.42);
+      }
+      /* Tile WIDE (faixa cheia): LINHA ÚNICA — ícone | nome | toggle. */
+      .zl-tile.is-wide {
+        grid-column: 1 / -1;
+        grid-template-columns: auto 1fr auto;
+        grid-template-rows: auto;
+        grid-template-areas: "icon name sw";
+        align-items: center;
+        align-content: center;
+        column-gap: 10px;
+      }
+      /* NOVO: no tile largo o ícone abraça o glifo (sem os ~13px de sobra da caixa
+         de 40px) para aproximar ícone↔título. */
+      .zl-tile.is-wide .zl-icon { width: 28px; }
+      .zl-icon {
+        grid-area: icon;
+        width: 40px; height: 40px;
+        display: grid; place-items: center start;
+        --light-color: #9da0a2;
+        color: var(--light-color);
+      }
+      .zl-tile.is-on .zl-icon {
+        --light-color: #f0c040;
+        color: var(--light-color);
+        filter: drop-shadow(0 0 7px rgba(240,192,64,0.28));
+      }
+      .zl-icon .tpl-light-icon {
+        width: 27px;
+        height: 27px;
+      }
+      .zl-icon svg { width: 100%; height: 100%; }
+      /* NOVO: espessura optica — mesmo peso visual dos icones da rail
+         (bento-sidebar-card.js: 19px exibido, stroke-width 1.55 => ~1.227px na
+         tela). Exibido a 27px aqui: 1.227 * 24/27 ≈ 1.09. */
+      .zl-icon .tpl-light-icon svg g,
+      .zl-icon .tpl-light-icon svg path {
+        stroke-width: 1.09;
+      }
+      /* RESTAURADO (2026-07-20): led-strip voltou a ser o icone customizado
+         ElastoUI convertido, que usa <g transform="scale(0.75)"> interno —
+         precisa do valor pre-compensado de novo. */
+      .zl-icon .tpl-light-icon.icon-ledstrip svg path {
+        stroke-width: 1.45;
+      }
+      .zl-name {
+        grid-area: name;
+        min-width: 0;
+        font-size: 15px; font-weight: 700;
+        color: var(--text-main);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .zl-switch {
+        grid-area: sw;
+        position: relative;
+        width: 38px; height: 22px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.18);
+        border: 1px solid rgba(255,255,255,0.14);
+        transition: background 0.2s ease, border-color 0.2s ease;
+      }
+      .zl-tile.is-on .zl-switch {
+        background: linear-gradient(90deg, rgba(255,176,54,0.95), rgba(255,206,120,0.95));
+        border-color: rgba(255,196,90,0.55);
+      }
+      .zl-knob {
+        position: absolute; top: 50%; left: 2px;
+        transform: translateY(-50%);
+        width: 16px; height: 16px; border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+        transition: left 0.2s ease;
+      }
+      .zl-tile.is-on .zl-knob { left: calc(100% - 18px); }
+      .zone-lights::-webkit-scrollbar { width: 0; }
       .zone-lights::-webkit-scrollbar { width: 0; }
       /* NOVO: linha = ícone (em círculo) | nome | BARRA LUMINOSA read-only.
          ANTERIOR: ícone | nome | estado | toggle. */
@@ -5705,7 +6156,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
       }
 
-      .ac-power-floating ha-icon {
+      .ac-power-floating bruno-icon {
         --mdc-icon-size: 34px;
       }
 
@@ -5815,7 +6266,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
       }
 
-      .ac-action-icon ha-icon {
+      .ac-action-icon bruno-icon {
         --mdc-icon-size: var(--bruno-liquid-icon-control, 23px);
       }
 
@@ -5886,7 +6337,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         cursor: pointer;
       }
 
-      .ac-popover-option ha-icon {
+      .ac-popover-option bruno-icon {
         --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px);
         color: rgba(255,255,255,0.72);
       }
@@ -5904,8 +6355,8 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         background: var(--bruno-liquid-popup-option-hover-background, rgba(242,194,102,0.115));
       }
 
-      .ac-popover-option:hover ha-icon,
-      .ac-popover-option.is-active ha-icon {
+      .ac-popover-option:hover bruno-icon,
+      .ac-popover-option.is-active bruno-icon {
         color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
       }
 
@@ -5972,7 +6423,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         box-shadow: inset 0 1px 0 rgba(255,255,255,0.10), 0 10px 24px rgba(0,0,0,0.20);
       }
 
-      .scene-pill ha-icon {
+      .scene-pill bruno-icon {
         --mdc-icon-size: 15px;
         color: rgb(255,205,95);
       }
@@ -6047,7 +6498,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         align-items: center;
         gap: 6px;
       }
-      .chip-button-icon ha-icon { --mdc-icon-size: 15px; }
+      .chip-button-icon bruno-icon { --mdc-icon-size: 15px; }
 
       .zone-toggle button.is-active {
         color: rgba(255,255,255,0.96);
@@ -6186,7 +6637,8 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         -webkit-backdrop-filter: blur(8px) saturate(0.9);
       }
 
-      .camera-state-surface ha-icon {
+      .camera-state-surface bruno-icon {
+        display: none;
         --mdc-icon-size: 32px;
         color: rgba(255,255,255,0.64);
       }
@@ -6202,7 +6654,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         padding: 8px;
       }
 
-      .camera-pip-feed .camera-state-surface ha-icon {
+      .camera-pip-feed .camera-state-surface bruno-icon {
         --mdc-icon-size: 22px;
       }
 
@@ -6286,7 +6738,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         box-shadow: inset 0 0 0 1px rgba(138,196,255,0.42);
       }
 
-      .camera-control ha-icon {
+      .camera-control bruno-icon {
         --mdc-icon-size: 17px;
       }
 
@@ -6481,7 +6933,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         height: 78% !important;
       }
 
-      .media-visual ha-icon {
+      .media-visual bruno-icon {
         --mdc-icon-size: 64px;
       }
 
@@ -6596,7 +7048,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(18px) saturate(1.28));
       }
 
-      .media-action-button ha-icon {
+      .media-action-button bruno-icon {
         --mdc-icon-size: 20px;
       }
 
@@ -6662,6 +7114,12 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         height: 100%;
         display: block;
         overflow: visible;
+      }
+      /* NOVO: espessura optica — mesmo peso visual dos icones da rail (ver
+         comentario em .zl-icon acima). Exibido a 44px: 1.227 * 24/44 ≈ 0.67. */
+      .tpl-media-icon svg g,
+      .tpl-media-icon svg path {
+        stroke-width: 0.67;
       }
 
       .tpl-media-icon.icon-spotify.is-active {
@@ -6747,7 +7205,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(18px) saturate(0.92) brightness(1.05) contrast(1.02));
       }
       .media-hub-card.mh-accordion::before { opacity: var(--bruno-liquid-surface-off-sheen-opacity, 0.10); }
-      .media-hub-card.mh-accordion::after { display: none; }
+      .media-hub-card.mh-accordion::after { display: var(--bruno-subview-card-edge-display, none); }
 
       .mh-head {
         position: relative;
@@ -6778,7 +7236,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         color: rgba(255,255,255,0.52);
         background: transparent;
       }
-      .mh-menu ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
+      .mh-menu bruno-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
       .media-hub-card .mh-menu.is-active {
         color: rgba(255,255,255,0.82);
         background: rgba(255,255,255,0.072);
@@ -6820,7 +7278,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         background: rgba(255,255,255,0.055);
         border: 1px solid rgba(255,255,255,0.075);
       }
-      .mh-overflow-icon ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
+      .mh-overflow-icon bruno-icon { --mdc-icon-size: var(--bruno-liquid-icon-section, 20px); }
 
       .mh-overflow-copy {
         min-width: 0;
@@ -6856,7 +7314,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         background: rgba(255,255,255,0.045);
         border: 1px solid rgba(255,255,255,0.075);
       }
-      .mh-overflow-action ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
+      .mh-overflow-action bruno-icon { --mdc-icon-size: var(--bruno-liquid-icon-overflow, 19px); }
       .mh-overflow-action.is-active {
         color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.92);
         border-color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.24);
@@ -7103,7 +7561,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
         -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
       }
-      .mh-vol ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-status, 15px); color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
+      .mh-vol bruno-icon { --mdc-icon-size: var(--bruno-liquid-icon-status, 15px); color: rgb(var(--bruno-liquid-warm-accent, 242,194,102)); }
       .mh-vol-label { font-size: 11.5px; font-weight: 700; white-space: nowrap; color: rgba(255,255,255,0.7); }
       .mh-vol input[type="range"] {
         -webkit-appearance: none;
@@ -7163,7 +7621,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
       }
       /* Icon-only: quadrado compacto e centrado. */
       .mh-btn.is-icon { padding: 0; gap: 0; }
-      .mh-btn ha-icon { --mdc-icon-size: var(--bruno-liquid-icon-control, 23px); flex: 0 0 auto; color: rgba(255,255,255,0.9); }
+      .mh-btn bruno-icon { --mdc-icon-size: var(--bruno-liquid-icon-control, 23px); flex: 0 0 auto; color: rgba(255,255,255,0.9); }
       .mh-btn:hover { background: rgba(255,255,255,0.052); }
       .mh-btn span {
         min-width: 0;
@@ -7188,7 +7646,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         border-radius: var(--bruno-liquid-control-radius-compact, 9px);
         box-shadow: var(--bruno-liquid-control-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
       }
-      .mh-btn.is-main ha-icon { color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.82); }
+      .mh-btn.is-main bruno-icon { color: rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.82); }
 
       .mh-btn.is-plus {
         padding: 0;
@@ -7217,7 +7675,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         height: calc(100% - 12px);
         object-fit: contain;
       }
-      .mh-art ha-icon {
+      .mh-art bruno-icon {
         position: absolute;
         inset: 0;
         display: flex;
@@ -7341,7 +7799,7 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
       }
 
-      .power-button ha-icon {
+      .power-button bruno-icon {
         --mdc-icon-size: 18px;
       }
 
@@ -7691,6 +8149,296 @@ class BrunoQuartoCasalSubview extends HTMLElement {
         padding: 0 4px;
       }
 
+      /* ==== REV.9 (2026-07-29) — DOCK DA ILUMINACAO ======================
+         Bloco colapsado por padrao numa faixa horizontal ancorada 7px acima da
+         faixa de tiles e alinhada a coluna do A/C. Abre para CIMA, sobre o
+         hero, sem reflow: o card e absoluto dentro da coluna direita e cresce
+         a partir da borda inferior, que e fixa.
+         A PELE (fundo, borda, blur, contorno) nao e definida aqui — vem dos
+         tokens da cartela, que apontam para os mesmos --bruno-liquid-surface-off-*
+         dos cards dinamicos da Home. Ver bruno-josh.js REV.9.
+         Este bloco fica ANTES das media queries de propósito: no phone o card
+         volta a ser um bloco em fluxo (as regras de 1180/760px prevalecem). */
+      @media (min-width: 761px) {
+        .lights-card {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: var(--lights-dock-bottom, calc(var(--ac-h, 320px) + 7px));
+          z-index: 6;
+          max-height: calc(100% - var(--lights-dock-bottom, calc(var(--ac-h, 320px) + 7px)));
+        }
+        /* Com a Iluminacao fora do fluxo, o A/C fica sendo o unico item da
+           coluna; sem esta linha ele subiria para a linha 1. */
+        .right-column > .ac-card { grid-row: 2; }
+      }
+
+      .lights-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      .lights-dock {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 54px;
+        padding: 0 10px 0 14px;
+      }
+      .lights-dock-id {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      .lights-dock-actions { display: flex; align-items: center; gap: 8px; }
+      .lights-dock-chevron {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: rgba(255,255,255,0.62);
+        cursor: pointer;
+        transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .lights-dock-chevron bruno-icon { --mdc-icon-size: 22px; }
+      .lights-card.is-open .lights-dock-chevron { transform: rotate(180deg); }
+
+      /* Abertura por grid-template-rows 0fr -> 1fr: acompanha a altura do
+         conteudo sem medicao em JS e anima em 200ms. */
+      .lights-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: 0fr;
+        gap: 0;
+        transition: grid-template-rows 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .lights-card.is-open .lights-body { grid-template-rows: 1fr; }
+      .lights-body-clip { min-height: 0; overflow: hidden; }
+      .lights-scroll {
+        max-height: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 14px 12px 4px;
+      }
+      .lights-scroll::-webkit-scrollbar { width: 0; }
+
+      .light-section + .light-section {
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255,255,255,0.10);
+      }
+      .section-head {
+        display: grid;
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 11px;
+        padding: 0 2px 8px;
+      }
+      .section-head .zone-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .section-head .zone-id strong { font-size: 15px; font-weight: 700; line-height: 1.1; }
+      .section-head .zone-id small { font-size: 11.5px; font-weight: 600; color: rgba(255,255,255,0.46); }
+      .section-head .zone-off {
+        padding: 0 2px;
+        border: 0;
+        background: none;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 700;
+        color: rgba(255,196,90,0.92);
+        cursor: pointer;
+      }
+
+      .lights-substatus {
+        padding: 0 2px 8px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.46);
+      }
+
+      /* Grade 2-col SEM cards: as celulas sao separadas apenas por filetes. */
+      .light-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .light-cell {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 11px;
+        min-height: 56px;
+        padding: 0 12px;
+        border: 0;
+        background: none;
+        color: inherit;
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+      .light-cell.is-wide { grid-column: 1 / -1; }
+      .light-cell.has-rule-top { border-top: 1px solid rgba(255,255,255,0.075); }
+      .light-cell.has-rule-left { border-left: 1px solid rgba(255,255,255,0.075); }
+      .lc-icon {
+        width: 28px;
+        display: grid;
+        place-items: center start;
+        --light-color: #9da0a2;
+        color: var(--light-color);
+      }
+      .light-cell.is-on .lc-icon {
+        --light-color: #f0c040;
+        color: var(--light-color);
+        filter: drop-shadow(0 0 7px rgba(240,192,64,0.28));
+      }
+      .lc-name {
+        min-width: 0;
+        font-size: 14.5px;
+        font-weight: 600;
+        line-height: 1.12;
+        color: rgba(255,255,255,0.90);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .lc-switch {
+        width: 40px;
+        height: 24px;
+        box-sizing: border-box;
+        padding: 0 2px;
+        border-radius: 999px;
+        border: 1px solid rgba(255,255,255,0.16);
+        background: rgba(255,255,255,0.13);
+        display: grid;
+        align-items: center;
+        transition: background 180ms ease, border-color 180ms ease;
+      }
+      .lc-knob {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.92);
+        transform: translateX(0);
+        transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .light-cell.is-on .lc-switch {
+        background: rgba(255,196,90,0.55);
+        border-color: rgba(255,196,90,0.65);
+      }
+      .light-cell.is-on .lc-knob { transform: translateX(16px); }
+
+      @media (prefers-reduced-motion: reduce) {
+        .lights-body,
+        .lights-dock-chevron,
+        .lc-switch,
+        .lc-knob { transition: none; }
+      }
+
+      /* ==== REV.10 (2026-07-29) — correcoes pontuais do dock =============
+         Só sobrepoe o que foi apontado. A RECEITA DA CARTELA (fundo, borda,
+         blur, contorno — tokens do card dinamico) NAO e tocada aqui. */
+
+      /* [3] chevron ao lado do titulo, nao colado na borda direita. */
+      .lights-dock-id { gap: 9px; }
+      .lights-dock-chevron {
+        width: 22px;
+        height: 22px;
+        color: rgba(255,255,255,0.55);
+      }
+      .lights-dock-chevron bruno-icon { --mdc-icon-size: 20px; }
+
+      /* [4] recuo lateral menor e alinhado: inicio do icone = inicio do titulo
+         = inicio do icone da celula, na mesma vertical. */
+      .lights-dock { padding: 0 10px; min-height: 52px; }
+      .lights-scroll { padding: 10px 10px 10px; }
+      .section-head {
+        grid-template-columns: 34px minmax(0, 1fr) auto;
+        gap: 8px;
+        padding: 0 10px 8px;
+      }
+
+      /* [8] filete separando cabecalho e conteudo, so com o bloco aberto. */
+      .lights-card.is-open .lights-dock {
+        border-bottom: 1px solid rgba(255,255,255,0.10);
+      }
+
+      /* [6] cromo da celula enxuto. Antes: 12+28+11+11+40+12 = 114px de cromo
+         numa coluna de ~193px, sobrando 79px para o rotulo (dai o "Luz princ…"
+         e a sobra a direita). Agora o cromo cai para ~86px. */
+      /* REV.11: o cromo ainda comia rotulo ("Led es...", "Cristal..."). Coluna
+         util ~175px; cromo caiu de 92 para 78px, sobrando ~97px. E o nome
+         passou a QUEBRAR em ate 2 linhas em vez de truncar — a celula tem 52px
+         de altura, entao duas linhas de 13.5px cabem sem mexer na grade. */
+      .light-cell {
+        grid-template-columns: 20px minmax(0, 1fr) auto;
+        gap: 7px;
+        padding: 0 8px;
+        min-height: 60px;
+        border: 1px solid var(--bruno-subview-cartela-inner-border-color, rgba(255,255,255,0.16));
+        border-radius: 0;
+      }
+      .lc-icon { width: 20px; }
+      .lc-name {
+        font-size: 13.5px;
+        line-height: 1.15;
+        white-space: normal;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
+      .lc-switch { width: 32px; height: 19px; }
+      .lc-knob { width: 14px; height: 14px; }
+      .light-cell.is-on .lc-knob { transform: translateX(12px); }
+
+      /* ==== REV.13 (2026-07-29) — largura util e bordas em grade ==========
+
+         [A] LARGURA. Uma regra ANTIGA, anterior a todo o dock, aplica
+         a regra .lights-card com padding de 14px (junto com cameras/tv/ps5/ac). Nenhuma
+         das revisoes do dock a sobrescreveu, entao o conteudo perdia 28px de
+         largura util antes de comecar. O dock ja tem recuo proprio (10px na
+         faixa, 10px no scroll), entao o padding do card vai a zero.
+         Complemento: stretch explicito em toda a cadeia
+         body -> clip -> scroll -> section -> grid, para o caso de algum
+         ancestral estar dimensionando por conteudo em vez de preencher. */
+      .lights-card { padding: 0; }
+      .lights-body { justify-items: stretch; }
+      .lights-body-clip,
+      .lights-scroll,
+      .light-section,
+      .light-grid { width: 100%; box-sizing: border-box; }
+      .light-grid {
+        width: calc(100% - 20px);
+        margin-inline: 10px;
+        gap: 4px;
+      }
+
+      /* [7] as linhas da "tabela" no mesmo tom do contorno do hub de midia.
+         A superficie e o blur das celulas vem da regra de nivel interno em
+         core/bruno-surface-material.js (.light-cell entrou na lista na rev.10). */
+      .light-cell.has-rule-top {
+        border-top-color: var(--bruno-subview-cartela-inner-border-color, rgba(255,255,255,0.16));
+      }
+      .light-cell.has-rule-left {
+        border-left-color: var(--bruno-subview-cartela-inner-border-color, rgba(255,255,255,0.16));
+      }
+
       @media (max-width: 1180px) {
         :host {
           height: auto;
@@ -7844,144 +8592,263 @@ class BrunoQuartoCasalSubview extends HTMLElement {
           min-height: 238px;
         }
       }
+
+      /* NOVO (2026-07-22) — consolidacao mobile
+         Contrato final da subview dentro da Shell: uma unica coluna, altura
+         natural e nenhum scroll vertical interno. As media queries anteriores
+         permanecem acima como rollback; este bloco usa o DOM ativo. */
+      @media (max-width: 800px) {
+        :host {
+          height: auto;
+          min-height: 0;
+          overflow: visible;
+        }
+
+        .quarto-casal-subview {
+          width: 100%;
+          height: auto;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+          gap: 10px;
+          padding: 0;
+          background: transparent;
+          overflow: visible;
+        }
+
+        /* Os wrappers continuam no DOM para rollback, mas nao criam trilhas.
+           Seus modulos passam a participar diretamente da coluna da Shell. */
+        .content-left,
+        .right-column,
+        .cams-media-row {
+          display: contents;
+        }
+
+        .subview-topband {
+          order: 0;
+          width: 100%;
+          height: auto;
+          min-height: 0;
+          display: block;
+        }
+
+        .topband-badges {
+          width: 100%;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          overflow: visible;
+        }
+
+        /* ANTERIOR (rollback 2026-07-29): seleção POSICIONAL
+             .topband-badges .tb-badge:nth-child(n + 4),
+           NOVO: seleção por ATRIBUTO. A badge de Presença entrou no início da faixa
+           e deslocaria o nth-child, que passaria a esconder a Umidade. Com a marcação
+           explícita o phone continua exibindo exatamente as mesmas três badges de
+           hoje (Luzes, Temperatura, Umidade) — a Presença fica oculta no phone, como
+           o rodapé já ficava. */
+        .topband-badges .tb-badge[data-phone-hide],
+        .topband-clock {
+          display: none;
+        }
+
+        .tb-badge {
+          min-width: 0;
+          height: 44px;
+          grid-template-columns: 20px minmax(0, 1fr);
+          column-gap: 6px;
+          padding: 0 8px;
+        }
+
+        .tb-badge-icon {
+          width: 20px;
+          height: 20px;
+        }
+
+        .tb-badge-sub {
+          max-width: 100%;
+        }
+
+        .hero-panel {
+          order: 10;
+          height: auto;
+          min-height: 0;
+        }
+
+        .hero-panel.is-unconfigured {
+          display: none;
+        }
+
+        .hero-atmosphere,
+        .hero-atmosphere .hero-content {
+          height: auto;
+          min-height: 0;
+        }
+
+        .curtain-control-row {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 10px;
+        }
+
+        .curtain-status {
+          justify-self: start;
+        }
+
+        .curtain-main-actions {
+          width: 100%;
+          justify-content: stretch;
+        }
+
+        .curtain-action-button {
+          flex: 1 1 0;
+          min-width: 0;
+          min-height: 44px;
+        }
+
+        .lights-card {
+          order: 20;
+          height: auto;
+          min-height: 0;
+          overflow: visible;
+        }
+
+        .lights-card .module-head {
+          min-height: 0;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+
+        .head-actions {
+          width: 100%;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .head-actions .chip-button,
+        .zone-header {
+          min-height: 44px;
+        }
+
+        /* Neutraliza os estilos inline de _clampExpandedLights no phone. */
+        .lights-zones,
+        .zone-lights,
+        .office-light-list {
+          flex: 0 0 auto;
+          max-height: none !important;
+          overflow-y: visible !important;
+          overscroll-behavior: auto;
+        }
+
+        .ac-card.ac-card-lean {
+          order: 30;
+          height: auto;
+          min-height: 360px;
+          grid-template-rows: 44px minmax(220px, auto) auto;
+          overflow: visible;
+        }
+
+        .ac-lean-foot {
+          align-items: stretch;
+        }
+
+        .ac-action {
+          min-height: 52px;
+        }
+
+        /* O baseline aprovado de .climate-ring (min(210px, 82%)) nao e
+           sobrescrito aqui. */
+        .media-hub-card.mh-accordion {
+          order: 40;
+          height: auto;
+          min-height: 330px;
+          grid-template-rows: 44px minmax(278px, 1fr);
+        }
+
+        .media-hub-card.is-unconfigured {
+          display: none;
+        }
+
+        .mh-source {
+          flex-basis: 44px;
+        }
+
+        .mh-source-head {
+          flex-basis: 44px;
+          height: 44px;
+        }
+
+        .mh-source-body {
+          grid-template-columns: minmax(0, 1fr) clamp(104px, 30vw, 148px);
+          gap: 8px;
+          padding-inline: 12px;
+        }
+
+        .mh-info {
+          padding-left: 0;
+        }
+
+        .mh-controls > .mh-btn.is-main {
+          width: 100%;
+          min-width: 0;
+        }
+
+        .mh-menu,
+        .mh-btn {
+          min-height: 44px;
+        }
+
+        .mh-menu {
+          width: 44px;
+          height: 44px;
+        }
+
+        .cameras-card.cameras-card-controls {
+          order: 50;
+          width: 100%;
+          height: auto;
+          min-height: 0;
+          grid-template-rows: 44px clamp(220px, 58vw, 360px);
+        }
+
+        .camera-pip-stage,
+        .camera-feed {
+          min-height: 0;
+          height: 100%;
+        }
+
+        .camera-control {
+          min-height: 44px;
+        }
+
+        .subview-footer {
+          display: none;
+        }
+      }
+      ${globalThis.BrunoSurfaceMaterial?.subviewStyles?.() || ''}
     `;
   }
 
   static _tplMediaIcon(type, options = {}) {
     const name = String(type || '').replace(/[^a-z0-9_-]/gi, '') || 'tv';
     const active = typeof options === 'boolean' ? options : Boolean(options.active);
-    const animate = typeof options === 'object' && Boolean(options.animate);
-    const tvScreen = active
-      ? `<path${animate ? ' class="media-tv-screen-on"' : ''} d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-qcasal-media-tv-screen)"/>`
-      : animate
-        ? '<path class="media-tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-qcasal-media-tv-screen)"/>'
-        : '';
-    const icons = {
-      tv: `
-        <svg viewBox="0 0 50 50" aria-hidden="true">
-          <style>
-            @keyframes bruno-qcasal-media-tv-on {
-              from { transform: scaleY(0); }
-              to { transform: scaleY(1); }
-            }
-            @keyframes bruno-qcasal-media-tv-off {
-              from { transform: scaleY(1); }
-              to { transform: scaleY(0); }
-            }
-            .media-tv-screen-on {
-              animation: bruno-qcasal-media-tv-on 900ms cubic-bezier(0.25,0.46,0.45,0.94) forwards;
-              transform-origin: -100% 46%;
-            }
-            .media-tv-screen-off {
-              animation: bruno-qcasal-media-tv-off 650ms cubic-bezier(0.25,0.46,0.45,0.94) both;
-              transform-origin: -100% 46%;
-            }
-          </style>
-          <linearGradient id="bruno-qcasal-media-tv-screen" gradientUnits="userSpaceOnUse" x1="5.401" y1="34.714" x2="43.817" y2="11.74">
-            <stop offset="0" stop-color="#64acb7"/>
-            <stop offset="1" stop-color="#7fdbe9"/>
-          </linearGradient>
-          <path d="M2.9,8h44.3v29.9H2.9V8z" fill="#20262890"/>
-          ${tvScreen}
-          <path fill="currentColor" d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3zM11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3a1.11 1.11 0 0 0 1.1 1.1z"/>
-        </svg>
-      `,
-      spotify: active
-        ? `
-          <svg viewBox="0 0 42.55 42.55" aria-hidden="true">
-            <style>
-              @keyframes bruno-qcasal-spotify-bounce {
-                10% { transform: scaleY(0.3); }
-                30% { transform: scaleY(1); opacity: .35; }
-                60% { transform: scaleY(0.5); }
-                80% { transform: scaleY(0.75); opacity: .75; }
-                100% { transform: scaleY(0.6); }
-              }
-              .media-spotify-bars {
-                fill: #ffffff;
-                stroke: #ffffff;
-                stroke-linecap: round;
-                stroke-width: 5px;
-              }
-              .media-spotify-bar {
-                animation: bruno-qcasal-spotify-bounce 2.2s ease infinite alternate;
-                transform-origin: center;
-              }
-              .media-spotify-bar:nth-child(2) { animation-delay: -2.2s; }
-              .media-spotify-bar:nth-child(3) { animation-delay: -3.2s; }
-              .media-spotify-bar:nth-child(4) { animation-delay: -1.2s; }
-              .media-spotify-bar:nth-child(5) { animation-delay: -2.1s; }
-            </style>
-            <g class="media-spotify-bars">
-              <path class="media-spotify-bar" d="M2.5,18.24v7.87"/>
-              <path class="media-spotify-bar" d="M32.54,18.24v7.87"/>
-              <path class="media-spotify-bar" d="M10.01,10.37v23.61"/>
-              <path class="media-spotify-bar" d="M25.03,10.37v23.61"/>
-              <path class="media-spotify-bar" d="M17.52,2.5V41.85"/>
-            </g>
-          </svg>
-        `
-        : `
-          <svg viewBox="0 0 49.17 49.17" aria-hidden="true">
-            <path fill="currentColor" d="M39.09 21.88c-7.87-4.67-21.02-5.16-28.52-2.83-1.23.37-2.46-.37-2.83-1.47-.37-1.23.37-2.46 1.47-2.83 8.73-2.58 23.11-2.09 32.2 3.32 1.11.61 1.47 2.09.86 3.2-.61.86-2.09 1.23-3.2.61m-.25 6.88c-.61.86-1.72 1.23-2.58.61-6.64-4.06-16.72-5.29-24.46-2.83-.98.25-2.09-.25-2.34-1.23s.25-2.09 1.23-2.34c8.97-2.7 20.04-1.35 27.66 3.32.74.37 1.11 1.6.49 2.46m-2.95 6.76c-.49.74-1.35.98-2.09.49-5.78-3.56-13.03-4.3-21.63-2.34-.86.25-1.6-.37-1.84-1.11-.25-.86.37-1.6 1.11-1.84 9.34-2.09 17.45-1.23 23.85 2.7.86.37.98 1.35.61 2.09M24.58 0C11.06 0 0 11.06 0 24.58s11.06 24.58 24.58 24.58S49.16 38.1 49.16 24.58 38.23 0 24.58 0"/>
-          </svg>
-        `,
-    };
-
-    return `<span class="tpl-media-icon icon-${name}${active ? ' is-active' : ''}">${icons[name] || icons.tv}</span>`;
+    const requested = name === 'spotify' ? 'spotify' : 'tv';
+    const icon = globalThis.BrunoIcons?.render(requested) || '';
+    return `<span class="tpl-media-icon icon-${name}${active ? ' is-active' : ''}">${icon}</span>`;
   }
 
   static _tplLightIcon(type, active = false) {
-    const name = String(type || '').replace(/^mdi:/, '').replace(/[^a-z0-9_-]/gi, '') || 'light_flush';
-    const glow = active
-      ? '<span class="tpl-light-glow" aria-hidden="true"></span>'
-      : '';
-    const pendantClass = active ? ' class="pendant-swing"' : '';
-    const flushBeam = active
-      ? `
-        <defs>
-          <radialGradient id="bruno-subview-flush-source" cx="25.165" cy="13.615" fx="25.165" fy="13.615" r="7.941" gradientTransform="matrix(-0.00353534,0.70731769,-1.7278701,-0.00863629,48.77824,1.4653142)" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#FFF9C3"/>
-            <stop offset="1" stop-color="#FFF9C3" stop-opacity="0"/>
-          </radialGradient>
-          <radialGradient id="bruno-subview-flush-center" cx="24.933" cy="10.064" fx="24.933" fy="10.064" r="13.627" gradientTransform="matrix(-1.3891264,0.01690265,-0.01282326,-1.0538672,59.802527,28.064254)" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#FFF9C3"/>
-            <stop offset="1" stop-color="#FFF9C3" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-        <path class="flush-beam" opacity="0.875" d="M22.413 22.141C22.413 22.141 16.999 22.946 16.242 25.456C16.242 25.456 15.874 27.586 19.976 28.969C19.976 28.969 22.927 29.685 25.213 29.654C28.288 29.613 30.582 28.904 30.582 28.904C33.865 28.036 33.963 26.03 33.963 26.03C33.882 23.684 30.008 22.583 30.008 22.583C26.164 21.611 24.51 21.844 22.413 22.141Z" fill="url(#bruno-subview-flush-source)"/>
-        <path class="flush-beam" d="M25.351 24.016C26.2104 24.016 26.907 23.5719 26.907 23.024C26.907 22.4761 26.2104 22.032 25.351 22.032C24.4916 22.032 23.795 22.4761 23.795 23.024C23.795 23.5719 24.4916 24.016 25.351 24.016Z" fill="url(#bruno-subview-flush-center)"/>
-      `
-      : '';
-    const icons = {
-      ledstrip: `
-        <svg viewBox="0 0 32 32" aria-hidden="true">
-          <path class="light-color" d="M8.4395,16.668 C8.9795,16.552 9.5115,16.895 9.6285,17.435 C9.7455,17.974 9.4025,18.506 8.8625,18.623 C8.3225,18.74 7.7905,18.397 7.6735,17.857 C7.5565,17.317 7.9005,16.785 8.4395,16.668 M13.3275,15.611 C13.8665,15.495 14.3985,15.838 14.5155,16.377 C14.6325,16.917 14.2895,17.449 13.7505,17.566 C13.2105,17.683 12.6775,17.34 12.5605,16.8 C12.4445,16.261 12.7875,15.729 13.3275,15.611 M18.2135,14.555 C18.7535,14.438 19.2865,14.781 19.4025,15.32 C19.5195,15.86 19.1765,16.393 18.6365,16.51 C18.0965,16.626 17.5645,16.283 17.4485,15.743 C17.3315,15.203 17.6735,14.671 18.2135,14.555 M23.1005,13.498 C23.6405,13.381 24.1725,13.724 24.2905,14.264 C24.4065,14.804 24.0635,15.336 23.5235,15.453 C22.9835,15.569 22.4515,15.227 22.3355,14.687 C22.2175,14.147 22.5615,13.614 23.1005,13.498 M10.6695,20.639 L25.4735,17.444 C26.5535,17.211 27.2405,16.147 27.0065,15.067 C26.4495,12.484 23.9035,10.842 21.3205,11.399 L6.5165,14.594 C5.4365,14.827 4.7505,15.891 4.9835,16.971 C5.5415,19.554 8.0865,21.196 10.6695,20.639 M25,26 C24.447,26 24,25.553 24,25 C24,24.447 24.447,24 25,24 C25.553,24 26,24.447 26,25 C26,25.553 25.553,26 25,26 M20,26 C19.447,26 19,25.553 19,25 C19,24.447 19.447,24 20,24 C20.553,24 21,24.447 21,25 C21,25.553 20.553,26 20,26 M15,26 C14.447,26 14,25.553 14,25 C14,24.447 14.447,24 15,24 C15.553,24 16,24.447 16,25 C16,25.553 15.553,26 15,26 M10,26 C9.447,26 9,25.553 9,25 C9,24.447 9.447,24 10,24 C10.553,24 11,24.447 11,25 C11,25.553 10.553,26 10,26 M27,22 L9,22 C5,22 4,19 4,18 L4,23 C4,25.762 6.238,28 9,28 L27,28 C27.553,28 28,27.553 28,27 L28,23 C28,22.447 27.553,22 27,22 M22,8 C21.447,8 21,7.553 21,7 C21,6.447 21.447,6 22,6 C22.553,6 23,6.447 23,7 C23,7.553 22.553,8 22,8 M17,8 C16.447,8 16,7.553 16,7 C16,6.447 16.447,6 17,6 C17.553,6 18,6.447 18,7 C18,7.553 17.553,8 17,8 M12,8 C11.447,8 11,7.553 11,7 C11,6.447 11.447,6 12,6 C12.553,6 13,6.447 13,7 C13,7.553 12.553,8 12,8 M7,8 C6.447,8 6,7.553 6,7 C6,6.447 6.447,6 7,6 C7.553,6 8,6.447 8,7 C8,7.553 7.553,8 7,8 M23,4 L5,4 C4.447,4 4,4.447 4,5 L4,9 C4,9.553 4.447,10 5,10 L23,10 C27,10 28,13 28,14 L28,9 C28,6.238 25.762,4 23,4"/>
-        </svg>
-      `,
-      pendant: `
-        <svg viewBox="0 0 50 50" aria-hidden="true">
-          <g${pendantClass}>
-            <path fill="none" stroke="#a0a0a0" stroke-width="2.8" stroke-linecap="round" d="M25 4v17"/>
-            <path fill="#9da0a2" opacity="0.86" d="M22.7 18.2h4.8c1.2 0 2.1 1 2.1 2.2v5.8c0 1.2-.9 2.2-2.1 2.2h-4.8c-1.2 0-2.1-1-2.1-2.2v-5.8c0-1.2.9-2.2 2.1-2.2z"/>
-            <path fill="#9da0a2" d="M9.1 34.4c-.2-7.3 7.2-14.1 15.9-14.1s16.1 6.8 15.9 14.1c-.1 4.9-2.5 5.5-8.8 5.7-4 .1-10.6.1-14.8 0-5.8-.1-8-.9-8.2-5.7z"/>
-            ${active ? '<path class="light-color" d="M21 42.4c.5-2.7 1.7-3.3 4.2-3.3s3.7.6 4.1 3.1c.4 2.6-1.6 5-4.1 5s-4.7-2.1-4.2-4.8z"/>' : ''}
-          </g>
-        </svg>
-      `,
-      light_flush: `
-        <svg viewBox="0 0 50 50" aria-hidden="true">
-          <g id="body">
-            <path fill="#9da0a2" opacity="0.8" d="M18.847 21.388C16.243 22.079 14.512 23.149 13.885 24.375C13.793 24.556 13.583 25.038 13.549 25.299C13.435 26.19 14.126 27.242 15.273 28.108C17.273 29.617 20.416 30.441 24.42 30.631L27.42 30.588C32.361 30.176 35.876 28.468 36.452 26.2C36.569 25.739 36.524 25.408 36.27 24.878C36.009 24.33 35.623 23.865 35.053 23.405C33.617 22.248 31.402 21.45 28.355 20.843C25.612 20.19 21.712 20.642 18.847 21.388ZM25.183 21.886C25.183 21.886 28.625 21.868 30.593 23.093C31.524 23.672 32.515 24.307 32.437 25.249C32.34 26.42 30.406 27.343 30.406 27.343C28.229 28.29 25.312 28.281 25.312 28.281C22.792 28.344 20.794 27.535 20.794 27.535C18.24 26.593 18.062 25.281 18.062 25.281C18.134 24.175 19.037 23.562 19.843 23.062C21.391 22.101 25.183 21.886 25.183 21.886Z"/>
-            <path fill="#9da0a2" d="M25.243 17.913C15.653 17.809 8.131 21.052 7.733 25C7.315 29.148 16.07 32.922 25.452 32.922C34.834 32.922 43.112 28.716 42.336 25.07C41.622 21.715 34.903 18.087 25.243 17.913ZM25.417 30.866C16.78 30.771 12.541 27.226 13.405 24.828C13.791 23.847 15.401 21.415 22.459 20.58C26.249 20.248 27.413 20.489 29.761 21.022C36.964 22.661 36.752 25.989 36.752 25.989C36.301 29.257 30.348 30.939 25.418 30.867Z"/>
-          </g>
-          <path fill="#707070" d="M42.316 25.012C41.603 23.019 40.277 22.207 40.277 22.207C36.714 19.347 31.883 18.661 28.947 18.224C25.505 17.712 21.478 18.057 21.478 18.057C15.227 18.68 12.928 19.952 10.795 21.096C10.795 21.096 8.371 23.11 7.808 24.606C7.808 24.606 8.205 22.474 8.531 21.871C9.048 20.912 10.53 19.862 11.002 19.572C16.034 17.047 19.435 16.678 23.652 16.585C24.911 16.557 26.971 16.634 26.971 16.634C31.712 16.954 33.768 17.631 36.597 18.675C36.597 18.675 39.671 20.146 40.678 21.183C41.125 21.643 41.752 22.321 41.956 22.929C42.111 23.459 42.266 24.473 42.316 25.012Z"/>
-          ${flushBeam}
-        </svg>
-      `,
-    };
-
-    return `<span class="tpl-light-icon icon-${name}${active ? ' is-on' : ''}">${glow}${icons[name] || icons.light_flush}</span>`;
+    const raw = String(type || 'light_flush').replace(/^mdi:/, '');
+    const name = raw.replace(/[^a-z0-9_-]/gi, '') || 'light_flush';
+    const requested = {
+      ledstrip: 'ledstrip',
+      'led-strip-variant': 'ledstrip',
+      pendant: 'pendant',
+      light_flush: 'light_flush',
+      'ceiling-light-outline': 'light_flush',
+      'string-lights': 'hugeicons:lamp-04',
+    }[name] || type || 'light_flush';
+    const icon = globalThis.BrunoIcons?.render(requested) || '';
+    return `<span class="tpl-light-icon icon-${name}${active ? ' is-on' : ''}">${icon}</span>`;
   }
 
   static _resolvePicture(src) {

@@ -1,0 +1,10 @@
+# HOME V2 — Mídia SOMENTE no PHONE (layout mobile intocado).
+# No celular o card de mídia continua permanente como hoje (o comportamento
+# de última mídia válida do bruno-media-card segue valendo). No desktop a
+# mídia virou card CONDICIONAL na área dinâmica (v2/bento_dynamic.yaml).
+type: custom:bruno-media-card
+view_layout:
+  grid-area: media
+  show:
+    mediaquery: '(max-width: 800px)'
+variant: wide

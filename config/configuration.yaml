@@ -12,42 +12,304 @@ default_config:
 frontend:
   themes: !include_dir_merge_named themes
   extra_module_url:
-    - /local/bento-sidebar-card.js?v=20260627-fullbleed-rail-transp-2
-    - /local/bruno-ui/core/bruno-shell.js?v=20260628-backdrop-crossfade-6
-    - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260630-icon-scale-1
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260701-main-seven-1
-    - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260701-office-bg-refresh-3
-    - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260621-kitchen-office-structure-3
-    - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260701-qcasal-five-lights-gap-1
-    - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260701-qmarina-sala-matrix-1
-    - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260701-qmiguel-qcasal-matrix-1
-    - /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260625-cameras-shell-5
-    - /local/bruno-ui/subviews/bruno-roborock-subview.js?v=20260625-roborock-shell-7
+    # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
+    # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock
+    # <=800px + content-slot rolavel. Bump para invalidar cache dos dispositivos.
+    # FASE 2 (-2): menu "Mais" no dock + z-index do rail-slot no phone.
+    # ANTERIOR (cache rollback): ?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-icons.js?v=20260720-ledstrip-outline-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-icons.js?v=20260720-bulb-icon-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-icons.js?v=20260720-icon-standardization-1
+    - /local/bruno-ui/core/bruno-icons.js?v=20260720-ledstrip-varanda-fill-1
+    - /local/bento-sidebar-card.js?v=20260719-icons-global-1
+    - /local/bruno-ui/core/bruno-wallpaper-manager.js?v=20260718-audit-final-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-scenes-panel.js?v=20260719-icons-global-1
+    - /local/bruno-ui/core/bruno-scenes-panel.js?v=20260802-josh-popup-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260722-persistent-sections-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260723-theme-backdrop-1
+    # NOVO (2026-07-24) — feedback Home V2: rail sem filete divisor.
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260724-home-v2-2
+    - /local/bruno-ui/core/bruno-shell.js?v=20260802-josh-popup-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260702-liquid-yaml-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260723-liquid-performance-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260723-surface-on-ios-1
+    - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260726-theme-writer-guard-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass-ios.js?v=20260723-liquid-glass-ios-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass-ios.js?v=20260723-liquid-glass-ios-2
+    - /local/bruno-ui/core/bruno-liquid-glass-ios.js?v=20260723-onoff-swap-radius-1
+    - /local/bruno-ui/core/bruno-visionos.js?v=20260703-theme-config-1
+    - /local/bruno-ui/core/bruno-ios-light.js?v=20260716-ios-themes-1
+    - /local/bruno-ui/core/bruno-ios-dark.js?v=20260716-ios-themes-1
+    # NOVO (2026-07-24) — HOME V2: tema Josh.ai (delta sobre iOS Dark — deve
+    # carregar DEPOIS dele). FALLBACK: comentar esta linha + entrada 'josh'
+    # no bruno-theme-manager.js.
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260724-josh-1
+    # NOVO (2026-07-25 rev.6): moldura sem a camada escura (dupla tinta).
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260725-home-v2-6
+    # NOVO (rev.7): strip-frame-filter none (backdrop root).
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260725-home-v2-7
+    # NOVO (2026-07-26) — HOME V3: tokens de tile + banda full-bleed.
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260726-home-v3-tiles-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260726-home-v3-tiles-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260726-home-v3-tiles-4
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260726-home-v3-tiles-5
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260726-home-v3-tiles-6
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260726-home-v3-tiles-8
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260726-josh-visionos-dynamic-strip-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260726-josh-autonomous-strip-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260726-josh-media-material-strip-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260727-josh-subview-material-2
+    # NOVO (2026-07-27): tokens de tile das subviews.
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260729-accordion-border-5
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260729-lights-dock-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260729-lights-dock-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260730-lights-grid-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260731-flat-status-dots-1
+    # ANTERIOR (rollback microblur): - /local/bruno-ui/core/bruno-josh.js?v=20260731-josh-syntax-fix-1
+    # ANTERIOR (rollback hierarquia interna): - /local/bruno-ui/core/bruno-josh.js?v=20260801-josh-microblur-1
+    # ANTERIOR (rollback material dos botoes de luz): - /local/bruno-ui/core/bruno-josh.js?v=20260801-josh-inner-hierarchy-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-josh.js?v=20260801-light-control-material-1
+    - /local/bruno-ui/core/bruno-josh.js?v=20260802-josh-popup-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-theme-manager.js?v=20260716-theme-manager-ios-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-theme-manager.js?v=20260723-liquid-glass-ios-1
+    # NOVO (2026-07-24) — HOME V2: registro do tema Josh.ai.
+    - /local/bruno-ui/core/bruno-theme-manager.js?v=20260724-home-v2-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-surface-material.js?v=20260727-josh-subviews-1
+    # NOVO (2026-07-27): subviews em modo tile (fill + filetes), so no Josh.
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-surface-material.js?v=20260729-accordion-border-5
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-surface-material.js?v=20260729-subview-footer-out-1  <-- QUEBRADO: crase dentro do template literal
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-surface-material.js?v=20260729-subview-footer-out-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-surface-material.js?v=20260729-lights-dock-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-surface-material.js?v=20260729-lights-dock-2
+    # ANTERIOR (rollback microblur): - /local/bruno-ui/core/bruno-surface-material.js?v=20260731-lights-grid-final-1
+    # ANTERIOR (rollback material dos botoes de luz): - /local/bruno-ui/core/bruno-surface-material.js?v=20260801-josh-microblur-1
+    # ANTERIOR (rollback backdrop root dos botoes de luz): - /local/bruno-ui/core/bruno-surface-material.js?v=20260801-light-control-material-1
+    - /local/bruno-ui/core/bruno-surface-material.js?v=20260801-light-control-backdrop-root-1
+    - /local/bruno-ui/core/bruno-updates-panel.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-system-panel.js?v=20260719-icons-global-1
+    - /local/bruno-ui/core/bruno-system-panel.js?v=20260802-josh-popup-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-network-panel.js?v=20260719-icons-global-1
+    - /local/bruno-ui/core/bruno-network-panel.js?v=20260802-josh-popup-material-1
+    - /local/bruno-ui/core/bruno-hybrid-light-icons.js?v=20260719-hybrid-light-icons-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260710-clock-camera-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260720-ledstrip-outline-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260720-optical-stroke-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260720-bulb-icon-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260720-icon-standardization-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260722-mobile-corrections-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260727-josh-subview-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260729-subview-footer-out-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260729-lights-dock-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260729-lights-dock-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260729-lights-dock-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260729-lights-dock-5
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260731-lights-cells-gap-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260710-clock-camera-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260720-optical-stroke-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260720-bulb-icon-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260720-icon-standardization-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260727-josh-subview-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260729-subview-footer-out-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260729-lights-dock-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260729-lights-dock-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260729-lights-dock-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260729-lights-dock-5
+    - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260731-lights-cells-gap-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260710-clock-camera-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260720-optical-stroke-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260720-bulb-icon-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260720-icon-standardization-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260722-mobile-corrections-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260727-josh-subview-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260729-subview-footer-out-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260729-lights-dock-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260729-lights-dock-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260729-lights-dock-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260729-lights-dock-5
+    - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260731-lights-cells-gap-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260710-clock-camera-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260720-optical-stroke-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260720-bulb-icon-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260720-icon-standardization-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260727-josh-subview-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260729-subview-footer-out-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260729-lights-dock-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260729-lights-dock-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260729-lights-dock-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260729-lights-dock-5
+    - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260731-lights-cells-gap-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260710-clock-camera-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260720-optical-stroke-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260720-bulb-icon-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260720-icon-standardization-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260727-josh-subview-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260729-subview-footer-out-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260729-lights-dock-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260729-lights-dock-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260729-lights-dock-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260729-lights-dock-5
+    - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260731-lights-cells-gap-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260710-clock-camera-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260720-optical-stroke-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260720-bulb-icon-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260720-icon-standardization-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260727-josh-subview-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260729-subview-footer-out-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260729-lights-dock-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260729-lights-dock-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260729-lights-dock-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260729-lights-dock-5
+    - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260731-lights-cells-gap-1
+    # ANTERIOR (rollback): ?v=20260704-camera-clean-1
+    - /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-roborock-subview.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-roborock-subview.js?v=20260722-mobile-consolidation-1
+    - /local/bruno-ui/subviews/bruno-roborock-subview.js?v=20260722-mobile-corrections-1
+    # Planta 3D interativa na bruno-shell. Fallback: remover esta linha e voltar
+    # o item floorplan da rail para shared/popup/planta_3d.yaml.
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-planta-3d-subview.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-planta-3d-subview.js?v=20260722-mobile-consolidation-1
+    - /local/bruno-ui/subviews/bruno-planta-3d-subview.js?v=20260722-mobile-room-focus-1
+    # NOVO (2026-08-01): Music Assistant — redireciona para ingress nativo do addon (token dinâmico)
+    - /local/bruno-ui/subviews/bruno-music-subview.js?v=20260801-ma-redirect-3
     # ORIGINAL: - /local/bruno-ui/cards/bruno-sala-card.js?v=20260608-sala-command-list-1
-    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260626-sala-card-section-1
+    # ANTERIOR: ?v=20260703-presence-uniform-2
+    # ANTERIOR (rollback): ?v=20260704-semantic-sync-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260711-home-microadjust-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260712-presence-contract-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260713-hybrid-icons-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260713-premium-dashboard-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260714-premium-dashboard-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260714-premium-dashboard-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260718-audit-final-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260718-tv-hybrid-v5-package-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260718-tv-hybrid-v5-metal-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260718-tv-hybrid-v5-blue-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260718-tv-hybrid-v5-internal-4
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260720-ledstrip-color-fix-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260720-optical-stroke-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260720-bulb-icon-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260720-icon-standardization-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-corrections-1
+    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-status-spacing-1
+    # NOVO (2026-07-24) — HOME V2: Sala em estrutura padrao de comodo para a
+    # faixa horizontal (clone da base Q. Casal). O bruno-sala-card acima segue
+    # intacto (Home V1 + phone). FALLBACK: comentar esta linha junto com o
+    # rollback da V2 em views/bento_shell.yaml.
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-room-card.js?v=20260724-home-v2-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-room-card.js?v=20260726-home-v3-tiles-2
+    - /local/bruno-ui/cards/bruno-sala-room-card.js?v=20260731-flat-status-dots-1
+    # NOVO (2026-07-25) — HOME V2 rev.4: container da area dinamica
+    # (mecanica B). FALLBACK: comentar esta linha e trocar o include em
+    # shell/section_home_v2.yaml para v2/legacy/bento_dynamic_conditional.yaml.
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-activity-column.js?v=20260725-home-v2-4
+    # NOVO (2026-07-25 rev.5): 2a coluna liberada a partir de 700px (a camera
+    # era descartada em janelas ~1335px) + descarte do mais antigo, nao do mais novo.
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-activity-column.js?v=20260725-home-v2-5
+    # NOVO (2026-07-25 rev.6): transbordo real para a 2a coluna (antes o card
+    # que nao cabia em ALTURA na coluna direita era descartado, nunca chegava
+    # a esquerda — o 3o card "substituia" o de cima).
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-activity-column.js?v=20260725-home-v2-6
+    # NOVO (rev.7): trava de largura removida + medida robusta + overlay debug.
+    # ANTERIOR (rollback composicao dinamica): - /local/bruno-ui/cards/bruno-activity-column.js?v=20260725-home-v2-7
+    - /local/bruno-ui/cards/bruno-activity-column.js?v=20260801-activity-filter-lifecycle-1
     # ORIGINAL: - /local/bruno-ui/cards/bruno-office-card.js?v=20260608-room-assets-uniform-1
-    - /local/bruno-ui/cards/bruno-office-card.js?v=20260701-office-shell-route-1
-    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260620-dashboard-refinements-1
-    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260611-room-nav-1
+    # ANTERIOR: ?v=20260703-presence-logic-1
+    # ANTERIOR (rollback): ?v=20260703-presence-uniform-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260711-home-microadjust-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260720-optical-stroke-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260726-home-v3-tiles-2
+    - /local/bruno-ui/cards/bruno-office-card.js?v=20260731-flat-status-dots-1
+    # ANTERIOR (2026-07-03): ?v=20260702-all-images-1 nos 5 cards abaixo.
+    # NOVO: bump para presence-uniform-1 (molde unico de presenca/ocupacao + alinhamento padrao Office).
+    # ANTERIOR (rollback): ?v=20260704-room-state-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260711-home-microadjust-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260726-home-v3-tiles-2
+    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260731-flat-status-dots-1
+    # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-1 (popup quebrado: _escapeAttr ausente + fixed clipado).
+    # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-2 (fix botao + popup <dialog> centralizado).
+    # NOVO: popup ancorado ao botao + backdrop suave + banner lavabo.jpg com bordas atmosfericas.
+    # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-3
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260720-icon-standardization-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260726-home-v3-tiles-2
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260731-flat-status-dots-1
+    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260802-josh-popup-material-1
+    # NOVO (2026-07-29) — HOME V3: Corredor como 8o tile da faixa.
+    # FALLBACK: comentar esta linha + o bloco em v2/bento_bottom_block.yaml
+    # e voltar o grid para repeat(7, ...).
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260729-corredor-assets-5
+    - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260731-flat-status-dots-1
     # ORIGINAL (cache stale no tablet — JS antigo com icone 92/80px): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260611-room-nav-1
-    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260701-qcasal-section-1
-    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260701-qmarina-section-1
-    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260701-qmiguel-section-1
-    - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260701-main-seven-1
-    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260701-home-header-1
-    - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260701-home-header-1
-    - /local/bruno-ui/cards/bruno-energy-card.js?v=20260701-home-header-1
-    - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-3
-    - /local/bruno-ui/cards/bruno-hero-stage-card.js?v=20260603-hero-stage-2
-    - /local/bruno-ui/cards/bruno-hero-card.js?v=20260701-main-seven-1
-    - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260701-main-seven-1
-    - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260627-fullbleed-dock54-4
-    - /local/bruno-ui/cards/bruno-media-card.js?v=20260701-home-media-card-5
+    # ANTERIOR (rollback, 3 linhas): ?v=20260704-semantic-sync-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260711-home-microadjust-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260726-home-v3-tiles-2
+    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260731-flat-status-dots-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260711-home-microadjust-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260726-home-v3-tiles-2
+    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260731-flat-status-dots-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260711-home-microadjust-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260722-mobile-consolidation-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260726-home-v3-tiles-2
+    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260731-flat-status-dots-1
+    - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260719-icons-global-1
+    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260718-audit-final-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260719-icons-global-1
+    - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260720-icon-standardization-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-energy-card.js?v=20260719-icons-global-1
+    - /local/bruno-ui/cards/bruno-energy-card.js?v=20260720-icon-standardization-1
+    - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260719-icons-global-1
+    - /local/bruno-ui/cards/bruno-hero-stage-card.js?v=20260702-all-images-1
+    # ANTERIOR (rollback): ?v=20260702-all-images-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-hero-card.js?v=20260719-icons-global-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-hero-card.js?v=20260724-home-v2-1
+    # NOVO (2026-07-25) — HOME V2 item 4: linhas de informacao inteligente.
+    - /local/bruno-ui/cards/bruno-hero-card.js?v=20260725-home-v2-5
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260719-icons-global-1
+    # NOVO (2026-07-25) — HOME V2 item 3: badge de Energia.
+    - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260725-home-v2-5
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260719-icons-global-1
+    # NOVO (2026-07-24) — HOME V2: rotulo do grupo 'sala' no dock (Corredor/TV/A-C).
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260724-home-v2-1
+    # NOVO (2026-07-24) — feedback Home V2: dock sem linhas divisórias.
+    - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260724-home-v2-2
+    - /local/bruno-ui/cards/bruno-media-card.js?v=20260719-icons-global-1
     - /local/bruno-ui/cards/bruno-mobile-card-frame.js?v=20260518-1
-    - /local/bruno-ui/cards/bruno-mobile-nav-card.js?v=20260518-2
+    - /local/bruno-ui/cards/bruno-mobile-nav-card.js?v=20260719-icons-global-1
     - /local/bruno-ui/cards/bruno-mobile-rooms-card.js?v=20260518-1
-    - /local/bruno-ui/cards/bruno-mobile-sala-card.js?v=20260608-sala-shift-1
-    - /local/bruno-ui/cards/bruno-mobile-cameras-list-card.js?v=20260518-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-mobile-sala-card.js?v=20260608-sala-shift-1
+    - /local/bruno-ui/cards/bruno-mobile-sala-card.js?v=20260719-icons-global-1
+    - /local/bruno-ui/cards/bruno-mobile-cameras-list-card.js?v=20260719-icons-global-1
+
+# Publica o DP Tuya initiative_message/ipc_motion para o card de monitoramento.
+# FALLBACK: comentar esta chave e restaurar o cache/mapeamento anterior do card.
+bruno_tuya_motion:
 
 homeassistant:
   # ANTERIOR: customize: !include customize.yaml
@@ -58,6 +320,8 @@ homeassistant:
       hidden: true
   packages:
     active_player: !include packages/active_player.yaml
+    bruno_scenes: !include packages/bruno_scenes.yaml
+    bruno_wallpapers: !include packages/bruno_wallpapers.yaml
     hass_sidebar_helpers: !include packages/hassio/hass_sidebar_helpers.yaml
     energy_estimated: !include packages/energy_estimated.yaml
     # ANTERIOR: kitchen_appliances: !include packages/kitchen_appliances.yaml
@@ -66,12 +330,34 @@ homeassistant:
     # package estiver confirmado no host.
     # kitchen_appliances: !include packages/kitchen_appliances.yaml
     sala_tv_controls: !include packages/sala_tv_controls.yaml
+    # NOVO (2026-07-12): supervisao comum dos 4-em-1 e do PIR do Corredor.
+    # Bloqueia cache de boot, propaga indisponibilidade e detecta leitura presa.
+    # FALLBACK: comentar este include; os packages anteriores ficam preservados.
+    presence_supervision: !include packages/presence_supervision.yaml
     # NOVO: camada lógica do Office (PIR/mmWave + HASS.Agent).
     # FALLBACK: comentar esta linha para voltar ao Office anterior.
     office_presence: !include packages/office_presence.yaml
     # NOVO: camada local da Sala para diferenciar passagem de ocupacao real.
     # FALLBACK: comentar esta linha para voltar ao uso direto do sensor 4-in-1.
     sala_presence: !include packages/sala_presence.yaml
+    # NOVO: camada logica do Lavabo usando sensor lv_sensor_presenca_*.
+    lavabo_presence: !include packages/lavabo_presence.yaml    # NOVO: camada local do Q. Marina seguindo a mesma logica da Sala.
+    q_marina_presence: !include packages/q_marina_presence.yaml
+    # NOVO (2026-07-03): molde unico de presenca/ocupacao para os demais comodos.
+    # FALLBACK: comentar as linhas abaixo para voltar ao uso direto do sensor bruto.
+    cozinha_presence: !include packages/cozinha_presence.yaml
+    q_miguel_presence: !include packages/q_miguel_presence.yaml
+    q_casal_presence: !include packages/q_casal_presence.yaml
+    # NOVO (2026-07-24) — HOME V2: sensores de relevancia da area dinamica
+    # (midia/camera/Roborock) + automacao que aponta a camera ativa para o
+    # ultimo evento de movimento da ponte bruno_tuya_motion.
+    # FALLBACK: comentar esta linha (a V2 fica com a area dinamica vazia).
+    home_activity: !include packages/home_activity.yaml
+    # NOVO (2026-07-25) — HOME V2 itens 3 e 4: fonte unica do resumo de
+    # energia (badge da barra superior) e das mensagens inteligentes do hero.
+    # FALLBACK: comentar esta linha — o badge Energy se omite sozinho e o
+    # hero volta a mostrar so a agenda.
+    home_insights: !include packages/home_insights.yaml
 
 automation: !include automations.yaml
 script: !include scripts.yaml

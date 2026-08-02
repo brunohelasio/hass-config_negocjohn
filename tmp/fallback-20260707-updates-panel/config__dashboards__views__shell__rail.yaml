@@ -1,0 +1,97 @@
+# Config da rail para a bruno-shell.
+# Identica a views/main-grid/bento_sidebar.yaml, EXCETO os itens de SECAO (home,
+# cameras) que, em vez de navegar para outra view, usam fire-dom-event com
+# `bruno_section`. A shell intercepta o `ll-custom`, troca a secao no lugar e
+# acende o item ativo — a rail NUNCA re-monta.
+# Popups (system/vacuum/network/updates/floorplan) e music/power seguem
+# inalterados (serao migrados por etapas).
+type: custom:bento-sidebar-liquid-card
+top_items:
+  - key: home
+    icon: home
+    label: Home
+    selected: true
+    tap_action:
+      action: fire-dom-event
+      bruno_section: home
+
+  - key: music
+    icon: music
+    label: Musica
+    tap_action:
+      action: navigate
+      navigation_path: mass-media
+
+  - key: cameras
+    icon: cameras
+    label: Cameras
+    # NOVO: separador removido (espaçamento uniforme entre botões).
+    # ROLLBACK: descomentar a linha abaixo.
+    # divider_after: true
+    tap_action:
+      action: fire-dom-event
+      bruno_section: cameras
+
+  - key: system
+    icon: system
+    label: Sistema
+    tap_action: !include ../../shared/popup/footer/footer_system.yaml
+
+  # key = roborock para casar com a secao/hash (#roborock) e ACENDER o item
+  # ativo (a shell marca selected por data-key === chave da secao). icon: vacuum.
+  - key: roborock
+    icon: vacuum
+    label: Aspirador
+    # ANTERIOR (rollback): abria o popup footer_vacuum.yaml.
+    # tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
+    # NOVO: troca para a secao #roborock da shell (mesmo padrao das Cameras).
+    tap_action:
+      action: fire-dom-event
+      bruno_section: roborock
+
+  - key: network
+    icon: network
+    label: Rede
+    tap_action: !include ../../shared/popup/footer/footer_network.yaml
+
+  - key: refresh
+    icon: refresh
+    label: Atualizar
+    tap_action:
+      action: call-service
+      service: browser_mod.javascript
+      service_data:
+        code: location.reload()
+
+  - key: updates
+    icon: updates
+    label: Updates
+    tap_action: !include ../../shared/popup/footer/footer_updates.yaml
+
+  - key: floorplan
+    icon: floorplan
+    label: Planta 3D
+    # NOVO: separador removido (espaçamento uniforme entre botões).
+    # ROLLBACK: descomentar a linha abaixo.
+    # divider_after: true
+    # ANTERIOR (rollback): abria o popup fullscreen da planta.
+    # tap_action: !include ../../shared/popup/planta_3d.yaml
+    # NOVO: troca para a secao #floorplan da shell, igual Cameras/Roborock.
+    tap_action:
+      action: fire-dom-event
+      bruno_section: floorplan
+
+  - key: config
+    icon: settings
+    label: Config
+    tap_action:
+      action: fire-dom-event
+      bruno_config: open
+
+bottom_items:
+  - key: power
+    icon: power
+    label: Power
+    tap_action:
+      action: navigate
+      navigation_path: /

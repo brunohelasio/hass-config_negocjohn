@@ -25,6 +25,7 @@ cards:
     section_rails:
       sala: rooms
       office: rooms
+      cozinha: rooms
       casal: rooms
       marina: rooms
       miguel: rooms
@@ -32,30 +33,66 @@ cards:
     # faixas + blocos). Seção sem entrada aqui => camada transparente (grafite).
     # ROLLBACK: comentar este bloco `backdrops` (volta ao fundo grafite de hoje).
     backdrops:
-      home: /local/images/home_savant.jpg
+      home: /local/images/home_savant.jpg?v=20260702-all-images-1
       # Cache-bust da imagem da Sala (atualizada pelo usuário em 2026-06-27).
-      sala: /local/images/sala_estar.jpg?v=20260627-1
-      office: /local/images/office.jpg?v=20260701-office-bg-refresh-3
-      casal: /local/images/quarto_casal.jpg?v=20260701-qcasal-bg-1
-      marina: /local/images/quarto_marina.jpg?v=20260701-qmarina-bg-1
-      miguel: /local/images/quarto_miguel.jpg?v=20260701-qmiguel-bg-1
+      sala: /local/images/sala_estar.jpg?v=20260702-all-images-1
+      office: /local/images/office.jpg?v=20260702-all-images-1
+      cozinha: /local/images/cozinha.jpg?v=20260702-all-images-1
+      casal: /local/images/quarto_casal.jpg?v=20260702-all-images-1
+      marina: /local/images/quarto_marina.jpg?v=20260702-all-images-1
+      miguel: /local/images/quarto_miguel.jpg?v=20260702-all-images-1
+      cameras: /local/images/home_savant.jpg?v=20260702-all-images-1
+      roborock: /local/images/home_savant.jpg?v=20260702-all-images-1
+      floorplan: /local/images/home_savant.jpg?v=20260702-all-images-1
+    backdrop_effects:
+      cameras:
+        blur: 24px
+        scale: 1.035
+        saturate: 1.08
+        brightness: 0.94
+        dim: 0.20
+      roborock:
+        blur: 24px
+        scale: 1.035
+        saturate: 1.08
+        brightness: 0.94
+        dim: 0.20
+      floorplan:
+        blur: 24px
+        scale: 1.035
+        saturate: 1.08
+        brightness: 0.94
+        dim: 0.20
     sections:
-      home: !include shell/section_home.yaml
+      # FEATURE FLAG HOME V2 (2026-07-24): a troca desta unica linha liga/
+      # desliga a nova Home. Nunca deixar as duas ativas ao mesmo tempo.
+      # ANTERIOR (rollback V1): home: !include shell/section_home.yaml
+      home: !include shell/section_home_v2.yaml
       cameras: !include shell/section_cameras.yaml
       # ROBOROCK inline (evita "Unable to read file" caso o arquivo novo
       # shell/section_roborock.yaml nao tenha sincronizado no /config). Conteudo
       # identico ao do arquivo (mantido como referencia/rollback).
       roborock:
         type: custom:bruno-roborock-subview
+      # PLANTA 3D inline (mesmo padrao do Roborock): conteudo da planta dentro
+      # da shell fixa. Rollback: remover esta secao e voltar o item floorplan da
+      # rail para o popup shared/popup/planta_3d.yaml.
+      floorplan:
+        type: custom:bruno-planta-3d-subview
       # NOVO (Etapa B): a Sala vira SEÇÃO da mesma shell (conteúdo-only; rail é da
       # shell, via section_rails: rooms).
       sala:
         type: custom:bruno-sala-subview
       office:
         type: custom:bruno-office-subview
+      cozinha:
+        type: custom:bruno-cozinha-subview
       casal:
         type: custom:bruno-quarto-casal-subview
       marina:
         type: custom:bruno-quarto-marina-subview
       miguel:
         type: custom:bruno-quarto-miguel-subview
+      # NOVO (2026-08-01): Music Assistant - redireciona para ingress nativo do addon
+      music:
+        type: custom:bruno-music-subview

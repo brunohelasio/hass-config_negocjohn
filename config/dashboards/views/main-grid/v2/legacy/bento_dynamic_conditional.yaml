@@ -1,0 +1,187 @@
+# ==========================================================================
+# HOME V2 — ÁREA DINÂMICA DE ATIVIDADES (coluna direita, acima dos cômodos).
+# REV.3 (2026-07-24, feedback do usuário):
+#   - FUNDO COMPLETAMENTE TRANSPARENTE: o retângulo fosco que aparecia era o
+#     ha-card do wrapper recebendo o vidro global do tema tablet (card-mod
+#     theme aplica glass em TODO ha-card). Neutralização agora com !important
+#     em background/borda/sombra/blur + ::before/::after desligados.
+#   - Cadeia simplificada: vertical-stack NATIVO no lugar do layout-card
+#     interno (menos camadas custom entre o conditional e o card — a rev.2
+#     deixou de renderizar o card de mídia; esta é a cadeia mais curta que
+#     preserva a mecânica A).
+#   - Âncora na BASE mantida: ha-card flex-column + justify-content: flex-end
+#     — a pilha senta logo acima do bloco de cômodos e cresce para cima.
+#
+# PRIORIDADE = ordem da lista (1 câmera, 2 Roborock, 3 mídia). Com a pilha
+# ancorada embaixo, o ÚLTIMO da lista fica mais perto dos cômodos. Para
+# reordenar: mover os blocos — nada de CSS.
+# Condições vêm do package home_activity.yaml (mecânica A).
+# Vazio = área invisível, hero/backdrop totalmente visíveis.
+# ROLLBACK: remover este include de section_home_v2.yaml.
+# ==========================================================================
+type: custom:mod-card
+view_layout:
+  grid-area: dynamic
+  show:
+    mediaquery: '(min-width: 801px)'
+card_mod:
+  style: |
+    :host {
+      display: block;
+      height: 100%;
+      min-height: 0;
+    }
+    /* Âncora inferior + TRANSPARÊNCIA TOTAL (anula o glass do tema). */
+    ha-card {
+      height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      --ha-card-background: transparent !important;
+      --ha-card-backdrop-filter: none !important;
+      --ha-card-glass-tint: transparent !important;
+      --ha-card-glass-inset-shadow: none !important;
+      --ha-card-border-width: 0 !important;
+      overflow: hidden;
+    }
+    ha-card::before,
+    ha-card::after {
+      display: none !important;
+    }
+    /* A pilha (vertical-stack) fica com altura de conteúdo, colada na base. */
+    ha-card > * {
+      flex: 0 0 auto;
+      width: 100%;
+      min-height: 0;
+    }
+card:
+  type: vertical-stack
+  cards:
+    # 1) CÂMERA — evento de movimento nos últimos 90s (ponte bruno_tuya_motion).
+    #    A automação home_activity_camera_follow_motion já apontou o
+    #    input_select.bento_active_camera para a câmera do evento.
+    - type: conditional
+      conditions:
+        - condition: state
+          entity: binary_sensor.home_activity_camera
+          state: 'on'
+      card:
+        type: custom:mod-card
+        card_mod:
+          style: |
+            :host {
+              display: block;
+              height: 296px;
+              animation: brunoDynamicIn 260ms ease both;
+            }
+            @keyframes brunoDynamicIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @media (prefers-reduced-motion: reduce) {
+              :host { animation: none; }
+            }
+            mod-card, ha-card { height: 100% !important; }
+            ha-card {
+              background: none !important;
+              border: none !important;
+              box-shadow: none !important;
+              backdrop-filter: none !important;
+              -webkit-backdrop-filter: none !important;
+              --ha-card-background: transparent !important;
+              --ha-card-backdrop-filter: none !important;
+              --ha-card-glass-tint: transparent !important;
+              --ha-card-border-width: 0 !important;
+            }
+            ha-card::before,
+            ha-card::after { display: none !important; }
+        card:
+          type: custom:bruno-home-camera-card
+
+    # 2) ROBOROCK — trabalhando/retornando/pausado/erro (nunca "na base").
+    - type: conditional
+      conditions:
+        - condition: state
+          entity: binary_sensor.home_activity_roborock
+          state: 'on'
+      card:
+        type: custom:mod-card
+        card_mod:
+          style: |
+            :host {
+              display: block;
+              height: 176px;
+              animation: brunoDynamicIn 260ms ease both;
+            }
+            @keyframes brunoDynamicIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @media (prefers-reduced-motion: reduce) {
+              :host { animation: none; }
+            }
+            mod-card, ha-card { height: 100% !important; }
+            ha-card {
+              background: none !important;
+              border: none !important;
+              box-shadow: none !important;
+              backdrop-filter: none !important;
+              -webkit-backdrop-filter: none !important;
+              --ha-card-background: transparent !important;
+              --ha-card-backdrop-filter: none !important;
+              --ha-card-glass-tint: transparent !important;
+              --ha-card-border-width: 0 !important;
+            }
+            ha-card::before,
+            ha-card::after { display: none !important; }
+        card:
+          type: custom:bruno-roborock-card
+          variant: compact
+
+    # 3) MÍDIA — playing/buffering (pausa recente segura o card por 2 min).
+    #    Último da lista = assento mais próximo do bloco de cômodos.
+    - type: conditional
+      conditions:
+        - condition: state
+          entity: binary_sensor.home_activity_media
+          state: 'on'
+      card:
+        type: custom:mod-card
+        card_mod:
+          style: |
+            :host {
+              display: block;
+              height: 248px;
+              animation: brunoDynamicIn 260ms ease both;
+            }
+            @keyframes brunoDynamicIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            @media (prefers-reduced-motion: reduce) {
+              :host { animation: none; }
+            }
+            mod-card, ha-card { height: 100% !important; }
+            ha-card {
+              background: none !important;
+              border: none !important;
+              box-shadow: none !important;
+              backdrop-filter: none !important;
+              -webkit-backdrop-filter: none !important;
+              --ha-card-background: transparent !important;
+              --ha-card-backdrop-filter: none !important;
+              --ha-card-glass-tint: transparent !important;
+              --ha-card-border-width: 0 !important;
+            }
+            ha-card::before,
+            ha-card::after { display: none !important; }
+        card:
+          type: custom:bruno-media-card
+          variant: wide

@@ -4,6 +4,19 @@ const BRUNO_HERO_DEFAULT_ENTITIES = {
   time: 'sensor.time',
   weather: 'weather.forecast_casa',
   sun: 'sun.sun',
+  // NOVO (2026-07-25) — HOME V2 item 4: mensagens inteligentes.
+  // Toda a REGRA vive no backend (package home_insights.yaml); aqui só se
+  // exibe a lista pronta do atributo `items`. Sem o package, o hero mostra
+  // apenas a agenda (comportamento anterior).
+  insights: 'sensor.home_insights',
+};
+
+// Tons das mensagens inteligentes (mesma paleta dos badges).
+const BRUNO_HERO_INSIGHT_TONES = {
+  amber: '#f7c600',
+  red: '#ff453a',
+  blue: '#7fdbe9',
+  green: '#30d158',
 };
 
 const BRUNO_HERO_WEATHER_ICONS = {
@@ -60,8 +73,8 @@ class BrunoHeroCard extends HTMLElement {
 
     this._config = {
       name: 'Bruno',
-      background: '/local/images/home_color.jpg',
-      fallback_background: '/local/images/home.jpg',
+      background: '/local/images/home_color.jpg?v=20260702-all-images-1',
+      fallback_background: '/local/images/home.jpg?v=20260702-all-images-1',
       ...config,
       calendar: {
         days_to_show: 3,
@@ -254,12 +267,35 @@ class BrunoHeroCard extends HTMLElement {
     }));
   }
 
+  // NOVO (2026-07-25) — HOME V2 item 4: linhas de informação inteligente.
+  // Lê a lista JÁ PRONTA do sensor (ordenada por severidade no backend).
+  _insightModels(limit = 2) {
+    const sensor = this._state(this._config.entities.insights);
+    const items = sensor?.attributes?.items;
+    if (!Array.isArray(items) || !items.length) return [];
+
+    return items
+      .slice(0, Math.max(0, limit))
+      .map((item) => ({
+        empty: false,
+        insight: true,
+        label: 'Agora',
+        summary: String(item?.text || '').trim(),
+        time: String(item?.detail || '').trim(),
+        color: BRUNO_HERO_INSIGHT_TONES[item?.tone] || BRUNO_HERO_INSIGHT_TONES.amber,
+      }))
+      .filter((line) => line.summary);
+  }
+
   _renderEventLine(event) {
+    // Linhas de insight não abrem a agenda (não são compromissos).
+    const insightClass = event.insight ? ' is-insight' : '';
+    const label = event.insight ? 'Informacao da casa' : 'Abrir agenda';
     return `
-      <button class="event-line" type="button" aria-label="Abrir agenda" style="--event-color:${BrunoHeroCard._escapeAttr(event.color)}">
+      <button class="event-line${insightClass}" type="button" aria-label="${BrunoHeroCard._escapeAttr(label)}" style="--event-color:${BrunoHeroCard._escapeAttr(event.color)}">
         <span>${BrunoHeroCard._escape(event.label)}</span>
         <strong>${BrunoHeroCard._escape(event.summary)}</strong>
-        <small>${BrunoHeroCard._escape(event.time)}</small>
+        ${event.time ? `<small>${BrunoHeroCard._escape(event.time)}</small>` : ''}
       </button>
     `;
   }
@@ -641,7 +677,7 @@ class BrunoHeroCard extends HTMLElement {
   _weatherMetric(icon, tone, label, value) {
     return `
       <span class="weather-metric">
-        <ha-icon icon="${icon}" style="color:${tone}"></ha-icon>
+        <bruno-icon icon="${icon}" style="color:${tone}"></bruno-icon>
         <span class="metric-label">${BrunoHeroCard._escape(label)}</span>
         <span class="metric-value">${BrunoHeroCard._escape(value)}</span>
       </span>
@@ -656,6 +692,17 @@ class BrunoHeroCard extends HTMLElement {
     const events = this._eventModels(this._config.calendar?.compact_events_to_show);
     const showCameras = this._config.cameras?.show !== false && this._config.cameras?.enabled !== false;
     const cameras = showCameras ? this._cameraModel() : [];
+    // NOVO (2026-07-24) — HOME V2: quando o wrapper passa hero_layout: 'v2',
+    // a agenda sobe para a coluna do headline (abaixo do clima) e a tipografia
+    // ganha protagonismo. Sem o flag, NADA muda (Home V1 intacta).
+    const heroV2 = this._config.hero_layout === 'v2';
+    // NOVO (2026-07-25) — item 4: na V2 a primeira linha e SEMPRE o proximo
+    // compromisso; as duas seguintes deixam de ser eventos extras da agenda
+    // (que quase nunca existiam, deixando o espaco morto) e passam a ser as
+    // mensagens inteligentes do sensor.home_insights.
+    const heroLines = heroV2
+      ? [this._nextEventModel(), ...this._insightModels(2)]
+      : events;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -888,7 +935,7 @@ class BrunoHeroCard extends HTMLElement {
           place-items: center;
           overflow: hidden;
           background:
-            url('/local/images/camera_seg_strip.png?v=20260607-main-strip-4') center center / contain no-repeat;
+            url('/local/images/camera_seg_strip.png?v=20260702-all-images-1') center center / contain no-repeat;
           filter:
             drop-shadow(0 11px 18px rgba(0,0,0,0.36))
             saturate(1.04)
@@ -946,7 +993,7 @@ class BrunoHeroCard extends HTMLElement {
             rgba(4,8,14,0.34);
         }
 
-        .camera-placeholder ha-icon {
+        .camera-placeholder bruno-icon {
           --mdc-icon-size: 22px;
         }
 
@@ -1015,6 +1062,167 @@ class BrunoHeroCard extends HTMLElement {
           }
         }
 
+        /* ============================================================
+           NOVO (2026-07-09) — Fase 2 mobile: HERO COMPACTO no phone.
+           Feedback do usuario: saudacao + status + proximo evento
+           ocupavam espaco excessivo na tela vertical. Reducao agressiva
+           de tipografia/margens + remocao da regua de 54px do tablet
+           (reservava espaco para o dock de acoes rapidas, que no phone
+           nao existe). Bloco ADITIVO. ROLLBACK: remover este @media.
+           ============================================================ */
+        @media (max-width: 800px) {
+          .hero-stage {
+            min-height: 196px;
+          }
+
+          .content {
+            padding: 12px 14px 0;
+            gap: 10px;
+          }
+
+          .date-line {
+            margin: 0 0 6px;
+          }
+
+          .greeting {
+            font-size: 19px;
+          }
+
+          .clock {
+            margin-top: 6px;
+            font-size: 42px;
+            line-height: 1;
+          }
+
+          .inline-weather {
+            margin-top: 8px;
+          }
+
+          .hero-bottom {
+            padding-bottom: 12px;
+            gap: 6px;
+          }
+
+          .event-stack {
+            gap: 5px;
+          }
+        }
+
+        /* ============================================================
+           NOVO (2026-07-24) — HOME V2 (hero_layout: 'v2').
+           Protagonismo moderado de data/saudacao/relogio/clima e agenda
+           INTEGRADA na coluna do headline (abaixo do clima), deixando de
+           ficar isolada no canto inferior. Bloco ADITIVO: sem o flag no
+           wrapper, nenhuma destas regras se aplica (Home V1 intacta).
+           ROLLBACK: remover hero_layout: 'v2' do wrapper v2.
+           ============================================================ */
+        .hero-stage.is-v2 .date-line {
+          font-size: 12px;
+          margin-bottom: 14px;
+        }
+
+        .hero-stage.is-v2 .greeting {
+          font-size: 31px;
+        }
+
+        .hero-stage.is-v2 .clock {
+          margin-top: 16px;
+          font-size: clamp(78px, 10.4vh, 108px);
+        }
+
+        .hero-stage.is-v2 .inline-weather {
+          margin-top: 20px;
+        }
+
+        .hero-stage.is-v2 .inline-weather img {
+          width: 23px;
+          height: 23px;
+          flex: 0 0 23px;
+        }
+
+        .hero-stage.is-v2 .inline-weather strong {
+          font-size: 16px;
+        }
+
+        .hero-stage.is-v2 .inline-weather small {
+          font-size: 12.5px;
+        }
+
+        .hero-stage.is-v2 .headline .event-stack {
+          margin-top: 26px;
+          max-width: 440px;
+          gap: 9px;
+        }
+
+        /* NOVO (2026-07-25) — item 4: linhas de informação inteligente.
+           Marcador de cor à esquerda (tom vindo do backend) diferencia a
+           mensagem do compromisso da agenda, sem criar card opaco. */
+        .hero-stage.is-v2 .event-line.is-insight {
+          position: relative;
+          padding-left: 12px;
+          cursor: default;
+        }
+
+        .hero-stage.is-v2 .event-line.is-insight::before {
+          content: "";
+          position: absolute;
+          left: 2px;
+          top: 3px;
+          bottom: 3px;
+          width: 2px;
+          border-radius: 999px;
+          background: var(--event-color, #f7c600);
+          box-shadow: 0 0 10px var(--event-color, #f7c600);
+          opacity: 0.9;
+        }
+
+        .hero-stage.is-v2 .event-line.is-insight span {
+          color: var(--event-color, #f7c600);
+          opacity: 0.92;
+        }
+
+        .hero-stage.is-v2 .event-line strong {
+          font-size: 15.5px;
+        }
+
+        .hero-stage.is-v2 .event-line span {
+          font-size: 11.5px;
+        }
+
+        .hero-stage.is-v2 .event-line small {
+          font-size: 11px;
+        }
+
+        @media (max-height: 760px) {
+          .hero-stage.is-v2 .clock {
+            font-size: clamp(66px, 9.2vh, 92px);
+          }
+
+          .hero-stage.is-v2 .headline .event-stack {
+            margin-top: 18px;
+          }
+        }
+
+        @media (max-width: 800px) {
+          .hero-stage.is-v2 .greeting {
+            font-size: 19px;
+          }
+
+          .hero-stage.is-v2 .clock {
+            margin-top: 6px;
+            font-size: 42px;
+          }
+
+          .hero-stage.is-v2 .inline-weather {
+            margin-top: 8px;
+          }
+
+          .hero-stage.is-v2 .headline .event-stack {
+            margin-top: 10px;
+            gap: 5px;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .inline-weather,
           .camera-thumb {
@@ -1023,7 +1231,7 @@ class BrunoHeroCard extends HTMLElement {
         }
       </style>
 
-      <section class="hero-stage" aria-label="Hero do dashboard">
+      <section class="hero-stage${heroV2 ? ' is-v2' : ''}" aria-label="Hero do dashboard">
         <div class="content">
           <div class="headline">
             <p class="date-line">${BrunoHeroCard._escape(this._dateLine())}</p>
@@ -1034,12 +1242,19 @@ class BrunoHeroCard extends HTMLElement {
               <strong>${BrunoHeroCard._escape(weather.temperature)}</strong>
               <small>${BrunoHeroCard._escape(this._weatherLabel(weather.state))}</small>
             </button>
+            ${heroV2 ? `
+              <div class="event-stack">
+                ${heroLines.map((line) => this._renderEventLine(line)).join('')}
+              </div>
+            ` : ''}
           </div>
 
           <div class="hero-bottom${showCameras ? ' has-cameras' : ''}">
-            <div class="event-stack">
-              ${events.map((event) => this._renderEventLine(event)).join('')}
-            </div>
+            ${heroV2 ? '' : `
+              <div class="event-stack">
+                ${heroLines.map((line) => this._renderEventLine(line)).join('')}
+              </div>
+            `}
 
             ${showCameras ? `
               <div class="camera-strip" aria-label="Mini cameras">
@@ -1058,7 +1273,8 @@ class BrunoHeroCard extends HTMLElement {
       this._openWeatherPopup();
     });
 
-    this.shadowRoot.querySelectorAll('.event-line').forEach((button) => button.addEventListener('click', (eventClick) => {
+    // Só as linhas de AGENDA abrem o popup; insights são informativos.
+    this.shadowRoot.querySelectorAll('.event-line:not(.is-insight)').forEach((button) => button.addEventListener('click', (eventClick) => {
       eventClick.preventDefault();
       eventClick.stopPropagation();
       this._openAgendaPopup();
@@ -1399,7 +1615,7 @@ class BrunoHeroCard extends HTMLElement {
           column-gap: 8px;
         }
 
-        .weather-metric ha-icon {
+        .weather-metric bruno-icon {
           --mdc-icon-size: 16px;
           width: 16px;
           height: 16px;
@@ -1647,7 +1863,7 @@ class BrunoHeroCard extends HTMLElement {
     return `
       <button class="camera-thumb${errorClass}" type="button" data-camera-id="${BrunoHeroCard._escapeAttr(camera?.entity || '')}" aria-label="${BrunoHeroCard._escapeAttr(camera?.name || 'Camera')}">
         ${hasImage ? `<img src="${BrunoHeroCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoHeroCard._escapeAttr(camera.image || camera.imageUrl)}" data-camera-entity="${BrunoHeroCard._escapeAttr(camera.entity || '')}" alt="">` : ''}
-        <span class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></span>
+        <span class="camera-placeholder" aria-hidden="true"><bruno-icon icon="mdi:video-outline"></bruno-icon></span>
         <span class="camera-label">
           <span class="camera-dot${onlineClass}" aria-hidden="true"></span>
           <strong>${BrunoHeroCard._escape(camera?.short_name || camera?.name || 'Camera')}</strong>

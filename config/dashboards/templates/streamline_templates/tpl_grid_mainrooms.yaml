@@ -19,7 +19,7 @@ grid_office:
       - binary_sensor.office_pc_active
       - binary_sensor.office_working_active
       - binary_sensor.office_meeting_active
-      - binary_sensor.of_sensor_presenca_movimento
+      - binary_sensor.sensor_4_in_1_office_presence
     double_tap_action: !include ../../shared/popup/rooms/office.yaml
     # hold_action: !include ../../shared/honeycomb/office_mode.yaml
     hold_action:
@@ -59,8 +59,8 @@ grid_office:
       motion: binary_sensor.office_occupancy
       # Alexa do Office (Echo Pop Office) — alexa_status mostra icone quando tocando
       alexa_entity: media_player.echo_pop_office
-      # tempsensor: sensor.office_temp_humid_temperature
-      # humidsensor: sensor.office_temp_humid_humidity
+      # tempsensor: sensor.sensor_4_in_1_office_temperature
+      # humidsensor: sensor.sensor_4_in_1_office_humidity
   # LIVING ROOM GRID
 grid_living_room:
   card:

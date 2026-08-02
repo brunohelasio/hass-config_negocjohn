@@ -1,6 +1,8 @@
 type: custom:bruno-cozinha-card
-navigation_path: subview-cozinha
-double_tap_action: !include ../../shared/popup/rooms/kitchen.yaml
+section: cozinha
+double_tap_action:
+  action: fire-dom-event
+  bruno_section: cozinha
 
 # FALLBACK - Cozinha Lovelace/Negocjohn original
 # Para voltar rapidamente:

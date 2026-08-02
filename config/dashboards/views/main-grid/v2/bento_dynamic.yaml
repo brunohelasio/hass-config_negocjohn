@@ -1,0 +1,60 @@
+# ==========================================================================
+# HOME V2 — ÁREA DINÂMICA DE ATIVIDADES (rev.4, 2026-07-25).
+#
+# MECÂNICA B: um único container JS (custom:bruno-activity-column) no lugar
+# dos três `conditional` da mecânica A. Motivo (ver cabeçalho do JS):
+#   - ancoragem na base exigia height:100%, que não resolve nesta base
+#     (HA 2026.3 envolve cards em <hui-card> com height auto);
+#   - dimensionar por CONTAGEM de cards ativos é impossível em CSS puro
+#     (conditional oculto continua no DOM e conta em :nth-child);
+#   - "ordem de ativação" é estado temporal, inexistente em CSS.
+#
+# REGRAS (usuário, 2026-07-25):
+#   - máx. 2 cards empilhados por coluna;
+#   - 1º ativado na BASE da coluna direita, próximos empilhados acima;
+#   - 3º card abre a 2ª coluna à esquerda (mesma largura), também de baixo
+#     para cima — por isso a área `dynamic` passou a ocupar 8 das 12 colunas
+#     do grid da seção (a metade esquerda fica transparente e NÃO captura
+#     toque, preservando o hero clicável por baixo);
+#   - câmera e Roborock têm altura FIXA; só a MÍDIA aceita compressão
+#     (min_height), usada apenas quando a altura útil não comporta a dupla.
+#
+# ALTURA: `available_height` espelha a linha do hero em section_home_v2.yaml.
+# Se a régua do grid mudar lá, mudar AQUI também.
+#
+# FALLBACK: legacy/bento_dynamic_conditional.yaml (mecânica A completa) —
+# trocar o include em shell/section_home_v2.yaml.
+# ==========================================================================
+type: custom:bruno-activity-column
+view_layout:
+  grid-area: dynamic
+  show:
+    mediaquery: '(min-width: 801px)'
+available_height: calc(77vh - 154px)
+max_per_column: 2
+gap: 12
+# A área `dynamic` já reserva as duas colunas no grid da Home; não há risco de
+# invasão do hero. Zero mantém o transbordo para a coluna esquerda determinístico.
+second_column_min_width: 0
+slots:
+  # Prioridade de entrada na coluna = ordem de ATIVAÇÃO (não esta lista).
+  # Esta lista define apenas entidade-condição, altura e o card de cada slot.
+  - key: camera
+    entity: binary_sensor.home_activity_camera
+    height: 296
+    card:
+      type: custom:bruno-home-camera-card
+  - key: roborock
+    entity: binary_sensor.home_activity_roborock
+    height: 176
+    card:
+      type: custom:bruno-roborock-card
+      variant: compact
+  - key: media
+    entity: binary_sensor.home_activity_media
+    height: 248
+    # ÚNICO card que aceita redução de altura (decisão do usuário).
+    min_height: 196
+    card:
+      type: custom:bruno-media-card
+      variant: wide

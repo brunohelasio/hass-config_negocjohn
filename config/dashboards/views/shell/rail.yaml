@@ -3,8 +3,17 @@
 # cameras) que, em vez de navegar para outra view, usam fire-dom-event com
 # `bruno_section`. A shell intercepta o `ll-custom`, troca a secao no lugar e
 # acende o item ativo — a rail NUNCA re-monta.
-# Popups (system/vacuum/network/updates/floorplan) e music/power seguem
+# Popups (system/vacuum/network/floorplan) e music/power seguem
 # inalterados (serao migrados por etapas).
+#
+# NOVO (2026-07-09) — MODO PHONE (Opcao A mobile): em <=800px a rail vira DOCK
+# horizontal na base da shell. `hide_on_phone: true` esconde o item do dock e
+# o move para o menu "Mais" (botao no fim do dock — Fase 2, feedback do
+# usuario). Tablet/desktop seguem exibindo tudo na rail vertical.
+# Curadoria do dock:
+#   VISIVEIS: Home, Cameras, Aspirador, Planta 3D, Mais (5 itens).
+#   NO MENU "MAIS": Musica, Sistema, Rede, Atualizar, Config, Power.
+# ROLLBACK: remover as linhas hide_on_phone (itens voltam ao dock).
 type: custom:bento-sidebar-liquid-card
 top_items:
   - key: home
@@ -18,9 +27,16 @@ top_items:
   - key: music
     icon: music
     label: Musica
+    hide_on_phone: true
+    indicator:
+      type: state
+      entity: sensor.media_focus_visuals
+      active_states: ['playing']
+    # ANTERIOR (rollback): action: navigate + navigation_path: mass-media (token hardcoded expirava)
+    # NOVO (2026-08-01): fire-dom-event -> bruno_section: music -> subview busca URL de ingress ATUAL
     tap_action:
-      action: navigate
-      navigation_path: mass-media
+      action: fire-dom-event
+      bruno_section: music
 
   - key: cameras
     icon: cameras
@@ -35,13 +51,25 @@ top_items:
   - key: system
     icon: system
     label: Sistema
-    tap_action: !include ../../shared/popup/footer/footer_system.yaml
+    hide_on_phone: true
+    indicator:
+      type: state
+      entity: binary_sensor.pi_docker_containers_problem
+      active_states: ['on']
+    # FALLBACK: tap_action: !include ../../shared/popup/footer/footer_system.yaml
+    tap_action:
+      action: fire-dom-event
+      bruno_action: system
 
   # key = roborock para casar com a secao/hash (#roborock) e ACENDER o item
   # ativo (a shell marca selected por data-key === chave da secao). icon: vacuum.
   - key: roborock
     icon: vacuum
     label: Aspirador
+    indicator:
+      type: state
+      entity: vacuum.roborock_s7
+      active_states: ['cleaning']
     # ANTERIOR (rollback): abria o popup footer_vacuum.yaml.
     # tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
     # NOVO: troca para a secao #roborock da shell (mesmo padrao das Cameras).
@@ -52,21 +80,23 @@ top_items:
   - key: network
     icon: network
     label: Rede
-    tap_action: !include ../../shared/popup/footer/footer_network.yaml
-
-  - key: refresh
-    icon: refresh
-    label: Atualizar
+    hide_on_phone: true
+    indicator:
+      type: state
+      entity: binary_sensor.unifi_controller_alert
+      active_states: ['on']
+    # FALLBACK: tap_action: !include ../../shared/popup/footer/footer_network.yaml
     tap_action:
-      action: call-service
-      service: browser_mod.javascript
-      service_data:
-        code: location.reload()
+      action: fire-dom-event
+      bruno_action: network
 
-  - key: updates
-    icon: updates
-    label: Updates
-    tap_action: !include ../../shared/popup/footer/footer_updates.yaml
+  - key: scenes
+    icon: scenes
+    label: Cenas
+    hide_on_phone: true
+    tap_action:
+      action: fire-dom-event
+      bruno_action: scenes
 
   - key: floorplan
     icon: floorplan
@@ -74,12 +104,29 @@ top_items:
     # NOVO: separador removido (espaçamento uniforme entre botões).
     # ROLLBACK: descomentar a linha abaixo.
     # divider_after: true
-    tap_action: !include ../../shared/popup/planta_3d.yaml
+    # ANTERIOR (rollback): abria o popup fullscreen da planta.
+    # tap_action: !include ../../shared/popup/planta_3d.yaml
+    # NOVO: troca para a secao #floorplan da shell, igual Cameras/Roborock.
+    tap_action:
+      action: fire-dom-event
+      bruno_section: floorplan
+
+  - key: config
+    icon: settings
+    label: Config
+    # NOVO (Fase 2): no phone o Config sai do dock e entra no menu "Mais".
+    hide_on_phone: true
+    indicator:
+      type: updates
+    tap_action:
+      action: fire-dom-event
+      bruno_config: open
 
 bottom_items:
   - key: power
     icon: power
     label: Power
+    hide_on_phone: true
     tap_action:
       action: navigate
       navigation_path: /

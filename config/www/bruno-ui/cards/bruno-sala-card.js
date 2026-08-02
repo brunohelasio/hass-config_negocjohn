@@ -5,19 +5,25 @@ const BRUNO_SALA_DEFAULT_ENTITIES = {
   room_toggle: 'light.sala_switch_2',
   room_fallback_lights: ['light.sala_switch_1', 'light.sala_switch_2'],
   active_sensor: 'sensor.living_room_active',
-  semantic_sensor: 'sensor.sala_semantic_state',
+  // ANTERIOR (rollback): semantic_sensor: 'sensor.sala_semantic_state',
+  semantic_sensor: 'sensor.sala_semantic_state_supervised',
   motion_recent: 'binary_sensor.sala_motion_recent',
   occupancy: 'binary_sensor.sala_occupancy',
   temperature: 'sensor.sensor_4_in_1_sala_temperature',
   humidity: 'sensor.sensor_4_in_1_sala_humidity',
   presence: 'binary_sensor.sensor_4_in_1_sala_presence',
+  illuminance: 'sensor.sensor_4_in_1_sala_illuminance',
   tv: 'media_player.android_tv_192_168_3_17',
   climate: 'climate.sl_ar_condicionado',
   speaker: 'media_player.echo_show',
   corridor: 'light.corredor_switch_1',
+  corridor_motion_recent: 'binary_sensor.corredor_motion_recent',
+  corridor_occupancy: 'binary_sensor.corredor_occupancy',
 };
 
-const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle'];
+// ANTERIOR (rollback): const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle'];
+// `buffering` e um estado transitorio ligado do MediaPlayer e deve permanecer ON.
+const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle', 'buffering'];
 const BRUNO_SALA_CLIMATE_ON_STATES = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
 const BRUNO_SALA_CLIMATE_ACTIVE_ACTIONS = ['cooling', 'heating', 'drying', 'fan', 'preheating'];
 const BRUNO_SALA_CLIMATE_INACTIVE_ACTIONS = ['off', 'idle'];
@@ -27,7 +33,168 @@ const BRUNO_SALA_CLIMATE_COOLDOWN = 2500;
 const BRUNO_SALA_TV_ANIMATION_MS = 950;
 const BRUNO_SALA_PRESENCE_FALLBACK_MS = 10 * 60 * 1000;
 
+// Icones hibridos aprovados: os canvases canonicos, a ordem das camadas e os
+// tempos abaixo espelham tv-v3, ac-v5 e led-strip-v7 sem reinterpretacao visual.
+// ANTERIOR (cache rollback): const BRUNO_SALA_HYBRID_ASSET_VERSION = '20260713-hybrid-icons-1';
+// ANTERIOR (cache rollback): const BRUNO_SALA_HYBRID_ASSET_VERSION = '20260713-premium-dashboard-1';
+// ANTERIOR (cache rollback): const BRUNO_SALA_HYBRID_ASSET_VERSION = '20260714-premium-dashboard-2';
+// ANTERIOR (cache rollback): const BRUNO_SALA_HYBRID_ASSET_VERSION = '20260714-premium-dashboard-3';
+const BRUNO_SALA_HYBRID_ASSET_VERSION = '20260716-premium-dashboard-5';
+const BRUNO_SALA_TV_HYBRID_ASSET_VERSION = '20260718-tv-hybrid-v5-blue-3';
+const BRUNO_SALA_HYBRID_TIMINGS = Object.freeze({
+  corridor: Object.freeze({ on: 880, off: 720, fade: 300 }),
+  tv: Object.freeze({ on: 1120, off: 1020, fade: 0 }),
+  climate: Object.freeze({ on: 780, off: 720, fade: 300 }),
+});
+const BRUNO_SALA_HYBRID_LOOPS = Object.freeze({
+  corridor: Object.freeze({ glow: 6800 }),
+  tv: Object.freeze({ glow: 5500 }),
+  climate: Object.freeze({ glow: 4800, airflow: 2200 }),
+});
+
+function _hybridRootClass(family, active, transition) {
+  // ANTERIOR (rollback): a prop active recebia o estado visual temporario no
+  // desligamento. Isso preservava o frame, mas fazia a prop divergir da entidade.
+  // const visualActive = active;
+  const visualActive = transition === 'turning-off' ? true : active;
+  return [
+    'hybridIcon',
+    `${family}Hybrid`,
+    // ANTERIOR (rollback): active ? 'hybridIcon--on' : 'hybridIcon--off',
+    visualActive ? 'hybridIcon--on' : 'hybridIcon--off',
+    transition ? `hybridIcon--${transition}` : '',
+  ].filter(Boolean).join(' ');
+}
+
+function _hybridStyle(size, canonicalWidth, elapsed, phases = {}) {
+  const safeSize = Number.isFinite(Number(size)) ? Number(size) : 42;
+  const safeElapsed = Math.max(0, Number(elapsed) || 0);
+  const declarations = [
+    `--hybrid-size:${safeSize}px`,
+    `--hybrid-scale:${safeSize / canonicalWidth}`,
+    `--hybrid-transition-delay:-${safeElapsed}ms`,
+  ];
+
+  Object.entries(phases).forEach(([name, value]) => {
+    declarations.push(`--hybrid-${name}-delay:-${Math.max(0, Number(value) || 0)}ms`);
+  });
+
+  return declarations.join(';');
+}
+
+// Componentes visuais controlados. Eles retornam somente o icone aprovado:
+// sem botao, card, texto, pill, background ou estado local proprio.
+function HybridTvIcon({ active, transition = '', elapsed = 0, size = 42, glowPhase = 0, key = 'tv' }) {
+  const rootClass = _hybridRootClass('tv', active, transition);
+  const style = _hybridStyle(size, 250, elapsed, { glow: glowPhase });
+  const base = `/local/bruno-ui/assets/hybrid-icons/tv/v5`;
+  const version = BRUNO_SALA_TV_HYBRID_ASSET_VERSION;
+
+  return `
+    <span class="${rootClass}" data-hybrid-key="${key}" style="${style}">
+      <span class="tvV5__canvas">
+        <img class="tvV5__layer tvV5__screenGlow" src="${base}/tv-glow.png?v=${version}" alt="">
+        <span class="tvV5__screenBase"></span>
+        <img class="tvV5__layer tvV5__screenOn" src="${base}/tv-screen-on.png?v=${version}" alt="">
+        <span class="tvV5__screenClip">
+          <span class="tvV5__screenWash"></span>
+          <span class="tvV5__oledLine"></span>
+        </span>
+        <img class="tvV5__layer tvV5__frameOff" src="${base}/tv-frame-off.png?v=${version}" alt="">
+        <img class="tvV5__layer tvV5__frameOn" src="${base}/tv-frame-on.png?v=${version}" alt="">
+        <span class="tvV5__metalFrame"></span>
+      </span>
+    </span>
+  `;
+}
+
+function HybridAcIcon({
+  active,
+  transition = '',
+  elapsed = 0,
+  size = 42,
+  glowPhase = 0,
+  airflowPhase = 0,
+  key = 'climate',
+}) {
+  const rootClass = _hybridRootClass('ac', active, transition);
+  const style = _hybridStyle(size, 250, elapsed, {
+    glow: glowPhase,
+    airflow: airflowPhase,
+  });
+  const base = `/local/bruno-ui/assets/hybrid-icons/ac`;
+  const version = BRUNO_SALA_HYBRID_ASSET_VERSION;
+
+  return `
+    <span class="${rootClass}" data-hybrid-key="${key}" style="${style}">
+      <span class="acHybrid__canvas">
+        <img class="acHybrid__layer acHybrid__glow" src="${base}/ac-glow.png?v=${version}" alt="">
+        <!-- ANTERIOR V2 (rollback):
+        <img class="acHybrid__layer acHybrid__airflow" src="${base}/ac-airflow.png?v=${version}" alt="">
+        -->
+        <!-- DASHBOARD EDITION V3: o viewport desacopla a escala vertical do
+             airflow da animacao interna e devolve altura util ao aparelho. -->
+        <span class="acHybrid__airflowViewport">
+          <img class="acHybrid__layer acHybrid__airflow" src="${base}/ac-airflow.png?v=${version}" alt="">
+        </span>
+        <img class="acHybrid__layer acHybrid__frameOff" src="${base}/ac-frame-off.png?v=${version}" alt="">
+        <img class="acHybrid__layer acHybrid__frameOn" src="${base}/ac-frame-on.png?v=${version}" alt="">
+        <span class="acHybrid__chassisRim"></span>
+        <span class="acHybrid__statusLed"></span>
+        <span class="acHybrid__outletLine"></span>
+      </span>
+    </span>
+  `;
+}
+
+function HybridLedStripIcon({ active, transition = '', elapsed = 0, size = 42, glowPhase = 0, key = 'corridor' }) {
+  const rootClass = _hybridRootClass('led', active, transition);
+  const style = _hybridStyle(size, 280, elapsed, { glow: glowPhase });
+  const base = `/local/bruno-ui/assets/hybrid-icons/led-strip`;
+  const version = BRUNO_SALA_HYBRID_ASSET_VERSION;
+
+  return `
+    <span class="${rootClass}" data-hybrid-key="${key}" style="${style}">
+      <span class="ledHybrid__canvas">
+        <img class="ledHybrid__layer ledHybrid__glow" src="${base}/led-strip-glow.png?v=${version}" alt="">
+        <img class="ledHybrid__layer ledHybrid__frameOff" src="${base}/led-strip-frame-off.png?v=${version}" alt="">
+        <img class="ledHybrid__layer ledHybrid__frameOn" src="${base}/led-strip-frame-on.png?v=${version}" alt="">
+        <!-- DASHBOARD EDITION: trilho estrutural de duplo contraste. Mantem a
+             geometria aprovada e garante leitura premium mesmo no estado OFF. -->
+        <svg class="ledHybrid__rail" viewBox="0 0 360 210" aria-hidden="true">
+          <path class="ledHybrid__railBase" d="M175 113 H74 C47 113 29 101 29 82 C29 63 45 47 74 47 H306"></path>
+          <path class="ledHybrid__railBase" d="M175 113 H280 C303 113 317 130 317 151 C317 170 303 184 280 184 H29"></path>
+          <path class="ledHybrid__railRim" d="M175 113 H74 C47 113 29 101 29 82 C29 63 45 47 74 47 H306"></path>
+          <path class="ledHybrid__railRim" d="M175 113 H280 C303 113 317 130 317 151 C317 170 303 184 280 184 H29"></path>
+          <path class="ledHybrid__railDiffuser" pathLength="1" d="M175 113 H74 C47 113 29 101 29 82 C29 63 45 47 74 47 H306"></path>
+          <path class="ledHybrid__railDiffuser" pathLength="1" d="M175 113 H280 C303 113 317 130 317 151 C317 170 303 184 280 184 H29"></path>
+        </svg>
+        <svg class="ledHybrid__trace" viewBox="0 0 360 210" aria-hidden="true">
+          <path class="ledHybrid__traceA" pathLength="1" d="M175 113 H74 C47 113 29 101 29 82 C29 63 45 47 74 47 H306"></path>
+          <path class="ledHybrid__traceB" pathLength="1" d="M175 113 H280 C303 113 317 130 317 151 C317 170 303 184 280 184 H29"></path>
+        </svg>
+      </span>
+    </span>
+  `;
+}
+
 class BrunoSalaCard extends HTMLElement {
+  constructor() {
+    super();
+    this._hybridTransitions = new Map();
+    this._hybridTimers = new Map();
+    this._hybridTransitionToken = 0;
+  }
+
+  connectedCallback() {
+    if (this._config) this._render();
+  }
+
+  disconnectedCallback() {
+    this._hybridTimers.forEach((timer) => window.clearTimeout(timer));
+    this._hybridTimers.clear();
+  }
+
   static getStubConfig() {
     return {};
   }
@@ -148,9 +315,22 @@ class BrunoSalaCard extends HTMLElement {
   }
 
   _presenceRecent() {
+    // NOVO (2026-07-12): fail-closed. Somente o motion_recent supervisionado
+    // pode acender o dot; ausencia da entidade nunca volta ao raw MQTT.
+    const supervisedMotion = this._state(this._config.entities.motion_recent);
+    return supervisedMotion?.state === 'on';
+
+    /* ANTERIOR (rollback): fallbacks para occupancy e presence bruta.
+    // ANTERIOR (rollback): dot tambem acendia com occupancy — apos a saida, o
+    // delay_off da ocupacao (minutos) segurava o dot aceso com presence ja false.
+    // if (motion?.state === 'on' || occupancy?.state === 'on') return true;
+    // if (motion || occupancy) return false;
+    // NOVO (2026-07-03): dot = presenca imediata APENAS (regra: saiu -> apaga rapido).
+    // Occupancy so e usada como fonte se a camada motion_recent nao existir.
     const motion = this._state(this._config.entities.motion_recent);
+    if (motion) return motion.state === 'on';
     const occupancy = this._state(this._config.entities.occupancy);
-    if (motion?.state === 'on' || occupancy?.state === 'on') return true;
+    if (occupancy) return occupancy.state === 'on';
 
     // FALLBACK - sensor original da Sala antes da camada de ocupacao.
     const entity = this._state(this._config.entities.presence);
@@ -158,6 +338,7 @@ class BrunoSalaCard extends HTMLElement {
 
     const changedAt = Date.parse(entity.last_changed);
     return !Number.isNaN(changedAt) && Date.now() - changedAt < BRUNO_SALA_PRESENCE_FALLBACK_MS;
+    */
   }
 
   _semanticLine() {
@@ -168,6 +349,12 @@ class BrunoSalaCard extends HTMLElement {
       return String(display).trim();
     }
 
+    // ANTERIOR (rollback): fallback mostrava o texto so pela ocupacao (podia
+    // ficar visivel apos o dot apagar).
+    // return occupancy?.state === 'on' ? 'Ocupada' : '';
+    // NOVO (2026-07-04): fallback exige presenca ativa junto com a ocupacao.
+    const motionRecent = this._state(this._config.entities.motion_recent);
+    if (motionRecent && motionRecent.state !== 'on') return '';
     const occupancy = this._state(this._config.entities.occupancy);
     return occupancy?.state === 'on' ? 'Ocupada' : '';
   }
@@ -194,6 +381,103 @@ class BrunoSalaCard extends HTMLElement {
     return BRUNO_SALA_CLIMATE_ON_STATES.includes(entity?.state || '');
   }
 
+  // A linha inferior representa se o climate esta habilitado, mesmo quando a
+  // acao HVAC esta idle. O dot superior continua usando _climateIsActive().
+  _climateIsEnabled(entity) {
+    return !this._isUnavailable(entity) && entity.state !== 'off';
+  }
+
+  _getCorridorSemanticStatus() {
+    const entities = this._config.entities;
+    const motionRecent = this._state(entities.corridor_motion_recent);
+    if (motionRecent?.state === 'on') return 'Presença detectada';
+
+    const occupancy = this._state(entities.corridor_occupancy);
+    if (occupancy?.state === 'on') return 'Movimento recente';
+
+    return null;
+  }
+
+  _semanticMediaValue(value) {
+    if (typeof value !== 'string') return null;
+    const normalized = value.trim();
+    if (!normalized) return null;
+
+    const lower = normalized.toLowerCase();
+    if (['unknown', 'unavailable', 'none', 'null', 'off', 'idle'].includes(lower)) return null;
+    // ANTERIOR (rollback): filtrava apenas http(s), paths e package IDs com
+    // tres ou mais segmentos; por exemplo, `com.netflix` ainda vazava.
+    // if (/^(https?:|\/)/i.test(normalized)) return null;
+    // if (/^[a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+){2,}$/i.test(normalized)) return null;
+    if (/^(?:[a-z][a-z0-9+.-]*:\/\/|\/)/i.test(normalized)) return null;
+    if (/^[a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+$/.test(normalized)) return null;
+    if (/^(media_player|sensor|switch|remote|input_[a-z_]+)\.[a-z0-9_]+$/i.test(normalized)) return null;
+
+    return normalized;
+  }
+
+  _getTvSemanticStatus(entity, enabled) {
+    if (!enabled) return null;
+
+    const attributes = entity?.attributes || {};
+    // ANTERIOR (rollback): aceitava title/series tambem em `on` e `idle`,
+    // estados nos quais Android TV costuma reter metadata antiga.
+    // const candidates = [
+    //   attributes.media_title,
+    //   attributes.media_series_title,
+    //   attributes.app_name,
+    //   attributes.source,
+    // ];
+    const playbackState = String(entity?.state || '').toLowerCase();
+    // ANTERIOR (rollback): const reliableTitles = ['playing', 'paused'].includes(playbackState)
+    const reliableTitles = ['playing', 'paused', 'buffering'].includes(playbackState)
+      ? [attributes.media_title, attributes.media_series_title]
+      : [];
+    const candidates = [
+      ...reliableTitles,
+      attributes.app_name,
+      attributes.source,
+    ];
+
+    for (const candidate of candidates) {
+      const value = this._semanticMediaValue(candidate);
+      if (value) return value;
+    }
+
+    return 'Em reprodução';
+  }
+
+  _translateHvacAction(value) {
+    const action = String(value || '').toLowerCase();
+    const translations = {
+      cooling: 'Resfriando',
+      heating: 'Aquecendo',
+      preheating: 'Aquecendo',
+      drying: 'Desumidificando',
+      fan: 'Ventilando',
+    };
+    return translations[action] || null;
+  }
+
+  _formatTargetTemperature(value) {
+    if (value === null || value === undefined || value === '') return null;
+    const temperature = Number(value);
+    if (!Number.isFinite(temperature)) return null;
+    return String(temperature).replace('.', ',');
+  }
+
+  _getAcSemanticStatus(entity, enabled) {
+    if (!enabled) return null;
+
+    const target = this._formatTargetTemperature(entity?.attributes?.temperature);
+    const action = this._translateHvacAction(this._climateAction(entity));
+
+    if (target && action) return `${target}° · ${action}`;
+    if (target) return `Ajustado em ${target}°`;
+    if (action) return action;
+    return 'Climatização ativa';
+  }
+
   _climateLabel(entity) {
     const hvacAction = this._climateAction(entity);
     if (hvacAction === 'idle') return 'Em espera';
@@ -213,6 +497,7 @@ class BrunoSalaCard extends HTMLElement {
     const roomOn = room?.state === 'on';
     const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tv?.state || '');
     const climateOn = this._climateIsActive(climate);
+    const climateEnabled = this._climateIsEnabled(climate);
     const speakerOn = BRUNO_SALA_SPEAKER_ON_STATES.includes(this._state(entities.speaker)?.state || '');
     const corridorOn = corridor?.state === 'on';
     const lights = this._lightsSummary(room);
@@ -226,6 +511,7 @@ class BrunoSalaCard extends HTMLElement {
       roomOn,
       tvOn,
       climateOn,
+      climateEnabled,
       speakerOn,
       corridorOn,
       presenceOn: this._presenceRecent(),
@@ -233,13 +519,17 @@ class BrunoSalaCard extends HTMLElement {
       humidity: this._sensorValue(entities.humidity, '%'),
       lights,
       statusLines,
+      corridorSemanticStatus: this._getCorridorSemanticStatus(),
+      tvSemanticStatus: this._getTvSemanticStatus(tv, tvOn),
+      acSemanticStatus: this._getAcSemanticStatus(climate, climateEnabled),
       // ORIGINAL labels (rollback): mantidos para aria-label/tooltip futuro
       tvLabel: this._tvLabel(tv),
       climateLabel: this._climateLabel(climate),
       corridorLabel: corridorOn ? 'Ligado' : 'Desligado',
       // NOVO: labels compactos ON/OFF para command-state (mockup react)
       tvStateLabel: tvOn ? 'ON' : 'OFF',
-      climateStateLabel: climateOn ? 'ON' : 'OFF',
+      // ANTERIOR (rollback): climateStateLabel: climateOn ? 'ON' : 'OFF',
+      climateStateLabel: climateEnabled ? 'ON' : 'OFF',
       corridorStateLabel: corridorOn ? 'ON' : 'OFF',
     };
   }
@@ -282,7 +572,12 @@ class BrunoSalaCard extends HTMLElement {
         this._moreInfo(entities.climate);
         return;
       }
+      /* ANTERIOR (rollback): a acao idle era interpretada como climate OFF.
       const service = this._climateIsActive(this._state(entities.climate))
+        ? 'climate.turn_off'
+        : 'climate.turn_on';
+      */
+      const service = this._climateIsEnabled(this._state(entities.climate))
         ? 'climate.turn_off'
         : 'climate.turn_on';
       this._callService(service, {}, { entity_id: entities.climate });
@@ -377,6 +672,13 @@ class BrunoSalaCard extends HTMLElement {
     let holdTimer = null;
     let holdFired = false;
     let pointerDown = false;
+    // NOVO (2026-07-22) — consolidacao mobile: distingue tap intencional de
+    // arraste iniciado sobre o card, sem impedir o scroll nativo da shell.
+    const dragCancelThreshold = 10;
+    let activePointerId = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerMoved = false;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -388,19 +690,35 @@ class BrunoSalaCard extends HTMLElement {
     const resetPress = () => {
       clearHold();
       pointerDown = false;
+      pointerMoved = false;
+      activePointerId = null;
       button.classList.remove('is-pressed');
     };
 
     button.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
-      event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: serializa o gesto; pointers
+      // adicionais nao substituem o pointer/timer que iniciou a interacao.
+      // ANTERIOR (rollback): if (activePointerId !== null) return;
+      if (activePointerId !== null) {
+        event.stopPropagation();
+        return;
+      }
+      // ANTERIOR (rollback): event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: nao cancela o gesto nativo;
+      // a shell continua livre para iniciar a rolagem vertical.
       event.stopPropagation();
       pointerDown = true;
       holdFired = false;
+      activePointerId = event.pointerId;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerMoved = false;
       button.classList.add('is-pressed');
-      button.setPointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): button.setPointerCapture?.(event.pointerId);
 
       holdTimer = window.setTimeout(() => {
+        if (!pointerDown || pointerMoved) return;
         holdFired = true;
         button.classList.add('is-hold-fired');
         window.setTimeout(() => button.classList.remove('is-hold-fired'), 260);
@@ -409,15 +727,36 @@ class BrunoSalaCard extends HTMLElement {
       }, 560);
     });
 
+    // NOVO (2026-07-22) — consolidacao mobile: qualquer deslocamento acima
+    // da tolerancia cancela tap e hold, mas nao chama preventDefault().
+    button.addEventListener('pointermove', (event) => {
+      if (!pointerDown || event.pointerId !== activePointerId) return;
+      const movedX = Math.abs(event.clientX - pointerStartX);
+      const movedY = Math.abs(event.clientY - pointerStartY);
+      if (movedX <= dragCancelThreshold && movedY <= dragCancelThreshold) return;
+      pointerMoved = true;
+      clearHold();
+      button.classList.remove('is-pressed');
+    });
+
     button.addEventListener('pointerup', (event) => {
+      // NOVO (2026-07-22) — consolidacao mobile: somente o pointer que abriu
+      // o gesto pode conclui-lo e executar a acao.
+      // ANTERIOR (rollback): if (event.pointerId !== activePointerId) return;
+      if (event.pointerId !== activePointerId) {
+        event.stopPropagation();
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
-      button.releasePointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): button.releasePointerCapture?.(event.pointerId);
 
       const wasPointerDown = pointerDown;
+      const wasPointerMoved = pointerMoved;
       resetPress();
 
-      if (!wasPointerDown || holdFired) return;
+      // ANTERIOR (rollback): if (!wasPointerDown || holdFired) return;
+      if (!wasPointerDown || wasPointerMoved || holdFired) return;
       globalThis.BrunoLiquidGlass?.feedback?.('tap');
       this._runAction(key, 'tap');
     });
@@ -433,7 +772,11 @@ class BrunoSalaCard extends HTMLElement {
     });
 
     button.addEventListener('pointerleave', resetPress);
-    button.addEventListener('pointercancel', resetPress);
+    // ANTERIOR (rollback): button.addEventListener('pointercancel', resetPress);
+    button.addEventListener('pointercancel', (event) => {
+      if (event.pointerId !== activePointerId) return;
+      resetPress();
+    });
 
     button.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -449,6 +792,13 @@ class BrunoSalaCard extends HTMLElement {
     let holdTimer = null;
     let holdFired = false;
     let pointerDown = false;
+    // NOVO (2026-07-22) — consolidacao mobile: a zona de navegacao segue o
+    // mesmo contrato de gesto do restante do card.
+    const dragCancelThreshold = 10;
+    let activePointerId = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerMoved = false;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -460,20 +810,35 @@ class BrunoSalaCard extends HTMLElement {
     const resetPress = () => {
       clearHold();
       pointerDown = false;
+      pointerMoved = false;
+      activePointerId = null;
       zone.classList.remove('is-pressed');
     };
 
     zone.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
-      event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: mantem um unico pointer
+      // responsavel pela navegacao/hold ate o encerramento do gesto.
+      // ANTERIOR (rollback): if (activePointerId !== null) return;
+      if (activePointerId !== null) {
+        event.stopPropagation();
+        return;
+      }
+      // ANTERIOR (rollback): event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: preserva o scroll nativo.
       event.stopPropagation();
 
       pointerDown = true;
       holdFired = false;
+      activePointerId = event.pointerId;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerMoved = false;
       zone.classList.add('is-pressed');
-      zone.setPointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): zone.setPointerCapture?.(event.pointerId);
 
       holdTimer = window.setTimeout(() => {
+        if (!pointerDown || pointerMoved) return;
         holdFired = true;
         zone.classList.add('is-hold-fired');
         window.setTimeout(() => zone.classList.remove('is-hold-fired'), 260);
@@ -482,16 +847,39 @@ class BrunoSalaCard extends HTMLElement {
       }, 560);
     });
 
+    // NOVO (2026-07-22) — consolidacao mobile: movimento cancela navegacao
+    // e hold sem bloquear o pan vertical ou horizontal do navegador.
+    zone.addEventListener('pointermove', (event) => {
+      if (!pointerDown || event.pointerId !== activePointerId) return;
+      const movedX = Math.abs(event.clientX - pointerStartX);
+      const movedY = Math.abs(event.clientY - pointerStartY);
+      if (movedX <= dragCancelThreshold && movedY <= dragCancelThreshold) return;
+      pointerMoved = true;
+      clearHold();
+      zone.classList.remove('is-pressed');
+    });
+
     zone.addEventListener('pointerup', (event) => {
+      // NOVO (2026-07-22) — consolidacao mobile: pointer secundario nao pode
+      // concluir a navegacao iniciada por outro toque.
+      // ANTERIOR (rollback): if (event.pointerId !== activePointerId) return;
+      if (event.pointerId !== activePointerId) {
+        event.stopPropagation();
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
-      zone.releasePointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): zone.releasePointerCapture?.(event.pointerId);
 
       const wasPointerDown = pointerDown;
+      const wasPointerMoved = pointerMoved;
       resetPress();
 
-      if (!wasPointerDown || holdFired) return;
-      this._runRoomSubview();
+      // ANTERIOR (rollback): if (!wasPointerDown || holdFired) return;
+      if (!wasPointerDown || wasPointerMoved || holdFired) return;
+      zone.classList.add('is-navigating');
+      window.setTimeout(() => zone.classList.remove('is-navigating'), 420);
+      window.setTimeout(() => this._runRoomSubview(), 90);
     });
 
     zone.addEventListener('click', (event) => {
@@ -505,13 +893,19 @@ class BrunoSalaCard extends HTMLElement {
     });
 
     zone.addEventListener('pointerleave', resetPress);
-    zone.addEventListener('pointercancel', resetPress);
+    // ANTERIOR (rollback): zone.addEventListener('pointercancel', resetPress);
+    zone.addEventListener('pointercancel', (event) => {
+      if (event.pointerId !== activePointerId) return;
+      resetPress();
+    });
 
     zone.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
       event.stopPropagation();
-      this._runRoomSubview();
+      zone.classList.add('is-navigating');
+      window.setTimeout(() => zone.classList.remove('is-navigating'), 420);
+      window.setTimeout(() => this._runRoomSubview(), 90);
     });
   }
 
@@ -519,7 +913,7 @@ class BrunoSalaCard extends HTMLElement {
     const activeClass = active ? ' is-active' : '';
     return `
       <span class="status-dot tone-${tone}${activeClass}" title="${BrunoSalaCard._escape(label)}" aria-label="${BrunoSalaCard._escape(label)}">
-        <ha-icon icon="${icon}"></ha-icon>
+        <bruno-icon icon="${icon}"></bruno-icon>
       </span>
     `;
   }
@@ -531,6 +925,177 @@ class BrunoSalaCard extends HTMLElement {
       .join('');
   }
 
+  _clearHybridTimer(key) {
+    const timer = this._hybridTimers.get(key);
+    if (timer !== undefined) window.clearTimeout(timer);
+    this._hybridTimers.delete(key);
+  }
+
+  _scheduleHybridTransition(key, entry) {
+    this._clearHybridTimer(key);
+    if (!entry.phase || !entry.until) return;
+
+    const token = entry.token;
+    const delay = Math.max(0, entry.until - Date.now());
+    const timer = window.setTimeout(() => this._advanceHybridTransition(key, token), delay);
+    this._hybridTimers.set(key, timer);
+  }
+
+  _applyHybridDomState(key, entry) {
+    const root = this.shadowRoot?.querySelector(`[data-hybrid-key="${key}"]`);
+    if (!root) return;
+
+    const visualOn = entry.phase === 'turning-off' ? true : entry.active;
+    root.classList.remove(
+      'hybridIcon--on',
+      'hybridIcon--off',
+      'hybridIcon--turning-on',
+      'hybridIcon--turning-off',
+      'hybridIcon--settling-off',
+    );
+    root.classList.add(visualOn ? 'hybridIcon--on' : 'hybridIcon--off');
+    if (entry.phase) root.classList.add(`hybridIcon--${entry.phase}`);
+    root.style.setProperty('--hybrid-transition-delay', '0ms');
+  }
+
+  _advanceHybridTransition(key, token) {
+    const entry = this._hybridTransitions.get(key);
+    if (!entry || entry.token !== token) return;
+
+    this._hybridTimers.delete(key);
+    const timing = BRUNO_SALA_HYBRID_TIMINGS[key];
+    const now = Date.now();
+
+    if (entry.phase === 'turning-off') {
+      entry.phase = 'settling-off';
+      entry.startedAt = now;
+      entry.until = now + timing.fade;
+      entry.token = ++this._hybridTransitionToken;
+      this._applyHybridDomState(key, entry);
+      this._scheduleHybridTransition(key, entry);
+      return;
+    }
+
+    if (entry.phase === 'turning-on') {
+      if (key === 'corridor') entry.glowStartedAt = now;
+      if (key === 'climate') entry.airflowStartedAt = now;
+    }
+
+    entry.phase = '';
+    entry.startedAt = 0;
+    entry.until = 0;
+    entry.token = ++this._hybridTransitionToken;
+    this._applyHybridDomState(key, entry);
+  }
+
+  _normalizeHybridTransition(key, entry, now) {
+    if (!entry.phase || now < entry.until) return;
+
+    const timing = BRUNO_SALA_HYBRID_TIMINGS[key];
+    if (entry.phase === 'turning-off') {
+      const fadeStartedAt = entry.until;
+      const fadeUntil = fadeStartedAt + timing.fade;
+      if (now < fadeUntil) {
+        entry.phase = 'settling-off';
+        entry.startedAt = fadeStartedAt;
+        entry.until = fadeUntil;
+        entry.token = ++this._hybridTransitionToken;
+        this._scheduleHybridTransition(key, entry);
+        return;
+      }
+    }
+
+    if (entry.phase === 'turning-on') {
+      if (key === 'corridor') entry.glowStartedAt = now;
+      if (key === 'climate') entry.airflowStartedAt = now;
+    }
+
+    entry.phase = '';
+    entry.startedAt = 0;
+    entry.until = 0;
+    entry.token = ++this._hybridTransitionToken;
+    this._clearHybridTimer(key);
+  }
+
+  _hybridTransitionFor(key, active, now) {
+    if (!this._hass) {
+      return { active, transition: '', elapsed: 0 };
+    }
+
+    let entry = this._hybridTransitions.get(key);
+    if (!entry) {
+      entry = {
+        active,
+        phase: '',
+        startedAt: 0,
+        until: 0,
+        glowStartedAt: active ? now : 0,
+        airflowStartedAt: active && key === 'climate' ? now : 0,
+        token: ++this._hybridTransitionToken,
+      };
+      this._hybridTransitions.set(key, entry);
+    } else {
+      this._normalizeHybridTransition(key, entry, now);
+    }
+
+    if (entry.active !== active) {
+      this._clearHybridTimer(key);
+      entry.active = active;
+      entry.phase = active ? 'turning-on' : 'turning-off';
+      entry.startedAt = now;
+      entry.until = now + BRUNO_SALA_HYBRID_TIMINGS[key][active ? 'on' : 'off'];
+      if (active) {
+        entry.glowStartedAt = key === 'corridor' ? 0 : now;
+        entry.airflowStartedAt = key === 'climate' ? 0 : entry.airflowStartedAt;
+      }
+      entry.token = ++this._hybridTransitionToken;
+      this._scheduleHybridTransition(key, entry);
+    }
+
+    if (entry.phase && !this._hybridTimers.has(key)) {
+      this._scheduleHybridTransition(key, entry);
+    }
+
+    const loopDurations = BRUNO_SALA_HYBRID_LOOPS[key];
+    const loopPhase = (startedAt, duration) => (
+      startedAt && duration ? Math.max(0, now - startedAt) % duration : 0
+    );
+    return {
+      // ANTERIOR (rollback): active: visualOn,
+      // `active` permanece sempre igual ao estado real da entidade; a classe
+      // visual ON durante turning-off e derivada apenas da fase de transicao.
+      active: entry.active,
+      transition: entry.phase,
+      elapsed: entry.phase ? Math.max(0, now - entry.startedAt) : 0,
+      glowPhase: loopPhase(entry.glowStartedAt, loopDurations.glow),
+      airflowPhase: loopPhase(entry.airflowStartedAt, loopDurations.airflow),
+    };
+  }
+
+  // NOTA (2026-07-20): uso intencional do renderer plano (BrunoIcons.render),
+  // mesma biblioteca de icones do resto do dashboard — HybridTvIcon/HybridAcIcon/
+  // HybridLedStripIcon (linhas 87-179) ficam preservados sem uso, decisao do
+  // usuario de nao usar os icones hibridos em PNG neste bloco.
+  _hybridIcon(key, iconName) {
+    const requested = iconName === 'ledstrip'
+      ? 'ledstrip'
+      : iconName === 'climate'
+        ? 'climate'
+        : iconName === 'light_flush'
+          ? 'light_flush'
+          : 'tv';
+    const icon = globalThis.BrunoIcons?.render(requested) || '';
+    return `<span class="tpl-icon bruno-command-icon" data-bruno-device-icon="${requested}">${icon}</span>`;
+  }
+
+  _screenReaderStatus(value) {
+    return String(value || '')
+      .replace(/°/g, ' graus')
+      .replace(/\s*·\s*/g, ', ')
+      .trim();
+  }
+
+  /* ANTERIOR (rollback): icones SVG inline + subtitulo generico sempre renderizado.
   _actionButton(key, iconName, name, label, active, tone, options = {}) {
     const activeClass = active ? ' is-active' : '';
     const category = options.category || '';
@@ -543,6 +1108,36 @@ class BrunoSalaCard extends HTMLElement {
           <span class="command-category">${BrunoSalaCard._escape(category)}</span>
         </span>
         <span class="command-state">${label}</span>
+      </button>
+    `;
+  }
+  */
+
+  _actionButton(key, iconName, name, label, active, tone, options = {}) {
+    const activeClass = active ? ' is-active' : '';
+    const semanticStatus = options.semanticStatus || null;
+    const semanticClass = semanticStatus ? ' has-semantic-status' : '';
+    const ariaName = options.ariaName || name;
+    const ariaState = options.ariaState || (active ? 'ligado' : 'desligado');
+    const ariaParts = [ariaName, ariaState];
+    if (semanticStatus) ariaParts.push(this._screenReaderStatus(semanticStatus));
+    const ariaLabel = ariaParts.join(', ');
+    const hybridIcon = this._hybridIcon(key, iconName, options.hybridTransition, options.now);
+
+    return `
+      <button class="command-row icon-${iconName} tone-${tone}${activeClass}" type="button" data-action-key="${key}" aria-label="${BrunoSalaCard._escape(ariaLabel)}" aria-pressed="${active ? 'true' : 'false'}">
+        <!-- ANTERIOR (rollback): class="command-icon is-hybrid" — a classe is-hybrid
+             forcava color:inherit/filter:none (regra .command-icon.is-hybrid, ~linha
+             1960), pensada para os icones PNG em camadas. Como o icone aqui e o
+             vetor plano da BrunoIcons (nao mais o hibrido), essa regra cancelava a
+             cor por tom de .command-row.icon-X.is-active .command-icon (~linha 1842),
+             e o icone nunca mudava de cor entre ligado/desligado. -->
+        <span class="command-icon" aria-hidden="true">${hybridIcon}</span>
+        <span class="command-copy${semanticClass}">
+          <span class="command-name">${BrunoSalaCard._escape(name)}</span>
+          ${semanticStatus ? `<span class="command-category">${BrunoSalaCard._escape(semanticStatus)}</span>` : ''}
+        </span>
+        <span class="command-state">${BrunoSalaCard._escape(label)}</span>
       </button>
     `;
   }
@@ -565,6 +1160,7 @@ class BrunoSalaCard extends HTMLElement {
     const roomActiveClass = model.roomOn ? ' is-room-on' : '';
     const statusStackClass = model.statusLines.length > 1 ? ' has-status-stack' : '';
     const now = Date.now();
+    /* ANTERIOR (rollback): janela unica usada apenas pelo SVG inline da TV.
     const tvStateChanged = Boolean(this._hass && this._lastTvOn !== undefined && this._lastTvOn !== model.tvOn);
     if (tvStateChanged) {
       this._tvAnimationUntil = now + BRUNO_SALA_TV_ANIMATION_MS;
@@ -576,6 +1172,12 @@ class BrunoSalaCard extends HTMLElement {
       && this._tvAnimationUntil
       && now < this._tvAnimationUntil,
     );
+    */
+    const hybridTransitions = {
+      corridor: this._hybridTransitionFor('corridor', model.corridorOn, now),
+      tv: this._hybridTransitionFor('tv', model.tvOn, now),
+      climate: this._hybridTransitionFor('climate', model.climateEnabled, now),
+    };
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -834,6 +1436,8 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .room-asset {
+          width: 94%;
+          height: 94%;
           object-fit: contain;
           opacity: 0;
           transform: translateZ(0);
@@ -919,7 +1523,7 @@ class BrunoSalaCard extends HTMLElement {
           position: relative;
           z-index: 4;
           min-width: 0;
-          width: min(164px, 100%);
+          width: 100%;
           min-height: 48px;
           padding: 1px 24px 2px 0;
           display: flex;
@@ -980,6 +1584,16 @@ class BrunoSalaCard extends HTMLElement {
         .room-nav-zone.is-hold-fired .room-chevron {
           color: rgba(255,214,150,0.98);
           filter: drop-shadow(0 0 10px rgba(255,190,90,0.34));
+        }
+
+        .room-nav-zone.is-navigating .room-chevron {
+          animation: brunoRoomChevronNavigate 360ms ease both;
+        }
+
+        @keyframes brunoRoomChevronNavigate {
+          0% { transform: translate(0, -1px); }
+          52% { transform: translate(5px, -1px); }
+          100% { transform: translate(2px, -1px); }
         }
 
         .lights-line {
@@ -1080,7 +1694,7 @@ class BrunoSalaCard extends HTMLElement {
           transform: translateZ(0) scale(1.04);
         }
 
-        .status-dot.is-active ha-icon {
+        .status-dot.is-active bruno-icon {
           filter: drop-shadow(0 0 5px rgba(var(--tone),0.56));
         }
         --- FIM ORIGINAL --- */
@@ -1132,7 +1746,7 @@ class BrunoSalaCard extends HTMLElement {
           to { opacity: 1; transform: scale(1); }
         }
 
-        .status-dot ha-icon {
+        .status-dot bruno-icon {
           --mdc-icon-size: 14px;
           width: 14px;
           height: 14px;
@@ -1332,8 +1946,16 @@ class BrunoSalaCard extends HTMLElement {
           line-height: 1;
         }
 
-        .command-row.icon-ledstrip.is-active .command-icon {
-          color: var(--state-icon-active-color, #f0c040);
+        /* ANTERIOR (rollback): color: var(--state-icon-active-color, #f0c040);
+           --state-icon-active-color e uma custom property herdada do DOM externo
+           (fora do shadow root deste card) — no card da Sala (view principal,
+           dentro do grid/stack-in-card) ela resolve para um azul vindo de um
+           ancestral; nas subviews (componente isolado) essa herança nao existe e
+           o fallback #f0c040 e usado, por isso so aqui aparecia azul. Corrigido
+           para usar --tone local (mesmo padrao ja usado por icon-tv/icon-climate
+           abaixo), que nao depende de heranca externa. */
+        .command-row.icon-light_flush.is-active .command-icon {
+          color: rgb(var(--tone));
         }
 
         .command-row.icon-tv.is-active .command-icon {
@@ -1349,6 +1971,32 @@ class BrunoSalaCard extends HTMLElement {
             drop-shadow(0 1px 2px rgba(0,0,0,0.18))
             drop-shadow(0 0 8px rgba(var(--tone),0.32));
         }
+
+        /* NOVO: espessura optica — mesma espessura VISUAL (em px de tela) dos
+           icones da rail (bento-sidebar-card.js: 19px de exibicao, stroke-width
+           1.55 => ~1.227px na tela). Como o icone aqui e exibido bem maior
+           (40px), o stroke-width em unidades de viewBox precisa ser BEM menor
+           para que o traco pareca do mesmo peso fino: 1.227 * 24/40 ≈ 0.74.
+           Repetido dentro dos 2 media queries abaixo (34px e 30px) com o valor
+           recalculado para cada tamanho — sem isso o traco engrossa visualmente
+           conforme o icone cresce. CSS sempre vence o atributo de apresentacao
+           stroke-width="1.5" embutido no corpo do svg da Hugeicons, entao isso
+           e seguro e fica restrito a este card. O icone led-strip usa
+           <g transform="scale(0.75)"> internamente, entao recebe o valor ja
+           dividido por 0.75 para compensar. */
+        .command-icon svg g,
+        .command-icon svg path {
+          stroke-width: 0.74;
+        }
+
+        /* ANTERIOR (obsoleto, 2026-07-20): compensacao so fazia sentido para o
+           icone customizado led-strip, que tinha <g transform="scale(0.75)">
+           interno. O icone foi trocado para hugeicons:bulb (sem transform),
+           entao a regra geral acima ja se aplica corretamente sem compensacao.
+        .command-icon [data-bruno-device-icon="ledstrip"] svg path {
+          stroke-width: 0.98;
+        }
+        --- FIM ANTERIOR --- */
 
         /* --- ORIGINAL .command-name / .command-category / .command-state (rollback) ---
         font-size 12 / 10.4 / 10; weight 680/560/720; state max-width 68px sem border-left
@@ -1443,6 +2091,1251 @@ class BrunoSalaCard extends HTMLElement {
           overflow: visible;
         }
 
+        /* Icones hibridos premium — port visual literal dos pacotes aprovados.
+           O canvas canonico inteiro e escalado como unidade para preservar
+           strokes, sombras, glows e proporcoes internas no tamanho compacto. */
+        .command-icon.is-hybrid,
+        .command-row.is-active .command-icon.is-hybrid {
+          color: inherit;
+          filter: none;
+          transform: none;
+          overflow: visible;
+          pointer-events: none;
+        }
+
+        .command-copy:not(.has-semantic-status) {
+          justify-content: center;
+          gap: 0;
+        }
+
+        .command-row.icon-light_flush.is-active .command-state,
+        .command-row.icon-tv.is-active .command-state {
+          color: rgba(238,201,139,0.98);
+          text-shadow:
+            0 0 10px rgba(238,201,139,0.42),
+            0 0 22px rgba(238,201,139,0.16);
+          border-left-color: rgba(238,201,139,0.20);
+        }
+
+        .command-row.icon-climate.is-active .command-state {
+          color: rgba(111,224,241,0.98);
+          text-shadow:
+            0 0 10px rgba(111,224,241,0.42),
+            0 0 22px rgba(111,224,241,0.16);
+          border-left-color: rgba(111,224,241,0.20);
+        }
+
+        .hybridIcon {
+          position: relative;
+          display: block;
+          width: var(--hybrid-size, 42px);
+          height: var(--hybrid-size, 42px);
+          flex: 0 0 auto;
+          isolation: isolate;
+          overflow: visible;
+          border: 0;
+          background: none;
+          pointer-events: none;
+        }
+
+        .tvHybrid__canvas,
+        .acHybrid__canvas,
+        .ledHybrid__canvas {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          transform: translate(-50%, -50%) scale(var(--hybrid-scale));
+          transform-origin: center;
+          isolation: isolate;
+          pointer-events: none;
+        }
+
+        /* TV v3 — glow -> screen -> clip/wash/OLED -> frame OFF -> frame ON. */
+        .tvHybrid__canvas {
+          width: 250px;
+          aspect-ratio: 475 / 300;
+        }
+
+        .tvHybrid__layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          pointer-events: none;
+          transition: opacity 320ms ease;
+        }
+
+        .tvHybrid__frameOff { opacity: 1; z-index: 4; }
+        .tvHybrid__frameOn { opacity: 0; z-index: 5; }
+        .tvHybrid__screenOn { opacity: 0; z-index: 1; }
+        .tvHybrid__screenGlow { opacity: 0; z-index: 0; }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__frameOff { opacity: 0; }
+        .tvHybrid.hybridIcon--on .tvHybrid__frameOn { opacity: 1; }
+        .tvHybrid.hybridIcon--on .tvHybrid__screenOn { opacity: 1; }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenGlow {
+          opacity: 0.65;
+          animation: tvHybridGlowBreath 5.5s ease-in-out infinite;
+          animation-delay: var(--hybrid-glow-delay);
+        }
+
+        .tvHybrid__screenClip {
+          position: absolute;
+          left: 7.37%;
+          top: 11.33%;
+          width: 85.47%;
+          height: 70.33%;
+          overflow: hidden;
+          z-index: 3;
+          pointer-events: none;
+        }
+
+        .tvHybrid__oledLine {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 0;
+          height: 1px;
+          transform: translate(-50%, -50%);
+          border-radius: 999px;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255,255,255,0.85) 18%,
+            #fff 50%,
+            rgba(255,255,255,0.85) 82%,
+            transparent 100%
+          );
+          box-shadow:
+            0 0 5px rgba(255,255,255,0.88),
+            0 0 12px rgba(238,201,139,0.52);
+          opacity: 0;
+        }
+
+        .tvHybrid__screenWash {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          background:
+            radial-gradient(circle at 50% 22%, rgba(239,198,128,0.18), transparent 54%),
+            linear-gradient(180deg, rgba(90,69,43,0.12), rgba(35,29,21,0.03));
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__frameOff {
+          animation: tvHybridFrameOffWake 320ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__frameOn,
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__screenOn {
+          animation: tvHybridLayerOnWake 320ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__oledLine {
+          animation: tvHybridOledOpen 900ms cubic-bezier(0.2,0.72,0.2,1) forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__screenWash {
+          animation: tvHybridScreenWake 900ms ease-out forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvHybrid__oledLine {
+          animation: tvHybridOledClose 820ms cubic-bezier(0.2,0.72,0.2,1) forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvHybrid__screenWash {
+          animation: tvHybridScreenSleep 820ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--settling-off .tvHybrid__frameOff {
+          animation: tvHybridFrameOffSettle 320ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--settling-off .tvHybrid__frameOn,
+        .tvHybrid.hybridIcon--settling-off .tvHybrid__screenOn {
+          animation: tvHybridLayerOnSettle 320ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        @keyframes tvHybridOledOpen {
+          0% {
+            width: 0;
+            opacity: 0;
+            transform: translate(-50%, -50%) scaleY(0.7);
+          }
+          16% { width: 2%; opacity: 1; }
+          62% { width: 100%; opacity: 1; }
+          82% { width: 100%; opacity: 0.5; }
+          100% { width: 100%; opacity: 0; }
+        }
+
+        @keyframes tvHybridFrameOffWake {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+
+        @keyframes tvHybridLayerOnWake {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes tvHybridScreenWake {
+          0%, 45% { opacity: 0; }
+          72% { opacity: 0.45; }
+          100% { opacity: 1; }
+        }
+
+        @keyframes tvHybridOledClose {
+          0% { width: 100%; opacity: 0; }
+          18% { width: 100%; opacity: 1; }
+          70% { width: 3%; opacity: 1; }
+          100% { width: 0; opacity: 0; }
+        }
+
+        @keyframes tvHybridScreenSleep {
+          0% { opacity: 1; }
+          52% { opacity: 0.24; }
+          100% { opacity: 0; }
+        }
+
+        @keyframes tvHybridGlowBreath {
+          0%, 100% { opacity: 0.42; transform: scale(1); }
+          50% { opacity: 0.68; transform: scale(1.012); }
+        }
+
+        @keyframes tvHybridFrameOffSettle {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes tvHybridLayerOnSettle {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+
+        /* A/C v5 — glow -> airflow (cinco curvas) -> frames -> calha. */
+        .acHybrid__canvas {
+          width: 250px;
+          aspect-ratio: 439 / 318;
+        }
+
+        .acHybrid__layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          pointer-events: none;
+          transition: opacity 300ms ease;
+        }
+
+        .acHybrid__frameOff { opacity: 1; z-index: 4; }
+        .acHybrid__frameOn { opacity: 0; z-index: 5; }
+        .acHybrid__glow { opacity: 0; z-index: 0; }
+        .acHybrid__airflow { opacity: 0; z-index: 2; transform: translateY(-10px); }
+
+        .acHybrid.hybridIcon--on .acHybrid__frameOff { opacity: 0; }
+        .acHybrid.hybridIcon--on .acHybrid__frameOn { opacity: 1; }
+
+        .acHybrid.hybridIcon--on .acHybrid__glow {
+          opacity: 0.62;
+          animation: acHybridGlowBreath 4.8s ease-in-out infinite;
+          animation-delay: var(--hybrid-glow-delay);
+        }
+
+        .acHybrid.hybridIcon--on .acHybrid__airflow {
+          opacity: 1;
+          animation: acHybridAirflowLoop 2.2s ease-in-out infinite;
+          animation-delay: var(--hybrid-airflow-delay);
+        }
+
+        .acHybrid__outletLine {
+          position: absolute;
+          left: 16%;
+          top: 50.5%;
+          width: 68%;
+          height: 2px;
+          border-radius: 999px;
+          background: linear-gradient(90deg, transparent, rgba(111,224,241,0.95), transparent);
+          box-shadow: 0 0 8px rgba(111,224,241,0.58);
+          opacity: 0;
+          transform: scaleX(0.15);
+          transform-origin: center;
+          z-index: 6;
+        }
+
+        .acHybrid.hybridIcon--turning-on .acHybrid__frameOff {
+          animation: acHybridFrameOffWake 300ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .acHybrid.hybridIcon--turning-on .acHybrid__frameOn {
+          animation: acHybridLayerOnWake 300ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .acHybrid.hybridIcon--turning-on .acHybrid__outletLine {
+          animation: acHybridOutletOn 760ms ease-out forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .acHybrid.hybridIcon--turning-on .acHybrid__airflow {
+          animation: acHybridAirflowWake 760ms ease-out forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .acHybrid.hybridIcon--turning-off .acHybrid__outletLine {
+          animation: acHybridOutletOff 700ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .acHybrid.hybridIcon--turning-off .acHybrid__airflow {
+          animation: acHybridAirflowSleep 700ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .acHybrid.hybridIcon--on:not(.hybridIcon--turning-on) .acHybrid__outletLine {
+          opacity: 1;
+          transform: scaleX(1);
+        }
+
+        .acHybrid.hybridIcon--settling-off .acHybrid__frameOff {
+          animation: acHybridFrameOffSettle 300ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .acHybrid.hybridIcon--settling-off .acHybrid__frameOn {
+          animation: acHybridLayerOnSettle 300ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        @keyframes acHybridOutletOn {
+          0%, 28% { opacity: 0; transform: scaleX(0.12); }
+          62% { opacity: 1; transform: scaleX(1); }
+          100% { opacity: 1; transform: scaleX(1); }
+        }
+
+        @keyframes acHybridFrameOffWake {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+
+        @keyframes acHybridLayerOnWake {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes acHybridAirflowWake {
+          0%, 42% { opacity: 0; transform: translateY(-16px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes acHybridOutletOff {
+          0% { opacity: 1; transform: scaleX(1); }
+          54% { opacity: 0.4; transform: scaleX(0.55); }
+          100% { opacity: 0; transform: scaleX(0.12); }
+        }
+
+        @keyframes acHybridAirflowSleep {
+          0% { opacity: 1; transform: translateY(0); }
+          100% { opacity: 0; transform: translateY(12px); }
+        }
+
+        @keyframes acHybridAirflowLoop {
+          0%, 100% { opacity: 0.48; transform: translateY(-2px); }
+          50% { opacity: 0.95; transform: translateY(5px); }
+        }
+
+        @keyframes acHybridGlowBreath {
+          0%, 100% { opacity: 0.38; transform: scale(1); }
+          50% { opacity: 0.64; transform: scale(1.01); }
+        }
+
+        @keyframes acHybridFrameOffSettle {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes acHybridLayerOnSettle {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+
+        /* LED Strip v7 — mesmo SVG na transicao e no estado ON final. */
+        .ledHybrid {
+          --led-hybrid-hot: #fff0c3;
+        }
+
+        .ledHybrid__canvas {
+          width: 280px;
+          aspect-ratio: 360 / 210;
+        }
+
+        .ledHybrid__layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          pointer-events: none;
+          transition: opacity 300ms ease;
+        }
+
+        .ledHybrid__frameOff { opacity: 1; z-index: 4; }
+        .ledHybrid__frameOn { opacity: 0; z-index: 5; }
+        .ledHybrid__glow { opacity: 0; z-index: 1; }
+        .ledHybrid__lightFinal { opacity: 0; z-index: 6; }
+
+        .ledHybrid.hybridIcon--on .ledHybrid__frameOff { opacity: 0; }
+        .ledHybrid.hybridIcon--on .ledHybrid__frameOn { opacity: 1; }
+
+        .ledHybrid.hybridIcon--on .ledHybrid__glow {
+          opacity: 0.76;
+          animation: ledHybridGlowBreath 6.8s ease-in-out infinite;
+          animation-delay: var(--hybrid-glow-delay);
+        }
+
+        .ledHybrid__trace {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 7;
+          overflow: visible;
+          pointer-events: none;
+          opacity: 0;
+        }
+
+        .ledHybrid__trace path {
+          fill: none;
+          stroke: var(--led-hybrid-hot);
+          stroke-width: 4.2;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          stroke-dasharray: 1;
+          stroke-dashoffset: 1;
+          filter:
+            drop-shadow(0 0 3px rgba(255,240,195,0.98))
+            drop-shadow(0 0 9px rgba(255,210,125,0.82))
+            drop-shadow(0 0 16px rgba(255,208,116,0.32));
+        }
+
+        .ledHybrid.hybridIcon--turning-on .ledHybrid__frameOff {
+          animation: ledHybridFrameOffWake 300ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .ledHybrid.hybridIcon--turning-on .ledHybrid__frameOn {
+          animation: ledHybridLayerOnWake 300ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .ledHybrid.hybridIcon--on .ledHybrid__trace {
+          opacity: 1;
+        }
+
+        .ledHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .ledHybrid__trace path {
+          stroke-dashoffset: 0;
+        }
+
+        .ledHybrid.hybridIcon--turning-on .ledHybrid__traceA,
+        .ledHybrid.hybridIcon--turning-on .ledHybrid__traceB {
+          animation: ledHybridTraceOn 860ms cubic-bezier(0.2,0.72,0.2,1) forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .ledHybrid.hybridIcon--turning-off .ledHybrid__traceA,
+        .ledHybrid.hybridIcon--turning-off .ledHybrid__traceB {
+          stroke-dashoffset: 0;
+          animation: ledHybridTraceOff 700ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .ledHybrid.hybridIcon--turning-on .ledHybrid__glow {
+          animation: ledHybridGlowOn 860ms ease-out forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .ledHybrid.hybridIcon--turning-off .ledHybrid__glow {
+          animation: ledHybridGlowOff 700ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .ledHybrid.hybridIcon--settling-off .ledHybrid__frameOff {
+          animation: ledHybridFrameOffSettle 300ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .ledHybrid.hybridIcon--settling-off .ledHybrid__frameOn {
+          animation: ledHybridLayerOnSettle 300ms ease forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        @keyframes ledHybridTraceOn {
+          from { stroke-dashoffset: 1; }
+          to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes ledHybridFrameOffWake {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+
+        @keyframes ledHybridLayerOnWake {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes ledHybridTraceOff {
+          from { stroke-dashoffset: 0; }
+          to { stroke-dashoffset: 1; }
+        }
+
+        @keyframes ledHybridGlowOn {
+          0%, 36% { opacity: 0; }
+          72% { opacity: 0.48; }
+          100% { opacity: 0.76; }
+        }
+
+        @keyframes ledHybridGlowOff {
+          0% { opacity: 0.76; }
+          100% { opacity: 0; }
+        }
+
+        @keyframes ledHybridGlowBreath {
+          0%, 100% { opacity: 0.58; transform: scale(1); }
+          50% { opacity: 0.80; transform: scale(1.006); }
+        }
+
+        @keyframes ledHybridFrameOffSettle {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes ledHybridLayerOnSettle {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+
+        /* DASHBOARD EDITION PREMIUM ---------------------------------------
+           O master aprovado continua intacto. Esta camada faz a correcao
+           optica necessaria em 32-46px: silhueta primeiro, material depois e
+           emissao apenas no ON. Nao cria fundo, mini-card ou segundo botao. */
+        .ledHybrid { --premium-halo: 255, 204, 125; }
+        .tvHybrid { --premium-halo: 238, 201, 139; }
+        .acHybrid { --premium-halo: 111, 224, 241; }
+
+        /* A assinatura cromatica da linha acompanha o proprio objeto premium,
+           eliminando o rail azul/roxo herdado dos glifos vetoriais antigos. */
+        .command-row.icon-light_flush { --tone: 255, 204, 125; }
+        .command-row.icon-tv { --tone: 238, 201, 139; }
+        .command-row.icon-climate { --tone: 111, 224, 241; }
+
+        .hybridIcon::before {
+          content: "";
+          position: absolute;
+          left: 50%;
+          top: 53%;
+          width: 94%;
+          height: 58%;
+          transform: translate(-50%, -50%);
+          border-radius: 50%;
+          background: radial-gradient(ellipse, rgba(4,6,10,0.72), rgba(4,6,10,0.30) 43%, transparent 74%);
+          filter: blur(2.4px);
+          opacity: 0.58;
+          z-index: 0;
+          pointer-events: none;
+          transition: opacity 300ms ease, filter 300ms ease, background 300ms ease;
+        }
+
+        .sala-card.is-room-on .hybridIcon--off::before {
+          opacity: 0.82;
+          filter: blur(2px);
+        }
+
+        .hybridIcon--on::before {
+          width: 112%;
+          height: 82%;
+          background: radial-gradient(ellipse, rgba(var(--premium-halo),0.42), rgba(var(--premium-halo),0.15) 42%, transparent 73%);
+          filter: blur(4px);
+          opacity: 0.88;
+        }
+
+        .tvHybrid__canvas,
+        .acHybrid__canvas,
+        .ledHybrid__canvas {
+          z-index: 1;
+        }
+
+        /* TV: vidro fumê com aro champagne. A massa escura ancora a silhueta
+           em fundos claros; o aro e o specular preservam leitura em fundos escuros. */
+        .tvHybrid__screenClip {
+          border-radius: 3px;
+          background:
+            radial-gradient(circle at 32% 18%, rgba(255,255,255,0.14), transparent 28%),
+            linear-gradient(155deg, rgba(47,52,57,0.96), rgba(13,15,19,0.98) 54%, rgba(4,5,8,0.99));
+          box-shadow:
+            inset 0 0 0 1px rgba(242,229,207,0.48),
+            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 0 -2px 6px rgba(0,0,0,0.58),
+            0 1px 2px rgba(0,0,0,0.72);
+          transition: background 320ms ease, box-shadow 320ms ease;
+        }
+
+        .sala-card.is-room-on .tvHybrid.hybridIcon--off .tvHybrid__screenClip {
+          background:
+            radial-gradient(circle at 30% 16%, rgba(255,255,255,0.12), transparent 25%),
+            linear-gradient(155deg, rgba(40,43,47,0.99), rgba(8,10,13,0.99) 58%, #020305);
+          box-shadow:
+            inset 0 0 0 1px rgba(255,232,191,0.68),
+            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 0 -2px 6px rgba(0,0,0,0.68),
+            0 1px 3px rgba(0,0,0,0.84);
+        }
+
+        .tvHybrid__frameOff {
+          filter:
+            brightness(1.22)
+            contrast(1.16)
+            drop-shadow(0 1px 1px rgba(0,0,0,0.88))
+            drop-shadow(0 0 1px rgba(255,238,207,0.48));
+        }
+
+        .tvHybrid__frameOn {
+          filter:
+            contrast(1.08)
+            drop-shadow(0 1px 1px rgba(0,0,0,0.82))
+            drop-shadow(0 0 4px rgba(238,201,139,0.74));
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenClip {
+          background:
+            radial-gradient(circle at 46% 20%, rgba(255,224,170,0.38), transparent 48%),
+            linear-gradient(180deg, rgba(72,50,25,0.62), rgba(16,13,11,0.76));
+          box-shadow:
+            inset 0 0 0 1px rgba(255,222,167,0.88),
+            inset 0 1px 0 rgba(255,255,255,0.34),
+            inset 0 -3px 8px rgba(26,13,3,0.42),
+            0 0 8px rgba(238,201,139,0.56),
+            0 2px 3px rgba(0,0,0,0.78);
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenWash {
+          background:
+            radial-gradient(circle at 42% 18%, rgba(255,223,169,0.42), transparent 52%),
+            linear-gradient(180deg, rgba(126,81,31,0.28), rgba(35,22,10,0.08));
+        }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvHybrid__screenWash {
+          opacity: 0.86;
+        }
+
+        /* A/C: corpo grafite sob o frame original. O frame continua sendo a
+           fonte de geometria/indicador; o corpo adiciona densidade de produto. */
+        .acHybrid__canvas::before {
+          content: "";
+          position: absolute;
+          left: 9.4%;
+          top: 14.2%;
+          width: 81.2%;
+          height: 38.8%;
+          border-radius: 17px 17px 9px 9px;
+          background:
+            radial-gradient(circle at 28% 8%, rgba(255,255,255,0.18), transparent 30%),
+            linear-gradient(180deg, rgba(58,63,68,0.98), rgba(19,22,27,0.99) 58%, rgba(6,8,11,0.99));
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.20),
+            inset 0 -5px 12px rgba(0,0,0,0.48),
+            0 5px 10px rgba(0,0,0,0.54);
+          z-index: 1;
+          transition: background 300ms ease, box-shadow 300ms ease;
+        }
+
+        .sala-card.is-room-on .acHybrid.hybridIcon--off .acHybrid__canvas::before {
+          background:
+            radial-gradient(circle at 28% 8%, rgba(255,255,255,0.15), transparent 28%),
+            linear-gradient(180deg, rgba(47,51,56,0.99), rgba(12,15,19,0.99) 60%, rgba(3,5,8,0.99));
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 0 -5px 12px rgba(0,0,0,0.58),
+            0 5px 12px rgba(0,0,0,0.68);
+        }
+
+        .acHybrid__frameOff {
+          filter:
+            brightness(1.12)
+            contrast(1.16)
+            drop-shadow(0 1px 1px rgba(0,0,0,0.88))
+            drop-shadow(0 0 1px rgba(244,234,217,0.46));
+        }
+
+        .acHybrid__frameOn {
+          filter:
+            contrast(1.10)
+            drop-shadow(0 1px 1px rgba(0,0,0,0.82))
+            drop-shadow(0 0 5px rgba(111,224,241,0.76));
+        }
+
+        .acHybrid.hybridIcon--on .acHybrid__canvas::before {
+          background:
+            radial-gradient(circle at 28% 8%, rgba(210,252,255,0.20), transparent 30%),
+            linear-gradient(180deg, rgba(23,51,57,0.99), rgba(6,23,28,0.99) 58%, rgba(2,8,11,0.99));
+          box-shadow:
+            inset 0 1px 0 rgba(206,251,255,0.25),
+            inset 0 -5px 12px rgba(0,10,13,0.62),
+            0 0 10px rgba(111,224,241,0.34),
+            0 5px 10px rgba(0,0,0,0.58);
+        }
+
+        /* LED: trilho grafite + filete metálico no OFF. O trace aprovado
+           permanece acima e transforma o mesmo objeto em luz no ON. */
+        .ledHybrid__rail {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          overflow: visible;
+          z-index: 6;
+          pointer-events: none;
+        }
+
+        .ledHybrid__rail path {
+          fill: none;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          transition: stroke 300ms ease, filter 300ms ease, opacity 300ms ease;
+        }
+
+        .ledHybrid__railBase {
+          stroke: rgba(11,14,19,0.96);
+          stroke-width: 11;
+          filter: drop-shadow(0 5px 7px rgba(0,0,0,0.62));
+        }
+
+        .ledHybrid__railRim {
+          stroke: rgba(219,210,194,0.82);
+          stroke-width: 4.4;
+          filter:
+            drop-shadow(0 1px 1px rgba(0,0,0,0.92))
+            drop-shadow(0 0 1px rgba(255,244,225,0.50));
+        }
+
+        .sala-card.is-room-on .ledHybrid.hybridIcon--off .ledHybrid__railBase {
+          stroke: rgba(6,8,12,0.99);
+        }
+
+        .sala-card.is-room-on .ledHybrid.hybridIcon--off .ledHybrid__railRim {
+          stroke: rgba(245,220,181,0.90);
+          filter:
+            drop-shadow(0 1px 1px rgba(0,0,0,0.96))
+            drop-shadow(0 0 2px rgba(255,230,188,0.48));
+        }
+
+        .ledHybrid.hybridIcon--on .ledHybrid__railBase {
+          stroke: rgba(35,24,13,0.92);
+        }
+
+        .ledHybrid.hybridIcon--on .ledHybrid__railRim {
+          stroke: rgba(255,213,139,0.48);
+          filter: drop-shadow(0 0 3px rgba(255,205,121,0.55));
+        }
+
+        .ledHybrid.hybridIcon--on .ledHybrid__trace path {
+          stroke-width: 5.2;
+        }
+
+        /* DASHBOARD EDITION PREMIUM V3 ------------------------------------
+           Revisao optica tablet-first. A camada V2 acima permanece intacta
+           para rollback; estes overrides separam materia fisica permanente
+           de emissao, que continua restrita ao estado ON. */
+        .hybridIcon {
+          --premium-metal-hi: rgba(247,238,221,0.96);
+          --premium-metal-mid: rgba(148,146,140,0.98);
+          --premium-metal-low: rgba(42,46,50,0.99);
+        }
+
+        /* TV V3: o painel deixa de carregar sozinho a silhueta. O suporte
+           possui contraste, espessura e sombra proprios, inclusive no ON. */
+        .tvHybrid__bezel,
+        .tvHybrid__neck,
+        .tvHybrid__foot {
+          position: absolute;
+          pointer-events: none;
+          transition: filter 320ms ease, box-shadow 320ms ease;
+        }
+
+        .tvHybrid__bezel {
+          left: 5.55%;
+          top: 9.2%;
+          width: 88.9%;
+          height: 74.7%;
+          box-sizing: border-box;
+          border: 5px solid transparent;
+          border-radius: 7px;
+          background:
+            linear-gradient(160deg, var(--premium-metal-hi), var(--premium-metal-mid) 42%, var(--premium-metal-low) 82%) border-box;
+          -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          filter:
+            drop-shadow(0 4px 4px rgba(0,0,0,0.74))
+            drop-shadow(0 0 1px rgba(255,245,226,0.64));
+          z-index: 6;
+        }
+
+        .tvHybrid__neck {
+          left: 50%;
+          top: 81.4%;
+          width: 10.8%;
+          height: 11.4%;
+          transform: translateX(-50%);
+          border-radius: 0 0 5px 5px;
+          background: linear-gradient(90deg, #393d41 0%, #d8d1c5 38%, #817f7b 63%, #292d31 100%);
+          box-shadow:
+            inset 1px 0 rgba(255,255,255,0.28),
+            inset -2px 0 rgba(0,0,0,0.42),
+            0 3px 4px rgba(0,0,0,0.72);
+          z-index: 7;
+        }
+
+        .tvHybrid__foot {
+          left: 50%;
+          top: 91.1%;
+          width: 38%;
+          height: 8.4%;
+          transform: translateX(-50%);
+          border-radius: 48% 48% 32% 32% / 62% 62% 38% 38%;
+          background:
+            linear-gradient(180deg, rgba(247,238,221,0.98), rgba(126,126,124,0.98) 38%, rgba(34,38,42,0.99) 82%);
+          box-shadow:
+            inset 0 2px rgba(255,255,255,0.42),
+            inset 0 -3px rgba(0,0,0,0.42),
+            0 4px 5px rgba(0,0,0,0.78),
+            0 0 1px rgba(255,245,226,0.68);
+          z-index: 8;
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__bezel,
+        .tvHybrid.hybridIcon--on .tvHybrid__neck,
+        .tvHybrid.hybridIcon--on .tvHybrid__foot {
+          filter:
+            drop-shadow(0 3px 3px rgba(0,0,0,0.76))
+            drop-shadow(0 0 2px rgba(255,222,166,0.44));
+        }
+
+        /* A/C V3: o chassi ganha altura propria e centraliza no eixo da linha.
+           O frame mantem a geometria original, mas perde a coloracao ciano; a
+           assinatura ativa fica apenas no indicador, na calha e no airflow. */
+        .acHybrid__canvas::before,
+        .acHybrid__chassisRim {
+          left: 5%;
+          top: 10%;
+          width: 90%;
+          height: 51%;
+          transform: translateY(26px);
+          border-radius: 24px 24px 12px 12px;
+        }
+
+        .acHybrid__canvas::before {
+          background:
+            linear-gradient(105deg, transparent 0 17%, rgba(255,255,255,0.18) 23%, transparent 30%),
+            linear-gradient(180deg, rgba(192,190,184,0.99), rgba(105,108,110,0.99) 28%, rgba(48,53,57,0.99) 67%, rgba(22,27,31,0.99));
+          box-shadow:
+            inset 0 3px 0 rgba(255,255,255,0.34),
+            inset 0 -9px 13px rgba(0,0,0,0.38),
+            0 7px 10px rgba(0,0,0,0.58);
+        }
+
+        .sala-card.is-room-on .acHybrid.hybridIcon--off .acHybrid__canvas::before,
+        .acHybrid.hybridIcon--on .acHybrid__canvas::before {
+          background:
+            linear-gradient(105deg, transparent 0 17%, rgba(255,255,255,0.16) 23%, transparent 30%),
+            linear-gradient(180deg, rgba(184,183,178,0.99), rgba(94,99,102,0.99) 29%, rgba(40,46,50,0.99) 68%, rgba(16,21,25,0.99));
+          box-shadow:
+            inset 0 3px 0 rgba(255,255,255,0.32),
+            inset 0 -9px 13px rgba(0,0,0,0.44),
+            0 7px 11px rgba(0,0,0,0.68);
+        }
+
+        .acHybrid__frameOff,
+        .acHybrid__frameOn {
+          transform: translateY(26px) scale(1.11, 1.30);
+          transform-origin: 50% 34%;
+        }
+
+        .acHybrid__frameOn {
+          filter:
+            saturate(0)
+            brightness(1.08)
+            contrast(1.13)
+            drop-shadow(0 1px 1px rgba(0,0,0,0.86))
+            drop-shadow(0 0 1px rgba(247,238,221,0.52));
+        }
+
+        .acHybrid__chassisRim {
+          position: absolute;
+          box-sizing: border-box;
+          border: 5px solid transparent;
+          background:
+            linear-gradient(158deg, var(--premium-metal-hi), rgba(139,140,137,0.98) 44%, var(--premium-metal-low) 86%) border-box;
+          -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          filter:
+            drop-shadow(0 4px 4px rgba(0,0,0,0.68))
+            drop-shadow(0 0 1px rgba(255,246,229,0.64));
+          z-index: 7;
+          pointer-events: none;
+        }
+
+        .acHybrid__airflowViewport {
+          position: absolute;
+          inset: 0;
+          transform: translateY(25px) scaleY(0.58);
+          transform-origin: 50% 50%;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .acHybrid__airflowViewport .acHybrid__airflow {
+          inset: 0;
+        }
+
+        .acHybrid__outletLine {
+          left: 14%;
+          top: 67.2%;
+          width: 72%;
+          height: 3px;
+          z-index: 9;
+        }
+
+        .acHybrid__statusLed {
+          position: absolute;
+          right: 22%;
+          top: 40.5%;
+          width: 8.5%;
+          height: 4px;
+          border-radius: 999px;
+          background: rgba(27,32,35,0.92);
+          box-shadow:
+            inset 0 1px rgba(255,255,255,0.24),
+            0 1px 1px rgba(0,0,0,0.72);
+          opacity: 0.72;
+          z-index: 9;
+          transition: background 280ms ease, box-shadow 280ms ease, opacity 280ms ease;
+          pointer-events: none;
+        }
+
+        .acHybrid.hybridIcon--on .acHybrid__statusLed {
+          background: rgba(154,246,255,0.98);
+          box-shadow:
+            0 0 5px rgba(111,224,241,0.92),
+            0 0 12px rgba(111,224,241,0.42);
+          opacity: 1;
+        }
+
+        .acHybrid.hybridIcon--on::before {
+          top: 67%;
+          width: 94%;
+          height: 38%;
+          background: radial-gradient(ellipse, rgba(111,224,241,0.36), rgba(111,224,241,0.11) 42%, transparent 74%);
+          filter: blur(3px);
+          opacity: 0.78;
+        }
+
+        .acHybrid.hybridIcon--on .acHybrid__glow {
+          opacity: 0.28;
+          transform: translateY(24px) scaleY(0.58);
+          transform-origin: 50% 50%;
+          filter: blur(1px);
+          animation: acHybridOutletGlowBreath 4.8s ease-in-out infinite;
+          animation-delay: var(--hybrid-glow-delay);
+        }
+
+        @keyframes acHybridOutletGlowBreath {
+          0%, 100% {
+            opacity: 0.18;
+            transform: translateY(24px) scale(1, 0.54);
+          }
+          50% {
+            opacity: 0.31;
+            transform: translateY(24px) scale(1.018, 0.62);
+          }
+        }
+
+        /* LED V3: a borda nao engrossa sozinha. O volume adicional pertence ao
+           corpo do tubo; dentro dele surge um difusor segmentado reconhecivel. */
+        .ledHybrid__railBase {
+          stroke: rgba(45,49,52,0.99);
+          stroke-width: 18;
+          filter:
+            drop-shadow(0 5px 7px rgba(0,0,0,0.66))
+            drop-shadow(0 0 1px rgba(255,245,226,0.34));
+        }
+
+        .ledHybrid__railRim {
+          stroke: rgba(226,218,203,0.94);
+          stroke-width: 13.2;
+          filter:
+            drop-shadow(0 1px 1px rgba(0,0,0,0.94))
+            drop-shadow(0 0 1px rgba(255,246,229,0.66));
+        }
+
+        .ledHybrid__railDiffuser {
+          stroke: rgba(184,175,160,0.96);
+          stroke-width: 7.4;
+          stroke-dasharray: 0.10 0.065;
+          opacity: 0.96;
+          filter:
+            drop-shadow(0 1px 1px rgba(0,0,0,0.82))
+            drop-shadow(0 0 1px rgba(245,230,205,0.38));
+        }
+
+        .sala-card.is-room-on .ledHybrid.hybridIcon--off .ledHybrid__railBase {
+          stroke: rgba(35,39,42,0.99);
+        }
+
+        .sala-card.is-room-on .ledHybrid.hybridIcon--off .ledHybrid__railRim {
+          stroke: rgba(238,222,197,0.96);
+        }
+
+        .sala-card.is-room-on .ledHybrid.hybridIcon--off .ledHybrid__railDiffuser {
+          stroke: rgba(154,144,128,0.98);
+        }
+
+        .ledHybrid.hybridIcon--on .ledHybrid__railBase {
+          stroke: rgba(67,53,36,0.96);
+        }
+
+        .ledHybrid.hybridIcon--on .ledHybrid__railRim {
+          stroke: rgba(235,218,190,0.72);
+          filter:
+            drop-shadow(0 1px 1px rgba(0,0,0,0.82))
+            drop-shadow(0 0 2px rgba(255,219,158,0.44));
+        }
+
+        .ledHybrid.hybridIcon--on .ledHybrid__railDiffuser {
+          stroke: rgba(255,205,122,0.52);
+          opacity: 0.72;
+          filter: drop-shadow(0 0 2px rgba(255,199,105,0.64));
+        }
+
+        /* DASHBOARD EDITION PREMIUM V4 ------------------------------------
+           Correcao cirurgica posterior ao QA real. A V3 permanece acima para
+           rollback. O LED strip aprovado nao recebe qualquer override aqui. */
+
+        /* TV V4: uma unica estrutura fisica permanente. Os frames raster
+           OFF/ON anteriores ficam preservados no markup, mas deixam de disputar
+           contorno com bezel, pescoco e base construidos na V3. */
+        .tvHybrid__frameOff,
+        .tvHybrid__frameOn {
+          opacity: 0 !important;
+          animation: none !important;
+          filter: none !important;
+        }
+
+        .tvHybrid__bezel {
+          top: 8.6%;
+          height: 76%;
+          border-width: 5px 5px 6px;
+        }
+
+        .tvHybrid__neck {
+          top: 84.7%;
+          height: 9.4%;
+        }
+
+        .tvHybrid__foot {
+          top: 92.8%;
+          height: 7%;
+        }
+
+        /* ANTERIOR V3: bezel, pescoco e base recebiam um filtro champagne
+           adicional no ON. Agora o material fisico e identico nos dois estados. */
+        .tvHybrid.hybridIcon--on .tvHybrid__bezel {
+          filter:
+            drop-shadow(0 4px 4px rgba(0,0,0,0.74))
+            drop-shadow(0 0 1px rgba(255,245,226,0.64));
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__neck,
+        .tvHybrid.hybridIcon--on .tvHybrid__foot {
+          filter: none;
+        }
+
+        /* Todo conteudo emissivo fica limitado ao retangulo interno da tela.
+           O clip usa exatamente a geometria canonica do screenClip. */
+        .tvHybrid__screenOn,
+        .tvHybrid__screenGlow {
+          clip-path: inset(11.33% 7.16% 18.34% 7.37% round 3px);
+          transform-origin: 50% 46%;
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenClip {
+          /* ANTERIOR V4 QA: linear-gradient(180deg, rgba(76,58,36,0.78), rgba(24,18,12,0.88)); */
+          background: linear-gradient(180deg, rgba(92,70,42,0.82), rgba(35,24,14,0.90));
+          box-shadow:
+            inset 0 0 0 1px rgba(226,213,192,0.58),
+            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 0 -3px 7px rgba(20,12,5,0.46),
+            0 1px 2px rgba(0,0,0,0.76);
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenWash {
+          background: linear-gradient(180deg, rgba(255,222,168,0.24), rgba(151,102,47,0.14) 48%, rgba(44,27,12,0.06));
+        }
+
+        /* ANTERIOR V3: o halo geral mudava tamanho, cor e centro optico no ON.
+           A TV volta a conservar apenas a mesma sombra neutra do produto OFF. */
+        .tvHybrid.hybridIcon--on::before {
+          top: 53%;
+          width: 94%;
+          height: 58%;
+          background: radial-gradient(ellipse, rgba(4,6,10,0.72), rgba(4,6,10,0.30) 43%, transparent 74%);
+          filter: blur(2.4px);
+          opacity: 0.58;
+        }
+
+        .sala-card.is-room-on .tvHybrid.hybridIcon--on::before {
+          opacity: 0.82;
+          filter: blur(2px);
+        }
+
+        /* Sequencia OLED: primeiro a linha abre; somente depois de atingir a
+           largura maxima a tela recebe preenchimento e glow uniformes. */
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__screenOn {
+          animation: tvHybridScreenFillAfterLine 900ms cubic-bezier(0.2,0.72,0.2,1) forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__screenGlow {
+          animation: tvHybridScreenGlowAfterLine 900ms ease-out forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__screenWash {
+          animation: tvHybridScreenWashAfterLine 900ms ease-out forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvHybrid__screenOn {
+          opacity: 0.92;
+        }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvHybrid__screenGlow {
+          /* ANTERIOR V4 QA: opacity: 0.34; */
+          opacity: 0.42;
+          animation: tvHybridScreenBreath 5.5s ease-in-out infinite;
+          animation-delay: var(--hybrid-glow-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvHybrid__screenOn {
+          animation: tvHybridScreenFillSleep 820ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvHybrid__screenGlow {
+          animation: tvHybridScreenGlowSleep 820ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        @keyframes tvHybridScreenFillAfterLine {
+          0%, 62% { opacity: 0; }
+          70% { opacity: 0.14; }
+          100% { opacity: 0.92; }
+        }
+
+        @keyframes tvHybridScreenGlowAfterLine {
+          0%, 64% { opacity: 0; }
+          74% { opacity: 0.10; }
+          /* ANTERIOR V4 QA: 100% { opacity: 0.34; } */
+          100% { opacity: 0.42; }
+        }
+
+        @keyframes tvHybridScreenWashAfterLine {
+          0%, 62% { opacity: 0; }
+          74% { opacity: 0.18; }
+          100% { opacity: 0.78; }
+        }
+
+        @keyframes tvHybridScreenBreath {
+          /* ANTERIOR V4 QA: 0%,100% 0.28; 50% 0.38. */
+          0%, 100% { opacity: 0.35; }
+          50% { opacity: 0.46; }
+        }
+
+        @keyframes tvHybridScreenFillSleep {
+          0% { opacity: 0.92; }
+          58%, 100% { opacity: 0; }
+        }
+
+        @keyframes tvHybridScreenGlowSleep {
+          /* ANTERIOR V4 QA: 0% { opacity: 0.34; } */
+          0% { opacity: 0.42; }
+          52%, 100% { opacity: 0; }
+        }
+
+        /* A/C V4: corpo e chassisRim compartilham a mesma geometria e passam
+           a ser a unica silhueta fisica. Os frames PNG concorrentes continuam
+           preservados no markup apenas para rollback. */
+        .acHybrid__frameOff,
+        .acHybrid__frameOn {
+          opacity: 0 !important;
+          animation: none !important;
+          filter: none !important;
+        }
+
+        /* AJUSTE V4 POS-RENDER: ocultar ambos os frames removeu detalhe demais.
+           O frame OFF neutro passa a ser o unico contorno autoritativo e fica
+           permanente; a moldura CSS V3 e o frame ON continuam preservados,
+           porem visualmente desativados para nao produzir linhas duplas. */
+        .acHybrid__frameOff {
+          opacity: 1 !important;
+          transform: translateY(31px) scale(1.04, 1.30);
+          transform-origin: 50% 34%;
+          filter:
+            brightness(1.10)
+            contrast(1.14)
+            drop-shadow(0 1px 1px rgba(0,0,0,0.86))
+            drop-shadow(0 0 1px rgba(247,238,221,0.50)) !important;
+        }
+
+        .acHybrid__frameOn {
+          opacity: 0 !important;
+        }
+
+        .acHybrid__chassisRim {
+          opacity: 0;
+        }
+
+        /* O halo de estado nao altera mais o envelope optico do aparelho.
+           Ciano permanece apenas no indicador, calha, glow interno e airflow. */
+        .acHybrid.hybridIcon--on::before {
+          top: 53%;
+          width: 94%;
+          height: 58%;
+          background: radial-gradient(ellipse, rgba(4,6,10,0.72), rgba(4,6,10,0.30) 43%, transparent 74%);
+          filter: blur(2.4px);
+          opacity: 0.58;
+        }
+
+        .sala-card.is-room-on .acHybrid.hybridIcon--on::before {
+          opacity: 0.82;
+          filter: blur(2px);
+        }
+
+        .acHybrid__glow {
+          clip-path: inset(44% 10% 8% 10% round 0 0 20px 20px);
+        }
+
         /* --- ORIGINAL @media (max-height: 760px) (rollback) ---
         hero-action min-height 134, col 106; room-icon 104x104 margin -4/-3;
         command-row 40px / 32px col / 8gap; icon 27px; fonts 11.6/9.8/9.8
@@ -1488,6 +3381,28 @@ class BrunoSalaCard extends HTMLElement {
             height: 34px;
           }
 
+          /* NOVO: espessura optica recalculada para 34px (ver comentario na
+             regra base): 1.227 * 24/34 ≈ 0.87. */
+          .command-icon svg g,
+          .command-icon svg path {
+            stroke-width: 0.87;
+          }
+
+          /* ANTERIOR (obsoleto, 2026-07-20): ver comentario na regra base (40px).
+          .command-icon [data-bruno-device-icon="ledstrip"] svg path {
+            stroke-width: 1.16;
+          }
+          --- FIM ANTERIOR --- */
+
+          /* ANTERIOR (rollback):
+          .hybridIcon { --hybrid-size: 36px !important; }
+          .tvHybrid, .acHybrid { --hybrid-scale: 0.144 !important; }
+          .ledHybrid { --hybrid-scale: 0.1285714286 !important; }
+          */
+          .hybridIcon { --hybrid-size: 40px !important; }
+          .tvHybrid, .acHybrid { --hybrid-scale: 0.16 !important; }
+          .ledHybrid { --hybrid-scale: 0.1428571429 !important; }
+
           .command-name {
             font-size: 13px;
           }
@@ -1503,6 +3418,9 @@ class BrunoSalaCard extends HTMLElement {
           }
         }
 
+        /* --- ANTERIOR (rollback) — bloco herdado do embed mobile V3.5:
+           inflava o card no phone (min-height 300px), causando a altura
+           excessiva apontada pelo usuario na Fase 2 mobile.
         @media (max-width: 800px) {
           :host {
             min-height: 300px;
@@ -1512,6 +3430,79 @@ class BrunoSalaCard extends HTMLElement {
             min-height: 300px;
           }
         }
+        --- FIM ANTERIOR --- */
+
+        /* ANTERIOR (rollback) — Fase 2 mobile de 2026-07-09: SALA COMPACTA
+           vertical no phone. Permanece ativa como fallback antes da camada
+           final de consolidacao mobile de 2026-07-22.
+           PNG menor, hero mais baixo e linhas de comando mais densas.
+           ROLLBACK: remover este bloco e descomentar o ANTERIOR acima. */
+        @media (max-width: 800px) {
+          :host {
+            min-height: 0;
+          }
+
+          .sala-card {
+            min-height: 0;
+            padding: 10px 12px;
+          }
+
+          .hero-action {
+            min-height: 96px;
+            grid-template-columns: 96px minmax(0, 1fr) 36px;
+            padding: 0 0 6px;
+          }
+
+          .room-icon {
+            width: 92px;
+            height: 62px;
+          }
+
+          .command-row {
+            height: 46px;
+            grid-template-columns: 34px minmax(0, 1fr) 42px;
+            column-gap: 5px;
+          }
+
+          .command-icon {
+            width: 30px;
+            height: 30px;
+          }
+
+          /* NOVO: espessura optica recalculada para 30px (ver comentario na
+             regra base): 1.227 * 24/30 ≈ 0.98. */
+          .command-icon svg g,
+          .command-icon svg path {
+            stroke-width: 0.98;
+          }
+
+          /* ANTERIOR (obsoleto, 2026-07-20): ver comentario na regra base (40px).
+          .command-icon [data-bruno-device-icon="ledstrip"] svg path {
+            stroke-width: 1.31;
+          }
+          --- FIM ANTERIOR --- */
+
+          /* ANTERIOR (rollback):
+          .hybridIcon { --hybrid-size: 32px !important; }
+          .tvHybrid, .acHybrid { --hybrid-scale: 0.128 !important; }
+          .ledHybrid { --hybrid-scale: 0.1142857143 !important; }
+          */
+          .hybridIcon { --hybrid-size: 36px !important; }
+          .tvHybrid, .acHybrid { --hybrid-scale: 0.144 !important; }
+          .ledHybrid { --hybrid-scale: 0.1285714286 !important; }
+
+          .command-name {
+            font-size: 12.6px;
+          }
+
+          .command-category {
+            font-size: 10px;
+          }
+
+          .command-state {
+            font-size: 9.6px;
+          }
+        }
 
         @media (prefers-reduced-motion: reduce) {
           .hero-action,
@@ -1519,6 +3510,704 @@ class BrunoSalaCard extends HTMLElement {
           .status-dot,
           .command-icon {
             transition: none !important;
+          }
+
+          .tvHybrid__oledLine,
+          .tvHybrid__screenWash,
+          .tvHybrid__screenGlow {
+            animation: none !important;
+          }
+        }
+
+        /* DASHBOARD EDITION PREMIUM V5 ------------------------------------
+           Microajuste de largura posterior ao fechamento dos icones. As
+           estruturas e animacoes premium permanecem intocadas: esta camada
+           redistribui apenas as tres colunas internas de cada command-row. */
+        .command-row {
+          /* ANTERIOR V4: 40px minmax(0,1fr) 44px. */
+          grid-template-columns: 40px minmax(0, 1fr) 36px;
+        }
+
+        .command-state {
+          /* ANTERIOR V4: padding-left 10px; border-left 1px solid. */
+          padding-left: 4px;
+          border-left: 0;
+          letter-spacing: 0.7px;
+        }
+
+        /* O A/C e o unico produto que ocupa quase toda a coluna de icone.
+           O respiro adicional nao altera Corredor, TV ou a geometria do A/C. */
+        .command-row.icon-climate .command-copy {
+          padding-left: 3px;
+        }
+
+        @media (max-height: 760px) {
+          .command-row {
+            /* ANTERIOR V4: 36px minmax(0,1fr) 40px. */
+            grid-template-columns: 36px minmax(0, 1fr) 33px;
+          }
+
+          .command-state {
+            /* ANTERIOR V4: padding-left 8px. */
+            padding-left: 3px;
+            letter-spacing: 0.65px;
+          }
+        }
+
+        @media (max-width: 800px) {
+          .command-row {
+            /* ANTERIOR V4: 34px minmax(0,1fr) 42px. */
+            grid-template-columns: 34px minmax(0, 1fr) 34px;
+          }
+
+          .command-state {
+            padding-left: 3px;
+            letter-spacing: 0.6px;
+          }
+        }
+
+        /* DASHBOARD EDITION PREMIUM V6 ------------------------------------
+           Ajuste exclusivamente cosmetico dos produtos TV e A/C. A V4/V5
+           permanece acima como fallback: nenhuma geometria, timing ou acao e
+           alterada por esta camada. */
+
+        /* A moldura continua fisicamente identica, mas o material deixa de
+           usar um gradiente diagonal que sugeria laterais inclinadas em 40px. */
+        .tvHybrid__bezel {
+          background:
+            linear-gradient(180deg, var(--premium-metal-hi), var(--premium-metal-mid) 48%, var(--premium-metal-low) 100%) border-box;
+        }
+
+        /* A assinatura ligada volta ao azul frio do template SVG anterior.
+           Toda emissao permanece recortada no interior da tela. */
+        .tvHybrid {
+          --premium-halo: 100, 172, 183;
+        }
+
+        .command-row.icon-tv {
+          --tone: 100, 172, 183;
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenClip {
+          background: linear-gradient(180deg, rgba(127,219,233,0.84), rgba(100,172,183,0.72) 48%, rgba(24,66,78,0.92));
+          box-shadow:
+            inset 0 0 0 1px rgba(180,236,244,0.70),
+            inset 0 1px 0 rgba(255,255,255,0.34),
+            inset 0 -3px 8px rgba(9,34,43,0.54),
+            0 1px 2px rgba(0,0,0,0.76);
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenWash {
+          background: linear-gradient(180deg, rgba(210,247,252,0.34), rgba(127,219,233,0.22) 46%, rgba(38,111,128,0.10));
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenOn,
+        .tvHybrid.hybridIcon--on .tvHybrid__screenGlow {
+          filter: grayscale(1) sepia(1) saturate(4.6) hue-rotate(142deg) brightness(1.18);
+          mix-blend-mode: screen;
+        }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvHybrid__screenGlow {
+          opacity: 0.56;
+          animation: tvHybridScreenBreathBlue 5.5s ease-in-out infinite;
+          animation-delay: var(--hybrid-glow-delay);
+        }
+
+        @keyframes tvHybridScreenBreathBlue {
+          0%, 100% { opacity: 0.48; }
+          50% { opacity: 0.62; }
+        }
+
+        /* Remove somente a faixa diagonal especular esquerda do A/C. O
+           gradiente vertical, o frame, o LED e o airflow ficam intactos. */
+        .acHybrid__canvas::before {
+          background:
+            linear-gradient(180deg, rgba(192,190,184,0.99), rgba(105,108,110,0.99) 28%, rgba(48,53,57,0.99) 67%, rgba(22,27,31,0.99));
+        }
+
+        .sala-card.is-room-on .acHybrid.hybridIcon--off .acHybrid__canvas::before,
+        .acHybrid.hybridIcon--on .acHybrid__canvas::before {
+          background:
+            linear-gradient(180deg, rgba(184,183,178,0.99), rgba(94,99,102,0.99) 29%, rgba(40,46,50,0.99) 68%, rgba(16,21,25,0.99));
+        }
+
+        /* DASHBOARD EDITION PREMIUM V7 ------------------------------------
+           Fechamento optico da TV: bezel uniforme, material fisico neutro e
+           uma unica assinatura azul no estado ligado. A sequencia OLED
+           centro-para-fora permanece a mesma no ligar e no desligar. */
+        .tvHybrid__bezel {
+          border-width: 5px;
+        }
+
+        .tvHybrid__neck {
+          background: linear-gradient(90deg, #34393e 0%, #c9c7c2 38%, #777a7c 63%, #252a2f 100%);
+        }
+
+        .tvHybrid__foot {
+          background: linear-gradient(180deg, rgba(226,226,222,0.98), rgba(116,120,122,0.98) 40%, rgba(31,36,41,0.99) 84%);
+          box-shadow:
+            inset 0 2px rgba(255,255,255,0.34),
+            inset 0 -3px rgba(0,0,0,0.46),
+            0 4px 5px rgba(0,0,0,0.76),
+            0 0 1px rgba(224,235,238,0.54);
+        }
+
+        .command-row.icon-tv.is-active .command-state {
+          color: rgba(156,226,238,0.98);
+          text-shadow:
+            0 0 9px rgba(100,172,183,0.34),
+            0 0 18px rgba(100,172,183,0.12);
+          border-left-color: rgba(100,172,183,0.20);
+        }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvHybrid__screenGlow {
+          opacity: 0.24;
+          animation: tvHybridScreenBreathBlue 5.5s ease-in-out infinite;
+          animation-delay: var(--hybrid-glow-delay);
+        }
+
+        @keyframes tvHybridScreenGlowAfterLine {
+          0%, 64% { opacity: 0; }
+          74% { opacity: 0.07; }
+          100% { opacity: 0.24; }
+        }
+
+        @keyframes tvHybridScreenGlowSleep {
+          0% { opacity: 0.24; }
+          52%, 100% { opacity: 0; }
+        }
+
+        @keyframes tvHybridScreenBreathBlue {
+          0%, 100% { opacity: 0.20; }
+          50% { opacity: 0.27; }
+        }
+
+        /* DASHBOARD EDITION PREMIUM V8 ------------------------------------
+           Fechamento final da TV: aro opticamente uniforme, tela fria sem
+           contaminacao champagne e sequencia OLED visivel nos dois sentidos. */
+        .tvHybrid__bezel {
+          left: 5.55%;
+          top: 8.6%;
+          width: 88.9%;
+          height: 76%;
+          border-width: 5px;
+          border-style: solid;
+          border-color: transparent;
+          border-radius: 7px;
+          background: linear-gradient(180deg, #d3d5d4 0%, #85898b 46%, #262b2f 100%) border-box;
+          filter:
+            drop-shadow(0 3px 3px rgba(0,0,0,0.70))
+            drop-shadow(0 0 1px rgba(229,238,240,0.50));
+        }
+
+        .tvHybrid__screenClip {
+          left: 7.55%;
+          top: 11.76%;
+          width: 84.9%;
+          height: 69.68%;
+          border-radius: 3px;
+          background:
+            radial-gradient(circle at 32% 18%, rgba(255,255,255,0.10), transparent 28%),
+            linear-gradient(160deg, rgba(38,44,49,0.98), rgba(10,13,17,0.99) 56%, rgba(3,5,8,1));
+          box-shadow:
+            inset 0 0 0 1px rgba(214,224,226,0.42),
+            inset 0 1px 0 rgba(255,255,255,0.16),
+            inset 0 -2px 5px rgba(0,0,0,0.62),
+            0 1px 2px rgba(0,0,0,0.74);
+        }
+
+        .tvHybrid__screenOn,
+        .tvHybrid__screenGlow {
+          clip-path: inset(11.76% 7.55% 18.56% 7.55% round 3px);
+          transform-origin: 50% 46.6%;
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenClip {
+          background:
+            radial-gradient(circle at 38% 18%, rgba(220,250,255,0.20), transparent 34%),
+            linear-gradient(180deg, rgba(120,196,213,0.70), rgba(64,132,148,0.56) 48%, rgba(15,45,55,0.88));
+          box-shadow:
+            inset 0 0 0 1px rgba(182,232,240,0.60),
+            inset 0 1px 0 rgba(255,255,255,0.28),
+            inset 0 -3px 7px rgba(7,28,36,0.48),
+            0 1px 2px rgba(0,0,0,0.76);
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenWash {
+          background: linear-gradient(180deg, rgba(221,249,253,0.20), rgba(112,190,206,0.12) 46%, rgba(34,91,104,0.05));
+        }
+
+        .tvHybrid.hybridIcon--on .tvHybrid__screenOn,
+        .tvHybrid.hybridIcon--on .tvHybrid__screenGlow {
+          filter: saturate(0.82) brightness(1.02);
+          mix-blend-mode: screen;
+        }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvHybrid__screenOn {
+          opacity: 0.48;
+        }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvHybrid__screenGlow {
+          opacity: 0.11;
+          animation: tvHybridScreenBreathV8 5.5s ease-in-out infinite;
+          animation-delay: var(--hybrid-glow-delay);
+        }
+
+        .tvHybrid__oledLine {
+          height: 1px;
+          background: linear-gradient(90deg, transparent 0%, rgba(174,234,244,0.82) 18%, #f6fdff 50%, rgba(174,234,244,0.82) 82%, transparent 100%);
+          box-shadow: 0 0 4px rgba(234,252,255,0.92), 0 0 9px rgba(100,172,183,0.54);
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__oledLine {
+          animation: tvHybridOledOpenV8 900ms cubic-bezier(0.2,0.72,0.2,1) forwards !important;
+          animation-delay: var(--hybrid-transition-delay) !important;
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__screenOn {
+          animation: tvHybridScreenFillAfterLineV8 900ms cubic-bezier(0.2,0.72,0.2,1) forwards !important;
+          animation-delay: var(--hybrid-transition-delay) !important;
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvHybrid__screenGlow {
+          animation: tvHybridScreenGlowAfterLineV8 900ms ease-out forwards !important;
+          animation-delay: var(--hybrid-transition-delay) !important;
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvHybrid__oledLine {
+          animation: tvHybridOledCloseV8 820ms cubic-bezier(0.2,0.72,0.2,1) forwards !important;
+          animation-delay: var(--hybrid-transition-delay) !important;
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvHybrid__screenOn {
+          animation: tvHybridScreenFillSleepV8 820ms ease-in forwards !important;
+          animation-delay: var(--hybrid-transition-delay) !important;
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvHybrid__screenGlow {
+          animation: tvHybridScreenGlowSleepV8 820ms ease-in forwards !important;
+          animation-delay: var(--hybrid-transition-delay) !important;
+        }
+
+        @keyframes tvHybridOledOpenV8 {
+          0% { width: 0; opacity: 0; transform: translate(-50%, -50%) scaleY(0.7); }
+          15% { width: 3%; opacity: 1; }
+          60% { width: 100%; opacity: 1; }
+          82% { width: 100%; opacity: 0.48; }
+          100% { width: 100%; opacity: 0; }
+        }
+
+        @keyframes tvHybridOledCloseV8 {
+          0% { width: 100%; opacity: 0; }
+          16% { width: 100%; opacity: 1; }
+          70% { width: 3%; opacity: 1; }
+          100% { width: 0; opacity: 0; }
+        }
+
+        @keyframes tvHybridScreenFillAfterLineV8 {
+          0%, 60% { opacity: 0; }
+          72% { opacity: 0.12; }
+          100% { opacity: 0.48; }
+        }
+
+        @keyframes tvHybridScreenGlowAfterLineV8 {
+          0%, 64% { opacity: 0; }
+          76% { opacity: 0.04; }
+          100% { opacity: 0.11; }
+        }
+
+        @keyframes tvHybridScreenFillSleepV8 {
+          0% { opacity: 0.48; }
+          52%, 100% { opacity: 0; }
+        }
+
+        @keyframes tvHybridScreenGlowSleepV8 {
+          0% { opacity: 0.11; }
+          48%, 100% { opacity: 0; }
+        }
+
+        @keyframes tvHybridScreenBreathV8 {
+          0%, 100% { opacity: 0.09; }
+          50% { opacity: 0.13; }
+        }
+
+        /* TV HYBRID V5 PACKAGE -------------------------------------------
+           Namespace isolado: nenhuma regra das edicoes V3-V8 interfere nas
+           quatro camadas e na sequencia OLED entregues pelo pacote V5. */
+        .tvHybrid::before {
+          content: none !important;
+        }
+
+        .tvV5__canvas {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 250px;
+          aspect-ratio: 475 / 300;
+          transform: translate(-50%, -50%) scale(var(--hybrid-scale));
+          transform-origin: center;
+          isolation: isolate;
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        .tvV5__layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          pointer-events: none;
+          transition: opacity 320ms ease;
+        }
+
+        .tvV5__frameOff { z-index: 4; opacity: 1; }
+        .tvV5__frameOn { z-index: 5; opacity: 0; }
+        .tvV5__screenOn { z-index: 2; opacity: 0; }
+        .tvV5__screenGlow { z-index: 2; opacity: 0; }
+
+        .tvV5__screenOn,
+        .tvV5__screenGlow {
+          clip-path: inset(14.50% 8.96% 21.50% 9.37% round 2px);
+        }
+
+        .tvV5__screenBase {
+          position: absolute;
+          left: 7.37%;
+          top: 11.33%;
+          width: 85.47%;
+          height: 70.33%;
+          box-sizing: border-box;
+          border-radius: 3px;
+          background:
+            radial-gradient(circle at 34% 18%, rgba(73,80,86,0.20), transparent 32%),
+            linear-gradient(158deg, rgba(29,33,37,0.99), rgba(8,10,13,1) 58%, rgba(2,3,5,1));
+          box-shadow:
+            inset 0 0 0 1px rgba(211,218,219,0.16),
+            inset 0 1px 0 rgba(255,255,255,0.08),
+            inset 0 -3px 7px rgba(0,0,0,0.72);
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        .tvV5__screenBase::after {
+          content: "";
+          position: absolute;
+          inset: 5px 4.5px;
+          border-radius: 2px;
+          opacity: 0;
+          background:
+            radial-gradient(circle at 38% 18%, rgba(214,246,252,0.18), transparent 35%),
+            linear-gradient(180deg, rgba(104,190,209,0.84), rgba(54,126,145,0.78) 50%, rgba(13,45,55,0.96));
+          box-shadow:
+            inset 0 0 0 1px rgba(193,235,242,0.38),
+            inset 0 1px 0 rgba(255,255,255,0.22),
+            inset 0 -3px 7px rgba(5,27,34,0.58);
+          pointer-events: none;
+        }
+
+        .tvV5__metalFrame {
+          position: absolute;
+          left: 5.95%;
+          top: 9.37%;
+          width: 88.32%;
+          height: 74.26%;
+          box-sizing: border-box;
+          border: 7px solid rgba(142,147,149,0.98);
+          border-radius: 7px;
+          box-shadow:
+            inset 0 0 0 1px rgba(232,235,234,0.34),
+            0 0 0 1px rgba(31,35,38,0.84),
+            0 3px 4px rgba(0,0,0,0.68),
+            0 0 2px rgba(224,230,230,0.42);
+          z-index: 6;
+          pointer-events: none;
+        }
+
+        .tvHybrid.hybridIcon--on .tvV5__frameOff { opacity: 0; }
+        .tvHybrid.hybridIcon--on .tvV5__frameOn { opacity: 1; }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvV5__screenOn {
+          opacity: 1;
+          filter: saturate(1.16) brightness(1.12);
+        }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvV5__screenBase::after {
+          opacity: 1;
+        }
+
+        .tvHybrid.hybridIcon--on:not(.hybridIcon--turning-on):not(.hybridIcon--turning-off) .tvV5__screenGlow {
+          opacity: 0.34;
+          filter: saturate(1.14) brightness(1.10);
+          animation: tvV5GlowBreath 5.5s ease-in-out infinite;
+          animation-delay: var(--hybrid-glow-delay);
+        }
+
+        .tvV5__screenClip {
+          position: absolute;
+          left: 9.37%;
+          top: 14.50%;
+          z-index: 3;
+          width: 81.67%;
+          height: 64%;
+          overflow: hidden;
+          pointer-events: none;
+        }
+
+        .tvV5__oledLine {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 0;
+          height: 1px;
+          opacity: 0;
+          transform: translate(-50%, -50%);
+          border-radius: 999px;
+          background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.85) 18%, #fff 50%, rgba(255,255,255,0.85) 82%, transparent 100%);
+          box-shadow: 0 0 5px rgba(255,255,255,0.88), 0 0 12px rgba(84,164,255,0.55);
+        }
+
+        .tvV5__screenWash {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          background:
+            radial-gradient(circle at 50% 22%, rgba(84,164,255,0.18), transparent 54%),
+            linear-gradient(180deg, rgba(35,67,104,0.12), rgba(18,29,43,0.03));
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvV5__oledLine {
+          animation: tvV5OledOpen 700ms cubic-bezier(0.2,0.72,0.2,1) forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvV5__screenWash {
+          animation: tvV5ScreenWake 420ms ease-out forwards;
+          animation-delay: calc(650ms + var(--hybrid-transition-delay));
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvV5__screenOn {
+          animation: tvV5ScreenLayerIn 420ms ease-out forwards;
+          animation-delay: calc(650ms + var(--hybrid-transition-delay));
+        }
+
+        .tvHybrid.hybridIcon--turning-on .tvV5__screenGlow {
+          animation: tvV5GlowLayerIn 420ms ease-out forwards;
+          animation-delay: calc(650ms + var(--hybrid-transition-delay));
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvV5__screenGlow {
+          opacity: 0.34;
+          animation: tvV5GlowLayerOut 300ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvV5__screenBase::after {
+          opacity: 1;
+          animation: tvV5ScreenBaseOut 300ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvV5__screenOn {
+          opacity: 1;
+          animation: tvV5ScreenLayerOut 300ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvV5__screenWash {
+          opacity: 1;
+          animation: tvV5ScreenSleep 300ms ease-in forwards;
+          animation-delay: var(--hybrid-transition-delay);
+        }
+
+        .tvHybrid.hybridIcon--turning-off .tvV5__oledLine {
+          animation: tvV5OledClose 700ms cubic-bezier(0.2,0.72,0.2,1) forwards;
+          animation-delay: calc(300ms + var(--hybrid-transition-delay));
+        }
+
+        @keyframes tvV5OledOpen {
+          0% { width: 0; opacity: 0; transform: translate(-50%, -50%) scaleY(0.7); }
+          14% { width: 2%; opacity: 1; }
+          78% { width: 100%; opacity: 1; }
+          100% { width: 100%; opacity: 0; }
+        }
+
+        @keyframes tvV5ScreenWake {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes tvV5ScreenLayerIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes tvV5GlowLayerIn {
+          from { opacity: 0; }
+          to { opacity: 0.34; }
+        }
+
+        @keyframes tvV5GlowLayerOut {
+          from { opacity: 0.34; }
+          to { opacity: 0; }
+        }
+
+        @keyframes tvV5ScreenBaseOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+
+        @keyframes tvV5ScreenLayerOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+
+        @keyframes tvV5ScreenSleep {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+
+        @keyframes tvV5OledClose {
+          0% { width: 100%; opacity: 0; }
+          14% { width: 100%; opacity: 1; }
+          82% { width: 3%; opacity: 1; }
+          100% { width: 0; opacity: 0; }
+        }
+
+        @keyframes tvV5GlowBreath {
+          0%, 100% { opacity: 0.26; }
+          50% { opacity: 0.36; }
+        }
+
+        /* NOVO (2026-07-22) — consolidacao mobile -------------------------
+           A Sala conserva a hierarquia pela largura integral, mas passa a
+           compartilhar a altura de 176px dos demais comodos. Identidade e
+           navegacao ficam a esquerda; Corredor, TV e A/C formam tres alvos
+           independentes empilhados a direita. Esta camada final e aditiva e
+           sobrescreve somente a geometria em <=800px.
+
+           ANTERIOR (rollback): composicao vertical definida nos blocos
+           @media (max-width: 800px) acima (hero 96px + tres comandos 46px). */
+        @media (max-width: 800px) {
+          :host {
+            height: 100%;
+            min-height: 0;
+          }
+
+          .sala-card {
+            height: 100%;
+            min-height: 0;
+            display: grid;
+            /* ANTERIOR (rollback):
+               grid-template-columns: minmax(0, 1fr) minmax(138px, 44%); */
+            /* NOVO (2026-07-22) — a divisoria da action-strip coincide com o
+               eixo geometrico do card e com a separacao da grade abaixo. */
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: minmax(0, 1fr);
+            /* ANTERIOR (rollback): column-gap: 9px; */
+            column-gap: 0;
+            padding: 10px 10px 10px 12px;
+          }
+
+          .hero-action {
+            min-width: 0;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            /* ANTERIOR (rollback):
+               grid-template-columns: 82px minmax(0, 1fr) 32px; */
+            /* NOVO (2026-07-22) — a trilha final reserva 8px de respiro
+               entre temperatura/status e a divisoria central. */
+            grid-template-columns: 82px minmax(0, 1fr) 40px;
+            grid-template-rows: auto minmax(0, 1fr) auto auto;
+            column-gap: 4px;
+            padding: 0;
+          }
+
+          .room-icon {
+            width: 80px;
+            height: 54px;
+            margin: 0;
+          }
+
+          .right-rail {
+            width: 32px;
+            /* ANTERIOR (rollback): herdava transform: translate(5px, -3px)
+               do contrato desktop, aproximando a metrica da divisoria. */
+            justify-self: start;
+            transform: translate(0, -3px);
+          }
+
+          .room-nav-zone {
+            min-height: 48px;
+            padding-right: 8px;
+          }
+
+          .title {
+            font-size: 14px;
+          }
+
+          .lights-line,
+          .sala-card.has-status-stack .lights-line {
+            max-height: 25px;
+            font-size: 10.2px;
+          }
+
+          .action-strip {
+            align-self: stretch;
+            height: 100%;
+            min-height: 0;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: repeat(3, minmax(0, 1fr));
+            border-left: 1px solid rgba(255,255,255,0.105);
+            padding-left: 7px;
+          }
+
+          .command-row {
+            height: auto;
+            min-height: 44px;
+            grid-template-columns: 30px minmax(0, 1fr) 32px;
+            column-gap: 4px;
+            padding: 0 0 0 2px;
+          }
+
+          .command-row::before {
+            left: -1px;
+            top: 10px;
+            bottom: 10px;
+          }
+
+          .command-row::after {
+            left: 34px;
+            right: 34px;
+          }
+
+          .command-icon {
+            width: 30px;
+            height: 30px;
+          }
+
+          .command-copy {
+            gap: 3px;
+          }
+
+          .command-name {
+            font-size: 11.8px;
+          }
+
+          .command-category {
+            font-size: 9.4px;
+          }
+
+          .command-state {
+            width: 100%;
+            padding-left: 2px;
+            font-size: 9px;
+            letter-spacing: 0.45px;
+          }
+
+          .command-row.icon-climate .command-copy {
+            padding-left: 0;
           }
         }
       </style>
@@ -1561,16 +4250,38 @@ class BrunoSalaCard extends HTMLElement {
           </div>
         </button>
 
-        <!-- ORIGINAL action-strip (rollback): usava model.corridorLabel/tvLabel/climateLabel (Ligado/Desligado etc) -->
+        <!-- ANTERIOR (rollback): icones SVG inline e categorias genericas.
         <div class="action-strip">
-          ${this._actionButton('corridor', 'ledstrip', 'Corredor', model.corridorStateLabel, model.corridorOn, 'blue', { category: 'Iluminação' })}
-          ${this._actionButton('tv', 'tv', 'TV', model.tvStateLabel, model.tvOn, 'purple', { animate: animateTv, category: 'Entretenimento' })}
-          ${this._actionButton('climate', 'climate', 'A/C', model.climateStateLabel, model.climateOn, 'cyan', { category: 'Climatização' })}
+          \${this._actionButton('corridor', 'ledstrip', 'Corredor', model.corridorStateLabel, model.corridorOn, 'blue', { category: 'Iluminação' })}
+          \${this._actionButton('tv', 'tv', 'TV', model.tvStateLabel, model.tvOn, 'purple', { animate: animateTv, category: 'Entretenimento' })}
+          \${this._actionButton('climate', 'climate', 'A/C', model.climateStateLabel, model.climateOn, 'cyan', { category: 'Climatização' })}
+        </div>
+        -->
+        <div class="action-strip">
+          ${this._actionButton('corridor', 'light_flush', 'Corredor', model.corridorStateLabel, model.corridorOn, 'blue', {
+            semanticStatus: model.corridorSemanticStatus,
+            ariaState: model.corridorOn ? 'luz ligada' : 'luz desligada',
+            hybridTransition: hybridTransitions.corridor,
+            now,
+          })}
+          ${this._actionButton('tv', 'tv', 'TV', model.tvStateLabel, model.tvOn, 'purple', {
+            semanticStatus: model.tvSemanticStatus,
+            ariaState: model.tvOn ? 'ligada' : 'desligada',
+            hybridTransition: hybridTransitions.tv,
+            now,
+          })}
+          ${this._actionButton('climate', 'climate', 'A/C', model.climateStateLabel, model.climateEnabled, 'cyan', {
+            semanticStatus: model.acSemanticStatus,
+            ariaName: 'Ar-condicionado',
+            ariaState: model.climateEnabled ? 'ligado' : 'desligado',
+            hybridTransition: hybridTransitions.climate,
+            now,
+          })}
         </div>
       </div>
     `;
 
-    if (this._hass) this._lastTvOn = model.tvOn;
+    // ANTERIOR (rollback): if (this._hass) this._lastTvOn = model.tvOn;
 
     this.shadowRoot
       .querySelectorAll('[data-action-key]')
@@ -1584,8 +4295,8 @@ class BrunoSalaCard extends HTMLElement {
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
-        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off.png?v=20260608-sala-shift-1" alt="" loading="eager" decoding="async">
-        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on.png?v=20260608-sala-shift-1" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
       </span>
     `;
   }
@@ -1596,8 +4307,8 @@ class BrunoSalaCard extends HTMLElement {
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
-        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260609-sala-shift-2" alt="" loading="eager" decoding="async">
-        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260609-sala-shift-2" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
       </span>
     `;
   }
@@ -1624,75 +4335,16 @@ class BrunoSalaCard extends HTMLElement {
     `;
   }
 
-  static _tplIcon(name, options = {}) {
-    const active = Boolean(options.active);
-    const animate = Boolean(options.animate);
-    const tvScreen = active
-      ? `<path${animate ? ' class="tv-screen-on"' : ''} d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-tv-screen)"/>`
-      : animate
-        ? `<path class="tv-screen-off" d="M2.9,8h44.3v29.9H2.9V8z" fill="url(#bruno-tv-screen)"/>`
-        : '';
-    const icons = {
-      living_sofa: `
-        <svg viewBox="0 0 24 24" class="tpl-icon-svg tpl-icon-living-sofa" aria-hidden="true">
-          <path fill="currentColor" d="M21,9.75c0.83,0,1.5,0.67,1.5,1.5v4.55c0,0.39-0.31,0.7-0.7,0.7H21v0.75c0,0.83-0.67,1.5-1.5,1.5s-1.5-0.67-1.5-1.5V16.5H6v0.75c0,0.83-0.67,1.5-1.5,1.5S3,18.08,3,17.25V16.5H2.2c-0.39,0-0.7-0.31-0.7-0.7v-4.55c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5v1.5h15v-1.5C19.5,10.42,20.17,9.75,21,9.75z M6,11.25c0-1.66-1.34-3-3-3v-1.5c0-0.83,0.67-1.5,1.5-1.5h15c0.83,0,1.5,0.67,1.5,1.5v1.5c-1.66,0-3,1.34-3,3H6z"/>
-        </svg>
-      `,
-      ledstrip: `
-        <svg viewBox="0 0 32 32" class="tpl-icon-svg tpl-icon-ledstrip" aria-hidden="true">
-          <path fill="currentColor" d="M8.4395,16.668 C8.9795,16.552 9.5115,16.895 9.6285,17.435 C9.7455,17.974 9.4025,18.506 8.8625,18.623 C8.3225,18.74 7.7905,18.397 7.6735,17.857 C7.5565,17.317 7.9005,16.785 8.4395,16.668 M13.3275,15.611 C13.8665,15.495 14.3985,15.838 14.5155,16.377 C14.6325,16.917 14.2895,17.449 13.7505,17.566 C13.2105,17.683 12.6775,17.34 12.5605,16.8 C12.4445,16.261 12.7875,15.729 13.3275,15.611 M18.2135,14.555 C18.7535,14.438 19.2865,14.781 19.4025,15.32 C19.5195,15.86 19.1765,16.393 18.6365,16.51 C18.0965,16.626 17.5645,16.283 17.4485,15.743 C17.3315,15.203 17.6735,14.671 18.2135,14.555 M23.1005,13.498 C23.6405,13.381 24.1725,13.724 24.2905,14.264 C24.4065,14.804 24.0635,15.336 23.5235,15.453 C22.9835,15.569 22.4515,15.227 22.3355,14.687 C22.2175,14.147 22.5615,13.614 23.1005,13.498 M10.6695,20.639 L25.4735,17.444 C26.5535,17.211 27.2405,16.147 27.0065,15.067 C26.4495,12.484 23.9035,10.842 21.3205,11.399 L6.5165,14.594 C5.4365,14.827 4.7505,15.891 4.9835,16.971 C5.5415,19.554 8.0865,21.196 10.6695,20.639 M25,26 C24.447,26 24,25.553 24,25 C24,24.447 24.447,24 25,24 C25.553,24 26,24.447 26,25 C26,25.553 25.553,26 25,26 M20,26 C19.447,26 19,25.553 19,25 C19,24.447 19.447,24 20,24 C20.553,24 21,24.447 21,25 C21,25.553 20.553,26 20,26 M15,26 C14.447,26 14,25.553 14,25 C14,24.447 14.447,24 15,24 C15.553,24 16,24.447 16,25 C16,25.553 15.553,26 15,26 M10,26 C9.447,26 9,25.553 9,25 C9,24.447 9.447,24 10,24 C10.553,24 11,24.447 11,25 C11,25.553 10.553,26 10,26 M27,22 L9,22 C5,22 4,19 4,18 L4,23 C4,25.762 6.238,28 9,28 L27,28 C27.553,28 28,27.553 28,27 L28,23 C28,22.447 27.553,22 27,22 M22,8 C21.447,8 21,7.553 21,7 C21,6.447 21.447,6 22,6 C22.553,6 23,6.447 23,7 C23,7.553 22.553,8 22,8 M17,8 C16.447,8 16,7.553 16,7 C16,6.447 16.447,6 17,6 C17.553,6 18,6.447 18,7 C18,7.553 17.553,8 17,8 M12,8 C11.447,8 11,7.553 11,7 C11,6.447 11.447,6 12,6 C12.553,6 13,6.447 13,7 C13,7.553 12.553,8 12,8 M7,8 C6.447,8 6,7.553 6,7 C6,6.447 6.447,6 7,6 C7.553,6 8,6.447 8,7 C8,7.553 7.553,8 7,8 M23,4 L5,4 C4.447,4 4,4.447 4,5 L4,9 C4,9.553 4.447,10 5,10 L23,10 C27,10 28,13 28,14 L28,9 C28,6.238 25.762,4 23,4"/>
-        </svg>
-      `,
-      tv: `
-        <svg viewBox="0 0 50 50" class="tpl-icon-svg tpl-icon-tv" aria-hidden="true">
-          <style>
-            @keyframes bruno-tv-on {
-              from { transform: scaleY(0); }
-              to { transform: scaleY(1); }
-            }
-            @keyframes bruno-tv-off {
-              from { transform: scaleY(1); }
-              to { transform: scaleY(0); }
-            }
-            .tv-screen-on {
-              animation: bruno-tv-on 900ms cubic-bezier(0.25,0.46,0.45,0.94) forwards;
-              transform-origin: -100% 46%;
-            }
-            .tv-screen-off {
-              animation: bruno-tv-off 650ms cubic-bezier(0.25,0.46,0.45,0.94) both;
-              transform-origin: -100% 46%;
-            }
-          </style>
-          <linearGradient id="bruno-tv-screen" gradientUnits="userSpaceOnUse" x1="5.401" y1="34.714" x2="43.817" y2="11.74">
-            <stop offset="0" stop-color="#64acb7"/>
-            <stop offset="1" stop-color="#7fdbe9"/>
-          </linearGradient>
-          <path d="M2.9,8h44.3v29.9H2.9V8z" fill="#20262890"/>
-          ${tvScreen}
-          <path fill="currentColor" d="M46 9.2v27.5H4.1V9.2H46m2.4-2.4H1.6v32.3h46.7c.1 0 .1-32.3.1-32.3zM11.9 43.2h26.3c.6 0 1.1-.4 1.1-1v-.3c0-.6-.4-1.1-1-1.1H11.9c-.6 0-1.1.4-1.1 1v.3a1.11 1.11 0 0 0 1.1 1.1z"/>
-        </svg>
-      `,
-      climate: `
-        <svg viewBox="0 0 50 50" class="tpl-icon-svg tpl-icon-climate" aria-hidden="true">
-          <path fill="currentColor" d="M36.8 1.2v1.7a5.34 5.34 0 0 1-5.3 5.3H18.4a5.34 5.34 0 0 1-5.3-5.3V1.2c-2.6.4-4.7 2.8-4.7 5.6v36.5c0 3.1 2.6 5.7 5.7 5.7h21.8c3.1 0 5.7-2.6 5.7-5.7V6.8c0-2.8-2.1-5.2-4.8-5.6zm-1.7 35.6c-.2 0-.4 0-.5-.1-.4-.1-1.2-.2-2.4-.6-.5-.2-.8-.3-1.2-.4-.3-.1-.7-.3-1.4-.5-1-.4-1.5-.5-1.9-.6-.5-.1-1.1-.2-1.9-.2s-1.4.2-1.9.4c-1 .3-1.8.7-2.1.9l-.6.3a9.75 9.75 0 0 1-1.4.6c-.3.1-.9.3-1.6.3h-.3c-.4 0-1 0-2-.2-.3-.1-.6-.1-.8-.2v-2.7l1.3.3c.5.1 1.3.2 1.7.2.5 0 .9-.2 1.1-.2.4-.1.6-.2 1-.4.2-.1.4-.2.7-.4.4-.2 1.3-.7 2.5-1 .6-.2 1.4-.4 2.5-.5s2 .1 2.5.2c.6.1 1.2.3 2.2.7l1.5.5c.3.1.6.2 1 .4 1 .3 1.8.5 2.1.5h.1v2.7zm0-6c-.2 0-.4 0-.5-.1-.4-.1-1.2-.2-2.4-.6-.5-.2-.8-.3-1.2-.4-.3-.1-.7-.3-1.4-.5-1-.4-1.5-.5-1.9-.6-.5-.1-1.1-.2-1.9-.2s-1.4.2-1.9.4c-1 .3-1.8.7-2.1.9l-.6.3a9.75 9.75 0 0 1-1.4.6c-.3.1-.9.3-1.6.3h-.3c-.4 0-1 0-2-.2-.3-.1-.6-.1-.8-.2v-2.7l1.3.3c.5.1 1.3.2 1.7.2.5 0 .9-.2 1.1-.2.4-.1.6-.2 1-.4.2-.1.4-.2.7-.4.4-.2 1.3-.7 2.5-1 .6-.2 1.4-.4 2.5-.5s2 .1 2.5.2c.6.1 1.2.3 2.2.7l1.5.5c.3.1.6.2 1 .4 1 .3 1.8.5 2.1.5h.1v2.7zm0-6c-.2 0-.4 0-.5-.1-.4-.1-1.2-.2-2.4-.6-.5-.2-.8-.3-1.2-.4-.3-.1-.7-.3-1.4-.5-1-.4-1.5-.5-1.9-.6-.5-.1-1.1-.2-1.9-.2s-1.4.2-1.9.4c-1 .3-1.8.7-2.1.9l-.6.3c-.4.2-.8.4-1.4.6-.3.1-.9.3-1.6.3h-.3c-.4 0-1 0-2-.2-.3-.1-.6-.1-.8-.2v-2.7l1.3.3c.5.1 1.3.2 1.7.2.5 0 .9-.2 1.1-.2.4-.1.6-.2 1-.4.2-.1.4-.2.7-.4.4-.2 1.3-.7 2.5-1 .6-.2 1.4-.4 2.5-.5s2 .1 2.5.2c.6.1 1.2.3 2.2.7l1.5.5c.3.1.6.2 1 .4 1 .3 1.8.5 2.1.5h.1v2.7zM15.7 1.9v-.8h18.6V3c0 1.5-1.2 2.8-2.8 2.8H18.4c-1.5 0-2.8-1.2-2.8-2.8V1.9z"/>
-        </svg>
-      `,
-      motion: `
-        <svg viewBox="0 0 50 45" class="tpl-icon-svg tpl-icon-motion" aria-hidden="true">
-          <path fill="currentColor" d="M37.85,39.55c1.33,2.67,5.32,1,3.89-1.91l-3.72-7.52c-.28-.56-.65-1.15-1.06-1.76l-2.24-3.19,.09-.3c.56-2,.89-3.13,1.02-5l.37-5.28c.2-2.8-1.52-4.78-4.22-4.78-2.04,0-3.46,1.06-5.24,2.8l-2.8,2.74c-.91,.91-1.28,1.72-1.39,3.04l-.35,4.32c-.11,1.28,.67,2.22,1.87,2.26,1.22,.09,2-.7,2.11-2.02l.39-4.59,1-.89c.28-.26,.74-.13,.7,.33l-.26,3.52c-.15,1.96,.24,3.06,1.78,4.98l3.69,4.63c.33,.41,.39,.54,.56,.89l3.8,7.74Zm-3.67-30.86c2.39,0,4.35-1.96,4.35-4.35s-1.96-4.35-4.35-4.35-4.35,1.96-4.35,4.35,1.96,4.35,4.35,4.35Zm-9.13,31.46l5.5-6.52c.59-.7,.72-.89,.91-1.56l.04-.15-3.41-4.26-.72,3.32-5.35,6.35c-2.04,2.43,1.33,4.85,3.02,2.82Zm19.45-23.23h-4.04l-2.09-2.28-.37,5.26,.13,.13c.65,.65,1.26,.87,2.46,.87h3.91c1.33,0,2.19-.78,2.19-1.98s-.89-2-2.19-2Z"/>
-          <path fill="currentColor" opacity="0.45" d="M1.41,16.58H15.82c.78,0,1.43-.7,1.43-1.52s-.65-1.52-1.43-1.52H1.41c-.78,0-1.41,.7-1.41,1.52s.63,1.52,1.41,1.52ZM10.65,7.54h10.17c.78,0,1.43-.7,1.43-1.52s-.65-1.52-1.43-1.52H10.65c-.8,0-1.46,.7-1.46,1.52s.65,1.52,1.46,1.52ZM2.59,34.66H13.65c.78,0,1.43-.7,1.43-1.52s-.65-1.52-1.43-1.52H2.59c-.8,0-1.46,.7-1.46,1.52s.65,1.52,1.46,1.52Zm6.26-9.04h7.63c.78,0,1.43-.7,1.43-1.52s-.65-1.52-1.43-1.52h-7.63c-.78,0-1.43,.7-1.43,1.52s.65,1.52,1.43,1.52Z"/>
-        </svg>
-      `,
-      homepod: `
-        <svg viewBox="0 0 50 50" class="tpl-icon-svg tpl-icon-homepod" aria-hidden="true">
-          <path fill="currentColor" opacity="0.95" d="M32.7,47.5c6.2,0,8.9-0.8,11.3-3.1c3.5-3.2,5.5-7.8,5.5-12.7c0-4-1.4-7.8-4.1-10.9c-0.6-0.8-1.3-0.8-2-0.4c-2.5,1.9-5.3,2.9-10.8,2.9c-5.5,0-8.3-1-10.9-2.9c-0.7-0.5-1.4-0.4-2,0.4c-2.7,3.1-4.1,6.8-4.1,10.9c0,4.9,2.1,9.5,5.5,12.7C23.8,46.7,26.5,47.5,32.7,47.5z"/>
-          <path fill="currentColor" opacity="0.62" d="M4.7,37.7h9.1c-0.4-1.3-0.7-2.5-0.8-4.1c-3.8-0.2-6.8-3.3-6.8-7.2c0-4,3.2-7.2,7.2-7.2c1.2,0,2.4,0.3,3.3,0.8c2.3-3.1,5.4-4.7,9.6-5.5V9.1c0-2.9-1.5-4.4-4.3-4.4H4.7c-2.8,0-4.3,1.5-4.3,4.4v24.2C0.4,36.2,1.9,37.7,4.7,37.7z M13.4,16.7c-2.2,0-4-1.8-4-3.9c0-2.2,1.8-3.9,4-3.9s4,1.8,4,3.9C17.3,14.9,15.5,16.7,13.4,16.7z M13.4,14.8c1.1,0,2-0.9,2-2c0-1.1-0.9-2-2-2s-2,0.9-2,2C11.4,13.9,12.3,14.8,13.4,14.8z M10.3,26.4c0,1.6,1.2,2.9,2.8,3c0.2-2,0.8-4,1.6-5.8c-0.4-0.2-0.8-0.3-1.3-0.3C11.7,23.4,10.3,24.8,10.3,26.4z"/>
-          <path fill="currentColor" opacity="0.45" d="M32.7,21c4.7,0,8.1-0.9,8.1-2.2c0-1.3-3.3-2.2-8.1-2.2c-4.7,0-8.1,0.9-8.1,2.2C24.7,20.1,28,21,32.7,21z"/>
-        </svg>
-      `,
-    };
-
-    return `<span class="tpl-icon">${icons[name] || icons.living_sofa}</span>`;
+  static _tplIcon(name) {
+    const requested = {
+      living_sofa: 'living_sofa',
+      ledstrip: 'ledstrip',
+      tv: 'tv',
+      climate: 'climate',
+      motion: 'motion',
+      homepod: 'homepod',
+    }[name] || 'living_sofa';
+    return `<span class="tpl-icon">${globalThis.BrunoIcons?.render(requested) || ''}</span>`;
   }
 
   static _escape(value) {

@@ -11,24 +11,78 @@
 
 template:
   - binary_sensor:
-      # ANTERIOR: o Office não tinha presença real; o dot ficava fixo em false.
-      # NOVO: enquanto o sensor for PIR, delay_off simula ocupação contínua.
-      # FUTURO mmWave: trocar apenas a entidade abaixo pela entidade de presença mmWave.
+      # Mesmo padrao da Sala: movimento recente acende apenas o dot.
+      - name: Office Motion Recent
+        unique_id: office_motion_recent
+        device_class: motion
+        icon: mdi:account
+        # NOVO (2026-07-12): falha/cache nao pode virar OFF/ON valido.
+        availability: >-
+          {{ is_state('sensor.office_presence_health', 'ok') }}
+        # ANTERIOR (2026-07-03): gating por motion_state atrasava/derrubava o dot
+        # ('medium' nao existe no enum do sensor; 'static' ficava de fora; e o
+        # motion_state chega em mensagem MQTT separada, atrasando o gate).
+        # state: >-
+        #   {% set presence = is_state('binary_sensor.sensor_4_in_1_office_presence', 'on') %}
+        #   {% set motion = states('sensor.sensor_4_in_1_office_motion_state') | lower %}
+        #   {% set motion_known = motion not in ['unknown', 'unavailable', 'none', ''] %}
+        #   {{ presence and (motion in ['small', 'medium', 'large'] or not motion_known) }}
+        # delay_off:
+        #   seconds: 25
+        # NOVO (molde unico): presenca imediata = espelho do sensor bruto.
+        state: >-
+          {{ is_state('binary_sensor.sensor_4_in_1_office_presence', 'on') }}
+        delay_off:
+          seconds: 5
+        attributes:
+          source_entity: binary_sensor.sensor_4_in_1_office_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_office_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_office_illuminance') }}"
+          semantic_role: passage_indicator
+          fallback_note: "Presenca imediata: espelho do sensor bruto, apenas para o dot."
+
+      # Mesmo padrao da Sala: ocupacao real exige permanencia.
       - name: Office Occupancy
         unique_id: office_occupancy
         device_class: occupancy
         icon: mdi:account
+        availability: >-
+          {{ is_state('sensor.office_presence_health', 'ok') }}
+        # ANTERIOR (2026-07-03): gating por motion_state ('medium' inexistente,
+        # 'static' excluido — pessoa parada sem PC nunca virava ocupacao).
+        # state: >-
+        #   {% set presence = is_state('binary_sensor.sensor_4_in_1_office_presence', 'on') %}
+        #   {% set motion = states('sensor.sensor_4_in_1_office_motion_state') | lower %}
+        #   {% set motion_known = motion not in ['unknown', 'unavailable', 'none', ''] %}
+        #   {% set pc_active = is_state('binary_sensor.office_pc_active', 'on') %}
+        #   {{ presence and (motion in ['small', 'medium', 'large'] or pc_active or not motion_known) }}
+        # delay_on:
+        #   seconds: 45
+        # delay_off:
+        #   seconds: 90
+        # ANTERIOR (2026-07-04, trava de contexto — REMOVIDA): com PC/AC/Echo
+        # ativos, a ocupacao ficava presa em ON com o office vazio (defeito
+        # confirmado no Q. Miguel com o AC).
+        # state: >-
+        #   {% set presence = is_state('binary_sensor.sensor_4_in_1_office_presence', 'on') %}
+        #   {% set pc_active = is_state('binary_sensor.office_pc_active', 'on') %}
+        #   {% set ac_on = states('climate.ac_office') in ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'] %}
+        #   {% set echo_on = is_state('media_player.echo_pop_office', 'playing') %}
+        #   {% set context = pc_active or ac_on or echo_on %}
+        #   {{ presence or (is_state('binary_sensor.office_occupancy', 'on') and context) }}
+        # NOVO: ocupacao = SOMENTE presenca sustentada (padrao validado na Marina).
         state: >-
-          {{ is_state('binary_sensor.of_sensor_presenca_movimento', 'on') }}
+          {{ is_state('binary_sensor.sensor_4_in_1_office_presence', 'on') }}
+        delay_on:
+          seconds: 60
         delay_off:
-          minutes: 10
+          seconds: 180
         attributes:
-          source_entity: binary_sensor.of_sensor_presenca_movimento
-          mode: pir_as_mmwave
-          fallback_note: "Trocar source_entity pelo mmWave quando instalado."
-          illuminance: "{{ states('sensor.of_sensor_presenca_iluminancia') }}"
-          battery: "{{ states('sensor.of_sensor_presenca_bateria') }}"
-
+          source_entity: binary_sensor.sensor_4_in_1_office_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_office_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_office_illuminance') }}"
+          semantic_role: real_occupancy
+          fallback_note: "Ocupacao real: somente presenca sustentada (60s liga / 180s solta)."
       - name: Office PC Active
         unique_id: office_pc_active
         icon: mdi:desktop-classic
@@ -48,6 +102,8 @@ template:
       - name: Office Meeting Active
         unique_id: office_meeting_active
         icon: mdi:video-account
+        availability: >-
+          {{ is_state('sensor.office_presence_health', 'ok') }}
         state: >-
           {% set session = states('sensor.desktop_melg9vv_office_pc_session_state') %}
           {% set active_window = states('sensor.desktop_melg9vv_office_pc_active_window') | lower %}
@@ -68,54 +124,70 @@ template:
       - name: Office Working Active
         unique_id: office_working_active
         icon: mdi:briefcase
+        availability: >-
+          {{ is_state('sensor.office_presence_health', 'ok') }}
         state: >-
           {{ is_state('binary_sensor.office_occupancy', 'on') and is_state('binary_sensor.office_pc_active', 'on') }}
         attributes:
           pc_active: "{{ states('binary_sensor.office_pc_active') }}"
+          motion_recent: "{{ states('binary_sensor.office_motion_recent') }}"
           occupancy: "{{ states('binary_sensor.office_occupancy') }}"
+          motion_state: "{{ states('sensor.sensor_4_in_1_office_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_office_illuminance') }}"
           active_window: "{{ states('sensor.desktop_melg9vv_office_pc_active_window') }}"
 
   - sensor:
       - name: Office Semantic State
         unique_id: office_semantic_state
+        # ANTERIOR (2026-07-04): os textos seguiam apenas ocupacao/working/meeting —
+        # com a liberacao longa da ocupacao, o texto ficava visivel depois do dot
+        # apagar. NOVO: guard de presenca ativa (motion_recent) em todos os niveis;
+        # a entidade office_occupancy mantem a liberacao longa para automacoes.
         icon: >-
-          {% if is_state('binary_sensor.office_meeting_active', 'on') %}
+          {% set present = is_state('binary_sensor.office_motion_recent', 'on') %}
+          {% if present and is_state('binary_sensor.office_meeting_active', 'on') %}
             mdi:video-account
-          {% elif is_state('binary_sensor.office_working_active', 'on') %}
+          {% elif present and is_state('binary_sensor.office_working_active', 'on') %}
             mdi:briefcase
-          {% elif is_state('binary_sensor.office_occupancy', 'on') %}
+          {% elif present and is_state('binary_sensor.office_occupancy', 'on') %}
             mdi:account
           {% else %}
             mdi:desk
           {% endif %}
         state: >-
-          {% if is_state('binary_sensor.office_meeting_active', 'on') %}
+          {% set present = is_state('binary_sensor.office_motion_recent', 'on') %}
+          {% if present and is_state('binary_sensor.office_meeting_active', 'on') %}
             meeting
-          {% elif is_state('binary_sensor.office_working_active', 'on') %}
+          {% elif present and is_state('binary_sensor.office_working_active', 'on') %}
             working
-          {% elif is_state('binary_sensor.office_occupancy', 'on') %}
+          {% elif present and is_state('binary_sensor.office_occupancy', 'on') %}
             occupied
           {% else %}
             none
           {% endif %}
         attributes:
           display: >-
-            {% if is_state('binary_sensor.office_meeting_active', 'on') %}
+            {% set present = is_state('binary_sensor.office_motion_recent', 'on') %}
+            {% if present and is_state('binary_sensor.office_meeting_active', 'on') %}
               Em reunião
-            {% elif is_state('binary_sensor.office_working_active', 'on') %}
+            {% elif present and is_state('binary_sensor.office_working_active', 'on') %}
               Trabalhando
-            {% elif is_state('binary_sensor.office_occupancy', 'on') %}
+            {% elif present and is_state('binary_sensor.office_occupancy', 'on') %}
               Ocupado
             {% else %}
-              
+
             {% endif %}
           priority: >-
-            {% if is_state('binary_sensor.office_meeting_active', 'on') %}3
-            {% elif is_state('binary_sensor.office_working_active', 'on') %}2
-            {% elif is_state('binary_sensor.office_occupancy', 'on') %}1
+            {% set present = is_state('binary_sensor.office_motion_recent', 'on') %}
+            {% if present and is_state('binary_sensor.office_meeting_active', 'on') %}3
+            {% elif present and is_state('binary_sensor.office_working_active', 'on') %}2
+            {% elif present and is_state('binary_sensor.office_occupancy', 'on') %}1
             {% else %}0
             {% endif %}
+          motion_recent: "{{ states('binary_sensor.office_motion_recent') }}"
           occupancy: "{{ states('binary_sensor.office_occupancy') }}"
+          motion_state: "{{ states('sensor.sensor_4_in_1_office_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_office_illuminance') }}"
           pc_active: "{{ states('binary_sensor.office_pc_active') }}"
           working: "{{ states('binary_sensor.office_working_active') }}"
           meeting: "{{ states('binary_sensor.office_meeting_active') }}"
@@ -140,7 +212,10 @@ template:
         attributes:
           semantic_state: "{{ states('sensor.office_semantic_state') }}"
           semantic_display: "{{ state_attr('sensor.office_semantic_state', 'display') }}"
+          motion_recent: "{{ states('binary_sensor.office_motion_recent') }}"
           occupancy: "{{ states('binary_sensor.office_occupancy') }}"
+          motion_state: "{{ states('sensor.sensor_4_in_1_office_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_office_illuminance') }}"
           pc_active: "{{ states('binary_sensor.office_pc_active') }}"
           working: "{{ states('binary_sensor.office_working_active') }}"
           meeting: "{{ states('binary_sensor.office_meeting_active') }}"
@@ -151,8 +226,6 @@ template:
           webcam_active: "{{ states('binary_sensor.desktop_melg9vv_office_pc_webcam_active') }}"
           teams_processes: "{{ states('sensor.desktop_melg9vv_office_pc_teams_active') }}"
           meet_window: "{{ states('binary_sensor.desktop_melg9vv_janela_meet') }}"
-          illuminance: "{{ states('sensor.of_sensor_presenca_iluminancia') }}"
-          battery: "{{ states('sensor.of_sensor_presenca_bateria') }}"
           lights_on: >-
             {%- set light = expand('light.grupo_luzes_office') | selectattr('state', 'eq', 'on') | map(attribute='name') | list %}
             {{- light }}

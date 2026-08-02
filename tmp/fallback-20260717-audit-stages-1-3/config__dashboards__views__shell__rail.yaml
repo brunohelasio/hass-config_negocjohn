@@ -1,0 +1,122 @@
+# Config da rail para a bruno-shell.
+# Identica a views/main-grid/bento_sidebar.yaml, EXCETO os itens de SECAO (home,
+# cameras) que, em vez de navegar para outra view, usam fire-dom-event com
+# `bruno_section`. A shell intercepta o `ll-custom`, troca a secao no lugar e
+# acende o item ativo — a rail NUNCA re-monta.
+# Popups (system/vacuum/network/updates/floorplan) e music/power seguem
+# inalterados (serao migrados por etapas).
+#
+# NOVO (2026-07-09) — MODO PHONE (Opcao A mobile): em <=800px a rail vira DOCK
+# horizontal na base da shell. `hide_on_phone: true` esconde o item do dock e
+# o move para o menu "Mais" (botao no fim do dock — Fase 2, feedback do
+# usuario). Tablet/desktop seguem exibindo tudo na rail vertical.
+# Curadoria do dock:
+#   VISIVEIS: Home, Cameras, Aspirador, Planta 3D, Mais (5 itens).
+#   NO MENU "MAIS": Musica, Sistema, Rede, Atualizar, Updates, Config, Power.
+# ROLLBACK: remover as linhas hide_on_phone (itens voltam ao dock).
+type: custom:bento-sidebar-liquid-card
+top_items:
+  - key: home
+    icon: home
+    label: Home
+    selected: true
+    tap_action:
+      action: fire-dom-event
+      bruno_section: home
+
+  - key: music
+    icon: music
+    label: Musica
+    hide_on_phone: true
+    tap_action:
+      action: navigate
+      navigation_path: mass-media
+
+  - key: cameras
+    icon: cameras
+    label: Cameras
+    # NOVO: separador removido (espaçamento uniforme entre botões).
+    # ROLLBACK: descomentar a linha abaixo.
+    # divider_after: true
+    tap_action:
+      action: fire-dom-event
+      bruno_section: cameras
+
+  - key: system
+    icon: system
+    label: Sistema
+    hide_on_phone: true
+    # FALLBACK: tap_action: !include ../../shared/popup/footer/footer_system.yaml
+    tap_action:
+      action: fire-dom-event
+      bruno_action: system
+
+  # key = roborock para casar com a secao/hash (#roborock) e ACENDER o item
+  # ativo (a shell marca selected por data-key === chave da secao). icon: vacuum.
+  - key: roborock
+    icon: vacuum
+    label: Aspirador
+    # ANTERIOR (rollback): abria o popup footer_vacuum.yaml.
+    # tap_action: !include ../../shared/popup/footer/footer_vacuum.yaml
+    # NOVO: troca para a secao #roborock da shell (mesmo padrao das Cameras).
+    tap_action:
+      action: fire-dom-event
+      bruno_section: roborock
+
+  - key: network
+    icon: network
+    label: Rede
+    hide_on_phone: true
+    # FALLBACK: tap_action: !include ../../shared/popup/footer/footer_network.yaml
+    tap_action:
+      action: fire-dom-event
+      bruno_action: network
+
+  - key: refresh
+    icon: refresh
+    label: Atualizar
+    hide_on_phone: true
+    tap_action:
+      action: fire-dom-event
+      bruno_action: refresh
+
+  - key: updates
+    icon: updates
+    label: Updates
+    hide_on_phone: true
+    # FALLBACK: substituir o bloco tap_action abaixo pela linha antiga:
+    # tap_action: !include ../../shared/popup/footer/footer_updates.yaml
+    tap_action:
+      action: fire-dom-event
+      bruno_action: updates
+
+  - key: floorplan
+    icon: floorplan
+    label: Planta 3D
+    # NOVO: separador removido (espaçamento uniforme entre botões).
+    # ROLLBACK: descomentar a linha abaixo.
+    # divider_after: true
+    # ANTERIOR (rollback): abria o popup fullscreen da planta.
+    # tap_action: !include ../../shared/popup/planta_3d.yaml
+    # NOVO: troca para a secao #floorplan da shell, igual Cameras/Roborock.
+    tap_action:
+      action: fire-dom-event
+      bruno_section: floorplan
+
+  - key: config
+    icon: settings
+    label: Config
+    # NOVO (Fase 2): no phone o Config sai do dock e entra no menu "Mais".
+    hide_on_phone: true
+    tap_action:
+      action: fire-dom-event
+      bruno_config: open
+
+bottom_items:
+  - key: power
+    icon: power
+    label: Power
+    hide_on_phone: true
+    tap_action:
+      action: navigate
+      navigation_path: /

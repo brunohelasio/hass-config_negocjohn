@@ -1,0 +1,93 @@
+# ==========================================================================
+# HOME V2 — DOCK DE AÇÕES RÁPIDAS com os controles migrados da Sala.
+#
+# Mesmo card e mesma faixa de 54px do dock atual. A lista `items` reproduz
+# os 3 botões padrão (Luzes/Wi-Fi/Atualizar, idênticos aos defaults do
+# bruno-quick-actions-card.js) e acrescenta o grupo "Sala" com os três
+# comandos que saíram do card especial da Sala (decisão 2026-07-24):
+#   - Corredor  -> toggle light.corredor_switch_1
+#   - TV        -> toggle media_player.android_tv_192_168_3_17
+#   - A/C       -> climate.toggle climate.sl_ar_condicionado
+# Serviços espelham o _runAction do bruno-sala-card (tap = toggle).
+# Limitação conhecida: o dock é ESTÁTICO por design (como o rail) — os
+# botões não acendem com o estado; o estado segue visível no card da Sala
+# da faixa de cômodos (dots TV/A-C) e na subview.
+#
+# O wrapper V1 (views/main-grid/bento_quick_actions.yaml) segue intacto —
+# a Home V1 mantém o dock só com os 3 botões padrão.
+# ROLLBACK: trocar o include em section_home_v2.yaml para o wrapper V1.
+# ==========================================================================
+type: custom:bruno-quick-actions-card
+view_layout:
+  grid-area: quick_actions
+  show:
+    mediaquery: '(min-width: 801px)'
+items:
+  # --- Padrão (cópia fiel dos defaults do card) ---
+  - key: lights_off
+    icon: mdi:lightbulb-off-outline
+    label: Luzes
+    group: actions
+    tap_action:
+      action: call-service
+      service: homeassistant.turn_off
+      data:
+        entity_id: light.todas_as_luzes
+  - key: wifi
+    icon: mdi:wifi
+    label: Wi-Fi
+    group: actions
+    tap_action:
+      action: fire-dom-event
+      browser_mod:
+        service: browser_mod.popup
+        data:
+          title: Wi-Fi
+          tag: wifi_qr
+          style: |
+            --popup-width: 450px;
+            --popup-max-width: min(450px, calc(100vw - 32px));
+            --popup-background-color: rgba(15, 20, 35, 0.75);
+            --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+            --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+          content:
+            type: picture
+            image: /local/images/wifi_main_scanme.png
+  - key: refresh
+    icon: mdi:refresh
+    label: Atualizar
+    group: actions
+    tap_action:
+      action: fire-dom-event
+      bruno_action: refresh
+  # --- Sala (comandos migrados do card especial) ---
+  - key: sala_corredor
+    icon_key: bulb
+    label: Corredor
+    group: sala
+    kind_label: Sala
+    tap_action:
+      action: call-service
+      service: homeassistant.toggle
+      data:
+        entity_id: light.corredor_switch_1
+  - key: sala_tv
+    icon_key: tv
+    label: TV
+    group: sala
+    kind_label: Sala
+    tap_action:
+      action: call-service
+      service: homeassistant.toggle
+      data:
+        entity_id: media_player.android_tv_192_168_3_17
+  - key: sala_ac
+    icon_key: smart-ac
+    label: A/C
+    group: sala
+    kind_label: Sala
+    tap_action:
+      action: call-service
+      service: climate.toggle
+      data:
+        entity_id: climate.sl_ar_condicionado

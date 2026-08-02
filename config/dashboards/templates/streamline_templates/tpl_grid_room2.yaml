@@ -17,7 +17,7 @@ grid_office_room:
       - binary_sensor.office_pc_active
       - binary_sensor.office_working_active
       - binary_sensor.office_meeting_active
-      - binary_sensor.of_sensor_presenca_movimento
+      - binary_sensor.sensor_4_in_1_office_presence
       - sensor.desktop_melg9vv_office_pc_idle_time
       - sensor.desktop_melg9vv_office_pc_session_state
       - sensor.roborock_s7_comodo_atual

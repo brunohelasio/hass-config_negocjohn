@@ -469,7 +469,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         <main class="security-subview">
           <header class="security-topbar">
             <button class="icon-button" type="button" data-action="navigate-home" aria-label="Voltar para o painel principal">
-              <ha-icon icon="mdi:arrow-left"></ha-icon>
+              <bruno-icon icon="mdi:arrow-left"></bruno-icon>
             </button>
 
             <div class="brand">
@@ -500,7 +500,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
           <footer class="security-footer">
             <span class="enc-note">
-              <ha-icon icon="mdi:shield-lock-outline" aria-hidden="true"></ha-icon>
+              <bruno-icon icon="mdi:shield-lock-outline" aria-hidden="true"></bruno-icon>
               Todas as câmeras estão protegidas com criptografia de ponta a ponta
             </span>
           </footer>
@@ -643,7 +643,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
            12px da shell, topo+base = 24px). Isso forca a linha a crescer => a
            celula da rail fica cheia e a rail centraliza sozinha, e o miolo
            ocupa quase todo o painel. Uso vh (nao dvh) por compat. com o tablet. */
-        height: calc(100vh - 24px);
+        height: 100%;
         min-height: 0;
         /* transparente — a shell da view fornece o grafite da Home */
         background: transparent;
@@ -676,7 +676,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         /* NOVO (feedback): faixa superior na altura da barra de badges (64px),
            miolo que cresce (1fr) e faixa inferior na altura da barra de cenas/
            acoes da Home (74px). */
-        grid-template-rows: 64px minmax(0, 1fr) 74px;
+        grid-template-rows: 48px minmax(0, 1fr) 54px;
         gap: 10px;
         padding: 0;
         overflow: hidden;
@@ -701,6 +701,11 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         box-shadow: none;
         backdrop-filter: none;
         -webkit-backdrop-filter: none;
+      }
+
+      .security-topbar .icon-button[data-action="navigate-home"] {
+        visibility: hidden;
+        pointer-events: none;
       }
 
       /* NOVO (feedback): botao de voltar "fantasma" — sem caixa, so o icone.
@@ -728,7 +733,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         outline: none;
       }
 
-      .icon-button ha-icon {
+      .icon-button bruno-icon {
         --mdc-icon-size: 18px;
       }
 
@@ -909,9 +914,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         min-height: 0;
         overflow: hidden;
         /* ORIGINAL (rollback): linear-gradient(145deg, rgba(15,23,42,0.92), rgba(2,6,23,0.82)) (slate/azul) */
-        background:
-          radial-gradient(260px 160px at 22% 12%, rgba(255,255,255,0.07), transparent 72%),
-          linear-gradient(145deg, rgba(12,13,16,0.92), rgba(4,6,9,0.82));
+        background: rgba(255,255,255,0.025);
       }
 
       .camera-image {
@@ -958,12 +961,12 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       .camera-placeholder {
         position: absolute;
         inset: 0;
-        display: grid;
+        display: none;
         place-items: center;
         color: rgba(226,232,240,0.24);
       }
 
-      .camera-placeholder ha-icon {
+      .camera-placeholder bruno-icon {
         --mdc-icon-size: 58px;
         filter: drop-shadow(0 14px 22px rgba(0,0,0,0.38));
       }
@@ -1120,7 +1123,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         outline: none;
       }
 
-      .hc-btn ha-icon {
+      .hc-btn bruno-icon {
         --mdc-icon-size: 16px;
       }
 
@@ -1185,14 +1188,14 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         align-items: center;
         gap: 8px;
         min-width: 0;
-        padding: 7px 12px;
-        border-radius: 999px;
+        padding: 0;
+        border-radius: 0;
         color: rgba(255,255,255,0.95);
-        background: rgba(6,8,11,0.42);
-        border: 1px solid rgba(255,255,255,0.12);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 10px 22px rgba(0,0,0,0.26);
-        backdrop-filter: blur(14px) saturate(1.22);
-        -webkit-backdrop-filter: blur(14px) saturate(1.22);
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
         font-size: 12.5px;
         line-height: 1;
         font-weight: 720;
@@ -1216,14 +1219,14 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         align-items: center;
         gap: 6px;
         min-width: 0;
-        padding: 4px 9px;
-        border-radius: 999px;
+        padding: 0;
+        border-radius: 0;
         color: rgba(255,255,255,0.92);
-        background: rgba(6,8,11,0.42);
-        border: 1px solid rgba(255,255,255,0.10);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
-        backdrop-filter: blur(12px) saturate(1.2);
-        -webkit-backdrop-filter: blur(12px) saturate(1.2);
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .tile-rec {
@@ -1274,7 +1277,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         text-align: center;
       }
 
-      .enc-note ha-icon {
+      .enc-note bruno-icon {
         --mdc-icon-size: 16px;
         color: rgba(226,232,240,0.5);
         flex: 0 0 auto;
@@ -1385,6 +1388,32 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         }
       }
 
+      /* ============================================================
+         NOVO (2026-07-09) — Fase 2 mobile: CAMERAS UNIFORMES no phone.
+         Feedback do usuario: a camera principal ficava gigante e as
+         demais achatadas. Agora TODAS as cameras (principal + tiles)
+         tem a MESMA altura e empilham em 1 coluna. Bloco fica APOS os
+         @media 980/640 de proposito (cascata: este vence no overlap).
+         ROLLBACK: remover este bloco @media.
+         ============================================================ */
+      @media (max-width: 800px) {
+        .security-grid {
+          grid-template-rows: auto auto auto;
+        }
+
+        .side-rail,
+        .bottom-strip {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-rows: none;
+        }
+
+        .main-feed,
+        .camera-tile {
+          height: clamp(190px, 26vh, 240px);
+          min-height: 0;
+        }
+      }
+
       @media (max-height: 720px) and (min-width: 981px) {
         .security-subview {
           min-height: 560px;
@@ -1434,10 +1463,12 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   // o <hui-image cameraView="live"> (ou, se indisponivel, um snapshot fallback).
   // A placeholder fica ATRAS do stream; a vinheta/pilula/controles, na frente.
   static _mainFeed(camera) {
+    const hasImage = Boolean(camera?.image);
     return `
-      <article class="feed-card">
-        <div class="image-stage has-image">
-          <div class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:cctv"></ha-icon></div>
+      <article class="feed-card main-feed-card">
+        <div class="image-stage main-feed-stage${hasImage ? ' has-image' : ''}">
+          ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image camera-main-fallback') : ''}
+          <div class="camera-placeholder" aria-hidden="true"></div>
           <div class="camera-live" data-live-mount aria-hidden="true"></div>
           <div class="feed-vignette" aria-hidden="true"></div>
           <div class="feed-pill" data-feed-pill>
@@ -1445,11 +1476,11 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           </div>
           <div class="feed-controls">
             <button class="hc-btn" type="button" data-action="more-info" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera?.entity || '')}" aria-label="Abrir detalhes da camera">
-              <ha-icon icon="mdi:magnify-plus-outline"></ha-icon>
+              <bruno-icon icon="mdi:magnify-plus-outline"></bruno-icon>
               <span>Detalhes</span>
             </button>
             <button class="hc-btn" type="button" data-action="refresh" aria-label="Atualizar cameras">
-              <ha-icon icon="mdi:refresh"></ha-icon>
+              <bruno-icon icon="mdi:refresh"></bruno-icon>
               <span>Atualizar</span>
             </button>
           </div>
@@ -1481,7 +1512,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       <article class="feed-card">
         <div class="image-stage${hasImage ? ' has-image' : ''}">
           ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image') : ''}
-          <div class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:cctv"></ha-icon></div>
+          <div class="camera-placeholder" aria-hidden="true"></div>
           <div class="feed-scrim"></div>
           <div class="feed-title">...</div>
           <div class="feed-actions">...Detalhes/Atualizar...</div>
@@ -1500,7 +1531,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       <button class="camera-tile ${BrunoCamerasSecuritySubview._escapeAttr(position)}" type="button" data-action="select-camera" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasSecuritySubview._escapeAttr(camera.name)}">
         <span class="image-stage${hasImage ? ' has-image' : ''}">
           ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image') : ''}
-          <span class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></span>
+          <span class="camera-placeholder" aria-hidden="true"></span>
           <span class="tile-vignette" aria-hidden="true"></span>
           <span class="tile-pill">
             ${BrunoCamerasSecuritySubview._pillInner(camera, true)}
@@ -1531,12 +1562,14 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
   static _clock() {
     const now = new Date();
-    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   }
 
   static _date() {
     const now = new Date();
-    return `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+    const days = ['DOMINGO', 'SEGUNDA-FEIRA', 'TER\u00c7A-FEIRA', 'QUARTA-FEIRA', 'QUINTA-FEIRA', 'SEXTA-FEIRA', 'S\u00c1BADO'];
+    const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+    return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
   }
 
   static _escape(value) {

@@ -1,0 +1,85 @@
+# ==========================================================================
+# HOME V2 — FAIXA HORIZONTAL DE CÔMODOS (moldura + 7 cards em 1 linha).
+# REV.3 (2026-07-24, feedback do usuário): faixa THEME-AWARE.
+#
+# ANTERIOR (rev.2): o wrapper injetava tokens fixos (--room-card-*) nos
+# cards, congelando o visual — trocar o tema não mudava o bloco. REMOVIDO.
+# NOVO: os 7 cards voltam a ler os tokens do TEMA ATIVO (--bruno-liquid-
+# surface-off-* publicados em :root pelo BrunoThemeManager). O visual
+# "Josh.ai" (cards cinza-quentes, opacos, flat) agora é um TEMA de verdade:
+# core/bruno-josh.js, selecionável em Config > Themes como os demais.
+#
+# A moldura também é theme-aware: lê --bruno-strip-frame-* (definidos no
+# tema Josh.ai) com fallback para o vidro fosco atual nos temas que não
+# os definem (VisionOS, Liquid Glass, iOS Light/Dark).
+#
+# mod-card (ha-card real) segue necessário: card_mod não atua em
+# layout-card puro (lição da rev.1).
+#
+# Alturas determinísticas: faixa = 23vh (linha do grid da seção) →
+# conteúdo = calc(23vh - 24px) (padding 12px x2 da moldura).
+#
+# Ordem: Sala, Office, Cozinha, Lavabo, Q. Casal, Q. Marina, Q. Miguel.
+# Desktop/tablet apenas (show min-801); phone usa a matriz 2x3 de sempre.
+# ROLLBACK: remover este include de section_home_v2.yaml (ou voltar a
+# Home V1 em bento_shell.yaml).
+# ==========================================================================
+type: custom:mod-card
+view_layout:
+  grid-area: comodos
+  show:
+    mediaquery: '(min-width: 801px)'
+card_mod:
+  style: |
+    :host {
+      display: block;
+      height: 100%;
+      min-height: 0;
+    }
+    ha-card {
+      /* Moldura externa THEME-AWARE: tokens do tema ativo com fallback
+         para o vidro fosco padrão da V2. */
+      height: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border-radius: 22px;
+      border: var(--bruno-strip-frame-border, 1px solid rgba(255,255,255,0.13)) !important;
+      background: var(--bruno-strip-frame-background,
+        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.035)),
+        rgba(10,14,22,0.28)) !important;
+      backdrop-filter: var(--bruno-strip-frame-filter, blur(28px) saturate(1.5)) !important;
+      -webkit-backdrop-filter: var(--bruno-strip-frame-filter, blur(28px) saturate(1.5)) !important;
+      box-shadow: var(--bruno-strip-frame-shadow,
+        inset 0 1px 0 rgba(255,255,255,0.15),
+        0 18px 48px rgba(0,0,0,0.26)) !important;
+      overflow: hidden;
+    }
+    /* O layout-card interno (filho direto do ha-card) preenche a moldura. */
+    ha-card > * {
+      display: block;
+      height: 100%;
+      min-height: 0;
+    }
+card:
+  type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    grid-template-columns: repeat(7, minmax(0, 1fr))
+    # Altura EXPLÍCITA dos cards (23vh da linha da seção - 24px de padding
+    # da moldura) — determinística, sem depender do #root interno.
+    grid-template-rows: calc(23vh - 24px)
+    grid-gap: 10px
+    margin: 0
+    padding: 0
+  cards:
+    # Sala em estrutura padrão (novo card irmão, base Q. Casal). O card
+    # especial da Sala (TV/A-C/Corredor) NÃO aparece aqui — os três comandos
+    # migraram para o dock de ações rápidas (v2/bento_quick_actions_v2.yaml).
+    - type: custom:bruno-sala-room-card
+      section: sala
+    - !include ../bento_office.yaml
+    - !include ../bento_cozinha.yaml
+    - !include ../bento_lavabo.yaml
+    - !include ../bento_quarto_casal.yaml
+    - !include ../bento_quarto_marina.yaml
+    - !include ../bento_quarto_miguel.yaml

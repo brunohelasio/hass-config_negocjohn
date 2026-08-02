@@ -1,0 +1,139 @@
+script:
+  bruno_scene_bom_dia:
+    alias: Bruno - Bom dia
+    mode: restart
+    sequence:
+      - service: cover.open_cover
+        target:
+          entity_id: cover.cortina_varanda_cortina_2
+
+  bruno_scene_cheguei:
+    alias: Bruno - Cheguei
+    mode: restart
+    sequence:
+      - service: light.turn_on
+        target:
+          entity_id:
+            - light.corredor_switch_1
+            - light.sala_switch_2
+
+  bruno_scene_sair_de_casa:
+    alias: Bruno - Sair de casa
+    mode: restart
+    sequence:
+      - service: light.turn_off
+        target:
+          entity_id: light.todas_as_luzes
+      - service: media_player.turn_off
+        target:
+          entity_id: media_player.android_tv_192_168_3_17
+      - service: media_player.media_pause
+        target:
+          entity_id: media_player.spotifyplus_bruno_helasio
+      - service: climate.turn_off
+        target:
+          entity_id:
+            - climate.sl_ar_condicionado
+            - climate.ac_office
+            - climate.qc_ar_condicionado
+            - climate.ac_quarto_miguel
+      - service: cover.close_cover
+        target:
+          entity_id: cover.cortina_varanda_cortina_2
+      - service: lock.lock
+        target:
+          entity_id:
+            - lock.porta_sala
+            - lock.porta_servico
+
+  bruno_scene_boa_noite:
+    alias: Bruno - Boa noite
+    mode: restart
+    sequence:
+      - service: light.turn_off
+        target:
+          entity_id: light.todas_as_luzes
+      - service: media_player.turn_off
+        target:
+          entity_id: media_player.android_tv_192_168_3_17
+      - service: media_player.media_pause
+        target:
+          entity_id: media_player.spotifyplus_bruno_helasio
+      - service: climate.turn_off
+        target:
+          entity_id:
+            - climate.sl_ar_condicionado
+            - climate.ac_office
+      - service: cover.close_cover
+        target:
+          entity_id: cover.cortina_varanda_cortina_2
+      - service: lock.lock
+        target:
+          entity_id:
+            - lock.porta_sala
+            - lock.porta_servico
+
+  bruno_scene_cinema:
+    alias: Bruno - Cinema
+    mode: restart
+    sequence:
+      - service: light.turn_off
+        target:
+          entity_id: light.grupo_luzes_sala
+      - service: cover.close_cover
+        target:
+          entity_id: cover.cortina_varanda_cortina_2
+      - service: media_player.turn_on
+        target:
+          entity_id: media_player.android_tv_192_168_3_17
+      - service: climate.turn_on
+        target:
+          entity_id: climate.sl_ar_condicionado
+
+  bruno_scene_relaxar:
+    alias: Bruno - Relaxar
+    mode: restart
+    sequence:
+      - service: light.turn_off
+        target:
+          entity_id: light.grupo_luzes_sala
+      - service: light.turn_on
+        target:
+          entity_id: light.varanda_switch_2
+      - service: cover.close_cover
+        target:
+          entity_id: cover.cortina_varanda_cortina_2
+
+  bruno_scene_receber:
+    alias: Bruno - Receber
+    mode: restart
+    sequence:
+      - service: light.turn_off
+        target:
+          entity_id: light.grupo_luzes_sala
+      - service: light.turn_on
+        target:
+          entity_id:
+            - light.corredor_switch_1
+            - light.sala_switch_1
+            - light.sala_switch_3
+            - light.varanda_switch_2
+            - light.varanda_switch_1
+            - light.sala_2_switch_3
+
+  bruno_scene_trabalho:
+    alias: Bruno - Trabalho
+    mode: restart
+    sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.grupo_luzes_office
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.office_pc_active
+                state: 'off'
+            sequence:
+              - service: button.press
+                target:
+                  entity_id: button.desktop_melg9vv_pc_office_switch

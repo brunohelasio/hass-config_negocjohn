@@ -14,25 +14,55 @@ const BRUNO_LAVABO_DEFAULT_CONFIG = {
     "room_group": "light.grupo_luzes_lavabo",
     "room_toggle": "light.grupo_luzes_lavabo",
     "room_fallback_lights": [
-      "light.grupo_luzes_lavabo"
+      "light.lavabo_switch_2",
+      "light.lavabo_switch_1",
+      "light.lavabo_switch_3"
     ],
     "active_sensor": "sensor.lavabo_active",
+    // NOVO (2026-07-03): presenca imediata para o dot; lavabo_occupancy fica
+    // para automacao de luz (segurava o dot aceso por minutos apos a saida).
+    "motion_recent": "binary_sensor.lavabo_motion_recent",
+    "presence": "binary_sensor.lavabo_occupancy",
+    "illuminance": "sensor.lv_sensor_presenca_iluminancia",
+    "pir": "sensor.lv_sensor_presenca_pir",
     "temperature": [],
     "humidity": [],
     "dishwasher": ""
   },
   "icon": {
-    // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/lavabo-off.png?v=20260608-room-assets-uniform-1",
-    "off": "/local/bruno-ui/assets/lavabo-off-tight.png?v=20260609-rail-dynamic-1",
-    // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/lavabo-on.png?v=20260608-room-assets-uniform-1",
-    "on": "/local/bruno-ui/assets/lavabo-on-tight.png?v=20260609-rail-dynamic-1",
+    // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/lavabo-off.png?v=20260702-all-images-1",
+    "off": "/local/bruno-ui/assets/lavabo-off-tight.png?v=20260702-all-images-1",
+    // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/lavabo-on.png?v=20260702-all-images-1",
+    "on": "/local/bruno-ui/assets/lavabo-on-tight.png?v=20260702-all-images-1",
     "fallback": "mdi:toilet"
+  },
+  "popup": {
+    // ANTERIOR (rollback): banner usava os PNGs off/on do icone do card.
+    // "banner": "/local/bruno-ui/assets/lavabo-off-tight.png?v=20260704-lavabo-popup-1",
+    // "banner_on": "/local/bruno-ui/assets/lavabo-on-tight.png?v=20260704-lavabo-popup-1",
+    // NOVO: foto real do lavabo (bordas atmosfericas aplicadas via CSS no shade).
+    "banner": "/local/images/lavabo.jpg?v=20260705-lavabo-jpg-1",
+    "banner_on": "/local/images/lavabo.jpg?v=20260705-lavabo-jpg-1",
+    "lights": [
+      { "entity": "light.lavabo_switch_2", "name": "Luz principal", "icon": "ledstrip" },
+      { "entity": "light.lavabo_switch_1", "name": "Luz parede", "icon": "sconce" },
+      { "entity": "light.lavabo_switch_3", "name": "Luz espelho", "icon": "light_flush" }
+    ]
   },
   "status_dots": [
     {
       "icon": "mdi:account",
       "label": "Presenca",
-      "tone": "blue"
+      "tone": "blue",
+      // ANTERIOR (rollback): dot lia lavabo_occupancy (delay_off de minutos —
+      // o icone ficava aceso muito tempo apos a saida).
+      // "entity": "binary_sensor.lavabo_occupancy",
+      // NOVO: presenca imediata — liga na deteccao, apaga ~35s apos a saida
+      // (fading 30s do sensor + 5s de anti-flicker).
+      "entity": "binary_sensor.lavabo_motion_recent",
+      "states": [
+        "on"
+      ]
     }
   ]
 };
@@ -54,11 +84,19 @@ class BrunoLavaboCard extends HTMLElement {
       ...(config?.icon || {}),
     };
 
+    const popup = {
+      ...BRUNO_LAVABO_DEFAULT_CONFIG.popup,
+      ...(config?.popup || {}),
+      lights: Array.isArray(config?.popup?.lights)
+        ? config.popup.lights
+        : BRUNO_LAVABO_DEFAULT_CONFIG.popup.lights,
+    };
     this._config = {
       ...BRUNO_LAVABO_DEFAULT_CONFIG,
       ...config,
       entities,
       icon,
+      popup,
       room_on_states: this._array(config?.room_on_states || BRUNO_LAVABO_DEFAULT_CONFIG.room_on_states),
       semantic_on_states: this._array(config?.semantic_on_states || BRUNO_LAVABO_DEFAULT_CONFIG.semantic_on_states || []),
       status_dots: Array.isArray(config?.status_dots) ? config.status_dots : BRUNO_LAVABO_DEFAULT_CONFIG.status_dots,
@@ -75,6 +113,61 @@ class BrunoLavaboCard extends HTMLElement {
     return 3;
   }
 
+  // ==== HOME V3 - MODO TILE (2026-07-26) ==================================
+  // Duas condicoes INDEPENDENTES, ambas necessarias:
+  //  1) POSICAO - `variant: tile` vem do YAML e e passado APENAS pelos
+  //     includes da faixa de comodos do desktop V2
+  //     (views/main-grid/v2/bento_bottom_block.yaml). O phone
+  //     (v2/bento_comodos_phone.yaml) e a Home V1 NAO passam a flag, entao
+  //     nunca viram tile.
+  //  2) TEMA - o tema ativo declara `--bruno-tile-mode: on`. Hoje somente o
+  //     Josh.ai declara. Em qualquer outro tema o modo nao liga e o render
+  //     fica IDENTICO ao atual. Assim o visual novo pertence ao TEMA e nao
+  //     ao layout, e um tema futuro adota o tile sem tocar em JS.
+  // ROLLBACK: remover `variant: tile` do YAML OU o token do tema.
+  // =======================================================================
+  _themeTileMode() {
+    if (this._tileModeCache !== undefined) return this._tileModeCache;
+    let value = '';
+    try {
+      value = getComputedStyle(this).getPropertyValue('--bruno-tile-mode').trim();
+    } catch (_error) {
+      value = '';
+    }
+    this._tileModeCache = value === 'on';
+    return this._tileModeCache;
+  }
+
+  _tileClasses() {
+    if (this._config?.variant !== 'tile' || !this._themeTileMode()) return '';
+    return this._config?.divider_left ? ' is-tile has-divider' : ' is-tile';
+  }
+
+  _tileDivider() {
+    return this._tileClasses().indexOf('has-divider') >= 0
+      ? '<span class="tile-divider" aria-hidden="true"></span>'
+      : '';
+  }
+
+  connectedCallback() {
+    // Trocar de tema (Config > Themes) precisa reavaliar o modo tile.
+    if (!this._onBrunoThemeChanged) {
+      this._onBrunoThemeChanged = () => {
+        this._tileModeCache = undefined;
+        this._render();
+      };
+    }
+    globalThis.addEventListener?.('bruno-theme-changed', this._onBrunoThemeChanged);
+    // O primeiro render pode ocorrer antes do attach; ali getComputedStyle
+    // ainda nao ve os tokens do tema. Invalida e repinta ja conectado.
+    this._tileModeCache = undefined;
+    this._render();
+  }
+
+  disconnectedCallback() {
+    if (!this._onBrunoThemeChanged) return;
+    globalThis.removeEventListener?.('bruno-theme-changed', this._onBrunoThemeChanged);
+  }
   _state(entityId) {
     return entityId ? this._hass?.states?.[entityId] : undefined;
   }
@@ -180,12 +273,54 @@ class BrunoLavaboCard extends HTMLElement {
     return value === true || value === 'true' || value === 'True' || value === 'on' || value === 'yes';
   }
 
+  _roomLightEntities() {
+    const entities = this._config.entities || {};
+    return [
+      ...this._array(entities.room_fallback_lights),
+      ...this._popupLights().map((light) => light.entity),
+    ].filter(Boolean);
+  }
+
+  _uniqueRoomLightStates() {
+    const seen = new Set();
+    return this._roomLightEntities()
+      .filter((entityId) => {
+        if (!entityId || seen.has(entityId)) return false;
+        seen.add(entityId);
+        return true;
+      })
+      .map((entityId) => this._state(entityId))
+      .filter((entity) => entity && !this._isUnavailable(entity));
+  }
+
+  _anyRoomLightOn() {
+    return this._uniqueRoomLightStates().some((entity) => entity.state === 'on');
+  }
+
+  // ANTERIOR (rollback): dependia SOMENTE dos membros light.lavabo_switch_* para
+  // decidir o on-state. O toque (room_toggle) age no GRUPO light.grupo_luzes_lavabo;
+  // se os membros nao refletirem imediatamente/estiverem indisponiveis, o botao
+  // nunca acendia (PNG cinza fixo) mesmo com a luz ligada.
+  // _roomOn(roomEntity) {
+  //   const lightStates = this._uniqueRoomLightStates();
+  //   if (lightStates.length) return lightStates.some((entity) => entity.state === 'on');
+  //   const state = String(roomEntity?.state || '').toLowerCase();
+  //   const activeState = String(this._state(this._config.entities.active_sensor)?.state || '').toLowerCase();
+  //   const roomOn = this._config.room_on_states.map((item) => String(item).toLowerCase()).includes(state);
+  //   const semanticOn = this._config.semantic_on_states.map((item) => String(item).toLowerCase()).includes(activeState);
+  //   return roomOn || semanticOn;
+  // }
+  // NOVO: fonte primaria = estado do GRUPO (reflete sempre o toque). Reforco: se
+  // qualquer switch membro estiver on. Fallback semantico por ultimo.
   _roomOn(roomEntity) {
-    const state = String(roomEntity?.state || '').toLowerCase();
+    const groupState = String(roomEntity?.state || '').toLowerCase();
+    const onStates = this._config.room_on_states.map((item) => String(item).toLowerCase());
+    if (onStates.includes(groupState)) return true;
+
+    if (this._uniqueRoomLightStates().some((entity) => entity.state === 'on')) return true;
+
     const activeState = String(this._state(this._config.entities.active_sensor)?.state || '').toLowerCase();
-    const roomOn = this._config.room_on_states.map((item) => String(item).toLowerCase()).includes(state);
-    const semanticOn = this._config.semantic_on_states.map((item) => String(item).toLowerCase()).includes(activeState);
-    return roomOn || semanticOn;
+    return this._config.semantic_on_states.map((item) => String(item).toLowerCase()).includes(activeState);
   }
 
   _dishwasherLine() {
@@ -236,6 +371,7 @@ class BrunoLavaboCard extends HTMLElement {
     };
   }
 
+
   _runAction(key, gesture) {
     if (key !== 'room') return;
     globalThis.BrunoLiquidGlass?.feedback?.(gesture === 'hold' ? 'hold' : 'tap');
@@ -250,11 +386,158 @@ class BrunoLavaboCard extends HTMLElement {
   }
 
   _runRoomSubview() {
-    const entities = this._config.entities;
     globalThis.BrunoLiquidGlass?.feedback?.('tap');
-    this._runConfiguredAction(this._config.double_tap_action, entities.room_group);
+    this._openLavaboPopup();
   }
 
+
+  _popupLights() {
+    return Array.isArray(this._config?.popup?.lights) ? this._config.popup.lights : [];
+  }
+
+  _lightPopupModel(light) {
+    const entity = this._state(light.entity);
+    const state = String(entity?.state || '').toLowerCase();
+    const on = state === 'on';
+    const unavailable = !entity || ['unavailable', 'unknown', 'none', ''].includes(state);
+    return {
+      ...light,
+      on,
+      unavailable,
+      stateLabel: unavailable ? 'Indisponivel' : (on ? 'Ligada' : 'Desligada'),
+    };
+  }
+
+  _openLavaboPopup() {
+    this._lavaboPopupOpen = true;
+    this._render();
+  }
+
+  _closeLavaboPopup() {
+    this._lavaboPopupOpen = false;
+    const dialog = this.shadowRoot?.querySelector('.lavabo-dialog');
+    if (dialog?.open) {
+      try { dialog.close(); } catch (_) { /* noop */ }
+    }
+    this._render();
+  }
+
+  _togglePopupLight(entityId) {
+    if (!entityId) return;
+    globalThis.BrunoLiquidGlass?.feedback?.('tap');
+    this._callService('light.toggle', {}, { entity_id: entityId });
+  }
+
+  _renderLavaboPopup(model) {
+    // NOVO: <dialog> nativo com showModal() -> renderiza na TOP LAYER do browser,
+    // acima de tudo e IMUNE ao overflow:hidden / transform de ancestrais (o motivo
+    // do popup com position:fixed ficar cortado/invisivel dentro do shell).
+    // O markup existe sempre; a abertura/fechamento e via showModal()/close().
+    const popup = this._config.popup || {};
+    const banner = model.roomOn ? (popup.banner_on || popup.banner) : (popup.banner || popup.banner_on);
+    const lights = this._popupLights().map((light) => this._lightPopupModel(light));
+    const popupTheme = globalThis.BrunoThemeManager?.current?.() === 'josh' ? 'josh' : 'default';
+    return `
+      <dialog class="lavabo-dialog" data-bruno-popup-theme="${popupTheme}" aria-label="Lavabo">
+        <section class="lavabo-popup-panel" role="document">
+          <header class="lavabo-popup-header">
+            <span class="lavabo-popup-icon" aria-hidden="true"><bruno-icon icon="mdi:toilet"></bruno-icon></span>
+            <div class="lavabo-popup-title">
+              <strong>Lavabo</strong>
+              <span>Controle rapido de luzes</span>
+            </div>
+            <button class="lavabo-popup-close" type="button" data-popup-action="close" aria-label="Fechar">&times;</button>
+          </header>
+          <div class="lavabo-popup-banner">
+            ${banner ? `<img src="${BrunoLavaboCard._escapeAttr(banner)}" alt="" loading="eager" decoding="async">` : ''}
+            <div class="lavabo-popup-banner-shade" aria-hidden="true"></div>
+          </div>
+          <div class="lavabo-popup-lights">
+            ${lights.map((light) => `
+              <button class="lavabo-light-tile${light.on ? ' is-on' : ''}${light.unavailable ? ' is-unavailable' : ''}" type="button" data-popup-light="${BrunoLavaboCard._escapeAttr(light.entity)}" aria-label="${BrunoLavaboCard._escapeAttr(light.name)}">
+                <span class="lavabo-light-icon" aria-hidden="true"><bruno-icon icon="${BrunoLavaboCard._escapeAttr(light.icon || 'mdi:lightbulb-outline')}"></bruno-icon></span>
+                <span class="lavabo-light-copy">
+                  <strong>${BrunoLavaboCard._escape(light.name || 'Luz')}</strong>
+                  <span>${BrunoLavaboCard._escape(light.stateLabel)}</span>
+                </span>
+              </button>
+            `).join('')}
+          </div>
+        </section>
+      </dialog>
+    `;
+  }
+
+  _wireLavaboPopup() {
+    const root = this.shadowRoot;
+    if (!root) return;
+    const dialog = root.querySelector('.lavabo-dialog');
+    if (!dialog) return;
+
+    // Clique no fundo do dialog (fora do painel) fecha; clique no painel nao.
+    const panel = root.querySelector('.lavabo-popup-panel');
+    panel?.addEventListener('click', (event) => event.stopPropagation());
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) this._closeLavaboPopup();
+    });
+    // ESC (evento 'cancel' do <dialog>) fecha pelo nosso fluxo.
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      this._closeLavaboPopup();
+    });
+
+    root.querySelectorAll('[data-popup-action="close"]').forEach((node) => {
+      node.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this._closeLavaboPopup();
+      });
+    });
+    root.querySelectorAll('[data-popup-light]').forEach((button) => {
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this._togglePopupLight(button.dataset.popupLight);
+      });
+    });
+
+    // O _render() recria o markup a cada atualizacao de hass. Se o popup deve
+    // estar aberto, reabrimos o <dialog> recem-criado (sincrono, sem flicker)
+    // e reancoramos o painel ao botao do card.
+    if (this._lavaboPopupOpen) {
+      if (!dialog.open) {
+        try { dialog.showModal(); } catch (_) { /* dialog ainda nao conectado */ }
+      }
+      this._positionPopup();
+    }
+  }
+
+  // Ancora o painel ao proprio botao do Lavabo (a semelhanca do popup de Config).
+  // O <dialog> esta na top layer -> getBoundingClientRect()/coords sao da viewport.
+  _positionPopup() {
+    const panel = this.shadowRoot?.querySelector('.lavabo-popup-panel');
+    if (!panel) return;
+    const anchor = this.getBoundingClientRect();
+    if (!anchor.width && !anchor.height) return;
+    const gap = 10;
+    const vw = window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const pw = panel.offsetWidth || 520;
+    const ph = panel.offsetHeight || 240;
+
+    // Horizontal: alinha a borda DIREITA do painel a borda direita do botao
+    // (o Lavabo fica no canto superior direito -> abre para dentro da tela).
+    let left = anchor.right - pw;
+    left = Math.min(Math.max(left, gap), Math.max(gap, vw - pw - gap));
+
+    // Vertical: abre logo ABAIXO do botao; se nao couber, abre ACIMA.
+    let top = anchor.bottom + gap;
+    if (top + ph > vh - gap) top = anchor.top - ph - gap;
+    top = Math.min(Math.max(top, gap), Math.max(gap, vh - ph - gap));
+
+    panel.style.left = `${Math.round(left)}px`;
+    panel.style.top = `${Math.round(top)}px`;
+  }
   _isActionCoolingDown(key) {
     this._lastActionAt = this._lastActionAt || {};
     const now = Date.now();
@@ -362,6 +645,13 @@ class BrunoLavaboCard extends HTMLElement {
     let holdTimer = null;
     let holdFired = false;
     let pointerDown = false;
+    // NOVO (2026-07-22) — consolidacao mobile: separa tap intencional de
+    // arraste iniciado sobre o card sem bloquear o scroll nativo.
+    const dragCancelThreshold = 10;
+    let activePointerId = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerMoved = false;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -373,20 +663,31 @@ class BrunoLavaboCard extends HTMLElement {
     const resetPress = () => {
       clearHold();
       pointerDown = false;
+      pointerMoved = false;
+      activePointerId = null;
       button.classList.remove('is-pressed');
     };
 
     button.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
-      event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: serializa o gesto; pointers
+      // adicionais nao substituem o pointer/timer que iniciou a interacao.
+      if (activePointerId !== null) return;
+      // ANTERIOR (rollback): event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: libera o pan da shell.
       event.stopPropagation();
 
       pointerDown = true;
       holdFired = false;
+      activePointerId = event.pointerId;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerMoved = false;
       button.classList.add('is-pressed');
-      button.setPointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): button.setPointerCapture?.(event.pointerId);
 
       holdTimer = window.setTimeout(() => {
+        if (!pointerDown || pointerMoved) return;
         holdFired = true;
         button.classList.add('is-hold-fired');
         window.setTimeout(() => button.classList.remove('is-hold-fired'), 260);
@@ -394,15 +695,32 @@ class BrunoLavaboCard extends HTMLElement {
       }, 560);
     });
 
+    // NOVO (2026-07-22) — consolidacao mobile: deslocamento acima da
+    // tolerancia cancela tap/hold; deliberadamente nao usa preventDefault().
+    button.addEventListener('pointermove', (event) => {
+      if (!pointerDown || event.pointerId !== activePointerId) return;
+      const movedX = Math.abs(event.clientX - pointerStartX);
+      const movedY = Math.abs(event.clientY - pointerStartY);
+      if (movedX <= dragCancelThreshold && movedY <= dragCancelThreshold) return;
+      pointerMoved = true;
+      clearHold();
+      button.classList.remove('is-pressed');
+    });
+
     button.addEventListener('pointerup', (event) => {
+      // NOVO (2026-07-22) — consolidacao mobile: somente o pointer que abriu
+      // o gesto pode conclui-lo e executar a acao.
+      if (event.pointerId !== activePointerId) return;
       event.preventDefault();
       event.stopPropagation();
-      button.releasePointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): button.releasePointerCapture?.(event.pointerId);
 
       const wasPointerDown = pointerDown;
+      const wasPointerMoved = pointerMoved;
       resetPress();
 
-      if (!wasPointerDown || holdFired) return;
+      // ANTERIOR (rollback): if (!wasPointerDown || holdFired) return;
+      if (!wasPointerDown || wasPointerMoved || holdFired) return;
       this._runAction(key, 'tap');
     });
 
@@ -417,7 +735,11 @@ class BrunoLavaboCard extends HTMLElement {
     });
 
     button.addEventListener('pointerleave', resetPress);
-    button.addEventListener('pointercancel', resetPress);
+    // ANTERIOR (rollback): button.addEventListener('pointercancel', resetPress);
+    button.addEventListener('pointercancel', (event) => {
+      if (event.pointerId !== activePointerId) return;
+      resetPress();
+    });
 
     button.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -429,56 +751,85 @@ class BrunoLavaboCard extends HTMLElement {
   _wireRoomNavZone(zone) {
     if (!zone) return;
 
-    let holdTimer = null;
-    let holdFired = false;
+    let pointerHandled = false;
+    // NOVO (2026-07-22) — consolidacao mobile: o Lavabo preserva seu fluxo
+    // direto de navegacao, agora com cancelamento por deslocamento.
+    const dragCancelThreshold = 10;
     let pointerDown = false;
+    let activePointerId = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerMoved = false;
 
-    const clearHold = () => {
-      if (holdTimer) {
-        window.clearTimeout(holdTimer);
-        holdTimer = null;
-      }
+    const open = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      zone.classList.add('is-navigating');
+      window.setTimeout(() => zone.classList.remove('is-navigating'), 420);
+      window.setTimeout(() => this._runRoomSubview(), 90);
     };
 
     const resetPress = () => {
-      clearHold();
       pointerDown = false;
+      pointerMoved = false;
+      activePointerId = null;
       zone.classList.remove('is-pressed');
     };
 
     zone.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
-      event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: mantem um unico pointer
+      // responsavel pela navegacao ate o encerramento do gesto.
+      if (activePointerId !== null) return;
+      // ANTERIOR (rollback): event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: preserva o scroll nativo.
       event.stopPropagation();
-
+      pointerHandled = false;
       pointerDown = true;
-      holdFired = false;
+      activePointerId = event.pointerId;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerMoved = false;
       zone.classList.add('is-pressed');
-      zone.setPointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): zone.setPointerCapture?.(event.pointerId);
+    });
 
-      holdTimer = window.setTimeout(() => {
-        holdFired = true;
-        zone.classList.add('is-hold-fired');
-        window.setTimeout(() => zone.classList.remove('is-hold-fired'), 260);
-        this._runAction('room', 'hold');
-      }, 560);
+    // NOVO (2026-07-22) — consolidacao mobile: movimento cancela a abertura
+    // da subview e nao interfere no gesto de pan.
+    zone.addEventListener('pointermove', (event) => {
+      if (!pointerDown || event.pointerId !== activePointerId) return;
+      const movedX = Math.abs(event.clientX - pointerStartX);
+      const movedY = Math.abs(event.clientY - pointerStartY);
+      if (movedX <= dragCancelThreshold && movedY <= dragCancelThreshold) return;
+      pointerMoved = true;
+      pointerHandled = true;
+      zone.classList.remove('is-pressed');
     });
 
     zone.addEventListener('pointerup', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      zone.releasePointerCapture?.(event.pointerId);
-
-      const wasPointerDown = pointerDown;
+      // NOVO (2026-07-22) — consolidacao mobile: pointer secundario nao pode
+      // concluir a navegacao iniciada por outro toque.
+      if (event.pointerId !== activePointerId) return;
+      // ANTERIOR (rollback): zone.releasePointerCapture?.(event.pointerId);
+      const shouldOpen = pointerDown && !pointerMoved;
       resetPress();
-
-      if (!wasPointerDown || holdFired) return;
-      this._runRoomSubview();
+      pointerHandled = true;
+      if (!shouldOpen) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      open(event);
     });
 
     zone.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
+      if (pointerHandled) {
+        pointerHandled = false;
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      open(event);
     });
 
     zone.addEventListener('dblclick', (event) => {
@@ -487,13 +838,15 @@ class BrunoLavaboCard extends HTMLElement {
     });
 
     zone.addEventListener('pointerleave', resetPress);
-    zone.addEventListener('pointercancel', resetPress);
+    // ANTERIOR (rollback): zone.addEventListener('pointercancel', resetPress);
+    zone.addEventListener('pointercancel', (event) => {
+      if (event.pointerId !== activePointerId) return;
+      resetPress();
+    });
 
     zone.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      event.stopPropagation();
-      this._runRoomSubview();
+      open(event);
     });
   }
 
@@ -511,7 +864,7 @@ class BrunoLavaboCard extends HTMLElement {
     const activeClass = dot.active ? ' is-active' : '';
     return `
       <span class="status-dot tone-${dot.tone}${activeClass}" title="${BrunoLavaboCard._escape(dot.label)}" aria-label="${BrunoLavaboCard._escape(dot.label)}">
-        <ha-icon icon="${dot.icon}"></ha-icon>
+        <bruno-icon icon="${dot.icon}"></bruno-icon>
       </span>
     `;
   }
@@ -528,7 +881,7 @@ class BrunoLavaboCard extends HTMLElement {
     const on = BrunoLavaboCard._escape(icon.on || '');
     return `
       <span class="room-asset-wrap">
-        <span class="room-asset-fallback"><ha-icon icon="${fallback}"></ha-icon></span>
+        <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
         ${off ? `<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async">` : ''}
         ${on ? `<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async">` : ''}
       </span>
@@ -541,7 +894,7 @@ class BrunoLavaboCard extends HTMLElement {
 
     const model = this._model();
     const roomActiveClass = model.roomOn ? ' is-room-on' : '';
-    const hasMetricClass = model.temperature ? ' has-metric' : '';
+    const hasMetricClass = model.temperature || model.dots.some((dot) => dot.active) ? ' has-metric' : '';
     const iconSize = Number(this._config.icon_size) || BRUNO_LAVABO_DEFAULT_CONFIG.icon_size;
 
     this.shadowRoot.innerHTML = `
@@ -566,7 +919,7 @@ class BrunoLavaboCard extends HTMLElement {
           min-height: 0;
           margin: 0;
           padding: 0;
-          contain: layout style;
+
         }
 
         * {
@@ -699,7 +1052,13 @@ class BrunoLavaboCard extends HTMLElement {
           align-items: start;
           padding: 14px 54px 13px 11px;
           --- FIM ORIGINAL --- */
-          grid-template-columns: 124px minmax(0, 1fr) 40px;
+          /* ANTERIOR (2026-07-03): 124px fixo estourava a largura real do card
+             (124+40+gaps+padding > largura) e clipava o dot de presenca a direita
+             — este era o "desalinhamento" do Lavabo (nao a falta de temp/umidade).
+             grid-template-columns: 124px minmax(0, 1fr) 40px; */
+          /* NOVO (padrao Office): a coluna do icone absorve o deficit e o PNG
+             encolhe proporcionalmente — os status nunca sao clipados. */
+          grid-template-columns: minmax(0, 124px) minmax(0, 1fr) 40px;
           grid-template-rows: auto minmax(0, 1fr) auto auto;
           grid-template-areas:
             "icon space right"
@@ -753,7 +1112,10 @@ class BrunoLavaboCard extends HTMLElement {
           justify-self: start;
           align-self: start;
           position: relative;
-          width: 120px;
+          /* ANTERIOR (2026-07-03): width fixo 120px transbordava quando a track encolhe. */
+          /* NOVO (padrao Office): imagem flexivel — encolhe junto com a coluna. */
+          width: 100%;
+          max-width: 120px;
           height: 80px;
           margin-left: 0;
           margin-top: 1px;
@@ -770,6 +1132,8 @@ class BrunoLavaboCard extends HTMLElement {
         }
 
         .room-asset {
+          width: 96%;
+          height: 96%;
           object-fit: contain;
           object-position: left top; /* NOVO: ancora asset tight no topo-esquerdo */
           opacity: 0;
@@ -798,7 +1162,7 @@ class BrunoLavaboCard extends HTMLElement {
           color: rgba(255,255,255,0.58);
         }
 
-        .room-asset-fallback ha-icon {
+        .room-asset-fallback bruno-icon {
           --mdc-icon-size: 100%;
           width: 100%;
           height: 100%;
@@ -852,13 +1216,11 @@ class BrunoLavaboCard extends HTMLElement {
           color: var(--text-muted);
         }
 
-        .room-nav-zone {
+        .room-copy {
           grid-column: 1 / 3;
           grid-row: 3 / 5;
-          justify-self: start;
           align-self: end;
-          position: relative;
-          z-index: 4;
+          justify-self: start;
           min-width: 0;
           width: min(136px, 100%);
           min-height: 56px;
@@ -866,7 +1228,16 @@ class BrunoLavaboCard extends HTMLElement {
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
+        }
+
+        .room-nav-zone {
+          flex: 0 0 auto;
+          width: 24px;
+          height: 24px;
+          display: inline-grid;
+          place-items: center;
           outline: none;
+          border-radius: 999px;
           cursor: pointer;
           user-select: none;
           -webkit-user-select: none;
@@ -907,10 +1278,6 @@ class BrunoLavaboCard extends HTMLElement {
             filter var(--bruno-liquid-motion-fast, 140ms ease);
         }
 
-        .room-nav-zone.is-pressed .title,
-        .room-nav-zone.is-pressed .status-lines {
-          filter: brightness(1.13);
-        }
 
         .room-nav-zone.is-pressed .room-chevron {
           color: rgba(255,255,255,0.96);
@@ -921,6 +1288,16 @@ class BrunoLavaboCard extends HTMLElement {
         .room-nav-zone.is-hold-fired .room-chevron {
           color: rgba(255,214,150,0.98);
           filter: drop-shadow(0 0 10px rgba(255,190,90,0.34));
+        }
+
+        .room-nav-zone.is-navigating .room-chevron {
+          animation: brunoRoomChevronNavigate 360ms ease both;
+        }
+
+        @keyframes brunoRoomChevronNavigate {
+          0% { transform: translate(0, -1px); }
+          52% { transform: translate(5px, -1px); }
+          100% { transform: translate(2px, -1px); }
         }
 
         .status-lines {
@@ -1014,7 +1391,7 @@ class BrunoLavaboCard extends HTMLElement {
           transform: translateZ(0) scale(1.04);
         }
 
-        .status-dot.is-active ha-icon {
+        .status-dot.is-active bruno-icon {
           filter: drop-shadow(0 0 5px rgba(var(--tone),0.56));
         }
         --- FIM ORIGINAL --- */
@@ -1042,7 +1419,7 @@ class BrunoLavaboCard extends HTMLElement {
           to { opacity: 1; transform: scale(1); }
         }
 
-        .status-dot ha-icon {
+        .status-dot bruno-icon {
           --mdc-icon-size: 14px;
           width: 14px;
           height: 14px;
@@ -1062,24 +1439,294 @@ class BrunoLavaboCard extends HTMLElement {
         .tone-purple { --tone: var(--accent-purple); }
         .tone-cyan { --tone: var(--accent-cyan); }
         .tone-amber { --tone: var(--accent-amber); }
-
-        /* --- ORIGINAL media max-height 760 (rollback rapido) ---
-        @media (max-height: 760px) {
-          .room-action {
-            padding: 12px 52px 12px 11px;
-          }
-
-          .room-icon {
-            width: calc(var(--room-icon-size) - 8px);
-            height: calc(var(--room-icon-size) - 8px);
-          }
-
-          .right-dots {
-            top: 13px;
-            right: 12px;
-          }
+/* ANTERIOR (rollback): overlay com position:fixed dentro do shadow DOM — ficava
+           cortado pelo overflow:hidden do .content-slot do shell.
+        .lavabo-popup-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 40;
+          display: grid;
+          place-items: center;
+          padding: 24px;
         }
-        --- FIM ORIGINAL --- */
+        .lavabo-popup-scrim {
+          position: absolute;
+          inset: -12px;
+          background: rgba(0,0,0,0.34);
+          backdrop-filter: blur(18px) saturate(1.08);
+          -webkit-backdrop-filter: blur(18px) saturate(1.08);
+        }
+        --- FIM ANTERIOR --- */
+
+        /* NOVO: <dialog> nativo na top layer — centraliza o painel e cobre a tela
+           inteira independentemente de overflow/transform de ancestrais. */
+        .lavabo-dialog {
+          margin: 0;
+          padding: 0;
+          border: 0;
+          inset: 0;
+          width: 100vw;
+          max-width: 100vw;
+          height: 100vh;
+          max-height: 100vh;
+          background: transparent;
+          color: inherit;
+          overflow: visible;
+        }
+
+        /* ANTERIOR (rollback): centralizava o painel (display:grid + place-items:center).
+           NOVO: o dialog so cobre a viewport (backdrop + clique-fora); o painel e
+           ANCORADO ao botao do card via top/left inline (ver _positionPopup). */
+        .lavabo-dialog[open] {
+          display: block;
+        }
+
+        .lavabo-dialog:not([open]) {
+          display: none;
+        }
+
+        /* ANTERIOR (rollback): blur forte (18px) escurecia demais o fundo.
+           NOVO: fundo suave a semelhanca do popup de Config (blur 2px / ~0.08). */
+        .lavabo-dialog::backdrop {
+          background: rgba(0,0,0,0.10);
+          backdrop-filter: blur(3px) saturate(1.04);
+          -webkit-backdrop-filter: blur(3px) saturate(1.04);
+        }
+
+        .lavabo-popup-panel {
+          position: fixed;
+          top: 0;
+          left: 0;
+          z-index: 1;
+          width: min(520px, calc(100vw - 52px));
+          border-radius: var(--bruno-liquid-panel-radius, 18px);
+          border: var(--bruno-liquid-popup-border, 1px solid rgba(255,255,255,0.16));
+          color: rgba(255,255,255,0.94);
+          background: var(--bruno-liquid-popup-background,
+            linear-gradient(180deg, rgba(44,33,26,0.80), rgba(16,14,14,0.82)),
+            rgba(20,18,18,0.80)
+          );
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.16),
+            0 24px 64px rgba(0,0,0,0.42);
+          backdrop-filter: var(--bruno-liquid-popup-filter, blur(28px) saturate(1.42));
+          -webkit-backdrop-filter: var(--bruno-liquid-popup-filter, blur(28px) saturate(1.42));
+          overflow: hidden;
+        }
+
+        .lavabo-dialog[data-bruno-popup-theme="josh"] .lavabo-popup-panel {
+          border: var(--bruno-josh-popup-border, var(--bruno-liquid-popup-border));
+          background: var(--bruno-josh-popup-background, var(--bruno-liquid-popup-background));
+          box-shadow: var(--bruno-josh-popup-shadow, var(--bruno-liquid-popup-shadow));
+          backdrop-filter: var(--bruno-josh-popup-filter, var(--bruno-liquid-popup-filter));
+          -webkit-backdrop-filter: var(--bruno-josh-popup-filter, var(--bruno-liquid-popup-filter));
+          isolation: isolate;
+        }
+
+        .lavabo-dialog[data-bruno-popup-theme="josh"] .lavabo-popup-panel::before {
+          content: "";
+          position: absolute;
+          inset: 1px;
+          z-index: 0;
+          border-radius: inherit;
+          background: var(--bruno-josh-popup-sheen, none);
+          opacity: var(--bruno-josh-popup-sheen-opacity, 0.13);
+          pointer-events: none;
+        }
+
+        .lavabo-dialog[data-bruno-popup-theme="josh"] .lavabo-popup-panel::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+          padding: 1px;
+          border-radius: inherit;
+          background: var(--bruno-josh-popup-edge-glow, none);
+          opacity: var(--bruno-josh-popup-edge-opacity, 0.70);
+          pointer-events: none;
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+        }
+
+        .lavabo-dialog[data-bruno-popup-theme="josh"] .lavabo-popup-panel > * {
+          position: relative;
+          z-index: 1;
+        }
+
+        .lavabo-popup-header {
+          height: 52px;
+          padding: 10px 12px 8px 14px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .lavabo-popup-icon {
+          width: 30px;
+          height: 30px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          color: rgb(255,195,83);
+          background: rgba(255,185,70,0.13);
+          border: 1px solid rgba(255,190,80,0.35);
+        }
+
+        .lavabo-popup-icon bruno-icon {
+          --mdc-icon-size: 16px;
+        }
+
+        .lavabo-popup-title {
+          flex: 1 1 auto;
+          min-width: 0;
+          display: grid;
+          gap: 2px;
+        }
+
+        .lavabo-popup-title strong {
+          font-size: 14px;
+          line-height: 1;
+          font-weight: 800;
+        }
+
+        .lavabo-popup-title span {
+          font-size: 10px;
+          line-height: 1;
+          font-weight: 650;
+          color: rgba(255,255,255,0.52);
+        }
+
+        .lavabo-popup-close {
+          appearance: none;
+          width: 30px;
+          height: 30px;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          border: 1px solid rgba(255,255,255,0.14);
+          color: rgba(255,255,255,0.72);
+          background: rgba(255,255,255,0.08);
+        }
+
+        .lavabo-dialog[data-bruno-popup-theme="josh"] .lavabo-popup-close {
+          border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+          background: var(--bruno-liquid-control-background, rgba(255,255,255,0.08));
+          box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+          backdrop-filter: var(--bruno-liquid-control-filter, none);
+          -webkit-backdrop-filter: var(--bruno-liquid-control-filter, none);
+        }
+
+        .lavabo-popup-banner {
+          position: relative;
+          height: 128px;
+          margin: 0 12px 12px;
+          border-radius: 14px;
+          border: 1px solid rgba(255,255,255,0.12);
+          overflow: hidden;
+          background:
+            radial-gradient(140px 80px at 20% 14%, rgba(255,219,155,0.20), transparent 70%),
+            linear-gradient(135deg, rgba(86,62,44,0.70), rgba(20,17,16,0.86));
+        }
+
+        .lavabo-popup-banner img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          filter: brightness(0.86) saturate(1.04);
+        }
+
+        /* NOVO: bordas atmosfericas nas 4 arestas (mesma linguagem do backdrop do
+           shell) — escurece o perimetro da foto para fundir com o painel. */
+        .lavabo-popup-banner-shade {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background:
+            linear-gradient(90deg,  rgba(12,9,7,0.72) 0%, rgba(12,9,7,0.28) 7%, transparent 18%),
+            linear-gradient(270deg, rgba(12,9,7,0.72) 0%, rgba(12,9,7,0.28) 7%, transparent 18%),
+            linear-gradient(0deg,   rgba(12,9,7,0.78) 0%, rgba(12,9,7,0.30) 8%, transparent 22%),
+            linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(12,9,7,0.34) 6%, transparent 20%);
+        }
+
+        .lavabo-popup-lights {
+          padding: 0 12px 14px;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 8px;
+        }
+
+        .lavabo-light-tile {
+          appearance: none;
+          min-width: 0;
+          min-height: 74px;
+          padding: 10px 9px;
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr);
+          align-items: center;
+          gap: 9px;
+          text-align: left;
+          border-radius: var(--bruno-liquid-control-radius, 11px);
+          border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.14));
+          color: rgba(255,255,255,0.88);
+          background: var(--bruno-liquid-control-background, rgba(255,255,255,0.075));
+          box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.12));
+          backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(1.08));
+          -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(1.08));
+        }
+
+        .lavabo-light-tile.is-on {
+          color: rgba(255,246,225,0.98);
+          border-color: rgba(255,195,80,0.38);
+          background:
+            radial-gradient(80px 48px at 18% 12%, rgba(255,203,95,0.22), transparent 70%),
+            rgba(255,255,255,0.09);
+        }
+
+        .lavabo-light-tile.is-unavailable {
+          opacity: 0.58;
+        }
+
+        .lavabo-light-icon {
+          width: 30px;
+          height: 30px;
+          display: grid;
+          place-items: center;
+          color: rgb(255,197,92);
+        }
+
+        .lavabo-light-icon bruno-icon {
+          --mdc-icon-size: 24px;
+        }
+
+        .lavabo-light-copy {
+          min-width: 0;
+          display: grid;
+          gap: 4px;
+        }
+
+        .lavabo-light-copy strong,
+        .lavabo-light-copy span {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .lavabo-light-copy strong {
+          font-size: 12px;
+          line-height: 1;
+          font-weight: 800;
+        }
+
+        .lavabo-light-copy span {
+          font-size: 10px;
+          line-height: 1;
+          font-weight: 650;
+          color: rgba(255,255,255,0.56);
+        }
+
 
         @media (max-height: 760px) {
           .room-action {
@@ -1088,8 +1735,25 @@ class BrunoLavaboCard extends HTMLElement {
           }
 
           .room-icon {
-            width: 108px;
+            /* ANTERIOR (2026-07-03): width: 108px; */
+            width: 100%;
+            max-width: 108px;
             height: 72px;
+          }
+        }
+
+        /* NOVO (2026-07-09) — Fase 2 mobile: card de comodo no phone.
+           PNG menor + padding reduzido => sobra altura para os status
+           semanticos e para a coluna direita de indicadores (que estavam
+           sendo cortados). ROLLBACK: remover este bloco @media. */
+        @media (max-width: 800px) {
+          .room-action {
+            padding: 11px 12px 10px 10px;
+          }
+
+          .room-icon {
+            max-width: 100px;
+            height: 62px;
           }
         }
 
@@ -1101,9 +1765,81 @@ class BrunoLavaboCard extends HTMLElement {
             transition: none !important;
           }
         }
+        /* ==== HOME V3 - MODO TILE (2026-07-26) ==========================
+           Ativo somente quando o card recebe 'variant: tile' (faixa de
+           comodos do desktop V2) E o tema declara --bruno-tile-mode: on
+           (hoje: apenas Josh.ai). Nos demais temas estas classes nunca
+           aparecem no elemento - phone e Home V1 ficam identicos.
+           Calibravel por tema via --bruno-tile-*; os fallbacks abaixo ja
+           sao o visual de tile aprovado no mockup.
+           INVARIANTE (rev.7): o tile perde o backdrop-filter aqui, e e isso
+           que autoriza a BANDA a ter blur. Se o tile voltar a filtrar, o
+           blur da banda sai no MESMO commit - senao volta o borrao sobre
+           borrao. Ver v2/bento_bottom_block.yaml.
+           ROLLBACK: remover 'variant: tile' do YAML ou o token do tema.
+           =============================================================== */
+        .room-card.is-tile,
+        .room-card.is-tile.is-room-on {
+          background: var(--bruno-tile-background, none);
+          border: var(--bruno-tile-border, 0);
+          border-radius: var(--bruno-tile-radius, 0);
+          box-shadow: var(--bruno-tile-shadow, none);
+          backdrop-filter: var(--bruno-tile-filter, none);
+          -webkit-backdrop-filter: var(--bruno-tile-filter, none);
+        }
+
+        .room-card.is-tile::before,
+        .room-card.is-tile.is-room-on::before {
+          opacity: var(--bruno-tile-sheen-opacity, 0);
+        }
+
+        /* Filete vertical no lugar do gap (gap vira 0 via --bruno-tile-gap). */
+        .room-card.is-tile.has-divider .tile-divider {
+          position: absolute;
+          left: 0;
+          top: 8px;
+          bottom: 8px;
+          width: 1px;
+          z-index: 2;
+          pointer-events: none;
+          background: var(--bruno-tile-divider, linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.19) 22%, rgba(255,255,255,0.19) 78%, rgba(255,255,255,0) 100%));
+        }
+
+        /* ON sem vidro: filete quente na base (reaproveita o ::after que ja
+           existe com opacidade 0) + brilho difuso sob o titulo. */
+        .room-card.is-tile.is-room-on::after {
+          inset: auto 14px 0 14px;
+          opacity: 1;
+          background: var(--bruno-tile-on-line, linear-gradient(90deg, rgba(255,187,72,0) 0%, rgba(255,187,72,0.42) 50%, rgba(255,187,72,0) 100%));
+        }
+
+        .room-card.is-tile .room-action {
+          position: relative;
+        }
+
+        .room-card.is-tile.is-room-on .room-action::after {
+          content: "";
+          position: absolute;
+          left: 8px;
+          right: 8px;
+          bottom: 0;
+          height: 46px;
+          z-index: 0;
+          pointer-events: none;
+          background: var(--bruno-tile-on-glow, radial-gradient(60px 30px at 50% 100%, rgba(255,187,72,0.10), transparent 72%));
+        }
+
+        /* Josh.ai: material flat dos dots, restrito aos tiles da Home. */
+        .room-card.is-tile .status-dot.is-active {
+          background: rgba(var(--tone), var(--bruno-tile-status-dot-fill-alpha));
+          border: var(--bruno-tile-status-dot-border);
+          box-shadow: 0 0 var(--bruno-tile-status-dot-halo-size)
+            rgba(var(--tone), var(--bruno-tile-status-dot-halo-alpha));
+        }
       </style>
 
-      <div class="room-card${roomActiveClass}" style="--room-icon-size:${iconSize}px;">
+      <div class="room-card${roomActiveClass}${this._tileClasses()}" style="--room-icon-size:${iconSize}px;">
+        ${this._tileDivider()}
         <button class="room-action${hasMetricClass}" type="button" data-action-key="room" aria-label="${BrunoLavaboCard._escape(this._config.name)}">
           <div class="room-icon" aria-hidden="true">${this._assetVisual(model.iconActive)}</div>
 
@@ -1113,11 +1849,12 @@ class BrunoLavaboCard extends HTMLElement {
             <span class="metric-sub">\${model.humidity}</span>
           </div>
           FIM ORIGINAL -->
-
-          <span class="room-nav-zone" data-room-nav role="button" tabindex="0" aria-label="Abrir ${BrunoLavaboCard._escape(this._config.name)}">
+          <span class="room-copy">
             <span class="room-title-row">
               <span class="title">${BrunoLavaboCard._escape(this._config.name)}</span>
-              <span class="room-chevron" aria-hidden="true">›</span>
+              <span class="room-nav-zone" data-room-nav role="button" tabindex="0" aria-label="Abrir ${BrunoLavaboCard._escape(this._config.name)}">
+                <span class="room-chevron" aria-hidden="true">&rsaquo;</span>
+              </span>
             </span>
             <span class="status-lines">${this._statusLines(model.statusLines)}</span>
           </span>
@@ -1138,6 +1875,7 @@ class BrunoLavaboCard extends HTMLElement {
           </div>
         </button>
       </div>
+      ${this._renderLavaboPopup(model)}
     `;
 
     this.shadowRoot
@@ -1145,6 +1883,7 @@ class BrunoLavaboCard extends HTMLElement {
       .forEach((button) => this._wireAction(button));
     this._wireRoomNavZone(this.shadowRoot.querySelector('[data-room-nav]'));
     this._wireAssetFallback();
+    this._wireLavaboPopup();
   }
 
   static _escape(value) {
@@ -1153,6 +1892,14 @@ class BrunoLavaboCard extends HTMLElement {
       .replace(/"/g, '&quot;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
+  }
+
+  // FIX (popup): o markup do popup chamava BrunoLavaboCard._escapeAttr(), que
+  // NAO existia -> TypeError durante o _render() do popup -> a montagem inteira
+  // do innerHTML falhava e o popup nunca aparecia (chevron "sem efeito").
+  // Mesmo contrato do BrunoShell._escapeAttr.
+  static _escapeAttr(value) {
+    return BrunoLavaboCard._escape(value);
   }
 }
 

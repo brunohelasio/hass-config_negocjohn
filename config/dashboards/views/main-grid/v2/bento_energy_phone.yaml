@@ -1,0 +1,16 @@
+# HOME V2 — Energia SOMENTE no PHONE (layout mobile intocado).
+# No desktop/tablet o card de energia SAIU da renderização permanente da
+# Home (decisão do roteiro V2). Componente/dados/entidades seguem 100%
+# preservados (bruno-energy-card.js + wrapper V1 em views/main-grid/).
+#
+# TODO (integração futura de Energia — fora do escopo desta etapa):
+#   - botão "Energia" na rail (views/shell/rail.yaml) OU
+#   - seção/subview própria em bento_shell.yaml (sections:) OU
+#   - alerta dinâmico de consumo anormal na área dinâmica
+#     (basta um binary_sensor de anomalia no package home_activity.yaml e
+#      um 4º conditional em v2/bento_dynamic.yaml).
+type: custom:bruno-energy-card
+view_layout:
+  grid-area: energy
+  show:
+    mediaquery: '(max-width: 800px)'

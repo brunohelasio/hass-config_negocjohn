@@ -6822,7 +6822,8 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
                 deviceId, 
                 play, 
                 delay, 
-                refreshDeviceList=False, 
+                refreshDeviceList=refreshDeviceList,
+                forceActivateDevice=forceActivateDevice,
                 deviceIdFrom=deviceIdFrom)
 
             # get current Spotify Connect player state (from cache - updated by PlayerTransferPlayback).

@@ -18,12 +18,23 @@ template:
         unique_id: sala_motion_recent
         device_class: motion
         icon: mdi:account
+        # NOVO (2026-07-12): falha/cache nao pode virar OFF/ON valido.
+        availability: >-
+          {{ is_state('sensor.sala_presence_health', 'ok') }}
         state: >-
           {{ is_state('binary_sensor.sensor_4_in_1_sala_presence', 'on') }}
+        # ANTERIOR (2026-07-03): delay_off 25s — somado ao fading_time de 30s do
+        # sensor, o dot demorava ate ~55s para apagar apos a saida.
+        # delay_off:
+        #   seconds: 25
+        # NOVO: regra de presenca imediata — o proprio sensor ja segura a presenca
+        # pelo fading_time (30s); o template faz apenas anti-flicker.
         delay_off:
-          seconds: 25
+          seconds: 5
         attributes:
           source_entity: binary_sensor.sensor_4_in_1_sala_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_sala_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_sala_illuminance') }}"
           semantic_role: passage_indicator
           fallback_note: "Passagem rapida acende apenas o dot de presenca."
 
@@ -35,43 +46,76 @@ template:
         unique_id: sala_occupancy
         device_class: occupancy
         icon: mdi:account
+        availability: >-
+          {{ is_state('sensor.sala_presence_health', 'ok') }}
+        # ANTERIOR (2026-07-03): ocupacao = presenca pura com delay_on de 2 minutos
+        # e delay_off de 90s. O delay_on longo atrasava o "Ocupada" e qualquer queda
+        # momentanea do presence zerava o cronometro.
+        # state: >-
+        #   {{ is_state('binary_sensor.sensor_4_in_1_sala_presence', 'on') }}
+        # delay_on:
+        #   minutes: 2
+        # delay_off:
+        #   seconds: 90
+        # ANTERIOR (2026-07-04, trava de contexto — REMOVIDA): com TV/AC/Echo
+        # ligados, a ocupacao ficava presa em ON indefinidamente (sala vazia
+        # "Ocupada"). Defeito confirmado no Q. Miguel com o AC.
+        # state: >-
+        #   {% set presence = is_state('binary_sensor.sensor_4_in_1_sala_presence', 'on') %}
+        #   {% set tv_on = states('media_player.android_tv_192_168_3_17') in ['playing', 'paused', 'on'] %}
+        #   {% set ac_on = states('climate.sl_ar_condicionado') in ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'] %}
+        #   {% set echo_on = is_state('media_player.echo_show', 'playing') %}
+        #   {% set context = tv_on or ac_on or echo_on %}
+        #   {{ presence or (is_state('binary_sensor.sala_occupancy', 'on') and context) }}
+        # NOVO: ocupacao = SOMENTE presenca sustentada (padrao validado na Marina).
+        # Sem gating por motion_state — 'static' (pessoa parada) conta normalmente.
         state: >-
           {{ is_state('binary_sensor.sensor_4_in_1_sala_presence', 'on') }}
         delay_on:
-          minutes: 2
+          seconds: 60
         delay_off:
-          seconds: 90
+          seconds: 180
         attributes:
           source_entity: binary_sensor.sensor_4_in_1_sala_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_sala_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_sala_illuminance') }}"
           semantic_role: real_occupancy
-          fallback_note: "Ajustar delay_on/delay_off quando houver mmWave dedicado."
+          fallback_note: "Ocupacao real exige permanencia antes de ligar; ajuste fino continua no sensor fisico."
 
   - sensor:
       - name: Sala Semantic State
         unique_id: sala_semantic_state
+        # ANTERIOR (2026-07-04): o texto "Ocupada" seguia apenas a ocupacao — com a
+        # liberacao longa (delay_off), o texto ficava visivel minutos depois do dot
+        # apagar (contradicao visual reportada no teste da Cozinha).
+        # NOVO: o texto so aparece enquanto ha presenca ativa (motion_recent) junto
+        # com a ocupacao. A entidade sala_occupancy MANTEM a liberacao longa para
+        # futuras automacoes (ex.: nao apagar a luz em saida rapida).
         icon: >-
-          {% if is_state('binary_sensor.sala_occupancy', 'on') %}
+          {% if is_state('binary_sensor.sala_occupancy', 'on') and is_state('binary_sensor.sala_motion_recent', 'on') %}
             mdi:account
           {% else %}
             mdi:sofa
           {% endif %}
         state: >-
-          {% if is_state('binary_sensor.sala_occupancy', 'on') %}
+          {% if is_state('binary_sensor.sala_occupancy', 'on') and is_state('binary_sensor.sala_motion_recent', 'on') %}
             occupied
           {% else %}
             none
           {% endif %}
         attributes:
           display: >-
-            {% if is_state('binary_sensor.sala_occupancy', 'on') %}
+            {% if is_state('binary_sensor.sala_occupancy', 'on') and is_state('binary_sensor.sala_motion_recent', 'on') %}
               Ocupada
             {% else %}
 
             {% endif %}
           priority: >-
-            {% if is_state('binary_sensor.sala_occupancy', 'on') %}1
+            {% if is_state('binary_sensor.sala_occupancy', 'on') and is_state('binary_sensor.sala_motion_recent', 'on') %}1
             {% else %}0
             {% endif %}
           motion_recent: "{{ states('binary_sensor.sala_motion_recent') }}"
           occupancy: "{{ states('binary_sensor.sala_occupancy') }}"
           source_entity: binary_sensor.sensor_4_in_1_sala_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_sala_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_sala_illuminance') }}"

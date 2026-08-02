@@ -312,7 +312,7 @@ class BrunoAgendaCard extends HTMLElement {
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
         }
 
-        .header-icon ha-icon {
+        .header-icon bruno-icon {
           --mdc-icon-size: 14px;
           position: absolute;
           left: 50%;
@@ -433,7 +433,7 @@ class BrunoAgendaCard extends HTMLElement {
           font-weight: 650;
         }
 
-        .empty ha-icon {
+        .empty bruno-icon {
           --mdc-icon-size: 16px;
           color: rgba(255,255,255,0.46);
         }
@@ -442,7 +442,7 @@ class BrunoAgendaCard extends HTMLElement {
       <div class="agenda-card" role="button" tabindex="0" aria-label="${BrunoAgendaCard._escapeAttr(this._config.title)}">
         <div class="card-header">
           <div class="header-copy">
-            <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:calendar-month-outline"></ha-icon></span>
+            <span class="header-icon" aria-hidden="true"><bruno-icon icon="mdi:calendar-month-outline"></bruno-icon></span>
             <span class="title">
               <span class="title-main">${BrunoAgendaCard._escape(this._config.name)}</span>
             </span>
@@ -476,7 +476,7 @@ class BrunoAgendaCard extends HTMLElement {
   _emptyState() {
     return `
       <div class="empty">
-        <ha-icon icon="mdi:check"></ha-icon>
+        <bruno-icon icon="mdi:check"></bruno-icon>
         <span>Nenhum evento nos proximos dias</span>
       </div>
     `;

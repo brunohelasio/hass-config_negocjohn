@@ -19,6 +19,7 @@ class BentoSidebarCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    this._syncIndicators();
   }
 
   getCardSize() {
@@ -141,6 +142,14 @@ class BentoSidebarCard extends HTMLElement {
     if (!this.shadowRoot) {
       this.attachShadow({ mode: 'open' });
     }
+
+    // NOVO (2026-07-09) — Fase 2 mobile: itens hide_on_phone alimentam o menu
+    // "Mais" do dock (so visivel <=800px). Rail de comodos nao tem itens
+    // ocultos => botao/menu nem renderizam.
+    const phoneHiddenItems = [
+      ...this._items('top_items').map((item, index) => ({ item, section: 'top', index })),
+      ...this._items('bottom_items').map((item, index) => ({ item, section: 'bottom', index })),
+    ].filter((entry) => entry.item?.hide_on_phone);
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -524,32 +533,240 @@ class BentoSidebarCard extends HTMLElement {
           white-space: nowrap;
           text-align: center;
         }
+
+        .nav-indicator {
+          position: absolute;
+          top: 5px;
+          right: 7px;
+          z-index: 3;
+          display: grid;
+          place-items: center;
+          pointer-events: none;
+          color: rgba(255,255,255,0.96);
+          background: rgba(var(--accent),0.92);
+          box-shadow: 0 0 9px rgba(var(--accent),0.36);
+        }
+
+        .nav-indicator[hidden] {
+          display: none;
+        }
+
+        .nav-indicator[data-kind="dot"] {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+        }
+
+        .nav-indicator[data-kind="count"] {
+          min-width: 16px;
+          height: 16px;
+          padding: 0 4px;
+          border-radius: 999px;
+          font-size: 8px;
+          line-height: 1;
+          font-weight: 900;
+        }
         /* sobrepõe a media query que estreitava o rail (50px) p/ manter rótulo */
         @media (max-height: 690px), (max-width: 900px) {
           :host { --rail-width: 86px; --button-size: 36px; --icon-size: 18px; }
+        }
+
+        /* ============================================================
+           NOVO (2026-07-09) — MODO DOCK (phone <=800px, Opcao A mobile).
+           A MESMA rail "deita" na horizontal e vira o dock inferior da
+           bruno-shell (que no phone move o .rail-slot para a base).
+           Bloco ADITIVO (regra de ouro): nada acima foi alterado; este
+           @media apenas sobrepoe o layout vertical em telas estreitas.
+           Itens com hide_on_phone: true no YAML somem do dock (ficam
+           acessiveis so no tablet/desktop).
+           ROLLBACK: remover este bloco @media (e, se desejar, os
+           hide_on_phone do rail.yaml) => rail volta a ser vertical
+           em qualquer largura.
+           ============================================================ */
+        /* Botao/menu "Mais" sao um recurso EXCLUSIVO do dock phone:
+           fora do breakpoint ficam ocultos (a rail vertical mostra tudo). */
+        .more-button,
+        .more-sheet {
+          display: none;
+        }
+
+        @media (max-width: 800px) {
+          :host {
+            --button-radius: 12px;
+            position: relative;
+          }
+          .rail {
+            flex-direction: row;
+            align-items: center;
+            /* flex-start (nao space-evenly): com overflow horizontal,
+               distribuicoes centradas deixam os itens da ESQUERDA fora do
+               alcance do scroll. A distribuicao uniforme fica no .group.top. */
+            justify-content: flex-start;
+            width: 100%;
+            height: auto;
+            max-height: none;
+            padding: 6px 8px calc(7px + env(safe-area-inset-bottom, 0px));
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+          }
+          .rail::-webkit-scrollbar { display: none; }
+          .group {
+            width: auto;
+            flex-direction: row;
+            align-items: center;
+            gap: 2px;
+          }
+          /* grupo superior espalha os itens pela largura toda quando cabem;
+             grupo inferior (Power, oculto no phone) nao rouba espaco. */
+          .group.top {
+            flex: 1 1 auto;
+            justify-content: space-evenly;
+          }
+          .group.bottom { flex: 0 0 auto; }
+          .spacer { display: none; }
+          .divider { width: 1px; height: 24px; margin: 0 6px; }
+          .nav-button {
+            width: auto;
+            min-width: 50px;
+            flex: 0 0 auto;
+            padding: 6px 6px 5px;
+          }
+          .nav-button[data-hide-phone] { display: none; }
+          .nav-label { font-size: 9px; }
+
+          .more-button {
+            display: inline-flex;
+          }
+
+          /* Menu suspenso acima do dock com os itens hide_on_phone.
+             :not([hidden]) preserva o toggle via atributo hidden. */
+          .more-sheet:not([hidden]) {
+            display: flex;
+          }
+
+          .more-sheet {
+            position: absolute;
+            right: 10px;
+            bottom: calc(100% + 10px);
+            z-index: 30;
+            min-width: 216px;
+            flex-direction: column;
+            gap: 2px;
+            padding: 8px;
+            border-radius: 18px;
+            border: var(--bruno-liquid-popup-border, 1px solid rgba(255,255,255,0.115));
+            background: var(--bruno-liquid-popup-background, linear-gradient(180deg, rgba(34,31,30,0.86), rgba(12,13,16,0.82)));
+            box-shadow: var(--bruno-liquid-popup-shadow, 0 18px 36px rgba(0,0,0,0.38));
+            -webkit-backdrop-filter: var(--bruno-liquid-popup-filter, blur(20px) saturate(1.16) brightness(0.94));
+            backdrop-filter: var(--bruno-liquid-popup-filter, blur(20px) saturate(1.16) brightness(0.94));
+          }
+
+          .more-item {
+            appearance: none;
+            -webkit-appearance: none;
+            display: grid;
+            grid-template-columns: 22px minmax(0, 1fr) auto;
+            align-items: center;
+            column-gap: 10px;
+            padding: 10px 10px;
+            margin: 0;
+            text-align: left;
+            color: rgba(255,255,255,0.86);
+            font-size: 12.5px;
+            font-weight: 600;
+            background: transparent;
+            border: 0;
+            border-radius: 12px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+          }
+
+          .more-item:active {
+            background: rgba(255,255,255,0.08);
+          }
+
+          .more-item svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.55;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+          }
+
+          .more-item .nav-indicator {
+            position: static;
+          }
         }
       </style>
       <div class="rail" role="navigation" aria-label="Bento sidebar">
         <div class="group top">
           ${this._items('top_items').map((item, index) => this._button(item, 'top', index)).join('')}
+          ${phoneHiddenItems.length ? `
+            <button class="nav-button more-button" type="button" title="Mais" aria-label="Mais opções" data-more-toggle>
+              ${BentoSidebarCard.icons.more}
+              <span class="nav-label">Mais</span>
+            </button>
+          ` : ''}
         </div>
         <div class="spacer" aria-hidden="true"></div>
         <div class="group bottom">
           ${this._items('bottom_items').map((item, index) => this._button(item, 'bottom', index)).join('')}
         </div>
       </div>
+      ${phoneHiddenItems.length ? `
+        <div class="more-sheet" id="moreSheet" hidden>
+          ${phoneHiddenItems.map(({ item, section, index }) => `
+            <button class="more-item" type="button" data-section="${section}_items" data-index="${index}">
+              ${BentoSidebarCard.icons[item?.icon] || BentoSidebarCard.icons.circle}
+              <span>${BentoSidebarCard._escape(item?.label || item?.key || 'Item')}</span>
+              ${this._indicatorMarkup(item)}
+            </button>
+          `).join('')}
+        </div>
+      ` : ''}
     `;
 
     this.shadowRoot.querySelectorAll('.nav-button').forEach((button) => {
       button.addEventListener('click', () => {
         button.classList.add('is-pressed');
         window.setTimeout(() => button.classList.remove('is-pressed'), 180);
+        // NOVO (2026-07-09): navegar por outro item fecha o menu "Mais".
+        if (!button.hasAttribute('data-more-toggle')) this._closeMoreSheet();
         const section = button.dataset.section;
         const index = Number(button.dataset.index);
         const item = this._items(section)[index];
         this._handleAction(item);
       });
     });
+
+    // NOVO (2026-07-09) — Fase 2 mobile: toggle + itens do menu "Mais".
+    this._moreSheetEl = this.shadowRoot.getElementById('moreSheet');
+    this._moreToggleEl = this.shadowRoot.querySelector('[data-more-toggle]');
+    if (this._moreToggleEl && this._moreSheetEl) {
+      this._moreToggleEl.addEventListener('click', () => {
+        const open = this._moreSheetEl.hidden;
+        this._moreSheetEl.hidden = !open;
+        this._moreToggleEl.classList.toggle('selected', open);
+      });
+      this._moreSheetEl.querySelectorAll('.more-item').forEach((button) => {
+        button.addEventListener('click', () => {
+          const item = this._items(button.dataset.section)[Number(button.dataset.index)];
+          this._closeMoreSheet();
+          this._handleAction(item);
+        });
+      });
+    }
+    this._syncIndicators();
+  }
+
+  // NOVO (2026-07-09) — Fase 2 mobile: fecha o menu "Mais" do dock.
+  _closeMoreSheet() {
+    if (this._moreSheetEl && !this._moreSheetEl.hidden) this._moreSheetEl.hidden = true;
+    this._moreToggleEl?.classList.remove('selected');
   }
 
   _button(item, section, index) {
@@ -569,15 +786,68 @@ class BentoSidebarCard extends HTMLElement {
         data-section="${section}_items"
         data-index="${index}"
         data-key="${BentoSidebarCard._escape(item?.key || '')}"
+        ${item?.hide_on_phone ? 'data-hide-phone=""' : ''}
         ${ariaDisabled}
       >
         ${icon}
         <!-- NOVO (Caminho 2): rótulo sob o ícone. Rollback: remover este span
              e o bloco de estilo "Caminho 2" no <style>. -->
         <span class="nav-label">${label}</span>
+        ${this._indicatorMarkup(item)}
       </button>
       ${item?.divider_after ? '<span class="divider" aria-hidden="true"></span>' : ''}
     `;
+  }
+
+  _indicatorMarkup(item) {
+    if (!item?.indicator) return '';
+    const model = this._indicatorModel(item);
+    return `<span class="nav-indicator" data-kind="${model.kind}" ${model.active ? '' : 'hidden'}>${model.text}</span>`;
+  }
+
+  _indicatorModel(item) {
+    const config = item?.indicator || {};
+    if (config.type === 'updates') {
+      const states = this._hass?.states || {};
+      const entityCount = Object.entries(states)
+        .filter(([entityId, state]) => entityId.startsWith('update.') && state?.state === 'on')
+        .length;
+      const aggregate = Number(states['sensor.hassio_updates_available']?.state) || 0;
+      const count = Math.max(entityCount, aggregate);
+      return {
+        active: count > 0,
+        kind: 'count',
+        text: count > 99 ? '99+' : String(count),
+      };
+    }
+    const stateObj = this._hass?.states?.[config.entity];
+    const raw = config.attribute ? stateObj?.attributes?.[config.attribute] : stateObj?.state;
+    if (config.type === 'count') {
+      const count = Math.max(0, Number.parseInt(raw, 10) || 0);
+      return {
+        active: count > 0,
+        kind: 'count',
+        text: count > 99 ? '99+' : String(count),
+      };
+    }
+    const activeStates = Array.isArray(config.active_states) ? config.active_states : ['on'];
+    const active = activeStates.includes(String(raw ?? '').toLowerCase());
+    return { active, kind: 'dot', text: '' };
+  }
+
+  _syncIndicators() {
+    const root = this.shadowRoot;
+    if (!root) return;
+    root.querySelectorAll('[data-section][data-index]').forEach((button) => {
+      const item = this._items(button.dataset.section)[Number(button.dataset.index)];
+      if (!item?.indicator) return;
+      const indicator = button.querySelector('.nav-indicator');
+      if (!indicator) return;
+      const model = this._indicatorModel(item);
+      indicator.dataset.kind = model.kind;
+      indicator.textContent = model.text;
+      indicator.hidden = !model.active;
+    });
   }
 
   static _escape(value) {
@@ -598,28 +868,13 @@ BentoSidebarCard.defaultBottomItems = [
   { key: 'power', icon: 'power', label: 'Power', tap_action: { action: 'navigate', navigation_path: '/' } },
 ];
 
-BentoSidebarCard.icons = {
-  home: '<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
-  music: '<svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
-  cameras: '<svg viewBox="0 0 24 24"><path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3.5"/><path d="M17.5 10.5h.01"/></svg>',
-  system: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6" rx="1"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>',
-  vacuum: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><line x1="12" y1="3" x2="12" y2="5"/></svg>',
-  network: '<svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
-  refresh: '<svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
-  updates: '<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-  floorplan: '<svg viewBox="0 0 24 24"><path d="M3 21V3h18v18H3z"/><path d="M3 9h7V3M10 9v12M10 15h11M16 15V9h5"/></svg>',
-  monitor: '<svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-  power: '<svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>',
-  // NOVO: ícones de CÔMODO (para reusar este componente como rail das subviews).
-  // Mesmo estilo SVG (stroke) dos demais -> réplica perfeita do rail principal.
-  sala: '<svg viewBox="0 0 24 24"><path d="M5 11V9.5A3.5 3.5 0 0 1 8.5 6h7A3.5 3.5 0 0 1 19 9.5V11"/><path d="M4 12.5A2.5 2.5 0 0 1 6.5 10H7a2 2 0 0 1 2 2v1h6v-1a2 2 0 0 1 2-2h.5A2.5 2.5 0 0 1 20 12.5V18H4v-5.5z"/><path d="M6 18v2M18 18v2"/></svg>',
-  office: '<svg viewBox="0 0 24 24"><path d="M4 5h16v10H4z"/><path d="M9 19h6M12 15v4"/><path d="M7 21h10"/></svg>',
-  cozinha: '<svg viewBox="0 0 24 24"><path d="M5 5h14v15H5z"/><path d="M5 10h14"/><path d="M9 7h.01M15 7h.01"/><path d="M8 14h8v4H8z"/></svg>',
-  casal: '<svg viewBox="0 0 24 24"><path d="M4 11V5h16v6"/><path d="M4 11h16a2 2 0 0 1 2 2v5H2v-5a2 2 0 0 1 2-2z"/><path d="M7 9h3M14 9h3"/><path d="M3 18v2M21 18v2"/></svg>',
-  marina: '<svg viewBox="0 0 24 24"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
-  miguel: '<svg viewBox="0 0 24 24"><path d="M5 11V6h9a4 4 0 0 1 4 4v1"/><path d="M5 11h14a2 2 0 0 1 2 2v5H3v-5a2 2 0 0 1 2-2z"/><path d="M7 9h4"/><path d="M4 18v2M20 18v2"/></svg>',
-  circle: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>',
-};
+BentoSidebarCard.icons = new Proxy({}, {
+  get(_target, key) {
+    return globalThis.BrunoIcons?.render(String(key || 'circle'))
+      || globalThis.BrunoIcons?.render('circle')
+      || '';
+  },
+});
 
 if (!customElements.get(BENTO_SIDEBAR_CARD_TAG)) {
   customElements.define(BENTO_SIDEBAR_CARD_TAG, BentoSidebarCard);

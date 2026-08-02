@@ -181,6 +181,8 @@ template:
             {{- light }}
           lights_on_count: >-
             {{ expand(states.light.grupo_luzes_quarto_miguel) | selectattr('state', 'eq', 'on') | list | count }}
+          presence: "{{ states('binary_sensor.sensor_4_in_1_q_miguel_presence') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_q_miguel_illuminance') }}"
 
       # SENSOR - QUARTO MARINA ACTIVITY
       - unique_id: quarto_marina_active
@@ -194,6 +196,8 @@ template:
             {{- light }}
           lights_on_count: >-
             {{ expand(states.light.grupo_luzes_quarto_marina) | selectattr('state', 'eq', 'on') | list | count }}
+          presence: "{{ states('binary_sensor.sensor_4_in_1_q_marina_presence') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_q_marina_illuminance') }}"
 
       # SENSOR - OFFICE ACTIVITY (adaptado para entidades do usuario)
       # ORIGINAL ngocjohn office_active (comentado — Regra de Ouro)
@@ -237,6 +241,8 @@ template:
             {{- light }}
           lights_on_count: >-
             {{ expand(states.light.grupo_luzes_cozinha) | selectattr('state', 'eq', 'on') | list | count }}
+          presence: "{{ states('binary_sensor.sensor_4_in_1_cozinha_presence') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_cozinha_illuminance') }}"
 
       # ══════════════════════════════════════════════════════════════════
       # SENSORS ORIGINAIS ngocjohn (europeus — comentados — Regra de Ouro)

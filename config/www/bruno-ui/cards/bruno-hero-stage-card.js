@@ -7,8 +7,8 @@ class BrunoHeroStageCard extends HTMLElement {
 
   setConfig(config) {
     this._config = {
-      background: '/local/images/home_color.jpg',
-      fallback_background: '/local/images/home.jpg',
+      background: '/local/images/home_color.jpg?v=20260702-all-images-1',
+      fallback_background: '/local/images/home.jpg?v=20260702-all-images-1',
       ...config,
     };
     this._render();

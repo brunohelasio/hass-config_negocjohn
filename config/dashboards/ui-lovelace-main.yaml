@@ -9,17 +9,17 @@ streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 # resources:
 #   - url: /local/bruno-ui/core/bruno-shell.js?v=20260624-shell-1
 #     type: module
-#   - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260621-sala-curtain-status-1
+#   - url: /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260702-sensors-1
 #     type: module
-#   - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260620-dashboard-refinements-1
+#   - url: /local/bruno-ui/subviews/bruno-office-subview.js?v=20260702-sensors-1
 #     type: module
-#   - url: /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260621-kitchen-office-structure-3
+#   - url: /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260702-sensors-1
 #     type: module
 #   - url: /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260620-dashboard-refinements-1
 #     type: module
-#   - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260620-dashboard-refinements-1
+#   - url: /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260702-sensors-1
 #     type: module
-#   - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260620-dashboard-refinements-1
+#   - url: /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260702-sensors-1
 #     type: module
 #   - url: /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260624-cameras-shell-2
 #     type: module

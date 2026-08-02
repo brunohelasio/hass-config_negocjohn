@@ -17,28 +17,47 @@ const BRUNO_QUARTO_MARINA_DEFAULT_CONFIG = {
       "light.quarto_marina_switch_4"
     ],
     "active_sensor": "sensor.quarto_marina_active",
+    "motion_recent": "binary_sensor.q_marina_motion_recent",
+    "occupancy": "binary_sensor.q_marina_occupancy",
+    // ANTERIOR (rollback): "semantic_sensor": "sensor.q_marina_semantic_state",
+    "semantic_sensor": "sensor.q_marina_semantic_state_supervised",
+    "presence": "binary_sensor.sensor_4_in_1_q_marina_presence",
+    "illuminance": "sensor.sensor_4_in_1_q_marina_illuminance",
     "temperature": [
+      "sensor.sensor_4_in_1_q_marina_temperature",
       "sensor.temperatura_quarto_marina",
       "sensor.qma_temperatura"
     ],
     "humidity": [
+      "sensor.sensor_4_in_1_q_marina_humidity",
       "sensor.umidade_quarto_marina",
       "sensor.qma_umidade"
     ],
     "dishwasher": ""
   },
   "icon": {
-    // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/marina-bedroom-off.png?v=20260608-room-assets-uniform-1",
-    "off": "/local/bruno-ui/assets/marina-bedroom-off-tight.png?v=20260609-rail-dynamic-1",
-    // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/marina-bedroom-on.png?v=20260608-room-assets-uniform-1",
-    "on": "/local/bruno-ui/assets/marina-bedroom-on-tight.png?v=20260609-rail-dynamic-1",
+    // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/marina-bedroom-off.png?v=20260702-all-images-1",
+    "off": "/local/bruno-ui/assets/marina-bedroom-off-tight.png?v=20260702-all-images-1",
+    // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/marina-bedroom-on.png?v=20260702-all-images-1",
+    "on": "/local/bruno-ui/assets/marina-bedroom-on-tight.png?v=20260702-all-images-1",
     "fallback": "mdi:bed-single-outline"
   },
   "status_dots": [
     {
       "icon": "mdi:account",
       "label": "Presenca",
-      "tone": "blue"
+      "tone": "blue",
+      // ANTERIOR (rollback): occupancy tambem acendia o dot — o delay_off da
+      // ocupacao (minutos) segurava o icone aceso com presence ja false.
+      // "binary_sensor.q_marina_occupancy",
+      // NOVO (2026-07-03 rev.2): dot = presenca imediata apenas; ocupacao
+      // aparece SO no texto "Ocupada".
+      "entities": [
+        "binary_sensor.q_marina_motion_recent"
+      ],
+      "states": [
+        "on"
+      ]
     },
     {
       "icon": "mdi:television-classic",
@@ -111,6 +130,61 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     return 3;
   }
 
+  // ==== HOME V3 - MODO TILE (2026-07-26) ==================================
+  // Duas condicoes INDEPENDENTES, ambas necessarias:
+  //  1) POSICAO - `variant: tile` vem do YAML e e passado APENAS pelos
+  //     includes da faixa de comodos do desktop V2
+  //     (views/main-grid/v2/bento_bottom_block.yaml). O phone
+  //     (v2/bento_comodos_phone.yaml) e a Home V1 NAO passam a flag, entao
+  //     nunca viram tile.
+  //  2) TEMA - o tema ativo declara `--bruno-tile-mode: on`. Hoje somente o
+  //     Josh.ai declara. Em qualquer outro tema o modo nao liga e o render
+  //     fica IDENTICO ao atual. Assim o visual novo pertence ao TEMA e nao
+  //     ao layout, e um tema futuro adota o tile sem tocar em JS.
+  // ROLLBACK: remover `variant: tile` do YAML OU o token do tema.
+  // =======================================================================
+  _themeTileMode() {
+    if (this._tileModeCache !== undefined) return this._tileModeCache;
+    let value = '';
+    try {
+      value = getComputedStyle(this).getPropertyValue('--bruno-tile-mode').trim();
+    } catch (_error) {
+      value = '';
+    }
+    this._tileModeCache = value === 'on';
+    return this._tileModeCache;
+  }
+
+  _tileClasses() {
+    if (this._config?.variant !== 'tile' || !this._themeTileMode()) return '';
+    return this._config?.divider_left ? ' is-tile has-divider' : ' is-tile';
+  }
+
+  _tileDivider() {
+    return this._tileClasses().indexOf('has-divider') >= 0
+      ? '<span class="tile-divider" aria-hidden="true"></span>'
+      : '';
+  }
+
+  connectedCallback() {
+    // Trocar de tema (Config > Themes) precisa reavaliar o modo tile.
+    if (!this._onBrunoThemeChanged) {
+      this._onBrunoThemeChanged = () => {
+        this._tileModeCache = undefined;
+        this._render();
+      };
+    }
+    globalThis.addEventListener?.('bruno-theme-changed', this._onBrunoThemeChanged);
+    // O primeiro render pode ocorrer antes do attach; ali getComputedStyle
+    // ainda nao ve os tokens do tema. Invalida e repinta ja conectado.
+    this._tileModeCache = undefined;
+    this._render();
+  }
+
+  disconnectedCallback() {
+    if (!this._onBrunoThemeChanged) return;
+    globalThis.removeEventListener?.('bruno-theme-changed', this._onBrunoThemeChanged);
+  }
   _state(entityId) {
     return entityId ? this._hass?.states?.[entityId] : undefined;
   }
@@ -234,16 +308,37 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     return `Lavando${elapsed ? ` / ${elapsed}` : ''}`;
   }
 
+  // NOVO (2026-07-03): linha semantica "Ocupada" — o sensor.q_marina_semantic_state
+  // ja existia no package, mas o card nao a renderizava (so Sala/Office exibiam).
+  _semanticLine() {
+    const semantic = this._state(this._config.entities.semantic_sensor);
+    const semanticState = String(semantic?.state || '').toLowerCase();
+    const display = semantic?.attributes?.display;
+    if (display && !['none', 'unknown', 'unavailable'].includes(semanticState)) {
+      return String(display).trim();
+    }
+
+    // ANTERIOR (rollback): fallback mostrava o texto so pela ocupacao.
+    // return occupancy?.state === 'on' ? 'Ocupada' : '';
+    // NOVO (2026-07-04): fallback exige presenca ativa junto com a ocupacao.
+    const motionRecent = this._state(this._config.entities.motion_recent);
+    if (motionRecent && motionRecent.state !== 'on') return '';
+    const occupancy = this._state(this._config.entities.occupancy);
+    return occupancy?.state === 'on' ? 'Ocupada' : '';
+  }
+
   _model() {
     const entities = this._config.entities;
     const room = this._state(entities.room_group);
     const roomOn = this._roomOn(room);
     const lights = this._lightsSummary(room);
     const dishwasherLine = this._dishwasherLine();
+    const semanticLine = this._semanticLine();
     const statusLines = [];
 
     if (lights.label) statusLines.push(lights.label);
     if (dishwasherLine) statusLines.push(dishwasherLine);
+    if (semanticLine) statusLines.push(semanticLine);
 
     return {
       roomOn,
@@ -255,10 +350,19 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     };
   }
 
+  _dotEntityActive(entity, states, dot) {
+    if (!entity || !states.includes(String(entity.state || '').toLowerCase())) return false;
+    if (!dot.recent_only) return true;
+
+    const changedAt = Date.parse(entity.last_changed || '');
+    const windowMs = Number(dot.recent_window_ms) || 600000;
+    return !Number.isNaN(changedAt) && Date.now() - changedAt <= windowMs;
+  }
+
   _dotModel(dot, roomOn) {
-    const entity = this._state(dot.entity);
     const states = this._array(dot.states).map((item) => String(item).toLowerCase());
-    const activeFromEntity = entity && states.includes(String(entity.state || '').toLowerCase());
+    const entityIds = dot.entities ? this._array(dot.entities) : this._array(dot.entity);
+    const activeFromEntity = entityIds.some((entityId) => this._dotEntityActive(this._state(entityId), states, dot));
     const activeEntity = this._state(this._config.entities.active_sensor);
     const attrValue = dot.active_attr ? activeEntity?.attributes?.[dot.active_attr] : undefined;
     const active = Boolean(dot.active) || Boolean(activeFromEntity) || this._truthy(attrValue);
@@ -407,6 +511,13 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     let holdTimer = null;
     let holdFired = false;
     let pointerDown = false;
+    // NOVO (2026-07-22) — consolidacao mobile: separa tap intencional de
+    // arraste iniciado sobre o card sem bloquear o scroll nativo.
+    const dragCancelThreshold = 10;
+    let activePointerId = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerMoved = false;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -418,20 +529,31 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     const resetPress = () => {
       clearHold();
       pointerDown = false;
+      pointerMoved = false;
+      activePointerId = null;
       button.classList.remove('is-pressed');
     };
 
     button.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
-      event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: serializa o gesto; pointers
+      // adicionais nao substituem o pointer/timer que iniciou a interacao.
+      if (activePointerId !== null) return;
+      // ANTERIOR (rollback): event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: libera o pan da shell.
       event.stopPropagation();
 
       pointerDown = true;
       holdFired = false;
+      activePointerId = event.pointerId;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerMoved = false;
       button.classList.add('is-pressed');
-      button.setPointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): button.setPointerCapture?.(event.pointerId);
 
       holdTimer = window.setTimeout(() => {
+        if (!pointerDown || pointerMoved) return;
         holdFired = true;
         button.classList.add('is-hold-fired');
         window.setTimeout(() => button.classList.remove('is-hold-fired'), 260);
@@ -439,15 +561,32 @@ class BrunoQuartoMarinaCard extends HTMLElement {
       }, 560);
     });
 
+    // NOVO (2026-07-22) — consolidacao mobile: deslocamento acima da
+    // tolerancia cancela tap/hold; deliberadamente nao usa preventDefault().
+    button.addEventListener('pointermove', (event) => {
+      if (!pointerDown || event.pointerId !== activePointerId) return;
+      const movedX = Math.abs(event.clientX - pointerStartX);
+      const movedY = Math.abs(event.clientY - pointerStartY);
+      if (movedX <= dragCancelThreshold && movedY <= dragCancelThreshold) return;
+      pointerMoved = true;
+      clearHold();
+      button.classList.remove('is-pressed');
+    });
+
     button.addEventListener('pointerup', (event) => {
+      // NOVO (2026-07-22) — consolidacao mobile: somente o pointer que abriu
+      // o gesto pode conclui-lo e executar a acao.
+      if (event.pointerId !== activePointerId) return;
       event.preventDefault();
       event.stopPropagation();
-      button.releasePointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): button.releasePointerCapture?.(event.pointerId);
 
       const wasPointerDown = pointerDown;
+      const wasPointerMoved = pointerMoved;
       resetPress();
 
-      if (!wasPointerDown || holdFired) return;
+      // ANTERIOR (rollback): if (!wasPointerDown || holdFired) return;
+      if (!wasPointerDown || wasPointerMoved || holdFired) return;
       this._runAction(key, 'tap');
     });
 
@@ -462,7 +601,11 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     });
 
     button.addEventListener('pointerleave', resetPress);
-    button.addEventListener('pointercancel', resetPress);
+    // ANTERIOR (rollback): button.addEventListener('pointercancel', resetPress);
+    button.addEventListener('pointercancel', (event) => {
+      if (event.pointerId !== activePointerId) return;
+      resetPress();
+    });
 
     button.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -477,6 +620,13 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     let holdTimer = null;
     let holdFired = false;
     let pointerDown = false;
+    // NOVO (2026-07-22) — consolidacao mobile: a zona de navegacao adota
+    // a mesma tolerancia do toque principal.
+    const dragCancelThreshold = 10;
+    let activePointerId = null;
+    let pointerStartX = 0;
+    let pointerStartY = 0;
+    let pointerMoved = false;
 
     const clearHold = () => {
       if (holdTimer) {
@@ -488,20 +638,31 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     const resetPress = () => {
       clearHold();
       pointerDown = false;
+      pointerMoved = false;
+      activePointerId = null;
       zone.classList.remove('is-pressed');
     };
 
     zone.addEventListener('pointerdown', (event) => {
       if (event.button != null && event.button !== 0) return;
-      event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: mantem um unico pointer
+      // responsavel pela navegacao/hold ate o encerramento do gesto.
+      if (activePointerId !== null) return;
+      // ANTERIOR (rollback): event.preventDefault();
+      // NOVO (2026-07-22) — consolidacao mobile: preserva o scroll nativo.
       event.stopPropagation();
 
       pointerDown = true;
       holdFired = false;
+      activePointerId = event.pointerId;
+      pointerStartX = event.clientX;
+      pointerStartY = event.clientY;
+      pointerMoved = false;
       zone.classList.add('is-pressed');
-      zone.setPointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): zone.setPointerCapture?.(event.pointerId);
 
       holdTimer = window.setTimeout(() => {
+        if (!pointerDown || pointerMoved) return;
         holdFired = true;
         zone.classList.add('is-hold-fired');
         window.setTimeout(() => zone.classList.remove('is-hold-fired'), 260);
@@ -509,16 +670,35 @@ class BrunoQuartoMarinaCard extends HTMLElement {
       }, 560);
     });
 
+    // NOVO (2026-07-22) — consolidacao mobile: movimento cancela navegacao
+    // e hold sem interferir no pan vertical ou horizontal.
+    zone.addEventListener('pointermove', (event) => {
+      if (!pointerDown || event.pointerId !== activePointerId) return;
+      const movedX = Math.abs(event.clientX - pointerStartX);
+      const movedY = Math.abs(event.clientY - pointerStartY);
+      if (movedX <= dragCancelThreshold && movedY <= dragCancelThreshold) return;
+      pointerMoved = true;
+      clearHold();
+      zone.classList.remove('is-pressed');
+    });
+
     zone.addEventListener('pointerup', (event) => {
+      // NOVO (2026-07-22) — consolidacao mobile: pointer secundario nao pode
+      // concluir a navegacao iniciada por outro toque.
+      if (event.pointerId !== activePointerId) return;
       event.preventDefault();
       event.stopPropagation();
-      zone.releasePointerCapture?.(event.pointerId);
+      // ANTERIOR (rollback): zone.releasePointerCapture?.(event.pointerId);
 
       const wasPointerDown = pointerDown;
+      const wasPointerMoved = pointerMoved;
       resetPress();
 
-      if (!wasPointerDown || holdFired) return;
-      this._runRoomSubview();
+      // ANTERIOR (rollback): if (!wasPointerDown || holdFired) return;
+      if (!wasPointerDown || wasPointerMoved || holdFired) return;
+      zone.classList.add('is-navigating');
+      window.setTimeout(() => zone.classList.remove('is-navigating'), 420);
+      window.setTimeout(() => this._runRoomSubview(), 90);
     });
 
     zone.addEventListener('click', (event) => {
@@ -532,13 +712,19 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     });
 
     zone.addEventListener('pointerleave', resetPress);
-    zone.addEventListener('pointercancel', resetPress);
+    // ANTERIOR (rollback): zone.addEventListener('pointercancel', resetPress);
+    zone.addEventListener('pointercancel', (event) => {
+      if (event.pointerId !== activePointerId) return;
+      resetPress();
+    });
 
     zone.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
       event.stopPropagation();
-      this._runRoomSubview();
+      zone.classList.add('is-navigating');
+      window.setTimeout(() => zone.classList.remove('is-navigating'), 420);
+      window.setTimeout(() => this._runRoomSubview(), 90);
     });
   }
 
@@ -556,7 +742,7 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     const activeClass = dot.active ? ' is-active' : '';
     return `
       <span class="status-dot tone-${dot.tone}${activeClass}" title="${BrunoQuartoMarinaCard._escape(dot.label)}" aria-label="${BrunoQuartoMarinaCard._escape(dot.label)}">
-        <ha-icon icon="${dot.icon}"></ha-icon>
+        <bruno-icon icon="${dot.icon}"></bruno-icon>
       </span>
     `;
   }
@@ -573,7 +759,7 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     const on = BrunoQuartoMarinaCard._escape(icon.on || '');
     return `
       <span class="room-asset-wrap">
-        <span class="room-asset-fallback"><ha-icon icon="${fallback}"></ha-icon></span>
+        <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
         ${off ? `<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async">` : ''}
         ${on ? `<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async">` : ''}
       </span>
@@ -817,6 +1003,8 @@ class BrunoQuartoMarinaCard extends HTMLElement {
         }
 
         .room-asset {
+          width: 92.5%;
+          height: 92.5%;
           object-fit: contain;
           object-position: left top; /* NOVO: ancora asset tight no topo-esquerdo */
           opacity: 0;
@@ -845,7 +1033,7 @@ class BrunoQuartoMarinaCard extends HTMLElement {
           color: rgba(255,255,255,0.58);
         }
 
-        .room-asset-fallback ha-icon {
+        .room-asset-fallback bruno-icon {
           --mdc-icon-size: 100%;
           width: 100%;
           height: 100%;
@@ -907,7 +1095,7 @@ class BrunoQuartoMarinaCard extends HTMLElement {
           position: relative;
           z-index: 4;
           min-width: 0;
-          width: min(136px, 100%);
+          width: 100%;
           min-height: 56px;
           padding: 2px 24px 2px 0;
           display: flex;
@@ -968,6 +1156,16 @@ class BrunoQuartoMarinaCard extends HTMLElement {
         .room-nav-zone.is-hold-fired .room-chevron {
           color: rgba(255,214,150,0.98);
           filter: drop-shadow(0 0 10px rgba(255,190,90,0.34));
+        }
+
+        .room-nav-zone.is-navigating .room-chevron {
+          animation: brunoRoomChevronNavigate 360ms ease both;
+        }
+
+        @keyframes brunoRoomChevronNavigate {
+          0% { transform: translate(0, -1px); }
+          52% { transform: translate(5px, -1px); }
+          100% { transform: translate(2px, -1px); }
         }
 
         .status-lines {
@@ -1061,7 +1259,7 @@ class BrunoQuartoMarinaCard extends HTMLElement {
           transform: translateZ(0) scale(1.04);
         }
 
-        .status-dot.is-active ha-icon {
+        .status-dot.is-active bruno-icon {
           filter: drop-shadow(0 0 5px rgba(var(--tone),0.56));
         }
         --- FIM ORIGINAL --- */
@@ -1089,7 +1287,7 @@ class BrunoQuartoMarinaCard extends HTMLElement {
           to { opacity: 1; transform: scale(1); }
         }
 
-        .status-dot ha-icon {
+        .status-dot bruno-icon {
           --mdc-icon-size: 14px;
           width: 14px;
           height: 14px;
@@ -1141,6 +1339,21 @@ class BrunoQuartoMarinaCard extends HTMLElement {
           }
         }
 
+        /* NOVO (2026-07-09) — Fase 2 mobile: card de comodo no phone.
+           Marina usa asset quadrado (92x92 fixo) — no phone encolhe para
+           64x64 + padding reduzido, liberando altura para os status.
+           ROLLBACK: remover este bloco @media. */
+        @media (max-width: 800px) {
+          .room-action {
+            padding: 11px 12px 10px 10px;
+          }
+
+          .room-icon {
+            width: 64px;
+            height: 64px;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .room-action,
           .status-dot,
@@ -1149,9 +1362,81 @@ class BrunoQuartoMarinaCard extends HTMLElement {
             transition: none !important;
           }
         }
+        /* ==== HOME V3 - MODO TILE (2026-07-26) ==========================
+           Ativo somente quando o card recebe 'variant: tile' (faixa de
+           comodos do desktop V2) E o tema declara --bruno-tile-mode: on
+           (hoje: apenas Josh.ai). Nos demais temas estas classes nunca
+           aparecem no elemento - phone e Home V1 ficam identicos.
+           Calibravel por tema via --bruno-tile-*; os fallbacks abaixo ja
+           sao o visual de tile aprovado no mockup.
+           INVARIANTE (rev.7): o tile perde o backdrop-filter aqui, e e isso
+           que autoriza a BANDA a ter blur. Se o tile voltar a filtrar, o
+           blur da banda sai no MESMO commit - senao volta o borrao sobre
+           borrao. Ver v2/bento_bottom_block.yaml.
+           ROLLBACK: remover 'variant: tile' do YAML ou o token do tema.
+           =============================================================== */
+        .room-card.is-tile,
+        .room-card.is-tile.is-room-on {
+          background: var(--bruno-tile-background, none);
+          border: var(--bruno-tile-border, 0);
+          border-radius: var(--bruno-tile-radius, 0);
+          box-shadow: var(--bruno-tile-shadow, none);
+          backdrop-filter: var(--bruno-tile-filter, none);
+          -webkit-backdrop-filter: var(--bruno-tile-filter, none);
+        }
+
+        .room-card.is-tile::before,
+        .room-card.is-tile.is-room-on::before {
+          opacity: var(--bruno-tile-sheen-opacity, 0);
+        }
+
+        /* Filete vertical no lugar do gap (gap vira 0 via --bruno-tile-gap). */
+        .room-card.is-tile.has-divider .tile-divider {
+          position: absolute;
+          left: 0;
+          top: 8px;
+          bottom: 8px;
+          width: 1px;
+          z-index: 2;
+          pointer-events: none;
+          background: var(--bruno-tile-divider, linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.19) 22%, rgba(255,255,255,0.19) 78%, rgba(255,255,255,0) 100%));
+        }
+
+        /* ON sem vidro: filete quente na base (reaproveita o ::after que ja
+           existe com opacidade 0) + brilho difuso sob o titulo. */
+        .room-card.is-tile.is-room-on::after {
+          inset: auto 14px 0 14px;
+          opacity: 1;
+          background: var(--bruno-tile-on-line, linear-gradient(90deg, rgba(255,187,72,0) 0%, rgba(255,187,72,0.42) 50%, rgba(255,187,72,0) 100%));
+        }
+
+        .room-card.is-tile .room-action {
+          position: relative;
+        }
+
+        .room-card.is-tile.is-room-on .room-action::after {
+          content: "";
+          position: absolute;
+          left: 8px;
+          right: 8px;
+          bottom: 0;
+          height: 46px;
+          z-index: 0;
+          pointer-events: none;
+          background: var(--bruno-tile-on-glow, radial-gradient(60px 30px at 50% 100%, rgba(255,187,72,0.10), transparent 72%));
+        }
+
+        /* Josh.ai: material flat dos dots, restrito aos tiles da Home. */
+        .room-card.is-tile .status-dot.is-active {
+          background: rgba(var(--tone), var(--bruno-tile-status-dot-fill-alpha));
+          border: var(--bruno-tile-status-dot-border);
+          box-shadow: 0 0 var(--bruno-tile-status-dot-halo-size)
+            rgba(var(--tone), var(--bruno-tile-status-dot-halo-alpha));
+        }
       </style>
 
-      <div class="room-card${roomActiveClass}" style="--room-icon-size:${iconSize}px;">
+      <div class="room-card${roomActiveClass}${this._tileClasses()}" style="--room-icon-size:${iconSize}px;">
+        ${this._tileDivider()}
         <button class="room-action${hasMetricClass}" type="button" data-action-key="room" aria-label="${BrunoQuartoMarinaCard._escape(this._config.name)}">
           <div class="room-icon" aria-hidden="true">${this._assetVisual(model.iconActive)}</div>
 

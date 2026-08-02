@@ -2,8 +2,8 @@ type: custom:bruno-hero-stage-card
 view_layout:
   grid-column: "2 / -1"
   grid-row: "2 / 5"
-background: /local/images/home_savant.jpg
-fallback_background: /local/images/home.jpg
+background: /local/images/home_savant.jpg?v=20260702-all-images-1
+fallback_background: /local/images/home.jpg?v=20260702-all-images-1
 card_mod:
   style: |
     :host {

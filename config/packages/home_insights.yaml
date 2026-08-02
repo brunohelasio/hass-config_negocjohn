@@ -1,0 +1,186 @@
+# ==========================================================================
+# Pacote: home_insights (HOME V2 — itens 3 e 4)
+#
+# FONTE ÚNICA DE VERDADE para:
+#   - o badge de Energia na barra superior (item 3);
+#   - as linhas de "informações inteligentes" do hero (item 4).
+# Ambos leem os sensores daqui — o percentual de consumo é calculado UMA vez,
+# no backend, evitando dois números divergentes na mesma tela.
+#
+# REGRAS DE HIGIENE (decisão do usuário): as mensagens NÃO repetem o que a
+# barra superior já mostra como estado puro. O valor está no que ela não diz —
+# "porta destrancada" duplica o badge Security; "destrancada há 25 min" não.
+#
+# NÃO IMPLEMENTADO POR FALTA DE HARDWARE (confirmado com o usuário em
+# 2026-07-25): "janela aberta há X" — não existem sensores de contato na casa.
+# O único binary_sensor com "janela" no nome é
+# binary_sensor.desktop_melg9vv_janela_meet, que é a JANELA DO MEET no PC do
+# Office, não uma janela física. Reintroduzir quando houver sensor real.
+#
+# FALLBACK RÁPIDO: comentar `home_insights: !include packages/home_insights.yaml`
+# em configuration.yaml. O badge de Energia some (o card de badges trata a
+# ausência do sensor) e o hero volta a mostrar só a agenda.
+# ==========================================================================
+
+template:
+  # ------------------------------------------------------------------
+  # ENERGIA — potência atual + desvio em relação ao MESMO HORÁRIO de ontem.
+  #
+  # Método: o utility_meter diário acumula o consumo de hoje; seu atributo
+  # `last_period` guarda o total fechado de ontem. A expectativa para este
+  # horário é `ontem * fração do dia decorrida`. O desvio compara o
+  # acumulado real com essa expectativa.
+  #
+  # Limitações honestas: (a) o perfil de consumo não é linear ao longo do
+  # dia, então de madrugada o percentual oscila muito — por isso só vira
+  # mensagem acima de 15% e depois das 07h; (b) no primeiro dia após um
+  # restart, `last_period` pode estar zerado -> o desvio sai como
+  # indisponível (o badge mostra só a potência).
+  # ------------------------------------------------------------------
+  - trigger:
+      - platform: state
+        entity_id:
+          - sensor.potencia_total_casa
+          - sensor.energia_total_casa_diaria
+      - platform: time_pattern
+        minutes: "/5"
+      - platform: homeassistant
+        event: start
+    sensor:
+      - name: Home Energy Status
+        unique_id: home_energy_status
+        icon: mdi:flash
+        unit_of_measurement: kW
+        state: >
+          {{ (states('sensor.potencia_total_casa') | float(0) / 1000) | round(2) }}
+        attributes:
+          today_kwh: >
+            {{ states('sensor.energia_total_casa_diaria') | float(0) | round(2) }}
+          yesterday_kwh: >
+            {{ state_attr('sensor.energia_total_casa_diaria', 'last_period') | float(0) | round(2) }}
+          # Fração do dia já decorrida (0..1).
+          day_fraction: >
+            {{ (((now().hour * 60 + now().minute) / 1440) | float(0)) | round(4) }}
+          # Desvio % vs. o mesmo horário de ontem ('unknown' quando não dá
+          # para comparar: sem histórico de ontem ou início do dia).
+          delta_pct: >
+            {% set today = states('sensor.energia_total_casa_diaria') | float(0) %}
+            {% set yesterday = state_attr('sensor.energia_total_casa_diaria', 'last_period') | float(0) %}
+            {% set fraction = (now().hour * 60 + now().minute) / 1440 %}
+            {% set expected = yesterday * fraction %}
+            {% if yesterday <= 0 or expected <= 0.05 %}
+              unknown
+            {% else %}
+              {{ (((today - expected) / expected) * 100) | round(0) | int }}
+            {% endif %}
+          # Texto pronto para o badge: "1,4 kW · +18%".
+          badge_sub: >
+            {% set kw = states('sensor.potencia_total_casa') | float(0) / 1000 %}
+            {% set today = states('sensor.energia_total_casa_diaria') | float(0) %}
+            {% set yesterday = state_attr('sensor.energia_total_casa_diaria', 'last_period') | float(0) %}
+            {% set fraction = (now().hour * 60 + now().minute) / 1440 %}
+            {% set expected = yesterday * fraction %}
+            {% set power = (kw | round(1) | string).replace('.', ',') ~ ' kW' %}
+            {% if yesterday <= 0 or expected <= 0.05 %}
+              {{ power }}
+            {% else %}
+              {% set delta = (((today - expected) / expected) * 100) | round(0) | int %}
+              {{ power }} · {{ '+' if delta > 0 else '' }}{{ delta }}%
+            {% endif %}
+
+  # ------------------------------------------------------------------
+  # INSIGHTS — lista ordenada por severidade, consumida pelo hero.
+  # O estado é a CONTAGEM; as mensagens vão no atributo `items`, cada uma
+  # com {id, icon, tone, text, detail}. O hero mostra as 2 primeiras.
+  # ------------------------------------------------------------------
+  - trigger:
+      - platform: time_pattern
+        minutes: "/2"
+      - platform: state
+        entity_id:
+          - lock.sl_fechadura_operate_lock
+          - vacuum.roborock_s7
+          - light.grupo_luzes_sala
+          - light.grupo_luzes_cozinha
+          - light.grupo_luzes_office
+          - sensor.home_energy_status
+      - platform: homeassistant
+        event: start
+    # A lista é montada UMA vez aqui e reaproveitada no estado e no atributo.
+    # (Sem isso, `state` teria de ler `this.attributes`, que num template
+    # acionado por gatilho devolve o valor ANTERIOR — contagem defasada.)
+    action:
+      - variables:
+          insight_items: >
+            {% set ns = namespace(items=[]) %}
+
+            {#- 1) ENERGIA acima do esperado para o horário (>15%, após 07h) -#}
+            {% set delta = state_attr('sensor.home_energy_status', 'delta_pct') %}
+            {% if delta not in [none, 'unknown'] and (delta | int(0)) > 15 and now().hour >= 7 %}
+              {% set today = states('sensor.energia_total_casa_diaria') | float(0) %}
+              {% set ns.items = ns.items + [{
+                'id': 'energy_high',
+                'icon': 'mdi:flash-alert',
+                'tone': 'amber',
+                'text': 'Consumo ' ~ (delta | int) ~ '% acima da média deste horário',
+                'detail': (today | round(1) | string).replace('.', ',') ~ ' kWh hoje'
+              }] %}
+            {% endif %}
+
+            {#- 2) ROBOROCK com erro ou preso -#}
+            {% set vac = states('vacuum.roborock_s7') %}
+            {% if vac in ['error', 'stuck'] %}
+              {% set ns.items = ns.items + [{
+                'id': 'vacuum_error',
+                'icon': 'mdi:robot-vacuum-alert',
+                'tone': 'red',
+                'text': 'Roborock precisa de atenção',
+                'detail': states('sensor.roborock_s7_vacuum_error') | default('Verifique o aspirador', true)
+              }] %}
+            {% endif %}
+
+            {#- 3) PORTA destrancada há mais de 10 min.
+                   O badge Security já diz "Unlocked"; o valor aqui é o TEMPO. -#}
+            {% set lock_id = 'lock.sl_fechadura_operate_lock' %}
+            {% if is_state(lock_id, 'unlocked') %}
+              {% set mins = ((now() - states[lock_id].last_changed).total_seconds() / 60) | int %}
+              {% if mins >= 10 %}
+                {% set ns.items = ns.items + [{
+                  'id': 'door_unlocked',
+                  'icon': 'mdi:lock-open-variant',
+                  'tone': 'amber',
+                  'text': 'Porta destrancada há ' ~ (mins ~ ' min' if mins < 60 else ((mins / 60) | int) ~ 'h'),
+                  'detail': 'Fechadura da sala'
+                }] %}
+              {% endif %}
+            {% endif %}
+
+            {#- 4) LUZES acesas em cômodo sem ocupação há mais de 20 min -#}
+            {% set rooms = [
+              ('light.grupo_luzes_sala', 'binary_sensor.sala_occupancy', 'Sala'),
+              ('light.grupo_luzes_cozinha', 'binary_sensor.cozinha_occupancy', 'Cozinha'),
+              ('light.grupo_luzes_office', 'binary_sensor.office_occupancy', 'Office')
+            ] %}
+            {% for group_id, occupancy_id, label in rooms %}
+              {% if is_state(group_id, 'on') and is_state(occupancy_id, 'off') %}
+                {% set mins = ((now() - states[group_id].last_changed).total_seconds() / 60) | int %}
+                {% if mins >= 20 %}
+                  {% set ns.items = ns.items + [{
+                    'id': 'lights_' ~ (label | lower),
+                    'icon': 'mdi:lightbulb-on-outline',
+                    'tone': 'amber',
+                    'text': 'Luz acesa na ' ~ label ~ ' sem ninguém há ' ~ (mins ~ ' min' if mins < 60 else ((mins / 60) | int) ~ 'h'),
+                    'detail': 'Toque para abrir o cômodo'
+                  }] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+
+            {{ ns.items }}
+    sensor:
+      - name: Home Insights
+        unique_id: home_insights
+        icon: mdi:lightbulb-alert-outline
+        state: "{{ insight_items | count }}"
+        attributes:
+          items: "{{ insight_items }}"

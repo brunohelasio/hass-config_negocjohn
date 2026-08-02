@@ -2193,3 +2193,880 @@ Decisoes do usuario nesta sessao:
 | O2 | Entidades temp/umidade do Office | config ainda lista 5 nomes candidatos por sensor; confirmar os reais no HA |
 | O3 | Cortina do Office | dock identico-inerte; mapear `entities.curtain` quando houver entidade |
 | O4 | Validacao visual no tablet | comparar Sala ↔ Office lado a lado (sem "degrau") |
+
+---
+
+## Registro de Implementacao — Molde Unico de Presenca/Ocupacao + Alinhamento dos Cards (2026-07-03)
+
+### Contexto
+
+Diagnostico completo dos sensores 4-em-1 (HOBEIAN/Tuya ZG-204ZV via Zigbee2MQTT) realizado
+nesta data identificou: (1) logica de ocupacao excluia o estado 'static' do motion_state
+(pessoa parada nunca virava "Ocupado") e usava 'medium' (valor inexistente no enum
+none/large/small/static); (2) 4 padroes de logica diferentes entre comodos + 3 comodos sem
+camada logica; (3) hack `recent_only: 120s` nos cards apagava o dot com o comodo ainda
+ocupado (confirmado ao vivo na Cozinha); (4) cards Lavabo/Cozinha (124px) e Miguel/Casal
+(112px) com coluna de icone fixa clipando os status a direita (overflow: hidden);
+(5) Marina/Cozinha/Miguel cairam da rede Zigbee (LQI fraco) — estados congelados/unknown.
+
+### Regra funcional definida pelo usuario
+
+- **Presenca (dot azul)**: IMEDIATA — liga na deteccao, apaga rapido na saida
+  (fading 30s do sensor + 5s anti-flicker do template).
+- **Ocupacao (texto "Ocupado/Ocupada")**: exige permanencia (delay_on 45-60s) e/ou
+  contexto (TV/AC/PC/Echo); delay_off por tipo de comodo.
+
+### Arquitetura implementada (molde unico por comodo)
+
+```
+L1  binary_sensor.<slug>_motion_recent  = espelho do presence bruto (delay_off 5s) -> dot
+L2  binary_sensor.<slug>_occupancy      = presenca sustentada (delay_on) + trava de
+                                          contexto (self-latch: occupancy on AND contexto
+                                          segura em microquedas do radar) -> semantica
+L3  sensor.<slug>_semantic_state        = occupied/none + attr display -> texto no card
+```
+
+Timers: Sala/Office 60s on / 180s off; Quartos 60s / 300s; Cozinha 45s / 120s;
+Lavabo occupancy 120s off (dot usa motion_recent).
+Contextos: Sala TV+AC+Echo Show; Office PC+AC+Echo Pop; Marina AC+Echo; Miguel AC;
+Casal Echo; Cozinha lava-loucas (sensor.lava_loucas_operation_state == 'run').
+
+### Arquivos alterados
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `packages/sala_presence.yaml` | motion_recent 25s->5s; occupancy 2min->60s/180s + contexto + sem gating |
+| `packages/office_presence.yaml` | motion_recent sem gating, 5s; occupancy 60s/180s + contexto |
+| `packages/q_marina_presence.yaml` | idem (delay_off 300s) |
+| `packages/lavabo_presence.yaml` | NOVO lavabo_motion_recent (5s); occupancy 3min->120s |
+| `packages/cozinha_presence.yaml` | CRIADO (molde unico + semantica "Ocupada") |
+| `packages/q_miguel_presence.yaml` | CRIADO (molde unico + semantica "Ocupado") |
+| `packages/q_casal_presence.yaml` | CRIADO (inerte ate instalar o sensor; nomear device "Sensor 4 in 1 q casal") |
+| `configuration.yaml` | 3 includes novos + cache-bust dos 5 cards (presence-uniform-1) |
+| `bruno-quarto-miguel-card.js` | dot -> motion_recent+occupancy (sem recent_only); _semanticLine; _dotModel com lista; grid minmax(0,124px) + icone flexivel |
+| `bruno-cozinha-card.js` | idem Miguel ("Ocupada") |
+| `bruno-quarto-casal-card.js` | idem Miguel |
+| `bruno-quarto-marina-card.js` | _semanticLine adicionada (sensor ja existia e nao era exibido) |
+| `bruno-lavabo-card.js` | dot -> lavabo_motion_recent; grid minmax(0,124px) + icone flexivel |
+
+### Padrao de alinhamento (Office)
+
+`grid-template-columns: minmax(0, 124px) minmax(0, 1fr) 40px` + `.room-icon { width: 100%;
+max-width: <n>px }` — a coluna do icone absorve o deficit de largura e o PNG encolhe
+proporcionalmente; a coluna dos status nunca e clipada. Aplicado em Miguel, Casal,
+Cozinha e Lavabo (Marina ja estava ok com 96px fixo — mantida).
+
+### Rollback
+
+- Todos os blocos anteriores comentados in-place com `ANTERIOR (2026-07-03)` / `NOVO`.
+- Packages novos: comentar os 3 includes em configuration.yaml.
+- Cards: reverter cache-bust para `?v=20260702-all-images-1`.
+
+### Pendencias pos-implementacao
+
+| # | Item | Nota |
+|---|------|------|
+| S1 | Availability no Zigbee2MQTT | habilitar (config do Z2M, fora do repo) para estados congelados virarem `unavailable` — elimina "presenca eterna" |
+| S2 | Roteador Zigbee | LQI fracos: sala 29, cozinha 29, marina 21, miguel 47 (office 149). Adicionar router (plug Zigbee) na ala quartos/cozinha |
+| S3 | Marina presence travado | testar com quarto vazio 3-5min; se nao cair: static sens 8->3, distance 5->3m; persistindo: trocar com unidade do Q. Casal (defeito conhecido do modelo) |
+| S4 | Sensor temp/umid extra no Lavabo | opcional — layout NAO depende mais dele |
+| S5 | Commit das mudancas | aguardando validacao visual do usuario (Regra de Ouro #2) |
+
+### Revisao 2 (2026-07-03, mesma sessao) — dot desacoplado da ocupacao
+
+Feedback do usuario: no Q. Miguel, presence ja estava false no HA mas o dot continuava
+aceso por 1-2+ minutos. Causa: o dot acendia com motion_recent OU occupancy, e o
+delay_off da ocupacao (300s nos quartos / 180s Sala-Office) segurava o icone.
+
+Correcao (regra do usuario: "saiu -> icone apaga rapido"):
+- Dot passa a ler APENAS `<slug>_motion_recent` (occupancy so como fallback se a
+  camada nao existir). Ocupacao aparece exclusivamente no texto "Ocupado/Ocupada".
+- Arquivos: bruno-sala-card.js e bruno-office-card.js (`_presenceRecent`),
+  bruno-quarto-miguel/cozinha/quarto-casal/quarto-marina-card.js (dot entities).
+- Cache-bust: 6 cards -> ?v=20260703-presence-uniform-2 (lavabo permanece uniform-1).
+
+Notas de hardware da mesma sessao:
+- Q. Marina: rejeita gravacao de parametros (erro) + presence travado em true +
+  motion_state 'large' fantasma; sensor estava alimentado por USB/tomada e foi
+  religado. Protocolo: factory reset (segurar botao ate LED piscar) + re-parear na
+  posicao final JA na alimentacao definitiva, aplicar calibracao logo apos o join
+  (device acordado aceita escrita); se persistir, trocar pela unidade do Q. Casal.
+- Q. Miguel: PIR detecta passagem pelo corredor atraves da porta aberta — limite de
+  distancia por software nao se aplica a PIR; corrigir reposicionando/angulando o
+  sensor (porta fora do campo de visao).
+
+### Revisao 3 (2026-07-04) — texto semantico sincronizado com a presenca
+
+Teste do usuario na Cozinha: dot apagou correto na saida, mas o texto "Ocupada"
+permaneceu ~2 min (delay_off da ocupacao) — contradicao visual (texto sem dot).
+
+Correcao: o TEXTO semantico agora exige ocupacao E presenca ativa (motion_recent).
+A ENTIDADE occupancy mantem a liberacao longa (2-5 min) para futuras automacoes
+(ex.: nao apagar luz em saida rapida) — a liberacao ficou invisivel na UI.
+
+- Packages (6): semantic_state com guard `and is_state(<slug>_motion_recent,'on')`
+  em icon/state/display/priority (sala, office [3 niveis], q_marina, cozinha,
+  q_miguel, q_casal).
+- Cards (5): fallback do `_semanticLine` com o mesmo guard (sala, marina, miguel,
+  cozinha, casal). Office nao tem fallback — sem mudanca no JS.
+- Cache-bust: 5 cards -> ?v=20260704-semantic-sync-1.
+
+Estado de rede na mesma data: availability habilitada no Z2M (passive 180 min);
+canal Zigbee 25 (ideal); canal Wi-Fi pendente de verificacao; power-cycle limpou
+o fantasma da Cozinha; roteador Zigbee segue recomendado (Miguel LQI 14).
+
+### Revisao 4 (2026-07-04) — trava de contexto REMOVIDA da ocupacao
+
+Bug confirmado pelo usuario no Q. Miguel: com o AC ligado, a ocupacao ficava presa
+em ON indefinidamente (self-latch `occupancy and context` nunca liberava). Sintomas:
+"Ocupado" com quarto vazio por minutos; ao entrar, texto aparecia JUNTO com a
+presenca (sem esperar os 60s), pois a ocupacao ja estava latched.
+
+Correcao nos 6 packages: occupancy = SOMENTE presenca sustentada
+(`is_state(<presence>, 'on')` + delay_on/delay_off). A folga de delay_off ja cobre
+microquedas do radar — a trava era redundante e nociva. Folga dos quartos reduzida
+de 300s para 180s (pedido do usuario). Blocos com trava mantidos comentados
+(`ANTERIOR ... trava de contexto — REMOVIDA`).
+
+Timers finais: Sala/Office 60s/180s · Quartos 60s/180s · Cozinha 45s/120s ·
+Lavabo 120s (dot via motion_recent).
+
+Nota: contexto (TV/AC/PC) NAO deve voltar como latch de estado; se necessario no
+futuro, usar como condicao em AUTOMACOES (ex.: nao desligar luz se TV playing),
+nunca preso dentro do binary_sensor de ocupacao.
+
+Fisico pendente (Miguel): sensor fica ao lado da camera (split USB do mesmo ponto
+de energia) — reposicionamento limitado. Mitigacoes: cabo USB mais longo para
+descolar o sensor da camera; fita na lateral da lente PIR voltada a porta;
+motion_detection_sensitivity 5 (4 ficou lento para detectar entrada).
+
+---
+
+## Registro de Implementacao — Grade 2-col de Iluminacao nas Subviews (2026-07-07)
+
+### Escopo autorizado
+
+Etapa 2 aprovada pelo usuario (tile 92px + clamp JS "opcao B"). Trocar o conteudo
+interno da secao expandida do acordeao de luzes: de LISTA vertical (icone + nome +
+barra luminosa) para GRADE de 2 colunas de tiles compactos (icone + toggle em cima;
+nome + status "Ligada"/"Desligada" embaixo). Todas as luzes sao on/off puro — sem
+dimmer/slider/porcentagem.
+
+### Regra da grade
+- 2 colunas fixas. Contagem IMPAR => 1º tile (luz principal) ocupa a linha inteira
+  (`.zl-tile.is-wide`, layout horizontal). PAR => todos em pares.
+- Altura do tile: 92px. Gap: 12px.
+
+### Diagnostico-chave (Etapa 1)
+- Render de luzes e DUPLICADO em 6 subviews (nao ha componente unico).
+- Dois formatos: ACORDEAO (`.zone-lights` via `_renderLightZone`) em sala, casal,
+  miguel, marina; LISTA UNICA (`.office-light-list`) em office e cozinha.
+- Nao existia `max-height` fixo dedicado; a altura era derivada/`auto`.
+
+### Decisoes do usuario aplicadas
+1. Teto = espaco acima do bloco A/C, com respiro minimo garantido (nunca encosta no A/C).
+2. Removidos TODOS os placeholders da lista; removida a 5ª luz fantasma do Q. Casal
+   (`light.quarto_casal_2_switch_3` "Luz cortineiro" — nao existe no HA).
+3. Anti-corte (opcao B): a secao expandida so exibe FAIXAS INTEIRAS. Se nao couber,
+   trava num multiplo exato de faixa + scroll vertical (minimo 2 faixas). Nunca meia
+   faixa cortada.
+
+### Implementacao
+- Novo metodo `_renderZoneTile(light, wide)` (nome distinto do rollback
+  `_renderLightTile`) — tile com `role="switch"`/`aria-checked` + toggle CSS.
+- Novo helper `_clampExpandedLights()` (chamado apos `_mountLiveCameraFeeds()`):
+  LAYOUT-AGNOSTICO. Mede o limite inferior da COLUNA (parent do card), desconta os
+  blocos apos o card (A/C) + MIN_GAP(12px) + o que ja e ocupado dentro do card
+  (cabecalhos + zonas fechadas abaixo) e trava a grade em faixas inteiras via
+  `maxHeight` inline + `overflow-y:auto`. Constantes 92/12 espelham o CSS.
+- CSS: `.zone-lights` / `.office-light-list` viraram grid 2-col
+  (`grid-auto-rows: 92px`); adicionado bloco `.zl-tile`/`.zl-icon`/`.zl-switch`/
+  `.zl-name`/`.zl-status` (skin ambar quando ligado).
+
+### Arquivos alterados (6)
+- `bruno-sala-subview.js` (referencia), `bruno-quarto-casal-subview.js`
+  (+ remocao do cortineiro), `bruno-quarto-miguel-subview.js`,
+  `bruno-quarto-marina-subview.js` (acordeao);
+- `bruno-office-subview.js`, `bruno-cozinha-subview.js` (lista unica).
+
+### Contagens finais (por zona expandida) e linhas na grade
+- Sala·sala 3 (impar→1 full+1 par=2 linhas) · Sala·varanda 4 (2)
+- Casal·sala 4 (2) · Casal·varanda 2 (1)
+- Miguel·sala 6 (3 — pior caso) · Miguel·varanda 2 (1)
+- Marina·sala 4 (2) · Marina·varanda 2 (1)
+- Office 3 (impar, 2) · Cozinha 3 (impar, 2)
+Pior caso (3 linhas) cabe com folga no tablet-alvo; clamp e rede p/ viewports menores.
+
+### Regra de Ouro / Rollback
+- Nada foi apagado. `_renderLightRow` comentado in-place nos acordeoes (mantido intacto
+  em office/cozinha por ser usado pelo `_renderLightZone` morto). CSS `.zone-lights`/
+  `.office-light-list` anterior mantido em comentario `ANTERIOR (rollback)`.
+- Rollback: descomentar os blocos ANTERIOR e remover os blocos NOVO; ou `git revert`.
+
+### Pendencias / pontos de atencao
+- Acao "Apagar [zona]" permanece no cabecalho da secao (inalterada). Se a densidade
+  nova pedir reposiciona-la, sinalizar antes de mudar.
+- Validacao VISUAL no tablet pendente (Regra de Ouro #2 — sem commit ate aprovar).
+- Sem runtime Node/Python no ambiente: nao foi possivel `node --check`; revisao manual.
+
+### 2ª passada — ajustes pos-feedback visual (2026-07-07)
+
+Feedback do usuario apos a 1ª passada. Aplicado nos 6 arquivos:
+
+- **A1 (alinhamento):** glifo do ícone alinhado à esquerda (`.zl-icon` `place-items: center start`), casando `início do ícone = início do título`.
+- **B3 (remover status):** removido o texto "Ligada/Desligada" (redundante c/ toggle + realce). Consequencias:
+  - tile **largo** virou LINHA ÚNICA `ícone | nome | toggle` (`.zl-tile.is-wide` 1 linha + `align-content: center`) — elimina o gap grande do tile largo;
+  - tile **compacto** ganhou mais respiro ícone↔nome e **ícone maior** (caixa 36→40px, glifo 23→27px, nome 14→15px).
+  - `<span class="zl-status">` removido do `_renderZoneTile` (comentado ANTERIOR); regras `.zl-status` comentadas.
+- **Tempo ligado (lógica do painel principal):** helper `_zoneOnLabel` (luz ACESA mais antiga da zona via `last_changed`) + `_fmtElapsed` (Xm/Xh/Xd). Exibido no cabeçalho da seção junto de "N/M acesas · Xh". Office/Cozinha (sem seção) ganharam mini-cabeçalho `.lights-substatus` entre o cabeçalho "Iluminação" e a grade.
+- **Efeito "escada":** auditoria confirmou estrutura consistente (grid 48/1fr/54, --ac-h 320, zone-header, tile). Achado real: `.lights-zones` gap era 7px em Casal/Miguel vs 10px em Sala/Marina — **padronizado em 10px** (Casal, Miguel).
+
+Decisoes do usuario nesta passada: Office/Cozinha mantem posicionamento atual (vao ate o A/C aceito por ora); shell inferior (54px) mantida; padronizacao de ícones (SVG animado vs flat/MDI) adiada para etapa propria. Pendencia registrada: A/C "fantasma" de 320px reservado na coluna direita da Cozinha (verificar em etapa futura).
+
+### 3ª passada — ajustes finos + escopo de ícones aprovado (2026-07-07)
+
+- **Item 1 (fonte do título):** confirmado que TODOS os `.zl-name` ja sao 15px/700 identicos (compacto=largo, nos 6). Usuario decidiu manter como esta; unica mudanca pedida: renomear "LED" -> "Led" (`sala-subview` linhas 80-81 + placeholder comentado; `planta-3d-subview` 6 ocorrencias). Se a diferenca visual persistir no tablet, e cache (subviews nao tem `?v=`) ou otico — nao ha diferenca no codigo.
+- **Item 2 (gap ícone↔título no tile largo):** causa real = caixa do ícone 40px com glifo 27px alinhado à esquerda (~13px de sobra) + `column-gap: 14px`. Corrigido nos 6: `.zl-tile.is-wide` column-gap 14->10 + `.zl-tile.is-wide .zl-icon { width: 28px }` (abraça o glifo). Compacto inalterado.
+- **Item 3 (ícones):** escopo APROVADO pelo usuario. Plano: 2 tiers numa unica linguagem (viewBox 24, stroke ~1.6, linha do rail em `bento-sidebar-card.js`). Tier 1 flat neutro (títulos de seção, cabeçalho, chips, rail — substitui MDI). Tier 2 flat + estado (apagado neutro; aceso = âmbar + fill translúcido + glow + pulsação). Arquitetura: modulo compartilhado `bruno-icons.js`. Rollout faseado (piloto no bloco de iluminação). Preview visual apresentado ao usuario (widget) para validar a linguagem ANTES de wire nos 20+ arquivos. `_tplLightIcon` atual sera mantido comentado no rollout. AGUARDA aprovacao visual do preview para iniciar o wire.
+
+---
+
+## Registro de Implementacao — Shell Mobile Fase 1 (Opcao A) (2026-07-09)
+
+### Contexto e decisao
+
+Diagnostico desta sessao: o mobile (V3/V3.5 de 2026-05) ficou defasado do desktop,
+que migrou para a `bruno-shell` (2026-06-24). Causas registradas: entrada fragil
+(redirect one-shot dentro da section_home), modelo de interacao divergente (popups
+browser_mod abandonados no desktop; navegacao caindo em views de tablet sem navbar),
+sensores de presenca antigos nos `bruno-mobile-*` (anteriores ao molde semantico de
+2026-07-03/04) e cards desktop redesenhados espremidos em molduras mobile fixas.
+
+Usuario aprovou a **Opcao A**: estender a PROPRIA shell para o mobile (um unico
+modelo de interacao; nada de mundo paralelo). Mockup visual aprovado antes do codigo.
+
+### Mecanica implementada (tudo por media query `(max-width: 800px)` — sem JS novo)
+
+```
+PHONE (<=800px):
+  bruno-shell  -> grid 1 coluna x 2 linhas: content-slot (rolavel) em cima,
+                  rail-slot na BASE. Altura 100dvh. Config panel ancora acima do dock.
+  rail (bento-sidebar-card) -> "deita": flex-direction row, dock horizontal com
+                  scroll-x, labels 9px, itens hide_on_phone somem.
+  section_home -> mediaquery do layout-card: 1 coluna empilhada
+                  (top_badges, welcome, sala, comodos, energy, roborock, media,
+                  camera, quick_actions, sidebar[0px]) com alturas minimas por bloco.
+                  card_mod libera height:auto no phone (tablet mantem 100%).
+  comodos matriz -> mediaquery: 2 colunas x 3 linhas de 150px.
+  subviews     -> JA tinham @media <=760px (1 coluna); nada foi alterado nelas.
+```
+
+### Curadoria do dock (rail.yaml, `hide_on_phone: true`)
+
+- VISIVEIS no phone: Home, Cameras, Aspirador, Planta 3D, Config (5 itens).
+- OCULTOS no phone: Musica (view tablet nao adaptada), Sistema/Rede/Updates
+  (popups de tablet), Atualizar (existe dentro do painel Config) e Power.
+- Rail de comodos (rail_rooms.yaml): 7 itens, todos visiveis (cabem no dock).
+- A troca de rail por secao (default/rooms) funciona igual no dock — mesma shell.
+
+### Arquivos alterados (6)
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `www/bento-sidebar-card.js` | Bloco ADITIVO @media <=800px (modo dock) + atributo `data-hide-phone` no `_button()` |
+| `www/bruno-ui/core/bruno-shell.js` | Bloco ADITIVO @media <=800px no `_styles()` (grid 1-col, content rolavel, config panel) |
+| `views/shell/section_home.yaml` | Bloco `mediaquery` phone no layout + @media no card_mod + **zz-mobile-redirect COMENTADO** (celular agora FICA na shell) |
+| `views/shell/rail.yaml` | `hide_on_phone: true` em music/system/network/refresh/updates/power + comentario de curadoria |
+| `shared/grid-cards/bento_comodos_matriz.yaml` | Bloco `mediaquery` phone (2col x 3x150px) |
+| `configuration.yaml` | Cache-bust: bento-sidebar-card.js e bruno-shell.js -> `?v=20260709-mobile-shell-1` |
+
+### Decisoes tecnicas
+
+1. **CSS puro, sem JS de deteccao**: shell e rail flipam juntos no MESMO breakpoint
+   (800px, o "Phone" historico do projeto) via media queries proprias — sem
+   matchMedia/atributos sincronizados, menos pontos de falha.
+2. **Dock com overflow-x**: `justify-content: flex-start` no `.rail` (distribuicoes
+   centradas + overflow deixam itens da esquerda inalcancaveis); a distribuicao
+   uniforme fica no `.group.top { flex:1; justify-content: space-evenly }`.
+3. **Estrategia Sagaland preservada** na section_home: todas as grid-areas existem
+   no breakpoint phone (sidebar como linha 0px, sem card).
+4. **Mundo mobile V3/V3.5 NAO removido**: as 5 views `/mobile-*` continuam
+   incluidas no ui-lovelace-main.yaml como fallback manual. Aposentadoria
+   (mover para disabled) fica para fase de limpeza, apos validacao no aparelho.
+
+### Rollback
+
+1. `configuration.yaml`: reverter os 2 cache-busts (ANTERIOR comentado inline).
+2. `section_home.yaml`: descomentar `zz-mobile-redirect` + remover bloco mediaquery
+   e o @media do card_mod => celular volta a ser expulso para /slug/mobile-casa (V3).
+3. `bruno-shell.js` / `bento-sidebar-card.js`: remover os blocos @media marcados
+   `NOVO (2026-07-09) — MODO PHONE/DOCK` (aditivos; nada acima foi alterado).
+4. `rail.yaml`: remover linhas `hide_on_phone`. `bento_comodos_matriz.yaml`:
+   remover bloco mediaquery.
+
+### Validacao executada
+
+- Sem runtime Node/Python no ambiente (restricao conhecida): revisao manual dos
+  blocos JS (template literals sem backtick/`${` espurios) e do YAML (indentacao
+  dos blocos mediaquery conferida por leitura; sintaxe identica a views/main.yaml).
+- Tablet/desktop: NENHUMA regra fora de @media <=800px foi tocada — comportamento
+  atual preservado por construcao.
+
+### Pendencias (Fase 2+)
+
+| # | Item | Nota |
+|---|------|------|
+| MS1 | Validacao visual no celular | ✅ FEITA (2026-07-09, iPhone) — Fase 1 aprovada como base; feedback virou a Fase 2 abaixo |
+| MS2 | Ajuste fino das subviews no phone | ⏳ parcialmente coberto na Fase 2 (cameras); comodos/roborock/planta pendentes |
+| MS3 | Hero (bruno-hero-card) full no phone | ✅ RESOLVIDO na Fase 2 (bloco @media phone no template desktop) |
+| MS4 | Faixa 761-800px (landscape de phone grande) | shell em modo phone, subviews no breakpoint 1180px (2 colunas) — verificar se aceitavel |
+| MS5 | Aposentar V1/V2/V3/V3.5 | mover includes para bloco comentado + arquivos para disabled/ apos Fase 2 aprovada (Regra de Ouro: nada apagado) |
+| MS6 | Popups de tablet no phone | Sistema/Rede/Updates sairam do dock para o menu "Mais"; versoes phone dos popups em fase propria |
+
+---
+
+## Registro de Implementacao — Shell Mobile Fase 2 (2026-07-09, mesma sessao)
+
+### Feedback do usuario (apos teste no iPhone)
+
+Fase 1 satisfatoria como base, mas a UI herdou demais o tablet: (1) hero ocupava
+espaco excessivo; (2) card da Sala alto demais; (3) cards de comodo com altura
+insuficiente (PNG grande cortava status semanticos e o 4o indicador); (4) home
+longa demais — Roborock e Monitoramento redundantes com o dock; (5) Acoes Rapidas
++ dock = dois grupos de botoes empilhados; substituir Config do dock por "Mais";
+(6) subviews (cameras/roborock/planta/comodos) precisam de layout proprio phone.
+
+### Implementado nesta fase
+
+| # | Item | Arquivos | Mecanica |
+|---|------|----------|----------|
+| 1 | Home enxuta | `bento_roborock.yaml`, `bento_camera.yaml`, `bento_quick_actions.yaml`, `section_home.yaml` | `view_layout.show.mediaquery (min-width: 801px)` nos 3 cards + linhas 0px no bloco phone (Sagaland). Home phone: badges → hero → sala → comodos → energia → midia |
+| 2 | Hero compacto | `bruno-hero-card.js` | @media <=800px no template DESKTOP (o que roda na home): clock 42px, greeting 19px, paddings minimos, removida regua de 54px do rodape (reservava espaco p/ dock do tablet) |
+| 3 | Sala compacta | `bruno-sala-card.js` | Bloco @media 800px ANTERIOR (min-height 300px, resquicio do embed V3.5 que INFLAVA o card) comentado; novo bloco: hero-action 96px, PNG 92x62, command-rows 46px |
+| 4 | Comodos legiveis | `bento_comodos_matriz.yaml` + 6 room cards | Linhas da matriz 150->176px + @media phone nos cards: PNG max 100x62 (Marina 64x64 quadrado) + padding reduzido => status semanticos e 4o indicador visiveis |
+| 5 | Dock "Mais" | `bento-sidebar-card.js`, `rail.yaml`, `bruno-shell.js` | Botao "Mais" (so phone) no fim do dock abre action-sheet liquid com TODOS os itens `hide_on_phone` (Musica/Sistema/Rede/Atualizar/Updates/Config/Power). Config saiu do dock (hide_on_phone). Sheet fecha ao navegar. rail-slot z-index 2 no phone (sheet sobre o conteudo) |
+| 6 | Cameras uniformes | `bruno-cameras-security-subview.js` | @media <=800px (apos os blocos 980/640 — cascata vence): main-feed e camera-tile com MESMA altura `clamp(190px, 26vh, 240px)`, 1 coluna |
+| 7 | Cache-busts | `configuration.yaml` | shell/sidebar -> `mobile-shell-2`; hero, sala, office, cozinha, lavabo, casal, marina, miguel, cameras-subview -> `20260709-mobile-phase2-1` |
+
+### Rollback
+
+- JS: todos os blocos novos marcados `NOVO (2026-07-09) — Fase 2 mobile`; o unico
+  bloco substituido (sala 800px do V3.5) esta comentado in-place como ANTERIOR.
+- YAML: blocos `show:` e ajustes de linha com comentario NOVO/ANTERIOR inline.
+- configuration.yaml: versoes ANTERIOR comentadas em cada linha.
+
+### Pendencias para Fase 3 (exigem sessao dedicada)
+
+| # | Item | Nota |
+|---|------|------|
+| F3.1 | Subviews de COMODO no phone | @media 760px atual empilha mas "desconfigura" (feedback); precisa layout proprio por subview (6 arquivos grandes) |
+| F3.2 | Roborock subview no phone | layout concebido em landscape; nao adapta |
+| F3.3 | Planta 3D no phone | "nao esta funcionando" — precisa diagnostico ao vivo (console/comportamento) antes de corrigir |
+| F3.4 | Acoes Rapidas realocadas | menu expansivel acionado por botao no Hero (sugestao do usuario); hoje estao apenas ocultas no phone |
+| F3.5 | Hero: agenda "Atualizando agenda" | verificar por que o fetch de agenda demora/falha no phone (visto no screenshot) |
+
+---
+
+## Registro de Implementacao - Ajustes pontuais da Home (2026-07-11)
+
+### Escopo aplicado
+
+Somente os cards JS da Home foram alterados; grid, shell, subviews, tokens globais
+e packages de sensores permaneceram fora do escopo.
+
+| Area | Arquivos | Implementacao |
+|---|---|---|
+| Comodos | `bruno-sala-card.js`, `bruno-office-card.js`, `bruno-cozinha-card.js`, `bruno-lavabo-card.js`, `bruno-quarto-casal-card.js`, `bruno-quarto-marina-card.js`, `bruno-quarto-miguel-card.js` | Faixa inferior ampliada nos comodos com subview; feedback local e animacao curta do chevron. Lavabo preserva a regra especial: somente o chevron abre o popup existente. |
+| Energia | `bruno-energy-card.js` | Titulo `Consumo parcial`; comparativo via atributo `last_period` dos utility meters diario, semanal e mensal. |
+| Roborock | `bruno-roborock-card.js` | Estado `cleaning`/`segment_cleaning` usa somente leve ganho de superficie pelo token `surface-on`; removidos borda e glow do destaque ativo. |
+| Monitoramento | `bruno-home-camera-card.js` | Fila FIFO, handoff 5s, retorno Sala 8s e override manual 30s, condicionados a um `motion_entity` real por camera. `recording` foi descartado como sinal por ser estado operacional persistente da Tuya. |
+| Midia | `bruno-media-card.js` | Ultima midia valida persistida em `localStorage` (`bruno-ui:last-valid-media:v1`); estado inativo conserva arte/metadados, remove progresso e abre Spotify Plus por `Escolher midia`. |
+
+### Fallback rapido
+
+1. Restaurar apenas o card afetado pela copia anterior ou pelo diff local; os cinco
+   grupos acima sao independentes e nao exigem rollback conjunto.
+2. Em `configuration.yaml`, devolver o recurso correspondente ao `?v=` anterior
+   registrado no historico local e recarregar os recursos do frontend.
+3. Camera: remover constantes `BRUNO_HOME_CAMERA_*`, metodos de fila entre
+   `_model()` e `_selectCamera()` e classes `is-motion`; o comportamento anterior
+   volta a obedecer somente `input_select.bento_active_camera`.
+4. Midia: remover `BRUNO_MEDIA_LAST_VALID_KEY`, helpers de snapshot, branch
+   `.is-inactive-media` e acao `choose-media`; playing/paused nao dependem desse
+   fallback.
+5. Energia: remover `*_total`, `_comparison()` e o segundo `<text>` do SVG.
+6. Roborock: remover `cleaningClass` e `.is-cleaning`; o restante da logica do robo
+   permanece intacto.
+
+### Cache-buster
+
+Os cards do lote receberam cache-buster em `config/configuration.yaml`; camera,
+energia e midia estao na revisao `?v=20260711-home-microadjust-2` apos a correcao
+de campo abaixo.
+
+### Correcao de campo - camera, midia e energia (2026-07-11)
+
+- Camera: `camera.* = recording` nao e evento de movimento nas cameras Tuya; sete
+  entidades permaneceram nesse estado e produziram o falso `7/8`. A fila agora
+  aceita somente `motion_entity` explicito por camera, com estado `on`, `detected`
+  ou `motion`. Como a integracao atual nao expoe entidade de evento funcional, o
+  auto-switch fica inativo e a selecao manual permanece estavel, sem falso positivo.
+- Midia: estado inativo passou a empilhar status e `Escolher midia`, eliminando a
+  sobreposicao no estreito trilho esquerdo.
+- Energia: `Consumo parcial` usa 11px/500 e `--text-soft`, igual aos status
+  semanticos dos cards de comodo.
+- Cache-buster destes tres cards: `?v=20260711-home-microadjust-2`.
+
+### Ponte de movimento Tuya das cameras (2026-07-13)
+
+- O DP bruto `initiative_message` (212) chega pelo MQTT com `cmd: ipc_motion`,
+  mas nao e publicado pelas entidades `movement_detect_pic`, `alarm_message` ou
+  `device_notifications` da integracao atual.
+- `config/custom_components/bruno_tuya_motion/` apenas escuta a fila MQTT ja
+  criada por Tuya/Xtend Tuya. A integracao original nao foi modificada.
+- Cada pacote `ipc_motion` atualiza um estado
+  `bruno_tuya_motion.<object_id_da_camera>`. O card usa esses oito estados como
+  `motion_entity`, preservando fila FIFO, handoff, retorno e selecao manual ja
+  existentes.
+- `configuration.yaml` carrega a ponte pela chave `bruno_tuya_motion:` e usa o
+  cache-buster `20260713-camera-motion-bridge-1` no card de monitoramento.
+
+Fallback rapido:
+
+1. Comentar apenas `bruno_tuya_motion:` em `configuration.yaml`.
+2. Restaurar o mapeamento anterior no inicio de
+   `bruno-home-camera-card.js` ou deixar `motion_entity` vazio para manter apenas
+   selecao manual.
+3. Restaurar o `?v=20260712-camera-motion-event-3` do recurso e reiniciar o Home
+   Assistant. Nenhum package de presenca ou arquivo da Xtend Tuya precisa ser
+   revertido.
+
+---
+
+## Registro de Implementacao — Faixa de tiles ate a base nas subviews (2026-07-29)
+
+### Escopo
+
+Item 2 do bloco aprovado, parte "subviews". A Home NAO foi tocada nesta passada
+(o dock de acoes rapidas so pode sair depois que o painel Dispositivos existir).
+
+### O que mudou
+
+A linha `bottomband` (54px) saiu do grid das 6 subviews de comodo. Ela carregava
+apenas o status de presenca. Consequencias:
+
+- A faixa de tiles (cameras / hub de midia / eletrodomesticos / A-C) passa a
+  encostar na base do painel, como na Home.
+- A linha de conteudo (`1fr`) ganha 64px (54px da faixa + 10px do gap). Esse ganho
+  vai para o hero (coluna esquerda) e para a Iluminacao (coluna direita) — e o que
+  tira a rolagem do bloco de luzes no Q. Miguel, que tem 6 luzes na zona sala.
+- A presenca virou a PRIMEIRA badge da barra superior (`mdi:motion-sensor`, azul
+  `96,165,250` = `--accent-blue` do dot dos cards de comodo). Texto de
+  `_presenceLine()` (inalterado); acendimento por `_presenceActive()` (novo), que
+  le `motion_recent` — mesmo contrato de 2026-07-03: dot/acendimento imediato pela
+  presenca, texto pela ocupacao.
+
+### Phone: byte-equivalente ao de hoje
+
+A regra do phone que escondia Roteador/Zigbee era POSICIONAL
+(`.tb-badge:nth-child(n + 4)`). Com a Presenca no inicio ela passaria a esconder a
+Umidade. Trocada por selecao por ATRIBUTO (`[data-phone-hide]`), marcada em
+Presenca + Roteador + Zigbee. O phone segue exibindo Luzes / Temperatura / Umidade,
+e a Presenca fica oculta — o rodape ja era `display: none` no phone.
+
+### Aplica-se a TODOS os temas
+
+A mudanca e de LAYOUT, nao de pele: os 64px e a badge valem em iOS / visionOS /
+Liquid Glass / Josh. So a moldura (`main::before`) e exclusiva do Josh, e ela
+apenas acompanhou a nova regua.
+
+### Arquivos alterados (8)
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `subviews/bruno-sala-subview.js` | grid sem `bottomband`; badge Presenca; `_presenceActive()`; regra do phone por atributo; chamada `_renderFrameBottom()` comentada |
+| `subviews/bruno-office-subview.js` | idem |
+| `subviews/bruno-cozinha-subview.js` | idem (grid 3-col, 4 linhas -> 3) |
+| `subviews/bruno-quarto-casal-subview.js` | idem |
+| `subviews/bruno-quarto-marina-subview.js` | idem |
+| `subviews/bruno-quarto-miguel-subview.js` | idem |
+| `core/bruno-surface-material.js` | `--bruno-subview-band-height`: `calc(--ac-h + gap + 54px)` -> `var(--ac-h, 320px)`. `grid-row: 2 / -1` segue correto: com uma linha a menos, `-1` virou o fim da propria linha dos cards |
+| `configuration.yaml` | cache-bust `?v=20260729-subview-footer-out-1` nos 7 recursos acima |
+
+NAO tocadas: `bruno-cameras-security-subview.js`, `bruno-roborock-subview.js`,
+`bruno-planta-3d-subview.js` (nao tem rodape nem injetam `subviewStyles()`).
+
+### Rollback
+
+Tudo comentado in-place com o marcador `rollback 2026-07-29`. Por arquivo:
+1. restaurar `grid-template-rows` / `grid-template-areas` do bloco ANTERIOR;
+2. devolver a interpolacao `this._renderFrameBottom()` no lugar do comentario HTML
+   (o metodo continua definido);
+3. voltar a regra do phone para `nth-child(n + 4)` e remover `phoneHide` das badges;
+4. em `bruno-surface-material.js`, voltar o default de `--bruno-subview-band-height`;
+5. reverter os `?v=` em `configuration.yaml` (linhas ANTERIOR ao lado).
+Ou `git revert` do commit desta sessao.
+
+### Validacao
+
+Sem runtime Node/Python no ambiente. Verificado por script: chaves balanceadas nos
+6 arquivos (delta 0), backticks em numero PAR (nenhum backtick aninhado em template
+literal), zero `${` dentro dos comentarios novos, `_presenceActive`/`_presenceLine`
+presentes uma vez em cada, `_renderFrameBottom()` sem chamadas ativas, `--ac-h: 320px`
+declarado nas 6 subviews (bate com o fallback do modulo de material).
+
+### Pendencias
+
+| # | Item | Nota |
+|---|------|------|
+| SB1 | Validacao visual no tablet | conferir se a Iluminacao do Q. Miguel deixou de rolar e se a faixa assenta na base nas 6 subviews |
+| SB2 | Home: mesma mudanca | depende do painel Dispositivos (item 4) — sem ele, sair o dock tira TV e A-C da tela sem destino |
+| SB3 | Cozinha: grids legados | duas definicoes antigas de `.cozinha-subview` (2-col) seguem no arquivo, sobrescritas pela ativa. Nao foram tocadas |
+
+### Incidente e correcao — crase dentro de template literal (2026-07-29)
+
+Sintoma reportado: nas 6 subviews TUDO voltou ao estilo VisionOS — faixa de tiles,
+filetes, pele dos cards. A Home ficou intacta (tiles e faixa normais).
+
+Causa raiz: no comentario CSS que eu adicionei em `main::before`
+(`core/bruno-surface-material.js`) escrevi uma expressao entre CRASES. Esse
+comentario vive DENTRO do template literal retornado por
+`brunoSubviewTileStyles()`. A crase FECHOU a string, o modulo parou de compilar e
+`globalThis.BrunoSurfaceMaterial` nunca foi definido. Consequencia em cascata:
+
+- `subviewStyles?.()` virou `undefined` -> `|| ''` -> ZERO css Josh nas subviews;
+- `connect?.(host)` virou no-op -> o host nunca recebeu
+  `data-bruno-subview-surface-theme="josh"`.
+
+A Home nao passa por esse modulo (o modo tile dela le `--bruno-tile-mode` direto
+dos tokens do tema), por isso continuou perfeita — e essa assimetria foi o que
+identificou o culpado: se o tema tivesse caido, a Home cairia junto.
+
+Correcao: crases trocadas por aspas retas. Cache-bust
+`?v=20260729-subview-footer-out-2`. A remocao do rodape e a badge de Presenca
+seguem valendo — nao tinham relacao com a falha.
+
+#### INVARIANTE (terceira ocorrencia do mesmo erro neste projeto)
+
+**NUNCA usar crase dentro de comentario CSS/JS que esteja dentro de template
+literal.** Paridade de crases NAO detecta: uma crase espuria vira duas e o total
+continua par. O check correto conta crases DENTRO do bloco de template, entre o
+`return` e o fechamento. Vale para os arquivos de tema, de material e de card —
+todos montam CSS por template literal.
+
+#### Diagnostico errado que tomei no caminho (registrado para nao repetir)
+
+Antes de achar a crase, atribui a falha a uma corrida de carregamento no
+`bruno-theme-manager.js` (`validTheme()` descarta a preferencia se o modulo do
+tema ainda nao executou, e nada reavalia depois) e cheguei a implementar um
+retry. A Home estar normal PROVAVA que o tema estava ativo, o que invalidava essa
+hipotese — a alteracao foi integralmente revertida (arquivo identico ao HEAD).
+
+A fragilidade descrita, ainda assim, EXISTE: se um dia `bruno-<tema>.js` for
+cache MISS e `bruno-theme-manager.js` cache HIT, a ordem de execucao dos
+`extra_module_url` pode inverter (script criado por JS executa na ordem em que
+TERMINA de carregar) e a preferencia cai no fallback de forma permanente naquele
+load. Nao foi a causa deste incidente e nao foi corrigida — fica registrada para
+avaliacao futura.
+
+---
+
+## Registro de Implementacao — Iluminacao: paridade de tokens + dock (2026-07-29, rev.9)
+
+### Parte A — a cartela da Iluminacao passa a USAR os tokens do card dinamico
+
+Diagnostico: as revisoes 6/7/8 calibraram a cartela no olho e ela divergia do card
+dinamico da Home em CINCO pontos. A cadeia real do card dinamico (ex. `.media-card`):
+
+```
+--bruno-liquid-surface-off-*   (o Josh NAO sobrescreve)
+  -> --bruno-liquid-card-*     (bruno-visionos.js, base do Josh)
+  -> --ha-card-background: none / --ha-card-box-shadow: none   (themes/tablet.yaml)
+```
+
+| # | Card dinamico | Iluminacao (rev.8) |
+|---|---------------|--------------------|
+| 1 | radial de topo `360x240 at 18% -10%` | ausente |
+| 2 | sem base escura (tablet.yaml zera) | `rgba(0,0,0,0.300)` |
+| 3 | `blur(20px) saturate(1.18) brightness(1.03)` | `none` |
+| 4 | borda `rgba(255,255,255,0.105)` | `0.10` |
+| 5 | edge-glow opacidade `1` | `0.70` |
+
+Correcao: os tokens `--bruno-subview-cartela-*` deixaram de ter valores proprios e
+passaram a APONTAR para `--bruno-liquid-surface-off-*`. Nao ha valor duplicado — se
+o card dinamico mudar, a Iluminacao acompanha e a divergencia fica impossivel por
+construcao. Adicionados `-filter`, `-sheen-opacity` e `-edge-opacity`.
+
+Os itens 1 e 3 andam juntos: sem blur o radial pousa sobre a foto nitida e le como
+bolha de borda dura (foi o "efeito circular" da rev.8). Com blur ele dissolve. NAO
+remover um sem o outro. A nota REV.7 em `bruno-surface-material.js` (que mandava nao
+reintroduzir filtro) fica como historico, nao como regra: ela tomou a FAIXA como
+referencia, e a referencia correta e o CARD DINAMICO.
+
+### Parte B — nova estrutura do bloco (dock)
+
+- Colapsado por padrao numa faixa de 54px ancorada 7px acima da faixa de tiles e
+  alinhada a coluna do A/C.
+- Faixa = icone + "Iluminacao" + pilulas + chevron. As pilulas agem no estado
+  colapsado; so o titulo e o chevron alternam o painel.
+- Abre para CIMA sobre o hero, sem reflow: `.lights-card` e `position: absolute`
+  dentro de `.right-column` (que virou `position: relative`), ancorado por
+  `bottom: var(--lights-dock-bottom)`. Corpo primeiro no DOM, faixa por ultimo.
+- Animacao por `grid-template-rows: 0fr -> 1fr` (200ms) — acompanha a altura do
+  conteudo sem medicao em JS. Chevron gira 180deg.
+- `max-height: calc(100% - var(--lights-dock-bottom))` + `overflow-y: auto` no
+  conteudo: rolagem so quando estoura a area util. Substitui `_clampExpandedLights()`,
+  cuja chamada foi comentada (metodo preservado).
+- Sem acordeao: todas as secoes visiveis ao mesmo tempo. Filete entre secoes.
+- Grade 2-col SEM cards: celulas separadas por filetes (`has-rule-top`/`has-rule-left`
+  calculados em `_lightCellFlags`, porque a luz principal ocupa a linha inteira quando
+  a contagem e impar e o `nth-child` erraria).
+- Office/Cozinha nao tem secoes: mantem so o substatus, sem "Apagar <zona>" (a faixa
+  de titulo ja concentra "Apagar todas") — evita redundancia.
+- `--lights-dock-bottom`: `calc(var(--ac-h,320px) + 7px)` nas 5 subviews cuja coluna
+  direita contem o A/C; na Cozinha a coluna termina acima da linha `appliances`, entao
+  o valor e `calc(7px - var(--office-gap,10px))`.
+
+### Phone intocado
+
+Todo o bloco novo de CSS foi inserido ANTES das media queries de 1180/760/800px, e o
+posicionamento absoluto esta dentro de `@media (min-width: 761px)`. No phone o card
+volta a ser bloco em fluxo, com as regras existentes prevalecendo.
+
+### Arquivos alterados (9)
+
+`core/bruno-josh.js`, `core/bruno-surface-material.js`, as 6 subviews de comodo e
+`configuration.yaml` (cache-bust `?v=20260729-lights-dock-1`).
+
+### Rollback
+
+Tudo comentado in-place com o marcador `rev.9` / `rollback 2026-07-29`.
+`_renderLightZone`, `_renderZoneTile` e `_clampExpandedLights` seguem definidos e
+intactos; o CSS antigo (`.lights-zones`, `.light-zone`, `.zone-lights`, `.zl-*`)
+tambem. Para reverter: restaurar o `return` de `_renderLights`, descomentar a chamada
+do clamp, remover o bloco de CSS marcado REV.9 e voltar os tokens da cartela aos
+valores comentados em `bruno-josh.js`.
+
+### Validacao
+
+Sem runtime Node/Python. Por script: chaves e parenteses balanceados nos 6 arquivos
+(delta 0), backticks em numero PAR, ZERO crase nos comentarios novos (a armadilha de
+2026-07-29 — ver invariante acima), e cada metodo novo presente exatamente uma vez.
+
+### Pendencias
+
+| # | Item | Nota |
+|---|------|------|
+| L1 | Validacao visual no tablet | conferir alinhamento do dock com a tile do A/C e a abertura sobre o hero |
+| L2 | Q. Miguel: 3 faixas | com o dock a altura util e maior; verificar se ainda rola |
+| L3 | Cozinha | `--lights-dock-bottom` negativo por construcao (coluna termina acima da faixa); conferir no tablet |
+
+### REV.10 (2026-07-29) — correcoes do dock, sem tocar na receita da cartela
+
+Os tokens da rev.9 (cartela = `--bruno-liquid-surface-off-*` do card dinamico)
+NAO foram alterados. As 5 divergencias mapeadas — radial, base, blur, borda
+0.105, edge-glow 1.0 — seguem resolvidas por alias e ficam congeladas.
+
+| # | Defeito | Causa | Correcao |
+|---|---------|-------|----------|
+| 1/7 | card "fosco", sem nivel interno | a rev.9 renomeou `.zl-tile` -> `.light-cell` e NAO atualizou `BRUNO_SURFACE_CARTELA_INNER`; as celulas ficaram orfas da regra e o card virou lamina uniforme | `.light-cell` entrou na lista. A regra nao define radius nem border-width, entao a celula ganha superficie + blur do hub sem virar card |
+| 2 | "linha circular" | DOIS aneis: `.micro-icon` (28px) no cabecalho e `.zone-icon` (34px) em cada secao. Nao e o radial — ele e parte da receita exigida no item 1 | borda/fundo/raio zerados so dentro do `.lights-card`; glifo âmbar preservado |
+| 3 | chevron na borda direita | estava em `.lights-dock-actions`, com `space-between` | movido para dentro de `.lights-dock-id` |
+| 4 | recuo lateral grande | 3 recuos distintos (dock 14, scroll 12, celula 12 sobre coluna de 28) | unificados em 10px, coluna de icone 22px |
+| 5 | cabecalho preso na base | a rev.9 pos o corpo PRIMEIRO no DOM; com o card ancorado pelo `bottom`, a faixa ficava embaixo | faixa primeiro, corpo depois — o cabecalho viaja ate o topo ao abrir |
+| 6 | rotulos truncados + sobra a direita | cromo de 114px numa coluna de ~193px deixava 79px para o nome | cromo -> ~86px (icone 22, gap 8, toggle 34, padding 10) |
+| 8 | sem filete cabecalho/conteudo | so existia `.light-section + .light-section` | `.lights-card.is-open .lights-dock { border-bottom }` |
+| 9 | Office/Cozinha sem secao | interpretei "sem acao Apagar" como "sem secao" | uma secao unica, mesma composicao, sem a acao |
+
+`.light-section` NAO entrou em `BRUNO_SURFACE_CARTELA_GROUPS` de proposito: aquela
+regra desenha borda completa e transformaria cada secao numa caixa. A separacao
+entre secoes continua sendo filete.
+
+Arquivos: `core/bruno-surface-material.js` + as 6 subviews. Cache-bust
+`?v=20260729-lights-dock-2` (o `bruno-josh.js` nao mudou e ficou em `-1`).
+
+### REV.11 / REV.12 (2026-07-29) — o blur sai de novo; a REV.7 estava certa
+
+Duas regressoes minhas na mesma sessao, ambas por aplicar o mapa de tokens do
+card dinamico ao pe da letra:
+
+1. **REV.11 — radial.** Eu argumentei que a "linha circular" nao podia ser o
+   radial porque ele integra a receita do card dinamico. Errado: no print do
+   bloco aberto o arco atravessa o painel. Sem filtro, a rampa de alfa 0.105 ->
+   transparent exibe BANDING sobre superficie lisa, e os degraus viram arcos.
+   Textura mascara banding; superficie lisa denuncia. Radial removido.
+
+2. **REV.12 — blur.** A rev.9 reintroduziu `backdrop-filter` e escreveu no
+   modulo que a nota REV.7 estava errada. Nao estava. Este registro ja dizia
+   "NAO reintroduzir backdrop-filter aqui" e o motivo continua valendo: a
+   Iluminacao le como TRANSLUCIDA porque NAO filtra — a foto atras aparece
+   NITIDA, so escurecida pelo scrim. Blur destroi a textura e tudo vira painel
+   chapado. Voltou `filter: none` + scrim `rgba(0,0,0,0.300)`.
+
+**A distincao que faltava, e que fica como regra:** o mapa de tokens do card
+dinamico e referencia de COR e CONTORNO — borda `rgba(255,255,255,0.105)`,
+edge-glow opacidade `1.0`, sheen `0.13`, raio `20px`, sombra `none`, todos
+adotados e mantidos. NAO e referencia de FILTRO nem das camadas radiais. O mesmo
+valor de blur da resultado oposto porque o que fica ATRAS e diferente: na Home o
+card dinamico esta sobre o wallpaper da shell; na subview a cartela esta sobre a
+foto do comodo.
+
+Estado final da cartela: `linear-gradient(180deg, rgba(255,255,255,0.060),
+rgba(255,255,255,0.018) 48%, rgba(0,0,0,0.035)), rgba(0,0,0,0.300)` +
+`backdrop-filter: none` + borda 0.105 + edge 1.0 + sheen 0.13 + raio 20px.
+
+Cache-bust `?v=20260729-lights-dock-4` (josh + material).
+
+### QUARTA ocorrencia da crase (2026-07-29) — e o detector correto
+
+Na rev.13 escrevi, num comentario CSS dentro do template literal, o nome de uma
+regra entre CRASES. Resultado: as 6 subviews caíram com "Erro de configuração".
+
+Meus dois checks passaram, e por isso falharam:
+- paridade de crases no arquivo: a crase espuria vem em PAR (abre e fecha);
+- grep por linha usando palavras-chave do bloco novo: o texto com a crase estava
+  numa linha que nao continha nenhuma das palavras procuradas.
+
+**Detector correto** (scratchpad/crase.pl): varre o arquivo mantendo estado de
+"dentro de comentario /* */" e acusa QUALQUER crase ali dentro. Roda em todos os
+arquivos que montam CSS por template literal. Ele acusa tambem 12 falsos
+positivos conhecidos (o bloco `ANTERIOR (rollback)` de `_presenceLine`, que e
+comentario JS comum fora de template, nas 6 subviews) — esses sao inofensivos.
+
+REGRA: ao citar codigo em comentario nesses arquivos, usar aspas retas ou
+simplesmente descrever ("a regra .lights-card com padding de 14px"). NUNCA crase.
+
+### REV.14 (2026-08-01) - microblur Josh de 2px, com rollback cirurgico
+
+Objetivo aprovado: desfocar minimamente o wallpaper sob as superficies Josh,
+sem alterar transparencia, scrim, bordas, filetes, sheen, edge-glow ou geometria.
+A regra e uma unica amostragem por superficie principal; nunca empilhar blur no
+container e em seus filhos.
+
+Aplicacao:
+- cards Josh: `--bruno-liquid-card-filter` e estados on/off usam blur(2px),
+  preservando saturate, brightness e contrast ja existentes;
+- faixa da Home: somente `--bruno-strip-frame-filter` usa blur(2px); tiles
+  individuais continuam com filtro none;
+- faixa inferior das subviews: somente `main::before` consome
+  `--bruno-subview-band-filter: blur(2px)`; cards filhos continuam sem filtro;
+- cartela de Iluminacao: somente a cartela externa usa blur(2px);
+- filtros internos anteriores de 14px e 12px ficam none no Josh para impedir
+  borrado sobre borrado. Outros temas nao mudam.
+
+Rollback rapido, sem tocar em fills ou contornos:
+1. remover os overrides `bruno-liquid-card-filter`,
+   `bruno-liquid-surface-off-filter` e `bruno-liquid-surface-on-filter` de
+   `bruno-josh.js`;
+2. restaurar `bruno-strip-frame-filter` e `bruno-subview-cartela-filter` para
+   `none`, remover `bruno-subview-band-filter`, restaurar
+   `bruno-subview-tile-inner-filter` para `blur(14px) saturate(1.10)` e
+   `bruno-subview-cartela-inner-filter` para `blur(12px) saturate(1.08)`;
+3. em `bruno-surface-material.js`, remover somente as duas declaracoes de
+   backdrop-filter de `main::before`;
+4. reativar os resources anteriores anotados em `configuration.yaml`:
+   Josh `20260731-josh-syntax-fix-1` e material
+   `20260731-lights-grid-final-1`.
+
+### REV.15 (2026-08-01) - hierarquia interna e composicao dos cards dinamicos
+
+Objetivo aprovado: preservar integralmente o microblur externo de 2px da
+REV.14 e recuperar apenas a separacao visual das superficies internas do Hub
+de Midia e dos botoes de Iluminacao. Em paralelo, impedir que os cards
+dinamicos permaneçam dentro de um wrapper transformado apos a animacao.
+
+Aplicacao cirurgica:
+- `--bruno-subview-tile-inner-filter` voltou para
+  `blur(14px) saturate(1.10)`; os seletores continuam limitados aos agrupadores
+  internos mapeados por `BRUNO_SURFACE_BAND_INNER`;
+- `--bruno-subview-cartela-inner-filter` voltou para
+  `blur(12px) saturate(1.08)`; somente `.zl-tile`, `.light-row` e `.light-cell`
+  consomem esse nivel;
+- filtros externos `bruno-strip-frame-filter`, `bruno-subview-band-filter` e
+  `bruno-subview-cartela-filter` permanecem em 2px, sem alteracao de fill,
+  scrim, borda, filete, sheen, edge-glow ou geometria;
+- `bruno-activity-column.js` remove `is-entering` 40ms depois do fim nominal
+  da animacao. Assim o `transform` com fill-mode `both` nao permanece como
+  camada de composicao sobre os cards dinamicos.
+
+Rollback rapido desta revisao, sem tocar na REV.14:
+1. em `bruno-josh.js`, devolver somente os dois tokens internos para `none`;
+2. em `bruno-activity-column.js`, remover `BRUNO_ACTIVITY_COLUMN_ENTER_MS`,
+   `_enterTimers` e o timer de limpeza; devolver a animacao para `260ms`;
+3. reativar em `configuration.yaml` os resources
+   `20260801-josh-microblur-1` e `20260725-home-v2-7`.
+
+### REV.16 (2026-08-01) - botoes de luz com o material dos controles do A/C
+
+Objetivo aprovado: corrigir somente as superficies dos botoes de luz nas
+subviews Josh, mantendo intactos o microblur externo de 2px, os cards
+dinamicos, a faixa de comodos, os cards externos, dimensoes, gaps e funcoes.
+
+Aplicacao:
+- os tokens `--bruno-subview-cartela-inner-*` apontam para o mesmo pacote
+  `--bruno-liquid-control-*` consumido por `.ac-action`;
+- a regra central de `.zl-tile`, `.light-row` e `.light-cell` passa a consumir
+  background, filtro, borda completa, raio compacto e sombra desse pacote;
+- a regra continua limitada ao Josh pelo atributo
+  `data-bruno-subview-surface-theme="josh"`; nenhum outro tema muda;
+- nenhuma das seis subviews foi editada individualmente.
+
+Rollback rapido:
+1. reativar os resources `20260801-josh-inner-hierarchy-1` e
+   `20260801-josh-microblur-1` anotados em `configuration.yaml`;
+2. em `bruno-josh.js`, restaurar os tokens internos registrados na REV.15;
+3. em `bruno-surface-material.js`, remover apenas `border` e `border-radius`
+   da regra central `cartelaInner`, preservando `border-color` e `box-shadow`.
+
+### REV.17 (2026-08-01) - backdrop root da Iluminacao
+
+Diagnostico confirmado: os botoes de luz e os controles do A/C ja consumiam o
+mesmo pacote `--bruno-liquid-control-*`, mas estavam em hierarquias de
+composicao diferentes. O `backdrop-filter: blur(2px)` aplicado diretamente na
+cartela externa da Iluminacao criava um backdrop root. Com isso, o filtro forte
+dos botoes internos nao conseguia amostrar a foto do comodo; no A/C, cujo tile
+externo nao tem filtro ancestral, a mesma receita produzia o fosco correto.
+
+Correcao cirurgica em `bruno-surface-material.js`:
+- a cartela externa mantem background, borda, raio, sombra e transparencia;
+- o filtro direto do ancestral passa a `none`;
+- o pseudo-elemento `::after`, antes desativado por gerar o arco de edge-glow,
+  vira um plano retangular transparente atras do conteudo e recebe somente o
+  microblur externo de 2px;
+- o sheen permanece acima desse plano e o conteudo acima de ambos;
+- os botoes continuam usando o pacote completo do A/C, agora sem o bloqueio do
+  backdrop root.
+
+Nao houve alteracao em `bruno-josh.js`, A/C, faixa inferior, geometria, gaps,
+funcoes ou arquivos individuais das subviews.
+
+Rollback rapido: reativar o resource
+`20260801-light-control-material-1` anotado em `configuration.yaml`. Isso volta
+somente a REV.16; todos os tokens e ajustes anteriores permanecem preservados.
+
+### REV.18 (2026-08-02) - material Josh nos popups
+
+Objetivo aprovado: aplicar aos popups Sistema, Rede, Cenas, Config e Lavabo o
+mesmo pacote visual dos cards Josh, sem alterar geometria, posicionamento,
+scrim, imagens, conteudo ou comportamento.
+
+Aplicacao:
+- `bruno-josh.js` expoe aliases `--bruno-josh-popup-*` que apontam diretamente
+  para o pacote aprovado `--bruno-liquid-surface-off-*`; nao ha copia de RGBA;
+- `bruno-shell.js` marca o overlay com `data-bruno-popup-theme="josh"` e aplica
+  o material somente aos paineis Config, Sistema, Rede e Cenas. Spotify e o
+  popup autonomo de Updates ficam fora desse escopo;
+- superficies internas continuam consumindo `--bruno-liquid-control-*`;
+- `bruno-lavabo-card.js`, por usar Shadow DOM e `<dialog>` nativo, possui uma
+  ponte local Josh equivalente; foto e shade do banner permanecem intactos;
+- cenas preservam integralmente suas imagens e recebem apenas o contorno do
+  pacote de controles.
+
+Invariantes: nao editar cards dinamicos, subviews, faixa da Home, shell,
+dimensoes dos popups ou handlers para calibrar esse material.
+
+Rollback rapido:
+1. reativar em `configuration.yaml` os seis resources anteriores anotados para
+   Josh, Shell, Sistema, Rede, Cenas e Lavabo;
+2. remover somente os aliases `--bruno-josh-popup-*`, os seletores Josh do
+   overlay compartilhado e a ponte local do dialog do Lavabo.

@@ -254,7 +254,7 @@ class BrunoMobileCamerasListCard extends HTMLElement {
             linear-gradient(155deg, rgba(11,16,27,0.96), rgba(4,7,14,0.96));
         }
 
-        .placeholder ha-icon {
+        .placeholder bruno-icon {
           --mdc-icon-size: 42px;
         }
 
@@ -319,7 +319,7 @@ class BrunoMobileCamerasListCard extends HTMLElement {
           text-transform: uppercase;
         }
 
-        .open-chip ha-icon {
+        .open-chip bruno-icon {
           --mdc-icon-size: 13px;
         }
       </style>
@@ -328,13 +328,13 @@ class BrunoMobileCamerasListCard extends HTMLElement {
         ${cameras.map((camera) => `
           <button class="${camera.online ? 'is-online ' : ''}${camera.image ? 'has-image' : ''}" type="button" data-camera-card="${BrunoMobileCamerasListCard._escapeAttr(camera.entity)}" data-camera-button="${BrunoMobileCamerasListCard._escapeAttr(camera.entity)}" aria-label="${BrunoMobileCamerasListCard._escapeAttr(camera.name)}">
             ${camera.image ? `<img class="camera-image" src="${BrunoMobileCamerasListCard._escapeAttr(camera.imageUrl)}" data-camera-src-base="${BrunoMobileCamerasListCard._escapeAttr(camera.image)}" alt="">` : ''}
-            <div class="placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></div>
+            <div class="placeholder" aria-hidden="true"><bruno-icon icon="mdi:video-outline"></bruno-icon></div>
             <div class="meta">
               <span>
                 <span class="name">${BrunoMobileCamerasListCard._escape(camera.name)}</span>
                 <span class="status"><span class="status-dot${camera.online ? ' is-online' : ''}"></span>${BrunoMobileCamerasListCard._escape(camera.status)}</span>
               </span>
-              <span class="open-chip"><ha-icon icon="mdi:eye"></ha-icon>Abrir</span>
+              <span class="open-chip"><bruno-icon icon="mdi:eye"></bruno-icon>Abrir</span>
             </div>
           </button>
         `).join('')}

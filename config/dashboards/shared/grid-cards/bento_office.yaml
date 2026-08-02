@@ -15,13 +15,11 @@ triggers_update:
   - climate.ac_office
   - media_player.echo_pop_office
   - person.bruno_helasio
-  - sensor.of_sensor_temp_humid_temperatura
-  - sensor.of_sensor_temp_humid_umidade
+  - sensor.sensor_4_in_1_office_temperature
+  - sensor.sensor_4_in_1_office_humidity
   # NOVO: PIR tratado como presença/mmWave + sensores HASS.Agent.
-  - binary_sensor.of_sensor_presenca_movimento
-  - sensor.of_sensor_presenca_iluminancia
-  - sensor.of_sensor_presenca_bateria
-  - event.of_sensor_presenca_device_notifications
+  - binary_sensor.sensor_4_in_1_office_presence
+  - sensor.sensor_4_in_1_office_illuminance
   - sensor.desktop_melg9vv_office_pc_session_state
   - sensor.desktop_melg9vv_office_pc_idle_time
   - sensor.desktop_melg9vv_office_pc_active_window
@@ -252,8 +250,8 @@ custom_fields:
         return null;
       };
       // ANTERIOR: priorizava sensores genericos/legados de temperatura e umidade do Office.
-      const t = firstValid(['sensor.of_sensor_temp_humid_temperatura', 'sensor.temperatura_office', 'sensor.office_temperatura', 'sensor.of_temperatura']);
-      const h = firstValid(['sensor.of_sensor_temp_humid_umidade', 'sensor.umidade_office', 'sensor.office_umidade', 'sensor.of_umidade']);
+      const t = firstValid(['sensor.sensor_4_in_1_office_temperature']);
+      const h = firstValid(['sensor.sensor_4_in_1_office_humidity']);
       if (!t) return '';
       const color = variables.state_on ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)';
       const subColor = variables.state_on ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.5)';

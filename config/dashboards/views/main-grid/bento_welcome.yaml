@@ -1,8 +1,8 @@
 type: custom:bruno-hero-card
 view_layout:
   grid-area: welcome
-background: /local/images/home_savant.jpg
-fallback_background: /local/images/home.jpg
+background: /local/images/home_savant.jpg?v=20260702-all-images-1
+fallback_background: /local/images/home.jpg?v=20260702-all-images-1
 entities:
   time: sensor.time
   weather: weather.forecast_casa
@@ -78,7 +78,7 @@ cameras:
 #           rgba(11, 22, 35, 0.20) 54%,
 #           rgba(11, 22, 35, 0.00) 70%
 #         ),
-#         url('/local/images/home_color.jpg') center / cover no-repeat !important;
+#         url('/local/images/home_color.jpg?v=20260702-all-images-1') center / cover no-repeat !important;
 #       backdrop-filter: blur(20px) saturate(1.35) !important;
 #       -webkit-backdrop-filter: blur(20px) saturate(1.35) !important;
 #       border: 1px solid rgba(255,255,255,0.10) !important;

@@ -1,4 +1,9 @@
 type: custom:bruno-home-camera-card
 view_layout:
   grid-area: camera
+  # NOVO (2026-07-09) — Fase 2 mobile: oculto no phone (<=800px); as cameras tem
+  # acesso direto pelo dock. Linha "camera" vira 0px no bloco phone da
+  # section_home. ROLLBACK: remover o bloco show abaixo.
+  show:
+    mediaquery: '(min-width: 801px)'
 

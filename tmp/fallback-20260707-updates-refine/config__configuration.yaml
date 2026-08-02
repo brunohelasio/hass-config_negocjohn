@@ -1,0 +1,117 @@
+#
+#     ______            _____                        __  _
+#    / ____/___  ____  / __(_)___ ___  ___________ _/ /_(_)___  ____
+#   / /   / __ \/ __ \/ /_/ / __ `/ / / / ___/ __ `/ __/ / __ \/ __ \
+#  / /___/ /_/ / / / / __/ / /_/ / /_/ / /  / /_/ / /_/ / /_/ / / / /
+#  \____/\____/_/ /_/_/ /_/\__, /\__,_/_/   \__,_/\__/_/\____/_/ /_/
+#                         /____/
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+  extra_module_url:
+    - /local/bento-sidebar-card.js?v=20260703-theme-config-1
+    - /local/bruno-ui/core/bruno-shell.js?v=20260707-updates-panel-1
+    - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260702-liquid-yaml-2
+    - /local/bruno-ui/core/bruno-visionos.js?v=20260703-theme-config-1
+    - /local/bruno-ui/core/bruno-theme-manager.js?v=20260703-theme-config-1
+    - /local/bruno-ui/core/bruno-updates-panel.js?v=20260707-updates-panel-1
+    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260704-camera-live-1
+    - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260704-camera-live-1
+    - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260704-cozinha-arrayfix-1
+    - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260704-camera-live-1
+    - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260704-marina-climate-1
+    - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260704-camera-live-1
+    - /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260704-camera-clean-1
+    - /local/bruno-ui/subviews/bruno-roborock-subview.js?v=20260702-roborock-shell-ruler-1
+    # Planta 3D interativa na bruno-shell. Fallback: remover esta linha e voltar
+    # o item floorplan da rail para shared/popup/planta_3d.yaml.
+    - /local/bruno-ui/subviews/bruno-planta-3d-subview.js?v=20260705-floorplan-lights-8
+    # ORIGINAL: - /local/bruno-ui/cards/bruno-sala-card.js?v=20260608-sala-command-list-1
+    # ANTERIOR: ?v=20260703-presence-uniform-2
+    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260704-semantic-sync-1
+    # ORIGINAL: - /local/bruno-ui/cards/bruno-office-card.js?v=20260608-room-assets-uniform-1
+    # ANTERIOR: ?v=20260703-presence-logic-1
+    - /local/bruno-ui/cards/bruno-office-card.js?v=20260703-presence-uniform-2
+    # ANTERIOR (2026-07-03): ?v=20260702-all-images-1 nos 5 cards abaixo.
+    # NOVO: bump para presence-uniform-1 (molde unico de presenca/ocupacao + alinhamento padrao Office).
+    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260704-room-state-1
+    # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-1 (popup quebrado: _escapeAttr ausente + fixed clipado).
+    # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-2 (fix botao + popup <dialog> centralizado).
+    # NOVO: popup ancorado ao botao + backdrop suave + banner lavabo.jpg com bordas atmosfericas.
+    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260705-lavabo-definitive-3
+    # ORIGINAL (cache stale no tablet — JS antigo com icone 92/80px): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260611-room-nav-1
+    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260704-semantic-sync-1
+    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260704-semantic-sync-1
+    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260704-semantic-sync-1
+    - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260704-camera-clean-1
+    - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260702-all-images-1
+    - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260704-camera-click-1
+    - /local/bruno-ui/cards/bruno-energy-card.js?v=20260701-home-header-1
+    - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260518-3
+    - /local/bruno-ui/cards/bruno-hero-stage-card.js?v=20260702-all-images-1
+    - /local/bruno-ui/cards/bruno-hero-card.js?v=20260702-all-images-1
+    - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260706-status-actions-2
+    - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260627-fullbleed-dock54-4
+    - /local/bruno-ui/cards/bruno-media-card.js?v=20260702-all-images-1
+    - /local/bruno-ui/cards/bruno-mobile-card-frame.js?v=20260518-1
+    - /local/bruno-ui/cards/bruno-mobile-nav-card.js?v=20260518-2
+    - /local/bruno-ui/cards/bruno-mobile-rooms-card.js?v=20260518-1
+    - /local/bruno-ui/cards/bruno-mobile-sala-card.js?v=20260608-sala-shift-1
+    - /local/bruno-ui/cards/bruno-mobile-cameras-list-card.js?v=20260518-1
+
+homeassistant:
+  # ANTERIOR: customize: !include customize.yaml
+  # Mantido inline para evitar falha de boot quando /config/customize.yaml não existe
+  # no ambiente de execução do Home Assistant.
+  customize:
+    input_boolean.bento_cameras_page_2:
+      hidden: true
+  packages:
+    active_player: !include packages/active_player.yaml
+    hass_sidebar_helpers: !include packages/hassio/hass_sidebar_helpers.yaml
+    energy_estimated: !include packages/energy_estimated.yaml
+    # ANTERIOR: kitchen_appliances: !include packages/kitchen_appliances.yaml
+    # Comentado para evitar falha de check_config quando o arquivo ainda não
+    # existe no /config do Home Assistant em produção. Reativar quando o
+    # package estiver confirmado no host.
+    # kitchen_appliances: !include packages/kitchen_appliances.yaml
+    sala_tv_controls: !include packages/sala_tv_controls.yaml
+    # NOVO: camada lógica do Office (PIR/mmWave + HASS.Agent).
+    # FALLBACK: comentar esta linha para voltar ao Office anterior.
+    office_presence: !include packages/office_presence.yaml
+    # NOVO: camada local da Sala para diferenciar passagem de ocupacao real.
+    # FALLBACK: comentar esta linha para voltar ao uso direto do sensor 4-in-1.
+    sala_presence: !include packages/sala_presence.yaml
+    # NOVO: camada logica do Lavabo usando sensor lv_sensor_presenca_*.
+    lavabo_presence: !include packages/lavabo_presence.yaml    # NOVO: camada local do Q. Marina seguindo a mesma logica da Sala.
+    q_marina_presence: !include packages/q_marina_presence.yaml
+    # NOVO (2026-07-03): molde unico de presenca/ocupacao para os demais comodos.
+    # FALLBACK: comentar as linhas abaixo para voltar ao uso direto do sensor bruto.
+    cozinha_presence: !include packages/cozinha_presence.yaml
+    q_miguel_presence: !include packages/q_miguel_presence.yaml
+    q_casal_presence: !include packages/q_casal_presence.yaml
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+lovelace:
+  mode: storage
+  dashboards:
+    ngocjohn-main:
+      mode: yaml
+      title: Ngocjohn Main
+      icon: mdi:home-automation
+      show_in_sidebar: true
+      filename: dashboards/ui-lovelace-main.yaml
+    
+    # --- NOVO DASHBOARD DE TESTE ---
+    homekitesq-teste:
+      mode: yaml
+      title: Teste HomeKit
+      icon: mdi:tablet-dashboard
+      show_in_sidebar: true
+      filename: lovelace-homekitesq.yaml

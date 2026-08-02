@@ -1,0 +1,101 @@
+# ===========================================================================
+# Pacote: cozinha_presence (NOVO 2026-07-03 — molde unico de presenca/ocupacao)
+# Objetivo: replicar na Cozinha a camada logica padronizada.
+#
+# - Motion Recent (L1): presenca imediata — espelho do sensor bruto, so para o dot.
+# - Occupancy (L2): ocupacao real — presenca sustentada + trava de contexto.
+# - Semantic State (L3): texto "Ocupada" exibido sob o titulo do card.
+#
+# Regra funcional (definida pelo usuario em 2026-07-03):
+# - Presenca: liga IMEDIATAMENTE na deteccao; apaga rapido na saida (fading do
+#   sensor ~30s + 5s de anti-flicker).
+# - Ocupacao: exige permanencia (delay_on) e/ou contexto; gera o texto semantico.
+#
+# FALLBACK RAPIDO:
+# - Remover/comentar `cozinha_presence: !include packages/cozinha_presence.yaml`
+#   em configuration.yaml para voltar ao uso direto do sensor 4-in-1.
+# ===========================================================================
+
+template:
+  - binary_sensor:
+      - name: Cozinha Motion Recent
+        unique_id: cozinha_motion_recent
+        device_class: motion
+        icon: mdi:account
+        # NOVO (2026-07-12): falha/cache nao pode virar OFF/ON valido.
+        availability: >-
+          {{ is_state('sensor.cozinha_presence_health', 'ok') }}
+        state: >-
+          {{ is_state('binary_sensor.sensor_4_in_1_cozinha_presence', 'on') }}
+        delay_off:
+          seconds: 5
+        attributes:
+          source_entity: binary_sensor.sensor_4_in_1_cozinha_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_cozinha_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_cozinha_illuminance') }}"
+          semantic_role: passage_indicator
+          fallback_note: "Presenca imediata: espelho do sensor bruto, apenas para o dot."
+
+      - name: Cozinha Occupancy
+        unique_id: cozinha_occupancy
+        device_class: occupancy
+        icon: mdi:account
+        availability: >-
+          {{ is_state('sensor.cozinha_presence_health', 'ok') }}
+        # ANTERIOR (2026-07-04, trava de contexto — REMOVIDA): com a lava-loucas
+        # rodando (ciclos de ~2h), a ocupacao ficaria presa em "Ocupada" com a
+        # cozinha vazia (mesmo defeito confirmado no Q. Miguel com o AC).
+        # state: >-
+        #   {% set presence = is_state('binary_sensor.sensor_4_in_1_cozinha_presence', 'on') %}
+        #   {% set dishwasher_on = is_state('sensor.lava_loucas_operation_state', 'run') %}
+        #   {% set context = dishwasher_on %}
+        #   {{ presence or (is_state('binary_sensor.cozinha_occupancy', 'on') and context) }}
+        # NOVO: ocupacao = SOMENTE presenca sustentada (padrao validado na Marina).
+        # Cozinha: confirmacao mais rapida (45s) e liberacao curta (120s).
+        state: >-
+          {{ is_state('binary_sensor.sensor_4_in_1_cozinha_presence', 'on') }}
+        delay_on:
+          seconds: 45
+        delay_off:
+          seconds: 120
+        attributes:
+          source_entity: binary_sensor.sensor_4_in_1_cozinha_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_cozinha_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_cozinha_illuminance') }}"
+          semantic_role: real_occupancy
+          fallback_note: "Ocupacao real: somente presenca sustentada (45s liga / 120s solta)."
+
+  - sensor:
+      - name: Cozinha Semantic State
+        unique_id: cozinha_semantic_state
+        # ANTERIOR (2026-07-04): texto seguia so a ocupacao (ficava visivel apos o
+        # dot apagar — contradicao observada no teste do usuario). NOVO: exige
+        # presenca ativa junto; cozinha_occupancy mantem a liberacao para automacoes.
+        icon: >-
+          {% if is_state('binary_sensor.cozinha_occupancy', 'on') and is_state('binary_sensor.cozinha_motion_recent', 'on') %}
+            mdi:account
+          {% else %}
+            mdi:silverware-fork-knife
+          {% endif %}
+        state: >-
+          {% if is_state('binary_sensor.cozinha_occupancy', 'on') and is_state('binary_sensor.cozinha_motion_recent', 'on') %}
+            occupied
+          {% else %}
+            none
+          {% endif %}
+        attributes:
+          display: >-
+            {% if is_state('binary_sensor.cozinha_occupancy', 'on') and is_state('binary_sensor.cozinha_motion_recent', 'on') %}
+              Ocupada
+            {% else %}
+
+            {% endif %}
+          priority: >-
+            {% if is_state('binary_sensor.cozinha_occupancy', 'on') and is_state('binary_sensor.cozinha_motion_recent', 'on') %}1
+            {% else %}0
+            {% endif %}
+          motion_recent: "{{ states('binary_sensor.cozinha_motion_recent') }}"
+          occupancy: "{{ states('binary_sensor.cozinha_occupancy') }}"
+          source_entity: binary_sensor.sensor_4_in_1_cozinha_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_cozinha_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_cozinha_illuminance') }}"

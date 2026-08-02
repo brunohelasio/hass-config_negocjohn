@@ -61,8 +61,8 @@ const BRUNO_ROBOROCK_SUBVIEW_DEFAULTS = {
     card_mod: {
       style: `
         ha-card {
-          height: calc(100vh - 182px) !important;
-          max-height: calc(100vh - 182px) !important;
+          height: calc(100vh - 146px) !important;
+          max-height: calc(100vh - 146px) !important;
           overflow: hidden !important;
           --map-card-primary-color: #FFFFFF30;
           --map-card-secondary-color: #FFFFFF10;
@@ -74,7 +74,7 @@ const BRUNO_ROBOROCK_SUBVIEW_DEFAULTS = {
           box-shadow: none !important;
         }
         div.map-wrapper {
-          max-height: calc(100vh - 290px) !important;
+          max-height: calc(100vh - 254px) !important;
           padding: 0.35rem 0 0.25rem !important;
         }
         div.controls-wrapper { padding-top: 0; padding-bottom: 0; margin: 0; }
@@ -82,6 +82,35 @@ const BRUNO_ROBOROCK_SUBVIEW_DEFAULTS = {
         xvmc-zoom-buttons { display: none !important; }
         paper-button { --mdc-icon-size: 1.35em; color: #9da0a2 !important; padding: 0.32em; }
         #map-image { filter: brightness(0.85); }
+
+        /* NOVO (2026-07-22) — consolidacao mobile: o mapa deixa de herdar a
+           altura desktop baseada em 100vh e passa a respeitar o slot 1-coluna
+           com aspecto definido pela subview. As regras acima ficam como
+           ANTERIOR (rollback) para desktop/tablet. */
+        @media (max-width: 800px) {
+          ha-card {
+            height: 100% !important;
+            max-height: 100% !important;
+            min-height: 0 !important;
+          }
+          div.map-wrapper {
+            height: auto !important;
+            /* ANTERIOR (rollback 2026-07-22): reservava apenas 84px para os
+               controles nativos; no phone a segunda faixa ficava cortada.
+               max-height: calc(100% - 84px) !important; */
+            max-height: calc(100% - 112px) !important;
+          }
+          div.controls-wrapper {
+            position: static !important;
+            height: auto !important;
+            min-height: 96px;
+            overflow: visible !important;
+          }
+          div.map-controls-wrapper {
+            box-sizing: border-box;
+            margin-bottom: 4px;
+          }
+        }
       `,
     },
   },
@@ -183,7 +212,7 @@ class BrunoRoborockSubview extends HTMLElement {
       <main class="rb-shell">
         <header class="rb-header">
           <button class="rb-back" type="button" data-action="navigate-home" aria-label="Voltar">
-            <ha-icon icon="mdi:arrow-left"></ha-icon>
+            <bruno-icon icon="mdi:arrow-left"></bruno-icon>
           </button>
           <div class="rb-brand">
             <span class="rb-brand-main">${BrunoRoborockSubview._esc(this._config.title)}</span>
@@ -208,6 +237,10 @@ class BrunoRoborockSubview extends HTMLElement {
               <span class="rb-battery" data-bind="battery">--</span>
             </div>
 
+            <!-- NOVO (2026-07-22) — consolidacao mobile:
+                 wrapper neutro no desktop; no phone agrupa os detalhes que
+                 passam para depois do mapa. O conteudo original foi preservado. -->
+            <div class="rb-summary-details">
             <div class="rb-rows">
               ${BrunoRoborockSubview._infoRow('Erro', 'error')}
               ${BrunoRoborockSubview._infoRow('Cômodo Atual', 'room')}
@@ -229,16 +262,17 @@ class BrunoRoborockSubview extends HTMLElement {
               ${BrunoRoborockSubview._infoRow('Filtro', 'filter')}
               ${BrunoRoborockSubview._infoRow('Sensor', 'sensor_life')}
             </div>
+            </div>
 
             <div class="rb-controls">
               <button class="rb-ctrl" type="button" data-action="play-pause">
-                <ha-icon icon="mdi:play-pause"></ha-icon><span data-bind="play-label">Iniciar</span>
+                <bruno-icon icon="mdi:play-pause"></bruno-icon><span data-bind="play-label">Iniciar</span>
               </button>
               <button class="rb-ctrl" type="button" data-action="return-base">
-                <ha-icon icon="mdi:home-map-marker"></ha-icon><span>Base</span>
+                <bruno-icon icon="mdi:home-map-marker"></bruno-icon><span>Base</span>
               </button>
               <button class="rb-ctrl" type="button" data-action="locate">
-                <ha-icon icon="mdi:map-marker"></ha-icon><span>Localizar</span>
+                <bruno-icon icon="mdi:map-marker"></bruno-icon><span>Localizar</span>
               </button>
             </div>
           </section>
@@ -270,7 +304,7 @@ class BrunoRoborockSubview extends HTMLElement {
 
         <footer class="rb-footer">
           <span class="rb-foot-note">
-            <ha-icon icon="mdi:robot-vacuum" aria-hidden="true"></ha-icon>
+            <bruno-icon icon="mdi:robot-vacuum" aria-hidden="true"></bruno-icon>
             <span data-bind="foot">Roborock S7</span>
           </span>
         </footer>
@@ -601,7 +635,7 @@ class BrunoRoborockSubview extends HTMLElement {
         /* NOVO (ajuste 1): topo (altura das badges) / conteudo / rodape (altura
            da barra de acoes da Home) — igual as Cameras. As faixas de topo e
            base ficam reservadas; o conteudo NAO invade a base. */
-        grid-template-rows: 64px minmax(0, 1fr) 74px;
+        grid-template-rows: 48px minmax(0, 1fr) 54px;
         gap: 10px;
       }
 
@@ -621,7 +655,7 @@ class BrunoRoborockSubview extends HTMLElement {
         font-weight: 560;
         letter-spacing: 0.02em;
       }
-      .rb-foot-note ha-icon { --mdc-icon-size: 16px; color: rgba(226,232,240,0.5); flex: 0 0 auto; }
+      .rb-foot-note bruno-icon { --mdc-icon-size: 16px; color: rgba(226,232,240,0.5); flex: 0 0 auto; }
 
       /* Header transparente (igual as demais subviews) */
       .rb-header {
@@ -633,6 +667,8 @@ class BrunoRoborockSubview extends HTMLElement {
         background: transparent;
       }
       .rb-back {
+        visibility: hidden;
+        pointer-events: none;
         width: 36px; height: 36px; display: grid; place-items: center;
         border: none; background: transparent; border-radius: 999px;
         color: rgba(226,232,240,0.82); transition: background 160ms ease;
@@ -666,6 +702,10 @@ class BrunoRoborockSubview extends HTMLElement {
       .rb-col { padding: 14px; display: flex; flex-direction: column; gap: 10px; overflow: auto; scrollbar-width: none; }
       .rb-col::-webkit-scrollbar { display: none; }
       .rb-col-title { font-size: 12px; font-weight: 760; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(226,232,240,0.62); }
+
+      /* NOVO (2026-07-22) — consolidacao mobile:
+         o wrapper nao altera a composicao desktop/tablet. */
+      .rb-summary-details { display: contents; }
 
       .rb-map { padding: 8px; overflow: hidden; }
       .rb-map-slot { width: 100%; height: 100%; min-height: 0; border-radius: 16px; overflow: hidden; }
@@ -737,13 +777,149 @@ class BrunoRoborockSubview extends HTMLElement {
         font-size: 10.5px; font-weight: 700;
         transition: background 160ms ease, border-color 160ms ease, transform 120ms ease;
       }
-      .rb-ctrl ha-icon { --mdc-icon-size: 22px; }
+      .rb-ctrl bruno-icon { --mdc-icon-size: 22px; }
       .rb-ctrl:hover, .rb-ctrl:focus-visible { border-color: rgba(var(--rb-accent),0.5); background: rgba(var(--rb-accent),0.16); outline: none; }
       .rb-ctrl:active { transform: translateY(1px) scale(0.985); }
 
       @media (max-width: 1100px) {
         .rb-body { grid-template-columns: 280px minmax(0,1fr); }
         .rb-settings { grid-column: 1 / -1; }
+      }
+
+      /* NOVO (2026-07-22) — consolidacao mobile.
+         As regras desktop/tablet anteriores permanecem acima para rollback.
+         No phone, a shell externa e a unica proprietaria do scroll vertical. */
+      @media (max-width: 800px) {
+        :host {
+          height: auto;
+          min-height: 0;
+          overflow: visible;
+        }
+
+        .rb-shell {
+          height: auto;
+          min-height: 0;
+          grid-template-rows: 44px auto 34px;
+          gap: 8px;
+          overflow: visible;
+          padding-bottom: max(0px, env(safe-area-inset-bottom));
+        }
+
+        .rb-header {
+          min-height: 44px;
+          grid-template-columns: 32px minmax(0, 1fr) auto;
+          gap: 8px;
+          padding: 0 4px;
+        }
+
+        .rb-brand {
+          justify-content: flex-start;
+          gap: 6px;
+          font-size: 12px;
+        }
+
+        .rb-clock { font-size: 11px; }
+        .rb-clock small { font-size: 9px; }
+
+        .rb-body {
+          min-height: 0;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+          grid-auto-rows: auto;
+          gap: 10px;
+          overflow: visible;
+        }
+
+        /* A summary deixa de ser uma coluna unica apenas no phone. Assim,
+           status e comandos podem vir antes do mapa, sem duplicar entidades. */
+        .rb-summary {
+          display: contents;
+        }
+
+        .rb-status {
+          order: 1;
+          min-height: 68px;
+          padding: 12px 14px;
+          border-radius: 18px;
+          background: var(--bruno-liquid-surface-off-background, rgba(8,12,20,0.44));
+          border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.13));
+          box-shadow: var(--bruno-liquid-surface-off-shadow, 0 18px 44px rgba(0,0,0,0.27));
+          backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.6));
+          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.6));
+        }
+
+        .rb-controls {
+          order: 2;
+          margin-top: 0;
+          padding: 10px;
+          border-radius: 18px;
+          background: var(--bruno-liquid-surface-off-background, rgba(8,12,20,0.44));
+          border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.13));
+          box-shadow: var(--bruno-liquid-surface-off-shadow, 0 18px 44px rgba(0,0,0,0.27));
+          backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.6));
+          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.6));
+        }
+
+        .rb-ctrl {
+          min-height: 56px;
+          height: 56px;
+        }
+
+        .rb-map {
+          order: 3;
+          width: min(100%, 560px);
+          height: auto;
+          /* ANTERIOR (rollback 2026-07-22): 1 / 1.08 mantinha o mapa grande,
+             mas nao deixava altura para os controles inferiores completos.
+             aspect-ratio: 1 / 1.08; */
+          aspect-ratio: 5 / 6;
+          justify-self: center;
+          padding: 7px;
+          overflow: hidden;
+        }
+
+        .rb-map-slot,
+        .rb-map-slot > * {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+        }
+
+        .rb-summary-details {
+          order: 4;
+          min-width: 0;
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          overflow: visible;
+          border-radius: var(--bruno-liquid-card-radius, 24px);
+          background: var(--bruno-liquid-surface-off-background, rgba(8,12,20,0.44));
+          border: var(--bruno-liquid-surface-off-border, 1px solid rgba(255,255,255,0.13));
+          box-shadow: var(--bruno-liquid-surface-off-shadow, 0 18px 44px rgba(0,0,0,0.27));
+          backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.6));
+          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, blur(32px) saturate(1.6));
+        }
+
+        .rb-settings {
+          order: 5;
+          grid-column: auto;
+        }
+
+        .rb-col,
+        .rb-settings {
+          height: auto;
+          max-height: none;
+          overflow: visible;
+        }
+
+        .rb-footer {
+          min-height: 34px;
+          height: 34px;
+          padding: 0 8px;
+        }
+
+        .rb-foot-note { font-size: 11px; }
       }
     `;
   }

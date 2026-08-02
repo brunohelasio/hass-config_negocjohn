@@ -1,0 +1,54 @@
+# HOME V2 — Hero com protagonismo (hero_layout: 'v2').
+# Mesma config do wrapper V1 (views/main-grid/bento_welcome.yaml), acrescida
+# do flag hero_layout que ativa no bruno-hero-card:
+#   - tipografia ampliada (data/saudacao/relogio/clima);
+#   - agenda INTEGRADA na coluna do headline, abaixo do clima.
+# O wrapper V1 permanece intacto — a Home V1 nao muda.
+# ROLLBACK: trocar o include em section_home_v2.yaml de volta para
+# ../main-grid/bento_welcome.yaml (ou remover a linha hero_layout abaixo).
+type: custom:bruno-hero-card
+view_layout:
+  grid-area: welcome
+hero_layout: v2
+background: /local/images/home_savant.jpg?v=20260702-all-images-1
+fallback_background: /local/images/home.jpg?v=20260702-all-images-1
+entities:
+  time: sensor.time
+  weather: weather.forecast_casa
+  sun: sun.sun
+calendar:
+  compact_events_to_show: 3
+  calendars:
+    - entity: calendar.brunohelasio_gmail_com
+      name: Bruno
+      color: "#7fdbe9"
+    - entity: calendar.familia
+      name: Familia
+      color: "#fdd835"
+    - entity: calendar.birthdays
+      name: Aniversarios
+      color: "#ff6c92"
+    - entity: calendar.feriados_no_brasil
+      name: Feriados
+      color: "#1DB954"
+  popup_calendars:
+    - calendar.brunohelasio_gmail_com
+    - calendar.familia
+    - calendar.feriados_no_brasil
+cameras:
+  show: false
+  active_entity: input_select.bento_active_camera
+  limit: 4
+  items:
+    - entity: camera.sl_camera_2
+      name: Sala
+      short_name: Sala
+    - entity: camera.vr_camera_2
+      name: Varanda
+      short_name: Varanda
+    - entity: camera.cz_camera_2
+      name: Cozinha
+      short_name: Cozinha
+    - entity: camera.as_camera_2
+      name: Area de Servico
+      short_name: Area

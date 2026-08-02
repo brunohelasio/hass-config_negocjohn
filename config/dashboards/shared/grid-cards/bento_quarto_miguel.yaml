@@ -78,8 +78,8 @@ custom_fields:
         }
         return null;
       };
-      const t = firstValid(['sensor.temperatura_quarto_miguel', 'sensor.qmi_temperatura']);
-      const h = firstValid(['sensor.umidade_quarto_miguel', 'sensor.qmi_umidade']);
+      const t = firstValid(['sensor.sensor_4_in_1_q_miguel_temperature', 'sensor.temperatura_quarto_miguel', 'sensor.qmi_temperatura']);
+      const h = firstValid(['sensor.sensor_4_in_1_q_miguel_humidity', 'sensor.umidade_quarto_miguel', 'sensor.qmi_umidade']);
       if (!t) return '';
       const color = variables.state_on ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)';
       const subColor = variables.state_on ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.5)';

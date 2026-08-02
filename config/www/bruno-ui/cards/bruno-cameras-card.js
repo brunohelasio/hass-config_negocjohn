@@ -237,23 +237,31 @@ class BrunoCamerasCard extends HTMLElement {
     this._hass.callService(domain, service, data);
   }
 
+  _openCamerasSection() {
+    this.dispatchEvent(new CustomEvent('ll-custom', {
+      detail: { bruno_section: 'cameras' },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
   _wireActions(activeId) {
     const root = this.shadowRoot;
     const preview = root.querySelector('.preview-action');
     preview?.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      this._openMoreInfo(activeId);
+      this._openCamerasSection();
     });
     preview?.addEventListener('dblclick', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      this._openMoreInfo(activeId);
+      this._openCamerasSection();
     });
     preview?.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
-      this._openMoreInfo(activeId);
+      this._openCamerasSection();
     });
 
     root.querySelectorAll('.thumb-button').forEach((button) => {
@@ -435,7 +443,7 @@ class BrunoCamerasCard extends HTMLElement {
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
         }
 
-        .header-icon ha-icon {
+        .header-icon bruno-icon {
           --mdc-icon-size: 14px;
           position: absolute;
           left: 50%;
@@ -518,7 +526,7 @@ class BrunoCamerasCard extends HTMLElement {
           background: rgba(255,255,255,0.055);
         }
 
-        .card-menu ha-icon {
+        .card-menu bruno-icon {
           --mdc-icon-size: 19px;
         }
 
@@ -610,7 +618,7 @@ class BrunoCamerasCard extends HTMLElement {
           color: rgba(226,232,240,0.28);
         }
 
-        .camera-placeholder ha-icon {
+        .camera-placeholder bruno-icon {
           --mdc-icon-size: 42px;
           filter: drop-shadow(0 12px 18px rgba(0,0,0,0.35));
         }
@@ -679,7 +687,7 @@ class BrunoCamerasCard extends HTMLElement {
           white-space: nowrap;
         }
 
-        .preview-badge ha-icon {
+        .preview-badge bruno-icon {
           --mdc-icon-size: 13px;
         }
 
@@ -786,7 +794,7 @@ class BrunoCamerasCard extends HTMLElement {
           color: rgba(226,232,240,0.25);
         }
 
-        .thumb-placeholder ha-icon {
+        .thumb-placeholder bruno-icon {
           --mdc-icon-size: 22px;
         }
 
@@ -903,7 +911,7 @@ class BrunoCamerasCard extends HTMLElement {
           background: var(--bruno-liquid-popup-option-hover-background, rgba(242,194,102,0.115));
         }
 
-        .camera-menu-option ha-icon {
+        .camera-menu-option bruno-icon {
           --mdc-icon-size: 16px;
           color: rgba(255,255,255,0.68);
         }
@@ -952,7 +960,7 @@ class BrunoCamerasCard extends HTMLElement {
       <div class="cameras-card${singleClass}${menuOpenClass}">
         <div class="card-header">
           <div class="header-copy">
-            <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:cctv"></ha-icon></span>
+            <span class="header-icon" aria-hidden="true"><bruno-icon icon="mdi:cctv"></bruno-icon></span>
             <span class="title">
               <span class="title-main">${BrunoCamerasCard._escape(this._config.name)}</span>
               <span class="title-sub">${BrunoCamerasCard._escape(active?.name || '')}</span>
@@ -965,7 +973,7 @@ class BrunoCamerasCard extends HTMLElement {
             </span>
             ${isSingle ? `
               <button class="card-menu${this._cameraMenuOpen ? ' is-open' : ''}" type="button" data-action="camera-menu" aria-label="Selecionar camera" aria-expanded="${this._cameraMenuOpen ? 'true' : 'false'}">
-                <ha-icon icon="mdi:dots-vertical"></ha-icon>
+                <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
               </button>
             ` : ''}
           </span>
@@ -1041,7 +1049,7 @@ class BrunoCamerasCard extends HTMLElement {
     return `
       <div class="media-frame${hasImage ? ' has-image' : ''}">
         ${hasImage ? `<img class="camera-image" src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}" alt="">` : ''}
-        <div class="camera-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></div>
+        <div class="camera-placeholder" aria-hidden="true"></div>
         <div class="preview-scrim"></div>
         <div class="preview-meta">
           <span>
@@ -1051,7 +1059,7 @@ class BrunoCamerasCard extends HTMLElement {
               ${BrunoCamerasCard._escape(camera?.status || 'Indisponivel')}
             </span>
           </span>
-          <span class="preview-badge"><ha-icon icon="mdi:eye-outline"></ha-icon> abrir</span>
+
         </div>
       </div>
     `;
@@ -1065,7 +1073,7 @@ class BrunoCamerasCard extends HTMLElement {
       <button class="thumb-button${activeClass}" type="button" data-camera-id="${BrunoCamerasCard._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasCard._escapeAttr(camera.name)}">
         <span class="thumb-media${hasImage ? ' has-image' : ''}">
           ${hasImage ? `<img src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}" alt="">` : ''}
-          <span class="thumb-placeholder" aria-hidden="true"><ha-icon icon="mdi:video-outline"></ha-icon></span>
+          <span class="thumb-placeholder" aria-hidden="true"></span>
           <span class="thumb-overlay"></span>
           <span class="thumb-label">
             <span class="status-dot${onlineClass}" data-camera-status="${BrunoCamerasCard._escapeAttr(camera.entity)}"></span>
@@ -1081,7 +1089,7 @@ class BrunoCamerasCard extends HTMLElement {
     const onlineClass = camera.online ? ' is-online' : '';
     return `
       <button class="camera-menu-option${activeClass}" type="button" role="menuitem" data-camera-id="${BrunoCamerasCard._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasCard._escapeAttr(camera.name)}">
-        <ha-icon icon="mdi:cctv"></ha-icon>
+        <bruno-icon icon="mdi:cctv"></bruno-icon>
         <span>${BrunoCamerasCard._escape(camera.name || camera.short_name || 'Camera')}</span>
         <span class="status-dot${onlineClass}" data-camera-status="${BrunoCamerasCard._escapeAttr(camera.entity)}"></span>
       </button>

@@ -1,0 +1,100 @@
+# ===========================================================================
+# Pacote: q_casal_presence (NOVO 2026-07-03 — molde unico de presenca/ocupacao)
+# ANTERIOR: o package foi criado antes da instalacao do sensor 4-in-1.
+# ATUAL (2026-07-12): o sensor esta instalado e usa o mesmo contrato dos demais.
+#
+# ANTERIOR (rollback/historico): o dispositivo ainda nao estava instalado e o
+# nome previsto no Zigbee2MQTT era "Sensor 4 in 1 q casal".
+#
+# - Motion Recent (L1): presenca imediata — espelho do sensor bruto, so para o dot.
+# - Occupancy (L2): ocupacao real — presenca sustentada + trava de contexto (Echo).
+# - Semantic State (L3): texto "Ocupado" exibido sob o titulo do card.
+#
+# FALLBACK RAPIDO:
+# - Remover/comentar `q_casal_presence: !include packages/q_casal_presence.yaml`
+#   em configuration.yaml.
+# ===========================================================================
+
+template:
+  - binary_sensor:
+      - name: Q Casal Motion Recent
+        unique_id: q_casal_motion_recent
+        device_class: motion
+        icon: mdi:account
+        # NOVO (2026-07-12): falha/cache nao pode virar OFF/ON valido.
+        availability: >-
+          {{ is_state('sensor.q_casal_presence_health', 'ok') }}
+        state: >-
+          {{ is_state('binary_sensor.sensor_4_in_1_q_casal_presence', 'on') }}
+        delay_off:
+          seconds: 5
+        attributes:
+          source_entity: binary_sensor.sensor_4_in_1_q_casal_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_q_casal_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_q_casal_illuminance') }}"
+          semantic_role: passage_indicator
+          fallback_note: "Presenca imediata: espelho do sensor bruto (device ainda nao instalado)."
+
+      - name: Q Casal Occupancy
+        unique_id: q_casal_occupancy
+        device_class: occupancy
+        icon: mdi:account
+        availability: >-
+          {{ is_state('sensor.q_casal_presence_health', 'ok') }}
+        # ANTERIOR (2026-07-04, trava de contexto — REMOVIDA): com o Echo tocando,
+        # a ocupacao ficaria presa em ON indefinidamente (defeito confirmado no
+        # Q. Miguel com o AC).
+        # state: >-
+        #   {% set presence = is_state('binary_sensor.sensor_4_in_1_q_casal_presence', 'on') %}
+        #   {% set echo_on = is_state('media_player.echo_pop_quarto_casal', 'playing') %}
+        #   {% set context = echo_on %}
+        #   {{ presence or (is_state('binary_sensor.q_casal_occupancy', 'on') and context) }}
+        # delay_off: 300
+        # NOVO: ocupacao = SOMENTE presenca sustentada; folga de 3 min.
+        state: >-
+          {{ is_state('binary_sensor.sensor_4_in_1_q_casal_presence', 'on') }}
+        delay_on:
+          seconds: 60
+        delay_off:
+          seconds: 180
+        attributes:
+          source_entity: binary_sensor.sensor_4_in_1_q_casal_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_q_casal_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_q_casal_illuminance') }}"
+          semantic_role: real_occupancy
+          fallback_note: "Ocupacao real: somente presenca sustentada (60s liga / 180s solta)."
+
+  - sensor:
+      - name: Q Casal Semantic State
+        unique_id: q_casal_semantic_state
+        # ANTERIOR (2026-07-04): texto seguia so a ocupacao (ficava visivel apos o
+        # dot apagar). NOVO: exige presenca ativa junto; q_casal_occupancy mantem
+        # a liberacao longa para automacoes.
+        icon: >-
+          {% if is_state('binary_sensor.q_casal_occupancy', 'on') and is_state('binary_sensor.q_casal_motion_recent', 'on') %}
+            mdi:account
+          {% else %}
+            mdi:bed-king
+          {% endif %}
+        state: >-
+          {% if is_state('binary_sensor.q_casal_occupancy', 'on') and is_state('binary_sensor.q_casal_motion_recent', 'on') %}
+            occupied
+          {% else %}
+            none
+          {% endif %}
+        attributes:
+          display: >-
+            {% if is_state('binary_sensor.q_casal_occupancy', 'on') and is_state('binary_sensor.q_casal_motion_recent', 'on') %}
+              Ocupado
+            {% else %}
+
+            {% endif %}
+          priority: >-
+            {% if is_state('binary_sensor.q_casal_occupancy', 'on') and is_state('binary_sensor.q_casal_motion_recent', 'on') %}1
+            {% else %}0
+            {% endif %}
+          motion_recent: "{{ states('binary_sensor.q_casal_motion_recent') }}"
+          occupancy: "{{ states('binary_sensor.q_casal_occupancy') }}"
+          source_entity: binary_sensor.sensor_4_in_1_q_casal_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_q_casal_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_q_casal_illuminance') }}"

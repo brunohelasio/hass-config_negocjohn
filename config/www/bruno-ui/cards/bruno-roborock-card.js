@@ -26,7 +26,7 @@ class BrunoRoborockCard extends HTMLElement {
     this._config = {
       name: 'Roborock',
       title: 'Roborock S7',
-      image: '/local/images/roborock_S7.png',
+      image: '/local/images/roborock_S7.png?v=20260702-all-images-1',
       ...config,
       entities,
     };
@@ -111,6 +111,7 @@ class BrunoRoborockCard extends HTMLElement {
 
     return {
       active,
+      cleaning: ['cleaning', 'segment_cleaning'].includes(state),
       state,
       status: labels[state] || state || 'Indisponivel',
       detail: details[state] || 'Aguardando status',
@@ -246,6 +247,7 @@ class BrunoRoborockCard extends HTMLElement {
 
     const model = this._model();
     const activeClass = model.active ? ' is-active' : '';
+    const cleaningClass = model.cleaning ? ' is-cleaning' : '';
     const compactClass = this._config.variant === 'compact' ? ' is-compact' : '';
 
     this.shadowRoot.innerHTML = `
@@ -351,11 +353,17 @@ class BrunoRoborockCard extends HTMLElement {
           mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
         }
 
-        .roborock-card.is-active {
-          border-color: rgba(var(--accent-warm),0.42);
-          box-shadow:
-            var(--bruno-liquid-surface-off-shadow, 0 18px 44px rgba(0,0,0,0.27)),
-            0 0 26px rgba(var(--accent-warm),0.18);
+        .roborock-card.is-cleaning {
+          background: var(--bruno-liquid-surface-on-background,
+            radial-gradient(170px 134px at 12% -10%, rgba(255,255,255,0.30), rgba(255,255,255,0.082) 52%, transparent 75%),
+            radial-gradient(165px 148px at 98% 94%, rgba(135,185,245,0.16), transparent 68%),
+            linear-gradient(180deg, rgba(255,255,255,0.165), rgba(255,255,255,0.052) 43%, rgba(255,255,255,0.078)),
+            linear-gradient(155deg, rgba(18,24,36,0.68), rgba(11,14,22,0.56) 49%, rgba(33,27,25,0.30))
+          );
+        }
+
+        .roborock-card.is-cleaning::before {
+          opacity: 0.86;
         }
 
         .roborock-card.is-compact {
@@ -437,7 +445,7 @@ class BrunoRoborockCard extends HTMLElement {
           justify-content: center;
         }
 
-        .roborock-card.is-compact .stat ha-icon {
+        .roborock-card.is-compact .stat bruno-icon {
           --mdc-icon-size: 28px;
         }
 
@@ -462,7 +470,7 @@ class BrunoRoborockCard extends HTMLElement {
           border-radius: var(--bruno-liquid-control-radius, 14px);
         }
 
-        .roborock-card.is-compact .action ha-icon {
+        .roborock-card.is-compact .action bruno-icon {
           --mdc-icon-size: 20px;
         }
 
@@ -507,7 +515,7 @@ class BrunoRoborockCard extends HTMLElement {
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
         }
 
-        .header-icon ha-icon {
+        .header-icon bruno-icon {
           --mdc-icon-size: var(--bruno-liquid-icon-title, 16px);
           position: absolute;
           left: 50%;
@@ -636,7 +644,7 @@ class BrunoRoborockCard extends HTMLElement {
           text-overflow: ellipsis;
         }
 
-        .location ha-icon {
+        .location bruno-icon {
           --mdc-icon-size: 15px;
           flex: 0 0 auto;
         }
@@ -670,7 +678,7 @@ class BrunoRoborockCard extends HTMLElement {
           text-shadow: 0 1px 8px rgba(0,0,0,0.34);
         }
 
-        .stat ha-icon {
+        .stat bruno-icon {
           --mdc-icon-size: 18px;
           color: rgba(255,222,178,0.92);
           filter: drop-shadow(0 0 8px rgba(255,171,72,0.22));
@@ -752,7 +760,7 @@ class BrunoRoborockCard extends HTMLElement {
           transform: translateY(1px) scale(0.985);
         }
 
-        .action ha-icon {
+        .action bruno-icon {
           --mdc-icon-size: 23px;
         }
 
@@ -792,7 +800,7 @@ class BrunoRoborockCard extends HTMLElement {
             height: 42px;
           }
 
-          .stat ha-icon {
+          .stat bruno-icon {
             --mdc-icon-size: 17px;
           }
 
@@ -849,24 +857,24 @@ class BrunoRoborockCard extends HTMLElement {
         }
       </style>
 
-      <div class="roborock-card${activeClass}${compactClass}" role="button" tabindex="0" aria-label="${BrunoRoborockCard._escape(this._config.title)}">
+      <div class="roborock-card${activeClass}${cleaningClass}${compactClass}" role="button" tabindex="0" aria-label="${BrunoRoborockCard._escape(this._config.title)}">
         <div class="header">
           <span class="header-copy">
-            <span class="header-icon" aria-hidden="true"><ha-icon icon="mdi:robot-vacuum"></ha-icon></span>
+            <span class="header-icon" aria-hidden="true"><bruno-icon icon="mdi:robot-vacuum"></bruno-icon></span>
             <span class="title-main">${BrunoRoborockCard._escape(this._config.name)}</span>
           </span>
         </div>
 
         <div class="robot" aria-hidden="true">
           <img src="${BrunoRoborockCard._escapeAttr(this._assetUrl(this._config.image))}" alt="">
-          <ha-icon class="robot-fallback" icon="mdi:robot-vacuum"></ha-icon>
+          <bruno-icon class="robot-fallback" icon="mdi:robot-vacuum"></bruno-icon>
         </div>
 
         <div class="status">
           <div class="status-main">${BrunoRoborockCard._escape(model.status)}</div>
           <div class="status-detail">${BrunoRoborockCard._escape(model.detail)}</div>
           <div class="location">
-            <ha-icon icon="mdi:map-marker-radius-outline"></ha-icon>
+            <bruno-icon icon="mdi:map-marker-radius-outline"></bruno-icon>
             <span>${BrunoRoborockCard._escape(model.room)}</span>
           </div>
         </div>
@@ -892,7 +900,7 @@ class BrunoRoborockCard extends HTMLElement {
   _stat(icon, value, label) {
     return `
       <div class="stat">
-        <ha-icon icon="${icon}"></ha-icon>
+        <bruno-icon icon="${icon}"></bruno-icon>
         <span class="stat-value">${BrunoRoborockCard._escape(value)}</span>
         <span class="stat-label">${BrunoRoborockCard._escape(label)}</span>
       </div>
@@ -902,7 +910,7 @@ class BrunoRoborockCard extends HTMLElement {
   _action(service, icon, label, primary = false) {
     return `
       <button class="action${primary ? ' primary' : ''}" type="button" data-service="${service}" aria-label="${BrunoRoborockCard._escapeAttr(label)}">
-        <ha-icon icon="${icon}"></ha-icon>
+        <bruno-icon icon="${icon}"></bruno-icon>
         <span>${BrunoRoborockCard._escape(label)}</span>
       </button>
     `;

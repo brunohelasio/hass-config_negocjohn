@@ -1,0 +1,97 @@
+# ===========================================================================
+# Pacote: q_miguel_presence (NOVO 2026-07-03 — molde unico de presenca/ocupacao)
+# Objetivo: replicar no Q. Miguel a camada logica padronizada.
+#
+# - Motion Recent (L1): presenca imediata — espelho do sensor bruto, so para o dot.
+# - Occupancy (L2): ocupacao real — somente presenca sustentada (60s/180s).
+# - Semantic State (L3): texto "Ocupado" exibido sob o titulo do card.
+#
+# FALLBACK RAPIDO:
+# - Remover/comentar `q_miguel_presence: !include packages/q_miguel_presence.yaml`
+#   em configuration.yaml para voltar ao uso direto do sensor 4-in-1.
+# ===========================================================================
+
+template:
+  - binary_sensor:
+      - name: Q Miguel Motion Recent
+        unique_id: q_miguel_motion_recent
+        device_class: motion
+        icon: mdi:account
+        # NOVO (2026-07-12): falha/cache nao pode virar OFF/ON valido.
+        availability: >-
+          {{ is_state('sensor.q_miguel_presence_health', 'ok') }}
+        state: >-
+          {{ is_state('binary_sensor.sensor_4_in_1_q_miguel_presence', 'on') }}
+        delay_off:
+          seconds: 5
+        attributes:
+          source_entity: binary_sensor.sensor_4_in_1_q_miguel_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_q_miguel_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_q_miguel_illuminance') }}"
+          semantic_role: passage_indicator
+          fallback_note: "Presenca imediata: espelho do sensor bruto, apenas para o dot."
+
+      - name: Q Miguel Occupancy
+        unique_id: q_miguel_occupancy
+        device_class: occupancy
+        icon: mdi:account
+        availability: >-
+          {{ is_state('sensor.q_miguel_presence_health', 'ok') }}
+        # ANTERIOR (2026-07-04): trava de contexto — com o AC ligado, a ocupacao
+        # ficava presa em ON indefinidamente (quarto vazio "Ocupado"; e ao entrar,
+        # o texto aparecia junto com a presenca, sem esperar a permanencia).
+        # state: >-
+        #   {% set presence = is_state('binary_sensor.sensor_4_in_1_q_miguel_presence', 'on') %}
+        #   {% set ac_on = states('climate.ac_quarto_miguel') in ['cool', 'fan_only', 'dry', 'heat', 'heat_cool', 'auto'] %}
+        #   {% set context = ac_on %}
+        #   {{ presence or (is_state('binary_sensor.q_miguel_occupancy', 'on') and context) }}
+        # delay_off: 300
+        # NOVO: ocupacao = SOMENTE presenca sustentada (padrao validado na Marina).
+        # A folga de desligamento (3 min) ja cobre as piscadas do radar.
+        state: >-
+          {{ is_state('binary_sensor.sensor_4_in_1_q_miguel_presence', 'on') }}
+        delay_on:
+          seconds: 60
+        delay_off:
+          seconds: 180
+        attributes:
+          source_entity: binary_sensor.sensor_4_in_1_q_miguel_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_q_miguel_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_q_miguel_illuminance') }}"
+          semantic_role: real_occupancy
+          fallback_note: "Ocupacao real: somente presenca sustentada (60s liga / 180s solta)."
+
+  - sensor:
+      - name: Q Miguel Semantic State
+        unique_id: q_miguel_semantic_state
+        # ANTERIOR (2026-07-04): texto seguia so a ocupacao (ficava visivel apos o
+        # dot apagar). NOVO: exige presenca ativa junto; q_miguel_occupancy mantem
+        # a liberacao longa para automacoes.
+        icon: >-
+          {% if is_state('binary_sensor.q_miguel_occupancy', 'on') and is_state('binary_sensor.q_miguel_motion_recent', 'on') %}
+            mdi:account
+          {% else %}
+            mdi:bed-single
+          {% endif %}
+        state: >-
+          {% if is_state('binary_sensor.q_miguel_occupancy', 'on') and is_state('binary_sensor.q_miguel_motion_recent', 'on') %}
+            occupied
+          {% else %}
+            none
+          {% endif %}
+        attributes:
+          display: >-
+            {% if is_state('binary_sensor.q_miguel_occupancy', 'on') and is_state('binary_sensor.q_miguel_motion_recent', 'on') %}
+              Ocupado
+            {% else %}
+
+            {% endif %}
+          priority: >-
+            {% if is_state('binary_sensor.q_miguel_occupancy', 'on') and is_state('binary_sensor.q_miguel_motion_recent', 'on') %}1
+            {% else %}0
+            {% endif %}
+          motion_recent: "{{ states('binary_sensor.q_miguel_motion_recent') }}"
+          occupancy: "{{ states('binary_sensor.q_miguel_occupancy') }}"
+          source_entity: binary_sensor.sensor_4_in_1_q_miguel_presence
+          motion_state: "{{ states('sensor.sensor_4_in_1_q_miguel_motion_state') }}"
+          illuminance: "{{ states('sensor.sensor_4_in_1_q_miguel_illuminance') }}"

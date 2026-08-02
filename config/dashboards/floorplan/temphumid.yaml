@@ -18,13 +18,13 @@
     # Temperature sensors
     - sensor.bedroom_tem_humid_temperature
     - sensor.dyson_ph04_temperature
-    - sensor.office_temp_humid_temperature
+    - sensor.sensor_4_in_1_office_temperature
     - sensor.bathroom_temp_humid_temperature
     # Humidity sensors
     - sensor.bedroom_tem_humid_humidity
     - sensor.dyson_ph04_humidity
     - sensor.bathroom_temp_humid_humidity
-    - sensor.office_temp_humid_humidity
+    - sensor.sensor_4_in_1_office_humidity
   tap_action: false
   hover_action: hover-info
   state_action:

@@ -1,0 +1,26 @@
+e0dc9da3 Atualização
+a5254121 fix: ajustes do dashboard via Codex
+eb6bc901 Merge pull request #599 from brunohelasio/claude/hopeful-lovelace-cuc93o
+c4583e1a fix(sala): Hub de Mídia — alinhamento de ícones, chevron, base fixa, fontes, translucidez
+3315a7c1 Merge pull request #598 from brunohelasio/claude/hopeful-lovelace-cuc93o
+fe08bc98 style(sala): Hub de Mídia — refino Savant Light (card, faixas, controles, arte)
+4a796d82 Merge pull request #597 from brunohelasio/claude/hopeful-lovelace-cuc93o
+65675b41 fix(sala): Hub de Mídia — PNG sem glow, header padronizado, botões icon-only
+4111bd6d Merge pull request #596 from brunohelasio/claude/hopeful-lovelace-cuc93o
+66422c4c refactor(sala): Hub de Mídia — re-skin conceito + remoção de título duplicado
+bafd3126 Merge pull request #595 from brunohelasio/claude/hopeful-lovelace-cuc93o
+882abe83 refactor(sala): Hub de Mídia como acordeão verdadeiro (TV→Spotify→PS5)
+5b5a0477 Merge pull request #594 from brunohelasio/claude/hopeful-lovelace-cuc93o
+5b0103f4 Sala: A/C levemente mais alto (320px) + câmeras/mídia acompanham (sem tocar luzes)
+049ec4fe Merge pull request #593 from brunohelasio/claude/hopeful-lovelace-cuc93o
+276d3519 Sala: desfaz o exagero e fixa SÓ a altura do A/C
+0e9a0342 Merge pull request #592 from brunohelasio/claude/hopeful-lovelace-cuc93o
+f73ec11e Sala: faixa inferior alinhada (Câmeras|Mídia|A/C) + A/C estável (Etapa 1)
+ecad8678 Merge pull request #591 from brunohelasio/claude/hopeful-lovelace-cuc93o
+4051952c Sala Iluminação: centraliza ícone no círculo + remove sol/lua dos chips
+40a4601c Merge pull request #590 from brunohelasio/claude/hopeful-lovelace-cuc93o
+24911237 Sala Iluminação: barra luminosa read-only + ícones circulares + sol/lua + altura
+7a74cf92 Merge pull request #589 from brunohelasio/claude/hopeful-lovelace-cuc93o
+5a5c8974 Sala: reverte espaçamento das luzes + aumenta levemente o bloco de Iluminação
+b73fefce Merge pull request #588 from brunohelasio/claude/hopeful-lovelace-cuc93o
+e0dc9da34f194813342f6d6c607a7e9e2ecdde37

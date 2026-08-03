@@ -1,0 +1,87 @@
+# ══════════════════════════════════════════════════════════════════════════
+# MEDIA GRID v2 — Popup "Todos os Players"
+# Criado: 2026-04-05
+#
+# Exibe todos os players do catalogo em um grid 2x2.
+# Tap em qualquer botao define esse player como foco no Slide 1
+# (atualiza input_select.media_focus_player).
+#
+# Para expandir o catalogo: adicionar novo custom:button-card abaixo
+# e adicionar o entity_id na lista options do active_player.yaml.
+# ══════════════════════════════════════════════════════════════════════════
+title: "Todos os Players"
+style: >
+  --popup-width: 55vw;
+  --popup-max-width: 680px;
+  --popup-background-color: rgba(15, 20, 35, 0.75);
+  --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+  --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+  --dialog-box-shadow: 0 0 24px rgba(62, 132, 255, 0.22);
+content:
+  type: grid
+  columns: 2
+  square: true
+  cards:
+    # Smart TV Sala
+    - type: custom:button-card
+      entity: media_player.android_tv_192_168_3_17
+      name: Smart TV
+      template:
+        - base
+        - media_premium
+        - icon_tv
+      tap_action:
+        action: call-service
+        service: input_select.select_option
+        service_data:
+          entity_id: input_select.media_focus_player
+          option: media_player.android_tv_192_168_3_17
+        haptic: light
+
+    # Echo Show Sala
+    - type: custom:button-card
+      entity: media_player.echo_show
+      name: Echo Show
+      template:
+        - base
+        - media_premium
+        - icon_tv
+      tap_action:
+        action: call-service
+        service: input_select.select_option
+        service_data:
+          entity_id: input_select.media_focus_player
+          option: media_player.echo_show
+        haptic: light
+
+    # Spotify Global
+    - type: custom:button-card
+      entity: media_player.spotifyplus_bruno_helasio
+      name: Spotify
+      template:
+        - base
+        - media_premium
+        - icon_spotify
+      tap_action:
+        action: call-service
+        service: input_select.select_option
+        service_data:
+          entity_id: input_select.media_focus_player
+          option: media_player.spotifyplus_bruno_helasio
+        haptic: light
+
+    # Echo Pop Office
+    - type: custom:button-card
+      entity: media_player.echo_pop_office
+      name: Echo Office
+      template:
+        - base
+        - media_premium
+        - icon_tv
+      tap_action:
+        action: call-service
+        service: input_select.select_option
+        service_data:
+          entity_id: input_select.media_focus_player
+          option: media_player.echo_pop_office
+        haptic: light

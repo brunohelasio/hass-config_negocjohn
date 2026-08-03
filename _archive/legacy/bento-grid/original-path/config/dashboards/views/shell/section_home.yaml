@@ -1,3 +1,19 @@
+# ⚠ ROLLBACK INCOMPLETO desde 2026-08-03 ────────────────────────────────────
+# Este arquivo e a Home V1, mantida como rollback de uma linha em
+# views/bento_shell.yaml. Ele NAO e carregado hoje (a V2 e que esta ativa).
+#
+# As 8 dependencias abaixo (views/main-grid/bento_*.yaml) foram ARQUIVADAS na
+# Fase 3 (decisao D2, aposentadoria do ramo views/main.yaml). Descomentar o flag
+# sem restaurar antes FAZ O DASHBOARD FALHAR AO CARREGAR.
+#
+# Para reativar a Home V1:
+#   git checkout pre-dashboard-architecture -- config/dashboards/views/main-grid/
+#   git checkout pre-dashboard-architecture -- config/dashboards/shared/grid-cards/
+#   (depois trocar a linha do flag em views/bento_shell.yaml)
+#
+# Conferir a qualquer momento com:
+#   perl scripts/validation/check-includes.pl .
+# ─────────────────────────────────────────────────────────────────────────────
 # Secao HOME da shell.
 # Reproduz o mosaico do bento_main SEM risco de transcricao: mantem EXATAMENTE as
 # mesmas colunas/linhas/areas do painel atual, apenas com a 1a coluna (a da rail)

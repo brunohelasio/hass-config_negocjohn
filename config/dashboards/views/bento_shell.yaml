@@ -64,9 +64,21 @@ cards:
         brightness: 0.94
         dim: 0.20
     sections:
-      # FEATURE FLAG HOME V2 (2026-07-24): a troca desta unica linha liga/
-      # desliga a nova Home. Nunca deixar as duas ativas ao mesmo tempo.
-      # ANTERIOR (rollback V1): home: !include shell/section_home.yaml
+      # HOME V2 — unica versao ativa desde 2026-08-03.
+      #
+      # A Home V1 (shell/section_home.yaml) foi APOSENTADA: ela dependia de 8
+      # arquivos de views/main-grid/, arquivados na Fase 3 (decisao D2). A V2
+      # esta em producao desde 2026-07-24 e recebeu todo o trabalho posterior
+      # (tema Josh, modo tile, faixa de comodos) — reverter desfaria tudo isso.
+      #
+      # RESTAURAR A V1, se um dia for preciso (3 comandos):
+      #   git checkout pre-dashboard-architecture -- config/dashboards/views/shell/section_home.yaml
+      #   git checkout pre-dashboard-architecture -- config/dashboards/views/main-grid/
+      #   git checkout pre-dashboard-architecture -- config/dashboards/shared/grid-cards/
+      #   (e trocar a linha abaixo por: home: !include shell/section_home.yaml)
+      #
+      # Conferir integridade a qualquer momento:
+      #   perl scripts/validation/check-includes.pl .
       home: !include shell/section_home_v2.yaml
       cameras: !include shell/section_cameras.yaml
       # ROBOROCK inline (evita "Unable to read file" caso o arquivo novo

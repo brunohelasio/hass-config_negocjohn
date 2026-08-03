@@ -35,7 +35,23 @@ views:
   #    da shell para `bento-shell`).
   # - !include views/bento_main.yaml
   - !include views/bento_shell.yaml
-  - !include views/main.yaml
+
+  # ── RAMO LEGADO `views/main.yaml` — APOSENTADO em 2026-08-02 (Fase 3, D2) ──
+  # Era o grid do tablet (path `summary`), substituido pela shell em 2026-06-24.
+  # Continuava sendo parseado a cada carregamento: `!include_dir_merge_list
+  # main-grid/` puxava os 39 arquivos da pasta, usados ou nao.
+  #
+  # Verificado antes de aposentar:
+  #   - nada navega para `summary` (nenhum navigation_path aponta para la);
+  #   - os templates button-card/streamline continuam sendo usados por popups,
+  #     colunas, system-grid e github-grid — por isso os dois
+  #     `!include_dir_merge_named` do topo deste arquivo PERMANECEM.
+  #
+  # Arquivos movidos para _archive/legacy/bento-grid/ e _archive/legacy/mat/.
+  # ROLLBACK: descomentar a linha abaixo E restaurar os arquivos:
+  #   git checkout pre-dashboard-architecture -- config/dashboards/views/main.yaml
+  #   git checkout pre-dashboard-architecture -- config/dashboards/views/main-grid/
+  # - !include views/main.yaml
 
   # ── LEGADO MOBILE V1 (2025) — DESATIVADO em 2026-05-10 ────────────────────
   # Rollback: descomentar para reativar.

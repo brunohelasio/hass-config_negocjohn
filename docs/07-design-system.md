@@ -146,3 +146,87 @@ proporção única e expor um `iconScale` por cômodo na configuração central
 
 Encaixa na Fase 5b, quando os 7 cards de cômodo viram um componente
 parametrizado — é exatamente o tipo de valor que passa a morar na configuração.
+
+---
+
+## Composição canônica do tile de cômodo
+
+Medida nos 8 cards em 2026-08-03. **Os 8 já são consistentes entre si** — não há
+divergência a resolver, há um padrão a preservar.
+
+Esta é a especificação que a Fase 5b deve aplicar ao componente único. Qualquer
+migração que produza valores diferentes destes está errada, mesmo que pareça
+melhor isoladamente: o requisito do usuário é que **todos os tiles tenham a
+mesma composição** de altura, ícone, tipografia, posicionamento e status.
+
+### Grade interna (`.room-action`)
+
+```
+grid-template-columns: minmax(0, 124px) minmax(0, 1fr) 40px
+grid-template-rows:    auto minmax(0, 1fr) auto auto
+grid-template-areas:   "icon  space right"
+                       "icon  space right"
+                       "title title right"
+                       "state state right"
+column-gap: 6px
+row-gap:    0
+padding:    14px 14px 13px 11px
+align-items: start
+```
+
+A primeira coluna é `minmax(0, 124px)`, não `124px` fixo: ela absorve o déficit
+quando a faixa encolhe, em vez de clipar a coluna de status. Padrão herdado do
+Office depois do incidente de clipping de 2026-07-03.
+
+### Dimensões e tipografia
+
+| Elemento | Valor |
+|---|---|
+| `icon_size` (config) | **94** px |
+| `.room-icon` | `var(--room-icon-size)`, margem `-4px` no topo e à esquerda |
+| `.title` | **15 px** / peso 700 / `line-height` 1.18 / `margin-bottom` 2px |
+| `.status-lines` | **11 px** / peso 500 / `line-height` 1.16 / `gap` 1px |
+| `.metric-value` | 13 px / peso 760 |
+| `.metric-sub` | 11 px / peso 600 / `margin-top` 4px |
+| `.status-dot` | **26 × 26 px**, círculo |
+| `.right-rail` | coluna, `gap` 7px, `transform: translate(5px, -3px)` |
+| raio do card | `var(--bruno-liquid-room-radius, var(--bruno-liquid-card-radius-compact, 16px))` |
+
+### Material — **consumir token, nunca reescrever valor**
+
+O tile **não** define o próprio fundo. Ele consome a cadeia que os módulos de
+tema publicam, com o mesmo encadeamento de fallback dos cards atuais:
+
+```
+--bruno-liquid-surface-off-background / -filter / -border / -shadow
+--bruno-liquid-surface-on-*            (estado aceso)
+--bruno-tile-*                          (modo tile do Josh)
+```
+
+**Erro cometido em 2026-08-03:** escrever valores literais como fallback no
+componente novo. Os literais venceram, e o tile ficou de vidro enquanto os
+demais seguiam o tema Josh. O fallback existe para o caso de o tema não ter
+carregado — não para substituir o tema.
+
+### Tokens locais do `:host`
+
+```
+--accent: 150,190,255      --accent-blue: 96,165,250
+--accent-purple: 167,139,250   --accent-cyan: 79,172,254
+--accent-amber: 255,153,0
+--text-main: rgba(245,250,255,0.96)
+--text-soft: rgba(255,255,255,0.40)
+--text-muted: rgba(255,255,255,0.52)
+--dot-off-bg / -border / -icon
+```
+
+No estado aceso (`.is-room-on`) esses valores mudam em bloco — ver o card atual.
+
+### Breakpoints existentes
+
+`max-width: 800px` (phone), `max-height: 760px`, `prefers-reduced-motion`.
+
+Ao migrar para container query, o alvo é **cair no mesmo valor** que estes
+breakpoints produzem hoje na largura do tablet. Independência de resolução não
+pode custar paridade visual: se `clamp()` não reproduzir a composição acima no
+aparelho real, o px fixo é a escolha certa e a fluidez fica para depois.

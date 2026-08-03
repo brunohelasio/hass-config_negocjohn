@@ -357,22 +357,69 @@ card sem retirá-lo da pasta.
 
 ## RISCOS IDENTIFICADOS
 
+> **Atualização 2026-08-02** — R1 a R5 foram respondidos pelo usuário. Ver
+> `RESOLUÇÃO DOS RISCOS` logo abaixo da tabela.
+
 | # | Risco | Severidade | Evidência |
 |---|---|---|---|
-| **R1** | `views/main-grid/grid_media.yaml` tem **24 `!include` ativos** de `shared/popup/media_all_players.yaml`, que **não existe** no repositório nem no histórico do Git. No HA, um `!include` sem alvo levanta erro no carregamento do dashboard **inteiro**. | **ALTA** | `grid_media.yaml:329,349,388,408,556,…` |
-| **R2** | Dashboard `homekitesq-teste` registrado apontando para `lovelace-homekitesq.yaml`, inexistente | MÉDIA | `configuration.yaml:366+` |
-| **R3** | **Processo externo commita esta árvore automaticamente.** Durante esta auditoria, 179 arquivos foram commitados como `Atualização` sem intervenção minha. Isso destrói a rastreabilidade por commit exigida pelo plano de migração. | **ALTA** | `git reflog`: `e0dc9da3 commit: Atualização` às 10:09:49 |
-| **R4** | `docs/**` dispara deploy público no GitHub Pages a cada push (`.github/workflows/deploy-page.yml`) | MÉDIA | O repositório é público; a documentação da auditoria mapeia a casa inteira |
-| **R5** | Node.js/npm **ausentes** na máquina — a fundação técnica pedida (Fase 4) não pode ser instalada hoje | **ALTA** (bloqueia Fase 4) | `command -v node/npm` → ausente |
+| **R1** | ~~`grid_media.yaml` referencia arquivo inexistente~~ → **reclassificado**: o arquivo existe no HA e **não** neste repositório. O repo **não é espelho fiel** do `/config`. | **ALTA** (nova forma) | `grid_media.yaml:329,349,…` + confirmação do usuário |
+| **R2** | ~~Dashboard `homekitesq-teste` apontando para arquivo inexistente~~ | ✅ **RESOLVIDO** | removido em 2026-08-02 |
+| **R3** | ~~Processo externo commita automaticamente~~ → era o **usuário via GitHub Desktop**. Não há automação a pausar; é coordenação. | BAIXA | confirmado pelo usuário |
+| **R4** | `docs/**` dispara deploy público no GitHub Pages **a cada push** (`.github/workflows/deploy-page.yml`) | MÉDIA | decisão: manter tudo **local**, sem push, até o usuário revisar |
+| **R5** | ~~Node.js/npm ausentes~~ | ✅ **EM RESOLUÇÃO** | Node LTS sendo instalado via `winget` (autorizado) |
 | **R6** | Sem build e sem lint, um erro de sintaxe só aparece no navegador. O incidente da crase em template literal já ocorreu **4 vezes** e derruba as 6 subviews de uma vez | **ALTA** | `CLAUDE.md`, seções de 2026-07-29 |
 | **R7** | 254 listeners sem remoção correspondente; 9 arquivos com listener/timer e sem `disconnectedCallback` | MÉDIA | contagem em `docs/02-file-inventory.md` |
 | **R8** | Mover qualquer YAML de `views/main-grid/` altera o resultado do `!include_dir_merge_list` — o efeito é global, não local | MÉDIA | `views/main.yaml:96` |
 | **R9** | Cache-bust manual: um esquecimento deixa o tablet com um módulo velho conversando com globais novos | MÉDIA | 52 recursos, 8 formatos de versão |
 | **R10** | `tpl_*.yaml` (button-card) e os cards JS reimplementam a **mesma** lógica de `state_on`/contagem de luzes em paralelo | BAIXA | `tpl_base.yaml:23` vs cards |
 
-**R1 e R2 exigem confirmação do usuário antes de qualquer ação** — não é possível
-distinguir daqui entre "arquivo perdido no espelhamento" e "dashboard realmente
-quebrado". Ver `PLANO DE VALIDAÇÃO`.
+### RESOLUÇÃO DOS RISCOS — 2026-08-02
+
+**R1 — resolvido.** O usuário confirmou que `media_all_players.yaml` existe no
+HA; o dashboard não está quebrado. A partir daí executei a **Fase 2b**
+(reconciliação completa repo × `/config`) por leitura do compartilhamento Samba
+do HA, e o resultado é bem melhor do que a incerteza sugeria:
+
+- **0 arquivos** existem aqui e faltam no HA — a sincronização repo → HA está íntegra
+- **7 arquivos** existiam só no HA e foram importados (5 YAML + 2 JS)
+- **61 dos 62 arquivos críticos são byte-idênticos** ao que roda no HA; o único
+  diferente é o `configuration.yaml`, pela remoção do `homekitesq-teste` que fiz
+  nesta sessão
+
+**Isso valida a auditoria** — ela foi feita sobre os arquivos que realmente rodam.
+
+Correção na lista de órfãos: **354 YAML, 200 alcançáveis, 154 órfãos, 0 `!include`
+sem alvo**. Apenas um arquivo mudou de classificação
+(`shared/sidebar/sidebar_tablet_landscape.yaml` não era órfão). A Fase 3 está
+**desbloqueada**.
+
+Fica pendente documentar **como** o código chega daqui ao HA
+(`docs/14-deployment-and-cache.md`) — o Samba está ativo, mas falta confirmar se
+é esse o caminho usado e o que fica de fora.
+
+**R2 — resolvido.** Dashboard `homekitesq-teste` retirado de
+`configuration.yaml` em 2026-08-02, com autorização explícita. As 6 linhas
+originais ficaram comentadas in-place (Regra de Ouro nº 1), com instrução de
+rollback. Exige reinício do HA para sair do sidebar.
+
+**R3 — resolvido, e meu diagnóstico estava errado.** Não havia processo
+automatizado: o commit `Atualização` foi feito pelo próprio usuário no GitHub
+Desktop. Não há nada a pausar; é coordenação. O que permanece útil: commits pelo
+botão do GitHub Desktop varrem a árvore inteira, então trabalho em andamento
+pode acabar dentro de uma mensagem genérica.
+
+**R4 — decisão tomada.** Nada será enviado ao remote por ora. O GitHub Pages só
+dispara em `push`, então commits locais são seguros. O usuário revisa depois o
+que commitar e publicar.
+
+**R5 — resolvido.** Node.js **24.18.1** LTS + npm **11.16.0** instalados via
+`winget` (escopo de usuário, download do `nodejs.org` com hash verificado).
+
+**R6 — mitigado.** Com Node disponível, o projeto ganhou pela primeira vez uma
+checagem sintática real: `scripts/validation/check-syntax.ps1` roda
+`node --check` nos 53 arquivos. **Linha de base: 53/53 OK.** Isso substitui a
+heurística em Perl que eu havia documentado, que produzia 24 falsos positivos e
+nenhum verdadeiro. A Fase 4 deixa de estar bloqueada.
 
 ---
 

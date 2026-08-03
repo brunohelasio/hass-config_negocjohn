@@ -46,30 +46,22 @@ return `
 Use aspas retas ou apenas descreva. **Paridade de crases não detecta** — a crase
 espúria vem em par.
 
-Detector heurístico (procura crase dentro de bloco `/* */`):
+**Detector correto (desde 2026-08-02, com Node instalado):**
 
 ```bash
-perl -ne 'if (/\/\*/../\*\//) { print "$ARGV:$.: $_" if /`/ }' arquivo.js
+powershell -File scripts/validation/check-syntax.ps1
 ```
 
-**Ele produz falsos positivos** — em 2026-08-02 acusa 24 pontos em 9 arquivos,
-todos benignos (o dashboard estava funcionando). O operador de intervalo do Perl
-não distingue comentário real de `/*` dentro de string, e não sabe se o
-comentário está dentro de um template literal.
+Ele roda `node --check` em todos os arquivos JS. É parse real: acusa erro se, e
+somente se, o arquivo não compila. **Zero falsos positivos.** Linha de base
+verificada em 2026-08-02: **53 de 53 arquivos OK.**
 
-Portanto **use-o como diff, não como veredito**: rode antes e depois da sua
-edição no mesmo arquivo e investigue **apenas os pontos novos**.
+Rode **antes** de pedir validação visual. Se falhar aqui, falharia no navegador —
+e no tablet o sintoma aparece como "erro de configuração" ou como o tema
+voltando silenciosamente ao anterior.
 
-```bash
-perl -ne 'if (/\/\*/../\*\//) { print "$.\n" if /`/ }' arquivo.js > /tmp/antes
-# … edite …
-perl -ne 'if (/\/\*/../\*\//) { print "$.\n" if /`/ }' arquivo.js > /tmp/depois
-diff /tmp/antes /tmp/depois
-```
-
-Linha de base atual (pontos conhecidos e benignos): `bruno-liquid-glass.js` 6,
-`bruno-sala-card.js` 4, `bruno-cameras-security-subview.js` 2, e 2 em cada uma
-das 6 subviews de cômodo (o bloco `ANTERIOR (rollback)` de `_presenceLine`).
+> Heurística anterior (Perl, `/\/\*/../\*\//` procurando crase) está
+> **obsoleta**: produzia 24 falsos positivos e nenhum verdadeiro. Não use.
 
 ### 2. Ordem de carregamento é o grafo de dependências
 
@@ -143,14 +135,22 @@ o `?v=` não subiu, ou o WebView do Fully Kiosk está servindo do cache. Não
 
 ## Limitações do ambiente
 
-- **Sem Node.js, npm ou Python.** Só `perl` e utilitários POSIX. Não há
-  `node --check`, lint ou teste automatizado. Toda validação sintática é manual.
+- **Node.js 24.18.1 + npm 11.16.0 instalados** em 2026-08-02 (winget, escopo de
+  usuário). O `winget` só atualiza o `PATH` em shells novos — o
+  `check-syntax.ps1` já contorna isso localizando o `node.exe` sozinho.
+  Caminho: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\OpenJS.NodeJS.LTS_*\node-v24.18.1-win-x64\`.
+- **Sem Python.** Disponível: `perl` e utilitários POSIX.
 - **Windows + Git Bash + PowerShell.** A ferramenta Bash roda em sandbox; use
   caminhos absolutos (o `cd` não persiste de forma confiável entre chamadas).
 - **Sem acesso ao Home Assistant em execução.** Não é possível confirmar quais
   entidades existem, quais integrações estão carregadas ou se um arquivo existe
   na máquina do HA mas não no repositório. **Quando a resposta depender disso,
   pergunte — não conclua.**
+- ⚠️ **O repositório NÃO é espelho fiel do `/config` do HA.** Confirmado em
+  2026-08-02: `shared/popup/media_all_players.yaml` existe no HA e nunca esteve
+  neste repositório. Portanto "arquivo ausente aqui" **não** significa "include
+  quebrado no HA", e "arquivo órfão aqui" **não** significa "não usado no HA".
+  Confirme com o usuário antes de classificar ou arquivar.
 
 ## Como registrar decisões
 
@@ -190,8 +190,16 @@ E atualize `docs/02-file-inventory.md` sempre que um arquivo mudar de classe.
 
 ## Atenção operacional
 
-**Existe um processo externo que commita este repositório automaticamente.**
-Em 2026-08-02 ele commitou 179 arquivos com a mensagem `Atualização` no meio de
-uma sessão. Se você precisa de rastreabilidade por commit, confirme o estado do
-Git imediatamente antes e depois de cada passo, e avise o usuário se encontrar
-um commit que não foi você.
+**O usuário commita pelo GitHub Desktop, às vezes no meio de uma sessão.** Em
+2026-08-02 apareceu um commit de 179 arquivos como `Atualização` entre duas
+chamadas de ferramenta. Não é automação — é ele, manualmente. Como o GitHub
+Desktop commita a árvore inteira, trabalho em andamento pode ser varrido para
+dentro de uma mensagem genérica.
+
+Quando uma fase precisar de commit próprio e rastreável, avise antes. Confira
+`git rev-parse HEAD` no início e no fim de passos longos; se mudou, pergunte em
+vez de presumir corrupção.
+
+**Nunca dê `git push` sem pedido explícito.** O usuário prefere que as mudanças
+fiquem locais até revisar o que vale commitar e publicar — e um push em `docs/**`
+dispara deploy público no GitHub Pages.

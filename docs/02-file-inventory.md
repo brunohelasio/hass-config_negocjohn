@@ -100,6 +100,15 @@ Arquivos em `config/dashboards/` que **não** são alcançáveis a partir de
 > **Falso-positivo conhecido:** os 7 arquivos de `dashboards/floorplan/` são
 > incluídos por caminho absoluto (`!include_dir_merge_list /config/dashboards/floorplan/`),
 > válido no HA mas não resolvível pelo resolvedor local. **Eles estão em uso.**
+>
+> ✅ **Validado contra o `/config` real (Fase 2b, 2026-08-02).** A lista abaixo é
+> a versão **anterior** à reconciliação, mantida para rastreabilidade. Correções:
+> `shared/sidebar/sidebar_tablet_landscape.yaml` **não é órfão** (é puxado por
+> `main-grid/sidebar.yaml`, que só existia no HA e foi importado); e os 3 novos
+> `subviews/sidebar_{cameras,floorplan,roborock}.yaml` entraram como órfãos.
+>
+> **Números corrigidos: 354 YAML, 200 alcançáveis, 154 órfãos, 0 `!include` sem
+> alvo.** Detalhe em [`12-migration-plan.md`](12-migration-plan.md), Fase 2b.
 
 ```
 dashboards/floorplan/covers.yaml

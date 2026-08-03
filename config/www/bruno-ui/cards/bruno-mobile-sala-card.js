@@ -39,8 +39,8 @@ class BrunoMobileSalaCard extends HTMLElement {
       name: 'Sala',
       navigation_path: 'subview-sala',
       icon: {
-        off: '/local/bruno-ui/assets/living-room-off.png?v=20260608-sala-shift-1',
-        on: '/local/bruno-ui/assets/living-room-on.png?v=20260608-sala-shift-1',
+        off: '/local/bruno-ui/assets/living-room-off.png?v=20260802-assets-resize-1',
+        on: '/local/bruno-ui/assets/living-room-on.png?v=20260802-assets-resize-1',
       },
       ...config,
       entities,

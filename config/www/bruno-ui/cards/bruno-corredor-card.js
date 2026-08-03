@@ -56,8 +56,8 @@ const BRUNO_CORREDOR_DEFAULT_CONFIG = {
   },
   "icon": {
     // Par 3D off/on derivado da imagem real do Corredor e recortado com alpha.
-    "off": "/local/bruno-ui/assets/corridor-off-tight.png?v=20260729-1",
-    "on": "/local/bruno-ui/assets/corridor-on-tight.png?v=20260729-1",
+    "off": "/local/bruno-ui/assets/corridor-off-tight.png?v=20260802-assets-resize-1",
+    "on": "/local/bruno-ui/assets/corridor-on-tight.png?v=20260802-assets-resize-1",
     "fallback": "mdi:door-open"
   },
   "status_dots": [

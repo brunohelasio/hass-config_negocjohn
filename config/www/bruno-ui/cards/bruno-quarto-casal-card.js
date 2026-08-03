@@ -39,9 +39,9 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
   },
   "icon": {
     // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/couple-bedroom-off.png?v=20260702-all-images-1",
-    "off": "/local/bruno-ui/assets/couple-bedroom-off-generated-v3.png?v=20260702-all-images-1",
+    "off": "/local/bruno-ui/assets/couple-bedroom-off-generated-v3.png?v=20260802-assets-resize-1",
     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/couple-bedroom-on.png?v=20260702-all-images-1",
-    "on": "/local/bruno-ui/assets/couple-bedroom-on-generated-v3.png?v=20260702-all-images-1",
+    "on": "/local/bruno-ui/assets/couple-bedroom-on-generated-v3.png?v=20260802-assets-resize-1",
     "fallback": "mdi:bed-king-outline"
   },
   "status_dots": [

@@ -30,7 +30,7 @@ const BRUNO_QUARTO_CASAL_SUBVIEW_DEFAULT_CONFIG = {
   climate_device_name: 'Gree',
   climate_image: '/local/images/ar-condicionado-gree-tight.png?v=20260702-all-images-1',
   climate_active_image: '/local/images/ar-condicionado-gree-on-tight.png?v=20260702-all-images-1',
-  tv_standby_image: '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260702-all-images-1',
+  tv_standby_image: '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260802-assets-resize-1',
   spotify_standby_image: '/local/images/echo_pop.png?v=20260702-all-images-1',
   tv_apps: [
     { key: 'netflix', label: 'Netflix', image: '/local/images/netflix_bg.jpg?v=20260702-all-images-1', script: '' },
@@ -2402,7 +2402,7 @@ if (action === 'toggle-lights-panel') {
 
     const tvPoster = tv.poster ? BrunoQuartoCasalSubview._resolvePicture(tv.poster) : '';
     const spotifyArtwork = spotify.artwork ? BrunoQuartoCasalSubview._resolvePicture(spotify.artwork) : '';
-    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260702-all-images-1';
+    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260802-assets-resize-1';
     const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png?v=20260702-all-images-1';
     const tvVolume = tv.volume == null ? 60 : tv.volume;
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;
@@ -2693,7 +2693,7 @@ if (action === 'toggle-lights-panel') {
     if (this._hass) this._lastMediaTvOn = tv.active;
     const tvPoster = tv.poster ? BrunoQuartoCasalSubview._resolvePicture(tv.poster) : '';
     const spotifyArtwork = spotify.artwork ? BrunoQuartoCasalSubview._resolvePicture(spotify.artwork) : '';
-    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260702-all-images-1';
+    const tvStandbyImage = this._config.tv_standby_image || '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260802-assets-resize-1';
     const spotifyStandbyImage = this._config.spotify_standby_image || '/local/images/echo_pop.png?v=20260702-all-images-1';
     const tvVolume = tv.volume == null ? 60 : tv.volume;
     const spotifyVolume = spotify.volume == null ? 66 : spotify.volume;

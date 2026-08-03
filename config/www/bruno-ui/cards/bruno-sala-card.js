@@ -4295,8 +4295,8 @@ class BrunoSalaCard extends HTMLElement {
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
-        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
-        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
       </span>
     `;
   }
@@ -4307,8 +4307,8 @@ class BrunoSalaCard extends HTMLElement {
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
-        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
-        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
       </span>
     `;
   }

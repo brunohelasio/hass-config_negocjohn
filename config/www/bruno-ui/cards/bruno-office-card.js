@@ -1575,8 +1575,8 @@ class BrunoOfficeCard extends HTMLElement {
     return `
       <span class="office-asset-wrap">
         <span class="office-asset-fallback">${BrunoOfficeCard._officeIcon(active)}</span>
-        <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
-        <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=20260702-all-images-1" alt="" loading="eager" decoding="async">
+        <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+        <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
       </span>
     `;
   }

@@ -38,9 +38,9 @@ const BRUNO_QUARTO_MIGUEL_DEFAULT_CONFIG = {
   },
   "icon": {
     // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/miguel-bedroom-off.png?v=20260702-all-images-1",
-    "off": "/local/bruno-ui/assets/miguel-bedroom-off-tight.png?v=20260702-all-images-1",
+    "off": "/local/bruno-ui/assets/miguel-bedroom-off-tight.png?v=20260802-assets-resize-1",
     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/miguel-bedroom-on.png?v=20260702-all-images-1",
-    "on": "/local/bruno-ui/assets/miguel-bedroom-on-tight.png?v=20260702-all-images-1",
+    "on": "/local/bruno-ui/assets/miguel-bedroom-on-tight.png?v=20260802-assets-resize-1",
     "fallback": "mdi:bed-single-outline"
   },
   "status_dots": [

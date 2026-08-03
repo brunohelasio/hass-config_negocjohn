@@ -51,8 +51,8 @@ const BRUNO_SALA_ROOM_DEFAULT_CONFIG = {
     "dishwasher": ""
   },
   "icon": {
-    "off": "/local/bruno-ui/assets/living-room-off-tight.png?v=20260702-all-images-1",
-    "on": "/local/bruno-ui/assets/living-room-on-tight.png?v=20260702-all-images-1",
+    "off": "/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1",
+    "on": "/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1",
     "fallback": "mdi:sofa-outline"
   },
   // Mesmos 4 indicadores (e tons) do right-rail do bruno-sala-card.js.

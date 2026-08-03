@@ -41,9 +41,9 @@ const BRUNO_COZINHA_DEFAULT_CONFIG = {
   },
   "icon": {
     // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/kitchen-off.png?v=20260702-all-images-1",
-    "off": "/local/bruno-ui/assets/kitchen-off-tight.png?v=20260702-all-images-1",
+    "off": "/local/bruno-ui/assets/kitchen-off-tight.png?v=20260802-assets-resize-1",
     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/kitchen-on.png?v=20260702-all-images-1",
-    "on": "/local/bruno-ui/assets/kitchen-on-tight.png?v=20260702-all-images-1",
+    "on": "/local/bruno-ui/assets/kitchen-on-tight.png?v=20260802-assets-resize-1",
     "fallback": "mdi:noodles"
   },
   "status_dots": [

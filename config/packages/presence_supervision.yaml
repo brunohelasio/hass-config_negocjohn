@@ -676,75 +676,90 @@ template:
         attributes: *presence_semantic_attributes
 
   # --------------------------------------------------------------------------
-  # Entidades funcionais do Corredor. Para automacoes de luz imediata, usar
-  # corredor_motion_recent; para liberacao suave, corredor_occupancy.
+  # LEGADO DESATIVADO (2026-08-03)
+  #
+  # Os helpers funcionais do Corredor foram isolados em corredor_presence.yaml.
+  # A supervisao acima permanece ativa apenas como diagnostico. O bloco original
+  # fica integralmente comentado para fallback e para evitar entidades duplicadas.
   # --------------------------------------------------------------------------
-  - binary_sensor:
-      - name: Corredor Motion Recent
-        default_entity_id: binary_sensor.corredor_motion_recent
-        unique_id: corredor_motion_recent
-        device_class: motion
-        icon: mdi:motion-sensor
-        availability: >-
-          {{ is_state('sensor.corredor_presence_health', 'ok') }}
-        state: >-
-          {{ is_state('binary_sensor.pir_motion_sensor_corredor_movimento', 'on') }}
-        delay_off:
-          seconds: 5
-        attributes:
-          source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
-          pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
-          pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"
-          semantic_role: immediate_motion
-
-      - name: Corredor Occupancy
-        default_entity_id: binary_sensor.corredor_occupancy
-        unique_id: corredor_occupancy
-        device_class: occupancy
-        icon: mdi:motion-sensor
-        availability: >-
-          {{ is_state('sensor.corredor_presence_health', 'ok') }}
-        state: >-
-          {{ is_state('binary_sensor.pir_motion_sensor_corredor_movimento', 'on') }}
-        delay_off:
-          seconds: 60
-        attributes:
-          source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
-          pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
-          pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"
-          semantic_role: corridor_occupancy
-
-  - sensor:
-      - name: Corredor Semantic State
-        default_entity_id: sensor.corredor_semantic_state
-        unique_id: corredor_semantic_state
-        icon: mdi:motion-sensor
-        state: >-
-          {% set health = states('sensor.corredor_presence_health') %}
-          {% if health == 'unavailable' %}offline
-          {% elif health == 'unknown' %}unknown_source
-          {% elif health == 'initializing' %}initializing
-          {% elif health == 'stale' %}stale
-          {% elif health == 'degraded' %}degraded
-          {% elif is_state('binary_sensor.corredor_motion_recent', 'on') %}motion
-          {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}recent
-          {% else %}none
-          {% endif %}
-        attributes:
-          display: >-
-            {% set state = states('sensor.corredor_presence_health') %}
-            {% if state == 'unavailable' %}Sensor indisponível
-            {% elif state == 'unknown' %}Estado desconhecido
-            {% elif state == 'initializing' %}Inicializando sensor
-            {% elif state == 'stale' %}Dados desatualizados
-            {% elif state == 'degraded' %}Sensor instável
-            {% elif is_state('binary_sensor.corredor_motion_recent', 'on') %}Movimento
-            {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}Movimento recente
-            {% else %}
-            {% endif %}
-          health: "{{ states('sensor.corredor_presence_health') }}"
-          motion_recent: "{{ states('binary_sensor.corredor_motion_recent') }}"
-          occupancy: "{{ states('binary_sensor.corredor_occupancy') }}"
-          source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
-          pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
-          pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"
+  # - binary_sensor:
+  #     - name: Corredor Motion Recent
+  #       default_entity_id: binary_sensor.corredor_motion_recent
+  #       unique_id: corredor_motion_recent
+  #       device_class: motion
+  #       icon: mdi:motion-sensor
+  #       availability: >-
+  #         {{ is_state('sensor.corredor_presence_health', 'ok') }}
+  #       # REVERTIDO em 2026-08-03 para o estado original.
+  #       #
+  #       # Tentativa que FALHOU: `auto_off: 45s` para limitar a retencao do PIR.
+  #       # Resultado: o dot parou de aparecer. `auto_off` nao se comporta como
+  #       # teto num template binary_sensor BASEADO EM ESTADO; ele so faz sentido
+  #       # em template com `trigger:`. Ver docs/11-failed-experiments.md.
+  #       #
+  #       # Bloco que falhou, para nao ser tentado de novo:
+  #       #   state: >-
+  #       #     {{ is_state('binary_sensor.pir_motion_sensor_corredor_movimento', 'on') }}
+  #       #   delay_off: {seconds: 2}
+  #       #   auto_off:  {seconds: 45}
+  #       state: >-
+  #         {{ is_state('binary_sensor.pir_motion_sensor_corredor_movimento', 'on') }}
+  #       delay_off:
+  #         seconds: 5
+  #       attributes:
+  #         source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+  #         pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
+  #         pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"
+  #         semantic_role: immediate_motion
+  #
+  #     - name: Corredor Occupancy
+  #       default_entity_id: binary_sensor.corredor_occupancy
+  #       unique_id: corredor_occupancy
+  #       device_class: occupancy
+  #       icon: mdi:motion-sensor
+  #       availability: >-
+  #         {{ is_state('sensor.corredor_presence_health', 'ok') }}
+  #       state: >-
+  #         {{ is_state('binary_sensor.pir_motion_sensor_corredor_movimento', 'on') }}
+  #       delay_off:
+  #         seconds: 60
+  #       attributes:
+  #         source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+  #         pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
+  #         pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"
+  #         semantic_role: corridor_occupancy
+  #
+  # - sensor:
+  #     - name: Corredor Semantic State
+  #       default_entity_id: sensor.corredor_semantic_state
+  #       unique_id: corredor_semantic_state
+  #       icon: mdi:motion-sensor
+  #       state: >-
+  #         {% set health = states('sensor.corredor_presence_health') %}
+  #         {% if health == 'unavailable' %}offline
+  #         {% elif health == 'unknown' %}unknown_source
+  #         {% elif health == 'initializing' %}initializing
+  #         {% elif health == 'stale' %}stale
+  #         {% elif health == 'degraded' %}degraded
+  #         {% elif is_state('binary_sensor.corredor_motion_recent', 'on') %}motion
+  #         {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}recent
+  #         {% else %}none
+  #         {% endif %}
+  #       attributes:
+  #         display: >-
+  #           {% set state = states('sensor.corredor_presence_health') %}
+  #           {% if state == 'unavailable' %}Sensor indisponivel
+  #           {% elif state == 'unknown' %}Estado desconhecido
+  #           {% elif state == 'initializing' %}Inicializando sensor
+  #           {% elif state == 'stale' %}Dados desatualizados
+  #           {% elif state == 'degraded' %}Sensor instavel
+  #           {% elif is_state('binary_sensor.corredor_motion_recent', 'on') %}Movimento
+  #           {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}Movimento recente
+  #           {% else %}
+  #           {% endif %}
+  #         health: "{{ states('sensor.corredor_presence_health') }}"
+  #         motion_recent: "{{ states('binary_sensor.corredor_motion_recent') }}"
+  #         occupancy: "{{ states('binary_sensor.corredor_occupancy') }}"
+  #         source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+  #         pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
+  #         pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"

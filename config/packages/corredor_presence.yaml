@@ -1,0 +1,79 @@
+# ============================================================================
+# Pacote: corredor_presence (2026-08-03)
+#
+# Objetivo:
+# - espelhar diretamente o PIR real do Corredor, como no Lavabo;
+# - separar o pulso visual curto da retencao para automacoes;
+# - manter a supervisao de saude apenas como diagnostico.
+#
+# Evidencia validada no Home Assistant:
+# - binary_sensor.pir_motion_sensor_corredor_movimento alterna on -> off;
+# - sensor.pir_motion_sensor_corredor_pir alterna pir -> none.
+#
+# FALLBACK RAPIDO:
+# - comentar `corredor_presence: !include packages/corredor_presence.yaml` em
+#   configuration.yaml;
+# - reativar o bloco legado comentado ao final de presence_supervision.yaml.
+# ============================================================================
+
+template:
+  - binary_sensor:
+      # Dot imediato do card: acompanha o sensor bruto e segura apenas 5 s.
+      - name: Corredor Motion Recent
+        default_entity_id: binary_sensor.corredor_motion_recent
+        unique_id: corredor_motion_recent
+        device_class: motion
+        icon: mdi:motion-sensor
+        state: >-
+          {{ is_state('binary_sensor.pir_motion_sensor_corredor_movimento', 'on') }}
+        delay_off:
+          seconds: 5
+        attributes:
+          source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+          source_state: "{{ states('binary_sensor.pir_motion_sensor_corredor_movimento') }}"
+          pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
+          pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"
+          presence_health: "{{ states('sensor.corredor_presence_health') }}"
+          semantic_role: immediate_motion
+
+      # Retencao curta para automacoes e estado semantico apos a passagem.
+      - name: Corredor Occupancy
+        default_entity_id: binary_sensor.corredor_occupancy
+        unique_id: corredor_occupancy
+        device_class: occupancy
+        icon: mdi:motion-sensor
+        state: >-
+          {{ is_state('binary_sensor.pir_motion_sensor_corredor_movimento', 'on') }}
+        delay_off:
+          seconds: 60
+        attributes:
+          source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+          source_state: "{{ states('binary_sensor.pir_motion_sensor_corredor_movimento') }}"
+          pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
+          pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"
+          presence_health: "{{ states('sensor.corredor_presence_health') }}"
+          semantic_role: corridor_occupancy
+
+  - sensor:
+      - name: Corredor Semantic State
+        default_entity_id: sensor.corredor_semantic_state
+        unique_id: corredor_semantic_state
+        icon: mdi:motion-sensor
+        state: >-
+          {% if is_state('binary_sensor.corredor_motion_recent', 'on') %}motion
+          {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}recent
+          {% else %}none
+          {% endif %}
+        attributes:
+          display: >-
+            {% if is_state('binary_sensor.corredor_motion_recent', 'on') %}Movimento
+            {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}Movimento recente
+            {% else %}
+            {% endif %}
+          health: "{{ states('sensor.corredor_presence_health') }}"
+          motion_recent: "{{ states('binary_sensor.corredor_motion_recent') }}"
+          occupancy: "{{ states('binary_sensor.corredor_occupancy') }}"
+          source_entity: binary_sensor.pir_motion_sensor_corredor_movimento
+          source_state: "{{ states('binary_sensor.pir_motion_sensor_corredor_movimento') }}"
+          pir_diagnostic_entity: sensor.pir_motion_sensor_corredor_pir
+          pir_diagnostic_state: "{{ states('sensor.pir_motion_sensor_corredor_pir') }}"

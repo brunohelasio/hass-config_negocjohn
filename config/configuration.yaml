@@ -25,7 +25,9 @@ frontend:
     #
     # ROLLBACK: comentar a linha abaixo. Nada mais depende dela.
     # ANTERIOR: - /local/dashboard/bruno-dashboard.DDAGhZ83.js
-    - /local/dashboard/bruno-dashboard.D2z183rm.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.D2z183rm.js  (so bruno-diagnostics)
+    # NOVO (Fase 5a, 2026-08-04): registra tambem <bruno-room-tile>.
+    - /local/dashboard/bruno-dashboard.CG820YuO.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

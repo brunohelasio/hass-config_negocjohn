@@ -140,7 +140,9 @@ card:
         # da serie, que e a regra que sustenta o visual de tiles + filetes.
         # O clique unico do Corredor vem da mecanica que ja existe: o tap do
         # tile e toggle da luz do comodo.
-        grid-template-columns: repeat(8, minmax(0, 1fr))
+        # ANTERIOR (rollback Fase 5a): repeat(8, minmax(0, 1fr))
+        # 9a coluna temporaria: o bruno-room-tile ao lado do bruno-corredor-card.
+        grid-template-columns: repeat(9, minmax(0, 1fr))
         grid-template-rows: calc(23vh - 24px)
         # Gap por TOKEN: 10px (cartela, como hoje) / 0 no Josh, onde o filete
         # vertical de 1px do tile substitui o gap.
@@ -185,6 +187,16 @@ card:
         - type: custom:bruno-corredor-card
           variant: tile
           divider_left: true
+        # ── FASE 5a, 2026-08-04 — TEMPORARIO, so para comparacao lado a lado ──
+        # Mesmo comodo do tile anterior, pela arquitetura nova (TypeScript+Lit)
+        # e com os assets V2 (maquetes). Entra AO LADO, nao no lugar.
+        # ROLLBACK: remover estas 4 linhas e voltar o grid acima para
+        # repeat(8, minmax(0, 1fr)). Nada mais depende disto.
+        - type: custom:bruno-room-tile
+          room: corredor
+          variant: tile
+          divider_left: true
+        # ─────────────────────────────────────────────────────────────────────
         - type: custom:bruno-quarto-casal-card
           section: casal
           double_tap_action:

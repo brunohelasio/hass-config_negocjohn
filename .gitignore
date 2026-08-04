@@ -43,3 +43,6 @@ home-assistant.log*
 .HA_VERSION
 go2rtc-*
 secrets.yaml
+
+# Previews gerados durante o desenvolvimento (nunca vao para o /config do HA)
+tmp/preview/

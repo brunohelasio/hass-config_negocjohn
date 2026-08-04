@@ -170,6 +170,18 @@ card:
             bruno_section: office
           variant: tile
           divider_left: true
+        # ── FASE 5a, 2026-08-04 — TEMPORARIO, so para comparacao lado a lado ──
+        # Mesmo comodo do tile anterior, pela arquitetura nova (TypeScript+Lit)
+        # e com os assets V2 (maquetes). Entra AO LADO, nao no lugar.
+        # Office porque tem o maior numero de status: luzes, presenca, A/C, PC,
+        # temperatura e umidade — exercita tudo que o tile precisa exibir.
+        # ROLLBACK: remover estas 4 linhas e voltar o grid acima para
+        # repeat(8, minmax(0, 1fr)). Nada mais depende disto.
+        - type: custom:bruno-room-tile
+          room: office
+          variant: tile
+          divider_left: true
+        # ─────────────────────────────────────────────────────────────────────
         - type: custom:bruno-cozinha-card
           section: cozinha
           double_tap_action:
@@ -187,16 +199,6 @@ card:
         - type: custom:bruno-corredor-card
           variant: tile
           divider_left: true
-        # ── FASE 5a, 2026-08-04 — TEMPORARIO, so para comparacao lado a lado ──
-        # Mesmo comodo do tile anterior, pela arquitetura nova (TypeScript+Lit)
-        # e com os assets V2 (maquetes). Entra AO LADO, nao no lugar.
-        # ROLLBACK: remover estas 4 linhas e voltar o grid acima para
-        # repeat(8, minmax(0, 1fr)). Nada mais depende disto.
-        - type: custom:bruno-room-tile
-          room: corredor
-          variant: tile
-          divider_left: true
-        # ─────────────────────────────────────────────────────────────────────
         - type: custom:bruno-quarto-casal-card
           section: casal
           double_tap_action:

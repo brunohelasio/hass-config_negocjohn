@@ -136,7 +136,26 @@ export class BrunoRoomTile extends LitElement {
     const e = this._room?.entities;
     const target = e?.lightGroup ?? e?.lights?.[0];
     if (!target || !this._hass) return;
+
+    // Retorno tatil: o HA expoe haptico pelo evento do frontend.
+    this.dispatchEvent(
+      new CustomEvent('haptic', { detail: 'light', bubbles: true, composed: true }),
+    );
     void this._hass.callService('light', 'toggle', {}, { entity_id: target });
+  };
+
+  /**
+   * Feedback visual de toque.
+   *
+   * O card real aplica a classe no pointerdown e remove no pointerup/cancel,
+   * em vez de usar :active. No WebView do tablet o :active fica presento quando
+   * o gesto vira rolagem da faixa — o botao fica "afundado" ate o proximo toque.
+   */
+  private _press = (ev: Event): void => {
+    const alvo = this.shadowRoot?.querySelector('.room-action');
+    if (!alvo) return;
+    if (ev.type === 'pointerdown') alvo.classList.add('is-pressed');
+    else alvo.classList.remove('is-pressed');
   };
 
   private _dots(): StatusDot[] {
@@ -522,6 +541,31 @@ export class BrunoRoomTile extends LitElement {
       --tone: var(--accent-amber);
     }
 
+    /* O bruno-icon nao tem tamanho proprio: sem estas regras ele renderiza
+       colapsado e o dot fica com um glifo ilegivel. Valores do card real. */
+    .status-dot bruno-icon {
+      --mdc-icon-size: 14px;
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: #ffffff;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.28));
+    }
+
+    /* Feedback de toque. No card real e uma classe aplicada por JS no
+       pointerdown, nao :active — no WebView do tablet o :active e instavel
+       quando o gesto vira scroll. */
+    .room-action.is-pressed {
+      transform: translateY(1px) scale(0.985);
+    }
+
     /* Josh: material flat dos dots, restrito ao modo tile. */
     .room-card.is-tile .status-dot {
       background: rgba(var(--tone), var(--bruno-tile-status-dot-fill-alpha, 0.22));
@@ -566,7 +610,14 @@ export class BrunoRoomTile extends LitElement {
       .join(' ');
 
     return html`
-      <div class=${classes} @click=${this._toggle}>
+      <div
+        class=${classes}
+        @click=${this._toggle}
+        @pointerdown=${this._press}
+        @pointerup=${this._press}
+        @pointercancel=${this._press}
+        @pointerleave=${this._press}
+      >
         ${this._tileMode && this._config?.divider_left
           ? html`<span class="tile-divider" aria-hidden="true"></span>`
           : nothing}

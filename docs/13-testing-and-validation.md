@@ -51,6 +51,29 @@ Focar no que quebra em silêncio e é barato de testar: **funções puras**.
 **Não** perseguir cobertura de saída renderizada — retorno baixo e quebra a cada
 ajuste visual.
 
+### Banco de medição de paridade — em uso desde a Fase 5a
+
+`scripts/harness/` sobe um servidor que mapeia `/local/` para `config/www/` — a
+mesma raiz que o Home Assistant usa, então PNGs e módulos carregam sem alterar
+caminho nenhum. A página renderiza o card **atual** e o componente **novo** na
+mesma célula, com os mesmos tokens de tema e o mesmo estado de entidades.
+
+Expõe `window.medir(hostId, seletores)`, que devolve a geometria de cada elemento
+interno **relativa ao canto do próprio card** — dois cards em colunas diferentes
+ficam comparáveis, e o resultado é um delta em pixels.
+
+Também serve para comportamento: disparar `PointerEvent` e conferir a classe de
+pressão, o cancelamento por arraste, o disparo do *hold* e a chamada de serviço
+resultante. Foi assim que se provou que o toque alterna a mesma entidade que o
+card real.
+
+O que ele **não** cobre: o `bruno-icon` renderiza, mas o painel não estreita
+abaixo de ~980 px, então o ramo `max-width: 800px` é conferido por **comparação
+de regra CSS** entre os dois `shadowRoot`, não por medição.
+
+Custo de medir: um comando. Custo de perguntar "está bom?": uma rodada do
+usuário — e não detecta 1 px.
+
 ### Playwright — Fase 7, não antes
 
 Playwright roda Chromium no computador. Tudo o que quebra neste projeto quebra no

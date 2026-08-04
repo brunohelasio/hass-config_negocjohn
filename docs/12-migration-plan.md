@@ -492,90 +492,103 @@ pode ser declarada como funcionando no tablet sem esse retorno.
 
 ---
 
-## Fase 5a — INTERROMPIDA em 2026-08-03, com pendência aberta
+## Fase 5a — CONCLUÍDA e validada pelo usuário em 2026-08-04
 
-Sessão encerrada a pedido do usuário após ciclos excessivos de tentativa e erro.
-**Nada foi entregue à VM.** O dashboard em produção está intacto.
+Primeiro componente da arquitetura nova em produção: `bruno-room-tile`, o nono
+tile da faixa, ao lado dos oito atuais. Validado pelo usuário com o Office
+renderizado duas vezes — card atual à esquerda, componente novo à direita.
 
-### O que ficou pronto e verificado por medição
+### O que ficou provado
 
-| Item | Estado |
+| Item | Resultado medido |
 |---|---|
-| Componente `bruno-room-tile` (Lit + TypeScript) | escrito, compila, 30 testes passando |
-| Modo tile (`variant: tile` + `--bruno-tile-mode`) | implementado |
-| Caixa do ícone | **0 px** de diferença contra `bruno-office-card` |
-| Alinhamento imagem × texto | **0 px** nos 8 cômodos |
-| Chevron (só em cômodo com subview) | implementado |
-| Métrica e dots | conforme o card real, medido |
-| Assets normalizados | canvas 384×254, alinhados à esquerda |
-| Contrato de atualização do `hass` | assinatura por entidade, sem re-render total |
+| Ícone, zona de navegação, título, chevron, linhas, coluna direita, métrica, pilha de dots | **0,00 px** em x, y, largura e altura |
+| Desenho do PNG dentro da caixa | 0,7 px no topo · 1,1 px na altura |
+| Pele do cartão, contagem e cor dos dots, textos, métrica | idênticos |
+| Toque, arraste, pressão longa, navegação | mesmo comportamento e mesma chamada de serviço |
+| Breakpoints `max-height: 760px` e `max-width: 800px` | declarações idênticas às do card real |
 
-### ⚠️ PENDÊNCIA: o Q. Casal continua lendo como pequeno
+Ambientes medidos: viewport 1280×720 e 1280×900, célula 183×160.
 
-Estado: 34% de área, igual aos demais. **O usuário avalia como pequeno.**
+### As duas causas que explicavam quase toda a divergência
 
-**Diagnóstico para retomar** — "área igual" é a métrica errada para este objeto.
-A cama de casal é um retângulo largo e achatado (conteúdo 376 × 218). Com área
-equalizada numa caixa de 124 × 82, ela renderiza **baixa**: ganha largura e perde
-altura. O olho lê altura, não área.
+**1. O modo tile nunca ligava.** O token `--bruno-tile-mode` era lido no
+`firstUpdated`. O Lit faz o primeiro update no *attach*, **antes** de o Home
+Assistant chamar `setConfig` — ali o token ainda não é visível e `variant` ainda
+não existe. O tile caía no cartão de vidro, e daí vinham a névoa esbranquiçada no
+estado aceso, a borda de 1 px que deslocava tudo e a pele errada dos dots.
+Correção: avaliação preguiçosa com cache, invalidado no `connectedCallback` e no
+evento `bruno-theme-changed` — que é exatamente o que os cards atuais fazem.
 
-Objetos compactos (escrivaninha, pia, berço) com a mesma área ocupam mais altura
-e por isso parecem maiores.
+**2. Faltavam os dois breakpoints dos cards atuais.** Ver docs/07, seção
+"Breakpoints existentes". Sem eles o ícone ficava 10 px mais alto que o dos
+vizinhos em telas com menos de 760 px de altura.
 
-**Caminhos a testar amanhã, em ordem de robustez:**
+### O que passou a existir na configuração
 
-1. **Equalizar pela ALTURA renderizada** em vez da área. Resolve a classe
-   inteira, não só o Casal — é o que o olho usa para julgar tamanho numa faixa
-   horizontal.
-2. **Equalizar pela diagonal** do retângulo de conteúdo. Meio-termo entre área e
-   altura; costuma funcionar para conjuntos com proporções muito diferentes.
-3. `iconScale` por cômodo calibrado **uma vez** sobre a geometria final. Só
-   depois de 1 ou 2, e nunca como primeira tentativa.
+`rooms.config.ts` ganhou quatro campos que antes viviam espalhados nos cards:
 
-**Não repetir:** ajustar o fator do Casal por tentativa. Foi feito quatro vezes
-(1,15 → 1,05 → 0,95 → 0,85 → 1,00) e as quatro primeiras avaliações foram sobre
-o arquivo errado. O problema é a métrica de normalização, não o número.
+- `toggleTarget` — o toque curto alterna a luz **principal**, não o grupo. O
+  grupo só no *hold*, para apagar o cômodo. Estava errado nos oito cômodos.
+- `activeSensor` — sensor `*_active`, fonte primária da contagem de luzes.
+- `statusDots` — descritor declarativo dos pontos de status, transcrito do
+  `status_dots` que os seis cards mais novos já usam.
+- `semanticState` — apontando para as variantes `*_supervised`, que são as que os
+  cards reais leem.
 
-### Pendência menor
+### Gap conhecido
 
-Bloco de título/status **3,7 px** mais baixo que o card real (≈2% do tile). A
-causa está na distribuição das linhas do grid — no Office ficam 28+28 px, no
-componente 16+16. `align-self: end` não resolveu.
+O overlay de reunião (`.meeting-icon`) é exclusivo do `bruno-office-card` e não
+foi transcrito. Decidir na Fase 5b se vira recurso do componente ou se sai.
 
-### Erros desta sessão e o que cada um custou
+---
+
+## Fase 5b — próxima: converger os sete cards restantes
+
+O caminho está aberto: `rooms.config.ts` já descreve os oito cômodos por
+completo, e o banco de medição (`scripts/harness/`) permite validar cada um por
+número antes de mostrar.
+
+Ordem sugerida, do mais completo para o mais simples — assim cada passo já
+exercita tudo que o anterior exercitou:
+
+1. **Sala** — quatro dots, TV, A/C, Echo; é o outro card "grande".
+2. **Q. Marina**, **Q. Miguel**, **Q. Casal** — mesma estrutura, A/C e Echo.
+3. **Cozinha** — dots de eletrodoméstico, incluindo o que acende por atributo.
+4. **Lavabo** — abre popup em vez de subview; é o caso que falta modelar.
+5. **Corredor** — sem subview, sem sensores de clima.
+
+Para cada um: trocar `room:` no harness, medir contra o card real correspondente,
+e só então publicar. O card antigo permanece no disco até os oito estarem
+validados.
+
+### Erros da Fase 5a e o que cada um custou
 
 | # | Erro | Causa raiz | Custo |
 |---|---|---|---|
 | 1 | `.metric` com 48px / `text-align: left` | copiei do `bruno-corredor-card`, que **não tem sensor de temperatura** — o CSS de lá nunca renderiza | 1 rodada |
-| 2 | Ícone 94×94 quadrado | li `icon_size` do config; o CSS o sobrescreve com `100% / max 124 × 82` | 1 rodada |
-| 3 | Assets em tela quadrada | normalizei **antes** de medir a caixa; tela quadrada em caixa 124×82 deixa 21px de folga e o objeto nunca encosta à esquerda | 2 rodadas |
-| 4 | Q. Casal com arquivo errado | montei o caminho por convenção (`-tight`); o arquivo real é `-generated-v3`, e existe um `-tight` órfão de 487×277 | **4 rodadas** |
-| 5 | Imagens em cache no harness | `?v=` fixo enquanto eu regerava os PNGs; o usuário avaliou arquivos velhos sem que eu percebesse | **3 rodadas** |
+| 2 | Ícone 94×94 quadrado | li `icon_size` do config; o CSS o sobrescreve com `100% / max 122 × 82` | 1 rodada |
+| 3 | Assets em tela quadrada | normalizei **antes** de medir a caixa | 2 rodadas |
+| 4 | Q. Casal com arquivo errado | montei o caminho por convenção (`-tight`); o real é `-generated-v3` | **4 rodadas** |
+| 5 | Imagens em cache no harness | `?v=` fixo enquanto eu regerava os PNGs; o usuário avaliou arquivos velhos | **3 rodadas** |
 | 6 | Crase em comentário de template literal | 5ª ocorrência no projeto; `tsc` pegou em segundos | ~0 |
+| 7 | Receita dos dots copiada de bloco **comentado** | o card real guarda três tentativas rejeitadas em comentário; peguei uma delas | 1 rodada |
+| 8 | Token do tema lido no `firstUpdated` | ciclo de vida do Lit ≠ ciclo de vida do card do HA | 1 rodada |
 
-**O padrão dos seis: pedi avaliação visual quando deveria ter medido.** Toda vez
-que medi, achei o defeito em um passo. Toda vez que perguntei "está bom?", gastei
-uma rodada do usuário para descobrir que eu não sabia.
+**O padrão dos oito: pedi avaliação visual quando deveria ter medido.** Toda vez
+que medi, achei o defeito em um passo.
 
-**Regra para retomar:** só pedir validação sobre resultado **medido**. Se não dá
-para provar por número que está certo, não mostrar.
+**Regra:** só pedir validação sobre resultado **medido**. Se não dá para provar
+por número que está certo, não mostrar. Ver `scripts/harness/README.md`.
 
 ### Como retomar
 
 ```bash
-cd dashboard-src && npm run check          # typecheck + lint + test + build
-powershell -File scripts/validation/check-includes.pl   # includes
+cd dashboard-src && npm run check                   # typecheck + lint + test + build
+perl scripts/validation/check-includes.pl .         # includes
 ```
 
-Harness local: `tmp/preview/harness.html` — abre no navegador, sem tocar no HA.
-Aponta para o bundle com hash; **atualizar o nome no HTML após cada build**.
-
-Medir contra o card real (referência é o **`bruno-office-card`**, o cômodo mais
-completo — nunca o Corredor nem o Lavabo, que têm CSS morto):
-
-```js
-const sr = document.querySelector('bruno-office-card').shadowRoot;
-const c  = sr.querySelector('.office-card').getBoundingClientRect();
-const el = sr.querySelector('.room-icon').getBoundingClientRect();
-({ esq: el.left - c.left, topo: el.top - c.top, larg: el.width, alt: el.height })
-```
+Banco de medição: `scripts/harness/` — sobe um servidor que mapeia `/local/` para
+`config/www/`, renderiza os dois cards na mesma célula e expõe `window.medir()`.
+Referência é sempre o **`bruno-office-card`**, o cômodo mais completo — nunca o
+Corredor nem o Lavabo, que têm CSS que nunca renderiza.

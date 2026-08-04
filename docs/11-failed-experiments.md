@@ -210,3 +210,39 @@ aposentar a Home V1 de vez.
 qualquer ponto cego do analisador vira decisão errada em massa. Antes de mover,
 validar o analisador contra o comportamento real — e ter uma segunda varredura
 que não dependa das mesmas premissas.
+
+## Ler token de tema no `firstUpdated` de um componente Lit (2026-08-04)
+
+**O que parecia certo:** `firstUpdated` roda depois do primeiro render, logo o
+elemento já está no DOM e `getComputedStyle` enxerga os tokens do tema.
+
+**O que acontece:** o Lit dispara o primeiro update no *attach*. O Home Assistant
+chama `setConfig` **depois** disso. No `firstUpdated` o `variant` ainda não
+existe, e o teste `variant === 'tile' && token === 'on'` dá falso — para sempre,
+porque `firstUpdated` não roda de novo.
+
+**Sintoma:** o tile renderizou como cartão de vidro no meio de oito tiles chatos.
+Névoa esbranquiçada no estado aceso (fundo ON do vidro), borda de 1 px deslocando
+toda a composição, dots com a pele errada. Três defeitos aparentemente
+independentes, uma causa só.
+
+**Correção:** avaliação preguiçosa no render, com cache invalidado no
+`connectedCallback` e no evento `bruno-theme-changed`. É o que os cards atuais
+sempre fizeram — eu troquei o padrão deles por um que parecia mais limpo.
+
+**Regra:** o ciclo de vida de um card do Home Assistant não é o ciclo de vida do
+Lit. `setConfig` pode chegar antes ou depois do primeiro update, e o elemento
+pode ser reconfigurado sem ser reconstruído.
+
+## Copiar CSS de bloco comentado dentro dos cards (2026-08-04)
+
+Os cards guardam tentativas rejeitadas em comentário, marcadas
+`ORIGINAL ... (rollback rapido)`. O `.status-dot` tem **três** receitas antigas
+antes da vigente: vidro fosco, chapado sólido, e ícone sem círculo.
+
+Copiei a primeira que apareceu no arquivo — a de vidro fosco — e entreguei ao
+usuário exatamente o visual que ele já tinha recusado.
+
+**Regra:** ao transcrever de um card, procurar a última definição **ativa** do
+seletor, não a primeira ocorrência textual. `grep -n '^\s*\.seletor {'` lista
+todas; as comentadas ficam dentro de `/* ... */`.

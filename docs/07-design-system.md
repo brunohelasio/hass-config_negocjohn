@@ -271,6 +271,47 @@ No estado aceso (`.is-room-on`) esses valores mudam em bloco — ver o card atua
 
 `max-width: 800px` (phone), `max-height: 760px`, `prefers-reduced-motion`.
 
+**Os dois primeiros mudam a composição e são obrigatórios em qualquer
+reimplementação.** Foram esquecidos na Fase 5a e o tile saiu com o ícone 10 px
+mais alto que o dos vizinhos em telas baixas. Valores exatos:
+
+```css
+@media (max-height: 760px) {
+  .room-action { padding: 12px 11px 12px 11px; }   /* base: 14px 11px 13px */
+  .room-icon   { width: 100%; max-width: 108px; height: 72px; }  /* base: 122 × 82 */
+}
+
+@media (max-width: 800px) {
+  .room-action { padding: 11px 12px 10px 10px; }
+  .room-icon   { max-width: 100px; height: 62px; }
+}
+```
+
+Consequência para os assets: qualquer compensação de enquadramento precisa ser
+**proporcional à caixa**, não em pixels fixos — senão o desenho descola em um dos
+três tamanhos. No tile novo isso é `height: 111%` da caixa, com o deslocamento
+também em percentual do próprio elemento.
+
+### O interruptor do modo tile — armadilha de ciclo de vida
+
+`--bruno-tile-mode` **não pode ser lido no `firstUpdated`** de um componente Lit.
+O Lit faz o primeiro update no *attach*; o Home Assistant chama `setConfig`
+depois. Naquele instante o token do tema ainda não é visível e o `variant` ainda
+não existe — o resultado é um cartão de vidro no meio de oito tiles.
+
+O padrão correto, que os cards atuais já usam: avaliação preguiçosa no render,
+com cache invalidado no `connectedCallback` e no evento `bruno-theme-changed`.
+
+### Onde NÃO copiar valores: blocos comentados
+
+Os cards guardam tentativas rejeitadas em comentário, com o marcador
+`ORIGINAL ... (rollback rapido)`. O `.status-dot`, por exemplo, tem **três**
+receitas antigas comentadas antes da vigente. Copiar a primeira que aparece no
+arquivo entrega justamente o visual que o usuário já recusou.
+
+A receita vigente do dot: círculo com gradiente tonal, borda clara e glifo
+branco; em modo tile vira preenchimento chapado com alfa 0,78 e sem borda.
+
 Ao migrar para container query, o alvo é **cair no mesmo valor** que estes
 breakpoints produzem hoje na largura do tablet. Independência de resolução não
 pode custar paridade visual: se `clamp()` não reproduzir a composição acima no

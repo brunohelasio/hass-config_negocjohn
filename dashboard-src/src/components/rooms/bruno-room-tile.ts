@@ -360,12 +360,21 @@ export class BrunoRoomTile extends LitElement {
       display: block;
     }
 
+    /* Assets V2 (Room Assets V2): maquetes em tela QUADRADA de 512x512, com
+       caixa optica, centro e linha de base ja padronizados na origem. Por isso
+       NAO recebem scale, translate nem margem por comodo — a padronizacao esta
+       no arquivo, nao no CSS.
+
+       object-position: left porque a tela e quadrada e a caixa e 124x82: com
+       contain a maquete renderiza 82x82 e, centralizada, sobrariam 21px de cada
+       lado — o objeto nao encostaria na coluna onde o texto do comodo comeca. */
     .room-asset {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: contain;
+      object-position: left center;
       transition: opacity var(--bruno-liquid-motion-fast, 160ms ease);
     }
 

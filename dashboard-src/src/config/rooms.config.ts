@@ -65,8 +65,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'sala',
     name: 'Sala',
     section: 'sala',
-    assetOff: 'living-room-off-tight',
-    assetOn: 'living-room-on-tight',
+    assetOff: 'v2/sala-off',
+    assetOn: 'v2/sala-on',
     grammaticalGender: 'f',
     entities: {
       lightGroup: 'light.grupo_luzes_sala',
@@ -91,8 +91,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'office',
     name: 'Office',
     section: 'office',
-    assetOff: 'office-off-tight',
-    assetOn: 'office-on-tight',
+    assetOff: 'v2/office-off',
+    assetOn: 'v2/office-on',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_luzes_office',
@@ -112,8 +112,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'cozinha',
     name: 'Cozinha',
     section: 'cozinha',
-    assetOff: 'kitchen-off-tight',
-    assetOn: 'kitchen-on-tight',
+    assetOff: 'v2/cozinha-off',
+    assetOn: 'v2/cozinha-on',
     grammaticalGender: 'f',
     entities: {
       lightGroup: 'light.grupo_luzes_cozinha',
@@ -130,8 +130,8 @@ export const ROOMS: readonly RoomConfig[] = [
   {
     id: 'lavabo',
     name: 'Lavabo',
-    assetOff: 'lavabo-off-tight',
-    assetOn: 'lavabo-on-tight',
+    assetOff: 'v2/lavabo-off',
+    assetOn: 'v2/lavabo-on',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_luzes_lavabo',
@@ -145,8 +145,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'casal',
     name: 'Q. Casal',
     section: 'casal',
-    assetOff: 'couple-bedroom-off-generated-v3',
-    assetOn: 'couple-bedroom-on-generated-v3',
+    assetOff: 'v2/quarto-casal-off',
+    assetOn: 'v2/quarto-casal-on',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_quarto_casal',
@@ -165,8 +165,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'marina',
     name: 'Q. Marina',
     section: 'marina',
-    assetOff: 'marina-bedroom-off-tight',
-    assetOn: 'marina-bedroom-on-tight',
+    assetOff: 'v2/quarto-menina-off',
+    assetOn: 'v2/quarto-menina-on',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_luzes_quarto_marina',
@@ -186,8 +186,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'miguel',
     name: 'Q. Miguel',
     section: 'miguel',
-    assetOff: 'miguel-bedroom-off-tight',
-    assetOn: 'miguel-bedroom-on-tight',
+    assetOff: 'v2/quarto-bebe-off',
+    assetOn: 'v2/quarto-bebe-on',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_luzes_quarto_miguel',
@@ -205,8 +205,8 @@ export const ROOMS: readonly RoomConfig[] = [
   {
     id: 'corredor',
     name: 'Corredor',
-    assetOff: 'corridor-off-tight',
-    assetOn: 'corridor-on-tight',
+    assetOff: 'v2/corredor-off',
+    assetOn: 'v2/corredor-on',
     grammaticalGender: 'm',
     entities: {
       lights: ['light.corredor_switch_1'],

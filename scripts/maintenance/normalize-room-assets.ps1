@@ -35,6 +35,12 @@ param(
   [string]$OutDir = '',
   [double]$TargetArea = 0.42,
   [int]$Canvas = 384,
+  # Altura da tela. NÃO é quadrada: acompanha a proporção da caixa do ícone
+  # (124 × 82 = 1,512). Tela quadrada virava 82×82 centralizada nos 124px, com
+  # 21px de folga de cada lado — o objeto nunca encostava na esquerda, onde o
+  # texto do cômodo começa. Com a proporção certa, o `contain` preenche a caixa
+  # inteira e a borda esquerda do conteúdo cai exatamente na do texto.
+  [int]$CanvasH = 254,
   # Fração máxima da tela que o conteúdo pode ocupar.
   #
   # Era 0.94 por precaução, mas a precaução não protegia de nada: como todas as
@@ -60,8 +66,19 @@ $assets = Join-Path $repo 'config\www\bruno-ui\assets'
 # Este é o mesmo papel que `iconScale` terá em rooms.config.ts — calibrar no
 # olho sem tocar em código nem regerar imagem. Ajustado a pedido do usuário
 # em 2026-08-03.
+# NOTA (2026-08-03): os fatores foram recalibrados depois de a caixa do icone
+# ser corrigida de 94x94 para 124x82. A primeira calibracao foi feita contra a
+# geometria errada, entao o Q. Casal (x1,15) ficou grande demais na caixa real.
+# O Q. Casal NAO tem ajuste, de proposito.
+#
+# Ele foi reduzido tres vezes (1,15 -> 1,05 -> 0,95 -> 0,85) com base em
+# avaliacao visual de um arquivo que o componente NAO exibia: o tile montava o
+# caminho por convencao e carregava couple-bedroom-on-tight.png (orfao, 487x277,
+# nunca processado) no lugar de couple-bedroom-on-generated-v3.png. As tres
+# avaliacoes foram sobre a imagem errada e por isso foram descartadas.
+#
+# Corredor e Office ficam: foram julgados sobre os arquivos realmente exibidos.
 $AJUSTE = @{
-  'Q. Casal' = 1.15
   'Corredor' = 1.12
   'Office'   = 0.94
 }
@@ -115,7 +132,7 @@ function Measure-Ink([System.Drawing.Bitmap]$bmp) {
 $destRoot = if ($OutDir) { Join-Path $repo $OutDir } else { $assets }
 if ($OutDir -and -not (Test-Path $destRoot)) { New-Item -ItemType Directory -Path $destRoot -Force | Out-Null }
 
-$alvoInk = $Canvas * $Canvas * $TargetArea
+$alvoInk = $Canvas * $CanvasH * $TargetArea
 
 Write-Host ''
 Write-Host ("  {0,-11} {1,-13} {2,9} {3,8} {4,9}" -f 'COMODO','CONTEUDO','AREA ORIG','ESCALA','AREA FINAL')
@@ -135,10 +152,10 @@ foreach ($p in $PARES) {
   $escala = $escala * $fator
   # ...e limitada para o conteudo nao estourar a tela.
   $maxPorLargura = ($Canvas * $MaxFill) / $m.W
-  $maxPorAltura  = ($Canvas * $MaxFill) / $m.H
+  $maxPorAltura  = ($CanvasH * $MaxFill) / $m.H
   $escala = [Math]::Min($escala, [Math]::Min($maxPorLargura, $maxPorAltura))
 
-  $areaFinal = [Math]::Round(100 * ($m.Ink * $escala * $escala) / ($Canvas * $Canvas))
+  $areaFinal = [Math]::Round(100 * ($m.Ink * $escala * $escala) / ($Canvas * $CanvasH))
   $marca = if ($fator -ne 1.0) { (" x{0:N2}" -f $fator) } else { '' }
   Write-Host ("  {0,-11} {1,-13} {2,8}% {3,8:N2} {4,8}%{5}" -f `
     $p.room, ("{0}x{1}" -f $m.W, $m.H),
@@ -156,7 +173,7 @@ foreach ($p in $PARES) {
     $nw = [Math]::Max(1, [int][Math]::Round($mi.W * $escala))
     $nh = [Math]::Max(1, [int][Math]::Round($mi.H * $escala))
 
-    $out = New-Object System.Drawing.Bitmap $Canvas, $Canvas, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $out = New-Object System.Drawing.Bitmap $Canvas, $CanvasH, ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g = [System.Drawing.Graphics]::FromImage($out)
     $g.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
     $g.InterpolationMode  = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
@@ -165,7 +182,7 @@ foreach ($p in $PARES) {
     $g.Clear([System.Drawing.Color]::Transparent)
 
     $destRect = New-Object System.Drawing.Rectangle `
-      ([int](($Canvas - $nw) / 2)), ([int](($Canvas - $nh) / 2)), $nw, $nh
+      0, ([int](($CanvasH - $nh) / 2)), $nw, $nh
     $srcRect = New-Object System.Drawing.Rectangle $mi.X, $mi.Y, $mi.W, $mi.H
     $g.DrawImage($bmp, $destRect, $srcRect, [System.Drawing.GraphicsUnit]::Pixel)
     $g.Dispose()

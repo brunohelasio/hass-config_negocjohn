@@ -36,8 +36,16 @@ export interface RoomConfig {
   name: string;
   /** Seção da shell (`bento-lab#<section>`). Ausente = sem subview própria. */
   section?: string;
-  /** Base dos assets `<asset>-on.png` / `<asset>-off.png`. */
-  asset?: string;
+  /**
+   * Caminhos completos dos assets, por estado.
+   *
+   * Eram montados por convenção (`<asset>-on-tight.png`), mas o Q. Casal foge
+   * do padrão: o arquivo em uso é `couple-bedroom-on-generated-v3.png`, e
+   * existe um `couple-bedroom-on-tight.png` **antigo e órfão** que a convenção
+   * carregava por engano. Caminho explícito elimina a classe do problema.
+   */
+  assetOff?: string;
+  assetOn?: string;
   /**
    * Ajuste fino de tamanho do ícone, 1 = padrão.
    *
@@ -57,7 +65,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'sala',
     name: 'Sala',
     section: 'sala',
-    asset: 'living-room',
+    assetOff: 'living-room-off-tight',
+    assetOn: 'living-room-on-tight',
     grammaticalGender: 'f',
     entities: {
       lightGroup: 'light.grupo_luzes_sala',
@@ -82,7 +91,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'office',
     name: 'Office',
     section: 'office',
-    asset: 'office',
+    assetOff: 'office-off-tight',
+    assetOn: 'office-on-tight',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_luzes_office',
@@ -102,7 +112,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'cozinha',
     name: 'Cozinha',
     section: 'cozinha',
-    asset: 'kitchen',
+    assetOff: 'kitchen-off-tight',
+    assetOn: 'kitchen-on-tight',
     grammaticalGender: 'f',
     entities: {
       lightGroup: 'light.grupo_luzes_cozinha',
@@ -119,7 +130,8 @@ export const ROOMS: readonly RoomConfig[] = [
   {
     id: 'lavabo',
     name: 'Lavabo',
-    asset: 'lavabo',
+    assetOff: 'lavabo-off-tight',
+    assetOn: 'lavabo-on-tight',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_luzes_lavabo',
@@ -133,7 +145,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'casal',
     name: 'Q. Casal',
     section: 'casal',
-    asset: 'couple-bedroom',
+    assetOff: 'couple-bedroom-off-generated-v3',
+    assetOn: 'couple-bedroom-on-generated-v3',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_quarto_casal',
@@ -152,7 +165,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'marina',
     name: 'Q. Marina',
     section: 'marina',
-    asset: 'marina-bedroom',
+    assetOff: 'marina-bedroom-off-tight',
+    assetOn: 'marina-bedroom-on-tight',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_luzes_quarto_marina',
@@ -172,7 +186,8 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'miguel',
     name: 'Q. Miguel',
     section: 'miguel',
-    asset: 'miguel-bedroom',
+    assetOff: 'miguel-bedroom-off-tight',
+    assetOn: 'miguel-bedroom-on-tight',
     grammaticalGender: 'm',
     entities: {
       lightGroup: 'light.grupo_luzes_quarto_miguel',
@@ -190,7 +205,8 @@ export const ROOMS: readonly RoomConfig[] = [
   {
     id: 'corredor',
     name: 'Corredor',
-    asset: 'corridor',
+    assetOff: 'corridor-off-tight',
+    assetOn: 'corridor-on-tight',
     grammaticalGender: 'm',
     entities: {
       lights: ['light.corredor_switch_1'],

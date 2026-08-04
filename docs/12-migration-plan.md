@@ -489,3 +489,93 @@ pode ser declarada como funcionando no tablet sem esse retorno.
 | Um commit de fase | `git revert <sha>` |
 | Recurso JS | reverter a linha `?v=` em `configuration.yaml` (o valor anterior está comentado ao lado) |
 | Home V2 → V1 | trocar 1 linha em `views/bento_shell.yaml` (`section_home_v2` → `section_home`) |
+
+---
+
+## Fase 5a — INTERROMPIDA em 2026-08-03, com pendência aberta
+
+Sessão encerrada a pedido do usuário após ciclos excessivos de tentativa e erro.
+**Nada foi entregue à VM.** O dashboard em produção está intacto.
+
+### O que ficou pronto e verificado por medição
+
+| Item | Estado |
+|---|---|
+| Componente `bruno-room-tile` (Lit + TypeScript) | escrito, compila, 30 testes passando |
+| Modo tile (`variant: tile` + `--bruno-tile-mode`) | implementado |
+| Caixa do ícone | **0 px** de diferença contra `bruno-office-card` |
+| Alinhamento imagem × texto | **0 px** nos 8 cômodos |
+| Chevron (só em cômodo com subview) | implementado |
+| Métrica e dots | conforme o card real, medido |
+| Assets normalizados | canvas 384×254, alinhados à esquerda |
+| Contrato de atualização do `hass` | assinatura por entidade, sem re-render total |
+
+### ⚠️ PENDÊNCIA: o Q. Casal continua lendo como pequeno
+
+Estado: 34% de área, igual aos demais. **O usuário avalia como pequeno.**
+
+**Diagnóstico para retomar** — "área igual" é a métrica errada para este objeto.
+A cama de casal é um retângulo largo e achatado (conteúdo 376 × 218). Com área
+equalizada numa caixa de 124 × 82, ela renderiza **baixa**: ganha largura e perde
+altura. O olho lê altura, não área.
+
+Objetos compactos (escrivaninha, pia, berço) com a mesma área ocupam mais altura
+e por isso parecem maiores.
+
+**Caminhos a testar amanhã, em ordem de robustez:**
+
+1. **Equalizar pela ALTURA renderizada** em vez da área. Resolve a classe
+   inteira, não só o Casal — é o que o olho usa para julgar tamanho numa faixa
+   horizontal.
+2. **Equalizar pela diagonal** do retângulo de conteúdo. Meio-termo entre área e
+   altura; costuma funcionar para conjuntos com proporções muito diferentes.
+3. `iconScale` por cômodo calibrado **uma vez** sobre a geometria final. Só
+   depois de 1 ou 2, e nunca como primeira tentativa.
+
+**Não repetir:** ajustar o fator do Casal por tentativa. Foi feito quatro vezes
+(1,15 → 1,05 → 0,95 → 0,85 → 1,00) e as quatro primeiras avaliações foram sobre
+o arquivo errado. O problema é a métrica de normalização, não o número.
+
+### Pendência menor
+
+Bloco de título/status **3,7 px** mais baixo que o card real (≈2% do tile). A
+causa está na distribuição das linhas do grid — no Office ficam 28+28 px, no
+componente 16+16. `align-self: end` não resolveu.
+
+### Erros desta sessão e o que cada um custou
+
+| # | Erro | Causa raiz | Custo |
+|---|---|---|---|
+| 1 | `.metric` com 48px / `text-align: left` | copiei do `bruno-corredor-card`, que **não tem sensor de temperatura** — o CSS de lá nunca renderiza | 1 rodada |
+| 2 | Ícone 94×94 quadrado | li `icon_size` do config; o CSS o sobrescreve com `100% / max 124 × 82` | 1 rodada |
+| 3 | Assets em tela quadrada | normalizei **antes** de medir a caixa; tela quadrada em caixa 124×82 deixa 21px de folga e o objeto nunca encosta à esquerda | 2 rodadas |
+| 4 | Q. Casal com arquivo errado | montei o caminho por convenção (`-tight`); o arquivo real é `-generated-v3`, e existe um `-tight` órfão de 487×277 | **4 rodadas** |
+| 5 | Imagens em cache no harness | `?v=` fixo enquanto eu regerava os PNGs; o usuário avaliou arquivos velhos sem que eu percebesse | **3 rodadas** |
+| 6 | Crase em comentário de template literal | 5ª ocorrência no projeto; `tsc` pegou em segundos | ~0 |
+
+**O padrão dos seis: pedi avaliação visual quando deveria ter medido.** Toda vez
+que medi, achei o defeito em um passo. Toda vez que perguntei "está bom?", gastei
+uma rodada do usuário para descobrir que eu não sabia.
+
+**Regra para retomar:** só pedir validação sobre resultado **medido**. Se não dá
+para provar por número que está certo, não mostrar.
+
+### Como retomar
+
+```bash
+cd dashboard-src && npm run check          # typecheck + lint + test + build
+powershell -File scripts/validation/check-includes.pl   # includes
+```
+
+Harness local: `tmp/preview/harness.html` — abre no navegador, sem tocar no HA.
+Aponta para o bundle com hash; **atualizar o nome no HTML após cada build**.
+
+Medir contra o card real (referência é o **`bruno-office-card`**, o cômodo mais
+completo — nunca o Corredor nem o Lavabo, que têm CSS morto):
+
+```js
+const sr = document.querySelector('bruno-office-card').shadowRoot;
+const c  = sr.querySelector('.office-card').getBoundingClientRect();
+const el = sr.querySelector('.room-icon').getBoundingClientRect();
+({ esq: el.left - c.left, topo: el.top - c.top, larg: el.width, alt: el.height })
+```

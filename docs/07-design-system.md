@@ -182,14 +182,59 @@ Office depois do incidente de clipping de 2026-07-03.
 
 | Elemento | Valor |
 |---|---|
-| `icon_size` (config) | **94** px |
-| `.room-icon` | `var(--room-icon-size)`, margem `-4px` no topo e à esquerda |
+| `.room-icon` | **`width: 100%`, `max-width: 124px`, `height: 82px`** — a caixa **não é quadrada**; margens `0` / `1px` |
+| `padding` da ação | **`14px 11px 13px`** |
 | `.title` | **15 px** / peso 700 / `line-height` 1.18 / `margin-bottom` 2px |
 | `.status-lines` | **11 px** / peso 500 / `line-height` 1.16 / `gap` 1px |
+| `.metric` | **`min-width: 36px`, `text-align: center`**, sem margens |
 | `.metric-value` | 13 px / peso 760 |
 | `.metric-sub` | 11 px / peso 600 / `margin-top` 4px |
 | `.status-dot` | **26 × 26 px**, círculo |
-| `.right-rail` | coluna, `gap` 7px, `transform: translate(5px, -3px)` |
+| `.right-rail` | coluna, `gap` 7px, `transform: translate(5px, -3px)`, `align-items: center` |
+
+> ⚠️ **Não copiar `.metric` do `bruno-corredor-card.js`.** O Corredor **não tem
+> sensor de temperatura** — a métrica nunca renderiza naquele card, e os valores
+> de lá (`min-width: 48px`, `text-align: left`, `margin-left: 6px`,
+> `margin-top: 3px`) são código morto que nunca foi exercitado. Copiá-los
+> produz o trilho com 48px e o texto começando 10px antes do dot.
+>
+> **A referência correta é o `bruno-office-card.js`**, medido no navegador em
+> 2026-08-03: trilho de 36px, métrica ocupando os 36px com texto centralizado,
+> dot de 26px centrado com 5px de folga de cada lado.
+>
+> Regra geral que sai daqui: ao extrair especificação de um card, confirmar que
+> o trecho **realmente renderiza** naquele cômodo. Card que não tem a entidade
+> carrega CSS morto.
+
+### ⚠️ Como extrair esta especificação — leia antes de migrar qualquer card
+
+Em 2026-08-03 eu errei **três vezes seguidas** montando este componente, sempre
+pelo mesmo motivo: **li o código-fonte em vez de medir o resultado renderizado.**
+
+| # | O que copiei | Da fonte | O real | Efeito |
+|---|---|---|---|---|
+| 1 | `.metric: 48px, left, margin-left 6px` | `bruno-corredor-card` | `36px, center, sem margem` | temperatura 10px à esquerda dos dots |
+| 2 | `icon_size: 94` (quadrado) | config do card | `100% / max 124 × 82px` | ícone 12px mais alto |
+| 3 | `padding: 14px 14px 13px 11px` | `bruno-corredor-card` | `14px 11px 13px` | 3px a mais à direita |
+
+A raiz dos três: **o `bruno-corredor-card` não tem sensor de temperatura**, então
+metade do CSS dele nunca renderiza. E o `icon_size` do config é fallback — o CSS
+o sobrescreve.
+
+**O método que funciona** é medir no navegador, com o card real montado:
+
+```js
+const sr = document.querySelector('bruno-office-card').shadowRoot;
+const c  = sr.querySelector('.office-card').getBoundingClientRect();
+const el = sr.querySelector('.room-icon').getBoundingClientRect();
+({ esq: el.left - c.left, topo: el.top - c.top, larg: el.width, alt: el.height })
+```
+
+**Referência correta: `bruno-office-card`** — é o cômodo mais completo (luzes,
+clima, presença, temperatura, umidade, PC), então exercita todo o CSS.
+Nunca extrair do Corredor ou do Lavabo.
+
+Resultado após medir: ícone **0 px de diferença** em posição e tamanho.
 | raio do card | `var(--bruno-liquid-room-radius, var(--bruno-liquid-card-radius-compact, 16px))` |
 
 ### Material — **consumir token, nunca reescrever valor**

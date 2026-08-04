@@ -5,6 +5,7 @@ import {
   semanticLine,
   isRoomOn,
   firstSensorValue,
+  sensorDisplay,
 } from './room-state';
 import type { Hass, HassEntity } from '@/models/home-assistant';
 
@@ -207,5 +208,22 @@ describe('firstSensorValue', () => {
   it('vazio quando nao ha sensor valido', () => {
     expect(firstSensorValue(hassOf(), ['sensor.x'], '°')).toBe('');
     expect(firstSensorValue(hassOf(), undefined)).toBe('');
+  });
+});
+
+describe('sensorDisplay', () => {
+  it('mantem o valor bruto, sem arredondar', () => {
+    const hass = hassOf(ent('sensor.t', '29.1'));
+    expect(sensorDisplay(hass, 'sensor.t', '°')).toBe('29.1°');
+  });
+
+  it('pula sensores indisponiveis e usa o proximo da lista', () => {
+    const hass = hassOf(ent('sensor.a', 'unavailable'), ent('sensor.b', '61'));
+    expect(sensorDisplay(hass, ['sensor.a', 'sensor.b'], '%')).toBe('61%');
+  });
+
+  it('devolve o travessao duplo quando nao ha leitura', () => {
+    expect(sensorDisplay(hassOf(), 'sensor.x', '°')).toBe('--');
+    expect(sensorDisplay(hassOf(), undefined)).toBe('--');
   });
 });

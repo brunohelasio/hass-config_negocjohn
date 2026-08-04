@@ -31,11 +31,39 @@ export interface RoomEntities {
   illuminance?: string;
 }
 
+/**
+ * Ponto de status na coluna direita do tile.
+ *
+ * Transcrito do `status_dots` que os 6 cards mais novos já usam. Só os pontos
+ * ATIVOS renderizam; os demais não ocupam espaço. `entities` é qualquer-um: o
+ * ponto acende se ao menos uma das entidades estiver num dos `states`.
+ */
+export interface RoomDot {
+  icon: string;
+  label: string;
+  tone: 'blue' | 'purple' | 'cyan' | 'amber';
+  entities?: readonly string[];
+  states?: readonly string[];
+  /** Atributo do sensor `*_active` que também acende o ponto. */
+  activeAttr?: string;
+}
+
 export interface RoomConfig {
   id: string;
   name: string;
   /** Seção da shell (`bento-lab#<section>`). Ausente = sem subview própria. */
   section?: string;
+  /**
+   * Alvo do toque curto.
+   *
+   * Não é o grupo: os cards atuais alternam UMA luz (a principal) no tap e só
+   * usam o grupo no hold, para apagar tudo. Tratar o grupo como alvo do tap
+   * mudaria o comportamento de sete cômodos de uma vez.
+   */
+  toggleTarget?: string;
+  /** Sensor `*_active`: traz `lights_on_count` e atributos de eletrodoméstico. */
+  activeSensor?: string;
+  statusDots?: readonly RoomDot[];
   /**
    * Caminhos completos dos assets, por estado.
    *
@@ -60,6 +88,11 @@ export interface RoomConfig {
   entities: RoomEntities;
 }
 
+/** Estados de `climate` que os cards tratam como ligado. */
+const CLIMATE_ON = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'] as const;
+/** Estados de `media_player` que os cards tratam como ativo. */
+const MEDIA_ON = ['playing', 'paused', 'on'] as const;
+
 export const ROOMS: readonly RoomConfig[] = [
   {
     id: 'sala',
@@ -68,6 +101,19 @@ export const ROOMS: readonly RoomConfig[] = [
     assetOff: 'v2/sala-off',
     assetOn: 'v2/sala-on',
     grammaticalGender: 'f',
+    toggleTarget: 'light.sala_switch_2',
+    activeSensor: 'sensor.living_room_active',
+    statusDots: [
+      { icon: 'mdi:account', label: 'Presenca na Sala', tone: 'blue',
+        entities: ['binary_sensor.sala_motion_recent'], states: ['on'] },
+      { icon: 'mdi:television-classic', label: 'TV ativa', tone: 'purple',
+        entities: ['media_player.android_tv_192_168_3_17'],
+        states: ['on', 'playing', 'paused', 'idle', 'buffering'] },
+      { icon: 'mdi:snowflake', label: 'Ar condicionado ativo', tone: 'cyan',
+        entities: ['climate.sl_ar_condicionado'], states: CLIMATE_ON },
+      { icon: 'mdi:speaker-wireless', label: 'Echo Show ativo', tone: 'amber',
+        entities: ['media_player.echo_show'], states: MEDIA_ON },
+    ],
     entities: {
       lightGroup: 'light.grupo_luzes_sala',
       lights: ['light.sala_switch_1', 'light.sala_switch_2'],
@@ -81,7 +127,7 @@ export const ROOMS: readonly RoomConfig[] = [
       covers: ['cover.cortina_varanda_cortina_2'],
       motionRecent: 'binary_sensor.sala_motion_recent',
       occupancy: 'binary_sensor.sala_occupancy',
-      semanticState: 'sensor.sala_semantic_state',
+      semanticState: 'sensor.sala_semantic_state_supervised',
       temperature: 'sensor.sensor_4_in_1_sala_temperature',
       humidity: 'sensor.sensor_4_in_1_sala_humidity',
       illuminance: 'sensor.sensor_4_in_1_sala_illuminance',
@@ -94,6 +140,18 @@ export const ROOMS: readonly RoomConfig[] = [
     assetOff: 'v2/office-off',
     assetOn: 'v2/office-on',
     grammaticalGender: 'm',
+    toggleTarget: 'light.office_switch_3',
+    activeSensor: 'sensor.office_active',
+    statusDots: [
+      { icon: 'mdi:account', label: 'Presenca no Office', tone: 'blue',
+        entities: ['binary_sensor.office_motion_recent'], states: ['on'] },
+      { icon: 'mdi:desktop-classic', label: 'PC ativo', tone: 'purple',
+        entities: ['binary_sensor.office_pc_active', 'switch.macbook'], states: ['on'] },
+      { icon: 'mdi:snowflake', label: 'Ar condicionado ativo', tone: 'cyan',
+        entities: ['climate.ac_office'], states: CLIMATE_ON },
+      { icon: 'mdi:speaker-wireless', label: 'Echo Pop ativo', tone: 'amber',
+        entities: ['media_player.echo_pop_office'], states: MEDIA_ON },
+    ],
     entities: {
       lightGroup: 'light.grupo_luzes_office',
       lights: ['light.office_switch_1', 'light.office_switch_2', 'light.office_switch_3'],
@@ -102,7 +160,7 @@ export const ROOMS: readonly RoomConfig[] = [
       cameras: ['camera.of_camera_2'],
       motionRecent: 'binary_sensor.office_motion_recent',
       occupancy: 'binary_sensor.office_occupancy',
-      semanticState: 'sensor.office_semantic_state',
+      semanticState: 'sensor.office_semantic_state_supervised',
       temperature: 'sensor.sensor_4_in_1_office_temperature',
       humidity: 'sensor.sensor_4_in_1_office_humidity',
       illuminance: 'sensor.sensor_4_in_1_office_illuminance',
@@ -115,13 +173,25 @@ export const ROOMS: readonly RoomConfig[] = [
     assetOff: 'v2/cozinha-off',
     assetOn: 'v2/cozinha-on',
     grammaticalGender: 'f',
+    toggleTarget: 'light.cz_luz_principal',
+    activeSensor: 'sensor.cozinha_active',
+    statusDots: [
+      { icon: 'mdi:account', label: 'Presenca', tone: 'blue',
+        entities: ['binary_sensor.cozinha_motion_recent'], states: ['on'] },
+      { icon: 'mdi:dishwasher', label: 'Lava-loucas', tone: 'purple',
+        entities: ['sensor.lava_loucas_operation_state'], states: ['run'],
+        activeAttr: 'dishwasher_running' },
+      // Sem entidade ainda — declarados para manter a ordem quando existirem.
+      { icon: 'mdi:washing-machine', label: 'Maquina de lavar', tone: 'cyan' },
+      { icon: 'mdi:air-fryer', label: 'Air fryer', tone: 'amber' },
+    ],
     entities: {
       lightGroup: 'light.grupo_luzes_cozinha',
       lights: ['light.cz_luz_principal'],
       cameras: ['camera.cz_camera_2', 'camera.as_camera_2'],
       motionRecent: 'binary_sensor.cozinha_motion_recent',
       occupancy: 'binary_sensor.cozinha_occupancy',
-      semanticState: 'sensor.cozinha_semantic_state',
+      semanticState: 'sensor.cozinha_semantic_state_supervised',
       temperature: 'sensor.sensor_4_in_1_cozinha_temperature',
       humidity: 'sensor.sensor_4_in_1_cozinha_humidity',
       illuminance: 'sensor.sensor_4_in_1_cozinha_illuminance',
@@ -133,6 +203,12 @@ export const ROOMS: readonly RoomConfig[] = [
     assetOff: 'v2/lavabo-off',
     assetOn: 'v2/lavabo-on',
     grammaticalGender: 'm',
+    toggleTarget: 'light.grupo_luzes_lavabo',
+    activeSensor: 'sensor.lavabo_active',
+    statusDots: [
+      { icon: 'mdi:account', label: 'Presenca', tone: 'blue',
+        entities: ['binary_sensor.lavabo_motion_recent'], states: ['on'] },
+    ],
     entities: {
       lightGroup: 'light.grupo_luzes_lavabo',
       lights: ['light.lavabo_switch_1', 'light.lavabo_switch_2', 'light.lavabo_switch_3'],
@@ -148,6 +224,16 @@ export const ROOMS: readonly RoomConfig[] = [
     assetOff: 'v2/quarto-casal-off',
     assetOn: 'v2/quarto-casal-on',
     grammaticalGender: 'm',
+    toggleTarget: 'light.qc_luz_principal',
+    activeSensor: 'sensor.quarto_casal_active',
+    statusDots: [
+      { icon: 'mdi:account', label: 'Presenca', tone: 'blue',
+        entities: ['binary_sensor.q_casal_motion_recent'], states: ['on'] },
+      { icon: 'mdi:television-classic', label: 'TV', tone: 'purple' },
+      { icon: 'mdi:snowflake', label: 'Clima', tone: 'cyan' },
+      { icon: 'mdi:speaker-wireless', label: 'Midia', tone: 'purple',
+        entities: ['media_player.echo_pop_quarto_casal'], states: MEDIA_ON },
+    ],
     entities: {
       lightGroup: 'light.grupo_quarto_casal',
       lights: ['light.qc_luz_principal'],
@@ -155,7 +241,7 @@ export const ROOMS: readonly RoomConfig[] = [
       cameras: ['camera.camera_quarto_casal_2'],
       motionRecent: 'binary_sensor.q_casal_motion_recent',
       occupancy: 'binary_sensor.q_casal_occupancy',
-      semanticState: 'sensor.q_casal_semantic_state',
+      semanticState: 'sensor.q_casal_semantic_state_supervised',
       temperature: 'sensor.sensor_4_in_1_q_casal_temperature',
       humidity: 'sensor.sensor_4_in_1_q_casal_humidity',
       illuminance: 'sensor.sensor_4_in_1_q_casal_illuminance',
@@ -168,6 +254,17 @@ export const ROOMS: readonly RoomConfig[] = [
     assetOff: 'v2/quarto-menina-off',
     assetOn: 'v2/quarto-menina-on',
     grammaticalGender: 'm',
+    toggleTarget: 'light.quarto_marina_switch_4',
+    activeSensor: 'sensor.quarto_marina_active',
+    statusDots: [
+      { icon: 'mdi:account', label: 'Presenca', tone: 'blue',
+        entities: ['binary_sensor.q_marina_motion_recent'], states: ['on'] },
+      { icon: 'mdi:television-classic', label: 'TV', tone: 'purple' },
+      { icon: 'mdi:snowflake', label: 'Clima', tone: 'cyan',
+        entities: ['climate.ac_quarto_marina'], states: CLIMATE_ON },
+      { icon: 'mdi:speaker-wireless', label: 'Midia', tone: 'purple',
+        entities: ['media_player.echo_pop_marina'], states: MEDIA_ON },
+    ],
     entities: {
       lightGroup: 'light.grupo_luzes_quarto_marina',
       lights: ['light.quarto_marina_switch_4'],
@@ -176,7 +273,7 @@ export const ROOMS: readonly RoomConfig[] = [
       cameras: ['camera.qma_camera_2'],
       motionRecent: 'binary_sensor.q_marina_motion_recent',
       occupancy: 'binary_sensor.q_marina_occupancy',
-      semanticState: 'sensor.q_marina_semantic_state',
+      semanticState: 'sensor.q_marina_semantic_state_supervised',
       temperature: 'sensor.sensor_4_in_1_q_marina_temperature',
       humidity: 'sensor.sensor_4_in_1_q_marina_humidity',
       illuminance: 'sensor.sensor_4_in_1_q_marina_illuminance',
@@ -189,6 +286,16 @@ export const ROOMS: readonly RoomConfig[] = [
     assetOff: 'v2/quarto-bebe-off',
     assetOn: 'v2/quarto-bebe-on',
     grammaticalGender: 'm',
+    toggleTarget: 'light.quarto_miguel_switch_2',
+    activeSensor: 'sensor.quarto_miguel_active',
+    statusDots: [
+      { icon: 'mdi:account', label: 'Presenca', tone: 'blue',
+        entities: ['binary_sensor.q_miguel_motion_recent'], states: ['on'] },
+      { icon: 'mdi:television-classic', label: 'TV', tone: 'purple' },
+      { icon: 'mdi:snowflake', label: 'Clima', tone: 'cyan',
+        entities: ['climate.ac_quarto_miguel'], states: CLIMATE_ON },
+      { icon: 'mdi:speaker-wireless', label: 'Midia', tone: 'purple' },
+    ],
     entities: {
       lightGroup: 'light.grupo_luzes_quarto_miguel',
       lights: ['light.quarto_miguel_switch_2'],
@@ -196,7 +303,7 @@ export const ROOMS: readonly RoomConfig[] = [
       cameras: ['camera.qmi_camera_2'],
       motionRecent: 'binary_sensor.q_miguel_motion_recent',
       occupancy: 'binary_sensor.q_miguel_occupancy',
-      semanticState: 'sensor.q_miguel_semantic_state',
+      semanticState: 'sensor.q_miguel_semantic_state_supervised',
       temperature: 'sensor.sensor_4_in_1_q_miguel_temperature',
       humidity: 'sensor.sensor_4_in_1_q_miguel_humidity',
       illuminance: 'sensor.sensor_4_in_1_q_miguel_illuminance',
@@ -208,6 +315,11 @@ export const ROOMS: readonly RoomConfig[] = [
     assetOff: 'v2/corredor-off',
     assetOn: 'v2/corredor-on',
     grammaticalGender: 'm',
+    toggleTarget: 'light.corredor_switch_1',
+    statusDots: [
+      { icon: 'mdi:account', label: 'Presenca', tone: 'blue',
+        entities: ['binary_sensor.corredor_motion_recent'], states: ['on'] },
+    ],
     entities: {
       lights: ['light.corredor_switch_1'],
       motionRecent: 'binary_sensor.corredor_motion_recent',

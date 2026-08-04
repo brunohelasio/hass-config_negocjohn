@@ -161,7 +161,31 @@ export function isRoomOn(
   return onStates.includes(String(entity.state).toLowerCase());
 }
 
-/** Primeiro valor numérico disponível numa lista de sensores. */
+/**
+ * Valor de sensor como os cards o exibem: estado BRUTO, com sufixo, e `--`
+ * quando não há leitura.
+ *
+ * Não arredonda de propósito. O card real mostra `29.1°`; arredondar deixava o
+ * tile novo com `29°` ao lado de um vizinho marcando `29.1°` — parecia outro
+ * sensor. Aceita um id só ou uma lista (alguns cômodos têm sensores alternativos)
+ * e usa o primeiro disponível.
+ */
+export function sensorDisplay(
+  hass: Hass,
+  entityIds: string | readonly string[] | undefined,
+  suffix = '',
+): string {
+  const ids = typeof entityIds === 'string' ? [entityIds] : (entityIds ?? []);
+  for (const id of ids) {
+    const e = hass.states[id];
+    const raw = String(e?.state ?? '').toLowerCase();
+    if (!e || ['unknown', 'unavailable', 'none', ''].includes(raw)) continue;
+    return `${e.state}${suffix}`;
+  }
+  return '--';
+}
+
+/** Primeiro valor numérico disponível numa lista de sensores, arredondado. */
 export function firstSensorValue(
   hass: Hass,
   entityIds: readonly string[] | undefined,

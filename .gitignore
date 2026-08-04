@@ -46,3 +46,6 @@ secrets.yaml
 
 # Previews gerados durante o desenvolvimento (nunca vao para o /config do HA)
 tmp/preview/
+
+# harness gerado a partir do .src.html
+scripts/harness/*.html

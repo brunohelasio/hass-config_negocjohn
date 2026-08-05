@@ -736,3 +736,55 @@ declarar `popup`.
 `scripts/validation/compare-method.mjs <_metodo> <comodo...>` — localiza o método,
 extrai o corpo por balanceamento de chaves e compara corpos, não assinaturas.
 Criada depois de os nomes de método me levarem a duas descrições erradas.
+
+### O CSS das seis, medido regra a regra (2026-08-04)
+
+`scripts/validation/diff-subview-css.mjs` extrai o CSS de dentro de `_styles()`,
+percorre mantendo a pilha de `@media` e compara **chave** (contexto de media
+query + seletor) contra **valor** (declarações normalizadas e ordenadas). Só a
+última definição de cada chave conta — é o que a cascata faz, e ler a primeira
+foi o que produziu a descrição errada do grid registrada em docs/04.
+
+| | |
+|---|---|
+| regras por arquivo | 712 a 735 |
+| chaves distintas somadas | 813 |
+| **idênticas nos seis** | **652 (80,2%)** |
+| divergentes de verdade | 8 |
+| ausentes em algum cômodo | 153 |
+
+#### Os 22 "divergentes" que não eram
+
+Cada cômodo prefixa seus próprios tokens: `--sala-gap`, `--office-gap`,
+`--qcasal-gap`, `--qmarina-gap`, `--qmiguel-gap` — e a **Cozinha reaproveita os
+do Office**. A regra é a mesma; só o nome do token muda. Normalizando o prefixo
+para `--room-`, 14 das 22 divergências somem. **No componente isso vira um
+prefixo único, e a duplicação some com elas.**
+
+#### As 8 divergências reais
+
+`.light-bar`, `.light-row`, `.light-row-icon` e vizinhas — diferenças de poucos
+pixels no dock de iluminação (ícone de 36px na maioria, 32px no Q. Casal). É a
+mesma classe de deriva que a faixa tinha: ninguém decidiu, foi acumulando.
+Convergem para um valor só, como os tiles.
+
+#### As 153 ausentes — o mapa do que é por cômodo
+
+| regras | cômodos | o que é |
+|---|---|---|
+| 67 | só Cozinha | bloco de eletrodomésticos |
+| 43 | todos **menos** a Cozinha | hub de mídia com TV |
+| 8 + 8 + 8 | Miguel / Marina / Casal, cada um | resíduo de prefixo de token |
+| 6 | só Sala | PS5 |
+| 4 | Office e Cozinha | grid de 3 colunas |
+| 4 | só Office | bloco do PC |
+| 1 | Sala e os três quartos | — |
+
+#### Conclusão para a arquitetura
+
+Depois de unificar o prefixo dos tokens, **o CSS do componente é uma base única
+de ~652 regras mais quatro blocos opcionais**: eletrodomésticos (Cozinha), hub de
+TV (cinco cômodos), PS5 (Sala) e PC (Office). Nenhum deles precisa de arquivo
+próprio — são blocos condicionais, como o painel do Lavabo no tile.
+
+Isso troca ~4.300 linhas de CSS repetido por uma base e quatro blocos.

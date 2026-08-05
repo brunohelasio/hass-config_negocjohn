@@ -402,18 +402,45 @@ export class BrunoRoomTile extends LitElement {
       activeSensorId: room.activeSensor,
       fallbackLightIds: room.entities.lights,
     });
-    const semantic = semanticLine({
-      hass,
-      semanticSensorId: room.entities.semanticState,
-      motionRecentId: room.entities.motionRecent,
-      occupancyId: room.entities.occupancy,
-    });
+    // Só há linha semântica onde há sensor semântico. O atalho de ler a ocupação
+    // crua nunca dispara em produção — todos os cards usam o sensor supervisionado
+    // — e no Lavabo, que não tem nenhum, ele inventava um "Ocupado" que o card
+    // real não mostra.
+    const semantic = room.entities.semanticState
+      ? semanticLine({
+          hass,
+          semanticSensorId: room.entities.semanticState,
+          motionRecentId: room.entities.motionRecent,
+          occupancyId: room.entities.occupancy,
+        })
+      : '';
 
     const linhas: string[] = [];
     if (lights.label) linhas.push(lights.label);
     else if (isRoomOn(hass, room.entities.lightGroup)) linhas.push('On');
+    const aparelho = this._applianceLine();
+    if (aparelho) linhas.push(aparelho);
     if (semantic) linhas.push(semantic);
     return linhas;
+  }
+
+  /** Linha do eletrodoméstico, no formato "Lavando / 12m". */
+  private _applianceLine(): string {
+    const hass = this._hass;
+    const room = this._room;
+    const cfg = room?.applianceLine;
+    if (!hass || !room || !cfg) return '';
+
+    const active = room.activeSensor ? hass.states[room.activeSensor] : undefined;
+    const estados = (cfg.states ?? []).map((s) => s.toLowerCase());
+    const entidade = cfg.entity ? hass.states[cfg.entity] : undefined;
+    const ligado =
+      (Boolean(entidade) && estados.includes(String(entidade?.state ?? '').toLowerCase())) ||
+      (cfg.activeAttr ? truthy(active?.attributes[cfg.activeAttr]) : false);
+    if (!ligado) return '';
+
+    const decorrido = cfg.elapsedAttr ? String(active?.attributes[cfg.elapsedAttr] ?? '') : '';
+    return decorrido ? `${cfg.label} / ${decorrido}` : cfg.label;
   }
 
   static override styles = css`
@@ -1013,6 +1040,11 @@ export class BrunoRoomTile extends LitElement {
     // arredondar deixava este tile com "29°" ao lado dos vizinhos.
     const temp = hass ? sensorDisplay(hass, room.entities.temperature, '°') : '--';
     const hum = hass ? sensorDisplay(hass, room.entities.humidity, '%') : '--';
+    // Cômodo SEM sensor de clima não reserva o espaço da métrica — os pontos
+    // sobem e a coluna encolhe para a largura do próprio ponto. Os cards atuais
+    // divergem aqui: o Corredor encolhe, o Lavabo deixa um bloco vazio de 28px.
+    // `--` continua valendo para sensor declarado que está indisponível.
+    const temMetrica = Boolean(room.entities.temperature ?? room.entities.humidity);
     const lines = this._statusLines();
     const dots = this._dots();
 
@@ -1089,10 +1121,12 @@ export class BrunoRoomTile extends LitElement {
           </span>
 
           <div class="right-rail" aria-label="Status do ambiente">
-            <div class="metric" aria-label="Temperatura e umidade">
-              <span class="metric-value">${temp}</span>
-              <span class="metric-sub">${hum}</span>
-            </div>
+            ${temMetrica
+              ? html`<div class="metric" aria-label="Temperatura e umidade">
+                  <span class="metric-value">${temp}</span>
+                  <span class="metric-sub">${hum}</span>
+                </div>`
+              : nothing}
             <div class="status-stack">
               ${dots.map(
                 (d) => html`<span class="status-dot tone-${d.tone}" title=${d.label} aria-label=${d.label}>

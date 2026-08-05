@@ -65,6 +65,22 @@ export interface RoomConfig {
   activeSensor?: string;
   statusDots?: readonly RoomDot[];
   /**
+   * Linha extra de status, entre a contagem de luzes e a semântica.
+   *
+   * Existe só na Cozinha hoje ("Lavando / 12m"), mas é conteúdo, não enfeite:
+   * some se o componente não a suportar. Modelada aqui para que qualquer cômodo
+   * possa ganhar uma sem código novo.
+   */
+  applianceLine?: {
+    entity?: string;
+    states?: readonly string[];
+    label: string;
+    /** Atributo do sensor `*_active` que também liga a linha. */
+    activeAttr?: string;
+    /** Atributo do sensor `*_active` com o tempo decorrido já formatado. */
+    elapsedAttr?: string;
+  };
+  /**
    * Caminhos completos dos assets, por estado.
    *
    * Eram montados por convenção (`<asset>-on-tight.png`), mas o Q. Casal foge
@@ -175,6 +191,13 @@ export const ROOMS: readonly RoomConfig[] = [
     grammaticalGender: 'f',
     toggleTarget: 'light.cz_luz_principal',
     activeSensor: 'sensor.cozinha_active',
+    applianceLine: {
+      entity: 'sensor.lava_loucas_operation_state',
+      states: ['run'],
+      label: 'Lavando',
+      activeAttr: 'dishwasher_running',
+      elapsedAttr: 'dishwasher_elapsed',
+    },
     statusDots: [
       { icon: 'mdi:account', label: 'Presenca', tone: 'blue',
         entities: ['binary_sensor.cozinha_motion_recent'], states: ['on'] },

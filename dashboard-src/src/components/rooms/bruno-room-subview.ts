@@ -1,5 +1,4 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import type { Hass } from '@/models/home-assistant';
 import { ROOMS, type RoomConfig } from '@/config/rooms.config';
 import { SUBVIEWS, type SubviewConfig } from '@/config/subviews.config';
@@ -156,6 +155,12 @@ export class BrunoRoomSubview extends LitElement {
     // PS5 só existe onde há entidade declarada. Na Sala há; nos outros cinco a
     // chave era string vazia e saiu na geração da configuração.
     liga('data-ps5', Boolean(ent?.['ps5']));
+  }
+
+  /** O Office troca o hub de midia pela Estacao de Trabalho, com o PC. */
+  private get _temPc(): boolean {
+    const ent = this._sub?.entities as Record<string, unknown> | undefined;
+    return Boolean(ent?.['pcSession'] ?? ent?.['pcActive'] ?? ent?.['pcPower']);
   }
 
   /** O cômodo tem eletrodomésticos? Só a Cozinha, e ela usa um grid próprio. */
@@ -488,20 +493,15 @@ export class BrunoRoomSubview extends LitElement {
   private _iconeDaLuz(tipo: string | undefined, acesa: boolean) {
     const bruto = String(tipo ?? 'light_flush').replace(/^mdi:/, '');
     const nome = bruto.replace(/[^a-z0-9_-]/gi, '') || 'light_flush';
-    const equivalentes: Record<string, string> = {
-      ledstrip: 'ledstrip',
-      'led-strip-variant': 'ledstrip',
-      pendant: 'pendant',
-      light_flush: 'light_flush',
-      'ceiling-light-outline': 'light_flush',
-      'string-lights': 'hugeicons:lamp-04',
-    };
-    const pedido = equivalentes[nome] ?? tipo ?? 'light_flush';
-    const g = globalThis as { BrunoIcons?: { render?: (n: string) => string } };
-    const svg = g.BrunoIcons?.render?.(pedido) ?? '';
-    return html`<span class="tpl-light-icon icon-${nome} ${acesa ? 'is-on' : ''}"
-      >${unsafeHTML(svg)}</span
-    >`;
+    // O conjunto de ícones do projeto é o Hugeicons, e `bruno-icons.js` já traz
+    // os apelidos que interessam aqui:
+    //   ledstrip → bruno:led-strip · pendant → hugeicons:candelier-02
+    //   sconce   → hugeicons:lamp-wall-up · light_flush → hugeicons:bulb
+    // Basta passar o nome cru; traduzir para `mdi:` foi o erro que produziu o
+    // círculo genérico.
+    return html`<span class="tpl-light-icon icon-${nome} ${acesa ? 'is-on' : ''}">
+      <bruno-icon icon=${nome}></bruno-icon>
+    </span>`;
   }
 
   private _alternarLuz(entityId: string): void {
@@ -662,8 +662,18 @@ export class BrunoRoomSubview extends LitElement {
     return html`
       <div class="glass-card cameras-card cameras-card-controls">
         <div class="mh-head cameras-head">
-          <div class="mh-head-title"></div>
-          <div class="mh-menu camera-settings-button"></div>
+          <div class="mh-head-title">
+            <span class="micro-icon tone-blue"><bruno-icon icon="mdi:cctv"></bruno-icon></span>
+            <div class="module-title">Câmeras</div>
+          </div>
+          <button
+            type="button"
+            class="mh-menu camera-settings-button"
+            title="Controles"
+            aria-label="Abrir controles das câmeras"
+          >
+            <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
+          </button>
         </div>
         <div class="camera-stage camera-pip-stage">
           <div class="camera-main camera-feed camera-primary-feed is-private"></div>
@@ -682,8 +692,13 @@ export class BrunoRoomSubview extends LitElement {
     return html`
       <div class="glass-card media-hub-card mh-accordion">
         <div class="mh-head">
-          <div class="mh-head-title"></div>
-          <div class="mh-menu"></div>
+          <div class="mh-head-title">
+            <span class="micro-icon tone-amber"><bruno-icon icon="mdi:multimedia"></bruno-icon></span>
+            <div class="module-title">${this._temPc ? 'Estação de Trabalho' : 'Hub de Mídia'}</div>
+          </div>
+          <button type="button" class="mh-menu" title="Opções" aria-label="Opções">
+            <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
+          </button>
         </div>
         <div class="mh-sources">
           <div class="mh-source is-open is-active"></div>

@@ -316,3 +316,54 @@ Ao migrar para container query, o alvo é **cair no mesmo valor** que estes
 breakpoints produzem hoje na largura do tablet. Independência de resolução não
 pode custar paridade visual: se `clamp()` não reproduzir a composição acima no
 aparelho real, o px fixo é a escolha certa e a fluidez fica para depois.
+
+---
+
+## Ícones: o conjunto é o **Hugeicons**, não o MDI
+
+Os nomes `mdi:` que aparecem no código são **apelidos**. `bruno-icons.js` traduz
+cada um para o Hugeicons (ou para um SVG próprio, prefixo `bruno:`) por uma
+tabela de 179 entradas. Traduzir um nome do projeto para um `mdi:` "equivalente"
+faz o ícone cair no genérico — foi o que produziu círculos no lugar dos ícones
+de luz.
+
+Apelidos que importam no bloco de iluminação e na cortina:
+
+| nome no código | resolve para |
+|---|---|
+| `ledstrip` | `bruno:led-strip` |
+| `pendant` | `hugeicons:candelier-02` |
+| `sconce` | `hugeicons:lamp-wall-up` |
+| `light_flush` | `hugeicons:bulb` |
+| `mdi:led-strip-variant` | `bruno:led-strip` |
+| `mdi:ceiling-light-outline` | `hugeicons:spotlight` |
+| `mdi:string-lights` | `hugeicons:lamp-04` |
+| `curtain`, `curtain-open`, `curtain-close` | `hugeicons:curtains` |
+| `curtain-stop` | `hugeicons:stop` |
+
+**Regra:** passar o nome CRU para `<bruno-icon icon="…">` ou para
+`BrunoIcons.render()`. Nunca converter para outro conjunto.
+
+Para listar os apelidos disponíveis:
+
+```bash
+node -e "const s=require('fs').readFileSync('config/www/bruno-ui/core/bruno-icons.js','utf8');const i=s.search(/const ALIASES/),j=s.indexOf('});',i);console.log([...s.slice(i,j).matchAll(/\"([^\"]+)\":\"([^\"]+)\"/g)].map(m=>m[1]+' -> '+m[2]).join('\n'))"
+```
+
+## A moldura da faixa de tiles exige `<main>`
+
+O filete superior, o inferior, o scrim e o blur da faixa de tiles das subviews
+vêm de **`main::before`**, em `core/bruno-surface-material.js`. As seis subviews
+usam `<main class="…-subview">` como raiz.
+
+Trocar a raiz por `<div>` faz o seletor deixar de casar, e os quatro somem de uma
+vez — sem erro no console, porque não há erro: a regra simplesmente não aplica.
+
+E o material **não vem do CSS do componente**. Vem do módulo global, em dois
+pontos, e os dois são obrigatórios:
+
+```js
+connectedCallback()  →  BrunoLiquidGlass.apply()
+                        BrunoSurfaceMaterial.connect(this)
+render()             →  BrunoSurfaceMaterial.subviewStyles()
+```

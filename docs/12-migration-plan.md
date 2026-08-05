@@ -659,19 +659,32 @@ para depois, numa passada só, com uma remedição das subviews em vez de duas.
 
 ### Decisão do usuário — PS5 só na Sala (2026-08-04)
 
-Verificado no código: hoje a Sala declara `ps5: 'switch.ps5_power'` e os três
-quartos **não declaram entidade nenhuma**. `_ps5Model` marca `configured: false`
-e o bloco renderiza com a classe `disabled` — ou seja, os quartos exibem um
-**tile morto**, que ocupa espaço no hub e não faz nada.
+**Correção de um erro meu no registro anterior.** Eu havia escrito que o PS5 é
+um tile do hub e que os quartos exibiam um "tile morto ocupando espaço". Errado.
 
-Na arquitetura nova o hub passa a ter quatro variantes, não três:
+A estrutura real, lida no código:
 
-| variante | cômodos |
-|---|---|
-| TV + PS5 | Sala |
-| TV | Casal, Marina, Miguel |
-| PC | Office |
-| Eletrodomésticos | Cozinha |
+- o corpo do hub tem **dois** tiles lado a lado: **TV** (ou **PC**, no Office) e
+  **Spotify**;
+- o **PS5 não é tile**. Ele é um item do painel de overflow que abre pelo botão
+  de três pontos (`mdi:dots-vertical`, classe `.mh-menu`) no canto superior
+  direito do hub — `.mh-overflow-panel`, ancorado em `top: 42px; right: 10px`.
+  Esse painel tem duas entradas: **PS5** (ligar/desligar + detalhes) e
+  **selecionar fonte de mídia**.
 
-Consequência visual: o hub dos três quartos ganha o espaço do tile morto. É
-mudança visível e deliberada — medir e mostrar antes de publicar, como na faixa.
+Nos três quartos a Sala declara `ps5: switch.ps5_power` e eles não declaram
+entidade nenhuma: `_ps5Model` marca `configured: false` e a linha do PS5
+renderiza no menu com o botão de energia `disabled`.
+
+Consequência de tirá-lo dos quartos: **o hub não muda de tamanho**. Sai uma
+entrada morta de dentro do menu de três pontos. O painel continua existindo
+neles, com a seleção de fonte.
+
+Variantes do hub na arquitetura nova:
+
+| variante | corpo do hub | menu de três pontos | cômodos |
+|---|---|---|---|
+| TV + PS5 | TV + Spotify | PS5 + fonte | Sala |
+| TV | TV + Spotify | fonte | Casal, Marina, Miguel |
+| PC | PC + Spotify | fonte | Office |
+| Eletrodomésticos | eletrodomésticos | — | Cozinha |

@@ -345,11 +345,154 @@ export class BrunoRoomSubview extends LitElement {
         </div>
         <div class="lights-body">
           <div class="lights-body-clip">
-            <div class="lights-scroll"></div>
+            <div class="lights-scroll">${this._renderSecoesDeLuz()}</div>
           </div>
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Seções de zona dentro do dock, com a grade de células de luz.
+   *
+   * As luzes vêm da configuração gerada (`entities.lights`), cada uma com
+   * `zone`, `name` e `icon_type`. A ordem das zonas é a de aparição na lista, e
+   * não uma lista fixa: é assim que a Sala tem "Sala" e "Varanda" e os demais
+   * têm só uma.
+   *
+   * Célula larga na primeira posição quando a contagem é ÍMPAR — a luz principal
+   * ocupa a linha inteira. Os filetes são por célula, não por gap: com gap o
+   * fundo vazaria por baixo.
+   */
+  private _renderSecoesDeLuz() {
+    const luzes = this._luzesDaConfiguracao();
+    if (!luzes.length) return nothing;
+
+    const rotulos = (this._sub?.['lightZoneLabels'] ?? {}) as Record<string, string>;
+    const icones = (this._sub?.['lightZoneIcons'] ?? {}) as Record<string, string>;
+    const padraoRotulo: Record<string, string> = { sala: 'Sala', varanda: 'Varanda' };
+    const padraoIcone: Record<string, string> = { sala: 'mdi:sofa-outline', varanda: 'bruno:balcony' };
+
+    const ordem: string[] = [];
+    for (const l of luzes) if (!ordem.includes(l.zone)) ordem.push(l.zone);
+
+    const zonas = ordem
+      .map((chave) => {
+        const daZona = luzes.filter((l) => l.zone === chave);
+        return {
+          chave,
+          // Sem rotulo mapeado, a chave vira o nome com inicial maiuscula: no
+          // Office e na Cozinha a zona unica saia como "office" e "cozinha".
+          nome: rotulos[chave] ?? padraoRotulo[chave] ?? chave.charAt(0).toUpperCase() + chave.slice(1),
+          icone: icones[chave] ?? padraoIcone[chave] ?? 'mdi:lightbulb-group',
+          luzes: daZona,
+          acesas: daZona.filter((l) => this._hass?.states[l.entity]?.state === 'on').length,
+        };
+      })
+      .filter((z) => z.luzes.length > 0);
+
+    const mostrarAcaoDaZona = zonas.length > 1;
+
+    return zonas.map((z) => {
+      const impar = z.luzes.length % 2 === 1;
+      return html`
+        <section class="light-section">
+          <div class="section-head">
+            <span class="zone-icon"><bruno-icon icon=${z.icone}></bruno-icon></span>
+            <span class="zone-id">
+              <strong>${z.nome}</strong>
+              <small>${z.acesas}/${z.luzes.length} acesas</small>
+            </span>
+            ${mostrarAcaoDaZona
+              ? html`<button
+                  type="button"
+                  class="zone-off"
+                  @click=${() => this._apagarZona(z.luzes)}
+                >
+                  Apagar ${z.nome.toLowerCase()}
+                </button>`
+              : nothing}
+          </div>
+          <div class="light-grid">
+            ${z.luzes.map((luz, i) => this._renderCelulaDeLuz(luz, i, impar))}
+          </div>
+        </section>
+      `;
+    });
+  }
+
+  private _luzesDaConfiguracao(): Array<{ entity: string; name: string; zone: string; icon: string | undefined }> {
+    const bruto = (this._sub?.entities as Record<string, unknown> | undefined)?.['lights'];
+    if (!Array.isArray(bruto)) return [];
+    return bruto
+      .filter((l): l is Record<string, unknown> => Boolean(l) && typeof l === 'object')
+      .filter((l) => typeof l['entity'] === 'string' && !l['placeholder'])
+      .map((l) => ({
+        entity: String(l['entity']),
+        name: String(l['name'] ?? 'Luz'),
+        zone: String(l['zone'] ?? 'sala'),
+        icon: typeof l['iconType'] === 'string' ? l['iconType'] : undefined,
+      }));
+  }
+
+  private _renderCelulaDeLuz(
+    luz: { entity: string; name: string; icon: string | undefined },
+    indice: number,
+    impar: boolean,
+  ) {
+    const acesa = this._hass?.states[luz.entity]?.state === 'on';
+    // A luz principal ocupa a linha inteira quando a contagem é ímpar; a partir
+    // daí a sequência volta a duas colunas, e é por isso que linha e coluna
+    // saem de um cálculo e não de :nth-child.
+    const larga = impar && indice === 0;
+    const seq = impar ? indice - 1 : indice;
+    const linha = larga ? 0 : Math.floor(seq / 2) + (impar ? 1 : 0);
+    const classes = [
+      'light-cell',
+      acesa ? 'is-on' : '',
+      larga ? 'is-wide' : '',
+      !larga && linha > 0 ? 'has-rule-top' : '',
+      !larga && seq % 2 === 1 ? 'has-rule-left' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    return html`
+      <button
+        type="button"
+        class=${classes}
+        role="switch"
+        aria-checked=${acesa ? 'true' : 'false'}
+        aria-label=${luz.name}
+        @click=${() => this._alternarLuz(luz.entity)}
+      >
+        <span class="lc-icon"><bruno-icon icon=${this._iconeDaLuz(luz.icon, acesa)}></bruno-icon></span>
+        <span class="lc-name">${luz.name}</span>
+        <span class="lc-switch" aria-hidden="true"><span class="lc-knob"></span></span>
+      </button>
+    `;
+  }
+
+  private _iconeDaLuz(tipo: string | undefined, acesa: boolean): string {
+    const mapa: Record<string, string> = {
+      light_flush: 'mdi:ceiling-light',
+      ledstrip: 'mdi:led-strip-variant',
+      pendant: 'mdi:ceiling-light-outline',
+      sconce: 'mdi:wall-sconce',
+      spot: 'mdi:track-light',
+    };
+    return mapa[tipo ?? ''] ?? (acesa ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline');
+  }
+
+  private _alternarLuz(entityId: string): void {
+    if (!this._hass) return;
+    this._hass.callService('light', 'toggle', { entity_id: entityId }, { entity_id: entityId });
+  }
+
+  private _apagarZona(luzes: Array<{ entity: string }>): void {
+    if (!this._hass || !luzes.length) return;
+    const ids = luzes.map((l) => l.entity);
+    this._hass.callService('light', 'turn_off', { entity_id: ids }, { entity_id: ids });
   }
 
   private _todasAsLuzes(servico: 'turn_on' | 'turn_off'): void {

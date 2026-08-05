@@ -121,6 +121,24 @@ export class BrunoRoomSubview extends LitElement {
         min-width: 0;
         min-height: 0;
       }
+
+      /* Na subview atual o elemento interno do anel e uma DIV, e o anel mede 203,27px. Com um
+         SVG no lugar dela media 203,00 exatos, e esse quarto de pixel movia o
+         anel 1px para baixo no arredondamento — 424 contra os 423 da
+         referencia. Com height 100% o anel mede 203,00 e o real 203,27: fica 1px acima no
+         arredondamento. Um quarto de pixel num elemento interno, invisivel, e
+         perseguir isso custaria mais do que vale — os seis modulos da linha de
+         base batem exatos. */
+      .icg-root {
+        width: 100%;
+        height: 100%;
+        display: flex;
+      }
+      .icg-root > svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
     `,
   ];
 
@@ -360,8 +378,25 @@ export class BrunoRoomSubview extends LitElement {
               <div class="curtain-slider-zone">
                 <div class="curtain-slider-glow"></div>
                 <input class="curtain-range" type="range" min="0" max="100" .value=${String(this._posicaoCortina())} />
+                <!-- As marcas sao BOTOES, nao rotulos: cada uma leva a cortina
+                     para aquela posicao. Como span elas mediam 17px em vez de
+                     22px, e eram os 5px que faltavam na altura do dock. -->
                 <div class="curtain-marks">
-                  ${[0, 25, 50, 75, 100].map((p) => html`<span>${p}%</span>`)}
+                  ${[0, 25, 50, 75, 100].map(
+                    (fechada) => html`
+                      <button
+                        type="button"
+                        class="curtain-mark"
+                        data-action="cover-position"
+                        data-position=${100 - fechada}
+                        data-closed=${fechada}
+                        aria-label="${fechada}% fechada"
+                        @click=${() => this._posicionarCortina(100 - fechada)}
+                      >
+                        ${fechada}%
+                      </button>
+                    `,
+                  )}
                 </div>
               </div>
             </div>
@@ -395,6 +430,12 @@ export class BrunoRoomSubview extends LitElement {
 
   private _percentualCortina(): string {
     return `- ${this._posicaoCortina()}%`;
+  }
+
+  private _posicionarCortina(posicao: number): void {
+    const id = this._entidadeCortina();
+    if (!id || !this._hass) return;
+    this._hass.callService('cover', 'set_cover_position', { entity_id: id, position: posicao }, { entity_id: id });
   }
 
   /** Câmeras: cabeçalho com o menu de três pontos + palco com feed e PIP. */
@@ -452,7 +493,9 @@ export class BrunoRoomSubview extends LitElement {
                vem do conteúdo, não de uma regra. A proporção 346x203 é a medida
                do anel na subview atual. -->
           <div class="ac-ring">
-            <svg class="icg-root" viewBox="0 0 346 203" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="icg-root">
+              <svg viewBox="0 0 720 460" preserveAspectRatio="xMidYMid meet"></svg>
+            </div>
           </div>
         </div>
         <div class="ac-lean-foot">

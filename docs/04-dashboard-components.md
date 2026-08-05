@@ -137,3 +137,66 @@ e foram trazidos na Fase 2b.
 atual; funciona de 600 a 2000 px de viewport **sem breakpoint próprio**;
 `disconnectedCallback` removendo tudo que registrou; sem `setInterval` onde
 houver estado reativo equivalente.
+
+---
+
+## Anatomia de uma subview de cômodo (verificada no código, 2026-08-04)
+
+Faltava no acervo, e a falta custou dois enganos meus: descrevi o hub de mídia
+pelos **nomes dos métodos** em vez do caminho que realmente renderiza. Registrado
+aqui para que ninguém repita.
+
+### Caminho vivo do render
+
+O template principal chama **oito** métodos, e só estes:
+
+```
+_renderTopBand      barra superior de badges
+_renderHero         relógio, saudação, foto do cômodo
+_renderCameras      câmera(s) + botão de 3 pontos com os controles
+_renderMediaHub     hub de mídia  ← ver abaixo
+_renderLights       dock de iluminação
+_renderAC           bloco do ar-condicionado
+_renderClimateRing  anel de temperatura
+_renderCurtain      dock de cortina
+```
+
+### O hub de mídia por dentro
+
+- corpo: **dois tiles lado a lado** — TV (ou PC, no Office) + **Spotify**;
+- canto superior direito: botão de **três pontos** (`.mh-menu`,
+  `mdi:dots-vertical`) que abre `.mh-overflow-panel` (`top: 42px; right: 10px`);
+- dentro do painel: **PS5** (ligar/desligar + detalhes) e **selecionar fonte**.
+
+### ⚠️ Código morto que parece vivo
+
+| método | definido | chamado |
+|---|---|---|
+| `_renderTV` | sim | **não** |
+| `_renderPS5` | sim | **não** |
+| `_renderMediaHubLegacy` | sim | **não** |
+
+Contar esses métodos como "o bloco de TV/PS5" foi o meu erro. **Antes de tratar
+um método como parte da estrutura, confirme que ele é chamado**:
+
+```bash
+grep -cE "this\._renderX\(" arquivo.js    # 0 = morto
+```
+
+### ⚠️ Sete definições de `.sala-subview` no mesmo arquivo
+
+Empilhadas: a base, mais blocos em `@media` de 1180px, 800px e 760px — e alguns
+fora de media query, sobrescrevendo a base. **A última definição ativa vence**; a
+primeira que aparece no arquivo quase nunca é a que vale.
+
+O grid base ainda declara uma área `ps5` no `grid-template-areas`. Ela é
+**vestigial**: como `_renderPS5` nunca é chamado, nenhum elemento ocupa essa
+área. Ler o grid e concluir que existe um tile de PS5 é o mesmo erro por outro
+caminho.
+
+### Regra
+
+Para descrever estrutura: partir do template principal e seguir só as chamadas
+reais. Nome de método, seletor de CSS e área de grid **não provam** que algo
+renderiza — no melhor caso são pistas, no pior são restos de tentativas
+anteriores que a Regra de Ouro manda preservar.

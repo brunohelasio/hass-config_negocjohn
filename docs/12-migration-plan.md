@@ -688,3 +688,51 @@ Variantes do hub na arquitetura nova:
 | TV | TV + Spotify | fonte | Casal, Marina, Miguel |
 | PC | PC + Spotify | fonte | Office |
 | Eletrodomésticos | eletrodomésticos | — | Cozinha |
+
+### Mapa do caminho VIVO (2026-08-04) — corrige a tabela de variantes acima
+
+A tabela de "quatro variantes de hub" registrada antes foi montada sobre métodos
+mortos (`_renderTV`, `_renderPS5`, `_renderMediaHubLegacy` — definidos, nunca
+chamados; ver docs/04). Refeita comparando o **corpo** de cada método vivo, com
+`scripts/validation/compare-method.mjs`.
+
+#### O hub de mídia tem DUAS formas, não quatro
+
+| forma | linhas | cômodos | semelhança interna |
+|---|---|---|---|
+| com PS5 no menu de três pontos | 277–286 | Sala, Casal, Marina, Miguel | 94,7% a 98,3% |
+| sem PS5 | 201 | Office, Cozinha | 97,6% |
+
+A diferença entre as duas formas é a **entrada do PS5 no painel de overflow** —
+50 linhas. Com a decisão do usuário (PS5 só na Sala), a segunda forma passa a
+valer para cinco dos seis cômodos.
+
+#### Os demais blocos vivos
+
+| método | linhas distintas somadas | presentes nos seis |
+|---|---|---|
+| `_renderCameras` | 35 | 29 (82,9%) |
+| `_renderAC` | 166 | 136 (81,9%) |
+| `_renderClimateRing` | 138 | 108 (78,3%) |
+| `_renderCurtain` | 80 | 42 (52,5%) |
+| `_renderTopBand` | 57 | 27 (47,4%) |
+| `_renderHero` | 8 | 3 (37,5%) |
+| `_renderLights` | 51 | 1 (2,0%) |
+
+`_renderLights` e `_renderHero` são métodos curtos que só delegam — a divergência
+ali é de parâmetro (nome das zonas, entidades), não de estrutura. O peso real dos
+~8.900 linhas por arquivo está no CSS e nos auxiliares, não nestes pontos de
+entrada.
+
+#### Consequência para a arquitetura
+
+Confirma a mesma forma da faixa: **um componente + configuração**. O hub deixa de
+ser variante e vira um parâmetro — a entrada de PS5 no menu aparece se o cômodo
+declarar a entidade, exatamente como o painel do Lavabo aparece se o cômodo
+declarar `popup`.
+
+#### Ferramenta
+
+`scripts/validation/compare-method.mjs <_metodo> <comodo...>` — localiza o método,
+extrai o corpo por balanceamento de chaves e compara corpos, não assinaturas.
+Criada depois de os nomes de método me levarem a duas descrições erradas.

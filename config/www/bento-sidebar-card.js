@@ -457,6 +457,18 @@ class BentoSidebarCard extends HTMLElement {
         :host {
           --rail-width: 86px;
           --button-radius: 13px;
+          /* NOVO (2026-08-04) — feedback do usuario: os icones ficam pequenos no
+             tablet. O ALVO DE TOQUE nunca foi o problema (medido: 70x51px, acima
+             dos 48dp do Android e dos 44pt do iOS) — pequeno era o GLIFO.
+             19 -> 24px cresce o botao para 70x56 e a rail passa a precisar de
+             666px numa coluna de 720: folga de 54px, sem transbordar.
+             NAO mexe na largura da coluna (86px), entao a area de conteudo e as
+             seis subviews ficam intocadas.
+             Abaixo de 690px de altura a media query no fim deste arquivo reduz
+             para 18px, e isso continua valendo.
+             ANTERIOR (rollback): esta linha nao existia — herdava os 19px do
+             bloco base. Medicao: scripts/harness/rail-size.src.html */
+          --icon-size: 24px;
           --icon-neutral: rgba(255,255,255,0.60);
           /* NOVO: espaçamento uniforme um pouco maior (era 8px) agora que os
              separadores foram removidos. */

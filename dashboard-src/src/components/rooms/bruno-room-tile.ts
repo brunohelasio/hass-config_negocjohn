@@ -774,7 +774,12 @@ export class BrunoRoomTile extends LitElement {
       min-width: 0;
       width: 100%;
       min-height: 56px;
-      padding: 2px 24px 2px 0;
+      /* ANTERIOR: padding: 2px 24px 2px 0
+         Os 24px eram respiro, não alvo de toque — a zona já ocupa duas colunas
+         inteiras. Numa célula de 152px (a largura real no tablet) sobravam 44px
+         para o título, e SEIS dos oito cômodos saíam cortados. 8px devolvem 16px
+         ao texto sem encostar na coluna dos pontos, que é a terceira. */
+      padding: 2px 8px 2px 0;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
@@ -789,7 +794,9 @@ export class BrunoRoomTile extends LitElement {
     .room-title-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      /* ANTERIOR: gap: 8px — mais 4px para o título, pela mesma razão do padding
+         da zona de navegação acima. O chevron continua legível colado. */
+      gap: 4px;
       min-width: 0;
     }
 

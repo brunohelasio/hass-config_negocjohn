@@ -291,7 +291,7 @@ export const ROOMS: readonly RoomConfig[] = [
   },
   {
     id: 'casal',
-    name: 'Q. Casal',
+    name: 'Casal',
     section: 'casal',
     assetOff: 'v2/quarto-casal-off',
     assetOn: 'v2/quarto-casal-on',
@@ -321,7 +321,7 @@ export const ROOMS: readonly RoomConfig[] = [
   },
   {
     id: 'marina',
-    name: 'Q. Marina',
+    name: 'Marina',
     section: 'marina',
     assetOff: 'v2/quarto-menina-off',
     assetOn: 'v2/quarto-menina-on',
@@ -353,7 +353,7 @@ export const ROOMS: readonly RoomConfig[] = [
   },
   {
     id: 'miguel',
-    name: 'Q. Miguel',
+    name: 'Miguel',
     section: 'miguel',
     assetOff: 'v2/quarto-bebe-off',
     assetOn: 'v2/quarto-bebe-on',

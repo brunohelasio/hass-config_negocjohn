@@ -32,7 +32,8 @@ frontend:
     # ANTERIOR: - /local/dashboard/bruno-dashboard.CzAJAgz5.js
     # NOVO (Fase 5b, 2026-08-04): a faixa inteira passa a ser um componente.
     # ANTERIOR: - /local/dashboard/bruno-dashboard.BxPAwAtX.js
-    - /local/dashboard/bruno-dashboard.CCv-M4QJ.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.CCv-M4QJ.js
+    - /local/dashboard/bruno-dashboard.2q_aNpe1.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock
@@ -43,7 +44,8 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-icons.js?v=20260720-bulb-icon-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-icons.js?v=20260720-icon-standardization-1
     - /local/bruno-ui/core/bruno-icons.js?v=20260720-ledstrip-varanda-fill-1
-    - /local/bento-sidebar-card.js?v=20260719-icons-global-1
+    # ANTERIOR: - /local/bento-sidebar-card.js?v=20260719-icons-global-1
+    - /local/bento-sidebar-card.js?v=20260804-rail-icon-24
     - /local/bruno-ui/core/bruno-wallpaper-manager.js?v=20260718-audit-final-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-scenes-panel.js?v=20260719-icons-global-1
     - /local/bruno-ui/core/bruno-scenes-panel.js?v=20260802-josh-popup-material-1

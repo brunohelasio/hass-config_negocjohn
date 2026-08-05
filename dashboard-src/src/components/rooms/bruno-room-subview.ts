@@ -125,6 +125,108 @@ export class BrunoRoomSubview extends LitElement {
   ];
 
   /**
+   * Barra superior — seis badges e o relógio.
+   *
+   * Transcrito de `_renderTopBand`. A ordem importa: a Presença é a PRIMEIRA
+   * desde 2026-07-29, quando o rodapé saiu e ela subiu para cá. As três marcadas
+   * com `data-phone-hide` somem no telefone — a regra era posicional
+   * (`nth-child(n+4)`) e virou explícita justamente porque a Presença mudou as
+   * posições.
+   *
+   * O azul da Presença é o mesmo dot dos cards de cômodo (96,165,250) e lê a
+   * mesma fonte — `motion_recent` —, para painel e subview nunca discordarem.
+   */
+  private _renderTopBand() {
+    const e = this._room?.entities;
+    const hass = this._hass;
+    const estado = (id?: string) => (id && hass ? hass.states[id] : undefined);
+
+    const luzes = this._contarLuzes();
+    const presencaAtiva = estado(e?.motionRecent)?.state === 'on';
+
+    const badges = [
+      { icon: 'mdi:motion-sensor', titulo: 'Presença', sub: this._linhaPresenca(),
+        tone: '96,165,250', ativo: presencaAtiva, ocultarNoTelefone: true },
+      { icon: 'mdi:lightbulb', titulo: 'Luzes', sub: this._linhaLuzes(),
+        tone: '247,198,0', ativo: luzes > 0, ocultarNoTelefone: false },
+      { icon: 'mdi:thermometer', titulo: 'Temperatura', sub: this._valorSensor(e?.temperature, 'º'),
+        tone: '247,170,90', ativo: false, ocultarNoTelefone: false },
+      { icon: 'mdi:water-percent', titulo: 'Umidade', sub: this._valorSensor(e?.humidity, '%'),
+        tone: '127,200,233', ativo: false, ocultarNoTelefone: false },
+      { icon: 'mdi:router-wireless', titulo: 'Roteador', sub: 'Online',
+        tone: '154,160,166', ativo: false, ocultarNoTelefone: true },
+      { icon: 'mdi:zigbee', titulo: 'Hub Zigbee', sub: 'Online',
+        tone: '154,160,166', ativo: false, ocultarNoTelefone: true },
+    ];
+
+    return html`
+      <header class="subview-topband">
+        <div class="topband-badges">
+          ${badges.map(
+            (b) => html`
+              <div
+                class="tb-badge ${b.ativo ? 'is-active' : ''}"
+                data-phone-hide=${b.ocultarNoTelefone ? '' : nothing}
+                style="--tone: ${b.tone};"
+              >
+                <span class="tb-badge-icon"><bruno-icon icon=${b.icon}></bruno-icon></span>
+                <span class="tb-badge-text">
+                  <span class="tb-badge-title">${b.titulo}</span>
+                  <span class="tb-badge-sub">${b.sub}</span>
+                </span>
+              </div>
+            `,
+          )}
+        </div>
+        <div class="topband-clock" aria-label="Data e hora">
+          <span data-clock>${this._hora()}</span>
+          <small>${this._data()}</small>
+        </div>
+      </header>
+    `;
+  }
+
+  private _contarLuzes(): number {
+    const hass = this._hass;
+    const e = this._room?.entities;
+    if (!hass || !e?.lights) return 0;
+    return e.lights.filter((id) => hass.states[id]?.state === 'on').length;
+  }
+
+  private _linhaLuzes(): string {
+    const total = this._contarLuzes();
+    return total === 1 ? '1 acesa' : `${total} acesas`;
+  }
+
+  private _linhaPresenca(): string {
+    const hass = this._hass;
+    const e = this._room?.entities;
+    if (!hass || !e?.semanticState) return 'Sensor indisponível';
+    const s = hass.states[e.semanticState];
+    const display = s?.attributes['display'];
+    if (display) return String(display);
+    return hass.states[e.motionRecent ?? '']?.state === 'on' ? 'Presença' : 'Sem presença';
+  }
+
+  private _valorSensor(id: string | undefined, sufixo: string): string {
+    const s = id && this._hass ? this._hass.states[id] : undefined;
+    const bruto = String(s?.state ?? '').toLowerCase();
+    if (!s || ['unknown', 'unavailable', 'none', ''].includes(bruto)) return '—';
+    return `${s.state}${sufixo}`;
+  }
+
+  private _hora(): string {
+    return new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  private _data(): string {
+    return new Date()
+      .toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })
+      .toUpperCase()
+      .replace(/-FEIRA/, '-FEIRA');
+  }
+
+  /**
    * Dock de iluminação — a faixa de 54px na coluna direita, acima do A/C.
    *
    * Transcrito de `_renderLightsDock` das subviews atuais. A altura de 54px vem
@@ -191,10 +293,7 @@ export class BrunoRoomSubview extends LitElement {
     // código, que guarda sete definições empilhadas e blocos mortos.
     return html`
       <div class="room-subview">
-        <div class="subview-topband">
-          <div class="topband-badges"></div>
-          <div class="topband-clock"></div>
-        </div>
+        ${this._renderTopBand()}
         ${this._temEletrodomesticos ? this._corpoCozinha() : this._corpoPadrao()}
       </div>
     `;

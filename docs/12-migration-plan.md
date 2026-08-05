@@ -656,3 +656,22 @@ As subviews carregam a maior parte das ~157 media queries do projeto, calibradas
 na largura atual do content-slot. O ajuste do espaçamento da rail e o dos badges
 superiores mexem exatamente nessa largura — por isso os dois foram agrupados
 para depois, numa passada só, com uma remedição das subviews em vez de duas.
+
+### Decisão do usuário — PS5 só na Sala (2026-08-04)
+
+Verificado no código: hoje a Sala declara `ps5: 'switch.ps5_power'` e os três
+quartos **não declaram entidade nenhuma**. `_ps5Model` marca `configured: false`
+e o bloco renderiza com a classe `disabled` — ou seja, os quartos exibem um
+**tile morto**, que ocupa espaço no hub e não faz nada.
+
+Na arquitetura nova o hub passa a ter quatro variantes, não três:
+
+| variante | cômodos |
+|---|---|
+| TV + PS5 | Sala |
+| TV | Casal, Marina, Miguel |
+| PC | Office |
+| Eletrodomésticos | Cozinha |
+
+Consequência visual: o hub dos três quartos ganha o espaço do tile morto. É
+mudança visível e deliberada — medir e mostrar antes de publicar, como na faixa.

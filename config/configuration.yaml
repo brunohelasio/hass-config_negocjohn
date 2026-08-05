@@ -37,7 +37,8 @@ frontend:
     # NOVO (Fase 5c, 2026-08-05): as seis subviews viram um componente.
     # ANTERIOR: - /local/dashboard/bruno-dashboard.gQQPjAce.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.NoSZpkrq.js
-    - /local/dashboard/bruno-dashboard.B8GWLACx.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.B8GWLACx.js
+    - /local/dashboard/bruno-dashboard.C8DXYrEJ.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

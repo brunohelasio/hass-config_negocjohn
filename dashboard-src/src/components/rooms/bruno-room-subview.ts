@@ -1,4 +1,5 @@
 import { LitElement, html, css, nothing } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import type { Hass } from '@/models/home-assistant';
 import { ROOMS, type RoomConfig } from '@/config/rooms.config';
 import { SUBVIEWS, type SubviewConfig } from '@/config/subviews.config';
@@ -466,22 +467,41 @@ export class BrunoRoomSubview extends LitElement {
         aria-label=${luz.name}
         @click=${() => this._alternarLuz(luz.entity)}
       >
-        <span class="lc-icon"><bruno-icon icon=${this._iconeDaLuz(luz.icon, acesa)}></bruno-icon></span>
+        <span class="lc-icon">${this._iconeDaLuz(luz.icon, acesa)}</span>
         <span class="lc-name">${luz.name}</span>
         <span class="lc-switch" aria-hidden="true"><span class="lc-knob"></span></span>
       </button>
     `;
   }
 
-  private _iconeDaLuz(tipo: string | undefined, acesa: boolean): string {
-    const mapa: Record<string, string> = {
-      light_flush: 'mdi:ceiling-light',
-      ledstrip: 'mdi:led-strip-variant',
-      pendant: 'mdi:ceiling-light-outline',
-      sconce: 'mdi:wall-sconce',
-      spot: 'mdi:track-light',
+  /**
+   * Ícone da luz — SVG do conjunto próprio, não um `mdi:`.
+   *
+   * As subviews atuais chamam `BrunoIcons.render()` com nomes do conjunto do
+   * projeto: `ledstrip`, `pendant`, `light_flush`. Eu havia mapeado esses nomes
+   * para equivalentes `mdi:`, e o resultado era um ícone minúsculo ou um círculo
+   * — o `mdi:` correspondente não existe, e o `bruno-icon` cai no genérico.
+   *
+   * A marcação de fora (`tpl-light-icon`, `icon-<nome>`, `is-on`) é o que o CSS
+   * usa para dimensionar e colorir; sem ela o glifo fica sem tamanho.
+   */
+  private _iconeDaLuz(tipo: string | undefined, acesa: boolean) {
+    const bruto = String(tipo ?? 'light_flush').replace(/^mdi:/, '');
+    const nome = bruto.replace(/[^a-z0-9_-]/gi, '') || 'light_flush';
+    const equivalentes: Record<string, string> = {
+      ledstrip: 'ledstrip',
+      'led-strip-variant': 'ledstrip',
+      pendant: 'pendant',
+      light_flush: 'light_flush',
+      'ceiling-light-outline': 'light_flush',
+      'string-lights': 'hugeicons:lamp-04',
     };
-    return mapa[tipo ?? ''] ?? (acesa ? 'mdi:lightbulb-on' : 'mdi:lightbulb-outline');
+    const pedido = equivalentes[nome] ?? tipo ?? 'light_flush';
+    const g = globalThis as { BrunoIcons?: { render?: (n: string) => string } };
+    const svg = g.BrunoIcons?.render?.(pedido) ?? '';
+    return html`<span class="tpl-light-icon icon-${nome} ${acesa ? 'is-on' : ''}"
+      >${unsafeHTML(svg)}</span
+    >`;
   }
 
   private _alternarLuz(entityId: string): void {
@@ -509,10 +529,10 @@ export class BrunoRoomSubview extends LitElement {
     // de classe e as áreas de grid lidos do DOM RENDERIZADO — não deduzidos do
     // código, que guarda sete definições empilhadas e blocos mortos.
     return html`
-      <div class="room-subview">
+      <main class="room-subview">
         ${this._renderTopBand()}
         ${this._temEletrodomesticos ? this._corpoCozinha() : this._corpoPadrao()}
-      </div>
+      </main>
     `;
   }
 

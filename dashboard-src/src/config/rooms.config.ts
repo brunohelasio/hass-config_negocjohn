@@ -178,8 +178,29 @@ export const ROOMS: readonly RoomConfig[] = [
     statusDots: [
       { icon: 'mdi:account', label: 'Presenca no Office', tone: 'blue',
         entities: ['binary_sensor.office_motion_recent'], states: ['on'] },
+      // ANTERIOR: entities: ['binary_sensor.office_pc_active', 'switch.macbook']
+      //
+      // Duas fontes, e nenhuma acendia o ponto com o PC em uso:
+      //
+      //   `switch.macbook` NAO EXISTE no sistema — nao aparece no recorder.
+      //   Referencia morta, herdada do card antigo; segue viva em cinco outros
+      //   pontos da configuracao do HA (energy_estimated, office_presence,
+      //   template_sensors, templates/switch, honeycomb/office_mode).
+      //
+      //   `binary_sensor.office_pc_active` significa "destravado E com input nos
+      //   ultimos 300s" (ver packages/office_presence.yaml). Apaga enquanto se
+      //   lê a tela, o que nao e o que o ponto promete.
+      //
+      // O terceiro id abaixo e a leitura direta da sessao do PC: acende com o
+      // PC ligado e destravado, que e a semantica dos demais pontos da faixa
+      // ("está acontecendo agora"). Os dois anteriores continuam na lista — o
+      // ponto acende com QUALQUER um deles.
       { icon: 'mdi:desktop-classic', label: 'PC ativo', tone: 'purple',
-        entities: ['binary_sensor.office_pc_active', 'switch.macbook'], states: ['on'] },
+        entities: [
+          'binary_sensor.office_pc_active',
+          'sensor.desktop_melg9vv_office_pc_session_state',
+        ],
+        states: ['on', 'unlocked'] },
       { icon: 'mdi:snowflake', label: 'Ar condicionado ativo', tone: 'cyan',
         entities: ['climate.ac_office'], states: CLIMATE_ON },
       { icon: 'mdi:speaker-wireless', label: 'Echo Pop ativo', tone: 'amber',

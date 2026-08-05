@@ -33,7 +33,9 @@ frontend:
     # NOVO (Fase 5b, 2026-08-04): a faixa inteira passa a ser um componente.
     # ANTERIOR: - /local/dashboard/bruno-dashboard.BxPAwAtX.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.CCv-M4QJ.js
-    - /local/dashboard/bruno-dashboard.2q_aNpe1.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.2q_aNpe1.js
+    # NOVO (Fase 5c, 2026-08-05): as seis subviews viram um componente.
+    - /local/dashboard/bruno-dashboard.gQQPjAce.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

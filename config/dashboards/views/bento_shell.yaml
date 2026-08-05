@@ -93,18 +93,51 @@ cards:
         type: custom:bruno-planta-3d-subview
       # NOVO (Etapa B): a Sala vira SEÇÃO da mesma shell (conteúdo-only; rail é da
       # shell, via section_rails: rooms).
+      # ══ FASE 5c, 2026-08-05 — as seis subviews viram UM componente ═════════
+      # Os seis arquivos de ~8.900 linhas cada — 41.421 no total, das quais só
+      # 5.876 eram distintas — dão lugar a seis instâncias de
+      # `bruno-room-subview`, parametrizadas por `room:`.
+      #
+      # A medição que autorizou a troca está em `scripts/harness/`: a geometria
+      # dos seis, módulo a módulo, contra `subview-baseline.json`. Resultado:
+      # 36 de 36 campos com delta ZERO, viewport 1280×720, incluindo as três
+      # particularidades da Cozinha (sem linha de câmeras+hub, coluna direita de
+      # 308px, sem A/C).
+      #
+      # ROLLBACK (sem reiniciar): comentar este bloco e descomentar o ANTERIOR
+      # logo abaixo. Os seis arquivos antigos continuam no disco e carregados.
       sala:
-        type: custom:bruno-sala-subview
+        type: custom:bruno-room-subview
+        room: sala
       office:
-        type: custom:bruno-office-subview
+        type: custom:bruno-room-subview
+        room: office
       cozinha:
-        type: custom:bruno-cozinha-subview
+        type: custom:bruno-room-subview
+        room: cozinha
       casal:
-        type: custom:bruno-quarto-casal-subview
+        type: custom:bruno-room-subview
+        room: casal
       marina:
-        type: custom:bruno-quarto-marina-subview
+        type: custom:bruno-room-subview
+        room: marina
       miguel:
-        type: custom:bruno-quarto-miguel-subview
+        type: custom:bruno-room-subview
+        room: miguel
+      # ── ANTERIOR (rollback) — um arquivo JS por cômodo ──────────────────────
+      # sala:
+      #   type: custom:bruno-sala-subview
+      # office:
+      #   type: custom:bruno-office-subview
+      # cozinha:
+      #   type: custom:bruno-cozinha-subview
+      # casal:
+      #   type: custom:bruno-quarto-casal-subview
+      # marina:
+      #   type: custom:bruno-quarto-marina-subview
+      # miguel:
+      #   type: custom:bruno-quarto-miguel-subview
+      # ───────────────────────────────────────────────────────────────────────
       # NOVO (2026-08-01): Music Assistant - redireciona para ingress nativo do addon
       music:
         type: custom:bruno-music-subview

@@ -3963,9 +3963,9 @@ $ {
 }
 `;
 
-/** Bloco condicional "appliances": 18 regras. */
+/** Bloco condicional "appliances": 18 regras, escopadas por atributo. */
 export const SUBVIEW_APPLIANCES_CSS = css`
-.appliances-card {
+:host([data-appliances]) .appliances-card {
   grid-area: appliances;
   min-width: 0;
   min-height: 0;
@@ -3975,18 +3975,18 @@ export const SUBVIEW_APPLIANCES_CSS = css`
   gap: 10px;
   overflow: hidden;
 }
-.appliances-head {
+:host([data-appliances]) .appliances-head {
   min-height: 38px;
   margin-bottom: 0;
 }
-.appliances-grid {
+:host([data-appliances]) .appliances-grid {
   min-width: 0;
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 }
-.appliance-tile {
+:host([data-appliances]) .appliance-tile {
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -4000,24 +4000,24 @@ export const SUBVIEW_APPLIANCES_CSS = css`
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.055);
   overflow: hidden;
 }
-.appliance-tile.is-on {
+:host([data-appliances]) .appliance-tile.is-on {
   border-color: rgba(255,196,90,0.30);
   background: linear-gradient(180deg, rgba(255,196,90,0.10), rgba(255,255,255,0.040));
 }
-.appliance-tile.is-muted {
+:host([data-appliances]) .appliance-tile.is-muted {
   color: rgba(255,255,255,0.74);
 }
-.appliance-more {
+:host([data-appliances]) .appliance-more {
   position: absolute;
   top: 7px;
   right: 7px;
   z-index: 3;
 }
-.appliance-more:disabled {
+:host([data-appliances]) .appliance-more:disabled {
   opacity: 0.28;
   cursor: default;
 }
-.appliance-visual {
+:host([data-appliances]) .appliance-visual {
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -4025,32 +4025,32 @@ export const SUBVIEW_APPLIANCES_CSS = css`
   place-items: center;
   padding: 10px 10px 2px;
 }
-.appliance-visual img {
+:host([data-appliances]) .appliance-visual img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   filter: drop-shadow(0 14px 22px rgba(0,0,0,0.42));
 }
-.appliance-visual bruno-icon {
+:host([data-appliances]) .appliance-visual bruno-icon {
   --mdc-icon-size: 44px;
   color: rgba(255,255,255,0.24);
 }
-.appliance-visual img + bruno-icon {
+:host([data-appliances]) .appliance-visual img + bruno-icon {
   display: none;
 }
-.appliance-visual.is-image-missing img {
+:host([data-appliances]) .appliance-visual.is-image-missing img {
   display: none;
 }
-.appliance-visual.is-image-missing bruno-icon {
+:host([data-appliances]) .appliance-visual.is-image-missing bruno-icon {
   display: block;
 }
-.appliance-copy {
+:host([data-appliances]) .appliance-copy {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
-.appliance-copy strong {
+:host([data-appliances]) .appliance-copy strong {
   min-width: 0;
   font-size: 14px;
   line-height: 1.05;
@@ -4060,7 +4060,7 @@ export const SUBVIEW_APPLIANCES_CSS = css`
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.appliance-copy small {
+:host([data-appliances]) .appliance-copy small {
   min-width: 0;
   font-size: 11px;
   line-height: 1.05;
@@ -4070,172 +4070,172 @@ export const SUBVIEW_APPLIANCES_CSS = css`
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.appliance-tile.is-on .appliance-copy small {
+:host([data-appliances]) .appliance-tile.is-on .appliance-copy small {
   color: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
 }
 `;
 
-/** Bloco condicional "tvHub": 35 regras. */
+/** Bloco condicional "tvHub": 35 regras, escopadas por atributo. */
 export const SUBVIEW_TVHUB_CSS = css`
 @media (max-width: 800px) {
-.content-left, .right-column, .cams-media-row {
+:host([data-tvhub]) .content-left, :host([data-tvhub]) .right-column, :host([data-tvhub]) .cams-media-row {
   display: contents;
 }
-.subview-topband {
+:host([data-tvhub]) .subview-topband {
   order: 0;
   width: 100%;
   height: auto;
   min-height: 0;
   display: block;
 }
-.topband-badges {
+:host([data-tvhub]) .topband-badges {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: visible;
 }
-.topband-badges .tb-badge[data-phone-hide], .topband-clock {
+:host([data-tvhub]) .topband-badges .tb-badge[data-phone-hide], :host([data-tvhub]) .topband-clock {
   display: none;
 }
-.tb-badge {
+:host([data-tvhub]) .tb-badge {
   min-width: 0;
   height: 44px;
   grid-template-columns: 20px minmax(0, 1fr);
   column-gap: 6px;
   padding: 0 8px;
 }
-.tb-badge-icon {
+:host([data-tvhub]) .tb-badge-icon {
   width: 20px;
   height: 20px;
 }
-.tb-badge-sub {
+:host([data-tvhub]) .tb-badge-sub {
   max-width: 100%;
 }
-.hero-panel {
+:host([data-tvhub]) .hero-panel {
   order: 10;
   height: auto;
   min-height: 0;
 }
-.hero-panel.is-unconfigured {
+:host([data-tvhub]) .hero-panel.is-unconfigured {
   display: none;
 }
-.hero-atmosphere, .hero-atmosphere .hero-content {
+:host([data-tvhub]) .hero-atmosphere, :host([data-tvhub]) .hero-atmosphere .hero-content {
   height: auto;
   min-height: 0;
 }
-.curtain-control-row {
+:host([data-tvhub]) .curtain-control-row {
   grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
-.curtain-status {
+:host([data-tvhub]) .curtain-status {
   justify-self: start;
 }
-.curtain-main-actions {
+:host([data-tvhub]) .curtain-main-actions {
   width: 100%;
   justify-content: stretch;
 }
-.curtain-action-button {
+:host([data-tvhub]) .curtain-action-button {
   flex: 1 1 0;
   min-width: 0;
   min-height: 44px;
 }
-.lights-card {
+:host([data-tvhub]) .lights-card {
   order: 20;
   height: auto;
   min-height: 0;
   overflow: visible;
 }
-.lights-card .module-head {
+:host([data-tvhub]) .lights-card .module-head {
   min-height: 0;
   flex-wrap: wrap;
   gap: 10px;
 }
-.head-actions {
+:host([data-tvhub]) .head-actions {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.head-actions .chip-button, .zone-header {
+:host([data-tvhub]) .head-actions .chip-button, :host([data-tvhub]) .zone-header {
   min-height: 44px;
 }
-.lights-zones, .zone-lights, .office-light-list {
+:host([data-tvhub]) .lights-zones, :host([data-tvhub]) .zone-lights, :host([data-tvhub]) .office-light-list {
   flex: 0 0 auto;
   max-height: none !important;
   overflow-y: visible !important;
   overscroll-behavior: auto;
 }
-.ac-card.ac-card-lean {
+:host([data-tvhub]) .ac-card.ac-card-lean {
   order: 30;
   height: auto;
   min-height: 360px;
   grid-template-rows: 44px minmax(220px, auto) auto;
   overflow: visible;
 }
-.ac-lean-foot {
+:host([data-tvhub]) .ac-lean-foot {
   align-items: stretch;
 }
-.ac-action {
+:host([data-tvhub]) .ac-action {
   min-height: 52px;
 }
-.media-hub-card.mh-accordion {
+:host([data-tvhub]) .media-hub-card.mh-accordion {
   order: 40;
   height: auto;
   min-height: 330px;
   grid-template-rows: 44px minmax(278px, 1fr);
 }
-.media-hub-card.is-unconfigured {
+:host([data-tvhub]) .media-hub-card.is-unconfigured {
   display: none;
 }
-.mh-source {
+:host([data-tvhub]) .mh-source {
   flex-basis: 44px;
 }
-.mh-source-head {
+:host([data-tvhub]) .mh-source-head {
   flex-basis: 44px;
   height: 44px;
 }
-.mh-source-body {
+:host([data-tvhub]) .mh-source-body {
   grid-template-columns: minmax(0, 1fr) clamp(104px, 30vw, 148px);
   gap: 8px;
   padding-inline: 12px;
 }
-.mh-info {
+:host([data-tvhub]) .mh-info {
   padding-left: 0;
 }
-.mh-controls > .mh-btn.is-main {
+:host([data-tvhub]) .mh-controls > .mh-btn.is-main {
   width: 100%;
   min-width: 0;
 }
-.mh-menu, .mh-btn {
+:host([data-tvhub]) .mh-menu, :host([data-tvhub]) .mh-btn {
   min-height: 44px;
 }
-.mh-menu {
+:host([data-tvhub]) .mh-menu {
   width: 44px;
   height: 44px;
 }
-.cameras-card.cameras-card-controls {
+:host([data-tvhub]) .cameras-card.cameras-card-controls {
   order: 50;
   width: 100%;
   height: auto;
   min-height: 0;
   grid-template-rows: 44px clamp(220px, 58vw, 360px);
 }
-.camera-pip-stage, .camera-feed {
+:host([data-tvhub]) .camera-pip-stage, :host([data-tvhub]) .camera-feed {
   min-height: 0;
   height: 100%;
 }
-.camera-control {
+:host([data-tvhub]) .camera-control {
   min-height: 44px;
 }
-.subview-footer {
+:host([data-tvhub]) .subview-footer {
   display: none;
 }
 }
 `;
 
-/** Bloco condicional "ps5": 2 regras. */
+/** Bloco condicional "ps5": 2 regras, escopadas por atributo. */
 export const SUBVIEW_PS5_CSS = css`
 @media (max-width: 800px) {
-.camera-pip-feed {
+:host([data-ps5]) .camera-pip-feed {
   right: 16px;
   bottom: 16px;
   width: clamp(88px, 25%, 112px);
@@ -4243,20 +4243,20 @@ export const SUBVIEW_PS5_CSS = css`
   aspect-ratio: 4 / 3;
   border-radius: 11px;
 }
-.camera-pip-stage.is-controls-open .camera-pip-feed {
+:host([data-ps5]) .camera-pip-stage.is-controls-open .camera-pip-feed {
   bottom: 70px;
 }
 }
 `;
 
-/** Bloco condicional "pc": 0 regras. */
+/** Bloco condicional "pc": 0 regras, escopadas por atributo. */
 export const SUBVIEW_PC_CSS = css`
 
 `;
 
 /** Sobreposicao do comodo sala: 13 regras que divergem da base. */
 const SOBREPOSICAO_SALA = css`
-.room-subview {
+:host([data-room='sala']) .room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -4269,21 +4269,21 @@ const SOBREPOSICAO_SALA = css`
   background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
   overflow: hidden;
 }
-.spotify-title.is-marquee span {
+:host([data-room='sala']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
   padding-right: 34px;
   animation: bruno-sala-marquee 10s linear infinite;
 }
 @keyframes bruno-sala-marquee {
-0%, 18% {
+:host([data-room='sala']) 0%, :host([data-room='sala']) 18% {
   transform: translateX(0);
 }
-82%, 100% {
+:host([data-room='sala']) 82%, :host([data-room='sala']) 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
-.right-column {
+:host([data-room='sala']) .right-column {
   grid-area: right;
   position: relative;
   display: grid;
@@ -4291,7 +4291,7 @@ const SOBREPOSICAO_SALA = css`
   align-content: space-between;
   --lights-dock-bottom: calc(var(--ac-h, 320px) + 7px);
 }
-.lights-zones {
+:host([data-room='sala']) .lights-zones {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -4300,7 +4300,7 @@ const SOBREPOSICAO_SALA = css`
   overflow-y: auto;
   padding: 0 2px 0 0;
 }
-.zone-lights {
+:host([data-room='sala']) .zone-lights {
   --zl-tile-h: 92px;
   --zl-gap: 12px;
   display: grid;
@@ -4309,10 +4309,10 @@ const SOBREPOSICAO_SALA = css`
   gap: var(--zl-gap);
   padding: 0 6px 6px;
 }
-.zone-lights::-webkit-scrollbar {
+:host([data-room='sala']) .zone-lights::-webkit-scrollbar {
   width: 0;
 }
-.light-row {
+:host([data-room='sala']) .light-row {
   display: grid;
   grid-template-columns: 38px 120px minmax(0, 1fr);
   align-items: center;
@@ -4325,7 +4325,7 @@ const SOBREPOSICAO_SALA = css`
   color: var(--text-main);
   text-align: left;
 }
-.light-row-icon {
+:host([data-room='sala']) .light-row-icon {
   width: 36px;
   height: 36px;
   display: grid;
@@ -4333,7 +4333,7 @@ const SOBREPOSICAO_SALA = css`
   --light-color: #9da0a2;
   color: var(--light-color);
 }
-.light-row-name {
+:host([data-room='sala']) .light-row-name {
   min-width: 0;
   font-size: 13px;
   font-weight: 600;
@@ -4341,7 +4341,7 @@ const SOBREPOSICAO_SALA = css`
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.light-bar {
+:host([data-room='sala']) .light-bar {
   height: 11px;
   border-radius: 999px;
   background: rgba(255,255,255,0.06);
@@ -4351,7 +4351,7 @@ const SOBREPOSICAO_SALA = css`
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 @media (max-width: 800px) {
-.room-subview {
+:host([data-room='sala']) .room-subview {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -4368,7 +4368,7 @@ const SOBREPOSICAO_SALA = css`
 
 /** Sobreposicao do comodo office: 16 regras que divergem da base. */
 const SOBREPOSICAO_OFFICE = css`
-.room-subview {
+:host([data-room='office']) .room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -4381,21 +4381,21 @@ const SOBREPOSICAO_OFFICE = css`
   background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
   overflow: hidden;
 }
-.spotify-title.is-marquee span {
+:host([data-room='office']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
   padding-right: 34px;
   animation: bruno-sala-marquee 10s linear infinite;
 }
 @keyframes bruno-sala-marquee {
-0%, 18% {
+:host([data-room='office']) 0%, :host([data-room='office']) 18% {
   transform: translateX(0);
 }
-82%, 100% {
+:host([data-room='office']) 82%, :host([data-room='office']) 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
-.right-column {
+:host([data-room='office']) .right-column {
   grid-area: right;
   position: relative;
   display: grid;
@@ -4403,7 +4403,7 @@ const SOBREPOSICAO_OFFICE = css`
   align-content: space-between;
   --lights-dock-bottom: calc(var(--ac-h, 320px) + 7px);
 }
-.lights-zones {
+:host([data-room='office']) .lights-zones {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -4412,12 +4412,12 @@ const SOBREPOSICAO_OFFICE = css`
   overflow-y: auto;
   padding: 0 2px 0 0;
 }
-.zone-lights {
+:host([data-room='office']) .zone-lights {
   display: flex;
   flex-direction: column;
   padding: 0 6px 6px;
 }
-.light-row {
+:host([data-room='office']) .light-row {
   display: grid;
   grid-template-columns: 38px 120px minmax(0, 1fr);
   align-items: center;
@@ -4430,7 +4430,7 @@ const SOBREPOSICAO_OFFICE = css`
   color: var(--text-main);
   text-align: left;
 }
-.light-row-icon {
+:host([data-room='office']) .light-row-icon {
   width: 36px;
   height: 36px;
   display: grid;
@@ -4438,7 +4438,7 @@ const SOBREPOSICAO_OFFICE = css`
   --light-color: #9da0a2;
   color: var(--light-color);
 }
-.light-row-name {
+:host([data-room='office']) .light-row-name {
   min-width: 0;
   font-size: 13px;
   font-weight: 600;
@@ -4446,7 +4446,7 @@ const SOBREPOSICAO_OFFICE = css`
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.light-bar {
+:host([data-room='office']) .light-bar {
   height: 11px;
   border-radius: 999px;
   background: rgba(255,255,255,0.06);
@@ -4455,10 +4455,10 @@ const SOBREPOSICAO_OFFICE = css`
   pointer-events: none;
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
-.mh-btn-row-5 {
+:host([data-room='office']) .mh-btn-row-5 {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
-.office-light-list {
+:host([data-room='office']) .office-light-list {
   --zl-tile-h: 92px;
   --zl-gap: 12px;
   display: grid;
@@ -4470,14 +4470,14 @@ const SOBREPOSICAO_OFFICE = css`
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
-.office-light-list::-webkit-scrollbar {
+:host([data-room='office']) .office-light-list::-webkit-scrollbar {
   width: 0;
 }
-.office-pc-actions .mh-btn {
+:host([data-room='office']) .office-pc-actions .mh-btn {
   min-width: 0;
 }
 @media (max-width: 800px) {
-.room-subview {
+:host([data-room='office']) .room-subview {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -4494,7 +4494,7 @@ const SOBREPOSICAO_OFFICE = css`
 
 /** Sobreposicao do comodo cozinha: 56 regras que divergem da base. */
 const SOBREPOSICAO_COZINHA = css`
-.room-subview {
+:host([data-room='cozinha']) .room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -4507,28 +4507,28 @@ const SOBREPOSICAO_COZINHA = css`
   background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
   overflow: hidden;
 }
-.spotify-title.is-marquee span {
+:host([data-room='cozinha']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
   padding-right: 34px;
   animation: bruno-sala-marquee 10s linear infinite;
 }
 @keyframes bruno-sala-marquee {
-0%, 18% {
+:host([data-room='cozinha']) 0%, :host([data-room='cozinha']) 18% {
   transform: translateX(0);
 }
-82%, 100% {
+:host([data-room='cozinha']) 82%, :host([data-room='cozinha']) 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
-.room-subview .content-left {
+:host([data-room='cozinha']) .room-subview .content-left {
   grid-template-rows: minmax(0, 1fr);
 }
-.room-subview .right-column {
+:host([data-room='cozinha']) .room-subview .right-column {
   grid-template-rows: auto;
   align-content: start;
 }
-.right-column {
+:host([data-room='cozinha']) .right-column {
   grid-area: right;
   position: relative;
   display: grid;
@@ -4536,7 +4536,7 @@ const SOBREPOSICAO_COZINHA = css`
   align-content: space-between;
   --lights-dock-bottom: calc(7px - var(--room-gap, 10px));
 }
-.lights-zones {
+:host([data-room='cozinha']) .lights-zones {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -4545,12 +4545,12 @@ const SOBREPOSICAO_COZINHA = css`
   overflow-y: auto;
   padding: 0 2px 0 0;
 }
-.zone-lights {
+:host([data-room='cozinha']) .zone-lights {
   display: flex;
   flex-direction: column;
   padding: 0 6px 6px;
 }
-.light-row {
+:host([data-room='cozinha']) .light-row {
   display: grid;
   grid-template-columns: 38px 120px minmax(0, 1fr);
   align-items: center;
@@ -4563,7 +4563,7 @@ const SOBREPOSICAO_COZINHA = css`
   color: var(--text-main);
   text-align: left;
 }
-.light-row-icon {
+:host([data-room='cozinha']) .light-row-icon {
   width: 36px;
   height: 36px;
   display: grid;
@@ -4571,7 +4571,7 @@ const SOBREPOSICAO_COZINHA = css`
   --light-color: #9da0a2;
   color: var(--light-color);
 }
-.light-row-name {
+:host([data-room='cozinha']) .light-row-name {
   min-width: 0;
   font-size: 13px;
   font-weight: 600;
@@ -4579,7 +4579,7 @@ const SOBREPOSICAO_COZINHA = css`
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.light-bar {
+:host([data-room='cozinha']) .light-bar {
   height: 11px;
   border-radius: 999px;
   background: rgba(255,255,255,0.06);
@@ -4588,10 +4588,10 @@ const SOBREPOSICAO_COZINHA = css`
   pointer-events: none;
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
-.mh-btn-row-5 {
+:host([data-room='cozinha']) .mh-btn-row-5 {
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
-.office-light-list {
+:host([data-room='cozinha']) .office-light-list {
   --zl-tile-h: 92px;
   --zl-gap: 12px;
   display: grid;
@@ -4603,53 +4603,53 @@ const SOBREPOSICAO_COZINHA = css`
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
-.office-light-list::-webkit-scrollbar {
+:host([data-room='cozinha']) .office-light-list::-webkit-scrollbar {
   width: 0;
 }
-.office-pc-actions .mh-btn {
+:host([data-room='cozinha']) .office-pc-actions .mh-btn {
   min-width: 0;
 }
-.room-subview .subview-topband {
+:host([data-room='cozinha']) .room-subview .subview-topband {
   grid-area: topband;
 }
-.room-subview .hero-panel {
+:host([data-room='cozinha']) .room-subview .hero-panel {
   grid-area: hero;
   min-width: 0;
   min-height: 0;
   height: 100%;
 }
-.room-subview .lights-card {
+:host([data-room='cozinha']) .room-subview .lights-card {
   width: 100%;
   min-width: 0;
   min-height: 0;
 }
-.room-subview .cameras-card {
+:host([data-room='cozinha']) .room-subview .cameras-card {
   grid-area: cams;
   min-width: 0;
   min-height: 0;
 }
-.room-subview .appliances-card {
+:host([data-room='cozinha']) .room-subview .appliances-card {
   grid-area: appliances;
   min-width: 0;
   min-height: 0;
 }
-.room-subview .subview-footer {
+:host([data-room='cozinha']) .room-subview .subview-footer {
   grid-area: bottomband;
 }
-.room-subview .hero-atmosphere, .room-subview .hero-atmosphere .hero-content {
+:host([data-room='cozinha']) .room-subview .hero-atmosphere, :host([data-room='cozinha']) .room-subview .hero-atmosphere .hero-content {
   height: 100%;
 }
-.room-subview .hero-atmosphere .hero-content {
+:host([data-room='cozinha']) .room-subview .hero-atmosphere .hero-content {
   display: block;
   padding: 0;
 }
-.room-subview .curtain-dock {
+:host([data-room='cozinha']) .room-subview .curtain-dock {
   display: none !important;
 }
-.room-subview .appliance-tile {
+:host([data-room='cozinha']) .room-subview .appliance-tile {
   display: block;
 }
-.room-subview .appliance-main {
+:host([data-room='cozinha']) .room-subview .appliance-main {
   width: 100%;
   height: 100%;
   min-width: 0;
@@ -4665,19 +4665,19 @@ const SOBREPOSICAO_COZINHA = css`
   text-align: left;
   cursor: pointer;
 }
-.room-subview .appliance-main:disabled {
+:host([data-room='cozinha']) .room-subview .appliance-main:disabled {
   cursor: default;
 }
-.room-subview .appliance-main:focus-visible {
+:host([data-room='cozinha']) .room-subview .appliance-main:focus-visible {
   outline: 1px solid rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.58);
   outline-offset: -4px;
   border-radius: calc(var(--room-radius-small) - 3px);
 }
-.room-subview .appliance-tile.is-airfryer .appliance-visual img {
+:host([data-room='cozinha']) .room-subview .appliance-tile.is-airfryer .appliance-visual img {
   transform: scale(0.92);
 }
 @media (max-width: 800px) {
-.room-subview {
+:host([data-room='cozinha']) .room-subview {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -4689,69 +4689,69 @@ const SOBREPOSICAO_COZINHA = css`
   background: transparent;
   overflow: visible;
 }
-.room-subview .right-column {
+:host([data-room='cozinha']) .room-subview .right-column {
   display: contents;
 }
-.room-subview .subview-topband {
+:host([data-room='cozinha']) .room-subview .subview-topband {
   order: 0;
   width: 100%;
   height: auto;
   min-height: 0;
   display: block;
 }
-.room-subview .topband-badges {
+:host([data-room='cozinha']) .room-subview .topband-badges {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: visible;
 }
-.room-subview .topband-badges .tb-badge[data-phone-hide], .room-subview .topband-clock {
+:host([data-room='cozinha']) .room-subview .topband-badges .tb-badge[data-phone-hide], :host([data-room='cozinha']) .room-subview .topband-clock {
   display: none;
 }
-.room-subview .tb-badge {
+:host([data-room='cozinha']) .room-subview .tb-badge {
   min-width: 0;
   height: 44px;
   grid-template-columns: 20px minmax(0, 1fr);
   column-gap: 6px;
   padding: 0 8px;
 }
-.room-subview .tb-badge-icon {
+:host([data-room='cozinha']) .room-subview .tb-badge-icon {
   width: 20px;
   height: 20px;
 }
-.room-subview .tb-badge-sub {
+:host([data-room='cozinha']) .room-subview .tb-badge-sub {
   max-width: 100%;
 }
-.room-subview .hero-panel.is-unconfigured {
+:host([data-room='cozinha']) .room-subview .hero-panel.is-unconfigured {
   display: none;
 }
-.room-subview .lights-card {
+:host([data-room='cozinha']) .room-subview .lights-card {
   order: 20;
   width: 100%;
   height: auto;
   min-height: 0;
   overflow: visible;
 }
-.room-subview .lights-card .module-head {
+:host([data-room='cozinha']) .room-subview .lights-card .module-head {
   min-height: 0;
   flex-wrap: wrap;
   gap: 10px;
 }
-.room-subview .head-actions {
+:host([data-room='cozinha']) .room-subview .head-actions {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.room-subview .head-actions .chip-button, .room-subview .zone-header {
+:host([data-room='cozinha']) .room-subview .head-actions .chip-button, :host([data-room='cozinha']) .room-subview .zone-header {
   min-height: 44px;
 }
-.room-subview .lights-zones, .room-subview .zone-lights, .room-subview .office-light-list {
+:host([data-room='cozinha']) .room-subview .lights-zones, :host([data-room='cozinha']) .room-subview .zone-lights, :host([data-room='cozinha']) .room-subview .office-light-list {
   flex: 0 0 auto;
   max-height: none !important;
   overflow-y: visible !important;
   overscroll-behavior: auto;
 }
-.room-subview .appliances-card {
+:host([data-room='cozinha']) .room-subview .appliances-card {
   order: 30;
   width: 100%;
   height: auto;
@@ -4759,34 +4759,34 @@ const SOBREPOSICAO_COZINHA = css`
   grid-template-rows: auto auto;
   overflow: hidden;
 }
-.room-subview .appliances-grid {
+:host([data-room='cozinha']) .room-subview .appliances-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-auto-rows: minmax(154px, auto);
   align-items: stretch;
 }
-.room-subview .appliance-tile:last-child:nth-child(odd) {
+:host([data-room='cozinha']) .room-subview .appliance-tile:last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
-.room-subview .appliance-main {
+:host([data-room='cozinha']) .room-subview .appliance-main {
   min-height: 44px;
 }
-.room-subview .mh-menu {
+:host([data-room='cozinha']) .room-subview .mh-menu {
   width: 44px;
   height: 44px;
   min-height: 44px;
 }
-.room-subview .cameras-card.cameras-card-controls {
+:host([data-room='cozinha']) .room-subview .cameras-card.cameras-card-controls {
   order: 40;
   width: 100%;
   height: auto;
   min-height: 0;
   grid-template-rows: 44px clamp(220px, 58vw, 360px);
 }
-.room-subview .camera-pip-stage, .room-subview .camera-feed {
+:host([data-room='cozinha']) .room-subview .camera-pip-stage, :host([data-room='cozinha']) .room-subview .camera-feed {
   min-height: 0;
   height: 100%;
 }
-.room-subview .camera-pip-feed {
+:host([data-room='cozinha']) .room-subview .camera-pip-feed {
   right: 16px;
   bottom: 16px;
   width: clamp(88px, 25%, 112px);
@@ -4794,13 +4794,13 @@ const SOBREPOSICAO_COZINHA = css`
   aspect-ratio: 4 / 3;
   border-radius: 11px;
 }
-.room-subview .camera-pip-stage.is-controls-open .camera-pip-feed {
+:host([data-room='cozinha']) .room-subview .camera-pip-stage.is-controls-open .camera-pip-feed {
   bottom: 70px;
 }
-.room-subview .camera-control {
+:host([data-room='cozinha']) .room-subview .camera-control {
   min-height: 44px;
 }
-.room-subview .subview-footer {
+:host([data-room='cozinha']) .room-subview .subview-footer {
   display: none;
 }
 }
@@ -4808,7 +4808,7 @@ const SOBREPOSICAO_COZINHA = css`
 
 /** Sobreposicao do comodo casal: 13 regras que divergem da base. */
 const SOBREPOSICAO_CASAL = css`
-.room-subview {
+:host([data-room='casal']) .room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -4821,21 +4821,21 @@ const SOBREPOSICAO_CASAL = css`
   background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
   overflow: hidden;
 }
-.spotify-title.is-marquee span {
+:host([data-room='casal']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
   padding-right: 34px;
   animation: bruno-qcasal-marquee 10s linear infinite;
 }
 @keyframes bruno-qcasal-marquee {
-0%, 18% {
+:host([data-room='casal']) 0%, :host([data-room='casal']) 18% {
   transform: translateX(0);
 }
-82%, 100% {
+:host([data-room='casal']) 82%, :host([data-room='casal']) 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
-.right-column {
+:host([data-room='casal']) .right-column {
   grid-area: right;
   position: relative;
   display: grid;
@@ -4843,7 +4843,7 @@ const SOBREPOSICAO_CASAL = css`
   align-content: space-between;
   --lights-dock-bottom: calc(var(--ac-h, 320px) + 7px);
 }
-.lights-zones {
+:host([data-room='casal']) .lights-zones {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -4854,7 +4854,7 @@ const SOBREPOSICAO_CASAL = css`
   -webkit-overflow-scrolling: touch;
   padding: 0 2px 0 0;
 }
-.zone-lights {
+:host([data-room='casal']) .zone-lights {
   --zl-tile-h: 92px;
   --zl-gap: 12px;
   display: grid;
@@ -4865,10 +4865,10 @@ const SOBREPOSICAO_CASAL = css`
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
-.zone-lights::-webkit-scrollbar {
+:host([data-room='casal']) .zone-lights::-webkit-scrollbar {
   width: 0;
 }
-.light-row {
+:host([data-room='casal']) .light-row {
   display: grid;
   grid-template-columns: 32px 112px minmax(0, 1fr);
   align-items: center;
@@ -4882,7 +4882,7 @@ const SOBREPOSICAO_CASAL = css`
   color: var(--text-main);
   text-align: left;
 }
-.light-row-icon {
+:host([data-room='casal']) .light-row-icon {
   width: 32px;
   height: 32px;
   display: grid;
@@ -4890,7 +4890,7 @@ const SOBREPOSICAO_CASAL = css`
   --light-color: #9da0a2;
   color: var(--light-color);
 }
-.light-row-name {
+:host([data-room='casal']) .light-row-name {
   min-width: 0;
   font-size: 12.5px;
   font-weight: 600;
@@ -4898,7 +4898,7 @@ const SOBREPOSICAO_CASAL = css`
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.light-bar {
+:host([data-room='casal']) .light-bar {
   height: 9px;
   border-radius: 999px;
   background: rgba(255,255,255,0.06);
@@ -4908,7 +4908,7 @@ const SOBREPOSICAO_CASAL = css`
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 @media (max-width: 800px) {
-.room-subview {
+:host([data-room='casal']) .room-subview {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -4925,7 +4925,7 @@ const SOBREPOSICAO_CASAL = css`
 
 /** Sobreposicao do comodo marina: 13 regras que divergem da base. */
 const SOBREPOSICAO_MARINA = css`
-.room-subview {
+:host([data-room='marina']) .room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -4938,21 +4938,21 @@ const SOBREPOSICAO_MARINA = css`
   background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
   overflow: hidden;
 }
-.spotify-title.is-marquee span {
+:host([data-room='marina']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
   padding-right: 34px;
   animation: bruno-qmarina-marquee 10s linear infinite;
 }
 @keyframes bruno-qmarina-marquee {
-0%, 18% {
+:host([data-room='marina']) 0%, :host([data-room='marina']) 18% {
   transform: translateX(0);
 }
-82%, 100% {
+:host([data-room='marina']) 82%, :host([data-room='marina']) 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
-.right-column {
+:host([data-room='marina']) .right-column {
   grid-area: right;
   position: relative;
   display: grid;
@@ -4960,7 +4960,7 @@ const SOBREPOSICAO_MARINA = css`
   align-content: space-between;
   --lights-dock-bottom: calc(var(--ac-h, 320px) + 7px);
 }
-.lights-zones {
+:host([data-room='marina']) .lights-zones {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -4969,7 +4969,7 @@ const SOBREPOSICAO_MARINA = css`
   overflow-y: auto;
   padding: 0 2px 0 0;
 }
-.zone-lights {
+:host([data-room='marina']) .zone-lights {
   --zl-tile-h: 92px;
   --zl-gap: 12px;
   display: grid;
@@ -4980,10 +4980,10 @@ const SOBREPOSICAO_MARINA = css`
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
-.zone-lights::-webkit-scrollbar {
+:host([data-room='marina']) .zone-lights::-webkit-scrollbar {
   width: 0;
 }
-.light-row {
+:host([data-room='marina']) .light-row {
   display: grid;
   grid-template-columns: 38px 120px minmax(0, 1fr);
   align-items: center;
@@ -4996,7 +4996,7 @@ const SOBREPOSICAO_MARINA = css`
   color: var(--text-main);
   text-align: left;
 }
-.light-row-icon {
+:host([data-room='marina']) .light-row-icon {
   width: 36px;
   height: 36px;
   display: grid;
@@ -5004,7 +5004,7 @@ const SOBREPOSICAO_MARINA = css`
   --light-color: #9da0a2;
   color: var(--light-color);
 }
-.light-row-name {
+:host([data-room='marina']) .light-row-name {
   min-width: 0;
   font-size: 13px;
   font-weight: 600;
@@ -5012,7 +5012,7 @@ const SOBREPOSICAO_MARINA = css`
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.light-bar {
+:host([data-room='marina']) .light-bar {
   height: 11px;
   border-radius: 999px;
   background: rgba(255,255,255,0.06);
@@ -5022,7 +5022,7 @@ const SOBREPOSICAO_MARINA = css`
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 @media (max-width: 800px) {
-.room-subview {
+:host([data-room='marina']) .room-subview {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -5039,7 +5039,7 @@ const SOBREPOSICAO_MARINA = css`
 
 /** Sobreposicao do comodo miguel: 13 regras que divergem da base. */
 const SOBREPOSICAO_MIGUEL = css`
-.room-subview {
+:host([data-room='miguel']) .room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -5052,21 +5052,21 @@ const SOBREPOSICAO_MIGUEL = css`
   background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
   overflow: hidden;
 }
-.spotify-title.is-marquee span {
+:host([data-room='miguel']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
   padding-right: 34px;
   animation: bruno-qmiguel-marquee 10s linear infinite;
 }
 @keyframes bruno-qmiguel-marquee {
-0%, 18% {
+:host([data-room='miguel']) 0%, :host([data-room='miguel']) 18% {
   transform: translateX(0);
 }
-82%, 100% {
+:host([data-room='miguel']) 82%, :host([data-room='miguel']) 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
-.right-column {
+:host([data-room='miguel']) .right-column {
   grid-area: right;
   position: relative;
   display: grid;
@@ -5074,7 +5074,7 @@ const SOBREPOSICAO_MIGUEL = css`
   align-content: space-between;
   --lights-dock-bottom: calc(var(--ac-h, 320px) + 7px);
 }
-.lights-zones {
+:host([data-room='miguel']) .lights-zones {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -5085,7 +5085,7 @@ const SOBREPOSICAO_MIGUEL = css`
   -webkit-overflow-scrolling: touch;
   padding: 0 2px 0 0;
 }
-.zone-lights {
+:host([data-room='miguel']) .zone-lights {
   --zl-tile-h: 92px;
   --zl-gap: 12px;
   display: grid;
@@ -5096,10 +5096,10 @@ const SOBREPOSICAO_MIGUEL = css`
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
-.zone-lights::-webkit-scrollbar {
+:host([data-room='miguel']) .zone-lights::-webkit-scrollbar {
   width: 0;
 }
-.light-row {
+:host([data-room='miguel']) .light-row {
   display: grid;
   grid-template-columns: 32px 112px minmax(0, 1fr);
   align-items: center;
@@ -5113,7 +5113,7 @@ const SOBREPOSICAO_MIGUEL = css`
   color: var(--text-main);
   text-align: left;
 }
-.light-row-icon {
+:host([data-room='miguel']) .light-row-icon {
   width: 32px;
   height: 32px;
   display: grid;
@@ -5121,7 +5121,7 @@ const SOBREPOSICAO_MIGUEL = css`
   --light-color: #9da0a2;
   color: var(--light-color);
 }
-.light-row-name {
+:host([data-room='miguel']) .light-row-name {
   min-width: 0;
   font-size: 12.5px;
   font-weight: 600;
@@ -5129,7 +5129,7 @@ const SOBREPOSICAO_MIGUEL = css`
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.light-bar {
+:host([data-room='miguel']) .light-bar {
   height: 9px;
   border-radius: 999px;
   background: rgba(255,255,255,0.06);
@@ -5139,7 +5139,7 @@ const SOBREPOSICAO_MIGUEL = css`
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 @media (max-width: 800px) {
-.room-subview {
+:host([data-room='miguel']) .room-subview {
   width: 100%;
   height: auto;
   min-height: 0;

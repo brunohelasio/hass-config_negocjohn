@@ -43,6 +43,7 @@ const COMODOS = [
 ];
 
 const scripts = [
+  '/local/dashboard/bruno-dashboard.DZXoDEsi.js',
   '/local/bruno-ui/core/bruno-icons.js',
   '/local/bruno-ui/core/bruno-liquid-glass.js',
   '/local/bruno-ui/core/bruno-surface-material.js',
@@ -149,6 +150,32 @@ window.medir = function medir(tag) {
     const r = el.getBoundingClientRect();
     saida[nome] = { x: +(r.left - base.left).toFixed(2), y: +(r.top - base.top).toFixed(2),
                     w: +r.width.toFixed(2), h: +r.height.toFixed(2) };
+  }
+  return saida;
+};
+
+// Mesma célula, componente NOVO. O id do cômodo difere entre a configuração
+// antiga (quarto-casal) e a nova (casal), então a ponte é explícita.
+const ID_NOVO = { 'quarto-casal': 'casal', 'quarto-marina': 'marina', 'quarto-miguel': 'miguel' };
+window.montarNovo = function montarNovo(indice) {
+  const [comodo] = COMODOS[indice];
+  const palco = document.getElementById('palco');
+  palco.innerHTML = '';
+  const el = document.createElement('bruno-room-subview');
+  palco.appendChild(el);
+  el.setConfig({ room: ID_NOVO[comodo] || comodo });
+  el.hass = hass;
+  document.getElementById('rotulo').textContent = comodo + '  ·  bruno-room-subview (NOVO)';
+  return 'bruno-room-subview';
+};
+
+// Percorre os seis com o componente novo e devolve a mesma tabela da referência.
+window.medicaoNova = async function medicaoNova() {
+  const saida = {};
+  for (let i = 0; i < COMODOS.length; i++) {
+    window.montarNovo(i);
+    await new Promise((ok) => setTimeout(ok, 300));
+    saida[COMODOS[i][0]] = window.medir('bruno-room-subview');
   }
   return saida;
 };

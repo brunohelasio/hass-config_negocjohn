@@ -832,3 +832,39 @@ node scripts/harness/serve-harness.mjs scripts/harness/subview-parity.html 8126
 
 No console: `await referencia()` devolve a geometria dos seis; comparar com
 `subview-baseline.json`.
+
+### Estado do componente de subview — INCOMPLETO (2026-08-04)
+
+O esqueleto existe (`bruno-room-subview.ts`), compila, e a estrutura de módulos
+renderiza. **O CSS gerado não está sendo aplicado**, e a medição contra a linha
+de base prova: onde o esperado é `1170×48`, mede-se `12×330`.
+
+Diagnóstico feito no navegador, não deduzido — das onze folhas adotadas pelo
+componente, **a folha 0 tem 16 regras e as folhas 1 a 10 têm zero**. Ou seja, o
+navegador aborta a análise do CSS logo no começo de cada folha.
+
+Duas causas, uma confirmada e uma em aberto:
+
+1. **CONFIRMADA — `escopar()` aplica o prefixo dentro de `@keyframes`.** O
+   resultado é `:host([data-room='sala']) 0%, :host([data-room='sala']) 18% {`,
+   que é seletor inválido: dentro de `@keyframes` os seletores são porcentagens.
+   Uma regra inválida derruba o resto da folha. São 12 blocos `@keyframes` no
+   arquivo gerado. Correção: `escopar()` não pode tocar em blocos cujo contexto
+   seja `@keyframes`.
+
+2. **EM ABERTO — a folha da base também para em 16 regras**, e a base não é
+   escopada. É outra causa, provavelmente na serialização de `@media` ou de
+   outra at-rule. Diagnosticar antes de mexer.
+
+**Nada disso está na VM.** O `main.ts` já importa o componente, então o próximo
+build carrega um componente sem estilo — não publicar até as duas causas caírem.
+
+Método para retomar, que foi o que achou isto em dois passos:
+
+```js
+// no console, com o harness aberto:
+document.querySelector('bruno-room-subview').shadowRoot
+  .adoptedStyleSheets.map((f, i) => [i, f.cssRules.length])
+```
+
+Folha com zero regras é folha que o navegador rejeitou.

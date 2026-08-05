@@ -10,6 +10,7 @@
  */
 import './diagnostics/bruno-diagnostics';
 import './components/rooms/bruno-room-tile';
+import './components/rooms/bruno-room-subview';
 
 declare const __BUILD_ID__: string;
 console.info(`[bruno-dashboard] build ${__BUILD_ID__}`);

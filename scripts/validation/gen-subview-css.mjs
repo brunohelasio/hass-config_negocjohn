@@ -129,7 +129,18 @@ const CONDICIONAIS = [
   { nome: 'pc', dono: (d, k) => !ehRaiz(k) && d.length === 1 && d[0] === 'office' },
 ];
 
-function serializar(bs) {
+// Os blocos e as sobreposições vivem na MESMA folha do componente, então
+// precisam de escopo — senão o grid da Cozinha valeria para todos. O escopo é um
+// atributo no host, que o componente define a partir da configuração.
+function escopar(seletor, prefixo) {
+  if (!prefixo) return seletor;
+  return seletor
+    .split(',')
+    .map((s) => `${prefixo} ${s.trim()}`)
+    .join(', ');
+}
+
+function serializar(bs, prefixo = '') {
   const linhas = [];
   let mediaAtual = '';
   for (const b of bs) {
@@ -139,7 +150,7 @@ function serializar(bs) {
       if (media) for (const m of b.media) linhas.push(`${m} {`);
       mediaAtual = media;
     }
-    linhas.push(`${b.seletor} {`);
+    linhas.push(escopar(b.seletor, prefixo) + " {");
     for (const d of b.decls) linhas.push(`  ${d};`);
     linhas.push('}');
   }
@@ -218,13 +229,13 @@ const partes = [
 for (const { nome } of CONDICIONAIS) {
   const lista = condicionais[nome];
   partes.push(
-    `/** Bloco condicional "${nome}": ${lista.length} regras. */\nexport const SUBVIEW_${nome.toUpperCase()}_CSS = css\`\n${serializar(lista)}\n\`;\n`,
+    `/** Bloco condicional "${nome}": ${lista.length} regras, escopadas por atributo. */\nexport const SUBVIEW_${nome.toUpperCase()}_CSS = css\`\n${serializar(lista, `:host([data-${nome.toLowerCase()}])`)}\n\`;\n`,
   );
 }
 const CHAVE_TS = { sala: 'sala', office: 'office', cozinha: 'cozinha', 'quarto-casal': 'casal', 'quarto-marina': 'marina', 'quarto-miguel': 'miguel' };
 for (const [comodo, lista] of Object.entries(sobreposicoes)) {
   partes.push(
-    `/** Sobreposicao do comodo ${CHAVE_TS[comodo]}: ${lista.length} regras que divergem da base. */\nconst SOBREPOSICAO_${CHAVE_TS[comodo].toUpperCase()} = css\`\n${serializar(lista)}\n\`;\n`,
+    `/** Sobreposicao do comodo ${CHAVE_TS[comodo]}: ${lista.length} regras que divergem da base. */\nconst SOBREPOSICAO_${CHAVE_TS[comodo].toUpperCase()} = css\`\n${serializar(lista, `:host([data-room='${CHAVE_TS[comodo]}'])`)}\n\`;\n`,
   );
 }
 

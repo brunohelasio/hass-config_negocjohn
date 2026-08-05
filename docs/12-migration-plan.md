@@ -592,3 +592,67 @@ Banco de medição: `scripts/harness/` — sobe um servidor que mapeia `/local/`
 `config/www/`, renderiza os dois cards na mesma célula e expõe `window.medir()`.
 Referência é sempre o **`bruno-office-card`**, o cômodo mais completo — nunca o
 Corredor nem o Lavabo, que têm CSS que nunca renderiza.
+
+---
+
+## Fase 5c — as seis subviews de cômodo · diagnóstico (2026-08-04)
+
+### O tamanho do prêmio, medido
+
+| | |
+|---|---|
+| linhas nos 6 arquivos | **41.421** |
+| linhas **distintas** entre os 6 | **5.876** |
+| repetição literal | **86%** |
+
+Cada arquivo, comparado com a Sala: Office 94,4% · Cozinha 90,9% · Casal 96,4% ·
+Marina 96,1% · Miguel 95,9% já existe lá dentro, linha por linha.
+
+Estrutura interna:
+
+| | Sala | Office | Cozinha | Casal | Marina | Miguel | nos SEIS |
+|---|---|---|---|---|---|---|---|
+| métodos | 120 | 113 | 117 | 120 | 121 | 120 | **111** |
+| seletores CSS | 303 | 305 | 312 | 303 | 303 | 303 | **301** |
+
+Ou seja: 111 dos ~120 métodos e 301 dos ~305 seletores são idênticos nos seis.
+
+### O que é genuinamente por cômodo
+
+Só **um bloco** varia de verdade — o hub de mídia/aparelhos, em três sabores:
+
+| variante | cômodos | métodos exclusivos |
+|---|---|---|
+| TV + PS5 | Sala, Casal, Marina, Miguel | `_renderTV`, `_renderPS5`, `_tvModel`, `_ps5Model`, `_openTvRemotePopup`, `_universalRemoteButton`, `_universalTvRemoteCard`, `_mediaSourceFromAction` |
+| PC | Office | `_pcModel`, `_renderPC` |
+| Eletrodomésticos | Cozinha | `_renderAppliances`, `_renderApplianceTile`, `_applianceModel` |
+
+O resto dos "exclusivos" é ruído: o nome da classe raiz (`.sala-subview`,
+`.office-subview`, …), que é cosmético e vira atributo, e um punhado de
+seletores do próprio hub.
+
+Hero, dock de iluminação, A/C, câmeras, trilho de status, badges superiores,
+molduras e a pele inteira do tema: **compartilhados pelos seis**.
+
+### Arquitetura decorrente
+
+Igual à da faixa, que já provou funcionar: **um componente + configuração**, com
+o hub como o único ponto de variação — três variantes declaradas, não seis
+arquivos. `rooms.config.ts` já descreve os oito cômodos; ganha um campo `hub`.
+
+### Método (o que a 5b ensinou)
+
+1. Medir antes de escrever. O banco de medição da faixa (`scripts/harness/`)
+   ganha uma página para as subviews: as seis renderizadas em pares
+   (atual × novo), com delta em pixels de cada elemento interno.
+2. Não copiar de bloco comentado — os arquivos guardam tentativas recusadas.
+3. Não presumir uniformidade entre os arquivos atuais: na faixa, três caixas de
+   ícone diferentes conviviam sem que ninguém tivesse notado.
+4. Publicar só com o delta medido, e numa passada só.
+
+### Risco conhecido
+
+As subviews carregam a maior parte das ~157 media queries do projeto, calibradas
+na largura atual do content-slot. O ajuste do espaçamento da rail e o dos badges
+superiores mexem exatamente nessa largura — por isso os dois foram agrupados
+para depois, numa passada só, com uma remedição das subviews em vez de duas.

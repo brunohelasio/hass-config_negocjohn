@@ -47,6 +47,8 @@ export class BrunoRoomSubview extends LitElement {
   private _room?: RoomConfig;
   private _sub: SubviewConfig | undefined;
   private _hass: Hass | undefined;
+  /** Estado do dock de iluminacao: fechado por padrao, como nas subviews atuais. */
+  private _lightsOpen = false;
 
   setConfig(config: SubviewCardConfig): void {
     if (!config?.room) throw new Error('bruno-room-subview: informe `room`');
@@ -122,6 +124,64 @@ export class BrunoRoomSubview extends LitElement {
     `,
   ];
 
+  /**
+   * Dock de iluminação — a faixa de 54px na coluna direita, acima do A/C.
+   *
+   * Transcrito de `_renderLightsDock` das subviews atuais. A altura de 54px vem
+   * da faixa fechada, não de um valor no CSS: é o `lights-dock` com o botão de
+   * título à esquerda e os dois chips à direita. Renderizar o cartão vazio dava
+   * 2px — só as bordas — e era a única divergência que sobrava contra a linha
+   * de base.
+   *
+   * O corpo (`lights-body`) existe sempre; quem o abre é a classe `is-open` no
+   * cartão, e o CSS resolve a altura. As seções de zona entram no passo
+   * seguinte — a faixa fechada já fecha a geometria.
+   */
+  private _renderLightsDock() {
+    const aberto = this._lightsOpen;
+    const classes = ['glass-card', 'lights-card', aberto ? 'is-open' : ''].filter(Boolean).join(' ');
+    return html`
+      <div class=${classes}>
+        <div class="lights-dock">
+          <button
+            type="button"
+            class="lights-dock-id"
+            aria-expanded=${aberto ? 'true' : 'false'}
+            @click=${() => {
+              this._lightsOpen = !this._lightsOpen;
+              this.requestUpdate();
+            }}
+          >
+            <span class="micro-icon tone-amber"><bruno-icon icon="mdi:lightbulb-group"></bruno-icon></span>
+            <span class="module-title">Iluminação</span>
+            <span class="lights-dock-chevron" aria-hidden="true">
+              <bruno-icon icon="mdi:chevron-up"></bruno-icon>
+            </span>
+          </button>
+          <div class="lights-dock-actions">
+            <button type="button" class="chip-button is-active" @click=${() => this._todasAsLuzes('turn_on')}>
+              Todas acesas
+            </button>
+            <button type="button" class="chip-button" @click=${() => this._todasAsLuzes('turn_off')}>
+              Apagar todas
+            </button>
+          </div>
+        </div>
+        <div class="lights-body">
+          <div class="lights-body-clip">
+            <div class="lights-scroll"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private _todasAsLuzes(servico: 'turn_on' | 'turn_off'): void {
+    const grupo = this._room?.entities.lightGroup;
+    if (!grupo || !this._hass) return;
+    this._hass.callService('light', servico, { entity_id: grupo }, { entity_id: grupo });
+  }
+
   override render() {
     const room = this._room;
     if (!room) return nothing;
@@ -144,7 +204,7 @@ export class BrunoRoomSubview extends LitElement {
           : html`<div class="hero-panel"></div>`}
 
         <div class="right-column">
-          <div class="glass-card lights-card"></div>
+          ${this._renderLightsDock()}
           ${completa ? html`<div class="glass-card ac-card ac-card-lean"></div>` : nothing}
         </div>
       </div>

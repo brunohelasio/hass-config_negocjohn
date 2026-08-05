@@ -18,7 +18,7 @@
  */
 import { css, unsafeCSS } from 'lit';
 
-/** Base compartilhada pelos seis comodos: 618 regras. */
+/** Base compartilhada pelos seis comodos: 620 regras. */
 export const SUBVIEW_BASE_CSS = css`
 :host {
   --room-gap: 10px;
@@ -1652,6 +1652,13 @@ to {
 .room-sidebar {
   display: none;
 }
+.room-subview {
+  height: auto;
+  overflow: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
+  grid-template-areas: "hero side" "cams cams" "tv spotify" "ps5 ac";
+}
 .side-panel {
   grid-template-rows: auto minmax(0, 1fr);
 }
@@ -1666,6 +1673,12 @@ to {
 :host {
   height: auto;
   overflow: visible;
+}
+.room-subview {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
+  grid-template-areas: "hero" "side" "cams" "tv" "spotify" "ps5" "ac";
+  padding: 8px;
 }
 .hero-stage {
   min-height: 430px;
@@ -3950,28 +3963,8 @@ $ {
 }
 `;
 
-/** Bloco condicional "appliances": 62 regras. */
+/** Bloco condicional "appliances": 18 regras. */
 export const SUBVIEW_APPLIANCES_CSS = css`
-.cozinha-subview {
-  width: 100%;
-  min-height: 100vh;
-  height: 100vh;
-  display: grid;
-  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
-  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
-  gap: var(--room-gap);
-  padding: 12px;
-  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
-  overflow: hidden;
-}
-.cozinha-subview .content-left {
-  grid-template-rows: minmax(0, 1fr);
-}
-.cozinha-subview .right-column {
-  grid-template-rows: auto;
-  align-content: start;
-}
 .appliances-card {
   grid-area: appliances;
   min-width: 0;
@@ -4079,218 +4072,6 @@ export const SUBVIEW_APPLIANCES_CSS = css`
 }
 .appliance-tile.is-on .appliance-copy small {
   color: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
-}
-@media (max-width: 1180px) {
-.cozinha-subview {
-  height: auto;
-  overflow: auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
-  grid-template-areas: "hero side" "cams cams" "tv spotify" "ps5 ac";
-}
-}
-@media (max-width: 760px) {
-.cozinha-subview {
-  grid-template-columns: 1fr;
-  grid-template-rows: auto;
-  grid-template-areas: "hero" "side" "cams" "tv" "spotify" "ps5" "ac";
-  padding: 8px;
-}
-}
-.cozinha-subview .subview-topband {
-  grid-area: topband;
-}
-.cozinha-subview .hero-panel {
-  grid-area: hero;
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-}
-.cozinha-subview .lights-card {
-  width: 100%;
-  min-width: 0;
-  min-height: 0;
-}
-.cozinha-subview .cameras-card {
-  grid-area: cams;
-  min-width: 0;
-  min-height: 0;
-}
-.cozinha-subview .appliances-card {
-  grid-area: appliances;
-  min-width: 0;
-  min-height: 0;
-}
-.cozinha-subview .subview-footer {
-  grid-area: bottomband;
-}
-.cozinha-subview .hero-atmosphere, .cozinha-subview .hero-atmosphere .hero-content {
-  height: 100%;
-}
-.cozinha-subview .hero-atmosphere .hero-content {
-  display: block;
-  padding: 0;
-}
-.cozinha-subview .curtain-dock {
-  display: none !important;
-}
-.cozinha-subview .appliance-tile {
-  display: block;
-}
-.cozinha-subview .appliance-main {
-  width: 100%;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: 8px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.cozinha-subview .appliance-main:disabled {
-  cursor: default;
-}
-.cozinha-subview .appliance-main:focus-visible {
-  outline: 1px solid rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.58);
-  outline-offset: -4px;
-  border-radius: calc(var(--room-radius-small) - 3px);
-}
-.cozinha-subview .appliance-tile.is-airfryer .appliance-visual img {
-  transform: scale(0.92);
-}
-@media (max-width: 800px) {
-.cozinha-subview {
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  padding: 0;
-  background: transparent;
-  overflow: visible;
-}
-.cozinha-subview .right-column {
-  display: contents;
-}
-.cozinha-subview .subview-topband {
-  order: 0;
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  display: block;
-}
-.cozinha-subview .topband-badges {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  overflow: visible;
-}
-.cozinha-subview .topband-badges .tb-badge[data-phone-hide], .cozinha-subview .topband-clock {
-  display: none;
-}
-.cozinha-subview .tb-badge {
-  min-width: 0;
-  height: 44px;
-  grid-template-columns: 20px minmax(0, 1fr);
-  column-gap: 6px;
-  padding: 0 8px;
-}
-.cozinha-subview .tb-badge-icon {
-  width: 20px;
-  height: 20px;
-}
-.cozinha-subview .tb-badge-sub {
-  max-width: 100%;
-}
-.cozinha-subview .hero-panel.is-unconfigured {
-  display: none;
-}
-.cozinha-subview .lights-card {
-  order: 20;
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  overflow: visible;
-}
-.cozinha-subview .lights-card .module-head {
-  min-height: 0;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.cozinha-subview .head-actions {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.cozinha-subview .head-actions .chip-button, .cozinha-subview .zone-header {
-  min-height: 44px;
-}
-.cozinha-subview .lights-zones, .cozinha-subview .zone-lights, .cozinha-subview .office-light-list {
-  flex: 0 0 auto;
-  max-height: none !important;
-  overflow-y: visible !important;
-  overscroll-behavior: auto;
-}
-.cozinha-subview .appliances-card {
-  order: 30;
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  grid-template-rows: auto auto;
-  overflow: hidden;
-}
-.cozinha-subview .appliances-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: minmax(154px, auto);
-  align-items: stretch;
-}
-.cozinha-subview .appliance-tile:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
-}
-.cozinha-subview .appliance-main {
-  min-height: 44px;
-}
-.cozinha-subview .mh-menu {
-  width: 44px;
-  height: 44px;
-  min-height: 44px;
-}
-.cozinha-subview .cameras-card.cameras-card-controls {
-  order: 40;
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  grid-template-rows: 44px clamp(220px, 58vw, 360px);
-}
-.cozinha-subview .camera-pip-stage, .cozinha-subview .camera-feed {
-  min-height: 0;
-  height: 100%;
-}
-.cozinha-subview .camera-pip-feed {
-  right: 16px;
-  bottom: 16px;
-  width: clamp(88px, 25%, 112px);
-  height: auto;
-  aspect-ratio: 4 / 3;
-  border-radius: 11px;
-}
-.cozinha-subview .camera-pip-stage.is-controls-open .camera-pip-feed {
-  bottom: 70px;
-}
-.cozinha-subview .camera-control {
-  min-height: 44px;
-}
-.cozinha-subview .subview-footer {
-  display: none;
-}
 }
 `;
 
@@ -4451,51 +4232,9 @@ export const SUBVIEW_TVHUB_CSS = css`
 }
 `;
 
-/** Bloco condicional "ps5": 6 regras. */
+/** Bloco condicional "ps5": 2 regras. */
 export const SUBVIEW_PS5_CSS = css`
-.sala-subview {
-  width: 100%;
-  min-height: 100vh;
-  height: 100vh;
-  display: grid;
-  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
-  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
-  gap: var(--room-gap);
-  padding: 12px;
-  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
-  overflow: hidden;
-}
-@media (max-width: 1180px) {
-.sala-subview {
-  height: auto;
-  overflow: auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
-  grid-template-areas: "hero side" "cams cams" "tv spotify" "ps5 ac";
-}
-}
-@media (max-width: 760px) {
-.sala-subview {
-  grid-template-columns: 1fr;
-  grid-template-rows: auto;
-  grid-template-areas: "hero" "side" "cams" "tv" "spotify" "ps5" "ac";
-  padding: 8px;
-}
-}
 @media (max-width: 800px) {
-.sala-subview {
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--room-gap);
-  padding: 0;
-  background: transparent;
-  overflow: visible;
-}
 .camera-pip-feed {
   right: 16px;
   bottom: 16px;
@@ -4510,9 +4249,14 @@ export const SUBVIEW_PS5_CSS = css`
 }
 `;
 
-/** Bloco condicional "pc": 4 regras. */
+/** Bloco condicional "pc": 0 regras. */
 export const SUBVIEW_PC_CSS = css`
-.office-subview {
+
+`;
+
+/** Sobreposicao do comodo sala: 13 regras que divergem da base. */
+const SOBREPOSICAO_SALA = css`
+.room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -4525,41 +4269,6 @@ export const SUBVIEW_PC_CSS = css`
   background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
   overflow: hidden;
 }
-@media (max-width: 1180px) {
-.office-subview {
-  height: auto;
-  overflow: auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
-  grid-template-areas: "hero side" "cams cams" "tv spotify" "ps5 ac";
-}
-}
-@media (max-width: 760px) {
-.office-subview {
-  grid-template-columns: 1fr;
-  grid-template-rows: auto;
-  grid-template-areas: "hero" "side" "cams" "tv" "spotify" "ps5" "ac";
-  padding: 8px;
-}
-}
-@media (max-width: 800px) {
-.office-subview {
-  width: 100%;
-  height: auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  padding: 0;
-  background: transparent;
-  overflow: visible;
-}
-}
-`;
-
-/** Sobreposicao do comodo sala: 11 regras que divergem da base. */
-const SOBREPOSICAO_SALA = css`
 .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -4641,10 +4350,37 @@ const SOBREPOSICAO_SALA = css`
   pointer-events: none;
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
+@media (max-width: 800px) {
+.room-subview {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--room-gap);
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+}
+}
 `;
 
-/** Sobreposicao do comodo office: 14 regras que divergem da base. */
+/** Sobreposicao do comodo office: 16 regras que divergem da base. */
 const SOBREPOSICAO_OFFICE = css`
+.room-subview {
+  width: 100%;
+  min-height: 100vh;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
+  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
+  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
+  gap: var(--room-gap);
+  padding: 12px;
+  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
+  overflow: hidden;
+}
 .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -4740,10 +4476,37 @@ const SOBREPOSICAO_OFFICE = css`
 .office-pc-actions .mh-btn {
   min-width: 0;
 }
+@media (max-width: 800px) {
+.room-subview {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+}
+}
 `;
 
-/** Sobreposicao do comodo cozinha: 14 regras que divergem da base. */
+/** Sobreposicao do comodo cozinha: 56 regras que divergem da base. */
 const SOBREPOSICAO_COZINHA = css`
+.room-subview {
+  width: 100%;
+  min-height: 100vh;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
+  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
+  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
+  gap: var(--room-gap);
+  padding: 12px;
+  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
+  overflow: hidden;
+}
 .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -4757,6 +4520,13 @@ const SOBREPOSICAO_COZINHA = css`
 82%, 100% {
   transform: translateX(calc(-100% + 100px));
 }
+}
+.room-subview .content-left {
+  grid-template-rows: minmax(0, 1fr);
+}
+.room-subview .right-column {
+  grid-template-rows: auto;
+  align-content: start;
 }
 .right-column {
   grid-area: right;
@@ -4839,11 +4609,206 @@ const SOBREPOSICAO_COZINHA = css`
 .office-pc-actions .mh-btn {
   min-width: 0;
 }
+.room-subview .subview-topband {
+  grid-area: topband;
+}
+.room-subview .hero-panel {
+  grid-area: hero;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+.room-subview .lights-card {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+.room-subview .cameras-card {
+  grid-area: cams;
+  min-width: 0;
+  min-height: 0;
+}
+.room-subview .appliances-card {
+  grid-area: appliances;
+  min-width: 0;
+  min-height: 0;
+}
+.room-subview .subview-footer {
+  grid-area: bottomband;
+}
+.room-subview .hero-atmosphere, .room-subview .hero-atmosphere .hero-content {
+  height: 100%;
+}
+.room-subview .hero-atmosphere .hero-content {
+  display: block;
+  padding: 0;
+}
+.room-subview .curtain-dock {
+  display: none !important;
+}
+.room-subview .appliance-tile {
+  display: block;
+}
+.room-subview .appliance-main {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.room-subview .appliance-main:disabled {
+  cursor: default;
+}
+.room-subview .appliance-main:focus-visible {
+  outline: 1px solid rgba(var(--bruno-liquid-warm-accent, 242,194,102),0.58);
+  outline-offset: -4px;
+  border-radius: calc(var(--room-radius-small) - 3px);
+}
+.room-subview .appliance-tile.is-airfryer .appliance-visual img {
+  transform: scale(0.92);
+}
+@media (max-width: 800px) {
+.room-subview {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+}
+.room-subview .right-column {
+  display: contents;
+}
+.room-subview .subview-topband {
+  order: 0;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  display: block;
+}
+.room-subview .topband-badges {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: visible;
+}
+.room-subview .topband-badges .tb-badge[data-phone-hide], .room-subview .topband-clock {
+  display: none;
+}
+.room-subview .tb-badge {
+  min-width: 0;
+  height: 44px;
+  grid-template-columns: 20px minmax(0, 1fr);
+  column-gap: 6px;
+  padding: 0 8px;
+}
+.room-subview .tb-badge-icon {
+  width: 20px;
+  height: 20px;
+}
+.room-subview .tb-badge-sub {
+  max-width: 100%;
+}
+.room-subview .hero-panel.is-unconfigured {
+  display: none;
+}
+.room-subview .lights-card {
+  order: 20;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+.room-subview .lights-card .module-head {
+  min-height: 0;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.room-subview .head-actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.room-subview .head-actions .chip-button, .room-subview .zone-header {
+  min-height: 44px;
+}
+.room-subview .lights-zones, .room-subview .zone-lights, .room-subview .office-light-list {
+  flex: 0 0 auto;
+  max-height: none !important;
+  overflow-y: visible !important;
+  overscroll-behavior: auto;
+}
+.room-subview .appliances-card {
+  order: 30;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  grid-template-rows: auto auto;
+  overflow: hidden;
+}
+.room-subview .appliances-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(154px, auto);
+  align-items: stretch;
+}
+.room-subview .appliance-tile:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.room-subview .appliance-main {
+  min-height: 44px;
+}
+.room-subview .mh-menu {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+}
+.room-subview .cameras-card.cameras-card-controls {
+  order: 40;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  grid-template-rows: 44px clamp(220px, 58vw, 360px);
+}
+.room-subview .camera-pip-stage, .room-subview .camera-feed {
+  min-height: 0;
+  height: 100%;
+}
+.room-subview .camera-pip-feed {
+  right: 16px;
+  bottom: 16px;
+  width: clamp(88px, 25%, 112px);
+  height: auto;
+  aspect-ratio: 4 / 3;
+  border-radius: 11px;
+}
+.room-subview .camera-pip-stage.is-controls-open .camera-pip-feed {
+  bottom: 70px;
+}
+.room-subview .camera-control {
+  min-height: 44px;
+}
+.room-subview .subview-footer {
+  display: none;
+}
+}
 `;
 
-/** Sobreposicao do comodo casal: 15 regras que divergem da base. */
+/** Sobreposicao do comodo casal: 13 regras que divergem da base. */
 const SOBREPOSICAO_CASAL = css`
-.quarto-casal-subview {
+.room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -4868,23 +4833,6 @@ const SOBREPOSICAO_CASAL = css`
 }
 82%, 100% {
   transform: translateX(calc(-100% + 100px));
-}
-}
-@media (max-width: 1180px) {
-.quarto-casal-subview {
-  height: auto;
-  overflow: auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
-  grid-template-areas: "hero side" "cams cams" "tv spotify" "ps5 ac";
-}
-}
-@media (max-width: 760px) {
-.quarto-casal-subview {
-  grid-template-columns: 1fr;
-  grid-template-rows: auto;
-  grid-template-areas: "hero" "side" "cams" "tv" "spotify" "ps5" "ac";
-  padding: 8px;
 }
 }
 .right-column {
@@ -4960,7 +4908,7 @@ const SOBREPOSICAO_CASAL = css`
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 @media (max-width: 800px) {
-.quarto-casal-subview {
+.room-subview {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -4975,9 +4923,9 @@ const SOBREPOSICAO_CASAL = css`
 }
 `;
 
-/** Sobreposicao do comodo marina: 15 regras que divergem da base. */
+/** Sobreposicao do comodo marina: 13 regras que divergem da base. */
 const SOBREPOSICAO_MARINA = css`
-.quarto-marina-subview {
+.room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -5002,23 +4950,6 @@ const SOBREPOSICAO_MARINA = css`
 }
 82%, 100% {
   transform: translateX(calc(-100% + 100px));
-}
-}
-@media (max-width: 1180px) {
-.quarto-marina-subview {
-  height: auto;
-  overflow: auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
-  grid-template-areas: "hero side" "cams cams" "tv spotify" "ps5 ac";
-}
-}
-@media (max-width: 760px) {
-.quarto-marina-subview {
-  grid-template-columns: 1fr;
-  grid-template-rows: auto;
-  grid-template-areas: "hero" "side" "cams" "tv" "spotify" "ps5" "ac";
-  padding: 8px;
 }
 }
 .right-column {
@@ -5091,7 +5022,7 @@ const SOBREPOSICAO_MARINA = css`
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 @media (max-width: 800px) {
-.quarto-marina-subview {
+.room-subview {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -5106,9 +5037,9 @@ const SOBREPOSICAO_MARINA = css`
 }
 `;
 
-/** Sobreposicao do comodo miguel: 15 regras que divergem da base. */
+/** Sobreposicao do comodo miguel: 13 regras que divergem da base. */
 const SOBREPOSICAO_MIGUEL = css`
-.quarto-miguel-subview {
+.room-subview {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
@@ -5133,23 +5064,6 @@ const SOBREPOSICAO_MIGUEL = css`
 }
 82%, 100% {
   transform: translateX(calc(-100% + 100px));
-}
-}
-@media (max-width: 1180px) {
-.quarto-miguel-subview {
-  height: auto;
-  overflow: auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
-  grid-template-areas: "hero side" "cams cams" "tv spotify" "ps5 ac";
-}
-}
-@media (max-width: 760px) {
-.quarto-miguel-subview {
-  grid-template-columns: 1fr;
-  grid-template-rows: auto;
-  grid-template-areas: "hero" "side" "cams" "tv" "spotify" "ps5" "ac";
-  padding: 8px;
 }
 }
 .right-column {
@@ -5225,7 +5139,7 @@ const SOBREPOSICAO_MIGUEL = css`
   transition: background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 @media (max-width: 800px) {
-.quarto-miguel-subview {
+.room-subview {
   width: 100%;
   height: auto;
   min-height: 0;

@@ -33,10 +33,18 @@ function cssDe(comodo) {
   const corpo = texto.slice(inicio, fim + 1);
   const abre = corpo.indexOf('`');
   const fecha = corpo.lastIndexOf('`');
-  return corpo
-    .slice(abre + 1, fecha)
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(PREFIXOS, '--room-');
+  return (
+    corpo
+      .slice(abre + 1, fecha)
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(PREFIXOS, '--room-')
+      // A classe raiz também é por cômodo: .sala-subview, .office-subview…
+      // Sem unificar, a raiz de cada um vira "exclusiva de um cômodo" e a
+      // classificação a joga dentro de um bloco de RECURSO — o grid da Sala
+      // acabava rotulado como CSS do PS5. Uma raiz só, e a diferença real da
+      // Cozinha aparece como sobreposição, que é o que ela é.
+      .replace(/\.(sala|office|cozinha|quarto-casal|quarto-marina|quarto-miguel)-subview\b/g, '.room-subview')
+  );
 }
 
 // Percorre e devolve blocos NA ORDEM, com o contexto de media query.
@@ -106,12 +114,19 @@ for (const [k, v] of indice) donos.set(k, COMODOS.filter((c) => v[c] !== undefin
 
 const ehBase = (k) => donos.get(k).length === COMODOS.length && new Set(Object.values(indice.get(k))).size === 1;
 
+// A classe raiz nunca entra num bloco de RECURSO: ela é o grid do cômodo, não um
+// aparelho. Sem esta guarda, o grid da Cozinha ficava dentro do bloco de
+// eletrodomésticos — funcionaria hoje, por coincidência de dono, e quebraria no
+// dia em que outro cômodo ganhasse eletrodomésticos. Raiz vai para base (quando
+// idêntica) ou para a sobreposição do cômodo.
+const ehRaiz = (k) => /(^|>> )\.room-subview\b/.test(k);
+
 // Quatro blocos condicionais, definidos pelo dono medido.
 const CONDICIONAIS = [
-  { nome: 'appliances', dono: (d) => d.length === 1 && d[0] === 'cozinha' },
-  { nome: 'tvHub', dono: (d) => d.length === 5 && !d.includes('cozinha') },
-  { nome: 'ps5', dono: (d) => d.length === 1 && d[0] === 'sala' },
-  { nome: 'pc', dono: (d) => d.length === 1 && d[0] === 'office' },
+  { nome: 'appliances', dono: (d, k) => !ehRaiz(k) && d.length === 1 && d[0] === 'cozinha' },
+  { nome: 'tvHub', dono: (d, k) => !ehRaiz(k) && d.length === 5 && !d.includes('cozinha') },
+  { nome: 'ps5', dono: (d, k) => !ehRaiz(k) && d.length === 1 && d[0] === 'sala' },
+  { nome: 'pc', dono: (d, k) => !ehRaiz(k) && d.length === 1 && d[0] === 'office' },
 ];
 
 function serializar(bs) {
@@ -149,7 +164,7 @@ for (const { nome, dono } of CONDICIONAIS) {
   for (const c of COMODOS) {
     for (const b of porComodo[c]) {
       const k = chave(b);
-      if (vistasC.has(k) || !dono(donos.get(k))) continue;
+      if (vistasC.has(k) || !dono(donos.get(k), k)) continue;
       vistasC.add(k);
       lista.push(b);
     }

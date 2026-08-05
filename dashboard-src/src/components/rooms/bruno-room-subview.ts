@@ -306,12 +306,160 @@ export class BrunoRoomSubview extends LitElement {
   private _corpoPadrao() {
     return html`
       <div class="content-left">
-        <div class="hero-panel"></div>
-        <div class="cams-media-row"></div>
+        ${this._renderHero()}
+        <div class="cams-media-row">${this._renderCameras()} ${this._renderMediaHub()}</div>
       </div>
-      <div class="right-column">
-        ${this._renderLightsDock()}
-        <div class="glass-card ac-card ac-card-lean"></div>
+      <div class="right-column">${this._renderLightsDock()} ${this._renderAC()}</div>
+    `;
+  }
+
+  /**
+   * Hero — a foto do cômodo com o dock de cortina sobreposto na base.
+   *
+   * A hierarquia de três níveis (`hero-stage` > `hero-content` > `curtain-dock`)
+   * não é decorativa: é ela que faz a cortina flutuar sobre a foto sem entrar no
+   * fluxo. Lida do DOM renderizado.
+   */
+  private _renderHero() {
+    return html`
+      <div class="hero-panel">
+        <div class="hero-stage hero-atmosphere">
+          <div class="hero-content">
+            <!-- O dock de cortina aparece nos CINCO cômodos com corpo padrão,
+                 mesmo onde não há entidade: nos quatro sem cortina ele renderiza
+                 inerte, mostrando "Indisponível". Só a Cozinha não o tem, e ela
+                 usa outro corpo. Condicioná-lo à entidade tirava o dock de
+                 Office, Casal, Marina e Miguel, que o exibem hoje. -->
+            <div class="curtain-dock curtain-overlay">
+              <div class="curtain-control-row">
+                <div class="curtain-identity">
+                  <span class="curtain-icon-shell">
+                    <bruno-icon icon="hugeicons:curtains"></bruno-icon>
+                  </span>
+                  <span class="curtain-title">Cortina</span>
+                </div>
+                <div class="curtain-status" aria-live="polite">
+                  <span class="curtain-status-text">${this._estadoCortina()}</span>
+                  <span class="curtain-status-percent">${this._percentualCortina()}</span>
+                </div>
+                <div class="curtain-main-actions">
+                  ${[
+                    ['cover-open', 'Abrir'],
+                    ['cover-stop', 'Parar'],
+                    ['cover-close', 'Fechar'],
+                  ].map(
+                    ([acao, rotulo]) => html`
+                      <button type="button" class="curtain-action-button" data-action=${acao}>
+                        <bruno-icon icon="hugeicons:curtains"></bruno-icon>
+                        <span>${rotulo}</span>
+                      </button>
+                    `,
+                  )}
+                </div>
+              </div>
+              <div class="curtain-slider-zone">
+                <div class="curtain-slider-glow"></div>
+                <input class="curtain-range" type="range" min="0" max="100" .value=${String(this._posicaoCortina())} />
+                <div class="curtain-marks">
+                  ${[0, 25, 50, 75, 100].map((p) => html`<span>${p}%</span>`)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private _entidadeCortina(): string | undefined {
+    const v = (this._sub?.entities as Record<string, unknown> | undefined)?.['curtain'];
+    return typeof v === 'string' ? v : undefined;
+  }
+
+  private _posicaoCortina(): number {
+    const id = this._entidadeCortina();
+    const s = id && this._hass ? this._hass.states[id] : undefined;
+    const p = s?.attributes['current_position'];
+    return typeof p === 'number' ? p : 100;
+  }
+
+  private _estadoCortina(): string {
+    const id = this._entidadeCortina();
+    if (!id) return 'Indisponível';
+    const s = this._hass?.states[id];
+    if (!s) return 'Indisponível';
+    if (s.state === 'open') return 'Aberta';
+    if (s.state === 'closed') return 'Fechada';
+    return 'Indisponível';
+  }
+
+  private _percentualCortina(): string {
+    return `- ${this._posicaoCortina()}%`;
+  }
+
+  /** Câmeras: cabeçalho com o menu de três pontos + palco com feed e PIP. */
+  private _renderCameras() {
+    return html`
+      <div class="glass-card cameras-card cameras-card-controls">
+        <div class="mh-head cameras-head">
+          <div class="mh-head-title"></div>
+          <div class="mh-menu camera-settings-button"></div>
+        </div>
+        <div class="camera-stage camera-pip-stage">
+          <div class="camera-main camera-feed camera-primary-feed is-private"></div>
+          <div class="camera-main camera-feed camera-pip-feed is-private"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Hub de mídia: dois tiles no corpo — TV (ou PC, no Office) e Spotify — com o
+   * menu de três pontos no canto. A entrada do PS5 vive nesse menu, e só onde há
+   * entidade: hoje, apenas a Sala.
+   */
+  private _renderMediaHub() {
+    return html`
+      <div class="glass-card media-hub-card mh-accordion">
+        <div class="mh-head">
+          <div class="mh-head-title"></div>
+          <div class="mh-menu"></div>
+        </div>
+        <div class="mh-sources">
+          <div class="mh-source is-open is-active"></div>
+          <div class="mh-source is-active"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  /** A/C: cabeçalho com power, anel de temperatura e três controles na base. */
+  private _renderAC() {
+    return html`
+      <div class="glass-card ac-card ac-card-lean">
+        <div class="ac-lean-head">
+          <div class="mh-head-title ac-head-title">
+            <span class="micro-icon tone-cyan"><bruno-icon icon="mdi:air-conditioner"></bruno-icon></span>
+            <span class="module-title">Ar-condicionado</span>
+          </div>
+          <div class="ac-top-stack">
+            <div class="mh-menu ac-more-button"></div>
+            <div class="ac-power-floating"></div>
+          </div>
+        </div>
+        <div class="ac-lean-mid">
+          <!-- O anel e um SVG: sem ele o elemento do anel mede zero, porque a altura
+               vem do conteúdo, não de uma regra. A proporção 346x203 é a medida
+               do anel na subview atual. -->
+          <div class="ac-ring">
+            <svg class="icg-root" viewBox="0 0 346 203" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+        </div>
+        <div class="ac-lean-foot">
+          ${[0, 1, 2].map(
+            () => html`<div class="ac-control-wrap"><div class="ac-action"></div></div>`,
+          )}
+        </div>
       </div>
     `;
   }
@@ -330,10 +478,15 @@ export class BrunoRoomSubview extends LitElement {
    */
   private _corpoCozinha() {
     return html`
-      <div class="hero-panel is-unconfigured"></div>
+      <div class="hero-panel is-unconfigured">
+        <div class="hero-stage hero-atmosphere"><div class="hero-content"></div></div>
+      </div>
       <div class="right-column">${this._renderLightsDock()}</div>
-      <div class="glass-card cameras-card cameras-card-controls"></div>
-      <div class="glass-card appliances-card kitchen-appliances-card"></div>
+      ${this._renderCameras()}
+      <div class="glass-card appliances-card kitchen-appliances-card">
+        <div class="mh-head appliances-head"></div>
+        <div class="appliances-grid"></div>
+      </div>
     `;
   }
 }

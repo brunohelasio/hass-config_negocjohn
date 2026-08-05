@@ -61,6 +61,9 @@ for (const arquivo of alvos) {
       else if (emComentario === '/*' && c === '*' && prox === '/') {
         emComentario = null;
         i++;
+      } else if (emComentario === '<!--' && c === '-' && prox === '-' && texto[i + 2] === '>') {
+        emComentario = null;
+        i += 2;
       } else if (c === CRASE && anterior !== '\\' && emTemplate) {
         problemas.push({ linha, trecho: linhas[linha - 1]?.trim().slice(0, 90) ?? '' });
       }
@@ -89,6 +92,14 @@ for (const arquivo of alvos) {
     if (c === '/' && prox === '*') {
       emComentario = '/*';
       i++;
+      continue;
+    }
+    // Comentário HTML dentro de template de markup. Foi a 6ª ocorrência da
+    // armadilha e a primeira que este detector deixou passar: eu só rastreava
+    // comentário de JS e de CSS.
+    if (emTemplate && c === '<' && texto.slice(i, i + 4) === '<!--') {
+      emComentario = '<!--';
+      i += 3;
       continue;
     }
     if (c === CRASE && anterior !== '\\') emTemplate = !emTemplate;

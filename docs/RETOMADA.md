@@ -38,41 +38,44 @@ Se precisar publicar outra coisa antes disso, comentar a linha 13 do `main.ts`.
 Critério de aceite: reproduzir a base com **delta 0,00** nos cinco cômodos, e os
 três valores próprios da Cozinha.
 
-### O que falta — dois defeitos localizados
+### Estado medido (2026-08-05)
 
-O componente renderiza a estrutura, mas o CSS não aplica: onde o esperado é
-`1170×48`, mede-se `12×330`. Das onze folhas adotadas, **a folha 0 tem 16 regras
-e as folhas 1 a 10 têm zero** — o navegador aborta a análise no começo de cada uma.
+Os três defeitos do dia anterior caíram. Contra `subview-baseline.json`,
+viewport 1280×720:
 
-**1. CONFIRMADO — escopo dentro de `@keyframes`.**
-`escopar()` em `scripts/validation/gen-subview-css.mjs` aplica o prefixo também
-aos blocos de `@keyframes`, produzindo
-`:host([data-room='sala']) 0%, :host([data-room='sala']) 18% {`. Dentro de
-`@keyframes` os seletores são porcentagens; isso é inválido e derruba a folha
-inteira. São 12 blocos `@keyframes` no arquivo gerado.
-Correção: `escopar()` não pode tocar em bloco cujo contexto seja `@keyframes`.
+| módulo | linha de base | componente | delta |
+|---|---|---|---|
+| topband | 1170×48 | 1170×48 | **0** |
+| hero | 800×308 | 800×308 | **0** |
+| cams + hub | 800×320 | 800×320 | **0** |
+| coluna direita | 360×638 | 360×638 | **0** |
+| A/C | 360×320 | 360×320 | **0** |
+| dock de luzes | 360×54 | 360×83 | **+29px** |
 
-**2. EM ABERTO — a folha da base também para em 16 regras.**
-A base não é escopada, então é outra causa. Suspeita: a serialização de `@media`
-em `serializar()`. **Diagnosticar antes de mexer** — presumir foi o que produziu
-os erros das sessões anteriores.
+### O defeito aberto — o dock não recebe display
 
-### Como retomar em dois comandos
+Medido nos dois lados, mesmo elemento:
 
-```bash
-node scripts/harness/gen-subview-harness.mjs
-node scripts/harness/serve-harness.mjs scripts/harness/subview-parity.html 8126
-```
+| elemento | real | componente |
+|---|---|---|
+| `.lights-card` | 54px, `display: flex` | 83px, **`display: block`** |
+| `.lights-dock` | 52px, `display: flex` | 61px, **`display: block`** |
+| `.lights-body` | 0px, `display: grid`, rows 0 | 20px, **`display: block`** |
 
-No console do navegador:
+Os três caem para `block`, que é o padrão — ou seja, **as regras de layout desses
+três seletores não estão sendo aplicadas ao componente**. Não é valor errado: é
+regra ausente. Diagnosticar ONDE elas foram parar na geração (base, bloco ou
+sobreposição) e por que o seletor não casa. Não editar o CSS antes de saber.
+
+Comando para retomar exatamente daqui:
 
 ```js
-document.querySelector('bruno-room-subview').shadowRoot
-  .adoptedStyleSheets.map((f, i) => [i, f.cssRules.length])
+// com o harness aberto, apos montarNovo(0):
+const sr = document.querySelector("bruno-room-subview").shadowRoot;
+sr.adoptedStyleSheets.flatMap((f, i) => [...f.cssRules]
+  .filter(r => r.selectorText && r.selectorText.includes("lights-card"))
+  .map(r => [i, r.selectorText, r.style.display]))
 ```
-
-Folha com zero regras é folha que o navegador rejeitou. Depois:
-`await medicaoNova()` e comparar com `subview-baseline.json`.
 
 ## Pendências fora da 5c
 

@@ -788,3 +788,47 @@ TV (cinco cômodos), PS5 (Sala) e PC (Office). Nenhum deles precisa de arquivo
 próprio — são blocos condicionais, como o painel do Lavabo no tile.
 
 Isso troca ~4.300 linhas de CSS repetido por uma base e quatro blocos.
+
+### Linha de base geométrica das seis (2026-08-04)
+
+`scripts/harness/gen-subview-harness.mjs` gera uma página que monta cada subview
+**atual** dentro de uma réplica da área útil da shell (coluna de 86px do rail +
+content-slot com 12px de padding) e mede a geometria de cada módulo. O estado
+sintético do `hass` sai da configuração real extraída dos próprios arquivos —
+167 entidades — e não de uma lista escrita à mão, que envelheceria.
+
+A página nasceu **antes** do componente, de propósito: primeiro grava a
+referência; quando o componente existir, entra na mesma célula e o diff é
+imediato. Foi o que levou a faixa pelas fases 5a e 5b sem tentativa e erro.
+
+Resultado, viewport 1280×720, área útil 1170×696, gravado em
+`scripts/harness/subview-baseline.json`:
+
+| módulo | cinco cômodos | Cozinha |
+|---|---|---|
+| topband | 1170×48 @0 | igual |
+| hero | 800×308 @58 | igual |
+| cams + hub | 800×320 @376 | **ausente** |
+| coluna direita | 360×638 @58 | **360×308** |
+| dock de luzes | 360×54 @315 | igual |
+| A/C | 360×320 @376 | **ausente** |
+
+**27 de 30 campos são idênticos ao pixel** entre Sala, Office, Casal, Marina e
+Miguel. As três divergências são todas da Cozinha, e são estruturais: ela usa um
+grid próprio, sem `content-left`, sem a linha de câmeras+hub e sem A/C.
+
+Os badges variam de 660 a 710px de largura — isso é conteúdo (quantidade de
+badges), não estrutura.
+
+**Critério de aceite do componente:** reproduzir esta tabela com delta 0,00 nos
+cinco, e o grid próprio da Cozinha com os mesmos três valores.
+
+### Como medir o componente contra a base
+
+```bash
+node scripts/harness/gen-subview-harness.mjs
+node scripts/harness/serve-harness.mjs scripts/harness/subview-parity.html 8126
+```
+
+No console: `await referencia()` devolve a geometria dos seis; comparar com
+`subview-baseline.json`.

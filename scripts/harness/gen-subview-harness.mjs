@@ -43,7 +43,7 @@ const COMODOS = [
 ];
 
 const scripts = [
-  '/local/dashboard/bruno-dashboard.Cy35-UPH.js',
+  '/local/dashboard/bruno-dashboard.CahmX4n9.js',
   '/local/bruno-ui/core/bruno-icons.js',
   '/local/bruno-ui/core/bruno-liquid-glass.js',
   '/local/bruno-ui/core/bruno-surface-material.js',

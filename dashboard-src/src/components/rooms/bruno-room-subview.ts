@@ -101,10 +101,10 @@ export class BrunoRoomSubview extends LitElement {
     liga('data-ps5', Boolean(ent?.['ps5']));
   }
 
-  /** O cômodo tem a coluna de câmeras + hub e o bloco de A/C? */
-  private get _temColunaCompleta(): boolean {
+  /** O cômodo tem eletrodomésticos? Só a Cozinha, e ela usa um grid próprio. */
+  private get _temEletrodomesticos(): boolean {
     const ent = this._sub?.entities as Record<string, unknown> | undefined;
-    return Boolean(ent?.['camera_main'] ?? ent?.['cameras']);
+    return Boolean(ent?.['appliances'] ?? ent?.['dishwasher']);
   }
 
   static override styles = [
@@ -185,29 +185,56 @@ export class BrunoRoomSubview extends LitElement {
   override render() {
     const room = this._room;
     if (!room) return nothing;
-    const completa = this._temColunaCompleta;
 
     // A estrutura dos módulos é a mesma dos seis arquivos atuais, com os nomes
-    // de classe lidos do DOM renderizado — não deduzidos do código.
+    // de classe e as áreas de grid lidos do DOM RENDERIZADO — não deduzidos do
+    // código, que guarda sete definições empilhadas e blocos mortos.
     return html`
       <div class="room-subview">
         <div class="subview-topband">
           <div class="topband-badges"></div>
           <div class="topband-clock"></div>
         </div>
-
-        ${completa
-          ? html`<div class="content-left">
-              <div class="hero-panel"></div>
-              <div class="cams-media-row"></div>
-            </div>`
-          : html`<div class="hero-panel"></div>`}
-
-        <div class="right-column">
-          ${this._renderLightsDock()}
-          ${completa ? html`<div class="glass-card ac-card ac-card-lean"></div>` : nothing}
-        </div>
+        ${this._temEletrodomesticos ? this._corpoCozinha() : this._corpoPadrao()}
       </div>
+    `;
+  }
+
+  /**
+   * Cinco cômodos: coluna esquerda (hero + linha de câmeras/hub) e coluna
+   * direita (dock de luzes + A/C), dentro de `content-left` e `right-column`.
+   */
+  private _corpoPadrao() {
+    return html`
+      <div class="content-left">
+        <div class="hero-panel"></div>
+        <div class="cams-media-row"></div>
+      </div>
+      <div class="right-column">
+        ${this._renderLightsDock()}
+        <div class="glass-card ac-card ac-card-lean"></div>
+      </div>
+    `;
+  }
+
+  /**
+   * Cozinha: grid próprio de três colunas.
+   *
+   *   "topband topband topband"
+   *   "hero    hero    right"
+   *   "cams    appliances appliances"
+   *
+   * Não há `content-left` nem A/C, e o hero, as câmeras e os eletrodomésticos
+   * são filhos DIRETOS da raiz — cada um ocupando sua área. Lido do DOM da
+   * subview atual; deduzir do CSS teria dado o grid errado, porque o arquivo
+   * guarda definições antigas empilhadas.
+   */
+  private _corpoCozinha() {
+    return html`
+      <div class="hero-panel is-unconfigured"></div>
+      <div class="right-column">${this._renderLightsDock()}</div>
+      <div class="glass-card cameras-card cameras-card-controls"></div>
+      <div class="glass-card appliances-card kitchen-appliances-card"></div>
     `;
   }
 }

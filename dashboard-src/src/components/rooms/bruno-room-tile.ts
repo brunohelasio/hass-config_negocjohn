@@ -122,7 +122,10 @@ export class BrunoRoomTile extends LitElement {
     const e = room?.entities;
     if (!e) return [];
     const dotIds = (room?.statusDots ?? []).flatMap((d) => d.entities ?? []);
+    const painelIds = (room?.popup?.lights ?? []).map((l) => l.entity);
     return [
+      ...painelIds,
+      room?.applianceLine?.entity,
       e.lightGroup,
       ...(e.lights ?? []),
       room?.toggleTarget,
@@ -354,18 +357,79 @@ export class BrunoRoomTile extends LitElement {
     hass.callService('light', 'toggle', { entity_id: alvo }, { entity_id: alvo });
   }
 
-  /** A shell escuta `ll-custom` e troca a seção; não há mudança de URL. */
+  /**
+   * Destino do chevron: a subview do cômodo ou, onde não há, o painel próprio.
+   *
+   * A shell escuta `ll-custom` e troca a seção; não há mudança de URL.
+   */
   private _openSubview(): void {
-    const section = this._room?.section;
-    if (!section) return;
+    const room = this._room;
+    if (!room) return;
     feedback('tap');
-    this.dispatchEvent(
-      new CustomEvent('ll-custom', {
-        detail: { action: 'fire-dom-event', bruno_section: section },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    if (room.section) {
+      this.dispatchEvent(
+        new CustomEvent('ll-custom', {
+          detail: { action: 'fire-dom-event', bruno_section: room.section },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      return;
+    }
+    if (room.popup) this._abrirPainel();
+  }
+
+  private _abrirPainel(): void {
+    const dialog = this.shadowRoot?.querySelector('dialog.room-popup');
+    if (!dialog) return;
+    try {
+      (dialog as HTMLDialogElement).showModal();
+    } catch {
+      return;
+    }
+    this._posicionarPainel();
+  }
+
+  private _fecharPainel = (): void => {
+    const dialog = this.shadowRoot?.querySelector('dialog.room-popup');
+    (dialog as HTMLDialogElement | null)?.close();
+  };
+
+  /**
+   * Ancora o painel ao próprio tile.
+   *
+   * O `<dialog>` está na top layer, então `getBoundingClientRect()` já devolve
+   * coordenadas de viewport. Abre abaixo do tile; se não couber, acima. O
+   * alinhamento é pela borda direita porque o cômodo com painel fica na metade
+   * direita da faixa — alinhar pela esquerda jogaria o painel para fora.
+   */
+  private _posicionarPainel(): void {
+    const painel = this.shadowRoot?.querySelector<HTMLElement>('.room-popup-panel');
+    if (!painel) return;
+    const ancora = this.getBoundingClientRect();
+    if (!ancora.width && !ancora.height) return;
+
+    const folga = 10;
+    const vw = window.innerWidth || document.documentElement.clientWidth;
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    const pw = painel.offsetWidth || 520;
+    const ph = painel.offsetHeight || 240;
+
+    let left = ancora.right - pw;
+    left = Math.min(Math.max(left, folga), Math.max(folga, vw - pw - folga));
+
+    let top = ancora.bottom + folga;
+    if (top + ph > vh - folga) top = ancora.top - ph - folga;
+    top = Math.min(Math.max(top, folga), Math.max(folga, vh - ph - folga));
+
+    painel.style.left = `${Math.round(left)}px`;
+    painel.style.top = `${Math.round(top)}px`;
+  }
+
+  private _alternarLuzDoPainel(entityId: string): void {
+    if (!this._hass) return;
+    feedback('tap');
+    this._hass.callService('light', 'toggle', { entity_id: entityId }, { entity_id: entityId });
   }
 
   // ── Modelo ───────────────────────────────────────────────────────────────
@@ -1018,6 +1082,274 @@ export class BrunoRoomTile extends LitElement {
       }
     }
 
+    /* ==== PAINEL PRÓPRIO (cômodo sem subview) ==========================
+       Transcrito do dialog do bruno-lavabo-card. O elemento é <dialog> com
+       showModal(): renderiza na top layer do navegador, acima de tudo e imune ao
+       overflow hidden e aos transform dos ancestrais — que era o motivo de o
+       painel antigo, com position fixed, sair cortado dentro da shell.
+       ==================================================================== */
+    .room-popup {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      inset: 0;
+      width: 100vw;
+      max-width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      background: transparent;
+      color: inherit;
+      overflow: visible;
+    }
+
+    .room-popup[open] {
+      display: block;
+    }
+    .room-popup:not([open]) {
+      display: none;
+    }
+
+    .room-popup::backdrop {
+      background: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(3px) saturate(1.04);
+      -webkit-backdrop-filter: blur(3px) saturate(1.04);
+    }
+
+    /* O painel é fixed e recebe top/left inline: quem o ancora ao tile é o JS. */
+    .room-popup-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      width: min(520px, calc(100vw - 52px));
+      border-radius: var(--bruno-liquid-panel-radius, 18px);
+      border: var(--bruno-liquid-popup-border, 1px solid rgba(255, 255, 255, 0.16));
+      color: rgba(255, 255, 255, 0.94);
+      background: var(
+        --bruno-liquid-popup-background,
+        linear-gradient(180deg, rgba(44, 33, 26, 0.8), rgba(16, 14, 14, 0.82)),
+        rgba(20, 18, 18, 0.8)
+      );
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 24px 64px rgba(0, 0, 0, 0.42);
+      backdrop-filter: var(--bruno-liquid-popup-filter, blur(28px) saturate(1.42));
+      -webkit-backdrop-filter: var(--bruno-liquid-popup-filter, blur(28px) saturate(1.42));
+      overflow: hidden;
+    }
+
+    .room-popup[data-bruno-popup-theme='josh'] .room-popup-panel {
+      border: var(--bruno-josh-popup-border, var(--bruno-liquid-popup-border));
+      background: var(--bruno-josh-popup-background, var(--bruno-liquid-popup-background));
+      box-shadow: var(--bruno-josh-popup-shadow, var(--bruno-liquid-popup-shadow));
+      backdrop-filter: var(--bruno-josh-popup-filter, var(--bruno-liquid-popup-filter));
+      -webkit-backdrop-filter: var(--bruno-josh-popup-filter, var(--bruno-liquid-popup-filter));
+      isolation: isolate;
+    }
+
+    .room-popup[data-bruno-popup-theme='josh'] .room-popup-panel::before {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      z-index: 0;
+      border-radius: inherit;
+      background: var(--bruno-josh-popup-sheen, none);
+      opacity: var(--bruno-josh-popup-sheen-opacity, 0.13);
+      pointer-events: none;
+    }
+
+    .room-popup[data-bruno-popup-theme='josh'] .room-popup-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      padding: 1px;
+      border-radius: inherit;
+      background: var(--bruno-josh-popup-edge-glow, none);
+      opacity: var(--bruno-josh-popup-edge-opacity, 0.7);
+      pointer-events: none;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+    }
+
+    .room-popup[data-bruno-popup-theme='josh'] .room-popup-panel > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .room-popup-header {
+      height: 52px;
+      padding: 10px 12px 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .room-popup-icon {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: rgb(255, 195, 83);
+      background: rgba(255, 185, 70, 0.13);
+      border: 1px solid rgba(255, 190, 80, 0.35);
+    }
+
+    .room-popup-icon bruno-icon {
+      --mdc-icon-size: 16px;
+    }
+
+    .room-popup-title {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .room-popup-title strong {
+      font-size: 14px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .room-popup-title span {
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 650;
+      color: rgba(255, 255, 255, 0.52);
+    }
+
+    .room-popup-close {
+      appearance: none;
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.72);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .room-popup[data-bruno-popup-theme='josh'] .room-popup-close {
+      border: var(--bruno-liquid-control-border, 1px solid rgba(255, 255, 255, 0.14));
+      background: var(--bruno-liquid-control-background, rgba(255, 255, 255, 0.08));
+      box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.12));
+      backdrop-filter: var(--bruno-liquid-control-filter, none);
+      -webkit-backdrop-filter: var(--bruno-liquid-control-filter, none);
+    }
+
+    .room-popup-banner {
+      position: relative;
+      height: 128px;
+      margin: 0 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+      background:
+        radial-gradient(140px 80px at 20% 14%, rgba(255, 219, 155, 0.2), transparent 70%),
+        linear-gradient(135deg, rgba(86, 62, 44, 0.7), rgba(20, 17, 16, 0.86));
+    }
+
+    .room-popup-banner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: brightness(0.86) saturate(1.04);
+    }
+
+    /* Escurece o perímetro da foto para fundir com o painel. */
+    .room-popup-banner-shade {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(12, 9, 7, 0.72) 0%, rgba(12, 9, 7, 0.28) 7%, transparent 18%),
+        linear-gradient(270deg, rgba(12, 9, 7, 0.72) 0%, rgba(12, 9, 7, 0.28) 7%, transparent 18%),
+        linear-gradient(0deg, rgba(12, 9, 7, 0.78) 0%, rgba(12, 9, 7, 0.3) 8%, transparent 22%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(12, 9, 7, 0.34) 6%, transparent 20%);
+    }
+
+    .room-popup-lights {
+      padding: 0 12px 14px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .room-popup-light {
+      appearance: none;
+      min-width: 0;
+      min-height: 74px;
+      padding: 10px 9px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 9px;
+      text-align: left;
+      border-radius: var(--bruno-liquid-control-radius, 11px);
+      border: var(--bruno-liquid-control-border, 1px solid rgba(255, 255, 255, 0.14));
+      color: rgba(255, 255, 255, 0.88);
+      background: var(--bruno-liquid-control-background, rgba(255, 255, 255, 0.075));
+      box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.12));
+      backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(1.08));
+      -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(1.08));
+    }
+
+    .room-popup-light.is-on {
+      color: rgba(255, 246, 225, 0.98);
+      border-color: rgba(255, 195, 80, 0.38);
+      background:
+        radial-gradient(80px 48px at 18% 12%, rgba(255, 203, 95, 0.22), transparent 70%),
+        rgba(255, 255, 255, 0.09);
+    }
+
+    .room-popup-light.is-unavailable {
+      opacity: 0.58;
+    }
+
+    .room-popup-light-icon {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      color: rgb(255, 197, 92);
+    }
+
+    .room-popup-light-icon bruno-icon {
+      --mdc-icon-size: 24px;
+    }
+
+    .room-popup-light-copy {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .room-popup-light-copy strong,
+    .room-popup-light-copy span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .room-popup-light-copy strong {
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 800;
+    }
+
+    .room-popup-light-copy span {
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 650;
+      color: rgba(255, 255, 255, 0.56);
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .room-action,
       .room-asset,
@@ -1065,6 +1397,15 @@ export class BrunoRoomTile extends LitElement {
       .join(' ');
 
     const nome = this._config?.name ?? room.name;
+    // O chevron promete uma segunda tela. Onde não há nem subview nem painel
+    // próprio, ele não aparece — seria promessa falsa (é o caso do Corredor).
+    const temNav = Boolean(room.section ?? room.popup);
+    const painel = room.popup;
+    const painelTema =
+      (globalThis as { BrunoThemeManager?: { current?: () => string } }).BrunoThemeManager?.current?.() ===
+      'josh'
+        ? 'josh'
+        : 'default';
 
     return html`
       <div class=${cardClasses}>
@@ -1103,19 +1444,19 @@ export class BrunoRoomTile extends LitElement {
 
           <span
             class="room-nav-zone"
-            role=${room.section ? 'button' : 'presentation'}
-            tabindex=${room.section ? 0 : -1}
-            aria-label=${room.section ? `Abrir ${nome}` : nome}
-            @pointerdown=${(e: PointerEvent) => room.section && this._onDown('nav', e)}
-            @pointermove=${(e: PointerEvent) => room.section && this._onMove('nav', e)}
-            @pointerup=${(e: PointerEvent) => room.section && this._onUp('nav', e)}
-            @pointercancel=${(e: PointerEvent) => room.section && this._onCancel('nav', e)}
-            @pointerleave=${() => room.section && this._resetGesture('nav')}
-            @keydown=${(e: KeyboardEvent) => room.section && this._onKey('nav', e)}
+            role=${temNav ? 'button' : 'presentation'}
+            tabindex=${temNav ? 0 : -1}
+            aria-label=${temNav ? `Abrir ${nome}` : nome}
+            @pointerdown=${(e: PointerEvent) => temNav && this._onDown('nav', e)}
+            @pointermove=${(e: PointerEvent) => temNav && this._onMove('nav', e)}
+            @pointerup=${(e: PointerEvent) => temNav && this._onUp('nav', e)}
+            @pointercancel=${(e: PointerEvent) => temNav && this._onCancel('nav', e)}
+            @pointerleave=${() => temNav && this._resetGesture('nav')}
+            @keydown=${(e: KeyboardEvent) => temNav && this._onKey('nav', e)}
           >
             <span class="room-title-row">
               <span class="title">${nome}</span>
-              ${room.section ? html`<span class="room-chevron" aria-hidden="true">›</span>` : nothing}
+              ${temNav ? html`<span class="room-chevron" aria-hidden="true">›</span>` : nothing}
             </span>
             <span class="status-lines">${lines.map((l) => html`<span>${l}</span>`)}</span>
           </span>
@@ -1136,6 +1477,78 @@ export class BrunoRoomTile extends LitElement {
             </div>
           </div>
         </button>
+        ${painel
+          ? html`<dialog
+              class="room-popup"
+              data-bruno-popup-theme=${painelTema}
+              aria-label=${painel.title}
+              @click=${(ev: MouseEvent) => {
+                // Clique no próprio dialog é clique FORA do painel: o painel é
+                // filho e para a propagação dos seus próprios cliques.
+                if (ev.target === ev.currentTarget) this._fecharPainel();
+              }}
+            >
+              <section class="room-popup-panel" role="document" @click=${(e: Event) => e.stopPropagation()}>
+                <header class="room-popup-header">
+                  <span class="room-popup-icon" aria-hidden="true">
+                    <bruno-icon icon=${painel.icon}></bruno-icon>
+                  </span>
+                  <div class="room-popup-title">
+                    <strong>${painel.title}</strong>
+                    ${painel.subtitle ? html`<span>${painel.subtitle}</span>` : nothing}
+                  </div>
+                  <button
+                    class="room-popup-close"
+                    type="button"
+                    aria-label="Fechar"
+                    @click=${this._fecharPainel}
+                  >
+                    ×
+                  </button>
+                </header>
+                ${painel.banner || painel.bannerOn
+                  ? html`<div class="room-popup-banner">
+                      <img
+                        src=${(on ? painel.bannerOn ?? painel.banner : painel.banner ?? painel.bannerOn) ?? ''}
+                        alt=""
+                        loading="eager"
+                        decoding="async"
+                      />
+                      <div class="room-popup-banner-shade" aria-hidden="true"></div>
+                    </div>`
+                  : nothing}
+                <div class="room-popup-lights">
+                  ${painel.lights.map((luz) => {
+                    const e = hass?.states[luz.entity];
+                    const estado = String(e?.state ?? '').toLowerCase();
+                    const acesa = estado === 'on';
+                    const indisponivel = !e || ['unavailable', 'unknown', 'none', ''].includes(estado);
+                    const classes = [
+                      'room-popup-light',
+                      acesa ? 'is-on' : '',
+                      indisponivel ? 'is-unavailable' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ');
+                    return html`<button
+                      class=${classes}
+                      type="button"
+                      aria-label=${luz.name}
+                      @click=${() => this._alternarLuzDoPainel(luz.entity)}
+                    >
+                      <span class="room-popup-light-icon" aria-hidden="true">
+                        <bruno-icon icon=${luz.icon ?? 'mdi:lightbulb-outline'}></bruno-icon>
+                      </span>
+                      <span class="room-popup-light-copy">
+                        <strong>${luz.name}</strong>
+                        <span>${indisponivel ? 'Indisponivel' : acesa ? 'Ligada' : 'Desligada'}</span>
+                      </span>
+                    </button>`;
+                  })}
+                </div>
+              </section>
+            </dialog>`
+          : nothing}
       </div>
     `;
   }

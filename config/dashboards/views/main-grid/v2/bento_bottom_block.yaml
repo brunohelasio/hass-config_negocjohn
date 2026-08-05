@@ -140,9 +140,9 @@ card:
         # da serie, que e a regra que sustenta o visual de tiles + filetes.
         # O clique unico do Corredor vem da mecanica que ja existe: o tap do
         # tile e toggle da luz do comodo.
-        # ANTERIOR (rollback Fase 5a): repeat(8, minmax(0, 1fr))
-        # 9a coluna temporaria: o bruno-room-tile ao lado do bruno-corredor-card.
-        grid-template-columns: repeat(9, minmax(0, 1fr))
+        # ANTERIOR (Fase 5a): repeat(9, ...) — a 9a coluna era o tile novo ao
+        # lado do card antigo do Office, so para a comparacao lado a lado.
+        grid-template-columns: repeat(8, minmax(0, 1fr))
         grid-template-rows: calc(23vh - 24px)
         # Gap por TOKEN: 10px (cartela, como hoje) / 0 no Josh, onde o filete
         # vertical de 1px do tile substitui o gap.
@@ -153,6 +153,58 @@ card:
         # os demais temas continuam usando o fallback simetrico existente.
         padding: 0 var(--bruno-tile-grid-inset-end, var(--bruno-tile-grid-inline-inset, 0px)) 0 var(--bruno-tile-grid-inset-start, var(--bruno-tile-grid-inline-inset, 0px))
       cards:
+        # ══ FASE 5b, 2026-08-04 — a faixa passa a ser UM componente ═════════
+        # Os oito cômodos deixam de ser oito cards e passam a ser oito
+        # instâncias de `bruno-room-tile`, parametrizadas por `room:`. Tudo que
+        # variava entre eles — entidades, alvo do toque, pontos de status,
+        # seção da subview, painel próprio — vive em
+        # `dashboard-src/src/config/rooms.config.ts`, declarado uma vez.
+        #
+        # A medição que autorizou a troca está em `scripts/harness/`: os oito
+        # pares renderizados lado a lado, com os mesmos tokens e o mesmo estado.
+        #
+        # ISTO MUDA A APARÊNCIA DE SEIS TILES, de propósito. Os oito cards
+        # antigos NÃO eram uniformes entre si: a caixa do ícone era 108×72 no
+        # Office, Cozinha e Lavabo, 109×80 na Sala, Corredor, Casal e Miguel, e
+        # 80×80 na Marina; o Lavabo e o Corredor reservavam 28px de métrica sem
+        # ter sensor de clima. Agora todos seguem a composição do Office, que é
+        # a documentada em docs/07.
+        #
+        # ROLLBACK (sem reiniciar): comentar este bloco e descomentar o bloco
+        # ANTERIOR logo abaixo. Os oito cards antigos continuam no disco,
+        # carregados e intactos.
+        - type: custom:bruno-room-tile
+          room: sala
+          variant: tile
+        - type: custom:bruno-room-tile
+          room: office
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-room-tile
+          room: cozinha
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-room-tile
+          room: lavabo
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-room-tile
+          room: corredor
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-room-tile
+          room: casal
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-room-tile
+          room: marina
+          variant: tile
+          divider_left: true
+        - type: custom:bruno-room-tile
+          room: miguel
+          variant: tile
+          divider_left: true
+        # ── ANTERIOR (rollback) — os oito cards, um arquivo JS cada ──────────
         # ATENÇÃO: os 7 cards são declarados INLINE aqui, e não por
         # `!include ../bento_*.yaml`, porque a flag `variant: tile` não pode
         # entrar nos wrappers compartilhados — eles também alimentam a matriz
@@ -160,66 +212,54 @@ card:
         # que devem permanecer idênticas. A config abaixo replica exatamente
         # a dos wrappers, apenas somando as flags de tile.
         # `divider_left` em todos MENOS o primeiro (Sala).
-        - type: custom:bruno-sala-room-card
-          section: sala
-          variant: tile
-        - type: custom:bruno-office-card
-          section: office
-          double_tap_action:
-            action: fire-dom-event
-            bruno_section: office
-          variant: tile
-          divider_left: true
-        # ── FASE 5a, 2026-08-04 — TEMPORARIO, so para comparacao lado a lado ──
-        # Mesmo comodo do tile anterior, pela arquitetura nova (TypeScript+Lit)
-        # e com os assets V2 (maquetes). Entra AO LADO, nao no lugar.
-        # Office porque tem o maior numero de status: luzes, presenca, A/C, PC,
-        # temperatura e umidade — exercita tudo que o tile precisa exibir.
-        # ROLLBACK: remover estas 4 linhas e voltar o grid acima para
-        # repeat(8, minmax(0, 1fr)). Nada mais depende disto.
-        - type: custom:bruno-room-tile
-          room: office
-          variant: tile
-          divider_left: true
-        # ─────────────────────────────────────────────────────────────────────
-        - type: custom:bruno-cozinha-card
-          section: cozinha
-          double_tap_action:
-            action: fire-dom-event
-            bruno_section: cozinha
-          variant: tile
-          divider_left: true
-        - type: custom:bruno-lavabo-card
-          double_tap_action: !include ../../../shared/popup/rooms/lavabo.yaml
-          variant: tile
-          divider_left: true
+        # - type: custom:bruno-sala-room-card
+        #   section: sala
+        #   variant: tile
+        # - type: custom:bruno-office-card
+        #   section: office
+        #   double_tap_action:
+        #     action: fire-dom-event
+        #     bruno_section: office
+        #   variant: tile
+        #   divider_left: true
+        # - type: custom:bruno-cozinha-card
+        #   section: cozinha
+        #   double_tap_action:
+        #     action: fire-dom-event
+        #     bruno_section: cozinha
+        #   variant: tile
+        #   divider_left: true
+        # - type: custom:bruno-lavabo-card
+        #   double_tap_action: !include ../../../shared/popup/rooms/lavabo.yaml
+        #   variant: tile
+        #   divider_left: true
         # Corredor: 8o tile. Sem subview propria (nao tem uma) e sem popup —
-        # o valor dele e o toggle direto. Estrutura, presenca e estado
-        # semantico identicos aos demais (ver bruno-corredor-card.js).
-        - type: custom:bruno-corredor-card
-          variant: tile
-          divider_left: true
-        - type: custom:bruno-quarto-casal-card
-          section: casal
-          double_tap_action:
-            action: fire-dom-event
-            bruno_section: casal
-          variant: tile
-          divider_left: true
-        - type: custom:bruno-quarto-marina-card
-          section: marina
-          double_tap_action:
-            action: fire-dom-event
-            bruno_section: marina
-          variant: tile
-          divider_left: true
-        - type: custom:bruno-quarto-miguel-card
-          section: miguel
-          double_tap_action:
-            action: fire-dom-event
-            bruno_section: miguel
-          variant: tile
-          divider_left: true
+        # o valor dele e o toggle direto.
+        # - type: custom:bruno-corredor-card
+        #   variant: tile
+        #   divider_left: true
+        # - type: custom:bruno-quarto-casal-card
+        #   section: casal
+        #   double_tap_action:
+        #     action: fire-dom-event
+        #     bruno_section: casal
+        #   variant: tile
+        #   divider_left: true
+        # - type: custom:bruno-quarto-marina-card
+        #   section: marina
+        #   double_tap_action:
+        #     action: fire-dom-event
+        #     bruno_section: marina
+        #   variant: tile
+        #   divider_left: true
+        # - type: custom:bruno-quarto-miguel-card
+        #   section: miguel
+        #   double_tap_action:
+        #     action: fire-dom-event
+        #     bruno_section: miguel
+        #   variant: tile
+        #   divider_left: true
+        # ─────────────────────────────────────────────────────────────────────
 
     # ---- Dock de ações rápidas (dentro da mesma banda) ----------------
     # Mesmo conteúdo de v2/bento_quick_actions_v2.yaml, sem view_layout

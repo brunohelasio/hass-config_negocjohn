@@ -99,6 +99,23 @@ export interface RoomConfig {
    * Calibrar no olho, sem tocar em código nem em imagem.
    */
   iconScale?: number;
+  /**
+   * Painel próprio, para cômodo sem subview.
+   *
+   * O Lavabo é o único hoje: em vez de navegar, o chevron abre um `<dialog>`
+   * nativo ancorado ao próprio tile, com atalho para cada luz. `<dialog>` porque
+   * `showModal()` renderiza na top layer do navegador — imune ao `overflow:
+   * hidden` e aos `transform` dos ancestrais, que era o motivo de o painel
+   * antigo, com `position: fixed`, sair cortado dentro da shell.
+   */
+  popup?: {
+    title: string;
+    subtitle?: string;
+    icon: string;
+    banner?: string;
+    bannerOn?: string;
+    lights: readonly { entity: string; name: string; icon?: string }[];
+  };
   /** Gênero para a semântica ("Ocupado" x "Ocupada"). */
   grammaticalGender?: 'm' | 'f';
   entities: RoomEntities;
@@ -228,6 +245,17 @@ export const ROOMS: readonly RoomConfig[] = [
     grammaticalGender: 'm',
     toggleTarget: 'light.grupo_luzes_lavabo',
     activeSensor: 'sensor.lavabo_active',
+    popup: {
+      title: 'Lavabo',
+      subtitle: 'Controle rapido de luzes',
+      icon: 'mdi:toilet',
+      banner: '/local/images/lavabo.jpg?v=20260705-lavabo-jpg-1',
+      lights: [
+        { entity: 'light.lavabo_switch_2', name: 'Luz principal', icon: 'ledstrip' },
+        { entity: 'light.lavabo_switch_1', name: 'Luz parede', icon: 'sconce' },
+        { entity: 'light.lavabo_switch_3', name: 'Luz espelho', icon: 'light_flush' },
+      ],
+    },
     statusDots: [
       { icon: 'mdi:account', label: 'Presenca', tone: 'blue',
         entities: ['binary_sensor.lavabo_motion_recent'], states: ['on'] },

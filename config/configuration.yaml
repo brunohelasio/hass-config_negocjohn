@@ -29,7 +29,9 @@ frontend:
     # ANTERIOR: - /local/dashboard/bruno-dashboard.CG820YuO.js
     # NOVO (Fase 5a, 2026-08-04): icone do dot dimensionado + feedback de toque.
     # ANTERIOR: - /local/dashboard/bruno-dashboard.CbGh_xnI.js
-    - /local/dashboard/bruno-dashboard.CzAJAgz5.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.CzAJAgz5.js
+    # NOVO (Fase 5b, 2026-08-04): a faixa inteira passa a ser um componente.
+    - /local/dashboard/bruno-dashboard.BxPAwAtX.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

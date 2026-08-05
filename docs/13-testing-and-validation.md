@@ -116,3 +116,32 @@ WebView 150 suporta DevTools remoto completo:
 | Um recurso JS | reverter a linha `?v=` em `configuration.yaml` (valor anterior comentado ao lado) |
 | Home V2 → V1 | uma linha em `views/bento_shell.yaml` |
 | Limpeza da VM | `Rename-Item` de volta — ver `14` |
+
+### Detector de crase — `scripts/validation/check-backtick.mjs`
+
+A armadilha que já quebrou o dashboard **cinco vezes**: uma crase não escapada
+dentro de um comentário que vive dentro de um template literal. Ela fecha a
+string, o módulo para de compilar, e o sintoma aparece longe da causa — em
+2026-07-29 as seis subviews voltaram ao tema errado por causa de uma dessas.
+
+```bash
+node scripts/validation/check-backtick.mjs --tudo
+```
+
+Varre `config/www`, `scripts` e `dashboard-src/src` (70 arquivos hoje). Sai com
+código 1 se achar algo.
+
+**Por que os detectores anteriores não serviam:**
+
+| tentativa | por que falhou |
+|---|---|
+| paridade de crases no arquivo | a espúria vem em par — o total continua par |
+| `grep` por palavras do bloco novo | a crase estava numa linha sem nenhuma delas |
+| primeira versão deste script | acusava crase **escapada**, que é legítima |
+| segunda versão | lia `http://` dentro de template como início de comentário |
+| terceira versão | não rastreava aspas simples/duplas e **se acusava sozinha** |
+
+A versão atual rastreia quatro estados — template literal, comentário de linha,
+comentário de bloco e string entre aspas — e só acusa a combinação perigosa.
+Verificada nos dois sentidos: acusa um arquivo-isca com o defeito, e passa limpo
+nos 70 arquivos do projeto.

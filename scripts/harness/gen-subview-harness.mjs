@@ -43,7 +43,7 @@ const COMODOS = [
 ];
 
 const scripts = [
-  '/local/dashboard/bruno-dashboard.DZXoDEsi.js',
+  '/local/dashboard/bruno-dashboard.BmpDLLMR.js',
   '/local/bruno-ui/core/bruno-icons.js',
   '/local/bruno-ui/core/bruno-liquid-glass.js',
   '/local/bruno-ui/core/bruno-surface-material.js',
@@ -75,7 +75,16 @@ const html = `<!doctype html>
 <div class="rotulo" id="rotulo">carregando…</div>
 <div class="palco"><div class="rail-vazio"></div><div class="conteudo" id="palco"></div></div>
 
-${scripts.map((s) => `<script src="${s}"></script>`).join('\n')}
+${scripts
+  .map((s) =>
+    // O bundle novo e um modulo ES (vite, formats: ['es']); os arquivos antigos
+    // sao scripts classicos. Carregar o modulo sem type=module o deixa em
+    // silencio, e o componente nunca registra.
+    s.includes('/dashboard/')
+      ? `<script type="module" src="${s}"></script>`
+      : `<script src="${s}"></script>`,
+  )
+  .join('\n')}
 
 <script>
 const CONFIGS = ${JSON.stringify(cfgs)};

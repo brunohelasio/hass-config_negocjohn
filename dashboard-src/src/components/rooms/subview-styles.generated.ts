@@ -70,10 +70,17 @@ button {
   gap: var(--room-gap);
 }
 .room-sidebar {
-  grid-area: frame-left;
+  width: 58px;
+  height: auto;
+  max-height: calc(100% - 6px);
+  grid-auto-rows: 40px;
+  gap: 7px;
+  padding: 12px 8px;
 }
 .cameras-card {
-  grid-area: cams;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
 }
 .tv-card {
   grid-area: tv;
@@ -82,10 +89,17 @@ button {
   grid-area: ps5;
 }
 .spotify-card {
-  grid-area: spotify;
+  padding: 14px;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
 }
 .ac-card {
-  grid-area: ac;
+  padding: 14px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
 }
 .room-rail-mount {
   grid-area: frame-left;
@@ -133,51 +147,41 @@ button {
   line-height: 1;
 }
 .subview-footer {
-  grid-area: frame-bottom;
+  grid-area: bottomband;
+  position: relative;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 12px;
+  gap: 8px;
   background: transparent;
 }
 .subview-presence {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: rgba(226,232,240,0.46);
   font-size: 12px;
-  font-weight: 560;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  color: rgba(255,255,255,0.52);
 }
 .subview-presence bruno-icon {
   --mdc-icon-size: 16px;
-  color: rgba(226,232,240,0.5);
-  flex: 0 0 auto;
+  color: rgba(255,255,255,0.42);
 }
 .hero-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  padding: 15px 18px 14px;
+  gap: 8px;
 }
 .room-sidebar::before {
   display: none;
 }
 .room-nav-button {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px 2px 7px;
-  border-radius: 13px;
-  color: rgba(255,255,255,0.60);
-  background: transparent;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 160ms ease, color 160ms ease;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  max-width: 40px;
+  max-height: 40px;
 }
 .room-nav-button::after {
   display: none;
@@ -283,14 +287,7 @@ button {
   opacity: var(--bruno-liquid-surface-on-sheen-opacity, 0.78);
 }
 .hero-stage {
-  position: relative;
-  isolation: isolate;
   overflow: visible;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  color: var(--text-main);
-  border-radius: 0;
 }
 .hero-bg {
   position: absolute;
@@ -357,28 +354,14 @@ button {
   color: var(--text-soft);
 }
 .hero-headline {
-  grid-column: 1;
-  grid-row: 2;
-  align-self: start;
-  justify-self: start;
-  margin-top: 20px;
+  margin-top: 12px;
 }
 .hero-date-line {
-  margin: 0 0 11px;
-  color: rgba(255,255,255,0.54);
-  font-size: 11px;
-  line-height: 1;
-  font-weight: 700;
-  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 .hero-clock {
-  margin-top: 14px;
-  font-size: clamp(56px, 7.4vh, 78px);
-  line-height: 0.96;
-  font-weight: 220;
-  font-variant-numeric: tabular-nums;
-  color: rgba(255,255,255,0.95);
-  text-shadow: 0 10px 32px rgba(0,0,0,0.28);
+  margin-top: 8px;
+  font-size: clamp(54px, 7.1vh, 74px);
 }
 .chip-button, .online-chip, .state-chip {
   display: inline-flex;
@@ -400,22 +383,8 @@ button {
   border-color: rgba(96,190,255,0.46);
 }
 .curtain-dock {
-  --curtain-gold-rgb: var(--bruno-liquid-warm-accent, 242,194,102);
-  --curtain-gold: rgb(var(--curtain-gold-rgb));
-  grid-row: 3;
-  grid-column: 1 / -1;
-  align-self: end;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 11px;
-  width: min(540px, 100%);
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  width: min(520px, 100%);
+  gap: 12px;
 }
 .curtain-control-row {
   display: grid;
@@ -477,24 +446,7 @@ button {
   min-width: 0;
 }
 .curtain-action-button {
-  width: 76px;
-  height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 0 9px;
-  border-radius: var(--bruno-liquid-control-radius-compact, 9px);
-  border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
-  background: var(--bruno-liquid-control-background, linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018)), rgba(255,255,255,0.030) );
-  box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
-  backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
-  -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
-  color: rgba(255,255,255,0.88);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0;
-  white-space: nowrap;
+  min-width: 78px;
 }
 .curtain-action-button.is-muted {
   color: rgba(255,255,255,0.88);
@@ -667,19 +619,12 @@ button {
   box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.18));
 }
 .status-rail {
-  display: grid;
+  min-height: 64px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0;
-  padding: 0;
 }
 .status-item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  min-width: 0;
-  gap: 8px;
-  padding: 0 13px;
-  border-right: 1px solid rgba(255,255,255,0.08);
+  grid-template-columns: auto minmax(0, 1fr);
+  padding: 0 12px;
 }
 .status-item:last-child {
   border-right: 0;
@@ -700,8 +645,7 @@ button {
   color: var(--text-soft);
 }
 .status-chevron {
-  --mdc-icon-size: 17px;
-  color: rgba(255,255,255,0.58);
+  display: none;
 }
 .micro-icon.tone-amber {
   color: rgb(255,183,77);
@@ -727,9 +671,7 @@ button {
   padding: 14px;
 }
 .lights-card {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 7px;
+  padding: 0;
 }
 .module-head {
   position: relative;
@@ -742,8 +684,8 @@ button {
   margin-bottom: 8px;
 }
 .lights-card .module-head {
-  min-height: 30px;
-  margin-bottom: 0;
+  align-items: start;
+  min-height: 40px;
 }
 .head-actions {
   display: flex;
@@ -797,22 +739,10 @@ button {
   gap: 10px;
 }
 .light-tile {
-  position: relative;
-  display: grid;
-  grid-template-columns: 66px minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  grid-template-areas: "icon title" "icon status";
-  align-items: center;
-  align-content: center;
-  column-gap: 15px;
-  padding: 13px 16px;
-  text-align: left;
-  border-radius: var(--room-cell-radius);
-  color: rgba(255,255,255,0.86);
-  background: var(--bruno-liquid-cell-background, rgba(255,255,255,0.055));
-  border: var(--bruno-liquid-cell-border, 1px solid rgba(255,255,255,0.11));
-  box-shadow: var(--bruno-liquid-cell-shadow, inset 0 1px 0 rgba(255,255,255,0.08));
-  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+  min-height: 0;
+  grid-template-columns: 60px minmax(0, 1fr);
+  column-gap: 11px;
+  padding: 11px 12px;
 }
 .light-tile.is-on {
   color: rgba(255,255,255,0.98);
@@ -821,27 +751,10 @@ button {
   box-shadow: var(--bruno-liquid-cell-active-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.22), inset 1px 0 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.08), 0 0 20px rgba(255,183,77,0.17) );
 }
 .lights-body {
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 10px;
+  justify-items: stretch;
 }
 .lights-zone-rail {
-  position: relative;
-  min-height: 0;
-  display: none;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  justify-items: center;
-  gap: 10px;
-  padding: 9px 7px;
-  overflow: hidden;
-  border-radius: var(--room-cell-radius);
-  color: rgba(255,255,255,0.74);
-  background: linear-gradient(145deg, rgba(255,255,255,0.072), rgba(255,255,255,0.026)), rgba(8,14,26,0.50);
-  border: 1px solid rgba(255,224,160,0.13);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), inset 0 -1px 0 rgba(255,200,100,0.045), 0 12px 26px rgba(0,0,0,0.20);
-  backdrop-filter: blur(22px) saturate(1.34);
-  -webkit-backdrop-filter: blur(22px) saturate(1.34);
+  display: grid;
 }
 .lights-zone-rail::before {
   content: "";
@@ -978,15 +891,8 @@ button {
   transform: translateY(-1px);
 }
 .light-icon {
-  grid-area: icon;
-  position: relative;
-  width: 62px;
-  height: 62px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  --light-color: var(--state-icon-color, #9da0a2);
-  color: rgba(255,255,255,0.74);
+  width: 60px;
+  height: 60px;
 }
 .light-tile.is-on .light-icon {
   --light-color: var(--state-icon-active-color, #f0c040);
@@ -1057,14 +963,7 @@ to {
 }
 }
 .light-tile strong {
-  grid-area: title;
-  min-width: 0;
-  align-self: end;
-  font-size: 14.5px;
-  line-height: 1.12;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 14.8px;
 }
 .light-tile small {
   grid-area: status;
@@ -1155,12 +1054,13 @@ to {
 }
 .camera-row-copy {
   left: 14px;
+  right: 14px;
   bottom: 14px;
-  display: grid;
-  gap: 4px;
+  transition: bottom 220ms ease;
 }
 .camera-row-copy strong {
-  font-size: 17px;
+  font-size: 15px;
+  line-height: 1.08;
 }
 .camera-row-copy span, .camera-thumb-name {
   display: inline-flex;
@@ -1224,10 +1124,7 @@ to {
   min-width: 0;
 }
 .media-source {
-  margin-top: 2px;
-  color: white;
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 14px;
 }
 .media-title {
   margin-top: 8px;
@@ -1441,7 +1338,11 @@ to {
   margin-top: 0;
 }
 .spotify-card .media-subtitle {
-  margin-top: -4px;
+  margin-top: -2px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .spotify-controls {
   display: flex;
@@ -1455,14 +1356,18 @@ to {
   border-radius: 13px;
 }
 .state-chip {
-  align-self: start;
-  min-height: 28px;
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ac-body {
+  height: 100%;
+  min-height: 0;
   grid-template-columns: 1fr;
-  grid-template-rows: auto auto auto auto minmax(64px, 1fr);
-  gap: 8px;
-  align-content: start;
+  grid-template-rows: auto auto auto auto auto auto;
+  gap: 12px;
+  align-content: space-between;
 }
 .temperature-pill {
   align-self: start;
@@ -1481,13 +1386,7 @@ to {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
 }
 .temperature-slider {
-  min-width: 0;
-  width: 100%;
-  display: block;
-  align-items: center;
-  padding: 0;
-  background: transparent;
-  border: 0;
+  margin-bottom: 3px;
 }
 .temperature-slider input {
   width: 100%;
@@ -1495,10 +1394,8 @@ to {
   accent-color: rgb(96,165,250);
 }
 .fan-label {
-  display: block;
-  color: rgba(255,255,255,0.90);
-  font-size: 13px;
-  font-weight: 800;
+  margin-top: 3px;
+  font-size: 12px;
 }
 .climate-mode-row, .fan-mode-row {
   display: grid;
@@ -1509,6 +1406,7 @@ to {
 }
 .fan-mode-row {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: start;
 }
 .climate-mode, .fan-mode, .climate-stepper {
   min-height: 38px;
@@ -1545,10 +1443,7 @@ to {
   box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.12), 0 0 14px rgba(96,165,250,0.16) );
 }
 .climate-stepper {
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) 42px;
-  align-items: center;
-  overflow: hidden;
+  margin-bottom: 4px;
 }
 .climate-stepper button {
   height: 38px;
@@ -1563,10 +1458,10 @@ to {
   font-weight: 800;
 }
 .fan-mode {
-  color: rgba(255,255,255,0.74);
-  font-size: 11px;
-  font-weight: 800;
-  min-height: 30px;
+  aspect-ratio: 1;
+  min-height: 0;
+  height: auto;
+  padding: 0 4px;
 }
 .fan-mode.is-active {
   color: rgba(255,255,255,0.94);
@@ -1654,16 +1549,18 @@ to {
 }
 .room-subview {
   height: auto;
+  min-height: 100vh;
   overflow: auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: minmax(330px, 46vh) minmax(360px, auto) repeat(2, minmax(300px, auto));
-  grid-template-areas: "hero side" "cams cams" "tv spotify" "ps5 ac";
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+  grid-template-areas: "left" "right";
+  padding: 10px;
 }
 .side-panel {
   grid-template-rows: auto minmax(0, 1fr);
 }
 .status-rail {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  min-height: 68px;
 }
 .status-item {
   padding: 0 10px;
@@ -1676,8 +1573,7 @@ to {
 }
 .room-subview {
   grid-template-columns: 1fr;
-  grid-template-rows: auto;
-  grid-template-areas: "hero" "side" "cams" "tv" "spotify" "ps5" "ac";
+  grid-template-areas: "left" "right";
   padding: 8px;
 }
 .hero-stage {
@@ -1691,6 +1587,7 @@ to {
 }
 .status-rail {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: auto;
 }
 .status-item:nth-child(even) {
   border-right: 0;
@@ -1700,7 +1597,6 @@ to {
 }
 .curtain-control-row {
   grid-template-columns: 1fr;
-  align-items: stretch;
   gap: 10px;
 }
 .curtain-status {
@@ -3685,25 +3581,11 @@ to {
 }
 }
 .lights-dock {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 54px;
-  padding: 0 10px 0 14px;
+  padding: 0 10px;
+  min-height: 52px;
 }
 .lights-dock-id {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
+  gap: 9px;
 }
 .lights-dock-actions {
   display: flex;
@@ -3711,19 +3593,12 @@ to {
   gap: 8px;
 }
 .lights-dock-chevron {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: rgba(255,255,255,0.62);
-  cursor: pointer;
-  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  width: 22px;
+  height: 22px;
+  color: rgba(255,255,255,0.55);
 }
 .lights-dock-chevron bruno-icon {
-  --mdc-icon-size: 22px;
+  --mdc-icon-size: 20px;
 }
 .lights-card.is-open .lights-dock-chevron {
   transform: rotate(180deg);
@@ -3736,11 +3611,7 @@ to {
   overflow: hidden;
 }
 .lights-scroll {
-  max-height: 100%;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: 14px 12px 4px;
+  padding: 10px 10px 10px;
 }
 .lights-scroll::-webkit-scrollbar {
   width: 0;
@@ -3751,11 +3622,9 @@ to {
   border-top: 1px solid rgba(255,255,255,0.10);
 }
 .section-head {
-  display: grid;
   grid-template-columns: 34px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 11px;
-  padding: 0 2px 8px;
+  gap: 8px;
+  padding: 0 10px 8px;
 }
 .section-head .zone-id {
   display: flex;
@@ -3790,38 +3659,29 @@ to {
   color: rgba(255,255,255,0.46);
 }
 .light-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: calc(100% - 20px);
+  margin-inline: 10px;
+  gap: 4px;
 }
 .light-cell {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 11px;
-  min-height: 56px;
-  padding: 0 12px;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 7px;
+  padding: 0 8px;
+  min-height: 60px;
+  border: 1px solid var(--bruno-subview-cartela-inner-border-color, rgba(255,255,255,0.16));
+  border-radius: 0;
 }
 .light-cell.is-wide {
   grid-column: 1 / -1;
 }
 .light-cell.has-rule-top {
-  border-top: 1px solid rgba(255,255,255,0.075);
+  border-top-color: var(--bruno-subview-cartela-inner-border-color, rgba(255,255,255,0.16));
 }
 .light-cell.has-rule-left {
-  border-left: 1px solid rgba(255,255,255,0.075);
+  border-left-color: var(--bruno-subview-cartela-inner-border-color, rgba(255,255,255,0.16));
 }
 .lc-icon {
-  width: 28px;
-  display: grid;
-  place-items: center start;
-  --light-color: #9da0a2;
-  color: var(--light-color);
+  width: 20px;
 }
 .light-cell.is-on .lc-icon {
   --light-color: #f0c040;
@@ -3829,41 +3689,28 @@ to {
   filter: drop-shadow(0 0 7px rgba(240,192,64,0.28));
 }
 .lc-name {
-  min-width: 0;
-  font-size: 14.5px;
-  font-weight: 600;
-  line-height: 1.12;
-  color: rgba(255,255,255,0.90);
+  font-size: 13.5px;
+  line-height: 1.15;
+  white-space: normal;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .lc-switch {
-  width: 40px;
-  height: 24px;
-  box-sizing: border-box;
-  padding: 0 2px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.13);
-  display: grid;
-  align-items: center;
-  transition: background 180ms ease, border-color 180ms ease;
+  width: 32px;
+  height: 19px;
 }
 .lc-knob {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.92);
-  transform: translateX(0);
-  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  width: 14px;
+  height: 14px;
 }
 .light-cell.is-on .lc-switch {
   background: rgba(255,196,90,0.55);
   border-color: rgba(255,196,90,0.65);
 }
 .light-cell.is-on .lc-knob {
-  transform: translateX(16px);
+  transform: translateX(12px);
 }
 @media (prefers-reduced-motion: reduce) {
 .lights-body, .lights-dock-chevron, .lc-switch, .lc-knob {
@@ -4257,17 +4104,17 @@ export const SUBVIEW_PC_CSS = css`
 /** Sobreposicao do comodo sala: 13 regras que divergem da base. */
 const SOBREPOSICAO_SALA = css`
 :host([data-room='sala']) .room-subview {
-  width: 100%;
-  min-height: 100vh;
-  height: 100vh;
+  --room-gap: 10px;
   display: grid;
-  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
-  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
+  grid-template-rows: 48px minmax(0, 1fr);
+  grid-template-areas: "topband topband" "content right";
+  align-items: stretch;
   gap: var(--room-gap);
-  padding: 12px;
-  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
-  overflow: hidden;
+  padding: 0;
+  background: transparent;
 }
 :host([data-room='sala']) .spotify-title.is-marquee span {
   max-width: none;
@@ -4276,10 +4123,10 @@ const SOBREPOSICAO_SALA = css`
   animation: bruno-sala-marquee 10s linear infinite;
 }
 @keyframes bruno-sala-marquee {
-:host([data-room='sala']) 0%, :host([data-room='sala']) 18% {
+0%, 18% {
   transform: translateX(0);
 }
-:host([data-room='sala']) 82%, :host([data-room='sala']) 100% {
+82%, 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
@@ -4369,17 +4216,17 @@ const SOBREPOSICAO_SALA = css`
 /** Sobreposicao do comodo office: 16 regras que divergem da base. */
 const SOBREPOSICAO_OFFICE = css`
 :host([data-room='office']) .room-subview {
-  width: 100%;
-  min-height: 100vh;
-  height: 100vh;
+  --room-gap: 10px;
   display: grid;
-  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
-  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
+  grid-template-rows: 48px minmax(0, 1fr);
+  grid-template-areas: "topband topband" "content right";
+  align-items: stretch;
   gap: var(--room-gap);
-  padding: 12px;
-  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
-  overflow: hidden;
+  padding: 0;
+  background: transparent;
 }
 :host([data-room='office']) .spotify-title.is-marquee span {
   max-width: none;
@@ -4388,10 +4235,10 @@ const SOBREPOSICAO_OFFICE = css`
   animation: bruno-sala-marquee 10s linear infinite;
 }
 @keyframes bruno-sala-marquee {
-:host([data-room='office']) 0%, :host([data-room='office']) 18% {
+0%, 18% {
   transform: translateX(0);
 }
-:host([data-room='office']) 82%, :host([data-room='office']) 100% {
+82%, 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
@@ -4495,16 +4342,17 @@ const SOBREPOSICAO_OFFICE = css`
 /** Sobreposicao do comodo cozinha: 56 regras que divergem da base. */
 const SOBREPOSICAO_COZINHA = css`
 :host([data-room='cozinha']) .room-subview {
-  width: 100%;
-  min-height: 100vh;
-  height: 100vh;
+  --room-gap: 10px;
   display: grid;
-  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
-  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: minmax(0, 0.81fr) minmax(0, 0.81fr) minmax(360px, 0.66fr);
+  grid-template-rows: 48px minmax(0, 1fr) var(--ac-h, 320px);
+  grid-template-areas: "topband topband topband" "hero hero right" "cams appliances appliances";
+  align-items: stretch;
   gap: var(--room-gap);
-  padding: 12px;
-  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
+  padding: 0;
+  background: transparent;
   overflow: hidden;
 }
 :host([data-room='cozinha']) .spotify-title.is-marquee span {
@@ -4514,10 +4362,10 @@ const SOBREPOSICAO_COZINHA = css`
   animation: bruno-sala-marquee 10s linear infinite;
 }
 @keyframes bruno-sala-marquee {
-:host([data-room='cozinha']) 0%, :host([data-room='cozinha']) 18% {
+0%, 18% {
   transform: translateX(0);
 }
-:host([data-room='cozinha']) 82%, :host([data-room='cozinha']) 100% {
+82%, 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
@@ -4525,7 +4373,12 @@ const SOBREPOSICAO_COZINHA = css`
   grid-template-rows: minmax(0, 1fr);
 }
 :host([data-room='cozinha']) .room-subview .right-column {
-  grid-template-rows: auto;
+  grid-area: right;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: max-content;
   align-content: start;
 }
 :host([data-room='cozinha']) .right-column {
@@ -4809,17 +4662,17 @@ const SOBREPOSICAO_COZINHA = css`
 /** Sobreposicao do comodo casal: 13 regras que divergem da base. */
 const SOBREPOSICAO_CASAL = css`
 :host([data-room='casal']) .room-subview {
-  width: 100%;
-  min-height: 100vh;
-  height: 100vh;
+  --room-gap: 10px;
   display: grid;
-  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
-  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
+  grid-template-rows: 48px minmax(0, 1fr);
+  grid-template-areas: "topband topband" "content right";
+  align-items: stretch;
   gap: var(--room-gap);
-  padding: 12px;
-  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
-  overflow: hidden;
+  padding: 0;
+  background: transparent;
 }
 :host([data-room='casal']) .spotify-title.is-marquee span {
   max-width: none;
@@ -4828,10 +4681,10 @@ const SOBREPOSICAO_CASAL = css`
   animation: bruno-qcasal-marquee 10s linear infinite;
 }
 @keyframes bruno-qcasal-marquee {
-:host([data-room='casal']) 0%, :host([data-room='casal']) 18% {
+0%, 18% {
   transform: translateX(0);
 }
-:host([data-room='casal']) 82%, :host([data-room='casal']) 100% {
+82%, 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
@@ -4926,17 +4779,17 @@ const SOBREPOSICAO_CASAL = css`
 /** Sobreposicao do comodo marina: 13 regras que divergem da base. */
 const SOBREPOSICAO_MARINA = css`
 :host([data-room='marina']) .room-subview {
-  width: 100%;
-  min-height: 100vh;
-  height: 100vh;
+  --room-gap: 10px;
   display: grid;
-  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
-  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
+  grid-template-rows: 48px minmax(0, 1fr);
+  grid-template-areas: "topband topband" "content right";
+  align-items: stretch;
   gap: var(--room-gap);
-  padding: 12px;
-  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
-  overflow: hidden;
+  padding: 0;
+  background: transparent;
 }
 :host([data-room='marina']) .spotify-title.is-marquee span {
   max-width: none;
@@ -4945,10 +4798,10 @@ const SOBREPOSICAO_MARINA = css`
   animation: bruno-qmarina-marquee 10s linear infinite;
 }
 @keyframes bruno-qmarina-marquee {
-:host([data-room='marina']) 0%, :host([data-room='marina']) 18% {
+0%, 18% {
   transform: translateX(0);
 }
-:host([data-room='marina']) 82%, :host([data-room='marina']) 100% {
+82%, 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }
@@ -5040,17 +4893,17 @@ const SOBREPOSICAO_MARINA = css`
 /** Sobreposicao do comodo miguel: 13 regras que divergem da base. */
 const SOBREPOSICAO_MIGUEL = css`
 :host([data-room='miguel']) .room-subview {
-  width: 100%;
-  min-height: 100vh;
-  height: 100vh;
+  --room-gap: 10px;
   display: grid;
-  grid-template-columns: 88px repeat(3, minmax(0, 1.15fr)) repeat(6, minmax(0, 1fr)) repeat(3, minmax(0, 1.10fr));
-  grid-template-rows: 42px minmax(0, 45fr) minmax(0, 15fr) minmax(0, 24fr) 62px;
-  grid-template-areas: "frame-left frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top frame-top" "frame-left hero hero hero hero hero side side side side side side side" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left cams cams cams tv tv spotify spotify ps5 ps5 ac ac ac" "frame-left frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom frame-bottom";
+  height: 100%;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1.62fr) minmax(360px, 0.66fr);
+  grid-template-rows: 48px minmax(0, 1fr);
+  grid-template-areas: "topband topband" "content right";
+  align-items: stretch;
   gap: var(--room-gap);
-  padding: 12px;
-  background: radial-gradient(760px 420px at 16% 2%, rgba(110,150,210,0.12), transparent 72%), radial-gradient(680px 420px at 96% 70%, rgba(255,190,120,0.08), transparent 74%), #020406;
-  overflow: hidden;
+  padding: 0;
+  background: transparent;
 }
 :host([data-room='miguel']) .spotify-title.is-marquee span {
   max-width: none;
@@ -5059,10 +4912,10 @@ const SOBREPOSICAO_MIGUEL = css`
   animation: bruno-qmiguel-marquee 10s linear infinite;
 }
 @keyframes bruno-qmiguel-marquee {
-:host([data-room='miguel']) 0%, :host([data-room='miguel']) 18% {
+0%, 18% {
   transform: translateX(0);
 }
-:host([data-room='miguel']) 82%, :host([data-room='miguel']) 100% {
+82%, 100% {
   transform: translateX(calc(-100% + 100px));
 }
 }

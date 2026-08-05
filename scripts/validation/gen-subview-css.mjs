@@ -100,6 +100,21 @@ const porComodo = Object.fromEntries(COMODOS.map((c) => [c, blocos(cssDe(c))]));
 const chave = (b) => (b.media.length ? b.media.join(' >> ') + ' >> ' : '') + b.seletor;
 const valor = (b) => [...b.decls].sort().join('; ');
 
+/**
+ * Última definição de cada chave, por cômodo.
+ *
+ * O arquivo da Sala define `.room-subview` SETE vezes, empilhadas. A cascata usa
+ * a última; emitir a primeira entregava o grid LEGADO — com áreas `tv`,
+ * `spotify` e `ps5` que nenhum elemento ocupa — em vez do grid vivo, com
+ * `topband`, `content` e `right`. O sintoma foi a raiz medindo 12px de largura.
+ */
+const ultimaDe = {};
+for (const c of COMODOS) {
+  const m = new Map();
+  for (const b of porComodo[c]) m.set(chave(b), b);
+  ultimaDe[c] = m;
+}
+
 // Índice: chave -> { comodo -> valor }.  Última definição vence, como a cascata.
 const indice = new Map();
 for (const c of COMODOS) {
@@ -132,8 +147,12 @@ const CONDICIONAIS = [
 // Os blocos e as sobreposições vivem na MESMA folha do componente, então
 // precisam de escopo — senão o grid da Cozinha valeria para todos. O escopo é um
 // atributo no host, que o componente define a partir da configuração.
-function escopar(seletor, prefixo) {
-  if (!prefixo) return seletor;
+function escopar(seletor, prefixo, dentroDeKeyframes) {
+  // Dentro de @keyframes o "seletor" é uma porcentagem — 0%, 18%, from, to.
+  // Prefixar produz ":host([data-room='sala']) 0%", que é inválido, e UMA regra
+  // inválida derruba a folha inteira: foi o que deixou dez das onze folhas do
+  // componente com zero regras.
+  if (!prefixo || dentroDeKeyframes) return seletor;
   return seletor
     .split(',')
     .map((s) => `${prefixo} ${s.trim()}`)
@@ -150,7 +169,8 @@ function serializar(bs, prefixo = '') {
       if (media) for (const m of b.media) linhas.push(`${m} {`);
       mediaAtual = media;
     }
-    linhas.push(escopar(b.seletor, prefixo) + " {");
+    const emKeyframes = b.media.some((m) => m.startsWith("@keyframes"));
+    linhas.push(escopar(b.seletor, prefixo, emKeyframes) + " {");
     for (const d of b.decls) linhas.push(`  ${d};`);
     linhas.push('}');
   }
@@ -165,7 +185,7 @@ for (const b of porComodo['sala']) {
   const k = chave(b);
   if (vistas.has(k) || !ehBase(k)) continue;
   vistas.add(k);
-  base.push(b);
+  base.push(ultimaDe['sala'].get(k));
 }
 
 const condicionais = {};
@@ -177,7 +197,7 @@ for (const { nome, dono } of CONDICIONAIS) {
       const k = chave(b);
       if (vistasC.has(k) || !dono(donos.get(k), k)) continue;
       vistasC.add(k);
-      lista.push(b);
+      lista.push(ultimaDe[c].get(k));
     }
   }
   condicionais[nome] = lista;
@@ -196,7 +216,7 @@ for (const c of COMODOS) {
     const k = chave(b);
     if (vistasS.has(k) || jaEmitidas.has(k)) continue;
     vistasS.add(k);
-    lista.push(b);
+    lista.push(ultimaDe[c].get(k));
   }
   if (lista.length) sobreposicoes[c] = lista;
 }

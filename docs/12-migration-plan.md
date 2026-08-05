@@ -868,3 +868,17 @@ document.querySelector('bruno-room-subview').shadowRoot
 ```
 
 Folha com zero regras é folha que o navegador rejeitou.
+
+### Conteúdo vivo dos módulos (2026-08-05)
+
+| módulo | fonte |
+|---|---|
+| câmeras | `<hui-image>` do HA com `cameraView: 'live'`, montado no `updated()` e reaproveitado entre renders |
+| hub de mídia | TV (ou PC, no Office) + Spotify; o resumo sai do estado — "Desligada", a fonte HDMI, ou faixa · artista |
+| A/C | modo, ventilação e swing traduzidos dos atributos `hvac`, `fan_mode` e `swing_mode` |
+| eletrodomésticos | cinco tiles; só a lava-louças tem entidade, os demais entram com `is-muted` como no original |
+| iluminação | zonas e células, com ícone do Hugeicons e alternância por célula |
+
+Ajuste **pedido**, não paridade: ícone da luz de 20 → 26px, coluna da célula
+idem, `gap` da célula 7 → 10px e da grade 4 → 8px. Fica no CSS do componente; o
+gerado segue cópia fiel do original.

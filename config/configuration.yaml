@@ -40,7 +40,8 @@ frontend:
     # ANTERIOR: - /local/dashboard/bruno-dashboard.B8GWLACx.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.C8DXYrEJ.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.DolCvfzl.js
-    - /local/dashboard/bruno-dashboard.SgTFfg3E.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.SgTFfg3E.js
+    - /local/dashboard/bruno-dashboard.D6WwkpRE.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

@@ -201,6 +201,22 @@ export class BrunoRoomSubview extends LitElement {
         width: 100%;
         height: 100%;
       }
+
+      /* Ajuste PEDIDO, não paridade: na origem o valor final é 20px de ícone e
+         4px de gap — os 28px/11px que aparecem antes no arquivo são de uma
+         definição sobrescrita depois. O usuário pediu um pouco maior e mais
+         respiro, então a mudança fica aqui, no componente, e o CSS gerado segue
+         cópia fiel do original. */
+      .lc-icon {
+        width: 26px;
+      }
+      .light-cell {
+        grid-template-columns: 26px minmax(0, 1fr) auto;
+        gap: 10px;
+      }
+      .light-grid {
+        gap: 8px;
+      }
     `,
   ];
 
@@ -771,12 +787,176 @@ export class BrunoRoomSubview extends LitElement {
             <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
           </button>
         </div>
-        <div class="mh-sources">
-          <div class="mh-source is-open is-active"></div>
-          <div class="mh-source is-active"></div>
-        </div>
+        <div class="mh-sources">${this._renderFontesDeMidia()}</div>
       </div>
     `;
+  }
+
+  /**
+   * Fontes do hub: a primeira aberta, as demais recolhidas.
+   *
+   * No Office a primeira fonte é o PC (Estação de Trabalho); nos demais é a TV.
+   * O Spotify é comum a todos. O resumo de cada uma vem do estado da entidade —
+   * é o que faz a linha dizer "Desligada", "HDMI 1" ou o nome da faixa.
+   */
+  private _renderFontesDeMidia() {
+    const e = this._sub?.entities as Record<string, unknown> | undefined;
+    const idDe = (k: string) => (typeof e?.[k] === 'string' ? (e[k] as string) : undefined);
+
+    const fontes: Array<{ chave: string; rotulo: string; icone: string; entidade: string | undefined }> = [];
+    if (this._temPc) {
+      fontes.push({ chave: 'pc', rotulo: 'PC', icone: 'mdi:desktop-classic', entidade: idDe('pcSession') ?? idDe('pcActive') });
+    } else {
+      fontes.push({ chave: 'tv', rotulo: 'TV da sala', icone: 'mdi:television-classic', entidade: idDe('tv') });
+    }
+    fontes.push({ chave: 'spotify', rotulo: 'Spotify', icone: 'mdi:spotify', entidade: idDe('spotify') });
+
+    return fontes.map((f, i) => {
+      const st = f.entidade && this._hass ? this._hass.states[f.entidade] : undefined;
+      const ativo = ['on', 'playing', 'paused', 'idle', 'buffering', 'unlocked'].includes(
+        String(st?.state ?? '').toLowerCase(),
+      );
+      const aberta = i === 0;
+      const classes = ['mh-source', aberta ? 'is-open' : '', ativo ? 'is-active' : '']
+        .filter(Boolean)
+        .join(' ');
+      return html`
+        <div class=${classes}>
+          <button type="button" class="mh-source-head" aria-expanded=${aberta ? 'true' : 'false'}>
+            <bruno-icon
+              class="mh-src-icon ${f.chave === 'spotify' ? 'mh-icon-spotify' : ''}"
+              icon=${f.icone}
+            ></bruno-icon>
+            <span class="mh-src-name">${f.rotulo}</span>
+            <span class="mh-src-summary">${this._resumoDaFonte(f.chave, st)}</span>
+            ${aberta ? nothing : html`<bruno-icon class="mh-src-chevron" icon="mdi:chevron-right"></bruno-icon>`}
+          </button>
+        </div>
+      `;
+    });
+  }
+
+  private _resumoDaFonte(chave: string, st: { state: string; attributes: Record<string, unknown> } | undefined): string {
+    if (!st) return 'Indisponível';
+    const estado = String(st.state).toLowerCase();
+    if (chave === 'spotify') {
+      if (estado === 'playing' || estado === 'paused') {
+        const titulo = st.attributes['media_title'];
+        const artista = st.attributes['media_artist'];
+        if (titulo) return artista ? `${String(titulo)} · ${String(artista)}` : String(titulo);
+      }
+      return 'Nenhuma faixa';
+    }
+    if (chave === 'pc') return estado === 'unlocked' || estado === 'on' ? 'Ligado' : 'Desligado';
+    if (estado === 'off' || estado === 'unavailable') return 'Desligada';
+    const fonte = st.attributes['source'];
+    return fonte ? String(fonte) : 'Ligada';
+  }
+
+  /**
+   * Os cinco eletrodomésticos da Cozinha.
+   *
+   * Cada tile tem imagem, nome e o estado em texto. Só a lava-louças tem
+   * entidade hoje; os demais são placeholders com `is-muted`, como no original —
+   * aparecem, mas não prometem controle que não existe.
+   */
+  private _renderEletrodomesticos() {
+    const e = this._sub?.entities as Record<string, unknown> | undefined;
+    const idDe = (k: string) => (typeof e?.[k] === 'string' ? (e[k] as string) : undefined);
+
+    const itens = [
+      { chave: 'dishwasher', nome: 'Lava-louças', icone: 'mdi:dishwasher', entidade: idDe('dishwasher'), toggle: idDe('dishwasherPower') },
+      { chave: 'airfryer', nome: 'Air fryer', icone: 'mdi:air-fryer', entidade: idDe('airfryer'), toggle: idDe('airfryer') },
+      { chave: 'fridge', nome: 'Geladeira', icone: 'mdi:fridge-outline', entidade: idDe('fridge'), toggle: undefined },
+      { chave: 'microwave', nome: 'Micro-ondas', icone: 'mdi:microwave', entidade: idDe('microwave'), toggle: undefined },
+      { chave: 'washer', nome: 'Lavadora', icone: 'mdi:washing-machine', entidade: idDe('washer'), toggle: idDe('washer') },
+    ];
+
+    return itens.map((item) => {
+      const st = item.entidade && this._hass ? this._hass.states[item.entidade] : undefined;
+      const configurado = Boolean(item.entidade);
+      const ativo = ['on', 'run', 'running', 'playing'].includes(String(st?.state ?? '').toLowerCase());
+      const classes = [
+        'appliance-tile',
+        `is-${item.chave}`,
+        ativo ? 'is-on' : '',
+        configurado ? '' : 'is-muted',
+      ]
+        .filter(Boolean)
+        .join(' ');
+      return html`
+        <article class=${classes}>
+          <button
+            type="button"
+            class="appliance-main"
+            aria-label="${item.nome}"
+            ?disabled=${!item.toggle}
+            @click=${() => item.toggle && this._alternarAparelho(item.toggle)}
+          >
+            <div class="appliance-visual" data-image-wrapper>
+              <bruno-icon icon=${item.icone}></bruno-icon>
+            </div>
+            <div class="appliance-copy">
+              <strong>${item.nome}</strong>
+              <span>${this._estadoDoAparelho(configurado, st)}</span>
+            </div>
+          </button>
+        </article>
+      `;
+    });
+  }
+
+  private _estadoDoAparelho(
+    configurado: boolean,
+    st: { state: string } | undefined,
+  ): string {
+    if (!configurado) return 'Sem tomada';
+    if (!st) return 'Indisponível';
+    const s = String(st.state).toLowerCase();
+    const nomes: Record<string, string> = {
+      run: 'Lavando', running: 'Lavando', on: 'Ligado', off: 'Desligado',
+      ready: 'Pronto', finished: 'Concluído', pause: 'Pausado',
+    };
+    return nomes[s] ?? st.state;
+  }
+
+  private _alternarAparelho(entityId: string): void {
+    if (!this._hass) return;
+    const dominio = entityId.split('.')[0] ?? 'switch';
+    this._hass.callService(dominio, 'toggle', { entity_id: entityId }, { entity_id: entityId });
+  }
+
+  private _entidadeClimate(): string | undefined {
+    const v = (this._sub?.entities as Record<string, unknown> | undefined)?.['climate'];
+    return typeof v === 'string' ? v : undefined;
+  }
+
+  private _estadoClimate() {
+    const id = this._entidadeClimate();
+    return id && this._hass ? this._hass.states[id] : undefined;
+  }
+
+  private _modoDoAC(): string {
+    const st = this._estadoClimate();
+    const nomes: Record<string, string> = {
+      off: 'Desligado', cool: 'Refrigerar', heat: 'Aquecer',
+      dry: 'Desumidificar', fan_only: 'Ventilar', heat_cool: 'Automático', auto: 'Automático',
+    };
+    return nomes[String(st?.state ?? '')] ?? '—';
+  }
+
+  private _ventilacaoDoAC(): string {
+    const v = this._estadoClimate()?.attributes['fan_mode'];
+    const nomes: Record<string, string> = {
+      auto: 'Auto', low: 'Baixa', mid: 'Média', middle: 'Média', high: 'Alta', quiet: 'Silencioso',
+    };
+    return v ? (nomes[String(v).toLowerCase()] ?? String(v)) : '—';
+  }
+
+  private _swingDoAC(): string {
+    const v = this._estadoClimate()?.attributes['swing_mode'];
+    const nomes: Record<string, string> = { off: 'Desligado', on: 'Ligado', vertical: 'Vertical', horizontal: 'Horizontal', both: 'Ambos' };
+    return v ? (nomes[String(v).toLowerCase()] ?? String(v)) : '—';
   }
 
   /** A/C: cabeçalho com power, anel de temperatura e três controles na base. */
@@ -804,8 +984,19 @@ export class BrunoRoomSubview extends LitElement {
           </div>
         </div>
         <div class="ac-lean-foot">
-          ${[0, 1, 2].map(
-            () => html`<div class="ac-control-wrap"><div class="ac-action"></div></div>`,
+          ${[
+            { icone: 'mdi:thermostat-auto', titulo: 'Modo', valor: this._modoDoAC() },
+            { icone: 'mdi:fan', titulo: 'Ventilação', valor: this._ventilacaoDoAC() },
+            { icone: 'mdi:air-conditioner', titulo: 'Swing', valor: this._swingDoAC() },
+          ].map(
+            (c) => html`
+              <div class="ac-control-wrap">
+                <button type="button" class="ac-action" ?disabled=${!this._entidadeClimate()}>
+                  <span class="ac-action-icon"><bruno-icon icon=${c.icone}></bruno-icon></span>
+                  <span class="ac-action-text"><small>${c.titulo}</small><strong>${c.valor}</strong></span>
+                </button>
+              </div>
+            `,
           )}
         </div>
       </div>
@@ -832,8 +1023,13 @@ export class BrunoRoomSubview extends LitElement {
       <div class="right-column">${this._renderLightsDock()}</div>
       ${this._renderCameras()}
       <div class="glass-card appliances-card kitchen-appliances-card">
-        <div class="mh-head appliances-head"></div>
-        <div class="appliances-grid"></div>
+        <div class="mh-head appliances-head">
+          <div class="mh-head-title">
+            <span class="micro-icon tone-amber"><bruno-icon icon="mdi:silverware-fork-knife"></bruno-icon></span>
+            <div class="module-title">Eletrodomésticos</div>
+          </div>
+        </div>
+        <div class="appliances-grid">${this._renderEletrodomesticos()}</div>
       </div>
     `;
   }

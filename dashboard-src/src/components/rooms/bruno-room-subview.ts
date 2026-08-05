@@ -33,6 +33,12 @@ import {
  *     room: sala
  */
 
+function truthy(v: unknown): boolean {
+  if (v === true) return true;
+  if (typeof v === 'number') return v > 0;
+  return ['true', 'on', 'yes', '1'].includes(String(v ?? '').toLowerCase());
+}
+
 interface SubviewCardConfig {
   room: string;
 }
@@ -209,6 +215,12 @@ export class BrunoRoomSubview extends LitElement {
          cópia fiel do original. */
       .lc-icon {
         width: 26px;
+        height: 26px;
+      }
+      .lc-icon .tpl-light-icon,
+      .lc-icon .tpl-light-icon svg {
+        width: 26px;
+        height: 26px;
       }
       .light-cell {
         grid-template-columns: 26px minmax(0, 1fr) auto;
@@ -715,7 +727,16 @@ export class BrunoRoomSubview extends LitElement {
   private _montarFeeds(): void {
     const raiz = this.shadowRoot;
     if (!raiz || !this._hass) return;
-    if (!customElements.get('hui-image')) return;
+    if (!customElements.get('hui-image')) {
+      //  e um elemento do proprio Home Assistant e pode registrar
+      // depois do primeiro render. Sem esta espera so aparecia a camera do
+      // comodo que por acaso renderizou tarde.
+      if (this._tentativasFeed < 40) {
+        this._tentativasFeed += 1;
+        window.setTimeout(() => this._montarFeeds(), 120);
+      }
+      return;
+    }
 
     for (const ponto of raiz.querySelectorAll<HTMLElement>('[data-camera-live-mount]')) {
       const entityId = ponto.dataset['cameraEntity'];
@@ -741,6 +762,7 @@ export class BrunoRoomSubview extends LitElement {
   }
 
   private _feeds = new Map<string, HTMLElement & Record<string, unknown>>();
+  private _tentativasFeed = 0;
 
   /** Câmeras: cabeçalho com o menu de três pontos + palco com feed e PIP. */
   private _renderCameras() {
@@ -861,63 +883,73 @@ export class BrunoRoomSubview extends LitElement {
    * aparecem, mas não prometem controle que não existe.
    */
   private _renderEletrodomesticos() {
-    const e = this._sub?.entities as Record<string, unknown> | undefined;
-    const idDe = (k: string) => (typeof e?.[k] === 'string' ? (e[k] as string) : undefined);
+    // A lista vem da própria configuração — `entities.appliances` —, com o PNG
+    // de cada aparelho, os estados que contam como ativo e os rótulos. Eu havia
+    // escrito uma lista fixa com ícones; o original usa IMAGEM.
+    const bruto = (this._sub?.entities as Record<string, unknown> | undefined)?.['appliances'];
+    if (!Array.isArray(bruto)) return nothing;
 
-    const itens = [
-      { chave: 'dishwasher', nome: 'Lava-louças', icone: 'mdi:dishwasher', entidade: idDe('dishwasher'), toggle: idDe('dishwasherPower') },
-      { chave: 'airfryer', nome: 'Air fryer', icone: 'mdi:air-fryer', entidade: idDe('airfryer'), toggle: idDe('airfryer') },
-      { chave: 'fridge', nome: 'Geladeira', icone: 'mdi:fridge-outline', entidade: idDe('fridge'), toggle: undefined },
-      { chave: 'microwave', nome: 'Micro-ondas', icone: 'mdi:microwave', entidade: idDe('microwave'), toggle: undefined },
-      { chave: 'washer', nome: 'Lavadora', icone: 'mdi:washing-machine', entidade: idDe('washer'), toggle: idDe('washer') },
-    ];
+    return bruto
+      .filter((a): a is Record<string, unknown> => Boolean(a) && typeof a === 'object')
+      .map((item) => {
+        const chave = String(item['key'] ?? 'item').replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
+        const nome = String(item['name'] ?? 'Eletrodoméstico');
+        const imagem = typeof item['image'] === 'string' ? item['image'] : '';
+        const alvo = typeof item['entity'] === 'string' ? item['entity'] : '';
+        const idEstado = typeof item['stateEntity'] === 'string' ? item['stateEntity'] : alvo;
+        const st = idEstado && this._hass ? this._hass.states[idEstado] : undefined;
 
-    return itens.map((item) => {
-      const st = item.entidade && this._hass ? this._hass.states[item.entidade] : undefined;
-      const configurado = Boolean(item.entidade);
-      const ativo = ['on', 'run', 'running', 'playing'].includes(String(st?.state ?? '').toLowerCase());
-      const classes = [
-        'appliance-tile',
-        `is-${item.chave}`,
-        ativo ? 'is-on' : '',
-        configurado ? '' : 'is-muted',
-      ]
-        .filter(Boolean)
-        .join(' ');
-      return html`
-        <article class=${classes}>
-          <button
-            type="button"
-            class="appliance-main"
-            aria-label="${item.nome}"
-            ?disabled=${!item.toggle}
-            @click=${() => item.toggle && this._alternarAparelho(item.toggle)}
-          >
-            <div class="appliance-visual" data-image-wrapper>
-              <bruno-icon icon=${item.icone}></bruno-icon>
-            </div>
-            <div class="appliance-copy">
-              <strong>${item.nome}</strong>
-              <span>${this._estadoDoAparelho(configurado, st)}</span>
-            </div>
-          </button>
-        </article>
-      `;
-    });
+        const ativos = Array.isArray(item['activeStates'])
+          ? (item['activeStates'] as unknown[]).map((v) => String(v).toLowerCase())
+          : ['on'];
+        const atributoAtivo = typeof item['activeAttr'] === 'string' ? item['activeAttr'] : '';
+        const sensorAtivo = this._room?.activeSensor ? this._hass?.states[this._room.activeSensor] : undefined;
+        const ativo =
+          ativos.includes(String(st?.state ?? '').toLowerCase()) ||
+          (atributoAtivo ? truthy(sensorAtivo?.attributes[atributoAtivo]) : false);
+
+        const placeholder = Boolean(item['placeholder']) || !alvo;
+        const classes = ['appliance-tile', `is-${chave}`, ativo ? 'is-on' : '', placeholder ? 'is-muted' : '']
+          .filter(Boolean)
+          .join(' ');
+
+        return html`
+          <article class=${classes}>
+            <button
+              type="button"
+              class="appliance-main"
+              aria-label=${nome}
+              ?disabled=${placeholder}
+              @click=${() => !placeholder && this._alternarAparelho(alvo)}
+            >
+              <div class="appliance-visual" data-image-wrapper>
+                ${imagem ? html`<img src=${imagem} alt="" loading="lazy" decoding="async" />` : nothing}
+              </div>
+              <div class="appliance-copy">
+                <strong>${nome}</strong>
+                <span>${this._rotuloDoAparelho(item, st, ativo, placeholder)}</span>
+              </div>
+            </button>
+          </article>
+        `;
+      });
   }
 
-  private _estadoDoAparelho(
-    configurado: boolean,
+  /** Rótulo de estado: os textos vêm da configuração, como no original. */
+  private _rotuloDoAparelho(
+    item: Record<string, unknown>,
     st: { state: string } | undefined,
+    ativo: boolean,
+    placeholder: boolean,
   ): string {
-    if (!configurado) return 'Sem tomada';
+    const texto = (k: string, padrao: string) =>
+      typeof item[k] === 'string' ? (item[k] as string) : padrao;
+    if (placeholder) return texto('placeholderLabel', 'Sem tomada');
     if (!st) return 'Indisponível';
+    if (ativo) return texto('activeLabel', 'Ligada');
     const s = String(st.state).toLowerCase();
-    const nomes: Record<string, string> = {
-      run: 'Lavando', running: 'Lavando', on: 'Ligado', off: 'Desligado',
-      ready: 'Pronto', finished: 'Concluído', pause: 'Pausado',
-    };
-    return nomes[s] ?? st.state;
+    if (s === 'off' || s === 'unavailable') return texto('offLabel', 'Desligada');
+    return texto('idleLabel', 'Ligada');
   }
 
   private _alternarAparelho(entityId: string): void {

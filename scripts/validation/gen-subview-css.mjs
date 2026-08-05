@@ -101,26 +101,49 @@ const chave = (b) => (b.media.length ? b.media.join(' >> ') + ' >> ' : '') + b.s
 const valor = (b) => [...b.decls].sort().join('; ');
 
 /**
- * Última definição de cada chave, por cômodo.
+ * Declarações FUNDIDAS de cada chave, por cômodo.
  *
- * O arquivo da Sala define `.room-subview` SETE vezes, empilhadas. A cascata usa
- * a última; emitir a primeira entregava o grid LEGADO — com áreas `tv`,
- * `spotify` e `ps5` que nenhum elemento ocupa — em vez do grid vivo, com
- * `topband`, `content` e `right`. O sintoma foi a raiz medindo 12px de largura.
+ * O arquivo da Sala define `.room-subview` SETE vezes, empilhadas, e
+ * `.lights-card` mais de uma. A cascata do CSS não troca a regra inteira: ela
+ * funde propriedade a propriedade, e a definição posterior sobrescreve apenas o
+ * que ela própria declara. O que só existe na definição anterior SOBREVIVE.
+ *
+ * Emitir só a primeira entregava o grid LEGADO (a raiz media 12px de largura).
+ * Emitir só a última perdia o que a primeira declarava e a última não — foi
+ * assim que `.lights-card` perdeu o `display: flex` e o dock ficou 29px mais
+ * alto. Fundir é o único comportamento que reproduz a cascata.
  */
-const ultimaDe = {};
+function fundir(blocosDaChave) {
+  const props = new Map(); // propriedade -> declaração completa, na ordem
+  for (const b of blocosDaChave) {
+    for (const d of b.decls) {
+      const prop = d.slice(0, d.indexOf(':')).trim();
+      props.delete(prop); // reinsere no fim: a última posição vence
+      props.set(prop, d);
+    }
+  }
+  const ultimo = blocosDaChave[blocosDaChave.length - 1];
+  return { media: ultimo.media, seletor: ultimo.seletor, decls: [...props.values()] };
+}
+
+const fundidoDe = {};
 for (const c of COMODOS) {
+  const porChave = new Map();
+  for (const b of porComodo[c]) {
+    if (!porChave.has(chave(b))) porChave.set(chave(b), []);
+    porChave.get(chave(b)).push(b);
+  }
   const m = new Map();
-  for (const b of porComodo[c]) m.set(chave(b), b);
-  ultimaDe[c] = m;
+  for (const [k, lista] of porChave) m.set(k, fundir(lista));
+  fundidoDe[c] = m;
 }
 
 // Índice: chave -> { comodo -> valor }.  Última definição vence, como a cascata.
 const indice = new Map();
 for (const c of COMODOS) {
-  for (const b of porComodo[c]) {
-    if (!indice.has(chave(b))) indice.set(chave(b), {});
-    indice.get(chave(b))[c] = valor(b);
+  for (const [k, b] of fundidoDe[c]) {
+    if (!indice.has(k)) indice.set(k, {});
+    indice.get(k)[c] = valor(b);
   }
 }
 
@@ -185,7 +208,7 @@ for (const b of porComodo['sala']) {
   const k = chave(b);
   if (vistas.has(k) || !ehBase(k)) continue;
   vistas.add(k);
-  base.push(ultimaDe['sala'].get(k));
+  base.push(fundidoDe['sala'].get(k));
 }
 
 const condicionais = {};
@@ -197,7 +220,7 @@ for (const { nome, dono } of CONDICIONAIS) {
       const k = chave(b);
       if (vistasC.has(k) || !dono(donos.get(k), k)) continue;
       vistasC.add(k);
-      lista.push(ultimaDe[c].get(k));
+      lista.push(fundidoDe[c].get(k));
     }
   }
   condicionais[nome] = lista;
@@ -216,7 +239,7 @@ for (const c of COMODOS) {
     const k = chave(b);
     if (vistasS.has(k) || jaEmitidas.has(k)) continue;
     vistasS.add(k);
-    lista.push(ultimaDe[c].get(k));
+    lista.push(fundidoDe[c].get(k));
   }
   if (lista.length) sobreposicoes[c] = lista;
 }

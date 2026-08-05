@@ -70,6 +70,22 @@ button {
   gap: var(--room-gap);
 }
 .room-sidebar {
+  grid-area: frame-left;
+  position: relative;
+  z-index: 3;
+  isolation: isolate;
+  align-self: center;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
   width: 58px;
   height: auto;
   max-height: calc(100% - 6px);
@@ -78,6 +94,7 @@ button {
   padding: 12px 8px;
 }
 .cameras-card {
+  grid-area: cams;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
@@ -89,6 +106,7 @@ button {
   grid-area: ps5;
 }
 .spotify-card {
+  grid-area: spotify;
   padding: 14px;
   min-height: 0;
   display: grid;
@@ -96,6 +114,7 @@ button {
   gap: 10px;
 }
 .ac-card {
+  grid-area: ac;
   padding: 14px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -147,6 +166,7 @@ button {
   line-height: 1;
 }
 .subview-footer {
+  padding: 0 12px;
   grid-area: bottomband;
   position: relative;
   min-width: 0;
@@ -157,6 +177,7 @@ button {
   background: transparent;
 }
 .subview-presence {
+  letter-spacing: 0.02em;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -165,10 +186,19 @@ button {
   color: rgba(255,255,255,0.52);
 }
 .subview-presence bruno-icon {
+  flex: 0 0 auto;
   --mdc-icon-size: 16px;
   color: rgba(255,255,255,0.42);
 }
 .hero-content {
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   padding: 15px 18px 14px;
   gap: 8px;
 }
@@ -176,6 +206,19 @@ button {
   display: none;
 }
 .room-nav-button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 2px 7px;
+  border-radius: 13px;
+  color: rgba(255,255,255,0.60);
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 160ms ease, color 160ms ease;
   width: 40px;
   height: 40px;
   min-width: 40px;
@@ -287,6 +330,13 @@ button {
   opacity: var(--bruno-liquid-surface-on-sheen-opacity, 0.78);
 }
 .hero-stage {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  color: var(--text-main);
+  border-radius: 0;
   overflow: visible;
 }
 .hero-bg {
@@ -354,12 +404,27 @@ button {
   color: var(--text-soft);
 }
 .hero-headline {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  justify-self: start;
   margin-top: 12px;
 }
 .hero-date-line {
+  margin: 0 0 11px;
+  color: rgba(255,255,255,0.54);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+  text-transform: uppercase;
   margin-bottom: 6px;
 }
 .hero-clock {
+  line-height: 0.96;
+  font-weight: 220;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.95);
+  text-shadow: 0 10px 32px rgba(0,0,0,0.28);
   margin-top: 8px;
   font-size: clamp(54px, 7.1vh, 74px);
 }
@@ -383,6 +448,20 @@ button {
   border-color: rgba(96,190,255,0.46);
 }
 .curtain-dock {
+  --curtain-gold-rgb: var(--bruno-liquid-warm-accent, 242,194,102);
+  --curtain-gold: rgb(var(--curtain-gold-rgb));
+  grid-row: 3;
+  grid-column: 1 / -1;
+  align-self: end;
+  display: grid;
+  grid-template-columns: 1fr;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   width: min(520px, 100%);
   gap: 12px;
 }
@@ -446,6 +525,24 @@ button {
   min-width: 0;
 }
 .curtain-action-button {
+  width: 76px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 9px;
+  border-radius: var(--bruno-liquid-control-radius-compact, 9px);
+  border: var(--bruno-liquid-control-border, 1px solid rgba(255,255,255,0.15));
+  background: var(--bruno-liquid-control-background, linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.018)), rgba(255,255,255,0.030) );
+  box-shadow: var(--bruno-liquid-control-shadow, inset 0 1px 0 rgba(255,255,255,0.060));
+  backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+  -webkit-backdrop-filter: var(--bruno-liquid-control-filter, blur(12px) saturate(0.96) brightness(1.04));
+  color: rgba(255,255,255,0.88);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+  white-space: nowrap;
   min-width: 78px;
 }
 .curtain-action-button.is-muted {
@@ -619,10 +716,18 @@ button {
   box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.18));
 }
 .status-rail {
+  display: grid;
+  gap: 0;
+  padding: 0;
   min-height: 64px;
   grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 .status-item {
+  display: grid;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  border-right: 1px solid rgba(255,255,255,0.08);
   grid-template-columns: auto minmax(0, 1fr);
   padding: 0 12px;
 }
@@ -645,6 +750,8 @@ button {
   color: var(--text-soft);
 }
 .status-chevron {
+  --mdc-icon-size: 17px;
+  color: rgba(255,255,255,0.58);
   display: none;
 }
 .micro-icon.tone-amber {
@@ -671,6 +778,12 @@ button {
   padding: 14px;
 }
 .lights-card {
+  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  overflow: hidden;
   padding: 0;
 }
 .module-head {
@@ -684,6 +797,7 @@ button {
   margin-bottom: 8px;
 }
 .lights-card .module-head {
+  margin-bottom: 0;
   align-items: start;
   min-height: 40px;
 }
@@ -739,6 +853,19 @@ button {
   gap: 10px;
 }
 .light-tile {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-template-areas: "icon title" "icon status";
+  align-items: center;
+  align-content: center;
+  text-align: left;
+  border-radius: var(--room-cell-radius);
+  color: rgba(255,255,255,0.86);
+  background: var(--bruno-liquid-cell-background, rgba(255,255,255,0.055));
+  border: var(--bruno-liquid-cell-border, 1px solid rgba(255,255,255,0.11));
+  box-shadow: var(--bruno-liquid-cell-shadow, inset 0 1px 0 rgba(255,255,255,0.08));
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
   min-height: 0;
   grid-template-columns: 60px minmax(0, 1fr);
   column-gap: 11px;
@@ -751,9 +878,30 @@ button {
   box-shadow: var(--bruno-liquid-cell-active-warm-shadow, inset 0 1px 0 rgba(255,255,255,0.22), inset 1px 0 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.08), 0 0 20px rgba(255,183,77,0.17) );
 }
 .lights-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 0fr;
+  gap: 0;
+  transition: grid-template-rows 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
   justify-items: stretch;
 }
 .lights-zone-rail {
+  position: relative;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 10px;
+  padding: 9px 7px;
+  overflow: hidden;
+  border-radius: var(--room-cell-radius);
+  color: rgba(255,255,255,0.74);
+  background: linear-gradient(145deg, rgba(255,255,255,0.072), rgba(255,255,255,0.026)), rgba(8,14,26,0.50);
+  border: 1px solid rgba(255,224,160,0.13);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), inset 0 -1px 0 rgba(255,200,100,0.045), 0 12px 26px rgba(0,0,0,0.20);
+  backdrop-filter: blur(22px) saturate(1.34);
+  -webkit-backdrop-filter: blur(22px) saturate(1.34);
   display: grid;
 }
 .lights-zone-rail::before {
@@ -891,6 +1039,13 @@ button {
   transform: translateY(-1px);
 }
 .light-icon {
+  grid-area: icon;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  --light-color: var(--state-icon-color, #9da0a2);
+  color: rgba(255,255,255,0.74);
   width: 60px;
   height: 60px;
 }
@@ -963,6 +1118,13 @@ to {
 }
 }
 .light-tile strong {
+  grid-area: title;
+  min-width: 0;
+  align-self: end;
+  line-height: 1.12;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 14.8px;
 }
 .light-tile small {
@@ -1053,6 +1215,8 @@ to {
   z-index: 2;
 }
 .camera-row-copy {
+  display: grid;
+  gap: 4px;
   left: 14px;
   right: 14px;
   bottom: 14px;
@@ -1124,6 +1288,9 @@ to {
   min-width: 0;
 }
 .media-source {
+  margin-top: 2px;
+  color: white;
+  font-weight: 800;
   font-size: 14px;
 }
 .media-title {
@@ -1356,6 +1523,8 @@ to {
   border-radius: 13px;
 }
 .state-chip {
+  align-self: start;
+  min-height: 28px;
   max-width: 76px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1386,6 +1555,13 @@ to {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
 }
 .temperature-slider {
+  min-width: 0;
+  width: 100%;
+  display: block;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
   margin-bottom: 3px;
 }
 .temperature-slider input {
@@ -1394,6 +1570,9 @@ to {
   accent-color: rgb(96,165,250);
 }
 .fan-label {
+  display: block;
+  color: rgba(255,255,255,0.90);
+  font-weight: 800;
   margin-top: 3px;
   font-size: 12px;
 }
@@ -1443,6 +1622,10 @@ to {
   box-shadow: var(--bruno-liquid-control-blue-shadow, inset 0 1px 0 rgba(255,255,255,0.12), 0 0 14px rgba(96,165,250,0.16) );
 }
 .climate-stepper {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  align-items: center;
+  overflow: hidden;
   margin-bottom: 4px;
 }
 .climate-stepper button {
@@ -1458,6 +1641,9 @@ to {
   font-weight: 800;
 }
 .fan-mode {
+  color: rgba(255,255,255,0.74);
+  font-size: 11px;
+  font-weight: 800;
   aspect-ratio: 1;
   min-height: 0;
   height: auto;
@@ -1560,6 +1746,7 @@ to {
   grid-template-rows: auto minmax(0, 1fr);
 }
 .status-rail {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   min-height: 68px;
 }
 .status-item {
@@ -1572,6 +1759,7 @@ to {
   overflow: visible;
 }
 .room-subview {
+  grid-template-rows: auto;
   grid-template-columns: 1fr;
   grid-template-areas: "left" "right";
   padding: 8px;
@@ -1596,6 +1784,7 @@ to {
   grid-template-columns: 1fr;
 }
 .curtain-control-row {
+  align-items: stretch;
   grid-template-columns: 1fr;
   gap: 10px;
 }
@@ -3581,10 +3770,24 @@ to {
 }
 }
 .lights-dock {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 0 10px;
   min-height: 52px;
 }
 .lights-dock-id {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
   gap: 9px;
 }
 .lights-dock-actions {
@@ -3593,6 +3796,13 @@ to {
   gap: 8px;
 }
 .lights-dock-chevron {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
   width: 22px;
   height: 22px;
   color: rgba(255,255,255,0.55);
@@ -3611,6 +3821,10 @@ to {
   overflow: hidden;
 }
 .lights-scroll {
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 10px 10px 10px;
 }
 .lights-scroll::-webkit-scrollbar {
@@ -3622,6 +3836,8 @@ to {
   border-top: 1px solid rgba(255,255,255,0.10);
 }
 .section-head {
+  display: grid;
+  align-items: center;
   grid-template-columns: 34px minmax(0, 1fr) auto;
   gap: 8px;
   padding: 0 10px 8px;
@@ -3659,11 +3875,20 @@ to {
   color: rgba(255,255,255,0.46);
 }
 .light-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   width: calc(100% - 20px);
   margin-inline: 10px;
   gap: 4px;
 }
 .light-cell {
+  display: grid;
+  align-items: center;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   grid-template-columns: 20px minmax(0, 1fr) auto;
   gap: 7px;
   padding: 0 8px;
@@ -3675,12 +3900,18 @@ to {
   grid-column: 1 / -1;
 }
 .light-cell.has-rule-top {
+  border-top: 1px solid rgba(255,255,255,0.075);
   border-top-color: var(--bruno-subview-cartela-inner-border-color, rgba(255,255,255,0.16));
 }
 .light-cell.has-rule-left {
+  border-left: 1px solid rgba(255,255,255,0.075);
   border-left-color: var(--bruno-subview-cartela-inner-border-color, rgba(255,255,255,0.16));
 }
 .lc-icon {
+  display: grid;
+  place-items: center start;
+  --light-color: #9da0a2;
+  color: var(--light-color);
   width: 20px;
 }
 .light-cell.is-on .lc-icon {
@@ -3689,6 +3920,10 @@ to {
   filter: drop-shadow(0 0 7px rgba(240,192,64,0.28));
 }
 .lc-name {
+  min-width: 0;
+  font-weight: 600;
+  color: rgba(255,255,255,0.90);
+  text-overflow: ellipsis;
   font-size: 13.5px;
   line-height: 1.15;
   white-space: normal;
@@ -3698,10 +3933,22 @@ to {
   -webkit-line-clamp: 2;
 }
 .lc-switch {
+  box-sizing: border-box;
+  padding: 0 2px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.13);
+  display: grid;
+  align-items: center;
+  transition: background 180ms ease, border-color 180ms ease;
   width: 32px;
   height: 19px;
 }
 .lc-knob {
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  transform: translateX(0);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
   width: 14px;
   height: 14px;
 }
@@ -4104,6 +4351,8 @@ export const SUBVIEW_PC_CSS = css`
 /** Sobreposicao do comodo sala: 13 regras que divergem da base. */
 const SOBREPOSICAO_SALA = css`
 :host([data-room='sala']) .room-subview {
+  width: 100%;
+  overflow: hidden;
   --room-gap: 10px;
   display: grid;
   height: 100%;
@@ -4216,6 +4465,8 @@ const SOBREPOSICAO_SALA = css`
 /** Sobreposicao do comodo office: 16 regras que divergem da base. */
 const SOBREPOSICAO_OFFICE = css`
 :host([data-room='office']) .room-subview {
+  width: 100%;
+  overflow: hidden;
   --room-gap: 10px;
   display: grid;
   height: 100%;
@@ -4342,6 +4593,7 @@ const SOBREPOSICAO_OFFICE = css`
 /** Sobreposicao do comodo cozinha: 56 regras que divergem da base. */
 const SOBREPOSICAO_COZINHA = css`
 :host([data-room='cozinha']) .room-subview {
+  width: 100%;
   --room-gap: 10px;
   display: grid;
   height: 100%;
@@ -4662,6 +4914,8 @@ const SOBREPOSICAO_COZINHA = css`
 /** Sobreposicao do comodo casal: 13 regras que divergem da base. */
 const SOBREPOSICAO_CASAL = css`
 :host([data-room='casal']) .room-subview {
+  width: 100%;
+  overflow: hidden;
   --room-gap: 10px;
   display: grid;
   height: 100%;
@@ -4779,6 +5033,8 @@ const SOBREPOSICAO_CASAL = css`
 /** Sobreposicao do comodo marina: 13 regras que divergem da base. */
 const SOBREPOSICAO_MARINA = css`
 :host([data-room='marina']) .room-subview {
+  width: 100%;
+  overflow: hidden;
   --room-gap: 10px;
   display: grid;
   height: 100%;
@@ -4893,6 +5149,8 @@ const SOBREPOSICAO_MARINA = css`
 /** Sobreposicao do comodo miguel: 13 regras que divergem da base. */
 const SOBREPOSICAO_MIGUEL = css`
 :host([data-room='miguel']) .room-subview {
+  width: 100%;
+  overflow: hidden;
   --room-gap: 10px;
   display: grid;
   height: 100%;

@@ -657,6 +657,75 @@ export class BrunoRoomSubview extends LitElement {
     this._hass.callService('cover', 'set_cover_position', { entity_id: id, position: posicao }, { entity_id: id });
   }
 
+  private _cameraPrincipal(): string | undefined {
+    const e = this._sub?.entities as Record<string, unknown> | undefined;
+    const v = e?.['cameraMain'] ?? e?.['cameraPrimary'];
+    return typeof v === 'string' ? v : undefined;
+  }
+
+  private _cameraSecundaria(): string | undefined {
+    const e = this._sub?.entities as Record<string, unknown> | undefined;
+    const v = e?.['cameraSecondary'];
+    return typeof v === 'string' ? v : undefined;
+  }
+
+  /**
+   * Imagem ao vivo de uma câmera.
+   *
+   * As subviews atuais montam um `<hui-image>` do próprio Home Assistant, com
+   * `cameraView: 'live'` — é ele que abre o stream. Aqui o elemento é criado no
+   * `updated()`, porque `hui-image` é um custom element do HA e precisa receber
+   * `hass` por propriedade, não por atributo.
+   */
+  private _renderFeed(entityId: string | undefined, classe: string) {
+    if (!entityId) return nothing;
+    return html`<div
+      class="camera-main camera-feed ${classe}"
+      data-camera-live-mount
+      data-camera-entity=${entityId}
+    ></div>`;
+  }
+
+  override updated(): void {
+    this._montarFeeds();
+  }
+
+  /**
+   * Cria e sincroniza os `<hui-image>` dos pontos de montagem.
+   *
+   * Reaproveita o mesmo elemento entre renders: recriá-lo a cada atualização
+   * reiniciaria o stream e piscaria a imagem.
+   */
+  private _montarFeeds(): void {
+    const raiz = this.shadowRoot;
+    if (!raiz || !this._hass) return;
+    if (!customElements.get('hui-image')) return;
+
+    for (const ponto of raiz.querySelectorAll<HTMLElement>('[data-camera-live-mount]')) {
+      const entityId = ponto.dataset['cameraEntity'];
+      if (!entityId) continue;
+      let el = this._feeds.get(entityId);
+      if (!el) {
+        el = document.createElement('hui-image') as HTMLElement & Record<string, unknown>;
+        el.classList.add('camera-live-el');
+        (el as Record<string, unknown>)['cameraView'] = 'live';
+        try {
+          (el as Record<string, unknown>)['fitMode'] = 'cover';
+        } catch {
+          /* versões antigas do HA não têm fitMode */
+        }
+        this._feeds.set(entityId, el);
+      }
+      (el as Record<string, unknown>)['hass'] = this._hass;
+      if ((el as Record<string, unknown>)['cameraImage'] !== entityId) {
+        (el as Record<string, unknown>)['cameraImage'] = entityId;
+      }
+      if (el.parentElement !== ponto) ponto.appendChild(el);
+    }
+  }
+
+  private _feeds = new Map<string, HTMLElement & Record<string, unknown>>();
+
   /** Câmeras: cabeçalho com o menu de três pontos + palco com feed e PIP. */
   private _renderCameras() {
     return html`
@@ -676,8 +745,10 @@ export class BrunoRoomSubview extends LitElement {
           </button>
         </div>
         <div class="camera-stage camera-pip-stage">
-          <div class="camera-main camera-feed camera-primary-feed is-private"></div>
-          <div class="camera-main camera-feed camera-pip-feed is-private"></div>
+          ${this._renderFeed(this._cameraPrincipal(), 'camera-primary-feed')}
+          ${this._cameraSecundaria()
+            ? this._renderFeed(this._cameraSecundaria(), 'camera-pip-feed')
+            : nothing}
         </div>
       </div>
     `;

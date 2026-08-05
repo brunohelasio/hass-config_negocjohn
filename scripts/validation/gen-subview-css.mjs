@@ -201,26 +201,37 @@ function serializar(bs, prefixo = '') {
   return linhas.join('\n');
 }
 
-// A base sai na ORDEM DA SALA (o arquivo mais completo), sem repetir chave.
-const vistas = new Set();
-const base = [];
-for (const b of porComodo['sala']) {
-  const k = chave(b);
-  if (vistas.has(k) || !ehBase(k)) continue;
-  vistas.add(k);
-  base.push(fundidoDe['sala'].get(k));
+/**
+ * Ordem de emissão: a posição da ÚLTIMA aparição de cada chave.
+ *
+ * Entre seletores DIFERENTES de mesma especificidade, quem vem depois vence. O
+ * arquivo da Sala declara `.light-grid` com `width: calc(100% - 20px)` e, mais
+ * abaixo, um grupo `.lights-body-clip, .lights-scroll, .light-section,
+ * .light-grid { width: 100% }`. Emitindo cada chave na posição da PRIMEIRA
+ * aparição, o grupo passava a vir depois e o `calc` era anulado — a grade de
+ * luzes ficava 20px mais larga e o botão encostava na borda do cartão.
+ */
+function emOrdemDeUltimaAparicao(comodo, filtro) {
+  const ultimaPosicao = new Map();
+  porComodo[comodo].forEach((b, i) => ultimaPosicao.set(chave(b), i));
+  return [...ultimaPosicao.entries()]
+    .filter(([k]) => filtro(k))
+    .sort((a, b) => a[1] - b[1])
+    .map(([k]) => fundidoDe[comodo].get(k));
 }
+
+const base = emOrdemDeUltimaAparicao('sala', ehBase);
 
 const condicionais = {};
 for (const { nome, dono } of CONDICIONAIS) {
   const vistasC = new Set();
   const lista = [];
   for (const c of COMODOS) {
-    for (const b of porComodo[c]) {
+    for (const b of emOrdemDeUltimaAparicao(c, (k) => dono(donos.get(k), k))) {
       const k = chave(b);
-      if (vistasC.has(k) || !dono(donos.get(k), k)) continue;
+      if (vistasC.has(k)) continue;
       vistasC.add(k);
-      lista.push(fundidoDe[c].get(k));
+      lista.push(b);
     }
   }
   condicionais[nome] = lista;
@@ -233,14 +244,7 @@ for (const { nome, dono } of CONDICIONAIS) {
 const jaEmitidas = new Set([...base, ...Object.values(condicionais).flat()].map(chave));
 const sobreposicoes = {};
 for (const c of COMODOS) {
-  const vistasS = new Set();
-  const lista = [];
-  for (const b of porComodo[c]) {
-    const k = chave(b);
-    if (vistasS.has(k) || jaEmitidas.has(k)) continue;
-    vistasS.add(k);
-    lista.push(fundidoDe[c].get(k));
-  }
+  const lista = emOrdemDeUltimaAparicao(c, (k) => !jaEmitidas.has(k));
   if (lista.length) sobreposicoes[c] = lista;
 }
 

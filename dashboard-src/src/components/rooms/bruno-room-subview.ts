@@ -74,7 +74,63 @@ export class BrunoRoomSubview extends LitElement {
   override connectedCallback(): void {
     super.connectedCallback();
     this._aplicarAtributos();
+    // O material do tema NÃO vem do CSS gerado: vem de um módulo global, que
+    // marca o host com data-bruno-subview-surface-theme e reage à troca de tema.
+    // Sem estas duas chamadas as câmeras, o hub e o A/C perdem a pele de tile do
+    // Josh e viram contornos — foi exatamente o que aconteceu na primeira
+    // publicação. Ver CLAUDE.md, seções REV.14 a REV.18.
+    const g = globalThis as {
+      BrunoLiquidGlass?: { apply?: () => void };
+      BrunoSurfaceMaterial?: { connect?: (h: unknown) => void; disconnect?: (h: unknown) => void };
+    };
+    g.BrunoLiquidGlass?.apply?.();
+    g.BrunoSurfaceMaterial?.connect?.(this);
+    this._injetarMaterial();
   }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    const g = globalThis as {
+      BrunoSurfaceMaterial?: { disconnect?: (h: unknown) => void };
+    };
+    g.BrunoSurfaceMaterial?.disconnect?.(this);
+  }
+
+  /**
+   * Injeta a folha de material do tema no shadow root.
+   *
+   * `subviewStyles()` devolve o CSS da pele das tiles (câmeras, hub, A/C,
+   * cartela de iluminação). As subviews atuais o interpolam dentro do próprio
+   * `<style>`; aqui ele entra como folha adotada, depois das folhas estáticas,
+   * para manter a mesma ordem de cascata.
+   *
+   * O módulo pode ainda não ter carregado quando o componente conecta — daí a
+   * segunda tentativa no próximo quadro.
+   */
+  private _injetarMaterial(tentativa = 0): void {
+    const raiz = this.shadowRoot;
+    if (!raiz || this._materialInjetado) return;
+    const g = globalThis as { BrunoSurfaceMaterial?: { subviewStyles?: () => string } };
+    const css = g.BrunoSurfaceMaterial?.subviewStyles?.();
+    if (!css) {
+      if (tentativa < 20) window.setTimeout(() => this._injetarMaterial(tentativa + 1), 60);
+      return;
+    }
+    try {
+      const folha = new CSSStyleSheet();
+      folha.replaceSync(css);
+      raiz.adoptedStyleSheets = [...raiz.adoptedStyleSheets, folha];
+      this._materialInjetado = true;
+    } catch {
+      // Navegador sem CSSStyleSheet construível: cai para um <style>.
+      const el = document.createElement('style');
+      el.textContent = css;
+      raiz.appendChild(el);
+      this._materialInjetado = true;
+    }
+  }
+
+  private _materialInjetado = false;
 
   /**
    * Os atributos do host são o interruptor de cada bloco de CSS.

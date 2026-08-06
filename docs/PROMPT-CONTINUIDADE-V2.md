@@ -4,7 +4,7 @@
 decisões já tomadas, tudo o que foi implementado, o ponto exato em que o
 desenvolvimento parou e como prosseguir.
 
-**Data de corte:** 2026-08-06
+**Data de corte:** 2026-08-06 · Fases 5c, 5d e 5e **FECHADAS** e commitadas · próxima: **6.0**
 
 ---
 
@@ -110,7 +110,7 @@ caminho original registrado.
 | 5a | Piloto: um tile de cômodo pela arquitetura nova |
 | 5b | **8 tiles da Home → 1 componente** — validado pelo usuário |
 | 5c | **6 subviews de ~8.900 linhas → 1 componente parametrizado** |
-| 5d (parcial) | Alinhamento da faixa de status da Home; espaçamento da rail |
+| 5d | **Fechamento:** alinhamento da faixa de status, espaçamento da rail, 1,8 MB retirados do carregamento, baseline congelada |
 | 5e.0 | **Contratos mínimos de dispositivo** (registry) |
 | 5e.1 | Power na rail das subviews |
 | 5e.2 | Faixa de ações rápidas da Home removida |
@@ -316,16 +316,19 @@ medir → reproduzir → comparar (antigo e novo na MESMA página, no mesmo inst
 
 ## 7. Onde o desenvolvimento parou (data de corte — confirmar, §0)
 
-**Fases 5c e 5e implementadas e publicadas. Falta a validação visual no tablet.**
+**Fases 5c, 5d e 5e FECHADAS, validadas no tablet pelo usuário e COMMITADAS.**
 
 ```
-branch: main   commit: b5a00831
-Bundle:  config/www/dashboard/bruno-dashboard.CbUinJPJ.js
-Shell:   bruno-shell.js?v=20260806-scrim-forte-1
-Badges:  bruno-top-badges-card.js?v=20260806-badges-rev6-1
+branch: main
+commit: b0ceba1e   feat(5c/5d/5e): conteudo vivo das subviews, refinamento
+                   funcional e fechamento
+tag:    baseline-5e-fechada     <- baseline congelada
+Bundle: config/www/dashboard/bruno-dashboard.Duzbu9AO.js
+Árvore de trabalho LIMPA. VM sincronizada.
 Trocar o bundle exige REINICIAR o Home Assistant.
-33 arquivos alterados/novos, NÃO commitados.
 ```
+
+**Não há pendência anterior à Fase 6.0.** A continuidade começa direto na 6.0.
 
 ### 7.1 Última medição da 5c
 
@@ -340,7 +343,35 @@ As 3 são o mesmo desvio deliberado: os arquivos originais rotulam a fonte de TV
 como "TV da sala" em todos os cômodos, inclusive no Q. Miguel, onde é falso.
 Fora da Sala o rótulo passou a ser "TV".
 
-### 7.2 O que a última rodada mudou (2026-08-06)
+### 7.2 Decisões do usuário no fechamento — não reabrir sem determinação dele
+
+| item | decisão |
+|---|---|
+| Validação visual no tablet | **aprovada**, inclusive o alinhamento da faixa de status |
+| Proporção das colunas da subview | **encerrada sem mudança.** Jogar o respiro para a direita desequilibraria a margem esquerda. Se voltar ao assunto, é decisão nova |
+| Espaçamento da rail | aprovado em 2px |
+| Botão Apps da TV | aprovado como está |
+| Estilo visual do popup Dispositivos | aceito para a fase de transição; ele quer repensar depois |
+| Cena "Apagar todas as luzes" | **autorizou criar** — feita no padrão já existente |
+
+### 7.3 O que a Fase 5e entregou
+
+| # | entrega |
+|---|---|
+| 5e.0 | Contratos mínimos de dispositivo (registry) + 16 testes |
+| 5e.1 | Power na rail das subviews |
+| 5e.2 | Faixa de ações rápidas removida da Home |
+| 5e.3 | Cena "Apagar todas as luzes" + gate de dependência |
+| 5e.4 | Wi-Fi absorvido pelo botão Rede, em cadeia |
+| 5e.5 | "Atualizar" migrado para Configurações |
+| 5e.6 | Popup **Dispositivos** substitui o popup Sistema |
+
+A cena segue o padrão já existente: script `bruno_scene_*` em
+`packages/bruno_scenes.yaml`, **não** entidade `scene.` — o painel de Cenas lista
+scripts. Criada com autorização expressa (a regra §2.1 proíbe mexer em packages
+sem ela).
+
+### 7.4 O que a Fase 5d fechou (2026-08-06)
 
 | # | mudança | arquivo |
 |---|---|---|
@@ -353,14 +384,26 @@ Fora da Sala o rótulo passou a ser "TV".
 | 7 | Faixa de ações rápidas comentada; bloco inferior com uma linha | `v2/bento_bottom_block.yaml` |
 | 8 | Rail: item Sistema → **Dispositivos** | `views/shell/rail.yaml` |
 | 9 | Painel Dispositivos, registry, controles, gate da cena | `dashboard-src/` |
+| 10 | **1,8 MB retirados do carregamento:** os 6 módulos de subview e as views legadas que os usavam | `configuration.yaml`, `ui-lovelace-main.yaml` |
 
-### 7.3 Rollback
+**Atenção no item 10** — eu errei o escopo na primeira tentativa e a correção
+vale como regra: os **8 cards de cômodo continuam carregados**, porque o layout
+do TELEFONE os usa (`bento_comodos_phone` → `bento_comodos_matriz` →
+`main-grid/bento_*.yaml`). Só as 6 subviews saíram.
+
+> **Retirar do carregamento exige checar quem CONSOME, não só quem DECLARA.**
+> `grep -rn "custom:<tag>" config/dashboards/` antes de comentar a linha.
+
+### 7.5 Rollback
 
 - **Bundle:** em `config/configuration.yaml`, voltar para a linha `# ANTERIOR:`
   comentada logo acima.
-- **Fase 5c inteira:** em `config/dashboards/views/bento_shell.yaml`, comentar o
-  bloco `FASE 5c` e descomentar o `ANTERIOR`. Os seis arquivos originais seguem
-  no disco e carregados — um comando, sem reinício.
+- **Tudo desta entrega:** `git revert b0ceba1e`, ou voltar à tag
+  `baseline-5e-fechada`.
+- **Fase 5c isolada:** em `config/dashboards/views/bento_shell.yaml`, comentar o
+  bloco `FASE 5c` e descomentar o `ANTERIOR` — mas os 6 módulos antigos saíram do
+  `extra_module_url` na 5d; descomentar junto as 6 linhas marcadas
+  `RETIRADO (Fase 5d.3)`.
 - **Ações rápidas:** descomentar o bloco em `v2/bento_bottom_block.yaml` **e**
   devolver `grid-template-rows: calc(23vh - 24px) 54px`.
 - **Grid da Home:** as revisões anteriores estão comentadas in-place (rev.3 a
@@ -368,24 +411,21 @@ Fora da Sala o rótulo passou a ser "TV".
 
 ---
 
-## 8. O que fazer a seguir — sequência corrigida
+## 8. O que fazer a seguir — comece pela 6.0
 
-### 8.1 Fase 5d — fechar a 5c e a 5e
+**As fases 5c, 5d e 5e estão fechadas.** Não há pendência anterior. A próxima
+ação é a **Fase 6.0 — baseline de runtime e carregador estável** (§8.3).
 
-| # | ação | nota |
-|---|---|---|
-| 5d.1 | **Validação visual no tablet**: seis subviews + Home + popup Dispositivos + contraste dos popups | só o usuário pode |
-| 5d.2 | Proporção das colunas da subview | o respiro da rail caiu para 2px; o ganho se distribui ~71%/29% e o usuário quer mais na coluna direita. **Precisa do olho dele** |
-| 5d.3 | Retirar do `extra_module_url` os 15 módulos já substituídos | 6 subviews + 9 cards de cômodo = **1,8 MB** de parse morto a cada carregamento. Comentar 15 linhas |
-| 5d.4 | Espaçamento da rail + badges (A2); botão Apps da TV (A6) | pendências antigas |
-| 5d.5 | Criar a cena `scene.apagar_todas_as_luzes` no HA | **é do usuário** — o dashboard só reporta a falta (gate 5e.3) |
-| 5d.6 | Consolidar o commit e congelar a baseline | — |
+### 8.1 Antes da primeira linha de código
+
+1. Rodar os comandos do §0 e confirmar que a árvore está limpa e o bundle bate.
+2. Ler `docs/ROTEIRO-CONSOLIDADO-V3.md` (plano) e as armadilhas do §5 daqui.
+3. Confirmar com o usuário o escopo da 6.0 antes de publicar qualquer coisa —
+   editar e testar localmente não precisa de autorização; publicar precisa (§2.1).
 
 ### 8.2 Sequência completa
 
 ```
-5d   Fechamento da 5c e 5e
- ↓
 6.0  Baseline de runtime + carregador estável + sondagem das câmeras
  ↓
 6.1  Estado seletivo e ciclo de vida

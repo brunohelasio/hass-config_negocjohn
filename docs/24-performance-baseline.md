@@ -121,3 +121,98 @@ Antes de copiar:
 2. deixe rodar alguns minutos — as amostras são de 5 em 5 segundos.
 
 Console, se preciso: `brunoRuntime.texto()`.
+
+---
+
+## Baseline 2 — 2026-08-06, sessão mais longa (466 s)
+
+| componente | instâncias | renders | média | pior | timers | requisições |
+|---|---|---|---|---|---|---|
+| `bruno-room-subview` | 8 / 8 | 21 | 7,9 ms | 32,6 ms | 16 / 16 | 3, **pior 5.638 ms** |
+| `bruno-room-tile` | 16 / 8 | **2.248** | 0,2 ms | 15,7 ms | 0 / 0 | — |
+| `bruno-devices-panel` | 1 / 1 | 3 | 0,9 ms | 2,4 ms | 0 / 0 | — |
+
+| ambiente | valor |
+|---|---|
+| Memória usada | **110,6 MB** |
+| **Crescimento** | **101,1 MB em 466 s** |
+| Tarefas longas | **178**, somando 16.165 ms, pior **444 ms** |
+| Vazamentos | instâncias 8 (os tiles da Home) · timers 0 · listeners 0 · assinaturas 0 |
+
+---
+
+## ⚠️ Correção da Baseline 1 — a memória É medível
+
+Na Baseline 1 eu concluí que `performance.memory` era quantizada demais nesta
+WebView e a tirei do conjunto confiável. **Estava errado.**
+
+O que aconteceu: naquela sessão o valor ficou em `10.000.000` nas 73 amostras.
+Eu li isso como "número congelado". Era outra coisa — o valor **é** grosso
+(arredondado a blocos), e naquela janela o consumo não saiu do primeiro bloco.
+
+Com 466 s a leitura se move e é inequívoca:
+
+```
+primeira:  10.000.000    (10 MB)
+última:   116.000.000   (116 MB)
+crescimento: 106.000.000  (101 MB)
+```
+
+**Resolução baixa não é ausência de sinal.** Concluir "não dá para medir" a
+partir de uma janela curta foi o erro — e o tipo de erro que este documento
+existe para evitar.
+
+### E o número é preocupante
+
+**101 MB em menos de 8 minutos**, num orçamento de app que a auditoria estimou
+em ~253 MB. Nesse ritmo, um painel de parede ligado o dia inteiro estoura.
+
+Não é o mesmo que vazamento de recurso: os contadores de instância, timer e
+listener estão todos zerados. O crescimento é de **dados**, não de estrutura —
+provavelmente os instantâneos de câmera, que chegam a cada 6,5 s por câmera e
+ficam retidos enquanto houver referência a eles.
+
+**Isto vira alvo nº 1 da Fase 6.1, junto com a latência das câmeras — e as duas
+suspeitas apontam para o mesmo lugar.**
+
+---
+
+## Sondagem das câmeras — resultado, e por que ele ainda não decide
+
+```
+Total 8 · WebRTC 0 · HLS 0 · Só instantâneo 8 · Fora do ar 0
+Todas as 8: "instantaneo · stream"
+```
+
+Duas leituras:
+
+1. **As 8 câmeras estão no ar** — inclusive `camera.qmi_camera_2`. Nenhuma
+   aparece como fora do ar.
+2. **Todas declaram o bit de STREAM**, mas **nenhuma publica
+   `frontend_stream_type`** como atributo de estado.
+
+O segundo ponto torna a sondagem **inconclusiva**, não negativa. "Declara stream
+e não diz o tipo" não é o mesmo que "não tem stream". Em versões recentes do
+Home Assistant esse dado saiu do estado da entidade e passou a ser respondido
+pelo WebSocket, em `camera/capabilities`.
+
+**Corrigido:** a sondagem agora pergunta ao HA por esse comando e usa a resposta;
+se ele não existir nesta versão, cai de volta na leitura por atributo, sem
+quebrar o painel. Recolher para fechar a 6.0.5.
+
+---
+
+## Q. Miguel — a câmera existe e está no ar
+
+`camera.qmi_camera_2` aparece na sondagem, no ar, com stream declarado, igual às
+outras sete. E a configuração dela no dashboard é idêntica à do Q. Marina e à do
+Q. Casal.
+
+**Então não é entidade ausente nem cômodo mal configurado.** Sobram:
+
+- o instantâneo daquela câmera especificamente demora mais que o teto e é
+  abandonado — coerente com a média de 4,2 s e o pior de 5,6 s desta sessão;
+- a câmera responde ao HA mas não entrega quadro (offline no lado do fabricante).
+
+O caminho é abrir a subview do Q. Miguel, esperar, e comparar `requisições:
+falhas` antes e depois. Se a falha aparecer, é timeout — e cai no mesmo alvo nº 1.

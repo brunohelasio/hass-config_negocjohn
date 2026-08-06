@@ -9,7 +9,7 @@ import {
   type EnvironmentInfo,
 } from './entity-check';
 import { instantaneo } from './runtime';
-import { sondarCameras } from './runtime/camera-probe';
+import { sondarCameras, sondarCamerasProfundo, type SondagemDeCameras } from './runtime/camera-probe';
 
 /**
  * Painel de diagnóstico — primeiro componente da arquitetura nova.
@@ -217,8 +217,22 @@ export class BrunoDiagnostics extends LitElement {
    * Responde, antes de escrever qualquer player, se este Home Assistant
    * consegue WebRTC ou se o único caminho é HLS transcodificado na VM.
    */
+  /** Resultado da sondagem profunda, quando ja respondeu. */
+  private _sondaProfunda: SondagemDeCameras | undefined;
+  private _sondando = false;
+
   private _cameras() {
-    const s = sondarCameras(this._hass);
+    // A leitura por atributo e imediata; a profunda pergunta ao HA pelo
+    // WebSocket e chega depois. Dispara uma vez e redesenha ao responder.
+    if (!this._sondaProfunda && !this._sondando && this._hass) {
+      this._sondando = true;
+      void sondarCamerasProfundo(this._hass).then((r) => {
+        this._sondaProfunda = r;
+        this._sondando = false;
+        this.requestUpdate();
+      });
+    }
+    const s = this._sondaProfunda ?? sondarCameras(this._hass);
     if (!s.cameras.length) return nothing;
     return html`
       <div>

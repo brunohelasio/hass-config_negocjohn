@@ -58,6 +58,60 @@ function caminhoDe(atributos: Record<string, unknown>, estado: string): CaminhoD
  * Puro: recebe o `hass` e devolve o retrato. Sem rede, sem efeito — dá para
  * testar e dá para rodar no painel a qualquer momento.
  */
+/**
+ * Sondagem PROFUNDA, pela API do Home Assistant.
+ *
+ * A leitura por atributo (`sondarCameras`) ficou INCONCLUSIVA neste HA: as 8
+ * cameras declaram o bit de STREAM em `supported_features`, mas nao publicam
+ * `frontend_stream_type` como atributo de estado. Em versoes recentes esse dado
+ * saiu do estado e passou a ser respondido pelo WebSocket, em
+ * `camera/capabilities`.
+ *
+ * Sem isto, a decisao da Fase 6.2B seria tomada no escuro: "declara stream" nao
+ * diz se o caminho e WebRTC (barato, sem transcodificar) ou HLS (transcodifica
+ * na VM, que ja e o gargalo).
+ *
+ * Falha em silencio e devolve a sondagem rasa — um painel de diagnostico que
+ * quebra a tela nao diagnostica nada.
+ */
+export async function sondarCamerasProfundo(hass: Hass | undefined): Promise<SondagemDeCameras> {
+  const raso = sondarCameras(hass);
+  const chamar = hass?.callWS;
+  if (!chamar || !raso.cameras.length) return raso;
+
+  const cameras = await Promise.all(
+    raso.cameras.map(async (c) => {
+      if (c.caminho === 'indisponivel') return c;
+      try {
+        const cap = await chamar<{ frontend_stream_types?: string[] }>({
+          type: 'camera/capabilities',
+          entity_id: c.entityId,
+        });
+        const tipos = cap?.frontend_stream_types ?? [];
+        if (tipos.includes('web_rtc')) return { ...c, caminho: 'web_rtc' as const };
+        if (tipos.includes('hls')) return { ...c, caminho: 'hls' as const };
+        return c;
+      } catch {
+        // Comando ausente nesta versao, ou camera sem resposta: fica o que a
+        // leitura por atributo disse.
+        return c;
+      }
+    }),
+  );
+
+  const resumo: Record<CaminhoDeVideo, number> = {
+    web_rtc: 0, hls: 0, instantaneo: 0, indisponivel: 0,
+  };
+  for (const c of cameras) resumo[c.caminho]++;
+
+  return {
+    streamCarregado: raso.streamCarregado,
+    cameras,
+    resumo,
+    veredito: vereditoDe(resumo, cameras.length, raso.streamCarregado),
+  };
+}
+
 export function sondarCameras(hass: Hass | undefined): SondagemDeCameras {
   const vazio: SondagemDeCameras = {
     streamCarregado: false,

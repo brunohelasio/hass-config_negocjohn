@@ -68,7 +68,8 @@ frontend:
     # O loader e o manifest.json seguem publicados em www/dashboard/ e podem ser
     # religados trocando as duas linhas abaixo.
     # DESLIGADO: - /local/dashboard/bruno-loader.js
-    - /local/dashboard/bruno-dashboard.BVD0DIRv.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.BVD0DIRv.js
+    - /local/dashboard/bruno-dashboard.CQEdeZDI.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

@@ -4,6 +4,18 @@ import { ROOMS, type RoomConfig } from '@/config/rooms.config';
 import { SUBVIEWS, type SubviewConfig } from '@/config/subviews.config';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
 import {
+  conectou,
+  desconectou,
+  medirRender,
+  intervalo,
+  espera,
+  encerrarTimer,
+  requisicaoManual,
+} from '@/diagnostics/runtime/probe';
+
+/** Nome deste componente no coletor de runtime (Fase 6.0). */
+const SONDA = 'bruno-room-subview';
+import {
   SUBVIEW_BASE_CSS,
   SUBVIEW_APPLIANCES_CSS,
   SUBVIEW_TVHUB_CSS,
@@ -162,8 +174,20 @@ export class BrunoRoomSubview extends LitElement {
     return 12;
   }
 
+  /**
+   * Mede o custo de cada atualização (Fase 6.0.1).
+   *
+   * No `update()`, e não no `render()`: é aqui que o Lit constrói E aplica o
+   * DOM. Medir só o `render()` mediria a montagem do template, que é a parte
+   * barata — e o número enganaria.
+   */
+  override update(mudancas: Map<string, unknown>): void {
+    medirRender(SONDA, () => super.update(mudancas));
+  }
+
   override connectedCallback(): void {
     super.connectedCallback();
+    conectou(SONDA);
     this._aplicarAtributos();
     // O material do tema NÃO vem do CSS gerado: vem de um módulo global, que
     // marca o host com data-bruno-subview-surface-theme e reage à troca de tema.
@@ -190,8 +214,7 @@ export class BrunoRoomSubview extends LitElement {
    */
   private _iniciarTimerRelogio(): void {
     if (this._timerRelogio) return;
-    // eslint-disable-next-line no-restricted-syntax
-    this._timerRelogio = window.setInterval(() => {
+    this._timerRelogio = intervalo(SONDA, () => {
       const minuto = this._hora();
       if (minuto === this._ultimoMinuto) return;
       this._ultimoMinuto = minuto;
@@ -204,17 +227,18 @@ export class BrunoRoomSubview extends LitElement {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
+    desconectou(SONDA);
     const g = globalThis as {
       BrunoSurfaceMaterial?: { disconnect?: (h: unknown) => void };
     };
     g.BrunoSurfaceMaterial?.disconnect?.(this);
     this._pararTimerCameras();
     if (this._timerLuzes) {
-      window.clearTimeout(this._timerLuzes);
+      encerrarTimer(SONDA, this._timerLuzes);
       this._timerLuzes = undefined;
     }
     if (this._timerRelogio) {
-      window.clearInterval(this._timerRelogio);
+      encerrarTimer(SONDA, this._timerRelogio);
       this._timerRelogio = undefined;
     }
   }
@@ -231,13 +255,12 @@ export class BrunoRoomSubview extends LitElement {
     // O quadro da câmera não chega por estado do hass — `entity_picture` só muda
     // de token, não de conteúdo. O ciclo é inevitável; o id fica guardado e o
     // `disconnectedCallback` logo abaixo o limpa.
-    // eslint-disable-next-line no-restricted-syntax
-    this._timerCameras = window.setInterval(() => this._atualizarCameras(), INTERVALO_CAMERAS);
+    this._timerCameras = intervalo(SONDA, () => this._atualizarCameras(), INTERVALO_CAMERAS);
   }
 
   private _pararTimerCameras(): void {
     if (!this._timerCameras) return;
-    window.clearInterval(this._timerCameras);
+    encerrarTimer(SONDA, this._timerCameras);
     this._timerCameras = undefined;
   }
 
@@ -252,14 +275,21 @@ export class BrunoRoomSubview extends LitElement {
       const entityId = img.dataset['cameraEntity'];
       if (!base) continue;
       const proxima = comSelo(base, selo);
+      // Instrumentado (Fase 6.0.1): o instantâneo da câmera é a requisição mais
+      // frequente do painel — uma por câmera a cada 6,5s. `fetch` não a
+      // enxerga, porque quem baixa é o próprio elemento de imagem; por isso o
+      // tempo é medido aqui, na mão, e entra no coletor como requisição.
       const carregador = new Image();
+      const t0 = performance.now();
       carregador.onload = () => {
+        requisicaoManual(SONDA, performance.now() - t0, true);
         if (entityId) this._urlsCarregadas[entityId] = proxima;
         img.src = proxima;
         img.removeAttribute('hidden');
         img.classList.add('is-loaded');
         img.closest('.camera-main')?.classList.add('has-loaded-image');
       };
+      carregador.onerror = () => requisicaoManual(SONDA, performance.now() - t0, false);
       carregador.src = proxima;
     }
   }
@@ -278,10 +308,16 @@ export class BrunoRoomSubview extends LitElement {
   private _injetarMaterial(tentativa = 0): void {
     const raiz = this.shadowRoot;
     if (!raiz || this._materialInjetado) return;
+    // A instrumentação da Fase 6.0 mostrou esta cadeia disparando até 1,2s
+    // depois de o componente sair da árvore (20 tentativas de 60ms). Não era
+    // vazamento — os timeouts se encerram sozinhos —, mas era trabalho feito
+    // sobre um componente morto, e o custo aparecia na medição. Sair aqui
+    // encerra a cadeia na hora.
+    if (!this.isConnected) return;
     const g = globalThis as { BrunoSurfaceMaterial?: { subviewStyles?: () => string } };
     const css = g.BrunoSurfaceMaterial?.subviewStyles?.();
     if (!css) {
-      if (tentativa < 20) window.setTimeout(() => this._injetarMaterial(tentativa + 1), 60);
+      if (tentativa < 20) espera(SONDA, () => this._injetarMaterial(tentativa + 1), 60);
       return;
     }
     try {
@@ -617,8 +653,8 @@ export class BrunoRoomSubview extends LitElement {
   private _alternarDock(): void {
     this._lightsOpen = !this._lightsOpen;
     this._luzesAssentadas = false;
-    if (this._timerLuzes) window.clearTimeout(this._timerLuzes);
-    this._timerLuzes = window.setTimeout(() => {
+    encerrarTimer(SONDA, this._timerLuzes);
+    this._timerLuzes = espera(SONDA, () => {
       this._luzesAssentadas = this._lightsOpen;
       this._timerLuzes = undefined;
       this.requestUpdate();

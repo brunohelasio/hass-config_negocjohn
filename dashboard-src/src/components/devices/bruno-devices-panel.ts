@@ -24,6 +24,10 @@ import {
 } from '@/application/device-registry';
 import { DEVICES } from '@/config/devices.config';
 import '@/components/devices/controls';
+import { conectou, desconectou, medirRender } from '@/diagnostics/runtime/probe';
+
+/** Nome deste componente no coletor de runtime (Fase 6.0). */
+const SONDA = 'bruno-devices-panel';
 
 /** Estados que fazem o dispositivo aparecer como ativo na lista. */
 const ATIVO = ['on', 'playing', 'paused', 'idle', 'buffering', 'cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
@@ -94,6 +98,21 @@ export class BrunoDevicesPanel extends LitElement {
     }
     if (this._hass) el.hass = this._hass;
     return el;
+  }
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    conectou(SONDA);
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    desconectou(SONDA);
+  }
+
+  /** Mede o custo de cada atualizacao (Fase 6.0.1). */
+  override update(mudancas: Map<string, unknown>): void {
+    medirRender(SONDA, () => super.update(mudancas));
   }
 
   override render() {

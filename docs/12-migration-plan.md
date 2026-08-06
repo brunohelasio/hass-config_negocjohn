@@ -1017,3 +1017,101 @@ divisória some.
 Desta vez num comentário HTML dentro de template literal no `bruno-shell.js`
 (a palavra `refresh` entre crases) e num comentário CSS dentro do bloco `css`
 do painel de dispositivos. As duas pegas por `check-backtick.mjs --tudo`.
+
+---
+
+## Fase 6.0 — baseline de runtime e carregador estável (2026-08-06)
+
+Bundle `bruno-dashboard.BVD0DIRv.js`, publicado pelo **carregador estável**.
+
+### 6.0.1 — instrumentação, desta vez ligada
+
+Uma tentativa anterior (outra IA) entregou 434 linhas de biblioteca com **zero
+pontos de coleta ligados**, 5 erros de tipo que quebravam o portão e um
+`setInterval` no escopo do módulo que nunca era limpo. Foi descartada.
+
+O que existe agora, em `dashboard-src/src/diagnostics/runtime/`:
+
+| arquivo | papel |
+|---|---|
+| `collector.ts` | depósito e aritmética. Puro, sem DOM, **14 testes** |
+| `probe.ts` | os pontos de coleta: timers com dono, listeners, requisições, render |
+| `observers.ts` | memória e tarefas longas. **Nada roda por importar** — quem liga é `iniciarObservadores()` |
+| `camera-probe.ts` | sondagem de capacidade das câmeras (6.0.5), **8 testes** |
+| `index.ts` | liga tudo e expõe `window.brunoRuntime` |
+
+**Ligado de verdade** em `bruno-room-subview`, `bruno-room-tile` e
+`bruno-devices-panel`: ciclo de vida, `update()` (não `render()` — é no `update`
+que o Lit aplica o DOM), os quatro timers do subview e o carregamento dos
+instantâneos de câmera.
+
+**O número que importa é `vazamentos`**: quanto abriu e não fechou. Contagem
+absoluta não é meta; o critério da 6.1 é esse valor voltar ao inicial depois de
+50 navegações.
+
+### 6.0.2 e 6.0.3 — leitura no tablet
+
+O painel `bruno-diagnostics` ganhou a seção **Runtime**: renders por componente
+com média e pior caso, timers vivos, memória e crescimento, tarefas longas, e o
+que abriu e não fechou. Mais um botão **Copiar baseline**, com caminho
+alternativo por `textarea` — `navigator.clipboard` exige contexto seguro, e o
+tablet fala com o HA por HTTP na rede local.
+
+Sem essa seção os números só existiriam no console, e a 6.0 exige coleta **no
+aparelho**.
+
+### 6.0.4 — carregador estável: fim do reinício a cada bundle
+
+```
+extra_module_url  ->  bruno-loader.js   (nome estável)
+                          |
+                          v
+                     manifest.json      (sempre da rede, cache: no-store)
+                          |
+                          v
+               bruno-dashboard.<hash>.js
+```
+
+Publicar deixa de exigir reiniciar o Home Assistant — **recarregar a página
+basta**. Importa porque o reinício do HA é o evento correlacionado três vezes
+com o Corredor quebrando.
+
+O loader vive em `dashboard-src/loader/` e é copiado pelo passo `npm run
+manifesto`, que roda depois do build. **A cópia em `config/www/dashboard/` não
+deve ser editada** — o `vite build` limpa aquele diretório. Descobri isso da
+maneira difícil: escrevi o loader lá e o build seguinte o apagou.
+
+Verificado ponta a ponta antes de publicar: manifesto lido, bundle importado, os
+4 custom elements registrados, `brunoRuntime` exposto, memória amostrada.
+
+### 6.0.5 — capacidade das câmeras
+
+`camera-probe.ts` lê `frontend_stream_type` de cada entidade e classifica em
+`web_rtc` / `hls` / `instantaneo` / `indisponivel`, com veredito em uma linha no
+painel. É a resposta que a 6.2B precisa **antes** de escrever qualquer player:
+se só houver HLS, a transcodificação roda na VM, e stream vira opt-in medido.
+
+### O que a instrumentação achou na primeira execução
+
+A cadeia de reinjeção do material da subview continuava disparando **até 1,2 s
+depois** de o componente sair da árvore — 20 tentativas de 60 ms, sem ninguém
+cancelar. Não era vazamento (os timeouts se encerram sozinhos), mas era trabalho
+sobre um componente morto. Corrigido com uma saída por `isConnected`.
+
+Serve de aval do método: a instrumentação encontrou algo real na primeira vez em
+que rodou.
+
+### Medição inicial (harness, não é a baseline oficial)
+
+Montar → atualizar → desmontar uma subview da Sala:
+
+| medida | valor |
+|---|---|
+| renders | 2 |
+| pior render | 17,3 ms |
+| timers criados/encerrados | 22 / 22 |
+| instâncias criadas/encerradas | 1 / 1 |
+| vazamentos após remover | 0 |
+
+**A baseline oficial é a do tablet** — WebView, memória do aparelho e CPU da VM
+não se reproduzem no computador. Colher pelo painel, botão "Copiar baseline".

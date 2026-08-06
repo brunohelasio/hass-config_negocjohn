@@ -49,7 +49,20 @@ frontend:
     # ANTERIOR: - /local/dashboard/bruno-dashboard.p0dzlndD.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.NftcYUXq.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.CbUinJPJ.js
-    - /local/dashboard/bruno-dashboard.Duzbu9AO.js
+    # ══ FASE 6.0.4 — CARREGADOR ESTAVEL ══════════════════════════════════
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.Duzbu9AO.js
+    #
+    # O nome do bundle carrega o hash de conteudo do Vite, entao TODA troca de
+    # versao exigia editar esta linha e REINICIAR o Home Assistant — e o
+    # reinicio e o evento correlacionado tres vezes com o Corredor quebrando.
+    #
+    # Agora a linha aponta para um arquivo de NOME ESTAVEL. Ele le
+    # www/dashboard/manifest.json (sempre da rede, nunca do cache) e importa o
+    # bundle com hash. Publicar passa a ser: copiar o .js novo + o manifest.
+    # RECARREGAR A PAGINA BASTA.
+    #
+    # ROLLBACK: comentar a linha abaixo e descomentar a ANTERIOR.
+    - /local/dashboard/bruno-loader.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

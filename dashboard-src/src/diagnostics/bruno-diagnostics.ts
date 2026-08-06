@@ -8,6 +8,8 @@ import {
   type EntityCheckResult,
   type EnvironmentInfo,
 } from './entity-check';
+import { instantaneo } from './runtime';
+import { sondarCameras } from './runtime/camera-probe';
 
 /**
  * Painel de diagnóstico — primeiro componente da arquitetura nova.
@@ -111,6 +113,20 @@ export class BrunoDiagnostics extends LitElement {
         font-size: var(--t-xs);
         font-family: ui-monospace, monospace;
       }
+      .acoes {
+        display: flex;
+        gap: var(--s-2);
+        margin-top: var(--s-3);
+      }
+      .acoes button {
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+        padding: var(--s-2) var(--s-4);
+        border-radius: var(--r-sm, 8px);
+        border: var(--hairline) solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.04);
+      }
       .empty {
         font-size: var(--t-sm);
         opacity: 0.7;
@@ -123,6 +139,131 @@ export class BrunoDiagnostics extends LitElement {
       <dt>${label}</dt>
       <dd class=${cls}>${value}</dd>
     </div>`;
+  }
+
+  /**
+   * Fase 6.0 — a baseline de runtime, legível NO TABLET.
+   *
+   * Sem esta seção os números só existiriam em `window.brunoRuntime`, e a 6.0
+   * exige coleta no aparelho — onde não há console à mão. O botão copia o JSON
+   * inteiro para a área de transferência.
+   */
+  private _runtime() {
+    const s = instantaneo();
+    const mb = (b: number) => (b / 1048576).toFixed(1) + ' MB';
+    const ms = (v: number) => v.toFixed(1) + ' ms';
+    const vaza = s.vazamentos;
+    const total = vaza.instancias + vaza.timers + vaza.listeners + vaza.assinaturas;
+
+    return html`
+      <div>
+        <h2>Runtime</h2>
+        <dl>
+          ${this._row('Build medido', s.build)}
+          ${this._row('Desde o carregamento', (s.desdeOCarregamento / 1000).toFixed(0) + ' s')}
+          ${this._row('Timers vivos', String(s.timersVivos))}
+          ${this._row(
+            'Memória usada',
+            s.memoria.ultima ? mb(s.memoria.ultima.usado) : 'sem leitura',
+            s.memoria.ultima ? '' : 'warn',
+          )}
+          ${this._row(
+            'Crescimento da memória',
+            s.memoria.amostras > 1 ? mb(s.memoria.crescimento) : '—',
+            s.memoria.crescimento > 20 * 1048576 ? 'warn' : 'ok',
+          )}
+          ${this._row(
+            'Tarefas longas',
+            `${s.tarefasLongas.total} · pior ${s.tarefasLongas.pior} ms`,
+            s.tarefasLongas.total === 0 ? 'ok' : 'warn',
+          )}
+          ${this._row(
+            'Aberto e não fechado',
+            String(total),
+            total === 0 ? 'ok' : 'warn',
+          )}
+        </dl>
+
+        ${s.componentes.length
+          ? html`<ul>
+              ${s.componentes.map(
+                (c) => html`<li>
+                  <strong>${c.nome}</strong> — ${c.render.total} renders
+                  (média ${c.render.total ? ms(c.render.duracaoTotal / c.render.total) : '0.0 ms'},
+                  pior ${ms(c.render.pior)}) ·
+                  vivos: ${c.instancias.criados - c.instancias.encerrados} ·
+                  timers ${c.timers.criados - c.timers.encerrados} ·
+                  listeners ${c.listeners.criados - c.listeners.encerrados}
+                  ${c.requisicoes.total
+                    ? html` · ${c.requisicoes.total} req (${c.requisicoes.falhas} falhas, pior ${ms(c.requisicoes.pior)})`
+                    : nothing}
+                </li>`,
+              )}
+            </ul>`
+          : html`<p class="empty">Nenhum componente instrumentado ainda.</p>`}
+
+        <div class="acoes">
+          <button type="button" @click=${() => this._copiarBaseline()}>Copiar baseline</button>
+          <button type="button" @click=${() => this.requestUpdate()}>Atualizar</button>
+        </div>
+        ${this._mensagem ? html`<p class="empty">${this._mensagem}</p>` : nothing}
+      </div>
+    `;
+  }
+
+  /**
+   * Fase 6.0.5 — capacidade real das câmeras.
+   *
+   * Responde, antes de escrever qualquer player, se este Home Assistant
+   * consegue WebRTC ou se o único caminho é HLS transcodificado na VM.
+   */
+  private _cameras() {
+    const s = sondarCameras(this._hass);
+    if (!s.cameras.length) return nothing;
+    return html`
+      <div>
+        <h2>Câmeras — capacidade</h2>
+        <dl>
+          ${this._row('Total', String(s.cameras.length))}
+          ${this._row('WebRTC', String(s.resumo.web_rtc), s.resumo.web_rtc ? 'ok' : '')}
+          ${this._row('HLS (transcodifica na VM)', String(s.resumo.hls), s.resumo.hls ? 'warn' : '')}
+          ${this._row('Só instantâneo', String(s.resumo.instantaneo))}
+          ${this._row('Fora do ar', String(s.resumo.indisponivel), s.resumo.indisponivel ? 'bad' : 'ok')}
+        </dl>
+        <p class="empty">${s.veredito}</p>
+        <ul>
+          ${s.cameras.map((c) => html`<li>${c.entityId} → ${c.caminho}${c.suportaStream ? ' · stream' : ''}</li>`)}
+        </ul>
+      </div>
+    `;
+  }
+
+  private _mensagem = '';
+
+  /**
+   * Copia a baseline para a área de transferência.
+   *
+   * `navigator.clipboard` exige contexto seguro; a WebView do tablet acessa o HA
+   * por HTTP na rede local, onde ele nem sempre existe. Por isso o caminho
+   * alternativo com `textarea` + `execCommand`, que continua funcionando ali.
+   */
+  private async _copiarBaseline(): Promise<void> {
+    const texto = JSON.stringify(instantaneo(), null, 2);
+    try {
+      await navigator.clipboard.writeText(texto);
+      this._mensagem = 'Baseline copiada.';
+    } catch {
+      const area = document.createElement('textarea');
+      area.value = texto;
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      this.shadowRoot?.appendChild(area);
+      area.select();
+      const ok = document.execCommand('copy');
+      area.remove();
+      this._mensagem = ok ? 'Baseline copiada.' : 'Não foi possível copiar — use brunoRuntime.texto().';
+    }
+    this.requestUpdate();
   }
 
   override render() {
@@ -215,6 +356,8 @@ export class BrunoDiagnostics extends LitElement {
               </div>
             `
           : nothing}
+        ${this._runtime()}
+        ${this._cameras()}
         ${!this._hass ? html`<p class="empty">Aguardando o objeto hass…</p>` : nothing}
       </div>
     `;

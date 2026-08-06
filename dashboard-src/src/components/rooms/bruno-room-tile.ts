@@ -3,6 +3,10 @@ import type { Hass } from '@/models/home-assistant';
 import { ROOMS, SPOTIFY_ENTITY, type RoomConfig, type RoomDot } from '@/config/rooms.config';
 import { lightsSummary, semanticLine, isRoomOn, sensorDisplay } from '@/services/entities/room-state';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
+import { conectou, desconectou, medirRender } from '@/diagnostics/runtime/probe';
+
+/** Nome deste componente no coletor de runtime (Fase 6.0). */
+const SONDA = 'bruno-room-tile';
 
 /**
  * Tile de cômodo — arquitetura nova.
@@ -105,6 +109,12 @@ export class BrunoRoomTile extends LitElement {
     return 3;
   }
 
+  /** Mede o custo de cada atualizacao (Fase 6.0.1). */
+  override update(mudancas: Map<string, unknown>): void {
+    medirRender(SONDA, () => super.update(mudancas));
+  }
+
+
   /**
    * O objeto hass muda a cada alteração de estado de QUALQUER entidade da casa.
    * Só re-renderiza quando muda algo que este tile realmente lê — é o contrato
@@ -156,6 +166,7 @@ export class BrunoRoomTile extends LitElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
+    conectou(SONDA);
     // O primeiro update do Lit acontece no attach, ANTES de o Home Assistant
     // chamar setConfig. Ali getComputedStyle ainda não vê os tokens do tema e
     // `variant` ainda não existe — por isso o cache é invalidado aqui e o valor
@@ -166,6 +177,7 @@ export class BrunoRoomTile extends LitElement {
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
+    desconectou(SONDA);
     globalThis.removeEventListener?.('bruno-theme-changed', this._onThemeChanged);
     for (const t of this._timers) window.clearTimeout(t);
     this._timers.clear();

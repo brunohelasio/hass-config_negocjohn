@@ -8,6 +8,12 @@
  * Enquanto a migraÃ§Ã£o acontece, este bundle CONVIVE com os 52 mÃ³dulos clÃ¡ssicos
  * atuais. NÃ£o substitui nada; apenas acrescenta os componentes jÃ¡ migrados.
  */
+// Fase 6.0 — instrumentacao de runtime. Liga os observadores e expoe a janela
+// de leitura em window.brunoRuntime. Importar os modulos do runtime NAO liga
+// nada; quem liga e esta chamada, uma vez.
+import { iniciarRuntime } from './diagnostics/runtime';
+iniciarRuntime();
+
 import './diagnostics/bruno-diagnostics';
 import './components/rooms/bruno-room-tile';
 import './components/rooms/bruno-room-subview';

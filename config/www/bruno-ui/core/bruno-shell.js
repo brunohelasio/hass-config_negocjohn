@@ -806,6 +806,18 @@ class BrunoShell extends HTMLElement {
               <span class="config-menu-copy"><strong>Updates</strong><small>${updateCount ? `${updateCount} ${updateCount === 1 ? 'pendente' : 'pendentes'}` : 'Abrir central'}</small></span>
               ${updateCount ? `<span class="config-menu-count">${updateCount > 99 ? '99+' : updateCount}</span>` : '<span class="config-menu-chevron" aria-hidden="true">&rsaquo;</span>'}
             </button>
+            <!-- NOVO (Fase 6.0) — DIAGNOSTICO.
+                 Ate aqui o painel <bruno-diagnostics> existia no bundle e nao
+                 estava em view nenhuma: nao havia como chegar nele. E a unica
+                 superficie que le a baseline de runtime NO TABLET, onde nao ha
+                 console. Sem esta entrada, a Fase 6.0 nao teria como ser colhida. -->
+            <button class="config-menu-item" type="button" data-config-action="open-section" data-section="diagnostico">
+              <span class="config-menu-icon" aria-hidden="true">
+                ${globalThis.BrunoIcons?.render('system') || ''}
+              </span>
+              <span class="config-menu-copy"><strong>Diagnostico</strong><small>Runtime, entidades e cameras</small></span>
+              <span class="config-menu-chevron" aria-hidden="true">&rsaquo;</span>
+            </button>
             <!-- NOVO (Fase 5e.5) — ATUALIZAR vem da faixa de acoes rapidas.
                  Recarrega a pagina; era o unico efeito util do botao antigo
                  (o shell_command do repositorio de origem nao existe aqui).
@@ -823,16 +835,58 @@ class BrunoShell extends HTMLElement {
       </section>
       ${child}
     `;
+    // Fase 6.0: o painel de diagnostico e um ELEMENTO, nao texto — encaixa
+    // depois que o innerHTML acima ja existe.
+    if (this._configSection === 'diagnostico') {
+      const host = this._configOverlayEl.querySelector('#diagnosticoHost');
+      const el = this._montarDiagnostico();
+      if (host && el) host.replaceChildren(el);
+      else if (host) host.textContent = 'Bundle nao carregado.';
+    }
     if (preserveScroll && previousScrollTop) {
       const scrollEl = this._configOverlayEl.querySelector('.updates-scroll');
       if (scrollEl) scrollEl.scrollTop = previousScrollTop;
     }
   }
 
+  /**
+   * Fase 6.0 — o painel de diagnostico dentro de Configuracoes.
+   *
+   * <bruno-diagnostics> e um componente Lit do bundle novo: recebe `hass` por
+   * PROPRIEDADE, entao nao da para monta-lo por innerHTML como os demais
+   * paineis desta shell. O elemento e criado uma vez e reaproveitado — recria-lo
+   * zeraria a rolagem e a mensagem de "baseline copiada".
+   */
+  _montarDiagnostico() {
+    if (!this._diagnosticoEl) {
+      if (!customElements.get('bruno-diagnostics')) return null;
+      this._diagnosticoEl = document.createElement('bruno-diagnostics');
+      this._diagnosticoEl.setConfig?.({});
+    }
+    if (this._hass) this._diagnosticoEl.hass = this._hass;
+    return this._diagnosticoEl;
+  }
+
+  _renderDiagnosticoChild() {
+    // O conteudo real e inserido depois, em _renderConfigPanel, porque aqui a
+    // shell trabalha com texto e o painel e um ELEMENTO.
+    return `
+      <section class="config-panel config-child-panel" role="dialog" aria-modal="true" aria-label="Diagnostico">
+        <header class="config-header">
+          <span class="config-icon" aria-hidden="true">${globalThis.BrunoIcons?.render('system') || ''}</span>
+          <div class="config-title"><strong>Diagnostico</strong><span>Runtime, entidades e cameras</span></div>
+          <button class="config-close" type="button" data-config-action="child-close" aria-label="Fechar">&times;</button>
+        </header>
+        <div class="config-section" id="diagnosticoHost"></div>
+      </section>
+    `;
+  }
+
   _renderConfigChild() {
     if (!this._configSection) return '';
     if (this._configSection === 'themes') return this._renderThemesChild();
     if (this._configSection === 'wallpaper') return this._renderWallpaperChild();
+    if (this._configSection === 'diagnostico') return this._renderDiagnosticoChild();
     if (this._configSection === 'updates') {
       if (globalThis.BrunoUpdatesPanel?.render) {
         return globalThis.BrunoUpdatesPanel.render({ hass: this._hass, embedded: true });

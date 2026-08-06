@@ -88,7 +88,8 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260805-rail-gap-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260806-devices-panel-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260806-5e-redistribuicao-1
-    - /local/bruno-ui/core/bruno-shell.js?v=20260806-scrim-forte-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260806-scrim-forte-1
+    - /local/bruno-ui/core/bruno-shell.js?v=20260806-diagnostico-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260702-liquid-yaml-2
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260723-liquid-performance-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260723-surface-on-ios-1

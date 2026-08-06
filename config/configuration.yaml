@@ -256,7 +256,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-corrections-1
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-status-spacing-1
-   - /local/bruno-ui/cards/bruno-sala-card.js?v=20260802-assets-resize-1
+    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260802-assets-resize-1
     # NOVO (2026-07-24) — HOME V2: Sala em estrutura padrao de comodo para a
     # faixa horizontal (clone da base Q. Casal). O bruno-sala-card acima segue
     # intacto (Home V1 + phone). FALLBACK: comentar esta linha junto com o
@@ -288,7 +288,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-office-card.js?v=20260731-flat-status-dots-1
-   - /local/bruno-ui/cards/bruno-office-card.js?v=20260802-assets-resize-1
+    - /local/bruno-ui/cards/bruno-office-card.js?v=20260802-assets-resize-1
     # ANTERIOR (2026-07-03): ?v=20260702-all-images-1 nos 5 cards abaixo.
     # NOVO: bump para presence-uniform-1 (molde unico de presenca/ocupacao + alinhamento padrao Office).
     # ANTERIOR (rollback): ?v=20260704-room-state-1
@@ -297,7 +297,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260731-flat-status-dots-1
-   - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260802-assets-resize-1
+    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260802-assets-resize-1
     # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-1 (popup quebrado: _escapeAttr ausente + fixed clipado).
     # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-2 (fix botao + popup <dialog> centralizado).
     # NOVO: popup ancorado ao botao + backdrop suave + banner lavabo.jpg com bordas atmosfericas.
@@ -308,13 +308,13 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260731-flat-status-dots-1
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260802-josh-popup-material-1
-   - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260802-assets-resize-1
+    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260802-assets-resize-1
     # NOVO (2026-07-29) — HOME V3: Corredor como 8o tile da faixa.
     # FALLBACK: comentar esta linha + o bloco em v2/bento_bottom_block.yaml
     # e voltar o grid para repeat(7, ...).
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260729-corredor-assets-5
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260731-flat-status-dots-1
-   - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260802-assets-resize-1
+    - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260802-assets-resize-1
     # ORIGINAL (cache stale no tablet — JS antigo com icone 92/80px): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260611-room-nav-1
     # ANTERIOR (rollback, 3 linhas): ?v=20260704-semantic-sync-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260711-home-microadjust-1
@@ -322,19 +322,19 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260731-flat-status-dots-1
-   - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260802-assets-resize-1
+    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260802-assets-resize-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260711-home-microadjust-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260731-flat-status-dots-1
-   - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260802-assets-resize-1
+    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260802-assets-resize-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260711-home-microadjust-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260731-flat-status-dots-1
-   - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260802-assets-resize-1
+    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260802-assets-resize-1
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260719-icons-global-1
     - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260718-audit-final-1

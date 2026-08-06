@@ -247,3 +247,46 @@ observação repetida, o suspeito é o banco de medição, não o observador.
 faixa. As áreas que ela sustentava pertencem a cards com
 `show.mediaquery (max-width: 800px)`: no desktop não renderizam, e área de card
 não renderizado não precisa existir.
+
+## Sintaxe do YAML — a verificação que faltava (2026-08-06)
+
+Publiquei um `configuration.yaml` com **oito linhas indentadas com 3 espaços em
+vez de 4**. Um script meu trocou um prefixo de 4 caracteres por 3:
+
+```js
+l.replace('    # RETIRADO (Fase 5d.3, 2026-08-06): ', '   ')   // 3, deveria ser 4
+```
+
+O Home Assistant não subiu:
+
+```
+Error loading /config/configuration.yaml: while parsing a block mapping in
+line 13, column 3 expected <block end>, but found <block sequence start>
+in line 259, column 4
+```
+
+**Por que nada pegou:** `check-includes.pl` só resolve `!include` (todos
+resolviam); `npm run check` não tocava em YAML; `check-backtick.mjs` é de
+template literal. O projeto tinha typecheck, lint, testes e build — e **nenhum
+parser de YAML**.
+
+```bash
+node scripts/validation/check-yaml.mjs            # config/ inteiro
+node scripts/validation/check-yaml.mjs <arquivo>  # um só
+```
+
+Roda como **primeiro passo** de `npm run check`. Declara as tags próprias do HA
+(`!include`, `!secret`, `!env_var`…) para não gerar falso positivo — um
+verificador que acusa arquivo bom ensina a ser ignorado. Ignora `_archive/`,
+`node_modules/`, `.disabled` e `custom_components/` (integrações de terceiros).
+
+Hoje: 247 arquivos, zero erros.
+
+### A lição, que é maior que o caso
+
+**Edição programática de YAML por substituição de string é frágil.** O prefixo
+que se remove e o que se põe têm de ter o mesmo tamanho, e um caractere a menos
+não aparece em diff visual nem em revisão. Duas defesas:
+
+1. sempre rodar o validador depois de qualquer script que edite YAML;
+2. preferir editar a linha inteira a manipular prefixos.

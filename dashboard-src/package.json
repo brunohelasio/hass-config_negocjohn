@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "deploy": "node scripts/deploy.mjs",
     "deploy:vm": "node scripts/deploy.mjs --vm",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "check": "npm run check:yaml && npm run typecheck && npm run lint && npm run test && npm run build",
+    "check:yaml": "node ../scripts/validation/check-yaml.mjs"
   },
   "dependencies": {
     "lit": "^3.2.1"

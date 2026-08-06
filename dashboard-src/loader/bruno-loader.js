@@ -29,8 +29,23 @@
  * exatamente o problema que ele veio resolver. O bundle, esse sim, pode ficar
  * em cache: o hash no nome garante que cache velho nunca é o errado.
  *
- * ROLLBACK: no `configuration.yaml`, comentar a linha do loader e descomentar a
- * linha direta do bundle com hash. Nada mais depende dele.
+ * ⚠️ DESLIGADO em 2026-08-06, no mesmo dia em que entrou.
+ *
+ * O PC continuou funcionando e o TABLET passou a mostrar erro de configuracao.
+ * Desligar o loader (voltar a linha direta do bundle) devolveu o tablet ao ar —
+ * o que confirma que a causa esta AQUI, e nao no bundle nem na shell.
+ *
+ * Suspeita, ainda nao provada: o `import()` dinamico. A WebView do tablet pode
+ * trata-lo diferente do Chrome do PC — politica de seguranca do frontend do HA,
+ * resolucao do caminho /local/, ou versao do motor.
+ *
+ * Se for religado, o caminho a tentar NAO e este: em vez de `import()`, injetar
+ * um <script type="module"> no documento, que e exatamente o que o proprio Home
+ * Assistant faz com as entradas de extra_module_url. Menos superficie, mesmo
+ * efeito.
+ *
+ * ROLLBACK/RELIGAR: no `configuration.yaml`, trocar a linha direta do bundle
+ * pela linha do loader. Nada mais depende dele.
  */
 
 (() => {

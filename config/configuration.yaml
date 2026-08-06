@@ -62,7 +62,13 @@ frontend:
     # RECARREGAR A PAGINA BASTA.
     #
     # ROLLBACK: comentar a linha abaixo e descomentar a ANTERIOR.
-    - /local/dashboard/bruno-loader.js
+    # ROLLBACK (2026-08-06): o carregador foi DESLIGADO — o tablet passou a
+    # mostrar erro de configuracao depois que ele entrou, e o PC nao. O bundle
+    # volta a ser referenciado direto, como antes da 6.0.4.
+    # O loader e o manifest.json seguem publicados em www/dashboard/ e podem ser
+    # religados trocando as duas linhas abaixo.
+    # DESLIGADO: - /local/dashboard/bruno-loader.js
+    - /local/dashboard/bruno-dashboard.BVD0DIRv.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

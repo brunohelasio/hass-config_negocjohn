@@ -48,18 +48,33 @@ top_items:
       action: fire-dom-event
       bruno_section: cameras
 
-  - key: system
+  # ANTERIOR (rollback 2026-08-06) — item Sistema:
+  #   - key: system
+  #     icon: system
+  #     label: Sistema
+  #     hide_on_phone: true
+  #     indicator:
+  #       type: state
+  #       entity: binary_sensor.pi_docker_containers_problem
+  #       active_states: ['on']
+  #     tap_action:
+  #       action: fire-dom-event
+  #       bruno_action: system
+  #
+  # NOVO (Fase 5e.6) — DISPOSITIVOS no lugar de Sistema.
+  # O painel Sistema renderizava literalmente "Modulo indisponivel". No lugar
+  # dele entra o ponto central de acesso rapido aos equipamentos da casa, que
+  # tambem recebe a TV e o ar-condicionado da Sala vindos das acoes rapidas.
+  # O indicador de problema do Docker sai junto: ele pertencia ao Sistema.
+  # A shell aceita as duas chaves (devices e system) durante a transicao.
+  # FALLBACK: tap_action: !include ../../shared/popup/footer/footer_system.yaml
+  - key: devices
     icon: system
-    label: Sistema
+    label: Dispositivos
     hide_on_phone: true
-    indicator:
-      type: state
-      entity: binary_sensor.pi_docker_containers_problem
-      active_states: ['on']
-    # FALLBACK: tap_action: !include ../../shared/popup/footer/footer_system.yaml
     tap_action:
       action: fire-dom-event
-      bruno_action: system
+      bruno_action: devices
 
   # key = roborock para casar com a secao/hash (#roborock) e ACENDER o item
   # ativo (a shell marca selected por data-key === chave da secao). icon: vacuum.

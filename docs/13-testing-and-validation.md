@@ -145,3 +145,105 @@ A versão atual rastreia quatro estados — template literal, comentário de lin
 comentário de bloco e string entre aspas — e só acusa a combinação perigosa.
 Verificada nos dois sentidos: acusa um arquivo-isca com o defeito, e passa limpo
 nos 70 arquivos do projeto.
+
+---
+
+## Medir CONTEÚDO, não só geometria (2026-08-05)
+
+A fase 5c publicou uma tela com a geometria exata e os módulos **vazios**. Foi um
+erro de método: paridade geométrica mede caixas, e uma caixa vazia mede igual a
+uma caixa cheia. O banco de medição passou a responder também "o módulo tem
+conteúdo?".
+
+```bash
+node scripts/harness/gen-subview-harness.mjs
+node scripts/harness/serve-harness.mjs scripts/harness/subview-parity.html 8199
+# no navegador, viewport 1280x720:
+#   await inspecao()   -> conteúdo dos seis, módulo a módulo
+```
+
+`window.conteudo(tag)` devolve, por cômodo:
+
+| grupo | o que conta | defeito que ele pega |
+|---|---|---|
+| `hub` | fontes, quantas abertas, filhos e altura do `mh-source-body`, botões, volume, arte | acordeão que não abre; fonte sem corpo |
+| `ac` | `icg-svg` presente, nº de arcos e de marcas, temperatura no centro, tag do power e o glifo dele, nº de controles | anel ausente; power como `<div>` vazio |
+| `cameras` | feeds, PIP, imagens e os `src` sem query | PIP que não aparece; feed sem imagem |
+| `eletro` | tiles, PNGs, e o **glifo do ícone do cabeçalho** | apelido inexistente caindo no ícone genérico |
+| `luzes` | células e glifos | ícone que não resolve |
+
+### O ícone genérico tem assinatura
+
+Um `bruno-icon` cujo nome não está na tabela de apelidos desenha **um único
+`<circle>`**. Um resolvido desenha `path` ou `g`. O inspetor devolve a lista de
+tags filhas do `<svg>`, então `generico(circulo)` é diagnóstico, não suspeita.
+
+### O glifo vive no shadow root
+
+`querySelectorAll('.lc-icon svg')` devolve **zero** mesmo com o ícone desenhado:
+o `<svg>` está dentro do shadow root do `bruno-icon`. Contar sem atravessar o
+shadow root produz um falso defeito — aconteceu nesta sessão e quase virou uma
+"correção" de um problema que não existia.
+
+## Comparar contra o ORIGINAL VIVO, não contra a linha de base gravada
+
+`subview-baseline.json` foi capturado num dia específico. Campos que dependem da
+data ou do estado — largura do relógio, largura das badges — divergem sozinhos
+depois. A comparação certa monta o componente **antigo** e o **novo** na mesma
+página, no mesmo instante, e diffa os dois:
+
+```js
+window.montar(i)      // subview atual
+window.montarNovo(i)  // componente novo, mesma célula
+```
+
+Na entrega de 2026-08-05: **461 campos, 3 divergências**, todas o mesmo desvio
+deliberado (o rótulo "TV da sala" que a origem repete nos seis cômodos).
+
+## Medir no TEMA e na RESOLUÇÃO do tablet (2026-08-05)
+
+O banco sobe com o tema padrão (`liquid-glass`) e o viewport do navegador. O
+tablet usa **Josh** e **1920×1200**. Um defeito real do A/C — o cartão 49px mais
+estreito por causa de uma coluna nomeada inexistente — era invisível a 1280×720 e
+saltava a 1920×1200.
+
+```js
+localStorage.setItem('bruno-ui-theme', 'josh');
+BrunoThemeManager.apply('josh');
+// e redimensionar a janela para 1920x1200 antes de medir
+```
+
+Confirme o host: `data-bruno-subview-surface-theme="josh"`. Com `default` você
+está medindo sem a pele do tema — e sem os defeitos que só ela revela.
+
+Medir nas duas resoluções, sempre. Geometria idêntica numa não prova nada sobre a
+outra.
+
+## Medir o COMPONENTE não é medir o LAYOUT (2026-08-06)
+
+Duas rodadas falharam no alinhamento da faixa de status da Home por causa disto,
+e a lição é maior que o caso.
+
+**O que eu fiz:** montei `bruno-top-badges-card` sozinho num slot com o mesmo
+padding do `content-slot`, medi, e concluí que o `margin-top: -10px` funcionava.
+
+**O que acontece na Home:** o `layout-card` **envolve cada card num wrapper**, e
+é o wrapper que é o item do grid — o `view_layout: grid-area` vai nele. Uma
+margem negativa no `:host` do card move o card **dentro** do wrapper; a posição
+da linha não muda. No banco de medição não havia wrapper, então a margem
+funcionou lá e não na tela real.
+
+**Regra:** quando o alvo está dentro de um contêiner de layout do Lovelace
+(`layout-card`, `stack-in-card`, `hui-card`), medir o componente isolado responde
+sobre o componente, não sobre o layout. Ou se reproduz a cadeia inteira de
+wrappers, ou se mede na tela real.
+
+**Sintoma que deveria ter me alertado:** a medição dizia "alinhado" e o usuário
+dizia "continua diferente" — pela terceira vez. Quando a medição contradiz a
+observação repetida, o suspeito é o banco de medição, não o observador.
+
+**Correção real:** a linha-fantasma de 0px saiu do grid da Home (rev.6 em
+`views/shell/section_home_v2.yaml`), e com ela o `grid-gap` que ficava acima da
+faixa. As áreas que ela sustentava pertencem a cards com
+`show.mediaquery (max-width: 800px)`: no desktop não renderizam, e área de card
+não renderizado não precisa existir.

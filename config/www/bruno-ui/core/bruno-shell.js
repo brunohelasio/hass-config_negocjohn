@@ -72,9 +72,14 @@ class BrunoShell extends HTMLElement {
         this._openScenesPanel();
         return;
       }
-      if (detail.bruno_action === 'system') {
+      // NOVO (Fase 5e.6): o painel Sistema renderizava "Modulo indisponivel" e
+      // foi substituido pelo painel Dispositivos. As duas chaves apontam para o
+      // mesmo lugar para que a rail antiga (bruno_action: system) continue
+      // funcionando ate o YAML ser atualizado.
+      // ROLLBACK: trocar _openDevicesPanel() por _openSystemPanel() aqui.
+      if (detail.bruno_action === 'devices' || detail.bruno_action === 'system') {
         event.stopPropagation();
-        this._openSystemPanel();
+        this._openDevicesPanel();
         return;
       }
       if (detail.bruno_action === 'network') {
@@ -176,6 +181,11 @@ class BrunoShell extends HTMLElement {
     }
     if (this._configOverlayEl?.dataset.panel === 'system' && !this._configOverlayEl.hidden) {
       this._renderSystemPanel({ preserveScroll: true });
+    }
+    // NOVO (5e.6): o painel Dispositivos recebe o hass por propriedade, e nao
+    // por innerHTML — o proprio componente reconcilia (Lit).
+    if (this._configOverlayEl?.dataset.panel === 'devices' && this._devicesPanelEl) {
+      this._devicesPanelEl.hass = hass;
     }
     if (this._configOverlayEl?.dataset.panel === 'network' && !this._configOverlayEl.hidden) {
       this._renderNetworkPanel({ preserveScroll: true });
@@ -796,6 +806,18 @@ class BrunoShell extends HTMLElement {
               <span class="config-menu-copy"><strong>Updates</strong><small>${updateCount ? `${updateCount} ${updateCount === 1 ? 'pendente' : 'pendentes'}` : 'Abrir central'}</small></span>
               ${updateCount ? `<span class="config-menu-count">${updateCount > 99 ? '99+' : updateCount}</span>` : '<span class="config-menu-chevron" aria-hidden="true">&rsaquo;</span>'}
             </button>
+            <!-- NOVO (Fase 5e.5) — ATUALIZAR vem da faixa de acoes rapidas.
+                 Recarrega a pagina; era o unico efeito util do botao antigo
+                 (o shell_command do repositorio de origem nao existe aqui).
+                 ROLLBACK: remover este botao e descomentar o item "refresh"
+                 em views/main-grid/v2/bento_bottom_block.yaml. -->
+            <button class="config-menu-item" type="button" data-config-action="refresh">
+              <span class="config-menu-icon" aria-hidden="true">
+                ${globalThis.BrunoIcons?.render('refresh') || ''}
+              </span>
+              <span class="config-menu-copy"><strong>Atualizar</strong><small>Recarregar o painel</small></span>
+              <span class="config-menu-chevron" aria-hidden="true">&rsaquo;</span>
+            </button>
           </div>
         </div>
       </section>
@@ -969,6 +991,58 @@ class BrunoShell extends HTMLElement {
     this._renderSystemPanel();
   }
 
+  /**
+   * NOVO (Fase 5e.6) — painel Dispositivos.
+   *
+   * Diferente dos demais paineis desta shell, o conteudo NAO vem de innerHTML:
+   * <bruno-devices-panel> e um componente Lit do bundle novo, e precisa receber
+   * `hass` por PROPRIEDADE. Por isso o elemento e criado e reaproveitado — cada
+   * recriacao perderia o dispositivo selecionado e o estado dos controles.
+   *
+   * O componente nao sabe o que e uma TV: a lista sai de devices.config.ts e
+   * cada controle vem do registry (application/device-registry.ts).
+   */
+  _openDevicesPanel() {
+    if (!this._configOverlayEl) return;
+    this._syncConfigOverlayTheme();
+    this._configOverlayEl.hidden = false;
+    this._configOverlayEl.dataset.open = '1';
+    this._configOverlayEl.dataset.panel = 'devices';
+    this._renderDevicesPanel();
+  }
+
+  _renderDevicesPanel() {
+    const overlay = this._configOverlayEl;
+    if (!overlay || overlay.hidden || overlay.dataset.panel !== 'devices') return;
+
+    if (!customElements.get('bruno-devices-panel')) {
+      overlay.innerHTML = `
+        <div class="config-scrim" data-system-action="close"></div>
+        <section class="config-panel" role="dialog" aria-modal="true" aria-label="Dispositivos">
+          <header class="config-header">
+            <span class="config-icon" aria-hidden="true">!</span>
+            <div class="config-title"><strong>Dispositivos</strong><span>Bundle nao carregado</span></div>
+            <button class="config-close" type="button" data-system-action="close" aria-label="Fechar">&times;</button>
+          </header>
+        </section>
+      `;
+      return;
+    }
+
+    if (!this._devicesPanelEl) {
+      this._devicesPanelEl = document.createElement('bruno-devices-panel');
+      this._devicesPanelEl.addEventListener('fechar', () => this._closeConfigPanel());
+    }
+    this._devicesPanelEl.hass = this._hass;
+
+    // O scrim e do overlay, nao do componente: fechar clicando fora ja e
+    // tratado pelo mesmo handler dos demais paineis.
+    if (this._devicesPanelEl.parentNode !== overlay) {
+      overlay.innerHTML = '<div class="config-scrim" data-system-action="close"></div>';
+      overlay.appendChild(this._devicesPanelEl);
+    }
+  }
+
   _renderSystemPanel({ preserveScroll = false } = {}) {
     if (!this._configOverlayEl || this._configOverlayEl.hidden || this._configOverlayEl.dataset.panel !== 'system') return;
     const previousScrollTop = preserveScroll
@@ -1000,6 +1074,8 @@ class BrunoShell extends HTMLElement {
     this._configOverlayEl.hidden = false;
     this._configOverlayEl.dataset.open = '1';
     this._configOverlayEl.dataset.panel = 'network';
+    // 5e.4: toda abertura comeca pelo QR de visitantes.
+    this._networkStep = 'qr';
     this._renderNetworkPanel();
   }
 
@@ -1077,8 +1153,53 @@ class BrunoShell extends HTMLElement {
     }
   }
 
+  /**
+   * NOVO (Fase 5e.4) — WI-FI ABSORVIDO PELO BOTAO REDE, EM CADEIA.
+   *
+   * O Wi-Fi era um botao da faixa de acoes rapidas que abria um browser_mod
+   * popup com o QR da rede de visitantes. Com a faixa removida, a funcao passa
+   * para o botao Rede da rail, como PRIMEIRO passo: o simples primeiro, o
+   * avancado a um toque. E a mesma navegacao em cadeia que o dashboard ja usa.
+   *
+   * `_networkStep` guarda em que passo a cadeia esta:
+   *   'qr'       -> QR de visitantes (padrao ao abrir)
+   *   'avancado' -> painel de rede que ja existia (BrunoNetworkPanel)
+   *
+   * ROLLBACK: apagar este metodo e o campo `_networkStep`, e voltar
+   * `_openNetworkPanel` a chamar `_renderNetworkPanel` direto.
+   */
+  _renderNetworkQrStep() {
+    const imagem = this._config?.wifi_qr_image || '/local/images/wifi_main_scanme.png';
+    this._configOverlayEl.innerHTML = `
+      <div class="config-scrim" data-network-action="close"></div>
+      <section class="config-panel" role="dialog" aria-modal="true" aria-label="Rede">
+        <header class="config-header">
+          <span class="config-icon" aria-hidden="true">${globalThis.BrunoIcons?.render('network') || ''}</span>
+          <div class="config-title"><strong>Wi-Fi</strong><span>Rede de visitantes</span></div>
+          <button class="config-close" type="button" data-network-action="close" aria-label="Fechar">&times;</button>
+        </header>
+        <div class="config-section">
+          <img class="network-qr" src="${BrunoShell._escape(imagem)}" alt="QR Code da rede de visitantes">
+          <p class="network-qr-dica">Aponte a camera para conectar.</p>
+          <div class="config-menu-list">
+            <button class="config-menu-item" type="button" data-network-action="avancado">
+              <span class="config-menu-icon" aria-hidden="true">${globalThis.BrunoIcons?.render('system') || ''}</span>
+              <span class="config-menu-copy"><strong>Configuracoes de rede</strong><small>Detalhes e diagnostico</small></span>
+              <span class="config-menu-chevron" aria-hidden="true">&rsaquo;</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
   _renderNetworkPanel({ preserveScroll = false } = {}) {
     if (!this._configOverlayEl || this._configOverlayEl.hidden || this._configOverlayEl.dataset.panel !== 'network') return;
+    // Primeiro passo da cadeia: QR de visitantes.
+    if (this._networkStep !== 'avancado') {
+      this._renderNetworkQrStep();
+      return;
+    }
     const previousScrollTop = preserveScroll
       ? this._configOverlayEl.querySelector('.network-scroll')?.scrollTop || 0
       : 0;
@@ -1150,6 +1271,12 @@ class BrunoShell extends HTMLElement {
         this._closeConfigPanel();
         return;
       }
+      // NOVO (5e.4): segundo passo da cadeia — o painel avancado que ja existia.
+      if (networkTarget.dataset.networkAction === 'avancado') {
+        this._networkStep = 'avancado';
+        this._renderNetworkPanel();
+        return;
+      }
       globalThis.BrunoNetworkPanel?.handleAction?.({ target: networkTarget, hass: this._hass, host: this });
       return;
     }
@@ -1187,6 +1314,12 @@ class BrunoShell extends HTMLElement {
       this._configSection = '';
       this._wallpaperMessage = '';
       this._renderConfigPanel();
+      return;
+    }
+    // NOVO (Fase 5e.5): Atualizar, vindo da faixa de acoes rapidas.
+    if (action === 'refresh') {
+      this._closeConfigPanel();
+      globalThis.location?.reload?.();
       return;
     }
     if (action === 'theme') {
@@ -1381,7 +1514,19 @@ class BrunoShell extends HTMLElement {
         min-width: 0;
         min-height: 0;
         overflow: hidden;
-        padding: 12px;
+        /* ANTERIOR (rollback 2026-08-05): padding: 12px;
+           O respiro da shell inteira vive aqui — a coluna da rail é colada na
+           borda (gap 0, padding 0 no .shell). Os 12px da ESQUERDA eram a
+           distancia entre a rail e o conteudo, e o usuario pediu para reduzi-la.
+           Os outros tres lados ficam em 12px: eles sustentam o alinhamento
+           atual do topo, da direita e da base. O ganho de 6px se distribui
+           pelas colunas da secao — na Home a faixa de tiles e fracionaria; nas
+           subviews as duas colunas sao fracionarias na resolucao do tablet. */
+        /* ANTERIOR (rollback 2026-08-06): padding: 12px 12px 12px 6px;
+           2a reducao a pedido do usuario — o respiro da rail continuava
+           incomodando. De 12 -> 6 -> 2px. Abaixo de 2px a coluna da rail
+           encosta no primeiro cartao e a divisoria some. */
+        padding: 12px 12px 12px 2px;
         /* Fundo CENTRAL das secoes (padrao unico, nao por arquivo): por padrao
            TRANSPARENTE -> mostra o grafite do :host (o "escuro atras do hero").
            Para trocar o fundo de TODAS as secoes de uma vez, basta definir
@@ -1423,12 +1568,34 @@ class BrunoShell extends HTMLElement {
         pointer-events: auto;
       }
 
+      /* ANTERIOR (rollback 2026-08-06): background rgba(0,0,0,0.08) + blur(2px).
+         O tema Josh deixa os popups TRANSLUCIDOS de proposito — a foto de fundo
+         atravessa. Com um scrim de 8% e blur de 2px o conteudo do painel
+         competia com o cenario e ficava dificil de ler. O scrim e o blur sobem;
+         a translucidez do painel fica intacta, so o que esta ATRAS e que recua. */
       .config-scrim {
         position: absolute;
         inset: 0;
-        background: rgba(0,0,0,0.08);
-        -webkit-backdrop-filter: blur(2px);
-        backdrop-filter: blur(2px);
+        background: rgba(0,0,0,0.42);
+        -webkit-backdrop-filter: blur(14px) saturate(0.92) brightness(0.82);
+        backdrop-filter: blur(14px) saturate(0.92) brightness(0.82);
+      }
+
+      /* NOVO (5e.4) — passo do QR de visitantes no painel Rede. */
+      .network-qr {
+        display: block;
+        width: min(260px, 100%);
+        margin: 4px auto 10px;
+        border-radius: 14px;
+        background: #fff;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      .network-qr-dica {
+        margin: 0 0 12px;
+        text-align: center;
+        font-size: 12px;
+        color: rgba(255,255,255,0.62);
       }
 
       .config-panel {

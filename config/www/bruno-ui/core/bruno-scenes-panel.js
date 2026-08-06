@@ -8,6 +8,9 @@
     { key: 'relaxar', title: 'Relaxar', subtitle: 'Luz suave na varanda', entity: 'script.bruno_scene_relaxar', image: '/local/bruno-ui/assets/scenes/relaxar.webp' },
     { key: 'receber', title: 'Receber', subtitle: 'Iluminacao social', entity: 'script.bruno_scene_receber', image: '/local/bruno-ui/assets/scenes/receber.webp' },
     { key: 'trabalho', title: 'Trabalho', subtitle: 'Office pronto para usar', entity: 'script.bruno_scene_trabalho', image: '/local/bruno-ui/assets/scenes/trabalho.webp' },
+    // NOVO (Fase 5e.3): vem da faixa de acoes rapidas da Home, removida na 5e.2.
+    // Sem arte propria ainda — o painel cai no fundo padrao quando a imagem falta.
+    { key: 'apagar-luzes', title: 'Apagar todas as luzes', subtitle: 'A casa inteira', entity: 'script.bruno_scene_apagar_todas_as_luzes', image: '/local/bruno-ui/assets/scenes/boa-noite.webp' },
   ];
 
   const escape = (value) => String(value ?? '')

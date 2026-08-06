@@ -1,7 +1,8 @@
 import { LitElement, html, css, nothing } from 'lit';
 import type { Hass } from '@/models/home-assistant';
-import { ROOMS, type RoomConfig, type RoomDot } from '@/config/rooms.config';
+import { ROOMS, SPOTIFY_ENTITY, type RoomConfig, type RoomDot } from '@/config/rooms.config';
 import { lightsSummary, semanticLine, isRoomOn, sensorDisplay } from '@/services/entities/room-state';
+import { spotifyTocandoEm } from '@/services/entities/spotify-device';
 
 /**
  * Tile de cômodo — arquitetura nova.
@@ -447,7 +448,14 @@ export class BrunoRoomTile extends LitElement {
         return Boolean(e) && estados.includes(String(e?.state ?? '').toLowerCase());
       });
       const porAtributo = d.activeAttr ? truthy(active?.attributes[d.activeAttr]) : false;
-      return porEntidade || porAtributo;
+      // O ponto de mídia também acende pelo Spotify: quando a música toca no
+      // Echo por Spotify Connect, a entidade do Echo continua em standby e só
+      // a do Spotify vai para `playing`. Sem esta segunda via o ponto ficava
+      // apagado exatamente no cômodo onde a música estava tocando.
+      const porSpotify = d.spotifyDevice
+        ? spotifyTocandoEm(hass.states[SPOTIFY_ENTITY], d.spotifyDevice)
+        : false;
+      return porEntidade || porAtributo || porSpotify;
     };
 
     return (room.statusDots ?? [])

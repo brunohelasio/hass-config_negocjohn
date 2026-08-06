@@ -11,6 +11,9 @@
 import './diagnostics/bruno-diagnostics';
 import './components/rooms/bruno-room-tile';
 import './components/rooms/bruno-room-subview';
+// Fase 5e.6 — popup Dispositivos. Importar aqui registra o componente E os
+// controles (a lista de tipos vive em components/devices/controls.ts).
+import './components/devices/bruno-devices-panel';
 
 declare const __BUILD_ID__: string;
 console.info(`[bruno-dashboard] build ${__BUILD_ID__}`);

@@ -44,16 +44,38 @@ layout:
   padding: 0
   grid-gap: 10px
   grid-template-columns: 0px repeat(12, minmax(0, 1fr))
-  # REV.5 (2026-07-25): a linha-fantasma de 0px (safety Sagaland) estava ENTRE
-  # o hero e o bloco inferior, somando DOIS gaps de 10px (=20px) entre a area
-  # dinamica e os comodos. Movida para o TOPO: o gap volta a ser um so (10px).
-  # Efeito colateral aceito: a faixa de badges desce 10px (o gap que agora fica
-  # acima dela). A soma total nao muda e o dock segue colado na base.
+  # ══ REV.6 (2026-08-06) — A LINHA-FANTASMA SAI, E COM ELA O DEGRAU ═════════
+  #
+  # ANTERIOR (rev.5): 0px 48px calc(77vh - 154px) calc(23vh + 52px)
   # ANTERIOR (rev.4): 48px calc(77vh - 154px) 0px calc(23vh + 52px)
   # ANTERIOR (rev.3): 48px calc(77vh - 166px) 23vh 0px 54px
-  grid-template-rows: 0px 48px calc(77vh - 154px) calc(23vh + 52px)
+  #
+  # A rev.5 moveu a linha-fantasma de 0px para o TOPO e aceitou, por escrito,
+  # que "a faixa de badges desce 10px" — o grid-gap passou a ficar ACIMA dela.
+  # Era esse o degrau na transicao Home -> subview: nas subviews a barra e a
+  # PRIMEIRA linha real, sem gap acima.
+  #
+  # TENTATIVA FRUSTRADA (2026-08-06, 2 rodadas): margin-top: -10px no :host do
+  # bruno-top-badges-card. NAO FUNCIONA na Home — o layout-card envolve cada
+  # card num wrapper, e o item do grid e o WRAPPER, nao o card. A margem movia
+  # o card DENTRO do wrapper. No banco de medicao o card era anexado direto ao
+  # slot, sem wrapper, e por isso a medicao dizia que funcionava.
+  #
+  # CORRECAO REAL: a linha-fantasma nao e mais necessaria. As quatro areas que
+  # ela sustentava (sala, comodos, energy, media) pertencem a cards com
+  # show.mediaquery (max-width: 800px) — no desktop eles NAO renderizam, e
+  # area de card nao renderizado nao precisa existir. As outras tres (camera,
+  # roborock, quick_actions) nao sao usadas por card nenhum desde a Home V3 e a
+  # remocao da faixa de acoes rapidas (5e.2).
+  #
+  # Aritmetica com 3 linhas (content-slot tem padding 12px x2):
+  #   48px (badges) + HERO + BLOCO INFERIOR + 2 gaps de 10px + 24px = 100vh
+  #   BLOCO INFERIOR = calc(23vh - 12px)   <- so os comodos; o dock de 54px saiu
+  #   => HERO = calc(77vh - 80px)
+  #   (a mesma constante esta em v2/bento_dynamic.yaml -> available_height;
+  #    mudar aqui exige mudar la.)
+  grid-template-rows: 48px calc(77vh - 80px) calc(23vh - 12px)
   grid-template-areas: |
-    "sidebar sala sala energy energy media media camera camera roborock roborock comodos quick_actions"
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
     "sidebar welcome welcome welcome welcome dynamic dynamic dynamic dynamic dynamic dynamic dynamic dynamic"
     "sidebar bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block"

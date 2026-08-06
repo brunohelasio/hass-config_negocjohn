@@ -46,7 +46,23 @@ export interface RoomDot {
   states?: readonly string[];
   /** Atributo do sensor `*_active` que também acende o ponto. */
   activeAttr?: string;
+  /**
+   * Nome do dispositivo deste cômodo no Spotify Connect.
+   *
+   * Quando o Spotify toca ATRAVÉS do Echo, a entidade do Echo costuma continuar
+   * em `standby` ou `idle` — a integração da Alexa não vê o áudio que entra por
+   * Spotify Connect. Quem está em `playing` é a entidade do Spotify, e o
+   * dispositivo em uso aparece nos atributos dela.
+   *
+   * Com este campo o ponto de mídia também acende quando o Spotify está tocando
+   * E o dispositivo ativo é o deste cômodo. Sem ele, o ponto ficava apagado no
+   * cômodo onde a música estava de fato tocando.
+   */
+  spotifyDevice?: string;
 }
+
+/** A conta do Spotify é uma só; o que distingue o cômodo é o DISPOSITIVO. */
+export const SPOTIFY_ENTITY = 'media_player.spotifyplus_bruno_helasio';
 
 export interface RoomConfig {
   id: string;
@@ -145,7 +161,8 @@ export const ROOMS: readonly RoomConfig[] = [
       { icon: 'mdi:snowflake', label: 'Ar condicionado ativo', tone: 'cyan',
         entities: ['climate.sl_ar_condicionado'], states: CLIMATE_ON },
       { icon: 'mdi:speaker-wireless', label: 'Echo Show ativo', tone: 'amber',
-        entities: ['media_player.echo_show'], states: MEDIA_ON },
+        entities: ['media_player.echo_show'], states: MEDIA_ON,
+        spotifyDevice: 'Echo Show' },
     ],
     entities: {
       lightGroup: 'light.grupo_luzes_sala',
@@ -204,7 +221,8 @@ export const ROOMS: readonly RoomConfig[] = [
       { icon: 'mdi:snowflake', label: 'Ar condicionado ativo', tone: 'cyan',
         entities: ['climate.ac_office'], states: CLIMATE_ON },
       { icon: 'mdi:speaker-wireless', label: 'Echo Pop ativo', tone: 'amber',
-        entities: ['media_player.echo_pop_office'], states: MEDIA_ON },
+        entities: ['media_player.echo_pop_office'], states: MEDIA_ON,
+        spotifyDevice: 'Echo Pop Office' },
     ],
     entities: {
       lightGroup: 'light.grupo_luzes_office',
@@ -301,10 +319,18 @@ export const ROOMS: readonly RoomConfig[] = [
     statusDots: [
       { icon: 'mdi:account', label: 'Presenca', tone: 'blue',
         entities: ['binary_sensor.q_casal_motion_recent'], states: ['on'] },
+      // O Q. Casal não tem TV. O ponto existe desde o card original e nunca
+      // acendeu — sem entidade não há o que ler.
       { icon: 'mdi:television-classic', label: 'TV', tone: 'purple' },
-      { icon: 'mdi:snowflake', label: 'Clima', tone: 'cyan' },
+      // ANTERIOR: { icon: 'mdi:snowflake', label: 'Clima', tone: 'cyan' },
+      // O ponto de clima estava sem entidade no card original — buraco, não
+      // decisão: `climate.qc_ar_condicionado` existe e é o A/C do cômodo,
+      // usado pela subview. Agora o ponto acende como nos demais quartos.
+      { icon: 'mdi:snowflake', label: 'Clima', tone: 'cyan',
+        entities: ['climate.qc_ar_condicionado'], states: CLIMATE_ON },
       { icon: 'mdi:speaker-wireless', label: 'Midia', tone: 'purple',
-        entities: ['media_player.echo_pop_quarto_casal'], states: MEDIA_ON },
+        entities: ['media_player.echo_pop_quarto_casal'], states: MEDIA_ON,
+        spotifyDevice: 'Echo Pop Quarto Casal' },
     ],
     entities: {
       lightGroup: 'light.grupo_quarto_casal',
@@ -335,7 +361,8 @@ export const ROOMS: readonly RoomConfig[] = [
       { icon: 'mdi:snowflake', label: 'Clima', tone: 'cyan',
         entities: ['climate.ac_quarto_marina'], states: CLIMATE_ON },
       { icon: 'mdi:speaker-wireless', label: 'Midia', tone: 'purple',
-        entities: ['media_player.echo_pop_marina'], states: MEDIA_ON },
+        entities: ['media_player.echo_pop_marina'], states: MEDIA_ON,
+        spotifyDevice: 'Echo Pop Marina' },
     ],
     entities: {
       lightGroup: 'light.grupo_luzes_quarto_marina',

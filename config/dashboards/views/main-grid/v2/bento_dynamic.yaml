@@ -30,7 +30,11 @@ view_layout:
   grid-area: dynamic
   show:
     mediaquery: '(min-width: 801px)'
-available_height: calc(77vh - 154px)
+# ANTERIOR (rollback rev.6): available_height: calc(77vh - 154px)
+# A linha-fantasma saiu do grid da Home e o dock de acoes rapidas foi removido:
+# o hero cresceu 74px. Esta constante ESPELHA a linha do hero em
+# views/shell/section_home_v2.yaml — as duas mudam juntas.
+available_height: calc(77vh - 80px)
 max_per_column: 2
 gap: 12
 # A área `dynamic` já reserva as duas colunas no grid da Home; não há risco de

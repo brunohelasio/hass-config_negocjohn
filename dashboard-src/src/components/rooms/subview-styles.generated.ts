@@ -57,9 +57,6 @@ button {
   touch-action: manipulation;
 }
 .hero-panel {
-  grid-area: hero;
-  min-width: 0;
-  min-height: 0;
 }
 .side-panel {
   grid-area: side;
@@ -605,7 +602,6 @@ button {
 .lights-groups {
   position: relative;
   z-index: 1;
-  display: grid;
   grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
   align-items: stretch;
   min-height: 0;
@@ -859,7 +855,6 @@ to {
   white-space: nowrap;
 }
 .cameras-card {
-  grid-area: cams;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
@@ -1087,7 +1082,6 @@ to {
   grid-row: 2;
 }
 .tv-card .control-row {
-  margin-top: 0;
 }
 .ps5-body {
   position: relative;
@@ -1172,19 +1166,11 @@ to {
   grid-area: spotify;
   padding: 14px;
   min-height: 0;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 10px;
 }
 .spotify-body {
   position: relative;
   z-index: 1;
-  min-height: 0;
   display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto;
-  align-items: stretch;
-  gap: 8px;
 }
 .spotify-art {
   position: relative;
@@ -1214,9 +1200,6 @@ to {
   --mdc-icon-size: 70px;
 }
 .spotify-copy {
-  display: grid;
-  align-content: start;
-  gap: 8px;
 }
 .spotify-card .media-title {
   margin-top: 0;
@@ -1225,7 +1208,6 @@ to {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 0;
 }
 .tv-card .control-button, .spotify-controls .control-button {
   width: 36px;
@@ -1344,7 +1326,6 @@ to {
   filter: drop-shadow(0 0 8px rgba(96,165,250,0.32));
 }
 .spotify-volume {
-  margin-top: 0;
 }
 .tv-card, .spotify-card {
   display: grid;
@@ -3432,7 +3413,6 @@ to {
 }
 }
 .ac-card {
-  grid-area: ac;
   padding: 14px;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);

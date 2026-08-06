@@ -85,38 +85,45 @@ views:
   - !include subviews/music-assistant.yaml
   - !include subviews/cameras-security.yaml
   - !include subviews/floor-plan.yaml
-  - !include subviews/sala_subview.yaml
-  - !include subviews/office_subview.yaml
-  - title: Cozinha
-    path: subview-cozinha
-    icon: mdi:countertop
-    subview: true
-    type: panel
-    theme: tablet
-    cards:
-      - type: custom:bruno-cozinha-subview
-  - title: Q. Casal
-    path: subview-quarto-casal
-    icon: mdi:bed-king
-    subview: true
-    type: panel
-    theme: tablet
-    cards:
-      - type: custom:bruno-quarto-casal-subview
-  - title: Q. Marina
-    path: subview-quarto-marina
-    icon: mdi:bed-single
-    subview: true
-    type: panel
-    theme: tablet
-    cards:
-      - type: custom:bruno-quarto-marina-subview
-  - title: Q. Miguel
-    path: subview-quarto-miguel
-    icon: mdi:bed-single-outline
-    subview: true
-    type: panel
-    theme: tablet
-    cards:
-      - type: custom:bruno-quarto-miguel-subview
+  # ══ RETIRADAS (Fase 5d.3, 2026-08-06) — VIEWS LEGADAS DAS SUBVIEWS ═══════
+  # As seis subviews de comodo vivem na shell desde a Fase 5c
+  # (bento_shell.yaml -> custom:bruno-room-subview). Estas views separadas so
+  # eram alcancaveis por URL direta e mantinham 1,8 MB de JS carregado a cada
+  # abertura do painel. Os arquivos seguem no disco.
+  # ROLLBACK: descomentar este bloco E as 6 linhas dos modulos em
+  # configuration.yaml (marcadas RETIRADO Fase 5d.3).
+  # - !include subviews/sala_subview.yaml
+  # - !include subviews/office_subview.yaml
+  # - title: Cozinha
+  #   path: subview-cozinha
+  #   icon: mdi:countertop
+  #   subview: true
+  #   type: panel
+  #   theme: tablet
+  #   cards:
+  #     - type: custom:bruno-cozinha-subview
+  # - title: Q. Casal
+  #   path: subview-quarto-casal
+  #   icon: mdi:bed-king
+  #   subview: true
+  #   type: panel
+  #   theme: tablet
+  #   cards:
+  #     - type: custom:bruno-quarto-casal-subview
+  # - title: Q. Marina
+  #   path: subview-quarto-marina
+  #   icon: mdi:bed-single
+  #   subview: true
+  #   type: panel
+  #   theme: tablet
+  #   cards:
+  #     - type: custom:bruno-quarto-marina-subview
+  # - title: Q. Miguel
+  #   path: subview-quarto-miguel
+  #   icon: mdi:bed-single-outline
+  #   subview: true
+  #   type: panel
+  #   theme: tablet
+  #   cards:
+  #     - type: custom:bruno-quarto-miguel-subview
   # - !include subviews/ytube-music.yaml

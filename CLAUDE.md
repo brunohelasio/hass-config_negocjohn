@@ -3070,3 +3070,234 @@ Rollback rapido:
    Josh, Shell, Sistema, Rede, Cenas e Lavabo;
 2. remover somente os aliases `--bruno-josh-popup-*`, os seletores Josh do
    overlay compartilhado e a ponte local do dialog do Lavabo.
+
+---
+
+## Registro de Implementacao — Fase 5c: conteudo vivo dos modulos (2026-08-05)
+
+### Escopo
+
+Ligar os modulos das seis subviews de comodo no componente novo
+(`dashboard-src/src/components/rooms/bruno-room-subview.ts`). A troca estrutural
+ja estava em producao desde 2026-08-05 pela manha; faltava o conteudo.
+
+### Defeitos relatados pelo usuario e causa de cada um
+
+| # | Sintoma | Causa |
+|---|---------|-------|
+| 1 | Hub de midia sem conteudo, acordeao inerte (Sala, Office, Casal, Marina, Miguel) | so o cabecalho (`mh-source-head`) era renderizado; sem `mh-source-body` e sem tratador de clique |
+| 2 | A/C sem anel luminoso e sem botao de power (todas) | `icg-root` com `<svg>` VAZIO; `ac-power-floating` como `<div>` vazio |
+| 3 | Cabecalho "Eletrodomesticos" com circulo no lugar do icone | `mdi:silverware-fork-knife` nao esta na tabela de apelidos dos Hugeicons; origem usa `mdi:home-lightning-bolt-outline` |
+| 4 | Camera demorando muito a renderizar | eu montava `hui-image` com `cameraView: 'live'` (negocia stream). Origem usa instantaneo `/api/camera_proxy/` com ciclo de 6,5s e pre-carga fora da arvore |
+| 5 | Cozinha sem a camera PIP | eu lia `cameraMain`/`cameraSecondary` (ids soltos) em vez de `entities.cameras`, que traz nome, nome curto e os tres interruptores |
+
+### Correcoes estruturais adicionais (achadas na medicao)
+
+- **Id de entidade pode ser LISTA de candidatos** (A/C do Q. Marina tem onze
+  nomes). `_resolverId` escolhe o primeiro disponivel. Sem isso o Marina exibia `--`.
+- **Regra do acordeao DIFERE por comodo**: TV+Spotify descarta a escolha manual
+  quando uma fonte fica ativa; PC+Spotify (Office) da PRECEDENCIA ao Spotify.
+- **Comandos do PC sao do dominio `button`** — `press`, nao `toggle`.
+- **Data da barra superior**: `toLocaleDateString('pt-BR')` devolve " de " e ponto
+  final, 30px mais largo que a origem. Tabela fixa de dias/meses.
+- **Badge de luzes e por ZONA** ("Sala 3 · Varanda 4"), nao um total.
+- **Grau e U+00B0**, nao o ordinal masculino U+00BA.
+
+### Desvio deliberado (unico)
+
+Os seis arquivos originais rotulam a fonte de TV como "TV da sala" nos SEIS —
+inclusive no Q. Miguel. So a Sala tem entidade de TV. Fora dela o rotulo passa a
+ser "TV". Marcado no codigo com comentario proprio.
+
+### Medicao (criterio de aceite)
+
+Comparacao entre a subview ATUAL e o componente NOVO, montados na mesma pagina e
+no mesmo instante (viewport 1280x720), nos seis comodos:
+
+- **461 campos** — geometria de 13 modulos, textos das seis badges, rotulos dos
+  botoes do hub e dos controles do A/C, fontes do acordeao;
+- **3 divergencias**, todas o desvio de rotulo acima.
+
+Interacao verificada: acordeao abre/fecha; popover de Modo abre com 5 opcoes e
+dispara `climate.set_hvac_mode`; power dispara `climate.turn_off`; toque no PIP
+promove a segunda camera; menu de cameras abre 3 controles.
+
+### Licao de metodo (a que produziu o erro)
+
+Paridade GEOMETRICA foi usada como criterio de aceite. Ela mede caixas — e uma
+caixa vazia mede igual a uma cheia. O banco de medicao ganhou `window.conteudo()`
+/ `window.inspecao()`, que contam conteudo por modulo. Registrado em
+`docs/13-testing-and-validation.md`.
+
+Duas armadilhas de medicao anotadas la:
+1. o glifo do `bruno-icon` vive no SHADOW ROOT — contar `.lc-icon svg` da zero
+   mesmo com o icone desenhado (falso defeito);
+2. o icone generico tem assinatura: um unico `<circle>`. Um resolvido tem `path`
+   ou `g`.
+
+### OITAVA ocorrencia da crase
+
+Escrevi crases dentro de um comentario HTML dentro de template literal, no
+`_corpoCozinha`. Derrubou a compilacao (`tsc` acusou octal invalido). O detector
+`check-backtick.mjs` pegou. Aspas retas em comentario, sempre.
+
+### Arquivos alterados
+
+| Arquivo | Alteracao |
+|---------|-----------|
+| `dashboard-src/src/components/rooms/bruno-room-subview.ts` | modelos de TV/Spotify/PC/climate/camera, hub com acordeao e corpo, anel do A/C, power e popovers, cameras por instantaneo, barra superior fiel |
+| `scripts/harness/gen-subview-harness.mjs` | bundle lido do diretorio (hash muda a cada build); `window.conteudo()` e `window.inspecao()` |
+| `config/configuration.yaml` | bundle -> `bruno-dashboard.BXcjd4_G.js` (ANTERIOR comentado) |
+| `docs/12-migration-plan.md`, `docs/13-testing-and-validation.md` | registro acima |
+
+### Rollback
+
+1. `config/configuration.yaml`: voltar ao bundle ANTERIOR comentado na propria linha.
+2. Rollback total da fase: em `config/dashboards/views/bento_shell.yaml`, comentar
+   o bloco `FASE 5c` e descomentar o `ANTERIOR` — os seis arquivos originais
+   seguem no disco e carregados.
+
+### Atencao
+
+A troca do `extra_module_url` no `configuration.yaml` EXIGE reinicio do Home
+Assistant. Conferir o Corredor apos o reinicio (ver historico de correlacao).
+
+### Correcao pos-feedback — Spotify e largura do A/C (2026-08-05, mesma sessao)
+
+#### 1. Spotify desligado: eu inventei um botao "Tocar"
+
+Nao existe botao de ligar nesse estado. Com o Spotify parado o comodo nao tem
+para onde tocar; o que a origem oferece e a ESCOLHA DO DISPOSITIVO, que abre o
+SpotifyPlus Card. Meu botao chamava `media_player.media_play`, que sem
+dispositivo ativo devolve erro na tela.
+
+Corrigido para o comportamento da origem:
+- estado desligado: um botao **Dispositivos** que dispara `ll-custom` com
+  `bruno_action: 'spotify'` + `bruno_spotify_config { entity, deviceDefaultId,
+  mode: 'devices' }` — mesma carga do `_openSpotifyPlusPopup`;
+- fileira "Mais": Dispositivos / Presets / Fila / Voltar (eu tinha posto
+  aleatorio e repetir, que nao existem la);
+- play com o Spotify parado usa `spotifyplus.player_transfer_playback` com
+  `device_id`, `force_activate_device: true` — nao `media_player.media_play`.
+
+#### 2. A/C mudando de largura — BUG NO GERADOR DE CSS
+
+Sintoma: no Office, Q. Casal, Q. Marina e Q. Miguel o cartao do A/C mudava de
+largura ao ligar/desligar.
+
+Causa raiz (medida na resolucao real do tablet, 1920x1200, tema Josh): o cartao
+saia **49px mais estreito** que o original e alinhado a direita, porque recebia
+`grid-column: ac` — uma coluna nomeada que nao existe. A coluna direita virava
+`49px 472px` em vez de uma unica faixa de 521px.
+
+De onde veio: o arquivo original define `.ac-card { grid-area: ac }` cedo (bloco
+de layout legado) e a CANCELA depois com
+`.hero-panel, …, .ac-card, .curtain-card { grid-area: auto }`. Mais adiante volta
+a definir `.ac-card` com outras propriedades. O gerador funde todas as
+declaracoes de um seletor e emite a regra na ULTIMA aparicao — entao o
+`grid-area: ac` viajava junto e passava a vencer o `auto`, invertendo a cascata
+original.
+
+Correcao no `scripts/validation/gen-subview-css.mjs`: nova funcao
+`anuladaDepois()`. Antes de fundir, cada declaracao e descartada se existir,
+DEPOIS dela e no mesmo contexto de media, uma regra de seletor diferente que
+declara a mesma propriedade e que inclui este seletor na sua lista separada por
+virgula. Ou seja: o que a cascata original ja tinha matado nao ressuscita.
+
+Efeito: 20 declaracoes mortas sairam do CSS gerado (`.ac-card`, `.hero-panel`,
+`.cameras-card`, `.lights-groups` e blocos legados de spotify/ps5/tv).
+Cobertura segue em 0 regras nao cobertas nos seis comodos.
+
+#### 3. O medidor rodava fora do tema e fora da resolucao do tablet
+
+O banco de medicao subia com o tema `liquid-glass` e viewport 1280x720. O tablet
+usa **Josh** e **1920x1200** — e o defeito do A/C so aparece la. Medicao refeita
+nas duas resolucoes, com o tema Josh aplicado antes:
+
+- 1920x1200 · Josh: **461 campos, 3 divergencias**
+- 1280x720 · Josh: **461 campos, 3 divergencias**
+
+As 3 sao sempre o mesmo desvio deliberado ("TV da sala" -> "TV" fora da Sala).
+
+REGRA: medir com o tema do tablet aplicado e na resolucao do tablet. Geometria
+identica em 1280x720 nao prova nada sobre 1920x1200 — foi exatamente o que
+deixou o A/C passar.
+
+---
+
+## Registro de Implementacao — Fases 5c (fechamento), 5d e 5e (2026-08-06)
+
+### Fase 5e — refinamento funcional
+
+| # | entrega | arquivo |
+|---|---------|---------|
+| 5e.0 | Contratos minimos de dispositivo: `DeviceControlDefinition`, `DeviceInstanceConfig`, registry, criacao por configuracao. 16 testes | `dashboard-src/src/application/device-registry.ts` |
+| 5e.1 | Power na rail das subviews (identico ao da Home) | `views/shell/rail_rooms.yaml` |
+| 5e.2 | Faixa de acoes rapidas removida da Home | `v2/bento_bottom_block.yaml` |
+| 5e.3 | Cena "Apagar todas as luzes" + gate de dependencia | `packages/bruno_scenes.yaml`, `config/scenes.config.ts` |
+| 5e.4 | Wi-Fi absorvido pelo botao Rede, em cadeia (QR -> painel avancado) | `core/bruno-shell.js` |
+| 5e.5 | "Atualizar" migrado para o menu Configuracoes | `core/bruno-shell.js` |
+| 5e.6 | Popup **Dispositivos** substitui o popup Sistema | `components/devices/` |
+
+**O popup Dispositivos nao sabe o que e uma TV.** A lista sai de
+`config/devices.config.ts` e cada controle vem do registry. Acrescentar um
+aparelho = acrescentar uma entrada; acrescentar um TIPO = registrar um controle
+em `controls.ts`. Nos dois casos o popup nao muda.
+
+**A cena segue o padrao ja anotado**: script `bruno_scene_*` em
+`packages/bruno_scenes.yaml`, nao entidade `scene.` — o painel de Cenas lista
+scripts. Criada com autorizacao expressa do usuario (a Regra de Trabalho n. 3
+proibe mexer em packages sem ela).
+
+### Fase 5d — fechamento
+
+| # | entrega |
+|---|---------|
+| 5d.1 | Validacao visual no tablet — **aprovada pelo usuario** |
+| 5d.2 | Proporcao das colunas — **encerrada sem mudanca**: jogar o respiro para a direita desequilibraria a margem esquerda |
+| 5d.3 | 6 modulos de subview retirados do carregamento (1,8 MB) + views legadas retiradas |
+| 5d.4 | Espacamento da rail e botao Apps da TV — aprovados como estao |
+| 5d.5 | Cena criada (ver 5e.3) |
+| 5d.6 | Commit consolidado, baseline congelada |
+
+#### O erro que quase virou regressao no 5d.3
+
+Eu havia afirmado que "nenhum dos 15 modulos e usado pelo caminho vivo". Estava
+ERRADO: conferi `extra_module_url` e nao os consumidores em YAML.
+
+- os **8 cards de comodo** sao usados pelo layout do TELEFONE
+  (`bento_comodos_phone` -> `bento_comodos_matriz` -> `main-grid/bento_*.yaml`);
+- as **6 subviews antigas** tinham views proprias registradas em
+  `ui-lovelace-main.yaml`, alcancaveis por URL direta.
+
+Escopo corrigido: os 8 cards **permanecem carregados**; as 6 subviews sairam,
+junto com as views que as usavam. Sao os 1,8 MB.
+
+**Licao:** retirar do carregamento exige checar quem CONSOME, nao so quem
+DECLARA. `grep -rn "custom:<tag>" config/dashboards/` antes de comentar a linha.
+
+### Correcoes visuais da mesma data
+
+| # | correcao | causa |
+|---|----------|-------|
+| 1 | Faixa de status da Home alinhada com as subviews | a linha-fantasma de 0px no topo do grid criava um `grid-gap` acima da faixa. **Removida** (rev.6): as areas que ela sustentava pertencem a cards com `show.mediaquery`, que no desktop nao renderizam |
+| 2 | Badges da Home passaram a flat | a pilula era o degrau que sobrava depois do alinhamento |
+| 3 | Banda inferior sem vazio | o dock de 54px saiu; banda `calc(23vh + 52px)` -> `calc(23vh - 12px)`, hero -> `calc(77vh - 80px)` |
+| 4 | Scrim dos popups reforcado | `0.08`/`blur(2px)` -> `0.42`/`blur(14px)`. O tema Josh deixa o painel translucido; o cenario competia com o texto |
+| 5 | Respiro da rail | `content-slot` `padding-left` 12 -> 6 -> 2px |
+
+#### Tentativa frustrada, documentada para nao repetir
+
+`margin-top: -10px` no `:host` do card de badges **nao funciona na Home**: o
+`layout-card` envolve cada card num wrapper, e o item do grid e o WRAPPER. A
+margem movia o card DENTRO do wrapper. No banco de medicao o card era anexado
+direto ao slot, sem wrapper — por isso a medicao dizia que funcionava e a tela
+dizia que nao. Custou tres rodadas.
+
+**Regra nova:** quando o alvo esta dentro de um container de layout do Lovelace,
+medir o componente isolado responde sobre o componente, nao sobre o layout.
+
+### Estado
+
+Bundle `bruno-dashboard.Duzbu9AO.js`. Proxima fase: **6.0 — baseline de runtime
+e carregador estavel**.

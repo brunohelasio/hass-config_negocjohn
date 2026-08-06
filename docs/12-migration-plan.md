@@ -882,3 +882,138 @@ Folha com zero regras é folha que o navegador rejeitou.
 Ajuste **pedido**, não paridade: ícone da luz de 20 → 26px, coluna da célula
 idem, `gap` da célula 7 → 10px e da grade 4 → 8px. Fica no CSS do componente; o
 gerado segue cópia fiel do original.
+
+---
+
+## Fase 5c — conteúdo vivo dos módulos (2026-08-05)
+
+A troca estrutural já estava em produção; faltavam os módulos, que renderizavam
+a caixa certa vazia. Esta passada ligou todos, medida contra as subviews atuais.
+
+### O que estava quebrado, e a causa de cada um
+
+| # | sintoma no tablet | causa |
+|---|---|---|
+| 1 | Hub de mídia sem conteúdo e acordeão inerte | eu renderizava só o `mh-source-head`. Não havia `mh-source-body` nem tratador de clique |
+| 2 | A/C sem anel e sem botão de power | `icg-root` com um `<svg>` **vazio** e `ac-power-floating` como `<div>` **vazio** |
+| 3 | Cabeçalho "Eletrodomésticos" com um círculo no lugar do ícone | `mdi:silverware-fork-knife` não está na tabela de apelidos dos Hugeicons → ícone genérico. A origem usa `mdi:home-lightning-bolt-outline` |
+| 4 | Câmera demorando muito a aparecer | eu montava `<hui-image cameraView="live">`, que negocia um stream. A origem usa instantâneo de `/api/camera_proxy/` com ciclo de 6,5s |
+| 5 | Cozinha sem a câmera pequena (PIP) | eu lia `cameraMain`/`cameraSecondary` — ids soltos. A lista real é `entities.cameras`, com nome, nome curto e os três interruptores de cada câmera |
+
+### Correções estruturais que vieram junto
+
+- **Id de entidade pode ser uma LISTA de candidatos.** O A/C do Q. Marina traz
+  onze nomes possíveis. `_resolverId` escolhe o primeiro disponível — sem isso o
+  cartão do Marina mostrava `--°`.
+- **Regra do acordeão DIFERE entre cômodos.** TV+Spotify: escolha manual cai
+  quando qualquer fonte fica ativa. PC+Spotify (Office): o Spotify tem
+  precedência e toma a vaga. Eu aplicava a primeira regra nos seis, e o Office
+  abria o PC quando devia abrir o Spotify.
+- **Comandos do PC são do domínio `button`.** `homeassistant.toggle` num button
+  não faz nada; é `button.press`.
+- **Data da barra superior.** `toLocaleDateString('pt-BR', …)` devolve
+  "segunda-feira, 5 de ago." — o " de " e o ponto final deixavam a linha 30px
+  mais larga que a da origem e empurravam o relógio. Tabela fixa de dias e meses.
+- **Badge de luzes é por ZONA** ("Sala 3 · Varanda 4"), não um total.
+- **Grau é U+00B0**, não o ordinal masculino U+00BA.
+
+### Desvio deliberado, único
+
+Os seis arquivos nasceram de uma cópia do da Sala e todos rotulam a fonte de TV
+como "TV da sala" — inclusive o Q. Miguel, onde é falso. Só a Sala tem entidade
+de TV. O rótulo passa a ser "TV" fora da Sala.
+
+### Medição
+
+461 campos comparados entre a subview atual e o componente novo, na mesma página
+e no mesmo instante, viewport 1280×720, nos seis cômodos: geometria de 13
+módulos, textos das seis badges, rótulos dos botões do hub e dos controles do
+A/C, e as fontes do acordeão. **3 divergências, todas o rótulo acima.**
+
+Interação verificada: acordeão abre e fecha; popover de Modo abre com 5 opções e
+dispara `climate.set_hvac_mode`; power dispara `climate.turn_off`; tocar no PIP
+promove a segunda câmera ao palco; o menu de câmeras abre 3 controles.
+
+---
+
+## Fase 5e — refinamento funcional (2026-08-06)
+
+Bundle: `bruno-dashboard.CbUinJPJ.js` · shell `?v=20260806-5e-redistribuicao-1`
+· badges `?v=20260806-badges-flat-1`.
+
+### O degrau entre a Home e as subviews NÃO era posição
+
+Duas passadas. A primeira corrigiu a posição; ela não bastou.
+
+**Passada 1 — a causa da posição, escrita no próprio arquivo.** Em
+`views/shell/section_home_v2.yaml` a primeira linha do grid é uma linha-fantasma
+de 0px (safety net Sagaland, para as áreas usadas só no telefone). O autor a
+moveu para o topo e registrou: *"Efeito colateral aceito: a faixa de badges
+desce 10px"* — o `grid-gap` de 10px passou a ficar **acima** da faixa.
+
+Corrigido **no card**, não no grid: a aritmética das linhas está calibrada para
+somar 100vh e a constante do hero é espelhada em `v2/bento_dynamic.yaml`. Um
+`margin-top: -10px` no `:host`, só acima de 900px, cancela o gap sem tocar em
+nenhuma das duas.
+
+**Passada 2 — o que sobrava era a PELE.** Medido, com os dois cards montados na
+mesma página:
+
+| | topo do badge | altura | ícone |
+|---|---|---|---|
+| Home | 13px | 46px | 18px |
+| Subview | 13px | 46px | 18px |
+
+Idênticos. O degrau vinha de as badges da Home serem **pílulas** (borda, fundo,
+sombra, blur) e as das subviews serem **flat**. Uma pílula de 46px pinta um
+bloco de 13 a 59; a versão flat pinta só a tinta do conteúdo — e o olho lê isso
+como degrau mesmo com as caixas alinhadas ao pixel.
+
+**Lição:** alinhar caixas não alinha a leitura. Quando o usuário insiste que
+"ainda está diferente" e a medição diz que não, a diferença mudou de natureza —
+de geometria para material.
+
+### Posicionamento do popup Dispositivos
+
+Ele nasceu colado no canto superior esquerdo. Causa: os demais painéis da rail
+usam a regra `.config-panel` da shell (`position: absolute; left: 94px;
+bottom: 74px`), e o componente novo entrou no overlay **sem posicionamento**.
+
+Resolvido no `:host` do componente, com os mesmos âncoras. Não usei a classe
+`.config-panel`: ela traz também largura de 360px, fundo e blur próprios, que
+duplicariam a pele do painel.
+
+### Redistribuição das ações rápidas
+
+A faixa saiu de `v2/bento_bottom_block.yaml` (linha 2 do bloco, 54px). O bloco
+passou a ter uma linha só, e a faixa de tiles ocupa a banda inteira — mesmo
+conceito das subviews.
+
+| função | destino |
+|---|---|
+| Luzes | cena (5e.3), com gate |
+| Wi-Fi | primeiro passo do botão Rede (5e.4) |
+| Atualizar | menu Configurações (5e.5) |
+| Corredor | já absorvido pela tile própria |
+| TV e A/C | popup Dispositivos (5e.6) |
+
+### O gate da cena (ajuste 4 do usuário)
+
+`config/scenes.config.ts` **declara** a dependência; não a cria. Criar a cena é
+configuração do Home Assistant, e a Regra de Trabalho nº 3 proíbe atuar lá.
+
+- entidade existe → a ação aparece e é invocada;
+- ausente → `checarDependencias()` a reporta no painel de diagnóstico, com a
+  instrução de como criá-la, e o dashboard **não atua fora do frontend**.
+
+### Espaçamento da rail
+
+`.content-slot` da shell: `padding-left` 12 → 6 → **2px**, em duas rodadas de
+feedback. Abaixo de 2px a coluna da rail encosta no primeiro cartão e a
+divisória some.
+
+### Décima ocorrência da crase
+
+Desta vez num comentário HTML dentro de template literal no `bruno-shell.js`
+(a palavra `refresh` entre crases) e num comentário CSS dentro do bloco `css`
+do painel de dispositivos. As duas pegas por `check-backtick.mjs --tudo`.

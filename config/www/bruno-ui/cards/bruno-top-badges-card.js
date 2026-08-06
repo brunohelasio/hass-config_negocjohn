@@ -620,6 +620,75 @@ class BrunoTopBadgesCard extends HTMLElement {
              backdrop (vinheta no topo), não de faixa/blur aqui. */
         }
 
+        /* NOVO (2026-08-06) — ALINHAMENTO COM AS SUBVIEWS.
+           A faixa da Home ficava 10px abaixo da faixa das subviews. A causa
+           esta no grid da Home (views/shell/section_home_v2.yaml) e o proprio
+           autor a registrou:
+
+             "Movida para o TOPO: o gap volta a ser um so (10px).
+              Efeito colateral aceito: a faixa de badges desce 10px."
+
+           A primeira linha do grid e uma linha-fantasma de 0px (safety net
+           Sagaland, para as areas usadas so no phone). Ao move-la para o topo,
+           o grid-gap de 10px passou a ficar ACIMA da faixa. Nas subviews a
+           barra e a primeira linha real, sem gap acima.
+
+           Correcao aqui, e nao no grid, de proposito: a aritmetica das linhas
+           esta calibrada para somar 100vh e a constante do hero e espelhada em
+           v2/bento_dynamic.yaml (available_height). Puxar o card 10px para
+           cima cancela exatamente o gap, sem tocar em nenhuma das duas.
+
+           A linha do grid continua com 48px, entao o hero nao se move.
+           So no desktop/tablet: no phone a faixa ja e a primeira linha real.
+           ROLLBACK: remover este bloco. */
+        /* REMOVIDO (2026-08-06, rev.6) — TENTATIVA FRUSTRADA.
+           margin-top: -10px no :host NAO move a faixa na Home: o layout-card
+           envolve cada card num wrapper, e o item do grid e o WRAPPER. A margem
+           deslocava o card DENTRO do wrapper, sem efeito na posicao da linha.
+           A correcao real foi remover a linha-fantasma de 0px do grid da Home
+           (views/shell/section_home_v2.yaml, rev.6). */
+
+        /* NOVO (2026-08-06, 2a passada) — O DEGRAU NAO ERA POSICAO.
+           Depois do ajuste acima, a geometria da Home e a da subview passaram a
+           coincidir. Medido, com os dois cards montados na mesma pagina:
+
+             Home    badge topo 13px · altura 46px · icone 18px
+             Subview badge topo 13px · altura 46px · icone 18px
+
+           O que sobrava era a PELE. As badges da Home eram PILULAS (borda,
+           fundo, sombra e blur); as das subviews sao FLAT — so icone e texto.
+           Uma pilula de 46px pinta um bloco de 13 a 59; a versao flat pinta so
+           a tinta do conteudo. O olho le isso como degrau na transicao, mesmo
+           com as caixas alinhadas ao pixel.
+
+           Igualar a pele resolve de verdade e ainda atende o pedido anterior de
+           "revisar o tamanho dos indicadores superiores": sem a pilula, a faixa
+           fica mais leve.
+
+           ROLLBACK: remover este bloco — as regras originais da pilula seguem
+           logo abaixo, intactas. */
+        @media (min-width: 901px) {
+          .badge {
+            border: 1px solid transparent;
+            background: transparent;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            padding: 0 16px;
+            column-gap: 9px;
+          }
+          .badge:hover {
+            background: rgba(255, 255, 255, 0.04);
+          }
+          /* Aceso: a subview acende pelo TOM do grupo, sem pilula branca. */
+          .badge.is-active {
+            background: transparent;
+            border-color: transparent;
+            color: rgba(255, 255, 255, 0.96);
+            box-shadow: none;
+          }
+        }
+
         * { box-sizing: border-box; letter-spacing: 0; }
 
         .badges-card {

@@ -1,5 +1,9 @@
 # Prompt de continuidade — dashboard Home Assistant (negocjohn)
 
+> ⚠️ **SUPERADO em 2026-08-05.** Este arquivo descreve a Fase 5c ainda quebrada e
+> foi escrito antes da conclusão dela. Use **`PROMPT-CONTINUIDADE-V2.md`**.
+> Mantido apenas como histórico.
+
 Cole isto numa sessão nova. Descreve o que estamos fazendo, onde paramos e o que
 está quebrado agora.
 

@@ -123,8 +123,10 @@ card:
   layout_type: custom:grid-layout
   layout:
     grid-template-columns: minmax(0, 1fr)
-    # Linha 1: cômodos (mesma altura de sempre). Linha 2: dock de 54px.
-    grid-template-rows: calc(23vh - 24px) 54px
+    # ANTERIOR (rollback 5e.2): duas linhas — comodos + dock de 54px.
+    #   grid-template-rows: calc(23vh - 24px) 54px
+    # NOVO: linha unica — a faixa de tiles ocupa a banda inteira.
+    grid-template-rows: minmax(0, 1fr)
     grid-gap: 10px
     margin: 0
     padding: 0
@@ -261,76 +263,90 @@ card:
         #   divider_left: true
         # ─────────────────────────────────────────────────────────────────────
 
-    # ---- Dock de ações rápidas (dentro da mesma banda) ----------------
-    # Mesmo conteúdo de v2/bento_quick_actions_v2.yaml, sem view_layout
-    # (aqui ele é filho do bloco, não uma área do grid da seção).
-    # Intocado pela Home V3: 54px, alinhado ao botão Power da rail.
-    - type: custom:bruno-quick-actions-card
-      items:
-        - key: lights_off
-          icon: mdi:lightbulb-off-outline
-          label: Luzes
-          group: actions
-          tap_action:
-            action: call-service
-            service: homeassistant.turn_off
-            data:
-              entity_id: light.todas_as_luzes
-        - key: wifi
-          icon: mdi:wifi
-          label: Wi-Fi
-          group: actions
-          tap_action:
-            action: fire-dom-event
-            browser_mod:
-              service: browser_mod.popup
-              data:
-                title: Wi-Fi
-                tag: wifi_qr
-                style: |
-                  --popup-width: 450px;
-                  --popup-max-width: min(450px, calc(100vw - 32px));
-                  --popup-background-color: rgba(15, 20, 35, 0.75);
-                  --mdc-theme-surface: rgba(20, 24, 33, 0.88);
-                  --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
-                content:
-                  type: picture
-                  image: /local/images/wifi_main_scanme.png
-        - key: refresh
-          icon: mdi:refresh
-          label: Atualizar
-          group: actions
-          tap_action:
-            action: fire-dom-event
-            bruno_action: refresh
-        # --- Sala (comandos migrados do card especial) ---
-        - key: sala_corredor
-          icon_key: bulb
-          label: Corredor
-          group: sala
-          kind_label: Sala
-          tap_action:
-            action: call-service
-            service: homeassistant.toggle
-            data:
-              entity_id: light.corredor_switch_1
-        - key: sala_tv
-          icon_key: tv
-          label: TV
-          group: sala
-          kind_label: Sala
-          tap_action:
-            action: call-service
-            service: homeassistant.toggle
-            data:
-              entity_id: media_player.android_tv_192_168_3_17
-        - key: sala_ac
-          icon_key: smart-ac
-          label: A/C
-          group: sala
-          kind_label: Sala
-          tap_action:
-            action: call-service
-            service: climate.toggle
-            data:
-              entity_id: climate.sl_ar_condicionado
+    # ══ REMOVIDO (Fase 5e.2, 2026-08-06) — FAIXA DE ACOES RAPIDAS ═══════════
+    # A base da Home passa a ser EXCLUSIVAMENTE a faixa de tiles dos comodos,
+    # mesmo conceito ja usado nas subviews. As seis funcoes foram
+    # REDISTRIBUIDAS, nenhuma se perdeu:
+    #
+    #   Luzes        -> cena, invocada pelo painel Cenas da rail (5e.3)
+    #   Wi-Fi        -> botao Rede da rail, primeiro passo da cadeia (5e.4)
+    #   Atualizar    -> menu Configuracoes (5e.5)
+    #   Corredor     -> ja absorvido pela tile propria do Corredor
+    #   TV / A-C     -> popup Dispositivos (5e.6)
+    #
+    # ROLLBACK: descomentar o bloco abaixo E devolver o grid-template-rows do
+    # bloco para: calc(23vh - 24px) 54px
+    #
+    # # ---- Dock de ações rápidas (dentro da mesma banda) ----------------
+    # # Mesmo conteúdo de v2/bento_quick_actions_v2.yaml, sem view_layout
+    # # (aqui ele é filho do bloco, não uma área do grid da seção).
+    # # Intocado pela Home V3: 54px, alinhado ao botão Power da rail.
+    # - type: custom:bruno-quick-actions-card
+    #   items:
+    #     - key: lights_off
+    #       icon: mdi:lightbulb-off-outline
+    #       label: Luzes
+    #       group: actions
+    #       tap_action:
+    #         action: call-service
+    #         service: homeassistant.turn_off
+    #         data:
+    #           entity_id: light.todas_as_luzes
+    #     - key: wifi
+    #       icon: mdi:wifi
+    #       label: Wi-Fi
+    #       group: actions
+    #       tap_action:
+    #         action: fire-dom-event
+    #         browser_mod:
+    #           service: browser_mod.popup
+    #           data:
+    #             title: Wi-Fi
+    #             tag: wifi_qr
+    #             style: |
+    #               --popup-width: 450px;
+    #               --popup-max-width: min(450px, calc(100vw - 32px));
+    #               --popup-background-color: rgba(15, 20, 35, 0.75);
+    #               --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+    #               --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+    #             content:
+    #               type: picture
+    #               image: /local/images/wifi_main_scanme.png
+    #     - key: refresh
+    #       icon: mdi:refresh
+    #       label: Atualizar
+    #       group: actions
+    #       tap_action:
+    #         action: fire-dom-event
+    #         bruno_action: refresh
+    #     # --- Sala (comandos migrados do card especial) ---
+    #     - key: sala_corredor
+    #       icon_key: bulb
+    #       label: Corredor
+    #       group: sala
+    #       kind_label: Sala
+    #       tap_action:
+    #         action: call-service
+    #         service: homeassistant.toggle
+    #         data:
+    #           entity_id: light.corredor_switch_1
+    #     - key: sala_tv
+    #       icon_key: tv
+    #       label: TV
+    #       group: sala
+    #       kind_label: Sala
+    #       tap_action:
+    #         action: call-service
+    #         service: homeassistant.toggle
+    #         data:
+    #           entity_id: media_player.android_tv_192_168_3_17
+    #     - key: sala_ac
+    #       icon_key: smart-ac
+    #       label: A/C
+    #       group: sala
+    #       kind_label: Sala
+    #       tap_action:
+    #         action: call-service
+    #         service: climate.toggle
+    #         data:
+    #           entity_id: climate.sl_ar_condicionado

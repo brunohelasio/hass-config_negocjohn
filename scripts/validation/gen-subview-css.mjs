@@ -81,7 +81,7 @@ function blocos(css) {
         .split(';')
         .map((d) => d.trim().replace(/\s+/g, ' '))
         .filter(Boolean);
-      saida.push({ media: [...pilha], seletor: cabecalho, decls });
+      saida.push({ media: [...pilha], seletor: cabecalho, decls, indice: saida.length });
       continue;
     }
     if (c === '}') {
@@ -113,11 +113,41 @@ const valor = (b) => [...b.decls].sort().join('; ');
  * assim que `.lights-card` perdeu o `display: flex` e o dock ficou 29px mais
  * alto. Fundir é o único comportamento que reproduz a cascata.
  */
-function fundir(blocosDaChave) {
+/**
+ * Uma declaração pode ter sido ANULADA por outra REGRA no meio do caminho.
+ *
+ * O caso real: `.ac-card { grid-area: ac }` aparece cedo no arquivo e é
+ * cancelada depois por `.hero-panel, …, .ac-card, .curtain-card
+ * { grid-area: auto }`. Mais adiante o arquivo volta a definir `.ac-card`, com
+ * outras propriedades. Como a fusão emite a regra na ÚLTIMA aparição do
+ * seletor, o `grid-area: ac` viajava junto e passava a vencer o `auto` — o
+ * inverso da cascata original. O cartão do A/C ficava numa coluna nomeada
+ * inexistente e saía 49px mais estreito na resolução do tablet.
+ *
+ * Esta função responde: entre a posição `desde` e o fim, existe uma regra de
+ * seletor DIFERENTE, no mesmo contexto de media, que declara esta propriedade e
+ * que também casa este seletor (por estar na lista separada por vírgula)? Se
+ * existe, a declaração já estava morta e não pode ser ressuscitada.
+ */
+function anuladaDepois(todos, desde, seletor, media, prop) {
+  const contexto = media.join(' >> ');
+  for (let i = desde + 1; i < todos.length; i++) {
+    const o = todos[i];
+    if (o.seletor === seletor) continue;
+    if (o.media.join(' >> ') !== contexto) continue;
+    const partes = o.seletor.split(',').map((s) => s.trim());
+    if (!partes.includes(seletor)) continue;
+    if (o.decls.some((d) => d.slice(0, d.indexOf(':')).trim() === prop)) return true;
+  }
+  return false;
+}
+
+function fundir(blocosDaChave, todos) {
   const props = new Map(); // propriedade -> declaração completa, na ordem
   for (const b of blocosDaChave) {
     for (const d of b.decls) {
       const prop = d.slice(0, d.indexOf(':')).trim();
+      if (anuladaDepois(todos, b.indice, b.seletor, b.media, prop)) continue;
       props.delete(prop); // reinsere no fim: a última posição vence
       props.set(prop, d);
     }
@@ -134,7 +164,7 @@ for (const c of COMODOS) {
     porChave.get(chave(b)).push(b);
   }
   const m = new Map();
-  for (const [k, lista] of porChave) m.set(k, fundir(lista));
+  for (const [k, lista] of porChave) m.set(k, fundir(lista, porComodo[c]));
   fundidoDe[c] = m;
 }
 

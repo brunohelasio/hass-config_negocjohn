@@ -1,5 +1,6 @@
 import type { Hass } from '@/models/home-assistant';
 import { collectConfiguredEntities } from '@/config/rooms.config';
+import { verificarCenas } from '@/config/scenes.config';
 
 /**
  * Verificação de existência de entidades.
@@ -46,6 +47,29 @@ export function checkConfiguredEntities(hass: Hass | undefined): EntityCheckResu
   }
 
   return { total: configured.length, ok, issues };
+}
+
+/**
+ * Dependências que o dashboard espera do Home Assistant e não pode criar.
+ *
+ * Hoje: as cenas declaradas em `config/scenes.config.ts`. É o gate da Fase 5e.3
+ * — o dashboard **registra** a dependência ausente e não atua fora do frontend.
+ * Criar a cena é configuração do HA, e depende de autorização explícita.
+ */
+export interface DependenciaAusente {
+  tipo: 'scene';
+  entityId: string;
+  nome: string;
+  comoResolver: string;
+}
+
+export function checarDependencias(hass: Hass | undefined): DependenciaAusente[] {
+  return verificarCenas(hass).ausentes.map((cena) => ({
+    tipo: 'scene' as const,
+    entityId: cena.entity,
+    nome: cena.name,
+    comoResolver: cena.comoCriar,
+  }));
 }
 
 /**

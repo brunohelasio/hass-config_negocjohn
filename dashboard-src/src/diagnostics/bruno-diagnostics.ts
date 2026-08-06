@@ -3,6 +3,7 @@ import { scaleTokens } from '@/styles/tokens/scale';
 import type { Hass } from '@/models/home-assistant';
 import {
   checkConfiguredEntities,
+  checarDependencias,
   readEnvironment,
   type EntityCheckResult,
   type EnvironmentInfo,
@@ -129,6 +130,8 @@ export class BrunoDiagnostics extends LitElement {
     const check: EntityCheckResult = checkConfiguredEntities(this._hass);
     const missing = check.issues.filter((i) => i.problem === 'missing');
     const unavailable = check.issues.filter((i) => i.problem === 'unavailable');
+    // Gate da Fase 5e.3: o que o dashboard espera do HA e nao pode criar.
+    const dependencias = checarDependencias(this._hass);
 
     return html`
       <div class="card">
@@ -162,7 +165,31 @@ export class BrunoDiagnostics extends LitElement {
             String(unavailable.length),
             unavailable.length === 0 ? 'ok' : 'warn',
           )}
+          ${this._row(
+            'Dependências do HA ausentes',
+            String(dependencias.length),
+            dependencias.length === 0 ? 'ok' : 'warn',
+          )}
         </dl>
+
+        ${dependencias.length > 0
+          ? html`
+              <div>
+                <h2>Dependências que o dashboard não cria</h2>
+                <p>
+                  Criar estes itens é configuração do Home Assistant. O dashboard
+                  registra a falta e não atua fora do frontend.
+                </p>
+                <ul>
+                  ${dependencias.map(
+                    (d) => html`<li class="warn">
+                      ${d.tipo} · ${d.nome} → ${d.entityId}<br /><small>${d.comoResolver}</small>
+                    </li>`,
+                  )}
+                </ul>
+              </div>
+            `
+          : nothing}
 
         ${missing.length > 0
           ? html`

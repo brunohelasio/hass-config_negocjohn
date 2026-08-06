@@ -9,7 +9,7 @@
 // arquivos — não de uma lista escrita à mão, que envelhece.
 //
 //   node scripts/harness/gen-subview-harness.mjs
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readdirSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 
 const SAIDA = 'scripts/harness/subview-parity.html';
@@ -42,8 +42,19 @@ const COMODOS = [
   ['quarto-miguel', 'bruno-quarto-miguel-subview'],
 ];
 
+// O bundle sai do Vite com hash de conteúdo — o nome muda a cada build. Ler o
+// diretório evita medir a versão anterior sem perceber, que foi como a página
+// ficou um dia inteiro apontando para um arquivo que não existia mais.
+const bundle = readdirSync('config/www/dashboard')
+  .filter((f) => /^bruno-dashboard\..*\.js$/.test(f))
+  .sort(
+    (a, b) =>
+      statSync(`config/www/dashboard/${b}`).mtimeMs - statSync(`config/www/dashboard/${a}`).mtimeMs,
+  )[0];
+if (!bundle) throw new Error('bundle não encontrado em config/www/dashboard');
+
 const scripts = [
-  '/local/dashboard/bruno-dashboard.DolCvfzl.js',
+  `/local/dashboard/${bundle}`,
   '/local/bruno-ui/core/bruno-icons.js',
   '/local/bruno-ui/core/bruno-liquid-glass.js',
   '/local/bruno-ui/core/bruno-surface-material.js',
@@ -214,8 +225,80 @@ window.referencia = async function referencia() {
   return saida;
 };
 
+// ── Conteúdo, não geometria ────────────────────────────────────────────────
+// A fase 5c publicou uma tela com a geometria exata e os módulos VAZIOS. Medir
+// caixa não prova que o módulo funciona; medir CONTEÚDO prova. Cada campo abaixo
+// responde a um defeito relatado no tablet.
+window.conteudo = function conteudo(tag) {
+  const raiz = document.querySelector(tag)?.shadowRoot;
+  if (!raiz) return { erro: 'sem shadowRoot: ' + tag };
+  const q = (s) => raiz.querySelector(s);
+  const qq = (s) => raiz.querySelectorAll(s);
+  const icone = (el) => {
+    // bruno-icon resolvido pelos Hugeicons desenha um <svg> com traçado. O ícone
+    // genérico (apelido inexistente) desenha um círculo — foi o que apareceu no
+    // cabeçalho dos eletrodomésticos.
+    const svg = el?.shadowRoot?.querySelector('svg') || el?.querySelector('svg');
+    if (!svg) return 'ausente';
+    const filhos = [...svg.children].map((c) => c.tagName.toLowerCase());
+    return filhos.length === 1 && filhos[0] === 'circle' ? 'generico(circulo)' : filhos.join(',');
+  };
+
+  const corpo = q('.mh-source-body');
+  return {
+    hub: {
+      fontes: qq('.mh-source').length,
+      abertas: qq('.mh-source.is-open').length,
+      corpoFilhos: corpo ? corpo.children.length : 0,
+      corpoAltura: corpo ? +corpo.getBoundingClientRect().height.toFixed(1) : 0,
+      botoes: qq('.mh-source-body .mh-btn').length,
+      volume: qq('.mh-source-body .mh-vol input').length,
+      arte: qq('.mh-source-body .mh-art img').length,
+    },
+    ac: {
+      anelSvg: Boolean(q('.icg-svg')),
+      anelCaminhos: qq('.icg-svg path').length,
+      anelMarcas: qq('.icg-svg line').length,
+      anelTemp: q('.icg-center-temp')?.textContent.trim() || '',
+      power: q('.ac-power-floating')?.tagName.toLowerCase() || 'ausente',
+      powerIcone: icone(q('.ac-power-floating bruno-icon')),
+      maisDetalhes: q('.ac-more-button')?.tagName.toLowerCase() || 'ausente',
+      controles: qq('.ac-lean-foot .ac-action').length,
+    },
+    cameras: {
+      feeds: qq('.camera-feed').length,
+      pip: qq('.camera-pip-feed').length,
+      imagens: qq('.camera-feed img[data-camera-src-base]').length,
+      srcs: [...qq('.camera-feed img[data-camera-src-base]')].map((i) =>
+        (i.getAttribute('src') || '').split('?')[0],
+      ),
+    },
+    eletro: {
+      tiles: qq('.appliance-tile').length,
+      pngs: qq('.appliance-visual img').length,
+      cabecalhoIcone: icone(q('.appliances-head bruno-icon')),
+    },
+    luzes: {
+      celulas: qq('.light-cell').length,
+      // O glifo vive no shadow root do bruno-icon — um seletor comum não o
+      // alcança, e contar zero aqui não significa ícone faltando.
+      icones: [...qq('.lc-icon bruno-icon')].filter((el) => el.shadowRoot?.querySelector('svg')).length,
+    },
+  };
+};
+
+window.inspecao = async function inspecao() {
+  const saida = {};
+  for (let i = 0; i < COMODOS.length; i++) {
+    window.montarNovo(i);
+    await new Promise((ok) => setTimeout(ok, 400));
+    saida[COMODOS[i][0]] = window.conteudo('bruno-room-subview');
+  }
+  return saida;
+};
+
 window.__pronto = true;
-document.getElementById('rotulo').textContent = 'pronto — chame montar(0..5) ou referencia()';
+document.getElementById('rotulo').textContent = 'pronto — montar(0..5), referencia(), inspecao()';
 </script>
 </body>
 </html>

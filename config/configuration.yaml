@@ -42,7 +42,14 @@ frontend:
     # ANTERIOR: - /local/dashboard/bruno-dashboard.DolCvfzl.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.SgTFfg3E.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.D6WwkpRE.js
-    - /local/dashboard/bruno-dashboard.DAEAbM3H.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.DAEAbM3H.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.BXcjd4_G.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.uIhLousp.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.ClNDMbAL.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.p0dzlndD.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.NftcYUXq.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.CbUinJPJ.js
+    - /local/dashboard/bruno-dashboard.Duzbu9AO.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock
@@ -57,13 +64,18 @@ frontend:
     - /local/bento-sidebar-card.js?v=20260804-rail-icon-24
     - /local/bruno-ui/core/bruno-wallpaper-manager.js?v=20260718-audit-final-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-scenes-panel.js?v=20260719-icons-global-1
-    - /local/bruno-ui/core/bruno-scenes-panel.js?v=20260802-josh-popup-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-scenes-panel.js?v=20260802-josh-popup-material-1
+    - /local/bruno-ui/core/bruno-scenes-panel.js?v=20260806-cena-apagar-luzes-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260722-persistent-sections-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260723-theme-backdrop-1
     # NOVO (2026-07-24) — feedback Home V2: rail sem filete divisor.
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260724-home-v2-2
-    - /local/bruno-ui/core/bruno-shell.js?v=20260802-josh-popup-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260802-josh-popup-material-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260805-rail-gap-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260806-devices-panel-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260806-5e-redistribuicao-1
+    - /local/bruno-ui/core/bruno-shell.js?v=20260806-scrim-forte-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260702-liquid-yaml-2
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260723-liquid-performance-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260723-surface-on-ios-1
@@ -140,7 +152,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260729-lights-dock-3
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260729-lights-dock-5
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260731-lights-cells-gap-1
-    - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260802-assets-resize-1
+    # RETIRADO (Fase 5d.3, 2026-08-06): - /local/bruno-ui/subviews/bruno-sala-subview.js?v=20260802-assets-resize-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260710-clock-camera-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260720-optical-stroke-1
@@ -153,7 +165,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260729-lights-dock-2
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260729-lights-dock-3
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260729-lights-dock-5
-    - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260731-lights-cells-gap-1
+    # RETIRADO (Fase 5d.3, 2026-08-06): - /local/bruno-ui/subviews/bruno-office-subview.js?v=20260731-lights-cells-gap-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260710-clock-camera-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260720-optical-stroke-1
@@ -167,7 +179,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260729-lights-dock-2
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260729-lights-dock-3
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260729-lights-dock-5
-    - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260731-lights-cells-gap-1
+    # RETIRADO (Fase 5d.3, 2026-08-06): - /local/bruno-ui/subviews/bruno-cozinha-subview.js?v=20260731-lights-cells-gap-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260710-clock-camera-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260720-optical-stroke-1
@@ -181,7 +193,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260729-lights-dock-3
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260729-lights-dock-5
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260731-lights-cells-gap-1
-    - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260802-assets-resize-1
+    # RETIRADO (Fase 5d.3, 2026-08-06): - /local/bruno-ui/subviews/bruno-quarto-casal-subview.js?v=20260802-assets-resize-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260710-clock-camera-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260720-optical-stroke-1
@@ -195,7 +207,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260729-lights-dock-3
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260729-lights-dock-5
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260731-lights-cells-gap-1
-    - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260802-assets-resize-1
+    # RETIRADO (Fase 5d.3, 2026-08-06): - /local/bruno-ui/subviews/bruno-quarto-marina-subview.js?v=20260802-assets-resize-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260710-clock-camera-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260720-optical-stroke-1
@@ -209,7 +221,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260729-lights-dock-3
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260729-lights-dock-5
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260731-lights-cells-gap-1
-    - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260802-assets-resize-1
+    # RETIRADO (Fase 5d.3, 2026-08-06): - /local/bruno-ui/subviews/bruno-quarto-miguel-subview.js?v=20260802-assets-resize-1
     # ANTERIOR (rollback): ?v=20260704-camera-clean-1
     - /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/subviews/bruno-roborock-subview.js?v=20260719-icons-global-1
@@ -244,7 +256,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-corrections-1
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-status-spacing-1
-    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260802-assets-resize-1
+   - /local/bruno-ui/cards/bruno-sala-card.js?v=20260802-assets-resize-1
     # NOVO (2026-07-24) — HOME V2: Sala em estrutura padrao de comodo para a
     # faixa horizontal (clone da base Q. Casal). O bruno-sala-card acima segue
     # intacto (Home V1 + phone). FALLBACK: comentar esta linha junto com o
@@ -276,7 +288,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-office-card.js?v=20260731-flat-status-dots-1
-    - /local/bruno-ui/cards/bruno-office-card.js?v=20260802-assets-resize-1
+   - /local/bruno-ui/cards/bruno-office-card.js?v=20260802-assets-resize-1
     # ANTERIOR (2026-07-03): ?v=20260702-all-images-1 nos 5 cards abaixo.
     # NOVO: bump para presence-uniform-1 (molde unico de presenca/ocupacao + alinhamento padrao Office).
     # ANTERIOR (rollback): ?v=20260704-room-state-1
@@ -285,7 +297,7 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260731-flat-status-dots-1
-    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260802-assets-resize-1
+   - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260802-assets-resize-1
     # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-1 (popup quebrado: _escapeAttr ausente + fixed clipado).
     # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-2 (fix botao + popup <dialog> centralizado).
     # NOVO: popup ancorado ao botao + backdrop suave + banner lavabo.jpg com bordas atmosfericas.
@@ -296,13 +308,13 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260731-flat-status-dots-1
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260802-josh-popup-material-1
-    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260802-assets-resize-1
+   - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260802-assets-resize-1
     # NOVO (2026-07-29) — HOME V3: Corredor como 8o tile da faixa.
     # FALLBACK: comentar esta linha + o bloco em v2/bento_bottom_block.yaml
     # e voltar o grid para repeat(7, ...).
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260729-corredor-assets-5
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260731-flat-status-dots-1
-    - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260802-assets-resize-1
+   - /local/bruno-ui/cards/bruno-corredor-card.js?v=20260802-assets-resize-1
     # ORIGINAL (cache stale no tablet — JS antigo com icone 92/80px): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260611-room-nav-1
     # ANTERIOR (rollback, 3 linhas): ?v=20260704-semantic-sync-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260711-home-microadjust-1
@@ -310,19 +322,19 @@ frontend:
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260731-flat-status-dots-1
-    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260802-assets-resize-1
+   - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260802-assets-resize-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260711-home-microadjust-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260731-flat-status-dots-1
-    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260802-assets-resize-1
+   - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260802-assets-resize-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260711-home-microadjust-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260722-mobile-consolidation-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260726-home-v3-tiles-2
     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260731-flat-status-dots-1
-    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260802-assets-resize-1
+   - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260802-assets-resize-1
     - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260719-icons-global-1
     - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260719-icons-global-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260718-audit-final-1
@@ -339,7 +351,10 @@ frontend:
     - /local/bruno-ui/cards/bruno-hero-card.js?v=20260725-home-v2-5
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260719-icons-global-1
     # NOVO (2026-07-25) — HOME V2 item 3: badge de Energia.
-    - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260725-home-v2-5
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260725-home-v2-5
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260806-badges-align-1
+    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260806-badges-flat-1
+    - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260806-badges-rev6-1
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260719-icons-global-1
     # NOVO (2026-07-24) — HOME V2: rotulo do grupo 'sala' no dock (Corredor/TV/A-C).
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260724-home-v2-1

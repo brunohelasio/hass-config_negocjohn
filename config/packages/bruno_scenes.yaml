@@ -137,3 +137,17 @@ script:
               - service: button.press
                 target:
                   entity_id: button.desktop_melg9vv_pc_office_switch
+
+  # NOVO (Fase 5e.3, 2026-08-06) — APAGAR TODAS AS LUZES.
+  # Vem da faixa de acoes rapidas da Home, removida na 5e.2. Era um botao
+  # chamando `homeassistant.turn_off` direto; virou cena para aparecer no painel
+  # de Cenas da rail e poder ser reaproveitada por automacao e por voz.
+  # Segue o mesmo padrao dos demais: script `bruno_scene_*`, nao entidade
+  # `scene.` — o painel lista scripts.
+  bruno_scene_apagar_todas_as_luzes:
+    alias: Bruno - Apagar todas as luzes
+    mode: restart
+    sequence:
+      - service: light.turn_off
+        target:
+          entity_id: light.todas_as_luzes

@@ -487,3 +487,27 @@ nunca editar o que é do HA.
  ↓
 7    Consolidação
 ```
+
+
+---
+
+## Atualização da Fase 6.2B — 2026-08-06, após a sondagem
+
+**A sondagem 6.0.5 respondeu: 8 de 8 câmeras com WebRTC.**
+
+Isso derruba a premissa da correção 1 do roteiro v2, que era minha e estava
+errada: eu afirmei que "Tuya não expõe WebRTC nativamente" e que o caminho
+realista seria HLS transcodificado na VM. Neste sistema, não.
+
+| premissa antiga | premissa medida |
+|---|---|
+| Só HLS, transcodificando na VM | WebRTC em todas as oito |
+| CPU da VM é a restrição principal | A restrição passa a ser o cliente: WebView, memória, rede |
+| Instantâneo é o padrão até o stream vencer | O instantâneo, medido, já é ruim: 6 s de média, 31% de falha numa sessão |
+| Stream é opt-in, uma câmera por vez | Continua prudente começar por uma, mas por causa do cliente, não do servidor |
+
+**Novo objetivo da 6.2B:** substituir o instantâneo por WebRTC na câmera
+principal do cômodo ativo, medindo pelas oito métricas já definidas. O
+instantâneo permanece como primeiro quadro e como fallback.
+
+As oito métricas de aceite não mudam — elas medem o resultado, não o caminho.

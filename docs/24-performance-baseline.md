@@ -216,3 +216,80 @@ Q. Casal.
 
 O caminho é abrir a subview do Q. Miguel, esperar, e comparar `requisições:
 falhas` antes e depois. Se a falha aparecer, é timeout — e cai no mesmo alvo nº 1.
+
+---
+
+## Sondagem profunda — o veredito, e uma posição minha que cai
+
+```
+Total 8 · WebRTC 8 · HLS 0 · Só instantâneo 0 · Fora do ar 0
+"8 de 8 com WebRTC — vale medir stream nessas."
+```
+
+Todas as oito, inclusive `camera.qmi_camera_2`, respondem `web_rtc` ao comando
+`camera/capabilities`.
+
+### Eu estava errado, e escrevi isso no roteiro
+
+Na revisão do roteiro (v2, correção 1) afirmei:
+
+> "São 8 câmeras Tuya, via integração Xtend. **Tuya não expõe WebRTC nativamente
+> no HA**; o caminho realista é RTSP → `stream` → HLS, que transcodifica **na
+> VM**."
+
+**Não é o caso neste sistema.** As oito negociam WebRTC. Isso significa: sem
+transcodificação na VM, latência baixa, e o custo de CPU do servidor sai da
+conta que eu tinha montado.
+
+A afirmação veio de conhecimento geral sobre a integração Tuya, não deste
+sistema — e a sondagem existe exatamente para isso. Foi a leitura por atributo
+que quase confirmou meu erro (`instantaneo` em todas as oito); só a pergunta
+pelo WebSocket deu a resposta certa. **Meia investigação teria produzido a
+conclusão errada com aparência de dado medido.**
+
+### O que muda na Fase 6.2B
+
+O que eu havia escrito | O que vale agora
+---|---
+"Instantâneo é o padrão até o stream vencer" | O stream tem caminho barato — e o instantâneo, medido, já é ruim (6 s de média)
+"Stream é opt-in, uma câmera por vez, por causa da CPU da VM" | A restrição de CPU cai; a restrição que sobra é o cliente (WebView, memória, rede)
+"Se o stream perder de novo, registra-se como decisão" | O alvo passa a ser **substituir** o instantâneo, não empatar com ele
+
+As oito métricas de aceite continuam valendo — elas medem o que interessa
+independentemente do caminho escolhido.
+
+---
+
+## Baseline 3 — 15 s após reinício: o crescimento é de CARGA, não de vazamento
+
+| medida | valor |
+|---|---|
+| Desde o carregamento | **15 s** |
+| Memória usada | 132,9 MB |
+| Crescimento | **121,0 MB** |
+| Tarefas longas | 3 · pior 118 ms |
+| `bruno-room-tile` | 72 renders, média 0,1 ms, pior 1,4 ms · 8 vivos |
+| Vazamentos | 8 instâncias (os tiles) · timers 0 · listeners 0 |
+
+### Segunda correção sobre memória
+
+Na Baseline 2 eu li "101 MB em 466 s" e escrevi que **"nesse ritmo, um painel de
+parede ligado o dia inteiro estoura"**. Essa frase não se sustenta.
+
+Aqui, **121 MB em 15 segundos**. Ou seja: o crescimento é **quase todo
+front-loaded** — é o custo de montar o dashboard, não um acúmulo linear ao longo
+do tempo. A primeira amostra é colhida no carregamento do bundle, antes de o
+painel existir; o salto que aparece como "crescimento" é a construção da tela.
+
+**O que isso realmente diz:** o dashboard custa ~120 MB para carregar, num
+orçamento estimado em ~253 MB. É muito, e é alvo legítimo — mas é um problema de
+**tamanho**, não de **vazamento**, e o remédio é outro.
+
+**O que ainda não está medido:** se, depois de carregado, o consumo continua
+subindo. Para responder isso é preciso uma sessão longa — 30 minutos ou mais,
+sem recarregar. Fica como a medição pendente da 6.1.
+
+Duas leituras erradas seguidas sobre a mesma métrica, em direções opostas:
+primeiro achei que não dava para medir, depois li um número de carga como se
+fosse taxa. A lição prática: **`crescimento` só vira "taxa" com sessão longa e
+sem recarga.** O painel passa a merecer essa ressalva à vista.

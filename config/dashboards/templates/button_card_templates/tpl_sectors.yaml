@@ -998,6 +998,17 @@ camera:
       [[[
         return !entity || states[variables.stream_status].state;
       ]]]
+    camera_enabled: >
+      [[[
+        let camName = entity.entity_id.split(".")[1],
+            enabledEntity = `switch.${camName}_camera_enabled`,
+            isOnline = states[enabledEntity].state == 'on';
+            return isOnline;
+      ]]]
+  state_display: >
+    [[[
+      return variables.camera_enabled ? variables.state : variables.translate_offline;
+    ]]]
   show_name: false
   # tap_action:
   #   action: call-service
@@ -1006,7 +1017,9 @@ camera:
   #     entity_id: automation.camera_snapshot
   tooltip: >
     [[[
-      return states[variables.battery].state+' %';
+      let batteryState = states[variables.battery].state+' %',
+          stateStr = variables.camera_enabled ? 'online' : 'offline';
+      return `${batteryState} - ${stateStr}`;
     ]]]
 
   double_tap_action:
@@ -1020,13 +1033,16 @@ camera:
           ]]]
   tap_action:
     action: call-service
-    service: button.press
+    service: >
+      [[[
+        return variables.camera_on
+          ? 'camera.turn_off'
+          : 'camera.turn_on';
+      ]]]
     service_data:
       entity_id: >
         [[[
-            let isIdle = states[variables.stream_status].state === 'StreamStatus.IDLE',
-                pressAction = isIdle ? 'start' : 'stop';
-            return `button.${entity.entity_id.split('.')[1]}_${pressAction}_rtsp_stream`;
+            return entity.entity_id;
         ]]]
 
   styles:
@@ -1038,14 +1054,23 @@ camera:
       - background-repeat: no-repeat
       - background-image: >
           [[[
-              let picUrl = variables.image_entity !== undefined
-                  ? states[variables.image_entity].attributes.entity_picture
-                  : variables.entity_picture;
-              return `linear-gradient(0deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 100%), url(${picUrl})`;
+              if (variables.camera_enabled) {
+                let picUrl = variables.image_entity !== undefined
+                    ? states[variables.image_entity].attributes.entity_picture
+                    : variables.entity_picture;
+                return `linear-gradient(0deg, rgba(0,0,0,.3) 0%, rgba(0,0,0,0) 100%), url(${picUrl})`;
+              }
+              return `radial-gradient(circle,rgba(0,0,0,.3) 15%, var(--button-card-background) 100%);`
           ]]]
     custom_fields:
       circle:
         - width: 50%
+        - display: >
+            [[[
+              return variables.camera_enabled
+                ? 'block'
+                : 'none';
+            ]]]
       icon:
         - display: >
             [[[

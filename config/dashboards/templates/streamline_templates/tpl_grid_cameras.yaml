@@ -9,7 +9,7 @@ grid_cam_door:
     hold_action: !include ../../shared/popup/cameras.yaml
     variables:
       battery: sensor.doorway_battery_percentage
-      image_entity: image.doorway_event_image
+      # image_entity: image.hallway_doorway_snapshot_event_image
     template:
       - camera
       - loader
@@ -20,7 +20,7 @@ grid_cam_door:
 grid_cam_kids:
   card:
     type: custom:button-card
-    entity: camera.kids_room_camera
+    entity: camera.kids_room
     name: ' '
     hold_action: !include ../../shared/popup/cameras.yaml
     template:
@@ -29,7 +29,7 @@ grid_cam_kids:
     variables:
       battery: 'sensor.doorway_battery_percentage'
       stream_status: 'sensor.kids_room_stream_status'
-      image_entity: 'image.kids_room_cam_snapshot'
+      image_entity: 'image.kids_room_snapshot_event_image'
 
     # double_tap_action:
     #   action: fire-dom-event
@@ -65,7 +65,7 @@ grid_cam_terrace:
       - loader
     variables:
       battery: sensor.terasa_battery_percentage
-      image_entity: image.terasa_event_image
+      # image_entity: image.terasa_snapshot_event_image
     styles:
       card:
         - background-position: center
@@ -82,3 +82,30 @@ grid_cam_garden:
     variables:
       battery: sensor.zahrada_battery_percentage
       image_entity: image.zahrada_event_image
+
+popup_camera_webrtc:
+  default:
+    - camera_entity: camera.doorway
+  card:
+    type: custom:webrtc-camera
+    entity: '[[camera_entity]]'
+    poster: '[[camera_entity]]'
+    ui: true
+    shortcuts:
+      - name: Play
+        icon: mdi:play
+        service: camera.turn_on
+        service_data:
+          entity_id: '[[camera_entity]]'
+      - name: Stop
+        icon: mdi:stop
+        service: camera.turn_off
+        service_data:
+          entity_id: '[[camera_entity]]'
+    uix:
+      style: |
+        ha-card {
+          {% if is_state(config.entity, "streaming") %}
+          border: 2px solid red !important;
+          {% endif %}
+        }

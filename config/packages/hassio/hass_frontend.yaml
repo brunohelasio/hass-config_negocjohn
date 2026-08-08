@@ -30,6 +30,15 @@ ingress:
       match: !secret external_url
       replace: !secret plex_url
       default: http://mbproserver.local:32400
+  local_baby:
+    work_mode: iframe
+    ui_mode: normal
+    title: Baby Tracker
+    icon: mdi:baby-bottle
+    url:
+      match: !secret external_url
+      replace: !secret baby_url
+      default: http://mbproserver.local:8099/
 
   ## HA CONFIG PAGES ##
   link_areas:

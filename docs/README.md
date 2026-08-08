@@ -10,7 +10,7 @@ Hey there! Welcome to my little corner of the tech world! 👨‍💻
 
 This is where I store all the cool configurations for my Home Assistant system. Well, it's a mix of awesome codes and setups I discovered from the Home Assistant community. Seriously, those folks are wizards! 🧙‍♂️ As a bit of an internet newbie turned tech enthusiast, I stumbled upon the magic of IT, and this repository is my way of sharing the joy and knowledge I've gained along the way. Dive in, explore, and let the tech magic begin! ✨
 
-I frequently refresh my configuration files. My current Home Assistant version is <b>2026.8.0</b>. If you find something you like, don't forget to give my repository a ⭐️!
+I frequently refresh my configuration files. My current Home Assistant version is <b>2026.8.1</b>. If you find something you like, don't forget to give my repository a ⭐️!
 
 ## Some of my projects for Home Assistant
 
@@ -47,13 +47,13 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
       </thead>
       <tbody>
           <tr>
-              <td>46,925 </td>
-              <td>37</td>
-              <td>301</td>
-              <td>80</td>
+              <td>46,765 </td>
+              <td>34</td>
+              <td>302</td>
+              <td>81</td>
               <td>63</td>
               <td>38</td>
-              <td>2220</td>
+              <td>2227</td>
               <td>271</td>
               <td>27</td>
           </tr>
@@ -164,6 +164,7 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - [Horizon Card](https://github.com/rejuvenate/lovelace-horizon-card)
 - [Hourly Weather Card](https://github.com/decompil3d/lovelace-hourly-weather)
 - [Hui Element](https://github.com/thomasloven/lovelace-hui-element)
+- [Ingress Webpage Card](https://github.com/lovelylain/ha-addon-iframe-card)
 - [Layout Card](https://github.com/thomasloven/lovelace-layout-card)
 - [Local Conditional Card](https://github.com/PiotrMachowski/Home-Assistant-Lovelace-Local-Conditional-card)
 - [Logbook Card](https://github.com/royto/logbook-card)

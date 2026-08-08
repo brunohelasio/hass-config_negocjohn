@@ -16,6 +16,8 @@ cards:
           - service: browser_mod.javascript
             data:
               code: lovelace_reload()
+          - service: browser_mod.refresh
+
     template:
       - footer
   - type: custom:button-card

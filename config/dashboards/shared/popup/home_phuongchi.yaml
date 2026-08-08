@@ -2,7 +2,7 @@ action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
-    title: Viet Ngoc
+    title: Phuong Chi
     adaptive: true
     content:
       type: custom:mod-card
@@ -18,11 +18,11 @@ browser_mod:
             card_mod:
               class: content
             entities:
-              - entity: person.viet_ngoc
+              - entity: person.phuong_chi
                 secondary_info: last-changed
           - type: history-graph
             entities:
-              - entity: person.viet_ngoc
+              - entity: person.phuong_chi
             visibility:
               - condition: user
                 users:
@@ -36,7 +36,6 @@ browser_mod:
             auto_fit: true
             dark_mode: true
             entities:
-              - device_tracker.amg_43_parking_location
-              - entity: device_tracker.viet_ngoc_samsung
+              - entity: device_tracker.phuong_chi
                 focus: false
             hours_to_show: 24

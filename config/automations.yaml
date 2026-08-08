@@ -617,152 +617,6 @@
         data:
           brightness_pct: 100
   mode: single
-- id: '1771658836855'
-  alias: Kids Cam Snapshot
-  description: ''
-  triggers:
-  - at: 05:00:00
-    id: delete
-    trigger: time
-  - hours: /1
-    trigger: time_pattern
-    id: every_hour
-  - trigger: state
-    entity_id:
-    - camera.kids_room
-    to:
-    - streaming
-    for:
-      hours: 0
-      minutes: 0
-      seconds: 5
-    id: camera_motion
-    enabled: false
-  conditions: []
-  actions:
-  - choose:
-    - conditions:
-      - condition: trigger
-        id:
-        - camera_motion
-      sequence:
-      - parallel:
-        - data:
-            filename: /config/www/tmp/kids/camera.kids_room-latest{{now().strftime("%Y%m%d%H%M%S")}}.jpg
-          target:
-            entity_id: camera.kids_room
-          action: camera.snapshot
-        - action: input_text.set_value
-          metadata: {}
-          data:
-            value: kids_room-latest{{now().strftime("%Y%m%d%H%M%S")}}.jpg
-          target:
-            entity_id: input_text.kids_camera_snapshot
-        alias: Camera Snapshot Input text
-    - conditions:
-      - condition: trigger
-        id: delete
-      sequence:
-      - data:
-          folder: /config/www/tmp/snapshots/
-          time: 0
-          only_extensions:
-          - .png
-          - .jpg
-        action: delete.files_in_folder
-      - data:
-          folder: /config/www/tmp/kids/
-          time: 0
-          only_extensions:
-          - .png
-          - .jpg
-        action: delete.files_in_folder
-    - conditions:
-      - condition: trigger
-        id:
-        - every_hour
-        enabled: true
-      - condition: time
-        after: 05:00:00
-        before: 00:00:00
-        enabled: true
-      sequence:
-      - parallel:
-        - action: button.press
-          metadata: {}
-          data: {}
-          target:
-            entity_id: button.kids_room_start_rtsp_stream
-        - condition: state
-          entity_id: camera.kids_room
-          state: streaming
-          for:
-            hours: 0
-            minutes: 0
-            seconds: 3
-      - delay:
-          hours: 0
-          minutes: 0
-          seconds: 2
-          milliseconds: 0
-      - parallel:
-        - data:
-            filename: /config/www/tmp/snapshots/camera.kids_room{{ now().strftime("%Y%m%d-%H%M%S")
-              }}.jpg
-          target:
-            entity_id: camera.kids_room
-          action: camera.snapshot
-      - delay:
-          hours: 0
-          minutes: 0
-          seconds: 2
-          milliseconds: 0
-      - parallel:
-        - data:
-            filename: /config/www/tmp/kids/camera.kids_room-latest{{now().strftime("%Y%m%d%H%M%S")}}.jpg
-          target:
-            entity_id: camera.kids_room
-          action: camera.snapshot
-        - action: input_text.set_value
-          metadata: {}
-          data:
-            value: kids_room-latest{{now().strftime("%Y%m%d%H%M%S")}}.jpg
-          target:
-            entity_id: input_text.kids_camera_snapshot
-      - delay:
-          hours: 0
-          minutes: 0
-          seconds: 5
-          milliseconds: 0
-      - action: button.press
-        metadata: {}
-        data: {}
-        target:
-          entity_id: button.kids_room_stop_rtsp_stream
-    - conditions:
-      - condition: trigger
-        id:
-        - every_hour
-        enabled: true
-      - condition: time
-        after: 05:00:00
-        before: 00:00:00
-        enabled: true
-      sequence:
-      - parallel:
-        - data:
-            filename: /config/www/tmp/kids/camera.kids_room-latest{{now().strftime("%Y%m%d%H%M%S")}}.jpg
-          action: camera.snapshot
-          target:
-            entity_id: camera.kids_room_camera
-        - action: input_text.set_value
-          metadata: {}
-          data:
-            value: kids_room-latest{{now().strftime("%Y%m%d%H%M%S")}}.jpg
-          target:
-            entity_id: input_text.kids_camera_snapshot
-        enabled: false
-  mode: single
 - id: '1771786266812'
   alias: Vacuum update map switch
   description: ''
@@ -1295,21 +1149,57 @@
       - cover.right
       - cover.window
   mode: single
-- id: '1785964772026'
-  alias: Cam Motion Detected
+- id: '1786050352078'
+  alias: Camera Event Snapshot
   description: ''
   triggers:
-  - trigger: motion.detected
-    target:
-      entity_id:
-      - binary_sensor.doorway_person_detected
-      - binary_sensor.doorway_motion_detected
-    options:
-      behavior: all
-      for: 00:00:00
+  - trigger: state
+    entity_id:
+    - camera.doorway
+    - camera.terasa
+    to:
+    - streaming
+    for:
+      hours: 0
+      minutes: 0
+      seconds: 5
+    id: streaming
+  - trigger: time_pattern
+    hours: /1
+    id: time_cron
   conditions: []
   actions:
-  - action: script.cam_generate_image
-    metadata: {}
-    data: {}
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - time_cron
+      sequence:
+      - repeat:
+          for_each:
+          - camera.kids_room
+          - camera.terasa
+          - camera.doorway
+          sequence:
+          - action: script.turn_on
+            target:
+              entity_id: script.cam_generate_image
+            data:
+              variables:
+                camera_entity: '{{repeat.item}}'
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 2
+              milliseconds: 0
+    - conditions:
+      - condition: trigger
+        id:
+        - streaming
+      sequence:
+      - action: eufy_security.generate_image
+        metadata: {}
+        target:
+          entity_id: '{{trigger.to_state.entity_id}}'
+        data: {}
   mode: single

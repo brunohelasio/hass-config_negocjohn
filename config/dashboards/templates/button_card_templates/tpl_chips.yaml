@@ -14,7 +14,7 @@ chips:
     - card_bounce
   variables:
     state_on: >
-      [[[ return ['on', 'home', 'Normal', 'Away', 'Night', 'Guest', 'cool', 'fan_only', 'unlocked', 'open', 'streaming', 'yes', 'Blažičkova', 'Plzeňská'].indexOf(!entity || entity.state) !== -1; ]]]
+      [[[ return ['on', 'home', 'Normal', 'Away', 'Night', 'Guest', 'cool', 'fan_only', 'unlocked', 'open', 'streaming', 'yes'].indexOf(!entity || entity.state) !== -1; ]]]
     state: >
       [[[ return !entity || entity.state; ]]]
     light_on: >
@@ -70,11 +70,11 @@ chips:
                 ? '#4b5254'
                 : '#97989c';
           ]]]
-      - background-color: >
+      - background: >
           [[[
               return variables.state_on
-                ? 'var(--button-card-background-active)'
-                : 'var(--button-card-background)';
+                ? 'linear-gradient(122deg, rgba(135, 160, 200, .14), transparent 48%), var(--button-card-background-active)'
+                : 'linear-gradient(122deg, rgba(135, 160, 200, .14), transparent 48%), var(--button-card-background)';
           ]]]
       - padding: 0.3vw
       - box-sizing: border-box;
@@ -199,7 +199,7 @@ chip_air:
       - padding: 0.2vw
       - max-height: 76px
     state:
-      - color: &color >
+      - color: >
           [[[
             const colorMap = {
               'Excellent': '#4CAF50',
@@ -236,7 +236,7 @@ chip_system:
       - border-bottom: 0.5px solid
       - border-bottom-color: rgba(10, 14, 34, 1)
       - color: rgba(255, 255, 255, 0.6)
-      - background: linear-gradient(to bottom, var(--button-card-background) 0%, rgba(49, 49, 49, 0.2) 100%)
+      - background: linear-gradient(122deg, rgba(135, 160, 200, .14), transparent 48%), var(--button-card-background)
     state:
       - color: &systemcolor >
           [[[
@@ -337,8 +337,8 @@ chip_air_new:
       - color: '#97989c'
       - background: linear-gradient(to bottom, rgba(53, 59, 83, 0.8) 0%, rgba(10, 14, 34, 0.8) 50%, rgba(53, 59, 83, 0.8) 100%)
       # - border-bottom-color: rgba(10, 14, 34, 1)
-      - padding: 0.2vw
-      - max-height: 76px
+      # - padding: 0.2vw
+      # - max-height: 76px
     state:
       - color: >
           [[[
@@ -367,3 +367,11 @@ chip_air_new:
               if (window.innerWidth < 800) return '10px';
               else return '1.5rem';
             ]]]
+chip_person:
+  template:
+    - chips
+  styles:
+    icon:
+      - padding: 3px
+      - background-color: null
+      - width: 50%

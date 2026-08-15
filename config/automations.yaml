@@ -1105,7 +1105,12 @@
   - trigger: state
     entity_id:
     - sensor.dishwasher_start_count
-    to:
+    not_from:
+    - unknown
+    - unavailable
+    not_to:
+    - unknown
+    - unavailable
     id: start-count
   conditions:
   - condition: template
@@ -1196,10 +1201,29 @@
       - condition: trigger
         id:
         - streaming
+        enabled: false
       sequence:
       - action: eufy_security.generate_image
         metadata: {}
         target:
           entity_id: '{{trigger.to_state.entity_id}}'
         data: {}
+  mode: single
+- id: '1786319396113'
+  alias: Feed Reminder
+  description: ''
+  triggers:
+  - trigger: time
+    at:
+      entity_id: sensor.baby_tracker_last_feed
+      offset: 03:00:00
+  conditions: []
+  actions:
+  - action: notify.send_message
+    metadata: {}
+    target:
+      entity_id: notify.viet_ngoc_samsung
+    data:
+      message: feeding time
+      title: "\U0001F37C  Feeding time"
   mode: single

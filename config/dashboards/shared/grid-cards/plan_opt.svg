@@ -50,10 +50,8 @@
 				href="/local/hafloor/bg_bathroom.webp" preserveAspectRatio="none" xlink:href="bg_bathroom.png" />
 			<image id="light_overlay.utility_room_light" transform="rotate(10)" x="131.36" y="-203.92" width="2199"
 				height="1705" href="/local/hafloor/bg_utility.webp" preserveAspectRatio="none" xlink:href="bg_utility.png" />
-			<image id="light_overlay.hallway_light" transform="rotate(10)" x="131.36" y="-203.92" width="2199" height="1705"
+			<image id="light_overlay.hallway_group" transform="rotate(10)" x="131.36" y="-203.92" width="2199" height="1705"
 				href="/local/hafloor/bg_hallway.webp" preserveAspectRatio="none" xlink:href="bg_hallway.png" />
-			<image id="light_overlay.aqara_hub" transform="rotate(10)" x="131.36" y="-203.92" width="2199" height="1705"
-				href="/local/hafloor/bg_aqara_hub.webp" preserveAspectRatio="none" xlink:href="bg_aqara_hub.png" />
 			<image id="light_overlay.office_led_light_strip" transform="rotate(10)" x="131.36" y="-203.92" width="2199"
 				height="1705" href="/local/hafloor/bg_office_table.webp" preserveAspectRatio="none"
 				xlink:href="bg_office_table.png" />
@@ -70,7 +68,18 @@
 			<image id="light_overlay.bed_light" transform="rotate(10)" x="131.36" y="-203.92" width="2199" height="1705"
 				href="/local/hafloor/bg_bedroom_main.webp" preserveAspectRatio="none" xlink:href="bg_bedroom_main.png" />
 		</g>
-
+		<g id="cover_overlays">
+			<image id="cover_overlay.living_room_terrace" transform="rotate(10)" x="131.36" y="-203.92" width="2199"
+				height="1705" href="/local/hafloor/bg_living_room_terrace.webp" preserveAspectRatio="none"
+				xlink:href="bg_living_room_terrace.png" />
+			<image id="cover_overlay.door" transform="rotate(10)" x="131.36" y="-203.92" width="2199" height="1705"
+				href="/local/hafloor/bg_door_cover.webp" preserveAspectRatio="none" xlink:href="bg_door_cover.png" />
+			<image id="cover_overlay.window" transform="rotate(10)" x="131.36" y="-203.92" width="2199" height="1705"
+				href="/local/hafloor/bg_window_cover.webp" preserveAspectRatio="none" xlink:href="bg_window_cover.png" />
+			<image id="cover_overlay.bedroom_shutters" transform="rotate(10)" x="131.36" y="-203.92" width="2199"
+				height="1705" href="/local/hafloor/bg_bedroom_shutters.webp" preserveAspectRatio="none"
+				xlink:href="bg_bedroom_shutters.png" />
+		</g>
 		<g id="tv_overlays">
 			<image id="media_player_overlay.living_room_tv" transform="rotate(10)" x="663.38" y="431.15" width="377.43"
 				height="385.4" href="/local/hafloor/bg_atv_idle_trim.webp" preserveAspectRatio="none"
@@ -85,7 +94,6 @@
 					width="426.97" height="157.64" preserveAspectRatio="none" />
 			</g>
 		</g>
-
 	</g>
 	<g id="areas" transform="translate(131.36 178.01)" stroke-width="0">
 		<g id="area.living_room">
@@ -114,8 +122,7 @@
 			<path id="path1523"
 				d="m1029.5 158.28 177.57-23.583 93.706 138.37-15.86 82.871 14.64 18.384-16.644 73.168 17.37 28.846 16.503-65.291 35.618 57.431-16.313 66.572 8.9461 15.301-16.891 6.1706 21.499 33.733-78.032 15.364-36.208 7.8502 5.1741-20.694-39.424-66.178-5.3182 27.278-15.956-32.046 11.94-66.272-29.299-48.633-11.81 65.533-74.351-124.7 8.648-66.344-25.644-43.413-9.0541 65.764-3.3931 1.9436-5.8458-12.978 13.879-97.45z"
 				fill="none" />
-			<use id="light.hallway_light" href="#path1523" />
-
+			<use id="light.hallway_group" href="#path1523" />
 		</g>
 		<g id="area.office">
 			<path id="path1567"
@@ -165,17 +172,6 @@
 		<path id="cover.window" d="m917.77 1061.4 121.78-30.132-17.241 99.813-119.04 30.224z" />
 		<path id="cover.door" d="m1034.5 1169.1 26.631-142.53 87.864-22-32.506 147.49-82.717 21.158z" />
 		<path id="cover.bedroom_shutters" d="m1809.2 844.23 155.7-37.59-42.604 88.722-151.37 37.748z" />
-		<path id="cover.living_room_terrace" d="m435.68 720.21 126.21 339.42-6.6573 148.17-112.57-317.54z" />
-		<image id="cover_overlay.living_room_terrace" transform="matrix(.96279 .27026 -.18419 .98289 -131.36 -178.01)"
-			x="719.94" y="710.16" width="233.59" height="471.89" preserveAspectRatio="none"
-			xlink:href="/local/hafloor/cover_living_room_terrace.png" />
-		<image id="cover_overlay.window" transform="matrix(.97831 .20715 -.1874 .98228 -131.36 -178.01)" x="1262" y="934.58"
-			width="125.88" height="170.44" preserveAspectRatio="none" xlink:href="/local/hafloor/cover_window.png" />
-		<image id="cover_overlay.door" transform="matrix(.98343 .18128 -.17158 .98517 0 0)" x="1219.5" y="747.04"
-			width="90.22" height="251.86" preserveAspectRatio="xMidYMid" xlink:href="/local/hafloor/cover_door.png" />
-		<image id="cover_overlay.bedroom_shutters" transform="matrix(.98432 .17638 -.18912 .98195 -131.36 -178.01)"
-			x="2066.4" y="591.61" width="200.62" height="174.66" preserveAspectRatio="xMidYMid"
-			xlink:href="/local/hafloor/cover_bedroom_shutters.png" />
 	</g>
 	<g id="icons" transform="translate(131.36 178.01)">
 		<path id="icon-front-door"
@@ -305,7 +301,6 @@
 			d="m1430.4 193.31c-3.5678-1.8213-8.0862-3.2426-13.565-4.2086-4.9831-0.87866-9.3928-1.1453-13.159-0.87265 3.7394 1.6529 8.4505 3.1081 13.902 4.0693 4.7354 0.83497 9.0851 1.1194 12.823 1.012zm3.9889 2.4917c-5.1852 0.59018-11.378 0.29307-17.297-0.75063-6.6074-1.165-13.265-3.3325-18.12-6.0622-5.5884 1.4275-9.0146 4.5988-9.8544 9.3616l-5.5923 31.715c-0.8981 5.0932 1.5576 9.3584 7.0332 12.595 1.2442 3.569 11.96 5.7424 15.484 6.3638 3.5515 0.62622 14.53 2.2781 16.796-0.75698 6.2248-1.1733 9.9587-4.3188 10.847-9.3569l5.5923-31.715c0.7767-4.4049-0.9517-8.2864-4.889-11.393z"
 			stroke-width="2.7955" />
 	</g>
-
 	<foreignObject id="CardTopLeft" x="15" y="0" width="800" height="750"></foreignObject>
 
 </svg>

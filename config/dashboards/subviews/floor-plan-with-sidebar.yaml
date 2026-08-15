@@ -4,14 +4,47 @@ type: sidebar
 icon: mdi:home-floor-0
 subview: false
 cards:
-  - show_name: false
-    show_icon: true
-    type: button
-    entity: input_boolean.test_floorplan_card_inside
-    show_state: true
-    icon_height: 15px
+  - type: horizontal-stack
     view_layout:
       position: sidebar
+    cards:
+      - &button_toggle
+        type: button
+        show_name: false
+        show_icon: true
+        show_state: true
+        icon_height: 15px
+        entity: input_boolean.test_floorplan_card_inside
+      - <<: *button_toggle
+        entity: input_boolean.brma
+  - type: vertical-stack
+    view_layout:
+      position: sidebar
+    cards:
+      - type: custom:streamline-card
+        template: popup_security_sensors
+        variables:
+          title: Motion
+          group_entity_id: group.motion_sensors
+      # - type: custom:webrtc-camera
+      #   url: kidsroom
+      #   poster: camera.kids_room
+      - type: custom:streamline-card
+        template: popup_camera_webrtc
+        variables:
+          camera_entity: camera.kids_room
+      - type: custom:streamline-card
+        template: popup_camera_webrtc
+        variables:
+          camera_entity: camera.doorway
+      - type: custom:streamline-card
+        template: popup_camera_webrtc
+        variables:
+          camera_entity: camera.terasa
+    visibility:
+      - condition: state
+        entity: input_boolean.brma
+        state: 'on'
 
   - type: vertical-stack
     view_layout:
@@ -31,7 +64,7 @@ cards:
                 }
                 .content {
                   padding: 0;
-                  background: radial-gradient(circle, rgba(255, 255, 255, 0.13) 0%, transparent 50%);
+                  background: radial-gradient(circle, rgba(255, 255, 255, 0.13) 0%, transparent 25%);
                 }
             full_height: true
             config:

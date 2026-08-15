@@ -72,7 +72,8 @@
 - entities:
     - media_player.sony_apple_tv_mix
     # - sensor.vibrant_color
-  element: light.sony_tv_backlight
+  element:
+    - light.sony_tv_backlight
   state_action:
     action: call-service
     service: floorplan.style_set

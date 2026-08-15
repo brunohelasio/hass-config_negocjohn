@@ -11,10 +11,30 @@
   tap_action: false
   double_tap_action: more-info
   state_action:
-    action: call-service
-    service: floorplan.class_set
-    # service_data: 'cover-${entity.state}'
-    service_data: '${(entity.attributes.current_tilt_position === 0) ? "cover-closed" : "cover-opened"}'
+    - action: call-service
+      service: floorplan.style_set
+      service_data:
+        element: '${entity.entity_id.replace("cover.", "cover_overlay.")}'
+        style: |
+          >
+          if( entity.attributes.current_tilt_position === 0 ) {
+              return "display: block;";
+          } else {
+              return "display: none;";
+          }
+
+# - entities:
+#     - cover.living_room_terrace
+#     - cover.bedroom_shutters
+#     - cover.door
+#     - cover.window
+#   tap_action: false
+#   double_tap_action: more-info
+#   state_action:
+#     action: call-service
+#     service: floorplan.class_set
+#     # service_data: 'cover-${entity.state}'
+#     service_data: '${(entity.attributes.current_tilt_position === 0) ? "cover-closed" : "cover-opened"}'
 
 - entities:
     - cover.living_room_terrace

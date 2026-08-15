@@ -23,7 +23,7 @@ template:
         for:
           hours: 0
           minutes: 0
-          seconds: 30
+          seconds: 15
         variables:
           disconnect_from_mb: >
             {% set mb_ble = "48:F0:7B:3A:E9:8B (MB Bluetooth 61471)" %}

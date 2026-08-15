@@ -15,6 +15,8 @@
 base:
   template:
     - settings
+    - func_vars
+    - badge_icons
     - tilt
     - card_bounce
     - vibrant_colors
@@ -74,6 +76,9 @@ base:
       - text-rendering: auto
       - -webkit-font-smoothing: antialiased
       - -moz-osx-font-smoothing: grayscale
+      - box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 13px 24px rgba(0, 0, 0, .16)
+      - backdrop-filter: blur(20px) saturate(115%)
+      - -webkit-backdrop-filter: blur(20px) saturate(115%)
       # - padding: 11.5% 10.5% 10.5% 11.5%
       - --button-card-ripple-color: >
           [[[
@@ -87,16 +92,19 @@ base:
                 ? '#4b5254'
                 : '#97989c';
           ]]]
-      - background-color: >
+      - background: >
           [[[
             if (variables.state_error) {
               return variables.state_error
                 ? 'rgba(139, 51, 51, 0.9)'
                 : 'var(--button-card-background)';
             } else {
+              // return variables.state_on
+              //   ? 'var(--button-card-background-active)'
+              //   : 'var(--button-card-background)';
               return variables.state_on
-                ? 'var(--button-card-background-active)'
-                : 'var(--button-card-background)';
+                ? 'linear-gradient(122deg, rgba(135, 160, 200, .14), transparent 48%), var(--button-card-background-active)'
+                : 'linear-gradient(122deg, rgba(135, 160, 200, .14), transparent 48%), var(--button-card-background)';
             }
           ]]]
 
@@ -296,6 +304,7 @@ extra_styles:
           padding: 10.9% 9.9% 8.9% 10.9%;
           cursor: var(--cursor);
           transition: all 0.4s ease-in-out;
+          overflow: hidden;
         }
         ${ variables.hover_enable
           ?
@@ -304,6 +313,15 @@ extra_styles:
               border: 1px solid var(--tablet-primary-color) !important;
             }`
           : ''
+        }
+
+        #card::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: linear-gradient(135deg, rgba(255,255,255,.08), transparent 30%);
+          border-radius: var(--button-card-border-radius);
         }
 
 
@@ -893,6 +911,14 @@ extra_styles:
           #card {
             border-radius: var(--chips-card-border-radius);
           }
+          #card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(135deg, rgba(255,255,255,.08), transparent 30%);
+            border-radius: var(--chips-card-border-radius);
+          }
           #container {
             overflow: hidden;
           }
@@ -958,6 +984,9 @@ extra_styles:
               transform: translateX(15%);
               scale: 1;
             }
+          }
+          #card::after {
+            display: none;
           }
           #container {
             gap: 8px;
@@ -1108,6 +1137,10 @@ extra_styles:
             padding: inherit;
             width: 100%;
             overflow: visible;
+            background: none !important;
+          }
+          #card::after {
+            display: none;
           }
           #name {
             place-self: center;
@@ -1639,4 +1672,27 @@ vibrant_colors:
     vibrant_data: >
       [[[
         return states['sensor.art_colors'].attributes.palette || {};
+      ]]]
+func_vars:
+  variables:
+    create_badge: >
+      [[[
+        return (icon, color) => {
+          return {
+            icon: icon,
+            color: color
+            }
+        }
+      ]]]
+    generate_badge_active: >
+      [[[
+        return (active_entity, active_icon, active_color, reverse = false) => {
+          let entityState = states[active_entity].state;
+          let isActive = ['on', 'true', 'yes', 'run'].includes(entityState) && !reverse || (reverse && entityState === 'off');
+          if (isActive) {
+            return variables.create_badge(active_icon ? active_icon : 'mdi:motion-sensor', active_color);
+          }
+
+          return null;
+        }
       ]]]

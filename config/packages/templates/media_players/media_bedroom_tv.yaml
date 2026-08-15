@@ -8,10 +8,14 @@ media_player:
       - media_player.bedroom_samsung_television
       - media_player.bedroom_shield_android_tv
     active_child_template: >
-      {% if state_attr("media_player.bedroom_samsung_television", "source") in ['hdmi3', 'Shield TV']  %}
-        media_player.bedroom_shield_android_tv
+      {% if state_attr("media_player.bedroom_samsung_tv", "on") %}
+        {% if state_attr("media_player.bedroom_samsung_television", "source") in ['hdmi3', 'Shield TV']  %}
+          media_player.bedroom_shield_android_tv
+        {% else %}
+          media_player.bedroom_samsung_television
+        {% endif %}
       {% else %}
-        media_player.bedroom_samsung_television
+        media_player.bedroom_samsung_tv
       {% endif %}
     commands:
       turn_on:

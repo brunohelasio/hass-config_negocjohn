@@ -298,10 +298,10 @@ g#cover path:hover {
 	cursor: move !important;
 }
 
-g#cover path.cover-closed {
+/* g#cover path.cover-closed {
 	fill: #000000;
 	fill-opacity: 0.6;
-}
+} */
 
 
 g#cover path.cover-closing {
@@ -400,6 +400,11 @@ g#temphumid text#sensor\.kids_room_temp_humid_temperature,
 g#temphumid text#sensor\.kids_room_temp_humid_humidity {
 	display: none !important;
 }
+
+g#cover image {
+	display: none;
+}
+
 
 foreignObject#CardTopLeft.card-on {
 	display: flex;

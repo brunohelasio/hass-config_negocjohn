@@ -29,7 +29,7 @@ honeycomb_menu:
     - icon: custom:arlo-baby
       show: true
       position: 2
-      entity: switch.lidl_3_gang_socket_l3
+      entity: switch.office_socket
       active: '[[[ return entity.state != "off" ]]]'
       tap_action:
         action: toggle

@@ -24,9 +24,12 @@ grid_front_door:
     template:
       - front_door
       - icon_lock
-      - loader
-    # variables:
-    #   battery_alert: binary_sensor.nuki_vchod_battery_critical
+    variables:
+      badges:
+        battery_low: >
+          [[[
+            return variables.generate_badge_active("binary_sensor.nuki_neklanka_byt_battery_critical", "mdi:battery-alert", "var(--error-color)");
+          ]]]
   #  MOTION SENSORS
 grid_motion_sensors:
   card:

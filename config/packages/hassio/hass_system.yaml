@@ -16,9 +16,9 @@ recorder:
   auto_repack: true
   exclude:
     domains:
-      - alarm_control_panel
-      - button
-      - camera
+      # - alarm_control_panel
+      # - button
+      # - camera
       - media_player
       - switch
       - light
@@ -26,7 +26,7 @@ recorder:
       - weather
       - timer
       - update
-      - image
+      # - image
       - device_tracker
     entities:
       - sensor.time
@@ -37,6 +37,7 @@ recorder:
       - sensor.motion_detected
       - sensor.tx
       - sensor.rx
+      - camera.roidmi_eve_live_map
     entity_globs:
       - sensor.*_motor_speed
       - sensor.browser_*
@@ -91,6 +92,29 @@ recorder:
       - sensor.motion_sensor_entrance_illuminance
       - sensor.neklanka_gateway_download
       - sensor.neklanka_gateway_upload
+      - light.living_room_floor_lamp
+      - light.shelly_dimmer
+      - light.shelly_rgbw_kitchen_led_strip
+      - light.kitchen_main_light
+      - light.kitchen_table_light
+      - light.hood_lighting
+      - light.bathroom_main_light
+      - light.bathroom_mirror_light
+      - light.bedroom_closet_light
+      - light.bedroom_main_light
+      - light.shower_room_main_light
+      - light.shower_room_mirror_light
+      - light.bedroom_bed_light
+      - light.aqara_hub
+      - light.utility_room_light
+      - light.hallway_light
+      - light.office_lamp_bulb
+      - light.office_main_light
+      - light.office_shelf_led
+      - light.office_ripple_mood_light
+      - light.office_led_light_strip
+      - light.bedroom_ripple_mood_light
+      - light.sony_tv_backlight
 logbook:
 
 # LOGGER https://www.home-assistant.io/integrations/system_log/

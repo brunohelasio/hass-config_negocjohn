@@ -13,44 +13,44 @@ scene:
     name: Office Mode
     entities:
       light.office_lamp_bulb:
-        min_color_temp_kelvin: 2202
-        max_color_temp_kelvin: 4000
-        min_mireds: 250
-        max_mireds: 454
-        effect_list:
-          - blink
-          - breathe
-          - okay
-          - channel_change
-          - finish_effect
-          - stop_effect
-        supported_color_modes:
-          - color_temp
-        color_mode: color_temp
-        brightness: 127
-        color_temp_kelvin: 2369
-        color_temp: 422
-        hs_color:
-          - 29.243
-          - 77.486
-        rgb_color:
-          - 255
-          - 153
-          - 57
-        xy_color:
-          - 0.562
-          - 0.389
-        color_temp_startup: 65535
-        last_seen: '2023-09-04T20:29:11+02:00'
-        linkquality: 32
-        power_on_behavior: previous
-        update:
-          installed_version: 587814449
-          latest_version: 537040419
-          state: idle
-        update_available:
-        friendly_name: Office Floor Lamp
-        supported_features: 44
+        # min_color_temp_kelvin: 2202
+        # max_color_temp_kelvin: 4000
+        # min_mireds: 250
+        # max_mireds: 454
+        # effect_list:
+        #   - blink
+        #   - breathe
+        #   - okay
+        #   - channel_change
+        #   - finish_effect
+        #   - stop_effect
+        # supported_color_modes:
+        #   - color_temp
+        # color_mode: color_temp
+        # brightness: 127
+        # color_temp_kelvin: 2369
+        # color_temp: 422
+        # hs_color:
+        #   - 29.243
+        #   - 77.486
+        # rgb_color:
+        #   - 255
+        #   - 153
+        #   - 57
+        # xy_color:
+        #   - 0.562
+        #   - 0.389
+        # color_temp_startup: 65535
+        # last_seen: '2023-09-04T20:29:11+02:00'
+        # linkquality: 32
+        # power_on_behavior: previous
+        # update:
+        #   installed_version: 587814449
+        #   latest_version: 537040419
+        #   state: idle
+        # update_available:
+        # friendly_name: Office Floor Lamp
+        # supported_features: 44
         state: 'on'
       light.office_ripple_mood_light:
         supported_color_modes:

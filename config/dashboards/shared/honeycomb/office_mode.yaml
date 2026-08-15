@@ -51,11 +51,11 @@ honeycomb_menu:
         action: toggle
         service_data:
           entity_id: entity
-    - icon: custom:ios-desktop-computer
-      show: true
-      position: 5
-      entity: switch.macbook
-      tap_action:
-        action: toggle
-        service_data:
-          entity_id: entity
+    # - icon: custom:ios-desktop-computer
+    #   show: true
+    #   position: 5
+    #   entity: switch.macbook
+    #   tap_action:
+    #     action: toggle
+    #     service_data:
+    #       entity_id: entity

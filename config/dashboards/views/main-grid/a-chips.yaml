@@ -114,20 +114,20 @@
       double_tap_action: !include ../../shared/popup/home_vietngoc.yaml
       entity: person.viet_ngoc
       template:
-        - chips
-      styles:
-        icon:
-          - padding: 3px
-          - background-color: null
-          - width: 50%
+        - chip_person
+      # styles:
+      #   icon:
+      #     - padding: 3px
+      #     - background-color: null
+      #     - width: 50%
     - type: custom:button-card
       name: Phuong Chi
       double_tap_action: !include ../../shared/popup/home_phuongchi.yaml
       entity: person.phuong_chi
       template:
-        - chips
-      styles:
-        icon:
-          - padding: 3px
-          - background-color: null
-          - width: 50%
+        - chip_person
+      # styles:
+      #   icon:
+      #     - padding: 3px
+      #     - background-color: null
+      #     - width: 50%

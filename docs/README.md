@@ -10,7 +10,7 @@ Hey there! Welcome to my little corner of the tech world! 👨‍💻
 
 This is where I store all the cool configurations for my Home Assistant system. Well, it's a mix of awesome codes and setups I discovered from the Home Assistant community. Seriously, those folks are wizards! 🧙‍♂️ As a bit of an internet newbie turned tech enthusiast, I stumbled upon the magic of IT, and this repository is my way of sharing the joy and knowledge I've gained along the way. Dive in, explore, and let the tech magic begin! ✨
 
-I frequently refresh my configuration files. My current Home Assistant version is <b>2026.8.1</b>. If you find something you like, don't forget to give my repository a ⭐️!
+I frequently refresh my configuration files. My current Home Assistant version is <b>2026.8.2</b>. If you find something you like, don't forget to give my repository a ⭐️!
 
 ## Some of my projects for Home Assistant
 
@@ -47,14 +47,14 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
       </thead>
       <tbody>
           <tr>
-              <td>46,765 </td>
-              <td>34</td>
+              <td>46,842 </td>
+              <td>35</td>
               <td>302</td>
-              <td>81</td>
-              <td>63</td>
+              <td>82</td>
+              <td>64</td>
               <td>38</td>
-              <td>2227</td>
-              <td>271</td>
+              <td>2243</td>
+              <td>269</td>
               <td>27</td>
           </tr>
       </tbody>
@@ -180,6 +180,7 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - [Multiple Entity Row](https://github.com/benct/lovelace-multiple-entity-row)
 - [Mushroom](https://github.com/piitaya/lovelace-mushroom)
 - [Polr Ytube Media Card](https://github.com/pathofleastresistor/polr-ytube-media-card)
+- [Room Climate Card](https://github.com/hyperfelixations/room-climate-card)
 - [Roscard](https://github.com/yyqclhy/RosCard)
 - [Rpi Monitor Card](https://github.com/ironsheep/lovelace-rpi-monitor-card)
 - [Sidebar Organizer](https://github.com/ngocjohn/sidebar-organizer)

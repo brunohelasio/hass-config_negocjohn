@@ -11,16 +11,14 @@ grid_shower:
     name: Shower
     template:
       - rooms_base
-      - door_state
-      - motion
       - icon_shower_new
-      # - icon_shower
-      # - icon_shower_head
     variables:
       light_entity: light.shower_group
-      motion: binary_sensor.motion_sensor_shower_room_occupancy
-      door: binary_sensor.contact_sensor_shower_room_contact
       active: sensor.shower_active
+      badges:
+        motion: '[[[ return variables.generate_badge_active("binary_sensor.motion_sensor_shower_room_occupancy"); ]]]'
+        door: '[[[ return variables.generate_badge_active("binary_sensor.contact_sensor_shower_room_contact", "mdi:door-closed", undefined, true); ]]]'
+
   # BATHROOM
 grid_bathroom:
   card:
@@ -30,15 +28,14 @@ grid_bathroom:
     template:
       - rooms_base
       - icon_bathroom
-      - motion
-      - door_state
-      - air_diffuser_circle
     variables:
       light_entity: light.bathroom_group
-      motion: binary_sensor.motion_sensor_bathroom_occupancy
-      door: binary_sensor.contact_sensor_bathroom
       active: sensor.bathroom_active
       air_diffuser_circle: switch.bathroom_air_diffuser
+      badges:
+        motion: '[[[ return variables.generate_badge_active("binary_sensor.motion_sensor_bathroom_occupancy"); ]]]'
+        door: '[[[ return variables.generate_badge_active("binary_sensor.contact_sensor_bathroom", "mdi:door-closed", undefined, true); ]]]'
+        air_diffuser_circle: '[[[ return variables.generate_badge_active("switch.bathroom_air_diffuser", "mdi:spray"); ]]]'
   # UTILITY NORMAL
 grid_utility_normal:
   card:
@@ -163,7 +160,8 @@ grid_hallway:
       - rooms_base
       # - icon_hallway
       - icon_hanger_mirror
-      - motion
+      # - motion
     variables:
       light_entity: light.hallway_group
-      motion: binary_sensor.motion_sensor_entrance_occupancy
+      badges:
+        motion: '[[[ return variables.generate_badge_active("binary_sensor.motion_sensor_entrance_occupancy"); ]]]'

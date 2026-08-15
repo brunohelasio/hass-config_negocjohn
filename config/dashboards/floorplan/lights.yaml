@@ -60,12 +60,14 @@
     # - light.shower_room_mirror_light
     - light.kitchen_table_light
     - light.kitchen_main_light
-    - light.hallway_group
+    # - light.hallway_group
+    - light.aqara_hub
+    - light.hallway_light
     - light.utility_room_light
     - light.vanesska_ceiling_light
     - light.bathroom_group
     - light.living_room_floor_lamp
-    # - light.office_led_light_strip
+    - light.office_led_light_strip
     - light.shelly_rgbw_kitchen_led_strip
   state_action:
     action: call-service
@@ -74,15 +76,18 @@
 - entities:
     - light.office_lamp_bulb
     - light.bedroom_closet_light
+    - light.shower_group
     # - light.shower_room_mirror_light
     - light.kitchen_table_light
     - light.kitchen_main_light
-    - light.hallway_group
+    # - light.hallway_group
+    - light.aqara_hub
+    - light.hallway_light
     - light.utility_room_light
     - light.vanesska_ceiling_light
     - light.bathroom_group
     - light.living_room_floor_lamp
-    # - light.office_led_light_strip
+    - light.office_led_light_strip
     - light.shelly_rgbw_kitchen_led_strip
   tap_action: toggle
   double_tap_action: more-info
@@ -90,7 +95,14 @@
     action: call-service
     service: floorplan.style_set
     service_data:
-      element: "${entity.entity_id.replace('light.', 'light_overlay.')}"
+      # element: "${entity.entity_id.replace('light.', 'light_overlay.')}"
+      element: |
+        >
+        if (entity.entity_id === "light.shower_group") {
+          return "light_overlay.shower_room_mirror_light";
+        }  else {
+          return entity.entity_id.replace('light.', 'light_overlay.');
+        }
       style: |
         >
         if( entity.state !== "on" )
@@ -123,6 +135,7 @@
             saturate(calc( ${sat}% * 2 ))
             brightness(calc( ${entity.attributes.brightness} / 255));
           `
+
 - entities:
     - light.kitchen_table_light
     - light.kitchen_main_light

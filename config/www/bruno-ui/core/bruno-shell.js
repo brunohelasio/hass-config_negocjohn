@@ -21,6 +21,7 @@ class BrunoShell extends HTMLElement {
     super();
     this._activeKey = null;
     this._railEl = null;
+    this._onFolha = this._onFolha.bind(this);
     this._sectionEl = null;
     this._helpers = null;
     this._built = false;
@@ -211,7 +212,54 @@ class BrunoShell extends HTMLElement {
     // Captura antes das subviews: impede que fallbacks locais troquem a view do HA.
     this.addEventListener('click', this._onSectionNavigationClick, true);
     this.addEventListener('hass-navigate', this._onHassNavigate, true);
+    // Folha aberta numa subview: marca o estado para manter a rail a frente.
+    this.addEventListener('bruno-folha', this._onFolha);
     if (this._built) this._syncFromHash();
+    this._observarDock();
+  }
+
+  /**
+   * Publica a altura REAL do dock em --bruno-dock-h.
+   *
+   * Quem esta DENTRO do content-slot precisa desse numero e nao tem como
+   * medi-lo: a bottom sheet das subviews tem de parar acima do dock, porque o
+   * rail-slot tem z-index 2 e o content-slot 1 — nenhum z-index de dentro do
+   * conteudo pinta sobre ele.
+   *
+   * Medido, nao estimado: a primeira versao usava 58px + safe-area, valor que
+   * saiu do meu banco em Chromium. No iPhone o dock e mais alto e a folha
+   * continuou passando por baixo. Propriedade customizada atravessa shadow DOM
+   * por heranca, entao a subview le isto sem conhecer a shell.
+   */
+  /**
+   * Marca na shell quando ha bottom sheet aberta no telefone.
+   *
+   * ANTERIOR (rollback rev. faixa-de-tiles): a classe elevava o content-slot
+   * acima da rail. Agora a mesma classe eleva a rail, mantendo-a fixa, visivel
+   * e clicavel enquanto a folha sobe da borda inferior.
+   *
+   * So o telefone e afetado: no tablet a regra que le a classe vive dentro de
+   * @media (max-width: 800px).
+   */
+  _onFolha(event) {
+    const shell = this.shadowRoot && this.shadowRoot.querySelector('.shell');
+    if (!shell) return;
+    shell.classList.toggle('tem-folha', Boolean(event && event.detail && event.detail.aberta));
+  }
+
+  _observarDock() {
+    const slot = this.shadowRoot && this.shadowRoot.querySelector('.rail-slot');
+    if (!slot) return;
+    const publicar = () => {
+      const h = Math.round(slot.getBoundingClientRect().height);
+      if (h > 0) this.style.setProperty('--bruno-dock-h', h + 'px');
+    };
+    publicar();
+    if (this._dockObserver) this._dockObserver.disconnect();
+    if (typeof ResizeObserver === 'function') {
+      this._dockObserver = new ResizeObserver(publicar);
+      this._dockObserver.observe(slot);
+    }
   }
 
   disconnectedCallback() {
@@ -222,6 +270,11 @@ class BrunoShell extends HTMLElement {
     this.removeEventListener('ll-custom', this._onLlCustom);
     this.removeEventListener('click', this._onSectionNavigationClick, true);
     this.removeEventListener('hass-navigate', this._onHassNavigate, true);
+    this.removeEventListener('bruno-folha', this._onFolha);
+    if (this._dockObserver) {
+      this._dockObserver.disconnect();
+      this._dockObserver = null;
+    }
   }
 
   // --- Helpers ---------------------------------------------------------------
@@ -290,6 +343,8 @@ class BrunoShell extends HTMLElement {
         if (buildRequestId !== this._buildRequestId) return;
         this._railEl = railEl;
         this._currentRailName = this._rails ? this._defaultRailName : null;
+        // O dock so existe depois daqui: e agora que da para medi-lo.
+        queueMicrotask(() => this._observarDock());
         const railSlot = this.shadowRoot.getElementById('rail');
         if (railSlot) railSlot.replaceChildren(this._railEl);
       }
@@ -405,6 +460,30 @@ class BrunoShell extends HTMLElement {
 
   _goToSection(key) {
     if (!this._sections || !this._sections[key]) return;
+    // No telefone a navegacao pertence integralmente a esta shell. Alterar
+    // `location.hash` dispara `hashchange` no WebView do HA e, em alguns
+    // clientes, o roteador externo remonta o Lovelace inteiro (tela preta
+    // "Loading data"). `replaceState` atualiza o deep-link sem emitir esse
+    // evento; a secao cacheada e ativada diretamente logo abaixo.
+    const phone = typeof globalThis.matchMedia === 'function'
+      && globalThis.matchMedia('(max-width: 800px)').matches;
+    if (phone) {
+      if (key === this._activeKey && !this._requestedKey) {
+        this._updateRailSelection(key);
+        return;
+      }
+      if (key === this._requestedKey) return;
+
+      const location = globalThis.location;
+      const history = globalThis.history;
+      if (location && history?.replaceState) {
+        const next = `${location.pathname}${location.search}#${encodeURIComponent(key)}`;
+        history.replaceState(history.state, '', next);
+      }
+      this._setSection(key);
+      return;
+    }
+
     const current = ((globalThis.location && globalThis.location.hash) || '').replace(/^#/, '');
     if (current !== key) {
       // Muda o hash → dispara hashchange → _syncFromHash (sem trocar a view).
@@ -689,21 +768,31 @@ class BrunoShell extends HTMLElement {
   _updateRailSelection(key) {
     const root = this._railEl && this._railEl.shadowRoot;
     if (!root) return;
-    const buttons = root.querySelectorAll('.nav-button[data-key]');
+    // NOVO (rev. faixa-de-tiles) — um botao pode representar um GRUPO.
+    // No telefone os tres quartos saem do dock e viram o menu "Quartos"
+    // (rail_rooms.yaml + bento-sidebar-card.js). O botao do grupo carrega
+    // data-group-keys="casal marina miguel"; sem esta leitura, entrar num
+    // quarto nao acendia nada na rail, porque o botao daquele quarto esta com
+    // display:none. ANTERIOR (rollback): so a comparacao com dataset.key.
+    const marcar = (btn) => {
+      const grupo = btn.dataset.groupKeys;
+      const ativo = grupo
+        ? grupo.split(' ').filter(Boolean).indexOf(key) !== -1
+        : btn.dataset.key === key;
+      btn.classList.toggle('selected', ativo);
+    };
+    const seletor = '.nav-button[data-key], .nav-button[data-group-keys]';
+    const buttons = root.querySelectorAll(seletor);
     if (!buttons.length) {
       // Rail ainda nao renderizou; tenta de novo no proximo frame.
       globalThis.requestAnimationFrame && globalThis.requestAnimationFrame(() => {
         const r = this._railEl && this._railEl.shadowRoot;
         if (!r) return;
-        r.querySelectorAll('.nav-button[data-key]').forEach((btn) => {
-          btn.classList.toggle('selected', btn.dataset.key === key);
-        });
+        r.querySelectorAll(seletor).forEach(marcar);
       });
       return;
     }
-    buttons.forEach((btn) => {
-      btn.classList.toggle('selected', btn.dataset.key === key);
-    });
+    buttons.forEach(marcar);
   }
 
   // --- Erros (nao derrubam a shell) ------------------------------------------
@@ -1667,6 +1756,28 @@ class BrunoShell extends HTMLElement {
         overflow: hidden;
       }
 
+      /* REV. 2026-08-14 — Diagnostico sempre dentro do viewport.
+         ANTERIOR (rollback): o painel crescia com todo o conteudo e ultrapassava
+         a tela. O invólucro agora fica entre as margens uteis e somente o card
+         interno rola; os demais popups conservam a geometria existente. */
+      .config-child-panel[aria-label="Diagnostico"] {
+        top: 12px;
+        bottom: 74px;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+      }
+      .config-child-panel[aria-label="Diagnostico"] > #diagnosticoHost {
+        min-height: 0;
+        flex: 1 1 auto;
+        overflow: hidden;
+      }
+      .config-child-panel[aria-label="Diagnostico"] bruno-diagnostics {
+        display: block;
+        height: 100%;
+        min-height: 0;
+      }
+
       .config-overlay[data-bruno-popup-theme="josh"][data-panel="config"] > .config-panel,
       .config-overlay[data-bruno-popup-theme="josh"][data-panel="system"] > .config-panel,
       .config-overlay[data-bruno-popup-theme="josh"][data-panel="network"] > .config-panel,
@@ -2189,6 +2300,33 @@ class BrunoShell extends HTMLElement {
         :host {
           height: 100vh;
           height: 100dvh;
+
+          /* NOVO (2026-08-10) — ALTURA DO DOCK, publicada para quem esta DENTRO
+             do content-slot. Propriedade customizada atravessa shadow DOM por
+             heranca, entao a subview le este valor sem conhecer a shell.
+             Serve para a bottom sheet reservar os controles ACIMA do dock,
+             embora a superficie da folha continue por tras da rail. O
+             rail-slot fica acima do content-slot e preserva os toques do dock.
+             Se a altura do dock mudar em bento-sidebar-card.js, mudar AQUI. */
+          /* Rede de seguranca. O valor bom vem de _observarDock(), que MEDE. */
+          --bruno-dock-h: calc(74px + env(safe-area-inset-bottom, 0px));
+          /* Material VisionOS da folha. Quando aberta, ela mesma continua por
+             tras da rail transparente. Escopo exclusivo do telefone. */
+          --bruno-mobile-sheet-background:
+            radial-gradient(360px 240px at 18% -10%, rgba(255,255,255,0.105), transparent 64%),
+            linear-gradient(180deg, rgba(255,255,255,0.060), rgba(255,255,255,0.018) 48%, rgba(0,0,0,0.035)),
+            rgba(0,0,0,0.300);
+          --bruno-mobile-sheet-filter: blur(20px) saturate(1.18) brightness(1.03);
+        }
+        /* A rail fechada e transparente: no telefone a borda atmosferica nao
+           pinta um rodape proprio. Permanecem as laterais, o topo e o veu geral
+           que garantem contraste ao restante da composicao. */
+        .backdrop::after {
+          background:
+            linear-gradient(90deg,  rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
+            linear-gradient(270deg, rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
+            linear-gradient(180deg, rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
+            rgba(6,9,14,var(--bruno-backdrop-dim, 0.10));
         }
         .shell {
           grid-template-columns: minmax(0, 1fr);
@@ -2202,6 +2340,7 @@ class BrunoShell extends HTMLElement {
           z-index: 2;
         }
         .rail-slot::after {
+          display: block;
           top: 0;
           left: 0;
           right: auto;
@@ -2209,10 +2348,36 @@ class BrunoShell extends HTMLElement {
           height: 1px;
           background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.30) 50%, transparent 100%);
         }
+        /* ANTERIOR (rollback rev. faixa-de-tiles): a folha elevava o
+           content-slot acima do dock. Isso fazia a bottom sheet cobrir a rail:
+           .shell.tem-folha .content-slot { z-index: 3; }
+
+           NOVO (2026-08-12): a rail permanece fixa e a frente da folha. A
+           classe tem-folha continua sendo publicada por _onFolha(), mas agora
+           eleva apenas o rail-slot. As regras vivem exclusivamente no phone;
+           a rail vertical do tablet conserva a pilha original. */
+        .shell.tem-folha .content-slot {
+          z-index: 1;
+        }
+        .shell.tem-folha .rail-slot {
+          z-index: 4;
+          /* A folha agora segue ate a borda inferior, por tras deste slot. A
+             rail permanece genuinamente transparente nos dois estados; quando
+             a folha abre, o mesmo material aparece por baixo dela sem emenda. */
+          background: transparent;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
+
         .content-slot {
           grid-column: 1;
           grid-row: 1;
           overflow-y: auto;
+          /* ANTERIOR (rollback 2026-08-15): somente a subview desativava
+             scroll anchoring. O elemento que realmente rola e decide a ancora
+             e este slot da shell; por isso Office e Quartos ainda deslocavam
+             ao montar/desmontar a folha. Exclusivo do breakpoint phone. */
+          overflow-anchor: none;
           -webkit-overflow-scrolling: touch;
           padding: 10px 10px 6px;
         }
@@ -2236,6 +2401,11 @@ class BrunoShell extends HTMLElement {
           left: 12px;
           right: 12px;
           width: auto;
+        }
+
+        .config-child-panel[aria-label="Diagnostico"] {
+          top: 12px;
+          bottom: calc(84px + env(safe-area-inset-bottom, 0px));
         }
 
         .config-panel.spotify-panel {

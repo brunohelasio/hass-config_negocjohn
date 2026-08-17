@@ -345,8 +345,23 @@ class BrunoTopBadgesCard extends HTMLElement {
     };
   }
 
+  // Prioridade exclusiva do telefone. O tablet conserva a ordem historica.
+  // Nivel 0: anomalia/atencao; nivel 1: atividade; nivel 2: estado normal.
+  // O indice original desempata, impedindo trocas arbitrarias a cada update.
+  _mobilePriority(model) {
+    const text = `${model?.title || ''} ${model?.sub || ''}`.toLowerCase();
+    const securityAttention = model?.key === 'security' && model?.active;
+    const explicitAttention = /unlocked|door open|error|offline|unavailable/.test(text);
+    if (securityAttention || explicitAttention) return 0;
+
+    const curtainRelevant = model?.key === 'curtains'
+      && (model.chips || []).some((chip) => chip.active || (Number.isFinite(chip.value) && chip.value < 97));
+    if (model?.active || curtainRelevant) return 1;
+    return 2;
+  }
+
   _models() {
-    return [
+    const models = [
       this._securityModel(),
       this._curtainsModel(),
       this._lightsModel(),
@@ -358,6 +373,17 @@ class BrunoTopBadgesCard extends HTMLElement {
       // _energyModel -> retorno null filtrado abaixo).
       this._energyModel(),
     ].filter(Boolean);
+
+    // NOVO (2026-08-16) — status prioritarios somente no mobile.
+    // ANTERIOR (rollback): retorno direto da lista fixa acima. Remover este
+    // bloco devolve Security -> Cortinas -> Luzes -> Midia -> Clima -> Energia
+    // em todas as larguras. A faixa continua horizontal e com a mesma altura.
+    const isPhone = globalThis.matchMedia?.('(max-width: 800px)')?.matches === true;
+    if (!isPhone) return models;
+    return models
+      .map((model, index) => ({ model, index, priority: this._mobilePriority(model) }))
+      .sort((left, right) => (left.priority - right.priority) || (left.index - right.index))
+      .map((item) => item.model);
   }
 
   // NOVO (2026-07-25) — Badge de Energia.
@@ -962,6 +988,20 @@ class BrunoTopBadgesCard extends HTMLElement {
           }
         }
 
+        /* NOVO (2026-08-15) — microajuste EXCLUSIVO do phone.
+           A faixa visual da Home comecava em y=10px, enquanto o plano visual
+           equivalente das subviews comecava em y=4,16px. O fluxo ja estava
+           correto e nao podia ceder altura do hero; por isso o ajuste e apenas
+           de pintura. A caixa continua reservando os mesmos 48px e somente seu
+           conteudo sobe os 5,84px medidos no harness.
+
+           ANTERIOR (rollback desta rodada): o transform foi colocado dentro do
+           media de 900px. Isso tambem alcançaria a faixa 801–900px, que pertence
+           ao tablet. O breakpoint correto e o contrato phone da shell: 800px. */
+        @media (max-width: 800px) {
+          :host { transform: translateY(-5.84px); }
+        }
+
         /* ============================================================
            NOVO — FAIXA DE STATUS (re-skin savant). Bloco ADITIVO/CSS-only:
            a LÓGICA (modelos, contagem, .is-active aceso/apagado, expandir/
@@ -1034,6 +1074,56 @@ class BrunoTopBadgesCard extends HTMLElement {
         }
         .rail .chip + .chip {
           border-left: 1px solid rgba(255,255,255,0.10);
+        }
+
+        /* ============================================================
+           NOVO (2026-08-16) — LARGURA UNIFORME DAS TILES DE STATUS.
+
+           POR ULTIMO de proposito. O bloco de re-skin acima redefine
+           ".badge { padding: 0 16px }" sem media query; media query nao
+           acrescenta especificidade, entao quem decide e a POSICAO. Colocado
+           antes, o padding daqui era ignorado — medido.
+
+           O DEFEITO: o bloco de 900px deixa ".badge { flex: 0 0 auto }", ou
+           seja, largura ditada pelo CONTEUDO. Medido a 428px: 99,3 · 101,8 ·
+           96,1 · 96,1 · 98,4 — desiguais. As quatro primeiras somavam 394,2 de
+           408 uteis, entao bastava um rotulo mais longo (Energia) ser
+           priorizado para a quarta ser cortada.
+
+           25% da caixa de conteudo do trilho => quatro tiles ocupam a largura
+           util EXATA, com qualquer combinacao que a prioridade escolher. O
+           filete entre badges e "border-left" e o box-sizing e border-box,
+           entao ele nao acrescenta largura.
+
+           A LOGICA de prioridade (nivel 0 atencao, 1 atividade, 2 normal) NAO e
+           tocada — so a geometria.
+
+           BREAKPOINT: 800px, o contrato de telefone da shell. O bloco de 900px
+           alcanca 801-900, que e faixa de tablet.
+
+           ROLLBACK: remover este bloco; volta a largura por conteudo.
+           ============================================================ */
+        @media (max-width: 800px) {
+          .badge {
+            flex: 0 0 25%;
+            min-width: 0;
+            /* 16px de cada lado custavam 31% de uma tile de 101,5px. 10px
+               devolve 12px ao texto sem encostar no filete. */
+            padding: 0 10px;
+            column-gap: 7px;
+          }
+
+          /* Sem isto um rotulo longo transborda a tile em vez de truncar, e a
+             largura fixa nao adiantaria nada: o texto invadiria a vizinha. */
+          .badge .badge-text { min-width: 0; max-width: 100%; }
+          .badge .badge-title,
+          .badge .badge-sub {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
         }
       </style>
 

@@ -61,7 +61,8 @@ const BRUNO_QUARTO_CASAL_SUBVIEW_DEFAULT_CONFIG = {
     temperature: ['sensor.sensor_4_in_1_q_casal_temperature'],
     humidity: ['sensor.sensor_4_in_1_q_casal_humidity'],
     room_group: 'light.grupo_quarto_casal',
-    camera_main: 'camera.camera_quarto_casal_2',
+    // ANTERIOR (rollback ONVIF geral): camera_main: 'camera.camera_quarto_casal_2',
+    camera_main: 'camera.qc_camera_profile_1',
     camera_secondary: '',
     active_camera_select: '',
     tv: '',
@@ -87,7 +88,8 @@ const BRUNO_QUARTO_CASAL_SUBVIEW_DEFAULT_CONFIG = {
     ],
     cameras: [
       {
-        entity: 'camera.camera_quarto_casal_2',
+        // ANTERIOR (rollback ONVIF geral): entity: 'camera.camera_quarto_casal_2',
+        entity: 'camera.qc_camera_profile_1',
         name: 'Quarto Casal',
         short_name: 'Casal',
         controls: [],

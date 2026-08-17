@@ -3301,3 +3301,1133 @@ medir o componente isolado responde sobre o componente, nao sobre o layout.
 
 Bundle `bruno-dashboard.Duzbu9AO.js`. Proxima fase: **6.0 — baseline de runtime
 e carregador estavel**.
+
+---
+
+## Registro de Implementacao — Fase 6.1: estado seletivo e ciclo de vida (2026-08-06)
+
+### INVARIANTE (o defeito que a fase achou, e que vale para todo componente novo)
+
+**Nunca declarar `hass` como propriedade REATIVA do Lit.**
+
+```
+static properties = { _hass: { state: true } };   // ERRADO
+```
+
+Toda atribuicao a uma propriedade reativa pede um render. O setter de `hass`
+atribui SEMPRE — o componente precisa do objeto mais recente para agir. Logo, o
+`return` de qualquer guarda no setter nunca evita nada: o render ja foi pedido na
+linha anterior.
+
+Foi isto que produziu os **4 renders por segundo** medidos no tablet. A guarda
+por assinatura do `bruno-room-tile` existia desde a Fase 5 e **nunca funcionou**.
+Nao dava para ver porque a contagem de renders nao dizia QUEM os pedia; a
+atribuicao de motivo (6.1) mostrou 2.767 de 2.800 renders vindos de fora do
+observador.
+
+O caminho correto: `static properties = {}` para o hass (ou so as propriedades de
+interface, como `_selecionado`), e `requestUpdate()` explicito na guarda.
+
+### O que entrou
+
+| Arquivo | Papel |
+|---------|-------|
+| `services/state/entity-watcher.ts` | `ObservadorDeEntidades`: declara as entidades lidas, responde QUAIS mudaram. `coletarIdsDeEntidade` varre a configuracao em vez de exigir lista a mao. 24 testes |
+| `services/state/clock.ts` | Relogio central: um intervalo para todos os assinantes, some quando o ultimo sai, desliga com a aba oculta. 12 testes |
+| `diagnostics/runtime/collector.ts` | Vazamento deixou de contar instancia montada; memoria ganhou piso/pico/tendencia; tarefas longas separam carga de uso; marca de ciclo de navegacao. 32 testes |
+| `scripts/harness/gen-render-harness.mjs` | Banco de medicao de RENDERS (o existente mede geometria) |
+
+Ligados: `bruno-room-tile`, `bruno-room-subview` (que **nao tinha guarda
+nenhuma**) e `bruno-devices-panel`.
+
+### Medido
+
+| | sem estado seletivo | com | reducao |
+|---|---|---|---|
+| 7 ladrilhos · 400 atualizacoes do hass | 2.800 renders | 40 | **98,6%** |
+| 1 subview · 200 atualizacoes | 200 renders | 20 | **90,0%** |
+
+Ciclo de navegacao: 50 montagens/desmontagens, tudo zerado desde a marca.
+
+### Duas armadilhas de medicao (registradas para nao repetir)
+
+1. **O Lit agrupa `requestUpdate` pendentes.** Um laco sincrono de 400 passos
+   vira UM render por componente — a primeira rodada deu 99,8% de reducao, que
+   era o agrupamento do Lit, nao o estado seletivo. Preciso `await
+   updateComplete` a cada passo.
+2. **`requestAnimationFrame` nao dispara com a aba em segundo plano**, e a
+   medicao roda com a aba oculta. Usar `setTimeout`.
+
+### Suspensao de modulo invisivel
+
+O tablet e de parede e a tela apaga. Com `visibilityState === 'hidden'`: o ciclo
+de instantaneos de camera para e o relogio central desliga. Ao voltar, um quadro
+e buscado na hora e o relogio bate uma vez antes de retomar — a tela nao acende
+com a imagem de dez minutos atras.
+
+### Rollback
+
+Todos os blocos substituidos estao comentados in-place com o marcador
+`ANTERIOR (rollback 6.1)`: `_buildSignature` do ladrilho, o setter sem guarda do
+subview, o timer proprio de relogio, e as tres declaracoes de `_hass` reativo.
+Em `configuration.yaml`, a linha do bundle anterior esta comentada ao lado.
+
+### Atencao
+
+A troca do bundle no `extra_module_url` EXIGE reinicio do Home Assistant.
+Conferir o Corredor apos o reinicio (ver historico de correlacao).
+
+### Baseline 6 (2026-08-06) — a 6.1 medida no tablet, e a QUARTA correcao de memoria
+
+Resultado: `bruno-room-tile` caiu de **4,04 renders/s** (baseline 4-5) para
+**0,32/s** — 12,6x menos, medido no aparelho. Vazamentos zero. E agora o painel
+diz QUEM acordou cada componente.
+
+**INVARIANTE sobre `performance.memory`:** o navegador NAO entrega medida
+continua. O valor fica parado por muitos minutos e entao salta (quantizacao
+contra espionagem). Evidencia acumulada: 146 s -> 9,5 MB; 568 s -> 9,5 MB;
+1391 s (mesma sessao) -> 110,6 MB; e 73 amostras identicas na baseline 1.
+
+Com UM valor lido, piso, pico e crescimento sao o mesmo numero. Qualquer
+veredito ali e conclusao tirada de nada, com aparencia de dado medido — foi o que
+me enganou QUATRO vezes, em tres direcoes diferentes.
+
+O coletor agora conta DEGRAUS (valores distintos) e **se recusa a opinar com
+menos de dois**. Regra geral que fica: **quando uma metrica engana repetidamente,
+o conserto e ensinar o instrumento a dizer "nao sei", nao afinar a
+interpretacao.**
+
+---
+
+## Registro de Implementacao — Fase 6.2B parte 1: motor de instantaneos (2026-08-07)
+
+### O defeito, em aritmetica
+
+```
+cadencia do ciclo antigo ......... 6.500 ms  (intervalo FIXO)
+carga media de um quadro ......... 6.200 ms  (medido no tablet)
+folga real entre requisicoes .....   300 ms
+```
+
+Cada camera mantinha uma requisicao em voo quase o tempo todo; a Cozinha, com
+duas cameras, mantinha duas. **Estavamos saturando exatamente aquilo que
+estavamos esperando.** Sem prazo e sem cancelamento, um pedido travado ficava
+pendurado para sempre e o ciclo seguinte abria outro por cima — o pior tempo de
+10.039 ms tem cara de prazo estourado do outro lado, nao de rede lenta.
+
+### A politica nova (`services/camera/snapshot-engine.ts`)
+
+1. nunca duas requisicoes em voo para a mesma camera;
+2. espera = `max(folga, cadencia - duracao)`;
+3. prazo de 8 s **com abort**;
+4. recuo exponencial apos 2 falhas seguidas, teto 60 s;
+5. partida escalonada (300 ms);
+6. cadencia propria do PIP (15 s).
+
+Virou SERVICO, e nao metodo do componente, para poder ser testado: carregador,
+agenda e relogio entram por parametro. 31 testes de unidade + verificacao de
+integracao no navegador (`window.medirCameras`).
+
+### Medido
+
+| cenario | resultado |
+|---|---|
+| cameras fora do ar, 30 s | 5 tentativas (ciclo antigo faria 8) · recuo ativo |
+| cameras respondendo, 25 s | palco 4 quadros · PIP 2 — cadencia diferenciada |
+| ligacao motor -> tela | os dois elementos com selo novo e `is-loaded` |
+| pico em voo | 1 |
+| apos desmontar | 0 em voo · 0 vazamentos |
+
+### O que NAO resolve
+
+A latencia de origem. Se o HA leva 6 s para produzir um quadro dessas cameras
+Tuya, o motor nao encurta esses 6 s — ele impede que a espera vire fila, que o
+erro vire martelo e que sair do comodo deixe requisicoes terminando em segundo
+plano. A latencia de origem e a **parte 2 (WebRTC)**.
+
+### DECIMA PRIMEIRA ocorrencia da crase — e a brecha estrutural
+
+Escrevi um caminho entre crases num comentario dentro do template literal do
+gerador do banco de medicao. Quebrou na hora de gerar.
+
+O detector existe e FUNCIONA (confirmei com caso sintetico). O problema era
+outro: **`npm run check` nunca rodou o detector de crase.** A armadilha que ja
+bateu onze vezes estava fora do gate.
+
+Corrigido: `check:crase` entrou no `npm run check`, e o `check-backtick.mjs`
+passou a resolver a raiz a partir da propria localizacao — antes dependia do
+diretorio de onde era chamado, e o gate roda de `dashboard-src/`.
+
+### Instrumentacao por camera
+
+A medicao passou a ser **por camera**, com o primeiro quadro num rotulo proprio
+(`camera <nome> · 1o quadro`). Sao as duas perguntas que a baseline levantava e
+nao respondia: QUAL camera falha (o usuario relatou o Q. Miguel) e QUANTO tempo
+ate a primeira imagem.
+
+### Rollback
+
+Ciclo antigo comentado in-place em `bruno-room-subview.ts` com o marcador
+`ANTERIOR (rollback 6.2B)`, junto da constante `INTERVALO_CAMERAS`.
+Bundle anterior comentado ao lado em `configuration.yaml`.
+
+### Fase 6.2B rev.2 (2026-08-07) — o prazo de 8 s era uma regressao MINHA
+
+Baseline 7, colhida no PC: das 21 requisicoes de camera, **10 falharam, e todas
+em ~8.001 ms**. Nao era falha das cameras — era o prazo de 8 s que eu introduzi
+na parte 1, abortando requisicoes que estavam a caminho. A camera do Office
+nunca renderizou: tres tentativas, tres cortes meus.
+
+O primeiro quadro legitimo nessas cameras leva de **3,9 s a 7,7 s**. Um prazo de
+8 s fica DENTRO da faixa normal de operacao.
+
+**INVARIANTE:** um prazo e uma afirmacao sobre a DISTRIBUICAO do tempo de
+resposta. Eu escolhi 8 s sem olhar a distribuicao — e ela ja estava medida no
+relatorio anterior (media de 6,2 s). Media de 6,2 s significa que metade das
+amostras passa disso. **Nunca calibrar prazo sem olhar a distribuicao que ja
+existe.**
+
+Segundo defeito achado junto: o elemento de imagem nascia com URL carimbada com
+selo, entao (a) nunca reusava o cache entre visitas e (b) o motor disparava
+OUTRA requisicao no mesmo instante — duas requisicoes lentas por camera na
+montagem, competindo.
+
+Correcoes: prazo 25 s; URL inicial sem selo; motor com `atrasoInicial` de uma
+cadencia (o primeiro quadro e do elemento, o motor entra na primeira
+ATUALIZACAO); metrica nova `camera <nome> · ate aparecer`, que mede o tempo
+entre abrir o comodo e a imagem estar na tela — o que o usuario chama de demora.
+
+### Memoria: primeira leitura confiavel de toda a Fase 6
+
+```
+piso 18,2 MB -> 119,3 MB · +96,4 MB em 442 s · 64 degraus
+veredito: "isto e retencao, nao oscilacao"
+```
+
+A correcao da 6.1 funcionou como projetada: o instrumento calou quando tinha um
+degrau so, e falou quando passou a ter 64.
+
+Hipotese com aritmetica: quadros de camera decodificados (1920x1080 = 8,29 MB
+cada; ~11 carregamentos = 91 MB, contra 96,4 MB medidos). Cada quadro tem URL
+unica por causa do selo, entao nenhum reusa cache.
+
+DESCARTADO por verificacao: retencao de instancia (`vivos: 0`, timers 95/95,
+listeners 22/22, `bruno-surface-material.js` usa WeakMap).
+
+NAO confirmada. Experimento que decide: Home aberta 7 min vs subview com camera
+aberta 7 min, comparando o crescimento do piso. Se confirmar, a correcao e
+`fetch` + `createObjectURL` + **`revokeObjectURL` do quadro anterior**.
+
+### O que NAO e defeito
+
+"So atualiza a imagem apos alguns segundos" e a natureza do instantaneo: cada
+quadro e uma requisicao de 4 a 8 s. Nenhum ajuste de cliente muda isso — e
+exatamente o que a **parte 2 (WebRTC)** resolve.
+
+### Fase 6.2B rev.3 (2026-08-07) — o recuo punia quem ainda nao viu imagem
+
+Baseline 8, no PC: sete cameras convergiram para ~6 s ate aparecer; a do
+Q. Miguel levou **49 s**. O pior tempo dela e **10.004 ms** — nao e o prazo do
+motor (25 s), e o **tempo limite do proprio Home Assistant** ao buscar imagem de
+camera. Ela falha no lado do servidor em 3 de 5 tentativas.
+
+Com o recuo comum, a sequencia falha -> 13 s -> falha -> 26 s somava os 49 s.
+
+**Distincao que faltava:** recuar protege a VM de uma camera morta, mas antes do
+primeiro quadro o usuario esta olhando para uma caixa vazia. Depois que ha
+imagem na tela, recuar nao custa nada visualmente.
+
+Correcoes: recuo distingue com/sem imagem (sem imagem tolera 4 falhas e o teto
+cai de 60 s para 12 s); `buscarAgora(entityId)` para quando o elemento de imagem
+falha sozinho.
+
+### Memoria: hipotese DERRUBADA por experimento (encerra a investigacao)
+
+Eu supus quadros de camera decodificados, e a aritmetica batia (11 x 8,29 MB =
+91 MB contra 96 MB medidos). Testei:
+
+```
+40 imagens com URL unica  -> heap +0,1 MB
+40 imagens com URL igual  -> heap +0,0 MB
+```
+
+**INVARIANTE:** `performance.memory.usedJSHeapSize` mede SO o heap JavaScript.
+Bitmap decodificado vive no cache de imagens do renderizador, FORA dele. Imagem
+nao aparece nessa metrica por construcao — a coincidencia aritmetica era
+coincidencia.
+
+**E a primeira versao do experimento imprimiu "hipotese CONFIRMADA"**, porque
+comparava 0,1 MB com 0,0 MB por RAZAO, com limiar de 3x. **Comparacao
+proporcional exige magnitude minima antes de valer** — razao sobre ruido da
+qualquer coisa. Mesma familia das quatro leituras erradas anteriores de memoria.
+
+Experimento certo — 40 montagens/desmontagens da subview, medindo o heap JS:
+
+```
+3,3 MB -> 8,9 MB · +5,6 MB · 143 KB por montagem · vazamentos 0
+```
+
+Na sessao do usuario foram 28 montagens = ~4 MB, contra ~98 MB medidos. **O
+crescimento nao vem dos componentes do dashboard**; vem do frontend do Home
+Assistant, que ocupa a mesma pagina. Investigacao encerrada: medida, atribuida e
+fora do alcance deste projeto.
+
+### A/C do Q. Marina ligado ao iniciar — o dashboard esta limpo
+
+Verificado: as 14 chamadas de `_servico` em `bruno-room-subview.ts` estao TODAS
+dentro de handlers de clique, e nao ha nenhum handler invocado no render (o erro
+classico `@click=${this._metodo()}`, que dispararia comandos ao montar). O
+dashboard nao liga o A/C.
+
+Pendencia para o usuario: conferir o logbook do HA da entidade de climate do
+Q. Marina — ele diz QUEM ligou. Territorio de sensor/automacao (Regra 3).
+
+Nota de configuracao: `subviews.config.ts` lista **11 ids candidatos** de climate
+para o Q. Marina, e `_resolverId` escolhe o primeiro disponivel. Confirmar qual
+existe de fato e fixar um so — lista de candidatos e cheiro de configuracao nao
+resolvida.
+
+---
+
+## Registro de Implementacao — Fase 6.2B parte 2: WebRTC (2026-08-07)
+
+### Escopo, e por que ele e minusculo de proposito
+
+Decisao do usuario, e ela e a politica da fase:
+
+> "quando, enfim, for aplicar o WebRTC sugiro que realmente aplique inicialmente
+> em apenas uma camera como teste (ex. sala), mantendo as demais como estao."
+
+`src/config/camera-webrtc.config.ts` e uma lista de UMA linha:
+`CAMERAS_WEBRTC = ['camera.sl_camera_2']`. Acrescentar camera = acrescentar
+linha. Voltar atras = apagar a linha. Nenhuma das duas toca em componente.
+
+A Sala e a escolha certa para o teste: mostrou o primeiro quadro em 3,1 s e
+nunca falhou nas medicoes — se o WebRTC piorar ALI, piora em qualquer lugar.
+
+### Arquitetura
+
+| arquivo | papel |
+|---|---|
+| `services/camera/webrtc-session.ts` | o PROTOCOLO: oferta, resposta, candidatos, prazo, liberacao. Recebe transporte e fabrica de conexao por parametro — **20 testes** |
+| `services/camera/webrtc-transport.ts` | o acoplamento com o HA (`camera/webrtc/offer`, `/candidate`, `/get_client_config`). Sem `connection`, devolve `undefined` |
+| `config/camera-webrtc.config.ts` | a lista curta |
+
+A separacao existe porque a negociacao real so pode ser validada no aparelho do
+usuario: a parte que da para provar fica provada, e a parte que nao da fica
+pequena e a vista.
+
+### A REGRA QUE GOVERNA A FASE
+
+**Falhar e normal e nao pode custar nada.** Qualquer erro em qualquer etapa
+encerra a sessao; o instantaneo continua na tela, exatamente como esta hoje. Uma
+camera que nao negocia fica IGUAL ao que ja era, nunca pior.
+
+Verificado no banco, com `RTCPeerConnection` real:
+- **sem `connection` no hass**: sessao nem e criada, video fica invisivel, os dois
+  instantaneos carregam normalmente;
+- **com `connection`**: envia `get_client_config` e `offer`; ao receber `error`,
+  vai para `falhou`, `webrtcAtivo` volta a false e o instantaneo segue;
+- ao desmontar: `unsubscribe` chamado.
+
+### Detalhes que custam caro quando esquecidos
+
+1. **`addTransceiver('video', { direction: 'recvonly' })`** — sem isso o
+   navegador negocia bidirecional e PEDE PERMISSAO DE CAMERA ao usuario.
+2. **Candidatos ICE antes do `session_id`** sao guardados e enviados quando a
+   sessao abre. Em rede local eles costumam sair antes da resposta; descartar
+   seria perder o caminho de conexao.
+3. **Zerar os handlers antes de `pc.close()`** — `close()` dispara mudanca de
+   estado, que reentraria em `falhar` durante o proprio encerramento.
+4. **Instantaneo sai dos alvos do motor enquanto o video toca** e volta sozinho
+   se a sessao cair.
+5. **Tela apagada encerra a sessao** — stream aberto sem ninguem olhando e o pior
+   dos dois mundos: CPU na VM e rede, para nada.
+
+### Pendencia
+
+Validacao no aparelho. E a primeira entrega desta fase que o usuario valida sem
+eu ter provado antes — o banco nao tem Home Assistant, e negociacao WebRTC
+precisa de um. O risco esta contido pelo fallback acima.
+
+### Fase 6.2B parte 2, rev.2 (2026-08-07) — eu reimplementei o que ja existia
+
+Medido no PC: `webrtc sl_camera_2` = **3 requisicoes, 3 falhas, todas em
+12.020 ms** (o prazo da minha propria negociacao). Nunca funcionou.
+
+E violou a regra que eu mesmo escrevi para a fase — *"falhar nao pode custar
+nada"*. As tentativas DEGRADARAM o instantaneo: cada oferta faz o HA abrir um
+stream para a camera, e a mesma camera nao serve negociacao e instantaneo ao
+mesmo tempo. Resultado: `sl_camera_2` com pior tempo de **25.003 ms** (o teto do
+motor) e o usuario esperando **22,7 s** pela imagem ao voltar para a Sala. Foi
+exatamente o que ele relatou.
+
+**A informacao que resolveu veio do proprio usuario**, e eu deveria ter buscado
+antes: na subview de CAMERAS a mesma camera aparece **em tempo real**. Aquela
+subview e legada e usa o `hui-image` nativo do HA com `cameraView = 'live'` —
+que resolve WebRTC ou HLS conforme a camera e ja cai para instantaneo sozinho.
+
+**INVARIANTE:** antes de implementar um protocolo, procurar se o frontend do
+Home Assistant ja o entrega pronto — e se alguma parte DESTE projeto ja o usa
+funcionando. `hui-image`, `ha-camera-stream`, `more-info` e afins existem e sao
+mantidos pelo HA. Reimplementar custa o dobro: o esforco e a regressao.
+
+Troca aplicada: `_cuidarDoAoVivo` cria UM `hui-image` (`cameraView: 'live'`,
+`fitMode: 'cover'`), aponta `cameraImage` para a camera do palco e o reanexa ao
+slot depois de cada render. `webrtc-session.ts` e `webrtc-transport.ts` ficam no
+repositorio, testados e FORA do caminho vivo (o Vite nao os inclui no bundle
+enquanto ninguem importar).
+
+E o instantaneo NAO sai mais dos alvos do motor quando ha video: a concorrencia
+foi justamente o que degradou a medicao.
+
+### More-info ao tocar na camera
+
+Pedido do usuario na mesma sessao: *"a impossibilidade de um clique na camera
+abrir aquela camera maior do proprio Home Assistant... e algo que a gente precisa
+corrigir"*. O palco era um `<div>` inerte; virou botao que dispara `_maisInfo`.
+
+### Memoria: o veredito se contradizia, e a causa era o ponto de partida
+
+Duas baselines seguidas: uma colhida ja no patamar disse "piso estavel", outra
+colhida desde a carga disse "retencao" — **as duas terminando nos mesmos
+~120 MB**. Comparar so o primeiro terco com o ultimo acusa igual duas curvas
+diferentes: subida ate o patamar e retencao de verdade.
+
+Corrigido: o coletor agora olha tambem o terco do MEIO. Se a subida CONTINUA no
+fim, e retencao; se estabilizou, o veredito passa a ser "custo de partida".
+
+### Fechamento da 6.2B + maquetes premium (2026-08-08)
+
+**A instrumentacao me corrigiu.** `ao vivo sl_camera_2 · stream 264px` provou que
+o player funcionava — eu havia afirmado que "nem chegava a assumir", e estava
+errado. O que ele fazia de ruim era outro: **consumia a camera e matava de fome
+os instantaneos de toda a casa** (100% de falha na `as_camera_2`, 62 s ate
+aparecer; 6 tempos esgotados na Sala). Desligado por isso, nao por nao funcionar.
+
+**LL-HLS aplicado** em `configuration.yaml` (`part_duration: 0.5`). Atua no
+caminho do more-info. Expectativa: 6-10 s -> ~2 s. Nao e tempo real; para isso
+so com `go2rtc` + RTSP local.
+
+**Maquetes premium**: os 16 PNGs de `www/bruno-ui/assets/v2/` foram substituidos.
+A familia nova tem **caixa optica identica nos 16** (460x452 em +26+34, centro X
+256, ultimo Y 485) e mascara alfa igual pixel a pixel entre ON e OFF — a troca de
+estado nao desloca nem redimensiona nada. Anteriores em
+`_archive/assets/v2-anterior-20260808/`. Cache-bust
+`?v=20260808-maquetes-premium-1`.
+
+Nenhum comodo usa `iconScale`, entao a uniformidade nova nao conflita com
+calibragem antiga.
+
+### Ponte do motor de cameras para a subview legada (2026-08-08)
+
+**Achado que motivou:** a subview de cameras (`bruno-cameras-security-subview.js`,
+JS legado, migracao so na Fase 6.6) rodava `refresh_interval: 3000` — intervalo
+FIXO de 3 s por camera, para OITO cameras, com carga medida de 3 a 9 s por
+quadro. Sem prazo, sem cancelamento e **sem `onerror`**: um carregamento que
+falhasse ficava pendurado para sempre e aquela imagem congelava.
+
+Era a pior configuracao do projeto, e era o que o usuario relatava como
+"na subview de cameras a coisa funciona muito pouco".
+
+**Solucao — ponte, nao migracao.** `main.ts` expoe `MotorDeInstantaneos` em
+`globalThis.BrunoCameraEngine`; a subview legada o consome. Acoplamento
+TEMPORARIO e registrado como divida: quando a 6.6 migrar aquela subview, ela
+importa o motor direto e a ponte sai.
+
+Sem o bundle carregado, cai no ciclo antigo — preservado, e agora com o
+`onerror` que faltava. Cache-bust `?v=20260808-motor-cameras-1`.
+
+### go2rtc: instalado, rodando, com ZERO streams
+
+O add-on go2rtc 1.9.14 esta no ar apontando para `/config/go2rtc.yaml`, e **esse
+arquivo nao existe**. A peca que faria WebRTC funcionar esta instalada e nunca
+foi ligada.
+
+Isso reconcilia a Fase 6.2B inteira: a negociacao WebRTC falhou 3 de 3 porque
+nao havia fonte registrada, e o HA caiu para o proprio `stream` — que e HLS com
+buffer de segmentos, dai os 6-10 s de atraso.
+
+Proposta preparada em `config/go2rtc.yaml.proposto` (NAO ativa; renomear para
+aplicar). Usa fonte `hass:` porque as URLs da Tuya sao assinadas e temporarias —
+RTSP fixo pararia de funcionar sozinho.
+
+**Expectativa honesta:** 6-10 s -> 1-2 s. O salto da nuvem permanece; o que sai
+e o buffer. Tempo real do SmartLife so com RTSP local ou hardware que o exponha.
+
+**INVARIANTE:** nao religar o player embutido do dashboard antes de confirmar na
+interface do go2rtc que a camera aparece online e o WebRTC abre. Na rev.1 da
+6.2B as tentativas de negociacao consumiram a camera e mataram de fome os
+instantaneos de toda a casa (100% de falha numa delas).
+
+---
+
+## Registro de Implementacao — Fase 6.2: independencia de resolucao (2026-08-09)
+
+### O problema
+
+1.257 valores em pixel fixo no CSS gerado, todos calibrados num aparelho so
+(Galaxy Tab S6 Lite). Trocar de tablet desorganizava o layout inteiro.
+
+### A entrega
+
+A conversao acontece no GERADOR (`scripts/validation/gen-subview-css.mjs`), nao
+no CSS a mao — sao 5.266 linhas, e editar a mao seria irreprodutivel. Segue o
+principio ja estabelecido: **gerar em vez de transcrever**.
+
+```
+14px  ->  clamp(11px, 0.77cqi, 18px)
+```
+
+**618 valores convertidos.** Referencia: 1820 px (1920 do tablet, menos a coluna
+da rail de 86 e os paddings do content-slot). Nessa largura o valor fluido
+resolve exatamente para o px original.
+
+Escalam: tipografia, tamanho, espacamento, posicao. NAO escalam: borda, raio,
+filete, sombra — um filete de 1px que vira 1,3px fica borrado.
+
+### Medido
+
+| cena | campos | divergencias |
+|---|---|---|
+| Sala / Office / Cozinha a 1820 px | 12 | **0** |
+| Sala a 600 px | 4 | 4 (o layout se acomoda) |
+| Sala a 2560 px | 2 | 2 (idem) |
+
+Zero divergencia na calibragem e adaptacao fora dela: e exatamente o aceite.
+
+### Rollback
+
+`FLUIDIZAR = false` no topo do gerador e regerar. O CSS volta byte a byte,
+porque e gerado. Ajuste fino: `LARGURA_REFERENCIA`, `PISO`, `TETO`,
+`PROPRIEDADES_FLUIDAS` — todas constantes no mesmo lugar.
+
+### NAO entregue, e o motivo
+
+A decomposicao em sete componentes filhos. `camera-stage` e um dos sete e contem
+o trabalho do Codex, que ha instrucao expressa de nao alterar. Fazer seis de
+sete seria fracionar a fase. Fica registrado em `docs/25-fase-6.2-plano.md`.
+
+### ARMADILHA NOVA: `$` em string de substituicao do JS
+
+Ao aplicar o bloco novo com `String.replace(alvo, texto)`, o texto continha
+`)$'` (fim de uma regex). Em `replace`, `$'` significa "o trecho DEPOIS do
+match" — o arquivo saiu truncado no meio e nao compilou.
+
+**Regra:** ao inserir codigo com `replace`, usar SEMPRE funcao como
+substituicao (`replace(alvo, () => texto)`), que desliga a interpretacao de `$`.
+
+### Correcao da 6.2 — os PNGs do ladrilho (2026-08-09)
+
+**Defeito relatado:** os cartoes da faixa da Home escalavam com a tela, mas os
+PNGs nao — causando aproximacao excessiva e sobreposicao.
+
+**Causa, e ela era minha.** A fluidizacao da 6.2 alcancou UM arquivo: o
+`subview-styles.generated.ts`. O ladrilho e outro componente
+(`bruno-room-tile.ts`) e o CSS dele vive DENTRO do proprio arquivo, escrito a
+mao. Ficou intocado: 216 px fixos, sem `container-type`, com
+`.room-icon { max-width: 122px; height: 82px }` travando a imagem.
+
+**Correcao:** `container-type: inline-size` no `:host` e **77 valores
+convertidos** para clamp/cqi.
+
+**A referencia e OUTRA, e isso e o ponto.** O ladrilho nao ocupa a subview: e
+uma celula da faixa de oito. `(1820 - 7 x 10 de gap) / 8 = 218,75 px`. Usar 1820
+aqui deixaria tudo oito vezes menor.
+
+**Medido** (`window.geometriaTile` no banco):
+
+| largura da celula | PNG antes | PNG agora |
+|---|---|---|
+| 218,75 (calibragem) | 108x72 | **108x72 — identico** |
+| 150 | 74x72 (altura travada) | 84x56 |
+| 320 | 108x72 (travado no teto) | 140x94 |
+
+**LICAO:** fluidizar um componente exige a largura de referencia DELE. Uma so
+referencia para o dashboard inteiro esta errada sempre que os componentes vivem
+em containers de tamanhos diferentes.
+
+### Faixa vermelha no tablet — diagnostico, sem correcao
+
+Sintoma antigo, anterior a este roteiro: apos cada reinicio do HA, o tablet
+mostra card de erro de configuracao e exige limpar cache. No PC, nunca.
+
+Verificado: os modulos definem seus custom elements de forma SINCRONA (nenhum
+`await` ou `import()` antes do `customElements.define`). Nao e defeito de codigo.
+
+**Causa: corrida de carregamento.** O HA injeta os `extra_module_url` como
+scripts e NAO espera por eles antes de renderizar a view. No PC os modulos ganham
+a corrida; no tablet, mais lento, a view as vezes renderiza antes — e o Lovelace
+mostra o card de erro **sem tentar de novo**. Hoje sao mais de 50 modulos na
+lista, o que alarga a janela.
+
+Nao ha ajuste pontual. A correcao e estrutural — reduzir o numero de modulos, que
+e o que as fases 6.5 e 7 fazem. Registrado.
+
+---
+
+## Registro de Implementacao — Fase 6.3A: inventario e arquitetura mobile (2026-08-09)
+
+Levantamento e decisao, sem remocao. Documento: `docs/26-fase-6.3A-mobile.md`.
+
+### O achado central
+
+**Existem DOIS caminhos mobile vivos ao mesmo tempo:**
+
+1. a **shell adaptada** por media query (rail vira dock na base, Home V2 em uma
+   coluna, 9 itens da rail com `hide_on_phone`);
+2. as **cinco views V3** dedicadas em `views/mobile/`.
+
+Cada um foi feito numa epoca, os dois funcionam parcialmente, nenhum e completo.
+Manter os dois custa o dobro em toda mudanca.
+
+**Decisao proposta para a 6.5B:** a shell adaptada e o caminho unico; as cinco
+views viram rota de fuga e sao arquivadas quando a shell cobrir o que elas
+cobrem.
+
+### O contrato de modo
+
+Hoje o modo e decidido em TRES lugares independentes, todos por largura CSS
+(`bruno-shell.js`, `section_home_v2.yaml`, `rail.yaml`). Tres fontes de verdade
+para a mesma pergunta.
+
+E largura CSS nao e a pergunta certa: um tablet de parede a 800 px nao e um
+celular na mao. Proposta: `DashboardMode = 'wall' | 'tablet' | 'phone'`, decidido
+num lugar so, com configuracao explicita > `pointer: coarse` + largura > largura.
+
+**So o contrato agora.** Navegacao, estado entre views e safe areas se
+implementam SOBRE a shell nova (6.5) — foi o proprio usuario quem apontou isso.
+
+### Regra medida que fica registrada para a 6.5B
+
+**Nunca multiplos streams automaticos no phone.** Vem da 6.2B: duas cameras
+disputando a mesma fonte levaram uma delas a 100% de falha. Num celular, com
+rede movel, o custo e maior.
+
+### Fases 6.3A e 6.3B — mobile como adaptacao, nao reducao (2026-08-09)
+
+**Correcao da rev.1 da 6.3A.** Eu havia escrito "a shell adaptada e o caminho
+unico" e "arquivar as cinco views mobile". O usuario leu como *reduzir o
+dashboard de parede e chamar de mobile* — e o texto autorizava a leitura.
+
+A distincao que faltava, e que fica como regra:
+
+| | vale ser unico? |
+|---|---|
+| **Moldura** (shell, rail, tema, navegacao, estado) | **Sim** — duas custam o dobro |
+| **Composicao** (quais cards, em que arranjo) | **Nao** — e onde o mobile difere |
+
+**Definicoes do usuario, vinculantes:** dois modos (`tablet` paisagem na parede =
+experiencia principal; `mobile` retrato = adaptacao especifica). A rail vira barra
+inferior. A faixa de tiles NAO existe no mobile. No lugar dela, cards de comodo.
+Cameras todas do mesmo tamanho.
+
+**Nasceu a 6.3B** porque o layout mobile em si esta inacabado — foi abandonado
+quando a migracao para tiles e cards dinamicos comecou. A 6.5B pressupunha um
+layout definido; sem fecha-lo antes, ela decidiria desenho dentro da
+implementacao.
+
+### O principio que governa o layout mobile
+
+> No tablet de parede voce ESTA no comodo: acende a luz e ve acontecer. No
+> celular voce esta longe — a camera E a confirmacao da acao.
+
+Disso decorre a regra estrutural: **no mobile, a camera do comodo nao rola para
+fora da tela enquanto voce comanda.** Camera fixa que colapsa ao rolar, controles
+abaixo, folha secundaria para o detalhe.
+
+Isso INVERTE a ordem que o usuario sugeriu (hero -> luz -> camera -> hub -> A/C):
+numa pilha com rolagem a camera sai da tela justamente quando e necessaria.
+
+### Defeito de cascata diagnosticado (subviews no celular)
+
+Algumas subviews empilham no celular e outras nao. Nao e aleatorio:
+
+```
+BASE, dentro de @media (max-width: 760px):
+  .room-subview { grid-template-columns: 1fr }          empilha
+
+SOBREPOSICAO por comodo, SEM media query, emitida DEPOIS:
+  :host([data-room='cozinha']) .room-subview { ...3 colunas }   vence sempre
+```
+
+A regra por comodo e mais especifica E vem depois. Heranca dos seis arquivos
+originais; o gerador preservou fielmente, inclusive o defeito.
+
+**Correcao prevista:** o layout mobile deixa de depender de vencer a cascata — no
+modo `mobile` a subview usa grid proprio declarado por modo, e as sobreposicoes
+de comodo ficam restritas ao modo `tablet`.
+
+---
+
+## Registro — Fase 6.3C: confronto das propostas mobile com o codigo (2026-08-10)
+
+Auditoria medida, sem alteracao de codigo. Documento:
+`docs/28-fase-6.3-confronto-com-o-codigo.md`. Maquete A vs B publicada como
+artifact.
+
+### O metodo que faltava
+
+A 6.3B propos composicoes para telas cujo estado atual eu havia apenas
+INVENTARIADO por nome de arquivo, nunca montado e medido. O usuario apontou:
+*"a implementacao mobile nao deve ser tratada como uma reconstrucao completa
+antes de avaliar tecnicamente o que ja existe"*.
+
+**REGRA:** antes de propor composicao para um alvo, montar o componente real
+naquele alvo e medir. Mesma familia de "medir no tema e resolucao do tablet" —
+medir a 1920 nao diz nada sobre 390.
+
+Banco novo: `scripts/harness/gen-phone-harness.mjs` (390x844, content-slot em
+modo telefone, dock na base). Devolve ordem visual, altura por modulo e o que
+fica acima da dobra.
+
+### A causa raiz das subviews quebradas no telefone
+
+O tratamento COMPLETO de telefone existe — 35 regras — e esta preso ao seletor
+`[data-tvhub]`, ligado por `Boolean(ent?.['tv'])`. **So a Sala tem `tv:`.**
+
+```
+sala      [data-tvhub]              35 regras
+cozinha   [data-room='cozinha']     25 regras
+office · casal · marina · miguel     1 regra: so o flex
+```
+
+Os quatro mantem o grid do tablet dentro dos containers — dai camera e hub
+LADO A LADO com 180px cada (medido), e as pilulas de status no grid do desktop.
+
+Defeito adicional na propria Sala: o bloco aplica `display: contents` em
+`.content-left` e `.cams-media-row` mas **nao em `.right-column`** — o `order`
+das luzes e do A/C nunca vale no eixo externo. Ordem medida hoje:
+`topband 10 · luzes 54 · A/C 97 · cortina 427 · hub 554 · cameras 822`.
+
+### Correcoes aos meus proprios documentos
+
+| doc | trecho | correcao |
+|---|---|---|
+| 26 rev.2 §3.1 | cascata das sobreposicoes impediria empilhar | FALSO — e a chave `[data-tvhub]` |
+| 26 rev.2 §5 | "Planta 3D nao esta funcionando" | envelhecido; tem tratamento proprio (900/800/370px) e funciona |
+| 27 | Home como lancador, cards em 2 colunas | **ja existe** (`bento_comodos_matriz`, 2x3 de 176px) |
+| 27 | "bloco de contexto condicional" | **ja existe** (`bruno-activity-column` + `binary_sensor.home_activity_*`), melhor do que o proposto |
+| 27 D3 | planta em paisagem forcada | RETIRADA |
+| 27 D5 | inverter a ordem do usuario | RETIRADA — ver abaixo |
+
+### O argumento do Cenario B nao sobreviveu a medicao
+
+Eu sustentei que camera e comandos nao coexistem numa pilha rolavel. Medido, na
+ordem que o usuario propos (cortina, luzes, camera, hub, A/C) e com a iluminacao
+recolhida, a camera fica em y=217 e termina em 480 — **inteiramente acima da
+dobra (764)** em qualquer telefone.
+
+O Cenario B so ganha no caso "telefone de 667px COM a iluminacao aberta", e paga
+com tres componentes novos dentro do arquivo compartilhado com o tablet.
+Recomendacao: **Cenario A**; ou **A′** (A com so a iluminacao em folha) se o
+aparelho for pequeno.
+
+### Alturas medidas (390px de largura, dobra 764)
+
+barra 34 · cortina 82/~100 · luzes 43 recolhida e 193-348 aberta · cameras 263 ·
+hub 257 · **A/C 320** · **eletrodomesticos 442** · hero da Home **328**
+(3 faixas de 48 = 144).
+
+### DUAS ARMADILHAS DE MEDICAO NOVAS
+
+1. **Sem `<meta name="viewport">`, a emulacao movel adota viewport de layout de
+   980px** e nenhuma media query de telefone casa. A primeira rodada inteira
+   mediu tablet achando que media telefone.
+2. **Com o painel do navegador oculto, transicoes CSS nao progridem** — a
+   leitura devolve o valor de partida. Me levou a quase reportar que o dock de
+   iluminacao nao abria no telefone. Ele abre (43 -> 193-348). Irma da armadilha
+   do `requestAnimationFrame` (2026-08-06): neutralizar a transicao, nao esperar
+   mais tempo.
+
+### Aguardando
+
+Aprovacao do Cenario A / A′ e a altura da tela do telefone do usuario — e a
+unica informacao que pode inverter a recomendacao.
+
+---
+
+## Registro de Implementacao — Cenario B no telefone + Home condensada (2026-08-10)
+
+Decisao do usuario: *"pode seguir com a opcao B e no home pode seguir com a sua
+recomendacao [...]; lembrando que card de energia e midia cedem para os atuais
+cards dinamicos do modo tablet"*. Detalhe medido em `docs/28 §10`.
+
+### O arquivo novo, e por que ele NAO entrou no gerador
+
+`dashboard-src/src/components/rooms/subview-phone.styles.ts` — o layout de
+telefone inteiro, escrito a mao, ULTIMO no array `static styles`.
+
+`subview-styles.generated.ts` e TRANSCRIÇÃO dos seis arquivos originais e
+precisa continuar regeneravel. Desenho NOVO num gerador que nao tem de onde
+tira-lo tornaria a regeneracao impossivel. **Regra: o gerado transcreve; o novo
+mora ao lado.**
+
+Prefixo `:host([data-room]) .room-subview` = (0,4,0), empata com a maior
+existente e vence por posicao. Os oito blocos `@media (max-width: 800px)`
+herdados continuam la, integralmente sombreados. Rollback = uma linha.
+
+### A composicao
+
+```
+Status (rolagem horizontal)   Camera   Cortina   3 linhas-resumo
+tocar numa linha -> o proprio modulo vira bottom sheet na base
+```
+
+**A folha NAO duplica conteudo**: `.lights-card` / `.ac-card` /
+`.media-hub-card` / `.appliances-card` saem do fluxo com `position: fixed`.
+Cada um volta com o `display` que ELE usa — `flex` para todos quebraria o grid
+interno do A/C e do hub.
+
+**Nenhum codigo pergunta "e telefone?"**. O DOM e o mesmo nos dois modos; acima
+de 800px as linhas e o escurecimento sao `display: none`. Foi o que dispensou o
+contrato de modo da 6.3A nesta etapa.
+
+### Medido a 428x926 (iPhone 13 Pro Max do usuario)
+
+```
+camera  56 -> 341 · cortina 351 -> 491 · resumo 500 -> 712
+total 718 · dobra 775 a 822 · sobra 57 a 104
+```
+
+17 folhas nos seis comodos, todas `fixed`, base em 926 (cobrem o dock).
+**Menor folga ate a camera: 140px** (eletrodomesticos da Cozinha, 445px de
+altura). A camera nunca e alcancada. Escurecimento z-index 7, camera 8, folha 9
+— a camera fica acesa e clicavel com a folha aberta.
+
+Tablet verificado a 1920x1200: grid intacto, linhas e escurecimento em
+`display: none`, nenhum modulo em `fixed`, geometria identica. Verificado por
+script que TODA regra do arquivo novo vive dentro de media query.
+
+### Home
+
+hero **328 -> 210px** (3 faixas -> 1, relogio 35, respiros); Sala 176 -> 150;
+matriz 176 -> 160; gaps 10 -> 8; Energia e Midia fixos saem; area dinamica
+entra com config propria (`bento_dynamic_phone.yaml`: uma coluna, um card por
+vez, colapsa quando nada esta ativo via classe `is-empty`).
+
+```
+badges 10-54 · hero 62-272 · Sala 280-430
+Office/Cozinha 438-598 · Lavabo/Casal 606-766 · Marina/Miguel 774-934
+```
+
+A ultima dupla completa cabe nas DUAS hipoteses de dobra; a terceira mostra
+48px em tela cheia — o recorte que convida a rolar.
+
+**Unica mudanca visivel no tablet**: a ordem das faixas do hero. Se ha proximo
+compromisso, nada muda; se nao ha, os insights sobem e o placeholder vai para a
+terceira linha. E pre-requisito do telefone (com uma faixa so, a fixa seria o
+placeholder).
+
+### DECIMA SEGUNDA ocorrencia da crase — e o FALSO VERDE do detector
+
+Duas crases em comentario dentro de template literal nesta sessao. O detector
+pegou a primeira. A segunda passou porque **eu rodei `check-backtick.mjs` sem
+argumento, e sem argumento ele varria ZERO arquivos e imprimia "0 arquivo(s)
+varrido(s): nenhuma crase perigosa"** — que le como aprovacao. `npm run check`
+sempre passou `--tudo` e estava correto; o buraco era a invocacao avulsa.
+
+Corrigido: sem argumento agora significa `--tudo`.
+
+**INVARIANTE: um detector que aprova sem olhar nada e pior que nenhum, porque
+cria confianca falsa.** Vale para todo verificador deste projeto — se a entrada
+vazia e possivel, ela tem de FALHAR, nao passar.
+
+### Outra armadilha registrada
+
+`bruno-hero-card.js` tem DOIS templates com blocos `@media (max-width: 800px)`
+quase iguais. O da Home V2 e o PRIMEIRO; o segundo atende `variant: mobile` das
+views V3. Editei o segundo e medi zero efeito. **Antes de editar CSS neste
+arquivo, confirmar em qual template o seletor vive.**
+
+### Pendencias
+
+| # | item |
+|---|---|
+| B1 | Validacao visual no aparelho — as 17 folhas e o orcamento estao medidos, falta o olho |
+| B2 | Fechar a folha e tocar no escurecimento; a alca e dica visual, nao arrasta |
+| B3 | Cozinha: dock de luzes com 3px no tablet — PRE-EXISTENTE (pendencia L3), nao introduzido aqui |
+| B4 | Terceira dupla da Home: 48px em tela cheia, 1px com a barra de status |
+
+### Correcao pos-validacao no aparelho (2026-08-10, rev.3)
+
+Duas regressoes minhas, ambas passaram porque o banco de medicao NAO
+reproduzia o ambiente real. Detalhe em `docs/28 §11`.
+
+**1. O pseudo-elemento da faixa virou item de flex.** O material do Josh
+desenha a faixa inferior como `main::before`, posicionada PELO GRID
+(`grid-row: 2 / -1`). No telefone troquei `main` de grid para flex —
+`grid-row` deixou de valer e o pseudo virou o PRIMEIRO item, com os 320px de
+`--ac-h`. A barra de status foi de 10px para **340px**. Correcao:
+`content: none` em `.room-subview::before/::after` no bloco de telefone.
+
+**2. So a folha de luzes era `fixed`.** O material declara
+`:host([data-bruno-subview-surface-theme="josh"]) .glass-card.ac-card` com
+`position: relative` — (0,4,0), MESMO peso do meu bloco, e injetado DEPOIS em
+`adoptedStyleSheets`. Empate resolvido por posicao: o material vencia. As
+folhas passaram a usar a mesma classe composta (`.glass-card.ac-card`), (0,5,0).
+
+**INVARIANTE: o CSS do material e injetado DEPOIS do `static styles` do
+componente. Empatar em especificidade com ele significa PERDER.** Ao sobrepor
+qualquer coisa que o material toque, usar a mesma forma composta que ele usa.
+
+**3. A folha nao pode cobrir o dock.** No telefone a shell da `z-index: 2` ao
+rail-slot e `1` ao content-slot — nenhum z-index de dentro do conteudo pinta
+sobre o dock. A folha agora para ACIMA dele, lendo `--bruno-dock-h`, publicada
+pela shell e herdada atraves do shadow DOM.
+
+### Banco novo: `gen-shell-harness.mjs`
+
+O anterior anexava a subview direto num content-slot escrito a mao. O novo
+monta a SHELL de verdade (com `loadCardHelpers` stubado) e **forca o tema
+Josh**.
+
+**INVARIANTE: medir com o TEMA do usuario, nao so na resolucao dele.** Ja
+estava registrado para o tablet e eu nao apliquei ao telefone — com o tema
+`default`, `main::before` e `content: none` e um defeito de 320px fica
+invisivel.
+
+### E o deploy
+
+Nada da rodada anterior tinha chegado a VM: `deploy.mjs` so copia
+`config/www/dashboard/`, e os outros cinco arquivos (YAML e cards) nao tem
+caminho automatizado nenhum. Eu encerrei mandando recarregar como se
+estivessem la. **Publicar exige copiar TAMBEM o que esta fora daquela pasta.**
+
+### Fechamento da faixa de controles mobile (2026-08-12)
+
+- Rail phone: Home, Sala, Cozinha, Office e Quartos; Quartos abre somente
+  Q. Casal, Q. Marina e Q. Miguel. Sem moldura externa ou card ativo.
+- Rail tablet: preserva os oito itens; a ordem compartilhada
+  Sala → Cozinha → Office foi aceita pelo usuario.
+- Bottom sheets: alturas por conteudo, limite seguro, rail fixa acima da folha,
+  saida animada, X/toque externo/arrasto e sem botao Concluir.
+- Cortina: Abrir/Parar/Fechar e slider voltaram a chamar os servicos reais.
+- Isolamento: composicao visual e empilhamento exclusivamente em
+  `max-width: 800px`; tablet validado em 1920x1200 com DOM mobile inerte.
+- Harness: 428x926 aprovado nas seis subviews; 208 testes, TypeScript, ESLint,
+  248 YAMLs e 108 arquivos no detector de crases aprovados.
+- Publicacao: bundle `BCRw5wMI`, cache-bust
+  `20260812-mobile-faixa-refino-1`, oito hashes local × VM identicos e rollback
+  em `\\192.168.3.102\config\tmp\rollback-20260812-mobile-faixa-refino-1`.
+- Pendente: reiniciar o Home Assistant para ativar o novo
+  `frontend.extra_module_url` e aceitar visualmente nos aparelhos reais.
+
+### Rodada estrutural global e plano B mobile (2026-08-15)
+
+- Producao ativa: Everex Home Assistant OS em `\\192.168.3.154\config`.
+  A VM foi abandonada e nao deve voltar a ser usada nem modificada.
+- Bundle publicado: `bruno-dashboard.BJutTx-c.js`; cache-bust da shell/sidebar:
+  `20260815-status-global-1`; sete hashes local x Everex identicos.
+- Cortina: posicao fisica prioritaria; helper e somente alvo comandado; estimador
+  progride ate confirmacao/reancoragem e retém a parada intermediaria.
+- A/C: apenas arco e marcador usam raio 315. Preservar a caixa, ticks, labels,
+  Power/Swing e `.climate-ring { width: min(210px, 82%); }`.
+- Mobile: o status visual interno mede 48px, mas o wrapper no fluxo continua
+  36,31px. Camera em top 56,31px e rail em 58,4px permanecem invariantes.
+- Hub: Sala, Office, Casal, Marina e Miguel compartilham folha de 330,3px e
+  corpo ativo de 172px em 428x926. A ancora e capturada ANTES da mutacao e
+  restaurada depois de `updateComplete` + dois frames; deslocamento medido 0px.
+- Tablet: status Home/subviews em 48/46px; oito destinos preservados; centro de
+  Home e primeira badge alinhados com diferenca medida de 0,02px.
+- Câmeras/quadros verdes: fora desta rodada. Nao alterar pipeline WebRTC/ONVIF
+  como consequencia deste registro.
+- Rollback local: `tmp/everex-preflight-20260815-structural-round-1/`.
+
+### Microajuste status/câmera mobile (2026-08-15)
+
+- Home: a pintura da faixa sobe 5,84px somente em `max-width: 800px`; a caixa
+  continua com 48px e não desloca hero/cards/rail.
+- Temperatura: somente gap e padding internos do terceiro tile mudam; largura,
+  altura e tipografia permanecem comuns.
+- Causa do salto Office/Quartos: `.camera-settings-button` também possui a
+  classe `.mh-menu`; a regra não escopada do Hub aumentava o botão de 23,39 para
+  34,31px ao abrir a folha e fazia o cabeçalho passar de 44 para 48,31px.
+- Correção: todas as câmeras mobile usam a caixa estável de 34,32px da Sala e a
+  regra do Hub casa apenas `.media-hub-card .mh-menu`.
+- Medição 428x926: Sala/Office/Casal/Marina têm câmera 56,31–333,56px,
+  cabeçalho 48,31px e delta zero fechado/aberto.
+- Build local: `DpecM3wp`; cache-bust top badges
+  `20260815-status-position-2`. **Ainda não publicado no Everex** porque a
+  sessão não autorizou nem a leitura para o backup prévio obrigatório.
+
+---
+
+## Registro — Fase 6.4: registry, contratos e host adapter (2026-08-16)
+
+### Estado que passa a valer
+
+- **Producao: Everex `\192.168.3.154\config`.** A VM `192.168.3.102` foi
+  ABANDONADA. As alteracoes vao SIMULTANEAMENTE para a pasta local e o Everex.
+- **O trabalho mobile do Codex esta validado no aparelho e e INTOCAVEL.** Nao
+  alterar composicao, geometria ou comportamento do telefone sem pedido
+  explicito — o risco e regressao no que ja passou pelo aceite.
+- Publicacao do bundle `DpecM3wp` concluida pelo usuario; sem pendencia.
+
+### Entregue
+
+`dashboard-src/src/application/`, 49 testes novos (208 -> 257):
+
+| arquivo | papel |
+|---|---|
+| `host-adapter.ts` | porta entre widget e casa: estado, servico, more-info, navegacao, observacao. `HostHomeAssistant` (le o hass por FUNCAO, nunca guarda a referencia) e `HostDeTeste` (guarda as chamadas em vez de executar) |
+| `widget-registry.ts` | `WidgetDefinition`, `WidgetInstance`, area em CELULAS, catalogo por categoria, colisao e validacao que devolve TODOS os erros |
+| `layout-repository.ts` | `LayoutRepository`, porta de armazenamento, versionamento com recusa explicita de versao futura, migracoes encadeadas. Memoria e localStorage |
+
+### A decisao de NAO religar nada
+
+Nenhum componente passou a usar os contratos novos, e o `device-registry` da
+5e.0 nao foi tocado. **Prova de que a fase e inerte: o bundle continuou
+`DpecM3wp`, byte a byte** — os arquivos saem no tree-shaking porque ninguem os
+importa. A fase nao exigiu publicacao.
+
+Isso e deliberado. Reescrever consumidores validados no aparelho para provar a
+arquitetura nova trocaria risco real por simetria. A migracao acontece quando
+houver motivo (6.5 e 6.6), nao por completude.
+
+### Corrigido de passagem: o deploy apontava para a VM abandonada
+
+`dashboard-src/scripts/deploy.mjs` publicaria em `192.168.3.102` — uma
+publicacao "bem-sucedida" que nao chegaria a lugar nenhum. Agora:
+
+- destino Everex; `--everex` (e `--vm` como apelido que avisa);
+- cobre tambem o que vive FORA de `www/dashboard`: `configuration.yaml`,
+  `bento-sidebar-card.js` e `bruno-shell.js` — a lacuna que em 2026-08-10
+  deixou uma rodada inteira no PC enquanto eu mandava recarregar;
+- COMPARA antes de escrever e imprime o que mudou, o que ja estava identico e o
+  que nao existe no repositorio.
+
+`npm run deploy:vm` virou `npm run deploy:everex`.
+
+### Aberto para o usuario decidir
+
+Onde o layout persiste: `localStorage` diverge entre tablet e telefone; entidade
+do HA sincroniza mas exige criar entidade (packages fora do meu alcance sem
+autorizacao); arquivo em `/config` sincroniza sem entidade mas exige caminho de
+escrita. A porta esta pronta para qualquer das tres.
+
+---
+
+## Registro — Home mobile compacta sem alterar tablet (2026-08-16)
+
+- Escopo absoluto: somente `max-width: 800px`; tablet/desktop permanecem
+  inalterados.
+- Cards de cômodo preservados em `172 px`, sem mudança de arquitetura, conteúdo
+  interno ou área de toque.
+- Hero V2 phone compactado para `160 px`; relógio e previsão passaram à mesma
+  linha.
+- A matriz phone recebeu uma linha transparente de `14 px` entre Q. Casal e
+  Q. Marina para o indicador de continuidade/atividade. Marina/Miguel começam
+  abaixo da viewport, sem recorte parcial.
+- Status phone usam prioridade estável: atenção, ativo, inativo. Em tablet a
+  ordem configurada continua fixa.
+- Prova de isolamento em `801 × 1000`: Hero `494 px`, indicador `0 px` e ordem
+  `Security, Cortinas, Lights, Media, Climate`.
+- Cache-bust: `20260816-mobile-home-compacta-1`.
+- Rollback coordenado:
+  `tmp/everex-preflight-20260816-mobile-home-compacta-1/`.
+- Publicacao no Everex pendente: a camada de autorizacao externa atingiu o
+  limite de uso antes de qualquer escrita. Producao permanece inalterada.
+
+---
+
+## Registro — Refino da Home mobile: grade, microindicador e hero (2026-08-16, rev.2)
+
+Escopo absoluto: somente `max-width: 800px`. Tablet/desktop nao foram tocados —
+medido a 1920x1200 com o tema Josh, nao deduzido.
+
+### 1. A grade dos comodos volta a ser uniforme
+
+A linha de 14px que hospedava o indicador textual saiu de
+`bento_comodos_matriz.yaml` (`repeat(3, 172px)`), e o card
+`custom:bruno-home-overflow-indicator` foi comentado por inteiro com cabecalho
+de rollback. Ela criava um vao de 30px entre a 2a e a 3a faixa (8 + 14 + 8)
+contra 8px das demais, e o vao permanecia durante a rolagem, quando o indicador
+ja estava oculto — lia como divisor do grid.
+
+Nenhum slot, margin, padding ou spacer foi criado para o indicador novo.
+
+### 2. Microindicador na rail (dot + numero + chevron)
+
+`rail.yaml` ganhou um bloco `overflow_hint.rooms` com as entidades de Q. Marina
+e Q. Miguel. `bento-sidebar-card.js` conta AMBIENTES com atividade (nao
+eventos) e desenha o conjunto.
+
+Posicionamento: `position: absolute; bottom: 100%; margin-bottom: 3px;
+right: 10px` sobre a rail. Medido a 428x926 — rail em 867,6; conjunto em
+835,6→864,6; botao Mais em x 346,6→396,6, y 873,6. Fica acima E a direita do
+botao, em diagonal: nao encosta nele e nao le como badge dele.
+
+Verificado nos tres estados (2 ativos / 1 ativo / nenhum): botoes sempre em
+`33,7 · 111,3 · 189 · 266,7 · 344,3`, rail sempre 58,4px. Some ao rolar por
+OPACIDADE (limiar 6px: 4px nao esconde, 8px esconde), com a caixa identica nos
+dois estados — zero reflow. `pointer-events: none`.
+
+Fora do telefone o elemento tem `display: none` desde a regra base: medido a
+1920x1200, caixa 0x0, rail 86x1200, oito botoes no lugar.
+
+O ouvinte de rolagem sobe por `parentNode` ate o shadow root da shell e pega o
+`.content-slot` (que no telefone e quem tem `overflow-y: auto`). Sem
+`requestAnimationFrame`: com a aba oculta ele nao dispara e o vinculo nunca
+seria feito. Sem `overflow_hint` na config — o caso de `rail_rooms.yaml` — nem
+o ouvinte chega a ser criado.
+
+### 3. Hero: 160 -> 182px, e a segunda linha volta
+
+Os 182px sao aritmetica, nao gosto: a faixa de 14px mais o gap de 8px que saiu
+do grid fazia a 3a dupla subir exatamente 22px e espiar acima do filete.
+Devolvendo os 22px ao hero, Lavabo/Q. Casal terminam rente ao filete e
+Marina/Miguel voltam a comecar abaixo dele.
+
+- ate DUAS linhas dinamicas (`nth-child(n + 2)` -> `n + 3`);
+- a linha de preenchimento ("Nenhum compromisso hoje" / "Agenda livre") ganhou
+  a classe `.is-empty` no `_renderEventLine` e some no telefone. A ordem em
+  `_render` ja e por relevancia, entao oculta-la nunca engole linha util. No
+  tablet ela continua aparecendo;
+- `.hero-bottom:not(.has-cameras)` some. Com `cameras.show: false` (a config
+  real da Home V2) ela ficava sem filho e mesmo assim reservava 12px, que
+  empurravam a composicao contra o teto no caso de duas linhas. O seletor NAO e
+  `:empty`: o template deixa espaco em branco ali, e `:empty` nao casa com no
+  de texto;
+- respiros: content 4/5 -> 7/8, data +1, stack margin 4 -> 5 e gap 2 -> 3. A
+  tipografia nao mudou — com duas linhas nao havia folga para isso.
+
+Medido em 428 / 390 / 375 / 360px x 4 cenarios de conteudo: `transborda 0` em
+todos, clima sempre a direita do relogio, placeholder nunca visivel.
+
+### Arquivos
+
+| arquivo | mudanca |
+|---|---|
+| `shared/grid-cards/bento_comodos_matriz.yaml` | `repeat(3, 172px)`; card do indicador comentado |
+| `views/shell/rail.yaml` | bloco `overflow_hint.rooms` |
+| `www/bento-sidebar-card.js` | contagem, markup, CSS e ouvinte de rolagem do microindicador |
+| `www/bruno-ui/cards/bruno-hero-card.js` | classe `.is-empty`; bloco phone com 182px, duas linhas e respiros |
+| `config/configuration.yaml` | cache-bust `20260816-mobile-home-refino-2` nos dois cards |
+| `dashboard-src/scripts/deploy.mjs` | EXTRAS ganhou o hero e os dois YAML |
+
+`bruno-activity-column.js` NAO foi alterado nesta rodada. O componente
+`BrunoHomeOverflowIndicator` continua definido ali, agora sem nenhum consumidor
+— preservado para rollback.
+
+### Publicacao
+
+Local e Everex, seis hashes conferidos e identicos. Backup previo em
+`tmp/everex-preflight-20260816-mobile-home-refino-2/`. O bundle segue
+`DpecM3wp` (nenhum TypeScript mudou).
+
+**Exige reinicio do Home Assistant** — o `extra_module_url` mudou de versao.
+Conferir o Corredor depois (ver historico de correlacao).
+
+### Fecha a pendencia 15.4 (divergencia do bundle)
+
+Tres hashes diferentes com 521.866 bytes cada, sem TypeScript alterado. O diff
+byte a byte contra producao achou UM ponto: `buildId: "20260815"` contra
+`"20260817"`. O `vite.config.ts` injeta a DATA da build por `define`, e ela
+entra no hash do conteudo. Oito caracteres sempre — dai o tamanho constante.
+
+O comentario do proprio arquivo afirma que so a data faz o hash mudar "so
+quando o codigo muda". Falso: muda tambem quando o DIA muda. Os tres hashes sao
+tres dias de build do mesmo codigo. **Divergencia benigna; a 6.5 nao tem mais
+pre-requisito.** Correcao sugerida, fora deste escopo: derivar o `BUILD_ID` do
+commit do git, para o hash voltar a depender so do codigo.

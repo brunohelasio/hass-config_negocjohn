@@ -60,8 +60,10 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
     temperature: ['sensor.sensor_4_in_1_sala_temperature', 'sensor.sl_sensor_temp_humid_temperatura'],
     humidity: ['sensor.sensor_4_in_1_sala_humidity', 'sensor.sl_sensor_temp_humid_umidade'],
     room_group: 'light.grupo_luzes_sala',
-    camera_main: 'camera.sl_camera_2',
-    camera_secondary: 'camera.vr_camera_2',
+    // ANTERIOR (rollback ONVIF geral): camera_main: 'camera.sl_camera_2',
+    // ANTERIOR (rollback ONVIF geral): camera_secondary: 'camera.vr_camera_2',
+    camera_main: 'camera.sl_camera_profile_1',
+    camera_secondary: 'camera.vr_camera_profile_1',
     active_camera_select: 'input_select.bento_active_camera',
     tv: 'media_player.android_tv_192_168_3_17',
     tv_remote_player: 'media_player.atv',
@@ -93,7 +95,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
     ],
     cameras: [
       {
-        entity: 'camera.sl_camera_2',
+        // ANTERIOR (rollback ONVIF geral): entity: 'camera.sl_camera_2',
+        entity: 'camera.sl_camera_profile_1',
         name: 'Sala Principal',
         short_name: 'Sala',
         controls: [
@@ -103,7 +106,8 @@ const BRUNO_SALA_SUBVIEW_DEFAULT_CONFIG = {
         ],
       },
       {
-        entity: 'camera.vr_camera_2',
+        // ANTERIOR (rollback ONVIF geral): entity: 'camera.vr_camera_2',
+        entity: 'camera.vr_camera_profile_1',
         name: 'Sala Lateral',
         short_name: 'Varanda',
         controls: [

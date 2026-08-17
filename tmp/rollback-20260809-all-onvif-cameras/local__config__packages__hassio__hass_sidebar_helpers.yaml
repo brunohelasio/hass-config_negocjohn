@@ -1,0 +1,297 @@
+#################################################
+#                                               #
+#   SIDEBAR HELPERS                             #
+#   input_select e input_boolean para           #
+#   controlar expand/collapse das badges        #
+#   e menu mobile da sidebar                    #
+#                                               #
+#################################################
+
+input_select:
+  hemma_expanded_row:
+    name: Sidebar Expanded Row
+    icon: mdi:arrow-expand-vertical
+    options:
+      - none
+      - lights
+      - curtains
+      - media
+      - climate
+      - security
+      - presence
+      # NOVO (2026-07-25) — HOME V2 item 3: badge de Energia na barra superior.
+      # Sem esta opcao o card usa expansao LOCAL (funciona, mas nao sincroniza
+      # entre dispositivos). FALLBACK: remover a linha abaixo.
+      - energy
+    initial: none
+  bento_active_camera:
+    name: Bento Active Camera
+    icon: mdi:cctv
+    options:
+      # --- CÓDIGO ORIGINAL COMENTADO (p1 apenas — 4 câmeras) ---
+      # - camera.sl_camera_2
+      # - camera.vr_camera_2
+      # - camera.cz_camera_2
+      # - camera.as_camera_2
+      # --- FIM CÓDIGO ORIGINAL ---
+      # NOVO v14: todas as 8 câmeras (p1 + p2 para o carrossel)
+      - camera.sl_camera_2
+      - camera.vr_camera_2
+      - camera.cz_camera_2
+      - camera.as_camera_2
+      - camera.of_camera_2
+      - camera.camera_quarto_casal_2
+      - camera.qmi_camera_2
+      - camera.qma_camera_2
+    initial: camera.sl_camera_2
+  bento_sidebar_active:
+    name: Bento Sidebar Active Icon
+    icon: mdi:gesture-tap-button
+    options:
+      - home
+      - music
+      - security
+      # Legacy key kept for the shared/grid-cards fallback sidebar.
+      - activity
+      - system
+      - vacuum
+      - wifi
+      - refresh
+      # Legacy key kept for the shared/grid-cards fallback sidebar.
+      - download
+      - updates
+      # Legacy key kept for the shared/grid-cards fallback sidebar.
+      - cube
+      - floorplan_3d
+      - monitor
+      - overview_reserved
+      - power
+    initial: home
+  bento_sidebar_action:
+    name: Bento Sidebar Action Icon
+    icon: mdi:gesture-double-tap
+    options:
+      - none
+      - security
+      - vacuum
+    initial: none
+
+input_boolean:
+  sidebar_compact:
+    name: Sidebar Compact (Tablet)
+    icon: mdi:view-column-outline
+    initial: false
+  menu_mobile:
+    name: Sidebar Menu Mobile
+    icon: mdi:menu
+    initial: false
+  # NOVO v14: controla qual página de câmeras está ativa no carrossel do bento
+  # off = página 1 (Sala, Varanda, Cozinha, Área de Serviço)
+  # on  = página 2 (Office, Quarto Casal, Quarto Miguel, Quarto Marina)
+  bento_cameras_page_2:
+    name: Bento Cameras — Página 2
+    icon: mdi:cctv
+    initial: false
+
+script:
+  bento_sidebar_open_security:
+    alias: Bento Sidebar - Security Popup
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.bento_sidebar_action
+        data:
+          option: security
+      - service: browser_mod.popup
+        data:
+          title: Cameras
+          tag: cameras_user
+          # --- ANTERIOR (fullscreen: true — parâmetro inválido nesta versão do browser_mod) ---
+          # fullscreen: true
+          # --- FIM ANTERIOR ---
+          # FULLSCREEN REAL — initial_style é o parâmetro correto (ver livingroom_fullscreen.yaml)
+          initial_style: fullscreen
+          dismissable: true
+          style: >
+            --popup-width: 100vw;
+            --popup-max-width: 100vw;
+            --popup-border-width: 0;
+            --popup-background-color: linear-gradient(180deg, rgba(15, 25, 50, 0.92) 0%, rgba(10, 18, 40, 0.96) 100%);
+            --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+            --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+          card_mod:
+            style:
+              .: |
+                ha-dialog {
+                  backdrop-filter: blur(12px);
+                  -webkit-backdrop-filter: blur(12px);
+                }
+                ha-dialog > ha-dialog-header {
+                  display: none !important;
+                }
+              ha-dialog$: |
+                .mdc-dialog__scrim {
+                  background-color: rgba(0, 0, 0, 0.56) !important;
+                }
+                .mdc-dialog__container {
+                  padding: 0 !important;
+                  align-items: stretch !important;
+                  justify-content: stretch !important;
+                }
+                .mdc-dialog__surface {
+                  width: 100vw !important;
+                  max-width: 100vw !important;
+                  height: 100vh !important;
+                  max-height: 100vh !important;
+                  border-radius: 0 !important;
+                  overflow: hidden !important;
+                }
+                .mdc-dialog__title {
+                  display: none !important;
+                }
+                .mdc-dialog__content {
+                  padding: 0 !important;
+                  height: 100vh !important;
+                  max-height: 100vh !important;
+                  overflow: hidden !important;
+                }
+          content:
+            type: custom:layout-card
+            layout_type: custom:grid-layout
+            layout:
+              grid-gap: 6px
+              grid-template-columns: repeat(3, 1fr)
+              grid-template-rows: auto
+              margin: 0
+              padding: 0.5rem
+              mediaquery:
+                '(max-width: 800px)':
+                  grid-template-columns: 1fr
+            cards:
+              - type: picture-entity
+                entity: camera.sl_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: SL - Sala
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.vr_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: VR - Varanda
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.cz_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: CZ - Cozinha
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.as_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: AS - Área Serviço
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.of_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: OF - Office
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.camera_quarto_casal_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: QC - Quarto Casal
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.qmi_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: QMI - Quarto Miguel
+                tap_action: { action: more-info }
+              - type: picture-entity
+                entity: camera.qma_camera_2
+                camera_view: auto
+                show_name: true
+                show_state: false
+                name: QMA - Quarto Marina
+                tap_action: { action: more-info }
+
+  bento_sidebar_open_vacuum:
+    alias: Bento Sidebar - Roborock Popup
+    sequence:
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.bento_sidebar_action
+        data:
+          option: vacuum
+      # CÓDIGO ANTERIOR (restore rápido): popup via include no botão
+      # tap_action: !include ../popup/footer/footer_vacuum.yaml
+      - service: browser_mod.popup
+        data:
+          title: Roborock S7
+          # --- ANTERIOR (size: wide / fullscreen: true — causava corte ou não funcionava) ---
+          # size: wide
+          # fullscreen: true
+          # --- FIM ANTERIOR ---
+          # FULLSCREEN REAL — initial_style é o parâmetro correto (ver livingroom_fullscreen.yaml)
+          initial_style: fullscreen
+          dismissable: true
+          style: >
+            --popup-width: 100vw;
+            --popup-max-width: 100vw;
+            --popup-border-width: 0;
+            --popup-background-color: rgba(15, 20, 35, 0.75);
+            --mdc-theme-surface: rgba(20, 24, 33, 0.88);
+            --mdc-dialog-scrim-color: rgba(0, 0, 0, 0.56);
+          card_mod:
+            style:
+              .: |
+                ha-dialog {
+                  backdrop-filter: blur(12px);
+                  -webkit-backdrop-filter: blur(12px);
+                }
+                ha-dialog > ha-dialog-header {
+                  display: none !important;
+                }
+              ha-dialog$: |
+                .mdc-dialog__scrim {
+                  background-color: rgba(0, 0, 0, 0.56) !important;
+                }
+                .mdc-dialog__container {
+                  padding: 0 !important;
+                  align-items: stretch !important;
+                  justify-content: stretch !important;
+                }
+                .mdc-dialog__surface {
+                  width: 100vw !important;
+                  max-width: 100vw !important;
+                  height: 100vh !important;
+                  max-height: 100vh !important;
+                  border-radius: 0 !important;
+                  overflow: hidden !important;
+                }
+                .mdc-dialog__title {
+                  display: none !important;
+                }
+                .mdc-dialog__content {
+                  padding: 8px 8px 4px 8px !important;
+                  height: 100vh !important;
+                  max-height: 100vh !important;
+                  overflow: auto !important;
+                }
+          content:
+            type: entities
+            entities:
+              - vacuum.roborock_s7
+              - sensor.roborock_s7_vacuum_error
+              - sensor.roborock_s7_comodo_atual
+              - sensor.roborock_s7_bateria

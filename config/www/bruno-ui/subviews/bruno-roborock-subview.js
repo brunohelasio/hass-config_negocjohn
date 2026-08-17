@@ -398,7 +398,10 @@ class BrunoRoborockSubview extends HTMLElement {
   }
 
   _withUnit(key) {
-    const v = this._state(key);
+    // ANTERIOR (rollback): const v = this._state(key);
+    // Sensores do Roborock podem publicar ponto flutuante com muitas casas.
+    // Consumiveis e estatisticas exibem no maximo duas, sem zeros artificiais.
+    const v = this._num(key, 2);
     if (v === '--') return '--';
     const u = this._unit(key);
     return u ? `${v} ${u}` : v;

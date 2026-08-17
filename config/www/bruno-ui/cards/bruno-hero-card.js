@@ -290,9 +290,14 @@ class BrunoHeroCard extends HTMLElement {
   _renderEventLine(event) {
     // Linhas de insight não abrem a agenda (não são compromissos).
     const insightClass = event.insight ? ' is-insight' : '';
+    // NOVO (2026-08-16): marca a linha de preenchimento ("Nenhum compromisso
+    // hoje" / "Agenda livre"). O tablet continua exibindo-a — ela ocupa uma
+    // faixa que sobra ali. No telefone o CSS a oculta: com espaço escasso,
+    // uma faixa que só diz que não há nada custa mais do que informa.
+    const emptyClass = event.empty ? ' is-empty' : '';
     const label = event.insight ? 'Informacao da casa' : 'Abrir agenda';
     return `
-      <button class="event-line${insightClass}" type="button" aria-label="${BrunoHeroCard._escapeAttr(label)}" style="--event-color:${BrunoHeroCard._escapeAttr(event.color)}">
+      <button class="event-line${insightClass}${emptyClass}" type="button" aria-label="${BrunoHeroCard._escapeAttr(label)}" style="--event-color:${BrunoHeroCard._escapeAttr(event.color)}">
         <span>${BrunoHeroCard._escape(event.label)}</span>
         <strong>${BrunoHeroCard._escape(event.summary)}</strong>
         ${event.time ? `<small>${BrunoHeroCard._escape(event.time)}</small>` : ''}
@@ -700,8 +705,25 @@ class BrunoHeroCard extends HTMLElement {
     // compromisso; as duas seguintes deixam de ser eventos extras da agenda
     // (que quase nunca existiam, deixando o espaco morto) e passam a ser as
     // mensagens inteligentes do sensor.home_insights.
+    // NOVO (2026-08-10) — A ORDEM PASSA A SER POR RELEVÂNCIA.
+    //
+    // No telefone só a PRIMEIRA faixa aparece (as três custavam 144px de um
+    // hero de 328 — 44% dele; ver docs/28 §2.1). Com a ordem fixa, num dia sem
+    // compromisso a única faixa visível seria "Nenhum compromisso hoje", e as
+    // informações da casa — que existem e importam — ficariam escondidas.
+    //
+    // Então: evento primeiro QUANDO EXISTE; senão os insights sobem e o
+    // placeholder da agenda vai para o fim. No tablet continuam as três, só
+    // que na ordem útil — nenhuma some.
+    //
+    // ANTERIOR (rollback):
+    //   ? [this._nextEventModel(), ...this._insightModels(2)]
+    const proximoEvento = heroV2 ? this._nextEventModel() : null;
+    const insights = heroV2 ? this._insightModels(2) : [];
     const heroLines = heroV2
-      ? [this._nextEventModel(), ...this._insightModels(2)]
+      ? (proximoEvento.empty && insights.length
+          ? [...insights, proximoEvento]
+          : [proximoEvento, ...insights])
       : events;
 
     this.shadowRoot.innerHTML = `
@@ -1221,6 +1243,194 @@ class BrunoHeroCard extends HTMLElement {
             margin-top: 10px;
             gap: 5px;
           }
+
+          /* NOVO (2026-08-10) — HERO CONDENSADO NO TELEFONE.
+             Medido: 328px de altura, dos quais 144 eram TRÊS faixas de 48 —
+             44% do hero para informação que cabe em uma. O usuário pediu uma
+             faixa só. As outras duas continuam no DOM porque o TABLET as usa;
+             o que muda aqui é só a visibilidade. A ordem por relevância (ver
+             _render) garante que a faixa que sobra é a que importa: num dia
+             sem compromisso, a única visível seria "Nenhum compromisso hoje".
+
+             O resto do corte vem do relógio e dos respiros, para fechar os
+             ~210px do orçamento da Home no telefone (docs/28 §2.3).
+
+             ATENÇÃO: este arquivo tem DOIS templates. Este bloco é o do
+             template que a Home V2 usa. O outro atende "variant: mobile", das
+             views V3 — que o usuário pediu para não mexer.
+
+             ROLLBACK: remover deste comentário até o fim do bloco.
+
+             ATUALIZADO (2026-08-16): a faixa recuperada do grid de cômodos
+             devolveu altura ao hero, e uma faixa só voltou a ser aperto e não
+             economia. Passam a caber DUAS. A linha de preenchimento continua
+             fora (.is-empty logo abaixo), então "duas" significa duas linhas
+             com conteúdo real — nunca uma informação e um aviso de vazio.
+             ANTERIOR (rollback): nth-child(n + 2). */
+          .hero-stage.is-v2 .headline .event-stack > .event-line:nth-child(n + 3) {
+            display: none;
+          }
+
+          /* A ordem em _render já é por relevância: com compromisso ele vem
+             primeiro; sem compromisso os insights sobem e o placeholder cai
+             para o fim. Ocultá-lo aqui nunca engole uma linha útil. */
+          .hero-stage.is-v2 .headline .event-stack > .event-line.is-empty {
+            display: none;
+          }
+
+          .hero-stage.is-v2 .clock {
+            margin-top: 0;
+            font-size: 35px;
+          }
+
+          .hero-stage.is-v2 .content {
+            padding: 10px 16px 10px;
+          }
+
+          .hero-stage.is-v2 .inline-weather {
+            margin-top: 5px;
+          }
+
+          .hero-stage.is-v2 .headline .event-stack {
+            margin-top: 6px;
+          }
+
+          /* NOVO (2026-08-16) — HOME MOBILE COMPACTA, SEM TOCAR NOS TILES.
+             A previsao deixa de consumir uma linha propria e divide a mesma
+             faixa do relogio. Data, saudacao e insight conservam conteudo e
+             hierarquia; somente os respiros externos cedem os 54px medidos.
+
+             ANTERIOR (rollback): o bloco phone acima entregava hero intrinseco
+             de aproximadamente 214px, com clima abaixo do relogio. Remover
+             apenas este bloco restaura exatamente essa composicao.
+
+             ATUALIZADO (2026-08-16): 160 -> 182px. Nao e escolha estetica, e
+             aritmetica do orcamento vertical. A faixa de 14px que hospedava o
+             indicador textual saiu do grid de comodos, e com ela o gap de 8px
+             que a acompanhava: a 3a dupla (Marina/Miguel) subiu exatamente
+             22px e passou a espiar acima do filete. Devolvendo esses 22px ao
+             hero, Lavabo/Q. Casal voltam a terminar rente ao filete e
+             Marina/Miguel voltam a comecar abaixo dele.
+             ANTERIOR (rollback): 160px. */
+          .hero-stage.is-v2 {
+            height: 182px;
+            min-height: 182px;
+          }
+
+          /* ANTERIOR (rollback): padding: 4px 16px 5px — calibrado para os
+             160px, onde nao havia respiro para ceder. */
+          .hero-stage.is-v2 .content {
+            padding: 7px 16px 8px;
+            gap: 0;
+          }
+
+          /* Com cameras.show: false (a config real da Home V2) a faixa de
+             baixo fica sem nenhum filho e mesmo assim reservava 12px de
+             padding. Esse vazio empurrava a composicao contra o teto no caso
+             de duas linhas.
+
+             O seletor e :not(.has-cameras), nao :empty — na V2 a faixa fica
+             com espaco em branco do template mesmo sem filho nenhum, e :empty
+             nao casa com no de texto. Se a tira de cameras voltar a ser
+             exibida, a classe reaparece e a regra deixa de valer sozinha:
+             nada precisa ser desfeito aqui. */
+          .hero-stage.is-v2 .hero-bottom:not(.has-cameras) {
+            display: none;
+          }
+
+          .hero-stage.is-v2 .headline {
+            min-width: 0;
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            grid-template-areas:
+              "date date"
+              "greeting greeting"
+              "clock weather"
+              "events events";
+            column-gap: 14px;
+            align-items: center;
+          }
+
+          /* ANTERIOR (rollback): margin: 0 0 4px. */
+          .hero-stage.is-v2 .date-line {
+            grid-area: date;
+            margin: 0 0 5px;
+          }
+
+          .hero-stage.is-v2 .greeting {
+            grid-area: greeting;
+            line-height: 1.04;
+          }
+
+          .hero-stage.is-v2 .clock {
+            grid-area: clock;
+            margin-top: 1px;
+            font-size: 35px;
+            line-height: 1;
+          }
+
+          .hero-stage.is-v2 .inline-weather {
+            grid-area: weather;
+            width: auto;
+            max-width: 100%;
+            min-width: 0;
+            margin-top: 1px;
+            justify-self: end;
+            gap: 6px;
+          }
+
+          .hero-stage.is-v2 .inline-weather img {
+            width: 20px;
+            height: 20px;
+            flex-basis: 20px;
+          }
+
+          .hero-stage.is-v2 .inline-weather strong {
+            font-size: 15px;
+          }
+
+          .hero-stage.is-v2 .inline-weather small {
+            max-width: min(42vw, 176px);
+            font-size: 11.5px;
+          }
+
+          /* ANTERIOR (rollback): margin-top: 4px; gap: 2px. Os respiros abaixo
+             consomem a folga que sobrou depois da segunda linha — e o unico
+             lugar onde a altura recuperada ainda cabia sem apertar nada. */
+          .hero-stage.is-v2 .headline .event-stack {
+            grid-area: events;
+            margin-top: 5px;
+            gap: 3px;
+          }
+
+          .hero-stage.is-v2 .event-line {
+            gap: 2px;
+          }
+
+          .hero-stage.is-v2 .event-line strong {
+            font-size: 14.5px;
+            line-height: 1.08;
+          }
+
+          .hero-stage.is-v2 .event-line span,
+          .hero-stage.is-v2 .event-line small {
+            font-size: 10.5px;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .hero-stage.is-v2 .headline {
+            column-gap: 8px;
+          }
+
+          .hero-stage.is-v2 .inline-weather {
+            gap: 4px;
+          }
+
+          .hero-stage.is-v2 .inline-weather small {
+            max-width: 116px;
+            font-size: 10.5px;
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1727,6 +1937,7 @@ class BrunoHeroCard extends HTMLElement {
             padding-left: 0;
             border-left: 0;
           }
+
         }
 
         .hero-stage.is-mobile .content {

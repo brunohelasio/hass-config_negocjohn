@@ -5,23 +5,27 @@ const BRUNO_CAMERAS_SECURITY_DEFAULT_CONFIG = {
   section: 'Cameras',
   active_entity: 'input_select.bento_active_camera',
   navigation_path: 'bento-lab',
-  // NOVO: secundarias atualizam a cada 3s (snapshot). O feed principal e stream
-  // ao vivo (hui-image), independente deste intervalo.
+  // Secundarias atualizam a cada 3s (snapshot). O feed principal usa WebRTC
+  // direto e so cede a foto depois do primeiro quadro real.
   refresh_interval: 3000,
+  // ANTERIOR (rollback ONVIF geral): cameras usavam os oito IDs Tuya *_2.
+  // O inventario completo permanece no rollback desta rodada.
   cameras: [
-    { entity: 'camera.sl_camera_2', name: 'PRINCIPAL: SALA', short_name: 'SL - Sala' },
-    { entity: 'camera.vr_camera_2', name: 'VR - Varanda', short_name: 'VR - Varanda' },
-    { entity: 'camera.cz_camera_2', name: 'CZ - Cozinha', short_name: 'CZ - Cozinha' },
-    { entity: 'camera.as_camera_2', name: 'AS - Area Servico', short_name: 'AS - Area Servico' },
-    { entity: 'camera.of_camera_2', name: 'OF - Office', short_name: 'OF - Office' },
-    { entity: 'camera.camera_quarto_casal_2', name: 'QC - Quarto Casal', short_name: 'QC - Quarto Casal' },
-    { entity: 'camera.qmi_camera_2', name: 'QMI - Quarto Miguel', short_name: 'QMI - Quarto Miguel' },
-    { entity: 'camera.qma_camera_2', name: 'QMA - Quarto Marina', short_name: 'QMA - Quarto Marina' },
+    { entity: 'camera.sl_camera_profile_1', name: 'PRINCIPAL: SALA', short_name: 'SL - Sala' },
+    { entity: 'camera.vr_camera_profile_1', name: 'VR - Varanda', short_name: 'VR - Varanda' },
+    { entity: 'camera.cz_camera_profile_1', name: 'CZ - Cozinha', short_name: 'CZ - Cozinha' },
+    { entity: 'camera.as_camera_profile_1', name: 'AS - Area Servico', short_name: 'AS - Area Servico' },
+    { entity: 'camera.of_camera_profile_1', name: 'OF - Office', short_name: 'OF - Office' },
+    { entity: 'camera.qc_camera_profile_1', name: 'QC - Quarto Casal', short_name: 'QC - Quarto Casal' },
+    { entity: 'camera.qmi_camera_profile_1', name: 'QMI - Quarto Miguel', short_name: 'QMI - Quarto Miguel' },
+    { entity: 'camera.qma_camera_profile_1', name: 'QMA - Quarto Marina', short_name: 'QMA - Quarto Marina' },
   ],
 };
 
 const BRUNO_CAMERAS_SECURITY_ONLINE_STATES = ['streaming', 'recording', 'idle', 'on'];
 const BRUNO_CAMERAS_SECURITY_UNAVAILABLE_STATES = ['unavailable', 'unknown', ''];
+// ANTERIOR (rollback expansao ONVIF): prazo literal de 10000 ms em _mountLiveFeed.
+const BRUNO_CAMERAS_SECURITY_LIVE_TIMEOUT_MS = 30000;
 
 class BrunoCamerasSecuritySubview extends HTMLElement {
   static getStubConfig() {
@@ -36,23 +40,44 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._boundClick = (event) => this._handleClick(event);
     this._boundKeydown = (event) => this._handleKeydown(event);
     this._boundClock = () => this._updateClock();
-    // NOVO (live): elemento de stream AO VIVO do feed principal (hui-image nativo
-    // do HA, cameraView: live). Instanciado uma vez e reaproveitado entre renders
-    // e trocas (sem recriar o stream a cada clique). As secundarias continuam em
-    // snapshot (refresh periodico).
+    // ANTERIOR (rollback WebRTC direto): o principal usava hui-image live, que
+    // podia permanecer em HLS. Agora usa o player WebRTC final do HA.
     this._liveEl = null;
+    this._liveEntity = '';
+    this._liveReady = '';
+    this._liveTimer = null;
+    // ANTERIOR (rollback 2026-08-10): _liveSuspendedEntities era um Set
+    // permanente; fechar o More Info nunca retomava o player nesta instancia.
+    this._liveState = 'idle';
+    this._liveBlockedEntity = '';
+    this._liveLoadToken = 0;
+    this._boundDialogClosed = (event) => this._handleDialogClosed(event);
   }
 
   connectedCallback() {
     globalThis.BrunoLiquidGlass?.apply?.();
+    this._liveState = 'idle';
+    this._liveBlockedEntity = '';
+    if (!this._listeningDialogClosed) {
+      globalThis.addEventListener?.('dialog-closed', this._boundDialogClosed, true);
+      this._listeningDialogClosed = true;
+    }
     this._startRefreshTimer();
     this._startClockTimer();
     this._render();
   }
 
   disconnectedCallback() {
+    this._liveLoadToken++;
     this._stopRefreshTimer();
     this._stopClockTimer();
+    this._stopLiveFeed();
+    if (this._listeningDialogClosed) {
+      globalThis.removeEventListener?.('dialog-closed', this._boundDialogClosed, true);
+      this._listeningDialogClosed = false;
+    }
+    if (this._liveResumeTimer) globalThis.clearTimeout(this._liveResumeTimer);
+    this._liveResumeTimer = null;
   }
 
   setConfig(config) {
@@ -77,7 +102,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._hass = hass;
     // NOVO (live): mantem o hass do stream sempre atual, mesmo quando o render
     // estrutural e pulado (anti-flicker) — senao o stream perde o contexto/token.
-    if (this._liveEl) this._liveEl.hass = hass;
+    // ANTERIOR (rollback WebRTC direto): if (this._liveEl) this._liveEl.hass = hass;
     const signature = this._renderSignature();
     if (this.shadowRoot && this._renderedSignature === signature) {
       this._startRefreshTimer();
@@ -184,6 +209,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     if (!entityId) return;
     const model = this._model();
     if (entityId === model.activeId) return;
+    this._liveLoadToken++;
+    this._liveState = 'idle';
+    this._liveBlockedEntity = '';
     globalThis.BrunoLiquidGlass?.feedback?.('tap');
 
     const swapped = this._swapActive(entityId);
@@ -225,13 +253,11 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._localActiveCamera = newActiveId;
     this._refreshSeed = Date.now();
 
-    // 1) Slot principal -> camera clicada. STREAM ao vivo: so reaponta o
-    //    hui-image (sem recriar). Em fallback (sem hui-image), atualiza o
-    //    snapshot do ponto de montagem.
-    if (!this._setLiveCamera(newCam.entity)) {
-      const liveMount = root.querySelector('.main-feed [data-live-mount]');
-      this._updateStage(liveMount, newCam);
-    }
+    // 1) Slot principal -> camera clicada.
+    // ANTERIOR (rollback WebRTC direto): _setLiveCamera reapontava o hui-image.
+    // A foto agora troca primeiro e permanece por baixo durante a negociacao.
+    this._updateStage(mainStage, newCam);
+    this._mountLiveFeed(newCam.entity);
     this._updateSlotPill(root.querySelector('.main-feed [data-feed-pill]'), newCam, false);
     const moreBtn = root.querySelector('.main-feed [data-action="more-info"]');
     if (moreBtn) moreBtn.dataset.cameraId = newCam.entity;
@@ -307,6 +333,21 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     }));
   }
 
+  _handleDialogClosed(event) {
+    if (event?.detail?.dialog !== 'ha-more-info-dialog' || this._liveState !== 'handed-off') return;
+    const entityId = this._model()?.activeId || '';
+    this._liveState = 'resuming';
+    globalThis.BrunoCameraLive?.marcar?.(entityId, 'more-info fechado; retomando');
+    if (this._liveResumeTimer) globalThis.clearTimeout(this._liveResumeTimer);
+    this._liveResumeTimer = globalThis.setTimeout(() => {
+      this._liveResumeTimer = null;
+      if (!this.isConnected || this._liveState !== 'resuming') return;
+      this._liveState = 'idle';
+      this._liveBlockedEntity = '';
+      this._mountLiveFeed(this._model().activeId);
+    }, 700);
+  }
+
   _navigateHome() {
     const path = this._config?.navigation_path;
     if (!path) return;
@@ -362,24 +403,65 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   _startRefreshTimer() {
     if (this._refreshTimer || !this.isConnected) return;
     const interval = Math.max(3000, Number(this._config?.refresh_interval) || BRUNO_CAMERAS_SECURITY_DEFAULT_CONFIG.refresh_interval);
-    this._refreshTimer = globalThis.setInterval(() => this._refreshCameraImages(), interval);
+    // ANTERIOR (rollback): setInterval fixo chamando _refreshCameraImages().
+    //   this._refreshTimer = globalThis.setInterval(..., interval);
+    // O motor tem cadencia propria por camera e nao precisa de relogio externo.
+    if (this._sincronizarMotorCameras(), this._motorCameras) return;
+    this._refreshTimer = globalThis.setInterval(() => this._refreshCameraImagesLegado(), interval);
   }
 
   _stopRefreshTimer() {
+    this._motorCameras?.parar();
     if (!this._refreshTimer) return;
     globalThis.clearInterval(this._refreshTimer);
     this._refreshTimer = null;
   }
 
+  // ── MOTOR DE INSTANTANEOS (ponte, 2026-08-08) ─────────────────────────────
+  //
+  // ANTERIOR (rollback): o corpo original de _refreshCameraImages() esta logo
+  // abaixo, comentado. Ele disparava um preload por camera a CADA 3 SEGUNDOS,
+  // sem olhar se o anterior tinha terminado, sem prazo, sem cancelamento e sem
+  // onerror. Com carga medida de 3 a 9 s por quadro e OITO cameras, cada uma
+  // mantinha requisicoes sobrepostas o tempo todo — e um carregamento que
+  // falhasse ficava pendurado para sempre, congelando aquela imagem.
+  //
+  //   _refreshCameraImages() {
+  //     const stamp = Date.now();
+  //     this._refreshSeed = stamp;
+  //     this.shadowRoot.querySelectorAll('img[data-camera-src-base]').forEach((image) => {
+  //       const nextSrc = ..._withCacheBust(baseSrc, stamp);
+  //       const loader = new globalThis.Image();
+  //       loader.onload = () => { image.src = nextSrc; ... };
+  //       loader.src = nextSrc;      // sem onerror, sem prazo, sem cancelar
+  //     });
+  //   }
+  //
+  // AGORA: o mesmo motor do subview de comodo (services/camera/snapshot-engine),
+  // exposto pelo bundle em globalThis.BrunoCameraEngine. Politica: nunca duas
+  // requisicoes em voo por camera; espera = max(folga, cadencia - duracao);
+  // prazo de 25 s com cancelamento; recuo exponencial que poupa quem ainda nao
+  // mostrou imagem; partida escalonada; cadencia propria para as miniaturas.
+  //
+  // Sem o bundle carregado, cai no ciclo antigo — a subview nunca fica sem
+  // atualizar imagem por causa desta ponte.
   _refreshCameraImages() {
+    this._motorCameras?.atualizarAgora();
+  }
+
+  /**
+   * O ciclo antigo, preservado como rede de segurança.
+   *
+   * So roda quando o bundle nao esta carregado (motor indisponivel). Ganhou o
+   * `onerror` que faltava no original — sem ele, uma imagem que falhava ficava
+   * escondida para sempre.
+   */
+  _refreshCameraImagesLegado() {
     if (!this.shadowRoot || !this._hass || !globalThis.Image) return;
     const stamp = Date.now();
     this._refreshSeed = stamp;
 
     this.shadowRoot.querySelectorAll('img[data-camera-src-base]').forEach((image) => {
-      // CORRECAO (static): le o entity_picture ATUAL do hass (token novo). O
-      // base congelado no primeiro render expira em minutos -> 401 -> a imagem
-      // travava. Atualiza o data-camera-src-base com o token vivo.
       const entityId = image.dataset.cameraEntity;
       const live = entityId ? this._hass.states?.[entityId]?.attributes?.entity_picture : '';
       const baseSrc = live || image.dataset.cameraSrcBase;
@@ -389,12 +471,67 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       const nextSrc = BrunoCamerasSecuritySubview._withCacheBust(baseSrc, stamp);
       const loader = new globalThis.Image();
       loader.onload = () => {
+        if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(loader)) {
+          globalThis.BrunoCameraLive?.marcar?.(entityId, 'snapshot verde rejeitado', 0, false);
+          return;
+        }
         image.src = nextSrc;
         image.dataset.hasLoaded = 'true';
         image.classList.remove('is-hidden');
       };
+      loader.onerror = () => {
+        loader.onload = null;
+        loader.onerror = null;
+      };
       loader.src = nextSrc;
     });
+  }
+
+  /** Cria o motor uma vez. Devolve false quando o bundle nao esta disponivel. */
+  _garantirMotorCameras() {
+    if (this._motorCameras) return true;
+    const Motor = globalThis.BrunoCameraEngine;
+    if (typeof Motor !== 'function') return false;
+    this._motorCameras = new Motor({
+      aoCarregar: (quadro) => this._aplicarQuadro(quadro.entityId, quadro.url),
+    });
+    return true;
+  }
+
+  /** Declara ao motor as cameras na tela: o palco e principal, as demais nao. */
+  _sincronizarMotorCameras() {
+    if (!this._garantirMotorCameras() || !this.shadowRoot || !this._hass) return;
+    const alvos = [];
+    const vistos = new Set();
+    this.shadowRoot.querySelectorAll('img[data-camera-entity]').forEach((image) => {
+      const entityId = image.dataset.cameraEntity;
+      if (!entityId || vistos.has(entityId)) return;
+      // O principal so sai do motor depois do primeiro quadro WebRTC real.
+      if (this._liveReady === entityId) return;
+      // Le o entity_picture VIVO: o token do camera_proxy rotaciona em minutos, e
+      // reusar o base antigo congelava a imagem (defeito ja registrado aqui).
+      const base = this._liveImageBase({ entity: entityId }) || image.dataset.cameraSrcBase;
+      if (!base) return;
+      vistos.add(entityId);
+      alvos.push({
+        entityId,
+        base,
+        prioridade: image.closest('.image-stage') && !image.closest('.camera-tile')
+          ? 'principal'
+          : 'secundaria',
+      });
+    });
+    this._motorCameras.definirAlvos(alvos);
+    this._motorCameras.iniciar();
+  }
+
+  /** Poe na tela o quadro que o motor baixou. */
+  _aplicarQuadro(entityId, url) {
+    const image = this.shadowRoot?.querySelector(`img[data-camera-entity="${entityId}"]`);
+    if (!image) return;
+    image.src = url;
+    image.dataset.hasLoaded = 'true';
+    image.classList.remove('is-hidden');
   }
 
   _handleClick(event) {
@@ -411,7 +548,16 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
     if (action === 'more-info') {
       event.preventDefault();
-      this._openMoreInfo(entityId || this._model().activeId);
+      const activeId = entityId || this._model().activeId;
+      // ANTERIOR (rollback 2026-08-10): add no Set suspendia ate a subview
+      // inteira ser recriada. Agora e um handoff com retomada no fechamento.
+      this._liveLoadToken++;
+      this._liveState = 'handed-off';
+      globalThis.BrunoCameraLive?.marcar?.(activeId, 'entregue ao more-info');
+      this._stopLiveFeed();
+      this._sincronizarMotorCameras();
+      this._refreshCameraImages();
+      this._openMoreInfo(activeId);
       return;
     }
 
@@ -522,7 +668,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     }
   }
 
-  // NOVO (live): cria (uma vez) o elemento de stream ao vivo. Usa o hui-image
+  // ANTERIOR (rollback WebRTC direto): cria o hui-image legado. Usa o hui-image
   // nativo do HA (cameraView: live) — ele resolve HLS/WebRTC e ja faz fallback
   // para snapshot internamente. Se o hui-image nao estiver registrado, retorna
   // null e o chamador cai no snapshot.
@@ -538,7 +684,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     return el;
   }
 
-  // NOVO (live): aponta o stream para a camera ativa (sem recriar o elemento).
+  // ANTERIOR (rollback WebRTC direto): reaponta o hui-image legado.
   _setLiveCamera(entityId) {
     const el = this._liveEl;
     if (!el) return false;
@@ -547,26 +693,155 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     return true;
   }
 
-  // NOVO (live): (re)insere o stream no ponto de montagem do feed principal apos
-  // cada _render (o innerHTML recria o DOM e desanexa o elemento). Em fallback
-  // (sem hui-image), monta um snapshot do principal — atualizado pelo timer.
+  // ATIVO: reinsere WebRTC direto quando o render recria o DOM. Sem o player
+  // registrado, mantem somente o snapshot e nao inicia fallback HLS.
   _mountLiveFeed(activeId) {
     const mount = this.shadowRoot?.querySelector('.main-feed [data-live-mount]');
-    if (!mount) return;
-    const el = this._ensureLiveEl();
-    if (el) {
-      if (el.parentNode !== mount) mount.appendChild(el);
-      mount.classList.remove('is-fallback');
-      this._setLiveCamera(activeId);
+    const camera = this._model().cameras.find((item) => item.entity === activeId);
+    if (this._liveState === 'fallback' && this._liveBlockedEntity !== activeId) {
+      this._liveState = 'idle';
+      this._liveBlockedEntity = '';
+    }
+    if (
+      !this.isConnected || !mount || !activeId || camera?.unavailable ||
+      ['loading-player', 'handed-off', 'resuming', 'fallback'].includes(this._liveState)
+    ) {
+      this._stopLiveFeed();
       return;
     }
-    // Fallback: hui-image indisponivel -> snapshot do principal.
-    const cam = (this._model().cameras || []).find((c) => c.entity === activeId);
-    mount.classList.add('is-fallback');
-    mount.innerHTML = cam && cam.image
-      ? BrunoCamerasSecuritySubview._image(cam, 'camera-image')
-      : '';
-    this._bindImages();
+
+    if (!this._liveEl || this._liveEntity !== activeId) {
+      this._stopLiveFeed();
+      if (!globalThis.customElements?.get('ha-web-rtc-player')) {
+        this._liveState = 'loading-player';
+        const token = ++this._liveLoadToken;
+        const garantir = globalThis.BrunoCameraLive?.garantirPlayer;
+        if (typeof garantir !== 'function') {
+          this._liveState = 'fallback';
+          this._liveBlockedEntity = activeId;
+          return;
+        }
+        Promise.resolve(garantir(activeId, this._hass)).then((ok) => {
+          if (!this.isConnected || token !== this._liveLoadToken) return;
+          this._liveState = ok ? 'idle' : 'fallback';
+          this._liveBlockedEntity = ok ? '' : activeId;
+          this._mountLiveFeed(this._model().activeId);
+        });
+        return;
+      }
+      const el = globalThis.BrunoCameraLive?.criarPlayer?.()
+        || document.createElement('ha-web-rtc-player');
+      this._liveState = 'negotiating';
+      el.classList.add('camera-live-el');
+      el.setAttribute('muted', '');
+      el.setAttribute('playsinline', '');
+      el.setAttribute('autoplay', '');
+      try { el.fitMode = 'cover'; } catch (error) { /* CSS cobre versoes sem fitMode. */ }
+      this._liveLoadHandler = () => this._markLiveReady();
+      this._liveStreamsHandler = (event) => {
+        if (event?.detail?.hasVideo === false) this._failLiveFeed(activeId, 'sem video');
+      };
+      el.addEventListener('load', this._liveLoadHandler);
+      el.addEventListener('streams', this._liveStreamsHandler);
+      this._liveEl = el;
+      this._liveEntity = activeId;
+
+      // O player oficial consome apiContext/connectionContext no primeiro
+      // update Lit. Atribuir entityid imediatamente depois do append ainda era
+      // cedo: _startWebRtc retornava sem contexto e nao tentava novamente.
+      mount.appendChild(el);
+      // ANTERIOR (rollback contexto Lit): atribuicao imediata de entityid e
+      // armacao do prazo de 30 s neste ponto.
+      this._startLivePlayerAfterContext(el, activeId);
+      return;
+    }
+
+    if (this._liveEl.parentElement !== mount) mount.appendChild(this._liveEl);
+    if (this._liveEl.entityid !== activeId) this._liveEl.entityid = activeId;
+  }
+
+  _startLivePlayerAfterContext(el, entityId) {
+    Promise.resolve(el.updateComplete).then(() => {
+      if (this._liveEl !== el || this._liveEntity !== entityId || !el.isConnected) return;
+      this._liveStartedAt = globalThis.performance?.now?.() || Date.now();
+      el.entityid = entityId;
+      globalThis.BrunoCameraLive?.marcar?.(entityId, 'entityid atribuido');
+      this._liveTimer = globalThis.setTimeout(() => {
+        if (this._liveEl === el && this._liveEntity === entityId && this._liveReady !== entityId) {
+          this._failLiveFeed(entityId, 'prazo');
+        }
+      }, BRUNO_CAMERAS_SECURITY_LIVE_TIMEOUT_MS);
+    }).catch(() => {
+      if (this._liveEl === el && this._liveEntity === entityId) this._failLiveFeed(entityId, 'contexto');
+    });
+  }
+
+  _markLiveReady() {
+    const el = this._liveEl;
+    const entityId = this._liveEntity;
+    const video = el?.shadowRoot?.querySelector('video');
+    if (!el || !entityId || !video || video.readyState < 2 || this._liveReady === entityId) return;
+    if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(video)) {
+      if (this._liveGreenMarked !== entityId) {
+        this._liveGreenMarked = entityId;
+        const now = globalThis.performance?.now?.() || Date.now();
+        globalThis.BrunoCameraLive?.marcar?.(
+          entityId,
+          'quadro verde rejeitado',
+          now - (this._liveStartedAt || now),
+          false,
+        );
+      }
+      if (this._liveGreenTimer) globalThis.clearTimeout(this._liveGreenTimer);
+      this._liveGreenTimer = globalThis.setTimeout(() => {
+        this._liveGreenTimer = null;
+        this._markLiveReady();
+      }, 700);
+      return;
+    }
+    this._liveReady = entityId;
+    this._liveState = 'live';
+    if (this._liveGreenTimer) globalThis.clearTimeout(this._liveGreenTimer);
+    this._liveGreenTimer = null;
+    el.classList.add('is-ready');
+    if (this._liveTimer) globalThis.clearTimeout(this._liveTimer);
+    this._liveTimer = null;
+    this._sincronizarMotorCameras();
+  }
+
+  _failLiveFeed(entityId, reason = 'falha') {
+    if (!entityId || entityId !== this._liveEntity) return;
+    const now = globalThis.performance?.now?.() || Date.now();
+    globalThis.BrunoCameraLive?.marcar?.(
+      entityId,
+      reason,
+      now - (this._liveStartedAt || now),
+      false,
+    );
+    this._liveState = 'fallback';
+    this._liveBlockedEntity = entityId;
+    this._stopLiveFeed();
+    this._sincronizarMotorCameras();
+    this._refreshCameraImages();
+  }
+
+  _stopLiveFeed() {
+    if (this._liveTimer) globalThis.clearTimeout(this._liveTimer);
+    this._liveTimer = null;
+    if (this._liveGreenTimer) globalThis.clearTimeout(this._liveGreenTimer);
+    this._liveGreenTimer = null;
+    const el = this._liveEl;
+    if (el) {
+      if (this._liveLoadHandler) el.removeEventListener('load', this._liveLoadHandler);
+      if (this._liveStreamsHandler) el.removeEventListener('streams', this._liveStreamsHandler);
+      el.remove();
+    }
+    this._liveEl = null;
+    this._liveEntity = '';
+    this._liveReady = '';
+    this._liveGreenMarked = '';
+    this._liveLoadHandler = null;
+    this._liveStreamsHandler = null;
   }
 
   _renderError(error) {
@@ -932,14 +1207,12 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         display: none;
       }
 
-      /* NOVO (live): ponto de montagem do stream do feed principal. Fica ACIMA
-         da placeholder e ABAIXO da vinheta/pilula/controles. Forca o hui-image
-         (e o <video> interno) a preencher o palco cobrindo a area. */
+      /* Player WebRTC acima da foto e abaixo da vinheta e dos controles. */
       .camera-live {
         position: absolute;
         inset: 0;
         overflow: hidden;
-        z-index: 0;
+        z-index: 1;
         background: transparent;
       }
 
@@ -949,7 +1222,11 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         display: block;
         width: 100% !important;
         height: 100% !important;
+        opacity: 0;
+        transition: opacity 160ms ease;
       }
+
+      .camera-live-el.is-ready { opacity: 1; }
 
       .camera-live video,
       .camera-live img {
@@ -1458,10 +1735,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   // (.feed-overlay-top) e contagem "N/N online" (.feed-status). MANTIDOS: os
   // controles flutuantes (Detalhes/Atualizar) no canto inferior direito.
   // A pilula tem data-feed-pill para a troca in-place (2b) localiza-la.
-  // NOVO (live): o feed principal e STREAM AO VIVO. O <img> de snapshot foi
-  // trocado por um ponto de montagem [data-live-mount] onde _mountLiveFeed insere
-  // o <hui-image cameraView="live"> (ou, se indisponivel, um snapshot fallback).
-  // A placeholder fica ATRAS do stream; a vinheta/pilula/controles, na frente.
+  // O feed principal mantem o snapshot por baixo do ponto data-live-mount.
+  // O player direto nasce invisivel e so aparece depois do primeiro quadro.
   static _mainFeed(camera) {
     const hasImage = Boolean(camera?.image);
     return `

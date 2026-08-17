@@ -4,7 +4,8 @@
 decisões já tomadas, tudo o que foi implementado, o ponto exato em que o
 desenvolvimento parou e como prosseguir.
 
-**Data de corte:** 2026-08-06 · Fases 5c, 5d e 5e **FECHADAS** e commitadas · próxima: **6.0**
+**Data de corte:** 2026-08-07 (rev.2) · Fases 5c–5e, 6.0, 6.1 e 6.2B-parte-1 entregues
+(as duas últimas **não commitadas**) · próxima: **6.2B parte 2 — WebRTC**
 
 ---
 
@@ -276,13 +277,51 @@ rollback. Buscar sempre a última definição ativa.
 Três vezes correlacionado. Evitar reinício desnecessário do HA; **conferir o
 Corredor após cada entrega que exija reinício**; desfazer antes de investigar.
 
+### 5.9 `hass` NUNCA pode ser propriedade reativa do Lit
+
+```ts
+static properties = { _hass: { state: true } };   // ERRADO — anula toda guarda
+```
+
+Atribuir a uma propriedade reativa **já pede o render**. O setter de `hass`
+atribui sempre (o componente precisa do objeto mais recente para agir), então
+qualquer `return` de guarda depois disso não evita nada — o render já foi pedido.
+
+Custou três meses de renders inúteis: a guarda do `bruno-room-tile` existia desde
+a Fase 5 e nunca funcionou. Correto: `static properties = {}` (ou só as
+propriedades de interface) e `requestUpdate()` explícito na guarda.
+
+**E o motivo pelo qual demorou a ser visto:** a instrumentação contava renders sem
+dizer quem os pedia. **Contador sem causa não conserta nada.** Todo componente
+novo passa o motivo em `medirRender(SONDA, fn, motivo)`.
+
+### 5.10 Três armadilhas de MEDIÇÃO (todas custaram rodadas)
+
+| armadilha | o que ela faz | como escapar |
+|---|---|---|
+| **O Lit agrupa `requestUpdate`** | um laço síncrono de N passos vira UM render por componente; a medição deu 99,8% de redução e estava medindo o agrupamento do Lit | `await el.updateComplete` a cada passo |
+| **`requestAnimationFrame` não dispara com a aba oculta** | a medição trava e estoura o prazo | `setTimeout` |
+| **`performance.memory` vem em degraus** | fica parada num valor por muitos minutos e então salta; com um valor só, piso, pico e crescimento são o mesmo número | o coletor conta `degraus` e **se recusa a opinar com menos de dois** |
+
+A de memória enganou **quatro leituras, em três direções opostas**. A regra que
+ficou: **quando uma métrica engana repetidamente, o conserto é ensinar o
+instrumento a dizer "não sei", não afinar a interpretação.**
+
+### 5.11 Lista escrita à mão no banco de medição mede a suposição, não o sistema
+
+O banco de render nasceu com os ids de cômodo digitados à mão: errou quatro dos
+sete e quebrou na montagem. Os ids agora saem do próprio bundle. Vale para toda
+lista de entidade, cômodo ou seletor dentro de um medidor.
+
 ---
 
 ## 6. Ferramentas de verificação
 
 ```bash
 # antes de publicar QUALQUER coisa
-cd dashboard-src && npm run check          # typecheck + lint + 62 testes + build
+cd dashboard-src && npm run check   # yaml + typecheck + lint + 140 testes + build
+#   O check-yaml.mjs é o PRIMEIRO passo e existe porque uma indentação de 3
+#   espaços num script derrubou o Home Assistant inteiro. Nada validava YAML.
 
 # a armadilha da crase
 node scripts/validation/check-backtick.mjs --tudo
@@ -297,14 +336,28 @@ perl scripts/validation/check-includes.pl .
 node scripts/validation/gen-subview-css.mjs      # CSS + relatório de cobertura
 node scripts/validation/gen-subview-config.mjs   # configuração dos cômodos
 
-# banco de medição
+# banco de medição — PARIDADE (geometria e conteúdo)
 node scripts/harness/gen-subview-harness.mjs
 node scripts/harness/serve-harness.mjs scripts/harness/subview-parity.html 8199
 #   no navegador, tema Josh, 1920x1200 e 1280x720:
 #     montar(0..5)      subview ATUAL
 #     montarNovo(0..5)  componente NOVO, mesma célula
 #     inspecao()        conteúdo dos seis, módulo a módulo
+
+# banco de medição — CUSTO DE RENDER (Fase 6.1)
+node scripts/harness/gen-render-harness.mjs
+node scripts/harness/serve-harness.mjs scripts/harness/render-cost.html 8127
+#     medirRenders(400, 0.1)   7 ladrilhos, 400 atualizações, 10% relevantes
+#     medirSubview(200, 0.1)   a subview, o componente pesado
+#     medirCiclos(50)          monta/desmonta 50x e confere o que sobrou
+#   Ver §5.10 — sem `await updateComplete` a cada passo, mede o Lit, não o código.
 ```
+
+**Os dois bancos respondem perguntas diferentes.** O de paridade mede se o
+componente **desenha** o mesmo; o de render mede quanto ele **custa**. Uma caixa
+vazia mede igual a uma cheia no primeiro, e um componente que repinta 3.000 vezes
+mede igual a um que repinta 40. Já houve entrega aprovada por paridade com os
+módulos vazios (Fase 5c) — por isso existem os dois.
 
 **Método que funcionou nas fases 5a/5b/5c:**
 ```
@@ -316,19 +369,75 @@ medir → reproduzir → comparar (antigo e novo na MESMA página, no mesmo inst
 
 ## 7. Onde o desenvolvimento parou (data de corte — confirmar, §0)
 
-**Fases 5c, 5d e 5e FECHADAS, validadas no tablet pelo usuário e COMMITADAS.**
+**Fases 5c, 5d, 5e, 6.0, 6.1 e 6.2B-parte-1 entregues. As duas últimas NÃO estão commitadas.**
 
 ```
 branch: main
-commit: b0ceba1e   feat(5c/5d/5e): conteudo vivo das subviews, refinamento
-                   funcional e fechamento
-tag:    baseline-5e-fechada     <- baseline congelada
-Bundle: config/www/dashboard/bruno-dashboard.Duzbu9AO.js
-Árvore de trabalho LIMPA. VM sincronizada.
+Bundle publicado: config/www/dashboard/bruno-dashboard.DFKUsoLs.js
+                  (já copiado para a VM, junto com o configuration.yaml)
+Árvore de trabalho SUJA — 6.1 e 6.2B-1 aguardam o commit do usuário (Regra de Ouro 2).
+Publicar na VM: `cd dashboard-src && npm run build && npm run deploy:vm`,
+MAIS a cópia do configuration.yaml (o deploy não o copia).
 Trocar o bundle exige REINICIAR o Home Assistant.
 ```
 
-**Não há pendência anterior à Fase 6.0.** A continuidade começa direto na 6.0.
+Arquivos alterados/novos não commitados da 6.1:
+
+```
+ M CLAUDE.md
+ M config/configuration.yaml                         (linha do bundle)
+ M dashboard-src/src/components/devices/bruno-devices-panel.ts
+ M dashboard-src/src/components/rooms/bruno-room-subview.ts
+ M dashboard-src/src/components/rooms/bruno-room-tile.ts
+ M dashboard-src/src/diagnostics/bruno-diagnostics.ts
+ M dashboard-src/src/diagnostics/runtime/collector.ts   (+ .test.ts)
+ M dashboard-src/src/diagnostics/runtime/index.ts
+ M dashboard-src/src/diagnostics/runtime/probe.ts
+ M docs/24-performance-baseline.md
+ M scripts/harness/README.md
+?? dashboard-src/src/services/state/          (entity-watcher, clock, testes)
+?? scripts/harness/gen-render-harness.mjs
+```
+
+### 7.0 O que a 6.0 e a 6.1 entregaram
+
+**6.0** — instrumentação de runtime (`src/diagnostics/runtime/`), painel de
+diagnóstico alcançável pelo menu Config, baselines colhidas no tablet, sondagem
+de capacidade das câmeras. O **carregador estável (6.0.4) foi construído e está
+DESLIGADO**: quebrou o tablet (o PC não), suspeita do `import()` dinâmico; se for
+religado, injetar `<script type="module">` em vez de importar.
+
+**6.1** — estado seletivo e ciclo de vida. Ver §7.2.
+
+### 7.2 O que a 6.1 provou, e o defeito que ela achou
+
+`bruno-room-tile` caiu de **4,04 renders/s para 0,32/s** no tablet (12,6×).
+Vazamentos zero. 50 ciclos de navegação sem sobra.
+
+**A causa dos 4 renders/s era um defeito de três anos-luz de distância do que eu
+supunha:** `_hass` estava declarado como propriedade **reativa** do Lit. Toda
+atribuição a propriedade reativa pede render, e o setter atribui sempre — a
+guarda por assinatura existia desde a Fase 5 e **nunca evitou um único render**.
+
+Só ficou visível quando cada render passou a carregar o MOTIVO: 2.767 de 2.800
+vinham de fora do observador. **Contador sem causa não conserta nada** — foi a
+atribuição, não a contagem, que resolveu.
+
+### 7.3 O que ficou sem resposta
+
+- **Memória:** `performance.memory` é entregue em degraus grandes e esparsos.
+  Uma sessão de 146 s lê UM valor, e piso/pico/crescimento viram o mesmo número.
+  Já me enganou quatro vezes; agora o instrumento se recusa a opinar com menos de
+  dois degraus. Precisa de sessão longa (30 min+ sem recarregar).
+- **Câmeras:** intocadas pela 6.1, e o usuário confirmou em 2026-08-06 que a
+  lentidão continua. É a próxima fase — ver §8.
+- **Entidades indisponíveis:** no último retrato, `sala`/`office`/`casal`
+  apareceram com `motion_recent` e `occupancy` indisponíveis, e os 4 Echo também.
+  Verificado: **não é o Zigbee** (Z2M no ar e publicando os seis sensores), **não
+  é nome errado** (os ids do dashboard batem com os `unique_id` dos packages) e
+  **não é "esperando o primeiro evento"** (Miguel tem zero eventos e está
+  disponível; Sala tem 40 e não está). Sem causa fechada. É território de sensor
+  — diagnosticar e reportar, nunca editar (§2).
 
 ### 7.1 Última medição da 5c
 
@@ -411,28 +520,81 @@ do TELEFONE os usa (`bento_comodos_phone` → `bento_comodos_matriz` →
 
 ---
 
-## 8. O que fazer a seguir — comece pela 6.0
+## 8. O que fazer a seguir — 6.2B parte 2 (WebRTC)
 
-**As fases 5c, 5d e 5e estão fechadas.** Não há pendência anterior. A próxima
-ação é a **Fase 6.0 — baseline de runtime e carregador estável** (§8.3).
+**A 6.2B foi PROMOVIDA à frente da 6.2.** Motivo, nas palavras do usuário em
+2026-08-06, depois de validar a 6.1: *"os resultados podem ter melhorado, mas na
+prática ainda tem muita lentidão na renderização das câmeras"*.
+
+### 8.0 A parte 1 já está entregue (2026-08-07)
+
+O diagnóstico exigido saiu da leitura do código, sem medição nova:
+
+```
+cadência do ciclo antigo ......... 6.500 ms  (intervalo FIXO)
+carga média de um quadro ......... 6.200 ms  (medido no tablet)
+folga real ........................  300 ms
+```
+
+Cada câmera tinha uma requisição em voo quase o tempo todo — **saturando
+exatamente aquilo que se esperava** — sem prazo, sem cancelamento, e martelando
+para sempre uma câmera fora do ar.
+
+`services/camera/snapshot-engine.ts` resolveu isso com seis regras (ver
+`docs/12`), 31 testes de unidade e verificação de integração no navegador. A
+instrumentação passou a ser **por câmera**, com o primeiro quadro em rótulo
+próprio.
+
+**O que a parte 1 NÃO resolve:** a latência de origem. Se o HA leva 6 s para
+produzir um quadro dessas câmeras Tuya, o motor não encurta esses 6 s.
+
+### 8.0.1 Antes de escrever a parte 2 — colher uma leitura
+
+O tablet ainda não rodou com a parte 1. A próxima baseline responde as duas
+perguntas que faltam, e as duas mudam o desenho da parte 2:
+
+1. **Qual câmera falha** (o usuário relatou o Q. Miguel) — se a falha for de uma
+   só, WebRTC nas oito é resposta errada para o problema;
+2. **Quanto tempo até a primeira imagem**, por câmera — é o número que o usuário
+   chama de "demora", e é o alvo real.
+
+**WebRTC não tem como ser testado no banco local** — não há Home Assistant ali.
+Ou se colhe essa leitura antes, ou se escreve no escuro. O histórico deste
+projeto recomenda a primeira.
+
+### 8.0.2 Escopo da parte 2
+
+- instantâneo imediato como placeholder — sempre, inclusive enquanto negocia;
+- sessão WebRTC opt-in, na câmera principal do cômodo ativo;
+- liberação da sessão ao sair da view (métrica 8) e na suspensão por
+  invisibilidade — o gancho já existe, da 6.1;
+- API do HA: `camera/webrtc/offer` (subscrição), `camera/webrtc/candidate`,
+  `camera/webrtc/get_client_config`. Confirmar contra a versão instalada antes de
+  escrever — não assumir a forma das mensagens.
+
+**Evidência já colhida:** 8 de 8 câmeras com `web_rtc`, 0 só com HLS.
 
 ### 8.1 Antes da primeira linha de código
 
-1. Rodar os comandos do §0 e confirmar que a árvore está limpa e o bundle bate.
-2. Ler `docs/ROTEIRO-CONSOLIDADO-V3.md` (plano) e as armadilhas do §5 daqui.
-3. Confirmar com o usuário o escopo da 6.0 antes de publicar qualquer coisa —
-   editar e testar localmente não precisa de autorização; publicar precisa (§2.1).
+1. Rodar os comandos do §0 e confirmar o estado real — a árvore está SUJA com a
+   6.1 (§7); confirmar com o usuário se ele já commitou.
+2. Ler `docs/ROTEIRO-CONSOLIDADO-V3.md` (Fase 6.2B, reescrita em 2026-08-06),
+   `docs/24-performance-baseline.md` (baselines 1 a 6) e as armadilhas do §5.
+3. Confirmar o escopo com o usuário antes de publicar — editar e testar
+   localmente não precisa de autorização; publicar precisa (§2.1).
 
 ### 8.2 Sequência completa
 
 ```
-6.0  Baseline de runtime + carregador estável + sondagem das câmeras
+6.0  Baseline de runtime + carregador estável + sondagem  ✅ CONCLUÍDA
  ↓
-6.1  Estado seletivo e ciclo de vida
+6.1  Estado seletivo e ciclo de vida                      ✅ CONCLUÍDA
+ ↓
+6.2B Camera Engine · parte 1 (motor de instantâneos)     ✅ CONCLUÍDA
+ ↓
+6.2B Camera Engine · parte 2 (WebRTC)       ← PRÓXIMA
  ↓
 6.2  Migração por módulo (decomposição + responsividade + retirada do CSS)
- ↓
-6.2B Camera Engine
  ↓
 6.3A Inventário e arquitetura mobile        ← ANTES da shell
  ↓
@@ -592,3 +754,55 @@ congelar a arquitetura.
   ele aceita fato, não aceita correção silenciosa do pedido errado.
 - Se um defeito sobreviver a duas rodadas, **o método de investigação está
   errado**, não o esforço. Trocar de método, não repetir o mesmo.
+
+---
+
+## 9. Adendo 2026-08-07 (rev.2) — a regressão do prazo, e o que ela ensina
+
+A parte 1 da 6.2B introduziu um prazo de 8 s nas requisições de câmera. A
+baseline seguinte mostrou **10 falhas em 21 requisições, todas em ~8.001 ms** —
+não eram falhas, era o prazo cortando requisições a caminho. A câmera do Office
+deixou de renderizar por completo.
+
+O primeiro quadro legítimo nessas câmeras leva de **3,9 s a 7,7 s**.
+
+> **INVARIANTE.** Um prazo é uma afirmação sobre a DISTRIBUIÇÃO do tempo de
+> resposta. Eu escolhi 8 s sem olhar a distribuição — que já estava medida no
+> relatório anterior, com média de 6,2 s. Média de 6,2 s significa que metade
+> das amostras passa disso. **Nunca calibrar prazo sem olhar a distribuição que
+> já existe no repositório.**
+
+Corrigido em rev.2: prazo 25 s, URL inicial sem selo, motor com `atrasoInicial`
+de uma cadência, e a métrica nova `câmera <nome> · até aparecer` — que mede o
+que o usuário sente (abrir o cômodo → imagem na tela), e não a duração da
+requisição.
+
+### 9.1 Memória: a primeira leitura confiável de toda a Fase 6
+
+```
+piso 18,2 MB -> 119,3 MB · +96,4 MB em 442 s · 64 degraus
+veredito: "isto é retenção, não oscilação"
+```
+
+Hipótese com aritmética: quadros de câmera decodificados (1920×1080 = 8,29 MB;
+~11 carregamentos = 91 MB contra 96,4 MB medidos). Cada quadro tem URL única por
+causa do selo, então nenhum reusa entrada de cache.
+
+**Descartado por verificação, não por suposição:** retenção de instância —
+`vivos: 0`, timers 95/95, listeners 22/22, e `bruno-surface-material.js` guarda
+hosts em `WeakMap`.
+
+**Experimento que decide, e é barato:** Home aberta 7 min vs subview com câmera
+aberta 7 min, comparando o crescimento do piso. Se confirmar, a correção é
+`fetch` + `createObjectURL` + `revokeObjectURL` do quadro anterior — liberação
+determinística em vez de esperar o navegador despejar.
+
+**Fazer esse experimento ANTES de escrever a parte 2.** Se a retenção for dos
+quadros, o WebRTC muda o quadro de lugar mas não resolve sozinho o consumo de um
+painel ligado 24/7.
+
+### 9.2 O que NÃO é defeito
+
+*"Só atualiza a imagem após alguns segundos"* é a natureza do instantâneo: cada
+quadro é uma requisição de 4 a 8 s, e a cadência espera a anterior terminar.
+Nenhum ajuste de cliente muda isso. É exatamente o que a parte 2 resolve.

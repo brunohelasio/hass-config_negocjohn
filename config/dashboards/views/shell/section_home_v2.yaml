@@ -82,23 +82,56 @@ layout:
   # PHONE: reproducao fiel do bloco phone da V1 (layout mobile intocado),
   # com as areas extras `dynamic` e `bottom_block` como linhas 0px
   # (Sagaland: toda area existe em todo breakpoint).
+  # ── PHONE — REV.7 (2026-08-10) ───────────────────────────────────────────
+  #
+  # Decisões do usuário nesta revisão:
+  #   1. hero condensado (3 faixas -> 1) para ~210px;
+  #   2. terceira dupla de cômodos aparecendo pela METADE — o recorte parcial
+  #      é o que convida a rolar, e um layout calibrado em 8px de folga quebra
+  #      no próximo aparelho;
+  #   3. Energia e Mídia FIXOS cedem lugar aos cards dinâmicos do tablet, que
+  #      só aparecem quando há condição ativa.
+  #
+  # Orçamento MEDIDO no iPhone 13 Pro Max (428x926). A dobra é uma faixa, não
+  # um número: 822 no app em tela cheia, 775 se a barra de status ocupar
+  # espaço. As posições abaixo saíram do banco de medição, não de estimativa.
+  #
+  #   badges          10 →  54
+  #   hero            62 → 272     (210px: 3 faixas viraram 1)
+  #   Sala           280 → 430
+  #   Office/Cozinha 438 → 598
+  #   Lavabo/Casal   606 → 766     ← última completa nas DUAS hipóteses
+  #   Marina/Miguel  774 → 934     ← aparece 48px em tela cheia
+  #
+  # A terceira dupla é cortada de propósito: o recorte parcial é o que convida
+  # a rolar. Não perseguir o encaixe exato — ver docs/28 §2.3.
+  #
+  # ANTERIOR (rev.6, para rollback):
+  #   grid-template-rows: minmax(44px, auto) minmax(0, auto) 176px auto minmax(140px, auto) 0px minmax(180px, auto) 0px 0px 0px 0px 0px
+  #   areas: top_badges welcome sala comodos energy roborock media camera quick_actions sidebar dynamic bottom_block
   mediaquery:
     '(max-width: 800px)':
-      grid-gap: 10px
+      # 8px (nao 10): os 4 respiros acima da terceira dupla devolvem 8px ao
+      # orcamento, e e o unico ajuste aqui que nao arrisca cortar conteudo.
+      grid-gap: 8px
       grid-template-columns: minmax(0, 1fr)
-      grid-template-rows: minmax(44px, auto) minmax(0, auto) 176px auto minmax(140px, auto) 0px minmax(180px, auto) 0px 0px 0px 0px 0px
+      # ANTERIOR (rollback): Sala e tiles de comodo usavam 160px.
+      # 172px e o minimo calculado para metrica (28px), gap (7px), quatro dots
+      # (4x26px + 3x4px) e padding vertical (21px), sem recorte no Office.
+      # A hierarquia da Sala continua vindo da largura e da composicao interna.
+      grid-template-rows: minmax(44px, auto) minmax(0, auto) 172px auto auto 0px 0px 0px 0px 0px 0px 0px
       grid-template-areas: |
         "top_badges"
         "welcome"
         "sala"
         "comodos"
+        "dynamic"
         "energy"
         "roborock"
         "media"
         "camera"
         "quick_actions"
         "sidebar"
-        "dynamic"
         "bottom_block"
 cards:
   # Faixa superior de status: mesma da V1 (shell preservada).
@@ -111,9 +144,15 @@ cards:
   - !include ../main-grid/v2/bento_comodos_phone.yaml
   # Area dinamica (container JS): camera / Roborock / midia por relevancia.
   - !include ../main-grid/v2/bento_dynamic.yaml
-  # Energia e midia permanentes APENAS no phone (mobile intocado).
-  - !include ../main-grid/v2/bento_energy_phone.yaml
-  - !include ../main-grid/v2/bento_media_phone.yaml
+  # NOVO (2026-08-10): a mesma logica no telefone, com config propria (uma
+  # coluna, um card por vez, faixa que colapsa quando nada esta ativo).
+  - !include ../main-grid/v2/bento_dynamic_phone.yaml
+  # ANTERIOR (rollback 2026-08-10) — Energia e midia FIXOS no phone. Cederam
+  # lugar aos cards dinamicos acima, por decisao do usuario. O consumo ja
+  # aparece nos status superiores; o grafico completo fica para o tablet.
+  # Os dois arquivos seguem no disco, intactos.
+  # - !include ../main-grid/v2/bento_energy_phone.yaml
+  # - !include ../main-grid/v2/bento_media_phone.yaml
   # Bloco inferior unificado (7 comodos + acoes rapidas na mesma moldura).
   # ANTERIOR (rev.3, blocos separados — arquivos preservados no disco):
   #   - !include ../main-grid/v2/bento_comodos_strip.yaml

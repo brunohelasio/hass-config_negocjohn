@@ -61,7 +61,8 @@ const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
     temperature: ['sensor.sensor_4_in_1_q_marina_temperature', 'sensor.temperatura_quarto_marina', 'sensor.qma_temperatura'],
     humidity: ['sensor.sensor_4_in_1_q_marina_humidity', 'sensor.umidade_quarto_marina', 'sensor.qma_umidade'],
     room_group: 'light.grupo_luzes_quarto_marina',
-    camera_main: 'camera.qma_camera_2',
+    // ANTERIOR (rollback ONVIF geral): camera_main: 'camera.qma_camera_2',
+    camera_main: 'camera.qma_camera_profile_1',
     camera_secondary: '',
     active_camera_select: '',
     tv: '',
@@ -96,7 +97,8 @@ const BRUNO_QUARTO_MARINA_SUBVIEW_DEFAULT_CONFIG = {
     ],
     cameras: [
       {
-        entity: 'camera.qma_camera_2',
+        // ANTERIOR (rollback ONVIF geral): entity: 'camera.qma_camera_2',
+        entity: 'camera.qma_camera_profile_1',
         name: 'Quarto Marina',
         short_name: 'Marina',
         controls: [],

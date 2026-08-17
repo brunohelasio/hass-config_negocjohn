@@ -1115,3 +1115,202 @@ Montar → atualizar → desmontar uma subview da Sala:
 
 **A baseline oficial é a do tablet** — WebView, memória do aparelho e CPU da VM
 não se reproduzem no computador. Colher pelo painel, botão "Copiar baseline".
+
+---
+
+## Fase 6.1 — estado seletivo e ciclo de vida (2026-08-06)
+
+### Entregue
+
+| arquivo | papel |
+|---|---|
+| `src/services/state/entity-watcher.ts` | `ObservadorDeEntidades` — o módulo declara o que lê, o observador responde QUAIS entidades mudaram. `coletarIdsDeEntidade` varre a configuração; lista à mão seria a próxima a ficar defasada, e o modo de falhar é silencioso (a entidade esquecida para de atualizar na tela, sem erro) |
+| `src/services/state/clock.ts` | relógio central: um intervalo para todos os assinantes, destruído quando o último sai, desligado com a aba oculta |
+| `src/diagnostics/runtime/collector.ts` | vazamento deixou de contar componente montado; memória ganhou piso/pico/degraus; tarefas longas separam carga de uso; marca de ciclo de navegação |
+| `scripts/harness/gen-render-harness.mjs` | banco de medição de custo de render |
+
+Ligados: `bruno-room-tile`, `bruno-room-subview` (que não tinha guarda alguma) e
+`bruno-devices-panel`.
+
+### Medido
+
+| | sem estado seletivo | com | redução |
+|---|---|---|---|
+| 7 ladrilhos · 400 atualizações do `hass` | 2.800 renders | 40 | 98,6% |
+| 1 subview · 200 atualizações | 200 renders | 20 | 90,0% |
+| **No tablet**, `bruno-room-tile` | 4,04 renders/s | 0,32/s | **12,6×** |
+
+Nos dois bancos o resultado é o ótimo teórico: um render por mudança relevante,
+no componente certo. Ciclo de navegação: 50 montagens/desmontagens com
+instâncias, timers, listeners e assinaturas zerados desde a marca.
+
+### Suspensão de módulo invisível
+
+O tablet é de parede e a tela apaga. Com `visibilityState === 'hidden'` o ciclo
+de instantâneos de câmera para e o relógio central desliga. Ao voltar, um quadro
+é buscado na hora — a tela não acende com a imagem de dez minutos atrás.
+
+### O que NÃO melhorou, e está registrado
+
+**As câmeras.** A 6.1 não tocou nelas, e o usuário confirmou depois de validar:
+*"ainda tem muita lentidão na renderização das câmeras"*. A medição concorda —
+25% de falha nas requisições de instantâneo, pior caso 10.039 ms. Isso promoveu a
+Fase 6.2B (Camera Engine) à frente da 6.2.
+
+### Rollback
+
+Blocos substituídos comentados in-place com `ANTERIOR (rollback 6.1)`:
+`_buildSignature` do ladrilho, o setter sem guarda do subview, o timer próprio de
+relógio e as três declarações de `_hass` reativo. Em `configuration.yaml`, as
+linhas de bundle anteriores estão comentadas ao lado.
+
+---
+
+## Fase 6.2B, parte 1 — motor de instantâneos (2026-08-07)
+
+A parte 2 (WebRTC) **não** entrou. O roteiro manda diagnosticar o pior caso de
+10 s antes de trocar o transporte, e a leitura do código deu a causa antes de
+qualquer medição nova.
+
+### O defeito, em aritmética
+
+```
+cadência do ciclo antigo ......... 6.500 ms  (intervalo FIXO)
+carga média de um quadro ......... 6.200 ms  (medido no tablet)
+                                   ─────────
+folga real entre requisições .....   300 ms
+```
+
+Cada câmera mantinha uma requisição em voo praticamente o tempo todo; a Cozinha,
+com duas câmeras, mantinha duas. **Estávamos saturando exatamente aquilo que
+estávamos esperando.** E como nada tinha prazo nem cancelamento, um pedido
+travado ficava pendurado para sempre enquanto o ciclo seguinte abria outro por
+cima — o pior tempo de 10.039 ms tem cara de prazo estourado do outro lado, não
+de rede lenta. Uma câmera fora do ar era martelada a cada 6,5 s, indefinidamente.
+
+### A política nova
+
+`dashboard-src/src/services/camera/snapshot-engine.ts`, seis regras:
+
+| # | regra | efeito |
+|---|---|---|
+| 1 | nunca duas requisições em voo para a mesma câmera | acaba a fila |
+| 2 | espera = `max(folga, cadência − duração)` | rápido mantém o ritmo; lento ganha respiro |
+| 3 | prazo de 8 s com **abort** | nada fica pendurado |
+| 4 | recuo exponencial após 2 falhas, teto 60 s | câmera morta para de consumir a VM |
+| 5 | partida escalonada (300 ms) | as câmeras não saem juntas |
+| 6 | cadência própria do PIP (15 s) | miniatura não paga preço de palco |
+
+### Por que virou serviço, e não método do componente
+
+Para poder ser **testado**. Carregador, agenda e relógio entram por parâmetro; em
+teste são falsos e o tempo anda na mão. São seis regras que interagem — validar
+isso clicando no tablet seria adivinhação. **31 testes de unidade.**
+
+### Medido
+
+Unidade (agenda falsa): as seis regras, incluindo "resposta que chega depois do
+prazo não conta duas vezes" e "uma resposta boa devolve a câmera ao ritmo".
+
+Integração no navegador (`window.medirCameras`), Cozinha, duas câmeras:
+
+| cenário | resultado |
+|---|---|
+| câmeras fora do ar, 30 s | 5 tentativas (o ciclo antigo faria 8) · recuo ativo após 3 falhas |
+| câmeras respondendo, 25 s | palco 4 quadros · PIP 2 quadros — a cadência diferenciada |
+| ligação motor → tela | os dois elementos com selo novo e `is-loaded` |
+| pico de requisições em voo | **1** |
+| após desmontar | 0 em voo · 0 vazamentos |
+
+### O que isto NÃO resolve
+
+A latência de origem. Se o Home Assistant leva 6 s para produzir um quadro
+dessas câmeras Tuya, o motor não encurta esses 6 s — ele impede que a espera
+vire fila, que o erro vire martelo e que sair do cômodo deixe requisições
+terminando em segundo plano. **A latência de origem é a parte 2 (WebRTC).**
+
+### O que a próxima baseline vai responder
+
+A instrumentação passou a ser **por câmera**, com o primeiro quadro num rótulo
+próprio (`câmera <nome> · 1º quadro`). São as duas perguntas que a baseline
+anterior levantava e não respondia: *qual* câmera falha — o usuário relatou o
+Q. Miguel — e *quanto tempo* até a primeira imagem, que é o que ele chama de
+"demora".
+
+### Rollback
+
+O ciclo antigo está comentado in-place em `bruno-room-subview.ts`, marcado
+`ANTERIOR (rollback 6.2B)`, junto com a constante `INTERVALO_CAMERAS`.
+
+---
+
+## Fase 6.2 — migração por módulo · base assentada (2026-08-08)
+
+### O pré-requisito que faltava
+
+Diagnóstico antes de extrair qualquer módulo:
+
+| | situação |
+|---|---|
+| `styles/tokens/scale.ts` | existia, **consumido só pelo painel de diagnóstico** |
+| `bruno-room-subview` | **sem `container-type`** — `cqi` não resolvia |
+| CSS gerado | **1.257 valores em px fixos** |
+
+Sem `container-type`, toda unidade `cqi` vira zero. Ligar a escala fluida em um
+módulo antes disso produziria layout colapsado — e a causa apareceria longe.
+
+### O que entrou
+
+```
+static styles = [ scaleTokens, css`:host { container-type: inline-size; ... }`, ... ]
+```
+
+**Estas duas linhas não mudam nada por si.** Enquanto as regras continuarem em px,
+o layout é idêntico; elas apenas tornam `cqi` disponível para cada módulo
+extraído daqui em diante.
+
+### Verificado, não suposto
+
+`container-type` estabelece contenção, e contenção mexe em como o elemento
+calcula tamanho — "não deve mudar nada" precisava virar número. Geometria dos
+módulos (`.hero-panel`, `.lights-card`, `.ac-card`, `.cameras-card`, `main`)
+medida antes e depois:
+
+| cena | campos | divergências |
+|---|---|---|
+| Sala a 1920×1200 | 5 | **0** |
+| Cozinha a 1280×720 | 4 | **0** |
+
+Banco: `window.geometria()` em `scripts/harness/gen-render-harness.mjs`.
+
+### A ordem dos módulos, e por que ela é essa
+
+```
+room-status -> lighting-dock -> climate-card -> media-hub
+            -> camera-stage -> room-hero -> appliances
+```
+
+Do menor e mais isolado para o maior e mais acoplado. `camera-stage` vem tarde de
+propósito: é o que acumulou mais lógica na Fase 6.2B (motor de instantâneos,
+vigia, more-info) e migrar cedo misturaria duas mudanças no mesmo diff.
+
+**Aceite por módulo:** funciona de 600 a 2000 px sem breakpoint por aparelho; não
+depende mais da fatia legada; geometria sem divergência a 1280×720 e 1920×1200,
+tema Josh. **Aceite da fase:** `subview-styles.generated.ts` esvaziado.
+
+---
+
+## Fase 6.2B — endurecimento WebRTC nas três superfícies (2026-08-10)
+
+Implementado o ajuste incremental descrito em `25-camera-streaming-webrtc.md`:
+
+- lazy-load determinístico do player por `loadCardHelpers`;
+- estado explícito em lugar de suspensão permanente;
+- handoff e retomada após `dialog-closed`;
+- quarentena de instantâneo e primeiro quadro WebRTC verdes;
+- política preservada de um stream principal por superfície;
+- ponte `BrunoCameraLive` para Home e Segurança enquanto forem módulos clássicos.
+
+Build `bruno-dashboard.BY5H2fqa.js` publicado localmente e na VM, com sete hashes
+idênticos. Aceite automatizado concluído; aceite funcional permanece dependente
+de reinício, PC frio e tablet real.

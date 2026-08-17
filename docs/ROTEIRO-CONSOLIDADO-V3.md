@@ -265,18 +265,45 @@ construído; ela não é o começo desse trabalho.
 **Por que 6.0.4 é prioridade:** hoje toda troca de bundle exige reiniciar o HA — e
 o reinício é o evento que se correlacionou **três vezes** com o Corredor quebrando.
 
-### Fase 6.1 — Estado seletivo e ciclo de vida
+### Fase 6.1 — Estado seletivo e ciclo de vida · ✅ CONCLUÍDA (2026-08-06)
 
-- o setter de `hass` passa a comparar **só as entidades que o módulo usa**
-  (equivalente novo do `triggers_update: all`, que é propriedade de button-card e
-  só existe no YAML remanescente);
-- seletores de entidade por módulo, declarados na configuração;
-- timers centralizados (hoje: relógio, câmeras e dock, cada um com o seu);
-- suspensão de módulo invisível; limpeza no `disconnectedCallback`;
-- teste de 50 ciclos de navegação com os contadores da 6.0.
+Entregue:
 
-**Aceite:** contadores voltam ao inicial após 50 navegações; sem crescimento
-contínuo de memória; redução de renders medida contra a 6.0.
+- `services/state/entity-watcher.ts` — o módulo declara o que lê, o observador
+  responde QUAIS entidades mudaram. A lista sai de uma varredura da configuração,
+  não de uma lista escrita à mão (que seria a próxima coisa a ficar defasada);
+- `services/state/clock.ts` — relógio central: um intervalo para todos, some
+  quando o último assinante sai, desliga com a aba oculta;
+- suspensão de módulo invisível: o ciclo de instantâneos de câmera para com a
+  tela apagada e busca um quadro na hora ao voltar;
+- coletor corrigido: vazamento deixou de contar componente montado; memória ganhou
+  piso/pico/degraus; tarefas longas separam carga de uso; marca de ciclo de
+  navegação;
+- `scripts/harness/gen-render-harness.mjs` — banco de medição de renders.
+
+**O defeito que a fase achou:** `_hass` estava declarado como propriedade
+**reativa** do Lit nos três componentes. Toda atribuição a propriedade reativa
+pede render, e o setter atribui sempre — então a guarda por assinatura, que
+existia desde a Fase 5, **nunca evitou um único render**. Era a origem dos 4
+renders por segundo. Só ficou visível quando cada render passou a carregar o
+motivo: 2.767 de 2.800 vinham de fora do observador.
+
+**Medido:**
+
+| | sem estado seletivo | com | redução |
+|---|---|---|---|
+| 7 ladrilhos · 400 atualizações do `hass` | 2.800 renders | 40 | 98,6% |
+| 1 subview · 200 atualizações | 200 renders | 20 | 90,0% |
+| **No tablet** (`bruno-room-tile`) | 4,04 renders/s | **0,32/s** | **12,6×** |
+
+50 ciclos de navegação: instâncias, timers, listeners e assinaturas zerados
+desde a marca.
+
+**Aceite pendente:** "sem crescimento contínuo de memória" **não pôde ser
+verificado** — e a razão está documentada: `performance.memory` é entregue em
+degraus grandes e esparsos, e uma sessão de 146 s lê um valor só. O instrumento
+agora se recusa a opinar com menos de dois degraus. Fica para uma sessão longa
+(30 min+ sem recarregar).
 
 ### Fase 6.2 — Migração por módulo
 
@@ -300,20 +327,74 @@ Ordem: `room-status` → `lighting-dock` → `climate-card` → `media-hub` →
 não depende mais da fatia legada; paridade a 1280×720 e 1920×1200, tema Josh.
 **Aceite da fase:** `subview-styles.generated.ts` esvaziado.
 
-### Fase 6.2B — Camera Engine
+### Fase 6.2B — Camera Engine · **PRÓXIMA** (promovida)
 
-- instantâneo imediato como placeholder — sempre;
-- sessão de stream **opt-in por câmera**, decidida pela sondagem da 6.0.5;
-- suspensão por invisibilidade; troca palco↔PIP sem remontar.
+**Por que subiu na fila.** Depois da 6.1 o usuário confirmou: *"os resultados
+podem ter melhorado, mas na prática ainda tem muita lentidão na renderização das
+câmeras"*. Está certo, e a medição concorda — a 6.1 melhorou render de ladrilho e
+**não tocou em câmera**. É o único incômodo que sobrou com evidência acumulada, e
+é o que ele sente todo dia.
 
-**Aceite:** tempo até a primeira imagem e fluidez **iguais ou melhores** que o
-instantâneo de hoje, medidos no tablet, com a CPU da VM dentro do orçamento.
+**A evidência medida no tablet** (baselines 3 a 6):
 
-**Contexto que justifica esse critério:** o streaming ao vivo (`hui-image` com
-`cameraView: 'live'`) já foi implementado nesta migração e **regrediu** — o
-usuário relatou demora relevante. São 8 câmeras Tuya via Xtend; o caminho
-realista é RTSP → HLS transcodificado na VM. Se o stream perder de novo na
-medição, o instantâneo permanece e isso é registrado como decisão, não falha.
+| medida | valor |
+|---|---|
+| Taxa de falha das requisições de instantâneo | **25%** (4 de 16; antes 7 de 28) |
+| Pior tempo de resposta | **10.039 ms** — cheira a estouro de prazo, não a lentidão |
+| Latência média por quadro (baseline 3) | 6,2 s |
+| Câmeras com WebRTC | **8 de 8** |
+| Câmeras só com HLS | 0 |
+
+**Correção registrada:** versões anteriores deste roteiro afirmavam que "Tuya não
+expõe WebRTC nativamente" e que "o caminho realista é HLS transcodificado na VM".
+Eu escrevi isso sem medir. A sondagem por WebSocket (`camera/capabilities`,
+Fase 6.0.5) devolveu **8 de 8 com `web_rtc`**. A leitura por atributo dizia
+"instantâneo" nas oito e teria confirmado meu erro com aparência de dado — foi
+preciso perguntar ao HA pela API. Ver docs/24.
+
+**Escopo, em duas partes:**
+
+#### Parte 1 — motor de instantâneos · ✅ CONCLUÍDA (2026-08-07)
+
+O diagnóstico exigido saiu da leitura do código, sem precisar de medição nova:
+
+```
+cadência do ciclo antigo ......... 6.500 ms  (intervalo FIXO)
+carga média de um quadro ......... 6.200 ms  (medido no tablet)
+folga real ........................  300 ms
+```
+
+Cada câmera tinha uma requisição em voo quase o tempo todo — **saturando
+exatamente aquilo que se esperava**. Sem prazo e sem cancelamento, pedido travado
+ficava pendurado e o ciclo seguinte abria outro por cima; câmera fora do ar era
+martelada a cada 6,5 s para sempre.
+
+`services/camera/snapshot-engine.ts` — seis regras: nunca duas em voo por câmera;
+espera `max(folga, cadência − duração)`; prazo de 8 s com abort; recuo
+exponencial após 2 falhas (teto 60 s); partida escalonada; cadência própria do
+PIP. 31 testes de unidade com agenda falsa + verificação de integração no
+navegador. Troca palco↔PIP sem remontar: entregue (o alvo muda de prioridade e
+preserva o estado).
+
+Instrumentação passou a ser **por câmera**, com o primeiro quadro em rótulo
+próprio — as duas perguntas que a baseline levantava e não respondia.
+
+#### Parte 2 — WebRTC · PRÓXIMA
+
+- instantâneo imediato como placeholder — sempre, inclusive enquanto negocia;
+- sessão WebRTC **opt-in por câmera**, na principal do cômodo ativo;
+- liberação da sessão ao sair da view (métrica 8) e na suspensão por
+  invisibilidade (o gancho já existe, da 6.1).
+
+**Pré-requisito de método:** WebRTC não tem como ser testado no banco local — não
+há Home Assistant ali. Ou se colhe uma leitura no tablet com a parte 1 antes de
+escrever a parte 2, ou se aceita escrever no escuro. A primeira opção é a que o
+histórico deste projeto recomenda.
+
+**Aceite:** as 8 métricas definidas na revisão anterior, medidas no tablet, tema
+Josh, 1920×1200 — com destaque para tempo até a primeira imagem e taxa de falha,
+que são os dois números que o usuário sente. Se o WebRTC perder na medição, o
+instantâneo permanece e isso é registrado como decisão, não como falha.
 
 ### Fase 6.3 — Modo mobile
 
@@ -322,12 +403,90 @@ Inventário das V1/V2/V3 **antes** de qualquer remoção; contrato de modo expl�
 (nunca múltiplos streams automáticos), performance mobile; classificação das views
 antigas em REUTILIZAR / MIGRAR / ARQUIVAR / DESCARTAR.
 
-### Fase 6.4 — Registry, contratos e host adapter
+### Fase 6.3B — Consolidação do layout mobile  ✅ ENTREGUE (2026-08-09)
 
-Formaliza o que a 5e.6 e a 6.2 vêm construindo: `WidgetInstance`,
-`WidgetDefinition`, `LayoutRepository`, `HostAdapter`. A interface de edição
-(drag-and-drop, redimensionamento, painel do editor) fica para depois — a
-estrutura, não.
+Documento: `docs/27-fase-6.3B-layout-mobile.md` — layout tela por tela,
+aguardando aprovacao do usuario. Sem codigo.
+
+### Fase 6.3C — Confronto com o código  ✅ ENTREGUE (2026-08-10)
+
+Documento: `docs/28-fase-6.3-confronto-com-o-codigo.md`. Maquete comparativa
+publicada como artifact. Sem codigo.
+
+**Por que ela existe.** A 6.3B propos composicoes para telas cujo estado atual
+nao havia sido medido — apenas inventariado por nome de arquivo. O usuario
+apontou o metodo: *"a implementacao mobile nao deve ser tratada como uma
+reconstrucao completa antes de avaliar tecnicamente o que ja existe"*.
+
+Banco de medicao novo: `scripts/harness/gen-phone-harness.mjs` — monta o
+componente real em 390×844 dentro de uma reproducao do content-slot em modo
+telefone e devolve ordem visual, altura por modulo e o que fica acima da dobra.
+
+**O que a medicao mudou:**
+
+- a causa do "alguns empilham, outros nao" nao e a cascata (26 §3.1, ERRADO):
+  o tratamento completo de telefone existe e esta preso ao seletor
+  `[data-tvhub]` — e so a Sala tem TV;
+- Home: cards em 2 colunas e area dinamica condicional **ja existem**; da 6.3B
+  sobrevive apenas o hero (3 faixas de 48px = 144px de 328);
+- Planta 3D tem tratamento proprio e funciona — a decisao D3 (paisagem forcada)
+  foi RETIRADA, nascia de uma pendencia de 2026-07-09 ja vencida;
+- D5 (inverter a ordem do usuario) RETIRADA: com a iluminacao recolhida a camera
+  fica acima da dobra na ordem que ele propos. O argumento do Cenario B nao
+  sobreviveu a medicao.
+
+Recomendacao: **Cenario A** (reordenar o que existe), ou **A′** (A com a
+iluminacao em folha) se o aparelho for de 667px de altura.
+
+**Por que ela existe.** A 6.5B pressupunha um layout mobile definido, que só
+precisaria ser reimplementado sobre a arquitetura nova. Não é o caso: nas
+palavras do usuário, *"no momento em que a gente migrou para o formato de tiles,
+de cards dinâmicos e de toda essa reestruturação, a gente abandonou o modo
+mobile"*. O layout está em construção.
+
+Sem fechá-lo antes, a 6.5B implementaria decisões de desenho ainda não tomadas —
+e decisão de desenho tomada dentro da implementação é a receita do retrabalho.
+
+**Decide, tela por tela:** Home, cards de cômodo, subviews de cômodo, câmeras,
+mídia, planta 3D, Roborock, ações rápidas e barra inferior.
+
+**Um defeito já diagnosticado que ela precisa resolver:** algumas subviews
+empilham no celular e outras não. Não é aleatório — as sobreposições de grid por
+cômodo são mais específicas e vêm depois da regra de `@media (max-width: 760px)`,
+então vencem em qualquer largura. Herança dos seis arquivos originais.
+
+**Entregável:** documento de layout por tela, suficiente para a 6.5B implementar
+sem decidir nada de desenho. **Sem código.**
+
+### Fase 6.4 — Registry, contratos e host adapter · ✅ CONCLUIDA (2026-08-16)
+
+Entregue em `dashboard-src/src/application/`, com 49 testes:
+
+| arquivo | papel |
+|---|---|
+| `host-adapter.ts` | a porta entre widget e casa: estado, serviço, more-info, navegação, observação. `HostHomeAssistant` e `HostDeTeste` |
+| `widget-registry.ts` | `WidgetDefinition`, `WidgetInstance`, área (posição/tamanho), catálogo, colisão e validação |
+| `layout-repository.ts` | `LayoutRepository`, porta de armazenamento, versionamento e migração. Memória e localStorage |
+
+**Nada foi religado.** O `device-registry` da 5e.0 continua atendendo o painel
+Dispositivos sem alteração, e nenhum componente passou a usar os contratos
+novos. Prova disso: o bundle continuou `DpecM3wp`, byte a byte — os arquivos são
+removidos pelo tree-shaking porque ninguém os importa. **A fase não exigiu
+publicação.**
+
+Isso e deliberado: o trabalho mobile do Codex esta validado no aparelho, e
+reescrever seus consumidores para provar a arquitetura nova trocaria risco real
+por simetria. A migracao dos consumidores acontece quando houver motivo — a 6.5
+e a 6.6 —, nao por completude.
+
+**Decisão que ficou em aberto, e é do usuário:** onde o layout persiste.
+`localStorage` diverge entre tablet e telefone; uma entidade do HA sincroniza
+mas exige criar entidade (packages estão fora do meu alcance sem autorização);
+um arquivo em `/config` sincroniza sem entidade mas exige caminho de escrita.
+A fase entrega a porta e duas implementações que não dependem da escolha.
+
+A interface de edição (arrastar, redimensionar, painel do editor) fica para
+depois — a estrutura, não.
 
 ### Fase 6.5 — Shell, rail e roteamento
 

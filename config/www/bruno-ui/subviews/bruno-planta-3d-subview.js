@@ -1929,7 +1929,9 @@ class BrunoPlanta3DSubview extends HTMLElement {
           height: 36px;
           padding: 0 9px;
           display: flex;
-          align-items: baseline;
+          /* ANTERIOR (rollback): baseline encostava 0/37 na borda superior. */
+          align-items: center;
+          justify-content: center;
           justify-content: center;
           border: 1px solid rgba(255,255,255,0.11);
           border-radius: 999px;
@@ -1943,6 +1945,13 @@ class BrunoPlanta3DSubview extends HTMLElement {
           color: rgba(255,222,127,0.96);
           font-size: 16px;
           font-weight: 760;
+        }
+
+        .mobile-panel-count strong,
+        .mobile-panel-count span {
+          display: flex;
+          align-items: center;
+          line-height: 1;
         }
 
         .mobile-overview-button {

@@ -4,20 +4,25 @@ const BRUNO_HOME_CAMERA_DEFAULT_CONFIG = {
   name: 'Monitoramento',
   active_entity: 'input_select.bento_active_camera',
   refresh_interval: 6500,
+  // ANTERIOR (rollback ONVIF geral): cameras usavam os oito IDs Tuya *_2.
+  // O inventario completo permanece no rollback desta rodada.
   cameras: [
-    { entity: 'camera.sl_camera_2', name: 'Sala', short_name: 'Sala' },
-    { entity: 'camera.vr_camera_2', name: 'Varanda', short_name: 'Varanda' },
-    { entity: 'camera.cz_camera_2', name: 'Cozinha', short_name: 'Cozinha' },
-    { entity: 'camera.as_camera_2', name: 'Area de Servico', short_name: 'Area' },
-    { entity: 'camera.of_camera_2', name: 'Office', short_name: 'Office' },
-    { entity: 'camera.camera_quarto_casal_2', name: 'Quarto Casal', short_name: 'Q. Casal' },
-    { entity: 'camera.qmi_camera_2', name: 'Quarto Miguel', short_name: 'Q. Miguel' },
-    { entity: 'camera.qma_camera_2', name: 'Quarto Marina', short_name: 'Q. Marina' },
+    { entity: 'camera.sl_camera_profile_1', name: 'Sala', short_name: 'Sala' },
+    { entity: 'camera.vr_camera_profile_1', name: 'Varanda', short_name: 'Varanda' },
+    { entity: 'camera.cz_camera_profile_1', name: 'Cozinha', short_name: 'Cozinha' },
+    { entity: 'camera.as_camera_profile_1', name: 'Area de Servico', short_name: 'Area' },
+    { entity: 'camera.of_camera_profile_1', name: 'Office', short_name: 'Office' },
+    { entity: 'camera.qc_camera_profile_1', name: 'Quarto Casal', short_name: 'Q. Casal' },
+    { entity: 'camera.qmi_camera_profile_1', name: 'Quarto Miguel', short_name: 'Q. Miguel' },
+    { entity: 'camera.qma_camera_profile_1', name: 'Quarto Marina', short_name: 'Q. Marina' },
   ],
 };
 
 const BRUNO_HOME_CAMERA_ONLINE_STATES = ['streaming', 'recording', 'idle', 'on'];
 const BRUNO_HOME_CAMERA_UNAVAILABLE_STATES = ['unavailable', 'unknown', ''];
+// ANTERIOR (rollback expansao ONVIF): 10000. O more-info prova que a negociacao
+// pode atravessar uma pausa maior antes de estabilizar em tempo real.
+const BRUNO_HOME_CAMERA_LIVE_TIMEOUT_MS = 30000;
 
 class BrunoHomeCameraCard extends HTMLElement {
   static getStubConfig() {
@@ -40,6 +45,13 @@ class BrunoHomeCameraCard extends HTMLElement {
     this._cameraBaseUrls = this._cameraBaseUrls || {};
     this._loadedCameraUrls = this._loadedCameraUrls || {};
     this._cameraLoads = this._cameraLoads || {};
+    // ANTERIOR (rollback 2026-08-10): _liveSuspendedEntities mantinha a camera
+    // suspensa ate o card ser desconectado. O estado agora distingue lazy-load,
+    // negociacao, handoff ao More Info, retomada e fallback.
+    this._liveState = this._liveState || 'idle';
+    this._liveBlockedEntity = this._liveBlockedEntity || '';
+    this._liveLoadToken = this._liveLoadToken || 0;
+    this._boundDialogClosed = this._boundDialogClosed || ((event) => this._handleDialogClosed(event));
     this._menuOpen = false;
     this._render();
     this._startRefreshTimer();
@@ -62,11 +74,26 @@ class BrunoHomeCameraCard extends HTMLElement {
   }
 
   connectedCallback() {
+    this._liveState = 'idle';
+    this._liveBlockedEntity = '';
+    if (!this._listeningDialogClosed) {
+      globalThis.addEventListener?.('dialog-closed', this._boundDialogClosed, true);
+      this._listeningDialogClosed = true;
+    }
     this._startRefreshTimer();
+    this._mountLiveFeed(this._model().activeCamera);
   }
 
   disconnectedCallback() {
+    this._liveLoadToken++;
     this._stopRefreshTimer();
+    this._stopLiveFeed();
+    if (this._listeningDialogClosed) {
+      globalThis.removeEventListener?.('dialog-closed', this._boundDialogClosed, true);
+      this._listeningDialogClosed = false;
+    }
+    if (this._liveResumeTimer) globalThis.clearTimeout(this._liveResumeTimer);
+    this._liveResumeTimer = null;
   }
 
   getCardSize() {
@@ -133,6 +160,9 @@ class BrunoHomeCameraCard extends HTMLElement {
 
   _selectCamera(entityId) {
     if (!entityId) return;
+    this._liveLoadToken++;
+    this._liveState = 'idle';
+    this._liveBlockedEntity = '';
     this._localActiveCamera = entityId;
     this._menuOpen = false;
     this._refreshSeed = Date.now();
@@ -147,11 +177,184 @@ class BrunoHomeCameraCard extends HTMLElement {
 
   _openMoreInfo(entityId) {
     if (!entityId) return;
+    // ANTERIOR (rollback 2026-08-10): a entidade entrava num Set permanente e
+    // so voltava ao vivo ao desmontar o card. Agora o evento dialog-closed
+    // reabre uma unica sessao depois que o More Info libera a anterior.
+    this._liveLoadToken++;
+    this._liveState = 'handed-off';
+    globalThis.BrunoCameraLive?.marcar?.(entityId, 'entregue ao more-info');
+    this._stopLiveFeed();
+    this._refreshCameraImages();
     this.dispatchEvent(new CustomEvent('hass-more-info', {
       detail: { entityId },
       bubbles: true,
       composed: true,
     }));
+  }
+
+  _handleDialogClosed(event) {
+    if (event?.detail?.dialog !== 'ha-more-info-dialog' || this._liveState !== 'handed-off') return;
+    const entityId = this._model()?.activeCamera?.entity || '';
+    this._liveState = 'resuming';
+    globalThis.BrunoCameraLive?.marcar?.(entityId, 'more-info fechado; retomando');
+    if (this._liveResumeTimer) globalThis.clearTimeout(this._liveResumeTimer);
+    this._liveResumeTimer = globalThis.setTimeout(() => {
+      this._liveResumeTimer = null;
+      if (!this.isConnected || this._liveState !== 'resuming') return;
+      this._liveState = 'idle';
+      this._liveBlockedEntity = '';
+      this._mountLiveFeed(this._model().activeCamera);
+    }, 700);
+  }
+
+  /**
+   * Monta o player WebRTC final do HA sem passar pelo seletor hui-image.
+   * A ordem e deliberada: conecta ao DOM, espera o primeiro update Lit consumir
+   * os contextos do HA e so depois atribui entityid.
+   */
+  _mountLiveFeed(camera) {
+    const entityId = camera?.entity || '';
+    const mount = entityId
+      ? this.shadowRoot?.querySelector(`[data-camera-live="${entityId}"]`)
+      : null;
+    if (this._liveState === 'fallback' && this._liveBlockedEntity !== entityId) {
+      this._liveState = 'idle';
+      this._liveBlockedEntity = '';
+    }
+    if (
+      !this.isConnected || !mount || camera?.unavailable ||
+      ['loading-player', 'handed-off', 'resuming', 'fallback'].includes(this._liveState)
+    ) {
+      this._stopLiveFeed();
+      return;
+    }
+
+    if (!this._liveEl || this._liveEntity !== entityId) {
+      this._stopLiveFeed();
+      if (!globalThis.customElements?.get('ha-web-rtc-player')) {
+        this._liveState = 'loading-player';
+        const token = ++this._liveLoadToken;
+        const garantir = globalThis.BrunoCameraLive?.garantirPlayer;
+        if (typeof garantir !== 'function') {
+          this._liveState = 'fallback';
+          this._liveBlockedEntity = entityId;
+          return;
+        }
+        Promise.resolve(garantir(entityId, this._hass)).then((ok) => {
+          if (!this.isConnected || token !== this._liveLoadToken) return;
+          this._liveState = ok ? 'idle' : 'fallback';
+          this._liveBlockedEntity = ok ? '' : entityId;
+          this._mountLiveFeed(this._model().activeCamera);
+        });
+        return;
+      }
+      const el = globalThis.BrunoCameraLive?.criarPlayer?.()
+        || document.createElement('ha-web-rtc-player');
+      this._liveState = 'negotiating';
+      el.classList.add('camera-live-el');
+      el.setAttribute('muted', '');
+      el.setAttribute('playsinline', '');
+      el.setAttribute('autoplay', '');
+      try { el.fitMode = 'cover'; } catch (error) { /* CSS cobre versoes sem fitMode. */ }
+      this._liveLoadHandler = () => this._markLiveReady();
+      this._liveStreamsHandler = (event) => {
+        if (event?.detail?.hasVideo === false) this._failLiveFeed(entityId, 'sem video');
+      };
+      el.addEventListener('load', this._liveLoadHandler);
+      el.addEventListener('streams', this._liveStreamsHandler);
+      this._liveEl = el;
+      this._liveEntity = entityId;
+      mount.appendChild(el);
+      // ANTERIOR (rollback contexto Lit): atribuicao imediata de entityid e
+      // armacao do prazo de 30 s neste ponto.
+      this._startLivePlayerAfterContext(el, entityId);
+      return;
+    }
+
+    if (this._liveEl.parentElement !== mount) mount.appendChild(this._liveEl);
+    if (this._liveEl.entityid !== entityId) this._liveEl.entityid = entityId;
+  }
+
+  _startLivePlayerAfterContext(el, entityId) {
+    Promise.resolve(el.updateComplete).then(() => {
+      if (this._liveEl !== el || this._liveEntity !== entityId || !el.isConnected) return;
+      this._liveStartedAt = globalThis.performance?.now?.() || Date.now();
+      el.entityid = entityId;
+      globalThis.BrunoCameraLive?.marcar?.(entityId, 'entityid atribuido');
+      this._liveTimer = globalThis.setTimeout(() => {
+        if (this._liveEl === el && this._liveEntity === entityId && this._liveReady !== entityId) {
+          this._failLiveFeed(entityId, 'prazo');
+        }
+      }, BRUNO_HOME_CAMERA_LIVE_TIMEOUT_MS);
+    }).catch(() => {
+      if (this._liveEl === el && this._liveEntity === entityId) this._failLiveFeed(entityId, 'contexto');
+    });
+  }
+
+  _markLiveReady() {
+    const el = this._liveEl;
+    const entityId = this._liveEntity;
+    const video = el?.shadowRoot?.querySelector('video');
+    if (!el || !entityId || !video || video.readyState < 2 || this._liveReady === entityId) return;
+    if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(video)) {
+      if (this._liveGreenMarked !== entityId) {
+        this._liveGreenMarked = entityId;
+        const now = globalThis.performance?.now?.() || Date.now();
+        globalThis.BrunoCameraLive?.marcar?.(
+          entityId,
+          'quadro verde rejeitado',
+          now - (this._liveStartedAt || now),
+          false,
+        );
+      }
+      if (this._liveGreenTimer) globalThis.clearTimeout(this._liveGreenTimer);
+      this._liveGreenTimer = globalThis.setTimeout(() => {
+        this._liveGreenTimer = null;
+        this._markLiveReady();
+      }, 700);
+      return;
+    }
+    this._liveReady = entityId;
+    this._liveState = 'live';
+    if (this._liveGreenTimer) globalThis.clearTimeout(this._liveGreenTimer);
+    this._liveGreenTimer = null;
+    el.classList.add('is-ready');
+    if (this._liveTimer) globalThis.clearTimeout(this._liveTimer);
+    this._liveTimer = null;
+  }
+
+  _failLiveFeed(entityId, reason = 'falha') {
+    if (!entityId || entityId !== this._liveEntity) return;
+    const now = globalThis.performance?.now?.() || Date.now();
+    globalThis.BrunoCameraLive?.marcar?.(
+      entityId,
+      reason,
+      now - (this._liveStartedAt || now),
+      false,
+    );
+    this._liveState = 'fallback';
+    this._liveBlockedEntity = entityId;
+    this._stopLiveFeed();
+    this._refreshCameraImages();
+  }
+
+  _stopLiveFeed() {
+    if (this._liveTimer) globalThis.clearTimeout(this._liveTimer);
+    this._liveTimer = null;
+    if (this._liveGreenTimer) globalThis.clearTimeout(this._liveGreenTimer);
+    this._liveGreenTimer = null;
+    const el = this._liveEl;
+    if (el) {
+      if (this._liveLoadHandler) el.removeEventListener('load', this._liveLoadHandler);
+      if (this._liveStreamsHandler) el.removeEventListener('streams', this._liveStreamsHandler);
+      el.remove();
+    }
+    this._liveEl = null;
+    this._liveEntity = '';
+    this._liveReady = '';
+    this._liveGreenMarked = '';
+    this._liveLoadHandler = null;
+    this._liveStreamsHandler = null;
   }
 
   _startRefreshTimer() {
@@ -174,12 +377,19 @@ class BrunoHomeCameraCard extends HTMLElement {
       const baseSrc = image.dataset.cameraSrcBase;
       const entityId = image.dataset.cameraEntity;
       if (!baseSrc || !entityId) return;
+      // A foto so cede depois do primeiro quadro real. Enquanto o WebRTC negocia,
+      // o motor continua atualizando a rede de seguranca por baixo.
+      if (this._liveReady === entityId) return;
       if (this._cameraLoads[entityId]) return;
       const nextSrc = BrunoHomeCameraCard._withCacheBust(baseSrc, stamp);
       const loader = new globalThis.Image();
       this._cameraLoads[entityId] = loader;
       loader.onload = () => {
         delete this._cameraLoads[entityId];
+        if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(loader)) {
+          globalThis.BrunoCameraLive?.marcar?.(entityId, 'snapshot verde rejeitado', 0, false);
+          return;
+        }
         this._loadedCameraUrls[entityId] = nextSrc;
         if (!image.isConnected || image.dataset.cameraEntity !== entityId) return;
         image.src = nextSrc;
@@ -211,6 +421,7 @@ class BrunoHomeCameraCard extends HTMLElement {
       image.dataset.cameraSrcBase = model.activeCamera.image;
       this._refreshCameraImages();
     }
+    this._mountLiveFeed(model.activeCamera);
   }
 
   _wireActions(activeId) {
@@ -256,6 +467,7 @@ class BrunoHomeCameraCard extends HTMLElement {
     const base = camera?.image || '';
     return `
       <div class="camera-row-image">
+        <div class="camera-live-slot" data-camera-live="${BrunoHomeCameraCard._escapeAttr(camera.entity)}" aria-hidden="true"></div>
         ${image ? `<img src="${BrunoHomeCameraCard._escapeAttr(image)}" data-camera-src-base="${BrunoHomeCameraCard._escapeAttr(base)}" data-camera-entity="${BrunoHomeCameraCard._escapeAttr(camera.entity)}" alt="">` : ''}
         <div class="camera-placeholder" aria-hidden="true"></div>
       </div>
@@ -517,6 +729,30 @@ class BrunoHomeCameraCard extends HTMLElement {
             rgba(255,255,255,0.018);
         }
 
+        .camera-live-slot {
+          position: absolute;
+          inset: 0;
+          z-index: 2;
+          overflow: hidden;
+          pointer-events: none;
+        }
+
+        .camera-live-slot:empty { display: none; }
+
+        .camera-live-slot > *,
+        .camera-live-el {
+          display: block;
+          width: 100% !important;
+          height: 100% !important;
+        }
+
+        .camera-live-el {
+          opacity: 0;
+          transition: opacity 160ms ease;
+        }
+
+        .camera-live-el.is-ready { opacity: 1; }
+
         .camera-row-image img {
           position: absolute;
           inset: 0;
@@ -526,6 +762,7 @@ class BrunoHomeCameraCard extends HTMLElement {
           object-fit: cover;
           filter: saturate(1.02) contrast(1.02);
           transform: scale(1.002);
+          z-index: 1;
         }
 
         .camera-row-image img.is-hidden,
@@ -723,6 +960,7 @@ class BrunoHomeCameraCard extends HTMLElement {
     `;
 
     this._wireActions(model.activeId);
+    this._mountLiveFeed(model.activeCamera);
   }
 
   static _menuOption(camera, active) {

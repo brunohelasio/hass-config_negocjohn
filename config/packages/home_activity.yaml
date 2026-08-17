@@ -121,8 +121,26 @@ automation:
       - condition: template
         value_template: "{{ trigger.to_state.attributes.event_type == 'ipc_motion' }}"
     action:
+      # ANTERIOR (rollback ONVIF geral): o evento entregava diretamente a entidade
+      # Tuya/nuvem em option. Os gatilhos acima permanecem Tuya porque sao a fonte
+      # do ipc_motion; somente o destino visual e traduzido para ONVIF local.
+      # option: "{{ trigger.to_state.attributes.camera_entity }}"
+      - variables:
+          onvif_camera_by_tuya:
+            camera.sl_camera_2: camera.sl_camera_profile_1
+            camera.vr_camera_2: camera.vr_camera_profile_1
+            camera.cz_camera_2: camera.cz_camera_profile_1
+            camera.as_camera_2: camera.as_camera_profile_1
+            camera.of_camera_2: camera.of_camera_profile_1
+            camera.camera_quarto_casal_2: camera.qc_camera_profile_1
+            camera.qmi_camera_2: camera.qmi_camera_profile_1
+            camera.qma_camera_2: camera.qma_camera_profile_1
       - service: input_select.select_option
         target:
           entity_id: input_select.bento_active_camera
         data:
-          option: "{{ trigger.to_state.attributes.camera_entity }}"
+          option: >-
+            {{ onvif_camera_by_tuya.get(
+              trigger.to_state.attributes.camera_entity,
+              'camera.sl_camera_profile_1'
+            ) }}

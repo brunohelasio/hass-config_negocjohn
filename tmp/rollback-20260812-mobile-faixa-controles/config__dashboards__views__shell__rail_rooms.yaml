@@ -1,0 +1,99 @@
+# Rail dos CÔMODOS (Etapa B) — mesmo componente do rail principal
+# (bento-sidebar-liquid-card), apenas com OUTROS itens: Home + cômodos.
+# A shell troca para este rail quando a seção ativa é um cômodo (sala/office/...),
+# SEM recriar o elemento (Home fica ancorado no topo; muda só o que vem abaixo).
+# Navegação por seção (fire-dom-event bruno_section: <key>) — mesma mecânica das
+# seções Câmeras/Roborock. A seleção do cômodo atual é marcada pela própria shell
+# (data-key === chave da seção).
+#
+# NOVO (rev. faixa-de-tiles) — CURADORIA DO DOCK NO TELEFONE.
+# Item 16 do roteiro: no telefone a rail passa a ter apenas
+#   Home · Sala · Cozinha · Office · Quartos
+# e "Quartos" da acesso aos tres quartos por um mecanismo secundario.
+# Nao ha componente novo: os tres quartos ganham hide_on_phone, que ja move o
+# item para o menu suspenso do dock, e o bloco phone_more abaixo renomeia esse
+# menu de "Mais" para "Quartos". O tablet segue mostrando os sete na vertical.
+#
+# ATENCAO (efeito no tablet): a ORDEM pedida pelo roteiro poe Cozinha antes de
+# Office. Como a lista e a mesma nos dois modos, a rail vertical do tablet
+# tambem troca esses dois de posicao. ANTERIOR (rollback): sala, office,
+# cozinha.
+phone_more:
+  label: Quartos
+  icon: casal
+  # A lista e EXPLICITA. Sem ela, todo item hide_on_phone entraria no menu — e o
+  # Power, que tambem esta oculto no telefone, aparecia dentro de "Quartos".
+  keys: [casal, marina, miguel]
+
+type: custom:bento-sidebar-liquid-card
+top_items:
+  - key: home
+    icon: home
+    label: Home
+    tap_action:
+      action: fire-dom-event
+      bruno_section: home
+
+  - key: sala
+    icon: sala
+    label: Sala
+    tap_action:
+      action: fire-dom-event
+      bruno_section: sala
+
+  - key: cozinha
+    icon: cozinha
+    label: Cozinha
+    tap_action:
+      action: fire-dom-event
+      bruno_section: cozinha
+
+  - key: office
+    icon: office
+    label: Office
+    tap_action:
+      action: fire-dom-event
+      bruno_section: office
+
+  - key: casal
+    icon: casal
+    label: Q. Casal
+    hide_on_phone: true
+    tap_action:
+      action: fire-dom-event
+      bruno_section: casal
+
+  - key: marina
+    icon: marina
+    label: Q. Marina
+    hide_on_phone: true
+    tap_action:
+      action: fire-dom-event
+      bruno_section: marina
+
+  - key: miguel
+    icon: miguel
+    label: Q. Miguel
+    hide_on_phone: true
+    tap_action:
+      action: fire-dom-event
+      bruno_section: miguel
+
+# ANTERIOR (rollback 2026-08-06): bottom_items: []
+#
+# NOVO (Fase 5e.1) — POWER NA RAIL DAS SUBVIEWS.
+# A rail da Home (rail.yaml) termina com este mesmo item; a das subviews nao o
+# tinha, e sobrava um vazio abaixo dos icones dos comodos. Ganho triplo:
+#   1. identidade visual entre Home e subviews;
+#   2. elimina o espaco vazio;
+#   3. permite sair do dashboard de QUALQUER ambiente, sem voltar a Home.
+# Definicao identica a de rail.yaml — mesma posicao, mesmo icone, mesma acao
+# (navegar para "/", a tela principal do Home Assistant).
+bottom_items:
+  - key: power
+    icon: power
+    label: Power
+    hide_on_phone: true
+    tap_action:
+      action: navigate
+      navigation_path: /

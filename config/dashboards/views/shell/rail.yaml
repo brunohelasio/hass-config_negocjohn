@@ -145,3 +145,31 @@ bottom_items:
     tap_action:
       action: navigate
       navigation_path: /
+
+# ── MICROINDICADOR DE ATIVIDADE ABAIXO DA DOBRA (2026-08-16) ────────────────
+#
+# Substitui a linha textual que ocupava uma faixa do grid de comodos. Aqui ele
+# nao ocupa espaco nenhum: e absoluto sobre a propria rail.
+#
+# So aparece nesta rail (a `default`, usada pela Home). As secoes de comodo usam
+# `rail_rooms.yaml`, onde a nocao de "ambientes ocultos abaixo" nao existe.
+#
+# O contador e a quantidade de AMBIENTES com atividade, nao de eventos: Marina
+# ativo = 1; Marina e Miguel ativos = 2.
+#
+# ROLLBACK: remover este bloco. Sem ele o indicador simplesmente nao existe.
+overflow_hint:
+  rooms:
+    - name: Q. Marina
+      entities:
+        - light.grupo_luzes_quarto_marina
+        - climate.ac_quarto_marina
+        - binary_sensor.q_marina_motion_recent
+        - binary_sensor.q_marina_occupancy
+        - media_player.echo_pop_marina
+    - name: Q. Miguel
+      entities:
+        - light.grupo_luzes_quarto_miguel
+        - climate.ac_quarto_miguel
+        - binary_sensor.q_miguel_motion_recent
+        - binary_sensor.q_miguel_occupancy

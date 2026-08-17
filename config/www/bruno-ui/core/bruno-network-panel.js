@@ -157,6 +157,11 @@ const BrunoNetworkPanel = {
   _styles() {
     return `
       .network-panel { width: min(500px, calc(100vw - 124px)); max-height: min(74vh, 690px); display: flex; flex-direction: column; }
+      /* No telefone o QR da shell usa 12px por lado. ANTERIOR (rollback): a
+         largura global acima deixava a etapa de configurações mais estreita. */
+      @media (max-width: 800px) {
+        .network-panel { width: auto; max-width: none; }
+      }
       .network-icon bruno-icon { --mdc-icon-size: 17px; color: rgba(var(--bruno-liquid-warm-accent,255,214,10),0.92); }
       .network-scroll { min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.22) transparent; }
       .network-scroll::-webkit-scrollbar { width: 6px; }

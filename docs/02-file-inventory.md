@@ -331,3 +331,12 @@ design tokens repetidos entre `bruno-josh.js`, `bruno-visionos.js`,
 | Assets superdimensionados | 33 PNG → 127 MB | `www/bruno-ui/assets/` — 1254×1254 px exibidos a ~100 px |
 | Tokens duplicados | — | 4 arquivos de tema + inline nas 6 subviews |
 | CSS em template literal sem checagem | 93.928 linhas | incidente da crase: 4 ocorrências |
+
+### Adendo ativo — câmera (2026-08-10)
+
+`dashboard-src/src/services/camera/ha-webrtc-player.ts` é `ACTIVE`: centraliza
+lazy-load do player oficial, criação WebRTC, telemetria e quarentena de quadro
+verde. `snapshot-engine.ts` continua `ACTIVE` e passa a classificar
+`quadro-verde`. A ponte `globalThis.BrunoCameraLive` é
+`ACTIVE_BUT_NEEDS_REFACTOR`: sai quando Home e Segurança forem migrados para o
+bundle e puderem importar o serviço diretamente.

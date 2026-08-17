@@ -290,3 +290,139 @@ não aparece em diff visual nem em revisão. Duas defesas:
 
 1. sempre rodar o validador depois de qualquer script que edite YAML;
 2. preferir editar a linha inteira a manipular prefixos.
+
+---
+
+## Banco de custo de render (Fase 6.1, 2026-08-06)
+
+### Por que um segundo banco
+
+O banco de paridade (`gen-subview-harness.mjs`) responde *"o componente novo
+desenha o mesmo que o antigo?"*. Ele **não** responde *"quanto custa?"* — e as
+duas perguntas já divergiram de forma cara: na Fase 5c uma entrega passou na
+paridade com os módulos **vazios**, porque caixa vazia mede igual a caixa cheia.
+
+Agora vale a versão dinâmica do mesmo problema: um componente que repinta 3.000
+vezes tem geometria idêntica a um que repinta 40.
+
+`gen-render-harness.mjs` reproduz o que o Home Assistant faz — uma sequência de
+objetos `hass`, cada um com UMA entidade diferente da anterior, com fração
+configurável tocando o que os componentes leem.
+
+```bash
+node scripts/harness/gen-render-harness.mjs
+node scripts/harness/serve-harness.mjs scripts/harness/render-cost.html 8127
+```
+
+| função | o que mede |
+|---|---|
+| `medirRenders(passos, fração)` | os 7 ladrilhos da Home sob rajada de `hass` |
+| `medirSubview(passos, fração)` | a subview, que é o componente pesado |
+| `medirCiclos(voltas)` | monta/desmonta N vezes e confere o que sobrou |
+
+### Três armadilhas descobertas ao construí-lo
+
+**1. O Lit agrupa `requestUpdate` pendentes.** Um laço síncrono de 400 passos
+vira UM render por componente. A primeira rodada acusou 99,8% de redução — bom
+demais, e era o agrupamento do Lit, não o estado seletivo. Obrigatório
+`await el.updateComplete` a cada passo. Com ele, o número honesto: 98,6%.
+
+**2. `requestAnimationFrame` não dispara com a aba em segundo plano.** A medição
+roda com a aba oculta e travava até estourar o prazo. Usar `setTimeout`.
+
+**3. Lista escrita à mão mede a suposição de quem escreveu.** Os ids de cômodo
+foram digitados na primeira versão: quatro dos sete errados, quebrou na montagem.
+Agora saem do próprio bundle, por tentativa de `setConfig`.
+
+### O que ele achou de primeira
+
+`bruno-room-tile`: 2.767 de 2.800 renders com motivo **"outro"** — isto é, vindos
+de fora do observador de entidades. Causa: `_hass` declarado como propriedade
+reativa do Lit, o que pede render a cada atribuição e anula qualquer guarda no
+setter. A guarda existia desde a Fase 5 e nunca funcionara.
+
+**A lição de método:** a Fase 6.0 já contava renders e nunca teria achado isso.
+Foi o **motivo** anexado a cada render que revelou a causa. Contador sem
+atribuição diz que dói, não onde dói.
+
+### Recusa de veredito como recurso de projeto
+
+`performance.memory` não é medida contínua: o navegador a entrega em degraus
+grandes e esparsos. Com um valor lido, piso, pico e crescimento são o mesmo
+número — e qualquer conclusão ali tem aparência de dado medido sem ser um.
+
+Essa métrica produziu **quatro leituras erradas em três direções opostas** ao
+longo da Fase 6. O conserto não foi afinar a interpretação: o coletor passou a
+contar `degraus` (valores distintos) e a **se recusar a opinar com menos de
+dois**, com o campo em alerta no painel.
+
+Vale como padrão: **métrica que engana repetidamente ganha a capacidade de dizer
+"não sei".**
+
+---
+
+## O gate não rodava o detector de crase (2026-08-07)
+
+Décima primeira ocorrência da armadilha, desta vez no gerador do banco de
+medição: um caminho entre crases num comentário dentro do template literal.
+
+O detector existe desde a quarta ocorrência e **funciona** — confirmei com um
+caso sintético, e ele acusou. O defeito era estrutural:
+`npm run check` nunca o chamava. A armadilha mais recorrente do projeto estava
+fora do portão.
+
+Duas correções:
+
+1. `check:crase` entrou no `npm run check`, logo depois do YAML;
+2. `check-backtick.mjs` passou a resolver a raiz do repositório a partir da
+   **própria localização**, e não do diretório de onde é chamado — o gate roda de
+   `dashboard-src/`, onde os caminhos relativos anteriores não existiam.
+
+**A lição, que vale além deste caso:** uma verificação que existe mas não está no
+caminho obrigatório é documentação, não garantia. Toda vez que uma armadilha se
+repete, a pergunta certa não é "como eu lembro de rodar o teste?", e sim "por que
+o teste não roda sozinho?".
+
+---
+
+## Verificação de integração do motor de câmeras (2026-08-07)
+
+`window.medirCameras(segundos, vivas)` no banco de custo de render.
+
+Os 31 testes de unidade provam a **política**, com agenda falsa e tempo na mão.
+Esta prova a **ligação**: que a subview declara os alvos, que o motor agenda de
+verdade e que o quadro baixado chega ao elemento na tela.
+
+| modo | o que exercita |
+|---|---|
+| `medirCameras(30)` | câmeras fora do ar — 404 em tudo. É o caminho de erro e o recuo |
+| `medirCameras(25, true)` | `entity_picture` apontando para uma imagem real do próprio servidor — o caminho de sucesso completo |
+
+**Um artefato do laboratório que precisou ser neutralizado:** a aba do banco roda
+em segundo plano, e a suspensão de módulo invisível (Fase 6.1) desliga o ciclo de
+câmera exatamente nessa condição. A primeira execução deu **zero tentativas** e
+parecia defeito do motor — era a suspensão funcionando. O banco passou a forçar
+`visibilityState: 'visible'`.
+
+Neutralizar um artefato do instrumento é legítimo; forjar o resultado não seria.
+A diferença está em saber qual é qual — e o único jeito de saber foi investigar
+o zero em vez de aceitá-lo.
+
+---
+
+## Aceite do streaming WebRTC e quarentena verde (2026-08-10)
+
+O roteiro completo está em `25-camera-streaming-webrtc.md`. O mínimo obrigatório:
+
+| Cenário | Evidência de sucesso |
+|---|---|
+| PC em carga fria | marcador `ausente; carregando modulo`, depois `definido sob demanda` e `primeiro quadro` |
+| Abrir e fechar More Info | `entregue ao more-info`, `more-info fechado; retomando` e novo primeiro quadro sem sair da subview |
+| Segurança | somente a principal em vídeo; secundárias continuam snapshots |
+| Quadro verde de snapshot | a imagem anterior permanece e `ultimoDesfecho` vira `quadro-verde` |
+| Quadro verde WebRTC | player não ganha `is-ready`; nova amostra ocorre após 700 ms |
+| Desmontagem | zero timers/listeners/sessões extras no diagnóstico |
+
+Gate local desta rodada: TypeScript, ESLint, `node --check` dos dois módulos
+clássicos e 46 testes direcionados aprovados. O runtime do HA e o tablet continuam
+sendo parte obrigatória do aceite.

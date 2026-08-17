@@ -56,7 +56,8 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
     temperature: ['sensor.sensor_4_in_1_office_temperature'],
     humidity: ['sensor.sensor_4_in_1_office_humidity'],
     room_group: 'light.grupo_luzes_office',
-    camera_main: 'camera.of_camera_2',
+    // ANTERIOR (rollback ONVIF geral): camera_main: 'camera.of_camera_2',
+    camera_main: 'camera.of_camera_profile_1',
     camera_secondary: '',
     active_camera_select: '',
     tv: '',
@@ -93,7 +94,8 @@ const BRUNO_OFFICE_SUBVIEW_DEFAULT_CONFIG = {
     ],
     cameras: [
       {
-        entity: 'camera.of_camera_2',
+        // ANTERIOR (rollback ONVIF geral): entity: 'camera.of_camera_2',
+        entity: 'camera.of_camera_profile_1',
         name: 'Office',
         short_name: 'Office',
         controls: [

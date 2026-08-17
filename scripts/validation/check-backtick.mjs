@@ -12,9 +12,15 @@
 //   node scripts/validation/check-backtick.mjs <arquivo...>
 //   node scripts/validation/check-backtick.mjs --tudo
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const CRASE = String.fromCharCode(96);
+
+// A raiz sai da localização DESTE arquivo, não do diretório de onde se chama.
+// Assim `--tudo` varre o repositório inteiro tanto da raiz quanto de
+// dashboard-src — que é de onde o gate roda.
+const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function varrer(dir, saida = []) {
   for (const nome of readdirSync(dir)) {
@@ -27,9 +33,20 @@ function varrer(dir, saida = []) {
   return saida;
 }
 
-const alvos = process.argv.includes('--tudo')
-  ? [...varrer('config/www'), ...varrer('scripts'), ...varrer('dashboard-src/src')]
-  : process.argv.slice(2);
+const explicitos = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+
+// SEM argumento agora significa `--tudo`. Antes significava "nenhum arquivo", e
+// o detector imprimia "0 arquivo(s) varrido(s): nenhuma crase perigosa" — que
+// lê como aprovação. Foi assim que a ocorrência de 2026-08-10 passou: eu rodei
+// sem argumento, li o verde e segui. Um detector que aprova sem olhar nada é
+// pior que nenhum, porque cria confiança falsa.
+const alvos = explicitos.length
+  ? explicitos
+  : [
+      ...varrer(join(RAIZ, 'config/www')),
+      ...varrer(join(RAIZ, 'scripts')),
+      ...varrer(join(RAIZ, 'dashboard-src/src')),
+    ];
 
 let achados = 0;
 let arquivos = 0;

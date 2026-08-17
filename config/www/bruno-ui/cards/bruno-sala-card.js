@@ -16,6 +16,7 @@ const BRUNO_SALA_DEFAULT_ENTITIES = {
   tv: 'media_player.android_tv_192_168_3_17',
   climate: 'climate.sl_ar_condicionado',
   speaker: 'media_player.echo_show',
+  spotify: 'media_player.spotifyplus_bruno_helasio',
   corridor: 'light.corredor_switch_1',
   corridor_motion_recent: 'binary_sensor.corredor_motion_recent',
   corridor_occupancy: 'binary_sensor.corredor_occupancy',
@@ -187,12 +188,37 @@ class BrunoSalaCard extends HTMLElement {
   }
 
   connectedCallback() {
+    if (!this._onBrunoThemeChanged) {
+      this._onBrunoThemeChanged = () => {
+        this._joshModeCache = undefined;
+        this._render();
+      };
+    }
+    globalThis.addEventListener?.('bruno-theme-changed', this._onBrunoThemeChanged);
+    this._joshModeCache = undefined;
     if (this._config) this._render();
   }
 
   disconnectedCallback() {
     this._hybridTimers.forEach((timer) => window.clearTimeout(timer));
     this._hybridTimers.clear();
+    globalThis.removeEventListener?.('bruno-theme-changed', this._onBrunoThemeChanged);
+  }
+
+  _themeJoshMode() {
+    if (this._joshModeCache !== undefined) return this._joshModeCache;
+    let value = '';
+    try {
+      value = getComputedStyle(this).getPropertyValue('--bruno-tile-mode').trim();
+    } catch (_error) {
+      value = '';
+    }
+    this._joshModeCache = value === 'on';
+    return this._joshModeCache;
+  }
+
+  _homeThemeClass() {
+    return this._themeJoshMode() ? ' is-josh-theme' : '';
   }
 
   static getStubConfig() {
@@ -487,6 +513,35 @@ class BrunoSalaCard extends HTMLElement {
     return Number.isFinite(Number(temperature)) ? `${Number(temperature)}&deg;` : 'Ligado';
   }
 
+  _normalizeMediaDevice(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  _spotifyOnDevice(expected) {
+    const spotify = this._state(this._config.entities.spotify);
+    if (!BRUNO_SALA_SPEAKER_ON_STATES.includes(spotify?.state || '')) return false;
+    const attrs = spotify?.attributes || {};
+    const wanted = this._normalizeMediaDevice(expected);
+    if (!wanted) return false;
+    return [
+      attrs.source,
+      attrs.source_name,
+      attrs.device_name,
+      attrs.active_device_name,
+      attrs.spotify_device_name,
+      attrs.media_player,
+      attrs.media_player_name,
+    ].some((value) => {
+      const current = this._normalizeMediaDevice(value);
+      return current && (current.includes(wanted) || wanted.includes(current));
+    });
+  }
+
   _model() {
     const entities = this._config.entities;
     const room = this._state(entities.room_group);
@@ -498,7 +553,8 @@ class BrunoSalaCard extends HTMLElement {
     const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tv?.state || '');
     const climateOn = this._climateIsActive(climate);
     const climateEnabled = this._climateIsEnabled(climate);
-    const speakerOn = BRUNO_SALA_SPEAKER_ON_STATES.includes(this._state(entities.speaker)?.state || '');
+    const speakerOn = BRUNO_SALA_SPEAKER_ON_STATES.includes(this._state(entities.speaker)?.state || '')
+      || this._spotifyOnDevice('Echo Show');
     const corridorOn = corridor?.state === 'on';
     const lights = this._lightsSummary(room);
     const statusLines = [];
@@ -4130,6 +4186,36 @@ class BrunoSalaCard extends HTMLElement {
             margin: 0;
           }
 
+          /* Micromaquete V2 apenas no phone. A caixa do icone permanece
+             80x54; a escala/offset reproduzem, proporcionalmente, o encaixe
+             alfa medido e aprovado no bruno-room-tile do tablet. */
+          .room-asset-wrap picture {
+            display: contents;
+          }
+
+          .room-asset,
+          .sala-card.is-room-on .room-asset-on {
+            inset: auto;
+            top: 0;
+            left: 0;
+            width: auto;
+            /* ANTERIOR (rollback microajustes remanescentes): height: 111%; */
+            /* Sala partia de uma caixa 80x54; 135% iguala a altura visual das
+               micromaquetes dos demais comodos sem alterar o tablet. */
+            height: 135%;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            object-position: left top;
+            transform: translate(-8.66%, -7.81%);
+          }
+
+          .sala-card.is-josh-theme .status-dot.is-active {
+            background: rgba(var(--tone), var(--bruno-tile-status-dot-fill-alpha, 0.78));
+            border: var(--bruno-tile-status-dot-border, 0);
+            box-shadow: 0 0 var(--bruno-tile-status-dot-halo-size, 8px)
+              rgba(var(--tone), var(--bruno-tile-status-dot-halo-alpha, 0.18));
+          }
+
           .right-rail {
             width: 32px;
             /* ANTERIOR (rollback): herdava transform: translate(5px, -3px)
@@ -4212,7 +4298,7 @@ class BrunoSalaCard extends HTMLElement {
         }
       </style>
 
-      <div class="sala-card${roomActiveClass}${statusStackClass}">
+      <div class="sala-card${roomActiveClass}${statusStackClass}${this._homeThemeClass()}">
         <button class="hero-action" type="button" data-action-key="room" aria-label="Sala">
           <div class="room-icon" aria-hidden="true">
             ${BrunoSalaCard._roomVisual(model.roomOn)}
@@ -4307,8 +4393,16 @@ class BrunoSalaCard extends HTMLElement {
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
-        <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
-        <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+        <picture>
+          <!-- O source V2 e exclusivo do phone; o img preserva integralmente
+               o asset anterior em tablet/desktop e funciona como rollback. -->
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-off.png?v=20260808-maquetes-premium-1">
+          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+        </picture>
+        <picture>
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-on.png?v=20260808-maquetes-premium-1">
+          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+        </picture>
       </span>
     `;
   }

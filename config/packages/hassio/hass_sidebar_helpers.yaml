@@ -35,15 +35,26 @@ input_select:
       # - camera.as_camera_2
       # --- FIM CÓDIGO ORIGINAL ---
       # NOVO v14: todas as 8 câmeras (p1 + p2 para o carrossel)
-      - camera.sl_camera_2
-      - camera.vr_camera_2
-      - camera.cz_camera_2
-      - camera.as_camera_2
-      - camera.of_camera_2
-      - camera.camera_quarto_casal_2
-      - camera.qmi_camera_2
-      - camera.qma_camera_2
-    initial: camera.sl_camera_2
+      # ANTERIOR (rollback ONVIF geral): entidades Tuya/nuvem usadas pelo carrossel.
+      # - camera.sl_camera_2
+      # - camera.vr_camera_2
+      # - camera.cz_camera_2
+      # - camera.as_camera_2
+      # - camera.of_camera_2
+      # - camera.camera_quarto_casal_2
+      # - camera.qmi_camera_2
+      # - camera.qma_camera_2
+      # ONVIF local: mesmas oito posicoes, agora pelo PROFILE_1 confirmado na VM.
+      - camera.sl_camera_profile_1
+      - camera.vr_camera_profile_1
+      - camera.cz_camera_profile_1
+      - camera.as_camera_profile_1
+      - camera.of_camera_profile_1
+      - camera.qc_camera_profile_1
+      - camera.qmi_camera_profile_1
+      - camera.qma_camera_profile_1
+    # ANTERIOR (rollback ONVIF geral): initial: camera.sl_camera_2
+    initial: camera.sl_camera_profile_1
   bento_sidebar_active:
     name: Bento Sidebar Active Icon
     icon: mdi:gesture-tap-button

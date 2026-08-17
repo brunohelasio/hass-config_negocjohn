@@ -1,0 +1,56 @@
+# ==========================================================================
+# HOME V2 — ÁREA DINÂMICA no TELEFONE (2026-08-10).
+#
+# Decisão do usuário: "card de energia e mídia cedem para os atuais cards
+# dinâmicos do modo tablet". Até aqui o telefone tinha Energia e Mídia FIXOS,
+# ocupando 320px somados estivessem ou não em uso; o tablet já mostrava
+# câmera / Roborock / mídia só quando há condição ativa.
+#
+# Por que um arquivo separado em vez de tirar o `show` do bento_dynamic.yaml:
+# a configuração do tablet não serve aqui. Lá a coluna divide a linha com o
+# hero, tem altura de 77vh e comporta duas colunas de dois cards. No telefone
+# ela é uma faixa do empilhamento, de uma coluna e um card por vez.
+#
+# `second_column_min_width` alto é o que desliga a segunda coluna: o card só a
+# permite quando a própria largura alcança esse valor, e nenhum telefone
+# alcança. O CSS do componente completa o serviço (uma coluna, ancorada no
+# topo) e colapsa a faixa quando nada está ativo — ver o bloco
+# `@media (max-width: 800px)` em cards/bruno-activity-column.js.
+#
+# ROLLBACK: comentar o include em shell/section_home_v2.yaml e devolver as
+# linhas de `energy` e `media` aos valores anteriores (anotados lá).
+# ==========================================================================
+type: custom:bruno-activity-column
+view_layout:
+  grid-area: dynamic
+  show:
+    mediaquery: '(max-width: 800px)'
+# A altura é MEDIDA pelo componente (getBoundingClientRect), não lida do
+# texto: `auto` daria zero e nada renderizaria. 300px comporta o card de
+# câmera (296) — o mais alto dos três — e some quando não há nada ativo.
+available_height: 300px
+max_per_column: 1
+gap: 12
+# Nenhum telefone tem 4000px de largura: a segunda coluna nunca abre.
+second_column_min_width: 4000
+slots:
+  # Mesmas condições e mesmos cards do tablet. Só as alturas mudam, para caber
+  # numa faixa de 300px em vez da coluna de 77vh.
+  - key: camera
+    entity: binary_sensor.home_activity_camera
+    height: 296
+    card:
+      type: custom:bruno-home-camera-card
+  - key: roborock
+    entity: binary_sensor.home_activity_roborock
+    height: 176
+    card:
+      type: custom:bruno-roborock-card
+      variant: compact
+  - key: media
+    entity: binary_sensor.home_activity_media
+    height: 248
+    min_height: 196
+    card:
+      type: custom:bruno-media-card
+      variant: wide

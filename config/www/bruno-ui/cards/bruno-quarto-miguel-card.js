@@ -41,6 +41,8 @@ const BRUNO_QUARTO_MIGUEL_DEFAULT_CONFIG = {
     "off": "/local/bruno-ui/assets/miguel-bedroom-off-tight.png?v=20260802-assets-resize-1",
     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/miguel-bedroom-on.png?v=20260702-all-images-1",
     "on": "/local/bruno-ui/assets/miguel-bedroom-on-tight.png?v=20260802-assets-resize-1",
+    "phone_off": "/local/bruno-ui/assets/v2/quarto-bebe-off.png?v=20260808-maquetes-premium-1",
+    "phone_on": "/local/bruno-ui/assets/v2/quarto-bebe-on.png?v=20260808-maquetes-premium-1",
     "fallback": "mdi:bed-single-outline"
   },
   "status_dots": [
@@ -157,8 +159,9 @@ class BrunoQuartoMiguelCard extends HTMLElement {
   }
 
   _tileClasses() {
-    if (this._config?.variant !== 'tile' || !this._themeTileMode()) return '';
-    return this._config?.divider_left ? ' is-tile has-divider' : ' is-tile';
+    const josh = this._themeTileMode();
+    if (this._config?.variant !== 'tile' || !josh) return josh ? ' is-josh-theme' : '';
+    return this._config?.divider_left ? ' is-josh-theme is-tile has-divider' : ' is-josh-theme is-tile';
   }
 
   _tileDivider() {
@@ -759,11 +762,13 @@ class BrunoQuartoMiguelCard extends HTMLElement {
     const fallback = BrunoQuartoMiguelCard._escape(icon.fallback || 'mdi:home-outline');
     const off = BrunoQuartoMiguelCard._escape(icon.off || '');
     const on = BrunoQuartoMiguelCard._escape(icon.on || '');
+    const phoneOff = BrunoQuartoMiguelCard._escape(icon.phone_off || '');
+    const phoneOn = BrunoQuartoMiguelCard._escape(icon.phone_on || '');
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
-        ${off ? `<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async">` : ''}
-        ${on ? `<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async">` : ''}
+        ${off ? `<picture>${phoneOff ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async"></picture>` : ''}
+        ${on ? `<picture>${phoneOn ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async"></picture>` : ''}
       </span>
     `;
   }
@@ -1363,6 +1368,31 @@ class BrunoQuartoMiguelCard extends HTMLElement {
           .room-icon {
             max-width: 100px;
             height: 62px;
+          }
+
+          .room-asset-wrap picture {
+            display: contents;
+          }
+
+          .room-asset,
+          .room-card.is-room-on .room-asset-on {
+            inset: auto;
+            top: 0;
+            left: 0;
+            width: auto;
+            /* ANTERIOR (rollback microajustes remanescentes): height: 111%; */
+            height: 118%;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            object-position: left top;
+            transform: translate(-8.66%, -7.81%);
+          }
+
+          .room-card.is-josh-theme .status-dot.is-active {
+            background: rgba(var(--tone), var(--bruno-tile-status-dot-fill-alpha, 0.78));
+            border: var(--bruno-tile-status-dot-border, 0);
+            box-shadow: 0 0 var(--bruno-tile-status-dot-halo-size, 8px)
+              rgba(var(--tone), var(--bruno-tile-status-dot-halo-alpha, 0.18));
           }
         }
 

@@ -1,6 +1,11 @@
 const BENTO_SIDEBAR_CARD_TAG = 'bento-sidebar-liquid-card';
 
 class BentoSidebarCard extends HTMLElement {
+  // Estados que NAO contam como atividade, para o microindicador da rail.
+  static estadosInativos = new Set([
+    '', 'off', 'idle', 'standby', 'closed', 'not_home', 'unknown', 'unavailable', 'none',
+  ]);
+
   static getStubConfig() {
     return {
       top_items: BentoSidebarCard.defaultTopItems,
@@ -20,6 +25,99 @@ class BentoSidebarCard extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
     this._syncIndicators();
+    this._syncOverflowHint();
+  }
+
+  // ── MICROINDICADOR DE ATIVIDADE ABAIXO DA DOBRA (2026-08-16) ─────────────
+  //
+  // Substitui a linha textual que ocupava uma faixa do grid de comodos. Ali ela
+  // somava 30px de vao entre a 2a e a 3a faixa contra 8px das demais, e o vao
+  // permanecia durante a rolagem, quando o indicador ja estava oculto.
+  //
+  // Aqui ele e ABSOLUTO sobre a rail: aparecer e sumir nao altera dimensao,
+  // gap ou posicao de nada — nem do grid, nem dos botoes.
+  //
+  // O contador e de AMBIENTES com atividade, nao de eventos.
+  //
+  // ROLLBACK: remover este metodo, _contarAmbientesAtivos, _entidadeRelevante,
+  // _ligarRolagemDaHome, _acharContainerDeRolagem, o markup .overflow-hint e o
+  // bloco de CSS correspondente.
+
+  _entidadeRelevante(entityId) {
+    const estado = entityId ? this._hass?.states?.[entityId] : undefined;
+    if (!estado) return false;
+    const valor = String(estado.state || '').toLowerCase();
+    const dominio = String(entityId).split('.')[0];
+    if (['binary_sensor', 'light', 'switch'].includes(dominio)) return valor === 'on';
+    if (dominio === 'media_player') return ['playing', 'paused', 'buffering', 'on'].includes(valor);
+    return !BentoSidebarCard.estadosInativos.has(valor);
+  }
+
+  _contarAmbientesAtivos() {
+    const salas = this._config?.overflow_hint?.rooms;
+    if (!Array.isArray(salas)) return 0;
+    return salas.filter((sala) => {
+      const ents = Array.isArray(sala?.entities) ? sala.entities : [];
+      return ents.some((id) => this._entidadeRelevante(id));
+    }).length;
+  }
+
+  _syncOverflowHint() {
+    // Sem o bloco na config (o caso da rail de comodos), nem o ouvinte de
+    // rolagem chega a ser criado.
+    if (!Array.isArray(this._config?.overflow_hint?.rooms)) return;
+    const caixa = this.shadowRoot?.querySelector('.overflow-hint');
+    if (!caixa) return;
+    const n = this._contarAmbientesAtivos();
+    caixa.hidden = n === 0;
+    const numero = caixa.querySelector('.overflow-hint-count');
+    if (numero && numero.textContent !== String(n)) numero.textContent = String(n);
+    this._ligarRolagemDaHome();
+  }
+
+  /**
+   * Some ao rolar, volta no topo.
+   *
+   * A rail vive no rail-slot da shell; quem rola e o content-slot, que e irmao
+   * dela. Subir por parentNode para no primeiro shadow root, dai o salto pelo
+   * host. Sem requestAnimationFrame: com a aba em segundo plano ele nao dispara
+   * e o vinculo nunca seria feito.
+   */
+  _acharContainerDeRolagem() {
+    let no = this.parentNode;
+    while (no) {
+      if (no instanceof ShadowRoot) {
+        // Chegando na raiz da shell, o alvo e o irmao que rola.
+        const slot = no.querySelector?.('.content-slot');
+        if (slot) return slot;
+        no = no.host;
+        continue;
+      }
+      if (no instanceof HTMLElement) {
+        no = no.parentNode;
+        continue;
+      }
+      break;
+    }
+    return null;
+  }
+
+  _ligarRolagemDaHome() {
+    if (this._alvoDeRolagem) return;
+    if (!this._aoRolarHome) {
+      this._aoRolarHome = () => {
+        const rolou = (this._alvoDeRolagem?.scrollTop ?? 0) > 6;
+        if (rolou === this._rolouHome) return;
+        this._rolouHome = rolou;
+        const caixa = this.shadowRoot?.querySelector('.overflow-hint');
+        if (caixa) caixa.classList.toggle('is-scrolled', rolou);
+      };
+    }
+    const alvo = this._acharContainerDeRolagem();
+    if (!alvo) return;
+    this._alvoDeRolagem = alvo;
+    alvo.addEventListener('scroll', this._aoRolarHome, { passive: true });
+    this._aoRolarHome();
   }
 
   getCardSize() {
@@ -146,10 +244,34 @@ class BentoSidebarCard extends HTMLElement {
     // NOVO (2026-07-09) — Fase 2 mobile: itens hide_on_phone alimentam o menu
     // "Mais" do dock (so visivel <=800px). Rail de comodos nao tem itens
     // ocultos => botao/menu nem renderizam.
-    const phoneHiddenItems = [
+    const ocultosNoPhone = [
       ...this._items('top_items').map((item, index) => ({ item, section: 'top', index })),
       ...this._items('bottom_items').map((item, index) => ({ item, section: 'bottom', index })),
     ].filter((entry) => entry.item?.hide_on_phone);
+
+    // NOVO (rev. faixa-de-tiles) — o menu pode ser um GRUPO com lista explicita.
+    // Sem "keys", ele continua sendo o "Mais" de 2026-07-09: tudo que esta
+    // hide_on_phone entra nele (e o caso de rail.yaml).
+    // Com "keys", entram SO os itens listados; os demais hide_on_phone apenas
+    // somem do dock. Foi o que o banco de medicao pegou: com a regra antiga o
+    // Power caia dentro de "Quartos", junto dos tres quartos.
+    const maisCfg = this._config?.phone_more || {};
+    const chavesDoGrupo = Array.isArray(maisCfg.keys) ? maisCfg.keys.map(String) : null;
+    const phoneHiddenItems = chavesDoGrupo
+      ? ocultosNoPhone.filter((e) => chavesDoGrupo.indexOf(String(e.item?.key)) !== -1)
+      : ocultosNoPhone;
+
+    // O rotulo e o icone do botao do menu. Na rail dos comodos ele vira
+    // "Quartos" (item 16 do roteiro); em rail.yaml segue "Mais".
+    // ANTERIOR (rollback): rotulo 'Mais' e icone 'more' fixos no markup.
+    const maisLabel = BentoSidebarCard._escape(maisCfg.label || 'Mais');
+    const maisIcone = BentoSidebarCard.icons[maisCfg.icon || 'more'] || BentoSidebarCard.icons.more;
+    // As chaves agrupadas: a shell acende o botao do grupo quando a secao ativa
+    // e uma delas. Sem isto, entrar num quarto apagava a rail inteira, porque o
+    // botao daquele quarto esta com display:none no telefone.
+    const maisKeys = BentoSidebarCard._escape(
+      phoneHiddenItems.map((e) => e.item?.key).filter(Boolean).join(' '),
+    );
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -578,6 +700,13 @@ class BentoSidebarCard extends HTMLElement {
           line-height: 1;
           font-weight: 900;
         }
+        /* UNIFORMIDADE GLOBAL DOS STATUS (2026-08-15).
+           Mantem as dimensoes aprovadas dos botoes da rail. Somente o inicio
+           do grupo superior sobe 6px para que o centro do Home coincida com o
+           centro da primeira tile de 46px da Home e das subviews. */
+        @media (min-width: 801px) {
+          .rail { padding-top: 8px; }
+        }
         /* sobrepõe a media query que estreitava o rail (50px) p/ manter rótulo */
         @media (max-height: 690px), (max-width: 900px) {
           :host { --rail-width: 86px; --button-size: 36px; --icon-size: 18px; }
@@ -602,11 +731,71 @@ class BentoSidebarCard extends HTMLElement {
           display: none;
         }
 
+        /* Fora do telefone o microindicador nao existe: a nocao de ambientes
+           ocultos abaixo da dobra e exclusiva do dock. */
+        .overflow-hint { display: none; }
+
         @media (max-width: 800px) {
           :host {
             --button-radius: 12px;
+            /* NOVO (2026-08-13): +2px no icone sem alterar a altura da rail.
+               ROLLBACK: remover esta linha restaura os 18px herdados da media
+               query anterior. O padding do botao abaixo compensa exatamente
+               esses 2px e preserva o filete e a geometria do dock. */
+            --icon-size: 20px;
             position: relative;
           }
+          /* ── MICROINDICADOR DE ATIVIDADE (2026-08-16) ─────────────────
+             Absoluto sobre a rail: aparecer e sumir nao muda dimensao, gap
+             nem posicao de nada. Fica ACIMA e a direita do botao Mais, com
+             folga suficiente para nao ler como badge dele.
+             So no telefone: fora deste media query o elemento nem existe. */
+          /* Ancorado no canto superior direito da rail e projetado para CIMA:
+             bottom: 100% poe a base do conjunto exatamente sobre o filete, e a
+             margem abre a folga pedida. Fica acima e a direita do botao Mais,
+             em diagonal — nao encosta nele e nao le como badge dele.
+
+             Nada aqui participa do fluxo: aparecer e sumir nao desloca botao,
+             nao muda a altura da rail e nao toca no filete nem na safe area. */
+          .overflow-hint {
+            position: absolute;
+            bottom: 100%;
+            margin-bottom: 3px;
+            right: 10px;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            pointer-events: none;
+            transition: opacity 140ms ease;
+          }
+          /* Some ao rolar por OPACIDADE: com display/visibility haveria troca
+             de caixa, e o pedido e sumir sem reflow. */
+          .overflow-hint[hidden] { display: none; }
+          .overflow-hint.is-scrolled { opacity: 0; }
+
+          .overflow-hint-dot {
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            background: var(--bruno-accent-amber, #f7c600);
+            box-shadow: 0 0 9px rgba(247, 198, 0, 0.42);
+          }
+
+          .overflow-hint-count {
+            font: 700 11px/1 system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            color: rgba(12, 14, 20, 0.92);
+          }
+
+          .overflow-hint-chevron {
+            width: 11px;
+            height: 11px;
+            color: rgba(247, 198, 0, 0.8);
+          }
+
           .rail {
             flex-direction: row;
             align-items: center;
@@ -624,6 +813,29 @@ class BentoSidebarCard extends HTMLElement {
             scrollbar-width: none;
           }
           .rail::-webkit-scrollbar { display: none; }
+
+          /* ============================================================
+             NOVO (2026-08-12) — RAIL PHONE SEM CONTAINER EXTERNO.
+             O bloco "Caminho 2" acima ja deixa a superficie transparente,
+             mas aqui a regra fica explicita e confinada ao breakpoint phone:
+             nem variaveis de tema nem o estado de bottom sheet podem
+             reintroduzir fundo, blur, borda, sombra ou raio de capsula.
+             ANTERIOR (rollback): o dock herdava somente o visual de .rail do
+             bloco "Caminho 2"; remover este trecho restaura essa heranca.
+             ============================================================ */
+          :host,
+          .rail {
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+          }
+          .rail::before {
+            display: none;
+          }
+
           .group {
             width: auto;
             flex-direction: row;
@@ -643,7 +855,9 @@ class BentoSidebarCard extends HTMLElement {
             width: auto;
             min-width: 50px;
             flex: 0 0 auto;
-            padding: 6px 6px 5px;
+            /* ANTERIOR (rollback): padding: 6px 6px 5px. A soma vertical
+               permanece identica; o conjunto icone+rotulo desce 2px. */
+            padding: 8px 6px 1px;
           }
           .nav-button[data-hide-phone] { display: none; }
           .nav-label { font-size: 9px; }
@@ -651,6 +865,47 @@ class BentoSidebarCard extends HTMLElement {
           .more-button {
             display: inline-flex;
           }
+
+          /* ============================================================
+             NOVO (rev. faixa-de-tiles) — ITEM ATIVO SEM MOLDURA (item 17).
+             O roteiro e explicito: a rail nao pode parecer pill/dock/card, e
+             o item ativo nao pode virar um card em torno de si. No dock o
+             fundo de .selected era justamente esse retangulo. Ele sai e o
+             ativo passa a ser marcado por COR DE ACENTO + um indicador
+             pequeno acima do icone.
+             So no telefone: a rail vertical do tablet mantem o fundo.
+             ROLLBACK: remover este trecho ate o fim do comentario de fecho.
+             ============================================================ */
+          .nav-button.selected,
+          .nav-button.selected:hover,
+          .nav-button.selected:focus,
+          .nav-button.selected:focus-visible,
+          .nav-button.more-button.is-open {
+            background: transparent;
+            border-color: transparent;
+            box-shadow: none;
+          }
+          .nav-button.selected .nav-label {
+            color: rgb(var(--accent));
+          }
+          .nav-button.selected::after {
+            content: "";
+            display: block;
+            position: absolute;
+            top: 1px;
+            left: 50%;
+            width: 14px;
+            height: 2px;
+            border-radius: 999px;
+            transform: translateX(-50%);
+            background: rgb(var(--accent));
+            box-shadow: 0 0 8px rgba(var(--accent), 0.55);
+          }
+          /* O menu aberto e ESTADO, nao selecao: acende so o glifo. */
+          .nav-button.more-button.is-open svg {
+            stroke: rgb(var(--accent));
+          }
+          /* ===== fim do trecho "item ativo sem moldura" ===== */
 
           /* Menu suspenso acima do dock com os itens hide_on_phone.
              :not([hidden]) preserva o toggle via atributo hidden. */
@@ -718,9 +973,9 @@ class BentoSidebarCard extends HTMLElement {
         <div class="group top">
           ${this._items('top_items').map((item, index) => this._button(item, 'top', index)).join('')}
           ${phoneHiddenItems.length ? `
-            <button class="nav-button more-button" type="button" title="Mais" aria-label="Mais opções" data-more-toggle>
-              ${BentoSidebarCard.icons.more}
-              <span class="nav-label">Mais</span>
+            <button class="nav-button more-button" type="button" title="${maisLabel}" aria-label="${maisLabel}" data-more-toggle data-group-keys="${maisKeys}">
+              ${maisIcone}
+              <span class="nav-label">${maisLabel}</span>
             </button>
           ` : ''}
         </div>
@@ -728,6 +983,14 @@ class BentoSidebarCard extends HTMLElement {
         <div class="group bottom">
           ${this._items('bottom_items').map((item, index) => this._button(item, 'bottom', index)).join('')}
         </div>
+      </div>
+      <!-- Microindicador: irmao da .rail, nao filho — a .rail tem
+           overflow-x: auto e recortaria um filho absoluto. -->
+      <div class="overflow-hint" role="status" aria-label="Ambientes com atividade abaixo" hidden>
+        <span class="overflow-hint-dot"><span class="overflow-hint-count">0</span></span>
+        <svg class="overflow-hint-chevron" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
       ${phoneHiddenItems.length ? `
         <div class="more-sheet" id="moreSheet" hidden>
@@ -762,7 +1025,11 @@ class BentoSidebarCard extends HTMLElement {
       this._moreToggleEl.addEventListener('click', () => {
         const open = this._moreSheetEl.hidden;
         this._moreSheetEl.hidden = !open;
-        this._moreToggleEl.classList.toggle('selected', open);
+        // ANTERIOR (rollback rev. faixa-de-tiles): classList.toggle('selected', open)
+        // O estado ABERTO usava a mesma classe do item ATIVO. Com o grupo
+        // "Quartos", que a shell acende quando um quarto e a secao atual,
+        // fechar o menu apagava a selecao. Classe propria resolve.
+        this._moreToggleEl.classList.toggle('is-open', open);
       });
       this._moreSheetEl.querySelectorAll('.more-item').forEach((button) => {
         button.addEventListener('click', () => {
@@ -778,7 +1045,9 @@ class BentoSidebarCard extends HTMLElement {
   // NOVO (2026-07-09) — Fase 2 mobile: fecha o menu "Mais" do dock.
   _closeMoreSheet() {
     if (this._moreSheetEl && !this._moreSheetEl.hidden) this._moreSheetEl.hidden = true;
-    this._moreToggleEl?.classList.remove('selected');
+    // ANTERIOR (rollback rev. faixa-de-tiles): remove('selected') — ver a nota
+    // no toggle acima. So o estado de abertura sai daqui; a selecao e da shell.
+    this._moreToggleEl?.classList.remove('is-open');
   }
 
   _button(item, section, index) {

@@ -10,10 +10,12 @@ const BRUNO_OFFICE_DEFAULT_ENTITIES = {
   motion_recent: 'binary_sensor.office_motion_recent',
   occupancy: 'binary_sensor.office_occupancy',
   pc_active: 'binary_sensor.office_pc_active',
+  pc_session: 'sensor.desktop_melg9vv_office_pc_session_state',
   pc_fallback: 'switch.macbook',
   meeting: 'binary_sensor.office_meeting_active',
   climate: 'climate.ac_office',
   speaker: 'media_player.echo_pop_office',
+  spotify: 'media_player.spotifyplus_bruno_helasio',
   presence: 'binary_sensor.sensor_4_in_1_office_presence',
   illuminance: 'sensor.sensor_4_in_1_office_illuminance',
   temperature: ['sensor.sensor_4_in_1_office_temperature'],
@@ -79,8 +81,9 @@ class BrunoOfficeCard extends HTMLElement {
   }
 
   _tileClasses() {
-    if (this._config?.variant !== 'tile' || !this._themeTileMode()) return '';
-    return this._config?.divider_left ? ' is-tile has-divider' : ' is-tile';
+    const josh = this._themeTileMode();
+    if (this._config?.variant !== 'tile' || !josh) return josh ? ' is-josh-theme' : '';
+    return this._config?.divider_left ? ' is-josh-theme is-tile has-divider' : ' is-josh-theme is-tile';
   }
 
   _tileDivider() {
@@ -110,6 +113,34 @@ class BrunoOfficeCard extends HTMLElement {
   }
   _state(entityId) {
     return entityId ? this._hass?.states?.[entityId] : undefined;
+  }
+
+  _normalizeMediaDevice(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  _spotifyOnDevice(expected) {
+    const spotify = this._state(this._config.entities.spotify);
+    if (!BRUNO_OFFICE_SPEAKER_ON_STATES.includes(spotify?.state || '')) return false;
+    const attrs = spotify?.attributes || {};
+    const wanted = this._normalizeMediaDevice(expected);
+    return [
+      attrs.source,
+      attrs.source_name,
+      attrs.device_name,
+      attrs.active_device_name,
+      attrs.spotify_device_name,
+      attrs.media_player,
+      attrs.media_player_name,
+    ].some((value) => {
+      const current = this._normalizeMediaDevice(value);
+      return current && (current.includes(wanted) || wanted.includes(current));
+    });
   }
 
   _isUnavailable(entity) {
@@ -253,6 +284,7 @@ class BrunoOfficeCard extends HTMLElement {
     const room = this._state(entities.room_group);
     const climate = this._state(entities.climate);
     const speaker = this._state(entities.speaker);
+    const pcSession = String(this._state(entities.pc_session)?.state || '').toLowerCase();
     const roomOn = room?.state === 'on';
     const pcFallbackOn = this._state(entities.pc_fallback)?.state === 'on';
     const lights = this._lightsSummary(room);
@@ -271,9 +303,10 @@ class BrunoOfficeCard extends HTMLElement {
       iconActive: roomOn || pcFallbackOn,
       meetingOn: this._meetingOn(),
       presenceOn: this._presenceRecent(),
-      pcOn: this._state(entities.pc_active)?.state === 'on' || pcFallbackOn,
+      pcOn: this._state(entities.pc_active)?.state === 'on' || pcSession === 'unlocked' || pcFallbackOn,
       climateOn: this._climateOn(climate),
-      speakerOn: BRUNO_OFFICE_SPEAKER_ON_STATES.includes(speaker?.state || ''),
+      speakerOn: BRUNO_OFFICE_SPEAKER_ON_STATES.includes(speaker?.state || '')
+        || this._spotifyOnDevice('Echo Pop Office'),
       temperature: this._sensorValue(entities.temperature, '&deg;'),
       humidity: this._sensorValue(entities.humidity, '%'),
       statusLines,
@@ -1426,6 +1459,35 @@ class BrunoOfficeCard extends HTMLElement {
             max-width: 100px;
             height: 62px;
           }
+
+          /* V2 somente no phone; preserva a caixa 100x62 e usa o mesmo
+             contrato optico medido nas micromaquetes do tablet. */
+          .office-asset-wrap picture {
+            display: contents;
+          }
+
+          .office-asset,
+          .office-card.is-room-on .office-asset-on {
+            inset: auto;
+            top: 0;
+            left: 0;
+            width: auto;
+            /* ANTERIOR (rollback microajustes remanescentes): height: 111%; */
+            height: 118%;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            object-position: left top;
+            transform: translate(-8.66%, -7.81%);
+          }
+
+          /* Josh no phone: replica apenas o material flat aprovado dos dots;
+             a geometria do card mobile permanece intacta. */
+          .office-card.is-josh-theme .status-dot.is-active {
+            background: rgba(var(--tone), var(--bruno-tile-status-dot-fill-alpha, 0.78));
+            border: var(--bruno-tile-status-dot-border, 0);
+            box-shadow: 0 0 var(--bruno-tile-status-dot-halo-size, 8px)
+              rgba(var(--tone), var(--bruno-tile-status-dot-halo-alpha, 0.18));
+          }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1575,8 +1637,16 @@ class BrunoOfficeCard extends HTMLElement {
     return `
       <span class="office-asset-wrap">
         <span class="office-asset-fallback">${BrunoOfficeCard._officeIcon(active)}</span>
-        <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
-        <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+        <picture>
+          <!-- V2 apenas no phone; o img abaixo continua sendo o contrato
+               anterior de tablet/desktop e o fallback de rollback. -->
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/office-off.png?v=20260808-maquetes-premium-1">
+          <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+        </picture>
+        <picture>
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/office-on.png?v=20260808-maquetes-premium-1">
+          <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+        </picture>
       </span>
     `;
   }

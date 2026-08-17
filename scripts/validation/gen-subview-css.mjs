@@ -212,6 +212,123 @@ function escopar(seletor, prefixo, dentroDeKeyframes) {
     .join(', ');
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FLUIDIZACAO (Fase 6.2, 2026-08-09)
+//
+// O CSS herdado tem 1.257 valores em pixel fixo, todos escolhidos olhando UM
+// aparelho (Galaxy Tab S6 Lite). Trocar de tablet desorganiza o layout inteiro,
+// porque o CSS nao ve a resolucao fisica: ve o viewport.
+//
+// Somar breakpoints nao resolve — eles se multiplicam por aparelho. A saida e
+// medir relativo ao CONTAINER, com piso e teto:
+//
+//     14px  ->  clamp(11px, 0.77cqi, 18px)
+//
+// "cqi" e 1% da largura do container. O "container-type: inline-size" ja esta no
+// :host da subview (ligado e verificado antes desta mudanca).
+//
+// A conversao acontece AQUI, no gerador, e nao no CSS a mao: sao 5.266 linhas, e
+// editar a mao seria irreprodutivel.
+//
+// ROLLBACK: FLUIDIZAR = false e regerar. O CSS volta byte a byte.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FLUIDIZAR = true;
+
+/**
+ * Largura da subview na calibragem original.
+ *
+ *   viewport do tablet ................... 1920
+ *   - coluna da rail (86px) .............. 1834
+ *   - padding esquerdo do content-slot (2)  1832
+ *   - padding direito do content-slot (12)  1820
+ *
+ * Nesta largura, (N / 1820 * 100)cqi resolve exatamente para N px — ou seja, a
+ * geometria fica IDENTICA a de hoje no aparelho de calibragem. E o criterio de
+ * aceite principal da fase.
+ */
+const LARGURA_REFERENCIA = 1820;
+
+/** Quanto o valor pode encolher e crescer antes de travar. */
+const PISO = 0.78;
+const TETO = 1.3;
+
+/**
+ * Abaixo disto nao compensa converter: a diferenca entre 2px e 2,6px nao e
+ * percebida, e o clamp so polui o CSS.
+ */
+const MENOR_VALOR = 4;
+
+/**
+ * Propriedades que ESCALAM.
+ *
+ * Regra ja escrita em styles/tokens/scale.ts: tamanho, espaco e tipografia
+ * escalam; borda, raio e filete NAO. Um filete de 1px que vira 1,3px fica
+ * borrado, e um raio que cresce muda a linguagem visual do tema.
+ */
+const PROPRIEDADES_FLUIDAS = new RegExp(
+  [
+    '^(',
+    'font-size|line-height|',
+    'width|height|min-width|min-height|max-width|max-height|',
+    'padding|padding-top|padding-right|padding-bottom|padding-left|',
+    'margin|margin-top|margin-right|margin-bottom|margin-left|',
+    'gap|row-gap|column-gap|grid-gap|',
+    'top|right|bottom|left|inset|',
+    'flex-basis|',
+    'grid-template-columns|grid-template-rows|grid-auto-rows|grid-auto-columns',
+    ')',
+    String.fromCharCode(36),
+  ].join(''),
+);
+
+/**
+ * Funcoes onde o px NAO deve virar clamp.
+ *
+ * clamp() dentro de calc() e legal, mas dentro de translate, blur e afins o
+ * resultado e imprevisivel e o ganho e nulo. Fora tambem var(...), cujo px
+ * pertence ao fallback de outra pessoa.
+ */
+const FUNCOES_INTOCAVEIS = /(blur|drop-shadow|translate[XYZ]?|scale|rotate|var)\s*\(/;
+
+function arredondar(n) {
+  return Math.round(n * 100) / 100;
+}
+
+/**
+ * Converte os px de UMA declaracao.
+ *
+ * Devolve a declaracao intacta quando a propriedade nao escala, quando o valor e
+ * pequeno demais, ou quando ha funcao intocavel no valor.
+ */
+function fluidizar(decl) {
+  if (!FLUIDIZAR) return decl;
+
+  const sep = decl.indexOf(':');
+  if (sep < 0) return decl;
+  const prop = decl.slice(0, sep).trim();
+  const valor = decl.slice(sep + 1);
+
+  if (!PROPRIEDADES_FLUIDAS.test(prop)) return decl;
+  if (FUNCOES_INTOCAVEIS.test(valor)) return decl;
+  if (!/\dpx|\d px/.test(valor)) return decl;
+
+  const convertido = valor.replace(/(-?\d*\.?\d+)px/g, (todo, num) => {
+    const n = Number(num);
+    if (!Number.isFinite(n) || Math.abs(n) < MENOR_VALOR) return todo;
+    const cqi = arredondar((n / LARGURA_REFERENCIA) * 100);
+    const piso = arredondar(n * PISO);
+    const teto = arredondar(n * TETO);
+    // Negativo inverte a ordem: clamp exige minimo <= maximo.
+    return n < 0
+      ? 'clamp(' + teto + 'px, ' + cqi + 'cqi, ' + piso + 'px)'
+      : 'clamp(' + piso + 'px, ' + cqi + 'cqi, ' + teto + 'px)';
+  });
+
+  return prop + ':' + convertido;
+}
+
 function serializar(bs, prefixo = '') {
   const linhas = [];
   let mediaAtual = '';
@@ -224,7 +341,7 @@ function serializar(bs, prefixo = '') {
     }
     const emKeyframes = b.media.some((m) => m.startsWith("@keyframes"));
     linhas.push(escopar(b.seletor, prefixo, emKeyframes) + " {");
-    for (const d of b.decls) linhas.push(`  ${d};`);
+    for (const d of b.decls) linhas.push(`  ${fluidizar(d)};`);
     linhas.push('}');
   }
   if (mediaAtual) linhas.push('}'.repeat(mediaAtual.split(' >> ').length));

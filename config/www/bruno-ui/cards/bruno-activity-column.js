@@ -298,11 +298,22 @@ class BrunoActivityColumn extends HTMLElement {
   // REV.7: uma medição ruim (seção oculta pela shell, layout ainda não
   // resolvido) devolvia altura ~0 e derrubava cards do plano. Agora medidas
   // implausíveis são ignoradas e vale a última boa.
-  _availableHeight() {
+  _availableHeight(hasActivePhoneSlot = false) {
     const measured = Math.max(0, this.getBoundingClientRect().height);
     if (measured >= 120) {
       this._lastGoodHeight = measured;
       return measured;
+    }
+    // No telefone, :host(.is-empty) mede 0px por desenho. Quando a primeira
+    // atividade liga, esperar uma medicao positiva criaria um ciclo fechado:
+    // sem altura nao ha plano, sem plano o host continua vazio. A configuracao
+    // mobile ja fornece a capacidade explicita (300px); ela serve apenas como
+    // partida fria. O caminho do tablet continua usando exclusivamente a
+    // medicao real/ultima medicao boa.
+    const isPhone = globalThis.matchMedia?.('(max-width: 800px)')?.matches === true;
+    if (isPhone && hasActivePhoneSlot) {
+      const configured = Number.parseFloat(String(this._config?.available_height || ''));
+      return this._lastGoodHeight || (Number.isFinite(configured) ? configured : 300);
     }
     return this._lastGoodHeight || 0;
   }
@@ -310,8 +321,8 @@ class BrunoActivityColumn extends HTMLElement {
   _update() {
     if (!this._config || !this.shadowRoot) return;
 
-    const availableHeight = this._availableHeight();
     const activeKeys = this._hass ? this._activeKeys() : [];
+    const availableHeight = this._availableHeight(activeKeys.length > 0);
     const plan = availableHeight > 0 ? this._plan(activeKeys, availableHeight) : new Map();
     this._renderDebug(availableHeight, activeKeys, plan);
 
@@ -374,6 +385,18 @@ class BrunoActivityColumn extends HTMLElement {
       }, BRUNO_ACTIVITY_COLUMN_EXIT_MS);
       this._exitTimers.set(slot.key, timer);
     });
+
+    // NOVO (2026-08-10) — MODO TELEFONE. No tablet a coluna divide a linha com
+    // o hero e ficar vazia não custa nada: ela é transparente e não captura
+    // toque. No telefone ela é uma FAIXA no empilhamento, e uma faixa vazia de
+    // 300px empurraria os cômodos para fora da tela. A classe deixa o CSS
+    // colapsá-la — só abaixo de 800px; no tablet nada muda.
+    // A condicao ativa e a fonte da verdade para reabrir a faixa no telefone.
+    // Usar _visible aqui perpetuava a partida fria em 0px antes do primeiro
+    // plano. Fora do breakpoint, conserva-se literalmente o criterio anterior
+    // do tablet, embora a classe so tenha regra visual no telefone.
+    const isPhone = globalThis.matchMedia?.('(max-width: 800px)')?.matches === true;
+    this.classList.toggle('is-empty', isPhone ? activeKeys.length === 0 : this._visible.size === 0);
   }
 
   // Overlay de diagnóstico (config `debug: true`). Mostra exatamente o que o
@@ -478,6 +501,28 @@ class BrunoActivityColumn extends HTMLElement {
           }
         }
 
+        /* NOVO (2026-08-10) — MODO TELEFONE.
+           No telefone a coluna vira uma FAIXA do empilhamento: uma coluna só,
+           ancorada no topo, e colapsada quando não há nada ativo. A colocação
+           calculada em _plan vem por estilo inline (grid-column/grid-row), daí
+           o !important — é o único jeito de a media query vencer o inline.
+           ROLLBACK: remover este bloco. O tablet não é tocado por ele. */
+        @media (max-width: 800px) {
+          :host(.is-empty) {
+            height: 0;
+          }
+          .columns {
+            grid-template-columns: minmax(0, 1fr);
+            grid-auto-rows: auto;
+            align-content: start;
+            align-items: start;
+          }
+          .slot {
+            grid-column: 1 / -1 !important;
+            grid-row: auto !important;
+          }
+        }
+
         /* Overlay de diagnóstico (só com debug: true). */
         .debug {
           position: absolute;
@@ -528,10 +573,274 @@ if (!customElements.get(BRUNO_ACTIVITY_COLUMN_TAG)) {
   customElements.define(BRUNO_ACTIVITY_COLUMN_TAG, BrunoActivityColumn);
 }
 
+// ============================================================================
+// HOME MOBILE — indicador semantico entre a 2a e a 3a faixa de comodos.
+//
+// O elemento nao e um card visual: nao tem superficie, borda, sombra nem acao.
+// Ele ocupa uma linha real do grid apenas no telefone, evitando que Marina e
+// Miguel aparecam parcialmente na dobra. A atividade e calculada com as mesmas
+// entidades dos tiles e com os tres sensores da area dinamica da Home.
+//
+// ROLLBACK 2026-08-16: remover esta classe/registro e o item correspondente de
+// bento_comodos_matriz.yaml; restaurar as tres linhas de 172px do grid phone.
+// ============================================================================
+const BRUNO_HOME_OVERFLOW_INDICATOR_TAG = 'bruno-home-overflow-indicator';
+const BRUNO_HOME_OVERFLOW_INACTIVE_STATES = new Set([
+  '',
+  'off',
+  'idle',
+  'standby',
+  'closed',
+  'not_home',
+  'unknown',
+  'unavailable',
+  'none',
+]);
+
+class BrunoHomeOverflowIndicator extends HTMLElement {
+  static getStubConfig() {
+    return {};
+  }
+
+  setConfig(config) {
+    this._overflowConfig = {
+      rooms: Array.isArray(config?.rooms) ? config.rooms : [],
+      dynamic_entities: Array.isArray(config?.dynamic_entities) ? config.dynamic_entities : [],
+    };
+    if (!this.shadowRoot) this.attachShadow({ mode: 'open' });
+    this._renderOverflow();
+  }
+
+  set hass(hass) {
+    this._overflowHass = hass;
+    this._renderOverflow();
+    // Nova tentativa de vinculo: na primeira atribuicao a secao pode ainda nao
+    // estar montada, e o container de rolagem so existe depois disso.
+    if (!this._alvoDeRolagem) this._ligarObservadorDeRolagem();
+  }
+
+  getCardSize() {
+    return 1;
+  }
+
+  // ── NOVO (2026-08-16) — VISIBILIDADE CONTEXTUAL ─────────────────────────
+  //
+  // O indicador diz "ha mais coisa abaixo". Depois que o usuario rola e a
+  // faixa aparece, a frase deixa de ser verdadeira e o elemento vira um
+  // divisor no meio do grid. Entao ele so existe visualmente enquanto o
+  // conteudo esta no topo.
+  //
+  // Por que ESCONDER e nao COLAPSAR: a linha de 14px e do grid, definida em
+  // bento_comodos_matriz.yaml. Colapsa-la durante a rolagem faria a terceira
+  // faixa saltar 22px para cima com o dedo na tela. Fica a linha vazia, que
+  // le como respiro, e nao como divisor.
+  //
+  // ROLLBACK: remover connectedCallback, disconnectedCallback,
+  // _ligarObservadorDeRolagem, _acharContainerDeRolagem, _aoRolar e a classe
+  // is-scrolled do CSS.
+
+  connectedCallback() {
+    this._ligarObservadorDeRolagem();
+  }
+
+  disconnectedCallback() {
+    if (this._alvoDeRolagem) {
+      this._alvoDeRolagem.removeEventListener('scroll', this._aoRolar);
+      this._alvoDeRolagem = null;
+    }
+  }
+
+  /**
+   * Acha quem rola de verdade.
+   *
+   * O indicador vive dentro do shadow DOM de um custom element, dentro dos
+   * wrappers do layout-card, dentro do shadow DOM da shell. Subir so por
+   * parentElement para no primeiro shadow root — por isso o salto pelo host.
+   */
+  _acharContainerDeRolagem() {
+    let no = this.parentNode;
+    while (no) {
+      if (no instanceof ShadowRoot) {
+        no = no.host;
+        continue;
+      }
+      if (no instanceof HTMLElement) {
+        const estilo = getComputedStyle(no);
+        const rolaY = ['auto', 'scroll', 'overlay'].includes(estilo.overflowY);
+        if (rolaY && no.scrollHeight > no.clientHeight + 1) return no;
+        no = no.parentNode;
+        continue;
+      }
+      break;
+    }
+    return null;
+  }
+
+  /**
+   * Liga o observador, e continua tentando ate achar quem rola.
+   *
+   * NAO usa requestAnimationFrame: com a aba em segundo plano ele nao dispara,
+   * e o vinculo ficaria sem ser feito ate a aba voltar — o indicador
+   * permaneceria aceso durante a rolagem. Como `set hass` e chamado a cada
+   * atualizacao de estado, ele serve de nova tentativa, e o container aparece
+   * assim que a secao monta.
+   */
+  _ligarObservadorDeRolagem() {
+    if (!this.isConnected) return;
+    if (!this._aoRolar) this._aoRolar = () => this._avaliarRolagem();
+    const alvo = this._acharContainerDeRolagem();
+    if (!alvo || this._alvoDeRolagem === alvo) return;
+    if (this._alvoDeRolagem) this._alvoDeRolagem.removeEventListener('scroll', this._aoRolar);
+    this._alvoDeRolagem = alvo;
+    alvo.addEventListener('scroll', this._aoRolar, { passive: true });
+    this._avaliarRolagem();
+  }
+
+  /**
+   * Limiar de 6px: um toque que desloca a lista em um ou dois pixels nao e
+   * "comecar a rolar", e piscar o indicador nesse caso seria pior que mante-lo.
+   */
+  _avaliarRolagem() {
+    const rolou = (this._alvoDeRolagem?.scrollTop ?? 0) > 6;
+    if (rolou === this._rolou) return;
+    this._rolou = rolou;
+    const caixa = this.shadowRoot?.querySelector('.indicator');
+    if (!caixa) return;
+    caixa.classList.toggle('is-scrolled', rolou);
+    // O atributo tem de acompanhar a classe: ele so era escrito no render, e
+    // ficaria dizendo "visivel" para o leitor de tela com o indicador oculto.
+    caixa.setAttribute('aria-hidden', rolou ? 'true' : 'false');
+  }
+
+  _entityIsRelevant(entityId) {
+    const entity = entityId ? this._overflowHass?.states?.[entityId] : undefined;
+    if (!entity) return false;
+    const state = String(entity.state || '').toLowerCase();
+    const domain = String(entityId).split('.')[0];
+
+    if (domain === 'binary_sensor' || domain === 'light' || domain === 'switch') {
+      return state === 'on';
+    }
+    if (domain === 'media_player') {
+      return ['playing', 'paused', 'buffering', 'on'].includes(state);
+    }
+    if (domain === 'climate') {
+      return !BRUNO_HOME_OVERFLOW_INACTIVE_STATES.has(state);
+    }
+    return !BRUNO_HOME_OVERFLOW_INACTIVE_STATES.has(state);
+  }
+
+  _overflowModel() {
+    const config = this._overflowConfig || { rooms: [], dynamic_entities: [] };
+    const activeRooms = config.rooms.filter((room) => {
+      const entities = Array.isArray(room?.entities) ? room.entities : [];
+      return entities.some((entityId) => this._entityIsRelevant(entityId));
+    }).length;
+    const dynamicActive = config.dynamic_entities.some((entityId) => this._entityIsRelevant(entityId));
+
+    if (activeRooms > 0) {
+      return {
+        active: true,
+        text: `atividade em ${activeRooms} ambiente${activeRooms === 1 ? '' : 's'} abaixo`,
+      };
+    }
+    if (dynamicActive) return { active: true, text: 'atividade adicional abaixo' };
+    return { active: false, text: 'mais ambientes abaixo' };
+  }
+
+  _renderOverflow() {
+    if (!this.shadowRoot || !this._overflowConfig) return;
+    const model = this._overflowModel();
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: none;
+          min-width: 0;
+          background: transparent;
+        }
+
+        @media (max-width: 800px) {
+          :host {
+            width: 100%;
+            height: 14px;
+            min-height: 14px;
+            display: block;
+            pointer-events: none;
+          }
+
+          .indicator {
+            width: 100%;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            color: rgba(255,255,255,0.58);
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            font: 620 10.5px/14px system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+          }
+
+          .dot {
+            width: 5px;
+            height: 5px;
+            flex: 0 0 5px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.34);
+          }
+
+          /* Rolou: some sem colapsar a linha do grid (ver comentario acima).
+             A transicao curta evita o piscar quando o dedo vai e volta. */
+          .indicator.is-scrolled {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 140ms ease, visibility 0s linear 140ms;
+          }
+
+          .indicator {
+            transition: opacity 140ms ease;
+          }
+
+          .indicator.is-active .dot {
+            background: #f7c600;
+            box-shadow: 0 0 8px rgba(247,198,0,0.52);
+          }
+
+          ha-icon {
+            width: 15px;
+            height: 15px;
+            flex: 0 0 15px;
+            color: rgba(255,255,255,0.68);
+          }
+        }
+      </style>
+      <div class="indicator${model.active ? ' is-active' : ''}${this._rolou ? ' is-scrolled' : ''}" role="status" aria-live="polite" aria-hidden="${this._rolou ? 'true' : 'false'}">
+        <span class="dot" aria-hidden="true"></span>
+        <span>${BrunoActivityColumn._escapeAttr(model.text)}</span>
+        <ha-icon icon="mdi:chevron-down" aria-hidden="true"></ha-icon>
+      </div>
+    `;
+  }
+}
+
+if (!customElements.get(BRUNO_HOME_OVERFLOW_INDICATOR_TAG)) {
+  customElements.define(BRUNO_HOME_OVERFLOW_INDICATOR_TAG, BrunoHomeOverflowIndicator);
+}
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: BRUNO_ACTIVITY_COLUMN_TAG,
   name: 'Bruno Activity Column',
   preview: false,
   description: 'Home V2 dynamic activity area: bottom-anchored stack, max 2 per column, overflow to a second column.',
+});
+
+window.customCards.push({
+  type: BRUNO_HOME_OVERFLOW_INDICATOR_TAG,
+  name: 'Bruno Home Overflow Indicator',
+  preview: false,
+  description: 'Mobile-only semantic continuation line between visible and scroll-only room rows.',
 });

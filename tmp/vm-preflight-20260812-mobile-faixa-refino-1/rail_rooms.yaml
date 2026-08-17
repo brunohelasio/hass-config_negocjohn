@@ -1,0 +1,76 @@
+# Rail dos CÔMODOS (Etapa B) — mesmo componente do rail principal
+# (bento-sidebar-liquid-card), apenas com OUTROS itens: Home + cômodos.
+# A shell troca para este rail quando a seção ativa é um cômodo (sala/office/...),
+# SEM recriar o elemento (Home fica ancorado no topo; muda só o que vem abaixo).
+# Navegação por seção (fire-dom-event bruno_section: <key>) — mesma mecânica das
+# seções Câmeras/Roborock. A seleção do cômodo atual é marcada pela própria shell
+# (data-key === chave da seção).
+type: custom:bento-sidebar-liquid-card
+top_items:
+  - key: home
+    icon: home
+    label: Home
+    tap_action:
+      action: fire-dom-event
+      bruno_section: home
+
+  - key: sala
+    icon: sala
+    label: Sala
+    tap_action:
+      action: fire-dom-event
+      bruno_section: sala
+
+  - key: office
+    icon: office
+    label: Office
+    tap_action:
+      action: fire-dom-event
+      bruno_section: office
+
+  - key: cozinha
+    icon: cozinha
+    label: Cozinha
+    tap_action:
+      action: fire-dom-event
+      bruno_section: cozinha
+
+  - key: casal
+    icon: casal
+    label: Q. Casal
+    tap_action:
+      action: fire-dom-event
+      bruno_section: casal
+
+  - key: marina
+    icon: marina
+    label: Q. Marina
+    tap_action:
+      action: fire-dom-event
+      bruno_section: marina
+
+  - key: miguel
+    icon: miguel
+    label: Q. Miguel
+    tap_action:
+      action: fire-dom-event
+      bruno_section: miguel
+
+# ANTERIOR (rollback 2026-08-06): bottom_items: []
+#
+# NOVO (Fase 5e.1) — POWER NA RAIL DAS SUBVIEWS.
+# A rail da Home (rail.yaml) termina com este mesmo item; a das subviews nao o
+# tinha, e sobrava um vazio abaixo dos icones dos comodos. Ganho triplo:
+#   1. identidade visual entre Home e subviews;
+#   2. elimina o espaco vazio;
+#   3. permite sair do dashboard de QUALQUER ambiente, sem voltar a Home.
+# Definicao identica a de rail.yaml — mesma posicao, mesmo icone, mesma acao
+# (navegar para "/", a tela principal do Home Assistant).
+bottom_items:
+  - key: power
+    icon: power
+    label: Power
+    hide_on_phone: true
+    tap_action:
+      action: navigate
+      navigation_path: /

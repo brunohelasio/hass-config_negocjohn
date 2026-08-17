@@ -67,8 +67,10 @@ const BRUNO_COZINHA_SUBVIEW_DEFAULT_CONFIG = {
       'sensor.cozinha_umidade',
     ],
     room_group: 'light.grupo_luzes_cozinha',
-    camera_main: 'camera.cz_camera_2',
-    camera_secondary: 'camera.as_camera_2',
+    // ANTERIOR (rollback ONVIF geral): camera_main: 'camera.cz_camera_2',
+    // ANTERIOR (rollback ONVIF geral): camera_secondary: 'camera.as_camera_2',
+    camera_main: 'camera.cz_camera_profile_1',
+    camera_secondary: 'camera.as_camera_profile_1',
     active_camera_select: '',
     tv: '',
     tv_remote_player: '',
@@ -126,7 +128,8 @@ const BRUNO_COZINHA_SUBVIEW_DEFAULT_CONFIG = {
     ],
     cameras: [
       {
-        entity: 'camera.cz_camera_2',
+        // ANTERIOR (rollback ONVIF geral): entity: 'camera.cz_camera_2',
+        entity: 'camera.cz_camera_profile_1',
         name: 'Cozinha',
         short_name: 'Cozinha',
         controls: [
@@ -136,7 +139,8 @@ const BRUNO_COZINHA_SUBVIEW_DEFAULT_CONFIG = {
         ],
       },
       {
-        entity: 'camera.as_camera_2',
+        // ANTERIOR (rollback ONVIF geral): entity: 'camera.as_camera_2',
+        entity: 'camera.as_camera_profile_1',
         name: 'Area de Servico',
         short_name: 'Area',
         controls: [],

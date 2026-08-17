@@ -60,7 +60,8 @@ const BRUNO_QUARTO_MIGUEL_SUBVIEW_DEFAULT_CONFIG = {
     temperature: ['sensor.sensor_4_in_1_q_miguel_temperature', 'sensor.temperatura_quarto_miguel', 'sensor.qmi_temperatura'],
     humidity: ['sensor.sensor_4_in_1_q_miguel_humidity', 'sensor.umidade_quarto_miguel', 'sensor.qmi_umidade'],
     room_group: 'light.grupo_luzes_quarto_miguel',
-    camera_main: 'camera.qmi_camera_2',
+    // ANTERIOR (rollback ONVIF geral): camera_main: 'camera.qmi_camera_2',
+    camera_main: 'camera.qmi_camera_profile_1',
     camera_secondary: '',
     active_camera_select: '',
     tv: '',
@@ -85,7 +86,8 @@ const BRUNO_QUARTO_MIGUEL_SUBVIEW_DEFAULT_CONFIG = {
     ],
     cameras: [
       {
-        entity: 'camera.qmi_camera_2',
+        // ANTERIOR (rollback ONVIF geral): entity: 'camera.qmi_camera_2',
+        entity: 'camera.qmi_camera_profile_1',
         name: 'Quarto Miguel',
         short_name: 'Miguel',
         controls: [],

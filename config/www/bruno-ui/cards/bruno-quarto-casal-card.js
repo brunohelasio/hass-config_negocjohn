@@ -35,13 +35,16 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
       "sensor.umidade_quarto_casal",
       "sensor.qc_umidade"
     ],
-    "dishwasher": ""
+    "dishwasher": "",
+    "spotify": "media_player.spotifyplus_bruno_helasio"
   },
   "icon": {
     // ORIGINAL (rollback rapido): "off": "/local/bruno-ui/assets/couple-bedroom-off.png?v=20260702-all-images-1",
     "off": "/local/bruno-ui/assets/couple-bedroom-off-generated-v3.png?v=20260802-assets-resize-1",
     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/couple-bedroom-on.png?v=20260702-all-images-1",
     "on": "/local/bruno-ui/assets/couple-bedroom-on-generated-v3.png?v=20260802-assets-resize-1",
+    "phone_off": "/local/bruno-ui/assets/v2/quarto-casal-off.png?v=20260808-maquetes-premium-1",
+    "phone_on": "/local/bruno-ui/assets/v2/quarto-casal-on.png?v=20260808-maquetes-premium-1",
     "fallback": "mdi:bed-king-outline"
   },
   "status_dots": [
@@ -80,6 +83,7 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
       "label": "Midia",
       "tone": "purple",
       "entity": "media_player.echo_pop_quarto_casal",
+      "spotify_device": "Echo Pop Quarto Casal",
       "states": [
         "playing",
         "paused",
@@ -153,8 +157,9 @@ class BrunoQuartoCasalCard extends HTMLElement {
   }
 
   _tileClasses() {
-    if (this._config?.variant !== 'tile' || !this._themeTileMode()) return '';
-    return this._config?.divider_left ? ' is-tile has-divider' : ' is-tile';
+    const josh = this._themeTileMode();
+    if (this._config?.variant !== 'tile' || !josh) return josh ? ' is-josh-theme' : '';
+    return this._config?.divider_left ? ' is-josh-theme is-tile has-divider' : ' is-josh-theme is-tile';
   }
 
   _tileDivider() {
@@ -355,15 +360,44 @@ class BrunoQuartoCasalCard extends HTMLElement {
     return !Number.isNaN(changedAt) && Date.now() - changedAt <= windowMs;
   }
 
+  _normalizeMediaDevice(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
+  _spotifyOnDevice(expected) {
+    const spotify = this._state(this._config.entities.spotify);
+    if (!['playing', 'paused', 'on'].includes(String(spotify?.state || '').toLowerCase())) return false;
+    const attrs = spotify?.attributes || {};
+    const wanted = this._normalizeMediaDevice(expected);
+    return [
+      attrs.source,
+      attrs.source_name,
+      attrs.device_name,
+      attrs.active_device_name,
+      attrs.spotify_device_name,
+      attrs.media_player,
+      attrs.media_player_name,
+    ].some((value) => {
+      const current = this._normalizeMediaDevice(value);
+      return current && (current.includes(wanted) || wanted.includes(current));
+    });
+  }
+
   _dotModel(dot, roomOn) {
     // ANTERIOR (rollback): const entity = this._state(dot.entity);
     // NOVO: suporta dot.entities (lista) alem de dot.entity — mesmo padrao do card Marina.
     const states = this._array(dot.states).map((item) => String(item).toLowerCase());
     const entityIds = dot.entities ? this._array(dot.entities) : this._array(dot.entity);
     const activeFromEntity = entityIds.some((entityId) => this._dotEntityActive(this._state(entityId), states, dot));
+    const activeFromSpotify = dot.spotify_device ? this._spotifyOnDevice(dot.spotify_device) : false;
     const activeEntity = this._state(this._config.entities.active_sensor);
     const attrValue = dot.active_attr ? activeEntity?.attributes?.[dot.active_attr] : undefined;
-    const active = Boolean(dot.active) || Boolean(activeFromEntity) || this._truthy(attrValue);
+    const active = Boolean(dot.active) || Boolean(activeFromEntity) || activeFromSpotify || this._truthy(attrValue);
 
     return {
       icon: dot.icon || 'mdi:circle-small',
@@ -771,11 +805,13 @@ class BrunoQuartoCasalCard extends HTMLElement {
     const fallback = BrunoQuartoCasalCard._escape(icon.fallback || 'mdi:home-outline');
     const off = BrunoQuartoCasalCard._escape(icon.off || '');
     const on = BrunoQuartoCasalCard._escape(icon.on || '');
+    const phoneOff = BrunoQuartoCasalCard._escape(icon.phone_off || '');
+    const phoneOn = BrunoQuartoCasalCard._escape(icon.phone_on || '');
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
-        ${off ? `<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async">` : ''}
-        ${on ? `<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async">` : ''}
+        ${off ? `<picture>${phoneOff ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async"></picture>` : ''}
+        ${on ? `<picture>${phoneOn ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async"></picture>` : ''}
       </span>
     `;
   }
@@ -1373,6 +1409,31 @@ class BrunoQuartoCasalCard extends HTMLElement {
           .room-icon {
             max-width: 100px;
             height: 62px;
+          }
+
+          .room-asset-wrap picture {
+            display: contents;
+          }
+
+          .room-asset,
+          .room-card.is-room-on .room-asset-on {
+            inset: auto;
+            top: 0;
+            left: 0;
+            width: auto;
+            /* ANTERIOR (rollback microajustes remanescentes): height: 111%; */
+            height: 118%;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            object-position: left top;
+            transform: translate(-8.66%, -7.81%);
+          }
+
+          .room-card.is-josh-theme .status-dot.is-active {
+            background: rgba(var(--tone), var(--bruno-tile-status-dot-fill-alpha, 0.78));
+            border: var(--bruno-tile-status-dot-border, 0);
+            box-shadow: 0 0 var(--bruno-tile-status-dot-halo-size, 8px)
+              rgba(var(--tone), var(--bruno-tile-status-dot-halo-alpha, 0.18));
           }
         }
 

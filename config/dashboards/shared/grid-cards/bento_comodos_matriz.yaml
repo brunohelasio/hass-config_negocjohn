@@ -17,8 +17,26 @@ layout:
       # Fase 2 (2026-07-09): 150px cortava status semanticos e o 4o indicador
       # (feedback do usuario). 176px + PNG reduzido nos cards resolve.
       # ANTERIOR (Fase 1): repeat(3, 150px)
-      grid-template-rows: repeat(3, 176px)
-      grid-gap: 10px
+      # ANTERIOR (2026-07-09 a 2026-08-10): repeat(3, 176px)
+      #
+      # ANTERIOR (2026-08-10): 160px. Os 16px por linha entravam no orcamento que
+      # deixa a terceira dupla (Marina/Miguel) aparecendo pela metade em vez de
+      # comecar fora da tela — o recorte parcial e o que sinaliza que ha mais.
+      # A verificacao geometrica mostrou que 160px ainda corta o quarto dot do
+      # Office: 28 + 7 + (4x26 + 3x4) + 21 = 172px. Esta e a menor altura que
+      # preserva os tamanhos e gaps ja aprovados.
+      # ANTERIOR (2026-08-16, revertido): 172px 172px 14px 172px — a linha de
+      # 14px hospedava o indicador textual. Ela criava um vao de 30px entre a 2a
+      # e a 3a faixa (8 + 14 + 8) contra 8px das demais, e o vao permanecia
+      # visivel durante a rolagem, quando o indicador ja havia sumido.
+      #
+      # NOVO (2026-08-16, rev.2): tres linhas iguais, row-gap uniforme em toda a
+      # matriz, em qualquer estado de rolagem. O aviso de atividade abaixo da
+      # dobra passou a ser o microindicador da rail (bento-sidebar-card.js), que
+      # nao ocupa espaco no grid.
+      grid-template-rows: repeat(3, 172px)
+      # ANTERIOR: grid-gap: 10px — 8px pelo mesmo motivo do grid da secao.
+      grid-gap: 8px
 card_mod:
   style: |
     :host { 
@@ -42,5 +60,42 @@ cards:
   - !include ../../views/main-grid/bento_cozinha.yaml
   - !include ../../views/main-grid/bento_lavabo.yaml
   - !include ../../views/main-grid/bento_quarto_casal.yaml
+  # ── REVERTIDO (2026-08-16, rev.2) — INDICADOR TEXTUAL NO GRID ─────────────
+  #
+  # Ele ocupava uma linha real de 14px, o que somava 30px de vao entre a 2a e a
+  # 3a faixa (8 + 14 + 8) contra 8px das demais. O vao continuava la durante a
+  # rolagem, quando o indicador ja estava oculto — lia como divisor do grid.
+  #
+  # Substituido pelo microindicador da rail (dot + numero + chevron), que vive
+  # em bento-sidebar-card.js e nao ocupa espaco nenhum no layout.
+  #
+  # ROLLBACK: descomentar o bloco abaixo e voltar grid-template-rows para
+  # 172px 172px 14px 172px.
+  # # Indicador autorizado para o telefone. Nao tem ha-card visual, nao recebe
+  # # toque e nao existe no layout do tablet. O span de duas colunas transforma
+  # # a linha de 14px em separador semantico entre a 2a e a 3a faixas.
+  # - type: custom:bruno-home-overflow-indicator
+  #   view_layout:
+  #     grid-column: 1 / -1
+  #     show:
+  #       mediaquery: '(max-width: 800px)'
+  #   rooms:
+  #     - name: Q. Marina
+  #       entities:
+  #         - light.grupo_luzes_quarto_marina
+  #         - climate.ac_quarto_marina
+  #         - binary_sensor.q_marina_motion_recent
+  #         - binary_sensor.q_marina_occupancy
+  #         - media_player.echo_pop_marina
+  #     - name: Q. Miguel
+  #       entities:
+  #         - light.grupo_luzes_quarto_miguel
+  #         - climate.ac_quarto_miguel
+  #         - binary_sensor.q_miguel_motion_recent
+  #         - binary_sensor.q_miguel_occupancy
+  #   dynamic_entities:
+  #     - binary_sensor.home_activity_camera
+  #     - binary_sensor.home_activity_roborock
+  #     - binary_sensor.home_activity_media
   - !include ../../views/main-grid/bento_quarto_marina.yaml
   - !include ../../views/main-grid/bento_quarto_miguel.yaml

@@ -491,7 +491,7 @@ frontend:
     # EXPERIMENTO CHAT->GITHUB (2026-08-17): override mobile isolado para validar
     # hero conceitual + respiro dos comodos + microindicador dentro da rail.
     # ROLLBACK: remover esta linha e o arquivo correspondente em www/bruno-ui/patches/.
-    - /local/bruno-ui/patches/home-mobile-hero-rail.js?v=20260817-chat-1
+    - /local/bruno-ui/patches/home-mobile-hero-rail.js?v=20260817-chat-2
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260719-icons-global-1
     # NOVO (2026-07-25) — HOME V2 item 3: badge de Energia.
     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-top-badges-card.js?v=20260725-home-v2-5

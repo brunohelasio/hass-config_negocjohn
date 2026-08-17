@@ -68,7 +68,7 @@ function brunoChatEnsureHeroStyle(root) {
 
       .hero-stage.is-v2 .inline-weather {
         display: grid !important;
-        grid-template-columns: 22px minmax(0, auto) !important;
+        grid-template-columns: 24px minmax(0, auto) !important;
         grid-template-rows: auto auto !important;
         grid-template-areas: "weather-icon weather-temp" "weather-icon weather-label" !important;
         align-items: center !important;
@@ -84,8 +84,8 @@ function brunoChatEnsureHeroStyle(root) {
 
       .hero-stage.is-v2 .inline-weather img {
         grid-area: weather-icon !important;
-        width: 22px !important;
-        height: 22px !important;
+        width: 24px !important;
+        height: 24px !important;
         align-self: center !important;
       }
 
@@ -134,6 +134,29 @@ function brunoChatEnsureHeroStyle(root) {
         transform: translateY(2px) !important;
         pointer-events: none !important;
         transition: opacity 170ms ease, transform 170ms ease !important;
+      }
+
+      .hero-stage.is-v2 .headline .event-stack.bruno-chat-carousel
+      > .event-line.bruno-chat-page:not(.is-insight) {
+        padding-left: 11px !important;
+      }
+
+      .hero-stage.is-v2 .headline .event-stack.bruno-chat-carousel
+      > .event-line.bruno-chat-page:not(.is-insight)::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 2px;
+        bottom: 2px;
+        width: 2px;
+        border-radius: 999px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 205, 70, 0.96),
+          rgba(255, 171, 0, 0.78)
+        );
+        box-shadow: 0 0 8px rgba(255, 186, 32, 0.22);
+        pointer-events: none;
       }
 
       .hero-stage.is-v2 .headline .event-stack.bruno-chat-carousel > .event-line.bruno-chat-page.bruno-chat-active {

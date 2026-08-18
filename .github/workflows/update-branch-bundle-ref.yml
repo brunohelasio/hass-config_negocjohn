@@ -1,0 +1,53 @@
+name: Update branch bundle reference
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-reference:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/tv-office-state-semantics
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Install dashboard dependencies
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: Run dashboard checks and build
+        working-directory: dashboard-src
+        run: npm run check
+
+      - name: Point configuration at built bundle
+        run: node scripts/validation/apply-dashboard-bundle-ref.mjs
+
+      - name: Recheck YAML and whitespace
+        run: |
+          cd dashboard-src
+          npm run check:yaml
+          cd ..
+          git diff --check
+
+      - name: Commit bundle reference
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add config/configuration.yaml
+          git diff --cached --quiet && exit 0
+          git commit -m "chore(dashboard): point branch to validated bundle"
+          git push origin HEAD:fix/tv-office-state-semantics

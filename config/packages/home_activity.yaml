@@ -29,9 +29,10 @@ template:
   # por on/idle/paused/buffering sem a TV ter desligado. Para abrir o card
   # dinâmico, porém, power sozinho também não basta: launcher/home/ambient
   # não são mídia. Assim a TV entra por playing/buffering diretamente ou,
-  # quando o player rico cai para on/paused/idle, por power ON + evidência
-  # real de conteúdo. O delay_off preserva a sessão em transições curtas.
-  # Os demais players mantêm o contrato anterior playing/buffering.
+  # quando o player rico cai para on/paused/idle/off transitório, por power
+  # ON + evidência real de conteúdo. O delay_off preserva a sessão em
+  # transições curtas. Os demais players mantêm o contrato anterior
+  # playing/buffering.
   # ------------------------------------------------------------------
   - binary_sensor:
       - name: Home Activity Media
@@ -43,6 +44,7 @@ template:
           {% set tv_entity = 'media_player.android_tv_192_168_3_17' %}
           {% set tv_state = states(tv_entity) | lower %}
           {% set tv_power = states('media_player.atv') | lower %}
+          {% set tv_power_on = tv_power in ['on', 'playing', 'paused', 'idle', 'buffering'] %}
           {% set title = state_attr(tv_entity, 'media_title') | default('', true) | string %}
           {% set app = state_attr(tv_entity, 'app_name') | default('', true) | string %}
           {% set source = state_attr(tv_entity, 'source') | default('', true) | string %}
@@ -67,7 +69,7 @@ template:
                (picture or duration > 0 or position > 0 or video_type) %}
           {% set tv_active = not is_shell and (
                tv_state in ['playing', 'buffering']
-               or (tv_power == 'on' and has_metadata)
+               or (tv_power_on and has_metadata)
              ) %}
           {% set other_active =
                states('media_player.echo_show') in ['playing', 'buffering']

@@ -1,8 +1,7 @@
-const INSTALL_FLAG = Symbol.for('bruno.room-tile.ios-longpress-guard');
+const installed = new WeakSet<object>();
 
 interface RoomTileLifecycle extends HTMLElement {
   updated?: (...args: unknown[]) => void;
-  [INSTALL_FLAG]?: boolean;
 }
 
 interface RoomTileConstructor extends CustomElementConstructor {
@@ -37,8 +36,8 @@ export function installRoomTileIosLongPressGuard(): void {
     if (!ctor) return;
 
     const proto = ctor.prototype;
-    if (proto[INSTALL_FLAG]) return;
-    proto[INSTALL_FLAG] = true;
+    if (installed.has(proto)) return;
+    installed.add(proto);
 
     const previousUpdated = proto.updated;
     proto.updated = function (...args: unknown[]): void {

@@ -6,19 +6,25 @@ on:
       - fix/tv-office-state-semantics
     paths:
       - .github/workflows/import-sonnet-hold.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/import-sonnet-hold.yml
 
 permissions:
   contents: write
 
 jobs:
   import:
-    if: github.event.head_commit.message == 'chore: run Sonnet hold importer'
+    if: github.event_name == 'pull_request' || github.event.head_commit.message == 'chore: run Sonnet hold importer'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: fix/tv-office-state-semantics
 
       - name: Import validated subset
         run: |

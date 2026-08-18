@@ -16,6 +16,14 @@ const BRUNO_STATE_PATCH_CURTAIN = 'cover.cortina_varanda_cortina_2';
 const BRUNO_STATE_PATCH_PC_ACTIVE = 'binary_sensor.office_pc_active';
 const BRUNO_STATE_PATCH_TV_ON = new Set(['on', 'playing', 'paused', 'idle', 'buffering']);
 const BRUNO_STATE_PATCH_BAD = new Set(['', 'unknown', 'unavailable', 'none', 'null']);
+const BRUNO_STATE_PATCH_SHELL_TERMS = [
+  'google tv launcher',
+  'android tv launcher',
+  'launcher',
+  'ambient mode',
+  'backdrop',
+  'home screen',
+];
 
 function brunoStateValue(entity) {
   return String(entity?.state ?? '').toLowerCase();
@@ -39,6 +47,11 @@ function brunoStateTvPowerOn(hass, richId = BRUNO_STATE_PATCH_TV_RICH, powerId =
   // comportamento anterior sem permitir que transicoes normais virem OFF.
   const rich = hass?.states?.[richId];
   return BRUNO_STATE_PATCH_TV_ON.has(brunoStateValue(rich));
+}
+
+function brunoStateIsShell(title = '', appName = '', source = '') {
+  const text = `${title || ''} ${appName || ''} ${source || ''}`.toLowerCase();
+  return BRUNO_STATE_PATCH_SHELL_TERMS.some((term) => text.includes(term));
 }
 
 function brunoStateInsertAfterPresence(dots, dot) {
@@ -207,10 +220,24 @@ function brunoStatePatchMediaCard(Card) {
       state, title, image, appName, source, entityId = '', config = {}, contentType = '', attributes = {}
     ) {
       const normalized = String(state || '').toLowerCase();
-      const shellText = `${title || ''} ${appName || ''} ${source || ''}`.toLowerCase();
-      const isShell = ['google tv launcher', 'android tv launcher', 'launcher', 'ambient mode', 'backdrop', 'home screen']
-        .some((term) => shellText.includes(term));
-      if (normalized === 'buffering') return !isShell;
+      const isShell = brunoStateIsShell(title, appName, source);
+      if (isShell) return false;
+      if (normalized === 'buffering') return true;
+
+      // A integracao rica da TV pode cair para off/idle enquanto a fonte de
+      // power continua ON. Se metadata real ainda esta presente, isso e uma
+      // oscilacao do player, nao um power-off e nem launcher.
+      const isSalaTv = entityId === BRUNO_STATE_PATCH_TV_RICH;
+      if (isSalaTv && brunoStateTvPowerOn(this?._hass, entityId, BRUNO_STATE_PATCH_TV_POWER)) {
+        const cleanTitle = this?._cleanText?.(title) || '';
+        const hasTitle = Boolean(cleanTitle);
+        const hasTimedMedia = Number(attributes?.media_duration) > 0 || Number(attributes?.media_position) > 0;
+        const hasArtwork = Boolean(image && !this?._isStandbyImage?.(image));
+        const type = String(contentType || '').toLowerCase();
+        const hasVideoType = ['video', 'movie', 'episode', 'tvshow'].some((term) => type.includes(term));
+        if (hasTitle && (hasArtwork || hasTimedMedia || hasVideoType)) return true;
+      }
+
       return originalHasPlayback.call(
         this, state, title, image, appName, source, entityId, config, contentType, attributes
       );
@@ -229,17 +256,19 @@ function brunoStatePatchMediaCard(Card) {
     const originalFocusModel = proto._focusModel;
     proto._focusModel = function patchedFocusModel(...args) {
       const model = originalFocusModel.apply(this, args);
-      if (!model || String(model.state || '').toLowerCase() !== 'buffering') return model;
+      if (!model) return model;
 
-      model.hasPlayback = true;
+      const buffering = String(model.state || '').toLowerCase() === 'buffering';
+      if (buffering) model.statusLabel = 'Carregando';
+      if (!model.hasPlayback) return model;
+
       model.isActive = true;
-      model.statusLabel = 'Carregando';
-      if (!model.image) {
+      if (buffering && !model.image) {
         model.image = this?._lastArtworkByPlayer?.[model.entity]
           || this?._mediaHistory?.[model.entity]?.image
           || '';
       }
-      model.isSoftArtwork = false;
+      if (buffering) model.isSoftArtwork = false;
       return model;
     };
   }

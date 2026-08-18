@@ -6,13 +6,18 @@ on:
       - fix/tv-office-state-semantics
     paths:
       - .github/workflows/pr601-package.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/pr601-package.yml
 
 permissions:
   contents: write
 
 jobs:
   package:
-    if: github.event.head_commit.message == 'chore: prepare PR601 release package'
+    if: github.event_name == 'pull_request' || github.event.head_commit.message == 'chore: prepare PR601 release package'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -27,7 +32,6 @@ jobs:
           from pathlib import Path
           import subprocess
 
-          # main.ts só havia sido tocado para registrar a ponte temporária.
           subprocess.run([
               'git', 'checkout', 'origin/main', '--',
               'dashboard-src/src/main.ts'

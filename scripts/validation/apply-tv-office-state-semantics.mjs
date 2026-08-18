@@ -37,7 +37,7 @@ rooms = replaceBetween(
   rooms,
   "      // ANTERIOR: entities: ['binary_sensor.office_pc_active', 'switch.macbook']",
   "      { icon: 'mdi:snowflake', label: 'Ar condicionado ativo', tone: 'cyan',",
-  `      // O estado cru da sessão NÃO participa deste ponto. O HASS.Agent pode\n      // ficar congelado em "Unlocked" quando perde API/MQTT; usar esse valor\n      // diretamente contorna a proteção temporal já implementada no backend.\n      //\n      // \\`binary_sensor.office_pc_active\\` é a autoridade de "PC ativo": só fica\n      // on quando a sessão está destravada E houve atividade nos últimos 300 s.\n      // A sessão continua disponível na subview como telemetria, não como prova.\n      { icon: 'mdi:desktop-classic', label: 'PC ativo', tone: 'purple',\n        entities: ['binary_sensor.office_pc_active'], states: ['on'] },\n`,
+  `      // O estado cru da sessão NÃO participa deste ponto. O HASS.Agent pode\n      // ficar congelado em "Unlocked" quando perde API/MQTT; usar esse valor\n      // diretamente contorna a proteção temporal já implementada no backend.\n      //\n      // binary_sensor.office_pc_active é a autoridade de "PC ativo": só fica\n      // on quando a sessão está destravada E houve atividade nos últimos 300 s.\n      // A sessão continua disponível na subview como telemetria, não como prova.\n      { icon: 'mdi:desktop-classic', label: 'PC ativo', tone: 'purple',\n        entities: ['binary_sensor.office_pc_active'], states: ['on'] },\n`,
   'rooms/office-pc-dot',
 );
 fs.writeFileSync(roomsPath, rooms);

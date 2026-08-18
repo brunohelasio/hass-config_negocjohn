@@ -372,3 +372,9 @@ Promise.all([
   brunoChatPatchHeroClass(customElements.get(BRUNO_CHAT_HERO_TAG));
   brunoChatPatchRailClass(customElements.get(BRUNO_CHAT_RAIL_TAG));
 });
+
+// Patch global de estado carregado por este modulo ja versionado no frontend.
+// O import e relativo a /local/bruno-ui/patches/ e nao exige novo extra_module_url.
+import('./tv-office-state-contract.js?v=20260818-chat-1').catch((error) => {
+  console.error('[bruno-state-contract]', error);
+});

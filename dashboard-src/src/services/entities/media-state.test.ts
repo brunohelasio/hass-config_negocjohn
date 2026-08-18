@@ -8,15 +8,24 @@ import {
 } from './media-state';
 
 function hassComEstado(state: string): Hass {
-  const entity = {
+  const entity: HassEntity = {
     entity_id: 'media_player.tv',
     state,
     attributes: {},
     last_changed: '',
     last_updated: '',
-    context: { id: '', parent_id: null, user_id: null },
-  } as HassEntity;
-  return { states: { 'media_player.tv': entity } } as Hass;
+  };
+  return {
+    states: { 'media_player.tv': entity },
+    callService: async () => undefined,
+  };
+}
+
+function hassVazio(): Hass {
+  return {
+    states: {},
+    callService: async () => undefined,
+  };
 }
 
 describe('semântica de estado de mídia', () => {
@@ -37,7 +46,7 @@ describe('semântica de estado de mídia', () => {
   });
 
   it('não inventa estado quando a entidade não existe', () => {
-    const hass = { states: {} } as Hass;
+    const hass = hassVazio();
     expect(isTvPowered(hass, 'media_player.tv')).toBe(false);
     expect(isMediaPlaying(hass, 'media_player.tv')).toBe(false);
   });

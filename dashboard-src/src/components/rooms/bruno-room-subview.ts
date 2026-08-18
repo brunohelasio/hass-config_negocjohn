@@ -86,7 +86,15 @@ function truthy(v: unknown): boolean {
 }
 
 /** Estados que contam como "ligado" em cada domínio — copiados dos originais. */
-const ESTADOS_TV_LIGADA = ['on', 'playing', 'paused', 'idle'];
+// Item 5 (2026-08-17): 'buffering' entrou na lista. Sem ele, o ciclo
+// playing -> buffering -> playing (rebuferizacao normal de streaming) fazia
+// o hub da Sala apagar e reacender (ON -> OFF -> ON) mesmo com a TV nunca
+// tendo desligado. O card principal da Sala (bruno-sala-card.js,
+// BRUNO_SALA_TV_ON_STATES) ja incluia 'buffering' — esta lista so estava
+// desalinhada dele. "TV ligada" (esta lista) e distinto de "playback ativo"
+// (bruno-media-card.js / home_activity_media): um comodo pode estar com a TV
+// ligada em 'on'/'idle' sem midia realmente tocando, e isso continua correto.
+const ESTADOS_TV_LIGADA = ['on', 'playing', 'paused', 'idle', 'buffering'];
 const ESTADOS_MIDIA_LIGADA = ['playing', 'paused', 'on', 'idle'];
 const ESTADOS_CAMERA_ONLINE = ['streaming', 'recording', 'idle', 'on'];
 const ESTADOS_CLIMATE_LIGADO = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];

@@ -255,6 +255,26 @@ class BrunoOfficeCard extends HTMLElement {
     return BRUNO_OFFICE_CLIMATE_ON_STATES.includes(entity.state) || entity.state !== 'off';
   }
 
+  // Item 3 (2026-08-17): ANTERIOR (rollback) fazia
+  //   pcOn: pc_active==='on' || pc_session==='unlocked' || pc_fallback==='on'
+  // — um OR simples deixa o sensor supervisionado (pc_active) sem efeito
+  // pratico, porque o HASS.Agent as vezes congela pc_session em "Unlocked"
+  // quando o PC desliga/para de responder, e esse valor cru nunca reverte.
+  // O resultado era o PC aparecer "ativo" para sempre.
+  //
+  // Agora pc_active e AUTORITATIVO sempre que disponivel (state 'on'/'off'):
+  // decide sozinho, sem OR com a sessao crua. So quando pc_active esta
+  // indisponivel (sensor caiu / HASS.Agent nao reportou ainda) e que a leitura
+  // cai para pc_session/pc_fallback como fallback — a mesma finalidade que
+  // pc_fallback ja tinha antes desta correcao.
+  _pcOn(entities) {
+    const pcActive = this._state(entities.pc_active);
+    if (!this._isUnavailable(pcActive)) return pcActive.state === 'on';
+    const pcSession = String(this._state(entities.pc_session)?.state || '').toLowerCase();
+    const pcFallbackOn = this._state(entities.pc_fallback)?.state === 'on';
+    return pcSession === 'unlocked' || pcFallbackOn;
+  }
+
   _presenceRecent() {
     // NOVO (2026-07-12): fail-closed. Sem fallback para presence bruta.
     const supervisedMotion = this._state(this._config.entities.motion_recent);
@@ -284,7 +304,6 @@ class BrunoOfficeCard extends HTMLElement {
     const room = this._state(entities.room_group);
     const climate = this._state(entities.climate);
     const speaker = this._state(entities.speaker);
-    const pcSession = String(this._state(entities.pc_session)?.state || '').toLowerCase();
     const roomOn = room?.state === 'on';
     const pcFallbackOn = this._state(entities.pc_fallback)?.state === 'on';
     const lights = this._lightsSummary(room);
@@ -303,7 +322,7 @@ class BrunoOfficeCard extends HTMLElement {
       iconActive: roomOn || pcFallbackOn,
       meetingOn: this._meetingOn(),
       presenceOn: this._presenceRecent(),
-      pcOn: this._state(entities.pc_active)?.state === 'on' || pcSession === 'unlocked' || pcFallbackOn,
+      pcOn: this._pcOn(entities),
       climateOn: this._climateOn(climate),
       speakerOn: BRUNO_OFFICE_SPEAKER_ON_STATES.includes(speaker?.state || '')
         || this._spotifyOnDevice('Echo Pop Office'),
@@ -1010,6 +1029,16 @@ class BrunoOfficeCard extends HTMLElement {
           transform: translateZ(0) scale(1.06);
           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
+        
+          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
+             (copiar/salvar imagem) no long-press sobre a ilustracao do
+             comodo. Tap e o hold customizado do proprio botao continuam
+             funcionando — isso so desliga o menu de contexto NATIVO de
+             imagem, nao os pointer events do componente. */
+          -webkit-touch-callout: none;
+          -webkit-user-drag: none;
+          -webkit-user-select: none;
+          user-select: none;
         }
 
         .office-asset-off {
@@ -1577,7 +1606,7 @@ class BrunoOfficeCard extends HTMLElement {
         ${this._tileDivider()}
         <button class="office-action" type="button" data-action-key="room" aria-label="${BrunoOfficeCard._escape(this._config.name)}">
           <div class="room-icon" aria-hidden="true">
-            <span class="office-icon">${BrunoOfficeCard._officeVisual(model.iconActive)}</span>
+            <span class="office-icon">${this._officeVisual(model.iconActive)}</span>
             ${model.meetingOn ? BrunoOfficeCard._meetingIcon() : ''}
           </div>
 
@@ -1629,23 +1658,41 @@ class BrunoOfficeCard extends HTMLElement {
     this._wireAssetFallback();
   }
 
-  static _officeVisual(active) {
+  // ANTERIOR (rollback 2026-08-17): era `static`, chamado como
+  // `BrunoOfficeCard._officeVisual(...)`. Virou metodo de instancia para
+  // poder reagendar `this._render()` quando o BrunoAssetPreload aquece o
+  // estado inativo — ver comentario abaixo.
+  _officeVisual(active) {
     // ORIGINAL (rollback rapido):
     // const version = '20260608-room-assets-uniform-1';
     // src="/local/bruno-ui/assets/office-off.png?v=20260702-all-images-1" / office-on.png
     const version = '20260609-rail-dynamic-1';
+    const offUrl = '/local/bruno-ui/assets/v2/office-off.webp?v=20260817-mobile-perf-webp-1';
+    const onUrl = '/local/bruno-ui/assets/v2/office-on.webp?v=20260817-mobile-perf-webp-1';
+    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
+    // estados do phone no primeiro load — so o visivel agora. O estado
+    // inativo fica sem srcset ate o BrunoAssetPreload avisar que aqueceu em
+    // segundo plano (idle); ate la o <picture> cai no <img> tight de
+    // tablet/desktop, sem layout shift e sem card vazio.
+    const preload = globalThis.BrunoAssetPreload;
+    const offReady = !active || !preload || preload.isReady(offUrl);
+    const onReady = active || !preload || preload.isReady(onUrl);
+    if (preload) {
+      if (!offReady) preload.schedule(offUrl, () => { if (this.isConnected) this._render(); });
+      if (!onReady) preload.schedule(onUrl, () => { if (this.isConnected) this._render(); });
+    }
     return `
       <span class="office-asset-wrap">
         <span class="office-asset-fallback">${BrunoOfficeCard._officeIcon(active)}</span>
         <picture>
           <!-- V2 apenas no phone; o img abaixo continua sendo o contrato
                anterior de tablet/desktop e o fallback de rollback. -->
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/office-off.png?v=20260808-maquetes-premium-1">
-          <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          ${offReady ? `<source media="(max-width: 800px)" srcset="${offUrl}">` : ''}
+          <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async" draggable="false">
         </picture>
         <picture>
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/office-on.png?v=20260808-maquetes-premium-1">
-          <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          ${onReady ? `<source media="(max-width: 800px)" srcset="${onUrl}">` : ''}
+          <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async" draggable="false">
         </picture>
       </span>
     `;

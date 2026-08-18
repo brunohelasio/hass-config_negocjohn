@@ -630,21 +630,55 @@ class BrunoShell extends HTMLElement {
     }
   }
 
+  // Performance mobile (2026-08-17, item 1C): ANTERIOR (rollback) buscava
+  // TODOS os backdrops (home, sala, office, cozinha, ..., roborock, floorplan)
+  // no cold load, disputando banda com o backdrop que a tela ATUAL realmente
+  // precisa. Agora: o backdrop da seção ativa é buscado na hora; os das
+  // demais seções vão para uma fila de idle, um de cada vez, e só se ainda
+  // não estiverem no cache. `_applyBackdrop()` continua chamando
+  // `_loadBackdrop()` sob demanda ao trocar de seção — se o idle ainda não
+  // tiver chegado lá, o fetch acontece ali (nunca pior que o comportamento
+  // anterior; troca de seção nunca fica sem imagem).
   _preloadBackdrops() {
     if (!this._backdrops) return;
+    const activeKey = this._activeKey || this._defaultSection;
     for (const k of Object.keys(this._backdrops)) {
       const url = this._backdrops[k];
-      if (url) this._loadBackdrop(url);
+      if (!url) continue;
+      if (k === activeKey) this._loadBackdrop(url);
+      else this._deferBackdropLoad(url);
     }
   }
 
   _preloadResolvedBackdrops() {
     if (!this._hass || !this._backdrops) return;
+    const activeKey = this._activeKey || this._defaultSection;
     for (const key of Object.keys(this._backdrops)) {
       const fallback = this._backdrops[key] || this._backdrops.default;
       const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
-      if (url) this._loadBackdrop(url);
+      if (!url) continue;
+      if (key === activeKey) this._loadBackdrop(url);
+      else this._deferBackdropLoad(url);
     }
+  }
+
+  // Agenda o carregamento de UM backdrop para o próximo idle do navegador,
+  // uma única vez por URL. Guardado em dois níveis: `_backdropCache` (já
+  // carregado/carregando — `_loadBackdrop` já é idempotente nisso) e
+  // `_backdropDeferred` (já agendado, mas ainda não disparou), porque
+  // `_preloadResolvedBackdrops()` roda a cada `set hass` — sem o segundo
+  // guard, cada tick reagendaria a mesma URL enquanto o idle não dispara.
+  _deferBackdropLoad(url) {
+    if (!url) return;
+    if (!(this._backdropCache instanceof Map)) this._backdropCache = new Map();
+    if (this._backdropCache.has(url)) return;
+    if (!(this._backdropDeferred instanceof Set)) this._backdropDeferred = new Set();
+    if (this._backdropDeferred.has(url)) return;
+    this._backdropDeferred.add(url);
+    const idle = typeof requestIdleCallback === 'function'
+      ? (fn) => requestIdleCallback(fn, { timeout: 4000 })
+      : (fn) => setTimeout(fn, 400);
+    idle(() => this._loadBackdrop(url));
   }
 
   _loadBackdrop(url) {

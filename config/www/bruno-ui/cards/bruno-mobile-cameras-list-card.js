@@ -237,6 +237,12 @@ class BrunoMobileCamerasListCard extends HTMLElement {
         .camera-image {
           z-index: 1;
           filter: saturate(0.88) contrast(1.04);
+          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
+             (copiar/salvar imagem) no long-press sobre o instantaneo. */
+          -webkit-touch-callout: none;
+          -webkit-user-drag: none;
+          -webkit-user-select: none;
+          user-select: none;
         }
 
         .camera-image.is-hidden,

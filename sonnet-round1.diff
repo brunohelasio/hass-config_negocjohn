@@ -1,0 +1,1104 @@
+diff --git a/CLAUDE.md b/CLAUDE.md
+index bd4f7f1c..2401c7e8 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -4431,3 +4431,115 @@ quando o codigo muda". Falso: muda tambem quando o DIA muda. Os tres hashes sao
+ tres dias de build do mesmo codigo. **Divergencia benigna; a 6.5 nao tem mais
+ pre-requisito.** Correcao sugerida, fora deste escopo: derivar o `BUILD_ID` do
+ commit do git, para o hash voltar a depender so do codigo.
++
++---
++
++## Registro — Pacote fechado: performance mobile, long-press iOS, PC Office e contrato TV/mídia (2026-08-17)
++
++Cinco correções autorizadas pelo usuário, fechadas numa unica passada, com
++diagnostico ja pronto de antemao. Sem redesign, sem card duplicado, sem
++caminho paralelo de midia.
++
++### 1 — Assets V2 do phone: 16,2 MB -> 348 KB (97,9%)
++
++PNG 16-bit -> WebP (`quality:90, alphaQuality:100`), mesma caixa optica,
++mesma mascara alfa, comparacao visual lado a lado sem diferenca perceptivel.
++PNGs originais preservados em `_archive/assets/v2-png-anterior-20260817/`.
++Total: 16.214.488 -> 347.644 bytes.
++
++Alem da otimizacao de bytes, dois problemas de POLITICA DE REQUEST:
++
++- **Critical path**: os 7 cards de comodo + `bruno-room-tile.ts` sempre
++  baixavam ON+OFF juntos (um deles invisivel, opacity:0, esperando o proximo
++  toggle). Novo modulo `www/bruno-ui/core/bruno-asset-preload.js`
++  (`globalThis.BrunoAssetPreload`) so libera o `src`/`srcset` do estado ATIVO
++  no primeiro render; o estado inativo fica de fora do DOM ate um
++  `requestIdleCallback` aquecer a URL em segundo plano — dai um re-render
++  automatico (`this._render()`/`this.requestUpdate()`) o inclui, ja servido
++  do cache do navegador. Falha aberta se o modulo nao carregar (nunca pior
++  que o comportamento anterior). Validado no navegador contra o componente
++  REAL: 0 imagens no DOM antes do warm-up, 2 depois, sem re-fetch.
++- **Backdrop da shell**: `_preloadBackdrops()`/`_preloadResolvedBackdrops()`
++  buscavam TODOS os fundos (home, 7 comodos, cameras, roborock, floorplan) no
++  cold load. Agora so o da secao ATIVA e imediato; os demais vao para uma
++  fila de idle, uma URL por vez, guardada contra reagendamento a cada
++  `set hass` (que roda a cada tick). `_applyBackdrop()` continua buscando sob
++  demanda se o idle ainda nao chegou — nunca pior que antes.
++
++Wallpaper runtime (`bruno-wallpaper-manager.js`, imagens via
++`/api/image/serve/...`): fora do escopo autorizado (sem pipeline novo de
++upload/transcoding); o peso do wallpaper selecionado no HA nao esta no Git
++para medir — registrado como limitacao, nao resolvido.
++
++### 2 — Long-press no iPhone (callout nativo copiar/salvar)
++
++`-webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
++none; user-select: none;` + `draggable="false"` nos `<img>`. Aplicado na
++regra `.room-asset`/`.office-asset` (7 cards + `bruno-room-tile.ts`) e nas
++imagens de camera/midia (`bruno-cameras-card.js`, `bruno-home-camera-card.js`,
++`bruno-mobile-cameras-list-card.js`, `bruno-media-card.js`) — via CSS onde ja
++havia classe, via `style` inline nos `<img>` sem classe propria. Tap, hold
++customizado e swipe preservados (a propriedade so desliga o menu de contexto
++NATIVO de imagem).
++
++### 3 — PC do Office preso em "ativo"
++
++`_pcOn()` novo em `bruno-office-card.js`: `binary_sensor.office_pc_active`
++passa a ser AUTORITATIVO quando disponivel — decide sozinho, sem OR com
++`pc_session`. So quando o sensor supervisionado esta indisponivel e que a
++leitura cai para `pc_session === 'unlocked'` ou `switch.macbook` (mesma
++finalidade que ja tinham). Corrige o caso relatado: HASS.Agent deixava
++`pc_session` congelado em "Unlocked" quando o PC desligava, e o OR antigo
++nunca deixava o sensor supervisionado prevalecer. Validado com a classe REAL
++(`node --check` + instanciacao) nos 5 cenarios do roteiro, incluindo o caso
++relatado (pc_active=off + session stale -> agora INATIVO).
++
++### 4/5 — Contrato TV/midia: buffering nao e desligar
++
++Tres pontos desalinhados sobre o MESMO ciclo `playing -> buffering ->
++playing`:
++
++- `bruno-media-card.js`: `BRUNO_MEDIA_ACTIVE_STATES` e `_hasPlayback()` nao
++  reconheciam `buffering` — card dinamico da Home podia sumir por 1-2s a cada
++  rebuferizacao. Adicionado ao mesmo balde de playing/paused (mesma regra:
++  titulo/artwork/appName precisam existir). `isShell`/launcher e a logica de
++  `'on'` com evidencia real (video player + artwork/duracao/content-type)
++  ficaram intocadas.
++- `binary_sensor.home_activity_media` (`packages/home_activity.yaml`): JA
++  incluia `playing`+`buffering` e ja tem `delay_off: 2min`, que cobre pausas
++  breves sem tratar pausa eterna como atividade (decisao de 2026-07-24,
++  documentada no proprio arquivo). Nao precisou de alteracao — verificado, nao
++  suposto.
++- `bruno-room-subview.ts` (hub da Sala): `ESTADOS_TV_LIGADA` nao tinha
++  `buffering`, ao contrario de `BRUNO_SALA_TV_ON_STATES` no card principal da
++  Sala (que ja tinha). Alinhado. Validado no navegador contra o componente
++  REAL (bundle compilado): com Spotify/Echo isolados, TV
++  off->playing->buffering->playing->off mantém `is-playing` em todo o trecho
++  do meio e cai corretamente no off final — zero flicker, zero falso-positivo.
++
++### Validacao
++
++`npm run check` completo (yaml + crase + typecheck + lint + 257 testes + build)
++verde. Bundle novo: `bruno-dashboard.Drt32TLl.js`. Cards classicos: `node
++--check` nos 11 arquivos + harness Node instanciando as classes REAIS contra
++a matriz de transicao do roteiro (16 casos, todos PASS) + verificacao no
++navegador (shell real, tema Josh) para o hub da Sala e o `bruno-room-tile`.
++
++### Publicacao
++
++Local e Everex, 17 hashes conferidos e identicos. Backup previo em
++`tmp/everex-preflight-20260817-mobile-perf-tv-media-1/`. Os 16 PNGs antigos
++removidos do Everex (dead weight — nada mais os referencia; originais seguem
++em `_archive/` no repositorio local).
++
++**Exige reinicio do Home Assistant** — `extra_module_url` mudou (bundle +
++`bruno-shell.js` + `bruno-asset-preload.js` novo + 11 cards). Conferir o
++Corredor depois (ver historico de correlacao).
++
++### Rollback
++
++Todos os blocos substituidos comentados in-place (`ANTERIOR (rollback
++2026-08-17)`) nos arquivos JS/TS tocados. `configuration.yaml`: linhas
++ANTERIOR comentadas ao lado de cada `?v=`. Assets: descomentar nada —
++restaurar e copiar de volta `_archive/assets/v2-png-anterior-20260817/*.png`
++e reverter as referencias `.webp` -> `.png` + `?v=20260808-maquetes-premium-1`.
+diff --git a/config/configuration.yaml b/config/configuration.yaml
+index e159a932..cc056521 100644
+--- a/config/configuration.yaml
++++ b/config/configuration.yaml
+@@ -141,7 +141,8 @@ frontend:
+     # ANTERIOR: - /local/dashboard/bruno-dashboard.CDCkqw9U.js
+     # ANTERIOR: - /local/dashboard/bruno-dashboard.DLc4aRtS.js
+     # ANTERIOR: - /local/dashboard/bruno-dashboard.BJutTx-c.js
+-    - /local/dashboard/bruno-dashboard.DpecM3wp.js
++    # ANTERIOR: - /local/dashboard/bruno-dashboard.DpecM3wp.js
++    - /local/dashboard/bruno-dashboard.Drt32TLl.js
+     # ─────────────────────────────────────────────────────────────────────────
+     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
+     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock
+@@ -152,6 +153,13 @@ frontend:
+     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-icons.js?v=20260720-bulb-icon-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-icons.js?v=20260720-icon-standardization-1
+     - /local/bruno-ui/core/bruno-icons.js?v=20260720-ledstrip-varanda-fill-1
++    # NOVO (2026-08-17): aquecedor de imagem compartilhado (item 1B da rodada
++    # de performance mobile) — evita que os cards de comodo baixem os DOIS
++    # estados (ON+OFF) no primeiro load. Usado por bruno-sala-card.js,
++    # bruno-office-card.js, bruno-lavabo-card.js, bruno-cozinha-card.js,
++    # bruno-quarto-casal/marina/miguel-card.js e por bruno-room-tile.ts
++    # (dentro do bundle acima). Cedo na lista, mesmo padrao do bruno-icons.js.
++    - /local/bruno-ui/core/bruno-asset-preload.js?v=20260817-mobile-perf-webp-1
+     # ANTERIOR: - /local/bento-sidebar-card.js?v=20260719-icons-global-1
+     # ANTERIOR: - /local/bento-sidebar-card.js?v=20260804-rail-icon-24
+     # ANTERIOR: - /local/bento-sidebar-card.js?v=20260812-mobile-faixa-refino-1
+@@ -181,7 +189,8 @@ frontend:
+     # ANTERIOR: - /local/bruno-ui/core/bruno-shell.js?v=20260812-mobile-ajustes-finos-1
+     # ANTERIOR: - /local/bruno-ui/core/bruno-shell.js?v=20260812-mobile-refino-final-1
+     # ANTERIOR: - /local/bruno-ui/core/bruno-shell.js?v=20260814-microajustes-1
+-    - /local/bruno-ui/core/bruno-shell.js?v=20260815-status-global-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-shell.js?v=20260815-status-global-1
++    - /local/bruno-ui/core/bruno-shell.js?v=20260817-mobile-perf-webp-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260702-liquid-yaml-2
+     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260723-liquid-performance-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/core/bruno-liquid-glass.js?v=20260723-surface-on-ios-1
+@@ -372,7 +381,8 @@ frontend:
+     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260722-mobile-status-spacing-1
+     # ANTERIOR (rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260802-assets-resize-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260814-mobile-maquetes-v2-1
+-    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260814-remanescentes-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-sala-card.js?v=20260814-remanescentes-1
++    - /local/bruno-ui/cards/bruno-sala-card.js?v=20260817-mobile-perf-webp-1
+     # NOVO (2026-07-24) — HOME V2: Sala em estrutura padrao de comodo para a
+     # faixa horizontal (clone da base Q. Casal). O bruno-sala-card acima segue
+     # intacto (Home V1 + phone). FALLBACK: comentar esta linha junto com o
+@@ -410,7 +420,8 @@ frontend:
+     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-office-card.js?v=20260731-flat-status-dots-1
+     # ANTERIOR (rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260802-assets-resize-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260814-mobile-maquetes-v2-1
+-    - /local/bruno-ui/cards/bruno-office-card.js?v=20260814-remanescentes-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-office-card.js?v=20260814-remanescentes-1
++    - /local/bruno-ui/cards/bruno-office-card.js?v=20260817-mobile-perf-webp-1
+     # ANTERIOR (2026-07-03): ?v=20260702-all-images-1 nos 5 cards abaixo.
+     # NOVO: bump para presence-uniform-1 (molde unico de presenca/ocupacao + alinhamento padrao Office).
+     # ANTERIOR (rollback): ?v=20260704-room-state-1
+@@ -421,7 +432,8 @@ frontend:
+     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260731-flat-status-dots-1
+     # ANTERIOR (rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260802-assets-resize-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260814-mobile-maquetes-v2-1
+-    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260814-remanescentes-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260814-remanescentes-1
++    - /local/bruno-ui/cards/bruno-cozinha-card.js?v=20260817-mobile-perf-webp-1
+     # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-1 (popup quebrado: _escapeAttr ausente + fixed clipado).
+     # ANTERIOR (rollback): ?v=20260705-lavabo-definitive-2 (fix botao + popup <dialog> centralizado).
+     # NOVO: popup ancorado ao botao + backdrop suave + banner lavabo.jpg com bordas atmosfericas.
+@@ -434,7 +446,8 @@ frontend:
+     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260802-josh-popup-material-1
+     # ANTERIOR (rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260802-assets-resize-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260814-mobile-maquetes-v2-1
+-    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260814-remanescentes-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260814-remanescentes-1
++    - /local/bruno-ui/cards/bruno-lavabo-card.js?v=20260817-mobile-perf-webp-1
+     # NOVO (2026-07-29) — HOME V3: Corredor como 8o tile da faixa.
+     # FALLBACK: comentar esta linha + o bloco em v2/bento_bottom_block.yaml
+     # e voltar o grid para repeat(7, ...).
+@@ -450,7 +463,8 @@ frontend:
+     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260731-flat-status-dots-1
+     # ANTERIOR (rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260802-assets-resize-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260814-mobile-maquetes-v2-1
+-    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260814-remanescentes-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260814-remanescentes-1
++    - /local/bruno-ui/cards/bruno-quarto-casal-card.js?v=20260817-mobile-perf-webp-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260711-home-microadjust-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260719-icons-global-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260722-mobile-consolidation-1
+@@ -458,7 +472,8 @@ frontend:
+     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260731-flat-status-dots-1
+     # ANTERIOR (rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260802-assets-resize-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260814-mobile-maquetes-v2-1
+-    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260814-remanescentes-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260814-remanescentes-1
++    - /local/bruno-ui/cards/bruno-quarto-marina-card.js?v=20260817-mobile-perf-webp-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260711-home-microadjust-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260719-icons-global-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260722-mobile-consolidation-1
+@@ -466,8 +481,10 @@ frontend:
+     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260731-flat-status-dots-1
+     # ANTERIOR (rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260802-assets-resize-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260814-mobile-maquetes-v2-1
+-    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260814-remanescentes-1
+-    - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260719-icons-global-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260814-remanescentes-1
++    - /local/bruno-ui/cards/bruno-quarto-miguel-card.js?v=20260817-mobile-perf-webp-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260719-icons-global-1
++    - /local/bruno-ui/cards/bruno-cameras-card.js?v=20260817-mobile-perf-webp-1
+     - /local/bruno-ui/cards/bruno-roborock-card.js?v=20260719-icons-global-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260718-audit-final-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260719-icons-global-1
+@@ -475,7 +492,8 @@ frontend:
+     # ANTERIOR: - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260809-onvif-webrtc-all-1
+     # ANTERIOR: - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260810-webrtc-timeout-30s-1
+     # ANTERIOR: - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260810-webrtc-lit-context-1
+-    - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260810-webrtc-lifecycle-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260810-webrtc-lifecycle-1
++    - /local/bruno-ui/cards/bruno-home-camera-card.js?v=20260817-mobile-perf-webp-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-energy-card.js?v=20260719-icons-global-1
+     - /local/bruno-ui/cards/bruno-energy-card.js?v=20260720-icon-standardization-1
+     - /local/bruno-ui/cards/bruno-agenda-card.js?v=20260719-icons-global-1
+@@ -506,14 +524,16 @@ frontend:
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260724-home-v2-1
+     # NOVO (2026-07-24) — feedback Home V2: dock sem linhas divisórias.
+     - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260724-home-v2-2
+-    - /local/bruno-ui/cards/bruno-media-card.js?v=20260719-icons-global-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-media-card.js?v=20260719-icons-global-1
++    - /local/bruno-ui/cards/bruno-media-card.js?v=20260817-mobile-perf-webp-1
+     - /local/bruno-ui/cards/bruno-mobile-card-frame.js?v=20260518-1
+     - /local/bruno-ui/cards/bruno-mobile-nav-card.js?v=20260719-icons-global-1
+     - /local/bruno-ui/cards/bruno-mobile-rooms-card.js?v=20260518-1
+     # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-mobile-sala-card.js?v=20260608-sala-shift-1
+     # ANTERIOR (rollback assets-resize): - /local/bruno-ui/cards/bruno-mobile-sala-card.js?v=20260719-icons-global-1
+     - /local/bruno-ui/cards/bruno-mobile-sala-card.js?v=20260802-assets-resize-1
+-    - /local/bruno-ui/cards/bruno-mobile-cameras-list-card.js?v=20260719-icons-global-1
++    # ANTERIOR (cache rollback): - /local/bruno-ui/cards/bruno-mobile-cameras-list-card.js?v=20260719-icons-global-1
++    - /local/bruno-ui/cards/bruno-mobile-cameras-list-card.js?v=20260817-mobile-perf-webp-1
+ 
+ # Publica o DP Tuya initiative_message/ipc_motion para o card de monitoramento.
+ # FALLBACK: comentar esta chave e restaurar o cache/mapeamento anterior do card.
+diff --git a/config/www/bruno-ui/assets/v2/corredor-off.png b/config/www/bruno-ui/assets/v2/corredor-off.png
+deleted file mode 100644
+index 26dcfdbe..00000000
+Binary files a/config/www/bruno-ui/assets/v2/corredor-off.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/corredor-on.png b/config/www/bruno-ui/assets/v2/corredor-on.png
+deleted file mode 100644
+index 8639e705..00000000
+Binary files a/config/www/bruno-ui/assets/v2/corredor-on.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/cozinha-off.png b/config/www/bruno-ui/assets/v2/cozinha-off.png
+deleted file mode 100644
+index b150cdf4..00000000
+Binary files a/config/www/bruno-ui/assets/v2/cozinha-off.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/cozinha-on.png b/config/www/bruno-ui/assets/v2/cozinha-on.png
+deleted file mode 100644
+index 9b155050..00000000
+Binary files a/config/www/bruno-ui/assets/v2/cozinha-on.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/lavabo-off.png b/config/www/bruno-ui/assets/v2/lavabo-off.png
+deleted file mode 100644
+index 1a40263a..00000000
+Binary files a/config/www/bruno-ui/assets/v2/lavabo-off.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/lavabo-on.png b/config/www/bruno-ui/assets/v2/lavabo-on.png
+deleted file mode 100644
+index 09d1a778..00000000
+Binary files a/config/www/bruno-ui/assets/v2/lavabo-on.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/office-off.png b/config/www/bruno-ui/assets/v2/office-off.png
+deleted file mode 100644
+index 4e006b08..00000000
+Binary files a/config/www/bruno-ui/assets/v2/office-off.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/office-on.png b/config/www/bruno-ui/assets/v2/office-on.png
+deleted file mode 100644
+index 7004d389..00000000
+Binary files a/config/www/bruno-ui/assets/v2/office-on.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/quarto-bebe-off.png b/config/www/bruno-ui/assets/v2/quarto-bebe-off.png
+deleted file mode 100644
+index ce8778d2..00000000
+Binary files a/config/www/bruno-ui/assets/v2/quarto-bebe-off.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/quarto-bebe-on.png b/config/www/bruno-ui/assets/v2/quarto-bebe-on.png
+deleted file mode 100644
+index e24a1480..00000000
+Binary files a/config/www/bruno-ui/assets/v2/quarto-bebe-on.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/quarto-casal-off.png b/config/www/bruno-ui/assets/v2/quarto-casal-off.png
+deleted file mode 100644
+index 94b13910..00000000
+Binary files a/config/www/bruno-ui/assets/v2/quarto-casal-off.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/quarto-casal-on.png b/config/www/bruno-ui/assets/v2/quarto-casal-on.png
+deleted file mode 100644
+index e554fbf5..00000000
+Binary files a/config/www/bruno-ui/assets/v2/quarto-casal-on.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/quarto-menina-off.png b/config/www/bruno-ui/assets/v2/quarto-menina-off.png
+deleted file mode 100644
+index c93e366e..00000000
+Binary files a/config/www/bruno-ui/assets/v2/quarto-menina-off.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/quarto-menina-on.png b/config/www/bruno-ui/assets/v2/quarto-menina-on.png
+deleted file mode 100644
+index e4fee1bd..00000000
+Binary files a/config/www/bruno-ui/assets/v2/quarto-menina-on.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/sala-off.png b/config/www/bruno-ui/assets/v2/sala-off.png
+deleted file mode 100644
+index f411409c..00000000
+Binary files a/config/www/bruno-ui/assets/v2/sala-off.png and /dev/null differ
+diff --git a/config/www/bruno-ui/assets/v2/sala-on.png b/config/www/bruno-ui/assets/v2/sala-on.png
+deleted file mode 100644
+index c27f8b24..00000000
+Binary files a/config/www/bruno-ui/assets/v2/sala-on.png and /dev/null differ
+diff --git a/config/www/bruno-ui/cards/bruno-cameras-card.js b/config/www/bruno-ui/cards/bruno-cameras-card.js
+index 477dd35f..52f83d93 100644
+--- a/config/www/bruno-ui/cards/bruno-cameras-card.js
++++ b/config/www/bruno-ui/cards/bruno-cameras-card.js
+@@ -601,6 +601,13 @@ class BrunoCamerasCard extends HTMLElement {
+           display: block;
+           filter: saturate(1.03) contrast(1.02);
+           transform: scale(1.002);
++          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++             (copiar/salvar imagem) no long-press sobre o instantaneo da
++             camera. Tap/hold do proprio componente continuam funcionando. */
++          -webkit-touch-callout: none;
++          -webkit-user-drag: none;
++          -webkit-user-select: none;
++          user-select: none;
+         }
+ 
+         .media-frame.is-image-error .camera-image,
+@@ -1072,7 +1079,7 @@ class BrunoCamerasCard extends HTMLElement {
+     return `
+       <button class="thumb-button${activeClass}" type="button" data-camera-id="${BrunoCamerasCard._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasCard._escapeAttr(camera.name)}">
+         <span class="thumb-media${hasImage ? ' has-image' : ''}">
+-          ${hasImage ? `<img src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}" alt="">` : ''}
++          ${hasImage ? `<img src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}" alt="" draggable="false" style="-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-user-select:none;user-select:none">` : ''}
+           <span class="thumb-placeholder" aria-hidden="true"></span>
+           <span class="thumb-overlay"></span>
+           <span class="thumb-label">
+diff --git a/config/www/bruno-ui/cards/bruno-cozinha-card.js b/config/www/bruno-ui/cards/bruno-cozinha-card.js
+index a425347b..f926fef1 100644
+--- a/config/www/bruno-ui/cards/bruno-cozinha-card.js
++++ b/config/www/bruno-ui/cards/bruno-cozinha-card.js
+@@ -44,8 +44,8 @@ const BRUNO_COZINHA_DEFAULT_CONFIG = {
+     "off": "/local/bruno-ui/assets/kitchen-off-tight.png?v=20260802-assets-resize-1",
+     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/kitchen-on.png?v=20260702-all-images-1",
+     "on": "/local/bruno-ui/assets/kitchen-on-tight.png?v=20260802-assets-resize-1",
+-    "phone_off": "/local/bruno-ui/assets/v2/cozinha-off.png?v=20260808-maquetes-premium-1",
+-    "phone_on": "/local/bruno-ui/assets/v2/cozinha-on.png?v=20260808-maquetes-premium-1",
++    "phone_off": "/local/bruno-ui/assets/v2/cozinha-off.webp?v=20260817-mobile-perf-webp-1",
++    "phone_on": "/local/bruno-ui/assets/v2/cozinha-on.webp?v=20260817-mobile-perf-webp-1",
+     "fallback": "mdi:noodles"
+   },
+   "status_dots": [
+@@ -799,11 +799,25 @@ class BrunoCozinhaCard extends HTMLElement {
+     const on = BrunoCozinhaCard._escape(icon.on || '');
+     const phoneOff = BrunoCozinhaCard._escape(icon.phone_off || '');
+     const phoneOn = BrunoCozinhaCard._escape(icon.phone_on || '');
++    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
++    // estados do phone no primeiro load — so o que esta visivel agora.
++    // O estado inativo fica sem srcset ate o BrunoAssetPreload avisar que
++    // aqueceu em segundo plano (idle); ate la o <picture> cai no <img>
++    // tight de tablet/desktop (mesma posicao CSS, sem layout shift, sem
++    // card vazio — so um instante com a arte antiga, invisivel pois
++    // opacity:0 continua valendo para o estado que nao esta em tela).
++    const preload = globalThis.BrunoAssetPreload;
++    const phoneOffReady = !phoneOff || !active || !preload || preload.isReady(phoneOff);
++    const phoneOnReady = !phoneOn || active || !preload || preload.isReady(phoneOn);
++    if (preload) {
++      if (!phoneOffReady) preload.schedule(phoneOff, () => { if (this.isConnected) this._render(); });
++      if (!phoneOnReady) preload.schedule(phoneOn, () => { if (this.isConnected) this._render(); });
++    }
+     return `
+       <span class="room-asset-wrap">
+         <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
+-        ${off ? `<picture>${phoneOff ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async"></picture>` : ''}
+-        ${on ? `<picture>${phoneOn ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async"></picture>` : ''}
++        ${off ? `<picture>${phoneOff && phoneOffReady ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
++        ${on ? `<picture>${phoneOn && phoneOnReady ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
+       </span>
+     `;
+   }
+@@ -1059,6 +1073,16 @@ class BrunoCozinhaCard extends HTMLElement {
+           transform: translateZ(0);
+           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
+           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
++        
++          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++             (copiar/salvar imagem) no long-press sobre a ilustracao do
++             comodo. Tap e o hold customizado do proprio botao continuam
++             funcionando — isso so desliga o menu de contexto NATIVO de
++             imagem, nao os pointer events do componente. */
++          -webkit-touch-callout: none;
++          -webkit-user-drag: none;
++          -webkit-user-select: none;
++          user-select: none;
+         }
+ 
+         .room-asset-off {
+diff --git a/config/www/bruno-ui/cards/bruno-home-camera-card.js b/config/www/bruno-ui/cards/bruno-home-camera-card.js
+index 0054962c..e3c0cd53 100644
+--- a/config/www/bruno-ui/cards/bruno-home-camera-card.js
++++ b/config/www/bruno-ui/cards/bruno-home-camera-card.js
+@@ -468,7 +468,7 @@ class BrunoHomeCameraCard extends HTMLElement {
+     return `
+       <div class="camera-row-image">
+         <div class="camera-live-slot" data-camera-live="${BrunoHomeCameraCard._escapeAttr(camera.entity)}" aria-hidden="true"></div>
+-        ${image ? `<img src="${BrunoHomeCameraCard._escapeAttr(image)}" data-camera-src-base="${BrunoHomeCameraCard._escapeAttr(base)}" data-camera-entity="${BrunoHomeCameraCard._escapeAttr(camera.entity)}" alt="">` : ''}
++        ${image ? `<img src="${BrunoHomeCameraCard._escapeAttr(image)}" data-camera-src-base="${BrunoHomeCameraCard._escapeAttr(base)}" data-camera-entity="${BrunoHomeCameraCard._escapeAttr(camera.entity)}" alt="" draggable="false" style="-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-user-select:none;user-select:none">` : ''}
+         <div class="camera-placeholder" aria-hidden="true"></div>
+       </div>
+     `;
+diff --git a/config/www/bruno-ui/cards/bruno-lavabo-card.js b/config/www/bruno-ui/cards/bruno-lavabo-card.js
+index 4090c8d5..130f21f2 100644
+--- a/config/www/bruno-ui/cards/bruno-lavabo-card.js
++++ b/config/www/bruno-ui/cards/bruno-lavabo-card.js
+@@ -34,8 +34,8 @@ const BRUNO_LAVABO_DEFAULT_CONFIG = {
+     "off": "/local/bruno-ui/assets/lavabo-off-tight.png?v=20260802-assets-resize-1",
+     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/lavabo-on.png?v=20260702-all-images-1",
+     "on": "/local/bruno-ui/assets/lavabo-on-tight.png?v=20260802-assets-resize-1",
+-    "phone_off": "/local/bruno-ui/assets/v2/lavabo-off.png?v=20260808-maquetes-premium-1",
+-    "phone_on": "/local/bruno-ui/assets/v2/lavabo-on.png?v=20260808-maquetes-premium-1",
++    "phone_off": "/local/bruno-ui/assets/v2/lavabo-off.webp?v=20260817-mobile-perf-webp-1",
++    "phone_on": "/local/bruno-ui/assets/v2/lavabo-on.webp?v=20260817-mobile-perf-webp-1",
+     "fallback": "mdi:toilet"
+   },
+   "popup": {
+@@ -884,11 +884,25 @@ class BrunoLavaboCard extends HTMLElement {
+     const on = BrunoLavaboCard._escape(icon.on || '');
+     const phoneOff = BrunoLavaboCard._escape(icon.phone_off || '');
+     const phoneOn = BrunoLavaboCard._escape(icon.phone_on || '');
++    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
++    // estados do phone no primeiro load — so o que esta visivel agora.
++    // O estado inativo fica sem srcset ate o BrunoAssetPreload avisar que
++    // aqueceu em segundo plano (idle); ate la o <picture> cai no <img>
++    // tight de tablet/desktop (mesma posicao CSS, sem layout shift, sem
++    // card vazio — so um instante com a arte antiga, invisivel pois
++    // opacity:0 continua valendo para o estado que nao esta em tela).
++    const preload = globalThis.BrunoAssetPreload;
++    const phoneOffReady = !phoneOff || !active || !preload || preload.isReady(phoneOff);
++    const phoneOnReady = !phoneOn || active || !preload || preload.isReady(phoneOn);
++    if (preload) {
++      if (!phoneOffReady) preload.schedule(phoneOff, () => { if (this.isConnected) this._render(); });
++      if (!phoneOnReady) preload.schedule(phoneOn, () => { if (this.isConnected) this._render(); });
++    }
+     return `
+       <span class="room-asset-wrap">
+         <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
+-        ${off ? `<picture>${phoneOff ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async"></picture>` : ''}
+-        ${on ? `<picture>${phoneOn ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async"></picture>` : ''}
++        ${off ? `<picture>${phoneOff && phoneOffReady ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
++        ${on ? `<picture>${phoneOn && phoneOnReady ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
+       </span>
+     `;
+   }
+@@ -1145,6 +1159,16 @@ class BrunoLavaboCard extends HTMLElement {
+           transform: translateZ(0);
+           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
+           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
++        
++          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++             (copiar/salvar imagem) no long-press sobre a ilustracao do
++             comodo. Tap e o hold customizado do proprio botao continuam
++             funcionando — isso so desliga o menu de contexto NATIVO de
++             imagem, nao os pointer events do componente. */
++          -webkit-touch-callout: none;
++          -webkit-user-drag: none;
++          -webkit-user-select: none;
++          user-select: none;
+         }
+ 
+         .room-asset-off {
+diff --git a/config/www/bruno-ui/cards/bruno-media-card.js b/config/www/bruno-ui/cards/bruno-media-card.js
+index a0319385..7a7ade34 100644
+--- a/config/www/bruno-ui/cards/bruno-media-card.js
++++ b/config/www/bruno-ui/cards/bruno-media-card.js
+@@ -28,7 +28,11 @@ const BRUNO_MEDIA_DEFAULT_CONFIG = {
+   ],
+ };
+ 
+-const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];
++// Item 4B (2026-08-17): 'buffering' entrou na lista. E um estado tecnico
++// transitorio de playing (carregando o proximo segmento/trecho) — tratar
++// como "sem playback" fazia a TV sumir do card dinamico por 1-2s a cada
++// rebuferizacao, mesmo tocando continuamente. Ver tambem _hasPlayback().
++const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused', 'buffering'];
+ 
+ class BrunoMediaCard extends HTMLElement {
+   static getStubConfig() {
+@@ -632,7 +636,11 @@ class BrunoMediaCard extends HTMLElement {
+     const isShell = ['google tv launcher', 'android tv launcher', 'launcher', 'ambient mode', 'backdrop', 'home screen']
+       .some((term) => shellText.includes(term));
+     if (isShell) return false;
+-    if (['playing', 'paused'].includes(normalized)) return Boolean(this._cleanText(title) || image || this._cleanText(appName));
++    // Item 4B (2026-08-17): 'buffering' entra no mesmo balde de playing/paused
++    // — e o mesmo player, so momentaneamente carregando. Sem isso, o ciclo
++    // playing -> buffering -> playing fazia o card desmontar e remontar
++    // (flicker) a cada rebuferizacao.
++    if (['playing', 'paused', 'buffering'].includes(normalized)) return Boolean(this._cleanText(title) || image || this._cleanText(appName));
+     if (normalized !== 'on') return false;
+     const hasMediaTitle = Boolean(this._cleanText(title));
+     const hasTimedMedia = Number(attributes?.media_duration) > 0 || Number(attributes?.media_position) > 0;
+@@ -1003,7 +1011,7 @@ class BrunoMediaCard extends HTMLElement {
+             class="wide-art${artwork ? ' has-art' : ''}"
+             aria-hidden="true"
+           >
+-            ${artwork ? `<img src="${artwork}" alt="">` : `<bruno-icon icon="${BrunoMediaCard._escapeAttr(focus.serviceIcon || 'mdi:music-note')}"></bruno-icon>`}
++            ${artwork ? `<img src="${artwork}" alt="" draggable="false" style="-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-user-select:none;user-select:none">` : `<bruno-icon icon="${BrunoMediaCard._escapeAttr(focus.serviceIcon || 'mdi:music-note')}"></bruno-icon>`}
+           </div>
+           ${focus.hasPlayback ? `
+             <div class="wide-progress" style="--media-progress:${progress.toFixed(2)}%;">
+diff --git a/config/www/bruno-ui/cards/bruno-mobile-cameras-list-card.js b/config/www/bruno-ui/cards/bruno-mobile-cameras-list-card.js
+index 870bf4b9..1c3b8981 100644
+--- a/config/www/bruno-ui/cards/bruno-mobile-cameras-list-card.js
++++ b/config/www/bruno-ui/cards/bruno-mobile-cameras-list-card.js
+@@ -237,6 +237,12 @@ class BrunoMobileCamerasListCard extends HTMLElement {
+         .camera-image {
+           z-index: 1;
+           filter: saturate(0.88) contrast(1.04);
++          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++             (copiar/salvar imagem) no long-press sobre o instantaneo. */
++          -webkit-touch-callout: none;
++          -webkit-user-drag: none;
++          -webkit-user-select: none;
++          user-select: none;
+         }
+ 
+         .camera-image.is-hidden,
+diff --git a/config/www/bruno-ui/cards/bruno-office-card.js b/config/www/bruno-ui/cards/bruno-office-card.js
+index b3bc5d58..8fb6cb75 100644
+--- a/config/www/bruno-ui/cards/bruno-office-card.js
++++ b/config/www/bruno-ui/cards/bruno-office-card.js
+@@ -255,6 +255,26 @@ class BrunoOfficeCard extends HTMLElement {
+     return BRUNO_OFFICE_CLIMATE_ON_STATES.includes(entity.state) || entity.state !== 'off';
+   }
+ 
++  // Item 3 (2026-08-17): ANTERIOR (rollback) fazia
++  //   pcOn: pc_active==='on' || pc_session==='unlocked' || pc_fallback==='on'
++  // — um OR simples deixa o sensor supervisionado (pc_active) sem efeito
++  // pratico, porque o HASS.Agent as vezes congela pc_session em "Unlocked"
++  // quando o PC desliga/para de responder, e esse valor cru nunca reverte.
++  // O resultado era o PC aparecer "ativo" para sempre.
++  //
++  // Agora pc_active e AUTORITATIVO sempre que disponivel (state 'on'/'off'):
++  // decide sozinho, sem OR com a sessao crua. So quando pc_active esta
++  // indisponivel (sensor caiu / HASS.Agent nao reportou ainda) e que a leitura
++  // cai para pc_session/pc_fallback como fallback — a mesma finalidade que
++  // pc_fallback ja tinha antes desta correcao.
++  _pcOn(entities) {
++    const pcActive = this._state(entities.pc_active);
++    if (!this._isUnavailable(pcActive)) return pcActive.state === 'on';
++    const pcSession = String(this._state(entities.pc_session)?.state || '').toLowerCase();
++    const pcFallbackOn = this._state(entities.pc_fallback)?.state === 'on';
++    return pcSession === 'unlocked' || pcFallbackOn;
++  }
++
+   _presenceRecent() {
+     // NOVO (2026-07-12): fail-closed. Sem fallback para presence bruta.
+     const supervisedMotion = this._state(this._config.entities.motion_recent);
+@@ -284,7 +304,6 @@ class BrunoOfficeCard extends HTMLElement {
+     const room = this._state(entities.room_group);
+     const climate = this._state(entities.climate);
+     const speaker = this._state(entities.speaker);
+-    const pcSession = String(this._state(entities.pc_session)?.state || '').toLowerCase();
+     const roomOn = room?.state === 'on';
+     const pcFallbackOn = this._state(entities.pc_fallback)?.state === 'on';
+     const lights = this._lightsSummary(room);
+@@ -303,7 +322,7 @@ class BrunoOfficeCard extends HTMLElement {
+       iconActive: roomOn || pcFallbackOn,
+       meetingOn: this._meetingOn(),
+       presenceOn: this._presenceRecent(),
+-      pcOn: this._state(entities.pc_active)?.state === 'on' || pcSession === 'unlocked' || pcFallbackOn,
++      pcOn: this._pcOn(entities),
+       climateOn: this._climateOn(climate),
+       speakerOn: BRUNO_OFFICE_SPEAKER_ON_STATES.includes(speaker?.state || '')
+         || this._spotifyOnDevice('Echo Pop Office'),
+@@ -1010,6 +1029,16 @@ class BrunoOfficeCard extends HTMLElement {
+           transform: translateZ(0) scale(1.06);
+           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
+           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
++        
++          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++             (copiar/salvar imagem) no long-press sobre a ilustracao do
++             comodo. Tap e o hold customizado do proprio botao continuam
++             funcionando — isso so desliga o menu de contexto NATIVO de
++             imagem, nao os pointer events do componente. */
++          -webkit-touch-callout: none;
++          -webkit-user-drag: none;
++          -webkit-user-select: none;
++          user-select: none;
+         }
+ 
+         .office-asset-off {
+@@ -1577,7 +1606,7 @@ class BrunoOfficeCard extends HTMLElement {
+         ${this._tileDivider()}
+         <button class="office-action" type="button" data-action-key="room" aria-label="${BrunoOfficeCard._escape(this._config.name)}">
+           <div class="room-icon" aria-hidden="true">
+-            <span class="office-icon">${BrunoOfficeCard._officeVisual(model.iconActive)}</span>
++            <span class="office-icon">${this._officeVisual(model.iconActive)}</span>
+             ${model.meetingOn ? BrunoOfficeCard._meetingIcon() : ''}
+           </div>
+ 
+@@ -1629,23 +1658,41 @@ class BrunoOfficeCard extends HTMLElement {
+     this._wireAssetFallback();
+   }
+ 
+-  static _officeVisual(active) {
++  // ANTERIOR (rollback 2026-08-17): era `static`, chamado como
++  // `BrunoOfficeCard._officeVisual(...)`. Virou metodo de instancia para
++  // poder reagendar `this._render()` quando o BrunoAssetPreload aquece o
++  // estado inativo — ver comentario abaixo.
++  _officeVisual(active) {
+     // ORIGINAL (rollback rapido):
+     // const version = '20260608-room-assets-uniform-1';
+     // src="/local/bruno-ui/assets/office-off.png?v=20260702-all-images-1" / office-on.png
+     const version = '20260609-rail-dynamic-1';
++    const offUrl = '/local/bruno-ui/assets/v2/office-off.webp?v=20260817-mobile-perf-webp-1';
++    const onUrl = '/local/bruno-ui/assets/v2/office-on.webp?v=20260817-mobile-perf-webp-1';
++    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
++    // estados do phone no primeiro load — so o visivel agora. O estado
++    // inativo fica sem srcset ate o BrunoAssetPreload avisar que aqueceu em
++    // segundo plano (idle); ate la o <picture> cai no <img> tight de
++    // tablet/desktop, sem layout shift e sem card vazio.
++    const preload = globalThis.BrunoAssetPreload;
++    const offReady = !active || !preload || preload.isReady(offUrl);
++    const onReady = active || !preload || preload.isReady(onUrl);
++    if (preload) {
++      if (!offReady) preload.schedule(offUrl, () => { if (this.isConnected) this._render(); });
++      if (!onReady) preload.schedule(onUrl, () => { if (this.isConnected) this._render(); });
++    }
+     return `
+       <span class="office-asset-wrap">
+         <span class="office-asset-fallback">${BrunoOfficeCard._officeIcon(active)}</span>
+         <picture>
+           <!-- V2 apenas no phone; o img abaixo continua sendo o contrato
+                anterior de tablet/desktop e o fallback de rollback. -->
+-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/office-off.png?v=20260808-maquetes-premium-1">
+-          <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
++          ${offReady ? `<source media="(max-width: 800px)" srcset="${offUrl}">` : ''}
++          <img class="office-asset office-asset-off" src="/local/bruno-ui/assets/office-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async" draggable="false">
+         </picture>
+         <picture>
+-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/office-on.png?v=20260808-maquetes-premium-1">
+-          <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
++          ${onReady ? `<source media="(max-width: 800px)" srcset="${onUrl}">` : ''}
++          <img class="office-asset office-asset-on" src="/local/bruno-ui/assets/office-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async" draggable="false">
+         </picture>
+       </span>
+     `;
+diff --git a/config/www/bruno-ui/cards/bruno-quarto-casal-card.js b/config/www/bruno-ui/cards/bruno-quarto-casal-card.js
+index 0419b3dd..e8881d59 100644
+--- a/config/www/bruno-ui/cards/bruno-quarto-casal-card.js
++++ b/config/www/bruno-ui/cards/bruno-quarto-casal-card.js
+@@ -43,8 +43,8 @@ const BRUNO_QUARTO_CASAL_DEFAULT_CONFIG = {
+     "off": "/local/bruno-ui/assets/couple-bedroom-off-generated-v3.png?v=20260802-assets-resize-1",
+     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/couple-bedroom-on.png?v=20260702-all-images-1",
+     "on": "/local/bruno-ui/assets/couple-bedroom-on-generated-v3.png?v=20260802-assets-resize-1",
+-    "phone_off": "/local/bruno-ui/assets/v2/quarto-casal-off.png?v=20260808-maquetes-premium-1",
+-    "phone_on": "/local/bruno-ui/assets/v2/quarto-casal-on.png?v=20260808-maquetes-premium-1",
++    "phone_off": "/local/bruno-ui/assets/v2/quarto-casal-off.webp?v=20260817-mobile-perf-webp-1",
++    "phone_on": "/local/bruno-ui/assets/v2/quarto-casal-on.webp?v=20260817-mobile-perf-webp-1",
+     "fallback": "mdi:bed-king-outline"
+   },
+   "status_dots": [
+@@ -807,11 +807,25 @@ class BrunoQuartoCasalCard extends HTMLElement {
+     const on = BrunoQuartoCasalCard._escape(icon.on || '');
+     const phoneOff = BrunoQuartoCasalCard._escape(icon.phone_off || '');
+     const phoneOn = BrunoQuartoCasalCard._escape(icon.phone_on || '');
++    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
++    // estados do phone no primeiro load — so o que esta visivel agora.
++    // O estado inativo fica sem srcset ate o BrunoAssetPreload avisar que
++    // aqueceu em segundo plano (idle); ate la o <picture> cai no <img>
++    // tight de tablet/desktop (mesma posicao CSS, sem layout shift, sem
++    // card vazio — so um instante com a arte antiga, invisivel pois
++    // opacity:0 continua valendo para o estado que nao esta em tela).
++    const preload = globalThis.BrunoAssetPreload;
++    const phoneOffReady = !phoneOff || !active || !preload || preload.isReady(phoneOff);
++    const phoneOnReady = !phoneOn || active || !preload || preload.isReady(phoneOn);
++    if (preload) {
++      if (!phoneOffReady) preload.schedule(phoneOff, () => { if (this.isConnected) this._render(); });
++      if (!phoneOnReady) preload.schedule(phoneOn, () => { if (this.isConnected) this._render(); });
++    }
+     return `
+       <span class="room-asset-wrap">
+         <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
+-        ${off ? `<picture>${phoneOff ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async"></picture>` : ''}
+-        ${on ? `<picture>${phoneOn ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async"></picture>` : ''}
++        ${off ? `<picture>${phoneOff && phoneOffReady ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
++        ${on ? `<picture>${phoneOn && phoneOnReady ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
+       </span>
+     `;
+   }
+@@ -1067,6 +1081,16 @@ class BrunoQuartoCasalCard extends HTMLElement {
+           transform: translateZ(0);
+           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
+           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
++        
++          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++             (copiar/salvar imagem) no long-press sobre a ilustracao do
++             comodo. Tap e o hold customizado do proprio botao continuam
++             funcionando — isso so desliga o menu de contexto NATIVO de
++             imagem, nao os pointer events do componente. */
++          -webkit-touch-callout: none;
++          -webkit-user-drag: none;
++          -webkit-user-select: none;
++          user-select: none;
+         }
+ 
+         .room-asset-off {
+diff --git a/config/www/bruno-ui/cards/bruno-quarto-marina-card.js b/config/www/bruno-ui/cards/bruno-quarto-marina-card.js
+index 0838d944..b14a4ec4 100644
+--- a/config/www/bruno-ui/cards/bruno-quarto-marina-card.js
++++ b/config/www/bruno-ui/cards/bruno-quarto-marina-card.js
+@@ -41,8 +41,8 @@ const BRUNO_QUARTO_MARINA_DEFAULT_CONFIG = {
+     "off": "/local/bruno-ui/assets/marina-bedroom-off-tight.png?v=20260802-assets-resize-1",
+     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/marina-bedroom-on.png?v=20260702-all-images-1",
+     "on": "/local/bruno-ui/assets/marina-bedroom-on-tight.png?v=20260802-assets-resize-1",
+-    "phone_off": "/local/bruno-ui/assets/v2/quarto-menina-off.png?v=20260808-maquetes-premium-1",
+-    "phone_on": "/local/bruno-ui/assets/v2/quarto-menina-on.png?v=20260808-maquetes-premium-1",
++    "phone_off": "/local/bruno-ui/assets/v2/quarto-menina-off.webp?v=20260817-mobile-perf-webp-1",
++    "phone_on": "/local/bruno-ui/assets/v2/quarto-menina-on.webp?v=20260817-mobile-perf-webp-1",
+     "fallback": "mdi:bed-single-outline"
+   },
+   "status_dots": [
+@@ -793,11 +793,25 @@ class BrunoQuartoMarinaCard extends HTMLElement {
+     const on = BrunoQuartoMarinaCard._escape(icon.on || '');
+     const phoneOff = BrunoQuartoMarinaCard._escape(icon.phone_off || '');
+     const phoneOn = BrunoQuartoMarinaCard._escape(icon.phone_on || '');
++    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
++    // estados do phone no primeiro load — so o que esta visivel agora.
++    // O estado inativo fica sem srcset ate o BrunoAssetPreload avisar que
++    // aqueceu em segundo plano (idle); ate la o <picture> cai no <img>
++    // tight de tablet/desktop (mesma posicao CSS, sem layout shift, sem
++    // card vazio — so um instante com a arte antiga, invisivel pois
++    // opacity:0 continua valendo para o estado que nao esta em tela).
++    const preload = globalThis.BrunoAssetPreload;
++    const phoneOffReady = !phoneOff || !active || !preload || preload.isReady(phoneOff);
++    const phoneOnReady = !phoneOn || active || !preload || preload.isReady(phoneOn);
++    if (preload) {
++      if (!phoneOffReady) preload.schedule(phoneOff, () => { if (this.isConnected) this._render(); });
++      if (!phoneOnReady) preload.schedule(phoneOn, () => { if (this.isConnected) this._render(); });
++    }
+     return `
+       <span class="room-asset-wrap">
+         <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
+-        ${off ? `<picture>${phoneOff ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async"></picture>` : ''}
+-        ${on ? `<picture>${phoneOn ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async"></picture>` : ''}
++        ${off ? `<picture>${phoneOff && phoneOffReady ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
++        ${on ? `<picture>${phoneOn && phoneOnReady ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
+       </span>
+     `;
+   }
+@@ -1047,6 +1061,16 @@ class BrunoQuartoMarinaCard extends HTMLElement {
+           transform: translateZ(0);
+           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
+           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
++        
++          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++             (copiar/salvar imagem) no long-press sobre a ilustracao do
++             comodo. Tap e o hold customizado do proprio botao continuam
++             funcionando — isso so desliga o menu de contexto NATIVO de
++             imagem, nao os pointer events do componente. */
++          -webkit-touch-callout: none;
++          -webkit-user-drag: none;
++          -webkit-user-select: none;
++          user-select: none;
+         }
+ 
+         .room-asset-off {
+diff --git a/config/www/bruno-ui/cards/bruno-quarto-miguel-card.js b/config/www/bruno-ui/cards/bruno-quarto-miguel-card.js
+index 8095d4e5..b7a49b59 100644
+--- a/config/www/bruno-ui/cards/bruno-quarto-miguel-card.js
++++ b/config/www/bruno-ui/cards/bruno-quarto-miguel-card.js
+@@ -41,8 +41,8 @@ const BRUNO_QUARTO_MIGUEL_DEFAULT_CONFIG = {
+     "off": "/local/bruno-ui/assets/miguel-bedroom-off-tight.png?v=20260802-assets-resize-1",
+     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/miguel-bedroom-on.png?v=20260702-all-images-1",
+     "on": "/local/bruno-ui/assets/miguel-bedroom-on-tight.png?v=20260802-assets-resize-1",
+-    "phone_off": "/local/bruno-ui/assets/v2/quarto-bebe-off.png?v=20260808-maquetes-premium-1",
+-    "phone_on": "/local/bruno-ui/assets/v2/quarto-bebe-on.png?v=20260808-maquetes-premium-1",
++    "phone_off": "/local/bruno-ui/assets/v2/quarto-bebe-off.webp?v=20260817-mobile-perf-webp-1",
++    "phone_on": "/local/bruno-ui/assets/v2/quarto-bebe-on.webp?v=20260817-mobile-perf-webp-1",
+     "fallback": "mdi:bed-single-outline"
+   },
+   "status_dots": [
+@@ -764,11 +764,25 @@ class BrunoQuartoMiguelCard extends HTMLElement {
+     const on = BrunoQuartoMiguelCard._escape(icon.on || '');
+     const phoneOff = BrunoQuartoMiguelCard._escape(icon.phone_off || '');
+     const phoneOn = BrunoQuartoMiguelCard._escape(icon.phone_on || '');
++    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
++    // estados do phone no primeiro load — so o que esta visivel agora.
++    // O estado inativo fica sem srcset ate o BrunoAssetPreload avisar que
++    // aqueceu em segundo plano (idle); ate la o <picture> cai no <img>
++    // tight de tablet/desktop (mesma posicao CSS, sem layout shift, sem
++    // card vazio — so um instante com a arte antiga, invisivel pois
++    // opacity:0 continua valendo para o estado que nao esta em tela).
++    const preload = globalThis.BrunoAssetPreload;
++    const phoneOffReady = !phoneOff || !active || !preload || preload.isReady(phoneOff);
++    const phoneOnReady = !phoneOn || active || !preload || preload.isReady(phoneOn);
++    if (preload) {
++      if (!phoneOffReady) preload.schedule(phoneOff, () => { if (this.isConnected) this._render(); });
++      if (!phoneOnReady) preload.schedule(phoneOn, () => { if (this.isConnected) this._render(); });
++    }
+     return `
+       <span class="room-asset-wrap">
+         <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
+-        ${off ? `<picture>${phoneOff ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async"></picture>` : ''}
+-        ${on ? `<picture>${phoneOn ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async"></picture>` : ''}
++        ${off ? `<picture>${phoneOff && phoneOffReady ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
++        ${on ? `<picture>${phoneOn && phoneOnReady ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
+       </span>
+     `;
+   }
+@@ -1026,6 +1040,16 @@ class BrunoQuartoMiguelCard extends HTMLElement {
+           transform: translateZ(0);
+           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
+           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
++        
++          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++             (copiar/salvar imagem) no long-press sobre a ilustracao do
++             comodo. Tap e o hold customizado do proprio botao continuam
++             funcionando — isso so desliga o menu de contexto NATIVO de
++             imagem, nao os pointer events do componente. */
++          -webkit-touch-callout: none;
++          -webkit-user-drag: none;
++          -webkit-user-select: none;
++          user-select: none;
+         }
+ 
+         .room-asset-off {
+diff --git a/config/www/bruno-ui/cards/bruno-sala-card.js b/config/www/bruno-ui/cards/bruno-sala-card.js
+index 4b883e31..6987eb8e 100644
+--- a/config/www/bruno-ui/cards/bruno-sala-card.js
++++ b/config/www/bruno-ui/cards/bruno-sala-card.js
+@@ -1499,6 +1499,16 @@ class BrunoSalaCard extends HTMLElement {
+           transform: translateZ(0);
+           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
+           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
++        
++          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++             (copiar/salvar imagem) no long-press sobre a ilustracao do
++             comodo. Tap e o hold customizado do proprio botao continuam
++             funcionando — isso so desliga o menu de contexto NATIVO de
++             imagem, nao os pointer events do componente. */
++          -webkit-touch-callout: none;
++          -webkit-user-drag: none;
++          -webkit-user-select: none;
++          user-select: none;
+         }
+ 
+         .room-asset-off {
+@@ -4301,7 +4311,7 @@ class BrunoSalaCard extends HTMLElement {
+       <div class="sala-card${roomActiveClass}${statusStackClass}${this._homeThemeClass()}">
+         <button class="hero-action" type="button" data-action-key="room" aria-label="Sala">
+           <div class="room-icon" aria-hidden="true">
+-            ${BrunoSalaCard._roomVisual(model.roomOn)}
++            ${this._roomVisual(model.roomOn)}
+           </div>
+ 
+           <span class="room-nav-zone" data-room-nav role="button" tabindex="0" aria-label="Abrir ${BrunoSalaCard._escape(this._config.name)}">
+@@ -4389,19 +4399,38 @@ class BrunoSalaCard extends HTMLElement {
+   */
+ 
+   // NOVO: assets tight (trim de borda transparente) — sofa ocupa ~100% do conteiner
+-  static _roomVisual(active) {
++  // ANTERIOR (rollback 2026-08-17): era `static`, chamado como
++  // `BrunoSalaCard._roomVisual(...)`. Virou metodo de instancia para poder
++  // reagendar `this._render()` quando o BrunoAssetPreload aquece o estado
++  // inativo — ver comentario abaixo. `_roomIcon` continua static (nao precisa
++  // de `this`).
++  _roomVisual(active) {
++    const offUrl = '/local/bruno-ui/assets/v2/sala-off.webp?v=20260817-mobile-perf-webp-1';
++    const onUrl = '/local/bruno-ui/assets/v2/sala-on.webp?v=20260817-mobile-perf-webp-1';
++    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
++    // estados do phone no primeiro load — so o visivel agora. O estado
++    // inativo fica sem srcset ate o BrunoAssetPreload avisar que aqueceu em
++    // segundo plano (idle); ate la o <picture> cai no <img> tight de
++    // tablet/desktop, sem layout shift e sem card vazio.
++    const preload = globalThis.BrunoAssetPreload;
++    const offReady = !active || !preload || preload.isReady(offUrl);
++    const onReady = active || !preload || preload.isReady(onUrl);
++    if (preload) {
++      if (!offReady) preload.schedule(offUrl, () => { if (this.isConnected) this._render(); });
++      if (!onReady) preload.schedule(onUrl, () => { if (this.isConnected) this._render(); });
++    }
+     return `
+       <span class="room-asset-wrap">
+         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
+         <picture>
+           <!-- O source V2 e exclusivo do phone; o img preserva integralmente
+                o asset anterior em tablet/desktop e funciona como rollback. -->
+-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-off.png?v=20260808-maquetes-premium-1">
+-          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
++          ${offReady ? `<source media="(max-width: 800px)" srcset="${offUrl}">` : ''}
++          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async" draggable="false">
+         </picture>
+         <picture>
+-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-on.png?v=20260808-maquetes-premium-1">
+-          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
++          ${onReady ? `<source media="(max-width: 800px)" srcset="${onUrl}">` : ''}
++          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async" draggable="false">
+         </picture>
+       </span>
+     `;
+diff --git a/config/www/bruno-ui/core/bruno-shell.js b/config/www/bruno-ui/core/bruno-shell.js
+index e72d062f..89d86ccc 100644
+--- a/config/www/bruno-ui/core/bruno-shell.js
++++ b/config/www/bruno-ui/core/bruno-shell.js
+@@ -630,23 +630,57 @@ class BrunoShell extends HTMLElement {
+     }
+   }
+ 
++  // Performance mobile (2026-08-17, item 1C): ANTERIOR (rollback) buscava
++  // TODOS os backdrops (home, sala, office, cozinha, ..., roborock, floorplan)
++  // no cold load, disputando banda com o backdrop que a tela ATUAL realmente
++  // precisa. Agora: o backdrop da seção ativa é buscado na hora; os das
++  // demais seções vão para uma fila de idle, um de cada vez, e só se ainda
++  // não estiverem no cache. `_applyBackdrop()` continua chamando
++  // `_loadBackdrop()` sob demanda ao trocar de seção — se o idle ainda não
++  // tiver chegado lá, o fetch acontece ali (nunca pior que o comportamento
++  // anterior; troca de seção nunca fica sem imagem).
+   _preloadBackdrops() {
+     if (!this._backdrops) return;
++    const activeKey = this._activeKey || this._defaultSection;
+     for (const k of Object.keys(this._backdrops)) {
+       const url = this._backdrops[k];
+-      if (url) this._loadBackdrop(url);
++      if (!url) continue;
++      if (k === activeKey) this._loadBackdrop(url);
++      else this._deferBackdropLoad(url);
+     }
+   }
+ 
+   _preloadResolvedBackdrops() {
+     if (!this._hass || !this._backdrops) return;
++    const activeKey = this._activeKey || this._defaultSection;
+     for (const key of Object.keys(this._backdrops)) {
+       const fallback = this._backdrops[key] || this._backdrops.default;
+       const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
+-      if (url) this._loadBackdrop(url);
++      if (!url) continue;
++      if (key === activeKey) this._loadBackdrop(url);
++      else this._deferBackdropLoad(url);
+     }
+   }
+ 
++  // Agenda o carregamento de UM backdrop para o próximo idle do navegador,
++  // uma única vez por URL. Guardado em dois níveis: `_backdropCache` (já
++  // carregado/carregando — `_loadBackdrop` já é idempotente nisso) e
++  // `_backdropDeferred` (já agendado, mas ainda não disparou), porque
++  // `_preloadResolvedBackdrops()` roda a cada `set hass` — sem o segundo
++  // guard, cada tick reagendaria a mesma URL enquanto o idle não dispara.
++  _deferBackdropLoad(url) {
++    if (!url) return;
++    if (!(this._backdropCache instanceof Map)) this._backdropCache = new Map();
++    if (this._backdropCache.has(url)) return;
++    if (!(this._backdropDeferred instanceof Set)) this._backdropDeferred = new Set();
++    if (this._backdropDeferred.has(url)) return;
++    this._backdropDeferred.add(url);
++    const idle = typeof requestIdleCallback === 'function'
++      ? (fn) => requestIdleCallback(fn, { timeout: 4000 })
++      : (fn) => setTimeout(fn, 400);
++    idle(() => this._loadBackdrop(url));
++  }
++
+   _loadBackdrop(url) {
+     if (!url) return Promise.resolve(null);
+     if (!(this._backdropCache instanceof Map)) this._backdropCache = new Map();
+diff --git a/dashboard-src/scripts/deploy.mjs b/dashboard-src/scripts/deploy.mjs
+index b3504e9f..f0a21752 100644
+--- a/dashboard-src/scripts/deploy.mjs
++++ b/dashboard-src/scripts/deploy.mjs
+@@ -40,6 +40,36 @@ const EXTRAS = [
+   'www/bruno-ui/cards/bruno-hero-card.js',
+   'dashboards/views/shell/rail.yaml',
+   'dashboards/shared/grid-cards/bento_comodos_matriz.yaml',
++  // NOVO (2026-08-17) — rodada de performance mobile + TV/media/PC:
++  'www/bruno-ui/core/bruno-asset-preload.js',
++  'www/bruno-ui/cards/bruno-sala-card.js',
++  'www/bruno-ui/cards/bruno-office-card.js',
++  'www/bruno-ui/cards/bruno-lavabo-card.js',
++  'www/bruno-ui/cards/bruno-cozinha-card.js',
++  'www/bruno-ui/cards/bruno-quarto-casal-card.js',
++  'www/bruno-ui/cards/bruno-quarto-marina-card.js',
++  'www/bruno-ui/cards/bruno-quarto-miguel-card.js',
++  'www/bruno-ui/cards/bruno-cameras-card.js',
++  'www/bruno-ui/cards/bruno-home-camera-card.js',
++  'www/bruno-ui/cards/bruno-mobile-cameras-list-card.js',
++  'www/bruno-ui/cards/bruno-media-card.js',
++  // Assets V2 do phone: PNG -> WebP (ver _archive/assets/v2-png-anterior-20260817/).
++  'www/bruno-ui/assets/v2/sala-off.webp',
++  'www/bruno-ui/assets/v2/sala-on.webp',
++  'www/bruno-ui/assets/v2/office-off.webp',
++  'www/bruno-ui/assets/v2/office-on.webp',
++  'www/bruno-ui/assets/v2/cozinha-off.webp',
++  'www/bruno-ui/assets/v2/cozinha-on.webp',
++  'www/bruno-ui/assets/v2/lavabo-off.webp',
++  'www/bruno-ui/assets/v2/lavabo-on.webp',
++  'www/bruno-ui/assets/v2/quarto-casal-off.webp',
++  'www/bruno-ui/assets/v2/quarto-casal-on.webp',
++  'www/bruno-ui/assets/v2/quarto-menina-off.webp',
++  'www/bruno-ui/assets/v2/quarto-menina-on.webp',
++  'www/bruno-ui/assets/v2/quarto-bebe-off.webp',
++  'www/bruno-ui/assets/v2/quarto-bebe-on.webp',
++  'www/bruno-ui/assets/v2/corredor-off.webp',
++  'www/bruno-ui/assets/v2/corredor-on.webp',
+ ];
+ 
+ // --everex publica; --vm continua aceito como apelido, com aviso.
+diff --git a/dashboard-src/src/components/rooms/bruno-room-subview.ts b/dashboard-src/src/components/rooms/bruno-room-subview.ts
+index faa188ce..5d2b9c99 100644
+--- a/dashboard-src/src/components/rooms/bruno-room-subview.ts
++++ b/dashboard-src/src/components/rooms/bruno-room-subview.ts
+@@ -86,7 +86,15 @@ function truthy(v: unknown): boolean {
+ }
+ 
+ /** Estados que contam como "ligado" em cada domínio — copiados dos originais. */
+-const ESTADOS_TV_LIGADA = ['on', 'playing', 'paused', 'idle'];
++// Item 5 (2026-08-17): 'buffering' entrou na lista. Sem ele, o ciclo
++// playing -> buffering -> playing (rebuferizacao normal de streaming) fazia
++// o hub da Sala apagar e reacender (ON -> OFF -> ON) mesmo com a TV nunca
++// tendo desligado. O card principal da Sala (bruno-sala-card.js,
++// BRUNO_SALA_TV_ON_STATES) ja incluia 'buffering' — esta lista so estava
++// desalinhada dele. "TV ligada" (esta lista) e distinto de "playback ativo"
++// (bruno-media-card.js / home_activity_media): um comodo pode estar com a TV
++// ligada em 'on'/'idle' sem midia realmente tocando, e isso continua correto.
++const ESTADOS_TV_LIGADA = ['on', 'playing', 'paused', 'idle', 'buffering'];
+ const ESTADOS_MIDIA_LIGADA = ['playing', 'paused', 'on', 'idle'];
+ const ESTADOS_CAMERA_ONLINE = ['streaming', 'recording', 'idle', 'on'];
+ const ESTADOS_CLIMATE_LIGADO = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
+diff --git a/dashboard-src/src/components/rooms/bruno-room-tile.ts b/dashboard-src/src/components/rooms/bruno-room-tile.ts
+index fcffb3d0..0772f609 100644
+--- a/dashboard-src/src/components/rooms/bruno-room-tile.ts
++++ b/dashboard-src/src/components/rooms/bruno-room-tile.ts
+@@ -832,6 +832,13 @@ export class BrunoRoomTile extends LitElement {
+       transform: translate(-8.66%, -7.81%);
+       filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.22));
+       transition: opacity 420ms ease, filter 420ms ease;
++      /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
++         (copiar/salvar imagem) no long-press sobre a ilustracao do tile. Tap
++         e o hold customizado do proprio botao continuam funcionando. */
++      -webkit-touch-callout: none;
++      -webkit-user-drag: none;
++      -webkit-user-select: none;
++      user-select: none;
+     }
+ 
+     .room-asset-on {
+@@ -1514,9 +1521,28 @@ export class BrunoRoomTile extends LitElement {
+     // troca de estado não desloca nem redimensiona nada.
+     //
+     // Os arquivos anteriores estão em _archive/assets/v2-anterior-20260808/.
+-    const v = '20260808-maquetes-premium-1';
+-    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.png?v=${v}` : '';
+-    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.png?v=${v}` : '';
++    // NOVO (2026-08-17): PNG -> WebP (mesma caixa optica, mesma mascara alfa;
++    // ver _archive/assets/v2-png-anterior-20260817/ para os originais).
++    const v = '20260817-mobile-perf-webp-1';
++    const offUrl = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.webp?v=${v}` : '';
++    const onUrl = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.webp?v=${v}` : '';
++    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
++    // estados de cada tile no primeiro load — so o que esta visivel agora
++    // (o outro fica em opacity:0 ate o proximo toggle). O estado inativo so
++    // ganha `src` real depois que o BrunoAssetPreload avisa que aqueceu em
++    // segundo plano (idle); ate la o <img> nao entra no DOM (nunca houve
++    // fallback proprio aqui, diferente dos cards classicos com <picture>).
++    // Isso nao afeta o card em si (borda, nome, temperatura, dots) — so a
++    // ilustracao, e so na janela estreita entre o mount e o warm-up de idle.
++    const preload = (globalThis as { BrunoAssetPreload?: { isReady: (u: string) => boolean; schedule: (u: string, cb: () => void) => void } }).BrunoAssetPreload;
++    const offReady = !offUrl || !on || !preload || preload.isReady(offUrl);
++    const onReady = !onUrl || on || !preload || preload.isReady(onUrl);
++    if (preload) {
++      if (!offReady) preload.schedule(offUrl, () => { if (this.isConnected) this.requestUpdate(); });
++      if (!onReady) preload.schedule(onUrl, () => { if (this.isConnected) this.requestUpdate(); });
++    }
++    const off = offReady ? offUrl : '';
++    const onImg = onReady ? onUrl : '';
+ 
+     const cardClasses = [
+       'room-card',
+@@ -1565,10 +1591,10 @@ export class BrunoRoomTile extends LitElement {
+           <div class="room-icon" aria-hidden="true">
+             <span class="room-asset-wrap">
+               ${off
+-                ? html`<img class="room-asset room-asset-off" src=${off} alt="" decoding="async" />`
++                ? html`<img class="room-asset room-asset-off" src=${off} alt="" decoding="async" draggable="false" />`
+                 : nothing}
+               ${onImg
+-                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" decoding="async" />`
++                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" decoding="async" draggable="false" />`
+                 : nothing}
+             </span>
+           </div>

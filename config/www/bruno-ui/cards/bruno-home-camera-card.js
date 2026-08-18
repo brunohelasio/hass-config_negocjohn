@@ -468,7 +468,7 @@ class BrunoHomeCameraCard extends HTMLElement {
     return `
       <div class="camera-row-image">
         <div class="camera-live-slot" data-camera-live="${BrunoHomeCameraCard._escapeAttr(camera.entity)}" aria-hidden="true"></div>
-        ${image ? `<img src="${BrunoHomeCameraCard._escapeAttr(image)}" data-camera-src-base="${BrunoHomeCameraCard._escapeAttr(base)}" data-camera-entity="${BrunoHomeCameraCard._escapeAttr(camera.entity)}" alt="">` : ''}
+        ${image ? `<img src="${BrunoHomeCameraCard._escapeAttr(image)}" data-camera-src-base="${BrunoHomeCameraCard._escapeAttr(base)}" data-camera-entity="${BrunoHomeCameraCard._escapeAttr(camera.entity)}" alt="" draggable="false" style="-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-user-select:none;user-select:none">` : ''}
         <div class="camera-placeholder" aria-hidden="true"></div>
       </div>
     `;

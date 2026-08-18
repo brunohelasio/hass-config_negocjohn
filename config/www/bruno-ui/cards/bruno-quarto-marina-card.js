@@ -41,8 +41,8 @@ const BRUNO_QUARTO_MARINA_DEFAULT_CONFIG = {
     "off": "/local/bruno-ui/assets/marina-bedroom-off-tight.png?v=20260802-assets-resize-1",
     // ORIGINAL (rollback rapido): "on": "/local/bruno-ui/assets/marina-bedroom-on.png?v=20260702-all-images-1",
     "on": "/local/bruno-ui/assets/marina-bedroom-on-tight.png?v=20260802-assets-resize-1",
-    "phone_off": "/local/bruno-ui/assets/v2/quarto-menina-off.png?v=20260808-maquetes-premium-1",
-    "phone_on": "/local/bruno-ui/assets/v2/quarto-menina-on.png?v=20260808-maquetes-premium-1",
+    "phone_off": "/local/bruno-ui/assets/v2/quarto-menina-off.webp?v=20260817-mobile-perf-webp-1",
+    "phone_on": "/local/bruno-ui/assets/v2/quarto-menina-on.webp?v=20260817-mobile-perf-webp-1",
     "fallback": "mdi:bed-single-outline"
   },
   "status_dots": [
@@ -793,11 +793,25 @@ class BrunoQuartoMarinaCard extends HTMLElement {
     const on = BrunoQuartoMarinaCard._escape(icon.on || '');
     const phoneOff = BrunoQuartoMarinaCard._escape(icon.phone_off || '');
     const phoneOn = BrunoQuartoMarinaCard._escape(icon.phone_on || '');
+    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
+    // estados do phone no primeiro load — so o que esta visivel agora.
+    // O estado inativo fica sem srcset ate o BrunoAssetPreload avisar que
+    // aqueceu em segundo plano (idle); ate la o <picture> cai no <img>
+    // tight de tablet/desktop (mesma posicao CSS, sem layout shift, sem
+    // card vazio — so um instante com a arte antiga, invisivel pois
+    // opacity:0 continua valendo para o estado que nao esta em tela).
+    const preload = globalThis.BrunoAssetPreload;
+    const phoneOffReady = !phoneOff || !active || !preload || preload.isReady(phoneOff);
+    const phoneOnReady = !phoneOn || active || !preload || preload.isReady(phoneOn);
+    if (preload) {
+      if (!phoneOffReady) preload.schedule(phoneOff, () => { if (this.isConnected) this._render(); });
+      if (!phoneOnReady) preload.schedule(phoneOn, () => { if (this.isConnected) this._render(); });
+    }
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback"><bruno-icon icon="${fallback}"></bruno-icon></span>
-        ${off ? `<picture>${phoneOff ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async"></picture>` : ''}
-        ${on ? `<picture>${phoneOn ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async"></picture>` : ''}
+        ${off ? `<picture>${phoneOff && phoneOffReady ? `<source media="(max-width: 800px)" srcset="${phoneOff}">` : ''}<img class="room-asset room-asset-off" src="${off}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
+        ${on ? `<picture>${phoneOn && phoneOnReady ? `<source media="(max-width: 800px)" srcset="${phoneOn}">` : ''}<img class="room-asset room-asset-on" src="${on}" alt="" loading="eager" decoding="async" draggable="false"></picture>` : ''}
       </span>
     `;
   }
@@ -1047,6 +1061,16 @@ class BrunoQuartoMarinaCard extends HTMLElement {
           transform: translateZ(0);
           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
+        
+          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
+             (copiar/salvar imagem) no long-press sobre a ilustracao do
+             comodo. Tap e o hold customizado do proprio botao continuam
+             funcionando — isso so desliga o menu de contexto NATIVO de
+             imagem, nao os pointer events do componente. */
+          -webkit-touch-callout: none;
+          -webkit-user-drag: none;
+          -webkit-user-select: none;
+          user-select: none;
         }
 
         .room-asset-off {

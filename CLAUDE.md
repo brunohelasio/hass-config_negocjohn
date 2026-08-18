@@ -4431,3 +4431,115 @@ quando o codigo muda". Falso: muda tambem quando o DIA muda. Os tres hashes sao
 tres dias de build do mesmo codigo. **Divergencia benigna; a 6.5 nao tem mais
 pre-requisito.** Correcao sugerida, fora deste escopo: derivar o `BUILD_ID` do
 commit do git, para o hash voltar a depender so do codigo.
+
+---
+
+## Registro — Pacote fechado: performance mobile, long-press iOS, PC Office e contrato TV/mídia (2026-08-17)
+
+Cinco correções autorizadas pelo usuário, fechadas numa unica passada, com
+diagnostico ja pronto de antemao. Sem redesign, sem card duplicado, sem
+caminho paralelo de midia.
+
+### 1 — Assets V2 do phone: 16,2 MB -> 348 KB (97,9%)
+
+PNG 16-bit -> WebP (`quality:90, alphaQuality:100`), mesma caixa optica,
+mesma mascara alfa, comparacao visual lado a lado sem diferenca perceptivel.
+PNGs originais preservados em `_archive/assets/v2-png-anterior-20260817/`.
+Total: 16.214.488 -> 347.644 bytes.
+
+Alem da otimizacao de bytes, dois problemas de POLITICA DE REQUEST:
+
+- **Critical path**: os 7 cards de comodo + `bruno-room-tile.ts` sempre
+  baixavam ON+OFF juntos (um deles invisivel, opacity:0, esperando o proximo
+  toggle). Novo modulo `www/bruno-ui/core/bruno-asset-preload.js`
+  (`globalThis.BrunoAssetPreload`) so libera o `src`/`srcset` do estado ATIVO
+  no primeiro render; o estado inativo fica de fora do DOM ate um
+  `requestIdleCallback` aquecer a URL em segundo plano — dai um re-render
+  automatico (`this._render()`/`this.requestUpdate()`) o inclui, ja servido
+  do cache do navegador. Falha aberta se o modulo nao carregar (nunca pior
+  que o comportamento anterior). Validado no navegador contra o componente
+  REAL: 0 imagens no DOM antes do warm-up, 2 depois, sem re-fetch.
+- **Backdrop da shell**: `_preloadBackdrops()`/`_preloadResolvedBackdrops()`
+  buscavam TODOS os fundos (home, 7 comodos, cameras, roborock, floorplan) no
+  cold load. Agora so o da secao ATIVA e imediato; os demais vao para uma
+  fila de idle, uma URL por vez, guardada contra reagendamento a cada
+  `set hass` (que roda a cada tick). `_applyBackdrop()` continua buscando sob
+  demanda se o idle ainda nao chegou — nunca pior que antes.
+
+Wallpaper runtime (`bruno-wallpaper-manager.js`, imagens via
+`/api/image/serve/...`): fora do escopo autorizado (sem pipeline novo de
+upload/transcoding); o peso do wallpaper selecionado no HA nao esta no Git
+para medir — registrado como limitacao, nao resolvido.
+
+### 2 — Long-press no iPhone (callout nativo copiar/salvar)
+
+`-webkit-touch-callout: none; -webkit-user-drag: none; -webkit-user-select:
+none; user-select: none;` + `draggable="false"` nos `<img>`. Aplicado na
+regra `.room-asset`/`.office-asset` (7 cards + `bruno-room-tile.ts`) e nas
+imagens de camera/midia (`bruno-cameras-card.js`, `bruno-home-camera-card.js`,
+`bruno-mobile-cameras-list-card.js`, `bruno-media-card.js`) — via CSS onde ja
+havia classe, via `style` inline nos `<img>` sem classe propria. Tap, hold
+customizado e swipe preservados (a propriedade so desliga o menu de contexto
+NATIVO de imagem).
+
+### 3 — PC do Office preso em "ativo"
+
+`_pcOn()` novo em `bruno-office-card.js`: `binary_sensor.office_pc_active`
+passa a ser AUTORITATIVO quando disponivel — decide sozinho, sem OR com
+`pc_session`. So quando o sensor supervisionado esta indisponivel e que a
+leitura cai para `pc_session === 'unlocked'` ou `switch.macbook` (mesma
+finalidade que ja tinham). Corrige o caso relatado: HASS.Agent deixava
+`pc_session` congelado em "Unlocked" quando o PC desligava, e o OR antigo
+nunca deixava o sensor supervisionado prevalecer. Validado com a classe REAL
+(`node --check` + instanciacao) nos 5 cenarios do roteiro, incluindo o caso
+relatado (pc_active=off + session stale -> agora INATIVO).
+
+### 4/5 — Contrato TV/midia: buffering nao e desligar
+
+Tres pontos desalinhados sobre o MESMO ciclo `playing -> buffering ->
+playing`:
+
+- `bruno-media-card.js`: `BRUNO_MEDIA_ACTIVE_STATES` e `_hasPlayback()` nao
+  reconheciam `buffering` — card dinamico da Home podia sumir por 1-2s a cada
+  rebuferizacao. Adicionado ao mesmo balde de playing/paused (mesma regra:
+  titulo/artwork/appName precisam existir). `isShell`/launcher e a logica de
+  `'on'` com evidencia real (video player + artwork/duracao/content-type)
+  ficaram intocadas.
+- `binary_sensor.home_activity_media` (`packages/home_activity.yaml`): JA
+  incluia `playing`+`buffering` e ja tem `delay_off: 2min`, que cobre pausas
+  breves sem tratar pausa eterna como atividade (decisao de 2026-07-24,
+  documentada no proprio arquivo). Nao precisou de alteracao — verificado, nao
+  suposto.
+- `bruno-room-subview.ts` (hub da Sala): `ESTADOS_TV_LIGADA` nao tinha
+  `buffering`, ao contrario de `BRUNO_SALA_TV_ON_STATES` no card principal da
+  Sala (que ja tinha). Alinhado. Validado no navegador contra o componente
+  REAL (bundle compilado): com Spotify/Echo isolados, TV
+  off->playing->buffering->playing->off mantém `is-playing` em todo o trecho
+  do meio e cai corretamente no off final — zero flicker, zero falso-positivo.
+
+### Validacao
+
+`npm run check` completo (yaml + crase + typecheck + lint + 257 testes + build)
+verde. Bundle novo: `bruno-dashboard.Drt32TLl.js`. Cards classicos: `node
+--check` nos 11 arquivos + harness Node instanciando as classes REAIS contra
+a matriz de transicao do roteiro (16 casos, todos PASS) + verificacao no
+navegador (shell real, tema Josh) para o hub da Sala e o `bruno-room-tile`.
+
+### Publicacao
+
+Local e Everex, 17 hashes conferidos e identicos. Backup previo em
+`tmp/everex-preflight-20260817-mobile-perf-tv-media-1/`. Os 16 PNGs antigos
+removidos do Everex (dead weight — nada mais os referencia; originais seguem
+em `_archive/` no repositorio local).
+
+**Exige reinicio do Home Assistant** — `extra_module_url` mudou (bundle +
+`bruno-shell.js` + `bruno-asset-preload.js` novo + 11 cards). Conferir o
+Corredor depois (ver historico de correlacao).
+
+### Rollback
+
+Todos os blocos substituidos comentados in-place (`ANTERIOR (rollback
+2026-08-17)`) nos arquivos JS/TS tocados. `configuration.yaml`: linhas
+ANTERIOR comentadas ao lado de cada `?v=`. Assets: descomentar nada —
+restaurar e copiar de volta `_archive/assets/v2-png-anterior-20260817/*.png`
+e reverter as referencias `.webp` -> `.png` + `?v=20260808-maquetes-premium-1`.

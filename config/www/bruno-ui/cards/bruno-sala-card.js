@@ -1499,6 +1499,16 @@ class BrunoSalaCard extends HTMLElement {
           transform: translateZ(0);
           filter: drop-shadow(0 6px 8px rgba(0,0,0,0.22));
           transition: opacity 420ms ease, filter 420ms ease, transform 420ms ease;
+        
+          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
+             (copiar/salvar imagem) no long-press sobre a ilustracao do
+             comodo. Tap e o hold customizado do proprio botao continuam
+             funcionando — isso so desliga o menu de contexto NATIVO de
+             imagem, nao os pointer events do componente. */
+          -webkit-touch-callout: none;
+          -webkit-user-drag: none;
+          -webkit-user-select: none;
+          user-select: none;
         }
 
         .room-asset-off {
@@ -4301,7 +4311,7 @@ class BrunoSalaCard extends HTMLElement {
       <div class="sala-card${roomActiveClass}${statusStackClass}${this._homeThemeClass()}">
         <button class="hero-action" type="button" data-action-key="room" aria-label="Sala">
           <div class="room-icon" aria-hidden="true">
-            ${BrunoSalaCard._roomVisual(model.roomOn)}
+            ${this._roomVisual(model.roomOn)}
           </div>
 
           <span class="room-nav-zone" data-room-nav role="button" tabindex="0" aria-label="Abrir ${BrunoSalaCard._escape(this._config.name)}">
@@ -4389,19 +4399,38 @@ class BrunoSalaCard extends HTMLElement {
   */
 
   // NOVO: assets tight (trim de borda transparente) — sofa ocupa ~100% do conteiner
-  static _roomVisual(active) {
+  // ANTERIOR (rollback 2026-08-17): era `static`, chamado como
+  // `BrunoSalaCard._roomVisual(...)`. Virou metodo de instancia para poder
+  // reagendar `this._render()` quando o BrunoAssetPreload aquece o estado
+  // inativo — ver comentario abaixo. `_roomIcon` continua static (nao precisa
+  // de `this`).
+  _roomVisual(active) {
+    const offUrl = '/local/bruno-ui/assets/v2/sala-off.webp?v=20260817-mobile-perf-webp-1';
+    const onUrl = '/local/bruno-ui/assets/v2/sala-on.webp?v=20260817-mobile-perf-webp-1';
+    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
+    // estados do phone no primeiro load — so o visivel agora. O estado
+    // inativo fica sem srcset ate o BrunoAssetPreload avisar que aqueceu em
+    // segundo plano (idle); ate la o <picture> cai no <img> tight de
+    // tablet/desktop, sem layout shift e sem card vazio.
+    const preload = globalThis.BrunoAssetPreload;
+    const offReady = !active || !preload || preload.isReady(offUrl);
+    const onReady = active || !preload || preload.isReady(onUrl);
+    if (preload) {
+      if (!offReady) preload.schedule(offUrl, () => { if (this.isConnected) this._render(); });
+      if (!onReady) preload.schedule(onUrl, () => { if (this.isConnected) this._render(); });
+    }
     return `
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
         <picture>
           <!-- O source V2 e exclusivo do phone; o img preserva integralmente
                o asset anterior em tablet/desktop e funciona como rollback. -->
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-off.png?v=20260808-maquetes-premium-1">
-          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          ${offReady ? `<source media="(max-width: 800px)" srcset="${offUrl}">` : ''}
+          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async" draggable="false">
         </picture>
         <picture>
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-on.png?v=20260808-maquetes-premium-1">
-          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          ${onReady ? `<source media="(max-width: 800px)" srcset="${onUrl}">` : ''}
+          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async" draggable="false">
         </picture>
       </span>
     `;

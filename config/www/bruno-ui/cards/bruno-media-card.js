@@ -28,7 +28,11 @@ const BRUNO_MEDIA_DEFAULT_CONFIG = {
   ],
 };
 
-const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];
+// Item 4B (2026-08-17): 'buffering' entrou na lista. E um estado tecnico
+// transitorio de playing (carregando o proximo segmento/trecho) — tratar
+// como "sem playback" fazia a TV sumir do card dinamico por 1-2s a cada
+// rebuferizacao, mesmo tocando continuamente. Ver tambem _hasPlayback().
+const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused', 'buffering'];
 
 class BrunoMediaCard extends HTMLElement {
   static getStubConfig() {
@@ -632,7 +636,11 @@ class BrunoMediaCard extends HTMLElement {
     const isShell = ['google tv launcher', 'android tv launcher', 'launcher', 'ambient mode', 'backdrop', 'home screen']
       .some((term) => shellText.includes(term));
     if (isShell) return false;
-    if (['playing', 'paused'].includes(normalized)) return Boolean(this._cleanText(title) || image || this._cleanText(appName));
+    // Item 4B (2026-08-17): 'buffering' entra no mesmo balde de playing/paused
+    // — e o mesmo player, so momentaneamente carregando. Sem isso, o ciclo
+    // playing -> buffering -> playing fazia o card desmontar e remontar
+    // (flicker) a cada rebuferizacao.
+    if (['playing', 'paused', 'buffering'].includes(normalized)) return Boolean(this._cleanText(title) || image || this._cleanText(appName));
     if (normalized !== 'on') return false;
     const hasMediaTitle = Boolean(this._cleanText(title));
     const hasTimedMedia = Number(attributes?.media_duration) > 0 || Number(attributes?.media_position) > 0;
@@ -1003,7 +1011,7 @@ class BrunoMediaCard extends HTMLElement {
             class="wide-art${artwork ? ' has-art' : ''}"
             aria-hidden="true"
           >
-            ${artwork ? `<img src="${artwork}" alt="">` : `<bruno-icon icon="${BrunoMediaCard._escapeAttr(focus.serviceIcon || 'mdi:music-note')}"></bruno-icon>`}
+            ${artwork ? `<img src="${artwork}" alt="" draggable="false" style="-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-user-select:none;user-select:none">` : `<bruno-icon icon="${BrunoMediaCard._escapeAttr(focus.serviceIcon || 'mdi:music-note')}"></bruno-icon>`}
           </div>
           ${focus.hasPlayback ? `
             <div class="wide-progress" style="--media-progress:${progress.toFixed(2)}%;">

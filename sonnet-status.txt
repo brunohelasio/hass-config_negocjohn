@@ -1,0 +1,56 @@
+ M .pnpm-store/v11/projects/11b300ff6d8b2b9f87a844c5eca42b5f/scripts/deploy.mjs
+ M .pnpm-store/v11/projects/11b300ff6d8b2b9f87a844c5eca42b5f/src/components/rooms/bruno-room-subview.ts
+ M .pnpm-store/v11/projects/11b300ff6d8b2b9f87a844c5eca42b5f/src/components/rooms/bruno-room-tile.ts
+ M CLAUDE.md
+ M config/configuration.yaml
+ D config/www/bruno-ui/assets/v2/corredor-off.png
+ D config/www/bruno-ui/assets/v2/corredor-on.png
+ D config/www/bruno-ui/assets/v2/cozinha-off.png
+ D config/www/bruno-ui/assets/v2/cozinha-on.png
+ D config/www/bruno-ui/assets/v2/lavabo-off.png
+ D config/www/bruno-ui/assets/v2/lavabo-on.png
+ D config/www/bruno-ui/assets/v2/office-off.png
+ D config/www/bruno-ui/assets/v2/office-on.png
+ D config/www/bruno-ui/assets/v2/quarto-bebe-off.png
+ D config/www/bruno-ui/assets/v2/quarto-bebe-on.png
+ D config/www/bruno-ui/assets/v2/quarto-casal-off.png
+ D config/www/bruno-ui/assets/v2/quarto-casal-on.png
+ D config/www/bruno-ui/assets/v2/quarto-menina-off.png
+ D config/www/bruno-ui/assets/v2/quarto-menina-on.png
+ D config/www/bruno-ui/assets/v2/sala-off.png
+ D config/www/bruno-ui/assets/v2/sala-on.png
+ M config/www/bruno-ui/cards/bruno-cameras-card.js
+ M config/www/bruno-ui/cards/bruno-cozinha-card.js
+ M config/www/bruno-ui/cards/bruno-home-camera-card.js
+ M config/www/bruno-ui/cards/bruno-lavabo-card.js
+ M config/www/bruno-ui/cards/bruno-media-card.js
+ M config/www/bruno-ui/cards/bruno-mobile-cameras-list-card.js
+ M config/www/bruno-ui/cards/bruno-office-card.js
+ M config/www/bruno-ui/cards/bruno-quarto-casal-card.js
+ M config/www/bruno-ui/cards/bruno-quarto-marina-card.js
+ M config/www/bruno-ui/cards/bruno-quarto-miguel-card.js
+ M config/www/bruno-ui/cards/bruno-sala-card.js
+ M config/www/bruno-ui/core/bruno-shell.js
+ M dashboard-src/scripts/deploy.mjs
+ M dashboard-src/src/components/rooms/bruno-room-subview.ts
+ M dashboard-src/src/components/rooms/bruno-room-tile.ts
+?? _archive/assets/v2-png-anterior-20260817/
+?? config/www/bruno-ui/assets/v2/corredor-off.webp
+?? config/www/bruno-ui/assets/v2/corredor-on.webp
+?? config/www/bruno-ui/assets/v2/cozinha-off.webp
+?? config/www/bruno-ui/assets/v2/cozinha-on.webp
+?? config/www/bruno-ui/assets/v2/lavabo-off.webp
+?? config/www/bruno-ui/assets/v2/lavabo-on.webp
+?? config/www/bruno-ui/assets/v2/office-off.webp
+?? config/www/bruno-ui/assets/v2/office-on.webp
+?? config/www/bruno-ui/assets/v2/quarto-bebe-off.webp
+?? config/www/bruno-ui/assets/v2/quarto-bebe-on.webp
+?? config/www/bruno-ui/assets/v2/quarto-casal-off.webp
+?? config/www/bruno-ui/assets/v2/quarto-casal-on.webp
+?? config/www/bruno-ui/assets/v2/quarto-menina-off.webp
+?? config/www/bruno-ui/assets/v2/quarto-menina-on.webp
+?? config/www/bruno-ui/assets/v2/sala-off.webp
+?? config/www/bruno-ui/assets/v2/sala-on.webp
+?? config/www/bruno-ui/core/bruno-asset-preload.js
+?? sonnet-status.txt
+?? tmp/everex-preflight-20260817-mobile-perf-tv-media-1/

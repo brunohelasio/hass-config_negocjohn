@@ -832,6 +832,13 @@ export class BrunoRoomTile extends LitElement {
       transform: translate(-8.66%, -7.81%);
       filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.22));
       transition: opacity 420ms ease, filter 420ms ease;
+      /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
+         (copiar/salvar imagem) no long-press sobre a ilustracao do tile. Tap
+         e o hold customizado do proprio botao continuam funcionando. */
+      -webkit-touch-callout: none;
+      -webkit-user-drag: none;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     .room-asset-on {
@@ -1514,9 +1521,28 @@ export class BrunoRoomTile extends LitElement {
     // troca de estado não desloca nem redimensiona nada.
     //
     // Os arquivos anteriores estão em _archive/assets/v2-anterior-20260808/.
-    const v = '20260808-maquetes-premium-1';
-    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.png?v=${v}` : '';
-    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.png?v=${v}` : '';
+    // NOVO (2026-08-17): PNG -> WebP (mesma caixa optica, mesma mascara alfa;
+    // ver _archive/assets/v2-png-anterior-20260817/ para os originais).
+    const v = '20260817-mobile-perf-webp-1';
+    const offUrl = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.webp?v=${v}` : '';
+    const onUrl = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.webp?v=${v}` : '';
+    // Performance mobile (2026-08-17): a Home nao precisa baixar os DOIS
+    // estados de cada tile no primeiro load — so o que esta visivel agora
+    // (o outro fica em opacity:0 ate o proximo toggle). O estado inativo so
+    // ganha `src` real depois que o BrunoAssetPreload avisa que aqueceu em
+    // segundo plano (idle); ate la o <img> nao entra no DOM (nunca houve
+    // fallback proprio aqui, diferente dos cards classicos com <picture>).
+    // Isso nao afeta o card em si (borda, nome, temperatura, dots) — so a
+    // ilustracao, e so na janela estreita entre o mount e o warm-up de idle.
+    const preload = (globalThis as { BrunoAssetPreload?: { isReady: (u: string) => boolean; schedule: (u: string, cb: () => void) => void } }).BrunoAssetPreload;
+    const offReady = !offUrl || !on || !preload || preload.isReady(offUrl);
+    const onReady = !onUrl || on || !preload || preload.isReady(onUrl);
+    if (preload) {
+      if (!offReady) preload.schedule(offUrl, () => { if (this.isConnected) this.requestUpdate(); });
+      if (!onReady) preload.schedule(onUrl, () => { if (this.isConnected) this.requestUpdate(); });
+    }
+    const off = offReady ? offUrl : '';
+    const onImg = onReady ? onUrl : '';
 
     const cardClasses = [
       'room-card',
@@ -1565,10 +1591,10 @@ export class BrunoRoomTile extends LitElement {
           <div class="room-icon" aria-hidden="true">
             <span class="room-asset-wrap">
               ${off
-                ? html`<img class="room-asset room-asset-off" src=${off} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-off" src=${off} alt="" decoding="async" draggable="false" />`
                 : nothing}
               ${onImg
-                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" decoding="async" draggable="false" />`
                 : nothing}
             </span>
           </div>

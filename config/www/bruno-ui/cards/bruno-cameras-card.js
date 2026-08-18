@@ -601,6 +601,13 @@ class BrunoCamerasCard extends HTMLElement {
           display: block;
           filter: saturate(1.03) contrast(1.02);
           transform: scale(1.002);
+          /* Item 2 (2026-08-17): impede o callout nativo do iOS/WebKit
+             (copiar/salvar imagem) no long-press sobre o instantaneo da
+             camera. Tap/hold do proprio componente continuam funcionando. */
+          -webkit-touch-callout: none;
+          -webkit-user-drag: none;
+          -webkit-user-select: none;
+          user-select: none;
         }
 
         .media-frame.is-image-error .camera-image,
@@ -1072,7 +1079,7 @@ class BrunoCamerasCard extends HTMLElement {
     return `
       <button class="thumb-button${activeClass}" type="button" data-camera-id="${BrunoCamerasCard._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasCard._escapeAttr(camera.name)}">
         <span class="thumb-media${hasImage ? ' has-image' : ''}">
-          ${hasImage ? `<img src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}" alt="">` : ''}
+          ${hasImage ? `<img src="${BrunoCamerasCard._escapeAttr(camera.imageUrl || camera.image)}" data-camera-src-base="${BrunoCamerasCard._escapeAttr(camera.image)}" data-camera-entity="${BrunoCamerasCard._escapeAttr(camera.entity)}" alt="" draggable="false" style="-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-user-select:none;user-select:none">` : ''}
           <span class="thumb-placeholder" aria-hidden="true"></span>
           <span class="thumb-overlay"></span>
           <span class="thumb-label">

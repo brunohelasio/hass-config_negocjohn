@@ -20,11 +20,18 @@
 template:
   # ------------------------------------------------------------------
   # MÍDIA — relevante quando algum player acompanhado está tocando.
-  # Primeira etapa (decisão 2026-07-24): playing/buffering. O delay_off
-  # de 2 min faz "pausa recente" manter o card visível (paridade com a
-  # noção de sessão ativa do bruno-media-card) sem tratar paused eterno
-  # como atividade.
-  # Players = mesma lista do bruno-media-card (BRUNO_MEDIA_DEFAULT_CONFIG).
+  #
+  # TV da Sala tem DUAS fontes por projeto:
+  # - media_player.atv = power estável (Android TV Remote);
+  # - media_player.android_tv_192_168_3_17 = playback + metadados.
+  #
+  # Não usar o estado de playback como sinônimo de power: ele pode passar
+  # por on/idle/paused/buffering sem a TV ter desligado. Para abrir o card
+  # dinâmico, porém, power sozinho também não basta: launcher/home/ambient
+  # não são mídia. Assim a TV entra por playing/buffering diretamente ou,
+  # quando o player rico cai para on/paused/idle, por power ON + evidência
+  # real de conteúdo. O delay_off preserva a sessão em transições curtas.
+  # Os demais players mantêm o contrato anterior playing/buffering.
   # ------------------------------------------------------------------
   - binary_sensor:
       - name: Home Activity Media
@@ -33,12 +40,40 @@ template:
         delay_off:
           minutes: 2
         state: >
-          {{ ['media_player.android_tv_192_168_3_17',
-              'media_player.echo_show',
-              'media_player.spotifyplus_bruno_helasio',
-              'media_player.echo_pop_office']
-             | select('is_state', ['playing', 'buffering'])
-             | list | count > 0 }}
+          {% set tv_entity = 'media_player.android_tv_192_168_3_17' %}
+          {% set tv_state = states(tv_entity) | lower %}
+          {% set tv_power = states('media_player.atv') | lower %}
+          {% set title = state_attr(tv_entity, 'media_title') | default('', true) | string %}
+          {% set app = state_attr(tv_entity, 'app_name') | default('', true) | string %}
+          {% set source = state_attr(tv_entity, 'source') | default('', true) | string %}
+          {% set shell = (title ~ ' ' ~ app ~ ' ' ~ source) | lower %}
+          {% set is_shell =
+               'launcher' in shell
+               or 'ambient mode' in shell
+               or 'backdrop' in shell
+               or 'home screen' in shell %}
+          {% set picture = state_attr(tv_entity, 'entity_picture')
+               or state_attr(tv_entity, 'media_image_url') %}
+          {% set duration = state_attr(tv_entity, 'media_duration') | float(0) %}
+          {% set position = state_attr(tv_entity, 'media_position') | float(0) %}
+          {% set content_type = state_attr(tv_entity, 'media_content_type')
+               | default('', true) | string | lower %}
+          {% set video_type =
+               'video' in content_type
+               or 'movie' in content_type
+               or 'episode' in content_type
+               or 'tvshow' in content_type %}
+          {% set has_metadata = title | trim != '' and
+               (picture or duration > 0 or position > 0 or video_type) %}
+          {% set tv_active = not is_shell and (
+               tv_state in ['playing', 'buffering']
+               or (tv_power == 'on' and has_metadata)
+             ) %}
+          {% set other_active =
+               states('media_player.echo_show') in ['playing', 'buffering']
+               or states('media_player.spotifyplus_bruno_helasio') in ['playing', 'buffering']
+               or states('media_player.echo_pop_office') in ['playing', 'buffering'] %}
+          {{ tv_active or other_active }}
 
   # ------------------------------------------------------------------
   # ROBOROCK — relevante quando há trabalho em andamento ou problema.

@@ -4,6 +4,7 @@ import type { Hass, HassEntity } from '@/models/home-assistant';
 import { ROOMS, type RoomConfig } from '@/config/rooms.config';
 import { SUBVIEWS, type SubviewConfig } from '@/config/subviews.config';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
+import { isMediaPlaying, isTvPowered } from '@/services/entities/media-state';
 import {
   coletarIdsDeEntidade,
   ObservadorDeEntidades,
@@ -85,8 +86,7 @@ function truthy(v: unknown): boolean {
   return ['true', 'on', 'yes', '1'].includes(String(v ?? '').toLowerCase());
 }
 
-/** Estados que contam como "ligado" em cada domínio — copiados dos originais. */
-const ESTADOS_TV_LIGADA = ['on', 'playing', 'paused', 'idle'];
+/** Estados que contam como "ligado" nos domínios ainda locais deste componente. */
 const ESTADOS_MIDIA_LIGADA = ['playing', 'paused', 'on', 'idle'];
 const ESTADOS_CAMERA_ONLINE = ['streaming', 'recording', 'idle', 'on'];
 const ESTADOS_CLIMATE_LIGADO = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
@@ -3022,16 +3022,21 @@ export class BrunoRoomSubview extends LitElement {
   }
 
   private _modeloTv() {
-    const st = this._estado(this._idDe('tv'));
+    const id = this._idDe('tv');
+    const st = this._estado(id);
     const a = st?.attributes ?? {};
     const estado = st?.state ?? 'off';
-    const ativo = ESTADOS_TV_LIGADA.includes(estado);
+    // Energia e reprodução são conceitos diferentes. Idle/paused continuam
+    // significando TV ligada; apenas playing/buffering significam reprodução.
+    const ativo = isTvPowered(this._hass, id);
+    const reproduzindo = isMediaPlaying(this._hass, id);
     const fonte = String(a['source'] ?? a['app_name'] ?? '') || 'HDMI 1';
     const titulo = String(a['media_title'] ?? a['media_series_title'] ?? a['app_name'] ?? '');
     return {
       st,
       estado,
       ativo,
+      reproduzindo,
       fonte,
       titulo,
       volume: a['volume_level'] != null ? Math.round(Number(a['volume_level']) * 100) : null,
@@ -3546,26 +3551,27 @@ export class BrunoRoomSubview extends LitElement {
     const sp = this._modeloSpotify();
 
     const primeira = temPc
-      ? { chave: 'pc', rotulo: 'PC', icone: 'mdi:desktop-tower', ativo: Boolean(pc?.ativo),
+      ? { chave: 'pc', rotulo: 'PC', icone: 'mdi:desktop-tower', ativo: Boolean(pc?.ativo), tocando: Boolean(pc?.ativo),
           resumo: pc?.ativo ? 'Ligado' : 'Desligado', atmosfera: '', corpo: () => this._corpoPc() }
       // DESVIO DELIBERADO da origem: os seis arquivos nasceram de uma cópia do
       // da Sala e todos rotulam a fonte como "TV da sala" — inclusive o Q.
       // Miguel, onde é simplesmente falso. Só a Sala tem entidade de TV; nos
       // outros a fonte fica sempre desligada, e o rótulo passa a ser "TV".
       : { chave: 'tv', rotulo: this._room?.id === 'sala' ? 'TV da sala' : 'TV', icone: 'mdi:television-classic',
-          ativo: Boolean(tv?.ativo), resumo: tv?.ativo ? `Ligada · ${tv.fonte}` : 'Desligada',
+          ativo: Boolean(tv?.ativo), tocando: Boolean(tv?.reproduzindo),
+          resumo: tv?.ativo ? `Ligada · ${tv.fonte}` : 'Desligada',
           atmosfera: tv?.ativo ? tv.poster : '', corpo: () => this._corpoTv() };
 
     const fontes = [
       primeira,
-      { chave: 'spotify', rotulo: 'Spotify', icone: 'mdi:spotify', ativo: sp.ativo,
+      { chave: 'spotify', rotulo: 'Spotify', icone: 'mdi:spotify', ativo: sp.ativo, tocando: sp.tocando,
         resumo: sp.ativo ? sp.titulo : 'Nenhuma faixa', atmosfera: sp.ativo ? sp.capa : '',
         corpo: () => this._corpoSpotify() },
     ];
 
     const ativas = Object.fromEntries(fontes.map((f) => [f.chave, f.ativo]));
     const aberta = this._fonteAberta(fontes.map((f) => f.chave), ativas);
-    const tocando = fontes.find((f) => f.chave === aberta)?.ativo;
+    const tocando = fontes.find((f) => f.chave === aberta)?.tocando;
 
     const classes = [
       'glass-card',

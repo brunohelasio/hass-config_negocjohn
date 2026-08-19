@@ -144,7 +144,8 @@ frontend:
     # ANTERIOR (rollback TV/Office state semantics): - /local/dashboard/bruno-dashboard.DpecM3wp.js
     # ANTERIOR (rollback TV/Office + long-press): - /local/dashboard/bruno-dashboard.DqBPUi80.js
     # ANTERIOR (rollback PR601 antes da 2a tentativa): - /local/dashboard/bruno-dashboard.BgWkHdc4.js
-    - /local/dashboard/bruno-dashboard.W-EWukDh.js
+    # ANTERIOR (rollback PR601 com hipótese auxiliar removida): - /local/dashboard/bruno-dashboard.W-EWukDh.js
+    - /local/dashboard/bruno-dashboard.C9J2ROQB.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

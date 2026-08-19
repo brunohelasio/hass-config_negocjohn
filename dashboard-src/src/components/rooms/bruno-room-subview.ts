@@ -4,7 +4,7 @@ import type { Hass, HassEntity } from '@/models/home-assistant';
 import { ROOMS, type RoomConfig } from '@/config/rooms.config';
 import { SUBVIEWS, type SubviewConfig } from '@/config/subviews.config';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
-import { isEntityInStates, isMediaPlaying, isTvPoweredStable } from '@/services/entities/media-state';
+import { isMediaPlaying, isTvPoweredStable } from '@/services/entities/media-state';
 import { callHaService } from '@/services/home-assistant/service-call';
 import {
   coletarIdsDeEntidade,
@@ -3028,18 +3028,12 @@ export class BrunoRoomSubview extends LitElement {
 
   private _modeloTv() {
     const id = this._idDe('tv');
-    const primario = this._estado(id);
-    const remotoId = this._idDe('tvRemotePlayer');
-    const remoto = this._estado(remotoId);
-    // O Android TV/ADB desta instalação oscila para off por poucos segundos
-    // mesmo com a tela ligada. Mantemos a última prova positiva por 45 s.
-    // A Apple TV NÃO vira autoridade de energia: só sustenta a sessão quando
-    // publica reprodução/pausa/buffering, evitando o falso positivo de idle/on.
-    const primarioLigado = isTvPoweredStable(this._hass, id, Date.now(), 45_000);
-    const remotoComMidia = isEntityInStates(this._hass, remotoId, ['playing', 'paused', 'buffering']);
-    const ativo = primarioLigado || remotoComMidia;
-    const reproduzindo = isMediaPlaying(this._hass, id) || isMediaPlaying(this._hass, remotoId);
-    const st = remotoComMidia && !primarioLigado ? remoto ?? primario : primario ?? remoto;
+    const st = this._estado(id);
+    // A entidade primária da TV é a única autoridade de estado no Hub.
+    // O filtro de 45 s absorve apenas OFF transitório dessa própria entidade;
+    // nenhuma entidade auxiliar/legada participa da decisão de energia ou mídia.
+    const ativo = isTvPoweredStable(this._hass, id, Date.now(), 45_000);
+    const reproduzindo = isMediaPlaying(this._hass, id);
     const a = st?.attributes ?? {};
     const estado = st?.state ?? 'off';
     const fonte = String(a['source'] ?? a['app_name'] ?? '') || 'HDMI 1';

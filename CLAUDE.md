@@ -4548,6 +4548,6 @@ e reverter as referencias `.webp` -> `.png` + `?v=20260808-maquetes-premium-1`.
 ## Registro PR #601 — segunda tentativa de mídia/câmeras (2026-08-19)
 
 - Spotify: restaurado o contrato de chamadas de serviço da subview legada / frontend oficial: entity_id permanece em serviceData.
-- TV: OFF transitório do Android TV recebe histerese de 45 s; Apple TV só apoia o estado quando há mídia real (playing/paused/buffering), nunca por idle/on.
+- TV: OFF transitório da entidade primária recebe histerese de 45 s; nenhuma entidade auxiliar/legada participa como autoridade de energia ou reprodução.
 - Câmeras: ONVIF PROFILE_1 segue primário; Varanda e Office caem para as entidades Tuya anteriores apenas quando o perfil ONVIF está indisponível.
 - Instalação desta rodada deve ser entregue em pacote copy-only para o Everex; usuário não executa build/terminal.

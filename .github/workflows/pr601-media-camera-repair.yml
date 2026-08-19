@@ -1,0 +1,89 @@
+name: PR601 media and camera repair
+
+on:
+  push:
+    branches:
+      - fix/tv-office-state-semantics
+    paths:
+      - .github/workflows/pr601-media-camera-repair.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/tv-office-state-semantics
+          fetch-depth: 0
+
+      - name: Apply guarded repair
+        run: node scripts/validation/repair-pr601-media-camera.mjs
+
+      - name: Install dependencies
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: Full validation gate
+        working-directory: dashboard-src
+        run: npm run check
+
+      - name: Align bundle and create copy-only package
+        shell: python
+        run: |
+          from pathlib import Path
+          import shutil
+
+          dist = Path('config/www/dashboard')
+          bundles = [p for p in dist.glob('bruno-dashboard.*.js') if not p.name.endswith('.map')]
+          if len(bundles) != 1:
+              raise SystemExit(f'Esperava um bundle, encontrei: {bundles}')
+          bundle = bundles[0].name
+
+          cfg = Path('config/configuration.yaml')
+          text = cfg.read_text(encoding='utf-8')
+          old = '    - /local/dashboard/bruno-dashboard.BgWkHdc4.js'
+          new = (
+              '    # ANTERIOR (rollback PR601 antes da 2a tentativa): - /local/dashboard/bruno-dashboard.BgWkHdc4.js\n'
+              f'    - /local/dashboard/{bundle}'
+          )
+          if old not in text:
+              raise SystemExit('Bundle ativo BgWkHdc4 não encontrado no configuration.yaml')
+          cfg.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          root = Path('_deploy/pr601')
+          if root.exists():
+              shutil.rmtree(root)
+          target = root / 'config'
+          (target / 'www').mkdir(parents=True, exist_ok=True)
+          shutil.copy2(cfg, target / 'configuration.yaml')
+          shutil.copytree(dist, target / 'www' / 'dashboard')
+          (root / 'LEIA-ME.txt').write_text(
+              'PR #601 — PACOTE DE TESTE COPY-ONLY\n\n'
+              'Copie TODO o conteúdo da pasta config deste pacote para \\\\192.168.3.154\\config, substituindo quando solicitado.\n'
+              'Nenhum build, npm ou terminal é necessário no PC do usuário.\n\n'
+              f'Bundle ativo: {bundle}\n',
+              encoding='utf-8'
+          )
+          print(f'PACKAGE_BUNDLE={bundle}')
+
+      - name: Validate aligned YAML and whitespace
+        run: |
+          cd dashboard-src
+          npm run check:yaml
+          cd ..
+          git diff --check
+
+      - name: Commit source and copy-only package
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/pr601-media-camera-repair.yml scripts/validation/repair-pr601-media-camera.mjs
+          git add -A dashboard-src/src config/configuration.yaml CLAUDE.md _deploy/pr601
+          git diff --cached --check
+          git status --short
+          git commit -m 'fix: repair media controls, TV stability and camera fallback'
+          git push origin HEAD:fix/tv-office-state-semantics

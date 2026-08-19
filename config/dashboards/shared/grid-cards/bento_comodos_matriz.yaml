@@ -39,27 +39,38 @@ layout:
       grid-gap: 8px
 card_mod:
   style: |
-    :host { 
-      height: 100% !important; 
-      margin: 0 !important; 
-      padding: 0 !important; 
-      display: block !important; 
+    :host {
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: block !important;
     }
-    #root { 
-      height: 100% !important; 
-      margin: 0 !important; 
-      padding: 0 !important; 
+    #root {
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
-    #root > * { 
-      height: 100% !important; 
+    #root > * {
+      height: 100% !important;
       min-width: 0 !important;
-      margin: 0 !important; 
+      margin: 0 !important;
     }
 cards:
-  - !include ../../views/main-grid/bento_office.yaml
-  - !include ../../views/main-grid/bento_cozinha.yaml
-  - !include ../../views/main-grid/bento_lavabo.yaml
-  - !include ../../views/main-grid/bento_quarto_casal.yaml
+  # 2026-08-19 — consolidação: telefone e faixa desktop passam a usar o MESMO
+  # Web Component e o MESMO contrato de estado. Os wrappers bruno-*-card
+  # permanecem no histórico do Git apenas para rollback.
+  - type: custom:bruno-room-tile
+    room: office
+    variant: tile
+  - type: custom:bruno-room-tile
+    room: cozinha
+    variant: tile
+  - type: custom:bruno-room-tile
+    room: lavabo
+    variant: tile
+  - type: custom:bruno-room-tile
+    room: casal
+    variant: tile
   # ── REVERTIDO (2026-08-16, rev.2) — INDICADOR TEXTUAL NO GRID ─────────────
   #
   # Ele ocupava uma linha real de 14px, o que somava 30px de vao entre a 2a e a
@@ -69,33 +80,17 @@ cards:
   # Substituido pelo microindicador da rail (dot + numero + chevron), que vive
   # em bento-sidebar-card.js e nao ocupa espaco nenhum no layout.
   #
-  # ROLLBACK: descomentar o bloco abaixo e voltar grid-template-rows para
-  # 172px 172px 14px 172px.
+  # ROLLBACK: restaurar os seis includes bruno_*_card deste arquivo.
   # # Indicador autorizado para o telefone. Nao tem ha-card visual, nao recebe
-  # # toque e nao existe no layout do tablet. O span de duas colunas transforma
-  # # a linha de 14px em separador semantico entre a 2a e a 3a faixas.
+  # # toque e nao existe no layout do tablet.
   # - type: custom:bruno-home-overflow-indicator
   #   view_layout:
   #     grid-column: 1 / -1
   #     show:
   #       mediaquery: '(max-width: 800px)'
-  #   rooms:
-  #     - name: Q. Marina
-  #       entities:
-  #         - light.grupo_luzes_quarto_marina
-  #         - climate.ac_quarto_marina
-  #         - binary_sensor.q_marina_motion_recent
-  #         - binary_sensor.q_marina_occupancy
-  #         - media_player.echo_pop_marina
-  #     - name: Q. Miguel
-  #       entities:
-  #         - light.grupo_luzes_quarto_miguel
-  #         - climate.ac_quarto_miguel
-  #         - binary_sensor.q_miguel_motion_recent
-  #         - binary_sensor.q_miguel_occupancy
-  #   dynamic_entities:
-  #     - binary_sensor.home_activity_camera
-  #     - binary_sensor.home_activity_roborock
-  #     - binary_sensor.home_activity_media
-  - !include ../../views/main-grid/bento_quarto_marina.yaml
-  - !include ../../views/main-grid/bento_quarto_miguel.yaml
+  - type: custom:bruno-room-tile
+    room: marina
+    variant: tile
+  - type: custom:bruno-room-tile
+    room: miguel
+    variant: tile

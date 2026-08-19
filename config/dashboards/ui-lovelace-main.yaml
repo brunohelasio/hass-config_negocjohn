@@ -69,14 +69,16 @@ views:
   # - !include views/mobile-v2-cameras.yaml
   # ── fim LEGADO MOBILE V2 ──────────────────────────────────────────────────
 
-  # ── MOBILE V3 (2026-05-10) — 5 abas + pill navbar ─────────────────────────
-  # Slug do dashboard: "lovelace" → URLs em /lovelace/mobile-<aba>
-  # Rollback: comentar as 5 linhas abaixo (e descomentar V1/V2 se desejar).
-  - !include views/mobile/mobile-casa.yaml
-  - !include views/mobile/mobile-comodos.yaml
-  - !include views/mobile/mobile-midia.yaml
-  - !include views/mobile/mobile-cameras.yaml
-  - !include views/mobile/mobile-mais.yaml
+  # ── MOBILE V3 (2026-05-10) — RETIRADO DO RUNTIME EM 2026-08-19 ───────────
+  # A shell `bento_shell` ja concentra a navegacao mobile atual. Estes cinco
+  # arquivos permanecem no repositorio como referencia historica/rollback, mas
+  # nao devem virar views irmas nem aparecer na barra superior do dashboard.
+  # ROLLBACK: descomentar somente as cinco linhas abaixo.
+  # - !include views/mobile/mobile-casa.yaml
+  # - !include views/mobile/mobile-comodos.yaml
+  # - !include views/mobile/mobile-midia.yaml
+  # - !include views/mobile/mobile-cameras.yaml
+  # - !include views/mobile/mobile-mais.yaml
   # ── fim MOBILE V3 ─────────────────────────────────────────────────────────
 
   - !include views/system.yaml

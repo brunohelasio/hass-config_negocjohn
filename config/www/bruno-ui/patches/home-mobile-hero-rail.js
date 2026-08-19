@@ -1,12 +1,18 @@
-// home-mobile-hero-rail.js — experimento Chat -> GitHub (2026-08-17)
+// home-mobile-hero-rail.js — patch consolidado de runtime (2026-08-19)
 //
-// Escopo estrito: Home V2 em phone (<=800px) + microindicador da rail phone.
-// O modulo e deliberadamente isolado para validar o conceito sem reescrever os
-// arquivos classicos grandes pela Contents API. Depois do aceite visual, pode
-// ser incorporado aos componentes de origem em uma rodada propria.
+// O arquivo já era carregado pelo dashboard validado e passa a concentrar as
+// correções que precisam atingir TANTO o bundle TypeScript atual quanto o card
+// clássico especial da Sala no telefone, sem criar um segundo runtime paralelo.
 //
-// ROLLBACK: remover este arquivo e a unica entrada correspondente em
-// configuration.yaml. Nenhum bundle TypeScript e alterado.
+// Escopo:
+// - refinamento visual Home V2 phone já validado;
+// - long-press iOS sem callout/drag nativo nos room tiles;
+// - dot do Office sem sessão HASS.Agent crua/congelada;
+// - TV: uma entidade primária, OFF transitório filtrado por 45 s e artwork retido;
+// - Spotify: entity_id volta a viajar dentro de serviceData;
+// - cortina: alvo visual só conclui depois do percurso físico estimado.
+//
+// ROLLBACK: restaurar a versão ?v=20260817-chat-2 desta entrada.
 
 const BRUNO_CHAT_PHONE_QUERY = '(max-width: 800px)';
 const BRUNO_CHAT_HERO_TAG = 'bruno-hero-card';
@@ -371,4 +377,245 @@ Promise.all([
 ]).then(() => {
   brunoChatPatchHeroClass(customElements.get(BRUNO_CHAT_HERO_TAG));
   brunoChatPatchRailClass(customElements.get(BRUNO_CHAT_RAIL_TAG));
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Runtime consolidation — 2026-08-19
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BRUNO_RUNTIME_ROOM_TILE_TAG = 'bruno-room-tile';
+const BRUNO_RUNTIME_ROOM_SUBVIEW_TAG = 'bruno-room-subview';
+const BRUNO_RUNTIME_SALA_CARD_TAG = 'bruno-sala-card';
+const BRUNO_RUNTIME_TV_ENTITY = 'media_player.android_tv_192_168_3_17';
+const BRUNO_RUNTIME_TV_GRACE_MS = 45_000;
+const BRUNO_RUNTIME_TV_POWER_STATES = new Set(['on', 'playing', 'paused', 'idle', 'buffering']);
+const BRUNO_RUNTIME_TV_PLAYING_STATES = new Set(['playing', 'buffering']);
+const BRUNO_RUNTIME_CURTAIN_FULL_TRAVEL_MS = 30_000;
+const BRUNO_RUNTIME_CURTAIN_MIN_TRAVEL_MS = 1_200;
+const BRUNO_RUNTIME_CURTAIN_TARGET_TOLERANCE = 2;
+const BRUNO_RUNTIME_CURTAIN_STOP_GRACE_MS = 700;
+
+function brunoRuntimeState(entity) {
+  return String(entity?.state ?? '').toLowerCase();
+}
+
+function brunoRuntimeTvStable(host, entity, { cacheSnapshot = false } = {}) {
+  const state = brunoRuntimeState(entity);
+  const now = Date.now();
+  if (BRUNO_RUNTIME_TV_POWER_STATES.has(state)) {
+    host.__brunoRuntimeTvLastPoweredAt = now;
+    if (cacheSnapshot && entity) {
+      host.__brunoRuntimeTvSnapshot = {
+        ...entity,
+        attributes: { ...(entity.attributes || {}) },
+      };
+    }
+    return true;
+  }
+
+  if (state !== 'off') {
+    host.__brunoRuntimeTvLastPoweredAt = 0;
+    if (cacheSnapshot) host.__brunoRuntimeTvSnapshot = null;
+    return false;
+  }
+
+  const last = Number(host.__brunoRuntimeTvLastPoweredAt) || 0;
+  return last > 0 && now - last <= BRUNO_RUNTIME_TV_GRACE_MS;
+}
+
+function brunoRuntimeProtectRoomAssets(tile) {
+  const root = tile?.shadowRoot;
+  if (!root) return;
+  root.querySelectorAll('img.room-asset').forEach((img) => {
+    img.draggable = false;
+    img.setAttribute('draggable', 'false');
+    img.style.setProperty('-webkit-touch-callout', 'none');
+    img.style.setProperty('-webkit-user-drag', 'none');
+    img.style.setProperty('-webkit-user-select', 'none');
+    img.style.setProperty('user-select', 'none');
+  });
+}
+
+function brunoRuntimePatchRoomTile(RoomTile) {
+  if (!RoomTile || RoomTile.prototype.__brunoRuntimeConsolidated) return;
+  const proto = RoomTile.prototype;
+  proto.__brunoRuntimeConsolidated = true;
+
+  // Long-press iOS: neutraliza somente o comportamento nativo da imagem.
+  const originalUpdated = proto.updated;
+  proto.updated = function patchedRuntimeUpdated(...args) {
+    const result = originalUpdated?.apply(this, args);
+    brunoRuntimeProtectRoomAssets(this);
+    return result;
+  };
+
+  // Dots: Office usa apenas o sensor supervisionado; Sala compartilha a mesma
+  // janela de estabilidade da TV usada no Hub, evitando o dot piscar OFF.
+  const originalDots = proto._dots;
+  proto._dots = function patchedRuntimeDots(...args) {
+    let dots = originalDots?.apply(this, args) || [];
+    const roomId = this?._room?.id;
+    const hass = this?._hass;
+
+    if (roomId === 'office' && hass) {
+      const pcOn = String(hass.states?.['binary_sensor.office_pc_active']?.state || '').toLowerCase() === 'on';
+      dots = dots.filter((dot) => dot?.label !== 'PC ativo');
+      if (pcOn) {
+        dots.push({ icon: 'mdi:desktop-classic', label: 'PC ativo', tone: 'purple' });
+      }
+    }
+
+    if (roomId === 'sala' && hass) {
+      const tvEntity = hass.states?.[BRUNO_RUNTIME_TV_ENTITY];
+      const powered = brunoRuntimeTvStable(this, tvEntity);
+      dots = dots.filter((dot) => dot?.label !== 'TV ativa');
+      if (powered) {
+        dots.push({ icon: 'mdi:television-classic', label: 'TV ativa', tone: 'purple' });
+      }
+    }
+
+    return dots;
+  };
+}
+
+function brunoRuntimePatchRoomSubview(RoomSubview) {
+  if (!RoomSubview || RoomSubview.prototype.__brunoRuntimeConsolidated) return;
+  const proto = RoomSubview.prototype;
+  proto.__brunoRuntimeConsolidated = true;
+
+  // Spotify/HA: entity_id faz parte do serviceData. O quarto argumento target
+  // introduzido na migração quebrava schemas de integrações como SpotifyPlus.
+  proto._servico = function patchedRuntimeService(dominio, servico, dados = {}) {
+    if (!this?._hass) return;
+    void this._hass.callService(dominio, servico, dados);
+  };
+
+  // TV: só a entidade primária decide energia/reprodução. Durante um OFF
+  // transitório preservamos também os últimos metadados para a arte não sumir.
+  proto._modeloTv = function patchedRuntimeTvModel() {
+    const id = this._idDe?.('tv');
+    const rawEntity = this._estado?.(id);
+    const rawState = brunoRuntimeState(rawEntity) || 'off';
+    const rawPowered = BRUNO_RUNTIME_TV_POWER_STATES.has(rawState);
+    const powered = brunoRuntimeTvStable(this, rawEntity, { cacheSnapshot: true });
+    const visualEntity = powered && !rawPowered && this.__brunoRuntimeTvSnapshot
+      ? this.__brunoRuntimeTvSnapshot
+      : rawEntity;
+    const attrs = visualEntity?.attributes || {};
+
+    return {
+      st: visualEntity,
+      estado: powered && rawState === 'off' ? 'idle' : rawState,
+      ativo: powered,
+      reproduzindo: BRUNO_RUNTIME_TV_PLAYING_STATES.has(rawState),
+      fonte: String(attrs.source ?? attrs.app_name ?? '') || 'HDMI 1',
+      titulo: String(attrs.media_title ?? attrs.media_series_title ?? attrs.app_name ?? ''),
+      volume: attrs.volume_level != null ? Math.round(Number(attrs.volume_level) * 100) : null,
+      poster: String(attrs.entity_picture ?? attrs.media_image_url ?? ''),
+    };
+  };
+
+  // Cortina: mesma interpolação já existente, mas SEM aceitar o alvo só porque
+  // o helper/cover saltou cedo para 0/100. O alvo só conclui após a duração
+  // calculada do percurso, ou após reconciliação física intermediária.
+  proto._fechamentoCortina = function patchedRuntimeCurtainClosed() {
+    const relatado = this._fechamentoCortinaRelatado?.() ?? 0;
+    const movimento = this._movimentoCortina;
+    const id = this._entidadeCortina?.();
+    if (!movimento || movimento.entityId !== id) return relatado;
+
+    const agora = Date.now();
+    const estado = String(this._estado?.(id)?.state ?? '').toLowerCase();
+    const estaMovendo = estado === 'opening' || estado === 'closing';
+    const fisico = this._fechamentoCortinaFisico?.();
+
+    if (movimento.retido) {
+      if (
+        !estaMovendo
+        && fisico != null
+        && agora - movimento.retidoEm >= BRUNO_RUNTIME_CURTAIN_STOP_GRACE_MS
+      ) {
+        this._movimentoCortina = undefined;
+        return fisico;
+      }
+      return movimento.fechado;
+    }
+
+    const decorrido = agora - movimento.iniciadoEm;
+    const fisicoNoAlvo = fisico != null
+      && Math.abs(fisico - movimento.alvoFechado) <= BRUNO_RUNTIME_CURTAIN_TARGET_TOLERANCE;
+
+    const fisicoIntermediario = fisico != null && !fisicoNoAlvo;
+    const mudouRelato = fisicoIntermediario
+      && Math.abs(fisico - movimento.ultimoRelatado) >= 1;
+    if (mudouRelato) {
+      movimento.ultimoRelatado = fisico;
+      movimento.inicioFechado = fisico;
+      movimento.iniciadoEm = agora;
+      movimento.duracao = Math.max(
+        BRUNO_RUNTIME_CURTAIN_MIN_TRAVEL_MS,
+        BRUNO_RUNTIME_CURTAIN_FULL_TRAVEL_MS
+          * (Math.abs(movimento.alvoFechado - fisico) / 100),
+      );
+      return fisico;
+    }
+
+    const estimado = this._fechamentoMovimentoCortina?.(movimento, agora) ?? relatado;
+    const terminou = decorrido >= movimento.duracao;
+    if (terminou && !estaMovendo) {
+      this._movimentoCortina = undefined;
+      this._pararTimerMovimentoCortina?.();
+      const comandado = this._fechamentoCortinaComandado?.();
+      const comandoNoAlvo = comandado != null
+        && Math.abs(comandado - movimento.alvoFechado) <= BRUNO_RUNTIME_CURTAIN_TARGET_TOLERANCE;
+      return fisico != null && !fisicoNoAlvo && !comandoNoAlvo
+        ? fisico
+        : movimento.alvoFechado;
+    }
+
+    if (estaMovendo) {
+      return movimento.alvoFechado > movimento.inicioFechado
+        ? Math.min(estimado, Math.max(movimento.inicioFechado, movimento.alvoFechado - 1))
+        : Math.max(estimado, Math.min(movimento.inicioFechado, movimento.alvoFechado + 1));
+    }
+
+    // Mesmo que o cover tenha parado de declarar opening/closing cedo, a UI
+    // continua no estimado até a duração física daquele percurso terminar.
+    return estimado;
+  };
+}
+
+function brunoRuntimePatchSalaPhone(SalaCard) {
+  if (!SalaCard || SalaCard.prototype.__brunoRuntimeConsolidated) return;
+  const proto = SalaCard.prototype;
+  proto.__brunoRuntimeConsolidated = true;
+  const originalState = proto._state;
+
+  // O card especial da Sala no telefone ainda é clássico. Em vez de manter uma
+  // segunda regra de TV, estabilizamos a leitura da entidade no mesmo ponto de
+  // entrada: OFF transitório reutiliza o último snapshot; unknown/unavailable não.
+  proto._state = function patchedRuntimeSalaState(entityId, ...args) {
+    const raw = originalState?.call(this, entityId, ...args);
+    if (entityId !== (this?._config?.entities?.tv || BRUNO_RUNTIME_TV_ENTITY)) return raw;
+
+    const powered = brunoRuntimeTvStable(this, raw, { cacheSnapshot: true });
+    const rawState = brunoRuntimeState(raw);
+    if (powered && rawState === 'off' && this.__brunoRuntimeTvSnapshot) {
+      return {
+        ...this.__brunoRuntimeTvSnapshot,
+        state: 'idle',
+      };
+    }
+    return raw;
+  };
+}
+
+Promise.all([
+  customElements.whenDefined(BRUNO_RUNTIME_ROOM_TILE_TAG),
+  customElements.whenDefined(BRUNO_RUNTIME_ROOM_SUBVIEW_TAG),
+  customElements.whenDefined(BRUNO_RUNTIME_SALA_CARD_TAG),
+]).then(() => {
+  brunoRuntimePatchRoomTile(customElements.get(BRUNO_RUNTIME_ROOM_TILE_TAG));
+  brunoRuntimePatchRoomSubview(customElements.get(BRUNO_RUNTIME_ROOM_SUBVIEW_TAG));
+  brunoRuntimePatchSalaPhone(customElements.get(BRUNO_RUNTIME_SALA_CARD_TAG));
 });

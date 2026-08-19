@@ -19,7 +19,7 @@
 
 template:
   # ------------------------------------------------------------------
-  # MÍDIA — relevante quando algum player acompanhado está tocando.
+  # MÍDIA — relevante quando a TV está ligada ou outro player está tocando.
   # Primeira etapa (decisão 2026-07-24): playing/buffering. O delay_off
   # de 2 min faz "pausa recente" manter o card visível (paridade com a
   # noção de sessão ativa do bruno-media-card) sem tratar paused eterno
@@ -33,12 +33,13 @@ template:
         delay_off:
           minutes: 2
         state: >
-          {{ ['media_player.android_tv_192_168_3_17',
-              'media_player.echo_show',
-              'media_player.spotifyplus_bruno_helasio',
-              'media_player.echo_pop_office']
-             | select('is_state', ['playing', 'buffering'])
-             | list | count > 0 }}
+          {{ states('media_player.android_tv_192_168_3_17') in
+             ['on', 'playing', 'paused', 'idle', 'buffering']
+             or ['media_player.echo_show',
+                 'media_player.spotifyplus_bruno_helasio',
+                 'media_player.echo_pop_office']
+                | select('is_state', ['playing', 'buffering'])
+                | list | count > 0 }}
 
   # ------------------------------------------------------------------
   # ROBOROCK — relevante quando há trabalho em andamento ou problema.

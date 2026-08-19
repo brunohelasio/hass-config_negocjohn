@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Entrypoint do bundle.
  *
  * Carregado por `frontend.extra_module_url` como
@@ -13,6 +13,9 @@
 // nada; quem liga e esta chamada, uma vez.
 import { iniciarRuntime } from './diagnostics/runtime';
 iniciarRuntime();
+
+// Um único request carrega também o runtime clássico ainda necessário.
+import './legacy-runtime.generated';
 
 import './diagnostics/bruno-diagnostics';
 import './components/rooms/bruno-room-tile';

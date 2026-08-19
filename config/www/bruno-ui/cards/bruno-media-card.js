@@ -29,6 +29,9 @@ const BRUNO_MEDIA_DEFAULT_CONFIG = {
 };
 
 const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];
+const BRUNO_MEDIA_TV_ENTITY = 'media_player.android_tv_192_168_3_17';
+const BRUNO_MEDIA_TV_POWER_STATES = new Set(['on', 'playing', 'paused', 'idle', 'buffering']);
+const BRUNO_MEDIA_TV_OFF_GRACE_MS = 45_000;
 
 class BrunoMediaCard extends HTMLElement {
   static getStubConfig() {
@@ -134,7 +137,17 @@ class BrunoMediaCard extends HTMLElement {
   }
 
   _isActive(entityId) {
-    return BRUNO_MEDIA_ACTIVE_STATES.includes(this._state(entityId)?.state || '');
+    const state = String(this._state(entityId)?.state || '').toLowerCase();
+    if (entityId === BRUNO_MEDIA_TV_ENTITY) {
+      if (BRUNO_MEDIA_TV_POWER_STATES.has(state)) {
+        this._lastTvPoweredAt = Date.now();
+        return true;
+      }
+      return state === 'off'
+        && Number.isFinite(this._lastTvPoweredAt)
+        && Date.now() - this._lastTvPoweredAt <= BRUNO_MEDIA_TV_OFF_GRACE_MS;
+    }
+    return BRUNO_MEDIA_ACTIVE_STATES.includes(state);
   }
 
   _isStandbyImage(image) {
@@ -265,8 +278,18 @@ class BrunoMediaCard extends HTMLElement {
   _playbackPriority(entityId) {
     const entity = this._state(entityId);
     const state = String(entity?.state || '').toLowerCase();
-    if (state === 'playing') return 4;
-    if (state === 'paused') return 2;
+    if (entityId === BRUNO_MEDIA_TV_ENTITY) {
+      if (BRUNO_MEDIA_TV_POWER_STATES.has(state)) this._lastTvPoweredAt = Date.now();
+      if (state === 'playing') return 4;
+      if (state === 'buffering') return 3;
+      if (state === 'paused') return 2;
+      if (state === 'on' || state === 'idle') return 1;
+      if (state === 'off' && Number.isFinite(this._lastTvPoweredAt)
+          && Date.now() - this._lastTvPoweredAt <= BRUNO_MEDIA_TV_OFF_GRACE_MS) return 1;
+    } else {
+      if (state === 'playing') return 4;
+      if (state === 'paused') return 2;
+    }
     const config = this._playerConfig(entityId);
     const attrs = entity?.attributes || {};
     const contentType = String(attrs.media_content_type || attrs.app_name || '').toLowerCase();
@@ -365,13 +388,16 @@ class BrunoMediaCard extends HTMLElement {
       });
     }
 
+    const tvPowered = focusId === BRUNO_MEDIA_TV_ENTITY && this._isActive(focusId);
     const persisted = hasPlayback
       ? null
-      : (this._mediaHistory?.[focusId] || this._latestMediaSnapshot());
-    const displayImage = hasPlayback ? image : (persisted?.image || '');
-    const displayTitle = hasPlayback ? liveTitle : (persisted?.title || '');
-    const displaySecondary = hasPlayback ? liveSecondary : (persisted?.secondary || persisted?.artist || '');
-    const displayContext = hasPlayback ? liveContext : (persisted?.context || '');
+      : (tvPowered ? (this._mediaHistory?.[focusId] || null) : (this._mediaHistory?.[focusId] || this._latestMediaSnapshot()));
+    const displayImage = hasPlayback ? image : (image || persisted?.image || this._lastArtworkByPlayer?.[focusId] || '');
+    const displayTitle = hasPlayback ? liveTitle : (persisted?.title || (tvPowered ? 'TV ligada' : ''));
+    const displaySecondary = hasPlayback
+      ? liveSecondary
+      : (persisted?.secondary || persisted?.artist || (tvPowered ? this._firstText([appName, source, 'Sala']) : ''));
+    const displayContext = hasPlayback ? liveContext : (persisted?.context || (tvPowered ? 'TV Sala' : ''));
 
     return {
       entity: hasPlayback ? focusId : (persisted?.entity || focusId),

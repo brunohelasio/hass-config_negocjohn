@@ -89,7 +89,6 @@ export const SUBVIEWS: Record<string, SubviewConfig> = {
       cameraSecondary: 'camera.vr_camera_profile_1',
       activeCameraSelect: 'input_select.bento_active_camera',
       tv: 'media_player.android_tv_192_168_3_17',
-      tvRemotePlayer: 'media_player.atv',
       tvRemote: 'remote.atv',
       spotify: 'media_player.spotifyplus_bruno_helasio',
       speaker: 'media_player.echo_show',

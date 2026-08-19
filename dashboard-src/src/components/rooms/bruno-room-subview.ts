@@ -114,7 +114,6 @@ const CORTINA_CURSO_MS = 30_000;
 const CORTINA_MOVIMENTO_MIN_MS = 1_200;
 const CORTINA_TICK_MS = 350;
 const CORTINA_TOLERANCIA_ALVO = 2;
-const CORTINA_GRAÇA_CONFIRMACAO_MS = 1_800;
 const CORTINA_GRAÇA_PARADA_MS = 700;
 
 type MovimentoCortina =
@@ -309,6 +308,11 @@ export class BrunoRoomSubview extends LitElement {
   private _fonteMidiaManual = false;
   /** Fontes que estavam ativas no render anterior — detecta ativação nova. */
   private _midiaAtivasAntes: string[] = [];
+  /** Últimos atributos válidos: ADB pode omiti-los por um frame sem power-off. */
+  private _tvUltimoVolume: number | null = null;
+  private _tvUltimoPoster = '';
+  private _tvUltimaFonte = 'HDMI 1';
+  private _tvUltimoTitulo = '';
   private _menuMidiaAberto = false;
   private _spotifyFerramentas = false;
   private _movimentoCortina: MovimentoCortina | undefined;
@@ -2575,22 +2579,7 @@ export class BrunoRoomSubview extends LitElement {
     const decorrido = agora - movimento.iniciadoEm;
     const fisicoNoAlvo = fisico != null
       && Math.abs(fisico - movimento.alvoFechado) <= CORTINA_TOLERANCIA_ALVO;
-    const estadoNoAlvo =
-      (estado === 'closed' && movimento.alvoFechado >= 100 - CORTINA_TOLERANCIA_ALVO)
-      || (estado === 'open' && movimento.alvoFechado <= CORTINA_TOLERANCIA_ALVO);
 
-    // Um extremo publicado enquanto o cover ainda declara opening/closing é o
-    // salto prematuro observado no dispositivo. Só conclui depois que o estado
-    // físico assenta e passa a janela de confirmação do comando.
-    if (
-      !estaMovendo
-      && decorrido >= CORTINA_GRAÇA_CONFIRMACAO_MS
-      && (fisicoNoAlvo || estadoNoAlvo)
-    ) {
-      this._movimentoCortina = undefined;
-      this._pararTimerMovimentoCortina();
-      return movimento.alvoFechado;
-    }
 
     const fisicoIntermediario = fisico != null && !fisicoNoAlvo;
     const mudouRelato = fisicoIntermediario && Math.abs(fisico - movimento.ultimoRelatado) >= 1;
@@ -2610,11 +2599,11 @@ export class BrunoRoomSubview extends LitElement {
     if (terminou && !estaMovendo) {
       this._movimentoCortina = undefined;
       this._pararTimerMovimentoCortina();
-      // Se houve uma parada externa antes do alvo, a telemetria física vence.
-      const comandado = this._fechamentoCortinaComandado();
-      const comandoNoAlvo = comandado != null
-        && Math.abs(comandado - movimento.alvoFechado) <= CORTINA_TOLERANCIA_ALVO;
-      return fisico != null && !fisicoNoAlvo && !comandoNoAlvo ? fisico : movimento.alvoFechado;
+      const estadoConfirmaAlvo =
+        (estado === 'closed' && movimento.alvoFechado >= 100 - CORTINA_TOLERANCIA_ALVO)
+        || (estado === 'open' && movimento.alvoFechado <= CORTINA_TOLERANCIA_ALVO);
+      if (fisicoNoAlvo || estadoConfirmaAlvo) return movimento.alvoFechado;
+      return fisico ?? movimento.alvoFechado;
     }
 
     if (estaMovendo) {
@@ -3029,24 +3018,37 @@ export class BrunoRoomSubview extends LitElement {
   private _modeloTv() {
     const id = this._idDe('tv');
     const st = this._estado(id);
-    // A entidade primária da TV é a única autoridade de estado no Hub.
-    // O filtro de 45 s absorve apenas OFF transitório dessa própria entidade;
-    // nenhuma entidade auxiliar/legada participa da decisão de energia ou mídia.
+    const a = st?.attributes ?? {};
+    const estadoBruto = String(st?.state ?? 'off').toLowerCase();
     const ativo = isTvPoweredStable(this._hass, id, Date.now(), 45_000);
     const reproduzindo = isMediaPlaying(this._hass, id);
-    const a = st?.attributes ?? {};
-    const estado = st?.state ?? 'off';
-    const fonte = String(a['source'] ?? a['app_name'] ?? '') || 'HDMI 1';
-    const titulo = String(a['media_title'] ?? a['media_series_title'] ?? a['app_name'] ?? '');
+
+    const fonteAtual = String(a['source'] ?? a['app_name'] ?? '').trim();
+    const tituloAtual = String(a['media_title'] ?? a['media_series_title'] ?? a['app_name'] ?? '').trim();
+    const posterAtual = String(a['entity_picture'] ?? a['media_image_url'] ?? '').trim();
+    const volumeNumero = a['volume_level'] == null ? Number.NaN : Number(a['volume_level']);
+    const volumeAtual = Number.isFinite(volumeNumero) ? Math.round(volumeNumero * 100) : null;
+
+    if (ativo) {
+      if (fonteAtual) this._tvUltimaFonte = fonteAtual;
+      if (tituloAtual) this._tvUltimoTitulo = tituloAtual;
+      if (posterAtual) this._tvUltimoPoster = posterAtual;
+      if (volumeAtual != null) this._tvUltimoVolume = volumeAtual;
+    } else {
+      this._tvUltimoPoster = '';
+      this._tvUltimoTitulo = '';
+      this._tvUltimoVolume = null;
+    }
+
     return {
       st,
-      estado,
+      estado: ativo && estadoBruto === 'off' ? 'idle' : estadoBruto,
       ativo,
       reproduzindo,
-      fonte,
-      titulo,
-      volume: a['volume_level'] != null ? Math.round(Number(a['volume_level']) * 100) : null,
-      poster: String(a['entity_picture'] ?? a['media_image_url'] ?? ''),
+      fonte: fonteAtual || (ativo ? this._tvUltimaFonte : 'HDMI 1') || 'HDMI 1',
+      titulo: tituloAtual || (ativo ? this._tvUltimoTitulo : ''),
+      volume: volumeAtual ?? (ativo ? this._tvUltimoVolume : null),
+      poster: posterAtual || (ativo ? this._tvUltimoPoster : ''),
     };
   }
 
@@ -3576,8 +3578,11 @@ export class BrunoRoomSubview extends LitElement {
     ];
 
     const ativas = Object.fromEntries(fontes.map((f) => [f.chave, f.ativo]));
-    const aberta = this._fonteAberta(fontes.map((f) => f.chave), ativas);
-    const tocando = fontes.find((f) => f.chave === aberta)?.tocando;
+    const prioridade = !temPc && fontes.some((f) => f.tocando)
+      ? Object.fromEntries(fontes.map((f) => [f.chave, Boolean(f.tocando)]))
+      : ativas;
+    const aberta = this._fonteAberta(fontes.map((f) => f.chave), prioridade);
+    const tocando = Boolean(fontes.find((f) => f.chave === aberta)?.tocando);
 
     const classes = [
       'glass-card',

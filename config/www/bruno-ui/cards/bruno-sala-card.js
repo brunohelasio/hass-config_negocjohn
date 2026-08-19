@@ -25,6 +25,7 @@ const BRUNO_SALA_DEFAULT_ENTITIES = {
 // ANTERIOR (rollback): const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle'];
 // `buffering` e um estado transitorio ligado do MediaPlayer e deve permanecer ON.
 const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle', 'buffering'];
+const BRUNO_SALA_TV_OFF_GRACE_MS = 45_000;
 const BRUNO_SALA_CLIMATE_ON_STATES = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
 const BRUNO_SALA_CLIMATE_ACTIVE_ACTIONS = ['cooling', 'heating', 'drying', 'fan', 'preheating'];
 const BRUNO_SALA_CLIMATE_INACTIVE_ACTIONS = ['off', 'idle'];
@@ -550,7 +551,11 @@ class BrunoSalaCard extends HTMLElement {
     const corridor = this._state(entities.corridor);
 
     const roomOn = room?.state === 'on';
-    const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tv?.state || '');
+    const tvState = String(tv?.state || '').toLowerCase();
+    if (BRUNO_SALA_TV_ON_STATES.includes(tvState)) this._lastTvPoweredAt = Date.now();
+    const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tvState)
+      || (tvState === 'off' && Number.isFinite(this._lastTvPoweredAt)
+        && Date.now() - this._lastTvPoweredAt <= BRUNO_SALA_TV_OFF_GRACE_MS);
     const climateOn = this._climateIsActive(climate);
     const climateEnabled = this._climateIsEnabled(climate);
     const speakerOn = BRUNO_SALA_SPEAKER_ON_STATES.includes(this._state(entities.speaker)?.state || '')

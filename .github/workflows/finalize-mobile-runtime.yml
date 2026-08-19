@@ -1,0 +1,593 @@
+name: Finalize mobile runtime
+
+on:
+  push:
+    branches:
+      - fix/mobile-runtime-tv-curtain-20260819
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: ${{ !contains(github.event.head_commit.message, '[runtime-finalized]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Reconcile sources and consolidate runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Recupera somente os dois arquivos que haviam sido reescritos em bloco;
+          # as correções desta rodada serão reaplicadas de forma mínima abaixo.
+          git checkout origin/main -- config/configuration.yaml
+          git checkout origin/main -- config/www/bruno-ui/patches/home-mobile-hero-rail.js
+
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: esperado 1 trecho, encontrado {count}')
+              return text.replace(old, new, 1)
+
+          # ------------------------------------------------------------------
+          # 1) configuration.yaml: preserva o histórico, mas tira do bootstrap
+          #    os módulos aposentados e consolida os módulos ainda ativos no
+          #    bundle Vite único.
+          # ------------------------------------------------------------------
+          cfg_path = root / 'config/configuration.yaml'
+          cfg = cfg_path.read_text(encoding='utf-8-sig')
+
+          retired = {
+              'bruno-ui/cards/bruno-mobile-card-frame.js',
+              'bruno-ui/cards/bruno-mobile-nav-card.js',
+              'bruno-ui/cards/bruno-mobile-rooms-card.js',
+              'bruno-ui/cards/bruno-mobile-sala-card.js',
+              'bruno-ui/cards/bruno-mobile-cameras-list-card.js',
+              'bruno-ui/cards/bruno-sala-room-card.js',
+              'bruno-ui/cards/bruno-office-card.js',
+              'bruno-ui/cards/bruno-cozinha-card.js',
+              'bruno-ui/cards/bruno-lavabo-card.js',
+              'bruno-ui/cards/bruno-corredor-card.js',
+              'bruno-ui/cards/bruno-quarto-casal-card.js',
+              'bruno-ui/cards/bruno-quarto-marina-card.js',
+              'bruno-ui/cards/bruno-quarto-miguel-card.js',
+          }
+
+          active_classic = []
+          output = []
+          in_extra = False
+          line_re = re.compile(r'^(\s*)-\s+(/local/[^\s]+\.js(?:\?[^\s]+)?)\s*$')
+          for line in cfg.splitlines():
+              stripped = line.strip()
+              if stripped == 'extra_module_url:':
+                  in_extra = True
+                  output.append(line)
+                  continue
+              if in_extra and stripped and not line.startswith(' ') and not stripped.startswith('#'):
+                  in_extra = False
+
+              if in_extra:
+                  match = line_re.match(line)
+                  if match:
+                      indent, url = match.groups()
+                      clean = url.split('?', 1)[0]
+                      if clean.startswith('/local/dashboard/bruno-dashboard.'):
+                          output.append(line)
+                          continue
+                      rel = clean.removeprefix('/local/')
+                      if rel in retired:
+                          output.append(f'{indent}# RETIRADO DO RUNTIME 2026-08-19: {url}')
+                          continue
+                      src = root / 'config/www' / rel
+                      if not src.is_file():
+                          raise SystemExit(f'Módulo ativo não encontrado no repositório: {src}')
+                      active_classic.append(rel)
+                      output.append(f'{indent}# CONSOLIDADO NO BUNDLE 2026-08-19: {url}')
+                      continue
+              output.append(line)
+
+          if len(active_classic) < 20:
+              raise SystemExit(f'Inventário clássico inesperadamente pequeno: {len(active_classic)}')
+
+          cfg_path.write_text('\n'.join(output) + '\n', encoding='utf-8')
+
+          generated = root / 'dashboard-src/src/legacy-runtime.generated.ts'
+          imports = [
+              '/**',
+              ' * Runtime clássico ainda necessário, consolidado pelo Vite.',
+              ' * GERADO a partir das entradas ativas de frontend.extra_module_url.',
+              ' * Os arquivos fonte permanecem em config/www para consulta/rollback.',
+              ' */',
+          ]
+          imports += [f"import '../../config/www/{rel}';" for rel in active_classic]
+          imports += ['', f"export const LEGACY_RUNTIME_MODULE_COUNT = {len(active_classic)};", '']
+          generated.write_text('\n'.join(imports), encoding='utf-8')
+
+          dts = root / 'dashboard-src/src/legacy-runtime.d.ts'
+          dts.write_text("declare module '*.js';\n", encoding='utf-8')
+
+          main_path = root / 'dashboard-src/src/main.ts'
+          main = main_path.read_text(encoding='utf-8-sig')
+          if "import './legacy-runtime.generated';" not in main:
+              marker = "iniciarRuntime();\n"
+              main = replace_once(
+                  main,
+                  marker,
+                  marker + "\n// Módulos clássicos efetivamente usados entram no MESMO request do bundle.\nimport './legacy-runtime.generated';\n",
+                  'main.ts legacy runtime',
+              )
+          main_path.write_text(main, encoding='utf-8')
+
+          # ------------------------------------------------------------------
+          # 2) TV/Hub: retenção do último volume/artwork válidos. O salto
+          #    13 -> 60 vinha do fallback `tv.volume ?? 60` quando o atributo
+          #    volume_level desaparecia por um frame.
+          # ------------------------------------------------------------------
+          room_path = root / 'dashboard-src/src/components/rooms/bruno-room-subview.ts'
+          room = room_path.read_text(encoding='utf-8')
+
+          field_marker = "  private _midiaAtivasAntes: string[] = [];\n  private _menuMidiaAberto = false;"
+          field_new = """  private _midiaAtivasAntes: string[] = [];
+  /** Últimos metadados válidos da TV; atributos ADB podem sumir sem power-off. */
+  private _tvUltimoVolume: number | null = null;
+  private _tvUltimoPoster = '';
+  private _tvUltimaFonte = 'HDMI 1';
+  private _tvUltimoTitulo = '';
+  private _menuMidiaAberto = false;"""
+          if '_tvUltimoVolume' not in room:
+              room = replace_once(room, field_marker, field_new, 'campos de estabilidade TV')
+
+          tv_pattern = re.compile(r"  private _modeloTv\(\) \{.*?\n  \}\n\n  private _modeloSpotify\(\)", re.S)
+          tv_match = tv_pattern.search(room)
+          if not tv_match:
+              raise SystemExit('_modeloTv não encontrado')
+          tv_new = """  private _modeloTv() {
+    const id = this._idDe('tv');
+    const st = this._estado(id);
+    const a = st?.attributes ?? {};
+    const estadoBruto = String(st?.state ?? 'off').toLowerCase();
+    const ativo = isTvPoweredStable(this._hass, id, Date.now(), 45_000);
+    const reproduzindo = isMediaPlaying(this._hass, id);
+
+    const fonteAtual = String(a['source'] ?? a['app_name'] ?? '').trim();
+    const tituloAtual = String(a['media_title'] ?? a['media_series_title'] ?? a['app_name'] ?? '').trim();
+    const posterAtual = String(a['entity_picture'] ?? a['media_image_url'] ?? '').trim();
+    const volumeNumero = a['volume_level'] == null ? Number.NaN : Number(a['volume_level']);
+    const volumeAtual = Number.isFinite(volumeNumero) ? Math.round(volumeNumero * 100) : null;
+
+    if (ativo) {
+      if (fonteAtual) this._tvUltimaFonte = fonteAtual;
+      if (tituloAtual) this._tvUltimoTitulo = tituloAtual;
+      if (posterAtual) this._tvUltimoPoster = posterAtual;
+      if (volumeAtual != null) this._tvUltimoVolume = volumeAtual;
+    } else {
+      this._tvUltimoPoster = '';
+      this._tvUltimoTitulo = '';
+      this._tvUltimoVolume = null;
+    }
+
+    return {
+      st,
+      // Durante um OFF filtrado o modelo continua energizado; não propaga o
+      // estado contraditório para CSS/arte/controles.
+      estado: ativo && estadoBruto === 'off' ? 'idle' : estadoBruto,
+      ativo,
+      reproduzindo,
+      fonte: fonteAtual || (ativo ? this._tvUltimaFonte : 'HDMI 1') || 'HDMI 1',
+      titulo: tituloAtual || (ativo ? this._tvUltimoTitulo : ''),
+      volume: volumeAtual ?? (ativo ? this._tvUltimoVolume : null),
+      poster: posterAtual || (ativo ? this._tvUltimoPoster : ''),
+    };
+  }
+
+  private _modeloSpotify()"""
+          room = room[:tv_match.start()] + tv_new + room[tv_match.end():]
+
+          # Reprodução real decide qual fonte rouba o foco do Hub. Energia ainda
+          # decide se a fonte está disponível/ligada.
+          priority_old = """    const ativas = Object.fromEntries(fontes.map((f) => [f.chave, f.ativo]));
+    const aberta = this._fonteAberta(fontes.map((f) => f.chave), ativas);
+    const tocando = fontes.find((f) => f.chave === aberta)?.tocando;"""
+          priority_new = """    const ativas = Object.fromEntries(fontes.map((f) => [f.chave, f.ativo]));
+    const haReproducao = !temPc && fontes.some((f) => f.tocando)
+      ? Object.fromEntries(fontes.map((f) => [f.chave, Boolean(f.tocando)]))
+      : ativas;
+    const aberta = this._fonteAberta(fontes.map((f) => f.chave), haReproducao);
+    const tocando = Boolean(fontes.find((f) => f.chave === aberta)?.tocando);"""
+          if priority_old in room:
+              room = replace_once(room, priority_old, priority_new, 'prioridade do Hub')
+
+          # A cortina não aceita mais o extremo publicado cedo. Só conclui no
+          # final do tempo proporcional de curso (ou após stop explícito).
+          room = room.replace('const CORTINA_GRAÇA_CONFIRMACAO_MS = 1_800;\n', '')
+          early_pattern = re.compile(
+              r"\n    // Um extremo publicado enquanto o cover ainda declara opening/closing é o\n"
+              r"    // salto prematuro observado no dispositivo\. Só conclui depois que o estado\n"
+              r"    // físico assenta e passa a janela de confirmação do comando\.\n"
+              r"    if \(\n"
+              r"      !estaMovendo\n"
+              r"      && decorrido >= CORTINA_GRAÇA_CONFIRMACAO_MS\n"
+              r"      && \(fisicoNoAlvo \|\| estadoNoAlvo\)\n"
+              r"    \) \{\n"
+              r"      this\._movimentoCortina = undefined;\n"
+              r"      this\._pararTimerMovimentoCortina\(\);\n"
+              r"      return movimento\.alvoFechado;\n"
+              r"    \}\n"
+          )
+          room, removed_early = early_pattern.subn('\n', room, count=1)
+          if removed_early != 1:
+              raise SystemExit(f'bloco de conclusão precoce da cortina: {removed_early}')
+
+          state_target_pattern = re.compile(
+              r"\n    const estadoNoAlvo =\n"
+              r"      \(estado === 'closed' && movimento\.alvoFechado >= 100 - CORTINA_TOLERANCIA_ALVO\)\n"
+              r"      \|\| \(estado === 'open' && movimento\.alvoFechado <= CORTINA_TOLERANCIA_ALVO\);\n"
+          )
+          room, removed_state_target = state_target_pattern.subn('\n', room, count=1)
+          if removed_state_target != 1:
+              raise SystemExit(f'estadoNoAlvo: {removed_state_target}')
+
+          completion_old = """    const estimado = this._fechamentoMovimentoCortina(movimento, agora) ?? relatado;
+    const terminou = decorrido >= movimento.duracao;
+    if (terminou && !estaMovendo) {
+      this._movimentoCortina = undefined;
+      this._pararTimerMovimentoCortina();
+      // Se houve uma parada externa antes do alvo, a telemetria física vence.
+      const comandado = this._fechamentoCortinaComandado();
+      const comandoNoAlvo = comandado != null
+        && Math.abs(comandado - movimento.alvoFechado) <= CORTINA_TOLERANCIA_ALVO;
+      return fisico != null && !fisicoNoAlvo && !comandoNoAlvo ? fisico : movimento.alvoFechado;
+    }"""
+          completion_new = """    const estimado = this._fechamentoMovimentoCortina(movimento, agora) ?? relatado;
+    const terminou = decorrido >= movimento.duracao;
+    if (terminou && !estaMovendo) {
+      this._movimentoCortina = undefined;
+      this._pararTimerMovimentoCortina();
+      const estadoConfirmaAlvo =
+        (estado === 'closed' && movimento.alvoFechado >= 100 - CORTINA_TOLERANCIA_ALVO)
+        || (estado === 'open' && movimento.alvoFechado <= CORTINA_TOLERANCIA_ALVO);
+      if (fisicoNoAlvo || estadoConfirmaAlvo) return movimento.alvoFechado;
+      // Parada externa/intermediária: depois do tempo de curso, a telemetria
+      // física vence. Sem telemetria, o alvo calculado é o único dado disponível.
+      return fisico ?? movimento.alvoFechado;
+    }"""
+          if completion_old in room:
+              room = replace_once(room, completion_old, completion_new, 'conclusão da cortina')
+          elif 'estadoConfirmaAlvo' not in room:
+              raise SystemExit('bloco final da cortina não reconhecido')
+
+          room_path.write_text(room, encoding='utf-8')
+
+          # ------------------------------------------------------------------
+          # 3) Config gerada: remove referência morta media_player.atv.
+          # ------------------------------------------------------------------
+          sub_cfg_path = root / 'dashboard-src/src/config/subviews.config.ts'
+          sub_cfg = sub_cfg_path.read_text(encoding='utf-8')
+          sub_cfg = sub_cfg.replace("      tvRemotePlayer: 'media_player.atv',\n", '')
+          sub_cfg_path.write_text(sub_cfg, encoding='utf-8')
+
+          # ------------------------------------------------------------------
+          # 4) Card dinâmico de mídia: TV energizada continua sendo uma sessão
+          #    visual, mesmo sem playback. OFF transitório recebe a mesma graça.
+          # ------------------------------------------------------------------
+          media_path = root / 'config/www/bruno-ui/cards/bruno-media-card.js'
+          media = media_path.read_text(encoding='utf-8')
+          media = replace_once(
+              media,
+              "const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];",
+              "const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];\nconst BRUNO_MEDIA_TV_ENTITY = 'media_player.android_tv_192_168_3_17';\nconst BRUNO_MEDIA_TV_POWER_STATES = new Set(['on', 'playing', 'paused', 'idle', 'buffering']);\nconst BRUNO_MEDIA_TV_OFF_GRACE_MS = 45_000;",
+              'constantes bruno-media-card',
+          )
+          media = replace_once(
+              media,
+              """  _isActive(entityId) {
+    return BRUNO_MEDIA_ACTIVE_STATES.includes(this._state(entityId)?.state || '');
+  }""",
+              """  _isActive(entityId) {
+    const state = String(this._state(entityId)?.state || '').toLowerCase();
+    if (entityId === BRUNO_MEDIA_TV_ENTITY) {
+      if (BRUNO_MEDIA_TV_POWER_STATES.has(state)) {
+        this._lastTvPoweredAt = Date.now();
+        return true;
+      }
+      return state === 'off'
+        && Number.isFinite(this._lastTvPoweredAt)
+        && Date.now() - this._lastTvPoweredAt <= BRUNO_MEDIA_TV_OFF_GRACE_MS;
+    }
+    return BRUNO_MEDIA_ACTIVE_STATES.includes(state);
+  }""",
+              '_isActive bruno-media-card',
+          )
+          playback_old = """  _playbackPriority(entityId) {
+    const entity = this._state(entityId);
+    const state = String(entity?.state || '').toLowerCase();
+    if (state === 'playing') return 4;
+    if (state === 'paused') return 2;
+    const config = this._playerConfig(entityId);"""
+          playback_new = """  _playbackPriority(entityId) {
+    const entity = this._state(entityId);
+    const state = String(entity?.state || '').toLowerCase();
+    if (entityId === BRUNO_MEDIA_TV_ENTITY) {
+      if (BRUNO_MEDIA_TV_POWER_STATES.has(state)) this._lastTvPoweredAt = Date.now();
+      if (state === 'playing') return 4;
+      if (state === 'buffering') return 3;
+      if (state === 'paused') return 2;
+      if (state === 'on' || state === 'idle') return 1;
+      if (state === 'off' && Number.isFinite(this._lastTvPoweredAt)
+          && Date.now() - this._lastTvPoweredAt <= BRUNO_MEDIA_TV_OFF_GRACE_MS) return 1;
+    } else {
+      if (state === 'playing') return 4;
+      if (state === 'paused') return 2;
+    }
+    const config = this._playerConfig(entityId);"""
+          media = replace_once(media, playback_old, playback_new, '_playbackPriority bruno-media-card')
+
+          persisted_old = """    const persisted = hasPlayback
+      ? null
+      : (this._mediaHistory?.[focusId] || this._latestMediaSnapshot());
+    const displayImage = hasPlayback ? image : (persisted?.image || '');
+    const displayTitle = hasPlayback ? liveTitle : (persisted?.title || '');
+    const displaySecondary = hasPlayback ? liveSecondary : (persisted?.secondary || persisted?.artist || '');
+    const displayContext = hasPlayback ? liveContext : (persisted?.context || '');"""
+          persisted_new = """    const tvPowered = focusId === BRUNO_MEDIA_TV_ENTITY && this._isActive(focusId);
+    const persisted = hasPlayback
+      ? null
+      : (tvPowered ? (this._mediaHistory?.[focusId] || null) : (this._mediaHistory?.[focusId] || this._latestMediaSnapshot()));
+    const displayImage = hasPlayback ? image : (image || persisted?.image || this._lastArtworkByPlayer?.[focusId] || '');
+    const displayTitle = hasPlayback ? liveTitle : (persisted?.title || (tvPowered ? 'TV ligada' : ''));
+    const displaySecondary = hasPlayback
+      ? liveSecondary
+      : (persisted?.secondary || persisted?.artist || (tvPowered ? this._firstText([appName, source, 'Sala']) : ''));
+    const displayContext = hasPlayback ? liveContext : (persisted?.context || (tvPowered ? 'TV Sala' : ''));"""
+          media = replace_once(media, persisted_old, persisted_new, 'persistência visual bruno-media-card')
+          media_path.write_text(media, encoding='utf-8')
+
+          # ------------------------------------------------------------------
+          # 5) Sala especial do phone: mesmo filtro de OFF transitório do Hub.
+          # ------------------------------------------------------------------
+          sala_path = root / 'config/www/bruno-ui/cards/bruno-sala-card.js'
+          sala = sala_path.read_text(encoding='utf-8')
+          sala = replace_once(
+              sala,
+              "const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle', 'buffering'];",
+              "const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle', 'buffering'];\nconst BRUNO_SALA_TV_OFF_GRACE_MS = 45_000;",
+              'constante graça Sala phone',
+          )
+          sala = replace_once(
+              sala,
+              "    const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tv?.state || '');",
+              """    const tvState = String(tv?.state || '').toLowerCase();
+    if (BRUNO_SALA_TV_ON_STATES.includes(tvState)) this._lastTvPoweredAt = Date.now();
+    const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tvState)
+      || (tvState === 'off' && Number.isFinite(this._lastTvPoweredAt)
+        && Date.now() - this._lastTvPoweredAt <= BRUNO_SALA_TV_OFF_GRACE_MS);""",
+              'tvOn Sala phone',
+          )
+          sala_path.write_text(sala, encoding='utf-8')
+
+          # ------------------------------------------------------------------
+          # 6) Card dinâmico: TV ligada é relevante mesmo idle/on; demais players
+          #    continuam exigindo playback. delay_off de 2 min absorve flapping.
+          # ------------------------------------------------------------------
+          activity_path = root / 'config/packages/home_activity.yaml'
+          activity = activity_path.read_text(encoding='utf-8')
+          activity_old = """          {{ ['media_player.android_tv_192_168_3_17',
+              'media_player.echo_show',
+              'media_player.spotifyplus_bruno_helasio',
+              'media_player.echo_pop_office']
+             | select('is_state', ['playing', 'buffering'])
+             | list | count > 0 }}"""
+          activity_new = """          {{ states('media_player.android_tv_192_168_3_17') in
+             ['on', 'playing', 'paused', 'idle', 'buffering']
+             or ['media_player.echo_show',
+                 'media_player.spotifyplus_bruno_helasio',
+                 'media_player.echo_pop_office']
+                | select('is_state', ['playing', 'buffering'])
+                | list | count > 0 }}"""
+          activity = replace_once(activity, activity_old, activity_new, 'home_activity media')
+          activity = activity.replace(
+              '# MÍDIA — relevante quando algum player acompanhado está tocando.\n',
+              '# MÍDIA — relevante quando a TV está ligada ou outro player está tocando.\n',
+              1,
+          )
+          activity_path.write_text(activity, encoding='utf-8')
+
+          # Guardas estruturais antes de instalar dependências.
+          if 'CORTINA_GRAÇA_CONFIRMACAO_MS' in room:
+              raise SystemExit('cortina ainda contém confirmação precoce')
+          if "media_player.atv" in sub_cfg:
+              raise SystemExit('referência morta media_player.atv ainda presente na config gerada')
+          if not active_classic:
+              raise SystemExit('nenhum módulo clássico foi consolidado')
+          print(f'Runtime clássico consolidado: {len(active_classic)} módulos -> 1 bundle')
+          PY
+
+          # Remove artefatos intermediários desta branch; não fazem parte do
+          # fluxo final de instalação.
+          git rm -r --ignore-unmatch _deploy/runtime-cleanup-20260819 || true
+          git rm --ignore-unmatch config/www/bruno-ui/patches/runtime-media-priority.js || true
+
+      - name: Install dependencies
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: dashboard-src
+        run: npm run typecheck
+
+      - name: Unit tests
+        working-directory: dashboard-src
+        run: npm test -- --run
+
+      - name: Lint TypeScript
+        working-directory: dashboard-src
+        run: npm run lint
+
+      - name: Validate YAML
+        working-directory: dashboard-src
+        run: npm run check:yaml
+
+      - name: Build production bundle
+        working-directory: dashboard-src
+        run: npm run build
+
+      - name: Compress bundle and wire configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const zlib = require('zlib');
+          const dir = 'config/www/dashboard';
+          const bundles = fs.readdirSync(dir).filter((name) => /^bruno-dashboard\..+\.js$/.test(name));
+          if (bundles.length !== 1) throw new Error(`Esperado 1 bundle JS, encontrados: ${bundles.join(', ')}`);
+          const file = path.join(dir, bundles[0]);
+          const data = fs.readFileSync(file);
+          fs.writeFileSync(file + '.br', zlib.brotliCompressSync(data, {
+            params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 11 },
+          }));
+          fs.writeFileSync(file + '.gz', zlib.gzipSync(data, { level: 9 }));
+          console.log(JSON.stringify({
+            bundle: bundles[0],
+            bytes: data.length,
+            br: fs.statSync(file + '.br').size,
+            gz: fs.statSync(file + '.gz').size,
+          }));
+          NODE
+
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          dashboard = Path('config/www/dashboard')
+          bundles = sorted(p.name for p in dashboard.glob('bruno-dashboard.*.js'))
+          if len(bundles) != 1:
+              raise SystemExit(f'Esperado um bundle: {bundles}')
+          bundle = bundles[0]
+
+          cfg_path = Path('config/configuration.yaml')
+          cfg = cfg_path.read_text(encoding='utf-8')
+          cfg, count = re.subn(
+              r'(?m)^(\s*-\s+/local/dashboard/)bruno-dashboard\.[^\s]+\.js\s*$',
+              rf'\1{bundle}',
+              cfg,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(f'Não foi possível atualizar referência do bundle: {count}')
+          cfg_path.write_text(cfg, encoding='utf-8')
+
+          # Após consolidação, só o bundle deve continuar como linha JS ativa em
+          # frontend.extra_module_url. Linhas antigas ficam comentadas para rollback.
+          active = []
+          in_extra = False
+          for line in cfg.splitlines():
+              if line.strip() == 'extra_module_url:':
+                  in_extra = True
+                  continue
+              if in_extra and line.strip() and not line.startswith(' ') and not line.lstrip().startswith('#'):
+                  in_extra = False
+              if in_extra and re.match(r'^\s*-\s+/(?:local|hacsfiles)/.*\.js', line):
+                  active.append(line.strip())
+          if active != [f'- /local/dashboard/{bundle}']:
+              raise SystemExit(f'Entradas JS ainda ativas no bootstrap: {active}')
+
+          print(f'Bundle ativo: {bundle}')
+          PY
+
+      - name: Final source guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+          checks = {
+              'dashboard-src/src/components/rooms/bruno-room-subview.ts': [
+                  '_tvUltimoVolume',
+                  'estadoConfirmaAlvo',
+                  'haReproducao',
+                  "callHaService(this._hass, dominio, servico, dados)",
+              ],
+              'config/packages/home_activity.yaml': [
+                  "states('media_player.android_tv_192_168_3_17') in",
+                  "['on', 'playing', 'paused', 'idle', 'buffering']",
+              ],
+              'config/www/bruno-ui/cards/bruno-media-card.js': [
+                  'BRUNO_MEDIA_TV_POWER_STATES',
+                  "'TV ligada'",
+              ],
+              'config/www/bruno-ui/cards/bruno-sala-card.js': [
+                  'BRUNO_SALA_TV_OFF_GRACE_MS',
+              ],
+              'dashboard-src/src/main.ts': [
+                  "import './legacy-runtime.generated';",
+                  'installRoomTileIosLongPressGuard();',
+              ],
+          }
+          for file, needles in checks.items():
+              text = Path(file).read_text(encoding='utf-8-sig')
+              for needle in needles:
+                  if needle not in text:
+                      raise SystemExit(f'{file}: contrato ausente: {needle}')
+          if 'CORTINA_GRAÇA_CONFIRMACAO_MS' in Path('dashboard-src/src/components/rooms/bruno-room-subview.ts').read_text(encoding='utf-8'):
+              raise SystemExit('cortina: confirmação precoce ainda presente')
+          print('Guardas finais OK')
+          PY
+
+      - name: Commit finalized branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          git add \
+            config/configuration.yaml \
+            config/dashboards/ui-lovelace-main.yaml \
+            config/dashboards/shared/grid-cards/bento_comodos_matriz.yaml \
+            config/packages/home_activity.yaml \
+            config/www/bruno-ui/cards/bruno-media-card.js \
+            config/www/bruno-ui/cards/bruno-sala-card.js \
+            config/www/bruno-ui/patches/home-mobile-hero-rail.js \
+            dashboard-src/src/main.ts \
+            dashboard-src/src/legacy-runtime.generated.ts \
+            dashboard-src/src/legacy-runtime.d.ts \
+            dashboard-src/src/components/rooms/bruno-room-subview.ts \
+            dashboard-src/src/components/rooms/bruno-room-tile.ts \
+            dashboard-src/src/config/rooms.config.ts \
+            dashboard-src/src/config/subviews.config.ts \
+            dashboard-src/src/services/entities/media-state.ts \
+            dashboard-src/src/services/entities/media-state.test.ts \
+            dashboard-src/src/services/home-assistant/service-call.ts \
+            dashboard-src/src/services/home-assistant/service-call.test.ts \
+            dashboard-src/src/services/ui/ios-longpress-guard.ts
+
+          BUNDLE=$(find config/www/dashboard -maxdepth 1 -type f -name 'bruno-dashboard.*.js' -printf '%f\n')
+          git add -f "config/www/dashboard/$BUNDLE" "config/www/dashboard/$BUNDLE.br" "config/www/dashboard/$BUNDLE.gz" config/www/dashboard/manifest.json
+
+          git status --short
+          if git diff --cached --quiet; then
+            echo 'Nada para commitar.'
+            exit 0
+          fi
+          git commit -m 'fix: finalize single-bundle mobile runtime [runtime-finalized]'
+          git push origin HEAD:fix/mobile-runtime-tv-curtain-20260819

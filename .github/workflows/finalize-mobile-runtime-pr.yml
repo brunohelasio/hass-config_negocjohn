@@ -28,4 +28,29 @@ jobs:
 
       - name: Finalize, validate, build and publish branch
         shell: bash
-        run: bash scripts/ci/finalize-mobile-runtime.sh
+        run: |
+          set -euo pipefail
+          cp scripts/ci/finalize-mobile-runtime.sh /tmp/finalize-mobile-runtime.sh
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path('/tmp/finalize-mobile-runtime.sh')
+          text = path.read_text(encoding='utf-8')
+          old = """  config/www/dashboard \\
+"""
+          if old not in text:
+              raise SystemExit('linha config/www/dashboard não encontrada no staging')
+          text = text.replace(old, '', 1)
+          old_force = "git add -f config/www/dashboard/*.br config/www/dashboard/*.gz"
+          new_force = """git add -u config/www/dashboard || true
+git add -f \\
+  config/www/dashboard/*.js \\
+  config/www/dashboard/*.js.map \\
+  config/www/dashboard/manifest.json \\
+  config/www/dashboard/bruno-loader.js \\
+  config/www/dashboard/*.br \\
+  config/www/dashboard/*.gz"""
+          if old_force not in text:
+              raise SystemExit('linha git add -f não encontrada')
+          path.write_text(text.replace(old_force, new_force, 1), encoding='utf-8')
+          PY
+          bash /tmp/finalize-mobile-runtime.sh

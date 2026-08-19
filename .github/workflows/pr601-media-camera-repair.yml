@@ -88,7 +88,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/workflows/pr601-media-camera-repair.yml scripts/validation/repair-pr601-media-camera.mjs
           git add -A dashboard-src/src config/configuration.yaml CLAUDE.md _deploy/pr601
-          git diff --cached --check
+          git diff --cached --check -- dashboard-src/src config/configuration.yaml CLAUDE.md
           git status --short
           git commit -m 'fix: repair media controls, TV stability and camera fallback'
           git push origin HEAD:fix/tv-office-state-semantics

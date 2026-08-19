@@ -28,6 +28,34 @@ export function isTvPowered(hass: Hass | undefined, entityId: string | undefined
   return isEntityInStates(hass, entityId, TV_POWER_ON_STATES);
 }
 
+const ultimoTvLigado = new Map<string, number>();
+
+/**
+ * Filtra OFF transitório da entidade de TV sem transformar outra integração em
+ * autoridade de energia. Um estado positivo renova a janela; unknown e
+ * unavailable continuam falsos.
+ */
+export function isTvPoweredStable(
+  hass: Hass | undefined,
+  entityId: string | undefined,
+  now = Date.now(),
+  graceMs = 45_000,
+): boolean {
+  if (!hass || !entityId) return false;
+  const raw = String(hass.states[entityId]?.state ?? '').toLowerCase();
+  if (TV_POWER_ON_STATES.includes(raw as (typeof TV_POWER_ON_STATES)[number])) {
+    ultimoTvLigado.set(entityId, now);
+    return true;
+  }
+  if (raw !== 'off') return false;
+  const ultimo = ultimoTvLigado.get(entityId);
+  return ultimo !== undefined && now - ultimo <= graceMs;
+}
+
+export function resetTvPowerStabilityForTests(): void {
+  ultimoTvLigado.clear();
+}
+
 /** Reprodução, deliberadamente separada do estado de energia. */
 export function isMediaPlaying(hass: Hass | undefined, entityId: string | undefined): boolean {
   return isEntityInStates(hass, entityId, MEDIA_PLAYING_STATES);

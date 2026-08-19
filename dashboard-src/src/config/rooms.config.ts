@@ -61,6 +61,8 @@ export interface RoomDot {
    * cômodo onde a música estava de fato tocando.
    */
   spotifyDevice?: string;
+  /** Mantém o estado ativo por alguns ms após um off transitório da entidade. */
+  offDelayMs?: number;
 }
 
 /** A conta do Spotify é uma só; o que distingue o cômodo é o DISPOSITIVO. */
@@ -159,7 +161,7 @@ export const ROOMS: readonly RoomConfig[] = [
         entities: ['binary_sensor.sala_motion_recent'], states: ['on'] },
       { icon: 'mdi:television-classic', label: 'TV ativa', tone: 'purple',
         entities: ['media_player.android_tv_192_168_3_17'],
-        states: TV_POWER_ON_STATES },
+        states: TV_POWER_ON_STATES, offDelayMs: 45_000 },
       { icon: 'mdi:snowflake', label: 'Ar condicionado ativo', tone: 'cyan',
         entities: ['climate.sl_ar_condicionado'], states: CLIMATE_ON },
       { icon: 'mdi:speaker-wireless', label: 'Echo Show ativo', tone: 'amber',

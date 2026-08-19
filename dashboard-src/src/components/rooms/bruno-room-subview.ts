@@ -4,7 +4,8 @@ import type { Hass, HassEntity } from '@/models/home-assistant';
 import { ROOMS, type RoomConfig } from '@/config/rooms.config';
 import { SUBVIEWS, type SubviewConfig } from '@/config/subviews.config';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
-import { isMediaPlaying, isTvPowered } from '@/services/entities/media-state';
+import { isEntityInStates, isMediaPlaying, isTvPoweredStable } from '@/services/entities/media-state';
+import { callHaService } from '@/services/home-assistant/service-call';
 import {
   coletarIdsDeEntidade,
   ObservadorDeEntidades,
@@ -243,6 +244,7 @@ interface EstadoHa {
 
 interface CameraCfg {
   entity: string;
+  fallbackEntity?: string;
   name?: string;
   shortName?: string;
   controls?: Array<{ key?: string; label?: string; description?: string; icon?: string; entity?: string }>;
@@ -2741,12 +2743,10 @@ export class BrunoRoomSubview extends LitElement {
 
   private _servico(dominio: string, servico: string, dados: Record<string, unknown>): void {
     if (!this._hass) return;
-    // ANTERIOR (rollback): o objeto inteiro também era enviado como target.
-    // Assim volume_level/delay/force_activate_device viravam chaves inválidas
-    // de target. O target recebe só entity_id; o restante permanece service data.
-    const { entity_id: entityId, ...serviceData } = dados;
-    const alvo = typeof entityId === 'string' && entityId ? { entity_id: entityId } : undefined;
-    this._hass.callService(dominio, servico, serviceData, alvo);
+    // O frontend oficial do HA e a subview legada enviam entity_id dentro de
+    // serviceData. A migração para target quebrou serviços de integrações que
+    // validam o schema dos dados (SpotifyPlus em especial).
+    void callHaService(this._hass, dominio, servico, dados);
   }
 
   /**
@@ -2770,16 +2770,21 @@ export class BrunoRoomSubview extends LitElement {
    * guardado: numa reconexão a imagem antiga continua na tela em vez de sumir.
    */
   private _cameraViva(cam: CameraCfg): CameraViva {
-    const st = this._estado(cam.entity);
+    const principal = this._estado(cam.entity);
+    const fallback = cam.fallbackEntity ? this._estado(cam.fallbackEntity) : undefined;
+    const usarFallback = this._indisponivel(principal) && Boolean(cam.fallbackEntity) && !this._indisponivel(fallback);
+    const entity = usarFallback ? String(cam.fallbackEntity) : cam.entity;
+    const st = usarFallback ? fallback : principal;
     const indisponivel = this._indisponivel(st);
     const online = !indisponivel && ESTADOS_CAMERA_ONLINE.includes(String(st?.state ?? ''));
 
     const publicada = String(st?.attributes['entity_picture'] ?? '');
-    if (publicada) this._ultimaImagem[cam.entity] = publicada;
-    const base = publicada || this._ultimaImagem[cam.entity] || `/api/camera_proxy/${cam.entity}`;
+    if (publicada) this._ultimaImagem[entity] = publicada;
+    const base = publicada || this._ultimaImagem[entity] || `/api/camera_proxy/${entity}`;
 
     return {
       ...cam,
+      entity,
       online,
       indisponivel,
       base,
@@ -2791,7 +2796,7 @@ export class BrunoRoomSubview extends LitElement {
       // motor disparava outra no mesmo instante. Sem o selo, voltar a um cômodo
       // visitado mostra o último quadro imediatamente, e o motor cuida da
       // atualização a partir daí.
-      url: this._urlsCarregadas[cam.entity] ?? base,
+      url: this._urlsCarregadas[entity] ?? base,
     };
   }
 
@@ -3023,13 +3028,20 @@ export class BrunoRoomSubview extends LitElement {
 
   private _modeloTv() {
     const id = this._idDe('tv');
-    const st = this._estado(id);
+    const primario = this._estado(id);
+    const remotoId = this._idDe('tvRemotePlayer');
+    const remoto = this._estado(remotoId);
+    // O Android TV/ADB desta instalação oscila para off por poucos segundos
+    // mesmo com a tela ligada. Mantemos a última prova positiva por 45 s.
+    // A Apple TV NÃO vira autoridade de energia: só sustenta a sessão quando
+    // publica reprodução/pausa/buffering, evitando o falso positivo de idle/on.
+    const primarioLigado = isTvPoweredStable(this._hass, id, Date.now(), 45_000);
+    const remotoComMidia = isEntityInStates(this._hass, remotoId, ['playing', 'paused', 'buffering']);
+    const ativo = primarioLigado || remotoComMidia;
+    const reproduzindo = isMediaPlaying(this._hass, id) || isMediaPlaying(this._hass, remotoId);
+    const st = remotoComMidia && !primarioLigado ? remoto ?? primario : primario ?? remoto;
     const a = st?.attributes ?? {};
     const estado = st?.state ?? 'off';
-    // Energia e reprodução são conceitos diferentes. Idle/paused continuam
-    // significando TV ligada; apenas playing/buffering significam reprodução.
-    const ativo = isTvPowered(this._hass, id);
-    const reproduzindo = isMediaPlaying(this._hass, id);
     const fonte = String(a['source'] ?? a['app_name'] ?? '') || 'HDMI 1';
     const titulo = String(a['media_title'] ?? a['media_series_title'] ?? a['app_name'] ?? '');
     return {

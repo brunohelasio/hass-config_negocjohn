@@ -50,8 +50,9 @@ frontend:
     - /local/bruno-ui/cards/bruno-quick-actions-card.js?v=20260724-home-v2-2
     - /local/bruno-ui/cards/bruno-media-card.js?v=20260719-icons-global-1
 
-    # Patch consolidado: hero/rail + correções de runtime da rodada 2026-08-19.
+    # Patches de compatibilidade do runtime consolidado.
     - /local/bruno-ui/patches/home-mobile-hero-rail.js?v=20260819-runtime-consolidation-1
+    - /local/bruno-ui/patches/runtime-media-priority.js?v=20260819-media-contract-1
 
 # Publica o DP Tuya initiative_message/ipc_motion para o card de monitoramento.
 bruno_tuya_motion:

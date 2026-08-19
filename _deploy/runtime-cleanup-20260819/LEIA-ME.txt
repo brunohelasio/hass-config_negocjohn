@@ -1,0 +1,20 @@
+RUNTIME CONSOLIDADO 2026-08-19 — PACOTE DE TESTE COPY-ONLY
+
+Copie TODO o conteúdo da pasta `config` deste pacote para:
+\\192.168.3.154\config
+
+Substitua os arquivos quando solicitado e reinicie o Home Assistant.
+
+Validar no iPhone/Everex:
+- Home sem as cinco abas Mobile V3 antigas;
+- cards de Office/Cozinha/Lavabo/Q. Casal/Q. Marina/Q. Miguel usando o mesmo componente compartilhado;
+- long-press nos cômodos sem callout/arraste nativo do iOS;
+- TV/Sala e Hub permanecendo ligados e com artwork durante OFF transitório;
+- Spotify play/pause/volume;
+- dot do PC no Office sem depender da sessão HASS.Agent congelada;
+- cortina sem anunciar 0%/100% antes do percurso físico estimado terminar;
+- câmeras ONVIF permanecendo funcionais.
+
+O bundle validado `bruno-dashboard.DpecM3wp.js` permanece o mesmo. Esta rodada atua no runtime já carregado e reduz os módulos clássicos incondicionais; não exige npm/build/terminal no PC.
+
+NÃO fazer merge no main antes da validação física.

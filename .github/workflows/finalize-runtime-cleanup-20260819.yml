@@ -71,7 +71,7 @@ jobs:
 
           (root / 'LEIA-ME.txt').write_text(
               'RUNTIME CONSOLIDADO 2026-08-19 — PACOTE COPY-ONLY\n\n'
-              '1. Copie TODO o conteudo da pasta config deste pacote para \\\\192.168.3.154\\config.\n'
+              '1. Copie TODO o conteudo da pasta config deste pacote para \\192.168.3.154\config.\n'
               '2. Substitua os arquivos quando solicitado.\n'
               '3. Reinicie o Home Assistant.\n'
               '4. Valide: Home no iPhone, TV/Sala, Hub de Midia, Spotify, Office e cortina.\n\n'
@@ -102,4 +102,4 @@ jobs:
           git commit -m 'fix: consolidate mobile runtime and media semantics'
           git push origin HEAD:fix/mobile-runtime-tv-curtain-20260819
 
-# Trigger 3: PR #602 is now open; this push should execute the branch workflow.
+# Trigger 4: low-level ref update.

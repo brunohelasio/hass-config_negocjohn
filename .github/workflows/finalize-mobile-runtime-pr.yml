@@ -1,0 +1,47 @@
+name: Finalize mobile runtime PR
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: ${{ github.head_ref == 'fix/mobile-runtime-tv-curtain-20260819' && !contains(github.event.pull_request.title, '[runtime-finalized]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Execute finalizer run blocks
+        shell: bash
+        run: |
+          set -euo pipefail
+          ruby <<'RUBY'
+          require 'yaml'
+          workflow = YAML.load_file('.github/workflows/finalize-mobile-runtime.yml', aliases: true)
+          steps = workflow.fetch('jobs').fetch('finalize').fetch('steps')
+          steps.each do |step|
+            command = step['run']
+            next unless command
+            directory = step['working-directory'] || '.'
+            puts "\n==> #{step['name'] || 'run'} (#{directory})"
+            Dir.chdir(directory) do
+              ok = system('bash', '-eo', 'pipefail', '-c', command)
+              exit 1 unless ok
+            end
+          end
+          RUBY

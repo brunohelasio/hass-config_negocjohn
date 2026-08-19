@@ -171,7 +171,6 @@ export const SUBVIEWS: Record<string, SubviewConfig> = {
         },
         {
           entity: 'camera.vr_camera_profile_1',
-          fallbackEntity: 'camera.vr_camera_2',
           name: 'Sala Lateral',
           shortName: 'Varanda',
           controls: [
@@ -261,7 +260,6 @@ export const SUBVIEWS: Record<string, SubviewConfig> = {
       cameras: [
         {
           entity: 'camera.of_camera_profile_1',
-          fallbackEntity: 'camera.of_camera_2',
           name: 'Office',
           shortName: 'Office',
           controls: [

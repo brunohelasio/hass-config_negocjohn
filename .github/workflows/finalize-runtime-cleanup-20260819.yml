@@ -102,4 +102,4 @@ jobs:
           git commit -m 'fix: consolidate mobile runtime and media semantics'
           git push origin HEAD:fix/mobile-runtime-tv-curtain-20260819
 
-# Trigger 2: workflow already existed before this push.
+# Trigger 3: PR #602 is now open; this push should execute the branch workflow.

@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Audit active include graph and template closure
+      - name: Audit active YAML and JS resource usage
         shell: bash
         run: |
           python3 <<'PY'
@@ -24,7 +24,6 @@ jobs:
               lines=[]
               for line in path.read_text(encoding='utf-8',errors='ignore').splitlines():
                   if line.lstrip().startswith('#'): continue
-                  # Remove simple trailing YAML comments; URLs do not contain ' #'.
                   line=re.sub(r'\s+#.*$','',line)
                   lines.append(line)
               return '\n'.join(lines)+'\n'
@@ -44,61 +43,23 @@ jobs:
                   if d.is_dir():
                       for c in sorted(d.rglob('*.yaml')): visit(c)
           visit(entry)
+          yaml_custom=set()
+          for p in ordered: yaml_custom.update(re.findall(r'custom:([A-Za-z0-9_.-]+)',active_text(p)))
 
-          def refs_from_text(t):
-              out=set(); lines=t.splitlines()
-              for i,line in enumerate(lines):
-                  m=re.match(r'^(\s*)template:\s*(.*)$',line)
-                  if not m: continue
-                  indent=len(m.group(1)); tail=m.group(2).strip()
-                  if tail and tail not in ('|','>'):
-                      if tail.startswith('[') and tail.endswith(']'):
-                          out.update(x.strip(' "\'') for x in tail[1:-1].split(',') if x.strip())
-                      else: out.add(tail.strip(' "\''))
-                  j=i+1
-                  while j<len(lines):
-                      nxt=lines[j]; stripped=nxt.strip()
-                      if not stripped: j+=1; continue
-                      nindent=len(nxt)-len(nxt.lstrip())
-                      if nindent<=indent: break
-                      mm=re.match(r'^\s*-\s*([A-Za-z0-9_.-]+)\s*$',nxt)
-                      if mm: out.add(mm.group(1))
-                      j+=1
-              return {x for x in out if re.fullmatch(r'[A-Za-z0-9_.-]+',x)}
-
-          initial=set(); custom=set()
-          for p in ordered:
-              t=active_text(p)
-              custom.update(re.findall(r'custom:([A-Za-z0-9_.-]+)',t))
-              initial |= refs_from_text(t)
-
-          defs={}
-          for kind,d in [('button',Path('config/dashboards/templates/button_card_templates')),('streamline',Path('config/dashboards/templates/streamline_templates'))]:
-              for p in sorted(d.rglob('*.yaml')):
-                  text=p.read_text(encoding='utf-8',errors='ignore')
-                  starts=[(m.start(),m.group(1)) for m in re.finditer(r'^([A-Za-z0-9_.-]+):(?:\s.*)?$',text,re.M)]
-                  for idx,(pos,key) in enumerate(starts):
-                      end=starts[idx+1][0] if idx+1<len(starts) else len(text)
-                      block=text[pos:end].rstrip()+'\n'
-                      defs[key]=(kind,p,block,refs_from_text(active_text(p)[0:0]+block))
-          closure=set(); todo=list(initial); missing=set()
-          while todo:
-              key=todo.pop()
-              if key in closure: continue
-              closure.add(key)
-              if key not in defs: missing.add(key); continue
-              todo.extend(x for x in defs[key][3] if x not in closure)
+          generated=Path('dashboard-src/src/legacy-runtime.generated.ts').read_text(encoding='utf-8')
+          classic=[]
+          for rel in re.findall(r"import ['\"]([^'\"]+\.js)['\"]",generated):
+              p=(Path('dashboard-src/src')/rel).resolve()
+              if p.exists(): classic.append(p)
+          js_custom=set()
+          for p in classic:
+              js_custom.update(re.findall(r'custom:([A-Za-z0-9_.-]+)',p.read_text(encoding='utf-8',errors='ignore')))
+          for p in Path('dashboard-src/src').rglob('*.ts'):
+              js_custom.update(re.findall(r'custom:([A-Za-z0-9_.-]+)',p.read_text(encoding='utf-8',errors='ignore')))
 
           print('REACHABLE_YAML',len(ordered))
-          for p in ordered: print('YAML',p.relative_to(Path.cwd()))
-          print('CUSTOM_TYPES',json.dumps(sorted(custom)))
-          print('INITIAL_TEMPLATE_REFS',json.dumps(sorted(initial)))
-          print('TEMPLATE_CLOSURE',json.dumps(sorted(closure)))
-          print('MISSING_TEMPLATE_KEYS',json.dumps(sorted(missing)))
-          totals={'button':0,'streamline':0}
-          for key in sorted(closure):
-              if key in defs:
-                  kind,p,block,deps=defs[key]; totals[kind]+=len(block.encode())
-                  print('KEEP',kind,key,p,len(block.encode()),'deps='+','.join(sorted(deps)))
-          print('MIN_TEMPLATE_BYTES',json.dumps(totals),'TOTAL',sum(totals.values()))
+          print('YAML_CUSTOM',json.dumps(sorted(yaml_custom)))
+          print('ACTIVE_CLASSIC_MODULES',len(classic))
+          print('JS_CUSTOM',json.dumps(sorted(js_custom)))
+          print('ALL_CUSTOM',json.dumps(sorted(yaml_custom|js_custom)))
           PY

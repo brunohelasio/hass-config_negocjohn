@@ -38,7 +38,10 @@ jobs:
 
       - name: Apply complete diagnosed implementation
         if: steps.guard.outputs.skip != 'true'
-        run: python3 scripts/build/apply-full-candidate-20260820.py
+        shell: bash
+        run: |
+          python3 scripts/build/apply-full-candidate-20260820.py
+          sed -i '1iexport {};' dashboard-src/src/diagnostics/startup-metrics.ts
 
       - name: Install dependencies
         if: steps.guard.outputs.skip != 'true'

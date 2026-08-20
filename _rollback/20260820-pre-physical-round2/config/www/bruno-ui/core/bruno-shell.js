@@ -597,7 +597,6 @@ class BrunoShell extends HTMLElement {
     globalThis.requestAnimationFrame?.(() => {
       if (requestId === this._sectionRequestId && this._activeKey === key) content.scrollTop = scrollTop;
     });
-    if (key === homeKey) this._scheduleBackdropWarmup();
   }
 
   async _setSection(key) {
@@ -619,10 +618,7 @@ class BrunoShell extends HTMLElement {
       const sectionPromise = key === homeKey
         ? homePromise
         : this._sectionElement(key, config, generation);
-      // Não troca os cards deixando o wallpaper antigo para trás: chunk e
-      // backdrop do destino são buscados em paralelo e ativados juntos.
-      const backdropPromise = this._preloadResolvedBackdropFor(key, 'high');
-      const [homeEl, el] = await Promise.all([homePromise, sectionPromise, backdropPromise]);
+      const [homeEl, el] = await Promise.all([homePromise, sectionPromise]);
       if (requestId !== this._sectionRequestId
         || generation !== this._sectionGeneration
         || this._requestedKey !== key) return;
@@ -635,37 +631,20 @@ class BrunoShell extends HTMLElement {
     }
   }
 
-  _scheduleBackdropWarmup() {
-    if (this._backdropWarmupScheduled || !this._backdrops) return;
-    this._backdropWarmupScheduled = true;
-    const run = async () => {
-      const current = this._activeKey || this._defaultSection;
-      const keys = Object.keys(this._backdrops).filter((key) => key !== 'default' && key !== current);
-      for (const key of keys) {
-        await this._preloadResolvedBackdropFor(key, 'low');
-      }
-    };
-    if (typeof globalThis.requestIdleCallback === 'function') {
-      globalThis.requestIdleCallback(() => { void run(); }, { timeout: 4000 });
-    } else {
-      globalThis.setTimeout(() => { void run(); }, 1200);
-    }
-  }
-
   _preloadBackdropFor(key) {
     if (!this._backdrops || !key) return;
     const url = this._backdrops[key] || this._backdrops.default;
     if (url) this._loadBackdrop(url);
   }
 
-  _preloadResolvedBackdropFor(key, priority = 'auto') {
-    if (!this._backdrops || !key) return Promise.resolve(null);
+  _preloadResolvedBackdropFor(key) {
+    if (!this._hass || !this._backdrops || !key) return;
     const fallback = this._backdrops[key] || this._backdrops.default;
     const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
-    return url ? this._loadBackdrop(url, priority) : Promise.resolve(null);
+    if (url) this._loadBackdrop(url);
   }
 
-  _loadBackdrop(url, priority = 'auto') {
+  _loadBackdrop(url) {
     if (!url) return Promise.resolve(null);
     if (!(this._backdropCache instanceof Map)) this._backdropCache = new Map();
     const cached = this._backdropCache.get(url);
@@ -673,7 +652,6 @@ class BrunoShell extends HTMLElement {
 
     const image = new Image();
     image.decoding = 'async';
-    if ('fetchPriority' in image) image.fetchPriority = priority;
     const promise = new Promise((resolve) => {
       let settled = false;
       const finish = async (loaded) => {

@@ -13,7 +13,7 @@ const BRUNO_SALA_DEFAULT_ENTITIES = {
   humidity: 'sensor.sensor_4_in_1_sala_humidity',
   presence: 'binary_sensor.sensor_4_in_1_sala_presence',
   illuminance: 'sensor.sensor_4_in_1_sala_illuminance',
-  tv: 'media_player.smart_tv_pro_2',
+  tv: 'media_player.android_tv_192_168_3_17',
   tv_media: 'media_player.android_tv_192_168_3_17',
   climate: 'climate.sl_ar_condicionado',
   speaker: 'media_player.echo_show',

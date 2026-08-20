@@ -1203,11 +1203,8 @@ export class BrunoRoomTile extends LitElement {
         padding: clamp(8.58px, 5.03cqi, 14.3px) clamp(9.36px, 5.49cqi, 15.6px) clamp(7.8px, 4.57cqi, 13px) clamp(7.8px, 4.57cqi, 13px);
       }
       .room-icon {
-        max-width: 100px;
-        height: 62px;
-      }
-      .room-asset {
-        height: 118%;
+        max-width: clamp(78px, 45.71cqi, 130px);
+        height: clamp(48.36px, 28.34cqi, 80.6px);
       }
     }
 
@@ -1521,11 +1518,9 @@ export class BrunoRoomTile extends LitElement {
     // troca de estado não desloca nem redimensiona nada.
     //
     // Os arquivos anteriores estão em _archive/assets/v2-anterior-20260808/.
-    // WebP preserva a mesma caixa óptica dos PNGs, com payload drasticamente menor.
-    // Ambos os estados são carregados já no tile: nada de aparição progressiva em idle.
-    const v = '20260820-webp-runtime-2';
-    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.webp?v=${v}` : '';
-    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.webp?v=${v}` : '';
+    const v = '20260808-maquetes-premium-1';
+    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.png?v=${v}` : '';
+    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.png?v=${v}` : '';
 
     const cardClasses = [
       'room-card',

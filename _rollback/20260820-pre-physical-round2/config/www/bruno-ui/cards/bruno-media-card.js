@@ -30,7 +30,7 @@ const BRUNO_MEDIA_DEFAULT_CONFIG = {
 
 const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];
 const BRUNO_MEDIA_TV_ENTITY = 'media_player.android_tv_192_168_3_17';
-const BRUNO_MEDIA_TV_POWER_ENTITY = 'media_player.smart_tv_pro_2';
+const BRUNO_MEDIA_TV_POWER_ENTITY = 'media_player.android_tv_192_168_3_17';
 const BRUNO_MEDIA_TV_POWER_STATES = new Set(['on', 'playing', 'paused', 'idle', 'buffering']);
 
 class BrunoMediaCard extends HTMLElement {

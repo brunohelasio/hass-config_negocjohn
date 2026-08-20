@@ -5,6 +5,8 @@ import re
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'config' / 'www' / 'dashboard'
 ANDROID = 'media_player.android_tv_192_168_3_17'
+POWER = 'media_player.smart_tv_pro_2'
+REMOTE = 'remote.smart_tv_pro'
 
 entries = sorted(p for p in OUT.glob('bruno-dashboard.*.js') if p.is_file())
 if len(entries) != 1:
@@ -58,19 +60,15 @@ for relative in active_tv_files:
         line for line in text.splitlines()
         if not line.lstrip().startswith(('#', '//'))
     )
-    for forbidden in [
-        'media_player.smart_tv_pro',
-        'media_player.smart_tv_pro_2',
-        'remote.smart_tv_pro',
-    ]:
-        if forbidden in active:
-            raise SystemExit(f'{forbidden} still active in {relative}')
+    # Não procurar nomes legados dentro de comentários/documentação dos componentes.
+    # A entidade remota efetiva é validada abaixo diretamente em subviews.config.ts.
+    pass
 
 subviews = (ROOT / 'dashboard-src/src/config/subviews.config.ts').read_text(encoding='utf-8')
 for required_token in [
-    f"tv: '{ANDROID}'",
+    f"tv: '{POWER}'",
     f"tvMedia: '{ANDROID}'",
-    "tvRemote: 'remote.atv'",
+    f"tvRemote: '{REMOTE}'",
 ]:
     if required_token not in subviews:
         raise SystemExit(f'missing TV token {required_token}')
@@ -97,5 +95,22 @@ print('CHUNKS', len(chunks))
 for path in chunks:
     sibling = Path(str(path) + '.br')
     print('CHUNK', path.name, path.stat().st_size, sibling.stat().st_size if sibling.exists() else 'skipped(<1KiB)')
-print('TV_ENTITY', ANDROID)
+# Regressões descobertas no teste físico de 2026-08-20.
+tile = (ROOT / 'dashboard-src/src/components/rooms/bruno-room-tile.ts').read_text(encoding='utf-8')
+if '.webp?v=${v}' not in tile or 'max-width: 100px' not in tile or 'height: 118%' not in tile:
+    raise SystemExit('room tile WebP/mobile geometry regression')
+for name in ['sala', 'office', 'cozinha', 'lavabo', 'quarto-casal', 'quarto-bebe', 'quarto-menina']:
+    for state in ['off', 'on']:
+        if not (ROOT / f'config/www/bruno-ui/assets/v2/{name}-{state}.webp').exists():
+            raise SystemExit(f'missing WebP asset {name}-{state}')
+ui_active = '\n'.join(line for line in ui.splitlines() if not line.lstrip().startswith('#'))
+for legacy_view in ['views/system.yaml', 'views/github-view.yaml', 'subviews/movie-panel.yaml', 'subviews/music-assistant.yaml', 'subviews/cameras-security.yaml', 'subviews/floor-plan.yaml']:
+    if legacy_view in ui_active:
+        raise SystemExit(f'legacy view still active: {legacy_view}')
+shell = (ROOT / 'config/www/bruno-ui/core/bruno-shell.js').read_text(encoding='utf-8')
+if "const backdropPromise = this._preloadResolvedBackdropFor(key, 'high');" not in shell:
+    raise SystemExit('destination backdrop is not gated with section activation')
+print('TV_POWER_ENTITY', POWER)
+print('TV_MEDIA_ENTITY', ANDROID)
+print('TV_REMOTE_ENTITY', REMOTE)
 print('candidate validation passed')

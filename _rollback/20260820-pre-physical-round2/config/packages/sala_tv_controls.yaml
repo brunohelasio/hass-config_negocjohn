@@ -22,13 +22,13 @@ script:
           - conditions:
               - condition: template
                 value_template: >-
-                  {{ states('media_player.smart_tv_pro_2') in ['off','unknown','unavailable'] }}
+                  {{ states('media_player.android_tv_192_168_3_17') in ['off','unknown','unavailable'] }}
             sequence:
               - action: media_player.turn_on
                 target:
-                  entity_id: media_player.smart_tv_pro_2
+                  entity_id: media_player.android_tv_192_168_3_17
               - wait_template: >-
-                  {{ states('media_player.smart_tv_pro_2') not in ['off','unknown','unavailable'] }}
+                  {{ states('media_player.android_tv_192_168_3_17') not in ['off','unknown','unavailable'] }}
                 timeout: "00:00:30"
               - delay: "00:00:05"
       - action: media_player.select_source
@@ -45,13 +45,13 @@ script:
           - conditions:
               - condition: template
                 value_template: >-
-                  {{ states('media_player.smart_tv_pro_2') in ['off','unknown','unavailable'] }}
+                  {{ states('media_player.android_tv_192_168_3_17') in ['off','unknown','unavailable'] }}
             sequence:
               - action: media_player.turn_on
                 target:
-                  entity_id: media_player.smart_tv_pro_2
+                  entity_id: media_player.android_tv_192_168_3_17
               - wait_template: >-
-                  {{ states('media_player.smart_tv_pro_2') not in ['off','unknown','unavailable'] }}
+                  {{ states('media_player.android_tv_192_168_3_17') not in ['off','unknown','unavailable'] }}
                 timeout: "00:00:30"
               - delay: "00:00:05"
       - action: media_player.select_source
@@ -68,13 +68,13 @@ script:
           - conditions:
               - condition: template
                 value_template: >-
-                  {{ states('media_player.smart_tv_pro_2') in ['off','unknown','unavailable'] }}
+                  {{ states('media_player.android_tv_192_168_3_17') in ['off','unknown','unavailable'] }}
             sequence:
               - action: media_player.turn_on
                 target:
-                  entity_id: media_player.smart_tv_pro_2
+                  entity_id: media_player.android_tv_192_168_3_17
               - wait_template: >-
-                  {{ states('media_player.smart_tv_pro_2') not in ['off','unknown','unavailable'] }}
+                  {{ states('media_player.android_tv_192_168_3_17') not in ['off','unknown','unavailable'] }}
                 timeout: "00:00:30"
               - delay: "00:00:05"
       - action: media_player.select_source
@@ -91,13 +91,13 @@ script:
           - conditions:
               - condition: template
                 value_template: >-
-                  {{ states('media_player.smart_tv_pro_2') in ['off','unknown','unavailable'] }}
+                  {{ states('media_player.android_tv_192_168_3_17') in ['off','unknown','unavailable'] }}
             sequence:
               - action: media_player.turn_on
                 target:
-                  entity_id: media_player.smart_tv_pro_2
+                  entity_id: media_player.android_tv_192_168_3_17
               - wait_template: >-
-                  {{ states('media_player.smart_tv_pro_2') not in ['off','unknown','unavailable'] }}
+                  {{ states('media_player.android_tv_192_168_3_17') not in ['off','unknown','unavailable'] }}
                 timeout: "00:00:30"
               - delay: "00:00:05"
       - choose:

@@ -81,12 +81,12 @@ views:
   # - !include views/mobile/mobile-mais.yaml
   # ── fim MOBILE V3 ─────────────────────────────────────────────────────────
 
-  # RETIRADO DO RUNTIME 2026-08-20: - !include views/system.yaml
-  # RETIRADO DO RUNTIME 2026-08-20: - !include views/github-view.yaml
-  # RETIRADO DO RUNTIME 2026-08-20: - !include subviews/movie-panel.yaml
-  # RETIRADO DO RUNTIME 2026-08-20: - !include subviews/music-assistant.yaml
-  # RETIRADO DO RUNTIME 2026-08-20: - !include subviews/cameras-security.yaml
-  # RETIRADO DO RUNTIME 2026-08-20: - !include subviews/floor-plan.yaml
+  - !include views/system.yaml
+  - !include views/github-view.yaml
+  - !include subviews/movie-panel.yaml
+  - !include subviews/music-assistant.yaml
+  - !include subviews/cameras-security.yaml
+  - !include subviews/floor-plan.yaml
   # ══ RETIRADAS (Fase 5d.3, 2026-08-06) — VIEWS LEGADAS DAS SUBVIEWS ═══════
   # As seis subviews de comodo vivem na shell desde a Fase 5c
   # (bento_shell.yaml -> custom:bruno-room-subview). Estas views separadas so

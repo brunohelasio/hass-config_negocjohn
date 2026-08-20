@@ -33,7 +33,7 @@ template:
         delay_off:
           minutes: 2
         state: >
-          {{ states('media_player.smart_tv_pro_2') in
+          {{ states('media_player.android_tv_192_168_3_17') in
              ['on', 'playing', 'paused', 'idle', 'buffering']
              or ['media_player.echo_show',
                  'media_player.spotifyplus_bruno_helasio',

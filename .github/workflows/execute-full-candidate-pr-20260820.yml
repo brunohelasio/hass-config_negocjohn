@@ -40,20 +40,25 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         shell: bash
         run: |
-          if grep -Fq "TV: Android TV é a fonte única de estado, mídia e artwork" dashboard-src/src/config/subviews.config.ts; then
-            echo 'candidate sources already materialized; preserving them'
-          elif grep -Fq "TV híbrida: power/volume pela Android TV Remote estável" dashboard-src/src/config/subviews.config.ts; then
-            echo 'hybrid candidate already materialized; preserving it'
+          if grep -Fq "BRUNO_MEDIA_HYBRID_RUNTIME = 'round3'" config/www/bruno-ui/cards/bruno-media-card.js; then
+            echo 'round3 sources already materialized; preserving them'
           else
-            python3 scripts/build/apply-full-candidate-20260820.py
-            python3 scripts/build/finalize-tv-android-20260820.py
-            rm -f dashboard-src/src/diagnostics/startup-metrics.ts
-            sed -i "s#import './diagnostics/startup-metrics';#import './services/performance/boot-metrics';#" dashboard-src/src/main.ts
-            sed -i "/const nav = performance.getEntriesByType('navigation')/d" dashboard-src/src/services/performance/boot-metrics.ts
-            sed -i "s#'dashboard-src/src/diagnostics/startup-metrics.ts'#'dashboard-src/src/services/performance/boot-metrics.ts'#" docs/34-implementacao-tv-performance-20260820.md || true
+            if grep -Fq "TV: Android TV é a fonte única de estado, mídia e artwork" dashboard-src/src/config/subviews.config.ts; then
+              echo 'candidate sources already materialized; preserving them'
+            elif grep -Fq "TV híbrida: power/volume pela Android TV Remote estável" dashboard-src/src/config/subviews.config.ts; then
+              echo 'hybrid candidate already materialized; preserving it'
+            else
+              python3 scripts/build/apply-full-candidate-20260820.py
+              python3 scripts/build/finalize-tv-android-20260820.py
+              rm -f dashboard-src/src/diagnostics/startup-metrics.ts
+              sed -i "s#import './diagnostics/startup-metrics';#import './services/performance/boot-metrics';#" dashboard-src/src/main.ts
+              sed -i "/const nav = performance.getEntriesByType('navigation')/d" dashboard-src/src/services/performance/boot-metrics.ts
+              sed -i "s#'dashboard-src/src/diagnostics/startup-metrics.ts'#'dashboard-src/src/services/performance/boot-metrics.ts'#" docs/34-implementacao-tv-performance-20260820.md || true
+            fi
+            python3 scripts/build/fix-physical-round2-20260820.py
+            python3 scripts/build/fix-validator-round2-20260820.py
+            python3 scripts/build/fix-physical-round3-20260820.py
           fi
-          python3 scripts/build/fix-physical-round2-20260820.py
-          python3 scripts/build/fix-validator-round2-20260820.py
 
       - name: Install dependencies
         if: steps.guard.outputs.skip != 'true'
@@ -78,6 +83,7 @@ jobs:
         shell: bash
         run: |
           python3 scripts/build/validate-full-candidate-20260820.py
+          python3 scripts/build/validate-physical-round3-20260820.py
           node scripts/validation/check-yaml.mjs
 
       - name: Commit and push full candidate
@@ -89,5 +95,5 @@ jobs:
           git add -A
           find config/www/dashboard -type f \( -name '*.js' -o -name '*.br' -o -name '*.gz' -o -name 'manifest.json' \) -print0 | xargs -0 git add -f --
           git status --short
-          git commit -m 'feat: publicar candidata híbrida TV e performance round2 [generated candidate]'
+          git commit -m 'fix: estabilizar mídia, arte, volume e remote round3 [generated candidate]'
           git push origin HEAD:fix/mobile-runtime-tv-curtain-20260819

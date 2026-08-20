@@ -42,12 +42,11 @@ jobs:
         run: |
           if grep -Fq "BRUNO_MEDIA_HYBRID_RUNTIME = 'round3'" config/www/bruno-ui/cards/bruno-media-card.js; then
             echo 'round3 sources already materialized; preserving them'
+          elif grep -Fq "TV híbrida: power/volume pela Android TV Remote estável" dashboard-src/src/config/subviews.config.ts; then
+            echo 'round2 sources already materialized; applying only round3'
+            python3 scripts/build/fix-physical-round3-20260820.py
           else
-            if grep -Fq "TV: Android TV é a fonte única de estado, mídia e artwork" dashboard-src/src/config/subviews.config.ts; then
-              echo 'candidate sources already materialized; preserving them'
-            elif grep -Fq "TV híbrida: power/volume pela Android TV Remote estável" dashboard-src/src/config/subviews.config.ts; then
-              echo 'hybrid candidate already materialized; preserving it'
-            else
+            if ! grep -Fq "TV: Android TV é a fonte única de estado, mídia e artwork" dashboard-src/src/config/subviews.config.ts; then
               python3 scripts/build/apply-full-candidate-20260820.py
               python3 scripts/build/finalize-tv-android-20260820.py
               rm -f dashboard-src/src/diagnostics/startup-metrics.ts

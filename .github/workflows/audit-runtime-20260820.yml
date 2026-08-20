@@ -1,0 +1,65 @@
+name: Audit active dashboard runtime
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize]
+
+jobs:
+  audit:
+    if: ${{ github.head_ref == 'fix/mobile-runtime-tv-curtain-20260819' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Audit reachable YAML and custom cards
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re, json
+
+          root = Path('config/dashboards')
+          entry = root / 'views' / 'bento_shell.yaml'
+          seen = set()
+          ordered = []
+
+          inc_re = re.compile(r'!include\s+([^\s#]+)')
+          dir_re = re.compile(r'!include_dir_merge_(?:named|list)\s+([^\s#]+)')
+
+          def visit(path):
+              path = path.resolve()
+              if path in seen or not path.exists():
+                  return
+              seen.add(path); ordered.append(path)
+              text = path.read_text(encoding='utf-8', errors='ignore')
+              for m in inc_re.finditer(text):
+                  raw = m.group(1).strip('"\'')
+                  child = (path.parent / raw).resolve()
+                  visit(child)
+              for m in dir_re.finditer(text):
+                  raw = m.group(1).strip('"\'')
+                  d = (path.parent / raw).resolve()
+                  if d.is_dir():
+                      for child in sorted(d.rglob('*.yaml')):
+                          visit(child)
+
+          visit(entry)
+          custom = set(); template_refs = set(); raw_text = ''
+          for p in ordered:
+              t = p.read_text(encoding='utf-8', errors='ignore')
+              raw_text += '\n' + t
+              custom.update(re.findall(r'custom:([A-Za-z0-9_.-]+)', t))
+              for m in re.finditer(r'^\s*template:\s*([^#\n]+)', t, re.M):
+                  value=m.group(1).strip()
+                  if value and not value.startswith('!'):
+                      template_refs.add(value)
+          print('REACHABLE_YAML', len(ordered))
+          for p in ordered: print('YAML', p.relative_to(Path.cwd()))
+          print('CUSTOM_TYPES', json.dumps(sorted(custom)))
+          print('TEMPLATE_REFS', json.dumps(sorted(template_refs)))
+          print('HAS_BUTTON_CARD', 'button-card' in custom)
+          print('HAS_STREAMLINE_CARD', 'streamline-card' in custom)
+          print('HAS_HA_FLOORPLAN', 'floorplan' in custom or 'ha-floorplan' in custom)
+          PY

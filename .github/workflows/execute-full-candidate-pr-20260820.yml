@@ -41,6 +41,7 @@ jobs:
         shell: bash
         run: |
           python3 scripts/build/apply-full-candidate-20260820.py
+          python3 scripts/build/finalize-tv-android-20260820.py
           rm -f dashboard-src/src/diagnostics/startup-metrics.ts
           sed -i "s#import './diagnostics/startup-metrics';#import './services/performance/boot-metrics';#" dashboard-src/src/main.ts
           sed -i "/const nav = performance.getEntriesByType('navigation')/d" dashboard-src/src/services/performance/boot-metrics.ts
@@ -68,7 +69,6 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         shell: bash
         run: |
-          sed -i "s#import './diagnostics/startup-metrics';#import './services/performance/boot-metrics';#" scripts/build/validate-full-candidate-20260820.py || true
           python3 scripts/build/validate-full-candidate-20260820.py
           node scripts/validation/check-yaml.mjs
 

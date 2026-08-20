@@ -129,7 +129,7 @@ class BrunoShell extends HTMLElement {
     //   backdrops: { home: <url>, sala: <url>, ... , default: <url opcional> }
     this._backdrops = config.backdrops || null;
     this._backdropEffects = config.backdrop_effects || null;
-    this._preloadBackdropFor(this._defaultSection);
+    this._preloadBackdrops();
     this._railConfig = config.rail
       || (this._rails ? this._rails[this._defaultRailName] : null);
     // ORIGINAL (rollback): todo setConfig reconstruia shadow DOM, rail e Home.
@@ -164,7 +164,7 @@ class BrunoShell extends HTMLElement {
     globalThis.BrunoWallpaperManager?.sections?.forEach?.((section) => {
       globalThis.BrunoWallpaperManager.clearPending?.(hass, section.key);
     });
-    this._preloadResolvedBackdropFor(this._activeKey || this._defaultSection);
+    this._preloadResolvedBackdrops();
     if (this._railEl) this._railEl.hass = hass;
     // ORIGINAL (rollback): apenas a secao visivel recebia hass.
     // if (this._sectionEl) this._sectionEl.hass = hass;
@@ -297,7 +297,6 @@ class BrunoShell extends HTMLElement {
   }
 
   async _createCard(config) {
-    await globalThis.BrunoLazyModules?.ensureForConfig?.(config);
     const helpers = await this._ensureHelpers();
     if (!helpers) throw new Error('loadCardHelpers indisponivel');
     const el = helpers.createCardElement(config);
@@ -631,17 +630,21 @@ class BrunoShell extends HTMLElement {
     }
   }
 
-  _preloadBackdropFor(key) {
-    if (!this._backdrops || !key) return;
-    const url = this._backdrops[key] || this._backdrops.default;
-    if (url) this._loadBackdrop(url);
+  _preloadBackdrops() {
+    if (!this._backdrops) return;
+    for (const k of Object.keys(this._backdrops)) {
+      const url = this._backdrops[k];
+      if (url) this._loadBackdrop(url);
+    }
   }
 
-  _preloadResolvedBackdropFor(key) {
-    if (!this._hass || !this._backdrops || !key) return;
-    const fallback = this._backdrops[key] || this._backdrops.default;
-    const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
-    if (url) this._loadBackdrop(url);
+  _preloadResolvedBackdrops() {
+    if (!this._hass || !this._backdrops) return;
+    for (const key of Object.keys(this._backdrops)) {
+      const fallback = this._backdrops[key] || this._backdrops.default;
+      const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
+      if (url) this._loadBackdrop(url);
+    }
   }
 
   _loadBackdrop(url) {

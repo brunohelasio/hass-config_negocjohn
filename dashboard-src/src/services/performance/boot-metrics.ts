@@ -19,7 +19,6 @@ type BootMetrics = {
 };
 
 const NAV_START = performance.timeOrigin || Date.now() - performance.now();
-const nav = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
 const relative = (): number => Math.round(performance.now());
 const mark = (): BootMark => ({
   at: Date.now(),

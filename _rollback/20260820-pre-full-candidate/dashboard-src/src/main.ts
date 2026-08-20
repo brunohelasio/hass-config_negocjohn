@@ -13,10 +13,9 @@ iniciarRuntime();
 import './legacy-runtime.generated';
 
 import './diagnostics/bruno-diagnostics';
-import './services/performance/boot-metrics';
-import './lazy-runtime';
 import './components/rooms/bruno-room-tile';
 import { installRoomTileIosLongPressGuard } from './services/ui/ios-longpress-guard';
+import './components/rooms/bruno-room-subview';
 import './components/devices/bruno-devices-panel';
 
 installRoomTileIosLongPressGuard();

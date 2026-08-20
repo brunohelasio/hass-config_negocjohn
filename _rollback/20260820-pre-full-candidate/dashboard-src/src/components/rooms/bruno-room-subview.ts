@@ -4,7 +4,7 @@ import type { Hass, HassEntity } from '@/models/home-assistant';
 import { ROOMS, type RoomConfig } from '@/config/rooms.config';
 import { SUBVIEWS, type SubviewConfig } from '@/config/subviews.config';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
-import { isMediaPlaying, isTvPowered } from '@/services/entities/media-state';
+import { isMediaPlaying, isTvPoweredStable } from '@/services/entities/media-state';
 import { callHaService } from '@/services/home-assistant/service-call';
 import {
   coletarIdsDeEntidade,
@@ -3016,22 +3016,17 @@ export class BrunoRoomSubview extends LitElement {
   }
 
   private _modeloTv() {
-    const powerId = this._idDe('tv');
-    const mediaId = this._idDe('tvMedia') ?? powerId;
-    const power = this._estado(powerId);
-    const media = this._estado(mediaId);
-    const pa = power?.attributes ?? {};
-    const ma = media?.attributes ?? {};
-    const ativo = isTvPowered(this._hass, powerId);
-    const reproduzindo = isMediaPlaying(this._hass, mediaId);
-    const estadoPower = String(power?.state ?? 'off').toLowerCase();
-    const estadoMedia = String(media?.state ?? '').toLowerCase();
+    const id = this._idDe('tv');
+    const st = this._estado(id);
+    const a = st?.attributes ?? {};
+    const estadoBruto = String(st?.state ?? 'off').toLowerCase();
+    const ativo = isTvPoweredStable(this._hass, id, Date.now(), 45_000);
+    const reproduzindo = isMediaPlaying(this._hass, id);
 
-    const fonteAtual = String(ma['app_name'] ?? ma['source'] ?? pa['source'] ?? pa['app_name'] ?? '').trim();
-    const tituloAtual = String(ma['media_title'] ?? ma['media_series_title'] ?? ma['app_name'] ?? '').trim();
-    const posterAtual = String(ma['entity_picture'] ?? ma['media_image_url'] ?? '').trim();
-    const volumeBruto = pa['volume_level'] ?? ma['volume_level'];
-    const volumeNumero = volumeBruto == null ? Number.NaN : Number(volumeBruto);
+    const fonteAtual = String(a['source'] ?? a['app_name'] ?? '').trim();
+    const tituloAtual = String(a['media_title'] ?? a['media_series_title'] ?? a['app_name'] ?? '').trim();
+    const posterAtual = String(a['entity_picture'] ?? a['media_image_url'] ?? '').trim();
+    const volumeNumero = a['volume_level'] == null ? Number.NaN : Number(a['volume_level']);
     const volumeAtual = Number.isFinite(volumeNumero) ? Math.round(volumeNumero * 100) : null;
 
     if (ativo) {
@@ -3046,9 +3041,8 @@ export class BrunoRoomSubview extends LitElement {
     }
 
     return {
-      st: power,
-      media,
-      estado: reproduzindo ? estadoMedia : estadoPower,
+      st,
+      estado: ativo && estadoBruto === 'off' ? 'idle' : estadoBruto,
       ativo,
       reproduzindo,
       fonte: fonteAtual || (ativo ? this._tvUltimaFonte : 'HDMI 1') || 'HDMI 1',
@@ -3219,7 +3213,6 @@ export class BrunoRoomSubview extends LitElement {
   private _corpoTv() {
     const tv = this._modeloTv();
     const id = this._idDe('tv');
-    const mediaId = this._idDe('tvMedia') ?? id;
     const espera = (this._sub?.['tvStandbyImage'] as string | undefined) ?? IMAGEM_TV_ESPERA;
     const generico = !tv.titulo || /^TV (ligada|desligada)$/i.test(tv.titulo) || tv.titulo === tv.fonte;
     const segundaLinha = (!generico && tv.estado === 'playing' ? tv.titulo : '') || tv.fonte;
@@ -3232,7 +3225,7 @@ export class BrunoRoomSubview extends LitElement {
             ${this._botaoMidia(
               'Ligar TV',
               'mdi:power',
-              () => this._servico('media_player', 'turn_on', { entity_id: id }),
+              () => this._servico('homeassistant', 'toggle', { entity_id: id }),
               { principal: true, desabilitado: !id },
             )}
           </div>
@@ -3261,7 +3254,7 @@ export class BrunoRoomSubview extends LitElement {
         </div>`
       : html`<div class="mh-btn-row mh-btn-row-3">
           ${this._botaoMidia('Pausar', 'mdi:pause', () =>
-            this._servico('media_player', 'media_play_pause', { entity_id: mediaId }), { soIcone: true })}
+            this._servico('media_player', 'media_play_pause', { entity_id: id }), { soIcone: true })}
           ${this._botaoMidia('Controle remoto', 'mdi:remote-tv', () => this._abrirControleRemoto(), {
             soIcone: true,
             desabilitado: !this._idDe('tvRemote'),

@@ -30,8 +30,8 @@ const BRUNO_MEDIA_DEFAULT_CONFIG = {
 
 const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];
 const BRUNO_MEDIA_TV_ENTITY = 'media_player.android_tv_192_168_3_17';
-const BRUNO_MEDIA_TV_POWER_ENTITY = 'media_player.android_tv_192_168_3_17';
 const BRUNO_MEDIA_TV_POWER_STATES = new Set(['on', 'playing', 'paused', 'idle', 'buffering']);
+const BRUNO_MEDIA_TV_OFF_GRACE_MS = 45_000;
 
 class BrunoMediaCard extends HTMLElement {
   static getStubConfig() {
@@ -139,8 +139,13 @@ class BrunoMediaCard extends HTMLElement {
   _isActive(entityId) {
     const state = String(this._state(entityId)?.state || '').toLowerCase();
     if (entityId === BRUNO_MEDIA_TV_ENTITY) {
-      const powerState = String(this._state(BRUNO_MEDIA_TV_POWER_ENTITY)?.state || '').toLowerCase();
-      return BRUNO_MEDIA_TV_POWER_STATES.has(powerState);
+      if (BRUNO_MEDIA_TV_POWER_STATES.has(state)) {
+        this._lastTvPoweredAt = Date.now();
+        return true;
+      }
+      return state === 'off'
+        && Number.isFinite(this._lastTvPoweredAt)
+        && Date.now() - this._lastTvPoweredAt <= BRUNO_MEDIA_TV_OFF_GRACE_MS;
     }
     return BRUNO_MEDIA_ACTIVE_STATES.includes(state);
   }

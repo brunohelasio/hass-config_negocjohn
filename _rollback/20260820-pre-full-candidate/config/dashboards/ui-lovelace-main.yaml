@@ -1,5 +1,5 @@
-# 2026-08-20: árvores legadas fora do grafo ativo da shell.
-# Rollback em _rollback/20260820-pre-full-candidate/.
+button_card_templates: !include_dir_merge_named ./templates/button_card_templates
+streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 
 # ── DEDUP (2026-06-24): bloco `resources:` comentado. TODOS estes JS ja sao
 #    carregados por frontend.extra_module_url (configuration.yaml) com as MESMAS

@@ -283,9 +283,7 @@ script:
     sequence:
       - service: media_player.volume_down
         target:
-          entity_id: >-
-            {% set player = states('input_select.media_focus_player') %}
-            {{ 'media_player.android_tv_192_168_3_17' if player == 'media_player.android_tv_192_168_3_17' else player }}
+          entity_id: "{{ states('input_select.media_focus_player') }}"
 
   media_focus_volume_up:
     alias: "Media Grid v2 — Volume Up Focused Player"
@@ -293,23 +291,18 @@ script:
     sequence:
       - service: media_player.volume_up
         target:
-          entity_id: >-
-            {% set player = states('input_select.media_focus_player') %}
-            {{ 'media_player.android_tv_192_168_3_17' if player == 'media_player.android_tv_192_168_3_17' else player }}
+          entity_id: "{{ states('input_select.media_focus_player') }}"
 
   media_focus_volume_mute:
     alias: "Media Grid v2 — Mute Focused Player"
     mode: single
     sequence:
-      - variables:
-          focused_player: "{{ states('input_select.media_focus_player') }}"
-          volume_player: "{{ 'media_player.android_tv_192_168_3_17' if focused_player == 'media_player.android_tv_192_168_3_17' else focused_player }}"
       - service: media_player.volume_mute
         target:
-          entity_id: "{{ volume_player }}"
+          entity_id: "{{ states('input_select.media_focus_player') }}"
         data:
           is_volume_muted: >
-            {{ not state_attr(volume_player, 'is_volume_muted') | default(false) }}
+            {{ not state_attr(states('input_select.media_focus_player'), 'is_volume_muted') | default(false) }}
 
 template:
   - sensor:

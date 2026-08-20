@@ -1,0 +1,147 @@
+# ==========================================================================
+# Pacote: home_activity (HOME V2 — área dinâmica de atividades)
+#
+# Objetivo: sensores de RELEVÂNCIA que controlam quais cards aparecem na
+# área dinâmica da Home V2 (mídia / câmera / Roborock). As regras ficam
+# centralizadas AQUI (backend), e os cards Lovelace apenas obedecem via
+# `conditional` — nenhuma lógica duplicada no frontend.
+#
+# Prioridade de exibição (definida pela ORDEM dos cards em
+# dashboards/views/main-grid/v2/bento_dynamic.yaml, não por CSS):
+#   1. câmera (evento de movimento)  2. Roborock  3. mídia
+#
+# FALLBACK RAPIDO:
+# - Comentar `home_activity: !include packages/home_activity.yaml` em
+#   configuration.yaml. A Home V2 então mostra a área dinâmica vazia
+#   (conditional com sensor inexistente = false); a Home V1 não usa nada
+#   deste pacote.
+# ==========================================================================
+
+template:
+  # ------------------------------------------------------------------
+  # MÍDIA — relevante quando a TV está ligada ou outro player está tocando.
+  # Primeira etapa (decisão 2026-07-24): playing/buffering. O delay_off
+  # de 2 min faz "pausa recente" manter o card visível (paridade com a
+  # noção de sessão ativa do bruno-media-card) sem tratar paused eterno
+  # como atividade.
+  # Players = mesma lista do bruno-media-card (BRUNO_MEDIA_DEFAULT_CONFIG).
+  # ------------------------------------------------------------------
+  - binary_sensor:
+      - name: Home Activity Media
+        unique_id: home_activity_media
+        icon: mdi:music
+        delay_off:
+          minutes: 2
+        state: >
+          {{ states('media_player.android_tv_192_168_3_17') in
+             ['on', 'playing', 'paused', 'idle', 'buffering']
+             or ['media_player.echo_show',
+                 'media_player.spotifyplus_bruno_helasio',
+                 'media_player.echo_pop_office']
+                | select('is_state', ['playing', 'buffering'])
+                | list | count > 0 }}
+
+  # ------------------------------------------------------------------
+  # ROBOROCK — relevante quando há trabalho em andamento ou problema.
+  # Estados REAIS da integração (mapeados de bruno-roborock-card.js:
+  # BRUNO_ROBOROCK_ACTIVE_STATES + labels): cleaning, segment_cleaning,
+  # moving, returning + paused (job interrompido) + error.
+  # docked/idle/carregando NÃO são relevantes (decisão do roteiro).
+  # ------------------------------------------------------------------
+  - binary_sensor:
+      - name: Home Activity Roborock
+        unique_id: home_activity_roborock
+        icon: mdi:robot-vacuum
+        delay_off:
+          seconds: 30
+        state: >
+          {{ states('vacuum.roborock_s7') in
+             ['cleaning', 'segment_cleaning', 'zone_cleaning', 'spot_cleaning',
+              'moving', 'returning', 'paused', 'error'] }}
+
+  # ------------------------------------------------------------------
+  # CÂMERA — relevante por JANELA DE EVENTO (90s desde o último movimento).
+  # Reconstrução da metade cliente perdida (a ponte bruno_tuya_motion
+  # continua sendo a fonte: estados bruno_tuya_motion.<camera> mudam a cada
+  # pacote MQTT ipc_motion, com attrs event_type/camera_entity/detected_at).
+  # Sensor por GATILHO + auto_off: cada evento novo liga e reinicia os 90s.
+  # ------------------------------------------------------------------
+  - trigger:
+      - platform: state
+        entity_id:
+          - bruno_tuya_motion.sl_camera_2
+          - bruno_tuya_motion.vr_camera_2
+          - bruno_tuya_motion.cz_camera_2
+          - bruno_tuya_motion.as_camera_2
+          - bruno_tuya_motion.of_camera_2
+          - bruno_tuya_motion.camera_quarto_casal_2
+          - bruno_tuya_motion.qmi_camera_2
+          - bruno_tuya_motion.qma_camera_2
+    condition:
+      - condition: template
+        # Ignora a inicialização "ready" da ponte (boot/restart) — só
+        # pacotes ipc_motion reais contam como evento.
+        value_template: "{{ trigger.to_state.attributes.event_type == 'ipc_motion' }}"
+    binary_sensor:
+      - name: Home Activity Camera
+        unique_id: home_activity_camera
+        icon: mdi:cctv
+        auto_off:
+          seconds: 90
+        state: "true"
+        attributes:
+          camera_entity: "{{ trigger.to_state.attributes.camera_entity }}"
+          detected_at: "{{ trigger.to_state.attributes.detected_at }}"
+
+# ------------------------------------------------------------------
+# Automação: a câmera exibida acompanha o ÚLTIMO evento de movimento.
+# Reaproveita o encanamento existente: o bruno-home-camera-card já segue
+# input_select.bento_active_camera (cujas opções são os entity_ids das
+# 8 câmeras). mode: restart => evento mais novo vence (fila implícita).
+# ------------------------------------------------------------------
+automation:
+  - id: home_activity_camera_follow_motion
+    alias: "Home V2: câmera ativa segue evento de movimento"
+    description: >
+      Aponta input_select.bento_active_camera para a câmera do último pacote
+      ipc_motion da ponte bruno_tuya_motion. O card de monitoramento da área
+      dinâmica (Home V2) obedece a esse select.
+    mode: restart
+    trigger:
+      - platform: state
+        entity_id:
+          - bruno_tuya_motion.sl_camera_2
+          - bruno_tuya_motion.vr_camera_2
+          - bruno_tuya_motion.cz_camera_2
+          - bruno_tuya_motion.as_camera_2
+          - bruno_tuya_motion.of_camera_2
+          - bruno_tuya_motion.camera_quarto_casal_2
+          - bruno_tuya_motion.qmi_camera_2
+          - bruno_tuya_motion.qma_camera_2
+    condition:
+      - condition: template
+        value_template: "{{ trigger.to_state.attributes.event_type == 'ipc_motion' }}"
+    action:
+      # ANTERIOR (rollback ONVIF geral): o evento entregava diretamente a entidade
+      # Tuya/nuvem em option. Os gatilhos acima permanecem Tuya porque sao a fonte
+      # do ipc_motion; somente o destino visual e traduzido para ONVIF local.
+      # option: "{{ trigger.to_state.attributes.camera_entity }}"
+      - variables:
+          onvif_camera_by_tuya:
+            camera.sl_camera_2: camera.sl_camera_profile_1
+            camera.vr_camera_2: camera.vr_camera_profile_1
+            camera.cz_camera_2: camera.cz_camera_profile_1
+            camera.as_camera_2: camera.as_camera_profile_1
+            camera.of_camera_2: camera.of_camera_profile_1
+            camera.camera_quarto_casal_2: camera.qc_camera_profile_1
+            camera.qmi_camera_2: camera.qmi_camera_profile_1
+            camera.qma_camera_2: camera.qma_camera_profile_1
+      - service: input_select.select_option
+        target:
+          entity_id: input_select.bento_active_camera
+        data:
+          option: >-
+            {{ onvif_camera_by_tuya.get(
+              trigger.to_state.attributes.camera_entity,
+              'camera.sl_camera_profile_1'
+            ) }}

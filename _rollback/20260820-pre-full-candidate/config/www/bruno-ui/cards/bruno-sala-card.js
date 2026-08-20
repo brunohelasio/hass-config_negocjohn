@@ -14,7 +14,6 @@ const BRUNO_SALA_DEFAULT_ENTITIES = {
   presence: 'binary_sensor.sensor_4_in_1_sala_presence',
   illuminance: 'sensor.sensor_4_in_1_sala_illuminance',
   tv: 'media_player.android_tv_192_168_3_17',
-  tv_media: 'media_player.android_tv_192_168_3_17',
   climate: 'climate.sl_ar_condicionado',
   speaker: 'media_player.echo_show',
   spotify: 'media_player.spotifyplus_bruno_helasio',
@@ -26,6 +25,7 @@ const BRUNO_SALA_DEFAULT_ENTITIES = {
 // ANTERIOR (rollback): const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle'];
 // `buffering` e um estado transitorio ligado do MediaPlayer e deve permanecer ON.
 const BRUNO_SALA_TV_ON_STATES = ['on', 'playing', 'paused', 'idle', 'buffering'];
+const BRUNO_SALA_TV_OFF_GRACE_MS = 45_000;
 const BRUNO_SALA_CLIMATE_ON_STATES = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
 const BRUNO_SALA_CLIMATE_ACTIVE_ACTIONS = ['cooling', 'heating', 'drying', 'fan', 'preheating'];
 const BRUNO_SALA_CLIMATE_INACTIVE_ACTIONS = ['off', 'idle'];
@@ -547,13 +547,15 @@ class BrunoSalaCard extends HTMLElement {
     const entities = this._config.entities;
     const room = this._state(entities.room_group);
     const tv = this._state(entities.tv);
-    const tvMedia = this._state(entities.tv_media) || tv;
     const climate = this._state(entities.climate);
     const corridor = this._state(entities.corridor);
 
     const roomOn = room?.state === 'on';
     const tvState = String(tv?.state || '').toLowerCase();
-    const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tvState);
+    if (BRUNO_SALA_TV_ON_STATES.includes(tvState)) this._lastTvPoweredAt = Date.now();
+    const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tvState)
+      || (tvState === 'off' && Number.isFinite(this._lastTvPoweredAt)
+        && Date.now() - this._lastTvPoweredAt <= BRUNO_SALA_TV_OFF_GRACE_MS);
     const climateOn = this._climateIsActive(climate);
     const climateEnabled = this._climateIsEnabled(climate);
     const speakerOn = BRUNO_SALA_SPEAKER_ON_STATES.includes(this._state(entities.speaker)?.state || '')
@@ -579,7 +581,7 @@ class BrunoSalaCard extends HTMLElement {
       lights,
       statusLines,
       corridorSemanticStatus: this._getCorridorSemanticStatus(),
-      tvSemanticStatus: this._getTvSemanticStatus(tvMedia, tvOn),
+      tvSemanticStatus: this._getTvSemanticStatus(tv, tvOn),
       acSemanticStatus: this._getAcSemanticStatus(climate, climateEnabled),
       // ORIGINAL labels (rollback): mantidos para aria-label/tooltip futuro
       tvLabel: this._tvLabel(tv),
@@ -621,10 +623,7 @@ class BrunoSalaCard extends HTMLElement {
         this._moreInfo(entities.tv);
         return;
       }
-      const service = BRUNO_SALA_TV_ON_STATES.includes(String(this._state(entities.tv)?.state || '').toLowerCase())
-        ? 'media_player.turn_off'
-        : 'media_player.turn_on';
-      this._callService(service, {}, { entity_id: entities.tv });
+      this._toggleEntity(entities.tv);
       return;
     }
 

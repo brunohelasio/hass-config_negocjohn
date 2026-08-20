@@ -141,7 +141,7 @@ frontend:
     # ANTERIOR: - /local/dashboard/bruno-dashboard.CDCkqw9U.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.DLc4aRtS.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.BJutTx-c.js
-    - /local/dashboard/bruno-dashboard.DtMPOD_j.js
+    - /local/dashboard/bruno-dashboard.9t_Xp8gv.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock
@@ -577,28 +577,6 @@ scene: !include scenes.yaml
 
 lovelace:
   mode: storage
-  # 2026-08-20: recursos do dashboard ativo. A lista em .storage permanece
-  # intacta para rollback; resource_mode: yaml apenas deixa de carregá-la.
-  resource_mode: yaml
-  resources:
-    - url: /browser_mod.js
-      type: module
-    - url: /hacsfiles/lovelace-card-mod/card-mod.js
-      type: module
-    - url: /hacsfiles/kiosk-mode/kiosk-mode.js
-      type: module
-    - url: /hacsfiles/lovelace-layout-card/layout-card.js
-      type: module
-    - url: /hacsfiles/lovelace-xiaomi-vacuum-map-card/xiaomi-vacuum-map-card.js
-      type: module
-    - url: /hacsfiles/spotifyplus_card/spotifyplus_card.js
-      type: module
-    - url: /hacsfiles/universal-remote-card/universal-remote-card.min.js
-      type: module
-    - url: /hacsfiles/honeycomb-menu/honeycomb-menu.js
-      type: module
-    - url: /hacsfiles/mini-media-player/mini-media-player-bundle.js
-      type: module
   dashboards:
     ngocjohn-main:
       mode: yaml

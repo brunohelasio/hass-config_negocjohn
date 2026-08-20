@@ -20,6 +20,10 @@ import '../../config/www/bruno-ui/core/bruno-updates-panel.js';
 import '../../config/www/bruno-ui/core/bruno-system-panel.js';
 import '../../config/www/bruno-ui/core/bruno-network-panel.js';
 import '../../config/www/bruno-ui/core/bruno-hybrid-light-icons.js';
+import '../../config/www/bruno-ui/subviews/bruno-cameras-security-subview.js';
+import '../../config/www/bruno-ui/subviews/bruno-roborock-subview.js';
+import '../../config/www/bruno-ui/subviews/bruno-planta-3d-subview.js';
+import '../../config/www/bruno-ui/subviews/bruno-music-subview.js';
 import '../../config/www/bruno-ui/cards/bruno-sala-card.js';
 import '../../config/www/bruno-ui/cards/bruno-activity-column.js';
 import '../../config/www/bruno-ui/cards/bruno-cameras-card.js';
@@ -34,4 +38,4 @@ import '../../config/www/bruno-ui/cards/bruno-top-badges-card.js';
 import '../../config/www/bruno-ui/cards/bruno-quick-actions-card.js';
 import '../../config/www/bruno-ui/cards/bruno-media-card.js';
 
-export const LEGACY_RUNTIME_MODULE_COUNT = 30;
+export const LEGACY_RUNTIME_MODULE_COUNT = 34;

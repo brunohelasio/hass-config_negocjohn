@@ -285,7 +285,7 @@ script:
         target:
           entity_id: >-
             {% set player = states('input_select.media_focus_player') %}
-            {{ player }}
+            {{ 'media_player.smart_tv_pro_2' if player == 'media_player.android_tv_192_168_3_17' else player }}
 
   media_focus_volume_up:
     alias: "Media Grid v2 — Volume Up Focused Player"
@@ -295,7 +295,7 @@ script:
         target:
           entity_id: >-
             {% set player = states('input_select.media_focus_player') %}
-            {{ player }}
+            {{ 'media_player.smart_tv_pro_2' if player == 'media_player.android_tv_192_168_3_17' else player }}
 
   media_focus_volume_mute:
     alias: "Media Grid v2 — Mute Focused Player"
@@ -303,7 +303,7 @@ script:
     sequence:
       - variables:
           focused_player: "{{ states('input_select.media_focus_player') }}"
-          volume_player: "{{ focused_player }}"
+          volume_player: "{{ 'media_player.smart_tv_pro_2' if focused_player == 'media_player.android_tv_192_168_3_17' else focused_player }}"
       - service: media_player.volume_mute
         target:
           entity_id: "{{ volume_player }}"

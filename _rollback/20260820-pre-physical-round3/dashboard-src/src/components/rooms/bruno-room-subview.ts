@@ -195,7 +195,6 @@ type EstadoAoVivo =
 const IMAGEM_TV_ESPERA = '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260802-assets-resize-1';
 const IMAGEM_SPOTIFY_ESPERA = '/local/images/echo_pop.png?v=20260702-all-images-1';
 const IMAGEM_PC = '/local/images/office_pc.png?v=20260702-all-images-1';
-const TV_HUB_HISTORY_KEY = 'bruno-ui:tv-hub-history:v1';
 
 /**
  * Módulos que, no TELEFONE, viram linha-resumo e abrem como bottom sheet.
@@ -314,7 +313,6 @@ export class BrunoRoomSubview extends LitElement {
   private _tvUltimoPoster = '';
   private _tvUltimaFonte = 'HDMI 1';
   private _tvUltimoTitulo = '';
-  private _tvHistoricoCarregado = false;
   private _menuMidiaAberto = false;
   private _spotifyFerramentas = false;
   private _movimentoCortina: MovimentoCortina | undefined;
@@ -3017,33 +3015,7 @@ export class BrunoRoomSubview extends LitElement {
     return this._resolverId((this._sub?.entities as Record<string, unknown> | undefined)?.[chave]);
   }
 
-  private _carregarHistoricoTv(): void {
-    if (this._tvHistoricoCarregado) return;
-    this._tvHistoricoCarregado = true;
-    try {
-      const raw = globalThis.localStorage?.getItem(TV_HUB_HISTORY_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
-      const fonte = String(parsed['fonte'] ?? '').trim();
-      const titulo = String(parsed['titulo'] ?? '').trim();
-      const poster = String(parsed['poster'] ?? '').trim();
-      const volume = Number(parsed['volume']);
-      if (fonte) this._tvUltimaFonte = fonte;
-      if (titulo) this._tvUltimoTitulo = titulo;
-      if (poster) this._tvUltimoPoster = poster;
-      if (Number.isFinite(volume)) this._tvUltimoVolume = volume;
-    } catch { /* localStorage opcional */ }
-  }
-
-  private _salvarHistoricoTv(): void {
-    if (!this._tvUltimoPoster && !this._tvUltimoTitulo) return;
-    try {
-      globalThis.localStorage?.setItem(TV_HUB_HISTORY_KEY, JSON.stringify({ fonte: this._tvUltimaFonte, titulo: this._tvUltimoTitulo, poster: this._tvUltimoPoster, volume: this._tvUltimoVolume, savedAt: Date.now() }));
-    } catch { /* localStorage opcional */ }
-  }
-
   private _modeloTv() {
-    this._carregarHistoricoTv();
     const powerId = this._idDe('tv');
     const mediaId = this._idDe('tvMedia') ?? powerId;
     const power = this._estado(powerId);
@@ -3057,21 +3029,20 @@ export class BrunoRoomSubview extends LitElement {
 
     const fonteAtual = String(ma['app_name'] ?? ma['source'] ?? pa['source'] ?? pa['app_name'] ?? '').trim();
     const tituloAtual = String(ma['media_title'] ?? ma['media_series_title'] ?? ma['app_name'] ?? '').trim();
-    const posterAtual = String(ma['entity_picture'] ?? ma['media_image_url'] ?? ma['entity_picture_local'] ?? '').trim();
+    const posterAtual = String(ma['entity_picture'] ?? ma['media_image_url'] ?? '').trim();
     const volumeBruto = pa['volume_level'] ?? ma['volume_level'];
     const volumeNumero = volumeBruto == null ? Number.NaN : Number(volumeBruto);
     const volumeAtual = Number.isFinite(volumeNumero) ? Math.round(volumeNumero * 100) : null;
 
     if (ativo) {
-      if (fonteAtual && this._tvUltimaFonte && fonteAtual !== this._tvUltimaFonte) {
-        this._tvUltimoPoster = '';
-        this._tvUltimoTitulo = '';
-      }
       if (fonteAtual) this._tvUltimaFonte = fonteAtual;
       if (tituloAtual) this._tvUltimoTitulo = tituloAtual;
       if (posterAtual) this._tvUltimoPoster = posterAtual;
       if (volumeAtual != null) this._tvUltimoVolume = volumeAtual;
-      this._salvarHistoricoTv();
+    } else {
+      this._tvUltimoPoster = '';
+      this._tvUltimoTitulo = '';
+      this._tvUltimoVolume = null;
     }
 
     return {
@@ -3306,7 +3277,7 @@ export class BrunoRoomSubview extends LitElement {
         <div class="mh-info">
           <small>Ligada</small>${segundaLinha ? html`<em>${segundaLinha}</em>` : nothing}
         </div>
-        <div class="mh-controls">${this._linhaVolume(mediaId, tv.volume ?? 60)} ${fileira}</div>
+        <div class="mh-controls">${this._linhaVolume(id, tv.volume ?? 60)} ${fileira}</div>
       </div>
       ${this._arteMidia(tv.poster || espera, 'wide', 'mdi:television-classic', Boolean(tv.poster), tv.estado === 'paused')}
     `;
@@ -3324,9 +3295,17 @@ export class BrunoRoomSubview extends LitElement {
   private _abrirControleRemoto(): void {
     const remoto = this._idDe('tvRemote');
     if (!remoto) return;
-    const mediaId = this._idDe('tvMedia') ?? this._idDe('tv');
-    const comando = (command: string) => ({ action: 'perform-action', perform_action: 'remote.send_command', target: { entity_id: remoto }, data: { command } });
-    const tecla = (nome: string, icone: string, command: string) => ({ type: 'button', name: nome, icon: icone, tap_action: comando(command) });
+    const apertar = (entityId: string) => ({
+      action: 'perform-action',
+      perform_action: 'button.press',
+      target: { entity_id: entityId },
+    });
+    const tecla = (nome: string, icone: string, entityId: string) => ({
+      type: 'button',
+      name: nome,
+      icon: icone,
+      tap_action: apertar(entityId),
+    });
 
     this.dispatchEvent(
       new CustomEvent('ll-custom', {
@@ -3344,7 +3323,7 @@ export class BrunoRoomSubview extends LitElement {
               content: {
                 type: 'custom:universal-remote-card',
                 remote_id: remoto,
-                media_player_id: mediaId,
+                media_player_id: this._idDe('tv'),
                 rows: [
                   ['power', 'input', 'menu'],
                   ['navigation'],
@@ -3352,26 +3331,26 @@ export class BrunoRoomSubview extends LitElement {
                   ['volume_down', 'volume_up', 'channel_down', 'channel_up'],
                 ],
                 custom_actions: [
-                  tecla('power', 'mdi:power', 'POWER'),
-                  tecla('input', 'mdi:import', 'TV'),
-                  tecla('menu', 'mdi:menu', 'MENU'),
+                  tecla('power', 'mdi:power', 'button.tv_sala_power'),
+                  tecla('input', 'mdi:import', 'button.tv_sala_input'),
+                  tecla('menu', 'mdi:menu', 'button.tv_sala_menu'),
                   {
                     type: 'circlepad',
                     name: 'navigation',
                     icon: 'mdi:checkbox-blank-circle',
-                    tap_action: comando('DPAD_CENTER'),
-                    up: { icon: 'mdi:chevron-up', tap_action: comando('DPAD_UP'), hold_action: { action: 'repeat' } },
-                    down: { icon: 'mdi:chevron-down', tap_action: comando('DPAD_DOWN'), hold_action: { action: 'repeat' } },
-                    left: { icon: 'mdi:chevron-left', tap_action: comando('DPAD_LEFT'), hold_action: { action: 'repeat' } },
-                    right: { icon: 'mdi:chevron-right', tap_action: comando('DPAD_RIGHT'), hold_action: { action: 'repeat' } },
+                    tap_action: apertar('button.tv_sala_ok'),
+                    up: { icon: 'mdi:chevron-up', tap_action: apertar('button.tv_sala_navigate_up'), hold_action: { action: 'repeat' } },
+                    down: { icon: 'mdi:chevron-down', tap_action: apertar('button.tv_sala_navigate_down'), hold_action: { action: 'repeat' } },
+                    left: { icon: 'mdi:chevron-left', tap_action: apertar('button.tv_sala_navigate_left'), hold_action: { action: 'repeat' } },
+                    right: { icon: 'mdi:chevron-right', tap_action: apertar('button.tv_sala_navigate_right'), hold_action: { action: 'repeat' } },
                   },
-                  tecla('back', 'mdi:keyboard-backspace', 'BACK'),
-                  tecla('home', 'mdi:home', 'HOME'),
-                  tecla('mute', 'mdi:volume-mute', 'MUTE'),
-                  tecla('volume_down', 'mdi:volume-minus', 'VOLUME_DOWN'),
-                  tecla('volume_up', 'mdi:volume-plus', 'VOLUME_UP'),
-                  tecla('channel_down', 'mdi:chevron-down', 'CHANNEL_DOWN'),
-                  tecla('channel_up', 'mdi:chevron-up', 'CHANNEL_UP'),
+                  tecla('back', 'mdi:keyboard-backspace', 'button.tv_sala_back'),
+                  tecla('home', 'mdi:home', 'button.tv_sala_homepage'),
+                  tecla('mute', 'mdi:volume-mute', 'button.tv_sala_mute'),
+                  tecla('volume_down', 'mdi:volume-minus', 'button.tv_sala_volume_down'),
+                  tecla('volume_up', 'mdi:volume-plus', 'button.tv_sala_volume_up'),
+                  tecla('channel_down', 'mdi:chevron-down', 'button.tv_sala_channel_down'),
+                  tecla('channel_up', 'mdi:chevron-up', 'button.tv_sala_channel_up'),
                 ],
               },
             },

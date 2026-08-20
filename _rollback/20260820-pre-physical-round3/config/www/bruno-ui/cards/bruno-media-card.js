@@ -32,7 +32,6 @@ const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];
 const BRUNO_MEDIA_TV_ENTITY = 'media_player.android_tv_192_168_3_17';
 const BRUNO_MEDIA_TV_POWER_ENTITY = 'media_player.smart_tv_pro_2';
 const BRUNO_MEDIA_TV_POWER_STATES = new Set(['on', 'playing', 'paused', 'idle', 'buffering']);
-const BRUNO_MEDIA_HYBRID_RUNTIME = 'round3';
 
 class BrunoMediaCard extends HTMLElement {
   static getStubConfig() {
@@ -53,11 +52,6 @@ class BrunoMediaCard extends HTMLElement {
     this._slideIndex = this._slideIndex || 0;
     this._mediaMenuOpen = this._mediaMenuOpen || false;
     if (this._mediaHistory === undefined) this._mediaHistory = this._readMediaHistory();
-    this._lastArtworkByPlayer = this._lastArtworkByPlayer || {};
-    const rememberedTv = this._mediaHistory?.[BRUNO_MEDIA_TV_ENTITY];
-    if (!this._lastArtworkByPlayer[BRUNO_MEDIA_TV_ENTITY] && rememberedTv?.image) {
-      this._lastArtworkByPlayer[BRUNO_MEDIA_TV_ENTITY] = rememberedTv.image;
-    }
     this._lastValidMedia = this._latestMediaSnapshot();
     this._safeRender();
   }
@@ -142,14 +136,12 @@ class BrunoMediaCard extends HTMLElement {
     `;
   }
 
-  _tvPowered() {
-    const powerState = String(this._state(BRUNO_MEDIA_TV_POWER_ENTITY)?.state || '').toLowerCase();
-    return BRUNO_MEDIA_TV_POWER_STATES.has(powerState);
-  }
-
   _isActive(entityId) {
     const state = String(this._state(entityId)?.state || '').toLowerCase();
-    if (entityId === BRUNO_MEDIA_TV_ENTITY) return this._tvPowered();
+    if (entityId === BRUNO_MEDIA_TV_ENTITY) {
+      const powerState = String(this._state(BRUNO_MEDIA_TV_POWER_ENTITY)?.state || '').toLowerCase();
+      return BRUNO_MEDIA_TV_POWER_STATES.has(powerState);
+    }
     return BRUNO_MEDIA_ACTIVE_STATES.includes(state);
   }
 
@@ -281,22 +273,33 @@ class BrunoMediaCard extends HTMLElement {
   _playbackPriority(entityId) {
     const entity = this._state(entityId);
     const state = String(entity?.state || '').toLowerCase();
-    const config = this._playerConfig(entityId);
-    const attrs = entity?.attributes || {};
-    const contentType = String(attrs.media_content_type || attrs.app_name || '').toLowerCase();
-    const rawImage = attrs.media_image_url || attrs.entity_picture || '';
-    const image = this._isStandbyImage(rawImage) ? '' : rawImage;
-
     if (entityId === BRUNO_MEDIA_TV_ENTITY) {
-      if (!this._tvPowered()) return 0;
+      if (BRUNO_MEDIA_TV_POWER_STATES.has(state)) this._lastTvPoweredAt = Date.now();
       if (state === 'playing') return 4;
       if (state === 'buffering') return 3;
       if (state === 'paused') return 2;
-      return this._hasPlayback(state, this._cleanText(attrs.media_title), image, attrs.app_name, attrs.source, entityId, config, contentType, attrs) ? 3 : 1;
+      if (state === 'on' || state === 'idle') return 1;
+      if (state === 'off' && Number.isFinite(this._lastTvPoweredAt)
+          && Date.now() - this._lastTvPoweredAt <= BRUNO_MEDIA_TV_OFF_GRACE_MS) return 1;
+    } else {
+      if (state === 'playing') return 4;
+      if (state === 'paused') return 2;
     }
-    if (state === 'playing') return 4;
-    if (state === 'paused') return 2;
-    return this._hasPlayback(state, this._cleanText(attrs.media_title), image, attrs.app_name, attrs.source, entityId, config, contentType, attrs) ? 3 : 0;
+    const config = this._playerConfig(entityId);
+    const attrs = entity?.attributes || {};
+    const contentType = String(attrs.media_content_type || attrs.app_name || '').toLowerCase();
+    const image = this._isStandbyImage(attrs.entity_picture) ? '' : (attrs.entity_picture || '');
+    return this._hasPlayback(
+      state,
+      this._cleanText(attrs.media_title),
+      image,
+      attrs.app_name,
+      attrs.source,
+      entityId,
+      config,
+      contentType,
+      attrs,
+    ) ? 3 : 0;
   }
 
   _focusModel() {
@@ -314,10 +317,7 @@ class BrunoMediaCard extends HTMLElement {
     if (rawImage && !this._isStandbyImage(rawImage)) {
       this._lastArtworkByPlayer[focusId] = rawImage;
     }
-    const shouldKeepArtwork = (
-      ['paused', 'idle'].includes(state)
-      || (focusId === BRUNO_MEDIA_TV_ENTITY && this._tvPowered())
-    ) && this._lastArtworkByPlayer[focusId];
+    const shouldKeepArtwork = ['paused', 'idle'].includes(state) && this._lastArtworkByPlayer[focusId];
     let image = rawImage;
     if (shouldKeepArtwork && (!rawImage || this._isStandbyImage(rawImage))) {
       image = this._lastArtworkByPlayer[focusId];
@@ -650,25 +650,16 @@ class BrunoMediaCard extends HTMLElement {
   _hasPlayback(state, title, image, appName, source, entityId = '', config = {}, contentType = '', attributes = {}) {
     const normalized = String(state || '').toLowerCase();
     const shellText = `${title || ''} ${appName || ''} ${source || ''}`.toLowerCase();
-    const isShell = ['google tv launcher', 'android tv launcher', 'launcher', 'ambient mode', 'backdrop', 'home screen', 'android settings']
+    const isShell = ['google tv launcher', 'android tv launcher', 'launcher', 'ambient mode', 'backdrop', 'home screen']
       .some((term) => shellText.includes(term));
     if (isShell) return false;
-    if (entityId === BRUNO_MEDIA_TV_ENTITY) {
-      if (!this._tvPowered()) return false;
-      const hasArtwork = Boolean(image && !this._isStandbyImage(image));
-      const hasTimedMedia = Number(attributes?.media_duration) > 0 || Number(attributes?.media_position) > 0;
-      const meaningfulText = [title, appName, source].map((value) => this._cleanText(value)).filter(Boolean)
-        .some((value) => !/^(?:tv|android tv|smart tv pro|hdmi\s*\d+)$/i.test(value));
-      if (!(hasArtwork || hasTimedMedia || meaningfulText)) return false;
-      if (['playing', 'paused', 'buffering'].includes(normalized)) return true;
-      return this._isVideoPlayer(entityId, config, contentType, appName, source);
-    }
     if (['playing', 'paused'].includes(normalized)) return Boolean(this._cleanText(title) || image || this._cleanText(appName));
     if (normalized !== 'on') return false;
     const hasMediaTitle = Boolean(this._cleanText(title));
     const hasTimedMedia = Number(attributes?.media_duration) > 0 || Number(attributes?.media_position) > 0;
     const hasArtwork = Boolean(image && !this._isStandbyImage(image));
-    return hasMediaTitle && (hasArtwork || hasTimedMedia || ['video', 'movie', 'episode', 'tvshow'].some((term) => String(contentType).includes(term)))
+    return hasMediaTitle
+      && (hasArtwork || hasTimedMedia || ['video', 'movie', 'episode', 'tvshow'].some((term) => String(contentType).includes(term)))
       && this._isVideoPlayer(entityId, config, contentType, appName, source);
   }
 

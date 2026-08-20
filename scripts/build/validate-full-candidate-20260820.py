@@ -4,6 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'config' / 'www' / 'dashboard'
+ANDROID = 'media_player.android_tv_192_168_3_17'
 
 entries = sorted(p for p in OUT.glob('bruno-dashboard.*.js') if p.is_file())
 if len(entries) != 1:
@@ -23,14 +24,19 @@ if count != 1:
     raise SystemExit(f'active bundle line replacements={count}')
 cfg_path.write_text(cfg, encoding='utf-8')
 
-required = [entry, Path(str(entry) + '.br'), Path(str(entry) + '.gz')]
 chunks = sorted((OUT / 'chunks').glob('*.js'))
 if not chunks:
     raise SystemExit('no lazy chunks generated')
-for path in required + chunks:
+
+# O compressor ignora arquivos < 1 KiB porque comprimi-los aumenta custo sem
+# benefício. A validação deve espelhar exatamente essa política — inclusive o
+# entry Vite mínimo, que apenas importa o chunk principal.
+assets = [entry] + chunks
+for path in assets:
     if not path.exists():
         raise SystemExit(f'missing {path}')
-for path in chunks:
+    if path.stat().st_size < 1024:
+        continue
     for suffix in ['.br', '.gz']:
         sibling = Path(str(path) + suffix)
         if not sibling.exists():
@@ -52,16 +58,19 @@ for relative in active_tv_files:
         line for line in text.splitlines()
         if not line.lstrip().startswith(('#', '//'))
     )
-    if 'remote.atv' in active:
-        raise SystemExit(f'remote.atv still active in {relative}')
-    if 'media_player.android_tv_192_168_3_17' in active:
-        raise SystemExit(f'ADB still active in {relative}')
+    for forbidden in [
+        'media_player.smart_tv_pro',
+        'media_player.smart_tv_pro_2',
+        'remote.smart_tv_pro',
+    ]:
+        if forbidden in active:
+            raise SystemExit(f'{forbidden} still active in {relative}')
 
 subviews = (ROOT / 'dashboard-src/src/config/subviews.config.ts').read_text(encoding='utf-8')
 for required_token in [
-    "tv: 'media_player.smart_tv_pro_2'",
-    "tvMedia: 'media_player.smart_tv_pro'",
-    "tvRemote: 'remote.smart_tv_pro'",
+    f"tv: '{ANDROID}'",
+    f"tvMedia: '{ANDROID}'",
+    "tvRemote: 'remote.atv'",
 ]:
     if required_token not in subviews:
         raise SystemExit(f'missing TV token {required_token}')
@@ -82,8 +91,11 @@ if "import './lazy-runtime';" not in main:
     raise SystemExit('lazy runtime not installed')
 
 print('ENTRY', entry.name, entry.stat().st_size)
-print('ENTRY_BR', Path(str(entry) + '.br').stat().st_size)
+entry_br = Path(str(entry) + '.br')
+print('ENTRY_BR', entry_br.stat().st_size if entry_br.exists() else 'skipped(<1KiB)')
 print('CHUNKS', len(chunks))
 for path in chunks:
-    print('CHUNK', path.name, path.stat().st_size, Path(str(path) + '.br').stat().st_size)
+    sibling = Path(str(path) + '.br')
+    print('CHUNK', path.name, path.stat().st_size, sibling.stat().st_size if sibling.exists() else 'skipped(<1KiB)')
+print('TV_ENTITY', ANDROID)
 print('candidate validation passed')

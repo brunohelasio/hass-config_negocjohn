@@ -42,21 +42,26 @@ jobs:
         run: |
           python3 <<'PY'
           from pathlib import Path
-          import textwrap
           src=Path('.github/workflows/build-full-candidate-20260820.yml').read_text(encoding='utf-8').splitlines()
-          blocks=[]; current=None
+          raw_blocks=[]; current=None
           for line in src:
               if "python3 <<'PY'" in line:
                   current=[]
                   continue
               if current is not None and line.strip() == 'PY':
-                  blocks.append(textwrap.dedent('\n'.join(current))+'\n')
+                  raw_blocks.append(current)
                   current=None
                   continue
               if current is not None:
                   current.append(line)
-          if len(blocks) < 2:
-              raise SystemExit(f'expected >=2 python blocks, got {len(blocks)}')
+          if len(raw_blocks) < 2:
+              raise SystemExit(f'expected >=2 python blocks, got {len(raw_blocks)}')
+          blocks=[]
+          for raw in raw_blocks:
+              first=next((line for line in raw if line.strip()), '')
+              indent=len(first)-len(first.lstrip())
+              body='\n'.join(line[indent:] if len(line) >= indent else '' for line in raw)+'\n'
+              blocks.append(body)
           Path('/tmp/apply-full-candidate.py').write_text(blocks[0],encoding='utf-8')
           Path('/tmp/validate-full-candidate.py').write_text(blocks[1],encoding='utf-8')
           print('extracted',len(blocks),'python blocks')

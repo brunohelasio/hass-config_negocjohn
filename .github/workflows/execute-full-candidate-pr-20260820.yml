@@ -41,7 +41,10 @@ jobs:
         shell: bash
         run: |
           python3 scripts/build/apply-full-candidate-20260820.py
-          sed -i '1iexport {};' dashboard-src/src/diagnostics/startup-metrics.ts
+          rm -f dashboard-src/src/diagnostics/startup-metrics.ts
+          sed -i "s#import './diagnostics/startup-metrics';#import './services/performance/boot-metrics';#" dashboard-src/src/main.ts
+          sed -i "/const nav = performance.getEntriesByType('navigation')/d" dashboard-src/src/services/performance/boot-metrics.ts
+          sed -i "s#'dashboard-src/src/diagnostics/startup-metrics.ts'#'dashboard-src/src/services/performance/boot-metrics.ts'#" docs/34-implementacao-tv-performance-20260820.md || true
 
       - name: Install dependencies
         if: steps.guard.outputs.skip != 'true'
@@ -65,6 +68,7 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         shell: bash
         run: |
+          sed -i "s#import './diagnostics/startup-metrics';#import './services/performance/boot-metrics';#" scripts/build/validate-full-candidate-20260820.py || true
           python3 scripts/build/validate-full-candidate-20260820.py
           node scripts/validation/check-yaml.mjs
 

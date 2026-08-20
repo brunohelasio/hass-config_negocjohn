@@ -42,6 +42,8 @@ jobs:
         run: |
           if grep -Fq "TV: Android TV é a fonte única de estado, mídia e artwork" dashboard-src/src/config/subviews.config.ts; then
             echo 'candidate sources already materialized; preserving them'
+          elif grep -Fq "TV híbrida: power/volume pela Android TV Remote estável" dashboard-src/src/config/subviews.config.ts; then
+            echo 'hybrid candidate already materialized; preserving it'
           else
             python3 scripts/build/apply-full-candidate-20260820.py
             python3 scripts/build/finalize-tv-android-20260820.py
@@ -50,6 +52,7 @@ jobs:
             sed -i "/const nav = performance.getEntriesByType('navigation')/d" dashboard-src/src/services/performance/boot-metrics.ts
             sed -i "s#'dashboard-src/src/diagnostics/startup-metrics.ts'#'dashboard-src/src/services/performance/boot-metrics.ts'#" docs/34-implementacao-tv-performance-20260820.md || true
           fi
+          python3 scripts/build/fix-physical-round2-20260820.py
 
       - name: Install dependencies
         if: steps.guard.outputs.skip != 'true'
@@ -85,5 +88,5 @@ jobs:
           git add -A
           find config/www/dashboard -type f \( -name '*.js' -o -name '*.br' -o -name '*.gz' -o -name 'manifest.json' \) -print0 | xargs -0 git add -f --
           git status --short
-          git commit -m 'feat: publicar candidata integral TV e cold-start [generated candidate]'
+          git commit -m 'feat: publicar candidata híbrida TV e performance round2 [generated candidate]'
           git push origin HEAD:fix/mobile-runtime-tv-curtain-20260819

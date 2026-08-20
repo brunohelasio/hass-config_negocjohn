@@ -1,0 +1,572 @@
+name: Build full candidate 20260820
+
+on:
+  push:
+    branches: [fix/mobile-runtime-tv-curtain-20260819]
+
+permissions:
+  contents: write
+
+jobs:
+  implement-build-validate:
+    if: ${{ !contains(github.event.head_commit.message, '[generated candidate]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/mobile-runtime-tv-curtain-20260819
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Apply complete diagnosed implementation
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re, shutil, json
+
+          ROOT = Path.cwd()
+          PRE = 'e4901bd71ea4e460098d1692423f497067cd051c'
+          rollback = ROOT / '_rollback' / '20260820-pre-full-candidate'
+          rollback.mkdir(parents=True, exist_ok=True)
+
+          def text(path): return (ROOT/path).read_text(encoding='utf-8')
+          def write(path, value):
+              p=ROOT/path; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(value,encoding='utf-8')
+          def replace_once(s, old, new, label):
+              if old not in s: raise SystemExit(f'MARKER NOT FOUND: {label}')
+              return s.replace(old,new,1)
+          def regex_once(s, pattern, repl, label, flags=re.S):
+              out,n=re.subn(pattern,repl,s,count=1,flags=flags)
+              if n!=1: raise SystemExit(f'REGEX {label}: expected 1, got {n}')
+              return out
+          def backup(path):
+              src=ROOT/path
+              if src.exists():
+                  dst=rollback/path
+                  dst.parent.mkdir(parents=True,exist_ok=True)
+                  shutil.copy2(src,dst)
+
+          for p in [
+              'config/configuration.yaml',
+              'config/dashboards/ui-lovelace-main.yaml',
+              'config/packages/home_activity.yaml',
+              'config/packages/active_player.yaml',
+              'config/packages/sala_tv_controls.yaml',
+              'config/www/bruno-ui/cards/bruno-sala-card.js',
+              'config/www/bruno-ui/cards/bruno-media-card.js',
+              'config/www/bruno-ui/core/bruno-shell.js',
+              'dashboard-src/src/config/subviews.config.ts',
+              'dashboard-src/src/config/rooms.config.ts',
+              'dashboard-src/src/components/rooms/bruno-room-subview.ts',
+              'dashboard-src/src/legacy-runtime.generated.ts',
+              'dashboard-src/src/main.ts',
+              'dashboard-src/vite.config.ts',
+              'dashboard-src/package.json',
+          ]: backup(p)
+          for p in ['config/www/dashboard/bruno-dashboard.9t_Xp8gv.js','config/www/dashboard/bruno-dashboard.9t_Xp8gv.js.br','config/www/dashboard/bruno-dashboard.9t_Xp8gv.js.gz']:
+              backup(p)
+
+          # 1) TV: autoridade de energia separada da fonte rica de mídia.
+          p='dashboard-src/src/config/subviews.config.ts'; s=text(p)
+          s=replace_once(s,
+              "      tv: 'media_player.android_tv_192_168_3_17',\n      tvRemote: 'remote.atv',",
+              "      // TV: energia/comandos = Android TV Remote; mídia/arte = Cast.\n      tv: 'media_player.smart_tv_pro_2',\n      tvMedia: 'media_player.smart_tv_pro',\n      tvRemote: 'remote.smart_tv_pro',",
+              'subviews tv split')
+          write(p,s)
+
+          p='dashboard-src/src/config/rooms.config.ts'; s=text(p)
+          s=replace_once(s,
+              "        entities: ['media_player.android_tv_192_168_3_17'],\n        states: TV_POWER_ON_STATES, offDelayMs: 45_000 },",
+              "        entities: ['media_player.smart_tv_pro_2'],\n        states: TV_POWER_ON_STATES },",
+              'room tv dot')
+          s=s.replace("        'media_player.android_tv_192_168_3_17',\n        'media_player.echo_show',",
+                      "        'media_player.smart_tv_pro_2',\n        'media_player.smart_tv_pro',\n        'media_player.echo_show',",1)
+          write(p,s)
+
+          # Room subview: power=smart_tv_pro_2, rich playback=smart_tv_pro, no grace.
+          p='dashboard-src/src/components/rooms/bruno-room-subview.ts'; s=text(p)
+          s=s.replace("import { isMediaPlaying, isTvPoweredStable } from '@/services/entities/media-state';",
+                      "import { isMediaPlaying, isTvPowered } from '@/services/entities/media-state';",1)
+          model = r'''  private _modeloTv\(\) \{.*?\n  \}\n\n  private _modeloSpotify\(\)'''
+          model_repl = '''  private _modeloTv() {
+    const powerId = this._idDe('tv');
+    const mediaId = this._idDe('tvMedia') ?? powerId;
+    const power = this._estado(powerId);
+    const media = this._estado(mediaId);
+    const pa = power?.attributes ?? {};
+    const ma = media?.attributes ?? {};
+    const ativo = isTvPowered(this._hass, powerId);
+    const reproduzindo = isMediaPlaying(this._hass, mediaId);
+    const estadoPower = String(power?.state ?? 'off').toLowerCase();
+    const estadoMedia = String(media?.state ?? '').toLowerCase();
+
+    const fonteAtual = String(ma['app_name'] ?? ma['source'] ?? pa['source'] ?? pa['app_name'] ?? '').trim();
+    const tituloAtual = String(ma['media_title'] ?? ma['media_series_title'] ?? ma['app_name'] ?? '').trim();
+    const posterAtual = String(ma['entity_picture'] ?? ma['media_image_url'] ?? '').trim();
+    const volumeBruto = pa['volume_level'] ?? ma['volume_level'];
+    const volumeNumero = volumeBruto == null ? Number.NaN : Number(volumeBruto);
+    const volumeAtual = Number.isFinite(volumeNumero) ? Math.round(volumeNumero * 100) : null;
+
+    if (ativo) {
+      if (fonteAtual) this._tvUltimaFonte = fonteAtual;
+      if (tituloAtual) this._tvUltimoTitulo = tituloAtual;
+      if (posterAtual) this._tvUltimoPoster = posterAtual;
+      if (volumeAtual != null) this._tvUltimoVolume = volumeAtual;
+    } else {
+      this._tvUltimoPoster = '';
+      this._tvUltimoTitulo = '';
+      this._tvUltimoVolume = null;
+    }
+
+    return {
+      st: power,
+      media,
+      estado: reproduzindo ? estadoMedia : estadoPower,
+      ativo,
+      reproduzindo,
+      fonte: fonteAtual || (ativo ? this._tvUltimaFonte : 'HDMI 1') || 'HDMI 1',
+      titulo: tituloAtual || (ativo ? this._tvUltimoTitulo : ''),
+      volume: volumeAtual ?? (ativo ? this._tvUltimoVolume : null),
+      poster: posterAtual || (ativo ? this._tvUltimoPoster : ''),
+    };
+  }
+
+  private _modeloSpotify()'''
+          s=regex_once(s,model,model_repl,'modeloTv')
+          # Power-on in the hub must be explicit and stable; playback goes to Cast.
+          s=s.replace("    const id = this._idDe('tv');\n    const espera =", "    const id = this._idDe('tv');\n    const mediaId = this._idDe('tvMedia') ?? id;\n    const espera =",1)
+          s=s.replace("() => this._servico('homeassistant', 'toggle', { entity_id: id })",
+                      "() => this._servico('media_player', 'turn_on', { entity_id: id })",1)
+          s=s.replace("this._servico('media_player', 'media_play_pause', { entity_id: id })",
+                      "this._servico('media_player', 'media_play_pause', { entity_id: mediaId })",1)
+          write(p,s)
+
+          # Legacy mobile Sala card: stable power source; Cast metadata; explicit power direction.
+          p='config/www/bruno-ui/cards/bruno-sala-card.js'; s=text(p)
+          s=s.replace("  tv: 'media_player.android_tv_192_168_3_17',",
+                      "  tv: 'media_player.smart_tv_pro_2',\n  tv_media: 'media_player.smart_tv_pro',",1)
+          s=s.replace("const BRUNO_SALA_TV_OFF_GRACE_MS = 45_000;\n",'',1)
+          old='''    const tv = this._state(entities.tv);
+    const climate = this._state(entities.climate);'''
+          new='''    const tv = this._state(entities.tv);
+    const tvMedia = this._state(entities.tv_media) || tv;
+    const climate = this._state(entities.climate);'''
+          s=replace_once(s,old,new,'sala card media entity')
+          old='''    const tvState = String(tv?.state || '').toLowerCase();
+    if (BRUNO_SALA_TV_ON_STATES.includes(tvState)) this._lastTvPoweredAt = Date.now();
+    const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tvState)
+      || (tvState === 'off' && Number.isFinite(this._lastTvPoweredAt)
+        && Date.now() - this._lastTvPoweredAt <= BRUNO_SALA_TV_OFF_GRACE_MS);'''
+          new='''    const tvState = String(tv?.state || '').toLowerCase();
+    const tvOn = BRUNO_SALA_TV_ON_STATES.includes(tvState);'''
+          s=replace_once(s,old,new,'sala card remove grace')
+          s=s.replace('tvSemanticStatus: this._getTvSemanticStatus(tv, tvOn),','tvSemanticStatus: this._getTvSemanticStatus(tvMedia, tvOn),',1)
+          old='''      this._toggleEntity(entities.tv);
+      return;'''
+          new='''      const service = BRUNO_SALA_TV_ON_STATES.includes(String(this._state(entities.tv)?.state || '').toLowerCase())
+        ? 'media_player.turn_off'
+        : 'media_player.turn_on';
+      this._callService(service, {}, { entity_id: entities.tv });
+      return;'''
+          # first occurrence after key tv; corridor has same text with corridor, so exact is unique.
+          s=replace_once(s,old,new,'sala explicit tv power')
+          write(p,s)
+
+          # Media card: Cast remains the artwork/playback entity; power authority is remote integration.
+          p='config/www/bruno-ui/cards/bruno-media-card.js'; s=text(p)
+          s=s.replace("{ entity: 'media_player.android_tv_192_168_3_17', name: 'TV'",
+                      "{ entity: 'media_player.smart_tv_pro', name: 'TV'",1)
+          s=s.replace("const BRUNO_MEDIA_TV_ENTITY = 'media_player.android_tv_192_168_3_17';",
+                      "const BRUNO_MEDIA_TV_ENTITY = 'media_player.smart_tv_pro';\nconst BRUNO_MEDIA_TV_POWER_ENTITY = 'media_player.smart_tv_pro_2';",1)
+          s=s.replace("const BRUNO_MEDIA_TV_OFF_GRACE_MS = 45_000;\n",'',1)
+          pat=r'''  _isActive\(entityId\) \{\n    const state = String\(this\._state\(entityId\)\?\.state \|\| ''\)\.toLowerCase\(\);\n    if \(entityId === BRUNO_MEDIA_TV_ENTITY\) \{.*?\n    \}\n    return BRUNO_MEDIA_ACTIVE_STATES\.includes\(state\);\n  \}'''
+          repl='''  _isActive(entityId) {
+    const state = String(this._state(entityId)?.state || '').toLowerCase();
+    if (entityId === BRUNO_MEDIA_TV_ENTITY) {
+      const powerState = String(this._state(BRUNO_MEDIA_TV_POWER_ENTITY)?.state || '').toLowerCase();
+      return BRUNO_MEDIA_TV_POWER_STATES.has(powerState);
+    }
+    return BRUNO_MEDIA_ACTIVE_STATES.includes(state);
+  }'''
+          s=regex_once(s,pat,repl,'media card active')
+          write(p,s)
+
+          # Backend media focus uses Cast for playback/artwork. TV volume routes to stable power/control entity.
+          p='config/packages/active_player.yaml'; s=text(p)
+          s=s.replace('media_player.android_tv_192_168_3_17','media_player.smart_tv_pro')
+          for svc in ['volume_down','volume_up']:
+              old=f'''      - service: media_player.{svc}
+        target:
+          entity_id: "{{{{ states('input_select.media_focus_player') }}}}"'''
+              new=f'''      - service: media_player.{svc}
+        target:
+          entity_id: >-
+            {{% set player = states('input_select.media_focus_player') %}}
+            {{{{ 'media_player.smart_tv_pro_2' if player == 'media_player.smart_tv_pro' else player }}}}'''
+              s=replace_once(s,old,new,f'active player {svc}')
+          old='''      - service: media_player.volume_mute
+        target:
+          entity_id: "{{ states('input_select.media_focus_player') }}"
+        data:
+          is_volume_muted: >
+            {{ not state_attr(states('input_select.media_focus_player'), 'is_volume_muted') | default(false) }}'''
+          new='''      - variables:
+          focused_player: "{{ states('input_select.media_focus_player') }}"
+          volume_player: "{{ 'media_player.smart_tv_pro_2' if focused_player == 'media_player.smart_tv_pro' else focused_player }}"
+      - service: media_player.volume_mute
+        target:
+          entity_id: "{{ volume_player }}"
+        data:
+          is_volume_muted: >
+            {{ not state_attr(volume_player, 'is_volume_muted') | default(false) }}'''
+          s=replace_once(s,old,new,'active player mute')
+          write(p,s)
+
+          p='config/packages/home_activity.yaml'; s=text(p)
+          s=s.replace("states('media_player.android_tv_192_168_3_17')","states('media_player.smart_tv_pro_2')",1)
+          write(p,s)
+
+          p='config/packages/sala_tv_controls.yaml'; s=text(p)
+          s=s.replace('media_player.android_tv_192_168_3_17','media_player.smart_tv_pro_2')
+          write(p,s)
+
+          # 2) Active Lovelace: stop parsing two unused global template forests.
+          p='config/dashboards/ui-lovelace-main.yaml'; s=text(p)
+          s=replace_once(s,
+              'button_card_templates: !include_dir_merge_named ./templates/button_card_templates\nstreamline_templates: !include_dir_merge_named ./templates/streamline_templates\n',
+              '# 2026-08-20: templates legados fora do grafo ativo da shell.\n# Rollback: restaurar as duas linhas a partir de _rollback/20260820-pre-full-candidate/.\n',
+              'remove unused template roots')
+          write(p,s)
+
+          # 3) Resource bootstrap: use YAML resource mode so the 73 storage resources are no longer all downloaded.
+          p='config/configuration.yaml'; s=text(p)
+          marker='''lovelace:
+  mode: storage
+  dashboards:'''
+          resources='''lovelace:
+  mode: storage
+  # 2026-08-20: o dashboard YAML usa somente o núcleo abaixo. A lista antiga em
+  # .storage não é apagada; resource_mode: yaml simplesmente deixa de carregá-la.
+  # Rollback: remover resource_mode/resources e voltar ao arquivo em _rollback/.
+  resource_mode: yaml
+  resources:
+    - url: /browser_mod.js
+      type: module
+    - url: /hacsfiles/lovelace-card-mod/card-mod.js
+      type: module
+    - url: /hacsfiles/kiosk-mode/kiosk-mode.js
+      type: module
+    - url: /hacsfiles/lovelace-layout-card/layout-card.js
+      type: module
+    - url: /hacsfiles/lovelace-xiaomi-vacuum-map-card/xiaomi-vacuum-map-card.js
+      type: module
+    - url: /hacsfiles/spotifyplus_card/spotifyplus_card.js
+      type: module
+    - url: /hacsfiles/universal-remote-card/universal-remote-card.min.js
+      type: module
+    - url: /hacsfiles/honeycomb-menu/honeycomb-menu.js
+      type: module
+    - url: /hacsfiles/mini-media-player/mini-media-player-bundle.js
+      type: module
+  dashboards:'''
+          s=replace_once(s,marker,resources,'resource mode yaml')
+          write(p,s)
+
+          # 4) Split route-only runtime into lazy chunks.
+          p='dashboard-src/src/legacy-runtime.generated.ts'; s=text(p)
+          lazy_imports=[
+              "import '../../config/www/bruno-ui/subviews/bruno-cameras-security-subview.js';\n",
+              "import '../../config/www/bruno-ui/subviews/bruno-roborock-subview.js';\n",
+              "import '../../config/www/bruno-ui/subviews/bruno-planta-3d-subview.js';\n",
+              "import '../../config/www/bruno-ui/subviews/bruno-music-subview.js';\n",
+          ]
+          for line in lazy_imports:
+              if line not in s: raise SystemExit('missing legacy lazy import '+line)
+              s=s.replace(line,'')
+          s=s.replace('export const LEGACY_RUNTIME_MODULE_COUNT = 34;','export const LEGACY_RUNTIME_MODULE_COUNT = 30;',1)
+          write(p,s)
+
+          lazy='''type LazyConfig = { type?: string; card?: LazyConfig; cards?: LazyConfig[] };
+
+type BrunoLazyApi = { ensureForConfig: (config: LazyConfig | undefined) => Promise<void> };
+
+const loaders: Record<string, () => Promise<unknown>> = {
+  'custom:bruno-room-subview': () => import('./components/rooms/bruno-room-subview'),
+  'custom:bruno-cameras-security-subview': () => import('../../config/www/bruno-ui/subviews/bruno-cameras-security-subview.js'),
+  'custom:bruno-roborock-subview': () => import('../../config/www/bruno-ui/subviews/bruno-roborock-subview.js'),
+  'custom:bruno-planta-3d-subview': () => import('../../config/www/bruno-ui/subviews/bruno-planta-3d-subview.js'),
+  'custom:bruno-music-subview': () => import('../../config/www/bruno-ui/subviews/bruno-music-subview.js'),
+};
+
+const pending = new Map<string, Promise<unknown>>();
+
+async function ensureType(type: string | undefined): Promise<void> {
+  if (!type || !loaders[type]) return;
+  let task = pending.get(type);
+  if (!task) {
+    task = loaders[type]();
+    pending.set(type, task);
+  }
+  await task;
+}
+
+async function ensureForConfig(config: LazyConfig | undefined): Promise<void> {
+  if (!config) return;
+  await ensureType(config.type);
+  if (config.card) await ensureForConfig(config.card);
+  if (Array.isArray(config.cards)) await Promise.all(config.cards.map(ensureForConfig));
+}
+
+(globalThis as typeof globalThis & { BrunoLazyModules?: BrunoLazyApi }).BrunoLazyModules = { ensureForConfig };
+'''
+          write('dashboard-src/src/lazy-runtime.ts',lazy)
+
+          p='dashboard-src/src/main.ts'; s=text(p)
+          s=s.replace("import './components/rooms/bruno-room-subview';\n",'',1)
+          s=s.replace("import './diagnostics/bruno-diagnostics';\n", "import './diagnostics/bruno-diagnostics';\nimport './diagnostics/startup-metrics';\nimport './lazy-runtime';\n",1)
+          write(p,s)
+
+          metrics='''type StartupMetric = { at: number; resources?: number; transferBytes?: number };
+
+type StartupState = {
+  startedAt: number;
+  marks: Record<string, StartupMetric>;
+};
+
+const state: StartupState = {
+  startedAt: performance.now(),
+  marks: {},
+};
+
+function mark(name: string): void {
+  state.marks[name] = { at: Math.round(performance.now()) };
+}
+
+mark('module');
+
+customElements.whenDefined('bruno-shell').then(() => mark('shell-defined'));
+window.addEventListener('DOMContentLoaded', () => mark('dom-content-loaded'), { once: true });
+window.addEventListener('load', () => {
+  const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
+  const transferBytes = entries.reduce((sum, entry) => sum + Number(entry.transferSize || 0), 0);
+  state.marks.load = {
+    at: Math.round(performance.now()),
+    resources: entries.length,
+    transferBytes,
+  };
+}, { once: true });
+
+(globalThis as typeof globalThis & { brunoStartup?: StartupState }).brunoStartup = state;
+'''
+          write('dashboard-src/src/diagnostics/startup-metrics.ts',metrics)
+
+          # Shell creates lazy cards only after loading the registering chunk.
+          p='config/www/bruno-ui/core/bruno-shell.js'; s=text(p)
+          old='''  async _createCard(config) {
+    const helpers = await this._ensureHelpers();'''
+          new='''  async _createCard(config) {
+    await globalThis.BrunoLazyModules?.ensureForConfig?.(config);
+    const helpers = await this._ensureHelpers();'''
+          s=replace_once(s,old,new,'shell lazy hook')
+          # Only warm the current/default backdrop, never all rooms on cold start.
+          s=s.replace('    this._preloadBackdrops();','    this._preloadBackdropFor(this._defaultSection);',1)
+          s=s.replace('    this._preloadResolvedBackdrops();','    this._preloadResolvedBackdropFor(this._activeKey || this._defaultSection);',1)
+          old='''  _preloadBackdrops() {
+    if (!this._backdrops) return;
+    for (const k of Object.keys(this._backdrops)) {
+      const url = this._backdrops[k];
+      if (url) this._loadBackdrop(url);
+    }
+  }
+
+  _preloadResolvedBackdrops() {
+    if (!this._hass || !this._backdrops) return;
+    for (const key of Object.keys(this._backdrops)) {
+      const fallback = this._backdrops[key] || this._backdrops.default;
+      const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
+      if (url) this._loadBackdrop(url);
+    }
+  }'''
+          new='''  _preloadBackdropFor(key) {
+    if (!this._backdrops || !key) return;
+    const url = this._backdrops[key] || this._backdrops.default;
+    if (url) this._loadBackdrop(url);
+  }
+
+  _preloadResolvedBackdropFor(key) {
+    if (!this._hass || !this._backdrops || !key) return;
+    const fallback = this._backdrops[key] || this._backdrops.default;
+    const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
+    if (url) this._loadBackdrop(url);
+  }'''
+          s=replace_once(s,old,new,'shell backdrop preload')
+          write(p,s)
+
+          # Vite code splitting instead of one monolith.
+          p='dashboard-src/vite.config.ts'; s=text(p)
+          s=s.replace("        // Um bundle só. O projeto atual faz 52 requisições separadas no cold\n        // start do tablet — este é o principal ganho de carregamento.\n        inlineDynamicImports: true,\n        entryFileNames: 'bruno-dashboard.[hash].js',",
+                      "        // Core da Home no entry; subviews pesadas ficam em chunks sob demanda.\n        entryFileNames: 'bruno-dashboard.[hash].js',\n        chunkFileNames: 'chunks/[name].[hash].js',",1)
+          write(p,s)
+
+          compress='''import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
+import { join, resolve, extname } from 'node:path';
+import { brotliCompressSync, gzipSync, constants } from 'node:zlib';
+
+const root = resolve(import.meta.dirname, '..', '..', 'config', 'www', 'dashboard');
+const okExt = new Set(['.js', '.css', '.json', '.svg']);
+const files = [];
+function walk(dir) {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) walk(p);
+    else if (okExt.has(extname(p)) && statSync(p).size >= 1024) files.push(p);
+  }
+}
+walk(root);
+for (const p of files) {
+  const raw = readFileSync(p);
+  writeFileSync(p + '.br', brotliCompressSync(raw, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }));
+  writeFileSync(p + '.gz', gzipSync(raw, { level: 9 }));
+}
+console.log(`compressed ${files.length} dashboard assets`);
+'''
+          write('dashboard-src/scripts/compress-output.mjs',compress)
+
+          p='dashboard-src/package.json'; obj=json.loads(text(p))
+          obj['scripts']['compress']='node scripts/compress-output.mjs'
+          obj['scripts']['build']='vite build && npm run manifesto && npm run compress'
+          write(p,json.dumps(obj,ensure_ascii=False,indent=2)+'\n')
+
+          doc=f'''# 34 — Implementação integral TV + cold start remoto (2026-08-20)
+
+## Escopo aplicado
+
+Esta candidata implementa os diagnósticos 32 e 33 sem alterar `main`.
+Base de rollback antes desta rodada: `{PRE}`.
+
+### TV
+- `media_player.smart_tv_pro_2`: autoridade de energia, volume e power.
+- `media_player.smart_tv_pro`: reprodução, fonte, título e artwork.
+- `remote.smart_tv_pro`: controle remoto.
+- `media_player.android_tv_192_168_3_17`: retirado das decisões do dashboard; integração não foi desabilitada.
+- Removido grace period de 45 s dos caminhos ativos.
+- Power deixa de usar `homeassistant.toggle`; direção passa a ser explícita.
+
+### Performance
+- árvores globais button-card/streamline não são mais parseadas pela shell ativa.
+- Lovelace usa `resource_mode: yaml` com núcleo necessário; `.storage/lovelace_resources` permanece intacto para rollback.
+- subviews de cômodo, câmeras, Roborock, planta e Music são chunks sob demanda.
+- o cold start pré-carrega somente o backdrop da seção atual.
+- todos os JS gerados do dashboard recebem irmãos Brotli e gzip frescos a cada build.
+- `window.brunoStartup` registra marcas de bootstrap e quantidade/bytes de recursos observados.
+
+## Rollback rápido
+
+Há cópia dos arquivos anteriores em `_rollback/20260820-pre-full-candidate/`.
+Para rollback físico, copie de volta para o Everex:
+- `config/configuration.yaml`
+- `config/dashboards/ui-lovelace-main.yaml`
+- `config/packages/active_player.yaml`
+- `config/packages/home_activity.yaml`
+- `config/packages/sala_tv_controls.yaml`
+- `config/www/bruno-ui/cards/bruno-sala-card.js`
+- `config/www/bruno-ui/cards/bruno-media-card.js`
+- `config/www/bruno-ui/core/bruno-shell.js`
+- e o bundle anterior `config/www/dashboard/bruno-dashboard.9t_Xp8gv.js` com `.br/.gz`.
+
+Depois reinicie o Home Assistant. Como a lista `.storage/lovelace_resources` não foi apagada, remover `resource_mode: yaml` restaura imediatamente o modelo anterior de Resources.
+
+## Critério de teste físico
+1. cold load real pelo 5G;
+2. Home sem “Erro de configuração”;
+3. TV ligada por pelo menos 5 minutos: dot/card/hub permanecem ligados mesmo se ADB oscilar;
+4. power liga e desliga; controle remoto abre; arte/título aparecem quando Cast publica mídia;
+5. Spotify play/pause/volume;
+6. Sala/Office/câmeras/cortina/long-press;
+7. abrir Câmeras, Roborock, Planta e Music para validar chunks lazy.
+'''
+          write('docs/34-implementacao-tv-performance-20260820.md',doc)
+          PY
+
+      - name: Install dependencies
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: Validate source before build
+        working-directory: dashboard-src
+        run: |
+          npm run typecheck
+          npm run lint
+          npm run test
+
+      - name: Build split bundle and fresh compression
+        working-directory: dashboard-src
+        run: npm run build
+
+      - name: Point configuration to generated entry and validate
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re, json
+          root=Path.cwd()
+          out=root/'config/www/dashboard'
+          entries=sorted([p for p in out.glob('bruno-dashboard.*.js') if p.is_file()])
+          if len(entries)!=1:
+              raise SystemExit(f'expected one entry bundle, got {[p.name for p in entries]}')
+          entry=entries[0]
+          cfg=(root/'config/configuration.yaml').read_text(encoding='utf-8')
+          cfg,n=re.subn(r'^\s*- /local/dashboard/bruno-dashboard\.[^\s]+\.js\s*$',f'    - /local/dashboard/{entry.name}',cfg,count=1,flags=re.M)
+          if n!=1: raise SystemExit(f'active bundle line replacements={n}')
+          (root/'config/configuration.yaml').write_text(cfg,encoding='utf-8')
+
+          required=[entry,Path(str(entry)+'.br'),Path(str(entry)+'.gz')]
+          chunks=list((out/'chunks').glob('*.js'))
+          if not chunks: raise SystemExit('no lazy chunks generated')
+          for p in required+chunks:
+              if not p.exists(): raise SystemExit(f'missing {p}')
+          for p in chunks:
+              for suffix in ['.br','.gz']:
+                  if not Path(str(p)+suffix).exists(): raise SystemExit(f'missing compressed sibling {p}{suffix}')
+
+          checks={
+            'config/subviews':'dashboard-src/src/config/subviews.config.ts',
+            'room config':'dashboard-src/src/config/rooms.config.ts',
+            'room subview':'dashboard-src/src/components/rooms/bruno-room-subview.ts',
+            'sala card':'config/www/bruno-ui/cards/bruno-sala-card.js',
+            'media card':'config/www/bruno-ui/cards/bruno-media-card.js',
+            'active player':'config/packages/active_player.yaml',
+            'home activity':'config/packages/home_activity.yaml',
+            'tv controls':'config/packages/sala_tv_controls.yaml',
+          }
+          for label,path in checks.items():
+              t=(root/path).read_text(encoding='utf-8')
+              if 'remote.atv' in t: raise SystemExit(f'{label}: remote.atv still active')
+          # ADB may remain in comments/docs/rollback, but not in the active TV authority configs below.
+          for path in checks.values():
+              t=(root/path).read_text(encoding='utf-8')
+              active='\n'.join(line for line in t.splitlines() if not line.lstrip().startswith(('#','//')))
+              if 'media_player.android_tv_192_168_3_17' in active:
+                  raise SystemExit(f'ADB still active in {path}')
+
+          print('ENTRY',entry.name,entry.stat().st_size)
+          print('CHUNKS',len(chunks))
+          for p in sorted(chunks): print('CHUNK',p.name,p.stat().st_size,Path(str(p)+'.br').stat().st_size)
+          print('ENTRY_BR',Path(str(entry)+'.br').stat().st_size)
+          PY
+          node scripts/validation/check-yaml.mjs
+
+      - name: Commit full candidate
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git status --short
+          git commit -m 'feat: implementar candidata integral TV e cold-start [generated candidate]'
+          git push origin HEAD:fix/mobile-runtime-tv-curtain-20260819

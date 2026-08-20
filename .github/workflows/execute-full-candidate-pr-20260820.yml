@@ -36,16 +36,20 @@ jobs:
           cache: npm
           cache-dependency-path: dashboard-src/package-lock.json
 
-      - name: Apply complete diagnosed implementation
+      - name: Materialize candidate when needed
         if: steps.guard.outputs.skip != 'true'
         shell: bash
         run: |
-          python3 scripts/build/apply-full-candidate-20260820.py
-          python3 scripts/build/finalize-tv-android-20260820.py
-          rm -f dashboard-src/src/diagnostics/startup-metrics.ts
-          sed -i "s#import './diagnostics/startup-metrics';#import './services/performance/boot-metrics';#" dashboard-src/src/main.ts
-          sed -i "/const nav = performance.getEntriesByType('navigation')/d" dashboard-src/src/services/performance/boot-metrics.ts
-          sed -i "s#'dashboard-src/src/diagnostics/startup-metrics.ts'#'dashboard-src/src/services/performance/boot-metrics.ts'#" docs/34-implementacao-tv-performance-20260820.md || true
+          if grep -Fq "TV: Android TV é a fonte única de estado, mídia e artwork" dashboard-src/src/config/subviews.config.ts; then
+            echo 'candidate sources already materialized; preserving them'
+          else
+            python3 scripts/build/apply-full-candidate-20260820.py
+            python3 scripts/build/finalize-tv-android-20260820.py
+            rm -f dashboard-src/src/diagnostics/startup-metrics.ts
+            sed -i "s#import './diagnostics/startup-metrics';#import './services/performance/boot-metrics';#" dashboard-src/src/main.ts
+            sed -i "/const nav = performance.getEntriesByType('navigation')/d" dashboard-src/src/services/performance/boot-metrics.ts
+            sed -i "s#'dashboard-src/src/diagnostics/startup-metrics.ts'#'dashboard-src/src/services/performance/boot-metrics.ts'#" docs/34-implementacao-tv-performance-20260820.md || true
+          fi
 
       - name: Install dependencies
         if: steps.guard.outputs.skip != 'true'
@@ -79,6 +83,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
+          find config/www/dashboard -type f \( -name '*.js' -o -name '*.br' -o -name '*.gz' -o -name 'manifest.json' \) -print0 | xargs -0 git add -f --
           git status --short
-          git commit -m 'feat: implementar candidata integral TV e cold-start [generated candidate]'
+          git commit -m 'feat: publicar candidata integral TV e cold-start [generated candidate]'
           git push origin HEAD:fix/mobile-runtime-tv-curtain-20260819

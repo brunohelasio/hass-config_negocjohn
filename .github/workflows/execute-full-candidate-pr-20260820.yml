@@ -1,0 +1,103 @@
+name: Execute full candidate on PR
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  execute:
+    if: ${{ github.head_ref == 'fix/mobile-runtime-tv-curtain-20260819' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Guard generated commit
+        id: guard
+        shell: bash
+        run: |
+          if git log -1 --pretty=%B | grep -Fq '[generated candidate]'; then
+            echo 'skip=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'skip=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Extract implementation and validation programs
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import textwrap
+          src=Path('.github/workflows/build-full-candidate-20260820.yml').read_text(encoding='utf-8').splitlines()
+          blocks=[]; current=None
+          for line in src:
+              if "python3 <<'PY'" in line:
+                  current=[]
+                  continue
+              if current is not None and line.strip() == 'PY':
+                  blocks.append(textwrap.dedent('\n'.join(current))+'\n')
+                  current=None
+                  continue
+              if current is not None:
+                  current.append(line)
+          if len(blocks) < 2:
+              raise SystemExit(f'expected >=2 python blocks, got {len(blocks)}')
+          Path('/tmp/apply-full-candidate.py').write_text(blocks[0],encoding='utf-8')
+          Path('/tmp/validate-full-candidate.py').write_text(blocks[1],encoding='utf-8')
+          print('extracted',len(blocks),'python blocks')
+          PY
+
+      - name: Apply complete diagnosed implementation
+        if: steps.guard.outputs.skip != 'true'
+        run: python3 /tmp/apply-full-candidate.py
+
+      - name: Install dependencies
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: Typecheck lint tests
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: |
+          npm run typecheck
+          npm run lint
+          npm run test
+
+      - name: Build split bundle and fresh compression
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run build
+
+      - name: Validate generated candidate
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          python3 /tmp/validate-full-candidate.py
+          node scripts/validation/check-yaml.mjs
+
+      - name: Commit and push full candidate
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git status --short
+          git commit -m 'feat: implementar candidata integral TV e cold-start [generated candidate]'
+          git push origin HEAD:fix/mobile-runtime-tv-curtain-20260819

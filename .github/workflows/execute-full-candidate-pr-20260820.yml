@@ -53,6 +53,7 @@ jobs:
             sed -i "s#'dashboard-src/src/diagnostics/startup-metrics.ts'#'dashboard-src/src/services/performance/boot-metrics.ts'#" docs/34-implementacao-tv-performance-20260820.md || true
           fi
           python3 scripts/build/fix-physical-round2-20260820.py
+          python3 scripts/build/fix-validator-round2-20260820.py
 
       - name: Install dependencies
         if: steps.guard.outputs.skip != 'true'

@@ -58,6 +58,7 @@ jobs:
             python3 scripts/build/fix-validator-round2-20260820.py
             python3 scripts/build/fix-physical-round3-20260820.py
           fi
+          sed -i 's/catch (_error) {}/catch { \/\* localStorage opcional *\/ }/g' dashboard-src/src/components/rooms/bruno-room-subview.ts
 
       - name: Install dependencies
         if: steps.guard.outputs.skip != 'true'

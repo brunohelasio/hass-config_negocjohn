@@ -810,16 +810,14 @@ export class BrunoRoomTile extends LitElement {
       display: block;
     }
 
-    /* Assets V2: maquetes numa tela QUADRADA de 512x512 com cerca de 5% de
-       margem transparente em volta. Os cards atuais usam PNGs "tight", em que o
-       desenho encosta na borda do arquivo — por isso a mesma regra de CSS
-       produz alturas diferentes nos dois.
+    /* Assets V3: as fontes 1254x1254 sao normalizadas pelo pipeline para
+       canvas 512x512, caixa visual de ~460px, centro X=256 e base Y=485. Esse
+       envelope replica a geometria que este tile ja foi calibrado para usar;
+       por isso escala e translacao abaixo permanecem deliberadamente iguais.
 
-       Estes tres valores existem para o CONTEUDO OPACO cair onde cai o do card
-       real: altura de 81,7px e topo 2,3px acima da caixa do icone, que e o que
-       alinha o desenho com a temperatura na coluna da direita. Medido com a
-       caixa alfa de cada arquivo, nao calibrado no olho. A margem varia de 24 a
-       32px entre os oito arquivos, o que deixa 1,2px de dispersao residual. */
+       A normalizacao e feita por PAR ON/OFF com a mesma transformacao, evitando
+       salto de tamanho/posicao no crossfade. O WebP reduz transferencia sem
+       aumentar o bitmap decodificado que o browser mantem em memoria. */
     .room-asset {
       position: absolute;
       top: 0;
@@ -1502,21 +1500,19 @@ export class BrunoRoomTile extends LitElement {
     const lines = this._statusLines();
     const dots = this._dots();
 
-    // Caminho explicito da configuracao, nao montado por convencao: o Q. Casal
-    // usa "-generated-v3" e existe um "-tight" orfao com outra dimensao, que a
-    // convencao carregava por engano.
-    // ANTERIOR (rollback): '20260803-normalized-2'
+    // Caminho explicito da configuracao. Na V3 a extensao pertence ao proprio
+    // asset para o renderer nao impor um formato e permitir evolucao sem nova
+    // regra de convencao.
     //
-    // Maquetes premium de 2026-08-08. A família inteira foi regerada com a Sala
-    // como âncora de câmera, lente, plataforma e direção de luz — e desta vez
-    // com caixa óptica IDÊNTICA nos 16 (460x452 em +26+34, centro X 256, último
-    // Y 485). Os pares ON/OFF têm máscara alfa igual pixel a pixel, então a
-    // troca de estado não desloca nem redimensiona nada.
+    // ANTERIOR (rollback V2): const v = '20260808-maquetes-premium-1';
+    // ANTERIOR (rollback V2): `${room.assetOff}.png?v=${v}` / `${room.assetOn}.png?v=${v}`
     //
-    // Os arquivos anteriores estão em _archive/assets/v2-anterior-20260808/.
-    const v = '20260808-maquetes-premium-1';
-    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.png?v=${v}` : '';
-    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.png?v=${v}` : '';
+    // V3 de 2026-08-21: fontes 1254x1254 normalizadas para 512x512 e WebP q82.
+    // O cache-bust muda junto com a familia; depois da primeira carga o browser
+    // reutiliza os 16 arquivos sem depender de invalidacao manual.
+    const v = '20260821-v3-webp-1';
+    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}?v=${v}` : '';
+    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}?v=${v}` : '';
 
     const cardClasses = [
       'room-card',
@@ -1565,10 +1561,10 @@ export class BrunoRoomTile extends LitElement {
           <div class="room-icon" aria-hidden="true">
             <span class="room-asset-wrap">
               ${off
-                ? html`<img class="room-asset room-asset-off" src=${off} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-off" src=${off} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${on ? 'low' : 'high'} />`
                 : nothing}
               ${onImg
-                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${on ? 'high' : 'low'} />`
                 : nothing}
             </span>
           </div>

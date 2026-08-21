@@ -25,7 +25,7 @@ A centralização vertical usa o mecanismo atual do Browser Mod/HA (`--dialog-su
 - commit/push da candidata gerada: OK.
 
 ## Candidata validada
-- head gerado: `a00b8ee494fe9dd45b79c5adc1e7893bf5e9fc50`;
+- head final: `11539518cd87aeb8038cebba3a6f94f92e45a0e5`;
 - bundle: `bruno-dashboard.CAlKI3vO.js`.
 
 ## Instalação mínima sobre a round5

@@ -391,7 +391,7 @@ function Fi() {
   }), customElements.get("bruno-icon") || customElements.define("bruno-icon", l);
 })();
 const ct = "bento-sidebar-liquid-card";
-class q extends HTMLElement {
+class S extends HTMLElement {
   // Estados que NAO contam como atividade, para o microindicador da rail.
   static estadosInativos = /* @__PURE__ */ new Set([
     "",
@@ -406,14 +406,14 @@ class q extends HTMLElement {
   ]);
   static getStubConfig() {
     return {
-      top_items: q.defaultTopItems,
-      bottom_items: q.defaultBottomItems
+      top_items: S.defaultTopItems,
+      bottom_items: S.defaultBottomItems
     };
   }
   setConfig(e) {
     this._config = {
-      top_items: q.defaultTopItems,
-      bottom_items: q.defaultBottomItems,
+      top_items: S.defaultTopItems,
+      bottom_items: S.defaultBottomItems,
       ...e
     }, this._render();
   }
@@ -438,7 +438,7 @@ class q extends HTMLElement {
     const t = e ? this._hass?.states?.[e] : void 0;
     if (!t) return !1;
     const a = String(t.state || "").toLowerCase(), i = String(e).split(".")[0];
-    return ["binary_sensor", "light", "switch"].includes(i) ? a === "on" : i === "media_player" ? ["playing", "paused", "buffering", "on"].includes(a) : !q.estadosInativos.has(a);
+    return ["binary_sensor", "light", "switch"].includes(i) ? a === "on" : i === "media_player" ? ["playing", "paused", "buffering", "on"].includes(a) : !S.estadosInativos.has(a);
   }
   _contarAmbientesAtivos() {
     const e = this._config?.overflow_hint?.rooms;
@@ -581,7 +581,7 @@ class q extends HTMLElement {
     const e = [
       ...this._items("top_items").map((l, c) => ({ item: l, section: "top", index: c })),
       ...this._items("bottom_items").map((l, c) => ({ item: l, section: "bottom", index: c }))
-    ].filter((l) => l.item?.hide_on_phone), t = this._config?.phone_more || {}, a = Array.isArray(t.keys) ? t.keys.map(String) : null, i = a ? e.filter((l) => a.indexOf(String(l.item?.key)) !== -1) : e, r = q._escape(t.label || "Mais"), n = q.icons[t.icon || "more"] || q.icons.more, s = q._escape(
+    ].filter((l) => l.item?.hide_on_phone), t = this._config?.phone_more || {}, a = Array.isArray(t.keys) ? t.keys.map(String) : null, i = a ? e.filter((l) => a.indexOf(String(l.item?.key)) !== -1) : e, r = S._escape(t.label || "Mais"), n = S.icons[t.icon || "more"] || S.icons.more, s = S._escape(
       i.map((l) => l.item?.key).filter(Boolean).join(" ")
     );
     this.shadowRoot.innerHTML = `
@@ -1307,8 +1307,8 @@ class q extends HTMLElement {
         <div class="more-sheet" id="moreSheet" hidden>
           ${i.map(({ item: l, section: c, index: p }) => `
             <button class="more-item" type="button" data-section="${c}_items" data-index="${p}">
-              ${q.icons[l?.icon] || q.icons.circle}
-              <span>${q._escape(l?.label || l?.key || "Item")}</span>
+              ${S.icons[l?.icon] || S.icons.circle}
+              <span>${S._escape(l?.label || l?.key || "Item")}</span>
               ${this._indicatorMarkup(l)}
             </button>
           `).join("")}
@@ -1335,7 +1335,7 @@ class q extends HTMLElement {
     this._moreSheetEl && !this._moreSheetEl.hidden && (this._moreSheetEl.hidden = !0), this._moreToggleEl?.classList.remove("is-open");
   }
   _button(e, t, a) {
-    const i = e?.selected ? " selected" : "", r = q._escape(e?.label || e?.key || e?.icon || "Item"), n = q.icons[e?.icon] || q.icons.circle, c = (e?.tap_action || e?.action || {}).action === "none" ? ' aria-disabled="true" tabindex="-1"' : "";
+    const i = e?.selected ? " selected" : "", r = S._escape(e?.label || e?.key || e?.icon || "Item"), n = S.icons[e?.icon] || S.icons.circle, c = (e?.tap_action || e?.action || {}).action === "none" ? ' aria-disabled="true" tabindex="-1"' : "";
     return `
       <button
         class="nav-button${i}"
@@ -1344,7 +1344,7 @@ class q extends HTMLElement {
         aria-label="${r}"
         data-section="${t}_items"
         data-index="${a}"
-        data-key="${q._escape(e?.key || "")}"
+        data-key="${S._escape(e?.key || "")}"
         ${e?.hide_on_phone ? 'data-hide-phone=""' : ""}
         ${c}
       >
@@ -1398,19 +1398,19 @@ class q extends HTMLElement {
     return String(e).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 }
-q.defaultTopItems = [
+S.defaultTopItems = [
   { key: "home", icon: "home", label: "Home", selected: !0, tap_action: { action: "none" } },
   { key: "music", icon: "music", label: "Musica", tap_action: { action: "navigate", navigation_path: "/lovelace/mass-media" } }
 ];
-q.defaultBottomItems = [
+S.defaultBottomItems = [
   { key: "power", icon: "power", label: "Power", tap_action: { action: "navigate", navigation_path: "/" } }
 ];
-q.icons = new Proxy({}, {
+S.icons = new Proxy({}, {
   get(o, e) {
     return globalThis.BrunoIcons?.render(String(e || "circle")) || globalThis.BrunoIcons?.render("circle") || "";
   }
 });
-customElements.get(ct) || customElements.define(ct, q);
+customElements.get(ct) || customElements.define(ct, S);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: ct,
@@ -5121,17 +5121,17 @@ html.bruno-liquid-route-transition::after {
   html.bruno-liquid-route-transition::after { -webkit-backdrop-filter: none; backdrop-filter: none; animation-duration: 180ms; }
 }
 `;
-function qr(o) {
+function Sr(o) {
   return Object.entries(o).map(([e, t]) => `  --${e}: ${String(t).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function Sr(o = globalThis.document) {
+function qr(o = globalThis.document) {
   if (!o?.head) return null;
   if (!ae()?.tokens)
     return console.error("[BrunoJosh] VisionOS base unavailable; Josh was not applied."), null;
   let t = o.getElementById(Kt);
   return t || (t = o.createElement("style"), t.id = Kt, o.head.appendChild(t)), t.textContent = `:root {
-${qr(ti())}
+${Sr(ti())}
 }
 ${kr}`, t;
 }
@@ -5146,7 +5146,7 @@ globalThis.BrunoJosh = {
   get states() {
     return ae()?.states || {};
   },
-  apply: Sr,
+  apply: qr,
   feedback: (...o) => ae()?.feedback?.(...o) || !1,
   routeTransition: (...o) => ae()?.routeTransition?.(...o)
 };
@@ -5266,9 +5266,9 @@ function Ar() {
       return n[c.current]?.label || n[s()]?.label || "VisionOS";
     },
     apply(f, m = {}) {
-      const x = l(f || B), S = n[x]?.api || n[s()]?.api;
-      if (!S?.apply) return null;
-      const $ = S.apply(m.styleOptions || void 0);
+      const x = l(f || B), q = n[x]?.api || n[s()]?.api;
+      if (!q?.apply) return null;
+      const $ = q.apply(m.styleOptions || void 0);
       return c.current = x, m.persist !== !1 && d(x), globalThis.BrunoLiquidGlass = b, globalThis.dispatchEvent?.(new CustomEvent("bruno-theme-changed", {
         detail: { key: x, label: n[x]?.label || x }
       })), $;
@@ -13866,7 +13866,7 @@ class D extends HTMLElement {
     const t = [{ value: e.graphCurrent ?? 0, time: Date.now() - 1 }, { value: e.graphCurrent ?? 0, time: Date.now() }], a = e.points.length >= 2 ? e.points : t, i = 360, r = 100, n = 0, s = 10, l = 20, c = a.map((M) => M.value), p = Math.min(e.period.lowerBound, ...c), d = Math.max(1, ...c), h = Math.max(1, d - p), b = (M) => a.length <= 1 ? n : n + M / (a.length - 1) * (i - n * 2), u = (M) => s + (d - M) / h * (r - s - l), g = a.map((M, H) => {
       const we = b(H).toFixed(2), ke = u(M.value).toFixed(2);
       return `${H ? "L" : "M"} ${we} ${ke}`;
-    }).join(" "), f = b(0).toFixed(2), m = b(a.length - 1).toFixed(2), x = (r - l).toFixed(2), S = `${g} L ${m} ${x} L ${f} ${x} Z`, $ = e.graphCurrent == null ? "--" : `${Number(e.graphCurrent).toFixed(e.period.unit === "W" ? 0 : 2).replace(".00", "")} ${e.period.unit}`, z = this._comparison(e);
+    }).join(" "), f = b(0).toFixed(2), m = b(a.length - 1).toFixed(2), x = (r - l).toFixed(2), q = `${g} L ${m} ${x} L ${f} ${x} Z`, $ = e.graphCurrent == null ? "--" : `${Number(e.graphCurrent).toFixed(e.period.unit === "W" ? 0 : 2).replace(".00", "")} ${e.period.unit}`, z = this._comparison(e);
     return `
       <svg viewBox="0 0 ${i} ${r}" preserveAspectRatio="none" role="img" aria-label="${D._escapeAttr($)}">
         <defs>
@@ -13883,7 +13883,7 @@ class D extends HTMLElement {
             </feMerge>
           </filter>
         </defs>
-        <path d="${S}" fill="url(#bruno-energy-area)"></path>
+        <path d="${q}" fill="url(#bruno-energy-area)"></path>
         <path d="${g}" fill="none" stroke="#6FB8FF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" filter="url(#bruno-energy-glow)"></path>
         <text x="18" y="94" class="axis-label">${D._escape($)}</text>
         <text x="342" y="94" text-anchor="end" class="comparison-label">${D._escape(z)}</text>
@@ -18435,7 +18435,7 @@ class k extends HTMLElement {
     !this._config || !this._hass || this._allPlayerIds().forEach((e) => {
       const t = this._state(e), a = t?.attributes || {}, i = String(t?.state || "").toLowerCase(), r = this._playerConfig(e), n = this._cleanText(a.media_title), s = a.media_image_url || a.entity_picture || "", l = this._isStandbyImage(s) ? "" : s, c = this._cleanText(a.app_name), p = this._cleanText(a.source), d = String(a.media_content_type || c || "").toLowerCase(), h = this._mediaHistory?.[e];
       if (h && l && l !== h.image && !["unknown", "unavailable"].includes(i) && this._storeLastValidMedia({ ...h, image: l, savedAt: h.savedAt || Date.now() }), !this._hasPlayback(i, n, l, c, p, e, r, d, a)) return;
-      const b = this._mediaServiceName(e, r, d, c, p), u = b === "Spotify" ? this._spotifyRoomTarget(a) : null, g = u ? { ...r, ...u } : r, f = this._mediaRoomName(g), m = this._cleanText(a.media_artist), x = this._cleanText(a.media_album_name), S = this._cleanText(a.media_series_title), $ = this._cleanText(a.media_channel), z = this._fallbackMediaTitle(b, f, e), M = this._firstText([n, z, this._playerName(e)]), H = this._firstText([m, x, S, $], [M]);
+      const b = this._mediaServiceName(e, r, d, c, p), u = b === "Spotify" ? this._spotifyRoomTarget(a) : null, g = u ? { ...r, ...u } : r, f = this._mediaRoomName(g), m = this._cleanText(a.media_artist), x = this._cleanText(a.media_album_name), q = this._cleanText(a.media_series_title), $ = this._cleanText(a.media_channel), z = this._fallbackMediaTitle(b, f, e), M = this._firstText([n, z, this._playerName(e)]), H = this._firstText([m, x, q, $], [M]);
       this._storeLastValidMedia({
         entity: e,
         image: l,
@@ -18490,14 +18490,14 @@ class k extends HTMLElement {
     l && (!s || this._isStandbyImage(s)) ? c = this._lastArtworkByPlayer[e] : this._isStandbyImage(s) && (c = "");
     const p = this._cleanText((i ? a?.attributes?.media_title : "") || t?.attributes?.media_title), d = this._cleanText((i ? a?.attributes?.media_artist : "") || t?.attributes?.media_artist), h = this._cleanText((i ? a?.attributes?.media_album_name : "") || t?.attributes?.media_album_name), b = this._cleanText((i ? a?.attributes?.app_name : "") || t?.attributes?.app_name), u = this._cleanText((i ? a?.attributes?.source : "") || t?.attributes?.source), g = this._cleanText((i ? a?.attributes?.media_series_title : "") || t?.attributes?.media_series_title), f = this._cleanText((i ? a?.attributes?.media_channel : "") || t?.attributes?.media_channel), m = Number((i ? a?.attributes?.media_duration : void 0) ?? t?.attributes?.media_duration ?? 0);
     let x = Number((i ? a?.attributes?.media_position : void 0) ?? t?.attributes?.media_position ?? 0);
-    const S = Number(t?.attributes?.volume_level ?? (i ? a?.attributes?.volume_level : void 0) ?? 0), $ = String(
+    const q = Number(t?.attributes?.volume_level ?? (i ? a?.attributes?.volume_level : void 0) ?? 0), $ = String(
       (i ? a?.attributes?.media_content_type : "") || t?.attributes?.media_content_type || t?.attributes?.app_name || ""
-    ).toLowerCase(), z = ["video", "movie", "tvshow", "episode", "channel"].some((Si) => $.includes(Si)), M = Date.parse((i ? a?.attributes?.media_position_updated_at : "") || t?.attributes?.media_position_updated_at || "");
+    ).toLowerCase(), z = ["video", "movie", "tvshow", "episode", "channel"].some((qi) => $.includes(qi)), M = Date.parse((i ? a?.attributes?.media_position_updated_at : "") || t?.attributes?.media_position_updated_at || "");
     n === "playing" && Number.isFinite(M) && Number.isFinite(x) && (x += Math.max(0, (Date.now() - M) / 1e3)), Number.isFinite(m) && m > 0 && (x = Math.min(x, m));
     const H = this._mediaServiceName(e, r, $, b, u), we = {
       ...t?.attributes || {},
       ...i ? a?.attributes || {} : {}
-    }, ke = H === "Spotify" ? this._spotifyRoomTarget(we) : null, qe = ke ? { ...r, ...ke } : r, Ht = this._mediaRoomName(qe), A = this._hasPlayback(n, p, s, b, u, e, r, $, we), yi = this._fallbackMediaTitle(H, Ht, e), Fe = A ? this._firstText([p, b, u, yi, this._playerName(e)]) : "", Dt = A ? this._firstText([d, h, g, f, b, u, this._stateLabel(n)], [Fe]) : "", Pt = A ? [H, Ht].filter(Boolean).join(" ") : "", Ge = r.icon || this._playerIcon(e), We = qe.path || qe.navigation_path || "", Ze = qe.section || "";
+    }, ke = H === "Spotify" ? this._spotifyRoomTarget(we) : null, Se = ke ? { ...r, ...ke } : r, Ht = this._mediaRoomName(Se), A = this._hasPlayback(n, p, s, b, u, e, r, $, we), yi = this._fallbackMediaTitle(H, Ht, e), Fe = A ? this._firstText([p, b, u, yi, this._playerName(e)]) : "", Dt = A ? this._firstText([d, h, g, f, b, u, this._stateLabel(n)], [Fe]) : "", Pt = A ? [H, Ht].filter(Boolean).join(" ") : "", Ge = r.icon || this._playerIcon(e), We = Se.path || Se.navigation_path || "", Ze = Se.section || "";
     A && ["playing", "paused"].includes(String(n).toLowerCase()) && this._storeLastValidMedia({
       entity: e,
       image: c,
@@ -18511,14 +18511,14 @@ class k extends HTMLElement {
       section: Ze,
       savedAt: Date.now()
     });
-    const Se = e === U && this._isActive(e), I = A ? null : Se ? this._mediaHistory?.[e] || null : this._mediaHistory?.[e] || this._latestMediaSnapshot(), jt = A ? c : c || I?.image || this._lastArtworkByPlayer?.[e] || "", wi = A ? Fe : I?.title || (Se ? "TV ligada" : ""), ki = A ? Dt : I?.secondary || I?.artist || (Se ? this._firstText([b, u, "Sala"]) : ""), qi = A ? Pt : I?.context || (Se ? "TV Sala" : "");
+    const qe = e === U && this._isActive(e), I = A ? null : qe ? this._mediaHistory?.[e] || null : this._mediaHistory?.[e] || this._latestMediaSnapshot(), jt = A ? c : c || I?.image || this._lastArtworkByPlayer?.[e] || "", wi = A ? Fe : I?.title || (qe ? "TV ligada" : ""), ki = A ? Dt : I?.secondary || I?.artist || (qe ? this._firstText([b, u, "Sala"]) : ""), Si = A ? Pt : I?.context || (qe ? "TV Sala" : "");
     return {
       entity: A ? e : I?.entity || e,
       image: jt,
       title: wi,
       artist: A ? d && d !== "Pronto para tocar" ? d : "" : I?.artist || "",
       secondary: ki,
-      context: qi,
+      context: Si,
       statusLabel: A ? n === "paused" ? "Pausado" : n === "on" ? this._stateLabel(n) : "Reproduzindo agora" : "Nenhuma mídia ativa",
       state: n,
       serviceName: A ? H : I?.serviceName || H,
@@ -18527,7 +18527,7 @@ class k extends HTMLElement {
       section: A ? Ze : I?.section || Ze,
       duration: Number.isFinite(m) ? m : 0,
       position: Number.isFinite(x) ? Math.max(0, x) : 0,
-      volumePercent: Number.isFinite(S) ? Math.max(0, Math.min(100, Math.round(S * 100))) : 0,
+      volumePercent: Number.isFinite(q) ? Math.max(0, Math.min(100, Math.round(q * 100))) : 0,
       isVideo: z,
       isPlaying: n === "playing",
       isActive: A,
@@ -18689,7 +18689,7 @@ class k extends HTMLElement {
     if (["google tv launcher", "android tv launcher", "launcher", "ambient mode", "backdrop", "home screen", "android settings"].some((f) => d.includes(f))) return !1;
     if (n === U) {
       if (!this._tvPowered()) return !1;
-      const f = !!(a && !this._isStandbyImage(a)), m = Number(c?.media_duration) > 0 || Number(c?.media_position) > 0, x = [t, i, r].map((S) => this._cleanText(S)).filter(Boolean).some((S) => !/^(?:tv|android tv|smart tv pro|hdmi\s*\d+)$/i.test(S));
+      const f = !!(a && !this._isStandbyImage(a)), m = Number(c?.media_duration) > 0 || Number(c?.media_position) > 0, x = [t, i, r].map((q) => this._cleanText(q)).filter(Boolean).some((q) => !/^(?:tv|android tv|smart tv pro|hdmi\s*\d+)$/i.test(q));
       return f || m || x ? ["playing", "paused", "buffering"].includes(p) ? !0 : this._isVideoPlayer(n, s, l, i, r) : !1;
     }
     if (["playing", "paused"].includes(p)) return !!(this._cleanText(t) || a || this._cleanText(i));
@@ -19945,7 +19945,7 @@ window.customCards.push({
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Ie = globalThis, $t = Ie.ShadowRoot && (Ie.ShadyCSS === void 0 || Ie.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, Mt = Symbol(), qa = /* @__PURE__ */ new WeakMap();
+const Ie = globalThis, $t = Ie.ShadowRoot && (Ie.ShadyCSS === void 0 || Ie.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, Mt = Symbol(), Sa = /* @__PURE__ */ new WeakMap();
 let ri = class {
   constructor(e, t, a) {
     if (this._$cssResult$ = !0, a !== Mt) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
@@ -19956,7 +19956,7 @@ let ri = class {
     const t = this.t;
     if ($t && e === void 0) {
       const a = t !== void 0 && t.length === 1;
-      a && (e = qa.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), a && qa.set(t, e));
+      a && (e = Sa.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), a && Sa.set(t, e));
     }
     return e;
   }
@@ -19971,13 +19971,13 @@ const ko = (o) => new ri(typeof o == "string" ? o : o + "", void 0, Mt), xe = (o
     throw Error("Value passed to 'css' function must be a 'css' function result: " + n + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(i) + o[r + 1], o[0]);
   return new ri(t, o, Mt);
-}, qo = (o, e) => {
+}, So = (o, e) => {
   if ($t) o.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
   else for (const t of e) {
     const a = document.createElement("style"), i = Ie.litNonce;
     i !== void 0 && a.setAttribute("nonce", i), a.textContent = t.cssText, o.appendChild(a);
   }
-}, Sa = $t ? (o) => o : (o) => o instanceof CSSStyleSheet ? ((e) => {
+}, qa = $t ? (o) => o : (o) => o instanceof CSSStyleSheet ? ((e) => {
   let t = "";
   for (const a of e.cssRules) t += a.cssText;
   return ko(t);
@@ -19987,7 +19987,7 @@ const ko = (o) => new ri(typeof o == "string" ? o : o + "", void 0, Mt), xe = (o
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: So, defineProperty: Ao, getOwnPropertyDescriptor: Oo, getOwnPropertyNames: Eo, getOwnPropertySymbols: Co, getPrototypeOf: To } = Object, Be = globalThis, Aa = Be.trustedTypes, $o = Aa ? Aa.emptyScript : "", Mo = Be.reactiveElementPolyfillSupport, ue = (o, e) => o, qt = { toAttribute(o, e) {
+const { is: qo, defineProperty: Ao, getOwnPropertyDescriptor: Oo, getOwnPropertyNames: Eo, getOwnPropertySymbols: Co, getPrototypeOf: To } = Object, Be = globalThis, Aa = Be.trustedTypes, $o = Aa ? Aa.emptyScript : "", Mo = Be.reactiveElementPolyfillSupport, ue = (o, e) => o, St = { toAttribute(o, e) {
   switch (e) {
     case Boolean:
       o = o ? $o : null;
@@ -20015,7 +20015,7 @@ const { is: So, defineProperty: Ao, getOwnPropertyDescriptor: Oo, getOwnProperty
       }
   }
   return t;
-} }, oi = (o, e) => !So(o, e), Oa = { attribute: !0, type: String, converter: qt, reflect: !1, useDefault: !1, hasChanged: oi };
+} }, oi = (o, e) => !qo(o, e), Oa = { attribute: !0, type: String, converter: St, reflect: !1, useDefault: !1, hasChanged: oi };
 Symbol.metadata ??= Symbol("metadata"), Be.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
 let te = class extends HTMLElement {
   static addInitializer(e) {
@@ -20071,8 +20071,8 @@ let te = class extends HTMLElement {
     const t = [];
     if (Array.isArray(e)) {
       const a = new Set(e.flat(1 / 0).reverse());
-      for (const i of a) t.unshift(Sa(i));
-    } else e !== void 0 && t.push(Sa(e));
+      for (const i of a) t.unshift(qa(i));
+    } else e !== void 0 && t.push(qa(e));
     return t;
   }
   static _$Eu(e, t) {
@@ -20098,7 +20098,7 @@ let te = class extends HTMLElement {
   }
   createRenderRoot() {
     const e = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return qo(e, this.constructor.elementStyles), e;
+    return So(e, this.constructor.elementStyles), e;
   }
   connectedCallback() {
     this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(!0), this._$EO?.forEach((e) => e.hostConnected?.());
@@ -20114,14 +20114,14 @@ let te = class extends HTMLElement {
   _$ET(e, t) {
     const a = this.constructor.elementProperties.get(e), i = this.constructor._$Eu(e, a);
     if (i !== void 0 && a.reflect === !0) {
-      const r = (a.converter?.toAttribute !== void 0 ? a.converter : qt).toAttribute(t, a.type);
+      const r = (a.converter?.toAttribute !== void 0 ? a.converter : St).toAttribute(t, a.type);
       this._$Em = e, r == null ? this.removeAttribute(i) : this.setAttribute(i, r), this._$Em = null;
     }
   }
   _$AK(e, t) {
     const a = this.constructor, i = a._$Eh.get(e);
     if (i !== void 0 && this._$Em !== i) {
-      const r = a.getPropertyOptions(i), n = typeof r.converter == "function" ? { fromAttribute: r.converter } : r.converter?.fromAttribute !== void 0 ? r.converter : qt;
+      const r = a.getPropertyOptions(i), n = typeof r.converter == "function" ? { fromAttribute: r.converter } : r.converter?.fromAttribute !== void 0 ? r.converter : St;
       this._$Em = i;
       const s = n.fromAttribute(t, r.type);
       this[i] = s ?? this._$Ej?.get(i) ?? s, this._$Em = null;
@@ -20545,8 +20545,10 @@ const Wo = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
     id: "sala",
     name: "Sala",
     section: "sala",
-    assetOff: "v2/sala-off",
-    assetOn: "v2/sala-on",
+    // ANTERIOR (rollback V2): assetOff: 'v2/sala-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/sala-on',
+    assetOff: "v3/sala-off.webp",
+    assetOn: "v3/sala-on.webp",
     grammaticalGender: "f",
     toggleTarget: "light.sala_switch_2",
     activeSensor: "sensor.living_room_active",
@@ -20605,8 +20607,10 @@ const Wo = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
     id: "office",
     name: "Office",
     section: "office",
-    assetOff: "v2/office-off",
-    assetOn: "v2/office-on",
+    // ANTERIOR (rollback V2): assetOff: 'v2/office-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/office-on',
+    assetOff: "v3/office-off.webp",
+    assetOn: "v3/office-on.webp",
     grammaticalGender: "m",
     toggleTarget: "light.office_switch_3",
     activeSensor: "sensor.office_active",
@@ -20667,8 +20671,10 @@ const Wo = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
     id: "cozinha",
     name: "Cozinha",
     section: "cozinha",
-    assetOff: "v2/cozinha-off",
-    assetOn: "v2/cozinha-on",
+    // ANTERIOR (rollback V2): assetOff: 'v2/cozinha-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/cozinha-on',
+    assetOff: "v3/cozinha-off.webp",
+    assetOn: "v3/cozinha-on.webp",
     grammaticalGender: "f",
     toggleTarget: "light.cz_luz_principal",
     activeSensor: "sensor.cozinha_active",
@@ -20715,8 +20721,10 @@ const Wo = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
   {
     id: "lavabo",
     name: "Lavabo",
-    assetOff: "v2/lavabo-off",
-    assetOn: "v2/lavabo-on",
+    // ANTERIOR (rollback V2): assetOff: 'v2/lavabo-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/lavabo-on',
+    assetOff: "v3/lavabo-off.webp",
+    assetOn: "v3/lavabo-on.webp",
     grammaticalGender: "m",
     toggleTarget: "light.grupo_luzes_lavabo",
     activeSensor: "sensor.lavabo_active",
@@ -20752,8 +20760,10 @@ const Wo = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
     id: "casal",
     name: "Casal",
     section: "casal",
-    assetOff: "v2/quarto-casal-off",
-    assetOn: "v2/quarto-casal-on",
+    // ANTERIOR (rollback V2): assetOff: 'v2/quarto-casal-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/quarto-casal-on',
+    assetOff: "v3/casal-off.webp",
+    assetOn: "v3/casal-on.webp",
     grammaticalGender: "m",
     toggleTarget: "light.qc_luz_principal",
     activeSensor: "sensor.quarto_casal_active",
@@ -20806,8 +20816,10 @@ const Wo = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
     id: "marina",
     name: "Marina",
     section: "marina",
-    assetOff: "v2/quarto-menina-off",
-    assetOn: "v2/quarto-menina-on",
+    // ANTERIOR (rollback V2): assetOff: 'v2/quarto-menina-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/quarto-menina-on',
+    assetOff: "v3/marina-off.webp",
+    assetOn: "v3/marina-on.webp",
     grammaticalGender: "m",
     toggleTarget: "light.quarto_marina_switch_4",
     activeSensor: "sensor.quarto_marina_active",
@@ -20855,8 +20867,10 @@ const Wo = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
     id: "miguel",
     name: "Miguel",
     section: "miguel",
-    assetOff: "v2/quarto-bebe-off",
-    assetOn: "v2/quarto-bebe-on",
+    // ANTERIOR (rollback V2): assetOff: 'v2/quarto-bebe-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/quarto-bebe-on',
+    assetOff: "v3/miguel-off.webp",
+    assetOn: "v3/miguel-on.webp",
     grammaticalGender: "m",
     toggleTarget: "light.quarto_miguel_switch_2",
     activeSensor: "sensor.quarto_miguel_active",
@@ -20895,8 +20909,10 @@ const Wo = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
   {
     id: "corredor",
     name: "Corredor",
-    assetOff: "v2/corredor-off",
-    assetOn: "v2/corredor-on",
+    // ANTERIOR (rollback V2): assetOff: 'v2/corredor-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/corredor-on',
+    assetOff: "v3/corredor-off.webp",
+    assetOn: "v3/corredor-on.webp",
     grammaticalGender: "m",
     toggleTarget: "light.corredor_switch_1",
     statusDots: [
@@ -21410,7 +21426,7 @@ He.customCards.some((o) => o.type === "bruno-diagnostics") || He.customCards.pus
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
 const Na = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.wrHBS7wU.js"),
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.CboymIGE.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.CBHmR7Dy.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
@@ -21421,10 +21437,10 @@ async function on(o) {
   let e = za.get(o);
   e || (e = Na[o](), za.set(o, e)), await e;
 }
-async function St(o) {
-  o && (await on(o.type), o.card && await St(o.card), Array.isArray(o.cards) && await Promise.all(o.cards.map(St)));
+async function qt(o) {
+  o && (await on(o.type), o.card && await qt(o.card), Array.isArray(o.cards) && await Promise.all(o.cards.map(qt)));
 }
-globalThis.BrunoLazyModules = { ensureForConfig: St };
+globalThis.BrunoLazyModules = { ensureForConfig: qt };
 function nn(o) {
   const e = o / 6e4, t = o / 36e5, a = o / 864e5;
   return e < 1 ? "<1m" : e < 60 ? `${Math.trunc(e)}m` : t < 24 ? `${Math.trunc(t)}h` : `${Math.trunc(a)}d`;
@@ -22138,16 +22154,14 @@ class xn extends Z {
       display: block;
     }
 
-    /* Assets V2: maquetes numa tela QUADRADA de 512x512 com cerca de 5% de
-       margem transparente em volta. Os cards atuais usam PNGs "tight", em que o
-       desenho encosta na borda do arquivo — por isso a mesma regra de CSS
-       produz alturas diferentes nos dois.
+    /* Assets V3: as fontes 1254x1254 sao normalizadas pelo pipeline para
+       canvas 512x512, caixa visual de ~460px, centro X=256 e base Y=485. Esse
+       envelope replica a geometria que este tile ja foi calibrado para usar;
+       por isso escala e translacao abaixo permanecem deliberadamente iguais.
 
-       Estes tres valores existem para o CONTEUDO OPACO cair onde cai o do card
-       real: altura de 81,7px e topo 2,3px acima da caixa do icone, que e o que
-       alinha o desenho com a temperatura na coluna da direita. Medido com a
-       caixa alfa de cada arquivo, nao calibrado no olho. A margem varia de 24 a
-       32px entre os oito arquivos, o que deixa 1,2px de dispersao residual. */
+       A normalizacao e feita por PAR ON/OFF com a mesma transformacao, evitando
+       salto de tamanho/posicao no crossfade. O WebP reduz transferencia sem
+       aumentar o bitmap decodificado que o browser mantem em memoria. */
     .room-asset {
       position: absolute;
       top: 0;
@@ -22818,7 +22832,7 @@ class xn extends Z {
   render() {
     const e = this._room, t = this._hass;
     if (!e) return _;
-    const a = t ? Ha(t, e.entities.lightGroup ?? e.entities.lights?.[0]) : !1, i = t ? Da(t, e.entities.temperature, "°") : "--", r = t ? Da(t, e.entities.humidity, "%") : "--", n = !!(e.entities.temperature ?? e.entities.humidity), s = this._statusLines(), l = this._dots(), c = "20260820-webp-runtime-2", p = e.assetOff ? `/local/bruno-ui/assets/${e.assetOff}.webp?v=${c}` : "", d = e.assetOn ? `/local/bruno-ui/assets/${e.assetOn}.webp?v=${c}` : "", h = [
+    const a = t ? Ha(t, e.entities.lightGroup ?? e.entities.lights?.[0]) : !1, i = t ? Da(t, e.entities.temperature, "°") : "--", r = t ? Da(t, e.entities.humidity, "%") : "--", n = !!(e.entities.temperature ?? e.entities.humidity), s = this._statusLines(), l = this._dots(), c = "20260821-v3-webp-1", p = e.assetOff ? `/local/bruno-ui/assets/${e.assetOff}?v=${c}` : "", d = e.assetOn ? `/local/bruno-ui/assets/${e.assetOn}?v=${c}` : "", h = [
       "room-card",
       a ? "is-room-on" : "",
       this._tileMode ? "is-tile" : "",
@@ -22846,8 +22860,8 @@ class xn extends Z {
         >
           <div class="room-icon" aria-hidden="true">
             <span class="room-asset-wrap">
-              ${p ? v`<img class="room-asset room-asset-off" src=${p} alt="" decoding="async" />` : _}
-              ${d ? v`<img class="room-asset room-asset-on" src=${d} alt="" decoding="async" />` : _}
+              ${p ? v`<img class="room-asset room-asset-off" src=${p} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${a ? "low" : "high"} />` : _}
+              ${d ? v`<img class="room-asset room-asset-on" src=${d} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${a ? "high" : "low"} />` : _}
             </span>
           </div>
 
@@ -22921,7 +22935,7 @@ class xn extends Z {
                     </div>` : _}
                 <div class="room-popup-lights">
                   ${g.lights.map((m) => {
-      const x = t?.states[m.entity], S = String(x?.state ?? "").toLowerCase(), $ = S === "on", z = !x || ["unavailable", "unknown", "none", ""].includes(S), M = [
+      const x = t?.states[m.entity], q = String(x?.state ?? "").toLowerCase(), $ = q === "on", z = !x || ["unavailable", "unknown", "none", ""].includes(q), M = [
         "room-popup-light",
         $ ? "is-on" : "",
         z ? "is-unavailable" : ""
@@ -22997,7 +23011,7 @@ class kn {
   }
 }
 const j = new kn();
-function qn(o) {
+function Sn(o) {
   const e = j.obter(o.type);
   if (e)
     return e.create(o);
@@ -23005,7 +23019,7 @@ function qn(o) {
 function Ua(o) {
   return j.obter(o.type)?.entities(o) ?? [];
 }
-function Sn(o) {
+function qn(o) {
   const e = [], t = /* @__PURE__ */ new Set();
   for (const [a, i] of o.entries()) {
     const r = i.id || `posição ${a}`;
@@ -23331,7 +23345,7 @@ class Mn extends Z {
       </p>`;
     let a = this._controles.get(e);
     if (!a) {
-      const i = qn(t);
+      const i = Sn(t);
       if (!i) return _;
       a = i, this._controles.set(e, a);
     }
@@ -23349,7 +23363,7 @@ class Mn extends Z {
     this._motivo = "", Ya(nt, () => super.update(e), t || "outro");
   }
   render() {
-    const e = Sn(this._dispositivos), t = this._idAberto;
+    const e = qn(this._dispositivos), t = this._idAberto;
     return v`
       <div class="painel" role="dialog" aria-modal="true" aria-label="Dispositivos">
         <header class="cabecalho">
@@ -23688,10 +23702,10 @@ function Dn(o, e, t) {
         for (let g = c * r; g < (c + 1) * r; g++) {
           const f = (u * e + g) * 4;
           if ((o[f + 3] ?? 0) < 128) continue;
-          const m = o[f] ?? 0, x = o[f + 1] ?? 0, S = o[f + 2] ?? 0;
-          if (d++, !xi(m, x, S)) continue;
+          const m = o[f] ?? 0, x = o[f + 1] ?? 0, q = o[f + 2] ?? 0;
+          if (d++, !xi(m, x, q)) continue;
           h++;
-          const $ = m >> 4 | x >> 4 << 4 | S >> 4 << 8, z = (p.get($) ?? 0) + 1;
+          const $ = m >> 4 | x >> 4 << 4 | q >> 4 << 8, z = (p.get($) ?? 0) + 1;
           p.set($, z), b = Math.max(b, z);
         }
       s[l][c] = d >= 48 && h / d >= 0.82 && b / d >= 0.55;
@@ -23959,4 +23973,4 @@ export {
   un as v,
   ns as w
 };
-//# sourceMappingURL=main.D5RLO2O6.js.map
+//# sourceMappingURL=main.bwJRORGB.js.map

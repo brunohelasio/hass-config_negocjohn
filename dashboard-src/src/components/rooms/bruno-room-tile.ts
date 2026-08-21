@@ -814,16 +814,14 @@ export class BrunoRoomTile extends LitElement {
       display: block;
     }
 
-    /* Assets V2: maquetes numa tela QUADRADA de 512x512 com cerca de 5% de
-       margem transparente em volta. Os cards atuais usam PNGs "tight", em que o
-       desenho encosta na borda do arquivo — por isso a mesma regra de CSS
-       produz alturas diferentes nos dois.
+    /* Assets V3: as fontes 1254x1254 sao normalizadas pelo pipeline para
+       canvas 512x512, caixa visual de ~460px, centro X=256 e base Y=485. Esse
+       envelope replica a geometria que este tile ja foi calibrado para usar;
+       por isso escala e translacao abaixo permanecem deliberadamente iguais.
 
-       Estes tres valores existem para o CONTEUDO OPACO cair onde cai o do card
-       real: altura de 81,7px e topo 2,3px acima da caixa do icone, que e o que
-       alinha o desenho com a temperatura na coluna da direita. Medido com a
-       caixa alfa de cada arquivo, nao calibrado no olho. A margem varia de 24 a
-       32px entre os oito arquivos, o que deixa 1,2px de dispersao residual. */
+       A normalizacao e feita por PAR ON/OFF com a mesma transformacao, evitando
+       salto de tamanho/posicao no crossfade. O WebP reduz transferencia sem
+       aumentar o bitmap decodificado que o browser mantem em memoria. */
     .room-asset {
       position: absolute;
       top: 0;
@@ -1523,9 +1521,9 @@ export class BrunoRoomTile extends LitElement {
     // Os arquivos anteriores estão em _archive/assets/v2-anterior-20260808/.
     // WebP preserva a mesma caixa óptica dos PNGs, com payload drasticamente menor.
     // Ambos os estados são carregados já no tile: nada de aparição progressiva em idle.
-    const v = '20260820-webp-runtime-2';
-    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.webp?v=${v}` : '';
-    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.webp?v=${v}` : '';
+    const v = '20260821-v3-webp-1';
+    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}?v=${v}` : '';
+    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}?v=${v}` : '';
 
     const cardClasses = [
       'room-card',
@@ -1574,10 +1572,10 @@ export class BrunoRoomTile extends LitElement {
           <div class="room-icon" aria-hidden="true">
             <span class="room-asset-wrap">
               ${off
-                ? html`<img class="room-asset room-asset-off" src=${off} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-off" src=${off} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${on ? 'low' : 'high'} />`
                 : nothing}
               ${onImg
-                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${on ? 'high' : 'low'} />`
                 : nothing}
             </span>
           </div>

@@ -1,3 +1,4 @@
+# retry 2: script de microblur agora distingue backdrop de -webkit-backdrop
 name: Validate Josh round4 final
 
 on:

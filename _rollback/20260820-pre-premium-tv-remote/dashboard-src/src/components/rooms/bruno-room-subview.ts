@@ -3350,222 +3350,18 @@ export class BrunoRoomSubview extends LitElement {
   private _appsTvAbertos = false;
 
   /**
-   * Popup premium do controle remoto da Sala.
+   * Popup do controle remoto.
    *
-   * Mantém `browser_mod.popup` + `universal-remote-card` para preservar o caminho
-   * funcional já validado em `remote.smart_tv_pro`, mas troca apenas a composição
-   * visual. O material replica a mesma base VisionOS das bottom sheets do telefone:
-   * gradientes translúcidos + blur moderado, sem animações contínuas ou filtros
-   * caros por botão. Assim o popup ganha hierarquia visual sem reabrir a regressão
-   * de performance remota já estabilizada nas rounds anteriores.
+   * Mesmo evento e mesma carga das subviews atuais — `ll-custom` com a chamada
+   * de `browser_mod.popup` e o `universal-remote-card`. Quem monta a janela é o
+   * browser_mod, exatamente como hoje; só a Sala tem controle (`remote.atv`).
    */
   private _abrirControleRemoto(): void {
     const remoto = this._idDe('tvRemote');
     if (!remoto) return;
     const mediaId = this._idDe('tvMedia') ?? this._idDe('tv');
-    // TV_REMOTE_PREMIUM_RUNTIME: round5
-
-    const comando = (command: string) => ({
-      action: 'perform-action',
-      perform_action: 'remote.send_command',
-      target: { entity_id: remoto },
-      data: { command },
-    });
-    const tecla = (
-      nome: string,
-      icone: string,
-      command: string,
-      label: string,
-      repetir = false,
-    ) => ({
-      type: 'button',
-      name: nome,
-      icon: icone,
-      label,
-      tap_action: comando(command),
-      ...(repetir ? { hold_action: { action: 'repeat' } } : {}),
-    });
-
-    const estilosVision = `
-      :host {
-        --remote-accent: rgba(244, 194, 96, 0.96);
-        --remote-accent-soft: rgba(244, 194, 96, 0.16);
-        --remote-text: rgba(248, 248, 250, 0.96);
-        --remote-muted: rgba(235, 235, 242, 0.58);
-        display: block;
-        width: min(390px, calc(100vw - 28px));
-        max-width: 100%;
-        box-sizing: border-box;
-        padding: 10px 10px 14px;
-        border-radius: 30px;
-        overflow: hidden;
-        color: var(--remote-text);
-        background:
-          radial-gradient(360px 240px at 18% -10%, rgba(255, 255, 255, 0.105), transparent 64%),
-          linear-gradient(
-            180deg,
-            rgba(255, 255, 255, 0.060),
-            rgba(255, 255, 255, 0.018) 48%,
-            rgba(0, 0, 0, 0.035)
-          ),
-          rgba(0, 0, 0, 0.300);
-        backdrop-filter: blur(20px) saturate(1.18) brightness(1.03);
-        -webkit-backdrop-filter: blur(20px) saturate(1.18) brightness(1.03);
-        border: 1px solid rgba(255, 255, 255, 0.075);
-        box-shadow:
-          0 24px 68px -24px rgba(0, 0, 0, 0.78),
-          inset 0 1px 0 rgba(255, 255, 255, 0.11);
-      }
-
-      .row {
-        width: 100%;
-        box-sizing: border-box;
-        justify-content: center;
-        align-items: center;
-        gap: 0;
-        margin: 0 0 10px;
-      }
-
-      #row-1,
-      #row-3,
-      #row-4 {
-        padding: 4px;
-        border-radius: 20px;
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.016)),
-          rgba(10, 12, 16, 0.24);
-        border: 1px solid rgba(255, 255, 255, 0.055);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
-      }
-
-      #row-2 {
-        margin: 2px 0 14px;
-      }
-
-      remote-button {
-        flex: 1 1 0;
-        min-width: 0;
-        margin: 0;
-        padding: 0;
-        border-radius: 16px;
-        background: transparent;
-        --icon-size: 25px;
-        --icon-color: var(--remote-text);
-      }
-
-      remote-button::part(button) {
-        min-height: 60px;
-        border-radius: 16px;
-        background: transparent;
-        transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
-      }
-
-      remote-button:active::part(button) {
-        transform: scale(0.965);
-        background: rgba(255, 255, 255, 0.075);
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
-      }
-
-      remote-button::part(icon) {
-        color: var(--remote-text);
-        filter: drop-shadow(0 1px 5px rgba(0,0,0,0.25));
-      }
-
-      remote-button::part(label) {
-        color: var(--remote-muted);
-        font-size: 9.5px;
-        line-height: 1.1;
-        font-weight: 650;
-        letter-spacing: 0.075em;
-        text-transform: uppercase;
-        margin-top: 5px;
-      }
-
-      #power::part(icon),
-      #home::part(icon) {
-        color: var(--remote-accent);
-        filter: drop-shadow(0 0 7px rgba(244, 194, 96, 0.34));
-      }
-
-      #power::part(button),
-      #home::part(button) {
-        background: radial-gradient(circle at 50% 50%, var(--remote-accent-soft), transparent 68%);
-      }
-
-      #row-4 remote-button::part(button) {
-        min-height: 54px;
-      }
-
-      #row-4 remote-button::part(label) {
-        font-size: 8.5px;
-        letter-spacing: 0.055em;
-      }
-
-      @media (max-width: 390px) {
-        :host {
-          width: calc(100vw - 20px);
-          border-radius: 26px;
-          padding: 8px 8px 12px;
-        }
-        remote-button::part(button) { min-height: 56px; }
-        #row-4 remote-button::part(button) { min-height: 50px; }
-      }
-    `;
-
-    const estiloNavegacao = `
-      :host {
-        width: min(72vw, 282px);
-        max-width: 282px;
-        margin: 2px auto;
-        --icon-size: 29px;
-        --icon-color: rgba(248, 248, 250, 0.90);
-      }
-
-      .circlepad {
-        aspect-ratio: 1 / 1;
-        border-radius: 50%;
-        overflow: hidden;
-        background:
-          radial-gradient(circle at 42% 32%, rgba(255,255,255,0.075), transparent 43%),
-          linear-gradient(145deg, rgba(36,39,45,0.84), rgba(10,12,16,0.82));
-        border: 1px solid rgba(255,255,255,0.09);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.08),
-          inset 0 -14px 30px rgba(0,0,0,0.18),
-          0 18px 38px -26px rgba(0,0,0,0.95);
-      }
-
-      #up::part(button),
-      #down::part(button),
-      #left::part(button),
-      #right::part(button) {
-        background: transparent;
-      }
-
-      #up::part(icon),
-      #down::part(icon),
-      #left::part(icon),
-      #right::part(icon) {
-        color: rgba(248,248,250,0.88);
-        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.34));
-      }
-
-      #center::part(button) {
-        background:
-          radial-gradient(circle at 42% 30%, rgba(244,194,96,0.24), rgba(26,24,21,0.80) 58%, rgba(12,13,16,0.92));
-        border: 1px solid rgba(244,194,96,0.40);
-        box-shadow:
-          inset 0 1px 0 rgba(255,255,255,0.11),
-          0 0 0 5px rgba(244,194,96,0.045),
-          0 0 22px rgba(244,194,96,0.13);
-      }
-
-      #center::part(icon) {
-        color: rgba(255, 223, 158, 0.98);
-        --icon-size: 31px;
-        filter: drop-shadow(0 0 7px rgba(244,194,96,0.30));
-      }
-    `;
+    const comando = (command: string) => ({ action: 'perform-action', perform_action: 'remote.send_command', target: { entity_id: remoto }, data: { command } });
+    const tecla = (nome: string, icone: string, command: string) => ({ type: 'button', name: nome, icon: icone, tap_action: comando(command) });
 
     this.dispatchEvent(
       new CustomEvent('ll-custom', {
@@ -3576,16 +3372,14 @@ export class BrunoRoomSubview extends LitElement {
           browser_mod: {
             service: 'browser_mod.popup',
             data: {
-              title: 'Controle da TV',
+              title: 'Smart TV Remote',
               tag: 'tv_remote',
               style:
-                '--popup-background-color: rgba(6,8,12,0.18); --popup-min-width: min(390px, 96vw); --popup-max-width: min(430px, 96vw); --popup-border-width: 0;',
+                '--popup-background-color: rgba(21,25,35,0.92); --popup-min-width: min(380px, 95vw); --popup-max-width: min(430px, 95vw); --popup-border-width: 0;',
               content: {
                 type: 'custom:universal-remote-card',
                 remote_id: remoto,
                 media_player_id: mediaId,
-                autofill: false,
-                haptics: true,
                 rows: [
                   ['power', 'input', 'menu'],
                   ['navigation'],
@@ -3593,30 +3387,27 @@ export class BrunoRoomSubview extends LitElement {
                   ['volume_down', 'volume_up', 'channel_down', 'channel_up'],
                 ],
                 custom_actions: [
-                  tecla('power', 'mdi:power', 'POWER', 'Power'),
-                  tecla('input', 'mdi:import', 'TV', 'Entrada'),
-                  tecla('menu', 'mdi:menu', 'MENU', 'Menu'),
+                  tecla('power', 'mdi:power', 'POWER'),
+                  tecla('input', 'mdi:import', 'TV'),
+                  tecla('menu', 'mdi:menu', 'MENU'),
                   {
                     type: 'circlepad',
                     name: 'navigation',
-                    icon: 'mdi:check-bold',
-                    label: 'OK',
+                    icon: 'mdi:checkbox-blank-circle',
                     tap_action: comando('DPAD_CENTER'),
                     up: { icon: 'mdi:chevron-up', tap_action: comando('DPAD_UP'), hold_action: { action: 'repeat' } },
                     down: { icon: 'mdi:chevron-down', tap_action: comando('DPAD_DOWN'), hold_action: { action: 'repeat' } },
                     left: { icon: 'mdi:chevron-left', tap_action: comando('DPAD_LEFT'), hold_action: { action: 'repeat' } },
                     right: { icon: 'mdi:chevron-right', tap_action: comando('DPAD_RIGHT'), hold_action: { action: 'repeat' } },
-                    styles: estiloNavegacao,
                   },
-                  tecla('back', 'mdi:keyboard-backspace', 'BACK', 'Voltar'),
-                  tecla('home', 'mdi:home', 'HOME', 'Início'),
-                  tecla('mute', 'mdi:volume-off', 'MUTE', 'Mudo'),
-                  tecla('volume_down', 'mdi:volume-minus', 'VOLUME_DOWN', 'Vol −', true),
-                  tecla('volume_up', 'mdi:volume-plus', 'VOLUME_UP', 'Vol +', true),
-                  tecla('channel_down', 'mdi:chevron-down', 'CHANNEL_DOWN', 'Canal −', true),
-                  tecla('channel_up', 'mdi:chevron-up', 'CHANNEL_UP', 'Canal +', true),
+                  tecla('back', 'mdi:keyboard-backspace', 'BACK'),
+                  tecla('home', 'mdi:home', 'HOME'),
+                  tecla('mute', 'mdi:volume-mute', 'MUTE'),
+                  tecla('volume_down', 'mdi:volume-minus', 'VOLUME_DOWN'),
+                  tecla('volume_up', 'mdi:volume-plus', 'VOLUME_UP'),
+                  tecla('channel_down', 'mdi:chevron-down', 'CHANNEL_DOWN'),
+                  tecla('channel_up', 'mdi:chevron-up', 'CHANNEL_UP'),
                 ],
-                styles: estilosVision,
               },
             },
           },

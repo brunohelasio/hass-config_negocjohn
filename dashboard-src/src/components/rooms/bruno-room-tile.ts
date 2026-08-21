@@ -3,6 +3,7 @@ import type { Hass } from '@/models/home-assistant';
 import { ROOMS, SPOTIFY_ENTITY, type RoomConfig, type RoomDot } from '@/config/rooms.config';
 import { lightsSummary, semanticLine, isRoomOn, sensorDisplay } from '@/services/entities/room-state';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
+import { isTvPoweredStable } from '@/services/entities/media-state';
 import { ObservadorDeEntidades, resumirMotivo } from '@/services/state/entity-watcher';
 import { conectou, desconectou, medirRender } from '@/diagnostics/runtime/probe';
 
@@ -507,6 +508,9 @@ export class BrunoRoomTile extends LitElement {
     const aceso = (d: RoomDot): boolean => {
       const estados = (d.states ?? []).map((s) => s.toLowerCase());
       const porEntidade = (d.entities ?? []).some((id) => {
+        if (d.offDelayMs && id.startsWith('media_player.')) {
+          return isTvPoweredStable(hass, id, Date.now(), d.offDelayMs);
+        }
         const e = hass.states[id];
         return Boolean(e) && estados.includes(String(e?.state ?? '').toLowerCase());
       });

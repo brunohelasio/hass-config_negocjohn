@@ -1,0 +1,421 @@
+{
+  "count": 16,
+  "files": [
+    {
+      "index": 1,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (1).png",
+      "bytes": 1532758,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        21,
+        1254,
+        1254
+      ],
+      "alpha_coverage_pct": 55.694,
+      "alpha_transparent_px": 696717,
+      "alpha_semitransparent_px": 875223,
+      "alpha_opaque_px": 576,
+      "mean_rgb": [
+        107.98,
+        92.5,
+        76.93
+      ],
+      "mean_luminance": 94.67
+    },
+    {
+      "index": 2,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (2).png",
+      "bytes": 1826034,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        46,
+        1254,
+        1246
+      ],
+      "alpha_coverage_pct": 56.651,
+      "alpha_transparent_px": 681673,
+      "alpha_semitransparent_px": 889629,
+      "alpha_opaque_px": 1214,
+      "mean_rgb": [
+        112.12,
+        94.75,
+        75.94
+      ],
+      "mean_luminance": 97.09
+    },
+    {
+      "index": 3,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (3).png",
+      "bytes": 1596905,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        21,
+        1254,
+        1222
+      ],
+      "alpha_coverage_pct": 57.282,
+      "alpha_transparent_px": 671748,
+      "alpha_semitransparent_px": 900272,
+      "alpha_opaque_px": 496,
+      "mean_rgb": [
+        104.15,
+        87.43,
+        70.25
+      ],
+      "mean_luminance": 89.74
+    },
+    {
+      "index": 4,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (4).png",
+      "bytes": 1732629,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        21,
+        1254,
+        1246
+      ],
+      "alpha_coverage_pct": 59.168,
+      "alpha_transparent_px": 642083,
+      "alpha_semitransparent_px": 929277,
+      "alpha_opaque_px": 1156,
+      "mean_rgb": [
+        116.75,
+        100.15,
+        82.12
+      ],
+      "mean_luminance": 102.38
+    },
+    {
+      "index": 5,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (5).png",
+      "bytes": 1886112,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        54,
+        1254,
+        1236
+      ],
+      "alpha_coverage_pct": 60.839,
+      "alpha_transparent_px": 615815,
+      "alpha_semitransparent_px": 956305,
+      "alpha_opaque_px": 396,
+      "mean_rgb": [
+        114.81,
+        100.41,
+        84.66
+      ],
+      "mean_luminance": 102.33
+    },
+    {
+      "index": 6,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_12 (6).png",
+      "bytes": 1821188,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        53,
+        1254,
+        1214
+      ],
+      "alpha_coverage_pct": 58.737,
+      "alpha_transparent_px": 648874,
+      "alpha_semitransparent_px": 922904,
+      "alpha_opaque_px": 738,
+      "mean_rgb": [
+        113.55,
+        97.53,
+        81.61
+      ],
+      "mean_luminance": 99.79
+    },
+    {
+      "index": 7,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_12 (7).png",
+      "bytes": 1891119,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        87,
+        1254,
+        1245
+      ],
+      "alpha_coverage_pct": 59.463,
+      "alpha_transparent_px": 637452,
+      "alpha_semitransparent_px": 934624,
+      "alpha_opaque_px": 440,
+      "mean_rgb": [
+        120.44,
+        104.08,
+        89.03
+      ],
+      "mean_luminance": 106.47
+    },
+    {
+      "index": 8,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_27 (1).png",
+      "bytes": 1678967,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        51,
+        1254,
+        1214
+      ],
+      "alpha_coverage_pct": 57.106,
+      "alpha_transparent_px": 674514,
+      "alpha_semitransparent_px": 897381,
+      "alpha_opaque_px": 621,
+      "mean_rgb": [
+        90.66,
+        83.73,
+        78.1
+      ],
+      "mean_luminance": 84.8
+    },
+    {
+      "index": 9,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (2).png",
+      "bytes": 1414512,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        99,
+        1254,
+        1254
+      ],
+      "alpha_coverage_pct": 55.748,
+      "alpha_transparent_px": 695877,
+      "alpha_semitransparent_px": 875418,
+      "alpha_opaque_px": 1221,
+      "mean_rgb": [
+        93.57,
+        87.54,
+        82.97
+      ],
+      "mean_luminance": 88.49
+    },
+    {
+      "index": 10,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (3).png",
+      "bytes": 1735441,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        17,
+        1254,
+        1254
+      ],
+      "alpha_coverage_pct": 56.465,
+      "alpha_transparent_px": 684587,
+      "alpha_semitransparent_px": 886519,
+      "alpha_opaque_px": 1410,
+      "mean_rgb": [
+        89.53,
+        82.96,
+        76.58
+      ],
+      "mean_luminance": 83.89
+    },
+    {
+      "index": 11,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (4).png",
+      "bytes": 1449772,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        21,
+        1254,
+        1220
+      ],
+      "alpha_coverage_pct": 57.608,
+      "alpha_transparent_px": 666624,
+      "alpha_semitransparent_px": 905524,
+      "alpha_opaque_px": 368,
+      "mean_rgb": [
+        85.07,
+        76.89,
+        69.34
+      ],
+      "mean_luminance": 78.08
+    },
+    {
+      "index": 12,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (5).png",
+      "bytes": 1582210,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        0,
+        1254,
+        1220
+      ],
+      "alpha_coverage_pct": 59.252,
+      "alpha_transparent_px": 640768,
+      "alpha_semitransparent_px": 930763,
+      "alpha_opaque_px": 985,
+      "mean_rgb": [
+        95.99,
+        90.27,
+        85.05
+      ],
+      "mean_luminance": 91.11
+    },
+    {
+      "index": 13,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_29 (6).png",
+      "bytes": 1727616,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        77,
+        1254,
+        1246
+      ],
+      "alpha_coverage_pct": 60.931,
+      "alpha_transparent_px": 614368,
+      "alpha_semitransparent_px": 957254,
+      "alpha_opaque_px": 894,
+      "mean_rgb": [
+        92.65,
+        87.26,
+        82.25
+      ],
+      "mean_luminance": 88.04
+    },
+    {
+      "index": 14,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_29 (7).png",
+      "bytes": 1620404,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        165,
+        1254,
+        1206
+      ],
+      "alpha_coverage_pct": 58.528,
+      "alpha_transparent_px": 652146,
+      "alpha_semitransparent_px": 919128,
+      "alpha_opaque_px": 1242,
+      "mean_rgb": [
+        95.19,
+        88.75,
+        83.14
+      ],
+      "mean_luminance": 89.72
+    },
+    {
+      "index": 15,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_29 (8).png",
+      "bytes": 1731727,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        39,
+        1254,
+        1254
+      ],
+      "alpha_coverage_pct": 59.428,
+      "alpha_transparent_px": 638001,
+      "alpha_semitransparent_px": 933987,
+      "alpha_opaque_px": 528,
+      "mean_rgb": [
+        99.78,
+        91.73,
+        85.64
+      ],
+      "mean_luminance": 93.0
+    },
+    {
+      "index": 16,
+      "name": "ChatGPT Image 21 de ago. de 2026, 09_22_38.png",
+      "bytes": 1788548,
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGBA",
+      "alpha_min": 0,
+      "alpha_max": 255,
+      "alpha_bbox": [
+        0,
+        51,
+        1254,
+        1213
+      ],
+      "alpha_coverage_pct": 56.789,
+      "alpha_transparent_px": 679502,
+      "alpha_semitransparent_px": 892308,
+      "alpha_opaque_px": 706,
+      "mean_rgb": [
+        111.38,
+        98.13,
+        84.17
+      ],
+      "mean_luminance": 99.94
+    }
+  ]
+}

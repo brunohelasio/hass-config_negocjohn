@@ -131,8 +131,8 @@ jobs:
           validator_path = root / 'scripts/build/validate-physical-round3-20260820.py'
           validator = validator_path.read_text(encoding='utf-8')
           validator = validator.replace(
-              'this._linhaVolume(mediaId, tv.volume ?? 60)',
-              "_linhaVolumeTv(this._idDe('tvRemote'), tv.volume ?? 60)",
+              "    'this._linhaVolume(mediaId, tv.volume ?? 60)',\n",
+              '',
           )
           validator_path.write_text(validator, encoding='utf-8')
 

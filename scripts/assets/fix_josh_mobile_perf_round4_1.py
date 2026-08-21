@@ -7,14 +7,19 @@ SALA = ROOT / 'config/www/bruno-ui/cards/bruno-sala-card.js'
 
 def replace_once(path: Path, old: str, new: str, label: str) -> None:
     text = path.read_text(encoding='utf-8')
-    if new in text:
+    old_count = text.count(old)
+    new_count = text.count(new)
+    if old_count == 1:
+        path.write_text(text.replace(old, new, 1), encoding='utf-8')
+        print(f'{label}: aplicado')
+        return
+    if old_count == 0 and new_count >= 1:
         print(f'{label}: ja aplicado')
         return
-    count = text.count(old)
-    if count != 1:
-        raise SystemExit(f'{label}: esperado 1 trecho, encontrado {count}')
-    path.write_text(text.replace(old, new, 1), encoding='utf-8')
-    print(f'{label}: aplicado')
+    raise SystemExit(
+        f'{label}: esperado 1 trecho antigo ou patch ja aplicado; '
+        f'antigo={old_count} novo={new_count}'
+    )
 
 
 # O Josh foi deliberadamente reduzido a microblur de 2px para evitar varias

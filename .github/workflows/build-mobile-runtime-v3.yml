@@ -132,6 +132,6 @@ jobs:
             dashboard-src/src/config/rooms.config.test.ts \
             dashboard-src/src/components/rooms/bruno-room-tile.ts \
             config/configuration.yaml
-          git add -A config/www/dashboard
+          git add -f -A config/www/dashboard
           git commit -m "feat: integrar V3 ao runtime mobile validado [generated candidate]"
           git push origin HEAD:feat/mobile-runtime-v3-20260821

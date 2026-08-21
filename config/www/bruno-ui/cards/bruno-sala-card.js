@@ -1534,6 +1534,51 @@ class BrunoSalaCard extends HTMLElement {
           opacity: 1;
         }
 
+        @media (max-width: 800px) {
+          .sala-card.is-josh-theme {
+            background:
+              radial-gradient(150px 118px at 14% -8%, rgba(255,255,255,0.12), transparent 72%),
+              linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025) 46%, rgba(0,0,0,0.045)),
+              rgba(13,14,17,0.34);
+            border: 1px solid rgba(255,255,255,0.135);
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.13),
+              0 10px 26px rgba(0,0,0,0.19);
+            backdrop-filter: blur(10px) saturate(1.10);
+            -webkit-backdrop-filter: blur(10px) saturate(1.10);
+          }
+          .sala-card.is-josh-theme::before {
+            background:
+              linear-gradient(180deg, rgba(255,255,255,0.085), transparent 36%),
+              linear-gradient(90deg, rgba(255,255,255,0.035), transparent 52%);
+            opacity: 0.72;
+          }
+          .sala-card.is-josh-theme.is-room-on {
+            --text-main: rgba(255,253,248,0.99);
+            --text-soft: rgba(255,246,230,0.72);
+            --text-muted: rgba(255,248,236,0.76);
+            background:
+              radial-gradient(175px 138px at 16% -10%, rgba(255,252,245,0.30), transparent 72%),
+              radial-gradient(155px 120px at 92% 100%, rgba(255,207,135,0.13), transparent 72%),
+              linear-gradient(180deg, rgba(255,250,240,0.18), rgba(255,242,222,0.075) 48%, rgba(44,31,22,0.10)),
+              rgba(30,27,24,0.42);
+            border-color: rgba(255,244,225,0.275);
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.27),
+              inset 0 -1px 0 rgba(255,213,151,0.07),
+              0 0 24px rgba(255,205,132,0.09),
+              0 12px 28px rgba(0,0,0,0.21);
+            backdrop-filter: blur(12px) saturate(1.13) brightness(1.035);
+            -webkit-backdrop-filter: blur(12px) saturate(1.13) brightness(1.035);
+          }
+          .sala-card.is-josh-theme.is-room-on::before {
+            background:
+              radial-gradient(120px 86px at 18% 0%, rgba(255,255,255,0.22), transparent 74%),
+              linear-gradient(180deg, rgba(255,255,255,0.12), transparent 42%);
+            opacity: 0.88;
+          }
+        }
+
         .metric {
           min-width: 36px;
           text-align: center;

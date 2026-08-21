@@ -306,6 +306,7 @@ export const ROOMS: readonly RoomConfig[] = [
       lights: ['light.lavabo_switch_1', 'light.lavabo_switch_2', 'light.lavabo_switch_3'],
       motionRecent: 'binary_sensor.lavabo_motion_recent',
       occupancy: 'binary_sensor.lavabo_occupancy',
+      semanticState: 'sensor.lavabo_semantic_state',
       illuminance: 'sensor.lv_sensor_presenca_iluminancia',
     },
   },

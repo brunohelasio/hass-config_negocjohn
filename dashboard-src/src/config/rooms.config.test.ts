@@ -35,4 +35,12 @@ describe('rooms.config', () => {
     }
   });
 
+
+  it('lavabo e corredor mantem contrato semantico de presenca', () => {
+    const lavabo = ROOMS.find((room) => room.id === 'lavabo');
+    const corredor = ROOMS.find((room) => room.id === 'corredor');
+    expect(lavabo?.entities.semanticState).toBe('sensor.lavabo_semantic_state');
+    expect(corredor?.entities.semanticState).toBe('sensor.corredor_semantic_state');
+  });
+
 });

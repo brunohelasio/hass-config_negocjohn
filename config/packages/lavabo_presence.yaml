@@ -68,3 +68,30 @@ template:
             {{- light }}
           lights_on_count: >-
             {{ expand('light.grupo_luzes_lavabo') | selectattr('state', 'eq', 'on') | list | count }}
+
+      # Linha semantica consumida pelo BrunoRoomTile. O card deixa de parecer
+      # "sem sensor" e, se o Tuya ficar fora do ar, informa isso explicitamente.
+      - name: Lavabo Semantic State
+        default_entity_id: sensor.lavabo_semantic_state
+        unique_id: lavabo_semantic_state
+        icon: mdi:motion-sensor
+        state: >-
+          {% set source = states('binary_sensor.lv_sensor_presenca_movimento') %}
+          {% if source in ['unknown', 'unavailable', 'none', ''] %}sensor_offline
+          {% elif is_state('binary_sensor.lavabo_motion_recent', 'on') %}motion
+          {% elif is_state('binary_sensor.lavabo_occupancy', 'on') %}recent
+          {% else %}none
+          {% endif %}
+        attributes:
+          display: >-
+            {% set source = states('binary_sensor.lv_sensor_presenca_movimento') %}
+            {% if source in ['unknown', 'unavailable', 'none', ''] %}Sensor indisponivel
+            {% elif is_state('binary_sensor.lavabo_motion_recent', 'on') %}Presenca
+            {% elif is_state('binary_sensor.lavabo_occupancy', 'on') %}Presenca recente
+            {% else %}
+            {% endif %}
+          source_entity: binary_sensor.lv_sensor_presenca_movimento
+          source_state: "{{ states('binary_sensor.lv_sensor_presenca_movimento') }}"
+          motion_recent: "{{ states('binary_sensor.lavabo_motion_recent') }}"
+          occupancy: "{{ states('binary_sensor.lavabo_occupancy') }}"
+

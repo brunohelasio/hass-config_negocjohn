@@ -826,7 +826,7 @@ export class BrunoRoomTile extends LitElement {
       position: absolute;
       top: 0;
       left: 0;
-      height: 111%;
+      height: 117%;
       width: auto;
       aspect-ratio: 1 / 1;
       object-fit: contain;
@@ -1205,7 +1205,7 @@ export class BrunoRoomTile extends LitElement {
         height: 62px;
       }
       .room-asset {
-        height: 118%;
+        height: 125%;
       }
     }
 
@@ -1521,7 +1521,7 @@ export class BrunoRoomTile extends LitElement {
     // Os arquivos anteriores estão em _archive/assets/v2-anterior-20260808/.
     // WebP preserva a mesma caixa óptica dos PNGs, com payload drasticamente menor.
     // Ambos os estados são carregados já no tile: nada de aparição progressiva em idle.
-    const v = '20260821-v3-webp-1';
+    const v = '20260821-v3-webp-2';
     const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}?v=${v}` : '';
     const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}?v=${v}` : '';
 

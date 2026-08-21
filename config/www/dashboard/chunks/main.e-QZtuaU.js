@@ -7363,8 +7363,8 @@ class L extends HTMLElement {
         }
 
         .room-asset {
-          width: 94%;
-          height: 94%;
+          width: 100%;
+          height: 100%;
           object-fit: contain;
           opacity: 0;
           transform: translateZ(0);
@@ -10253,14 +10253,13 @@ class L extends HTMLElement {
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${L._roomIcon(e)}</span>
         <picture>
-          <!-- O source V2 e exclusivo do phone; o img preserva integralmente
-               o asset anterior em tablet/desktop e funciona como rollback. -->
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-off.png?v=20260808-maquetes-premium-1">
-          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          <!-- V3 unica em todos os breakpoints; rollback permanece no historico Git. -->
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v3/sala-off.webp?v=20260821-v3-webp-2">
+          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/v3/sala-off.webp?v=20260821-v3-webp-2" alt="" width="512" height="512" loading="eager" decoding="async">
         </picture>
         <picture>
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-on.png?v=20260808-maquetes-premium-1">
-          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v3/sala-on.webp?v=20260821-v3-webp-2">
+          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/v3/sala-on.webp?v=20260821-v3-webp-2" alt="" width="512" height="512" loading="eager" decoding="async">
         </picture>
       </span>
     `;
@@ -21426,7 +21425,7 @@ He.customCards.some((o) => o.type === "bruno-diagnostics") || He.customCards.pus
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
 const Na = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.CboymIGE.js"),
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.CSGjk8zK.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.CBHmR7Dy.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
@@ -22166,7 +22165,7 @@ class xn extends Z {
       position: absolute;
       top: 0;
       left: 0;
-      height: 111%;
+      height: 117%;
       width: auto;
       aspect-ratio: 1 / 1;
       object-fit: contain;
@@ -22545,7 +22544,7 @@ class xn extends Z {
         height: 62px;
       }
       .room-asset {
-        height: 118%;
+        height: 125%;
       }
     }
 
@@ -22832,7 +22831,7 @@ class xn extends Z {
   render() {
     const e = this._room, t = this._hass;
     if (!e) return _;
-    const a = t ? Ha(t, e.entities.lightGroup ?? e.entities.lights?.[0]) : !1, i = t ? Da(t, e.entities.temperature, "°") : "--", r = t ? Da(t, e.entities.humidity, "%") : "--", n = !!(e.entities.temperature ?? e.entities.humidity), s = this._statusLines(), l = this._dots(), c = "20260821-v3-webp-1", p = e.assetOff ? `/local/bruno-ui/assets/${e.assetOff}?v=${c}` : "", d = e.assetOn ? `/local/bruno-ui/assets/${e.assetOn}?v=${c}` : "", h = [
+    const a = t ? Ha(t, e.entities.lightGroup ?? e.entities.lights?.[0]) : !1, i = t ? Da(t, e.entities.temperature, "°") : "--", r = t ? Da(t, e.entities.humidity, "%") : "--", n = !!(e.entities.temperature ?? e.entities.humidity), s = this._statusLines(), l = this._dots(), c = "20260821-v3-webp-2", p = e.assetOff ? `/local/bruno-ui/assets/${e.assetOff}?v=${c}` : "", d = e.assetOn ? `/local/bruno-ui/assets/${e.assetOn}?v=${c}` : "", h = [
       "room-card",
       a ? "is-room-on" : "",
       this._tileMode ? "is-tile" : "",
@@ -23973,4 +23972,4 @@ export {
   un as v,
   ns as w
 };
-//# sourceMappingURL=main.bwJRORGB.js.map
+//# sourceMappingURL=main.e-QZtuaU.js.map

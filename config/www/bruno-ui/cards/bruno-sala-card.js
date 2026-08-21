@@ -1498,8 +1498,8 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .room-asset {
-          width: 94%;
-          height: 94%;
+          width: 100%;
+          height: 100%;
           object-fit: contain;
           opacity: 0;
           transform: translateZ(0);
@@ -4400,14 +4400,13 @@ class BrunoSalaCard extends HTMLElement {
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
         <picture>
-          <!-- O source V2 e exclusivo do phone; o img preserva integralmente
-               o asset anterior em tablet/desktop e funciona como rollback. -->
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-off.png?v=20260808-maquetes-premium-1">
-          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          <!-- V3 unica em todos os breakpoints; rollback permanece no historico Git. -->
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v3/sala-off.webp?v=20260821-v3-webp-2">
+          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/v3/sala-off.webp?v=20260821-v3-webp-2" alt="" width="512" height="512" loading="eager" decoding="async">
         </picture>
         <picture>
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-on.png?v=20260808-maquetes-premium-1">
-          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v3/sala-on.webp?v=20260821-v3-webp-2">
+          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/v3/sala-on.webp?v=20260821-v3-webp-2" alt="" width="512" height="512" loading="eager" decoding="async">
         </picture>
       </span>
     `;

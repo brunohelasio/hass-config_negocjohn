@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/build-josh-on-presence-round4.yml'
       - 'scripts/assets/fix_josh_on_presence_round4.py'
+      - 'scripts/assets/fix_josh_mobile_perf_round4_1.py'
 
 permissions:
   contents: write
@@ -22,6 +23,9 @@ jobs:
 
       - name: Aplicar round4 Josh e presenca
         run: python scripts/assets/fix_josh_on_presence_round4.py
+
+      - name: Preservar microblur Josh
+        run: python scripts/assets/fix_josh_mobile_perf_round4_1.py
 
       - name: Validar escopo estrutural do round4
         run: |
@@ -42,15 +46,19 @@ jobs:
               'tablet 8pct': 'height: 120%;',
               'mobile 8pct': 'height: 127.5%;',
               'Lavabo semantic config': "semanticState: 'sensor.lavabo_semantic_state'",
+              'Josh OFF microblur': 'var(--bruno-josh-microblur, blur(2px)) saturate(1.10)',
+              'Josh ON microblur': 'var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035)',
           }
           for label, needle in required.items():
-              if needle not in tile + '\n' + rooms:
+              if needle not in tile + '\n' + rooms + '\n' + sala:
                   raise SystemExit(f'{label}: ausente')
 
           if '.sala-card.is-josh-theme.is-room-on' not in sala:
               raise SystemExit('Sala nao recebeu material Josh ON do mobile')
           if 'width: 101.5%;' not in sala or 'height: 101.5%;' not in sala:
               raise SystemExit('Sala perdeu escala V3 de ~8%')
+          if 'blur(10px) saturate(1.10)' in tile + sala or 'blur(12px) saturate(1.13)' in tile + sala:
+              raise SystemExit('blur pesado reintroduzido no Josh mobile')
           if 'unique_id: lavabo_semantic_state' not in lavabo:
               raise SystemExit('sensor semantico do Lavabo ausente')
           if "sensor_offline" not in lavabo or "Sensor indisponivel" not in lavabo:
@@ -114,7 +122,7 @@ jobs:
           if old == bundle:
               raise SystemExit('hash do bundle nao mudou; abortando por seguranca')
           indent = matches[0].group(1)
-          repl = f'{indent}# ANTERIOR (rollback Josh/presenca round4): - /local/dashboard/{old}\n{indent}- /local/dashboard/{bundle}'
+          repl = f'{indent}# ANTERIOR (rollback Josh/presenca round4 final): - /local/dashboard/{old}\n{indent}- /local/dashboard/{bundle}'
           p.write_text(pattern.sub(repl, text, count=1), encoding='utf-8')
           print(f'bundle ativo: {old} -> {bundle}')
           PY
@@ -159,5 +167,5 @@ jobs:
           git add config/packages/corredor_presence.yaml
           git add config/configuration.yaml
           git add -f -A config/www/dashboard
-          git commit -m 'fix: destacar Josh ON e restaurar presenca Lavabo Corredor'
+          git commit -m 'fix: destacar Josh ON e restaurar presenca com microblur'
           git push

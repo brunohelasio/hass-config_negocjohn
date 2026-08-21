@@ -1498,8 +1498,8 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .room-asset {
-          width: 100%;
-          height: 100%;
+          width: 101.5%;
+          height: 101.5%;
           object-fit: contain;
           opacity: 0;
           transform: translateZ(0);

@@ -7363,8 +7363,8 @@ class L extends HTMLElement {
         }
 
         .room-asset {
-          width: 100%;
-          height: 100%;
+          width: 101.5%;
+          height: 101.5%;
           object-fit: contain;
           opacity: 0;
           transform: translateZ(0);
@@ -21425,7 +21425,7 @@ He.customCards.some((o) => o.type === "bruno-diagnostics") || He.customCards.pus
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
 const Na = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.CSGjk8zK.js"),
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.Bx0DJnp0.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.CBHmR7Dy.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
@@ -21715,7 +21715,7 @@ class xn extends Z {
     this._timers.clear();
     for (const e of ["room", "nav"]) this._resetGesture(e);
   }
-  get _tileMode() {
+  get _joshHomeMode() {
     if (this._config?.variant !== "tile") return !1;
     if (this._tileModeCache !== void 0) return this._tileModeCache;
     let e = "";
@@ -21725,6 +21725,13 @@ class xn extends Z {
       e = "";
     }
     return this._tileModeCache = e === "on", this._tileModeCache;
+  }
+  get _phoneJoshCard() {
+    const e = typeof globalThis.matchMedia == "function" ? globalThis.matchMedia("(max-width: 800px)").matches : !1;
+    return this._joshHomeMode && e;
+  }
+  get _tileMode() {
+    return this._joshHomeMode && !this._phoneJoshCard;
   }
   /**
    * Liga/desliga uma classe de interação DIRETO no elemento.
@@ -22165,7 +22172,7 @@ class xn extends Z {
       position: absolute;
       top: 0;
       left: 0;
-      height: 117%;
+      height: 120%;
       width: auto;
       aspect-ratio: 1 / 1;
       object-fit: contain;
@@ -22536,6 +22543,12 @@ class xn extends Z {
     }
 
     @media (max-width: 800px) {
+      .room-card.is-josh-phone-card {
+        border-radius: var(--bruno-liquid-card-radius, 22px);
+      }
+      .room-card.is-josh-phone-card .room-action {
+        border-radius: inherit;
+      }
       .room-action {
         padding: clamp(8.58px, 5.03cqi, 14.3px) clamp(9.36px, 5.49cqi, 15.6px) clamp(7.8px, 4.57cqi, 13px) clamp(7.8px, 4.57cqi, 13px);
       }
@@ -22544,7 +22557,7 @@ class xn extends Z {
         height: 62px;
       }
       .room-asset {
-        height: 125%;
+        height: 127.5%;
       }
     }
 
@@ -22834,6 +22847,7 @@ class xn extends Z {
     const a = t ? Ha(t, e.entities.lightGroup ?? e.entities.lights?.[0]) : !1, i = t ? Da(t, e.entities.temperature, "°") : "--", r = t ? Da(t, e.entities.humidity, "%") : "--", n = !!(e.entities.temperature ?? e.entities.humidity), s = this._statusLines(), l = this._dots(), c = "20260821-v3-webp-2", p = e.assetOff ? `/local/bruno-ui/assets/${e.assetOff}?v=${c}` : "", d = e.assetOn ? `/local/bruno-ui/assets/${e.assetOn}?v=${c}` : "", h = [
       "room-card",
       a ? "is-room-on" : "",
+      this._phoneJoshCard ? "is-josh-phone-card" : "",
       this._tileMode ? "is-tile" : "",
       this._tileMode && this._config?.divider_left ? "has-divider" : ""
     ].filter(Boolean).join(" "), b = this._config?.name ?? e.name, u = !!(e.section ?? e.popup), g = e.popup, f = globalThis.BrunoThemeManager?.current?.() === "josh" ? "josh" : "default";
@@ -23972,4 +23986,4 @@ export {
   un as v,
   ns as w
 };
-//# sourceMappingURL=main.e-QZtuaU.js.map
+//# sourceMappingURL=main.D0gNdm4a.js.map

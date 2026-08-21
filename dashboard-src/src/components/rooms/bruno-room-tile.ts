@@ -249,7 +249,7 @@ export class BrunoRoomTile extends LitElement {
    */
   private _tileModeCache: boolean | undefined;
 
-  private get _tileMode(): boolean {
+  private get _joshHomeMode(): boolean {
     if (this._config?.variant !== 'tile') return false;
     if (this._tileModeCache !== undefined) return this._tileModeCache;
     let value = '';
@@ -260,6 +260,17 @@ export class BrunoRoomTile extends LitElement {
     }
     this._tileModeCache = value === 'on';
     return this._tileModeCache;
+  }
+
+  private get _phoneJoshCard(): boolean {
+    const phone = typeof globalThis.matchMedia === 'function'
+      ? globalThis.matchMedia('(max-width: 800px)').matches
+      : false;
+    return this._joshHomeMode && phone;
+  }
+
+  private get _tileMode(): boolean {
+    return this._joshHomeMode && !this._phoneJoshCard;
   }
 
   /**
@@ -826,7 +837,7 @@ export class BrunoRoomTile extends LitElement {
       position: absolute;
       top: 0;
       left: 0;
-      height: 117%;
+      height: 120%;
       width: auto;
       aspect-ratio: 1 / 1;
       object-fit: contain;
@@ -1197,6 +1208,12 @@ export class BrunoRoomTile extends LitElement {
     }
 
     @media (max-width: 800px) {
+      .room-card.is-josh-phone-card {
+        border-radius: var(--bruno-liquid-card-radius, 22px);
+      }
+      .room-card.is-josh-phone-card .room-action {
+        border-radius: inherit;
+      }
       .room-action {
         padding: clamp(8.58px, 5.03cqi, 14.3px) clamp(9.36px, 5.49cqi, 15.6px) clamp(7.8px, 4.57cqi, 13px) clamp(7.8px, 4.57cqi, 13px);
       }
@@ -1205,7 +1222,7 @@ export class BrunoRoomTile extends LitElement {
         height: 62px;
       }
       .room-asset {
-        height: 125%;
+        height: 127.5%;
       }
     }
 
@@ -1528,6 +1545,7 @@ export class BrunoRoomTile extends LitElement {
     const cardClasses = [
       'room-card',
       on ? 'is-room-on' : '',
+      this._phoneJoshCard ? 'is-josh-phone-card' : '',
       this._tileMode ? 'is-tile' : '',
       this._tileMode && this._config?.divider_left ? 'has-divider' : '',
     ]

@@ -279,38 +279,23 @@ script:
 
   media_focus_volume_down:
     alias: "Media Grid v2 — Volume Down Focused Player"
-    # Round4: TV usa remote.smart_tv_pro para volume físico; demais players mantêm media_player.
     mode: single
     sequence:
-      - choose:
-          - conditions: "{{ states('input_select.media_focus_player') == 'media_player.android_tv_192_168_3_17' }}"
-            sequence:
-              - service: remote.send_command
-                target:
-                  entity_id: remote.smart_tv_pro
-                data:
-                  command: VOLUME_DOWN
-        default:
-          - service: media_player.volume_down
-            target:
-              entity_id: "{{ states('input_select.media_focus_player') }}"
+      - service: media_player.volume_down
+        target:
+          entity_id: >-
+            {% set player = states('input_select.media_focus_player') %}
+            {{ player }}
 
   media_focus_volume_up:
     alias: "Media Grid v2 — Volume Up Focused Player"
     mode: single
     sequence:
-      - choose:
-          - conditions: "{{ states('input_select.media_focus_player') == 'media_player.android_tv_192_168_3_17' }}"
-            sequence:
-              - service: remote.send_command
-                target:
-                  entity_id: remote.smart_tv_pro
-                data:
-                  command: VOLUME_UP
-        default:
-          - service: media_player.volume_up
-            target:
-              entity_id: "{{ states('input_select.media_focus_player') }}"
+      - service: media_player.volume_up
+        target:
+          entity_id: >-
+            {% set player = states('input_select.media_focus_player') %}
+            {{ player }}
 
   media_focus_volume_mute:
     alias: "Media Grid v2 — Mute Focused Player"
@@ -318,21 +303,13 @@ script:
     sequence:
       - variables:
           focused_player: "{{ states('input_select.media_focus_player') }}"
-      - choose:
-          - conditions: "{{ focused_player == 'media_player.android_tv_192_168_3_17' }}"
-            sequence:
-              - service: remote.send_command
-                target:
-                  entity_id: remote.smart_tv_pro
-                data:
-                  command: MUTE
-        default:
-          - service: media_player.volume_mute
-            target:
-              entity_id: "{{ focused_player }}"
-            data:
-              is_volume_muted: >
-                {{ not state_attr(focused_player, 'is_volume_muted') | default(false) }}
+          volume_player: "{{ focused_player }}"
+      - service: media_player.volume_mute
+        target:
+          entity_id: "{{ volume_player }}"
+        data:
+          is_volume_muted: >
+            {{ not state_attr(volume_player, 'is_volume_muted') | default(false) }}
 
 template:
   - sensor:

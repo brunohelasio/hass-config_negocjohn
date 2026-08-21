@@ -51,4 +51,5 @@ for path in (TILE, SALA):
     if 'blur(10px) saturate(1.10)' in text or 'blur(12px) saturate(1.13)' in text:
         raise SystemExit(f'{path}: blur pesado do round4 ainda presente')
 
+# Touch intencional: este arquivo faz parte do path-filter do workflow round4.
 print('Round4.1: microblur Josh preservado')

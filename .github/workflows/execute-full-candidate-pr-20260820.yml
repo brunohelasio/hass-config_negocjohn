@@ -128,6 +128,14 @@ jobs:
               )
               active_path.write_text(active, encoding='utf-8')
 
+          validator_path = root / 'scripts/build/validate-physical-round3-20260820.py'
+          validator = validator_path.read_text(encoding='utf-8')
+          validator = validator.replace(
+              'this._linhaVolume(mediaId, tv.volume ?? 60)',
+              "_linhaVolumeTv(this._idDe('tvRemote'), tv.volume ?? 60)",
+          )
+          validator_path.write_text(validator, encoding='utf-8')
+
           docs = root / 'docs/35-round4-hub-artwork-volume-20260820.md'
           docs.write_text("""# Round4 — Hub artwork e volume da TV\n\nBaseline preservado: round3 confirmou ganho significativo no 5G, power da TV estável e card dinâmico com artwork.\n\n## Ajustes desta rodada\n- Hub usa a mesma prioridade de artwork do card dinâmico: `media_image_url` → `entity_picture` → `entity_picture_local`, ignorando strings vazias.\n- Oscilação de `app_name/source` do ADB não apaga mais o último poster válido enquanto a entidade estável de power mantiver a TV ligada.\n- Slider da TV não usa mais `media_player.volume_set`; converte o delta em `VOLUME_UP`/`VOLUME_DOWN` via `remote.smart_tv_pro`, caminho confirmado fisicamente no popup remoto.\n- Scripts de volume/mute do Media Grid fazem a mesma rota para TV e preservam `media_player` para Spotify/Echos.\n\n## Rollback\nEstado anterior à round4: `_rollback/20260820-pre-physical-round4/`.\n\n## Escopo preservado\nNenhuma mudança em performance, code splitting, Resources, power da TV, card dinâmico, cortina, câmeras, Spotify ou long-press.\n""", encoding='utf-8')
           PY

@@ -1,6 +1,12 @@
 name: Integrate V3 Dashboard Assets
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'scripts/assets/apply_v3_dashboard.py'
+      - '.github/workflows/v3-dashboard-integrate.yml'
   push:
     branches:
       - feat/assets-v3-5g
@@ -52,6 +58,7 @@ jobs:
         run: npm run build
 
       - name: Registrar integracao validada
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

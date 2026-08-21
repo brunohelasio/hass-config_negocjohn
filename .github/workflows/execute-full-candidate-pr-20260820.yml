@@ -60,6 +60,78 @@ jobs:
           fi
           sed -i 's/catch (_error) {}/catch { \/\* localStorage opcional *\/ }/g' dashboard-src/src/components/rooms/bruno-room-subview.ts
 
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+
+          root = Path('.')
+          source_path = root / 'dashboard-src/src/components/rooms/bruno-room-subview.ts'
+          active_path = root / 'config/packages/active_player.yaml'
+          rollback = root / '_rollback/20260820-pre-physical-round4'
+
+          for path in [source_path, active_path, root / 'config/www/dashboard']:
+              if not path.exists():
+                  continue
+              dst = rollback / path
+              if dst.exists():
+                  if dst.is_dir(): shutil.rmtree(dst)
+                  else: dst.unlink()
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              if path.is_dir(): shutil.copytree(path, dst)
+              else: shutil.copy2(path, dst)
+
+          source = source_path.read_text(encoding='utf-8')
+          if "const TV_HUB_RUNTIME = 'round4';" not in source:
+              source = source.replace(
+                  "const TV_HUB_HISTORY_KEY = 'bruno-ui:tv-hub-history:v1';",
+                  "const TV_HUB_HISTORY_KEY = 'bruno-ui:tv-hub-history:v1';\nconst TV_HUB_RUNTIME = 'round4';",
+                  1,
+              )
+              source = source.replace(
+                  "const posterAtual = String(ma['entity_picture'] ?? ma['media_image_url'] ?? ma['entity_picture_local'] ?? '').trim();",
+                  "const posterAtual = String(ma['media_image_url'] || ma['entity_picture'] || ma['entity_picture_local'] || '').trim();",
+                  1,
+              )
+              source = source.replace(
+                  """      if (fonteAtual && this._tvUltimaFonte && fonteAtual !== this._tvUltimaFonte) {\n        this._tvUltimoPoster = '';\n        this._tvUltimoTitulo = '';\n      }\n""",
+                  """      // ADB alterna app_name/source durante a mesma sessão. Não descarte a última\n      // arte válida até que uma nova arte real chegue; power continua vindo da\n      // entidade estável e encerra a sessão de forma inequívoca.\n""",
+                  1,
+              )
+              volume_marker = """  /** Botão do corpo do hub. `soIcone` evita o truncamento nas fileiras de 4-5. */\n"""
+              volume_helper = """  /** Volume da TV: o Android TV Remote físico responde a VOLUME_UP/DOWN,\n   * enquanto volume_set nas media_player não altera o aparelho. O slider continua\n   * absoluto visualmente e converte o delta em passos do remote ao soltar. */\n  private _linhaVolumeTv(remoteId: string | undefined, volume: number) {\n    return html`\n      <div class=${remoteId ? 'mh-vol' : 'mh-vol is-disabled'}>\n        <bruno-icon icon=\"mdi:volume-medium\"></bruno-icon>\n        <span class=\"mh-vol-label\">Volume ${volume}%</span>\n        <input\n          type=\"range\"\n          min=\"0\"\n          max=\"100\"\n          value=${String(volume)}\n          .value=${String(volume)}\n          aria-label=\"Volume da TV\"\n          ?disabled=${!remoteId}\n          @change=${(ev: Event) => {\n            const alvo = ev.currentTarget as HTMLInputElement;\n            if (!remoteId) return;\n            const desejado = Math.max(0, Math.min(100, Number(alvo.value)));\n            const atual = Math.max(0, Math.min(100, Number(volume) || 0));\n            const delta = Math.round(desejado - atual);\n            if (!delta) return;\n            this._servico('remote', 'send_command', {\n              entity_id: remoteId,\n              command: delta > 0 ? 'VOLUME_UP' : 'VOLUME_DOWN',\n              num_repeats: Math.min(100, Math.abs(delta)),\n              delay_secs: 0.05,\n            });\n          }}\n        />\n      </div>\n    `;\n  }\n\n"""
+              if volume_marker not in source:
+                  raise SystemExit('round4: volume helper marker not found')
+              source = source.replace(volume_marker, volume_helper + volume_marker, 1)
+              old_tv_line = "<div class=\"mh-controls\">${this._linhaVolume(mediaId, tv.volume ?? 60)} ${fileira}</div>"
+              new_tv_line = "<div class=\"mh-controls\">${this._linhaVolumeTv(this._idDe('tvRemote'), tv.volume ?? 60)} ${fileira}</div>"
+              if old_tv_line not in source:
+                  raise SystemExit('round4: TV volume line not found')
+              source = source.replace(old_tv_line, new_tv_line, 1)
+              source_path.write_text(source, encoding='utf-8')
+
+          active = active_path.read_text(encoding='utf-8')
+          if 'Round4: TV usa remote.smart_tv_pro para volume físico' not in active:
+              active = active.replace(
+                  """  media_focus_volume_down:\n    alias: \"Media Grid v2 — Volume Down Focused Player\"\n    mode: single\n    sequence:\n      - service: media_player.volume_down\n        target:\n          entity_id: >-\n            {% set player = states('input_select.media_focus_player') %}\n            {{ player }}\n""",
+                  """  media_focus_volume_down:\n    alias: \"Media Grid v2 — Volume Down Focused Player\"\n    # Round4: TV usa remote.smart_tv_pro para volume físico; demais players mantêm media_player.\n    mode: single\n    sequence:\n      - choose:\n          - conditions: \"{{ states('input_select.media_focus_player') == 'media_player.android_tv_192_168_3_17' }}\"\n            sequence:\n              - service: remote.send_command\n                target:\n                  entity_id: remote.smart_tv_pro\n                data:\n                  command: VOLUME_DOWN\n        default:\n          - service: media_player.volume_down\n            target:\n              entity_id: \"{{ states('input_select.media_focus_player') }}\"\n""",
+                  1,
+              )
+              active = active.replace(
+                  """  media_focus_volume_up:\n    alias: \"Media Grid v2 — Volume Up Focused Player\"\n    mode: single\n    sequence:\n      - service: media_player.volume_up\n        target:\n          entity_id: >-\n            {% set player = states('input_select.media_focus_player') %}\n            {{ player }}\n""",
+                  """  media_focus_volume_up:\n    alias: \"Media Grid v2 — Volume Up Focused Player\"\n    mode: single\n    sequence:\n      - choose:\n          - conditions: \"{{ states('input_select.media_focus_player') == 'media_player.android_tv_192_168_3_17' }}\"\n            sequence:\n              - service: remote.send_command\n                target:\n                  entity_id: remote.smart_tv_pro\n                data:\n                  command: VOLUME_UP\n        default:\n          - service: media_player.volume_up\n            target:\n              entity_id: \"{{ states('input_select.media_focus_player') }}\"\n""",
+                  1,
+              )
+              active = active.replace(
+                  """  media_focus_volume_mute:\n    alias: \"Media Grid v2 — Mute Focused Player\"\n    mode: single\n    sequence:\n      - variables:\n          focused_player: \"{{ states('input_select.media_focus_player') }}\"\n          volume_player: \"{{ focused_player }}\"\n      - service: media_player.volume_mute\n        target:\n          entity_id: \"{{ volume_player }}\"\n        data:\n          is_volume_muted: >\n            {{ not state_attr(volume_player, 'is_volume_muted') | default(false) }}\n""",
+                  """  media_focus_volume_mute:\n    alias: \"Media Grid v2 — Mute Focused Player\"\n    mode: single\n    sequence:\n      - variables:\n          focused_player: \"{{ states('input_select.media_focus_player') }}\"\n      - choose:\n          - conditions: \"{{ focused_player == 'media_player.android_tv_192_168_3_17' }}\"\n            sequence:\n              - service: remote.send_command\n                target:\n                  entity_id: remote.smart_tv_pro\n                data:\n                  command: MUTE\n        default:\n          - service: media_player.volume_mute\n            target:\n              entity_id: \"{{ focused_player }}\"\n            data:\n              is_volume_muted: >\n                {{ not state_attr(focused_player, 'is_volume_muted') | default(false) }}\n""",
+                  1,
+              )
+              active_path.write_text(active, encoding='utf-8')
+
+          docs = root / 'docs/35-round4-hub-artwork-volume-20260820.md'
+          docs.write_text("""# Round4 — Hub artwork e volume da TV\n\nBaseline preservado: round3 confirmou ganho significativo no 5G, power da TV estável e card dinâmico com artwork.\n\n## Ajustes desta rodada\n- Hub usa a mesma prioridade de artwork do card dinâmico: `media_image_url` → `entity_picture` → `entity_picture_local`, ignorando strings vazias.\n- Oscilação de `app_name/source` do ADB não apaga mais o último poster válido enquanto a entidade estável de power mantiver a TV ligada.\n- Slider da TV não usa mais `media_player.volume_set`; converte o delta em `VOLUME_UP`/`VOLUME_DOWN` via `remote.smart_tv_pro`, caminho confirmado fisicamente no popup remoto.\n- Scripts de volume/mute do Media Grid fazem a mesma rota para TV e preservam `media_player` para Spotify/Echos.\n\n## Rollback\nEstado anterior à round4: `_rollback/20260820-pre-physical-round4/`.\n\n## Escopo preservado\nNenhuma mudança em performance, code splitting, Resources, power da TV, card dinâmico, cortina, câmeras, Spotify ou long-press.\n""", encoding='utf-8')
+          PY
+
       - name: Install dependencies
         if: steps.guard.outputs.skip != 'true'
         working-directory: dashboard-src
@@ -84,6 +156,26 @@ jobs:
         run: |
           python3 scripts/build/validate-full-candidate-20260820.py
           python3 scripts/build/validate-physical-round3-20260820.py
+          python3 - <<'PY'
+          from pathlib import Path
+          source = Path('dashboard-src/src/components/rooms/bruno-room-subview.ts').read_text(encoding='utf-8')
+          active = Path('config/packages/active_player.yaml').read_text(encoding='utf-8')
+          required_source = [
+              "const TV_HUB_RUNTIME = 'round4';",
+              "ma['media_image_url'] || ma['entity_picture'] || ma['entity_picture_local']",
+              "_linhaVolumeTv(this._idDe('tvRemote'), tv.volume ?? 60)",
+              "command: delta > 0 ? 'VOLUME_UP' : 'VOLUME_DOWN'",
+          ]
+          for marker in required_source:
+              if marker not in source:
+                  raise SystemExit(f'round4 validation missing source marker: {marker}')
+          if "this._tvUltimoPoster = '';\n        this._tvUltimoTitulo = '';" in source:
+              raise SystemExit('round4 validation: stale artwork invalidation remains')
+          for marker in ['remote.smart_tv_pro', 'command: VOLUME_DOWN', 'command: VOLUME_UP', 'command: MUTE']:
+              if marker not in active:
+                  raise SystemExit(f'round4 validation missing active_player marker: {marker}')
+          print('round4 artwork/volume validation OK')
+          PY
           node scripts/validation/check-yaml.mjs
 
       - name: Commit and push full candidate
@@ -95,5 +187,5 @@ jobs:
           git add -A
           find config/www/dashboard -type f \( -name '*.js' -o -name '*.br' -o -name '*.gz' -o -name 'manifest.json' \) -print0 | xargs -0 git add -f --
           git status --short
-          git commit -m 'fix: estabilizar mídia, arte, volume e remote round3 [generated candidate]'
+          git commit -m 'fix: preservar artwork e controlar volume via remote round4 [generated candidate]'
           git push origin HEAD:fix/mobile-runtime-tv-curtain-20260819

@@ -63,7 +63,6 @@ source = source.replace(old, new, 1)
 old = """        .circlepad {\n        aspect-ratio: 1 / 1;\n        border-radius: 50%;\n        overflow: hidden;\n        background:\n          radial-gradient(circle at 42% 32%, rgba(255,255,255,0.075), transparent 43%),\n          linear-gradient(145deg, rgba(36,39,45,0.84), rgba(10,12,16,0.82));\n"""
 new = """      .circlepad {\n        aspect-ratio: 1 / 1;\n        border-radius: 50%;\n        overflow: hidden;\n        background:\n          /* quatro filetes diagonais delimitam UP / RIGHT / DOWN / LEFT sem\n             criar quatro botões visivelmente separados */\n          repeating-conic-gradient(\n            from 45deg at 50% 50%,\n            transparent 0deg 89.15deg,\n            rgba(255,255,255,0.115) 89.15deg 90deg\n          ),\n          radial-gradient(circle at 42% 32%, rgba(255,255,255,0.075), transparent 43%),\n          linear-gradient(145deg, rgba(36,39,45,0.84), rgba(10,12,16,0.82));\n"""
 if old not in source:
-    # tolerate indentation from round5 exactly as generated
     old = """      .circlepad {\n        aspect-ratio: 1 / 1;\n        border-radius: 50%;\n        overflow: hidden;\n        background:\n          radial-gradient(circle at 42% 32%, rgba(255,255,255,0.075), transparent 43%),\n          linear-gradient(145deg, rgba(36,39,45,0.84), rgba(10,12,16,0.82));\n"""
 if old not in source:
     raise SystemExit('round6: circlepad background marker not found')
@@ -87,7 +86,6 @@ if old not in source:
     raise SystemExit('round6: popup centering marker not found')
 source = source.replace(old, new, 1)
 
-# Small-screen geometry: preserve circle instead of letting the center shrink vertically.
 old = """        remote-button::part(button) { min-height: 56px; }\n        #row-4 remote-button::part(button) { min-height: 50px; }\n"""
 new = """        remote-button::part(button) { min-height: 56px; }\n        #row-4 remote-button::part(button) { min-height: 50px; }\n        #navigation { margin-inline: auto; }\n"""
 if old in source:
@@ -110,7 +108,7 @@ SOURCE.write_text(source, encoding='utf-8')
 
 DOC = ROOT / 'docs/37-controle-remoto-premium-round6-20260821.md'
 DOC.write_text(
-    """# 37 — Controle remoto premium round6\n\n"
+    "# 37 — Controle remoto premium round6\n\n"
     "Refinamento visual solicitado após validação física da round5. A funcionalidade permanece intacta.\n\n"
     "## Ajustes\n"
     "- centro do D-pad passa a ser círculo real, com host e botão em `aspect-ratio: 1 / 1`;\n"
@@ -119,8 +117,7 @@ DOC.write_text(
     "- popup usa `--dialog-surface-margin-top: auto` e margem horizontal automática para centralização no mobile;\n"
     "- material VisionOS, comandos, hold/repeat e arquitetura da TV permanecem inalterados.\n\n"
     "## Rollback\n"
-    "Estado imediatamente anterior em `_rollback/20260821-pre-premium-tv-remote-round6/`.\n"
-    """,
+    "Estado imediatamente anterior em `_rollback/20260821-pre-premium-tv-remote-round6/`.\n",
     encoding='utf-8',
 )
 

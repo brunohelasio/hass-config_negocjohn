@@ -81,10 +81,10 @@ jobs:
               else: shutil.copy2(path, dst)
 
           source = source_path.read_text(encoding='utf-8')
-          if "const TV_HUB_RUNTIME = 'round4';" not in source:
+          if '// TV_HUB_RUNTIME: round4' not in source:
               source = source.replace(
                   "const TV_HUB_HISTORY_KEY = 'bruno-ui:tv-hub-history:v1';",
-                  "const TV_HUB_HISTORY_KEY = 'bruno-ui:tv-hub-history:v1';\nconst TV_HUB_RUNTIME = 'round4';",
+                  "const TV_HUB_HISTORY_KEY = 'bruno-ui:tv-hub-history:v1';\n// TV_HUB_RUNTIME: round4",
                   1,
               )
               source = source.replace(
@@ -161,7 +161,7 @@ jobs:
           source = Path('dashboard-src/src/components/rooms/bruno-room-subview.ts').read_text(encoding='utf-8')
           active = Path('config/packages/active_player.yaml').read_text(encoding='utf-8')
           required_source = [
-              "const TV_HUB_RUNTIME = 'round4';",
+              '// TV_HUB_RUNTIME: round4',
               "ma['media_image_url'] || ma['entity_picture'] || ma['entity_picture_local']",
               "_linhaVolumeTv(this._idDe('tvRemote'), tv.volume ?? 60)",
               "command: delta > 0 ? 'VOLUME_UP' : 'VOLUME_DOWN'",

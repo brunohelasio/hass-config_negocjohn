@@ -20962,7 +20962,7 @@ function Xo(o) {
 function Jo() {
   const o = window.devicePixelRatio || 1;
   return {
-    buildId: "20260820",
+    buildId: "20260821",
     viewportCss: `${window.innerWidth} x ${window.innerHeight}`,
     screenPhysical: `${Math.round(window.screen.width * o)} x ${Math.round(
       window.screen.height * o
@@ -21410,7 +21410,7 @@ He.customCards.some((o) => o.type === "bruno-diagnostics") || He.customCards.pus
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
 const Na = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.Bky56Ayb.js"),
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.BWhW4AVh.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.CBHmR7Dy.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
@@ -23926,7 +23926,7 @@ class Xn {
 }
 Fi();
 wn();
-console.info("[bruno-dashboard] build 20260820");
+console.info("[bruno-dashboard] build 20260821");
 globalThis.BrunoCameraEngine = Xn;
 globalThis.BrunoCameraLive = Vn;
 export {
@@ -23959,4 +23959,4 @@ export {
   un as v,
   ns as w
 };
-//# sourceMappingURL=main.D1A5uw_n.js.map
+//# sourceMappingURL=main.BG8CuE9o.js.map

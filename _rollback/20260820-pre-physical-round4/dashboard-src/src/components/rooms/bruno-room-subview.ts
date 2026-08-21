@@ -196,6 +196,7 @@ const IMAGEM_TV_ESPERA = '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=2026
 const IMAGEM_SPOTIFY_ESPERA = '/local/images/echo_pop.png?v=20260702-all-images-1';
 const IMAGEM_PC = '/local/images/office_pc.png?v=20260702-all-images-1';
 const TV_HUB_HISTORY_KEY = 'bruno-ui:tv-hub-history:v1';
+// TV_HUB_RUNTIME: round4
 
 /**
  * Módulos que, no TELEFONE, viram linha-resumo e abrem como bottom sheet.
@@ -3057,16 +3058,15 @@ export class BrunoRoomSubview extends LitElement {
 
     const fonteAtual = String(ma['app_name'] ?? ma['source'] ?? pa['source'] ?? pa['app_name'] ?? '').trim();
     const tituloAtual = String(ma['media_title'] ?? ma['media_series_title'] ?? ma['app_name'] ?? '').trim();
-    const posterAtual = String(ma['entity_picture'] ?? ma['media_image_url'] ?? ma['entity_picture_local'] ?? '').trim();
+    const posterAtual = String(ma['media_image_url'] || ma['entity_picture'] || ma['entity_picture_local'] || '').trim();
     const volumeBruto = pa['volume_level'] ?? ma['volume_level'];
     const volumeNumero = volumeBruto == null ? Number.NaN : Number(volumeBruto);
     const volumeAtual = Number.isFinite(volumeNumero) ? Math.round(volumeNumero * 100) : null;
 
     if (ativo) {
-      if (fonteAtual && this._tvUltimaFonte && fonteAtual !== this._tvUltimaFonte) {
-        this._tvUltimoPoster = '';
-        this._tvUltimoTitulo = '';
-      }
+      // ADB alterna app_name/source durante a mesma sessão. Não descarte a última
+      // arte válida até que uma nova arte real chegue; power continua vindo da
+      // entidade estável e encerra a sessão de forma inequívoca.
       if (fonteAtual) this._tvUltimaFonte = fonteAtual;
       if (tituloAtual) this._tvUltimoTitulo = tituloAtual;
       if (posterAtual) this._tvUltimoPoster = posterAtual;
@@ -3201,6 +3201,41 @@ export class BrunoRoomSubview extends LitElement {
     `;
   }
 
+  /** Volume da TV: o Android TV Remote físico responde a VOLUME_UP/DOWN,
+   * enquanto volume_set nas media_player não altera o aparelho. O slider continua
+   * absoluto visualmente e converte o delta em passos do remote ao soltar. */
+  private _linhaVolumeTv(remoteId: string | undefined, volume: number) {
+    return html`
+      <div class=${remoteId ? 'mh-vol' : 'mh-vol is-disabled'}>
+        <bruno-icon icon="mdi:volume-medium"></bruno-icon>
+        <span class="mh-vol-label">Volume ${volume}%</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value=${String(volume)}
+          .value=${String(volume)}
+          aria-label="Volume da TV"
+          ?disabled=${!remoteId}
+          @change=${(ev: Event) => {
+            const alvo = ev.currentTarget as HTMLInputElement;
+            if (!remoteId) return;
+            const desejado = Math.max(0, Math.min(100, Number(alvo.value)));
+            const atual = Math.max(0, Math.min(100, Number(volume) || 0));
+            const delta = Math.round(desejado - atual);
+            if (!delta) return;
+            this._servico('remote', 'send_command', {
+              entity_id: remoteId,
+              command: delta > 0 ? 'VOLUME_UP' : 'VOLUME_DOWN',
+              num_repeats: Math.min(100, Math.abs(delta)),
+              delay_secs: 0.05,
+            });
+          }}
+        />
+      </div>
+    `;
+  }
+
   /** Botão do corpo do hub. `soIcone` evita o truncamento nas fileiras de 4-5. */
   private _botaoMidia(
     rotulo: string,
@@ -3306,7 +3341,7 @@ export class BrunoRoomSubview extends LitElement {
         <div class="mh-info">
           <small>Ligada</small>${segundaLinha ? html`<em>${segundaLinha}</em>` : nothing}
         </div>
-        <div class="mh-controls">${this._linhaVolume(mediaId, tv.volume ?? 60)} ${fileira}</div>
+        <div class="mh-controls">${this._linhaVolumeTv(this._idDe('tvRemote'), tv.volume ?? 60)} ${fileira}</div>
       </div>
       ${this._arteMidia(tv.poster || espera, 'wide', 'mdi:television-classic', Boolean(tv.poster), tv.estado === 'paused')}
     `;

@@ -1,4 +1,4 @@
-import { i as w, a as ra, M as na, C as sa, r as T, e as v, b as A, O as H, p as la, m as R, R as ca, c as G, d as da, f as pa, g as ma, o as I, h as ha, j as N, k as ua, l as ga, s as ba, A as b, n as l, q as xa, t as fa, u as va, v as wa, w as F } from "./main.D1A5uw_n.js";
+import { i as w, a as ra, M as na, C as sa, r as T, e as v, b as A, O as H, p as la, m as R, R as ca, c as G, d as da, f as pa, g as ma, o as I, h as ha, j as N, k as ua, l as ga, s as ba, A as b, n as l, q as xa, t as fa, u as va, v as wa, w as F } from "./main.BG8CuE9o.js";
 const _a = {
   sala: {
     title: "Sala",
@@ -9528,8 +9528,8 @@ class io extends ra {
   }
   _modeloTv() {
     this._carregarHistoricoTv();
-    const a = this._idDe("tv"), o = this._idDe("tvMedia") ?? a, i = this._estado(a), e = this._estado(o), t = i?.attributes ?? {}, r = e?.attributes ?? {}, n = fa(this._hass, a), p = va(this._hass, o), s = String(i?.state ?? "off").toLowerCase(), c = String(e?.state ?? "").toLowerCase(), m = String(r.app_name ?? r.source ?? t.source ?? t.app_name ?? "").trim(), d = String(r.media_title ?? r.media_series_title ?? r.app_name ?? "").trim(), g = String(r.entity_picture ?? r.media_image_url ?? r.entity_picture_local ?? "").trim(), x = t.volume_level ?? r.volume_level, y = x == null ? Number.NaN : Number(x), C = Number.isFinite(y) ? Math.round(y * 100) : null;
-    return n && (m && this._tvUltimaFonte && m !== this._tvUltimaFonte && (this._tvUltimoPoster = "", this._tvUltimoTitulo = ""), m && (this._tvUltimaFonte = m), d && (this._tvUltimoTitulo = d), g && (this._tvUltimoPoster = g), C != null && (this._tvUltimoVolume = C), this._salvarHistoricoTv()), {
+    const a = this._idDe("tv"), o = this._idDe("tvMedia") ?? a, i = this._estado(a), e = this._estado(o), t = i?.attributes ?? {}, r = e?.attributes ?? {}, n = fa(this._hass, a), p = va(this._hass, o), s = String(i?.state ?? "off").toLowerCase(), c = String(e?.state ?? "").toLowerCase(), m = String(r.app_name ?? r.source ?? t.source ?? t.app_name ?? "").trim(), d = String(r.media_title ?? r.media_series_title ?? r.app_name ?? "").trim(), g = String(r.media_image_url || r.entity_picture || r.entity_picture_local || "").trim(), x = t.volume_level ?? r.volume_level, y = x == null ? Number.NaN : Number(x), C = Number.isFinite(y) ? Math.round(y * 100) : null;
+    return n && (m && (this._tvUltimaFonte = m), d && (this._tvUltimoTitulo = d), g && (this._tvUltimoPoster = g), C != null && (this._tvUltimoVolume = C), this._salvarHistoricoTv()), {
       st: i,
       media: e,
       estado: p ? c : s,
@@ -9604,6 +9604,37 @@ class io extends ra {
       a && this._servico("media_player", "volume_set", {
         entity_id: a,
         volume_level: Number(e.value) / 100
+      });
+    }}
+        />
+      </div>
+    `;
+  }
+  /** Volume da TV: o Android TV Remote físico responde a VOLUME_UP/DOWN,
+   * enquanto volume_set nas media_player não altera o aparelho. O slider continua
+   * absoluto visualmente e converte o delta em passos do remote ao soltar. */
+  _linhaVolumeTv(a, o) {
+    return l`
+      <div class=${a ? "mh-vol" : "mh-vol is-disabled"}>
+        <bruno-icon icon="mdi:volume-medium"></bruno-icon>
+        <span class="mh-vol-label">Volume ${o}%</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value=${String(o)}
+          .value=${String(o)}
+          aria-label="Volume da TV"
+          ?disabled=${!a}
+          @change=${(i) => {
+      const e = i.currentTarget;
+      if (!a) return;
+      const t = Math.max(0, Math.min(100, Number(e.value))), r = Math.max(0, Math.min(100, Number(o) || 0)), n = Math.round(t - r);
+      n && this._servico("remote", "send_command", {
+        entity_id: a,
+        command: n > 0 ? "VOLUME_UP" : "VOLUME_DOWN",
+        num_repeats: Math.min(100, Math.abs(n)),
+        delay_secs: 0.05
       });
     }}
         />
@@ -9685,7 +9716,7 @@ class io extends ra {
         <div class="mh-info">
           <small>Ligada</small>${r ? l`<em>${r}</em>` : b}
         </div>
-        <div class="mh-controls">${this._linhaVolume(i, a.volume ?? 60)} ${p}</div>
+        <div class="mh-controls">${this._linhaVolumeTv(this._idDe("tvRemote"), a.volume ?? 60)} ${p}</div>
       </div>
       ${this._arteMidia(a.poster || e, "wide", "mdi:television-classic", !!a.poster, a.estado === "paused")}
     `;
@@ -10428,4 +10459,4 @@ D.customCards.some((u) => u.type === "bruno-room-subview") || D.customCards.push
 export {
   io as BrunoRoomSubview
 };
-//# sourceMappingURL=bruno-room-subview.Bky56Ayb.js.map
+//# sourceMappingURL=bruno-room-subview.BWhW4AVh.js.map

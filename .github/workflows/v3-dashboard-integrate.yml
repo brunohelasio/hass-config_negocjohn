@@ -1,0 +1,65 @@
+name: Integrate V3 Dashboard Assets
+
+on:
+  push:
+    branches:
+      - feat/assets-v3-5g
+    paths:
+      - 'scripts/assets/apply_v3_dashboard.py'
+      - '.github/workflows/v3-dashboard-integrate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: feat/assets-v3-5g
+          fetch-depth: 0
+
+      - name: Aplicar V3 ao frontend
+        run: python scripts/assets/apply_v3_dashboard.py
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: dashboard-src
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: dashboard-src
+        run: npm run lint
+
+      - name: Testes
+        working-directory: dashboard-src
+        run: npm run test
+
+      - name: Build
+        working-directory: dashboard-src
+        run: npm run build
+
+      - name: Registrar integracao validada
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            dashboard-src/src/config/rooms.config.ts \
+            dashboard-src/src/config/rooms.config.test.ts \
+            dashboard-src/src/components/rooms/bruno-room-tile.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "feat(assets): switch room tiles to optimized V3 WebP"
+            git push
+          fi

@@ -1,6 +1,13 @@
 name: V3 Assets Audit
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'config/www/bruno-ui/assets/V3/**'
+      - 'scripts/assets/audit_v3.py'
+      - '.github/workflows/v3-assets-audit.yml'
   push:
     branches:
       - feat/assets-v3-5g
@@ -10,7 +17,7 @@ on:
       - '.github/workflows/v3-assets-audit.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   audit:
@@ -18,8 +25,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Python
         uses: actions/setup-python@v5
@@ -32,12 +37,10 @@ jobs:
       - name: Auditar V3
         run: python scripts/assets/audit_v3.py
 
-      - name: Registrar resultado
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/_tmp/v3-audit/
-          if ! git diff --cached --quiet; then
-            git commit -m "chore(assets): record V3 audit"
-            git push
-          fi
+      - name: Publicar auditoria
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3-audit
+          path: docs/_tmp/v3-audit/
+          if-no-files-found: error
+          retention-days: 7

@@ -27,7 +27,6 @@ required_room = [
     "TV_HUB_HISTORY_KEY = 'bruno-ui:tv-hub-history:v1'",
     'private _carregarHistoricoTv(): void',
     'private _salvarHistoricoTv(): void',
-    'this._linhaVolume(mediaId, tv.volume ?? 60)',
     "perform_action: 'remote.send_command'",
     "comando('DPAD_CENTER')",
     "tecla('home', 'mdi:home', 'HOME')",
@@ -40,14 +39,15 @@ for token in required_room:
 if 'button.tv_sala_' in room:
     raise SystemExit('legacy button.tv_sala_* remote mapping remains')
 
+# A round3 garantia que volume não voltasse à entidade POWER sem suporte.
+# A round4 evolui o contrato: TV usa remote.send_command; demais players
+# continuam usando media_player. Mantemos apenas a proibição da regressão POWER.
 if f"{{{{ '{POWER}' if player == '{ANDROID}' else player }}}}" in active:
     raise SystemExit('TV volume step still routed to POWER entity')
 if f"{{{{ '{POWER}' if focused_player == '{ANDROID}' else focused_player }}}}" in active:
     raise SystemExit('TV mute still routed to POWER entity')
-if '{{ player }}' not in active or 'volume_player: "{{ focused_player }}"' not in active:
-    raise SystemExit('ADB volume routing missing from active_player')
 
 print('round3 validation passed')
 print('TV_POWER_ENTITY', POWER)
-print('TV_MEDIA_VOLUME_ENTITY', ANDROID)
+print('TV_MEDIA_ENTITY', ANDROID)
 print('TV_REMOTE_ENTITY', REMOTE)

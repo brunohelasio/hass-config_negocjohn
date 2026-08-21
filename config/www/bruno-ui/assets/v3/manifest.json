@@ -1,0 +1,40 @@
+{
+  "version": "20260821-v3-webp-1",
+  "format": "webp",
+  "canvas": 512,
+  "quality": 82,
+  "assets": {
+    "lavabo": {
+      "off": "v3/lavabo-off.webp",
+      "on": "v3/lavabo-on.webp"
+    },
+    "corredor": {
+      "off": "v3/corredor-off.webp",
+      "on": "v3/corredor-on.webp"
+    },
+    "cozinha": {
+      "off": "v3/cozinha-off.webp",
+      "on": "v3/cozinha-on.webp"
+    },
+    "office": {
+      "off": "v3/office-off.webp",
+      "on": "v3/office-on.webp"
+    },
+    "casal": {
+      "off": "v3/casal-off.webp",
+      "on": "v3/casal-on.webp"
+    },
+    "miguel": {
+      "off": "v3/miguel-off.webp",
+      "on": "v3/miguel-on.webp"
+    },
+    "marina": {
+      "off": "v3/marina-off.webp",
+      "on": "v3/marina-on.webp"
+    },
+    "sala": {
+      "off": "v3/sala-off.webp",
+      "on": "v3/sala-on.webp"
+    }
+  }
+}

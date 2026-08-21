@@ -1,0 +1,326 @@
+{
+  "canvas": 512,
+  "target_visual_width": 460,
+  "target_center_x": 256,
+  "target_visual_bottom": 485,
+  "alpha_threshold": 8,
+  "webp_quality": 82,
+  "rooms": {
+    "lavabo": {
+      "source_on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (1).png",
+      "source_off": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (2).png",
+      "source_pair_bbox_alpha8": [
+        0,
+        126,
+        1247,
+        1117
+      ],
+      "transform": {
+        "scale": 0.36888532,
+        "resized_width": 463,
+        "resized_height": 463,
+        "offset_x": 26,
+        "offset_y": 73
+      },
+      "outputs": {
+        "on": {
+          "file": "lavabo-on.webp",
+          "bytes": 28248,
+          "bbox_alpha8": [
+            26,
+            120,
+            486,
+            485
+          ]
+        },
+        "off": {
+          "file": "lavabo-off.webp",
+          "bytes": 26904,
+          "bbox_alpha8": [
+            27,
+            119,
+            487,
+            486
+          ]
+        }
+      }
+    },
+    "corredor": {
+      "source_on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (2).png",
+      "source_off": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (3).png",
+      "source_pair_bbox_alpha8": [
+        0,
+        58,
+        1251,
+        1116
+      ],
+      "transform": {
+        "scale": 0.36770584,
+        "resized_width": 461,
+        "resized_height": 461,
+        "offset_x": 26,
+        "offset_y": 75
+      },
+      "outputs": {
+        "on": {
+          "file": "corredor-on.webp",
+          "bytes": 38816,
+          "bbox_alpha8": [
+            26,
+            97,
+            485,
+            485
+          ]
+        },
+        "off": {
+          "file": "corredor-off.webp",
+          "bytes": 36326,
+          "bbox_alpha8": [
+            26,
+            96,
+            487,
+            486
+          ]
+        }
+      }
+    },
+    "cozinha": {
+      "source_on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (3).png",
+      "source_off": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (4).png",
+      "source_pair_bbox_alpha8": [
+        1,
+        83,
+        1254,
+        1115
+      ],
+      "transform": {
+        "scale": 0.36711891,
+        "resized_width": 460,
+        "resized_height": 460,
+        "offset_x": 26,
+        "offset_y": 76
+      },
+      "outputs": {
+        "on": {
+          "file": "cozinha-on.webp",
+          "bytes": 28374,
+          "bbox_alpha8": [
+            26,
+            108,
+            486,
+            485
+          ]
+        },
+        "off": {
+          "file": "cozinha-off.webp",
+          "bytes": 26430,
+          "bbox_alpha8": [
+            26,
+            107,
+            486,
+            485
+          ]
+        }
+      }
+    },
+    "office": {
+      "source_on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (4).png",
+      "source_off": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (5).png",
+      "source_pair_bbox_alpha8": [
+        1,
+        145,
+        1253,
+        1123
+      ],
+      "transform": {
+        "scale": 0.36741214,
+        "resized_width": 461,
+        "resized_height": 461,
+        "offset_x": 26,
+        "offset_y": 72
+      },
+      "outputs": {
+        "on": {
+          "file": "office-on.webp",
+          "bytes": 32944,
+          "bbox_alpha8": [
+            26,
+            125,
+            486,
+            484
+          ]
+        },
+        "off": {
+          "file": "office-off.webp",
+          "bytes": 30606,
+          "bbox_alpha8": [
+            26,
+            125,
+            487,
+            484
+          ]
+        }
+      }
+    },
+    "casal": {
+      "source_on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (5).png",
+      "source_off": "ChatGPT Image 21 de ago. de 2026, 09_22_29 (6).png",
+      "source_pair_bbox_alpha8": [
+        0,
+        181,
+        1254,
+        1117
+      ],
+      "transform": {
+        "scale": 0.36682616,
+        "resized_width": 460,
+        "resized_height": 460,
+        "offset_x": 26,
+        "offset_y": 75
+      },
+      "outputs": {
+        "on": {
+          "file": "casal-on.webp",
+          "bytes": 29376,
+          "bbox_alpha8": [
+            26,
+            142,
+            486,
+            484
+          ]
+        },
+        "off": {
+          "file": "casal-off.webp",
+          "bytes": 27584,
+          "bbox_alpha8": [
+            26,
+            141,
+            486,
+            485
+          ]
+        }
+      }
+    },
+    "miguel": {
+      "source_on": "ChatGPT Image 21 de ago. de 2026, 09_22_12 (6).png",
+      "source_off": "ChatGPT Image 21 de ago. de 2026, 09_22_29 (7).png",
+      "source_pair_bbox_alpha8": [
+        0,
+        274,
+        1254,
+        1115
+      ],
+      "transform": {
+        "scale": 0.36682616,
+        "resized_width": 460,
+        "resized_height": 460,
+        "offset_x": 26,
+        "offset_y": 76
+      },
+      "outputs": {
+        "on": {
+          "file": "miguel-on.webp",
+          "bytes": 29692,
+          "bbox_alpha8": [
+            26,
+            176,
+            486,
+            485
+          ]
+        },
+        "off": {
+          "file": "miguel-off.webp",
+          "bytes": 27322,
+          "bbox_alpha8": [
+            26,
+            176,
+            486,
+            485
+          ]
+        }
+      }
+    },
+    "marina": {
+      "source_on": "ChatGPT Image 21 de ago. de 2026, 09_22_12 (7).png",
+      "source_off": "ChatGPT Image 21 de ago. de 2026, 09_22_29 (8).png",
+      "source_pair_bbox_alpha8": [
+        3,
+        142,
+        1251,
+        1116
+      ],
+      "transform": {
+        "scale": 0.36858974,
+        "resized_width": 462,
+        "resized_height": 462,
+        "offset_x": 25,
+        "offset_y": 74
+      },
+      "outputs": {
+        "on": {
+          "file": "marina-on.webp",
+          "bytes": 33272,
+          "bbox_alpha8": [
+            25,
+            127,
+            485,
+            485
+          ]
+        },
+        "off": {
+          "file": "marina-off.webp",
+          "bytes": 32696,
+          "bbox_alpha8": [
+            25,
+            126,
+            486,
+            485
+          ]
+        }
+      }
+    },
+    "sala": {
+      "source_on": "ChatGPT Image 21 de ago. de 2026, 09_22_38.png",
+      "source_off": "ChatGPT Image 21 de ago. de 2026, 09_22_27 (1).png",
+      "source_pair_bbox_alpha8": [
+        4,
+        96,
+        1250,
+        1116
+      ],
+      "transform": {
+        "scale": 0.36918138,
+        "resized_width": 463,
+        "resized_height": 463,
+        "offset_x": 25,
+        "offset_y": 73
+      },
+      "outputs": {
+        "on": {
+          "file": "sala-on.webp",
+          "bytes": 28774,
+          "bbox_alpha8": [
+            27,
+            108,
+            486,
+            485
+          ]
+        },
+        "off": {
+          "file": "sala-off.webp",
+          "bytes": 27542,
+          "bbox_alpha8": [
+            25,
+            108,
+            486,
+            485
+          ]
+        }
+      }
+    }
+  },
+  "source_total_bytes": 27015942,
+  "optimized_total_bytes": 484906,
+  "reduction_pct": 98.205,
+  "decoded_rgba_mib_16_images": 16.0
+}

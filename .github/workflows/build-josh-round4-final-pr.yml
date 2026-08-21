@@ -1,0 +1,144 @@
+name: Validate Josh round4 final
+
+on:
+  pull_request:
+    branches:
+      - fix/mobile-runtime-tv-curtain-20260819
+    types: [opened, reopened, synchronize]
+    paths:
+      - '.github/workflows/build-josh-round4-final-pr.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout da branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/mobile-runtime-v3-20260821
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Aplicar microblur final
+        run: python scripts/assets/fix_josh_mobile_perf_round4_1.py
+
+      - name: Validar contratos
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          tile = Path('dashboard-src/src/components/rooms/bruno-room-tile.ts').read_text(encoding='utf-8')
+          sala = Path('config/www/bruno-ui/cards/bruno-sala-card.js').read_text(encoding='utf-8')
+          rooms = Path('dashboard-src/src/config/rooms.config.ts').read_text(encoding='utf-8')
+          lavabo = Path('config/packages/lavabo_presence.yaml').read_text(encoding='utf-8')
+          corredor = Path('config/packages/corredor_presence.yaml').read_text(encoding='utf-8')
+          required = [
+              '.room-card.is-tile.is-room-on::before',
+              '.room-card.is-josh-phone-card.is-room-on',
+              'height: 120%;',
+              'height: 127.5%;',
+              'var(--bruno-josh-microblur, blur(2px)) saturate(1.10)',
+              'var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035)',
+          ]
+          missing = [x for x in required if x not in tile]
+          if missing:
+              raise SystemExit(f'contratos Josh ausentes: {missing}')
+          if 'blur(10px) saturate(1.10)' in tile + sala or 'blur(12px) saturate(1.13)' in tile + sala:
+              raise SystemExit('blur pesado ainda presente')
+          if 'width: 101.5%;' not in sala or 'height: 101.5%;' not in sala:
+              raise SystemExit('escala Sala V3 regrediu')
+          if "semanticState: 'sensor.lavabo_semantic_state'" not in rooms:
+              raise SystemExit('Lavabo perdeu semanticState')
+          if 'unique_id: lavabo_semantic_state' not in lavabo or 'Sensor indisponivel' not in lavabo:
+              raise SystemExit('Lavabo sem diagnostico semantico')
+          if 'sensor_offline' not in corredor or 'Sensor indisponivel' not in corredor:
+              raise SystemExit('Corredor sem diagnostico offline')
+          print('contratos finais OK')
+          PY
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: YAML
+        working-directory: dashboard-src
+        run: npm run check:yaml
+
+      - name: Typecheck
+        working-directory: dashboard-src
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: dashboard-src
+        run: npm run lint
+
+      - name: Testes
+        working-directory: dashboard-src
+        run: npm run test
+
+      - name: Build completo
+        working-directory: dashboard-src
+        run: npm run build
+
+      - name: Atualizar bundle ativo
+        run: |
+          python - <<'PY'
+          import json, re
+          from pathlib import Path
+          bundle = json.loads(Path('config/www/dashboard/manifest.json').read_text(encoding='utf-8'))['bundle']
+          p = Path('config/configuration.yaml')
+          text = p.read_text(encoding='utf-8')
+          pattern = re.compile(r'(?m)^(\s*)- /local/dashboard/(bruno-dashboard\.[A-Za-z0-9_-]+\.js)\s*$')
+          matches = list(pattern.finditer(text))
+          if len(matches) != 1:
+              raise SystemExit(f'esperava 1 bundle ativo; encontrei {len(matches)}')
+          old = matches[0].group(2)
+          if old == bundle:
+              raise SystemExit('hash do bundle nao mudou')
+          indent = matches[0].group(1)
+          repl = f'{indent}# ANTERIOR (rollback Josh round4 final): - /local/dashboard/{old}\n{indent}- /local/dashboard/{bundle}'
+          p.write_text(pattern.sub(repl, text, count=1), encoding='utf-8')
+          print(f'bundle ativo: {old} -> {bundle}')
+          PY
+
+      - name: Guardar escopo
+        run: |
+          python - <<'PY'
+          import subprocess
+          allowed = {
+              'dashboard-src/src/components/rooms/bruno-room-tile.ts',
+              'config/www/bruno-ui/cards/bruno-sala-card.js',
+              'config/configuration.yaml',
+          }
+          bad = []
+          for line in subprocess.check_output(['git','status','--porcelain=v1'], text=True).splitlines():
+              path = line[3:]
+              if ' -> ' in path:
+                  path = path.split(' -> ',1)[1]
+              if path in allowed or path.startswith('config/www/dashboard/'):
+                  continue
+              bad.append(line)
+          if bad:
+              raise SystemExit('arquivos inesperados:\n' + '\n'.join(bad))
+          print('escopo OK')
+          PY
+
+      - name: Registrar candidata final
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dashboard-src/src/components/rooms/bruno-room-tile.ts
+          git add config/www/bruno-ui/cards/bruno-sala-card.js
+          git add config/configuration.yaml
+          git add -f -A config/www/dashboard
+          git commit -m 'perf: finalizar Josh round4 com microblur'
+          git push origin HEAD:feat/mobile-runtime-v3-20260821

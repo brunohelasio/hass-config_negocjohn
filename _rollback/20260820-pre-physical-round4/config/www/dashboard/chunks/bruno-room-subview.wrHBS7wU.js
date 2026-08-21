@@ -1,4 +1,4 @@
-import { i as w, a as ra, M as na, C as sa, r as O, e as v, b as A, O as H, p as la, m as R, R as ca, c as G, d as da, f as pa, g as ma, o as I, h as ha, j as N, k as ua, l as ga, s as ba, A as b, n as l, q as xa, t as fa, u as va, v as wa, w as F } from "./main.BBuEdMkM.js";
+import { i as w, a as ra, M as na, C as sa, r as O, e as v, b as A, O as H, p as la, m as R, R as ca, c as G, d as da, f as pa, g as ma, o as I, h as ha, j as N, k as ua, l as ga, s as ba, A as b, n as l, q as xa, t as fa, u as va, v as wa, w as F } from "./main.D5RLO2O6.js";
 const _a = {
   sala: {
     title: "Sala",
@@ -9752,10 +9752,12 @@ class eo extends ra {
         --remote-accent-soft: rgba(244, 194, 96, 0.16);
         --remote-text: rgba(248, 248, 250, 0.96);
         --remote-muted: rgba(235, 235, 242, 0.58);
+        --remote-divider: rgba(255, 255, 255, 0.105);
         display: block;
         width: min(390px, calc(100vw - 28px));
         max-width: 100%;
         box-sizing: border-box;
+        margin: clamp(12px, 3.2dvh, 34px) auto;
         padding: 10px 10px 14px;
         border-radius: 30px;
         overflow: hidden;
@@ -9800,6 +9802,24 @@ class eo extends ra {
 
       #row-2 {
         margin: 2px 0 14px;
+      }
+
+      /* Filetes curtos e translúcidos entre todos os botões das barras.
+         O gradiente evita a aparência de grade rígida e mantém a linguagem
+         VisionOS da composição de referência. */
+      #row-1 remote-button + remote-button,
+      #row-3 remote-button + remote-button,
+      #row-4 remote-button + remote-button {
+        background-image: linear-gradient(
+          180deg,
+          transparent 8%,
+          var(--remote-divider) 24%,
+          var(--remote-divider) 76%,
+          transparent 92%
+        );
+        background-size: 1px 78%;
+        background-position: left center;
+        background-repeat: no-repeat;
       }
 
       remote-button {
@@ -9869,6 +9889,7 @@ class eo extends ra {
         }
         remote-button::part(button) { min-height: 56px; }
         #row-4 remote-button::part(button) { min-height: 50px; }
+        #navigation { margin-inline: auto; }
       }
     `, r = `
       :host {
@@ -9884,6 +9905,13 @@ class eo extends ra {
         border-radius: 50%;
         overflow: hidden;
         background:
+          /* quatro filetes diagonais delimitam UP / RIGHT / DOWN / LEFT sem
+             criar quatro botões visivelmente separados */
+          repeating-conic-gradient(
+            from 45deg at 50% 50%,
+            transparent 0deg 89.15deg,
+            rgba(255,255,255,0.115) 89.15deg 90deg
+          ),
           radial-gradient(circle at 42% 32%, rgba(255,255,255,0.075), transparent 43%),
           linear-gradient(145deg, rgba(36,39,45,0.84), rgba(10,12,16,0.82));
         border: 1px solid rgba(255,255,255,0.09);
@@ -9900,6 +9928,30 @@ class eo extends ra {
         background: transparent;
       }
 
+      .center-row {
+        align-items: center;
+        justify-content: center;
+      }
+
+      #left,
+      #right {
+        flex: 1 1 0;
+        min-width: 0;
+        align-self: stretch;
+      }
+
+      /* O centro da round5 herdava a célula retangular do circlepad e o botão
+         virava oval. A round6 fixa host e part no mesmo quadrado. */
+      #center {
+        flex: 0 0 43%;
+        width: 43%;
+        max-width: 122px;
+        aspect-ratio: 1 / 1;
+        align-self: center;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+
       #up::part(icon),
       #down::part(icon),
       #left::part(icon),
@@ -9909,6 +9961,12 @@ class eo extends ra {
       }
 
       #center::part(button) {
+        width: 100%;
+        height: 100%;
+        min-width: 100%;
+        min-height: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
         background:
           radial-gradient(circle at 42% 30%, rgba(244,194,96,0.24), rgba(26,24,21,0.80) 58%, rgba(12,13,16,0.92));
         border: 1px solid rgba(244,194,96,0.40);
@@ -9936,6 +9994,16 @@ class eo extends ra {
               title: "Controle da TV",
               tag: "tv_remote",
               style: "--popup-background-color: rgba(6,8,12,0.18); --popup-min-width: min(390px, 96vw); --popup-max-width: min(430px, 96vw); --popup-border-width: 0;",
+              popup_styles: [
+                {
+                  style: "all",
+                  styles: `
+                    ha-dialog {
+                      --dialog-surface-margin-top: auto !important;
+                    }
+                  `
+                }
+              ],
               content: {
                 type: "custom:universal-remote-card",
                 remote_id: a,
@@ -10656,4 +10724,4 @@ D.customCards.some((u) => u.type === "bruno-room-subview") || D.customCards.push
 export {
   eo as BrunoRoomSubview
 };
-//# sourceMappingURL=bruno-room-subview.C4se6kVu.js.map
+//# sourceMappingURL=bruno-room-subview.wrHBS7wU.js.map

@@ -21410,7 +21410,7 @@ He.customCards.some((o) => o.type === "bruno-diagnostics") || He.customCards.pus
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
 const Na = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.C4se6kVu.js"),
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.wrHBS7wU.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.CBHmR7Dy.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
@@ -23959,4 +23959,4 @@ export {
   un as v,
   ns as w
 };
-//# sourceMappingURL=main.BBuEdMkM.js.map
+//# sourceMappingURL=main.D5RLO2O6.js.map

@@ -7,16 +7,19 @@ CONFIG = ROOT / "dashboard-src/src/config/rooms.config.ts"
 TEST = ROOT / "dashboard-src/src/config/rooms.config.test.ts"
 TILE = ROOT / "dashboard-src/src/components/rooms/bruno-room-tile.ts"
 
-ROOMS = (
-    "sala",
-    "office",
-    "cozinha",
-    "lavabo",
-    "casal",
-    "marina",
-    "miguel",
-    "corredor",
-)
+# room id -> stem V2 atualmente configurado no main. Tres quartos usam nomes
+# historicos diferentes do id logico; manter isso explicito faz o script falhar
+# fechado se o baseline mudar antes da aplicacao.
+ROOMS = {
+    "sala": "sala",
+    "office": "office",
+    "cozinha": "cozinha",
+    "lavabo": "lavabo",
+    "casal": "quarto-casal",
+    "marina": "quarto-menina",
+    "miguel": "quarto-bebe",
+    "corredor": "corredor",
+}
 
 
 def replace_once(text: str, old: str, new: str, label: str) -> str:
@@ -37,11 +40,11 @@ config = replace_once(
     "   * para o renderer nao impor PNG/WebP e o config continuar sendo a fonte unica.\n   *\n",
     "comentario RoomConfig.asset",
 )
-for room in ROOMS:
-    old = f"    assetOff: 'v2/{room}-off',\n    assetOn: 'v2/{room}-on',"
+for room, legacy_stem in ROOMS.items():
+    old = f"    assetOff: 'v2/{legacy_stem}-off',\n    assetOn: 'v2/{legacy_stem}-on',"
     new = (
-        f"    // ANTERIOR (rollback V2): assetOff: 'v2/{room}-off',\n"
-        f"    // ANTERIOR (rollback V2): assetOn: 'v2/{room}-on',\n"
+        f"    // ANTERIOR (rollback V2): assetOff: 'v2/{legacy_stem}-off',\n"
+        f"    // ANTERIOR (rollback V2): assetOn: 'v2/{legacy_stem}-on',\n"
         f"    assetOff: 'v3/{room}-off.webp',\n"
         f"    assetOn: 'v3/{room}-on.webp',"
     )
@@ -126,7 +129,7 @@ if needle not in test:
     pos = test.rfind("\n});")
     if pos < 0:
         raise SystemExit("rooms.config.test.ts: fechamento do describe nao encontrado")
-    block = """
+    block = r"""
 
   it('assets de comodo usam V3 WebP normalizada', () => {
     const assets = ROOMS.flatMap((room) => [room.assetOff, room.assetOn]);

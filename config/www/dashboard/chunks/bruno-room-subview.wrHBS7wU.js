@@ -1,4 +1,4 @@
-import { i as w, a as ra, M as na, C as sa, r as T, e as v, b as A, O as H, p as la, m as R, R as ca, c as G, d as da, f as pa, g as ma, o as I, h as ha, j as N, k as ua, l as ga, s as ba, A as b, n as l, q as xa, t as fa, u as va, v as wa, w as F } from "./main.BG8CuE9o.js";
+import { i as w, a as ra, M as na, C as sa, r as O, e as v, b as A, O as H, p as la, m as R, R as ca, c as G, d as da, f as pa, g as ma, o as I, h as ha, j as N, k as ua, l as ga, s as ba, A as b, n as l, q as xa, t as fa, u as va, v as wa, w as F } from "./main.D5RLO2O6.js";
 const _a = {
   sala: {
     title: "Sala",
@@ -725,8 +725,8 @@ const _a = {
     }
   }
 };
-function ya(u, a, o, i = {}) {
-  return u.callService(a, o, i);
+function ya(u, a, o, e = {}) {
+  return u.callService(a, o, e);
 }
 const E = /* @__PURE__ */ new Set(), S = { timer: void 0, ouvindoVisibilidade: !1 }, qa = 1e3;
 function W() {
@@ -5074,7 +5074,7 @@ $ {
 w`
 
 `;
-const Ta = w`
+const Oa = w`
 :host([data-room='sala']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -5185,7 +5185,7 @@ const Ta = w`
   overflow: visible;
 }
 }
-`, Oa = w`
+`, Ta = w`
 :host([data-room='office']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -5974,8 +5974,8 @@ const Ta = w`
 }
 }
 `, Fa = {
-  sala: Ta,
-  office: Oa,
+  sala: Oa,
+  office: Ta,
   cozinha: Ra,
   casal: Ia,
   marina: Na,
@@ -7664,14 +7664,14 @@ function M(u, a = 0) {
   return Number.isFinite(o) ? o.toFixed(a).replace(/\.0+$/, "") : "--";
 }
 function Z(u) {
-  const a = Math.max(0, Math.floor(Number(u) || 0)), o = Math.floor(a / 3600), i = Math.floor(a % 3600 / 60), e = a % 60;
-  return o > 0 ? `${o}:${String(i).padStart(2, "0")}:${String(e).padStart(2, "0")}` : `${i}:${String(e).padStart(2, "0")}`;
+  const a = Math.max(0, Math.floor(Number(u) || 0)), o = Math.floor(a / 3600), e = Math.floor(a % 3600 / 60), i = a % 60;
+  return o > 0 ? `${o}:${String(e).padStart(2, "0")}:${String(i).padStart(2, "0")}` : `${e}:${String(i).padStart(2, "0")}`;
 }
 function P(u) {
   const a = String(u ?? "").replace(/_/g, " ").trim();
   return a ? a.charAt(0).toUpperCase() + a.slice(1) : "—";
 }
-class io extends ra {
+class eo extends ra {
   constructor() {
     super(...arguments), this._lightsOpen = !1, this._folha = null, this._folhaSaindo = !1, this._tokenAncoraFolha = 0, this._fonteMidia = "", this._fonteMidiaManual = !1, this._midiaAtivasAntes = [], this._tvUltimoVolume = null, this._tvUltimoPoster = "", this._tvUltimaFonte = "HDMI 1", this._tvUltimoTitulo = "", this._tvHistoricoCarregado = !1, this._menuMidiaAberto = !1, this._spotifyFerramentas = !1, this._painelClima = "", this._controlesCameraAbertos = !1, this._cameraAtiva = "", this._urlsCarregadas = {}, this._ultimaImagem = {}, this._motorCameras = new na({
       // O primeiro quadro é do elemento de imagem, que nasce com `src` e baixa
@@ -7684,9 +7684,9 @@ class io extends ra {
         agora: () => performance.now()
       },
       aoCarregar: (a) => this._quadroPronto(a.entityId, a.url),
-      aoMedir: (a, o, i, e) => {
+      aoMedir: (a, o, e, i) => {
         const t = a.split(".")[1] ?? a;
-        T(`câmera ${t}`, o, i === "ok"), e && T(`câmera ${t} · 1º quadro`, o, !0);
+        O(`câmera ${t}`, o, e === "ok"), i && O(`câmera ${t} · 1º quadro`, o, !0);
       }
     }), this._liveEntity = "", this._livePronto = "", this._liveIniciadoEm = 0, this._estadoAoVivo = "ocioso", this._tokenDefinicaoPlayer = 0, this._quadroVerdeRegistrado = "", this._fallbackAoVivo = "", this._ouvindoFechamentoDialogo = !1, this._observador = new H(), this._motivo = "", this._ultimoMinuto = "", this._ouvindoVisibilidade = !1, this._aoMudarVisibilidade = () => {
       if (this.isConnected) {
@@ -7699,9 +7699,9 @@ class io extends ra {
     }, this._modoPlayer = "nenhum", this._aoCarregarAoVivo = () => {
       const a = this._liveEl, o = this._liveEntity;
       if (!a || !o || !this.isConnected) return;
-      const i = a.shadowRoot?.querySelector("video");
-      if (!i || i.readyState < 2 || this._livePronto === o) return;
-      if (la(i)) {
+      const e = a.shadowRoot?.querySelector("video");
+      if (!e || e.readyState < 2 || this._livePronto === o) return;
+      if (la(e)) {
         this._quadroVerdeRegistrado !== o && (this._quadroVerdeRegistrado = o, R(
           o,
           "quadro verde rejeitado",
@@ -7713,9 +7713,9 @@ class io extends ra {
         return;
       }
       this._livePronto = o, this._estadoAoVivo = "ao-vivo", v(h, this._timerQuadroVerde), this._timerQuadroVerde = void 0, a.classList.add("is-ready"), v(h, this._timerAoVivo), this._timerAoVivo = void 0;
-      const e = o.split(".")[1] ?? o;
-      T(
-        `marco: ${e} · player ${this._modoPlayer} · primeiro quadro`,
+      const i = o.split(".")[1] ?? o;
+      O(
+        `marco: ${i} · player ${this._modoPlayer} · primeiro quadro`,
         performance.now() - this._liveIniciadoEm,
         !0
       ), this._sincronizarCameras();
@@ -7740,8 +7740,8 @@ class io extends ra {
       }
       this._arrastoAlvo.style.transform = `translateY(${(o * 0.72).toFixed(1)}px)`;
     }, this._soltarArrasto = (a) => {
-      const o = this._arrastoY, i = this._arrastoAlvo;
-      this._encerrarArrasto(), !(o == null || !i) && a.clientY - o > 90 && this._fecharFolha();
+      const o = this._arrastoY, e = this._arrastoAlvo;
+      this._encerrarArrasto(), !(o == null || !e) && a.clientY - o > 90 && this._fecharFolha();
     }, this._cancelarArrasto = () => {
       this._encerrarArrasto();
     }, this._appsTvAbertos = !1;
@@ -7754,14 +7754,14 @@ class io extends ra {
     const o = ca.find((n) => n.id === a.room);
     if (!o) throw new Error(`bruno-room-subview: cômodo desconhecido "${a.room}"`);
     this._config = a, this._room = o, this._sub = _a[a.room], this._config, this._hass;
-    const i = [
+    const e = [
       ...G(o),
       ...G(this._sub)
-    ], e = this._sub?.entities ?? {}, t = ["spotify", "tv", "speaker"].flatMap((n) => {
-      const p = e[n];
+    ], i = this._sub?.entities ?? {}, t = ["spotify", "tv", "speaker"].flatMap((n) => {
+      const p = i[n];
       return Array.isArray(p) ? p : typeof p == "string" ? [p] : [];
     }).filter((n) => !!n), r = Object.fromEntries(t.map((n) => [n, Qa]));
-    this._observador = new H(i, { projecoes: r }), this._aplicarAtributos();
+    this._observador = new H(e, { projecoes: r }), this._aplicarAtributos();
   }
   /**
    * ANTERIOR (rollback 6.1) — sem guarda nenhuma:
@@ -7888,14 +7888,14 @@ class io extends ra {
       this._motorCameras.definirAlvos([]), this._pararAoVivo();
       return;
     }
-    const o = a.find((t) => t.entity === this._cameraAtiva) ?? a[0], i = a.find((t) => t.online), e = o?.online || !i ? o : i;
+    const o = a.find((t) => t.entity === this._cameraAtiva) ?? a[0], e = a.find((t) => t.online), i = o?.online || !e ? o : e;
     this._motorCameras.definirAlvos(
       a.filter((t) => !(this._liveEl?.isConnected && this._livePronto === t.entity)).map((t) => ({
         entityId: t.entity,
         base: t.base,
-        prioridade: t.entity === e?.entity ? "principal" : "secundaria"
+        prioridade: t.entity === i?.entity ? "principal" : "secundaria"
       }))
-    ), this._cuidarDoAoVivo(e?.entity);
+    ), this._cuidarDoAoVivo(i?.entity);
   }
   /**
    * Aponta o player WebRTC nativo do HA para a câmera do palco.
@@ -7913,10 +7913,10 @@ class io extends ra {
       this._pararAoVivo();
       return;
     }
-    const i = this.shadowRoot?.querySelector(
+    const e = this.shadowRoot?.querySelector(
       `.camera-live-slot[data-camera-live="${o}"]`
     );
-    if (!i) return;
+    if (!e) return;
     if (!this._liveEl || this._liveEntity !== o) {
       this._pararAoVivo();
       const t = this._criarPlayer();
@@ -7928,11 +7928,11 @@ class io extends ra {
         });
         return;
       }
-      this._estadoAoVivo = "negociando", this._liveEl = t, this._liveEntity = o, I(h, t, "load", this._aoCarregarAoVivo), I(h, t, "streams", this._aoInformarStreams), i.appendChild(t), this._iniciarPlayerAposContexto(t, o);
+      this._estadoAoVivo = "negociando", this._liveEl = t, this._liveEntity = o, I(h, t, "load", this._aoCarregarAoVivo), I(h, t, "streams", this._aoInformarStreams), e.appendChild(t), this._iniciarPlayerAposContexto(t, o);
       return;
     }
-    const e = this._liveEl;
-    e.parentElement !== i && i.appendChild(e), e.entityid !== o && (e.entityid = o);
+    const i = this._liveEl;
+    i.parentElement !== e && e.appendChild(i), i.entityid !== o && (i.entityid = o);
   }
   /**
    * Cria o player ao vivo, preferindo WebRTC DIRETO.
@@ -7992,9 +7992,9 @@ class io extends ra {
   _falharAoVivo(a) {
     const o = this._liveEntity;
     if (!o) return;
-    const i = o.split(".")[1] ?? o;
-    T(
-      `marco: ${i} · player ${this._modoPlayer} · ${a}`,
+    const e = o.split(".")[1] ?? o;
+    O(
+      `marco: ${e} · player ${this._modoPlayer} · ${a}`,
       performance.now() - this._liveIniciadoEm,
       !1
     ), this._estadoAoVivo = "fallback", this._fallbackAoVivo = o, this._pararAoVivo(), this._sincronizarCameras();
@@ -8017,7 +8017,7 @@ class io extends ra {
     if (this._quadrosNaTela.has(a)) return;
     this._quadrosNaTela.add(a);
     const o = a.split(".")[1] ?? a;
-    T(`câmera ${o} · até aparecer`, performance.now() - this._montadoEm, !0);
+    O(`câmera ${o} · até aparecer`, performance.now() - this._montadoEm, !0);
   }
   /**
    * O elemento não conseguiu baixar o primeiro quadro sozinho.
@@ -8050,10 +8050,10 @@ class io extends ra {
   /** Põe na tela o quadro que o motor acabou de baixar. */
   _quadroPronto(a, o) {
     this._urlsCarregadas[a] = o;
-    const i = this.shadowRoot?.querySelector(
+    const e = this.shadowRoot?.querySelector(
       `img[data-camera-entity="${a}"]`
     );
-    i && (i.src = o, i.classList.add("is-loaded"), i.closest(".camera-main")?.classList.add("has-loaded-image"));
+    e && (e.src = o, e.classList.add("is-loaded"), e.closest(".camera-main")?.classList.add("has-loaded-image"));
   }
   /**
    * Injeta a folha de material do tema no shadow root.
@@ -8069,17 +8069,17 @@ class io extends ra {
   _injetarMaterial(a = 0) {
     const o = this.shadowRoot;
     if (!o || this._materialInjetado || !this.isConnected) return;
-    const e = globalThis.BrunoSurfaceMaterial?.subviewStyles?.();
-    if (!e) {
+    const i = globalThis.BrunoSurfaceMaterial?.subviewStyles?.();
+    if (!i) {
       a < 20 && A(h, () => this._injetarMaterial(a + 1), 60);
       return;
     }
     try {
       const t = new CSSStyleSheet();
-      t.replaceSync(e), o.adoptedStyleSheets = [...o.adoptedStyleSheets, t], this._materialInjetado = !0;
+      t.replaceSync(i), o.adoptedStyleSheets = [...o.adoptedStyleSheets, t], this._materialInjetado = !0;
     } catch {
       const t = document.createElement("style");
-      t.textContent = e, o.appendChild(t), this._materialInjetado = !0;
+      t.textContent = i, o.appendChild(t), this._materialInjetado = !0;
     }
   }
   /**
@@ -8093,10 +8093,10 @@ class io extends ra {
     const a = this._room;
     if (!a) return;
     this.setAttribute("data-room", a.id);
-    const o = this._sub?.entities, i = (e, t) => {
-      t ? this.setAttribute(e, "") : this.removeAttribute(e);
+    const o = this._sub?.entities, e = (i, t) => {
+      t ? this.setAttribute(i, "") : this.removeAttribute(i);
     };
-    i("data-appliances", !!(o?.appliances ?? o?.dishwasher)), i("data-tvhub", !!o?.tv), this._folha ? this.setAttribute("data-folha", this._folha) : this.removeAttribute("data-folha"), this._folhaSaindo ? this.setAttribute("data-folha-saindo", "") : this.removeAttribute("data-folha-saindo"), i("data-ps5", !!o?.ps5);
+    e("data-appliances", !!(o?.appliances ?? o?.dishwasher)), e("data-tvhub", !!o?.tv), this._folha ? this.setAttribute("data-folha", this._folha) : this.removeAttribute("data-folha"), this._folhaSaindo ? this.setAttribute("data-folha-saindo", "") : this.removeAttribute("data-folha-saindo"), e("data-ps5", !!o?.ps5);
   }
   /** O Office troca o hub de midia pela Estacao de Trabalho, com o PC. */
   get _temPc() {
@@ -8361,7 +8361,7 @@ class io extends ra {
    * mesma fonte — `motion_recent` —, para painel e subview nunca discordarem.
    */
   _renderTopBand() {
-    const a = this._room?.entities, o = this._hass, i = (n) => n && o ? o.states[n] : void 0, e = this._contarLuzes(), t = i(a?.motionRecent)?.state === "on", r = [
+    const a = this._room?.entities, o = this._hass, e = (n) => n && o ? o.states[n] : void 0, i = this._contarLuzes(), t = e(a?.motionRecent)?.state === "on", r = [
       {
         icon: "mdi:motion-sensor",
         titulo: "Presença",
@@ -8375,7 +8375,7 @@ class io extends ra {
         titulo: "Luzes",
         sub: this._linhaLuzes(),
         tone: "247,198,0",
-        ativo: e > 0,
+        ativo: i > 0,
         ocultarNoTelefone: !1
       },
       {
@@ -8439,7 +8439,7 @@ class io extends ra {
   }
   _contarLuzes() {
     const a = this._hass, o = this._room?.entities;
-    return !a || !o?.lights ? 0 : o.lights.filter((i) => a.states[i]?.state === "on").length;
+    return !a || !o?.lights ? 0 : o.lights.filter((e) => a.states[e]?.state === "on").length;
   }
   /**
    * Legenda da badge de luzes — acesas POR ZONA.
@@ -8454,17 +8454,17 @@ class io extends ra {
     const a = this._luzesDaConfiguracao();
     if (!a.length) return `${this._contarLuzes()} acesas`;
     const o = /* @__PURE__ */ new Map();
-    for (const i of a) {
-      const e = i.zone || "sala", t = this._hass?.states[i.entity]?.state === "on" ? 1 : 0;
-      o.set(e, (o.get(e) ?? 0) + t);
+    for (const e of a) {
+      const i = e.zone || "sala", t = this._hass?.states[e.entity]?.state === "on" ? 1 : 0;
+      o.set(i, (o.get(i) ?? 0) + t);
     }
-    return [...o.entries()].map(([i, e]) => `${i.charAt(0).toUpperCase()}${i.slice(1)} ${e}`).join(" · ");
+    return [...o.entries()].map(([e, i]) => `${e.charAt(0).toUpperCase()}${e.slice(1)} ${i}`).join(" · ");
   }
   _linhaPresenca() {
     const a = this._hass, o = this._room?.entities;
     if (!a || !o?.semanticState) return "Sensor indisponível";
-    const e = a.states[o.semanticState]?.attributes.display;
-    return e ? String(e) : a.states[o.motionRecent ?? ""]?.state === "on" ? "Presença" : "Sem presença";
+    const i = a.states[o.semanticState]?.attributes.display;
+    return i ? String(i) : a.states[o.motionRecent ?? ""]?.state === "on" ? "Presença" : "Sem presença";
   }
   /**
    * Leitura de um sensor da barra superior.
@@ -8474,9 +8474,9 @@ class io extends ra {
    * GRAU (U+00B0), não o ordinal masculino — este último desenha um traço sob o
    * círculo e destoa do resto do painel.
    */
-  _valorSensor(a, o, i = 0) {
-    const e = a && this._hass ? this._hass.states[a] : void 0, t = String(e?.state ?? "").toLowerCase();
-    return !e || ["unknown", "unavailable", "none", ""].includes(t) ? "--" : `${M(e.state, i)}${o}`;
+  _valorSensor(a, o, e = 0) {
+    const i = a && this._hass ? this._hass.states[a] : void 0, t = String(i?.state ?? "").toLowerCase();
+    return !i || ["unknown", "unavailable", "none", ""].includes(t) ? "--" : `${M(i.state, e)}${o}`;
   }
   /** Roteador e hub Zigbee: "Online" quando conectado, senão o próprio estado. */
   _linhaRede(a) {
@@ -8495,8 +8495,8 @@ class io extends ra {
    * mais larga que a das subviews atuais e empurravam o relógio para a esquerda.
    */
   _data() {
-    const a = ["DOMINGO", "SEGUNDA-FEIRA", "TERÇA-FEIRA", "QUARTA-FEIRA", "QUINTA-FEIRA", "SEXTA-FEIRA", "SÁBADO"], o = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"], i = /* @__PURE__ */ new Date();
-    return `${a[i.getDay()]}, ${i.getDate()} ${o[i.getMonth()]}`;
+    const a = ["DOMINGO", "SEGUNDA-FEIRA", "TERÇA-FEIRA", "QUARTA-FEIRA", "QUINTA-FEIRA", "SEXTA-FEIRA", "SÁBADO"], o = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"], e = /* @__PURE__ */ new Date();
+    return `${a[e.getDay()]}, ${e.getDate()} ${o[e.getMonth()]}`;
   }
   /**
    * Abre e fecha o dock de iluminação.
@@ -8558,14 +8558,14 @@ class io extends ra {
         a = a.parentNode;
         continue;
       }
-      const e = a.getRootNode();
-      a = e instanceof ShadowRoot && e.host !== a ? e.host : null;
+      const i = a.getRootNode();
+      a = i instanceof ShadowRoot && i.host !== a ? i.host : null;
     }
     if (!o) return;
-    const i = this.renderRoot.querySelector(".cameras-card") ?? this;
+    const e = this.renderRoot.querySelector(".cameras-card") ?? this;
     return {
       rolavel: o,
-      topoCamera: i.getBoundingClientRect().top,
+      topoCamera: e.getBoundingClientRect().top,
       rolagem: o.scrollTop,
       token: ++this._tokenAncoraFolha
     };
@@ -8584,8 +8584,8 @@ class io extends ra {
       globalThis.requestAnimationFrame(() => {
         globalThis.requestAnimationFrame(() => {
           if (a.token !== this._tokenAncoraFolha || !a.rolavel.isConnected) return;
-          const i = (this.renderRoot.querySelector(".cameras-card") ?? this).getBoundingClientRect().top - a.topoCamera;
-          a.rolavel.scrollTop = Math.max(0, a.rolagem + i);
+          const e = (this.renderRoot.querySelector(".cameras-card") ?? this).getBoundingClientRect().top - a.topoCamera;
+          a.rolavel.scrollTop = Math.max(0, a.rolagem + e);
         });
       });
     });
@@ -8603,10 +8603,10 @@ class io extends ra {
       this.style.removeProperty("--fone-folha-top");
       return;
     }
-    const a = this.renderRoot.querySelector(".curtain-dock"), o = this.renderRoot.querySelector(".cameras-card"), i = a?.getBoundingClientRect().top ?? (o?.getBoundingClientRect().bottom ?? 0) + 8;
-    if (!Number.isFinite(i) || i <= 0) return;
-    const e = `${Math.round(i)}px`;
-    this.style.getPropertyValue("--fone-folha-top") !== e && this.style.setProperty("--fone-folha-top", e);
+    const a = this.renderRoot.querySelector(".curtain-dock"), o = this.renderRoot.querySelector(".cameras-card"), e = a?.getBoundingClientRect().top ?? (o?.getBoundingClientRect().bottom ?? 0) + 8;
+    if (!Number.isFinite(e) || e <= 0) return;
+    const i = `${Math.round(e)}px`;
+    this.style.getPropertyValue("--fone-folha-top") !== i && this.style.setProperty("--fone-folha-top", i);
   }
   /**
    * Faz as quatro linhas visuais de Sala e Q. Miguel caberem exatamente na
@@ -8625,17 +8625,17 @@ class io extends ra {
       this.style.removeProperty(a);
       return;
     }
-    const o = this.renderRoot.querySelector(".lights-scroll"), i = [...this.renderRoot.querySelectorAll(".light-grid")];
-    if (!o || !i.length || o.clientHeight <= 0) return;
-    let e = 0, t = 0, r = 0;
-    for (const m of i) {
+    const o = this.renderRoot.querySelector(".lights-scroll"), e = [...this.renderRoot.querySelectorAll(".light-grid")];
+    if (!o || !e.length || o.clientHeight <= 0) return;
+    let i = 0, t = 0, r = 0;
+    for (const m of e) {
       const d = m.querySelectorAll(".light-cell").length, g = Math.ceil(d / 2);
       if (!g) continue;
       const x = Number.parseFloat(getComputedStyle(m).rowGap) || 0;
-      e += g, t += m.getBoundingClientRect().height, r += Math.max(0, g - 1) * x;
+      i += g, t += m.getBoundingClientRect().height, r += Math.max(0, g - 1) * x;
     }
-    if (!e) return;
-    const n = Math.max(0, o.scrollHeight - t), p = (o.clientHeight - n - r - 2) / e, s = Math.floor(Math.max(56, Math.min(60, p)) * 10) / 10;
+    if (!i) return;
+    const n = Math.max(0, o.scrollHeight - t), p = (o.clientHeight - n - r - 2) / i, s = Math.floor(Math.max(56, Math.min(60, p)) * 10) / 10;
     if (!Number.isFinite(s)) return;
     const c = `${s}px`;
     this.style.getPropertyValue(a) !== c && this.style.setProperty(a, c);
@@ -8671,8 +8671,8 @@ class io extends ra {
     }, 280);
   }
   _limparFolhaImediatamente(a = !0) {
-    const o = this._capturarBaseFolha(), i = !!this._folha;
-    v(h, this._timerFecharFolha), this._timerFecharFolha = void 0, this._folhaSaindo = !1, this._folha = null, this._encerrarArrasto(), this._aplicarAtributos(), i && a && this._avisarFolha(), this.requestUpdate(), this._restaurarBaseFolha(o);
+    const o = this._capturarBaseFolha(), e = !!this._folha;
+    v(h, this._timerFecharFolha), this._timerFecharFolha = void 0, this._folhaSaindo = !1, this._folha = null, this._encerrarArrasto(), this._aplicarAtributos(), e && a && this._avisarFolha(), this.requestUpdate(), this._restaurarBaseFolha(o);
   }
   /**
    * O botão discreto de fechar, no cabeçalho de cada folha.
@@ -8818,9 +8818,9 @@ class io extends ra {
   _resumoEletrodomesticos() {
     const a = this._sub?.entities?.appliances;
     if (!Array.isArray(a) || !a.length) return "Sem aparelhos";
-    const o = a.filter((e) => !e.placeholder && e.entity);
-    return o.length ? `${o.filter((e) => {
-      const t = this._hass?.states[String(e.stateEntity ?? e.entity)]?.state, r = Array.isArray(e.activeStates) ? e.activeStates : ["on"];
+    const o = a.filter((i) => !i.placeholder && i.entity);
+    return o.length ? `${o.filter((i) => {
+      const t = this._hass?.states[String(i.stateEntity ?? i.entity)]?.state, r = Array.isArray(i.activeStates) ? i.activeStates : ["on"];
       return t != null && r.includes(String(t));
     }).length} de ${o.length} ligados` : `${a.length} sem tomada`;
   }
@@ -8933,7 +8933,7 @@ class io extends ra {
   _renderSecoesDeLuz() {
     const a = this._luzesDaConfiguracao();
     if (!a.length) return b;
-    const o = this._sub?.lightZoneLabels ?? {}, i = this._sub?.lightZoneIcons ?? {}, e = { sala: "Sala", varanda: "Varanda" }, t = { sala: "mdi:sofa-outline", varanda: "bruno:balcony" }, r = [];
+    const o = this._sub?.lightZoneLabels ?? {}, e = this._sub?.lightZoneIcons ?? {}, i = { sala: "Sala", varanda: "Varanda" }, t = { sala: "mdi:sofa-outline", varanda: "bruno:balcony" }, r = [];
     for (const s of a) r.includes(s.zone) || r.push(s.zone);
     const n = r.map((s) => {
       const c = a.filter((m) => m.zone === s);
@@ -8941,8 +8941,8 @@ class io extends ra {
         chave: s,
         // Sem rotulo mapeado, a chave vira o nome com inicial maiuscula: no
         // Office e na Cozinha a zona unica saia como "office" e "cozinha".
-        nome: o[s] ?? e[s] ?? s.charAt(0).toUpperCase() + s.slice(1),
-        icone: i[s] ?? t[s] ?? "mdi:lightbulb-group",
+        nome: o[s] ?? i[s] ?? s.charAt(0).toUpperCase() + s.slice(1),
+        icone: e[s] ?? t[s] ?? "mdi:lightbulb-group",
         luzes: c,
         acesas: c.filter((m) => this._hass?.states[m.entity]?.state === "on").length
       };
@@ -8981,10 +8981,10 @@ class io extends ra {
       icon: typeof o.iconType == "string" ? o.iconType : void 0
     })) : [];
   }
-  _renderCelulaDeLuz(a, o, i) {
-    const e = this._hass?.states[a.entity]?.state === "on", t = i && o === 0, r = i ? o - 1 : o, n = t ? 0 : Math.floor(r / 2) + (i ? 1 : 0), p = [
+  _renderCelulaDeLuz(a, o, e) {
+    const i = this._hass?.states[a.entity]?.state === "on", t = e && o === 0, r = e ? o - 1 : o, n = t ? 0 : Math.floor(r / 2) + (e ? 1 : 0), p = [
       "light-cell",
-      e ? "is-on" : "",
+      i ? "is-on" : "",
       t ? "is-wide" : "",
       !t && n > 0 ? "has-rule-top" : "",
       !t && r % 2 === 1 ? "has-rule-left" : ""
@@ -8994,11 +8994,11 @@ class io extends ra {
         type="button"
         class=${p}
         role="switch"
-        aria-checked=${e ? "true" : "false"}
+        aria-checked=${i ? "true" : "false"}
         aria-label=${a.name}
         @click=${() => this._alternarLuz(a.entity)}
       >
-        <span class="lc-icon">${this._iconeDaLuz(a.icon, e)}</span>
+        <span class="lc-icon">${this._iconeDaLuz(a.icon, i)}</span>
         <span class="lc-name">${a.name}</span>
         <span class="lc-switch" aria-hidden="true"><span class="lc-knob"></span></span>
       </button>
@@ -9016,9 +9016,9 @@ class io extends ra {
    * usa para dimensionar e colorir; sem ela o glifo fica sem tamanho.
    */
   _iconeDaLuz(a, o) {
-    const e = String(a ?? "light_flush").replace(/^mdi:/, "").replace(/[^a-z0-9_-]/gi, "") || "light_flush";
-    return l`<span class="tpl-light-icon icon-${e} ${o ? "is-on" : ""}">
-      <bruno-icon icon=${e}></bruno-icon>
+    const i = String(a ?? "light_flush").replace(/^mdi:/, "").replace(/[^a-z0-9_-]/gi, "") || "light_flush";
+    return l`<span class="tpl-light-icon icon-${i} ${o ? "is-on" : ""}">
+      <bruno-icon icon=${i}></bruno-icon>
     </span>`;
   }
   _alternarLuz(a) {
@@ -9026,7 +9026,7 @@ class io extends ra {
   }
   _apagarZona(a) {
     if (!this._hass || !a.length) return;
-    const o = a.map((i) => i.entity);
+    const o = a.map((e) => e.entity);
     this._hass.callService("light", "turn_off", { entity_id: o }, { entity_id: o });
   }
   _todasAsLuzes(a) {
@@ -9063,7 +9063,7 @@ class io extends ra {
    * fluxo. Lida do DOM renderizado.
    */
   _renderHero() {
-    const a = this._entidadeCortina(), o = this._estado(a), i = this._indisponivel(o), e = ["opening", "closing"].includes(String(o?.state));
+    const a = this._entidadeCortina(), o = this._estado(a), e = this._indisponivel(o), i = ["opening", "closing"].includes(String(o?.state));
     return l`
       <div class="hero-panel">
         <div class="hero-stage hero-atmosphere">
@@ -9097,9 +9097,9 @@ class io extends ra {
       ([t, r, n]) => l`
                       <button
                         type="button"
-                        class="curtain-action-button ${t === "cover-stop" ? "is-muted" : ""} ${t === "cover-stop" && e ? "is-active" : ""}"
+                        class="curtain-action-button ${t === "cover-stop" ? "is-muted" : ""} ${t === "cover-stop" && i ? "is-active" : ""}"
                         data-action=${t}
-                        ?disabled=${i}
+                        ?disabled=${e}
                         @click=${() => this._acionarCortina(r)}
                       >
                         <bruno-icon icon="hugeicons:curtains"></bruno-icon>
@@ -9121,7 +9121,7 @@ class io extends ra {
                   step="1"
                   .value=${String(this._fechamentoCortina())}
                   aria-label="Percentual de fechamento da cortina"
-                  ?disabled=${i}
+                  ?disabled=${e}
                   @input=${(t) => this._previsualizarFechamentoCortina(t)}
                   @change=${(t) => this._posicionarCortinaPorFechamento(Number(t.currentTarget.value))}
                 />
@@ -9138,7 +9138,7 @@ class io extends ra {
                         data-position=${this._posicaoBrutaPorFechamento(t)}
                         data-closed=${t}
                         aria-label="${t}% fechada"
-                        ?disabled=${i}
+                        ?disabled=${e}
                         @click=${() => this._posicionarCortinaPorFechamento(t)}
                       >
                         ${t}%
@@ -9158,29 +9158,29 @@ class io extends ra {
     return typeof a == "string" ? a : void 0;
   }
   _posicaoCortina() {
-    const a = this._entidadeCortina(), i = (a && this._hass ? this._hass.states[a] : void 0)?.attributes.current_position;
-    return typeof i == "number" ? i : void 0;
+    const a = this._entidadeCortina(), e = (a && this._hass ? this._hass.states[a] : void 0)?.attributes.current_position;
+    return typeof e == "number" ? e : void 0;
   }
   _percentualCortinaValido(a) {
     const o = Number(a);
     if (Number.isFinite(o))
       return Math.max(0, Math.min(100, Math.round(o)));
   }
-  _interpolarCortina(a, o, i) {
-    const e = this._percentualCortinaValido(a) ?? 0, t = Ga, r = t[0];
-    if (e <= r[o]) return r[i];
+  _interpolarCortina(a, o, e) {
+    const i = this._percentualCortinaValido(a) ?? 0, t = Ga, r = t[0];
+    if (i <= r[o]) return r[e];
     for (let n = 1; n < t.length; n += 1) {
       const p = t[n - 1], s = t[n];
-      if (e <= s[o]) {
+      if (i <= s[o]) {
         const c = s[o] - p[o];
-        if (c === 0) return s[i];
-        const m = (e - p[o]) / c;
+        if (c === 0) return s[e];
+        const m = (i - p[o]) / c;
         return this._percentualCortinaValido(
-          p[i] + (s[i] - p[i]) * m
-        ) ?? s[i];
+          p[e] + (s[e] - p[e]) * m
+        ) ?? s[e];
       }
     }
-    return t[t.length - 1][i];
+    return t[t.length - 1][e];
   }
   /** Posição física do cover, já convertida para percentual visual FECHADO. */
   _fechamentoCortinaFisico() {
@@ -9209,25 +9209,25 @@ class io extends ra {
   _fechamentoMovimentoCortina(a = this._movimentoCortina, o = Date.now()) {
     if (!a) return;
     if (a.retido) return this._percentualCortinaValido(a.fechado);
-    const i = Math.min(1, Math.max(0, (o - a.iniciadoEm) / Math.max(1, a.duracao)));
+    const e = Math.min(1, Math.max(0, (o - a.iniciadoEm) / Math.max(1, a.duracao)));
     return this._percentualCortinaValido(
-      a.inicioFechado + (a.alvoFechado - a.inicioFechado) * i
+      a.inicioFechado + (a.alvoFechado - a.inicioFechado) * e
     );
   }
   /** Percentual visual fechado: 0 = aberta; 100 = fechada. */
   _fechamentoCortina() {
-    const a = this._fechamentoCortinaRelatado(), o = this._movimentoCortina, i = this._entidadeCortina();
-    if (!o || o.entityId !== i) return a;
-    const e = Date.now(), t = String(this._estado(i)?.state ?? "").toLowerCase(), r = t === "opening" || t === "closing", n = this._fechamentoCortinaFisico();
+    const a = this._fechamentoCortinaRelatado(), o = this._movimentoCortina, e = this._entidadeCortina();
+    if (!o || o.entityId !== e) return a;
+    const i = Date.now(), t = String(this._estado(e)?.state ?? "").toLowerCase(), r = t === "opening" || t === "closing", n = this._fechamentoCortinaFisico();
     if (o.retido)
-      return !r && n != null && e - o.retidoEm >= Xa ? (this._movimentoCortina = void 0, n) : o.fechado;
-    const p = e - o.iniciadoEm, s = n != null && Math.abs(n - o.alvoFechado) <= L;
+      return !r && n != null && i - o.retidoEm >= Xa ? (this._movimentoCortina = void 0, n) : o.fechado;
+    const p = i - o.iniciadoEm, s = n != null && Math.abs(n - o.alvoFechado) <= L;
     if (n != null && !s && Math.abs(n - o.ultimoRelatado) >= 1)
-      return o.ultimoRelatado = n, o.inicioFechado = n, o.iniciadoEm = e, o.duracao = Math.max(
+      return o.ultimoRelatado = n, o.inicioFechado = n, o.iniciadoEm = i, o.duracao = Math.max(
         X,
         Y * (Math.abs(o.alvoFechado - n) / 100)
       ), n;
-    const d = this._fechamentoMovimentoCortina(o, e) ?? a;
+    const d = this._fechamentoMovimentoCortina(o, i) ?? a;
     if (p >= o.duracao && !r) {
       this._movimentoCortina = void 0, this._pararTimerMovimentoCortina();
       const x = t === "closed" && o.alvoFechado >= 100 - L || t === "open" && o.alvoFechado <= L;
@@ -9248,13 +9248,13 @@ class io extends ra {
     v(h, this._timerMovimentoCortina), this._timerMovimentoCortina = void 0;
   }
   _iniciarMovimentoCortina(a) {
-    const o = this._entidadeCortina(), i = this._percentualCortinaValido(a);
-    if (!o || i == null) return;
-    const e = this._fechamentoMovimentoCortina() ?? this._fechamentoCortinaRelatado(), t = Math.abs(i - e);
+    const o = this._entidadeCortina(), e = this._percentualCortinaValido(a);
+    if (!o || e == null) return;
+    const i = this._fechamentoMovimentoCortina() ?? this._fechamentoCortinaRelatado(), t = Math.abs(e - i);
     this._movimentoCortina = {
       entityId: o,
-      inicioFechado: e,
-      alvoFechado: i,
+      inicioFechado: i,
+      alvoFechado: e,
       iniciadoEm: Date.now(),
       duracao: Math.max(X, Y * (t / 100)),
       ultimoRelatado: this._fechamentoCortinaRelatado()
@@ -9275,17 +9275,17 @@ class io extends ra {
     if (!a) return "Indisponível";
     const o = this._hass?.states[a];
     if (!o) return "Indisponível";
-    const i = this._fechamentoCortina(), e = String(o.state ?? "").toLowerCase(), t = this._movimentoCortina, r = t && !t.retido && t.entityId === a ? t : void 0;
-    return e === "opening" || r && r.alvoFechado < r.inicioFechado ? `Abrindo ${i}%` : e === "closing" || r && r.alvoFechado > r.inicioFechado ? `Fechando ${i}%` : i <= 1 ? "Aberta" : i >= 99 ? "Fechada" : `Fechada ${i}%`;
+    const e = this._fechamentoCortina(), i = String(o.state ?? "").toLowerCase(), t = this._movimentoCortina, r = t && !t.retido && t.entityId === a ? t : void 0;
+    return i === "opening" || r && r.alvoFechado < r.inicioFechado ? `Abrindo ${e}%` : i === "closing" || r && r.alvoFechado > r.inicioFechado ? `Fechando ${e}%` : e <= 1 ? "Aberta" : e >= 99 ? "Fechada" : `Fechada ${e}%`;
   }
   _percentualCortina() {
     return "";
   }
   _previsualizarFechamentoCortina(a) {
-    const o = a.currentTarget, i = this._percentualCortinaValido(o.value) ?? 0, e = o.closest(".curtain-dock");
-    e?.style.setProperty("--curtain-position", `${i}%`), e?.querySelector(".curtain-status-text")?.replaceChildren(
+    const o = a.currentTarget, e = this._percentualCortinaValido(o.value) ?? 0, i = o.closest(".curtain-dock");
+    i?.style.setProperty("--curtain-position", `${e}%`), i?.querySelector(".curtain-status-text")?.replaceChildren(
       document.createTextNode(
-        i <= 1 ? "Aberta" : i >= 99 ? "Fechada" : `Fechada ${i}%`
+        e <= 1 ? "Aberta" : e >= 99 ? "Fechada" : `Fechada ${e}%`
       )
     );
   }
@@ -9306,8 +9306,8 @@ class io extends ra {
   _indisponivel(a) {
     return !a || ["unavailable", "unknown", ""].includes(String(a.state).toLowerCase());
   }
-  _servico(a, o, i) {
-    this._hass && ya(this._hass, a, o, i);
+  _servico(a, o, e) {
+    this._hass && ya(this._hass, a, o, e);
   }
   /**
    * A lista de câmeras vem da configuração gerada — `entities.cameras` —, com
@@ -9328,7 +9328,7 @@ class io extends ra {
    * guardado: numa reconexão a imagem antiga continua na tela em vez de sumir.
    */
   _cameraViva(a) {
-    const o = this._estado(a.entity), i = a.fallbackEntity ? this._estado(a.fallbackEntity) : void 0, e = this._indisponivel(o) && !!a.fallbackEntity && !this._indisponivel(i), t = e ? String(a.fallbackEntity) : a.entity, r = e ? i : o, n = this._indisponivel(r), p = !n && ja.includes(String(r?.state ?? "")), s = String(r?.attributes.entity_picture ?? "");
+    const o = this._estado(a.entity), e = a.fallbackEntity ? this._estado(a.fallbackEntity) : void 0, i = this._indisponivel(o) && !!a.fallbackEntity && !this._indisponivel(e), t = i ? String(a.fallbackEntity) : a.entity, r = i ? e : o, n = this._indisponivel(r), p = !n && ja.includes(String(r?.state ?? "")), s = String(r?.attributes.entity_picture ?? "");
     s && (this._ultimaImagem[t] = s);
     const c = s || this._ultimaImagem[t] || `/api/camera_proxy/${t}`;
     return {
@@ -9350,13 +9350,13 @@ class io extends ra {
   }
   /** Um dos três interruptores da câmera (som, movimento, privacidade). */
   _controleCamera(a, o) {
-    const i = (a?.controls ?? []).find((r) => String(r.key ?? "").toLowerCase() === o);
-    if (!i?.entity) return;
-    const e = this._estado(i.entity), t = this._indisponivel(e);
+    const e = (a?.controls ?? []).find((r) => String(r.key ?? "").toLowerCase() === o);
+    if (!e?.entity) return;
+    const i = this._estado(e.entity), t = this._indisponivel(i);
     return {
-      ...i,
-      entity: i.entity,
-      ativo: !t && String(e?.state ?? "").toLowerCase() === "on",
+      ...e,
+      entity: e.entity,
+      ativo: !t && String(i?.state ?? "").toLowerCase() === "on",
       indisponivel: t
     };
   }
@@ -9367,7 +9367,7 @@ class io extends ra {
    * espera. O PIP é um botão: tocá-lo promove aquela câmera ao feed principal.
    */
   _renderFeed(a, o) {
-    const i = a?.shortName || a?.name || "Câmera", t = !!this._controleCamera(a, "privacy")?.ativo, r = !a || a.indisponivel, n = [
+    const e = a?.shortName || a?.name || "Câmera", t = !!this._controleCamera(a, "privacy")?.ativo, r = !a || a.indisponivel, n = [
       "camera-main",
       "camera-feed",
       o ? "camera-pip-feed" : "camera-primary-feed",
@@ -9397,12 +9397,12 @@ class io extends ra {
         <div class="camera-placeholder" aria-hidden="true"></div>
       </div>
       ${p}
-      <div class="camera-row-copy"><strong>${i}</strong></div>
+      <div class="camera-row-copy"><strong>${e}</strong></div>
     `;
     return o && a ? l`<button
         type="button"
         class=${n}
-        aria-label=${`Mostrar câmera ${i}`}
+        aria-label=${`Mostrar câmera ${e}`}
         @click=${() => {
       this._cameraAtiva = a.entity, this.requestUpdate();
     }}
@@ -9411,11 +9411,11 @@ class io extends ra {
       </button>` : a ? l`<button
       type="button"
       class=${n}
-      aria-label=${`Abrir câmera ${i} em tela cheia`}
+      aria-label=${`Abrir câmera ${e} em tela cheia`}
       @click=${() => this._maisInfo(a.entity)}
     >
       ${c}
-    </button>` : l`<div class=${n} aria-label=${`Câmera ${i}`}>${c}</div>`;
+    </button>` : l`<div class=${n} aria-label=${`Câmera ${e}`}>${c}</div>`;
   }
   /** Câmeras: cabeçalho com o menu de três pontos + palco com feed e PIP. */
   _renderCameras() {
@@ -9432,7 +9432,7 @@ class io extends ra {
           <div class="camera-stage camera-pip-stage">${this._renderFeed(void 0, !1)}</div>
         </div>
       `;
-    const o = a.find((n) => n.entity === this._cameraAtiva) ?? a[0], i = a.find((n) => n.online), e = o?.online || !i ? o : i, t = a.find((n) => n.entity !== e?.entity), r = this._controlesCameraAbertos;
+    const o = a.find((n) => n.entity === this._cameraAtiva) ?? a[0], e = a.find((n) => n.online), i = o?.online || !e ? o : e, t = a.find((n) => n.entity !== i?.entity), r = this._controlesCameraAbertos;
     return l`
       <div class="glass-card cameras-card cameras-card-controls">
         <div class="mh-head cameras-head">
@@ -9454,33 +9454,33 @@ class io extends ra {
           </button>
         </div>
         <div class="camera-stage camera-pip-stage ${r ? "is-controls-open" : ""}">
-          ${this._renderFeed(e, !1)}
+          ${this._renderFeed(i, !1)}
           ${t ? this._renderFeed(t, !0) : b}
-          ${r ? this._renderControlesCamera(e) : b}
+          ${r ? this._renderControlesCamera(i) : b}
         </div>
       </div>
     `;
   }
   _renderControlesCamera(a) {
-    const o = ["sound", "motion", "privacy"].map((e) => this._controleCamera(a, e)).filter((e) => !!e);
+    const o = ["sound", "motion", "privacy"].map((i) => this._controleCamera(a, i)).filter((i) => !!i);
     if (!o.length) return b;
-    const i = a?.shortName || a?.name || "Câmera";
+    const e = a?.shortName || a?.name || "Câmera";
     return l`
-      <div class="camera-control-strip" aria-label=${`Controles da câmera ${i}`}>
+      <div class="camera-control-strip" aria-label=${`Controles da câmera ${e}`}>
         <div class="camera-controls">
-          ${o.map((e) => {
-      const t = e.description || e.label || "Controle";
+          ${o.map((i) => {
+      const t = i.description || i.label || "Controle";
       return l`
               <button
                 type="button"
-                class="camera-control ${e.ativo ? "is-on" : ""} ${e.indisponivel ? "is-unavailable" : ""}"
-                ?disabled=${e.indisponivel}
-                aria-pressed=${e.ativo ? "true" : "false"}
-                title=${`${t} — câmera ${i}`}
-                @click=${() => this._servico("homeassistant", "toggle", { entity_id: e.entity })}
+                class="camera-control ${i.ativo ? "is-on" : ""} ${i.indisponivel ? "is-unavailable" : ""}"
+                ?disabled=${i.indisponivel}
+                aria-pressed=${i.ativo ? "true" : "false"}
+                title=${`${t} — câmera ${e}`}
+                @click=${() => this._servico("homeassistant", "toggle", { entity_id: i.entity })}
               >
-                <bruno-icon icon=${e.icon ?? "mdi:toggle-switch-outline"}></bruno-icon>
-                <span class="camera-control-label">${e.label || t}</span>
+                <bruno-icon icon=${i.icon ?? "mdi:toggle-switch-outline"}></bruno-icon>
+                <span class="camera-control-label">${i.label || t}</span>
                 <span class="camera-control-switch" aria-hidden="true"></span>
               </button>
             `;
@@ -9501,8 +9501,8 @@ class io extends ra {
   _resolverId(a) {
     if (typeof a == "string") return a || void 0;
     if (!Array.isArray(a)) return;
-    const o = a.filter((e) => typeof e == "string" && !!e);
-    return o.find((e) => !this._indisponivel(this._hass?.states[e])) ?? o[0];
+    const o = a.filter((i) => typeof i == "string" && !!i);
+    return o.find((i) => !this._indisponivel(this._hass?.states[i])) ?? o[0];
   }
   _idDe(a) {
     return this._resolverId(this._sub?.entities?.[a]);
@@ -9513,8 +9513,8 @@ class io extends ra {
       try {
         const a = globalThis.localStorage?.getItem(Q);
         if (!a) return;
-        const o = JSON.parse(a), i = String(o.fonte ?? "").trim(), e = String(o.titulo ?? "").trim(), t = String(o.poster ?? "").trim(), r = Number(o.volume);
-        i && (this._tvUltimaFonte = i), e && (this._tvUltimoTitulo = e), t && (this._tvUltimoPoster = t), Number.isFinite(r) && (this._tvUltimoVolume = r);
+        const o = JSON.parse(a), e = String(o.fonte ?? "").trim(), i = String(o.titulo ?? "").trim(), t = String(o.poster ?? "").trim(), r = Number(o.volume);
+        e && (this._tvUltimaFonte = e), i && (this._tvUltimoTitulo = i), t && (this._tvUltimoPoster = t), Number.isFinite(r) && (this._tvUltimoVolume = r);
       } catch {
       }
     }
@@ -9528,10 +9528,10 @@ class io extends ra {
   }
   _modeloTv() {
     this._carregarHistoricoTv();
-    const a = this._idDe("tv"), o = this._idDe("tvMedia") ?? a, i = this._estado(a), e = this._estado(o), t = i?.attributes ?? {}, r = e?.attributes ?? {}, n = fa(this._hass, a), p = va(this._hass, o), s = String(i?.state ?? "off").toLowerCase(), c = String(e?.state ?? "").toLowerCase(), m = String(r.app_name ?? r.source ?? t.source ?? t.app_name ?? "").trim(), d = String(r.media_title ?? r.media_series_title ?? r.app_name ?? "").trim(), g = String(r.media_image_url || r.entity_picture || r.entity_picture_local || "").trim(), x = t.volume_level ?? r.volume_level, y = x == null ? Number.NaN : Number(x), C = Number.isFinite(y) ? Math.round(y * 100) : null;
+    const a = this._idDe("tv"), o = this._idDe("tvMedia") ?? a, e = this._estado(a), i = this._estado(o), t = e?.attributes ?? {}, r = i?.attributes ?? {}, n = fa(this._hass, a), p = va(this._hass, o), s = String(e?.state ?? "off").toLowerCase(), c = String(i?.state ?? "").toLowerCase(), m = String(r.app_name ?? r.source ?? t.source ?? t.app_name ?? "").trim(), d = String(r.media_title ?? r.media_series_title ?? r.app_name ?? "").trim(), g = String(r.media_image_url || r.entity_picture || r.entity_picture_local || "").trim(), x = t.volume_level ?? r.volume_level, y = x == null ? Number.NaN : Number(x), C = Number.isFinite(y) ? Math.round(y * 100) : null;
     return n && (m && (this._tvUltimaFonte = m), d && (this._tvUltimoTitulo = d), g && (this._tvUltimoPoster = g), C != null && (this._tvUltimoVolume = C), this._salvarHistoricoTv()), {
-      st: i,
-      media: e,
+      st: e,
+      media: i,
       estado: p ? c : s,
       ativo: n,
       reproduzindo: p,
@@ -9542,14 +9542,14 @@ class io extends ra {
     };
   }
   _modeloSpotify() {
-    const a = this._estado(this._idDe("spotify")), o = a?.attributes ?? {}, i = a?.state ?? "off", t = Pa.includes(i) && wa(
+    const a = this._estado(this._idDe("spotify")), o = a?.attributes ?? {}, e = a?.state ?? "off", t = Pa.includes(e) && wa(
       a,
       this._sub?.spotifyDeviceName,
       this._estado(this._idDe("speaker"))
-    ), r = String(o.media_title ?? "") || "SpotifyPlus", n = Number(o.media_duration) || 0, p = Number(o.media_position) || 0, s = Date.parse(String(o.media_position_updated_at ?? "")), c = t && i === "playing", m = c && Number.isFinite(s) ? p + (Date.now() - s) / 1e3 : p, d = n > 0 ? Math.max(0, Math.min(n, m)) : Math.max(0, m);
+    ), r = String(o.media_title ?? "") || "SpotifyPlus", n = Number(o.media_duration) || 0, p = Number(o.media_position) || 0, s = Date.parse(String(o.media_position_updated_at ?? "")), c = t && e === "playing", m = c && Number.isFinite(s) ? p + (Date.now() - s) / 1e3 : p, d = n > 0 ? Math.max(0, Math.min(n, m)) : Math.max(0, m);
     return {
       st: a,
-      estado: i,
+      estado: e,
       ativo: t,
       tocando: c,
       titulo: t ? /^SpotifyPlus\s+Bruno/i.test(r) ? "SpotifyPlus" : r : "SpotifyPlus",
@@ -9563,8 +9563,8 @@ class io extends ra {
     };
   }
   _modeloPc() {
-    const a = this._estado(this._idDe("pcActive"))?.state === "on", o = this._estado(this._idDe("pcSession"))?.state ?? "", i = this._estado(this._idDe("pcWindow"))?.state ?? "";
-    return { ativo: a, sessao: o, janela: i };
+    const a = this._estado(this._idDe("pcActive"))?.state === "on", o = this._estado(this._idDe("pcSession"))?.state ?? "", e = this._estado(this._idDe("pcWindow"))?.state ?? "";
+    return { ativo: a, sessao: o, janela: e };
   }
   /**
    * Qual fonte fica aberta.
@@ -9582,8 +9582,8 @@ class io extends ra {
    * abrir o Spotify.
    */
   _fonteAberta(a, o) {
-    const i = a.filter((t) => o[t]), e = this._midiaAtivasAntes;
-    return this._midiaAtivasAntes = i, this._estaNoTelefone() && this._fonteMidiaManual && a.includes(this._fonteMidia) ? this._fonteMidia : this._temPc ? (o.spotify && !e.includes("spotify") && (this._fonteMidia = "spotify"), !o.pc && this._fonteMidia === "pc" && o.spotify && (this._fonteMidia = "spotify"), a.includes(this._fonteMidia) ? this._fonteMidia : o.spotify ? "spotify" : "pc") : (i.some((t) => !e.includes(t)) && (this._fonteMidia = ""), a.includes(this._fonteMidia) ? this._fonteMidia : i[0] ?? a[0] ?? "");
+    const e = a.filter((t) => o[t]), i = this._midiaAtivasAntes;
+    return this._midiaAtivasAntes = e, this._estaNoTelefone() && this._fonteMidiaManual && a.includes(this._fonteMidia) ? this._fonteMidia : this._temPc ? (o.spotify && !i.includes("spotify") && (this._fonteMidia = "spotify"), !o.pc && this._fonteMidia === "pc" && o.spotify && (this._fonteMidia = "spotify"), a.includes(this._fonteMidia) ? this._fonteMidia : o.spotify ? "spotify" : "pc") : (e.some((t) => !i.includes(t)) && (this._fonteMidia = ""), a.includes(this._fonteMidia) ? this._fonteMidia : e[0] ?? a[0] ?? "");
   }
   /** Linha de volume — o mesmo controle nas duas fontes. */
   _linhaVolume(a, o) {
@@ -9599,11 +9599,11 @@ class io extends ra {
           .value=${String(o)}
           aria-label="Volume"
           ?disabled=${!a}
-          @change=${(i) => {
-      const e = i.currentTarget;
+          @change=${(e) => {
+      const i = e.currentTarget;
       a && this._servico("media_player", "volume_set", {
         entity_id: a,
-        volume_level: Number(e.value) / 100
+        volume_level: Number(i.value) / 100
       });
     }}
         />
@@ -9626,10 +9626,10 @@ class io extends ra {
           .value=${String(o)}
           aria-label="Volume da TV"
           ?disabled=${!a}
-          @change=${(i) => {
-      const e = i.currentTarget;
+          @change=${(e) => {
+      const i = e.currentTarget;
       if (!a) return;
-      const t = Math.max(0, Math.min(100, Number(e.value))), r = Math.max(0, Math.min(100, Number(o) || 0)), n = Math.round(t - r);
+      const t = Math.max(0, Math.min(100, Number(i.value))), r = Math.max(0, Math.min(100, Number(o) || 0)), n = Math.round(t - r);
       n && this._servico("remote", "send_command", {
         entity_id: a,
         command: n > 0 ? "VOLUME_UP" : "VOLUME_DOWN",
@@ -9642,11 +9642,11 @@ class io extends ra {
     `;
   }
   /** Botão do corpo do hub. `soIcone` evita o truncamento nas fileiras de 4-5. */
-  _botaoMidia(a, o, i, e = {}) {
-    const t = !!(e.soIcone ?? e.mais), r = [
+  _botaoMidia(a, o, e, i = {}) {
+    const t = !!(i.soIcone ?? i.mais), r = [
       "mh-btn",
-      e.principal ? "is-main" : "",
-      e.mais ? "is-plus" : "",
+      i.principal ? "is-main" : "",
+      i.mais ? "is-plus" : "",
       t ? "is-icon" : ""
     ].filter(Boolean).join(" ");
     return l`
@@ -9655,8 +9655,8 @@ class io extends ra {
         class=${r}
         title=${a}
         aria-label=${a}
-        ?disabled=${e.desabilitado}
-        @click=${i}
+        ?disabled=${i.desabilitado}
+        @click=${e}
       >
         <bruno-icon icon=${o}></bruno-icon>${t ? b : l`<span>${a}</span>`}
       </button>
@@ -9668,15 +9668,15 @@ class io extends ra {
    * Só o PNG, sobreposto — posicionado de forma absoluta pelo CSS, para nunca
    * ditar a altura da linha e empurrar os botões para fora do cartão.
    */
-  _arteMidia(a, o, i, e, t = !1) {
+  _arteMidia(a, o, e, i, t = !1) {
     return l`
-      <div class="mh-art mh-art-${o} ${e ? "is-cover" : "is-standby"}${t ? " is-paused" : ""}">
-        ${a ? l`<img src=${a} alt="" loading="lazy" />` : l`<bruno-icon icon=${i}></bruno-icon>`}
+      <div class="mh-art mh-art-${o} ${i ? "is-cover" : "is-standby"}${t ? " is-paused" : ""}">
+        ${a ? l`<img src=${a} alt="" loading="lazy" />` : l`<bruno-icon icon=${e}></bruno-icon>`}
       </div>
     `;
   }
   _corpoTv() {
-    const a = this._modeloTv(), o = this._idDe("tv"), i = this._idDe("tvMedia") ?? o, e = this._sub?.tvStandbyImage ?? Ka, r = (!(!a.titulo || /^TV (ligada|desligada)$/i.test(a.titulo) || a.titulo === a.fonte) && a.estado === "playing" ? a.titulo : "") || a.fonte;
+    const a = this._modeloTv(), o = this._idDe("tv"), e = this._idDe("tvMedia") ?? o, i = this._sub?.tvStandbyImage ?? Ka, r = (!(!a.titulo || /^TV (ligada|desligada)$/i.test(a.titulo) || a.titulo === a.fonte) && a.estado === "playing" ? a.titulo : "") || a.fonte;
     if (!a.ativo)
       return l`
         <div class="mh-left">
@@ -9690,7 +9690,7 @@ class io extends ra {
       )}
           </div>
         </div>
-        ${this._arteMidia(e, "wide", "mdi:television-classic", !1)}
+        ${this._arteMidia(i, "wide", "mdi:television-classic", !1)}
       `;
     const n = Array.isArray(this._sub?.tvApps) ? this._sub.tvApps : [], p = this._appsTvAbertos && n.length ? l`<div class="mh-btn-row mh-btn-row-5">
           ${n.map(
@@ -9702,7 +9702,7 @@ class io extends ra {
       this._appsTvAbertos = !1, this.requestUpdate();
     }, { mais: !0 })}
         </div>` : l`<div class="mh-btn-row mh-btn-row-3">
-          ${this._botaoMidia("Pausar", "mdi:pause", () => this._servico("media_player", "media_play_pause", { entity_id: i }), { soIcone: !0 })}
+          ${this._botaoMidia("Pausar", "mdi:pause", () => this._servico("media_player", "media_play_pause", { entity_id: e }), { soIcone: !0 })}
           ${this._botaoMidia("Controle remoto", "mdi:remote-tv", () => this._abrirControleRemoto(), {
       soIcone: !0,
       desabilitado: !this._idDe("tvRemote")
@@ -9718,20 +9718,270 @@ class io extends ra {
         </div>
         <div class="mh-controls">${this._linhaVolumeTv(this._idDe("tvRemote"), a.volume ?? 60)} ${p}</div>
       </div>
-      ${this._arteMidia(a.poster || e, "wide", "mdi:television-classic", !!a.poster, a.estado === "paused")}
+      ${this._arteMidia(a.poster || i, "wide", "mdi:television-classic", !!a.poster, a.estado === "paused")}
     `;
   }
   /**
-   * Popup do controle remoto.
+   * Popup premium do controle remoto da Sala.
    *
-   * Mesmo evento e mesma carga das subviews atuais — `ll-custom` com a chamada
-   * de `browser_mod.popup` e o `universal-remote-card`. Quem monta a janela é o
-   * browser_mod, exatamente como hoje; só a Sala tem controle (`remote.atv`).
+   * Mantém `browser_mod.popup` + `universal-remote-card` para preservar o caminho
+   * funcional já validado em `remote.smart_tv_pro`, mas troca apenas a composição
+   * visual. O material replica a mesma base VisionOS das bottom sheets do telefone:
+   * gradientes translúcidos + blur moderado, sem animações contínuas ou filtros
+   * caros por botão. Assim o popup ganha hierarquia visual sem reabrir a regressão
+   * de performance remota já estabilizada nas rounds anteriores.
    */
   _abrirControleRemoto() {
     const a = this._idDe("tvRemote");
     if (!a) return;
-    const o = this._idDe("tvMedia") ?? this._idDe("tv"), i = (t) => ({ action: "perform-action", perform_action: "remote.send_command", target: { entity_id: a }, data: { command: t } }), e = (t, r, n) => ({ type: "button", name: t, icon: r, tap_action: i(n) });
+    const o = this._idDe("tvMedia") ?? this._idDe("tv"), e = (n) => ({
+      action: "perform-action",
+      perform_action: "remote.send_command",
+      target: { entity_id: a },
+      data: { command: n }
+    }), i = (n, p, s, c, m = !1) => ({
+      type: "button",
+      name: n,
+      icon: p,
+      label: c,
+      tap_action: e(s),
+      ...m ? { hold_action: { action: "repeat" } } : {}
+    }), t = `
+      :host {
+        --remote-accent: rgba(244, 194, 96, 0.96);
+        --remote-accent-soft: rgba(244, 194, 96, 0.16);
+        --remote-text: rgba(248, 248, 250, 0.96);
+        --remote-muted: rgba(235, 235, 242, 0.58);
+        --remote-divider: rgba(255, 255, 255, 0.105);
+        display: block;
+        width: min(390px, calc(100vw - 28px));
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: clamp(12px, 3.2dvh, 34px) auto;
+        padding: 10px 10px 14px;
+        border-radius: 30px;
+        overflow: hidden;
+        color: var(--remote-text);
+        background:
+          radial-gradient(360px 240px at 18% -10%, rgba(255, 255, 255, 0.105), transparent 64%),
+          linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.060),
+            rgba(255, 255, 255, 0.018) 48%,
+            rgba(0, 0, 0, 0.035)
+          ),
+          rgba(0, 0, 0, 0.300);
+        backdrop-filter: blur(20px) saturate(1.18) brightness(1.03);
+        -webkit-backdrop-filter: blur(20px) saturate(1.18) brightness(1.03);
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        box-shadow:
+          0 24px 68px -24px rgba(0, 0, 0, 0.78),
+          inset 0 1px 0 rgba(255, 255, 255, 0.11);
+      }
+
+      .row {
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+        align-items: center;
+        gap: 0;
+        margin: 0 0 10px;
+      }
+
+      #row-1,
+      #row-3,
+      #row-4 {
+        padding: 4px;
+        border-radius: 20px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.016)),
+          rgba(10, 12, 16, 0.24);
+        border: 1px solid rgba(255, 255, 255, 0.055);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+      }
+
+      #row-2 {
+        margin: 2px 0 14px;
+      }
+
+      /* Filetes curtos e translúcidos entre todos os botões das barras.
+         O gradiente evita a aparência de grade rígida e mantém a linguagem
+         VisionOS da composição de referência. */
+      #row-1 remote-button + remote-button,
+      #row-3 remote-button + remote-button,
+      #row-4 remote-button + remote-button {
+        background-image: linear-gradient(
+          180deg,
+          transparent 8%,
+          var(--remote-divider) 24%,
+          var(--remote-divider) 76%,
+          transparent 92%
+        );
+        background-size: 1px 78%;
+        background-position: left center;
+        background-repeat: no-repeat;
+      }
+
+      remote-button {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border-radius: 16px;
+        background: transparent;
+        --icon-size: 25px;
+        --icon-color: var(--remote-text);
+      }
+
+      remote-button::part(button) {
+        min-height: 60px;
+        border-radius: 16px;
+        background: transparent;
+        transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+      }
+
+      remote-button:active::part(button) {
+        transform: scale(0.965);
+        background: rgba(255, 255, 255, 0.075);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+      }
+
+      remote-button::part(icon) {
+        color: var(--remote-text);
+        filter: drop-shadow(0 1px 5px rgba(0,0,0,0.25));
+      }
+
+      remote-button::part(label) {
+        color: var(--remote-muted);
+        font-size: 9.5px;
+        line-height: 1.1;
+        font-weight: 650;
+        letter-spacing: 0.075em;
+        text-transform: uppercase;
+        margin-top: 5px;
+      }
+
+      #power::part(icon),
+      #home::part(icon) {
+        color: var(--remote-accent);
+        filter: drop-shadow(0 0 7px rgba(244, 194, 96, 0.34));
+      }
+
+      #power::part(button),
+      #home::part(button) {
+        background: radial-gradient(circle at 50% 50%, var(--remote-accent-soft), transparent 68%);
+      }
+
+      #row-4 remote-button::part(button) {
+        min-height: 54px;
+      }
+
+      #row-4 remote-button::part(label) {
+        font-size: 8.5px;
+        letter-spacing: 0.055em;
+      }
+
+      @media (max-width: 390px) {
+        :host {
+          width: calc(100vw - 20px);
+          border-radius: 26px;
+          padding: 8px 8px 12px;
+        }
+        remote-button::part(button) { min-height: 56px; }
+        #row-4 remote-button::part(button) { min-height: 50px; }
+        #navigation { margin-inline: auto; }
+      }
+    `, r = `
+      :host {
+        width: min(72vw, 282px);
+        max-width: 282px;
+        margin: 2px auto;
+        --icon-size: 29px;
+        --icon-color: rgba(248, 248, 250, 0.90);
+      }
+
+      .circlepad {
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        overflow: hidden;
+        background:
+          /* quatro filetes diagonais delimitam UP / RIGHT / DOWN / LEFT sem
+             criar quatro botões visivelmente separados */
+          repeating-conic-gradient(
+            from 45deg at 50% 50%,
+            transparent 0deg 89.15deg,
+            rgba(255,255,255,0.115) 89.15deg 90deg
+          ),
+          radial-gradient(circle at 42% 32%, rgba(255,255,255,0.075), transparent 43%),
+          linear-gradient(145deg, rgba(36,39,45,0.84), rgba(10,12,16,0.82));
+        border: 1px solid rgba(255,255,255,0.09);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.08),
+          inset 0 -14px 30px rgba(0,0,0,0.18),
+          0 18px 38px -26px rgba(0,0,0,0.95);
+      }
+
+      #up::part(button),
+      #down::part(button),
+      #left::part(button),
+      #right::part(button) {
+        background: transparent;
+      }
+
+      .center-row {
+        align-items: center;
+        justify-content: center;
+      }
+
+      #left,
+      #right {
+        flex: 1 1 0;
+        min-width: 0;
+        align-self: stretch;
+      }
+
+      /* O centro da round5 herdava a célula retangular do circlepad e o botão
+         virava oval. A round6 fixa host e part no mesmo quadrado. */
+      #center {
+        flex: 0 0 43%;
+        width: 43%;
+        max-width: 122px;
+        aspect-ratio: 1 / 1;
+        align-self: center;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+
+      #up::part(icon),
+      #down::part(icon),
+      #left::part(icon),
+      #right::part(icon) {
+        color: rgba(248,248,250,0.88);
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.34));
+      }
+
+      #center::part(button) {
+        width: 100%;
+        height: 100%;
+        min-width: 100%;
+        min-height: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 42% 30%, rgba(244,194,96,0.24), rgba(26,24,21,0.80) 58%, rgba(12,13,16,0.92));
+        border: 1px solid rgba(244,194,96,0.40);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.11),
+          0 0 0 5px rgba(244,194,96,0.045),
+          0 0 22px rgba(244,194,96,0.13);
+      }
+
+      #center::part(icon) {
+        color: rgba(255, 223, 158, 0.98);
+        --icon-size: 31px;
+        filter: drop-shadow(0 0 7px rgba(244,194,96,0.30));
+      }
+    `;
     this.dispatchEvent(
       new CustomEvent("ll-custom", {
         bubbles: !0,
@@ -9741,13 +9991,25 @@ class io extends ra {
           browser_mod: {
             service: "browser_mod.popup",
             data: {
-              title: "Smart TV Remote",
+              title: "Controle da TV",
               tag: "tv_remote",
-              style: "--popup-background-color: rgba(21,25,35,0.92); --popup-min-width: min(380px, 95vw); --popup-max-width: min(430px, 95vw); --popup-border-width: 0;",
+              style: "--popup-background-color: rgba(6,8,12,0.18); --popup-min-width: min(390px, 96vw); --popup-max-width: min(430px, 96vw); --popup-border-width: 0;",
+              popup_styles: [
+                {
+                  style: "all",
+                  styles: `
+                    ha-dialog {
+                      --dialog-surface-margin-top: auto !important;
+                    }
+                  `
+                }
+              ],
               content: {
                 type: "custom:universal-remote-card",
                 remote_id: a,
                 media_player_id: o,
+                autofill: !1,
+                haptics: !0,
                 rows: [
                   ["power", "input", "menu"],
                   ["navigation"],
@@ -9755,27 +10017,30 @@ class io extends ra {
                   ["volume_down", "volume_up", "channel_down", "channel_up"]
                 ],
                 custom_actions: [
-                  e("power", "mdi:power", "POWER"),
-                  e("input", "mdi:import", "TV"),
-                  e("menu", "mdi:menu", "MENU"),
+                  i("power", "mdi:power", "POWER", "Power"),
+                  i("input", "mdi:import", "TV", "Entrada"),
+                  i("menu", "mdi:menu", "MENU", "Menu"),
                   {
                     type: "circlepad",
                     name: "navigation",
-                    icon: "mdi:checkbox-blank-circle",
-                    tap_action: i("DPAD_CENTER"),
-                    up: { icon: "mdi:chevron-up", tap_action: i("DPAD_UP"), hold_action: { action: "repeat" } },
-                    down: { icon: "mdi:chevron-down", tap_action: i("DPAD_DOWN"), hold_action: { action: "repeat" } },
-                    left: { icon: "mdi:chevron-left", tap_action: i("DPAD_LEFT"), hold_action: { action: "repeat" } },
-                    right: { icon: "mdi:chevron-right", tap_action: i("DPAD_RIGHT"), hold_action: { action: "repeat" } }
+                    icon: "mdi:check-bold",
+                    label: "OK",
+                    tap_action: e("DPAD_CENTER"),
+                    up: { icon: "mdi:chevron-up", tap_action: e("DPAD_UP"), hold_action: { action: "repeat" } },
+                    down: { icon: "mdi:chevron-down", tap_action: e("DPAD_DOWN"), hold_action: { action: "repeat" } },
+                    left: { icon: "mdi:chevron-left", tap_action: e("DPAD_LEFT"), hold_action: { action: "repeat" } },
+                    right: { icon: "mdi:chevron-right", tap_action: e("DPAD_RIGHT"), hold_action: { action: "repeat" } },
+                    styles: r
                   },
-                  e("back", "mdi:keyboard-backspace", "BACK"),
-                  e("home", "mdi:home", "HOME"),
-                  e("mute", "mdi:volume-mute", "MUTE"),
-                  e("volume_down", "mdi:volume-minus", "VOLUME_DOWN"),
-                  e("volume_up", "mdi:volume-plus", "VOLUME_UP"),
-                  e("channel_down", "mdi:chevron-down", "CHANNEL_DOWN"),
-                  e("channel_up", "mdi:chevron-up", "CHANNEL_UP")
-                ]
+                  i("back", "mdi:keyboard-backspace", "BACK", "Voltar"),
+                  i("home", "mdi:home", "HOME", "Início"),
+                  i("mute", "mdi:volume-off", "MUTE", "Mudo"),
+                  i("volume_down", "mdi:volume-minus", "VOLUME_DOWN", "Vol −", !0),
+                  i("volume_up", "mdi:volume-plus", "VOLUME_UP", "Vol +", !0),
+                  i("channel_down", "mdi:chevron-down", "CHANNEL_DOWN", "Canal −", !0),
+                  i("channel_up", "mdi:chevron-up", "CHANNEL_UP", "Canal +", !0)
+                ],
+                styles: t
               }
             }
           }
@@ -9784,28 +10049,28 @@ class io extends ra {
     );
   }
   _corpoPc() {
-    const a = this._modeloPc(), o = this._sub?.pcImage ?? oo, i = a.ativo ? [a.sessao, a.janela].filter((t) => t && t !== "--")[0] || "Sessão ativa" : "Pronto para ligar", e = (t) => () => {
+    const a = this._modeloPc(), o = this._sub?.pcImage ?? oo, e = a.ativo ? [a.sessao, a.janela].filter((t) => t && t !== "--")[0] || "Sessão ativa" : "Pronto para ligar", i = (t) => () => {
       const r = this._idDe(t);
       r && this._servico("button", "press", { entity_id: r });
     };
     return l`
       <div class="mh-left">
-        <div class="mh-info"><small>${a.ativo ? "Ligado" : "Desligado"}</small><em>${i}</em></div>
+        <div class="mh-info"><small>${a.ativo ? "Ligado" : "Desligado"}</small><em>${e}</em></div>
         <div class="mh-controls">
           ${a.ativo ? l`<div class="mh-btn-row mh-btn-row-5 office-pc-actions">
-                ${this._botaoMidia("Sleep", "mdi:weather-night", e("pcSleep"), {
+                ${this._botaoMidia("Sleep", "mdi:weather-night", i("pcSleep"), {
       soIcone: !0,
       desabilitado: !this._idDe("pcSleep")
     })}
-                ${this._botaoMidia("Reiniciar", "mdi:restart", e("pcRestart"), {
+                ${this._botaoMidia("Reiniciar", "mdi:restart", i("pcRestart"), {
       soIcone: !0,
       desabilitado: !this._idDe("pcRestart")
     })}
-                ${this._botaoMidia("Desligar", "mdi:power-standby", e("pcShutdown"), {
+                ${this._botaoMidia("Desligar", "mdi:power-standby", i("pcShutdown"), {
       soIcone: !0,
       desabilitado: !this._idDe("pcShutdown")
     })}
-                ${this._botaoMidia("Bloquear", "mdi:lock-outline", e("pcLock"), {
+                ${this._botaoMidia("Bloquear", "mdi:lock-outline", i("pcLock"), {
       soIcone: !0,
       desabilitado: !this._idDe("pcLock")
     })}
@@ -9816,7 +10081,7 @@ class io extends ra {
       { soIcone: !0 }
     )}
               </div>` : l`<div class="mh-btn-row mh-btn-row-3">
-                ${this._botaoMidia("Ligar PC", "mdi:power", e("pcPower"), {
+                ${this._botaoMidia("Ligar PC", "mdi:power", i("pcPower"), {
       principal: !0,
       desabilitado: !this._idDe("pcPower")
     })}
@@ -9827,7 +10092,7 @@ class io extends ra {
     `;
   }
   _corpoSpotify() {
-    const a = this._modeloSpotify(), o = this._idDe("spotify"), i = this._sub?.spotifyStandbyImage ?? ao;
+    const a = this._modeloSpotify(), o = this._idDe("spotify"), e = this._sub?.spotifyStandbyImage ?? ao;
     if (!a.ativo)
       return l`
         <div class="mh-left">
@@ -9839,9 +10104,9 @@ class io extends ra {
       })}
           </div>
         </div>
-        ${this._arteMidia(i, "square", "mdi:music-note", !1)}
+        ${this._arteMidia(e, "square", "mdi:music-note", !1)}
       `;
-    const e = this._spotifyFerramentas ? l`<div class="mh-btn-row mh-btn-row-4">
+    const i = this._spotifyFerramentas ? l`<div class="mh-btn-row mh-btn-row-4">
           ${this._botaoMidia("Dispositivos", "mdi:speaker-wireless", () => this._abrirSpotifyPlus("devices"), { soIcone: !0 })}
           ${this._botaoMidia("Presets", "mdi:bookmark-music-outline", () => this._abrirSpotifyPlus("presets"), { soIcone: !0 })}
           ${this._botaoMidia("Fila", "mdi:playlist-play", () => this._abrirSpotifyPlus("queue"), { soIcone: !0 })}
@@ -9868,9 +10133,9 @@ class io extends ra {
             <span class="mh-progress-time">${a.total}</span>
           </div>
         </div>
-        <div class="mh-controls">${this._linhaVolume(o, a.volume ?? 66)} ${e}</div>
+        <div class="mh-controls">${this._linhaVolume(o, a.volume ?? 66)} ${i}</div>
       </div>
-      ${this._arteMidia(a.capa || i, "square", "mdi:music-note", !!a.capa, a.estado === "paused")}
+      ${this._arteMidia(a.capa || e, "square", "mdi:music-note", !!a.capa, a.estado === "paused")}
     `;
   }
   /**
@@ -9938,14 +10203,14 @@ class io extends ra {
    * há entidade — hoje, apenas a Sala.
    */
   _renderMediaHub() {
-    const a = this._temPc, o = a ? void 0 : this._modeloTv(), i = a ? this._modeloPc() : void 0, e = this._modeloSpotify(), r = [
+    const a = this._temPc, o = a ? void 0 : this._modeloTv(), e = a ? this._modeloPc() : void 0, i = this._modeloSpotify(), r = [
       a ? {
         chave: "pc",
         rotulo: "PC",
         icone: "mdi:desktop-tower",
-        ativo: !!i?.ativo,
-        tocando: !!i?.ativo,
-        resumo: i?.ativo ? "Ligado" : "Desligado",
+        ativo: !!e?.ativo,
+        tocando: !!e?.ativo,
+        resumo: e?.ativo ? "Ligado" : "Desligado",
         atmosfera: "",
         corpo: () => this._corpoPc()
       } : {
@@ -9962,10 +10227,10 @@ class io extends ra {
         chave: "spotify",
         rotulo: "Spotify",
         icone: "mdi:spotify",
-        ativo: e.ativo,
-        tocando: e.tocando,
-        resumo: e.ativo ? e.titulo : "Nenhuma faixa",
-        atmosfera: e.ativo ? e.capa : "",
+        ativo: i.ativo,
+        tocando: i.tocando,
+        resumo: i.ativo ? i.titulo : "Nenhuma faixa",
+        atmosfera: i.ativo ? i.capa : "",
         corpo: () => this._corpoSpotify()
       }
     ], n = Object.fromEntries(r.map((d) => [d.chave, d.ativo])), p = !a && r.some((d) => d.tocando) ? Object.fromEntries(r.map((d) => [d.chave, !!d.tocando])) : n, s = this._fonteAberta(r.map((d) => d.chave), p), c = !!r.find((d) => d.chave === s)?.tocando, m = [
@@ -10038,10 +10303,10 @@ class io extends ra {
   }
   /** O menu de três pontos. Só a Sala tem PS5; nos demais fica o more-info. */
   _renderMenuMidia() {
-    const a = this._idDe("ps5"), i = this._estado(a)?.state === "on", e = a ? [{ icone: "mdi:sony-playstation", titulo: "PS5", sub: i ? "Online" : "Offline", entidade: a, ativo: i }] : [];
-    return e.length ? l`
+    const a = this._idDe("ps5"), e = this._estado(a)?.state === "on", i = a ? [{ icone: "mdi:sony-playstation", titulo: "PS5", sub: e ? "Online" : "Offline", entidade: a, ativo: e }] : [];
+    return i.length ? l`
       <div class="mh-overflow-panel" role="menu" aria-label="Opções de mídia">
-        ${e.map(
+        ${i.map(
       (t) => l`
             <div class="mh-overflow-item">
               <span class="mh-overflow-icon"><bruno-icon icon=${t.icone}></bruno-icon></span>
@@ -10080,13 +10345,13 @@ class io extends ra {
   _renderEletrodomesticos() {
     const a = this._sub?.entities?.appliances;
     return Array.isArray(a) ? a.filter((o) => !!o && typeof o == "object").map((o) => {
-      const i = String(o.key ?? "item").replace(/[^a-z0-9_-]/gi, "-").toLowerCase(), e = String(o.name ?? "Eletrodoméstico"), t = typeof o.image == "string" ? o.image : "", r = typeof o.entity == "string" ? o.entity : "", n = typeof o.stateEntity == "string" ? o.stateEntity : r, p = n && this._hass ? this._hass.states[n] : void 0, s = Array.isArray(o.activeStates) ? o.activeStates.map((C) => String(C).toLowerCase()) : ["on"], c = typeof o.activeAttr == "string" ? o.activeAttr : "", m = this._room?.activeSensor ? this._hass?.states[this._room.activeSensor] : void 0, d = s.includes(String(p?.state ?? "").toLowerCase()) || (c ? La(m?.attributes[c]) : !1), g = !!o.placeholder || !r, x = typeof o.moreInfoEntity == "string" ? o.moreInfoEntity : r, y = ["appliance-tile", `is-${i}`, d ? "is-on" : "", g ? "is-muted" : ""].filter(Boolean).join(" ");
+      const e = String(o.key ?? "item").replace(/[^a-z0-9_-]/gi, "-").toLowerCase(), i = String(o.name ?? "Eletrodoméstico"), t = typeof o.image == "string" ? o.image : "", r = typeof o.entity == "string" ? o.entity : "", n = typeof o.stateEntity == "string" ? o.stateEntity : r, p = n && this._hass ? this._hass.states[n] : void 0, s = Array.isArray(o.activeStates) ? o.activeStates.map((C) => String(C).toLowerCase()) : ["on"], c = typeof o.activeAttr == "string" ? o.activeAttr : "", m = this._room?.activeSensor ? this._hass?.states[this._room.activeSensor] : void 0, d = s.includes(String(p?.state ?? "").toLowerCase()) || (c ? La(m?.attributes[c]) : !1), g = !!o.placeholder || !r, x = typeof o.moreInfoEntity == "string" ? o.moreInfoEntity : r, y = ["appliance-tile", `is-${e}`, d ? "is-on" : "", g ? "is-muted" : ""].filter(Boolean).join(" ");
       return l`
           <article class=${y}>
             <button
               type="button"
               class="appliance-main"
-              aria-label=${e}
+              aria-label=${i}
               ?disabled=${g}
               @click=${() => !g && this._alternarAparelho(r)}
             >
@@ -10094,7 +10359,7 @@ class io extends ra {
                 ${t ? l`<img src=${t} alt="" loading="lazy" decoding="async" />` : b}
               </div>
               <div class="appliance-copy">
-                <strong>${e}</strong>
+                <strong>${i}</strong>
                 <small>${this._rotuloDoAparelho(o, p, d, g)}</small>
               </div>
             </button>
@@ -10102,7 +10367,7 @@ class io extends ra {
               type="button"
               class="mh-menu appliance-more"
               title="Mais detalhes"
-              aria-label=${`Mais detalhes de ${e}`}
+              aria-label=${`Mais detalhes de ${i}`}
               ?disabled=${!x}
               @click=${() => this._maisInfo(x)}
             >
@@ -10113,11 +10378,11 @@ class io extends ra {
     }) : b;
   }
   /** Rótulo de estado: os textos vêm da configuração, como no original. */
-  _rotuloDoAparelho(a, o, i, e) {
+  _rotuloDoAparelho(a, o, e, i) {
     const t = (n, p) => typeof a[n] == "string" ? a[n] : p;
-    if (e) return t("placeholderLabel", "Sem tomada");
+    if (i) return t("placeholderLabel", "Sem tomada");
     if (!o) return "Indisponível";
-    if (i) return t("activeLabel", "Ligada");
+    if (e) return t("activeLabel", "Ligada");
     const r = String(o.state).toLowerCase();
     return r === "off" || r === "unavailable" ? t("offLabel", "Desligada") : t("idleLabel", "Ligada");
   }
@@ -10139,10 +10404,10 @@ class io extends ra {
    * `idle` não está resfriando. Sem ela, vale o estado.
    */
   _modeloClimate() {
-    const a = this._estadoClimate(), o = a?.attributes ?? {}, i = String(o.hvac_action ?? "").toLowerCase(), e = this._indisponivel(a), t = e || a?.state === "off" ? !1 : Ua.includes(i) ? !0 : Ha.includes(i) ? !1 : Ba.includes(String(a?.state ?? "")), r = (n, p) => Number.isFinite(Number(n)) ? Number(n) : p;
+    const a = this._estadoClimate(), o = a?.attributes ?? {}, e = String(o.hvac_action ?? "").toLowerCase(), i = this._indisponivel(a), t = i || a?.state === "off" ? !1 : Ua.includes(e) ? !0 : Ha.includes(e) ? !1 : Ba.includes(String(a?.state ?? "")), r = (n, p) => Number.isFinite(Number(n)) ? Number(n) : p;
     return {
       st: a,
-      indisponivel: e,
+      indisponivel: i,
       ativo: t,
       alvo: r(o.temperature, null),
       atual: r(o.current_temperature, null),
@@ -10203,18 +10468,18 @@ class io extends ra {
       const q = _ * Math.PI / 180;
       return { x: 360 + f * Math.cos(q), y: 410 + f * Math.sin(q) };
     }, y = (f, _, q) => {
-      const k = x(f, _), z = x(f, q), O = Math.abs(q - _) <= 180 ? "0" : "1";
-      return `M ${k.x.toFixed(3)} ${k.y.toFixed(3)} A ${f} ${f} 0 ${O} 1 ${z.x.toFixed(3)} ${z.y.toFixed(3)}`;
+      const k = x(f, _), z = x(f, q), T = Math.abs(q - _) <= 180 ? "0" : "1";
+      return `M ${k.x.toFixed(3)} ${k.y.toFixed(3)} A ${f} ${f} 0 ${T} 1 ${z.x.toFixed(3)} ${z.y.toFixed(3)}`;
     }, C = Array.from({ length: 91 }, (f, _) => {
-      const q = -180 + 180 * (_ / 90), k = _ % 15 === 0, z = _ % 5 === 0, O = x(334, q), U = x(
+      const q = -180 + 180 * (_ / 90), k = _ % 15 === 0, z = _ % 5 === 0, T = x(334, q), U = x(
         k ? 308 : z ? 314 : 321,
         q
       ), ta = k ? "icg-tick major" : z ? "icg-tick medium" : "icg-tick minor";
-      return F`<line x1=${O.x.toFixed(3)} y1=${O.y.toFixed(3)} x2=${U.x.toFixed(3)} y2=${U.y.toFixed(3)} class=${ta}></line>`;
+      return F`<line x1=${T.x.toFixed(3)} y1=${T.y.toFixed(3)} x2=${U.x.toFixed(3)} y2=${U.y.toFixed(3)} class=${ta}></line>`;
     }), oa = Array.from({ length: 73 }, (f, _) => {
       const q = -180 + 180 * (_ / 72), k = x(282, q), z = x(266, q);
       return F`<line x1=${k.x.toFixed(3)} y1=${k.y.toFixed(3)} x2=${z.x.toFixed(3)} y2=${z.y.toFixed(3)} class="icg-inner-tick"></line>`;
-    }), ia = [
+    }), ea = [
       { texto: `${M(s, 0)}°`, ang: -180, r: 352, cls: "edge" },
       { texto: "10", ang: -148, r: 358, cls: "" },
       { texto: "20", ang: -90, r: 352, cls: "top" },
@@ -10223,7 +10488,7 @@ class io extends ra {
     ].map((f) => {
       const _ = x(f.r, f.ang);
       return F`<text x=${_.x.toFixed(3)} y=${_.y.toFixed(3)} text-anchor="middle" dominant-baseline="middle" class=${`icg-label ${f.cls}`}>${f.texto}</text>`;
-    }), $ = x(315, g), j = a.alvo == null ? "--" : M(a.alvo, 0), B = a.atual == null ? "--" : M(a.atual, 1), ea = (a.modo === "cool" ? "Resfriamento" : a.modo === "heat" ? "Aquecimento" : a.modo === "fan_only" ? "Ventilacao" : "Temperatura").toUpperCase();
+    }), $ = x(315, g), j = a.alvo == null ? "--" : M(a.alvo, 0), B = a.atual == null ? "--" : M(a.atual, 1), ia = (a.modo === "cool" ? "Resfriamento" : a.modo === "heat" ? "Aquecimento" : a.modo === "fan_only" ? "Ventilacao" : "Temperatura").toUpperCase();
     return l`
       <div class="icg-root">
         <div class="icg-shell">
@@ -10259,7 +10524,7 @@ class io extends ra {
             <path d=${y(315, -180, g)} class="icg-active-arc"></path>
             <g>${C}</g>
             <g>${oa}</g>
-            ${ia}
+            ${ea}
             <circle cx=${$.x.toFixed(3)} cy=${$.y.toFixed(3)} r="21" class="icg-marker-glow"></circle>
             <circle cx=${$.x.toFixed(3)} cy=${$.y.toFixed(3)} r="13" class="icg-marker-ring"></circle>
             <circle
@@ -10269,7 +10534,7 @@ class io extends ra {
               class="icg-marker-highlight"
             ></circle>
             <text x=${360} y="260" text-anchor="middle" dominant-baseline="middle" class="icg-center-mode">
-              ${ea}
+              ${ia}
             </text>
             <text x=${360} y="328" text-anchor="middle" dominant-baseline="middle" class="icg-center-temp">
               ${j}°
@@ -10288,7 +10553,7 @@ class io extends ra {
   }
   /** A/C: cabeçalho com power, anel de temperatura e três controles na base. */
   _renderAC() {
-    const a = this._entidadeClimate(), o = this._modeloClimate(), i = o.swing.toLowerCase(), e = ["on", "ativo", "ativada", "enabled"].includes(i) || i.includes("ativ") && !i.includes("desativ"), t = (c) => [...new Set(c.filter(Boolean))], r = this._painelClima, n = {
+    const a = this._entidadeClimate(), o = this._modeloClimate(), e = o.swing.toLowerCase(), i = ["on", "ativo", "ativada", "enabled"].includes(e) || e.includes("ativ") && !e.includes("desativ"), t = (c) => [...new Set(c.filter(Boolean))], r = this._painelClima, n = {
       mode: t(o.modos).map((c) => ({
         modo: c,
         rotulo: this._rotuloModo(c),
@@ -10309,7 +10574,7 @@ class io extends ra {
         modo: c,
         rotulo: this._rotuloSwing(c),
         icone: c.toLowerCase() === "off" ? "mdi:air-conditioner" : "mdi:swap-vertical",
-        ativo: c.toLowerCase() === i,
+        ativo: c.toLowerCase() === e,
         servico: "set_swing_mode",
         campo: "swing_mode"
       }))
@@ -10402,7 +10667,7 @@ class io extends ra {
       "swing",
       "mdi:air-conditioner",
       "Swing",
-      o.swing ? this._rotuloSwing(o.swing) : e ? "Ativo" : "Desligado"
+      o.swing ? this._rotuloSwing(o.swing) : i ? "Ativo" : "Desligado"
     )}
         </div>
       </div>
@@ -10448,7 +10713,7 @@ class io extends ra {
     `;
   }
 }
-customElements.get("bruno-room-subview") || customElements.define("bruno-room-subview", io);
+customElements.get("bruno-room-subview") || customElements.define("bruno-room-subview", eo);
 const D = window;
 D.customCards = D.customCards ?? [];
 D.customCards.some((u) => u.type === "bruno-room-subview") || D.customCards.push({
@@ -10457,6 +10722,6 @@ D.customCards.some((u) => u.type === "bruno-room-subview") || D.customCards.push
   description: "Subview parametrizada por cômodo (arquitetura nova)."
 });
 export {
-  io as BrunoRoomSubview
+  eo as BrunoRoomSubview
 };
-//# sourceMappingURL=bruno-room-subview.BWhW4AVh.js.map
+//# sourceMappingURL=bruno-room-subview.wrHBS7wU.js.map

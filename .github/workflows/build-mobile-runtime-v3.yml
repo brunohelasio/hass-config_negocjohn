@@ -8,6 +8,16 @@ on:
       - 'scripts/assets/apply_v3_runtime_branch.py'
       - '.github/workflows/build-mobile-runtime-v3.yml'
       - 'config/www/bruno-ui/assets/v3/**'
+  pull_request:
+    branches:
+      - fix/mobile-runtime-tv-curtain-20260819
+    paths:
+      - 'scripts/assets/apply_v3_runtime_branch.py'
+      - '.github/workflows/build-mobile-runtime-v3.yml'
+      - 'config/www/bruno-ui/assets/v3/**'
+      - 'dashboard-src/src/config/rooms.config.ts'
+      - 'dashboard-src/src/config/rooms.config.test.ts'
+      - 'dashboard-src/src/components/rooms/bruno-room-tile.ts'
 
 permissions:
   contents: write
@@ -118,6 +128,7 @@ jobs:
           PY
 
       - name: Registrar candidata pronta para Everex
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

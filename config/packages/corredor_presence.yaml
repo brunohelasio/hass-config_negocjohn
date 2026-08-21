@@ -60,13 +60,17 @@ template:
         unique_id: corredor_semantic_state
         icon: mdi:motion-sensor
         state: >-
-          {% if is_state('binary_sensor.corredor_motion_recent', 'on') %}motion
+          {% set source = states('binary_sensor.pir_motion_sensor_corredor_movimento') %}
+          {% if source in ['unknown', 'unavailable', 'none', ''] %}sensor_offline
+          {% elif is_state('binary_sensor.corredor_motion_recent', 'on') %}motion
           {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}recent
           {% else %}none
           {% endif %}
         attributes:
           display: >-
-            {% if is_state('binary_sensor.corredor_motion_recent', 'on') %}Movimento
+            {% set source = states('binary_sensor.pir_motion_sensor_corredor_movimento') %}
+            {% if source in ['unknown', 'unavailable', 'none', ''] %}Sensor indisponivel
+            {% elif is_state('binary_sensor.corredor_motion_recent', 'on') %}Movimento
             {% elif is_state('binary_sensor.corredor_occupancy', 'on') %}Movimento recente
             {% else %}
             {% endif %}

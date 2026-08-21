@@ -1498,8 +1498,8 @@ class BrunoSalaCard extends HTMLElement {
         }
 
         .room-asset {
-          width: 94%;
-          height: 94%;
+          width: 101.5%;
+          height: 101.5%;
           object-fit: contain;
           opacity: 0;
           transform: translateZ(0);
@@ -1532,6 +1532,51 @@ class BrunoSalaCard extends HTMLElement {
 
         .room-icon.has-image-error .room-asset-fallback {
           opacity: 1;
+        }
+
+        @media (max-width: 800px) {
+          .sala-card.is-josh-theme {
+            background:
+              radial-gradient(150px 118px at 14% -8%, rgba(255,255,255,0.12), transparent 72%),
+              linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025) 46%, rgba(0,0,0,0.045)),
+              rgba(13,14,17,0.34);
+            border: 1px solid rgba(255,255,255,0.135);
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.13),
+              0 10px 26px rgba(0,0,0,0.19);
+            backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
+            -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
+          }
+          .sala-card.is-josh-theme::before {
+            background:
+              linear-gradient(180deg, rgba(255,255,255,0.085), transparent 36%),
+              linear-gradient(90deg, rgba(255,255,255,0.035), transparent 52%);
+            opacity: 0.72;
+          }
+          .sala-card.is-josh-theme.is-room-on {
+            --text-main: rgba(255,253,248,0.99);
+            --text-soft: rgba(255,246,230,0.72);
+            --text-muted: rgba(255,248,236,0.76);
+            background:
+              radial-gradient(175px 138px at 16% -10%, rgba(255,252,245,0.30), transparent 72%),
+              radial-gradient(155px 120px at 92% 100%, rgba(255,207,135,0.13), transparent 72%),
+              linear-gradient(180deg, rgba(255,250,240,0.18), rgba(255,242,222,0.075) 48%, rgba(44,31,22,0.10)),
+              rgba(30,27,24,0.42);
+            border-color: rgba(255,244,225,0.275);
+            box-shadow:
+              inset 0 1px 0 rgba(255,255,255,0.27),
+              inset 0 -1px 0 rgba(255,213,151,0.07),
+              0 0 24px rgba(255,205,132,0.09),
+              0 12px 28px rgba(0,0,0,0.21);
+            backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+            -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+          }
+          .sala-card.is-josh-theme.is-room-on::before {
+            background:
+              radial-gradient(120px 86px at 18% 0%, rgba(255,255,255,0.22), transparent 74%),
+              linear-gradient(180deg, rgba(255,255,255,0.12), transparent 42%);
+            opacity: 0.88;
+          }
         }
 
         .metric {
@@ -4400,14 +4445,13 @@ class BrunoSalaCard extends HTMLElement {
       <span class="room-asset-wrap">
         <span class="room-asset-fallback">${BrunoSalaCard._roomIcon(active)}</span>
         <picture>
-          <!-- O source V2 e exclusivo do phone; o img preserva integralmente
-               o asset anterior em tablet/desktop e funciona como rollback. -->
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-off.png?v=20260808-maquetes-premium-1">
-          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/living-room-off-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          <!-- V3 unica em todos os breakpoints; rollback permanece no historico Git. -->
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v3/sala-off.webp?v=20260821-v3-webp-2">
+          <img class="room-asset room-asset-off" src="/local/bruno-ui/assets/v3/sala-off.webp?v=20260821-v3-webp-2" alt="" width="512" height="512" loading="eager" decoding="async">
         </picture>
         <picture>
-          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v2/sala-on.png?v=20260808-maquetes-premium-1">
-          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/living-room-on-tight.png?v=20260802-assets-resize-1" alt="" loading="eager" decoding="async">
+          <source media="(max-width: 800px)" srcset="/local/bruno-ui/assets/v3/sala-on.webp?v=20260821-v3-webp-2">
+          <img class="room-asset room-asset-on" src="/local/bruno-ui/assets/v3/sala-on.webp?v=20260821-v3-webp-2" alt="" width="512" height="512" loading="eager" decoding="async">
         </picture>
       </span>
     `;

@@ -249,7 +249,7 @@ export class BrunoRoomTile extends LitElement {
    */
   private _tileModeCache: boolean | undefined;
 
-  private get _tileMode(): boolean {
+  private get _joshHomeMode(): boolean {
     if (this._config?.variant !== 'tile') return false;
     if (this._tileModeCache !== undefined) return this._tileModeCache;
     let value = '';
@@ -260,6 +260,17 @@ export class BrunoRoomTile extends LitElement {
     }
     this._tileModeCache = value === 'on';
     return this._tileModeCache;
+  }
+
+  private get _phoneJoshCard(): boolean {
+    const phone = typeof globalThis.matchMedia === 'function'
+      ? globalThis.matchMedia('(max-width: 800px)').matches
+      : false;
+    return this._joshHomeMode && phone;
+  }
+
+  private get _tileMode(): boolean {
+    return this._joshHomeMode && !this._phoneJoshCard;
   }
 
   /**
@@ -814,21 +825,19 @@ export class BrunoRoomTile extends LitElement {
       display: block;
     }
 
-    /* Assets V2: maquetes numa tela QUADRADA de 512x512 com cerca de 5% de
-       margem transparente em volta. Os cards atuais usam PNGs "tight", em que o
-       desenho encosta na borda do arquivo — por isso a mesma regra de CSS
-       produz alturas diferentes nos dois.
+    /* Assets V3: as fontes 1254x1254 sao normalizadas pelo pipeline para
+       canvas 512x512, caixa visual de ~460px, centro X=256 e base Y=485. Esse
+       envelope replica a geometria que este tile ja foi calibrado para usar;
+       por isso escala e translacao abaixo permanecem deliberadamente iguais.
 
-       Estes tres valores existem para o CONTEUDO OPACO cair onde cai o do card
-       real: altura de 81,7px e topo 2,3px acima da caixa do icone, que e o que
-       alinha o desenho com a temperatura na coluna da direita. Medido com a
-       caixa alfa de cada arquivo, nao calibrado no olho. A margem varia de 24 a
-       32px entre os oito arquivos, o que deixa 1,2px de dispersao residual. */
+       A normalizacao e feita por PAR ON/OFF com a mesma transformacao, evitando
+       salto de tamanho/posicao no crossfade. O WebP reduz transferencia sem
+       aumentar o bitmap decodificado que o browser mantem em memoria. */
     .room-asset {
       position: absolute;
       top: 0;
       left: 0;
-      height: 111%;
+      height: 120%;
       width: auto;
       aspect-ratio: 1 / 1;
       object-fit: contain;
@@ -1093,6 +1102,35 @@ export class BrunoRoomTile extends LitElement {
       opacity: var(--bruno-tile-sheen-opacity, 0);
     }
 
+    /* Josh ON: reforco sem reintroduzir uma cartela. A leitura vem de luz,
+       nao de moldura: wash leitoso discreto, filete quente e glow de base. */
+    .room-card.is-tile.is-room-on {
+      --text-main: rgba(255, 252, 245, 0.99);
+      --text-soft: rgba(255, 245, 226, 0.72);
+      --text-muted: rgba(255, 247, 232, 0.76);
+      --bruno-tile-on-line: linear-gradient(
+        90deg,
+        rgba(255, 194, 104, 0) 0%,
+        rgba(255, 202, 122, 0.78) 50%,
+        rgba(255, 194, 104, 0) 100%
+      );
+      --bruno-tile-on-glow: radial-gradient(
+        82px 38px at 50% 100%,
+        rgba(255, 194, 102, 0.22),
+        rgba(255, 216, 156, 0.07) 48%,
+        transparent 76%
+      );
+    }
+
+    .room-card.is-tile.is-room-on::before {
+      inset: 1px 2px 1px;
+      border-radius: 0;
+      background:
+        radial-gradient(92% 78% at 50% 100%, rgba(255, 204, 126, 0.12), transparent 72%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.070), rgba(255, 247, 232, 0.025) 62%, transparent);
+      opacity: 1;
+    }
+
     .room-card.is-tile.is-room-on::after {
       inset: auto clamp(10.92px, 6.4cqi, 18.2px) 0 clamp(10.92px, 6.4cqi, 18.2px);
       opacity: 1;
@@ -1100,6 +1138,7 @@ export class BrunoRoomTile extends LitElement {
         --bruno-tile-on-line,
         linear-gradient(90deg, rgba(255, 187, 72, 0) 0%, rgba(255, 187, 72, 0.42) 50%, rgba(255, 187, 72, 0) 100%)
       );
+      box-shadow: 0 -2px 11px rgba(255, 194, 102, 0.17);
     }
 
     .room-card.is-tile .room-action {
@@ -1199,6 +1238,52 @@ export class BrunoRoomTile extends LitElement {
     }
 
     @media (max-width: 800px) {
+      .room-card.is-josh-phone-card {
+        border-radius: var(--bruno-liquid-card-radius, 22px);
+        background:
+          radial-gradient(150px 118px at 14% -8%, rgba(255, 255, 255, 0.12), transparent 72%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025) 46%, rgba(0, 0, 0, 0.045)),
+          rgba(13, 14, 17, 0.34);
+        border: 1px solid rgba(255, 255, 255, 0.135);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.13),
+          0 10px 26px rgba(0, 0, 0, 0.19);
+        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
+        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
+      }
+      .room-card.is-josh-phone-card::before {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.085), transparent 36%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent 52%);
+        opacity: 0.72;
+      }
+      .room-card.is-josh-phone-card.is-room-on {
+        --text-main: rgba(255, 253, 248, 0.99);
+        --text-soft: rgba(255, 246, 230, 0.72);
+        --text-muted: rgba(255, 248, 236, 0.76);
+        background:
+          radial-gradient(175px 138px at 16% -10%, rgba(255, 252, 245, 0.30), transparent 72%),
+          radial-gradient(155px 120px at 92% 100%, rgba(255, 207, 135, 0.13), transparent 72%),
+          linear-gradient(180deg, rgba(255, 250, 240, 0.18), rgba(255, 242, 222, 0.075) 48%, rgba(44, 31, 22, 0.10)),
+          rgba(30, 27, 24, 0.42);
+        border-color: rgba(255, 244, 225, 0.275);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.27),
+          inset 0 -1px 0 rgba(255, 213, 151, 0.07),
+          0 0 24px rgba(255, 205, 132, 0.09),
+          0 12px 28px rgba(0, 0, 0, 0.21);
+        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+      }
+      .room-card.is-josh-phone-card.is-room-on::before {
+        background:
+          radial-gradient(120px 86px at 18% 0%, rgba(255, 255, 255, 0.22), transparent 74%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 42%);
+        opacity: 0.88;
+      }
+      .room-card.is-josh-phone-card .room-action {
+        border-radius: inherit;
+      }
       .room-action {
         padding: clamp(8.58px, 5.03cqi, 14.3px) clamp(9.36px, 5.49cqi, 15.6px) clamp(7.8px, 4.57cqi, 13px) clamp(7.8px, 4.57cqi, 13px);
       }
@@ -1207,7 +1292,7 @@ export class BrunoRoomTile extends LitElement {
         height: 62px;
       }
       .room-asset {
-        height: 118%;
+        height: 127.5%;
       }
     }
 
@@ -1523,13 +1608,14 @@ export class BrunoRoomTile extends LitElement {
     // Os arquivos anteriores estão em _archive/assets/v2-anterior-20260808/.
     // WebP preserva a mesma caixa óptica dos PNGs, com payload drasticamente menor.
     // Ambos os estados são carregados já no tile: nada de aparição progressiva em idle.
-    const v = '20260820-webp-runtime-2';
-    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.webp?v=${v}` : '';
-    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.webp?v=${v}` : '';
+    const v = '20260821-v3-webp-2';
+    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}?v=${v}` : '';
+    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}?v=${v}` : '';
 
     const cardClasses = [
       'room-card',
       on ? 'is-room-on' : '',
+      this._phoneJoshCard ? 'is-josh-phone-card' : '',
       this._tileMode ? 'is-tile' : '',
       this._tileMode && this._config?.divider_left ? 'has-divider' : '',
     ]
@@ -1574,10 +1660,10 @@ export class BrunoRoomTile extends LitElement {
           <div class="room-icon" aria-hidden="true">
             <span class="room-asset-wrap">
               ${off
-                ? html`<img class="room-asset room-asset-off" src=${off} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-off" src=${off} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${on ? 'low' : 'high'} />`
                 : nothing}
               ${onImg
-                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${on ? 'high' : 'low'} />`
                 : nothing}
             </span>
           </div>

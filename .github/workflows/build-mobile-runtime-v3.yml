@@ -1,0 +1,137 @@
+name: Build mobile runtime + V3 candidate
+
+on:
+  pull_request:
+    branches:
+      - fix/mobile-runtime-tv-curtain-20260819
+    types: [opened, reopened, synchronize]
+    paths:
+      - 'scripts/assets/apply_v3_runtime_branch.py'
+      - '.github/workflows/build-mobile-runtime-v3.yml'
+      - 'config/www/bruno-ui/assets/v3/**'
+      - 'dashboard-src/src/config/rooms.config.ts'
+      - 'dashboard-src/src/config/rooms.config.test.ts'
+      - 'dashboard-src/src/components/rooms/bruno-room-tile.ts'
+
+permissions:
+  contents: write
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout da candidata
+        uses: actions/checkout@v4
+        with:
+          ref: feat/mobile-runtime-v3-20260821
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Aplicar V3 sobre o runtime validado da 602
+        run: python scripts/assets/apply_v3_runtime_branch.py
+
+      - name: Confirmar que somente os 3 fontes esperados mudaram
+        run: |
+          python - <<'PY'
+          import subprocess
+          allowed = {
+              'dashboard-src/src/config/rooms.config.ts',
+              'dashboard-src/src/config/rooms.config.test.ts',
+              'dashboard-src/src/components/rooms/bruno-room-tile.ts',
+          }
+          paths = set(subprocess.check_output(['git','diff','--name-only'], text=True).splitlines())
+          extra = paths - allowed
+          missing = allowed - paths
+          if extra or missing:
+              raise SystemExit(f'diff de fonte inesperado; extra={sorted(extra)} missing={sorted(missing)}')
+          print('diff de fonte restrito aos 3 arquivos V3')
+          PY
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: dashboard-src
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: dashboard-src
+        run: npm run lint
+
+      - name: Testes
+        working-directory: dashboard-src
+        run: npm run test
+
+      - name: Build completo
+        working-directory: dashboard-src
+        run: npm run build
+
+      - name: Atualizar bundle ativo em configuration.yaml
+        run: |
+          python - <<'PY'
+          import json, re
+          from pathlib import Path
+          manifest = json.loads(Path('config/www/dashboard/manifest.json').read_text(encoding='utf-8'))
+          bundle = manifest['bundle']
+          p = Path('config/configuration.yaml')
+          text = p.read_text(encoding='utf-8')
+          pattern = re.compile(r'(?m)^(\s*)- /local/dashboard/(bruno-dashboard\.[A-Za-z0-9_-]+\.js)\s*$')
+          matches = list(pattern.finditer(text))
+          if len(matches) != 1:
+              raise SystemExit(f'esperava 1 bundle ativo em configuration.yaml; encontrei {len(matches)}')
+          old = matches[0].group(2)
+          if old == bundle:
+              raise SystemExit('o build V3 nao alterou o hash do bundle; abortando por seguranca')
+          indent = matches[0].group(1)
+          replacement = f'{indent}# ANTERIOR (rollback V3): - /local/dashboard/{old}\n{indent}- /local/dashboard/{bundle}'
+          text = pattern.sub(replacement, text, count=1)
+          p.write_text(text, encoding='utf-8')
+          print(f'bundle ativo: {old} -> {bundle}')
+          PY
+
+      - name: Bloquear alteracoes inesperadas
+        run: |
+          python - <<'PY'
+          import subprocess
+          paths = subprocess.check_output(['git','status','--porcelain=v1'], text=True).splitlines()
+          unexpected = []
+          for line in paths:
+              path = line[3:]
+              if ' -> ' in path:
+                  path = path.split(' -> ',1)[1]
+              ok = (
+                  path in {
+                      'dashboard-src/src/config/rooms.config.ts',
+                      'dashboard-src/src/config/rooms.config.test.ts',
+                      'dashboard-src/src/components/rooms/bruno-room-tile.ts',
+                      'config/configuration.yaml',
+                  }
+                  or path.startswith('config/www/dashboard/')
+              )
+              if not ok:
+                  unexpected.append(line)
+          if unexpected:
+              raise SystemExit('arquivos inesperados apos build:\n' + '\n'.join(unexpected))
+          print('build restrito aos fontes V3, configuration.yaml e artefatos do dashboard')
+          PY
+
+      - name: Registrar candidata pronta para Everex
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            dashboard-src/src/config/rooms.config.ts \
+            dashboard-src/src/config/rooms.config.test.ts \
+            dashboard-src/src/components/rooms/bruno-room-tile.ts \
+            config/configuration.yaml
+          git add -f -A config/www/dashboard
+          git commit -m "feat: integrar V3 ao runtime mobile validado [generated candidate]"
+          git push origin HEAD:feat/mobile-runtime-v3-20260821

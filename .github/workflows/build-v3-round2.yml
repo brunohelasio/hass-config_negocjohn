@@ -1,0 +1,126 @@
+name: Build V3 round2 candidate
+
+on:
+  push:
+    branches:
+      - feat/mobile-runtime-v3-20260821
+    paths:
+      - 'scripts/assets/fix_v3_round2.py'
+
+permissions:
+  contents: write
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout da candidata
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Aplicar correcoes V3 round2
+        run: python scripts/assets/fix_v3_round2.py
+
+      - name: Validar referencias V3
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          tile = Path('dashboard-src/src/components/rooms/bruno-room-tile.ts').read_text(encoding='utf-8')
+          sala = Path('config/www/bruno-ui/cards/bruno-sala-card.js').read_text(encoding='utf-8')
+          required = [
+              "const v = '20260821-v3-webp-2';",
+              '/local/bruno-ui/assets/v3/sala-off.webp?v=20260821-v3-webp-2',
+              '/local/bruno-ui/assets/v3/sala-on.webp?v=20260821-v3-webp-2',
+          ]
+          combined = tile + '\n' + sala
+          missing = [x for x in required if x not in combined]
+          if missing:
+              raise SystemExit(f'referencias V3 ausentes: {missing}')
+          if '/local/bruno-ui/assets/v2/sala-off.png' in sala or '/local/bruno-ui/assets/v2/sala-on.png' in sala:
+              raise SystemExit('Sala ainda referencia V2')
+          print('referencias V3 round2 confirmadas')
+          PY
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Instalar dependencias
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: dashboard-src
+        run: npm run typecheck
+
+      - name: Lint
+        working-directory: dashboard-src
+        run: npm run lint
+
+      - name: Testes
+        working-directory: dashboard-src
+        run: npm run test
+
+      - name: Build completo
+        working-directory: dashboard-src
+        run: npm run build
+
+      - name: Atualizar bundle ativo em configuration.yaml
+        run: |
+          python - <<'PY'
+          import json, re
+          from pathlib import Path
+          manifest = json.loads(Path('config/www/dashboard/manifest.json').read_text(encoding='utf-8'))
+          bundle = manifest['bundle']
+          p = Path('config/configuration.yaml')
+          text = p.read_text(encoding='utf-8')
+          pattern = re.compile(r'(?m)^(\s*)- /local/dashboard/(bruno-dashboard\.[A-Za-z0-9_-]+\.js)\s*$')
+          matches = list(pattern.finditer(text))
+          if len(matches) != 1:
+              raise SystemExit(f'esperava 1 bundle ativo; encontrei {len(matches)}')
+          old = matches[0].group(2)
+          if old == bundle:
+              raise SystemExit('hash do bundle nao mudou; abortando por seguranca')
+          indent = matches[0].group(1)
+          repl = f'{indent}# ANTERIOR (rollback V3 round2): - /local/dashboard/{old}\n{indent}- /local/dashboard/{bundle}'
+          p.write_text(pattern.sub(repl, text, count=1), encoding='utf-8')
+          print(f'bundle ativo: {old} -> {bundle}')
+          PY
+
+      - name: Bloquear alteracoes inesperadas
+        run: |
+          python - <<'PY'
+          import subprocess
+          allowed_exact = {
+              'dashboard-src/src/components/rooms/bruno-room-tile.ts',
+              'config/www/bruno-ui/cards/bruno-sala-card.js',
+              'config/configuration.yaml',
+          }
+          lines = subprocess.check_output(['git','status','--porcelain=v1'], text=True).splitlines()
+          unexpected = []
+          for line in lines:
+              path = line[3:]
+              if ' -> ' in path:
+                  path = path.split(' -> ', 1)[1]
+              if path in allowed_exact or path.startswith('config/www/dashboard/'):
+                  continue
+              unexpected.append(line)
+          if unexpected:
+              raise SystemExit('arquivos inesperados apos build:\n' + '\n'.join(unexpected))
+          print('escopo round2 confirmado')
+          PY
+
+      - name: Registrar candidata round2
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dashboard-src/src/components/rooms/bruno-room-tile.ts
+          git add config/www/bruno-ui/cards/bruno-sala-card.js
+          git add config/configuration.yaml
+          git add -f -A config/www/dashboard
+          git commit -m 'fix: estabilizar V3 em desktop tablet e Sala'
+          git push

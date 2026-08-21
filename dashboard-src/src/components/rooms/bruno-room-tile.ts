@@ -1248,8 +1248,8 @@ export class BrunoRoomTile extends LitElement {
         box-shadow:
           inset 0 1px 0 rgba(255, 255, 255, 0.13),
           0 10px 26px rgba(0, 0, 0, 0.19);
-        backdrop-filter: blur(10px) saturate(1.10);
-        -webkit-backdrop-filter: blur(10px) saturate(1.10);
+        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
+        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
       }
       .room-card.is-josh-phone-card::before {
         background:
@@ -1272,8 +1272,8 @@ export class BrunoRoomTile extends LitElement {
           inset 0 -1px 0 rgba(255, 213, 151, 0.07),
           0 0 24px rgba(255, 205, 132, 0.09),
           0 12px 28px rgba(0, 0, 0, 0.21);
-        backdrop-filter: blur(12px) saturate(1.13) brightness(1.035);
-        -webkit-backdrop-filter: blur(12px) saturate(1.13) brightness(1.035);
+        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
       }
       .room-card.is-josh-phone-card.is-room-on::before {
         background:

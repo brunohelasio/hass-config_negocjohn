@@ -21,32 +21,32 @@ def replace_once(path: Path, old: str, new: str, label: str) -> None:
 # backdrop roots pesadas na Home. O round4 reforca o material com SCRIM e SHEEN,
 # portanto nao precisa reintroduzir blur de 10/12px por card.
 #
-# As quebras de linha fazem parte do alvo de proposito: sem elas, a substring
-# `backdrop-filter:` tambem casa dentro de `-webkit-backdrop-filter:`.
+# IMPORTANTE: troca primeiro a variante -webkit-. Assim `backdrop-filter:` nao
+# casa como substring dentro dela e cada substituicao continua deterministica.
 for path, prefix in ((TILE, 'tile'), (SALA, 'Sala')):
     replace_once(
         path,
-        '\n        backdrop-filter: blur(10px) saturate(1.10);',
-        '\n        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);',
-        f'{prefix} OFF microblur',
-    )
-    replace_once(
-        path,
-        '\n        -webkit-backdrop-filter: blur(10px) saturate(1.10);',
-        '\n        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);',
+        '-webkit-backdrop-filter: blur(10px) saturate(1.10);',
+        '-webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);',
         f'{prefix} OFF microblur webkit',
     )
     replace_once(
         path,
-        '\n        backdrop-filter: blur(12px) saturate(1.13) brightness(1.035);',
-        '\n        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);',
-        f'{prefix} ON microblur',
+        'backdrop-filter: blur(10px) saturate(1.10);',
+        'backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);',
+        f'{prefix} OFF microblur',
     )
     replace_once(
         path,
-        '\n        -webkit-backdrop-filter: blur(12px) saturate(1.13) brightness(1.035);',
-        '\n        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);',
+        '-webkit-backdrop-filter: blur(12px) saturate(1.13) brightness(1.035);',
+        '-webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);',
         f'{prefix} ON microblur webkit',
+    )
+    replace_once(
+        path,
+        'backdrop-filter: blur(12px) saturate(1.13) brightness(1.035);',
+        'backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);',
+        f'{prefix} ON microblur',
     )
 
 for path in (TILE, SALA):

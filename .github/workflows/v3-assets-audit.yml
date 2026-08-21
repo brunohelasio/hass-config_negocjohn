@@ -7,6 +7,7 @@ on:
     paths:
       - 'config/www/bruno-ui/assets/V3/**'
       - 'scripts/assets/audit_v3.py'
+      - 'scripts/assets/benchmark_v3.py'
       - '.github/workflows/v3-assets-audit.yml'
   push:
     branches:
@@ -14,6 +15,7 @@ on:
     paths:
       - 'config/www/bruno-ui/assets/V3/**'
       - 'scripts/assets/audit_v3.py'
+      - 'scripts/assets/benchmark_v3.py'
       - '.github/workflows/v3-assets-audit.yml'
 
 permissions:
@@ -36,6 +38,9 @@ jobs:
 
       - name: Auditar V3
         run: python scripts/assets/audit_v3.py
+
+      - name: Benchmark WebP
+        run: python scripts/assets/benchmark_v3.py
 
       - name: Publicar auditoria
         uses: actions/upload-artifact@v4

@@ -1,8 +1,51 @@
 {
   "version": "20260821-v3-webp-1",
+  "source_family": "V3",
+  "source_canvas": 1254,
   "format": "webp",
   "canvas": 512,
   "quality": 82,
+  "normalization": {
+    "alpha_threshold": 8,
+    "target_visual_width": 460,
+    "target_center_x": 256,
+    "target_visual_bottom": 485,
+    "pair_transform": "same transform for ON/OFF of each room"
+  },
+  "source_files": {
+    "lavabo": {
+      "on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (1).png",
+      "off": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (2).png"
+    },
+    "corredor": {
+      "on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (2).png",
+      "off": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (3).png"
+    },
+    "cozinha": {
+      "on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (3).png",
+      "off": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (4).png"
+    },
+    "office": {
+      "on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (4).png",
+      "off": "ChatGPT Image 21 de ago. de 2026, 09_22_28 (5).png"
+    },
+    "casal": {
+      "on": "ChatGPT Image 21 de ago. de 2026, 09_22_11 (5).png",
+      "off": "ChatGPT Image 21 de ago. de 2026, 09_22_29 (6).png"
+    },
+    "miguel": {
+      "on": "ChatGPT Image 21 de ago. de 2026, 09_22_12 (6).png",
+      "off": "ChatGPT Image 21 de ago. de 2026, 09_22_29 (7).png"
+    },
+    "marina": {
+      "on": "ChatGPT Image 21 de ago. de 2026, 09_22_12 (7).png",
+      "off": "ChatGPT Image 21 de ago. de 2026, 09_22_29 (8).png"
+    },
+    "sala": {
+      "on": "ChatGPT Image 21 de ago. de 2026, 09_22_38.png",
+      "off": "ChatGPT Image 21 de ago. de 2026, 09_22_27 (1).png"
+    }
+  },
   "assets": {
     "lavabo": {
       "off": "v3/lavabo-off.webp",

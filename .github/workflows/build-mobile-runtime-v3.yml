@@ -1,16 +1,10 @@
 name: Build mobile runtime + V3 candidate
 
 on:
-  push:
-    branches:
-      - feat/mobile-runtime-v3-20260821
-    paths:
-      - 'scripts/assets/apply_v3_runtime_branch.py'
-      - '.github/workflows/build-mobile-runtime-v3.yml'
-      - 'config/www/bruno-ui/assets/v3/**'
   pull_request:
     branches:
       - fix/mobile-runtime-tv-curtain-20260819
+    types: [opened, reopened, synchronize]
     paths:
       - 'scripts/assets/apply_v3_runtime_branch.py'
       - '.github/workflows/build-mobile-runtime-v3.yml'
@@ -29,7 +23,9 @@ jobs:
       - name: Checkout da candidata
         uses: actions/checkout@v4
         with:
+          ref: feat/mobile-runtime-v3-20260821
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Aplicar V3 sobre o runtime validado da 602
         run: python scripts/assets/apply_v3_runtime_branch.py
@@ -128,7 +124,6 @@ jobs:
           PY
 
       - name: Registrar candidata pronta para Everex
-        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -138,5 +133,5 @@ jobs:
             dashboard-src/src/components/rooms/bruno-room-tile.ts \
             config/configuration.yaml
           git add -A config/www/dashboard
-          git commit -m "feat: integrar V3 ao runtime mobile validado"
-          git push
+          git commit -m "feat: integrar V3 ao runtime mobile validado [generated candidate]"
+          git push origin HEAD:feat/mobile-runtime-v3-20260821

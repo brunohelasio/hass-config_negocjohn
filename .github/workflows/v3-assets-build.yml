@@ -1,6 +1,13 @@
 name: Build V3 Assets
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'config/www/bruno-ui/assets/V3/**'
+      - 'scripts/assets/build_v3.py'
+      - '.github/workflows/v3-assets-build.yml'
   push:
     branches:
       - feat/assets-v3-5g
@@ -33,7 +40,16 @@ jobs:
       - name: Gerar assets V3
         run: python scripts/assets/build_v3.py
 
+      - name: Publicar preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: v3-build-preview
+          path: docs/_tmp/v3-build/
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Registrar assets otimizados
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

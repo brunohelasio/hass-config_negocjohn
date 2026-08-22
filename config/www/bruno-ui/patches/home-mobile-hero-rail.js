@@ -12,10 +12,8 @@ const BRUNO_CHAT_PHONE_QUERY = '(max-width: 800px)';
 const BRUNO_CHAT_HERO_TAG = 'bruno-hero-card';
 const BRUNO_CHAT_RAIL_TAG = 'bento-sidebar-liquid-card';
 const BRUNO_CHAT_ROTATION_MS = 6000;
-const BRUNO_HOME_V4_TAG = 'bruno-home-phone-v4-card';
 
 const brunoChatIsPhone = () => Boolean(globalThis.matchMedia?.(BRUNO_CHAT_PHONE_QUERY).matches);
-const brunoChatHomeV4IsLoaded = () => Boolean(customElements.get(BRUNO_HOME_V4_TAG));
 
 function brunoChatClearHeroTimer(card) {
   if (!card?.__brunoChatHeroTimer) return;
@@ -225,17 +223,6 @@ function brunoChatEnsureHeroStyle(root) {
 }
 
 function brunoChatApplyHero(card) {
-  // HOME V4 (2026-08-22): quando o compositor novo está registrado no phone,
-  // este patch de 17/08 deixa de disputar o mesmo hero. A V4 é quem define a
-  // geometria (128/124px) e a remoção da faixa agenda/insights. Fora do phone
-  // ou sem a V4 carregada, o comportamento validado de 17/08 permanece igual.
-  if (brunoChatIsPhone() && brunoChatHomeV4IsLoaded()) {
-    brunoChatClearHeroTimer(card);
-    card?.shadowRoot?.querySelector('style[data-bruno-chat-hero-patch]')?.remove();
-    card?.shadowRoot?.querySelector('.bruno-chat-event-dots')?.remove();
-    return;
-  }
-
   if (!card?.shadowRoot || card?._config?.hero_layout !== 'v2' || !brunoChatIsPhone()) {
     brunoChatClearHeroTimer(card);
     return;

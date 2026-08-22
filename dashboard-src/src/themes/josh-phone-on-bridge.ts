@@ -1,43 +1,32 @@
 /**
- * Josh — ajuste visual EXCLUSIVO do estado ON dos room tiles.
+ * Josh — material ON por breakpoint, sem alterar semantica, geometria ou gestos.
  *
- * Existem duas linguagens diferentes por breakpoint e elas nao devem ser
- * misturadas:
+ * Round2 (2026-08-22): a primeira versao tentava substituir connectedCallback
+ * depois de customElements.define(). Isso nao e um gancho confiavel: o lifecycle
+ * do custom element ja foi capturado no registro e a folha podia nunca chegar
+ * as instancias criadas depois. Esta versao observa os nos reais e instala a
+ * folha diretamente em cada shadowRoot.
  *
- * 1) TABLET/DESKTOP (> 800px): o comodo continua sendo TILE, sem cartela.
- *    O ON recebe apenas um wash leitoso que morre antes das extremidades e um
- *    filete inferior mais legivel. Nenhuma borda/raio de card e criada.
+ * TABLET/DESKTOP (>800px): continua TILE. O wash/veil ON foi rejeitado na
+ * validacao fisica e e removido integralmente. Permanecem PNG ON, texto, filete
+ * quente e glow inferior ja existentes.
  *
- * 2) PHONE (<= 800px): o comodo continua sendo CARD. O ON replica a receita
- *    visual de `bruno-liquid-surface-on-*` do tema Liquid Glass, preservando o
- *    raio/estrutura do Josh e sem alterar estado, gesto, layout ou OFF.
- *
- * A superficie vive no Shadow DOM de <bruno-room-tile>; este bridge injeta uma
- * folha pequena no shadowRoot e nao toca na logica do componente.
+ * PHONE (<=800px): continua CARD Josh. Somente o material visual ON replica,
+ * literalmente, os tokens canonicos bruno-liquid-surface-on-* do Liquid Glass:
+ * background, blur/filter, border-color, shadow, sheen e sheen-opacity.
+ * Nenhum border-radius, estado, gesto, asset ou layout e alterado aqui.
  */
 
-const JOSH_PHONE_ON_STYLE_ID = 'bruno-josh-on-material';
+const JOSH_ON_STYLE_ID = 'bruno-josh-on-material-round2';
 
-const JOSH_PHONE_ON_CSS = `
-/* TABLET / DESKTOP — continua TILE, sem cartela. */
+const JOSH_ON_CSS = `
+/* TABLET / DESKTOP — sem veil/cartela. */
 @media (min-width: 801px) {
   .room-card.is-tile.is-room-on::before {
     inset: 0 !important;
     border-radius: 0 !important;
-    background:
-      radial-gradient(
-        ellipse 74% 70% at 50% 66%,
-        rgba(255,255,255,0.12) 0%,
-        rgba(255,255,255,0.065) 38%,
-        rgba(255,255,255,0.024) 58%,
-        transparent 78%
-      ),
-      radial-gradient(
-        ellipse 54% 42% at 50% 18%,
-        rgba(255,255,255,0.055) 0%,
-        transparent 74%
-      ) !important;
-    opacity: 1 !important;
+    background: none !important;
+    opacity: 0 !important;
   }
 
   .room-card.is-tile.is-room-on::after {
@@ -52,7 +41,7 @@ const JOSH_PHONE_ON_CSS = `
   }
 }
 
-/* PHONE — receita ON do Liquid Glass, sem alterar o raio Josh. */
+/* PHONE — valores literais do estado ON vigente em bruno-liquid-glass.js. */
 @media (max-width: 800px) {
   .room-card.is-josh-phone-card.is-room-on {
     --text-main: rgba(248, 251, 255, 0.96);
@@ -80,58 +69,64 @@ const JOSH_PHONE_ON_CSS = `
       linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.00) 48%) !important;
     opacity: 0.85 !important;
   }
-
-  .room-card.is-josh-phone-card.is-room-on::after {
-    opacity: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .room-card.is-josh-phone-card.is-room-on .room-asset-on {
-    filter: none !important;
-  }
 }
 `;
 
-type JoshLifecycleElement = HTMLElement & {
-  __brunoJoshPhoneOnPatched?: boolean;
-  connectedCallback?: () => void;
-};
-
-type TileCtor = CustomElementConstructor & {
-  prototype: JoshLifecycleElement;
-};
+const observedRoots = new WeakSet<Document | ShadowRoot>();
 
 function installStyle(tile: Element): void {
   const root = tile.shadowRoot;
-  if (!root || root.getElementById(JOSH_PHONE_ON_STYLE_ID)) return;
+  if (!root || root.getElementById(JOSH_ON_STYLE_ID)) return;
   const style = document.createElement('style');
-  style.id = JOSH_PHONE_ON_STYLE_ID;
-  style.textContent = JOSH_PHONE_ON_CSS;
+  style.id = JOSH_ON_STYLE_ID;
+  style.textContent = JOSH_ON_CSS;
   root.appendChild(style);
 }
 
-function walkOpenRoots(root: Document | ShadowRoot): void {
-  root.querySelectorAll('bruno-room-tile').forEach(installStyle);
-  root.querySelectorAll('*').forEach((node) => {
-    if (node.shadowRoot) walkOpenRoots(node.shadowRoot);
+function inspectElement(element: Element): void {
+  if (element.matches('bruno-room-tile')) installStyle(element);
+  element.querySelectorAll('bruno-room-tile').forEach(installStyle);
+
+  if (element.shadowRoot) observeRoot(element.shadowRoot);
+  element.querySelectorAll('*').forEach((node) => {
+    if (node.shadowRoot) observeRoot(node.shadowRoot);
   });
 }
 
+function inspectAddedNode(node: Node): void {
+  if (!(node instanceof Element)) return;
+  inspectElement(node);
+  // Lit costuma criar o shadowRoot no primeiro update depois da conexao.
+  // Reinspecionar nos dois frames seguintes cobre esse intervalo sem polling.
+  requestAnimationFrame(() => {
+    inspectElement(node);
+    requestAnimationFrame(() => inspectElement(node));
+  });
+}
+
+function observeRoot(root: Document | ShadowRoot): void {
+  if (observedRoots.has(root)) return;
+  observedRoots.add(root);
+
+  root.querySelectorAll('bruno-room-tile').forEach(installStyle);
+  root.querySelectorAll('*').forEach((node) => {
+    if (node.shadowRoot) observeRoot(node.shadowRoot);
+  });
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach(inspectAddedNode);
+    }
+  });
+  observer.observe(root, { childList: true, subtree: true });
+}
+
 void customElements.whenDefined('bruno-room-tile').then(() => {
-  const ctor = customElements.get('bruno-room-tile') as TileCtor | undefined;
-  if (!ctor) return;
+  observeRoot(document);
+  // Cobre instancias que foram promovidas/renderizadas antes da microtask.
+  document.querySelectorAll('bruno-room-tile').forEach(installStyle);
+});
 
-  const proto = ctor.prototype;
-  if (!proto.__brunoJoshPhoneOnPatched) {
-    const originalConnected = proto.connectedCallback;
-    proto.connectedCallback = function connectedCallbackWithJoshPhoneOn(this: JoshLifecycleElement) {
-      originalConnected?.call(this);
-      queueMicrotask(() => installStyle(this));
-    };
-    proto.__brunoJoshPhoneOnPatched = true;
-  }
-
-  // customElements.define() pode ter promovido nos ja conectados antes da
-  // microtask de whenDefined; cobre essas instancias sem observer permanente.
-  walkOpenRoots(document);
+globalThis.addEventListener?.('bruno-theme-changed', () => {
+  document.querySelectorAll('bruno-room-tile').forEach(installStyle);
 });

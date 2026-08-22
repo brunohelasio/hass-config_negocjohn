@@ -31,11 +31,7 @@
 # Layout desktop/tablet:
 #   linha 1  top_badges (48px)
 #   linha 2  HERO (welcome, 4 col) | AREA DINAMICA (dynamic, 8 col)
-#   linha 3  0px — safety net Sagaland p/ areas usadas so no phone
-#   linha 4  BLOCO INFERIOR (moldura unica: 7 comodos + acoes rapidas)
-#
-# PHONE (<=800px): layout IDENTICO ao da V1 (decisao do usuario) — mesmo
-# empilhamento, mesmos cards; `dynamic` e `bottom_block` como linhas 0px.
+#   linha 3  BLOCO INFERIOR (moldura unica: 7 comodos + acoes rapidas)
 # ==========================================================================
 type: custom:layout-card
 layout_type: custom:grid-layout
@@ -44,137 +40,69 @@ layout:
   padding: 0
   grid-gap: 10px
   grid-template-columns: 0px repeat(12, minmax(0, 1fr))
-  # ══ REV.6 (2026-08-06) — A LINHA-FANTASMA SAI, E COM ELA O DEGRAU ═════════
-  #
   # ANTERIOR (rev.5): 0px 48px calc(77vh - 154px) calc(23vh + 52px)
   # ANTERIOR (rev.4): 48px calc(77vh - 154px) 0px calc(23vh + 52px)
   # ANTERIOR (rev.3): 48px calc(77vh - 166px) 23vh 0px 54px
-  #
-  # A rev.5 moveu a linha-fantasma de 0px para o TOPO e aceitou, por escrito,
-  # que "a faixa de badges desce 10px" — o grid-gap passou a ficar ACIMA dela.
-  # Era esse o degrau na transicao Home -> subview: nas subviews a barra e a
-  # PRIMEIRA linha real, sem gap acima.
-  #
-  # TENTATIVA FRUSTRADA (2026-08-06, 2 rodadas): margin-top: -10px no :host do
-  # bruno-top-badges-card. NAO FUNCIONA na Home — o layout-card envolve cada
-  # card num wrapper, e o item do grid e o WRAPPER, nao o card. A margem movia
-  # o card DENTRO do wrapper. No banco de medicao o card era anexado direto ao
-  # slot, sem wrapper, e por isso a medicao dizia que funcionava.
-  #
-  # CORRECAO REAL: a linha-fantasma nao e mais necessaria. As quatro areas que
-  # ela sustentava (sala, comodos, energy, media) pertencem a cards com
-  # show.mediaquery (max-width: 800px) — no desktop eles NAO renderizam, e
-  # area de card nao renderizado nao precisa existir. As outras tres (camera,
-  # roborock, quick_actions) nao sao usadas por card nenhum desde a Home V3 e a
-  # remocao da faixa de acoes rapidas (5e.2).
-  #
-  # Aritmetica com 3 linhas (content-slot tem padding 12px x2):
-  #   48px (badges) + HERO + BLOCO INFERIOR + 2 gaps de 10px + 24px = 100vh
-  #   BLOCO INFERIOR = calc(23vh - 12px)   <- so os comodos; o dock de 54px saiu
-  #   => HERO = calc(77vh - 80px)
-  #   (a mesma constante esta em v2/bento_dynamic.yaml -> available_height;
-  #    mudar aqui exige mudar la.)
   grid-template-rows: 48px calc(77vh - 80px) calc(23vh - 12px)
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
     "sidebar welcome welcome welcome welcome dynamic dynamic dynamic dynamic dynamic dynamic dynamic dynamic"
     "sidebar bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block bottom_block"
-  # PHONE: reproducao fiel do bloco phone da V1 (layout mobile intocado),
-  # com as areas extras `dynamic` e `bottom_block` como linhas 0px
-  # (Sagaland: toda area existe em todo breakpoint).
-  # ── PHONE — REV.7 (2026-08-10) ───────────────────────────────────────────
+
+  # ── PHONE REV.8 / HOME V4 (2026-08-22) ─────────────────────────────────
   #
-  # Decisões do usuário nesta revisão:
-  #   1. hero condensado (3 faixas -> 1) para ~210px;
-  #   2. terceira dupla de cômodos aparecendo pela METADE — o recorte parcial
-  #      é o que convida a rolar, e um layout calibrado em 8px de folga quebra
-  #      no próximo aparelho;
-  #   3. Energia e Mídia FIXOS cedem lugar aos cards dinâmicos do tablet, que
-  #      só aparecem quando há condição ativa.
+  # A primeira implementação V4 tentou conservar as linhas REV.7 e fazer um
+  # compositor de ~570px atravessar as antigas areas `sala` + `comodos` por
+  # `grid-row`. Isso manteve a régua velha no ponto em que a nova Home precisava
+  # de altura intrínseca e foi a escolha estrutural errada.
   #
-  # Orçamento MEDIDO no iPhone 13 Pro Max (428x926). A dobra é uma faixa, não
-  # um número: 822 no app em tela cheia, 775 se a barra de status ocupar
-  # espaço. As posições abaixo saíram do banco de medição, não de estimativa.
+  # A correção deixa no grid phone somente TRÊS superfícies reais:
+  #   status / hero / compositor V4.
+  # O compositor V4 é dono de Cômodos + Favoritos + seção condicional
+  # "Em execução". Logo, quando não há card dinâmico ativo não existe sequer
+  # uma linha/gap dinâmica no grid externo.
   #
-  #   badges          10 →  54
-  #   hero            62 → 272     (210px: 3 faixas viraram 1)
-  #   Sala           280 → 430
-  #   Office/Cozinha 438 → 598
-  #   Lavabo/Casal   606 → 766     ← última completa nas DUAS hipóteses
-  #   Marina/Miguel  774 → 934     ← aparece 48px em tela cheia
-  #
-  # A terceira dupla é cortada de propósito: o recorte parcial é o que convida
-  # a rolar. Não perseguir o encaixe exato — ver docs/28 §2.3.
-  #
-  # ANTERIOR (rev.6, para rollback):
-  #   grid-template-rows: minmax(44px, auto) minmax(0, auto) 176px auto minmax(140px, auto) 0px minmax(180px, auto) 0px 0px 0px 0px 0px
-  #   areas: top_badges welcome sala comodos energy roborock media camera quick_actions sidebar dynamic bottom_block
+  # ANTERIOR (REV.7, rollback):
+  # grid-template-rows: minmax(44px, auto) minmax(0, auto) 172px auto auto 0px 0px 0px 0px 0px 0px 0px
+  # areas: top_badges / welcome / sala / comodos / dynamic / energy / roborock /
+  #        media / camera / quick_actions / sidebar / bottom_block
   mediaquery:
     '(max-width: 800px)':
-      # 8px (nao 10): os 4 respiros acima da terceira dupla devolvem 8px ao
-      # orcamento, e e o unico ajuste aqui que nao arrisca cortar conteudo.
       grid-gap: 8px
       grid-template-columns: minmax(0, 1fr)
-
-      # ── PHONE REV.8 / HOME V4 (2026-08-22) ───────────────────────────────
-      # A primeira implementação tentou manter a régua REV.7 e fazer o novo
-      # compositor atravessar `sala` + `comodos` por `view_layout.grid-row`.
-      # Isso preservou a restrição antiga de 172px no ponto em que o novo bloco
-      # precisava de altura intrínseca (~550px) e foi a escolha estrutural errada.
-      #
-      # A V4 usa apenas as QUATRO tracks que realmente montam no phone:
-      #   badges / hero / compositor V4 / dynamic.
-      # A matriz vertical antiga continua inteira em bento_comodos_phone.yaml,
-      # porém seu include fica comentado abaixo para rollback explícito.
-      #
-      # ANTERIOR (rollback REV.7):
-      # grid-template-rows: minmax(44px, auto) minmax(0, auto) 172px auto auto 0px 0px 0px 0px 0px 0px 0px
-      # grid-template-areas: |
-      #   "top_badges"
-      #   "welcome"
-      #   "sala"
-      #   "comodos"
-      #   "dynamic"
-      #   "energy"
-      #   "roborock"
-      #   "media"
-      #   "camera"
-      #   "quick_actions"
-      #   "sidebar"
-      #   "bottom_block"
-      grid-template-rows: minmax(44px, auto) minmax(0, auto) auto auto
+      grid-template-rows: minmax(44px, auto) minmax(0, auto) auto
       grid-template-areas: |
         "top_badges"
         "welcome"
         "sala"
-        "dynamic"
+
 cards:
   # Faixa superior de status: mesma da V1 (shell preservada).
   - !include ../main-grid/bento_top_badges.yaml
-  # Hero com protagonismo + agenda integrada (hero_layout: v2).
-  # HOME V4 PHONE: o resource home-mobile-v4.js oculta a agenda/insights apenas
-  # no telefone. Tablet/desktop continuam com a configuração original abaixo.
+
+  # Hero V2. No phone a camada home-mobile-v4.js remove agenda/insights e
+  # reduz a altura; tablet/desktop continuam com o comportamento original.
   - !include ../main-grid/v2/bento_welcome_v2.yaml
-  # Sala especial APENAS no phone (desktop: card padrao no bloco inferior).
-  # HOME V4 PHONE: este wrapper agora aponta para o compositor completo.
+
+  # HOME V4 PHONE: compositor único com as duas páginas de cômodos, Favoritos
+  # e "Em execução" condicional. No desktop/tablet este card não monta.
   - !include ../main-grid/v2/bento_sala_phone.yaml
-  # Matriz 2x3 de comodos APENAS no phone.
-  # ANTERIOR (rollback HOME V4): o arquivo segue intacto; reativar esta linha,
-  # restaurar bento_sala_phone.yaml e o bloco REV.7 acima devolve a Home anterior.
+
+  # ANTERIOR (rollback HOME V4): matriz vertical phone. Arquivo preservado
+  # intacto; reativar esta linha + restaurar bento_sala_phone.yaml + REV.7.
   # - !include ../main-grid/v2/bento_comodos_phone.yaml
-  # Area dinamica (container JS): camera / Roborock / midia por relevancia.
+
+  # Area dinamica exclusiva do desktop/tablet.
   - !include ../main-grid/v2/bento_dynamic.yaml
-  # NOVO (2026-08-10): a mesma logica no telefone, com config propria (uma
-  # coluna, um card por vez, faixa que colapsa quando nada esta ativo).
-  - !include ../main-grid/v2/bento_dynamic_phone.yaml
-  # ANTERIOR (rollback 2026-08-10) — Energia e midia FIXOS no phone. Cederam
-  # lugar aos cards dinamicos acima, por decisao do usuario. O consumo ja
-  # aparece nos status superiores; o grafico completo fica para o tablet.
-  # Os dois arquivos seguem no disco, intactos.
+
+  # ANTERIOR (rollback HOME V4): no phone a activity-column era uma linha
+  # separada do grid. Agora ela é criada DENTRO do compositor V4 para que
+  # "Em execução" + card apareçam juntos e zero espaço exista quando inativa.
+  # - !include ../main-grid/v2/bento_dynamic_phone.yaml
+
+  # ANTERIOR (rollback 2026-08-10) — Energia e midia FIXOS no phone.
   # - !include ../main-grid/v2/bento_energy_phone.yaml
   # - !include ../main-grid/v2/bento_media_phone.yaml
-  # Bloco inferior unificado (7 comodos + acoes rapidas na mesma moldura).
-  # ANTERIOR (rev.3, blocos separados — arquivos preservados no disco):
-  #   - !include ../main-grid/v2/bento_comodos_strip.yaml
-  #   - !include ../main-grid/v2/bento_quick_actions_v2.yaml
+
+  # Bloco inferior unificado exclusivo de desktop/tablet.
   - !include ../main-grid/v2/bento_bottom_block.yaml

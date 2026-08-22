@@ -3,6 +3,7 @@ import type { Hass } from '@/models/home-assistant';
 import { ROOMS, SPOTIFY_ENTITY, type RoomConfig, type RoomDot } from '@/config/rooms.config';
 import { lightsSummary, semanticLine, isRoomOn, sensorDisplay } from '@/services/entities/room-state';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
+import { isTvPoweredStable } from '@/services/entities/media-state';
 import { ObservadorDeEntidades, resumirMotivo } from '@/services/state/entity-watcher';
 import { conectou, desconectou, medirRender } from '@/diagnostics/runtime/probe';
 
@@ -248,7 +249,7 @@ export class BrunoRoomTile extends LitElement {
    */
   private _tileModeCache: boolean | undefined;
 
-  private get _tileMode(): boolean {
+  private get _joshHomeMode(): boolean {
     if (this._config?.variant !== 'tile') return false;
     if (this._tileModeCache !== undefined) return this._tileModeCache;
     let value = '';
@@ -259,6 +260,17 @@ export class BrunoRoomTile extends LitElement {
     }
     this._tileModeCache = value === 'on';
     return this._tileModeCache;
+  }
+
+  private get _phoneJoshCard(): boolean {
+    const phone = typeof globalThis.matchMedia === 'function'
+      ? globalThis.matchMedia('(max-width: 800px)').matches
+      : false;
+    return this._joshHomeMode && phone;
+  }
+
+  private get _tileMode(): boolean {
+    return this._joshHomeMode && !this._phoneJoshCard;
   }
 
   /**
@@ -507,6 +519,9 @@ export class BrunoRoomTile extends LitElement {
     const aceso = (d: RoomDot): boolean => {
       const estados = (d.states ?? []).map((s) => s.toLowerCase());
       const porEntidade = (d.entities ?? []).some((id) => {
+        if (d.offDelayMs && id.startsWith('media_player.')) {
+          return isTvPoweredStable(hass, id, Date.now(), d.offDelayMs);
+        }
         const e = hass.states[id];
         return Boolean(e) && estados.includes(String(e?.state ?? '').toLowerCase());
       });
@@ -810,21 +825,19 @@ export class BrunoRoomTile extends LitElement {
       display: block;
     }
 
-    /* Assets V2: maquetes numa tela QUADRADA de 512x512 com cerca de 5% de
-       margem transparente em volta. Os cards atuais usam PNGs "tight", em que o
-       desenho encosta na borda do arquivo — por isso a mesma regra de CSS
-       produz alturas diferentes nos dois.
+    /* Assets V3: as fontes 1254x1254 sao normalizadas pelo pipeline para
+       canvas 512x512, caixa visual de ~460px, centro X=256 e base Y=485. Esse
+       envelope replica a geometria que este tile ja foi calibrado para usar;
+       por isso escala e translacao abaixo permanecem deliberadamente iguais.
 
-       Estes tres valores existem para o CONTEUDO OPACO cair onde cai o do card
-       real: altura de 81,7px e topo 2,3px acima da caixa do icone, que e o que
-       alinha o desenho com a temperatura na coluna da direita. Medido com a
-       caixa alfa de cada arquivo, nao calibrado no olho. A margem varia de 24 a
-       32px entre os oito arquivos, o que deixa 1,2px de dispersao residual. */
+       A normalizacao e feita por PAR ON/OFF com a mesma transformacao, evitando
+       salto de tamanho/posicao no crossfade. O WebP reduz transferencia sem
+       aumentar o bitmap decodificado que o browser mantem em memoria. */
     .room-asset {
       position: absolute;
       top: 0;
       left: 0;
-      height: 111%;
+      height: 120%;
       width: auto;
       aspect-ratio: 1 / 1;
       object-fit: contain;
@@ -1089,6 +1102,35 @@ export class BrunoRoomTile extends LitElement {
       opacity: var(--bruno-tile-sheen-opacity, 0);
     }
 
+    /* Josh ON tablet/desktop: continua TILE, sem cartela e sem veil.
+       O wash foi reprovado na validacao fisica de 2026-08-22 porque ainda
+       desenhava um retangulo perceptivel. O feedback ON fica no PNG, texto,
+       filete quente e glow inferior. */
+    .room-card.is-tile.is-room-on {
+      --text-main: rgba(255, 252, 245, 0.99);
+      --text-soft: rgba(255, 245, 226, 0.72);
+      --text-muted: rgba(255, 247, 232, 0.76);
+      --bruno-tile-on-line: linear-gradient(
+        90deg,
+        rgba(255, 194, 104, 0) 0%,
+        rgba(255, 202, 122, 0.92) 50%,
+        rgba(255, 194, 104, 0) 100%
+      );
+      --bruno-tile-on-glow: radial-gradient(
+        82px 38px at 50% 100%,
+        rgba(255, 194, 102, 0.22),
+        rgba(255, 216, 156, 0.07) 48%,
+        transparent 76%
+      );
+    }
+
+    .room-card.is-tile.is-room-on::before {
+      inset: 0;
+      border-radius: 0;
+      background: none;
+      opacity: 0;
+    }
+
     .room-card.is-tile.is-room-on::after {
       inset: auto clamp(10.92px, 6.4cqi, 18.2px) 0 clamp(10.92px, 6.4cqi, 18.2px);
       opacity: 1;
@@ -1096,6 +1138,7 @@ export class BrunoRoomTile extends LitElement {
         --bruno-tile-on-line,
         linear-gradient(90deg, rgba(255, 187, 72, 0) 0%, rgba(255, 187, 72, 0.42) 50%, rgba(255, 187, 72, 0) 100%)
       );
+      box-shadow: 0 -2px 14px rgba(255, 194, 102, 0.24);
     }
 
     .room-card.is-tile .room-action {
@@ -1195,12 +1238,51 @@ export class BrunoRoomTile extends LitElement {
     }
 
     @media (max-width: 800px) {
+      .room-card.is-josh-phone-card {
+        border-radius: var(--bruno-liquid-card-radius, 22px);
+        background:
+          radial-gradient(150px 118px at 14% -8%, rgba(255, 255, 255, 0.12), transparent 72%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025) 46%, rgba(0, 0, 0, 0.045)),
+          rgba(13, 14, 17, 0.34);
+        border: 1px solid rgba(255, 255, 255, 0.135);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.13),
+          0 10px 26px rgba(0, 0, 0, 0.19);
+        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
+        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
+      }
+      .room-card.is-josh-phone-card::before {
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.085), transparent 36%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent 52%);
+        opacity: 0.72;
+      }
+      .room-card.is-josh-phone-card.is-room-on {
+        --text-main: rgba(248, 251, 255, 0.96);
+        --text-soft: rgba(255, 255, 255, 0.52);
+        --text-muted: rgba(255, 255, 255, 0.62);
+        background: var(--bruno-josh-room-on-background);
+        border-color: var(--bruno-josh-room-on-border-color);
+        box-shadow: var(--bruno-josh-room-on-shadow);
+        backdrop-filter: var(--bruno-josh-room-on-filter);
+        -webkit-backdrop-filter: var(--bruno-josh-room-on-filter);
+      }
+      .room-card.is-josh-phone-card.is-room-on::before {
+        background: var(--bruno-josh-room-on-sheen);
+        opacity: var(--bruno-josh-room-on-sheen-opacity);
+      }
+      .room-card.is-josh-phone-card .room-action {
+        border-radius: inherit;
+      }
       .room-action {
         padding: clamp(8.58px, 5.03cqi, 14.3px) clamp(9.36px, 5.49cqi, 15.6px) clamp(7.8px, 4.57cqi, 13px) clamp(7.8px, 4.57cqi, 13px);
       }
       .room-icon {
-        max-width: clamp(78px, 45.71cqi, 130px);
-        height: clamp(48.36px, 28.34cqi, 80.6px);
+        max-width: 100px;
+        height: 62px;
+      }
+      .room-asset {
+        height: 127.5%;
       }
     }
 
@@ -1514,13 +1596,16 @@ export class BrunoRoomTile extends LitElement {
     // troca de estado não desloca nem redimensiona nada.
     //
     // Os arquivos anteriores estão em _archive/assets/v2-anterior-20260808/.
-    const v = '20260808-maquetes-premium-1';
-    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}.png?v=${v}` : '';
-    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}.png?v=${v}` : '';
+    // WebP preserva a mesma caixa óptica dos PNGs, com payload drasticamente menor.
+    // Ambos os estados são carregados já no tile: nada de aparição progressiva em idle.
+    const v = '20260821-v3-webp-2';
+    const off = room.assetOff ? `/local/bruno-ui/assets/${room.assetOff}?v=${v}` : '';
+    const onImg = room.assetOn ? `/local/bruno-ui/assets/${room.assetOn}?v=${v}` : '';
 
     const cardClasses = [
       'room-card',
       on ? 'is-room-on' : '',
+      this._phoneJoshCard ? 'is-josh-phone-card' : '',
       this._tileMode ? 'is-tile' : '',
       this._tileMode && this._config?.divider_left ? 'has-divider' : '',
     ]
@@ -1565,10 +1650,10 @@ export class BrunoRoomTile extends LitElement {
           <div class="room-icon" aria-hidden="true">
             <span class="room-asset-wrap">
               ${off
-                ? html`<img class="room-asset room-asset-off" src=${off} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-off" src=${off} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${on ? 'low' : 'high'} />`
                 : nothing}
               ${onImg
-                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" decoding="async" />`
+                ? html`<img class="room-asset room-asset-on" src=${onImg} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${on ? 'high' : 'low'} />`
                 : nothing}
             </span>
           </div>

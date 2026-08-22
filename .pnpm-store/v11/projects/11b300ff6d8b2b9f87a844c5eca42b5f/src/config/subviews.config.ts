@@ -88,9 +88,10 @@ export const SUBVIEWS: Record<string, SubviewConfig> = {
       cameraMain: 'camera.sl_camera_profile_1',
       cameraSecondary: 'camera.vr_camera_profile_1',
       activeCameraSelect: 'input_select.bento_active_camera',
-      tv: 'media_player.android_tv_192_168_3_17',
-      tvRemotePlayer: 'media_player.atv',
-      tvRemote: 'remote.atv',
+      // TV híbrida: power/volume pela Android TV Remote estável; metadata/artwork pela ADB.
+      tv: 'media_player.smart_tv_pro_2',
+      tvMedia: 'media_player.android_tv_192_168_3_17',
+      tvRemote: 'remote.smart_tv_pro',
       spotify: 'media_player.spotifyplus_bruno_helasio',
       speaker: 'media_player.echo_show',
       climate: 'climate.sl_ar_condicionado',

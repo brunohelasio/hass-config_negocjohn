@@ -1,0 +1,32 @@
+# HOME V4 — compositor único do PHONE (2026-08-22, correção rev.2).
+#
+# A área `sala` agora é AUTO no grid phone da section_home_v2.yaml e hospeda
+# todo o bloco estático da Home: pager de cômodos + Favoritos. Não há mais
+# tentativa de atravessar duas linhas do grid via `grid-row`.
+#
+# Página 1 (social): Sala + Cozinha + Lavabo.
+# Página 2 (íntima/trabalho): Office + Q. Casal + Q. Marina + Q. Miguel.
+# Depois do pager: Bento Favoritos (Agenda/Casa + Wi-Fi + 4 cenas).
+#
+# ROLLBACK: restaurar o bloco ANTERIOR abaixo E reativar o include
+# v2/bento_comodos_phone.yaml em shell/section_home_v2.yaml.
+type: custom:bruno-home-phone-v4-card
+view_layout:
+  grid-area: sala
+  show:
+    mediaquery: '(max-width: 800px)'
+rooms:
+  - type: custom:bruno-sala-card
+  - !include ../bento_cozinha.yaml
+  - !include ../bento_lavabo.yaml
+  - !include ../bento_office.yaml
+  - !include ../bento_quarto_casal.yaml
+  - !include ../bento_quarto_marina.yaml
+  - !include ../bento_quarto_miguel.yaml
+
+# ── ANTERIOR (rollback 2026-08-22) ─────────────────────────────────────────
+# type: custom:bruno-sala-card
+# view_layout:
+#   grid-area: sala
+#   show:
+#     mediaquery: '(max-width: 800px)'

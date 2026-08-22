@@ -74,7 +74,7 @@ const html = `<!doctype html>
         <div class="saud">Boa tarde, Bruno</div>
         <div class="rel">17:05</div>
       </div>
-      <bruno-home-phone id="alvo"></bruno-home-phone>
+      <div id="envelope"></div>
     </div>
   </div>
   <div class="rail-slot"></div>
@@ -122,8 +122,20 @@ globalThis.loadCardHelpers = async () => ({
   },
 });
 
+// PRODUCAO: a shell tem shadow root, o layout-card tem outro, e so entao vem o
+// componente. O banco reproduz DOIS niveis: sem isso, closest() encontrava o
+// content-slot aqui e falhava no aparelho — foi o que deixou o bloco 64px alto
+// demais e cortado pela rail.
+const envelope = document.getElementById('envelope');
+const raiz1 = envelope.attachShadow({ mode: 'open' });
+const nivel2 = document.createElement('div');
+raiz1.appendChild(nivel2);
+const raiz2 = nivel2.attachShadow({ mode: 'open' });
+const alvoEl = document.createElement('bruno-home-phone');
+raiz2.appendChild(alvoEl);
+
 window.medir = async function medir({ rodando = false } = {}) {
-  const alvo = document.getElementById('alvo');
+  const alvo = alvoEl;
   alvo.setConfig({
     type: 'custom:bruno-home-phone',
     pages: [{ rooms: ['sala', 'cozinha', 'lavabo'] },

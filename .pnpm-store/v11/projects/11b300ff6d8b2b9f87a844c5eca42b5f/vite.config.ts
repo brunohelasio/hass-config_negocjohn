@@ -32,10 +32,9 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        // Um bundle só. O projeto atual faz 52 requisições separadas no cold
-        // start do tablet — este é o principal ganho de carregamento.
-        inlineDynamicImports: true,
+        // Core da Home no entry; subviews pesadas ficam em chunks sob demanda.
         entryFileNames: 'bruno-dashboard.[hash].js',
+        chunkFileNames: 'chunks/[name].[hash].js',
       },
     },
   },

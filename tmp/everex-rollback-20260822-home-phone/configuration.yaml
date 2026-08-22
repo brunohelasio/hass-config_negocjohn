@@ -148,12 +148,7 @@ frontend:
     # ANTERIOR (rollback Josh/presenca round4 final): - /local/dashboard/bruno-dashboard.B0uUw0N5.js
     # ANTERIOR (rollback final V3): - /local/dashboard/bruno-dashboard.Cq_szS0r.js
     # ANTERIOR (rollback final V3): - /local/dashboard/bruno-dashboard.DDPR7KRw.js
-    # ANTERIOR (rollback HOME PHONE 2026-08-22): - /local/dashboard/bruno-dashboard.DS0_M01T.js
-    # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.cfRFwyb3.js
-    # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.Gls4tQdc.js
-    # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.Ct-Xu--y.js
-    # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.Cfi0fi4H.js
-    - /local/dashboard/bruno-dashboard.CVMBM6fh.js
+    - /local/dashboard/bruno-dashboard.DS0_M01T.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

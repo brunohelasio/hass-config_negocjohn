@@ -1,3 +1,5 @@
+import { TV_POWER_ON_STATES } from '@/services/entities/media-state';
+
 /**
  * Configuração central dos cômodos.
  *
@@ -59,6 +61,8 @@ export interface RoomDot {
    * cômodo onde a música estava de fato tocando.
    */
   spotifyDevice?: string;
+  /** Mantém o estado ativo por alguns ms após um off transitório da entidade. */
+  offDelayMs?: number;
 }
 
 /** A conta do Spotify é uma só; o que distingue o cômodo é o DISPOSITIVO. */
@@ -97,7 +101,8 @@ export interface RoomConfig {
     elapsedAttr?: string;
   };
   /**
-   * Caminhos completos dos assets, por estado.
+   * Caminhos completos dos assets, por estado. A extensao faz parte do caminho
+   * para o renderer nao impor PNG/WebP e o config continuar sendo a fonte unica.
    *
    * Eram montados por convenção (`<asset>-on-tight.png`), mas o Q. Casal foge
    * do padrão: o arquivo em uso é `couple-bedroom-on-generated-v3.png`, e
@@ -147,8 +152,10 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'sala',
     name: 'Sala',
     section: 'sala',
-    assetOff: 'v2/sala-off',
-    assetOn: 'v2/sala-on',
+    // ANTERIOR (rollback V2): assetOff: 'v2/sala-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/sala-on',
+    assetOff: 'v3/sala-off.webp',
+    assetOn: 'v3/sala-on.webp',
     grammaticalGender: 'f',
     toggleTarget: 'light.sala_switch_2',
     activeSensor: 'sensor.living_room_active',
@@ -156,8 +163,8 @@ export const ROOMS: readonly RoomConfig[] = [
       { icon: 'mdi:account', label: 'Presenca na Sala', tone: 'blue',
         entities: ['binary_sensor.sala_motion_recent'], states: ['on'] },
       { icon: 'mdi:television-classic', label: 'TV ativa', tone: 'purple',
-        entities: ['media_player.android_tv_192_168_3_17'],
-        states: ['on', 'playing', 'paused', 'idle', 'buffering'] },
+        entities: ['media_player.smart_tv_pro_2'],
+        states: TV_POWER_ON_STATES },
       { icon: 'mdi:snowflake', label: 'Ar condicionado ativo', tone: 'cyan',
         entities: ['climate.sl_ar_condicionado'], states: CLIMATE_ON },
       { icon: 'mdi:speaker-wireless', label: 'Echo Show ativo', tone: 'amber',
@@ -188,37 +195,25 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'office',
     name: 'Office',
     section: 'office',
-    assetOff: 'v2/office-off',
-    assetOn: 'v2/office-on',
+    // ANTERIOR (rollback V2): assetOff: 'v2/office-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/office-on',
+    assetOff: 'v3/office-off.webp',
+    assetOn: 'v3/office-on.webp',
     grammaticalGender: 'm',
     toggleTarget: 'light.office_switch_3',
     activeSensor: 'sensor.office_active',
     statusDots: [
       { icon: 'mdi:account', label: 'Presenca no Office', tone: 'blue',
         entities: ['binary_sensor.office_motion_recent'], states: ['on'] },
-      // ANTERIOR: entities: ['binary_sensor.office_pc_active', 'switch.macbook']
+      // O estado cru da sessão NÃO participa deste ponto. O HASS.Agent pode
+      // ficar congelado em "Unlocked" quando perde API/MQTT; usar esse valor
+      // diretamente contorna a proteção temporal já implementada no backend.
       //
-      // Duas fontes, e nenhuma acendia o ponto com o PC em uso:
-      //
-      //   `switch.macbook` NAO EXISTE no sistema — nao aparece no recorder.
-      //   Referencia morta, herdada do card antigo; segue viva em cinco outros
-      //   pontos da configuracao do HA (energy_estimated, office_presence,
-      //   template_sensors, templates/switch, honeycomb/office_mode).
-      //
-      //   `binary_sensor.office_pc_active` significa "destravado E com input nos
-      //   ultimos 300s" (ver packages/office_presence.yaml). Apaga enquanto se
-      //   lê a tela, o que nao e o que o ponto promete.
-      //
-      // O terceiro id abaixo e a leitura direta da sessao do PC: acende com o
-      // PC ligado e destravado, que e a semantica dos demais pontos da faixa
-      // ("está acontecendo agora"). Os dois anteriores continuam na lista — o
-      // ponto acende com QUALQUER um deles.
+      // binary_sensor.office_pc_active é a autoridade de "PC ativo": só fica
+      // on quando a sessão está destravada E houve atividade nos últimos 300 s.
+      // A sessão continua disponível na subview como telemetria, não como prova.
       { icon: 'mdi:desktop-classic', label: 'PC ativo', tone: 'purple',
-        entities: [
-          'binary_sensor.office_pc_active',
-          'sensor.desktop_melg9vv_office_pc_session_state',
-        ],
-        states: ['on', 'unlocked'] },
+        entities: ['binary_sensor.office_pc_active'], states: ['on'] },
       { icon: 'mdi:snowflake', label: 'Ar condicionado ativo', tone: 'cyan',
         entities: ['climate.ac_office'], states: CLIMATE_ON },
       { icon: 'mdi:speaker-wireless', label: 'Echo Pop ativo', tone: 'amber',
@@ -244,8 +239,10 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'cozinha',
     name: 'Cozinha',
     section: 'cozinha',
-    assetOff: 'v2/cozinha-off',
-    assetOn: 'v2/cozinha-on',
+    // ANTERIOR (rollback V2): assetOff: 'v2/cozinha-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/cozinha-on',
+    assetOff: 'v3/cozinha-off.webp',
+    assetOn: 'v3/cozinha-on.webp',
     grammaticalGender: 'f',
     toggleTarget: 'light.cz_luz_principal',
     activeSensor: 'sensor.cozinha_active',
@@ -282,8 +279,10 @@ export const ROOMS: readonly RoomConfig[] = [
   {
     id: 'lavabo',
     name: 'Lavabo',
-    assetOff: 'v2/lavabo-off',
-    assetOn: 'v2/lavabo-on',
+    // ANTERIOR (rollback V2): assetOff: 'v2/lavabo-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/lavabo-on',
+    assetOff: 'v3/lavabo-off.webp',
+    assetOn: 'v3/lavabo-on.webp',
     grammaticalGender: 'm',
     toggleTarget: 'light.grupo_luzes_lavabo',
     activeSensor: 'sensor.lavabo_active',
@@ -307,6 +306,7 @@ export const ROOMS: readonly RoomConfig[] = [
       lights: ['light.lavabo_switch_1', 'light.lavabo_switch_2', 'light.lavabo_switch_3'],
       motionRecent: 'binary_sensor.lavabo_motion_recent',
       occupancy: 'binary_sensor.lavabo_occupancy',
+      semanticState: 'sensor.lavabo_semantic_state',
       illuminance: 'sensor.lv_sensor_presenca_iluminancia',
     },
   },
@@ -314,8 +314,10 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'casal',
     name: 'Casal',
     section: 'casal',
-    assetOff: 'v2/quarto-casal-off',
-    assetOn: 'v2/quarto-casal-on',
+    // ANTERIOR (rollback V2): assetOff: 'v2/quarto-casal-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/quarto-casal-on',
+    assetOff: 'v3/casal-off.webp',
+    assetOn: 'v3/casal-on.webp',
     grammaticalGender: 'm',
     toggleTarget: 'light.qc_luz_principal',
     activeSensor: 'sensor.quarto_casal_active',
@@ -353,8 +355,10 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'marina',
     name: 'Marina',
     section: 'marina',
-    assetOff: 'v2/quarto-menina-off',
-    assetOn: 'v2/quarto-menina-on',
+    // ANTERIOR (rollback V2): assetOff: 'v2/quarto-menina-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/quarto-menina-on',
+    assetOff: 'v3/marina-off.webp',
+    assetOn: 'v3/marina-on.webp',
     grammaticalGender: 'm',
     toggleTarget: 'light.quarto_marina_switch_4',
     activeSensor: 'sensor.quarto_marina_active',
@@ -387,8 +391,10 @@ export const ROOMS: readonly RoomConfig[] = [
     id: 'miguel',
     name: 'Miguel',
     section: 'miguel',
-    assetOff: 'v2/quarto-bebe-off',
-    assetOn: 'v2/quarto-bebe-on',
+    // ANTERIOR (rollback V2): assetOff: 'v2/quarto-bebe-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/quarto-bebe-on',
+    assetOff: 'v3/miguel-off.webp',
+    assetOn: 'v3/miguel-on.webp',
     grammaticalGender: 'm',
     toggleTarget: 'light.quarto_miguel_switch_2',
     activeSensor: 'sensor.quarto_miguel_active',
@@ -417,8 +423,10 @@ export const ROOMS: readonly RoomConfig[] = [
   {
     id: 'corredor',
     name: 'Corredor',
-    assetOff: 'v2/corredor-off',
-    assetOn: 'v2/corredor-on',
+    // ANTERIOR (rollback V2): assetOff: 'v2/corredor-off',
+    // ANTERIOR (rollback V2): assetOn: 'v2/corredor-on',
+    assetOff: 'v3/corredor-off.webp',
+    assetOn: 'v3/corredor-on.webp',
     grammaticalGender: 'm',
     toggleTarget: 'light.corredor_switch_1',
     statusDots: [

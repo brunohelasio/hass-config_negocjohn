@@ -5,9 +5,10 @@
   "type": "module",
   "description": "Dashboard Home Assistant — fonte TypeScript. O bundle compilado vai para config/www/dashboard/.",
   "scripts": {
-    "build": "vite build && npm run manifesto",
+    "materialize:remote": "python3 ../scripts/build/apply-premium-tv-remote-round6-20260821.py",
+    "build": "npm run materialize:remote && vite build && npm run manifesto && npm run compress",
     "watch": "vite build --watch",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "npm run materialize:remote && tsc --noEmit",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.{ts,css}\"",
@@ -19,7 +20,8 @@
     "check:yaml": "node ../scripts/validation/check-yaml.mjs",
     "check:crase": "node ../scripts/validation/check-backtick.mjs --tudo",
     "manifesto": "node scripts/publicar-manifesto.mjs",
-    "deploy:everex": "node scripts/deploy.mjs --everex"
+    "deploy:everex": "node scripts/deploy.mjs --everex",
+    "compress": "node scripts/compress-output.mjs"
   },
   "dependencies": {
     "lit": "^3.2.1"

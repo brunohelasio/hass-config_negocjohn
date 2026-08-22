@@ -24,4 +24,23 @@ describe('rooms.config', () => {
       if (r.section) expect(r.section).toMatch(/^[a-z]+$/);
     }
   });
+
+  it('assets de comodo usam V3 WebP normalizada', () => {
+    const assets = ROOMS.flatMap((room) => [room.assetOff, room.assetOn]);
+    expect(assets).toHaveLength(ROOMS.length * 2);
+    expect(new Set(assets).size).toBe(ROOMS.length * 2);
+    for (const room of ROOMS) {
+      expect(room.assetOff, `${room.id}.assetOff`).toMatch(/^v3\/.+-off\.webp$/);
+      expect(room.assetOn, `${room.id}.assetOn`).toMatch(/^v3\/.+-on\.webp$/);
+    }
+  });
+
+
+  it('lavabo e corredor mantem contrato semantico de presenca', () => {
+    const lavabo = ROOMS.find((room) => room.id === 'lavabo');
+    const corredor = ROOMS.find((room) => room.id === 'corredor');
+    expect(lavabo?.entities.semanticState).toBe('sensor.lavabo_semantic_state');
+    expect(corredor?.entities.semanticState).toBe('sensor.corredor_semantic_state');
+  });
+
 });

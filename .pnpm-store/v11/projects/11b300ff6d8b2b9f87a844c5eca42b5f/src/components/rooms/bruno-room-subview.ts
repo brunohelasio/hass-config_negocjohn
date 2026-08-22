@@ -4,6 +4,8 @@ import type { Hass, HassEntity } from '@/models/home-assistant';
 import { ROOMS, type RoomConfig } from '@/config/rooms.config';
 import { SUBVIEWS, type SubviewConfig } from '@/config/subviews.config';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
+import { isMediaPlaying, isTvPowered } from '@/services/entities/media-state';
+import { callHaService } from '@/services/home-assistant/service-call';
 import {
   coletarIdsDeEntidade,
   ObservadorDeEntidades,
@@ -85,8 +87,7 @@ function truthy(v: unknown): boolean {
   return ['true', 'on', 'yes', '1'].includes(String(v ?? '').toLowerCase());
 }
 
-/** Estados que contam como "ligado" em cada domínio — copiados dos originais. */
-const ESTADOS_TV_LIGADA = ['on', 'playing', 'paused', 'idle'];
+/** Estados que contam como "ligado" nos domínios ainda locais deste componente. */
 const ESTADOS_MIDIA_LIGADA = ['playing', 'paused', 'on', 'idle'];
 const ESTADOS_CAMERA_ONLINE = ['streaming', 'recording', 'idle', 'on'];
 const ESTADOS_CLIMATE_LIGADO = ['cool', 'heat', 'fan_only', 'dry', 'heat_cool', 'auto'];
@@ -113,7 +114,6 @@ const CORTINA_CURSO_MS = 30_000;
 const CORTINA_MOVIMENTO_MIN_MS = 1_200;
 const CORTINA_TICK_MS = 350;
 const CORTINA_TOLERANCIA_ALVO = 2;
-const CORTINA_GRAÇA_CONFIRMACAO_MS = 1_800;
 const CORTINA_GRAÇA_PARADA_MS = 700;
 
 type MovimentoCortina =
@@ -195,6 +195,8 @@ type EstadoAoVivo =
 const IMAGEM_TV_ESPERA = '/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260802-assets-resize-1';
 const IMAGEM_SPOTIFY_ESPERA = '/local/images/echo_pop.png?v=20260702-all-images-1';
 const IMAGEM_PC = '/local/images/office_pc.png?v=20260702-all-images-1';
+const TV_HUB_HISTORY_KEY = 'bruno-ui:tv-hub-history:v1';
+// TV_HUB_RUNTIME: round4
 
 /**
  * Módulos que, no TELEFONE, viram linha-resumo e abrem como bottom sheet.
@@ -243,6 +245,7 @@ interface EstadoHa {
 
 interface CameraCfg {
   entity: string;
+  fallbackEntity?: string;
   name?: string;
   shortName?: string;
   controls?: Array<{ key?: string; label?: string; description?: string; icon?: string; entity?: string }>;
@@ -307,6 +310,12 @@ export class BrunoRoomSubview extends LitElement {
   private _fonteMidiaManual = false;
   /** Fontes que estavam ativas no render anterior — detecta ativação nova. */
   private _midiaAtivasAntes: string[] = [];
+  /** Últimos atributos válidos: ADB pode omiti-los por um frame sem power-off. */
+  private _tvUltimoVolume: number | null = null;
+  private _tvUltimoPoster = '';
+  private _tvUltimaFonte = 'HDMI 1';
+  private _tvUltimoTitulo = '';
+  private _tvHistoricoCarregado = false;
   private _menuMidiaAberto = false;
   private _spotifyFerramentas = false;
   private _movimentoCortina: MovimentoCortina | undefined;
@@ -2573,22 +2582,7 @@ export class BrunoRoomSubview extends LitElement {
     const decorrido = agora - movimento.iniciadoEm;
     const fisicoNoAlvo = fisico != null
       && Math.abs(fisico - movimento.alvoFechado) <= CORTINA_TOLERANCIA_ALVO;
-    const estadoNoAlvo =
-      (estado === 'closed' && movimento.alvoFechado >= 100 - CORTINA_TOLERANCIA_ALVO)
-      || (estado === 'open' && movimento.alvoFechado <= CORTINA_TOLERANCIA_ALVO);
 
-    // Um extremo publicado enquanto o cover ainda declara opening/closing é o
-    // salto prematuro observado no dispositivo. Só conclui depois que o estado
-    // físico assenta e passa a janela de confirmação do comando.
-    if (
-      !estaMovendo
-      && decorrido >= CORTINA_GRAÇA_CONFIRMACAO_MS
-      && (fisicoNoAlvo || estadoNoAlvo)
-    ) {
-      this._movimentoCortina = undefined;
-      this._pararTimerMovimentoCortina();
-      return movimento.alvoFechado;
-    }
 
     const fisicoIntermediario = fisico != null && !fisicoNoAlvo;
     const mudouRelato = fisicoIntermediario && Math.abs(fisico - movimento.ultimoRelatado) >= 1;
@@ -2608,11 +2602,11 @@ export class BrunoRoomSubview extends LitElement {
     if (terminou && !estaMovendo) {
       this._movimentoCortina = undefined;
       this._pararTimerMovimentoCortina();
-      // Se houve uma parada externa antes do alvo, a telemetria física vence.
-      const comandado = this._fechamentoCortinaComandado();
-      const comandoNoAlvo = comandado != null
-        && Math.abs(comandado - movimento.alvoFechado) <= CORTINA_TOLERANCIA_ALVO;
-      return fisico != null && !fisicoNoAlvo && !comandoNoAlvo ? fisico : movimento.alvoFechado;
+      const estadoConfirmaAlvo =
+        (estado === 'closed' && movimento.alvoFechado >= 100 - CORTINA_TOLERANCIA_ALVO)
+        || (estado === 'open' && movimento.alvoFechado <= CORTINA_TOLERANCIA_ALVO);
+      if (fisicoNoAlvo || estadoConfirmaAlvo) return movimento.alvoFechado;
+      return fisico ?? movimento.alvoFechado;
     }
 
     if (estaMovendo) {
@@ -2741,12 +2735,10 @@ export class BrunoRoomSubview extends LitElement {
 
   private _servico(dominio: string, servico: string, dados: Record<string, unknown>): void {
     if (!this._hass) return;
-    // ANTERIOR (rollback): o objeto inteiro também era enviado como target.
-    // Assim volume_level/delay/force_activate_device viravam chaves inválidas
-    // de target. O target recebe só entity_id; o restante permanece service data.
-    const { entity_id: entityId, ...serviceData } = dados;
-    const alvo = typeof entityId === 'string' && entityId ? { entity_id: entityId } : undefined;
-    this._hass.callService(dominio, servico, serviceData, alvo);
+    // O frontend oficial do HA e a subview legada enviam entity_id dentro de
+    // serviceData. A migração para target quebrou serviços de integrações que
+    // validam o schema dos dados (SpotifyPlus em especial).
+    void callHaService(this._hass, dominio, servico, dados);
   }
 
   /**
@@ -2770,16 +2762,21 @@ export class BrunoRoomSubview extends LitElement {
    * guardado: numa reconexão a imagem antiga continua na tela em vez de sumir.
    */
   private _cameraViva(cam: CameraCfg): CameraViva {
-    const st = this._estado(cam.entity);
+    const principal = this._estado(cam.entity);
+    const fallback = cam.fallbackEntity ? this._estado(cam.fallbackEntity) : undefined;
+    const usarFallback = this._indisponivel(principal) && Boolean(cam.fallbackEntity) && !this._indisponivel(fallback);
+    const entity = usarFallback ? String(cam.fallbackEntity) : cam.entity;
+    const st = usarFallback ? fallback : principal;
     const indisponivel = this._indisponivel(st);
     const online = !indisponivel && ESTADOS_CAMERA_ONLINE.includes(String(st?.state ?? ''));
 
     const publicada = String(st?.attributes['entity_picture'] ?? '');
-    if (publicada) this._ultimaImagem[cam.entity] = publicada;
-    const base = publicada || this._ultimaImagem[cam.entity] || `/api/camera_proxy/${cam.entity}`;
+    if (publicada) this._ultimaImagem[entity] = publicada;
+    const base = publicada || this._ultimaImagem[entity] || `/api/camera_proxy/${entity}`;
 
     return {
       ...cam,
+      entity,
       online,
       indisponivel,
       base,
@@ -2791,7 +2788,7 @@ export class BrunoRoomSubview extends LitElement {
       // motor disparava outra no mesmo instante. Sem o selo, voltar a um cômodo
       // visitado mostra o último quadro imediatamente, e o motor cuida da
       // atualização a partir daí.
-      url: this._urlsCarregadas[cam.entity] ?? base,
+      url: this._urlsCarregadas[entity] ?? base,
     };
   }
 
@@ -3021,21 +3018,72 @@ export class BrunoRoomSubview extends LitElement {
     return this._resolverId((this._sub?.entities as Record<string, unknown> | undefined)?.[chave]);
   }
 
+  private _carregarHistoricoTv(): void {
+    if (this._tvHistoricoCarregado) return;
+    this._tvHistoricoCarregado = true;
+    try {
+      const raw = globalThis.localStorage?.getItem(TV_HUB_HISTORY_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const fonte = String(parsed['fonte'] ?? '').trim();
+      const titulo = String(parsed['titulo'] ?? '').trim();
+      const poster = String(parsed['poster'] ?? '').trim();
+      const volume = Number(parsed['volume']);
+      if (fonte) this._tvUltimaFonte = fonte;
+      if (titulo) this._tvUltimoTitulo = titulo;
+      if (poster) this._tvUltimoPoster = poster;
+      if (Number.isFinite(volume)) this._tvUltimoVolume = volume;
+    } catch { /* localStorage opcional */ }
+  }
+
+  private _salvarHistoricoTv(): void {
+    if (!this._tvUltimoPoster && !this._tvUltimoTitulo) return;
+    try {
+      globalThis.localStorage?.setItem(TV_HUB_HISTORY_KEY, JSON.stringify({ fonte: this._tvUltimaFonte, titulo: this._tvUltimoTitulo, poster: this._tvUltimoPoster, volume: this._tvUltimoVolume, savedAt: Date.now() }));
+    } catch { /* localStorage opcional */ }
+  }
+
   private _modeloTv() {
-    const st = this._estado(this._idDe('tv'));
-    const a = st?.attributes ?? {};
-    const estado = st?.state ?? 'off';
-    const ativo = ESTADOS_TV_LIGADA.includes(estado);
-    const fonte = String(a['source'] ?? a['app_name'] ?? '') || 'HDMI 1';
-    const titulo = String(a['media_title'] ?? a['media_series_title'] ?? a['app_name'] ?? '');
+    this._carregarHistoricoTv();
+    const powerId = this._idDe('tv');
+    const mediaId = this._idDe('tvMedia') ?? powerId;
+    const power = this._estado(powerId);
+    const media = this._estado(mediaId);
+    const pa = power?.attributes ?? {};
+    const ma = media?.attributes ?? {};
+    const ativo = isTvPowered(this._hass, powerId);
+    const reproduzindo = isMediaPlaying(this._hass, mediaId);
+    const estadoPower = String(power?.state ?? 'off').toLowerCase();
+    const estadoMedia = String(media?.state ?? '').toLowerCase();
+
+    const fonteAtual = String(ma['app_name'] ?? ma['source'] ?? pa['source'] ?? pa['app_name'] ?? '').trim();
+    const tituloAtual = String(ma['media_title'] ?? ma['media_series_title'] ?? ma['app_name'] ?? '').trim();
+    const posterAtual = String(ma['media_image_url'] || ma['entity_picture'] || ma['entity_picture_local'] || '').trim();
+    const volumeBruto = pa['volume_level'] ?? ma['volume_level'];
+    const volumeNumero = volumeBruto == null ? Number.NaN : Number(volumeBruto);
+    const volumeAtual = Number.isFinite(volumeNumero) ? Math.round(volumeNumero * 100) : null;
+
+    if (ativo) {
+      // ADB alterna app_name/source durante a mesma sessão. Não descarte a última
+      // arte válida até que uma nova arte real chegue; power continua vindo da
+      // entidade estável e encerra a sessão de forma inequívoca.
+      if (fonteAtual) this._tvUltimaFonte = fonteAtual;
+      if (tituloAtual) this._tvUltimoTitulo = tituloAtual;
+      if (posterAtual) this._tvUltimoPoster = posterAtual;
+      if (volumeAtual != null) this._tvUltimoVolume = volumeAtual;
+      this._salvarHistoricoTv();
+    }
+
     return {
-      st,
-      estado,
+      st: power,
+      media,
+      estado: reproduzindo ? estadoMedia : estadoPower,
       ativo,
-      fonte,
-      titulo,
-      volume: a['volume_level'] != null ? Math.round(Number(a['volume_level']) * 100) : null,
-      poster: String(a['entity_picture'] ?? a['media_image_url'] ?? ''),
+      reproduzindo,
+      fonte: fonteAtual || (ativo ? this._tvUltimaFonte : 'HDMI 1') || 'HDMI 1',
+      titulo: tituloAtual || (ativo ? this._tvUltimoTitulo : ''),
+      volume: volumeAtual ?? (ativo ? this._tvUltimoVolume : null),
+      poster: posterAtual || (ativo ? this._tvUltimoPoster : ''),
     };
   }
 
@@ -3153,6 +3201,41 @@ export class BrunoRoomSubview extends LitElement {
     `;
   }
 
+  /** Volume da TV: o Android TV Remote físico responde a VOLUME_UP/DOWN,
+   * enquanto volume_set nas media_player não altera o aparelho. O slider continua
+   * absoluto visualmente e converte o delta em passos do remote ao soltar. */
+  private _linhaVolumeTv(remoteId: string | undefined, volume: number) {
+    return html`
+      <div class=${remoteId ? 'mh-vol' : 'mh-vol is-disabled'}>
+        <bruno-icon icon="mdi:volume-medium"></bruno-icon>
+        <span class="mh-vol-label">Volume ${volume}%</span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value=${String(volume)}
+          .value=${String(volume)}
+          aria-label="Volume da TV"
+          ?disabled=${!remoteId}
+          @change=${(ev: Event) => {
+            const alvo = ev.currentTarget as HTMLInputElement;
+            if (!remoteId) return;
+            const desejado = Math.max(0, Math.min(100, Number(alvo.value)));
+            const atual = Math.max(0, Math.min(100, Number(volume) || 0));
+            const delta = Math.round(desejado - atual);
+            if (!delta) return;
+            this._servico('remote', 'send_command', {
+              entity_id: remoteId,
+              command: delta > 0 ? 'VOLUME_UP' : 'VOLUME_DOWN',
+              num_repeats: Math.min(100, Math.abs(delta)),
+              delay_secs: 0.05,
+            });
+          }}
+        />
+      </div>
+    `;
+  }
+
   /** Botão do corpo do hub. `soIcone` evita o truncamento nas fileiras de 4-5. */
   private _botaoMidia(
     rotulo: string,
@@ -3200,6 +3283,7 @@ export class BrunoRoomSubview extends LitElement {
   private _corpoTv() {
     const tv = this._modeloTv();
     const id = this._idDe('tv');
+    const mediaId = this._idDe('tvMedia') ?? id;
     const espera = (this._sub?.['tvStandbyImage'] as string | undefined) ?? IMAGEM_TV_ESPERA;
     const generico = !tv.titulo || /^TV (ligada|desligada)$/i.test(tv.titulo) || tv.titulo === tv.fonte;
     const segundaLinha = (!generico && tv.estado === 'playing' ? tv.titulo : '') || tv.fonte;
@@ -3212,7 +3296,7 @@ export class BrunoRoomSubview extends LitElement {
             ${this._botaoMidia(
               'Ligar TV',
               'mdi:power',
-              () => this._servico('homeassistant', 'toggle', { entity_id: id }),
+              () => this._servico('media_player', 'turn_on', { entity_id: id }),
               { principal: true, desabilitado: !id },
             )}
           </div>
@@ -3241,7 +3325,7 @@ export class BrunoRoomSubview extends LitElement {
         </div>`
       : html`<div class="mh-btn-row mh-btn-row-3">
           ${this._botaoMidia('Pausar', 'mdi:pause', () =>
-            this._servico('media_player', 'media_play_pause', { entity_id: id }), { soIcone: true })}
+            this._servico('media_player', 'media_play_pause', { entity_id: mediaId }), { soIcone: true })}
           ${this._botaoMidia('Controle remoto', 'mdi:remote-tv', () => this._abrirControleRemoto(), {
             soIcone: true,
             desabilitado: !this._idDe('tvRemote'),
@@ -3257,7 +3341,7 @@ export class BrunoRoomSubview extends LitElement {
         <div class="mh-info">
           <small>Ligada</small>${segundaLinha ? html`<em>${segundaLinha}</em>` : nothing}
         </div>
-        <div class="mh-controls">${this._linhaVolume(id, tv.volume ?? 60)} ${fileira}</div>
+        <div class="mh-controls">${this._linhaVolumeTv(this._idDe('tvRemote'), tv.volume ?? 60)} ${fileira}</div>
       </div>
       ${this._arteMidia(tv.poster || espera, 'wide', 'mdi:television-classic', Boolean(tv.poster), tv.estado === 'paused')}
     `;
@@ -3266,26 +3350,280 @@ export class BrunoRoomSubview extends LitElement {
   private _appsTvAbertos = false;
 
   /**
-   * Popup do controle remoto.
+   * Popup premium do controle remoto da Sala.
    *
-   * Mesmo evento e mesma carga das subviews atuais — `ll-custom` com a chamada
-   * de `browser_mod.popup` e o `universal-remote-card`. Quem monta a janela é o
-   * browser_mod, exatamente como hoje; só a Sala tem controle (`remote.atv`).
+   * Mantém `browser_mod.popup` + `universal-remote-card` para preservar o caminho
+   * funcional já validado em `remote.smart_tv_pro`, mas troca apenas a composição
+   * visual. O material replica a mesma base VisionOS das bottom sheets do telefone:
+   * gradientes translúcidos + blur moderado, sem animações contínuas ou filtros
+   * caros por botão. Assim o popup ganha hierarquia visual sem reabrir a regressão
+   * de performance remota já estabilizada nas rounds anteriores.
    */
   private _abrirControleRemoto(): void {
     const remoto = this._idDe('tvRemote');
     if (!remoto) return;
-    const apertar = (entityId: string) => ({
+    const mediaId = this._idDe('tvMedia') ?? this._idDe('tv');
+    // TV_REMOTE_PREMIUM_RUNTIME: round6
+
+    const comando = (command: string) => ({
       action: 'perform-action',
-      perform_action: 'button.press',
-      target: { entity_id: entityId },
+      perform_action: 'remote.send_command',
+      target: { entity_id: remoto },
+      data: { command },
     });
-    const tecla = (nome: string, icone: string, entityId: string) => ({
+    const tecla = (
+      nome: string,
+      icone: string,
+      command: string,
+      label: string,
+      repetir = false,
+    ) => ({
       type: 'button',
       name: nome,
       icon: icone,
-      tap_action: apertar(entityId),
+      label,
+      tap_action: comando(command),
+      ...(repetir ? { hold_action: { action: 'repeat' } } : {}),
     });
+
+    const estilosVision = `
+      :host {
+        --remote-accent: rgba(244, 194, 96, 0.96);
+        --remote-accent-soft: rgba(244, 194, 96, 0.16);
+        --remote-text: rgba(248, 248, 250, 0.96);
+        --remote-muted: rgba(235, 235, 242, 0.58);
+        --remote-divider: rgba(255, 255, 255, 0.105);
+        display: block;
+        width: min(390px, calc(100vw - 28px));
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: clamp(12px, 3.2dvh, 34px) auto;
+        padding: 10px 10px 14px;
+        border-radius: 30px;
+        overflow: hidden;
+        color: var(--remote-text);
+        background:
+          radial-gradient(360px 240px at 18% -10%, rgba(255, 255, 255, 0.105), transparent 64%),
+          linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.060),
+            rgba(255, 255, 255, 0.018) 48%,
+            rgba(0, 0, 0, 0.035)
+          ),
+          rgba(0, 0, 0, 0.300);
+        backdrop-filter: blur(20px) saturate(1.18) brightness(1.03);
+        -webkit-backdrop-filter: blur(20px) saturate(1.18) brightness(1.03);
+        border: 1px solid rgba(255, 255, 255, 0.075);
+        box-shadow:
+          0 24px 68px -24px rgba(0, 0, 0, 0.78),
+          inset 0 1px 0 rgba(255, 255, 255, 0.11);
+      }
+
+      .row {
+        width: 100%;
+        box-sizing: border-box;
+        justify-content: center;
+        align-items: center;
+        gap: 0;
+        margin: 0 0 10px;
+      }
+
+      #row-1,
+      #row-3,
+      #row-4 {
+        padding: 4px;
+        border-radius: 20px;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.016)),
+          rgba(10, 12, 16, 0.24);
+        border: 1px solid rgba(255, 255, 255, 0.055);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+      }
+
+      #row-2 {
+        margin: 2px 0 14px;
+      }
+
+      /* Filetes curtos e translúcidos entre todos os botões das barras.
+         O gradiente evita a aparência de grade rígida e mantém a linguagem
+         VisionOS da composição de referência. */
+      #row-1 remote-button + remote-button,
+      #row-3 remote-button + remote-button,
+      #row-4 remote-button + remote-button {
+        background-image: linear-gradient(
+          180deg,
+          transparent 8%,
+          var(--remote-divider) 24%,
+          var(--remote-divider) 76%,
+          transparent 92%
+        );
+        background-size: 1px 78%;
+        background-position: left center;
+        background-repeat: no-repeat;
+      }
+
+      remote-button {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border-radius: 16px;
+        background: transparent;
+        --icon-size: 25px;
+        --icon-color: var(--remote-text);
+      }
+
+      remote-button::part(button) {
+        min-height: 60px;
+        border-radius: 16px;
+        background: transparent;
+        transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+      }
+
+      remote-button:active::part(button) {
+        transform: scale(0.965);
+        background: rgba(255, 255, 255, 0.075);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+      }
+
+      remote-button::part(icon) {
+        color: var(--remote-text);
+        filter: drop-shadow(0 1px 5px rgba(0,0,0,0.25));
+      }
+
+      remote-button::part(label) {
+        color: var(--remote-muted);
+        font-size: 9.5px;
+        line-height: 1.1;
+        font-weight: 650;
+        letter-spacing: 0.075em;
+        text-transform: uppercase;
+        margin-top: 5px;
+      }
+
+      #power::part(icon),
+      #home::part(icon) {
+        color: var(--remote-accent);
+        filter: drop-shadow(0 0 7px rgba(244, 194, 96, 0.34));
+      }
+
+      #power::part(button),
+      #home::part(button) {
+        background: radial-gradient(circle at 50% 50%, var(--remote-accent-soft), transparent 68%);
+      }
+
+      #row-4 remote-button::part(button) {
+        min-height: 54px;
+      }
+
+      #row-4 remote-button::part(label) {
+        font-size: 8.5px;
+        letter-spacing: 0.055em;
+      }
+
+      @media (max-width: 390px) {
+        :host {
+          width: calc(100vw - 20px);
+          border-radius: 26px;
+          padding: 8px 8px 12px;
+        }
+        remote-button::part(button) { min-height: 56px; }
+        #row-4 remote-button::part(button) { min-height: 50px; }
+        #navigation { margin-inline: auto; }
+      }
+    `;
+
+    const estiloNavegacao = `
+      :host {
+        width: min(72vw, 282px);
+        max-width: 282px;
+        margin: 2px auto;
+        --icon-size: 29px;
+        --icon-color: rgba(248, 248, 250, 0.90);
+      }
+
+      .circlepad {
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        overflow: hidden;
+        background:
+          /* quatro filetes diagonais delimitam UP / RIGHT / DOWN / LEFT sem
+             criar quatro botões visivelmente separados */
+          repeating-conic-gradient(
+            from 45deg at 50% 50%,
+            transparent 0deg 89.15deg,
+            rgba(255,255,255,0.115) 89.15deg 90deg
+          ),
+          radial-gradient(circle at 42% 32%, rgba(255,255,255,0.075), transparent 43%),
+          linear-gradient(145deg, rgba(36,39,45,0.84), rgba(10,12,16,0.82));
+        border: 1px solid rgba(255,255,255,0.09);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.08),
+          inset 0 -14px 30px rgba(0,0,0,0.18),
+          0 18px 38px -26px rgba(0,0,0,0.95);
+      }
+
+      #up::part(button),
+      #down::part(button),
+      #left::part(button),
+      #right::part(button) {
+        background: transparent;
+      }
+
+      .center-row {
+        align-items: center;
+        justify-content: center;
+      }
+
+      #left,
+      #right {
+        flex: 1 1 0;
+        min-width: 0;
+        align-self: stretch;
+      }
+
+      /* O centro da round5 herdava a célula retangular do circlepad e o botão
+         virava oval. A round6 fixa host e part no mesmo quadrado. */
+      #center {
+        flex: 0 0 43%;
+        width: 43%;
+        max-width: 122px;
+        aspect-ratio: 1 / 1;
+        align-self: center;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+
+      #up::part(icon),
+      #down::part(icon),
+      #left::part(icon),
+      #right::part(icon) {
+        color: rgba(248,248,250,0.88);
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.34));
+      }
+
+      #center::part(button) {
+        width: 100%;
+        height: 100%;
+        min-width: 100%;
+        min-height: 100%;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 42% 30%, rgba(244,194,96,0.24), rgba(26,24,21,0.80) 58%, rgba(12,13,16,0.92));
+        border: 1px solid rgba(244,194,96,0.40);
+        box-shadow:
+          inset 0 1px 0 rgba(255,255,255,0.11),
+          0 0 0 5px rgba(244,194,96,0.045),
+          0 0 22px rgba(244,194,96,0.13);
+      }
+
+      #center::part(icon) {
+        color: rgba(255, 223, 158, 0.98);
+        --icon-size: 31px;
+        filter: drop-shadow(0 0 7px rgba(244,194,96,0.30));
+      }
+    `;
 
     this.dispatchEvent(
       new CustomEvent('ll-custom', {
@@ -3296,14 +3634,26 @@ export class BrunoRoomSubview extends LitElement {
           browser_mod: {
             service: 'browser_mod.popup',
             data: {
-              title: 'Smart TV Remote',
+              title: 'Controle da TV',
               tag: 'tv_remote',
               style:
-                '--popup-background-color: rgba(21,25,35,0.92); --popup-min-width: min(380px, 95vw); --popup-max-width: min(430px, 95vw); --popup-border-width: 0;',
+                '--popup-background-color: rgba(6,8,12,0.18); --popup-min-width: min(390px, 96vw); --popup-max-width: min(430px, 96vw); --popup-border-width: 0;',
+              popup_styles: [
+                {
+                  style: 'all',
+                  styles: `
+                    ha-dialog {
+                      --dialog-surface-margin-top: auto !important;
+                    }
+                  `,
+                },
+              ],
               content: {
                 type: 'custom:universal-remote-card',
                 remote_id: remoto,
-                media_player_id: this._idDe('tv'),
+                media_player_id: mediaId,
+                autofill: false,
+                haptics: true,
                 rows: [
                   ['power', 'input', 'menu'],
                   ['navigation'],
@@ -3311,27 +3661,30 @@ export class BrunoRoomSubview extends LitElement {
                   ['volume_down', 'volume_up', 'channel_down', 'channel_up'],
                 ],
                 custom_actions: [
-                  tecla('power', 'mdi:power', 'button.tv_sala_power'),
-                  tecla('input', 'mdi:import', 'button.tv_sala_input'),
-                  tecla('menu', 'mdi:menu', 'button.tv_sala_menu'),
+                  tecla('power', 'mdi:power', 'POWER', 'Power'),
+                  tecla('input', 'mdi:import', 'TV', 'Entrada'),
+                  tecla('menu', 'mdi:menu', 'MENU', 'Menu'),
                   {
                     type: 'circlepad',
                     name: 'navigation',
-                    icon: 'mdi:checkbox-blank-circle',
-                    tap_action: apertar('button.tv_sala_ok'),
-                    up: { icon: 'mdi:chevron-up', tap_action: apertar('button.tv_sala_navigate_up'), hold_action: { action: 'repeat' } },
-                    down: { icon: 'mdi:chevron-down', tap_action: apertar('button.tv_sala_navigate_down'), hold_action: { action: 'repeat' } },
-                    left: { icon: 'mdi:chevron-left', tap_action: apertar('button.tv_sala_navigate_left'), hold_action: { action: 'repeat' } },
-                    right: { icon: 'mdi:chevron-right', tap_action: apertar('button.tv_sala_navigate_right'), hold_action: { action: 'repeat' } },
+                    icon: 'mdi:check-bold',
+                    label: 'OK',
+                    tap_action: comando('DPAD_CENTER'),
+                    up: { icon: 'mdi:chevron-up', tap_action: comando('DPAD_UP'), hold_action: { action: 'repeat' } },
+                    down: { icon: 'mdi:chevron-down', tap_action: comando('DPAD_DOWN'), hold_action: { action: 'repeat' } },
+                    left: { icon: 'mdi:chevron-left', tap_action: comando('DPAD_LEFT'), hold_action: { action: 'repeat' } },
+                    right: { icon: 'mdi:chevron-right', tap_action: comando('DPAD_RIGHT'), hold_action: { action: 'repeat' } },
+                    styles: estiloNavegacao,
                   },
-                  tecla('back', 'mdi:keyboard-backspace', 'button.tv_sala_back'),
-                  tecla('home', 'mdi:home', 'button.tv_sala_homepage'),
-                  tecla('mute', 'mdi:volume-mute', 'button.tv_sala_mute'),
-                  tecla('volume_down', 'mdi:volume-minus', 'button.tv_sala_volume_down'),
-                  tecla('volume_up', 'mdi:volume-plus', 'button.tv_sala_volume_up'),
-                  tecla('channel_down', 'mdi:chevron-down', 'button.tv_sala_channel_down'),
-                  tecla('channel_up', 'mdi:chevron-up', 'button.tv_sala_channel_up'),
+                  tecla('back', 'mdi:keyboard-backspace', 'BACK', 'Voltar'),
+                  tecla('home', 'mdi:home', 'HOME', 'Início'),
+                  tecla('mute', 'mdi:volume-off', 'MUTE', 'Mudo'),
+                  tecla('volume_down', 'mdi:volume-minus', 'VOLUME_DOWN', 'Vol −', true),
+                  tecla('volume_up', 'mdi:volume-plus', 'VOLUME_UP', 'Vol +', true),
+                  tecla('channel_down', 'mdi:chevron-down', 'CHANNEL_DOWN', 'Canal −', true),
+                  tecla('channel_up', 'mdi:chevron-up', 'CHANNEL_UP', 'Canal +', true),
                 ],
+                styles: estilosVision,
               },
             },
           },
@@ -3546,26 +3899,30 @@ export class BrunoRoomSubview extends LitElement {
     const sp = this._modeloSpotify();
 
     const primeira = temPc
-      ? { chave: 'pc', rotulo: 'PC', icone: 'mdi:desktop-tower', ativo: Boolean(pc?.ativo),
+      ? { chave: 'pc', rotulo: 'PC', icone: 'mdi:desktop-tower', ativo: Boolean(pc?.ativo), tocando: Boolean(pc?.ativo),
           resumo: pc?.ativo ? 'Ligado' : 'Desligado', atmosfera: '', corpo: () => this._corpoPc() }
       // DESVIO DELIBERADO da origem: os seis arquivos nasceram de uma cópia do
       // da Sala e todos rotulam a fonte como "TV da sala" — inclusive o Q.
       // Miguel, onde é simplesmente falso. Só a Sala tem entidade de TV; nos
       // outros a fonte fica sempre desligada, e o rótulo passa a ser "TV".
       : { chave: 'tv', rotulo: this._room?.id === 'sala' ? 'TV da sala' : 'TV', icone: 'mdi:television-classic',
-          ativo: Boolean(tv?.ativo), resumo: tv?.ativo ? `Ligada · ${tv.fonte}` : 'Desligada',
+          ativo: Boolean(tv?.ativo), tocando: Boolean(tv?.reproduzindo),
+          resumo: tv?.ativo ? `Ligada · ${tv.fonte}` : 'Desligada',
           atmosfera: tv?.ativo ? tv.poster : '', corpo: () => this._corpoTv() };
 
     const fontes = [
       primeira,
-      { chave: 'spotify', rotulo: 'Spotify', icone: 'mdi:spotify', ativo: sp.ativo,
+      { chave: 'spotify', rotulo: 'Spotify', icone: 'mdi:spotify', ativo: sp.ativo, tocando: sp.tocando,
         resumo: sp.ativo ? sp.titulo : 'Nenhuma faixa', atmosfera: sp.ativo ? sp.capa : '',
         corpo: () => this._corpoSpotify() },
     ];
 
     const ativas = Object.fromEntries(fontes.map((f) => [f.chave, f.ativo]));
-    const aberta = this._fonteAberta(fontes.map((f) => f.chave), ativas);
-    const tocando = fontes.find((f) => f.chave === aberta)?.ativo;
+    const prioridade = !temPc && fontes.some((f) => f.tocando)
+      ? Object.fromEntries(fontes.map((f) => [f.chave, Boolean(f.tocando)]))
+      : ativas;
+    const aberta = this._fonteAberta(fontes.map((f) => f.chave), prioridade);
+    const tocando = Boolean(fontes.find((f) => f.chave === aberta)?.tocando);
 
     const classes = [
       'glass-card',

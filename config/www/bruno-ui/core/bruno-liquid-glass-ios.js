@@ -120,15 +120,22 @@ const BRUNO_LIQUID_GLASS_IOS_TOKENS = Object.assign(
 
     // NOVO: raio das bordas explicitamente igual ao tema Liquid Glass principal
     // (evita depender so da heranca implicita de BRUNO_LIQUID_GLASS_IOS_BASE).
-    'bruno-liquid-card-radius': '34px',
-    'bruno-liquid-card-radius-compact': '24px',
-    'bruno-liquid-room-radius': '24px',
-    'bruno-liquid-cell-radius': '18px',
-    'bruno-liquid-control-radius': '18px',
-    'bruno-liquid-control-radius-compact': '14px',
+    // ANTERIOR (rollback raio unico 2026-08-22): 34px
+    'bruno-liquid-card-radius': '20px',
+    // ANTERIOR (rollback raio unico 2026-08-22): 24px
+    'bruno-liquid-card-radius-compact': '16px',
+    // ANTERIOR (rollback raio unico 2026-08-22): 24px
+    'bruno-liquid-room-radius': '20px',
+    // ANTERIOR (rollback raio unico 2026-08-22): 18px
+    'bruno-liquid-cell-radius': '16px',
+    // ANTERIOR (rollback raio unico 2026-08-22): 18px
+    'bruno-liquid-control-radius': '16px',
+    // ANTERIOR (rollback raio unico 2026-08-22): 14px
+    'bruno-liquid-control-radius-compact': '12px',
     'bruno-liquid-dock-radius': '999px',
     'bruno-liquid-rail-radius': '999px',
-    'ha-card-border-radius': '34px',
+    // ANTERIOR (rollback raio unico 2026-08-22): 34px
+    'ha-card-border-radius': '20px',
   },
 );
 

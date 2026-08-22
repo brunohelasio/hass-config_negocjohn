@@ -4699,3 +4699,110 @@ Banco: `window.medirRolagem()` afirma a invariancia em quatro posicoes.
 Medido a 428x926: Favoritos 252,8px em scrollTop 0 / 120 / 300 / 590 (fim);
 `--altura-util` 679px constante; folga 6px ate o filete; agenda = wifi = 122,4;
 "Em execucao" em 868,6, abaixo do filete.
+
+## Registro — Microajustes visuais da Home mobile (2026-08-22, rev.6)
+
+Rodada de acabamento. Nenhuma dimensao estrutural, hierarquia ou distribuicao
+de cards foi tocada.
+
+### 1. Raio unico (referencia: Vision OS)
+
+`bruno-visionos.js` passou a ser a fonte do raio dos cards. 21 tokens alinhados
+em `bruno-hemma.js`, `bruno-liquid-glass.js` e `bruno-liquid-glass-ios.js`:
+card 20px, card-compact 16px, room 20px, cell 16px, control 16px,
+control-compact 12px, ha-card 20px. **So o raio foi importado** — nenhum outro
+parametro visual do Vision OS entrou nos outros temas.
+
+NAO tocados: `bruno-tile-radius` / `bruno-subview-tile-radius` /
+`bruno-strip-frame-radius`, todos `0` no Josh. Sao estruturais do modo tile
+(faixa continua separada por filetes), nao raio de card.
+
+### 2. A borda luminosa parcial e o box-shadow, nao o ::before
+
+Medido: o efeito que os cards de Favoritos exibem vem de
+`--bruno-liquid-card-shadow` -> `--ha-card-box-shadow` do Vision OS:
+
+```
+inset  0.5px  0.5px 1px rgba(255,255,255,0.40)   topo/esquerda
+inset -0.5px -0.5px 1px rgba(255,255,255,0.10)   base/direita
+```
+
+E por isso que ele NAO percorre o perimetro: a assimetria e a receita. Os
+blocos Josh do telefone (`.sala-card.is-josh-theme` e
+`.room-card.is-josh-phone-card`) sobrescreviam isso com um inset unico de 0.13
+so no topo. Os dois passaram a consumir o token; o `0 10px 26px` de
+profundidade foi preservado.
+
+### 3. Estado ON da Sala unificado
+
+A Sala tinha recheio ambar proprio (`rgba(255,252,245,0.30)` + base
+`rgba(30,27,24,0.42)`) — a nevoa sobre o PNG. Passou a usar os MESMOS tokens
+dos demais comodos (`--bruno-josh-room-on-background/-border-color/-shadow/
+-filter/-sheen/-sheen-opacity`), sem recriar nada a mao. Os gradientes lineares
+desses tokens sao percentuais, entao cobrem o cartao horizontal inteiro; so o
+realce radial fica ancorado no canto, como nos demais. As variaveis dos
+controles Corredor/TV/A-C continuam vindo de `.sala-card.is-room-on`, ja
+calibradas para vidro claro.
+
+### 4. Dots flat do Josh no telefone
+
+`.room-card.is-tile .status-dot` (tablet) ganhou
+`.room-card.is-josh-phone-card .status-dot`. Mesma regra, sem variante nova.
+Medido: com a classe, o dot perde `border: 1px solid` e o radial de vidro, e
+fica com fill chapado + halo — identico ao da Sala.
+
+### 5. PNGs +4,9px
+
+So a ESCALA do desenho muda (`.room-asset` em %); a caixa (`.room-icon`) fica
+igual, entao nada no grid se desloca e nao ha colisao com texto, dots ou
+chevron.
+
+| alvo | antes | depois | medido |
+|---|---|---|---|
+| comodos no telefone | 127,5% | 135,5% | 79,1 -> 84,0px |
+| Sala no telefone | 135% | 144% | 72,9 -> 77,8px |
+| tiles no tablet | 120% | 126% | 104,4 -> 109,6px |
+
+### 6. Agenda <-> Insights alterna o contexto inteiro
+
+Cada pagina da rotacao carrega o TIPO, e dele saem titulo, icone, conteudo e a
+existencia de acao:
+
+| | Agenda | Insights |
+|---|---|---|
+| titulo | Agenda | Insights |
+| icone | `mdi:calendar-month-outline` | `mdi:pulse` |
+| linhas | hora + descricao | so o texto do insight |
+| clique | abre a agenda completa | nenhum |
+
+O `detail` do insight — onde vinha "Toque para abrir o comodo" — deixou de ser
+renderizado. A altura NAO muda: ela vem da coluna
+(`repeat(2, minmax(0,1fr))`), nao do conteudo. Medido: 122,4px nos dois estados.
+
+Agenda completa: `<dialog>` + `showModal()` (top layer, acima do dock, imune ao
+overflow dos ancestrais) com o MESMO `bruno-agenda-card` do tablet, montado no
+primeiro toque. Folha na base, parando acima do dock por `--bruno-dock-h`.
+
+`mdi:close` NAO existe no catalogo Hugeicons do projeto — cairia no fallback
+(circulo). O botao de fechar usa `mdi:chevron-down`, que e o gesto da propria
+folha.
+
+### Medicao
+
+Banco a 428x926 com os tokens do Josh aplicados. Raio 20px e box-shadow
+byte-identicos entre Sala, ladrilho e Favoritos; estado ON com background,
+border-color e backdrop-filter identicos entre Sala e ladrilho; dot flat
+confirmado; PNGs nas medidas da tabela; card de Agenda/Insights com 122,4px nos
+dois estados.
+
+### Rollback
+
+Todos os valores anteriores estao comentados in-place com o marcador
+`ANTERIOR (rollback item N - 2026-08-22)`. Bundle anterior comentado ao lado em
+`configuration.yaml`.
+
+### Armadilha registrada
+
+Os arquivos do repositorio estao em **CRLF** (git `autocrlf`). Substituicao de
+bloco multilinha com `\n` NAO casa — o alvo tem de ser montado com o EOL do
+proprio arquivo. Custou uma passada.

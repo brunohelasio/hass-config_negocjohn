@@ -1181,8 +1181,11 @@ export class BrunoRoomTile extends LitElement {
       );
     }
 
-    /* Josh: material flat dos dots, restrito aos tiles da Home. */
-    .room-card.is-tile .status-dot {
+    /* Josh: material flat dos dots. Os tiles do tablet ja usavam; o cartao
+       do telefone caia no vidro compartilhado com os outros temas. Mesma
+       regra, sem variante nova. */
+    .room-card.is-tile .status-dot,
+    .room-card.is-josh-phone-card .status-dot {
       background: rgba(var(--tone), var(--bruno-tile-status-dot-fill-alpha, 0.78));
       border: var(--bruno-tile-status-dot-border, 0);
       box-shadow: 0 0 var(--bruno-tile-status-dot-halo-size, 8px)
@@ -1213,6 +1216,12 @@ export class BrunoRoomTile extends LitElement {
       .room-icon {
         max-width: clamp(100.87px, 59.12cqi, 168.12px);
         height: clamp(67.8px, 39.74cqi, 113px);
+      }
+      /* ITEM 5 (2026-08-22): mesma proporcao do telefone. Na celula de
+         referencia (218,75px) a caixa mede ~87px: 120% = 104,4px ->
+         126% = 109,6px (+5,2px). Cresce so o desenho, nao a caixa. */
+      .room-asset {
+        height: 126%;
       }
       .metric-value {
         font-size: clamp(10.75px, 6.3cqi, 17.91px);
@@ -1245,8 +1254,18 @@ export class BrunoRoomTile extends LitElement {
           linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025) 46%, rgba(0, 0, 0, 0.045)),
           rgba(13, 14, 17, 0.34);
         border: 1px solid rgba(255, 255, 255, 0.135);
+        /* ANTERIOR (rollback item 2 - 2026-08-22):
+             inset 0 1px 0 rgba(255,255,255,0.13), 0 10px 26px rgba(0,0,0,0.19)
+           A borda luminosa parcial dos cards de Favoritos vem do box-shadow
+           inset do token de card do tema: 0.40 no topo/esquerda e 0.10 na
+           base/direita — por isso ela nao percorre o perimetro inteiro. Aqui
+           havia um inset unico de 0.13 so no topo. */
         box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.13),
+          var(
+            --bruno-liquid-card-shadow,
+            inset 0.5px 0.5px 1px 0 rgba(255, 255, 255, 0.4),
+            inset -0.5px -0.5px 1px 0 rgba(255, 255, 255, 0.1)
+          ),
           0 10px 26px rgba(0, 0, 0, 0.19);
         backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
         -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
@@ -1282,7 +1301,10 @@ export class BrunoRoomTile extends LitElement {
         height: 62px;
       }
       .room-asset {
-        height: 127.5%;
+        /* ANTERIOR (rollback item 5 - 2026-08-22): 127.5% */
+        /* 62px de caixa: 127,5% = 79,1px -> 135,5% = 84,0px (+4,9px). A
+           caixa NAO muda, entao nada no grid do cartao se desloca. */
+        height: 135.5%;
       }
     }
 

@@ -1541,8 +1541,16 @@ class BrunoSalaCard extends HTMLElement {
               linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025) 46%, rgba(0,0,0,0.045)),
               rgba(13,14,17,0.34);
             border: 1px solid rgba(255,255,255,0.135);
+            /* ANTERIOR (rollback item 2 - 2026-08-22):
+                 inset 0 1px 0 rgba(255,255,255,0.13), 0 10px 26px rgba(0,0,0,0.19)
+               Mesma borda luminosa parcial dos cards de Favoritos e dos
+               demais comodos: 0.40 no topo/esquerda, 0.10 na base/direita. */
             box-shadow:
-              inset 0 1px 0 rgba(255,255,255,0.13),
+              var(
+                --bruno-liquid-card-shadow,
+                inset 0.5px 0.5px 1px 0 rgba(255,255,255,0.40),
+                inset -0.5px -0.5px 1px 0 rgba(255,255,255,0.10)
+              ),
               0 10px 26px rgba(0,0,0,0.19);
             backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
             -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.10);
@@ -1553,29 +1561,45 @@ class BrunoSalaCard extends HTMLElement {
               linear-gradient(90deg, rgba(255,255,255,0.035), transparent 52%);
             opacity: 0.72;
           }
+          /* ── ITEM 3 (2026-08-22) — estado ON unificado ─────────────────
+             ANTERIOR (rollback): recheio ambar proprio da Sala, que
+             produzia nevoa/esbranquiçamento sobre o PNG.
+               --text-main: rgba(255,253,248,0.99);
+               --text-soft: rgba(255,246,230,0.72);
+               --text-muted: rgba(255,248,236,0.76);
+               background:
+                 radial-gradient(175px 138px at 16% -10%, rgba(255,252,245,0.30), transparent 72%),
+                 radial-gradient(155px 120px at 92% 100%, rgba(255,207,135,0.13), transparent 72%),
+                 linear-gradient(180deg, rgba(255,250,240,0.18), rgba(255,242,222,0.075) 48%, rgba(44,31,22,0.10)),
+                 rgba(30,27,24,0.42);
+               border-color: rgba(255,244,225,0.275);
+               box-shadow: inset 0 1px 0 rgba(255,255,255,0.27),
+                 inset 0 -1px 0 rgba(255,213,151,0.07),
+                 0 0 24px rgba(255,205,132,0.09), 0 12px 28px rgba(0,0,0,0.21);
+               backdrop-filter: microblur saturate(1.13) brightness(1.035);
+               ::before radial 120x86 + linear, opacity 0.88;
+
+             NOVO: os MESMOS tokens que os demais comodos consomem em
+             .room-card.is-josh-phone-card.is-room-on. Nada e recriado a mao.
+             Os gradientes lineares dos tokens sao de porcentagem, entao
+             cobrem a superficie inteira do cartao horizontal; so o realce
+             radial fica ancorado no canto, como nos demais.
+             Contraste: o trio de texto e o mesmo dos outros comodos, e as
+             variaveis dos controles (Corredor/TV/A-C) continuam vindo de
+             .sala-card.is-room-on, ja calibradas para vidro claro. */
           .sala-card.is-josh-theme.is-room-on {
-            --text-main: rgba(255,253,248,0.99);
-            --text-soft: rgba(255,246,230,0.72);
-            --text-muted: rgba(255,248,236,0.76);
-            background:
-              radial-gradient(175px 138px at 16% -10%, rgba(255,252,245,0.30), transparent 72%),
-              radial-gradient(155px 120px at 92% 100%, rgba(255,207,135,0.13), transparent 72%),
-              linear-gradient(180deg, rgba(255,250,240,0.18), rgba(255,242,222,0.075) 48%, rgba(44,31,22,0.10)),
-              rgba(30,27,24,0.42);
-            border-color: rgba(255,244,225,0.275);
-            box-shadow:
-              inset 0 1px 0 rgba(255,255,255,0.27),
-              inset 0 -1px 0 rgba(255,213,151,0.07),
-              0 0 24px rgba(255,205,132,0.09),
-              0 12px 28px rgba(0,0,0,0.21);
-            backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
-            -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+            --text-main: rgba(248,251,255,0.96);
+            --text-soft: rgba(255,255,255,0.52);
+            --text-muted: rgba(255,255,255,0.62);
+            background: var(--bruno-josh-room-on-background);
+            border-color: var(--bruno-josh-room-on-border-color);
+            box-shadow: var(--bruno-josh-room-on-shadow);
+            backdrop-filter: var(--bruno-josh-room-on-filter);
+            -webkit-backdrop-filter: var(--bruno-josh-room-on-filter);
           }
           .sala-card.is-josh-theme.is-room-on::before {
-            background:
-              radial-gradient(120px 86px at 18% 0%, rgba(255,255,255,0.22), transparent 74%),
-              linear-gradient(180deg, rgba(255,255,255,0.12), transparent 42%);
-            opacity: 0.88;
+            background: var(--bruno-josh-room-on-sheen);
+            opacity: var(--bruno-josh-room-on-sheen-opacity);
           }
         }
 
@@ -4253,7 +4277,10 @@ class BrunoSalaCard extends HTMLElement {
             /* ANTERIOR (rollback microajustes remanescentes): height: 111%; */
             /* Sala partia de uma caixa 80x54; 135% iguala a altura visual das
                micromaquetes dos demais comodos sem alterar o tablet. */
-            height: 135%;
+            /* ANTERIOR (rollback item 5 - 2026-08-22): 135% */
+            /* 54px de caixa: 135% = 72,9px -> 144% = 77,8px (+4,9px), o
+               mesmo acrescimo dos demais comodos. A caixa 80x54 nao muda. */
+            height: 144%;
             aspect-ratio: 1 / 1;
             object-fit: contain;
             object-position: left top;

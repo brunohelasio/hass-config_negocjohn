@@ -16,7 +16,8 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'primary-text-color': 'rgba(255, 255, 255, 0.96)',
   'secondary-text-color': 'rgba(222, 222, 222, 0.96)',
   'divider-color': 'rgba(152, 152, 157, 0.3)',
-  'ha-card-border-radius': '34px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 34px
+  'ha-card-border-radius': '20px',
   'ha-card-features-border-radius': 'var(--ha-card-border-radius)',
   'ha-card-border-width': '0',
   'ha-card-backdrop-filter': 'blur(5px)',
@@ -39,12 +40,18 @@ const BRUNO_LIQUID_GLASS_TOKENS = {
   'primary-color': 'var(--orange-color)',
 
 
-  'bruno-liquid-card-radius': '34px',
-  'bruno-liquid-card-radius-compact': '24px',
-  'bruno-liquid-room-radius': '24px',
-  'bruno-liquid-cell-radius': '18px',
-  'bruno-liquid-control-radius': '18px',
-  'bruno-liquid-control-radius-compact': '14px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 34px
+  'bruno-liquid-card-radius': '20px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 24px
+  'bruno-liquid-card-radius-compact': '16px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 24px
+  'bruno-liquid-room-radius': '20px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 18px
+  'bruno-liquid-cell-radius': '16px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 18px
+  'bruno-liquid-control-radius': '16px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 14px
+  'bruno-liquid-control-radius-compact': '12px',
   'bruno-liquid-dock-radius': '999px',
   'bruno-liquid-rail-radius': '999px',
 

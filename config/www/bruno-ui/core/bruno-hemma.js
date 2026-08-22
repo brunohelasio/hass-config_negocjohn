@@ -16,13 +16,20 @@ const BRUNO_HEMMA_SHARED = {
   'primary-font-family': '"Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
   'primary-color': '#00c0e8',
   'accent-color': '#00C3D0',
-  'ha-card-border-radius': '28px',
-  'bruno-liquid-card-radius': '28px',
-  'bruno-liquid-card-radius-compact': '24px',
-  'bruno-liquid-room-radius': '28px',
-  'bruno-liquid-cell-radius': '24px',
-  'bruno-liquid-control-radius': '24px',
-  'bruno-liquid-control-radius-compact': '18px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 28px
+  'ha-card-border-radius': '20px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 28px
+  'bruno-liquid-card-radius': '20px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 24px
+  'bruno-liquid-card-radius-compact': '16px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 28px
+  'bruno-liquid-room-radius': '20px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 24px
+  'bruno-liquid-cell-radius': '16px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 24px
+  'bruno-liquid-control-radius': '16px',
+  // ANTERIOR (rollback raio unico 2026-08-22): 18px
+  'bruno-liquid-control-radius-compact': '12px',
   'bruno-liquid-panel-radius': '28px',
   'bruno-liquid-dock-radius': '9999px',
   'bruno-liquid-rail-radius': '9999px',

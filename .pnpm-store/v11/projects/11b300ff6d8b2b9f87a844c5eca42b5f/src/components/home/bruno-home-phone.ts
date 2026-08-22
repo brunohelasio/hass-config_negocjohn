@@ -62,7 +62,12 @@ interface HomePhoneConfig {
   scenes?: CenaConfig[];
   favorites?: {
     wifi?: { ssidEntity?: string; downloadEntity?: string; uploadEntity?: string };
-    agenda?: { calendarEntity?: string; insightsEntity?: string };
+    agenda?: {
+      calendarEntity?: string;
+      insightsEntity?: string;
+      /** Calendarios extras exibidos SO na agenda completa (item 6). */
+      extraCalendars?: string[];
+    };
   };
   /** Sensores que fazem a seção "Em execução" existir. */
   running?: { camera?: string; roborock?: string; media?: string };
@@ -478,34 +483,91 @@ export class BrunoHomePhone extends LitElement {
     // As páginas são as MESMAS da faixa que saiu do hero: o compromisso na
     // frente quando existe, seguido das informações da casa. A rotação de 6 s
     // reproduz a cadência daquela faixa (BRUNO_CHAT_ROTATION_MS no patch).
-    const paginas: Array<{ marca: string; texto: string }> = [];
-    if (titulo) paginas.push({ marca: hora || 'Hoje', texto: titulo });
+    // ITEM 6 (2026-08-22): a alternancia deixou de ser so de conteudo. Cada
+    // pagina carrega o TIPO, e dele saem titulo, icone e a existencia de acao.
+    // No insight o `detail` NAO e exibido: e onde vinha a chamada de toque
+    // ('Toque para abrir o comodo'), e o estado de insight nao tem acao.
+    const paginas: Array<{ tipo: 'agenda' | 'insight'; marca: string; texto: string }> = [];
+    if (titulo) paginas.push({ tipo: 'agenda', marca: hora || 'Hoje', texto: titulo });
     for (const item of insights?.items ?? []) {
       const texto = String(item?.text ?? '').trim();
-      if (texto) paginas.push({ marca: String(item?.detail ?? 'Agora').trim() || 'Agora', texto });
+      if (texto) paginas.push({ tipo: 'insight', marca: '', texto });
     }
-    if (!paginas.length) paginas.push({ marca: 'Hoje', texto: 'Sem compromissos' });
+    if (!paginas.length) {
+      paginas.push({ tipo: 'agenda', marca: 'Hoje', texto: 'Sem compromissos' });
+    }
 
-    const atual = paginas[this._pagAgenda % paginas.length] ?? paginas[0];
+    const indice = this._pagAgenda % paginas.length;
+    const atual = paginas[indice] ?? paginas[0];
+    const ehAgenda = atual?.tipo !== 'insight';
+    // So abre o calendario quando ha calendario configurado E a pagina atual
+    // e a da agenda. O estado de insight nao tem acao de clique.
+    const abre = ehAgenda && Boolean(cfg.calendarEntity);
     return html`
-      <div class="fav-card agenda">
+      <div
+        class="fav-card agenda ${ehAgenda ? '' : 'is-insight'} ${abre ? 'is-clicavel' : ''}"
+        role=${abre ? 'button' : nothing}
+        tabindex=${abre ? '0' : nothing}
+        aria-label=${abre ? 'Abrir agenda' : nothing}
+        @click=${abre ? this._abrirAgenda : nothing}
+        @keydown=${abre ? this._teclaAgenda : nothing}
+      >
         <div class="fav-topo">
-          <bruno-icon class="fav-icone" icon="mdi:calendar-month-outline"></bruno-icon>
-          <strong>Agenda</strong>
+          <bruno-icon
+            class="fav-icone"
+            icon=${ehAgenda ? 'mdi:calendar-month-outline' : 'mdi:pulse'}
+          ></bruno-icon>
+          <strong>${ehAgenda ? 'Agenda' : 'Insights'}</strong>
           ${paginas.length > 1
             ? html`<span class="agenda-dots">
-                ${paginas.map(
-                  (_, i) =>
-                    html`<i class=${i === this._pagAgenda % paginas.length ? 'is-atual' : ''}></i>`,
-                )}
+                ${paginas.map((_, i) => html`<i class=${i === indice ? 'is-atual' : ''}></i>`)}
               </span>`
             : nothing}
         </div>
-        <div class="agenda-marca">${atual?.marca ?? ''}</div>
+        ${ehAgenda
+          ? html`<div class="agenda-marca">${atual?.marca ?? ''}</div>`
+          : nothing}
         <div class="agenda-titulo">${atual?.texto ?? ''}</div>
       </div>
     `;
   }
+
+  private _teclaAgenda = (ev: KeyboardEvent): void => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    ev.preventDefault();
+    void this._abrirAgenda();
+  };
+
+  /**
+   * Agenda completa no telefone.
+   *
+   * Reusa o MESMO `bruno-agenda-card` do tablet — nao ha segunda agenda. O
+   * recipiente e um <dialog> com showModal(): renderiza na top layer do
+   * navegador, acima do dock e imune ao overflow dos ancestrais. Foi o
+   * caminho que resolveu o painel de comodo do bruno-room-tile.
+   */
+  private _abrirAgenda = async (): Promise<void> => {
+    const cfg = this._config?.favorites?.agenda ?? {};
+    if (!cfg.calendarEntity) return;
+    const dialogo = this.renderRoot.querySelector('dialog.agenda-modal') as
+      | (HTMLElement & { showModal?: () => void })
+      | null;
+    const host = this.renderRoot.querySelector('.agenda-modal-corpo') as HTMLElement | null;
+    if (!dialogo || !host) return;
+    dialogo.showModal?.();
+    await this._montar(host, {
+      type: 'custom:bruno-agenda-card',
+      calendars: [cfg.calendarEntity, ...(cfg.extraCalendars ?? [])],
+      days_to_show: 7,
+    });
+  };
+
+  private _fecharAgenda = (): void => {
+    const dialogo = this.renderRoot.querySelector('dialog.agenda-modal') as
+      | (HTMLElement & { close?: () => void })
+      | null;
+    dialogo?.close?.();
+  };
 
   private _favoritos() {
     return html`
@@ -535,8 +597,39 @@ export class BrunoHomePhone extends LitElement {
         ${this._pager()} ${this._indicadores()} ${this._favoritos()}
       </div>
       ${this._emExecucao()}
+      ${this._modalAgenda()}
     `;
   }
+
+  /**
+   * Recipiente da agenda completa (item 6).
+   *
+   * <dialog> + showModal(): top layer do navegador, acima do dock e imune ao
+   * overflow dos ancestrais. O card so e criado no primeiro toque — enquanto
+   * ninguem abre, nao ha busca de calendario nem custo de render.
+   */
+  private _modalAgenda() {
+    return html`
+      <dialog class="agenda-modal" @click=${this._fecharPorFora} @cancel=${this._fecharAgenda}>
+        <div class="agenda-modal-painel">
+          <div class="agenda-modal-topo">
+            <bruno-icon class="fav-icone" icon="mdi:calendar-month-outline"></bruno-icon>
+            <strong>Agenda</strong>
+            <button class="agenda-modal-x" @click=${this._fecharAgenda} aria-label="Fechar">
+              <bruno-icon icon="mdi:chevron-down"></bruno-icon>
+            </button>
+          </div>
+          <div class="agenda-modal-corpo"></div>
+        </div>
+      </dialog>
+    `;
+  }
+
+  /** Toque no escurecimento fecha; toque no painel nao. */
+  private _fecharPorFora = (ev: Event): void => {
+    const alvo = ev.target as HTMLElement | null;
+    if (alvo?.classList.contains('agenda-modal')) this._fecharAgenda();
+  };
 
   static override styles = css`
     /* O componente só é montado pelo card com show.mediaquery (max-width:800px),
@@ -805,6 +898,97 @@ export class BrunoHomePhone extends LitElement {
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+
+    /* ITEM 6 (2026-08-22): no estado de insight o card perde a linha de
+       marca (era onde vinha a chamada de toque) — o texto ganha a linha
+       livre em vez de deixar buraco. A ALTURA nao muda: ela vem da coluna
+       (repeat(2, minmax(0,1fr))), nao do conteudo. */
+    .agenda.is-insight .agenda-titulo {
+      -webkit-line-clamp: 3;
+    }
+    .agenda.is-clicavel {
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .agenda.is-clicavel:active {
+      transform: scale(0.985);
+    }
+    .agenda {
+      transition: transform 140ms ease;
+    }
+
+    /* ── agenda completa (modal) ── */
+    .agenda-modal {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      inset: 0;
+      width: 100vw;
+      max-width: 100vw;
+      height: 100dvh;
+      max-height: 100dvh;
+      background: transparent;
+      overflow: hidden;
+    }
+    .agenda-modal::backdrop {
+      background: rgba(6, 8, 12, 0.62);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .agenda-modal[open] {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    /* Folha na base, como as das subviews: o polegar alcanca, e ela para
+       acima do dock lendo a altura que a shell publica. */
+    .agenda-modal-painel {
+      width: 100%;
+      max-height: calc(100dvh - var(--bruno-dock-h, 58px) - 24px);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 12px calc(var(--bruno-dock-h, 58px) + 12px);
+      border-radius: var(--bruno-liquid-card-radius, 20px)
+        var(--bruno-liquid-card-radius, 20px) 0 0;
+      background: var(--bruno-liquid-card-background, rgba(20, 22, 28, 0.92));
+      border: 1px solid var(--bruno-liquid-card-border, rgba(255, 255, 255, 0.105));
+      box-shadow: var(--bruno-liquid-card-shadow, none);
+      backdrop-filter: var(--bruno-liquid-card-filter, none);
+      -webkit-backdrop-filter: var(--bruno-liquid-card-filter, none);
+      color: var(--bruno-text-main, rgba(245, 250, 255, 0.96));
+    }
+    .agenda-modal-topo {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--bruno-text-soft, rgba(255, 255, 255, 0.58));
+    }
+    .agenda-modal-x {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: inherit;
+      cursor: pointer;
+    }
+    .agenda-modal-x bruno-icon {
+      --mdc-icon-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+    .agenda-modal-corpo {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     /* ── wi-fi ── */

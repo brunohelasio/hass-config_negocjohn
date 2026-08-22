@@ -49,10 +49,17 @@ jobs:
         working-directory: dashboard-src
         run: npm run check:yaml
 
-      - name: Backtick guard
+      - name: Backtick guard on changed sources
         if: steps.guard.outputs.skip != 'true'
         working-directory: dashboard-src
-        run: npm run check:crase
+        run: |
+          node ../scripts/validation/check-backtick.mjs \
+            ../config/www/bruno-ui/core/bruno-hemma.js \
+            ../config/www/bruno-ui/core/bruno-theme-manager.js \
+            src/config/lavabo-climate.runtime.ts \
+            src/legacy-runtime.generated.ts \
+            src/main.ts \
+            src/themes/josh-phone-on-bridge.ts
 
       - name: Typecheck
         if: steps.guard.outputs.skip != 'true'

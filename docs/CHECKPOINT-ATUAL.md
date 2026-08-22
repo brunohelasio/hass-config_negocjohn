@@ -13,6 +13,26 @@ Atualizado em **2026-08-22**. Este documento é a primeira fonte de continuidade
 - Ao final de TODA rodada, informar: **branch**, **head**, **bundle ativo**, **estado dos testes** e **lista exata do que copiar para o Everex**.
 - Toda implementação relevante deve atualizar este checkpoint e a documentação correspondente em `docs/`; não depender da memória de uma conversa.
 
+## Definition of Done — uma rodada só termina Everex-ready
+
+Este requisito é obrigatório e foi reforçado pelo usuário em 2026-08-22 após recorrência do mesmo problema operacional.
+
+- **Não encerrar uma rodada no estado intermediário** “fonte alterada, mas ainda falta build/teste/bundle/cache-bust”.
+- Não apresentar um resumo de implementação como se fosse entrega final enquanto ainda existir qualquer etapa necessária antes da cópia ao Everex.
+- Se uma etapa técnica ainda estiver pendente, **continue executando-a na mesma rodada**; não transfira a pendência ao usuário como conclusão.
+- A resposta final da rodada só deve ser emitida quando a candidata estiver **Everex-ready**, isto é:
+  1. implementação funcional consolidada na branch correta;
+  2. documentação/checkpoint atualizados;
+  3. validações automáticas previstas executadas e resultado conhecido;
+  4. build Vite concluído quando o runtime compilado for afetado;
+  5. `manifest.json`, bundle com hash, compressões e `configuration.yaml` coerentes entre si;
+  6. branch/PR funcional apontando para o head final;
+  7. pacote exato de arquivos a copiar para `/config` do Everex definido;
+  8. instruções de cache/restart/reload e rollback prontas.
+- **“Não copie para o Everex ainda” não é uma entrega final aceitável** quando a própria IA ainda tem etapas de implementação/build que pode e deve concluir.
+- Exceção: somente um bloqueio externo real e não contornável (por exemplo, credencial/serviço indisponível ou informação que só existe no HA físico) pode impedir o Everex-ready; nesse caso o bloqueio deve ser identificado assim que surgir, não apenas depois de uma longa rodada.
+- A validação física no Everex/iPhone continua sendo posterior e continua bloqueando o merge para `main`; **Everex-ready não significa validado fisicamente nem mergeado**.
+
 ## Cadeia vigente
 
 1. **#602 — `fix/mobile-runtime-tv-curtain-20260819`**: runtime mobile/TV/Hub/Spotify/cortina validado fisicamente.

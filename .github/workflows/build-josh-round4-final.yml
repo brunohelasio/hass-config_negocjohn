@@ -1,9 +1,9 @@
-name: Finalize Josh ON round2 Everex-ready
+name: Build Josh round4 final
 
 on:
   push:
     branches:
-      - feat/mobile-runtime-v3-hemma-josh-lavabo-20260822
+      - feat/mobile-runtime-v3-20260821
     paths:
       - '.github/workflows/build-josh-round4-final.yml'
 
@@ -14,347 +14,108 @@ jobs:
   candidate:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout candidate
+      - name: Checkout da candidata
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Apply Josh ON round2 in canonical sources
-        shell: bash
+      - name: Preservar microblur Josh
+        run: python scripts/assets/fix_josh_mobile_perf_round4_1.py
+
+      - name: Validar contratos finais
         run: |
-          python3 <<'PY'
-          from pathlib import Path
-
-          def replace_once(text, old, new, label):
-              if new in text:
-                  return text
-              if old not in text:
-                  raise SystemExit(f'marker not found: {label}')
-              return text.replace(old, new, 1)
-
-          tile = Path('dashboard-src/src/components/rooms/bruno-room-tile.ts')
-          s = tile.read_text(encoding='utf-8')
-
-          old_tablet = '''    /* Josh ON: reforco sem reintroduzir uma cartela. A leitura vem de luz,
-       nao de moldura: wash leitoso discreto, filete quente e glow de base. */
-    .room-card.is-tile.is-room-on {
-      --text-main: rgba(255, 252, 245, 0.99);
-      --text-soft: rgba(255, 245, 226, 0.72);
-      --text-muted: rgba(255, 247, 232, 0.76);
-      --bruno-tile-on-line: linear-gradient(
-        90deg,
-        rgba(255, 194, 104, 0) 0%,
-        rgba(255, 202, 122, 0.78) 50%,
-        rgba(255, 194, 104, 0) 100%
-      );
-      --bruno-tile-on-glow: radial-gradient(
-        82px 38px at 50% 100%,
-        rgba(255, 194, 102, 0.22),
-        rgba(255, 216, 156, 0.07) 48%,
-        transparent 76%
-      );
-    }
-
-    .room-card.is-tile.is-room-on::before {
-      inset: 1px 2px 1px;
-      border-radius: 0;
-      background:
-        radial-gradient(92% 78% at 50% 100%, rgba(255, 204, 126, 0.12), transparent 72%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.070), rgba(255, 247, 232, 0.025) 62%, transparent);
-      opacity: 1;
-    }
-'''
-          new_tablet = '''    /* Josh ON tablet/desktop: continua TILE, sem cartela e sem veil.
-       O wash foi reprovado na validacao fisica de 2026-08-22 porque ainda
-       desenhava um retangulo perceptivel. O feedback ON fica no PNG, texto,
-       filete quente e glow inferior. */
-    .room-card.is-tile.is-room-on {
-      --text-main: rgba(255, 252, 245, 0.99);
-      --text-soft: rgba(255, 245, 226, 0.72);
-      --text-muted: rgba(255, 247, 232, 0.76);
-      --bruno-tile-on-line: linear-gradient(
-        90deg,
-        rgba(255, 194, 104, 0) 0%,
-        rgba(255, 202, 122, 0.92) 50%,
-        rgba(255, 194, 104, 0) 100%
-      );
-      --bruno-tile-on-glow: radial-gradient(
-        82px 38px at 50% 100%,
-        rgba(255, 194, 102, 0.22),
-        rgba(255, 216, 156, 0.07) 48%,
-        transparent 76%
-      );
-    }
-
-    .room-card.is-tile.is-room-on::before {
-      inset: 0;
-      border-radius: 0;
-      background: none;
-      opacity: 0;
-    }
-'''
-          s = replace_once(s, old_tablet, new_tablet, 'tablet ON material')
-          if 'box-shadow: 0 -2px 14px rgba(255, 194, 102, 0.24);' not in s:
-              s = s.replace(
-                  'box-shadow: 0 -2px 11px rgba(255, 194, 102, 0.17);',
-                  'box-shadow: 0 -2px 14px rgba(255, 194, 102, 0.24);',
-                  1,
-              )
-
-          old_mobile = '''      .room-card.is-josh-phone-card.is-room-on {
-        --text-main: rgba(255, 253, 248, 0.99);
-        --text-soft: rgba(255, 246, 230, 0.72);
-        --text-muted: rgba(255, 248, 236, 0.76);
-        background:
-          radial-gradient(175px 138px at 16% -10%, rgba(255, 252, 245, 0.30), transparent 72%),
-          radial-gradient(155px 120px at 92% 100%, rgba(255, 207, 135, 0.13), transparent 72%),
-          linear-gradient(180deg, rgba(255, 250, 240, 0.18), rgba(255, 242, 222, 0.075) 48%, rgba(44, 31, 22, 0.10)),
-          rgba(30, 27, 24, 0.42);
-        border-color: rgba(255, 244, 225, 0.275);
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.27),
-          inset 0 -1px 0 rgba(255, 213, 151, 0.07),
-          0 0 24px rgba(255, 205, 132, 0.09),
-          0 12px 28px rgba(0, 0, 0, 0.21);
-        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
-        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
-      }
-      .room-card.is-josh-phone-card.is-room-on::before {
-        background:
-          radial-gradient(120px 86px at 18% 0%, rgba(255, 255, 255, 0.22), transparent 74%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 42%);
-        opacity: 0.88;
-      }
-'''
-          new_mobile = '''      .room-card.is-josh-phone-card.is-room-on {
-        --text-main: rgba(248, 251, 255, 0.96);
-        --text-soft: rgba(255, 255, 255, 0.52);
-        --text-muted: rgba(255, 255, 255, 0.62);
-        background: var(--bruno-josh-room-on-background);
-        border-color: var(--bruno-josh-room-on-border-color);
-        box-shadow: var(--bruno-josh-room-on-shadow);
-        backdrop-filter: var(--bruno-josh-room-on-filter);
-        -webkit-backdrop-filter: var(--bruno-josh-room-on-filter);
-      }
-      .room-card.is-josh-phone-card.is-room-on::before {
-        background: var(--bruno-josh-room-on-sheen);
-        opacity: var(--bruno-josh-room-on-sheen-opacity);
-      }
-'''
-          s = replace_once(s, old_mobile, new_mobile, 'phone ON material')
-          tile.write_text(s, encoding='utf-8')
-
-          josh = Path('config/www/bruno-ui/core/bruno-josh.js')
-          s = josh.read_text(encoding='utf-8')
-          if "20260822-josh-liquid-on-reference-1" not in s:
-              s = s.replace(
-                  "const BRUNO_JOSH_VERSION = '20260802-josh-popup-material-1';",
-                  "const BRUNO_JOSH_VERSION = '20260822-josh-liquid-on-reference-1';",
-                  1,
-              )
-          old_resolver = '''function brunoJoshTokens() {
-  const base = brunoJoshVisionOSBase();
-  return Object.assign({}, base?.tokens || {}, BRUNO_JOSH_OVERRIDES);
-}
-'''
-          new_resolver = '''function brunoJoshLiquidGlassOnReference() {
-  const liquid = globalThis.BrunoLiquidGlassOriginal
-    || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass);
-  const tokens = liquid?.tokens || {};
-  return {
-    'bruno-josh-room-on-background': tokens['bruno-liquid-surface-on-background'] || 'radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 46%, transparent 73%), linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 40%, rgba(255,255,255,0.07)), linear-gradient(155deg, rgba(255,255,255,0.11), rgba(255,255,255,0.055))',
-    'bruno-josh-room-on-filter': tokens['bruno-liquid-surface-on-filter'] || 'blur(14px) saturate(1.28) brightness(1.04)',
-    'bruno-josh-room-on-border-color': tokens['bruno-liquid-surface-on-border-color'] || 'rgba(255,255,255,0.16)',
-    'bruno-josh-room-on-shadow': tokens['bruno-liquid-surface-on-shadow'] || 'inset 0 1px 0 rgba(255,255,255,0.36), inset 1px 0 0 rgba(255,255,255,0.12), inset -1px 0 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.32)',
-    'bruno-josh-room-on-sheen': tokens['bruno-liquid-surface-on-sheen'] || 'radial-gradient(112px 72px at 16% 0%, rgba(255,255,255,0.40), transparent 72%), linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.00) 38%), linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.00) 48%)',
-    'bruno-josh-room-on-sheen-opacity': tokens['bruno-liquid-surface-on-sheen-opacity'] || '0.85',
-  };
-}
-
-function brunoJoshTokens() {
-  const base = brunoJoshVisionOSBase();
-  return Object.assign({}, base?.tokens || {}, BRUNO_JOSH_OVERRIDES, brunoJoshLiquidGlassOnReference());
-}
-'''
-          s = replace_once(s, old_resolver, new_resolver, 'Josh token resolver')
-          josh.write_text(s, encoding='utf-8')
-
-          Path('dashboard-src/src/themes/josh-phone-on-bridge.ts').write_text('''/**
- * OBSOLETO desde 2026-08-22 (Josh ON round2).
- * A primeira candidata empilhava CSS no Shadow DOM. A implementacao vigente
- * vive em bruno-room-tile.ts e consome tokens de bruno-josh.js.
- * Mantido somente como registro/rollback; nao injeta estilos.
- */
-export {};
-''', encoding='utf-8')
-
-          guide = Path('docs/16-ai-working-guide.md')
-          g = guide.read_text(encoding='utf-8')
-          marker = '## Definition of Done — Everex-ready'
-          if marker not in g:
-              anchor = '## Documentação é parte da implementação\n'
-              block = '''## Definition of Done — Everex-ready
-
-Uma rodada de implementação não termina em estado intermediário. Se ainda faltar teste, build, manifesto, compressão, cache-bust ou definição do pacote do Everex, continue executando na mesma rodada. A resposta final só deve ser emitida quando a candidata estiver pronta para cópia ao Everex. "Everex-ready" não significa validada fisicamente nem mergeada: o aceite Everex/iPhone continua sendo a etapa posterior que libera o merge.
-
-'''
-              if anchor not in g:
-                  raise SystemExit('guide anchor not found')
-              g = g.replace(anchor, block + anchor, 1)
-              guide.write_text(g, encoding='utf-8')
-
-          print('canonical Josh ON round2 sources applied')
-          PY
-
-      - name: Validate source contracts
-        shell: bash
-        run: |
-          python3 <<'PY'
+          python - <<'PY'
           from pathlib import Path
           tile = Path('dashboard-src/src/components/rooms/bruno-room-tile.ts').read_text(encoding='utf-8')
-          josh = Path('config/www/bruno-ui/core/bruno-josh.js').read_text(encoding='utf-8')
-          bridge = Path('dashboard-src/src/themes/josh-phone-on-bridge.ts').read_text(encoding='utf-8')
           sala = Path('config/www/bruno-ui/cards/bruno-sala-card.js').read_text(encoding='utf-8')
           rooms = Path('dashboard-src/src/config/rooms.config.ts').read_text(encoding='utf-8')
           lavabo = Path('config/packages/lavabo_presence.yaml').read_text(encoding='utf-8')
           corredor = Path('config/packages/corredor_presence.yaml').read_text(encoding='utf-8')
 
-          required_tile = [
-              'background: none;',
-              'opacity: 0;',
-              'background: var(--bruno-josh-room-on-background);',
-              'backdrop-filter: var(--bruno-josh-room-on-filter);',
-              'background: var(--bruno-josh-room-on-sheen);',
+          required = [
+              '.room-card.is-tile.is-room-on::before',
+              '.room-card.is-josh-phone-card.is-room-on',
               'height: 120%;',
               'height: 127.5%;',
+              'var(--bruno-josh-microblur, blur(2px)) saturate(1.10)',
+              'var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035)',
           ]
-          missing = [x for x in required_tile if x not in tile]
+          missing = [x for x in required if x not in tile]
           if missing:
-              raise SystemExit(f'Josh round2 tile contract missing: {missing}')
-          if 'wash leitoso discreto' in tile:
-              raise SystemExit('old tablet wash still present')
-          if 'rgba(255, 252, 245, 0.30)' in tile:
-              raise SystemExit('old phone ON recipe still present')
-          required_josh = [
-              'brunoJoshLiquidGlassOnReference',
-              "tokens['bruno-liquid-surface-on-background']",
-              "tokens['bruno-liquid-surface-on-filter']",
-              "tokens['bruno-liquid-surface-on-border-color']",
-              "tokens['bruno-liquid-surface-on-shadow']",
-              "tokens['bruno-liquid-surface-on-sheen']",
-              "tokens['bruno-liquid-surface-on-sheen-opacity']",
-          ]
-          missing = [x for x in required_josh if x not in josh]
-          if missing:
-              raise SystemExit(f'Liquid Glass references missing: {missing}')
-          if 'MutationObserver' in bridge or 'connectedCallback' in bridge:
-              raise SystemExit('old bridge injection still active')
+              raise SystemExit(f'contratos Josh ausentes: {missing}')
+          if 'blur(10px) saturate(1.10)' in tile + sala or 'blur(12px) saturate(1.13)' in tile + sala:
+              raise SystemExit('blur pesado do round4 ainda presente')
           if 'width: 101.5%;' not in sala or 'height: 101.5%;' not in sala:
-              raise SystemExit('Sala V3 scale regressed')
+              raise SystemExit('escala Sala V3 ~8% regrediu')
           if "semanticState: 'sensor.lavabo_semantic_state'" not in rooms:
-              raise SystemExit('Lavabo semantic state regressed')
+              raise SystemExit('Lavabo perdeu semanticState')
           if 'unique_id: lavabo_semantic_state' not in lavabo or 'Sensor indisponivel' not in lavabo:
-              raise SystemExit('Lavabo semantic diagnostics regressed')
+              raise SystemExit('Lavabo sem diagnostico semantico')
           if 'sensor_offline' not in corredor or 'Sensor indisponivel' not in corredor:
-              raise SystemExit('Corredor offline diagnostics regressed')
-          print('source contracts OK')
+              raise SystemExit('Corredor sem diagnostico offline')
+          print('contratos finais OK')
           PY
 
-      - name: Setup Node
+      - name: Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: dashboard-src/package-lock.json
 
-      - name: Install dependencies
+      - name: Instalar dependencias
         working-directory: dashboard-src
         run: npm ci
 
-      - name: YAML validation
+      - name: YAML
         working-directory: dashboard-src
         run: npm run check:yaml
 
-      - name: Backtick guard on changed sources
-        run: node scripts/validation/check-backtick.mjs dashboard-src/src/components/rooms/bruno-room-tile.ts dashboard-src/src/themes/josh-phone-on-bridge.ts config/www/bruno-ui/core/bruno-josh.js
-
-      - name: TypeScript
+      - name: Typecheck
         working-directory: dashboard-src
         run: npm run typecheck
 
-      - name: ESLint
+      - name: Lint
         working-directory: dashboard-src
         run: npm run lint
 
-      - name: Vitest
+      - name: Testes
         working-directory: dashboard-src
         run: npm run test
 
-      - name: Vite build plus manifest and compression
+      - name: Build completo
         working-directory: dashboard-src
         run: npm run build
 
-      - name: Update active bundle and docs
-        shell: bash
+      - name: Atualizar bundle ativo
         run: |
-          python3 <<'PY'
+          python - <<'PY'
           import json, re
           from pathlib import Path
-
-          manifest = Path('config/www/dashboard/manifest.json')
-          data = json.loads(manifest.read_text(encoding='utf-8'))
-          bundle = data['bundle']
-
-          config = Path('config/configuration.yaml')
-          text = config.read_text(encoding='utf-8')
+          bundle = json.loads(Path('config/www/dashboard/manifest.json').read_text(encoding='utf-8'))['bundle']
+          p = Path('config/configuration.yaml')
+          text = p.read_text(encoding='utf-8')
           pattern = re.compile(r'(?m)^(\s*)- /local/dashboard/(bruno-dashboard\.[A-Za-z0-9_-]+\.js)\s*$')
           matches = list(pattern.finditer(text))
           if len(matches) != 1:
-              raise SystemExit(f'expected 1 active bundle, found {len(matches)}')
+              raise SystemExit(f'esperava 1 bundle ativo; encontrei {len(matches)}')
           old = matches[0].group(2)
-          if old != bundle:
-              indent = matches[0].group(1)
-              repl = f'{indent}# ANTERIOR (rollback Josh ON round2): - /local/dashboard/{old}\n{indent}- /local/dashboard/{bundle}'
-              config.write_text(pattern.sub(repl, text, count=1), encoding='utf-8')
-
-          checkpoint = Path('docs/CHECKPOINT-ATUAL.md')
-          c = checkpoint.read_text(encoding='utf-8')
-          section = '## Última candidata Everex-ready'
-          payload = f'''\n\n{section}\n\n- Data: 2026-08-22.\n- Branch: `feat/mobile-runtime-v3-hemma-josh-lavabo-20260822`.\n- Bundle: `{bundle}`.\n- Rodada: Josh ON round2 — tablet sem veil; phone consumindo os tokens ON canônicos do Liquid Glass; bridge antigo inerte.\n- Gate executado: YAML, backtick guard dos fontes alterados, TypeScript, ESLint, Vitest e build Vite com manifesto/compressão.\n- Pacote Everex desta rodada: `config/configuration.yaml` + diretório `config/www/dashboard/`.\n- `main` permanece intacto; merge continua bloqueado até validação física Everex/iPhone.\n'''
-          if section in c:
-              c = c.split(section, 1)[0].rstrip() + payload
-          else:
-              c = c.rstrip() + payload
-          checkpoint.write_text(c, encoding='utf-8')
-
-          doc = Path('docs/38-v3-josh-hemma-lavabo-20260822.md')
-          d = doc.read_text(encoding='utf-8')
-          marker = '## Fechamento Everex-ready — round2'
-          payload2 = f'''\n\n{marker}\n\n- Bundle gerado: `{bundle}`.\n- Tablet Josh ON: veil removido na fonte do tile; permanecem PNG ON, texto, filete e glow inferior.\n- Phone Josh ON: `bruno-room-tile` consome tokens namespaced resolvidos diretamente dos `bruno-liquid-surface-on-*` do Liquid Glass.\n- Bridge de injeção anterior: inerte, sem `MutationObserver` nem monkey-patch de lifecycle.\n- Gate: YAML + backtick guard + TypeScript + ESLint + Vitest + Vite/manifesto/compressão.\n- Everex: copiar `config/configuration.yaml` e substituir `config/www/dashboard/` pelo conteúdo desta branch.\n- Não copiar `dashboard-src`, `docs`, `.pnpm-store`, `scripts` nem assets V3 nesta rodada.\n- Merge: proibido até aceite físico no Everex/iPhone.\n'''
-          if marker in d:
-              d = d.split(marker, 1)[0].rstrip() + payload2
-          else:
-              d = d.rstrip() + payload2
-          doc.write_text(d, encoding='utf-8')
-
-          print(f'active bundle: {old} -> {bundle}')
+          if old == bundle:
+              raise SystemExit('hash do bundle nao mudou; abortando por seguranca')
+          indent = matches[0].group(1)
+          repl = f'{indent}# ANTERIOR (rollback Josh round4 final): - /local/dashboard/{old}\n{indent}- /local/dashboard/{bundle}'
+          p.write_text(pattern.sub(repl, text, count=1), encoding='utf-8')
+          print(f'bundle ativo: {old} -> {bundle}')
           PY
 
-      - name: Guard generated scope
-        shell: bash
+      - name: Bloquear alteracoes inesperadas
         run: |
-          python3 <<'PY'
+          python - <<'PY'
           import subprocess
           allowed = {
-              '.github/workflows/build-josh-round4-final.yml',
               'dashboard-src/src/components/rooms/bruno-room-tile.ts',
-              'dashboard-src/src/themes/josh-phone-on-bridge.ts',
-              'config/www/bruno-ui/core/bruno-josh.js',
+              'config/www/bruno-ui/cards/bruno-sala-card.js',
               'config/configuration.yaml',
-              'docs/CHECKPOINT-ATUAL.md',
-              'docs/16-ai-working-guide.md',
-              'docs/38-v3-josh-hemma-lavabo-20260822.md',
           }
           unexpected = []
           for line in subprocess.check_output(['git', 'status', '--porcelain=v1'], text=True).splitlines():
@@ -365,23 +126,17 @@ Uma rodada de implementação não termina em estado intermediário. Se ainda fa
                   continue
               unexpected.append(line)
           if unexpected:
-              raise SystemExit('unexpected files after build:\n' + '\n'.join(unexpected))
-          subprocess.run(['git', 'diff', '--check'], check=True)
-          print('generated scope and whitespace OK')
+              raise SystemExit('arquivos inesperados apos build:\n' + '\n'.join(unexpected))
+          print('escopo final confirmado')
           PY
 
-      - name: Restore historical workflow and publish candidate
-        shell: bash
+      - name: Registrar candidata final
         run: |
-          git show HEAD^:.github/workflows/build-josh-round4-final.yml > .github/workflows/build-josh-round4-final.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .github/workflows/build-josh-round4-final.yml
           git add dashboard-src/src/components/rooms/bruno-room-tile.ts
-          git add dashboard-src/src/themes/josh-phone-on-bridge.ts
-          git add config/www/bruno-ui/core/bruno-josh.js
+          git add config/www/bruno-ui/cards/bruno-sala-card.js
           git add config/configuration.yaml
-          git add docs/CHECKPOINT-ATUAL.md docs/16-ai-working-guide.md docs/38-v3-josh-hemma-lavabo-20260822.md
           git add -f -A config/www/dashboard
-          git commit -m 'fix: concluir Josh ON round2 Everex-ready [generated candidate]'
+          git commit -m 'perf: finalizar Josh round4 com microblur'
           git push

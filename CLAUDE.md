@@ -4431,3 +4431,102 @@ quando o codigo muda". Falso: muda tambem quando o DIA muda. Os tres hashes sao
 tres dias de build do mesmo codigo. **Divergencia benigna; a 6.5 nao tem mais
 pre-requisito.** Correcao sugerida, fora deste escopo: derivar o `BUILD_ID` do
 commit do git, para o hash voltar a depender so do codigo.
+
+---
+
+## Registro — Home mobile: restauracao da baseline + redesign (2026-08-22)
+
+### A descoberta que evitou um estrago
+
+O prompt tratava `main` como "a ultima baseline validada antes da V4". **Nao
+era.** O branch `chat/home-mobile-v4-pager-bento` SAIU de `main`, e `main` esta
+**145 commits atras** do trabalho validado. Quem comecou a V4 ja descartou as
+correcoes de TV e do Josh antes da primeira linha.
+
+Baseline correta: `feat/mobile-runtime-v3-hemma-josh-lavabo-20260822` — o unico
+branch com `media-state.ts` (contrato de TV), 16 regras Josh no card da Sala (o
+dobro de main) e o tema Hemma.
+
+Pior: o `/config` do Everex ja rodava o estado `main` — os 10 arquivos fora do
+lugar casavam todos com o branch V4. **As correcoes de TV e Josh ja estavam
+perdidas em producao**, nao eram risco futuro.
+
+**INVARIANTE:** antes de restaurar, provar QUAL commit e a baseline procurando
+os marcadores do trabalho que nao se pode perder. Nome de branch e data de topo
+nao bastam — `main` era o mais recente por data e o mais pobre em conteudo.
+
+### Causa raiz de cada quebra
+
+| # | quebra | causa provada |
+|---|---|---|
+| A | `Erro de configuracao` no mobile | O compositor V4 era declarado num bloco `resources:` no YAML do dashboard. O Lovelace roda `mode: storage`; nesse modo os recursos vem de `.storage/lovelace_resources` (73 itens, zero casando) e o bloco do YAML e **ignorado**. O arquivo nunca carregou; `custom:bruno-home-phone-v4-card` nunca registrou |
+| B | componente | `bento_sala_phone.yaml`, em `grid-area: sala` — exatamente onde o erro aparecia |
+| C | natureza | custom element nao registrado, por caminho de recurso invalido para o modo do dashboard. Nao foi YAML, setConfig, include nem grid |
+| D | hero alto demais | A camada V4 do hero vivia no mesmo arquivo que nunca carregou. O hero manteve a geometria do patch de 17/08, faixa de agenda incluida |
+| E | patches concorrentes | SIM: `home-mobile-hero-rail.js` (carrega, marca `__brunoChatHomePatch`) e `home-mobile-v4.js` (nao carrega, ESPERAVA aquele marcador) |
+| F | dot da rail preso | A V4 apontou o indicador para `home_activity_media`. Naquele momento o sensor lia a entidade ADB da TV, que vive em `idle`. **Na baseline correta isso ja esta corrigido**: o sensor usa `media_player.smart_tv_pro_2` |
+| G | tablet | `configuration.yaml` declarava `bruno-dashboard.DpecM3wp.js` → **HTTP 404**. E por esse bundle que entram `bruno-room-tile`, `bruno-icon` e as subviews. `main` carrega a mesma declaracao quebrada |
+| H | vazamento >800px | No `layout-card`, `_cards = this._config.cards.map(_createCard)` cria TODOS os cards; `show.mediaquery` so governa a colocacao. O card nao registrado virava `hui-error-card` tambem no tablet |
+| I | compartilhados | `section_home_v2.yaml`, `rail.yaml` e `ui-lovelace-main.yaml` servem os dois breakpoints |
+
+### Etapa 1 — restauracao
+
+10 arquivos copiados da baseline, na ordem runtime -> YAML -> `configuration.yaml`
+por ultimo, cada um conferido por SHA-256. Resultado: **373/373 identicos**
+(eram 363). Validado pelo usuario no aparelho antes de qualquer implementacao.
+
+### Etapa 2 — redesign
+
+`bruno-home-phone` (dashboard-src), compositor unico do bloco estatico do
+telefone: Comodos + Favoritos + "Em execucao".
+
+**Carga:** pelo `main.ts`, ou seja, pelo bundle unico que o `extra_module_url`
+ja declara. **Nunca por `resources:`** — foi o que matou a V4.
+
+**Grid:** o bloco phone tinha DOZE tracks, nove de 0px, e a area `dynamic`
+reservava altura mesmo vazia. Agora sao TRES tracks reais. Altura intrinseca;
+nenhum `grid-row` atravessa tracks antigos.
+
+**Isolamento de erro:** cada filho e criado por
+`loadCardHelpers().createCardElement()` em try/catch proprio; falha vira aviso
+naquela celula e nao derruba a Home.
+
+**Atividade dos comodos:** lida de `ROOMS`, a mesma configuracao dos ladrilhos —
+o indicador nao pode divergir do que o card mostra.
+
+**Cenas:** as quatro ficam na CONFIGURACAO, nao no codigo, para trocar pelo
+dashboard sem rebuild.
+
+**Agenda:** NAO usa `bruno-agenda-card` — aquele card e uma agenda mensal sem
+modo compacto, e espremê-lo numa celula do Bento repetiria o aperto que quebrou
+as tentativas anteriores. O proximo compromisso sai dos atributos que a propria
+entidade de calendario publica (`message`/`start_time`); a linha secundaria vem
+de `sensor.home_insights`.
+
+### Preservacao do tablet, verificada
+
+- grid do tablet em `section_home_v2.yaml`: **identico** a baseline (diff vazio);
+- regra nova do hero: linha 1281, **dentro** de `@media (max-width: 800px)`;
+- indicador da rail: `display: none` na regra base, redeclarado so no bloco phone;
+- cards que troquei tinham todos `show.mediaquery (max-width: 800px)`;
+- `bento_dynamic.yaml` e `bento_bottom_block.yaml` (>=801px) intocados.
+
+### Nao tocado, por decisao do usuario
+
+TV, entidades de TV, comportamento de botao, interior dos cards de comodo,
+tema Josh. Nenhum arquivo desses aparece no diff.
+
+### Rollback
+
+- baseline: `tmp/everex-rollback-20260822-restore-baseline/` (10 arquivos)
+- redesign: `tmp/everex-rollback-20260822-home-phone/` (34 arquivos, dist incluso)
+- no repo: `git checkout feat/mobile-runtime-v3-hemma-josh-lavabo-20260822 -- config/`
+
+Cada arquivo alterado tem o bloco ANTERIOR comentado in-place.
+
+### Observacao de gate
+
+`check:crase` falha nesta baseline com 1260 ocorrencias em 15 arquivos — TODOS
+de terceiros (`www/community/`) ou artefatos de build (`www/dashboard/chunks/`,
+versionados sem minificar). Zero sobreposicao com codigo nosso. E falso positivo
+do gate sobre codigo que nao controlamos; fica registrado, nao foi "corrigido".

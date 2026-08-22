@@ -24,17 +24,17 @@ streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 #   - url: /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260624-cameras-shell-2
 #     type: module
 
-# HOME V4 — recurso de validacao isolado (2026-08-22, rev.2).
+# HOME V4 — recurso de validacao isolado (2026-08-22, rev.3).
 #
 # Diferente da primeira tentativa, NÃO aponta de novo para
 # home-mobile-hero-rail.js. O patch validado de 17/08 continua carregado UMA vez
-# pelo configuration.yaml, com seu cache-bust antigo e seu conteúdo intacto.
-# A V4 usa arquivo próprio e aplica somente o delta mobile depois dele.
+# pelo configuration.yaml. A V4 usa arquivo próprio e se instala como camada
+# externa do hero depois daquele patch, evitando disputa de ordem/cache.
 #
 # Depois da validação visual, esta camada pode ser consolidada no entrypoint
 # principal e este bloco volta a ficar totalmente comentado.
 resources:
-  - url: /local/bruno-ui/patches/home-mobile-v4.js?v=20260822-home-v4-2
+  - url: /local/bruno-ui/patches/home-mobile-v4.js?v=20260822-home-v4-3
     type: module
 
 kiosk_mode:

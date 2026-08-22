@@ -1,0 +1,133 @@
+name: Build final V3 candidate
+
+on:
+  pull_request:
+    branches:
+      - ci/mobile-runtime-v3-finalize-base
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  candidate:
+    if: ${{ github.head_ref == 'feat/mobile-runtime-v3-hemma-josh-lavabo-20260822' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip generated candidate commits
+        id: guard
+        shell: bash
+        run: |
+          if git log -1 --pretty=%B | grep -Fq '[generated candidate]'; then
+            echo 'skip=true' >> "$GITHUB_OUTPUT"
+            echo 'generated candidate already built; skipping rebuild'
+          else
+            echo 'skip=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Install dependencies
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: YAML validation
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run check:yaml
+
+      - name: Backtick guard
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run check:crase
+
+      - name: Typecheck
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run typecheck
+
+      - name: Lint
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run lint
+
+      - name: Tests
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run test
+
+      - name: Full build
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run build
+
+      - name: Update active bundle in configuration.yaml
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          python - <<'PY'
+          import json, re
+          from pathlib import Path
+          manifest = json.loads(Path('config/www/dashboard/manifest.json').read_text(encoding='utf-8'))
+          bundle = manifest['bundle']
+          p = Path('config/configuration.yaml')
+          text = p.read_text(encoding='utf-8')
+          pattern = re.compile(r'(?m)^(\s*)- /local/dashboard/(bruno-dashboard\.[A-Za-z0-9_-]+\.js)\s*$')
+          matches = list(pattern.finditer(text))
+          if len(matches) != 1:
+              raise SystemExit(f'expected one active bundle; found {len(matches)}')
+          old = matches[0].group(2)
+          if old == bundle:
+              print(f'bundle already active: {bundle}')
+          else:
+              indent = matches[0].group(1)
+              repl = f'{indent}# ANTERIOR (rollback final V3): - /local/dashboard/{old}\n{indent}- /local/dashboard/{bundle}'
+              p.write_text(pattern.sub(repl, text, count=1), encoding='utf-8')
+              print(f'active bundle: {old} -> {bundle}')
+          PY
+
+      - name: Guard generated scope
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          python - <<'PY'
+          import subprocess
+          lines = subprocess.check_output(['git','status','--porcelain=v1'], text=True).splitlines()
+          unexpected = []
+          for line in lines:
+              path = line[3:]
+              if ' -> ' in path:
+                  path = path.split(' -> ', 1)[1]
+              ok = path == 'config/configuration.yaml' or path.startswith('config/www/dashboard/')
+              if not ok:
+                  unexpected.append(line)
+          if unexpected:
+              raise SystemExit('unexpected files after build:\n' + '\n'.join(unexpected))
+          print('generated diff restricted to dashboard bundle + active bundle pointer')
+          PY
+
+      - name: Commit generated bundle to candidate branch
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          if git diff --quiet && git diff --cached --quiet && [ -z "$(git status --porcelain)" ]; then
+            echo 'nothing to commit'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add config/configuration.yaml
+          git add -f -A config/www/dashboard
+          git commit -m 'build: publish Josh Hemma Lavabo V3 candidate [generated candidate]'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}

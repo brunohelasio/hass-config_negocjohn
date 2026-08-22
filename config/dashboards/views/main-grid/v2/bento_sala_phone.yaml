@@ -1,25 +1,22 @@
-# HOME V4 — Composição completa do PHONE no lugar da Sala isolada (2026-08-22).
+# HOME V4 — compositor único do PHONE (2026-08-22, correção rev.2).
 #
-# A área `sala` passa a hospedar um único compositor que atravessa também a
-# linha `comodos`. Isso permite manter section_home_v2.yaml intacto no tablet e
-# elimina, no telefone, o empilhamento vertical de todos os cômodos.
+# A área `sala` agora é AUTO no grid phone da section_home_v2.yaml e hospeda
+# todo o bloco estático da Home: pager de cômodos + Favoritos. Não há mais
+# tentativa de atravessar duas linhas do grid via `grid-row`.
 #
 # Página 1 (social): Sala + Cozinha + Lavabo.
 # Página 2 (íntima/trabalho): Office + Q. Casal + Q. Marina + Q. Miguel.
 # Depois do pager: Bento Favoritos (Agenda/Casa + Wi-Fi + 4 cenas).
 #
-# ROLLBACK: restaurar o bloco ANTERIOR abaixo e reativar
-# v2/bento_comodos_phone.yaml.
+# ROLLBACK: restaurar o bloco ANTERIOR abaixo E reativar o include
+# v2/bento_comodos_phone.yaml em shell/section_home_v2.yaml.
 type: custom:bruno-home-phone-v4-card
 view_layout:
   grid-area: sala
-  grid-row: sala-start / comodos-end
   show:
     mediaquery: '(max-width: 800px)'
 rooms:
-  # Sala mantem exatamente a configuracao anterior do phone.
   - type: custom:bruno-sala-card
-  # Os demais reutilizam os wrappers existentes, inclusive double_tap/popups.
   - !include ../bento_cozinha.yaml
   - !include ../bento_lavabo.yaml
   - !include ../bento_office.yaml

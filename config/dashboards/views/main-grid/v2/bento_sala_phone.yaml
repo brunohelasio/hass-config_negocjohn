@@ -1,11 +1,35 @@
-# HOME V2 — Sala no PHONE (layout mobile intocado, decisão 2026-07-24).
-# No celular a Home V2 mantém exatamente o card especial da Sala usado hoje
-# (bruno-sala-card, linha de 160px). No desktop/tablet este card NÃO monta
-# (show max-800) — lá a Sala vive na faixa de cômodos (bruno-sala-room-card).
-# Estratégia Sagaland: a área `sala` existe nos dois breakpoints; aqui o
-# show:mediaquery é o mecanismo primário de ocultação.
-type: custom:bruno-sala-card
+# HOME V4 — Composição completa do PHONE no lugar da Sala isolada (2026-08-22).
+#
+# A área `sala` passa a hospedar um único compositor que atravessa também a
+# linha `comodos`. Isso permite manter section_home_v2.yaml intacto no tablet e
+# elimina, no telefone, o empilhamento vertical de todos os cômodos.
+#
+# Página 1 (social): Sala + Cozinha + Lavabo.
+# Página 2 (íntima/trabalho): Office + Q. Casal + Q. Marina + Q. Miguel.
+# Depois do pager: Bento Favoritos (Agenda/Casa + Wi-Fi + 4 cenas).
+#
+# ROLLBACK: restaurar o bloco ANTERIOR abaixo e reativar
+# v2/bento_comodos_phone.yaml.
+type: custom:bruno-home-phone-v4-card
 view_layout:
   grid-area: sala
+  grid-row: sala-start / comodos-end
   show:
     mediaquery: '(max-width: 800px)'
+rooms:
+  # Sala mantem exatamente a configuracao anterior do phone.
+  - type: custom:bruno-sala-card
+  # Os demais reutilizam os wrappers existentes, inclusive double_tap/popups.
+  - !include ../bento_cozinha.yaml
+  - !include ../bento_lavabo.yaml
+  - !include ../bento_office.yaml
+  - !include ../bento_quarto_casal.yaml
+  - !include ../bento_quarto_marina.yaml
+  - !include ../bento_quarto_miguel.yaml
+
+# ── ANTERIOR (rollback 2026-08-22) ─────────────────────────────────────────
+# type: custom:bruno-sala-card
+# view_layout:
+#   grid-area: sala
+#   show:
+#     mediaquery: '(max-width: 800px)'

@@ -340,13 +340,18 @@ export class BrunoHomePhone extends LitElement {
     };
     const down = numero(w.downloadEntity);
     const up = numero(w.uploadEntity);
-    // Semântica pedida: Excelente / Parcial / Offline.
+    // A linha de estado semântico saiu do card (rev.3): eram QUATRO linhas
+    // contra três da Agenda, e a diferença virava altura desperdiçada nos dois.
+    // O estado continua calculado e vai para o `title`, então a informação não
+    // se perde — só deixa de ocupar uma linha.
     const estado = offline ? 'Offline' : down >= 1 ? 'Excelente' : 'Parcial';
     return html`
-      <div class="fav-card wifi">
-        <div class="fav-topo"><span class="fav-icone">✧</span><strong>Wi-Fi</strong></div>
+      <div class="fav-card wifi" title=${`Sinal ${estado}`}>
+        <div class="fav-topo">
+          <bruno-icon class="fav-icone" icon="wifi"></bruno-icon>
+          <strong>Wi-Fi</strong>
+        </div>
         <div class="wifi-rede">${offline ? 'Sem rede' : bruto}</div>
-        <div class="wifi-estado is-${estado.toLowerCase()}">${estado}</div>
         <div class="wifi-taxas">
           <span>↓ ${down.toFixed(1)}</span><span>↑ ${up.toFixed(1)}</span>
         </div>
@@ -496,7 +501,7 @@ export class BrunoHomePhone extends LitElement {
        ele, que faz o conteúdo passar da viewport e habilitar a rolagem. */
     :host {
       display: grid;
-      grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+      grid-template-rows: auto auto auto auto minmax(0, max-content) auto;
       height: 100%;
       min-height: 0;
       width: 100%;
@@ -622,9 +627,13 @@ export class BrunoHomePhone extends LitElement {
       gap: 8px;
       min-height: 0;
     }
+    /* rev.3: as duas linhas medem o CONTEUDO (auto), nao a sobra (1fr). Como
+       Agenda e Wi-Fi tem 3 linhas cada, saem com a mesma altura por construcao.
+       O card de Cenas, na coluna vizinha, estica e fica valendo exatamente
+       Agenda + gap + Wi-Fi — a regra pedida, sem calculo em pixel. */
     .fav-coluna {
       display: grid;
-      grid-template-rows: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(2, auto);
       gap: 8px;
       min-width: 0;
       min-height: 0;
@@ -634,12 +643,16 @@ export class BrunoHomePhone extends LitElement {
        Os mesmos tokens que os demais cards consomem. Ao trocar de tema, estes
        valores mudam com ele — não há cor fixa aqui, só o fallback de segurança
        para o caso de o tema não ter carregado ainda. */
+    /* rev.3: alinhado ao TOPO, nao centrado. Centrado, a Agenda (3 linhas)
+       sobrava espaco em cima e embaixo enquanto o Wi-Fi (4 linhas) enchia — as
+       duas mediam igual, mas so uma parecia cheia. Com o topo como referencia e
+       as duas em 3 linhas, o respiro inferior fecha igual ao superior sozinho. */
     .fav-card {
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
       gap: 1px;
-      padding: 8px 11px;
+      padding: 7px 11px;
       min-width: 0;
       min-height: 0;
       overflow: hidden;
@@ -726,8 +739,9 @@ export class BrunoHomePhone extends LitElement {
     .wifi-taxas {
       display: flex;
       gap: 9px;
-      font-size: 10.5px;
-      color: var(--bruno-text-soft, rgba(255, 255, 255, 0.55));
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--bruno-accent-amber, #f7c600);
       font-variant-numeric: tabular-nums;
     }
 

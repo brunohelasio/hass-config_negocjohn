@@ -4581,3 +4581,36 @@ crases num comentario dentro do `css` template literal. Quebrou o parse na hora.
 O detector do projeto pegou. Aspas retas em comentario, sempre.
 
 Bundle: cfRFwyb3 -> Gls4tQdc.
+
+### Ajuste pos-feedback — Favoritos cortado pela rail (2026-08-22, rev.3)
+
+Wi-Fi e Cenas eram cortados pelo filete da rail. Escopo autorizado: apenas os
+ajustes 1 e 2. A altura dos cards de comodo (172px) NAO foi tocada, e a
+hipotese de mover a rail ficou explicitamente de fora.
+
+**1. Respiro entre status e hero.** `grid-gap` do phone 8px -> 5px e padding
+superior do hero 6px -> 2px. Sao dois respiros (badges|hero e hero|compositor),
+entao o ganho e ~10px — pequeno, mas vai direto para Favoritos.
+
+**2. Altura de Favoritos.** Tres mudancas que se sustentam:
+
+- os cards passaram de `justify-content: center` para `flex-start`. Centrados, a
+  Agenda (3 linhas) sobrava espaco em cima e embaixo enquanto o Wi-Fi (4 linhas)
+  enchia: mediam igual, mas so um parecia cheio;
+- o Wi-Fi perdeu a linha de estado semantico e ficou com tres, como a Agenda. O
+  estado continua calculado e vai para o `title` — a informacao nao se perde, so
+  deixa de ocupar uma linha. Download/upload passaram a ambar;
+- a coluna esquerda passou de `repeat(2, minmax(0,1fr))` para `repeat(2, auto)`.
+  Com as duas em tres linhas, saem com a mesma altura POR CONSTRUCAO, e o card
+  de Cenas — que estica na coluna vizinha — vale exatamente
+  `Agenda + gap + Wi-Fi`. A regra pedida, sem calculo em pixel.
+
+O bloco Favoritos virou `minmax(0, max-content)` no grid do compositor: mede o
+conteudo em vez de reivindicar a sobra. Os quatro botoes de cena viram levemente
+retangulares como consequencia, que era o esperado.
+
+O icone do Wi-Fi era um glifo de texto (`✧`) enquanto o da Agenda era
+`bruno-icon`; por isso destoavam de tamanho. Agora os dois sao `bruno-icon` a
+13px.
+
+Bundle: Gls4tQdc -> Ct-Xu--y.

@@ -113,7 +113,13 @@ layout:
     '(max-width: 800px)':
       # 8px (nao 10): os 4 respiros acima da terceira dupla devolvem 8px ao
       # orcamento, e e o unico ajuste aqui que nao arrisca cortar conteudo.
-      grid-gap: 8px
+      #
+      # rev.3 (2026-08-22): 8px -> 5px. Sao apenas DOIS respiros agora
+      # (badges|hero e hero|compositor), entao o ganho e de 6px — pequeno, mas
+      # e altura que vai direto para os cards de Favoritos, que estavam sendo
+      # cortados pela rail. As dimensoes dos cards de comodo nao mudam.
+      # ANTERIOR (rollback): grid-gap: 8px
+      grid-gap: 5px
       grid-template-columns: minmax(0, 1fr)
       # ANTERIOR (rollback): Sala e tiles de comodo usavam 160px.
       # 172px e o minimo calculado para metrica (28px), gap (7px), quatro dots

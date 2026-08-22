@@ -73,7 +73,9 @@ function brunoChatEnsureHeroStyle(root) {
       }
 
       .hero-stage.is-v2 .content {
-        padding: 6px 16px 7px !important;
+        /* rev.3 (2026-08-22): topo de 6px -> 2px. O hero sobe 4px e todo o
+           conteudo abaixo acompanha. ANTERIOR (rollback): 6px 16px 7px */
+        padding: 2px 16px 7px !important;
         gap: 0 !important;
       }
 

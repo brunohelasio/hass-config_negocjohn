@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Dashboard Home Assistant — fonte TypeScript. O bundle compilado vai para config/www/dashboard/.",
   "scripts": {
-    "materialize:remote": "python3 ../scripts/build/apply-josh-on-round2-20260822.py && python3 ../scripts/build/apply-premium-tv-remote-round6-20260821.py",
+    "materialize:remote": "python3 ../scripts/build/apply-premium-tv-remote-round6-20260821.py",
     "build": "npm run materialize:remote && vite build && npm run manifesto && npm run compress",
     "watch": "vite build --watch",
     "typecheck": "npm run materialize:remote && tsc --noEmit",

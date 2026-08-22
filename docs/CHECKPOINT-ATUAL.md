@@ -26,7 +26,7 @@ Este requisito é obrigatório e foi reforçado pelo usuário em 2026-08-22 apó
   3. validações automáticas previstas executadas e resultado conhecido;
   4. build Vite concluído quando o runtime compilado for afetado;
   5. `manifest.json`, bundle com hash, compressões e `configuration.yaml` coerentes entre si;
-  6. branch/PR funcional apontando para o head final;
+  6. branch/PR funcional apontando para o estado final da rodada;
   7. pacote exato de arquivos a copiar para `/config` do Everex definido;
   8. instruções de cache/restart/reload e rollback prontas.
 - **“Não copie para o Everex ainda” não é uma entrega final aceitável** quando a própria IA ainda tem etapas de implementação/build que pode e deve concluir.
@@ -37,9 +37,21 @@ Este requisito é obrigatório e foi reforçado pelo usuário em 2026-08-22 apó
 
 1. **#602 — `fix/mobile-runtime-tv-curtain-20260819`**: runtime mobile/TV/Hub/Spotify/cortina validado fisicamente.
 2. **#604 — `feat/mobile-runtime-v3-20260821`**: candidata V3 construída sobre #602; assets V3 e round4 visual/semântico.
-3. **#606 — `feat/mobile-runtime-v3-hemma-josh-lavabo-20260822`**: candidata funcional atual, construída sobre #604. Inclui Hemma, clima do Lavabo e refinamentos Josh. **Não mergear antes da validação física.**
+3. **#606 — `feat/mobile-runtime-v3-hemma-josh-lavabo-20260822`**: candidata funcional atual, construída sobre #604. Inclui Hemma, clima do Lavabo e Josh ON round2. **Não mergear antes da validação física.**
 
-O bundle ativo deve sempre ser confirmado no `config/www/dashboard/manifest.json` da branch antes de orientar cópia ao Everex.
+## Última candidata Everex-ready — 2026-08-22
+
+- PR funcional: **#606**.
+- Branch: `feat/mobile-runtime-v3-hemma-josh-lavabo-20260822`.
+- Commit que materializou e publicou o runtime: `fe1e870e85843bce33110ff5fc902a8f3c098340`.
+- Bundle ativo: `bruno-dashboard.DS0_M01T.js`.
+- Main chunk: `chunks/main.D0kWSwW_.js`.
+- `manifest.json` aponta para `bruno-dashboard.DS0_M01T.js`.
+- `config/configuration.yaml` aponta para `/local/dashboard/bruno-dashboard.DS0_M01T.js`.
+- Rollback imediato de bundle: `bruno-dashboard.DDPR7KRw.js`.
+- Validação automática: npm ci, 248 YAMLs, guard de crases, TypeScript, ESLint, **17 arquivos / 277 testes Vitest**, Vite (75 módulos), manifesto, compressão de 6 assets e guard de escopo — todos aprovados.
+- Pacote Everex desta rodada: `config/configuration.yaml` + **todo o diretório** `config/www/dashboard/`.
+- Não copiar nesta rodada: `dashboard-src/`, `docs/`, `scripts/`, `.pnpm-store/`, `_rollback/` ou assets V3.
 
 ## Contratos que NÃO podem regredir
 
@@ -68,16 +80,18 @@ O bundle ativo deve sempre ser confirmado no `config/www/dashboard/manifest.json
 - Cômodos são **tiles**, não cards.
 - Não criar cartela, raio de card ou blur próprio da tile.
 - ON = PNG aceso + texto + filete inferior quente + glow inferior.
-- O veil/wash leitoso foi **reprovado fisicamente em 2026-08-22** porque continuou desenhando um retângulo perceptível. A rodada atual manda removê-lo por completo.
+- O veil/wash leitoso foi **reprovado fisicamente em 2026-08-22** porque continuou desenhando um retângulo perceptível.
+- Round2 final: `.room-card.is-tile.is-room-on::before` não desenha superfície (`background: none; opacity: 0`).
 
 ### Phone (<=800px)
 
 - Cômodos permanecem **cards Josh**.
 - OFF permanece Josh.
-- Somente o material visual ON deve reproduzir a receita canônica `bruno-liquid-surface-on-*` do Liquid Glass: `background`, `filter/blur`, `border-color`, `shadow`, `sheen` e `sheen-opacity`.
+- Somente o material visual ON reproduz a receita canônica `bruno-liquid-surface-on-*` do Liquid Glass: `background`, `filter/blur`, `border-color`, `shadow`, `sheen` e `sheen-opacity`.
 - **Não alterar raio, semântica, lógica de estado, gestos, assets ou layout.**
 - Não criar receita “parecida”. Os valores visuais devem vir literalmente da implementação Liquid Glass vigente.
-- A primeira tentativa via bridge falhou porque tentava substituir `connectedCallback` depois de `customElements.define()`, portanto a folha não chegava de forma confiável às novas instâncias. O round2 observa os elementos reais e injeta a folha em cada `shadowRoot`.
+- Round2 final: `bruno-room-tile.ts` consome tokens `--bruno-josh-room-on-*`; `bruno-josh.js` resolve esses tokens diretamente dos `bruno-liquid-surface-on-*` do Liquid Glass.
+- O bridge anterior fica **inerte** (`export {}`): não existe `MutationObserver`, monkey-patch de `connectedCallback` nem segunda camada de CSS no Shadow DOM.
 
 ## Tema Hemma
 
@@ -106,7 +120,7 @@ O bundle ativo deve sempre ser confirmado no `config/www/dashboard/manifest.json
 - Runtime/V3 base: preservado.
 - Tablet Josh ON da candidata anterior: **REPROVADO visualmente** — veil retangular ainda perceptível.
 - Phone Josh ON da candidata anterior: **REPROVADO visualmente** — material não reproduziu o Liquid Glass; o clareamento continuou concentrado próximo ao PNG.
-- Round2 atual: tablet sem veil; phone com receita ON literal do Liquid Glass e instalação confiável no Shadow DOM.
+- Round2 final: **Everex-ready, ainda não validado fisicamente** — tablet sem veil; phone usando a autoridade visual canônica do Liquid Glass, sem bridge ativo.
 - Lavabo temperatura/umidade: ainda requer confirmação no HA real.
 
 ## Ordem obrigatória de continuidade

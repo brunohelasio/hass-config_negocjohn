@@ -1102,8 +1102,10 @@ export class BrunoRoomTile extends LitElement {
       opacity: var(--bruno-tile-sheen-opacity, 0);
     }
 
-    /* Josh ON: reforco sem reintroduzir uma cartela. A leitura vem de luz,
-       nao de moldura: wash leitoso discreto, filete quente e glow de base. */
+    /* Josh ON tablet/desktop: continua TILE, sem cartela e sem veil.
+       O wash foi reprovado na validacao fisica de 2026-08-22 porque ainda
+       desenhava um retangulo perceptivel. O feedback ON fica no PNG, texto,
+       filete quente e glow inferior. */
     .room-card.is-tile.is-room-on {
       --text-main: rgba(255, 252, 245, 0.99);
       --text-soft: rgba(255, 245, 226, 0.72);
@@ -1111,7 +1113,7 @@ export class BrunoRoomTile extends LitElement {
       --bruno-tile-on-line: linear-gradient(
         90deg,
         rgba(255, 194, 104, 0) 0%,
-        rgba(255, 202, 122, 0.78) 50%,
+        rgba(255, 202, 122, 0.92) 50%,
         rgba(255, 194, 104, 0) 100%
       );
       --bruno-tile-on-glow: radial-gradient(
@@ -1123,12 +1125,10 @@ export class BrunoRoomTile extends LitElement {
     }
 
     .room-card.is-tile.is-room-on::before {
-      inset: 1px 2px 1px;
+      inset: 0;
       border-radius: 0;
-      background:
-        radial-gradient(92% 78% at 50% 100%, rgba(255, 204, 126, 0.12), transparent 72%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.070), rgba(255, 247, 232, 0.025) 62%, transparent);
-      opacity: 1;
+      background: none;
+      opacity: 0;
     }
 
     .room-card.is-tile.is-room-on::after {
@@ -1138,7 +1138,7 @@ export class BrunoRoomTile extends LitElement {
         --bruno-tile-on-line,
         linear-gradient(90deg, rgba(255, 187, 72, 0) 0%, rgba(255, 187, 72, 0.42) 50%, rgba(255, 187, 72, 0) 100%)
       );
-      box-shadow: 0 -2px 11px rgba(255, 194, 102, 0.17);
+      box-shadow: 0 -2px 14px rgba(255, 194, 102, 0.24);
     }
 
     .room-card.is-tile .room-action {
@@ -1258,28 +1258,18 @@ export class BrunoRoomTile extends LitElement {
         opacity: 0.72;
       }
       .room-card.is-josh-phone-card.is-room-on {
-        --text-main: rgba(255, 253, 248, 0.99);
-        --text-soft: rgba(255, 246, 230, 0.72);
-        --text-muted: rgba(255, 248, 236, 0.76);
-        background:
-          radial-gradient(175px 138px at 16% -10%, rgba(255, 252, 245, 0.30), transparent 72%),
-          radial-gradient(155px 120px at 92% 100%, rgba(255, 207, 135, 0.13), transparent 72%),
-          linear-gradient(180deg, rgba(255, 250, 240, 0.18), rgba(255, 242, 222, 0.075) 48%, rgba(44, 31, 22, 0.10)),
-          rgba(30, 27, 24, 0.42);
-        border-color: rgba(255, 244, 225, 0.275);
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.27),
-          inset 0 -1px 0 rgba(255, 213, 151, 0.07),
-          0 0 24px rgba(255, 205, 132, 0.09),
-          0 12px 28px rgba(0, 0, 0, 0.21);
-        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
-        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+        --text-main: rgba(248, 251, 255, 0.96);
+        --text-soft: rgba(255, 255, 255, 0.52);
+        --text-muted: rgba(255, 255, 255, 0.62);
+        background: var(--bruno-josh-room-on-background);
+        border-color: var(--bruno-josh-room-on-border-color);
+        box-shadow: var(--bruno-josh-room-on-shadow);
+        backdrop-filter: var(--bruno-josh-room-on-filter);
+        -webkit-backdrop-filter: var(--bruno-josh-room-on-filter);
       }
       .room-card.is-josh-phone-card.is-room-on::before {
-        background:
-          radial-gradient(120px 86px at 18% 0%, rgba(255, 255, 255, 0.22), transparent 74%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 42%);
-        opacity: 0.88;
+        background: var(--bruno-josh-room-on-sheen);
+        opacity: var(--bruno-josh-room-on-sheen-opacity);
       }
       .room-card.is-josh-phone-card .room-action {
         border-radius: inherit;

@@ -25,7 +25,7 @@
 // arquivo depende deste.
 // ============================================================================
 
-const BRUNO_JOSH_VERSION = '20260802-josh-popup-material-1';
+const BRUNO_JOSH_VERSION = '20260822-josh-liquid-on-reference-1';
 const BRUNO_JOSH_STYLE_ID = 'bruno-liquid-glass-tokens';
 // A base é resolvida no momento da aplicação, não na avaliação do módulo.
 // Isso elimina a corrida de carregamento que podia congelar Liquid Glass ou
@@ -353,9 +353,23 @@ const BRUNO_JOSH_OVERRIDES = {
   'bruno-strip-mask': 'none',
 };
 
+function brunoJoshLiquidGlassOnReference() {
+  const liquid = globalThis.BrunoLiquidGlassOriginal
+    || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass);
+  const tokens = liquid?.tokens || {};
+  return {
+    'bruno-josh-room-on-background': tokens['bruno-liquid-surface-on-background'] || 'radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 46%, transparent 73%), linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 40%, rgba(255,255,255,0.07)), linear-gradient(155deg, rgba(255,255,255,0.11), rgba(255,255,255,0.055))',
+    'bruno-josh-room-on-filter': tokens['bruno-liquid-surface-on-filter'] || 'blur(14px) saturate(1.28) brightness(1.04)',
+    'bruno-josh-room-on-border-color': tokens['bruno-liquid-surface-on-border-color'] || 'rgba(255,255,255,0.16)',
+    'bruno-josh-room-on-shadow': tokens['bruno-liquid-surface-on-shadow'] || 'inset 0 1px 0 rgba(255,255,255,0.36), inset 1px 0 0 rgba(255,255,255,0.12), inset -1px 0 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.32)',
+    'bruno-josh-room-on-sheen': tokens['bruno-liquid-surface-on-sheen'] || 'radial-gradient(112px 72px at 16% 0%, rgba(255,255,255,0.40), transparent 72%), linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.00) 38%), linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.00) 48%)',
+    'bruno-josh-room-on-sheen-opacity': tokens['bruno-liquid-surface-on-sheen-opacity'] || '0.85',
+  };
+}
+
 function brunoJoshTokens() {
   const base = brunoJoshVisionOSBase();
-  return Object.assign({}, base?.tokens || {}, BRUNO_JOSH_OVERRIDES);
+  return Object.assign({}, base?.tokens || {}, BRUNO_JOSH_OVERRIDES, brunoJoshLiquidGlassOnReference());
 }
 
 // ANTERIOR (rollback — junto da superfície cinza global desativada acima):

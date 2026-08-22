@@ -1,12 +1,12 @@
-const Mi = performance.timeOrigin || Date.now() - performance.now(), Ii = () => Math.round(performance.now()), ge = () => ({
+const Ci = performance.timeOrigin || Date.now() - performance.now(), Ti = () => Math.round(performance.now()), ge = () => ({
   at: Date.now(),
-  sinceNavigation: Ii()
+  sinceNavigation: Ti()
 }), W = {
   version: 1,
-  navigationStart: Math.round(Mi),
+  navigationStart: Math.round(Ci),
   moduleStart: ge()
 };
-function Li() {
+function $i() {
   const o = performance.getEntriesByType("resource");
   W.resources = {
     count: o.length,
@@ -15,7 +15,7 @@ function Li() {
   };
 }
 function je() {
-  Li();
+  $i();
   try {
     globalThis.localStorage?.setItem("bruno-ui:last-boot-metrics", JSON.stringify(W));
   } catch {
@@ -43,7 +43,7 @@ je();
 function Ae() {
   return { criados: 0, encerrados: 0 };
 }
-function Ri(o) {
+function Mi(o) {
   return {
     nome: o,
     instancias: Ae(),
@@ -55,13 +55,13 @@ function Ri(o) {
     requisicoes: { total: 0, falhas: 0, duracaoTotal: 0, pior: 0 }
   };
 }
-const Ni = 720, Hi = 200, zi = 24, Di = 4, Ua = 3e4, Pi = 12, Ke = 10 * 1024 * 1024, ji = 64;
+const Ii = 720, Li = 200, Ri = 24, Ni = 4, Ua = 3e4, zi = 12, Ke = 10 * 1024 * 1024, Hi = 64;
 function Ye(o) {
   let e = Number.POSITIVE_INFINITY;
   for (const a of o) a.usado < e && (e = a.usado);
   return Number.isFinite(e) ? e : 0;
 }
-class Vi {
+class Di {
   constructor() {
     this.componentes = /* @__PURE__ */ new Map(), this.memoria = [], this.tarefas = [], this.inicio = 0, this.buildId = "desconhecido", this.tarefasTotal = 0, this.tarefasDuracao = 0, this.tarefasPior = 0, this.tarefasNaCarga = 0, this.pisoGlobal = Number.POSITIVE_INFINITY, this.picoGlobal = 0, this.valoresDeMemoria = /* @__PURE__ */ new Set();
   }
@@ -71,7 +71,7 @@ class Vi {
   }
   de(e) {
     let a = this.componentes.get(e);
-    return a || (a = Ri(e), this.componentes.set(e, a)), a;
+    return a || (a = Mi(e), this.componentes.set(e, a)), a;
   }
   // ── Pontos de coleta ──────────────────────────────────────────────────────
   conectou(e) {
@@ -90,7 +90,7 @@ class Vi {
   renderizou(e, a, t) {
     const i = this.de(e), r = i.render;
     if (r.total++, r.duracaoTotal += a, r.ultima = a, a > r.pior && (r.pior = a), !t) return;
-    const n = i.motivos.has(t) || i.motivos.size < zi ? t : "outros";
+    const n = i.motivos.has(t) || i.motivos.size < Ri ? t : "outros";
     i.motivos.set(n, (i.motivos.get(n) ?? 0) + 1);
   }
   timerCriado(e) {
@@ -116,10 +116,10 @@ class Vi {
     i.total++, t || i.falhas++, i.duracaoTotal += a, a > i.pior && (i.pior = a);
   }
   memoriaAmostrada(e) {
-    this.memoria.push(e), this.memoria.length > Ni && this.memoria.shift(), e.usado < this.pisoGlobal && (this.pisoGlobal = e.usado), e.usado > this.picoGlobal && (this.picoGlobal = e.usado), this.valoresDeMemoria.size < ji && this.valoresDeMemoria.add(e.usado);
+    this.memoria.push(e), this.memoria.length > Ii && this.memoria.shift(), e.usado < this.pisoGlobal && (this.pisoGlobal = e.usado), e.usado > this.picoGlobal && (this.picoGlobal = e.usado), this.valoresDeMemoria.size < Hi && this.valoresDeMemoria.add(e.usado);
   }
   tarefaLonga(e) {
-    this.tarefas.push(e), this.tarefas.length > Hi && this.tarefas.shift(), this.tarefasTotal++, this.tarefasDuracao += e.duracao, e.duracao > this.tarefasPior && (this.tarefasPior = e.duracao), e.em < Ua && this.tarefasNaCarga++;
+    this.tarefas.push(e), this.tarefas.length > Li && this.tarefas.shift(), this.tarefasTotal++, this.tarefasDuracao += e.duracao, e.duracao > this.tarefasPior && (this.tarefasPior = e.duracao), e.em < Ua && this.tarefasNaCarga++;
   }
   // ── Ciclo de navegação ────────────────────────────────────────────────────
   /**
@@ -153,7 +153,7 @@ class Vi {
   leituraDeMemoria() {
     const e = this.memoria, a = e[0], t = e[e.length - 1], i = e.length, r = Math.max(1, Math.floor(i / 3)), n = i ? Ye(e.slice(0, r)) : 0, s = i ? Ye(e.slice(i - r)) : 0, l = s - n, c = this.valoresDeMemoria.size, p = i ? Ye(e.slice(r, i - r)) : 0, d = s - p;
     let h;
-    return i < Pi ? h = `Só ${i} amostra(s) — o piso ainda não significa nada.` : c < 2 ? h = `${i} amostras, mas um único valor de heap: o navegador ainda não atualizou a leitura. Sem informação — precisa de sessão longa.` : l > Ke && d > Ke ? h = `Piso subiu ${(l / 1048576).toFixed(1)} MB e AINDA sobe (${(d / 1048576).toFixed(1)} MB no último terço) — isto é retenção.` : l > Ke ? h = `Subiu ${(l / 1048576).toFixed(1)} MB desde a carga e estabilizou em ${(s / 1048576).toFixed(0)} MB — é custo de partida, não vazamento.` : h = `Piso estável em ${c} degraus — a variação do heap é coleta de lixo, não vazamento.`, {
+    return i < zi ? h = `Só ${i} amostra(s) — o piso ainda não significa nada.` : c < 2 ? h = `${i} amostras, mas um único valor de heap: o navegador ainda não atualizou a leitura. Sem informação — precisa de sessão longa.` : l > Ke && d > Ke ? h = `Piso subiu ${(l / 1048576).toFixed(1)} MB e AINDA sobe (${(d / 1048576).toFixed(1)} MB no último terço) — isto é retenção.` : l > Ke ? h = `Subiu ${(l / 1048576).toFixed(1)} MB desde a carga e estabilizou em ${(s / 1048576).toFixed(0)} MB — é custo de partida, não vazamento.` : h = `Piso estável em ${c} degraus — a variação do heap é coleta de lixo, não vazamento.`, {
       amostras: i,
       ...a ? { primeira: a } : {},
       ...t ? { ultima: t } : {},
@@ -194,7 +194,7 @@ class Vi {
       instancias: { ...s.instancias },
       vivos: s.instancias.criados - s.instancias.encerrados,
       render: { ...s.render },
-      motivos: [...s.motivos.entries()].map(([l, c]) => ({ motivo: l, total: c })).sort((l, c) => c.total - l.total).slice(0, Di),
+      motivos: [...s.motivos.entries()].map(([l, c]) => ({ motivo: l, total: c })).sort((l, c) => c.total - l.total).slice(0, Ni),
       timers: { ...s.timers },
       listeners: { ...s.listeners },
       assinaturas: { ...s.assinaturas },
@@ -229,20 +229,20 @@ class Vi {
     this.componentes.clear(), this.memoria.length = 0, this.tarefas.length = 0, this.marca = void 0, this.tarefasTotal = 0, this.tarefasDuracao = 0, this.tarefasPior = 0, this.tarefasNaCarga = 0, this.pisoGlobal = Number.POSITIVE_INFINITY, this.picoGlobal = 0, this.valoresDeMemoria.clear();
   }
 }
-const T = new Vi(), Bi = 5e3, le = { timerMemoria: void 0, observador: void 0 };
-function Ui() {
+const T = new Di(), Pi = 5e3, le = { timerMemoria: void 0, observador: void 0 };
+function ji() {
   const o = performance;
   if (o.memory)
     return { usado: o.memory.usedJSHeapSize, limite: o.memory.jsHeapSizeLimit };
 }
-function Fi(o) {
+function Bi(o) {
   if (le.timerMemoria !== void 0 || le.observador !== void 0) return;
   T.iniciar(performance.now(), o);
   const e = () => {
-    const a = Ui();
+    const a = ji();
     a && T.memoriaAmostrada({ em: Math.round(performance.now()), ...a });
   };
-  if (e(), le.timerMemoria = window.setInterval(e, Bi), "PerformanceObserver" in window)
+  if (e(), le.timerMemoria = window.setInterval(e, Pi), "PerformanceObserver" in window)
     try {
       const a = new PerformanceObserver((t) => {
         for (const i of t.getEntries())
@@ -255,44 +255,44 @@ function Fi(o) {
     } catch {
     }
 }
-function Gi() {
+function Vi() {
   return le.timerMemoria !== void 0;
 }
 const ie = /* @__PURE__ */ new Map();
-function ls(o, e, a) {
+function os(o, e, a) {
   const t = window.setInterval(e, a);
   return ie.set(t, "intervalo"), T.timerCriado(o), t;
 }
-function cs(o, e, a) {
+function ns(o, e, a) {
   const t = window.setTimeout(() => {
     ie.delete(t), T.timerEncerrado(o), e();
   }, a);
   return ie.set(t, "espera"), T.timerCriado(o), t;
 }
-function ds(o, e) {
+function ss(o, e) {
   if (e === void 0) return;
   const a = ie.get(e);
   a !== void 0 && (a === "intervalo" ? window.clearInterval(e) : window.clearTimeout(e), ie.delete(e), T.timerEncerrado(o));
 }
-function Wi() {
+function Ui() {
   return ie.size;
 }
-function ps(o, e, a, t, i) {
+function ls(o, e, a, t, i) {
   e.addEventListener(a, t, i), T.listenerCriado(o);
 }
-function us(o, e, a, t, i) {
+function cs(o, e, a, t, i) {
   e.removeEventListener(a, t, i), T.listenerEncerrado(o);
 }
-function Zi(o, e, a) {
+function Fi(o, e, a) {
   T.requisicao(o, e, a);
 }
-function Xt(o) {
+function Yt(o) {
   T.conectou(o);
 }
-function Qt(o) {
+function Xt(o) {
   T.desconectou(o);
 }
-function Jt(o, e, a) {
+function Qt(o, e, a) {
   const t = performance.now();
   try {
     return e();
@@ -300,13 +300,13 @@ function Jt(o, e, a) {
     T.renderizou(o, performance.now() - t, a);
   }
 }
-function ei() {
+function Jt() {
   return T.marcar(performance.now());
 }
-function Ki() {
+function Gi() {
   T.limparMarca();
 }
-function Yi() {
+function Wi() {
   try {
     const o = import.meta.url;
     return o.slice(o.lastIndexOf("/") + 1) || "desconhecido";
@@ -315,17 +315,17 @@ function Yi() {
   }
 }
 function Le() {
-  return { ...T.instantaneo(performance.now()), timersVivos: Wi() };
+  return { ...T.instantaneo(performance.now()), timersVivos: Ui() };
 }
-function Xi() {
-  if (Gi()) return;
-  Fi(Yi());
+function Zi() {
+  if (Vi()) return;
+  Bi(Wi());
   const o = {
     instantaneo: Le,
     texto: () => JSON.stringify(Le(), null, 2),
     zerar: () => T.zerar(),
-    marcar: ei,
-    limparMarca: Ki
+    marcar: Jt,
+    limparMarca: Gi
   };
   globalThis.brunoRuntime = o;
 }
@@ -1418,7 +1418,7 @@ window.customCards.push({
   preview: !1,
   description: "Isolated Bento sidebar rail with fixed Home highlight and anchored bottom actions."
 });
-const Qi = "20260718-wallpaper-upload-1", Oe = "input_number.bruno_wallpaper_revision", Xe = Object.freeze([
+const Ki = "20260718-wallpaper-upload-1", Oe = "input_number.bruno_wallpaper_revision", Xe = Object.freeze([
   { key: "home", label: "Painel principal", entity: "input_text.bruno_wallpaper_home" },
   { key: "sala", label: "Sala", entity: "input_text.bruno_wallpaper_sala" },
   { key: "office", label: "Office", entity: "input_text.bruno_wallpaper_office" },
@@ -1429,8 +1429,8 @@ const Qi = "20260718-wallpaper-upload-1", Oe = "input_number.bruno_wallpaper_rev
   { key: "cameras", label: "Cameras", entity: "input_text.bruno_wallpaper_cameras" },
   { key: "roborock", label: "Aspirador", entity: "input_text.bruno_wallpaper_roborock" },
   { key: "floorplan", label: "Planta 3D", entity: "input_text.bruno_wallpaper_floorplan" }
-]), Ji = {
-  version: Qi,
+]), Yi = {
+  version: Ki,
   sections: Xe,
   _pending: /* @__PURE__ */ new Map(),
   _revision: 0,
@@ -1499,7 +1499,7 @@ const Qi = "20260718-wallpaper-upload-1", Oe = "input_number.bruno_wallpaper_rev
     return e ? `${a}${a.includes("?") ? "&" : "?"}bruno_wallpaper=${encodeURIComponent(e)}` : a;
   }
 };
-globalThis.BrunoWallpaperManager = Ji;
+globalThis.BrunoWallpaperManager = Yi;
 (() => {
   const o = [
     { key: "bom-dia", title: "Bom dia", subtitle: "Abrir a cortina", entity: "script.bruno_scene_bom_dia", image: "/local/bruno-ui/assets/scenes/bom-dia.webp" },
@@ -3536,7 +3536,7 @@ window.customCards.push({
   name: "Bruno Shell",
   description: "App-shell com barra fixa e conteudo que troca por secao."
 });
-const er = "20260723-liquid-performance-1", Fa = "bruno-liquid-glass-tokens", Oa = {
+const Xi = "20260723-liquid-performance-1", Fa = "bruno-liquid-glass-tokens", Oa = {
   "bruno-liquid-accent": "255, 159, 10",
   "bruno-liquid-warm-accent": "255, 214, 10",
   "bruno-liquid-green-accent": "50, 215, 75",
@@ -3808,7 +3808,7 @@ Object.assign(Oa, {
   "bruno-liquid-active-warm-shadow": "var(--bruno-liquid-surface-on-shadow)",
   "bruno-liquid-active-warm-sheen": "var(--bruno-liquid-surface-on-sheen)"
 });
-const ar = {
+const Qi = {
   card: {
     background: "var(--bruno-liquid-card-background)",
     filter: "var(--bruno-liquid-card-filter)",
@@ -3849,7 +3849,7 @@ const ar = {
     shadow: "var(--bruno-liquid-chip-shadow)",
     filter: "var(--bruno-liquid-chip-filter)"
   }
-}, tr = {
+}, Ji = {
   activeWarm: {
     background: "var(--bruno-liquid-active-warm-background)",
     borderColor: "var(--bruno-liquid-active-warm-border-color)",
@@ -3861,7 +3861,7 @@ const ar = {
     borderColor: "var(--bruno-liquid-selected-blue-border)",
     shadow: "var(--bruno-liquid-selected-blue-shadow)"
   }
-}, ir = `
+}, er = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -3905,19 +3905,19 @@ html.bruno-liquid-route-transition::after {
   }
 }
 `;
-function rr(o) {
+function ar(o) {
   return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function ai(o = globalThis.document) {
+function ei(o = globalThis.document) {
   if (!o?.head) return null;
   let e = o.getElementById(Fa);
   return e || (e = o.createElement("style"), e.id = Fa, o.head.appendChild(e)), e.textContent = `:root {
-${rr(Oa)}
+${ar(Oa)}
 }
-${ir}`, e;
+${er}`, e;
 }
-function or(o = "tap") {
+function tr(o = "tap") {
   const e = globalThis.navigator?.vibrate;
   if (typeof e != "function") return !1;
   const a = o === "hold" ? [12, 24, 12] : 10;
@@ -3927,23 +3927,23 @@ function or(o = "tap") {
     return !1;
   }
 }
-function nr(o = 280) {
+function ir(o = 280) {
   const e = globalThis.document?.documentElement;
   e && (e.classList.remove("bruno-liquid-route-transition"), e.offsetWidth, e.classList.add("bruno-liquid-route-transition"), globalThis.setTimeout?.(() => {
     e.classList.remove("bruno-liquid-route-transition");
   }, o));
 }
 const Ga = {
-  version: er,
+  version: Xi,
   tokens: Oa,
-  surfaces: ar,
-  states: tr,
-  apply: ai,
-  feedback: or,
-  routeTransition: nr
+  surfaces: Qi,
+  states: Ji,
+  apply: ei,
+  feedback: tr,
+  routeTransition: ir
 };
-globalThis.BrunoThemeManager ? globalThis.BrunoLiquidGlassOriginal = Ga : (globalThis.BrunoLiquidGlass = Ga, ai());
-const sr = "20260822-hemma-1", Wa = "bruno-liquid-glass-tokens", ce = globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass), ti = {
+globalThis.BrunoThemeManager ? globalThis.BrunoLiquidGlassOriginal = Ga : (globalThis.BrunoLiquidGlass = Ga, ei());
+const rr = "20260822-hemma-1", Wa = "bruno-liquid-glass-tokens", ce = globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass), ai = {
   "primary-font-family": '"Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
   "primary-color": "#00c0e8",
   "accent-color": "#00C3D0",
@@ -3985,8 +3985,8 @@ const sr = "20260822-hemma-1", Wa = "bruno-liquid-glass-tokens", ce = globalThis
   "bruno-theme-backdrop-scale": "1",
   "bruno-theme-backdrop-saturate": "1",
   "bruno-theme-backdrop-brightness": "1"
-}, ii = {
-  ...ti,
+}, ti = {
+  ...ai,
   "primary-background-color": "rgb(50,50,50)",
   "secondary-background-color": "rgb(40,40,40)",
   "ha-card-background": "rgba(0,0,0,0.20)",
@@ -4033,8 +4033,8 @@ const sr = "20260822-hemma-1", Wa = "bruno-liquid-glass-tokens", ce = globalThis
   "bruno-liquid-popup-border": "1px solid rgba(255,255,255,0.10)",
   "bruno-liquid-dock-background": "rgba(20,20,20,0.30)",
   "bruno-liquid-dock-filter": "blur(24px) saturate(1.20)"
-}, lr = {
-  ...ti,
+}, or = {
+  ...ai,
   "primary-background-color": "rgb(40,40,40)",
   "secondary-background-color": "rgb(20,20,20)",
   "ha-card-background": "rgba(0,0,0,0.40)",
@@ -4082,39 +4082,39 @@ const sr = "20260822-hemma-1", Wa = "bruno-liquid-glass-tokens", ce = globalThis
   "bruno-liquid-dock-background": "rgba(0,0,0,0.30)",
   "bruno-liquid-dock-filter": "blur(24px) saturate(1.20)"
 };
-function cr() {
+function nr() {
   return !!globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches;
 }
-function dr() {
-  const o = cr() ? lr : ii;
+function sr() {
+  const o = nr() ? or : ti;
   return Object.assign({}, ce?.tokens || {}, o);
 }
-function pr(o) {
+function lr(o) {
   return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function ri(o = globalThis.document) {
+function ii(o = globalThis.document) {
   if (!o?.head) return null;
   let e = o.getElementById(Wa);
   return e || (e = o.createElement("style"), e.id = Wa, o.head.appendChild(e)), e.textContent = `:root {
-${pr(dr())}
+${lr(sr())}
 }`, e;
 }
-const ur = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
-ur?.addEventListener?.("change", () => {
-  globalThis.BrunoThemeManager?.current?.() === "hemma" && ri();
+const cr = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
+cr?.addEventListener?.("change", () => {
+  globalThis.BrunoThemeManager?.current?.() === "hemma" && ii();
 });
 globalThis.BrunoHemma = {
-  version: sr,
+  version: rr,
   // Mantém o mesmo formato dos temas clássicos: objeto de tokens + apply().
-  tokens: ii,
+  tokens: ti,
   surfaces: ce?.surfaces || {},
   states: ce?.states || {},
-  apply: ri,
+  apply: ii,
   feedback: (...o) => ce?.feedback?.(...o) || !1,
   routeTransition: (...o) => ce?.routeTransition?.(...o)
 };
-const hr = "20260702-visionos-yaml-2", Za = "bruno-liquid-glass-tokens", Ea = {
+const dr = "20260702-visionos-yaml-2", Za = "bruno-liquid-glass-tokens", Ea = {
   "bruno-liquid-accent": "255, 159, 10",
   "bruno-liquid-warm-accent": "255, 214, 10",
   "bruno-liquid-green-accent": "50, 215, 75",
@@ -4344,7 +4344,7 @@ Object.assign(Ea, {
   "bruno-liquid-active-warm-shadow": "var(--bruno-liquid-surface-on-shadow)",
   "bruno-liquid-active-warm-sheen": "var(--bruno-liquid-surface-on-sheen)"
 });
-const br = {
+const pr = {
   card: {
     background: "var(--bruno-liquid-card-background)",
     filter: "var(--bruno-liquid-card-filter)",
@@ -4385,7 +4385,7 @@ const br = {
     shadow: "var(--bruno-liquid-chip-shadow)",
     filter: "var(--bruno-liquid-chip-filter)"
   }
-}, gr = {
+}, ur = {
   activeWarm: {
     background: "var(--bruno-liquid-active-warm-background)",
     borderColor: "var(--bruno-liquid-active-warm-border-color)",
@@ -4397,7 +4397,7 @@ const br = {
     borderColor: "var(--bruno-liquid-selected-blue-border)",
     shadow: "var(--bruno-liquid-selected-blue-shadow)"
   }
-}, mr = `
+}, hr = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -4441,19 +4441,19 @@ html.bruno-liquid-route-transition::after {
   }
 }
 `;
-function fr(o) {
+function br(o) {
   return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function vr(o = globalThis.document) {
+function gr(o = globalThis.document) {
   if (!o?.head) return null;
   let e = o.getElementById(Za);
   return e || (e = o.createElement("style"), e.id = Za, o.head.appendChild(e)), e.textContent = `:root {
-${fr(Ea)}
+${br(Ea)}
 }
-${mr}`, e;
+${hr}`, e;
 }
-function _r(o = "tap") {
+function mr(o = "tap") {
   const e = globalThis.navigator?.vibrate;
   if (typeof e != "function") return !1;
   const a = o === "hold" ? [12, 24, 12] : 10;
@@ -4463,24 +4463,24 @@ function _r(o = "tap") {
     return !1;
   }
 }
-function xr(o = 280) {
+function fr(o = 280) {
   const e = globalThis.document?.documentElement;
   e && (e.classList.remove("bruno-liquid-route-transition"), e.offsetWidth, e.classList.add("bruno-liquid-route-transition"), globalThis.setTimeout?.(() => {
     e.classList.remove("bruno-liquid-route-transition");
   }, o));
 }
-const oi = {
-  version: hr,
+const ri = {
+  version: dr,
   tokens: Ea,
-  surfaces: br,
-  states: gr,
-  apply: vr,
-  feedback: _r,
-  routeTransition: xr
+  surfaces: pr,
+  states: ur,
+  apply: gr,
+  feedback: mr,
+  routeTransition: fr
 };
-globalThis.BrunoVisionOS = oi;
-globalThis.BrunoLiquidGlass || (globalThis.BrunoLiquidGlass = oi);
-const yr = "20260716-ios-light-1", Ka = "bruno-liquid-glass-tokens", de = globalThis.BrunoVisionOS || globalThis.BrunoLiquidGlass, Ca = Object.assign({}, de?.tokens || {}, {
+globalThis.BrunoVisionOS = ri;
+globalThis.BrunoLiquidGlass || (globalThis.BrunoLiquidGlass = ri);
+const vr = "20260716-ios-light-1", Ka = "bruno-liquid-glass-tokens", de = globalThis.BrunoVisionOS || globalThis.BrunoLiquidGlass, Ca = Object.assign({}, de?.tokens || {}, {
   // Palette extracted from ios-themes.yaml. Background artwork remains owned
   // by the Bruno shell and is deliberately not replaced by the theme.
   "background-image": "none",
@@ -4609,7 +4609,7 @@ Object.assign(Ca, {
   "bruno-liquid-active-warm-shadow": "var(--bruno-liquid-surface-on-shadow)",
   "bruno-liquid-active-warm-sheen": "var(--bruno-liquid-surface-on-sheen)"
 });
-const wr = `
+const _r = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -4626,28 +4626,28 @@ html.bruno-liquid-route-transition::after {
   html.bruno-liquid-route-transition::after { -webkit-backdrop-filter: none; backdrop-filter: none; animation-duration: 180ms; }
 }
 `;
-function kr(o) {
+function xr(o) {
   return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function qr(o = globalThis.document) {
+function yr(o = globalThis.document) {
   if (!o?.head) return null;
   let e = o.getElementById(Ka);
   return e || (e = o.createElement("style"), e.id = Ka, o.head.appendChild(e)), e.textContent = `:root {
-${kr(Ca)}
+${xr(Ca)}
 }
-${wr}`, e;
+${_r}`, e;
 }
 globalThis.BrunoIOSLight = {
-  version: yr,
+  version: vr,
   tokens: Ca,
   surfaces: de?.surfaces || {},
   states: de?.states || {},
-  apply: qr,
+  apply: yr,
   feedback: (...o) => de?.feedback?.(...o) || !1,
   routeTransition: (...o) => de?.routeTransition?.(...o)
 };
-const Sr = "20260716-ios-dark-1", Ya = "bruno-liquid-glass-tokens", pe = globalThis.BrunoVisionOS || globalThis.BrunoLiquidGlass, Ta = Object.assign({}, pe?.tokens || {}, {
+const wr = "20260716-ios-dark-1", Ya = "bruno-liquid-glass-tokens", pe = globalThis.BrunoVisionOS || globalThis.BrunoLiquidGlass, Ta = Object.assign({}, pe?.tokens || {}, {
   // Dark palette from ios-themes.yaml. Shell backdrops remain untouched.
   "background-image": "none",
   "primary-background-color": "#2c2c2e",
@@ -4751,7 +4751,7 @@ Object.assign(Ta, {
   "bruno-liquid-surface-off-sheen-opacity": "var(--bruno-liquid-card-sheen-opacity)",
   "bruno-liquid-surface-edge-glow": "var(--bruno-liquid-card-edge-glow)"
 });
-const Ar = `
+const kr = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -4768,32 +4768,32 @@ html.bruno-liquid-route-transition::after {
   html.bruno-liquid-route-transition::after { -webkit-backdrop-filter: none; backdrop-filter: none; animation-duration: 180ms; }
 }
 `;
-function Or(o) {
+function qr(o) {
   return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function Er(o = globalThis.document) {
+function Sr(o = globalThis.document) {
   if (!o?.head) return null;
   let e = o.getElementById(Ya);
   return e || (e = o.createElement("style"), e.id = Ya, o.head.appendChild(e)), e.textContent = `:root {
-${Or(Ta)}
+${qr(Ta)}
 }
-${Ar}`, e;
+${kr}`, e;
 }
 globalThis.BrunoIOSDark = {
-  version: Sr,
+  version: wr,
   tokens: Ta,
   surfaces: pe?.surfaces || {},
   states: pe?.states || {},
-  apply: Er,
+  apply: Sr,
   feedback: (...o) => pe?.feedback?.(...o) || !1,
   routeTransition: (...o) => pe?.routeTransition?.(...o)
 };
-const Cr = "20260802-josh-popup-material-1", Xa = "bruno-liquid-glass-tokens";
+const Ar = "20260822-josh-liquid-on-reference-1", Xa = "bruno-liquid-glass-tokens";
 function te() {
   return globalThis.BrunoVisionOSOriginal || globalThis.BrunoVisionOS || null;
 }
-const Tr = {
+const Or = {
   // Microblur Josh controlado: uma unica amostragem por superficie principal.
   // Fills, scrims, bordas, filetes, sheen e edge-glow permanecem inalterados.
   "bruno-josh-microblur": "blur(2px)",
@@ -5094,11 +5094,22 @@ const Tr = {
   "bruno-strip-bleed-end": "12px",
   "bruno-strip-mask": "none"
 };
-function ni() {
-  const o = te();
-  return Object.assign({}, o?.tokens || {}, Tr);
+function Er() {
+  const e = (globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass))?.tokens || {};
+  return {
+    "bruno-josh-room-on-background": e["bruno-liquid-surface-on-background"] || "radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 46%, transparent 73%), linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 40%, rgba(255,255,255,0.07)), linear-gradient(155deg, rgba(255,255,255,0.11), rgba(255,255,255,0.055))",
+    "bruno-josh-room-on-filter": e["bruno-liquid-surface-on-filter"] || "blur(14px) saturate(1.28) brightness(1.04)",
+    "bruno-josh-room-on-border-color": e["bruno-liquid-surface-on-border-color"] || "rgba(255,255,255,0.16)",
+    "bruno-josh-room-on-shadow": e["bruno-liquid-surface-on-shadow"] || "inset 0 1px 0 rgba(255,255,255,0.36), inset 1px 0 0 rgba(255,255,255,0.12), inset -1px 0 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.32)",
+    "bruno-josh-room-on-sheen": e["bruno-liquid-surface-on-sheen"] || "radial-gradient(112px 72px at 16% 0%, rgba(255,255,255,0.40), transparent 72%), linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.00) 38%), linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.00) 48%)",
+    "bruno-josh-room-on-sheen-opacity": e["bruno-liquid-surface-on-sheen-opacity"] || "0.85"
+  };
 }
-const $r = `
+function oi() {
+  const o = te();
+  return Object.assign({}, o?.tokens || {}, Or, Er());
+}
+const Cr = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -5115,24 +5126,24 @@ html.bruno-liquid-route-transition::after {
   html.bruno-liquid-route-transition::after { -webkit-backdrop-filter: none; backdrop-filter: none; animation-duration: 180ms; }
 }
 `;
-function Mr(o) {
+function Tr(o) {
   return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function Ir(o = globalThis.document) {
+function $r(o = globalThis.document) {
   if (!o?.head) return null;
   if (!te()?.tokens)
     return console.error("[BrunoJosh] VisionOS base unavailable; Josh was not applied."), null;
   let a = o.getElementById(Xa);
   return a || (a = o.createElement("style"), a.id = Xa, o.head.appendChild(a)), a.textContent = `:root {
-${Mr(ni())}
+${Tr(oi())}
 }
-${$r}`, a;
+${Cr}`, a;
 }
 globalThis.BrunoJosh = {
-  version: Cr,
+  version: Ar,
   get tokens() {
-    return ni();
+    return oi();
   },
   get surfaces() {
     return te()?.surfaces || {};
@@ -5140,12 +5151,12 @@ globalThis.BrunoJosh = {
   get states() {
     return te()?.states || {};
   },
-  apply: Ir,
+  apply: $r,
   feedback: (...o) => te()?.feedback?.(...o) || !1,
   routeTransition: (...o) => te()?.routeTransition?.(...o)
 };
-const Qa = "20260822-hemma-1", Ee = "bruno-ui-theme", Qe = "bruno-ui-theme-storage-version", Je = "2", B = "visionos";
-function Lr() {
+const Qa = "20260822-hemma-1", Ee = "bruno-ui-theme", Qe = "bruno-ui-theme-storage-version", Je = "2", V = "visionos";
+function Mr() {
   const o = globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass), e = globalThis.BrunoHemma, a = globalThis.BrunoVisionOSOriginal || globalThis.BrunoVisionOS, t = globalThis.BrunoIOSLight, i = globalThis.BrunoIOSDark, r = globalThis.BrunoJosh;
   o && (globalThis.BrunoLiquidGlassOriginal = o), a && (globalThis.BrunoVisionOSOriginal = a);
   const n = {
@@ -5193,11 +5204,11 @@ function Lr() {
         return globalThis.BrunoJosh || r || null;
       }
     }
-  }, s = () => n[B]?.api ? B : n["liquid-glass"]?.api ? "liquid-glass" : B, l = (f) => n[f]?.api ? f : s(), c = {
+  }, s = () => n[V]?.api ? V : n["liquid-glass"]?.api ? "liquid-glass" : V, l = (f) => n[f]?.api ? f : s(), c = {
     current: s()
   }, p = () => {
     try {
-      return (globalThis.localStorage?.getItem(Qe) || "") !== Je ? (globalThis.localStorage?.setItem(Qe, Je), globalThis.localStorage?.setItem(Ee, B), B) : globalThis.localStorage?.getItem(Ee) || "";
+      return (globalThis.localStorage?.getItem(Qe) || "") !== Je ? (globalThis.localStorage?.setItem(Qe, Je), globalThis.localStorage?.setItem(Ee, V), V) : globalThis.localStorage?.getItem(Ee) || "";
     } catch {
       return "";
     }
@@ -5244,7 +5255,7 @@ function Lr() {
   }, u = {
     version: Qa,
     storageKey: Ee,
-    defaultTheme: B,
+    defaultTheme: V,
     themes: n,
     list() {
       return Object.values(n).map((f) => ({
@@ -5260,7 +5271,7 @@ function Lr() {
       return n[c.current]?.label || n[s()]?.label || "VisionOS";
     },
     apply(f, m = {}) {
-      const x = l(f || B), S = n[x]?.api || n[s()]?.api;
+      const x = l(f || V), S = n[x]?.api || n[s()]?.api;
       if (!S?.apply) return null;
       const $ = S.apply(m.styleOptions || void 0);
       return c.current = x, m.persist !== !1 && d(x), globalThis.BrunoLiquidGlass = b, globalThis.dispatchEvent?.(new CustomEvent("bruno-theme-changed", {
@@ -5271,28 +5282,28 @@ function Lr() {
       return h();
     },
     compatApi: b
-  }, g = l(p() || B);
+  }, g = l(p() || V);
   return c.current = g, globalThis.BrunoThemeManager = u, u.apply(g, { persist: !1 }), u;
 }
-globalThis.BrunoThemeManager = Lr();
-const Rr = "20260801-light-control-backdrop-root-1", $a = "data-bruno-subview-surface-theme", Re = /* @__PURE__ */ new WeakMap();
-function Nr() {
+globalThis.BrunoThemeManager = Mr();
+const Ir = "20260801-light-control-backdrop-root-1", $a = "data-bruno-subview-surface-theme", Re = /* @__PURE__ */ new WeakMap();
+function Lr() {
   return globalThis.BrunoThemeManager?.current?.() || "";
 }
-function si(o) {
+function ni(o) {
   o?.setAttribute && o.setAttribute(
     $a,
-    Nr() === "josh" ? "josh" : "default"
+    Lr() === "josh" ? "josh" : "default"
   );
 }
-function Hr(o) {
+function Rr(o) {
   if (!o) return;
   const e = Re.get(o);
   e && globalThis.removeEventListener?.("bruno-theme-changed", e);
-  const a = () => si(o);
+  const a = () => ni(o);
   Re.set(o, a), globalThis.addEventListener?.("bruno-theme-changed", a), a();
 }
-function zr(o) {
+function Nr(o) {
   const e = Re.get(o);
   e && globalThis.removeEventListener?.("bruno-theme-changed", e), Re.delete(o);
 }
@@ -5301,10 +5312,10 @@ const G = [
   ".glass-card.media-hub-card",
   ".glass-card.ac-card",
   ".glass-card.appliances-card"
-], Dr = G, Pr = [
+], zr = G, Hr = [
   ".glass-card.media-hub-card",
   ".glass-card.ac-card"
-], jr = [
+], Dr = [
   // Hub de mídia / estação de trabalho
   // `.mh-source` e o container de CADA secao do hub (PC, Spotify) — e ele que
   // aparece como "card dentro do card". Ficou de fora das listas anteriores,
@@ -5322,7 +5333,7 @@ const G = [
   ".appliance-tile"
 ], Ce = [
   ".glass-card.lights-card"
-], Vr = [
+], Pr = [
   ".zl-tile",
   ".light-row",
   // REV.10 (2026-07-29): a celula da grade nova. A rev.9 renomeou `.zl-tile`
@@ -5333,9 +5344,9 @@ const G = [
   // o pacote material completo dos controles do A/C; a geometria da grade
   // continua pertencendo a cada subview.
   ".light-cell"
-], Br = [
+], jr = [
   ".light-zone"
-], Ur = [
+], Br = [
   ".cameras-head",
   ".media-hub-card .module-head",
   ".ac-card .module-head"
@@ -5345,8 +5356,8 @@ function C(o, e = "") {
   return o.map((t) => `${a} ${t}${e}`).join(`,
 `);
 }
-function Fr() {
-  const o = `:host([${$a}="josh"])`, e = C(G), a = C(G, "::before"), t = C(G, "::after"), i = C(G.map((h) => `${h}.is-active`)), r = C(Dr), n = C(Ce), s = C(Pr), l = C(jr), c = C(Vr), p = C(Br), d = C(Ur);
+function Vr() {
+  const o = `:host([${$a}="josh"])`, e = C(G), a = C(G, "::before"), t = C(G, "::after"), i = C(G.map((h) => `${h}.is-active`)), r = C(zr), n = C(Ce), s = C(Hr), l = C(Dr), c = C(Pr), p = C(jr), d = C(Br);
   return `
     /* ---- 1. Cards viram tile: perdem cartela, blur, borda e cantos. ------- */
     ${e},
@@ -5603,7 +5614,7 @@ function Fr() {
     }
   `;
 }
-function Gr() {
+function Ur() {
   const o = C(G), e = C(G, "::before"), a = C(G, "::after");
   return `
     ${o} {
@@ -5652,15 +5663,15 @@ function Gr() {
   `;
 }
 globalThis.BrunoSurfaceMaterial = {
-  version: Rr,
-  connect: Hr,
-  disconnect: zr,
-  sync: si,
+  version: Ir,
+  connect: Rr,
+  disconnect: Nr,
+  sync: ni,
   // ANTERIOR (rollback): subviewStyles: brunoSubviewMaterialStyles,
-  subviewStyles: Fr,
-  materialStyles: Gr
+  subviewStyles: Vr,
+  materialStyles: Ur
 };
-const Wr = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", Zr = {
+const Fr = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", Gr = {
   _installingEntities: /* @__PURE__ */ new Set(),
   render({ hass: o, embedded: e = !1 } = {}) {
     const a = this._model(o), t = e ? 'data-config-action="child-close"' : 'data-updates-action="close"';
@@ -5787,7 +5798,7 @@ const Wr = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
         entityId: e,
         name: r,
         group: this._updateGroup(e, i),
-        picture: t.entity_picture || Wr,
+        picture: t.entity_picture || Fr,
         versionLine: `${n} -> ${s}`,
         installing: this._installingEntities.has(e) || this._isInstalling(t.in_progress)
       };
@@ -5995,8 +6006,8 @@ const Wr = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
     `;
   }
 };
-globalThis.BrunoUpdatesPanel = Zr;
-const Kr = {
+globalThis.BrunoUpdatesPanel = Gr;
+const Wr = {
   render({ hass: o } = {}) {
     const e = this._model(o);
     return `
@@ -6156,8 +6167,8 @@ const Kr = {
     `;
   }
 };
-globalThis.BrunoSystemPanel = Kr;
-const Yr = {
+globalThis.BrunoSystemPanel = Wr;
+const Zr = {
   render({ hass: o } = {}) {
     const e = this._model(o);
     return `
@@ -6315,7 +6326,7 @@ const Yr = {
     `;
   }
 };
-globalThis.BrunoNetworkPanel = Yr;
+globalThis.BrunoNetworkPanel = Zr;
 (() => {
   const o = "20260719-hybrid-light-icons-1", e = "/local/bruno-ui/assets/hybrid-icons/led-strip", a = "/local/bruno-ui/assets/hybrid-icons/pendant/v7", t = "M175 113 H74 C47 113 29 101 29 82 C29 63 45 47 74 47 H306", i = "M175 113 H280 C303 113 317 130 317 151 C317 170 303 184 280 184 H29", r = (p, d) => `${p}/${d}?v=${o}`, n = (p, d) => `<path class="${p}" pathLength="1" d="${d}"></path>`;
   function s({ active: p = !1 } = {}) {
@@ -6550,11 +6561,11 @@ const ua = "bruno-sala-card", Ja = {
   corridor: "light.corredor_switch_1",
   corridor_motion_recent: "binary_sensor.corredor_motion_recent",
   corridor_occupancy: "binary_sensor.corredor_occupancy"
-}, et = ["on", "playing", "paused", "idle", "buffering"], Xr = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Qr = ["cooling", "heating", "drying", "fan", "preheating"], Jr = ["off", "idle"], at = ["playing", "on", "paused"], eo = 1200, ao = 2500, ea = Object.freeze({
+}, et = ["on", "playing", "paused", "idle", "buffering"], Kr = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Yr = ["cooling", "heating", "drying", "fan", "preheating"], Xr = ["off", "idle"], at = ["playing", "on", "paused"], Qr = 1200, Jr = 2500, ea = Object.freeze({
   corridor: Object.freeze({ on: 880, off: 720, fade: 300 }),
   tv: Object.freeze({ on: 1120, off: 1020, fade: 0 }),
   climate: Object.freeze({ on: 780, off: 720, fade: 300 })
-}), to = Object.freeze({
+}), eo = Object.freeze({
   corridor: Object.freeze({ glow: 6800 }),
   tv: Object.freeze({ glow: 5500 }),
   climate: Object.freeze({ glow: 4800, airflow: 2200 })
@@ -6679,7 +6690,7 @@ class L extends HTMLElement {
   _climateIsActive(e) {
     if (this._isUnavailable(e) || e.state === "off") return !1;
     const a = this._climateAction(e);
-    return Qr.includes(a) ? !0 : Jr.includes(a) ? !1 : Xr.includes(e?.state || "");
+    return Yr.includes(a) ? !0 : Xr.includes(a) ? !1 : Kr.includes(e?.state || "");
   }
   // A linha inferior representa se o climate esta habilitado, mesmo quando a
   // acao HVAC esta idle. O dot superior continua usando _climateIsActive().
@@ -6838,7 +6849,7 @@ class L extends HTMLElement {
   }
   _isActionCoolingDown(e) {
     this._lastActionAt = this._lastActionAt || {};
-    const a = Date.now(), t = this._lastActionAt[e] || 0, i = e === "climate" ? ao : eo;
+    const a = Date.now(), t = this._lastActionAt[e] || 0, i = e === "climate" ? Jr : Qr;
     return a - t < i ? !0 : (this._lastActionAt[e] = a, !1);
   }
   _callService(e, a = {}, t = {}) {
@@ -7024,7 +7035,7 @@ class L extends HTMLElement {
       airflowStartedAt: a && e === "climate" ? t : 0,
       token: ++this._hybridTransitionToken
     }, this._hybridTransitions.set(e, i)), i.active !== a && (this._clearHybridTimer(e), i.active = a, i.phase = a ? "turning-on" : "turning-off", i.startedAt = t, i.until = t + ea[e][a ? "on" : "off"], a && (i.glowStartedAt = e === "corridor" ? 0 : t, i.airflowStartedAt = e === "climate" ? 0 : i.airflowStartedAt), i.token = ++this._hybridTransitionToken, this._scheduleHybridTransition(e, i)), i.phase && !this._hybridTimers.has(e) && this._scheduleHybridTransition(e, i);
-    const r = to[e], n = (s, l) => s && l ? Math.max(0, t - s) % l : 0;
+    const r = eo[e], n = (s, l) => s && l ? Math.max(0, t - s) % l : 0;
     return {
       // ANTERIOR (rollback): active: visualOn,
       // `active` permanece sempre igual ao estado real da entidade; a classe
@@ -10388,7 +10399,7 @@ const ha = "bruno-activity-column", tt = {
     }
   ]
 }, it = 260, rt = 220;
-class Ve extends HTMLElement {
+class Be extends HTMLElement {
   static getStubConfig() {
     return {};
   }
@@ -10687,7 +10698,7 @@ class Ve extends HTMLElement {
 
       <div class="columns" role="region" aria-label="Atividades da casa">
         ${this._config.slots.map((t) => `
-          <div class="slot is-hidden" data-slot-key="${Ve._escapeAttr(t.key)}"></div>
+          <div class="slot is-hidden" data-slot-key="${Be._escapeAttr(t.key)}"></div>
         `).join("")}
       </div>
       <div class="debug" aria-hidden="true"></div>
@@ -10699,7 +10710,7 @@ class Ve extends HTMLElement {
     return String(e ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 }
-customElements.get(ha) || customElements.define(ha, Ve);
+customElements.get(ha) || customElements.define(ha, Be);
 const ba = "bruno-home-overflow-indicator", ot = /* @__PURE__ */ new Set([
   "",
   "off",
@@ -10711,7 +10722,7 @@ const ba = "bruno-home-overflow-indicator", ot = /* @__PURE__ */ new Set([
   "unavailable",
   "none"
 ]);
-class io extends HTMLElement {
+class ao extends HTMLElement {
   static getStubConfig() {
     return {};
   }
@@ -10882,13 +10893,13 @@ class io extends HTMLElement {
       </style>
       <div class="indicator${e.active ? " is-active" : ""}${this._rolou ? " is-scrolled" : ""}" role="status" aria-live="polite" aria-hidden="${this._rolou ? "true" : "false"}">
         <span class="dot" aria-hidden="true"></span>
-        <span>${Ve._escapeAttr(e.text)}</span>
+        <span>${Be._escapeAttr(e.text)}</span>
         <ha-icon icon="mdi:chevron-down" aria-hidden="true"></ha-icon>
       </div>
     `;
   }
 }
-customElements.get(ba) || customElements.define(ba, io);
+customElements.get(ba) || customElements.define(ba, ao);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: ha,
@@ -10915,7 +10926,7 @@ const ga = "bruno-cameras-card", nt = {
     { entity: "camera.qmi_camera_2", name: "Quarto Miguel", short_name: "QMiguel" },
     { entity: "camera.qma_camera_2", name: "Quarto Marina", short_name: "QMarina" }
   ]
-}, ro = ["streaming", "recording", "idle", "on"], oo = ["unavailable", "unknown", ""], st = 6500;
+}, to = ["streaming", "recording", "idle", "on"], io = ["unavailable", "unknown", ""], st = 6500;
 class y extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -11006,7 +11017,7 @@ class y extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _cameraState(e) {
-    const a = this._state(e.entity), t = a?.state || "", i = !a || oo.includes(t), r = !i && ro.includes(t);
+    const a = this._state(e.entity), t = a?.state || "", i = !a || io.includes(t), r = !i && to.includes(t);
     this._lastCameraImages = this._lastCameraImages || {};
     const n = a?.attributes?.entity_picture || "";
     n && (this._lastCameraImages[e.entity] = n);
@@ -11869,20 +11880,20 @@ window.customCards.push({
   preview: !1,
   description: "Isolated Bento cameras card with Home Assistant camera snapshots and Bruno liquid glass visuals."
 });
-const ma = "bruno-roborock-card", no = "20260606-main-view-4", so = {
+const ma = "bruno-roborock-card", ro = "20260606-main-view-4", oo = {
   vacuum: "vacuum.roborock_s7",
   room: "sensor.roborock_s7_comodo_atual",
   battery: ["sensor.roborock_s7_bateria", "sensor.roborock_s7_battery"],
   area: ["sensor.roborock_s7_area_limpa", "sensor.roborock_s7_cleaning_area"],
   cleaning_time: ["sensor.roborock_s7_tempo_de_limpeza", "sensor.roborock_s7_cleaning_time"]
-}, lo = ["cleaning", "moving", "returning", "segment_cleaning"], co = ["unknown", "unavailable", "none", ""];
+}, no = ["cleaning", "moving", "returning", "segment_cleaning"], so = ["unknown", "unavailable", "none", ""];
 class R extends HTMLElement {
   static getStubConfig() {
     return {};
   }
   setConfig(e) {
     const a = {
-      ...so,
+      ...oo,
       ...e?.entities || {}
     };
     this._config = {
@@ -11903,7 +11914,7 @@ class R extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _isInvalid(e) {
-    return e == null || co.includes(String(e).toLowerCase());
+    return e == null || so.includes(String(e).toLowerCase());
   }
   _entityList(e) {
     return Array.isArray(e) ? e : e ? [e] : [];
@@ -11921,7 +11932,7 @@ class R extends HTMLElement {
     return Number.isFinite(t) ? t : a;
   }
   _model() {
-    const e = this._config.entities, a = this._state(e.vacuum), t = a?.state || "unknown", i = lo.includes(t), r = {
+    const e = this._config.entities, a = this._state(e.vacuum), t = a?.state || "unknown", i = no.includes(t), r = {
       cleaning: "Limpando",
       returning: "Retornando",
       docked: "Na base",
@@ -12024,7 +12035,7 @@ class R extends HTMLElement {
     }, { once: !0 });
   }
   _assetUrl(e) {
-    return e ? `${e}${String(e).includes("?") ? "&" : "?"}v=${no}` : "";
+    return e ? `${e}${String(e).includes("?") ? "&" : "?"}v=${ro}` : "";
   }
   _render() {
     if (!this._config) return;
@@ -12722,7 +12733,7 @@ const fa = "bruno-home-camera-card", aa = {
     { entity: "camera.qmi_camera_profile_1", name: "Quarto Miguel", short_name: "Q. Miguel" },
     { entity: "camera.qma_camera_profile_1", name: "Quarto Marina", short_name: "Q. Marina" }
   ]
-}, po = ["streaming", "recording", "idle", "on"], uo = ["unavailable", "unknown", ""], ho = 3e4;
+}, lo = ["streaming", "recording", "idle", "on"], co = ["unavailable", "unknown", ""], po = 3e4;
 class E extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -12755,10 +12766,10 @@ class E extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _isUnavailable(e) {
-    return !e || uo.includes(String(e.state || "").toLowerCase());
+    return !e || co.includes(String(e.state || "").toLowerCase());
   }
   _cameraState(e) {
-    const a = this._state(e.entity), t = String(a?.state || "").toLowerCase(), i = this._isUnavailable(a), r = !i && po.includes(t), n = a?.attributes?.entity_picture || "";
+    const a = this._state(e.entity), t = String(a?.state || "").toLowerCase(), i = this._isUnavailable(a), r = !i && lo.includes(t), n = a?.attributes?.entity_picture || "";
     n && (this._lastCameraImages[e.entity] = n);
     const s = n || this._lastCameraImages[e.entity] || `/api/camera_proxy/${e.entity}`;
     return this._cameraBaseUrls[e.entity] !== s && (this._cameraBaseUrls[e.entity] = s, delete this._loadedCameraUrls[e.entity]), {
@@ -12847,7 +12858,7 @@ class E extends HTMLElement {
     Promise.resolve(e.updateComplete).then(() => {
       this._liveEl !== e || this._liveEntity !== a || !e.isConnected || (this._liveStartedAt = globalThis.performance?.now?.() || Date.now(), e.entityid = a, globalThis.BrunoCameraLive?.marcar?.(a, "entityid atribuido"), this._liveTimer = globalThis.setTimeout(() => {
         this._liveEl === e && this._liveEntity === a && this._liveReady !== a && this._failLiveFeed(a, "prazo");
-      }, ho));
+      }, po));
     }).catch(() => {
       this._liveEl === e && this._liveEntity === a && this._failLiveFeed(a, "contexto");
     });
@@ -13465,7 +13476,7 @@ window.customCards.push({
   preview: !1,
   description: "Single camera card for the Bruno home bento grid."
 });
-const va = "bruno-energy-card", bo = {
+const va = "bruno-energy-card", uo = {
   period: "input_select.periodo_energia_dashboard",
   total: "sensor.energia_total_casa_periodo_atual",
   daily: "sensor.potencia_total_casa",
@@ -13511,7 +13522,7 @@ const va = "bruno-energy-card", bo = {
     totalEntityKey: "monthly_total",
     comparisonLabel: "mês anterior"
   }
-], go = ["unknown", "unavailable", "none", ""], mo = 60 * 1e3;
+], ho = ["unknown", "unavailable", "none", ""], bo = 60 * 1e3;
 class D extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -13521,7 +13532,7 @@ class D extends HTMLElement {
   }
   setConfig(e) {
     const a = {
-      ...bo,
+      ...uo,
       ...e?.entities || {}
     };
     this._config = {
@@ -13540,7 +13551,7 @@ class D extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _isInvalid(e) {
-    return e == null || go.includes(String(e).toLowerCase());
+    return e == null || ho.includes(String(e).toLowerCase());
   }
   _activePeriod() {
     const e = this._state(this._config.entities.period)?.state;
@@ -13577,7 +13588,7 @@ class D extends HTMLElement {
   _ensureHistory(e) {
     if (!this._hass || !e.graphEntity) return;
     const a = this._historyCache?.[e.cacheKey], t = Date.now();
-    a?.loading || a?.fetchedAt && t - a.fetchedAt < mo || (this._historyCache[e.cacheKey] = {
+    a?.loading || a?.fetchedAt && t - a.fetchedAt < bo || (this._historyCache[e.cacheKey] = {
       ...a || {},
       loading: !0
     }, this._fetchHistory(e.period, e.graphEntity).then((i) => {
@@ -13901,10 +13912,10 @@ class D extends HTMLElement {
     `;
   }
   _chart(e) {
-    const a = [{ value: e.graphCurrent ?? 0, time: Date.now() - 1 }, { value: e.graphCurrent ?? 0, time: Date.now() }], t = e.points.length >= 2 ? e.points : a, i = 360, r = 100, n = 0, s = 10, l = 20, c = t.map((M) => M.value), p = Math.min(e.period.lowerBound, ...c), d = Math.max(1, ...c), h = Math.max(1, d - p), b = (M) => t.length <= 1 ? n : n + M / (t.length - 1) * (i - n * 2), u = (M) => s + (d - M) / h * (r - s - l), g = t.map((M, z) => {
-      const we = b(z).toFixed(2), ke = u(M.value).toFixed(2);
-      return `${z ? "L" : "M"} ${we} ${ke}`;
-    }).join(" "), f = b(0).toFixed(2), m = b(t.length - 1).toFixed(2), x = (r - l).toFixed(2), S = `${g} L ${m} ${x} L ${f} ${x} Z`, $ = e.graphCurrent == null ? "--" : `${Number(e.graphCurrent).toFixed(e.period.unit === "W" ? 0 : 2).replace(".00", "")} ${e.period.unit}`, H = this._comparison(e);
+    const a = [{ value: e.graphCurrent ?? 0, time: Date.now() - 1 }, { value: e.graphCurrent ?? 0, time: Date.now() }], t = e.points.length >= 2 ? e.points : a, i = 360, r = 100, n = 0, s = 10, l = 20, c = t.map((M) => M.value), p = Math.min(e.period.lowerBound, ...c), d = Math.max(1, ...c), h = Math.max(1, d - p), b = (M) => t.length <= 1 ? n : n + M / (t.length - 1) * (i - n * 2), u = (M) => s + (d - M) / h * (r - s - l), g = t.map((M, H) => {
+      const we = b(H).toFixed(2), ke = u(M.value).toFixed(2);
+      return `${H ? "L" : "M"} ${we} ${ke}`;
+    }).join(" "), f = b(0).toFixed(2), m = b(t.length - 1).toFixed(2), x = (r - l).toFixed(2), S = `${g} L ${m} ${x} L ${f} ${x} Z`, $ = e.graphCurrent == null ? "--" : `${Number(e.graphCurrent).toFixed(e.period.unit === "W" ? 0 : 2).replace(".00", "")} ${e.period.unit}`, z = this._comparison(e);
     return `
       <svg viewBox="0 0 ${i} ${r}" preserveAspectRatio="none" role="img" aria-label="${D._escapeAttr($)}">
         <defs>
@@ -13924,7 +13935,7 @@ class D extends HTMLElement {
         <path d="${S}" fill="url(#bruno-energy-area)"></path>
         <path d="${g}" fill="none" stroke="#6FB8FF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" filter="url(#bruno-energy-glow)"></path>
         <text x="18" y="94" class="axis-label">${D._escape($)}</text>
-        <text x="342" y="94" text-anchor="end" class="comparison-label">${D._escape(H)}</text>
+        <text x="342" y="94" text-anchor="end" class="comparison-label">${D._escape(z)}</text>
       </svg>
     `;
   }
@@ -13943,7 +13954,7 @@ window.customCards.push({
   preview: !1,
   description: "Isolated Bento energy card with period selector, Home Assistant history, and Bruno liquid glass visuals."
 });
-const _a = "bruno-agenda-card", fo = [
+const _a = "bruno-agenda-card", go = [
   { entity: "calendar.brunohelasio_gmail_com", name: "Bruno", color: "#7fdbe9" },
   { entity: "calendar.familia", name: "Familia", color: "#fdd835" },
   { entity: "calendar.birthdays", name: "Aniversarios", color: "#ff6c92" },
@@ -13952,8 +13963,8 @@ const _a = "bruno-agenda-card", fo = [
   "calendar.brunohelasio_gmail_com",
   "calendar.familia",
   "calendar.feriados_no_brasil"
-], ct = 5 * 1e3, vo = ["unknown", "unavailable", "none", ""];
-class V extends HTMLElement {
+], ct = 5 * 1e3, mo = ["unknown", "unavailable", "none", ""];
+class B extends HTMLElement {
   static getStubConfig() {
     return {};
   }
@@ -13964,7 +13975,7 @@ class V extends HTMLElement {
       days_to_show: 3,
       compact_events_to_show: 3,
       refresh_interval: ct,
-      calendars: fo,
+      calendars: go,
       popup_calendars: lt,
       ...e || {}
     }, this._events = this._events || [], this._render(), this._scheduleRefresh(!0);
@@ -13986,7 +13997,7 @@ class V extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _isInvalid(e) {
-    return e == null || vo.includes(String(e).toLowerCase());
+    return e == null || mo.includes(String(e).toLowerCase());
   }
   _scheduleRefresh(e = !1) {
     if (!(!this._config || !this.isConnected)) {
@@ -14325,12 +14336,12 @@ class V extends HTMLElement {
         }
       </style>
 
-      <div class="agenda-card" role="button" tabindex="0" aria-label="${V._escapeAttr(this._config.title)}">
+      <div class="agenda-card" role="button" tabindex="0" aria-label="${B._escapeAttr(this._config.title)}">
         <div class="card-header">
           <div class="header-copy">
             <span class="header-icon" aria-hidden="true"><bruno-icon icon="mdi:calendar-month-outline"></bruno-icon></span>
             <span class="title">
-              <span class="title-main">${V._escape(this._config.name)}</span>
+              <span class="title-main">${B._escape(this._config.name)}</span>
             </span>
           </div>
         </div>
@@ -14345,12 +14356,12 @@ class V extends HTMLElement {
     return `
       <div class="event-row">
         <div class="date">
-          <span class="weekday">${V._escape(this._weekday(a))}</span>
+          <span class="weekday">${B._escape(this._weekday(a))}</span>
           <span class="day">${a.getDate()}</span>
         </div>
-        <div class="event" style="--event-color:${V._escapeAttr(e.color)}">
-          <span class="summary">${V._escape(e.summary)}</span>
-          <span class="time">${V._escape(this._timeLabel(e))}</span>
+        <div class="event" style="--event-color:${B._escapeAttr(e.color)}">
+          <span class="summary">${B._escape(e.summary)}</span>
+          <span class="time">${B._escape(this._timeLabel(e))}</span>
         </div>
       </div>
     `;
@@ -14373,10 +14384,10 @@ class V extends HTMLElement {
     return String(e ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
   static _escapeAttr(e) {
-    return V._escape(e).replace(/'/g, "&#39;");
+    return B._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(_a) || customElements.define(_a, V);
+customElements.get(_a) || customElements.define(_a, B);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: _a,
@@ -14566,7 +14577,7 @@ window.customCards.push({
   preview: !1,
   description: "Non-interactive atmospheric background stage for the Bento dashboard."
 });
-const ya = "bruno-hero-card", _o = {
+const ya = "bruno-hero-card", fo = {
   time: "sensor.time",
   weather: "weather.forecast_casa",
   sun: "sun.sun",
@@ -14608,14 +14619,14 @@ const ya = "bruno-hero-card", _o = {
   { entity: "camera.vr_camera_2", name: "Varanda", short_name: "Varanda" },
   { entity: "camera.cz_camera_2", name: "Cozinha", short_name: "Cozinha" },
   { entity: "camera.as_camera_2", name: "Area de Servico", short_name: "Area" }
-], gt = 300 * 1e3, xo = ["unknown", "unavailable", "idle", "off", "none", ""];
+], gt = 300 * 1e3, vo = ["unknown", "unavailable", "idle", "off", "none", ""];
 class w extends HTMLElement {
   static getStubConfig() {
     return {};
   }
   setConfig(e) {
     const a = {
-      ..._o,
+      ...fo,
       ...e?.entities || {}
     }, t = e?.calendar || {}, i = e?.cameras || {};
     this._config = {
@@ -14786,7 +14797,7 @@ class w extends HTMLElement {
     return t ? `${i} · ${e.calendarName || "Agenda"}` : `${e.start.toLocaleDateString([], { day: "2-digit", month: "short" })} · ${i}`;
   }
   _cameraState(e) {
-    const a = this._state(e.entity), t = a?.state || "", i = !a || xo.includes(String(t).toLowerCase()), r = a?.attributes?.entity_picture || "";
+    const a = this._state(e.entity), t = a?.state || "", i = !a || vo.includes(String(t).toLowerCase()), r = a?.attributes?.entity_picture || "";
     r && (this._lastCameraImages[e.entity] = r);
     const n = r || this._lastCameraImages[e.entity] || (e.entity ? `/api/camera_proxy/${e.entity}` : "");
     return this._cameraBaseUrls[e.entity] !== n && (this._cameraBaseUrls[e.entity] = n, delete this._loadedCameraUrls[e.entity]), {
@@ -16432,7 +16443,7 @@ window.customCards.push({
   preview: !1,
   description: "Atmospheric Bento Hero with blended background layer and preserved weather popup."
 });
-const li = "(max-width: 800px)", mt = "bruno-hero-card", ft = "bento-sidebar-liquid-card", yo = 6e3, vt = () => !!globalThis.matchMedia?.(li).matches;
+const si = "(max-width: 800px)", mt = "bruno-hero-card", ft = "bento-sidebar-liquid-card", _o = 6e3, vt = () => !!globalThis.matchMedia?.(si).matches;
 function X(o) {
   o?.__brunoChatHeroTimer && (clearInterval(o.__brunoChatHeroTimer), o.__brunoChatHeroTimer = null);
 }
@@ -16446,7 +16457,7 @@ function _t(o, e) {
     i.classList.toggle("is-active", r === t);
   });
 }
-function wo(o) {
+function xo(o) {
   if (!o || o.querySelector("style[data-bruno-chat-hero-patch]")) return;
   const e = document.createElement("style");
   e.dataset.brunoChatHeroPatch = "1", e.textContent = `
@@ -16633,7 +16644,7 @@ function xt(o) {
   }
   const e = o.shadowRoot, a = e.querySelector(".hero-stage.is-v2"), t = e.querySelector(".headline .event-stack");
   if (!a || !t) return;
-  wo(e);
+  xo(e);
   const i = [...t.querySelectorAll(":scope > .event-line")], r = i.filter((s) => !s.classList.contains("is-empty"));
   if (i.filter((s) => s.classList.contains("is-empty")).forEach((s) => {
     s.style.display = "none", s.setAttribute("aria-hidden", "true"), s.tabIndex = -1;
@@ -16663,9 +16674,9 @@ function xt(o) {
       return;
     }
     o.__brunoChatHeroIndex = (Math.max(0, Number(o.__brunoChatHeroIndex) || 0) + 1) % s.length, _t(o, s);
-  }, yo));
+  }, _o));
 }
-function ko(o) {
+function yo(o) {
   if (!o || o.prototype.__brunoChatHomePatch) return;
   const e = o.prototype;
   e.__brunoChatHomePatch = !0;
@@ -16677,7 +16688,7 @@ function ko(o) {
   const t = e.connectedCallback;
   e.connectedCallback = function(...n) {
     const s = t?.apply(this, n);
-    return !this.__brunoChatViewportQuery && globalThis.matchMedia && (this.__brunoChatViewportQuery = globalThis.matchMedia(li), this.__brunoChatViewportListener = () => {
+    return !this.__brunoChatViewportQuery && globalThis.matchMedia && (this.__brunoChatViewportQuery = globalThis.matchMedia(si), this.__brunoChatViewportListener = () => {
       X(this), this._render?.();
     }, this.__brunoChatViewportQuery.addEventListener?.("change", this.__brunoChatViewportListener)), xt(this), s;
   };
@@ -16686,7 +16697,7 @@ function ko(o) {
     return X(this), this.__brunoChatViewportQuery && this.__brunoChatViewportListener && this.__brunoChatViewportQuery.removeEventListener?.("change", this.__brunoChatViewportListener), this.__brunoChatViewportQuery = null, this.__brunoChatViewportListener = null, i?.apply(this, n);
   };
 }
-function qo(o) {
+function wo(o) {
   if (!o || o.querySelector("style[data-bruno-chat-rail-patch]")) return;
   const e = document.createElement("style");
   e.dataset.brunoChatRailPatch = "1", e.textContent = `
@@ -16700,29 +16711,29 @@ function qo(o) {
     }
   `, o.appendChild(e);
 }
-function So(o) {
+function ko(o) {
   if (!o || o.prototype.__brunoChatRailPatch) return;
   const e = o.prototype;
   e.__brunoChatRailPatch = !0;
   const a = e._render;
   e._render = function(...i) {
     const r = a.apply(this, i);
-    return qo(this.shadowRoot), r;
+    return wo(this.shadowRoot), r;
   };
 }
 Promise.all([
   customElements.whenDefined(mt),
   customElements.whenDefined(ft)
 ]).then(() => {
-  ko(customElements.get(mt)), So(customElements.get(ft));
+  yo(customElements.get(mt)), ko(customElements.get(ft));
 });
-const wa = "bruno-top-badges-card", Ao = [
+const wa = "bruno-top-badges-card", qo = [
   { visual: 0, position: 0 },
   { visual: 25, position: 33 },
   { visual: 50, position: 47 },
   { visual: 75, position: 70 },
   { visual: 100, position: 100 }
-], Oo = {
+], So = {
   expanded: "input_select.hemma_expanded_row",
   person: "person.bruno_helasio",
   locks: ["lock.porta_sala", "lock.porta_servico"],
@@ -16798,7 +16809,7 @@ class N extends HTMLElement {
   setConfig(e) {
     this._config = {
       entities: {
-        ...Oo,
+        ...So,
         ...e?.entities || {}
       },
       ...e
@@ -16827,7 +16838,7 @@ class N extends HTMLElement {
     return Number.isFinite(a) ? Math.max(0, Math.min(100, Math.round(a))) : null;
   }
   _interpolateCurtainPercent(e, a, t) {
-    const i = this._toPercent(e) ?? 0, r = Ao;
+    const i = this._toPercent(e) ?? 0, r = qo;
     if (i <= r[0][a]) return r[0][t];
     for (let n = 1; n < r.length; n += 1) {
       const s = r[n - 1], l = r[n];
@@ -18345,7 +18356,7 @@ const qa = "bruno-media-card", St = "bruno-ui:media-history:v3", Te = {
     { entity: "media_player.spotifyplus_bruno_helasio", name: "Spotify", icon: "mdi:spotify", section: "sala", path: "subview-sala" },
     { entity: "media_player.echo_pop_office", name: "Office", icon: "mdi:speaker", section: "office", path: "subview-office" }
   ]
-}, Eo = ["playing", "paused"], U = "media_player.android_tv_192_168_3_17", Co = "media_player.smart_tv_pro_2", To = /* @__PURE__ */ new Set(["on", "playing", "paused", "idle", "buffering"]);
+}, Ao = ["playing", "paused"], U = "media_player.android_tv_192_168_3_17", Oo = "media_player.smart_tv_pro_2", Eo = /* @__PURE__ */ new Set(["on", "playing", "paused", "idle", "buffering"]);
 class k extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -18433,12 +18444,12 @@ class k extends HTMLElement {
     `;
   }
   _tvPowered() {
-    const e = String(this._state(Co)?.state || "").toLowerCase();
-    return To.has(e);
+    const e = String(this._state(Oo)?.state || "").toLowerCase();
+    return Eo.has(e);
   }
   _isActive(e) {
     const a = String(this._state(e)?.state || "").toLowerCase();
-    return e === U ? this._tvPowered() : Eo.includes(a);
+    return e === U ? this._tvPowered() : Ao.includes(a);
   }
   _isStandbyImage(e) {
     return String(e || "").includes("standby_art");
@@ -18473,13 +18484,13 @@ class k extends HTMLElement {
     !this._config || !this._hass || this._allPlayerIds().forEach((e) => {
       const a = this._state(e), t = a?.attributes || {}, i = String(a?.state || "").toLowerCase(), r = this._playerConfig(e), n = this._cleanText(t.media_title), s = t.media_image_url || t.entity_picture || "", l = this._isStandbyImage(s) ? "" : s, c = this._cleanText(t.app_name), p = this._cleanText(t.source), d = String(t.media_content_type || c || "").toLowerCase(), h = this._mediaHistory?.[e];
       if (h && l && l !== h.image && !["unknown", "unavailable"].includes(i) && this._storeLastValidMedia({ ...h, image: l, savedAt: h.savedAt || Date.now() }), !this._hasPlayback(i, n, l, c, p, e, r, d, t)) return;
-      const b = this._mediaServiceName(e, r, d, c, p), u = b === "Spotify" ? this._spotifyRoomTarget(t) : null, g = u ? { ...r, ...u } : r, f = this._mediaRoomName(g), m = this._cleanText(t.media_artist), x = this._cleanText(t.media_album_name), S = this._cleanText(t.media_series_title), $ = this._cleanText(t.media_channel), H = this._fallbackMediaTitle(b, f, e), M = this._firstText([n, H, this._playerName(e)]), z = this._firstText([m, x, S, $], [M]);
+      const b = this._mediaServiceName(e, r, d, c, p), u = b === "Spotify" ? this._spotifyRoomTarget(t) : null, g = u ? { ...r, ...u } : r, f = this._mediaRoomName(g), m = this._cleanText(t.media_artist), x = this._cleanText(t.media_album_name), S = this._cleanText(t.media_series_title), $ = this._cleanText(t.media_channel), z = this._fallbackMediaTitle(b, f, e), M = this._firstText([n, z, this._playerName(e)]), H = this._firstText([m, x, S, $], [M]);
       this._storeLastValidMedia({
         entity: e,
         image: l,
         title: M,
         artist: m && m !== "Pronto para tocar" ? m : "",
-        secondary: z,
+        secondary: H,
         context: [b, f].filter(Boolean).join(" "),
         serviceName: b,
         serviceIcon: r.icon || this._playerIcon(e),
@@ -18530,48 +18541,48 @@ class k extends HTMLElement {
     let x = Number((i ? t?.attributes?.media_position : void 0) ?? a?.attributes?.media_position ?? 0);
     const S = Number(a?.attributes?.volume_level ?? (i ? t?.attributes?.volume_level : void 0) ?? 0), $ = String(
       (i ? t?.attributes?.media_content_type : "") || a?.attributes?.media_content_type || a?.attributes?.app_name || ""
-    ).toLowerCase(), H = ["video", "movie", "tvshow", "episode", "channel"].some(($i) => $.includes($i)), M = Date.parse((i ? t?.attributes?.media_position_updated_at : "") || a?.attributes?.media_position_updated_at || "");
+    ).toLowerCase(), z = ["video", "movie", "tvshow", "episode", "channel"].some((Ei) => $.includes(Ei)), M = Date.parse((i ? t?.attributes?.media_position_updated_at : "") || a?.attributes?.media_position_updated_at || "");
     n === "playing" && Number.isFinite(M) && Number.isFinite(x) && (x += Math.max(0, (Date.now() - M) / 1e3)), Number.isFinite(m) && m > 0 && (x = Math.min(x, m));
-    const z = this._mediaServiceName(e, r, $, b, u), we = {
+    const H = this._mediaServiceName(e, r, $, b, u), we = {
       ...a?.attributes || {},
       ...i ? t?.attributes || {} : {}
-    }, ke = z === "Spotify" ? this._spotifyRoomTarget(we) : null, qe = ke ? { ...r, ...ke } : r, Pa = this._mediaRoomName(qe), A = this._hasPlayback(n, p, s, b, u, e, r, $, we), Oi = this._fallbackMediaTitle(z, Pa, e), Fe = A ? this._firstText([p, b, u, Oi, this._playerName(e)]) : "", ja = A ? this._firstText([d, h, g, f, b, u, this._stateLabel(n)], [Fe]) : "", Va = A ? [z, Pa].filter(Boolean).join(" ") : "", Ge = r.icon || this._playerIcon(e), We = qe.path || qe.navigation_path || "", Ze = qe.section || "";
+    }, ke = H === "Spotify" ? this._spotifyRoomTarget(we) : null, qe = ke ? { ...r, ...ke } : r, Pa = this._mediaRoomName(qe), A = this._hasPlayback(n, p, s, b, u, e, r, $, we), qi = this._fallbackMediaTitle(H, Pa, e), Fe = A ? this._firstText([p, b, u, qi, this._playerName(e)]) : "", ja = A ? this._firstText([d, h, g, f, b, u, this._stateLabel(n)], [Fe]) : "", Ba = A ? [H, Pa].filter(Boolean).join(" ") : "", Ge = r.icon || this._playerIcon(e), We = qe.path || qe.navigation_path || "", Ze = qe.section || "";
     A && ["playing", "paused"].includes(String(n).toLowerCase()) && this._storeLastValidMedia({
       entity: e,
       image: c,
       title: Fe,
       artist: d && d !== "Pronto para tocar" ? d : "",
       secondary: ja,
-      context: Va,
-      serviceName: z,
+      context: Ba,
+      serviceName: H,
       serviceIcon: Ge,
       path: We,
       section: Ze,
       savedAt: Date.now()
     });
-    const Se = e === U && this._isActive(e), I = A ? null : Se ? this._mediaHistory?.[e] || null : this._mediaHistory?.[e] || this._latestMediaSnapshot(), Ba = A ? c : c || I?.image || this._lastArtworkByPlayer?.[e] || "", Ei = A ? Fe : I?.title || (Se ? "TV ligada" : ""), Ci = A ? ja : I?.secondary || I?.artist || (Se ? this._firstText([b, u, "Sala"]) : ""), Ti = A ? Va : I?.context || (Se ? "TV Sala" : "");
+    const Se = e === U && this._isActive(e), I = A ? null : Se ? this._mediaHistory?.[e] || null : this._mediaHistory?.[e] || this._latestMediaSnapshot(), Va = A ? c : c || I?.image || this._lastArtworkByPlayer?.[e] || "", Si = A ? Fe : I?.title || (Se ? "TV ligada" : ""), Ai = A ? ja : I?.secondary || I?.artist || (Se ? this._firstText([b, u, "Sala"]) : ""), Oi = A ? Ba : I?.context || (Se ? "TV Sala" : "");
     return {
       entity: A ? e : I?.entity || e,
-      image: Ba,
-      title: Ei,
+      image: Va,
+      title: Si,
       artist: A ? d && d !== "Pronto para tocar" ? d : "" : I?.artist || "",
-      secondary: Ci,
-      context: Ti,
+      secondary: Ai,
+      context: Oi,
       statusLabel: A ? n === "paused" ? "Pausado" : n === "on" ? this._stateLabel(n) : "Reproduzindo agora" : "Nenhuma mídia ativa",
       state: n,
-      serviceName: A ? z : I?.serviceName || z,
+      serviceName: A ? H : I?.serviceName || H,
       serviceIcon: A ? Ge : I?.serviceIcon || Ge,
       path: A ? We : I?.path || We,
       section: A ? Ze : I?.section || Ze,
       duration: Number.isFinite(m) ? m : 0,
       position: Number.isFinite(x) ? Math.max(0, x) : 0,
       volumePercent: Number.isFinite(S) ? Math.max(0, Math.min(100, Math.round(S * 100))) : 0,
-      isVideo: H,
+      isVideo: z,
       isPlaying: n === "playing",
       isActive: A,
       hasPlayback: A,
       hasLastMedia: !!(I && (I.image || I.title)),
-      isSoftArtwork: (n === "paused" || !A) && !!Ba
+      isSoftArtwork: (n === "paused" || !A) && !!Va
     };
   }
   _slotPlayerIds(e = "", a = 4) {
@@ -19984,7 +19995,7 @@ window.customCards.push({
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const Ie = globalThis, Ma = Ie.ShadowRoot && (Ie.ShadyCSS === void 0 || Ie.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, Ia = Symbol(), At = /* @__PURE__ */ new WeakMap();
-let ci = class {
+let li = class {
   constructor(e, a, t) {
     if (this._$cssResult$ = !0, t !== Ia) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
     this.cssText = e, this.t = a;
@@ -20002,14 +20013,14 @@ let ci = class {
     return this.cssText;
   }
 };
-const $o = (o) => new ci(typeof o == "string" ? o : o + "", void 0, Ia), xe = (o, ...e) => {
+const Co = (o) => new li(typeof o == "string" ? o : o + "", void 0, Ia), xe = (o, ...e) => {
   const a = o.length === 1 ? o[0] : e.reduce((t, i, r) => t + ((n) => {
     if (n._$cssResult$ === !0) return n.cssText;
     if (typeof n == "number") return n;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + n + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(i) + o[r + 1], o[0]);
-  return new ci(a, o, Ia);
-}, Mo = (o, e) => {
+  return new li(a, o, Ia);
+}, To = (o, e) => {
   if (Ma) o.adoptedStyleSheets = e.map((a) => a instanceof CSSStyleSheet ? a : a.styleSheet);
   else for (const a of e) {
     const t = document.createElement("style"), i = Ie.litNonce;
@@ -20018,17 +20029,17 @@ const $o = (o) => new ci(typeof o == "string" ? o : o + "", void 0, Ia), xe = (o
 }, Ot = Ma ? (o) => o : (o) => o instanceof CSSStyleSheet ? ((e) => {
   let a = "";
   for (const t of e.cssRules) a += t.cssText;
-  return $o(a);
+  return Co(a);
 })(o) : o;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: Io, defineProperty: Lo, getOwnPropertyDescriptor: Ro, getOwnPropertyNames: No, getOwnPropertySymbols: Ho, getPrototypeOf: zo } = Object, Be = globalThis, Et = Be.trustedTypes, Do = Et ? Et.emptyScript : "", Po = Be.reactiveElementPolyfillSupport, ue = (o, e) => o, Sa = { toAttribute(o, e) {
+const { is: $o, defineProperty: Mo, getOwnPropertyDescriptor: Io, getOwnPropertyNames: Lo, getOwnPropertySymbols: Ro, getPrototypeOf: No } = Object, Ve = globalThis, Et = Ve.trustedTypes, zo = Et ? Et.emptyScript : "", Ho = Ve.reactiveElementPolyfillSupport, ue = (o, e) => o, Sa = { toAttribute(o, e) {
   switch (e) {
     case Boolean:
-      o = o ? Do : null;
+      o = o ? zo : null;
       break;
     case Object:
     case Array:
@@ -20053,8 +20064,8 @@ const { is: Io, defineProperty: Lo, getOwnPropertyDescriptor: Ro, getOwnProperty
       }
   }
   return a;
-} }, di = (o, e) => !Io(o, e), Ct = { attribute: !0, type: String, converter: Sa, reflect: !1, useDefault: !1, hasChanged: di };
-Symbol.metadata ??= Symbol("metadata"), Be.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
+} }, ci = (o, e) => !$o(o, e), Ct = { attribute: !0, type: String, converter: Sa, reflect: !1, useDefault: !1, hasChanged: ci };
+Symbol.metadata ??= Symbol("metadata"), Ve.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
 let ae = class extends HTMLElement {
   static addInitializer(e) {
     this._$Ei(), (this.l ??= []).push(e);
@@ -20065,11 +20076,11 @@ let ae = class extends HTMLElement {
   static createProperty(e, a = Ct) {
     if (a.state && (a.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((a = Object.create(a)).wrapped = !0), this.elementProperties.set(e, a), !a.noAccessor) {
       const t = Symbol(), i = this.getPropertyDescriptor(e, t, a);
-      i !== void 0 && Lo(this.prototype, e, i);
+      i !== void 0 && Mo(this.prototype, e, i);
     }
   }
   static getPropertyDescriptor(e, a, t) {
-    const { get: i, set: r } = Ro(this.prototype, e) ?? { get() {
+    const { get: i, set: r } = Io(this.prototype, e) ?? { get() {
       return this[a];
     }, set(n) {
       this[a] = n;
@@ -20084,13 +20095,13 @@ let ae = class extends HTMLElement {
   }
   static _$Ei() {
     if (this.hasOwnProperty(ue("elementProperties"))) return;
-    const e = zo(this);
+    const e = No(this);
     e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
   }
   static finalize() {
     if (this.hasOwnProperty(ue("finalized"))) return;
     if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(ue("properties"))) {
-      const a = this.properties, t = [...No(a), ...Ho(a)];
+      const a = this.properties, t = [...Lo(a), ...Ro(a)];
       for (const i of t) this.createProperty(i, a[i]);
     }
     const e = this[Symbol.metadata];
@@ -20136,7 +20147,7 @@ let ae = class extends HTMLElement {
   }
   createRenderRoot() {
     const e = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return Mo(e, this.constructor.elementStyles), e;
+    return To(e, this.constructor.elementStyles), e;
   }
   connectedCallback() {
     this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(!0), this._$EO?.forEach((e) => e.hostConnected?.());
@@ -20168,7 +20179,7 @@ let ae = class extends HTMLElement {
   requestUpdate(e, a, t, i = !1, r) {
     if (e !== void 0) {
       const n = this.constructor;
-      if (i === !1 && (r = this[e]), t ??= n.getPropertyOptions(e), !((t.hasChanged ?? di)(r, a) || t.useDefault && t.reflect && r === this._$Ej?.get(e) && !this.hasAttribute(n._$Eu(e, t)))) return;
+      if (i === !1 && (r = this[e]), t ??= n.getPropertyOptions(e), !((t.hasChanged ?? ci)(r, a) || t.useDefault && t.reflect && r === this._$Ej?.get(e) && !this.hasAttribute(n._$Eu(e, t)))) return;
       this.C(e, a, t);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
@@ -20236,56 +20247,56 @@ let ae = class extends HTMLElement {
   firstUpdated(e) {
   }
 };
-ae.elementStyles = [], ae.shadowRootOptions = { mode: "open" }, ae[ue("elementProperties")] = /* @__PURE__ */ new Map(), ae[ue("finalized")] = /* @__PURE__ */ new Map(), Po?.({ ReactiveElement: ae }), (Be.reactiveElementVersions ??= []).push("2.1.2");
+ae.elementStyles = [], ae.shadowRootOptions = { mode: "open" }, ae[ue("elementProperties")] = /* @__PURE__ */ new Map(), ae[ue("finalized")] = /* @__PURE__ */ new Map(), Ho?.({ ReactiveElement: ae }), (Ve.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const La = globalThis, Tt = (o) => o, He = La.trustedTypes, $t = He ? He.createPolicy("lit-html", { createHTML: (o) => o }) : void 0, pi = "$lit$", F = `lit$${Math.random().toFixed(9).slice(2)}$`, ui = "?" + F, jo = `<${ui}>`, ee = document, me = () => ee.createComment(""), fe = (o) => o === null || typeof o != "object" && typeof o != "function", Ra = Array.isArray, Vo = (o) => Ra(o) || typeof o?.[Symbol.iterator] == "function", ia = `[ 	
+const La = globalThis, Tt = (o) => o, ze = La.trustedTypes, $t = ze ? ze.createPolicy("lit-html", { createHTML: (o) => o }) : void 0, di = "$lit$", F = `lit$${Math.random().toFixed(9).slice(2)}$`, pi = "?" + F, Do = `<${pi}>`, ee = document, me = () => ee.createComment(""), fe = (o) => o === null || typeof o != "object" && typeof o != "function", Ra = Array.isArray, Po = (o) => Ra(o) || typeof o?.[Symbol.iterator] == "function", ia = `[ 	
 \f\r]`, ne = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Mt = /-->/g, It = />/g, Y = RegExp(`>|${ia}(?:([^\\s"'>=/]+)(${ia}*=${ia}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Lt = /'/g, Rt = /"/g, hi = /^(?:script|style|textarea|title)$/i, bi = (o) => (e, ...a) => ({ _$litType$: o, strings: e, values: a }), v = bi(1), gs = bi(2), re = Symbol.for("lit-noChange"), _ = Symbol.for("lit-nothing"), Nt = /* @__PURE__ */ new WeakMap(), J = ee.createTreeWalker(ee, 129);
-function gi(o, e) {
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Lt = /'/g, Rt = /"/g, ui = /^(?:script|style|textarea|title)$/i, hi = (o) => (e, ...a) => ({ _$litType$: o, strings: e, values: a }), v = hi(1), us = hi(2), re = Symbol.for("lit-noChange"), _ = Symbol.for("lit-nothing"), Nt = /* @__PURE__ */ new WeakMap(), J = ee.createTreeWalker(ee, 129);
+function bi(o, e) {
   if (!Ra(o) || !o.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return $t !== void 0 ? $t.createHTML(e) : e;
 }
-const Bo = (o, e) => {
+const jo = (o, e) => {
   const a = o.length - 1, t = [];
   let i, r = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", n = ne;
   for (let s = 0; s < a; s++) {
     const l = o[s];
     let c, p, d = -1, h = 0;
-    for (; h < l.length && (n.lastIndex = h, p = n.exec(l), p !== null); ) h = n.lastIndex, n === ne ? p[1] === "!--" ? n = Mt : p[1] !== void 0 ? n = It : p[2] !== void 0 ? (hi.test(p[2]) && (i = RegExp("</" + p[2], "g")), n = Y) : p[3] !== void 0 && (n = Y) : n === Y ? p[0] === ">" ? (n = i ?? ne, d = -1) : p[1] === void 0 ? d = -2 : (d = n.lastIndex - p[2].length, c = p[1], n = p[3] === void 0 ? Y : p[3] === '"' ? Rt : Lt) : n === Rt || n === Lt ? n = Y : n === Mt || n === It ? n = ne : (n = Y, i = void 0);
+    for (; h < l.length && (n.lastIndex = h, p = n.exec(l), p !== null); ) h = n.lastIndex, n === ne ? p[1] === "!--" ? n = Mt : p[1] !== void 0 ? n = It : p[2] !== void 0 ? (ui.test(p[2]) && (i = RegExp("</" + p[2], "g")), n = Y) : p[3] !== void 0 && (n = Y) : n === Y ? p[0] === ">" ? (n = i ?? ne, d = -1) : p[1] === void 0 ? d = -2 : (d = n.lastIndex - p[2].length, c = p[1], n = p[3] === void 0 ? Y : p[3] === '"' ? Rt : Lt) : n === Rt || n === Lt ? n = Y : n === Mt || n === It ? n = ne : (n = Y, i = void 0);
     const b = n === Y && o[s + 1].startsWith("/>") ? " " : "";
-    r += n === ne ? l + jo : d >= 0 ? (t.push(c), l.slice(0, d) + pi + l.slice(d) + F + b) : l + F + (d === -2 ? s : b);
+    r += n === ne ? l + Do : d >= 0 ? (t.push(c), l.slice(0, d) + di + l.slice(d) + F + b) : l + F + (d === -2 ? s : b);
   }
-  return [gi(o, r + (o[a] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), t];
+  return [bi(o, r + (o[a] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), t];
 };
 class ve {
   constructor({ strings: e, _$litType$: a }, t) {
     let i;
     this.parts = [];
     let r = 0, n = 0;
-    const s = e.length - 1, l = this.parts, [c, p] = Bo(e, a);
+    const s = e.length - 1, l = this.parts, [c, p] = jo(e, a);
     if (this.el = ve.createElement(c, t), J.currentNode = this.el.content, a === 2 || a === 3) {
       const d = this.el.content.firstChild;
       d.replaceWith(...d.childNodes);
     }
     for (; (i = J.nextNode()) !== null && l.length < s; ) {
       if (i.nodeType === 1) {
-        if (i.hasAttributes()) for (const d of i.getAttributeNames()) if (d.endsWith(pi)) {
+        if (i.hasAttributes()) for (const d of i.getAttributeNames()) if (d.endsWith(di)) {
           const h = p[n++], b = i.getAttribute(d).split(F), u = /([.?@])?(.*)/.exec(h);
-          l.push({ type: 1, index: r, name: u[2], strings: b, ctor: u[1] === "." ? Fo : u[1] === "?" ? Go : u[1] === "@" ? Wo : Ue }), i.removeAttribute(d);
+          l.push({ type: 1, index: r, name: u[2], strings: b, ctor: u[1] === "." ? Vo : u[1] === "?" ? Uo : u[1] === "@" ? Fo : Ue }), i.removeAttribute(d);
         } else d.startsWith(F) && (l.push({ type: 6, index: r }), i.removeAttribute(d));
-        if (hi.test(i.tagName)) {
+        if (ui.test(i.tagName)) {
           const d = i.textContent.split(F), h = d.length - 1;
           if (h > 0) {
-            i.textContent = He ? He.emptyScript : "";
+            i.textContent = ze ? ze.emptyScript : "";
             for (let b = 0; b < h; b++) i.append(d[b], me()), J.nextNode(), l.push({ type: 2, index: ++r });
             i.append(d[h], me());
           }
         }
-      } else if (i.nodeType === 8) if (i.data === ui) l.push({ type: 2, index: r });
+      } else if (i.nodeType === 8) if (i.data === pi) l.push({ type: 2, index: r });
       else {
         let d = -1;
         for (; (d = i.data.indexOf(F, d + 1)) !== -1; ) l.push({ type: 7, index: r }), d += F.length - 1;
@@ -20304,7 +20315,7 @@ function oe(o, e, a = o, t) {
   const r = fe(e) ? void 0 : e._$litDirective$;
   return i?.constructor !== r && (i?._$AO?.(!1), r === void 0 ? i = void 0 : (i = new r(o), i._$AT(o, a, t)), t !== void 0 ? (a._$Co ??= [])[t] = i : a._$Cl = i), i !== void 0 && (e = oe(o, i._$AS(o, e.values), i, t)), e;
 }
-class Uo {
+class Bo {
   constructor(e, a) {
     this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = a;
   }
@@ -20321,7 +20332,7 @@ class Uo {
     for (; l !== void 0; ) {
       if (n === l.index) {
         let c;
-        l.type === 2 ? c = new ye(r, r.nextSibling, this, e) : l.type === 1 ? c = new l.ctor(r, l.name, l.strings, this, e) : l.type === 6 && (c = new Zo(r, this, e)), this._$AV.push(c), l = t[++s];
+        l.type === 2 ? c = new ye(r, r.nextSibling, this, e) : l.type === 1 ? c = new l.ctor(r, l.name, l.strings, this, e) : l.type === 6 && (c = new Go(r, this, e)), this._$AV.push(c), l = t[++s];
       }
       n !== l?.index && (r = J.nextNode(), n++);
     }
@@ -20351,7 +20362,7 @@ class ye {
     return this._$AB;
   }
   _$AI(e, a = this) {
-    e = oe(this, e, a), fe(e) ? e === _ || e == null || e === "" ? (this._$AH !== _ && this._$AR(), this._$AH = _) : e !== this._$AH && e !== re && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Vo(e) ? this.k(e) : this._(e);
+    e = oe(this, e, a), fe(e) ? e === _ || e == null || e === "" ? (this._$AH !== _ && this._$AR(), this._$AH = _) : e !== this._$AH && e !== re && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Po(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -20363,10 +20374,10 @@ class ye {
     this._$AH !== _ && fe(this._$AH) ? this._$AA.nextSibling.data = e : this.T(ee.createTextNode(e)), this._$AH = e;
   }
   $(e) {
-    const { values: a, _$litType$: t } = e, i = typeof t == "number" ? this._$AC(e) : (t.el === void 0 && (t.el = ve.createElement(gi(t.h, t.h[0]), this.options)), t);
+    const { values: a, _$litType$: t } = e, i = typeof t == "number" ? this._$AC(e) : (t.el === void 0 && (t.el = ve.createElement(bi(t.h, t.h[0]), this.options)), t);
     if (this._$AH?._$AD === i) this._$AH.p(a);
     else {
-      const r = new Uo(i, this), n = r.u(this.options);
+      const r = new Bo(i, this), n = r.u(this.options);
       r.p(a), this.T(n), this._$AH = r;
     }
   }
@@ -20416,7 +20427,7 @@ class Ue {
     e === _ ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
-class Fo extends Ue {
+class Vo extends Ue {
   constructor() {
     super(...arguments), this.type = 3;
   }
@@ -20424,7 +20435,7 @@ class Fo extends Ue {
     this.element[this.name] = e === _ ? void 0 : e;
   }
 }
-class Go extends Ue {
+class Uo extends Ue {
   constructor() {
     super(...arguments), this.type = 4;
   }
@@ -20432,7 +20443,7 @@ class Go extends Ue {
     this.element.toggleAttribute(this.name, !!e && e !== _);
   }
 }
-class Wo extends Ue {
+class Fo extends Ue {
   constructor(e, a, t, i, r) {
     super(e, a, t, i, r), this.type = 5;
   }
@@ -20445,7 +20456,7 @@ class Wo extends Ue {
     typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
   }
 }
-class Zo {
+class Go {
   constructor(e, a, t) {
     this.element = e, this.type = 6, this._$AN = void 0, this._$AM = a, this.options = t;
   }
@@ -20456,9 +20467,9 @@ class Zo {
     oe(this, e);
   }
 }
-const Ko = La.litHtmlPolyfillSupport;
-Ko?.(ve, ye), (La.litHtmlVersions ??= []).push("3.3.3");
-const Yo = (o, e, a) => {
+const Wo = La.litHtmlPolyfillSupport;
+Wo?.(ve, ye), (La.litHtmlVersions ??= []).push("3.3.3");
+const Zo = (o, e, a) => {
   const t = a?.renderBefore ?? e;
   let i = t._$litPart$;
   if (i === void 0) {
@@ -20483,7 +20494,7 @@ class Z extends ae {
   }
   update(e) {
     const a = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Yo(a, this.renderRoot, this.renderOptions);
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Zo(a, this.renderRoot, this.renderOptions);
   }
   connectedCallback() {
     super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -20496,10 +20507,10 @@ class Z extends ae {
   }
 }
 Z._$litElement$ = !0, Z.finalized = !0, Na.litElementHydrateSupport?.({ LitElement: Z });
-const Xo = Na.litElementPolyfillSupport;
-Xo?.({ LitElement: Z });
+const Ko = Na.litElementPolyfillSupport;
+Ko?.({ LitElement: Z });
 (Na.litElementVersions ??= []).push("4.2.2");
-const Qo = xe`
+const Yo = xe`
   :host {
     /* Tipografia — piso, fluido, teto. Interpola em vez de saltar. */
     --t-xs: clamp(9px, 2.6cqi, 11px);
@@ -20554,31 +20565,31 @@ const Qo = xe`
     --motion-base: 220ms;
     --ease: cubic-bezier(0.2, 0, 0, 1);
   }
-`, Ha = ["on", "playing", "paused", "idle", "buffering"], Jo = ["playing", "buffering"];
-function mi(o, e, a) {
+`, za = ["on", "playing", "paused", "idle", "buffering"], Xo = ["playing", "buffering"];
+function gi(o, e, a) {
   if (!o || !e) return !1;
   const t = o.states[e]?.state;
   if (!t) return !1;
   const i = String(t).toLowerCase();
   return a.some((r) => r.toLowerCase() === i);
 }
-function ms(o, e) {
-  return mi(o, e, Ha);
+function hs(o, e) {
+  return gi(o, e, za);
 }
-const Ht = /* @__PURE__ */ new Map();
-function en(o, e, a = Date.now(), t = 45e3) {
+const zt = /* @__PURE__ */ new Map();
+function Qo(o, e, a = Date.now(), t = 45e3) {
   if (!o || !e) return !1;
   const i = String(o.states[e]?.state ?? "").toLowerCase();
-  if (Ha.includes(i))
-    return Ht.set(e, a), !0;
+  if (za.includes(i))
+    return zt.set(e, a), !0;
   if (i !== "off") return !1;
-  const r = Ht.get(e);
+  const r = zt.get(e);
   return r !== void 0 && a - r <= t;
 }
-function fs(o, e) {
-  return mi(o, e, Jo);
+function bs(o, e) {
+  return gi(o, e, Xo);
 }
-const an = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], $e = ["playing", "paused", "on"], za = [
+const Jo = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], $e = ["playing", "paused", "on"], Ha = [
   {
     id: "sala",
     name: "Sala",
@@ -20603,7 +20614,7 @@ const an = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
         label: "TV ativa",
         tone: "purple",
         entities: ["media_player.smart_tv_pro_2"],
-        states: Ha
+        states: za
       },
       {
         icon: "mdi:snowflake",
@@ -20971,9 +20982,9 @@ const an = "media_player.spotifyplus_bruno_helasio", se = ["cool", "heat", "fan_
     }
   }
 ];
-function tn() {
+function en() {
   const o = [];
-  for (const e of za)
+  for (const e of Ha)
     for (const [a, t] of Object.entries(e.entities))
       if (typeof t == "string")
         o.push({ entityId: t, roomId: e.id, field: a });
@@ -20981,7 +20992,7 @@ function tn() {
         for (const i of t) o.push({ entityId: i, roomId: e.id, field: a });
   return o;
 }
-const rn = [
+const an = [
   {
     entity: "script.bruno_scene_apagar_todas_as_luzes",
     name: "Apagar todas as luzes",
@@ -20989,14 +21000,14 @@ const rn = [
     comoCriar: "CRIADA em 2026-08-06 (Fase 5e.3), com autorizacao do usuario, em config/packages/bruno_scenes.yaml — mesmo padrao dos demais: script bruno_scene_*, nao entidade scene. O painel de Cenas lista scripts."
   }
 ];
-function on(o) {
+function tn(o) {
   const e = [], a = [];
-  for (const t of rn)
+  for (const t of an)
     o?.states?.[t.entity] ? e.push(t) : a.push(t);
   return { disponiveis: e, ausentes: a };
 }
-function nn(o) {
-  const e = tn();
+function rn(o) {
+  const e = en();
   if (!o) return { total: e.length, ok: 0, issues: [] };
   const a = [];
   let t = 0;
@@ -21006,15 +21017,15 @@ function nn(o) {
   }
   return { total: e.length, ok: t, issues: a };
 }
-function sn(o) {
-  return on(o).ausentes.map((e) => ({
+function on(o) {
+  return tn(o).ausentes.map((e) => ({
     tipo: "scene",
     entityId: e.entity,
     nome: e.name,
     comoResolver: e.comoCriar
   }));
 }
-function ln() {
+function nn() {
   const o = window.devicePixelRatio || 1;
   return {
     buildId: "20260822",
@@ -21028,14 +21039,14 @@ function ln() {
     userAgent: navigator.userAgent
   };
 }
-const cn = 2;
-function dn(o, e) {
+const sn = 2;
+function ln(o, e) {
   if (["unavailable", "unknown"].includes(e)) return "indisponivel";
   const a = String(o.frontend_stream_type ?? "");
   return a === "web_rtc" ? "web_rtc" : a === "hls" ? "hls" : "instantaneo";
 }
-async function pn(o) {
-  const e = fi(o), a = o?.callWS;
+async function cn(o) {
+  const e = mi(o), a = o?.callWS;
   if (!a || !e.cameras.length) return e;
   const t = await Promise.all(
     e.cameras.map(async (r) => {
@@ -21061,10 +21072,10 @@ async function pn(o) {
     streamCarregado: e.streamCarregado,
     cameras: t,
     resumo: i,
-    veredito: vi(i, t.length, e.streamCarregado)
+    veredito: fi(i, t.length, e.streamCarregado)
   };
 }
-function fi(o) {
+function mi(o) {
   const e = {
     streamCarregado: !1,
     cameras: [],
@@ -21080,8 +21091,8 @@ function fi(o) {
       entityId: r,
       nome: String(s.friendly_name ?? r),
       estado: String(n.state),
-      caminho: dn(s, String(n.state)),
-      suportaStream: (l & cn) !== 0
+      caminho: ln(s, String(n.state)),
+      suportaStream: (l & sn) !== 0
     });
   }
   a.sort((r, n) => r.entityId.localeCompare(n.entityId));
@@ -21097,15 +21108,15 @@ function fi(o) {
     streamCarregado: i,
     cameras: a,
     resumo: t,
-    veredito: vi(t, a.length, i)
+    veredito: fi(t, a.length, i)
   };
 }
-function vi(o, e, a) {
+function fi(o, e, a) {
   return e === 0 ? "Nenhuma câmera encontrada." : o.web_rtc > 0 ? `${o.web_rtc} de ${e} com WebRTC — vale medir stream nessas.` : o.hls > 0 ? `${o.hls} de ${e} só com HLS. A transcodificação roda na VM: stream só se a medição provar que compensa, e uma câmera por vez.` : a ? "Câmeras com stream declarado, mas sem tipo publicado — sondar de novo com o painel aberto." : "Nenhuma câmera declara suporte a stream — o instantâneo é o único caminho.";
 }
-class un extends Z {
+class dn extends Z {
   constructor() {
-    super(...arguments), this._env = ln(), this._sondando = !1, this._mensagem = "";
+    super(...arguments), this._env = nn(), this._sondando = !1, this._mensagem = "";
   }
   static {
     this.properties = {
@@ -21123,7 +21134,7 @@ class un extends Z {
   }
   static {
     this.styles = [
-      Qo,
+      Yo,
       xe`
       :host {
         display: block;
@@ -21327,14 +21338,14 @@ class un extends Z {
    * se quer comparar.
    */
   _marcar() {
-    const e = ei();
+    const e = Jt();
     this._mensagem = `Marca posta: ${e.instancias} instâncias, ${e.timers} timers, ${e.listeners} listeners. Navegue e volte aqui.`, this.requestUpdate();
   }
   _cameras() {
-    !this._sondaProfunda && !this._sondando && this._hass && (this._sondando = !0, pn(this._hass).then((a) => {
+    !this._sondaProfunda && !this._sondando && this._hass && (this._sondando = !0, cn(this._hass).then((a) => {
       this._sondaProfunda = a, this._sondando = !1, this.requestUpdate();
     }));
-    const e = this._sondaProfunda ?? fi(this._hass);
+    const e = this._sondaProfunda ?? mi(this._hass);
     return e.cameras.length ? v`
       <div>
         <h2>Câmeras — capacidade</h2>
@@ -21372,7 +21383,7 @@ class un extends Z {
     this.requestUpdate();
   }
   render() {
-    const e = this._env, a = nn(this._hass), t = a.issues.filter((n) => n.problem === "missing"), i = a.issues.filter((n) => n.problem === "unavailable"), r = sn(this._hass);
+    const e = this._env, a = rn(this._hass), t = a.issues.filter((n) => n.problem === "missing"), i = a.issues.filter((n) => n.problem === "unavailable"), r = on(this._hass);
     return v`
       <div class="card">
         <div>
@@ -21456,133 +21467,37 @@ class un extends Z {
     `;
   }
 }
-customElements.get("bruno-diagnostics") || customElements.define("bruno-diagnostics", un);
-const ze = window;
-ze.customCards = ze.customCards ?? [];
-ze.customCards.some((o) => o.type === "bruno-diagnostics") || ze.customCards.push({
+customElements.get("bruno-diagnostics") || customElements.define("bruno-diagnostics", dn);
+const He = window;
+He.customCards = He.customCards ?? [];
+He.customCards.some((o) => o.type === "bruno-diagnostics") || He.customCards.push({
   type: "bruno-diagnostics",
   name: "Bruno · Diagnóstico",
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
-const zt = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.Det_mLE_.js"),
+const Ht = {
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.BH4UqthB.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.CBHmR7Dy.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
   "custom:bruno-music-subview": () => import("./bruno-music-subview.XuZ319ir.js")
 }, Dt = /* @__PURE__ */ new Map();
-async function hn(o) {
-  if (!o || !zt[o]) return;
+async function pn(o) {
+  if (!o || !Ht[o]) return;
   let e = Dt.get(o);
-  e || (e = zt[o](), Dt.set(o, e)), await e;
+  e || (e = Ht[o](), Dt.set(o, e)), await e;
 }
 async function Aa(o) {
-  o && (await hn(o.type), o.card && await Aa(o.card), Array.isArray(o.cards) && await Promise.all(o.cards.map(Aa)));
+  o && (await pn(o.type), o.card && await Aa(o.card), Array.isArray(o.cards) && await Promise.all(o.cards.map(Aa)));
 }
 globalThis.BrunoLazyModules = { ensureForConfig: Aa };
-const ra = za.find((o) => o.id === "lavabo");
+const ra = Ha.find((o) => o.id === "lavabo");
 ra && (ra.entities.temperature = "sensor.office_temp_humid_temperature", ra.entities.humidity = "sensor.office_temp_humid_humidity");
-const Pt = "bruno-josh-on-material", bn = `
-/* TABLET / DESKTOP — continua TILE, sem cartela. */
-@media (min-width: 801px) {
-  .room-card.is-tile.is-room-on::before {
-    inset: 0 !important;
-    border-radius: 0 !important;
-    background:
-      radial-gradient(
-        ellipse 74% 70% at 50% 66%,
-        rgba(255,255,255,0.12) 0%,
-        rgba(255,255,255,0.065) 38%,
-        rgba(255,255,255,0.024) 58%,
-        transparent 78%
-      ),
-      radial-gradient(
-        ellipse 54% 42% at 50% 18%,
-        rgba(255,255,255,0.055) 0%,
-        transparent 74%
-      ) !important;
-    opacity: 1 !important;
-  }
-
-  .room-card.is-tile.is-room-on::after {
-    opacity: 1 !important;
-    background: linear-gradient(
-      90deg,
-      rgba(255,194,104,0) 0%,
-      rgba(255,202,122,0.92) 50%,
-      rgba(255,194,104,0) 100%
-    ) !important;
-    box-shadow: 0 -2px 14px rgba(255,194,102,0.24) !important;
-  }
-}
-
-/* PHONE — receita ON do Liquid Glass, sem alterar o raio Josh. */
-@media (max-width: 800px) {
-  .room-card.is-josh-phone-card.is-room-on {
-    --text-main: rgba(248, 251, 255, 0.96);
-    --text-soft: rgba(255, 255, 255, 0.52);
-    --text-muted: rgba(255, 255, 255, 0.62);
-    background:
-      radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 46%, transparent 73%),
-      linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 40%, rgba(255,255,255,0.07)),
-      linear-gradient(155deg, rgba(255,255,255,0.11), rgba(255,255,255,0.055)) !important;
-    border-color: rgba(255,255,255,0.16) !important;
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.36),
-      inset 1px 0 0 rgba(255,255,255,0.12),
-      inset -1px 0 0 rgba(255,255,255,0.07),
-      inset 0 -1px 0 rgba(255,255,255,0.04),
-      0 8px 24px rgba(0,0,0,0.32) !important;
-    backdrop-filter: blur(14px) saturate(1.28) brightness(1.04) !important;
-    -webkit-backdrop-filter: blur(14px) saturate(1.28) brightness(1.04) !important;
-  }
-
-  .room-card.is-josh-phone-card.is-room-on::before {
-    background:
-      radial-gradient(112px 72px at 16% 0%, rgba(255,255,255,0.40), transparent 72%),
-      linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.00) 38%),
-      linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.00) 48%) !important;
-    opacity: 0.85 !important;
-  }
-
-  .room-card.is-josh-phone-card.is-room-on::after {
-    opacity: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .room-card.is-josh-phone-card.is-room-on .room-asset-on {
-    filter: none !important;
-  }
-}
-`;
-function _i(o) {
-  const e = o.shadowRoot;
-  if (!e || e.getElementById(Pt)) return;
-  const a = document.createElement("style");
-  a.id = Pt, a.textContent = bn, e.appendChild(a);
-}
-function xi(o) {
-  o.querySelectorAll("bruno-room-tile").forEach(_i), o.querySelectorAll("*").forEach((e) => {
-    e.shadowRoot && xi(e.shadowRoot);
-  });
-}
-customElements.whenDefined("bruno-room-tile").then(() => {
-  const o = customElements.get("bruno-room-tile");
-  if (!o) return;
-  const e = o.prototype;
-  if (!e.__brunoJoshPhoneOnPatched) {
-    const a = e.connectedCallback;
-    e.connectedCallback = function() {
-      a?.call(this), queueMicrotask(() => _i(this));
-    }, e.__brunoJoshPhoneOnPatched = !0;
-  }
-  xi(document);
-});
-function gn(o) {
+function un(o) {
   const e = o / 6e4, a = o / 36e5, t = o / 864e5;
   return e < 1 ? "<1m" : e < 60 ? `${Math.trunc(e)}m` : a < 24 ? `${Math.trunc(a)}h` : `${Math.trunc(t)}d`;
 }
-function mn(o) {
+function hn(o) {
   const { hass: e, groupEntityId: a, activeSensorId: t, fallbackLightIds: i = [] } = o, r = o.now ?? Date.now(), n = a ? e.states[a] : void 0, s = t ? e.states[t] : void 0;
   let l = null;
   const c = s?.attributes.lights_on_count;
@@ -21597,7 +21512,7 @@ function mn(o) {
       u && (l = u.length / 2);
     }
   }
-  const p = fn(n);
+  const p = bn(n);
   l === null && p.length > 0 && (l = p.filter((b) => e.states[b]?.state === "on").length), l === null && i.length > 0 && (l = i.filter((b) => e.states[b]?.state === "on").length), l === null && (l = n?.state === "on" ? 1 : 0);
   let d = String(s?.attributes.lights_elapsed ?? "");
   if (!d) {
@@ -21613,7 +21528,7 @@ function mn(o) {
       const g = Date.parse(n.last_changed);
       Number.isNaN(g) || (u = g);
     }
-    d = u === null ? "" : gn(r - u);
+    d = u === null ? "" : un(r - u);
   }
   const h = l === 1 ? "1 light" : `${l} lights`;
   return {
@@ -21622,23 +21537,23 @@ function mn(o) {
     label: l > 0 ? `${h}${d ? ` / ${d}` : ""}` : ""
   };
 }
-function fn(o) {
+function bn(o) {
   const e = o?.attributes.entity_id;
   return Array.isArray(e) ? e.filter((a) => typeof a == "string") : [];
 }
-function vn(o) {
+function gn(o) {
   const { hass: e, semanticSensorId: a, motionRecentId: t, occupancyId: i } = o, r = a ? e.states[a] : void 0, n = String(r?.state ?? "").toLowerCase(), s = r?.attributes.display;
   if (s && !["none", "unknown", "unavailable", ""].includes(n))
     return String(s).trim();
   const l = t ? e.states[t] : void 0;
   return l && l.state !== "on" ? "" : (i ? e.states[i] : void 0)?.state === "on" ? "Ocupado" : "";
 }
-function jt(o, e, a = ["on", "home", "active", "yes"]) {
+function Pt(o, e, a = ["on", "home", "active", "yes"]) {
   if (!e) return !1;
   const t = o.states[e];
   return t ? a.includes(String(t.state).toLowerCase()) : !1;
 }
-function Vt(o, e, a = "") {
+function jt(o, e, a = "") {
   const t = typeof e == "string" ? [e] : e ?? [];
   for (const i of t) {
     const r = o.states[i], n = String(r?.state ?? "").toLowerCase();
@@ -21650,7 +21565,7 @@ function Vt(o, e, a = "") {
 function Q(o) {
   return String(o ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
-const _n = [
+const mn = [
   "source",
   "source_name",
   "device_name",
@@ -21659,21 +21574,21 @@ const _n = [
   "media_player",
   "media_player_name"
 ];
-function xn(o, e) {
+function fn(o, e) {
   const a = Q(e);
   if (!a) return !0;
   const t = o ?? {};
-  return _n.some((i) => {
+  return mn.some((i) => {
     const r = Q(t[i]);
     return !!(r && (r === a || r.includes(a) || r.length >= 10 && a.includes(r)));
   });
 }
-const yi = ["playing", "paused"];
-function yn(o, e, a) {
-  return !o || !yi.includes(String(o.state).toLowerCase()) ? !1 : xn(o.attributes, e) ? !0 : wn(o.attributes, a);
+const vi = ["playing", "paused"];
+function vn(o, e, a) {
+  return !o || !vi.includes(String(o.state).toLowerCase()) ? !1 : fn(o.attributes, e) ? !0 : _n(o.attributes, a);
 }
-function wn(o, e) {
-  if (!e || !yi.includes(String(e.state).toLowerCase())) return !1;
+function _n(o, e) {
+  if (!e || !vi.includes(String(e.state).toLowerCase())) return !1;
   const a = e.attributes ?? {};
   if (Q(
     [a.app_name, a.source, a.media_content_type, a.media_channel].join(" ")
@@ -21683,8 +21598,8 @@ function wn(o, e) {
   const s = Q(a.media_artist), l = Q(i.media_artist);
   return !!(r && n && r.includes(n) && s && l && s === l);
 }
-const kn = "∅", qn = (o) => o ? `${o.state}@${o.last_changed}` : kn;
-class wi {
+const xn = "∅", yn = (o) => o ? `${o.state}@${o.last_changed}` : xn;
+class _i {
   constructor(e = [], a = {}) {
     this.ids = [], this.ultimo = /* @__PURE__ */ new Map(), this.virgem = !0, this.projecoes = a.projecoes ?? {}, this.observar(e);
   }
@@ -21705,7 +21620,7 @@ class wi {
     return this.ids;
   }
   projetar(e, a) {
-    return (this.projecoes[a] ?? qn)(e.states[a]);
+    return (this.projecoes[a] ?? yn)(e.states[a]);
   }
   /**
    * O que mudou desde a última pergunta.
@@ -21739,15 +21654,15 @@ class wi {
     this.ultimo.clear(), this.virgem = !0;
   }
 }
-function ki(o, e = 2) {
+function xi(o, e = 2) {
   return o.length === 0 ? "" : o.length <= e ? o.join(" ") : `${o.slice(0, e).join(" ")} +${o.length - e}`;
 }
-const Sn = /^[a-z_]+\.[a-z0-9_]+$/, An = 8;
-function vs(o, e = 0) {
+const wn = /^[a-z_]+\.[a-z0-9_]+$/, kn = 8;
+function gs(o, e = 0) {
   const a = [], t = /* @__PURE__ */ new Set(), i = (r, n) => {
-    if (!(n > An || r == null)) {
+    if (!(n > kn || r == null)) {
       if (typeof r == "string") {
-        Sn.test(r) && !t.has(r) && (t.add(r), a.push(r));
+        wn.test(r) && !t.has(r) && (t.add(r), a.push(r));
         return;
       }
       if (Array.isArray(r)) {
@@ -21760,8 +21675,8 @@ function vs(o, e = 0) {
   };
   return i(o, e), a;
 }
-const oa = "bruno-room-tile", On = 1200, En = 560, Bt = 10;
-function Ut() {
+const oa = "bruno-room-tile", qn = 1200, Sn = 560, Bt = 10;
+function Vt() {
   return {
     pointerId: null,
     down: !1,
@@ -21775,14 +21690,14 @@ function Ut() {
 function na(o) {
   globalThis.BrunoLiquidGlass?.feedback?.(o);
 }
-function Ft(o) {
+function Ut(o) {
   return o === !0 ? !0 : typeof o == "number" ? o > 0 : ["true", "on", "yes", "1"].includes(String(o ?? "").toLowerCase());
 }
-class Cn extends Z {
+class An extends Z {
   constructor() {
-    super(...arguments), this._lastAction = 0, this._observador = new wi(), this._motivo = "", this._gestures = {
-      room: Ut(),
-      nav: Ut()
+    super(...arguments), this._lastAction = 0, this._observador = new _i(), this._motivo = "", this._gestures = {
+      room: Vt(),
+      nav: Vt()
     }, this._timers = /* @__PURE__ */ new Set(), this._onThemeChanged = () => {
       this._tileModeCache = void 0, this.requestUpdate();
     }, this._fecharPainel = () => {
@@ -21794,7 +21709,7 @@ class Cn extends Z {
   }
   setConfig(e) {
     if (!e?.room) throw new Error("bruno-room-tile: informe `room`");
-    const a = za.find((t) => t.id === e.room);
+    const a = Ha.find((t) => t.id === e.room);
     if (!a) throw new Error(`bruno-room-tile: cômodo desconhecido "${e.room}"`);
     this._config = e, this._room = a, this._observador.observar(this._watched());
   }
@@ -21809,7 +21724,7 @@ class Cn extends Z {
    */
   update(e) {
     const a = this._motivo;
-    this._motivo = "", Jt(
+    this._motivo = "", Qt(
       oa,
       () => super.update(e),
       a || (this.hasUpdated ? "interação" : "montagem")
@@ -21823,7 +21738,7 @@ class Cn extends Z {
   set hass(e) {
     this._hass = e;
     const a = this._observador.mudancas(e);
-    a.length !== 0 && (this._motivo = ki(a), this.requestUpdate());
+    a.length !== 0 && (this._motivo = xi(a), this.requestUpdate());
   }
   _watched() {
     const e = this._room, a = e?.entities;
@@ -21845,10 +21760,10 @@ class Cn extends Z {
     ].filter((r) => typeof r == "string");
   }
   connectedCallback() {
-    super.connectedCallback(), Xt(oa), this._tileModeCache = void 0, globalThis.addEventListener?.("bruno-theme-changed", this._onThemeChanged);
+    super.connectedCallback(), Yt(oa), this._tileModeCache = void 0, globalThis.addEventListener?.("bruno-theme-changed", this._onThemeChanged);
   }
   disconnectedCallback() {
-    super.disconnectedCallback(), Qt(oa), globalThis.removeEventListener?.("bruno-theme-changed", this._onThemeChanged);
+    super.disconnectedCallback(), Xt(oa), globalThis.removeEventListener?.("bruno-theme-changed", this._onThemeChanged);
     for (const e of this._timers) window.clearTimeout(e);
     this._timers.clear();
     for (const e of ["room", "nav"]) this._resetGesture(e);
@@ -21917,7 +21832,7 @@ class Cn extends Z {
     }
     a.stopPropagation(), t.down = !0, t.moved = !1, t.holdFired = !1, t.pointerId = a.pointerId, t.startX = a.clientX, t.startY = a.clientY, this._classe(this._alvoSeletor(e), "is-pressed", !0), t.holdTimer = this._later(() => {
       t.holdTimer = null, !(!t.down || t.moved) && (t.holdFired = !0, this._classe(this._alvoSeletor(e), "is-hold-fired", !0), this._later(() => this._classe(this._alvoSeletor(e), "is-hold-fired", !1), 260), this._runAction("hold"));
-    }, En);
+    }, Sn);
   }
   _onMove(e, a) {
     const t = this._gestures[e];
@@ -21964,7 +21879,7 @@ class Cn extends Z {
       return;
     }
     const i = Date.now();
-    if (i - this._lastAction < On) return;
+    if (i - this._lastAction < qn) return;
     this._lastAction = i;
     const r = a.toggleTarget ?? a.entities.lightGroup ?? a.entities.lights?.[0];
     r && t.callService("light", "toggle", { entity_id: r }, { entity_id: r });
@@ -22030,10 +21945,10 @@ class Cn extends Z {
     const t = a.activeSensor ? e.states[a.activeSensor] : void 0, i = (r) => {
       const n = (r.states ?? []).map((p) => p.toLowerCase()), s = (r.entities ?? []).some((p) => {
         if (r.offDelayMs && p.startsWith("media_player."))
-          return en(e, p, Date.now(), r.offDelayMs);
+          return Qo(e, p, Date.now(), r.offDelayMs);
         const d = e.states[p];
         return !!d && n.includes(String(d?.state ?? "").toLowerCase());
-      }), l = r.activeAttr ? Ft(t?.attributes[r.activeAttr]) : !1, c = r.spotifyDevice ? yn(e.states[an], r.spotifyDevice) : !1;
+      }), l = r.activeAttr ? Ut(t?.attributes[r.activeAttr]) : !1, c = r.spotifyDevice ? vn(e.states[Jo], r.spotifyDevice) : !1;
       return s || l || c;
     };
     return (a.statusDots ?? []).filter(i).map((r) => ({ icon: r.icon, label: r.label, tone: r.tone }));
@@ -22041,18 +21956,18 @@ class Cn extends Z {
   _statusLines() {
     const e = this._hass, a = this._room;
     if (!e || !a) return [];
-    const t = mn({
+    const t = hn({
       hass: e,
       groupEntityId: a.entities.lightGroup,
       activeSensorId: a.activeSensor,
       fallbackLightIds: a.entities.lights
-    }), i = a.entities.semanticState ? vn({
+    }), i = a.entities.semanticState ? gn({
       hass: e,
       semanticSensorId: a.entities.semanticState,
       motionRecentId: a.entities.motionRecent,
       occupancyId: a.entities.occupancy
     }) : "", r = [];
-    t.label ? r.push(t.label) : jt(e, a.entities.lightGroup) && r.push("On");
+    t.label ? r.push(t.label) : Pt(e, a.entities.lightGroup) && r.push("On");
     const n = this._applianceLine();
     return n && r.push(n), i && r.push(i), r;
   }
@@ -22061,7 +21976,7 @@ class Cn extends Z {
     const e = this._hass, a = this._room, t = a?.applianceLine;
     if (!e || !a || !t) return "";
     const i = a.activeSensor ? e.states[a.activeSensor] : void 0, r = (t.states ?? []).map((c) => c.toLowerCase()), n = t.entity ? e.states[t.entity] : void 0;
-    if (!(!!n && r.includes(String(n?.state ?? "").toLowerCase()) || (t.activeAttr ? Ft(i?.attributes[t.activeAttr]) : !1))) return "";
+    if (!(!!n && r.includes(String(n?.state ?? "").toLowerCase()) || (t.activeAttr ? Ut(i?.attributes[t.activeAttr]) : !1))) return "";
     const l = t.elapsedAttr ? String(i?.attributes[t.elapsedAttr] ?? "") : "";
     return l ? `${t.label} / ${l}` : t.label;
   }
@@ -22575,8 +22490,10 @@ class Cn extends Z {
       opacity: var(--bruno-tile-sheen-opacity, 0);
     }
 
-    /* Josh ON: reforco sem reintroduzir uma cartela. A leitura vem de luz,
-       nao de moldura: wash leitoso discreto, filete quente e glow de base. */
+    /* Josh ON tablet/desktop: continua TILE, sem cartela e sem veil.
+       O wash foi reprovado na validacao fisica de 2026-08-22 porque ainda
+       desenhava um retangulo perceptivel. O feedback ON fica no PNG, texto,
+       filete quente e glow inferior. */
     .room-card.is-tile.is-room-on {
       --text-main: rgba(255, 252, 245, 0.99);
       --text-soft: rgba(255, 245, 226, 0.72);
@@ -22584,7 +22501,7 @@ class Cn extends Z {
       --bruno-tile-on-line: linear-gradient(
         90deg,
         rgba(255, 194, 104, 0) 0%,
-        rgba(255, 202, 122, 0.78) 50%,
+        rgba(255, 202, 122, 0.92) 50%,
         rgba(255, 194, 104, 0) 100%
       );
       --bruno-tile-on-glow: radial-gradient(
@@ -22596,12 +22513,10 @@ class Cn extends Z {
     }
 
     .room-card.is-tile.is-room-on::before {
-      inset: 1px 2px 1px;
+      inset: 0;
       border-radius: 0;
-      background:
-        radial-gradient(92% 78% at 50% 100%, rgba(255, 204, 126, 0.12), transparent 72%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.070), rgba(255, 247, 232, 0.025) 62%, transparent);
-      opacity: 1;
+      background: none;
+      opacity: 0;
     }
 
     .room-card.is-tile.is-room-on::after {
@@ -22611,7 +22526,7 @@ class Cn extends Z {
         --bruno-tile-on-line,
         linear-gradient(90deg, rgba(255, 187, 72, 0) 0%, rgba(255, 187, 72, 0.42) 50%, rgba(255, 187, 72, 0) 100%)
       );
-      box-shadow: 0 -2px 11px rgba(255, 194, 102, 0.17);
+      box-shadow: 0 -2px 14px rgba(255, 194, 102, 0.24);
     }
 
     .room-card.is-tile .room-action {
@@ -22731,28 +22646,18 @@ class Cn extends Z {
         opacity: 0.72;
       }
       .room-card.is-josh-phone-card.is-room-on {
-        --text-main: rgba(255, 253, 248, 0.99);
-        --text-soft: rgba(255, 246, 230, 0.72);
-        --text-muted: rgba(255, 248, 236, 0.76);
-        background:
-          radial-gradient(175px 138px at 16% -10%, rgba(255, 252, 245, 0.30), transparent 72%),
-          radial-gradient(155px 120px at 92% 100%, rgba(255, 207, 135, 0.13), transparent 72%),
-          linear-gradient(180deg, rgba(255, 250, 240, 0.18), rgba(255, 242, 222, 0.075) 48%, rgba(44, 31, 22, 0.10)),
-          rgba(30, 27, 24, 0.42);
-        border-color: rgba(255, 244, 225, 0.275);
-        box-shadow:
-          inset 0 1px 0 rgba(255, 255, 255, 0.27),
-          inset 0 -1px 0 rgba(255, 213, 151, 0.07),
-          0 0 24px rgba(255, 205, 132, 0.09),
-          0 12px 28px rgba(0, 0, 0, 0.21);
-        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
-        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+        --text-main: rgba(248, 251, 255, 0.96);
+        --text-soft: rgba(255, 255, 255, 0.52);
+        --text-muted: rgba(255, 255, 255, 0.62);
+        background: var(--bruno-josh-room-on-background);
+        border-color: var(--bruno-josh-room-on-border-color);
+        box-shadow: var(--bruno-josh-room-on-shadow);
+        backdrop-filter: var(--bruno-josh-room-on-filter);
+        -webkit-backdrop-filter: var(--bruno-josh-room-on-filter);
       }
       .room-card.is-josh-phone-card.is-room-on::before {
-        background:
-          radial-gradient(120px 86px at 18% 0%, rgba(255, 255, 255, 0.22), transparent 74%),
-          linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 42%);
-        opacity: 0.88;
+        background: var(--bruno-josh-room-on-sheen);
+        opacity: var(--bruno-josh-room-on-sheen-opacity);
       }
       .room-card.is-josh-phone-card .room-action {
         border-radius: inherit;
@@ -23052,7 +22957,7 @@ class Cn extends Z {
   render() {
     const e = this._room, a = this._hass;
     if (!e) return _;
-    const t = a ? jt(a, e.entities.lightGroup ?? e.entities.lights?.[0]) : !1, i = a ? Vt(a, e.entities.temperature, "°") : "--", r = a ? Vt(a, e.entities.humidity, "%") : "--", n = !!(e.entities.temperature ?? e.entities.humidity), s = this._statusLines(), l = this._dots(), c = "20260821-v3-webp-2", p = e.assetOff ? `/local/bruno-ui/assets/${e.assetOff}?v=${c}` : "", d = e.assetOn ? `/local/bruno-ui/assets/${e.assetOn}?v=${c}` : "", h = [
+    const t = a ? Pt(a, e.entities.lightGroup ?? e.entities.lights?.[0]) : !1, i = a ? jt(a, e.entities.temperature, "°") : "--", r = a ? jt(a, e.entities.humidity, "%") : "--", n = !!(e.entities.temperature ?? e.entities.humidity), s = this._statusLines(), l = this._dots(), c = "20260821-v3-webp-2", p = e.assetOff ? `/local/bruno-ui/assets/${e.assetOff}?v=${c}` : "", d = e.assetOn ? `/local/bruno-ui/assets/${e.assetOn}?v=${c}` : "", h = [
       "room-card",
       t ? "is-room-on" : "",
       this._phoneJoshCard ? "is-josh-phone-card" : "",
@@ -23156,10 +23061,10 @@ class Cn extends Z {
                     </div>` : _}
                 <div class="room-popup-lights">
                   ${g.lights.map((m) => {
-      const x = a?.states[m.entity], S = String(x?.state ?? "").toLowerCase(), $ = S === "on", H = !x || ["unavailable", "unknown", "none", ""].includes(S), M = [
+      const x = a?.states[m.entity], S = String(x?.state ?? "").toLowerCase(), $ = S === "on", z = !x || ["unavailable", "unknown", "none", ""].includes(S), M = [
         "room-popup-light",
         $ ? "is-on" : "",
-        H ? "is-unavailable" : ""
+        z ? "is-unavailable" : ""
       ].filter(Boolean).join(" ");
       return v`<button
                       class=${M}
@@ -23172,7 +23077,7 @@ class Cn extends Z {
                       </span>
                       <span class="room-popup-light-copy">
                         <strong>${m.name}</strong>
-                        <span>${H ? "Indisponivel" : $ ? "Ligada" : "Desligada"}</span>
+                        <span>${z ? "Indisponivel" : $ ? "Ligada" : "Desligada"}</span>
                       </span>
                     </button>`;
     })}
@@ -23183,7 +23088,7 @@ class Cn extends Z {
     `;
   }
 }
-customElements.get("bruno-room-tile") || customElements.define("bruno-room-tile", Cn);
+customElements.get("bruno-room-tile") || customElements.define("bruno-room-tile", An);
 const De = window;
 De.customCards = De.customCards ?? [];
 De.customCards.some((o) => o.type === "bruno-room-tile") || De.customCards.push({
@@ -23191,27 +23096,27 @@ De.customCards.some((o) => o.type === "bruno-room-tile") || De.customCards.push(
   name: "Bruno · Tile de cômodo",
   description: "Tile parametrizado por cômodo (arquitetura nova)."
 });
-const Gt = /* @__PURE__ */ new WeakSet();
-function Tn(o) {
+const Ft = /* @__PURE__ */ new WeakSet();
+function On(o) {
   const e = o.shadowRoot;
   e && e.querySelectorAll("img.room-asset").forEach((a) => {
     a.draggable = !1, a.setAttribute("draggable", "false"), a.style.setProperty("-webkit-touch-callout", "none"), a.style.setProperty("-webkit-user-drag", "none"), a.style.setProperty("-webkit-user-select", "none"), a.style.setProperty("user-select", "none");
   });
 }
-function $n() {
+function En() {
   customElements.whenDefined("bruno-room-tile").then(() => {
     const o = customElements.get("bruno-room-tile");
     if (!o) return;
     const e = o.prototype;
-    if (Gt.has(e)) return;
-    Gt.add(e);
+    if (Ft.has(e)) return;
+    Ft.add(e);
     const a = e.updated;
     e.updated = function(...t) {
-      a?.apply(this, t), Tn(this);
+      a?.apply(this, t), On(this);
     };
   });
 }
-class Mn {
+class Cn {
   constructor() {
     this.definicoes = /* @__PURE__ */ new Map();
   }
@@ -23231,16 +23136,16 @@ class Mn {
     return this.definicoes.has(e);
   }
 }
-const j = new Mn();
-function In(o) {
+const j = new Cn();
+function Tn(o) {
   const e = j.obter(o.type);
   if (e)
     return e.create(o);
 }
-function Wt(o) {
+function Gt(o) {
   return j.obter(o.type)?.entities(o) ?? [];
 }
-function Ln(o) {
+function $n(o) {
   const e = [], a = /* @__PURE__ */ new Set();
   for (const [t, i] of o.entries()) {
     const r = i.id || `posição ${t}`;
@@ -23250,7 +23155,7 @@ function Ln(o) {
   }
   return { ok: e.length === 0, erros: e };
 }
-function qi(o, e) {
+function yi(o, e) {
   if (typeof o == "string") return o || void 0;
   if (!Array.isArray(o)) return;
   const a = o.filter((i) => typeof i == "string" && !!i);
@@ -23259,7 +23164,7 @@ function qi(o, e) {
     return r && !["unavailable", "unknown", ""].includes(String(r.state).toLowerCase());
   }) ?? a[0];
 }
-function Rn(o) {
+function Mn(o) {
   const e = /* @__PURE__ */ new Map();
   for (const a of o) {
     const t = a.group ?? "Casa", i = e.get(t);
@@ -23267,7 +23172,7 @@ function Rn(o) {
   }
   return [...e.entries()].map(([a, t]) => ({ grupo: a, itens: t }));
 }
-const Zt = [
+const Wt = [
   {
     id: "sala-tv",
     type: "media-tv",
@@ -23290,7 +23195,7 @@ const Zt = [
     entity: "climate.sl_ar_condicionado",
     version: 1
   }
-], Nn = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Hn = ["on", "playing", "paused", "idle", "buffering"];
+], In = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Ln = ["on", "playing", "paused", "idle", "buffering"];
 class Pe extends Z {
   static {
     this.properties = { _hass: { state: !0 } };
@@ -23302,7 +23207,7 @@ class Pe extends Z {
     this._hass = e, this.requestUpdate();
   }
   get _entityId() {
-    return qi(this._instancia?.entity, this._hass);
+    return yi(this._instancia?.entity, this._hass);
   }
   _estado(e) {
     return e && this._hass ? this._hass.states[e] : void 0;
@@ -23376,14 +23281,14 @@ class Pe extends Z {
   `;
   }
 }
-class zn extends Pe {
+class Rn extends Pe {
   static {
     this.styles = [Pe.estilosComuns];
   }
   render() {
     const e = this._entityId, a = this._estado(e);
     if (!a) return v`<p class="indisponivel">Entidade indisponível: ${e ?? "—"}</p>`;
-    const t = Hn.includes(String(a.state)), i = String(a.attributes.source ?? a.attributes.app_name ?? "") || "HDMI 1", r = a.attributes.volume_level != null ? Math.round(Number(a.attributes.volume_level) * 100) : null;
+    const t = Ln.includes(String(a.state)), i = String(a.attributes.source ?? a.attributes.app_name ?? "") || "HDMI 1", r = a.attributes.volume_level != null ? Math.round(Number(a.attributes.volume_level) * 100) : null;
     return v`
       <div class="titulo">
         <strong>${this._instancia?.name ?? "TV"}</strong>
@@ -23428,14 +23333,14 @@ class zn extends Pe {
     );
   }
 }
-class Dn extends Pe {
+class Nn extends Pe {
   static {
     this.styles = [Pe.estilosComuns];
   }
   render() {
     const e = this._entityId, a = this._estado(e);
     if (!a) return v`<p class="indisponivel">Entidade indisponível: ${e ?? "—"}</p>`;
-    const t = Nn.includes(String(a.state)), i = Number(a.attributes.temperature), r = Number(a.attributes.current_temperature), n = Number.isFinite(Number(a.attributes.min_temp)) ? Number(a.attributes.min_temp) : 16, s = Number.isFinite(Number(a.attributes.max_temp)) ? Number(a.attributes.max_temp) : 30, l = Number(a.attributes.target_temp_step) || 1, c = Array.isArray(a.attributes.hvac_modes) ? a.attributes.hvac_modes : [], p = (d) => this._servico("climate", "set_temperature", {
+    const t = In.includes(String(a.state)), i = Number(a.attributes.temperature), r = Number(a.attributes.current_temperature), n = Number.isFinite(Number(a.attributes.min_temp)) ? Number(a.attributes.min_temp) : 16, s = Number.isFinite(Number(a.attributes.max_temp)) ? Number(a.attributes.max_temp) : 30, l = Number(a.attributes.target_temp_step) || 1, c = Array.isArray(a.attributes.hvac_modes) ? a.attributes.hvac_modes : [], p = (d) => this._servico("climate", "set_temperature", {
       entity_id: e,
       temperature: Math.max(n, Math.min(s, d))
     });
@@ -23488,9 +23393,9 @@ class Dn extends Pe {
     }[String(e).toLowerCase()] ?? e;
   }
 }
-customElements.get("bruno-control-tv") || customElements.define("bruno-control-tv", zn);
-customElements.get("bruno-control-climate") || customElements.define("bruno-control-climate", Dn);
-function Si(o) {
+customElements.get("bruno-control-tv") || customElements.define("bruno-control-tv", Rn);
+customElements.get("bruno-control-climate") || customElements.define("bruno-control-climate", Nn);
+function wi(o) {
   return (e) => {
     const a = document.createElement(o);
     return a.instancia = e, a;
@@ -23500,7 +23405,7 @@ j.conhece("media-tv") || j.registrar({
   type: "media-tv",
   label: "TV",
   icon: "mdi:television-classic",
-  create: Si("bruno-control-tv"),
+  create: wi("bruno-control-tv"),
   entities: (o) => [typeof o.entity == "string" ? o.entity : o.entity?.[0] ?? ""].filter(Boolean),
   validate: (o) => ({
     ok: !!o.entity,
@@ -23511,18 +23416,18 @@ j.conhece("climate") || j.registrar({
   type: "climate",
   label: "Ar-condicionado",
   icon: "mdi:air-conditioner",
-  create: Si("bruno-control-climate"),
+  create: wi("bruno-control-climate"),
   entities: (o) => [typeof o.entity == "string" ? o.entity : o.entity?.[0] ?? ""].filter(Boolean),
   validate: (o) => ({
     ok: !!o.entity,
     erros: o.entity ? [] : [`dispositivo "${o.id}": clima exige "entity"`]
   })
 });
-const sa = "bruno-devices-panel", Pn = ["on", "playing", "paused", "idle", "buffering", "cool", "heat", "fan_only", "dry", "heat_cool", "auto"];
-class jn extends Z {
+const sa = "bruno-devices-panel", zn = ["on", "playing", "paused", "idle", "buffering", "cool", "heat", "fan_only", "dry", "heat_cool", "auto"];
+class Hn extends Z {
   constructor() {
-    super(...arguments), this._selecionado = "", this._controles = /* @__PURE__ */ new Map(), this._observador = new wi(
-      Zt.flatMap((e) => Wt(e))
+    super(...arguments), this._selecionado = "", this._controles = /* @__PURE__ */ new Map(), this._observador = new _i(
+      Wt.flatMap((e) => Gt(e))
     ), this._motivo = "";
   }
   static {
@@ -23534,10 +23439,10 @@ class jn extends Z {
     this._hass = e;
     for (const t of this._controles.values()) t.hass = e;
     const a = this._observador.mudancas(e);
-    a.length !== 0 && (this._motivo = ki(a), this.requestUpdate());
+    a.length !== 0 && (this._motivo = xi(a), this.requestUpdate());
   }
   get _dispositivos() {
-    return Zt;
+    return Wt;
   }
   _instancia(e) {
     return this._dispositivos.find((a) => a.id === e);
@@ -23547,8 +23452,8 @@ class jn extends Z {
     return this._selecionado && this._instancia(this._selecionado) ? this._selecionado : this._dispositivos.find((a) => this._estaAtivo(a))?.id ?? this._dispositivos[0]?.id ?? "";
   }
   _estaAtivo(e) {
-    const a = qi(e.entity, this._hass), t = a && this._hass ? this._hass.states[a] : void 0;
-    return !!t && Pn.includes(String(t?.state ?? "").toLowerCase());
+    const a = yi(e.entity, this._hass), t = a && this._hass ? this._hass.states[a] : void 0;
+    return !!t && zn.includes(String(t?.state ?? "").toLowerCase());
   }
   /**
    * O controle do dispositivo aberto.
@@ -23566,25 +23471,25 @@ class jn extends Z {
       </p>`;
     let t = this._controles.get(e);
     if (!t) {
-      const i = In(a);
+      const i = Tn(a);
       if (!i) return _;
       t = i, this._controles.set(e, t);
     }
     return this._hass && (t.hass = this._hass), t;
   }
   connectedCallback() {
-    super.connectedCallback(), Xt(sa);
+    super.connectedCallback(), Yt(sa);
   }
   disconnectedCallback() {
-    super.disconnectedCallback(), Qt(sa);
+    super.disconnectedCallback(), Xt(sa);
   }
   /** Mede o custo de cada atualizacao (Fase 6.0.1). */
   update(e) {
     const a = this._motivo;
-    this._motivo = "", Jt(sa, () => super.update(e), a || "outro");
+    this._motivo = "", Qt(sa, () => super.update(e), a || "outro");
   }
   render() {
-    const e = Ln(this._dispositivos), a = this._idAberto;
+    const e = $n(this._dispositivos), a = this._idAberto;
     return v`
       <div class="painel" role="dialog" aria-modal="true" aria-label="Dispositivos">
         <header class="cabecalho">
@@ -23607,7 +23512,7 @@ class jn extends Z {
 
         <div class="corpo">
           <nav class="lista" aria-label="Lista de dispositivos">
-            ${Rn(this._dispositivos).map(
+            ${Mn(this._dispositivos).map(
       (t) => v`
                 <div class="grupo">
                   <h3>${t.grupo}</h3>
@@ -23640,7 +23545,7 @@ class jn extends Z {
   }
   /** Diagnóstico: quais entidades este painel observa. Usado na Fase 6.1. */
   entidadesObservadas() {
-    return [...new Set(this._dispositivos.flatMap((e) => Wt(e)))];
+    return [...new Set(this._dispositivos.flatMap((e) => Gt(e)))];
   }
   static {
     this.styles = xe`
@@ -23851,26 +23756,26 @@ class jn extends Z {
   `;
   }
 }
-customElements.get("bruno-devices-panel") || customElements.define("bruno-devices-panel", jn);
-const K = "ha-web-rtc-player", Vn = 6e3, he = 48, be = 27, Kt = 500;
+customElements.get("bruno-devices-panel") || customElements.define("bruno-devices-panel", Hn);
+const K = "ha-web-rtc-player", Dn = 6e3, he = 48, be = 27, Zt = 500;
 let la;
 const Me = /* @__PURE__ */ new WeakMap();
-function Bn(o) {
+function Pn(o) {
   return o.split(".")[1] ?? o;
 }
 function _e(o, e, a = 0, t = !0) {
-  Zi(`marco: ${Bn(o)} · player webrtc · ${e}`, a, t);
+  Fi(`marco: ${Pn(o)} · player webrtc · ${e}`, a, t);
 }
-function Un() {
+function jn() {
   return typeof customElements > "u" ? Promise.resolve(!1) : customElements.get(K) ? Promise.resolve(!0) : new Promise((o) => {
     let e = !1;
     const a = (i) => {
       e || (e = !0, globalThis.clearTimeout(t), o(i));
-    }, t = globalThis.setTimeout(() => a(!!customElements.get(K)), Vn);
+    }, t = globalThis.setTimeout(() => a(!!customElements.get(K)), Dn);
     customElements.whenDefined(K).then(() => a(!0));
   });
 }
-async function Fn(o, e) {
+async function Bn(o, e) {
   if (typeof customElements > "u") return !1;
   if (customElements.get(K)) return !0;
   const a = globalThis.loadCardHelpers;
@@ -23885,21 +23790,21 @@ async function Fn(o, e) {
       show_name: !1,
       show_state: !1
     });
-    return i && e && (i.hass = e), await Un();
+    return i && e && (i.hass = e), await jn();
   } catch {
     return !1;
   }
 }
-async function Gn(o, e) {
+async function Vn(o, e) {
   if (typeof customElements < "u" && customElements.get(K)) return !0;
   const a = typeof performance < "u" ? performance.now() : Date.now();
-  _e(o, "ausente; carregando modulo", 0, !1), la ??= Fn(o, e).finally(() => {
+  _e(o, "ausente; carregando modulo", 0, !1), la ??= Bn(o, e).finally(() => {
     la = void 0;
   });
   const t = await la, i = typeof performance < "u" ? performance.now() : Date.now();
   return _e(o, t ? "definido sob demanda" : "definicao indisponivel", i - a, t), t;
 }
-function Wn() {
+function Un() {
   if (typeof customElements > "u" || !customElements.get(K)) return;
   const o = document.createElement(K);
   o.classList.add("camera-live-el"), o.setAttribute("muted", ""), o.setAttribute("playsinline", ""), o.setAttribute("autoplay", "");
@@ -23907,12 +23812,12 @@ function Wn() {
     o.fitMode = "cover";
   } catch {
   }
-  return Yn(o), o;
+  return Wn(o), o;
 }
-function Ai(o, e, a) {
+function ki(o, e, a) {
   return e >= 80 && e - o >= 48 && e - a >= 48;
 }
-function Zn(o, e, a) {
+function Fn(o, e, a) {
   if (e !== he || a !== be || o.length !== e * a * 4) return !1;
   const t = 6, i = 3, r = e / t, n = a / i, s = Array.from({ length: i }, () => Array(t).fill(!1));
   for (let l = 0; l < i; l++)
@@ -23924,10 +23829,10 @@ function Zn(o, e, a) {
           const f = (u * e + g) * 4;
           if ((o[f + 3] ?? 0) < 128) continue;
           const m = o[f] ?? 0, x = o[f + 1] ?? 0, S = o[f + 2] ?? 0;
-          if (d++, !Ai(m, x, S)) continue;
+          if (d++, !ki(m, x, S)) continue;
           h++;
-          const $ = m >> 4 | x >> 4 << 4 | S >> 4 << 8, H = (p.get($) ?? 0) + 1;
-          p.set($, H), b = Math.max(b, H);
+          const $ = m >> 4 | x >> 4 << 4 | S >> 4 << 8, z = (p.get($) ?? 0) + 1;
+          p.set($, z), b = Math.max(b, z);
         }
       s[l][c] = d >= 48 && h / d >= 0.82 && b / d >= 0.55;
     }
@@ -23937,7 +23842,7 @@ function Zn(o, e, a) {
         return !0;
   return !1;
 }
-function Kn(o, e = he, a = be) {
+function Gn(o, e = he, a = be) {
   const t = /* @__PURE__ */ new Map();
   let i = 0;
   for (let d = 0; d + 3 < o.length; d += 4) {
@@ -23950,9 +23855,9 @@ function Kn(o, e = he, a = be) {
   for (const [d, h] of t)
     h <= r || (r = h, n = d);
   const s = (n & 15) * 16 + 8, l = (n >> 4 & 15) * 16 + 8, c = (n >> 8 & 15) * 16 + 8;
-  return r / i >= 0.45 && Ai(s, l, c) || Zn(o, e, a);
+  return r / i >= 0.45 && ki(s, l, c) || Fn(o, e, a);
 }
-function Yn(o) {
+function Wn(o) {
   if (Me.has(o)) return;
   let e = 0;
   const a = () => {
@@ -23967,9 +23872,9 @@ function Yn(o) {
       Me.delete(o);
       return;
     }
-    const i = globalThis.setTimeout(a, Kt);
+    const i = globalThis.setTimeout(a, Zt);
     Me.set(o, i);
-  }, t = globalThis.setTimeout(a, Kt);
+  }, t = globalThis.setTimeout(a, Zt);
   Me.set(o, t);
 }
 function Da(o) {
@@ -23978,29 +23883,29 @@ function Da(o) {
     const e = document.createElement("canvas");
     e.width = he, e.height = be;
     const a = e.getContext("2d", { willReadFrequently: !0 });
-    return a ? (a.drawImage(o, 0, 0, he, be), Kn(
+    return a ? (a.drawImage(o, 0, 0, he, be), Gn(
       a.getImageData(0, 0, he, be).data
     )) : !1;
   } catch {
     return !1;
   }
 }
-const Xn = {
-  garantirPlayer: Gn,
-  criarPlayer: Wn,
+const Zn = {
+  garantirPlayer: Vn,
+  criarPlayer: Un,
   marcar: _e,
   pareceQuadroVerde: Da
-}, Qn = {
+}, Kn = {
   principal: 6500,
   secundaria: 15e3
-}, Jn = {
+}, Yn = {
   principal: 1500,
   secundaria: 3e3
-}, es = 25e3, as = 300, ts = 6e4, is = 12e3, Yt = { comImagem: 2, semImagem: 4 };
-function rs(o, e) {
+}, Xn = 25e3, Qn = 300, Jn = 6e4, es = 12e3, Kt = { comImagem: 2, semImagem: 4 };
+function as(o, e) {
   return o ? `${o}${o.includes("?") ? "&" : "?"}bruno_t=${e}` : "";
 }
-const os = (o, e) => {
+const ts = (o, e) => {
   const a = new Image();
   let t = !0;
   const i = (r) => {
@@ -24009,14 +23914,14 @@ const os = (o, e) => {
   return a.onload = () => i(Da(a) ? "quadro-verde" : !0), a.onerror = () => i(!1), a.src = o, () => {
     t = !1, a.onload = null, a.onerror = null, a.src = "";
   };
-}, ns = {
+}, is = {
   agendar: (o, e) => globalThis.setTimeout(o, e),
   cancelar: (o) => globalThis.clearTimeout(o),
   agora: () => typeof performance < "u" ? performance.now() : Date.now()
 };
-class ss {
+class rs {
   constructor(e = {}) {
-    this.cameras = /* @__PURE__ */ new Map(), this.ligado = !1, this.carregador = e.carregador ?? os, this.agenda = e.agenda ?? ns, this.aoCarregar = e.aoCarregar ?? (() => {
+    this.cameras = /* @__PURE__ */ new Map(), this.ligado = !1, this.carregador = e.carregador ?? ts, this.agenda = e.agenda ?? is, this.aoCarregar = e.aoCarregar ?? (() => {
     }), this.aoMedir = e.aoMedir ?? (() => {
     }), this.atrasoInicial = e.atrasoInicial ?? 0;
   }
@@ -24121,7 +24026,7 @@ class ss {
     const t = this.cameras.get(e);
     !t || t.timer !== void 0 || t.emVoo || (t.timer = this.agenda.agendar(
       () => this.buscar(t),
-      this.atrasoInicial + a * as
+      this.atrasoInicial + a * Qn
     ));
   }
   desmontar(e) {
@@ -24130,8 +24035,8 @@ class ss {
   buscar(e) {
     if (e.timer = void 0, !this.ligado || e.emVoo) return;
     e.emVoo = !0, e.inicio = this.agenda.agora();
-    const a = rs(e.alvo.base, Math.round(e.inicio) || 1);
-    e.prazo = this.agenda.agendar(() => this.encerrar(e, "prazo", a), es), e.abortar = this.carregador(
+    const a = as(e.alvo.base, Math.round(e.inicio) || 1);
+    e.prazo = this.agenda.agendar(() => this.encerrar(e, "prazo", a), Xn), e.abortar = this.carregador(
       a,
       (t) => this.encerrar(
         e,
@@ -24150,8 +24055,8 @@ class ss {
   }
   agendarProximo(e, a) {
     const t = e.alvo.prioridade;
-    let i = Math.max(Jn[t], Qn[t] - a);
-    const r = e.quadros === 0, n = r ? Yt.semImagem : Yt.comImagem, s = r ? is : ts;
+    let i = Math.max(Yn[t], Kn[t] - a);
+    const r = e.quadros === 0, n = r ? Kt.semImagem : Kt.comImagem, s = r ? es : Jn;
     if (e.falhasSeguidas >= n) {
       const l = 2 ** Math.min(e.falhasSeguidas - n + 1, 5);
       i = Math.min(s, i * l);
@@ -24159,39 +24064,39 @@ class ss {
     e.timer = this.agenda.agendar(() => this.buscar(e), i);
   }
 }
-Xi();
-$n();
+Zi();
+En();
 console.info("[bruno-dashboard] build 20260822");
-globalThis.BrunoCameraEngine = ss;
-globalThis.BrunoCameraLive = Xn;
+globalThis.BrunoCameraEngine = rs;
+globalThis.BrunoCameraLive = Zn;
 export {
   _ as A,
-  Qn as C,
-  ss as M,
-  wi as O,
-  za as R,
+  Kn as C,
+  rs as M,
+  _i as O,
+  Ha as R,
   Z as a,
-  cs as b,
-  vs as c,
-  ki as d,
-  ds as e,
-  Jt as f,
-  Xt as g,
-  Qt as h,
+  ns as b,
+  gs as c,
+  xi as d,
+  ss as e,
+  Qt as f,
+  Yt as g,
+  Xt as h,
   xe as i,
-  us as j,
-  Gn as k,
-  Wn as l,
+  cs as j,
+  Vn as k,
+  Un as l,
   _e as m,
   v as n,
-  ps as o,
+  ls as o,
   Da as p,
-  ls as q,
-  Zi as r,
-  Qo as s,
-  ms as t,
-  fs as u,
-  yn as v,
-  gs as w
+  os as q,
+  Fi as r,
+  Yo as s,
+  hs as t,
+  bs as u,
+  vn as v,
+  us as w
 };
-//# sourceMappingURL=main.BX4cRxxO.js.map
+//# sourceMappingURL=main.D0kWSwW_.js.map

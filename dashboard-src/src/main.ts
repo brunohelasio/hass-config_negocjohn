@@ -15,6 +15,8 @@ import './legacy-runtime.generated';
 import './diagnostics/bruno-diagnostics';
 import './services/performance/boot-metrics';
 import './lazy-runtime';
+import './config/lavabo-climate.runtime';
+import './themes/josh-phone-on-bridge';
 import './components/rooms/bruno-room-tile';
 import { installRoomTileIosLongPressGuard } from './services/ui/ios-longpress-guard';
 import './components/devices/bruno-devices-panel';

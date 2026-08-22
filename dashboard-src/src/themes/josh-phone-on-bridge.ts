@@ -1,57 +1,93 @@
 /**
- * Josh phone — somente o estado ON dos room tiles.
+ * Josh — ajuste visual EXCLUSIVO do estado ON dos room tiles.
  *
- * A superfície do tile vive dentro do Shadow DOM de <bruno-room-tile>; por isso
- * um CSS global do tema não a alcança. Este bridge instala uma folha pequena no
- * shadowRoot sem tocar em estado, gestos, layout ou no estado OFF.
+ * Existem duas linguagens diferentes por breakpoint e elas nao devem ser
+ * misturadas:
  *
- * O seletor exige as três classes simultaneamente:
- *   is-josh-phone-card + is-room-on + breakpoint <= 800px.
- * Tablet/desktop e qualquer outro tema ficam fora por construção.
+ * 1) TABLET/DESKTOP (> 800px): o comodo continua sendo TILE, sem cartela.
+ *    O ON recebe apenas um wash leitoso que morre antes das extremidades e um
+ *    filete inferior mais legivel. Nenhuma borda/raio de card e criada.
+ *
+ * 2) PHONE (<= 800px): o comodo continua sendo CARD. O ON replica a receita
+ *    visual de `bruno-liquid-surface-on-*` do tema Liquid Glass, preservando o
+ *    raio/estrutura do Josh e sem alterar estado, gesto, layout ou OFF.
+ *
+ * A superficie vive no Shadow DOM de <bruno-room-tile>; este bridge injeta uma
+ * folha pequena no shadowRoot e nao toca na logica do componente.
  */
 
-const JOSH_PHONE_ON_STYLE_ID = 'bruno-josh-phone-on-material';
+const JOSH_PHONE_ON_STYLE_ID = 'bruno-josh-on-material';
 
 const JOSH_PHONE_ON_CSS = `
+/* TABLET / DESKTOP — continua TILE, sem cartela. */
+@media (min-width: 801px) {
+  .room-card.is-tile.is-room-on::before {
+    inset: 0 !important;
+    border-radius: 0 !important;
+    background:
+      radial-gradient(
+        ellipse 74% 70% at 50% 66%,
+        rgba(255,255,255,0.12) 0%,
+        rgba(255,255,255,0.065) 38%,
+        rgba(255,255,255,0.024) 58%,
+        transparent 78%
+      ),
+      radial-gradient(
+        ellipse 54% 42% at 50% 18%,
+        rgba(255,255,255,0.055) 0%,
+        transparent 74%
+      ) !important;
+    opacity: 1 !important;
+  }
+
+  .room-card.is-tile.is-room-on::after {
+    opacity: 1 !important;
+    background: linear-gradient(
+      90deg,
+      rgba(255,194,104,0) 0%,
+      rgba(255,202,122,0.92) 50%,
+      rgba(255,194,104,0) 100%
+    ) !important;
+    box-shadow: 0 -2px 14px rgba(255,194,102,0.24) !important;
+  }
+}
+
+/* PHONE — receita ON do Liquid Glass, sem alterar o raio Josh. */
 @media (max-width: 800px) {
   .room-card.is-josh-phone-card.is-room-on {
-    --text-main: rgba(255, 255, 255, 0.99);
-    --text-soft: rgba(255, 255, 255, 0.76);
-    --text-muted: rgba(255, 255, 255, 0.78);
+    --text-main: rgba(248, 251, 255, 0.96);
+    --text-soft: rgba(255, 255, 255, 0.52);
+    --text-muted: rgba(255, 255, 255, 0.62);
     background:
-      radial-gradient(172px 132px at 15% -8%, rgba(255,255,255,0.40), rgba(255,255,255,0.10) 48%, transparent 73%),
-      radial-gradient(150px 118px at 96% 96%, rgba(255,214,128,0.11), transparent 72%),
-      linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.065) 42%, rgba(255,255,255,0.095)),
-      linear-gradient(155deg, rgba(31,35,42,0.68), rgba(20,23,29,0.56) 52%, rgba(13,15,20,0.48)) !important;
-    border-color: rgba(255,255,255,0.24) !important;
+      radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 46%, transparent 73%),
+      linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 40%, rgba(255,255,255,0.07)),
+      linear-gradient(155deg, rgba(255,255,255,0.11), rgba(255,255,255,0.055)) !important;
+    border-color: rgba(255,255,255,0.16) !important;
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.42),
-      inset 1px 0 0 rgba(255,255,255,0.15),
-      inset -1px 0 0 rgba(255,255,255,0.09),
-      inset 0 -1px 0 rgba(255,255,255,0.07),
-      0 10px 26px rgba(0,0,0,0.28) !important;
-    backdrop-filter: blur(8px) saturate(1.28) brightness(1.15) !important;
-    -webkit-backdrop-filter: blur(8px) saturate(1.28) brightness(1.15) !important;
+      inset 0 1px 0 rgba(255,255,255,0.36),
+      inset 1px 0 0 rgba(255,255,255,0.12),
+      inset -1px 0 0 rgba(255,255,255,0.07),
+      inset 0 -1px 0 rgba(255,255,255,0.04),
+      0 8px 24px rgba(0,0,0,0.32) !important;
+    backdrop-filter: blur(14px) saturate(1.28) brightness(1.04) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(1.28) brightness(1.04) !important;
   }
 
   .room-card.is-josh-phone-card.is-room-on::before {
     background:
-      radial-gradient(118px 76px at 16% 0%, rgba(255,255,255,0.40), transparent 72%),
-      linear-gradient(180deg, rgba(255,255,255,0.22), transparent 38%),
-      linear-gradient(90deg, rgba(255,255,255,0.10), transparent 48%) !important;
-    opacity: 0.88 !important;
+      radial-gradient(112px 72px at 16% 0%, rgba(255,255,255,0.40), transparent 72%),
+      linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.00) 38%),
+      linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.00) 48%) !important;
+    opacity: 0.85 !important;
   }
 
   .room-card.is-josh-phone-card.is-room-on::after {
-    inset: auto 18px 7px 18px !important;
-    height: 1px !important;
-    opacity: 1 !important;
-    background: linear-gradient(90deg, transparent, #FFD60A 50%, transparent) !important;
-    box-shadow: 0 -1px 9px rgba(255,214,10,0.30) !important;
+    opacity: 0 !important;
+    box-shadow: none !important;
   }
 
   .room-card.is-josh-phone-card.is-room-on .room-asset-on {
-    filter: brightness(1.15) saturate(1.03);
+    filter: none !important;
   }
 }
 `;
@@ -95,7 +131,7 @@ void customElements.whenDefined('bruno-room-tile').then(() => {
     proto.__brunoJoshPhoneOnPatched = true;
   }
 
-  // customElements.define() pode ter promovido nós já conectados antes da
-  // microtask de whenDefined; cobre essas instâncias sem observer permanente.
+  // customElements.define() pode ter promovido nos ja conectados antes da
+  // microtask de whenDefined; cobre essas instancias sem observer permanente.
   walkOpenRoots(document);
 });

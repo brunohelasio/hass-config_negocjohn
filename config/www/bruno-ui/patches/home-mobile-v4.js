@@ -2,18 +2,19 @@
 //
 // Escopo estrito: <=800px.
 // - hero sem agenda/insights;
-// - pager de cômodos 2 páginas;
-// - Bento Favoritos (Agenda/Casa, Wi-Fi e 4 cenas).
+// - pager de cômodos em duas páginas;
+// - Bento Favoritos (Agenda/Casa, Wi-Fi e quatro cenas);
+// - seção "Em execução" apenas quando câmera/Roborock/mídia estiverem ativos.
 //
-// IMPORTANTE: os cards-filho são criados com loadCardHelpers(), o mesmo padrão
-// já validado em bruno-activity-column.js. Nenhum setConfig() de filho pode
-// propagar exceção e derrubar o compositor inteiro.
-//
-// O microindicador da rail NÃO é alterado aqui. Sua semântica V4 está declarada
-// em shell/rail.yaml, usando os três binary_sensor.home_activity_*.
+// Os cards-filho são criados com loadCardHelpers(), o mesmo contrato usado por
+// bruno-activity-column.js. Falha de um filho é isolada e nunca derruba o
+// compositor inteiro com hui-error-card.
 
 const BRUNO_HOME_V4_QUERY = '(max-width: 800px)';
 const BRUNO_HOME_V4_TAG = 'bruno-home-phone-v4-card';
+const BRUNO_HOME_V4_HERO_TAG = 'bruno-hero-card';
+const BRUNO_HOME_V4_OLD_PATCH_MARK = '__brunoChatHomePatch';
+
 const brunoHomeV4IsPhone = () => Boolean(globalThis.matchMedia?.(BRUNO_HOME_V4_QUERY).matches);
 
 const BRUNO_HOME_V4_CALENDARS = [
@@ -28,7 +29,6 @@ const BRUNO_HOME_V4_PAGE2_ACTIVITY = [
     'light.grupo_luzes_office',
     'binary_sensor.office_motion_recent',
     'binary_sensor.office_occupancy',
-    'binary_sensor.office_pc_active',
     'climate.ac_office',
     'media_player.echo_pop_office',
   ],
@@ -53,6 +53,41 @@ const BRUNO_HOME_V4_PAGE2_ACTIVITY = [
   ],
 ];
 
+const BRUNO_HOME_V4_DYNAMIC_ENTITIES = [
+  'binary_sensor.home_activity_camera',
+  'binary_sensor.home_activity_roborock',
+  'binary_sensor.home_activity_media',
+];
+
+const BRUNO_HOME_V4_DYNAMIC_CONFIG = {
+  type: 'custom:bruno-activity-column',
+  available_height: '300px',
+  max_per_column: 1,
+  gap: 12,
+  second_column_min_width: 4000,
+  slots: [
+    {
+      key: 'camera',
+      entity: 'binary_sensor.home_activity_camera',
+      height: 296,
+      card: { type: 'custom:bruno-home-camera-card' },
+    },
+    {
+      key: 'roborock',
+      entity: 'binary_sensor.home_activity_roborock',
+      height: 176,
+      card: { type: 'custom:bruno-roborock-card', variant: 'compact' },
+    },
+    {
+      key: 'media',
+      entity: 'binary_sensor.home_activity_media',
+      height: 248,
+      min_height: 196,
+      card: { type: 'custom:bruno-media-card', variant: 'wide' },
+    },
+  ],
+};
+
 const BRUNO_HOME_V4_SCENES = [
   ['Bom dia', 'script.bruno_scene_bom_dia', 'mdi:weather-sunset-up'],
   ['Sair', 'script.bruno_scene_sair_de_casa', 'mdi:exit-run'],
@@ -67,10 +102,10 @@ class BrunoHomePhoneV4Card extends HTMLElement {
 
   setConfig(config) {
     this._config = { ...(config || {}) };
-    this._page = this._page || 0;
-    this._events = this._events || [];
-    this._cards = this._cards || new Map();
-    this._lastCalendarLoad = this._lastCalendarLoad || 0;
+    this._page ??= 0;
+    this._events ??= [];
+    this._cards ??= new Map();
+    this._lastCalendarLoad ??= 0;
     this._renderShell();
     this._ensureCards();
   }
@@ -102,7 +137,7 @@ class BrunoHomePhoneV4Card extends HTMLElement {
   }
 
   getCardSize() {
-    return 11;
+    return 12;
   }
 
   _state(entityId) {
@@ -125,6 +160,10 @@ class BrunoHomePhoneV4Card extends HTMLElement {
     return BRUNO_HOME_V4_PAGE2_ACTIVITY.filter((entities) => entities.some((id) => this._isActive(id))).length;
   }
 
+  _dynamicActive() {
+    return BRUNO_HOME_V4_DYNAMIC_ENTITIES.some((id) => this._state(id)?.state === 'on');
+  }
+
   _rooms() {
     return Array.isArray(this._config?.rooms) ? this._config.rooms.slice(0, 7) : [];
   }
@@ -139,7 +178,8 @@ class BrunoHomePhoneV4Card extends HTMLElement {
 
       const rooms = this._rooms();
       for (let index = 0; index < 7; index += 1) {
-        if (this._cards.has(index)) continue;
+        const key = `room-${index}`;
+        if (this._cards.has(key)) continue;
         const slot = this.shadowRoot.querySelector(`[data-room="${index}"]`);
         const config = rooms[index];
         if (!slot || !config?.type) continue;
@@ -148,11 +188,24 @@ class BrunoHomePhoneV4Card extends HTMLElement {
           const card = helpers.createCardElement(config);
           if (this._hass) card.hass = this._hass;
           slot.replaceChildren(card);
-          this._cards.set(index, card);
+          this._cards.set(key, card);
         } catch (error) {
-          // Um cômodo nunca pode transformar o compositor inteiro em hui-error-card.
           console.error(`[home-mobile-v4] falha ao criar cômodo ${index}:`, error, config);
           slot.innerHTML = '<span class="room-fallback">Cômodo indisponível</span>';
+        }
+      }
+
+      if (!this._cards.has('dynamic')) {
+        const slot = this.shadowRoot.querySelector('[data-dynamic-card]');
+        if (slot) {
+          try {
+            const card = helpers.createCardElement(BRUNO_HOME_V4_DYNAMIC_CONFIG);
+            if (this._hass) card.hass = this._hass;
+            slot.replaceChildren(card);
+            this._cards.set('dynamic', card);
+          } catch (error) {
+            console.error('[home-mobile-v4] falha ao criar área dinâmica:', error);
+          }
         }
       }
     } catch (error) {
@@ -165,6 +218,7 @@ class BrunoHomePhoneV4Card extends HTMLElement {
       }
     } finally {
       this._creatingCards = false;
+      this._sync();
     }
   }
 
@@ -287,11 +341,14 @@ class BrunoHomePhoneV4Card extends HTMLElement {
     if (!this.shadowRoot) return;
 
     const activeRooms = this._page2ActiveCount();
-    const activity = this.shadowRoot.querySelector('.room-activity');
-    if (activity) {
-      activity.hidden = this._page !== 0 || activeRooms === 0;
-      activity.textContent = String(activeRooms);
+    const roomActivity = this.shadowRoot.querySelector('.room-activity');
+    if (roomActivity) {
+      roomActivity.hidden = this._page !== 0 || activeRooms === 0;
+      roomActivity.textContent = String(activeRooms);
     }
+
+    const runningSection = this.shadowRoot.querySelector('.running-section');
+    if (runningSection) runningSection.hidden = !this._dynamicActive();
 
     const network = this._networkModel();
     const status = this.shadowRoot.querySelector('[data-net-status]');
@@ -380,294 +437,47 @@ class BrunoHomePhoneV4Card extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <style>
-        :host {
-          display: block;
-          width: 100%;
-          min-width: 0;
-          height: auto;
-          min-height: 0;
-          color: rgba(255,255,255,0.94);
-          contain: layout style;
-        }
-        * { box-sizing: border-box; letter-spacing: 0; }
-        button { font: inherit; color: inherit; }
-        h2 {
-          margin: 0 0 6px 10px;
-          font: 760 14px/1 system-ui, -apple-system, sans-serif;
-          text-shadow: 0 2px 12px rgba(0,0,0,0.28);
-        }
-        .home-v4 { display: block; width: 100%; min-width: 0; }
-        .pages {
-          width: 100%;
-          display: grid;
-          grid-auto-flow: column;
-          grid-auto-columns: 100%;
-          gap: 10px;
-          overflow-x: auto;
-          overflow-y: hidden;
-          scroll-snap-type: x mandatory;
-          overscroll-behavior-x: contain;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-width: none;
-        }
-        .pages::-webkit-scrollbar { display: none; }
-        .page {
-          height: 352px;
-          display: grid;
-          grid-template: repeat(2, 172px) / repeat(2, minmax(0, 1fr));
-          gap: 8px;
-          scroll-snap-align: start;
-          scroll-snap-stop: always;
-        }
-        .social [data-room="0"] { grid-column: 1 / -1; }
-        .room { height: 172px; min-width: 0; min-height: 0; overflow: hidden; }
-        .room > * { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; }
-        .room-fallback {
-          display: grid;
-          place-items: center;
-          width: 100%;
-          height: 100%;
-          border-radius: 20px;
-          border: 1px solid rgba(255,255,255,0.10);
-          background: rgba(20,22,28,0.30);
-          color: rgba(255,255,255,0.52);
-          font: 650 11px/1 system-ui;
-        }
-        .pager {
-          height: 22px;
-          margin: 4px 5px 5px 0;
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          gap: 7px;
-        }
-        .page-dots { display: flex; gap: 6px; }
-        .page-dot {
-          appearance: none;
-          width: 7px;
-          height: 7px;
-          margin: 0;
-          padding: 0;
-          border: 0;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.34);
-        }
-        .page-dot.is-active { background: rgba(255,255,255,0.92); }
-        .room-activity {
-          min-width: 19px;
-          height: 19px;
-          padding: 0 5px;
-          display: grid;
-          place-items: center;
-          border-radius: 999px;
-          background: var(--bruno-accent-amber, #f7c600);
-          box-shadow: 0 0 10px rgba(247,198,0,0.40);
-          color: #0c0e14;
-          font: 820 10px/1 system-ui;
-        }
-        .room-activity[hidden] { display: none; }
-        .favorites-title { margin-top: 4px; }
-        .bento {
-          --square: clamp(128px, 34vw, 145px);
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) var(--square);
-          grid-template-rows: var(--square);
-          gap: 8px;
-        }
-        .favorite-left {
-          display: grid;
-          grid-template-rows: repeat(2, minmax(0, 1fr));
-          gap: 8px;
-          min-width: 0;
-        }
-        .favorite-card,
-        .scenes-card {
-          position: relative;
-          overflow: hidden;
-          border: 1px solid rgba(255,255,255,0.15);
-          background:
-            radial-gradient(100px 62px at 18% 0%, rgba(255,255,255,0.14), transparent 72%),
-            linear-gradient(160deg, rgba(68,57,50,0.48), rgba(35,31,30,0.36));
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.13), 0 8px 24px rgba(0,0,0,0.18);
-          backdrop-filter: blur(24px) saturate(1.18);
-          -webkit-backdrop-filter: blur(24px) saturate(1.18);
-        }
-        .favorite-card {
-          appearance: none;
-          width: 100%;
-          display: grid;
-          grid-template-columns: 32px minmax(0,1fr);
-          align-items: center;
-          gap: 8px;
-          padding: 8px 10px;
-          border-radius: 19px;
-          text-align: left;
-          cursor: pointer;
-        }
-        .favorite-card:active { transform: scale(0.99); }
-        .favorite-icon {
-          width: 32px;
-          height: 32px;
-          border-radius: 12px;
-          display: grid;
-          place-items: center;
-          background: rgba(255,255,255,0.07);
-          border: 1px solid rgba(255,255,255,0.09);
-        }
-        .favorite-icon bruno-icon { --mdc-icon-size: 19px; }
-        .favorite-copy { min-width: 0; display: grid; gap: 2px; }
-        .favorite-top { display: flex; align-items: center; gap: 6px; min-width: 0; }
-        .favorite-top > span:first-child {
-          flex: 1;
-          font-size: 9px;
-          font-weight: 760;
-          color: rgba(255,255,255,0.58);
-        }
-        .favorite-top em {
-          max-width: 72px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          font: 800 9px/1 system-ui;
-          color: rgba(255,255,255,0.72);
-        }
-        .favorite-copy strong,
-        .favorite-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .favorite-copy strong { font: 760 11px/1.12 system-ui; }
-        .favorite-copy small { font: 620 8.7px/1.1 system-ui; color: rgba(255,255,255,0.52); }
-        .insight-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          background: #f7c600;
-          box-shadow: 0 0 7px rgba(247,198,0,0.44);
-        }
-        .insight-dot[hidden] { display: none; }
-        .insight-dot[data-tone="red"] { background: #ff453a; }
-        .insight-dot[data-tone="blue"] { background: #7fdbe9; }
-        .insight-dot[data-tone="green"] { background: #30d158; }
-        [data-net-status][data-state="excelente"] { color: #62d27b; }
-        [data-net-status][data-state="parcial"] { color: #f7c600; }
-        [data-net-status][data-state="offline"] { color: #ff6259; }
-        .network-metrics { display: flex; gap: 7px; }
-        .network-metrics span { display: flex; align-items: center; gap: 2px; }
-        .network-metrics bruno-icon { --mdc-icon-size: 10px; }
-        .scenes-card {
-          border-radius: 21px;
-          padding: 8px;
-          display: grid;
-          grid-template-rows: 17px 1fr;
-          gap: 5px;
-        }
-        .scenes-card > strong {
-          padding-left: 2px;
-          font: 780 10px/1 system-ui;
-          color: rgba(255,255,255,0.74);
-        }
-        .scene-grid {
-          display: grid;
-          grid-template: repeat(2,1fr) / repeat(2,1fr);
-          gap: 5px;
-          min-height: 0;
-        }
-        .scene-button {
-          appearance: none;
-          display: grid;
-          place-items: center;
-          align-content: center;
-          gap: 3px;
-          min-width: 0;
-          min-height: 0;
-          padding: 4px 2px;
-          border: 1px solid rgba(255,255,255,0.09);
-          border-radius: 13px;
-          background: rgba(255,255,255,0.045);
-        }
-        .scene-button bruno-icon { --mdc-icon-size: 17px; }
-        .scene-button span {
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          font: 690 7.5px/1 system-ui;
-          color: rgba(255,255,255,0.66);
-        }
-        .scene-button:active,
-        .scene-button.is-running { transform: scale(0.96); background: rgba(255,255,255,0.09); }
-        @media (max-width: 390px) {
-          .bento { --square: 128px; }
-          .favorite-card { grid-template-columns: 29px 1fr; gap: 6px; padding: 7px 8px; }
-          .favorite-icon { width: 29px; height: 29px; }
-          .favorite-copy strong { font-size: 10px; }
-          .favorite-copy small { font-size: 8px; }
-          .favorite-top em { max-width: 58px; font-size: 8px; }
-        }
+        :host{display:block;width:100%;min-width:0;height:auto;min-height:0;color:rgba(255,255,255,.94);contain:layout style}
+        *{box-sizing:border-box;letter-spacing:0}button{font:inherit;color:inherit}
+        h2{margin:0 0 6px 10px;font:760 14px/1 system-ui,-apple-system,sans-serif;text-shadow:0 2px 12px rgba(0,0,0,.28)}
+        .home-v4{display:block;width:100%;min-width:0}
+        .pages{width:100%;display:grid;grid-auto-flow:column;grid-auto-columns:100%;gap:10px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+        .pages::-webkit-scrollbar{display:none}
+        .page{height:352px;display:grid;grid-template:repeat(2,172px)/repeat(2,minmax(0,1fr));gap:8px;scroll-snap-align:start;scroll-snap-stop:always}
+        .social [data-room="0"]{grid-column:1/-1}.room{height:172px;min-width:0;min-height:0;overflow:hidden}.room>*{display:block;width:100%;height:100%;min-width:0;min-height:0}
+        .room-fallback{display:grid;place-items:center;width:100%;height:100%;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:rgba(20,22,28,.3);color:rgba(255,255,255,.52);font:650 11px/1 system-ui}
+        .pager{height:22px;margin:4px 5px 5px 0;display:flex;justify-content:flex-end;align-items:center;gap:7px}.page-dots{display:flex;gap:6px}.page-dot{appearance:none;width:7px;height:7px;margin:0;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.34)}.page-dot.is-active{background:rgba(255,255,255,.92)}
+        .room-activity{min-width:19px;height:19px;padding:0 5px;display:grid;place-items:center;border-radius:999px;background:var(--bruno-accent-amber,#f7c600);box-shadow:0 0 10px rgba(247,198,0,.4);color:#0c0e14;font:820 10px/1 system-ui}.room-activity[hidden]{display:none}
+        .favorites-title{margin-top:4px}.bento{--square:clamp(128px,34vw,145px);display:grid;grid-template-columns:minmax(0,1fr) var(--square);grid-template-rows:var(--square);gap:8px}.favorite-left{display:grid;grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+        .favorite-card,.scenes-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.15);background:radial-gradient(100px 62px at 18% 0%,rgba(255,255,255,.14),transparent 72%),linear-gradient(160deg,rgba(68,57,50,.48),rgba(35,31,30,.36));box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 8px 24px rgba(0,0,0,.18);backdrop-filter:blur(24px) saturate(1.18);-webkit-backdrop-filter:blur(24px) saturate(1.18)}
+        .favorite-card{appearance:none;width:100%;display:grid;grid-template-columns:32px minmax(0,1fr);align-items:center;gap:8px;padding:8px 10px;border-radius:19px;text-align:left;cursor:pointer}.favorite-card:active{transform:scale(.99)}.favorite-icon{width:32px;height:32px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}.favorite-icon bruno-icon{--mdc-icon-size:19px}.favorite-copy{min-width:0;display:grid;gap:2px}.favorite-top{display:flex;align-items:center;gap:6px;min-width:0}.favorite-top>span:first-child{flex:1;font-size:9px;font-weight:760;color:rgba(255,255,255,.58)}.favorite-top em{max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 9px/1 system-ui;color:rgba(255,255,255,.72)}.favorite-copy strong,.favorite-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.favorite-copy strong{font:760 11px/1.12 system-ui}.favorite-copy small{font:620 8.7px/1.1 system-ui;color:rgba(255,255,255,.52)}
+        .insight-dot{width:5px;height:5px;border-radius:50%;background:#f7c600;box-shadow:0 0 7px rgba(247,198,0,.44)}.insight-dot[hidden]{display:none}.insight-dot[data-tone="red"]{background:#ff453a}.insight-dot[data-tone="blue"]{background:#7fdbe9}.insight-dot[data-tone="green"]{background:#30d158}[data-net-status][data-state="excelente"]{color:#62d27b}[data-net-status][data-state="parcial"]{color:#f7c600}[data-net-status][data-state="offline"]{color:#ff6259}.network-metrics{display:flex;gap:7px}.network-metrics span{display:flex;align-items:center;gap:2px}.network-metrics bruno-icon{--mdc-icon-size:10px}
+        .scenes-card{border-radius:21px;padding:8px;display:grid;grid-template-rows:17px 1fr;gap:5px}.scenes-card>strong{padding-left:2px;font:780 10px/1 system-ui;color:rgba(255,255,255,.74)}.scene-grid{display:grid;grid-template:repeat(2,1fr)/repeat(2,1fr);gap:5px;min-height:0}.scene-button{appearance:none;display:grid;place-items:center;align-content:center;gap:3px;min-width:0;min-height:0;padding:4px 2px;border:1px solid rgba(255,255,255,.09);border-radius:13px;background:rgba(255,255,255,.045)}.scene-button bruno-icon{--mdc-icon-size:17px}.scene-button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:690 7.5px/1 system-ui;color:rgba(255,255,255,.66)}.scene-button:active,.scene-button.is-running{transform:scale(.96);background:rgba(255,255,255,.09)}
+        .running-section{margin-top:14px}.running-section[hidden]{display:none}.running-slot{width:100%;height:300px;min-height:0}.running-slot>*{display:block;width:100%;height:100%;min-height:0}
+        @media(max-width:390px){.bento{--square:128px}.favorite-card{grid-template-columns:29px 1fr;gap:6px;padding:7px 8px}.favorite-icon{width:29px;height:29px}.favorite-copy strong{font-size:10px}.favorite-copy small{font-size:8px}.favorite-top em{max-width:58px;font-size:8px}}
       </style>
-
       <div class="home-v4">
         <section aria-label="Cômodos">
           <h2>Cômodos</h2>
           <div class="pages">
-            <div class="page social">
-              <div class="room" data-room="0"></div>
-              <div class="room" data-room="1"></div>
-              <div class="room" data-room="2"></div>
-            </div>
-            <div class="page">
-              <div class="room" data-room="3"></div>
-              <div class="room" data-room="4"></div>
-              <div class="room" data-room="5"></div>
-              <div class="room" data-room="6"></div>
-            </div>
+            <div class="page social"><div class="room" data-room="0"></div><div class="room" data-room="1"></div><div class="room" data-room="2"></div></div>
+            <div class="page"><div class="room" data-room="3"></div><div class="room" data-room="4"></div><div class="room" data-room="5"></div><div class="room" data-room="6"></div></div>
           </div>
-          <div class="pager">
-            <span class="page-dots">
-              <button class="page-dot is-active" data-page="0" aria-label="Página social"></button>
-              <button class="page-dot" data-page="1" aria-label="Página íntima e trabalho"></button>
-            </span>
-            <span class="room-activity" hidden>0</span>
-          </div>
+          <div class="pager"><span class="page-dots"><button class="page-dot is-active" data-page="0" aria-label="Página social"></button><button class="page-dot" data-page="1" aria-label="Página íntima e trabalho"></button></span><span class="room-activity" hidden>0</span></div>
         </section>
-
         <section aria-label="Favoritos">
           <h2 class="favorites-title">Favoritos</h2>
           <div class="bento">
             <div class="favorite-left">
-              <button class="favorite-card" data-agenda>
-                <span class="favorite-icon"><bruno-icon icon="mdi:calendar-blank-outline"></bruno-icon></span>
-                <span class="favorite-copy">
-                  <span class="favorite-top"><span>Agenda</span><i class="insight-dot" hidden></i><em data-event-time>Hoje</em></span>
-                  <strong data-event-summary>Agenda livre</strong>
-                  <small data-event-detail>Sem avisos da casa</small>
-                </span>
-              </button>
-
-              <button class="favorite-card" data-network>
-                <span class="favorite-icon"><bruno-icon icon="mdi:wifi"></bruno-icon></span>
-                <span class="favorite-copy">
-                  <span class="favorite-top"><span>Wi-Fi</span><em data-net-status>--</em></span>
-                  <strong>Rede Principal</strong>
-                  <small class="network-metrics">
-                    <span><bruno-icon icon="mdi:download"></bruno-icon><b data-download>--</b></span>
-                    <span><bruno-icon icon="mdi:upload"></bruno-icon><b data-upload>--</b></span>
-                    <span>Mbps</span>
-                  </small>
-                </span>
-              </button>
+              <button class="favorite-card" data-agenda><span class="favorite-icon"><bruno-icon icon="mdi:calendar-blank-outline"></bruno-icon></span><span class="favorite-copy"><span class="favorite-top"><span>Agenda</span><i class="insight-dot" hidden></i><em data-event-time>Hoje</em></span><strong data-event-summary>Agenda livre</strong><small data-event-detail>Sem avisos da casa</small></span></button>
+              <button class="favorite-card" data-network><span class="favorite-icon"><bruno-icon icon="mdi:wifi"></bruno-icon></span><span class="favorite-copy"><span class="favorite-top"><span>Wi-Fi</span><em data-net-status>--</em></span><strong>Rede Principal</strong><small class="network-metrics"><span><bruno-icon icon="mdi:download"></bruno-icon><b data-download>--</b></span><span><bruno-icon icon="mdi:upload"></bruno-icon><b data-upload>--</b></span><span>Mbps</span></small></span></button>
             </div>
-
-            <div class="scenes-card">
-              <strong>Cenas</strong>
-              <div class="scene-grid">
-                ${BRUNO_HOME_V4_SCENES.map((scene, index) => `
-                  <button class="scene-button" data-scene="${index}" aria-label="Ativar cena ${BrunoHomePhoneV4Card._escape(scene[0])}">
-                    <bruno-icon icon="${scene[2]}"></bruno-icon>
-                    <span>${BrunoHomePhoneV4Card._escape(scene[0])}</span>
-                  </button>
-                `).join('')}
-              </div>
-            </div>
+            <div class="scenes-card"><strong>Cenas</strong><div class="scene-grid">${BRUNO_HOME_V4_SCENES.map((scene,index)=>`<button class="scene-button" data-scene="${index}" aria-label="Ativar cena ${BrunoHomePhoneV4Card._escape(scene[0])}"><bruno-icon icon="${scene[2]}"></bruno-icon><span>${BrunoHomePhoneV4Card._escape(scene[0])}</span></button>`).join('')}</div></div>
           </div>
+        </section>
+        <section class="running-section" aria-label="Em execução" hidden>
+          <h2>Em execução</h2>
+          <div class="running-slot" data-dynamic-card></div>
         </section>
       </div>
     `;
@@ -693,9 +503,9 @@ if (!customElements.get(BRUNO_HOME_V4_TAG)) {
 
 // ---------------------------------------------------------------------------
 // HERO PHONE V4
-// O patch de 17/08 continua carregado pelo configuration.yaml. Esta camada
-// roda depois dele na view, cancela o carrossel no phone e remove seu style
-// antes de aplicar a geometria V4. Tablet/desktop não são alterados.
+// A camada de 17/08 continua existindo, mas a V4 precisa ser a camada EXTERNA
+// do prototype para sempre vencer o render e o connectedCallback antigos.
+// Por isso a instalação espera brevemente o marcador __brunoChatHomePatch.
 // ---------------------------------------------------------------------------
 function brunoHomeV4ApplyHero(card) {
   if (!card?.shadowRoot || card?._config?.hero_layout !== 'v2' || !brunoHomeV4IsPhone()) return;
@@ -713,106 +523,64 @@ function brunoHomeV4ApplyHero(card) {
   const style = document.createElement('style');
   style.dataset.brunoHomeV4Hero = '1';
   style.textContent = `
-    @media (max-width: 800px) {
-      .hero-stage.is-v2 {
-        height: 128px !important;
-        min-height: 128px !important;
-      }
-      .hero-stage.is-v2 .content {
-        padding: 5px 16px 4px !important;
-        gap: 0 !important;
-      }
-      .hero-stage.is-v2 .headline {
-        column-gap: 12px !important;
-      }
-      .hero-stage.is-v2 .date-line {
-        margin-bottom: 4px !important;
-      }
-      .hero-stage.is-v2 .greeting {
-        font-size: 19px !important;
-      }
-      .hero-stage.is-v2 .clock {
-        margin-top: 0 !important;
-        font-size: clamp(62px, 16.5vw, 69px) !important;
-        line-height: 0.90 !important;
-        font-weight: 220 !important;
-      }
-      .hero-stage.is-v2 .headline .event-stack {
-        display: none !important;
-        min-height: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-      .hero-stage.is-v2 .hero-bottom:not(.has-cameras) {
-        display: none !important;
-      }
-      .hero-stage.is-v2 .inline-weather {
-        display: grid !important;
-        grid-template: auto auto / 23px minmax(0, auto) !important;
-        grid-template-areas: "icon temp" "icon label" !important;
-        align-items: center !important;
-        column-gap: 7px !important;
-        row-gap: 3px !important;
-        width: auto !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-        margin-top: 0 !important;
-        justify-self: end !important;
-      }
-      .hero-stage.is-v2 .inline-weather img {
-        grid-area: icon !important;
-        width: 23px !important;
-        height: 23px !important;
-      }
-      .hero-stage.is-v2 .inline-weather strong {
-        grid-area: temp !important;
-        font-size: 16px !important;
-        line-height: 1 !important;
-      }
-      .hero-stage.is-v2 .inline-weather small {
-        grid-area: label !important;
-        max-width: min(35vw, 142px) !important;
-        font-size: 11px !important;
-        line-height: 1.06 !important;
-      }
+    @media(max-width:800px){
+      .hero-stage.is-v2{height:128px!important;min-height:128px!important}
+      .hero-stage.is-v2 .content{padding:5px 16px 4px!important;gap:0!important}
+      .hero-stage.is-v2 .headline{column-gap:12px!important}
+      .hero-stage.is-v2 .date-line{margin-bottom:4px!important}
+      .hero-stage.is-v2 .greeting{font-size:19px!important}
+      .hero-stage.is-v2 .clock{margin-top:0!important;font-size:clamp(62px,16.5vw,69px)!important;line-height:.9!important;font-weight:220!important}
+      .hero-stage.is-v2 .headline .event-stack{display:none!important;min-height:0!important;margin:0!important;padding:0!important}
+      .hero-stage.is-v2 .hero-bottom:not(.has-cameras){display:none!important}
+      .hero-stage.is-v2 .inline-weather{display:grid!important;grid-template:auto auto/23px minmax(0,auto)!important;grid-template-areas:"icon temp" "icon label"!important;align-items:center!important;column-gap:7px!important;row-gap:3px!important;width:auto!important;min-width:0!important;max-width:100%!important;margin-top:0!important;justify-self:end!important}
+      .hero-stage.is-v2 .inline-weather img{grid-area:icon!important;width:23px!important;height:23px!important}
+      .hero-stage.is-v2 .inline-weather strong{grid-area:temp!important;font-size:16px!important;line-height:1!important}
+      .hero-stage.is-v2 .inline-weather small{grid-area:label!important;max-width:min(35vw,142px)!important;font-size:11px!important;line-height:1.06!important}
     }
-    @media (max-width: 390px) {
-      .hero-stage.is-v2 {
-        height: 124px !important;
-        min-height: 124px !important;
-      }
-      .hero-stage.is-v2 .clock { font-size: 62px !important; }
-      .hero-stage.is-v2 .headline { column-gap: 8px !important; }
-      .hero-stage.is-v2 .inline-weather small { max-width: 112px !important; font-size: 10.5px !important; }
-    }
+    @media(max-width:390px){.hero-stage.is-v2{height:124px!important;min-height:124px!important}.hero-stage.is-v2 .clock{font-size:62px!important}.hero-stage.is-v2 .headline{column-gap:8px!important}.hero-stage.is-v2 .inline-weather small{max-width:112px!important;font-size:10.5px!important}}
   `;
   root.appendChild(style);
 }
 
 function brunoHomeV4PatchHero(HeroCard) {
   if (!HeroCard || HeroCard.prototype.__brunoHomeV4Patch) return;
-  const original = HeroCard.prototype._renderDesktop;
-  if (typeof original !== 'function') return;
+  const proto = HeroCard.prototype;
+  const originalRender = proto._renderDesktop;
+  const originalConnected = proto.connectedCallback;
+  if (typeof originalRender !== 'function') return;
 
-  HeroCard.prototype.__brunoHomeV4Patch = true;
-  HeroCard.prototype._renderDesktop = function patchedHomeV4Hero(...args) {
-    const result = original.apply(this, args);
+  proto.__brunoHomeV4Patch = true;
+  proto._renderDesktop = function patchedHomeV4Hero(...args) {
+    const result = originalRender.apply(this, args);
     brunoHomeV4ApplyHero(this);
     return result;
   };
-
-  // Aplica também ao card já montado quando o resource chega depois da Home.
-  document.querySelectorAll?.('bruno-hero-card').forEach((card) => brunoHomeV4ApplyHero(card));
+  proto.connectedCallback = function patchedHomeV4Connected(...args) {
+    const result = originalConnected?.apply(this, args);
+    brunoHomeV4ApplyHero(this);
+    return result;
+  };
 }
 
-customElements.whenDefined('bruno-hero-card').then(() => {
-  brunoHomeV4PatchHero(customElements.get('bruno-hero-card'));
-});
+function brunoHomeV4InstallHeroPatch(attempt = 0) {
+  const HeroCard = customElements.get(BRUNO_HOME_V4_HERO_TAG);
+  if (!HeroCard) return;
+
+  // O patch de 17/08 é carregado por extra_module_url. Normalmente já está
+  // instalado quando os resources do Lovelace executam; o retry cobre a corrida.
+  if (!HeroCard.prototype[BRUNO_HOME_V4_OLD_PATCH_MARK] && attempt < 80) {
+    setTimeout(() => brunoHomeV4InstallHeroPatch(attempt + 1), 25);
+    return;
+  }
+  brunoHomeV4PatchHero(HeroCard);
+}
+
+customElements.whenDefined(BRUNO_HOME_V4_HERO_TAG).then(() => brunoHomeV4InstallHeroPatch());
 
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: BRUNO_HOME_V4_TAG,
   name: 'Bruno Home Phone V4',
   preview: false,
-  description: 'Pager mobile de cômodos + Bento Favoritos.',
+  description: 'Pager mobile de cômodos + Favoritos + Em execução.',
 });

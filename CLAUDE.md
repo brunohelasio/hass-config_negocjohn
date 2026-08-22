@@ -4614,3 +4614,53 @@ O icone do Wi-Fi era um glifo de texto (`✧`) enquanto o da Agenda era
 13px.
 
 Bundle: Gls4tQdc -> Ct-Xu--y.
+
+### Favoritos cortado pela rail — e o banco de medicao que faltava (2026-08-22, rev.4)
+
+Tres rodadas seguidas de ajuste de altura feitas por ESTIMATIVA, e o usuario teve
+de corrigir as tres. Esta rodada comecou construindo o instrumento:
+`scripts/harness/gen-home-phone-harness.mjs` reproduz a coluna do telefone com
+as medidas reais da shell (viewport, rail 58,4px, padding `10px 10px 6px` do
+content-slot, grid da section_home_v2) e mede onde cada bloco termina.
+
+A primeira medicao ja mostrou os dois defeitos que o usuario apontou:
+folga de 34,3px ate o filete (onde "Em execucao" aparecia) e agenda 61,2px
+contra wifi 64,3px.
+
+**Tres tentativas, todas MEDIDAS e descartadas** — o registro importa mais que a
+solucao:
+
+1. `1fr` na mesma grade do "Em execucao": a secao dinamica disputa altura com
+   Favoritos. Medido: 252,8px -> 136,6px, e o titulo aparecia ACIMA do filete.
+2. `min-height: 100%` no bloco estatico: o grid da secao cresce com o transbordo,
+   a linha `1fr` cresce junto e o estatico cresce de novo. Medido: Favoritos
+   inflou para 727,2px. Laco.
+3. `repeat(2, auto)` na coluna esquerda: cada linha mede o PROPRIO conteudo, por
+   isso agenda e wifi saiam diferentes. Trocado por `repeat(2, minmax(0,1fr))`.
+
+**O que funcionou:** a altura util deixou de vir do CSS e passou a ser medida em
+runtime — `slotBottom - topoDoHost`, com `ResizeObserver`. O `.content-slot` da
+shell e o unico ancestral que NAO cresce quando a secao dinamica aparece. Nao ha
+numero de aparelho no codigo: qualquer viewport chega ao mesmo resultado.
+
+Medido nos tres estados (428x926), todos identicos em Favoritos:
+
+| | normal | com midia | volta |
+|---|---|---|---|
+| altura de Favoritos | 252,8 | 252,8 | 252,8 |
+| agenda / wifi | 122,4 / 122,4 | idem | idem |
+| cenas = agenda + 8 + wifi | ok | ok | ok |
+| folga ate o filete | 6px | 6px | 6px |
+| rolagem | nao | sim | nao |
+| "Em execucao" | — | topo 868,6 (filete 867,6) | — |
+| pager | 352 | 352 | 352 |
+
+**Um erro de contagem no caminho:** o bloco estatico tem CINCO filhos (titulo,
+pager, dots, titulo, grade) e eu declarei quatro linhas — o `1fr` caiu no TITULO
+e a grade ficou no auto implicito. So apareceu porque o banco mediu.
+
+**A folga e 6px, nao os 2-3px pedidos.** Os 6px sao o `padding-bottom` do
+content-slot da shell, compartilhado com as subviews. Reduzir exigiria mexer numa
+referencia que o proprio usuario pediu para nao mover sem revisar todas elas.
+
+Bundle: Ct-Xu--y -> Cfi0fi4H.

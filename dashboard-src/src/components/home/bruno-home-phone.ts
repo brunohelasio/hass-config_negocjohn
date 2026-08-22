@@ -98,6 +98,7 @@ export class BrunoHomePhone extends LitElement {
   private _rodando = false;
   private _pagAgenda = 0;
   private _relogio: ReturnType<typeof setInterval> | undefined;
+  private _observador: ResizeObserver | undefined;
   private _assinatura = '';
   private _montados = new WeakSet<Element>();
 
@@ -115,10 +116,31 @@ export class BrunoHomePhone extends LitElement {
       this._pagAgenda += 1;
       this.requestUpdate();
     }, ROTACAO_MS);
+    this._observador ??= new ResizeObserver(() => this._medirAlturaUtil());
+    this._observador.observe(document.documentElement);
+    requestAnimationFrame(() => this._medirAlturaUtil());
   }
+
+  /**
+   * Mede a altura util: do topo deste componente ate o fim da area rolavel da
+   * shell. E o unico valor que nao cresce quando a secao "Em execucao" aparece.
+   */
+  private _medirAlturaUtil = (): void => {
+    const slot = this.closest('.content-slot')
+      ?? (this.getRootNode() as ShadowRoot)?.host?.closest?.('.content-slot');
+    const caixa = this.getBoundingClientRect();
+    if (!caixa.height && !caixa.top) return;
+    const limite = slot
+      ? slot.getBoundingClientRect().bottom - parseFloat(getComputedStyle(slot).paddingBottom || '0')
+      : globalThis.innerHeight;
+    const util = Math.max(0, Math.round(limite - caixa.top));
+    if (!util) return;
+    this.style.setProperty('--altura-util', String(util) + 'px');
+  };
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
+    this._observador?.disconnect();
     if (this._relogio) clearInterval(this._relogio);
     this._relogio = undefined;
   }
@@ -248,6 +270,7 @@ export class BrunoHomePhone extends LitElement {
   }
 
   protected override updated(_mudou: PropertyValues): void {
+    this._medirAlturaUtil();
     for (const host of this.renderRoot.querySelectorAll<HTMLElement>('[data-card-host]')) {
       const bruto = host.dataset['cardHost'];
       if (!bruto) continue;
@@ -474,8 +497,11 @@ export class BrunoHomePhone extends LitElement {
   protected override render() {
     if (!this._config) return nothing;
     return html`
-      <h2 class="titulo">Cômodos</h2>
-      ${this._pager()} ${this._indicadores()} ${this._favoritos()} ${this._emExecucao()}
+      <div class="estatico">
+        <h2 class="titulo">Cômodos</h2>
+        ${this._pager()} ${this._indicadores()} ${this._favoritos()}
+      </div>
+      ${this._emExecucao()}
     `;
   }
 
@@ -500,13 +526,41 @@ export class BrunoHomePhone extends LitElement {
        "Em execução" e uma faixa automatica e so existe quando há atividade — é ele, e só
        ele, que faz o conteúdo passar da viewport e habilitar a rolagem. */
     :host {
-      display: grid;
-      grid-template-rows: auto auto auto auto minmax(0, max-content) auto;
+      display: flex;
+      flex-direction: column;
+      /* MEDIDO (rev.4): com o host esticado e "Em execucao" na mesma grade, o
+         auto da secao dinamica disputava altura com o 1fr de Favoritos — o
+         bloco encolhia de 252,8px para 136,6px e o titulo aparecia ACIMA do
+         filete. Com align-self: start o host mede o CONTEUDO, e min-height
+         100% garante que, sem atividade, ele ainda preencha ate a rail. */
       height: 100%;
-      min-height: 0;
       width: 100%;
       min-width: 0;
       color: var(--bruno-text-main, rgba(245, 250, 255, 0.96));
+    }
+
+    /* O estatico preenche e NAO encolhe; a secao em execucao flui depois e
+       transborda, que e o que habilita a rolagem. */
+    .estatico {
+      display: grid;
+      /* CINCO filhos: titulo Comodos, pager, indicadores, titulo Favoritos e a
+         grade de Favoritos. Com quatro linhas o 1fr caia no TITULO e a grade
+         ficava no auto implicito — media 136,6px em vez de preencher. */
+      grid-template-rows: auto auto auto auto minmax(0, 1fr);
+      /* A altura NAO vem do CSS: vem de --altura-util, medida em runtime.
+
+         Tentativas anteriores, todas medidas e descartadas:
+          - 1fr na mesma grade do "Em execucao": a secao dinamica disputava
+            altura e Favoritos caia de 252,8px para 136,6px;
+          - min-height 100%: o grid da secao cresce com o transbordo, a linha
+            1fr cresce junto e Favoritos inflava para 727,2px — laco.
+
+         O que nao cresce e o content-slot da shell (viewport menos a rail).
+         Entao a altura util e slotBottom - topoDoHost, medida com
+         ResizeObserver. E medicao, nao calibragem: nao ha numero de aparelho
+         aqui, e qualquer viewport chega ao mesmo resultado. */
+      height: var(--altura-util, auto);
+      flex: 0 0 auto;
     }
 
     .titulo {
@@ -631,9 +685,14 @@ export class BrunoHomePhone extends LitElement {
        Agenda e Wi-Fi tem 3 linhas cada, saem com a mesma altura por construcao.
        O card de Cenas, na coluna vizinha, estica e fica valendo exatamente
        Agenda + gap + Wi-Fi — a regra pedida, sem calculo em pixel. */
+    /* rev.4, MEDIDO: dimensionar por conteudo dava a cada linha a sua PROPRIA
+       altura —
+       agenda 61,2px contra wifi 64,3px. Com 1fr as duas dividem a coluna em
+       partes iguais, entao saem identicas por construcao, e o card de Cenas
+       (que estica ao lado) vale exatamente Agenda + gap + Wi-Fi. */
     .fav-coluna {
       display: grid;
-      grid-template-rows: repeat(2, auto);
+      grid-template-rows: repeat(2, minmax(0, 1fr));
       gap: 8px;
       min-width: 0;
       min-height: 0;

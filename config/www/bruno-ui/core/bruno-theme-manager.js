@@ -1,4 +1,4 @@
-const BRUNO_THEME_MANAGER_VERSION = '20260723-liquid-glass-ios-1';
+const BRUNO_THEME_MANAGER_VERSION = '20260822-hemma-1';
 const BRUNO_THEME_STORAGE_KEY = 'bruno-ui-theme';
 const BRUNO_THEME_STORAGE_VERSION_KEY = 'bruno-ui-theme-storage-version';
 const BRUNO_THEME_STORAGE_VERSION = '2';
@@ -7,7 +7,7 @@ const BRUNO_THEME_DEFAULT = 'visionos';
 function brunoThemeManagerCreate() {
   const liquidOriginal = globalThis.BrunoLiquidGlassOriginal
     || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass);
-  const liquidIOSOriginal = globalThis.BrunoLiquidGlassIOS;
+  const hemmaOriginal = globalThis.BrunoHemma;
   const visionOriginal = globalThis.BrunoVisionOSOriginal || globalThis.BrunoVisionOS;
   const iosLightOriginal = globalThis.BrunoIOSLight;
   const iosDarkOriginal = globalThis.BrunoIOSDark;
@@ -23,10 +23,10 @@ function brunoThemeManagerCreate() {
       label: 'Liquid Glass',
       get api() { return globalThis.BrunoLiquidGlassOriginal || liquidOriginal || null; },
     },
-    'liquid-glass-ios': {
-      key: 'liquid-glass-ios',
-      label: 'Liquid Glass - iOS',
-      get api() { return globalThis.BrunoLiquidGlassIOS || liquidIOSOriginal || null; },
+    hemma: {
+      key: 'hemma',
+      label: 'Hemma',
+      get api() { return globalThis.BrunoHemma || hemmaOriginal || null; },
     },
     visionos: {
       key: 'visionos',

@@ -2,161 +2,147 @@
 
 Leia isto **antes** de tocar em qualquer arquivo deste repositório.
 
+## REGRA ZERO — continuidade entre sessões
+
+**Primeiro abra `docs/CHECKPOINT-ATUAL.md`.** Ele é o estado operacional canônico e deve ser atualizado ao final de cada rodada. Não reconstrua o trabalho apenas pela memória do chat, pelo título das PRs ou pela branch mais recente visualmente.
+
+Se houver conflito entre um documento histórico e o checkpoint, use esta ordem de autoridade:
+
+1. `docs/CHECKPOINT-ATUAL.md`;
+2. código da branch candidata indicada no checkpoint;
+3. PR funcional atual;
+4. documentação específica da rodada;
+5. documentos históricos.
+
 ## Ordem de leitura
 
-1. `docs/00-project-overview.md` — o que é o projeto e por que está assim
-2. Este arquivo — como trabalhar sem quebrar
-3. `PRE_MIGRATION_AUDIT.md` — o diagnóstico completo
-4. `docs/01-current-architecture.md` — como a aplicação carrega e renderiza
-5. `docs/03-active-entrypoints.md` — o que executa de fato
-6. `docs/02-file-inventory.md` — o que é ativo, legado, órfão ou desconhecido
-7. `docs/12-migration-plan.md` — em que fase estamos e o que está bloqueado
+1. `docs/CHECKPOINT-ATUAL.md` — estado atual, branch/PR, contratos, pendências e validação física
+2. `docs/LEIA-PRIMEIRO.md` — índice
+3. este arquivo — procedimento de trabalho
+4. documentação específica da rodada atual indicada no checkpoint
+5. `docs/11-failed-experiments.md` antes de repetir uma solução já tentada
+6. `docs/15-decisions-log.md` para decisões arquiteturais
+7. somente depois, os documentos históricos necessários (`00`–`14`, relatórios, CLAUDE/AGENTS)
 
-`CLAUDE.md` (168 KB) e `AGENTS.md` (144 KB) são a fonte histórica primária.
-**Não os leia inteiros por padrão** — procure a seção específica.
+`CLAUDE.md` e `AGENTS.md` são fontes históricas extensas. **Não os leia inteiros por padrão**; procure a seção específica e confira se o contrato não foi superado no checkpoint.
 
-## As duas regras de ouro do projeto (do `CLAUDE.md`, ainda valem)
+## Fluxo operacional vigente
 
-1. **Nunca excluir código. Comentar antes de substituir.** O código anterior fica
-   comentado no próprio arquivo, marcado como `ANTERIOR` / `rollback`, e o novo
-   entra abaixo.
-2. **Só entregar quando o usuário autorizar.** Mudanças são incrementais e
-   reversíveis; commit só depois da validação visual.
+O repositório `brunohelasio/hass-config_negocjohn` é a fonte principal de diagnóstico. `main` é o último estado consolidado/aceito e **não deve receber uma candidata ainda não validada fisicamente**.
 
-> Tensão conhecida: a regra 1 é a causa direta de 1.178 linhas de comentário
-> histórico no código de produção (`bruno-josh.js` com 57%). A saída acordada no
-> plano de migração é mover esse histórico para `docs/` **e** para o Git, não
-> abandonar a regra.
+Para cada demanda:
 
-## ⚠️ Invariantes que já quebraram o dashboard
+1. consulte o checkpoint;
+2. investigue primeiro o código/PR correto no GitHub;
+3. identifique causa, arquivos envolvidos e solução;
+4. classifique a execução em **MODO MANUAL**, **MODO CHAT-GITHUB** ou **MODO AGENTE**;
+5. escolha o caminho de menor custo e menor risco;
+6. implemente e valide;
+7. atualize documentação e checkpoint;
+8. informe branch, head, bundle, testes e pacote exato para o Everex;
+9. aguarde validação Everex/iPhone antes de mergear.
 
-### 1. Crase dentro de comentário em template literal — **4 ocorrências**
+### MODO MANUAL
 
-Todo o CSS é montado em template literal. Uma crase num comentário CSS/JS dentro
-do template **fecha a string**, o módulo não compila e o dashboard cai inteiro.
+Mudanças pequenas, determinísticas e de baixo risco. Informar arquivo, trecho atual, trecho novo, cache-bust e validação.
 
-```js
-// ERRADO — a crase fecha o template literal
-return `
-  /* a regra `.lights-card` usa padding 14px */
-  .lights-card { padding: 14px; }
-`;
-```
+### MODO CHAT-GITHUB
 
-Use aspas retas ou apenas descreva. **Paridade de crases não detecta** — a crase
-espúria vem em par.
+Quando o diagnóstico estiver fechado e a alteração puder ser feita com segurança no GitHub. Criar/usar branch candidata, manter PR draft, executar validações disponíveis e deixar `main` intacto até o aceite físico. **Neste modo, commits/pushes feitos pelo conector fazem parte do fluxo aprovado; não pedir ao usuário para reproduzir manualmente a escrita já feita no GitHub.**
 
-**Detector correto (desde 2026-08-02, com Node instalado):**
+### MODO AGENTE
+
+Somente quando houver necessidade real de execução local, build/harness complexo, testes fora do CI, refactor estrutural ou risco elevado.
+
+## Documentação é parte da implementação
+
+Uma rodada não está concluída apenas porque o código foi alterado.
+
+Toda implementação relevante deve:
+
+- atualizar `docs/CHECKPOINT-ATUAL.md`;
+- criar/atualizar o documento específico da rodada;
+- registrar decisão em `docs/15-decisions-log.md` quando houver consequência arquitetural ou regra que não pode ser esquecida;
+- registrar tentativa rejeitada em `docs/11-failed-experiments.md` quando houver risco real de repetição futura;
+- marcar documentos históricos como superados quando contiverem contratos perigosos.
+
+## Invariantes que já quebraram o dashboard
+
+### Crase em comentário dentro de template literal
+
+Uma crase não escapada em comentário CSS/HTML/JS dentro de template literal pode fechar a string e derrubar o módulo. Use o detector vigente:
 
 ```bash
-powershell -File scripts/validation/check-syntax.ps1
+node scripts/validation/check-backtick.mjs --tudo
 ```
 
-Ele roda `node --check` em todos os arquivos JS. É parse real: acusa erro se, e
-somente se, o arquivo não compila. **Zero falsos positivos.** Linha de base
-verificada em 2026-08-02: **53 de 53 arquivos OK.**
+Quando o bundle antigo contiver falsos positivos históricos, valide explicitamente os fontes alterados antes do rebuild e registre a razão; não declare sucesso sem executar TypeScript/build depois.
 
-Rode **antes** de pedir validação visual. Se falhar aqui, falharia no navegador —
-e no tablet o sintoma aparece como "erro de configuração" ou como o tema
-voltando silenciosamente ao anterior.
+### Ordem de carregamento é dependência
 
-> Heurística anterior (Perl, `/\/\*/../\*\//` procurando crase) está
-> **obsoleta**: produzia 24 falsos positivos e nenhum verdadeiro. Não use.
+Os módulos clássicos consolidados em `legacy-runtime.generated.ts` ainda têm ordem significativa. Antes de mudar dependências entre temas/core, confira a ordem real de importação e não presuma que `extra_module_url` histórico continua sendo a única fonte.
 
-### 2. Ordem de carregamento é o grafo de dependências
+### Optional chaining mascara falha
 
-Não há `import`. `bruno-josh.js` depende de `bruno-ios-dark.js`;
-`bruno-theme-manager.js` depende dos temas. A única declaração disso é a **ordem
-das linhas** em `frontend.extra_module_url`. Nunca reordene sem entender.
+Chamadas como `globalThis.Modulo?.metodo?.()` podem falhar silenciosamente quando o módulo não carregou. Sintoma visual não prova que a lógica executou. Confirme carregamento, ordem e bundle.
 
-### 3. Consumo por `?.` mascara falha de carregamento
+### Home × subviews
 
-`globalThis.BrunoSurfaceMaterial?.connect?.(this)` não dá erro quando o módulo
-não carregou — o efeito simplesmente não acontece. Sintoma típico: "o tema
-voltou ao antigo". Antes de suspeitar de corrida de carregamento, verifique se
-o módulo compila.
+Assimetrias entre Home e subviews são diagnósticas. Não replique automaticamente uma correção de um contexto no outro: confirme qual componente/tokens materializam cada superfície.
 
-### 4. Assimetria Home × subviews é diagnóstica
+## Antes de alterar um componente
 
-A Home lê tokens direto do tema; as subviews passam por
-`bruno-surface-material.js`. **Se a Home está normal e as subviews quebraram, o
-tema está vivo** — o problema é o módulo de material, não o tema.
+1. confirme que ele está no runtime ativo da branch;
+2. leia o checkpoint e a documentação da rodada;
+3. procure a mesma área em `11-failed-experiments.md` e no histórico relevante;
+4. identifique se o valor é fonte, gerado ou bundle compilado;
+5. altere a fonte correta;
+6. preserve contratos marcados no checkpoint;
+7. valide automaticamente;
+8. gere novo bundle/cache-bust quando a fonte fizer parte do Vite;
+9. valide visualmente em Everex/iPhone antes de merge.
 
-## Como verificar se um arquivo está em uso
+## Arquivos gerados e bundle
 
-**JavaScript:**
-```bash
-grep -n "nome-do-arquivo.js" config/configuration.yaml
-```
-Se não aparecer numa linha não comentada de `extra_module_url`, não é carregado.
+Não editar bundle compilado como fonte de implementação. O código em `dashboard-src/` e módulos clássicos incorporados pelo runtime são a fonte; `config/www/dashboard/` é produto do build.
 
-**YAML:** resolver o grafo de `!include` a partir de `dashboards/ui-lovelace-main.yaml`,
-ignorando linhas comentadas. A lista pronta está em `docs/02-file-inventory.md`.
-Cuidado com dois casos:
-- `!include_dir_merge_list main-grid/` puxa **todos** os arquivos do diretório
-- includes por caminho absoluto (`/config/dashboards/floorplan/`) são válidos no
-  HA e parecem quebrados localmente
+Quando o build gerar novo hash:
 
-**Custom element:**
-```bash
-grep -rn "BRUNO_.*_TAG = " config/www/bruno-ui/
-```
+- confirmar `config/www/dashboard/manifest.json`;
+- confirmar o ponteiro ativo em `config/configuration.yaml`;
+- registrar o novo bundle no checkpoint/PR;
+- indicar exatamente o que deve ser copiado para o Everex.
 
-## Como alterar um componente
+## Validação mínima de candidata
 
-1. Confirme que ele é carregado (acima)
-2. Leia o `CLAUDE.md` na seção daquele componente — há grande chance de a
-   mudança já ter sido tentada e revertida
-3. Comente o bloco anterior in-place, marcado `ANTERIOR (rollback <data>)`
-4. Escreva o novo abaixo
-5. **Suba o `?v=` do recurso em `configuration.yaml`** e comente o valor anterior
-   ao lado. Sem isso, o tablet continua com o arquivo velho
-6. Verifique a sintaxe (chaves, parênteses, crases, e o detector de crase acima)
-7. Peça validação visual — no tablet, não só no computador
+Quando a esteira estiver disponível:
 
-## Como saber que a alteração chegou no tablet
+1. YAML;
+2. detector de crase nos fontes relevantes;
+3. TypeScript;
+4. ESLint;
+5. Vitest;
+6. Vite build;
+7. manifesto/compressão;
+8. guard de escopo;
+9. confirmação do bundle ativo;
+10. validação física Everex/iPhone.
 
-O cache-bust é manual. Se a mudança aparece no computador e não no tablet:
-o `?v=` não subiu, ou o WebView do Fully Kiosk está servindo do cache. Não
-"conserte" o componente — conserte a entrega.
+Nunca confundir “código parece correto” com “build executado e aprovado”.
 
-## Como validar
+## `.pnpm-store`
 
-| # | Verificação |
-|---|---|
-| 1 | Sintaxe (sem Node: revisão manual + detector de crase) |
-| 2 | Custom elements registrados (`customElements.get('bruno-…')` no console) |
-| 3 | Recurso com versão nova em `configuration.yaml` |
-| 4 | Visual no desktop |
-| 5 | Funcional (a ação realmente chama o serviço) |
-| 6 | Console sem erro novo |
-| 7 | **Visual e funcional no tablet — sempre pelo usuário** |
-| 8 | Rollback registrado |
+O ruído local `.pnpm-store/...` no GitHub Desktop já foi investigado e foi deliberadamente deixado quieto. **Não pedir para descartar, excluir, commitar, adicionar ao `.gitignore` nem repetir a investigação**, salvo pedido explícito do usuário. Consulte o checkpoint.
 
-## Limitações do ambiente
+## Home Assistant em execução
 
-- **Node.js 24.18.1 + npm 11.16.0 instalados** em 2026-08-02 (winget, escopo de
-  usuário). O `winget` só atualiza o `PATH` em shells novos — o
-  `check-syntax.ps1` já contorna isso localizando o `node.exe` sozinho.
-  Caminho: `%LOCALAPPDATA%\Microsoft\WinGet\Packages\OpenJS.NodeJS.LTS_*\node-v24.18.1-win-x64\`.
-- **Sem Python.** Disponível: `perl` e utilitários POSIX.
-- **Windows + Git Bash + PowerShell.** A ferramenta Bash roda em sandbox; use
-  caminhos absolutos (o `cd` não persiste de forma confiável entre chamadas).
-- **Sem acesso ao Home Assistant em execução.** Não é possível confirmar quais
-  entidades existem, quais integrações estão carregadas ou se um arquivo existe
-  na máquina do HA mas não no repositório. **Quando a resposta depender disso,
-  pergunte — não conclua.**
-- ⚠️ **O repositório NÃO é espelho fiel do `/config` do HA.** Confirmado em
-  2026-08-02: `shared/popup/media_all_players.yaml` existe no HA e nunca esteve
-  neste repositório. Portanto "arquivo ausente aqui" **não** significa "include
-  quebrado no HA", e "arquivo órfão aqui" **não** significa "não usado no HA".
-  Confirme com o usuário antes de classificar ou arquivar.
+O repositório não é necessariamente espelho integral do `/config` do HA. Quando uma conclusão depender da existência/estado atual de entidade ou arquivo exclusivamente no HA real, use evidência do repositório quando houver e marque o restante para validação física; não invente `entity_id`.
 
 ## Como registrar decisões
 
 Em `docs/15-decisions-log.md`:
 
-```
+```text
 Data:
 Decisão:
 Contexto:
@@ -167,39 +153,30 @@ Arquivos afetados:
 Status:
 ```
 
-E atualize `docs/02-file-inventory.md` sempre que um arquivo mudar de classe.
+## Como não reintroduzir legado
 
-## Como não reintroduzir o legado
-
-- Nada em `_archive/` pode entrar no build, ser importado por `src/`, virar
-  resource ou ser carregado pelo HA
-- Não copie padrão de arquivo legado sem verificar se ele ainda é o padrão atual
-- Antes de "criar um card novo para o cômodo X": **já existem 6 cópias.** A
-  direção do projeto é convergir para um componente parametrizado, não somar a
-  sétima cópia
-- Antes de adicionar `setInterval`: verifique se o HA já entrega o dado por
-  estado reativo
+- nada em `_archive/` entra no runtime novo sem decisão explícita;
+- não copiar padrão legado sem verificar se ainda é o padrão vigente;
+- não criar nova duplicação quando existe componente parametrizado;
+- antes de polling/`setInterval`, verificar se o HA já entrega o dado de forma reativa;
+- antes de mudar contrato TV/Hub/Office/cortina/câmeras, conferir o checkpoint.
 
 ## Como não fazer alterações demais de uma vez
 
-- Uma fase resolve um problema
-- Um commit contém uma mudança coerente
-- Não misture limpeza com migração, nem redesign com correção
-- Se o dashboard quebrar e a causa não estiver identificada, **pare** — não
-  avance para a fase seguinte
+- uma rodada resolve um conjunto coerente e diagnosticado;
+- não misturar limpeza genérica com correção funcional;
+- não avançar quando a validação física reprovar o comportamento anterior;
+- registrar reprovação e causa antes da nova tentativa.
 
-## Atenção operacional
+## Fechamento obrigatório de cada rodada
 
-**O usuário commita pelo GitHub Desktop, às vezes no meio de uma sessão.** Em
-2026-08-02 apareceu um commit de 179 arquivos como `Atualização` entre duas
-chamadas de ferramenta. Não é automação — é ele, manualmente. Como o GitHub
-Desktop commita a árvore inteira, trabalho em andamento pode ser varrido para
-dentro de uma mensagem genérica.
+A resposta ao usuário deve terminar com:
 
-Quando uma fase precisar de commit próprio e rastreável, avise antes. Confira
-`git rev-parse HEAD` no início e no fim de passos longos; se mudou, pergunte em
-vez de presumir corrupção.
-
-**Nunca dê `git push` sem pedido explícito.** O usuário prefere que as mudanças
-fiquem locais até revisar o que vale commitar e publicar — e um push em `docs/**`
-dispara deploy público no GitHub Pages.
+- **branch candidata**;
+- **head SHA**;
+- **bundle ativo**;
+- **testes realmente executados e resultado**;
+- **arquivos/pastas exatos para copiar ao Everex**;
+- **o que NÃO copiar**;
+- **checklist objetivo de validação física**;
+- confirmação de que **não houve merge para `main`**.

@@ -916,7 +916,7 @@ camera:
           stateStr = variables.camera_enabled ? 'online' : 'offline';
       return `${batteryState} - ${stateStr}`;
     ]]]
-  update_timer: '500ms'
+  # update_timer: '500ms'
   double_tap_action:
     action: fire-dom-event
     browser_mod:
@@ -1038,7 +1038,10 @@ circle_state:
           }
         }
       ]]]
-
+  styles:
+    custom_fields:
+      circle:
+        - width: 50%
 battery_circle:
   template:
     - base

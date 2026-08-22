@@ -629,6 +629,7 @@ mediaplayer:
     circle_input: >
       [[[
         if (entity) {
+
           // if light group get brightness from child to remove bounce
           let volume = Math.round(entity.attributes.volume_level * 100)
           return volume === 0 && entity.state !== 'off'
@@ -653,6 +654,12 @@ mediaplayer:
                 }
             }
           ]]]
+    custom_fields:
+      circle:
+        - display: >
+            [[[
+              return entity && entity.attributes.volume_level !== undefined ? 'block' : 'none';
+            ]]]
 currently_playing:
   template:
     - conditional_media

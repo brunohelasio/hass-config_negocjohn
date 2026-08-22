@@ -4,23 +4,39 @@
 # Living Room
 - type: custom:streamline-card
   template: grid_living_room
-# OFFICE
-- type: custom:streamline-card
-  template: grid_office
 
 # Kitchen
-
-- type: custom:state-switch
-  entity: sensor.kitchen_active
-  default: 'no'
-  states:
-    'no':
-      type: custom:streamline-card
-      template: grid_kitchen_normal
-    dishwashing:
-      type: custom:streamline-card
-      template: grid_kitchen_dishwasing
+# - type: custom:state-switch
+#   entity: sensor.kitchen_active
+#   default: 'no'
+#   states:
+#     'no':
+#       type: custom:streamline-card
+#       template: grid_kitchen_normal
+#     dishwashing:
+#       type: custom:streamline-card
+#       template: grid_kitchen_dishwasing
+- type: conditional
+  conditions:
+    - condition: state
+      entity: sensor.kitchen_active
+      state_not: dishwashing
+  card:
+    type: custom:streamline-card
+    template: grid_kitchen_normal
+- type: conditional
+  conditions:
+    - condition: state
+      entity: sensor.kitchen_active
+      state: dishwashing
+  card:
+    type: custom:streamline-card
+    template: grid_kitchen_dishwasing
 
 # Bedroom
 - type: custom:streamline-card
   template: grid_bedroom
+
+# OFFICE
+- type: custom:streamline-card
+  template: grid_office

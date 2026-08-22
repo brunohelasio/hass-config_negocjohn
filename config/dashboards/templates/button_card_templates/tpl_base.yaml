@@ -1160,12 +1160,15 @@ extra_styles:
             letter-spacing: 0.5px;
             color: #97989c;
           }
-          @media screen and (max-width: 1700px) {
+          @media screen and (min-width: 801px) and (max-width: 1440px) {
+            // #card {
+            //   padding: 1vw 0;
+            // }
             #name {
               font-size: 6em;
             }
             #label {
-              font-size: 1vw;
+              font-size: 2vw;
             }
           }
           @media screen and (max-width: 800px) {

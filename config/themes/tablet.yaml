@@ -186,6 +186,7 @@ tablet:
               margin: unset !important;
               padding: unset !important;
             }
+
     #################################################
     #                                               #
     #               SWIPE CARD MARGIN               #

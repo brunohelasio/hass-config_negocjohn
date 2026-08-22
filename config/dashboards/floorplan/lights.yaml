@@ -109,6 +109,9 @@
             return "display: none;";
         let hue = 0;
         let sat = 0;
+        let brightness = entity.attributes.brightness || 255;
+        let brightness_calc = 0.40 + (brightness / 255) * 0.60;
+        console.log("Brightness: " + brightness + " | Brightness Calc: " + brightness_calc);
         if( entity.attributes.hs_color )
         {
             hue = entity.attributes.hs_color[0];
@@ -121,7 +124,7 @@
             transform: translate3d(0,0,0) !important;
             -webkit-backface-visibility: visible;
             mix-blend-mode: lighten;
-            filter: brightness(calc( ${entity.attributes.brightness} / 255));
+            filter: brightness(calc( ${brightness} / 255));
             `
         }
         return `
@@ -133,7 +136,7 @@
             sepia(100%)
             hue-rotate(calc( ${hue}deg - 55deg ))
             saturate(calc( ${sat}% * 2 ))
-            brightness(calc( ${entity.attributes.brightness} / 255));
+            brightness(calc(0.40 + (${brightness} / 255) * 0.60));
           `
 
 - entities:

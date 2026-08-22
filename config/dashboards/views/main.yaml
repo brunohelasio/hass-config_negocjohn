@@ -44,6 +44,7 @@ layout:
         ".  floorplan  floorplan   floorplan ."
         ".  footer     footer      footer    ."
         ".  .          .           .         ."
+
     # phone
     '(max-width: 800px) and (min-height: 463px)':
       # grid-gap: calc(var(--custom-layout-card-padding) * 1.7)

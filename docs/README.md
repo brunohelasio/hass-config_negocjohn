@@ -10,7 +10,7 @@ Hey there! Welcome to my little corner of the tech world! 👨‍💻
 
 This is where I store all the cool configurations for my Home Assistant system. Well, it's a mix of awesome codes and setups I discovered from the Home Assistant community. Seriously, those folks are wizards! 🧙‍♂️ As a bit of an internet newbie turned tech enthusiast, I stumbled upon the magic of IT, and this repository is my way of sharing the joy and knowledge I've gained along the way. Dive in, explore, and let the tech magic begin! ✨
 
-I frequently refresh my configuration files. My current Home Assistant version is <b>2026.8.2</b>. If you find something you like, don't forget to give my repository a ⭐️!
+I frequently refresh my configuration files. My current Home Assistant version is <b>2026.8.3</b>. If you find something you like, don't forget to give my repository a ⭐️!
 
 ## Some of my projects for Home Assistant
 
@@ -47,14 +47,14 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
       </thead>
       <tbody>
           <tr>
-              <td>46,842 </td>
+              <td>46,942 </td>
               <td>35</td>
-              <td>302</td>
-              <td>82</td>
+              <td>297</td>
+              <td>79</td>
               <td>64</td>
               <td>38</td>
-              <td>2243</td>
-              <td>269</td>
+              <td>2183</td>
+              <td>261</td>
               <td>27</td>
           </tr>
       </tbody>
@@ -80,6 +80,7 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - Log Viewer
 - MA Provider Watcher
 - MariaDB
+- Matter Server
 - Mosquitto broker
 - Music Assistant
 - Node-RED
@@ -141,8 +142,10 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
   <summary>Lovelace plugins</summary>
 
 ### Lovelace plugins
+- [Air Quality Card](https://github.com/firstof9/ha-air-quality-card)
 - [Apexcharts Card](https://github.com/RomRider/apexcharts-card)
 - [Apple Tv Remote Control](https://github.com/madmicio/Apple-Tv-Card)
+- [Area Glance Card](https://github.com/Future-Surfer/ha-area-glance-card)
 - [Atomic Calendar Revive](https://github.com/totaldebug/atomic-calendar-revive)
 - [Auto Entities](https://github.com/Lint-Free-Technology/lovelace-auto-entities)
 - [Bar Card](https://github.com/spacerokk/bar-card)
@@ -190,6 +193,7 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - [Streamline Card](https://github.com/brunosabot/streamline-card)
 - [Swipe Card](https://github.com/bramkragten/swipe-card)
 - [Timer Bar Card](https://github.com/rianadon/timer-bar-card)
+- [Track History Card](https://github.com/sergon2000/lovelace-track-history-card)
 - [Tv Remote Card (With Touchpad And Haptic Feedback)](https://github.com/usernein/tv-card)
 - [Upcoming Media Card](https://github.com/xZetsubou/upcoming-media-card)
 - [Vehicle Info Card](https://github.com/ngocjohn/vehicle-info-card)

@@ -84,6 +84,7 @@ recorder:
       - sensor.*_latency
       - sensor.neklanka_gateway_*
       - sensor.rx_*
+      - sensor.kids_room_*
   include:
     entities:
       - device_tracker.viet_ngoc_samsung

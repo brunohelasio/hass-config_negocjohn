@@ -5,20 +5,29 @@
 #################################################
 - type: 'custom:layout-card'
   layout_type: 'custom:grid-layout'
+  uix:
+    style:
+      grid-layout $: |
+        #root {
+          height: 100% !important;
+        }
+
   view_layout:
     grid-area: header
     show:
       mediaquery: '(min-height: 463px)'
   layout:
     margin: 0
-
     place-items: center center
-    grid-template-columns: 0.5fr 1fr
+    grid-template-columns: minmax(170px, 250px) minmax(200px, 1fr)
+    grid-template-rows: auto
     grid-gap: 0
     mediaquery:
       '(min-width: 801px) and (max-width: 1440px)':
+        place-items: center center
         grid-template-columns: 1fr
-        grid-template-rows: auto
+        grid-template-rows: 2fr 2fr
+
   cards:
     - type: custom:button-card
       entity: sensor.time
@@ -26,40 +35,87 @@
         - header_clock
       tap_action: !include ../../shared/popup/calendar.yaml
 
-    - type: custom:button-card
-      entity: weather.prague
+    # - type: custom:button-card
+    #   entity: weather.prague
+    #   tap_action: !include ../../shared/popup/popup_weather.yaml
+    #   template:
+    #     - header_weather
+    - type: custom:weather-forecast-card
+      show_current: true
+      show_forecast: true
+      default_forecast: hourly
       tap_action: !include ../../shared/popup/popup_weather.yaml
-      template:
-        - header_weather
-#################################################
-#                                               #
-#                  WEATHER                      #
-#                                               #
-#################################################
+      entity: weather.neklanka
+      show_condition_effects: true
+      forecast:
+        mode: simple
+        show_sun_times: true
+        scroll_to_selected: false
+        hourly_group_size: 1
+        use_color_thresholds: true
+        show_attribute_selector: true
+      uix:
+        style:
+          .: |
+            :host {
+              width: 100%;
+              --ha-card-background: none;
+              --weather-forecast-card-effects-sky-visibility: hidden;
+              overflow: visible;
+            }
 
-# - type: 'custom:layout-card'
-#   layout_type: 'custom:grid-layout'
-#   view_layout:
-#     grid-area: header
-#     show:
-#       mediaquery: '(max-width: 800px)'
-#   layout:
-#     grid-template-columns: 1fr 1fr
-#     grid-gap: 0
-#     margin: 0
-#     align-items: flex-end
-#   cards:
-#     - type: custom:button-card
-#       entity: sensor.template_sidebar_time
-#       template:
-#         - timeclock
-#     - type: custom:button-card
-#       entity: weather.prague
-#       tap_action: !include ../../shared/popup/popup_weather.yaml
-#       name: Prague
-#       variables:
-#         temp_min: sensor.weather_min_temp
-#         temp_max: sensor.weather_max_temp
-#         humidity: sensor.weather_humidity
-#       template:
-#         - horizontal_widget_weather
+            ha-card {
+              min-height: 100px;
+              --ha-font-size-3xl: 48px;
+              --ha-font-size-xl: 30px;
+            }
+            ha-card wfc-animation-provider {
+              overflow: visible;
+              --sun-size: 100px;
+            }
+            @media screen and (max-width: 800px) {
+              ha-card wfc-animation-provider {
+                --moon-size: 60px;
+                --sun-size: 60px;
+              }
+            }
+            @media screen and (min-width: 1441px) {
+              ha-card wfc-animation-provider {
+                --moon-size: 200px;
+                # --sun-size: 60px;
+              }
+            }
+            div.wfc-forecast-container,
+            ha-card wfc-weather-condition-icon-provider,
+            div.wfc-name-state {
+              display: none;
+            }
+            .wfc-current-conditions {
+              justify-content: flex-end;
+            }
+            .wfc-current-temperature {
+              font-weight: 500;
+              font-family: 'Raleway';
+              color: #97989c;
+            }
+          wfc-animation-provider$: |
+            div.sun {
+              top: calc(var(--sun-size) * 0.15);
+              right: 45%;
+              --sun-ray-color: #fbbf2478;
+              opacity: 0.8;
+            }
+            div.moon-body {
+              top: calc(var(--moon-size) * 0.15);
+              right: 45%;
+            }
+            div.star {
+              display: none;
+            }
+            div.cloud-track {
+              opacity: 0.3;
+              top: 10%;
+            }
+            div.cloud-track:nth-child(even) {
+              top: 25% !important;
+            }

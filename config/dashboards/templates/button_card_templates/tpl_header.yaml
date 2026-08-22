@@ -56,6 +56,11 @@ header_clock:
                 font-size: 5rem !important;
               }
             }
+            @media screen and (max-width: 1700px) {
+              .time-wrapper.size-large .time-parts {
+                font-size: 2vw !important;
+              }
+            }
 
             .time-part.second {
               min-width: 30px !important;

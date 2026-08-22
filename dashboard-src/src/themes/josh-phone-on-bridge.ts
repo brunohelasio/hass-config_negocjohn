@@ -56,8 +56,13 @@ const JOSH_PHONE_ON_CSS = `
 }
 `;
 
+type JoshLifecycleElement = HTMLElement & {
+  __brunoJoshPhoneOnPatched?: boolean;
+  connectedCallback?: () => void;
+};
+
 type TileCtor = CustomElementConstructor & {
-  prototype: HTMLElement & { __brunoJoshPhoneOnPatched?: boolean };
+  prototype: JoshLifecycleElement;
 };
 
 function installStyle(tile: Element): void {
@@ -83,7 +88,7 @@ void customElements.whenDefined('bruno-room-tile').then(() => {
   const proto = ctor.prototype;
   if (!proto.__brunoJoshPhoneOnPatched) {
     const originalConnected = proto.connectedCallback;
-    proto.connectedCallback = function connectedCallbackWithJoshPhoneOn(this: HTMLElement) {
+    proto.connectedCallback = function connectedCallbackWithJoshPhoneOn(this: JoshLifecycleElement) {
       originalConnected?.call(this);
       queueMicrotask(() => installStyle(this));
     };

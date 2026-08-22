@@ -50,6 +50,10 @@ A confirmação final continua sendo feita no HA real.
 
 O bundle gerado e o `configuration.yaml` são atualizados somente após a validação automática da candidata.
 
+### Consolidação de fonte
+
+A PR técnica #611 foi aberta somente para forçar a esteira de CI atualizada. O objetivo é, se a esteira disparar, retirar o wash diretamente de `bruno-room-tile.ts` e fazer o phone consumir tokens Liquid Glass por uma autoridade única em `bruno-josh.js`, deixando o bridge de Shadow DOM apenas como mecanismo transitório/fallback. Esta PR técnica nunca deve ser mergeada.
+
 ## Validação física esperada
 
 - Tablet: Office ON sem retângulo/veil; filete inferior perceptível; nenhuma cartela nova.

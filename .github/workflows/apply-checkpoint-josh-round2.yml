@@ -1,0 +1,376 @@
+name: Apply checkpoint and Josh ON round2
+
+on:
+  pull_request:
+    branches:
+      - ci/checkpoint-josh-round2-base
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  candidate:
+    if: ${{ github.head_ref == 'feat/mobile-runtime-v3-hemma-josh-lavabo-20260822' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout candidate branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Skip generated candidate commits
+        id: guard
+        shell: bash
+        run: |
+          if git log -1 --pretty=%B | grep -Fq '[generated candidate]'; then
+            echo 'skip=true' >> "$GITHUB_OUTPUT"
+            echo 'generated candidate already applied; skipping'
+          else
+            echo 'skip=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply source corrections and operational checkpoint
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f'marker not found: {label}')
+              return text.replace(old, new, 1)
+
+          # 1) Josh: tablet sem veil; mobile consome uma referencia canonica
+          # do estado ON do Liquid Glass, preservando geometria/estado Josh.
+          p = Path('dashboard-src/src/components/rooms/bruno-room-tile.ts')
+          s = p.read_text(encoding='utf-8')
+
+          old_tablet = '''    /* Josh ON: reforco sem reintroduzir uma cartela. A leitura vem de luz,
+       nao de moldura: wash leitoso discreto, filete quente e glow de base. */
+    .room-card.is-tile.is-room-on {
+      --text-main: rgba(255, 252, 245, 0.99);
+      --text-soft: rgba(255, 245, 226, 0.72);
+      --text-muted: rgba(255, 247, 232, 0.76);
+      --bruno-tile-on-line: linear-gradient(
+        90deg,
+        rgba(255, 194, 104, 0) 0%,
+        rgba(255, 202, 122, 0.78) 50%,
+        rgba(255, 194, 104, 0) 100%
+      );
+      --bruno-tile-on-glow: radial-gradient(
+        82px 38px at 50% 100%,
+        rgba(255, 194, 102, 0.22),
+        rgba(255, 216, 156, 0.07) 48%,
+        transparent 76%
+      );
+    }
+
+    .room-card.is-tile.is-room-on::before {
+      inset: 1px 2px 1px;
+      border-radius: 0;
+      background:
+        radial-gradient(92% 78% at 50% 100%, rgba(255, 204, 126, 0.12), transparent 72%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.070), rgba(255, 247, 232, 0.025) 62%, transparent);
+      opacity: 1;
+    }
+'''
+          new_tablet = '''    /* Josh ON no tablet/desktop: continua TILE, sem cartela e sem veil.
+       A tentativa de wash leitoso continuou desenhando um retangulo perceptivel
+       na validacao fisica de 2026-08-22. Por decisao do usuario, o wash sai por
+       completo. O feedback ON fica no PNG, texto, filete quente e glow inferior. */
+    .room-card.is-tile.is-room-on {
+      --text-main: rgba(255, 252, 245, 0.99);
+      --text-soft: rgba(255, 245, 226, 0.72);
+      --text-muted: rgba(255, 247, 232, 0.76);
+      --bruno-tile-on-line: linear-gradient(
+        90deg,
+        rgba(255, 194, 104, 0) 0%,
+        rgba(255, 202, 122, 0.92) 50%,
+        rgba(255, 194, 104, 0) 100%
+      );
+      --bruno-tile-on-glow: radial-gradient(
+        82px 38px at 50% 100%,
+        rgba(255, 194, 102, 0.22),
+        rgba(255, 216, 156, 0.07) 48%,
+        transparent 76%
+      );
+    }
+
+    .room-card.is-tile.is-room-on::before {
+      inset: 0;
+      border-radius: 0;
+      background: none;
+      opacity: 0;
+    }
+'''
+          s = replace_once(s, old_tablet, new_tablet, 'tablet Josh ON block')
+          s = replace_once(
+              s,
+              '      box-shadow: 0 -2px 11px rgba(255, 194, 102, 0.17);',
+              '      box-shadow: 0 -2px 14px rgba(255, 194, 102, 0.24);',
+              'tablet bottom line shadow',
+          )
+
+          old_mobile = '''      .room-card.is-josh-phone-card.is-room-on {
+        --text-main: rgba(255, 253, 248, 0.99);
+        --text-soft: rgba(255, 246, 230, 0.72);
+        --text-muted: rgba(255, 248, 236, 0.76);
+        background:
+          radial-gradient(175px 138px at 16% -10%, rgba(255, 252, 245, 0.30), transparent 72%),
+          radial-gradient(155px 120px at 92% 100%, rgba(255, 207, 135, 0.13), transparent 72%),
+          linear-gradient(180deg, rgba(255, 250, 240, 0.18), rgba(255, 242, 222, 0.075) 48%, rgba(44, 31, 22, 0.10)),
+          rgba(30, 27, 24, 0.42);
+        border-color: rgba(255, 244, 225, 0.275);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.27),
+          inset 0 -1px 0 rgba(255, 213, 151, 0.07),
+          0 0 24px rgba(255, 205, 132, 0.09),
+          0 12px 28px rgba(0, 0, 0, 0.21);
+        backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+        -webkit-backdrop-filter: var(--bruno-josh-microblur, blur(2px)) saturate(1.13) brightness(1.035);
+      }
+      .room-card.is-josh-phone-card.is-room-on::before {
+        background:
+          radial-gradient(120px 86px at 18% 0%, rgba(255, 255, 255, 0.22), transparent 74%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 42%);
+        opacity: 0.88;
+      }
+'''
+          new_mobile = '''      .room-card.is-josh-phone-card.is-room-on {
+        --text-main: rgba(248, 251, 255, 0.96);
+        --text-soft: rgba(255, 255, 255, 0.52);
+        --text-muted: rgba(255, 255, 255, 0.62);
+        background: var(--bruno-josh-room-on-background);
+        border-color: var(--bruno-josh-room-on-border-color);
+        box-shadow: var(--bruno-josh-room-on-shadow);
+        backdrop-filter: var(--bruno-josh-room-on-filter);
+        -webkit-backdrop-filter: var(--bruno-josh-room-on-filter);
+      }
+      .room-card.is-josh-phone-card.is-room-on::before {
+        background: var(--bruno-josh-room-on-sheen);
+        opacity: var(--bruno-josh-room-on-sheen-opacity);
+      }
+'''
+          s = replace_once(s, old_mobile, new_mobile, 'phone Josh ON block')
+          p.write_text(s, encoding='utf-8')
+
+          # 2) Josh recebe os tokens ON diretamente do objeto canonico Liquid Glass.
+          p = Path('config/www/bruno-ui/core/bruno-josh.js')
+          s = p.read_text(encoding='utf-8')
+          s = replace_once(
+              s,
+              "const BRUNO_JOSH_VERSION = '20260802-josh-popup-material-1';",
+              "const BRUNO_JOSH_VERSION = '20260822-josh-liquid-on-reference-1';",
+              'Josh version',
+          )
+          old_tokens = '''function brunoJoshTokens() {
+  const base = brunoJoshVisionOSBase();
+  return Object.assign({}, base?.tokens || {}, BRUNO_JOSH_OVERRIDES);
+}
+'''
+          new_tokens = '''function brunoJoshLiquidGlassOnReference() {
+  const liquid = globalThis.BrunoLiquidGlassOriginal
+    || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass);
+  const tokens = liquid?.tokens || {};
+  return {
+    // Referencia visual CANONICA: sao os mesmos valores usados pelo tema
+    // Liquid Glass no estado ON. Nao copiar/mimetizar no componente.
+    'bruno-josh-room-on-background': tokens['bruno-liquid-surface-on-background'] || 'radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 46%, transparent 73%), linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 40%, rgba(255,255,255,0.07)), linear-gradient(155deg, rgba(255,255,255,0.11), rgba(255,255,255,0.055))',
+    'bruno-josh-room-on-filter': tokens['bruno-liquid-surface-on-filter'] || 'blur(14px) saturate(1.28) brightness(1.04)',
+    'bruno-josh-room-on-border-color': tokens['bruno-liquid-surface-on-border-color'] || 'rgba(255,255,255,0.16)',
+    'bruno-josh-room-on-shadow': tokens['bruno-liquid-surface-on-shadow'] || 'inset 0 1px 0 rgba(255,255,255,0.36), inset 1px 0 0 rgba(255,255,255,0.12), inset -1px 0 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.32)',
+    'bruno-josh-room-on-sheen': tokens['bruno-liquid-surface-on-sheen'] || 'radial-gradient(112px 72px at 16% 0%, rgba(255,255,255,0.40), transparent 72%), linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.00) 38%), linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.00) 48%)',
+    'bruno-josh-room-on-sheen-opacity': tokens['bruno-liquid-surface-on-sheen-opacity'] || '0.85',
+  };
+}
+
+function brunoJoshTokens() {
+  const base = brunoJoshVisionOSBase();
+  return Object.assign(
+    {},
+    base?.tokens || {},
+    BRUNO_JOSH_OVERRIDES,
+    brunoJoshLiquidGlassOnReference(),
+  );
+}
+'''
+          s = replace_once(s, old_tokens, new_tokens, 'Josh token resolver')
+          p.write_text(s, encoding='utf-8')
+
+          # 3) O bridge temporario deixa de participar; a regra agora vive no
+          # componente e nos tokens do tema, sem segunda camada de override.
+          Path('dashboard-src/src/themes/josh-phone-on-bridge.ts').write_text(
+              '''/**\n * OBSOLETO desde 2026-08-22 (round2).\n *\n * A primeira candidata tentou corrigir o Josh ON injetando CSS depois do\n * Shadow DOM. A validacao fisica mostrou que isso empilhava material sobre o\n * CSS proprio do bruno-room-tile e produzia resultados diferentes do tema\n * Liquid Glass. A implementacao vigente esta no proprio componente e consome\n * tokens canonicos resolvidos por bruno-josh.js.\n *\n * Mantido como arquivo vazio de rollback/documentacao; nao injeta estilos.\n */\nexport {};\n''',
+              encoding='utf-8',
+          )
+
+          # 4) Checkpoint operacional canonico para novas sessoes/IA.
+          Path('docs/CHECKPOINT-ATUAL.md').write_text('''# CHECKPOINT ATUAL — LEITURA OBRIGATORIA\n\nAtualizado em **2026-08-22**. Este documento e a primeira fonte de continuidade operacional do projeto.\n\n> **REGRA ZERO PARA QUALQUER IA/CHAT NOVO:** antes de diagnosticar, propor branch, escrever codigo, orientar GitHub Desktop ou indicar arquivos para o Everex, leia este arquivo e depois `docs/LEIA-PRIMEIRO.md`. Nao reconstrua o estado apenas pela lista de PRs.\n\n## Fonte de verdade e fluxo\n\n- Repositorio: `brunohelasio/hass-config_negocjohn`.\n- `main` permanece intacto enquanto uma candidata nao for validada fisicamente.\n- Modos: **MODO MANUAL**, **MODO CHAT-GITHUB**, **MODO AGENTE**. Preferir sempre o caminho de menor custo/risco.\n- Em MODO CHAT-GITHUB, criar/usar branch candidata, validar automaticamente, manter PR draft e **nao mergear antes do aceite Everex/iPhone**.\n- Ao fim de TODA rodada, a resposta deve informar: **branch**, **head**, **bundle ativo**, **estado dos testes** e **lista exata do que copiar para o Everex**.\n- Toda implementacao relevante deve atualizar este checkpoint e criar/atualizar documentacao em `docs/`; nao depender da memoria de um chat.\n\n## Cadeia de trabalho vigente\n\n1. **#602 — `fix/mobile-runtime-tv-curtain-20260819`**: runtime mobile/TV/Hub/Spotify/cortina validado fisicamente.\n2. **#604 — `feat/mobile-runtime-v3-20260821`**: candidata V3 criada SOBRE #602; assets V3 e round4 visual/semantico.\n3. **#606 — `feat/mobile-runtime-v3-hemma-josh-lavabo-20260822`**: candidata atual, SOBRE #604. Inclui Hemma, clima do Lavabo e refinamento visual Josh. **Nao mergear antes da validacao fisica.**\n\nBundle desta candidata apos o build desta rodada: **BUNDLE_PENDENTE**.\n\n## Contratos que NAO podem regredir\n\n- TV Sala — power/status: `media_player.smart_tv_pro_2` + `TV_POWER_ON_STATES`.\n- TV Sala — playback/source/title/artwork: `media_player.android_tv_192_168_3_17`.\n- Comandos fisicos/volume da TV: `remote.smart_tv_pro`.\n- Estabilidade transitória da TV: preservar `isTvPoweredStable`; nao voltar a misturar power e playback.\n- Office PC dot: autoridade exclusiva `binary_sensor.office_pc_active`; nao voltar a usar sessao HASS.Agent congelada nem `switch.macbook` como autoridade do dot.\n- Hub: preservar ultimo poster/artwork valido quando atributos temporariamente chegam vazios; volume TV por comandos do remote.\n- Cortina: preservar mecanismo/estimador ja validado; calibracao fina e assunto separado.\n- Camera: nao alterar IDs/streaming nesta cadeia sem demanda especifica.\n- Nao existe integracao Apple TV a ser presumida; `media_player.atv` nao e contrato do projeto.\n\n## Lavabo — hardware e entidades\n\n- Presenca/luminancia e um sensor fisico separado do sensor de temperatura/umidade.\n- O sensor PIR/luminancia do Lavabo e do mesmo tipo/arranjo usado no Corredor.\n- Temperatura/umidade do Lavabo vem do antigo sensor separado que ficava no Office antes dos sensores 4-em-1.\n- Mapeamento candidato atual: `sensor.office_temp_humid_temperature` e `sensor.office_temp_humid_humidity`.\n- Esse mapeamento continua sujeito a validacao no HA real; nao inventar novos entity_id sem evidencia.\n\n## Josh — contrato visual por breakpoint\n\n- **Tablet/desktop (>800px):** comodos sao **tiles**, nao cards. Sem cartela, sem raio de card, sem blur proprio da tile. ON = PNG aceso + texto + filete inferior quente + glow inferior. O veil leitoso foi rejeitado na validacao fisica de 2026-08-22 por desenhar um retangulo; a rodada atual o remove por completo.\n- **Phone (<=800px):** comodos permanecem **cards**. OFF continua Josh. Somente o material visual ON deve reproduzir os tokens canonicos `bruno-liquid-surface-on-*` do tema Liquid Glass: background, filter/blur, border-color, shadow, sheen e sheen-opacity. **Nao alterar raio, semantica, logica de estado, gestos, assets ou layout.**\n- Nao criar uma segunda receita "parecida". O Josh deve apontar para a receita canonica Liquid Glass.\n\n## Tema Hemma\n\n- `Hemma` substitui `Liquid Glass - iOS` no seletor da candidata #606.\n- Implementacao: `config/www/bruno-ui/core/bruno-hemma.js`, incorporada ao bundle.\n- O antigo `bruno-liquid-glass-ios.js` permanece no repositorio para rollback, fora do runtime ativo da candidata.\n\n## `.pnpm-store` — NAO MEXER\n\n- GitHub Desktop pode mostrar dezenas de arquivos locais sob `.pnpm-store/...`.\n- O problema ja foi investigado em rodadas anteriores; tentativas de remover/ignorar nao resolveram de forma satisfatoria.\n- Decisao do usuario: **deixar esse ruido local quieto**.\n- Nao pedir para descartar, apagar, commitar, adicionar ao `.gitignore` ou repetir a investigacao, salvo se o usuario explicitamente reabrir o assunto.\n- Esses arquivos nunca entram no pacote do Everex.\n\n## Publicacao / Everex\n\n- O GitHub/branch candidata e a fonte de implementacao; nao pedir commit local para aplicar mudancas feitas via Chat-GitHub.\n- O pacote exato de copia deve ser calculado no fim de cada rodada. Nao mandar copiar `dashboard-src`, `.pnpm-store`, `scripts` ou `_rollback`.\n- Bundle Vite com hash + `configuration.yaml` sao parte do cache-bust. Assets externos (`config/www/bruno-ui/assets/v3/`) so precisam ser copiados quando mudarem ou quando o Everex ainda nao tiver a V3 correspondente.\n\n## Estado da validacao fisica em 2026-08-22\n\n- V3/runtime base: preservado.\n- Tablet Josh ON da candidata anterior: **REPROVADO visualmente** — veil retangular ainda perceptivel.\n- Phone Josh ON da candidata anterior: **REPROVADO visualmente** — material nao reproduziu o Liquid Glass; parecia apenas ampliar o clareamento perto do PNG.\n- Round2 atual: remove o veil do tablet e faz o mobile consumir a receita ON canonica do Liquid Glass.\n- Lavabo temperatura/umidade: ainda requer confirmacao no HA real.\n\n## Documentos de continuidade\n\nDepois deste checkpoint, ler nesta ordem:\n\n1. `docs/LEIA-PRIMEIRO.md`\n2. `docs/16-ai-working-guide.md`\n3. `docs/38-v3-josh-hemma-lavabo-20260822.md`\n4. `docs/15-decisions-log.md` quando a decisao tiver consequencia arquitetural\n5. `docs/11-failed-experiments.md` antes de repetir uma solucao antiga\n\nDocumentos antigos podem conter contratos superados. Em caso de conflito, **este checkpoint + codigo da branch candidata + PR atual prevalecem**.\n''', encoding='utf-8')
+
+          Path('docs/38-v3-josh-hemma-lavabo-20260822.md').write_text('''# V3 — Josh, Hemma e Lavabo — 2026-08-22\n\n## Contexto\n\nA candidata #606 e filha direta da #604 e preserva o runtime validado da #602. Esta rodada surgiu apos a validacao fisica mostrar duas falhas visuais no Josh: o tablet ainda desenhava um veil retangular no estado ON e o card mobile nao reproduzia o material ON do Liquid Glass.\n\n## Diagnostico da falha visual anterior\n\n### Tablet/desktop\n\nO `bruno-room-tile.ts` ja possuia `room-card.is-tile.is-room-on::before` com wash proprio. A primeira correcao adicionou outra camada por `josh-phone-on-bridge.ts`, portanto tentou corrigir o efeito sem retirar a fonte anterior. Resultado: a area clara continuou legivel como retangulo/quadrado dentro da faixa.\n\n**Decisao round2:** retirar o wash por completo. A tile ON continua sem cartela e conserva PNG aceso, texto, filete inferior quente e glow inferior.\n\n### Mobile\n\nO card Josh phone tinha uma receita ON hard-coded propria (quente, microblur 2px). A primeira correcao acrescentou um bridge de Shadow DOM com valores copiados, criando duas autoridades visuais. A validacao mostrou que o resultado continuou diferente do Liquid Glass.\n\n**Decisao round2:** uma unica autoridade. `bruno-josh.js` resolve os valores diretamente de `BrunoLiquidGlassOriginal.tokens['bruno-liquid-surface-on-*']` e os expoe como `bruno-josh-room-on-*`. O `bruno-room-tile.ts` consome esses tokens somente em `.is-josh-phone-card.is-room-on`. Raio Josh, OFF, logica, semantica, gesto, layout e assets nao mudam. O bridge fica inerte.\n\n## Lavabo\n\nO Lavabo tem dois dispositivos fisicos distintos: PIR/luminancia e temperatura/umidade. O sensor de temperatura/umidade foi transferido do Office para o Lavabo quando o Office recebeu sensores 4-em-1. A candidata usa `sensor.office_temp_humid_temperature` e `sensor.office_temp_humid_humidity`; a confirmacao final continua sendo o HA real.\n\n## Hemma\n\n`Hemma` substitui `Liquid Glass - iOS` no Theme Manager desta candidata. O tema foi portado para JS/contrato Bruno; o arquivo antigo de Liquid Glass iOS permanece apenas como rollback.\n\n## Arquivos fonte desta rodada\n\n- `dashboard-src/src/components/rooms/bruno-room-tile.ts`\n- `config/www/bruno-ui/core/bruno-josh.js`\n- `dashboard-src/src/themes/josh-phone-on-bridge.ts` (desativado/inertizado)\n- `docs/CHECKPOINT-ATUAL.md`\n- `docs/LEIA-PRIMEIRO.md`\n- `docs/16-ai-working-guide.md`\n- `docs/33-runtime-mobile-consolidado.md` (aviso de contrato superado)\n- `docs/15-decisions-log.md`\n\n## Validacao esperada\n\n- Tablet: Office ON sem retangulo/veil; filete inferior mais legivel; nenhuma cartela nova.\n- Phone Josh: OFF idêntico ao anterior; ON com a mesma receita material do Liquid Glass, preservando raio Josh.\n- Nenhuma regressao em TV, Hub, Office PC, cortina, camera ou V3 assets.\n\n## Merge\n\n**Nao mergear #606 antes da validacao fisica no Everex/iPhone.**\n''', encoding='utf-8')
+
+          # 5) Tornar o checkpoint impossivel de ignorar na documentacao existente.
+          p = Path('docs/LEIA-PRIMEIRO.md')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('Atualizado em **2026-08-05**, ao fim da Fase 5c.', 'Atualizado em **2026-08-22**. O estado operacional vivo fica em `CHECKPOINT-ATUAL.md`.')
+          marker = '## Para retomar o trabalho\n\n'
+          if '`CHECKPOINT-ATUAL.md`' not in s.split('## Base de conhecimento', 1)[0]:
+              s = replace_once(
+                  s,
+                  marker,
+                  marker + '> **PASSO ZERO:** leia `CHECKPOINT-ATUAL.md`. Ele registra branch/PR vigente, contratos que nao podem regredir, problemas ja abandonados e o estado da validacao fisica. Em caso de conflito com documentos historicos, o checkpoint prevalece.\n\n',
+                  'LEIA-PRIMEIRO checkpoint',
+              )
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('docs/16-ai-working-guide.md')
+          s = p.read_text(encoding='utf-8')
+          marker = 'Leia isto **antes** de tocar em qualquer arquivo deste repositório.\n\n'
+          if 'CHECKPOINT-ATUAL.md' not in s[:1200]:
+              s = replace_once(
+                  s,
+                  marker,
+                  marker + '**REGRA ZERO (2026-08-22):** antes desta ordem de leitura, abra `docs/CHECKPOINT-ATUAL.md`. O checkpoint e atualizado a cada rodada e impede que uma nova sessao reconstrua o estado apenas por PRs ou por memoria de chat.\n\n',
+                  'AI guide checkpoint',
+              )
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('docs/33-runtime-mobile-consolidado.md')
+          s = p.read_text(encoding='utf-8')
+          warning = '> **ATENCAO — documento historico.** O contrato de TV descrito abaixo foi superado pelas rodadas #602/#604. Para trabalho atual, use `docs/CHECKPOINT-ATUAL.md`: power/status = `media_player.smart_tv_pro_2`, playback/artwork = `media_player.android_tv_192_168_3_17`, comandos = `remote.smart_tv_pro`.\n\n'
+          if not s.startswith('> **ATENCAO'):
+              s = s.replace('\n\n', '\n\n' + warning, 1)
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('docs/15-decisions-log.md')
+          s = p.read_text(encoding='utf-8')
+          decision_marker = '**Data:** 2026-08-22\n**Decisão:** instituir `docs/CHECKPOINT-ATUAL.md`'
+          if decision_marker not in s:
+              s += '''\n\n---\n\n**Data:** 2026-08-22\n**Decisão:** instituir `docs/CHECKPOINT-ATUAL.md` como estado operacional canonico para toda nova sessao/IA e tornar obrigatoria sua atualizacao ao fim de cada rodada.\n**Contexto:** a memoria de projeto nao forneceu de forma deterministica o historico integral entre chats; isso levou a leitura de PR obsoleta, repeticao de tentativas ja abandonadas e orientacoes inconsistentes de deploy. A pasta `docs/` ja existia justamente para evitar esse problema, mas nao vinha sendo mantida nas rodadas recentes.\n**Consequencias:** `LEIA-PRIMEIRO.md` e `16-ai-working-guide.md` apontam primeiro para o checkpoint; cada rodada registra branch/PR, contratos, validacao fisica, pendencias e pacote Everex. `.pnpm-store` passa a constar como ruido local conhecido que nao deve ser reaberto sem pedido explicito.\n**Arquivos afetados:** `docs/CHECKPOINT-ATUAL.md`, `docs/LEIA-PRIMEIRO.md`, `docs/16-ai-working-guide.md`, documentacao da rodada.\n**Status:** vigente.\n\n**Data:** 2026-08-22\n**Decisão:** no Josh, separar definitivamente o feedback ON por breakpoint: tablet/desktop sem veil e phone consumindo os tokens ON canonicos do Liquid Glass.\n**Contexto:** validacao fisica da primeira candidata #606 mostrou que o wash do tablet ainda desenhava um retangulo e que o mobile continuava diferente do Liquid Glass por haver receita Josh hard-coded + bridge de override.\n**Consequencias:** tablet mantem tile/PNG/filete/glow sem cartela; phone preserva raio/logica/estado/layout Josh e reutiliza apenas `background`, `filter`, `border-color`, `shadow`, `sheen` e `sheen-opacity` de `bruno-liquid-surface-on-*`.\n**Arquivos afetados:** `bruno-room-tile.ts`, `bruno-josh.js`, `josh-phone-on-bridge.ts`.\n**Status:** candidata #606, aguardando validacao fisica.\n'''
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: dashboard-src/package-lock.json
+
+      - name: Install dependencies
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm ci
+
+      - name: YAML validation
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run check:yaml
+
+      - name: Backtick guard on changed sources
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          node scripts/validation/check-backtick.mjs \
+            dashboard-src/src/components/rooms/bruno-room-tile.ts \
+            dashboard-src/src/themes/josh-phone-on-bridge.ts \
+            config/www/bruno-ui/core/bruno-josh.js
+
+      - name: Typecheck
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run typecheck
+
+      - name: Lint
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run lint
+
+      - name: Tests
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run test
+
+      - name: Full build
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: dashboard-src
+        run: npm run build
+
+      - name: Update active bundle and checkpoint
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          python3 <<'PY'
+          import json, re
+          from pathlib import Path
+          manifest = json.loads(Path('config/www/dashboard/manifest.json').read_text(encoding='utf-8'))
+          bundle = manifest['bundle']
+          p = Path('config/configuration.yaml')
+          text = p.read_text(encoding='utf-8')
+          pattern = re.compile(r'(?m)^(\s*)- /local/dashboard/(bruno-dashboard\.[A-Za-z0-9_-]+\.js)\s*$')
+          matches = list(pattern.finditer(text))
+          if len(matches) != 1:
+              raise SystemExit(f'expected one active bundle; found {len(matches)}')
+          old = matches[0].group(2)
+          if old != bundle:
+              indent = matches[0].group(1)
+              repl = f'{indent}# ANTERIOR (rollback Josh round2): - /local/dashboard/{old}\n{indent}- /local/dashboard/{bundle}'
+              p.write_text(pattern.sub(repl, text, count=1), encoding='utf-8')
+          cp = Path('docs/CHECKPOINT-ATUAL.md')
+          c = cp.read_text(encoding='utf-8').replace('BUNDLE_PENDENTE', bundle)
+          cp.write_text(c, encoding='utf-8')
+          rd = Path('docs/38-v3-josh-hemma-lavabo-20260822.md')
+          r = rd.read_text(encoding='utf-8') + f'\n## Build round2\n\nBundle gerado: `{bundle}`.\n'
+          rd.write_text(r, encoding='utf-8')
+          print(f'active bundle: {old} -> {bundle}')
+          PY
+
+      - name: Guard scope
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          python3 <<'PY'
+          import subprocess
+          allowed = {
+            'dashboard-src/src/components/rooms/bruno-room-tile.ts',
+            'dashboard-src/src/themes/josh-phone-on-bridge.ts',
+            'config/www/bruno-ui/core/bruno-josh.js',
+            'docs/CHECKPOINT-ATUAL.md',
+            'docs/38-v3-josh-hemma-lavabo-20260822.md',
+            'docs/LEIA-PRIMEIRO.md',
+            'docs/16-ai-working-guide.md',
+            'docs/33-runtime-mobile-consolidado.md',
+            'docs/15-decisions-log.md',
+            'config/configuration.yaml',
+          }
+          unexpected=[]
+          for line in subprocess.check_output(['git','status','--porcelain=v1'], text=True).splitlines():
+              path=line[3:]
+              if ' -> ' in path: path=path.split(' -> ',1)[1]
+              if path.startswith('config/www/dashboard/'): continue
+              if path not in allowed: unexpected.append(line)
+          if unexpected:
+              raise SystemExit('unexpected files:\n' + '\n'.join(unexpected))
+          print('scope ok')
+          PY
+
+      - name: Commit source docs and generated bundle
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dashboard-src/src/components/rooms/bruno-room-tile.ts \
+                  dashboard-src/src/themes/josh-phone-on-bridge.ts \
+                  config/www/bruno-ui/core/bruno-josh.js \
+                  docs/CHECKPOINT-ATUAL.md \
+                  docs/38-v3-josh-hemma-lavabo-20260822.md \
+                  docs/LEIA-PRIMEIRO.md \
+                  docs/16-ai-working-guide.md \
+                  docs/33-runtime-mobile-consolidado.md \
+                  docs/15-decisions-log.md \
+                  config/configuration.yaml
+          git add -f -A config/www/dashboard
+          git commit -m 'fix: alinhar Josh ON ao Liquid Glass e registrar checkpoint [generated candidate]'
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}

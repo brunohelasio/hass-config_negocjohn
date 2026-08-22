@@ -137,7 +137,12 @@ layout:
       # As areas que sumiram pertencem a cards com show.mediaquery
       # (min-width: 801px): no telefone eles NAO renderizam, e area de card
       # nao renderizado nao precisa existir.
-      grid-template-rows: minmax(44px, auto) minmax(0, auto) auto
+      # A terceira faixa e 1fr, nao auto: o compositor recebe TODA a altura que
+      # sobra ate a rail, e e ele que reparte entre Comodos (fixo) e Favoritos
+      # (o resto). Assim a rail determina a altura de Favoritos, e nao o
+      # contrario — sem numero calibrado a mao para o aparelho.
+      # ANTERIOR (rollback): ... minmax(0, auto) auto
+      grid-template-rows: minmax(44px, auto) minmax(0, auto) minmax(0, 1fr)
       grid-template-areas: |
         "top_badges"
         "welcome"

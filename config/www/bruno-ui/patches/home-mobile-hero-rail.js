@@ -13,6 +13,11 @@ const BRUNO_CHAT_HERO_TAG = 'bruno-hero-card';
 const BRUNO_CHAT_RAIL_TAG = 'bento-sidebar-liquid-card';
 const BRUNO_CHAT_ROTATION_MS = 6000;
 
+// HOME PHONE (2026-08-22): a faixa rotativa de agenda/insights saiu do hero no
+// telefone e passou a viver no card Agenda do bloco Favoritos, com a mesma
+// cadencia. Ligar de volta aqui restaura o comportamento anterior por inteiro.
+const BRUNO_CHAT_HERO_CAROUSEL = false;
+
 const brunoChatIsPhone = () => Boolean(globalThis.matchMedia?.(BRUNO_CHAT_PHONE_QUERY).matches);
 
 function brunoChatClearHeroTimer(card) {
@@ -45,9 +50,26 @@ function brunoChatEnsureHeroStyle(root) {
   style.dataset.brunoChatHeroPatch = '1';
   style.textContent = `
     @media (max-width: 800px) {
+      /* ── HOME PHONE (2026-08-22) ───────────────────────────────────────
+         ANTERIOR (rollback):
+           height: 178px !important;
+           min-height: 178px !important;
+
+         Os 178px foram calibrados COM a faixa de agenda/insights embaixo do
+         relogio: conteudo (~117px) + carrossel (48px + respiros). A faixa
+         migrou para o card Agenda do bloco Favoritos, e a altura fixa passou a
+         reservar ~60px de vazio entre o relogio e o titulo "Comodos".
+
+         Altura automatica: o hero passa a medir o proprio conteudo, e o que
+         sobra vai para Comodos + Favoritos. Nada aqui depende mais de um
+         numero calibrado a mao.
+
+         O carrossel em si e desligado por BRUNO_CHAT_HERO_CAROUSEL (abaixo) —
+         nao por CSS, para nao entrar em guerra de especificidade com este
+         proprio bloco. */
       .hero-stage.is-v2 {
-        height: 178px !important;
-        min-height: 178px !important;
+        height: auto !important;
+        min-height: 0 !important;
       }
 
       .hero-stage.is-v2 .content {
@@ -234,6 +256,26 @@ function brunoChatApplyHero(card) {
   if (!stage || !stack) return;
 
   brunoChatEnsureHeroStyle(root);
+
+  // ── HOME PHONE (2026-08-22) ────────────────────────────────────────────
+  // A faixa de agenda/insights saiu do hero no telefone e migrou para o card
+  // Agenda do bloco Favoritos, que reproduz a MESMA logica (paginas rotativas
+  // a cada BRUNO_CHAT_ROTATION_MS).
+  //
+  // Desligar aqui, no JS, e nao por CSS: o bloco de estilo deste proprio
+  // arquivo usa `!important` no carrossel, entao qualquer regra externa
+  // entraria numa guerra de especificidade. Aqui a faixa simplesmente nao e
+  // instalada, e o hero mede so o proprio conteudo.
+  //
+  // ROLLBACK: trocar para `true` e devolver a altura fixa no bloco de estilo.
+  if (!BRUNO_CHAT_HERO_CAROUSEL) {
+    stack.classList.remove('bruno-chat-carousel');
+    stack.style.display = 'none';
+    stack.querySelector('.bruno-chat-event-dots')?.remove();
+    brunoChatClearHeroTimer(card);
+    card.__brunoChatHeroIndex = 0;
+    return;
+  }
 
   const allLines = [...stack.querySelectorAll(':scope > .event-line')];
   const usefulLines = allLines.filter((line) => !line.classList.contains('is-empty'));

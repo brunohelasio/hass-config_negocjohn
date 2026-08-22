@@ -44,15 +44,25 @@ favorites:
 # As quatro cenas ficam AQUI, na configuração, e não no código: a ideia é poder
 # trocá-las pelo próprio dashboard no futuro sem rebuild.
 # Todas conferidas no registro de entidades; nenhuma foi inventada.
+# Icones da biblioteca ja adotada pelo dashboard (Hugeicons, via bruno-icons.js).
+# Uso os apelidos semanticos que o proprio mapa ja define, em vez de nomes crus:
+#   lights_off             -> hugeicons:lightbulb-off
+#   mdi:weather-sunset-up  -> hugeicons:sunset      (o unico sol do catalogo)
+#   mdi:weather-night      -> hugeicons:moon-02
+#   movies                 -> hugeicons:film-01
 scenes:
   - label: Apagar luzes
     script: script.bruno_scene_apagar_todas_as_luzes
+    icon: lights_off
   - label: Bom dia
     script: script.bruno_scene_bom_dia
+    icon: mdi:weather-sunset-up
   - label: Boa noite
     script: script.bruno_scene_boa_noite
+    icon: mdi:weather-night
   - label: Cinema
     script: script.bruno_scene_cinema
+    icon: movies
 
 # ── Em execução ────────────────────────────────────────────────────────────
 # Os mesmos três sensores que governam a área dinâmica. Quando os três estão

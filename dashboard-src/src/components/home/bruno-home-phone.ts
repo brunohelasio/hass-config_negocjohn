@@ -70,8 +70,10 @@ interface HomePhoneConfig {
   dynamicCard?: Record<string, unknown>;
 }
 
-const ALTURA_LINHA = 172;
-const GAP = 8;
+// Altura da linha (172px) e o gap (8px) vivem no CSS: sao geometria, nao
+// logica, e mante-los num lugar so evita os dois divergirem.
+// Mesma cadencia da faixa que saiu do hero (BRUNO_CHAT_ROTATION_MS no patch).
+const ROTACAO_MS = 6000;
 
 /** Sala tem card próprio e ocupa a linha inteira; os demais são ladrilhos. */
 const configDoComodo = (id: string): Record<string, unknown> =>
@@ -86,6 +88,7 @@ export class BrunoHomePhone extends LitElement {
   // assinatura abaixo é o que evita os renders inúteis (invariante da Fase 6.1).
   static override properties = {
     _pagina: { state: true },
+    _pagAgenda: { state: true },
     _rodando: { state: true },
   };
 
@@ -93,8 +96,32 @@ export class BrunoHomePhone extends LitElement {
   private _config?: HomePhoneConfig;
   private _pagina = 0;
   private _rodando = false;
+  private _pagAgenda = 0;
+  private _relogio: ReturnType<typeof setInterval> | undefined;
   private _assinatura = '';
   private _montados = new WeakSet<Element>();
+
+  /**
+   * Rotação da agenda: mesma cadência da faixa que saiu do hero.
+   *
+   * O timer vive no ciclo de vida do elemento — some quando ele sai do DOM e
+   * pausa com a aba oculta. Um intervalo que sobrevive à desmontagem é
+   * vazamento, e a aba escondida não tem quem olhe.
+   */
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this._relogio ??= setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      this._pagAgenda += 1;
+      this.requestUpdate();
+    }, ROTACAO_MS);
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this._relogio) clearInterval(this._relogio);
+    this._relogio = undefined;
+  }
 
   set hass(hass: Hass) {
     this._hass = hass;
@@ -327,27 +354,30 @@ export class BrunoHomePhone extends LitElement {
     `;
   }
 
+  /**
+   * Card ÚNICO de Favoritos com as quatro ações dentro.
+   *
+   * Sem título "Cenas" e sem card separado: o mockup pede um bloco só, e um
+   * título extra roubaria a altura que a seção não tem.
+   */
   private _cenas() {
     const cenas = (this._config?.scenes ?? []).slice(0, 4);
     return html`
-      <div class="cenas-bloco">
-        <div class="fav-card cenas-titulo">
-          <span class="fav-icone">✦</span><strong>Cenas</strong>
-        </div>
-        <div class="cenas-grade">
-          ${cenas.map(
-            (cena) => html`
-              <button
-                class="cena"
-                type="button"
-                @click=${() =>
-                  this._hass?.callService('script', 'turn_on', { entity_id: cena.script })}
-              >
-                <span class="cena-nome">${cena.label}</span>
-              </button>
-            `,
-          )}
-        </div>
+      <div class="fav-card cenas">
+        ${cenas.map(
+          (cena) => html`
+            <button
+              class="cena"
+              type="button"
+              aria-label=${cena.label}
+              @click=${() =>
+                this._hass?.callService('script', 'turn_on', { entity_id: cena.script })}
+            >
+              <bruno-icon class="cena-icone" icon=${cena.icon ?? 'circle'}></bruno-icon>
+              <span class="cena-nome">${cena.label}</span>
+            </button>
+          `,
+        )}
       </div>
     `;
   }
@@ -381,27 +411,44 @@ export class BrunoHomePhone extends LitElement {
     }
 
     const insights = this._hass?.states[cfg.insightsEntity ?? '']?.attributes as
-      | { items?: Array<{ text?: string }> }
+      | { items?: Array<{ text?: string; detail?: string }> }
       | undefined;
-    const insight = String(insights?.items?.[0]?.text ?? '').trim();
 
+    // As páginas são as MESMAS da faixa que saiu do hero: o compromisso na
+    // frente quando existe, seguido das informações da casa. A rotação de 6 s
+    // reproduz a cadência daquela faixa (BRUNO_CHAT_ROTATION_MS no patch).
+    const paginas: Array<{ marca: string; texto: string }> = [];
+    if (titulo) paginas.push({ marca: hora || 'Hoje', texto: titulo });
+    for (const item of insights?.items ?? []) {
+      const texto = String(item?.text ?? '').trim();
+      if (texto) paginas.push({ marca: String(item?.detail ?? 'Agora').trim() || 'Agora', texto });
+    }
+    if (!paginas.length) paginas.push({ marca: 'Hoje', texto: 'Sem compromissos' });
+
+    const atual = paginas[this._pagAgenda % paginas.length] ?? paginas[0];
     return html`
       <div class="fav-card agenda">
-        <div class="fav-topo"><span class="fav-icone">◷</span><strong>Agenda</strong></div>
-        ${titulo
-          ? html`
-              <div class="agenda-hora">${hora || 'Hoje'}</div>
-              <div class="agenda-titulo">${titulo}</div>
-            `
-          : html`<div class="agenda-vazia">Sem compromissos</div>`}
-        ${insight ? html`<div class="agenda-insight">${insight}</div>` : nothing}
+        <div class="fav-topo">
+          <bruno-icon class="fav-icone" icon="mdi:calendar-month-outline"></bruno-icon>
+          <strong>Agenda</strong>
+          ${paginas.length > 1
+            ? html`<span class="agenda-dots">
+                ${paginas.map(
+                  (_, i) =>
+                    html`<i class=${i === this._pagAgenda % paginas.length ? 'is-atual' : ''}></i>`,
+                )}
+              </span>`
+            : nothing}
+        </div>
+        <div class="agenda-marca">${atual?.marca ?? ''}</div>
+        <div class="agenda-titulo">${atual?.texto ?? ''}</div>
       </div>
     `;
   }
 
   private _favoritos() {
     return html`
-      <h2 class="titulo">Favoritos</h2>
+      <h2 class="titulo is-favoritos">Favoritos</h2>
       <div class="favoritos">
         <div class="fav-coluna">${this._agenda()} ${this._wifi()}</div>
         ${this._cenas()}
@@ -414,7 +461,7 @@ export class BrunoHomePhone extends LitElement {
     // altura reservada. É isso que mantém a Home sem rolagem no estado normal.
     if (!this._rodando || !this._config?.dynamicCard) return nothing;
     return html`
-      <h2 class="titulo">Em execução</h2>
+      <h2 class="titulo is-rodando">Em execução</h2>
       <div class="rodando" data-card-host=${JSON.stringify(this._config.dynamicCard)}></div>
     `;
   }
@@ -431,27 +478,44 @@ export class BrunoHomePhone extends LitElement {
     /* O componente só é montado pelo card com show.mediaquery (max-width:800px),
        mas o :host guarda o breakpoint de novo: se algum dia ele for colocado
        noutro lugar, não vaza geometria de telefone para o tablet. */
-    :host {
-      display: block;
-      width: 100%;
-      min-width: 0;
-      color: var(--bruno-text-main, rgba(245, 250, 255, 0.96));
-    }
     @media (min-width: 801px) {
       :host {
         display: none;
       }
     }
 
+    /* ── ALTURA ────────────────────────────────────────────────────────────
+       O compositor ocupa a linha do grid externo, que no telefone é
+       minmax(0, 1fr). Cômodos tem altura fixa e conhecida; FAVORITOS recebe o
+       que sobra (1fr) e por isso termina exatamente onde a rail começa.
+
+       É a inversão que o desenho pedia: a rail determina a altura de
+       Favoritos, não o contrário. Nada aqui é calibrado em pixel de aparelho.
+
+       "Em execução" e uma faixa automatica e so existe quando há atividade — é ele, e só
+       ele, que faz o conteúdo passar da viewport e habilitar a rolagem. */
+    :host {
+      display: grid;
+      grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+      height: 100%;
+      min-height: 0;
+      width: 100%;
+      min-width: 0;
+      color: var(--bruno-text-main, rgba(245, 250, 255, 0.96));
+    }
+
     .titulo {
-      margin: 0 0 6px;
-      font-size: 15px;
+      margin: 0 0 5px;
+      font-size: 14px;
       font-weight: 700;
       letter-spacing: 0.01em;
       color: var(--bruno-text-main, rgba(245, 250, 255, 0.96));
     }
-    .titulo:not(:first-child) {
-      margin-top: 12px;
+    /* Respiro entre Cômodos e Favoritos reduzido de propósito: é altura que
+       vai direto para os cards de Favoritos. */
+    .titulo.is-favoritos,
+    .titulo.is-rodando {
+      margin-top: 7px;
     }
 
     /* ── pager ── */
@@ -459,7 +523,6 @@ export class BrunoHomePhone extends LitElement {
       display: grid;
       grid-auto-flow: column;
       grid-auto-columns: 100%;
-      gap: 0;
       overflow-x: auto;
       overflow-y: hidden;
       scroll-snap-type: x mandatory;
@@ -471,13 +534,13 @@ export class BrunoHomePhone extends LitElement {
       display: none;
     }
 
-    /* Altura intrínseca e explícita: duas linhas de 172px + um gap de 8px.
-       Nada aqui depende de vh nem de track de 0px no grid externo. */
+    /* Duas linhas de 172px + um gap. Altura intrínseca: nada depende de vh
+       nem de track de 0px no grid externo. */
     .pagina {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-auto-rows: ${ALTURA_LINHA}px;
-      gap: ${GAP}px;
+      grid-auto-rows: 172px;
+      gap: 8px;
       scroll-snap-align: start;
       scroll-snap-stop: always;
       min-width: 0;
@@ -498,7 +561,7 @@ export class BrunoHomePhone extends LitElement {
       display: grid;
       place-items: center;
       height: 100%;
-      border-radius: 16px;
+      border-radius: var(--bruno-liquid-card-radius, 16px);
       font-size: 11px;
       color: rgba(255, 255, 255, 0.5);
       background: rgba(255, 255, 255, 0.05);
@@ -511,8 +574,8 @@ export class BrunoHomePhone extends LitElement {
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-top: 8px;
-      min-height: 14px;
+      padding: 6px 0 0;
+      min-height: 12px;
     }
     .dots {
       display: flex;
@@ -536,37 +599,56 @@ export class BrunoHomePhone extends LitElement {
     .aviso-comodos {
       display: grid;
       place-items: center;
-      min-width: 17px;
-      height: 17px;
+      min-width: 16px;
+      height: 16px;
       padding: 0 4px;
-      border-radius: 9px;
+      border-radius: 8px;
       background: var(--bruno-accent-amber, #f7c600);
       color: rgba(12, 14, 20, 0.92);
-      font: 700 11px/1 system-ui, -apple-system, sans-serif;
+      font: 700 10.5px/1 system-ui, -apple-system, sans-serif;
     }
 
-    /* ── favoritos ── */
+    /* ── favoritos ──────────────────────────────────────────────────────────
+       Mesmas colunas e o MESMO gap da seção de cômodos: duas faixas iguais de
+       1fr separadas por 8px. Assim as bordas dos dois blocos ficam alinhadas
+       verticalmente.
+
+       A coluna da esquerda empilha Agenda e Wi-Fi em duas linhas iguais com o
+       mesmo gap, então a soma das duas alturas mais o respiro fecha exatamente
+       a altura do card da direita. */
     .favoritos {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: ${GAP}px;
-      align-items: stretch;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      min-height: 0;
     }
     .fav-coluna {
       display: grid;
-      grid-auto-rows: minmax(0, 1fr);
-      gap: ${GAP}px;
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 8px;
       min-width: 0;
+      min-height: 0;
     }
+
+    /* ── SUPERFÍCIE ─────────────────────────────────────────────────────────
+       Os mesmos tokens que os demais cards consomem. Ao trocar de tema, estes
+       valores mudam com ele — não há cor fixa aqui, só o fallback de segurança
+       para o caso de o tema não ter carregado ainda. */
     .fav-card {
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      padding: 10px 12px;
-      border-radius: 16px;
+      justify-content: center;
+      gap: 1px;
+      padding: 8px 11px;
       min-width: 0;
-      background: var(--bruno-liquid-surface-off-bg, rgba(255, 255, 255, 0.06));
-      border: 1px solid var(--bruno-liquid-surface-off-border, rgba(255, 255, 255, 0.105));
+      min-height: 0;
+      overflow: hidden;
+      border-radius: var(--bruno-liquid-card-radius, 16px);
+      background: var(--bruno-liquid-card-background, rgba(255, 255, 255, 0.06));
+      border: 1px solid var(--bruno-liquid-card-border, rgba(255, 255, 255, 0.105));
+      box-shadow: var(--bruno-liquid-card-shadow, none);
+      backdrop-filter: var(--bruno-liquid-card-filter, none);
+      -webkit-backdrop-filter: var(--bruno-liquid-card-filter, none);
     }
     .fav-card > * {
       min-width: 0;
@@ -574,48 +656,62 @@ export class BrunoHomePhone extends LitElement {
     .fav-topo {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.62);
+      gap: 5px;
+      font-size: 11px;
+      color: var(--bruno-text-soft, rgba(255, 255, 255, 0.58));
     }
     .fav-icone {
-      opacity: 0.7;
+      --mdc-icon-size: 13px;
+      width: 13px;
+      height: 13px;
+      opacity: 0.8;
+      flex: 0 0 13px;
     }
-    .agenda-hora {
-      font-size: 12px;
+
+    /* ── agenda ── */
+    .agenda-dots {
+      display: flex;
+      gap: 3px;
+      margin-left: auto;
+    }
+    .agenda-dots i {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.22);
+    }
+    .agenda-dots i.is-atual {
+      background: var(--bruno-accent-amber, #f7c600);
+    }
+    .agenda-marca {
+      font-size: 11px;
       font-weight: 700;
       color: var(--bruno-accent-amber, #f7c600);
       font-variant-numeric: tabular-nums;
-    }
-    .agenda-titulo,
-    .agenda-vazia,
-    .agenda-insight {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .agenda-titulo {
-      font-size: 12.5px;
-      font-weight: 600;
-    }
-    .agenda-vazia {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.45);
+      font-weight: 600;
+      line-height: 1.2;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
-    .agenda-insight {
-      margin-top: 2px;
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.55);
-    }
+
+    /* ── wi-fi ── */
     .wifi-rede {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 650;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .wifi-estado {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 600;
     }
     .wifi-estado.is-excelente {
@@ -629,52 +725,55 @@ export class BrunoHomePhone extends LitElement {
     }
     .wifi-taxas {
       display: flex;
-      gap: 10px;
-      margin-top: 2px;
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.55);
+      gap: 9px;
+      font-size: 10.5px;
+      color: var(--bruno-text-soft, rgba(255, 255, 255, 0.55));
       font-variant-numeric: tabular-nums;
     }
 
-    .cenas-bloco {
-      display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-      gap: ${GAP}px;
-      min-width: 0;
-    }
-    .cenas-titulo {
-      flex-direction: row;
-      align-items: center;
-      padding: 8px 12px;
-    }
-    .cenas-grade {
+    /* ── cenas: UM card com as quatro ações dentro ── */
+    .cenas {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-auto-rows: minmax(0, 1fr);
-      gap: ${GAP}px;
-      min-width: 0;
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      padding: 8px;
+      justify-content: stretch;
     }
     .cena {
       display: grid;
-      align-content: end;
-      padding: 8px 10px;
-      border-radius: 14px;
+      grid-template-rows: auto auto;
+      align-content: center;
+      justify-items: center;
+      gap: 3px;
+      padding: 4px 3px;
       min-width: 0;
-      text-align: left;
+      min-height: 0;
+      border-radius: calc(var(--bruno-liquid-card-radius, 16px) * 0.6);
       cursor: pointer;
       color: inherit;
-      background: var(--bruno-liquid-control-bg, rgba(255, 255, 255, 0.05));
+      text-align: center;
+      background: var(--bruno-liquid-control-background, rgba(255, 255, 255, 0.05));
       border: 1px solid var(--bruno-liquid-control-border, rgba(255, 255, 255, 0.1));
+      transition: transform 120ms ease;
     }
     .cena:active {
       transform: translateY(1px);
     }
+    .cena-icone {
+      --mdc-icon-size: 17px;
+      width: 17px;
+      height: 17px;
+      opacity: 0.88;
+    }
     .cena-nome {
-      font-size: 11.5px;
+      font-size: 9.5px;
       font-weight: 600;
-      line-height: 1.15;
+      line-height: 1.05;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
     }
 
     .rodando > * {
@@ -683,7 +782,8 @@ export class BrunoHomePhone extends LitElement {
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .dot {
+      .dot,
+      .cena {
         transition: none;
       }
     }

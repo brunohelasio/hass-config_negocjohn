@@ -4530,3 +4530,54 @@ Cada arquivo alterado tem o bloco ANTERIOR comentado in-place.
 de terceiros (`www/community/`) ou artefatos de build (`www/dashboard/chunks/`,
 versionados sem minificar). Zero sobreposicao com codigo nosso. E falso positivo
 do gate sobre codigo que nao controlamos; fica registrado, nao foi "corrigido".
+
+### Ajuste pos-feedback visual — Home phone (2026-08-22, rev.2)
+
+Oito correcoes do usuario apos ver a primeira versao no aparelho.
+
+**O espaco vazio tinha DUAS fontes de altura fixa**, nao uma:
+`bruno-hero-card.js` (`height: 182px`) e `home-mobile-hero-rail.js`
+(`height: 178px !important`). A do patch vencia. E os 178px eram exatamente
+conteudo (~117px) + carrossel de agenda (48px + respiros) — calibrados COM a
+faixa que acabara de sair.
+
+Pior: minha regra `display: none` no `.event-stack` **nunca teve efeito**. O
+patch adiciona a classe `bruno-chat-carousel` com `display: block !important`,
+e ganha por `!important` + ordem de injecao. A faixa continuava instalada.
+
+Correcao: `BRUNO_CHAT_HERO_CAROUSEL = false` no patch (desliga no JS, nao por
+CSS, para nao entrar em guerra de especificidade com o proprio bloco) e altura
+`auto`. A rotacao de 6 s migrou para o card Agenda, com a mesma cadencia.
+
+**INVARIANTE:** antes de esconder algo com CSS, verificar se um patch nao
+declara aquilo com `!important`. Regra sem `!important` contra patch com
+`!important` injetado depois nao vence nunca — e o sintoma e "sumiu
+semanticamente mas o espaco ficou".
+
+**Altura: a rail passou a determinar Favoritos, e nao o contrario.** A terceira
+faixa do grid phone virou `minmax(0, 1fr)` e o `:host` do compositor virou grid
+com `Favoritos = 1fr`. Nao ha numero calibrado por aparelho: Comodos tem altura
+fixa e conhecida, Favoritos recebe o que sobra ate a rail, e "Em execucao" e
+`auto` — e so ele que faz o conteudo passar da viewport e habilitar rolagem.
+
+**Tokens:** os cards de Favoritos apareciam quase transparentes porque eu usei
+`--bruno-liquid-surface-off-*`. Passaram a consumir `--bruno-liquid-card-*`
+(background, border, radius, shadow, filter) — os mesmos dos demais cards, com
+fallback so para o caso de o tema ainda nao ter carregado. Theme-aware por
+construcao.
+
+**Favoritos:** duas colunas de `1fr` com gap 8px, iguais as de Comodos, entao as
+bordas dos dois blocos alinham. Coluna esquerda com duas linhas iguais e o mesmo
+gap — a soma fecha a altura do card da direita sem calculo. Card unico de cenas
+com as quatro acoes dentro; sem titulo "Cenas" separado, que roubaria altura.
+
+**Icones:** Hugeicons, a biblioteca ja adotada (`bruno-icons.js`), pelos
+apelidos semanticos que o proprio mapa define: `lights_off`,
+`mdi:weather-sunset-up`, `mdi:weather-night`, `movies`. `sunset` e o unico sol
+do catalogo de 126 icones.
+
+**A crase, de novo — e desta vez fui eu.** Escrevi um nome de valor CSS entre
+crases num comentario dentro do `css` template literal. Quebrou o parse na hora.
+O detector do projeto pegou. Aspas retas em comentario, sempre.
+
+Bundle: cfRFwyb3 -> Gls4tQdc.

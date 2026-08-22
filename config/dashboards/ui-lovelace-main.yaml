@@ -24,6 +24,17 @@ streamline_templates: !include_dir_merge_named ./templates/streamline_templates
 #   - url: /local/bruno-ui/subviews/bruno-cameras-security-subview.js?v=20260624-cameras-shell-2
 #     type: module
 
+# HOME V4 — ponte de validacao Chat->GitHub (2026-08-22).
+# Carrega SOMENTE o patch mobile com cache-bust novo. O mesmo arquivo continua
+# em frontend.extra_module_url com a versao anterior; o modulo V4 e idempotente
+# (guards no custom element e nos patches), entao esta duplicacao pontual e
+# segura para validar no iPhone sem editar o enorme configuration.yaml.
+# Depois do aceite: mover o cache-bust para configuration.yaml e remover este
+# bloco, restaurando a regra de deduplicacao global.
+resources:
+  - url: /local/bruno-ui/patches/home-mobile-hero-rail.js?v=20260822-home-v4-1
+    type: module
+
 kiosk_mode:
   kiosk: true
 

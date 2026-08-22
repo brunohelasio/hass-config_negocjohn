@@ -119,34 +119,47 @@ layout:
       # 172px e o minimo calculado para metrica (28px), gap (7px), quatro dots
       # (4x26px + 3x4px) e padding vertical (21px), sem recorte no Office.
       # A hierarquia da Sala continua vindo da largura e da composicao interna.
-      grid-template-rows: minmax(44px, auto) minmax(0, auto) 172px auto auto 0px 0px 0px 0px 0px 0px 0px
+      # ── HOME PHONE (2026-08-22) ───────────────────────────────────────
+      # ANTERIOR (rollback):
+      # grid-template-rows: minmax(44px, auto) minmax(0, auto) 172px auto auto 0px 0px 0px 0px 0px 0px 0px
+      # grid-template-areas: |
+      #   "top_badges" "welcome" "sala" "comodos" "dynamic" "energy"
+      #   "roborock" "media" "camera" "quick_actions" "sidebar" "bottom_block"
+      #
+      # Doze tracks, nove delas de 0px, para hospedar cards que ou nao
+      # renderizam no phone ou nao existem mais. A area "dynamic" reservava
+      # altura mesmo vazia, o que sozinho ja criava rolagem vertical.
+      #
+      # Agora sao TRES tracks reais. O compositor "home_phone" e dono de
+      # Comodos, Favoritos e da secao condicional "Em execucao", com altura
+      # intrinseca — nada aqui depende de vh nem de track de 0px.
+      #
+      # As areas que sumiram pertencem a cards com show.mediaquery
+      # (min-width: 801px): no telefone eles NAO renderizam, e area de card
+      # nao renderizado nao precisa existir.
+      grid-template-rows: minmax(44px, auto) minmax(0, auto) auto
       grid-template-areas: |
         "top_badges"
         "welcome"
-        "sala"
-        "comodos"
-        "dynamic"
-        "energy"
-        "roborock"
-        "media"
-        "camera"
-        "quick_actions"
-        "sidebar"
-        "bottom_block"
+        "home_phone"
 cards:
   # Faixa superior de status: mesma da V1 (shell preservada).
   - !include ../main-grid/bento_top_badges.yaml
   # Hero com protagonismo + agenda integrada (hero_layout: v2).
   - !include ../main-grid/v2/bento_welcome_v2.yaml
   # Sala especial APENAS no phone (desktop: card padrao no bloco inferior).
-  - !include ../main-grid/v2/bento_sala_phone.yaml
+  # ANTERIOR (rollback HOME PHONE 2026-08-22): os tres includes abaixo eram
+  # linhas independentes do grid. O compositor assumiu os tres.
+  # - !include ../main-grid/v2/bento_sala_phone.yaml
   # Matriz 2x3 de comodos APENAS no phone.
-  - !include ../main-grid/v2/bento_comodos_phone.yaml
+  # - !include ../main-grid/v2/bento_comodos_phone.yaml
   # Area dinamica (container JS): camera / Roborock / midia por relevancia.
   - !include ../main-grid/v2/bento_dynamic.yaml
   # NOVO (2026-08-10): a mesma logica no telefone, com config propria (uma
   # coluna, um card por vez, faixa que colapsa quando nada esta ativo).
-  - !include ../main-grid/v2/bento_dynamic_phone.yaml
+  # - !include ../main-grid/v2/bento_dynamic_phone.yaml
+  # NOVO: compositor unico do telefone (Comodos + Favoritos + Em execucao).
+  - !include ../main-grid/v2/bento_home_phone.yaml
   # ANTERIOR (rollback 2026-08-10) — Energia e midia FIXOS no phone. Cederam
   # lugar aos cards dinamicos acima, por decisao do usuario. O consumo ja
   # aparece nos status superiores; o grafico completo fica para o tablet.

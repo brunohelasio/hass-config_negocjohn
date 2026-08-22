@@ -158,18 +158,46 @@ bottom_items:
 # ativo = 1; Marina e Miguel ativos = 2.
 #
 # ROLLBACK: remover este bloco. Sem ele o indicador simplesmente nao existe.
+# ── SEMANTICA NOVA (HOME PHONE, 2026-08-22) ────────────────────────────────
+#
+# O indicador da rail NAO representa mais comodos ocultos abaixo da dobra.
+# Com o pager, a atividade de comodos passou a ter indicador proprio, ao lado
+# dos dots de pagina, dentro do compositor.
+#
+# A rail passa a indicar EXCLUSIVAMENTE conteudo em execucao abaixo da dobra —
+# exatamente os mesmos tres sensores que fazem a secao "Em execucao" existir.
+# Sem camera, Roborock ou midia, o contador e zero e o indicador some sozinho,
+# pelo comportamento que bento-sidebar-card.js ja tem. Nao ha patch novo.
+#
+# Cada entrada e uma fonte, entao o numero e: 1 = uma ativa, 3 = as tres.
+#
+# ESCOPO: o indicador so existe em max-width 800px (regra de CSS do proprio
+# bento-sidebar-card.js). O tablet nao tem esse indicador e nao muda aqui.
+#
+# ANTERIOR (rollback):
+# overflow_hint:
+#   rooms:
+#     - name: Q. Marina
+#       entities:
+#         - light.grupo_luzes_quarto_marina
+#         - climate.ac_quarto_marina
+#         - binary_sensor.q_marina_motion_recent
+#         - binary_sensor.q_marina_occupancy
+#         - media_player.echo_pop_marina
+#     - name: Q. Miguel
+#       entities:
+#         - light.grupo_luzes_quarto_miguel
+#         - climate.ac_quarto_miguel
+#         - binary_sensor.q_miguel_motion_recent
+#         - binary_sensor.q_miguel_occupancy
 overflow_hint:
   rooms:
-    - name: Q. Marina
+    - name: Camera
       entities:
-        - light.grupo_luzes_quarto_marina
-        - climate.ac_quarto_marina
-        - binary_sensor.q_marina_motion_recent
-        - binary_sensor.q_marina_occupancy
-        - media_player.echo_pop_marina
-    - name: Q. Miguel
+        - binary_sensor.home_activity_camera
+    - name: Roborock
       entities:
-        - light.grupo_luzes_quarto_miguel
-        - climate.ac_quarto_miguel
-        - binary_sensor.q_miguel_motion_recent
-        - binary_sensor.q_miguel_occupancy
+        - binary_sensor.home_activity_roborock
+    - name: Midia
+      entities:
+        - binary_sensor.home_activity_media

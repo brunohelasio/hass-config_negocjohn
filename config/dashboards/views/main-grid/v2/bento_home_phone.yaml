@@ -1,0 +1,69 @@
+# HOME PHONE — compositor único do bloco estático (2026-08-22).
+#
+# Dono de Cômodos (pager de duas páginas), Favoritos e da seção condicional
+# "Em execução". Substitui três cards que antes eram linhas independentes do
+# grid: bento_sala_phone, bento_comodos_phone e bento_dynamic_phone.
+#
+# O elemento `bruno-home-phone` vive em dashboard-src e entra pelo bundle único
+# que o `extra_module_url` já declara — NÃO por um bloco `resources:` no YAML
+# do dashboard. Aquele caminho é ignorado quando o Lovelace roda `mode: storage`
+# (o caso aqui), e foi exatamente o que impediu a tentativa de 22/08 de carregar.
+#
+# ROLLBACK: comentar o `!include` deste arquivo em shell/section_home_v2.yaml,
+# reativar os três includes originais e restaurar o bloco phone do
+# `grid-template-rows`/`grid-template-areas` (o anterior está preservado lá).
+type: custom:bruno-home-phone
+view_layout:
+  grid-area: home_phone
+  show:
+    mediaquery: '(max-width: 800px)'
+
+# ── Pager de cômodos ───────────────────────────────────────────────────────
+# Página 1 com três cômodos: o primeiro (Sala) ocupa a linha inteira, os dois
+# seguintes dividem a segunda linha. Página 2 com quatro: grade 2x2.
+# Duas linhas de 172px + 8px de gap = 352px por página, altura intrínseca.
+pages:
+  - rooms: [sala, cozinha, lavabo]
+  - rooms: [office, casal, marina, miguel]
+
+# ── Favoritos ──────────────────────────────────────────────────────────────
+favorites:
+  agenda:
+    # O próximo compromisso sai dos atributos que a própria entidade de
+    # calendário publica (`message` / `start_time`) — sem segunda busca de
+    # agenda e sem duplicar a lógica do hero.
+    calendarEntity: calendar.brunohelasio_gmail_com
+    # Já ordenado por severidade no backend; é a mesma fonte dos insights do
+    # hero no tablet.
+    insightsEntity: sensor.home_insights
+  wifi:
+    ssidEntity: sensor.iphone_ssid
+    downloadEntity: sensor.hua_wei_lu_you_ax3_pro_download_speed
+    uploadEntity: sensor.hua_wei_lu_you_ax3_pro_upload_speed
+
+# As quatro cenas ficam AQUI, na configuração, e não no código: a ideia é poder
+# trocá-las pelo próprio dashboard no futuro sem rebuild.
+# Todas conferidas no registro de entidades; nenhuma foi inventada.
+scenes:
+  - label: Apagar luzes
+    script: script.bruno_scene_apagar_todas_as_luzes
+  - label: Bom dia
+    script: script.bruno_scene_bom_dia
+  - label: Boa noite
+    script: script.bruno_scene_boa_noite
+  - label: Cinema
+    script: script.bruno_scene_cinema
+
+# ── Em execução ────────────────────────────────────────────────────────────
+# Os mesmos três sensores que governam a área dinâmica. Quando os três estão
+# off a seção não existe: sem título, sem gap, sem altura reservada — é isso
+# que mantém a Home sem rolagem vertical no estado normal.
+running:
+  camera: binary_sensor.home_activity_camera
+  roborock: binary_sensor.home_activity_roborock
+  media: binary_sensor.home_activity_media
+
+# Reaproveita o componente dinâmico que já existe, com a configuração de slots
+# validada. O `view_layout` que vem junto é inofensivo: o card é criado por
+# `createCardElement`, que o ignora.
+dynamicCard: !include bento_dynamic_phone.yaml

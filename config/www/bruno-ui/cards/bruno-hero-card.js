@@ -1278,6 +1278,20 @@ class BrunoHeroCard extends HTMLElement {
             display: none;
           }
 
+          /* ── HOME PHONE (2026-08-22) ──────────────────────────────────
+             A agenda e os insights saem do hero no TELEFONE e passam a viver
+             no bloco Favoritos, onde cabem sem espremer o relógio. O hero
+             mobile fica com data, saudação, relógio e clima à direita.
+
+             As duas regras acima (nth-child e .is-empty) continuam aqui de
+             propósito: são o caminho de rollback — basta remover ESTE bloco
+             para a faixa voltar, com o comportamento de duas linhas intacto.
+
+             No TABLET nada muda: tudo isto está dentro de max-width 800px. */
+          .hero-stage.is-v2 .headline .event-stack {
+            display: none;
+          }
+
           .hero-stage.is-v2 .clock {
             margin-top: 0;
             font-size: 35px;

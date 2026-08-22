@@ -18,6 +18,10 @@ import './lazy-runtime';
 import './config/lavabo-climate.runtime';
 import './themes/josh-phone-on-bridge';
 import './components/rooms/bruno-room-tile';
+// Compositor do bloco estatico da Home no telefone (Comodos + Favoritos +
+// Em execucao). Entra pelo bundle unico: e o unico caminho de carga que o
+// Lovelace em mode: storage respeita.
+import './components/home/bruno-home-phone';
 import { installRoomTileIosLongPressGuard } from './services/ui/ios-longpress-guard';
 import './components/devices/bruno-devices-panel';
 

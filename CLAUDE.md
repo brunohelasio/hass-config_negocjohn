@@ -4664,3 +4664,38 @@ content-slot da shell, compartilhado com as subviews. Reduzir exigiria mexer num
 referencia que o proprio usuario pediu para nao mover sem revisar todas elas.
 
 Bundle: Ct-Xu--y -> Cfi0fi4H.
+
+### rev.5 (2026-08-22) — a altura util nao pode depender da rolagem
+
+Dois defeitos, um em cada rodada, e ambos com a mesma raiz: o instrumento nao
+reproduzia a tela.
+
+**1. `closest()` nao atravessa shadow DOM.** O compositor vive dentro de DOIS
+(shell e layout-card), entao a busca pelo `.content-slot` falhava SEMPRE, caia
+no fallback `innerHeight` — que nao desconta a rail (58,4px) nem o padding
+inferior (6px) — e o bloco ficava ~64px alto demais. Era esse o corte das tres
+rodadas. A subida agora troca de arvore no `ShadowRoot` (`pai.host`); sem o
+slot, a altura volta para `auto` em vez de estimar (mais curto nunca corta).
+
+O banco anexava o componente no light DOM, onde `closest()` funciona: aprovava
+o que a tela cortava.
+
+**2. Media em coordenadas de VIEWPORT.** `limite - caixa.top` cresce quando se
+rola, porque `caixa.top` diminui. Com a secao "Em execucao" presente o slot
+rola, cada update de hass re-mede, e o bloco estatico inflava ate ocupar a tela
+inteira. So aparece quando ha card dinamico — o unico caso em que o slot rola —
+e por isso passou por todas as medicoes anteriores.
+
+Correcao: medir nas coordenadas do CONTEUDO do slot
+(`caixa.top - caixaSlot.top - slot.clientTop + slot.scrollTop`), o que
+neutraliza a rolagem e da o mesmo resultado com o slot no topo.
+
+**INVARIANTE:** toda medida de "quanto espaco sobra" feita dentro de um
+container rolavel tem de somar `scrollTop`. Medida em viewport e uma funcao da
+rolagem, nao do layout.
+
+Banco: `window.medirRolagem()` afirma a invariancia em quatro posicoes.
+
+Medido a 428x926: Favoritos 252,8px em scrollTop 0 / 120 / 300 / 590 (fim);
+`--altura-util` 679px constante; folga 6px ate o filete; agenda = wifi = 122,4;
+"Em execucao" em 868,6, abaixo do filete.

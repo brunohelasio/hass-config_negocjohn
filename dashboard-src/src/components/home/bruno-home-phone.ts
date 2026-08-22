@@ -153,10 +153,20 @@ export class BrunoHomePhone extends LitElement {
       this.style.removeProperty('--altura-util');
       return;
     }
-    const limite =
-      slot.getBoundingClientRect().bottom -
-      parseFloat(getComputedStyle(slot).paddingBottom || '0');
-    const util = Math.max(0, Math.round(limite - caixa.top));
+    // ANTERIOR (rollback): media em coordenadas de VIEWPORT.
+    //   const limite = slot.getBoundingClientRect().bottom - paddingBottom;
+    //   const util   = limite - caixa.top;
+    // Ao rolar, caixa.top diminui e util CRESCE. Com a secao "Em execucao"
+    // presente o slot rola, o componente re-renderiza durante a rolagem e o
+    // bloco estatico inflava ate ocupar a tela inteira. Era esse o estouro.
+    //
+    // Agora a medida e feita nas coordenadas do CONTEUDO do slot: somar
+    // scrollTop neutraliza a rolagem, e o resultado e identico ao anterior
+    // quando o slot esta no topo.
+    const caixaSlot = slot.getBoundingClientRect();
+    const topoNoConteudo = caixa.top - caixaSlot.top - slot.clientTop + slot.scrollTop;
+    const fim = slot.clientHeight - parseFloat(getComputedStyle(slot).paddingBottom || '0');
+    const util = Math.max(0, Math.round(fim - topoNoConteudo));
     if (!util) return;
     this.style.setProperty('--altura-util', String(util) + 'px');
   };

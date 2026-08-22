@@ -187,6 +187,28 @@ window.medir = async function medir({ rodando = false } = {}) {
   };
 };
 
+// A altura util NAO pode depender da rolagem. Ela era medida em coordenadas de
+// viewport: ao rolar, o topo do componente subia e o bloco estatico inflava ate
+// ocupar a tela inteira. So acontece quando a secao "Em execucao" existe, que e
+// o unico caso em que o slot rola — por isso passou pelas medicoes anteriores.
+window.medirRolagem = async function medirRolagem() {
+  await window.medir({ rodando: true });
+  const slot = document.getElementById("slot");
+  const fav = () => +alvoEl.renderRoot.querySelector(".favoritos").getBoundingClientRect().height.toFixed(1);
+  const passos = [];
+  for (const alvo of [0, 120, 300, slot.scrollHeight]) {
+    slot.scrollTop = alvo;
+    alvoEl.requestUpdate();
+    await alvoEl.updateComplete;
+    await new Promise((ok) => setTimeout(ok, 120));
+    passos.push({ scrollTop: Math.round(slot.scrollTop), favoritos: fav(),
+                  alturaUtil: alvoEl.style.getPropertyValue("--altura-util") });
+  }
+  slot.scrollTop = 0;
+  const alturas = new Set(passos.map((p) => p.favoritos));
+  return { passos, invariante: alturas.size === 1 };
+};
+
 (async () => {
   await customElements.whenDefined('bruno-home-phone');
   const normal = await window.medir({ rodando: false });

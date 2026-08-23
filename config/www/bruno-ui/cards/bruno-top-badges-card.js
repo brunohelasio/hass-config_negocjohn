@@ -293,16 +293,27 @@ class BrunoTopBadgesCard extends HTMLElement {
     const entityId = item.entity || item.cover;
     const cover = this._state(entityId);
     const state = String(cover?.state || '').toLowerCase();
-    const percentEntity = this._state(item.percent_control || item.percentControl);
-    const percentControl = this._isUnavailable(percentEntity) ? null : this._toPercent(percentEntity?.state);
-    if (percentControl != null) return 100 - percentControl;
-
+    // ANTERIOR (rollback A1 2026-08-23): o helper de percentual tinha
+    // prioridade sobre a posicao fisica aqui, ao contrario da subview.
+    //   const percentControl = ...;
+    //   if (percentControl != null) return 100 - percentControl;
+    //   const coverPosition = ...;
+    //
+    // O helper representa o ALVO do comando e salta a 0/100 enquanto o motor
+    // ainda corre — foi por isso que a subview o rebaixou a fallback em
+    // 2026-08-15. Com as duas prioridades opostas, barra e subview liam
+    // fontes diferentes e divergiam. Agora a ordem e a MESMA da subview:
+    // posicao fisica primeiro, helper so quando o cover nao mede posicao.
     const coverPosition = this._toPercent(cover?.attributes?.current_position);
     if (coverPosition != null) {
       if (state === 'open' && coverPosition <= 1) return 100;
       if (state === 'closed' && coverPosition >= 99) return 0;
       return coverPosition;
     }
+
+    const percentEntity = this._state(item.percent_control || item.percentControl);
+    const percentControl = this._isUnavailable(percentEntity) ? null : this._toPercent(percentEntity?.state);
+    if (percentControl != null) return 100 - percentControl;
 
     if (state === 'open') return 100;
     if (state === 'closed') return 0;

@@ -126,7 +126,21 @@ type MovimentoCortina =
       ultimoRelatado: number;
       retido?: false;
     }
-  | { entityId: string; fechado: number; retidoEm: number; retido: true };
+  | {
+      entityId: string;
+      fechado: number;
+      retidoEm: number;
+      retido: true;
+      /**
+       * A1 (2026-08-23) — amostra fisica conhecida NO INSTANTE do Stop.
+       *
+       * A retencao so e liberada quando o cover publicar algo DIFERENTE
+       * disto: e a definicao operacional de telemetria nova. Sem essa
+       * ancora, o timeout cego devolvia a leitura antiga e o percentual
+       * saltava para o extremo.
+       */
+      fisicoNoStop: number | undefined;
+    };
 
 type AncoraFolhaTelefone = {
   rolavel: HTMLElement;
@@ -2572,7 +2586,22 @@ export class BrunoRoomSubview extends LitElement {
       // O clique em Parar chega antes da atualização do cover. Segura o ponto
       // calculado por uma janela curta e só então reconcilia com a posição
       // física, evitando voltar ao extremo antigo no mesmo frame do toque.
-      if (!estaMovendo && fisico != null && agora - movimento.retidoEm >= CORTINA_GRAÇA_PARADA_MS) {
+      // ANTERIOR (rollback A1 2026-08-23): a condicao era apenas
+      //   !estaMovendo && fisico != null && agora - retidoEm >= GRAÇA
+      // Timeout cego: passados 700ms qualquer leitura fisica vencia,
+      // inclusive a ANTIGA que o cover continua publicando por um tempo
+      // depois do Stop. Era esse o salto para o extremo.
+      //
+      // Agora a graca e apenas o piso; o que libera e a telemetria ser
+      // NOVA, isto e, diferente da amostra colhida no instante do Stop.
+      // Uma nova ordem Open/Close/Set substitui _movimentoCortina inteiro
+      // em _iniciarMovimentoCortina, entao invalida a retencao sozinha.
+      const telemetriaNova = fisico != null && fisico !== movimento.fisicoNoStop;
+      if (
+        !estaMovendo
+        && telemetriaNova
+        && agora - movimento.retidoEm >= CORTINA_GRAÇA_PARADA_MS
+      ) {
         this._movimentoCortina = undefined;
         return fisico;
       }
@@ -2657,7 +2686,13 @@ export class BrunoRoomSubview extends LitElement {
     const entityId = this._entidadeCortina();
     if (!entityId) return;
     const fechado = this._fechamentoMovimentoCortina() ?? this._fechamentoCortinaRelatado();
-    this._movimentoCortina = { entityId, fechado, retidoEm: Date.now(), retido: true };
+    this._movimentoCortina = {
+      entityId,
+      fechado,
+      retidoEm: Date.now(),
+      retido: true,
+      fisicoNoStop: this._fechamentoCortinaFisico(),
+    };
     this._pararTimerMovimentoCortina();
     this.requestUpdate();
   }

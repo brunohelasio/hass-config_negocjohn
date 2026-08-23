@@ -232,9 +232,55 @@ class BrunoHeroCard extends HTMLElement {
     return Number.isNaN(date.getTime()) ? null : date;
   }
 
+  /**
+   * ITEM 5 (2026-08-23) — fallback pelos ATRIBUTOS da entidade de calendario.
+   *
+   * _loadEvents descarta evento que comecou ha mais de uma hora
+   * (startMs >= agora - 3600000). Com um compromisso em andamento, _events
+   * fica vazio e _nextEventModel devolvia o placeholder. Enquanto o
+   * placeholder era renderizado isso passava despercebido; com ele fora do
+   * stack (B8), a Agenda simplesmente sumia do hero no tablet.
+   *
+   * A entidade de calendario publica message/start_time do compromisso
+   * corrente — a MESMA fonte que o card de Favoritos do telefone usa e que
+   * o usuario confirmou correta. Sem segunda busca e sem tocar no fetch.
+   *
+   * TABLET ONLY: no telefone o hero continua exatamente como esta.
+   */
+  _eventoPelaEntidade() {
+    const ehTelefone = typeof globalThis.matchMedia === 'function'
+      && globalThis.matchMedia('(max-width: 800px)').matches;
+    if (ehTelefone || !this._hass) return null;
+    const cfg = this._config.calendar || {};
+    const lista = Array.isArray(cfg.calendars) && cfg.calendars.length
+      ? cfg.calendars
+      : BRUNO_HERO_DEFAULT_CALENDARS;
+    for (const item of lista) {
+      const id = typeof item === 'string' ? item : item?.entity;
+      const st = id ? this._hass.states[id] : null;
+      const titulo = String(st?.attributes?.message || '').trim();
+      if (!titulo) continue;
+      const inicio = String(st?.attributes?.start_time || '').trim();
+      const d = inicio ? new Date(inicio.replace(' ', 'T')) : null;
+      const hora = d && !Number.isNaN(d.getTime())
+        ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        : (typeof item === 'string' ? 'Agenda' : item?.name || 'Agenda');
+      return {
+        empty: false,
+        label: 'Próximo evento',
+        summary: titulo,
+        time: hora,
+        color: (typeof item === 'string' ? '' : item?.color) || '#7fdbe9',
+      };
+    }
+    return null;
+  }
+
   _nextEventModel() {
     const event = Array.isArray(this._events) ? this._events[0] : null;
     if (!event) {
+      const daEntidade = this._eventoPelaEntidade();
+      if (daEntidade) return daEntidade;
       return {
         empty: true,
         label: 'Próximo evento',
@@ -741,9 +787,13 @@ class BrunoHeroCard extends HTMLElement {
     // ordem visivel resultante era exatamente a de agora. _nextEventModel e
     // a classe .is-empty permanecem intactos (usados fora do hero V2).
     const agendaReal = heroV2 && proximoEvento && !proximoEvento.empty ? [proximoEvento] : [];
-    const heroLines = heroV2 ? [...agendaReal, ...insights] : events;
-    // Filete entre os grupos: so quando ha Agenda real E insight.
-    const indiceSeparador = agendaReal.length && insights.length ? agendaReal.length : -1;
+    // ITEM 5 (2026-08-23): a ordem pedida na validacao fisica e
+    // INSIGHT(S) -> filete -> AGENDA.
+    // ANTERIOR (rollback): const heroLines = heroV2 ? [...agendaReal, ...insights] : events;
+    const heroLines = heroV2 ? [...insights, ...agendaReal] : events;
+    // Filete entre os grupos: so quando ha insight E Agenda real. Marca a
+    // PRIMEIRA linha do segundo grupo, que agora e a Agenda.
+    const indiceSeparador = insights.length && agendaReal.length ? insights.length : -1;
 
     this.shadowRoot.innerHTML = `
       <style>

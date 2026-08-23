@@ -1380,24 +1380,29 @@ export class BrunoRoomSubview extends LitElement {
           grid-template-columns: repeat(4, minmax(0, 1fr)) clamp(32.76px, 2.31cqi, 54.6px);
         }
 
-        /* B1 (2026-08-23) — TABLET: o CONCEITO estrutural do Hub do telefone.
+        /* ==== B1 REVERTIDO (2026-08-23, correcao pos-validacao fisica) =====
 
-           O tablet mantinha a composicao antiga: .mh-left como coluna flex
-           confinada a coluna da esquerda, com os controles empilhados dentro
-           dela. A largura abaixo da arte ficava sem uso.
+           O item 6 da validacao fisica reportou o Hub do tablet sem responder:
+           acordeao nao alternava e a TV nao respondia ao power.
 
-           No telefone .mh-left usa display contents, entao info e controles
-           sao filhos diretos do grid: a metadata divide a primeira camada com
-           a arte e os controles ocupam a largura toda abaixo. E esse conceito
-           que vem para ca.
+           O banco de medicao (shell real, 1920x1200, tema Josh, material
+           carregado) NAO reproduziu: acordeao alternando, botoes alcancaveis
+           por elementsFromPoint, zero excecoes no render. Ou seja: nao ha
+           evidencia de que este bloco fosse a causa.
 
-           NAO sao copiadas medidas do telefone: colunas, gaps e paddings
-           continuam sendo os do tablet, definidos em
-           subview-styles.generated.ts. Aqui so mudam as AREAS.
+           Ainda assim ele sai. Foi a UNICA mudanca estrutural feita no Hub do
+           tablet nesta rodada, e display:contents tem historico de falha de
+           hit-testing em WebView Android — justamente a diferenca entre o
+           navegador do banco e o aparelho. Diante de uma regressao critica sem
+           reproducao, remover a mudanca estrutural vale mais do que publicar
+           um remendo especulativo.
 
-           O acordeao nao e tocado: quem abre/fecha e .mh-source.is-open, que
-           permanece como esta. Telefone intocado — este bloco vive inteiro
-           dentro de (min-width: 801px). */
+           O layout volta ao estado pre-rodada, que estava validado. B2 (cinco
+           colunas) e B4 (altura das celulas) permanecem: nenhum dos dois
+           reestrutura o grid do corpo.
+
+           PARA REATIVAR: descomentar o bloco abaixo. Ele esta integro.
+
         .mh-source-body {
           grid-template-rows: minmax(0, 1fr) auto;
           grid-template-areas:
@@ -1405,28 +1410,14 @@ export class BrunoRoomSubview extends LitElement {
             'controls art';
           align-content: start;
         }
-
-        .mh-left {
-          display: contents;
-        }
-
-        .mh-info {
-          grid-area: info;
-          min-width: 0;
-        }
-
+        .mh-left   { display: contents; }
+        .mh-info   { grid-area: info; min-width: 0; }
         .mh-controls {
-          grid-area: controls;
-          min-width: 0;
-          display: flex;
-          flex-direction: column;
-          gap: clamp(7.8px, 0.55cqi, 13px);
-          align-self: end;
+          grid-area: controls; min-width: 0; display: flex;
+          flex-direction: column; gap: clamp(7.8px, 0.55cqi, 13px); align-self: end;
         }
-
-        .mh-art {
-          grid-area: art;
-        }
+        .mh-art    { grid-area: art; }
+           ================================================================== */
 
         /* B4 (2026-08-23) — TABLET: celulas de iluminacao menos achatadas.
            A base gerada usa min-height: clamp(46.8px, 3.3cqi, 78px). O

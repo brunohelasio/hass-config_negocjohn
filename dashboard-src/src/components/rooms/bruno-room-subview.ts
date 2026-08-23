@@ -1352,6 +1352,83 @@ export class BrunoRoomSubview extends LitElement {
         gap: 8px;
       }
 
+      /* A3 (2026-08-23): arte do atalho de streaming dentro do botao.
+         44px e o ponto de partida pedido. A caixa do botao nao muda: a
+         imagem e o conteudo, no lugar onde o bruno-icon estava. */
+      .mh-btn.is-app {
+        padding: 0;
+        overflow: hidden;
+      }
+      .mh-btn-img {
+        width: 100%;
+        max-width: 44px;
+        height: 100%;
+        max-height: 44px;
+        object-fit: cover;
+        border-radius: inherit;
+        display: block;
+      }
+
+      /* B2 (2026-08-23) — TABLET: a fileira de cinco do Hub.
+         .mh-btn-row-5 so tinha regra escopada a office e cozinha; na Sala
+         caia no .mh-btn-row generico (grid de uma coluna) e os atalhos
+         empilhavam. A regra abaixo e generica e vive dentro de
+         (min-width: 801px), entao o telefone — que ja tem override proprio
+         em subview-phone.styles.ts — nao e tocado. */
+      @media (min-width: 801px) {
+        .mh-btn-row-5 {
+          grid-template-columns: repeat(4, minmax(0, 1fr)) clamp(32.76px, 2.31cqi, 54.6px);
+        }
+
+        /* B1 (2026-08-23) — TABLET: o CONCEITO estrutural do Hub do telefone.
+
+           O tablet mantinha a composicao antiga: .mh-left como coluna flex
+           confinada a coluna da esquerda, com os controles empilhados dentro
+           dela. A largura abaixo da arte ficava sem uso.
+
+           No telefone .mh-left usa display contents, entao info e controles
+           sao filhos diretos do grid: a metadata divide a primeira camada com
+           a arte e os controles ocupam a largura toda abaixo. E esse conceito
+           que vem para ca.
+
+           NAO sao copiadas medidas do telefone: colunas, gaps e paddings
+           continuam sendo os do tablet, definidos em
+           subview-styles.generated.ts. Aqui so mudam as AREAS.
+
+           O acordeao nao e tocado: quem abre/fecha e .mh-source.is-open, que
+           permanece como esta. Telefone intocado — este bloco vive inteiro
+           dentro de (min-width: 801px). */
+        .mh-source-body {
+          grid-template-rows: minmax(0, 1fr) auto;
+          grid-template-areas:
+            'info art'
+            'controls art';
+          align-content: start;
+        }
+
+        .mh-left {
+          display: contents;
+        }
+
+        .mh-info {
+          grid-area: info;
+          min-width: 0;
+        }
+
+        .mh-controls {
+          grid-area: controls;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: clamp(7.8px, 0.55cqi, 13px);
+          align-self: end;
+        }
+
+        .mh-art {
+          grid-area: art;
+        }
+      }
+
       /* Mesma linguagem do card dinâmico da Home: a arte permanece como
          contexto no pause, mas perde nitidez para sinalizar que não está
          reproduzindo. A caixa e a geometria do Hub não mudam. */
@@ -3335,7 +3412,18 @@ export class BrunoRoomSubview extends LitElement {
         ?disabled=${opcoes.desabilitado}
         @click=${aoClicar}
       >
-        <bruno-icon icon=${icone}></bruno-icon>${soIcone ? nothing : html`<span>${rotulo}</span>`}
+        ${imagem
+          ? html`<img
+              class="mh-btn-img"
+              src=${imagem}
+              alt=""
+              decoding="async"
+              @error=${this._aoFalharArte}
+              @load=${this._aoCarregarArte}
+            />`
+          : html`<bruno-icon icon=${icone}></bruno-icon>`}${soIcone
+          ? nothing
+          : html`<span>${rotulo}</span>`}
       </button>
     `;
   }

@@ -1,4 +1,27 @@
+// A4 (2026-08-23): a contagem de midia reusa o MESMO helper que os room
+// tiles ja usam para decidir em qual comodo o Spotify toca. Este arquivo e
+// consolidado no bundle Vite (nenhuma linha ativa em extra_module_url),
+// entao o import resolve em build e nao gera fetch em runtime.
+import { altoFalanteCasa, dispositivoDoComodo } from '@/services/entities/spotify-device';
+
 const BRUNO_TOP_BADGES_CARD_TAG = 'bruno-top-badges-card';
+
+/**
+ * Entidades que representam o MESMO endpoint fisico.
+ *
+ * A TV da Sala publica por duas integracoes: smart_tv_pro_2 responde por
+ * power/status e android_tv_... por playback (contrato do checkpoint). Contar
+ * as duas fazia o status dizer 2 quando ha uma TV.
+ *
+ * Declarativo de proposito: acrescentar um aparelho e acrescentar uma linha.
+ */
+const BRUNO_TOP_BADGES_MEDIA_ENDPOINTS = [
+  {
+    id: 'tv-sala',
+    title: 'TV Sala',
+    entities: ['media_player.smart_tv_pro_2', 'media_player.android_tv_192_168_3_17'],
+  },
+];
 const BRUNO_TOP_BADGES_CURTAIN_CALIBRATION = [
   { visual: 0, position: 0 },
   { visual: 25, position: 33 },
@@ -246,21 +269,85 @@ class BrunoTopBadgesCard extends HTMLElement {
     };
   }
 
-  _mediaModel() {
-    const active = (this._config.entities.media || [])
+  /**
+   * A4 (2026-08-23) — sessoes fisicas, nao entidades.
+   *
+   * ANTERIOR (rollback): _mediaModel contava ENTIDADES ativas. Como a TV
+   * publica por duas integracoes e o Spotify aparece tanto na entidade do
+   * SpotifyPlus quanto na do Echo que reproduz, o status somava integracoes.
+   *
+   * Aqui as entidades ativas sao colapsadas em SESSOES:
+   *   1. entidades do mesmo endpoint declarado viram uma so (TV da Sala);
+   *   2. o Echo que espelha a reproducao do Spotify e absorvido pela sessao
+   *      do Spotify — decidido pelo MESMO helper que os room tiles usam;
+   *   3. Echo com conteudo proprio permanece sessao independente;
+   *   4. Spotify sem endpoint reconhecivel continua sendo uma sessao.
+   */
+  _mediaSessions() {
+    const ativas = (this._config.entities.media || [])
       .filter((id) => BRUNO_TOP_BADGES_MEDIA_ON_STATES.includes(this._state(id)?.state || ''));
+    const restantes = new Set(ativas);
+    const sessoes = [];
+
+    // 1) endpoints declarados: varias entidades, um aparelho.
+    for (const grupo of BRUNO_TOP_BADGES_MEDIA_ENDPOINTS) {
+      const membros = grupo.entities.filter((id) => restantes.has(id));
+      if (!membros.length) continue;
+      membros.forEach((id) => restantes.delete(id));
+      sessoes.push({ entityId: membros[0], membros, title: grupo.title, fonte: 'tv' });
+    }
+
+    // 2) Spotify absorve o alto-falante que espelha a mesma reproducao.
+    for (const id of Array.from(restantes)) {
+      if (!id.includes('spotify')) continue;
+      restantes.delete(id);
+      const spotify = this._state(id);
+      const membros = [id];
+      let endpoint = '';
+      for (const outro of Array.from(restantes)) {
+        const falante = this._state(outro);
+        const mesmoConteudo = altoFalanteCasa(spotify?.attributes, falante);
+        const mesmoDispositivo = dispositivoDoComodo(spotify?.attributes, this._entityName(outro));
+        if (!mesmoConteudo && !mesmoDispositivo) continue;
+        restantes.delete(outro);
+        membros.push(outro);
+        endpoint = this._entityName(outro);
+      }
+      sessoes.push({
+        entityId: id,
+        membros,
+        title: endpoint ? `Spotify - ${endpoint}` : this._entityName(id),
+        fonte: 'spotify',
+      });
+    }
+
+    // 3) o que sobrou toca por conta propria.
+    for (const id of restantes) {
+      sessoes.push({ entityId: id, membros: [id], title: this._entityName(id), fonte: 'outro' });
+    }
+
+    return sessoes;
+  }
+
+  _mediaModel() {
+    const active = this._mediaSessions();
     return {
       key: 'media',
       title: 'Media',
       sub: active.length ? `${active.length} On` : 'All Off',
       icon: 'mdi:speaker-wireless',
-      tone: 'gray',
+      // ANTERIOR (rollback A4 2026-08-23): tone: 'gray' — ativo ficava
+      // visualmente igual a inativo. O violeta e a linguagem que o proprio
+      // dashboard ja usa para midia/TV (--accent-purple do room tile).
+      tone: 'purple',
       active: active.length > 0,
-      chips: active.map((id) => ({
-        icon: 'mdi:music-note',
-        title: this._entityName(id),
-        sub: (this._state(id)?.state || 'on').replace('_', ' '),
-        entityId: id,
+      // O chip continua agindo sobre UMA entidade (a mesma de antes: a que
+      // representa a sessao), entao play-pause-media nao muda de contrato.
+      chips: active.map((sessao) => ({
+        icon: sessao.fonte === 'tv' ? 'mdi:television-classic' : 'mdi:music-note',
+        title: sessao.title,
+        sub: (this._state(sessao.entityId)?.state || 'on').replace('_', ' '),
+        entityId: sessao.entityId,
         action: 'play-pause-media',
       })),
     };
@@ -964,6 +1051,8 @@ class BrunoTopBadgesCard extends HTMLElement {
         .tone-blue { --tone: 126, 200, 255; }
         .tone-amber { --tone: 247, 198, 0; }
         .tone-gray { --tone: 154, 160, 166; }
+        /* A4: mesmo RGB de --accent-purple usado no dot de midia do room tile. */
+        .tone-purple { --tone: 167, 139, 250; }
         .tone-green { --tone: 86, 216, 155; }
 
         @media (max-width: 900px) {

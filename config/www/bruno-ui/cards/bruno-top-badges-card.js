@@ -3,6 +3,11 @@
 // consolidado no bundle Vite (nenhuma linha ativa em extra_module_url),
 // entao o import resolve em build e nao gera fetch em runtime.
 import { altoFalanteCasa, dispositivoDoComodo } from '@/services/entities/spotify-device';
+// ITEM 1B (2026-08-23): a barra le a MESMA retencao que a subview grava.
+// Alinhar so a prioridade das fontes (rodada anterior) nao bastou: a
+// subview retinha o valor apos o Stop e a barra nao, entao apareciam 90% e
+// 0% ao mesmo tempo. Agora ha um dono unico do numero.
+import { fechamentoRetido } from '@/services/entities/curtain-hold';
 
 const BRUNO_TOP_BADGES_CARD_TAG = 'bruno-top-badges-card';
 
@@ -445,7 +450,16 @@ class BrunoTopBadgesCard extends HTMLElement {
       const available = !this._isUnavailable(cover);
       const openPosition = available ? this._curtainOpenPosition(item) : null;
       const displayOpenPosition = openPosition == null ? null : this._curtainDisplayOpenPosition(openPosition);
-      const displayClosedPosition = displayOpenPosition == null ? null : 100 - displayOpenPosition;
+      // ITEM 1B: a retencao compartilhada tem precedencia sobre a leitura
+      // fisica enquanto nao houver telemetria nova. O modulo devolve
+      // undefined quando a retencao caiu, e ai a fisica volta a mandar.
+      const bruto = this._toPercent(cover?.attributes?.current_position);
+      const retido = available
+        ? fechamentoRetido(entityId, bruto == null ? undefined : bruto, state === 'opening' || state === 'closing')
+        : undefined;
+      const displayClosedPosition = retido != null
+        ? retido
+        : (displayOpenPosition == null ? null : 100 - displayOpenPosition);
       return {
         icon: displayClosedPosition != null && displayClosedPosition >= 97 ? 'mdi:curtains-closed' : 'mdi:curtains',
         title: item.title || this._entityName(entityId),

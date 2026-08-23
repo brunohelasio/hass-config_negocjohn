@@ -1439,6 +1439,27 @@ export class BrunoRoomSubview extends LitElement {
         }
       }
 
+      /* ITEM 2 (2026-08-23) — o anel sobe e abre espaco para os +/-.
+
+         .ac-lean-mid e um flex centrado com um filho so (o anel). Com o
+         stepper entrando como segundo filho, a faixa vira coluna: anel em
+         cima, controles embaixo. O anel sobe pelo proprio rearranjo; o
+         margin-top negativo da o deslocamento discreto pedido.
+
+         O TAMANHO/RAIO do anel NAO e tocado nesta rodada — so a posicao. */
+      .ac-lean-mid {
+        flex-direction: column;
+        justify-content: flex-start;
+        gap: 2px;
+      }
+      .ac-lean-mid .ac-ring {
+        margin-top: -8px;
+      }
+      .ac-lean-mid .climate-stepper {
+        width: min(210px, 82%);
+        margin-bottom: 0;
+      }
+
       /* Mesma linguagem do card dinâmico da Home: a arte permanece como
          contexto no pause, mas perde nitidez para sinalizar que não está
          reproduzindo. A caixa e a geometria do Hub não mudam. */
@@ -2808,6 +2829,12 @@ export class BrunoRoomSubview extends LitElement {
       retido: true,
       fisicoNoStop: this._fechamentoCortinaFisico(),
     };
+    // ITEM 1A: a retencao tambem vai para o registro compartilhado. Sem
+    // isso ela morria com a instancia — navegar e voltar zerava o valor
+    // intermediario. Grava o percentual VISUAL exibido + a leitura BRUTA do
+    // cover naquele instante; e a comparacao com essa leitura bruta que
+    // define, depois, o que conta como telemetria nova.
+    gravarRetencao(entityId, fechado, this._posicaoCortina() ?? null);
     this._pararTimerMovimentoCortina();
     this.requestUpdate();
   }
@@ -4641,6 +4668,54 @@ export class BrunoRoomSubview extends LitElement {
     `;
   }
 
+  /**
+   * ITEM 2 (2026-08-23) — ajuste real do setpoint.
+   *
+   * Reusa a classe .climate-stepper, que ja esta transcrita e estilizada no
+   * CSS gerado. O passo vem de target_temp_step quando o climate publica;
+   * senao 1 grau. Os limites vem de min_temp/max_temp do modelo.
+   *
+   * Desabilitado quando o A/C esta indisponivel, desligado ou sem alvo — o
+   * mesmo criterio que ja governa os demais controles do bloco.
+   */
+  private _stepperClimate(cl: ReturnType<typeof this._modeloClimate>) {
+    const id = this._entidadeClimate();
+    const st = id ? this._estado(id) : undefined;
+    const passoBruto = Number(st?.attributes?.['target_temp_step']);
+    const passo = Number.isFinite(passoBruto) && passoBruto > 0 ? passoBruto : 1;
+    const inativo = !id || cl.indisponivel || !cl.ativo || cl.alvo == null;
+    const ajustar = (sinal: number) => {
+      if (inativo || cl.alvo == null) return;
+      const bruto = cl.alvo + sinal * passo;
+      const limitado = Math.min(cl.maxima, Math.max(cl.minima, bruto));
+      const alvo = Math.round(limitado * 10) / 10;
+      if (alvo === cl.alvo) return;
+      this._servico('climate', 'set_temperature', { entity_id: id, temperature: alvo });
+    };
+    const rotulo = cl.alvo == null ? '--' : `${Math.round(cl.alvo * 10) / 10}°`;
+    return html`
+      <div class="climate-stepper" role="group" aria-label="Temperatura alvo">
+        <button
+          type="button"
+          aria-label="Diminuir temperatura"
+          ?disabled=${inativo || (cl.alvo != null && cl.alvo <= cl.minima)}
+          @click=${() => ajustar(-1)}
+        >
+          −
+        </button>
+        <span>${rotulo}</span>
+        <button
+          type="button"
+          aria-label="Aumentar temperatura"
+          ?disabled=${inativo || (cl.alvo != null && cl.alvo >= cl.maxima)}
+          @click=${() => ajustar(1)}
+        >
+          +
+        </button>
+      </div>
+    `;
+  }
+
   /** A/C: cabeçalho com power, anel de temperatura e três controles na base. */
   private _renderAC() {
     const id = this._entidadeClimate();
@@ -4773,6 +4848,21 @@ export class BrunoRoomSubview extends LitElement {
         </div>
         <div class="ac-lean-mid">
           <div class="ac-ring">${this._renderAnelClimate(cl)}</div>
+          <!-- ITEM 2 (2026-08-23) — os controles +/- de volta.
+
+               Eles existiam nas subviews originais: a classe .climate-stepper
+               continua transcrita e estilizada em subview-styles.generated.ts
+               (regras .climate-stepper, .climate-stepper button e
+               .climate-stepper span), mas NENHUM markup a produzia — o
+               controle se perdeu na migracao da Fase 5c, nao nesta rodada.
+
+               O anel continua sendo DISPLAY: nao vira controle de
+               temperatura. Quem altera o setpoint sao estes dois botoes.
+
+               Limites e passo saem do proprio climate (min_temp, max_temp,
+               target_temp_step), com os mesmos defaults que _modeloClimate ja
+               usa. Servico: climate.set_temperature. -->
+          ${this._stepperClimate(cl)}
         </div>
         <div class="ac-lean-foot">
           ${controle(

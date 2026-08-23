@@ -3122,7 +3122,14 @@ export class BrunoRoomSubview extends LitElement {
       // entidade estável e encerra a sessão de forma inequívoca.
       if (fonteAtual) this._tvUltimaFonte = fonteAtual;
       if (tituloAtual) this._tvUltimoTitulo = tituloAtual;
-      if (posterAtual) this._tvUltimoPoster = posterAtual;
+      // A2 (2026-08-23): ANTERIOR — `if (posterAtual) this._tvUltimoPoster = posterAtual;`
+      // Uma URL passava a ser a "ultima valida" so por existir no atributo.
+      // Se ela nunca carregasse, o Hub guardava e reexibia uma arte quebrada.
+      // Agora so promove o que ja carregou (ou o que ainda nao reprovou, para
+      // nao perder o poster no primeiro frame, antes do evento de load).
+      if (posterAtual && !this._artesQuebradas.has(posterAtual)) {
+        this._tvUltimoPoster = posterAtual;
+      }
       if (volumeAtual != null) this._tvUltimoVolume = volumeAtual;
       this._salvarHistoricoTv();
     }
@@ -3325,10 +3332,50 @@ export class BrunoRoomSubview extends LitElement {
    * Só o PNG, sobreposto — posicionado de forma absoluta pelo CSS, para nunca
    * ditar a altura da linha e empurrar os botões para fora do cartão.
    */
+  /**
+   * A2 (2026-08-23) — URLs de arte que ja falharam ao carregar.
+   *
+   * Uma URL nao vazia pode ser invalida, vencida ou inacessivel. Preservar a
+   * URL nao prova que a imagem carregou: sem isto sobrava o retangulo
+   * quebrado permanente.
+   */
+  private _artesQuebradas = new Set<string>();
+
+  /** URLs que ja carregaram com sucesso — so estas viram "ultima valida". */
+  private _artesCarregadas = new Set<string>();
+
+  private _aoFalharArte = (ev: Event): void => {
+    const img = ev.currentTarget as HTMLImageElement | null;
+    const url = img?.getAttribute('src') ?? '';
+    if (!url || this._artesQuebradas.has(url)) return;
+    this._artesQuebradas.add(url);
+    this._artesCarregadas.delete(url);
+    if (this._tvUltimoPoster === url) this._tvUltimoPoster = '';
+    this.requestUpdate();
+  };
+
+  private _aoCarregarArte = (ev: Event): void => {
+    const img = ev.currentTarget as HTMLImageElement | null;
+    const url = img?.getAttribute('src') ?? '';
+    if (!url || this._artesCarregadas.has(url)) return;
+    this._artesCarregadas.add(url);
+    this._artesQuebradas.delete(url);
+  };
+
   private _arteMidia(src: string, forma: 'wide' | 'square', icone: string, capa: boolean, pausada = false) {
+    // Uma URL ja reprovada nao volta a ser tentada neste ciclo de vida.
+    const url = src && this._artesQuebradas.has(src) ? '' : src;
     return html`
       <div class="mh-art mh-art-${forma} ${capa ? 'is-cover' : 'is-standby'}${pausada ? ' is-paused' : ''}">
-        ${src ? html`<img src=${src} alt="" loading="lazy" />` : html`<bruno-icon icon=${icone}></bruno-icon>`}
+        ${url
+          ? html`<img
+              src=${url}
+              alt=""
+              decoding="async"
+              @error=${this._aoFalharArte}
+              @load=${this._aoCarregarArte}
+            />`
+          : html`<bruno-icon icon=${icone}></bruno-icon>`}
       </div>
     `;
   }
@@ -3396,7 +3443,15 @@ export class BrunoRoomSubview extends LitElement {
         </div>
         <div class="mh-controls">${this._linhaVolumeTv(this._idDe('tvRemote'), tv.volume ?? 60)} ${fileira}</div>
       </div>
-      ${this._arteMidia(tv.poster || espera, 'wide', 'mdi:television-classic', Boolean(tv.poster), tv.estado === 'paused')}
+      <!-- A2: a arte ATIVA da TV passa a quadrada (antes wide), igualando o
+           Spotify. O standby do aparelho continua wide/contain. -->
+      ${this._arteMidia(
+        tv.poster || espera,
+        tv.poster ? 'square' : 'wide',
+        'mdi:television-classic',
+        Boolean(tv.poster),
+        tv.estado === 'paused',
+      )}
     `;
   }
 

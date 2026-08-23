@@ -1694,21 +1694,32 @@ export const SUBVIEW_TELEFONE_CSS = css`
   }
 
   /* ====================================================================
-     C1 (2026-08-23) — MOBILE: as fontes do Hub voltam a ler como cards.
+     ITEM 4 (2026-08-23) — MOBILE: as fontes do Hub como cards, de verdade.
 
-     Uma decisao anterior integrou o conteudo na folha zerando material,
-     borda, raio e sombra de .mh-source / .mh-source.is-open / .mh-source-body
-     (regras acima, duas delas com !important). O resultado foi TV, PC e
-     Spotify sem hierarquia externa nenhuma.
+     A primeira tentativa (C1) so acertou a secao FECHADA. Medido no banco,
+     428x926:
 
-     Aqui volta SOMENTE o material. Nada de geometria interna: grid, arte a
-     direita, play/pause circular, volume, controles, acordeao e a logica
-     seguem exatamente como estao. As unicas medidas tocadas sao o gap entre
-     as fontes e o padding externo do corpo — sem eles cards colados leem como
-     um bloco unico.
+       secao ABERTA   borda 0px   raio 0px    sombra band-open
+       secao fechada  borda 1px   raio 16px   sombra none
 
-     Os valores nao sao novos: sao os MESMOS tokens --bruno-liquid-band-* que
-     o tablet ja consome em subview-styles.generated.ts.
+     Causa: a regra que zera o material usa .mh-source.is-open, que tem
+     especificidade (0,2,0). Eu sobrescrevi apenas .mh-source (0,1,0) — perdi
+     por ESPECIFICIDADE, nao por ordem, e por isso a aberta ficou sem caixa.
+
+     Segundo achado: a ultima secao terminava a 3,6px do filete do dock. A
+     folha e max-height + overflow-y auto, entao o conteudo estourava e as
+     secoes ficavam espremidas.
+
+     Correcao, em quatro pontos:
+       1. aberta e fechada compartilham borda, raio e sombra — mesma caixa;
+       2. a sombra vem do token de CARD, cuja borda luminosa parcial ja e a
+          linguagem adotada no dashboard (o token de band resolve para none
+          no Josh e deixava a fechada sem aresta);
+       3. respiro no rodape da lista, para a ultima secao sair do filete;
+       4. a folha de midia ganha 16px de altura util para pagar os gaps.
+
+     Geometria INTERNA preservada integralmente: grid, arte a direita,
+     play/pause circular, volume, controles, acordeao, logica e scripts.
 
      ROLLBACK: remover este bloco inteiro; as regras que zeram o material
      continuam acima, intactas, e voltam a valer sozinhas.
@@ -1716,16 +1727,36 @@ export const SUBVIEW_TELEFONE_CSS = css`
   @media (max-width: 800px) {
     :host([data-folha='midia']) .room-subview .mh-sources {
       gap: 6px;
+      /* Sem isto a ultima secao fica colada no filete do dock. */
+      padding-bottom: 10px;
+    }
+
+    /* Ponto 4: a folha paga os gaps com altura util. --fone-reserva e
+       redefinida NO PROPRIO elemento, entao so a folha de midia muda; as
+       folhas de luzes, A/C e eletrodomesticos ficam como estao. */
+    :host([data-folha='midia']) .room-subview .glass-card.media-hub-card {
+      --fone-reserva: calc(62px + var(--fone-camera-visivel));
+    }
+
+    /* Ponto 1 e 2: a MESMA caixa nos dois estados. A especificidade repete o
+       .is-open de proposito — a regra que zera usa (0,2,0) e precisa ser
+       vencida, nao empatada. */
+    :host([data-folha='midia']) .room-subview .mh-source,
+    :host([data-folha='midia']) .room-subview .mh-source.is-open {
+      border-width: 1px;
+      border-style: solid;
+      border-color: var(--bruno-liquid-band-border-color, rgba(255, 255, 255, 0.09));
+      border-radius: var(--bruno-liquid-cell-radius, 16px);
+      box-shadow: var(
+        --bruno-liquid-card-shadow,
+        inset 0.5px 0.5px 1px 0 rgba(255, 255, 255, 0.4),
+        inset -0.5px -0.5px 1px 0 rgba(255, 255, 255, 0.1)
+      ) !important;
+      overflow: hidden;
     }
 
     :host([data-folha='midia']) .room-subview .mh-source {
-      /* !important porque a regra que zera o material tambem usa !important:
-         especificidade e ordem nao bastam contra ela. */
-      background: var(--bruno-liquid-band-background, rgba(255, 255, 255, 0.01)) !important;
-      box-shadow: var(--bruno-liquid-band-shadow, none) !important;
-      border: var(--bruno-liquid-band-border, 1px solid rgba(255, 255, 255, 0.035));
-      border-radius: var(--bruno-liquid-cell-radius, 16px);
-      overflow: hidden;
+      background: var(--bruno-liquid-band-background, rgba(255, 255, 255, 0.02)) !important;
     }
 
     :host([data-folha='midia']) .room-subview .mh-source.is-open {
@@ -1739,15 +1770,10 @@ export const SUBVIEW_TELEFONE_CSS = css`
         ),
         rgba(9, 11, 15, 0.052)
       ) !important;
-      border-color: var(--bruno-liquid-band-open-border-color, rgba(255, 255, 255, 0.092));
-      box-shadow: var(
-        --bruno-liquid-band-open-shadow,
-        inset 0 1px 0 rgba(255, 255, 255, 0.066),
-        0 6px 16px rgba(0, 0, 0, 0.105)
-      ) !important;
+      border-color: var(--bruno-liquid-band-open-border-color, rgba(255, 255, 255, 0.14));
     }
 
-    /* Com borda propria em cada card, os filetes de separacao viram linha
+    /* Com borda propria em cada card, os filetes de separacao virariam linha
        dupla. Eles existiam justamente porque nao havia caixa. */
     :host([data-folha='midia']) .room-subview .mh-source + .mh-source.is-open::before {
       display: none;
@@ -1755,11 +1781,6 @@ export const SUBVIEW_TELEFONE_CSS = css`
 
     :host([data-folha='midia']) .room-subview .mh-source + .mh-source .mh-source-head {
       border-top: 0;
-    }
-
-    /* O corpo respira dentro do card sem mexer no grid interno. */
-    :host([data-folha='midia']) .room-subview .mh-source-body {
-      padding-bottom: 8px;
     }
   }
 

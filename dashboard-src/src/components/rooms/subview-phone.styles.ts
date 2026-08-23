@@ -1676,6 +1676,76 @@ export const SUBVIEW_TELEFONE_CSS = css`
     }
   }
 
+  /* ====================================================================
+     C1 (2026-08-23) — MOBILE: as fontes do Hub voltam a ler como cards.
+
+     Uma decisao anterior integrou o conteudo na folha zerando material,
+     borda, raio e sombra de .mh-source / .mh-source.is-open / .mh-source-body
+     (regras acima, duas delas com !important). O resultado foi TV, PC e
+     Spotify sem hierarquia externa nenhuma.
+
+     Aqui volta SOMENTE o material. Nada de geometria interna: grid, arte a
+     direita, play/pause circular, volume, controles, acordeao e a logica
+     seguem exatamente como estao. As unicas medidas tocadas sao o gap entre
+     as fontes e o padding externo do corpo — sem eles cards colados leem como
+     um bloco unico.
+
+     Os valores nao sao novos: sao os MESMOS tokens --bruno-liquid-band-* que
+     o tablet ja consome em subview-styles.generated.ts.
+
+     ROLLBACK: remover este bloco inteiro; as regras que zeram o material
+     continuam acima, intactas, e voltam a valer sozinhas.
+     ==================================================================== */
+  @media (max-width: 800px) {
+    :host([data-folha='midia']) .room-subview .mh-sources {
+      gap: 6px;
+    }
+
+    :host([data-folha='midia']) .room-subview .mh-source {
+      /* !important porque a regra que zera o material tambem usa !important:
+         especificidade e ordem nao bastam contra ela. */
+      background: var(--bruno-liquid-band-background, rgba(255, 255, 255, 0.01)) !important;
+      box-shadow: var(--bruno-liquid-band-shadow, none) !important;
+      border: var(--bruno-liquid-band-border, 1px solid rgba(255, 255, 255, 0.035));
+      border-radius: var(--bruno-liquid-cell-radius, 16px);
+      overflow: hidden;
+    }
+
+    :host([data-folha='midia']) .room-subview .mh-source.is-open {
+      background: var(
+        --bruno-liquid-band-open-background,
+        linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.044),
+          rgba(255, 255, 255, 0.012) 54%,
+          rgba(255, 255, 255, 0.018)
+        ),
+        rgba(9, 11, 15, 0.052)
+      ) !important;
+      border-color: var(--bruno-liquid-band-open-border-color, rgba(255, 255, 255, 0.092));
+      box-shadow: var(
+        --bruno-liquid-band-open-shadow,
+        inset 0 1px 0 rgba(255, 255, 255, 0.066),
+        0 6px 16px rgba(0, 0, 0, 0.105)
+      ) !important;
+    }
+
+    /* Com borda propria em cada card, os filetes de separacao viram linha
+       dupla. Eles existiam justamente porque nao havia caixa. */
+    :host([data-folha='midia']) .room-subview .mh-source + .mh-source.is-open::before {
+      display: none;
+    }
+
+    :host([data-folha='midia']) .room-subview .mh-source + .mh-source .mh-source-head {
+      border-top: 0;
+    }
+
+    /* O corpo respira dentro do card sem mexer no grid interno. */
+    :host([data-folha='midia']) .room-subview .mh-source-body {
+      padding-bottom: 8px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .folha-scrim,
     .resumo-chevron,

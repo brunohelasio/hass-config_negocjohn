@@ -1199,10 +1199,15 @@ class BrunoHeroCard extends HTMLElement {
           margin-top: 20px;
         }
 
+        /* B7 (2026-08-23): 23px -> 26px, so no tablet. Esta e a regra base do
+           hero V2; o telefone tem override proprio de 20px dentro de
+           (max-width: 800px), que continua vencendo. Temperatura, descricao,
+           tipografia e espacamento global nao mudam.
+           ANTERIOR (rollback): 23px nas tres propriedades. */
         .hero-stage.is-v2 .inline-weather img {
-          width: 23px;
-          height: 23px;
-          flex: 0 0 23px;
+          width: 26px;
+          height: 26px;
+          flex: 0 0 26px;
         }
 
         .hero-stage.is-v2 .inline-weather strong {

@@ -1427,6 +1427,17 @@ export class BrunoRoomSubview extends LitElement {
         .mh-art {
           grid-area: art;
         }
+
+        /* B4 (2026-08-23) — TABLET: celulas de iluminacao menos achatadas.
+           A base gerada usa min-height: clamp(46.8px, 3.3cqi, 78px). O
+           acrescimo e proporcional em toda a faixa, entao a resposta ao
+           container nao muda de natureza. Icones, textos, switches, gaps,
+           ordem e logica nao sao tocados; o telefone tem regras proprias e
+           fica fora deste bloco.
+           ANTERIOR (rollback): remover esta regra. */
+        .light-cell {
+          min-height: clamp(53.8px, 3.8cqi, 89.7px);
+        }
       }
 
       /* Mesma linguagem do card dinâmico da Home: a arte permanece como

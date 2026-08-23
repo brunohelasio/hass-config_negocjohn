@@ -287,7 +287,7 @@ class BrunoHeroCard extends HTMLElement {
       .filter((line) => line.summary);
   }
 
-  _renderEventLine(event) {
+  _renderEventLine(event, separador = false) {
     // Linhas de insight não abrem a agenda (não são compromissos).
     const insightClass = event.insight ? ' is-insight' : '';
     // NOVO (2026-08-16): marca a linha de preenchimento ("Nenhum compromisso
@@ -295,9 +295,12 @@ class BrunoHeroCard extends HTMLElement {
     // faixa que sobra ali. No telefone o CSS a oculta: com espaço escasso,
     // uma faixa que só diz que não há nada custa mais do que informa.
     const emptyClass = event.empty ? ' is-empty' : '';
+    // B8: marca a primeira linha do grupo de insights quando ha Agenda real
+    // acima. O filete e desenhado por ::before, entao nao ocupa faixa.
+    const separatorClass = separador ? ' has-separator' : '';
     const label = event.insight ? 'Informacao da casa' : 'Abrir agenda';
     return `
-      <button class="event-line${insightClass}${emptyClass}" type="button" aria-label="${BrunoHeroCard._escapeAttr(label)}" style="--event-color:${BrunoHeroCard._escapeAttr(event.color)}">
+      <button class="event-line${insightClass}${emptyClass}${separatorClass}" type="button" aria-label="${BrunoHeroCard._escapeAttr(label)}" style="--event-color:${BrunoHeroCard._escapeAttr(event.color)}">
         <span>${BrunoHeroCard._escape(event.label)}</span>
         <strong>${BrunoHeroCard._escape(event.summary)}</strong>
         ${event.time ? `<small>${BrunoHeroCard._escape(event.time)}</small>` : ''}
@@ -720,11 +723,27 @@ class BrunoHeroCard extends HTMLElement {
     //   ? [this._nextEventModel(), ...this._insightModels(2)]
     const proximoEvento = heroV2 ? this._nextEventModel() : null;
     const insights = heroV2 ? this._insightModels(2) : [];
-    const heroLines = heroV2
-      ? (proximoEvento.empty && insights.length
-          ? [...insights, proximoEvento]
-          : [proximoEvento, ...insights])
-      : events;
+    // B8 (2026-08-23) — o placeholder da Agenda deixa de entrar no stack.
+    //
+    // ANTERIOR (rollback):
+    //   const heroLines = heroV2
+    //     ? (proximoEvento.empty && insights.length
+    //         ? [...insights, proximoEvento]
+    //         : [proximoEvento, ...insights])
+    //     : events;
+    //
+    // O placeholder continuava sendo renderizado no tablet e ocupava uma
+    // faixa so para dizer que nao ha nada. Agora: Agenda so quando existe
+    // evento real; insights quando existem; nenhum dos dois => stack nao
+    // renderiza (ver o render do event-stack).
+    //
+    // MOBILE inalterado por construcao: la o CSS ja ocultava .is-empty, e a
+    // ordem visivel resultante era exatamente a de agora. _nextEventModel e
+    // a classe .is-empty permanecem intactos (usados fora do hero V2).
+    const agendaReal = heroV2 && proximoEvento && !proximoEvento.empty ? [proximoEvento] : [];
+    const heroLines = heroV2 ? [...agendaReal, ...insights] : events;
+    // Filete entre os grupos: so quando ha Agenda real E insight.
+    const indiceSeparador = agendaReal.length && insights.length ? agendaReal.length : -1;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -884,6 +903,30 @@ class BrunoHeroCard extends HTMLElement {
           display: grid;
           gap: 7px;
           min-width: 0;
+        }
+
+        /* B8 (2026-08-23): filete entre o grupo Agenda e o grupo Insights.
+           Mesma linguagem do filete inferior das superficies do dashboard
+           (--bruno-liquid-surface-bottom-line): mais intenso no centro, fade
+           nas laterais. Desenhado em ::before para nao ocupar faixa propria
+           nem alterar o gap do stack. */
+        .event-line.has-separator {
+          position: relative;
+          margin-top: 4px;
+        }
+
+        .event-line.has-separator::before {
+          content: '';
+          position: absolute;
+          left: 2px;
+          right: 2px;
+          top: -6px;
+          height: 1px;
+          pointer-events: none;
+          background: var(
+            --bruno-liquid-surface-bottom-line,
+            linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent)
+          );
         }
 
         .event-line {
@@ -1466,9 +1509,9 @@ class BrunoHeroCard extends HTMLElement {
               <strong>${BrunoHeroCard._escape(weather.temperature)}</strong>
               <small>${BrunoHeroCard._escape(this._weatherLabel(weather.state))}</small>
             </button>
-            ${heroV2 ? `
+            ${heroV2 && heroLines.length ? `
               <div class="event-stack">
-                ${heroLines.map((line) => this._renderEventLine(line)).join('')}
+                ${heroLines.map((line, i) => this._renderEventLine(line, i === indiceSeparador)).join('')}
               </div>
             ` : ''}
           </div>

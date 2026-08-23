@@ -550,6 +550,24 @@ export class BrunoRoomSubview extends LitElement {
       ouvir(SONDA, window, 'dialog-closed', this._aoFecharDialogo);
       this._ouvindoFechamentoDialogo = true;
     }
+    // B3 (2026-08-23) — TABLET: a Iluminacao comeca expandida a cada visita.
+    //
+    // A shell mantem cache das secoes, mas as subviews nao-Home sao
+    // desconectadas ao sair e reconectadas ao voltar. Entao connectedCallback
+    // ja tem exatamente a semantica pedida: abre ao entrar, o usuario pode
+    // recolher durante a visita (o toque escreve em _lightsOpen e nada aqui
+    // roda de novo), e ao sair/retornar abre outra vez. Nao foi preciso
+    // protocolo novo na shell.
+    //
+    // MOBILE inalterado: no telefone quem abre a Iluminacao e a folha
+    // (_abrirFolha -> _lightsOpen = true), e essa continua sendo a unica via.
+    if (!this._estaNoTelefone()) {
+      this._lightsOpen = true;
+      // Mesmo par que a folha do telefone usa: sem `assentada` o corpo nasce
+      // sem rolagem, porque a espera de 240ms de _alternarDock existe para a
+      // animacao de altura, que aqui nao acontece.
+      this._luzesAssentadas = true;
+    }
   }
 
   /**

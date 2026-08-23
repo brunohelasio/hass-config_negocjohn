@@ -4,6 +4,14 @@ import type { Hass, HassEntity } from '@/models/home-assistant';
 import { ROOMS, type RoomConfig } from '@/config/rooms.config';
 import { SUBVIEWS, type SubviewConfig } from '@/config/subviews.config';
 import { spotifyTocandoEm } from '@/services/entities/spotify-device';
+// ITEM 1A (2026-08-23): a retencao da cortina passa a viver num registro
+// compartilhado e persistente, porque a instancia da subview morre a cada
+// navegacao. A barra superior le o MESMO registro.
+import {
+  fechamentoRetido,
+  gravarRetencao,
+  limparRetencao,
+} from '@/services/entities/curtain-hold';
 import { isMediaPlaying, isTvPowered } from '@/services/entities/media-state';
 import { callHaService } from '@/services/home-assistant/service-call';
 import {
@@ -2673,7 +2681,15 @@ export class BrunoRoomSubview extends LitElement {
     const relatado = this._fechamentoCortinaRelatado();
     const movimento = this._movimentoCortina;
     const id = this._entidadeCortina();
-    if (!movimento || movimento.entityId !== id) return relatado;
+    if (!movimento || movimento.entityId !== id) {
+      // ITEM 1A: sem movimento em memoria, consulta o registro compartilhado
+      // antes de aceitar a telemetria. E este o caminho que a instancia
+      // recem-reconectada percorre depois de uma navegacao.
+      const estadoAtual = String(this._estado(id)?.state ?? '').toLowerCase();
+      const emMovimento = estadoAtual === 'opening' || estadoAtual === 'closing';
+      const retido = fechamentoRetido(id, this._posicaoCortina(), emMovimento);
+      return retido ?? relatado;
+    }
     const agora = Date.now();
     const estado = String(this._estado(id)?.state ?? '').toLowerCase();
     const estaMovendo = estado === 'opening' || estado === 'closing';
@@ -2775,6 +2791,8 @@ export class BrunoRoomSubview extends LitElement {
       duracao: Math.max(CORTINA_MOVIMENTO_MIN_MS, CORTINA_CURSO_MS * (distancia / 100)),
       ultimoRelatado: this._fechamentoCortinaRelatado(),
     };
+    // ITEM 1A: ordem nova invalida a retencao na hora.
+    limparRetencao(entityId);
     this._iniciarTimerMovimentoCortina();
     this.requestUpdate();
   }

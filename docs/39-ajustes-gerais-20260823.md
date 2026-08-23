@@ -559,3 +559,86 @@ rodaram diretamente.
 **duas vezes** aqui, ambas em comentário CSS que eu mesmo escrevi. O detector
 `node scripts/validation/check-backtick.mjs --tudo` pega — rode-o **antes** do
 `tsc`, não depois.
+
+---
+
+# CORREÇÕES PÓS-VALIDAÇÃO FÍSICA (2026-08-23, mesma data)
+
+Rodada de correção dos oito itens reprovados na validação física. Bundle
+**`bruno-dashboard.Cqr-1HMb.js`**. Remoto intacto.
+
+| Item | Causa real | Diagnóstico anterior | Commit |
+|---|---|---|---|
+| 1 | retenção em estado de INSTÂNCIA + dois donos do número | corrigido | `0240be00` |
+| 2 | `+/-` perdidos na migração da Fase 5c (CSS existe, markup não) | confirmado | `10c8b496` |
+| 3 | Echo em `standby` nunca entrava na lista de ativos | corrigido | `f7e35e1e` |
+| 4 | perdi por ESPECIFICIDADE: `.mh-source.is-open` é (0,2,0) | confirmado | `681671ad` |
+| 5 | `_loadEvents` descarta evento iniciado há >1h | corrigido | `0d1d7198` |
+| 6 | **não reproduzido** — B1 removido por risco | não confirmado | `b31b0335` |
+| 7 | `::before` pinta ATRÁS das `.backdrop-layer` | confirmado | `f17ce2cf` |
+| 8 | mecanismo existe; a 2ª sessão só aparecia ao deslizar | corrigido | `b314982e` |
+
+## Item 6 — o que foi medido, e por que mesmo assim reverti
+
+Banco da shell, 1920×1200, tema Josh, material carregado:
+
+- acordeão alterna (TV → Spotify → TV), estado correto a cada passo;
+- `.mh-source-head`, "Ligar TV", Pausar, Controle remoto e Apps **todos
+  alcançáveis** por `elementsFromPoint` — nenhum overlay invisível;
+- **zero exceções** de render (`console.error`, `window.error` e
+  `unhandledrejection` capturados durante as interações);
+- B1 aplicado de fato (`mh-left` com `display: contents`, `mh-info` na área);
+- sem sobreposição entre a Iluminação aberta por B3 e o Hub;
+- Everex íntegro: 28/28 arquivos, nenhum hash divergente, todos os chunks
+  referenciados presentes.
+
+Não há evidência de que B1 fosse a causa. Ele saiu porque foi a **única**
+mudança estrutural feita no Hub do tablet, e `display:contents` tem histórico de
+falha de hit-testing em WebView Android — justamente a diferença entre o
+navegador do banco e o aparelho. O bloco ficou **íntegro em comentário**, com
+instrução de reativação. B2 e B4 permanecem.
+
+> **Se o Hub continuar quebrado depois desta rodada**, a causa é outra e o
+> banco não a alcança. O que resolveria: abrir o inspetor no tablet e capturar
+> (a) erros de console ao tocar no cabeçalho da fonte, (b)
+> `document.elementFromPoint` no centro do botão.
+
+## Item 1 — a fonte única
+
+`dashboard-src/src/services/entities/curtain-hold.ts` (novo).
+
+O Stop grava o **percentual visual exibido** + a **leitura bruta** do cover
+naquele instante. A retenção vale enquanto a física não mudar; um
+`current_position` diferente do gravado é a "evidência física nova" e derruba a
+retenção. Ordem nova ou movimento declarado limpam na hora. `localStorage` é o
+mesmo mecanismo do histórico da TV — nenhum protocolo novo.
+
+Subview e barra leem e escrevem o mesmo registro.
+
+**Medido** (retenção 90% com físico 12 no Stop):
+
+| físico atual | barra exibe |
+|---|---|
+| 12 (igual ao do Stop) | **90% fechada** |
+| 40 (telemetria nova) | 62% (solta, calibrado da física) |
+| 40 (leitura seguinte) | 62% (registro já limpo) |
+
+## Item 4 — medições antes e depois
+
+| | antes | depois |
+|---|---|---|
+| seção **aberta** | borda 0px · raio 0px | **1px · 16px · sombra** |
+| seção fechada | 1px · 16px · sem sombra | **1px · 16px · sombra** |
+| folga da última ao filete | 3,6px | **14px** |
+| altura da folha | 336px | 348px |
+
+## Achado fora do escopo — NÃO ALTERADO
+
+Já registrado acima: `dashboard-src/scripts/deploy.mjs` falha com `EPERM` em
+`config/www/dashboard/chunks`. Segue sem correção.
+
+## Rollback
+
+Um commit por item. Rollback completo exige `git revert` + `vite build` +
+`manifesto` + `compress` + voltar o ponteiro (`DB1sivd6`, comentado ao lado) +
+ressincronizar `config/www/dashboard/` para o Everex.

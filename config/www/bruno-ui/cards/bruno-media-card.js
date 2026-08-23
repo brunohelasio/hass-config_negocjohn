@@ -32,6 +32,9 @@ const BRUNO_MEDIA_ACTIVE_STATES = ['playing', 'paused'];
 const BRUNO_MEDIA_TV_ENTITY = 'media_player.android_tv_192_168_3_17';
 const BRUNO_MEDIA_TV_POWER_ENTITY = 'media_player.smart_tv_pro_2';
 const BRUNO_MEDIA_TV_POWER_STATES = new Set(['on', 'playing', 'paused', 'idle', 'buffering']);
+// ITEM 8 (2026-08-23): mesma cadencia da faixa rotativa do hero.
+const BRUNO_MEDIA_ROTACAO_MS = 6000;
+
 const BRUNO_MEDIA_HYBRID_RUNTIME = 'round3';
 
 class BrunoMediaCard extends HTMLElement {
@@ -978,6 +981,8 @@ class BrunoMediaCard extends HTMLElement {
     const players = this._slotPlayerIds(focus.entity, isWide ? 2 : 4).map((id) => this._playerModel(id, focus.entity));
     const slideIndex = players.length ? (this._slideIndex || 0) : 0;
     if (!players.length && this._slideIndex) this._slideIndex = 0;
+    // ITEM 8: a rotacao le isto; sem segunda sessao ela nao gira.
+    this._temSegundaSessao = players.length > 0;
     const wideClass = isWide ? ' is-wide' : '';
     const focusSurfaceAttrs = isWide
       ? 'aria-label="Resumo de mídia"'

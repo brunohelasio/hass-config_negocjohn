@@ -1669,6 +1669,17 @@ class BrunoShell extends HTMLElement {
         position: absolute;
         inset: 0;
         pointer-events: none;
+        /* ITEM 7 (2026-08-23) — O EMPILHAMENTO ERA A CAUSA.
+
+           Na validacao fisica o scrim nao foi percebido. Causa: ::before e o
+           PRIMEIRO na ordem de pintura do .backdrop, entao ficava ATRAS das
+           .backdrop-layer (as imagens de fundo, position: absolute sem
+           z-index). O ::after funciona porque e o ULTIMO.
+
+           z-index: 1 poe a camada acima das imagens e abaixo do conteudo —
+           o .backdrop inteiro e z-index 0 e todo o resto da shell e 1, entao
+           isto nao alcanca rail, faixas nem cards. */
+        z-index: 1;
         background:
           linear-gradient(
             90deg,
@@ -1681,7 +1692,17 @@ class BrunoShell extends HTMLElement {
       .backdrop[data-secao="home"]::before {
         inset: 0 0 auto 0;
         height: 74vh;
+        /* ITEM 7: concentrado no CANTO SUPERIOR ESQUERDO, que e onde vive a
+           informacao do hero. O radial faz a concentracao; o linear vertical
+           fecha o contraste ate um pouco abaixo do status superior; o lateral
+           amarra a coluna da rail. */
         background:
+          radial-gradient(
+            120% 90% at 0% 0%,
+            rgba(4, 7, 11, 0.58) 0,
+            rgba(4, 7, 11, 0.30) 34%,
+            rgba(4, 7, 11, 0) 68%
+          ),
           linear-gradient(
             90deg,
             rgba(4, 7, 11, 0.50) 0,
@@ -1690,8 +1711,8 @@ class BrunoShell extends HTMLElement {
           ),
           linear-gradient(
             180deg,
-            rgba(4, 7, 11, 0.40) 0,
-            rgba(4, 7, 11, 0.20) 44%,
+            rgba(4, 7, 11, 0.34) 0,
+            rgba(4, 7, 11, 0.16) 46%,
             rgba(4, 7, 11, 0) 88%
           );
         -webkit-mask-image: linear-gradient(

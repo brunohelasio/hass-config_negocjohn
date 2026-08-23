@@ -712,6 +712,10 @@ class BrunoShell extends HTMLElement {
 
   _applyBackdrop(key) {
     if (!this._backdropEl || !this._bdLayers || this._bdLayers.length < 2) return;
+    // B6 (2026-08-23): o scrim do hero e exclusivo da Home, entao o backdrop
+    // precisa saber em que secao esta. Somente um atributo — nenhuma logica
+    // nova de navegacao.
+    this._backdropEl.dataset.secao = String(key || '');
     this._applyBackdropEffect(key);
     const fallback = this._backdrops && (this._backdrops[key] || this._backdrops.default);
     const url = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, key, fallback) || fallback;
@@ -1641,8 +1645,72 @@ class BrunoShell extends HTMLElement {
           linear-gradient(0deg,   rgba(4,7,11,0.86) 0%, rgba(4,7,11,0.40) 6%, rgba(4,7,11,0.00) 16%),
           rgba(6,9,14,var(--bruno-backdrop-dim, 0.10));
       }
+      /* B6 (2026-08-23) — DUAS responsabilidades separadas.
+
+         O ::after acima e a vinheta de perimetro, igual nas quatro bordas.
+         Aumentar so o lado esquerdo dela escureceria tambem a faixa de tiles
+         da Home, que ocupa a base — nao e o que se quer.
+
+         Entao a camada nova vive num pseudo-elemento proprio:
+
+         1. scrim lateral ESTREITO, ancorado na largura da rail (86px), para
+            assentar a coluna sem invadir o conteudo;
+         2. na HOME, um scrim adicional atras da regiao informativa do hero
+            (data, saudacao, relogio, clima, Agenda, Insights).
+
+         Na Home o pseudo-elemento e limitado a 74vh. A faixa de tiles comeca
+         em 77vh (grid da section_home_v2: 48px + calc(77vh - 80px) + gaps),
+         entao ela fica FORA por construcao — nao por calibragem no olho.
+
+         Somente gradientes alpha: nada de backdrop-filter, nada de backdrop
+         root novo. */
+      .backdrop::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(
+            90deg,
+            rgba(4, 7, 11, 0.50) 0,
+            rgba(4, 7, 11, 0.22) 86px,
+            rgba(4, 7, 11, 0) 118px
+          );
+      }
+
+      .backdrop[data-secao="home"]::before {
+        inset: 0 0 auto 0;
+        height: 74vh;
+        background:
+          linear-gradient(
+            90deg,
+            rgba(4, 7, 11, 0.50) 0,
+            rgba(4, 7, 11, 0.22) 86px,
+            rgba(4, 7, 11, 0) 118px
+          ),
+          linear-gradient(
+            180deg,
+            rgba(4, 7, 11, 0.40) 0,
+            rgba(4, 7, 11, 0.20) 44%,
+            rgba(4, 7, 11, 0) 88%
+          );
+        -webkit-mask-image: linear-gradient(
+          90deg,
+          rgba(0, 0, 0, 1) 0,
+          rgba(0, 0, 0, 1) 42%,
+          rgba(0, 0, 0, 0) 62%
+        );
+        mask-image: linear-gradient(
+          90deg,
+          rgba(0, 0, 0, 1) 0,
+          rgba(0, 0, 0, 1) 42%,
+          rgba(0, 0, 0, 0) 62%
+        );
+      }
+
       /* Sem imagem (seção sem backdrop): camada some e o :host (grafite) aparece. */
       .backdrop:not([data-active])::after { background: none; }
+      .backdrop:not([data-active])::before { background: none; }
 
       .rail-slot {
         grid-column: 1;

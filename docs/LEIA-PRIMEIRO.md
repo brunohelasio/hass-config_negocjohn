@@ -37,7 +37,7 @@ Os que mais mudam e mais valem consulta:
 | `15-decisions-log.md` | decisões com consequência arquitetural, e o motivo de cada uma |
 | `16-ai-working-guide.md` | como trabalhar neste repositório |
 | `38-v3-josh-hemma-lavabo-20260822.md` | rodada V3 atual: Josh, Hemma e Lavabo |
-| `39-ajustes-gerais-20260823.md` | rodada V3 atual: Josh, Hemma e Lavabo |
+| `39-ajustes-gerais-20260823.md` | **referencia de consulta** dos ajustes A/B/C: causa, arquivo, antes/depois e rollback por item |
 
 ---
 

@@ -383,9 +383,21 @@ export class BrunoHomePhone extends LitElement {
             `,
           )}
         </div>
-        ${fora > 0
-          ? html`<span class="aviso-comodos" title="Cômodos ativos na outra página">${fora}</span>`
-          : nothing}
+        <!-- C3 (2026-08-23): o slot existe SEMPRE.
+
+             ANTERIOR (rollback): o span so era criado quando fora > 0. Como
+             a linha do grid e automatica e .indicadores so garantia
+             min-height: 12px, entrar/sair o aviso (16px) mudava a altura
+             total e deslocava Favoritos a cada troca de pagina.
+
+             Agora a caixa e reservada e so o conteudo muda; a paginacao nao
+             altera mais a altura da composicao. Os dots seguem iguais. -->
+        <span
+          class="aviso-comodos ${fora > 0 ? '' : 'is-vazio'}"
+          title="Cômodos ativos na outra página"
+          aria-hidden=${fora > 0 ? 'false' : 'true'}
+          >${fora > 0 ? fora : ''}</span
+        >
       </div>
     `;
   }
@@ -760,7 +772,9 @@ export class BrunoHomePhone extends LitElement {
       justify-content: center;
       gap: 8px;
       padding: 6px 0 0;
-      min-height: 12px;
+      /* C3: a linha passa a ser sempre da altura do aviso (16px), que e o
+         elemento mais alto aqui. ANTERIOR (rollback): min-height: 12px. */
+      min-height: 16px;
     }
     .dots {
       display: flex;
@@ -791,6 +805,13 @@ export class BrunoHomePhone extends LitElement {
       background: var(--bruno-accent-amber, #f7c600);
       color: rgba(12, 14, 20, 0.92);
       font: 700 10.5px/1 system-ui, -apple-system, sans-serif;
+    }
+
+    /* C3: sem aviso a caixa continua ocupando o mesmo espaco — so o
+       desenho some. visibility, nao display: display: none devolveria a
+       largura ao flex e mexeria na centralizacao dos dots. */
+    .aviso-comodos.is-vazio {
+      visibility: hidden;
     }
 
     /* ── favoritos ──────────────────────────────────────────────────────────

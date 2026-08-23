@@ -817,9 +817,26 @@ export const SUBVIEW_TELEFONE_CSS = css`
       gap: 10px;
     }
     /* Filete abaixo do cabecalho — mesmo divisor da faixa, para o segundo nivel
-       falar a mesma lingua do primeiro. */
+       falar a mesma lingua do primeiro.
+
+       C2 (2026-08-23) — o :not(.cameras-head).
+
+       ANTERIOR (rollback): o seletor era .mh-head puro. O cabecalho da
+       CAMERA tambem tem a classe .mh-head, entao ele ganhava esta borda
+       sempre que qualquer folha abria. Medido no banco da shell, 428x926:
+       a altura do cabecalho ia de 48,3125px para 49,3125px e o resumo
+       central descia exatamente 1,00px. Nao era rolagem (scrollTop 0 nos
+       tres casos) nem o topo da camera (delta 0) — era a borda ligando.
+
+       A folha de MIDIA nao apresentava o defeito porque a regra de
+       [data-folha=midia] mais abaixo zera esta borda; luzes e ac nao tinham
+       equivalente. Em vez de acrescentar mais duas excecoes, o filete deixa
+       de alcancar um cabecalho que nunca foi seu alvo.
+
+       Mesma familia do defeito de 2026-08-15, quando .camera-settings-button
+       foi capturado por uma regra nao escopada do Hub. */
     :host([data-folha]) .room-subview .lights-card.is-open .lights-dock,
-    :host([data-folha]) .room-subview .mh-head,
+    :host([data-folha]) .room-subview .mh-head:not(.cameras-head),
     :host([data-folha]) .room-subview .ac-lean-head {
       border-bottom: 1px solid var(--fone-faixa-filete);
     }

@@ -4482,7 +4482,16 @@ export class BrunoRoomSubview extends LitElement {
     // scale(1.06) no container e deslocava Power/Swing. Agora só os quatro
     // paths e o marcador usam 315; a coroa permanece em 300 e fica por cima.
     const raioMarcacoes = 300;
-    const raioAnel = 315;
+    // A5 (2026-08-23): 315 -> 330. Sobe SO o arco e o marcador; a coroa de
+    // marcacoes segue em 300 e o container nao e escalado — a tentativa com
+    // scale(1.06) no container deslocava Power/Swing e foi revertida.
+    //
+    // Clipping conferido pela aritmetica do proprio SVG: viewBox 0 0 720 460,
+    // centro (360, 410), maior stroke do anel = 18 (icg-active-glow), logo o
+    // desenho alcanca 330 + 9 = 339. Em x: 360 +/- 339 = 21..699 (folga de
+    // 21px de cada lado). Em y: 410 - 339 = 71. Ambos dentro da caixa.
+    // ANTERIOR (rollback): const raioAnel = 315;
+    const raioAnel = 330;
     const inicio = -180;
     const fim = 0;
     const varredura = fim - inicio;

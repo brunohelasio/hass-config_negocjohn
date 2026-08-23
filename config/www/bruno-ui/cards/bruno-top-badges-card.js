@@ -313,10 +313,33 @@ class BrunoTopBadgesCard extends HTMLElement {
         membros.push(outro);
         endpoint = this._entityName(outro);
       }
+      // ITEM 3 (2026-08-23) — o endpoint fisico e a informacao prioritaria.
+      //
+      // Com Spotify Connect a entidade do Echo permanece em `standby` (esta
+      // documentado no proprio spotify-device.ts), entao ela NAO entra na
+      // lista de ativas e nao ha nada a absorver no laco acima. Era por isso
+      // que sobrava so "SpotifyPlus": a deduplicacao funcionava porque o
+      // Echo nunca era contado, nao porque tinha sido reconhecido.
+      //
+      // O nome do dispositivo vem dos ATRIBUTOS do proprio Spotify. Quem
+      // decide o casamento e o MESMO dispositivoDoComodo que os room tiles
+      // usam — nenhum algoritmo paralelo, nenhuma sessao a mais.
+      if (!endpoint) {
+        for (const candidato of (this._config.entities.media || [])) {
+          if (candidato === id) continue;
+          const nome = this._entityName(candidato);
+          if (nome && dispositivoDoComodo(spotify?.attributes, nome)) {
+            endpoint = nome;
+            break;
+          }
+        }
+      }
       sessoes.push({
         entityId: id,
         membros,
-        title: endpoint ? `Spotify - ${endpoint}` : this._entityName(id),
+        // endpoint como informacao principal; a integracao vira secundaria.
+        title: endpoint || this._entityName(id),
+        sub: endpoint ? 'Spotify' : '',
         fonte: 'spotify',
       });
     }
@@ -346,7 +369,9 @@ class BrunoTopBadgesCard extends HTMLElement {
       chips: active.map((sessao) => ({
         icon: sessao.fonte === 'tv' ? 'mdi:television-classic' : 'mdi:music-note',
         title: sessao.title,
-        sub: (this._state(sessao.entityId)?.state || 'on').replace('_', ' '),
+        // ITEM 3: quando o endpoint fisico e conhecido, a linha secundaria
+        // diz a integracao; sem endpoint, mantem o estado como antes.
+        sub: sessao.sub || (this._state(sessao.entityId)?.state || 'on').replace('_', ' '),
         entityId: sessao.entityId,
         action: 'play-pause-media',
       })),

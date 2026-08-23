@@ -3301,14 +3301,28 @@ export class BrunoRoomSubview extends LitElement {
     rotulo: string,
     icone: string,
     aoClicar: () => void,
-    opcoes: { principal?: boolean; mais?: boolean; soIcone?: boolean; desabilitado?: boolean } = {},
+    opcoes: {
+      principal?: boolean;
+      mais?: boolean;
+      soIcone?: boolean;
+      desabilitado?: boolean;
+      /**
+       * A3 (2026-08-23): arte do atalho, vinda de `tvApps[].image` na
+       * configuracao. Os assets ja existiam; o renderer e que os ignorava e
+       * desenhava mdi:play-box-outline em todos. O icone permanece como
+       * fallback e entra sozinho se a imagem falhar.
+       */
+      imagem?: string;
+    } = {},
   ) {
     const soIcone = Boolean(opcoes.soIcone ?? opcoes.mais);
+    const imagem = opcoes.imagem && !this._artesQuebradas.has(opcoes.imagem) ? opcoes.imagem : '';
     const classes = [
       'mh-btn',
       opcoes.principal ? 'is-main' : '',
       opcoes.mais ? 'is-plus' : '',
       soIcone ? 'is-icon' : '',
+      imagem ? 'is-app' : '',
     ]
       .filter(Boolean)
       .join(' ');
@@ -3416,7 +3430,7 @@ export class BrunoRoomSubview extends LitElement {
           ${apps.map((app) =>
             this._botaoMidia(app.label, 'mdi:play-box-outline', () => {
               if (app.script) this._servico('script', 'turn_on', { entity_id: app.script });
-            }, { soIcone: true, desabilitado: !app.script }),
+            }, { soIcone: true, desabilitado: !app.script, imagem: app.image ?? '' }),
           )}
           ${this._botaoMidia('Voltar', 'mdi:chevron-left', () => {
             this._appsTvAbertos = false;
@@ -3493,6 +3507,28 @@ export class BrunoRoomSubview extends LitElement {
       tap_action: comando(command),
       ...(repetir ? { hold_action: { action: 'repeat' } } : {}),
     });
+
+    // A3 (2026-08-23): os mesmos atalhos de streaming do Hub, vindos da MESMA
+    // fonte (`tvApps` da configuracao do comodo). Nada e duplicado: o script
+    // acionado e exatamente o que a configuracao ja declara. Sem tvApps a
+    // fileira nao existe e o remoto fica como estava.
+    const appsRemoto = (Array.isArray(this._sub?.['tvApps'])
+      ? (this._sub['tvApps'] as Array<{ key: string; label: string; script?: string }>)
+      : []
+    ).slice(0, 4);
+    const atalhosApps = appsRemoto.map((app) => ({
+      type: 'button',
+      name: `app_${app.key}`,
+      icon: 'mdi:play-box-outline',
+      label: app.label,
+      tap_action: app.script
+        ? {
+            action: 'perform-action',
+            perform_action: 'script.turn_on',
+            target: { entity_id: app.script },
+          }
+        : { action: 'none' },
+    }));
 
     const estilosVision = `
       :host {
@@ -3767,6 +3803,8 @@ export class BrunoRoomSubview extends LitElement {
                   ['navigation'],
                   ['back', 'home', 'mute'],
                   ['volume_down', 'volume_up', 'channel_down', 'channel_up'],
+                  // A3: fileira de atalhos, so quando ha apps configurados.
+                  ...(atalhosApps.length ? [atalhosApps.map((a) => a.name)] : []),
                 ],
                 custom_actions: [
                   tecla('power', 'mdi:power', 'POWER', 'Power'),
@@ -3791,6 +3829,8 @@ export class BrunoRoomSubview extends LitElement {
                   tecla('volume_up', 'mdi:volume-plus', 'VOLUME_UP', 'Vol +', true),
                   tecla('channel_down', 'mdi:chevron-down', 'CHANNEL_DOWN', 'Canal −', true),
                   tecla('channel_up', 'mdi:chevron-up', 'CHANNEL_UP', 'Canal +', true),
+                  // A3: acoes dos atalhos. As doze teclas acima seguem intactas.
+                  ...atalhosApps,
                 ],
                 styles: estilosVision,
               },

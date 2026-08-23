@@ -123,6 +123,30 @@ Este requisito é obrigatório e foi reforçado pelo usuário em 2026-08-22 apó
 - Round2 final: **Everex-ready, ainda não validado fisicamente** — tablet sem veil; phone usando a autoridade visual canônica do Liquid Glass, sem bridge ativo.
 - Lavabo temperatura/umidade: ainda requer confirmação no HA real.
 
+## Rodada de ajustes gerais — 2026-08-23 (LOCAL + Everex, remoto intacto)
+
+- Branch local de trabalho: `local/ajustes-gerais-20260823`, a partir de
+  `fix/home-mobile-v4-clean` (SHA `08066375`).
+- **GitHub remoto NAO foi alterado nesta rodada**: sem push, PR, merge ou
+  escrita via API. A candidata vive em LOCAL + Everex ate a validacao fisica.
+- Bundle ativo: **`bruno-dashboard.DB1sivd6.js`**. Anterior a rodada:
+  `bruno-dashboard.DJf5VDPn.js`. Por bloco: 1 `CKib2awp`, 2 `WRycymXp`,
+  3 `DB1sivd6`.
+- `manifest.json` e `config/configuration.yaml` apontam para `DB1sivd6`.
+- Pacote Everex: `config/configuration.yaml` + todo o diretorio
+  `config/www/dashboard/` + os EXTRAS declarados em `dashboard-src/scripts/deploy.mjs`.
+- Validacao automatica: YAML (nenhum erro), detector de crase nos fontes
+  alterados, TypeScript, ESLint, 277 testes Vitest, Vite build, manifesto e
+  compressao — todos aprovados.
+- Itens: A1..A5, B1..B4, B6..B8, C1..C3 implementados; **B5 nao alterado**
+  por ausencia de margem segura. Detalhe em `docs/39-ajustes-gerais-20260823.md`.
+- `materialize:remote` do `npm run build` exige Python, ausente nesta maquina;
+  o gerador ja esta materializado (marcador `round6` presente na fonte) e sai
+  sem fazer nada, entao as demais etapas do gate foram executadas diretamente.
+- ACHADO FORA DO ESCOPO, nao corrigido: `dashboard-src/scripts/deploy.mjs`
+  falha com EPERM ao copiar `config/www/dashboard/chunks` (trata diretorio
+  como arquivo).
+
 ## Ordem obrigatória de continuidade
 
 1. `docs/CHECKPOINT-ATUAL.md`

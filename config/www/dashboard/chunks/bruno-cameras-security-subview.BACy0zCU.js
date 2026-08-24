@@ -1,4 +1,4 @@
-const p = "bruno-cameras-security-subview", c = {
+const p = "bruno-cameras-security-subview", d = {
   title: "Residence Security",
   section: "Cameras",
   active_entity: "input_select.bento_active_camera",
@@ -9,16 +9,92 @@ const p = "bruno-cameras-security-subview", c = {
   // ANTERIOR (rollback ONVIF geral): cameras usavam os oito IDs Tuya *_2.
   // O inventario completo permanece no rollback desta rodada.
   cameras: [
-    { entity: "camera.sl_camera_profile_1", name: "PRINCIPAL: SALA", short_name: "SL - Sala", display_name: "Sala", group: "social" },
-    { entity: "camera.vr_camera_profile_1", name: "VR - Varanda", short_name: "VR - Varanda", display_name: "Varanda", group: "social" },
-    { entity: "camera.cz_camera_profile_1", name: "CZ - Cozinha", short_name: "CZ - Cozinha", display_name: "Cozinha", group: "social" },
-    { entity: "camera.as_camera_profile_1", name: "AS - Area Servico", short_name: "AS - Area Servico", display_name: "Área de Serviço", group: "social" },
-    { entity: "camera.of_camera_profile_1", name: "OF - Office", short_name: "OF - Office", display_name: "Office", group: "intimate" },
-    { entity: "camera.qc_camera_profile_1", name: "QC - Quarto Casal", short_name: "QC - Quarto Casal", display_name: "Quarto Casal", group: "intimate" },
-    { entity: "camera.qmi_camera_profile_1", name: "QMI - Quarto Miguel", short_name: "QMI - Quarto Miguel", display_name: "Quarto Filho", group: "intimate" },
-    { entity: "camera.qma_camera_profile_1", name: "QMA - Quarto Marina", short_name: "QMA - Quarto Marina", display_name: "Quarto Filha", group: "intimate" }
+    {
+      entity: "camera.sl_camera_profile_1",
+      name: "PRINCIPAL: SALA",
+      short_name: "SL - Sala",
+      display_name: "Sala",
+      group: "social",
+      motion_entity: "bruno_tuya_motion.sl_camera_2",
+      controls: [
+        { key: "sound", label: "Som", icon: "mdi:microphone-outline", entity: "switch.sl_camera_deteccao_de_som" },
+        { key: "motion", label: "Movimento", icon: "mdi:run-fast", entity: "switch.sl_camera_alarme_de_movimento" },
+        { key: "privacy", label: "Privacidade", icon: "mdi:eye-off-outline", entity: "switch.sl_camera_modo_de_privacidade" }
+      ]
+    },
+    {
+      entity: "camera.vr_camera_profile_1",
+      name: "VR - Varanda",
+      short_name: "VR - Varanda",
+      display_name: "Varanda",
+      group: "social",
+      motion_entity: "bruno_tuya_motion.vr_camera_2",
+      controls: [
+        { key: "sound", label: "Som", icon: "mdi:microphone-outline", entity: "switch.vr_camera_deteccao_de_som" },
+        { key: "motion", label: "Movimento", icon: "mdi:run-fast", entity: "switch.vr_camera_alarme_de_movimento" },
+        { key: "privacy", label: "Privacidade", icon: "mdi:eye-off-outline", entity: "switch.vr_camera_modo_de_privacidade" }
+      ]
+    },
+    {
+      entity: "camera.cz_camera_profile_1",
+      name: "CZ - Cozinha",
+      short_name: "CZ - Cozinha",
+      display_name: "Cozinha",
+      group: "social",
+      motion_entity: "bruno_tuya_motion.cz_camera_2",
+      controls: [
+        { key: "sound", label: "Som", icon: "mdi:microphone-outline", entity: "switch.cz_camera_deteccao_de_som" },
+        { key: "motion", label: "Movimento", icon: "mdi:run-fast", entity: "switch.cz_camera_alarme_de_movimento" },
+        { key: "privacy", label: "Privacidade", icon: "mdi:eye-off-outline", entity: "switch.cz_camera_modo_de_privacidade" }
+      ]
+    },
+    {
+      entity: "camera.as_camera_profile_1",
+      name: "AS - Area Servico",
+      short_name: "AS - Area Servico",
+      display_name: "Área de Serviço",
+      group: "social",
+      motion_entity: "bruno_tuya_motion.as_camera_2"
+    },
+    {
+      entity: "camera.of_camera_profile_1",
+      name: "OF - Office",
+      short_name: "OF - Office",
+      display_name: "Office",
+      group: "intimate",
+      motion_entity: "bruno_tuya_motion.of_camera_2",
+      controls: [
+        { key: "sound", label: "Som", icon: "mdi:microphone-outline", entity: "switch.of_camera_deteccao_de_som" },
+        { key: "motion", label: "Movimento", icon: "mdi:run-fast", entity: "switch.of_camera_alarme_de_movimento" },
+        { key: "privacy", label: "Privacidade", icon: "mdi:eye-off-outline", entity: "switch.of_camera_modo_de_privacidade" }
+      ]
+    },
+    {
+      entity: "camera.qc_camera_profile_1",
+      name: "QC - Quarto Casal",
+      short_name: "QC - Quarto Casal",
+      display_name: "Quarto Casal",
+      group: "intimate",
+      motion_entity: "bruno_tuya_motion.camera_quarto_casal_2"
+    },
+    {
+      entity: "camera.qmi_camera_profile_1",
+      name: "QMI - Quarto Miguel",
+      short_name: "QMI - Quarto Miguel",
+      display_name: "Quarto Filho",
+      group: "intimate",
+      motion_entity: "bruno_tuya_motion.qmi_camera_2"
+    },
+    {
+      entity: "camera.qma_camera_profile_1",
+      name: "QMA - Quarto Marina",
+      short_name: "QMA - Quarto Marina",
+      display_name: "Quarto Filha",
+      group: "intimate",
+      motion_entity: "bruno_tuya_motion.qma_camera_2"
+    }
   ]
-}, h = ["streaming", "recording", "idle", "on"], g = ["unavailable", "unknown", ""], u = /* @__PURE__ */ new Set([
+}, g = ["streaming", "recording", "idle", "on"], m = ["unavailable", "unknown", ""], u = /* @__PURE__ */ new Set([
   "camera.sl_camera_profile_1",
   "camera.vr_camera_profile_1",
   "camera.cz_camera_profile_1",
@@ -28,13 +104,13 @@ const p = "bruno-cameras-security-subview", c = {
   "camera.qc_camera_profile_1",
   "camera.qmi_camera_profile_1",
   "camera.qma_camera_profile_1"
-]), b = 3e4;
-class s extends HTMLElement {
+]), b = 3e4, _ = 9e4;
+class o extends HTMLElement {
   static getStubConfig() {
     return {};
   }
   constructor() {
-    super(), this._refreshSeed = Date.now(), this._lastCameraImages = {}, this._lastClock = s._clock(), this._boundClick = (e) => this._handleClick(e), this._boundKeydown = (e) => this._handleKeydown(e), this._boundClock = () => this._updateClock(), this._liveEl = null, this._liveEntity = "", this._liveReady = "", this._liveTimer = null, this._liveState = "idle", this._liveBlockedEntity = "", this._liveLoadToken = 0, this._boundDialogClosed = (e) => this._handleDialogClosed(e);
+    super(), this._refreshSeed = Date.now(), this._lastCameraImages = {}, this._lastClock = o._clock(), this._boundClick = (e) => this._handleClick(e), this._boundKeydown = (e) => this._handleKeydown(e), this._boundClock = () => this._updateClock(), this._liveEl = null, this._liveEntity = "", this._liveReady = "", this._liveTimer = null, this._liveState = "idle", this._liveBlockedEntity = "", this._liveLoadToken = 0, this._boundDialogClosed = (e) => this._handleDialogClosed(e);
   }
   connectedCallback() {
     globalThis.BrunoLiquidGlass?.apply?.(), this._liveState = "idle", this._liveBlockedEntity = "", this._listeningDialogClosed || (globalThis.addEventListener?.("dialog-closed", this._boundDialogClosed, !0), this._listeningDialogClosed = !0), this._startRefreshTimer(), this._startClockTimer(), this._render();
@@ -62,64 +138,99 @@ class s extends HTMLElement {
     this._hass = e;
     const a = this._renderSignature();
     if (this.shadowRoot && this._renderedSignature === a) {
-      this._startRefreshTimer();
+      this._updateDesktopInformational(), this._syncCameraControls(), this._startRefreshTimer();
       return;
     }
     this._render(), this._startRefreshTimer();
   }
   _renderSignature() {
-    return !this._hass || !this._config ? "pending" : s._signatureFromModel(this._model());
+    return !this._hass || !this._config ? "pending" : o._signatureFromModel(this._model());
   }
   static _signatureFromModel(e) {
     if (!e) return "pending";
-    const a = (e.cameras || []).map((i) => `${i.entity}:${i.online ? 1 : 0}:${i.unavailable ? 1 : 0}:${i.image ? 1 : 0}:${i.status}`).join("|");
+    const a = (e.cameras || []).map((t) => `${t.entity}:${t.online ? 1 : 0}:${t.unavailable ? 1 : 0}:${t.image ? 1 : 0}:${t.status}`).join("|");
     return `${e.activeId}#${a}`;
   }
   _normalizeConfig(e = {}) {
     return {
-      ...c,
+      ...d,
       ...e,
-      refresh_interval: Number(e.refresh_interval) > 0 ? Number(e.refresh_interval) : c.refresh_interval,
-      cameras: Array.isArray(e.cameras) && e.cameras.length ? e.cameras : c.cameras
+      refresh_interval: Number(e.refresh_interval) > 0 ? Number(e.refresh_interval) : d.refresh_interval,
+      cameras: Array.isArray(e.cameras) && e.cameras.length ? e.cameras : d.cameras
     };
   }
   _state(e) {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _cameraState(e) {
-    const a = this._state(e.entity), i = a?.state || "", t = !a || g.includes(i), r = !t && h.includes(i), n = a?.attributes?.entity_picture || "";
-    n && (this._lastCameraImages[e.entity] = n);
-    const o = n || this._lastCameraImages[e.entity] || "";
+    const a = this._state(e.entity), t = a?.state || "", i = !a || m.includes(t), r = !i && g.includes(t), s = a?.attributes?.entity_picture || "";
+    s && (this._lastCameraImages[e.entity] = s);
+    const n = s || this._lastCameraImages[e.entity] || "";
     return {
       ...e,
       entityObj: a,
-      state: i,
-      image: o,
-      imageUrl: s._withCacheBust(o, this._refreshSeed),
-      unavailable: t,
+      state: t,
+      image: n,
+      imageUrl: o._withCacheBust(n, this._refreshSeed),
+      unavailable: i,
       online: r,
-      status: s._statusLabel(i, t)
+      status: o._statusLabel(t, i)
     };
   }
   _cameraGroup(e) {
     return e?.group === "social" || e?.group === "intimate" ? e.group : u.has(e?.entity) ? "social" : (f.has(e?.entity), "intimate");
   }
+  _motionEvent(e) {
+    if (!e?.motion_entity) return null;
+    const a = this._state(e.motion_entity);
+    if (!a || a.attributes?.event_type !== "ipc_motion") return null;
+    const t = String(a.attributes?.detected_at || ""), i = Date.parse(t);
+    return Number.isFinite(i) ? {
+      entity: e.entity,
+      name: o._displayName(e, !0, !0),
+      detectedAt: t,
+      timestamp: i
+    } : null;
+  }
+  _recentMotionEvents(e) {
+    return (e || []).map((a) => this._motionEvent(a)).filter(Boolean).sort((a, t) => t.timestamp - a.timestamp).slice(0, 3);
+  }
+  _motionCount(e) {
+    const a = Date.now();
+    return (e || []).filter((t) => {
+      const i = this._motionEvent(t);
+      return i && a - i.timestamp >= 0 && a - i.timestamp <= _;
+    }).length;
+  }
+  _controlState(e, a) {
+    const t = (e?.controls || []).find((s) => s?.key === a);
+    if (!t?.entity) return null;
+    const i = this._state(t.entity), r = !i || m.includes(String(i.state || "").toLowerCase());
+    return {
+      ...t,
+      active: !r && String(i?.state || "").toLowerCase() === "on",
+      unavailable: r
+    };
+  }
   _isMobileLayout() {
     return !!globalThis.matchMedia?.("(max-width: 800px)")?.matches;
   }
   _model() {
-    const e = this._config || c, a = e.cameras.map((l) => this._cameraState(l)), i = this._state(e.active_entity)?.state, t = a[0]?.entity || "", r = this._localActiveCamera || (a.some((l) => l.entity === i) ? i : t), n = a.find((l) => l.entity === r) || a[0], o = a.filter((l) => l.entity !== n?.entity);
+    const e = this._config || d, a = e.cameras.map((l) => this._cameraState(l)), t = this._state(e.active_entity)?.state, i = a[0]?.entity || "", r = this._localActiveCamera || (a.some((l) => l.entity === t) ? t : i), s = a.find((l) => l.entity === r) || a[0], n = a.filter((l) => l.entity !== s?.entity);
     return {
-      activeCamera: n,
+      activeCamera: s,
       activeId: r,
       // Mantidos para o layout mobile legado, que nao muda nesta rodada.
-      sideCameras: o.slice(0, 3),
-      bottomCameras: o.slice(3),
+      sideCameras: n.slice(0, 3),
+      bottomCameras: n.slice(3),
       // Desktop/tablet paisagem: os 7 secundarios sao sempre recalculados por setor.
-      socialCameras: o.filter((l) => this._cameraGroup(l) === "social"),
-      intimateCameras: o.filter((l) => this._cameraGroup(l) === "intimate"),
+      socialCameras: n.filter((l) => this._cameraGroup(l) === "social"),
+      intimateCameras: n.filter((l) => this._cameraGroup(l) === "intimate"),
       cameras: a,
       onlineCount: a.filter((l) => l.online).length,
+      motionCount: this._motionCount(a),
+      recordingCount: a.filter((l) => l.state === "recording").length,
+      recentMotionEvents: this._recentMotionEvents(a),
       totalCount: a.length
     };
   }
@@ -149,9 +260,9 @@ class s extends HTMLElement {
     const a = this._model();
     if (e === a.activeId) return;
     this._liveLoadToken++, this._liveState = "idle", this._liveBlockedEntity = "", globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._swapActive(e) || (this._localActiveCamera = e, this._refreshSeed = Date.now(), this._render());
-    const t = this._config?.active_entity;
-    t && this._hass?.states?.[t] && this._callService("input_select", "select_option", {
-      entity_id: t,
+    const i = this._config?.active_entity;
+    i && this._hass?.states?.[i] && this._callService("input_select", "select_option", {
+      entity_id: i,
       option: e
     });
   }
@@ -162,20 +273,20 @@ class s extends HTMLElement {
   _swapActive(e) {
     const a = this.shadowRoot;
     if (!a) return !1;
-    const i = this._model(), t = i.activeCamera;
-    if (!t || e === t.entity) return !1;
-    const r = a.querySelector(`.camera-tile[data-camera-id="${e}"]`), n = a.querySelector(".main-feed .image-stage");
-    if (!r || !n) return !1;
-    const o = i.cameras.find((m) => m.entity === e);
-    if (!o) return !1;
-    this._localActiveCamera = e, this._refreshSeed = Date.now(), this._updateStage(n, o), this._mountLiveFeed(o.entity), this._updateSlotPill(a.querySelector(".main-feed [data-feed-pill]"), o, !1);
+    const t = this._model(), i = t.activeCamera;
+    if (!i || e === i.entity) return !1;
+    const r = a.querySelector(`.camera-tile[data-camera-id="${e}"]`), s = a.querySelector(".main-feed .image-stage");
+    if (!r || !s) return !1;
+    const n = t.cameras.find((h) => h.entity === e);
+    if (!n) return !1;
+    this._localActiveCamera = e, this._refreshSeed = Date.now(), this._updateStage(s, n), this._mountLiveFeed(n.entity), this._updateSlotPill(a.querySelector(".main-feed [data-feed-pill]"), n, !1);
     const l = a.querySelector('.main-feed [data-action="more-info"]');
-    l && (l.dataset.cameraId = o.entity), this._updateStage(r.querySelector(".image-stage"), t), this._updateSlotPill(r.querySelector(".tile-pill"), t, !0), r.dataset.cameraId = t.entity;
-    const d = !!a.querySelector(".security-subview.is-desktop");
+    l && (l.dataset.cameraId = n.entity), this._updateStage(r.querySelector(".image-stage"), i), this._updateSlotPill(r.querySelector(".tile-pill"), i, !0), r.dataset.cameraId = i.entity;
+    const c = !!a.querySelector(".security-subview.is-desktop");
     return r.setAttribute(
       "aria-label",
-      s._displayName(t, !0, d)
-    ), this._syncDesktopGroups(), this._renderedSignature = s._signatureFromModel(this._model()), !0;
+      o._displayName(i, !0, c)
+    ), this._syncDesktopGroups(), this._renderedSignature = o._signatureFromModel(this._model()), !0;
   }
   _syncDesktopGroups() {
     const e = this.shadowRoot;
@@ -184,13 +295,54 @@ class s extends HTMLElement {
     [
       ["social", a.socialCameras],
       ["intimate", a.intimateCameras]
-    ].forEach(([t, r]) => {
-      const n = e.querySelector(`[data-camera-group-grid="${t}"]`), o = e.querySelector(`[data-camera-group-count="${t}"]`);
-      o && (o.textContent = `${r.length} câmeras`), n && r.forEach((l) => {
-        const d = e.querySelector(`.camera-tile[data-camera-id="${l.entity}"]`);
-        d && n.appendChild(d);
+    ].forEach(([i, r]) => {
+      const s = e.querySelector(`[data-camera-group-grid="${i}"]`), n = e.querySelector(`[data-camera-group-count="${i}"]`);
+      n && (n.textContent = `${r.length} câmeras`), s && r.forEach((l) => {
+        const c = e.querySelector(`.camera-tile[data-camera-id="${l.entity}"]`);
+        c && s.appendChild(c);
       });
+    }), this._replaceCameraControls(a.activeCamera), this._updateDesktopInformational(a);
+  }
+  _replaceCameraControls(e) {
+    const a = this.shadowRoot?.querySelector("[data-camera-controls]");
+    a && (a.innerHTML = this._cameraControls(e));
+  }
+  _cameraControls(e) {
+    return e ? ["sound", "motion", "privacy"].map((a) => this._controlState(e, a)).filter(Boolean).map((a) => {
+      const t = a.active ? " is-on" : "", i = a.unavailable ? " is-unavailable" : "";
+      return `
+          <button
+            class="camera-control-btn${t}${i}"
+            type="button"
+            data-action="toggle-camera-control"
+            data-control-entity="${o._escapeAttr(a.entity)}"
+            aria-label="${o._escapeAttr(a.label || a.key)}"
+            aria-pressed="${a.active ? "true" : "false"}"
+            ${a.unavailable ? "disabled" : ""}
+          >
+            <bruno-icon icon="${o._escapeAttr(a.icon || "mdi:toggle-switch-outline")}"></bruno-icon>
+          </button>
+        `;
+    }).join("") : "";
+  }
+  _syncCameraControls() {
+    const e = this.shadowRoot;
+    e && e.querySelectorAll("[data-control-entity]").forEach((a) => {
+      const t = this._state(a.dataset.controlEntity), i = !t || m.includes(String(t.state || "").toLowerCase()), r = !i && String(t?.state || "").toLowerCase() === "on";
+      a.classList.toggle("is-on", r), a.classList.toggle("is-unavailable", i), a.toggleAttribute("disabled", i), a.setAttribute("aria-pressed", r ? "true" : "false");
     });
+  }
+  _updateDesktopInformational(e = this._model()) {
+    const a = this.shadowRoot?.querySelector("[data-camera-insights]");
+    if (!a) return;
+    const t = o._insightsInner(e), i = [
+      e.onlineCount,
+      e.motionCount,
+      e.recordingCount,
+      ...(e.recentMotionEvents || []).map((r) => `${r.entity}:${r.detectedAt}`),
+      Math.floor(Date.now() / 15e3)
+    ].join("|");
+    a.dataset.signature !== i && (a.dataset.signature = i, a.innerHTML = t);
   }
   // NOVO (2b, corrigido): atualiza a imagem de um slot (principal ou tile) na
   // troca. Le SEMPRE o entity_picture mais recente do hass (token novo — o token
@@ -203,15 +355,15 @@ class s extends HTMLElement {
   // permanecia -> "o nome muda mas a imagem nao".
   _updateStage(e, a) {
     if (!e) return;
-    const i = this._liveImageBase(a), t = !!i;
-    e.classList.toggle("has-image", t);
+    const t = this._liveImageBase(a), i = !!t;
+    e.classList.toggle("has-image", i);
     let r = e.querySelector("img.camera-image");
-    if (!t) {
+    if (!i) {
       r && r.classList.add("is-hidden");
       return;
     }
-    const n = s._withCacheBust(i, this._refreshSeed);
-    r || (r = document.createElement("img"), r.className = "camera-image is-hidden", r.alt = "", e.insertBefore(r, e.firstChild), this._bindImageElement(r)), r.dataset.cameraSrcBase = i, r.dataset.cameraEntity = a.entity, r.src = n;
+    const s = o._withCacheBust(t, this._refreshSeed);
+    r || (r = document.createElement("img"), r.className = "camera-image is-hidden", r.alt = "", e.insertBefore(r, e.firstChild), this._bindImageElement(r)), r.dataset.cameraSrcBase = t, r.dataset.cameraEntity = a.entity, r.src = s;
   }
   // NOVO: retorna o entity_picture VIVO da camera (token atual do hass). Se o
   // hass ainda nao tiver, cai para o ultimo conhecido / o que veio no modelo.
@@ -221,10 +373,10 @@ class s extends HTMLElement {
     return a && (this._lastCameraImages[e.entity] = a), a || e.image || this._lastCameraImages[e.entity] || "";
   }
   // NOVO (2b): reescreve so o conteudo da pilula (sem imagens) -> nao pisca.
-  _updateSlotPill(e, a, i) {
+  _updateSlotPill(e, a, t) {
     if (!e) return;
-    const t = !!e.closest?.(".security-subview.is-desktop");
-    e.innerHTML = s._pillInner(a, i, t);
+    const i = !!e.closest?.(".security-subview.is-desktop");
+    e.innerHTML = o._pillInner(a, t, i);
   }
   _openMoreInfo(e) {
     e && (globalThis.BrunoLiquidGlass?.feedback?.("tap"), this.dispatchEvent(new CustomEvent("hass-more-info", {
@@ -255,11 +407,11 @@ class s extends HTMLElement {
   _resolveNavigationPath(e) {
     if (!e) return "/";
     if (e.startsWith("/")) return e;
-    const i = (globalThis.location?.pathname || "/lovelace/0").split("/").filter(Boolean);
-    return `/${i.length ? i[0] : "lovelace"}/${e}`;
+    const t = (globalThis.location?.pathname || "/lovelace/0").split("/").filter(Boolean);
+    return `/${t.length ? t[0] : "lovelace"}/${e}`;
   }
-  _callService(e, a, i = {}) {
-    !this._hass || !e || !a || this._hass.callService(e, a, i);
+  _callService(e, a, t = {}) {
+    !this._hass || !e || !a || this._hass.callService(e, a, t);
   }
   _startClockTimer() {
     this._clockTimer || (this._clockTimer = globalThis.setInterval(this._boundClock, 1e3));
@@ -268,12 +420,12 @@ class s extends HTMLElement {
     this._clockTimer && (globalThis.clearInterval(this._clockTimer), this._clockTimer = null);
   }
   _updateClock() {
-    const e = s._clock();
-    e !== this._lastClock && (this._lastClock = e, this.shadowRoot?.querySelector("[data-clock]")?.replaceChildren(document.createTextNode(e)), this.shadowRoot?.querySelector("[data-date]")?.replaceChildren(document.createTextNode(s._date())));
+    const e = o._clock();
+    e !== this._lastClock && (this._lastClock = e, this.shadowRoot?.querySelector("[data-clock]")?.replaceChildren(document.createTextNode(e)), this.shadowRoot?.querySelector("[data-date]")?.replaceChildren(document.createTextNode(o._date()))), this._updateDesktopInformational();
   }
   _startRefreshTimer() {
     if (this._refreshTimer || !this.isConnected) return;
-    const e = Math.max(3e3, Number(this._config?.refresh_interval) || c.refresh_interval);
+    const e = Math.max(3e3, Number(this._config?.refresh_interval) || d.refresh_interval);
     this._sincronizarMotorCameras(), !this._motorCameras && (this._refreshTimer = globalThis.setInterval(() => this._refreshCameraImagesLegado(), e));
   }
   _stopRefreshTimer() {
@@ -321,19 +473,19 @@ class s extends HTMLElement {
     if (!this.shadowRoot || !this._hass || !globalThis.Image) return;
     const e = Date.now();
     this._refreshSeed = e, this.shadowRoot.querySelectorAll("img[data-camera-src-base]").forEach((a) => {
-      const i = a.dataset.cameraEntity, t = i ? this._hass.states?.[i]?.attributes?.entity_picture : "", r = t || a.dataset.cameraSrcBase;
+      const t = a.dataset.cameraEntity, i = t ? this._hass.states?.[t]?.attributes?.entity_picture : "", r = i || a.dataset.cameraSrcBase;
       if (!r) return;
-      t && t !== a.dataset.cameraSrcBase && (a.dataset.cameraSrcBase = t);
-      const n = s._withCacheBust(r, e), o = new globalThis.Image();
-      o.onload = () => {
-        if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(o)) {
-          globalThis.BrunoCameraLive?.marcar?.(i, "snapshot verde rejeitado", 0, !1);
+      i && i !== a.dataset.cameraSrcBase && (a.dataset.cameraSrcBase = i);
+      const s = o._withCacheBust(r, e), n = new globalThis.Image();
+      n.onload = () => {
+        if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(n)) {
+          globalThis.BrunoCameraLive?.marcar?.(t, "snapshot verde rejeitado", 0, !1);
           return;
         }
-        a.src = n, a.dataset.hasLoaded = "true", a.classList.remove("is-hidden");
-      }, o.onerror = () => {
-        o.onload = null, o.onerror = null;
-      }, o.src = n;
+        a.src = s, a.dataset.hasLoaded = "true", a.classList.remove("is-hidden");
+      }, n.onerror = () => {
+        n.onload = null, n.onerror = null;
+      }, n.src = s;
     });
   }
   /** Cria o motor uma vez. Devolve false quando o bundle nao esta disponivel. */
@@ -348,41 +500,48 @@ class s extends HTMLElement {
   _sincronizarMotorCameras() {
     if (!this._garantirMotorCameras() || !this.shadowRoot || !this._hass) return;
     const e = [], a = /* @__PURE__ */ new Set();
-    this.shadowRoot.querySelectorAll("img[data-camera-entity]").forEach((i) => {
-      const t = i.dataset.cameraEntity;
-      if (!t || a.has(t) || this._liveReady === t) return;
-      const r = this._liveImageBase({ entity: t }) || i.dataset.cameraSrcBase;
-      r && (a.add(t), e.push({
-        entityId: t,
+    this.shadowRoot.querySelectorAll("img[data-camera-entity]").forEach((t) => {
+      const i = t.dataset.cameraEntity;
+      if (!i || a.has(i) || this._liveReady === i) return;
+      const r = this._liveImageBase({ entity: i }) || t.dataset.cameraSrcBase;
+      r && (a.add(i), e.push({
+        entityId: i,
         base: r,
-        prioridade: i.closest(".image-stage") && !i.closest(".camera-tile") ? "principal" : "secundaria"
+        prioridade: t.closest(".image-stage") && !t.closest(".camera-tile") ? "principal" : "secundaria"
       }));
     }), this._motorCameras.definirAlvos(e), this._motorCameras.iniciar();
   }
   /** Poe na tela o quadro que o motor baixou. */
   _aplicarQuadro(e, a) {
-    const i = this.shadowRoot?.querySelector(`img[data-camera-entity="${e}"]`);
-    i && (i.src = a, i.dataset.hasLoaded = "true", i.classList.remove("is-hidden"));
+    const t = this.shadowRoot?.querySelector(`img[data-camera-entity="${e}"]`);
+    t && (t.src = a, t.dataset.hasLoaded = "true", t.classList.remove("is-hidden"));
   }
   _handleClick(e) {
     const a = e.target?.closest?.("[data-action]");
     if (!a) return;
-    const i = a.dataset.action, t = a.dataset.cameraId;
-    if (i === "select-camera") {
-      e.preventDefault(), this._selectCamera(t);
+    const t = a.dataset.action, i = a.dataset.cameraId;
+    if (t === "select-camera") {
+      e.preventDefault(), this._selectCamera(i);
       return;
     }
-    if (i === "more-info") {
+    if (t === "toggle-camera-control") {
       e.preventDefault();
-      const r = t || this._model().activeId;
+      const r = a.dataset.controlEntity;
+      if (!r || !this._hass?.states?.[r]) return;
+      globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._callService("homeassistant", "toggle", { entity_id: r });
+      return;
+    }
+    if (t === "more-info") {
+      e.preventDefault();
+      const r = i || this._model().activeId;
       this._liveLoadToken++, this._liveState = "handed-off", globalThis.BrunoCameraLive?.marcar?.(r, "entregue ao more-info"), this._stopLiveFeed(), this._sincronizarMotorCameras(), this._refreshCameraImages(), this._openMoreInfo(r);
       return;
     }
-    if (i === "refresh") {
+    if (t === "refresh") {
       e.preventDefault(), globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._refreshSeed = Date.now(), this._render();
       return;
     }
-    i === "navigate-home" && (e.preventDefault(), this._navigateHome());
+    t === "navigate-home" && (e.preventDefault(), this._navigateHome());
   }
   _handleKeydown(e) {
     if (e.key !== "Enter" && e.key !== " ") return;
@@ -405,8 +564,8 @@ class s extends HTMLElement {
     this._config || (this._config = this._normalizeConfig()), this.shadowRoot || this.attachShadow({ mode: "open" }), globalThis.BrunoLiquidGlass?.apply?.();
     try {
       const e = this._model(), a = e.activeCamera;
-      this._lastClock = s._clock();
-      const t = this._isMobileLayout() ? `
+      this._lastClock = o._clock();
+      const i = this._isMobileLayout() ? `
           <main class="security-subview">
             <header class="security-topbar">
               <button class="icon-button" type="button" data-action="navigate-home" aria-label="Voltar para o painel principal">
@@ -420,22 +579,22 @@ class s extends HTMLElement {
               </div>
 
               <div class="clock-block" aria-label="Horario atual">
-                <span data-clock>${s._escape(this._lastClock)}</span>
-                <small data-date>${s._escape(s._date())}</small>
+                <span data-clock>${o._escape(this._lastClock)}</span>
+                <small data-date>${o._escape(o._date())}</small>
               </div>
             </header>
 
             <section class="security-grid">
               <section class="main-feed">
-                ${s._mainFeed(a)}
+                ${o._mainFeed(a)}
               </section>
 
               <aside class="side-rail" aria-label="Cameras principais">
-                ${e.sideCameras.map((r) => s._tile(r, "side")).join("")}
+                ${e.sideCameras.map((r) => o._tile(r, "side")).join("")}
               </aside>
 
               <section class="bottom-strip" aria-label="Outras cameras">
-                ${e.bottomCameras.map((r) => s._tile(r, "bottom")).join("")}
+                ${e.bottomCameras.map((r) => o._tile(r, "bottom")).join("")}
               </section>
             </section>
 
@@ -460,18 +619,23 @@ class s extends HTMLElement {
             </header>
 
             <section class="camera-overview-grid">
-              <section class="main-feed" aria-label="Câmera principal">
-                ${s._mainFeed(a, !0)}
+              <section class="camera-primary-column">
+                <section class="main-feed" aria-label="Câmera principal">
+                  ${o._mainFeed(a, !0, this._cameraControls(a))}
+                </section>
+                <section class="camera-insights" data-camera-insights aria-label="Resumo de câmeras">
+                  ${o._insightsInner(e)}
+                </section>
               </section>
 
               <aside class="camera-groups" aria-label="Câmeras por área">
-                ${s._groupSection("social", "Área social", e.socialCameras)}
-                ${s._groupSection("intimate", "Área íntima", e.intimateCameras)}
+                ${o._groupSection("social", "Área social", e.socialCameras)}
+                ${o._groupSection("intimate", "Área íntima", e.intimateCameras)}
               </aside>
             </section>
           </main>
         `;
-      this.shadowRoot.innerHTML = `<style>${this._styles()}</style>${t}`, this.shadowRoot.removeEventListener("click", this._boundClick), this.shadowRoot.removeEventListener("keydown", this._boundKeydown), this.shadowRoot.addEventListener("click", this._boundClick), this.shadowRoot.addEventListener("keydown", this._boundKeydown), this._bindImages(), this._mountLiveFeed(e.activeId), this._renderedSignature = s._signatureFromModel(e);
+      this.shadowRoot.innerHTML = `<style>${this._styles()}</style>${i}`, this.shadowRoot.removeEventListener("click", this._boundClick), this.shadowRoot.removeEventListener("keydown", this._boundKeydown), this.shadowRoot.addEventListener("click", this._boundClick), this.shadowRoot.addEventListener("keydown", this._boundKeydown), this._bindImages(), this._syncCameraControls(), this._updateDesktopInformational(e), this._mountLiveFeed(e.activeId), this._renderedSignature = o._signatureFromModel(e);
     } catch (e) {
       this._renderError(e);
     }
@@ -499,33 +663,33 @@ class s extends HTMLElement {
   // ATIVO: reinsere WebRTC direto quando o render recria o DOM. Sem o player
   // registrado, mantem somente o snapshot e nao inicia fallback HLS.
   _mountLiveFeed(e) {
-    const a = this.shadowRoot?.querySelector(".main-feed [data-live-mount]"), i = this._model().cameras.find((t) => t.entity === e);
-    if (this._liveState === "fallback" && this._liveBlockedEntity !== e && (this._liveState = "idle", this._liveBlockedEntity = ""), !this.isConnected || !a || !e || i?.unavailable || ["loading-player", "handed-off", "resuming", "fallback"].includes(this._liveState)) {
+    const a = this.shadowRoot?.querySelector(".main-feed [data-live-mount]"), t = this._model().cameras.find((i) => i.entity === e);
+    if (this._liveState === "fallback" && this._liveBlockedEntity !== e && (this._liveState = "idle", this._liveBlockedEntity = ""), !this.isConnected || !a || !e || t?.unavailable || ["loading-player", "handed-off", "resuming", "fallback"].includes(this._liveState)) {
       this._stopLiveFeed();
       return;
     }
     if (!this._liveEl || this._liveEntity !== e) {
       if (this._stopLiveFeed(), !globalThis.customElements?.get("ha-web-rtc-player")) {
         this._liveState = "loading-player";
-        const r = ++this._liveLoadToken, n = globalThis.BrunoCameraLive?.garantirPlayer;
-        if (typeof n != "function") {
+        const r = ++this._liveLoadToken, s = globalThis.BrunoCameraLive?.garantirPlayer;
+        if (typeof s != "function") {
           this._liveState = "fallback", this._liveBlockedEntity = e;
           return;
         }
-        Promise.resolve(n(e, this._hass)).then((o) => {
-          !this.isConnected || r !== this._liveLoadToken || (this._liveState = o ? "idle" : "fallback", this._liveBlockedEntity = o ? "" : e, this._mountLiveFeed(this._model().activeId));
+        Promise.resolve(s(e, this._hass)).then((n) => {
+          !this.isConnected || r !== this._liveLoadToken || (this._liveState = n ? "idle" : "fallback", this._liveBlockedEntity = n ? "" : e, this._mountLiveFeed(this._model().activeId));
         });
         return;
       }
-      const t = globalThis.BrunoCameraLive?.criarPlayer?.() || document.createElement("ha-web-rtc-player");
-      this._liveState = "negotiating", t.classList.add("camera-live-el"), t.setAttribute("muted", ""), t.setAttribute("playsinline", ""), t.setAttribute("autoplay", "");
+      const i = globalThis.BrunoCameraLive?.criarPlayer?.() || document.createElement("ha-web-rtc-player");
+      this._liveState = "negotiating", i.classList.add("camera-live-el"), i.setAttribute("muted", ""), i.setAttribute("playsinline", ""), i.setAttribute("autoplay", "");
       try {
-        t.fitMode = "cover";
+        i.fitMode = "cover";
       } catch {
       }
       this._liveLoadHandler = () => this._markLiveReady(), this._liveStreamsHandler = (r) => {
         r?.detail?.hasVideo === !1 && this._failLiveFeed(e, "sem video");
-      }, t.addEventListener("load", this._liveLoadHandler), t.addEventListener("streams", this._liveStreamsHandler), this._liveEl = t, this._liveEntity = e, a.appendChild(t), this._startLivePlayerAfterContext(t, e);
+      }, i.addEventListener("load", this._liveLoadHandler), i.addEventListener("streams", this._liveStreamsHandler), this._liveEl = i, this._liveEntity = e, a.appendChild(i), this._startLivePlayerAfterContext(i, e);
       return;
     }
     this._liveEl.parentElement !== a && a.appendChild(this._liveEl), this._liveEl.entityid !== e && (this._liveEl.entityid = e);
@@ -540,16 +704,16 @@ class s extends HTMLElement {
     });
   }
   _markLiveReady() {
-    const e = this._liveEl, a = this._liveEntity, i = e?.shadowRoot?.querySelector("video");
-    if (!(!e || !a || !i || i.readyState < 2 || this._liveReady === a)) {
-      if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(i)) {
+    const e = this._liveEl, a = this._liveEntity, t = e?.shadowRoot?.querySelector("video");
+    if (!(!e || !a || !t || t.readyState < 2 || this._liveReady === a)) {
+      if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(t)) {
         if (this._liveGreenMarked !== a) {
           this._liveGreenMarked = a;
-          const t = globalThis.performance?.now?.() || Date.now();
+          const i = globalThis.performance?.now?.() || Date.now();
           globalThis.BrunoCameraLive?.marcar?.(
             a,
             "quadro verde rejeitado",
-            t - (this._liveStartedAt || t),
+            i - (this._liveStartedAt || i),
             !1
           );
         }
@@ -563,11 +727,11 @@ class s extends HTMLElement {
   }
   _failLiveFeed(e, a = "falha") {
     if (!e || e !== this._liveEntity) return;
-    const i = globalThis.performance?.now?.() || Date.now();
+    const t = globalThis.performance?.now?.() || Date.now();
     globalThis.BrunoCameraLive?.marcar?.(
       e,
       a,
-      i - (this._liveStartedAt || i),
+      t - (this._liveStartedAt || t),
       !1
     ), this._liveState = "fallback", this._liveBlockedEntity = e, this._stopLiveFeed(), this._sincronizarMotorCameras(), this._refreshCameraImages();
   }
@@ -615,7 +779,7 @@ class s extends HTMLElement {
       <div class="error-card">
         <span class="error-content">
           <span class="error-title">Bruno Cameras Security Subview</span>
-          <span class="error-detail">${s._escape(e?.message || e || "Render error")}</span>
+          <span class="error-detail">${o._escape(e?.message || e || "Render error")}</span>
         </span>
       </div>
     `;
@@ -1494,9 +1658,17 @@ class s extends HTMLElement {
           min-width: 0;
           min-height: 0;
           display: grid;
-          grid-template-columns: minmax(0, 1.66fr) minmax(320px, 1fr);
+          grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
           gap: clamp(12px, 1.05cqw, 18px);
           align-items: stretch;
+        }
+
+        .camera-primary-column {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: minmax(0, 7fr) minmax(0, 3fr);
+          gap: clamp(10px, 0.82cqw, 14px);
         }
 
         .security-subview.is-desktop .main-feed {
@@ -1602,6 +1774,206 @@ class s extends HTMLElement {
           width: 36px;
           height: 36px;
         }
+
+        .camera-control-cluster {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          z-index: 3;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        }
+
+        .camera-control-btn {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          padding: 0;
+          border-radius: 999px;
+          color: rgba(226,232,240,0.68);
+          background: rgba(6,8,11,0.42);
+          border: 1px solid rgba(255,255,255,0.12);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+          backdrop-filter: blur(12px) saturate(1.16);
+          -webkit-backdrop-filter: blur(12px) saturate(1.16);
+          transition: background 160ms ease, color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+        }
+
+        .camera-control-btn bruno-icon {
+          --mdc-icon-size: 16px;
+        }
+
+        .camera-control-btn.is-on {
+          color: rgba(241,250,255,0.97);
+          background: rgba(var(--security-accent),0.22);
+          border-color: rgba(var(--security-accent),0.42);
+        }
+
+        .camera-control-btn.is-unavailable {
+          opacity: 0.32;
+        }
+
+        .camera-insights {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-columns: minmax(0, 1.32fr) minmax(250px, 1fr);
+          gap: clamp(10px, 0.82cqw, 14px);
+          padding: clamp(12px, 1cqw, 16px);
+          border-radius: var(--bruno-liquid-cell-radius, 18px);
+          background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(255,255,255,0.08);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+          overflow: hidden;
+        }
+
+        .recent-activity {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto repeat(3, minmax(0, 1fr));
+          gap: 6px;
+        }
+
+        .insight-title {
+          margin: 0;
+          color: rgba(241,245,249,0.88);
+          font-size: clamp(11px, 0.82cqw, 13px);
+          line-height: 1;
+          font-weight: 650;
+        }
+
+        .activity-row {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-columns: 28px minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 8px;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(255,255,255,0.045);
+        }
+
+        .activity-icon {
+          width: 26px;
+          height: 26px;
+          display: grid;
+          place-items: center;
+          border-radius: 8px;
+          color: rgb(var(--security-warn));
+          background: rgba(var(--security-warn),0.09);
+        }
+
+        .activity-icon bruno-icon {
+          --mdc-icon-size: 15px;
+        }
+
+        .activity-copy {
+          min-width: 0;
+          display: grid;
+          gap: 2px;
+        }
+
+        .activity-copy strong,
+        .activity-copy small {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .activity-copy strong {
+          color: rgba(241,245,249,0.82);
+          font-size: clamp(9.5px, 0.7cqw, 11px);
+          line-height: 1;
+          font-weight: 610;
+        }
+
+        .activity-copy small,
+        .activity-time {
+          color: rgba(203,213,225,0.45);
+          font-size: clamp(8px, 0.61cqw, 9.5px);
+          line-height: 1;
+          font-weight: 520;
+        }
+
+        .activity-row.is-empty {
+          opacity: 0.46;
+        }
+
+        .camera-metrics {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
+          gap: 8px;
+        }
+
+        .metric-rings {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          align-items: center;
+          gap: 8px;
+        }
+
+        .metric {
+          min-width: 0;
+          display: grid;
+          justify-items: center;
+          gap: 6px;
+        }
+
+        .metric-ring {
+          --ring-progress: 0deg;
+          width: clamp(50px, 4.4cqw, 68px);
+          aspect-ratio: 1;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          background:
+            radial-gradient(circle at center, rgba(8,11,15,0.98) 57%, transparent 59%),
+            conic-gradient(rgb(var(--security-accent)) var(--ring-progress), rgba(255,255,255,0.08) 0);
+          box-shadow: inset 0 0 0 1px rgba(255,255,255,0.055);
+        }
+
+        .metric.is-motion .metric-ring {
+          background:
+            radial-gradient(circle at center, rgba(8,11,15,0.98) 57%, transparent 59%),
+            conic-gradient(rgb(var(--security-warn)) var(--ring-progress), rgba(255,255,255,0.08) 0);
+        }
+
+        .metric.is-recording .metric-ring {
+          background:
+            radial-gradient(circle at center, rgba(8,11,15,0.98) 57%, transparent 59%),
+            conic-gradient(rgb(239,68,68) var(--ring-progress), rgba(255,255,255,0.08) 0);
+        }
+
+        .metric-value {
+          color: rgba(248,250,252,0.94);
+          font-size: clamp(13px, 1.08cqw, 17px);
+          line-height: 1;
+          font-weight: 680;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .metric-label {
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          color: rgba(203,213,225,0.48);
+          font-size: clamp(8px, 0.61cqw, 9.5px);
+          line-height: 1;
+          font-weight: 540;
+          text-align: center;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1632,20 +2004,21 @@ class s extends HTMLElement {
   // A pilula tem data-feed-pill para a troca in-place (2b) localiza-la.
   // O feed principal mantem o snapshot por baixo do ponto data-live-mount.
   // O player direto nasce invisivel e so aparece depois do primeiro quadro.
-  static _mainFeed(e, a = !1) {
+  static _mainFeed(e, a = !1, t = "") {
     const i = !!e?.image;
     return `
       <article class="feed-card main-feed-card">
         <div class="image-stage main-feed-stage${i ? " has-image" : ""}">
-          ${i ? s._image(e, "camera-image camera-main-fallback") : ""}
+          ${i ? o._image(e, "camera-image camera-main-fallback") : ""}
           <div class="camera-placeholder" aria-hidden="true"></div>
           <div class="camera-live" data-live-mount aria-hidden="true"></div>
           <div class="feed-vignette" aria-hidden="true"></div>
+          <div class="camera-control-cluster" data-camera-controls>${a ? t : ""}</div>
           <div class="feed-pill" data-feed-pill>
-            ${s._pillInner(e, !1, a)}
+            ${o._pillInner(e, !1, a)}
           </div>
           <div class="feed-controls">
-            <button class="hc-btn" type="button" data-action="more-info" data-camera-id="${s._escapeAttr(e?.entity || "")}" aria-label="Abrir detalhes da camera">
+            <button class="hc-btn" type="button" data-action="more-info" data-camera-id="${o._escapeAttr(e?.entity || "")}" aria-label="Abrir detalhes da camera">
               <bruno-icon icon="mdi:magnify-plus-outline"></bruno-icon>
               <span>Detalhes</span>
             </button>
@@ -1661,12 +2034,12 @@ class s extends HTMLElement {
   // NOVO (2a/2b): conteudo da pilula compartilhado pelo principal e pelos tiles
   // (ponto de status + nome + "REC" quando gravando). compact=false usa o nome
   // longo (principal); compact=true usa short_name (tiles).
-  static _displayName(e, a, i = !1) {
-    return i && e?.display_name ? e.display_name : a ? e?.short_name || e?.name || "Camera" : e?.name || "Camera";
+  static _displayName(e, a, t = !1) {
+    return t && e?.display_name ? e.display_name : a ? e?.short_name || e?.name || "Camera" : e?.name || "Camera";
   }
-  static _pillInner(e, a, i = !1) {
-    const t = e?.online ? " is-online" : "", r = e?.state === "recording", n = r ? " is-recording" : "", o = s._displayName(e, a, i), l = a ? "tile-name" : "cam-pill-name", d = r ? '<span class="tile-rec">REC</span>' : "";
-    return `<span class="status-dot${t}${n}"></span><span class="${l}">${s._escape(o)}</span>${d}`;
+  static _pillInner(e, a, t = !1) {
+    const i = e?.online ? " is-online" : "", r = e?.state === "recording", s = r ? " is-recording" : "", n = o._displayName(e, a, t), l = a ? "tile-name" : "cam-pill-name", c = r ? '<span class="tile-rec">REC</span>' : "";
+    return `<span class="status-dot${i}${s}"></span><span class="${l}">${o._escape(n)}</span>${c}`;
   }
   /* ORIGINAL (rollback): hero com rodape preto grande.
   static _mainFeedLegacy(camera, model) {
@@ -1688,65 +2061,121 @@ class s extends HTMLElement {
   */
   // NOVO (redesign Opcao A): secundaria sem barra pesada — apenas uma pilula
   // inferior compacta integrada (ponto de status + nome + "REC" se gravando).
-  static _tile(e, a, i = !1) {
-    const t = !!e?.image, r = s._displayName(e, !0, i);
+  static _tile(e, a, t = !1) {
+    const i = !!e?.image, r = o._displayName(e, !0, t);
     return `
-      <button class="camera-tile ${s._escapeAttr(a)}" type="button" data-action="select-camera" data-camera-id="${s._escapeAttr(e.entity)}" aria-label="${s._escapeAttr(r)}">
-        <span class="image-stage${t ? " has-image" : ""}">
-          ${t ? s._image(e, "camera-image") : ""}
+      <button class="camera-tile ${o._escapeAttr(a)}" type="button" data-action="select-camera" data-camera-id="${o._escapeAttr(e.entity)}" aria-label="${o._escapeAttr(r)}">
+        <span class="image-stage${i ? " has-image" : ""}">
+          ${i ? o._image(e, "camera-image") : ""}
           <span class="camera-placeholder" aria-hidden="true"></span>
           <span class="tile-vignette" aria-hidden="true"></span>
           <span class="tile-pill">
-            ${s._pillInner(e, !0, i)}
+            ${o._pillInner(e, !0, t)}
           </span>
         </span>
       </button>
     `;
   }
-  static _groupSection(e, a, i) {
+  static _formatMotionAge(e) {
+    const a = Date.parse(e);
+    if (!Number.isFinite(a)) return "";
+    const t = Math.max(0, Math.floor((Date.now() - a) / 1e3));
+    if (t < 45) return "Agora";
+    const i = Math.floor(t / 60);
+    if (i < 60) return `${i} min atrás`;
+    const r = Math.floor(i / 60);
+    return r < 24 ? `${r} h atrás` : new Date(a).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  }
+  static _metric(e, a, t, i = "") {
+    const r = Math.max(1, Number(t) || 0), s = Math.max(0, Number(a) || 0), n = Math.max(0, Math.min(360, s / r * 360)), l = e === "Online" ? `${s}/${Number(t) || 0}` : String(s);
     return `
-      <section class="camera-group" data-camera-group="${s._escapeAttr(e)}">
+      <div class="metric ${o._escapeAttr(i)}">
+        <div class="metric-ring" style="--ring-progress:${n.toFixed(1)}deg">
+          <span class="metric-value">${o._escape(l)}</span>
+        </div>
+        <span class="metric-label">${o._escape(e)}</span>
+      </div>
+    `;
+  }
+  static _insightsInner(e) {
+    const a = [...e?.recentMotionEvents || []];
+    return `
+      <section class="recent-activity">
+        <h2 class="insight-title">Atividade recente</h2>
+        ${Array.from({ length: 3 }, (i, r) => {
+      const s = a[r];
+      return s ? `
+        <div class="activity-row">
+          <span class="activity-icon"><bruno-icon icon="mdi:run-fast"></bruno-icon></span>
+          <span class="activity-copy">
+            <strong>Movimento detectado</strong>
+            <small>${o._escape(s.name)}</small>
+          </span>
+          <span class="activity-time">${o._escape(o._formatMotionAge(s.detectedAt))}</span>
+        </div>
+      ` : `
+          <div class="activity-row is-empty">
+            <span class="activity-icon"><bruno-icon icon="mdi:motion-sensor"></bruno-icon></span>
+            <span class="activity-copy"><strong>Sem detecção registrada</strong><small>—</small></span>
+            <span class="activity-time">—</span>
+          </div>
+        `;
+    }).join("")}
+      </section>
+      <section class="camera-metrics">
+        <h2 class="insight-title">Estado das câmeras</h2>
+        <div class="metric-rings">
+          ${o._metric("Online", e?.onlineCount || 0, e?.totalCount || 0, "is-online")}
+          ${o._metric("Com movimento", e?.motionCount || 0, e?.totalCount || 0, "is-motion")}
+          ${o._metric("Gravando", e?.recordingCount || 0, e?.totalCount || 0, "is-recording")}
+        </div>
+      </section>
+    `;
+  }
+  static _groupSection(e, a, t) {
+    return `
+      <section class="camera-group" data-camera-group="${o._escapeAttr(e)}">
         <header class="camera-group-head">
-          <h2>${s._escape(a)}</h2>
-          <span data-camera-group-count="${s._escapeAttr(e)}">${i.length} câmeras</span>
+          <h2>${o._escape(a)}</h2>
+          <span data-camera-group-count="${o._escapeAttr(e)}">${t.length} câmeras</span>
         </header>
-        <div class="camera-group-grid" data-camera-group-grid="${s._escapeAttr(e)}">
-          ${i.map((t) => s._tile(t, "group", !0)).join("")}
+        <div class="camera-group-grid" data-camera-group-grid="${o._escapeAttr(e)}">
+          ${t.map((i) => o._tile(i, "group", !0)).join("")}
         </div>
       </section>
     `;
   }
   static _image(e, a) {
-    return `<img class="${a}" src="${s._escapeAttr(e.imageUrl || e.image)}" data-camera-src-base="${s._escapeAttr(e.image)}" data-camera-entity="${s._escapeAttr(e.entity)}" alt="">`;
+    return `<img class="${a}" src="${o._escapeAttr(e.imageUrl || e.image)}" data-camera-src-base="${o._escapeAttr(e.image)}" data-camera-entity="${o._escapeAttr(e.entity)}" alt="">`;
   }
   static _statusLabel(e, a) {
     return a ? "Indisponivel" : e === "streaming" ? "Ao vivo" : e === "recording" ? "Gravando" : e === "idle" || e === "on" ? "Online" : e === "off" || e === "standby" ? "Em espera" : e || "Online";
   }
   static _withCacheBust(e, a) {
     if (!e) return "";
-    const i = e.includes("?") ? "&" : "?";
-    return `${e}${i}bruno_refresh=${encodeURIComponent(a || Date.now())}`;
+    const t = e.includes("?") ? "&" : "?";
+    return `${e}${t}bruno_refresh=${encodeURIComponent(a || Date.now())}`;
   }
   static _clock() {
     const e = /* @__PURE__ */ new Date();
     return `${String(e.getHours()).padStart(2, "0")}:${String(e.getMinutes()).padStart(2, "0")}`;
   }
   static _date() {
-    const e = /* @__PURE__ */ new Date(), a = ["DOMINGO", "SEGUNDA-FEIRA", "TERÇA-FEIRA", "QUARTA-FEIRA", "QUINTA-FEIRA", "SEXTA-FEIRA", "SÁBADO"], i = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
-    return `${a[e.getDay()]}, ${e.getDate()} ${i[e.getMonth()]}`;
+    const e = /* @__PURE__ */ new Date(), a = ["DOMINGO", "SEGUNDA-FEIRA", "TERÇA-FEIRA", "QUARTA-FEIRA", "QUINTA-FEIRA", "SEXTA-FEIRA", "SÁBADO"], t = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
+    return `${a[e.getDay()]}, ${e.getDate()} ${t[e.getMonth()]}`;
   }
   static _escape(e) {
     return String(e ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
   static _escapeAttr(e) {
-    return s._escape(e).replace(/'/g, "&#39;");
+    return o._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(p) || customElements.define(p, s);
+customElements.get(p) || customElements.define(p, o);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: p,
   name: "Bruno Cameras Security Subview",
   description: "Full-screen Bruno UI security camera console."
 });
-//# sourceMappingURL=bruno-cameras-security-subview.BhvZBoXD.js.map
+//# sourceMappingURL=bruno-cameras-security-subview.BACy0zCU.js.map

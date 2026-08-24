@@ -1410,18 +1410,61 @@ export class BrunoRoomSubview extends LitElement {
       /* A3 (2026-08-23): arte do atalho de streaming dentro do botao.
          44px e o ponto de partida pedido. A caixa do botao nao muda: a
          imagem e o conteudo, no lugar onde o bruno-icon estava. */
+      /* UNIFORMIDADE (2026-08-23): a fileira de streaming inteira com a
+         MESMA caixa — quadrada, quinas arredondadas. Antes cada botao
+         seguia a largura da sua coluna e a arte ficava com proporcao
+         diferente da do vizinho. */
       .mh-btn.is-app {
         padding: 0;
         overflow: hidden;
+        aspect-ratio: 1 / 1;
+        justify-self: center;
+        width: 100%;
+        max-width: 52px;
+        height: auto;
+        min-height: 0;
+        border-radius: var(--bruno-liquid-control-radius-compact, 12px);
       }
       .mh-btn-img {
         width: 100%;
-        max-width: 44px;
         height: 100%;
-        max-height: 44px;
         object-fit: cover;
         border-radius: inherit;
         display: block;
+      }
+
+      /* O botao de Voltar acompanha a mesma caixa, para a fileira nao ter
+         uma peca de formato diferente no fim. */
+      .mh-btn-row-5 .mh-btn.is-plus {
+        aspect-ratio: 1 / 1;
+        justify-self: center;
+        width: 100%;
+        max-width: 52px;
+        height: auto;
+        min-height: 0;
+        border-radius: var(--bruno-liquid-control-radius-compact, 12px);
+      }
+
+      /* FEEDBACK DE TOQUE (2026-08-23): o clique precisa responder na hora,
+         antes de qualquer ida ao Home Assistant. Vale para os atalhos de
+         streaming e para os +/- do A/C. */
+      .mh-btn,
+      .climate-stepper button {
+        transition: transform 90ms ease, filter 90ms ease, opacity 90ms ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mh-btn:active:not(:disabled),
+      .climate-stepper button:active:not(:disabled) {
+        transform: scale(0.93);
+        filter: brightness(1.18);
+      }
+      .mh-btn.is-app:active:not(:disabled) {
+        filter: brightness(1.28);
+      }
+
+      /* ARTE (2026-08-23): desce levemente no Hub, TV e Spotify. */
+      .mh-art {
+        margin-top: 6px;
       }
 
       /* B2 (2026-08-23) — TABLET: a fileira de cinco do Hub.

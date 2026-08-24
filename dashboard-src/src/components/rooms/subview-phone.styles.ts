@@ -1782,6 +1782,19 @@ export const SUBVIEW_TELEFONE_CSS = css`
     :host([data-folha='midia']) .room-subview .mh-source + .mh-source .mh-source-head {
       border-top: 0;
     }
+
+    /* UNIFORMIDADE DOS ATALHOS (2026-08-23) — quinas arredondadas no telefone.
+
+       A regra .mh-btn-row .mh-btn acima zera border-radius para todos os
+       botoes da fileira (ela existe porque, sem imagem, o botao era so um
+       icone solto). Com arte dentro, o botao volta a ser uma peca com caixa.
+
+       Medido antes: 52x52 com raio 0px. Os atalhos e o Voltar da fileira de
+       cinco recuperam o raio; os demais botoes seguem como estao. */
+    :host([data-folha='midia']) .room-subview .mh-btn-row-5 .mh-btn {
+      border-radius: var(--bruno-liquid-control-radius-compact, 12px);
+      overflow: hidden;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

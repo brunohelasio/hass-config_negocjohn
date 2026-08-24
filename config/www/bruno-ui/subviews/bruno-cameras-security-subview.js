@@ -11,19 +11,31 @@ const BRUNO_CAMERAS_SECURITY_DEFAULT_CONFIG = {
   // ANTERIOR (rollback ONVIF geral): cameras usavam os oito IDs Tuya *_2.
   // O inventario completo permanece no rollback desta rodada.
   cameras: [
-    { entity: 'camera.sl_camera_profile_1', name: 'PRINCIPAL: SALA', short_name: 'SL - Sala' },
-    { entity: 'camera.vr_camera_profile_1', name: 'VR - Varanda', short_name: 'VR - Varanda' },
-    { entity: 'camera.cz_camera_profile_1', name: 'CZ - Cozinha', short_name: 'CZ - Cozinha' },
-    { entity: 'camera.as_camera_profile_1', name: 'AS - Area Servico', short_name: 'AS - Area Servico' },
-    { entity: 'camera.of_camera_profile_1', name: 'OF - Office', short_name: 'OF - Office' },
-    { entity: 'camera.qc_camera_profile_1', name: 'QC - Quarto Casal', short_name: 'QC - Quarto Casal' },
-    { entity: 'camera.qmi_camera_profile_1', name: 'QMI - Quarto Miguel', short_name: 'QMI - Quarto Miguel' },
-    { entity: 'camera.qma_camera_profile_1', name: 'QMA - Quarto Marina', short_name: 'QMA - Quarto Marina' },
+    { entity: 'camera.sl_camera_profile_1', name: 'PRINCIPAL: SALA', short_name: 'SL - Sala', display_name: 'Sala', group: 'social' },
+    { entity: 'camera.vr_camera_profile_1', name: 'VR - Varanda', short_name: 'VR - Varanda', display_name: 'Varanda', group: 'social' },
+    { entity: 'camera.cz_camera_profile_1', name: 'CZ - Cozinha', short_name: 'CZ - Cozinha', display_name: 'Cozinha', group: 'social' },
+    { entity: 'camera.as_camera_profile_1', name: 'AS - Area Servico', short_name: 'AS - Area Servico', display_name: 'Área de Serviço', group: 'social' },
+    { entity: 'camera.of_camera_profile_1', name: 'OF - Office', short_name: 'OF - Office', display_name: 'Office', group: 'intimate' },
+    { entity: 'camera.qc_camera_profile_1', name: 'QC - Quarto Casal', short_name: 'QC - Quarto Casal', display_name: 'Quarto Casal', group: 'intimate' },
+    { entity: 'camera.qmi_camera_profile_1', name: 'QMI - Quarto Miguel', short_name: 'QMI - Quarto Miguel', display_name: 'Quarto Filho', group: 'intimate' },
+    { entity: 'camera.qma_camera_profile_1', name: 'QMA - Quarto Marina', short_name: 'QMA - Quarto Marina', display_name: 'Quarto Filha', group: 'intimate' },
   ],
 };
 
 const BRUNO_CAMERAS_SECURITY_ONLINE_STATES = ['streaming', 'recording', 'idle', 'on'];
 const BRUNO_CAMERAS_SECURITY_UNAVAILABLE_STATES = ['unavailable', 'unknown', ''];
+const BRUNO_CAMERAS_SECURITY_SOCIAL_ENTITIES = new Set([
+  'camera.sl_camera_profile_1',
+  'camera.vr_camera_profile_1',
+  'camera.cz_camera_profile_1',
+  'camera.as_camera_profile_1',
+]);
+const BRUNO_CAMERAS_SECURITY_INTIMATE_ENTITIES = new Set([
+  'camera.of_camera_profile_1',
+  'camera.qc_camera_profile_1',
+  'camera.qmi_camera_profile_1',
+  'camera.qma_camera_profile_1',
+]);
 // ANTERIOR (rollback expansao ONVIF): prazo literal de 10000 ms em _mountLiveFeed.
 const BRUNO_CAMERAS_SECURITY_LIVE_TIMEOUT_MS = 30000;
 
@@ -163,6 +175,17 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     };
   }
 
+  _cameraGroup(camera) {
+    if (camera?.group === 'social' || camera?.group === 'intimate') return camera.group;
+    if (BRUNO_CAMERAS_SECURITY_SOCIAL_ENTITIES.has(camera?.entity)) return 'social';
+    if (BRUNO_CAMERAS_SECURITY_INTIMATE_ENTITIES.has(camera?.entity)) return 'intimate';
+    return 'intimate';
+  }
+
+  _isMobileLayout() {
+    return Boolean(globalThis.matchMedia?.('(max-width: 800px)')?.matches);
+  }
+
   _model() {
     const config = this._config || BRUNO_CAMERAS_SECURITY_DEFAULT_CONFIG;
     const cameras = config.cameras.map((camera) => this._cameraState(camera));
@@ -176,8 +199,12 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     return {
       activeCamera,
       activeId,
+      // Mantidos para o layout mobile legado, que nao muda nesta rodada.
       sideCameras: thumbnails.slice(0, 3),
       bottomCameras: thumbnails.slice(3),
+      // Desktop/tablet paisagem: os 7 secundarios sao sempre recalculados por setor.
+      socialCameras: thumbnails.filter((camera) => this._cameraGroup(camera) === 'social'),
+      intimateCameras: thumbnails.filter((camera) => this._cameraGroup(camera) === 'intimate'),
       cameras,
       onlineCount: cameras.filter((camera) => camera.online).length,
       totalCount: cameras.length,
@@ -266,12 +293,42 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._updateStage(tileEl.querySelector('.image-stage'), oldActive);
     this._updateSlotPill(tileEl.querySelector('.tile-pill'), oldActive, true);
     tileEl.dataset.cameraId = oldActive.entity;
-    tileEl.setAttribute('aria-label', oldActive.name || '');
+    const desktop = Boolean(root.querySelector('.security-subview.is-desktop'));
+    tileEl.setAttribute(
+      'aria-label',
+      BrunoCamerasSecuritySubview._displayName(oldActive, true, desktop),
+    );
+
+    // No desktop, um clique entre setores muda a distribuicao 3+4 / 4+3.
+    // Reordenar usa appendChild nos botoes EXISTENTES: nenhuma miniatura e
+    // recriada e nenhum snapshot/player secundario perde o proprio DOM.
+    this._syncDesktopGroups();
 
     // Mantem a assinatura estrutural coerente para que `set hass` nao dispare um
     // re-render completo (que reordenaria os tiles pela ordem do config).
     this._renderedSignature = BrunoCamerasSecuritySubview._signatureFromModel(this._model());
     return true;
+  }
+
+  _syncDesktopGroups() {
+    const root = this.shadowRoot;
+    if (!root?.querySelector('.security-subview.is-desktop')) return;
+    const model = this._model();
+    const groups = [
+      ['social', model.socialCameras],
+      ['intimate', model.intimateCameras],
+    ];
+
+    groups.forEach(([key, cameras]) => {
+      const grid = root.querySelector(`[data-camera-group-grid="${key}"]`);
+      const count = root.querySelector(`[data-camera-group-count="${key}"]`);
+      if (count) count.textContent = `${cameras.length} câmeras`;
+      if (!grid) return;
+      cameras.forEach((camera) => {
+        const tile = root.querySelector(`.camera-tile[data-camera-id="${camera.entity}"]`);
+        if (tile) grid.appendChild(tile);
+      });
+    });
   }
 
   // NOVO (2b, corrigido): atualiza a imagem de um slot (principal ou tile) na
@@ -320,7 +377,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   // NOVO (2b): reescreve so o conteudo da pilula (sem imagens) -> nao pisca.
   _updateSlotPill(pillEl, camera, compact) {
     if (!pillEl) return;
-    pillEl.innerHTML = BrunoCamerasSecuritySubview._pillInner(camera, compact);
+    const desktop = Boolean(pillEl.closest?.('.security-subview.is-desktop'));
+    pillEl.innerHTML = BrunoCamerasSecuritySubview._pillInner(camera, compact, desktop);
   }
 
   _openMoreInfo(entityId) {
@@ -610,48 +668,76 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       const active = model.activeCamera;
       this._lastClock = BrunoCamerasSecuritySubview._clock();
 
-      this.shadowRoot.innerHTML = `
-        <style>${this._styles()}</style>
-        <main class="security-subview">
-          <header class="security-topbar">
-            <button class="icon-button" type="button" data-action="navigate-home" aria-label="Voltar para o painel principal">
-              <bruno-icon icon="mdi:arrow-left"></bruno-icon>
-            </button>
+      const mobile = this._isMobileLayout();
+      const markup = mobile
+        ? `
+          <main class="security-subview">
+            <header class="security-topbar">
+              <button class="icon-button" type="button" data-action="navigate-home" aria-label="Voltar para o painel principal">
+                <bruno-icon icon="mdi:arrow-left"></bruno-icon>
+              </button>
 
-            <div class="brand">
-              <span class="brand-main">Residência</span>
-              <span class="brand-sep" aria-hidden="true">·</span>
-              <strong class="brand-strong">Segurança</strong>
-            </div>
+              <div class="brand">
+                <span class="brand-main">Residência</span>
+                <span class="brand-sep" aria-hidden="true">·</span>
+                <strong class="brand-strong">Segurança</strong>
+              </div>
 
-            <div class="clock-block" aria-label="Horario atual">
-              <span data-clock>${BrunoCamerasSecuritySubview._escape(this._lastClock)}</span>
-              <small data-date>${BrunoCamerasSecuritySubview._escape(BrunoCamerasSecuritySubview._date())}</small>
-            </div>
-          </header>
+              <div class="clock-block" aria-label="Horario atual">
+                <span data-clock>${BrunoCamerasSecuritySubview._escape(this._lastClock)}</span>
+                <small data-date>${BrunoCamerasSecuritySubview._escape(BrunoCamerasSecuritySubview._date())}</small>
+              </div>
+            </header>
 
-          <section class="security-grid">
-            <section class="main-feed">
-              ${BrunoCamerasSecuritySubview._mainFeed(active)}
+            <section class="security-grid">
+              <section class="main-feed">
+                ${BrunoCamerasSecuritySubview._mainFeed(active)}
+              </section>
+
+              <aside class="side-rail" aria-label="Cameras principais">
+                ${model.sideCameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'side')).join('')}
+              </aside>
+
+              <section class="bottom-strip" aria-label="Outras cameras">
+                ${model.bottomCameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'bottom')).join('')}
+              </section>
             </section>
 
-            <aside class="side-rail" aria-label="Cameras principais">
-              ${model.sideCameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'side')).join('')}
-            </aside>
+            <footer class="security-footer">
+              <span class="enc-note">
+                <bruno-icon icon="mdi:shield-lock-outline" aria-hidden="true"></bruno-icon>
+                Todas as câmeras estão protegidas com criptografia de ponta a ponta
+              </span>
+            </footer>
+          </main>
+        `
+        : `
+          <main class="security-subview is-desktop">
+            <header class="camera-overview-head">
+              <div class="camera-overview-title">
+                <h1>Câmeras</h1>
+                <p>
+                  <span>${model.totalCount} câmeras</span>
+                  <span class="overview-sep" aria-hidden="true">·</span>
+                  <span>${model.onlineCount} online</span>
+                </p>
+              </div>
+            </header>
 
-            <section class="bottom-strip" aria-label="Outras cameras">
-              ${model.bottomCameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'bottom')).join('')}
+            <section class="camera-overview-grid">
+              <section class="main-feed" aria-label="Câmera principal">
+                ${BrunoCamerasSecuritySubview._mainFeed(active, true)}
+              </section>
+
+              <aside class="camera-groups" aria-label="Câmeras por área">
+                ${BrunoCamerasSecuritySubview._groupSection('social', 'Área social', model.socialCameras)}
+                ${BrunoCamerasSecuritySubview._groupSection('intimate', 'Área íntima', model.intimateCameras)}
+              </aside>
             </section>
-          </section>
+          </main>
+        `;
 
-          <footer class="security-footer">
-            <span class="enc-note">
-              <bruno-icon icon="mdi:shield-lock-outline" aria-hidden="true"></bruno-icon>
-              Todas as câmeras estão protegidas com criptografia de ponta a ponta
-            </span>
-          </footer>
-        </main>
-      `;
+      this.shadowRoot.innerHTML = `<style>${this._styles()}</style>${markup}`;
 
       this.shadowRoot.removeEventListener('click', this._boundClick);
       this.shadowRoot.removeEventListener('keydown', this._boundKeydown);
@@ -1708,6 +1794,174 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         }
       }
 
+      /* ============================================================
+         DESKTOP/TABLET PAISAGEM — layout definitivo de câmeras (2026-08-24).
+         A rail continua fora deste componente, fornecida pelo YAML da subview.
+         O markup mobile legado permanece intacto em <=800px.
+         ============================================================ */
+      @media (min-width: 801px) {
+        .security-subview.is-desktop {
+          height: 100%;
+          min-height: 0;
+          grid-template-rows: auto minmax(0, 1fr);
+          gap: clamp(12px, 1.05cqw, 18px);
+          padding: clamp(4px, 0.45cqw, 8px) clamp(4px, 0.6cqw, 10px) clamp(8px, 0.7cqw, 12px);
+          overflow: hidden;
+        }
+
+        .camera-overview-head {
+          min-width: 0;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          padding: 2px 4px 0;
+        }
+
+        .camera-overview-title {
+          min-width: 0;
+          display: grid;
+          gap: 7px;
+        }
+
+        .camera-overview-title h1 {
+          margin: 0;
+          color: rgba(248,250,252,0.97);
+          font-size: clamp(25px, 2.15cqw, 34px);
+          line-height: 1;
+          font-weight: 710;
+          letter-spacing: -0.035em;
+        }
+
+        .camera-overview-title p {
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          color: rgba(203,213,225,0.62);
+          font-size: clamp(11px, 0.82cqw, 13px);
+          line-height: 1;
+          font-weight: 560;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .overview-sep {
+          color: rgba(255,255,255,0.24);
+        }
+
+        .camera-overview-grid {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-columns: minmax(0, 1.66fr) minmax(320px, 1fr);
+          gap: clamp(12px, 1.05cqw, 18px);
+          align-items: stretch;
+        }
+
+        .security-subview.is-desktop .main-feed {
+          grid-area: auto;
+          min-width: 0;
+          min-height: 0;
+        }
+
+        .security-subview.is-desktop .main-feed-card {
+          min-height: 0;
+          border-radius: var(--bruno-liquid-card-radius, 24px);
+        }
+
+        .camera-groups {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: repeat(2, minmax(0, 1fr));
+          gap: clamp(14px, 1.15cqw, 20px);
+        }
+
+        .camera-group {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
+          gap: 9px;
+          padding-top: clamp(12px, 0.9cqw, 16px);
+          border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .camera-group:first-child {
+          padding-top: 0;
+          border-top: 0;
+        }
+
+        .camera-group-head {
+          min-width: 0;
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 0 2px;
+        }
+
+        .camera-group-head h2 {
+          margin: 0;
+          min-width: 0;
+          color: rgba(241,245,249,0.90);
+          font-size: clamp(12px, 0.95cqw, 15px);
+          line-height: 1;
+          font-weight: 650;
+        }
+
+        .camera-group-head span {
+          flex: 0 0 auto;
+          color: rgba(203,213,225,0.48);
+          font-size: clamp(10px, 0.75cqw, 12px);
+          line-height: 1;
+          font-weight: 560;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .camera-group-grid {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-rows: repeat(2, minmax(0, 1fr));
+          gap: clamp(8px, 0.72cqw, 11px);
+        }
+
+        .camera-group-grid .camera-tile {
+          min-width: 0;
+          min-height: 0;
+          border-radius: var(--bruno-liquid-cell-radius, 18px);
+        }
+
+        .camera-group-grid .tile-pill {
+          left: 9px;
+          bottom: 9px;
+          max-width: calc(100% - 18px);
+          gap: 6px;
+        }
+
+        .camera-group-grid .tile-name {
+          font-size: clamp(10px, 0.74cqw, 12px);
+        }
+
+        .security-subview.is-desktop .feed-pill {
+          left: 17px;
+          bottom: 16px;
+          max-width: calc(100% - 126px);
+          font-size: clamp(12px, 0.9cqw, 14px);
+        }
+
+        .security-subview.is-desktop .feed-controls {
+          right: 15px;
+          bottom: 14px;
+        }
+
+        .security-subview.is-desktop .hc-btn {
+          width: 36px;
+          height: 36px;
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .camera-tile,
         .action-pill {
@@ -1737,7 +1991,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   // A pilula tem data-feed-pill para a troca in-place (2b) localiza-la.
   // O feed principal mantem o snapshot por baixo do ponto data-live-mount.
   // O player direto nasce invisivel e so aparece depois do primeiro quadro.
-  static _mainFeed(camera) {
+  static _mainFeed(camera, desktop = false) {
     const hasImage = Boolean(camera?.image);
     return `
       <article class="feed-card main-feed-card">
@@ -1747,7 +2001,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           <div class="camera-live" data-live-mount aria-hidden="true"></div>
           <div class="feed-vignette" aria-hidden="true"></div>
           <div class="feed-pill" data-feed-pill>
-            ${BrunoCamerasSecuritySubview._pillInner(camera, false)}
+            ${BrunoCamerasSecuritySubview._pillInner(camera, false, desktop)}
           </div>
           <div class="feed-controls">
             <button class="hc-btn" type="button" data-action="more-info" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera?.entity || '')}" aria-label="Abrir detalhes da camera">
@@ -1767,13 +2021,18 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   // NOVO (2a/2b): conteudo da pilula compartilhado pelo principal e pelos tiles
   // (ponto de status + nome + "REC" quando gravando). compact=false usa o nome
   // longo (principal); compact=true usa short_name (tiles).
-  static _pillInner(camera, compact) {
+  static _displayName(camera, compact, desktop = false) {
+    if (desktop && camera?.display_name) return camera.display_name;
+    return compact
+      ? (camera?.short_name || camera?.name || 'Camera')
+      : (camera?.name || 'Camera');
+  }
+
+  static _pillInner(camera, compact, desktop = false) {
     const onlineClass = camera?.online ? ' is-online' : '';
     const recording = camera?.state === 'recording';
     const recClass = recording ? ' is-recording' : '';
-    const name = compact
-      ? (camera?.short_name || camera?.name || 'Camera')
-      : (camera?.name || 'Camera');
+    const name = BrunoCamerasSecuritySubview._displayName(camera, compact, desktop);
     const nameClass = compact ? 'tile-name' : 'cam-pill-name';
     const rec = recording ? '<span class="tile-rec">REC</span>' : '';
     return `<span class="status-dot${onlineClass}${recClass}"></span><span class="${nameClass}">${BrunoCamerasSecuritySubview._escape(name)}</span>${rec}`;
@@ -1800,19 +2059,34 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
   // NOVO (redesign Opcao A): secundaria sem barra pesada — apenas uma pilula
   // inferior compacta integrada (ponto de status + nome + "REC" se gravando).
-  static _tile(camera, position) {
+  static _tile(camera, position, desktop = false) {
     const hasImage = Boolean(camera?.image);
+    const label = BrunoCamerasSecuritySubview._displayName(camera, true, desktop);
     return `
-      <button class="camera-tile ${BrunoCamerasSecuritySubview._escapeAttr(position)}" type="button" data-action="select-camera" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasSecuritySubview._escapeAttr(camera.name)}">
+      <button class="camera-tile ${BrunoCamerasSecuritySubview._escapeAttr(position)}" type="button" data-action="select-camera" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasSecuritySubview._escapeAttr(label)}">
         <span class="image-stage${hasImage ? ' has-image' : ''}">
           ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image') : ''}
           <span class="camera-placeholder" aria-hidden="true"></span>
           <span class="tile-vignette" aria-hidden="true"></span>
           <span class="tile-pill">
-            ${BrunoCamerasSecuritySubview._pillInner(camera, true)}
+            ${BrunoCamerasSecuritySubview._pillInner(camera, true, desktop)}
           </span>
         </span>
       </button>
+    `;
+  }
+
+  static _groupSection(key, label, cameras) {
+    return `
+      <section class="camera-group" data-camera-group="${BrunoCamerasSecuritySubview._escapeAttr(key)}">
+        <header class="camera-group-head">
+          <h2>${BrunoCamerasSecuritySubview._escape(label)}</h2>
+          <span data-camera-group-count="${BrunoCamerasSecuritySubview._escapeAttr(key)}">${cameras.length} câmeras</span>
+        </header>
+        <div class="camera-group-grid" data-camera-group-grid="${BrunoCamerasSecuritySubview._escapeAttr(key)}">
+          ${cameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'group', true)).join('')}
+        </div>
+      </section>
     `;
   }
 

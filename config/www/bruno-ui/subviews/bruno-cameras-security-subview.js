@@ -213,7 +213,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   static _signatureFromModel(model) {
     if (!model) return 'pending';
     const cams = (model.cameras || [])
-      .map((c) => `${c.entity}:${c.online ? 1 : 0}:${c.unavailable ? 1 : 0}:${c.image ? 1 : 0}:${c.status}`)
+      // isPrivate entra na assinatura: sem ele o anti-flicker consideraria a
+      // troca de privacidade irrelevante e a superficie nunca apareceria.
+      .map((c) => `${c.entity}:${c.online ? 1 : 0}:${c.unavailable ? 1 : 0}:${c.image ? 1 : 0}:${c.isPrivate ? 1 : 0}:${c.status}`)
       .join('|');
     return `${model.activeId}#${cams}`;
   }
@@ -252,6 +254,10 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       imageUrl: BrunoCamerasSecuritySubview._withCacheBust(image, this._refreshSeed),
       unavailable,
       online,
+      // MODO PRIVACIDADE (2026-08-24): calculado aqui porque _mainFeed e
+      // _tile sao estaticos e nao alcancam _controlState. Mesma leitura que
+      // o painel de controles ja faz.
+      isPrivate: Boolean(this._controlState(camera, 'privacy')?.active),
       status: BrunoCamerasSecuritySubview._statusLabel(state, unavailable),
     };
   }
@@ -2385,6 +2391,58 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           display: none;
         }
 
+        /* ==== MODO PRIVACIDADE / INDISPONIVEL =========================
+
+           Transportado das cameras das subviews (.camera-state-surface),
+           valores incluidos: mesmo fundo, mesmo blur, mesma tipografia e o
+           mesmo icone escondido — la a leitura e do texto.
+
+           Vale para o feed principal e para as miniaturas, como nas
+           subviews, onde o palco e o PIP recebem o mesmo tratamento.
+           ============================================================== */
+        .camera-state-surface {
+          position: absolute;
+          inset: 0;
+          z-index: 3;
+          display: grid;
+          place-items: center;
+          align-content: center;
+          gap: clamp(6px, 0.44cqw, 10px);
+          padding: clamp(12px, 0.88cqw, 21px);
+          color: rgba(255,255,255,0.78);
+          text-align: center;
+          background:
+            radial-gradient(circle at 50% 42%, rgba(96,165,250,0.12), transparent 58%),
+            rgba(5, 8, 14, 0.76);
+          backdrop-filter: blur(8px) saturate(0.9);
+          -webkit-backdrop-filter: blur(8px) saturate(0.9);
+        }
+
+        .camera-state-surface bruno-icon {
+          display: none;
+          --mdc-icon-size: 32px;
+          color: rgba(255,255,255,0.64);
+        }
+
+        .camera-state-surface span {
+          font-size: clamp(9px, 0.66cqw, 16px);
+          font-weight: 760;
+          line-height: 1.1;
+        }
+
+        .camera-tile .camera-state-surface span {
+          font-size: clamp(8px, 0.5cqw, 12px);
+        }
+
+        /* A foto sai de cena junto com o video: sem isto a ultima imagem
+           ficaria visivel por baixo do vidro, e era justamente essa foto
+           congelada que fazia parecer que a camera so travou. */
+        .main-feed-card.is-private .camera-image,
+        .main-feed-card.is-private .camera-live,
+        .camera-tile.is-private .camera-image {
+          opacity: 0;
+        }
+
         /* ==== FAIXA DE CABECALHO DO BLOCO PRINCIPAL ==================== */
         .security-subview.is-desktop .main-feed-card.has-head {
           display: grid;
@@ -2419,7 +2477,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           justify-content: space-between;
           gap: 12px;
           padding: clamp(9px, 0.72cqw, 13px) clamp(12px, 0.95cqw, 16px);
-          border-bottom: 1px solid rgba(255,255,255,0.07);
+          /* ANTERIOR (rollback 2026-08-24): border-bottom de 1px.
+             Com a imagem recuada, o filete ficava colado nela e nao
+             separava nada — o proprio recuo ja faz essa leitura. */
         }
 
         .feed-head-id {
@@ -2880,12 +2940,13 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         </header>`
       : '';
     return `
-      <article class="feed-card main-feed-card${desktop ? ' has-head' : ''}">
+      <article class="feed-card main-feed-card${desktop ? ' has-head' : ''}${camera?.isPrivate ? ' is-private' : ''}">
         ${cabecalho}
         <div class="image-stage main-feed-stage${hasImage ? ' has-image' : ''}">
           ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image camera-main-fallback') : ''}
           <div class="camera-placeholder" aria-hidden="true"></div>
           <div class="camera-live" data-live-mount aria-hidden="true"></div>
+          ${BrunoCamerasSecuritySubview._stateSurface(camera)}
           <div class="feed-vignette" aria-hidden="true"></div>
           <div class="camera-control-cluster${menuAberto ? ' is-open' : ''}" data-camera-controls>${desktop && menuAberto ? controls : ''}</div>
           <div class="feed-pill" data-feed-pill>
@@ -2914,6 +2975,26 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     return compact
       ? (camera?.short_name || camera?.name || 'Camera')
       : (camera?.name || 'Camera');
+  }
+
+  // SUPERFICIE DE ESTADO (2026-08-24) — transportada das cameras das
+  // subviews (.camera-state-surface).
+  //
+  // Antes, ligar a privacidade so congelava a imagem: o instantaneo parava
+  // de atualizar e a ultima foto ficava na tela, sem dizer por que. Agora o
+  // comportamento e o mesmo das subviews — a camera escurece e a razao
+  // aparece centralizada.
+  //
+  // O icone existe no markup e o CSS o esconde, exatamente como la: a
+  // leitura e do texto.
+  static _stateSurface(camera) {
+    if (camera?.unavailable) {
+      return `<div class="camera-state-surface"><bruno-icon icon="mdi:video-off-outline"></bruno-icon><span>Indisponível</span></div>`;
+    }
+    if (camera?.isPrivate) {
+      return `<div class="camera-state-surface"><bruno-icon icon="mdi:eye-off-outline"></bruno-icon><span>Modo privacidade ativo</span></div>`;
+    }
+    return '';
   }
 
   static _pillInner(camera, compact, desktop = false) {
@@ -2951,10 +3032,11 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     const hasImage = Boolean(camera?.image);
     const label = BrunoCamerasSecuritySubview._displayName(camera, true, desktop);
     return `
-      <button class="camera-tile ${BrunoCamerasSecuritySubview._escapeAttr(position)}" type="button" data-action="select-camera" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasSecuritySubview._escapeAttr(label)}">
+      <button class="camera-tile ${BrunoCamerasSecuritySubview._escapeAttr(position)}${camera?.isPrivate ? ' is-private' : ''}" type="button" data-action="select-camera" data-camera-id="${BrunoCamerasSecuritySubview._escapeAttr(camera.entity)}" aria-label="${BrunoCamerasSecuritySubview._escapeAttr(label)}">
         <span class="image-stage${hasImage ? ' has-image' : ''}">
           ${hasImage ? BrunoCamerasSecuritySubview._image(camera, 'camera-image') : ''}
           <span class="camera-placeholder" aria-hidden="true"></span>
+          ${BrunoCamerasSecuritySubview._stateSurface(camera)}
           <span class="tile-vignette" aria-hidden="true"></span>
           <span class="tile-pill">
             ${BrunoCamerasSecuritySubview._pillInner(camera, true, desktop)}

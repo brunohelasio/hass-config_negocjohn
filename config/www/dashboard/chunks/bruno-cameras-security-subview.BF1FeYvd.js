@@ -1,4 +1,4 @@
-const p = "bruno-cameras-security-subview", d = {
+const g = "bruno-cameras-security-subview", p = {
   title: "Residence Security",
   section: "Cameras",
   active_entity: "input_select.bento_active_camera",
@@ -94,23 +94,23 @@ const p = "bruno-cameras-security-subview", d = {
       motion_entity: "bruno_tuya_motion.qma_camera_2"
     }
   ]
-}, u = ["streaming", "recording", "idle", "on"], m = ["unavailable", "unknown", ""], f = /* @__PURE__ */ new Set([
+}, f = ["streaming", "recording", "idle", "on"], h = ["unavailable", "unknown", ""], _ = /* @__PURE__ */ new Set([
   "camera.sl_camera_profile_1",
   "camera.vr_camera_profile_1",
   "camera.cz_camera_profile_1",
   "camera.as_camera_profile_1"
-]), b = /* @__PURE__ */ new Set([
+]), v = /* @__PURE__ */ new Set([
   "camera.of_camera_profile_1",
   "camera.qc_camera_profile_1",
   "camera.qmi_camera_profile_1",
   "camera.qma_camera_profile_1"
-]), h = 3e4, _ = 9e4;
+]), u = 3e4, x = 9e4;
 class o extends HTMLElement {
   static getStubConfig() {
     return {};
   }
   constructor() {
-    super(), this._refreshSeed = Date.now(), this._lastCameraImages = {}, this._lastClock = o._clock(), this._boundClick = (e) => this._handleClick(e), this._boundKeydown = (e) => this._handleKeydown(e), this._boundClock = () => this._updateClock(), this._liveEl = null, this._liveEntity = "", this._liveReady = "", this._liveTimer = null, this._liveState = "idle", this._liveBlockedEntity = "", this._liveLoadToken = 0, this._boundDialogClosed = (e) => this._handleDialogClosed(e);
+    super(), this._refreshSeed = Date.now(), this._lastCameraImages = {}, this._lastClock = o._clock(), this._boundClick = (e) => this._handleClick(e), this._boundKeydown = (e) => this._handleKeydown(e), this._boundClock = () => this._updateClock(), this._liveEl = null, this._liveEntity = "", this._liveReady = "", this._liveTimer = null, this._liveState = "idle", this._liveBlockedEntity = "", this._liveLoadToken = 0, this._cameraMenuOpen = !1, this._boundDialogClosed = (e) => this._handleDialogClosed(e);
   }
   connectedCallback() {
     globalThis.BrunoLiquidGlass?.apply?.(), this._liveState = "idle", this._liveBlockedEntity = "", this._listeningDialogClosed || (globalThis.addEventListener?.("dialog-closed", this._boundDialogClosed, !0), this._listeningDialogClosed = !0), this._startRefreshTimer(), this._startClockTimer(), this._render();
@@ -153,17 +153,17 @@ class o extends HTMLElement {
   }
   _normalizeConfig(e = {}) {
     return {
-      ...d,
+      ...p,
       ...e,
-      refresh_interval: Number(e.refresh_interval) > 0 ? Number(e.refresh_interval) : d.refresh_interval,
-      cameras: Array.isArray(e.cameras) && e.cameras.length ? e.cameras : d.cameras
+      refresh_interval: Number(e.refresh_interval) > 0 ? Number(e.refresh_interval) : p.refresh_interval,
+      cameras: Array.isArray(e.cameras) && e.cameras.length ? e.cameras : p.cameras
     };
   }
   _state(e) {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _cameraState(e) {
-    const a = this._state(e.entity), t = a?.state || "", i = !a || m.includes(t), r = !i && u.includes(t), s = a?.attributes?.entity_picture || "";
+    const a = this._state(e.entity), t = a?.state || "", i = !a || h.includes(t), r = !i && f.includes(t), s = a?.attributes?.entity_picture || "";
     s && (this._lastCameraImages[e.entity] = s);
     const n = s || this._lastCameraImages[e.entity] || "";
     return {
@@ -178,7 +178,7 @@ class o extends HTMLElement {
     };
   }
   _cameraGroup(e) {
-    return e?.group === "social" || e?.group === "intimate" ? e.group : f.has(e?.entity) ? "social" : (b.has(e?.entity), "intimate");
+    return e?.group === "social" || e?.group === "intimate" ? e.group : _.has(e?.entity) ? "social" : (v.has(e?.entity), "intimate");
   }
   _motionEvent(e) {
     if (!e?.motion_entity) return null;
@@ -199,13 +199,13 @@ class o extends HTMLElement {
     const a = Date.now();
     return (e || []).filter((t) => {
       const i = this._motionEvent(t);
-      return i && a - i.timestamp >= 0 && a - i.timestamp <= _;
+      return i && a - i.timestamp >= 0 && a - i.timestamp <= x;
     }).length;
   }
   _controlState(e, a) {
     const t = (e?.controls || []).find((s) => s?.key === a);
     if (!t?.entity) return null;
-    const i = this._state(t.entity), r = !i || m.includes(String(i.state || "").toLowerCase());
+    const i = this._state(t.entity), r = !i || h.includes(String(i.state || "").toLowerCase());
     return {
       ...t,
       active: !r && String(i?.state || "").toLowerCase() === "on",
@@ -216,7 +216,7 @@ class o extends HTMLElement {
     return !!globalThis.matchMedia?.("(max-width: 800px)")?.matches;
   }
   _model() {
-    const e = this._config || d, a = e.cameras.map((l) => this._cameraState(l)), t = this._state(e.active_entity)?.state, i = a[0]?.entity || "", r = this._localActiveCamera || (a.some((l) => l.entity === t) ? t : i), s = a.find((l) => l.entity === r) || a[0], n = a.filter((l) => l.entity !== s?.entity);
+    const e = this._config || p, a = e.cameras.map((l) => this._cameraState(l)), t = this._state(e.active_entity)?.state, i = a[0]?.entity || "", r = this._localActiveCamera || (a.some((l) => l.entity === t) ? t : i), s = a.find((l) => l.entity === r) || a[0], n = a.filter((l) => l.entity !== s?.entity);
     return {
       activeCamera: s,
       activeId: r,
@@ -277,15 +277,23 @@ class o extends HTMLElement {
     if (!i || e === i.entity) return !1;
     const r = a.querySelector(`.camera-tile[data-camera-id="${e}"]`), s = a.querySelector(".main-feed .image-stage");
     if (!r || !s) return !1;
-    const n = t.cameras.find((g) => g.entity === e);
+    const n = t.cameras.find((d) => d.entity === e);
     if (!n) return !1;
     this._localActiveCamera = e, this._refreshSeed = Date.now(), this._updateStage(s, n), this._mountLiveFeed(n.entity), this._updateSlotPill(a.querySelector(".main-feed [data-feed-pill]"), n, !1);
-    const l = a.querySelector('.main-feed [data-action="more-info"]');
-    l && (l.dataset.cameraId = n.entity), this._updateStage(r.querySelector(".image-stage"), i), this._updateSlotPill(r.querySelector(".tile-pill"), i, !0), r.dataset.cameraId = i.entity;
-    const c = !!a.querySelector(".security-subview.is-desktop");
+    const l = a.querySelector(".main-feed [data-feed-title]");
+    if (l && (l.textContent = o._displayName(n, !1, !0)), this._cameraMenuOpen) {
+      this._cameraMenuOpen = !1;
+      const d = a.querySelector(".main-feed [data-camera-controls]");
+      d && (d.innerHTML = "", d.classList.remove("is-open"));
+      const m = a.querySelector(".main-feed .feed-head-menu");
+      m && (m.classList.remove("is-active"), m.setAttribute("aria-expanded", "false"));
+    }
+    const c = a.querySelector('.main-feed [data-action="more-info"]');
+    c && (c.dataset.cameraId = n.entity), this._updateStage(r.querySelector(".image-stage"), i), this._updateSlotPill(r.querySelector(".tile-pill"), i, !0), r.dataset.cameraId = i.entity;
+    const b = !!a.querySelector(".security-subview.is-desktop");
     return r.setAttribute(
       "aria-label",
-      o._displayName(i, !0, c)
+      o._displayName(i, !0, b)
     ), this._syncDesktopGroups(), this._renderedSignature = o._signatureFromModel(this._model()), !0;
   }
   _syncDesktopGroups() {
@@ -307,28 +315,43 @@ class o extends HTMLElement {
     const a = this.shadowRoot?.querySelector("[data-camera-controls]");
     a && (a.innerHTML = this._cameraControls(e));
   }
+  // PAINEL DE CONTROLES (2026-08-24).
+  //
+  // ANTERIOR (rollback): tres botoes translucidos soltos sobre a imagem,
+  // no canto superior direito. Saiu por decisao do usuario — nao funcionava
+  // bem sobre o video.
+  //
+  // Agora e o MESMO painel das cameras das subviews: mesma tripla
+  // (som, movimento, privacidade), mesma forma (icone + rotulo + chave),
+  // aberto pelo botao de tres pontos do cabecalho. Nenhuma logica de
+  // interacao nova: a acao continua sendo toggle-camera-control.
   _cameraControls(e) {
-    return e ? ["sound", "motion", "privacy"].map((a) => this._controlState(e, a)).filter(Boolean).map((a) => {
-      const t = a.active ? " is-on" : "", i = a.unavailable ? " is-unavailable" : "";
+    if (!e) return "";
+    const a = o._displayName(e, !1, !0), t = ["sound", "motion", "privacy"].map((i) => this._controlState(e, i)).filter(Boolean).map((i) => {
+      const r = i.active ? " is-on" : "", s = i.unavailable ? " is-unavailable" : "", n = i.description || i.label || "Controle";
       return `
           <button
-            class="camera-control-btn${t}${i}"
+            class="camera-control${r}${s}"
             type="button"
             data-action="toggle-camera-control"
-            data-control-entity="${o._escapeAttr(a.entity)}"
-            aria-label="${o._escapeAttr(a.label || a.key)}"
-            aria-pressed="${a.active ? "true" : "false"}"
-            ${a.unavailable ? "disabled" : ""}
+            data-control-entity="${o._escapeAttr(i.entity)}"
+            title="${o._escapeAttr(n)} — camera ${o._escapeAttr(a)}"
+            aria-label="${o._escapeAttr(i.label || i.key)}"
+            aria-pressed="${i.active ? "true" : "false"}"
+            ${i.unavailable ? "disabled" : ""}
           >
-            <bruno-icon icon="${o._escapeAttr(a.icon || "mdi:toggle-switch-outline")}"></bruno-icon>
+            <bruno-icon icon="${o._escapeAttr(i.icon || "mdi:toggle-switch-outline")}"></bruno-icon>
+            <span class="camera-control-label">${o._escape(i.label || n)}</span>
+            <span class="camera-control-switch" aria-hidden="true"></span>
           </button>
         `;
-    }).join("") : "";
+    }).join("");
+    return t ? `<div class="camera-control-strip" aria-label="Controles da camera ${o._escapeAttr(a)}"><div class="camera-controls">${t}</div></div>` : "";
   }
   _syncCameraControls() {
     const e = this.shadowRoot;
     e && e.querySelectorAll("[data-control-entity]").forEach((a) => {
-      const t = this._state(a.dataset.controlEntity), i = !t || m.includes(String(t.state || "").toLowerCase()), r = !i && String(t?.state || "").toLowerCase() === "on";
+      const t = this._state(a.dataset.controlEntity), i = !t || h.includes(String(t.state || "").toLowerCase()), r = !i && String(t?.state || "").toLowerCase() === "on";
       a.classList.toggle("is-on", r), a.classList.toggle("is-unavailable", i), a.toggleAttribute("disabled", i), a.setAttribute("aria-pressed", r ? "true" : "false");
     });
   }
@@ -425,7 +448,7 @@ class o extends HTMLElement {
   }
   _startRefreshTimer() {
     if (this._refreshTimer || !this.isConnected) return;
-    const e = Math.max(3e3, Number(this._config?.refresh_interval) || d.refresh_interval);
+    const e = Math.max(3e3, Number(this._config?.refresh_interval) || p.refresh_interval);
     this._sincronizarMotorCameras(), !this._motorCameras && (this._refreshTimer = globalThis.setInterval(() => this._refreshCameraImagesLegado(), e));
   }
   _stopRefreshTimer() {
@@ -522,6 +545,10 @@ class o extends HTMLElement {
     const t = a.dataset.action, i = a.dataset.cameraId;
     if (t === "select-camera") {
       e.preventDefault(), this._selectCamera(i);
+      return;
+    }
+    if (t === "toggle-camera-menu") {
+      e.preventDefault(), globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._cameraMenuOpen = !this._cameraMenuOpen, this._render();
       return;
     }
     if (t === "toggle-camera-control") {
@@ -621,7 +648,7 @@ class o extends HTMLElement {
             <section class="camera-overview-grid">
               <section class="camera-primary-column">
                 <section class="main-feed" aria-label="Câmera principal">
-                  ${o._mainFeed(a, !0, this._cameraControls(a))}
+                  ${o._mainFeed(a, !0, this._cameraControls(a), this._cameraMenuOpen)}
                 </section>
                 <section class="camera-insights" data-camera-insights aria-label="Resumo de câmeras">
                   ${o._insightsInner(e)}
@@ -769,7 +796,7 @@ class o extends HTMLElement {
     }
     this._liveEntity !== e && (this._liveReady = "", this._liveGreenMarked = "", this._liveEntity = e, this._liveStartedAt = globalThis.performance?.now?.() || Date.now(), this._liveState = "negotiating", this._liveLoadHandler && i.removeEventListener("load", this._liveLoadHandler), this._liveLoadHandler = () => this._markLiveReady(), i.addEventListener("load", this._liveLoadHandler), this._liveTimer && globalThis.clearTimeout(this._liveTimer), this._liveTimer = globalThis.setTimeout(
       () => this._promoverLiveFeed(e),
-      h
+      u
     )), this._setLiveCamera(e), i.parentElement !== a && a.appendChild(i);
   }
   // Prazo esgotado SEM video detectado.
@@ -785,7 +812,7 @@ class o extends HTMLElement {
     Promise.resolve(e.updateComplete).then(() => {
       this._liveEl !== e || this._liveEntity !== a || !e.isConnected || (this._liveStartedAt = globalThis.performance?.now?.() || Date.now(), e.entityid = a, globalThis.BrunoCameraLive?.marcar?.(a, "entityid atribuido"), this._liveTimer = globalThis.setTimeout(() => {
         this._liveEl === e && this._liveEntity === a && this._liveReady !== a && this._failLiveFeed(a, "prazo");
-      }, h));
+      }, u));
     }).catch(() => {
       this._liveEl === e && this._liveEntity === a && this._failLiveFeed(a, "contexto");
     });
@@ -1768,6 +1795,64 @@ class o extends HTMLElement {
           align-items: stretch;
         }
 
+        /* ==== QUATRO BLOCOS INDEPENDENTES (2026-08-24) ==================
+
+           Camera principal, Atividade recente, Area social e Area intima
+           passam a ser quatro superficies proprias — borda, raio, fundo e
+           separacao clara entre si.
+
+           O material e vidro fosco TRANSLUCIDO, nao solido: o fundo da Home
+           ja chega borrado quando esta interface abre, e a superficie deve
+           deixar isso aparecer.
+
+           O que neutraliza o calor do wallpaper e o saturate MENOR que 1
+           no backdrop-filter — nao um fundo mais opaco. Escurecer sem
+           dessaturar deixaria a mancha alaranjada, so mais escura.
+           ================================================================ */
+        .security-subview.is-desktop {
+          --cam-bloco-fundo:
+            linear-gradient(180deg, rgba(255,255,255,0.042), rgba(255,255,255,0.014) 52%, rgba(0,0,0,0.030)),
+            rgba(11, 13, 17, 0.46);
+          --cam-bloco-borda: 1px solid rgba(255,255,255,0.085);
+          --cam-bloco-raio: var(--bruno-liquid-card-radius, 22px);
+          --cam-bloco-filtro: blur(3px) saturate(0.72) brightness(0.94);
+          --cam-bloco-sombra:
+            inset 0.5px 0.5px 1px 0 rgba(255,255,255,0.32),
+            inset -0.5px -0.5px 1px 0 rgba(255,255,255,0.075),
+            0 12px 30px -18px rgba(0,0,0,0.62);
+        }
+
+        .security-subview.is-desktop .main-feed-card,
+        .security-subview.is-desktop .camera-insights,
+        .security-subview.is-desktop .camera-group {
+          background: var(--cam-bloco-fundo) !important;
+          border: var(--cam-bloco-borda) !important;
+          border-radius: var(--cam-bloco-raio) !important;
+          box-shadow: var(--cam-bloco-sombra) !important;
+          backdrop-filter: var(--cam-bloco-filtro);
+          -webkit-backdrop-filter: var(--cam-bloco-filtro);
+          overflow: hidden;
+        }
+
+        /* Os dois grupos deixam de ser um bloco unico dividido por filete:
+           cada um tem caixa propria, entao o separador sai e o respiro do
+           grid assume. */
+        .security-subview.is-desktop .camera-group {
+          padding: clamp(11px, 0.9cqw, 15px) clamp(11px, 0.9cqw, 15px) clamp(12px, 1cqw, 16px);
+          border-top: 0;
+        }
+
+        .security-subview.is-desktop .camera-group:first-child {
+          padding-top: clamp(11px, 0.9cqw, 15px);
+        }
+
+        /* As miniaturas ficam DENTRO do bloco do grupo, entao a caixa delas
+           nao repete o material — so o recorte. */
+        .security-subview.is-desktop .camera-group .camera-tile {
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
+
         .camera-primary-column {
           min-width: 0;
           min-height: 0;
@@ -1863,16 +1948,116 @@ class o extends HTMLElement {
           font-size: clamp(10px, 0.74cqw, 12px);
         }
 
-        .security-subview.is-desktop .feed-pill {
-          left: 17px;
-          bottom: 16px;
-          max-width: calc(100% - 126px);
-          font-size: clamp(12px, 0.9cqw, 14px);
+        /* ANTERIOR (rollback 2026-08-24): a pilula com o nome do ambiente
+           e os botoes Detalhes/Atualizar viviam sobrepostos a imagem.
+             .feed-pill    { left: 17px; bottom: 16px; max-width: calc(100% - 126px); }
+             .feed-controls{ right: 15px; bottom: 14px; }
+           Essas informacoes passaram para a faixa de cabecalho. O markup
+           continua no DOM (o mobile usa) — aqui so deixa de ser exibido. */
+        .security-subview.is-desktop .main-feed-card .feed-pill,
+        .security-subview.is-desktop .main-feed-card .feed-controls {
+          display: none;
         }
 
-        .security-subview.is-desktop .feed-controls {
-          right: 15px;
-          bottom: 14px;
+        /* ==== FAIXA DE CABECALHO DO BLOCO PRINCIPAL ==================== */
+        .security-subview.is-desktop .main-feed-card.has-head {
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
+        }
+
+        .feed-head {
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          padding: clamp(9px, 0.72cqw, 13px) clamp(12px, 0.95cqw, 16px);
+          border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .feed-head-id {
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 9px;
+        }
+
+        .feed-head-title {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          color: rgba(244,248,255,0.95);
+          font-size: clamp(13px, 1.02cqw, 17px);
+          font-weight: 660;
+          line-height: 1.1;
+        }
+
+        .feed-live-pill {
+          flex: 0 0 auto;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 8px 3px 6px;
+          border-radius: 999px;
+          background: rgba(239, 68, 68, 0.14);
+          border: 1px solid rgba(239, 68, 68, 0.30);
+          color: rgba(254, 226, 226, 0.94);
+          font-size: clamp(9px, 0.62cqw, 11px);
+          font-weight: 700;
+          letter-spacing: 0.02em;
+          text-transform: uppercase;
+          line-height: 1;
+        }
+
+        .feed-live-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #ef4444;
+          box-shadow: 0 0 7px rgba(239, 68, 68, 0.72);
+        }
+
+        .feed-head-actions {
+          flex: 0 0 auto;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        /* Mesma caixa dos dois: o expandir (More Info) e o de tres pontos. */
+        .feed-head-btn {
+          width: 32px;
+          height: 32px;
+          display: grid;
+          place-items: center;
+          padding: 0;
+          border-radius: var(--bruno-liquid-control-radius-compact, 11px);
+          border: 1px solid rgba(255,255,255,0.09);
+          background: rgba(255,255,255,0.045);
+          color: rgba(226,232,240,0.86);
+          cursor: pointer;
+          transition: background 140ms ease, color 140ms ease, transform 90ms ease;
+        }
+
+        .feed-head-btn bruno-icon {
+          --mdc-icon-size: 17px;
+          width: 17px;
+          height: 17px;
+        }
+
+        .feed-head-btn:hover {
+          background: rgba(255,255,255,0.085);
+          color: rgba(241,245,249,0.96);
+        }
+
+        .feed-head-btn:active {
+          transform: scale(0.93);
+        }
+
+        .feed-head-btn.is-active {
+          background: rgba(255,255,255,0.14);
+          color: #fff;
         }
 
         .security-subview.is-desktop .hc-btn {
@@ -1880,14 +2065,118 @@ class o extends HTMLElement {
           height: 36px;
         }
 
+        /* ANTERIOR (rollback 2026-08-24): o cluster era a fileira de tres
+           botoes translucidos solta sobre a imagem. Agora e o recipiente do
+           painel aberto pelo botao de tres pontos — ancorado no topo
+           direito do video e so presente quando aberto. */
         .camera-control-cluster {
           position: absolute;
-          top: 14px;
-          right: 14px;
-          z-index: 3;
-          display: flex;
+          top: 12px;
+          right: 12px;
+          z-index: 4;
+          display: none;
+        }
+
+        .camera-control-cluster.is-open {
+          display: block;
+        }
+
+        /* Mesma forma do painel das cameras nas subviews: icone, rotulo e
+           chave, um por linha, sobre vidro translucido. */
+        .camera-control-strip {
+          min-width: 208px;
+          padding: 7px;
+          border-radius: var(--bruno-liquid-card-radius-compact, 16px);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
+            rgba(9, 11, 15, 0.72);
+          border: 1px solid rgba(255,255,255,0.105);
+          box-shadow: 0 18px 40px -20px rgba(0,0,0,0.82);
+          backdrop-filter: blur(14px) saturate(0.86);
+          -webkit-backdrop-filter: blur(14px) saturate(0.86);
+        }
+
+        .camera-controls {
+          display: grid;
+          gap: 3px;
+        }
+
+        .camera-control {
+          display: grid;
+          grid-template-columns: 20px minmax(0, 1fr) 32px;
           align-items: center;
-          gap: 7px;
+          gap: 9px;
+          width: 100%;
+          padding: 8px 9px;
+          border: 0;
+          border-radius: var(--bruno-liquid-control-radius-compact, 11px);
+          background: transparent;
+          color: rgba(226,232,240,0.86);
+          font: inherit;
+          text-align: left;
+          cursor: pointer;
+          transition: background 130ms ease, color 130ms ease;
+        }
+
+        .camera-control:hover:not(:disabled) {
+          background: rgba(255,255,255,0.055);
+        }
+
+        .camera-control bruno-icon {
+          --mdc-icon-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+
+        .camera-control-label {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: clamp(11px, 0.78cqw, 13px);
+          font-weight: 560;
+        }
+
+        /* Chave no mesmo desenho dos toggles do dashboard. */
+        .camera-control-switch {
+          position: relative;
+          width: 32px;
+          height: 18px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.12);
+          border: 1px solid rgba(255,255,255,0.14);
+          transition: background 150ms ease, border-color 150ms ease;
+        }
+
+        .camera-control-switch::after {
+          content: "";
+          position: absolute;
+          top: 2px;
+          left: 2px;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: rgba(255,255,255,0.86);
+          transition: transform 150ms ease;
+        }
+
+        .camera-control.is-on {
+          color: rgba(244,248,255,0.97);
+        }
+
+        .camera-control.is-on .camera-control-switch {
+          background: rgba(96,165,250,0.62);
+          border-color: rgba(96,165,250,0.44);
+        }
+
+        .camera-control.is-on .camera-control-switch::after {
+          transform: translateX(14px);
+        }
+
+        .camera-control:disabled,
+        .camera-control.is-unavailable {
+          opacity: 0.42;
+          cursor: default;
         }
 
         .camera-control-btn {
@@ -2109,16 +2398,45 @@ class o extends HTMLElement {
   // A pilula tem data-feed-pill para a troca in-place (2b) localiza-la.
   // O feed principal mantem o snapshot por baixo do ponto data-live-mount.
   // O player direto nasce invisivel e so aparece depois do primeiro quadro.
-  static _mainFeed(e, a = !1, t = "") {
-    const i = !!e?.image;
+  // FAIXA DE CABECALHO (2026-08-24) — bloco da camera principal.
+  //
+  // No DESKTOP o bloco ganha um cabecalho proprio acima do video:
+  //   titulo DINAMICO (segue a camera selecionada) + pilula Ao vivo a
+  //   esquerda; expandir (More Info) e tres pontos a direita.
+  //
+  // Com isso saem de cima da imagem: a pilula com o nome do ambiente (que
+  // agora vive no cabecalho) e os tres botoes translucidos de controle (que
+  // viram o painel do menu de tres pontos, igual ao das subviews).
+  //
+  // O video fica mais baixo por construcao — a faixa consome altura, e essa
+  // reducao e desejada.
+  //
+  // MOBILE inalterado: continua com a pilula sobreposta e sem cabecalho.
+  static _mainFeed(e, a = !1, t = "", i = !1) {
+    const r = !!e?.image, s = a ? `
+        <header class="feed-head">
+          <div class="feed-head-id">
+            <span class="feed-head-title" data-feed-title>${o._escape(o._displayName(e, !1, !0))}</span>
+            <span class="feed-live-pill"><span class="feed-live-dot" aria-hidden="true"></span>Ao vivo</span>
+          </div>
+          <div class="feed-head-actions">
+            <button class="feed-head-btn" type="button" data-action="more-info" data-camera-id="${o._escapeAttr(e?.entity || "")}" title="Abrir detalhes" aria-label="Abrir detalhes da camera">
+              <bruno-icon icon="mdi:magnify-plus-outline"></bruno-icon>
+            </button>
+            <button class="feed-head-btn feed-head-menu${i ? " is-active" : ""}" type="button" data-action="toggle-camera-menu" title="Controles" aria-expanded="${i ? "true" : "false"}" aria-label="${i ? "Fechar controles da camera" : "Abrir controles da camera"}">
+              <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
+            </button>
+          </div>
+        </header>` : "";
     return `
-      <article class="feed-card main-feed-card">
-        <div class="image-stage main-feed-stage${i ? " has-image" : ""}">
-          ${i ? o._image(e, "camera-image camera-main-fallback") : ""}
+      <article class="feed-card main-feed-card${a ? " has-head" : ""}">
+        ${s}
+        <div class="image-stage main-feed-stage${r ? " has-image" : ""}">
+          ${r ? o._image(e, "camera-image camera-main-fallback") : ""}
           <div class="camera-placeholder" aria-hidden="true"></div>
           <div class="camera-live" data-live-mount aria-hidden="true"></div>
           <div class="feed-vignette" aria-hidden="true"></div>
-          <div class="camera-control-cluster" data-camera-controls>${a ? t : ""}</div>
+          <div class="camera-control-cluster${i ? " is-open" : ""}" data-camera-controls>${a && i ? t : ""}</div>
           <div class="feed-pill" data-feed-pill>
             ${o._pillInner(e, !1, a)}
           </div>
@@ -2276,11 +2594,11 @@ class o extends HTMLElement {
     return o._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(p) || customElements.define(p, o);
+customElements.get(g) || customElements.define(g, o);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: p,
+  type: g,
   name: "Bruno Cameras Security Subview",
   description: "Full-screen Bruno UI security camera console."
 });
-//# sourceMappingURL=bruno-cameras-security-subview.DX5XKzUt.js.map
+//# sourceMappingURL=bruno-cameras-security-subview.BF1FeYvd.js.map

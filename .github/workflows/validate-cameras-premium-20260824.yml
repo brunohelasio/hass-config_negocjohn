@@ -3,18 +3,21 @@ name: Validate cameras premium 20260824
 on:
   push:
     branches: [feat/cameras-premium-subview-20260824]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: write
 
 jobs:
   validate-build:
-    if: ${{ !contains(github.event.head_commit.message, '[generated cameras]') }}
+    if: ${{ github.event_name == 'pull_request' || !contains(github.event.head_commit.message, '[generated cameras]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feat/cameras-premium-subview-20260824
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || 'feat/cameras-premium-subview-20260824' }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v4

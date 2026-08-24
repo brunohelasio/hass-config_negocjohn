@@ -94,17 +94,17 @@ const p = "bruno-cameras-security-subview", d = {
       motion_entity: "bruno_tuya_motion.qma_camera_2"
     }
   ]
-}, g = ["streaming", "recording", "idle", "on"], m = ["unavailable", "unknown", ""], u = /* @__PURE__ */ new Set([
+}, u = ["streaming", "recording", "idle", "on"], m = ["unavailable", "unknown", ""], f = /* @__PURE__ */ new Set([
   "camera.sl_camera_profile_1",
   "camera.vr_camera_profile_1",
   "camera.cz_camera_profile_1",
   "camera.as_camera_profile_1"
-]), f = /* @__PURE__ */ new Set([
+]), b = /* @__PURE__ */ new Set([
   "camera.of_camera_profile_1",
   "camera.qc_camera_profile_1",
   "camera.qmi_camera_profile_1",
   "camera.qma_camera_profile_1"
-]), b = 3e4, _ = 9e4;
+]), h = 3e4, _ = 9e4;
 class o extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -163,7 +163,7 @@ class o extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _cameraState(e) {
-    const a = this._state(e.entity), t = a?.state || "", i = !a || m.includes(t), r = !i && g.includes(t), s = a?.attributes?.entity_picture || "";
+    const a = this._state(e.entity), t = a?.state || "", i = !a || m.includes(t), r = !i && u.includes(t), s = a?.attributes?.entity_picture || "";
     s && (this._lastCameraImages[e.entity] = s);
     const n = s || this._lastCameraImages[e.entity] || "";
     return {
@@ -178,7 +178,7 @@ class o extends HTMLElement {
     };
   }
   _cameraGroup(e) {
-    return e?.group === "social" || e?.group === "intimate" ? e.group : u.has(e?.entity) ? "social" : (f.has(e?.entity), "intimate");
+    return e?.group === "social" || e?.group === "intimate" ? e.group : f.has(e?.entity) ? "social" : (b.has(e?.entity), "intimate");
   }
   _motionEvent(e) {
     if (!e?.motion_entity) return null;
@@ -277,7 +277,7 @@ class o extends HTMLElement {
     if (!i || e === i.entity) return !1;
     const r = a.querySelector(`.camera-tile[data-camera-id="${e}"]`), s = a.querySelector(".main-feed .image-stage");
     if (!r || !s) return !1;
-    const n = t.cameras.find((h) => h.entity === e);
+    const n = t.cameras.find((g) => g.entity === e);
     if (!n) return !1;
     this._localActiveCamera = e, this._refreshSeed = Date.now(), this._updateStage(s, n), this._mountLiveFeed(n.entity), this._updateSlotPill(a.querySelector(".main-feed [data-feed-pill]"), n, !1);
     const l = a.querySelector('.main-feed [data-action="more-info"]');
@@ -660,51 +660,156 @@ class o extends HTMLElement {
     const a = this._liveEl;
     return a ? (a.hass = this._hass, a.cameraImage !== e && (a.cameraImage = e), !0) : !1;
   }
-  // ATIVO: reinsere WebRTC direto quando o render recria o DOM. Sem o player
-  // registrado, mantem somente o snapshot e nao inicia fallback HLS.
+  // ANTERIOR (rollback ONVIF ao vivo 2026-08-24) — WebRTC direto.
+  //
+  // O bloco abaixo montava um ha-web-rtc-player cru sobre a entidade ONVIF.
+  // Ele exige que a negociacao WebRTC feche; qualquer falha (prazo, sem video,
+  // contexto Lit, player nao registrado) caia em _failLiveFeed, que marca
+  // _liveBlockedEntity e BLOQUEIA aquela camera pelo resto da vida da
+  // instancia — sobrando so o instantaneo.
+  //
+  // O bloco esta INTEGRO em comentario. Para reativar: descomentar e remover o
+  // _mountLiveFeed novo. _startLivePlayerAfterContext permanece definido logo
+  // abaixo, intacto.
+  //
+  //   // ATIVO: reinsere WebRTC direto quando o render recria o DOM. Sem o player
+  //   // registrado, mantem somente o snapshot e nao inicia fallback HLS.
+  //   _mountLiveFeed(activeId) {
+  //     const mount = this.shadowRoot?.querySelector('.main-feed [data-live-mount]');
+  //     const camera = this._model().cameras.find((item) => item.entity === activeId);
+  //     if (this._liveState === 'fallback' && this._liveBlockedEntity !== activeId) {
+  //       this._liveState = 'idle';
+  //       this._liveBlockedEntity = '';
+  //     }
+  //     if (
+  //       !this.isConnected || !mount || !activeId || camera?.unavailable ||
+  //       ['loading-player', 'handed-off', 'resuming', 'fallback'].includes(this._liveState)
+  //     ) {
+  //       this._stopLiveFeed();
+  //       return;
+  //     }
+  //
+  //     if (!this._liveEl || this._liveEntity !== activeId) {
+  //       this._stopLiveFeed();
+  //       if (!globalThis.customElements?.get('ha-web-rtc-player')) {
+  //         this._liveState = 'loading-player';
+  //         const token = ++this._liveLoadToken;
+  //         const garantir = globalThis.BrunoCameraLive?.garantirPlayer;
+  //         if (typeof garantir !== 'function') {
+  //           this._liveState = 'fallback';
+  //           this._liveBlockedEntity = activeId;
+  //           return;
+  //         }
+  //         Promise.resolve(garantir(activeId, this._hass)).then((ok) => {
+  //           if (!this.isConnected || token !== this._liveLoadToken) return;
+  //           this._liveState = ok ? 'idle' : 'fallback';
+  //           this._liveBlockedEntity = ok ? '' : activeId;
+  //           this._mountLiveFeed(this._model().activeId);
+  //         });
+  //         return;
+  //       }
+  //       const el = globalThis.BrunoCameraLive?.criarPlayer?.()
+  //         || document.createElement('ha-web-rtc-player');
+  //       this._liveState = 'negotiating';
+  //       el.classList.add('camera-live-el');
+  //       el.setAttribute('muted', '');
+  //       el.setAttribute('playsinline', '');
+  //       el.setAttribute('autoplay', '');
+  //       try { el.fitMode = 'cover'; } catch (error) { /* CSS cobre versoes sem fitMode. */ }
+  //       this._liveLoadHandler = () => this._markLiveReady();
+  //       this._liveStreamsHandler = (event) => {
+  //         if (event?.detail?.hasVideo === false) this._failLiveFeed(activeId, 'sem video');
+  //       };
+  //       el.addEventListener('load', this._liveLoadHandler);
+  //       el.addEventListener('streams', this._liveStreamsHandler);
+  //       this._liveEl = el;
+  //       this._liveEntity = activeId;
+  //
+  //       // O player oficial consome apiContext/connectionContext no primeiro
+  //       // update Lit. Atribuir entityid imediatamente depois do append ainda era
+  //       // cedo: _startWebRtc retornava sem contexto e nao tentava novamente.
+  //       mount.appendChild(el);
+  //       // ANTERIOR (rollback contexto Lit): atribuicao imediata de entityid e
+  //       // armacao do prazo de 30 s neste ponto.
+  //       this._startLivePlayerAfterContext(el, activeId);
+  //       return;
+  //     }
+  //
+  //     if (this._liveEl.parentElement !== mount) mount.appendChild(this._liveEl);
+  //     if (this._liveEl.entityid !== activeId) this._liveEl.entityid = activeId;
+  //   }
+  //
+  //
+  // ATIVO (2026-08-24): a camera principal transmite pela entidade ONVIF
+  // usando o hui-image nativo do Home Assistant.
+  //
+  // POR QUE hui-image, e nao o player WebRTC direto
+  //
+  // hui-image com cameraView live e o mesmo elemento que o proprio HA usa no
+  // more-info: ele resolve WebRTC quando disponivel, cai para HLS quando nao,
+  // e cai para instantaneo por conta propria. Reimplementar essa cadeia a mao
+  // ja custou uma rodada inteira neste projeto (registro de 2026-08-07 rev.2:
+  // tres negociacoes, tres falhas, e as tentativas ainda consumiam a camera e
+  // matavam de fome os instantaneos dos outros comodos).
+  //
+  // A entidade continua sendo a ONVIF declarada na configuracao
+  // (camera.*_profile_1) — nada de origem muda aqui.
+  //
+  // _ensureLiveEl e _setLiveCamera ja existiam no arquivo para este caminho.
   _mountLiveFeed(e) {
-    const a = this.shadowRoot?.querySelector(".main-feed [data-live-mount]"), t = this._model().cameras.find((i) => i.entity === e);
-    if (this._liveState === "fallback" && this._liveBlockedEntity !== e && (this._liveState = "idle", this._liveBlockedEntity = ""), !this.isConnected || !a || !e || t?.unavailable || ["loading-player", "handed-off", "resuming", "fallback"].includes(this._liveState)) {
+    const a = this.shadowRoot?.querySelector(".main-feed [data-live-mount]"), t = this._model().cameras.find((r) => r.entity === e);
+    if (this._liveState === "fallback" && this._liveBlockedEntity !== e && (this._liveState = "idle", this._liveBlockedEntity = ""), !this.isConnected || !a || !e || t?.unavailable || this._liveState === "fallback" && this._liveBlockedEntity === e) {
       this._stopLiveFeed();
       return;
     }
-    if (!this._liveEl || this._liveEntity !== e) {
-      if (this._stopLiveFeed(), !globalThis.customElements?.get("ha-web-rtc-player")) {
-        this._liveState = "loading-player";
-        const r = ++this._liveLoadToken, s = globalThis.BrunoCameraLive?.garantirPlayer;
-        if (typeof s != "function") {
-          this._liveState = "fallback", this._liveBlockedEntity = e;
-          return;
-        }
-        Promise.resolve(s(e, this._hass)).then((n) => {
-          !this.isConnected || r !== this._liveLoadToken || (this._liveState = n ? "idle" : "fallback", this._liveBlockedEntity = n ? "" : e, this._mountLiveFeed(this._model().activeId));
-        });
-        return;
-      }
-      const i = globalThis.BrunoCameraLive?.criarPlayer?.() || document.createElement("ha-web-rtc-player");
-      this._liveState = "negotiating", i.classList.add("camera-live-el"), i.setAttribute("muted", ""), i.setAttribute("playsinline", ""), i.setAttribute("autoplay", "");
-      try {
-        i.fitMode = "cover";
-      } catch {
-      }
-      this._liveLoadHandler = () => this._markLiveReady(), this._liveStreamsHandler = (r) => {
-        r?.detail?.hasVideo === !1 && this._failLiveFeed(e, "sem video");
-      }, i.addEventListener("load", this._liveLoadHandler), i.addEventListener("streams", this._liveStreamsHandler), this._liveEl = i, this._liveEntity = e, a.appendChild(i), this._startLivePlayerAfterContext(i, e);
+    const i = this._ensureLiveEl();
+    if (!i) {
+      this._liveState = "fallback", this._liveBlockedEntity = e, this._stopLiveFeed();
       return;
     }
-    this._liveEl.parentElement !== a && a.appendChild(this._liveEl), this._liveEl.entityid !== e && (this._liveEl.entityid = e);
+    this._liveEntity !== e && (this._liveReady = "", this._liveGreenMarked = "", this._liveEntity = e, this._liveStartedAt = globalThis.performance?.now?.() || Date.now(), this._liveState = "negotiating", this._liveLoadHandler && i.removeEventListener("load", this._liveLoadHandler), this._liveLoadHandler = () => this._markLiveReady(), i.addEventListener("load", this._liveLoadHandler), this._liveTimer && globalThis.clearTimeout(this._liveTimer), this._liveTimer = globalThis.setTimeout(
+      () => this._promoverLiveFeed(e),
+      h
+    )), this._setLiveCamera(e), i.parentElement !== a && a.appendChild(i);
+  }
+  // Prazo esgotado SEM video detectado.
+  //
+  // Nao e falha: hui-image e a autoridade sobre o que consegue exibir, e o
+  // proprio fallback interno dele ja pode estar na tela. Revelar o elemento e
+  // melhor do que arrancar um player que so demorou mais que o prazo — e, ao
+  // contrario de _failLiveFeed, nao bloqueia a camera para o resto da sessao.
+  _promoverLiveFeed(e) {
+    !e || e !== this._liveEntity || !this._liveEl || (this._liveTimer = null, this._liveReady !== e && (this._liveReady = e, this._liveState = "live", this._liveEl.classList.add("is-ready"), this._sincronizarMotorCameras()));
   }
   _startLivePlayerAfterContext(e, a) {
     Promise.resolve(e.updateComplete).then(() => {
       this._liveEl !== e || this._liveEntity !== a || !e.isConnected || (this._liveStartedAt = globalThis.performance?.now?.() || Date.now(), e.entityid = a, globalThis.BrunoCameraLive?.marcar?.(a, "entityid atribuido"), this._liveTimer = globalThis.setTimeout(() => {
         this._liveEl === e && this._liveEntity === a && this._liveReady !== a && this._failLiveFeed(a, "prazo");
-      }, b));
+      }, h));
     }).catch(() => {
       this._liveEl === e && this._liveEntity === a && this._failLiveFeed(a, "contexto");
     });
   }
+  // O <video> pode estar num shadow root ANINHADO.
+  //
+  // Com o player WebRTC cru ele era filho direto do proprio elemento. Com o
+  // hui-image ha um nivel a mais: hui-image renderiza ha-hls-player ou
+  // ha-web-rtc-player, e o video vive no shadow root DESSE filho. Uma busca de
+  // um nivel so nunca acharia — e o feed ficaria invisivel para sempre, com o
+  // instantaneo por baixo dando a impressao de que nada mudou.
+  _acharVideoAoVivo(e, a = 0) {
+    if (!e || a > 4) return null;
+    const t = e.querySelector?.("video");
+    if (t) return t;
+    for (const i of e.querySelectorAll?.("*") ?? []) {
+      if (!i.shadowRoot) continue;
+      const r = this._acharVideoAoVivo(i.shadowRoot, a + 1);
+      if (r) return r;
+    }
+    return null;
+  }
   _markLiveReady() {
-    const e = this._liveEl, a = this._liveEntity, t = e?.shadowRoot?.querySelector("video");
+    const e = this._liveEl, a = this._liveEntity, t = e?.shadowRoot ? this._acharVideoAoVivo(e.shadowRoot) : null;
     if (!(!e || !a || !t || t.readyState < 2 || this._liveReady === a)) {
       if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(t)) {
         if (this._liveGreenMarked !== a) {
@@ -2178,4 +2283,4 @@ window.customCards.push({
   name: "Bruno Cameras Security Subview",
   description: "Full-screen Bruno UI security camera console."
 });
-//# sourceMappingURL=bruno-cameras-security-subview.BACy0zCU.js.map
+//# sourceMappingURL=bruno-cameras-security-subview.DX5XKzUt.js.map

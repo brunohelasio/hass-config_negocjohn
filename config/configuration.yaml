@@ -165,7 +165,8 @@ frontend:
     # ANTERIOR (rollback blocos visuais): - /local/dashboard/bruno-dashboard.BHp2FhWd.js
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.NCZGW0jT.js
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.DxcXSs8A.js
-    - /local/dashboard/bruno-dashboard.B-CcUtgI.js
+    # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.B-CcUtgI.js
+    - /local/dashboard/bruno-dashboard.BOUu81Px.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

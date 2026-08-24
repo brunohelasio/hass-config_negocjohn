@@ -1727,6 +1727,9 @@ export const SUBVIEW_TELEFONE_CSS = css`
   @media (max-width: 800px) {
     :host([data-folha='midia']) .room-subview .mh-sources {
       gap: 6px;
+      /* A primeira secao encostava no filete que separa o cabecalho da
+         folha. O respiro superior descola as duas coisas. */
+      padding-top: 8px;
       /* Sem isto a ultima secao fica colada no filete do dock. */
       padding-bottom: 10px;
     }
@@ -1735,7 +1738,9 @@ export const SUBVIEW_TELEFONE_CSS = css`
        redefinida NO PROPRIO elemento, entao so a folha de midia muda; as
        folhas de luzes, A/C e eletrodomesticos ficam como estao. */
     :host([data-folha='midia']) .room-subview .glass-card.media-hub-card {
-      --fone-reserva: calc(62px + var(--fone-camera-visivel));
+      /* A folha paga os respiros com altura util. 62 -> 52px devolve mais
+         10px, o suficiente para o padding-top novo sem espremer as secoes. */
+      --fone-reserva: calc(52px + var(--fone-camera-visivel));
     }
 
     /* Ponto 1 e 2: a MESMA caixa nos dois estados. A especificidade repete o

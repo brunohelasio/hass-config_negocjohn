@@ -161,7 +161,8 @@ frontend:
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.Cqr-1HMb.js
     # ANTERIOR (rollback câmeras premium 2026-08-24): - /local/dashboard/bruno-dashboard.JCbYdD1u.js
     # ANTERIOR (rollback câmeras 60-40 70-30 2026-08-24): - /local/dashboard/bruno-dashboard.C87VVvKL.js
-    - /local/dashboard/bruno-dashboard.X9QlqRsL.js
+    # ANTERIOR (rollback ONVIF ao vivo): - /local/dashboard/bruno-dashboard.X9QlqRsL.js
+    - /local/dashboard/bruno-dashboard.BHp2FhWd.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

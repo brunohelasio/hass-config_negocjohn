@@ -198,6 +198,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     if (this.shadowRoot && this._renderedSignature === signature) {
       this._updateDesktopInformational();
       this._syncCameraControls();
+      this._syncPrivacySurfaces();
       this._startRefreshTimer();
       return;
     }
@@ -213,9 +214,13 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   static _signatureFromModel(model) {
     if (!model) return 'pending';
     const cams = (model.cameras || [])
-      // isPrivate entra na assinatura: sem ele o anti-flicker consideraria a
-      // troca de privacidade irrelevante e a superficie nunca apareceria.
-      .map((c) => `${c.entity}:${c.online ? 1 : 0}:${c.unavailable ? 1 : 0}:${c.image ? 1 : 0}:${c.isPrivate ? 1 : 0}:${c.status}`)
+      // ANTERIOR (rollback 2026-08-24): isPrivate fazia parte da assinatura.
+      // Funcionava, mas a QUE PRECO: qualquer troca de privacidade mudava a
+      // assinatura, disparava _render e reconstruia o shadow DOM inteiro —
+      // matando o elemento ao vivo e apagando a camera. O mesmo defeito do
+      // menu. Agora a superficie e sincronizada in-place, e a assinatura
+      // volta a enxergar so o que exige remontar o DOM.
+      .map((c) => `${c.entity}:${c.online ? 1 : 0}:${c.unavailable ? 1 : 0}:${c.image ? 1 : 0}:${c.status}`)
       .join('|');
     return `${model.activeId}#${cams}`;
   }
@@ -481,6 +486,33 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._updateDesktopInformational(model);
   }
 
+  /**
+   * Liga/desliga a faixa de controles sem passar pelo _render.
+   *
+   * Toca so no recipiente da faixa e no botao de tres pontos. Tudo o mais —
+   * inclusive o elemento ao vivo — permanece exatamente onde esta.
+   */
+  _alternarFaixaControles() {
+    const root = this.shadowRoot;
+    if (!root) return;
+    const painel = root.querySelector('.main-feed [data-camera-controls]');
+    const botao = root.querySelector('.main-feed .feed-head-menu');
+    const aberto = Boolean(this._cameraMenuOpen);
+    if (painel) {
+      const ativa = this._model().activeCamera;
+      painel.innerHTML = aberto ? this._cameraControls(ativa) : '';
+      painel.classList.toggle('is-open', aberto);
+    }
+    if (botao) {
+      botao.classList.toggle('is-active', aberto);
+      botao.setAttribute('aria-expanded', aberto ? 'true' : 'false');
+      botao.setAttribute(
+        'aria-label',
+        aberto ? 'Fechar controles da camera' : 'Abrir controles da camera',
+      );
+    }
+  }
+
   _replaceCameraControls(camera) {
     const mount = this.shadowRoot?.querySelector('[data-camera-controls]');
     if (!mount) return;
@@ -527,6 +559,45 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       .join('');
     if (!itens) return '';
     return `<div class="camera-control-strip" aria-label="Controles da camera ${BrunoCamerasSecuritySubview._escapeAttr(nome)}"><div class="camera-controls">${itens}</div></div>`;
+  }
+
+  /**
+   * Liga/desliga a superficie de privacidade sem reconstruir o DOM.
+   *
+   * Roda junto de _syncCameraControls a cada update de hass. Toca so na
+   * classe do host e no proprio elemento da superficie; o video permanece.
+   */
+  _syncPrivacySurfaces() {
+    const root = this.shadowRoot;
+    if (!root) return;
+    const model = this._model();
+    const porEntidade = new Map((model.cameras || []).map((c) => [c.entity, c]));
+    const card = root.querySelector('.main-feed-card');
+    if (card) this._aplicarEstadoCamera(card, porEntidade.get(model.activeId), '.image-stage');
+    root.querySelectorAll('.camera-tile[data-camera-id]').forEach((tile) => {
+      this._aplicarEstadoCamera(tile, porEntidade.get(tile.dataset.cameraId), '.image-stage');
+    });
+  }
+
+  _aplicarEstadoCamera(host, camera, seletorPalco) {
+    if (!host || !camera) return;
+    host.classList.toggle('is-private', Boolean(camera.isPrivate));
+    const palco = host.querySelector(seletorPalco) || host;
+    const atual = palco.querySelector('.camera-state-surface');
+    const desejado = BrunoCamerasSecuritySubview._stateSurface(camera);
+    if (!desejado) {
+      if (atual) atual.remove();
+      return;
+    }
+    if (!atual) {
+      palco.insertAdjacentHTML('beforeend', desejado);
+      return;
+    }
+    // Ja existe: so troca quando o motivo muda (privacidade <-> indisponivel).
+    const molde = document.createElement('div');
+    molde.innerHTML = desejado;
+    const novo = molde.firstElementChild;
+    if (novo && atual.textContent.trim() !== novo.textContent.trim()) atual.replaceWith(novo);
   }
 
   _syncCameraControls() {
@@ -838,7 +909,16 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       event.preventDefault();
       globalThis.BrunoLiquidGlass?.feedback?.('tap');
       this._cameraMenuOpen = !this._cameraMenuOpen;
-      this._render();
+      // ANTERIOR (rollback 2026-08-24): this._render().
+      //
+      // _render faz shadowRoot.innerHTML = ..., ou seja, reconstroi o DOM
+      // INTEIRO. Isso destruia o elemento ao vivo; _mountLiveFeed remontava
+      // e a negociacao recomecava do zero — a camera apagava e voltava a
+      // cada abrir/fechar do menu.
+      //
+      // A faixa e ligada IN-PLACE, como a troca de camera ja faz. O video
+      // nao e tocado.
+      this._alternarFaixaControles();
       return;
     }
 
@@ -997,6 +1077,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       this.shadowRoot.addEventListener('keydown', this._boundKeydown);
       this._bindImages();
       this._syncCameraControls();
+      this._syncPrivacySurfaces();
       this._updateDesktopInformational(model);
       // NOVO (live): (re)monta o stream do feed principal no novo DOM.
       this._mountLiveFeed(model.activeId);
@@ -2572,15 +2653,26 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           height: 36px;
         }
 
-        /* ANTERIOR (rollback 2026-08-24): o cluster era a fileira de tres
-           botoes translucidos solta sobre a imagem. Agora e o recipiente do
-           painel aberto pelo botao de tres pontos — ancorado no topo
-           direito do video e so presente quando aberto. */
+        /* ==== FAIXA DE CONTROLES NA BASE (2026-08-24) ==================
+
+           ANTERIOR (rollback): um popup ancorado no canto superior direito do
+           video. Cobria parte da cena e obrigava a tirar o olho da imagem.
+
+           Agora e a MESMA faixa das cameras das subviews: translucida, colada
+           na base do video, ocupando a largura util. Como ela deixa passar a
+           imagem, o video segue visivel com os controles abertos.
+
+           Valores transportados de .camera-control-strip do CSS gerado das
+           subviews — fundo, blur, tres colunas, filete entre os itens e o
+           verde do estado ligado. Nada recriado no olho.
+           ============================================================== */
         .camera-control-cluster {
           position: absolute;
-          top: 12px;
-          right: 12px;
-          z-index: 4;
+          left: clamp(8px, 0.55cqw, 13px);
+          right: clamp(8px, 0.55cqw, 13px);
+          bottom: clamp(8px, 0.55cqw, 13px);
+          top: auto;
+          z-index: 7;
           display: none;
         }
 
@@ -2588,102 +2680,126 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           display: block;
         }
 
-        /* Mesma forma do painel das cameras nas subviews: icone, rotulo e
-           chave, um por linha, sobre vidro translucido. */
         .camera-control-strip {
-          min-width: 208px;
-          padding: 7px;
-          border-radius: var(--bruno-liquid-card-radius-compact, 16px);
+          min-height: clamp(45px, 3.19cqw, 75px);
+          display: grid;
+          align-items: stretch;
+          padding: clamp(3px, 0.22cqw, 5px) 0;
+          border: 0;
+          border-radius: var(--bruno-liquid-control-radius-compact, 12px);
+          overflow: hidden;
           background:
-            linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
-            rgba(9, 11, 15, 0.72);
-          border: 1px solid rgba(255,255,255,0.105);
-          box-shadow: 0 18px 40px -20px rgba(0,0,0,0.82);
-          backdrop-filter: blur(14px) saturate(0.86);
-          -webkit-backdrop-filter: blur(14px) saturate(0.86);
+            linear-gradient(180deg, rgba(3,7,13,0.08), rgba(3,7,13,0.40)),
+            rgba(6,8,12,0.18);
+          backdrop-filter: blur(10px) saturate(0.95);
+          -webkit-backdrop-filter: blur(10px) saturate(0.95);
+          box-shadow: none;
         }
 
         .camera-controls {
+          min-width: 0;
           display: grid;
-          gap: 3px;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          align-items: stretch;
+          gap: 0;
         }
 
         .camera-control {
+          position: relative;
+          min-width: 0;
+          min-height: clamp(39px, 2.75cqw, 65px);
           display: grid;
-          grid-template-columns: 20px minmax(0, 1fr) 32px;
+          grid-template-columns: clamp(14px, 0.99cqw, 23px) auto clamp(22px, 1.54cqw, 36px);
           align-items: center;
-          gap: 9px;
-          width: 100%;
-          padding: 8px 9px;
+          justify-content: center;
+          gap: clamp(5px, 0.38cqw, 9px);
+          padding: 0 clamp(6px, 0.44cqw, 10px);
           border: 0;
-          border-radius: var(--bruno-liquid-control-radius-compact, 11px);
+          border-radius: 0;
           background: transparent;
-          color: rgba(226,232,240,0.86);
+          color: rgba(255,255,255,0.62);
           font: inherit;
           text-align: left;
           cursor: pointer;
-          transition: background 130ms ease, color 130ms ease;
+          transition: color 160ms ease, background 160ms ease, opacity 160ms ease;
         }
 
-        .camera-control:hover:not(:disabled) {
-          background: rgba(255,255,255,0.055);
+        .camera-control + .camera-control::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: clamp(8px, 0.6cqw, 14px);
+          bottom: clamp(8px, 0.6cqw, 14px);
+          width: 1px;
+          background: rgba(255,255,255,0.105);
+        }
+
+        .camera-control:hover,
+        .camera-control:focus-visible {
+          color: rgba(255,255,255,0.90);
+          background: rgba(255,255,255,0.036);
+          outline: none;
         }
 
         .camera-control bruno-icon {
-          --mdc-icon-size: 18px;
-          width: 18px;
-          height: 18px;
+          --mdc-icon-size: 17px;
+          width: 17px;
+          height: 17px;
         }
 
         .camera-control-label {
           min-width: 0;
+          font-size: clamp(9px, 0.6cqw, 14px);
+          font-weight: 760;
+          line-height: 1;
+          white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
-          font-size: clamp(11px, 0.78cqw, 13px);
-          font-weight: 560;
         }
 
-        /* Chave no mesmo desenho dos toggles do dashboard. */
         .camera-control-switch {
           position: relative;
-          width: 32px;
-          height: 18px;
+          justify-self: start;
+          width: clamp(20px, 1.43cqw, 34px);
+          height: clamp(11px, 0.77cqw, 18px);
           border-radius: 999px;
-          background: rgba(255,255,255,0.12);
-          border: 1px solid rgba(255,255,255,0.14);
-          transition: background 150ms ease, border-color 150ms ease;
+          border: 0;
+          background: rgba(255,255,255,0.16);
+          box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+          transition: background 160ms ease, box-shadow 160ms ease;
         }
 
         .camera-control-switch::after {
           content: "";
           position: absolute;
-          top: 2px;
-          left: 2px;
-          width: 12px;
-          height: 12px;
+          top: 3px;
+          left: 3px;
+          width: clamp(6px, 0.44cqw, 10px);
+          height: clamp(6px, 0.44cqw, 10px);
           border-radius: 50%;
           background: rgba(255,255,255,0.86);
-          transition: transform 150ms ease;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.30);
+          transition: transform 160ms ease, background 160ms ease;
         }
 
         .camera-control.is-on {
-          color: rgba(244,248,255,0.97);
+          color: rgba(218,248,230,0.94);
         }
 
         .camera-control.is-on .camera-control-switch {
-          background: rgba(96,165,250,0.62);
-          border-color: rgba(96,165,250,0.44);
+          background: rgba(46,231,122,0.58);
+          box-shadow: inset 0 1px 2px rgba(0,0,0,0.18), 0 0 8px rgba(46,231,122,0.18);
         }
 
         .camera-control.is-on .camera-control-switch::after {
-          transform: translateX(14px);
+          transform: translateX(12px);
+          background: rgba(255,255,255,0.96);
         }
 
-        .camera-control:disabled,
-        .camera-control.is-unavailable {
-          opacity: 0.42;
-          cursor: default;
+        .camera-control.is-unavailable,
+        .camera-control:disabled {
+          opacity: 0.34;
+          cursor: not-allowed;
         }
 
         .camera-control-btn {

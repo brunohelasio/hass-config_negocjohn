@@ -2164,7 +2164,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           height: 100%;
           min-height: 0;
           grid-template-rows: auto minmax(0, 1fr);
-          gap: clamp(12px, 1.05cqw, 18px);
+          /* ANTERIOR (rollback gaps 2026-08-24): clamp(12px, 1.05cqw, 18px) */
+          gap: clamp(8px, 0.7cqw, 12px);
           padding: clamp(4px, 0.45cqw, 8px) clamp(4px, 0.6cqw, 10px) clamp(8px, 0.7cqw, 12px);
           overflow: hidden;
         }
@@ -2213,7 +2214,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           min-height: 0;
           display: grid;
           grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
-          gap: clamp(12px, 1.05cqw, 18px);
+          /* ANTERIOR (rollback gaps 2026-08-24): clamp(12px, 1.05cqw, 18px) */
+          gap: clamp(8px, 0.7cqw, 12px);
           align-items: stretch;
         }
 
@@ -2280,7 +2282,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           min-height: 0;
           display: grid;
           grid-template-rows: minmax(0, 7fr) minmax(0, 3fr);
-          gap: clamp(10px, 0.82cqw, 14px);
+          /* ANTERIOR (rollback gaps 2026-08-24): clamp(10px, 0.82cqw, 14px) */
+          gap: clamp(8px, 0.7cqw, 12px);
         }
 
         .security-subview.is-desktop .main-feed {
@@ -2299,7 +2302,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           min-height: 0;
           display: grid;
           grid-template-rows: repeat(2, minmax(0, 1fr));
-          gap: clamp(14px, 1.15cqw, 20px);
+          /* ANTERIOR (rollback gaps 2026-08-24): clamp(14px, 1.15cqw, 20px) */
+          gap: clamp(8px, 0.7cqw, 12px);
         }
 
         .camera-group {
@@ -2385,6 +2389,27 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         .security-subview.is-desktop .main-feed-card.has-head {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr);
+        }
+
+        /* A IMAGEM PRINCIPAL DEIXA DE SANGRAR (2026-08-24).
+
+           A margem lateral e a inferior sao as MESMAS que as minicameras
+           tem dentro do bloco do grupo — ou seja, o padding de
+           .camera-group. Assim a principal e as miniaturas ficam recuadas
+           igual, e o raio da imagem e o mesmo dos tiles.
+
+           O topo fica rente ao filete do cabecalho, como pedido: a faixa
+           esta imediatamente acima e nao ha margem entre as duas. */
+        .security-subview.is-desktop .main-feed-card.has-head .main-feed-stage {
+          /* .image-stage traz width e height em 100%. Com margem, isso soma
+             100% + 2x e o palco TRANSBORDA o card em vez de recuar — medido:
+             12,9px de recuo a esquerda e -10,9px a direita. Com auto, o item
+             do grid estica sozinho e a margem passa a valer. */
+          width: auto;
+          height: auto;
+          margin: 0 clamp(11px, 0.9cqw, 15px) clamp(12px, 1cqw, 16px);
+          border-radius: var(--bruno-liquid-cell-radius, 18px);
+          overflow: hidden;
         }
 
         .feed-head {

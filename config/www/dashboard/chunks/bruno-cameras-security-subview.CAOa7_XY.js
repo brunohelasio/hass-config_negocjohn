@@ -99,12 +99,12 @@ const g = "bruno-cameras-security-subview", p = {
   "camera.vr_camera_profile_1",
   "camera.cz_camera_profile_1",
   "camera.as_camera_profile_1"
-]), v = /* @__PURE__ */ new Set([
+]), x = /* @__PURE__ */ new Set([
   "camera.of_camera_profile_1",
   "camera.qc_camera_profile_1",
   "camera.qmi_camera_profile_1",
   "camera.qma_camera_profile_1"
-]), u = 3e4, x = 9e4;
+]), u = 3e4, v = 9e4;
 class o extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -178,7 +178,7 @@ class o extends HTMLElement {
     };
   }
   _cameraGroup(e) {
-    return e?.group === "social" || e?.group === "intimate" ? e.group : _.has(e?.entity) ? "social" : (v.has(e?.entity), "intimate");
+    return e?.group === "social" || e?.group === "intimate" ? e.group : _.has(e?.entity) ? "social" : (x.has(e?.entity), "intimate");
   }
   _motionEvent(e) {
     if (!e?.motion_entity) return null;
@@ -199,7 +199,7 @@ class o extends HTMLElement {
     const a = Date.now();
     return (e || []).filter((t) => {
       const i = this._motionEvent(t);
-      return i && a - i.timestamp >= 0 && a - i.timestamp <= x;
+      return i && a - i.timestamp >= 0 && a - i.timestamp <= v;
     }).length;
   }
   _controlState(e, a) {
@@ -1742,7 +1742,8 @@ class o extends HTMLElement {
           height: 100%;
           min-height: 0;
           grid-template-rows: auto minmax(0, 1fr);
-          gap: clamp(12px, 1.05cqw, 18px);
+          /* ANTERIOR (rollback gaps 2026-08-24): clamp(12px, 1.05cqw, 18px) */
+          gap: clamp(8px, 0.7cqw, 12px);
           padding: clamp(4px, 0.45cqw, 8px) clamp(4px, 0.6cqw, 10px) clamp(8px, 0.7cqw, 12px);
           overflow: hidden;
         }
@@ -1791,7 +1792,8 @@ class o extends HTMLElement {
           min-height: 0;
           display: grid;
           grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
-          gap: clamp(12px, 1.05cqw, 18px);
+          /* ANTERIOR (rollback gaps 2026-08-24): clamp(12px, 1.05cqw, 18px) */
+          gap: clamp(8px, 0.7cqw, 12px);
           align-items: stretch;
         }
 
@@ -1858,7 +1860,8 @@ class o extends HTMLElement {
           min-height: 0;
           display: grid;
           grid-template-rows: minmax(0, 7fr) minmax(0, 3fr);
-          gap: clamp(10px, 0.82cqw, 14px);
+          /* ANTERIOR (rollback gaps 2026-08-24): clamp(10px, 0.82cqw, 14px) */
+          gap: clamp(8px, 0.7cqw, 12px);
         }
 
         .security-subview.is-desktop .main-feed {
@@ -1877,7 +1880,8 @@ class o extends HTMLElement {
           min-height: 0;
           display: grid;
           grid-template-rows: repeat(2, minmax(0, 1fr));
-          gap: clamp(14px, 1.15cqw, 20px);
+          /* ANTERIOR (rollback gaps 2026-08-24): clamp(14px, 1.15cqw, 20px) */
+          gap: clamp(8px, 0.7cqw, 12px);
         }
 
         .camera-group {
@@ -1963,6 +1967,27 @@ class o extends HTMLElement {
         .security-subview.is-desktop .main-feed-card.has-head {
           display: grid;
           grid-template-rows: auto minmax(0, 1fr);
+        }
+
+        /* A IMAGEM PRINCIPAL DEIXA DE SANGRAR (2026-08-24).
+
+           A margem lateral e a inferior sao as MESMAS que as minicameras
+           tem dentro do bloco do grupo — ou seja, o padding de
+           .camera-group. Assim a principal e as miniaturas ficam recuadas
+           igual, e o raio da imagem e o mesmo dos tiles.
+
+           O topo fica rente ao filete do cabecalho, como pedido: a faixa
+           esta imediatamente acima e nao ha margem entre as duas. */
+        .security-subview.is-desktop .main-feed-card.has-head .main-feed-stage {
+          /* .image-stage traz width e height em 100%. Com margem, isso soma
+             100% + 2x e o palco TRANSBORDA o card em vez de recuar — medido:
+             12,9px de recuo a esquerda e -10,9px a direita. Com auto, o item
+             do grid estica sozinho e a margem passa a valer. */
+          width: auto;
+          height: auto;
+          margin: 0 clamp(11px, 0.9cqw, 15px) clamp(12px, 1cqw, 16px);
+          border-radius: var(--bruno-liquid-cell-radius, 18px);
+          overflow: hidden;
         }
 
         .feed-head {
@@ -2601,4 +2626,4 @@ window.customCards.push({
   name: "Bruno Cameras Security Subview",
   description: "Full-screen Bruno UI security camera console."
 });
-//# sourceMappingURL=bruno-cameras-security-subview.BF1FeYvd.js.map
+//# sourceMappingURL=bruno-cameras-security-subview.CAOa7_XY.js.map

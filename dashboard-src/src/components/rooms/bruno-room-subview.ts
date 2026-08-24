@@ -344,6 +344,53 @@ export class BrunoRoomSubview extends LitElement {
   private _timerMovimentoCortina: number | undefined;
   /** Painel de A/C aberto: 'mode' | 'fan' | 'swing' | ''. */
   private _painelClima = '';
+
+  /**
+   * Setpoint pedido pelo toque, antes do eco do Home Assistant.
+   *
+   * Janela curta de proposito: se o A/C recusar ou arredondar o valor, a
+   * verdade volta sozinha. Ver _modeloClimate.
+   */
+  private _alvoOtimista: { entityId: string; valor: number; em: number } | undefined;
+
+  /** Janela em que o valor pedido prevalece sobre o eco do Home Assistant. */
+  private static readonly JANELA_ALVO_OTIMISTA_MS = 6000;
+
+  private _alvoClimateEfetivo(doHass: number | null): number | null {
+    const pedido = this._alvoOtimista;
+    if (!pedido) return doHass;
+    if (pedido.entityId !== this._entidadeClimate()) {
+      this._alvoOtimista = undefined;
+      return doHass;
+    }
+    if (Date.now() - pedido.em > BrunoRoomSubview.JANELA_ALVO_OTIMISTA_MS) {
+      this._alvoOtimista = undefined;
+      return doHass;
+    }
+    // Confirmado: o hass ja publica o valor pedido.
+    if (doHass != null && Math.abs(doHass - pedido.valor) < 0.05) {
+      this._alvoOtimista = undefined;
+      return doHass;
+    }
+    // O aparelho respondeu com OUTRO valor: a verdade vence, mesmo dentro
+    // da janela. Sem isto um setpoint recusado ficaria mentindo por 6s.
+    if (doHass != null && this._alvoEcoDiferente(doHass)) {
+      this._alvoOtimista = undefined;
+      return doHass;
+    }
+    return pedido.valor;
+  }
+
+  /** O hass mudou de valor DEPOIS do pedido? */
+  private _alvoEcoDiferente(doHass: number): boolean {
+    const pedido = this._alvoOtimista;
+    if (!pedido) return false;
+    if (this._alvoAntesDoPedido == null) return false;
+    return Math.abs(doHass - this._alvoAntesDoPedido) > 0.05;
+  }
+
+  /** Valor que o hass publicava quando o toque aconteceu. */
+  private _alvoAntesDoPedido: number | null = null;
   private _controlesCameraAbertos = false;
   /** Câmera promovida ao feed principal pelo toque no PIP. */
   private _cameraAtiva = '';
@@ -1426,6 +1473,13 @@ export class BrunoRoomSubview extends LitElement {
         }
         .mh-art    { grid-area: art; }
            ================================================================== */
+
+        /* ALTURA DOS CONTROLES DO A/C (2026-08-23) — TABLET ONLY.
+           Acrescimo proporcional em toda a faixa do clamp, como em B4.
+           O telefone tem regras proprias e fica fora deste bloco. */
+        .ac-action {
+          min-height: clamp(45px, 3.16cqi, 75px);
+        }
 
         /* B4 (2026-08-23) — TABLET: celulas de iluminacao menos achatadas.
            A base gerada usa min-height: clamp(46.8px, 3.3cqi, 78px). O
@@ -4458,7 +4512,11 @@ export class BrunoRoomSubview extends LitElement {
       st,
       indisponivel,
       ativo,
-      alvo: num(a['temperature'], null),
+      // RESPOSTA IMEDIATA (2026-08-23): o alvo otimista tem precedencia por
+      // uma janela curta. Ele cai assim que o hass publicar QUALQUER valor,
+      // inclusive diferente do pedido — o A/C pode arredondar ou recusar, e
+      // nesse caso a verdade tem de aparecer.
+      alvo: this._alvoClimateEfetivo(num(a['temperature'], null)),
       atual: num(a['current_temperature'], null),
       minima: num(a['min_temp'], 16) as number,
       maxima: num(a['max_temp'], 30) as number,
@@ -4690,6 +4748,18 @@ export class BrunoRoomSubview extends LitElement {
       const limitado = Math.min(cl.maxima, Math.max(cl.minima, bruto));
       const alvo = Math.round(limitado * 10) / 10;
       if (alvo === cl.alvo) return;
+      // RESPOSTA IMEDIATA (2026-08-23): o numero e o anel mudam no toque.
+      //
+      // Sem isto, a UI so se mexia quando o Home Assistant ecoava o novo
+      // setpoint — e o aparelho fisico leva segundos para confirmar. O
+      // clique parecia perdido e o usuario tocava de novo.
+      //
+      // O valor otimista NAO substitui a verdade: ele vale por uma janela
+      // curta e cai assim que o hass publicar qualquer temperatura, mesmo
+      // diferente da pedida (o A/C pode arredondar ou recusar).
+      this._alvoAntesDoPedido = cl.alvo;
+      this._alvoOtimista = { entityId: id, valor: alvo, em: Date.now() };
+      this.requestUpdate();
       this._servico('climate', 'set_temperature', { entity_id: id, temperature: alvo });
     };
     const rotulo = cl.alvo == null ? '--' : `${Math.round(cl.alvo * 10) / 10}°`;

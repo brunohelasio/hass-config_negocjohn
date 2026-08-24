@@ -11,14 +11,90 @@ const BRUNO_CAMERAS_SECURITY_DEFAULT_CONFIG = {
   // ANTERIOR (rollback ONVIF geral): cameras usavam os oito IDs Tuya *_2.
   // O inventario completo permanece no rollback desta rodada.
   cameras: [
-    { entity: 'camera.sl_camera_profile_1', name: 'PRINCIPAL: SALA', short_name: 'SL - Sala', display_name: 'Sala', group: 'social' },
-    { entity: 'camera.vr_camera_profile_1', name: 'VR - Varanda', short_name: 'VR - Varanda', display_name: 'Varanda', group: 'social' },
-    { entity: 'camera.cz_camera_profile_1', name: 'CZ - Cozinha', short_name: 'CZ - Cozinha', display_name: 'Cozinha', group: 'social' },
-    { entity: 'camera.as_camera_profile_1', name: 'AS - Area Servico', short_name: 'AS - Area Servico', display_name: 'Área de Serviço', group: 'social' },
-    { entity: 'camera.of_camera_profile_1', name: 'OF - Office', short_name: 'OF - Office', display_name: 'Office', group: 'intimate' },
-    { entity: 'camera.qc_camera_profile_1', name: 'QC - Quarto Casal', short_name: 'QC - Quarto Casal', display_name: 'Quarto Casal', group: 'intimate' },
-    { entity: 'camera.qmi_camera_profile_1', name: 'QMI - Quarto Miguel', short_name: 'QMI - Quarto Miguel', display_name: 'Quarto Filho', group: 'intimate' },
-    { entity: 'camera.qma_camera_profile_1', name: 'QMA - Quarto Marina', short_name: 'QMA - Quarto Marina', display_name: 'Quarto Filha', group: 'intimate' },
+    {
+      entity: 'camera.sl_camera_profile_1',
+      name: 'PRINCIPAL: SALA',
+      short_name: 'SL - Sala',
+      display_name: 'Sala',
+      group: 'social',
+      motion_entity: 'bruno_tuya_motion.sl_camera_2',
+      controls: [
+        { key: 'sound', label: 'Som', icon: 'mdi:microphone-outline', entity: 'switch.sl_camera_deteccao_de_som' },
+        { key: 'motion', label: 'Movimento', icon: 'mdi:run-fast', entity: 'switch.sl_camera_alarme_de_movimento' },
+        { key: 'privacy', label: 'Privacidade', icon: 'mdi:eye-off-outline', entity: 'switch.sl_camera_modo_de_privacidade' },
+      ],
+    },
+    {
+      entity: 'camera.vr_camera_profile_1',
+      name: 'VR - Varanda',
+      short_name: 'VR - Varanda',
+      display_name: 'Varanda',
+      group: 'social',
+      motion_entity: 'bruno_tuya_motion.vr_camera_2',
+      controls: [
+        { key: 'sound', label: 'Som', icon: 'mdi:microphone-outline', entity: 'switch.vr_camera_deteccao_de_som' },
+        { key: 'motion', label: 'Movimento', icon: 'mdi:run-fast', entity: 'switch.vr_camera_alarme_de_movimento' },
+        { key: 'privacy', label: 'Privacidade', icon: 'mdi:eye-off-outline', entity: 'switch.vr_camera_modo_de_privacidade' },
+      ],
+    },
+    {
+      entity: 'camera.cz_camera_profile_1',
+      name: 'CZ - Cozinha',
+      short_name: 'CZ - Cozinha',
+      display_name: 'Cozinha',
+      group: 'social',
+      motion_entity: 'bruno_tuya_motion.cz_camera_2',
+      controls: [
+        { key: 'sound', label: 'Som', icon: 'mdi:microphone-outline', entity: 'switch.cz_camera_deteccao_de_som' },
+        { key: 'motion', label: 'Movimento', icon: 'mdi:run-fast', entity: 'switch.cz_camera_alarme_de_movimento' },
+        { key: 'privacy', label: 'Privacidade', icon: 'mdi:eye-off-outline', entity: 'switch.cz_camera_modo_de_privacidade' },
+      ],
+    },
+    {
+      entity: 'camera.as_camera_profile_1',
+      name: 'AS - Area Servico',
+      short_name: 'AS - Area Servico',
+      display_name: 'Área de Serviço',
+      group: 'social',
+      motion_entity: 'bruno_tuya_motion.as_camera_2',
+    },
+    {
+      entity: 'camera.of_camera_profile_1',
+      name: 'OF - Office',
+      short_name: 'OF - Office',
+      display_name: 'Office',
+      group: 'intimate',
+      motion_entity: 'bruno_tuya_motion.of_camera_2',
+      controls: [
+        { key: 'sound', label: 'Som', icon: 'mdi:microphone-outline', entity: 'switch.of_camera_deteccao_de_som' },
+        { key: 'motion', label: 'Movimento', icon: 'mdi:run-fast', entity: 'switch.of_camera_alarme_de_movimento' },
+        { key: 'privacy', label: 'Privacidade', icon: 'mdi:eye-off-outline', entity: 'switch.of_camera_modo_de_privacidade' },
+      ],
+    },
+    {
+      entity: 'camera.qc_camera_profile_1',
+      name: 'QC - Quarto Casal',
+      short_name: 'QC - Quarto Casal',
+      display_name: 'Quarto Casal',
+      group: 'intimate',
+      motion_entity: 'bruno_tuya_motion.camera_quarto_casal_2',
+    },
+    {
+      entity: 'camera.qmi_camera_profile_1',
+      name: 'QMI - Quarto Miguel',
+      short_name: 'QMI - Quarto Miguel',
+      display_name: 'Quarto Filho',
+      group: 'intimate',
+      motion_entity: 'bruno_tuya_motion.qmi_camera_2',
+    },
+    {
+      entity: 'camera.qma_camera_profile_1',
+      name: 'QMA - Quarto Marina',
+      short_name: 'QMA - Quarto Marina',
+      display_name: 'Quarto Filha',
+      group: 'intimate',
+      motion_entity: 'bruno_tuya_motion.qma_camera_2',
+    },
   ],
 };
 
@@ -38,6 +114,7 @@ const BRUNO_CAMERAS_SECURITY_INTIMATE_ENTITIES = new Set([
 ]);
 // ANTERIOR (rollback expansao ONVIF): prazo literal de 10000 ms em _mountLiveFeed.
 const BRUNO_CAMERAS_SECURITY_LIVE_TIMEOUT_MS = 30000;
+const BRUNO_CAMERAS_SECURITY_MOTION_WINDOW_MS = 90000;
 
 class BrunoCamerasSecuritySubview extends HTMLElement {
   static getStubConfig() {
@@ -117,6 +194,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     // ANTERIOR (rollback WebRTC direto): if (this._liveEl) this._liveEl.hass = hass;
     const signature = this._renderSignature();
     if (this.shadowRoot && this._renderedSignature === signature) {
+      this._updateDesktopInformational();
+      this._syncCameraControls();
       this._startRefreshTimer();
       return;
     }
@@ -182,6 +261,49 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     return 'intimate';
   }
 
+  _motionEvent(camera) {
+    if (!camera?.motion_entity) return null;
+    const state = this._state(camera.motion_entity);
+    if (!state || state.attributes?.event_type !== 'ipc_motion') return null;
+    const detectedAt = String(state.attributes?.detected_at || '');
+    const timestamp = Date.parse(detectedAt);
+    if (!Number.isFinite(timestamp)) return null;
+    return {
+      entity: camera.entity,
+      name: BrunoCamerasSecuritySubview._displayName(camera, true, true),
+      detectedAt,
+      timestamp,
+    };
+  }
+
+  _recentMotionEvents(cameras) {
+    return (cameras || [])
+      .map((camera) => this._motionEvent(camera))
+      .filter(Boolean)
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 3);
+  }
+
+  _motionCount(cameras) {
+    const now = Date.now();
+    return (cameras || []).filter((camera) => {
+      const event = this._motionEvent(camera);
+      return event && now - event.timestamp >= 0 && now - event.timestamp <= BRUNO_CAMERAS_SECURITY_MOTION_WINDOW_MS;
+    }).length;
+  }
+
+  _controlState(camera, key) {
+    const control = (camera?.controls || []).find((item) => item?.key === key);
+    if (!control?.entity) return null;
+    const state = this._state(control.entity);
+    const unavailable = !state || BRUNO_CAMERAS_SECURITY_UNAVAILABLE_STATES.includes(String(state.state || '').toLowerCase());
+    return {
+      ...control,
+      active: !unavailable && String(state?.state || '').toLowerCase() === 'on',
+      unavailable,
+    };
+  }
+
   _isMobileLayout() {
     return Boolean(globalThis.matchMedia?.('(max-width: 800px)')?.matches);
   }
@@ -207,6 +329,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       intimateCameras: thumbnails.filter((camera) => this._cameraGroup(camera) === 'intimate'),
       cameras,
       onlineCount: cameras.filter((camera) => camera.online).length,
+      motionCount: this._motionCount(cameras),
+      recordingCount: cameras.filter((camera) => camera.state === 'recording').length,
+      recentMotionEvents: this._recentMotionEvents(cameras),
       totalCount: cameras.length,
     };
   }
@@ -329,6 +454,69 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         if (tile) grid.appendChild(tile);
       });
     });
+    this._replaceCameraControls(model.activeCamera);
+    this._updateDesktopInformational(model);
+  }
+
+  _replaceCameraControls(camera) {
+    const mount = this.shadowRoot?.querySelector('[data-camera-controls]');
+    if (!mount) return;
+    mount.innerHTML = this._cameraControls(camera);
+  }
+
+  _cameraControls(camera) {
+    if (!camera) return '';
+    return ['sound', 'motion', 'privacy']
+      .map((key) => this._controlState(camera, key))
+      .filter(Boolean)
+      .map((control) => {
+        const stateClass = control.active ? ' is-on' : '';
+        const unavailableClass = control.unavailable ? ' is-unavailable' : '';
+        return `
+          <button
+            class="camera-control-btn${stateClass}${unavailableClass}"
+            type="button"
+            data-action="toggle-camera-control"
+            data-control-entity="${BrunoCamerasSecuritySubview._escapeAttr(control.entity)}"
+            aria-label="${BrunoCamerasSecuritySubview._escapeAttr(control.label || control.key)}"
+            aria-pressed="${control.active ? 'true' : 'false'}"
+            ${control.unavailable ? 'disabled' : ''}
+          >
+            <bruno-icon icon="${BrunoCamerasSecuritySubview._escapeAttr(control.icon || 'mdi:toggle-switch-outline')}"></bruno-icon>
+          </button>
+        `;
+      })
+      .join('');
+  }
+
+  _syncCameraControls() {
+    const root = this.shadowRoot;
+    if (!root) return;
+    root.querySelectorAll('[data-control-entity]').forEach((button) => {
+      const state = this._state(button.dataset.controlEntity);
+      const unavailable = !state || BRUNO_CAMERAS_SECURITY_UNAVAILABLE_STATES.includes(String(state.state || '').toLowerCase());
+      const active = !unavailable && String(state?.state || '').toLowerCase() === 'on';
+      button.classList.toggle('is-on', active);
+      button.classList.toggle('is-unavailable', unavailable);
+      button.toggleAttribute('disabled', unavailable);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+  }
+
+  _updateDesktopInformational(model = this._model()) {
+    const mount = this.shadowRoot?.querySelector('[data-camera-insights]');
+    if (!mount) return;
+    const next = BrunoCamerasSecuritySubview._insightsInner(model);
+    const signature = [
+      model.onlineCount,
+      model.motionCount,
+      model.recordingCount,
+      ...(model.recentMotionEvents || []).map((event) => `${event.entity}:${event.detectedAt}`),
+      Math.floor(Date.now() / 15000),
+    ].join('|');
+    if (mount.dataset.signature === signature) return;
+    mount.dataset.signature = signature;
+    mount.innerHTML = next;
   }
 
   // NOVO (2b, corrigido): atualiza a imagem de um slot (principal ou tile) na
@@ -452,10 +640,12 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
   _updateClock() {
     const nextClock = BrunoCamerasSecuritySubview._clock();
-    if (nextClock === this._lastClock) return;
-    this._lastClock = nextClock;
-    this.shadowRoot?.querySelector('[data-clock]')?.replaceChildren(document.createTextNode(nextClock));
-    this.shadowRoot?.querySelector('[data-date]')?.replaceChildren(document.createTextNode(BrunoCamerasSecuritySubview._date()));
+    if (nextClock !== this._lastClock) {
+      this._lastClock = nextClock;
+      this.shadowRoot?.querySelector('[data-clock]')?.replaceChildren(document.createTextNode(nextClock));
+      this.shadowRoot?.querySelector('[data-date]')?.replaceChildren(document.createTextNode(BrunoCamerasSecuritySubview._date()));
+    }
+    this._updateDesktopInformational();
   }
 
   _startRefreshTimer() {
@@ -604,6 +794,15 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       return;
     }
 
+    if (action === 'toggle-camera-control') {
+      event.preventDefault();
+      const controlEntity = target.dataset.controlEntity;
+      if (!controlEntity || !this._hass?.states?.[controlEntity]) return;
+      globalThis.BrunoLiquidGlass?.feedback?.('tap');
+      this._callService('homeassistant', 'toggle', { entity_id: controlEntity });
+      return;
+    }
+
     if (action === 'more-info') {
       event.preventDefault();
       const activeId = entityId || this._model().activeId;
@@ -725,8 +924,13 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
             </header>
 
             <section class="camera-overview-grid">
-              <section class="main-feed" aria-label="Câmera principal">
-                ${BrunoCamerasSecuritySubview._mainFeed(active, true)}
+              <section class="camera-primary-column">
+                <section class="main-feed" aria-label="Câmera principal">
+                  ${BrunoCamerasSecuritySubview._mainFeed(active, true, this._cameraControls(active))}
+                </section>
+                <section class="camera-insights" data-camera-insights aria-label="Resumo de câmeras">
+                  ${BrunoCamerasSecuritySubview._insightsInner(model)}
+                </section>
               </section>
 
               <aside class="camera-groups" aria-label="Câmeras por área">
@@ -744,6 +948,8 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       this.shadowRoot.addEventListener('click', this._boundClick);
       this.shadowRoot.addEventListener('keydown', this._boundKeydown);
       this._bindImages();
+      this._syncCameraControls();
+      this._updateDesktopInformational(model);
       // NOVO (live): (re)monta o stream do feed principal no novo DOM.
       this._mountLiveFeed(model.activeId);
       // NOVO (anti-flicker): registra a assinatura estrutural ja renderizada,
@@ -1852,9 +2058,17 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           min-width: 0;
           min-height: 0;
           display: grid;
-          grid-template-columns: minmax(0, 1.66fr) minmax(320px, 1fr);
+          grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
           gap: clamp(12px, 1.05cqw, 18px);
           align-items: stretch;
+        }
+
+        .camera-primary-column {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: minmax(0, 7fr) minmax(0, 3fr);
+          gap: clamp(10px, 0.82cqw, 14px);
         }
 
         .security-subview.is-desktop .main-feed {
@@ -1960,6 +2174,206 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           width: 36px;
           height: 36px;
         }
+
+        .camera-control-cluster {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          z-index: 3;
+          display: flex;
+          align-items: center;
+          gap: 7px;
+        }
+
+        .camera-control-btn {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          padding: 0;
+          border-radius: 999px;
+          color: rgba(226,232,240,0.68);
+          background: rgba(6,8,11,0.42);
+          border: 1px solid rgba(255,255,255,0.12);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+          backdrop-filter: blur(12px) saturate(1.16);
+          -webkit-backdrop-filter: blur(12px) saturate(1.16);
+          transition: background 160ms ease, color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+        }
+
+        .camera-control-btn bruno-icon {
+          --mdc-icon-size: 16px;
+        }
+
+        .camera-control-btn.is-on {
+          color: rgba(241,250,255,0.97);
+          background: rgba(var(--security-accent),0.22);
+          border-color: rgba(var(--security-accent),0.42);
+        }
+
+        .camera-control-btn.is-unavailable {
+          opacity: 0.32;
+        }
+
+        .camera-insights {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-columns: minmax(0, 1.32fr) minmax(250px, 1fr);
+          gap: clamp(10px, 0.82cqw, 14px);
+          padding: clamp(12px, 1cqw, 16px);
+          border-radius: var(--bruno-liquid-cell-radius, 18px);
+          background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(255,255,255,0.08);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+          overflow: hidden;
+        }
+
+        .recent-activity {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto repeat(3, minmax(0, 1fr));
+          gap: 6px;
+        }
+
+        .insight-title {
+          margin: 0;
+          color: rgba(241,245,249,0.88);
+          font-size: clamp(11px, 0.82cqw, 13px);
+          line-height: 1;
+          font-weight: 650;
+        }
+
+        .activity-row {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-columns: 28px minmax(0, 1fr) auto;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 8px;
+          border-radius: 10px;
+          background: rgba(255,255,255,0.025);
+          border: 1px solid rgba(255,255,255,0.045);
+        }
+
+        .activity-icon {
+          width: 26px;
+          height: 26px;
+          display: grid;
+          place-items: center;
+          border-radius: 8px;
+          color: rgb(var(--security-warn));
+          background: rgba(var(--security-warn),0.09);
+        }
+
+        .activity-icon bruno-icon {
+          --mdc-icon-size: 15px;
+        }
+
+        .activity-copy {
+          min-width: 0;
+          display: grid;
+          gap: 2px;
+        }
+
+        .activity-copy strong,
+        .activity-copy small {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .activity-copy strong {
+          color: rgba(241,245,249,0.82);
+          font-size: clamp(9.5px, 0.7cqw, 11px);
+          line-height: 1;
+          font-weight: 610;
+        }
+
+        .activity-copy small,
+        .activity-time {
+          color: rgba(203,213,225,0.45);
+          font-size: clamp(8px, 0.61cqw, 9.5px);
+          line-height: 1;
+          font-weight: 520;
+        }
+
+        .activity-row.is-empty {
+          opacity: 0.46;
+        }
+
+        .camera-metrics {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
+          gap: 8px;
+        }
+
+        .metric-rings {
+          min-width: 0;
+          min-height: 0;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          align-items: center;
+          gap: 8px;
+        }
+
+        .metric {
+          min-width: 0;
+          display: grid;
+          justify-items: center;
+          gap: 6px;
+        }
+
+        .metric-ring {
+          --ring-progress: 0deg;
+          width: clamp(50px, 4.4cqw, 68px);
+          aspect-ratio: 1;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          background:
+            radial-gradient(circle at center, rgba(8,11,15,0.98) 57%, transparent 59%),
+            conic-gradient(rgb(var(--security-accent)) var(--ring-progress), rgba(255,255,255,0.08) 0);
+          box-shadow: inset 0 0 0 1px rgba(255,255,255,0.055);
+        }
+
+        .metric.is-motion .metric-ring {
+          background:
+            radial-gradient(circle at center, rgba(8,11,15,0.98) 57%, transparent 59%),
+            conic-gradient(rgb(var(--security-warn)) var(--ring-progress), rgba(255,255,255,0.08) 0);
+        }
+
+        .metric.is-recording .metric-ring {
+          background:
+            radial-gradient(circle at center, rgba(8,11,15,0.98) 57%, transparent 59%),
+            conic-gradient(rgb(239,68,68) var(--ring-progress), rgba(255,255,255,0.08) 0);
+        }
+
+        .metric-value {
+          color: rgba(248,250,252,0.94);
+          font-size: clamp(13px, 1.08cqw, 17px);
+          line-height: 1;
+          font-weight: 680;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .metric-label {
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          color: rgba(203,213,225,0.48);
+          font-size: clamp(8px, 0.61cqw, 9.5px);
+          line-height: 1;
+          font-weight: 540;
+          text-align: center;
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1991,7 +2405,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
   // A pilula tem data-feed-pill para a troca in-place (2b) localiza-la.
   // O feed principal mantem o snapshot por baixo do ponto data-live-mount.
   // O player direto nasce invisivel e so aparece depois do primeiro quadro.
-  static _mainFeed(camera, desktop = false) {
+  static _mainFeed(camera, desktop = false, controls = '') {
     const hasImage = Boolean(camera?.image);
     return `
       <article class="feed-card main-feed-card">
@@ -2000,6 +2414,7 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           <div class="camera-placeholder" aria-hidden="true"></div>
           <div class="camera-live" data-live-mount aria-hidden="true"></div>
           <div class="feed-vignette" aria-hidden="true"></div>
+          <div class="camera-control-cluster" data-camera-controls>${desktop ? controls : ''}</div>
           <div class="feed-pill" data-feed-pill>
             ${BrunoCamerasSecuritySubview._pillInner(camera, false, desktop)}
           </div>
@@ -2073,6 +2488,74 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           </span>
         </span>
       </button>
+    `;
+  }
+
+  static _formatMotionAge(detectedAt) {
+    const timestamp = Date.parse(detectedAt);
+    if (!Number.isFinite(timestamp)) return '';
+    const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+    if (seconds < 45) return 'Agora';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min atrás`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} h atrás`;
+    return new Date(timestamp).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  }
+
+  static _metric(label, value, total, kind = '') {
+    const safeTotal = Math.max(1, Number(total) || 0);
+    const safeValue = Math.max(0, Number(value) || 0);
+    const degrees = Math.max(0, Math.min(360, (safeValue / safeTotal) * 360));
+    const valueLabel = label === 'Online' ? `${safeValue}/${Number(total) || 0}` : String(safeValue);
+    return `
+      <div class="metric ${BrunoCamerasSecuritySubview._escapeAttr(kind)}">
+        <div class="metric-ring" style="--ring-progress:${degrees.toFixed(1)}deg">
+          <span class="metric-value">${BrunoCamerasSecuritySubview._escape(valueLabel)}</span>
+        </div>
+        <span class="metric-label">${BrunoCamerasSecuritySubview._escape(label)}</span>
+      </div>
+    `;
+  }
+
+  static _insightsInner(model) {
+    const events = [...(model?.recentMotionEvents || [])];
+    const rows = Array.from({ length: 3 }, (_, index) => {
+      const event = events[index];
+      if (!event) {
+        return `
+          <div class="activity-row is-empty">
+            <span class="activity-icon"><bruno-icon icon="mdi:motion-sensor"></bruno-icon></span>
+            <span class="activity-copy"><strong>Sem detecção registrada</strong><small>—</small></span>
+            <span class="activity-time">—</span>
+          </div>
+        `;
+      }
+      return `
+        <div class="activity-row">
+          <span class="activity-icon"><bruno-icon icon="mdi:run-fast"></bruno-icon></span>
+          <span class="activity-copy">
+            <strong>Movimento detectado</strong>
+            <small>${BrunoCamerasSecuritySubview._escape(event.name)}</small>
+          </span>
+          <span class="activity-time">${BrunoCamerasSecuritySubview._escape(BrunoCamerasSecuritySubview._formatMotionAge(event.detectedAt))}</span>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <section class="recent-activity">
+        <h2 class="insight-title">Atividade recente</h2>
+        ${rows}
+      </section>
+      <section class="camera-metrics">
+        <h2 class="insight-title">Estado das câmeras</h2>
+        <div class="metric-rings">
+          ${BrunoCamerasSecuritySubview._metric('Online', model?.onlineCount || 0, model?.totalCount || 0, 'is-online')}
+          ${BrunoCamerasSecuritySubview._metric('Com movimento', model?.motionCount || 0, model?.totalCount || 0, 'is-motion')}
+          ${BrunoCamerasSecuritySubview._metric('Gravando', model?.recordingCount || 0, model?.totalCount || 0, 'is-recording')}
+        </div>
+      </section>
     `;
   }
 

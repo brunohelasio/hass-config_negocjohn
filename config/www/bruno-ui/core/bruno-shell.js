@@ -2486,6 +2486,8 @@ class BrunoShell extends HTMLElement {
              e este slot da shell; por isso Office e Quartos ainda deslocavam
              ao montar/desmontar a folha. Exclusivo do breakpoint phone. */
           overflow-anchor: none;
+          /* A rolagem util fica aqui dentro e nao vaza para a pagina. */
+          overscroll-behavior: contain;
           -webkit-overflow-scrolling: touch;
           padding: 10px 10px 6px;
         }

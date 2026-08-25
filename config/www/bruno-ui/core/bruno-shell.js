@@ -228,6 +228,10 @@ class BrunoShell extends HTMLElement {
     ];
     globalThis.addEventListener('resize', this._onViewportResize);
     globalThis.addEventListener('orientationchange', this._onViewportResize);
+    if (globalThis.visualViewport) {
+      globalThis.visualViewport.addEventListener('resize', this._onViewportResize);
+      globalThis.visualViewport.addEventListener('scroll', this._onViewportResize);
+    }
     this.addEventListener('pointerdown', this._onTapDiag, true);
     if (this._querDiagnostico()) {
       this._ancoraTimers.push(setTimeout(() => this._diagnosticoNaTela(), 1200));
@@ -311,55 +315,52 @@ class BrunoShell extends HTMLElement {
       return;
     }
 
-    // A altura VISIVEL, nao a de layout.
+    // A UNICA medida confiavel no telefone: a altura que o navegador declara
+    // estar visivel AGORA.
     //
-    // ANTERIOR (2026-08-25, nao funcionou): o criterio era
-    // "scrollHeight > clientHeight". No iOS os dois valem a viewport de
-    // LAYOUT, que e a GRANDE — a de barra do navegador recolhida. Sao iguais,
-    // o laco sempre caia no continue e NENHUMA trava chegou a ser aplicada.
-    // A correcao nao falhou: ela nunca rodou.
+    // As duas tentativas anteriores perseguiram o ANCESTRAL errado. A primeira
+    // comparou scrollHeight com clientHeight — no iOS ambos valem a viewport
+    // de LAYOUT, a grande, entao eram iguais e nada foi travado. A segunda
+    // procurou caixas em 100vh na cadeia, o que exige acertar qual delas e a
+    // culpada.
     //
-    // E o diagnostico por tras dela tambem estava errado. Nao e o documento
-    // que rola por overflow: e a viewport VISUAL que desliza dentro da de
-    // layout, porque alguma caixa da cadeia esta dimensionada em 100vh — que
-    // no telefone vale a viewport grande. "overflow: hidden" nao governa esse
-    // deslize por construcao; por isso nao houve a menor diferenca.
+    // Nao ha necessidade de saber. visualViewport.height E o que se ve; a
+    // shell passa a valer exatamente isso, presa por position: fixed, e o
+    // documento e travado atras dela. Nao importa mais quantos ancestrais
+    // estejam dimensionados errado: nenhum deles participa do resultado.
     const vv = globalThis.visualViewport;
-    const visivel = (vv && vv.height) || globalThis.innerHeight || 0;
+    const visivel = Math.round((vv && vv.height) || globalThis.innerHeight || 0);
     if (!visivel) return;
 
     const travas = this._travasViewport || (this._travasViewport = []);
-    const jaTem = (el, prop) => travas.some((t) => t.el === el && t.prop === prop);
     const fixar = (el, prop, valor) => {
-      if (jaTem(el, prop)) return;
-      travas.push({ el, prop, anterior: el.style[prop] });
+      if (!travas.some((t) => t.el === el && t.prop === prop)) {
+        travas.push({ el, prop, anterior: el.style[prop] });
+      }
+      // Aplica SEMPRE: a altura muda quando a barra do navegador recolhe, e o
+      // registro do valor original ja foi feito na primeira passagem.
       el.style[prop] = valor;
     };
 
-    for (const el of this._ancestraisDaShell()) {
-      const estilo = globalThis.getComputedStyle && globalThis.getComputedStyle(el);
-      if (!estilo) continue;
+    const alt = visivel + 'px';
 
-      // Caixa dimensionada pela viewport GRANDE: e ela que cria a area
-      // arrastavel. "100dvh" acompanha a barra do navegador, entao a caixa
-      // passa a valer exatamente o que se ve.
-      const minH = parseFloat(estilo.minHeight);
-      if (Number.isFinite(minH) && minH > visivel + 1) fixar(el, 'minHeight', '100dvh');
+    // Documento travado. "position: fixed" no body e a unica trava que o iOS
+    // respeita de forma consistente — "overflow: hidden" sozinho nao basta.
+    fixar(document.documentElement, 'height', alt);
+    fixar(document.documentElement, 'overflow', 'hidden');
+    fixar(document.body, 'position', 'fixed');
+    fixar(document.body, 'top', '0px');
+    fixar(document.body, 'left', '0px');
+    fixar(document.body, 'right', '0px');
+    fixar(document.body, 'height', alt);
+    fixar(document.body, 'overflow', 'hidden');
 
-      const alt = parseFloat(estilo.height);
-      if (Number.isFinite(alt) && alt > visivel + 1 && estilo.position !== 'fixed') {
-        // maxHeight, nao height: prende o teto sem impor altura a quem se
-        // dimensiona por conteudo.
-        fixar(el, 'maxHeight', '100dvh');
-      }
-
-      // O scroll de quem ainda sobrar — agora medido contra o VISIVEL.
-      const y = estilo.overflowY;
-      const raiz = el === document.documentElement || el === document.body;
-      if ((raiz || y === 'auto' || y === 'scroll') && el.scrollHeight > visivel + 1) {
-        fixar(el, 'overflowY', 'hidden');
-      }
-    }
+    // A shell colada na viewport visual.
+    fixar(this, 'position', 'fixed');
+    fixar(this, 'top', '0px');
+    fixar(this, 'left', '0px');
+    fixar(this, 'right', '0px');
+    fixar(this, 'height', alt);
   }
 
   _soltarViewport() {
@@ -570,6 +571,10 @@ class BrunoShell extends HTMLElement {
     }
     globalThis.removeEventListener('resize', this._onViewportResize);
     globalThis.removeEventListener('orientationchange', this._onViewportResize);
+    if (globalThis.visualViewport) {
+      globalThis.visualViewport.removeEventListener('resize', this._onViewportResize);
+      globalThis.visualViewport.removeEventListener('scroll', this._onViewportResize);
+    }
     this.removeEventListener('pointerdown', this._onTapDiag, true);
     for (const id of this._ancoraTimers || []) clearTimeout(id);
     this._ancoraTimers = [];

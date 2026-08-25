@@ -174,7 +174,9 @@ frontend:
     # NOVO (2026-08-25 rev.2): ancoragem pela viewport VISUAL + diagnostico ?diag=1.
     # ANTERIOR: - /local/dashboard/bruno-dashboard.B0GjfvsR.js
     # NOVO (2026-08-25 rev.3): diagnostico tambem por #diag e por 5 toques.
-    - /local/dashboard/bruno-dashboard.COZ5vb1I.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.COZ5vb1I.js
+    # NOVO (2026-08-25 rev.4): shell presa a viewport visual; documento travado.
+    - /local/dashboard/bruno-dashboard.DNKhaDQj.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

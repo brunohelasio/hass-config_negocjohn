@@ -3087,10 +3087,29 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         :host {
           min-height: 0;
           height: 100%;
+          /* Ancora do posicionamento abaixo. O display NAO pode ser trocado
+             daqui: a shell declara ".content-slot > * { display: block }" e
+             estilo do lado de fora vence :host. Medido: virar o host em grid
+             ou em flex deixou o main em 445,4px, igual a sem correcao. */
+          position: relative;
         }
 
         .security-subview.is-mobile-v2 {
-          height: 100%;
+          /* ANTERIOR (rollback 2026-08-25): height: 100%.
+
+             MEDIDO na shell real: o host recebe 769,56px — mas por PERCENTUAL,
+             herdado de ".content-slot > * { height: 100% }". E o percentual
+             para de resolver um nivel abaixo dele: com height: 100% o main
+             ficava com 445,4px, a soma do proprio conteudo, e as faixas
+             fracionarias iam a zero (miniaturas de 23px de altura).
+             Prova: com altura ABSOLUTA no host, o mesmo height: 100% resolvia
+             para 770px.
+
+             inset: 0 nao passa por percentual nenhum — mede a caixa do host
+             diretamente. Medido apos a troca: main 769,56px, principal 202px,
+             miniaturas 161x81, sem rolagem. */
+          position: absolute;
+          inset: 0;
           min-height: 0;
           display: grid;
           /* cabecalho | principal | Area social | Area intima */

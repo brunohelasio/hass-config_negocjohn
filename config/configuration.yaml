@@ -182,7 +182,8 @@ frontend:
     # NOVO (2026-08-25 rev.6): hero nasce na geometria final; sem reflow inicial.
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.hpd0Vfwq.js
     # NOVO (2026-08-25): subview de cameras do telefone (4 regioes, zero scroll).
-    - /local/dashboard/bruno-dashboard.DYBZF_B6.js
+    # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.DYBZF_B6.js
+    - /local/dashboard/bruno-dashboard.Q8A4F4r2.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

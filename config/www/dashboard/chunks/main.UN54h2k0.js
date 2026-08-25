@@ -3483,6 +3483,21 @@ class O extends HTMLElement {
         :host {
           height: 100vh;
           height: 100dvh;
+          /* ANCORAGEM NA VIEWPORT (2026-08-24).
+
+             Sem overscroll-behavior a rolagem do content-slot ENCADEIA para
+             os ancestrais: no telefone a borracha do iOS arrasta a pagina
+             inteira e aparece a faixa preta abaixo da rail, mesmo quando o
+             conteudo cabe e nao ha nada para rolar.
+
+             none no host corta o encadeamento e a propria borracha; contain
+             no slot (regra mais abaixo) mantem a rolagem util la dentro.
+
+             max-height fecha a outra metade: 100vh no telefone conta a barra
+             do navegador e pode ser MAIOR que a area visivel. Onde dvh
+             existe ele ja resolve; onde nao existe, o teto impede o excesso. */
+          max-height: 100dvh;
+          overscroll-behavior: none;
 
           /* NOVO (2026-08-10) — ALTURA DO DOCK, publicada para quem esta DENTRO
              do content-slot. Propriedade customizada atravessa shadow DOM por
@@ -21833,7 +21848,7 @@ De.customCards.some((o) => o.type === "bruno-diagnostics") || De.customCards.pus
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
 const Pt = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.-ioKsIDD.js"),
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.DeFDvpnL.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.Bb4tCdNq.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
@@ -23552,6 +23567,7 @@ let je = class extends V {
       "[data-card-host] > *"
     ) ?? [])
       a.hass = o;
+    this._medirAlturaUtil();
     const e = this._assinaturaDeEstado();
     e !== this._assinatura && (this._assinatura = e, this._rodando = this._temAtividadeDinamica(), this.requestUpdate());
   }
@@ -25333,4 +25349,4 @@ export {
   $o as y,
   Ss as z
 };
-//# sourceMappingURL=main.RFkxPYQd.js.map
+//# sourceMappingURL=main.UN54h2k0.js.map

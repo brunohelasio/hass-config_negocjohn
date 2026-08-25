@@ -22,6 +22,9 @@ class BrunoShell extends HTMLElement {
     this._activeKey = null;
     this._railEl = null;
     this._onFolha = this._onFolha.bind(this);
+    this._onViewportResize = this._onViewportResize.bind(this);
+    this._travasViewport = [];
+    this._ancoraTimers = [];
     this._sectionEl = null;
     this._helpers = null;
     this._built = false;
@@ -216,6 +219,14 @@ class BrunoShell extends HTMLElement {
     this.addEventListener('bruno-folha', this._onFolha);
     if (this._built) this._syncFromHash();
     this._observarDock();
+    // NOVO (2026-08-25) — ancoragem do dashboard na viewport do telefone.
+    this._ancorarViewport();
+    this._ancoraTimers = [
+      setTimeout(this._onViewportResize, 0),
+      setTimeout(this._onViewportResize, 400),
+    ];
+    globalThis.addEventListener('resize', this._onViewportResize);
+    globalThis.addEventListener('orientationchange', this._onViewportResize);
   }
 
   /**
@@ -262,6 +273,92 @@ class BrunoShell extends HTMLElement {
     }
   }
 
+  /**
+   * Ancora o dashboard na viewport do TELEFONE.
+   *
+   * Validacao fisica de 2026-08-25: no app do HA E no Safari do iPhone o
+   * conjunto inteiro desliza para cima e expoe uma faixa preta logo acima da
+   * barra de endereco. No tablet nao acontece.
+   *
+   * Isso fecha a causa: algum ANCESTRAL desta shell mede 100vh, que no telefone
+   * INCLUI a barra do navegador, enquanto a shell mede 100dvh, que nao inclui.
+   * A diferenca e exatamente a faixa arrastavel.
+   *
+   * E explica por que "overscroll-behavior" no :host nunca teve efeito: ele
+   * governa o ENCADEAMENTO entre scrollers, e quem rola aqui e um ancestral com
+   * overflow proprio — fora do shadow DOM, fora do alcance de qualquer regra
+   * nossa. A ausencia total de melhora era, ela mesma, a prova de que o
+   * problema estava fora da shell.
+   *
+   * A trava e minima de proposito: somente "overflow: hidden" nos ancestrais
+   * que de fato podem rolar. Nenhuma altura e alterada, entao nada e cortado —
+   * a shell ja cabe inteira em 100dvh e o excedente do ancestral e espaco vazio
+   * ABAIXO dela. O que sai e o acesso a esse vazio.
+   *
+   * O valor inline anterior de cada elemento e guardado e devolvido ao
+   * desmontar.
+   */
+  _ancorarViewport() {
+    const phone = typeof globalThis.matchMedia === 'function'
+      && globalThis.matchMedia('(max-width: 800px)').matches;
+    if (!phone) {
+      this._soltarViewport();
+      return;
+    }
+    const travas = this._travasViewport || (this._travasViewport = []);
+    const travados = new Set(travas.map((trava) => trava.el));
+    for (const el of this._ancestraisDaShell()) {
+      if (travados.has(el)) continue;
+      if (el.scrollHeight <= el.clientHeight + 1) continue;
+      const estilo = globalThis.getComputedStyle && globalThis.getComputedStyle(el);
+      const y = estilo ? estilo.overflowY : '';
+      const raiz = el === document.documentElement || el === document.body;
+      if (!raiz && y !== 'auto' && y !== 'scroll') continue;
+      // So o eixo Y, e so a longhand. Guardar/devolver a shorthand
+      // "overflow" apagaria um "overflow-y" inline que ja existisse no
+      // elemento — o banco flagrou exatamente isso no cenario B.
+      travas.push({ el, anterior: el.style.overflowY });
+      el.style.overflowY = 'hidden';
+    }
+  }
+
+  _soltarViewport() {
+    for (const trava of this._travasViewport || []) {
+      trava.el.style.overflowY = trava.anterior;
+    }
+    this._travasViewport = [];
+  }
+
+  /**
+   * Cadeia de ancestrais ate o documento, ATRAVESSANDO shadow roots.
+   *
+   * "closest()" nao serve: ele para na fronteira do shadow DOM — a mesma
+   * armadilha que ja custou uma rodada na Home do telefone.
+   */
+  _ancestraisDaShell() {
+    const lista = [];
+    let no = this;
+    while (no) {
+      // Arvore ACHATADA, nao a de luz. Quando este no esta distribuido num
+      // slot, quem o CONTEM visualmente e o slot — e os wrappers do shadow
+      // tree acima dele, que o encadeamento por parentNode simplesmente pula.
+      // No Lovelace e ali que mora o "#view" do hui-root, candidato natural a
+      // ser o ancestral que rola.
+      const slot = no instanceof Element ? no.assignedSlot : null;
+      const proximo = slot || (no instanceof ShadowRoot ? no.host : no.parentNode);
+      if (!proximo) break;
+      if (proximo instanceof HTMLElement && proximo !== this) lista.push(proximo);
+      no = proximo;
+    }
+    const doc = document.documentElement;
+    if (doc && !lista.includes(doc)) lista.push(doc);
+    return lista;
+  }
+
+  _onViewportResize() {
+    this._ancorarViewport();
+  }
+
   disconnectedCallback() {
     globalThis.removeEventListener('hashchange', this._onHashChange);
     globalThis.removeEventListener('location-changed', this._onHashChange);
@@ -275,6 +372,11 @@ class BrunoShell extends HTMLElement {
       this._dockObserver.disconnect();
       this._dockObserver = null;
     }
+    globalThis.removeEventListener('resize', this._onViewportResize);
+    globalThis.removeEventListener('orientationchange', this._onViewportResize);
+    for (const id of this._ancoraTimers || []) clearTimeout(id);
+    this._ancoraTimers = [];
+    this._soltarViewport();
   }
 
   // --- Helpers ---------------------------------------------------------------

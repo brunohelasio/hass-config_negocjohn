@@ -170,7 +170,9 @@ frontend:
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.Bn33s2jJ.js
     # ANTERIOR: - /local/dashboard/bruno-dashboard.BP-Ox5Sa.js
     # NOVO (2026-08-25): ancoragem do dashboard na viewport do telefone.
-    - /local/dashboard/bruno-dashboard.CH4h3rJW.js
+    # ANTERIOR: - /local/dashboard/bruno-dashboard.CH4h3rJW.js
+    # NOVO (2026-08-25 rev.2): ancoragem pela viewport VISUAL + diagnostico ?diag=1.
+    - /local/dashboard/bruno-dashboard.B0GjfvsR.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

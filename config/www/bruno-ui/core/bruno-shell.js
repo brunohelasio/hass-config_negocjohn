@@ -227,6 +227,9 @@ class BrunoShell extends HTMLElement {
     ];
     globalThis.addEventListener('resize', this._onViewportResize);
     globalThis.addEventListener('orientationchange', this._onViewportResize);
+    if (String(globalThis.location && globalThis.location.search || '').indexOf('diag=1') >= 0) {
+      this._ancoraTimers.push(setTimeout(() => this._diagnosticoNaTela(), 1200));
+    }
   }
 
   /**
@@ -305,26 +308,61 @@ class BrunoShell extends HTMLElement {
       this._soltarViewport();
       return;
     }
+
+    // A altura VISIVEL, nao a de layout.
+    //
+    // ANTERIOR (2026-08-25, nao funcionou): o criterio era
+    // "scrollHeight > clientHeight". No iOS os dois valem a viewport de
+    // LAYOUT, que e a GRANDE — a de barra do navegador recolhida. Sao iguais,
+    // o laco sempre caia no continue e NENHUMA trava chegou a ser aplicada.
+    // A correcao nao falhou: ela nunca rodou.
+    //
+    // E o diagnostico por tras dela tambem estava errado. Nao e o documento
+    // que rola por overflow: e a viewport VISUAL que desliza dentro da de
+    // layout, porque alguma caixa da cadeia esta dimensionada em 100vh — que
+    // no telefone vale a viewport grande. "overflow: hidden" nao governa esse
+    // deslize por construcao; por isso nao houve a menor diferenca.
+    const vv = globalThis.visualViewport;
+    const visivel = (vv && vv.height) || globalThis.innerHeight || 0;
+    if (!visivel) return;
+
     const travas = this._travasViewport || (this._travasViewport = []);
-    const travados = new Set(travas.map((trava) => trava.el));
+    const jaTem = (el, prop) => travas.some((t) => t.el === el && t.prop === prop);
+    const fixar = (el, prop, valor) => {
+      if (jaTem(el, prop)) return;
+      travas.push({ el, prop, anterior: el.style[prop] });
+      el.style[prop] = valor;
+    };
+
     for (const el of this._ancestraisDaShell()) {
-      if (travados.has(el)) continue;
-      if (el.scrollHeight <= el.clientHeight + 1) continue;
       const estilo = globalThis.getComputedStyle && globalThis.getComputedStyle(el);
-      const y = estilo ? estilo.overflowY : '';
+      if (!estilo) continue;
+
+      // Caixa dimensionada pela viewport GRANDE: e ela que cria a area
+      // arrastavel. "100dvh" acompanha a barra do navegador, entao a caixa
+      // passa a valer exatamente o que se ve.
+      const minH = parseFloat(estilo.minHeight);
+      if (Number.isFinite(minH) && minH > visivel + 1) fixar(el, 'minHeight', '100dvh');
+
+      const alt = parseFloat(estilo.height);
+      if (Number.isFinite(alt) && alt > visivel + 1 && estilo.position !== 'fixed') {
+        // maxHeight, nao height: prende o teto sem impor altura a quem se
+        // dimensiona por conteudo.
+        fixar(el, 'maxHeight', '100dvh');
+      }
+
+      // O scroll de quem ainda sobrar — agora medido contra o VISIVEL.
+      const y = estilo.overflowY;
       const raiz = el === document.documentElement || el === document.body;
-      if (!raiz && y !== 'auto' && y !== 'scroll') continue;
-      // So o eixo Y, e so a longhand. Guardar/devolver a shorthand
-      // "overflow" apagaria um "overflow-y" inline que ja existisse no
-      // elemento — o banco flagrou exatamente isso no cenario B.
-      travas.push({ el, anterior: el.style.overflowY });
-      el.style.overflowY = 'hidden';
+      if ((raiz || y === 'auto' || y === 'scroll') && el.scrollHeight > visivel + 1) {
+        fixar(el, 'overflowY', 'hidden');
+      }
     }
   }
 
   _soltarViewport() {
     for (const trava of this._travasViewport || []) {
-      trava.el.style.overflowY = trava.anterior;
+      trava.el.style[trava.prop] = trava.anterior;
     }
     this._travasViewport = [];
   }
@@ -357,6 +395,127 @@ class BrunoShell extends HTMLElement {
 
   _onViewportResize() {
     this._ancorarViewport();
+    if (this._diagEl) this._diagnosticoNaTela();
+  }
+
+  /**
+   * Diagnostico NO APARELHO.
+   *
+   * Chromium de banco nao tem barra de navegador que recolhe, entao a
+   * divergencia entre viewport de layout e viewport visual — a causa do
+   * arrasto — nao se reproduz aqui. Sem medir no aparelho so restava chutar,
+   * e foi o que custou as ultimas rodadas.
+   *
+   * Abrir o dashboard com "?diag=1" na URL mostra esta faixa. Ela e so
+   * leitura: nao altera nada, e some ao tocar em Fechar.
+   */
+  _diagnosticoNaTela() {
+    const doc = document.documentElement;
+    const vv = globalThis.visualViewport;
+    const n = (v) => (Number.isFinite(v) ? Math.round(v) : '?');
+    const linhas = [];
+
+    linhas.push('VIEWPORT');
+    linhas.push('  innerHeight ......... ' + n(globalThis.innerHeight));
+    linhas.push('  visualViewport ...... ' + n(vv && vv.height));
+    linhas.push('  doc.clientHeight .... ' + n(doc.clientHeight));
+    linhas.push('  doc.scrollHeight .... ' + n(doc.scrollHeight));
+    linhas.push('  body.scrollHeight ... ' + n(document.body.scrollHeight));
+    linhas.push('  doc.scrollTop ....... ' + n(doc.scrollTop));
+    const delta = n(doc.clientHeight) - n(vv && vv.height ? vv.height : globalThis.innerHeight);
+    linhas.push('  DELTA layout-visual . ' + delta + '  <- area arrastavel');
+    linhas.push('');
+
+    const travas = this._travasViewport || [];
+    linhas.push('CADEIA (achatada), travas aplicadas: ' + travas.length);
+    for (const el of this._ancestraisDaShell()) {
+      const e = getComputedStyle(el);
+      const nome = el.tagName.toLowerCase()
+        + (el.id ? '#' + el.id : '')
+        + (el.classList.length ? '.' + el.classList[0] : '');
+      const presas = travas.filter((t) => t.el === el).map((t) => t.prop);
+      linhas.push('  ' + nome);
+      linhas.push('    h=' + n(el.offsetHeight)
+        + ' minH=' + e.minHeight
+        + ' maxH=' + e.maxHeight
+        + ' ovY=' + e.overflowY
+        + ' sH=' + n(el.scrollHeight)
+        + (presas.length ? '  [' + presas.join(',') + ']' : ''));
+    }
+    linhas.push('');
+
+    const slot = this.shadowRoot && this.shadowRoot.querySelector('.content-slot');
+    linhas.push('SHELL');
+    linhas.push('  host.h .............. ' + n(this.offsetHeight));
+    if (slot) {
+      const es = getComputedStyle(slot);
+      linhas.push('  slot.clientHeight ... ' + n(slot.clientHeight));
+      linhas.push('  slot.scrollHeight ... ' + n(slot.scrollHeight));
+      linhas.push('  slot.scrollTop ...... ' + n(slot.scrollTop));
+      linhas.push('  slot.padBottom ...... ' + es.paddingBottom);
+    } else {
+      linhas.push('  slot ................ AUSENTE');
+    }
+    linhas.push('');
+
+    const home = document.querySelector('bruno-home-phone')
+      || (slot && slot.querySelector && slot.querySelector('bruno-home-phone'))
+      || this._acharFundo(this.shadowRoot, 'bruno-home-phone');
+    linhas.push('HOME (favoritos)');
+    if (!home) {
+      linhas.push('  bruno-home-phone .... NAO ENCONTRADO');
+    } else {
+      const eh = getComputedStyle(home);
+      linhas.push('  util (var) .......... ' + (eh.getPropertyValue('--altura-util') || '(vazio)'));
+      linhas.push('  host.h .............. ' + n(home.offsetHeight));
+      if (slot) {
+        const cx = home.getBoundingClientRect();
+        const cs = slot.getBoundingClientRect();
+        linhas.push('  topo no conteudo .... '
+          + n(cx.top - cs.top - slot.clientTop + slot.scrollTop));
+      }
+      const est = home.shadowRoot && home.shadowRoot.querySelector('.estatico');
+      linhas.push('  .estatico.h ......... ' + (est ? n(est.offsetHeight) : 'AUSENTE'));
+      const fav = home.shadowRoot && home.shadowRoot.querySelector('.favoritos');
+      linhas.push('  .favoritos.h ........ ' + (fav ? n(fav.offsetHeight) : 'AUSENTE'));
+    }
+
+    let caixa = this._diagEl;
+    if (!caixa) {
+      caixa = document.createElement('div');
+      caixa.style.cssText = 'position:fixed;left:0;right:0;top:0;bottom:0;z-index:2147483647;'
+        + 'background:rgba(8,10,14,0.96);color:#cfe3ff;font:11px/1.35 ui-monospace,Menlo,monospace;'
+        + 'padding:10px;overflow:auto;-webkit-overflow-scrolling:touch;white-space:pre;';
+      const fechar = document.createElement('button');
+      fechar.textContent = 'Fechar';
+      fechar.style.cssText = 'position:sticky;top:0;float:right;padding:6px 12px;'
+        + 'background:#1e293b;color:#e2e8f0;border:1px solid #475569;border-radius:8px;font:12px sans-serif;';
+      fechar.addEventListener('click', () => {
+        caixa.remove();
+        this._diagEl = null;
+      });
+      const corpo = document.createElement('div');
+      caixa.appendChild(fechar);
+      caixa.appendChild(corpo);
+      document.body.appendChild(caixa);
+      this._diagEl = caixa;
+      this._diagCorpo = corpo;
+    }
+    this._diagCorpo.textContent = linhas.join('\n');
+  }
+
+  /** Busca em profundidade atravessando shadow roots. */
+  _acharFundo(raiz, tag, nivel = 0) {
+    if (!raiz || nivel > 6) return null;
+    const direto = raiz.querySelector && raiz.querySelector(tag);
+    if (direto) return direto;
+    const todos = raiz.querySelectorAll ? raiz.querySelectorAll('*') : [];
+    for (const filho of todos) {
+      if (!filho.shadowRoot) continue;
+      const achado = this._acharFundo(filho.shadowRoot, tag, nivel + 1);
+      if (achado) return achado;
+    }
+    return null;
   }
 
   disconnectedCallback() {

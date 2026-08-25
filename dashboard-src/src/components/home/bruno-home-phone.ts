@@ -122,8 +122,8 @@ export class BrunoHomePhone extends LitElement {
       this.requestUpdate();
     }, ROTACAO_MS);
     this._observador ??= new ResizeObserver(() => this._medirAlturaUtil());
-    this._observador.observe(document.documentElement);
-    requestAnimationFrame(() => this._medirAlturaUtil());
+    this._observarLayout();
+    this._medirQuandoAssentar();
   }
 
   /**
@@ -145,6 +145,73 @@ export class BrunoHomePhone extends LitElement {
       no = no instanceof ShadowRoot ? no.host : no.parentNode;
     }
     return null;
+  }
+
+  /**
+   * O que precisa ser observado.
+   *
+   * ANTERIOR (rollback): o ResizeObserver observava document.documentElement.
+   * Ele NAO redimensiona depois da carga, entao o observador nunca disparava.
+   * A unica medida valia era a do primeiro quadro — feita antes de os cards
+   * filhos montarem (eles vem de loadCardHelpers, assincrono), quando o slot
+   * ainda nao tinha caixa. A medida falhava, --altura-util ficava sem valor,
+   * o bloco caia para height auto e Favoritos nascia colapsado. So voltava ao
+   * normal quando algo forcava outro render — rolar o pager, por exemplo.
+   *
+   * Agora observa as DUAS caixas de que a medida depende: o proprio host e a
+   * area rolavel da shell. Quando o layout assenta, a medida refaz sozinha.
+   */
+  private _observarLayout(): void {
+    if (!this._observador) return;
+    this._observador.disconnect();
+    this._observador.observe(this);
+    const slot = this._acharSlot();
+    if (slot) {
+      this._observador.observe(slot);
+      this._slotObservado = true;
+    }
+  }
+
+  private _slotObservado = false;
+  private _tentativasDeMedida = 0;
+
+  /**
+   * Insiste ate a primeira medida valida.
+   *
+   * O ResizeObserver resolve o caso geral, mas ele so dispara quando uma
+   * caixa MUDA de tamanho. Se o slot ja nascer com a altura final antes de
+   * este componente conectar, nao ha mudanca para observar — e sem uma
+   * primeira medida o bloco fica colapsado do mesmo jeito.
+   *
+   * Limite curto: nao e polling, e a janela ate o layout assentar.
+   */
+  private _ultimaMedida = '';
+
+  private _medirQuandoAssentar = (): void => {
+    this._medirAlturaUtil();
+    const agora = this.style.getPropertyValue('--altura-util');
+    // ANTERIOR (rollback): parava na primeira medida VALIDA.
+    //
+    // Ela era valida e errada. Medido no banco: 578px no primeiro quadro
+    // contra 679px depois que o layout assentou — Favoritos nascia com
+    // 147,8px em vez de 248,8px. O hero ainda nao tinha altura final quando
+    // a primeira leitura aconteceu, e como ela ja produzia um numero, a
+    // insistencia encerrava ali.
+    //
+    // Agora so para quando duas leituras seguidas dao o MESMO valor. Um
+    // numero que ainda vai mudar nao serve de criterio de parada.
+    const estavel = Boolean(agora) && agora === this._ultimaMedida;
+    this._ultimaMedida = agora;
+    if (estavel || this._tentativasDeMedida >= 40) return;
+    this._tentativasDeMedida += 1;
+    requestAnimationFrame(this._medirQuandoAssentar);
+  };
+
+  /** Recomeça a insistência: algo mudou o layout depois de ele ter assentado. */
+  private _remedir(): void {
+    this._tentativasDeMedida = 0;
+    this._ultimaMedida = '';
+    this._medirQuandoAssentar();
   }
 
   private _medirAlturaUtil = (): void => {
@@ -297,6 +364,10 @@ export class BrunoHomePhone extends LitElement {
       const el = helpers.createCardElement(config);
       if (this._hass) el.hass = this._hass;
       host.replaceChildren(el);
+      // Os filhos vem de loadCardHelpers, que e assincrono. Cada um que
+      // entra muda a altura do bloco, entao a medida recomeca — e este e o
+      // gatilho exato, nao um temporizador torcendo para dar tempo.
+      this._remedir();
     } catch (erro) {
       this._montados.delete(host);
       const aviso = document.createElement('div');
@@ -308,6 +379,9 @@ export class BrunoHomePhone extends LitElement {
   }
 
   protected override updated(_mudou: PropertyValues): void {
+    // O slot so existe depois que a shell monta este componente; se ainda
+    // nao foi observado, tenta de novo a cada render ate conseguir.
+    if (!this._slotObservado) this._observarLayout();
     this._medirAlturaUtil();
     for (const host of this.renderRoot.querySelectorAll<HTMLElement>('[data-card-host]')) {
       const bruto = host.dataset['cardHost'];

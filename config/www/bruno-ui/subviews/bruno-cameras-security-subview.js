@@ -2714,187 +2714,6 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           height: 36px;
         }
 
-        /* ==== FAIXA DE CONTROLES NA BASE (2026-08-24) ==================
-
-           ANTERIOR (rollback): um popup ancorado no canto superior direito do
-           video. Cobria parte da cena e obrigava a tirar o olho da imagem.
-
-           Agora e a MESMA faixa das cameras das subviews: translucida, colada
-           na base do video, ocupando a largura util. Como ela deixa passar a
-           imagem, o video segue visivel com os controles abertos.
-
-           Valores transportados de .camera-control-strip do CSS gerado das
-           subviews — fundo, blur, tres colunas, filete entre os itens e o
-           verde do estado ligado. Nada recriado no olho.
-           ============================================================== */
-        .camera-control-cluster {
-          position: absolute;
-          left: clamp(8px, 0.55cqw, 13px);
-          right: clamp(8px, 0.55cqw, 13px);
-          bottom: clamp(8px, 0.55cqw, 13px);
-          top: auto;
-          z-index: 7;
-          display: none;
-        }
-
-        .camera-control-cluster.is-open {
-          display: block;
-        }
-
-        .camera-control-strip {
-          min-height: clamp(45px, 3.19cqw, 75px);
-          display: grid;
-          align-items: stretch;
-          padding: clamp(3px, 0.22cqw, 5px) 0;
-          border: 0;
-          border-radius: var(--bruno-liquid-control-radius-compact, 12px);
-          overflow: hidden;
-          background:
-            linear-gradient(180deg, rgba(3,7,13,0.08), rgba(3,7,13,0.40)),
-            rgba(6,8,12,0.18);
-          backdrop-filter: blur(10px) saturate(0.95);
-          -webkit-backdrop-filter: blur(10px) saturate(0.95);
-          box-shadow: none;
-        }
-
-        .camera-controls {
-          min-width: 0;
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          align-items: stretch;
-          gap: 0;
-        }
-
-        .camera-control {
-          position: relative;
-          min-width: 0;
-          min-height: clamp(39px, 2.75cqw, 65px);
-          display: grid;
-          grid-template-columns: clamp(14px, 0.99cqw, 23px) auto clamp(22px, 1.54cqw, 36px);
-          align-items: center;
-          justify-content: center;
-          gap: clamp(5px, 0.38cqw, 9px);
-          padding: 0 clamp(6px, 0.44cqw, 10px);
-          border: 0;
-          border-radius: 0;
-          background: transparent;
-          color: rgba(255,255,255,0.62);
-          font: inherit;
-          text-align: left;
-          cursor: pointer;
-          transition: color 160ms ease, background 160ms ease, opacity 160ms ease;
-        }
-
-        .camera-control + .camera-control::before {
-          content: "";
-          position: absolute;
-          left: 0;
-          top: clamp(8px, 0.6cqw, 14px);
-          bottom: clamp(8px, 0.6cqw, 14px);
-          width: 1px;
-          background: rgba(255,255,255,0.105);
-        }
-
-        .camera-control:hover,
-        .camera-control:focus-visible {
-          color: rgba(255,255,255,0.90);
-          background: rgba(255,255,255,0.036);
-          outline: none;
-        }
-
-        .camera-control bruno-icon {
-          --mdc-icon-size: 17px;
-          width: 17px;
-          height: 17px;
-        }
-
-        .camera-control-label {
-          min-width: 0;
-          font-size: clamp(9px, 0.6cqw, 14px);
-          font-weight: 760;
-          line-height: 1;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .camera-control-switch {
-          position: relative;
-          justify-self: start;
-          width: clamp(20px, 1.43cqw, 34px);
-          height: clamp(11px, 0.77cqw, 18px);
-          border-radius: 999px;
-          border: 0;
-          background: rgba(255,255,255,0.16);
-          box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
-          transition: background 160ms ease, box-shadow 160ms ease;
-        }
-
-        .camera-control-switch::after {
-          content: "";
-          position: absolute;
-          top: 3px;
-          left: 3px;
-          width: clamp(6px, 0.44cqw, 10px);
-          height: clamp(6px, 0.44cqw, 10px);
-          border-radius: 50%;
-          background: rgba(255,255,255,0.86);
-          box-shadow: 0 1px 3px rgba(0,0,0,0.30);
-          transition: transform 160ms ease, background 160ms ease;
-        }
-
-        .camera-control.is-on {
-          color: rgba(218,248,230,0.94);
-        }
-
-        .camera-control.is-on .camera-control-switch {
-          background: rgba(46,231,122,0.58);
-          box-shadow: inset 0 1px 2px rgba(0,0,0,0.18), 0 0 8px rgba(46,231,122,0.18);
-        }
-
-        .camera-control.is-on .camera-control-switch::after {
-          transform: translateX(12px);
-          background: rgba(255,255,255,0.96);
-        }
-
-        .camera-control.is-unavailable,
-        .camera-control:disabled {
-          opacity: 0.34;
-          cursor: not-allowed;
-        }
-
-        .camera-control-btn {
-          appearance: none;
-          -webkit-appearance: none;
-          width: 34px;
-          height: 34px;
-          display: grid;
-          place-items: center;
-          padding: 0;
-          border-radius: 999px;
-          color: rgba(226,232,240,0.68);
-          background: rgba(6,8,11,0.42);
-          border: 1px solid rgba(255,255,255,0.12);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-          backdrop-filter: blur(12px) saturate(1.16);
-          -webkit-backdrop-filter: blur(12px) saturate(1.16);
-          transition: background 160ms ease, color 160ms ease, border-color 160ms ease, opacity 160ms ease;
-        }
-
-        .camera-control-btn bruno-icon {
-          --mdc-icon-size: 16px;
-        }
-
-        .camera-control-btn.is-on {
-          color: rgba(241,250,255,0.97);
-          background: rgba(var(--security-accent),0.22);
-          border-color: rgba(var(--security-accent),0.42);
-        }
-
-        .camera-control-btn.is-unavailable {
-          opacity: 0.32;
-        }
-
         .camera-insights {
           min-width: 0;
           min-height: 0;
@@ -3053,6 +2872,183 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           text-align: center;
         }
       }
+
+      /* ================================================================
+         FAIXA DE CONTROLES — FORA DA MEDIA QUERY (2026-08-25).
+
+         ANTERIOR (rollback): estas regras viviam dentro de
+         @media (min-width: 801px). No telefone a faixa abria SEM ESTILO
+         NENHUM — .camera-control-cluster nao recebia position nem o
+         display:none/block que a liga, entao tocar nos tres pontos nao
+         produzia nada visivel. Mesma armadilha das faixas de cabecalho.
+
+         Nao foram duplicadas de proposito: sao seletores que so existem
+         dentro da propria faixa, e o pedido era o MESMO menu do tablet.
+         Duplicar abriria espaco para as duas versoes divergirem.
+         ================================================================ */
+        /* ==== FAIXA DE CONTROLES NA BASE (2026-08-24) ==================
+
+           ANTERIOR (rollback): um popup ancorado no canto superior direito do
+           video. Cobria parte da cena e obrigava a tirar o olho da imagem.
+
+           Agora e a MESMA faixa das cameras das subviews: translucida, colada
+           na base do video, ocupando a largura util. Como ela deixa passar a
+           imagem, o video segue visivel com os controles abertos.
+
+           Valores transportados de .camera-control-strip do CSS gerado das
+           subviews — fundo, blur, tres colunas, filete entre os itens e o
+           verde do estado ligado. Nada recriado no olho.
+           ============================================================== */
+        .camera-control-cluster {
+          position: absolute;
+          left: clamp(8px, 0.55cqw, 13px);
+          right: clamp(8px, 0.55cqw, 13px);
+          bottom: clamp(8px, 0.55cqw, 13px);
+          top: auto;
+          z-index: 7;
+          display: none;
+        }
+        .camera-control-cluster.is-open {
+          display: block;
+        }
+        .camera-control-strip {
+          min-height: clamp(45px, 3.19cqw, 75px);
+          display: grid;
+          align-items: stretch;
+          padding: clamp(3px, 0.22cqw, 5px) 0;
+          border: 0;
+          border-radius: var(--bruno-liquid-control-radius-compact, 12px);
+          overflow: hidden;
+          background:
+            linear-gradient(180deg, rgba(3,7,13,0.08), rgba(3,7,13,0.40)),
+            rgba(6,8,12,0.18);
+          backdrop-filter: blur(10px) saturate(0.95);
+          -webkit-backdrop-filter: blur(10px) saturate(0.95);
+          box-shadow: none;
+        }
+        .camera-controls {
+          min-width: 0;
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          align-items: stretch;
+          gap: 0;
+        }
+        .camera-control {
+          position: relative;
+          min-width: 0;
+          min-height: clamp(39px, 2.75cqw, 65px);
+          display: grid;
+          grid-template-columns: clamp(14px, 0.99cqw, 23px) auto clamp(22px, 1.54cqw, 36px);
+          align-items: center;
+          justify-content: center;
+          gap: clamp(5px, 0.38cqw, 9px);
+          padding: 0 clamp(6px, 0.44cqw, 10px);
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          color: rgba(255,255,255,0.62);
+          font: inherit;
+          text-align: left;
+          cursor: pointer;
+          transition: color 160ms ease, background 160ms ease, opacity 160ms ease;
+        }
+        .camera-control + .camera-control::before {
+          content: "";
+          position: absolute;
+          left: 0;
+          top: clamp(8px, 0.6cqw, 14px);
+          bottom: clamp(8px, 0.6cqw, 14px);
+          width: 1px;
+          background: rgba(255,255,255,0.105);
+        }
+        .camera-control:hover,
+        .camera-control:focus-visible {
+          color: rgba(255,255,255,0.90);
+          background: rgba(255,255,255,0.036);
+          outline: none;
+        }
+        .camera-control bruno-icon {
+          --mdc-icon-size: 17px;
+          width: 17px;
+          height: 17px;
+        }
+        .camera-control-label {
+          min-width: 0;
+          font-size: clamp(9px, 0.6cqw, 14px);
+          font-weight: 760;
+          line-height: 1;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .camera-control-switch {
+          position: relative;
+          justify-self: start;
+          width: clamp(20px, 1.43cqw, 34px);
+          height: clamp(11px, 0.77cqw, 18px);
+          border-radius: 999px;
+          border: 0;
+          background: rgba(255,255,255,0.16);
+          box-shadow: inset 0 1px 2px rgba(0,0,0,0.30);
+          transition: background 160ms ease, box-shadow 160ms ease;
+        }
+        .camera-control-switch::after {
+          content: "";
+          position: absolute;
+          top: 3px;
+          left: 3px;
+          width: clamp(6px, 0.44cqw, 10px);
+          height: clamp(6px, 0.44cqw, 10px);
+          border-radius: 50%;
+          background: rgba(255,255,255,0.86);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.30);
+          transition: transform 160ms ease, background 160ms ease;
+        }
+        .camera-control.is-on {
+          color: rgba(218,248,230,0.94);
+        }
+        .camera-control.is-on .camera-control-switch {
+          background: rgba(46,231,122,0.58);
+          box-shadow: inset 0 1px 2px rgba(0,0,0,0.18), 0 0 8px rgba(46,231,122,0.18);
+        }
+        .camera-control.is-on .camera-control-switch::after {
+          transform: translateX(12px);
+          background: rgba(255,255,255,0.96);
+        }
+        .camera-control.is-unavailable,
+        .camera-control:disabled {
+          opacity: 0.34;
+          cursor: not-allowed;
+        }
+        .camera-control-btn {
+          appearance: none;
+          -webkit-appearance: none;
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          padding: 0;
+          border-radius: 999px;
+          color: rgba(226,232,240,0.68);
+          background: rgba(6,8,11,0.42);
+          border: 1px solid rgba(255,255,255,0.12);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+          backdrop-filter: blur(12px) saturate(1.16);
+          -webkit-backdrop-filter: blur(12px) saturate(1.16);
+          transition: background 160ms ease, color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+        }
+        .camera-control-btn bruno-icon {
+          --mdc-icon-size: 16px;
+        }
+        .camera-control-btn.is-on {
+          color: rgba(241,250,255,0.97);
+          background: rgba(var(--security-accent),0.22);
+          border-color: rgba(var(--security-accent),0.42);
+        }
+        .camera-control-btn.is-unavailable {
+          opacity: 0.32;
+        }
+
 
       @media (prefers-reduced-motion: reduce) {
         .camera-tile,

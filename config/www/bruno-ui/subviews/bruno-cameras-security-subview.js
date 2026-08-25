@@ -446,7 +446,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     this._updateStage(tileEl.querySelector('.image-stage'), oldActive);
     this._updateSlotPill(tileEl.querySelector('.tile-pill'), oldActive, true);
     tileEl.dataset.cameraId = oldActive.entity;
-    const desktop = Boolean(root.querySelector('.security-subview.is-desktop'));
+    // Nome limpo (display_name) tambem no telefone: o mobile novo segue a
+    // mesma nomenclatura do tablet, sem as siglas SL-/VR-/CZ-.
+    const desktop = Boolean(root.querySelector('.security-subview.is-desktop, .security-subview.is-mobile-v2'));
     tileEl.setAttribute(
       'aria-label',
       BrunoCamerasSecuritySubview._displayName(oldActive, true, desktop),
@@ -465,7 +467,11 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
   _syncDesktopGroups() {
     const root = this.shadowRoot;
-    if (!root?.querySelector('.security-subview.is-desktop')) return;
+    // ANTERIOR (rollback): so rodava em .security-subview.is-desktop.
+    // O telefone passou a usar os MESMOS setores, entao a recomposicao
+    // 3+4 / 4+3 tem de valer nas duas apresentacoes. O corpo do metodo nao
+    // muda: continua movendo os tiles EXISTENTES com appendChild.
+    if (!root?.querySelector('.security-subview.is-desktop, .security-subview.is-mobile-v2')) return;
     const model = this._model();
     const groups = [
       ['social', model.socialCameras],
@@ -517,6 +523,21 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
     const mount = this.shadowRoot?.querySelector('[data-camera-controls]');
     if (!mount) return;
     mount.innerHTML = this._cameraControls(camera);
+    this._marcarAusenciaDeControles(camera);
+  }
+
+  /**
+   * Marca no root quando a camera ativa NAO tem controles.
+   *
+   * _cameraControls devolve string vazia quando nenhuma das tres entidades
+   * (som, movimento, privacidade) existe. Sem esta marca o botao de tres
+   * pontos abriria um painel vazio. O CSS do telefone esconde o botao.
+   * Nao altera o desktop: la a regra que le a classe nao existe.
+   */
+  _marcarAusenciaDeControles(camera) {
+    const raiz = this.shadowRoot?.querySelector('.security-subview');
+    if (!raiz) return;
+    raiz.classList.toggle('sem-controles', !this._cameraControls(camera));
   }
 
   // PAINEL DE CONTROLES (2026-08-24).
@@ -996,46 +1017,88 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
       this._lastClock = BrunoCamerasSecuritySubview._clock();
 
       const mobile = this._isMobileLayout();
+
+      // ANTERIOR (rollback 2026-08-25) — apresentacao mobile LEGADA:
+      // topbar Residencia/Seguranca + relogio + data, .security-grid com
+      // .side-rail e .bottom-strip e rodape de criptografia. Substituida
+      // pela composicao abaixo. O CSS dela continua no _styles e deixa de
+      // casar por falta dos seletores.
+      // const mobile = this._isMobileLayout();
+      // const markup = mobile
+      //   ? `
+      //     <main class="security-subview">
+      //       <header class="security-topbar">
+      //         <button class="icon-button" type="button" data-action="navigate-home" aria-label="Voltar para o painel principal">
+      //           <bruno-icon icon="mdi:arrow-left"></bruno-icon>
+      //         </button>
+      //
+      //         <div class="brand">
+      //           <span class="brand-main">Residência</span>
+      //           <span class="brand-sep" aria-hidden="true">·</span>
+      //           <strong class="brand-strong">Segurança</strong>
+      //         </div>
+      //
+      //         <div class="clock-block" aria-label="Horario atual">
+      //           <span data-clock>${BrunoCamerasSecuritySubview._escape(this._lastClock)}</span>
+      //           <small data-date>${BrunoCamerasSecuritySubview._escape(BrunoCamerasSecuritySubview._date())}</small>
+      //         </div>
+      //       </header>
+      //
+      //       <section class="security-grid">
+      //         <section class="main-feed">
+      //           ${BrunoCamerasSecuritySubview._mainFeed(active)}
+      //         </section>
+      //
+      //         <aside class="side-rail" aria-label="Cameras principais">
+      //           ${model.sideCameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'side')).join('')}
+      //         </aside>
+      //
+      //         <section class="bottom-strip" aria-label="Outras cameras">
+      //           ${model.bottomCameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'bottom')).join('')}
+      //         </section>
+      //       </section>
+      //
+      //       <footer class="security-footer">
+      //         <span class="enc-note">
+      //           <bruno-icon icon="mdi:shield-lock-outline" aria-hidden="true"></bruno-icon>
+      //           Todas as câmeras estão protegidas com criptografia de ponta a ponta
+      //         </span>
+      //       </footer>
+      //     </main>
+      //   `
+      //
+      // --- FIM ANTERIOR ---
+
+      // NOVO (2026-08-25) — MOBILE: a MESMA subview do tablet, reorganizada.
+      //
+      // Quatro regioes e mais nada: cabecalho, camera principal, Area social
+      // e Area intima. Sem bloco de atividade, sem metricas, sem rodape — a
+      // rail inferior da shell continua sendo a unica navegacao.
+      //
+      // Os construtores sao os MESMOS do tablet (_mainFeed com cabecalho,
+      // _groupSection, _tile). Nada e duplicado: o que muda e so a grade
+      // que os arranja, no bloco de telefone do _styles.
+      const controles = this._cameraControls(active);
       const markup = mobile
         ? `
-          <main class="security-subview">
-            <header class="security-topbar">
-              <button class="icon-button" type="button" data-action="navigate-home" aria-label="Voltar para o painel principal">
-                <bruno-icon icon="mdi:arrow-left"></bruno-icon>
-              </button>
-
-              <div class="brand">
-                <span class="brand-main">Residência</span>
-                <span class="brand-sep" aria-hidden="true">·</span>
-                <strong class="brand-strong">Segurança</strong>
-              </div>
-
-              <div class="clock-block" aria-label="Horario atual">
-                <span data-clock>${BrunoCamerasSecuritySubview._escape(this._lastClock)}</span>
-                <small data-date>${BrunoCamerasSecuritySubview._escape(BrunoCamerasSecuritySubview._date())}</small>
-              </div>
+          <main class="security-subview is-mobile-v2${controles ? '' : ' sem-controles'}">
+            <header class="cameras-phone-head">
+              <h1>Câmeras</h1>
+              <p>
+                <span>${model.totalCount} câmeras</span>
+                <span class="overview-sep" aria-hidden="true">·</span>
+                <span>${model.onlineCount} online</span>
+                <span class="overview-sep" aria-hidden="true">·</span>
+                <span>${model.motionCount} com movimento</span>
+              </p>
             </header>
 
-            <section class="security-grid">
-              <section class="main-feed">
-                ${BrunoCamerasSecuritySubview._mainFeed(active)}
-              </section>
-
-              <aside class="side-rail" aria-label="Cameras principais">
-                ${model.sideCameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'side')).join('')}
-              </aside>
-
-              <section class="bottom-strip" aria-label="Outras cameras">
-                ${model.bottomCameras.map((camera) => BrunoCamerasSecuritySubview._tile(camera, 'bottom')).join('')}
-              </section>
+            <section class="main-feed" aria-label="Câmera principal">
+              ${BrunoCamerasSecuritySubview._mainFeed(active, true, controles, this._cameraMenuOpen)}
             </section>
 
-            <footer class="security-footer">
-              <span class="enc-note">
-                <bruno-icon icon="mdi:shield-lock-outline" aria-hidden="true"></bruno-icon>
-                Todas as câmeras estão protegidas com criptografia de ponta a ponta
-              </span>
-            </footer>
+            ${BrunoCamerasSecuritySubview._groupSection('social', 'Área social', model.socialCameras)}
+            ${BrunoCamerasSecuritySubview._groupSection('intimate', 'Área íntima', model.intimateCameras)}
           </main>
         `
         : `
@@ -2997,6 +3060,193 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
         .camera-tile,
         .action-pill {
           transition: none !important;
+        }
+      }
+
+      /* ================================================================
+         MOBILE (2026-08-25) — a mesma subview do tablet, reorganizada.
+
+         Vem por ULTIMO de proposito: as regras do telefone legado
+         (.security-grid, .side-rail, .bottom-strip) continuam no arquivo e
+         deixam de casar por falta dos seletores, mas a regra generica
+         ".main-feed, .camera-tile { height: clamp(190px, 26vh, 240px) }"
+         do bloco de 800px casaria com esta composicao. Tudo aqui e escopado
+         em .is-mobile-v2, que tem especificidade maior e vem depois.
+
+         ZERO SCROLL POR CONSTRUCAO, nao por overflow escondido:
+         a composicao e uma grade de FRACOES. Cabecalho usa o necessario;
+         principal e os dois setores dividem o que sobra. Nenhuma linha tem
+         altura intrinseca capaz de transbordar, entao a soma e sempre a
+         altura entregue pela shell, em qualquer viewport.
+
+         Por isso tambem caem aqui o "min-height: 520px" do :host e o
+         "min-height: 100vh" do root: os dois empurrariam a composicao para
+         alem da area util em telefones curtos.
+         ================================================================ */
+      @media (max-width: 800px) {
+        :host {
+          min-height: 0;
+          height: 100%;
+        }
+
+        .security-subview.is-mobile-v2 {
+          height: 100%;
+          min-height: 0;
+          display: grid;
+          /* cabecalho | principal | Area social | Area intima */
+          /* SEM var() aqui: custom property dentro de minmax() so e
+             resolvida no valor computado, e se algo nao casar a declaracao
+             INTEIRA cai para o inicial (none). Medido: as quatro linhas
+             viraram auto e os tiles do setor social mediram 2px de altura. */
+          /* Fracoes medidas a 390x844: com 0.8 no principal ele fica em
+             1.81:1 — praticamente 16:9 — e as miniaturas em 2:1, legiveis.
+             Dar mais ao principal achata os tiles (1fr/0.8fr media 2.56:1). */
+          grid-template-rows: auto minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
+          /* O rule base de .security-subview declara DUAS colunas (heranca do
+             layout antigo). Sem zerar aqui, os quatro filhos fluem em pares e
+             o grid inventa linhas implicitas: medido, seis faixas em vez de
+             quatro, com os tiles do setor social em 2px. */
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-areas: none;
+          gap: clamp(6px, 1vh, 10px);
+          padding: clamp(2px, 0.5vh, 8px) clamp(8px, 2.6vw, 12px) 0;
+          box-sizing: border-box;
+          overflow: visible;
+        }
+
+        /* ---- cabecalho ---- */
+        .security-subview.is-mobile-v2 .cameras-phone-head {
+          min-width: 0;
+          display: grid;
+          gap: 2px;
+          padding: 0 2px;
+        }
+
+        .security-subview.is-mobile-v2 .cameras-phone-head h1 {
+          margin: 0;
+          font-size: clamp(16px, 4.4vw, 20px);
+          line-height: 1.1;
+          font-weight: 700;
+          letter-spacing: -0.012em;
+          color: rgba(241,245,249,0.94);
+        }
+
+        .security-subview.is-mobile-v2 .cameras-phone-head p {
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: clamp(10px, 2.8vw, 12px);
+          line-height: 1.1;
+          font-weight: 540;
+          color: rgba(203,213,225,0.52);
+          font-variant-numeric: tabular-nums;
+        }
+
+        /* ---- camera principal ---- */
+        .security-subview.is-mobile-v2 .main-feed {
+          /* O layout mobile legado dava grid-area: main a este bloco. A area
+             nomeada sobrevive ao novo grid e reposiciona a camera principal
+             numa coluna propria — medido: tres colunas de 15/84/233px. */
+          grid-area: auto;
+          min-height: 0;
+          height: auto;
+          display: grid;
+        }
+
+        /* Mesmas duas regras que o tablet aplica em .is-desktop; aqui elas
+           precisam existir com o seletor do telefone. */
+        .security-subview.is-mobile-v2 .main-feed-card.has-head {
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
+          min-height: 0;
+        }
+
+        .security-subview.is-mobile-v2 .main-feed-card.has-head .main-feed-stage {
+          width: auto;
+          height: auto;
+          min-height: 0;
+          margin: 0 clamp(7px, 2.2vw, 11px) clamp(7px, 2.2vw, 11px);
+          border-radius: var(--bruno-liquid-cell-radius, 16px);
+          overflow: hidden;
+        }
+
+        .security-subview.is-mobile-v2 .feed-head {
+          padding: clamp(6px, 1vh, 10px) clamp(9px, 2.8vw, 13px);
+          gap: 8px;
+        }
+
+        .security-subview.is-mobile-v2 .feed-head-title {
+          font-size: clamp(13px, 3.6vw, 15.5px);
+        }
+
+        .security-subview.is-mobile-v2 .feed-live-pill {
+          font-size: clamp(9px, 2.4vw, 10.5px);
+        }
+
+        /* A identificacao e as acoes vivem no cabecalho: a pilula sobreposta
+           e os botoes flutuantes sobre a imagem sairiam redundantes. */
+        .security-subview.is-mobile-v2 .main-feed-card.has-head .feed-pill,
+        .security-subview.is-mobile-v2 .main-feed-card.has-head .feed-controls {
+          display: none;
+        }
+
+        /* Sem entidades de som/movimento/privacidade, o menu abriria vazio. */
+        .security-subview.is-mobile-v2.sem-controles .feed-head-menu {
+          display: none;
+        }
+
+        /* ---- setores ---- */
+        .security-subview.is-mobile-v2 .camera-group {
+          min-height: 0;
+          display: grid;
+          grid-template-rows: auto minmax(0, 1fr);
+          gap: clamp(4px, 0.7vh, 7px);
+          padding: clamp(7px, 1.1vh, 11px) clamp(8px, 2.4vw, 11px);
+          border-top: 0;
+          border-radius: var(--bruno-liquid-card-radius, 22px);
+          background: var(--bruno-liquid-surface-off-background,
+            radial-gradient(180px 110px at 16% 8%, rgba(255,255,255,0.09), transparent 72%),
+            linear-gradient(155deg, rgba(255,255,255,0.085), rgba(255,255,255,0.03)),
+            rgba(9,12,18,0.34));
+          border: 1px solid var(--bruno-liquid-surface-off-border-color, rgba(255,255,255,0.105));
+          box-shadow: var(--bruno-liquid-surface-off-shadow, none);
+          backdrop-filter: var(--bruno-liquid-surface-off-filter, none);
+          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, none);
+        }
+
+        .security-subview.is-mobile-v2 .camera-group-head h2 {
+          font-size: clamp(11.5px, 3.2vw, 13.5px);
+        }
+
+        .security-subview.is-mobile-v2 .camera-group-head span {
+          font-size: clamp(9.5px, 2.6vw, 11.5px);
+        }
+
+        /* SEMPRE 2x2. Com tres cameras a quarta celula fica vazia e a
+           terceira NAO expande — e o que "repeat(2, ...)" nas duas direcoes
+           garante, sem placeholder nenhum no DOM. */
+        .security-subview.is-mobile-v2 .camera-group-grid {
+          min-height: 0;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-rows: repeat(2, minmax(0, 1fr));
+          gap: clamp(5px, 1.7vw, 9px);
+        }
+
+        .security-subview.is-mobile-v2 .camera-tile {
+          height: auto;
+          min-height: 0;
+        }
+
+        .security-subview.is-mobile-v2 .camera-tile .image-stage {
+          width: 100%;
+          height: 100%;
+          min-height: 0;
+        }
+
+        .security-subview.is-mobile-v2 .tile-pill {
+          font-size: clamp(9px, 2.5vw, 11px);
         }
       }
     `;

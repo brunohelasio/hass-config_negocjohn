@@ -55,7 +55,7 @@ function Hi(o) {
     requisicoes: { total: 0, falhas: 0, duracaoTotal: 0, pior: 0 }
   };
 }
-const Di = 720, Pi = 200, ji = 24, Bi = 4, Ya = 3e4, Vi = 12, Qe = 10 * 1024 * 1024, Ui = 64;
+const Di = 720, Pi = 200, ji = 24, Bi = 4, Ya = 3e4, Vi = 12, Xe = 10 * 1024 * 1024, Ui = 64;
 function Je(o) {
   let e = Number.POSITIVE_INFINITY;
   for (const a of o) a.usado < e && (e = a.usado);
@@ -153,7 +153,7 @@ class Fi {
   leituraDeMemoria() {
     const e = this.memoria, a = e[0], t = e[e.length - 1], i = e.length, r = Math.max(1, Math.floor(i / 3)), n = i ? Je(e.slice(0, r)) : 0, s = i ? Je(e.slice(i - r)) : 0, l = s - n, c = this.valoresDeMemoria.size, p = i ? Je(e.slice(r, i - r)) : 0, d = s - p;
     let h;
-    return i < Vi ? h = `Só ${i} amostra(s) — o piso ainda não significa nada.` : c < 2 ? h = `${i} amostras, mas um único valor de heap: o navegador ainda não atualizou a leitura. Sem informação — precisa de sessão longa.` : l > Qe && d > Qe ? h = `Piso subiu ${(l / 1048576).toFixed(1)} MB e AINDA sobe (${(d / 1048576).toFixed(1)} MB no último terço) — isto é retenção.` : l > Qe ? h = `Subiu ${(l / 1048576).toFixed(1)} MB desde a carga e estabilizou em ${(s / 1048576).toFixed(0)} MB — é custo de partida, não vazamento.` : h = `Piso estável em ${c} degraus — a variação do heap é coleta de lixo, não vazamento.`, {
+    return i < Vi ? h = `Só ${i} amostra(s) — o piso ainda não significa nada.` : c < 2 ? h = `${i} amostras, mas um único valor de heap: o navegador ainda não atualizou a leitura. Sem informação — precisa de sessão longa.` : l > Xe && d > Xe ? h = `Piso subiu ${(l / 1048576).toFixed(1)} MB e AINDA sobe (${(d / 1048576).toFixed(1)} MB no último terço) — isto é retenção.` : l > Xe ? h = `Subiu ${(l / 1048576).toFixed(1)} MB desde a carga e estabilizou em ${(s / 1048576).toFixed(0)} MB — é custo de partida, não vazamento.` : h = `Piso estável em ${c} degraus — a variação do heap é coleta de lixo, não vazamento.`, {
       amostras: i,
       ...a ? { primeira: a } : {},
       ...t ? { ultima: t } : {},
@@ -283,10 +283,10 @@ function ys(o, e, a, t, i) {
 function ws(o, e, a, t, i) {
   e.removeEventListener(a, t, i), T.listenerEncerrado(o);
 }
-function Xi(o, e, a) {
+function Qi(o, e, a) {
   T.requisicao(o, e, a);
 }
-function Qt(o) {
+function Xt(o) {
   T.conectou(o);
 }
 function Jt(o) {
@@ -303,7 +303,7 @@ function ei(o, e, a) {
 function ai() {
   return T.marcar(performance.now());
 }
-function Qi() {
+function Xi() {
   T.limparMarca();
 }
 function Ji() {
@@ -325,7 +325,7 @@ function er() {
     texto: () => JSON.stringify(Ie(), null, 2),
     zerar: () => T.zerar(),
     marcar: ai,
-    limparMarca: Qi
+    limparMarca: Xi
   };
   globalThis.brunoRuntime = o;
 }
@@ -3561,6 +3561,8 @@ class O extends HTMLElement {
              e este slot da shell; por isso Office e Quartos ainda deslocavam
              ao montar/desmontar a folha. Exclusivo do breakpoint phone. */
           overflow-anchor: none;
+          /* A rolagem util fica aqui dentro e nao vaza para a pagina. */
+          overscroll-behavior: contain;
           -webkit-overflow-scrolling: touch;
           padding: 10px 10px 6px;
         }
@@ -4025,7 +4027,7 @@ function cr(o = 280) {
     e.classList.remove("bruno-liquid-route-transition");
   }, o));
 }
-const Xa = {
+const Qa = {
   version: ir,
   tokens: Ma,
   surfaces: rr,
@@ -4034,8 +4036,8 @@ const Xa = {
   feedback: lr,
   routeTransition: cr
 };
-globalThis.BrunoThemeManager ? globalThis.BrunoLiquidGlassOriginal = Xa : (globalThis.BrunoLiquidGlass = Xa, ti());
-const dr = "20260822-hemma-1", Qa = "bruno-liquid-glass-tokens", ce = globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass), ii = {
+globalThis.BrunoThemeManager ? globalThis.BrunoLiquidGlassOriginal = Qa : (globalThis.BrunoLiquidGlass = Qa, ti());
+const dr = "20260822-hemma-1", Xa = "bruno-liquid-glass-tokens", ce = globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass), ii = {
   "primary-font-family": '"Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
   "primary-color": "#00c0e8",
   "accent-color": "#00C3D0",
@@ -4194,8 +4196,8 @@ function br(o) {
 }
 function oi(o = globalThis.document) {
   if (!o?.head) return null;
-  let e = o.getElementById(Qa);
-  return e || (e = o.createElement("style"), e.id = Qa, o.head.appendChild(e)), e.textContent = `:root {
+  let e = o.getElementById(Xa);
+  return e || (e = o.createElement("style"), e.id = Xa, o.head.appendChild(e)), e.textContent = `:root {
 ${br(hr())}
 }`, e;
 }
@@ -5770,7 +5772,7 @@ globalThis.BrunoSurfaceMaterial = {
   subviewStyles: Yr,
   materialStyles: Kr
 };
-const Xr = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", Qr = {
+const Qr = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", Xr = {
   _installingEntities: /* @__PURE__ */ new Set(),
   render({ hass: o, embedded: e = !1 } = {}) {
     const a = this._model(o), t = e ? 'data-config-action="child-close"' : 'data-updates-action="close"';
@@ -5897,7 +5899,7 @@ const Xr = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
         entityId: e,
         name: r,
         group: this._updateGroup(e, i),
-        picture: t.entity_picture || Xr,
+        picture: t.entity_picture || Qr,
         versionLine: `${n} -> ${s}`,
         installing: this._installingEntities.has(e) || this._isInstalling(t.in_progress)
       };
@@ -6105,7 +6107,7 @@ const Xr = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
     `;
   }
 };
-globalThis.BrunoUpdatesPanel = Qr;
+globalThis.BrunoUpdatesPanel = Xr;
 const Jr = {
   render({ hass: o } = {}) {
     const e = this._model(o);
@@ -16916,7 +16918,7 @@ Promise.all([
 ]).then(() => {
   Oo(customElements.get(xt)), Co(customElements.get(yt));
 });
-function X(o) {
+function Q(o) {
   return String(o ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 const To = [
@@ -16929,11 +16931,11 @@ const To = [
   "media_player_name"
 ];
 function Sa(o, e) {
-  const a = X(e);
+  const a = Q(e);
   if (!a) return !0;
   const t = o ?? {};
   return To.some((i) => {
-    const r = X(t[i]);
+    const r = Q(t[i]);
     return !!(r && (r === a || r.includes(a) || r.length >= 10 && a.includes(r)));
   });
 }
@@ -16944,12 +16946,12 @@ function $o(o, e, a) {
 function pi(o, e) {
   if (!e || !di.includes(String(e.state).toLowerCase())) return !1;
   const a = e.attributes ?? {};
-  if (X(
+  if (Q(
     [a.app_name, a.source, a.media_content_type, a.media_channel].join(" ")
   ).includes("spotify")) return !0;
-  const i = o ?? {}, r = X(a.media_title), n = X(i.media_title);
+  const i = o ?? {}, r = Q(a.media_title), n = Q(i.media_title);
   if (r && n && r === n) return !0;
-  const s = X(a.media_artist), l = X(i.media_artist);
+  const s = Q(a.media_artist), l = Q(i.media_artist);
   return !!(r && n && r.includes(n) && s && l && s === l);
 }
 const ui = "bruno-ui:curtain-hold:v1", Mo = 1440 * 60 * 1e3;
@@ -18901,7 +18903,7 @@ class k extends HTMLElement {
     const H = this._mediaServiceName(e, r, $, b, u), ye = {
       ...a?.attributes || {},
       ...i ? t?.attributes || {} : {}
-    }, we = H === "Spotify" ? this._spotifyRoomTarget(ye) : null, ke = we ? { ...r, ...we } : r, Fa = this._mediaRoomName(ke), S = this._hasPlayback(n, p, s, b, u, e, r, $, ye), Ti = this._fallbackMediaTitle(H, Fa, e), Ze = S ? this._firstText([p, b, u, Ti, this._playerName(e)]) : "", Ga = S ? this._firstText([d, h, g, f, b, u, this._stateLabel(n)], [Ze]) : "", Wa = S ? [H, Fa].filter(Boolean).join(" ") : "", Ye = r.icon || this._playerIcon(e), Ke = ke.path || ke.navigation_path || "", Xe = ke.section || "";
+    }, we = H === "Spotify" ? this._spotifyRoomTarget(ye) : null, ke = we ? { ...r, ...we } : r, Fa = this._mediaRoomName(ke), S = this._hasPlayback(n, p, s, b, u, e, r, $, ye), Ti = this._fallbackMediaTitle(H, Fa, e), Ze = S ? this._firstText([p, b, u, Ti, this._playerName(e)]) : "", Ga = S ? this._firstText([d, h, g, f, b, u, this._stateLabel(n)], [Ze]) : "", Wa = S ? [H, Fa].filter(Boolean).join(" ") : "", Ye = r.icon || this._playerIcon(e), Ke = ke.path || ke.navigation_path || "", Qe = ke.section || "";
     S && ["playing", "paused"].includes(String(n).toLowerCase()) && this._storeLastValidMedia({
       entity: e,
       image: c,
@@ -18912,7 +18914,7 @@ class k extends HTMLElement {
       serviceName: H,
       serviceIcon: Ye,
       path: Ke,
-      section: Xe,
+      section: Qe,
       savedAt: Date.now()
     });
     const qe = e === F && this._isActive(e), R = S ? null : qe ? this._mediaHistory?.[e] || null : this._mediaHistory?.[e] || this._latestMediaSnapshot(), Za = S ? c : c || R?.image || this._lastArtworkByPlayer?.[e] || "", $i = S ? Ze : R?.title || (qe ? "TV ligada" : ""), Mi = S ? Ga : R?.secondary || R?.artist || (qe ? this._firstText([b, u, "Sala"]) : ""), Ri = S ? Wa : R?.context || (qe ? "TV Sala" : "");
@@ -18928,7 +18930,7 @@ class k extends HTMLElement {
       serviceName: S ? H : R?.serviceName || H,
       serviceIcon: S ? Ye : R?.serviceIcon || Ye,
       path: S ? Ke : R?.path || Ke,
-      section: S ? Xe : R?.section || Xe,
+      section: S ? Qe : R?.section || Qe,
       duration: Number.isFinite(m) ? m : 0,
       position: Number.isFinite(x) ? Math.max(0, x) : 0,
       volumePercent: Number.isFinite(A) ? Math.max(0, Math.min(100, Math.round(A * 100))) : 0,
@@ -20608,9 +20610,9 @@ ee.elementStyles = [], ee.shadowRootOptions = { mode: "open" }, ee[ue("elementPr
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Pa = globalThis, Mt = (o) => o, He = Pa.trustedTypes, Rt = He ? He.createPolicy("lit-html", { createHTML: (o) => o }) : void 0, fi = "$lit$", G = `lit$${Math.random().toFixed(9).slice(2)}$`, vi = "?" + G, Xo = `<${vi}>`, J = document, me = () => J.createComment(""), fe = (o) => o === null || typeof o != "object" && typeof o != "function", ja = Array.isArray, Qo = (o) => ja(o) || typeof o?.[Symbol.iterator] == "function", sa = `[ 	
+const Pa = globalThis, Mt = (o) => o, He = Pa.trustedTypes, Rt = He ? He.createPolicy("lit-html", { createHTML: (o) => o }) : void 0, fi = "$lit$", G = `lit$${Math.random().toFixed(9).slice(2)}$`, vi = "?" + G, Qo = `<${vi}>`, J = document, me = () => J.createComment(""), fe = (o) => o === null || typeof o != "object" && typeof o != "function", ja = Array.isArray, Xo = (o) => ja(o) || typeof o?.[Symbol.iterator] == "function", sa = `[ 	
 \f\r]`, ne = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, It = /-->/g, Lt = />/g, K = RegExp(`>|${sa}(?:([^\\s"'>=/]+)(${sa}*=${sa}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Nt = /'/g, zt = /"/g, _i = /^(?:script|style|textarea|title)$/i, xi = (o) => (e, ...a) => ({ _$litType$: o, strings: e, values: a }), v = xi(1), Ss = xi(2), ie = Symbol.for("lit-noChange"), _ = Symbol.for("lit-nothing"), Ht = /* @__PURE__ */ new WeakMap(), Q = J.createTreeWalker(J, 129);
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Nt = /'/g, zt = /"/g, _i = /^(?:script|style|textarea|title)$/i, xi = (o) => (e, ...a) => ({ _$litType$: o, strings: e, values: a }), v = xi(1), Ss = xi(2), ie = Symbol.for("lit-noChange"), _ = Symbol.for("lit-nothing"), Ht = /* @__PURE__ */ new WeakMap(), X = J.createTreeWalker(J, 129);
 function yi(o, e) {
   if (!ja(o) || !o.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return Rt !== void 0 ? Rt.createHTML(e) : e;
@@ -20623,7 +20625,7 @@ const Jo = (o, e) => {
     let c, p, d = -1, h = 0;
     for (; h < l.length && (n.lastIndex = h, p = n.exec(l), p !== null); ) h = n.lastIndex, n === ne ? p[1] === "!--" ? n = It : p[1] !== void 0 ? n = Lt : p[2] !== void 0 ? (_i.test(p[2]) && (i = RegExp("</" + p[2], "g")), n = K) : p[3] !== void 0 && (n = K) : n === K ? p[0] === ">" ? (n = i ?? ne, d = -1) : p[1] === void 0 ? d = -2 : (d = n.lastIndex - p[2].length, c = p[1], n = p[3] === void 0 ? K : p[3] === '"' ? zt : Nt) : n === zt || n === Nt ? n = K : n === It || n === Lt ? n = ne : (n = K, i = void 0);
     const b = n === K && o[s + 1].startsWith("/>") ? " " : "";
-    r += n === ne ? l + Xo : d >= 0 ? (t.push(c), l.slice(0, d) + fi + l.slice(d) + G + b) : l + G + (d === -2 ? s : b);
+    r += n === ne ? l + Qo : d >= 0 ? (t.push(c), l.slice(0, d) + fi + l.slice(d) + G + b) : l + G + (d === -2 ? s : b);
   }
   return [yi(o, r + (o[a] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), t];
 };
@@ -20633,11 +20635,11 @@ class ve {
     this.parts = [];
     let r = 0, n = 0;
     const s = e.length - 1, l = this.parts, [c, p] = Jo(e, a);
-    if (this.el = ve.createElement(c, t), Q.currentNode = this.el.content, a === 2 || a === 3) {
+    if (this.el = ve.createElement(c, t), X.currentNode = this.el.content, a === 2 || a === 3) {
       const d = this.el.content.firstChild;
       d.replaceWith(...d.childNodes);
     }
-    for (; (i = Q.nextNode()) !== null && l.length < s; ) {
+    for (; (i = X.nextNode()) !== null && l.length < s; ) {
       if (i.nodeType === 1) {
         if (i.hasAttributes()) for (const d of i.getAttributeNames()) if (d.endsWith(fi)) {
           const h = p[n++], b = i.getAttribute(d).split(G), u = /([.?@])?(.*)/.exec(h);
@@ -20647,7 +20649,7 @@ class ve {
           const d = i.textContent.split(G), h = d.length - 1;
           if (h > 0) {
             i.textContent = He ? He.emptyScript : "";
-            for (let b = 0; b < h; b++) i.append(d[b], me()), Q.nextNode(), l.push({ type: 2, index: ++r });
+            for (let b = 0; b < h; b++) i.append(d[b], me()), X.nextNode(), l.push({ type: 2, index: ++r });
             i.append(d[h], me());
           }
         }
@@ -20682,16 +20684,16 @@ class en {
   }
   u(e) {
     const { el: { content: a }, parts: t } = this._$AD, i = (e?.creationScope ?? J).importNode(a, !0);
-    Q.currentNode = i;
-    let r = Q.nextNode(), n = 0, s = 0, l = t[0];
+    X.currentNode = i;
+    let r = X.nextNode(), n = 0, s = 0, l = t[0];
     for (; l !== void 0; ) {
       if (n === l.index) {
         let c;
         l.type === 2 ? c = new xe(r, r.nextSibling, this, e) : l.type === 1 ? c = new l.ctor(r, l.name, l.strings, this, e) : l.type === 6 && (c = new on(r, this, e)), this._$AV.push(c), l = t[++s];
       }
-      n !== l?.index && (r = Q.nextNode(), n++);
+      n !== l?.index && (r = X.nextNode(), n++);
     }
-    return Q.currentNode = J, i;
+    return X.currentNode = J, i;
   }
   p(e) {
     let a = 0;
@@ -20717,7 +20719,7 @@ class xe {
     return this._$AB;
   }
   _$AI(e, a = this) {
-    e = re(this, e, a), fe(e) ? e === _ || e == null || e === "" ? (this._$AH !== _ && this._$AR(), this._$AH = _) : e !== this._$AH && e !== ie && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Qo(e) ? this.k(e) : this._(e);
+    e = re(this, e, a), fe(e) ? e === _ || e == null || e === "" ? (this._$AH !== _ && this._$AR(), this._$AH = _) : e !== this._$AH && e !== ie && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Xo(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -21383,7 +21385,7 @@ function fn(o) {
 function vn() {
   const o = window.devicePixelRatio || 1;
   return {
-    buildId: "20260824",
+    buildId: "20260825",
     viewportCss: `${window.innerWidth} x ${window.innerHeight}`,
     screenPhysical: `${Math.round(window.screen.width * o)} x ${Math.round(
       window.screen.height * o
@@ -21831,7 +21833,7 @@ De.customCards.some((o) => o.type === "bruno-diagnostics") || De.customCards.pus
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
 const Pt = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.s-LgH6sB.js"),
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.-ioKsIDD.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.Bb4tCdNq.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
@@ -22079,7 +22081,7 @@ class In extends V {
     ].filter((r) => typeof r == "string");
   }
   connectedCallback() {
-    super.connectedCallback(), Qt(ca), this._tileModeCache = void 0, globalThis.addEventListener?.("bruno-theme-changed", this._onThemeChanged);
+    super.connectedCallback(), Xt(ca), this._tileModeCache = void 0, globalThis.addEventListener?.("bruno-theme-changed", this._onThemeChanged);
   }
   disconnectedCallback() {
     super.disconnectedCallback(), Jt(ca), globalThis.removeEventListener?.("bruno-theme-changed", this._onThemeChanged);
@@ -23455,7 +23457,11 @@ var Nn = Object.getOwnPropertyDescriptor, zn = (o, e, a, t) => {
 const Hn = 6e3, Dn = (o) => o === "sala" ? { type: "custom:bruno-sala-card" } : { type: "custom:bruno-room-tile", room: o, variant: "tile" };
 let je = class extends V {
   constructor() {
-    super(...arguments), this._pagina = 0, this._rodando = !1, this._pagAgenda = 0, this._assinatura = "", this._montados = /* @__PURE__ */ new WeakSet(), this._medirAlturaUtil = () => {
+    super(...arguments), this._pagina = 0, this._rodando = !1, this._pagAgenda = 0, this._assinatura = "", this._montados = /* @__PURE__ */ new WeakSet(), this._slotObservado = !1, this._tentativasDeMedida = 0, this._ultimaMedida = "", this._medirQuandoAssentar = () => {
+      this._medirAlturaUtil();
+      const o = this.style.getPropertyValue("--altura-util"), e = !!o && o === this._ultimaMedida;
+      this._ultimaMedida = o, !(e || this._tentativasDeMedida >= 40) && (this._tentativasDeMedida += 1, requestAnimationFrame(this._medirQuandoAssentar));
+    }, this._medirAlturaUtil = () => {
       const o = this._acharSlot(), e = this.getBoundingClientRect();
       if (!e.height && !e.top) return;
       if (!o) {
@@ -23491,7 +23497,7 @@ let je = class extends V {
   connectedCallback() {
     super.connectedCallback(), this._relogio ??= setInterval(() => {
       document.visibilityState !== "hidden" && (this._pagAgenda += 1, this.requestUpdate());
-    }, Hn), this._observador ??= new ResizeObserver(() => this._medirAlturaUtil()), this._observador.observe(document.documentElement), requestAnimationFrame(() => this._medirAlturaUtil());
+    }, Hn), this._observador ??= new ResizeObserver(() => this._medirAlturaUtil()), this._observarLayout(), this._medirQuandoAssentar();
   }
   /**
    * Mede a altura util: do topo deste componente ate o fim da area rolavel da
@@ -23512,6 +23518,30 @@ let je = class extends V {
       o = o instanceof ShadowRoot ? o.host : o.parentNode;
     }
     return null;
+  }
+  /**
+   * O que precisa ser observado.
+   *
+   * ANTERIOR (rollback): o ResizeObserver observava document.documentElement.
+   * Ele NAO redimensiona depois da carga, entao o observador nunca disparava.
+   * A unica medida valia era a do primeiro quadro — feita antes de os cards
+   * filhos montarem (eles vem de loadCardHelpers, assincrono), quando o slot
+   * ainda nao tinha caixa. A medida falhava, --altura-util ficava sem valor,
+   * o bloco caia para height auto e Favoritos nascia colapsado. So voltava ao
+   * normal quando algo forcava outro render — rolar o pager, por exemplo.
+   *
+   * Agora observa as DUAS caixas de que a medida depende: o proprio host e a
+   * area rolavel da shell. Quando o layout assenta, a medida refaz sozinha.
+   */
+  _observarLayout() {
+    if (!this._observador) return;
+    this._observador.disconnect(), this._observador.observe(this);
+    const o = this._acharSlot();
+    o && (this._observador.observe(o), this._slotObservado = !0);
+  }
+  /** Recomeça a insistência: algo mudou o layout depois de ele ter assentado. */
+  _remedir() {
+    this._tentativasDeMedida = 0, this._ultimaMedida = "", this._medirQuandoAssentar();
   }
   disconnectedCallback() {
     super.disconnectedCallback(), this._observador?.disconnect(), this._relogio && clearInterval(this._relogio), this._relogio = void 0;
@@ -23600,7 +23630,7 @@ let je = class extends V {
         const a = await globalThis.loadCardHelpers?.();
         if (!a) throw new Error("loadCardHelpers indisponível");
         const t = a.createCardElement(e);
-        this._hass && (t.hass = this._hass), o.replaceChildren(t);
+        this._hass && (t.hass = this._hass), o.replaceChildren(t), this._remedir();
       } catch (a) {
         this._montados.delete(o);
         const t = document.createElement("div");
@@ -23609,7 +23639,7 @@ let je = class extends V {
     }
   }
   updated(o) {
-    this._medirAlturaUtil();
+    this._slotObservado || this._observarLayout(), this._medirAlturaUtil();
     for (const e of this.renderRoot.querySelectorAll("[data-card-host]")) {
       const a = e.dataset.cardHost;
       if (a)
@@ -24625,7 +24655,7 @@ j.conhece("climate") || j.registrar({
   })
 });
 const pa = "bruno-devices-panel", Kn = ["on", "playing", "paused", "idle", "buffering", "cool", "heat", "fan_only", "dry", "heat_cool", "auto"];
-class Xn extends V {
+class Qn extends V {
   constructor() {
     super(...arguments), this._selecionado = "", this._controles = /* @__PURE__ */ new Map(), this._observador = new Ai(
       Yt.flatMap((e) => Zt(e))
@@ -24679,7 +24709,7 @@ class Xn extends V {
     return this._hass && (t.hass = this._hass), t;
   }
   connectedCallback() {
-    super.connectedCallback(), Qt(pa);
+    super.connectedCallback(), Xt(pa);
   }
   disconnectedCallback() {
     super.disconnectedCallback(), Jt(pa);
@@ -24957,22 +24987,22 @@ class Xn extends V {
   `;
   }
 }
-customElements.get("bruno-devices-panel") || customElements.define("bruno-devices-panel", Xn);
-const Y = "ha-web-rtc-player", Qn = 6e3, he = 48, be = 27, Kt = 500;
+customElements.get("bruno-devices-panel") || customElements.define("bruno-devices-panel", Qn);
+const Y = "ha-web-rtc-player", Xn = 6e3, he = 48, be = 27, Kt = 500;
 let ua;
 const $e = /* @__PURE__ */ new WeakMap();
 function Jn(o) {
   return o.split(".")[1] ?? o;
 }
 function _e(o, e, a = 0, t = !0) {
-  Xi(`marco: ${Jn(o)} · player webrtc · ${e}`, a, t);
+  Qi(`marco: ${Jn(o)} · player webrtc · ${e}`, a, t);
 }
 function es() {
   return typeof customElements > "u" ? Promise.resolve(!1) : customElements.get(Y) ? Promise.resolve(!0) : new Promise((o) => {
     let e = !1;
     const a = (i) => {
       e || (e = !0, globalThis.clearTimeout(t), o(i));
-    }, t = globalThis.setTimeout(() => a(!!customElements.get(Y)), Qn);
+    }, t = globalThis.setTimeout(() => a(!!customElements.get(Y)), Xn);
     customElements.whenDefined(Y).then(() => a(!0));
   });
 }
@@ -25102,7 +25132,7 @@ const ss = {
 }, cs = {
   principal: 1500,
   secundaria: 3e3
-}, ds = 25e3, ps = 300, us = 6e4, hs = 12e3, Xt = { comImagem: 2, semImagem: 4 };
+}, ds = 25e3, ps = 300, us = 6e4, hs = 12e3, Qt = { comImagem: 2, semImagem: 4 };
 function bs(o, e) {
   return o ? `${o}${o.includes("?") ? "&" : "?"}bruno_t=${e}` : "";
 }
@@ -25257,7 +25287,7 @@ class fs {
   agendarProximo(e, a) {
     const t = e.alvo.prioridade;
     let i = Math.max(cs[t], ls[t] - a);
-    const r = e.quadros === 0, n = r ? Xt.semImagem : Xt.comImagem, s = r ? hs : us;
+    const r = e.quadros === 0, n = r ? Qt.semImagem : Qt.comImagem, s = r ? hs : us;
     if (e.falhasSeguidas >= n) {
       const l = 2 ** Math.min(e.falhasSeguidas - n + 1, 5);
       i = Math.min(s, i * l);
@@ -25267,7 +25297,7 @@ class fs {
 }
 er();
 jn();
-console.info("[bruno-dashboard] build 20260824");
+console.info("[bruno-dashboard] build 20260825");
 globalThis.BrunoCameraEngine = fs;
 globalThis.BrunoCameraLive = ss;
 export {
@@ -25282,7 +25312,7 @@ export {
   Si as d,
   xs as e,
   ei as f,
-  Qt as g,
+  Xt as g,
   Jt as h,
   oe as i,
   ws as j,
@@ -25293,7 +25323,7 @@ export {
   ys as o,
   Ua as p,
   Io as q,
-  Xi as r,
+  Qi as r,
   cn as s,
   vs as t,
   Me as u,
@@ -25303,4 +25333,4 @@ export {
   $o as y,
   Ss as z
 };
-//# sourceMappingURL=main.cjwJpGpl.js.map
+//# sourceMappingURL=main.RFkxPYQd.js.map

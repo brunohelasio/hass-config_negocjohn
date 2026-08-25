@@ -1085,11 +1085,9 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
             <header class="cameras-phone-head">
               <h1>Câmeras</h1>
               <p>
-                <span>${model.totalCount} câmeras</span>
+                <span>${model.onlineCount}/${model.totalCount} online</span>
                 <span class="overview-sep" aria-hidden="true">·</span>
-                <span>${model.onlineCount} online</span>
-                <span class="overview-sep" aria-hidden="true">·</span>
-                <span>${model.motionCount} com movimento</span>
+                <span>${model.motionCount} movimento</span>
               </p>
             </header>
 
@@ -3133,16 +3131,21 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           overflow: visible;
         }
 
-        /* ---- cabecalho ---- */
+        /* ---- cabecalho: tudo numa linha ----
+           ANTERIOR (rollback 2026-08-25): titulo e contagem empilhados
+           (grid + gap), 33px medidos. Em linha unica ficam ~20px. */
         .security-subview.is-mobile-v2 .cameras-phone-head {
           min-width: 0;
-          display: grid;
-          gap: 2px;
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 10px;
           padding: 0 2px;
         }
 
         .security-subview.is-mobile-v2 .cameras-phone-head h1 {
           margin: 0;
+          flex: 0 1 auto;
           font-size: clamp(16px, 4.4vw, 20px);
           line-height: 1.1;
           font-weight: 700;
@@ -3152,94 +3155,203 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
 
         .security-subview.is-mobile-v2 .cameras-phone-head p {
           margin: 0;
+          flex: 0 0 auto;
           display: flex;
           align-items: center;
-          gap: 6px;
-          font-size: clamp(10px, 2.8vw, 12px);
+          gap: 5px;
+          font-size: clamp(10px, 2.7vw, 11.5px);
           line-height: 1.1;
           font-weight: 540;
           color: rgba(203,213,225,0.52);
           font-variant-numeric: tabular-nums;
+          white-space: nowrap;
         }
 
-        /* ---- camera principal ---- */
+        /* ---- camera principal: a faixa deixa de ocupar linha propria ----
+
+           ANTERIOR (rollback 2026-08-25): card em grid "auto / 1fr", com a
+           faixa consumindo uma linha inteira de 65px. E ela EMPILHAVA, porque
+           .feed-head, .feed-head-id e .feed-head-actions vivem todos dentro
+           de @media (min-width: 801px) — no telefone nao recebiam flex nenhum.
+
+           Agora a faixa flutua SOBRE a imagem: titulo e pilula a esquerda,
+           os dois botoes redondos a direita. O video ocupa o card inteiro. */
         .security-subview.is-mobile-v2 .main-feed {
-          /* O layout mobile legado dava grid-area: main a este bloco. A area
-             nomeada sobrevive ao novo grid e reposiciona a camera principal
-             numa coluna propria — medido: tres colunas de 15/84/233px. */
           grid-area: auto;
           min-height: 0;
           height: auto;
           display: grid;
         }
 
-        /* Mesmas duas regras que o tablet aplica em .is-desktop; aqui elas
-           precisam existir com o seletor do telefone. */
         .security-subview.is-mobile-v2 .main-feed-card.has-head {
-          display: grid;
-          grid-template-rows: auto minmax(0, 1fr);
+          display: block;
+          position: relative;
           min-height: 0;
         }
 
         .security-subview.is-mobile-v2 .main-feed-card.has-head .main-feed-stage {
-          width: auto;
-          height: auto;
+          width: 100%;
+          height: 100%;
           min-height: 0;
-          margin: 0 clamp(7px, 2.2vw, 11px) clamp(7px, 2.2vw, 11px);
-          border-radius: var(--bruno-liquid-cell-radius, 16px);
+          margin: 0;
+          border-radius: inherit;
           overflow: hidden;
         }
 
+        /* Veu no topo: sem ele o titulo branco some sobre cena clara. */
+        .security-subview.is-mobile-v2 .main-feed-card.has-head::before {
+          content: '';
+          position: absolute;
+          inset: 0 0 auto 0;
+          height: clamp(52px, 12vw, 72px);
+          z-index: 2;
+          pointer-events: none;
+          border-radius: inherit;
+          background: linear-gradient(180deg, rgba(4,8,14,0.62), rgba(4,8,14,0) 100%);
+        }
+
         .security-subview.is-mobile-v2 .feed-head {
-          padding: clamp(6px, 1vh, 10px) clamp(9px, 2.8vw, 13px);
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 3;
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
           gap: 8px;
+          padding: clamp(8px, 2.4vw, 12px);
+          pointer-events: none;
+        }
+
+        .security-subview.is-mobile-v2 .feed-head-id,
+        .security-subview.is-mobile-v2 .feed-head-actions {
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          pointer-events: auto;
         }
 
         .security-subview.is-mobile-v2 .feed-head-title {
-          font-size: clamp(13px, 3.6vw, 15.5px);
+          font-size: clamp(14px, 3.9vw, 17px);
+          font-weight: 640;
+          color: rgba(255,255,255,0.96);
+          text-shadow: 0 1px 3px rgba(0,0,0,0.45);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .security-subview.is-mobile-v2 .feed-live-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 8px;
+          border-radius: 999px;
           font-size: clamp(9px, 2.4vw, 10.5px);
+          font-weight: 640;
+          letter-spacing: 0.04em;
+          text-transform: uppercase;
+          color: rgba(255,255,255,0.92);
+          background: rgba(10,14,20,0.52);
+          border: 1px solid rgba(255,255,255,0.14);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
         }
 
-        /* A identificacao e as acoes vivem no cabecalho: a pilula sobreposta
-           e os botoes flutuantes sobre a imagem sairiam redundantes. */
+        /* Vermelha: e a UNICA camera da subview em tempo real. */
+        .security-subview.is-mobile-v2 .feed-live-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #ef4444;
+          box-shadow: 0 0 0 3px rgba(239,68,68,0.20);
+        }
+
+        /* Os dois controles viram botoes redondos sobre a imagem. Mesma acao
+           de sempre: um abre o More Info, o outro abre a MESMA faixa
+           translucida de Som/Movimento/Privacidade. A faixa ja e desenhada
+           sobre a imagem, entao os dois convivem sem sobrepor. */
+        .security-subview.is-mobile-v2 .feed-head-btn {
+          width: 34px;
+          height: 34px;
+          padding: 0;
+          display: grid;
+          place-items: center;
+          border-radius: 50%;
+          color: rgba(255,255,255,0.92);
+          background: rgba(10,14,20,0.52);
+          border: 1px solid rgba(255,255,255,0.14);
+          backdrop-filter: blur(6px);
+          -webkit-backdrop-filter: blur(6px);
+        }
+
+        .security-subview.is-mobile-v2 .feed-head-btn bruno-icon {
+          --mdc-icon-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+
         .security-subview.is-mobile-v2 .main-feed-card.has-head .feed-pill,
         .security-subview.is-mobile-v2 .main-feed-card.has-head .feed-controls {
           display: none;
         }
 
-        /* Sem entidades de som/movimento/privacidade, o menu abriria vazio. */
         .security-subview.is-mobile-v2.sem-controles .feed-head-menu {
           display: none;
         }
 
-        /* ---- setores ---- */
+        /* ---- setores: sem bloco proprio ----
+           ANTERIOR (rollback 2026-08-25): cada setor era uma superficie de
+           vidro com padding de 9,3px em cima e embaixo, borda e raio. No
+           tablet o bloco fica (la sobra altura); no telefone o titulo passa a
+           ser texto solto sobre o fundo da shell e as miniaturas encostam. */
         .security-subview.is-mobile-v2 .camera-group {
           min-height: 0;
           display: grid;
           grid-template-rows: auto minmax(0, 1fr);
           gap: clamp(4px, 0.7vh, 7px);
-          padding: clamp(7px, 1.1vh, 11px) clamp(8px, 2.4vw, 11px);
+          padding: 0;
+          border: 0;
           border-top: 0;
-          border-radius: var(--bruno-liquid-card-radius, 22px);
-          background: var(--bruno-liquid-surface-off-background,
-            radial-gradient(180px 110px at 16% 8%, rgba(255,255,255,0.09), transparent 72%),
-            linear-gradient(155deg, rgba(255,255,255,0.085), rgba(255,255,255,0.03)),
-            rgba(9,12,18,0.34));
-          border: 1px solid var(--bruno-liquid-surface-off-border-color, rgba(255,255,255,0.105));
-          box-shadow: var(--bruno-liquid-surface-off-shadow, none);
-          backdrop-filter: var(--bruno-liquid-surface-off-filter, none);
-          -webkit-backdrop-filter: var(--bruno-liquid-surface-off-filter, none);
+          border-radius: 0;
+          background: none;
+          box-shadow: none;
+          backdrop-filter: none;
+          -webkit-backdrop-filter: none;
+        }
+
+        /* Titulo e contagem na mesma linha, como na faixa da principal.
+           Sem isto o cabecalho do setor media 58px: as regras de flex dele
+           tambem vivem em @media (min-width: 801px). */
+        .security-subview.is-mobile-v2 .camera-group-head {
+          min-width: 0;
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          gap: 10px;
+          padding: 0 2px;
         }
 
         .security-subview.is-mobile-v2 .camera-group-head h2 {
-          font-size: clamp(11.5px, 3.2vw, 13.5px);
+          margin: 0;
+          min-width: 0;
+          font-size: clamp(12px, 3.3vw, 14px);
+          line-height: 1.1;
+          font-weight: 650;
+          color: rgba(241,245,249,0.90);
         }
 
         .security-subview.is-mobile-v2 .camera-group-head span {
+          flex: 0 0 auto;
           font-size: clamp(9.5px, 2.6vw, 11.5px);
+          line-height: 1.1;
+          font-weight: 560;
+          color: rgba(203,213,225,0.48);
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
         }
 
         /* SEMPRE 2x2. Com tres cameras a quarta celula fica vazia e a
@@ -3263,7 +3375,6 @@ class BrunoCamerasSecuritySubview extends HTMLElement {
           height: 100%;
           min-height: 0;
         }
-
         .security-subview.is-mobile-v2 .tile-pill {
           font-size: clamp(9px, 2.5vw, 11px);
         }

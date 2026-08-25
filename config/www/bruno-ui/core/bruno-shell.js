@@ -23,6 +23,7 @@ class BrunoShell extends HTMLElement {
     this._railEl = null;
     this._onFolha = this._onFolha.bind(this);
     this._onViewportResize = this._onViewportResize.bind(this);
+    this._onTapDiag = this._onTapDiag.bind(this);
     this._travasViewport = [];
     this._ancoraTimers = [];
     this._sectionEl = null;
@@ -227,7 +228,8 @@ class BrunoShell extends HTMLElement {
     ];
     globalThis.addEventListener('resize', this._onViewportResize);
     globalThis.addEventListener('orientationchange', this._onViewportResize);
-    if (String(globalThis.location && globalThis.location.search || '').indexOf('diag=1') >= 0) {
+    this.addEventListener('pointerdown', this._onTapDiag, true);
+    if (this._querDiagnostico()) {
       this._ancoraTimers.push(setTimeout(() => this._diagnosticoNaTela(), 1200));
     }
   }
@@ -504,6 +506,41 @@ class BrunoShell extends HTMLElement {
     this._diagCorpo.textContent = linhas.join('\n');
   }
 
+  /**
+   * Duas formas de pedir o diagnostico, porque a URL nem sempre sobrevive.
+   *
+   * O roteador do Home Assistant devolveu o usuario para a home ao receber
+   * a query string. O hash e inofensivo aqui: chave desconhecida cai na
+   * secao padrao (ver _currentHashKey), entao "#diag" nao muda navegacao.
+   */
+  _querDiagnostico() {
+    const loc = globalThis.location || {};
+    const alvo = String(loc.search || '') + String(loc.hash || '');
+    return alvo.toLowerCase().indexOf('diag') >= 0;
+  }
+
+  /**
+   * Ultimo recurso sem URL: cinco toques no canto superior esquerdo, dentro
+   * de 1,5s. Nao consome o evento — o que estiver embaixo continua
+   * reagindo; a faixa apenas cobre a tela quando abre.
+   */
+  _onTapDiag(event) {
+    const r = this.getBoundingClientRect();
+    const x = event.clientX - r.left;
+    const y = event.clientY - r.top;
+    if (x < 0 || y < 0 || x > 56 || y > 56) {
+      this._diagToques = [];
+      return;
+    }
+    const agora = Date.now();
+    this._diagToques = (this._diagToques || []).filter((t) => agora - t < 1500);
+    this._diagToques.push(agora);
+    if (this._diagToques.length >= 5) {
+      this._diagToques = [];
+      this._diagnosticoNaTela();
+    }
+  }
+
   /** Busca em profundidade atravessando shadow roots. */
   _acharFundo(raiz, tag, nivel = 0) {
     if (!raiz || nivel > 6) return null;
@@ -533,6 +570,7 @@ class BrunoShell extends HTMLElement {
     }
     globalThis.removeEventListener('resize', this._onViewportResize);
     globalThis.removeEventListener('orientationchange', this._onViewportResize);
+    this.removeEventListener('pointerdown', this._onTapDiag, true);
     for (const id of this._ancoraTimers || []) clearTimeout(id);
     this._ancoraTimers = [];
     this._soltarViewport();

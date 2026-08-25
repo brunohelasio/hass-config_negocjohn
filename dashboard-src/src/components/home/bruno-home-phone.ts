@@ -257,6 +257,27 @@ export class BrunoHomePhone extends LitElement {
     ) ?? []) {
       filho.hass = hass;
     }
+    // A MEDIDA ACOMPANHA A REALIDADE (2026-08-24).
+    //
+    // O que quebrava nao era a primeira medida em si: era nao haver segunda.
+    //
+    // O hero acima assenta TARDE — a agenda chega por busca assincrona e,
+    // quando a linha aparece, ele cresce e empurra este compositor para
+    // baixo. Isso muda a nossa POSICAO, nao o nosso TAMANHO, e ResizeObserver
+    // nao observa posicao: nem o host nem o slot mudam de caixa, entao o
+    // observador ficava mudo e o valor medido antes disso permanecia. So
+    // corrigia quando algo forcava outro render — rolar o pager, exatamente o
+    // relato.
+    //
+    // A tentativa anterior (insistir por 40 quadros) errou por supor que o
+    // layout assenta em ~600ms. Com a agenda em rede, nao assenta.
+    //
+    // Medir aqui e O(1): le um rect e escreve uma custom property inline.
+    // Nao dispara render do Lit, entao nao entra em conflito com a guarda de
+    // assinatura logo abaixo — e vale para TODA atualizacao de hass, nao so
+    // para as estruturais.
+    this._medirAlturaUtil();
+
     const nova = this._assinaturaDeEstado();
     if (nova === this._assinatura) return;
     this._assinatura = nova;

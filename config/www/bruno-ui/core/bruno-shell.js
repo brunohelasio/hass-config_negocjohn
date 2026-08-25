@@ -2408,6 +2408,21 @@ class BrunoShell extends HTMLElement {
         :host {
           height: 100vh;
           height: 100dvh;
+          /* ANCORAGEM NA VIEWPORT (2026-08-24).
+
+             Sem overscroll-behavior a rolagem do content-slot ENCADEIA para
+             os ancestrais: no telefone a borracha do iOS arrasta a pagina
+             inteira e aparece a faixa preta abaixo da rail, mesmo quando o
+             conteudo cabe e nao ha nada para rolar.
+
+             none no host corta o encadeamento e a propria borracha; contain
+             no slot (regra mais abaixo) mantem a rolagem util la dentro.
+
+             max-height fecha a outra metade: 100vh no telefone conta a barra
+             do navegador e pode ser MAIOR que a area visivel. Onde dvh
+             existe ele ja resolve; onde nao existe, o teto impede o excesso. */
+          max-height: 100dvh;
+          overscroll-behavior: none;
 
           /* NOVO (2026-08-10) — ALTURA DO DOCK, publicada para quem esta DENTRO
              do content-slot. Propriedade customizada atravessa shadow DOM por

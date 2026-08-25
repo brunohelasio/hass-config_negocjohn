@@ -779,7 +779,12 @@ export class BrunoHomePhone extends LitElement {
       /* CINCO filhos: titulo Comodos, pager, indicadores, titulo Favoritos e a
          grade de Favoritos. Com quatro linhas o 1fr caia no TITULO e a grade
          ficava no auto implicito — media 136,6px em vez de preencher. */
-      grid-template-rows: auto auto auto auto minmax(0, 1fr);
+      /* ANTERIOR (rollback 2026-08-25): minmax(0, 1fr).
+         O minimo ZERO era o que autorizava o colapso: a linha aceitava
+         qualquer altura que --altura-util mandasse, inclusive uma medida
+         cedo demais, e os cards de Favoritos encolhiam com o texto
+         cortado dentro. O piso passa a ser o CONTEUDO. */
+      grid-template-rows: auto auto auto auto minmax(min-content, 1fr);
       /* A altura NAO vem do CSS: vem de --altura-util, medida em runtime.
 
          Tentativas anteriores, todas medidas e descartadas:
@@ -793,6 +798,19 @@ export class BrunoHomePhone extends LitElement {
          ResizeObserver. E medicao, nao calibragem: nao ha numero de aparelho
          aqui, e qualquer viewport chega ao mesmo resultado. */
       height: var(--altura-util, auto);
+      /* A caixa nunca fica menor que o proprio conteudo.
+
+         --altura-util e "slotBottom - topoDoHost", e topoDoHost depende de
+         TUDO que esta acima: badges e hero. O hero muda de altura quando a
+         agenda chega, segundos depois da entrada — entao a primeira medida
+         nasce errada e so se corrige quando aquilo assenta. Era esse o
+         "entra colapsado e volta ao normal".
+
+         Em vez de perseguir o instante certo de medir, a medida deixa de
+         poder cortar: se ela vier curta demais, o conteudo manda e o que
+         sobra transborda para a rolagem que ja existe. Quando util e maior,
+         volta a mandar e o bloco preenche como antes. */
+      min-height: min-content;
       flex: 0 0 auto;
     }
 

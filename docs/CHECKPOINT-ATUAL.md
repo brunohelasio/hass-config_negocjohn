@@ -157,3 +157,33 @@ Este requisito é obrigatório e foi reforçado pelo usuário em 2026-08-22 apó
 6. `docs/11-failed-experiments.md` antes de repetir uma solução antiga
 
 Em caso de conflito, **este checkpoint + código da branch candidata + PR funcional atual prevalecem sobre documentos históricos**.
+
+---
+
+## Atualização operacional — Home mobile sem reacomodação inicial (2026-08-25)
+
+- Branch local: `local/ajustes-gerais-20260823`; HEAD de base `b8531f29`, com
+  alterações ainda sem commit por decisão da rodada.
+- Novo bundle local: **`bruno-dashboard.hpd0Vfwq.js`**; main chunk
+  `chunks/main.Da31I_xT.js`.
+- Rollback imediato de bundle: `bruno-dashboard.B7kOYusv.js`, preservado em
+  comentário em `config/configuration.yaml`.
+- Causa corrigida: o Hero mobile iniciava em 182 px e recebia depois um patch
+  tardio para altura automática; a medição do bloco estático capturava o estado
+  intermediário. O piso `min-content` da tentativa seguinte apenas deslocava a
+  compressão para Cozinha/Lavabo.
+- Solução: geometria final do Hero no CSS nativo mobile desde o primeiro quadro,
+  injeção tardia do Hero desativada e linha estática restaurada a
+  `minmax(0, 1fr)`.
+- Tablet 1920x1200/Josh medido e aprovado sem alteração: oito itens na rail,
+  layout em duas colunas e nenhum DOM mobile visível.
+- Gates locais aprovados: TypeScript, ESLint, 277 testes, Vite, manifesto,
+  compressão, YAML e detector de crases direcionado aos fontes alterados.
+- Everex sincronizado: 31/31 arquivos conferidos por SHA-256 e sete módulos
+  alcançáveis sem chunk ausente. `manifest.json` e `configuration.yaml` remotos
+  apontam para `bruno-dashboard.hpd0Vfwq.js`. Reinício do HA pendente por falta
+  de uma sessão autenticada disponível no navegador desta rodada.
+- Snapshot de rollback pré-publicação:
+  `tmp/everex-preflight-20260825-home-phone-first-paint/`.
+- Detalhes completos em `docs/39-ajustes-gerais-20260823.md`, seção
+  "HOME MOBILE — PRIMEIRO QUADRO ESTÁVEL".

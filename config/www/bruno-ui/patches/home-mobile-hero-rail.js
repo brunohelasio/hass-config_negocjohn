@@ -257,7 +257,11 @@ function brunoChatApplyHero(card) {
   const stack = root.querySelector('.headline .event-stack');
   if (!stage || !stack) return;
 
-  brunoChatEnsureHeroStyle(root);
+  // ANTERIOR (rollback 2026-08-25): brunoChatEnsureHeroStyle(root);
+  // A geometria final agora nasce no stylesheet do bruno-hero-card. Injetar
+  // este segundo bloco depois do primeiro paint era a origem da troca
+  // 182px -> auto e da reacomodacao visivel da Home. O restante do patch
+  // continua cuidando apenas do comportamento do carrossel e da rail.
 
   // ── HOME PHONE (2026-08-22) ────────────────────────────────────────────
   // A faixa de agenda/insights saiu do hero no telefone e migrou para o card

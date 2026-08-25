@@ -185,7 +185,8 @@ frontend:
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.DYBZF_B6.js
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.Q8A4F4r2.js
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.Dh97XBGt.js
-    - /local/dashboard/bruno-dashboard.DZ0RebDD.js
+    # ANTERIOR (rollback câmeras mobile: privacidade + quarentena verde): - /local/dashboard/bruno-dashboard.DZ0RebDD.js
+    - /local/dashboard/bruno-dashboard.B_IHs_CU.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

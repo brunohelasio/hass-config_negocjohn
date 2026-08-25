@@ -1423,16 +1423,24 @@ class BrunoHeroCard extends HTMLElement {
              22px e passou a espiar acima do filete. Devolvendo esses 22px ao
              hero, Lavabo/Q. Casal voltam a terminar rente ao filete e
              Marina/Miguel voltam a comecar abaixo dele.
-             ANTERIOR (rollback): 160px. */
+             ANTERIOR (rollback): 160px.
+
+             CORRECAO (2026-08-25): a geometria final do phone deixa de ser
+             instalada depois por home-mobile-hero-rail.js. O valor de 182px
+             era pintado primeiro e depois trocado por auto, deslocando todo o
+             compositor da Home em cerca de 101px. A regra final passa a
+             existir neste primeiro stylesheet do proprio card. */
           .hero-stage.is-v2 {
-            height: 182px;
-            min-height: 182px;
+            /* ANTERIOR (rollback): height: 182px; min-height: 182px; */
+            height: auto;
+            min-height: 0;
           }
 
           /* ANTERIOR (rollback): padding: 4px 16px 5px — calibrado para os
-             160px, onde nao havia respiro para ceder. */
+             160px, onde nao havia respiro para ceder.
+             ANTERIOR imediato (patch tardio): padding: 7px 16px 8px. */
           .hero-stage.is-v2 .content {
-            padding: 7px 16px 8px;
+            padding: 2px 16px 7px;
             gap: 0;
           }
 
@@ -1459,7 +1467,8 @@ class BrunoHeroCard extends HTMLElement {
               "greeting greeting"
               "clock weather"
               "events events";
-            column-gap: 14px;
+            /* ANTERIOR (rollback): column-gap: 14px; */
+            column-gap: 12px;
             align-items: center;
           }
 
@@ -1476,34 +1485,56 @@ class BrunoHeroCard extends HTMLElement {
 
           .hero-stage.is-v2 .clock {
             grid-area: clock;
-            margin-top: 1px;
-            font-size: 35px;
-            line-height: 1;
+            /* ANTERIOR (rollback): margin-top: 1px; font-size: 35px;
+               line-height: 1; */
+            margin-top: 0;
+            font-size: clamp(66px, 17vw, 72px);
+            line-height: 0.92;
+            font-weight: 220;
           }
 
           .hero-stage.is-v2 .inline-weather {
             grid-area: weather;
+            display: grid;
+            grid-template-columns: 24px minmax(0, auto);
+            grid-template-rows: auto auto;
+            grid-template-areas:
+              "weather-icon weather-temp"
+              "weather-icon weather-label";
+            align-items: center;
+            justify-items: start;
+            column-gap: 7px;
+            row-gap: 3px;
             width: auto;
             max-width: 100%;
             min-width: 0;
-            margin-top: 1px;
+            /* ANTERIOR (rollback): margin-top: 1px; gap: 6px; */
+            margin-top: 0;
             justify-self: end;
-            gap: 6px;
           }
 
           .hero-stage.is-v2 .inline-weather img {
-            width: 20px;
-            height: 20px;
-            flex-basis: 20px;
+            /* ANTERIOR (rollback): width: 20px; height: 20px;
+               flex-basis: 20px; */
+            grid-area: weather-icon;
+            width: 24px;
+            height: 24px;
+            align-self: center;
           }
 
           .hero-stage.is-v2 .inline-weather strong {
-            font-size: 15px;
+            /* ANTERIOR (rollback): font-size: 15px; */
+            grid-area: weather-temp;
+            font-size: 16px;
+            line-height: 1;
           }
 
           .hero-stage.is-v2 .inline-weather small {
-            max-width: min(42vw, 176px);
+            /* ANTERIOR (rollback): max-width: min(42vw, 176px); */
+            grid-area: weather-label;
+            max-width: min(35vw, 142px);
             font-size: 11.5px;
+            line-height: 1.08;
           }
 
           /* ANTERIOR (rollback): margin-top: 4px; gap: 2px. Os respiros abaixo
@@ -1536,11 +1567,13 @@ class BrunoHeroCard extends HTMLElement {
           }
 
           .hero-stage.is-v2 .inline-weather {
-            gap: 4px;
+            /* ANTERIOR (rollback): gap: 4px; */
+            column-gap: 5px;
           }
 
           .hero-stage.is-v2 .inline-weather small {
-            max-width: 116px;
+            /* ANTERIOR (rollback): max-width: 116px; */
+            max-width: 112px;
             font-size: 10.5px;
           }
         }

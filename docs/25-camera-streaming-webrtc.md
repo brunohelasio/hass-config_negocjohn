@@ -255,3 +255,80 @@ apenas pelo JavaScript do dashboard.
 2. Reiniciar o Home Assistant.
 3. O código anterior permanece no Git e os pontos substituídos estão marcados
    `ANTERIOR (rollback 2026-08-10)` nos arquivos.
+
+## Segurança/Câmeras no telefone — privacidade e quarentena contínua (2026-08-25)
+
+### Escopo
+
+Esta rodada é exclusiva do ramo mobile da subview Segurança/Câmeras, selecionado
+por `_isMobileLayout()` em até 800 px. O markup, a grade e as dimensões aprovadas
+não foram alterados. O tablet continua executando o caminho anterior.
+
+### Privacidade
+
+A superfície de estado e a sincronização in-place já existiam, mas as regras que
+escureciam a mídia e centralizavam a mensagem estavam dentro de
+`@media (min-width: 801px)`. Por isso o telefone atualizava a entidade e congelava
+a imagem, porém não pintava o estado visual.
+
+Foi adicionada a mesma semântica no bloco `@media (max-width: 800px)`, escopada
+por `.security-subview.is-mobile-v2`:
+
+- a imagem e o `hui-image` ficam ocultos quando o host recebe `is-private`;
+- uma superfície escura mostra `Modo privacidade ativo` no centro;
+- o cabeçalho e o menu permanecem acima da superfície, permitindo desligar a
+  privacidade sem desmontar o player;
+- o estado continua sendo sincronizado sem `_render()`, portanto abrir o menu ou
+  alternar a chave não reinicia a sessão ao vivo.
+
+### Quadros verdes
+
+O detector compartilhado de 48 × 27 pixels e o motor de snapshots já rejeitavam
+os quadros verdes periódicos. Permaneciam três lacunas na subview nova:
+
+1. a imagem inicial criada pelo markup era revelada apenas pelo evento `load`;
+2. a troca principal ↔ miniatura atribuía o URL diretamente;
+3. o `hui-image` era verificado somente no primeiro quadro e podia corromper
+   depois, ou ser promovido automaticamente ao fim do prazo.
+
+No telefone, a subview agora:
+
+- mantém imagens iniciais ocultas até a amostragem confirmar um quadro válido;
+- pré-valida a imagem candidata de uma troca antes de substituir o último quadro
+  bom;
+- observa a mídia real aninhada no shadow DOM do `hui-image` a cada 500 ms;
+- ao detectar verde total ou parcial, remove somente `is-ready`, revelando o
+  snapshot validado que já está por baixo;
+- mantém o mesmo player conectado e o promove novamente quando os pixels voltam
+  ao normal;
+- pede um snapshot seguro apenas na entrada da quarentena, evitando carga a cada
+  ciclo de observação;
+- falha aberto quando o navegador não permite amostragem por canvas.
+
+Não foram modificadas entidades, URLs, codec, ONVIF, go2rtc, quantidade de
+streams nem política de uma câmera principal ao vivo.
+
+### Build e validação
+
+- `node --check`: aprovado no módulo clássico;
+- detector de crase no arquivo alterado: aprovado;
+- TypeScript e ESLint: aprovados;
+- Vitest: 277 de 277 testes aprovados;
+- YAML: 250 arquivos aprovados;
+- grafo local de chunks: 7 módulos alcançáveis, nenhum ausente;
+- bundle gerado: `bruno-dashboard.B_IHs_CU.js`;
+- chunk da subview de câmeras: `bruno-cameras-security-subview.DlFTO3Vm.js`.
+
+O aceite definitivo da quarentena contínua depende do iPhone, porque o banco de
+desktop não reproduz o pipeline ONVIF/WebRTC nem a composição do WebView/Safari.
+
+### Rollback desta rodada
+
+Backup local antes da edição e do build:
+
+`tmp/everex-preflight-20260825-cameras-privacy-green/local`
+
+Para voltar somente esta rodada, restaurar o módulo clássico e a pasta
+`www/dashboard` desse backup, reativar
+`bruno-dashboard.DZ0RebDD.js` em `configuration.yaml` e reiniciar o Home
+Assistant.

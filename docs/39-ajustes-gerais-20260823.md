@@ -642,3 +642,73 @@ Já registrado acima: `dashboard-src/scripts/deploy.mjs` falha com `EPERM` em
 Um commit por item. Rollback completo exige `git revert` + `vite build` +
 `manifesto` + `compress` + voltar o ponteiro (`DB1sivd6`, comentado ao lado) +
 ressincronizar `config/www/dashboard/` para o Everex.
+
+---
+
+# HOME MOBILE — PRIMEIRO QUADRO ESTÁVEL (2026-08-25)
+
+## Sintoma e causa confirmada
+
+No iPhone 428x926, o bloco estático da Home nascia aproximadamente 101 px mais
+baixo/curto e se corrigia alguns segundos depois. O estado final já estava
+correto; a regressão existia somente no primeiro quadro.
+
+A causa era a combinação de duas geometrias aplicadas em momentos diferentes:
+
+1. `bruno-hero-card.js` entregava o primeiro quadro mobile com
+   `.hero-stage.is-v2` em `height/min-height: 182px`;
+2. `home-mobile-hero-rail.js` injetava posteriormente um patch que trocava essa
+   altura por `auto` e também aplicava a composição compacta final;
+3. `bruno-home-phone` media a altura útil enquanto o Hero ainda estava alto.
+
+O piso `min-content` introduzido na tentativa anterior não corrigia a origem.
+Ele media cerca de 567 px contra 679 px naturais e transferia a compressão para
+as linhas automáticas: Cozinha/Lavabo encolhiam e surgia o vão abaixo de
+Favoritos.
+
+## Correção aplicada
+
+- A geometria compacta final do Hero passou a existir no CSS nativo do próprio
+  card, dentro de `@media (max-width: 800px)`. Assim, o primeiro quadro e o
+  quadro assentado usam a mesma altura.
+- A chamada tardia que injetava a geometria do Hero foi desativada. A função
+  antiga permanece inteira no arquivo para rollback; o patch de rail continua
+  ativo e independente.
+- A linha estática voltou a `minmax(0, 1fr)` e o `min-height: min-content`
+  regressivo ficou preservado em comentário.
+- O cálculo da altura útil e a correção já validada que prende a shell à
+  viewport do telefone não foram alterados.
+
+## Arquivos
+
+- `config/www/bruno-ui/cards/bruno-hero-card.js`
+- `config/www/bruno-ui/patches/home-mobile-hero-rail.js`
+- `dashboard-src/src/components/home/bruno-home-phone.ts`
+- `config/configuration.yaml`
+- `config/www/dashboard/` completo, incluindo `chunks/`
+
+## Escopo e validação
+
+- Escopo visual: somente telefone, breakpoint `max-width: 800px`.
+- Banco Home em 428x926: altura útil 679 px, Hero 118,6 px, pager 352 px,
+  Favoritos 248,8 px, folga final de 6 px e nenhum scroll no slot estático.
+- Banco da shell em 1920x1200, tema Josh: `aprovado: true`, rail com oito itens,
+  duas colunas lado a lado e nenhum elemento mobile visível.
+- Gates: TypeScript, ESLint, 17 arquivos/277 testes Vitest, Vite, manifesto,
+  compressão, YAML e detector de crases nos três fontes alterados aprovados.
+- Bundle: `bruno-dashboard.hpd0Vfwq.js`; main chunk:
+  `chunks/main.Da31I_xT.js`.
+- Publicação Everex: 28 arquivos do runtime mais `configuration.yaml` e os dois
+  módulos clássicos, 31/31 SHA-256 idênticos. O validador encontrou os sete
+  módulos alcançáveis e nenhum chunk ausente. O reinício do HA ficou pendente
+  porque a sessão de navegador disponível abriu na tela de login.
+
+## Rollback desta rodada
+
+- Código anterior preservado nos próprios arquivos com marcadores
+  `ANTERIOR (rollback 2026-08-25)`.
+- Ponteiro anterior preservado em `configuration.yaml`:
+  `bruno-dashboard.B7kOYusv.js`.
+- Snapshot integral pré-publicação:
+  `tmp/everex-preflight-20260825-home-phone-first-paint/`.
+- Não houve commit, push, PR ou merge nesta rodada.

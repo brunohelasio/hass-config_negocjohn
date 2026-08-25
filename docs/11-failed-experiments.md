@@ -246,3 +246,30 @@ usuário exatamente o visual que ele já tinha recusado.
 **Regra:** ao transcrever de um card, procurar a última definição **ativa** do
 seletor, não a primeira ocorrência textual. `grep -n '^\s*\.seletor {'` lista
 todas; as comentadas ficam dentro de `/* ... */`.
+
+---
+
+## Piso `min-content` no bloco estático da Home mobile (2026-08-25)
+
+**Objetivo:** impedir que Favoritos fosse cortado enquanto a altura útil ainda
+estava sendo recalculada na entrada do iPhone.
+
+**Tentativa:** trocar a última linha da grade para
+`minmax(min-content, 1fr)` e aplicar `min-height: min-content` ao bloco.
+
+**Resultado:** regressão. O mínimo intrínseco da grade era aproximadamente
+567 px, enquanto a composição natural assentada precisava de 679 px. Como o
+piso não cobria a geometria real, o navegador retirava a diferença das linhas
+automáticas: o pager de cômodos encolhia, Cozinha/Lavabo nasciam mais baixos e
+ficava um vão abaixo de Favoritos. A re-medição tardia apenas escondia o defeito
+depois de alguns segundos.
+
+**Causa que a tentativa não alcançava:** o Hero tinha dois donos de geometria.
+O CSS nativo nascia com 182 px e um patch posterior o mudava para altura
+automática. Portanto, a primeira medição era correta para um DOM transitório,
+mas incorreta para a composição final.
+
+**Decisão:** não voltar a usar `min-content` como compensação. A correção deve
+eliminar a geometria transitória no produtor: o Hero mobile precisa nascer com
+o mesmo CSS compacto que terá após o assentamento. A linha estática permanece
+`minmax(0, 1fr)`.

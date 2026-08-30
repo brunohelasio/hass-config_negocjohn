@@ -107,8 +107,28 @@ const BRUNO_TOP_BADGES_DEFAULT_ENTITIES = {
 
 const BRUNO_TOP_BADGES_MEDIA_ON_STATES = ['playing', 'paused', 'on'];
 const BRUNO_TOP_BADGES_OFF_STATES = ['off', 'unavailable', 'unknown', ''];
+const BRUNO_TOP_BADGES_DRAG_CANCEL_PX = 10;
 
 class BrunoTopBadgesCard extends HTMLElement {
+  constructor() {
+    super();
+    this._lightsSheetOpen = false;
+    this._onLightsSheetState = (event) => {
+      const open = Boolean(event?.detail?.open);
+      if (open === this._lightsSheetOpen) return;
+      this._lightsSheetOpen = open;
+      this._render();
+    };
+  }
+
+  connectedCallback() {
+    globalThis.addEventListener('bruno-status-lights-sheet-state', this._onLightsSheetState);
+  }
+
+  disconnectedCallback() {
+    globalThis.removeEventListener('bruno-status-lights-sheet-state', this._onLightsSheetState);
+  }
+
   static getStubConfig() {
     return {};
   }
@@ -142,8 +162,10 @@ class BrunoTopBadgesCard extends HTMLElement {
   }
 
   _expanded() {
-    if (this._localExpanded && this._localExpanded !== 'none') return this._localExpanded;
-    return this._state(this._config.entities.expanded)?.state || 'none';
+    const expanded = this._localExpanded && this._localExpanded !== 'none'
+      ? this._localExpanded
+      : this._state(this._config.entities.expanded)?.state || 'none';
+    return this._lightsSheetOpen && expanded === 'lights' ? 'none' : expanded;
   }
 
   _entityName(entityId) {
@@ -261,6 +283,7 @@ class BrunoTopBadgesCard extends HTMLElement {
       icon: 'mdi:lightbulb',
       tone: 'amber',
       active: on.length > 0,
+      entityIds: lights,
       chips: on.map((id) => {
         const brightness = this._state(id)?.attributes?.brightness;
         return {
@@ -653,6 +676,17 @@ class BrunoTopBadgesCard extends HTMLElement {
   }
 
   _runAction(key, gesture) {
+    if (gesture === 'hold' && key === 'lights') {
+      const monitoredLights = this._lightsModel().entityIds;
+      this._lightsSheetOpen = true;
+      this._render();
+      this.dispatchEvent(new CustomEvent('bruno-status-lights-open', {
+        detail: { monitoredLights },
+        bubbles: true,
+        composed: true,
+      }));
+      return;
+    }
     if (gesture === 'hold' && key !== 'security') return;
     if (key === 'security' && gesture === 'hold') {
       this._openSecurityPopup();
@@ -679,6 +713,11 @@ class BrunoTopBadgesCard extends HTMLElement {
       let holdTimer = null;
       let tapTimer = null;
       let holdFired = false;
+      let moved = false;
+      let pointerDown = false;
+      let pointerId = null;
+      let startX = 0;
+      let startY = 0;
       const clearHold = () => {
         if (holdTimer) window.clearTimeout(holdTimer);
         holdTimer = null;
@@ -687,25 +726,57 @@ class BrunoTopBadgesCard extends HTMLElement {
         if (tapTimer) window.clearTimeout(tapTimer);
         tapTimer = null;
       };
+      const resetPress = () => {
+        clearHold();
+        pointerDown = false;
+        moved = false;
+        pointerId = null;
+        button.classList.remove('is-pressed');
+      };
 
       button.addEventListener('pointerdown', (event) => {
         if (event.button != null && event.button !== 0) return;
-        event.preventDefault();
+        if (pointerId !== null) {
+          event.stopPropagation();
+          return;
+        }
+        event.stopPropagation();
+        pointerDown = true;
         holdFired = false;
+        moved = false;
+        pointerId = event.pointerId;
+        startX = event.clientX;
+        startY = event.clientY;
         button.classList.add('is-pressed');
-        button.setPointerCapture?.(event.pointerId);
         holdTimer = window.setTimeout(() => {
+          holdTimer = null;
+          if (!pointerDown || moved) return;
           holdFired = true;
           this._runAction(key, 'hold');
         }, 560);
       });
 
-      button.addEventListener('pointerup', (event) => {
-        event.preventDefault();
-        button.releasePointerCapture?.(event.pointerId);
+      button.addEventListener('pointermove', (event) => {
+        if (!pointerDown || event.pointerId !== pointerId || moved) return;
+        const dx = Math.abs(event.clientX - startX);
+        const dy = Math.abs(event.clientY - startY);
+        if (dx <= BRUNO_TOP_BADGES_DRAG_CANCEL_PX && dy <= BRUNO_TOP_BADGES_DRAG_CANCEL_PX) return;
+        moved = true;
         clearHold();
         button.classList.remove('is-pressed');
-        if (holdFired) return;
+      });
+
+      button.addEventListener('pointerup', (event) => {
+        if (event.pointerId !== pointerId) {
+          event.stopPropagation();
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        const wasPointerDown = pointerDown;
+        const wasMoved = moved;
+        resetPress();
+        if (!wasPointerDown || holdFired || wasMoved) return;
         if (key === 'security') {
           if (tapTimer) {
             clearTap();
@@ -721,16 +792,36 @@ class BrunoTopBadgesCard extends HTMLElement {
         this._runAction(key, 'tap');
       });
 
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+
       button.addEventListener('dblclick', (event) => {
         event.preventDefault();
-        clearHold();
+        event.stopPropagation();
+        resetPress();
         clearTap();
         this._runAction(key, 'double');
       });
 
       button.addEventListener('pointerleave', () => {
-        clearHold();
-        button.classList.remove('is-pressed');
+        resetPress();
+      });
+
+      button.addEventListener('pointercancel', (event) => {
+        if (event.pointerId !== pointerId) return;
+        resetPress();
+      });
+
+      button.addEventListener('contextmenu', (event) => {
+        if (key !== 'lights') return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (holdFired) return;
+        resetPress();
+        holdFired = true;
+        this._runAction(key, 'hold');
       });
     });
   }
@@ -879,6 +970,7 @@ class BrunoTopBadgesCard extends HTMLElement {
           cursor: pointer;
           user-select: none;
           -webkit-user-select: none;
+          -webkit-touch-callout: none;
           touch-action: manipulation;
         }
 

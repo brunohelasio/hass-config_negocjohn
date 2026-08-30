@@ -186,7 +186,20 @@ frontend:
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.Q8A4F4r2.js
     # ANTERIOR (rollback): - /local/dashboard/bruno-dashboard.Dh97XBGt.js
     # ANTERIOR (rollback câmeras mobile: privacidade + quarentena verde): - /local/dashboard/bruno-dashboard.DZ0RebDD.js
-    - /local/dashboard/bruno-dashboard.B_IHs_CU.js
+    # ANTERIOR (rollback status Iluminacao sheet 2026-08-25): - /local/dashboard/bruno-dashboard.B_IHs_CU.js
+    # ANTERIOR (ajuste interno antes da ancora real da dock): - /local/dashboard/bruno-dashboard.BFsUhR9C.js
+    # NOVO (2026-08-25): hold em Lights abre sheet; mobile ancora na borda real da dock.
+    # ANTERIOR (rollback status Lights rev.1): - /local/dashboard/bruno-dashboard.BRJUqUOA.js
+    # NOVO (2026-08-25 rev.2): hold sem pointer capture + fallback de long-press nativo.
+    # ANTERIOR (build intermediario rev.2): - /local/dashboard/bruno-dashboard.DMOTEEPH.js
+    # NOVO (2026-08-25 rev.2 final): fallback de long-press sem abertura duplicada.
+    # ANTERIOR (rollback sheet Iluminacao aprovada): - /local/dashboard/bruno-dashboard.Cs0ZDrkD.js
+    # NOVO (2026-08-26): continuidade sheet/dock + Q. Casal 6 circuitos + touch targets.
+    # ANTERIOR (rollback microajuste sheet rev.1): - /local/dashboard/bruno-dashboard.DNHrEkaP.js
+    # NOVO (2026-08-26 rev.2): side sheet 60% + controles 42px + rail mobile suavizada.
+    # ANTERIOR (rollback sincronizacao tripla): - /local/dashboard/bruno-dashboard.B7LHAT4p.js
+    # NOVO (2026-08-30): rebuild reproduzivel dos mesmos fontes validados.
+    - /local/dashboard/bruno-dashboard.Dq2NEBNk.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

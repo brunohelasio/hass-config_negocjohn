@@ -10,6 +10,7 @@ import './services/performance/boot-metrics';
 import { iniciarRuntime } from './diagnostics/runtime';
 iniciarRuntime();
 
+import './components/status/bruno-status-lights-sheet';
 import './legacy-runtime.generated';
 
 import './diagnostics/bruno-diagnostics';

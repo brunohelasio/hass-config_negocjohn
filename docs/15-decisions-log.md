@@ -358,3 +358,110 @@ cinco arquivos do Everex preservados antes da rodada.
 **Publicação:** pendente. Nenhuma escrita foi feita no Everex porque a camada de
 autorização externa atingiu o limite de uso antes da verificação prévia dos
 hashes. O estado local está pronto e validado; produção continua inalterada.
+
+---
+
+**Data:** 2026-08-25
+**Decisão:** o hold da tile global `Lights` solicita uma sheet sem transferir
+inventário, renderização ou controle de overlay para a própria tile.
+
+**Arquitetura:** `bruno-top-badges-card` reconhece tap/hold/arrasto e emite um
+evento semântico; `bruno-shell` hospeda a camada e mede a borda real da dock;
+`bruno-status-lights-sheet` resolve o inventário a partir de `ROOMS` e observa
+somente as entidades necessárias.
+
+**Motivo:** a tile deve preservar sua expansão rápida e permanecer pequena,
+enquanto a shell é a única camada que conhece viewport, rail, dock e z-index
+globais. A medição da borda da dock é necessária porque o contêiner fixo da
+shell pode ter geometria diferente da viewport visual no telefone.
+
+**Contrato:** tablet sem scroll/clipping/paginação, mobile com scroll somente no
+corpo, ação global restrita ao conjunto deduplicado conhecido e qualquer
+circuito monitorado sem associação explícita exposto em `Sem cômodo`.
+
+**Rollback:** `tmp/rollback-20260825-status-lights-sheet/`.
+
+**Correção rev.2 após validação física:** a primeira implementação usava
+`preventDefault` no `pointerdown`, captura explícita do ponteiro e o canal
+genérico `ll-custom`. Esse conjunto divergia da arbitragem móvel já validada nos
+room cards e o hold não abriu no aparelho. A tile passou a não capturar o
+ponteiro, a cancelar por deslocamento, a emitir `bruno-status-lights-open` e a
+usar `contextmenu` como fallback do long-press WebKit. O shell conserva o
+tratamento anterior de `ll-custom` apenas para compatibilidade. Bundle candidato
+rev.2: `bruno-dashboard.Cs0ZDrkD.js`; main chunk:
+`chunks/main.CnYAbPol.js`.
+
+**Publicação:** concluída no Everex em 2026-08-25, com `configuration.yaml`
+copiado por último. Os 31 arquivos do payload tiveram SHA-256 local e remoto
+idênticos; os sete módulos alcançáveis estão presentes e o bundle anterior
+`bruno-dashboard.B_IHs_CU.js` foi preservado. Backup pré-publicação:
+`tmp/everex-preflight-20260825-status-lights-hold-rev2/`. Reinício e aceite
+físico continuam pendentes.
+
+---
+
+**Data:** 2026-08-26
+**Decisão:** a sheet global de iluminação no mobile deve usar o mesmo contrato
+de composição das folhas das subviews: o material segue até a borda inferior,
+a rail apenas se sobrepõe de forma transparente e o scroll reserva a altura real
+da dock.
+
+**Motivo:** encerrar a sheet no topo da rail criava duas superfícies com tokens
+visualmente diferentes e uma divisão marcada. A composição já validada nas
+subviews elimina essa emenda sem duplicar os tokens na rail.
+
+**Escopo:** nenhum gap, filete, posição de elemento, `ROOMS`, grupo do Home
+Assistant, card ou subview foi alterado. A sheet exclui localmente somente
+`light.quarto_casal_2_switch_1` e `light.quarto_casal_switch_3`, confirmados fora
+de uso, inclusive do caminho de órfãos. O Q. Casal passa a seis controles.
+
+**Geometria:** controles com 46 px no mobile e 38 px no tablet. Em 390 x 844 a
+sheet começa em 185,7 px, não invade o Hero e cobre a rail; em 1280 x 720 o
+tablet permanece com overflow vertical zero.
+
+**Publicação:** `bruno-dashboard.DNHrEkaP.js` ativo no Everex em 2026-08-26;
+30/30 hashes idênticos e sete módulos alcançáveis presentes. O bundle anterior
+`bruno-dashboard.Cs0ZDrkD.js` foi preservado. Rollback local:
+`tmp/rollback-20260826-status-lights-sheet-microadjust/`; backup pré-publicação:
+`tmp/everex-preflight-20260826-status-lights-sheet-microadjust/`. Sem reinício,
+commit, push, PR ou merge.
+
+---
+
+**Data:** 2026-08-26
+**Decisão:** reduzir a side sheet de iluminação do tablet para 60% e elevar seus
+controles para 42 px, usando a folga vertical observada sem alterar gaps ou
+provocar scroll.
+
+**Rail mobile:** a continuidade cromática da revisão anterior permanece. Como
+esta sheet exige scroll, somente durante `tem-status-lights` a rail recebe um
+véu preto neutro de 16% e blur de 16 px; isso separa os controles em movimento
+dos botões da dock sem restaurar a superfície independente antiga.
+
+**Altura mobile:** acréscimo limitado a 5 px. Em 390 x 844 o painel começa em
+180,7 px e conserva 62,7 px de distância para o headline do Hero.
+
+**Validação:** overflow vertical e horizontal zero no tablet em 1024 x 768,
+1280 x 720 e 1363 x 742. Bundle `bruno-dashboard.B7LHAT4p.js` publicado no
+Everex com 30/30 hashes e sete módulos alcançáveis; anterior
+`bruno-dashboard.DNHrEkaP.js` preservado. Rollback:
+`tmp/rollback-20260826-status-lights-sheet-microadjust-rev2/`; backup remoto:
+`tmp/everex-preflight-20260826-status-lights-sheet-microadjust-rev2/`. Sem
+reinício, commit, push, PR ou merge.
+
+---
+
+**Data:** 2026-08-30
+**Decisão:** consolidar a implementação validada da sheet de iluminação sobre a
+última base de `origin/main` e publicar exatamente o mesmo payload compilado no
+Everex.
+
+**Segurança:** caches `.pnpm-store`, configuração local `.claude` e snapshots
+`tmp/` ficam fora do versionamento e do payload. O rebuild canônico
+`bruno-dashboard.Dq2NEBNk.js` difere do B7 apenas pelo identificador diagnóstico
+de data e pelos hashes derivados de main/room chunk.
+
+**Validação:** Everex com 31/31 hashes idênticos ao local e sete módulos
+alcançáveis; `configuration.yaml` copiado por último e B7 preservado. Rollback:
+`tmp/rollback-20260830-three-way-sync/`; backup remoto:
+`tmp/everex-preflight-20260830-three-way-sync/`. Home Assistant sem reinício.

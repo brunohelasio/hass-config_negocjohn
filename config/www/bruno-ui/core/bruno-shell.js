@@ -22,6 +22,8 @@ class BrunoShell extends HTMLElement {
     this._activeKey = null;
     this._railEl = null;
     this._onFolha = this._onFolha.bind(this);
+    this._onStatusLightsOpen = this._onStatusLightsOpen.bind(this);
+    this._onStatusLightsState = this._onStatusLightsState.bind(this);
     this._onViewportResize = this._onViewportResize.bind(this);
     this._onTapDiag = this._onTapDiag.bind(this);
     this._travasViewport = [];
@@ -62,6 +64,11 @@ class BrunoShell extends HTMLElement {
     };
     this._onLlCustom = (event) => {
       const detail = (event && event.detail) || {};
+      if (detail.bruno_status_lights === 'open') {
+        event.stopPropagation();
+        this._openStatusLightsSheet(detail.monitored_lights || []);
+        return;
+      }
       if (detail.bruno_config === 'open' || detail.bruno_action === 'config') {
         event.stopPropagation();
         this._openConfigPanel();
@@ -198,6 +205,7 @@ class BrunoShell extends HTMLElement {
     if (this._configOverlayEl?.dataset.panel === 'spotify' && this._spotifyPanelCard) {
       this._spotifyPanelCard.hass = hass;
     }
+    if (this._statusLightsSheetEl) this._statusLightsSheetEl.hass = hass;
   }
 
   getCardSize() {
@@ -218,6 +226,8 @@ class BrunoShell extends HTMLElement {
     this.addEventListener('hass-navigate', this._onHassNavigate, true);
     // Folha aberta numa subview: marca o estado para manter a rail a frente.
     this.addEventListener('bruno-folha', this._onFolha);
+    this.addEventListener('bruno-status-lights-open', this._onStatusLightsOpen);
+    this.addEventListener('bruno-status-lights-sheet-state', this._onStatusLightsState);
     if (this._built) this._syncFromHash();
     this._observarDock();
     // NOVO (2026-08-25) — ancoragem do dashboard na viewport do telefone.
@@ -267,12 +277,42 @@ class BrunoShell extends HTMLElement {
     shell.classList.toggle('tem-folha', Boolean(event && event.detail && event.detail.aberta));
   }
 
+  _onStatusLightsState(event) {
+    const shell = this.shadowRoot && this.shadowRoot.querySelector('.shell');
+    if (!shell) return;
+    shell.classList.toggle('tem-status-lights', Boolean(event?.detail?.open));
+  }
+
+  _onStatusLightsOpen(event) {
+    event?.stopPropagation?.();
+    this._openStatusLightsSheet(event?.detail?.monitoredLights || []);
+  }
+
+  _openStatusLightsSheet(monitoredLights) {
+    const sheet = this._statusLightsSheetEl;
+    if (!sheet) return;
+    sheet.hass = this._hass;
+    sheet.monitoredLights = Array.isArray(monitoredLights) ? monitoredLights : [];
+    sheet.open?.(sheet.monitoredLights);
+    globalThis.requestAnimationFrame?.(() => this._syncStatusLightsDockEdge());
+  }
+
+  _syncStatusLightsDockEdge() {
+    const sheet = this._statusLightsSheetEl;
+    /* ANTERIOR (rollback microajuste 2026-08-26): esta rotina media o topo da
+       rail e fazia a sheet parar exatamente ali. Nas folhas das subviews, o
+       material segue ate a borda inferior por tras da rail transparente; esse
+       e o contrato visual que agora vale tambem para a sheet global. */
+    sheet?.style.removeProperty('--bruno-status-sheet-bottom');
+  }
+
   _observarDock() {
     const slot = this.shadowRoot && this.shadowRoot.querySelector('.rail-slot');
     if (!slot) return;
     const publicar = () => {
       const h = Math.round(slot.getBoundingClientRect().height);
       if (h > 0) this.style.setProperty('--bruno-dock-h', h + 'px');
+      this._syncStatusLightsDockEdge();
     };
     publicar();
     if (this._dockObserver) this._dockObserver.disconnect();
@@ -565,6 +605,8 @@ class BrunoShell extends HTMLElement {
     this.removeEventListener('click', this._onSectionNavigationClick, true);
     this.removeEventListener('hass-navigate', this._onHassNavigate, true);
     this.removeEventListener('bruno-folha', this._onFolha);
+    this.removeEventListener('bruno-status-lights-open', this._onStatusLightsOpen);
+    this.removeEventListener('bruno-status-lights-sheet-state', this._onStatusLightsState);
     if (this._dockObserver) {
       this._dockObserver.disconnect();
       this._dockObserver = null;
@@ -628,10 +670,13 @@ class BrunoShell extends HTMLElement {
         <div class="rail-slot" id="rail"></div>
         <div class="content-slot" id="content"></div>
         <div class="config-overlay" id="configOverlay" hidden></div>
+        <bruno-status-lights-sheet id="statusLightsSheet" hidden></bruno-status-lights-sheet>
       </div>
     `;
     this._backdropEl = this.shadowRoot.getElementById('backdrop');
     this._configOverlayEl = this.shadowRoot.getElementById('configOverlay');
+    this._statusLightsSheetEl = this.shadowRoot.getElementById('statusLightsSheet');
+    if (this._hass && this._statusLightsSheetEl) this._statusLightsSheetEl.hass = this._hass;
     this._syncConfigOverlayTheme();
     this._configOverlayEl?.removeEventListener('click', this._onConfigClick);
     this._configOverlayEl?.addEventListener('click', this._onConfigClick);
@@ -2794,6 +2839,19 @@ class BrunoShell extends HTMLElement {
           background: transparent;
           backdrop-filter: none;
           -webkit-backdrop-filter: none;
+        }
+        /* A sheet global segue ate a borda inferior por tras do dock medido. A
+           rail fica visivel e fora do scrim, repetindo a continuidade visual
+           ja validada nas folhas das subviews. */
+        .shell.tem-status-lights .rail-slot {
+          z-index: 61;
+          /* ANTERIOR (rollback microajuste rail rev.2): background: transparent;
+             backdrop-filter: none. A sheet continua sendo o material-base;
+             este veu neutro apenas impede que os controles em scroll disputem
+             leitura com os botoes da rail, sem introduzir outra coloracao. */
+          background: rgba(0, 0, 0, 0.16);
+          backdrop-filter: blur(16px) saturate(1.08);
+          -webkit-backdrop-filter: blur(16px) saturate(1.08);
         }
 
         .content-slot {

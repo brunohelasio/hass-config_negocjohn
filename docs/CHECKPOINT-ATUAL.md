@@ -1,6 +1,6 @@
 # CHECKPOINT ATUAL — LEITURA OBRIGATÓRIA
 
-Atualizado em **2026-08-22**. Este documento é a primeira fonte de continuidade operacional do projeto.
+Atualizado em **2026-08-25**. Este documento é a primeira fonte de continuidade operacional do projeto.
 
 > **REGRA ZERO PARA QUALQUER IA/CHAT NOVO:** antes de diagnosticar, propor branch, escrever código, orientar GitHub Desktop ou indicar arquivos para o Everex, leia este arquivo e depois `docs/LEIA-PRIMEIRO.md`. Não reconstrua o estado apenas pela lista de PRs nem apenas pela memória do chat.
 
@@ -187,3 +187,120 @@ Em caso de conflito, **este checkpoint + código da branch candidata + PR funcio
   `tmp/everex-preflight-20260825-home-phone-first-paint/`.
 - Detalhes completos em `docs/39-ajustes-gerais-20260823.md`, seção
   "HOME MOBILE — PRIMEIRO QUADRO ESTÁVEL".
+
+---
+
+## Atualização operacional — status Iluminacao com hold (2026-08-25)
+
+- Branch local: `local/ajustes-gerais-20260823`; HEAD de base
+  `f4f24b53710f5a2bb5286916a621d9f1acb1eee1`; alterações sem commit.
+- Bundle candidato: **`bruno-dashboard.Cs0ZDrkD.js`**; main chunk
+  `chunks/main.CnYAbPol.js`.
+- Tap em `Lights` preserva a expansão atual. Hold de 560 ms abre a interface
+  ampliada global; arrasto horizontal acima de 10 px cancela o hold.
+- Correção rev.2 após falha no aparelho físico: removidos `preventDefault` no
+  `pointerdown` e pointer capture; evento dedicado entre tile e shell; fallback
+  de long-press WebKit por `contextmenu`, com guarda contra abertura duplicada.
+  Harness direcionado aprovou hold, cancelamento por arraste e fallback.
+- Inventário: 37 circuitos únicos, oito cômodos, sete grupos expandidos e
+  nenhum órfão.
+- Tablet 1280 x 720: side sheet com 64,5% da largura, duas colunas principais,
+  37 controles simultaneamente visíveis e zero overflow.
+- Mobile 390 x 844: bottom sheet com 64% da altura, scroll apenas no corpo e
+  base ancorada exatamente na borda real da dock.
+- Toggle individual, ações globais reativas e fechamentos por botão, scrim e
+  drag aprovados no harness; sem erro/warning de console.
+- Gates finais: TypeScript, ESLint, 18 arquivos/281 testes Vitest, 250 YAMLs,
+  200 JS no parser, detector de crases direcionado em seis fontes, Vite (90 módulos),
+  manifesto e compressão de seis assets — todos aprovados.
+- Snapshot pré-rodada:
+  `tmp/rollback-20260825-status-lights-sheet/`.
+- Pacote Everex: `config/configuration.yaml`, todo
+  `config/www/dashboard/`, `config/www/bruno-ui/core/bruno-shell.js` e
+  `config/www/bruno-ui/cards/bruno-top-badges-card.js`.
+- Publicado no Everex em 2026-08-25: 31/31 pares SHA-256 idênticos, entrypoint
+  ativo `bruno-dashboard.Cs0ZDrkD.js`, sete módulos alcançáveis presentes e
+  bundle anterior `bruno-dashboard.B_IHs_CU.js` preservado.
+- Backup pré-publicação:
+  `tmp/everex-preflight-20260825-status-lights-hold-rev2/`.
+- O Home Assistant não foi reiniciado. Reinício, recarga forçada e validação
+  física em tablet/iPhone continuam obrigatórios. Não houve commit, push, PR ou
+  merge.
+- Detalhes: `docs/40-status-lights-sheet-20260825.md`.
+
+---
+
+## Atualização operacional — microajustes da sheet Iluminação (2026-08-26)
+
+- Branch local: `local/ajustes-gerais-20260823`; HEAD de base
+  `f4f24b53710f5a2bb5286916a621d9f1acb1eee1`; alterações sem commit.
+- Bundle ativo no Everex: **`bruno-dashboard.DNHrEkaP.js`**; main chunk
+  `chunks/main.CH662_yg.js`.
+- Mobile agora repete o contrato das folhas das subviews: sheet até a borda
+  inferior, conteúdo com reserva da dock e rail transparente sobre o mesmo
+  material/tokens.
+- Altura mobile medida em 658,3 px no viewport 390 x 844: topo em 185,7 px,
+  3,7 px abaixo do Hero e 1,3 px acima do título `Cômodos`.
+- Controles: 46 px no mobile; 38 px no tablet. Em 1280 x 720, o tablet manteve
+  `bodyClientHeight = bodyScrollHeight = 644 px` e overflow zero.
+- Inventário corrigido apenas na sheet: removidos
+  `light.quarto_casal_2_switch_1` e `light.quarto_casal_switch_3`. Resultado:
+  seis controles no Q. Casal, 36 no total e nenhum retorno em `Sem cômodo`.
+- Gates finais: TypeScript, ESLint, 18 arquivos/282 testes Vitest, 250 YAMLs,
+  200 JS, detector de crases em seis fontes, Vite (90 módulos), manifesto,
+  compressão e grafo de sete módulos — todos aprovados.
+- Everex sincronizado: 30/30 pares SHA-256 idênticos, sete módulos alcançáveis
+  presentes e bundle anterior `bruno-dashboard.Cs0ZDrkD.js` preservado.
+- Rollback local: `tmp/rollback-20260826-status-lights-sheet-microadjust/`.
+- Backup pré-publicação:
+  `tmp/everex-preflight-20260826-status-lights-sheet-microadjust/`.
+- O Home Assistant não foi reiniciado. Não houve commit, push, PR ou merge.
+- Detalhes: `docs/40-status-lights-sheet-20260825.md`, seção
+  "Microajustes pós-aceite — 2026-08-26".
+
+---
+
+## Atualização operacional — densidade da sheet Iluminação rev.2 (2026-08-26)
+
+- Bundle ativo no Everex: **`bruno-dashboard.B7LHAT4p.js`**; main chunk
+  `chunks/main.dAuboa0p.js`.
+- Tablet: side sheet em 60%, controles com 42 px e nenhum gap, padding, filete
+  ou agrupamento alterado.
+- Overflow zero confirmado em 1024 x 768, 1280 x 720 e 1363 x 742; neste último,
+  que corresponde à captura física, o painel mede 817,8 x 726 px.
+- Mobile: bottom sheet 5 px mais alta; em 390 x 844 começa em 180,7 px, cobre o
+  título `Cômodos` e conserva 62,7 px até o headline do Hero.
+- Rail mobile: mesmo material e coloração-base preservados, com véu preto
+  neutro de 16% e `blur(16px) saturate(1.08)` apenas durante a sheet global.
+- Gates: TypeScript, ESLint, 18 arquivos/282 testes Vitest, 250 YAMLs, 200 JS,
+  detector de crases em seis fontes, Vite (90 módulos), compressão e grafo de
+  sete módulos — todos aprovados.
+- Everex: 30/30 hashes idênticos, sete módulos alcançáveis e bundle anterior
+  `bruno-dashboard.DNHrEkaP.js` preservado.
+- Rollback local:
+  `tmp/rollback-20260826-status-lights-sheet-microadjust-rev2/`.
+- Backup pré-publicação:
+  `tmp/everex-preflight-20260826-status-lights-sheet-microadjust-rev2/`.
+- Sem reinício do Home Assistant, commit, push, PR ou merge.
+- Detalhes: `docs/40-status-lights-sheet-20260825.md`, seção
+  "Microajustes de densidade — revisão 2".
+
+---
+
+## Atualização operacional — sincronização tripla (2026-08-30)
+
+- Base remota incorporada: `cd2244d3`; alteração exclusiva de documentação da
+  fundação de automação inteligente.
+- Bundle canônico ativo local/Everex: **`bruno-dashboard.Dq2NEBNk.js`**; main
+  `chunks/main.DOvb_YDD.js`; room chunk
+  `chunks/bruno-room-subview.COtclf9Q.js`.
+- O rebuild altera em runtime somente `buildId`/log diagnóstico de 20260826 para
+  20260830; os demais deltas do JS são referências aos novos hashes.
+- Everex validado em 31/31 hashes e sete módulos alcançáveis. Bundle anterior
+  `bruno-dashboard.B7LHAT4p.js` preservado.
+- Gates: TypeScript, ESLint, 18 arquivos/282 testes Vitest, 250 YAMLs, 200 JS,
+  detector de crases em seis fontes, Vite/90 módulos, compressão e grafo local
+  e remoto aprovados.
+- Rollback local: `tmp/rollback-20260830-three-way-sync/`.
+- Backup Everex: `tmp/everex-preflight-20260830-three-way-sync/`.
+- O Home Assistant não foi reiniciado.

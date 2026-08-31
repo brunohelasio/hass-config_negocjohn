@@ -20,6 +20,12 @@ import {
   resumirMotivo,
 } from '@/services/state/entity-watcher';
 import { assinarRelogio } from '@/services/state/clock';
+import {
+  mobileSheetExitDuration,
+  mobileSheetVelocity,
+  shouldDismissMobileSheet,
+  type MobileSheetSample,
+} from '@/services/ui/mobile-sheet-motion';
 import { CADENCIA, MotorDeInstantaneos } from '@/services/camera/snapshot-engine';
 import {
   criarPlayerWebRtc,
@@ -319,6 +325,7 @@ export class BrunoRoomSubview extends LitElement {
    */
   private _folhaSaindo = false;
   private _timerFecharFolha: number | undefined;
+  private _timerAssentarArrasto: number | undefined;
   private _mediaTelefone: MediaQueryList | undefined;
   private _tokenAncoraFolha = 0;
 
@@ -1820,11 +1827,16 @@ export class BrunoRoomSubview extends LitElement {
   /**
    * No tablet o titulo conserva o comportamento historico de expandir/recolher
    * o dock. Na folha do telefone ele passa a ser o controle de retorno pedido
-   * no ajuste pos-dispositivo: o chevron ao lado do titulo fecha a folha.
+   * no ajuste pos-dispositivo: a acao legada do titulo fica preservada para
+   * rollback, mas o telefone fecha a folha pela alca, pelo arrasto ou pelo scrim.
    */
   private _acionarCabecalhoLuzes(): void {
     if (this._estaNoTelefone() && this._folha === 'luzes') {
-      this._fecharFolha();
+      // ANTERIOR (rollback gesto mobile 2026-08-31): o titulo fechava a folha
+      // junto com um chevron. Sem o indicador visual, manter uma acao invisivel
+      // no titulo seria imprevisivel; no telefone o fechamento fica no gesto,
+      // no scrim e na via acessivel.
+      // this._fecharFolha();
       return;
     }
     this._alternarDock();
@@ -2033,10 +2045,36 @@ export class BrunoRoomSubview extends LitElement {
     this._restaurarBaseFolha(ancora);
   }
 
-  private _fecharFolha(): void {
+  private _fecharFolha(
+    arrasto?: { alvo: HTMLElement; distancia: number; velocidade: number },
+  ): void {
     if (!this._folha || this._folhaSaindo) return;
     const ancora = this._capturarBaseFolha();
-    this._encerrarArrasto();
+    // ANTERIOR (rollback gesto mobile 2026-08-31): o encerramento sempre
+    // apagava o transform inline antes de iniciar a animacao de saida. Ao
+    // soltar, a folha voltava ao topo e somente depois descia novamente.
+    // this._encerrarArrasto();
+    this._encerrarArrasto(Boolean(arrasto));
+
+    if (arrasto) {
+      const altura = Math.max(1, arrasto.alvo.getBoundingClientRect().height);
+      const duracao = mobileSheetExitDuration({
+        distance: arrasto.distancia,
+        velocity: arrasto.velocidade,
+        height: altura,
+      });
+      arrasto.alvo.setAttribute('data-folha-arrasto-saindo', '');
+      arrasto.alvo.style.transition = 'none';
+      arrasto.alvo.style.transform = `translate3d(0, ${arrasto.distancia.toFixed(1)}px, 0)`;
+      // Forca o primeiro quadro no ponto exato em que o dedo foi solto. O
+      // quadro seguinte continua dali ate a base, sem reiniciar em zero.
+      void arrasto.alvo.offsetHeight;
+      globalThis.requestAnimationFrame(() => {
+        if (!arrasto.alvo.isConnected) return;
+        arrasto.alvo.style.transition = `transform ${duracao}ms cubic-bezier(0.22, 0.72, 0.24, 1)`;
+        arrasto.alvo.style.transform = `translate3d(0, ${(altura + 2).toFixed(1)}px, 0)`;
+      });
+    }
     this._folhaSaindo = true;
     this._aplicarAtributos();
     this.requestUpdate();
@@ -2052,22 +2090,37 @@ export class BrunoRoomSubview extends LitElement {
       return;
     }
     // ANTERIOR (rollback pos-device): 180ms. A folha agora percorre sua altura
-    // inteira ate a base; o estado permanece montado pelos mesmos 280ms do CSS.
+    // inteira ate a base; sem arrasto, o estado permanece montado pelos mesmos
+    // 280ms do CSS. Depois de um arrasto, a duracao acompanha o trecho restante.
+    const duracaoSaida = arrasto
+      ? mobileSheetExitDuration({
+          distance: arrasto.distancia,
+          velocity: arrasto.velocidade,
+          height: Math.max(1, arrasto.alvo.getBoundingClientRect().height),
+        })
+      : 280;
     this._timerFecharFolha = espera(SONDA, () => {
       this._timerFecharFolha = undefined;
       this._limparFolhaImediatamente();
-    }, 280);
+    }, duracaoSaida);
   }
 
   private _limparFolhaImediatamente(avisar = true): void {
     const ancora = this._capturarBaseFolha();
     const estavaAberta = Boolean(this._folha);
+    const alvoAnterior = this._folhaEl();
     encerrarTimer(SONDA, this._timerFecharFolha);
     this._timerFecharFolha = undefined;
+    encerrarTimer(SONDA, this._timerAssentarArrasto);
+    this._timerAssentarArrasto = undefined;
     this._folhaSaindo = false;
     this._folha = null;
-    this._encerrarArrasto();
+    // ANTERIOR (rollback gesto mobile 2026-08-31): os estilos do alvo eram
+    // limpos enquanto data-folha ainda o mantinha visivel. Remover o atributo
+    // primeiro impede um quadro residual no topo ao final da saida.
     this._aplicarAtributos();
+    this._encerrarArrasto();
+    if (alvoAnterior) this._limparEstiloArrasto(alvoAnterior);
     if (estavaAberta && avisar) this._avisarFolha();
     this.requestUpdate();
     this._restaurarBaseFolha(ancora);
@@ -2115,6 +2168,15 @@ export class BrunoRoomSubview extends LitElement {
     `;
   }
 
+  /** Alca visual unica das quatro folhas de telefone. */
+  private _alcaFolhaTelefone() {
+    return html`
+      <div class="folha-alca-zona" aria-hidden="true">
+        <span class="folha-alca"></span>
+      </div>
+    `;
+  }
+
   /** O elemento que ESTÁ servindo de folha agora, ou null. */
   private _folhaEl(): HTMLElement | null {
     const seletores: Record<FolhaChave, string> = {
@@ -2136,51 +2198,151 @@ export class BrunoRoomSubview extends LitElement {
   // limiar, o dedo arrasta a folha; ao soltar, ela volta ou fecha.
   //
   // Se o navegador decidir que o gesto é rolagem (`pointercancel`), a folha
-  // volta ao lugar e nada quebra — o toque fora e o X continuam fechando.
+  // volta ao lugar e nada quebra — o toque fora continua fechando.
 
-  private _arrastoY: number | null = null;
-  private _arrastoAlvo: HTMLElement | null = null;
+  // ANTERIOR (rollback gesto mobile 2026-08-31): o estado guardava somente Y e
+  // alvo. Sem pointerId, eixo, amostras e distancia corrente nao era possivel
+  // distinguir scroll, flick e retorno curto.
+  // private _arrastoY: number | null = null;
+  // private _arrastoAlvo: HTMLElement | null = null;
+  private _arrasto: {
+    pointerId: number;
+    inicioX: number;
+    inicioY: number;
+    alvo: HTMLElement;
+    distancia: number;
+    assumido: boolean;
+    amostras: MobileSheetSample[];
+  } | null = null;
+
+  private _origemInterativa(caminho: EventTarget[]): boolean {
+    return caminho.some((no) => no instanceof HTMLElement && Boolean(no.closest(
+      'button, input, select, textarea, a, [role="button"], [contenteditable="true"]',
+    )));
+  }
+
+  private _scrollerDoCaminho(caminho: EventTarget[], folha: HTMLElement): HTMLElement | null {
+    for (const no of caminho) {
+      if (!(no instanceof HTMLElement) || no === folha || !folha.contains(no)) continue;
+      const estilo = globalThis.getComputedStyle?.(no);
+      if (!estilo || !/(auto|scroll)/.test(estilo.overflowY)) continue;
+      if (no.scrollHeight > no.clientHeight + 1) return no;
+    }
+    return null;
+  }
 
   private _iniciarArrasto = (evento: PointerEvent): void => {
-    if (!this._folha || evento.button !== 0) return;
+    if (!this._estaNoTelefone() || !this._folha || evento.button !== 0 || this._folhaSaindo) return;
     const folha = this._folhaEl();
-    if (!folha || !evento.composedPath().includes(folha)) return;
-    if (folha.scrollTop > 0) return;
-    this._arrastoY = evento.clientY;
-    this._arrastoAlvo = folha;
-    globalThis.addEventListener('pointermove', this._moverArrasto, { passive: true });
+    const caminho = evento.composedPath();
+    if (!folha || !caminho.includes(folha) || this._origemInterativa(caminho)) return;
+    const scroller = this._scrollerDoCaminho(caminho, folha);
+    if (scroller && scroller.scrollTop > 0) return;
+
+    encerrarTimer(SONDA, this._timerAssentarArrasto);
+    this._timerAssentarArrasto = undefined;
+    folha.removeAttribute('data-folha-retornando');
+    folha.removeAttribute('data-folha-arrasto-saindo');
+    folha.style.transition = 'none';
+    folha.style.willChange = 'transform';
+    const tempo = evento.timeStamp || performance.now();
+    this._arrasto = {
+      pointerId: evento.pointerId,
+      inicioX: evento.clientX,
+      inicioY: evento.clientY,
+      alvo: folha,
+      distancia: 0,
+      assumido: false,
+      amostras: [{ y: evento.clientY, time: tempo }],
+    };
+    globalThis.addEventListener('pointermove', this._moverArrasto, { passive: false });
     globalThis.addEventListener('pointerup', this._soltarArrasto);
     globalThis.addEventListener('pointercancel', this._cancelarArrasto);
   };
 
   private _moverArrasto = (evento: PointerEvent): void => {
-    if (this._arrastoY == null || !this._arrastoAlvo) return;
-    const dy = evento.clientY - this._arrastoY;
-    if (dy <= 0) {
-      this._arrastoAlvo.style.transform = '';
-      return;
+    const arrasto = this._arrasto;
+    if (!arrasto || evento.pointerId !== arrasto.pointerId) return;
+    const dx = evento.clientX - arrasto.inicioX;
+    const dy = evento.clientY - arrasto.inicioY;
+    if (!arrasto.assumido) {
+      if (Math.abs(dx) > Math.abs(dy) || dy <= 4) return;
+      arrasto.assumido = true;
+      arrasto.alvo.setAttribute('data-folha-arrastando', '');
     }
-    // Resistência: o arrasto acompanha o dedo mas com freio, para o gesto ter
-    // peso e não parecer que a folha escorregou sozinha.
-    this._arrastoAlvo.style.transform = `translateY(${(dy * 0.72).toFixed(1)}px)`;
+    if (evento.cancelable) evento.preventDefault();
+    arrasto.distancia = Math.max(0, dy);
+    const tempo = evento.timeStamp || performance.now();
+    arrasto.amostras.push({ y: evento.clientY, time: tempo });
+    arrasto.amostras = arrasto.amostras.filter((amostra) => tempo - amostra.time <= 160);
+    // ANTERIOR (rollback gesto mobile 2026-08-31): dy * 0.72. A folha agora
+    // acompanha o dedo em 1:1, como uma superficie fisica.
+    arrasto.alvo.style.transform = `translate3d(0, ${arrasto.distancia.toFixed(1)}px, 0)`;
   };
 
   private _soltarArrasto = (evento: PointerEvent): void => {
-    const inicio = this._arrastoY;
-    const alvo = this._arrastoAlvo;
-    this._encerrarArrasto();
-    if (inicio == null || !alvo) return;
-    if (evento.clientY - inicio > 90) this._fecharFolha();
+    const arrasto = this._arrasto;
+    if (!arrasto || evento.pointerId !== arrasto.pointerId) return;
+    const tempo = evento.timeStamp || performance.now();
+    arrasto.amostras.push({ y: evento.clientY, time: tempo });
+    const velocidade = mobileSheetVelocity(arrasto.amostras);
+    const altura = Math.max(1, arrasto.alvo.getBoundingClientRect().height);
+    const fechar = arrasto.assumido && shouldDismissMobileSheet({
+      distance: arrasto.distancia,
+      velocity: velocidade,
+      height: altura,
+    });
+    const estado = {
+      alvo: arrasto.alvo,
+      distancia: arrasto.distancia,
+      velocidade,
+    };
+    this._encerrarArrasto(true);
+    if (fechar) {
+      this._fecharFolha(estado);
+      return;
+    }
+    this._retornarArrasto(estado.alvo, estado.distancia);
   };
 
   private _cancelarArrasto = (): void => {
-    this._encerrarArrasto();
+    const alvo = this._arrasto?.alvo;
+    const distancia = this._arrasto?.distancia ?? 0;
+    this._encerrarArrasto(true);
+    if (alvo) this._retornarArrasto(alvo, distancia);
   };
 
-  private _encerrarArrasto(): void {
-    if (this._arrastoAlvo) this._arrastoAlvo.style.transform = '';
-    this._arrastoY = null;
-    this._arrastoAlvo = null;
+  private _retornarArrasto(alvo: HTMLElement, distancia: number): void {
+    if (!alvo.isConnected || distancia <= 0) {
+      this._limparEstiloArrasto(alvo);
+      return;
+    }
+    alvo.removeAttribute('data-folha-arrastando');
+    alvo.setAttribute('data-folha-retornando', '');
+    alvo.style.transition = 'transform 180ms cubic-bezier(0.22, 0.72, 0.24, 1)';
+    globalThis.requestAnimationFrame(() => {
+      if (alvo.isConnected) alvo.style.transform = 'translate3d(0, 0, 0)';
+    });
+    encerrarTimer(SONDA, this._timerAssentarArrasto);
+    this._timerAssentarArrasto = espera(SONDA, () => {
+      this._timerAssentarArrasto = undefined;
+      this._limparEstiloArrasto(alvo);
+    }, 210);
+  }
+
+  private _limparEstiloArrasto(alvo: HTMLElement): void {
+    alvo.style.removeProperty('transform');
+    alvo.style.removeProperty('transition');
+    alvo.style.removeProperty('will-change');
+    alvo.removeAttribute('data-folha-arrastando');
+    alvo.removeAttribute('data-folha-retornando');
+    alvo.removeAttribute('data-folha-arrasto-saindo');
+  }
+
+  private _encerrarArrasto(preservarVisual = false): void {
+    const alvo = this._arrasto?.alvo;
+    if (alvo && !preservarVisual) this._limparEstiloArrasto(alvo);
+    this._arrasto = null;
     globalThis.removeEventListener('pointermove', this._moverArrasto);
     globalThis.removeEventListener('pointerup', this._soltarArrasto);
     globalThis.removeEventListener('pointercancel', this._cancelarArrasto);
@@ -2373,7 +2535,8 @@ export class BrunoRoomSubview extends LitElement {
       .filter(Boolean)
       .join(' ');
     return html`
-      <div class=${classes}>
+      <div class=${classes} @pointerdown=${this._iniciarArrasto}>
+        ${this._alcaFolhaTelefone()}
         <div class="lights-dock">
           <button
             type="button"
@@ -2581,7 +2744,9 @@ export class BrunoRoomSubview extends LitElement {
     // de classe e as áreas de grid lidos do DOM RENDERIZADO — não deduzidos do
     // código, que guarda sete definições empilhadas e blocos mortos.
     return html`
-      <main class="room-subview" @pointerdown=${this._iniciarArrasto}>
+      <!-- ANTERIOR (rollback gesto mobile 2026-08-31): o pointerdown vivia no
+           main inteiro. Agora cada folha e dona do proprio gesto. -->
+      <main class="room-subview">
         ${this._renderTopBand()}
         ${this._temEletrodomesticos ? this._corpoCozinha() : this._corpoPadrao()}
       </main>
@@ -4316,7 +4481,8 @@ export class BrunoRoomSubview extends LitElement {
       .join(' ');
 
     return html`
-      <div class=${classes}>
+      <div class=${classes} @pointerdown=${this._iniciarArrasto}>
+        ${this._alcaFolhaTelefone()}
         <div class="mh-head">
           <div class="mh-head-title">
             <span class="micro-icon ${temPc ? '' : 'tone-amber'}">
@@ -4923,7 +5089,8 @@ export class BrunoRoomSubview extends LitElement {
     `;
 
     return html`
-      <div class="glass-card ac-card ac-card-lean">
+      <div class="glass-card ac-card ac-card-lean" @pointerdown=${this._iniciarArrasto}>
+        ${this._alcaFolhaTelefone()}
         <div class="ac-lean-head">
           <div class="mh-head-title ac-head-title">
             <span class="micro-icon tone-cyan"><bruno-icon icon="mdi:air-conditioner"></bruno-icon></span>
@@ -5015,7 +5182,11 @@ export class BrunoRoomSubview extends LitElement {
       </div>
       <div class="right-column">${this._renderLightsDock()}</div>
       ${this._renderCameras()}
-      <div class="glass-card appliances-card kitchen-appliances-card">
+      <div
+        class="glass-card appliances-card kitchen-appliances-card"
+        @pointerdown=${this._iniciarArrasto}
+      >
+        ${this._alcaFolhaTelefone()}
         <div class="mh-head appliances-head">
           <div class="mh-head-title">
             <!-- O nome tem de ser um dos apelidos da tabela de Hugeicons.

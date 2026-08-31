@@ -1,6 +1,6 @@
 # CHECKPOINT ATUAL — LEITURA OBRIGATÓRIA
 
-Atualizado em **2026-08-25**. Este documento é a primeira fonte de continuidade operacional do projeto.
+Atualizado em **2026-08-31**. Este documento é a primeira fonte de continuidade operacional do projeto.
 
 > **REGRA ZERO PARA QUALQUER IA/CHAT NOVO:** antes de diagnosticar, propor branch, escrever código, orientar GitHub Desktop ou indicar arquivos para o Everex, leia este arquivo e depois `docs/LEIA-PRIMEIRO.md`. Não reconstrua o estado apenas pela lista de PRs nem apenas pela memória do chat.
 
@@ -12,6 +12,10 @@ Atualizado em **2026-08-25**. Este documento é a primeira fonte de continuidade
 - Em MODO CHAT-GITHUB, usar branch candidata, validar automaticamente, manter PR draft e **não mergear antes do aceite no Everex/iPhone**.
 - Ao final de TODA rodada, informar: **branch**, **head**, **bundle ativo**, **estado dos testes** e **lista exata do que copiar para o Everex**.
 - Toda implementação relevante deve atualizar este checkpoint e a documentação correspondente em `docs/`; não depender da memória de uma conversa.
+- **Regra de publicação reforçada em 2026-08-31:** toda implementação autorizada
+  deve ser aplicada na pasta local e também no Everex na mesma rodada, salvo
+  instrução expressa em sentido contrário ou indisponibilidade externa real.
+  Diagnósticos sem autorização de escrita permanecem somente leitura.
 
 ## Definition of Done — uma rodada só termina Everex-ready
 
@@ -304,3 +308,36 @@ Em caso de conflito, **este checkpoint + código da branch candidata + PR funcio
 - Rollback local: `tmp/rollback-20260830-three-way-sync/`.
 - Backup Everex: `tmp/everex-preflight-20260830-three-way-sync/`.
 - O Home Assistant não foi reiniciado.
+
+---
+
+## Atualização operacional — bottom sheets mobile unificados (2026-08-31)
+
+- Branch candidata: `local/ajustes-gerais-20260823`, construída sobre o HEAD de
+  base `5e67467a`.
+- Bundle ativo local/Everex: **`bruno-dashboard.qBASlcMq.js`**; main chunk
+  `chunks/main.D2BcXk8C.js`; room chunk
+  `chunks/bruno-room-subview.HHRyAifU.js`.
+- As quatro famílias de folhas das subviews e a folha global de Iluminação
+  receberam alça superior centralizada e o mesmo gesto mobile.
+- Chevrons de recolhimento e X não ficam visíveis no telefone; o markup anterior
+  foi preservado para rollback e o tablet não recebeu o override.
+- O arrasto acompanha o dedo em 1:1. Arrasto curto retorna; distância suficiente
+  ou flick fecha a folha desde o pixel da soltura, sem salto ao topo nem fade.
+- Gates: TypeScript, ESLint e 19 arquivos/288 testes Vitest aprovados; detector
+  de crases direcionado em seis fontes aprovado.
+- Harness mobile 428 x 926 aprovado: alça visível, chevron/X ausentes, retorno
+  curto e continuidade 122 px -> 122 px na soltura. Folha global aprovada nos
+  mesmos critérios.
+- Tablet 1920 x 1200/Josh aprovado sem alteração: oito itens na rail, DOM mobile
+  invisível e geometria existente preservada.
+- Rollback local:
+  `tmp/rollback-20260831-mobile-bottom-sheet-gesture/`.
+- Publicado no Everex em 2026-08-31: 29/29 pares SHA-256 idênticos e sete
+  módulos alcançáveis sem ausências. O bundle anterior
+  `bruno-dashboard.Dq2NEBNk.js` foi preservado para rollback.
+- Backup Everex pré-publicação:
+  `tmp/everex-preflight-20260831-mobile-bottom-sheet-gesture/`.
+- Home Assistant não reiniciado. A candidata permanece na branch
+  `local/ajustes-gerais-20260823`, sem merge para `main`. Detalhes em
+  `docs/41-mobile-bottom-sheets-20260831.md`.

@@ -746,8 +746,12 @@ export const SUBVIEW_TELEFONE_CSS = css`
     }
 
     @keyframes fone-folha-sobe {
-      from { transform: translateY(100%); opacity: 0.82; }
-      to   { transform: translateY(0);    opacity: 1; }
+      /* ANTERIOR (rollback gesto mobile 2026-08-31): a folha tambem variava de
+         opacidade, o que fazia a superficie parecer apagar em vez de subir. */
+      /* from { transform: translateY(100%); opacity: 0.82; }
+         to   { transform: translateY(0);    opacity: 1; } */
+      from { transform: translate3d(0, 100%, 0); }
+      to   { transform: translate3d(0, 0, 0); }
     }
 
     /* ANTERIOR (rollback refinamento mobile): zerar o estado escondia a folha
@@ -762,27 +766,56 @@ export const SUBVIEW_TELEFONE_CSS = css`
     }
 
     @keyframes fone-folha-desce {
-      from { transform: translateY(0); opacity: 1; }
-      to   { transform: translateY(100%); opacity: 0.82; }
+      /* ANTERIOR (rollback gesto mobile 2026-08-31):
+         from { transform: translateY(0); opacity: 1; }
+         to   { transform: translateY(100%); opacity: 0.82; } */
+      from { transform: translate3d(0, 0, 0); }
+      to   { transform: translate3d(0, 100%, 0); }
     }
 
-    /* A alça: dica visual de que a folha se fecha arrastando ou tocando fora. */
+    /* Durante drag/retorno a transicao inline e a unica autoridade. Durante a
+       saida iniciada pelo dedo, a folha continua do offset corrente em vez de
+       executar novamente o keyframe que parte de zero. */
+    :host([data-folha]) .room-subview [data-folha-arrastando],
+    :host([data-folha]) .room-subview [data-folha-retornando],
+    :host([data-folha][data-folha-saindo]) .room-subview [data-folha-arrasto-saindo] {
+      animation: none !important;
+      opacity: 1 !important;
+    }
+
+    /* ANTERIOR (rollback gesto mobile 2026-08-31): a alca era um ::after do
+       proprio card. Como cada modulo tem pseudos e cascata diferentes, ela nao
+       constituia uma peca visual unica entre as folhas. O bloco fica
+       preservado e neutralizado; a alca real vem logo abaixo. */
     :host([data-folha]) .room-subview .glass-card.lights-card::after,
     :host([data-folha]) .room-subview .glass-card.ac-card::after,
     :host([data-folha]) .room-subview .glass-card.media-hub-card::after,
     :host([data-folha]) .room-subview .glass-card.appliances-card::after {
-      content: '';
+      content: none;
+    }
+
+    :host([data-folha]) .room-subview .folha-alca-zona {
+      display: grid;
+      place-items: start center;
       position: absolute;
-      inset: 7px auto auto 50%;
+      top: 0;
+      left: 50%;
+      z-index: 4;
+      width: 76px;
+      height: 28px;
+      padding-top: 7px;
       transform: translateX(-50%);
-      /* Menor e mais discreta que a anterior (42x4 / 0.28): o item 11 pede que
-         a alca nao chame atencao. */
+      touch-action: none;
+      cursor: grab;
+      -webkit-tap-highlight-color: transparent;
+    }
+    :host([data-folha]) .room-subview .folha-alca-zona:active { cursor: grabbing; }
+    :host([data-folha]) .room-subview .folha-alca {
+      display: block;
       width: 34px;
       height: 3px;
-      padding: 0;
       border-radius: 2px;
       background: rgba(255, 255, 255, 0.20);
-      z-index: 2;
       pointer-events: none;
     }
 
@@ -815,6 +848,7 @@ export const SUBVIEW_TELEFONE_CSS = css`
       height: auto;
       padding: 0 2px 12px;
       gap: 10px;
+      touch-action: none;
     }
     /* Filete abaixo do cabecalho — mesmo divisor da faixa, para o segundo nivel
        falar a mesma lingua do primeiro.
@@ -993,7 +1027,8 @@ export const SUBVIEW_TELEFONE_CSS = css`
       border-bottom: 0;
     }
     :host([data-folha='luzes']) .room-subview .lights-dock-chevron {
-      display: grid;
+      /* ANTERIOR (rollback gesto mobile 2026-08-31): display: grid. */
+      display: none !important;
       transform: none;
     }
 
@@ -1610,6 +1645,12 @@ export const SUBVIEW_TELEFONE_CSS = css`
       outline-offset: 2px;
     }
 
+    /* O markup antigo fica preservado para rollback, mas o cromo mobile passa
+       a ter somente a alca superior como affordance de fechamento. */
+    :host([data-folha]) .room-subview .folha-recolher {
+      display: none !important;
+    }
+
     /* ANTERIOR (rollback pos-device): o X era um glifo MDI e depois um caractere
        em circulo. O markup fica preservado, mas sem ocupar layout; o chevron ao
        lado do titulo assumiu o fechamento. */
@@ -1688,6 +1729,7 @@ export const SUBVIEW_TELEFONE_CSS = css`
        dentro do bloco de telefone e nao alcança larguras maiores. */
     .folha-x,
     .folha-recolher,
+    .folha-alca-zona,
     .folha-fechar {
       display: none !important;
     }

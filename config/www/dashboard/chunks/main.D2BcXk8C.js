@@ -10,8 +10,8 @@ function Bi() {
   const o = performance.getEntriesByType("resource");
   Y.resources = {
     count: o.length,
-    totalDuration: Math.round(o.reduce((e, a) => e + a.duration, 0)),
-    transferSize: o.reduce((e, a) => e + (a.transferSize || 0), 0)
+    totalDuration: Math.round(o.reduce((e, t) => e + t.duration, 0)),
+    transferSize: o.reduce((e, t) => e + (t.transferSize || 0), 0)
   };
 }
 function Ge() {
@@ -25,17 +25,17 @@ function Ge() {
 customElements.whenDefined("bruno-shell").then(() => {
   Y.shellDefined = me(), Ge();
 });
-const ga = () => {
+const bt = () => {
   const o = document.querySelector("bruno-shell");
   o && !Y.shellConnected && (Y.shellConnected = me());
-  const a = o?.shadowRoot?.querySelector("#content");
-  if (a?.dataset.section === "home" && a.children.length > 0) {
+  const t = o?.shadowRoot?.querySelector("#content");
+  if (t?.dataset.section === "home" && t.children.length > 0) {
     Y.homeVisible = me(), Ge();
     return;
   }
-  performance.now() < 12e4 && window.setTimeout(ga, 100);
+  performance.now() < 12e4 && window.setTimeout(bt, 100);
 };
-document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", ga, { once: !0 }) : ga();
+document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", bt, { once: !0 }) : bt();
 globalThis.addEventListener("load", () => {
   Y.windowLoad = me(), Ge();
 }, { once: !0 });
@@ -55,10 +55,10 @@ function Ui(o) {
     requisicoes: { total: 0, falhas: 0, duracaoTotal: 0, pior: 0 }
   };
 }
-const Fi = 720, Gi = 200, Wi = 24, Yi = 4, Qa = 3e4, Zi = 12, ea = 10 * 1024 * 1024, Ki = 64;
-function aa(o) {
+const Fi = 720, Gi = 200, Wi = 24, Yi = 4, Qt = 3e4, Zi = 12, et = 10 * 1024 * 1024, Ki = 64;
+function tt(o) {
   let e = Number.POSITIVE_INFINITY;
-  for (const a of o) a.usado < e && (e = a.usado);
+  for (const t of o) t.usado < e && (e = t.usado);
   return Number.isFinite(e) ? e : 0;
 }
 class Xi {
@@ -66,12 +66,12 @@ class Xi {
     this.componentes = /* @__PURE__ */ new Map(), this.memoria = [], this.tarefas = [], this.inicio = 0, this.buildId = "desconhecido", this.tarefasTotal = 0, this.tarefasDuracao = 0, this.tarefasPior = 0, this.tarefasNaCarga = 0, this.pisoGlobal = Number.POSITIVE_INFINITY, this.picoGlobal = 0, this.valoresDeMemoria = /* @__PURE__ */ new Set();
   }
   /** Marca zero do relógio. Chamado uma vez, por quem inicia os observadores. */
-  iniciar(e, a) {
-    this.inicio = e, this.buildId = a;
+  iniciar(e, t) {
+    this.inicio = e, this.buildId = t;
   }
   de(e) {
-    let a = this.componentes.get(e);
-    return a || (a = Ui(e), this.componentes.set(e, a)), a;
+    let t = this.componentes.get(e);
+    return t || (t = Ui(e), this.componentes.set(e, t)), t;
   }
   // ── Pontos de coleta ──────────────────────────────────────────────────────
   conectou(e) {
@@ -87,10 +87,10 @@ class Xi {
    * mas os que sabem transformam "renderizou 3.328 vezes" em "renderizou 3.328
    * vezes por causa de `sensor.X`", que é acionável.
    */
-  renderizou(e, a, t) {
+  renderizou(e, t, a) {
     const i = this.de(e), r = i.render;
-    if (r.total++, r.duracaoTotal += a, r.ultima = a, a > r.pior && (r.pior = a), !t) return;
-    const n = i.motivos.has(t) || i.motivos.size < Wi ? t : "outros";
+    if (r.total++, r.duracaoTotal += t, r.ultima = t, t > r.pior && (r.pior = t), !a) return;
+    const n = i.motivos.has(a) || i.motivos.size < Wi ? a : "outros";
     i.motivos.set(n, (i.motivos.get(n) ?? 0) + 1);
   }
   timerCriado(e) {
@@ -111,15 +111,15 @@ class Xi {
   desassinou(e) {
     this.de(e).assinaturas.encerrados++;
   }
-  requisicao(e, a, t) {
+  requisicao(e, t, a) {
     const i = this.de(e).requisicoes;
-    i.total++, t || i.falhas++, i.duracaoTotal += a, a > i.pior && (i.pior = a);
+    i.total++, a || i.falhas++, i.duracaoTotal += t, t > i.pior && (i.pior = t);
   }
   memoriaAmostrada(e) {
     this.memoria.push(e), this.memoria.length > Fi && this.memoria.shift(), e.usado < this.pisoGlobal && (this.pisoGlobal = e.usado), e.usado > this.picoGlobal && (this.picoGlobal = e.usado), this.valoresDeMemoria.size < Ki && this.valoresDeMemoria.add(e.usado);
   }
   tarefaLonga(e) {
-    this.tarefas.push(e), this.tarefas.length > Gi && this.tarefas.shift(), this.tarefasTotal++, this.tarefasDuracao += e.duracao, e.duracao > this.tarefasPior && (this.tarefasPior = e.duracao), e.em < Qa && this.tarefasNaCarga++;
+    this.tarefas.push(e), this.tarefas.length > Gi && this.tarefas.shift(), this.tarefasTotal++, this.tarefasDuracao += e.duracao, e.duracao > this.tarefasPior && (this.tarefasPior = e.duracao), e.em < Qt && this.tarefasNaCarga++;
   }
   // ── Ciclo de navegação ────────────────────────────────────────────────────
   /**
@@ -137,27 +137,27 @@ class Xi {
     this.marca = void 0;
   }
   contagem() {
-    const e = (a) => {
-      let t = 0;
-      for (const i of this.componentes.values()) t += a(i).criados - a(i).encerrados;
-      return t;
+    const e = (t) => {
+      let a = 0;
+      for (const i of this.componentes.values()) a += t(i).criados - t(i).encerrados;
+      return a;
     };
     return {
-      instancias: e((a) => a.instancias),
-      timers: e((a) => a.timers),
-      listeners: e((a) => a.listeners),
-      assinaturas: e((a) => a.assinaturas)
+      instancias: e((t) => t.instancias),
+      timers: e((t) => t.timers),
+      listeners: e((t) => t.listeners),
+      assinaturas: e((t) => t.assinaturas)
     };
   }
   // ── Leitura ───────────────────────────────────────────────────────────────
   leituraDeMemoria() {
-    const e = this.memoria, a = e[0], t = e[e.length - 1], i = e.length, r = Math.max(1, Math.floor(i / 3)), n = i ? aa(e.slice(0, r)) : 0, s = i ? aa(e.slice(i - r)) : 0, l = s - n, c = this.valoresDeMemoria.size, p = i ? aa(e.slice(r, i - r)) : 0, d = s - p;
+    const e = this.memoria, t = e[0], a = e[e.length - 1], i = e.length, r = Math.max(1, Math.floor(i / 3)), n = i ? tt(e.slice(0, r)) : 0, s = i ? tt(e.slice(i - r)) : 0, l = s - n, c = this.valoresDeMemoria.size, p = i ? tt(e.slice(r, i - r)) : 0, d = s - p;
     let h;
-    return i < Zi ? h = `Só ${i} amostra(s) — o piso ainda não significa nada.` : c < 2 ? h = `${i} amostras, mas um único valor de heap: o navegador ainda não atualizou a leitura. Sem informação — precisa de sessão longa.` : l > ea && d > ea ? h = `Piso subiu ${(l / 1048576).toFixed(1)} MB e AINDA sobe (${(d / 1048576).toFixed(1)} MB no último terço) — isto é retenção.` : l > ea ? h = `Subiu ${(l / 1048576).toFixed(1)} MB desde a carga e estabilizou em ${(s / 1048576).toFixed(0)} MB — é custo de partida, não vazamento.` : h = `Piso estável em ${c} degraus — a variação do heap é coleta de lixo, não vazamento.`, {
+    return i < Zi ? h = `Só ${i} amostra(s) — o piso ainda não significa nada.` : c < 2 ? h = `${i} amostras, mas um único valor de heap: o navegador ainda não atualizou a leitura. Sem informação — precisa de sessão longa.` : l > et && d > et ? h = `Piso subiu ${(l / 1048576).toFixed(1)} MB e AINDA sobe (${(d / 1048576).toFixed(1)} MB no último terço) — isto é retenção.` : l > et ? h = `Subiu ${(l / 1048576).toFixed(1)} MB desde a carga e estabilizou em ${(s / 1048576).toFixed(0)} MB — é custo de partida, não vazamento.` : h = `Piso estável em ${c} degraus — a variação do heap é coleta de lixo, não vazamento.`, {
       amostras: i,
-      ...a ? { primeira: a } : {},
-      ...t ? { ultima: t } : {},
-      crescimento: a && t ? t.usado - a.usado : 0,
+      ...t ? { primeira: t } : {},
+      ...a ? { ultima: a } : {},
+      crescimento: t && a ? a.usado - t.usado : 0,
       piso: Number.isFinite(this.pisoGlobal) ? this.pisoGlobal : 0,
       pico: this.picoGlobal,
       pisoInicial: n,
@@ -168,14 +168,14 @@ class Xi {
     };
   }
   leituraDeTarefas(e) {
-    const a = this.tarefasTotal - this.tarefasNaCarga, t = Math.max(0, e - Qa) / 6e4;
+    const t = this.tarefasTotal - this.tarefasNaCarga, a = Math.max(0, e - Qt) / 6e4;
     return {
       total: this.tarefasTotal,
       duracaoTotal: Math.round(this.tarefasDuracao),
       pior: Math.round(this.tarefasPior),
       naCarga: this.tarefasNaCarga,
-      depoisDaCarga: a,
-      porMinuto: t > 0 ? Number((a / t).toFixed(1)) : 0
+      depoisDaCarga: t,
+      porMinuto: a > 0 ? Number((t / a).toFixed(1)) : 0
     };
   }
   /**
@@ -187,7 +187,7 @@ class Xi {
    * deixou lixo.
    */
   instantaneo(e) {
-    const t = [...this.componentes.values()].sort(
+    const a = [...this.componentes.values()].sort(
       (s, l) => s.nome.localeCompare(l.nome)
     ).map((s) => ({
       nome: s.nome,
@@ -205,7 +205,7 @@ class Xi {
       build: this.buildId,
       capturadoEm: (/* @__PURE__ */ new Date()).toISOString(),
       desdeOCarregamento: r,
-      componentes: t,
+      componentes: a,
       memoria: this.leituraDeMemoria(),
       tarefasLongas: this.leituraDeTarefas(r),
       vazamentos: {
@@ -239,52 +239,52 @@ function er(o) {
   if (ce.timerMemoria !== void 0 || ce.observador !== void 0) return;
   T.iniciar(performance.now(), o);
   const e = () => {
-    const a = Ji();
-    a && T.memoriaAmostrada({ em: Math.round(performance.now()), ...a });
+    const t = Ji();
+    t && T.memoriaAmostrada({ em: Math.round(performance.now()), ...t });
   };
   if (e(), ce.timerMemoria = window.setInterval(e, Qi), "PerformanceObserver" in window)
     try {
-      const a = new PerformanceObserver((t) => {
-        for (const i of t.getEntries())
+      const t = new PerformanceObserver((a) => {
+        for (const i of a.getEntries())
           T.tarefaLonga({
             em: Math.round(i.startTime),
             duracao: Math.round(i.duration)
           });
       });
-      a.observe({ entryTypes: ["longtask"] }), ce.observador = a;
+      t.observe({ entryTypes: ["longtask"] }), ce.observador = t;
     } catch {
     }
 }
-function ar() {
+function tr() {
   return ce.timerMemoria !== void 0;
 }
 const ie = /* @__PURE__ */ new Map();
-function Ts(o, e, a) {
-  const t = window.setInterval(e, a);
-  return ie.set(t, "intervalo"), T.timerCriado(o), t;
+function Rs(o, e, t) {
+  const a = window.setInterval(e, t);
+  return ie.set(a, "intervalo"), T.timerCriado(o), a;
 }
-function $s(o, e, a) {
-  const t = window.setTimeout(() => {
-    ie.delete(t), T.timerEncerrado(o), e();
-  }, a);
-  return ie.set(t, "espera"), T.timerCriado(o), t;
+function Ls(o, e, t) {
+  const a = window.setTimeout(() => {
+    ie.delete(a), T.timerEncerrado(o), e();
+  }, t);
+  return ie.set(a, "espera"), T.timerCriado(o), a;
 }
-function Ms(o, e) {
+function Is(o, e) {
   if (e === void 0) return;
-  const a = ie.get(e);
-  a !== void 0 && (a === "intervalo" ? window.clearInterval(e) : window.clearTimeout(e), ie.delete(e), T.timerEncerrado(o));
+  const t = ie.get(e);
+  t !== void 0 && (t === "intervalo" ? window.clearInterval(e) : window.clearTimeout(e), ie.delete(e), T.timerEncerrado(o));
 }
-function tr() {
+function ar() {
   return ie.size;
 }
-function Rs(o, e, a, t, i) {
-  e.addEventListener(a, t, i), T.listenerCriado(o);
+function Ns(o, e, t, a, i) {
+  e.addEventListener(t, a, i), T.listenerCriado(o);
 }
-function Ls(o, e, a, t, i) {
-  e.removeEventListener(a, t, i), T.listenerEncerrado(o);
+function zs(o, e, t, a, i) {
+  e.removeEventListener(t, a, i), T.listenerEncerrado(o);
 }
-function ir(o, e, a) {
-  T.requisicao(o, e, a);
+function ir(o, e, t) {
+  T.requisicao(o, e, t);
 }
 function oi(o) {
   T.conectou(o);
@@ -292,12 +292,12 @@ function oi(o) {
 function ni(o) {
   T.desconectou(o);
 }
-function si(o, e, a) {
-  const t = performance.now();
+function si(o, e, t) {
+  const a = performance.now();
   try {
     return e();
   } finally {
-    T.renderizou(o, performance.now() - t, a);
+    T.renderizou(o, performance.now() - a, t);
   }
 }
 function li() {
@@ -315,10 +315,10 @@ function or() {
   }
 }
 function Ne() {
-  return { ...T.instantaneo(performance.now()), timersVivos: tr() };
+  return { ...T.instantaneo(performance.now()), timersVivos: ar() };
 }
 function nr() {
-  if (ar()) return;
+  if (tr()) return;
   er(or());
   const o = {
     instantaneo: Ne,
@@ -334,18 +334,18 @@ function nr() {
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Re = globalThis, Ia = Re.ShadowRoot && (Re.ShadyCSS === void 0 || Re.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, Na = Symbol(), Ja = /* @__PURE__ */ new WeakMap();
+const Re = globalThis, It = Re.ShadowRoot && (Re.ShadyCSS === void 0 || Re.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, Nt = Symbol(), Jt = /* @__PURE__ */ new WeakMap();
 let ci = class {
-  constructor(e, a, t) {
-    if (this._$cssResult$ = !0, t !== Na) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
-    this.cssText = e, this.t = a;
+  constructor(e, t, a) {
+    if (this._$cssResult$ = !0, a !== Nt) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    this.cssText = e, this.t = t;
   }
   get styleSheet() {
     let e = this.o;
-    const a = this.t;
-    if (Ia && e === void 0) {
-      const t = a !== void 0 && a.length === 1;
-      t && (e = Ja.get(a)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), t && Ja.set(a, e));
+    const t = this.t;
+    if (It && e === void 0) {
+      const a = t !== void 0 && t.length === 1;
+      a && (e = Jt.get(t)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), a && Jt.set(t, e));
     }
     return e;
   }
@@ -353,33 +353,33 @@ let ci = class {
     return this.cssText;
   }
 };
-const sr = (o) => new ci(typeof o == "string" ? o : o + "", void 0, Na), ee = (o, ...e) => {
-  const a = o.length === 1 ? o[0] : e.reduce((t, i, r) => t + ((n) => {
+const sr = (o) => new ci(typeof o == "string" ? o : o + "", void 0, Nt), ee = (o, ...e) => {
+  const t = o.length === 1 ? o[0] : e.reduce((a, i, r) => a + ((n) => {
     if (n._$cssResult$ === !0) return n.cssText;
     if (typeof n == "number") return n;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + n + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(i) + o[r + 1], o[0]);
-  return new ci(a, o, Na);
+  return new ci(t, o, Nt);
 }, lr = (o, e) => {
-  if (Ia) o.adoptedStyleSheets = e.map((a) => a instanceof CSSStyleSheet ? a : a.styleSheet);
-  else for (const a of e) {
-    const t = document.createElement("style"), i = Re.litNonce;
-    i !== void 0 && t.setAttribute("nonce", i), t.textContent = a.cssText, o.appendChild(t);
+  if (It) o.adoptedStyleSheets = e.map((t) => t instanceof CSSStyleSheet ? t : t.styleSheet);
+  else for (const t of e) {
+    const a = document.createElement("style"), i = Re.litNonce;
+    i !== void 0 && a.setAttribute("nonce", i), a.textContent = t.cssText, o.appendChild(a);
   }
-}, et = Ia ? (o) => o : (o) => o instanceof CSSStyleSheet ? ((e) => {
-  let a = "";
-  for (const t of e.cssRules) a += t.cssText;
-  return sr(a);
+}, ea = It ? (o) => o : (o) => o instanceof CSSStyleSheet ? ((e) => {
+  let t = "";
+  for (const a of e.cssRules) t += a.cssText;
+  return sr(t);
 })(o) : o;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: cr, defineProperty: dr, getOwnPropertyDescriptor: pr, getOwnPropertyNames: ur, getOwnPropertySymbols: hr, getPrototypeOf: br } = Object, We = globalThis, at = We.trustedTypes, gr = at ? at.emptyScript : "", mr = We.reactiveElementPolyfillSupport, he = (o, e) => o, ma = { toAttribute(o, e) {
+const { is: cr, defineProperty: dr, getOwnPropertyDescriptor: pr, getOwnPropertyNames: ur, getOwnPropertySymbols: hr, getPrototypeOf: gr } = Object, We = globalThis, ta = We.trustedTypes, br = ta ? ta.emptyScript : "", mr = We.reactiveElementPolyfillSupport, he = (o, e) => o, mt = { toAttribute(o, e) {
   switch (e) {
     case Boolean:
-      o = o ? gr : null;
+      o = o ? br : null;
       break;
     case Object:
     case Array:
@@ -387,86 +387,86 @@ const { is: cr, defineProperty: dr, getOwnPropertyDescriptor: pr, getOwnProperty
   }
   return o;
 }, fromAttribute(o, e) {
-  let a = o;
+  let t = o;
   switch (e) {
     case Boolean:
-      a = o !== null;
+      t = o !== null;
       break;
     case Number:
-      a = o === null ? null : Number(o);
+      t = o === null ? null : Number(o);
       break;
     case Object:
     case Array:
       try {
-        a = JSON.parse(o);
+        t = JSON.parse(o);
       } catch {
-        a = null;
+        t = null;
       }
   }
-  return a;
-} }, di = (o, e) => !cr(o, e), tt = { attribute: !0, type: String, converter: ma, reflect: !1, useDefault: !1, hasChanged: di };
+  return t;
+} }, di = (o, e) => !cr(o, e), aa = { attribute: !0, type: String, converter: mt, reflect: !1, useDefault: !1, hasChanged: di };
 Symbol.metadata ??= Symbol("metadata"), We.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-let ae = class extends HTMLElement {
+let te = class extends HTMLElement {
   static addInitializer(e) {
     this._$Ei(), (this.l ??= []).push(e);
   }
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(e, a = tt) {
-    if (a.state && (a.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((a = Object.create(a)).wrapped = !0), this.elementProperties.set(e, a), !a.noAccessor) {
-      const t = Symbol(), i = this.getPropertyDescriptor(e, t, a);
+  static createProperty(e, t = aa) {
+    if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
+      const a = Symbol(), i = this.getPropertyDescriptor(e, a, t);
       i !== void 0 && dr(this.prototype, e, i);
     }
   }
-  static getPropertyDescriptor(e, a, t) {
+  static getPropertyDescriptor(e, t, a) {
     const { get: i, set: r } = pr(this.prototype, e) ?? { get() {
-      return this[a];
+      return this[t];
     }, set(n) {
-      this[a] = n;
+      this[t] = n;
     } };
     return { get: i, set(n) {
       const s = i?.call(this);
-      r?.call(this, n), this.requestUpdate(e, s, t);
+      r?.call(this, n), this.requestUpdate(e, s, a);
     }, configurable: !0, enumerable: !0 };
   }
   static getPropertyOptions(e) {
-    return this.elementProperties.get(e) ?? tt;
+    return this.elementProperties.get(e) ?? aa;
   }
   static _$Ei() {
     if (this.hasOwnProperty(he("elementProperties"))) return;
-    const e = br(this);
+    const e = gr(this);
     e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
   }
   static finalize() {
     if (this.hasOwnProperty(he("finalized"))) return;
     if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(he("properties"))) {
-      const a = this.properties, t = [...ur(a), ...hr(a)];
-      for (const i of t) this.createProperty(i, a[i]);
+      const t = this.properties, a = [...ur(t), ...hr(t)];
+      for (const i of a) this.createProperty(i, t[i]);
     }
     const e = this[Symbol.metadata];
     if (e !== null) {
-      const a = litPropertyMetadata.get(e);
-      if (a !== void 0) for (const [t, i] of a) this.elementProperties.set(t, i);
+      const t = litPropertyMetadata.get(e);
+      if (t !== void 0) for (const [a, i] of t) this.elementProperties.set(a, i);
     }
     this._$Eh = /* @__PURE__ */ new Map();
-    for (const [a, t] of this.elementProperties) {
-      const i = this._$Eu(a, t);
-      i !== void 0 && this._$Eh.set(i, a);
+    for (const [t, a] of this.elementProperties) {
+      const i = this._$Eu(t, a);
+      i !== void 0 && this._$Eh.set(i, t);
     }
     this.elementStyles = this.finalizeStyles(this.styles);
   }
   static finalizeStyles(e) {
-    const a = [];
+    const t = [];
     if (Array.isArray(e)) {
-      const t = new Set(e.flat(1 / 0).reverse());
-      for (const i of t) a.unshift(et(i));
-    } else e !== void 0 && a.push(et(e));
-    return a;
+      const a = new Set(e.flat(1 / 0).reverse());
+      for (const i of a) t.unshift(ea(i));
+    } else e !== void 0 && t.push(ea(e));
+    return t;
   }
-  static _$Eu(e, a) {
-    const t = a.attribute;
-    return t === !1 ? void 0 : typeof t == "string" ? t : typeof e == "string" ? e.toLowerCase() : void 0;
+  static _$Eu(e, t) {
+    const a = t.attribute;
+    return a === !1 ? void 0 : typeof a == "string" ? a : typeof e == "string" ? e.toLowerCase() : void 0;
   }
   constructor() {
     super(), this._$Ep = void 0, this.isUpdatePending = !1, this.hasUpdated = !1, this._$Em = null, this._$Ev();
@@ -481,8 +481,8 @@ let ae = class extends HTMLElement {
     this._$EO?.delete(e);
   }
   _$E_() {
-    const e = /* @__PURE__ */ new Map(), a = this.constructor.elementProperties;
-    for (const t of a.keys()) this.hasOwnProperty(t) && (e.set(t, this[t]), delete this[t]);
+    const e = /* @__PURE__ */ new Map(), t = this.constructor.elementProperties;
+    for (const a of t.keys()) this.hasOwnProperty(a) && (e.set(a, this[a]), delete this[a]);
     e.size > 0 && (this._$Ep = e);
   }
   createRenderRoot() {
@@ -497,42 +497,42 @@ let ae = class extends HTMLElement {
   disconnectedCallback() {
     this._$EO?.forEach((e) => e.hostDisconnected?.());
   }
-  attributeChangedCallback(e, a, t) {
-    this._$AK(e, t);
+  attributeChangedCallback(e, t, a) {
+    this._$AK(e, a);
   }
-  _$ET(e, a) {
-    const t = this.constructor.elementProperties.get(e), i = this.constructor._$Eu(e, t);
-    if (i !== void 0 && t.reflect === !0) {
-      const r = (t.converter?.toAttribute !== void 0 ? t.converter : ma).toAttribute(a, t.type);
+  _$ET(e, t) {
+    const a = this.constructor.elementProperties.get(e), i = this.constructor._$Eu(e, a);
+    if (i !== void 0 && a.reflect === !0) {
+      const r = (a.converter?.toAttribute !== void 0 ? a.converter : mt).toAttribute(t, a.type);
       this._$Em = e, r == null ? this.removeAttribute(i) : this.setAttribute(i, r), this._$Em = null;
     }
   }
-  _$AK(e, a) {
-    const t = this.constructor, i = t._$Eh.get(e);
+  _$AK(e, t) {
+    const a = this.constructor, i = a._$Eh.get(e);
     if (i !== void 0 && this._$Em !== i) {
-      const r = t.getPropertyOptions(i), n = typeof r.converter == "function" ? { fromAttribute: r.converter } : r.converter?.fromAttribute !== void 0 ? r.converter : ma;
+      const r = a.getPropertyOptions(i), n = typeof r.converter == "function" ? { fromAttribute: r.converter } : r.converter?.fromAttribute !== void 0 ? r.converter : mt;
       this._$Em = i;
-      const s = n.fromAttribute(a, r.type);
+      const s = n.fromAttribute(t, r.type);
       this[i] = s ?? this._$Ej?.get(i) ?? s, this._$Em = null;
     }
   }
-  requestUpdate(e, a, t, i = !1, r) {
+  requestUpdate(e, t, a, i = !1, r) {
     if (e !== void 0) {
       const n = this.constructor;
-      if (i === !1 && (r = this[e]), t ??= n.getPropertyOptions(e), !((t.hasChanged ?? di)(r, a) || t.useDefault && t.reflect && r === this._$Ej?.get(e) && !this.hasAttribute(n._$Eu(e, t)))) return;
-      this.C(e, a, t);
+      if (i === !1 && (r = this[e]), a ??= n.getPropertyOptions(e), !((a.hasChanged ?? di)(r, t) || a.useDefault && a.reflect && r === this._$Ej?.get(e) && !this.hasAttribute(n._$Eu(e, a)))) return;
+      this.C(e, t, a);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
   }
-  C(e, a, { useDefault: t, reflect: i, wrapped: r }, n) {
-    t && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(e) && (this._$Ej.set(e, n ?? a ?? this[e]), r !== !0 || n !== void 0) || (this._$AL.has(e) || (this.hasUpdated || t || (a = void 0), this._$AL.set(e, a)), i === !0 && this._$Em !== e && (this._$Eq ??= /* @__PURE__ */ new Set()).add(e));
+  C(e, t, { useDefault: a, reflect: i, wrapped: r }, n) {
+    a && !(this._$Ej ??= /* @__PURE__ */ new Map()).has(e) && (this._$Ej.set(e, n ?? t ?? this[e]), r !== !0 || n !== void 0) || (this._$AL.has(e) || (this.hasUpdated || a || (t = void 0), this._$AL.set(e, t)), i === !0 && this._$Em !== e && (this._$Eq ??= /* @__PURE__ */ new Set()).add(e));
   }
   async _$EP() {
     this.isUpdatePending = !0;
     try {
       await this._$ES;
-    } catch (a) {
-      Promise.reject(a);
+    } catch (t) {
+      Promise.reject(t);
     }
     const e = this.scheduleUpdate();
     return e != null && await e, !this.isUpdatePending;
@@ -547,25 +547,25 @@ let ae = class extends HTMLElement {
         for (const [i, r] of this._$Ep) this[i] = r;
         this._$Ep = void 0;
       }
-      const t = this.constructor.elementProperties;
-      if (t.size > 0) for (const [i, r] of t) {
+      const a = this.constructor.elementProperties;
+      if (a.size > 0) for (const [i, r] of a) {
         const { wrapped: n } = r, s = this[i];
         n !== !0 || this._$AL.has(i) || s === void 0 || this.C(i, void 0, r, s);
       }
     }
     let e = !1;
-    const a = this._$AL;
+    const t = this._$AL;
     try {
-      e = this.shouldUpdate(a), e ? (this.willUpdate(a), this._$EO?.forEach((t) => t.hostUpdate?.()), this.update(a)) : this._$EM();
-    } catch (t) {
-      throw e = !1, this._$EM(), t;
+      e = this.shouldUpdate(t), e ? (this.willUpdate(t), this._$EO?.forEach((a) => a.hostUpdate?.()), this.update(t)) : this._$EM();
+    } catch (a) {
+      throw e = !1, this._$EM(), a;
     }
-    e && this._$AE(a);
+    e && this._$AE(t);
   }
   willUpdate(e) {
   }
   _$AE(e) {
-    this._$EO?.forEach((a) => a.hostUpdated?.()), this.hasUpdated || (this.hasUpdated = !0, this.firstUpdated(e)), this.updated(e);
+    this._$EO?.forEach((t) => t.hostUpdated?.()), this.hasUpdated || (this.hasUpdated = !0, this.firstUpdated(e)), this.updated(e);
   }
   _$EM() {
     this._$AL = /* @__PURE__ */ new Map(), this.isUpdatePending = !1;
@@ -580,59 +580,59 @@ let ae = class extends HTMLElement {
     return !0;
   }
   update(e) {
-    this._$Eq &&= this._$Eq.forEach((a) => this._$ET(a, this[a])), this._$EM();
+    this._$Eq &&= this._$Eq.forEach((t) => this._$ET(t, this[t])), this._$EM();
   }
   updated(e) {
   }
   firstUpdated(e) {
   }
 };
-ae.elementStyles = [], ae.shadowRootOptions = { mode: "open" }, ae[he("elementProperties")] = /* @__PURE__ */ new Map(), ae[he("finalized")] = /* @__PURE__ */ new Map(), mr?.({ ReactiveElement: ae }), (We.reactiveElementVersions ??= []).push("2.1.2");
+te.elementStyles = [], te.shadowRootOptions = { mode: "open" }, te[he("elementProperties")] = /* @__PURE__ */ new Map(), te[he("finalized")] = /* @__PURE__ */ new Map(), mr?.({ ReactiveElement: te }), (We.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const za = globalThis, it = (o) => o, ze = za.trustedTypes, rt = ze ? ze.createPolicy("lit-html", { createHTML: (o) => o }) : void 0, pi = "$lit$", G = `lit$${Math.random().toFixed(9).slice(2)}$`, ui = "?" + G, fr = `<${ui}>`, J = document, fe = () => J.createComment(""), ve = (o) => o === null || typeof o != "object" && typeof o != "function", Ha = Array.isArray, vr = (o) => Ha(o) || typeof o?.[Symbol.iterator] == "function", ta = `[ 	
-\f\r]`, se = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, ot = /-->/g, nt = />/g, K = RegExp(`>|${ta}(?:([^\\s"'>=/]+)(${ta}*=${ta}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), st = /'/g, lt = /"/g, hi = /^(?:script|style|textarea|title)$/i, bi = (o) => (e, ...a) => ({ _$litType$: o, strings: e, values: a }), v = bi(1), zs = bi(2), re = Symbol.for("lit-noChange"), _ = Symbol.for("lit-nothing"), ct = /* @__PURE__ */ new WeakMap(), Q = J.createTreeWalker(J, 129);
-function gi(o, e) {
-  if (!Ha(o) || !o.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return rt !== void 0 ? rt.createHTML(e) : e;
+const zt = globalThis, ia = (o) => o, ze = zt.trustedTypes, ra = ze ? ze.createPolicy("lit-html", { createHTML: (o) => o }) : void 0, pi = "$lit$", G = `lit$${Math.random().toFixed(9).slice(2)}$`, ui = "?" + G, fr = `<${ui}>`, J = document, fe = () => J.createComment(""), ve = (o) => o === null || typeof o != "object" && typeof o != "function", Ht = Array.isArray, vr = (o) => Ht(o) || typeof o?.[Symbol.iterator] == "function", at = `[ 	
+\f\r]`, se = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, oa = /-->/g, na = />/g, K = RegExp(`>|${at}(?:([^\\s"'>=/]+)(${at}*=${at}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), sa = /'/g, la = /"/g, hi = /^(?:script|style|textarea|title)$/i, gi = (o) => (e, ...t) => ({ _$litType$: o, strings: e, values: t }), v = gi(1), Ps = gi(2), re = Symbol.for("lit-noChange"), _ = Symbol.for("lit-nothing"), ca = /* @__PURE__ */ new WeakMap(), Q = J.createTreeWalker(J, 129);
+function bi(o, e) {
+  if (!Ht(o) || !o.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  return ra !== void 0 ? ra.createHTML(e) : e;
 }
 const _r = (o, e) => {
-  const a = o.length - 1, t = [];
+  const t = o.length - 1, a = [];
   let i, r = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", n = se;
-  for (let s = 0; s < a; s++) {
+  for (let s = 0; s < t; s++) {
     const l = o[s];
     let c, p, d = -1, h = 0;
-    for (; h < l.length && (n.lastIndex = h, p = n.exec(l), p !== null); ) h = n.lastIndex, n === se ? p[1] === "!--" ? n = ot : p[1] !== void 0 ? n = nt : p[2] !== void 0 ? (hi.test(p[2]) && (i = RegExp("</" + p[2], "g")), n = K) : p[3] !== void 0 && (n = K) : n === K ? p[0] === ">" ? (n = i ?? se, d = -1) : p[1] === void 0 ? d = -2 : (d = n.lastIndex - p[2].length, c = p[1], n = p[3] === void 0 ? K : p[3] === '"' ? lt : st) : n === lt || n === st ? n = K : n === ot || n === nt ? n = se : (n = K, i = void 0);
-    const b = n === K && o[s + 1].startsWith("/>") ? " " : "";
-    r += n === se ? l + fr : d >= 0 ? (t.push(c), l.slice(0, d) + pi + l.slice(d) + G + b) : l + G + (d === -2 ? s : b);
+    for (; h < l.length && (n.lastIndex = h, p = n.exec(l), p !== null); ) h = n.lastIndex, n === se ? p[1] === "!--" ? n = oa : p[1] !== void 0 ? n = na : p[2] !== void 0 ? (hi.test(p[2]) && (i = RegExp("</" + p[2], "g")), n = K) : p[3] !== void 0 && (n = K) : n === K ? p[0] === ">" ? (n = i ?? se, d = -1) : p[1] === void 0 ? d = -2 : (d = n.lastIndex - p[2].length, c = p[1], n = p[3] === void 0 ? K : p[3] === '"' ? la : sa) : n === la || n === sa ? n = K : n === oa || n === na ? n = se : (n = K, i = void 0);
+    const g = n === K && o[s + 1].startsWith("/>") ? " " : "";
+    r += n === se ? l + fr : d >= 0 ? (a.push(c), l.slice(0, d) + pi + l.slice(d) + G + g) : l + G + (d === -2 ? s : g);
   }
-  return [gi(o, r + (o[a] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), t];
+  return [bi(o, r + (o[t] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), a];
 };
 class _e {
-  constructor({ strings: e, _$litType$: a }, t) {
+  constructor({ strings: e, _$litType$: t }, a) {
     let i;
     this.parts = [];
     let r = 0, n = 0;
-    const s = e.length - 1, l = this.parts, [c, p] = _r(e, a);
-    if (this.el = _e.createElement(c, t), Q.currentNode = this.el.content, a === 2 || a === 3) {
+    const s = e.length - 1, l = this.parts, [c, p] = _r(e, t);
+    if (this.el = _e.createElement(c, a), Q.currentNode = this.el.content, t === 2 || t === 3) {
       const d = this.el.content.firstChild;
       d.replaceWith(...d.childNodes);
     }
     for (; (i = Q.nextNode()) !== null && l.length < s; ) {
       if (i.nodeType === 1) {
         if (i.hasAttributes()) for (const d of i.getAttributeNames()) if (d.endsWith(pi)) {
-          const h = p[n++], b = i.getAttribute(d).split(G), u = /([.?@])?(.*)/.exec(h);
-          l.push({ type: 1, index: r, name: u[2], strings: b, ctor: u[1] === "." ? yr : u[1] === "?" ? wr : u[1] === "@" ? kr : Ye }), i.removeAttribute(d);
+          const h = p[n++], g = i.getAttribute(d).split(G), u = /([.?@])?(.*)/.exec(h);
+          l.push({ type: 1, index: r, name: u[2], strings: g, ctor: u[1] === "." ? yr : u[1] === "?" ? wr : u[1] === "@" ? kr : Ye }), i.removeAttribute(d);
         } else d.startsWith(G) && (l.push({ type: 6, index: r }), i.removeAttribute(d));
         if (hi.test(i.tagName)) {
           const d = i.textContent.split(G), h = d.length - 1;
           if (h > 0) {
             i.textContent = ze ? ze.emptyScript : "";
-            for (let b = 0; b < h; b++) i.append(d[b], fe()), Q.nextNode(), l.push({ type: 2, index: ++r });
+            for (let g = 0; g < h; g++) i.append(d[g], fe()), Q.nextNode(), l.push({ type: 2, index: ++r });
             i.append(d[h], fe());
           }
         }
@@ -644,20 +644,20 @@ class _e {
       r++;
     }
   }
-  static createElement(e, a) {
-    const t = J.createElement("template");
-    return t.innerHTML = e, t;
+  static createElement(e, t) {
+    const a = J.createElement("template");
+    return a.innerHTML = e, a;
   }
 }
-function oe(o, e, a = o, t) {
+function oe(o, e, t = o, a) {
   if (e === re) return e;
-  let i = t !== void 0 ? a._$Co?.[t] : a._$Cl;
+  let i = a !== void 0 ? t._$Co?.[a] : t._$Cl;
   const r = ve(e) ? void 0 : e._$litDirective$;
-  return i?.constructor !== r && (i?._$AO?.(!1), r === void 0 ? i = void 0 : (i = new r(o), i._$AT(o, a, t)), t !== void 0 ? (a._$Co ??= [])[t] = i : a._$Cl = i), i !== void 0 && (e = oe(o, i._$AS(o, e.values), i, t)), e;
+  return i?.constructor !== r && (i?._$AO?.(!1), r === void 0 ? i = void 0 : (i = new r(o), i._$AT(o, t, a)), a !== void 0 ? (t._$Co ??= [])[a] = i : t._$Cl = i), i !== void 0 && (e = oe(o, i._$AS(o, e.values), i, a)), e;
 }
 class xr {
-  constructor(e, a) {
-    this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = a;
+  constructor(e, t) {
+    this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = t;
   }
   get parentNode() {
     return this._$AM.parentNode;
@@ -666,34 +666,34 @@ class xr {
     return this._$AM._$AU;
   }
   u(e) {
-    const { el: { content: a }, parts: t } = this._$AD, i = (e?.creationScope ?? J).importNode(a, !0);
+    const { el: { content: t }, parts: a } = this._$AD, i = (e?.creationScope ?? J).importNode(t, !0);
     Q.currentNode = i;
-    let r = Q.nextNode(), n = 0, s = 0, l = t[0];
+    let r = Q.nextNode(), n = 0, s = 0, l = a[0];
     for (; l !== void 0; ) {
       if (n === l.index) {
         let c;
-        l.type === 2 ? c = new ye(r, r.nextSibling, this, e) : l.type === 1 ? c = new l.ctor(r, l.name, l.strings, this, e) : l.type === 6 && (c = new Sr(r, this, e)), this._$AV.push(c), l = t[++s];
+        l.type === 2 ? c = new ye(r, r.nextSibling, this, e) : l.type === 1 ? c = new l.ctor(r, l.name, l.strings, this, e) : l.type === 6 && (c = new Sr(r, this, e)), this._$AV.push(c), l = a[++s];
       }
       n !== l?.index && (r = Q.nextNode(), n++);
     }
     return Q.currentNode = J, i;
   }
   p(e) {
-    let a = 0;
-    for (const t of this._$AV) t !== void 0 && (t.strings !== void 0 ? (t._$AI(e, t, a), a += t.strings.length - 2) : t._$AI(e[a])), a++;
+    let t = 0;
+    for (const a of this._$AV) a !== void 0 && (a.strings !== void 0 ? (a._$AI(e, a, t), t += a.strings.length - 2) : a._$AI(e[t])), t++;
   }
 }
 class ye {
   get _$AU() {
     return this._$AM?._$AU ?? this._$Cv;
   }
-  constructor(e, a, t, i) {
-    this.type = 2, this._$AH = _, this._$AN = void 0, this._$AA = e, this._$AB = a, this._$AM = t, this.options = i, this._$Cv = i?.isConnected ?? !0;
+  constructor(e, t, a, i) {
+    this.type = 2, this._$AH = _, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = a, this.options = i, this._$Cv = i?.isConnected ?? !0;
   }
   get parentNode() {
     let e = this._$AA.parentNode;
-    const a = this._$AM;
-    return a !== void 0 && e?.nodeType === 11 && (e = a.parentNode), e;
+    const t = this._$AM;
+    return t !== void 0 && e?.nodeType === 11 && (e = t.parentNode), e;
   }
   get startNode() {
     return this._$AA;
@@ -701,8 +701,8 @@ class ye {
   get endNode() {
     return this._$AB;
   }
-  _$AI(e, a = this) {
-    e = oe(this, e, a), ve(e) ? e === _ || e == null || e === "" ? (this._$AH !== _ && this._$AR(), this._$AH = _) : e !== this._$AH && e !== re && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : vr(e) ? this.k(e) : this._(e);
+  _$AI(e, t = this) {
+    e = oe(this, e, t), ve(e) ? e === _ || e == null || e === "" ? (this._$AH !== _ && this._$AR(), this._$AH = _) : e !== this._$AH && e !== re && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : vr(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -714,28 +714,28 @@ class ye {
     this._$AH !== _ && ve(this._$AH) ? this._$AA.nextSibling.data = e : this.T(J.createTextNode(e)), this._$AH = e;
   }
   $(e) {
-    const { values: a, _$litType$: t } = e, i = typeof t == "number" ? this._$AC(e) : (t.el === void 0 && (t.el = _e.createElement(gi(t.h, t.h[0]), this.options)), t);
-    if (this._$AH?._$AD === i) this._$AH.p(a);
+    const { values: t, _$litType$: a } = e, i = typeof a == "number" ? this._$AC(e) : (a.el === void 0 && (a.el = _e.createElement(bi(a.h, a.h[0]), this.options)), a);
+    if (this._$AH?._$AD === i) this._$AH.p(t);
     else {
       const r = new xr(i, this), n = r.u(this.options);
-      r.p(a), this.T(n), this._$AH = r;
+      r.p(t), this.T(n), this._$AH = r;
     }
   }
   _$AC(e) {
-    let a = ct.get(e.strings);
-    return a === void 0 && ct.set(e.strings, a = new _e(e)), a;
+    let t = ca.get(e.strings);
+    return t === void 0 && ca.set(e.strings, t = new _e(e)), t;
   }
   k(e) {
-    Ha(this._$AH) || (this._$AH = [], this._$AR());
-    const a = this._$AH;
-    let t, i = 0;
-    for (const r of e) i === a.length ? a.push(t = new ye(this.O(fe()), this.O(fe()), this, this.options)) : t = a[i], t._$AI(r), i++;
-    i < a.length && (this._$AR(t && t._$AB.nextSibling, i), a.length = i);
+    Ht(this._$AH) || (this._$AH = [], this._$AR());
+    const t = this._$AH;
+    let a, i = 0;
+    for (const r of e) i === t.length ? t.push(a = new ye(this.O(fe()), this.O(fe()), this, this.options)) : a = t[i], a._$AI(r), i++;
+    i < t.length && (this._$AR(a && a._$AB.nextSibling, i), t.length = i);
   }
-  _$AR(e = this._$AA.nextSibling, a) {
-    for (this._$AP?.(!1, !0, a); e !== this._$AB; ) {
-      const t = it(e).nextSibling;
-      it(e).remove(), e = t;
+  _$AR(e = this._$AA.nextSibling, t) {
+    for (this._$AP?.(!1, !0, t); e !== this._$AB; ) {
+      const a = ia(e).nextSibling;
+      ia(e).remove(), e = a;
     }
   }
   setConnected(e) {
@@ -749,17 +749,17 @@ class Ye {
   get _$AU() {
     return this._$AM._$AU;
   }
-  constructor(e, a, t, i, r) {
-    this.type = 1, this._$AH = _, this._$AN = void 0, this.element = e, this.name = a, this._$AM = i, this.options = r, t.length > 2 || t[0] !== "" || t[1] !== "" ? (this._$AH = Array(t.length - 1).fill(new String()), this.strings = t) : this._$AH = _;
+  constructor(e, t, a, i, r) {
+    this.type = 1, this._$AH = _, this._$AN = void 0, this.element = e, this.name = t, this._$AM = i, this.options = r, a.length > 2 || a[0] !== "" || a[1] !== "" ? (this._$AH = Array(a.length - 1).fill(new String()), this.strings = a) : this._$AH = _;
   }
-  _$AI(e, a = this, t, i) {
+  _$AI(e, t = this, a, i) {
     const r = this.strings;
     let n = !1;
-    if (r === void 0) e = oe(this, e, a, 0), n = !ve(e) || e !== this._$AH && e !== re, n && (this._$AH = e);
+    if (r === void 0) e = oe(this, e, t, 0), n = !ve(e) || e !== this._$AH && e !== re, n && (this._$AH = e);
     else {
       const s = e;
       let l, c;
-      for (e = r[0], l = 0; l < r.length - 1; l++) c = oe(this, s[t + l], a, l), c === re && (c = this._$AH[l]), n ||= !ve(c) || c !== this._$AH[l], c === _ ? e = _ : e !== _ && (e += (c ?? "") + r[l + 1]), this._$AH[l] = c;
+      for (e = r[0], l = 0; l < r.length - 1; l++) c = oe(this, s[a + l], t, l), c === re && (c = this._$AH[l]), n ||= !ve(c) || c !== this._$AH[l], c === _ ? e = _ : e !== _ && (e += (c ?? "") + r[l + 1]), this._$AH[l] = c;
     }
     n && !i && this.j(e);
   }
@@ -784,21 +784,21 @@ class wr extends Ye {
   }
 }
 class kr extends Ye {
-  constructor(e, a, t, i, r) {
-    super(e, a, t, i, r), this.type = 5;
+  constructor(e, t, a, i, r) {
+    super(e, t, a, i, r), this.type = 5;
   }
-  _$AI(e, a = this) {
-    if ((e = oe(this, e, a, 0) ?? _) === re) return;
-    const t = this._$AH, i = e === _ && t !== _ || e.capture !== t.capture || e.once !== t.once || e.passive !== t.passive, r = e !== _ && (t === _ || i);
-    i && this.element.removeEventListener(this.name, this, t), r && this.element.addEventListener(this.name, this, e), this._$AH = e;
+  _$AI(e, t = this) {
+    if ((e = oe(this, e, t, 0) ?? _) === re) return;
+    const a = this._$AH, i = e === _ && a !== _ || e.capture !== a.capture || e.once !== a.once || e.passive !== a.passive, r = e !== _ && (a === _ || i);
+    i && this.element.removeEventListener(this.name, this, a), r && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
   handleEvent(e) {
     typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
   }
 }
 class Sr {
-  constructor(e, a, t) {
-    this.element = e, this.type = 6, this._$AN = void 0, this._$AM = a, this.options = t;
+  constructor(e, t, a) {
+    this.element = e, this.type = 6, this._$AN = void 0, this._$AM = t, this.options = a;
   }
   get _$AU() {
     return this._$AM._$AU;
@@ -807,14 +807,14 @@ class Sr {
     oe(this, e);
   }
 }
-const Ar = za.litHtmlPolyfillSupport;
-Ar?.(_e, ye), (za.litHtmlVersions ??= []).push("3.3.3");
-const qr = (o, e, a) => {
-  const t = a?.renderBefore ?? e;
-  let i = t._$litPart$;
+const Ar = zt.litHtmlPolyfillSupport;
+Ar?.(_e, ye), (zt.litHtmlVersions ??= []).push("3.3.3");
+const qr = (o, e, t) => {
+  const a = t?.renderBefore ?? e;
+  let i = a._$litPart$;
   if (i === void 0) {
-    const r = a?.renderBefore ?? null;
-    t._$litPart$ = i = new ye(e.insertBefore(fe(), r), r, void 0, a ?? {});
+    const r = t?.renderBefore ?? null;
+    a._$litPart$ = i = new ye(e.insertBefore(fe(), r), r, void 0, t ?? {});
   }
   return i._$AI(o), i;
 };
@@ -823,8 +823,8 @@ const qr = (o, e, a) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Da = globalThis;
-class j extends ae {
+const Dt = globalThis;
+class j extends te {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -833,8 +833,8 @@ class j extends ae {
     return this.renderOptions.renderBefore ??= e.firstChild, e;
   }
   update(e) {
-    const a = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = qr(a, this.renderRoot, this.renderOptions);
+    const t = this.render();
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = qr(t, this.renderRoot, this.renderOptions);
   }
   connectedCallback() {
     super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -846,32 +846,32 @@ class j extends ae {
     return re;
   }
 }
-j._$litElement$ = !0, j.finalized = !0, Da.litElementHydrateSupport?.({ LitElement: j });
-const Er = Da.litElementPolyfillSupport;
+j._$litElement$ = !0, j.finalized = !0, Dt.litElementHydrateSupport?.({ LitElement: j });
+const Er = Dt.litElementPolyfillSupport;
 Er?.({ LitElement: j });
-(Da.litElementVersions ??= []).push("4.2.2");
-const Pa = ["on", "playing", "paused", "idle", "buffering"], Or = ["playing", "buffering"];
-function mi(o, e, a) {
+(Dt.litElementVersions ??= []).push("4.2.2");
+const Pt = ["on", "playing", "paused", "idle", "buffering"], Or = ["playing", "buffering"];
+function mi(o, e, t) {
   if (!o || !e) return !1;
-  const t = o.states[e]?.state;
-  if (!t) return !1;
-  const i = String(t).toLowerCase();
-  return a.some((r) => r.toLowerCase() === i);
+  const a = o.states[e]?.state;
+  if (!a) return !1;
+  const i = String(a).toLowerCase();
+  return t.some((r) => r.toLowerCase() === i);
 }
-function Hs(o, e) {
-  return mi(o, e, Pa);
+function js(o, e) {
+  return mi(o, e, Pt);
 }
-const dt = /* @__PURE__ */ new Map();
-function Cr(o, e, a = Date.now(), t = 45e3) {
+const da = /* @__PURE__ */ new Map();
+function Cr(o, e, t = Date.now(), a = 45e3) {
   if (!o || !e) return !1;
   const i = String(o.states[e]?.state ?? "").toLowerCase();
-  if (Pa.includes(i))
-    return dt.set(e, a), !0;
+  if (Pt.includes(i))
+    return da.set(e, t), !0;
   if (i !== "off") return !1;
-  const r = dt.get(e);
-  return r !== void 0 && a - r <= t;
+  const r = da.get(e);
+  return r !== void 0 && t - r <= a;
 }
-function Ds(o, e) {
+function Vs(o, e) {
   return mi(o, e, Or);
 }
 const Tr = "media_player.spotifyplus_bruno_helasio", le = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Ee = ["playing", "paused", "on"], ne = [
@@ -899,7 +899,7 @@ const Tr = "media_player.spotifyplus_bruno_helasio", le = ["cool", "heat", "fan_
         label: "TV ativa",
         tone: "purple",
         entities: ["media_player.smart_tv_pro_2"],
-        states: Pa
+        states: Pt
       },
       {
         icon: "mdi:snowflake",
@@ -1270,17 +1270,17 @@ const Tr = "media_player.spotifyplus_bruno_helasio", le = ["cool", "heat", "fan_
 function $r() {
   const o = [];
   for (const e of ne)
-    for (const [a, t] of Object.entries(e.entities))
-      if (typeof t == "string")
-        o.push({ entityId: t, roomId: e.id, field: a });
-      else if (Array.isArray(t))
-        for (const i of t) o.push({ entityId: i, roomId: e.id, field: a });
+    for (const [t, a] of Object.entries(e.entities))
+      if (typeof a == "string")
+        o.push({ entityId: a, roomId: e.id, field: t });
+      else if (Array.isArray(a))
+        for (const i of a) o.push({ entityId: i, roomId: e.id, field: t });
   return o;
 }
 const Mr = "∅", Rr = (o) => o ? `${o.state}@${o.last_changed}` : Mr;
 class He {
-  constructor(e = [], a = {}) {
-    this.ids = [], this.ultimo = /* @__PURE__ */ new Map(), this.virgem = !0, this.projecoes = a.projecoes ?? {}, this.observar(e);
+  constructor(e = [], t = {}) {
+    this.ids = [], this.ultimo = /* @__PURE__ */ new Map(), this.virgem = !0, this.projecoes = t.projecoes ?? {}, this.observar(e);
   }
   /**
    * Troca a lista observada.
@@ -1290,16 +1290,16 @@ class He {
    * virgem — senão o componente ficaria preso à leitura feita com a lista velha.
    */
   observar(e) {
-    const a = [], t = /* @__PURE__ */ new Set();
+    const t = [], a = /* @__PURE__ */ new Set();
     for (const i of e)
-      typeof i != "string" || !i || t.has(i) || (t.add(i), a.push(i));
-    this.ids = a, this.ultimo.clear(), this.virgem = !0;
+      typeof i != "string" || !i || a.has(i) || (a.add(i), t.push(i));
+    this.ids = t, this.ultimo.clear(), this.virgem = !0;
   }
   get observadas() {
     return this.ids;
   }
-  projetar(e, a) {
-    return (this.projecoes[a] ?? Rr)(e.states[a]);
+  projetar(e, t) {
+    return (this.projecoes[t] ?? Rr)(e.states[t]);
   }
   /**
    * O que mudou desde a última pergunta.
@@ -1314,15 +1314,15 @@ class He {
     if (!e) return [];
     if (this.virgem) {
       this.virgem = !1;
-      for (const t of this.ids) this.ultimo.set(t, this.projetar(e, t));
+      for (const a of this.ids) this.ultimo.set(a, this.projetar(e, a));
       return this.ids;
     }
-    let a;
-    for (const t of this.ids) {
-      const i = this.projetar(e, t);
-      i !== this.ultimo.get(t) && (this.ultimo.set(t, i), (a ??= []).push(t));
+    let t;
+    for (const a of this.ids) {
+      const i = this.projetar(e, a);
+      i !== this.ultimo.get(a) && (this.ultimo.set(a, i), (t ??= []).push(a));
     }
-    return a ?? [];
+    return t ?? [];
   }
   /** Mudou alguma coisa? Atalho para quem não precisa saber qual. */
   mudou(e) {
@@ -1337,11 +1337,11 @@ function fi(o, e = 2) {
   return o.length === 0 ? "" : o.length <= e ? o.join(" ") : `${o.slice(0, e).join(" ")} +${o.length - e}`;
 }
 const Lr = /^[a-z_]+\.[a-z0-9_]+$/, Ir = 8;
-function Ps(o, e = 0) {
-  const a = [], t = /* @__PURE__ */ new Set(), i = (r, n) => {
+function Bs(o, e = 0) {
+  const t = [], a = /* @__PURE__ */ new Set(), i = (r, n) => {
     if (!(n > Ir || r == null)) {
       if (typeof r == "string") {
-        Lr.test(r) && !t.has(r) && (t.add(r), a.push(r));
+        Lr.test(r) && !a.has(r) && (a.add(r), t.push(r));
         return;
       }
       if (Array.isArray(r)) {
@@ -1352,67 +1352,80 @@ function Ps(o, e = 0) {
         for (const s of Object.values(r)) i(s, n + 1);
     }
   };
-  return i(o, e), a;
+  return i(o, e), t;
 }
-const Nr = /* @__PURE__ */ new Set([
+function Nr(o) {
+  const e = Math.max(1, o.height), t = Math.min(132, Math.max(72, e * 0.22)), a = Math.max(0, o.distance), i = Math.max(0, o.velocity);
+  return a >= t || a >= 18 && i >= 0.55;
+}
+function zr(o) {
+  if (o.length < 2) return 0;
+  const e = o.at(-1), t = e.time - 120, a = o.find((r) => r.time >= t) ?? o[0], i = e.time - a.time;
+  return i <= 0 ? 0 : Math.max(0, (e.y - a.y) / i);
+}
+function Hr(o) {
+  const e = Math.max(1, o.height), t = Math.max(0, e - Math.max(0, o.distance)), a = Math.min(1, t / e), i = Math.max(0, o.velocity), r = 135 + a * 105, n = Math.min(55, i * 44);
+  return Math.round(Math.min(250, Math.max(130, r - n)));
+}
+const Dr = /* @__PURE__ */ new Set([
   "light.quarto_casal_2_switch_1",
   "light.quarto_casal_switch_3"
 ]);
-function zr(o) {
+function Pr(o) {
   const e = o?.attributes?.entity_id;
-  return Array.isArray(e) ? e.filter((a) => typeof a == "string") : [];
+  return Array.isArray(e) ? e.filter((t) => typeof t == "string") : [];
 }
-function Hr(o) {
-  return (o.split(".")[1] ?? o).split("_").filter(Boolean).map((a) => a.charAt(0).toUpperCase() + a.slice(1)).join(" ");
+function jr(o) {
+  return (o.split(".")[1] ?? o).split("_").filter(Boolean).map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join(" ");
 }
-function fa(o, e) {
-  const a = o.states[e];
-  if (!a || !e.startsWith("light.")) return;
-  const t = a.attributes?.friendly_name, i = String(a.state ?? "").toLowerCase();
+function ft(o, e) {
+  const t = o.states[e];
+  if (!t || !e.startsWith("light.")) return;
+  const a = t.attributes?.friendly_name, i = String(t.state ?? "").toLowerCase();
   return {
     entityId: e,
-    name: typeof t == "string" && t.trim() ? t.trim() : Hr(e),
+    name: typeof a == "string" && a.trim() ? a.trim() : jr(e),
     isOn: i === "on",
     isUnavailable: i === "unavailable" || i === "unknown"
   };
 }
-function Le(o, e, a, t = /* @__PURE__ */ new Set(), i = !0) {
-  if (!e || t.has(e)) return [];
-  t.add(e);
+function Le(o, e, t, a = /* @__PURE__ */ new Set(), i = !0) {
+  if (!e || a.has(e)) return [];
+  a.add(e);
   const r = o.states[e];
   if (!r) return [];
-  const n = zr(r);
-  return n.length ? (a.add(e), n.flatMap((s) => Le(o, s, a, t, !0))) : i && e.startsWith("light.") ? [e] : [];
+  const n = Pr(r);
+  return n.length ? (t.add(e), n.flatMap((s) => Le(o, s, t, a, !0))) : i && e.startsWith("light.") ? [e] : [];
 }
-function pt(o, e) {
-  const a = [], t = /* @__PURE__ */ new Set();
+function pa(o, e) {
+  const t = [], a = /* @__PURE__ */ new Set();
   for (const i of e)
-    t.has(i) || Nr.has(i) || !fa(o, i) || (t.add(i), a.push(i));
-  return a;
+    a.has(i) || Dr.has(i) || !ft(o, i) || (a.add(i), t.push(i));
+  return t;
 }
-function ut(o, e = []) {
+function ua(o, e = []) {
   if (!o)
     return { rooms: [], entityIds: [], expandedGroups: [], orphanEntityIds: [], onCount: 0, total: 0 };
-  const a = /* @__PURE__ */ new Set(), t = /* @__PURE__ */ new Set(), i = [];
+  const t = /* @__PURE__ */ new Set(), a = /* @__PURE__ */ new Set(), i = [];
   for (const c of ne) {
     const p = [], d = c.entities.lightGroup;
-    d && p.push(...Le(o, d, a, /* @__PURE__ */ new Set(), !1));
+    d && p.push(...Le(o, d, t, /* @__PURE__ */ new Set(), !1));
     for (const u of c.entities.lights ?? [])
-      p.push(...Le(o, u, a));
-    const b = pt(o, p).filter((u) => t.has(u) ? !1 : (t.add(u), !0)).map((u) => fa(o, u)).filter((u) => !!u);
-    b.length && i.push({
+      p.push(...Le(o, u, t));
+    const g = pa(o, p).filter((u) => a.has(u) ? !1 : (a.add(u), !0)).map((u) => ft(o, u)).filter((u) => !!u);
+    g.length && i.push({
       id: c.id,
       name: c.name,
-      lights: b,
+      lights: g,
       ...d ? { sourceGroup: d } : {}
     });
   }
-  const n = pt(
+  const n = pa(
     o,
-    Array.from(e).flatMap((c) => Le(o, c, a))
-  ).filter((c) => !t.has(c));
+    Array.from(e).flatMap((c) => Le(o, c, t))
+  ).filter((c) => !a.has(c));
   if (n.length) {
-    const c = n.map((p) => fa(o, p)).filter((p) => !!p);
+    const c = n.map((p) => ft(o, p)).filter((p) => !!p);
     i.push({ id: "unassigned", name: "Sem cômodo", lights: c, isUnassigned: !0 });
   }
   const s = i.flatMap((c) => c.lights.map((p) => p.entityId)), l = i.reduce(
@@ -1422,42 +1435,71 @@ function ut(o, e = []) {
   return {
     rooms: i,
     entityIds: s,
-    expandedGroups: [...a],
+    expandedGroups: [...t],
     orphanEntityIds: n,
     onCount: l,
     total: s.length
   };
 }
-function Dr(o) {
-  const e = [[], []], a = [0, 0], t = o.map((i, r) => ({ room: i, index: r, weight: 1 + Math.ceil(i.lights.length / 2) })).sort((i, r) => r.weight - i.weight || i.index - r.index);
-  for (const i of t) {
-    const r = a[0] <= a[1] ? 0 : 1;
-    e[r].push([i.index, i.room]), a[r] += i.weight;
+function Vr(o) {
+  const e = [[], []], t = [0, 0], a = o.map((i, r) => ({ room: i, index: r, weight: 1 + Math.ceil(i.lights.length / 2) })).sort((i, r) => r.weight - i.weight || i.index - r.index);
+  for (const i of a) {
+    const r = t[0] <= t[1] ? 0 : 1;
+    e[r].push([i.index, i.room]), t[r] += i.weight;
   }
   return e.map((i) => i.sort((r, n) => r[0] - n[0]).map((r) => r[1]));
 }
-const ht = "bruno-status-lights-sheet", Pr = 280, jr = (o) => o ? JSON.stringify([
+const ha = "bruno-status-lights-sheet", Br = 280, Ur = (o) => o ? JSON.stringify([
   o.state,
   o.last_changed,
   o.attributes?.friendly_name,
   o.attributes?.entity_id
 ]) : "absent";
-class Vr extends j {
+class Fr extends j {
   constructor() {
-    super(...arguments), this._monitoredLights = [], this._inventory = ut(void 0), this._observer = new He(), this._dragStartX = 0, this._dragStartY = 0, this._onKeyDown = (e) => {
+    super(...arguments), this._monitoredLights = [], this._inventory = ua(void 0), this._observer = new He(), this._dragStartX = 0, this._dragStartY = 0, this._dragDistance = 0, this._dragClaimed = !1, this._dragSamples = [], this._onKeyDown = (e) => {
       e.key === "Escape" && (e.preventDefault(), this.close());
     }, this._moveDrag = (e) => {
       if (e.pointerId !== this._dragPointer || !this._dragPanel) return;
-      const a = globalThis.matchMedia?.("(max-width: 800px)").matches ?? !1, t = a ? Math.max(0, e.clientY - this._dragStartY) : Math.max(0, e.clientX - this._dragStartX);
-      if (t <= 0) return;
-      e.preventDefault();
-      const i = (t * 0.72).toFixed(1);
-      this._dragPanel.style.transform = a ? `translateY(${i}px)` : `translateX(${i}px)`;
+      const t = globalThis.matchMedia?.("(max-width: 800px)").matches ?? !1, a = t ? Math.max(0, e.clientY - this._dragStartY) : Math.max(0, e.clientX - this._dragStartX);
+      if (a <= 0 || t && !this._dragClaimed && Math.abs(e.clientX - this._dragStartX) > a) return;
+      if (e.preventDefault(), t) {
+        this._dragClaimed = !0, this._dragDistance = a;
+        const r = e.timeStamp || performance.now();
+        this._dragSamples.push({ y: e.clientY, time: r }), this._dragSamples = this._dragSamples.filter((n) => r - n.time <= 160), this._dragPanel.setAttribute("data-mobile-dragging", ""), this._dragPanel.style.transform = `translate3d(0, ${a.toFixed(1)}px, 0)`;
+        return;
+      }
+      const i = (a * 0.72).toFixed(1);
+      this._dragPanel.style.transform = `translateX(${i}px)`;
     }, this._releaseDrag = (e) => {
       if (e.pointerId !== this._dragPointer) return;
-      const a = globalThis.matchMedia?.("(max-width: 800px)").matches ?? !1, t = a ? e.clientY - this._dragStartY : e.clientX - this._dragStartX;
-      this._endDrag(), t > (a ? 90 : 110) && this.close();
-    }, this._cancelDrag = () => this._endDrag();
+      const t = globalThis.matchMedia?.("(max-width: 800px)").matches ?? !1, a = t ? e.clientY - this._dragStartY : e.clientX - this._dragStartX;
+      if (!t) {
+        this._endDrag(), a > 110 && this.close();
+        return;
+      }
+      const i = this._dragPanel;
+      if (!i) return;
+      const r = e.timeStamp || performance.now();
+      this._dragSamples.push({ y: e.clientY, time: r });
+      const n = zr(this._dragSamples), s = Math.max(0, this._dragDistance || a), l = this._dragClaimed && Nr({
+        distance: s,
+        velocity: n,
+        height: Math.max(1, i.getBoundingClientRect().height)
+      });
+      if (this._endDrag(!0), l) {
+        this.close({ panel: i, distance: s, velocity: n });
+        return;
+      }
+      this._returnMobileDrag(i, s);
+    }, this._cancelDrag = () => {
+      if (!(globalThis.matchMedia?.("(max-width: 800px)").matches ?? !1)) {
+        this._endDrag();
+        return;
+      }
+      const t = this._dragPanel, a = this._dragDistance;
+      this._endDrag(!0), t && this._returnMobileDrag(t, a);
+    };
   }
   static {
     this.properties = {};
@@ -1469,8 +1511,8 @@ class Vr extends j {
     return this._hass;
   }
   set monitoredLights(e) {
-    const a = Array.isArray(e) ? [...new Set(e.filter((t) => typeof t == "string"))] : [];
-    a.join("|") !== this._monitoredLights.join("|") && (this._monitoredLights = a, this.hasAttribute("data-open") && (this._rebuildInventory(), this.requestUpdate()));
+    const t = Array.isArray(e) ? [...new Set(e.filter((a) => typeof a == "string"))] : [];
+    t.join("|") !== this._monitoredLights.join("|") && (this._monitoredLights = t, this.hasAttribute("data-open") && (this._rebuildInventory(), this.requestUpdate()));
   }
   get monitoredLights() {
     return this._monitoredLights;
@@ -1482,32 +1524,44 @@ class Vr extends j {
     this._clearCloseTimer(), this._endDrag(), this._removeKeyListener(), this._auditFrame != null && cancelAnimationFrame(this._auditFrame), super.disconnectedCallback();
   }
   open(e) {
-    e && (this.monitoredLights = e), this._clearCloseTimer(), this.removeAttribute("data-closing"), this.hidden = !1, this.setAttribute("data-open", ""), this._rebuildInventory(), this._addKeyListener(), this._emitState(!0), this.requestUpdate(), this.updateComplete.then(() => {
-      this.renderRoot.querySelector(".close-button")?.focus({ preventScroll: !0 });
+    e && (this.monitoredLights = e), this._clearCloseTimer(), this.removeAttribute("data-closing");
+    const t = this.renderRoot.querySelector(".panel");
+    t && this._clearDragStyle(t), this.hidden = !1, this.setAttribute("data-open", ""), this._rebuildInventory(), this._addKeyListener(), this._emitState(!0), this.requestUpdate(), this.updateComplete.then(() => {
+      globalThis.matchMedia?.("(max-width: 800px)").matches ?? !1 ? this.renderRoot.querySelector(".panel")?.focus({ preventScroll: !0 }) : this.renderRoot.querySelector(".close-button")?.focus({ preventScroll: !0 });
     });
   }
-  close() {
-    if (!(!this.hasAttribute("data-open") || this.hasAttribute("data-closing"))) {
-      if (this._endDrag(), globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
-        this._finishClose();
-        return;
-      }
-      this.setAttribute("data-closing", ""), this._closeTimer = window.setTimeout(() => this._finishClose(), Pr);
+  close(e) {
+    if (!this.hasAttribute("data-open") || this.hasAttribute("data-closing")) return;
+    if (this._endDrag(!!e), globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      this._finishClose();
+      return;
     }
+    let t = Br;
+    if (e) {
+      const a = Math.max(1, e.panel.getBoundingClientRect().height);
+      t = Hr({
+        distance: e.distance,
+        velocity: e.velocity,
+        height: a
+      }), e.panel.setAttribute("data-mobile-drag-closing", ""), e.panel.style.transition = "none", e.panel.style.transform = `translate3d(0, ${e.distance.toFixed(1)}px, 0)`, e.panel.offsetHeight, requestAnimationFrame(() => {
+        e.panel.isConnected && (e.panel.style.transition = `transform ${t}ms cubic-bezier(0.22, 0.72, 0.24, 1)`, e.panel.style.transform = `translate3d(0, ${(a + 2).toFixed(1)}px, 0)`);
+      });
+    }
+    this.setAttribute("data-closing", ""), this._closeTimer = window.setTimeout(() => this._finishClose(), t);
   }
   inventoryAudit() {
     return this._inventory;
   }
   layoutAudit() {
-    const e = this.renderRoot.querySelector(".panel"), a = this.renderRoot.querySelector(".body");
+    const e = this.renderRoot.querySelector(".panel"), t = this.renderRoot.querySelector(".body");
     return {
       mode: globalThis.matchMedia?.("(max-width: 800px)").matches ?? !1 ? "mobile" : "tablet",
       panelWidth: Math.round(e?.getBoundingClientRect().width ?? 0),
       panelHeight: Math.round(e?.getBoundingClientRect().height ?? 0),
-      bodyClientHeight: a?.clientHeight ?? 0,
-      bodyScrollHeight: a?.scrollHeight ?? 0,
-      overflow: Math.max(0, (a?.scrollHeight ?? 0) - (a?.clientHeight ?? 0)),
-      hasHorizontalOverflow: !!(a && a.scrollWidth > a.clientWidth + 1)
+      bodyClientHeight: t?.clientHeight ?? 0,
+      bodyScrollHeight: t?.scrollHeight ?? 0,
+      overflow: Math.max(0, (t?.scrollHeight ?? 0) - (t?.clientHeight ?? 0)),
+      hasHorizontalOverflow: !!(t && t.scrollWidth > t.clientWidth + 1)
     };
   }
   updated() {
@@ -1516,17 +1570,17 @@ class Vr extends j {
     });
   }
   _rebuildInventory() {
-    this._inventory = ut(this._hass, this._monitoredLights);
+    this._inventory = ua(this._hass, this._monitoredLights);
     const e = /* @__PURE__ */ new Set([
       ...this._inventory.entityIds,
       ...this._inventory.expandedGroups,
       ...this._monitoredLights,
-      ...ne.flatMap((t) => [
-        t.entities.lightGroup,
-        ...t.entities.lights ?? []
-      ]).filter((t) => !!t)
-    ]), a = Object.fromEntries([...e].map((t) => [t, jr]));
-    this._observer = new He(e, { projecoes: a }), this._observer.mudancas(this._hass);
+      ...ne.flatMap((a) => [
+        a.entities.lightGroup,
+        ...a.entities.lights ?? []
+      ]).filter((a) => !!a)
+    ]), t = Object.fromEntries([...e].map((a) => [a, Ur]));
+    this._observer = new He(e, { projecoes: t }), this._observer.mudancas(this._hass);
   }
   _emitState(e) {
     this.dispatchEvent(new CustomEvent("bruno-status-lights-sheet-state", {
@@ -1536,7 +1590,8 @@ class Vr extends j {
     }));
   }
   _finishClose() {
-    this._clearCloseTimer(), this.removeAttribute("data-open"), this.removeAttribute("data-closing"), this.removeAttribute("data-tablet-overflow"), this.hidden = !0, this._removeKeyListener(), this._emitState(!1);
+    const e = this.renderRoot.querySelector(".panel");
+    this._clearCloseTimer(), this.removeAttribute("data-open"), this.removeAttribute("data-closing"), this.removeAttribute("data-tablet-overflow"), this.hidden = !0, this._endDrag(), e && this._clearDragStyle(e), this._removeKeyListener(), this._emitState(!1);
   }
   _clearCloseTimer() {
     this._closeTimer != null && window.clearTimeout(this._closeTimer), this._closeTimer = void 0;
@@ -1549,42 +1604,59 @@ class Vr extends j {
   }
   _toggleLight(e) {
     if (!this._hass || e.isUnavailable) return;
-    const a = e.isOn ? "turn_off" : "turn_on";
+    const t = e.isOn ? "turn_off" : "turn_on";
     this._hass.callService(
       "light",
-      a,
+      t,
       { entity_id: e.entityId },
       { entity_id: e.entityId }
     );
   }
   _setAll(e) {
     if (!this._hass || !this._inventory.entityIds.length) return;
-    const a = [...this._inventory.entityIds];
-    this._hass.callService("light", e, { entity_id: a }, { entity_id: a });
+    const t = [...this._inventory.entityIds];
+    this._hass.callService("light", e, { entity_id: t }, { entity_id: t });
   }
   _startDrag(e) {
-    if (e.button !== 0 || e.composedPath().some((t) => t instanceof HTMLButtonElement)) return;
-    const a = this.renderRoot.querySelector(".panel");
-    a && (this._dragPointer = e.pointerId, this._dragStartX = e.clientX, this._dragStartY = e.clientY, this._dragPanel = a, globalThis.addEventListener("pointermove", this._moveDrag, { passive: !1 }), globalThis.addEventListener("pointerup", this._releaseDrag), globalThis.addEventListener("pointercancel", this._cancelDrag));
+    if (e.button !== 0 || e.composedPath().some((i) => i instanceof HTMLButtonElement)) return;
+    const t = this.renderRoot.querySelector(".panel");
+    if (!t) return;
+    this._dragPointer = e.pointerId, this._dragStartX = e.clientX, this._dragStartY = e.clientY, this._dragPanel = t, this._dragDistance = 0, this._dragClaimed = !1;
+    const a = e.timeStamp || performance.now();
+    this._dragSamples = [{ y: e.clientY, time: a }], this._dragSettleTimer != null && window.clearTimeout(this._dragSettleTimer), this._dragSettleTimer = void 0, t.removeAttribute("data-mobile-drag-returning"), t.removeAttribute("data-mobile-drag-closing"), t.style.transition = "none", t.style.willChange = "transform", globalThis.addEventListener("pointermove", this._moveDrag, { passive: !1 }), globalThis.addEventListener("pointerup", this._releaseDrag), globalThis.addEventListener("pointercancel", this._cancelDrag);
   }
-  _endDrag() {
-    this._dragPanel && (this._dragPanel.style.transform = ""), this._dragPointer = void 0, this._dragPanel = void 0, globalThis.removeEventListener("pointermove", this._moveDrag), globalThis.removeEventListener("pointerup", this._releaseDrag), globalThis.removeEventListener("pointercancel", this._cancelDrag);
+  _returnMobileDrag(e, t) {
+    if (!e.isConnected || t <= 0) {
+      this._clearDragStyle(e);
+      return;
+    }
+    e.removeAttribute("data-mobile-dragging"), e.setAttribute("data-mobile-drag-returning", ""), e.style.transition = "transform 180ms cubic-bezier(0.22, 0.72, 0.24, 1)", requestAnimationFrame(() => {
+      e.isConnected && (e.style.transform = "translate3d(0, 0, 0)");
+    }), this._dragSettleTimer != null && window.clearTimeout(this._dragSettleTimer), this._dragSettleTimer = window.setTimeout(() => {
+      this._dragSettleTimer = void 0, this._clearDragStyle(e);
+    }, 210);
+  }
+  _clearDragStyle(e) {
+    e.style.removeProperty("transform"), e.style.removeProperty("transition"), e.style.removeProperty("will-change"), e.removeAttribute("data-mobile-dragging"), e.removeAttribute("data-mobile-drag-returning"), e.removeAttribute("data-mobile-drag-closing");
+  }
+  _endDrag(e = !1) {
+    this._dragPanel && !e && this._clearDragStyle(this._dragPanel), !e && this._dragSettleTimer != null && (window.clearTimeout(this._dragSettleTimer), this._dragSettleTimer = void 0), this._dragPointer = void 0, this._dragPanel = void 0, this._dragDistance = 0, this._dragClaimed = !1, this._dragSamples = [], globalThis.removeEventListener("pointermove", this._moveDrag), globalThis.removeEventListener("pointerup", this._releaseDrag), globalThis.removeEventListener("pointercancel", this._cancelDrag);
   }
   _auditTabletFit() {
     if (!this.hasAttribute("data-open") || globalThis.matchMedia?.("(max-width: 800px)").matches) {
       this.removeAttribute("data-tablet-overflow");
       return;
     }
-    const e = this.layoutAudit(), a = Number(e.overflow ?? 0), t = !!e.hasHorizontalOverflow;
-    this.toggleAttribute("data-tablet-overflow", a > 1 || t), (a > 1 || t) && console.warn("[bruno-status-lights-sheet] conteudo excede a side sheet", e);
+    const e = this.layoutAudit(), t = Number(e.overflow ?? 0), a = !!e.hasHorizontalOverflow;
+    this.toggleAttribute("data-tablet-overflow", t > 1 || a), (t > 1 || a) && console.warn("[bruno-status-lights-sheet] conteudo excede a side sheet", e);
   }
   _renderLight(e) {
-    const a = e.isUnavailable ? `${e.name}, indisponível` : `${e.isOn ? "Apagar" : "Acender"} ${e.name}`;
+    const t = e.isUnavailable ? `${e.name}, indisponível` : `${e.isOn ? "Apagar" : "Acender"} ${e.name}`;
     return v`
       <button
         class="light-control ${e.isOn ? "is-on" : ""}"
         type="button"
-        aria-label=${a}
+        aria-label=${t}
         aria-pressed=${e.isOn ? "true" : "false"}
         ?disabled=${e.isUnavailable}
         @click=${() => this._toggleLight(e)}
@@ -1604,15 +1676,15 @@ class Vr extends j {
           <h2 id="room-${e.id}">${e.name}</h2>
           <span>${e.lights.length} ${e.lights.length === 1 ? "luz" : "luzes"}</span>
         </div>
-        <div class="room-lights">${e.lights.map((a) => this._renderLight(a))}</div>
+        <div class="room-lights">${e.lights.map((t) => this._renderLight(t))}</div>
       </section>
     `;
   }
   _renderColumn(e) {
-    return v`<div class="room-column">${e.map((a) => this._renderRoom(a))}</div>`;
+    return v`<div class="room-column">${e.map((t) => this._renderRoom(t))}</div>`;
   }
   render() {
-    const [e, a] = Dr(this._inventory.rooms), t = this._inventory.total, i = this._inventory.onCount;
+    const [e, t] = Vr(this._inventory.rooms), a = this._inventory.total, i = this._inventory.onCount;
     return v`
       <div class="scrim" aria-hidden="true" @click=${() => this.close()}></div>
       <section
@@ -1620,6 +1692,7 @@ class Vr extends j {
         role="dialog"
         aria-modal="true"
         aria-labelledby="status-lights-title"
+        tabindex="-1"
         @click=${(r) => r.stopPropagation()}
       >
         <header class="header" @pointerdown=${(r) => this._startDrag(r)}>
@@ -1628,14 +1701,14 @@ class Vr extends j {
             <span class="title-icon" aria-hidden="true"><bruno-icon icon="mdi:lightbulb-group"></bruno-icon></span>
             <span class="title-copy">
               <strong id="status-lights-title">Iluminação</strong>
-              <small>${t} ${t === 1 ? "circuito" : "circuitos"} • ${i}/${t} ${i === 1 ? "acesa" : "acesas"}</small>
+              <small>${a} ${a === 1 ? "circuito" : "circuitos"} • ${i}/${a} ${i === 1 ? "acesa" : "acesas"}</small>
             </span>
           </div>
           <div class="global-actions">
-            <button type="button" ?disabled=${!t} @click=${() => this._setAll("turn_on")}>
+            <button type="button" ?disabled=${!a} @click=${() => this._setAll("turn_on")}>
               <bruno-icon icon="mdi:lightbulb-on"></bruno-icon><span>Acender todas</span>
             </button>
-            <button type="button" ?disabled=${!t} @click=${() => this._setAll("turn_off")}>
+            <button type="button" ?disabled=${!a} @click=${() => this._setAll("turn_off")}>
               <bruno-icon icon="mdi:lightbulb-off"></bruno-icon><span>Apagar todas</span>
             </button>
           </div>
@@ -1644,7 +1717,7 @@ class Vr extends j {
           </button>
         </header>
         <div class="body">
-          ${t ? v`<div class="rooms-grid">${this._renderColumn(e)}${this._renderColumn(a)}</div>` : v`<div class="empty">Nenhuma luz disponível.</div>`}
+          ${a ? v`<div class="rooms-grid">${this._renderColumn(e)}${this._renderColumn(t)}</div>` : v`<div class="empty">Nenhuma luz disponível.</div>`}
           ${this._inventory.orphanEntityIds.length ? v`<p class="audit-note">${this._inventory.orphanEntityIds.length} circuito(s) sem associação segura a um cômodo.</p>` : _}
         </div>
       </section>
@@ -1854,7 +1927,10 @@ class Vr extends j {
         animation-name: bottom-in;
       }
       .header {
-        grid-template-columns: minmax(0, 1fr) 36px;
+        /* ANTERIOR (rollback gesto mobile 2026-08-31):
+           grid-template-columns: minmax(0, 1fr) 36px. O X visual saiu do
+           mobile; o controle permanece somente como via assistiva oculta. */
+        grid-template-columns: minmax(0, 1fr);
         grid-template-rows: auto auto;
         min-height: 105px;
         gap: 7px 10px;
@@ -1862,7 +1938,18 @@ class Vr extends j {
       }
       .handle { display: block; position: absolute; top: 7px; left: 50%; width: 34px; height: 3px; transform: translateX(-50%); border-radius: 2px; background: rgba(255,255,255,0.20); }
       .identity { grid-column: 1; grid-row: 1; }
-      .close-button { grid-column: 2; grid-row: 1; }
+      .close-button {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
       .global-actions { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .global-actions button { justify-content: center; min-height: 35px; }
       .body { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 8px 10px calc(12px + var(--bruno-dock-h, 74px)); touch-action: pan-y; }
@@ -1873,8 +1960,16 @@ class Vr extends j {
       .light-control { min-height: 46px; grid-template-columns: 21px minmax(0, 1fr) 30px; padding-inline: 7px; }
       .light-name { font-size: 10px; }
       :host([data-closing]) .panel { animation-name: bottom-out; }
-      @keyframes bottom-in { from { transform: translateY(100%); opacity: 0.82; } to { transform: translateY(0); opacity: 1; } }
-      @keyframes bottom-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0.82; } }
+      :host([data-open]) .panel[data-mobile-dragging],
+      :host([data-open]) .panel[data-mobile-drag-returning],
+      :host([data-closing]) .panel[data-mobile-drag-closing] {
+        animation: none !important;
+        opacity: 1 !important;
+      }
+      /* ANTERIOR (rollback gesto mobile 2026-08-31): os keyframes tambem
+         alteravam opacity 0.82 <-> 1, fazendo a folha parecer apagar. */
+      @keyframes bottom-in { from { transform: translate3d(0, 100%, 0); } to { transform: translate3d(0, 0, 0); } }
+      @keyframes bottom-out { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, 100%, 0); } }
     }
     @media (max-width: 360px) {
       .rooms-grid { grid-template-columns: minmax(0, 1fr); }
@@ -1888,9 +1983,9 @@ class Vr extends j {
   `;
   }
 }
-customElements.get(ht) || customElements.define(ht, Vr);
+customElements.get(ha) || customElements.define(ha, Fr);
 (() => {
-  const o = Object.freeze({ "candelier-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2 3h20M12 3v13m7.5-13v8m-15-8v8m0 0c-1.715 0-2.705 2.512-2.464 3.99c.207 1.267 4.696 1.424 4.928 0C7.205 13.512 6.215 11 4.5 11m7.5 5c-1.715 0-2.705 2.512-2.464 3.99c.207 1.267 4.696 1.424 4.928 0C14.705 18.512 13.715 16 12 16m7.5-5c-1.715 0-2.705 2.512-2.464 3.99c.207 1.267 4.696 1.424 4.928 0c.241-1.478-.749-3.99-2.464-3.99"/>', width: 24, height: 24 }, "lamp-wall-up": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h10M8.66 12h10.68a1.66 1.66 0 0 0 1.526-2.313l-1.827-4.263c-.504-1.175-.756-1.763-1.257-2.094S16.642 3 15.362 3h-2.724c-1.28 0-1.92 0-2.42.33c-.501.33-.753.919-1.257 2.094L7.134 9.687A1.66 1.66 0 0 0 8.66 12M3 19.667v-3.334c0-.31 0-.465.034-.592a1 1 0 0 1 .707-.707C3.868 15 4.023 15 4.333 15c.62 0 .93 0 1.185.068a2 2 0 0 1 1.414 1.414c.068.255.068.565.068 1.185v.666c0 .62 0 .93-.068 1.185a2 2 0 0 1-1.414 1.414C5.263 21 4.953 21 4.333 21c-.31 0-.465 0-.592-.034a1 1 0 0 1-.707-.707C3 20.132 3 19.977 3 19.667M7 18h1c2.829 0 4.243 0 5.121-.879C14 16.243 14 14.828 14 12"/>', width: 24, height: 24 }, "shower-head": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.132 16.654a1.544 1.544 0 0 0 1.96-.954l1.172-3.393a1.03 1.03 0 0 1 1.308-.635l.972.333c.537.185 1.122-.1 1.307-.635l2.343-6.786a1.025 1.025 0 0 0-.637-1.303a5.145 5.145 0 0 0-6.535 3.178l-2.846 8.24c-.277.803.15 1.678.956 1.955m0 0l-.735 2.13A3.46 3.46 0 0 1 3 21M18.083 5.92l2.917 1m-3.921 1.907l2.917 1.002m-3.921 1.907l2.916 1.001"/>', width: 24, height: 24 }, "alert-circle": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m.125 3.75H12m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "arrow-data-transfer-vertical": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19V6.659c0-1.006 0-1.51.309-1.634c.308-.125.672.23 1.398.941L19 8.211M9 5v12.341c0 1.006 0 1.51-.309 1.634c-.308.125-.672-.23-1.398-.941L5 15.789"/>', width: 24, height: 24 }, "arrow-down-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9s-4.419 6-6 6s-6-6-6-6"/>', width: 24, height: 24 }, "arrow-left-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 6s-6 4.419-6 6s6 6 6 6"/>', width: 24, height: 24 }, "arrow-left-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.5 12.002H19m-8 6s-6-4.419-6-6s6-6 6-6"/>', width: 24, height: 24 }, "arrow-right-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 6s6 4.419 6 6s-6 6-6 6"/>', width: 24, height: 24 }, "arrow-up-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 15s-4.42-6-6-6s-6 6-6 6"/>', width: 24, height: 24 }, "baby-bed-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 7v8M8 7v8m8-8v8m4 5V6a2 2 0 0 1 2-2M4 20V6a2 2 0 0 0-2-2m2 3h16M4 15h16M4 18h16"/>', width: 24, height: 24 }, "bed-double": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="M22 17.5H2M22 21v-5c0-1.886 0-2.828-.586-3.414S19.886 12 18 12H6c-1.886 0-2.828 0-3.414.586S2 14.114 2 16v5"/><path d="M11 12v-1.787c0-.38-.057-.508-.35-.658C10.04 9.243 9.299 9 8.5 9s-1.54.243-2.15.555c-.293.15-.35.278-.35.658V12m12 0v-1.787c0-.38-.057-.508-.35-.658C17.04 9.243 16.299 9 15.5 9s-1.54.243-2.15.555c-.293.15-.35.278-.35.658V12"/><path d="M21 12V7.36c0-.691 0-1.037-.192-1.363s-.466-.496-1.014-.834C17.587 3.8 14.9 3 12 3s-5.587.8-7.794 2.163c-.548.338-.822.507-1.014.834S3 6.669 3 7.36V12"/></g>', width: 24, height: 24 }, "bed-single-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="M22 17.5H2M22 21v-5c0-1.886 0-2.828-.586-3.414S19.886 12 18 12H6c-1.886 0-2.828 0-3.414.586S2 14.114 2 16v5"/><path d="M16 12v-1.382c0-.508-.091-.677-.56-.877C14.463 9.324 13.278 9 12 9s-2.463.324-3.44.74c-.468.2-.56.37-.56.878V12"/><path d="M20 12V7.36c0-.691 0-1.037-.17-1.363c-.172-.327-.415-.496-.902-.834A12.1 12.1 0 0 0 12 3c-2.577 0-4.966.8-6.928 2.163c-.487.338-.73.507-.901.834S4 6.669 4 7.36V12"/></g>', width: 24, height: 24 }, "bookmark-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 17.98V9.709c0-3.634 0-5.45 1.172-6.58S8.229 2 12 2s5.657 0 6.828 1.129C20 4.257 20 6.074 20 9.708v8.273c0 2.306 0 3.459-.773 3.871c-1.497.8-4.304-1.867-5.637-2.67c-.773-.465-1.16-.698-1.59-.698s-.817.233-1.59.698c-1.333.803-4.14 3.47-5.637 2.67C4 21.44 4 20.287 4 17.981"/>', width: 24, height: 24 }, bulb: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M5.143 14A7.8 7.8 0 0 1 4 9.919C4 5.545 7.582 2 12 2s8 3.545 8 7.919A7.8 7.8 0 0 1 18.857 14"/><path stroke-linecap="round" d="M14 10c-.613.643-1.289 1-2 1s-1.387-.357-2-1"/><path d="M7.383 17.098c-.092-.276-.138-.415-.133-.527a.6.6 0 0 1 .382-.53c.104-.041.25-.041.54-.041h7.656c.291 0 .436 0 .54.04a.6.6 0 0 1 .382.531c.005.112-.041.25-.133.527c-.17.511-.255.767-.386.974a2 2 0 0 1-1.2.869c-.238.059-.506.059-1.043.059h-3.976c-.537 0-.806 0-1.043-.06a2 2 0 0 1-1.2-.868c-.131-.207-.216-.463-.386-.974ZM15 19l-.13.647c-.14.707-.211 1.06-.37 1.34a2 2 0 0 1-1.113.912C13.082 22 12.72 22 12 22s-1.082 0-1.387-.1a2 2 0 0 1-1.113-.913c-.159-.28-.23-.633-.37-1.34L9 19"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 15.5V11"/></g>', width: 24, height: 24 }, "calendar-03": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M16 2v4M8 2v4m5-2h-2C7.229 4 5.343 4 4.172 5.172S3 8.229 3 12v2c0 3.771 0 5.657 1.172 6.828S7.229 22 11 22h2c3.771 0 5.657 0 6.828-1.172S21 17.771 21 14v-2c0-3.771 0-5.657-1.172-6.828S16.771 4 13 4M3 10h18"/><path d="M12.126 14H12m.125 4H12m-4.376-4H7.5m.125 4H7.5m9.125-4H16.5m-4.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m0 4a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m-4.5-4a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m0 4a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m9-4a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "camera-video": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 21.5l4-4m2 0l4 4m-5-4v5"/><path d="M2 11.875c0-2.062 0-3.094 1.025-3.734S5.7 7.5 9 7.5h1c3.3 0 4.95 0 5.975.64C17 8.782 17 9.814 17 11.876v1.25c0 2.062 0 3.094-1.025 3.734S13.3 17.5 10 17.5H9c-3.3 0-4.95 0-5.975-.64C2 16.218 2 15.186 2 13.124z"/><path stroke-linecap="round" d="m17 10.25l.126-.076c2.116-1.27 3.174-1.904 4.024-1.598c.85.307.85 1.323.85 3.355v1.138c0 2.032 0 3.048-.85 3.355s-1.908-.329-4.024-1.598L17 14.75"/><circle cx="12.5" cy="5" r="2.5"/><circle cx="7" cy="4.5" r="3"/></g>', width: 24, height: 24 }, "cctv-camera": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m8 14l-.357 1.784c-.308 1.54-.462 2.31-1.015 2.763S5.291 19 3.721 19H2m0-2v4m14.951-9.492l4.252.033a.8.8 0 0 1 .358.089a.82.82 0 0 1 .351 1.096l-2.426 4.829a.798.798 0 0 1-1.363.114L15.599 14.2m-2.581-3.735l-.056.112m2.187 4.52l2.254-4.486a2.03 2.03 0 0 0-.868-2.709L7.685 3.33a2.96 2.96 0 0 0-4.007 1.32L2.325 7.342c-.747 1.487-.164 3.306 1.302 4.064l8.849 4.572c.977.505 2.173.11 2.672-.88m-2.075-4.744a.253.253 0 0 1 .109.338a.247.247 0 0 1-.334.11a.254.254 0 0 1-.109-.338a.247.247 0 0 1 .334-.11"/>', width: 24, height: 24 }, chip: { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path d="M4 12c0-3.771 0-5.657 1.172-6.828S8.229 4 12 4s5.657 0 6.828 1.172S20 8.229 20 12s0 5.657-1.172 6.828S15.771 20 12 20s-5.657 0-6.828-1.172S4 15.771 4 12Z"/><path d="M7.732 16.268C8.464 17 9.643 17 12 17c.79 0 1.447 0 2-.028L16.972 14c.028-.553.028-1.21.028-2c0-2.357 0-3.536-.732-4.268S14.357 7 12 7s-3.536 0-4.268.732S7 9.643 7 12s0 3.536.732 4.268Z"/><path stroke-linecap="round" d="M8 2v2m8-2v2m-4-2v2M8 20v2m4-2v2m4-2v2m6-6h-2M4 8H2m2 8H2m2-4H2m20-4h-2m2 4h-2"/></g>', width: 24, height: 24 }, circle: { body: '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/>', width: 24, height: 24 }, "circle-small": { body: '<circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>', width: 24, height: 24 }, "clock-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l2 2"/></g>', width: 24, height: 24 }, computer: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 21h2m-2 0a1.5 1.5 0 0 1-1.5-1.5V17H12m2 4h-4m0 0H8m2 0a1.5 1.5 0 0 0 1.5-1.5V17h.5m0 0v4m4-18H8c-2.828 0-4.243 0-5.121.879C2 4.757 2 6.172 2 9v2c0 2.828 0 4.243.879 5.121C3.757 17 5.172 17 8 17h8c2.828 0 4.243 0 5.121-.879C22 15.243 22 13.828 22 11V9c0-2.828 0-4.243-.879-5.121C20.243 3 18.828 3 16 3"/>', width: 24, height: 24 }, "computer-desk-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M22 12H2m18 5h-4c-1.886 0-2.828 0-3.414-.586S12 14.886 12 13v-1m-8 0v10m16-10v10M7 6V5c0-1.414 0-2.121.44-2.56C7.878 2 8.585 2 10 2h4c1.414 0 2.121 0 2.56.44C17 2.878 17 3.585 17 5v1c0 1.414 0 2.121-.44 2.56C16.122 9 15.415 9 14 9h-4c-1.414 0-2.121 0-2.56-.44C7 8.122 7 7.415 7 6m6.5 3l.5 3m-3.5-3l-.5 3"/>', width: 24, height: 24 }, cpu: { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path d="M4 12c0-3.771 0-5.657 1.172-6.828S8.229 4 12 4s5.657 0 6.828 1.172S20 8.229 20 12s0 5.657-1.172 6.828S15.771 20 12 20s-5.657 0-6.828-1.172S4 15.771 4 12Z"/><path stroke-linecap="round" d="M9.5 2v2m5-2v2m-5 16v2m5-2v2M13 9l-4 4m6 0l-2 2m9-.5h-2m-16-5H2m2 5H2m20-5h-2"/></g>', width: 24, height: 24 }, cube: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.793 21.207c.293.293.764.293 1.707.293h10c.943 0 1.414 0 1.707-.293m-13.414 0C2.5 20.914 2.5 20.443 2.5 19.5v-10c0-.943 0-1.414.293-1.707m0 13.414l6-6m7.414 6c.293-.293.293-.764.293-1.707v-10c0-.943 0-1.414-.293-1.707m0 13.414l5-5c.293-.293.293-.764.293-1.707v-10c0-.943 0-1.414-.293-1.707m-5 5C15.914 7.5 15.443 7.5 14.5 7.5h-10c-.943 0-1.414 0-1.707.293m13.414 0l5-5m-18.414 5l5-5C8.086 2.5 8.557 2.5 9.5 2.5h10c.943 0 1.414 0 1.707.293M8.793 15.207c.293.293.764.293 1.707.293H14m-5.207-.293C8.5 14.914 8.5 14.443 8.5 13.5v-3"/>', width: 24, height: 24 }, curtains: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M22 3H2m3 11c.598-.707 1.767-2.606 2-5m12 5c-.599-.707-1.767-2.606-2-5M3 3v11.625m0 0v2.125c0 2.003 0 3.005.586 3.628C4.172 21 5.114 21 7 21h1c0-1.469-.4-4.922-2-6.985m-3 .61c1.148-.077 2.141-.29 3-.61m0 0c3.88-1.44 6-6.8 6-11.015m9 0v11.625m0 0v2.125c0 2.003 0 3.005-.586 3.628C19.828 21 18.886 21 17 21h-1c0-1.469.4-4.922 2-6.985m3 .61c-1.148-.077-2.141-.29-3-.61m0 0c-3.88-1.44-6-6.8-6-11.015"/>', width: 24, height: 24 }, database: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="8" ry="3"/><path stroke-linecap="round" d="M7 10.842c.602.18 1.274.33 2 .44"/><path d="M20 12c0 1.657-3.582 3-8 3s-8-1.343-8-3"/><path stroke-linecap="round" d="M7 17.842c.602.18 1.274.33 2 .44"/><path d="M20 5v14c0 1.657-3.582 3-8 3s-8-1.343-8-3V5"/></g>', width: 24, height: 24 }, desk: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5" d="M3 8h18v4c0 2.357 0 3.536-.732 4.268C19.535 17 18.357 17 16 17H8c-2.357 0-3.536 0-4.268-.732S3 14.357 3 12zm4-2c0-1.886 0-2.828.586-3.414S9.114 2 11 2h2c1.886 0 2.828 0 3.414.586S17 4.114 17 6v2H7zM5 17v5m14-5v5M8 17v3m8-3v3M2 8h1.818m16.364 0H22"/>', width: 24, height: 24 }, "dish-washer": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M14.5 2.5h-5c-3.3 0-4.95 0-5.975 1.025S2.5 6.2 2.5 9.5v5c0 3.3 0 4.95 1.025 5.975S6.2 21.5 9.5 21.5h5c3.3 0 4.95 0 5.975-1.025S21.5 17.8 21.5 14.5v-5c0-3.3 0-4.95-1.025-5.975S17.8 2.5 14.5 2.5m-12 6h19M6 5.5h4"/><path d="M14.5 18.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7"/><path d="M12 12.55a3.5 3.5 0 1 0 0 4.899M18.125 5.5H18m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "electric-home-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="M20 8.585v4.916c0 3.77 0 5.656-1.172 6.828c-.808.808-1.956 1.059-3.828 1.136M4 8.585v4.916c0 3.77 0 5.656 1.172 6.828c1.063 1.063 2.714 1.162 5.828 1.17a1 1 0 0 0 1-.998v-3"/><path d="m22 10.5l-4.343-4.164C14.99 3.779 13.657 2.5 12 2.5S9.01 3.78 6.343 6.336L2 10.5M14.001 9v2.5m-4 0V9m-1.495 3.38c-.04-.475.37-.88.89-.88h5.214c.52 0 .93.405.89.88l-.107 1.298a5.16 5.16 0 0 1-.98 2.61l-.35.483c-.331.455-.889.73-1.486.73h-1.148c-.597 0-1.155-.275-1.486-.73l-.35-.483a5.16 5.16 0 0 1-.98-2.61z"/></g>', width: 24, height: 24 }, eye: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M2 8s4.477-5 10-5s10 5 10 5"/><path d="M21.544 13.045c.304.426.456.64.456.955c0 .316-.152.529-.456.955C20.178 16.871 16.689 21 12 21c-4.69 0-8.178-4.13-9.544-6.045C2.152 14.529 2 14.315 2 14c0-.316.152-.529.456-.955C3.822 11.129 7.311 7 12 7c4.69 0 8.178 4.13 9.544 6.045Z"/><path d="M15 14a3 3 0 1 0-6 0a3 3 0 0 0 6 0Z"/></g>', width: 24, height: 24 }, "fan-01": { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path d="M9.263 12.246c-2.07-.191-4.623-.123-6.027.688l-.148.086c-.46.265-.8.703-.83 1.233c-.043.795.05 2.073.813 3.395c1.354 2.345 3.704 3.423 4.699 3.791c.296.11.62.066.893-.091c.503-.29.717-.902.584-1.468c-.37-1.58-.454-3.85.732-5.615a2.5 2.5 0 0 1-.716-2.02Zm4.898.918a2.5 2.5 0 0 1-1.29 1.572c.868 1.904 2.219 4.123 3.64 4.943l.148.086c.46.265 1.01.34 1.483.1a6.13 6.13 0 0 0 2.534-2.4c1.354-2.345 1.113-4.92.934-5.965a1.05 1.05 0 0 0-.526-.727c-.503-.291-1.139-.17-1.563.227c-1.208 1.134-3.187 2.368-5.36 2.164Zm-2.989-3.096a2.5 2.5 0 0 1 2.16.497C14.532 8.867 15.75 6.622 15.75 5v-.17c0-.53-.21-1.044-.654-1.334A6.13 6.13 0 0 0 11.75 2.5c-2.708 0-4.817 1.497-5.633 2.174a1.05 1.05 0 0 0-.367.82c0 .58.422 1.07.979 1.239c1.525.46 3.486 1.492 4.443 3.335Z"/><path d="M14.25 12.5a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0Z"/></g>', width: 24, height: 24 }, "fan-02": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linejoin="round" d="M9.58 12.629A5.05 5.05 0 0 0 7 17.042a5.04 5.04 0 0 0 3.053 4.645c.701.3 1.052.45 1.5.15s.447-.79.447-1.77V14.5a2.5 2.5 0 0 1-2.42-1.871ZM9.5 12H3.933c-.98 0-1.47 0-1.77-.448c-.3-.447-.15-.798.15-1.5A5.04 5.04 0 0 1 6.958 7c1.9 0 3.553 1.041 4.413 2.58A2.5 2.5 0 0 0 9.5 12ZM12 9.5V3.933c0-.98 0-1.47.448-1.77c.447-.3.798-.15 1.5.15A5.04 5.04 0 0 1 17 6.958c0 1.9-1.041 3.553-2.58 4.413A2.5 2.5 0 0 0 12 9.5Zm.629 4.92A2.5 2.5 0 0 0 14.5 12h5.567c.98 0 1.47 0 1.77.448c.3.447.15.798-.15 1.5A5.04 5.04 0 0 1 17.042 17a5.05 5.05 0 0 1-4.413-2.58Z"/><path d="M14.5 12a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0Z"/></g>', width: 24, height: 24 }, "fast-wind": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M2 5.941c3.5 3.432 8.576 1.961 9.732 0c.17-.288.268-.623.268-.98C12 3.878 11.105 3 10 3s-2 .878-2 1.961m9 3.967C17 7.311 18.12 6 19.5 6S22 7.311 22 8.928a3.23 3.23 0 0 1-.585 1.883C19.346 14.191 9.276 12.916 4 11.856m9.085 8.031c.206.649.762 1.113 1.415 1.113c.828 0 1.5-.747 1.5-1.669c0-.313-.078-.607-.213-.857C14.5 15.992 8 14.324 2 18.774"/><path stroke-linejoin="round" d="M19 15.5h2"/></g>', width: 24, height: 24 }, favourite: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.41 19.968C7.59 17.858 2 13.035 2 8.694C2 5.826 4.105 3.5 7 3.5c1.5 0 3 .5 5 2.5c2-2 3.5-2.5 5-2.5c2.895 0 5 2.326 5 5.194c0 4.34-5.59 9.164-8.41 11.274c-.95.71-2.23.71-3.18 0"/>', width: 24, height: 24 }, "file-import": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M20 15.006V10.66c0-.818 0-1.227-.152-1.595s-.441-.657-1.02-1.235l-4.736-4.739c-.499-.499-.748-.748-1.058-.896a2 2 0 0 0-.197-.082C12.514 2 12.161 2 11.456 2c-3.245 0-4.868 0-5.967.886a4 4 0 0 0-.603.604C4 4.59 4 6.213 4 9.46v4.545c0 3.773 0 5.66 1.172 6.832C6.115 21.78 7.52 21.964 10 22m3-19.5V3c0 2.83 0 4.245.879 5.124c.878.879 2.293.879 5.121.879h.5"/><path d="M15 22c-.607-.59-3-2.16-3-3s2.393-2.41 3-3m-2 3h7"/></g>', width: 24, height: 24 }, "film-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 12c0-4.478 0-6.718 1.391-8.109S7.521 2.5 12 2.5c4.478 0 6.718 0 8.109 1.391S21.5 7.521 21.5 12c0 4.478 0 6.718-1.391 8.109S16.479 21.5 12 21.5c-4.478 0-6.718 0-8.109-1.391S2.5 16.479 2.5 12Z"/><path stroke-linejoin="round" d="M2.5 7h19m-19 10h19"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 17V7M8 7V3m8 4V3M8 21v-4m8 4v-4"/></g>', width: 24, height: 24 }, fire: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.856 22c12.222-3 5.378-15-2.933-20c-.978 3.5-2.445 4.5-5.378 8c-3.884 4.634-1.955 10 3.422 12c-.815-1-2.917-3.1-1.467-6c.5-1 1.5-2 1-4c.978.5 3 1 3.5 3.5c.815-1 1.66-3.1.878-5.5c6.122 4.5 3.622 9 .978 12"/>', width: 24, height: 24 }, flash: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m5.226 11.33l6.998-8.983c.547-.703 1.573-.266 1.573.67V9.97c0 .56.402 1.015.899 1.015H18.1c.773 0 1.185 1.03.674 1.686l-6.998 8.983c-.547.702-1.573.265-1.573-.671V14.03c0-.56-.403-1.015-.899-1.015H5.9c-.773 0-1.185-1.03-.674-1.686"/>', width: 24, height: 24 }, "game-controller-03": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-linejoin="round" stroke-width="1.5" d="M2.008 15.81c.223-3.494.88-6.05 1.435-7.535c.281-.75.885-1.308 1.658-1.495c4.3-1.04 9.498-1.04 13.798 0c.773.187 1.377.745 1.658 1.495c.556 1.485 1.212 4.041 1.435 7.534c.133 2.09-1.377 3.241-3.05 4.083c-1.064.537-1.883-1.046-2.427-2.272a1.82 1.82 0 0 0-1.687-1.084H9.172c-.739 0-1.39.415-1.687 1.084c-.544 1.226-1.363 2.809-2.428 2.272c-1.655-.833-3.183-1.976-3.049-4.083M5 4.5L6.963 4M19 4.5L17 4"/><path stroke-width="1.5" d="m9 13l-1.5-1.5m0 0L6 10m1.5 1.5L6 13m1.5-1.5L9 10"/><path stroke-linejoin="round" stroke-width="2" d="M15.988 10h.01m1.99 3h.01"/></g>', width: 24, height: 24 }, "grid-view": { body: '<path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" d="M3.889 9.663C4.393 10 5.096 10 6.5 10s2.107 0 2.611-.337a2 2 0 0 0 .552-.552C10 8.607 10 7.904 10 6.5s0-2.107-.337-2.611a2 2 0 0 0-.552-.552C8.607 3 7.904 3 6.5 3s-2.107 0-2.611.337a2 2 0 0 0-.552.552C3 4.393 3 5.096 3 6.5s0 2.107.337 2.611a2 2 0 0 0 .552.552Zm11 0C15.393 10 16.096 10 17.5 10s2.107 0 2.611-.337a2 2 0 0 0 .552-.552C21 8.607 21 7.904 21 6.5s0-2.107-.337-2.611a2 2 0 0 0-.552-.552C19.607 3 18.904 3 17.5 3s-2.107 0-2.611.337a2 2 0 0 0-.552.552C14 4.393 14 5.096 14 6.5s0 2.107.337 2.611a2 2 0 0 0 .552.552Zm-11 11C4.393 21 5.096 21 6.5 21s2.107 0 2.611-.337a2 2 0 0 0 .552-.552C10 19.607 10 18.904 10 17.5s0-2.107-.337-2.611a2 2 0 0 0-.552-.552C8.607 14 7.904 14 6.5 14s-2.107 0-2.611.337a2 2 0 0 0-.552.552C3 15.393 3 16.096 3 17.5s0 2.107.337 2.611a2 2 0 0 0 .552.552Zm11 0C15.393 21 16.096 21 17.5 21s2.107 0 2.611-.337c.218-.146.406-.334.552-.552C21 19.607 21 18.904 21 17.5s0-2.107-.337-2.611a2 2 0 0 0-.552-.552C19.607 14 18.904 14 17.5 14s-2.107 0-2.611.337a2 2 0 0 0-.552.552C14 15.393 14 16.096 14 17.5s0 2.107.337 2.611c.146.218.334.406.552.552Z"/>', width: 24, height: 24 }, "home-03": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 11.99v2.51c0 3.3 0 4.95 1.025 5.975S6.7 21.5 10 21.5h4c3.3 0 4.95 0 5.975-1.025S21 17.8 21 14.5v-2.51c0-1.682 0-2.522-.356-3.25s-1.02-1.244-2.346-2.276l-2-1.555C14.233 3.303 13.2 2.5 12 2.5s-2.233.803-4.298 2.409l-2 1.555C4.375 7.496 3.712 8.012 3.356 8.74S3 10.308 3 11.99"/><path d="M15 21.5v-5c0-1.414 0-2.121-.44-2.56c-.439-.44-1.146-.44-2.56-.44s-2.121 0-2.56.44C9 14.378 9 15.085 9 16.5v5"/></g>', width: 24, height: 24 }, humidity: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 13.678c0-4.184 3.58-8.319 6.094-10.706a3.463 3.463 0 0 1 4.812 0C16.919 5.36 20.5 9.494 20.5 13.678C20.5 17.78 17.281 22 12 22s-8.5-4.22-8.5-8.322Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 12.284c1.465-.454 4.392-.6 7.984 1.418c3.586 2.014 6.532 1.296 8.016.433"/></g>', width: 24, height: 24 }, "image-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7.5" cy="7.5" r="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 12c0-4.478 0-6.718 1.391-8.109S7.521 2.5 12 2.5c4.478 0 6.718 0 8.109 1.391S21.5 7.521 21.5 12c0 4.478 0 6.718-1.391 8.109S16.479 21.5 12 21.5c-4.478 0-6.718 0-8.109-1.391S2.5 16.479 2.5 12Z"/><path d="M5 21c4.372-5.225 9.274-12.116 16.498-7.458"/></g>', width: 24, height: 24 }, internet: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4" ry="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 12h20"/></g>', width: 24, height: 24 }, "kitchen-utensils": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M11.983 14V3m0 11c-1.658 0-3.003 1.435-3.003 2.625c0 1.75 1.345 4.375 3.003 4.375s3.003-2.625 3.003-4.375c0-1.19-1.345-2.625-3.003-2.625Zm-7.005-3.972V21M3.686 3.13l-.783.078a1 1 0 0 0-.89 1.148l.67 4.315c.113.731.743 1.34 1.483 1.34H5.79c.74 0 1.37-.609 1.484-1.34l.669-4.315a1 1 0 0 0-.89-1.148l-.78-.078a13 13 0 0 0-2.587 0Z"/><path stroke-linejoin="round" d="M17.996 13.818V3.026c1.159.32 3.085 1.527 3.405 4.502l.573 4.514c.1.793-.101 1.584-.89 1.72c-.66.113-1.661.15-3.088.056m0 0V21"/></g>', width: 24, height: 24 }, "lamp-01": { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path d="M12 7a6 6 0 0 0-6 6h12a6 6 0 0 0-6-6Zm-3 6a3 3 0 1 0 6 0"/><path stroke-linecap="round" d="M5 13h14m-7-6V2m0 18v2m3-3l2 1.5M9 19l-2 1.5"/></g>', width: 24, height: 24 }, "lamp-04": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0 10v-3m-4 3h8m-.974-10H8.974c-2.212 0-3.318 0-3.787-.685c-.469-.686-.015-1.64.893-3.546l1.623-3.41c.546-1.145.818-1.718 1.342-2.038C9.57 2 10.234 2 11.562 2h.876c1.328 0 1.992 0 2.516.32c.525.321.797.894 1.343 2.039l1.623 3.41c.908 1.907 1.362 2.86.893 3.546S17.238 12 15.026 12"/></g>', width: 24, height: 24 }, laptop: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.5 16.5v-8c0-2.357 0-3.536-.732-4.268C19.035 3.5 17.857 3.5 15.5 3.5h-7c-2.357 0-3.536 0-4.268.732S3.5 6.143 3.5 8.5v8m18.484 4H2.016c-.383 0-.632-.391-.461-.724L3.5 16.5h17l1.945 3.276a.5.5 0 0 1-.46.724"/>', width: 24, height: 24 }, "lightbulb-off": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M5.143 14A7.8 7.8 0 0 1 4 9.919c0-1.672.524-3.223 1.417-4.502m2.62-2.38A8 8 0 0 1 12 2c4.418 0 8 3.545 8 7.919c0 1.456-.397 2.82-1.09 3.992M16 16H7l.544 1.633A2 2 0 0 0 9.442 19h5.117a2 2 0 0 0 1.897-1.367l.294-.883"/><path d="m15 19l-.544 1.633A2 2 0 0 1 12.559 22h-1.117a2 2 0 0 1-1.898-1.367L9 19m3-3.5V12M2 2l20 20"/></g>', width: 24, height: 24 }, "list-restart": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 4.5h18m-18 7h5m-5 7h5m4.758-1a4.5 4.5 0 1 0-.193-4.685M12 9.5v1c0 1.414 0 2.121.44 2.56c.439.44 1.146.44 2.56.44h1"/>', width: 24, height: 24 }, "location-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.618 21.367A2.37 2.37 0 0 1 12 22a2.37 2.37 0 0 1-1.617-.633C6.412 17.626 1.09 13.447 3.685 7.38C5.09 4.1 8.458 2 12.001 2s6.912 2.1 8.315 5.38c2.592 6.06-2.717 10.259-6.698 13.987Z"/><path d="M15.5 11a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Z"/></g>', width: 24, height: 24 }, "location-03": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 9a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.222 17c1.395 1.988 2.062 3.047 1.665 3.9q-.06.128-.14.247c-.575.853-2.06.853-5.03.853H9.283c-2.97 0-4.454 0-5.029-.853a2 2 0 0 1-.14-.247c-.397-.852.27-1.912 1.665-3.9"/><path d="M13.257 17.494a1.813 1.813 0 0 1-2.514 0c-3.089-2.993-7.228-6.336-5.21-11.19C6.626 3.679 9.246 2 12 2s5.375 1.68 6.467 4.304c2.016 4.847-2.113 8.207-5.21 11.19Z"/></g>', width: 24, height: 24 }, lock: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10Z"/><path stroke-linecap="round" d="M12 13a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 0v3"/></g>', width: 24, height: 24 }, maps: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m5.253 4.196l-1.227.712c-.989.573-1.483.86-1.754 1.337C2 6.722 2 7.302 2 8.464v8.164c0 1.526 0 2.29.342 2.714c.228.282.547.472.9.535c.53.095 1.18-.282 2.478-1.035c.882-.511 1.73-1.043 2.785-.898c.48.065.937.293 1.853.748l3.813 1.896c.825.41.833.412 1.75.412H18c1.886 0 2.828 0 3.414-.599c.586-.598.586-1.562.586-3.49v-6.74c0-1.927 0-2.89-.586-3.49c-.586-.598-1.528-.598-3.414-.598h-2.079c-.917 0-.925-.002-1.75-.412L10.84 4.015C9.449 3.323 8.753 2.977 8.012 3S6.6 3.415 5.253 4.196M8 3v14.5m7-11v14"/>', width: 24, height: 24 }, "maps-location-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M22 10v-.783c0-1.94 0-2.909-.586-3.512c-.586-.602-1.528-.602-3.414-.602h-2.079c-.917 0-.925-.002-1.75-.415L10.84 3.021c-1.391-.696-2.087-1.044-2.828-1.02S6.6 2.418 5.253 3.204l-1.227.716c-.989.577-1.483.866-1.754 1.346C2 5.746 2 6.33 2 7.499v8.217c0 1.535 0 2.303.342 2.73c.228.285.547.476.9.54c.53.095 1.18-.284 2.478-1.042c.882-.515 1.73-1.05 2.785-.905c.884.122 1.705.68 2.495 1.075"/><path stroke-linejoin="round" d="M8 2v15"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v4.5"/><path d="M18.308 21.684A1.18 1.18 0 0 1 17.5 22c-.302 0-.591-.113-.808-.317c-1.986-1.87-4.646-3.96-3.349-6.993C14.045 13.05 15.73 12 17.5 12s3.456 1.05 4.157 2.69c1.296 3.03-1.358 5.13-3.349 6.993Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17.625 16.5H17.5m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "menu-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5h16M4 12h16M4 19h16"/>', width: 24, height: 24 }, "mic-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 7v4a5 5 0 0 1-10 0V7a5 5 0 0 1 10 0Z"/><path stroke-linecap="round" d="M17 7h-3m3 4h-3m6 0a8 8 0 0 1-8 8m0 0a8 8 0 0 1-8-8m8 8v3m0 0h3m-3 0H9"/></g>', width: 24, height: 24 }, "moon-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21.5 14.078A8.557 8.557 0 0 1 9.922 2.5C5.668 3.497 2.5 7.315 2.5 11.873a9.627 9.627 0 0 0 9.627 9.627c4.558 0 8.376-3.168 9.373-7.422"/>', width: 24, height: 24 }, "more-horizontal": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.004 12.5V12m12 .5V12m-6 .5V12m-5 .5a1 1 0 1 0-2 0a1 1 0 0 0 2 0m12 0a1 1 0 1 0-2 0a1 1 0 0 0 2 0m-6 0a1 1 0 1 0-2 0a1 1 0 0 0 2 0"/>', width: 24, height: 24 }, "more-horizontal-circle-01": { body: '<path fill="none" stroke="currentColor" stroke-width="1.5" d="M21 12a1.5 1.5 0 1 0-3 0a1.5 1.5 0 0 0 3 0Zm-7.5 0a1.5 1.5 0 1 0-3 0a1.5 1.5 0 0 0 3 0ZM6 12a1.5 1.5 0 1 0-3 0a1.5 1.5 0 0 0 3 0Z"/>', width: 24, height: 24 }, "more-vertical": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.997 12.5V12m0-5.5V6m0 12.5V18m1-5.5a1 1 0 1 0-2 0a1 1 0 0 0 2 0m0-6a1 1 0 1 0-2 0a1 1 0 0 0 2 0m0 12a1 1 0 1 0-2 0a1 1 0 0 0 2 0"/>', width: 24, height: 24 }, "motion-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M4.513 12c-.401-.058-.72-.156-1-.317a3 3 0 0 1-1.108-1.108C2 9.873 2 8.93 2 7.044s0-2.829.405-3.53c.266-.46.648-.843 1.108-1.109C4.215 2 5.158 2 7.044 2s2.829 0 3.53.405c.46.266.843.648 1.109 1.108c.161.28.259.599.317 1"/><path stroke-linecap="round" d="M9.522 17c-.406-.058-.727-.156-1.009-.319a3 3 0 0 1-1.108-1.107C7 14.87 7 13.929 7 12.044c0-1.886 0-2.829.405-3.531c.266-.46.648-.842 1.108-1.108C9.215 7 10.158 7 12.043 7c1.886 0 2.829 0 3.53.405c.46.266.843.648 1.108 1.108c.163.282.26.603.319 1.009"/><path d="M12 17c0-1.87 0-2.804.402-3.5a3 3 0 0 1 1.098-1.098C14.196 12 15.13 12 17 12s2.804 0 3.5.402a3 3 0 0 1 1.098 1.098C22 14.196 22 15.13 22 17s0 2.804-.402 3.5a3 3 0 0 1-1.098 1.098C19.804 22 18.87 22 17 22s-2.804 0-3.5-.402a3 3 0 0 1-1.098-1.098C12 19.804 12 18.87 12 17Z"/></g>', width: 24, height: 24 }, "music-note-03": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 18.5V7c0-.923 0-1.385.264-1.672c.263-.287.754-.329 1.735-.413c4.023-.343 6.91-1.655 8.356-2.505c.296-.174.444-.26.544-.203s.101.225.101.559V16"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 10c5.867 0 9.778-2.333 11-3"/></g>', width: 24, height: 24 }, next: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linejoin="round" d="M15.935 12.626c-.254 1.211-1.608 2.082-4.315 3.822c-2.945 1.893-4.417 2.84-5.61 2.475a2.8 2.8 0 0 1-1.088-.635C4 17.418 4 15.612 4 12s0-5.418.922-6.288a2.8 2.8 0 0 1 1.089-.635c1.192-.365 2.664.582 5.609 2.475c2.707 1.74 4.06 2.61 4.315 3.822c.087.412.087.84 0 1.252Z"/><path stroke-linecap="round" d="M20 5v14"/></g>', width: 24, height: 24 }, noodles: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M18 12a2.5 2.5 0 0 0-5 0"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v9m2.5-9.5v5M11 2v5.5m-7-3l2-.312M20 2l-6.5 1.016M4 7l2-.125M20 6l-6.5.406"/><path stroke-linejoin="round" d="M4.911 12H19.09c1.602 0 2.19.37 1.79 1.982c-.706 2.843-2.703 3.549-4.549 5.404c-.448.45.25 1.117.25 1.613c0 .934-.887 1.001-1.595 1.001h-5.97c-.708 0-1.596-.067-1.595-1c0-.486.677-1.184.25-1.614c-1.846-1.855-3.843-2.561-4.549-5.404c-.4-1.611.188-1.982 1.79-1.982Z"/></g>', width: 24, height: 24 }, oven: { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 16V8c0-2.828 0-4.243.879-5.121C4.757 2 6.172 2 9 2h6c2.828 0 4.243 0 5.121.879C21 3.757 21 5.172 21 8v8c0 2.828 0 4.243-.879 5.121C19.243 22 17.828 22 15 22H9c-2.828 0-4.243 0-5.121-.879C3 20.243 3 18.828 3 16"/><path d="M6 16v-5c0-1.414 0-2.121.44-2.56C6.878 8 7.585 8 9 8h6c1.414 0 2.121 0 2.56.44c.44.439.44 1.146.44 2.56v5c0 1.414 0 2.121-.44 2.56c-.439.44-1.146.44-2.56.44H9c-1.414 0-2.121 0-2.56-.44C6 18.122 6 17.415 6 16m3-5h6m-2.95-5.998H12m.1 0a.1.1 0 1 1-.2 0a.1.1 0 0 1 .2 0m3.95 0H16m.1 0a.1.1 0 1 1-.2 0a.1.1 0 0 1 .2 0m-8.05 0H8m.1 0a.1.1 0 1 1-.2 0a.1.1 0 0 1 .2 0"/></g>', width: 24, height: 24 }, "paint-board": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12s4.477 10 10 10c.842 0 2 .116 2-1c0-.609-.317-1.079-.631-1.546c-.46-.683-.917-1.359-.369-2.454c.667-1.333 1.778-1.333 3.482-1.333c.851 0 1.851 0 3.018-.167c2.101-.3 2.5-1.592 2.5-3.5Z"/><circle cx="9.5" cy="8.5" r="1.5"/><circle cx="16.5" cy="9.5" r="1.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M7.125 15H7m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "playlist-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 15c0-2.809 0-4.213.674-5.222a4 4 0 0 1 1.104-1.104C5.787 8 7.19 8 10 8h4c2.809 0 4.213 0 5.222.674a4 4 0 0 1 1.104 1.104C21 10.787 21 12.19 21 15s0 4.213-.674 5.222a4 4 0 0 1-1.104 1.104C18.213 22 16.81 22 14 22h-4c-2.809 0-4.213 0-5.222-.674a4 4 0 0 1-1.104-1.104C3 19.213 3 17.81 3 15"/><path d="M12.5 16.5a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0m0 0v-5s.4 1.733 2 2M19 8c-.018-1.24-.11-1.943-.582-2.414C17.832 5 16.888 5 15.002 5H8.998c-1.887 0-2.83 0-3.416.586C5.11 6.057 5.018 6.76 5 8m12-3c0-.932 0-1.398-.152-1.765a2 2 0 0 0-1.083-1.083C15.398 2 14.932 2 14 2h-4c-.932 0-1.398 0-1.765.152a2 2 0 0 0-1.083 1.083C7 3.602 7 4.068 7 5"/></g>', width: 24, height: 24 }, "plus-sign": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>', width: 24, height: 24 }, power: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.708 6A9 9 0 1 1 3 12c0-2.305.867-4.408 2.292-6M12 3v9"/>', width: 24, height: 24 }, "power-socket-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 12c0-4.23 0-6.345 1.198-7.747q.256-.3.555-.555C5.655 2.5 7.77 2.5 12 2.5s6.345 0 7.747 1.198q.3.256.555.555C21.5 5.655 21.5 7.77 21.5 12s0 6.345-1.198 7.747q-.256.3-.555.555C18.345 21.5 16.23 21.5 12 21.5s-6.345 0-7.747-1.198q-.3-.256-.555-.555C2.5 18.345 2.5 16.23 2.5 12Z"/><circle cx="12" cy="12" r="6"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.875 12H9.75m4.625.001h-.125M10 12a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m4.5.001a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, previous: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linejoin="round" d="M8.065 12.626c.254 1.211 1.608 2.082 4.315 3.822c2.945 1.893 4.417 2.84 5.61 2.475c.403-.124.775-.34 1.088-.635C20 17.418 20 15.612 20 12s0-5.418-.922-6.288a2.8 2.8 0 0 0-1.088-.635c-1.193-.365-2.665.582-5.61 2.475c-2.707 1.74-4.06 2.61-4.315 3.822c-.087.412-.087.84 0 1.252Z"/><path stroke-linecap="round" d="M4 4v16"/></g>', width: 24, height: 24 }, "pulse-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2 12h4l1.5-4l2 7L13 6l2.5 12l2.5-6h4"/>', width: 24, height: 24 }, refresh: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.01 2v3.132a.314.314 0 0 1-.556.201A9.98 9.98 0 0 0 12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10"/>', width: 24, height: 24 }, "remote-control": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M12.5 2c3.3 0 4.95 0 5.975 1.025S19.5 5.7 19.5 9v6c0 3.3 0 4.95-1.025 5.975S15.8 22 12.5 22h-1c-3.3 0-4.95 0-5.975-1.025S4.5 18.3 4.5 15V9c0-3.3 0-4.95 1.025-5.975S8.2 2 11.5 2zM8 15h2m-2 3h2m4-3h2m-2 3h2"/><path d="M15 8a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z"/></g>', width: 24, height: 24 }, "router-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M18 20.5H6c-1.886 0-2.828 0-3.414-.586S2 18.386 2 16.5s0-2.828.586-3.414S4.114 12.5 6 12.5h12c1.886 0 2.828 0 3.414.586S22 14.614 22 16.5s0 2.828-.586 3.414s-1.528.586-3.414.586m-6-8v-2m-6 6h4m-.5-9.135a4 4 0 0 1 5 .01M7 4.255a8 8 0 0 1 10 0"/><path d="M18.125 16.5H18m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m-4.125 0H14m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "security-lock": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M18.709 3.495C16.817 2.554 14.5 2 12 2s-4.816.554-6.709 1.495c-.928.462-1.392.693-1.841 1.419S3 6.342 3 7.748v3.49c0 5.683 4.542 8.842 7.173 10.196c.734.377 1.1.566 1.827.566s1.093-.189 1.827-.566C16.457 20.08 21 16.92 21 11.237V7.748c0-1.406 0-2.108-.45-2.834s-.913-.957-1.841-1.419"/><path d="M10 10V8.5a2 2 0 1 1 4 0V10m0 0h-4a1.5 1.5 0 0 0-1.5 1.5V13a1.5 1.5 0 0 0 1.5 1.5h4a1.5 1.5 0 0 0 1.5-1.5v-1.5A1.5 1.5 0 0 0 14 10"/></g>', width: 24, height: 24 }, "settings-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="m21.318 7.141l-.494-.856c-.373-.648-.56-.972-.878-1.101c-.317-.13-.676-.027-1.395.176l-1.22.344c-.459.106-.94.046-1.358-.17l-.337-.194a2 2 0 0 1-.788-.967l-.334-.998c-.22-.66-.33-.99-.591-1.178c-.261-.19-.609-.19-1.303-.19h-1.115c-.694 0-1.041 0-1.303.19c-.261.188-.37.518-.59 1.178l-.334.998a2 2 0 0 1-.789.967l-.337.195c-.418.215-.9.275-1.358.17l-1.22-.345c-.719-.203-1.078-.305-1.395-.176c-.318.129-.505.453-.878 1.1l-.493.857c-.35.608-.525.911-.491 1.234c.034.324.268.584.736 1.105l1.031 1.153c.252.319.431.875.431 1.375s-.179 1.056-.43 1.375l-1.032 1.152c-.468.521-.702.782-.736 1.105s.14.627.49 1.234l.494.857c.373.647.56.971.878 1.1s.676.028 1.395-.176l1.22-.344a2 2 0 0 1 1.359.17l.336.194c.36.23.636.57.788.968l.334.997c.22.66.33.99.591 1.18c.262.188.609.188 1.303.188h1.115c.694 0 1.042 0 1.303-.189s.371-.519.59-1.179l.335-.997c.152-.399.428-.738.788-.968l.336-.194c.42-.215.9-.276 1.36-.17l1.22.344c.718.204 1.077.306 1.394.177c.318-.13.505-.454.878-1.101l.493-.857c.35-.607.525-.91.491-1.234s-.268-.584-.736-1.105l-1.031-1.152c-.252-.32-.431-.875-.431-1.375s.179-1.056.43-1.375l1.032-1.153c.468-.52.702-.781.736-1.105s-.14-.626-.49-1.234Z"/><path d="M15.52 12a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Z"/></g>', width: 24, height: 24 }, "smart-ac": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M16 3c2.339 0 3.508 0 4.362.536a3.5 3.5 0 0 1 1.102 1.102C22 5.492 22 6.66 22 9s0 3.508-.537 4.362a3.5 3.5 0 0 1-1.1 1.101C19.507 15 18.338 15 16 15H8c-2.339 0-3.508 0-4.362-.537a3.5 3.5 0 0 1-1.102-1.1C2 12.507 2 11.338 2 9s0-3.508.536-4.362a3.5 3.5 0 0 1 1.102-1.102C4.492 3 5.66 3 8 3zm-9 9h10"/><path stroke-linejoin="round" d="M6 21a2 2 0 0 0 2-2v-1m10 3a2 2 0 0 1-2-2v-1m-4 0v3m6.125-14H18m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, snow: { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path stroke-linecap="round" d="m21 14.25l-.831-.659c-.946-.75-1.419-1.125-1.419-1.591s.473-.841 1.419-1.591L21 9.75m-18 0l.831.659c.946.75 1.419 1.125 1.419 1.591s-.473.841-1.419 1.591L3 14.25M14.572 21l.156-1.059c.178-1.205.267-1.807.674-2.042c.407-.236.972-.011 2.104.437l.994.394M9.428 3l-.156 1.059c-.178 1.205-.267 1.807-.674 2.042c-.407.236-.972.011-2.104-.437L5.5 5.27M5 18.732l1.07-.395c1.218-.448 1.827-.672 2.265-.438s.533.838.724 2.042L9.227 21M19 5.268l-1.07.394c-1.218.45-1.828.673-2.265.439s-.533-.838-.724-2.042L14.773 3"/><path d="M19 12H5m10.5 6l-7-12m7 0l-7 12"/></g>', width: 24, height: 24 }, "sofa-01": { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path stroke-linecap="round" d="M6 17v3m12-3v3m2-11c0-1.87 0-2.804-.402-3.5A3 3 0 0 0 18.5 4.402C17.804 4 16.87 4 15 4H9c-1.87 0-2.804 0-3.5.402A3 3 0 0 0 4.402 5.5C4 6.196 4 7.13 4 9"/><path d="M20 9a2 2 0 0 0-2 2v2c0 .827-.173 1-1 1H7c-.827 0-1-.173-1-1v-2a2 2 0 1 0-3 1.732V13c0 1.886 0 2.828.586 3.414S5.114 17 7 17h10c1.886 0 2.828 0 3.414-.586S21 14.886 21 13v-.268A2 2 0 0 0 20 9Z"/></g>', width: 24, height: 24 }, "speaker-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 10c0-3.771 0-5.657 1.245-6.828S7.993 2 12 2s6.01 0 7.255 1.172S20.5 6.229 20.5 10v4c0 3.771 0 5.657-1.245 6.828S16.007 22 12 22s-6.01 0-7.255-1.172S3.5 17.771 3.5 14z"/><circle cx="12" cy="14.5" r="3.5"/><path stroke-linecap="round" d="M10 6h4"/></g>', width: 24, height: 24 }, spotify: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M7.5 12.069c1.1-.37 2.276-.569 3.5-.569c2.024 0 3.92.547 5.549 1.5M18 10c-1.85-1.262-4.088-2-6.5-2c-1.597 0-3.118.324-4.5.908M15.129 16a9.04 9.04 0 0 0-6.497-.685"/></g>', width: 24, height: 24 }, spotlight: { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M8 2v7m0 5l5-5l-4.116-4.116a3.02 3.02 0 0 0-4.268 0l-.732.732a3.02 3.02 0 0 0 0 4.268z"/><path d="m13 9l-5 5l.762 3.05a1.255 1.255 0 0 0 2.106.582l5.764-5.764a1.255 1.255 0 0 0-.583-2.106zm5 10l2 2m-1-6h2m-7 5v2"/></g>', width: 24, height: 24 }, "square-unlock-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4.268 18.845c.225 1.67 1.608 2.979 3.292 3.056c1.416.065 2.855.099 4.44.099s3.024-.034 4.44-.1c1.684-.076 3.067-1.385 3.292-3.055c.147-1.09.268-2.207.268-3.345s-.121-2.255-.268-3.345c-.225-1.67-1.608-2.979-3.292-3.056A95 95 0 0 0 12 9c-1.585 0-3.024.034-4.44.1c-1.684.076-3.067 1.385-3.292 3.055C4.12 13.245 4 14.362 4 15.5s.121 2.255.268 3.345Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 9V6.5A4.5 4.5 0 0 1 12 2c1.96 0 3.5 1.5 4 3"/><path stroke-linecap="round" d="M12.125 15.5H12m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0Z"/></g>', width: 24, height: 24 }, stop: { body: '<path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 12c0-3.28 0-4.919.814-6.081a4.5 4.5 0 0 1 1.105-1.105C7.08 4 8.72 4 12 4s4.919 0 6.081.814a4.5 4.5 0 0 1 1.105 1.105C20 7.08 20 8.72 20 12s0 4.919-.814 6.081a4.5 4.5 0 0 1-1.105 1.105C16.92 20 15.28 20 12 20s-4.919 0-6.081-.814a4.5 4.5 0 0 1-1.105-1.105C4 16.92 4 15.28 4 12Z"/>', width: 24, height: 24 }, sunset: { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="M9.5 7.5c.492.506 1.8 2.5 2.5 2.5m2.5-2.5c-.492.506-1.8 2.5-2.5 2.5m0 0V4"/><path d="M18.363 10.636L16.95 12.05M3 17h2m.637-6.364L7.05 12.05M21 17h-2m2 3H3m13-3a4 4 0 0 0-8 0"/></g>', width: 24, height: 24 }, "system-update-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="m21.255 7.134l-.494-.857c-.373-.648-.56-.972-.877-1.1c-.318-.13-.677-.028-1.395.176l-1.22.343c-.459.106-.94.046-1.359-.169l-.337-.194a2 2 0 0 1-.788-.968l-.334-.997c-.22-.66-.33-.99-.59-1.18C13.598 2 13.25 2 12.556 2h-1.114c-.695 0-1.042 0-1.303.189c-.262.189-.371.519-.591 1.179l-.334.997a2 2 0 0 1-.788.968l-.337.194a2 2 0 0 1-1.359.17l-1.22-.344c-.718-.204-1.077-.306-1.395-.177c-.317.13-.504.453-.877 1.101l-.494.857c-.35.607-.525.91-.49 1.234c.033.323.267.583.736 1.104l1.03 1.153c.253.319.432.875.432 1.375s-.18 1.056-.431 1.375L2.99 14.528c-.469.52-.703.781-.737 1.104s.141.627.491 1.234l.494.857c.373.648.56.972.877 1.1c.318.13.677.028 1.395-.176l1.22-.343c.46-.106.94-.046 1.36.169l.336.194c.359.23.635.57.788.968l.334.997c.22.66.33.99.59 1.18c.262.188.61.188 1.304.188h1.114c.695 0 1.042 0 1.303-.189c.262-.189.372-.518.591-1.178l.334-.998c.153-.399.429-.738.788-.968l.337-.194a2 2 0 0 1 1.359-.17l1.22.344c.718.204 1.077.306 1.395.177c.317-.13.504-.453.877-1.101l.494-.857c.35-.607.525-.91.49-1.234c-.033-.323-.267-.583-.736-1.104l-1.03-1.153c-.253-.32-.432-.875-.432-1.375s.18-1.056.431-1.375l1.031-1.153c.469-.52.703-.781.737-1.104s-.141-.627-.491-1.234Z"/><path stroke-linejoin="round" d="m14.062 11.5l.5-.5c.441-.441.662-.662.951-.57c.29.091.336.353.427.877q.06.338.06.693a4 4 0 0 1-5.5 3.71m-.5-3.175l-.544.544c-.434.434-.652.652-.938.565c-.287-.087-.338-.344-.44-.857A4 4 0 0 1 13.5 8.291"/></g>', width: 24, height: 24 }, thermometer: { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path stroke-linecap="round" d="m13.88 15.937l6.794-7.764c.748-.855 1.122-1.282 1.251-1.76a2.14 2.14 0 0 0-.042-1.258c-.16-.468-.562-.87-1.365-1.673s-1.205-1.204-1.673-1.365a2.14 2.14 0 0 0-1.258-.042c-.477.13-.905.503-1.76 1.251L8.063 10.12c-.956.836-1.433 1.254-1.715 1.806c-.28.551-.338 1.184-.453 2.448l-.023.258c-.061.668-.092 1.002-.22 1.307c-.127.304-.343.56-.777 1.072l-2.6 3.073a1.164 1.164 0 0 0 1.64 1.64l3.074-2.6c.512-.433.768-.65 1.072-.777s.639-.158 1.307-.219l.258-.023c1.264-.115 1.897-.172 2.448-.454c.552-.28.97-.758 1.806-1.714"/><path d="m7.79 9.895l1.58.948a.787.787 0 0 1 .27 1.08l-.292.486a1.634 1.634 0 0 0 2.242 2.243l.487-.292a.787.787 0 0 1 1.08.27l.948 1.58"/><path stroke-linecap="round" d="m17.263 6.737l-3.158 3.158"/></g>', width: 24, height: 24 }, "tick-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m5 14l3.5 3.5L19 6.5"/>', width: 24, height: 24 }, "timer-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M11.08 13.152L8 7l5.42 4.28c.77.608.774 1.767.008 2.38a1.547 1.547 0 0 1-2.347-.508"/><path d="M5 4.82a10 10 0 0 0-3 7.158C2 17.513 6.477 22 12 22s10-4.487 10-10.022a10.02 10.02 0 0 0-8.013-9.825c-.836-.17-1.254-.254-1.62.047S12 2.987 12 3.96v1.002"/></g>', width: 24, height: 24 }, "toilet-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M8 11h9.135c1.465 0 2.198 0 2.64.735c.442.736.182 1.204-.34 2.142A6.1 6.1 0 0 1 14.09 17a6.12 6.12 0 0 1-4.028-1.5M8 11V4c0-.943 0-1.414-.293-1.707S6.943 2 6 2s-1.414 0-1.707.293S4 3.057 4 4v7c0 .943 0 1.414.293 1.707S5.057 13 6 13s1.414 0 1.707-.293S8 11.943 8 11M7 7h3"/><path d="M16 17c-1 1 0 4 2 5H4c1-1 2.7-4.2 1.5-9"/></g>', width: 24, height: 24 }, "tv-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M2 14c0-3.771 0-5.657 1.172-6.828S6.229 6 10 6h4c3.771 0 5.657 0 6.828 1.172S22 10.229 22 14s0 5.657-1.172 6.828S17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172S2 17.771 2 14Z"/><path stroke-linejoin="round" d="m9 3l3 3l4-4"/></g>', width: 24, height: 24 }, user: { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M17 8.5a5 5 0 1 0-10 0a5 5 0 0 0 10 0"/><path d="M19 20.5a7 7 0 1 0-14 0"/></g>', width: 24, height: 24 }, "user-group": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M15.5 11a3.5 3.5 0 1 0-7 0a3.5 3.5 0 0 0 7 0"/><path d="M15.483 11.35q.484.149 1.017.15a3.5 3.5 0 1 0-3.483-3.85m-2.034 0a3.5 3.5 0 1 0-2.466 3.7M22 16.5c0-2.761-2.462-5-5.5-5m1 8c0-2.761-2.462-5-5.5-5s-5.5 2.239-5.5 5"/><path d="M7.5 11.5c-3.038 0-5.5 2.239-5.5 5"/></g>', width: 24, height: 24 }, "user-multiple": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M13 11a4 4 0 1 0-8 0a4 4 0 0 0 8 0"/><path d="M11.039 7.558a4 4 0 1 1 1.923 2.885M15 21a6 6 0 0 0-12 0"/><path d="M21 17a6 6 0 0 0-6-6"/></g>', width: 24, height: 24 }, "user-time-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M14.5 8a5 5 0 1 0-10 0a5 5 0 0 0 10 0"/><path d="M2.5 20a7 7 0 0 1 10-6.326M19 18l-1-.5V16m3.5 1.5a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0"/></g>', width: 24, height: 24 }, "vacuum-cleaner": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M6 21a2 2 0 1 1 0-4a2 2 0 0 1 0 4"/><path d="M10 21h1.974c.64 0 1.124-.565 1.01-1.179l-.914-4.9C11.538 12.07 8.994 10 6.024 10C5.458 10 5 10.447 5 10.999V14.5"/><path d="M19.5 21L12.858 6.934A6.87 6.87 0 0 0 6.649 3A4.65 4.65 0 0 0 2 7.65v.188A4.39 4.39 0 0 0 5 12m17 9h-5.5"/></g>', width: 24, height: 24 }, "video-off": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="m2.002 2l19.975 20m-5.125-5.132c-.13.938-.386 1.599-.893 2.106C14.937 20 13.289 20 9.993 20h-.999c-3.296 0-4.943 0-5.967-1.026C2.002 17.95 2.002 16.3 2.002 13v-2c0-3.3 0-4.95 1.024-5.975c.342-.343.755-.571 1.275-.723"/><path stroke-linejoin="round" d="M8.236 4h1.755c3.296 0 4.944 0 5.967 1.025C16.982 6.05 16.982 7.7 16.982 11v1.757m0-3.526l2.32-1.702c1.47-.988 2.147-.357 2.365.12c.452 1.279.31 3.744.31 6.893c-.107 2.013-.382 2.23-.663 2.452l-.003.002"/></g>', width: 24, height: 24 }, "view-off": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M22 8s-4 6-10 6S2 8 2 8"/><path stroke-linejoin="round" d="m15 13.5l1.5 2.5m3.5-5l2 2M2 13l2-2m5 2.5L7.5 16"/></g>', width: 24, height: 24 }, "washing-machine": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 14v-4c0-3.771 0-5.657 1.172-6.828S7.229 2 11 2h2c3.771 0 5.657 0 6.828 1.172S21 6.229 21 10v4c0 3.771 0 5.657-1.172 6.828S16.771 22 13 22h-2c-3.771 0-5.657 0-6.828-1.172S3 17.771 3 14"/><path d="M17 13a5 5 0 1 1-10 0a5 5 0 0 1 10 0"/><path d="M7 13q2.5-2 5 0t5 0M7.125 6H7m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "wifi-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M8.25 14.5c2-2 5.5-2 7.5 0m2.75-3c-3.768-3.333-9-3.333-13 0"/><path d="M2 8.5c6.316-5.333 13.684-5.333 20 0"/><circle cx="12" cy="18" r="1.5"/></g>', width: 24, height: 24 }, wireless: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.5 11h-5c-1.866 0-2.799 0-3.519.347a3.5 3.5 0 0 0-1.634 1.634C4 13.701 4 14.634 4 16.5s0 2.799.347 3.519a3.5 3.5 0 0 0 1.634 1.634C6.701 22 7.634 22 9.5 22h5c1.866 0 2.799 0 3.519-.347a3.5 3.5 0 0 0 1.634-1.634C20 19.299 20 18.366 20 16.5s0-2.799-.347-3.519a3.5 3.5 0 0 0-1.634-1.634C17.299 11 16.366 11 14.5 11M13 15h3M9.5 6.99a4.005 4.005 0 0 1 5 .01M7 3.752a8.01 8.01 0 0 1 10 0"/>', width: 24, height: 24 }, "wireless-cloud-access": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.478 8.398h.022c2.485 0 4.5 1.98 4.5 4.423a4.4 4.4 0 0 1-2 3.679m-2.522-8.102q.021-.243.022-.492C17.5 4.921 15.038 2.5 12 2.5c-2.877 0-5.238 2.171-5.48 4.937m10.958.961a5.33 5.33 0 0 1-1.235 2.949M10 8.398a5.04 5.04 0 0 0-3.48-.96C3.983 7.674 2 9.773 2 12.33c0 1.759.94 3.302 2.352 4.17M8 15.978c1.149-.935 2.52-1.478 3.995-1.478c1.478 0 2.854.547 4.005 1.487M14.174 18.5a4.1 4.1 0 0 0-2.18-.64a4.1 4.1 0 0 0-2.17.634M12 21.5h.006"/>', width: 24, height: 24 }, "workout-run": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 4.5a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m15 21l-.664-2.615a4.9 4.9 0 0 0-1.315-2.288L11.5 14.6M6 11.153c1-1.97 2.538-3.11 6-3.152m0 0c.219-.002.544-.003.87-.003c.505 0 .757 0 .958.094s.408.34.82.833c.118.142.24.268.352.352m-3-1.276L10.73 9.96c-.697 1.076-1.046 1.614-1.06 2.18a2 2 0 0 0 .123.738c.195.531.7.928 1.707 1.722M15 9.277c1.155.866 2.963 1.215 5-1.078m-5 1.078L11.5 14.6M4 17.73l.678.162C6.407 18.302 8.203 17.516 9 16"/></g>', width: 24, height: 24 }, "zoom-in-area": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m18.502 19.122l2.498 2.5m-1-6.5a5.5 5.5 0 1 0-11 0a5.5 5.5 0 0 0 11 0m-5.5-2v4m2-2h-4M10 3.622h4m-11 7v4m3.5 7a3.5 3.5 0 0 1-3.5-3.5m14.5-14.5a3.5 3.5 0 0 1 3.5 3.5m-18 0a3.5 3.5 0 0 1 3.5-3.5"/>', width: 24, height: 24 } }), e = Object.freeze({ "close-to-menu-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l7 0l7 0M5 12h14M5 19l7 0l7 0"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 5l7 7l7 -7M12 12h0M5 19l7 -7l7 7;M5 5l7 0l7 0M5 12h14M5 19l7 0l7 0"/></path>', width: 24, height: 24 }, "cog-loop": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="22" d="M12 9c1.66 0 3 1.34 3 3c0 1.66 -1.34 3 -3 3c-1.66 0 -3 -1.34 -3 -3c0 -1.66 1.34 -3 3 -3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="22;0"/></path><path stroke-dasharray="44" stroke-dashoffset="44" d="M12 5.5c3.59 0 6.5 2.91 6.5 6.5c0 3.59 -2.91 6.5 -6.5 6.5c-3.59 0 -6.5 -2.91 -6.5 -6.5c0 -3.59 2.91 -6.5 6.5 -6.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.3s" dur="0.5s" to="0"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="0"/></path><path d="M15.24 6.37c0.41 0.23 0.8 0.51 1.14 0.83c0 0 2.62 -1.08 2.63 -1.06c0 0 1.56 2.7 1.56 2.7c0.01 0.03 -2.22 1.75 -2.22 1.75c0.1 0.45 0.15 0.93 0.15 1.41" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M15.24 6.37c0.41 0.23 0.8 0.51 1.14 0.83c0.22 0.2 0.42 0.41 0.61 0.63c0.47 0.57 0.86 1.22 1.12 1.94c0.09 0.26 0.17 0.54 0.24 0.82c0.1 0.45 0.15 0.93 0.15 1.41;M15.24 6.37c0.41 0.23 0.8 0.51 1.14 0.83c0 0 2.62 -1.08 2.63 -1.06c0 0 1.56 2.7 1.56 2.7c0.01 0.03 -2.22 1.75 -2.22 1.75c0.1 0.45 0.15 0.93 0.15 1.41"/></path><path d="M18.5 11.99c0.01 0.47 -0.04 0.95 -0.15 1.4c0 0 2.25 1.73 2.23 1.75c0 0 -1.56 2.7 -1.56 2.7c-0.02 0.02 -2.63 -1.05 -2.63 -1.05c-0.34 0.31 -0.73 0.59 -1.15 0.83" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M18.5 11.99c0.01 0.47 -0.04 0.95 -0.15 1.4c-0.06 0.29 -0.15 0.57 -0.24 0.84c-0.26 0.69 -0.63 1.35 -1.12 1.94c-0.18 0.21 -0.38 0.42 -0.59 0.62c-0.34 0.31 -0.73 0.59 -1.15 0.83;M18.5 11.99c0.01 0.47 -0.04 0.95 -0.15 1.4c0 0 2.25 1.73 2.23 1.75c0 0 -1.56 2.7 -1.56 2.7c-0.02 0.02 -2.63 -1.05 -2.63 -1.05c-0.34 0.31 -0.73 0.59 -1.15 0.83"/></path><path d="M15.26 17.62c-0.4 0.24 -0.84 0.44 -1.29 0.57c0 0 -0.37 2.81 -0.4 2.81c0 0 -3.12 0 -3.12 0c-0.03 -0.01 -0.41 -2.8 -0.41 -2.8c-0.44 -0.14 -0.88 -0.34 -1.3 -0.58" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M15.26 17.62c-0.4 0.24 -0.84 0.44 -1.29 0.57c-0.28 0.09 -0.57 0.16 -0.85 0.21c-0.73 0.12 -1.49 0.13 -2.24 0c-0.27 -0.05 -0.55 -0.12 -0.83 -0.2c-0.44 -0.14 -0.88 -0.34 -1.3 -0.58;M15.26 17.62c-0.4 0.24 -0.84 0.44 -1.29 0.57c0 0 -0.37 2.81 -0.4 2.81c0 0 -3.12 0 -3.12 0c-0.03 -0.01 -0.41 -2.8 -0.41 -2.8c-0.44 -0.14 -0.88 -0.34 -1.3 -0.58"/></path><path d="M8.76 17.63c-0.41 -0.23 -0.8 -0.51 -1.14 -0.83c0 0 -2.62 1.08 -2.63 1.06c0 0 -1.56 -2.7 -1.56 -2.7c-0.01 -0.03 2.22 -1.75 2.22 -1.75c-0.1 -0.45 -0.15 -0.93 -0.15 -1.41" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M8.76 17.63c-0.41 -0.23 -0.8 -0.51 -1.14 -0.83c-0.22 -0.2 -0.42 -0.41 -0.61 -0.63c-0.47 -0.57 -0.86 -1.22 -1.12 -1.94c-0.09 -0.26 -0.17 -0.54 -0.24 -0.82c-0.1 -0.45 -0.15 -0.93 -0.15 -1.41;M8.76 17.63c-0.41 -0.23 -0.8 -0.51 -1.14 -0.83c0 0 -2.62 1.08 -2.63 1.06c0 0 -1.56 -2.7 -1.56 -2.7c-0.01 -0.03 2.22 -1.75 2.22 -1.75c-0.1 -0.45 -0.15 -0.93 -0.15 -1.41"/></path><path d="M5.5 12.01c-0.01 -0.47 0.04 -0.95 0.15 -1.4c0 0 -2.25 -1.73 -2.23 -1.75c0 0 1.56 -2.7 1.56 -2.7c0.02 -0.02 2.63 1.05 2.63 1.05c0.34 -0.31 0.73 -0.59 1.15 -0.83" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M5.5 12.01c-0.01 -0.47 0.04 -0.95 0.15 -1.4c0.06 -0.29 0.15 -0.57 0.24 -0.84c0.26 -0.69 0.63 -1.35 1.12 -1.94c0.18 -0.21 0.38 -0.42 0.59 -0.62c0.34 -0.31 0.73 -0.59 1.15 -0.83;M5.5 12.01c-0.01 -0.47 0.04 -0.95 0.15 -1.4c0 0 -2.25 -1.73 -2.23 -1.75c0 0 1.56 -2.7 1.56 -2.7c0.02 -0.02 2.63 1.05 2.63 1.05c0.34 -0.31 0.73 -0.59 1.15 -0.83"/></path><path d="M8.74 6.38c0.4 -0.24 0.84 -0.44 1.29 -0.57c0 0 0.37 -2.81 0.4 -2.81c0 0 3.12 0 3.12 0c0.03 0.01 0.41 2.8 0.41 2.8c0.44 0.14 0.88 0.34 1.3 0.58" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M8.74 6.38c0.4 -0.24 0.84 -0.44 1.29 -0.57c0.28 -0.09 0.57 -0.16 0.85 -0.21c0.73 -0.12 1.49 -0.13 2.24 0c0.27 0.05 0.55 0.12 0.83 0.2c0.44 0.14 0.88 0.34 1.3 0.58;M8.74 6.38c0.4 -0.24 0.84 -0.44 1.29 -0.57c0 0 0.37 -2.81 0.4 -2.81c0 0 3.12 0 3.12 0c0.03 0.01 0.41 2.8 0.41 2.8c0.44 0.14 0.88 0.34 1.3 0.58"/></path></g>', width: 24, height: 24 }, "download-loop": { body: '<g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="20" d="M12 4h2v6h2.5l-4.5 4.5M12 4h-2v6h-2.5l4.5 4.5"><animate attributeName="d" dur="1.5s" keyTimes="0;0.5;1" repeatCount="indefinite" values="M12 4h2v6h2.5l-4.5 4.5M12 4h-2v6h-2.5l4.5 4.5;M12 4h2v3h2.5l-4.5 4.5M12 4h-2v3h-2.5l4.5 4.5;M12 4h2v6h2.5l-4.5 4.5M12 4h-2v6h-2.5l4.5 4.5"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="20;0"/><animate fill="freeze" attributeName="fill-opacity" begin="0.7s" dur="0.4s" to="1"/></path><path fill="none" stroke-dasharray="14" stroke-dashoffset="14" d="M6 19h12"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.2s" to="0"/></path></g>', width: 24, height: 24 }, "lightbulb-off-loop": { body: '<defs><mask id="SVGoMLV5cXg"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><g stroke="#fff"><path stroke-dasharray="46" d="M12 17h-3v-2.8c-1.79 -1.04 -3 -2.98 -3 -5.2c0 -3.31 2.69 -6 6 -6c3.31 0 6 2.69 6 6c0 2.22 -1.21 4.16 -3 5.2v2.8Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="46;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M10 21h4"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.2s" to="0"/></path></g><path stroke="#000" stroke-dasharray="24" stroke-dashoffset="24" d="M1 11h22" transform="rotate(45 13 12)"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.3s" to="0"/></path></g></mask></defs><path fill="currentColor" d="M0 0h24v24H0z" mask="url(#SVGoMLV5cXg)"/><path fill="none" stroke="currentColor" stroke-dasharray="24" stroke-dashoffset="24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M0 13h22" transform="rotate(45 13 12)"><animate attributeName="d" dur="6s" keyTimes="0;0.5;1" repeatCount="indefinite" values="M0 13h22;M2 13h22;M0 13h22"/><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.3s" to="0"/></path>', width: 24, height: 24 }, "loading-loop": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3c4.97 0 9 4.03 9 9"><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path>', width: 24, height: 24 }, "menu-to-close-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l7 7l7 -7M12 12h0M5 19l7 -7l7 7"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 5l7 0l7 0M5 12h14M5 19l7 0l7 0;M5 5l7 7l7 -7M12 12h0M5 19l7 -7l7 7"/></path>', width: 24, height: 24 }, pause: { body: '<g fill="none" stroke="currentColor" stroke-dasharray="30" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M7 6h2v12h-2Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="30;0"/></path><path stroke-dashoffset="30" d="M15 6h2v12h-2Z"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.4s" to="0"/></path></g>', width: 24, height: 24 }, "pause-to-play-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 15l-5 3l0 -12l5 3l0 0M13 9l5 3l0 0l-5 3l0 0"><animate fill="freeze" attributeName="d" dur="0.6s" keyTimes="0;0.33;1" values="M9 18l-2 0l0 -12l2 0l0 12M15 6l2 0l0 12l-2 0l0 -12;M13 15l-5 3l0 -12l5 3l0 6M13 9l5 3l0 0l-5 3l0 -6;M13 15l-5 3l0 -12l5 3l0 0M13 9l5 3l0 0l-5 3l0 0"/></path>', width: 24, height: 24 }, play: { body: '<path fill="none" stroke="currentColor" stroke-dasharray="38" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6l10 6l-10 6Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="38;0"/></path>', width: 24, height: 24 }, "play-to-pause-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 18l-2 0l0 -12l2 0l0 12M15 6l2 0l0 12l-2 0l0 -12"><animate fill="freeze" attributeName="d" dur="0.6s" keyTimes="0;0.33;1" values="M13 15l-5 3l0 -12l5 3l0 0M13 9l5 3l0 0l-5 3l0 0;M13 15l-5 3l0 -12l5 3l0 6M13 9l5 3l0 0l-5 3l0 -6;M9 18l-2 0l0 -12l2 0l0 12M15 6l2 0l0 12l-2 0l0 -12"/></path>', width: 24, height: 24 }, switch: { body: '<path fill="none" stroke="currentColor" stroke-dasharray="54" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7h5c2.76 0 5 2.24 5 5c0 2.76 -2.24 5 -5 5h-10c-2.76 0 -5 -2.24 -5 -5c0 -2.76 2.24 -5 5 -5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="54;0"/></path><circle cx="17" cy="12" r="3" fill="currentColor" opacity="0"><animate fill="freeze" attributeName="opacity" begin="0.6s" dur="0.2s" to="1"/></circle>', width: 24, height: 24 }, "switch-off": { body: '<path fill="none" stroke="currentColor" stroke-dasharray="54" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7h5c2.76 0 5 2.24 5 5c0 2.76 -2.24 5 -5 5h-10c-2.76 0 -5 -2.24 -5 -5c0 -2.76 2.24 -5 5 -5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="54;0"/></path><circle cx="7" cy="12" r="3" fill="currentColor" opacity="0"><animate fill="freeze" attributeName="opacity" begin="0.6s" dur="0.2s" to="1"/></circle>', width: 24, height: 24 }, "switch-off-to-switch-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7h5c2.76 0 5 2.24 5 5c0 2.76 -2.24 5 -5 5h-10c-2.76 0 -5 -2.24 -5 -5c0 -2.76 2.24 -5 5 -5Z"/><circle cx="17" cy="12" r="3" fill="currentColor"><animate fill="freeze" attributeName="cx" dur="0.2s" values="7;17"/></circle>', width: 24, height: 24 }, "switch-to-switch-off-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7h5c2.76 0 5 2.24 5 5c0 2.76 -2.24 5 -5 5h-10c-2.76 0 -5 -2.24 -5 -5c0 -2.76 2.24 -5 5 -5Z"/><circle cx="7" cy="12" r="3" fill="currentColor"><animate fill="freeze" attributeName="cx" dur="0.2s" values="17;7"/></circle>', width: 24, height: 24 }, "volume-high-off": { body: '<defs><mask id="SVGZcWklbpN"><path fill="none" stroke="#fff" stroke-dasharray="34" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h3.5l3.5 -3.5v10.5l-3.5 -3.5h-3.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><g fill="#fff"><path d="M14 12c0 0 0 0 0 0c0 0 0 0 0 0Z"><animate fill="freeze" attributeName="d" begin="0.4s" dur="0.2s" to="M14 16c1.5 -0.71 2.5 -2.24 2.5 -4c0 -1.77 -1 -3.26 -2.5 -4Z"/></path><path d="M14 12c0 0 0 0 0 0c0 0 0 0 0 0v0c0 0 0 0 0 0c0 0 0 0 0 0Z"><animate fill="freeze" attributeName="d" begin="0.4s" dur="0.4s" to="M14 3.23c4 0.91 7 4.49 7 8.77c0 4.28 -3 7.86 -7 8.77v-2.07c2.89 -0.86 5 -3.53 5 -6.7c0 -3.17 -2.11 -5.85 -5 -6.71Z"/></path></g><path fill="none" stroke="#000" stroke-dasharray="28" stroke-dashoffset="28" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M-1 11h26" transform="rotate(45 12 12)"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.4s" to="0"/></path></mask></defs><path fill="currentColor" d="M0 0h24v24H0z" mask="url(#SVGZcWklbpN)"/><path fill="none" stroke="currentColor" stroke-dasharray="28" stroke-dashoffset="28" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M-1 13h26" transform="rotate(45 12 12)"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.4s" to="0"/></path>', width: 24, height: 24 }, "volume-medium": { body: '<path fill="none" stroke="currentColor" stroke-dasharray="34" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 10h3.5l3.5 -3.5v10.5l-3.5 -3.5h-3.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><path fill="currentColor" d="M16 12c0 0 0 0 0 0c0 0 0 0 0 0Z"><animate fill="freeze" attributeName="d" begin="0.4s" dur="0.2s" to="M16 16c1.5 -0.71 2.5 -2.24 2.5 -4c0 -1.77 -1 -3.26 -2.5 -4Z"/></path>', width: 24, height: 24 }, "volume-minus": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="34" d="M4 10h3.5l3.5 -3.5v10.5l-3.5 -3.5h-3.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M15 12h6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.2s" to="0"/></path></g>', width: 24, height: 24 }, "volume-plus": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="34" d="M4 10h3.5l3.5 -3.5v10.5l-3.5 -3.5h-3.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><g stroke-dasharray="8" stroke-dashoffset="8"><path d="M15 12h6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.2s" to="0"/></path><path d="M18 9v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" to="0"/></path></g></g>', width: 24, height: 24 } }), a = Object.freeze({ "led-strip": '<g transform="scale(0.75)"><path fill="currentColor" d="M6.75,8.75h20.25c.4140625,0,.75-.3359375.75-.75v-.75h3.25c.4140625,0,.75-.3359375.75-.75s-.3359375-.75-.75-.75h-3.25v-2.5h3.25c.4140625,0,.75-.3359375.75-.75s-.3359375-.75-.75-.75h-3.25v-.75c0-.4140625-.3359375-.75-.75-.75H6.75C3.1660156.25.25,3.1660156.25,6.75v7c0,3.5839844,2.9160156,6.5,6.5,6.5h18.5c1.3605957,0,2.6092529.5638428,3.545166,1.5205078-.90625.9125977-2.1600342,1.4794922-3.545166,1.4794922H5c-.4140625,0-.75.3359375-.75.75v.75H1c-.4140625,0-.75.3359375-.75.75s.3359375.75.75.75h3.25v2.5H1c-.4140625,0-.75.3359375-.75.75s.3359375.75.75.75h3.25v.75c0,.4140625.3359375.75.75.75h20.25c3.5839844,0,6.5-2.9160156,6.5-6.5v-7c0-3.5839844-2.9160156-6.5-6.5-6.5H6.75c-1.3851318,0-2.638916-.5668945-3.545166-1.4794922.9359131-.956665,2.1845703-1.5205078,3.545166-1.5205078ZM30.25,25.25c0,2.7568359-2.2421875,5-5,5H5.75v-5.5h19.5c2.0209961,0,3.8068848-.9466553,5-2.3979492v2.8979492ZM6.75,13.25h18.5c2.7578125,0,5,2.2431641,5,5,0,.826416-.2207031,1.5949707-.5771484,2.2824707-1.1959229-1.1253662-2.7446289-1.7824707-4.4228516-1.7824707H6.75c-2.7578125,0-5-2.2431641-5-5v-2.8979492c1.1931152,1.4512939,2.9790039,2.3979492,5,2.3979492ZM1.75,6.75C1.75,3.9931641,3.9921875,1.75,6.75,1.75h19.5v5.5H6.75c-1.6782227,0-3.2269287.6571045-4.4228516,1.7824707-.3564453-.6875-.5771484-1.4560547-.5771484-2.2824707ZM6.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM10.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM14.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM18.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM22.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM7.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM11.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM15.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM19.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM23.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM9.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75ZM13.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75ZM17.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75ZM21.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75ZM25.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75Z"/></g>', balcony: '<g transform="scale(0.75)"><path fill="currentColor" d="M7,15.75c.4140625,0,.75-.3359375.75-.75v-3.25h7.5v3.25c0,.4140625.3359375.75.75.75s.75-.3359375.75-.75v-3.25h7.5v3.25c0,.4140625.3359375.75.75.75s.75-.3359375.75-.75v-5C25.75,4.6230469,21.3759766.25,16,.25S6.25,4.6230469,6.25,10v5c0,.4140625.3359375.75.75.75ZM16.75,1.8258057c4.1931152.3857422,7.5,3.8822021,7.5,8.1741943v.25h-7.5V1.8258057ZM7.75,10c0-4.2919922,3.3068848-7.7884521,7.5-8.1741943v8.4241943h-7.5v-.25ZM29,18.25H3c-1.5166016,0-2.75,1.234375-2.75,2.75,0,.4140625.3359375.75.75.75s.75-.3359375.75-.75c0-.6894531.5605469-1.25,1.25-1.25h2.25v10.5h-.25c-.4140625,0-.75.3359375-.75.75s.3359375.75.75.75h22c.4140625,0,.75-.3359375.75-.75s-.3359375-.75-.75-.75h-.25v-10.5h2.25c.6894531,0,1.25.5605469,1.25,1.25,0,.4140625.3359375.75.75.75s.75-.3359375.75-.75c0-1.515625-1.2333984-2.75-2.75-2.75ZM10.25,30.25h-3.5v-10.5h3.5v10.5ZM15.25,30.25h-3.5v-10.5h3.5v10.5ZM20.25,30.25h-3.5v-10.5h3.5v10.5ZM25.25,30.25h-3.5v-10.5h3.5v10.5Z"/></g>' }), t = Object.freeze({ "mdi:access-point": "hugeicons:wireless-cloud-access", "mdi:account": "hugeicons:user", "mdi:account-clock-outline": "hugeicons:user-time-01", "mdi:account-group": "hugeicons:user-group", "mdi:account-multiple-outline": "hugeicons:user-multiple", "mdi:air-conditioner": "hugeicons:smart-ac", "mdi:air-fryer": "hugeicons:oven", "mdi:alert-circle-outline": "hugeicons:alert-circle", "mdi:apps": "hugeicons:grid-view", "mdi:arrow-left": "hugeicons:arrow-left-02", "mdi:autorenew": "hugeicons:refresh", "mdi:bed-king": "hugeicons:bed-double", "mdi:bed-king-outline": "hugeicons:bed-double", "mdi:bed-single": "hugeicons:bed-single-01", "mdi:bed-single-outline": "hugeicons:bed-single-01", "mdi:bookmark-music-outline": "hugeicons:bookmark-02", "mdi:calendar-month-outline": "hugeicons:calendar-03", "mdi:cctv": "hugeicons:cctv-camera", "mdi:ceiling-light-outline": "hugeicons:spotlight", "mdi:check": "hugeicons:tick-02", "mdi:checkbox-blank-circle": "hugeicons:circle", "mdi:chevron-down": "hugeicons:arrow-down-01", "mdi:chevron-left": "hugeicons:arrow-left-01", "mdi:chevron-right": "hugeicons:arrow-right-01", "mdi:chevron-up": "hugeicons:arrow-up-01", "mdi:chip": "hugeicons:chip", "mdi:circle-small": "hugeicons:circle-small", "mdi:clock-outline": "hugeicons:clock-01", "mdi:countertop": "hugeicons:kitchen-utensils", "mdi:cube-outline": "hugeicons:cube", "mdi:curtains": "hugeicons:curtains", "mdi:curtains-closed": "hugeicons:curtains", "mdi:database": "hugeicons:database", "mdi:desk": "hugeicons:desk", "mdi:desktop-classic": "hugeicons:computer", "mdi:desktop-tower": "hugeicons:computer", "mdi:dishwasher": "hugeicons:dish-washer", "mdi:dots-horizontal": "hugeicons:more-horizontal", "mdi:dots-horizontal-circle": "hugeicons:more-horizontal-circle-01", "mdi:dots-vertical": "hugeicons:more-vertical", "mdi:eye": "hugeicons:eye", "mdi:eye-off-outline": "hugeicons:view-off", "mdi:fan": "hugeicons:fan-01", "mdi:fan-auto": "hugeicons:fan-02", "mdi:fan-speed-1": "hugeicons:fan-01", "mdi:fan-speed-2": "hugeicons:fan-02", "mdi:fan-speed-3": "hugeicons:fan-02", "mdi:fire": "hugeicons:fire", "mdi:heart-outline": "hugeicons:favourite", "mdi:home": "hugeicons:home-03", "mdi:home-assistant": "hugeicons:home-03", "mdi:home-lightning-bolt-outline": "hugeicons:electric-home-01", "mdi:home-map-marker": "hugeicons:maps-location-01", "mdi:home-outline": "hugeicons:home-03", "mdi:home-variant": "hugeicons:home-03", "mdi:import": "hugeicons:file-import", "mdi:keyboard-backspace": "hugeicons:arrow-left-02", "mdi:led-strip-variant": "bruno:led-strip", "mdi:lightbulb": "hugeicons:bulb", "mdi:lightbulb-group": "hugeicons:bulb", "mdi:lightbulb-group-outline": "hugeicons:bulb", "mdi:lightbulb-off-outline": "hugeicons:lightbulb-off", "mdi:lightbulb-on": "hugeicons:bulb", "mdi:lightbulb-on-outline": "hugeicons:bulb", "mdi:lightbulb-outline": "hugeicons:bulb", "mdi:lightning-bolt": "hugeicons:flash", "mdi:lock": "hugeicons:lock", "mdi:lock-open-variant": "hugeicons:square-unlock-01", "mdi:lock-outline": "hugeicons:lock", "mdi:magnify-plus-outline": "hugeicons:zoom-in-area", "mdi:map-marker": "hugeicons:location-01", "mdi:map-marker-radius-outline": "hugeicons:location-03", "mdi:menu": "hugeicons:menu-01", "mdi:microphone-outline": "hugeicons:mic-01", "mdi:motion-sensor": "hugeicons:motion-01", "mdi:multimedia": "hugeicons:music-note-03", "mdi:music": "hugeicons:music-note-03", "mdi:music-note": "hugeicons:music-note-03", "mdi:noodles": "hugeicons:noodles", "mdi:pause": "line-md:pause", "mdi:play": "line-md:play", "mdi:play-pause": "line-md:play-to-pause-transition", "mdi:playlist-music": "hugeicons:playlist-01", "mdi:playlist-play": "hugeicons:playlist-01", "mdi:plus": "hugeicons:plus-sign", "mdi:power": "hugeicons:power", "mdi:power-plug-outline": "hugeicons:power-socket-01", "mdi:power-standby": "hugeicons:power", "mdi:pulse": "hugeicons:pulse-01", "mdi:radiobox-marked": "hugeicons:circle", "mdi:raspberry-pi": "hugeicons:cpu", "mdi:refresh": "hugeicons:refresh", "mdi:remote-tv": "hugeicons:remote-control", "mdi:restart": "hugeicons:list-restart", "mdi:robot-vacuum": "hugeicons:vacuum-cleaner", "mdi:router-wireless": "hugeicons:router-01", "mdi:run-fast": "hugeicons:workout-run", "mdi:shield-lock": "hugeicons:security-lock", "mdi:shield-lock-outline": "hugeicons:security-lock", "mdi:skip-next": "hugeicons:next", "mdi:skip-previous": "hugeicons:previous", "mdi:snowflake": "hugeicons:snow", "mdi:sofa": "hugeicons:sofa-01", "mdi:sofa-outline": "hugeicons:sofa-01", "mdi:sony-playstation": "hugeicons:game-controller-03", "mdi:speaker": "hugeicons:speaker-01", "mdi:speaker-wireless": "hugeicons:speaker-01", "mdi:spotify": "hugeicons:spotify", "mdi:stop": "hugeicons:stop", "mdi:string-lights": "hugeicons:lamp-04", "mdi:swap-vertical": "hugeicons:arrow-data-transfer-vertical", "mdi:television-classic": "hugeicons:tv-01", "mdi:thermometer": "hugeicons:thermometer", "mdi:thermostat": "hugeicons:thermometer", "mdi:thermostat-auto": "hugeicons:smart-ac", "mdi:timer-outline": "hugeicons:timer-01", "mdi:toggle-switch-outline": "line-md:switch", "mdi:toilet": "hugeicons:toilet-01", "mdi:update": "hugeicons:system-update-01", "mdi:video-off-outline": "hugeicons:video-off", "mdi:video-outline": "hugeicons:camera-video", "mdi:volume-medium": "line-md:volume-medium", "mdi:volume-minus": "line-md:volume-minus", "mdi:volume-mute": "line-md:volume-high-off", "mdi:volume-plus": "line-md:volume-plus", "mdi:wan": "hugeicons:internet", "mdi:washing-machine": "hugeicons:washing-machine", "mdi:water-percent": "hugeicons:humidity", "mdi:weather-night": "hugeicons:moon-02", "mdi:weather-sunset-down": "hugeicons:sunset", "mdi:weather-sunset-up": "hugeicons:sunset", "mdi:weather-windy": "hugeicons:fast-wind", "mdi:wifi": "hugeicons:wifi-01", "mdi:zigbee": "hugeicons:wireless", home: "hugeicons:home-03", music: "hugeicons:music-note-03", cameras: "hugeicons:cctv-camera", camera: "hugeicons:camera-video", system: "hugeicons:chip", vacuum: "hugeicons:vacuum-cleaner", network: "hugeicons:wifi-01", refresh: "hugeicons:refresh", scenes: "hugeicons:grid-view", updates: "hugeicons:system-update-01", floorplan: "hugeicons:maps", settings: "hugeicons:settings-01", monitor: "hugeicons:computer", power: "hugeicons:power", more: "hugeicons:more-horizontal-circle-01", sala: "hugeicons:sofa-01", office: "hugeicons:computer-desk-01", cozinha: "hugeicons:kitchen-utensils", lavabo: "hugeicons:toilet-01", casal: "hugeicons:bed-double", marina: "hugeicons:bed-single-01", miguel: "hugeicons:baby-bed-01", circle: "hugeicons:circle", lights_off: "hugeicons:lightbulb-off", wifi: "hugeicons:wifi-01", movies: "hugeicons:film-01", laptop: "hugeicons:laptop", sofa: "hugeicons:sofa-01", palette: "hugeicons:paint-board", wallpaper: "hugeicons:image-01", spotify: "hugeicons:spotify", tv: "hugeicons:tv-01", climate: "hugeicons:smart-ac", motion: "hugeicons:motion-01", homepod: "hugeicons:speaker-01", living_sofa: "hugeicons:sofa-01", ledstrip: "bruno:led-strip", pendant: "hugeicons:candelier-02", sconce: "hugeicons:lamp-wall-up", light_flush: "hugeicons:bulb", curtain: "hugeicons:curtains", "curtain-open": "hugeicons:curtains", "curtain-close": "hugeicons:curtains", "curtain-stop": "hugeicons:stop", "meeting-off": "hugeicons:video-off" }), i = Object.freeze({
+  const o = Object.freeze({ "candelier-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2 3h20M12 3v13m7.5-13v8m-15-8v8m0 0c-1.715 0-2.705 2.512-2.464 3.99c.207 1.267 4.696 1.424 4.928 0C7.205 13.512 6.215 11 4.5 11m7.5 5c-1.715 0-2.705 2.512-2.464 3.99c.207 1.267 4.696 1.424 4.928 0C14.705 18.512 13.715 16 12 16m7.5-5c-1.715 0-2.705 2.512-2.464 3.99c.207 1.267 4.696 1.424 4.928 0c.241-1.478-.749-3.99-2.464-3.99"/>', width: 24, height: 24 }, "lamp-wall-up": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h10M8.66 12h10.68a1.66 1.66 0 0 0 1.526-2.313l-1.827-4.263c-.504-1.175-.756-1.763-1.257-2.094S16.642 3 15.362 3h-2.724c-1.28 0-1.92 0-2.42.33c-.501.33-.753.919-1.257 2.094L7.134 9.687A1.66 1.66 0 0 0 8.66 12M3 19.667v-3.334c0-.31 0-.465.034-.592a1 1 0 0 1 .707-.707C3.868 15 4.023 15 4.333 15c.62 0 .93 0 1.185.068a2 2 0 0 1 1.414 1.414c.068.255.068.565.068 1.185v.666c0 .62 0 .93-.068 1.185a2 2 0 0 1-1.414 1.414C5.263 21 4.953 21 4.333 21c-.31 0-.465 0-.592-.034a1 1 0 0 1-.707-.707C3 20.132 3 19.977 3 19.667M7 18h1c2.829 0 4.243 0 5.121-.879C14 16.243 14 14.828 14 12"/>', width: 24, height: 24 }, "shower-head": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.132 16.654a1.544 1.544 0 0 0 1.96-.954l1.172-3.393a1.03 1.03 0 0 1 1.308-.635l.972.333c.537.185 1.122-.1 1.307-.635l2.343-6.786a1.025 1.025 0 0 0-.637-1.303a5.145 5.145 0 0 0-6.535 3.178l-2.846 8.24c-.277.803.15 1.678.956 1.955m0 0l-.735 2.13A3.46 3.46 0 0 1 3 21M18.083 5.92l2.917 1m-3.921 1.907l2.917 1.002m-3.921 1.907l2.916 1.001"/>', width: 24, height: 24 }, "alert-circle": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m.125 3.75H12m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "arrow-data-transfer-vertical": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19V6.659c0-1.006 0-1.51.309-1.634c.308-.125.672.23 1.398.941L19 8.211M9 5v12.341c0 1.006 0 1.51-.309 1.634c-.308.125-.672-.23-1.398-.941L5 15.789"/>', width: 24, height: 24 }, "arrow-down-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9s-4.419 6-6 6s-6-6-6-6"/>', width: 24, height: 24 }, "arrow-left-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 6s-6 4.419-6 6s6 6 6 6"/>', width: 24, height: 24 }, "arrow-left-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.5 12.002H19m-8 6s-6-4.419-6-6s6-6 6-6"/>', width: 24, height: 24 }, "arrow-right-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 6s6 4.419 6 6s-6 6-6 6"/>', width: 24, height: 24 }, "arrow-up-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 15s-4.42-6-6-6s-6 6-6 6"/>', width: 24, height: 24 }, "baby-bed-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 7v8M8 7v8m8-8v8m4 5V6a2 2 0 0 1 2-2M4 20V6a2 2 0 0 0-2-2m2 3h16M4 15h16M4 18h16"/>', width: 24, height: 24 }, "bed-double": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="M22 17.5H2M22 21v-5c0-1.886 0-2.828-.586-3.414S19.886 12 18 12H6c-1.886 0-2.828 0-3.414.586S2 14.114 2 16v5"/><path d="M11 12v-1.787c0-.38-.057-.508-.35-.658C10.04 9.243 9.299 9 8.5 9s-1.54.243-2.15.555c-.293.15-.35.278-.35.658V12m12 0v-1.787c0-.38-.057-.508-.35-.658C17.04 9.243 16.299 9 15.5 9s-1.54.243-2.15.555c-.293.15-.35.278-.35.658V12"/><path d="M21 12V7.36c0-.691 0-1.037-.192-1.363s-.466-.496-1.014-.834C17.587 3.8 14.9 3 12 3s-5.587.8-7.794 2.163c-.548.338-.822.507-1.014.834S3 6.669 3 7.36V12"/></g>', width: 24, height: 24 }, "bed-single-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="M22 17.5H2M22 21v-5c0-1.886 0-2.828-.586-3.414S19.886 12 18 12H6c-1.886 0-2.828 0-3.414.586S2 14.114 2 16v5"/><path d="M16 12v-1.382c0-.508-.091-.677-.56-.877C14.463 9.324 13.278 9 12 9s-2.463.324-3.44.74c-.468.2-.56.37-.56.878V12"/><path d="M20 12V7.36c0-.691 0-1.037-.17-1.363c-.172-.327-.415-.496-.902-.834A12.1 12.1 0 0 0 12 3c-2.577 0-4.966.8-6.928 2.163c-.487.338-.73.507-.901.834S4 6.669 4 7.36V12"/></g>', width: 24, height: 24 }, "bookmark-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 17.98V9.709c0-3.634 0-5.45 1.172-6.58S8.229 2 12 2s5.657 0 6.828 1.129C20 4.257 20 6.074 20 9.708v8.273c0 2.306 0 3.459-.773 3.871c-1.497.8-4.304-1.867-5.637-2.67c-.773-.465-1.16-.698-1.59-.698s-.817.233-1.59.698c-1.333.803-4.14 3.47-5.637 2.67C4 21.44 4 20.287 4 17.981"/>', width: 24, height: 24 }, bulb: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M5.143 14A7.8 7.8 0 0 1 4 9.919C4 5.545 7.582 2 12 2s8 3.545 8 7.919A7.8 7.8 0 0 1 18.857 14"/><path stroke-linecap="round" d="M14 10c-.613.643-1.289 1-2 1s-1.387-.357-2-1"/><path d="M7.383 17.098c-.092-.276-.138-.415-.133-.527a.6.6 0 0 1 .382-.53c.104-.041.25-.041.54-.041h7.656c.291 0 .436 0 .54.04a.6.6 0 0 1 .382.531c.005.112-.041.25-.133.527c-.17.511-.255.767-.386.974a2 2 0 0 1-1.2.869c-.238.059-.506.059-1.043.059h-3.976c-.537 0-.806 0-1.043-.06a2 2 0 0 1-1.2-.868c-.131-.207-.216-.463-.386-.974ZM15 19l-.13.647c-.14.707-.211 1.06-.37 1.34a2 2 0 0 1-1.113.912C13.082 22 12.72 22 12 22s-1.082 0-1.387-.1a2 2 0 0 1-1.113-.913c-.159-.28-.23-.633-.37-1.34L9 19"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 15.5V11"/></g>', width: 24, height: 24 }, "calendar-03": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M16 2v4M8 2v4m5-2h-2C7.229 4 5.343 4 4.172 5.172S3 8.229 3 12v2c0 3.771 0 5.657 1.172 6.828S7.229 22 11 22h2c3.771 0 5.657 0 6.828-1.172S21 17.771 21 14v-2c0-3.771 0-5.657-1.172-6.828S16.771 4 13 4M3 10h18"/><path d="M12.126 14H12m.125 4H12m-4.376-4H7.5m.125 4H7.5m9.125-4H16.5m-4.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m0 4a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m-4.5-4a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m0 4a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m9-4a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "camera-video": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 21.5l4-4m2 0l4 4m-5-4v5"/><path d="M2 11.875c0-2.062 0-3.094 1.025-3.734S5.7 7.5 9 7.5h1c3.3 0 4.95 0 5.975.64C17 8.782 17 9.814 17 11.876v1.25c0 2.062 0 3.094-1.025 3.734S13.3 17.5 10 17.5H9c-3.3 0-4.95 0-5.975-.64C2 16.218 2 15.186 2 13.124z"/><path stroke-linecap="round" d="m17 10.25l.126-.076c2.116-1.27 3.174-1.904 4.024-1.598c.85.307.85 1.323.85 3.355v1.138c0 2.032 0 3.048-.85 3.355s-1.908-.329-4.024-1.598L17 14.75"/><circle cx="12.5" cy="5" r="2.5"/><circle cx="7" cy="4.5" r="3"/></g>', width: 24, height: 24 }, "cctv-camera": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m8 14l-.357 1.784c-.308 1.54-.462 2.31-1.015 2.763S5.291 19 3.721 19H2m0-2v4m14.951-9.492l4.252.033a.8.8 0 0 1 .358.089a.82.82 0 0 1 .351 1.096l-2.426 4.829a.798.798 0 0 1-1.363.114L15.599 14.2m-2.581-3.735l-.056.112m2.187 4.52l2.254-4.486a2.03 2.03 0 0 0-.868-2.709L7.685 3.33a2.96 2.96 0 0 0-4.007 1.32L2.325 7.342c-.747 1.487-.164 3.306 1.302 4.064l8.849 4.572c.977.505 2.173.11 2.672-.88m-2.075-4.744a.253.253 0 0 1 .109.338a.247.247 0 0 1-.334.11a.254.254 0 0 1-.109-.338a.247.247 0 0 1 .334-.11"/>', width: 24, height: 24 }, chip: { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path d="M4 12c0-3.771 0-5.657 1.172-6.828S8.229 4 12 4s5.657 0 6.828 1.172S20 8.229 20 12s0 5.657-1.172 6.828S15.771 20 12 20s-5.657 0-6.828-1.172S4 15.771 4 12Z"/><path d="M7.732 16.268C8.464 17 9.643 17 12 17c.79 0 1.447 0 2-.028L16.972 14c.028-.553.028-1.21.028-2c0-2.357 0-3.536-.732-4.268S14.357 7 12 7s-3.536 0-4.268.732S7 9.643 7 12s0 3.536.732 4.268Z"/><path stroke-linecap="round" d="M8 2v2m8-2v2m-4-2v2M8 20v2m4-2v2m4-2v2m6-6h-2M4 8H2m2 8H2m2-4H2m20-4h-2m2 4h-2"/></g>', width: 24, height: 24 }, circle: { body: '<circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"/>', width: 24, height: 24 }, "circle-small": { body: '<circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/>', width: 24, height: 24 }, "clock-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l2 2"/></g>', width: 24, height: 24 }, computer: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 21h2m-2 0a1.5 1.5 0 0 1-1.5-1.5V17H12m2 4h-4m0 0H8m2 0a1.5 1.5 0 0 0 1.5-1.5V17h.5m0 0v4m4-18H8c-2.828 0-4.243 0-5.121.879C2 4.757 2 6.172 2 9v2c0 2.828 0 4.243.879 5.121C3.757 17 5.172 17 8 17h8c2.828 0 4.243 0 5.121-.879C22 15.243 22 13.828 22 11V9c0-2.828 0-4.243-.879-5.121C20.243 3 18.828 3 16 3"/>', width: 24, height: 24 }, "computer-desk-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M22 12H2m18 5h-4c-1.886 0-2.828 0-3.414-.586S12 14.886 12 13v-1m-8 0v10m16-10v10M7 6V5c0-1.414 0-2.121.44-2.56C7.878 2 8.585 2 10 2h4c1.414 0 2.121 0 2.56.44C17 2.878 17 3.585 17 5v1c0 1.414 0 2.121-.44 2.56C16.122 9 15.415 9 14 9h-4c-1.414 0-2.121 0-2.56-.44C7 8.122 7 7.415 7 6m6.5 3l.5 3m-3.5-3l-.5 3"/>', width: 24, height: 24 }, cpu: { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path d="M4 12c0-3.771 0-5.657 1.172-6.828S8.229 4 12 4s5.657 0 6.828 1.172S20 8.229 20 12s0 5.657-1.172 6.828S15.771 20 12 20s-5.657 0-6.828-1.172S4 15.771 4 12Z"/><path stroke-linecap="round" d="M9.5 2v2m5-2v2m-5 16v2m5-2v2M13 9l-4 4m6 0l-2 2m9-.5h-2m-16-5H2m2 5H2m20-5h-2"/></g>', width: 24, height: 24 }, cube: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.793 21.207c.293.293.764.293 1.707.293h10c.943 0 1.414 0 1.707-.293m-13.414 0C2.5 20.914 2.5 20.443 2.5 19.5v-10c0-.943 0-1.414.293-1.707m0 13.414l6-6m7.414 6c.293-.293.293-.764.293-1.707v-10c0-.943 0-1.414-.293-1.707m0 13.414l5-5c.293-.293.293-.764.293-1.707v-10c0-.943 0-1.414-.293-1.707m-5 5C15.914 7.5 15.443 7.5 14.5 7.5h-10c-.943 0-1.414 0-1.707.293m13.414 0l5-5m-18.414 5l5-5C8.086 2.5 8.557 2.5 9.5 2.5h10c.943 0 1.414 0 1.707.293M8.793 15.207c.293.293.764.293 1.707.293H14m-5.207-.293C8.5 14.914 8.5 14.443 8.5 13.5v-3"/>', width: 24, height: 24 }, curtains: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M22 3H2m3 11c.598-.707 1.767-2.606 2-5m12 5c-.599-.707-1.767-2.606-2-5M3 3v11.625m0 0v2.125c0 2.003 0 3.005.586 3.628C4.172 21 5.114 21 7 21h1c0-1.469-.4-4.922-2-6.985m-3 .61c1.148-.077 2.141-.29 3-.61m0 0c3.88-1.44 6-6.8 6-11.015m9 0v11.625m0 0v2.125c0 2.003 0 3.005-.586 3.628C19.828 21 18.886 21 17 21h-1c0-1.469.4-4.922 2-6.985m3 .61c-1.148-.077-2.141-.29-3-.61m0 0c-3.88-1.44-6-6.8-6-11.015"/>', width: 24, height: 24 }, database: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="8" ry="3"/><path stroke-linecap="round" d="M7 10.842c.602.18 1.274.33 2 .44"/><path d="M20 12c0 1.657-3.582 3-8 3s-8-1.343-8-3"/><path stroke-linecap="round" d="M7 17.842c.602.18 1.274.33 2 .44"/><path d="M20 5v14c0 1.657-3.582 3-8 3s-8-1.343-8-3V5"/></g>', width: 24, height: 24 }, desk: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5" d="M3 8h18v4c0 2.357 0 3.536-.732 4.268C19.535 17 18.357 17 16 17H8c-2.357 0-3.536 0-4.268-.732S3 14.357 3 12zm4-2c0-1.886 0-2.828.586-3.414S9.114 2 11 2h2c1.886 0 2.828 0 3.414.586S17 4.114 17 6v2H7zM5 17v5m14-5v5M8 17v3m8-3v3M2 8h1.818m16.364 0H22"/>', width: 24, height: 24 }, "dish-washer": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M14.5 2.5h-5c-3.3 0-4.95 0-5.975 1.025S2.5 6.2 2.5 9.5v5c0 3.3 0 4.95 1.025 5.975S6.2 21.5 9.5 21.5h5c3.3 0 4.95 0 5.975-1.025S21.5 17.8 21.5 14.5v-5c0-3.3 0-4.95-1.025-5.975S17.8 2.5 14.5 2.5m-12 6h19M6 5.5h4"/><path d="M14.5 18.5a3.5 3.5 0 1 0 0-7a3.5 3.5 0 0 0 0 7"/><path d="M12 12.55a3.5 3.5 0 1 0 0 4.899M18.125 5.5H18m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "electric-home-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="M20 8.585v4.916c0 3.77 0 5.656-1.172 6.828c-.808.808-1.956 1.059-3.828 1.136M4 8.585v4.916c0 3.77 0 5.656 1.172 6.828c1.063 1.063 2.714 1.162 5.828 1.17a1 1 0 0 0 1-.998v-3"/><path d="m22 10.5l-4.343-4.164C14.99 3.779 13.657 2.5 12 2.5S9.01 3.78 6.343 6.336L2 10.5M14.001 9v2.5m-4 0V9m-1.495 3.38c-.04-.475.37-.88.89-.88h5.214c.52 0 .93.405.89.88l-.107 1.298a5.16 5.16 0 0 1-.98 2.61l-.35.483c-.331.455-.889.73-1.486.73h-1.148c-.597 0-1.155-.275-1.486-.73l-.35-.483a5.16 5.16 0 0 1-.98-2.61z"/></g>', width: 24, height: 24 }, eye: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M2 8s4.477-5 10-5s10 5 10 5"/><path d="M21.544 13.045c.304.426.456.64.456.955c0 .316-.152.529-.456.955C20.178 16.871 16.689 21 12 21c-4.69 0-8.178-4.13-9.544-6.045C2.152 14.529 2 14.315 2 14c0-.316.152-.529.456-.955C3.822 11.129 7.311 7 12 7c4.69 0 8.178 4.13 9.544 6.045Z"/><path d="M15 14a3 3 0 1 0-6 0a3 3 0 0 0 6 0Z"/></g>', width: 24, height: 24 }, "fan-01": { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path d="M9.263 12.246c-2.07-.191-4.623-.123-6.027.688l-.148.086c-.46.265-.8.703-.83 1.233c-.043.795.05 2.073.813 3.395c1.354 2.345 3.704 3.423 4.699 3.791c.296.11.62.066.893-.091c.503-.29.717-.902.584-1.468c-.37-1.58-.454-3.85.732-5.615a2.5 2.5 0 0 1-.716-2.02Zm4.898.918a2.5 2.5 0 0 1-1.29 1.572c.868 1.904 2.219 4.123 3.64 4.943l.148.086c.46.265 1.01.34 1.483.1a6.13 6.13 0 0 0 2.534-2.4c1.354-2.345 1.113-4.92.934-5.965a1.05 1.05 0 0 0-.526-.727c-.503-.291-1.139-.17-1.563.227c-1.208 1.134-3.187 2.368-5.36 2.164Zm-2.989-3.096a2.5 2.5 0 0 1 2.16.497C14.532 8.867 15.75 6.622 15.75 5v-.17c0-.53-.21-1.044-.654-1.334A6.13 6.13 0 0 0 11.75 2.5c-2.708 0-4.817 1.497-5.633 2.174a1.05 1.05 0 0 0-.367.82c0 .58.422 1.07.979 1.239c1.525.46 3.486 1.492 4.443 3.335Z"/><path d="M14.25 12.5a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0Z"/></g>', width: 24, height: 24 }, "fan-02": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linejoin="round" d="M9.58 12.629A5.05 5.05 0 0 0 7 17.042a5.04 5.04 0 0 0 3.053 4.645c.701.3 1.052.45 1.5.15s.447-.79.447-1.77V14.5a2.5 2.5 0 0 1-2.42-1.871ZM9.5 12H3.933c-.98 0-1.47 0-1.77-.448c-.3-.447-.15-.798.15-1.5A5.04 5.04 0 0 1 6.958 7c1.9 0 3.553 1.041 4.413 2.58A2.5 2.5 0 0 0 9.5 12ZM12 9.5V3.933c0-.98 0-1.47.448-1.77c.447-.3.798-.15 1.5.15A5.04 5.04 0 0 1 17 6.958c0 1.9-1.041 3.553-2.58 4.413A2.5 2.5 0 0 0 12 9.5Zm.629 4.92A2.5 2.5 0 0 0 14.5 12h5.567c.98 0 1.47 0 1.77.448c.3.447.15.798-.15 1.5A5.04 5.04 0 0 1 17.042 17a5.05 5.05 0 0 1-4.413-2.58Z"/><path d="M14.5 12a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0Z"/></g>', width: 24, height: 24 }, "fast-wind": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M2 5.941c3.5 3.432 8.576 1.961 9.732 0c.17-.288.268-.623.268-.98C12 3.878 11.105 3 10 3s-2 .878-2 1.961m9 3.967C17 7.311 18.12 6 19.5 6S22 7.311 22 8.928a3.23 3.23 0 0 1-.585 1.883C19.346 14.191 9.276 12.916 4 11.856m9.085 8.031c.206.649.762 1.113 1.415 1.113c.828 0 1.5-.747 1.5-1.669c0-.313-.078-.607-.213-.857C14.5 15.992 8 14.324 2 18.774"/><path stroke-linejoin="round" d="M19 15.5h2"/></g>', width: 24, height: 24 }, favourite: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.41 19.968C7.59 17.858 2 13.035 2 8.694C2 5.826 4.105 3.5 7 3.5c1.5 0 3 .5 5 2.5c2-2 3.5-2.5 5-2.5c2.895 0 5 2.326 5 5.194c0 4.34-5.59 9.164-8.41 11.274c-.95.71-2.23.71-3.18 0"/>', width: 24, height: 24 }, "file-import": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M20 15.006V10.66c0-.818 0-1.227-.152-1.595s-.441-.657-1.02-1.235l-4.736-4.739c-.499-.499-.748-.748-1.058-.896a2 2 0 0 0-.197-.082C12.514 2 12.161 2 11.456 2c-3.245 0-4.868 0-5.967.886a4 4 0 0 0-.603.604C4 4.59 4 6.213 4 9.46v4.545c0 3.773 0 5.66 1.172 6.832C6.115 21.78 7.52 21.964 10 22m3-19.5V3c0 2.83 0 4.245.879 5.124c.878.879 2.293.879 5.121.879h.5"/><path d="M15 22c-.607-.59-3-2.16-3-3s2.393-2.41 3-3m-2 3h7"/></g>', width: 24, height: 24 }, "film-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 12c0-4.478 0-6.718 1.391-8.109S7.521 2.5 12 2.5c4.478 0 6.718 0 8.109 1.391S21.5 7.521 21.5 12c0 4.478 0 6.718-1.391 8.109S16.479 21.5 12 21.5c-4.478 0-6.718 0-8.109-1.391S2.5 16.479 2.5 12Z"/><path stroke-linejoin="round" d="M2.5 7h19m-19 10h19"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 17V7M8 7V3m8 4V3M8 21v-4m8 4v-4"/></g>', width: 24, height: 24 }, fire: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.856 22c12.222-3 5.378-15-2.933-20c-.978 3.5-2.445 4.5-5.378 8c-3.884 4.634-1.955 10 3.422 12c-.815-1-2.917-3.1-1.467-6c.5-1 1.5-2 1-4c.978.5 3 1 3.5 3.5c.815-1 1.66-3.1.878-5.5c6.122 4.5 3.622 9 .978 12"/>', width: 24, height: 24 }, flash: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m5.226 11.33l6.998-8.983c.547-.703 1.573-.266 1.573.67V9.97c0 .56.402 1.015.899 1.015H18.1c.773 0 1.185 1.03.674 1.686l-6.998 8.983c-.547.702-1.573.265-1.573-.671V14.03c0-.56-.403-1.015-.899-1.015H5.9c-.773 0-1.185-1.03-.674-1.686"/>', width: 24, height: 24 }, "game-controller-03": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-linejoin="round" stroke-width="1.5" d="M2.008 15.81c.223-3.494.88-6.05 1.435-7.535c.281-.75.885-1.308 1.658-1.495c4.3-1.04 9.498-1.04 13.798 0c.773.187 1.377.745 1.658 1.495c.556 1.485 1.212 4.041 1.435 7.534c.133 2.09-1.377 3.241-3.05 4.083c-1.064.537-1.883-1.046-2.427-2.272a1.82 1.82 0 0 0-1.687-1.084H9.172c-.739 0-1.39.415-1.687 1.084c-.544 1.226-1.363 2.809-2.428 2.272c-1.655-.833-3.183-1.976-3.049-4.083M5 4.5L6.963 4M19 4.5L17 4"/><path stroke-width="1.5" d="m9 13l-1.5-1.5m0 0L6 10m1.5 1.5L6 13m1.5-1.5L9 10"/><path stroke-linejoin="round" stroke-width="2" d="M15.988 10h.01m1.99 3h.01"/></g>', width: 24, height: 24 }, "grid-view": { body: '<path fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5" d="M3.889 9.663C4.393 10 5.096 10 6.5 10s2.107 0 2.611-.337a2 2 0 0 0 .552-.552C10 8.607 10 7.904 10 6.5s0-2.107-.337-2.611a2 2 0 0 0-.552-.552C8.607 3 7.904 3 6.5 3s-2.107 0-2.611.337a2 2 0 0 0-.552.552C3 4.393 3 5.096 3 6.5s0 2.107.337 2.611a2 2 0 0 0 .552.552Zm11 0C15.393 10 16.096 10 17.5 10s2.107 0 2.611-.337a2 2 0 0 0 .552-.552C21 8.607 21 7.904 21 6.5s0-2.107-.337-2.611a2 2 0 0 0-.552-.552C19.607 3 18.904 3 17.5 3s-2.107 0-2.611.337a2 2 0 0 0-.552.552C14 4.393 14 5.096 14 6.5s0 2.107.337 2.611a2 2 0 0 0 .552.552Zm-11 11C4.393 21 5.096 21 6.5 21s2.107 0 2.611-.337a2 2 0 0 0 .552-.552C10 19.607 10 18.904 10 17.5s0-2.107-.337-2.611a2 2 0 0 0-.552-.552C8.607 14 7.904 14 6.5 14s-2.107 0-2.611.337a2 2 0 0 0-.552.552C3 15.393 3 16.096 3 17.5s0 2.107.337 2.611a2 2 0 0 0 .552.552Zm11 0C15.393 21 16.096 21 17.5 21s2.107 0 2.611-.337c.218-.146.406-.334.552-.552C21 19.607 21 18.904 21 17.5s0-2.107-.337-2.611a2 2 0 0 0-.552-.552C19.607 14 18.904 14 17.5 14s-2.107 0-2.611.337a2 2 0 0 0-.552.552C14 15.393 14 16.096 14 17.5s0 2.107.337 2.611c.146.218.334.406.552.552Z"/>', width: 24, height: 24 }, "home-03": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 11.99v2.51c0 3.3 0 4.95 1.025 5.975S6.7 21.5 10 21.5h4c3.3 0 4.95 0 5.975-1.025S21 17.8 21 14.5v-2.51c0-1.682 0-2.522-.356-3.25s-1.02-1.244-2.346-2.276l-2-1.555C14.233 3.303 13.2 2.5 12 2.5s-2.233.803-4.298 2.409l-2 1.555C4.375 7.496 3.712 8.012 3.356 8.74S3 10.308 3 11.99"/><path d="M15 21.5v-5c0-1.414 0-2.121-.44-2.56c-.439-.44-1.146-.44-2.56-.44s-2.121 0-2.56.44C9 14.378 9 15.085 9 16.5v5"/></g>', width: 24, height: 24 }, humidity: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 13.678c0-4.184 3.58-8.319 6.094-10.706a3.463 3.463 0 0 1 4.812 0C16.919 5.36 20.5 9.494 20.5 13.678C20.5 17.78 17.281 22 12 22s-8.5-4.22-8.5-8.322Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 12.284c1.465-.454 4.392-.6 7.984 1.418c3.586 2.014 6.532 1.296 8.016.433"/></g>', width: 24, height: 24 }, "image-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7.5" cy="7.5" r="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 12c0-4.478 0-6.718 1.391-8.109S7.521 2.5 12 2.5c4.478 0 6.718 0 8.109 1.391S21.5 7.521 21.5 12c0 4.478 0 6.718-1.391 8.109S16.479 21.5 12 21.5c-4.478 0-6.718 0-8.109-1.391S2.5 16.479 2.5 12Z"/><path d="M5 21c4.372-5.225 9.274-12.116 16.498-7.458"/></g>', width: 24, height: 24 }, internet: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4" ry="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M2 12h20"/></g>', width: 24, height: 24 }, "kitchen-utensils": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M11.983 14V3m0 11c-1.658 0-3.003 1.435-3.003 2.625c0 1.75 1.345 4.375 3.003 4.375s3.003-2.625 3.003-4.375c0-1.19-1.345-2.625-3.003-2.625Zm-7.005-3.972V21M3.686 3.13l-.783.078a1 1 0 0 0-.89 1.148l.67 4.315c.113.731.743 1.34 1.483 1.34H5.79c.74 0 1.37-.609 1.484-1.34l.669-4.315a1 1 0 0 0-.89-1.148l-.78-.078a13 13 0 0 0-2.587 0Z"/><path stroke-linejoin="round" d="M17.996 13.818V3.026c1.159.32 3.085 1.527 3.405 4.502l.573 4.514c.1.793-.101 1.584-.89 1.72c-.66.113-1.661.15-3.088.056m0 0V21"/></g>', width: 24, height: 24 }, "lamp-01": { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path d="M12 7a6 6 0 0 0-6 6h12a6 6 0 0 0-6-6Zm-3 6a3 3 0 1 0 6 0"/><path stroke-linecap="round" d="M5 13h14m-7-6V2m0 18v2m3-3l2 1.5M9 19l-2 1.5"/></g>', width: 24, height: 24 }, "lamp-04": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0 10v-3m-4 3h8m-.974-10H8.974c-2.212 0-3.318 0-3.787-.685c-.469-.686-.015-1.64.893-3.546l1.623-3.41c.546-1.145.818-1.718 1.342-2.038C9.57 2 10.234 2 11.562 2h.876c1.328 0 1.992 0 2.516.32c.525.321.797.894 1.343 2.039l1.623 3.41c.908 1.907 1.362 2.86.893 3.546S17.238 12 15.026 12"/></g>', width: 24, height: 24 }, laptop: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.5 16.5v-8c0-2.357 0-3.536-.732-4.268C19.035 3.5 17.857 3.5 15.5 3.5h-7c-2.357 0-3.536 0-4.268.732S3.5 6.143 3.5 8.5v8m18.484 4H2.016c-.383 0-.632-.391-.461-.724L3.5 16.5h17l1.945 3.276a.5.5 0 0 1-.46.724"/>', width: 24, height: 24 }, "lightbulb-off": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M5.143 14A7.8 7.8 0 0 1 4 9.919c0-1.672.524-3.223 1.417-4.502m2.62-2.38A8 8 0 0 1 12 2c4.418 0 8 3.545 8 7.919c0 1.456-.397 2.82-1.09 3.992M16 16H7l.544 1.633A2 2 0 0 0 9.442 19h5.117a2 2 0 0 0 1.897-1.367l.294-.883"/><path d="m15 19l-.544 1.633A2 2 0 0 1 12.559 22h-1.117a2 2 0 0 1-1.898-1.367L9 19m3-3.5V12M2 2l20 20"/></g>', width: 24, height: 24 }, "list-restart": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 4.5h18m-18 7h5m-5 7h5m4.758-1a4.5 4.5 0 1 0-.193-4.685M12 9.5v1c0 1.414 0 2.121.44 2.56c.439.44 1.146.44 2.56.44h1"/>', width: 24, height: 24 }, "location-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.618 21.367A2.37 2.37 0 0 1 12 22a2.37 2.37 0 0 1-1.617-.633C6.412 17.626 1.09 13.447 3.685 7.38C5.09 4.1 8.458 2 12.001 2s6.912 2.1 8.315 5.38c2.592 6.06-2.717 10.259-6.698 13.987Z"/><path d="M15.5 11a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Z"/></g>', width: 24, height: 24 }, "location-03": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14.5 9a2.5 2.5 0 1 1-5 0a2.5 2.5 0 0 1 5 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M18.222 17c1.395 1.988 2.062 3.047 1.665 3.9q-.06.128-.14.247c-.575.853-2.06.853-5.03.853H9.283c-2.97 0-4.454 0-5.029-.853a2 2 0 0 1-.14-.247c-.397-.852.27-1.912 1.665-3.9"/><path d="M13.257 17.494a1.813 1.813 0 0 1-2.514 0c-3.089-2.993-7.228-6.336-5.21-11.19C6.626 3.679 9.246 2 12 2s5.375 1.68 6.467 4.304c2.016 4.847-2.113 8.207-5.21 11.19Z"/></g>', width: 24, height: 24 }, lock: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10Z"/><path stroke-linecap="round" d="M12 13a2 2 0 1 0 0-4a2 2 0 0 0 0 4Zm0 0v3"/></g>', width: 24, height: 24 }, maps: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m5.253 4.196l-1.227.712c-.989.573-1.483.86-1.754 1.337C2 6.722 2 7.302 2 8.464v8.164c0 1.526 0 2.29.342 2.714c.228.282.547.472.9.535c.53.095 1.18-.282 2.478-1.035c.882-.511 1.73-1.043 2.785-.898c.48.065.937.293 1.853.748l3.813 1.896c.825.41.833.412 1.75.412H18c1.886 0 2.828 0 3.414-.599c.586-.598.586-1.562.586-3.49v-6.74c0-1.927 0-2.89-.586-3.49c-.586-.598-1.528-.598-3.414-.598h-2.079c-.917 0-.925-.002-1.75-.412L10.84 4.015C9.449 3.323 8.753 2.977 8.012 3S6.6 3.415 5.253 4.196M8 3v14.5m7-11v14"/>', width: 24, height: 24 }, "maps-location-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M22 10v-.783c0-1.94 0-2.909-.586-3.512c-.586-.602-1.528-.602-3.414-.602h-2.079c-.917 0-.925-.002-1.75-.415L10.84 3.021c-1.391-.696-2.087-1.044-2.828-1.02S6.6 2.418 5.253 3.204l-1.227.716c-.989.577-1.483.866-1.754 1.346C2 5.746 2 6.33 2 7.499v8.217c0 1.535 0 2.303.342 2.73c.228.285.547.476.9.54c.53.095 1.18-.284 2.478-1.042c.882-.515 1.73-1.05 2.785-.905c.884.122 1.705.68 2.495 1.075"/><path stroke-linejoin="round" d="M8 2v15"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v4.5"/><path d="M18.308 21.684A1.18 1.18 0 0 1 17.5 22c-.302 0-.591-.113-.808-.317c-1.986-1.87-4.646-3.96-3.349-6.993C14.045 13.05 15.73 12 17.5 12s3.456 1.05 4.157 2.69c1.296 3.03-1.358 5.13-3.349 6.993Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M17.625 16.5H17.5m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "menu-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5h16M4 12h16M4 19h16"/>', width: 24, height: 24 }, "mic-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 7v4a5 5 0 0 1-10 0V7a5 5 0 0 1 10 0Z"/><path stroke-linecap="round" d="M17 7h-3m3 4h-3m6 0a8 8 0 0 1-8 8m0 0a8 8 0 0 1-8-8m8 8v3m0 0h3m-3 0H9"/></g>', width: 24, height: 24 }, "moon-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21.5 14.078A8.557 8.557 0 0 1 9.922 2.5C5.668 3.497 2.5 7.315 2.5 11.873a9.627 9.627 0 0 0 9.627 9.627c4.558 0 8.376-3.168 9.373-7.422"/>', width: 24, height: 24 }, "more-horizontal": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6.004 12.5V12m12 .5V12m-6 .5V12m-5 .5a1 1 0 1 0-2 0a1 1 0 0 0 2 0m12 0a1 1 0 1 0-2 0a1 1 0 0 0 2 0m-6 0a1 1 0 1 0-2 0a1 1 0 0 0 2 0"/>', width: 24, height: 24 }, "more-horizontal-circle-01": { body: '<path fill="none" stroke="currentColor" stroke-width="1.5" d="M21 12a1.5 1.5 0 1 0-3 0a1.5 1.5 0 0 0 3 0Zm-7.5 0a1.5 1.5 0 1 0-3 0a1.5 1.5 0 0 0 3 0ZM6 12a1.5 1.5 0 1 0-3 0a1.5 1.5 0 0 0 3 0Z"/>', width: 24, height: 24 }, "more-vertical": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.997 12.5V12m0-5.5V6m0 12.5V18m1-5.5a1 1 0 1 0-2 0a1 1 0 0 0 2 0m0-6a1 1 0 1 0-2 0a1 1 0 0 0 2 0m0 12a1 1 0 1 0-2 0a1 1 0 0 0 2 0"/>', width: 24, height: 24 }, "motion-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M4.513 12c-.401-.058-.72-.156-1-.317a3 3 0 0 1-1.108-1.108C2 9.873 2 8.93 2 7.044s0-2.829.405-3.53c.266-.46.648-.843 1.108-1.109C4.215 2 5.158 2 7.044 2s2.829 0 3.53.405c.46.266.843.648 1.109 1.108c.161.28.259.599.317 1"/><path stroke-linecap="round" d="M9.522 17c-.406-.058-.727-.156-1.009-.319a3 3 0 0 1-1.108-1.107C7 14.87 7 13.929 7 12.044c0-1.886 0-2.829.405-3.531c.266-.46.648-.842 1.108-1.108C9.215 7 10.158 7 12.043 7c1.886 0 2.829 0 3.53.405c.46.266.843.648 1.108 1.108c.163.282.26.603.319 1.009"/><path d="M12 17c0-1.87 0-2.804.402-3.5a3 3 0 0 1 1.098-1.098C14.196 12 15.13 12 17 12s2.804 0 3.5.402a3 3 0 0 1 1.098 1.098C22 14.196 22 15.13 22 17s0 2.804-.402 3.5a3 3 0 0 1-1.098 1.098C19.804 22 18.87 22 17 22s-2.804 0-3.5-.402a3 3 0 0 1-1.098-1.098C12 19.804 12 18.87 12 17Z"/></g>', width: 24, height: 24 }, "music-note-03": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="18.5" r="3.5"/><circle cx="18" cy="16" r="3"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 18.5V7c0-.923 0-1.385.264-1.672c.263-.287.754-.329 1.735-.413c4.023-.343 6.91-1.655 8.356-2.505c.296-.174.444-.26.544-.203s.101.225.101.559V16"/><path stroke-linecap="round" stroke-linejoin="round" d="M10 10c5.867 0 9.778-2.333 11-3"/></g>', width: 24, height: 24 }, next: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linejoin="round" d="M15.935 12.626c-.254 1.211-1.608 2.082-4.315 3.822c-2.945 1.893-4.417 2.84-5.61 2.475a2.8 2.8 0 0 1-1.088-.635C4 17.418 4 15.612 4 12s0-5.418.922-6.288a2.8 2.8 0 0 1 1.089-.635c1.192-.365 2.664.582 5.609 2.475c2.707 1.74 4.06 2.61 4.315 3.822c.087.412.087.84 0 1.252Z"/><path stroke-linecap="round" d="M20 5v14"/></g>', width: 24, height: 24 }, noodles: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M18 12a2.5 2.5 0 0 0-5 0"/><path stroke-linecap="round" stroke-linejoin="round" d="M6 3v9m2.5-9.5v5M11 2v5.5m-7-3l2-.312M20 2l-6.5 1.016M4 7l2-.125M20 6l-6.5.406"/><path stroke-linejoin="round" d="M4.911 12H19.09c1.602 0 2.19.37 1.79 1.982c-.706 2.843-2.703 3.549-4.549 5.404c-.448.45.25 1.117.25 1.613c0 .934-.887 1.001-1.595 1.001h-5.97c-.708 0-1.596-.067-1.595-1c0-.486.677-1.184.25-1.614c-1.846-1.855-3.843-2.561-4.549-5.404c-.4-1.611.188-1.982 1.79-1.982Z"/></g>', width: 24, height: 24 }, oven: { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 16V8c0-2.828 0-4.243.879-5.121C4.757 2 6.172 2 9 2h6c2.828 0 4.243 0 5.121.879C21 3.757 21 5.172 21 8v8c0 2.828 0 4.243-.879 5.121C19.243 22 17.828 22 15 22H9c-2.828 0-4.243 0-5.121-.879C3 20.243 3 18.828 3 16"/><path d="M6 16v-5c0-1.414 0-2.121.44-2.56C6.878 8 7.585 8 9 8h6c1.414 0 2.121 0 2.56.44c.44.439.44 1.146.44 2.56v5c0 1.414 0 2.121-.44 2.56c-.439.44-1.146.44-2.56.44H9c-1.414 0-2.121 0-2.56-.44C6 18.122 6 17.415 6 16m3-5h6m-2.95-5.998H12m.1 0a.1.1 0 1 1-.2 0a.1.1 0 0 1 .2 0m3.95 0H16m.1 0a.1.1 0 1 1-.2 0a.1.1 0 0 1 .2 0m-8.05 0H8m.1 0a.1.1 0 1 1-.2 0a.1.1 0 0 1 .2 0"/></g>', width: 24, height: 24 }, "paint-board": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12s4.477 10 10 10c.842 0 2 .116 2-1c0-.609-.317-1.079-.631-1.546c-.46-.683-.917-1.359-.369-2.454c.667-1.333 1.778-1.333 3.482-1.333c.851 0 1.851 0 3.018-.167c2.101-.3 2.5-1.592 2.5-3.5Z"/><circle cx="9.5" cy="8.5" r="1.5"/><circle cx="16.5" cy="9.5" r="1.5"/><path stroke-linecap="round" stroke-linejoin="round" d="M7.125 15H7m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "playlist-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 15c0-2.809 0-4.213.674-5.222a4 4 0 0 1 1.104-1.104C5.787 8 7.19 8 10 8h4c2.809 0 4.213 0 5.222.674a4 4 0 0 1 1.104 1.104C21 10.787 21 12.19 21 15s0 4.213-.674 5.222a4 4 0 0 1-1.104 1.104C18.213 22 16.81 22 14 22h-4c-2.809 0-4.213 0-5.222-.674a4 4 0 0 1-1.104-1.104C3 19.213 3 17.81 3 15"/><path d="M12.5 16.5a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0m0 0v-5s.4 1.733 2 2M19 8c-.018-1.24-.11-1.943-.582-2.414C17.832 5 16.888 5 15.002 5H8.998c-1.887 0-2.83 0-3.416.586C5.11 6.057 5.018 6.76 5 8m12-3c0-.932 0-1.398-.152-1.765a2 2 0 0 0-1.083-1.083C15.398 2 14.932 2 14 2h-4c-.932 0-1.398 0-1.765.152a2 2 0 0 0-1.083 1.083C7 3.602 7 4.068 7 5"/></g>', width: 24, height: 24 }, "plus-sign": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/>', width: 24, height: 24 }, power: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.708 6A9 9 0 1 1 3 12c0-2.305.867-4.408 2.292-6M12 3v9"/>', width: 24, height: 24 }, "power-socket-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.5 12c0-4.23 0-6.345 1.198-7.747q.256-.3.555-.555C5.655 2.5 7.77 2.5 12 2.5s6.345 0 7.747 1.198q.3.256.555.555C21.5 5.655 21.5 7.77 21.5 12s0 6.345-1.198 7.747q-.256.3-.555.555C18.345 21.5 16.23 21.5 12 21.5s-6.345 0-7.747-1.198q-.3-.256-.555-.555C2.5 18.345 2.5 16.23 2.5 12Z"/><circle cx="12" cy="12" r="6"/><path stroke-linecap="round" stroke-linejoin="round" d="M9.875 12H9.75m4.625.001h-.125M10 12a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m4.5.001a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, previous: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linejoin="round" d="M8.065 12.626c.254 1.211 1.608 2.082 4.315 3.822c2.945 1.893 4.417 2.84 5.61 2.475c.403-.124.775-.34 1.088-.635C20 17.418 20 15.612 20 12s0-5.418-.922-6.288a2.8 2.8 0 0 0-1.088-.635c-1.193-.365-2.665.582-5.61 2.475c-2.707 1.74-4.06 2.61-4.315 3.822c-.087.412-.087.84 0 1.252Z"/><path stroke-linecap="round" d="M4 4v16"/></g>', width: 24, height: 24 }, "pulse-01": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2 12h4l1.5-4l2 7L13 6l2.5 12l2.5-6h4"/>', width: 24, height: 24 }, refresh: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.01 2v3.132a.314.314 0 0 1-.556.201A9.98 9.98 0 0 0 12 2C6.477 2 2 6.477 2 12s4.477 10 10 10s10-4.477 10-10"/>', width: 24, height: 24 }, "remote-control": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="M12.5 2c3.3 0 4.95 0 5.975 1.025S19.5 5.7 19.5 9v6c0 3.3 0 4.95-1.025 5.975S15.8 22 12.5 22h-1c-3.3 0-4.95 0-5.975-1.025S4.5 18.3 4.5 15V9c0-3.3 0-4.95 1.025-5.975S8.2 2 11.5 2zM8 15h2m-2 3h2m4-3h2m-2 3h2"/><path d="M15 8a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z"/></g>', width: 24, height: 24 }, "router-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M18 20.5H6c-1.886 0-2.828 0-3.414-.586S2 18.386 2 16.5s0-2.828.586-3.414S4.114 12.5 6 12.5h12c1.886 0 2.828 0 3.414.586S22 14.614 22 16.5s0 2.828-.586 3.414s-1.528.586-3.414.586m-6-8v-2m-6 6h4m-.5-9.135a4 4 0 0 1 5 .01M7 4.255a8 8 0 0 1 10 0"/><path d="M18.125 16.5H18m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0m-4.125 0H14m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "security-lock": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M18.709 3.495C16.817 2.554 14.5 2 12 2s-4.816.554-6.709 1.495c-.928.462-1.392.693-1.841 1.419S3 6.342 3 7.748v3.49c0 5.683 4.542 8.842 7.173 10.196c.734.377 1.1.566 1.827.566s1.093-.189 1.827-.566C16.457 20.08 21 16.92 21 11.237V7.748c0-1.406 0-2.108-.45-2.834s-.913-.957-1.841-1.419"/><path d="M10 10V8.5a2 2 0 1 1 4 0V10m0 0h-4a1.5 1.5 0 0 0-1.5 1.5V13a1.5 1.5 0 0 0 1.5 1.5h4a1.5 1.5 0 0 0 1.5-1.5v-1.5A1.5 1.5 0 0 0 14 10"/></g>', width: 24, height: 24 }, "settings-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" d="m21.318 7.141l-.494-.856c-.373-.648-.56-.972-.878-1.101c-.317-.13-.676-.027-1.395.176l-1.22.344c-.459.106-.94.046-1.358-.17l-.337-.194a2 2 0 0 1-.788-.967l-.334-.998c-.22-.66-.33-.99-.591-1.178c-.261-.19-.609-.19-1.303-.19h-1.115c-.694 0-1.041 0-1.303.19c-.261.188-.37.518-.59 1.178l-.334.998a2 2 0 0 1-.789.967l-.337.195c-.418.215-.9.275-1.358.17l-1.22-.345c-.719-.203-1.078-.305-1.395-.176c-.318.129-.505.453-.878 1.1l-.493.857c-.35.608-.525.911-.491 1.234c.034.324.268.584.736 1.105l1.031 1.153c.252.319.431.875.431 1.375s-.179 1.056-.43 1.375l-1.032 1.152c-.468.521-.702.782-.736 1.105s.14.627.49 1.234l.494.857c.373.647.56.971.878 1.1s.676.028 1.395-.176l1.22-.344a2 2 0 0 1 1.359.17l.336.194c.36.23.636.57.788.968l.334.997c.22.66.33.99.591 1.18c.262.188.609.188 1.303.188h1.115c.694 0 1.042 0 1.303-.189s.371-.519.59-1.179l.335-.997c.152-.399.428-.738.788-.968l.336-.194c.42-.215.9-.276 1.36-.17l1.22.344c.718.204 1.077.306 1.394.177c.318-.13.505-.454.878-1.101l.493-.857c.35-.607.525-.91.491-1.234s-.268-.584-.736-1.105l-1.031-1.152c-.252-.32-.431-.875-.431-1.375s.179-1.056.43-1.375l1.032-1.153c.468-.52.702-.781.736-1.105s-.14-.626-.49-1.234Z"/><path d="M15.52 12a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0Z"/></g>', width: 24, height: 24 }, "smart-ac": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M16 3c2.339 0 3.508 0 4.362.536a3.5 3.5 0 0 1 1.102 1.102C22 5.492 22 6.66 22 9s0 3.508-.537 4.362a3.5 3.5 0 0 1-1.1 1.101C19.507 15 18.338 15 16 15H8c-2.339 0-3.508 0-4.362-.537a3.5 3.5 0 0 1-1.102-1.1C2 12.507 2 11.338 2 9s0-3.508.536-4.362a3.5 3.5 0 0 1 1.102-1.102C4.492 3 5.66 3 8 3zm-9 9h10"/><path stroke-linejoin="round" d="M6 21a2 2 0 0 0 2-2v-1m10 3a2 2 0 0 1-2-2v-1m-4 0v3m6.125-14H18m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, snow: { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path stroke-linecap="round" d="m21 14.25l-.831-.659c-.946-.75-1.419-1.125-1.419-1.591s.473-.841 1.419-1.591L21 9.75m-18 0l.831.659c.946.75 1.419 1.125 1.419 1.591s-.473.841-1.419 1.591L3 14.25M14.572 21l.156-1.059c.178-1.205.267-1.807.674-2.042c.407-.236.972-.011 2.104.437l.994.394M9.428 3l-.156 1.059c-.178 1.205-.267 1.807-.674 2.042c-.407.236-.972.011-2.104-.437L5.5 5.27M5 18.732l1.07-.395c1.218-.448 1.827-.672 2.265-.438s.533.838.724 2.042L9.227 21M19 5.268l-1.07.394c-1.218.45-1.828.673-2.265.439s-.533-.838-.724-2.042L14.773 3"/><path d="M19 12H5m10.5 6l-7-12m7 0l-7 12"/></g>', width: 24, height: 24 }, "sofa-01": { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path stroke-linecap="round" d="M6 17v3m12-3v3m2-11c0-1.87 0-2.804-.402-3.5A3 3 0 0 0 18.5 4.402C17.804 4 16.87 4 15 4H9c-1.87 0-2.804 0-3.5.402A3 3 0 0 0 4.402 5.5C4 6.196 4 7.13 4 9"/><path d="M20 9a2 2 0 0 0-2 2v2c0 .827-.173 1-1 1H7c-.827 0-1-.173-1-1v-2a2 2 0 1 0-3 1.732V13c0 1.886 0 2.828.586 3.414S5.114 17 7 17h10c1.886 0 2.828 0 3.414-.586S21 14.886 21 13v-.268A2 2 0 0 0 20 9Z"/></g>', width: 24, height: 24 }, "speaker-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 10c0-3.771 0-5.657 1.245-6.828S7.993 2 12 2s6.01 0 7.255 1.172S20.5 6.229 20.5 10v4c0 3.771 0 5.657-1.245 6.828S16.007 22 12 22s-6.01 0-7.255-1.172S3.5 17.771 3.5 14z"/><circle cx="12" cy="14.5" r="3.5"/><path stroke-linecap="round" d="M10 6h4"/></g>', width: 24, height: 24 }, spotify: { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M7.5 12.069c1.1-.37 2.276-.569 3.5-.569c2.024 0 3.92.547 5.549 1.5M18 10c-1.85-1.262-4.088-2-6.5-2c-1.597 0-3.118.324-4.5.908M15.129 16a9.04 9.04 0 0 0-6.497-.685"/></g>', width: 24, height: 24 }, spotlight: { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M8 2v7m0 5l5-5l-4.116-4.116a3.02 3.02 0 0 0-4.268 0l-.732.732a3.02 3.02 0 0 0 0 4.268z"/><path d="m13 9l-5 5l.762 3.05a1.255 1.255 0 0 0 2.106.582l5.764-5.764a1.255 1.255 0 0 0-.583-2.106zm5 10l2 2m-1-6h2m-7 5v2"/></g>', width: 24, height: 24 }, "square-unlock-01": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4.268 18.845c.225 1.67 1.608 2.979 3.292 3.056c1.416.065 2.855.099 4.44.099s3.024-.034 4.44-.1c1.684-.076 3.067-1.385 3.292-3.055c.147-1.09.268-2.207.268-3.345s-.121-2.255-.268-3.345c-.225-1.67-1.608-2.979-3.292-3.056A95 95 0 0 0 12 9c-1.585 0-3.024.034-4.44.1c-1.684.076-3.067 1.385-3.292 3.055C4.12 13.245 4 14.362 4 15.5s.121 2.255.268 3.345Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 9V6.5A4.5 4.5 0 0 1 12 2c1.96 0 3.5 1.5 4 3"/><path stroke-linecap="round" d="M12.125 15.5H12m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0Z"/></g>', width: 24, height: 24 }, stop: { body: '<path fill="none" stroke="currentColor" stroke-width="1.5" d="M4 12c0-3.28 0-4.919.814-6.081a4.5 4.5 0 0 1 1.105-1.105C7.08 4 8.72 4 12 4s4.919 0 6.081.814a4.5 4.5 0 0 1 1.105 1.105C20 7.08 20 8.72 20 12s0 4.919-.814 6.081a4.5 4.5 0 0 1-1.105 1.105C16.92 20 15.28 20 12 20s-4.919 0-6.081-.814a4.5 4.5 0 0 1-1.105-1.105C4 16.92 4 15.28 4 12Z"/>', width: 24, height: 24 }, sunset: { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path stroke-linejoin="round" d="M9.5 7.5c.492.506 1.8 2.5 2.5 2.5m2.5-2.5c-.492.506-1.8 2.5-2.5 2.5m0 0V4"/><path d="M18.363 10.636L16.95 12.05M3 17h2m.637-6.364L7.05 12.05M21 17h-2m2 3H3m13-3a4 4 0 0 0-8 0"/></g>', width: 24, height: 24 }, "system-update-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="m21.255 7.134l-.494-.857c-.373-.648-.56-.972-.877-1.1c-.318-.13-.677-.028-1.395.176l-1.22.343c-.459.106-.94.046-1.359-.169l-.337-.194a2 2 0 0 1-.788-.968l-.334-.997c-.22-.66-.33-.99-.59-1.18C13.598 2 13.25 2 12.556 2h-1.114c-.695 0-1.042 0-1.303.189c-.262.189-.371.519-.591 1.179l-.334.997a2 2 0 0 1-.788.968l-.337.194a2 2 0 0 1-1.359.17l-1.22-.344c-.718-.204-1.077-.306-1.395-.177c-.317.13-.504.453-.877 1.101l-.494.857c-.35.607-.525.91-.49 1.234c.033.323.267.583.736 1.104l1.03 1.153c.253.319.432.875.432 1.375s-.18 1.056-.431 1.375L2.99 14.528c-.469.52-.703.781-.737 1.104s.141.627.491 1.234l.494.857c.373.648.56.972.877 1.1c.318.13.677.028 1.395-.176l1.22-.343c.46-.106.94-.046 1.36.169l.336.194c.359.23.635.57.788.968l.334.997c.22.66.33.99.59 1.18c.262.188.61.188 1.304.188h1.114c.695 0 1.042 0 1.303-.189c.262-.189.372-.518.591-1.178l.334-.998c.153-.399.429-.738.788-.968l.337-.194a2 2 0 0 1 1.359-.17l1.22.344c.718.204 1.077.306 1.395.177c.317-.13.504-.453.877-1.101l.494-.857c.35-.607.525-.91.49-1.234c-.033-.323-.267-.583-.736-1.104l-1.03-1.153c-.253-.32-.432-.875-.432-1.375s.18-1.056.431-1.375l1.031-1.153c.469-.52.703-.781.737-1.104s-.141-.627-.491-1.234Z"/><path stroke-linejoin="round" d="m14.062 11.5l.5-.5c.441-.441.662-.662.951-.57c.29.091.336.353.427.877q.06.338.06.693a4 4 0 0 1-5.5 3.71m-.5-3.175l-.544.544c-.434.434-.652.652-.938.565c-.287-.087-.338-.344-.44-.857A4 4 0 0 1 13.5 8.291"/></g>', width: 24, height: 24 }, thermometer: { body: '<g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"><path stroke-linecap="round" d="m13.88 15.937l6.794-7.764c.748-.855 1.122-1.282 1.251-1.76a2.14 2.14 0 0 0-.042-1.258c-.16-.468-.562-.87-1.365-1.673s-1.205-1.204-1.673-1.365a2.14 2.14 0 0 0-1.258-.042c-.477.13-.905.503-1.76 1.251L8.063 10.12c-.956.836-1.433 1.254-1.715 1.806c-.28.551-.338 1.184-.453 2.448l-.023.258c-.061.668-.092 1.002-.22 1.307c-.127.304-.343.56-.777 1.072l-2.6 3.073a1.164 1.164 0 0 0 1.64 1.64l3.074-2.6c.512-.433.768-.65 1.072-.777s.639-.158 1.307-.219l.258-.023c1.264-.115 1.897-.172 2.448-.454c.552-.28.97-.758 1.806-1.714"/><path d="m7.79 9.895l1.58.948a.787.787 0 0 1 .27 1.08l-.292.486a1.634 1.634 0 0 0 2.242 2.243l.487-.292a.787.787 0 0 1 1.08.27l.948 1.58"/><path stroke-linecap="round" d="m17.263 6.737l-3.158 3.158"/></g>', width: 24, height: 24 }, "tick-02": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m5 14l3.5 3.5L19 6.5"/>', width: 24, height: 24 }, "timer-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M11.08 13.152L8 7l5.42 4.28c.77.608.774 1.767.008 2.38a1.547 1.547 0 0 1-2.347-.508"/><path d="M5 4.82a10 10 0 0 0-3 7.158C2 17.513 6.477 22 12 22s10-4.487 10-10.022a10.02 10.02 0 0 0-8.013-9.825c-.836-.17-1.254-.254-1.62.047S12 2.987 12 3.96v1.002"/></g>', width: 24, height: 24 }, "toilet-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M8 11h9.135c1.465 0 2.198 0 2.64.735c.442.736.182 1.204-.34 2.142A6.1 6.1 0 0 1 14.09 17a6.12 6.12 0 0 1-4.028-1.5M8 11V4c0-.943 0-1.414-.293-1.707S6.943 2 6 2s-1.414 0-1.707.293S4 3.057 4 4v7c0 .943 0 1.414.293 1.707S5.057 13 6 13s1.414 0 1.707-.293S8 11.943 8 11M7 7h3"/><path d="M16 17c-1 1 0 4 2 5H4c1-1 2.7-4.2 1.5-9"/></g>', width: 24, height: 24 }, "tv-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M2 14c0-3.771 0-5.657 1.172-6.828S6.229 6 10 6h4c3.771 0 5.657 0 6.828 1.172S22 10.229 22 14s0 5.657-1.172 6.828S17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172S2 17.771 2 14Z"/><path stroke-linejoin="round" d="m9 3l3 3l4-4"/></g>', width: 24, height: 24 }, user: { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M17 8.5a5 5 0 1 0-10 0a5 5 0 0 0 10 0"/><path d="M19 20.5a7 7 0 1 0-14 0"/></g>', width: 24, height: 24 }, "user-group": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M15.5 11a3.5 3.5 0 1 0-7 0a3.5 3.5 0 0 0 7 0"/><path d="M15.483 11.35q.484.149 1.017.15a3.5 3.5 0 1 0-3.483-3.85m-2.034 0a3.5 3.5 0 1 0-2.466 3.7M22 16.5c0-2.761-2.462-5-5.5-5m1 8c0-2.761-2.462-5-5.5-5s-5.5 2.239-5.5 5"/><path d="M7.5 11.5c-3.038 0-5.5 2.239-5.5 5"/></g>', width: 24, height: 24 }, "user-multiple": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M13 11a4 4 0 1 0-8 0a4 4 0 0 0 8 0"/><path d="M11.039 7.558a4 4 0 1 1 1.923 2.885M15 21a6 6 0 0 0-12 0"/><path d="M21 17a6 6 0 0 0-6-6"/></g>', width: 24, height: 24 }, "user-time-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M14.5 8a5 5 0 1 0-10 0a5 5 0 0 0 10 0"/><path d="M2.5 20a7 7 0 0 1 10-6.326M19 18l-1-.5V16m3.5 1.5a3.5 3.5 0 1 1-7 0a3.5 3.5 0 0 1 7 0"/></g>', width: 24, height: 24 }, "vacuum-cleaner": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M6 21a2 2 0 1 1 0-4a2 2 0 0 1 0 4"/><path d="M10 21h1.974c.64 0 1.124-.565 1.01-1.179l-.914-4.9C11.538 12.07 8.994 10 6.024 10C5.458 10 5 10.447 5 10.999V14.5"/><path d="M19.5 21L12.858 6.934A6.87 6.87 0 0 0 6.649 3A4.65 4.65 0 0 0 2 7.65v.188A4.39 4.39 0 0 0 5 12m17 9h-5.5"/></g>', width: 24, height: 24 }, "video-off": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="m2.002 2l19.975 20m-5.125-5.132c-.13.938-.386 1.599-.893 2.106C14.937 20 13.289 20 9.993 20h-.999c-3.296 0-4.943 0-5.967-1.026C2.002 17.95 2.002 16.3 2.002 13v-2c0-3.3 0-4.95 1.024-5.975c.342-.343.755-.571 1.275-.723"/><path stroke-linejoin="round" d="M8.236 4h1.755c3.296 0 4.944 0 5.967 1.025C16.982 6.05 16.982 7.7 16.982 11v1.757m0-3.526l2.32-1.702c1.47-.988 2.147-.357 2.365.12c.452 1.279.31 3.744.31 6.893c-.107 2.013-.382 2.23-.663 2.452l-.003.002"/></g>', width: 24, height: 24 }, "view-off": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="1.5"><path d="M22 8s-4 6-10 6S2 8 2 8"/><path stroke-linejoin="round" d="m15 13.5l1.5 2.5m3.5-5l2 2M2 13l2-2m5 2.5L7.5 16"/></g>', width: 24, height: 24 }, "washing-machine": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M3 14v-4c0-3.771 0-5.657 1.172-6.828S7.229 2 11 2h2c3.771 0 5.657 0 6.828 1.172S21 6.229 21 10v4c0 3.771 0 5.657-1.172 6.828S16.771 22 13 22h-2c-3.771 0-5.657 0-6.828-1.172S3 17.771 3 14"/><path d="M17 13a5 5 0 1 1-10 0a5 5 0 0 1 10 0"/><path d="M7 13q2.5-2 5 0t5 0M7.125 6H7m.25 0a.25.25 0 1 1-.5 0a.25.25 0 0 1 .5 0"/></g>', width: 24, height: 24 }, "wifi-01": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"><path d="M8.25 14.5c2-2 5.5-2 7.5 0m2.75-3c-3.768-3.333-9-3.333-13 0"/><path d="M2 8.5c6.316-5.333 13.684-5.333 20 0"/><circle cx="12" cy="18" r="1.5"/></g>', width: 24, height: 24 }, wireless: { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.5 11h-5c-1.866 0-2.799 0-3.519.347a3.5 3.5 0 0 0-1.634 1.634C4 13.701 4 14.634 4 16.5s0 2.799.347 3.519a3.5 3.5 0 0 0 1.634 1.634C6.701 22 7.634 22 9.5 22h5c1.866 0 2.799 0 3.519-.347a3.5 3.5 0 0 0 1.634-1.634C20 19.299 20 18.366 20 16.5s0-2.799-.347-3.519a3.5 3.5 0 0 0-1.634-1.634C17.299 11 16.366 11 14.5 11M13 15h3M9.5 6.99a4.005 4.005 0 0 1 5 .01M7 3.752a8.01 8.01 0 0 1 10 0"/>', width: 24, height: 24 }, "wireless-cloud-access": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.478 8.398h.022c2.485 0 4.5 1.98 4.5 4.423a4.4 4.4 0 0 1-2 3.679m-2.522-8.102q.021-.243.022-.492C17.5 4.921 15.038 2.5 12 2.5c-2.877 0-5.238 2.171-5.48 4.937m10.958.961a5.33 5.33 0 0 1-1.235 2.949M10 8.398a5.04 5.04 0 0 0-3.48-.96C3.983 7.674 2 9.773 2 12.33c0 1.759.94 3.302 2.352 4.17M8 15.978c1.149-.935 2.52-1.478 3.995-1.478c1.478 0 2.854.547 4.005 1.487M14.174 18.5a4.1 4.1 0 0 0-2.18-.64a4.1 4.1 0 0 0-2.17.634M12 21.5h.006"/>', width: 24, height: 24 }, "workout-run": { body: '<g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 4.5a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m15 21l-.664-2.615a4.9 4.9 0 0 0-1.315-2.288L11.5 14.6M6 11.153c1-1.97 2.538-3.11 6-3.152m0 0c.219-.002.544-.003.87-.003c.505 0 .757 0 .958.094s.408.34.82.833c.118.142.24.268.352.352m-3-1.276L10.73 9.96c-.697 1.076-1.046 1.614-1.06 2.18a2 2 0 0 0 .123.738c.195.531.7.928 1.707 1.722M15 9.277c1.155.866 2.963 1.215 5-1.078m-5 1.078L11.5 14.6M4 17.73l.678.162C6.407 18.302 8.203 17.516 9 16"/></g>', width: 24, height: 24 }, "zoom-in-area": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m18.502 19.122l2.498 2.5m-1-6.5a5.5 5.5 0 1 0-11 0a5.5 5.5 0 0 0 11 0m-5.5-2v4m2-2h-4M10 3.622h4m-11 7v4m3.5 7a3.5 3.5 0 0 1-3.5-3.5m14.5-14.5a3.5 3.5 0 0 1 3.5 3.5m-18 0a3.5 3.5 0 0 1 3.5-3.5"/>', width: 24, height: 24 } }), e = Object.freeze({ "close-to-menu-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l7 0l7 0M5 12h14M5 19l7 0l7 0"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 5l7 7l7 -7M12 12h0M5 19l7 -7l7 7;M5 5l7 0l7 0M5 12h14M5 19l7 0l7 0"/></path>', width: 24, height: 24 }, "cog-loop": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="22" d="M12 9c1.66 0 3 1.34 3 3c0 1.66 -1.34 3 -3 3c-1.66 0 -3 -1.34 -3 -3c0 -1.66 1.34 -3 3 -3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="22;0"/></path><path stroke-dasharray="44" stroke-dashoffset="44" d="M12 5.5c3.59 0 6.5 2.91 6.5 6.5c0 3.59 -2.91 6.5 -6.5 6.5c-3.59 0 -6.5 -2.91 -6.5 -6.5c0 -3.59 2.91 -6.5 6.5 -6.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.3s" dur="0.5s" to="0"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="0"/></path><path d="M15.24 6.37c0.41 0.23 0.8 0.51 1.14 0.83c0 0 2.62 -1.08 2.63 -1.06c0 0 1.56 2.7 1.56 2.7c0.01 0.03 -2.22 1.75 -2.22 1.75c0.1 0.45 0.15 0.93 0.15 1.41" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M15.24 6.37c0.41 0.23 0.8 0.51 1.14 0.83c0.22 0.2 0.42 0.41 0.61 0.63c0.47 0.57 0.86 1.22 1.12 1.94c0.09 0.26 0.17 0.54 0.24 0.82c0.1 0.45 0.15 0.93 0.15 1.41;M15.24 6.37c0.41 0.23 0.8 0.51 1.14 0.83c0 0 2.62 -1.08 2.63 -1.06c0 0 1.56 2.7 1.56 2.7c0.01 0.03 -2.22 1.75 -2.22 1.75c0.1 0.45 0.15 0.93 0.15 1.41"/></path><path d="M18.5 11.99c0.01 0.47 -0.04 0.95 -0.15 1.4c0 0 2.25 1.73 2.23 1.75c0 0 -1.56 2.7 -1.56 2.7c-0.02 0.02 -2.63 -1.05 -2.63 -1.05c-0.34 0.31 -0.73 0.59 -1.15 0.83" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M18.5 11.99c0.01 0.47 -0.04 0.95 -0.15 1.4c-0.06 0.29 -0.15 0.57 -0.24 0.84c-0.26 0.69 -0.63 1.35 -1.12 1.94c-0.18 0.21 -0.38 0.42 -0.59 0.62c-0.34 0.31 -0.73 0.59 -1.15 0.83;M18.5 11.99c0.01 0.47 -0.04 0.95 -0.15 1.4c0 0 2.25 1.73 2.23 1.75c0 0 -1.56 2.7 -1.56 2.7c-0.02 0.02 -2.63 -1.05 -2.63 -1.05c-0.34 0.31 -0.73 0.59 -1.15 0.83"/></path><path d="M15.26 17.62c-0.4 0.24 -0.84 0.44 -1.29 0.57c0 0 -0.37 2.81 -0.4 2.81c0 0 -3.12 0 -3.12 0c-0.03 -0.01 -0.41 -2.8 -0.41 -2.8c-0.44 -0.14 -0.88 -0.34 -1.3 -0.58" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M15.26 17.62c-0.4 0.24 -0.84 0.44 -1.29 0.57c-0.28 0.09 -0.57 0.16 -0.85 0.21c-0.73 0.12 -1.49 0.13 -2.24 0c-0.27 -0.05 -0.55 -0.12 -0.83 -0.2c-0.44 -0.14 -0.88 -0.34 -1.3 -0.58;M15.26 17.62c-0.4 0.24 -0.84 0.44 -1.29 0.57c0 0 -0.37 2.81 -0.4 2.81c0 0 -3.12 0 -3.12 0c-0.03 -0.01 -0.41 -2.8 -0.41 -2.8c-0.44 -0.14 -0.88 -0.34 -1.3 -0.58"/></path><path d="M8.76 17.63c-0.41 -0.23 -0.8 -0.51 -1.14 -0.83c0 0 -2.62 1.08 -2.63 1.06c0 0 -1.56 -2.7 -1.56 -2.7c-0.01 -0.03 2.22 -1.75 2.22 -1.75c-0.1 -0.45 -0.15 -0.93 -0.15 -1.41" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M8.76 17.63c-0.41 -0.23 -0.8 -0.51 -1.14 -0.83c-0.22 -0.2 -0.42 -0.41 -0.61 -0.63c-0.47 -0.57 -0.86 -1.22 -1.12 -1.94c-0.09 -0.26 -0.17 -0.54 -0.24 -0.82c-0.1 -0.45 -0.15 -0.93 -0.15 -1.41;M8.76 17.63c-0.41 -0.23 -0.8 -0.51 -1.14 -0.83c0 0 -2.62 1.08 -2.63 1.06c0 0 -1.56 -2.7 -1.56 -2.7c-0.01 -0.03 2.22 -1.75 2.22 -1.75c-0.1 -0.45 -0.15 -0.93 -0.15 -1.41"/></path><path d="M5.5 12.01c-0.01 -0.47 0.04 -0.95 0.15 -1.4c0 0 -2.25 -1.73 -2.23 -1.75c0 0 1.56 -2.7 1.56 -2.7c0.02 -0.02 2.63 1.05 2.63 1.05c0.34 -0.31 0.73 -0.59 1.15 -0.83" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M5.5 12.01c-0.01 -0.47 0.04 -0.95 0.15 -1.4c0.06 -0.29 0.15 -0.57 0.24 -0.84c0.26 -0.69 0.63 -1.35 1.12 -1.94c0.18 -0.21 0.38 -0.42 0.59 -0.62c0.34 -0.31 0.73 -0.59 1.15 -0.83;M5.5 12.01c-0.01 -0.47 0.04 -0.95 0.15 -1.4c0 0 -2.25 -1.73 -2.23 -1.75c0 0 1.56 -2.7 1.56 -2.7c0.02 -0.02 2.63 1.05 2.63 1.05c0.34 -0.31 0.73 -0.59 1.15 -0.83"/></path><path d="M8.74 6.38c0.4 -0.24 0.84 -0.44 1.29 -0.57c0 0 0.37 -2.81 0.4 -2.81c0 0 3.12 0 3.12 0c0.03 0.01 0.41 2.8 0.41 2.8c0.44 0.14 0.88 0.34 1.3 0.58" opacity="0"><animateTransform attributeName="transform" dur="30s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/><set fill="freeze" attributeName="opacity" begin="0.8s" to="1"/><animate fill="freeze" attributeName="d" begin="0.8s" dur="0.2s" values="M8.74 6.38c0.4 -0.24 0.84 -0.44 1.29 -0.57c0.28 -0.09 0.57 -0.16 0.85 -0.21c0.73 -0.12 1.49 -0.13 2.24 0c0.27 0.05 0.55 0.12 0.83 0.2c0.44 0.14 0.88 0.34 1.3 0.58;M8.74 6.38c0.4 -0.24 0.84 -0.44 1.29 -0.57c0 0 0.37 -2.81 0.4 -2.81c0 0 3.12 0 3.12 0c0.03 0.01 0.41 2.8 0.41 2.8c0.44 0.14 0.88 0.34 1.3 0.58"/></path></g>', width: 24, height: 24 }, "download-loop": { body: '<g stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path fill="currentColor" fill-opacity="0" stroke-dasharray="20" d="M12 4h2v6h2.5l-4.5 4.5M12 4h-2v6h-2.5l4.5 4.5"><animate attributeName="d" dur="1.5s" keyTimes="0;0.5;1" repeatCount="indefinite" values="M12 4h2v6h2.5l-4.5 4.5M12 4h-2v6h-2.5l4.5 4.5;M12 4h2v3h2.5l-4.5 4.5M12 4h-2v3h-2.5l4.5 4.5;M12 4h2v6h2.5l-4.5 4.5M12 4h-2v6h-2.5l4.5 4.5"/><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="20;0"/><animate fill="freeze" attributeName="fill-opacity" begin="0.7s" dur="0.4s" to="1"/></path><path fill="none" stroke-dasharray="14" stroke-dashoffset="14" d="M6 19h12"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.2s" to="0"/></path></g>', width: 24, height: 24 }, "lightbulb-off-loop": { body: '<defs><mask id="SVGoMLV5cXg"><g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><g stroke="#fff"><path stroke-dasharray="46" d="M12 17h-3v-2.8c-1.79 -1.04 -3 -2.98 -3 -5.2c0 -3.31 2.69 -6 6 -6c3.31 0 6 2.69 6 6c0 2.22 -1.21 4.16 -3 5.2v2.8Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="46;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M10 21h4"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.5s" dur="0.2s" to="0"/></path></g><path stroke="#000" stroke-dasharray="24" stroke-dashoffset="24" d="M1 11h22" transform="rotate(45 13 12)"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.3s" to="0"/></path></g></mask></defs><path fill="currentColor" d="M0 0h24v24H0z" mask="url(#SVGoMLV5cXg)"/><path fill="none" stroke="currentColor" stroke-dasharray="24" stroke-dashoffset="24" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M0 13h22" transform="rotate(45 13 12)"><animate attributeName="d" dur="6s" keyTimes="0;0.5;1" repeatCount="indefinite" values="M0 13h22;M2 13h22;M0 13h22"/><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.7s" dur="0.3s" to="0"/></path>', width: 24, height: 24 }, "loading-loop": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3c4.97 0 9 4.03 9 9"><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path>', width: 24, height: 24 }, "menu-to-close-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5l7 7l7 -7M12 12h0M5 19l7 -7l7 7"><animate fill="freeze" attributeName="d" dur="0.4s" values="M5 5l7 0l7 0M5 12h14M5 19l7 0l7 0;M5 5l7 7l7 -7M12 12h0M5 19l7 -7l7 7"/></path>', width: 24, height: 24 }, pause: { body: '<g fill="none" stroke="currentColor" stroke-dasharray="30" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M7 6h2v12h-2Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="30;0"/></path><path stroke-dashoffset="30" d="M15 6h2v12h-2Z"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.4s" to="0"/></path></g>', width: 24, height: 24 }, "pause-to-play-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 15l-5 3l0 -12l5 3l0 0M13 9l5 3l0 0l-5 3l0 0"><animate fill="freeze" attributeName="d" dur="0.6s" keyTimes="0;0.33;1" values="M9 18l-2 0l0 -12l2 0l0 12M15 6l2 0l0 12l-2 0l0 -12;M13 15l-5 3l0 -12l5 3l0 6M13 9l5 3l0 0l-5 3l0 -6;M13 15l-5 3l0 -12l5 3l0 0M13 9l5 3l0 0l-5 3l0 0"/></path>', width: 24, height: 24 }, play: { body: '<path fill="none" stroke="currentColor" stroke-dasharray="38" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 6l10 6l-10 6Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="38;0"/></path>', width: 24, height: 24 }, "play-to-pause-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 18l-2 0l0 -12l2 0l0 12M15 6l2 0l0 12l-2 0l0 -12"><animate fill="freeze" attributeName="d" dur="0.6s" keyTimes="0;0.33;1" values="M13 15l-5 3l0 -12l5 3l0 0M13 9l5 3l0 0l-5 3l0 0;M13 15l-5 3l0 -12l5 3l0 6M13 9l5 3l0 0l-5 3l0 -6;M9 18l-2 0l0 -12l2 0l0 12M15 6l2 0l0 12l-2 0l0 -12"/></path>', width: 24, height: 24 }, switch: { body: '<path fill="none" stroke="currentColor" stroke-dasharray="54" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7h5c2.76 0 5 2.24 5 5c0 2.76 -2.24 5 -5 5h-10c-2.76 0 -5 -2.24 -5 -5c0 -2.76 2.24 -5 5 -5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="54;0"/></path><circle cx="17" cy="12" r="3" fill="currentColor" opacity="0"><animate fill="freeze" attributeName="opacity" begin="0.6s" dur="0.2s" to="1"/></circle>', width: 24, height: 24 }, "switch-off": { body: '<path fill="none" stroke="currentColor" stroke-dasharray="54" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7h5c2.76 0 5 2.24 5 5c0 2.76 -2.24 5 -5 5h-10c-2.76 0 -5 -2.24 -5 -5c0 -2.76 2.24 -5 5 -5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.6s" values="54;0"/></path><circle cx="7" cy="12" r="3" fill="currentColor" opacity="0"><animate fill="freeze" attributeName="opacity" begin="0.6s" dur="0.2s" to="1"/></circle>', width: 24, height: 24 }, "switch-off-to-switch-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7h5c2.76 0 5 2.24 5 5c0 2.76 -2.24 5 -5 5h-10c-2.76 0 -5 -2.24 -5 -5c0 -2.76 2.24 -5 5 -5Z"/><circle cx="17" cy="12" r="3" fill="currentColor"><animate fill="freeze" attributeName="cx" dur="0.2s" values="7;17"/></circle>', width: 24, height: 24 }, "switch-to-switch-off-transition": { body: '<path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7h5c2.76 0 5 2.24 5 5c0 2.76 -2.24 5 -5 5h-10c-2.76 0 -5 -2.24 -5 -5c0 -2.76 2.24 -5 5 -5Z"/><circle cx="7" cy="12" r="3" fill="currentColor"><animate fill="freeze" attributeName="cx" dur="0.2s" values="17;7"/></circle>', width: 24, height: 24 }, "volume-high-off": { body: '<defs><mask id="SVGZcWklbpN"><path fill="none" stroke="#fff" stroke-dasharray="34" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h3.5l3.5 -3.5v10.5l-3.5 -3.5h-3.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><g fill="#fff"><path d="M14 12c0 0 0 0 0 0c0 0 0 0 0 0Z"><animate fill="freeze" attributeName="d" begin="0.4s" dur="0.2s" to="M14 16c1.5 -0.71 2.5 -2.24 2.5 -4c0 -1.77 -1 -3.26 -2.5 -4Z"/></path><path d="M14 12c0 0 0 0 0 0c0 0 0 0 0 0v0c0 0 0 0 0 0c0 0 0 0 0 0Z"><animate fill="freeze" attributeName="d" begin="0.4s" dur="0.4s" to="M14 3.23c4 0.91 7 4.49 7 8.77c0 4.28 -3 7.86 -7 8.77v-2.07c2.89 -0.86 5 -3.53 5 -6.7c0 -3.17 -2.11 -5.85 -5 -6.71Z"/></path></g><path fill="none" stroke="#000" stroke-dasharray="28" stroke-dashoffset="28" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M-1 11h26" transform="rotate(45 12 12)"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.4s" to="0"/></path></mask></defs><path fill="currentColor" d="M0 0h24v24H0z" mask="url(#SVGZcWklbpN)"/><path fill="none" stroke="currentColor" stroke-dasharray="28" stroke-dashoffset="28" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M-1 13h26" transform="rotate(45 12 12)"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.8s" dur="0.4s" to="0"/></path>', width: 24, height: 24 }, "volume-medium": { body: '<path fill="none" stroke="currentColor" stroke-dasharray="34" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 10h3.5l3.5 -3.5v10.5l-3.5 -3.5h-3.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><path fill="currentColor" d="M16 12c0 0 0 0 0 0c0 0 0 0 0 0Z"><animate fill="freeze" attributeName="d" begin="0.4s" dur="0.2s" to="M16 16c1.5 -0.71 2.5 -2.24 2.5 -4c0 -1.77 -1 -3.26 -2.5 -4Z"/></path>', width: 24, height: 24 }, "volume-minus": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="34" d="M4 10h3.5l3.5 -3.5v10.5l-3.5 -3.5h-3.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><path stroke-dasharray="8" stroke-dashoffset="8" d="M15 12h6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.2s" to="0"/></path></g>', width: 24, height: 24 }, "volume-plus": { body: '<g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="34" d="M4 10h3.5l3.5 -3.5v10.5l-3.5 -3.5h-3.5Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.4s" values="34;0"/></path><g stroke-dasharray="8" stroke-dashoffset="8"><path d="M15 12h6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.4s" dur="0.2s" to="0"/></path><path d="M18 9v6"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" to="0"/></path></g></g>', width: 24, height: 24 } }), t = Object.freeze({ "led-strip": '<g transform="scale(0.75)"><path fill="currentColor" d="M6.75,8.75h20.25c.4140625,0,.75-.3359375.75-.75v-.75h3.25c.4140625,0,.75-.3359375.75-.75s-.3359375-.75-.75-.75h-3.25v-2.5h3.25c.4140625,0,.75-.3359375.75-.75s-.3359375-.75-.75-.75h-3.25v-.75c0-.4140625-.3359375-.75-.75-.75H6.75C3.1660156.25.25,3.1660156.25,6.75v7c0,3.5839844,2.9160156,6.5,6.5,6.5h18.5c1.3605957,0,2.6092529.5638428,3.545166,1.5205078-.90625.9125977-2.1600342,1.4794922-3.545166,1.4794922H5c-.4140625,0-.75.3359375-.75.75v.75H1c-.4140625,0-.75.3359375-.75.75s.3359375.75.75.75h3.25v2.5H1c-.4140625,0-.75.3359375-.75.75s.3359375.75.75.75h3.25v.75c0,.4140625.3359375.75.75.75h20.25c3.5839844,0,6.5-2.9160156,6.5-6.5v-7c0-3.5839844-2.9160156-6.5-6.5-6.5H6.75c-1.3851318,0-2.638916-.5668945-3.545166-1.4794922.9359131-.956665,2.1845703-1.5205078,3.545166-1.5205078ZM30.25,25.25c0,2.7568359-2.2421875,5-5,5H5.75v-5.5h19.5c2.0209961,0,3.8068848-.9466553,5-2.3979492v2.8979492ZM6.75,13.25h18.5c2.7578125,0,5,2.2431641,5,5,0,.826416-.2207031,1.5949707-.5771484,2.2824707-1.1959229-1.1253662-2.7446289-1.7824707-4.4228516-1.7824707H6.75c-2.7578125,0-5-2.2431641-5-5v-2.8979492c1.1931152,1.4512939,2.9790039,2.3979492,5,2.3979492ZM1.75,6.75C1.75,3.9931641,3.9921875,1.75,6.75,1.75h19.5v5.5H6.75c-1.6782227,0-3.2269287.6571045-4.4228516,1.7824707-.3564453-.6875-.5771484-1.4560547-.5771484-2.2824707ZM6.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM10.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM14.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM18.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM22.25,4.5c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM7.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM11.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM15.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM19.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM23.25,16c0-.4141846.3358154-.75.75-.75s.75.3358154.75.75-.3358154.75-.75.75-.75-.3358154-.75-.75ZM9.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75ZM13.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75ZM17.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75ZM21.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75ZM25.75,27.5c0,.4141846-.3358154.75-.75.75s-.75-.3358154-.75-.75.3358154-.75.75-.75.75.3358154.75.75Z"/></g>', balcony: '<g transform="scale(0.75)"><path fill="currentColor" d="M7,15.75c.4140625,0,.75-.3359375.75-.75v-3.25h7.5v3.25c0,.4140625.3359375.75.75.75s.75-.3359375.75-.75v-3.25h7.5v3.25c0,.4140625.3359375.75.75.75s.75-.3359375.75-.75v-5C25.75,4.6230469,21.3759766.25,16,.25S6.25,4.6230469,6.25,10v5c0,.4140625.3359375.75.75.75ZM16.75,1.8258057c4.1931152.3857422,7.5,3.8822021,7.5,8.1741943v.25h-7.5V1.8258057ZM7.75,10c0-4.2919922,3.3068848-7.7884521,7.5-8.1741943v8.4241943h-7.5v-.25ZM29,18.25H3c-1.5166016,0-2.75,1.234375-2.75,2.75,0,.4140625.3359375.75.75.75s.75-.3359375.75-.75c0-.6894531.5605469-1.25,1.25-1.25h2.25v10.5h-.25c-.4140625,0-.75.3359375-.75.75s.3359375.75.75.75h22c.4140625,0,.75-.3359375.75-.75s-.3359375-.75-.75-.75h-.25v-10.5h2.25c.6894531,0,1.25.5605469,1.25,1.25,0,.4140625.3359375.75.75.75s.75-.3359375.75-.75c0-1.515625-1.2333984-2.75-2.75-2.75ZM10.25,30.25h-3.5v-10.5h3.5v10.5ZM15.25,30.25h-3.5v-10.5h3.5v10.5ZM20.25,30.25h-3.5v-10.5h3.5v10.5ZM25.25,30.25h-3.5v-10.5h3.5v10.5Z"/></g>' }), a = Object.freeze({ "mdi:access-point": "hugeicons:wireless-cloud-access", "mdi:account": "hugeicons:user", "mdi:account-clock-outline": "hugeicons:user-time-01", "mdi:account-group": "hugeicons:user-group", "mdi:account-multiple-outline": "hugeicons:user-multiple", "mdi:air-conditioner": "hugeicons:smart-ac", "mdi:air-fryer": "hugeicons:oven", "mdi:alert-circle-outline": "hugeicons:alert-circle", "mdi:apps": "hugeicons:grid-view", "mdi:arrow-left": "hugeicons:arrow-left-02", "mdi:autorenew": "hugeicons:refresh", "mdi:bed-king": "hugeicons:bed-double", "mdi:bed-king-outline": "hugeicons:bed-double", "mdi:bed-single": "hugeicons:bed-single-01", "mdi:bed-single-outline": "hugeicons:bed-single-01", "mdi:bookmark-music-outline": "hugeicons:bookmark-02", "mdi:calendar-month-outline": "hugeicons:calendar-03", "mdi:cctv": "hugeicons:cctv-camera", "mdi:ceiling-light-outline": "hugeicons:spotlight", "mdi:check": "hugeicons:tick-02", "mdi:checkbox-blank-circle": "hugeicons:circle", "mdi:chevron-down": "hugeicons:arrow-down-01", "mdi:chevron-left": "hugeicons:arrow-left-01", "mdi:chevron-right": "hugeicons:arrow-right-01", "mdi:chevron-up": "hugeicons:arrow-up-01", "mdi:chip": "hugeicons:chip", "mdi:circle-small": "hugeicons:circle-small", "mdi:clock-outline": "hugeicons:clock-01", "mdi:countertop": "hugeicons:kitchen-utensils", "mdi:cube-outline": "hugeicons:cube", "mdi:curtains": "hugeicons:curtains", "mdi:curtains-closed": "hugeicons:curtains", "mdi:database": "hugeicons:database", "mdi:desk": "hugeicons:desk", "mdi:desktop-classic": "hugeicons:computer", "mdi:desktop-tower": "hugeicons:computer", "mdi:dishwasher": "hugeicons:dish-washer", "mdi:dots-horizontal": "hugeicons:more-horizontal", "mdi:dots-horizontal-circle": "hugeicons:more-horizontal-circle-01", "mdi:dots-vertical": "hugeicons:more-vertical", "mdi:eye": "hugeicons:eye", "mdi:eye-off-outline": "hugeicons:view-off", "mdi:fan": "hugeicons:fan-01", "mdi:fan-auto": "hugeicons:fan-02", "mdi:fan-speed-1": "hugeicons:fan-01", "mdi:fan-speed-2": "hugeicons:fan-02", "mdi:fan-speed-3": "hugeicons:fan-02", "mdi:fire": "hugeicons:fire", "mdi:heart-outline": "hugeicons:favourite", "mdi:home": "hugeicons:home-03", "mdi:home-assistant": "hugeicons:home-03", "mdi:home-lightning-bolt-outline": "hugeicons:electric-home-01", "mdi:home-map-marker": "hugeicons:maps-location-01", "mdi:home-outline": "hugeicons:home-03", "mdi:home-variant": "hugeicons:home-03", "mdi:import": "hugeicons:file-import", "mdi:keyboard-backspace": "hugeicons:arrow-left-02", "mdi:led-strip-variant": "bruno:led-strip", "mdi:lightbulb": "hugeicons:bulb", "mdi:lightbulb-group": "hugeicons:bulb", "mdi:lightbulb-group-outline": "hugeicons:bulb", "mdi:lightbulb-off-outline": "hugeicons:lightbulb-off", "mdi:lightbulb-on": "hugeicons:bulb", "mdi:lightbulb-on-outline": "hugeicons:bulb", "mdi:lightbulb-outline": "hugeicons:bulb", "mdi:lightning-bolt": "hugeicons:flash", "mdi:lock": "hugeicons:lock", "mdi:lock-open-variant": "hugeicons:square-unlock-01", "mdi:lock-outline": "hugeicons:lock", "mdi:magnify-plus-outline": "hugeicons:zoom-in-area", "mdi:map-marker": "hugeicons:location-01", "mdi:map-marker-radius-outline": "hugeicons:location-03", "mdi:menu": "hugeicons:menu-01", "mdi:microphone-outline": "hugeicons:mic-01", "mdi:motion-sensor": "hugeicons:motion-01", "mdi:multimedia": "hugeicons:music-note-03", "mdi:music": "hugeicons:music-note-03", "mdi:music-note": "hugeicons:music-note-03", "mdi:noodles": "hugeicons:noodles", "mdi:pause": "line-md:pause", "mdi:play": "line-md:play", "mdi:play-pause": "line-md:play-to-pause-transition", "mdi:playlist-music": "hugeicons:playlist-01", "mdi:playlist-play": "hugeicons:playlist-01", "mdi:plus": "hugeicons:plus-sign", "mdi:power": "hugeicons:power", "mdi:power-plug-outline": "hugeicons:power-socket-01", "mdi:power-standby": "hugeicons:power", "mdi:pulse": "hugeicons:pulse-01", "mdi:radiobox-marked": "hugeicons:circle", "mdi:raspberry-pi": "hugeicons:cpu", "mdi:refresh": "hugeicons:refresh", "mdi:remote-tv": "hugeicons:remote-control", "mdi:restart": "hugeicons:list-restart", "mdi:robot-vacuum": "hugeicons:vacuum-cleaner", "mdi:router-wireless": "hugeicons:router-01", "mdi:run-fast": "hugeicons:workout-run", "mdi:shield-lock": "hugeicons:security-lock", "mdi:shield-lock-outline": "hugeicons:security-lock", "mdi:skip-next": "hugeicons:next", "mdi:skip-previous": "hugeicons:previous", "mdi:snowflake": "hugeicons:snow", "mdi:sofa": "hugeicons:sofa-01", "mdi:sofa-outline": "hugeicons:sofa-01", "mdi:sony-playstation": "hugeicons:game-controller-03", "mdi:speaker": "hugeicons:speaker-01", "mdi:speaker-wireless": "hugeicons:speaker-01", "mdi:spotify": "hugeicons:spotify", "mdi:stop": "hugeicons:stop", "mdi:string-lights": "hugeicons:lamp-04", "mdi:swap-vertical": "hugeicons:arrow-data-transfer-vertical", "mdi:television-classic": "hugeicons:tv-01", "mdi:thermometer": "hugeicons:thermometer", "mdi:thermostat": "hugeicons:thermometer", "mdi:thermostat-auto": "hugeicons:smart-ac", "mdi:timer-outline": "hugeicons:timer-01", "mdi:toggle-switch-outline": "line-md:switch", "mdi:toilet": "hugeicons:toilet-01", "mdi:update": "hugeicons:system-update-01", "mdi:video-off-outline": "hugeicons:video-off", "mdi:video-outline": "hugeicons:camera-video", "mdi:volume-medium": "line-md:volume-medium", "mdi:volume-minus": "line-md:volume-minus", "mdi:volume-mute": "line-md:volume-high-off", "mdi:volume-plus": "line-md:volume-plus", "mdi:wan": "hugeicons:internet", "mdi:washing-machine": "hugeicons:washing-machine", "mdi:water-percent": "hugeicons:humidity", "mdi:weather-night": "hugeicons:moon-02", "mdi:weather-sunset-down": "hugeicons:sunset", "mdi:weather-sunset-up": "hugeicons:sunset", "mdi:weather-windy": "hugeicons:fast-wind", "mdi:wifi": "hugeicons:wifi-01", "mdi:zigbee": "hugeicons:wireless", home: "hugeicons:home-03", music: "hugeicons:music-note-03", cameras: "hugeicons:cctv-camera", camera: "hugeicons:camera-video", system: "hugeicons:chip", vacuum: "hugeicons:vacuum-cleaner", network: "hugeicons:wifi-01", refresh: "hugeicons:refresh", scenes: "hugeicons:grid-view", updates: "hugeicons:system-update-01", floorplan: "hugeicons:maps", settings: "hugeicons:settings-01", monitor: "hugeicons:computer", power: "hugeicons:power", more: "hugeicons:more-horizontal-circle-01", sala: "hugeicons:sofa-01", office: "hugeicons:computer-desk-01", cozinha: "hugeicons:kitchen-utensils", lavabo: "hugeicons:toilet-01", casal: "hugeicons:bed-double", marina: "hugeicons:bed-single-01", miguel: "hugeicons:baby-bed-01", circle: "hugeicons:circle", lights_off: "hugeicons:lightbulb-off", wifi: "hugeicons:wifi-01", movies: "hugeicons:film-01", laptop: "hugeicons:laptop", sofa: "hugeicons:sofa-01", palette: "hugeicons:paint-board", wallpaper: "hugeicons:image-01", spotify: "hugeicons:spotify", tv: "hugeicons:tv-01", climate: "hugeicons:smart-ac", motion: "hugeicons:motion-01", homepod: "hugeicons:speaker-01", living_sofa: "hugeicons:sofa-01", ledstrip: "bruno:led-strip", pendant: "hugeicons:candelier-02", sconce: "hugeicons:lamp-wall-up", light_flush: "hugeicons:bulb", curtain: "hugeicons:curtains", "curtain-open": "hugeicons:curtains", "curtain-close": "hugeicons:curtains", "curtain-stop": "hugeicons:stop", "meeting-off": "hugeicons:video-off" }), i = Object.freeze({
     "close-to-menu-transition": "menu",
     "menu-to-close-transition": "close",
     "pause-to-play-transition": "play",
@@ -1898,12 +1993,12 @@ customElements.get(ht) || customElements.define(ht, Vr);
     "switch-off-to-switch-transition": "switch",
     "switch-to-switch-off-transition": "switch-off"
   }), r = (c) => String(c ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"), n = (c, p = {}) => {
-    const d = String(c || "circle").trim().toLowerCase(), h = t[d] || d;
-    let [b, u] = h.includes(":") ? h.split(":", 2) : ["hugeicons", h];
-    return b === "line-md" && !p.animate && i[u] && (u = i[u]), b === "bruno" && a[u] ? { family: b, name: u, body: a[u], width: 24, height: 24 } : b === "line-md" && e[u] ? { family: b, name: u, ...e[u] } : o[u] ? { family: "hugeicons", name: u, ...o[u] } : { family: "hugeicons", name: "circle", ...o.circle };
+    const d = String(c || "circle").trim().toLowerCase(), h = a[d] || d;
+    let [g, u] = h.includes(":") ? h.split(":", 2) : ["hugeicons", h];
+    return g === "line-md" && !p.animate && i[u] && (u = i[u]), g === "bruno" && t[u] ? { family: g, name: u, body: t[u], width: 24, height: 24 } : g === "line-md" && e[u] ? { family: g, name: u, ...e[u] } : o[u] ? { family: "hugeicons", name: u, ...o[u] } : { family: "hugeicons", name: "circle", ...o.circle };
   }, s = (c, p = {}) => {
-    const d = n(c, p), h = p.className ? ` class="${r(p.className)}"` : "", b = Number(p.size), u = Number.isFinite(b) && b > 0 ? ` width="${b}" height="${b}"` : "", g = p.title ? `<title>${r(p.title)}</title>` : "", m = p.title ? "false" : "true";
-    return `<svg${h}${u} viewBox="0 0 ${d.width} ${d.height}" aria-hidden="${m}" focusable="false" data-bruno-icon="${d.family}:${d.name}">${g}${d.body}</svg>`;
+    const d = n(c, p), h = p.className ? ` class="${r(p.className)}"` : "", g = Number(p.size), u = Number.isFinite(g) && g > 0 ? ` width="${g}" height="${g}"` : "", b = p.title ? `<title>${r(p.title)}</title>` : "", m = p.title ? "false" : "true";
+    return `<svg${h}${u} viewBox="0 0 ${d.width} ${d.height}" aria-hidden="${m}" focusable="false" data-bruno-icon="${d.family}:${d.name}">${b}${d.body}</svg>`;
   };
   class l extends HTMLElement {
     static get observedAttributes() {
@@ -1943,14 +2038,14 @@ customElements.get(ht) || customElements.define(ht, Vr);
     }
   }
   globalThis.BrunoIcons = Object.freeze({
-    aliases: t,
+    aliases: a,
     render: s,
     resolve: n,
     hugeicons: o,
     lineMd: e
   }), customElements.get("bruno-icon") || customElements.define("bruno-icon", l);
 })();
-const va = "bento-sidebar-liquid-card";
+const vt = "bento-sidebar-liquid-card";
 class S extends HTMLElement {
   // Estados que NAO contam como atividade, para o microindicador da rail.
   static estadosInativos = /* @__PURE__ */ new Set([
@@ -1995,23 +2090,23 @@ class S extends HTMLElement {
   // _ligarRolagemDaHome, _acharContainerDeRolagem, o markup .overflow-hint e o
   // bloco de CSS correspondente.
   _entidadeRelevante(e) {
-    const a = e ? this._hass?.states?.[e] : void 0;
-    if (!a) return !1;
-    const t = String(a.state || "").toLowerCase(), i = String(e).split(".")[0];
-    return ["binary_sensor", "light", "switch"].includes(i) ? t === "on" : i === "media_player" ? ["playing", "paused", "buffering", "on"].includes(t) : !S.estadosInativos.has(t);
+    const t = e ? this._hass?.states?.[e] : void 0;
+    if (!t) return !1;
+    const a = String(t.state || "").toLowerCase(), i = String(e).split(".")[0];
+    return ["binary_sensor", "light", "switch"].includes(i) ? a === "on" : i === "media_player" ? ["playing", "paused", "buffering", "on"].includes(a) : !S.estadosInativos.has(a);
   }
   _contarAmbientesAtivos() {
     const e = this._config?.overflow_hint?.rooms;
-    return Array.isArray(e) ? e.filter((a) => (Array.isArray(a?.entities) ? a.entities : []).some((i) => this._entidadeRelevante(i))).length : 0;
+    return Array.isArray(e) ? e.filter((t) => (Array.isArray(t?.entities) ? t.entities : []).some((i) => this._entidadeRelevante(i))).length : 0;
   }
   _syncOverflowHint() {
     if (!Array.isArray(this._config?.overflow_hint?.rooms)) return;
     const e = this.shadowRoot?.querySelector(".overflow-hint");
     if (!e) return;
-    const a = this._contarAmbientesAtivos();
-    e.hidden = a === 0;
-    const t = e.querySelector(".overflow-hint-count");
-    t && t.textContent !== String(a) && (t.textContent = String(a)), this._ligarRolagemDaHome();
+    const t = this._contarAmbientesAtivos();
+    e.hidden = t === 0;
+    const a = e.querySelector(".overflow-hint-count");
+    a && a.textContent !== String(t) && (a.textContent = String(t)), this._ligarRolagemDaHome();
   }
   /**
    * Some ao rolar, volta no topo.
@@ -2025,8 +2120,8 @@ class S extends HTMLElement {
     let e = this.parentNode;
     for (; e; ) {
       if (e instanceof ShadowRoot) {
-        const a = e.querySelector?.(".content-slot");
-        if (a) return a;
+        const t = e.querySelector?.(".content-slot");
+        if (t) return t;
         e = e.host;
         continue;
       }
@@ -2041,11 +2136,11 @@ class S extends HTMLElement {
   _ligarRolagemDaHome() {
     if (this._alvoDeRolagem) return;
     this._aoRolarHome || (this._aoRolarHome = () => {
-      const a = (this._alvoDeRolagem?.scrollTop ?? 0) > 6;
-      if (a === this._rolouHome) return;
-      this._rolouHome = a;
-      const t = this.shadowRoot?.querySelector(".overflow-hint");
-      t && t.classList.toggle("is-scrolled", a);
+      const t = (this._alvoDeRolagem?.scrollTop ?? 0) > 6;
+      if (t === this._rolouHome) return;
+      this._rolouHome = t;
+      const a = this.shadowRoot?.querySelector(".overflow-hint");
+      a && a.classList.toggle("is-scrolled", t);
     });
     const e = this._acharContainerDeRolagem();
     e && (this._alvoDeRolagem = e, e.addEventListener("scroll", this._aoRolarHome, { passive: !0 }), this._aoRolarHome());
@@ -2054,32 +2149,32 @@ class S extends HTMLElement {
     return 4;
   }
   _items(e) {
-    const a = this._config?.[e];
-    return Array.isArray(a) ? a : [];
+    const t = this._config?.[e];
+    return Array.isArray(t) ? t : [];
   }
   _handleAction(e) {
-    const a = e?.tap_action || e?.action || { action: "none" };
-    switch (a.action) {
+    const t = e?.tap_action || e?.action || { action: "none" };
+    switch (t.action) {
       case void 0:
       case "none":
         return;
       case "navigate":
-        this._navigate(a.navigation_path || a.path);
+        this._navigate(t.navigation_path || t.path);
         return;
       case "url":
-        this._openUrl(a.url_path || a.url);
+        this._openUrl(t.url_path || t.url);
         return;
       case "call-service":
-        this._callService(a);
+        this._callService(t);
         return;
       case "more-info":
-        this._moreInfo(a.entity || e.entity);
+        this._moreInfo(t.entity || e.entity);
         return;
       case "fire-dom-event":
-        this._fireDomEvent(a);
+        this._fireDomEvent(t);
         return;
       default:
-        console.warn("bento-sidebar-card: unsupported action", a);
+        console.warn("bento-sidebar-card: unsupported action", t);
     }
   }
   // --- CÓDIGO ORIGINAL COMENTADO (so disparava hass-navigate; nao roteava no HA) ---
@@ -2097,13 +2192,13 @@ class S extends HTMLElement {
   // HA realmente reconhece) e resolve paths relativos contra o dashboard atual.
   _navigate(e) {
     if (!e) return;
-    const a = this._resolveNavigationPath(e);
+    const t = this._resolveNavigationPath(e);
     this.dispatchEvent(new CustomEvent("hass-navigate", {
-      detail: { path: a },
+      detail: { path: t },
       bubbles: !0,
       composed: !0
     })), globalThis.setTimeout?.(() => {
-      !a || globalThis.location?.pathname === a || (globalThis.history?.pushState?.(null, "", a), globalThis.dispatchEvent?.(new CustomEvent("location-changed", { detail: { replace: !1 } })));
+      !t || globalThis.location?.pathname === t || (globalThis.history?.pushState?.(null, "", t), globalThis.dispatchEvent?.(new CustomEvent("location-changed", { detail: { replace: !1 } })));
     }, 80);
   }
   _resolveNavigationPath(e) {
@@ -2114,10 +2209,10 @@ class S extends HTMLElement {
   }
   _callService(e) {
     if (!this._hass || !e.service) return;
-    const [a, t] = e.service.split(".");
-    !a || !t || this._hass.callService(
-      a,
+    const [t, a] = e.service.split(".");
+    !t || !a || this._hass.callService(
       t,
+      a,
       e.service_data || e.data || {},
       e.target || {}
     );
@@ -2141,7 +2236,7 @@ class S extends HTMLElement {
     const e = [
       ...this._items("top_items").map((l, c) => ({ item: l, section: "top", index: c })),
       ...this._items("bottom_items").map((l, c) => ({ item: l, section: "bottom", index: c }))
-    ].filter((l) => l.item?.hide_on_phone), a = this._config?.phone_more || {}, t = Array.isArray(a.keys) ? a.keys.map(String) : null, i = t ? e.filter((l) => t.indexOf(String(l.item?.key)) !== -1) : e, r = S._escape(a.label || "Mais"), n = S.icons[a.icon || "more"] || S.icons.more, s = S._escape(
+    ].filter((l) => l.item?.hide_on_phone), t = this._config?.phone_more || {}, a = Array.isArray(t.keys) ? t.keys.map(String) : null, i = a ? e.filter((l) => a.indexOf(String(l.item?.key)) !== -1) : e, r = S._escape(t.label || "Mais"), n = S.icons[t.icon || "more"] || S.icons.more, s = S._escape(
       i.map((l) => l.item?.key).filter(Boolean).join(" ")
     );
     this.shadowRoot.innerHTML = `
@@ -2894,7 +2989,7 @@ class S extends HTMLElement {
   _closeMoreSheet() {
     this._moreSheetEl && !this._moreSheetEl.hidden && (this._moreSheetEl.hidden = !0), this._moreToggleEl?.classList.remove("is-open");
   }
-  _button(e, a, t) {
+  _button(e, t, a) {
     const i = e?.selected ? " selected" : "", r = S._escape(e?.label || e?.key || e?.icon || "Item"), n = S.icons[e?.icon] || S.icons.circle, c = (e?.tap_action || e?.action || {}).action === "none" ? ' aria-disabled="true" tabindex="-1"' : "";
     return `
       <button
@@ -2902,8 +2997,8 @@ class S extends HTMLElement {
         type="button"
         title="${r}"
         aria-label="${r}"
-        data-section="${a}_items"
-        data-index="${t}"
+        data-section="${t}_items"
+        data-index="${a}"
         data-key="${S._escape(e?.key || "")}"
         ${e?.hide_on_phone ? 'data-hide-phone=""' : ""}
         ${c}
@@ -2919,12 +3014,12 @@ class S extends HTMLElement {
   }
   _indicatorMarkup(e) {
     if (!e?.indicator) return "";
-    const a = this._indicatorModel(e);
-    return `<span class="nav-indicator" data-kind="${a.kind}" ${a.active ? "" : "hidden"}>${a.text}</span>`;
+    const t = this._indicatorModel(e);
+    return `<span class="nav-indicator" data-kind="${t.kind}" ${t.active ? "" : "hidden"}>${t.text}</span>`;
   }
   _indicatorModel(e) {
-    const a = e?.indicator || {};
-    if (a.type === "updates") {
+    const t = e?.indicator || {};
+    if (t.type === "updates") {
       const s = this._hass?.states || {}, l = Object.entries(s).filter(([d, h]) => d.startsWith("update.") && h?.state === "on").length, c = Number(s["sensor.hassio_updates_available"]?.state) || 0, p = Math.max(l, c);
       return {
         active: p > 0,
@@ -2932,8 +3027,8 @@ class S extends HTMLElement {
         text: p > 99 ? "99+" : String(p)
       };
     }
-    const t = this._hass?.states?.[a.entity], i = a.attribute ? t?.attributes?.[a.attribute] : t?.state;
-    if (a.type === "count") {
+    const a = this._hass?.states?.[t.entity], i = t.attribute ? a?.attributes?.[t.attribute] : a?.state;
+    if (t.type === "count") {
       const s = Math.max(0, Number.parseInt(i, 10) || 0);
       return {
         active: s > 0,
@@ -2941,16 +3036,16 @@ class S extends HTMLElement {
         text: s > 99 ? "99+" : String(s)
       };
     }
-    return { active: (Array.isArray(a.active_states) ? a.active_states : ["on"]).includes(String(i ?? "").toLowerCase()), kind: "dot", text: "" };
+    return { active: (Array.isArray(t.active_states) ? t.active_states : ["on"]).includes(String(i ?? "").toLowerCase()), kind: "dot", text: "" };
   }
   _syncIndicators() {
     const e = this.shadowRoot;
-    e && e.querySelectorAll("[data-section][data-index]").forEach((a) => {
-      const t = this._items(a.dataset.section)[Number(a.dataset.index)];
-      if (!t?.indicator) return;
-      const i = a.querySelector(".nav-indicator");
+    e && e.querySelectorAll("[data-section][data-index]").forEach((t) => {
+      const a = this._items(t.dataset.section)[Number(t.dataset.index)];
+      if (!a?.indicator) return;
+      const i = t.querySelector(".nav-indicator");
       if (!i) return;
-      const r = this._indicatorModel(t);
+      const r = this._indicatorModel(a);
       i.dataset.kind = r.kind, i.textContent = r.text, i.hidden = !r.active;
     });
   }
@@ -2970,15 +3065,15 @@ S.icons = new Proxy({}, {
     return globalThis.BrunoIcons?.render(String(e || "circle")) || globalThis.BrunoIcons?.render("circle") || "";
   }
 });
-customElements.get(va) || customElements.define(va, S);
+customElements.get(vt) || customElements.define(vt, S);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: va,
+  type: vt,
   name: "Bento Sidebar Card",
   preview: !1,
   description: "Isolated Bento sidebar rail with fixed Home highlight and anchored bottom actions."
 });
-const Br = "20260718-wallpaper-upload-1", Oe = "input_number.bruno_wallpaper_revision", ia = Object.freeze([
+const Gr = "20260718-wallpaper-upload-1", Oe = "input_number.bruno_wallpaper_revision", it = Object.freeze([
   { key: "home", label: "Painel principal", entity: "input_text.bruno_wallpaper_home" },
   { key: "sala", label: "Sala", entity: "input_text.bruno_wallpaper_sala" },
   { key: "office", label: "Office", entity: "input_text.bruno_wallpaper_office" },
@@ -2989,55 +3084,55 @@ const Br = "20260718-wallpaper-upload-1", Oe = "input_number.bruno_wallpaper_rev
   { key: "cameras", label: "Cameras", entity: "input_text.bruno_wallpaper_cameras" },
   { key: "roborock", label: "Aspirador", entity: "input_text.bruno_wallpaper_roborock" },
   { key: "floorplan", label: "Planta 3D", entity: "input_text.bruno_wallpaper_floorplan" }
-]), Ur = {
-  version: Br,
-  sections: ia,
+]), Wr = {
+  version: Gr,
+  sections: it,
   _pending: /* @__PURE__ */ new Map(),
   _revision: 0,
   section(o) {
-    return ia.find((e) => e.key === o) || ia[0];
+    return it.find((e) => e.key === o) || it[0];
   },
   value(o, e) {
-    const a = this.section(e);
-    if (this._pending.has(a.key)) return this._pending.get(a.key);
-    const t = o?.states?.[a.entity]?.state || "";
-    return this._isUsableUrl(t) ? String(t).trim() : "";
+    const t = this.section(e);
+    if (this._pending.has(t.key)) return this._pending.get(t.key);
+    const a = o?.states?.[t.entity]?.state || "";
+    return this._isUsableUrl(a) ? String(a).trim() : "";
   },
-  resolve(o, e, a = "") {
-    const t = this.value(o, e) || a || "";
-    if (!t) return "";
+  resolve(o, e, t = "") {
+    const a = this.value(o, e) || t || "";
+    if (!a) return "";
     const i = Number(o?.states?.[Oe]?.state) || 0, r = Math.max(i, this._revision);
-    return this._withRevision(t, r);
+    return this._withRevision(a, r);
   },
-  async save({ hass: o, key: e, url: a } = {}) {
-    const t = this.section(e), i = String(a || "").trim();
+  async save({ hass: o, key: e, url: t } = {}) {
+    const a = this.section(e), i = String(t || "").trim();
     if (i && !this._isUsableUrl(i))
       throw new Error("Use um caminho /local/, /api/ ou uma URL http(s).");
-    this._pending.set(t.key, i);
+    this._pending.set(a.key, i);
     const r = Number(o?.states?.[Oe]?.state) || 0;
-    return this._revision = Math.max(this._revision, r) + 1, o?.states?.[t.entity] && await o.callService("input_text", "set_value", {
-      entity_id: t.entity,
+    return this._revision = Math.max(this._revision, r) + 1, o?.states?.[a.entity] && await o.callService("input_text", "set_value", {
+      entity_id: a.entity,
       value: i
     }), o?.states?.[Oe] && await o.callService("input_number", "set_value", {
       entity_id: Oe,
       value: this._revision
     }), globalThis.dispatchEvent?.(new CustomEvent("bruno-wallpaper-changed", {
-      detail: { key: t.key, url: i, revision: this._revision }
+      detail: { key: a.key, url: i, revision: this._revision }
     })), i;
   },
-  async upload({ hass: o, key: e, file: a } = {}) {
-    if (!a) throw new Error("Selecione uma imagem.");
-    if (!/^image\/(?:jpeg|png|gif)$/i.test(String(a.type || "")))
+  async upload({ hass: o, key: e, file: t } = {}) {
+    if (!t) throw new Error("Selecione uma imagem.");
+    if (!/^image\/(?:jpeg|png|gif)$/i.test(String(t.type || "")))
       throw new Error("Use uma imagem JPG, PNG ou GIF.");
-    if (Number(a.size) > 10 * 1024 * 1024)
+    if (Number(t.size) > 10 * 1024 * 1024)
       throw new Error("A imagem deve ter no maximo 10 MB.");
     if (!o?.fetchWithAuth)
       throw new Error("Upload de imagem indisponivel nesta sessao.");
-    const t = new FormData();
-    t.append("file", a);
+    const a = new FormData();
+    a.append("file", t);
     const i = await o.fetchWithAuth("/api/image/upload", {
       method: "POST",
-      body: t
+      body: a
     });
     if (!i.ok)
       throw new Error(i.status === 413 ? "A imagem excede o limite de 10 MB." : "Nao foi possivel enviar a imagem.");
@@ -3047,19 +3142,19 @@ const Br = "20260718-wallpaper-upload-1", Oe = "input_number.bruno_wallpaper_rev
     return await this.save({ hass: o, key: e, url: n }), n;
   },
   clearPending(o, e) {
-    const a = this.section(e), t = o?.states?.[a.entity]?.state || "";
-    this._pending.get(a.key) === t && this._pending.delete(a.key);
+    const t = this.section(e), a = o?.states?.[t.entity]?.state || "";
+    this._pending.get(t.key) === a && this._pending.delete(t.key);
   },
   _isUsableUrl(o) {
     const e = String(o || "").trim();
     return !e || ["unknown", "unavailable", "none"].includes(e.toLowerCase()) ? !1 : /^(?:\/local\/|\/api\/|https?:\/\/)/i.test(e);
   },
   _withRevision(o, e) {
-    const a = String(o || "").replace(/([?&])bruno_wallpaper=\d+(&?)/, (t, i, r) => r ? i : "");
-    return e ? `${a}${a.includes("?") ? "&" : "?"}bruno_wallpaper=${encodeURIComponent(e)}` : a;
+    const t = String(o || "").replace(/([?&])bruno_wallpaper=\d+(&?)/, (a, i, r) => r ? i : "");
+    return e ? `${t}${t.includes("?") ? "&" : "?"}bruno_wallpaper=${encodeURIComponent(e)}` : t;
   }
 };
-globalThis.BrunoWallpaperManager = Ur;
+globalThis.BrunoWallpaperManager = Wr;
 (() => {
   const o = [
     { key: "bom-dia", title: "Bom dia", subtitle: "Abrir a cortina", entity: "script.bruno_scene_bom_dia", image: "/local/bruno-ui/assets/scenes/bom-dia.webp" },
@@ -3073,7 +3168,7 @@ globalThis.BrunoWallpaperManager = Ur;
     // NOVO (Fase 5e.3): vem da faixa de acoes rapidas da Home, removida na 5e.2.
     // Sem arte propria ainda — o painel cai no fundo padrao quando a imagem falta.
     { key: "apagar-luzes", title: "Apagar todas as luzes", subtitle: "A casa inteira", entity: "script.bruno_scene_apagar_todas_as_luzes", image: "/local/bruno-ui/assets/scenes/boa-noite.webp" }
-  ], e = (i) => String(i ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"), a = () => `
+  ], e = (i) => String(i ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"), t = () => `
     <div class="config-scrim" data-scenes-action="close"></div>
     <section class="config-panel scenes-panel" role="dialog" aria-modal="true" aria-label="Cenas">
       <header class="config-header">
@@ -3195,7 +3290,7 @@ globalThis.BrunoWallpaperManager = Ur;
         .scene-banner { height: 84px; min-height: 84px; }
       }
     </style>
-  `, t = async ({ target: i, hass: r, host: n }) => {
+  `, a = async ({ target: i, hass: r, host: n }) => {
     const s = i?.dataset?.scenesAction;
     if (s === "close") {
       n?._closeConfigPanel?.();
@@ -3213,70 +3308,70 @@ globalThis.BrunoWallpaperManager = Ur;
       c && (c.textContent = "Falha"), i.disabled = !1, i.classList.remove("is-running");
     }
   };
-  globalThis.BrunoScenesPanel = Object.freeze({ scenes: o, render: a, handleAction: t });
+  globalThis.BrunoScenesPanel = Object.freeze({ scenes: o, render: t, handleAction: a });
 })();
-const _a = "bruno-shell";
+const _t = "bruno-shell";
 class E extends HTMLElement {
   constructor() {
     super(), this._activeKey = null, this._railEl = null, this._onFolha = this._onFolha.bind(this), this._onStatusLightsOpen = this._onStatusLightsOpen.bind(this), this._onStatusLightsState = this._onStatusLightsState.bind(this), this._onViewportResize = this._onViewportResize.bind(this), this._onTapDiag = this._onTapDiag.bind(this), this._travasViewport = [], this._ancoraTimers = [], this._sectionEl = null, this._helpers = null, this._built = !1, this._requestedKey = null, this._sectionCache = /* @__PURE__ */ new Map(), this._sectionPromises = /* @__PURE__ */ new Map(), this._sectionScroll = /* @__PURE__ */ new Map(), this._sectionGeneration = 0, this._sectionRequestId = 0, this._buildRequestId = 0, this._configSignature = null, this._sectionErrorEl = null, this._configSection = "", this._wallpaperSection = "home", this._wallpaperMessage = "", this._onHashChange = () => this._syncFromHash(), this._onSectionNavigationClick = (e) => this._handleSectionNavigationClick(e), this._onHassNavigate = (e) => this._handleHassNavigate(e), this._onConfigClick = (e) => this._handleConfigClick(e), this._onConfigChange = (e) => this._handleConfigChange(e), this._onThemeChanged = (e) => {
       this._syncConfigOverlayTheme(e?.detail?.key), this._configOverlayEl?.dataset.panel === "config" && this._renderConfigPanel();
     }, this._onWallpaperChanged = (e) => {
-      const a = e?.detail?.key;
-      (!a || a === this._activeKey) && this._applyBackdrop(this._activeKey), this._configOverlayEl?.dataset.panel === "config" && this._configSection === "wallpaper" && this._renderConfigPanel();
+      const t = e?.detail?.key;
+      (!t || t === this._activeKey) && this._applyBackdrop(this._activeKey), this._configOverlayEl?.dataset.panel === "config" && this._configSection === "wallpaper" && this._renderConfigPanel();
     }, this._onLlCustom = (e) => {
-      const a = e && e.detail || {};
-      if (a.bruno_status_lights === "open") {
-        e.stopPropagation(), this._openStatusLightsSheet(a.monitored_lights || []);
+      const t = e && e.detail || {};
+      if (t.bruno_status_lights === "open") {
+        e.stopPropagation(), this._openStatusLightsSheet(t.monitored_lights || []);
         return;
       }
-      if (a.bruno_config === "open" || a.bruno_action === "config") {
+      if (t.bruno_config === "open" || t.bruno_action === "config") {
         e.stopPropagation(), this._openConfigPanel();
         return;
       }
-      if (a.bruno_action === "refresh") {
+      if (t.bruno_action === "refresh") {
         e.stopPropagation(), globalThis.location?.reload?.();
         return;
       }
-      if (a.bruno_action === "scenes") {
+      if (t.bruno_action === "scenes") {
         e.stopPropagation(), this._openScenesPanel();
         return;
       }
-      if (a.bruno_action === "devices" || a.bruno_action === "system") {
+      if (t.bruno_action === "devices" || t.bruno_action === "system") {
         e.stopPropagation(), this._openDevicesPanel();
         return;
       }
-      if (a.bruno_action === "network") {
+      if (t.bruno_action === "network") {
         e.stopPropagation(), this._openNetworkPanel();
         return;
       }
-      if (a.bruno_updates === "open" || a.bruno_action === "updates") {
+      if (t.bruno_updates === "open" || t.bruno_action === "updates") {
         e.stopPropagation(), this._openUpdatesPanel();
         return;
       }
-      if (a.bruno_action === "spotify") {
-        e.stopPropagation(), this._openSpotifyPanel(a.bruno_spotify_config || {});
+      if (t.bruno_action === "spotify") {
+        e.stopPropagation(), this._openSpotifyPanel(t.bruno_spotify_config || {});
         return;
       }
-      const t = a.bruno_section;
-      t && (e.stopPropagation(), this._goToSection(t));
+      const a = t.bruno_section;
+      a && (e.stopPropagation(), this._goToSection(a));
     };
   }
   // --- Lovelace card API -----------------------------------------------------
   setConfig(e) {
     if (!e) throw new Error("bruno-shell: config ausente");
-    const a = this._configFingerprint(e), t = a === this._configSignature;
-    if (this._config = e, this._sections = e.sections || {}, this._defaultSection = e.default_section || Object.keys(this._sections)[0] || "home", this._rails = e.rails || null, this._sectionRails = e.section_rails || {}, this._defaultRailName = e.default_rail || "default", this._backdrops = e.backdrops || null, this._backdropEffects = e.backdrop_effects || null, this._preloadBackdropFor(this._defaultSection), this._railConfig = e.rail || (this._rails ? this._rails[this._defaultRailName] : null), t) {
+    const t = this._configFingerprint(e), a = t === this._configSignature;
+    if (this._config = e, this._sections = e.sections || {}, this._defaultSection = e.default_section || Object.keys(this._sections)[0] || "home", this._rails = e.rails || null, this._sectionRails = e.section_rails || {}, this._defaultRailName = e.default_rail || "default", this._backdrops = e.backdrops || null, this._backdropEffects = e.backdrop_effects || null, this._preloadBackdropFor(this._defaultSection), this._railConfig = e.rail || (this._rails ? this._rails[this._defaultRailName] : null), a) {
       this._built && this._syncFromHash();
       return;
     }
-    this._configSignature = a, this._sectionGeneration += 1, this._sectionRequestId += 1, this._sectionCache.clear(), this._sectionPromises.clear(), this._sectionScroll.clear(), this._activeKey = null, this._requestedKey = null, this._sectionEl = null, this._sectionErrorEl = null, this._currentRailName = null, this._built = !1, this._build();
+    this._configSignature = t, this._sectionGeneration += 1, this._sectionRequestId += 1, this._sectionCache.clear(), this._sectionPromises.clear(), this._sectionScroll.clear(), this._activeKey = null, this._requestedKey = null, this._sectionEl = null, this._sectionErrorEl = null, this._currentRailName = null, this._built = !1, this._build();
   }
   set hass(e) {
-    this._hass = e, globalThis.BrunoWallpaperManager?.sections?.forEach?.((t) => {
-      globalThis.BrunoWallpaperManager.clearPending?.(e, t.key);
+    this._hass = e, globalThis.BrunoWallpaperManager?.sections?.forEach?.((a) => {
+      globalThis.BrunoWallpaperManager.clearPending?.(e, a.key);
     }), this._preloadResolvedBackdropFor(this._activeKey || this._defaultSection), this._railEl && (this._railEl.hass = e), this._sectionEl && (this._sectionEl.hass = e);
-    const a = this._sectionCache.get(this._homeSectionKey());
-    a && a !== this._sectionEl && (a.hass = e), this._activeKey && this._applyBackdrop(this._activeKey), this._configOverlayEl?.dataset.panel === "config" && this._configSection === "updates" && !this._configOverlayEl.hidden && this._renderConfigPanel({ preserveScroll: !0 }), this._configOverlayEl?.dataset.panel === "updates" && !this._configOverlayEl.hidden && this._renderUpdatesPanel({ preserveScroll: !0 }), this._configOverlayEl?.dataset.panel === "system" && !this._configOverlayEl.hidden && this._renderSystemPanel({ preserveScroll: !0 }), this._configOverlayEl?.dataset.panel === "devices" && this._devicesPanelEl && (this._devicesPanelEl.hass = e), this._configOverlayEl?.dataset.panel === "network" && !this._configOverlayEl.hidden && this._renderNetworkPanel({ preserveScroll: !0 }), this._configOverlayEl?.dataset.panel === "spotify" && this._spotifyPanelCard && (this._spotifyPanelCard.hass = e), this._statusLightsSheetEl && (this._statusLightsSheetEl.hass = e);
+    const t = this._sectionCache.get(this._homeSectionKey());
+    t && t !== this._sectionEl && (t.hass = e), this._activeKey && this._applyBackdrop(this._activeKey), this._configOverlayEl?.dataset.panel === "config" && this._configSection === "updates" && !this._configOverlayEl.hidden && this._renderConfigPanel({ preserveScroll: !0 }), this._configOverlayEl?.dataset.panel === "updates" && !this._configOverlayEl.hidden && this._renderUpdatesPanel({ preserveScroll: !0 }), this._configOverlayEl?.dataset.panel === "system" && !this._configOverlayEl.hidden && this._renderSystemPanel({ preserveScroll: !0 }), this._configOverlayEl?.dataset.panel === "devices" && this._devicesPanelEl && (this._devicesPanelEl.hass = e), this._configOverlayEl?.dataset.panel === "network" && !this._configOverlayEl.hidden && this._renderNetworkPanel({ preserveScroll: !0 }), this._configOverlayEl?.dataset.panel === "spotify" && this._spotifyPanelCard && (this._spotifyPanelCard.hass = e), this._statusLightsSheetEl && (this._statusLightsSheetEl.hass = e);
   }
   getCardSize() {
     return 100;
@@ -3312,19 +3407,19 @@ class E extends HTMLElement {
    * @media (max-width: 800px).
    */
   _onFolha(e) {
-    const a = this.shadowRoot && this.shadowRoot.querySelector(".shell");
-    a && a.classList.toggle("tem-folha", !!(e && e.detail && e.detail.aberta));
+    const t = this.shadowRoot && this.shadowRoot.querySelector(".shell");
+    t && t.classList.toggle("tem-folha", !!(e && e.detail && e.detail.aberta));
   }
   _onStatusLightsState(e) {
-    const a = this.shadowRoot && this.shadowRoot.querySelector(".shell");
-    a && a.classList.toggle("tem-status-lights", !!e?.detail?.open);
+    const t = this.shadowRoot && this.shadowRoot.querySelector(".shell");
+    t && t.classList.toggle("tem-status-lights", !!e?.detail?.open);
   }
   _onStatusLightsOpen(e) {
     e?.stopPropagation?.(), this._openStatusLightsSheet(e?.detail?.monitoredLights || []);
   }
   _openStatusLightsSheet(e) {
-    const a = this._statusLightsSheetEl;
-    a && (a.hass = this._hass, a.monitoredLights = Array.isArray(e) ? e : [], a.open?.(a.monitoredLights), globalThis.requestAnimationFrame?.(() => this._syncStatusLightsDockEdge()));
+    const t = this._statusLightsSheetEl;
+    t && (t.hass = this._hass, t.monitoredLights = Array.isArray(e) ? e : [], t.open?.(t.monitoredLights), globalThis.requestAnimationFrame?.(() => this._syncStatusLightsDockEdge()));
   }
   _syncStatusLightsDockEdge() {
     this._statusLightsSheetEl?.style.removeProperty("--bruno-status-sheet-bottom");
@@ -3332,11 +3427,11 @@ class E extends HTMLElement {
   _observarDock() {
     const e = this.shadowRoot && this.shadowRoot.querySelector(".rail-slot");
     if (!e) return;
-    const a = () => {
-      const t = Math.round(e.getBoundingClientRect().height);
-      t > 0 && this.style.setProperty("--bruno-dock-h", t + "px"), this._syncStatusLightsDockEdge();
+    const t = () => {
+      const a = Math.round(e.getBoundingClientRect().height);
+      a > 0 && this.style.setProperty("--bruno-dock-h", a + "px"), this._syncStatusLightsDockEdge();
     };
-    a(), this._dockObserver && this._dockObserver.disconnect(), typeof ResizeObserver == "function" && (this._dockObserver = new ResizeObserver(a), this._dockObserver.observe(e));
+    t(), this._dockObserver && this._dockObserver.disconnect(), typeof ResizeObserver == "function" && (this._dockObserver = new ResizeObserver(t), this._dockObserver.observe(e));
   }
   /**
    * Ancora o dashboard na viewport do TELEFONE.
@@ -3368,11 +3463,11 @@ class E extends HTMLElement {
       this._soltarViewport();
       return;
     }
-    const a = globalThis.visualViewport, t = Math.round(a && a.height || globalThis.innerHeight || 0);
-    if (!t) return;
+    const t = globalThis.visualViewport, a = Math.round(t && t.height || globalThis.innerHeight || 0);
+    if (!a) return;
     const i = this._travasViewport || (this._travasViewport = []), r = (s, l, c) => {
       i.some((p) => p.el === s && p.prop === l) || i.push({ el: s, prop: l, anterior: s.style[l] }), s.style[l] = c;
-    }, n = t + "px";
+    }, n = a + "px";
     r(document.documentElement, "height", n), r(document.documentElement, "overflow", "hidden"), r(document.body, "position", "fixed"), r(document.body, "top", "0px"), r(document.body, "left", "0px"), r(document.body, "right", "0px"), r(document.body, "height", n), r(document.body, "overflow", "hidden"), r(this, "position", "fixed"), r(this, "top", "0px"), r(this, "left", "0px"), r(this, "right", "0px"), r(this, "height", n);
   }
   _soltarViewport() {
@@ -3388,14 +3483,14 @@ class E extends HTMLElement {
    */
   _ancestraisDaShell() {
     const e = [];
-    let a = this;
-    for (; a; ) {
-      const r = (a instanceof Element ? a.assignedSlot : null) || (a instanceof ShadowRoot ? a.host : a.parentNode);
+    let t = this;
+    for (; t; ) {
+      const r = (t instanceof Element ? t.assignedSlot : null) || (t instanceof ShadowRoot ? t.host : t.parentNode);
       if (!r) break;
-      r instanceof HTMLElement && r !== this && e.push(r), a = r;
+      r instanceof HTMLElement && r !== this && e.push(r), t = r;
     }
-    const t = document.documentElement;
-    return t && !e.includes(t) && e.push(t), e;
+    const a = document.documentElement;
+    return a && !e.includes(a) && e.push(a), e;
   }
   _onViewportResize() {
     this._ancorarViewport(), this._diagEl && this._diagnosticoNaTela();
@@ -3412,21 +3507,21 @@ class E extends HTMLElement {
    * leitura: nao altera nada, e some ao tocar em Fechar.
    */
   _diagnosticoNaTela() {
-    const e = document.documentElement, a = globalThis.visualViewport, t = (p) => Number.isFinite(p) ? Math.round(p) : "?", i = [];
-    i.push("VIEWPORT"), i.push("  innerHeight ......... " + t(globalThis.innerHeight)), i.push("  visualViewport ...... " + t(a && a.height)), i.push("  doc.clientHeight .... " + t(e.clientHeight)), i.push("  doc.scrollHeight .... " + t(e.scrollHeight)), i.push("  body.scrollHeight ... " + t(document.body.scrollHeight)), i.push("  doc.scrollTop ....... " + t(e.scrollTop));
-    const r = t(e.clientHeight) - t(a && a.height ? a.height : globalThis.innerHeight);
+    const e = document.documentElement, t = globalThis.visualViewport, a = (p) => Number.isFinite(p) ? Math.round(p) : "?", i = [];
+    i.push("VIEWPORT"), i.push("  innerHeight ......... " + a(globalThis.innerHeight)), i.push("  visualViewport ...... " + a(t && t.height)), i.push("  doc.clientHeight .... " + a(e.clientHeight)), i.push("  doc.scrollHeight .... " + a(e.scrollHeight)), i.push("  body.scrollHeight ... " + a(document.body.scrollHeight)), i.push("  doc.scrollTop ....... " + a(e.scrollTop));
+    const r = a(e.clientHeight) - a(t && t.height ? t.height : globalThis.innerHeight);
     i.push("  DELTA layout-visual . " + r + "  <- area arrastavel"), i.push("");
     const n = this._travasViewport || [];
     i.push("CADEIA (achatada), travas aplicadas: " + n.length);
     for (const p of this._ancestraisDaShell()) {
-      const d = getComputedStyle(p), h = p.tagName.toLowerCase() + (p.id ? "#" + p.id : "") + (p.classList.length ? "." + p.classList[0] : ""), b = n.filter((u) => u.el === p).map((u) => u.prop);
-      i.push("  " + h), i.push("    h=" + t(p.offsetHeight) + " minH=" + d.minHeight + " maxH=" + d.maxHeight + " ovY=" + d.overflowY + " sH=" + t(p.scrollHeight) + (b.length ? "  [" + b.join(",") + "]" : ""));
+      const d = getComputedStyle(p), h = p.tagName.toLowerCase() + (p.id ? "#" + p.id : "") + (p.classList.length ? "." + p.classList[0] : ""), g = n.filter((u) => u.el === p).map((u) => u.prop);
+      i.push("  " + h), i.push("    h=" + a(p.offsetHeight) + " minH=" + d.minHeight + " maxH=" + d.maxHeight + " ovY=" + d.overflowY + " sH=" + a(p.scrollHeight) + (g.length ? "  [" + g.join(",") + "]" : ""));
     }
     i.push("");
     const s = this.shadowRoot && this.shadowRoot.querySelector(".content-slot");
-    if (i.push("SHELL"), i.push("  host.h .............. " + t(this.offsetHeight)), s) {
+    if (i.push("SHELL"), i.push("  host.h .............. " + a(this.offsetHeight)), s) {
       const p = getComputedStyle(s);
-      i.push("  slot.clientHeight ... " + t(s.clientHeight)), i.push("  slot.scrollHeight ... " + t(s.scrollHeight)), i.push("  slot.scrollTop ...... " + t(s.scrollTop)), i.push("  slot.padBottom ...... " + p.paddingBottom);
+      i.push("  slot.clientHeight ... " + a(s.clientHeight)), i.push("  slot.scrollHeight ... " + a(s.scrollHeight)), i.push("  slot.scrollTop ...... " + a(s.scrollTop)), i.push("  slot.padBottom ...... " + p.paddingBottom);
     } else
       i.push("  slot ................ AUSENTE");
     i.push("");
@@ -3435,14 +3530,14 @@ class E extends HTMLElement {
       i.push("  bruno-home-phone .... NAO ENCONTRADO");
     else {
       const p = getComputedStyle(l);
-      if (i.push("  util (var) .......... " + (p.getPropertyValue("--altura-util") || "(vazio)")), i.push("  host.h .............. " + t(l.offsetHeight)), s) {
-        const b = l.getBoundingClientRect(), u = s.getBoundingClientRect();
-        i.push("  topo no conteudo .... " + t(b.top - u.top - s.clientTop + s.scrollTop));
+      if (i.push("  util (var) .......... " + (p.getPropertyValue("--altura-util") || "(vazio)")), i.push("  host.h .............. " + a(l.offsetHeight)), s) {
+        const g = l.getBoundingClientRect(), u = s.getBoundingClientRect();
+        i.push("  topo no conteudo .... " + a(g.top - u.top - s.clientTop + s.scrollTop));
       }
       const d = l.shadowRoot && l.shadowRoot.querySelector(".estatico");
-      i.push("  .estatico.h ......... " + (d ? t(d.offsetHeight) : "AUSENTE"));
+      i.push("  .estatico.h ......... " + (d ? a(d.offsetHeight) : "AUSENTE"));
       const h = l.shadowRoot && l.shadowRoot.querySelector(".favoritos");
-      i.push("  .favoritos.h ........ " + (h ? t(h.offsetHeight) : "AUSENTE"));
+      i.push("  .favoritos.h ........ " + (h ? a(h.offsetHeight) : "AUSENTE"));
     }
     let c = this._diagEl;
     if (!c) {
@@ -3474,8 +3569,8 @@ class E extends HTMLElement {
    * reagindo; a faixa apenas cobre a tela quando abre.
    */
   _onTapDiag(e) {
-    const a = this.getBoundingClientRect(), t = e.clientX - a.left, i = e.clientY - a.top;
-    if (t < 0 || i < 0 || t > 56 || i > 56) {
+    const t = this.getBoundingClientRect(), a = e.clientX - t.left, i = e.clientY - t.top;
+    if (a < 0 || i < 0 || a > 56 || i > 56) {
       this._diagToques = [];
       return;
     }
@@ -3483,14 +3578,14 @@ class E extends HTMLElement {
     this._diagToques = (this._diagToques || []).filter((n) => r - n < 1500), this._diagToques.push(r), this._diagToques.length >= 5 && (this._diagToques = [], this._diagnosticoNaTela());
   }
   /** Busca em profundidade atravessando shadow roots. */
-  _acharFundo(e, a, t = 0) {
-    if (!e || t > 6) return null;
-    const i = e.querySelector && e.querySelector(a);
+  _acharFundo(e, t, a = 0) {
+    if (!e || a > 6) return null;
+    const i = e.querySelector && e.querySelector(t);
     if (i) return i;
     const r = e.querySelectorAll ? e.querySelectorAll("*") : [];
     for (const n of r) {
       if (!n.shadowRoot) continue;
-      const s = this._acharFundo(n.shadowRoot, a, t + 1);
+      const s = this._acharFundo(n.shadowRoot, t, a + 1);
       if (s) return s;
     }
     return null;
@@ -3513,12 +3608,12 @@ class E extends HTMLElement {
   }
   async _createCard(e) {
     await globalThis.BrunoLazyModules?.ensureForConfig?.(e);
-    const a = await this._ensureHelpers();
-    if (!a) throw new Error("loadCardHelpers indisponivel");
-    const t = a.createCardElement(e);
-    return this._hass && (t.hass = this._hass), t.addEventListener("ll-rebuild", () => {
-      this._hass && (t.hass = this._hass);
-    }), t;
+    const t = await this._ensureHelpers();
+    if (!t) throw new Error("loadCardHelpers indisponivel");
+    const a = t.createCardElement(e);
+    return this._hass && (a.hass = this._hass), a.addEventListener("ll-rebuild", () => {
+      this._hass && (a.hass = this._hass);
+    }), a;
   }
   // --- Construcao da moldura -------------------------------------------------
   async _build() {
@@ -3538,34 +3633,34 @@ class E extends HTMLElement {
     `, this._backdropEl = this.shadowRoot.getElementById("backdrop"), this._configOverlayEl = this.shadowRoot.getElementById("configOverlay"), this._statusLightsSheetEl = this.shadowRoot.getElementById("statusLightsSheet"), this._hass && this._statusLightsSheetEl && (this._statusLightsSheetEl.hass = this._hass), this._syncConfigOverlayTheme(), this._configOverlayEl?.removeEventListener("click", this._onConfigClick), this._configOverlayEl?.addEventListener("click", this._onConfigClick), this._configOverlayEl?.removeEventListener("change", this._onConfigChange), this._configOverlayEl?.addEventListener("change", this._onConfigChange), this._bdLayers = Array.from(this.shadowRoot.querySelectorAll(".backdrop-layer")), this._bdActive = -1;
     try {
       if (this._railConfig) {
-        const a = await this._createCard(this._railConfig);
+        const t = await this._createCard(this._railConfig);
         if (e !== this._buildRequestId) return;
-        this._railEl = a, this._currentRailName = this._rails ? this._defaultRailName : null, queueMicrotask(() => this._observarDock());
-        const t = this.shadowRoot.getElementById("rail");
-        t && t.replaceChildren(this._railEl);
+        this._railEl = t, this._currentRailName = this._rails ? this._defaultRailName : null, queueMicrotask(() => this._observarDock());
+        const a = this.shadowRoot.getElementById("rail");
+        a && a.replaceChildren(this._railEl);
       }
-    } catch (a) {
+    } catch (t) {
       if (e !== this._buildRequestId) return;
-      this._renderRailError(a);
+      this._renderRailError(t);
     }
     e === this._buildRequestId && (this._built = !0, this._syncFromHash());
   }
   // --- Secoes ----------------------------------------------------------------
   _currentHashKey() {
-    const a = (globalThis.location && globalThis.location.hash || "").replace(/^#/, "");
-    return this._sections && this._sections[a] ? a : this._defaultSection;
+    const t = (globalThis.location && globalThis.location.hash || "").replace(/^#/, "");
+    return this._sections && this._sections[t] ? t : this._defaultSection;
   }
   _homeSectionKey() {
     return this._sections?.home ? "home" : this._defaultSection;
   }
   _navigationSectionKey(e) {
     if (typeof e != "string" || !e.trim() || !this._sections) return null;
-    const a = e.trim();
-    if (a.startsWith("#")) {
-      const c = a.replace(/^#/, "").split(/[?&]/, 1)[0];
+    const t = e.trim();
+    if (t.startsWith("#")) {
+      const c = t.replace(/^#/, "").split(/[?&]/, 1)[0];
       return this._sections[c] ? c : null;
     }
-    const i = a.split(/[?#]/, 1)[0].replace(/\/+$/, "").split("/").filter(Boolean);
+    const i = t.split(/[?#]/, 1)[0].replace(/\/+$/, "").split("/").filter(Boolean);
     if (!i.length) return null;
     const r = (globalThis.location?.pathname || "").split("/").filter(Boolean);
     if (i.length > 1 && r.length && i[0] !== r[0]) return null;
@@ -3588,26 +3683,26 @@ class E extends HTMLElement {
     return l && this._sections[l] ? l : null;
   }
   _handleSectionNavigationClick(e) {
-    const a = typeof e.composedPath == "function" ? e.composedPath() : [];
-    let t = null;
-    for (const i of a)
+    const t = typeof e.composedPath == "function" ? e.composedPath() : [];
+    let a = null;
+    for (const i of t)
       if (!(!i || !i.dataset)) {
         if (i.dataset.action === "navigate-home") {
-          t = this._homeSectionKey();
+          a = this._homeSectionKey();
           break;
         }
-        if (i.dataset.action === "navigate" && i.dataset.path && (t = this._navigationSectionKey(i.dataset.path), t))
+        if (i.dataset.action === "navigate" && i.dataset.path && (a = this._navigationSectionKey(i.dataset.path), a))
           break;
         if (i.classList?.contains("nav-button") && i.dataset.key && this._sections?.[i.dataset.key]) {
-          t = i.dataset.key;
+          a = i.dataset.key;
           break;
         }
       }
-    t && (e.preventDefault(), e.stopPropagation(), e.stopImmediatePropagation?.(), this._goToSection(t));
+    a && (e.preventDefault(), e.stopPropagation(), e.stopImmediatePropagation?.(), this._goToSection(a));
   }
   _handleHassNavigate(e) {
-    const a = e?.detail || {}, t = this._navigationSectionKey(a.path || a.navigate || a.navigation_path);
-    t && (e.preventDefault(), e.stopPropagation(), e.stopImmediatePropagation?.(), this._goToSection(t));
+    const t = e?.detail || {}, a = this._navigationSectionKey(t.path || t.navigate || t.navigation_path);
+    a && (e.preventDefault(), e.stopPropagation(), e.stopImmediatePropagation?.(), this._goToSection(a));
   }
   _syncFromHash() {
     if (!this._built) return;
@@ -3638,69 +3733,69 @@ class E extends HTMLElement {
   }
   // ORIGINAL (rollback): recriava o card e removia a Home com replaceChildren.
   async _setSectionOriginalRollback(e) {
-    const a = this._sections && this._sections[e];
-    if (!a) return;
+    const t = this._sections && this._sections[e];
+    if (!t) return;
     this._activeKey = e;
-    const t = this.shadowRoot && this.shadowRoot.getElementById("content");
-    if (t) {
-      t.dataset.section = e, this._applyBackdrop(e), this._applyRailForSection(e);
+    const a = this.shadowRoot && this.shadowRoot.getElementById("content");
+    if (a) {
+      a.dataset.section = e, this._applyBackdrop(e), this._applyRailForSection(e);
       try {
-        const i = await this._createCard(a);
+        const i = await this._createCard(t);
         if (this._activeKey !== e) return;
-        this._sectionEl = i, t.replaceChildren(i);
+        this._sectionEl = i, a.replaceChildren(i);
       } catch (i) {
-        this._renderSectionError(t, i);
+        this._renderSectionError(a, i);
       }
       this._updateRailSelection(e);
     }
   }
   // NOVO (full-bleed): PRÉ-CARREGA todas as imagens de backdrop no setConfig para
   // a troca de seção ser instantânea (sem o atraso de buscar a imagem na hora).
-  _sectionElement(e, a, t) {
+  _sectionElement(e, t, a) {
     const i = this._sectionCache.get(e);
     if (i) return Promise.resolve(i);
     const r = this._sectionPromises.get(e);
     if (r) return r;
-    const n = this._createCard(a).then((s) => (t === this._sectionGeneration && (s.dataset.brunoSection = e, this._sectionCache.set(e, s)), s)).finally(() => {
+    const n = this._createCard(t).then((s) => (a === this._sectionGeneration && (s.dataset.brunoSection = e, this._sectionCache.set(e, s)), s)).finally(() => {
       this._sectionPromises.get(e) === n && this._sectionPromises.delete(e);
     });
     return this._sectionPromises.set(e, n), n;
   }
-  _setSectionVisibility(e, a) {
-    e && (e.hidden = !a, a ? (e.removeAttribute("aria-hidden"), e.removeAttribute("inert"), "inert" in e && (e.inert = !1)) : (e.setAttribute("aria-hidden", "true"), "inert" in e ? e.inert = !0 : e.setAttribute("inert", "")));
+  _setSectionVisibility(e, t) {
+    e && (e.hidden = !t, t ? (e.removeAttribute("aria-hidden"), e.removeAttribute("inert"), "inert" in e && (e.inert = !1)) : (e.setAttribute("aria-hidden", "true"), "inert" in e ? e.inert = !0 : e.setAttribute("inert", "")));
   }
-  _activateSection({ key: e, el: a, homeKey: t, homeEl: i, content: r, requestId: n }) {
+  _activateSection({ key: e, el: t, homeKey: a, homeEl: i, content: r, requestId: n }) {
     this._activeKey && this._sectionScroll.set(this._activeKey, r.scrollTop || 0), this._clearSectionError();
     const s = this._sectionEl;
-    s && s !== i && s !== a && s.parentNode === r && (this._setSectionVisibility(s, !1), r.removeChild(s)), i.parentNode !== r && r.appendChild(i), this._setSectionVisibility(i, e === t), a !== i && (a.parentNode !== r && r.appendChild(a), this._setSectionVisibility(a, !0)), this._activeKey = e, this._requestedKey = null, this._sectionEl = a, r.dataset.section = e, this._hass && (a.hass = this._hass), this._applyBackdrop(e), this._applyRailForSection(e), this._updateRailSelection(e);
+    s && s !== i && s !== t && s.parentNode === r && (this._setSectionVisibility(s, !1), r.removeChild(s)), i.parentNode !== r && r.appendChild(i), this._setSectionVisibility(i, e === a), t !== i && (t.parentNode !== r && r.appendChild(t), this._setSectionVisibility(t, !0)), this._activeKey = e, this._requestedKey = null, this._sectionEl = t, r.dataset.section = e, this._hass && (t.hass = this._hass), this._applyBackdrop(e), this._applyRailForSection(e), this._updateRailSelection(e);
     const l = this._sectionScroll.get(e) || 0;
     r.scrollTop = l, globalThis.requestAnimationFrame?.(() => {
       n === this._sectionRequestId && this._activeKey === e && (r.scrollTop = l);
-    }), e === t && this._scheduleBackdropWarmup();
+    }), e === a && this._scheduleBackdropWarmup();
   }
   async _setSection(e) {
-    const a = this._sections && this._sections[e];
-    if (!a) return;
-    const t = this.shadowRoot && this.shadowRoot.getElementById("content");
+    const t = this._sections && this._sections[e];
     if (!t) return;
+    const a = this.shadowRoot && this.shadowRoot.getElementById("content");
+    if (!a) return;
     const i = ++this._sectionRequestId, r = this._sectionGeneration;
     this._requestedKey = e;
     const n = this._homeSectionKey(), s = this._sections[n];
     try {
-      const l = this._sectionElement(n, s, r), c = e === n ? l : this._sectionElement(e, a, r), p = this._preloadResolvedBackdropFor(e, "high"), [d, h] = await Promise.all([l, c, p]);
+      const l = this._sectionElement(n, s, r), c = e === n ? l : this._sectionElement(e, t, r), p = this._preloadResolvedBackdropFor(e, "high"), [d, h] = await Promise.all([l, c, p]);
       if (i !== this._sectionRequestId || r !== this._sectionGeneration || this._requestedKey !== e) return;
-      this._activateSection({ key: e, el: h, homeKey: n, homeEl: d, content: t, requestId: i });
+      this._activateSection({ key: e, el: h, homeKey: n, homeEl: d, content: a, requestId: i });
     } catch (l) {
       if (i !== this._sectionRequestId || r !== this._sectionGeneration) return;
-      this._requestedKey = null, this._renderSectionError(t, l), this._updateRailSelection(this._activeKey || e);
+      this._requestedKey = null, this._renderSectionError(a, l), this._updateRailSelection(this._activeKey || e);
     }
   }
   _scheduleBackdropWarmup() {
     if (this._backdropWarmupScheduled || !this._backdrops) return;
     this._backdropWarmupScheduled = !0;
     const e = async () => {
-      const a = this._activeKey || this._defaultSection, t = Object.keys(this._backdrops).filter((i) => i !== "default" && i !== a);
-      for (const i of t)
+      const t = this._activeKey || this._defaultSection, a = Object.keys(this._backdrops).filter((i) => i !== "default" && i !== t);
+      for (const i of a)
         await this._preloadResolvedBackdropFor(i, "low");
     };
     typeof globalThis.requestIdleCallback == "function" ? globalThis.requestIdleCallback(() => {
@@ -3711,21 +3806,21 @@ class E extends HTMLElement {
   }
   _preloadBackdropFor(e) {
     if (!this._backdrops || !e) return;
-    const a = this._backdrops[e] || this._backdrops.default;
-    a && this._loadBackdrop(a);
+    const t = this._backdrops[e] || this._backdrops.default;
+    t && this._loadBackdrop(t);
   }
-  _preloadResolvedBackdropFor(e, a = "auto") {
+  _preloadResolvedBackdropFor(e, t = "auto") {
     if (!this._backdrops || !e) return Promise.resolve(null);
-    const t = this._backdrops[e] || this._backdrops.default, i = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, e, t) || t;
-    return i ? this._loadBackdrop(i, a) : Promise.resolve(null);
+    const a = this._backdrops[e] || this._backdrops.default, i = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, e, a) || a;
+    return i ? this._loadBackdrop(i, t) : Promise.resolve(null);
   }
-  _loadBackdrop(e, a = "auto") {
+  _loadBackdrop(e, t = "auto") {
     if (!e) return Promise.resolve(null);
     this._backdropCache instanceof Map || (this._backdropCache = /* @__PURE__ */ new Map());
-    const t = this._backdropCache.get(e);
-    if (t) return t.promise;
+    const a = this._backdropCache.get(e);
+    if (a) return a.promise;
     const i = new Image();
-    i.decoding = "async", "fetchPriority" in i && (i.fetchPriority = a);
+    i.decoding = "async", "fetchPriority" in i && (i.fetchPriority = t);
     const r = new Promise((n) => {
       let s = !1;
       const l = async (c) => {
@@ -3747,33 +3842,33 @@ class E extends HTMLElement {
   // ambas as camadas transparentes (grafite do :host aparece).
   _applyBackdropEffect(e) {
     if (!this._backdropEl) return;
-    const a = this._backdropEffects && (this._backdropEffects[e] || this._backdropEffects.default) || {}, t = (i, r, n) => {
+    const t = this._backdropEffects && (this._backdropEffects[e] || this._backdropEffects.default) || {}, a = (i, r, n) => {
       const s = r == null || r === "" ? n : String(r);
       this._backdropEl.style.setProperty(i, s);
     };
-    t("--bruno-backdrop-blur", a.blur, "var(--bruno-theme-backdrop-blur, 0px)"), t("--bruno-backdrop-scale", a.scale, "var(--bruno-theme-backdrop-scale, 1)"), t("--bruno-backdrop-saturate", a.saturate, "var(--bruno-theme-backdrop-saturate, 1)"), t("--bruno-backdrop-brightness", a.brightness, "var(--bruno-theme-backdrop-brightness, 1)"), t("--bruno-backdrop-dim", a.dim, "var(--bruno-theme-backdrop-dim, 0.10)");
+    a("--bruno-backdrop-blur", t.blur, "var(--bruno-theme-backdrop-blur, 0px)"), a("--bruno-backdrop-scale", t.scale, "var(--bruno-theme-backdrop-scale, 1)"), a("--bruno-backdrop-saturate", t.saturate, "var(--bruno-theme-backdrop-saturate, 1)"), a("--bruno-backdrop-brightness", t.brightness, "var(--bruno-theme-backdrop-brightness, 1)"), a("--bruno-backdrop-dim", t.dim, "var(--bruno-theme-backdrop-dim, 0.10)");
   }
   _applyBackdrop(e) {
     if (!this._backdropEl || !this._bdLayers || this._bdLayers.length < 2) return;
     this._backdropEl.dataset.secao = String(e || ""), this._applyBackdropEffect(e);
-    const a = this._backdrops && (this._backdrops[e] || this._backdrops.default), t = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, e, a) || a;
-    if (!t) {
+    const t = this._backdrops && (this._backdrops[e] || this._backdrops.default), a = globalThis.BrunoWallpaperManager?.resolve?.(this._hass, e, t) || t;
+    if (!a) {
       this._backdropRequestId = (this._backdropRequestId || 0) + 1, this._backdropTargetUrl = "", this._bdLayers.forEach((n) => {
         n.style.opacity = "0";
       }), delete this._backdropEl.dataset.active, this._bdActive = -1;
       return;
     }
     const i = this._bdActive >= 0 ? this._bdLayers[this._bdActive] : null;
-    if (i && i.dataset.url === t) {
+    if (i && i.dataset.url === a) {
       this._backdropTargetUrl = "", this._backdropEl.dataset.active = "1";
       return;
     }
-    if (this._backdropTargetUrl === t) return;
+    if (this._backdropTargetUrl === a) return;
     const r = (this._backdropRequestId || 0) + 1;
-    this._backdropRequestId = r, this._backdropTargetUrl = t, this._loadBackdrop(t).then((n) => {
-      if (!n || r !== this._backdropRequestId || this._activeKey !== e || this._backdropTargetUrl !== t) return;
+    this._backdropRequestId = r, this._backdropTargetUrl = a, this._loadBackdrop(a).then((n) => {
+      if (!n || r !== this._backdropRequestId || this._activeKey !== e || this._backdropTargetUrl !== a) return;
       const s = this._bdActive >= 0 ? this._bdLayers[this._bdActive] : null, l = this._bdActive === 0 ? 1 : 0, c = this._bdLayers[l];
-      c.style.opacity = "0", c.dataset.url = t, c.style.backgroundImage = `url("${t}")`, globalThis.requestAnimationFrame?.(() => {
+      c.style.opacity = "0", c.dataset.url = a, c.style.backgroundImage = `url("${a}")`, globalThis.requestAnimationFrame?.(() => {
         r !== this._backdropRequestId || this._activeKey !== e || (c.style.opacity = "1", s && s !== c && (s.style.opacity = "0"), this._backdropEl.dataset.active = "1", this._bdActive = l, this._backdropTargetUrl = "");
       });
     });
@@ -3784,13 +3879,13 @@ class E extends HTMLElement {
   // O Home permanece ancorado no topo (item 0 das duas listas).
   _applyRailForSection(e) {
     if (!this._rails || !this._railEl) return;
-    const a = this._sectionRails[e] || this._defaultRailName;
-    if (a === this._currentRailName) return;
-    const t = this._rails[a] || this._rails[this._defaultRailName];
-    if (t) {
-      this._currentRailName = a;
+    const t = this._sectionRails[e] || this._defaultRailName;
+    if (t === this._currentRailName) return;
+    const a = this._rails[t] || this._rails[this._defaultRailName];
+    if (a) {
+      this._currentRailName = t;
       try {
-        this._railEl.setConfig(t), this._hass && (this._railEl.hass = this._hass);
+        this._railEl.setConfig(a), this._hass && (this._railEl.hass = this._hass);
       } catch (i) {
         console.warn("bruno-shell: falha ao trocar rail da secao", e, i);
       }
@@ -3799,30 +3894,30 @@ class E extends HTMLElement {
   // Atualiza o item ativo da rail SEM reconstrui-la (so alterna a classe .selected
   // pelos data-key dos botoes — aditivo no bento-sidebar-card.js).
   _updateRailSelection(e) {
-    const a = this._railEl && this._railEl.shadowRoot;
-    if (!a) return;
-    const t = (n) => {
+    const t = this._railEl && this._railEl.shadowRoot;
+    if (!t) return;
+    const a = (n) => {
       const s = n.dataset.groupKeys, l = s ? s.split(" ").filter(Boolean).indexOf(e) !== -1 : n.dataset.key === e;
       n.classList.toggle("selected", l);
-    }, i = ".nav-button[data-key], .nav-button[data-group-keys]", r = a.querySelectorAll(i);
+    }, i = ".nav-button[data-key], .nav-button[data-group-keys]", r = t.querySelectorAll(i);
     if (!r.length) {
       globalThis.requestAnimationFrame && globalThis.requestAnimationFrame(() => {
         const n = this._railEl && this._railEl.shadowRoot;
-        n && n.querySelectorAll(i).forEach(t);
+        n && n.querySelectorAll(i).forEach(a);
       });
       return;
     }
-    r.forEach(t);
+    r.forEach(a);
   }
   // --- Erros (nao derrubam a shell) ------------------------------------------
   _renderRailError(e) {
-    const a = this.shadowRoot && this.shadowRoot.getElementById("rail");
-    a && (a.innerHTML = `<div class="err">rail: ${E._escape(e && e.message)}</div>`);
+    const t = this.shadowRoot && this.shadowRoot.getElementById("rail");
+    t && (t.innerHTML = `<div class="err">rail: ${E._escape(e && e.message)}</div>`);
   }
-  _renderSectionError(e, a) {
+  _renderSectionError(e, t) {
     this._clearSectionError();
-    const t = document.createElement("div");
-    t.className = "err section-error", t.textContent = `secao: ${a && a.message || a}`, e.appendChild(t), this._sectionErrorEl = t;
+    const a = document.createElement("div");
+    a.className = "err section-error", a.textContent = `secao: ${t && t.message || t}`, e.appendChild(a), this._sectionErrorEl = a;
   }
   _clearSectionError() {
     this._sectionErrorEl?.parentNode && this._sectionErrorEl.parentNode.removeChild(this._sectionErrorEl), this._sectionErrorEl = null;
@@ -3830,8 +3925,8 @@ class E extends HTMLElement {
   // --- Configuracoes ---------------------------------------------------------
   _syncConfigOverlayTheme(e = "") {
     if (!this._configOverlayEl) return;
-    const a = e || globalThis.BrunoThemeManager?.current?.() || "";
-    this._configOverlayEl.dataset.brunoPopupTheme = a === "josh" ? "josh" : "default";
+    const t = e || globalThis.BrunoThemeManager?.current?.() || "";
+    this._configOverlayEl.dataset.brunoPopupTheme = t === "josh" ? "josh" : "default";
   }
   _openConfigPanel() {
     this._configOverlayEl && (this._syncConfigOverlayTheme(), this._configSection = "", this._wallpaperMessage = "", this._configOverlayEl.hidden = !1, this._configOverlayEl.dataset.open = "1", this._configOverlayEl.dataset.panel = "config", this._renderConfigPanel());
@@ -3841,7 +3936,7 @@ class E extends HTMLElement {
   }
   _renderConfigPanel({ preserveScroll: e = !1 } = {}) {
     if (!this._configOverlayEl || this._configOverlayEl.hidden) return;
-    const a = e && this._configOverlayEl.querySelector(".updates-scroll")?.scrollTop || 0, t = globalThis.BrunoThemeManager, i = globalThis.BrunoWallpaperManager, r = this._pendingUpdatesCount(), n = this._renderConfigChild();
+    const t = e && this._configOverlayEl.querySelector(".updates-scroll")?.scrollTop || 0, a = globalThis.BrunoThemeManager, i = globalThis.BrunoWallpaperManager, r = this._pendingUpdatesCount(), n = this._renderConfigChild();
     if (this._configOverlayEl.innerHTML = `
       <div class="config-scrim" data-config-action="close"></div>
       <section class="config-panel config-root-panel${n ? " has-child" : ""}" role="dialog" aria-modal="true" aria-label="Configuracoes">
@@ -3861,7 +3956,7 @@ class E extends HTMLElement {
               <span class="config-menu-icon" aria-hidden="true">
                 ${globalThis.BrunoIcons?.render("palette") || ""}
               </span>
-              <span class="config-menu-copy"><strong>Themes</strong><small>${E._escape(t?.activeLabel?.() || "VisionOS")}</small></span>
+              <span class="config-menu-copy"><strong>Themes</strong><small>${E._escape(a?.activeLabel?.() || "VisionOS")}</small></span>
               <span class="config-menu-chevron" aria-hidden="true">&rsaquo;</span>
             </button>
             <button class="config-menu-item" type="button" data-config-action="open-section" data-section="wallpaper">
@@ -3910,9 +4005,9 @@ class E extends HTMLElement {
       const s = this._configOverlayEl.querySelector("#diagnosticoHost"), l = this._montarDiagnostico();
       s && l ? s.replaceChildren(l) : s && (s.textContent = "Bundle nao carregado.");
     }
-    if (e && a) {
+    if (e && t) {
       const s = this._configOverlayEl.querySelector(".updates-scroll");
-      s && (s.scrollTop = a);
+      s && (s.scrollTop = t);
     }
   }
   /**
@@ -3954,23 +4049,23 @@ class E extends HTMLElement {
       ` : "" : "";
   }
   _renderThemesChild() {
-    const e = globalThis.BrunoThemeManager, a = e?.list?.() || [], t = e?.current?.() || "visionos";
+    const e = globalThis.BrunoThemeManager, t = e?.list?.() || [], a = e?.current?.() || "visionos";
     return `
       <section class="config-panel config-child-panel" role="dialog" aria-modal="true" aria-label="Themes">
         <header class="config-header">
           <span class="config-icon" aria-hidden="true">
             ${globalThis.BrunoIcons?.render("palette") || ""}
           </span>
-          <div class="config-title"><strong>Themes</strong><span>${E._escape(e?.activeLabel?.() || t)}</span></div>
+          <div class="config-title"><strong>Themes</strong><span>${E._escape(e?.activeLabel?.() || a)}</span></div>
           <button class="config-close" type="button" data-config-action="child-close" aria-label="Fechar">&times;</button>
         </header>
         <div class="config-section">
           <div class="theme-list">
-            ${a.map((i) => `
-              <button class="theme-option${i.key === t ? " is-selected" : ""}" type="button"
+            ${t.map((i) => `
+              <button class="theme-option${i.key === a ? " is-selected" : ""}" type="button"
                 data-config-action="theme" data-theme="${E._escapeAttr(i.key)}" ${i.available ? "" : "disabled"}>
                 <span>${E._escape(i.label)}</span>
-                <small>${i.key === t ? "Atual" : i.available ? "Disponivel" : "Indisponivel"}</small>
+                <small>${i.key === a ? "Atual" : i.available ? "Disponivel" : "Indisponivel"}</small>
               </button>
             `).join("")}
           </div>
@@ -3980,9 +4075,9 @@ class E extends HTMLElement {
     `;
   }
   _renderWallpaperChild() {
-    const e = globalThis.BrunoWallpaperManager, a = e?.sections || [], t = e?.section?.(this._wallpaperSection) || a[0] || { key: "home" };
-    this._wallpaperSection = t.key;
-    const i = e?.value?.(this._hass, t.key) || "", r = this._backdrops && (this._backdrops[t.key] || this._backdrops.default) || "", n = e?.resolve?.(this._hass, t.key, r) || r, s = !!this._hass?.states?.[t.entity];
+    const e = globalThis.BrunoWallpaperManager, t = e?.sections || [], a = e?.section?.(this._wallpaperSection) || t[0] || { key: "home" };
+    this._wallpaperSection = a.key;
+    const i = e?.value?.(this._hass, a.key) || "", r = this._backdrops && (this._backdrops[a.key] || this._backdrops.default) || "", n = e?.resolve?.(this._hass, a.key, r) || r, s = !!this._hass?.states?.[a.entity];
     return `
       <section class="config-panel config-child-panel wallpaper-panel" role="dialog" aria-modal="true" aria-label="Wallpaper">
         <header class="config-header">
@@ -3996,10 +4091,10 @@ class E extends HTMLElement {
           <div class="wallpaper-field">
             <span>Area</span>
             <div class="wallpaper-area-list" role="listbox" aria-label="Area do wallpaper">
-              ${a.map((l) => `
-                <button class="wallpaper-area-option${l.key === t.key ? " is-selected" : ""}" type="button"
+              ${t.map((l) => `
+                <button class="wallpaper-area-option${l.key === a.key ? " is-selected" : ""}" type="button"
                   data-config-action="wallpaper-area" data-wallpaper-key="${E._escapeAttr(l.key)}"
-                  role="option" aria-selected="${l.key === t.key ? "true" : "false"}">
+                  role="option" aria-selected="${l.key === a.key ? "true" : "false"}">
                   ${E._escape(l.label)}
                 </button>
               `).join("")}
@@ -4024,8 +4119,8 @@ class E extends HTMLElement {
     `;
   }
   _pendingUpdatesCount() {
-    const e = this._hass?.states || {}, a = Object.entries(e).filter(([i, r]) => i.startsWith("update.") && r?.state === "on").length, t = Number(e["sensor.hassio_updates_available"]?.state) || 0;
-    return Math.max(a, t);
+    const e = this._hass?.states || {}, t = Object.entries(e).filter(([i, r]) => i.startsWith("update.") && r?.state === "on").length, a = Number(e["sensor.hassio_updates_available"]?.state) || 0;
+    return Math.max(t, a);
   }
   _refreshUpdatesPanel({ preserveScroll: e = !0 } = {}) {
     if (this._configOverlayEl?.dataset.panel === "config" && this._configSection === "updates") {
@@ -4039,7 +4134,7 @@ class E extends HTMLElement {
   }
   _renderUpdatesPanel({ preserveScroll: e = !1 } = {}) {
     if (!this._configOverlayEl || this._configOverlayEl.hidden || this._configOverlayEl.dataset.panel !== "updates") return;
-    const a = e && this._configOverlayEl.querySelector(".updates-scroll")?.scrollTop || 0;
+    const t = e && this._configOverlayEl.querySelector(".updates-scroll")?.scrollTop || 0;
     if (!globalThis.BrunoUpdatesPanel?.render) {
       this._configOverlayEl.innerHTML = `
         <div class="config-scrim" data-updates-action="close"></div>
@@ -4056,9 +4151,9 @@ class E extends HTMLElement {
       `;
       return;
     }
-    if (this._configOverlayEl.innerHTML = globalThis.BrunoUpdatesPanel.render({ hass: this._hass }), e && a) {
-      const t = this._configOverlayEl.querySelector(".updates-scroll");
-      t && (t.scrollTop = a);
+    if (this._configOverlayEl.innerHTML = globalThis.BrunoUpdatesPanel.render({ hass: this._hass }), e && t) {
+      const a = this._configOverlayEl.querySelector(".updates-scroll");
+      a && (a.scrollTop = t);
     }
   }
   _openSystemPanel() {
@@ -4099,7 +4194,7 @@ class E extends HTMLElement {
   }
   _renderSystemPanel({ preserveScroll: e = !1 } = {}) {
     if (!this._configOverlayEl || this._configOverlayEl.hidden || this._configOverlayEl.dataset.panel !== "system") return;
-    const a = e && this._configOverlayEl.querySelector(".system-scroll")?.scrollTop || 0;
+    const t = e && this._configOverlayEl.querySelector(".system-scroll")?.scrollTop || 0;
     if (!globalThis.BrunoSystemPanel?.render) {
       this._configOverlayEl.innerHTML = `
         <div class="config-scrim" data-system-action="close"></div>
@@ -4113,9 +4208,9 @@ class E extends HTMLElement {
       `;
       return;
     }
-    if (this._configOverlayEl.innerHTML = globalThis.BrunoSystemPanel.render({ hass: this._hass }), e && a) {
-      const t = this._configOverlayEl.querySelector(".system-scroll");
-      t && (t.scrollTop = a);
+    if (this._configOverlayEl.innerHTML = globalThis.BrunoSystemPanel.render({ hass: this._hass }), e && t) {
+      const a = this._configOverlayEl.querySelector(".system-scroll");
+      a && (a.scrollTop = t);
     }
   }
   _openNetworkPanel() {
@@ -4165,7 +4260,7 @@ class E extends HTMLElement {
       </section>
     `;
       try {
-        const a = await this._createCard({
+        const t = await this._createCard({
           type: "custom:spotifyplus-card",
           cardUniqueId: "bruno-shell-spotify-panel",
           entity: this._spotifyPanelConfig.entity,
@@ -4177,10 +4272,10 @@ class E extends HTMLElement {
           sectionDefault: "player"
         });
         if (this._configOverlayEl.hidden || this._configOverlayEl.dataset.panel !== "spotify") return;
-        this._spotifyPanelCard = a, this._hass && (a.hass = this._hass), this._configOverlayEl.querySelector("#spotifyCardHost")?.replaceChildren(a);
-      } catch (a) {
-        const t = this._configOverlayEl.querySelector("#spotifyCardHost");
-        t && (t.innerHTML = `<span class="spotify-panel-loading">${E._escape(a?.message || "Spotify indisponivel")}</span>`);
+        this._spotifyPanelCard = t, this._hass && (t.hass = this._hass), this._configOverlayEl.querySelector("#spotifyCardHost")?.replaceChildren(t);
+      } catch (t) {
+        const a = this._configOverlayEl.querySelector("#spotifyCardHost");
+        a && (a.innerHTML = `<span class="spotify-panel-loading">${E._escape(t?.message || "Spotify indisponivel")}</span>`);
       }
     }
   }
@@ -4229,7 +4324,7 @@ class E extends HTMLElement {
       this._renderNetworkQrStep();
       return;
     }
-    const a = e && this._configOverlayEl.querySelector(".network-scroll")?.scrollTop || 0;
+    const t = e && this._configOverlayEl.querySelector(".network-scroll")?.scrollTop || 0;
     if (!globalThis.BrunoNetworkPanel?.render) {
       this._configOverlayEl.innerHTML = `
         <div class="config-scrim" data-network-action="close"></div>
@@ -4243,24 +4338,24 @@ class E extends HTMLElement {
       `;
       return;
     }
-    if (this._configOverlayEl.innerHTML = globalThis.BrunoNetworkPanel.render({ hass: this._hass }), e && a) {
-      const t = this._configOverlayEl.querySelector(".network-scroll");
-      t && (t.scrollTop = a);
+    if (this._configOverlayEl.innerHTML = globalThis.BrunoNetworkPanel.render({ hass: this._hass }), e && t) {
+      const a = this._configOverlayEl.querySelector(".network-scroll");
+      a && (a.scrollTop = t);
     }
   }
   _handleConfigClick(e) {
-    const a = e.target?.closest?.("[data-scenes-action]");
-    if (a) {
+    const t = e.target?.closest?.("[data-scenes-action]");
+    if (t) {
       e.preventDefault(), e.stopPropagation(), globalThis.BrunoScenesPanel?.handleAction?.({
-        target: a,
+        target: t,
         hass: this._hass,
         host: this
-      }), a.dataset.scenesAction === "close" && !globalThis.BrunoScenesPanel?.handleAction && this._closeConfigPanel();
+      }), t.dataset.scenesAction === "close" && !globalThis.BrunoScenesPanel?.handleAction && this._closeConfigPanel();
       return;
     }
-    const t = e.target?.closest?.("[data-spotify-action]");
-    if (t) {
-      if (e.preventDefault(), e.stopPropagation(), t.dataset.spotifyAction === "close") {
+    const a = e.target?.closest?.("[data-spotify-action]");
+    if (a) {
+      if (e.preventDefault(), e.stopPropagation(), a.dataset.spotifyAction === "close") {
         this._closeConfigPanel();
         return;
       }
@@ -4344,31 +4439,31 @@ class E extends HTMLElement {
     l === "reload" && globalThis.location?.reload?.();
   }
   _handleConfigChange(e) {
-    const a = e.target?.closest?.("[data-config-action]");
-    if (a && a.dataset.configAction === "wallpaper-file") {
-      const t = a.files?.[0];
-      a.value = "", t && this._uploadWallpaper(t);
+    const t = e.target?.closest?.("[data-config-action]");
+    if (t && t.dataset.configAction === "wallpaper-file") {
+      const a = t.files?.[0];
+      t.value = "", a && this._uploadWallpaper(a);
     }
   }
   async _uploadWallpaper(e) {
-    const a = globalThis.BrunoWallpaperManager;
-    if (a?.upload) {
+    const t = globalThis.BrunoWallpaperManager;
+    if (t?.upload) {
       this._wallpaperMessage = "Enviando imagem...", this._renderConfigPanel();
       try {
-        await a.upload({ hass: this._hass, key: this._wallpaperSection, file: e }), this._wallpaperMessage = "Wallpaper aplicado.";
-      } catch (t) {
-        this._wallpaperMessage = t?.message || "Nao foi possivel enviar a imagem.";
+        await t.upload({ hass: this._hass, key: this._wallpaperSection, file: e }), this._wallpaperMessage = "Wallpaper aplicado.";
+      } catch (a) {
+        this._wallpaperMessage = a?.message || "Nao foi possivel enviar a imagem.";
       }
       this._renderConfigPanel();
     }
   }
   async _saveWallpaper(e) {
-    const a = globalThis.BrunoWallpaperManager;
-    if (!a?.save) return;
-    const t = this._configOverlayEl?.querySelector("#wallpaperUrl"), i = e === void 0 ? t?.value || "" : e;
+    const t = globalThis.BrunoWallpaperManager;
+    if (!t?.save) return;
+    const a = this._configOverlayEl?.querySelector("#wallpaperUrl"), i = e === void 0 ? a?.value || "" : e;
     this._wallpaperMessage = "Salvando...", this._renderConfigPanel();
     try {
-      await a.save({ hass: this._hass, key: this._wallpaperSection, url: i }), this._wallpaperMessage = i ? "Wallpaper aplicado." : "Wallpaper padrao restaurado.";
+      await t.save({ hass: this._hass, key: this._wallpaperSection, url: i }), this._wallpaperMessage = i ? "Wallpaper aplicado." : "Wallpaper padrao restaurado.";
     } catch (r) {
       this._wallpaperMessage = r?.message || "Nao foi possivel salvar o wallpaper.";
     }
@@ -5385,14 +5480,14 @@ class E extends HTMLElement {
     return String(e ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   }
 }
-customElements.get(_a) || customElements.define(_a, E);
+customElements.get(_t) || customElements.define(_t, E);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: _a,
+  type: _t,
   name: "Bruno Shell",
   description: "App-shell com barra fixa e conteudo que troca por secao."
 });
-const Fr = "20260723-liquid-performance-1", bt = "bruno-liquid-glass-tokens", ja = {
+const Yr = "20260723-liquid-performance-1", ga = "bruno-liquid-glass-tokens", jt = {
   "bruno-liquid-accent": "255, 159, 10",
   "bruno-liquid-warm-accent": "255, 214, 10",
   "bruno-liquid-green-accent": "50, 215, 75",
@@ -5657,7 +5752,7 @@ const Fr = "20260723-liquid-performance-1", bt = "bruno-liquid-glass-tokens", ja
     0 6px 16px rgba(0,0,0,0.105)
   `
 };
-Object.assign(ja, {
+Object.assign(jt, {
   // Compatibility aliases used by already migrated components.
   "bruno-liquid-surface-off-background": "var(--bruno-liquid-card-background)",
   "bruno-liquid-surface-off-filter": "var(--bruno-liquid-card-filter)",
@@ -5671,7 +5766,7 @@ Object.assign(ja, {
   "bruno-liquid-active-warm-shadow": "var(--bruno-liquid-surface-on-shadow)",
   "bruno-liquid-active-warm-sheen": "var(--bruno-liquid-surface-on-sheen)"
 });
-const Gr = {
+const Zr = {
   card: {
     background: "var(--bruno-liquid-card-background)",
     filter: "var(--bruno-liquid-card-filter)",
@@ -5712,7 +5807,7 @@ const Gr = {
     shadow: "var(--bruno-liquid-chip-shadow)",
     filter: "var(--bruno-liquid-chip-filter)"
   }
-}, Wr = {
+}, Kr = {
   activeWarm: {
     background: "var(--bruno-liquid-active-warm-background)",
     borderColor: "var(--bruno-liquid-active-warm-border-color)",
@@ -5724,7 +5819,7 @@ const Gr = {
     borderColor: "var(--bruno-liquid-selected-blue-border)",
     shadow: "var(--bruno-liquid-selected-blue-shadow)"
   }
-}, Yr = `
+}, Xr = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -5768,45 +5863,45 @@ html.bruno-liquid-route-transition::after {
   }
 }
 `;
-function Zr(o) {
-  return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
+function Qr(o) {
+  return Object.entries(o).map(([e, t]) => `  --${e}: ${String(t).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
 function vi(o = globalThis.document) {
   if (!o?.head) return null;
-  let e = o.getElementById(bt);
-  return e || (e = o.createElement("style"), e.id = bt, o.head.appendChild(e)), e.textContent = `:root {
-${Zr(ja)}
+  let e = o.getElementById(ga);
+  return e || (e = o.createElement("style"), e.id = ga, o.head.appendChild(e)), e.textContent = `:root {
+${Qr(jt)}
 }
-${Yr}`, e;
+${Xr}`, e;
 }
-function Kr(o = "tap") {
+function Jr(o = "tap") {
   const e = globalThis.navigator?.vibrate;
   if (typeof e != "function") return !1;
-  const a = o === "hold" ? [12, 24, 12] : 10;
+  const t = o === "hold" ? [12, 24, 12] : 10;
   try {
-    return e.call(globalThis.navigator, a), !0;
+    return e.call(globalThis.navigator, t), !0;
   } catch {
     return !1;
   }
 }
-function Xr(o = 280) {
+function eo(o = 280) {
   const e = globalThis.document?.documentElement;
   e && (e.classList.remove("bruno-liquid-route-transition"), e.offsetWidth, e.classList.add("bruno-liquid-route-transition"), globalThis.setTimeout?.(() => {
     e.classList.remove("bruno-liquid-route-transition");
   }, o));
 }
-const gt = {
-  version: Fr,
-  tokens: ja,
-  surfaces: Gr,
-  states: Wr,
+const ba = {
+  version: Yr,
+  tokens: jt,
+  surfaces: Zr,
+  states: Kr,
   apply: vi,
-  feedback: Kr,
-  routeTransition: Xr
+  feedback: Jr,
+  routeTransition: eo
 };
-globalThis.BrunoThemeManager ? globalThis.BrunoLiquidGlassOriginal = gt : (globalThis.BrunoLiquidGlass = gt, vi());
-const Qr = "20260822-hemma-1", mt = "bruno-liquid-glass-tokens", de = globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass), _i = {
+globalThis.BrunoThemeManager ? globalThis.BrunoLiquidGlassOriginal = ba : (globalThis.BrunoLiquidGlass = ba, vi());
+const to = "20260822-hemma-1", ma = "bruno-liquid-glass-tokens", de = globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass), _i = {
   "primary-font-family": '"Hanken Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif',
   "primary-color": "#00c0e8",
   "accent-color": "#00C3D0",
@@ -5903,7 +5998,7 @@ const Qr = "20260822-hemma-1", mt = "bruno-liquid-glass-tokens", de = globalThis
   "bruno-liquid-popup-border": "1px solid rgba(255,255,255,0.10)",
   "bruno-liquid-dock-background": "rgba(20,20,20,0.30)",
   "bruno-liquid-dock-filter": "blur(24px) saturate(1.20)"
-}, Jr = {
+}, ao = {
   ..._i,
   "primary-background-color": "rgb(40,40,40)",
   "secondary-background-color": "rgb(20,20,20)",
@@ -5952,30 +6047,30 @@ const Qr = "20260822-hemma-1", mt = "bruno-liquid-glass-tokens", de = globalThis
   "bruno-liquid-dock-background": "rgba(0,0,0,0.30)",
   "bruno-liquid-dock-filter": "blur(24px) saturate(1.20)"
 };
-function eo() {
+function io() {
   return !!globalThis.matchMedia?.("(prefers-color-scheme: dark)").matches;
 }
-function ao() {
-  const o = eo() ? Jr : xi;
+function ro() {
+  const o = io() ? ao : xi;
   return Object.assign({}, de?.tokens || {}, o);
 }
-function to(o) {
-  return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
+function oo(o) {
+  return Object.entries(o).map(([e, t]) => `  --${e}: ${String(t).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
 function yi(o = globalThis.document) {
   if (!o?.head) return null;
-  let e = o.getElementById(mt);
-  return e || (e = o.createElement("style"), e.id = mt, o.head.appendChild(e)), e.textContent = `:root {
-${to(ao())}
+  let e = o.getElementById(ma);
+  return e || (e = o.createElement("style"), e.id = ma, o.head.appendChild(e)), e.textContent = `:root {
+${oo(ro())}
 }`, e;
 }
-const io = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
-io?.addEventListener?.("change", () => {
+const no = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
+no?.addEventListener?.("change", () => {
   globalThis.BrunoThemeManager?.current?.() === "hemma" && yi();
 });
 globalThis.BrunoHemma = {
-  version: Qr,
+  version: to,
   // Mantém o mesmo formato dos temas clássicos: objeto de tokens + apply().
   tokens: xi,
   surfaces: de?.surfaces || {},
@@ -5984,7 +6079,7 @@ globalThis.BrunoHemma = {
   feedback: (...o) => de?.feedback?.(...o) || !1,
   routeTransition: (...o) => de?.routeTransition?.(...o)
 };
-const ro = "20260702-visionos-yaml-2", ft = "bruno-liquid-glass-tokens", Va = {
+const so = "20260702-visionos-yaml-2", fa = "bruno-liquid-glass-tokens", Vt = {
   "bruno-liquid-accent": "255, 159, 10",
   "bruno-liquid-warm-accent": "255, 214, 10",
   "bruno-liquid-green-accent": "50, 215, 75",
@@ -6200,7 +6295,7 @@ const ro = "20260702-visionos-yaml-2", ft = "bruno-liquid-glass-tokens", Va = {
   "bruno-liquid-band-open-border-color": "var(--bruno-liquid-surface-on-border-color)",
   "bruno-liquid-band-open-shadow": "var(--bruno-liquid-surface-on-shadow)"
 };
-Object.assign(Va, {
+Object.assign(Vt, {
   // Compatibility aliases used by already migrated components.
   "bruno-liquid-surface-off-background": "var(--bruno-liquid-card-background)",
   "bruno-liquid-surface-off-filter": "var(--bruno-liquid-card-filter)",
@@ -6214,7 +6309,7 @@ Object.assign(Va, {
   "bruno-liquid-active-warm-shadow": "var(--bruno-liquid-surface-on-shadow)",
   "bruno-liquid-active-warm-sheen": "var(--bruno-liquid-surface-on-sheen)"
 });
-const oo = {
+const lo = {
   card: {
     background: "var(--bruno-liquid-card-background)",
     filter: "var(--bruno-liquid-card-filter)",
@@ -6255,7 +6350,7 @@ const oo = {
     shadow: "var(--bruno-liquid-chip-shadow)",
     filter: "var(--bruno-liquid-chip-filter)"
   }
-}, no = {
+}, co = {
   activeWarm: {
     background: "var(--bruno-liquid-active-warm-background)",
     borderColor: "var(--bruno-liquid-active-warm-border-color)",
@@ -6267,7 +6362,7 @@ const oo = {
     borderColor: "var(--bruno-liquid-selected-blue-border)",
     shadow: "var(--bruno-liquid-selected-blue-shadow)"
   }
-}, so = `
+}, po = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -6311,46 +6406,46 @@ html.bruno-liquid-route-transition::after {
   }
 }
 `;
-function lo(o) {
-  return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
+function uo(o) {
+  return Object.entries(o).map(([e, t]) => `  --${e}: ${String(t).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function co(o = globalThis.document) {
+function ho(o = globalThis.document) {
   if (!o?.head) return null;
-  let e = o.getElementById(ft);
-  return e || (e = o.createElement("style"), e.id = ft, o.head.appendChild(e)), e.textContent = `:root {
-${lo(Va)}
+  let e = o.getElementById(fa);
+  return e || (e = o.createElement("style"), e.id = fa, o.head.appendChild(e)), e.textContent = `:root {
+${uo(Vt)}
 }
-${so}`, e;
+${po}`, e;
 }
-function po(o = "tap") {
+function go(o = "tap") {
   const e = globalThis.navigator?.vibrate;
   if (typeof e != "function") return !1;
-  const a = o === "hold" ? [12, 24, 12] : 10;
+  const t = o === "hold" ? [12, 24, 12] : 10;
   try {
-    return e.call(globalThis.navigator, a), !0;
+    return e.call(globalThis.navigator, t), !0;
   } catch {
     return !1;
   }
 }
-function uo(o = 280) {
+function bo(o = 280) {
   const e = globalThis.document?.documentElement;
   e && (e.classList.remove("bruno-liquid-route-transition"), e.offsetWidth, e.classList.add("bruno-liquid-route-transition"), globalThis.setTimeout?.(() => {
     e.classList.remove("bruno-liquid-route-transition");
   }, o));
 }
 const wi = {
-  version: ro,
-  tokens: Va,
-  surfaces: oo,
-  states: no,
-  apply: co,
-  feedback: po,
-  routeTransition: uo
+  version: so,
+  tokens: Vt,
+  surfaces: lo,
+  states: co,
+  apply: ho,
+  feedback: go,
+  routeTransition: bo
 };
 globalThis.BrunoVisionOS = wi;
 globalThis.BrunoLiquidGlass || (globalThis.BrunoLiquidGlass = wi);
-const ho = "20260716-ios-light-1", vt = "bruno-liquid-glass-tokens", pe = globalThis.BrunoVisionOS || globalThis.BrunoLiquidGlass, Ba = Object.assign({}, pe?.tokens || {}, {
+const mo = "20260716-ios-light-1", va = "bruno-liquid-glass-tokens", pe = globalThis.BrunoVisionOS || globalThis.BrunoLiquidGlass, Bt = Object.assign({}, pe?.tokens || {}, {
   // Palette extracted from ios-themes.yaml. Background artwork remains owned
   // by the Bruno shell and is deliberately not replaced by the theme.
   "background-image": "none",
@@ -6466,7 +6561,7 @@ const ho = "20260716-ios-light-1", vt = "bruno-liquid-glass-tokens", pe = global
   "bruno-liquid-band-border-color": "rgba(142,142,147,0.18)",
   "bruno-liquid-band-border": "1px solid var(--bruno-liquid-band-border-color)"
 });
-Object.assign(Ba, {
+Object.assign(Bt, {
   "bruno-liquid-surface-off-background": "var(--bruno-liquid-card-background)",
   "bruno-liquid-surface-off-filter": "var(--bruno-liquid-card-filter)",
   "bruno-liquid-surface-off-border": "var(--bruno-liquid-card-border)",
@@ -6479,7 +6574,7 @@ Object.assign(Ba, {
   "bruno-liquid-active-warm-shadow": "var(--bruno-liquid-surface-on-shadow)",
   "bruno-liquid-active-warm-sheen": "var(--bruno-liquid-surface-on-sheen)"
 });
-const bo = `
+const fo = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -6496,28 +6591,28 @@ html.bruno-liquid-route-transition::after {
   html.bruno-liquid-route-transition::after { -webkit-backdrop-filter: none; backdrop-filter: none; animation-duration: 180ms; }
 }
 `;
-function go(o) {
-  return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
+function vo(o) {
+  return Object.entries(o).map(([e, t]) => `  --${e}: ${String(t).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function mo(o = globalThis.document) {
+function _o(o = globalThis.document) {
   if (!o?.head) return null;
-  let e = o.getElementById(vt);
-  return e || (e = o.createElement("style"), e.id = vt, o.head.appendChild(e)), e.textContent = `:root {
-${go(Ba)}
+  let e = o.getElementById(va);
+  return e || (e = o.createElement("style"), e.id = va, o.head.appendChild(e)), e.textContent = `:root {
+${vo(Bt)}
 }
-${bo}`, e;
+${fo}`, e;
 }
 globalThis.BrunoIOSLight = {
-  version: ho,
-  tokens: Ba,
+  version: mo,
+  tokens: Bt,
   surfaces: pe?.surfaces || {},
   states: pe?.states || {},
-  apply: mo,
+  apply: _o,
   feedback: (...o) => pe?.feedback?.(...o) || !1,
   routeTransition: (...o) => pe?.routeTransition?.(...o)
 };
-const fo = "20260716-ios-dark-1", _t = "bruno-liquid-glass-tokens", ue = globalThis.BrunoVisionOS || globalThis.BrunoLiquidGlass, Ua = Object.assign({}, ue?.tokens || {}, {
+const xo = "20260716-ios-dark-1", _a = "bruno-liquid-glass-tokens", ue = globalThis.BrunoVisionOS || globalThis.BrunoLiquidGlass, Ut = Object.assign({}, ue?.tokens || {}, {
   // Dark palette from ios-themes.yaml. Shell backdrops remain untouched.
   "background-image": "none",
   "primary-background-color": "#2c2c2e",
@@ -6612,7 +6707,7 @@ const fo = "20260716-ios-dark-1", _t = "bruno-liquid-glass-tokens", ue = globalT
   "bruno-liquid-popup-option-background": "rgba(255,255,255,0.05)",
   "bruno-liquid-popup-option-hover-background": "rgba(9,132,255,0.15)"
 });
-Object.assign(Ua, {
+Object.assign(Ut, {
   "bruno-liquid-surface-off-background": "var(--bruno-liquid-card-background)",
   "bruno-liquid-surface-off-filter": "var(--bruno-liquid-card-filter)",
   "bruno-liquid-surface-off-border": "var(--bruno-liquid-card-border)",
@@ -6621,7 +6716,7 @@ Object.assign(Ua, {
   "bruno-liquid-surface-off-sheen-opacity": "var(--bruno-liquid-card-sheen-opacity)",
   "bruno-liquid-surface-edge-glow": "var(--bruno-liquid-card-edge-glow)"
 });
-const vo = `
+const yo = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -6638,32 +6733,32 @@ html.bruno-liquid-route-transition::after {
   html.bruno-liquid-route-transition::after { -webkit-backdrop-filter: none; backdrop-filter: none; animation-duration: 180ms; }
 }
 `;
-function _o(o) {
-  return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
+function wo(o) {
+  return Object.entries(o).map(([e, t]) => `  --${e}: ${String(t).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function xo(o = globalThis.document) {
+function ko(o = globalThis.document) {
   if (!o?.head) return null;
-  let e = o.getElementById(_t);
-  return e || (e = o.createElement("style"), e.id = _t, o.head.appendChild(e)), e.textContent = `:root {
-${_o(Ua)}
+  let e = o.getElementById(_a);
+  return e || (e = o.createElement("style"), e.id = _a, o.head.appendChild(e)), e.textContent = `:root {
+${wo(Ut)}
 }
-${vo}`, e;
+${yo}`, e;
 }
 globalThis.BrunoIOSDark = {
-  version: fo,
-  tokens: Ua,
+  version: xo,
+  tokens: Ut,
   surfaces: ue?.surfaces || {},
   states: ue?.states || {},
-  apply: xo,
+  apply: ko,
   feedback: (...o) => ue?.feedback?.(...o) || !1,
   routeTransition: (...o) => ue?.routeTransition?.(...o)
 };
-const yo = "20260822-josh-liquid-on-reference-1", xt = "bruno-liquid-glass-tokens";
-function te() {
+const So = "20260822-josh-liquid-on-reference-1", xa = "bruno-liquid-glass-tokens";
+function ae() {
   return globalThis.BrunoVisionOSOriginal || globalThis.BrunoVisionOS || null;
 }
-const wo = {
+const Ao = {
   // Microblur Josh controlado: uma unica amostragem por superficie principal.
   // Fills, scrims, bordas, filetes, sheen e edge-glow permanecem inalterados.
   "bruno-josh-microblur": "blur(2px)",
@@ -6964,7 +7059,7 @@ const wo = {
   "bruno-strip-bleed-end": "12px",
   "bruno-strip-mask": "none"
 };
-function ko() {
+function qo() {
   const e = (globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass))?.tokens || {};
   return {
     "bruno-josh-room-on-background": e["bruno-liquid-surface-on-background"] || "radial-gradient(165px 150px at 15% -9%, rgba(255,255,255,0.30), rgba(255,255,255,0.06) 46%, transparent 73%), linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.04) 40%, rgba(255,255,255,0.07)), linear-gradient(155deg, rgba(255,255,255,0.11), rgba(255,255,255,0.055))",
@@ -6976,10 +7071,10 @@ function ko() {
   };
 }
 function ki() {
-  const o = te();
-  return Object.assign({}, o?.tokens || {}, wo, ko());
+  const o = ae();
+  return Object.assign({}, o?.tokens || {}, Ao, qo());
 }
-const So = `
+const Eo = `
 html.bruno-liquid-route-transition::after {
   content: "";
   position: fixed;
@@ -6996,39 +7091,39 @@ html.bruno-liquid-route-transition::after {
   html.bruno-liquid-route-transition::after { -webkit-backdrop-filter: none; backdrop-filter: none; animation-duration: 180ms; }
 }
 `;
-function Ao(o) {
-  return Object.entries(o).map(([e, a]) => `  --${e}: ${String(a).trim().replace(/\s+/g, " ")};`).join(`
+function Oo(o) {
+  return Object.entries(o).map(([e, t]) => `  --${e}: ${String(t).trim().replace(/\s+/g, " ")};`).join(`
 `);
 }
-function qo(o = globalThis.document) {
+function Co(o = globalThis.document) {
   if (!o?.head) return null;
-  if (!te()?.tokens)
+  if (!ae()?.tokens)
     return console.error("[BrunoJosh] VisionOS base unavailable; Josh was not applied."), null;
-  let a = o.getElementById(xt);
-  return a || (a = o.createElement("style"), a.id = xt, o.head.appendChild(a)), a.textContent = `:root {
-${Ao(ki())}
+  let t = o.getElementById(xa);
+  return t || (t = o.createElement("style"), t.id = xa, o.head.appendChild(t)), t.textContent = `:root {
+${Oo(ki())}
 }
-${So}`, a;
+${Eo}`, t;
 }
 globalThis.BrunoJosh = {
-  version: yo,
+  version: So,
   get tokens() {
     return ki();
   },
   get surfaces() {
-    return te()?.surfaces || {};
+    return ae()?.surfaces || {};
   },
   get states() {
-    return te()?.states || {};
+    return ae()?.states || {};
   },
-  apply: qo,
-  feedback: (...o) => te()?.feedback?.(...o) || !1,
-  routeTransition: (...o) => te()?.routeTransition?.(...o)
+  apply: Co,
+  feedback: (...o) => ae()?.feedback?.(...o) || !1,
+  routeTransition: (...o) => ae()?.routeTransition?.(...o)
 };
-const yt = "20260822-hemma-1", Ce = "bruno-ui-theme", ra = "bruno-ui-theme-storage-version", oa = "2", U = "visionos";
-function Eo() {
-  const o = globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass), e = globalThis.BrunoHemma, a = globalThis.BrunoVisionOSOriginal || globalThis.BrunoVisionOS, t = globalThis.BrunoIOSLight, i = globalThis.BrunoIOSDark, r = globalThis.BrunoJosh;
-  o && (globalThis.BrunoLiquidGlassOriginal = o), a && (globalThis.BrunoVisionOSOriginal = a);
+const ya = "20260822-hemma-1", Ce = "bruno-ui-theme", rt = "bruno-ui-theme-storage-version", ot = "2", U = "visionos";
+function To() {
+  const o = globalThis.BrunoLiquidGlassOriginal || (globalThis.BrunoLiquidGlass?.__brunoThemeProxy ? null : globalThis.BrunoLiquidGlass), e = globalThis.BrunoHemma, t = globalThis.BrunoVisionOSOriginal || globalThis.BrunoVisionOS, a = globalThis.BrunoIOSLight, i = globalThis.BrunoIOSDark, r = globalThis.BrunoJosh;
+  o && (globalThis.BrunoLiquidGlassOriginal = o), t && (globalThis.BrunoVisionOSOriginal = t);
   const n = {
     "liquid-glass": {
       key: "liquid-glass",
@@ -7048,14 +7143,14 @@ function Eo() {
       key: "visionos",
       label: "VisionOS",
       get api() {
-        return globalThis.BrunoVisionOSOriginal || globalThis.BrunoVisionOS || a || null;
+        return globalThis.BrunoVisionOSOriginal || globalThis.BrunoVisionOS || t || null;
       }
     },
     "ios-light": {
       key: "ios-light",
       label: "iOS Light",
       get api() {
-        return globalThis.BrunoIOSLight || t || null;
+        return globalThis.BrunoIOSLight || a || null;
       }
     },
     "ios-dark": {
@@ -7078,19 +7173,19 @@ function Eo() {
     current: s()
   }, p = () => {
     try {
-      return (globalThis.localStorage?.getItem(ra) || "") !== oa ? (globalThis.localStorage?.setItem(ra, oa), globalThis.localStorage?.setItem(Ce, U), U) : globalThis.localStorage?.getItem(Ce) || "";
+      return (globalThis.localStorage?.getItem(rt) || "") !== ot ? (globalThis.localStorage?.setItem(rt, ot), globalThis.localStorage?.setItem(Ce, U), U) : globalThis.localStorage?.getItem(Ce) || "";
     } catch {
       return "";
     }
   }, d = (m) => {
     try {
-      globalThis.localStorage?.setItem(ra, oa), globalThis.localStorage?.setItem(Ce, m);
+      globalThis.localStorage?.setItem(rt, ot), globalThis.localStorage?.setItem(Ce, m);
     } catch {
     }
-  }, h = () => n[c.current]?.api || n[s()]?.api || null, b = {
+  }, h = () => n[c.current]?.api || n[s()]?.api || null, g = {
     __brunoThemeProxy: !0,
     get version() {
-      return h()?.version || yt;
+      return h()?.version || ya;
     },
     apply(m) {
       return h()?.apply?.(m) || null;
@@ -7123,7 +7218,7 @@ function Eo() {
       return h()?.buildStyles?.(m) || "";
     }
   }, u = {
-    version: yt,
+    version: ya,
     storageKey: Ce,
     defaultTheme: U,
     themes: n,
@@ -7144,36 +7239,36 @@ function Eo() {
       const x = l(m || U), A = n[x]?.api || n[s()]?.api;
       if (!A?.apply) return null;
       const $ = A.apply(f.styleOptions || void 0);
-      return c.current = x, f.persist !== !1 && d(x), globalThis.BrunoLiquidGlass = b, globalThis.dispatchEvent?.(new CustomEvent("bruno-theme-changed", {
+      return c.current = x, f.persist !== !1 && d(x), globalThis.BrunoLiquidGlass = g, globalThis.dispatchEvent?.(new CustomEvent("bruno-theme-changed", {
         detail: { key: x, label: n[x]?.label || x }
       })), $;
     },
     get activeApi() {
       return h();
     },
-    compatApi: b
-  }, g = l(p() || U);
-  return c.current = g, globalThis.BrunoThemeManager = u, u.apply(g, { persist: !1 }), u;
+    compatApi: g
+  }, b = l(p() || U);
+  return c.current = b, globalThis.BrunoThemeManager = u, u.apply(b, { persist: !1 }), u;
 }
-globalThis.BrunoThemeManager = Eo();
-const Oo = "20260801-light-control-backdrop-root-1", Fa = "data-bruno-subview-surface-theme", De = /* @__PURE__ */ new WeakMap();
-function Co() {
+globalThis.BrunoThemeManager = To();
+const $o = "20260801-light-control-backdrop-root-1", Ft = "data-bruno-subview-surface-theme", De = /* @__PURE__ */ new WeakMap();
+function Mo() {
   return globalThis.BrunoThemeManager?.current?.() || "";
 }
 function Si(o) {
   o?.setAttribute && o.setAttribute(
-    Fa,
-    Co() === "josh" ? "josh" : "default"
+    Ft,
+    Mo() === "josh" ? "josh" : "default"
   );
 }
-function To(o) {
+function Ro(o) {
   if (!o) return;
   const e = De.get(o);
   e && globalThis.removeEventListener?.("bruno-theme-changed", e);
-  const a = () => Si(o);
-  De.set(o, a), globalThis.addEventListener?.("bruno-theme-changed", a), a();
+  const t = () => Si(o);
+  De.set(o, t), globalThis.addEventListener?.("bruno-theme-changed", t), t();
 }
-function $o(o) {
+function Lo(o) {
   const e = De.get(o);
   e && globalThis.removeEventListener?.("bruno-theme-changed", e), De.delete(o);
 }
@@ -7182,10 +7277,10 @@ const W = [
   ".glass-card.media-hub-card",
   ".glass-card.ac-card",
   ".glass-card.appliances-card"
-], Mo = W, Ro = [
+], Io = W, No = [
   ".glass-card.media-hub-card",
   ".glass-card.ac-card"
-], Lo = [
+], zo = [
   // Hub de mídia / estação de trabalho
   // `.mh-source` e o container de CADA secao do hub (PC, Spotify) — e ele que
   // aparece como "card dentro do card". Ficou de fora das listas anteriores,
@@ -7203,7 +7298,7 @@ const W = [
   ".appliance-tile"
 ], Te = [
   ".glass-card.lights-card"
-], Io = [
+], Ho = [
   ".zl-tile",
   ".light-row",
   // REV.10 (2026-07-29): a celula da grade nova. A rev.9 renomeou `.zl-tile`
@@ -7214,20 +7309,20 @@ const W = [
   // o pacote material completo dos controles do A/C; a geometria da grade
   // continua pertencendo a cada subview.
   ".light-cell"
-], No = [
+], Do = [
   ".light-zone"
-], zo = [
+], Po = [
   ".cameras-head",
   ".media-hub-card .module-head",
   ".ac-card .module-head"
 ];
 function C(o, e = "") {
-  const a = `:host([${Fa}="josh"])`;
-  return o.map((t) => `${a} ${t}${e}`).join(`,
+  const t = `:host([${Ft}="josh"])`;
+  return o.map((a) => `${t} ${a}${e}`).join(`,
 `);
 }
-function Ho() {
-  const o = `:host([${Fa}="josh"])`, e = C(W), a = C(W, "::before"), t = C(W, "::after"), i = C(W.map((h) => `${h}.is-active`)), r = C(Mo), n = C(Te), s = C(Ro), l = C(Lo), c = C(Io), p = C(No), d = C(zo);
+function jo() {
+  const o = `:host([${Ft}="josh"])`, e = C(W), t = C(W, "::before"), a = C(W, "::after"), i = C(W.map((h) => `${h}.is-active`)), r = C(Io), n = C(Te), s = C(No), l = C(zo), c = C(Ho), p = C(Do), d = C(Po);
   return `
     /* ---- 1. Cards viram tile: perdem cartela, blur, borda e cantos. ------- */
     ${e},
@@ -7246,8 +7341,8 @@ function Ho() {
     }
 
     /* Sheen e edge-glow da cartela não existem no tile. */
-    ${a},
-    ${t} {
+    ${t},
+    ${a} {
       display: none;
     }
 
@@ -7484,8 +7579,8 @@ function Ho() {
     }
   `;
 }
-function Do() {
-  const o = C(W), e = C(W, "::before"), a = C(W, "::after");
+function Vo() {
+  const o = C(W), e = C(W, "::before"), t = C(W, "::after");
   return `
     ${o} {
       background: var(--bruno-josh-subview-surface-background);
@@ -7508,7 +7603,7 @@ function Do() {
       opacity: var(--bruno-josh-subview-surface-sheen-opacity);
     }
 
-    ${a} {
+    ${t} {
       content: "";
       display: block;
       position: absolute;
@@ -7533,18 +7628,18 @@ function Do() {
   `;
 }
 globalThis.BrunoSurfaceMaterial = {
-  version: Oo,
-  connect: To,
-  disconnect: $o,
+  version: $o,
+  connect: Ro,
+  disconnect: Lo,
   sync: Si,
   // ANTERIOR (rollback): subviewStyles: brunoSubviewMaterialStyles,
-  subviewStyles: Ho,
-  materialStyles: Do
+  subviewStyles: jo,
+  materialStyles: Vo
 };
-const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", jo = {
+const Bo = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", Uo = {
   _installingEntities: /* @__PURE__ */ new Set(),
   render({ hass: o, embedded: e = !1 } = {}) {
-    const a = this._model(o), t = e ? 'data-config-action="child-close"' : 'data-updates-action="close"';
+    const t = this._model(o), a = e ? 'data-config-action="child-close"' : 'data-updates-action="close"';
     return `
       <style>${this._styles()}</style>
       ${e ? "" : '<div class="config-scrim" data-updates-action="close"></div>'}
@@ -7557,16 +7652,16 @@ const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
             <strong>Updates</strong>
             <span>Atualizacoes do sistema</span>
           </div>
-          <button class="config-close" type="button" ${t} aria-label="Fechar">&times;</button>
+          <button class="config-close" type="button" ${a} aria-label="Fechar">&times;</button>
         </header>
 
         <div class="updates-scroll">
           <div class="config-section">
             <div class="config-section-title">
               <span>Home Assistant</span>
-              <small>${this._escape(a.homeStatus)}</small>
+              <small>${this._escape(t.homeStatus)}</small>
             </div>
-            ${this._updatesList(a.systemUpdates, {
+            ${this._updatesList(t.systemUpdates, {
       emptyTitle: "Sem updates do sistema",
       emptyText: "Core, OS e Supervisor nao possuem atualizacoes pendentes."
     })}
@@ -7575,9 +7670,9 @@ const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
           <div class="config-section">
             <div class="config-section-title">
               <span>Integracoes</span>
-              <small>${this._escape(a.integrationStatus)}</small>
+              <small>${this._escape(t.integrationStatus)}</small>
             </div>
-            ${this._updatesList(a.integrationUpdates, {
+            ${this._updatesList(t.integrationUpdates, {
       emptyTitle: "Nada pendente",
       emptyText: "Integracoes e componentes estao sem atualizacoes."
     })}
@@ -7590,27 +7685,27 @@ const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
       </section>
     `;
   },
-  handleAction({ target: o, hass: e, host: a } = {}) {
-    const t = o?.dataset?.updatesAction;
-    if (!t) return !1;
+  handleAction({ target: o, hass: e, host: t } = {}) {
+    const a = o?.dataset?.updatesAction;
+    if (!a) return !1;
     const i = o.dataset.entity;
-    if (t === "more-info" && i)
-      return a?.dispatchEvent?.(new CustomEvent("hass-more-info", {
+    if (a === "more-info" && i)
+      return t?.dispatchEvent?.(new CustomEvent("hass-more-info", {
         detail: { entityId: i },
         bubbles: !0,
         composed: !0
       })), !0;
-    if (t === "install" && i) {
+    if (a === "install" && i) {
       const r = e?.states?.[i];
-      return this._installingEntities.has(i) || this._isInstalling(r?.attributes?.in_progress) || (this._installingEntities.add(i), Promise.resolve(e?.callService?.("update", "install", { entity_id: i })).catch(() => this._installingEntities.delete(i)), globalThis.setTimeout?.(() => this._installingEntities.delete(i), 6e4), this._scheduleRender(a)), !0;
+      return this._installingEntities.has(i) || this._isInstalling(r?.attributes?.in_progress) || (this._installingEntities.add(i), Promise.resolve(e?.callService?.("update", "install", { entity_id: i })).catch(() => this._installingEntities.delete(i)), globalThis.setTimeout?.(() => this._installingEntities.delete(i), 6e4), this._scheduleRender(t)), !0;
     }
-    if (t === "skip" && i)
-      return e?.callService?.("update", "skip", { entity_id: i }), this._scheduleRender(a), !0;
-    if (t === "release-notes") {
+    if (a === "skip" && i)
+      return e?.callService?.("update", "skip", { entity_id: i }), this._scheduleRender(t), !0;
+    if (a === "release-notes") {
       const r = o.dataset.url;
       return r && globalThis.open?.(r, "_blank", "noopener,noreferrer"), !0;
     }
-    if (t === "open-updates-page") {
+    if (a === "open-updates-page") {
       const r = e?.panels?.config?.url_path || "config";
       return globalThis.location.href = `/${r}/updates`, !0;
     }
@@ -7620,10 +7715,10 @@ const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
     globalThis.setTimeout?.(() => o?._refreshUpdatesPanel?.({ preserveScroll: !0 }), 900);
   },
   _model(o) {
-    const e = o?.states || {}, a = this._updateEntities(e), t = a.filter((l) => l.group === "system"), i = a.filter((l) => l.group !== "system"), r = t.length, n = Number(this._attr(e, "sensor.hassio_updates_available", "home_assistant")) || 0, s = Math.max(r, n);
+    const e = o?.states || {}, t = this._updateEntities(e), a = t.filter((l) => l.group === "system"), i = t.filter((l) => l.group !== "system"), r = a.length, n = Number(this._attr(e, "sensor.hassio_updates_available", "home_assistant")) || 0, s = Math.max(r, n);
     return {
       homeStatus: s > 0 ? `${s} ${s === 1 ? "pendente" : "pendentes"}` : "Sem updates do sistema",
-      systemUpdates: t,
+      systemUpdates: a,
       integrationUpdates: i,
       integrationStatus: i.length === 0 ? "Nenhuma pendente" : `${i.length} ${i.length === 1 ? "pendente" : "pendentes"}`
     };
@@ -7631,22 +7726,22 @@ const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
   _updatesList(o, e = {}) {
     return o.length ? `
       <div class="updates-list">
-        ${o.map((a) => `
+        ${o.map((t) => `
           <article class="updates-item">
-            <button class="updates-info" type="button" data-updates-action="more-info" data-entity="${this._escapeAttr(a.entityId)}">
+            <button class="updates-info" type="button" data-updates-action="more-info" data-entity="${this._escapeAttr(t.entityId)}">
               <span class="updates-thumb" aria-hidden="true">
-                <img src="${this._escapeAttr(a.picture)}" alt="">
+                <img src="${this._escapeAttr(t.picture)}" alt="">
               </span>
               <span class="updates-copy">
-                <strong>${this._escape(a.name)}</strong>
-                <small>${this._escape(a.versionLine)}</small>
+                <strong>${this._escape(t.name)}</strong>
+                <small>${this._escape(t.versionLine)}</small>
               </span>
             </button>
             <div class="updates-actions">
-              <button class="updates-mini${a.installing ? " is-installing" : ""}" type="button"
-                data-updates-action="install" data-entity="${this._escapeAttr(a.entityId)}"
-                ${a.installing ? 'disabled aria-busy="true"' : ""}>${a.installing ? "Instalando" : "Instalar"}</button>
-              <button class="updates-mini is-muted" type="button" data-updates-action="skip" data-entity="${this._escapeAttr(a.entityId)}">Ignorar</button>
+              <button class="updates-mini${t.installing ? " is-installing" : ""}" type="button"
+                data-updates-action="install" data-entity="${this._escapeAttr(t.entityId)}"
+                ${t.installing ? 'disabled aria-busy="true"' : ""}>${t.installing ? "Instalando" : "Instalar"}</button>
+              <button class="updates-mini is-muted" type="button" data-updates-action="skip" data-entity="${this._escapeAttr(t.entityId)}">Ignorar</button>
             </div>
           </article>
         `).join("")}
@@ -7662,17 +7757,17 @@ const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
       `;
   },
   _updateEntities(o) {
-    return Object.entries(o || {}).filter(([e, a]) => e.startsWith("update.") && a?.state === "on").map(([e, a]) => {
-      const t = a.attributes || {}, i = t.friendly_name || e, r = this._cleanName(i), n = t.installed_version || t.installed || "--", s = t.latest_version || t.latest || "--";
+    return Object.entries(o || {}).filter(([e, t]) => e.startsWith("update.") && t?.state === "on").map(([e, t]) => {
+      const a = t.attributes || {}, i = a.friendly_name || e, r = this._cleanName(i), n = a.installed_version || a.installed || "--", s = a.latest_version || a.latest || "--";
       return {
         entityId: e,
         name: r,
         group: this._updateGroup(e, i),
-        picture: t.entity_picture || Po,
+        picture: a.entity_picture || Bo,
         versionLine: `${n} -> ${s}`,
-        installing: this._installingEntities.has(e) || this._isInstalling(t.in_progress)
+        installing: this._installingEntities.has(e) || this._isInstalling(a.in_progress)
       };
-    }).sort((e, a) => e.name.localeCompare(a.name, "pt-BR"));
+    }).sort((e, t) => e.name.localeCompare(t.name, "pt-BR"));
   },
   _isInstalling(o) {
     if (o === !0) return !0;
@@ -7680,7 +7775,7 @@ const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
     return Number.isFinite(e) && e > 0 ? !0 : ["true", "installing", "in_progress"].includes(String(o || "").toLowerCase());
   },
   _updateGroup(o, e) {
-    const a = `${o} ${e}`.toLowerCase();
+    const t = `${o} ${e}`.toLowerCase();
     return [
       "home_assistant_core",
       "home assistant core",
@@ -7690,14 +7785,14 @@ const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
       "hassos",
       "supervisor",
       "home_assistant_supervisor"
-    ].some((t) => a.includes(t)) ? "system" : "integration";
+    ].some((a) => t.includes(a)) ? "system" : "integration";
   },
   _state(o, e) {
-    const a = o?.[e]?.state;
-    return a && !["unknown", "unavailable"].includes(String(a).toLowerCase()) ? a : "";
+    const t = o?.[e]?.state;
+    return t && !["unknown", "unavailable"].includes(String(t).toLowerCase()) ? t : "";
   },
-  _attr(o, e, a) {
-    return o?.[e]?.attributes?.[a];
+  _attr(o, e, t) {
+    return o?.[e]?.attributes?.[t];
   },
   _cleanName(o) {
     return String(o || "").replace(/_/g, " ").replace(/\s+update$/i, "").replace(/^update\./i, "").trim();
@@ -7876,8 +7971,8 @@ const Po = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAA
     `;
   }
 };
-globalThis.BrunoUpdatesPanel = jo;
-const Vo = {
+globalThis.BrunoUpdatesPanel = Uo;
+const Fo = {
   render({ hass: o } = {}) {
     const e = this._model(o);
     return `
@@ -7940,25 +8035,25 @@ const Vo = {
       </section>
     `;
   },
-  handleAction({ target: o, hass: e, host: a } = {}) {
-    const t = o?.dataset?.systemAction;
-    if (!t || t === "close") return !1;
-    if (t === "reload-yaml")
+  handleAction({ target: o, hass: e, host: t } = {}) {
+    const a = o?.dataset?.systemAction;
+    if (!a || a === "close") return !1;
+    if (a === "reload-yaml")
       return e?.callService?.("homeassistant", "reload_all", {}), !0;
-    if (t === "restart-ha")
+    if (a === "restart-ha")
       return e?.callService?.("homeassistant", "restart", {}), !0;
-    if (t === "restart-pi")
+    if (a === "restart-pi")
       return e?.callService?.("script", "restart_pi_docker", {}), !0;
-    if (t === "purge-dockerlog")
+    if (a === "purge-dockerlog")
       return e?.callService?.("script", "purge_dockerlog", {}), !0;
-    if (t === "more-info") {
+    if (a === "more-info") {
       const i = o.dataset.entity;
-      return i && a?.dispatchEvent?.(new CustomEvent("hass-more-info", { detail: { entityId: i }, bubbles: !0, composed: !0 })), !0;
+      return i && t?.dispatchEvent?.(new CustomEvent("hass-more-info", { detail: { entityId: i }, bubbles: !0, composed: !0 })), !0;
     }
     return !1;
   },
   _model(o) {
-    const e = o?.states || {}, a = this._state(e, "binary_sensor.192_168_0_146", "off") === "on";
+    const e = o?.states || {}, t = this._state(e, "binary_sensor.192_168_0_146", "off") === "on";
     return {
       haStatus: this._state(e, "sensor.current_version") || "Disponivel",
       currentVersion: this._state(e, "sensor.current_version"),
@@ -7968,8 +8063,8 @@ const Vo = {
       haTemp: this._num(e, "sensor.ha_system_cpu_thermal_0_temperature"),
       haMemory: this._num(e, "sensor.ha_system_memory_usage"),
       haDisk: this._num(e, "sensor.ha_system_data_disk_usage"),
-      serverStatus: a ? "Online" : "Offline",
-      dockerState: a ? "Online" : "Offline",
+      serverStatus: t ? "Online" : "Offline",
+      dockerState: t ? "Online" : "Offline",
       dockerUptime: this._attr(e, "sensor.rpi_monitor_docker", "up_time") || this._state(e, "sensor.rpi_monitor_docker"),
       rpiCpu: this._num(e, "sensor.rpi_monitor_docker_rpi_cpu_use_pidocker"),
       rpiTemp: this._num(e, "sensor.rpi_monitor_docker_rpi_temp_pidocker"),
@@ -7977,17 +8072,17 @@ const Vo = {
       rpiDiskFree: this._num(e, "sensor.rpi_monitor_docker", "fs_free_prcnt")
     };
   },
-  _metricLine(o, e, a) {
+  _metricLine(o, e, t) {
     return `
       <div class="panel-line">
         <bruno-icon icon="${this._escapeAttr(o)}"></bruno-icon>
         <span>${this._escape(e)}</span>
-        <strong>${this._escape(a || "--")}</strong>
+        <strong>${this._escape(t || "--")}</strong>
       </div>
     `;
   },
-  _bar(o, e, a) {
-    const t = Number(e), i = Number.isFinite(t), r = i ? Math.max(0, Math.min(100, t)) : 0, n = i ? `${t.toFixed(t >= 10 ? 0 : 1)}${a || ""}` : "--";
+  _bar(o, e, t) {
+    const a = Number(e), i = Number.isFinite(a), r = i ? Math.max(0, Math.min(100, a)) : 0, n = i ? `${a.toFixed(a >= 10 ? 0 : 1)}${t || ""}` : "--";
     return `
       <div class="panel-bar">
         <div><span>${this._escape(o)}</span><strong>${this._escape(n)}</strong></div>
@@ -7995,17 +8090,17 @@ const Vo = {
       </div>
     `;
   },
-  _state(o, e, a = "--") {
-    const t = o?.[e]?.state;
-    return t && !["unknown", "unavailable", "none"].includes(String(t).toLowerCase()) ? t : a;
+  _state(o, e, t = "--") {
+    const a = o?.[e]?.state;
+    return a && !["unknown", "unavailable", "none"].includes(String(a).toLowerCase()) ? a : t;
   },
-  _num(o, e, a) {
-    const t = a ? o?.[e]?.attributes?.[a] : o?.[e]?.state, i = Number(t);
+  _num(o, e, t) {
+    const a = t ? o?.[e]?.attributes?.[t] : o?.[e]?.state, i = Number(a);
     return Number.isFinite(i) ? i : null;
   },
-  _attr(o, e, a) {
-    const t = o?.[e]?.attributes?.[a];
-    return t == null || ["unknown", "unavailable", "none"].includes(String(t).toLowerCase()) ? "--" : t;
+  _attr(o, e, t) {
+    const a = o?.[e]?.attributes?.[t];
+    return a == null || ["unknown", "unavailable", "none"].includes(String(a).toLowerCase()) ? "--" : a;
   },
   _escape(o) {
     return String(o ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -8037,8 +8132,8 @@ const Vo = {
     `;
   }
 };
-globalThis.BrunoSystemPanel = Vo;
-const Bo = {
+globalThis.BrunoSystemPanel = Fo;
+const Go = {
   render({ hass: o } = {}) {
     const e = this._model(o);
     return `
@@ -8061,7 +8156,7 @@ const Bo = {
               <small>${this._escape(e.apStatus)}</small>
             </div>
             <div class="network-list">
-              ${e.aps.map((a) => this._apLine(a)).join("")}
+              ${e.aps.map((t) => this._apLine(t)).join("")}
             </div>
           </div>
 
@@ -8100,11 +8195,11 @@ const Bo = {
     `;
   },
   handleAction({ target: o, hass: e } = {}) {
-    const a = o?.dataset?.networkAction;
-    return !a || a === "close" ? !1 : a === "archive-alerts" ? (e?.callService?.("input_button", "press", { entity_id: "input_button.unifi_archive_alerts" }), !0) : a === "refresh-speedtest" ? (e?.callService?.("homeassistant", "update_entity", { entity_id: ["sensor.speedtest_download", "sensor.speedtest_upload"] }), !0) : a === "zigbee-map" ? (globalThis.location.href = "/api/hassio_ingress/Ew2YSafnnerR2_NXuuOG-3KWDZvnNgFBSfdzoUmcR_Y/#/map", !0) : !1;
+    const t = o?.dataset?.networkAction;
+    return !t || t === "close" ? !1 : t === "archive-alerts" ? (e?.callService?.("input_button", "press", { entity_id: "input_button.unifi_archive_alerts" }), !0) : t === "refresh-speedtest" ? (e?.callService?.("homeassistant", "update_entity", { entity_id: ["sensor.speedtest_download", "sensor.speedtest_upload"] }), !0) : t === "zigbee-map" ? (globalThis.location.href = "/api/hassio_ingress/Ew2YSafnnerR2_NXuuOG-3KWDZvnNgFBSfdzoUmcR_Y/#/map", !0) : !1;
   },
   _model(o) {
-    const e = o?.states || {}, a = [
+    const e = o?.states || {}, t = [
       { entity: "sensor.unifi_office_ap", name: "Office" },
       { entity: "sensor.unifi_wall_ap", name: "Living Room" },
       { entity: "sensor.unifi_bedroom_ap", name: "Bedroom" }
@@ -8112,10 +8207,10 @@ const Bo = {
       ...i,
       state: this._state(e, i.entity),
       score: this._attr(e, i.entity, "score") || this._attr(e, i.entity, "Score") || "--"
-    })), t = a.filter((i) => !["--", "off", "unavailable"].includes(String(i.state).toLowerCase())).length;
+    })), a = t.filter((i) => !["--", "off", "unavailable"].includes(String(i.state).toLowerCase())).length;
     return {
-      aps: a,
-      apStatus: `${t}/${a.length} online`,
+      aps: t,
+      apStatus: `${a}/${t.length} online`,
       routerState: this._state(e, "binary_sensor.arris_tg3442de_wan_status"),
       clients: this._state(e, "sensor.unifi_controller_clients"),
       allClients: this._state(e, "sensor.unifi_controller_all_clients"),
@@ -8134,31 +8229,31 @@ const Bo = {
       </div>
     `;
   },
-  _metricLine(o, e, a) {
+  _metricLine(o, e, t) {
     return `
       <div class="network-line">
         <bruno-icon icon="${this._escapeAttr(o)}"></bruno-icon>
         <span><strong>${this._escape(e)}</strong></span>
-        <em>${this._escape(a || "--")}</em>
+        <em>${this._escape(t || "--")}</em>
       </div>
     `;
   },
-  _speedItem(o, e, a) {
+  _speedItem(o, e, t) {
     return `
       <div class="speed-item">
         <span>${this._escape(o)}</span>
         <strong>${this._escape(e || "--")}</strong>
-        <small>${this._escape(a)}</small>
+        <small>${this._escape(t)}</small>
       </div>
     `;
   },
-  _state(o, e, a = "--") {
-    const t = o?.[e]?.state;
-    return t && !["unknown", "unavailable", "none"].includes(String(t).toLowerCase()) ? t : a;
+  _state(o, e, t = "--") {
+    const a = o?.[e]?.state;
+    return a && !["unknown", "unavailable", "none"].includes(String(a).toLowerCase()) ? a : t;
   },
-  _attr(o, e, a) {
-    const t = o?.[e]?.attributes?.[a];
-    return t == null || ["unknown", "unavailable", "none"].includes(String(t).toLowerCase()) ? "" : t;
+  _attr(o, e, t) {
+    const a = o?.[e]?.attributes?.[t];
+    return a == null || ["unknown", "unavailable", "none"].includes(String(a).toLowerCase()) ? "" : a;
   },
   _escape(o) {
     return String(o ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -8196,9 +8291,9 @@ const Bo = {
     `;
   }
 };
-globalThis.BrunoNetworkPanel = Bo;
+globalThis.BrunoNetworkPanel = Go;
 (() => {
-  const o = "20260719-hybrid-light-icons-1", e = "/local/bruno-ui/assets/hybrid-icons/led-strip", a = "/local/bruno-ui/assets/hybrid-icons/pendant/v7", t = "M175 113 H74 C47 113 29 101 29 82 C29 63 45 47 74 47 H306", i = "M175 113 H280 C303 113 317 130 317 151 C317 170 303 184 280 184 H29", r = (p, d) => `${p}/${d}?v=${o}`, n = (p, d) => `<path class="${p}" pathLength="1" d="${d}"></path>`;
+  const o = "20260719-hybrid-light-icons-1", e = "/local/bruno-ui/assets/hybrid-icons/led-strip", t = "/local/bruno-ui/assets/hybrid-icons/pendant/v7", a = "M175 113 H74 C47 113 29 101 29 82 C29 63 45 47 74 47 H306", i = "M175 113 H280 C303 113 317 130 317 151 C317 170 303 184 280 184 H29", r = (p, d) => `${p}/${d}?v=${o}`, n = (p, d) => `<path class="${p}" pathLength="1" d="${d}"></path>`;
   function s({ active: p = !1 } = {}) {
     return `
       <span class="tpl-light-icon brunoHybridLight brunoHybridLed ${p ? "is-on" : "is-off"}" aria-hidden="true">
@@ -8207,15 +8302,15 @@ globalThis.BrunoNetworkPanel = Bo;
           <img class="brunoHybridLed__layer brunoHybridLed__frameOff" src="${r(e, "led-strip-frame-off.png")}" alt="">
           <img class="brunoHybridLed__layer brunoHybridLed__frameOn" src="${r(e, "led-strip-frame-on.png")}" alt="">
           <svg class="brunoHybridLed__rail" viewBox="0 0 360 210">
-            ${n("brunoHybridLed__railBase", t)}
+            ${n("brunoHybridLed__railBase", a)}
             ${n("brunoHybridLed__railBase", i)}
-            ${n("brunoHybridLed__railRim", t)}
+            ${n("brunoHybridLed__railRim", a)}
             ${n("brunoHybridLed__railRim", i)}
-            ${n("brunoHybridLed__railDiffuser", t)}
+            ${n("brunoHybridLed__railDiffuser", a)}
             ${n("brunoHybridLed__railDiffuser", i)}
           </svg>
           <svg class="brunoHybridLed__trace" viewBox="0 0 360 210">
-            ${n("brunoHybridLed__tracePath", t)}
+            ${n("brunoHybridLed__tracePath", a)}
             ${n("brunoHybridLed__tracePath", i)}
           </svg>
         </span>
@@ -8226,8 +8321,8 @@ globalThis.BrunoNetworkPanel = Bo;
     return `
       <span class="tpl-light-icon brunoHybridLight brunoHybridPendant ${p ? "is-on" : "is-off"}" aria-hidden="true">
         <span class="brunoHybridPendant__canvas">
-          <img class="brunoHybridPendant__layer brunoHybridPendant__off" src="${r(a, "pendant-off.png")}" alt="">
-          <img class="brunoHybridPendant__layer brunoHybridPendant__on" src="${r(a, "pendant-on.png")}" alt="">
+          <img class="brunoHybridPendant__layer brunoHybridPendant__off" src="${r(t, "pendant-off.png")}" alt="">
+          <img class="brunoHybridPendant__layer brunoHybridPendant__on" src="${r(t, "pendant-on.png")}" alt="">
         </span>
       </span>
     `;
@@ -8410,7 +8505,7 @@ globalThis.BrunoNetworkPanel = Bo;
     styles: c
   });
 })();
-const xa = "bruno-sala-card", wt = {
+const xt = "bruno-sala-card", wa = {
   room_group: "light.grupo_luzes_sala",
   room_toggle: "light.sala_switch_2",
   room_fallback_lights: ["light.sala_switch_1", "light.sala_switch_2"],
@@ -8431,11 +8526,11 @@ const xa = "bruno-sala-card", wt = {
   corridor: "light.corredor_switch_1",
   corridor_motion_recent: "binary_sensor.corredor_motion_recent",
   corridor_occupancy: "binary_sensor.corredor_occupancy"
-}, kt = ["on", "playing", "paused", "idle", "buffering"], Uo = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Fo = ["cooling", "heating", "drying", "fan", "preheating"], Go = ["off", "idle"], St = ["playing", "on", "paused"], Wo = 1200, Yo = 2500, na = Object.freeze({
+}, ka = ["on", "playing", "paused", "idle", "buffering"], Wo = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Yo = ["cooling", "heating", "drying", "fan", "preheating"], Zo = ["off", "idle"], Sa = ["playing", "on", "paused"], Ko = 1200, Xo = 2500, nt = Object.freeze({
   corridor: Object.freeze({ on: 880, off: 720, fade: 300 }),
   tv: Object.freeze({ on: 1120, off: 1020, fade: 0 }),
   climate: Object.freeze({ on: 780, off: 720, fade: 300 })
-}), Zo = Object.freeze({
+}), Qo = Object.freeze({
   corridor: Object.freeze({ glow: 6800 }),
   tv: Object.freeze({ glow: 5500 }),
   climate: Object.freeze({ glow: 4800, airflow: 2200 })
@@ -8469,8 +8564,8 @@ class L extends HTMLElement {
     return {};
   }
   setConfig(e) {
-    const a = {
-      ...wt,
+    const t = {
+      ...wa,
       ...e?.entities || {}
     };
     this._config = {
@@ -8480,7 +8575,7 @@ class L extends HTMLElement {
       // trocar de view). Se `section` for removido, volta a navegar p/ navigation_path.
       section: "sala",
       ...e,
-      entities: a
+      entities: t
     }, this._render();
   }
   set hass(e) {
@@ -8495,15 +8590,15 @@ class L extends HTMLElement {
   _isUnavailable(e) {
     return !e || ["unknown", "unavailable", ""].includes(e.state);
   }
-  _isAnyState(e, a) {
-    return a.includes(this._state(e)?.state || "");
+  _isAnyState(e, t) {
+    return t.includes(this._state(e)?.state || "");
   }
   _roomEntityIds(e) {
-    const a = e?.attributes?.entity_id;
-    return Array.isArray(a) ? a : [];
+    const t = e?.attributes?.entity_id;
+    return Array.isArray(t) ? t : [];
   }
   _lightsSummary(e) {
-    const a = this._config.entities, t = this._state(a.active_sensor), i = t?.attributes?.lights_on_count, r = t?.attributes?.lights_on;
+    const t = this._config.entities, a = this._state(t.active_sensor), i = a?.attributes?.lights_on_count, r = a?.attributes?.lights_on;
     let n = null;
     if (i != null && i !== "" && !Number.isNaN(Number(i)))
       n = parseInt(i, 10);
@@ -8514,13 +8609,13 @@ class L extends HTMLElement {
       d && (n = d.length / 2);
     }
     const s = this._roomEntityIds(e);
-    n === null && s.length && (n = s.filter((d) => this._state(d)?.state === "on").length), n === null && (n = (Array.isArray(a.room_fallback_lights) ? a.room_fallback_lights : wt.room_fallback_lights).filter((h) => this._state(h)?.state === "on").length);
+    n === null && s.length && (n = s.filter((d) => this._state(d)?.state === "on").length), n === null && (n = (Array.isArray(t.room_fallback_lights) ? t.room_fallback_lights : wa.room_fallback_lights).filter((h) => this._state(h)?.state === "on").length);
     let l = null;
     if (s.forEach((d) => {
       const h = this._state(d);
       if (h?.state === "on" && h.last_changed) {
-        const b = Date.parse(h.last_changed);
-        !Number.isNaN(b) && (l === null || b < l) && (l = b);
+        const g = Date.parse(h.last_changed);
+        !Number.isNaN(g) && (l === null || g < l) && (l = g);
       }
     }), l === null && e?.last_changed) {
       const d = Date.parse(e.last_changed);
@@ -8534,20 +8629,20 @@ class L extends HTMLElement {
     };
   }
   _elapsed(e) {
-    const a = e / 6e4, t = e / 36e5, i = e / 864e5;
-    return a < 1 ? "<1m" : a < 60 ? `${parseInt(a, 10)}m` : t < 24 ? `${parseInt(t, 10)}h` : `${parseInt(i, 10)}d`;
+    const t = e / 6e4, a = e / 36e5, i = e / 864e5;
+    return t < 1 ? "<1m" : t < 60 ? `${parseInt(t, 10)}m` : a < 24 ? `${parseInt(a, 10)}h` : `${parseInt(i, 10)}d`;
   }
-  _sensorValue(e, a = "") {
-    const t = this._state(e);
-    return this._isUnavailable(t) ? "&mdash;" : `${L._escape(t.state)}${a}`;
+  _sensorValue(e, t = "") {
+    const a = this._state(e);
+    return this._isUnavailable(a) ? "&mdash;" : `${L._escape(a.state)}${t}`;
   }
   _presenceRecent() {
     return this._state(this._config.entities.motion_recent)?.state === "on";
   }
   _semanticLine() {
-    const e = this._state(this._config.entities.semantic_sensor), a = String(e?.state || "").toLowerCase(), t = e?.attributes?.display;
-    if (t && !["none", "unknown", "unavailable"].includes(a))
-      return String(t).trim();
+    const e = this._state(this._config.entities.semantic_sensor), t = String(e?.state || "").toLowerCase(), a = e?.attributes?.display;
+    if (a && !["none", "unknown", "unavailable"].includes(t))
+      return String(a).trim();
     const i = this._state(this._config.entities.motion_recent);
     return i && i.state !== "on" ? "" : this._state(this._config.entities.occupancy)?.state === "on" ? "Ocupada" : "";
   }
@@ -8559,8 +8654,8 @@ class L extends HTMLElement {
   }
   _climateIsActive(e) {
     if (this._isUnavailable(e) || e.state === "off") return !1;
-    const a = this._climateAction(e);
-    return Fo.includes(a) ? !0 : Go.includes(a) ? !1 : Uo.includes(e?.state || "");
+    const t = this._climateAction(e);
+    return Yo.includes(t) ? !0 : Zo.includes(t) ? !1 : Wo.includes(e?.state || "");
   }
   // A linha inferior representa se o climate esta habilitado, mesmo quando a
   // acao HVAC esta idle. O dot superior continua usando _climateIsActive().
@@ -8573,17 +8668,17 @@ class L extends HTMLElement {
   }
   _semanticMediaValue(e) {
     if (typeof e != "string") return null;
-    const a = e.trim();
-    if (!a) return null;
-    const t = a.toLowerCase();
-    return ["unknown", "unavailable", "none", "null", "off", "idle"].includes(t) || /^(?:[a-z][a-z0-9+.-]*:\/\/|\/)/i.test(a) || /^[a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+$/.test(a) || /^(media_player|sensor|switch|remote|input_[a-z_]+)\.[a-z0-9_]+$/i.test(a) ? null : a;
+    const t = e.trim();
+    if (!t) return null;
+    const a = t.toLowerCase();
+    return ["unknown", "unavailable", "none", "null", "off", "idle"].includes(a) || /^(?:[a-z][a-z0-9+.-]*:\/\/|\/)/i.test(t) || /^[a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+$/.test(t) || /^(media_player|sensor|switch|remote|input_[a-z_]+)\.[a-z0-9_]+$/i.test(t) ? null : t;
   }
-  _getTvSemanticStatus(e, a) {
-    if (!a) return null;
-    const t = e?.attributes || {}, i = String(e?.state || "").toLowerCase(), n = [
-      ...["playing", "paused", "buffering"].includes(i) ? [t.media_title, t.media_series_title] : [],
-      t.app_name,
-      t.source
+  _getTvSemanticStatus(e, t) {
+    if (!t) return null;
+    const a = e?.attributes || {}, i = String(e?.state || "").toLowerCase(), n = [
+      ...["playing", "paused", "buffering"].includes(i) ? [a.media_title, a.media_series_title] : [],
+      a.app_name,
+      a.source
     ];
     for (const s of n) {
       const l = this._semanticMediaValue(s);
@@ -8592,116 +8687,116 @@ class L extends HTMLElement {
     return "Em reprodução";
   }
   _translateHvacAction(e) {
-    const a = String(e || "").toLowerCase();
+    const t = String(e || "").toLowerCase();
     return {
       cooling: "Resfriando",
       heating: "Aquecendo",
       preheating: "Aquecendo",
       drying: "Desumidificando",
       fan: "Ventilando"
-    }[a] || null;
+    }[t] || null;
   }
   _formatTargetTemperature(e) {
     if (e == null || e === "") return null;
-    const a = Number(e);
-    return Number.isFinite(a) ? String(a).replace(".", ",") : null;
+    const t = Number(e);
+    return Number.isFinite(t) ? String(t).replace(".", ",") : null;
   }
-  _getAcSemanticStatus(e, a) {
-    if (!a) return null;
-    const t = this._formatTargetTemperature(e?.attributes?.temperature), i = this._translateHvacAction(this._climateAction(e));
-    return t && i ? `${t}° · ${i}` : t ? `Ajustado em ${t}°` : i || "Climatização ativa";
+  _getAcSemanticStatus(e, t) {
+    if (!t) return null;
+    const a = this._formatTargetTemperature(e?.attributes?.temperature), i = this._translateHvacAction(this._climateAction(e));
+    return a && i ? `${a}° · ${i}` : a ? `Ajustado em ${a}°` : i || "Climatização ativa";
   }
   _climateLabel(e) {
     if (this._climateAction(e) === "idle") return "Em espera";
     if (!this._climateIsActive(e)) return "Desligado";
-    const t = e?.attributes?.temperature;
-    return Number.isFinite(Number(t)) ? `${Number(t)}&deg;` : "Ligado";
+    const a = e?.attributes?.temperature;
+    return Number.isFinite(Number(a)) ? `${Number(a)}&deg;` : "Ligado";
   }
   _normalizeMediaDevice(e) {
     return String(e || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   }
   _spotifyOnDevice(e) {
-    const a = this._state(this._config.entities.spotify);
-    if (!St.includes(a?.state || "")) return !1;
-    const t = a?.attributes || {}, i = this._normalizeMediaDevice(e);
+    const t = this._state(this._config.entities.spotify);
+    if (!Sa.includes(t?.state || "")) return !1;
+    const a = t?.attributes || {}, i = this._normalizeMediaDevice(e);
     return i ? [
-      t.source,
-      t.source_name,
-      t.device_name,
-      t.active_device_name,
-      t.spotify_device_name,
-      t.media_player,
-      t.media_player_name
+      a.source,
+      a.source_name,
+      a.device_name,
+      a.active_device_name,
+      a.spotify_device_name,
+      a.media_player,
+      a.media_player_name
     ].some((r) => {
       const n = this._normalizeMediaDevice(r);
       return n && (n.includes(i) || i.includes(n));
     }) : !1;
   }
   _model() {
-    const e = this._config.entities, a = this._state(e.room_group), t = this._state(e.tv), i = this._state(e.tv_media) || t, r = this._state(e.climate), n = this._state(e.corridor), s = a?.state === "on", l = String(t?.state || "").toLowerCase(), c = kt.includes(l), p = this._climateIsActive(r), d = this._climateIsEnabled(r), h = St.includes(this._state(e.speaker)?.state || "") || this._spotifyOnDevice("Echo Show"), b = n?.state === "on", u = this._lightsSummary(a), g = [], m = this._semanticLine();
-    return u.label && g.push(u.label), m && g.push(m), {
+    const e = this._config.entities, t = this._state(e.room_group), a = this._state(e.tv), i = this._state(e.tv_media) || a, r = this._state(e.climate), n = this._state(e.corridor), s = t?.state === "on", l = String(a?.state || "").toLowerCase(), c = ka.includes(l), p = this._climateIsActive(r), d = this._climateIsEnabled(r), h = Sa.includes(this._state(e.speaker)?.state || "") || this._spotifyOnDevice("Echo Show"), g = n?.state === "on", u = this._lightsSummary(t), b = [], m = this._semanticLine();
+    return u.label && b.push(u.label), m && b.push(m), {
       roomOn: s,
       tvOn: c,
       climateOn: p,
       climateEnabled: d,
       speakerOn: h,
-      corridorOn: b,
+      corridorOn: g,
       presenceOn: this._presenceRecent(),
       temperature: this._sensorValue(e.temperature, "&deg;"),
       humidity: this._sensorValue(e.humidity, "%"),
       lights: u,
-      statusLines: g,
+      statusLines: b,
       corridorSemanticStatus: this._getCorridorSemanticStatus(),
       tvSemanticStatus: this._getTvSemanticStatus(i, c),
       acSemanticStatus: this._getAcSemanticStatus(r, d),
       // ORIGINAL labels (rollback): mantidos para aria-label/tooltip futuro
-      tvLabel: this._tvLabel(t),
+      tvLabel: this._tvLabel(a),
       climateLabel: this._climateLabel(r),
-      corridorLabel: b ? "Ligado" : "Desligado",
+      corridorLabel: g ? "Ligado" : "Desligado",
       // NOVO: labels compactos ON/OFF para command-state (mockup react)
       tvStateLabel: c ? "ON" : "OFF",
       // ANTERIOR (rollback): climateStateLabel: climateOn ? 'ON' : 'OFF',
       climateStateLabel: d ? "ON" : "OFF",
-      corridorStateLabel: b ? "ON" : "OFF"
+      corridorStateLabel: g ? "ON" : "OFF"
     };
   }
-  _runAction(e, a) {
-    const t = this._config.entities;
+  _runAction(e, t) {
+    const a = this._config.entities;
     if (e === "room") {
-      if (a === "hold") {
-        this._callService("light.turn_off", {}, { entity_id: t.room_group });
+      if (t === "hold") {
+        this._callService("light.turn_off", {}, { entity_id: a.room_group });
         return;
       }
-      this._callService("light.toggle", {}, { entity_id: t.room_toggle });
+      this._callService("light.toggle", {}, { entity_id: a.room_toggle });
       return;
     }
     if (e === "corridor") {
-      if (a === "tap" && this._isActionCoolingDown(e)) return;
-      if (a === "hold") {
-        this._moreInfo(t.corridor);
+      if (t === "tap" && this._isActionCoolingDown(e)) return;
+      if (t === "hold") {
+        this._moreInfo(a.corridor);
         return;
       }
-      this._toggleEntity(t.corridor);
+      this._toggleEntity(a.corridor);
       return;
     }
     if (e === "tv") {
-      if (a === "tap" && this._isActionCoolingDown(e)) return;
-      if (a === "hold") {
-        this._moreInfo(t.tv);
+      if (t === "tap" && this._isActionCoolingDown(e)) return;
+      if (t === "hold") {
+        this._moreInfo(a.tv);
         return;
       }
-      const i = kt.includes(String(this._state(t.tv)?.state || "").toLowerCase()) ? "media_player.turn_off" : "media_player.turn_on";
-      this._callService(i, {}, { entity_id: t.tv });
+      const i = ka.includes(String(this._state(a.tv)?.state || "").toLowerCase()) ? "media_player.turn_off" : "media_player.turn_on";
+      this._callService(i, {}, { entity_id: a.tv });
       return;
     }
     if (e === "climate") {
-      if (a === "tap" && this._isActionCoolingDown(e)) return;
-      if (a === "hold") {
-        this._moreInfo(t.climate);
+      if (t === "tap" && this._isActionCoolingDown(e)) return;
+      if (t === "hold") {
+        this._moreInfo(a.climate);
         return;
       }
-      const i = this._climateIsEnabled(this._state(t.climate)) ? "climate.turn_off" : "climate.turn_on";
-      this._callService(i, {}, { entity_id: t.climate });
+      const i = this._climateIsEnabled(this._state(a.climate)) ? "climate.turn_off" : "climate.turn_on";
+      this._callService(i, {}, { entity_id: a.climate });
     }
   }
   _runRoomSubview() {
@@ -8719,28 +8814,28 @@ class L extends HTMLElement {
   }
   _isActionCoolingDown(e) {
     this._lastActionAt = this._lastActionAt || {};
-    const a = Date.now(), t = this._lastActionAt[e] || 0, i = e === "climate" ? Yo : Wo;
-    return a - t < i ? !0 : (this._lastActionAt[e] = a, !1);
+    const t = Date.now(), a = this._lastActionAt[e] || 0, i = e === "climate" ? Xo : Ko;
+    return t - a < i ? !0 : (this._lastActionAt[e] = t, !1);
   }
-  _callService(e, a = {}, t = {}) {
+  _callService(e, t = {}, a = {}) {
     if (!this._hass || !e) return;
     const [i, r] = e.split(".");
     if (!i || !r) return;
-    const n = { ...a };
-    t?.entity_id != null && n.entity_id == null && (n.entity_id = t.entity_id), t?.area_id != null && n.area_id == null && (n.area_id = t.area_id), t?.device_id != null && n.device_id == null && (n.device_id = t.device_id), this._hass.callService(i, r, n, t);
+    const n = { ...t };
+    a?.entity_id != null && n.entity_id == null && (n.entity_id = a.entity_id), a?.area_id != null && n.area_id == null && (n.area_id = a.area_id), a?.device_id != null && n.device_id == null && (n.device_id = a.device_id), this._hass.callService(i, r, n, a);
   }
   _toggleEntity(e) {
     e && this._callService("homeassistant.toggle", {}, { entity_id: e });
   }
   _navigate(e) {
     if (!e) return;
-    const a = this._resolveNavigationPath(e), t = e.startsWith("/") ? a : e;
+    const t = this._resolveNavigationPath(e), a = e.startsWith("/") ? t : e;
     globalThis.BrunoLiquidGlass?.routeTransition?.(), this.dispatchEvent(new CustomEvent("hass-navigate", {
-      detail: { path: t },
+      detail: { path: a },
       bubbles: !0,
       composed: !0
     })), window.setTimeout(() => {
-      !a || window.location?.pathname === a || (window.history?.pushState && window.history.pushState(null, "", a), window.dispatchEvent?.(new CustomEvent("location-changed", { detail: { replace: !1 } })));
+      !t || window.location?.pathname === t || (window.history?.pushState && window.history.pushState(null, "", t), window.dispatchEvent?.(new CustomEvent("location-changed", { detail: { replace: !1 } })));
     }, 80);
   }
   _resolveNavigationPath(e) {
@@ -8754,55 +8849,55 @@ class L extends HTMLElement {
     }));
   }
   _wireAction(e) {
-    const a = e.dataset.actionKey;
-    if (!a) return;
-    let t = null, i = !1, r = !1;
+    const t = e.dataset.actionKey;
+    if (!t) return;
+    let a = null, i = !1, r = !1;
     const n = 10;
     let s = null, l = 0, c = 0, p = !1;
     const d = () => {
-      t && (window.clearTimeout(t), t = null);
+      a && (window.clearTimeout(a), a = null);
     }, h = () => {
       d(), r = !1, p = !1, s = null, e.classList.remove("is-pressed");
     };
-    e.addEventListener("pointerdown", (b) => {
-      if (!(b.button != null && b.button !== 0)) {
+    e.addEventListener("pointerdown", (g) => {
+      if (!(g.button != null && g.button !== 0)) {
         if (s !== null) {
-          b.stopPropagation();
+          g.stopPropagation();
           return;
         }
-        b.stopPropagation(), r = !0, i = !1, s = b.pointerId, l = b.clientX, c = b.clientY, p = !1, e.classList.add("is-pressed"), t = window.setTimeout(() => {
-          !r || p || (i = !0, e.classList.add("is-hold-fired"), window.setTimeout(() => e.classList.remove("is-hold-fired"), 260), globalThis.BrunoLiquidGlass?.feedback?.("hold"), this._runAction(a, "hold"));
+        g.stopPropagation(), r = !0, i = !1, s = g.pointerId, l = g.clientX, c = g.clientY, p = !1, e.classList.add("is-pressed"), a = window.setTimeout(() => {
+          !r || p || (i = !0, e.classList.add("is-hold-fired"), window.setTimeout(() => e.classList.remove("is-hold-fired"), 260), globalThis.BrunoLiquidGlass?.feedback?.("hold"), this._runAction(t, "hold"));
         }, 560);
       }
-    }), e.addEventListener("pointermove", (b) => {
-      if (!r || b.pointerId !== s) return;
-      const u = Math.abs(b.clientX - l), g = Math.abs(b.clientY - c);
-      u <= n && g <= n || (p = !0, d(), e.classList.remove("is-pressed"));
-    }), e.addEventListener("pointerup", (b) => {
-      if (b.pointerId !== s) {
-        b.stopPropagation();
+    }), e.addEventListener("pointermove", (g) => {
+      if (!r || g.pointerId !== s) return;
+      const u = Math.abs(g.clientX - l), b = Math.abs(g.clientY - c);
+      u <= n && b <= n || (p = !0, d(), e.classList.remove("is-pressed"));
+    }), e.addEventListener("pointerup", (g) => {
+      if (g.pointerId !== s) {
+        g.stopPropagation();
         return;
       }
-      b.preventDefault(), b.stopPropagation();
-      const u = r, g = p;
-      h(), !(!u || g || i) && (globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._runAction(a, "tap"));
-    }), e.addEventListener("click", (b) => {
-      b.preventDefault(), b.stopPropagation();
-    }), e.addEventListener("dblclick", (b) => {
-      b.preventDefault(), b.stopPropagation();
-    }), e.addEventListener("pointerleave", h), e.addEventListener("pointercancel", (b) => {
-      b.pointerId === s && h();
-    }), e.addEventListener("keydown", (b) => {
-      b.key !== "Enter" && b.key !== " " || (b.preventDefault(), globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._runAction(a, "tap"));
+      g.preventDefault(), g.stopPropagation();
+      const u = r, b = p;
+      h(), !(!u || b || i) && (globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._runAction(t, "tap"));
+    }), e.addEventListener("click", (g) => {
+      g.preventDefault(), g.stopPropagation();
+    }), e.addEventListener("dblclick", (g) => {
+      g.preventDefault(), g.stopPropagation();
+    }), e.addEventListener("pointerleave", h), e.addEventListener("pointercancel", (g) => {
+      g.pointerId === s && h();
+    }), e.addEventListener("keydown", (g) => {
+      g.key !== "Enter" && g.key !== " " || (g.preventDefault(), globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._runAction(t, "tap"));
     });
   }
   _wireRoomNavZone(e) {
     if (!e) return;
-    let a = null, t = !1, i = !1;
+    let t = null, a = !1, i = !1;
     const r = 10;
     let n = null, s = 0, l = 0, c = !1;
     const p = () => {
-      a && (window.clearTimeout(a), a = null);
+      t && (window.clearTimeout(t), t = null);
     }, d = () => {
       p(), i = !1, c = !1, n = null, e.classList.remove("is-pressed");
     };
@@ -8812,22 +8907,22 @@ class L extends HTMLElement {
           h.stopPropagation();
           return;
         }
-        h.stopPropagation(), i = !0, t = !1, n = h.pointerId, s = h.clientX, l = h.clientY, c = !1, e.classList.add("is-pressed"), a = window.setTimeout(() => {
-          !i || c || (t = !0, e.classList.add("is-hold-fired"), window.setTimeout(() => e.classList.remove("is-hold-fired"), 260), globalThis.BrunoLiquidGlass?.feedback?.("hold"), this._runAction("room", "hold"));
+        h.stopPropagation(), i = !0, a = !1, n = h.pointerId, s = h.clientX, l = h.clientY, c = !1, e.classList.add("is-pressed"), t = window.setTimeout(() => {
+          !i || c || (a = !0, e.classList.add("is-hold-fired"), window.setTimeout(() => e.classList.remove("is-hold-fired"), 260), globalThis.BrunoLiquidGlass?.feedback?.("hold"), this._runAction("room", "hold"));
         }, 560);
       }
     }), e.addEventListener("pointermove", (h) => {
       if (!i || h.pointerId !== n) return;
-      const b = Math.abs(h.clientX - s), u = Math.abs(h.clientY - l);
-      b <= r && u <= r || (c = !0, p(), e.classList.remove("is-pressed"));
+      const g = Math.abs(h.clientX - s), u = Math.abs(h.clientY - l);
+      g <= r && u <= r || (c = !0, p(), e.classList.remove("is-pressed"));
     }), e.addEventListener("pointerup", (h) => {
       if (h.pointerId !== n) {
         h.stopPropagation();
         return;
       }
       h.preventDefault(), h.stopPropagation();
-      const b = i, u = c;
-      d(), !(!b || u || t) && (e.classList.add("is-navigating"), window.setTimeout(() => e.classList.remove("is-navigating"), 420), window.setTimeout(() => this._runRoomSubview(), 90));
+      const g = i, u = c;
+      d(), !(!g || u || a) && (e.classList.add("is-navigating"), window.setTimeout(() => e.classList.remove("is-navigating"), 420), window.setTimeout(() => this._runRoomSubview(), 90));
     }), e.addEventListener("click", (h) => {
       h.preventDefault(), h.stopPropagation();
     }), e.addEventListener("dblclick", (h) => {
@@ -8838,81 +8933,81 @@ class L extends HTMLElement {
       h.key !== "Enter" && h.key !== " " || (h.preventDefault(), h.stopPropagation(), e.classList.add("is-navigating"), window.setTimeout(() => e.classList.remove("is-navigating"), 420), window.setTimeout(() => this._runRoomSubview(), 90));
     });
   }
-  _statusDot(e, a, t, i) {
+  _statusDot(e, t, a, i) {
     return `
-      <span class="status-dot tone-${i}${a ? " is-active" : ""}" title="${L._escape(t)}" aria-label="${L._escape(t)}">
+      <span class="status-dot tone-${i}${t ? " is-active" : ""}" title="${L._escape(a)}" aria-label="${L._escape(a)}">
         <bruno-icon icon="${e}"></bruno-icon>
       </span>
     `;
   }
   _statusLines(e) {
-    return e.length ? e.map((a) => `<span>${L._escape(a)}</span>`).join("") : "";
+    return e.length ? e.map((t) => `<span>${L._escape(t)}</span>`).join("") : "";
   }
   _clearHybridTimer(e) {
-    const a = this._hybridTimers.get(e);
-    a !== void 0 && window.clearTimeout(a), this._hybridTimers.delete(e);
+    const t = this._hybridTimers.get(e);
+    t !== void 0 && window.clearTimeout(t), this._hybridTimers.delete(e);
   }
-  _scheduleHybridTransition(e, a) {
-    if (this._clearHybridTimer(e), !a.phase || !a.until) return;
-    const t = a.token, i = Math.max(0, a.until - Date.now()), r = window.setTimeout(() => this._advanceHybridTransition(e, t), i);
+  _scheduleHybridTransition(e, t) {
+    if (this._clearHybridTimer(e), !t.phase || !t.until) return;
+    const a = t.token, i = Math.max(0, t.until - Date.now()), r = window.setTimeout(() => this._advanceHybridTransition(e, a), i);
     this._hybridTimers.set(e, r);
   }
-  _applyHybridDomState(e, a) {
-    const t = this.shadowRoot?.querySelector(`[data-hybrid-key="${e}"]`);
-    if (!t) return;
-    const i = a.phase === "turning-off" ? !0 : a.active;
-    t.classList.remove(
+  _applyHybridDomState(e, t) {
+    const a = this.shadowRoot?.querySelector(`[data-hybrid-key="${e}"]`);
+    if (!a) return;
+    const i = t.phase === "turning-off" ? !0 : t.active;
+    a.classList.remove(
       "hybridIcon--on",
       "hybridIcon--off",
       "hybridIcon--turning-on",
       "hybridIcon--turning-off",
       "hybridIcon--settling-off"
-    ), t.classList.add(i ? "hybridIcon--on" : "hybridIcon--off"), a.phase && t.classList.add(`hybridIcon--${a.phase}`), t.style.setProperty("--hybrid-transition-delay", "0ms");
+    ), a.classList.add(i ? "hybridIcon--on" : "hybridIcon--off"), t.phase && a.classList.add(`hybridIcon--${t.phase}`), a.style.setProperty("--hybrid-transition-delay", "0ms");
   }
-  _advanceHybridTransition(e, a) {
-    const t = this._hybridTransitions.get(e);
-    if (!t || t.token !== a) return;
+  _advanceHybridTransition(e, t) {
+    const a = this._hybridTransitions.get(e);
+    if (!a || a.token !== t) return;
     this._hybridTimers.delete(e);
-    const i = na[e], r = Date.now();
-    if (t.phase === "turning-off") {
-      t.phase = "settling-off", t.startedAt = r, t.until = r + i.fade, t.token = ++this._hybridTransitionToken, this._applyHybridDomState(e, t), this._scheduleHybridTransition(e, t);
+    const i = nt[e], r = Date.now();
+    if (a.phase === "turning-off") {
+      a.phase = "settling-off", a.startedAt = r, a.until = r + i.fade, a.token = ++this._hybridTransitionToken, this._applyHybridDomState(e, a), this._scheduleHybridTransition(e, a);
       return;
     }
-    t.phase === "turning-on" && (e === "corridor" && (t.glowStartedAt = r), e === "climate" && (t.airflowStartedAt = r)), t.phase = "", t.startedAt = 0, t.until = 0, t.token = ++this._hybridTransitionToken, this._applyHybridDomState(e, t);
+    a.phase === "turning-on" && (e === "corridor" && (a.glowStartedAt = r), e === "climate" && (a.airflowStartedAt = r)), a.phase = "", a.startedAt = 0, a.until = 0, a.token = ++this._hybridTransitionToken, this._applyHybridDomState(e, a);
   }
-  _normalizeHybridTransition(e, a, t) {
-    if (!a.phase || t < a.until) return;
-    const i = na[e];
-    if (a.phase === "turning-off") {
-      const r = a.until, n = r + i.fade;
-      if (t < n) {
-        a.phase = "settling-off", a.startedAt = r, a.until = n, a.token = ++this._hybridTransitionToken, this._scheduleHybridTransition(e, a);
+  _normalizeHybridTransition(e, t, a) {
+    if (!t.phase || a < t.until) return;
+    const i = nt[e];
+    if (t.phase === "turning-off") {
+      const r = t.until, n = r + i.fade;
+      if (a < n) {
+        t.phase = "settling-off", t.startedAt = r, t.until = n, t.token = ++this._hybridTransitionToken, this._scheduleHybridTransition(e, t);
         return;
       }
     }
-    a.phase === "turning-on" && (e === "corridor" && (a.glowStartedAt = t), e === "climate" && (a.airflowStartedAt = t)), a.phase = "", a.startedAt = 0, a.until = 0, a.token = ++this._hybridTransitionToken, this._clearHybridTimer(e);
+    t.phase === "turning-on" && (e === "corridor" && (t.glowStartedAt = a), e === "climate" && (t.airflowStartedAt = a)), t.phase = "", t.startedAt = 0, t.until = 0, t.token = ++this._hybridTransitionToken, this._clearHybridTimer(e);
   }
-  _hybridTransitionFor(e, a, t) {
+  _hybridTransitionFor(e, t, a) {
     if (!this._hass)
-      return { active: a, transition: "", elapsed: 0 };
+      return { active: t, transition: "", elapsed: 0 };
     let i = this._hybridTransitions.get(e);
-    i ? this._normalizeHybridTransition(e, i, t) : (i = {
-      active: a,
+    i ? this._normalizeHybridTransition(e, i, a) : (i = {
+      active: t,
       phase: "",
       startedAt: 0,
       until: 0,
-      glowStartedAt: a ? t : 0,
-      airflowStartedAt: a && e === "climate" ? t : 0,
+      glowStartedAt: t ? a : 0,
+      airflowStartedAt: t && e === "climate" ? a : 0,
       token: ++this._hybridTransitionToken
-    }, this._hybridTransitions.set(e, i)), i.active !== a && (this._clearHybridTimer(e), i.active = a, i.phase = a ? "turning-on" : "turning-off", i.startedAt = t, i.until = t + na[e][a ? "on" : "off"], a && (i.glowStartedAt = e === "corridor" ? 0 : t, i.airflowStartedAt = e === "climate" ? 0 : i.airflowStartedAt), i.token = ++this._hybridTransitionToken, this._scheduleHybridTransition(e, i)), i.phase && !this._hybridTimers.has(e) && this._scheduleHybridTransition(e, i);
-    const r = Zo[e], n = (s, l) => s && l ? Math.max(0, t - s) % l : 0;
+    }, this._hybridTransitions.set(e, i)), i.active !== t && (this._clearHybridTimer(e), i.active = t, i.phase = t ? "turning-on" : "turning-off", i.startedAt = a, i.until = a + nt[e][t ? "on" : "off"], t && (i.glowStartedAt = e === "corridor" ? 0 : a, i.airflowStartedAt = e === "climate" ? 0 : i.airflowStartedAt), i.token = ++this._hybridTransitionToken, this._scheduleHybridTransition(e, i)), i.phase && !this._hybridTimers.has(e) && this._scheduleHybridTransition(e, i);
+    const r = Qo[e], n = (s, l) => s && l ? Math.max(0, a - s) % l : 0;
     return {
       // ANTERIOR (rollback): active: visualOn,
       // `active` permanece sempre igual ao estado real da entidade; a classe
       // visual ON durante turning-off e derivada apenas da fase de transicao.
       active: i.active,
       transition: i.phase,
-      elapsed: i.phase ? Math.max(0, t - i.startedAt) : 0,
+      elapsed: i.phase ? Math.max(0, a - i.startedAt) : 0,
       glowPhase: n(i.glowStartedAt, r.glow),
       airflowPhase: n(i.airflowStartedAt, r.airflow)
     };
@@ -8921,9 +9016,9 @@ class L extends HTMLElement {
   // mesma biblioteca de icones do resto do dashboard — HybridTvIcon/HybridAcIcon/
   // HybridLedStripIcon (linhas 87-179) ficam preservados sem uso, decisao do
   // usuario de nao usar os icones hibridos em PNG neste bloco.
-  _hybridIcon(e, a) {
-    const t = a === "ledstrip" ? "ledstrip" : a === "climate" ? "climate" : a === "light_flush" ? "light_flush" : "tv", i = globalThis.BrunoIcons?.render(t) || "";
-    return `<span class="tpl-icon bruno-command-icon" data-bruno-device-icon="${t}">${i}</span>`;
+  _hybridIcon(e, t) {
+    const a = t === "ledstrip" ? "ledstrip" : t === "climate" ? "climate" : t === "light_flush" ? "light_flush" : "tv", i = globalThis.BrunoIcons?.render(a) || "";
+    return `<span class="tpl-icon bruno-command-icon" data-bruno-device-icon="${a}">${i}</span>`;
   }
   _screenReaderStatus(e) {
     return String(e || "").replace(/°/g, " graus").replace(/\s*·\s*/g, ", ").trim();
@@ -8945,21 +9040,21 @@ class L extends HTMLElement {
       `;
     }
     */
-  _actionButton(e, a, t, i, r, n, s = {}) {
-    const l = r ? " is-active" : "", c = s.semanticStatus || null, p = c ? " has-semantic-status" : "", d = s.ariaName || t, h = s.ariaState || (r ? "ligado" : "desligado"), b = [d, h];
-    c && b.push(this._screenReaderStatus(c));
-    const u = b.join(", "), g = this._hybridIcon(e, a, s.hybridTransition, s.now);
+  _actionButton(e, t, a, i, r, n, s = {}) {
+    const l = r ? " is-active" : "", c = s.semanticStatus || null, p = c ? " has-semantic-status" : "", d = s.ariaName || a, h = s.ariaState || (r ? "ligado" : "desligado"), g = [d, h];
+    c && g.push(this._screenReaderStatus(c));
+    const u = g.join(", "), b = this._hybridIcon(e, t, s.hybridTransition, s.now);
     return `
-      <button class="command-row icon-${a} tone-${n}${l}" type="button" data-action-key="${e}" aria-label="${L._escape(u)}" aria-pressed="${r ? "true" : "false"}">
+      <button class="command-row icon-${t} tone-${n}${l}" type="button" data-action-key="${e}" aria-label="${L._escape(u)}" aria-pressed="${r ? "true" : "false"}">
         <!-- ANTERIOR (rollback): class="command-icon is-hybrid" — a classe is-hybrid
              forcava color:inherit/filter:none (regra .command-icon.is-hybrid, ~linha
              1960), pensada para os icones PNG em camadas. Como o icone aqui e o
              vetor plano da BrunoIcons (nao mais o hibrido), essa regra cancelava a
              cor por tom de .command-row.icon-X.is-active .command-icon (~linha 1842),
              e o icone nunca mudava de cor entre ligado/desligado. -->
-        <span class="command-icon" aria-hidden="true">${g}</span>
+        <span class="command-icon" aria-hidden="true">${b}</span>
         <span class="command-copy${p}">
-          <span class="command-name">${L._escape(t)}</span>
+          <span class="command-name">${L._escape(a)}</span>
           ${c ? `<span class="command-category">${L._escape(c)}</span>` : ""}
         </span>
         <span class="command-state">${L._escape(i)}</span>
@@ -8976,7 +9071,7 @@ class L extends HTMLElement {
   _render() {
     if (!this._config) return;
     this.shadowRoot || this.attachShadow({ mode: "open" });
-    const e = this._model(), a = e.roomOn ? " is-room-on" : "", t = e.statusLines.length > 1 ? " has-status-stack" : "", i = Date.now(), r = {
+    const e = this._model(), t = e.roomOn ? " is-room-on" : "", a = e.statusLines.length > 1 ? " has-status-stack" : "", i = Date.now(), r = {
       corridor: this._hybridTransitionFor("corridor", e.corridorOn, i),
       tv: this._hybridTransitionFor("tv", e.tvOn, i),
       climate: this._hybridTransitionFor("climate", e.climateEnabled, i)
@@ -12116,7 +12211,7 @@ class L extends HTMLElement {
         }
       </style>
 
-      <div class="sala-card${a}${t}${this._homeThemeClass()}">
+      <div class="sala-card${t}${a}${this._homeThemeClass()}">
         <button class="hero-action" type="button" data-action-key="room" aria-label="Sala">
           <div class="room-icon" aria-hidden="true">
             ${L._roomVisual(e.roomOn)}
@@ -12232,7 +12327,7 @@ class L extends HTMLElement {
     `;
   }
   static _tplIcon(e) {
-    const a = {
+    const t = {
       living_sofa: "living_sofa",
       ledstrip: "ledstrip",
       tv: "tv",
@@ -12240,21 +12335,21 @@ class L extends HTMLElement {
       motion: "motion",
       homepod: "homepod"
     }[e] || "living_sofa";
-    return `<span class="tpl-icon">${globalThis.BrunoIcons?.render(a) || ""}</span>`;
+    return `<span class="tpl-icon">${globalThis.BrunoIcons?.render(t) || ""}</span>`;
   }
   static _escape(e) {
     return String(e ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 }
-customElements.get(xa) || customElements.define(xa, L);
+customElements.get(xt) || customElements.define(xt, L);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: xa,
+  type: xt,
   name: "Bruno Sala Card",
   preview: !1,
   description: "Isolated Bento Sala card with preserved Home Assistant actions and premium liquid glass visuals."
 });
-const ya = "bruno-activity-column", At = {
+const yt = "bruno-activity-column", Aa = {
   // Espelha a linha do hero em shell/section_home_v2.yaml. Se a régua do grid
   // mudar lá, mudar AQUI também (referência cruzada anotada nos dois arquivos).
   available_height: "calc(77vh - 154px)",
@@ -12295,22 +12390,22 @@ const ya = "bruno-activity-column", At = {
       card: { type: "custom:bruno-media-card", variant: "wide" }
     }
   ]
-}, qt = 260, Et = 220;
+}, qa = 260, Ea = 220;
 class Ze extends HTMLElement {
   static getStubConfig() {
     return {};
   }
   setConfig(e) {
     this._config = {
-      ...At,
+      ...Aa,
       ...e || {},
-      slots: Array.isArray(e?.slots) && e.slots.length ? e.slots : At.slots
+      slots: Array.isArray(e?.slots) && e.slots.length ? e.slots : Aa.slots
     }, this._cards = this._cards || /* @__PURE__ */ new Map(), this._wrappers = this._wrappers || /* @__PURE__ */ new Map(), this._activeSince = this._activeSince || /* @__PURE__ */ new Map(), this._visible = this._visible || /* @__PURE__ */ new Set(), this._enterTimers = this._enterTimers || /* @__PURE__ */ new Map(), this._exitTimers = this._exitTimers || /* @__PURE__ */ new Map(), this._renderShell(), this._ensureCards();
   }
   set hass(e) {
-    this._hass = e, this._cards.forEach((a) => {
+    this._hass = e, this._cards.forEach((t) => {
       try {
-        a.hass = e;
+        t.hass = e;
       } catch {
       }
     }), this._update();
@@ -12333,12 +12428,12 @@ class Ze extends HTMLElement {
       try {
         const e = await globalThis.loadCardHelpers?.();
         if (!e?.createCardElement) throw new Error("loadCardHelpers indisponivel");
-        this._config.slots.forEach((a) => {
-          if (this._cards.has(a.key)) return;
-          const t = this._wrappers.get(a.key);
-          if (!t || !a.card) return;
-          const i = e.createCardElement(a.card);
-          this._hass && (i.hass = this._hass), t.appendChild(i), this._cards.set(a.key, i);
+        this._config.slots.forEach((t) => {
+          if (this._cards.has(t.key)) return;
+          const a = this._wrappers.get(t.key);
+          if (!a || !t.card) return;
+          const i = e.createCardElement(t.card);
+          this._hass && (i.hass = this._hass), a.appendChild(i), this._cards.set(t.key, i);
         });
       } catch (e) {
         console.warn("[bruno-activity-column] falha ao criar cards:", e);
@@ -12349,21 +12444,21 @@ class Ze extends HTMLElement {
   }
   // Lista de chaves ativas em ORDEM DE ATIVAÇÃO (mais antiga primeiro).
   _activeKeys() {
-    const e = Date.now(), a = [];
-    return this._config.slots.forEach((t) => {
-      String(this._state(t.entity)?.state || "").toLowerCase() === "on" ? (this._activeSince.has(t.key) || this._activeSince.set(t.key, e), a.push(t.key)) : this._activeSince.delete(t.key);
-    }), a.sort((t, i) => (this._activeSince.get(t) || 0) - (this._activeSince.get(i) || 0));
+    const e = Date.now(), t = [];
+    return this._config.slots.forEach((a) => {
+      String(this._state(a.entity)?.state || "").toLowerCase() === "on" ? (this._activeSince.has(a.key) || this._activeSince.set(a.key, e), t.push(a.key)) : this._activeSince.delete(a.key);
+    }), t.sort((a, i) => (this._activeSince.get(a) || 0) - (this._activeSince.get(i) || 0));
   }
   _slotConfig(e) {
-    return this._config.slots.find((a) => a.key === e);
+    return this._config.slots.find((t) => t.key === e);
   }
   _slotEntry(e) {
-    const a = this._slotConfig(e) || {}, t = Number(a.height) || 200, i = Math.min(Number(a.min_height) || t, t);
-    return { key: e, height: t, minHeight: i };
+    const t = this._slotConfig(e) || {}, a = Number(t.height) || 200, i = Math.min(Number(t.min_height) || a, a);
+    return { key: e, height: a, minHeight: i };
   }
   // Altura mínima que uma coluna precisa para acomodar este conjunto.
-  _columnMinHeight(e, a) {
-    return e.length ? e.reduce((t, i) => t + this._slotEntry(i).minHeight, 0) + a * (e.length - 1) : 0;
+  _columnMinHeight(e, t) {
+    return e.length ? e.reduce((a, i) => a + this._slotEntry(i).minHeight, 0) + t * (e.length - 1) : 0;
   }
   // Distribui as chaves ativas em colunas. Map(key -> {column, row, height});
   // column 2 = coluna direita (principal), column 1 = coluna esquerda.
@@ -12376,19 +12471,19 @@ class Ze extends HTMLElement {
   // Agora é preenchimento sequencial: cada card entra na coluna atual
   // enquanto couber (contagem E altura); quando não cabe, TRANSBORDA para a
   // coluna seguinte. Descarte só se não houver mais coluna disponível.
-  _plan(e, a) {
-    const t = Number(this._config.gap) || 12, i = Math.max(1, Number(this._config.max_per_column) || 2), r = Number(this._config.second_column_min_width) || 0, s = r <= 0 || this.getBoundingClientRect().width >= r ? [2, 1] : [2], l = e.slice(), c = /* @__PURE__ */ new Map();
+  _plan(e, t) {
+    const a = Number(this._config.gap) || 12, i = Math.max(1, Number(this._config.max_per_column) || 2), r = Number(this._config.second_column_min_width) || 0, s = r <= 0 || this.getBoundingClientRect().width >= r ? [2, 1] : [2], l = e.slice(), c = /* @__PURE__ */ new Map();
     return s.forEach((p) => {
       const d = [];
       for (; l.length && d.length < i; ) {
         const h = d.concat(l[0]);
-        if (this._columnMinHeight(h, t) > a) break;
+        if (this._columnMinHeight(h, a) > t) break;
         d.push(l.shift());
       }
-      !d.length && l.length && p === s[0] && d.push(l.shift()), this._fitColumn(d, a, t).forEach((h, b) => {
+      !d.length && l.length && p === s[0] && d.push(l.shift()), this._fitColumn(d, t, a).forEach((h, g) => {
         c.set(h.key, {
           column: p,
-          row: Math.max(1, i - b),
+          row: Math.max(1, i - g),
           height: h.height
         });
       });
@@ -12397,27 +12492,27 @@ class Ze extends HTMLElement {
   // Ajusta as alturas de uma coluna ao espaço disponível. Só os slots com
   // min_height (hoje: mídia) encolhem; câmera e Roborock mantêm a altura.
   // A seleção de quem entra na coluna já foi feita em _plan.
-  _fitColumn(e, a, t) {
+  _fitColumn(e, t, a) {
     if (!e.length) return [];
-    const i = e.map((p) => this._slotEntry(p)), r = t * Math.max(0, i.length - 1), n = i.reduce((p, d) => p + d.height, 0) + r;
-    if (n <= a)
+    const i = e.map((p) => this._slotEntry(p)), r = a * Math.max(0, i.length - 1), n = i.reduce((p, d) => p + d.height, 0) + r;
+    if (n <= t)
       return i.map(({ key: p, height: d }) => ({ key: p, height: d }));
-    let s = n - a;
+    let s = n - t;
     const l = i.reduce((p, d) => p + (d.height - d.minHeight), 0), c = i.map((p) => {
       const d = p.height - p.minHeight;
       if (!d || !l) return { key: p.key, height: p.height };
       const h = Math.min(d, Math.round(d / l * s));
       return s -= h, { key: p.key, height: p.height - h };
     });
-    return c.length === 1 && c[0].height > a && (c[0].height = Math.max(120, Math.floor(a))), c;
+    return c.length === 1 && c[0].height > t && (c[0].height = Math.max(120, Math.floor(t))), c;
   }
   // REV.7: uma medição ruim (seção oculta pela shell, layout ainda não
   // resolvido) devolvia altura ~0 e derrubava cards do plano. Agora medidas
   // implausíveis são ignoradas e vale a última boa.
   _availableHeight(e = !1) {
-    const a = Math.max(0, this.getBoundingClientRect().height);
-    if (a >= 120)
-      return this._lastGoodHeight = a, a;
+    const t = Math.max(0, this.getBoundingClientRect().height);
+    if (t >= 120)
+      return this._lastGoodHeight = t, t;
     if (globalThis.matchMedia?.("(max-width: 800px)")?.matches === !0 && e) {
       const i = Number.parseFloat(String(this._config?.available_height || ""));
       return this._lastGoodHeight || (Number.isFinite(i) ? i : 300);
@@ -12426,20 +12521,20 @@ class Ze extends HTMLElement {
   }
   _update() {
     if (!this._config || !this.shadowRoot) return;
-    const e = this._hass ? this._activeKeys() : [], a = this._availableHeight(e.length > 0), t = a > 0 ? this._plan(e, a) : /* @__PURE__ */ new Map();
-    this._renderDebug(a, e, t), this._config.slots.forEach((r) => {
+    const e = this._hass ? this._activeKeys() : [], t = this._availableHeight(e.length > 0), a = t > 0 ? this._plan(e, t) : /* @__PURE__ */ new Map();
+    this._renderDebug(t, e, a), this._config.slots.forEach((r) => {
       const n = this._wrappers.get(r.key);
       if (!n) return;
-      const s = t.get(r.key), l = this._visible.has(r.key);
+      const s = a.get(r.key), l = this._visible.has(r.key);
       if (s) {
         const d = this._exitTimers.get(r.key);
         if (d && (window.clearTimeout(d), this._exitTimers.delete(r.key)), n.style.gridColumn = String(s.column), n.style.gridRow = String(s.row), n.style.height = `${s.height}px`, n.classList.remove("is-hidden", "is-leaving"), !l) {
           const h = this._enterTimers.get(r.key);
           h && window.clearTimeout(h), n.classList.remove("is-entering"), n.offsetWidth, n.classList.add("is-entering");
-          const b = window.setTimeout(() => {
+          const g = window.setTimeout(() => {
             n.classList.remove("is-entering"), this._enterTimers.delete(r.key);
-          }, qt + 40);
-          this._enterTimers.set(r.key, b);
+          }, qa + 40);
+          this._enterTimers.set(r.key, g);
         }
         this._visible.add(r.key);
         return;
@@ -12453,7 +12548,7 @@ class Ze extends HTMLElement {
       c && (window.clearTimeout(c), this._enterTimers.delete(r.key)), n.classList.remove("is-entering"), n.classList.add("is-leaving");
       const p = window.setTimeout(() => {
         n.classList.remove("is-leaving"), n.classList.add("is-hidden"), this._exitTimers.delete(r.key);
-      }, Et);
+      }, Ea);
       this._exitTimers.set(r.key, p);
     });
     const i = globalThis.matchMedia?.("(max-width: 800px)")?.matches === !0;
@@ -12462,7 +12557,7 @@ class Ze extends HTMLElement {
   // Overlay de diagnóstico (config `debug: true`). Mostra exatamente o que o
   // algoritmo mediu e decidiu — evita novo ciclo de tentativa e erro caso
   // algum card não apareça onde deveria.
-  _renderDebug(e, a, t) {
+  _renderDebug(e, t, a) {
     if (!this.shadowRoot) return;
     const i = this.shadowRoot.querySelector(".debug");
     if (!i) return;
@@ -12470,17 +12565,17 @@ class Ze extends HTMLElement {
       i.textContent = "";
       return;
     }
-    const r = Math.round(this.getBoundingClientRect().width), n = [...t.entries()].map(([l, c]) => `${l}:c${c.column}r${c.row}/${c.height}px`).join("  "), s = a.filter((l) => !t.has(l));
+    const r = Math.round(this.getBoundingClientRect().width), n = [...a.entries()].map(([l, c]) => `${l}:c${c.column}r${c.row}/${c.height}px`).join("  "), s = t.filter((l) => !a.has(l));
     i.textContent = [
       `host ${r}x${Math.round(e)}px`,
-      `ativos: ${a.join(",") || "-"}`,
+      `ativos: ${t.join(",") || "-"}`,
       `plano: ${n || "-"}`,
       s.length ? `DESCARTADOS: ${s.join(",")}` : ""
     ].filter(Boolean).join(" | ");
   }
   _renderShell() {
     if (this.shadowRoot || this.attachShadow({ mode: "open" }), this._shellReady) return;
-    const e = Number(this._config.gap) || 12, a = Math.max(1, Number(this._config.max_per_column) || 2);
+    const e = Number(this._config.gap) || 12, t = Math.max(1, Number(this._config.max_per_column) || 2);
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -12500,7 +12595,7 @@ class Ze extends HTMLElement {
           height: 100%;
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
-          grid-template-rows: repeat(${a}, auto);
+          grid-template-rows: repeat(${t}, auto);
           /* Ancora a pilha na BASE (logo acima do bloco inferior). */
           align-content: end;
           align-items: end;
@@ -12519,11 +12614,11 @@ class Ze extends HTMLElement {
         }
 
         .slot.is-entering {
-          animation: brunoActivityIn ${qt}ms ease both;
+          animation: brunoActivityIn ${qa}ms ease both;
         }
 
         .slot.is-leaving {
-          animation: brunoActivityOut ${Et}ms ease both;
+          animation: brunoActivityOut ${Ea}ms ease both;
         }
 
         /* Os cards internos preenchem o slot (altura vem do wrapper). */
@@ -12594,21 +12689,21 @@ class Ze extends HTMLElement {
       </style>
 
       <div class="columns" role="region" aria-label="Atividades da casa">
-        ${this._config.slots.map((t) => `
-          <div class="slot is-hidden" data-slot-key="${Ze._escapeAttr(t.key)}"></div>
+        ${this._config.slots.map((a) => `
+          <div class="slot is-hidden" data-slot-key="${Ze._escapeAttr(a.key)}"></div>
         `).join("")}
       </div>
       <div class="debug" aria-hidden="true"></div>
-    `, this._wrappers.clear(), this.shadowRoot.querySelectorAll("[data-slot-key]").forEach((t) => {
-      this._wrappers.set(t.dataset.slotKey, t);
+    `, this._wrappers.clear(), this.shadowRoot.querySelectorAll("[data-slot-key]").forEach((a) => {
+      this._wrappers.set(a.dataset.slotKey, a);
     }), this._shellReady = !0;
   }
   static _escapeAttr(e) {
     return String(e ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 }
-customElements.get(ya) || customElements.define(ya, Ze);
-const wa = "bruno-home-overflow-indicator", Ot = /* @__PURE__ */ new Set([
+customElements.get(yt) || customElements.define(yt, Ze);
+const wt = "bruno-home-overflow-indicator", Oa = /* @__PURE__ */ new Set([
   "",
   "off",
   "idle",
@@ -12619,7 +12714,7 @@ const wa = "bruno-home-overflow-indicator", Ot = /* @__PURE__ */ new Set([
   "unavailable",
   "none"
 ]);
-class Ko extends HTMLElement {
+class Jo extends HTMLElement {
   static getStubConfig() {
     return {};
   }
@@ -12671,8 +12766,8 @@ class Ko extends HTMLElement {
         continue;
       }
       if (e instanceof HTMLElement) {
-        const a = getComputedStyle(e);
-        if (["auto", "scroll", "overlay"].includes(a.overflowY) && e.scrollHeight > e.clientHeight + 1) return e;
+        const t = getComputedStyle(e);
+        if (["auto", "scroll", "overlay"].includes(t.overflowY) && e.scrollHeight > e.clientHeight + 1) return e;
         e = e.parentNode;
         continue;
       }
@@ -12703,21 +12798,21 @@ class Ko extends HTMLElement {
     const e = (this._alvoDeRolagem?.scrollTop ?? 0) > 6;
     if (e === this._rolou) return;
     this._rolou = e;
-    const a = this.shadowRoot?.querySelector(".indicator");
-    a && (a.classList.toggle("is-scrolled", e), a.setAttribute("aria-hidden", e ? "true" : "false"));
+    const t = this.shadowRoot?.querySelector(".indicator");
+    t && (t.classList.toggle("is-scrolled", e), t.setAttribute("aria-hidden", e ? "true" : "false"));
   }
   _entityIsRelevant(e) {
-    const a = e ? this._overflowHass?.states?.[e] : void 0;
-    if (!a) return !1;
-    const t = String(a.state || "").toLowerCase(), i = String(e).split(".")[0];
-    return i === "binary_sensor" || i === "light" || i === "switch" ? t === "on" : i === "media_player" ? ["playing", "paused", "buffering", "on"].includes(t) : !Ot.has(t);
+    const t = e ? this._overflowHass?.states?.[e] : void 0;
+    if (!t) return !1;
+    const a = String(t.state || "").toLowerCase(), i = String(e).split(".")[0];
+    return i === "binary_sensor" || i === "light" || i === "switch" ? a === "on" : i === "media_player" ? ["playing", "paused", "buffering", "on"].includes(a) : !Oa.has(a);
   }
   _overflowModel() {
-    const e = this._overflowConfig || { rooms: [], dynamic_entities: [] }, a = e.rooms.filter((i) => (Array.isArray(i?.entities) ? i.entities : []).some((n) => this._entityIsRelevant(n))).length, t = e.dynamic_entities.some((i) => this._entityIsRelevant(i));
-    return a > 0 ? {
+    const e = this._overflowConfig || { rooms: [], dynamic_entities: [] }, t = e.rooms.filter((i) => (Array.isArray(i?.entities) ? i.entities : []).some((n) => this._entityIsRelevant(n))).length, a = e.dynamic_entities.some((i) => this._entityIsRelevant(i));
+    return t > 0 ? {
       active: !0,
-      text: `atividade em ${a} ambiente${a === 1 ? "" : "s"} abaixo`
-    } : t ? { active: !0, text: "atividade adicional abaixo" } : { active: !1, text: "mais ambientes abaixo" };
+      text: `atividade em ${t} ambiente${t === 1 ? "" : "s"} abaixo`
+    } : a ? { active: !0, text: "atividade adicional abaixo" } : { active: !1, text: "mais ambientes abaixo" };
   }
   _renderOverflow() {
     if (!this.shadowRoot || !this._overflowConfig) return;
@@ -12796,21 +12891,21 @@ class Ko extends HTMLElement {
     `;
   }
 }
-customElements.get(wa) || customElements.define(wa, Ko);
+customElements.get(wt) || customElements.define(wt, Jo);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: ya,
+  type: yt,
   name: "Bruno Activity Column",
   preview: !1,
   description: "Home V2 dynamic activity area: bottom-anchored stack, max 2 per column, overflow to a second column."
 });
 window.customCards.push({
-  type: wa,
+  type: wt,
   name: "Bruno Home Overflow Indicator",
   preview: !1,
   description: "Mobile-only semantic continuation line between visible and scroll-only room rows."
 });
-const ka = "bruno-cameras-card", Ct = {
+const kt = "bruno-cameras-card", Ca = {
   name: "Cameras",
   active_entity: "input_select.bento_active_camera",
   cameras: [
@@ -12823,7 +12918,7 @@ const ka = "bruno-cameras-card", Ct = {
     { entity: "camera.qmi_camera_2", name: "Quarto Miguel", short_name: "QMiguel" },
     { entity: "camera.qma_camera_2", name: "Quarto Marina", short_name: "QMarina" }
   ]
-}, Xo = ["streaming", "recording", "idle", "on"], Qo = ["unavailable", "unknown", ""], Tt = 6500;
+}, en = ["streaming", "recording", "idle", "on"], tn = ["unavailable", "unknown", ""], Ta = 6500;
 class y extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -12833,8 +12928,8 @@ class y extends HTMLElement {
   }
   set hass(e) {
     this._hass = e;
-    const a = this._state(this._config?.active_entity)?.state;
-    this._localActiveCamera && a === this._localActiveCamera && (this._localActiveCamera = null), this.shadowRoot?.querySelector(".cameras-card") && this._renderedWithHass ? this._updateStateOnly() : this._safeRender(), this._startRefreshTimer();
+    const t = this._state(this._config?.active_entity)?.state;
+    this._localActiveCamera && t === this._localActiveCamera && (this._localActiveCamera = null), this.shadowRoot?.querySelector(".cameras-card") && this._renderedWithHass ? this._updateStateOnly() : this._safeRender(), this._startRefreshTimer();
   }
   connectedCallback() {
     this._startRefreshTimer();
@@ -12847,10 +12942,10 @@ class y extends HTMLElement {
   }
   _normalizeConfig(e) {
     return {
-      ...Ct,
+      ...Ca,
       ...e || {},
-      refresh_interval: Number(e?.refresh_interval) > 0 ? Number(e.refresh_interval) : Tt,
-      cameras: Array.isArray(e?.cameras) && e.cameras.length ? e.cameras : Ct.cameras
+      refresh_interval: Number(e?.refresh_interval) > 0 ? Number(e.refresh_interval) : Ta,
+      cameras: Array.isArray(e?.cameras) && e.cameras.length ? e.cameras : Ca.cameras
     };
   }
   _safeRender() {
@@ -12867,19 +12962,19 @@ class y extends HTMLElement {
         this._safeRender();
         return;
       }
-      const a = e.activeCamera, t = this.shadowRoot.querySelector(".live-count");
-      t && (t.innerHTML = `
+      const t = e.activeCamera, a = this.shadowRoot.querySelector(".live-count");
+      a && (a.innerHTML = `
           <span class="live-dot${e.onlineCount ? " is-online" : ""}"></span>
           ${e.onlineCount}/${e.totalCount} online
         `);
       const i = this.shadowRoot.querySelector(".title-sub");
-      i && (i.textContent = a?.name || "");
+      i && (i.textContent = t?.name || "");
       const r = this.shadowRoot.querySelector(".active-name");
-      r && (r.textContent = a?.name || "Camera");
+      r && (r.textContent = t?.name || "Camera");
       const n = this.shadowRoot.querySelector(".active-status");
       n && (n.innerHTML = `
-          <span class="status-dot${a?.online ? " is-online" : ""}" data-camera-status="${y._escapeAttr(a?.entity || "")}"></span>
-          ${y._escape(a?.status || "Indisponivel")}
+          <span class="status-dot${t?.online ? " is-online" : ""}" data-camera-status="${y._escapeAttr(t?.entity || "")}"></span>
+          ${y._escape(t?.status || "Indisponivel")}
         `), e.cameras.forEach((s) => {
         const l = s.entity === e.activeId;
         this.shadowRoot.querySelectorAll(`.thumb-button[data-camera-id="${y._escapeAttr(s.entity)}"]`).forEach((c) => c.classList.toggle("is-active", l)), this.shadowRoot.querySelectorAll(`.camera-menu-option[data-camera-id="${y._escapeAttr(s.entity)}"]`).forEach((c) => c.classList.toggle("is-active", l)), this.shadowRoot.querySelectorAll(`img[data-camera-entity="${y._escapeAttr(s.entity)}"]`).forEach((c) => {
@@ -12892,7 +12987,7 @@ class y extends HTMLElement {
   }
   _startRefreshTimer() {
     if (this._refreshTimer || !this._config || !this.isConnected) return;
-    const e = Math.max(4e3, Number(this._config.refresh_interval) || Tt);
+    const e = Math.max(4e3, Number(this._config.refresh_interval) || Ta);
     this._refreshTimer = globalThis.setInterval(() => this._refreshCameraImages(), e);
   }
   _stopRefreshTimer() {
@@ -12901,12 +12996,12 @@ class y extends HTMLElement {
   _refreshCameraImages() {
     if (!this.shadowRoot || !this._hass || !globalThis.Image) return;
     const e = Date.now();
-    this._refreshSeed = e, this.shadowRoot.querySelectorAll("img[data-camera-src-base]").forEach((a) => {
-      const t = a.dataset.cameraSrcBase;
-      if (!t) return;
-      const i = y._withCacheBust(t, e), r = new globalThis.Image();
+    this._refreshSeed = e, this.shadowRoot.querySelectorAll("img[data-camera-src-base]").forEach((t) => {
+      const a = t.dataset.cameraSrcBase;
+      if (!a) return;
+      const i = y._withCacheBust(a, e), r = new globalThis.Image();
       r.onload = () => {
-        a.src = i, a.dataset.hasLoaded = "true", a.classList.remove("is-hidden");
+        t.src = i, t.dataset.hasLoaded = "true", t.classList.remove("is-hidden");
       }, r.src = i;
     });
   }
@@ -12914,24 +13009,24 @@ class y extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _cameraState(e) {
-    const a = this._state(e.entity), t = a?.state || "", i = !a || Qo.includes(t), r = !i && Xo.includes(t);
+    const t = this._state(e.entity), a = t?.state || "", i = !t || tn.includes(a), r = !i && en.includes(a);
     this._lastCameraImages = this._lastCameraImages || {};
-    const n = a?.attributes?.entity_picture || "";
+    const n = t?.attributes?.entity_picture || "";
     n && (this._lastCameraImages[e.entity] = n);
     const s = n || this._lastCameraImages[e.entity] || "";
     return {
       ...e,
-      entityObj: a,
-      state: t,
+      entityObj: t,
+      state: a,
       image: s,
       imageUrl: y._withCacheBust(s, this._refreshSeed || Date.now()),
       unavailable: i,
       online: r,
-      status: y._statusLabel(t, i)
+      status: y._statusLabel(a, i)
     };
   }
   _model() {
-    const e = this._config.cameras.map((s) => this._cameraState(s)), a = this._state(this._config.active_entity)?.state, t = e[0]?.entity || "", i = this._localActiveCamera || (e.some((s) => s.entity === a) ? a : t), r = e.find((s) => s.entity === i) || e[0], n = e.filter((s) => s.online).length;
+    const e = this._config.cameras.map((s) => this._cameraState(s)), t = this._state(this._config.active_entity)?.state, a = e[0]?.entity || "", i = this._localActiveCamera || (e.some((s) => s.entity === t) ? t : a), r = e.find((s) => s.entity === i) || e[0], n = e.filter((s) => s.online).length;
     return {
       cameras: e,
       activeCamera: r,
@@ -12953,8 +13048,8 @@ class y extends HTMLElement {
       composed: !0
     }));
   }
-  _callService(e, a, t = {}) {
-    !this._hass || !e || !a || this._hass.callService(e, a, t);
+  _callService(e, t, a = {}) {
+    !this._hass || !e || !t || this._hass.callService(e, t, a);
   }
   _openCamerasSection() {
     this.dispatchEvent(new CustomEvent("ll-custom", {
@@ -12964,30 +13059,30 @@ class y extends HTMLElement {
     }));
   }
   _wireActions(e) {
-    const a = this.shadowRoot, t = a.querySelector(".preview-action");
-    t?.addEventListener("click", (i) => {
+    const t = this.shadowRoot, a = t.querySelector(".preview-action");
+    a?.addEventListener("click", (i) => {
       i.preventDefault(), i.stopPropagation(), this._openCamerasSection();
-    }), t?.addEventListener("dblclick", (i) => {
+    }), a?.addEventListener("dblclick", (i) => {
       i.preventDefault(), i.stopPropagation(), this._openCamerasSection();
-    }), t?.addEventListener("keydown", (i) => {
+    }), a?.addEventListener("keydown", (i) => {
       i.key !== "Enter" && i.key !== " " || (i.preventDefault(), this._openCamerasSection());
-    }), a.querySelectorAll(".thumb-button").forEach((i) => {
+    }), t.querySelectorAll(".thumb-button").forEach((i) => {
       const r = i.dataset.cameraId;
       i.addEventListener("click", (n) => {
         n.preventDefault(), n.stopPropagation(), this._selectCamera(r);
       }), i.addEventListener("keydown", (n) => {
         n.key !== "Enter" && n.key !== " " || (n.preventDefault(), this._selectCamera(r));
       });
-    }), a.querySelector('[data-action="camera-menu"]')?.addEventListener("click", (i) => {
+    }), t.querySelector('[data-action="camera-menu"]')?.addEventListener("click", (i) => {
       i.preventDefault(), i.stopPropagation(), this._cameraMenuOpen = !this._cameraMenuOpen, this._safeRender();
-    }), a.querySelectorAll(".camera-menu-option").forEach((i) => {
+    }), t.querySelectorAll(".camera-menu-option").forEach((i) => {
       const r = i.dataset.cameraId;
       i.addEventListener("click", (n) => {
         n.preventDefault(), n.stopPropagation(), this._selectCamera(r);
       }), i.addEventListener("keydown", (n) => {
         n.key !== "Enter" && n.key !== " " || (n.preventDefault(), this._selectCamera(r));
       });
-    }), a.querySelectorAll("img").forEach((i) => {
+    }), t.querySelectorAll("img").forEach((i) => {
       i.addEventListener("load", () => {
         i.dataset.hasLoaded = "true", i.classList.remove("is-hidden");
       }), i.addEventListener("error", () => {
@@ -12998,7 +13093,7 @@ class y extends HTMLElement {
   _render() {
     if (!this._config) return;
     this.shadowRoot || this.attachShadow({ mode: "open" });
-    const e = this._model(), a = e.activeCamera, t = this._config.variant === "single", i = t ? " is-single" : "", r = this._cameraMenuOpen ? " is-menu-open" : "", n = t && this._cameraMenuOpen ? `
+    const e = this._model(), t = e.activeCamera, a = this._config.variant === "single", i = a ? " is-single" : "", r = this._cameraMenuOpen ? " is-menu-open" : "", n = a && this._cameraMenuOpen ? `
         <div class="camera-menu" role="menu" aria-label="Selecionar camera">
           ${e.cameras.map((s) => y._menuOption(s, s.entity === e.activeId)).join("")}
         </div>
@@ -13638,7 +13733,7 @@ class y extends HTMLElement {
             <span class="header-icon" aria-hidden="true"><bruno-icon icon="mdi:cctv"></bruno-icon></span>
             <span class="title">
               <span class="title-main">${y._escape(this._config.name)}</span>
-              <span class="title-sub">${y._escape(a?.name || "")}</span>
+              <span class="title-sub">${y._escape(t?.name || "")}</span>
             </span>
           </div>
           <span class="header-actions">
@@ -13646,7 +13741,7 @@ class y extends HTMLElement {
               <span class="live-dot${e.onlineCount ? " is-online" : ""}"></span>
               ${e.onlineCount}/${e.totalCount} online
             </span>
-            ${t ? `
+            ${a ? `
               <button class="card-menu${this._cameraMenuOpen ? " is-open" : ""}" type="button" data-action="camera-menu" aria-label="Selecionar camera" aria-expanded="${this._cameraMenuOpen ? "true" : "false"}">
                 <bruno-icon icon="mdi:dots-vertical"></bruno-icon>
               </button>
@@ -13654,11 +13749,11 @@ class y extends HTMLElement {
           </span>
         </div>
 
-        <button class="preview-action" type="button" aria-label="${y._escape(a?.name || "Camera")}" tabindex="0">
-          ${y._preview(a)}
+        <button class="preview-action" type="button" aria-label="${y._escape(t?.name || "Camera")}" tabindex="0">
+          ${y._preview(t)}
         </button>
 
-        ${t ? n : `
+        ${a ? n : `
           <div class="thumb-shell" aria-label="Selecionar camera">
             <div class="thumb-strip">
               ${e.cameras.map((s) => y._thumbnail(s, s.entity === e.activeId)).join("")}
@@ -13709,17 +13804,17 @@ class y extends HTMLElement {
     `;
   }
   static _preview(e) {
-    const a = !!e?.image, t = e?.online ? " is-online" : "";
+    const t = !!e?.image, a = e?.online ? " is-online" : "";
     return `
-      <div class="media-frame${a ? " has-image" : ""}">
-        ${a ? `<img class="camera-image" src="${y._escapeAttr(e.imageUrl || e.image)}" data-camera-src-base="${y._escapeAttr(e.image)}" data-camera-entity="${y._escapeAttr(e.entity)}" alt="">` : ""}
+      <div class="media-frame${t ? " has-image" : ""}">
+        ${t ? `<img class="camera-image" src="${y._escapeAttr(e.imageUrl || e.image)}" data-camera-src-base="${y._escapeAttr(e.image)}" data-camera-entity="${y._escapeAttr(e.entity)}" alt="">` : ""}
         <div class="camera-placeholder" aria-hidden="true"></div>
         <div class="preview-scrim"></div>
         <div class="preview-meta">
           <span>
             <span class="active-name">${y._escape(e?.name || "Camera")}</span>
             <span class="active-status">
-              <span class="status-dot${t}" data-camera-status="${y._escapeAttr(e?.entity || "")}"></span>
+              <span class="status-dot${a}" data-camera-status="${y._escapeAttr(e?.entity || "")}"></span>
               ${y._escape(e?.status || "Indisponivel")}
             </span>
           </span>
@@ -13728,12 +13823,12 @@ class y extends HTMLElement {
       </div>
     `;
   }
-  static _thumbnail(e, a) {
-    const t = !!e.image, i = a ? " is-active" : "", r = e.online ? " is-online" : "";
+  static _thumbnail(e, t) {
+    const a = !!e.image, i = t ? " is-active" : "", r = e.online ? " is-online" : "";
     return `
       <button class="thumb-button${i}" type="button" data-camera-id="${y._escapeAttr(e.entity)}" aria-label="${y._escapeAttr(e.name)}">
-        <span class="thumb-media${t ? " has-image" : ""}">
-          ${t ? `<img src="${y._escapeAttr(e.imageUrl || e.image)}" data-camera-src-base="${y._escapeAttr(e.image)}" data-camera-entity="${y._escapeAttr(e.entity)}" alt="">` : ""}
+        <span class="thumb-media${a ? " has-image" : ""}">
+          ${a ? `<img src="${y._escapeAttr(e.imageUrl || e.image)}" data-camera-src-base="${y._escapeAttr(e.image)}" data-camera-entity="${y._escapeAttr(e.entity)}" alt="">` : ""}
           <span class="thumb-placeholder" aria-hidden="true"></span>
           <span class="thumb-overlay"></span>
           <span class="thumb-label">
@@ -13744,23 +13839,23 @@ class y extends HTMLElement {
       </button>
     `;
   }
-  static _menuOption(e, a) {
-    const t = a ? " is-active" : "", i = e.online ? " is-online" : "";
+  static _menuOption(e, t) {
+    const a = t ? " is-active" : "", i = e.online ? " is-online" : "";
     return `
-      <button class="camera-menu-option${t}" type="button" role="menuitem" data-camera-id="${y._escapeAttr(e.entity)}" aria-label="${y._escapeAttr(e.name)}">
+      <button class="camera-menu-option${a}" type="button" role="menuitem" data-camera-id="${y._escapeAttr(e.entity)}" aria-label="${y._escapeAttr(e.name)}">
         <bruno-icon icon="mdi:cctv"></bruno-icon>
         <span>${y._escape(e.name || e.short_name || "Camera")}</span>
         <span class="status-dot${i}" data-camera-status="${y._escapeAttr(e.entity)}"></span>
       </button>
     `;
   }
-  static _statusLabel(e, a) {
-    return a ? "Indisponivel" : e === "streaming" ? "Ao vivo" : e === "recording" ? "Gravando" : e === "idle" || e === "on" ? "Online" : e === "off" || e === "standby" ? "Em espera" : e || "Online";
+  static _statusLabel(e, t) {
+    return t ? "Indisponivel" : e === "streaming" ? "Ao vivo" : e === "recording" ? "Gravando" : e === "idle" || e === "on" ? "Online" : e === "off" || e === "standby" ? "Em espera" : e || "Online";
   }
-  static _withCacheBust(e, a) {
+  static _withCacheBust(e, t) {
     if (!e) return "";
-    const t = e.includes("?") ? "&" : "?";
-    return `${e}${t}bruno_refresh=${encodeURIComponent(a)}`;
+    const a = e.includes("?") ? "&" : "?";
+    return `${e}${a}bruno_refresh=${encodeURIComponent(t)}`;
   }
   static _escape(e) {
     return String(e ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -13769,28 +13864,28 @@ class y extends HTMLElement {
     return y._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(ka) || customElements.define(ka, y);
+customElements.get(kt) || customElements.define(kt, y);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: ka,
+  type: kt,
   name: "Bruno Cameras Card",
   preview: !1,
   description: "Isolated Bento cameras card with Home Assistant camera snapshots and Bruno liquid glass visuals."
 });
-const Sa = "bruno-roborock-card", Jo = "20260606-main-view-4", en = {
+const St = "bruno-roborock-card", an = "20260606-main-view-4", rn = {
   vacuum: "vacuum.roborock_s7",
   room: "sensor.roborock_s7_comodo_atual",
   battery: ["sensor.roborock_s7_bateria", "sensor.roborock_s7_battery"],
   area: ["sensor.roborock_s7_area_limpa", "sensor.roborock_s7_cleaning_area"],
   cleaning_time: ["sensor.roborock_s7_tempo_de_limpeza", "sensor.roborock_s7_cleaning_time"]
-}, an = ["cleaning", "moving", "returning", "segment_cleaning"], tn = ["unknown", "unavailable", "none", ""];
+}, on = ["cleaning", "moving", "returning", "segment_cleaning"], nn = ["unknown", "unavailable", "none", ""];
 class I extends HTMLElement {
   static getStubConfig() {
     return {};
   }
   setConfig(e) {
-    const a = {
-      ...en,
+    const t = {
+      ...rn,
       ...e?.entities || {}
     };
     this._config = {
@@ -13798,7 +13893,7 @@ class I extends HTMLElement {
       title: "Roborock S7",
       image: "/local/images/roborock_S7.png?v=20260702-all-images-1",
       ...e,
-      entities: a
+      entities: t
     }, this._render();
   }
   set hass(e) {
@@ -13811,25 +13906,25 @@ class I extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _isInvalid(e) {
-    return e == null || tn.includes(String(e).toLowerCase());
+    return e == null || nn.includes(String(e).toLowerCase());
   }
   _entityList(e) {
     return Array.isArray(e) ? e : e ? [e] : [];
   }
   _firstValid(e) {
-    for (const a of this._entityList(e)) {
-      const t = this._state(a);
-      if (t && !this._isInvalid(t.state)) return t.state;
+    for (const t of this._entityList(e)) {
+      const a = this._state(t);
+      if (a && !this._isInvalid(a.state)) return a.state;
     }
     return null;
   }
-  _number(e, a = "--") {
-    if (this._isInvalid(e)) return a;
-    const t = Number(e);
-    return Number.isFinite(t) ? t : a;
+  _number(e, t = "--") {
+    if (this._isInvalid(e)) return t;
+    const a = Number(e);
+    return Number.isFinite(a) ? a : t;
   }
   _model() {
-    const e = this._config.entities, a = this._state(e.vacuum), t = a?.state || "unknown", i = an.includes(t), r = {
+    const e = this._config.entities, t = this._state(e.vacuum), a = t?.state || "unknown", i = on.includes(a), r = {
       cleaning: "Limpando",
       returning: "Retornando",
       docked: "Na base",
@@ -13846,36 +13941,36 @@ class I extends HTMLElement {
       moving: "Reposicionando",
       segment_cleaning: "Limpeza por comodo"
     }, s = this._state(e.room)?.state, l = this._isInvalid(s) ? "--" : s;
-    let c = a?.attributes?.battery_level;
+    let c = t?.attributes?.battery_level;
     this._isInvalid(c) && (c = this._firstValid(e.battery)), c = this._number(c);
-    let p = a?.attributes?.cleaning_area;
+    let p = t?.attributes?.cleaning_area;
     this._isInvalid(p) && (p = this._firstValid(e.area)), p = this._number(p);
-    let d = a?.attributes?.cleaning_time;
+    let d = t?.attributes?.cleaning_time;
     return this._isInvalid(d) && (d = this._firstValid(e.cleaning_time)), d = this._number(d), typeof d == "number" && d > 300 && (d /= 60), {
       active: i,
-      cleaning: ["cleaning", "segment_cleaning"].includes(t),
-      state: t,
-      status: r[t] || t || "Indisponivel",
-      detail: n[t] || "Aguardando status",
+      cleaning: ["cleaning", "segment_cleaning"].includes(a),
+      state: a,
+      status: r[a] || a || "Indisponivel",
+      detail: n[a] || "Aguardando status",
       room: l,
       battery: typeof c == "number" ? `${Math.round(c)}%` : "--",
       area: typeof p == "number" ? `${Number(p).toFixed(1).replace(".0", "")}m²` : "--m²",
       time: typeof d == "number" ? `${Number(d).toFixed(1).replace(".0", "")} min` : "-- min",
-      stateMetric: t === "docked" ? "Idle" : this._isInvalid(t) ? "Indisp." : r[t] || t || "--"
+      stateMetric: a === "docked" ? "Idle" : this._isInvalid(a) ? "Indisp." : r[a] || a || "--"
     };
   }
-  _callService(e, a = {}, t = {}) {
+  _callService(e, t = {}, a = {}) {
     if (!this._hass || !e) return;
     const [i, r] = e.split(".");
     if (!i || !r) return;
-    const n = { ...a };
-    t?.entity_id != null && n.entity_id == null && (n.entity_id = t.entity_id), this._hass.callService(i, r, n, t);
+    const n = { ...t };
+    a?.entity_id != null && n.entity_id == null && (n.entity_id = a.entity_id), this._hass.callService(i, r, n, a);
   }
   _runVacuumAction(e) {
-    const a = e?.dataset?.service;
-    if (!a) return;
-    const t = Date.now(), i = Number(e.dataset.lastRunAt || 0);
-    t - i < 650 || (e.dataset.lastRunAt = String(t), globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._callService(a, {}, { entity_id: this._config.entities.vacuum }));
+    const t = e?.dataset?.service;
+    if (!t) return;
+    const a = Date.now(), i = Number(e.dataset.lastRunAt || 0);
+    a - i < 650 || (e.dataset.lastRunAt = String(a), globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._callService(t, {}, { entity_id: this._config.entities.vacuum }));
   }
   _openPopup() {
     const e = this._config.entities;
@@ -13903,41 +13998,41 @@ class I extends HTMLElement {
   }
   _wireActions() {
     const e = this.shadowRoot.querySelector(".roborock-card");
-    e?.addEventListener("click", (t) => {
-      t.target?.closest?.("[data-service]") || this._openPopup();
-    }), e?.addEventListener("keydown", (t) => {
-      t.key !== "Enter" && t.key !== " " || (t.preventDefault(), this._openPopup());
-    }), this.shadowRoot.querySelectorAll("[data-service]").forEach((t) => {
+    e?.addEventListener("click", (a) => {
+      a.target?.closest?.("[data-service]") || this._openPopup();
+    }), e?.addEventListener("keydown", (a) => {
+      a.key !== "Enter" && a.key !== " " || (a.preventDefault(), this._openPopup());
+    }), this.shadowRoot.querySelectorAll("[data-service]").forEach((a) => {
       let i = 0;
       const r = (n) => {
         n.preventDefault(), n.stopPropagation();
       };
-      t.addEventListener("pointerdown", (n) => {
-        r(n), t.classList.add("is-pressed"), t.setPointerCapture?.(n.pointerId);
-      }), t.addEventListener("pointerup", (n) => {
-        r(n), t.classList.remove("is-pressed"), t.releasePointerCapture?.(n.pointerId), i = Date.now(), this._runVacuumAction(t);
-      }), t.addEventListener("pointercancel", () => {
-        t.classList.remove("is-pressed");
-      }), t.addEventListener("pointerleave", () => {
-        t.classList.remove("is-pressed");
-      }), t.addEventListener("click", (n) => {
-        r(n), !(Date.now() - i < 420) && this._runVacuumAction(t);
-      }), t.addEventListener("keydown", (n) => {
-        n.key !== "Enter" && n.key !== " " || (r(n), this._runVacuumAction(t));
+      a.addEventListener("pointerdown", (n) => {
+        r(n), a.classList.add("is-pressed"), a.setPointerCapture?.(n.pointerId);
+      }), a.addEventListener("pointerup", (n) => {
+        r(n), a.classList.remove("is-pressed"), a.releasePointerCapture?.(n.pointerId), i = Date.now(), this._runVacuumAction(a);
+      }), a.addEventListener("pointercancel", () => {
+        a.classList.remove("is-pressed");
+      }), a.addEventListener("pointerleave", () => {
+        a.classList.remove("is-pressed");
+      }), a.addEventListener("click", (n) => {
+        r(n), !(Date.now() - i < 420) && this._runVacuumAction(a);
+      }), a.addEventListener("keydown", (n) => {
+        n.key !== "Enter" && n.key !== " " || (r(n), this._runVacuumAction(a));
       });
     });
-    const a = this.shadowRoot.querySelector(".robot img");
-    a?.addEventListener("error", () => {
-      a.closest(".robot")?.classList.add("is-fallback"), a.setAttribute("hidden", "");
+    const t = this.shadowRoot.querySelector(".robot img");
+    t?.addEventListener("error", () => {
+      t.closest(".robot")?.classList.add("is-fallback"), t.setAttribute("hidden", "");
     }, { once: !0 });
   }
   _assetUrl(e) {
-    return e ? `${e}${String(e).includes("?") ? "&" : "?"}v=${Jo}` : "";
+    return e ? `${e}${String(e).includes("?") ? "&" : "?"}v=${an}` : "";
   }
   _render() {
     if (!this._config) return;
     this.shadowRoot || this.attachShadow({ mode: "open" });
-    const e = this._model(), a = e.active ? " is-active" : "", t = e.cleaning ? " is-cleaning" : "", i = this._config.variant === "compact" ? " is-compact" : "";
+    const e = this._model(), t = e.active ? " is-active" : "", a = e.cleaning ? " is-cleaning" : "", i = this._config.variant === "compact" ? " is-compact" : "";
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -14545,7 +14640,7 @@ class I extends HTMLElement {
         }
       </style>
 
-      <div class="roborock-card${a}${t}${i}" role="button" tabindex="0" aria-label="${I._escape(this._config.title)}">
+      <div class="roborock-card${t}${a}${i}" role="button" tabindex="0" aria-label="${I._escape(this._config.title)}">
         <div class="header">
           <span class="header-copy">
             <span class="header-icon" aria-hidden="true"><bruno-icon icon="mdi:robot-vacuum"></bruno-icon></span>
@@ -14582,20 +14677,20 @@ class I extends HTMLElement {
       </div>
     `, this._wireActions();
   }
-  _stat(e, a, t) {
+  _stat(e, t, a) {
     return `
       <div class="stat">
         <bruno-icon icon="${e}"></bruno-icon>
-        <span class="stat-value">${I._escape(a)}</span>
-        <span class="stat-label">${I._escape(t)}</span>
+        <span class="stat-value">${I._escape(t)}</span>
+        <span class="stat-label">${I._escape(a)}</span>
       </div>
     `;
   }
-  _action(e, a, t, i = !1) {
+  _action(e, t, a, i = !1) {
     return `
-      <button class="action${i ? " primary" : ""}" type="button" data-service="${e}" aria-label="${I._escapeAttr(t)}">
-        <bruno-icon icon="${a}"></bruno-icon>
-        <span>${I._escape(t)}</span>
+      <button class="action${i ? " primary" : ""}" type="button" data-service="${e}" aria-label="${I._escapeAttr(a)}">
+        <bruno-icon icon="${t}"></bruno-icon>
+        <span>${I._escape(a)}</span>
       </button>
     `;
   }
@@ -14606,15 +14701,15 @@ class I extends HTMLElement {
     return I._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(Sa) || customElements.define(Sa, I);
+customElements.get(St) || customElements.define(St, I);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: Sa,
+  type: St,
   name: "Bruno Roborock Card",
   preview: !1,
   description: "Isolated Bento Roborock card with preserved vacuum actions and Bruno liquid glass visuals."
 });
-const Aa = "bruno-home-camera-card", sa = {
+const At = "bruno-home-camera-card", st = {
   name: "Monitoramento",
   active_entity: "input_select.bento_active_camera",
   refresh_interval: 6500,
@@ -14630,25 +14725,25 @@ const Aa = "bruno-home-camera-card", sa = {
     { entity: "camera.qmi_camera_profile_1", name: "Quarto Miguel", short_name: "Q. Miguel" },
     { entity: "camera.qma_camera_profile_1", name: "Quarto Marina", short_name: "Q. Marina" }
   ]
-}, rn = ["streaming", "recording", "idle", "on"], on = ["unavailable", "unknown", ""], nn = 3e4;
+}, sn = ["streaming", "recording", "idle", "on"], ln = ["unavailable", "unknown", ""], cn = 3e4;
 class O extends HTMLElement {
   static getStubConfig() {
     return {};
   }
   setConfig(e) {
     this._config = {
-      ...sa,
+      ...st,
       ...e || {},
-      cameras: Array.isArray(e?.cameras) && e.cameras.length ? e.cameras : sa.cameras,
-      refresh_interval: Number(e?.refresh_interval) > 0 ? Number(e.refresh_interval) : sa.refresh_interval
-    }, this._refreshSeed = this._refreshSeed || Date.now(), this._lastCameraImages = this._lastCameraImages || {}, this._cameraBaseUrls = this._cameraBaseUrls || {}, this._loadedCameraUrls = this._loadedCameraUrls || {}, this._cameraLoads = this._cameraLoads || {}, this._liveState = this._liveState || "idle", this._liveBlockedEntity = this._liveBlockedEntity || "", this._liveLoadToken = this._liveLoadToken || 0, this._boundDialogClosed = this._boundDialogClosed || ((a) => this._handleDialogClosed(a)), this._menuOpen = !1, this._render(), this._startRefreshTimer();
+      cameras: Array.isArray(e?.cameras) && e.cameras.length ? e.cameras : st.cameras,
+      refresh_interval: Number(e?.refresh_interval) > 0 ? Number(e.refresh_interval) : st.refresh_interval
+    }, this._refreshSeed = this._refreshSeed || Date.now(), this._lastCameraImages = this._lastCameraImages || {}, this._cameraBaseUrls = this._cameraBaseUrls || {}, this._loadedCameraUrls = this._loadedCameraUrls || {}, this._cameraLoads = this._cameraLoads || {}, this._liveState = this._liveState || "idle", this._liveBlockedEntity = this._liveBlockedEntity || "", this._liveLoadToken = this._liveLoadToken || 0, this._boundDialogClosed = this._boundDialogClosed || ((t) => this._handleDialogClosed(t)), this._menuOpen = !1, this._render(), this._startRefreshTimer();
   }
   set hass(e) {
     this._hass = e;
-    const a = this._state(this._config?.active_entity)?.state;
-    this._localActiveCamera && a === this._localActiveCamera && (this._localActiveCamera = "");
-    const t = this._model(), i = this._renderSignature(t);
-    !this.shadowRoot || this._lastRenderSignature !== i ? this._render() : this._syncDynamic(t), this._startRefreshTimer();
+    const t = this._state(this._config?.active_entity)?.state;
+    this._localActiveCamera && t === this._localActiveCamera && (this._localActiveCamera = "");
+    const a = this._model(), i = this._renderSignature(a);
+    !this.shadowRoot || this._lastRenderSignature !== i ? this._render() : this._syncDynamic(a), this._startRefreshTimer();
   }
   connectedCallback() {
     this._liveState = "idle", this._liveBlockedEntity = "", this._listeningDialogClosed || (globalThis.addEventListener?.("dialog-closed", this._boundDialogClosed, !0), this._listeningDialogClosed = !0), this._startRefreshTimer(), this._mountLiveFeed(this._model().activeCamera);
@@ -14663,16 +14758,16 @@ class O extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _isUnavailable(e) {
-    return !e || on.includes(String(e.state || "").toLowerCase());
+    return !e || ln.includes(String(e.state || "").toLowerCase());
   }
   _cameraState(e) {
-    const a = this._state(e.entity), t = String(a?.state || "").toLowerCase(), i = this._isUnavailable(a), r = !i && rn.includes(t), n = a?.attributes?.entity_picture || "";
+    const t = this._state(e.entity), a = String(t?.state || "").toLowerCase(), i = this._isUnavailable(t), r = !i && sn.includes(a), n = t?.attributes?.entity_picture || "";
     n && (this._lastCameraImages[e.entity] = n);
     const s = n || this._lastCameraImages[e.entity] || `/api/camera_proxy/${e.entity}`;
     return this._cameraBaseUrls[e.entity] !== s && (this._cameraBaseUrls[e.entity] = s, delete this._loadedCameraUrls[e.entity]), {
       ...e,
-      entityObj: a,
-      state: t,
+      entityObj: t,
+      state: a,
       unavailable: i,
       online: r,
       image: s,
@@ -14681,7 +14776,7 @@ class O extends HTMLElement {
     };
   }
   _model() {
-    const e = (this._config.cameras || []).map((s) => this._cameraState(s)), a = this._state(this._config.active_entity)?.state, t = e[0]?.entity || "", i = this._localActiveCamera || (e.some((s) => s.entity === a) ? a : t), r = e.find((s) => s.entity === i) || e[0], n = e.filter((s) => s.online).length;
+    const e = (this._config.cameras || []).map((s) => this._cameraState(s)), t = this._state(this._config.active_entity)?.state, a = e[0]?.entity || "", i = this._localActiveCamera || (e.some((s) => s.entity === t) ? t : a), r = e.find((s) => s.entity === i) || e[0], n = e.filter((s) => s.online).length;
     return {
       cameras: e,
       activeCamera: r,
@@ -14691,8 +14786,8 @@ class O extends HTMLElement {
     };
   }
   _renderSignature(e) {
-    const a = (e?.cameras || []).map((t) => `${t.unavailable ? "u" : "a"}${t.online ? "1" : "0"}`).join("");
-    return `${e?.activeId || ""}|${a}`;
+    const t = (e?.cameras || []).map((a) => `${a.unavailable ? "u" : "a"}${a.online ? "1" : "0"}`).join("");
+    return `${e?.activeId || ""}|${t}`;
   }
   _selectCamera(e) {
     e && (this._liveLoadToken++, this._liveState = "idle", this._liveBlockedEntity = "", this._localActiveCamera = e, this._menuOpen = !1, this._refreshSeed = Date.now(), this._render(), this._config.active_entity && this._hass?.callService("input_select", "select_option", {
@@ -14709,8 +14804,8 @@ class O extends HTMLElement {
   }
   _handleDialogClosed(e) {
     if (e?.detail?.dialog !== "ha-more-info-dialog" || this._liveState !== "handed-off") return;
-    const a = this._model()?.activeCamera?.entity || "";
-    this._liveState = "resuming", globalThis.BrunoCameraLive?.marcar?.(a, "more-info fechado; retomando"), this._liveResumeTimer && globalThis.clearTimeout(this._liveResumeTimer), this._liveResumeTimer = globalThis.setTimeout(() => {
+    const t = this._model()?.activeCamera?.entity || "";
+    this._liveState = "resuming", globalThis.BrunoCameraLive?.marcar?.(t, "more-info fechado; retomando"), this._liveResumeTimer && globalThis.clearTimeout(this._liveResumeTimer), this._liveResumeTimer = globalThis.setTimeout(() => {
       this._liveResumeTimer = null, !(!this.isConnected || this._liveState !== "resuming") && (this._liveState = "idle", this._liveBlockedEntity = "", this._mountLiveFeed(this._model().activeCamera));
     }, 700);
   }
@@ -14720,21 +14815,21 @@ class O extends HTMLElement {
    * os contextos do HA e so depois atribui entityid.
    */
   _mountLiveFeed(e) {
-    const a = e?.entity || "", t = a ? this.shadowRoot?.querySelector(`[data-camera-live="${a}"]`) : null;
-    if (this._liveState === "fallback" && this._liveBlockedEntity !== a && (this._liveState = "idle", this._liveBlockedEntity = ""), !this.isConnected || !t || e?.unavailable || ["loading-player", "handed-off", "resuming", "fallback"].includes(this._liveState)) {
+    const t = e?.entity || "", a = t ? this.shadowRoot?.querySelector(`[data-camera-live="${t}"]`) : null;
+    if (this._liveState === "fallback" && this._liveBlockedEntity !== t && (this._liveState = "idle", this._liveBlockedEntity = ""), !this.isConnected || !a || e?.unavailable || ["loading-player", "handed-off", "resuming", "fallback"].includes(this._liveState)) {
       this._stopLiveFeed();
       return;
     }
-    if (!this._liveEl || this._liveEntity !== a) {
+    if (!this._liveEl || this._liveEntity !== t) {
       if (this._stopLiveFeed(), !globalThis.customElements?.get("ha-web-rtc-player")) {
         this._liveState = "loading-player";
         const r = ++this._liveLoadToken, n = globalThis.BrunoCameraLive?.garantirPlayer;
         if (typeof n != "function") {
-          this._liveState = "fallback", this._liveBlockedEntity = a;
+          this._liveState = "fallback", this._liveBlockedEntity = t;
           return;
         }
-        Promise.resolve(n(a, this._hass)).then((s) => {
-          !this.isConnected || r !== this._liveLoadToken || (this._liveState = s ? "idle" : "fallback", this._liveBlockedEntity = s ? "" : a, this._mountLiveFeed(this._model().activeCamera));
+        Promise.resolve(n(t, this._hass)).then((s) => {
+          !this.isConnected || r !== this._liveLoadToken || (this._liveState = s ? "idle" : "fallback", this._liveBlockedEntity = s ? "" : t, this._mountLiveFeed(this._model().activeCamera));
         });
         return;
       }
@@ -14745,30 +14840,30 @@ class O extends HTMLElement {
       } catch {
       }
       this._liveLoadHandler = () => this._markLiveReady(), this._liveStreamsHandler = (r) => {
-        r?.detail?.hasVideo === !1 && this._failLiveFeed(a, "sem video");
-      }, i.addEventListener("load", this._liveLoadHandler), i.addEventListener("streams", this._liveStreamsHandler), this._liveEl = i, this._liveEntity = a, t.appendChild(i), this._startLivePlayerAfterContext(i, a);
+        r?.detail?.hasVideo === !1 && this._failLiveFeed(t, "sem video");
+      }, i.addEventListener("load", this._liveLoadHandler), i.addEventListener("streams", this._liveStreamsHandler), this._liveEl = i, this._liveEntity = t, a.appendChild(i), this._startLivePlayerAfterContext(i, t);
       return;
     }
-    this._liveEl.parentElement !== t && t.appendChild(this._liveEl), this._liveEl.entityid !== a && (this._liveEl.entityid = a);
+    this._liveEl.parentElement !== a && a.appendChild(this._liveEl), this._liveEl.entityid !== t && (this._liveEl.entityid = t);
   }
-  _startLivePlayerAfterContext(e, a) {
+  _startLivePlayerAfterContext(e, t) {
     Promise.resolve(e.updateComplete).then(() => {
-      this._liveEl !== e || this._liveEntity !== a || !e.isConnected || (this._liveStartedAt = globalThis.performance?.now?.() || Date.now(), e.entityid = a, globalThis.BrunoCameraLive?.marcar?.(a, "entityid atribuido"), this._liveTimer = globalThis.setTimeout(() => {
-        this._liveEl === e && this._liveEntity === a && this._liveReady !== a && this._failLiveFeed(a, "prazo");
-      }, nn));
+      this._liveEl !== e || this._liveEntity !== t || !e.isConnected || (this._liveStartedAt = globalThis.performance?.now?.() || Date.now(), e.entityid = t, globalThis.BrunoCameraLive?.marcar?.(t, "entityid atribuido"), this._liveTimer = globalThis.setTimeout(() => {
+        this._liveEl === e && this._liveEntity === t && this._liveReady !== t && this._failLiveFeed(t, "prazo");
+      }, cn));
     }).catch(() => {
-      this._liveEl === e && this._liveEntity === a && this._failLiveFeed(a, "contexto");
+      this._liveEl === e && this._liveEntity === t && this._failLiveFeed(t, "contexto");
     });
   }
   _markLiveReady() {
-    const e = this._liveEl, a = this._liveEntity, t = e?.shadowRoot?.querySelector("video");
-    if (!(!e || !a || !t || t.readyState < 2 || this._liveReady === a)) {
-      if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(t)) {
-        if (this._liveGreenMarked !== a) {
-          this._liveGreenMarked = a;
+    const e = this._liveEl, t = this._liveEntity, a = e?.shadowRoot?.querySelector("video");
+    if (!(!e || !t || !a || a.readyState < 2 || this._liveReady === t)) {
+      if (globalThis.BrunoCameraLive?.pareceQuadroVerde?.(a)) {
+        if (this._liveGreenMarked !== t) {
+          this._liveGreenMarked = t;
           const i = globalThis.performance?.now?.() || Date.now();
           globalThis.BrunoCameraLive?.marcar?.(
-            a,
+            t,
             "quadro verde rejeitado",
             i - (this._liveStartedAt || i),
             !1
@@ -14779,16 +14874,16 @@ class O extends HTMLElement {
         }, 700);
         return;
       }
-      this._liveReady = a, this._liveState = "live", this._liveGreenTimer && globalThis.clearTimeout(this._liveGreenTimer), this._liveGreenTimer = null, e.classList.add("is-ready"), this._liveTimer && globalThis.clearTimeout(this._liveTimer), this._liveTimer = null;
+      this._liveReady = t, this._liveState = "live", this._liveGreenTimer && globalThis.clearTimeout(this._liveGreenTimer), this._liveGreenTimer = null, e.classList.add("is-ready"), this._liveTimer && globalThis.clearTimeout(this._liveTimer), this._liveTimer = null;
     }
   }
-  _failLiveFeed(e, a = "falha") {
+  _failLiveFeed(e, t = "falha") {
     if (!e || e !== this._liveEntity) return;
-    const t = globalThis.performance?.now?.() || Date.now();
+    const a = globalThis.performance?.now?.() || Date.now();
     globalThis.BrunoCameraLive?.marcar?.(
       e,
-      a,
-      t - (this._liveStartedAt || t),
+      t,
+      a - (this._liveStartedAt || a),
       !1
     ), this._liveState = "fallback", this._liveBlockedEntity = e, this._stopLiveFeed(), this._refreshCameraImages();
   }
@@ -14808,16 +14903,16 @@ class O extends HTMLElement {
   _refreshCameraImages() {
     if (!this.shadowRoot || !this._hass || !globalThis.Image) return;
     const e = Date.now();
-    this._refreshSeed = e, this.shadowRoot.querySelectorAll("img[data-camera-src-base]").forEach((a) => {
-      const t = a.dataset.cameraSrcBase, i = a.dataset.cameraEntity;
-      if (!t || !i || this._liveReady === i || this._cameraLoads[i]) return;
-      const r = O._withCacheBust(t, e), n = new globalThis.Image();
+    this._refreshSeed = e, this.shadowRoot.querySelectorAll("img[data-camera-src-base]").forEach((t) => {
+      const a = t.dataset.cameraSrcBase, i = t.dataset.cameraEntity;
+      if (!a || !i || this._liveReady === i || this._cameraLoads[i]) return;
+      const r = O._withCacheBust(a, e), n = new globalThis.Image();
       this._cameraLoads[i] = n, n.onload = () => {
         if (delete this._cameraLoads[i], globalThis.BrunoCameraLive?.pareceQuadroVerde?.(n)) {
           globalThis.BrunoCameraLive?.marcar?.(i, "snapshot verde rejeitado", 0, !1);
           return;
         }
-        this._loadedCameraUrls[i] = r, !(!a.isConnected || a.dataset.cameraEntity !== i) && (a.src = r, a.dataset.hasLoaded = "true", a.classList.remove("is-hidden"));
+        this._loadedCameraUrls[i] = r, !(!t.isConnected || t.dataset.cameraEntity !== i) && (t.src = r, t.dataset.hasLoaded = "true", t.classList.remove("is-hidden"));
       }, n.onerror = () => {
         delete this._cameraLoads[i];
       }, n.src = r;
@@ -14825,32 +14920,32 @@ class O extends HTMLElement {
   }
   _syncDynamic(e = this._model()) {
     if (!this.shadowRoot || !e?.activeCamera) return;
-    const a = this.shadowRoot.querySelector(".online-chip");
-    if (a) {
-      a.classList.toggle("is-online", e.onlineCount > 0);
-      const r = a.querySelector(".online-count");
+    const t = this.shadowRoot.querySelector(".online-chip");
+    if (t) {
+      t.classList.toggle("is-online", e.onlineCount > 0);
+      const r = t.querySelector(".online-count");
       r && (r.textContent = `${e.onlineCount}/${e.totalCount || 0} online`);
     }
-    const t = this.shadowRoot.querySelector(".camera-row-copy span");
-    t && (t.lastChild.textContent = e.activeCamera.status || "Online", t.querySelector(".live-dot")?.classList.toggle("is-muted", !e.activeCamera.online));
+    const a = this.shadowRoot.querySelector(".camera-row-copy span");
+    a && (a.lastChild.textContent = e.activeCamera.status || "Online", a.querySelector(".live-dot")?.classList.toggle("is-muted", !e.activeCamera.online));
     const i = this.shadowRoot.querySelector("img[data-camera-entity]");
     i && e.activeCamera.image && i.dataset.cameraSrcBase !== e.activeCamera.image && (i.dataset.cameraSrcBase = e.activeCamera.image, this._refreshCameraImages()), this._mountLiveFeed(e.activeCamera);
   }
   _wireActions(e) {
-    const a = this.shadowRoot;
-    a.querySelector(".camera-main")?.addEventListener("click", (t) => {
-      t.preventDefault(), t.stopPropagation(), this._openMoreInfo(e);
-    }), a.querySelector('[data-action="camera-menu"]')?.addEventListener("click", (t) => {
-      t.preventDefault(), t.stopPropagation(), this._menuOpen = !this._menuOpen, this._render();
-    }), a.querySelectorAll("[data-camera-id]").forEach((t) => {
-      t.addEventListener("click", (i) => {
-        i.preventDefault(), i.stopPropagation(), this._selectCamera(t.dataset.cameraId);
+    const t = this.shadowRoot;
+    t.querySelector(".camera-main")?.addEventListener("click", (a) => {
+      a.preventDefault(), a.stopPropagation(), this._openMoreInfo(e);
+    }), t.querySelector('[data-action="camera-menu"]')?.addEventListener("click", (a) => {
+      a.preventDefault(), a.stopPropagation(), this._menuOpen = !this._menuOpen, this._render();
+    }), t.querySelectorAll("[data-camera-id]").forEach((a) => {
+      a.addEventListener("click", (i) => {
+        i.preventDefault(), i.stopPropagation(), this._selectCamera(a.dataset.cameraId);
       });
-    }), a.querySelectorAll("img[data-camera-src-base]").forEach((t) => {
-      t.addEventListener("load", () => {
-        t.dataset.hasLoaded = "true", t.classList.remove("is-hidden");
-      }), t.addEventListener("error", () => {
-        t.dataset.hasLoaded !== "true" && t.classList.add("is-hidden");
+    }), t.querySelectorAll("img[data-camera-src-base]").forEach((a) => {
+      a.addEventListener("load", () => {
+        a.dataset.hasLoaded = "true", a.classList.remove("is-hidden");
+      }), a.addEventListener("error", () => {
+        a.dataset.hasLoaded !== "true" && a.classList.add("is-hidden");
       });
     });
   }
@@ -14861,24 +14956,24 @@ class O extends HTMLElement {
           <div class="camera-placeholder" aria-hidden="true"></div>
         </div>
       `;
-    const a = e?.imageUrl || "", t = e?.image || "";
+    const t = e?.imageUrl || "", a = e?.image || "";
     return `
       <div class="camera-row-image">
         <div class="camera-live-slot" data-camera-live="${O._escapeAttr(e.entity)}" aria-hidden="true"></div>
-        ${a ? `<img src="${O._escapeAttr(a)}" data-camera-src-base="${O._escapeAttr(t)}" data-camera-entity="${O._escapeAttr(e.entity)}" alt="">` : ""}
+        ${t ? `<img src="${O._escapeAttr(t)}" data-camera-src-base="${O._escapeAttr(a)}" data-camera-entity="${O._escapeAttr(e.entity)}" alt="">` : ""}
         <div class="camera-placeholder" aria-hidden="true"></div>
       </div>
     `;
   }
   _renderCameraFeed(e) {
-    const a = e?.short_name || e?.name || "Camera", t = !e || e.unavailable, i = e?.online ? "" : " is-muted", r = e?.status || "Online";
+    const t = e?.short_name || e?.name || "Camera", a = !e || e.unavailable, i = e?.online ? "" : " is-muted", r = e?.status || "Online";
     return `
       <button class="${[
       "camera-main",
       "camera-feed",
-      t ? "is-unavailable" : ""
-    ].filter(Boolean).join(" ")}" type="button" aria-label="Abrir camera ${O._escapeAttr(a)}">
-        ${t ? `
+      a ? "is-unavailable" : ""
+    ].filter(Boolean).join(" ")}" type="button" aria-label="Abrir camera ${O._escapeAttr(t)}">
+        ${a ? `
           <div class="camera-state-surface">
             <bruno-icon icon="mdi:video-off-outline"></bruno-icon>
             <span>Imagem indisponivel</span>
@@ -14886,7 +14981,7 @@ class O extends HTMLElement {
         ` : ""}
         ${this._cameraFrame(e)}
         <div class="camera-row-copy">
-          <strong>${O._escape(a)}</strong>
+          <strong>${O._escape(t)}</strong>
           <span><i class="live-dot${i}" aria-hidden="true"></i>${O._escape(r)}</span>
         </div>
 
@@ -14898,7 +14993,7 @@ class O extends HTMLElement {
     this.shadowRoot || this.attachShadow({ mode: "open" });
     const e = this._model();
     this._lastRenderedActiveId = e.activeId, this._lastRenderSignature = this._renderSignature(e);
-    const a = e.activeCamera || {}, t = `${e.onlineCount}/${e.totalCount || 0} online`, i = e.onlineCount > 0 ? " is-online" : "", r = this._menuOpen ? `
+    const t = e.activeCamera || {}, a = `${e.onlineCount}/${e.totalCount || 0} online`, i = e.onlineCount > 0 ? " is-online" : "", r = this._menuOpen ? `
       <div class="mh-overflow-panel" role="menu" aria-label="Selecionar camera">
         ${e.cameras.map((n) => O._menuOption(n, n.entity === e.activeId)).join("")}
       </div>
@@ -15322,7 +15417,7 @@ class O extends HTMLElement {
             <div class="module-title">${O._escape(this._config.name || "Monitoramento")}</div>
           </div>
           <div class="head-right">
-            <span class="online-chip${i}"><span class="online-count">${O._escape(t)}</span><i class="live-dot${i ? "" : " is-muted"}" aria-hidden="true"></i></span>
+            <span class="online-chip${i}"><span class="online-count">${O._escape(a)}</span><i class="live-dot${i ? "" : " is-muted"}" aria-hidden="true"></i></span>
             <button
               type="button"
               class="mh-menu${this._menuOpen ? " is-active" : ""}"
@@ -15337,26 +15432,26 @@ class O extends HTMLElement {
         </div>
 
         <div class="camera-stage">
-          ${this._renderCameraFeed(a)}
+          ${this._renderCameraFeed(t)}
         </div>
         ${r}
       </section>
     `, this._wireActions(e.activeId), this._mountLiveFeed(e.activeCamera);
   }
-  static _menuOption(e, a) {
-    const t = a ? " is-active" : "", i = e.online ? "" : " is-muted";
+  static _menuOption(e, t) {
+    const a = t ? " is-active" : "", i = e.online ? "" : " is-muted";
     return `
-      <button class="camera-option${t}" type="button" role="menuitem" data-camera-id="${O._escapeAttr(e.entity)}">
+      <button class="camera-option${a}" type="button" role="menuitem" data-camera-id="${O._escapeAttr(e.entity)}">
         <bruno-icon icon="mdi:cctv"></bruno-icon>
         <span>${O._escape(e.name || e.short_name || "Camera")}</span>
         <i class="live-dot${i}" aria-hidden="true"></i>
       </button>
     `;
   }
-  static _withCacheBust(e, a) {
+  static _withCacheBust(e, t) {
     if (!e) return "";
-    const t = String(e).includes("?") ? "&" : "?";
-    return `${e}${t}bruno_refresh=${encodeURIComponent(a)}`;
+    const a = String(e).includes("?") ? "&" : "?";
+    return `${e}${a}bruno_refresh=${encodeURIComponent(t)}`;
   }
   static _escape(e) {
     return String(e ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -15365,15 +15460,15 @@ class O extends HTMLElement {
     return O._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(Aa) || customElements.define(Aa, O);
+customElements.get(At) || customElements.define(At, O);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: Aa,
+  type: At,
   name: "Bruno Home Camera Card",
   preview: !1,
   description: "Single camera card for the Bruno home bento grid."
 });
-const qa = "bruno-energy-card", sn = {
+const qt = "bruno-energy-card", dn = {
   period: "input_select.periodo_energia_dashboard",
   total: "sensor.energia_total_casa_periodo_atual",
   daily: "sensor.potencia_total_casa",
@@ -15382,7 +15477,7 @@ const qa = "bruno-energy-card", sn = {
   daily_total: "sensor.energia_total_casa_diaria",
   weekly_total: "sensor.energia_total_casa_semanal",
   monthly_total: "sensor.energia_total_casa_mensal"
-}, la = [
+}, lt = [
   {
     option: "Diário",
     button: "Dia",
@@ -15419,7 +15514,7 @@ const qa = "bruno-energy-card", sn = {
     totalEntityKey: "monthly_total",
     comparisonLabel: "mês anterior"
   }
-], ln = ["unknown", "unavailable", "none", ""], cn = 60 * 1e3;
+], pn = ["unknown", "unavailable", "none", ""], un = 60 * 1e3;
 class D extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -15428,14 +15523,14 @@ class D extends HTMLElement {
     this._render();
   }
   setConfig(e) {
-    const a = {
-      ...sn,
+    const t = {
+      ...dn,
       ...e?.entities || {}
     };
     this._config = {
       name: "Energia",
       ...e,
-      entities: a
+      entities: t
     }, this._historyCache = this._historyCache || {}, this._render();
   }
   set hass(e) {
@@ -15448,26 +15543,26 @@ class D extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _isInvalid(e) {
-    return e == null || ln.includes(String(e).toLowerCase());
+    return e == null || pn.includes(String(e).toLowerCase());
   }
   _activePeriod() {
     const e = this._state(this._config.entities.period)?.state;
-    return la.find((a) => a.option === e) || la[0];
+    return lt.find((t) => t.option === e) || lt[0];
   }
   _model() {
-    const e = this._activePeriod(), a = this._state(this._config.entities.total)?.state, t = this._isInvalid(a) ? 0 : Number(a), i = this._config.entities[e.entityKey], r = this._state(i)?.state, n = this._isInvalid(r) ? null : Number(r), l = this._state(this._config.entities[e.totalEntityKey])?.attributes?.last_period, c = this._isInvalid(l) ? null : Number(l), p = this._historyKey(e, i), d = this._historyCache?.[p]?.points || [];
+    const e = this._activePeriod(), t = this._state(this._config.entities.total)?.state, a = this._isInvalid(t) ? 0 : Number(t), i = this._config.entities[e.entityKey], r = this._state(i)?.state, n = this._isInvalid(r) ? null : Number(r), l = this._state(this._config.entities[e.totalEntityKey])?.attributes?.last_period, c = this._isInvalid(l) ? null : Number(l), p = this._historyKey(e, i), d = this._historyCache?.[p]?.points || [];
     return {
       period: e,
       graphEntity: i,
       cacheKey: p,
-      total: Number.isFinite(t) ? t : 0,
+      total: Number.isFinite(a) ? a : 0,
       graphCurrent: Number.isFinite(n) ? n : null,
       previousTotal: Number.isFinite(c) ? c : null,
       points: d
     };
   }
-  _historyKey(e, a) {
-    return `${e.option}:${a || ""}`;
+  _historyKey(e, t) {
+    return `${e.option}:${t || ""}`;
   }
   _selectPeriod(e) {
     !this._hass || !e || this._hass.callService("input_select", "select_option", {
@@ -15477,16 +15572,16 @@ class D extends HTMLElement {
   }
   _wireActions() {
     this.shadowRoot.querySelectorAll("[data-energy-option]").forEach((e) => {
-      e.addEventListener("click", (a) => {
-        a.preventDefault(), a.stopPropagation(), this._selectPeriod(e.dataset.energyOption);
+      e.addEventListener("click", (t) => {
+        t.preventDefault(), t.stopPropagation(), this._selectPeriod(e.dataset.energyOption);
       });
     });
   }
   _ensureHistory(e) {
     if (!this._hass || !e.graphEntity) return;
-    const a = this._historyCache?.[e.cacheKey], t = Date.now();
-    a?.loading || a?.fetchedAt && t - a.fetchedAt < cn || (this._historyCache[e.cacheKey] = {
-      ...a || {},
+    const t = this._historyCache?.[e.cacheKey], a = Date.now();
+    t?.loading || t?.fetchedAt && a - t.fetchedAt < un || (this._historyCache[e.cacheKey] = {
+      ...t || {},
       loading: !0
     }, this._fetchHistory(e.period, e.graphEntity).then((i) => {
       this._historyCache[e.cacheKey] = {
@@ -15498,26 +15593,26 @@ class D extends HTMLElement {
       this._historyCache[e.cacheKey] = {
         fetchedAt: Date.now(),
         loading: !1,
-        points: a?.points || []
+        points: t?.points || []
       }, this._render();
     }));
   }
-  async _fetchHistory(e, a) {
-    if (!this._hass?.callApi || !a) return [];
-    const t = /* @__PURE__ */ new Date(), i = new Date(t.getTime() - e.hours * 60 * 60 * 1e3), r = [
-      `filter_entity_id=${encodeURIComponent(a)}`,
-      `end_time=${encodeURIComponent(t.toISOString())}`,
+  async _fetchHistory(e, t) {
+    if (!this._hass?.callApi || !t) return [];
+    const a = /* @__PURE__ */ new Date(), i = new Date(a.getTime() - e.hours * 60 * 60 * 1e3), r = [
+      `filter_entity_id=${encodeURIComponent(t)}`,
+      `end_time=${encodeURIComponent(a.toISOString())}`,
       "minimal_response",
       "no_attributes"
     ], n = `history/period/${encodeURIComponent(i.toISOString())}?${r.join("&")}`, s = await this._hass.callApi("GET", n);
     return this._normalizeHistory(s, e);
   }
-  _normalizeHistory(e, a) {
+  _normalizeHistory(e, t) {
     const i = (Array.isArray(e?.[0]) ? e[0] : Array.isArray(e) ? e : []).map((n) => {
       const s = Number(n?.state ?? n?.s ?? n?.[1]), l = n?.last_changed ?? n?.last_updated ?? n?.lu ?? n?.[0], c = this._dateFromHistory(l);
       return !Number.isFinite(s) || !c ? null : { value: s, time: c.getTime() };
     }).filter(Boolean);
-    if (a.aggregate !== "day-max") return this._downsample(i, 96);
+    if (t.aggregate !== "day-max") return this._downsample(i, 96);
     const r = /* @__PURE__ */ new Map();
     return i.forEach((n) => {
       const s = new Date(n.time), l = `${s.getFullYear()}-${s.getMonth()}-${s.getDate()}`, c = r.get(l);
@@ -15527,16 +15622,16 @@ class D extends HTMLElement {
   _dateFromHistory(e) {
     if (e == null) return null;
     if (typeof e == "number") {
-      const t = e > 1e11 ? e : e * 1e3, i = new Date(t);
+      const a = e > 1e11 ? e : e * 1e3, i = new Date(a);
       return Number.isNaN(i.getTime()) ? null : i;
     }
-    const a = new Date(e);
-    return Number.isNaN(a.getTime()) ? null : a;
+    const t = new Date(e);
+    return Number.isNaN(t.getTime()) ? null : t;
   }
-  _downsample(e, a) {
-    if (e.length <= a) return e;
-    const t = Math.ceil(e.length / a);
-    return e.filter((i, r) => r % t === 0);
+  _downsample(e, t) {
+    if (e.length <= t) return e;
+    const a = Math.ceil(e.length / t);
+    return e.filter((i, r) => r % a === 0);
   }
   _formatEnergy(e) {
     return new Intl.NumberFormat("pt-BR", {
@@ -15545,9 +15640,9 @@ class D extends HTMLElement {
     }).format(Number(e) || 0);
   }
   _comparison(e) {
-    const a = Number(e.total), t = Number(e.previousTotal);
-    if (!Number.isFinite(a) || !Number.isFinite(t) || t <= 0) return "Sem comparativo";
-    const i = (a - t) / t * 100, r = Math.round(Math.abs(i));
+    const t = Number(e.total), a = Number(e.previousTotal);
+    if (!Number.isFinite(t) || !Number.isFinite(a) || a <= 0) return "Sem comparativo";
+    const i = (t - a) / a * 100, r = Math.round(Math.abs(i));
     return `${i < 0 ? "−" : i > 0 ? "+" : ""}${r}% vs. ${e.period.comparisonLabel}`;
   }
   _render() {
@@ -15792,7 +15887,7 @@ class D extends HTMLElement {
             </span>
           </div>
           <div class="selector" aria-label="Periodo de energia">
-            ${la.map((a) => this._segment(a, a.option === e.period.option)).join("")}
+            ${lt.map((t) => this._segment(t, t.option === e.period.option)).join("")}
           </div>
         </div>
         <div class="chart" aria-label="Grafico de energia">
@@ -15801,18 +15896,18 @@ class D extends HTMLElement {
       </div>
     `, this._wireActions();
   }
-  _segment(e, a) {
+  _segment(e, t) {
     return `
-      <button class="segment${a ? " is-active" : ""}" type="button" data-energy-option="${D._escapeAttr(e.option)}">
+      <button class="segment${t ? " is-active" : ""}" type="button" data-energy-option="${D._escapeAttr(e.option)}">
         ${D._escape(e.button)}
       </button>
     `;
   }
   _chart(e) {
-    const a = [{ value: e.graphCurrent ?? 0, time: Date.now() - 1 }, { value: e.graphCurrent ?? 0, time: Date.now() }], t = e.points.length >= 2 ? e.points : a, i = 360, r = 100, n = 0, s = 10, l = 20, c = t.map((M) => M.value), p = Math.min(e.period.lowerBound, ...c), d = Math.max(1, ...c), h = Math.max(1, d - p), b = (M) => t.length <= 1 ? n : n + M / (t.length - 1) * (i - n * 2), u = (M) => s + (d - M) / h * (r - s - l), g = t.map((M, H) => {
-      const we = b(H).toFixed(2), ke = u(M.value).toFixed(2);
+    const t = [{ value: e.graphCurrent ?? 0, time: Date.now() - 1 }, { value: e.graphCurrent ?? 0, time: Date.now() }], a = e.points.length >= 2 ? e.points : t, i = 360, r = 100, n = 0, s = 10, l = 20, c = a.map((M) => M.value), p = Math.min(e.period.lowerBound, ...c), d = Math.max(1, ...c), h = Math.max(1, d - p), g = (M) => a.length <= 1 ? n : n + M / (a.length - 1) * (i - n * 2), u = (M) => s + (d - M) / h * (r - s - l), b = a.map((M, H) => {
+      const we = g(H).toFixed(2), ke = u(M.value).toFixed(2);
       return `${H ? "L" : "M"} ${we} ${ke}`;
-    }).join(" "), m = b(0).toFixed(2), f = b(t.length - 1).toFixed(2), x = (r - l).toFixed(2), A = `${g} L ${f} ${x} L ${m} ${x} Z`, $ = e.graphCurrent == null ? "--" : `${Number(e.graphCurrent).toFixed(e.period.unit === "W" ? 0 : 2).replace(".00", "")} ${e.period.unit}`, z = this._comparison(e);
+    }).join(" "), m = g(0).toFixed(2), f = g(a.length - 1).toFixed(2), x = (r - l).toFixed(2), A = `${b} L ${f} ${x} L ${m} ${x} Z`, $ = e.graphCurrent == null ? "--" : `${Number(e.graphCurrent).toFixed(e.period.unit === "W" ? 0 : 2).replace(".00", "")} ${e.period.unit}`, z = this._comparison(e);
     return `
       <svg viewBox="0 0 ${i} ${r}" preserveAspectRatio="none" role="img" aria-label="${D._escapeAttr($)}">
         <defs>
@@ -15830,7 +15925,7 @@ class D extends HTMLElement {
           </filter>
         </defs>
         <path d="${A}" fill="url(#bruno-energy-area)"></path>
-        <path d="${g}" fill="none" stroke="#6FB8FF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" filter="url(#bruno-energy-glow)"></path>
+        <path d="${b}" fill="none" stroke="#6FB8FF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" filter="url(#bruno-energy-glow)"></path>
         <text x="18" y="94" class="axis-label">${D._escape($)}</text>
         <text x="342" y="94" text-anchor="end" class="comparison-label">${D._escape(z)}</text>
       </svg>
@@ -15843,24 +15938,24 @@ class D extends HTMLElement {
     return D._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(qa) || customElements.define(qa, D);
+customElements.get(qt) || customElements.define(qt, D);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: qa,
+  type: qt,
   name: "Bruno Energy Card",
   preview: !1,
   description: "Isolated Bento energy card with period selector, Home Assistant history, and Bruno liquid glass visuals."
 });
-const Ea = "bruno-agenda-card", dn = [
+const Et = "bruno-agenda-card", hn = [
   { entity: "calendar.brunohelasio_gmail_com", name: "Bruno", color: "#7fdbe9" },
   { entity: "calendar.familia", name: "Familia", color: "#fdd835" },
   { entity: "calendar.birthdays", name: "Aniversarios", color: "#ff6c92" },
   { entity: "calendar.feriados_no_brasil", name: "Feriados", color: "#1DB954" }
-], $t = [
+], $a = [
   "calendar.brunohelasio_gmail_com",
   "calendar.familia",
   "calendar.feriados_no_brasil"
-], Mt = 5 * 1e3, pn = ["unknown", "unavailable", "none", ""];
+], Ma = 5 * 1e3, gn = ["unknown", "unavailable", "none", ""];
 class B extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -15871,15 +15966,15 @@ class B extends HTMLElement {
       title: "Agenda Mensal",
       days_to_show: 3,
       compact_events_to_show: 3,
-      refresh_interval: Mt,
-      calendars: dn,
-      popup_calendars: $t,
+      refresh_interval: Ma,
+      calendars: hn,
+      popup_calendars: $a,
       ...e || {}
     }, this._events = this._events || [], this._render(), this._scheduleRefresh(!0);
   }
   set hass(e) {
-    const a = !this._hass;
-    this._hass = e, this._render(), this._scheduleRefresh(a);
+    const t = !this._hass;
+    this._hass = e, this._render(), this._scheduleRefresh(t);
   }
   connectedCallback() {
     this._scheduleRefresh(!0);
@@ -15894,13 +15989,13 @@ class B extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _isInvalid(e) {
-    return e == null || pn.includes(String(e).toLowerCase());
+    return e == null || gn.includes(String(e).toLowerCase());
   }
   _scheduleRefresh(e = !1) {
     if (!(!this._config || !this.isConnected)) {
       if (!this._refreshTimer) {
-        const a = Math.max(5e3, Number(this._config.refresh_interval) || Mt);
-        this._refreshTimer = setInterval(() => this._loadEvents(), a);
+        const t = Math.max(5e3, Number(this._config.refresh_interval) || Ma);
+        this._refreshTimer = setInterval(() => this._loadEvents(), t);
       }
       e && this._loadEvents();
     }
@@ -15910,19 +16005,19 @@ class B extends HTMLElement {
     this._loading = !0;
     const e = /* @__PURE__ */ new Date();
     e.setHours(0, 0, 0, 0);
-    const a = new Date(e.getTime() + Number(this._config.days_to_show || 3) * 24 * 60 * 60 * 1e3);
+    const t = new Date(e.getTime() + Number(this._config.days_to_show || 3) * 24 * 60 * 60 * 1e3);
     try {
-      const t = await Promise.all(
-        this._config.calendars.map((i) => this._fetchCalendarEvents(i, e, a))
+      const a = await Promise.all(
+        this._config.calendars.map((i) => this._fetchCalendarEvents(i, e, t))
       );
-      this._events = t.flat().sort((i, r) => i.startMs - r.startMs), this._lastFetchAt = Date.now();
-    } catch (t) {
-      this._lastError = t;
+      this._events = a.flat().sort((i, r) => i.startMs - r.startMs), this._lastFetchAt = Date.now();
+    } catch (a) {
+      this._lastError = a;
     } finally {
       this._loading = !1, this._render();
     }
   }
-  async _fetchCalendarEvents(e, a, t) {
+  async _fetchCalendarEvents(e, t, a) {
     const i = e.entity;
     if (!i) return [];
     let r = null;
@@ -15931,44 +16026,44 @@ class B extends HTMLElement {
         r = await this._hass.callWS({
           type: "calendar/list_events",
           entity_id: i,
-          start: a.toISOString(),
-          end: t.toISOString()
+          start: t.toISOString(),
+          end: a.toISOString()
         });
       } catch {
         r = null;
       }
     if (!r && this._hass?.callApi) {
-      const s = `calendars/${encodeURIComponent(i)}?start=${encodeURIComponent(a.toISOString())}&end=${encodeURIComponent(t.toISOString())}`;
+      const s = `calendars/${encodeURIComponent(i)}?start=${encodeURIComponent(t.toISOString())}&end=${encodeURIComponent(a.toISOString())}`;
       r = await this._hass.callApi("GET", s);
     }
     return (Array.isArray(r?.events) ? r.events : Array.isArray(r) ? r : []).map((s) => this._normalizeEvent(s, e)).filter(Boolean);
   }
-  _normalizeEvent(e, a) {
-    const t = this._eventDate(e?.start), i = this._eventDate(e?.end);
-    return t ? {
-      calendar: a.entity,
-      calendarName: a.name || a.entity,
-      color: a.color || "#7fdbe9",
+  _normalizeEvent(e, t) {
+    const a = this._eventDate(e?.start), i = this._eventDate(e?.end);
+    return a ? {
+      calendar: t.entity,
+      calendarName: t.name || t.entity,
+      color: t.color || "#7fdbe9",
       summary: e?.summary || e?.message || e?.title || "Evento",
       location: e?.location || "",
-      start: t,
+      start: a,
       end: i,
-      startMs: t.getTime(),
+      startMs: a.getTime(),
       allDay: !!(e?.start?.date && !e?.start?.dateTime)
     } : null;
   }
   _eventDate(e) {
-    const a = e?.dateTime || e?.date || e;
-    if (!a) return null;
-    if (typeof a == "string" && /^\d{4}-\d{2}-\d{2}$/.test(a)) {
-      const [i, r, n] = a.split("-").map(Number);
+    const t = e?.dateTime || e?.date || e;
+    if (!t) return null;
+    if (typeof t == "string" && /^\d{4}-\d{2}-\d{2}$/.test(t)) {
+      const [i, r, n] = t.split("-").map(Number);
       return new Date(i, r - 1, n);
     }
-    const t = new Date(a);
-    return Number.isNaN(t.getTime()) ? null : t;
+    const a = new Date(t);
+    return Number.isNaN(a.getTime()) ? null : a;
   }
   _openPopup() {
-    const e = Array.isArray(this._config.popup_calendars) ? this._config.popup_calendars : $t;
+    const e = Array.isArray(this._config.popup_calendars) ? this._config.popup_calendars : $a;
     this.dispatchEvent(new CustomEvent("ll-custom", {
       detail: {
         action: "fire-dom-event",
@@ -15991,8 +16086,8 @@ class B extends HTMLElement {
   }
   _wireActions() {
     const e = this.shadowRoot.querySelector(".agenda-card");
-    e?.addEventListener("click", () => this._openPopup()), e?.addEventListener("keydown", (a) => {
-      a.key !== "Enter" && a.key !== " " || (a.preventDefault(), this._openPopup());
+    e?.addEventListener("click", () => this._openPopup()), e?.addEventListener("keydown", (t) => {
+      t.key !== "Enter" && t.key !== " " || (t.preventDefault(), this._openPopup());
     });
   }
   _visibleEvents() {
@@ -16243,18 +16338,18 @@ class B extends HTMLElement {
           </div>
         </div>
         <div class="events">
-          ${e.length ? e.map((a) => this._eventRow(a)).join("") : this._emptyState()}
+          ${e.length ? e.map((t) => this._eventRow(t)).join("") : this._emptyState()}
         </div>
       </div>
     `, this._wireActions();
   }
   _eventRow(e) {
-    const a = e.start;
+    const t = e.start;
     return `
       <div class="event-row">
         <div class="date">
-          <span class="weekday">${B._escape(this._weekday(a))}</span>
-          <span class="day">${a.getDate()}</span>
+          <span class="weekday">${B._escape(this._weekday(t))}</span>
+          <span class="day">${t.getDate()}</span>
         </div>
         <div class="event" style="--event-color:${B._escapeAttr(e.color)}">
           <span class="summary">${B._escape(e.summary)}</span>
@@ -16284,15 +16379,15 @@ class B extends HTMLElement {
     return B._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(Ea) || customElements.define(Ea, B);
+customElements.get(Et) || customElements.define(Et, B);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: Ea,
+  type: Et,
   name: "Bruno Agenda Card",
   preview: !1,
   description: "Isolated Bento agenda card with Home Assistant calendar events and Bruno liquid glass visuals."
 });
-const Oa = "bruno-hero-stage-card";
+const Ot = "bruno-hero-stage-card";
 class Pe extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -16321,7 +16416,7 @@ class Pe extends HTMLElement {
   _render() {
     if (!this._config) return;
     this.shadowRoot || this.attachShadow({ mode: "open" });
-    const e = Pe._cssUrl(this._config.background), a = Pe._cssUrl(this._config.fallback_background || this._config.background);
+    const e = Pe._cssUrl(this._config.background), t = Pe._cssUrl(this._config.fallback_background || this._config.background);
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -16363,7 +16458,7 @@ class Pe extends HTMLElement {
           right: -86px;
           background:
             url("${e}") left center / auto 100% no-repeat,
-            url("${a}") left center / auto 100% no-repeat,
+            url("${t}") left center / auto 100% no-repeat,
             #020406;
           opacity: 1;
           filter: saturate(1.12) brightness(1.02) contrast(1.04);
@@ -16466,15 +16561,15 @@ class Pe extends HTMLElement {
     return String(e || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\)/g, "\\)");
   }
 }
-customElements.get(Oa) || customElements.define(Oa, Pe);
+customElements.get(Ot) || customElements.define(Ot, Pe);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: Oa,
+  type: Ot,
   name: "Bruno Hero Stage Card",
   preview: !1,
   description: "Non-interactive atmospheric background stage for the Bento dashboard."
 });
-const Ca = "bruno-hero-card", un = {
+const Ct = "bruno-hero-card", bn = {
   time: "sensor.time",
   weather: "weather.forecast_casa",
   sun: "sun.sun",
@@ -16483,12 +16578,12 @@ const Ca = "bruno-hero-card", un = {
   // exibe a lista pronta do atributo `items`. Sem o package, o hero mostra
   // apenas a agenda (comportamento anterior).
   insights: "sensor.home_insights"
-}, Rt = {
+}, Ra = {
   amber: "#f7c600",
   red: "#ff453a",
   blue: "#7fdbe9",
   green: "#30d158"
-}, Lt = {
+}, La = {
   sunny: { day: "clear-day", night: "clear-night" },
   "clear-night": { day: "clear-night", night: "clear-night" },
   partlycloudy: { day: "partly-cloudy-day", night: "partly-cloudy-night" },
@@ -16502,30 +16597,30 @@ const Ca = "bruno-hero-card", un = {
   fog: { day: "fog", night: "fog" },
   windy: { day: "wind", night: "wind" },
   "windy-variant": { day: "wind", night: "wind" }
-}, ca = [
+}, ct = [
   { entity: "calendar.brunohelasio_gmail_com", name: "Bruno", color: "#7fdbe9" },
   { entity: "calendar.familia", name: "Familia", color: "#fdd835" },
   { entity: "calendar.birthdays", name: "Aniversarios", color: "#ff6c92" },
   { entity: "calendar.feriados_no_brasil", name: "Feriados", color: "#1DB954" }
-], It = [
+], Ia = [
   "calendar.brunohelasio_gmail_com",
   "calendar.familia",
   "calendar.feriados_no_brasil"
-], Nt = [
+], Na = [
   { entity: "camera.sl_camera_2", name: "Sala", short_name: "Sala" },
   { entity: "camera.vr_camera_2", name: "Varanda", short_name: "Varanda" },
   { entity: "camera.cz_camera_2", name: "Cozinha", short_name: "Cozinha" },
   { entity: "camera.as_camera_2", name: "Area de Servico", short_name: "Area" }
-], zt = 300 * 1e3, hn = ["unknown", "unavailable", "idle", "off", "none", ""];
+], za = 300 * 1e3, mn = ["unknown", "unavailable", "idle", "off", "none", ""];
 class w extends HTMLElement {
   static getStubConfig() {
     return {};
   }
   setConfig(e) {
-    const a = {
-      ...un,
+    const t = {
+      ...bn,
       ...e?.entities || {}
-    }, t = e?.calendar || {}, i = e?.cameras || {};
+    }, a = e?.calendar || {}, i = e?.cameras || {};
     this._config = {
       name: "Bruno",
       background: "/local/images/home_color.jpg?v=20260702-all-images-1",
@@ -16534,23 +16629,23 @@ class w extends HTMLElement {
       calendar: {
         days_to_show: 3,
         compact_events_to_show: 1,
-        refresh_interval: zt,
-        calendars: ca,
-        popup_calendars: It,
-        ...t
+        refresh_interval: za,
+        calendars: ct,
+        popup_calendars: Ia,
+        ...a
       },
       cameras: {
         active_entity: "input_select.bento_active_camera",
         limit: 4,
-        items: Nt,
+        items: Na,
         ...i
       },
-      entities: a
+      entities: t
     }, this._events = this._events || [], this._lastCameraImages = this._lastCameraImages || {}, this._loadedCameraUrls = this._loadedCameraUrls || {}, this._cameraBaseUrls = this._cameraBaseUrls || {}, this._refreshSeed = this._refreshSeed || Date.now(), this._render(), this._scheduleRefresh(!0);
   }
   set hass(e) {
-    const a = !this._hass;
-    this._hass = e, this._render(), this._scheduleRefresh(a);
+    const t = !this._hass;
+    this._hass = e, this._render(), this._scheduleRefresh(t);
   }
   connectedCallback() {
     this._scheduleRefresh(!0);
@@ -16570,8 +16665,8 @@ class w extends HTMLElement {
   _scheduleRefresh(e = !1) {
     if (!(!this._config || this._config.variant === "mobile" || !this.isConnected)) {
       if (!this._refreshTimer) {
-        const a = Math.max(5e3, Number(this._config.calendar?.refresh_interval) || zt);
-        this._refreshTimer = setInterval(() => this._loadEvents(), a);
+        const t = Math.max(5e3, Number(this._config.calendar?.refresh_interval) || za);
+        this._refreshTimer = setInterval(() => this._loadEvents(), t);
       }
       e && this._loadEvents();
     }
@@ -16579,12 +16674,12 @@ class w extends HTMLElement {
   async _loadEvents() {
     if (!this._hass || this._loadingEvents) return;
     this._loadingEvents = !0;
-    const e = this._config.calendar || {}, a = /* @__PURE__ */ new Date();
-    a.setHours(0, 0, 0, 0);
-    const t = Math.max(1, Number(e.days_to_show || 3)), i = new Date(a.getTime() + t * 24 * 60 * 60 * 1e3);
+    const e = this._config.calendar || {}, t = /* @__PURE__ */ new Date();
+    t.setHours(0, 0, 0, 0);
+    const a = Math.max(1, Number(e.days_to_show || 3)), i = new Date(t.getTime() + a * 24 * 60 * 60 * 1e3);
     try {
-      const r = Array.isArray(e.calendars) && e.calendars.length ? e.calendars : ca, n = await Promise.all(
-        r.map((s) => this._fetchCalendarEvents(s, a, i))
+      const r = Array.isArray(e.calendars) && e.calendars.length ? e.calendars : ct, n = await Promise.all(
+        r.map((s) => this._fetchCalendarEvents(s, t, i))
       );
       this._events = n.flat().filter((s) => s.startMs >= Date.now() - 3600 * 1e3 || s.allDay).sort((s, l) => s.startMs - l.startMs), this._lastFetchAt = Date.now();
     } catch (r) {
@@ -16593,7 +16688,7 @@ class w extends HTMLElement {
       this._loadingEvents = !1, this._render();
     }
   }
-  async _fetchCalendarEvents(e, a, t) {
+  async _fetchCalendarEvents(e, t, a) {
     const i = e?.entity;
     if (!i) return [];
     let r = null;
@@ -16602,41 +16697,41 @@ class w extends HTMLElement {
         r = await this._hass.callWS({
           type: "calendar/list_events",
           entity_id: i,
-          start: a.toISOString(),
-          end: t.toISOString()
+          start: t.toISOString(),
+          end: a.toISOString()
         });
       } catch {
         r = null;
       }
     if (!r && this._hass?.callApi) {
-      const s = `calendars/${encodeURIComponent(i)}?start=${encodeURIComponent(a.toISOString())}&end=${encodeURIComponent(t.toISOString())}`;
+      const s = `calendars/${encodeURIComponent(i)}?start=${encodeURIComponent(t.toISOString())}&end=${encodeURIComponent(a.toISOString())}`;
       r = await this._hass.callApi("GET", s);
     }
     return (Array.isArray(r?.events) ? r.events : Array.isArray(r) ? r : []).map((s) => this._normalizeEvent(s, e)).filter(Boolean);
   }
-  _normalizeEvent(e, a) {
-    const t = this._eventDate(e?.start), i = this._eventDate(e?.end);
-    return t ? {
-      calendar: a.entity,
-      calendarName: a.name || a.entity,
-      color: a.color || "#7fdbe9",
+  _normalizeEvent(e, t) {
+    const a = this._eventDate(e?.start), i = this._eventDate(e?.end);
+    return a ? {
+      calendar: t.entity,
+      calendarName: t.name || t.entity,
+      color: t.color || "#7fdbe9",
       summary: e?.summary || e?.message || e?.title || "Evento",
       location: e?.location || "",
-      start: t,
+      start: a,
       end: i,
-      startMs: t.getTime(),
+      startMs: a.getTime(),
       allDay: !!(e?.start?.date && !e?.start?.dateTime)
     } : null;
   }
   _eventDate(e) {
-    const a = e?.dateTime || e?.date || e;
-    if (!a) return null;
-    if (typeof a == "string" && /^\d{4}-\d{2}-\d{2}$/.test(a)) {
-      const [i, r, n] = a.split("-").map(Number);
+    const t = e?.dateTime || e?.date || e;
+    if (!t) return null;
+    if (typeof t == "string" && /^\d{4}-\d{2}-\d{2}$/.test(t)) {
+      const [i, r, n] = t.split("-").map(Number);
       return new Date(i, r - 1, n);
     }
-    const t = new Date(a);
-    return Number.isNaN(t.getTime()) ? null : t;
+    const a = new Date(t);
+    return Number.isNaN(a.getTime()) ? null : a;
   }
   /**
    * ITEM 5 (2026-08-23) — fallback pelos ATRIBUTOS da entidade de calendario.
@@ -16655,8 +16750,8 @@ class w extends HTMLElement {
    */
   _eventoPelaEntidade() {
     if (typeof globalThis.matchMedia == "function" && globalThis.matchMedia("(max-width: 800px)").matches || !this._hass) return null;
-    const a = this._config.calendar || {}, t = Array.isArray(a.calendars) && a.calendars.length ? a.calendars : ca;
-    for (const i of t) {
+    const t = this._config.calendar || {}, a = Array.isArray(t.calendars) && t.calendars.length ? t.calendars : ct;
+    for (const i of a) {
       const r = typeof i == "string" ? i : i?.entity, n = r ? this._hass.states[r] : null, s = String(n?.attributes?.message || "").trim();
       if (!s) continue;
       const l = String(n?.attributes?.start_time || "").trim(), c = l ? new Date(l.replace(" ", "T")) : null, p = c && !Number.isNaN(c.getTime()) ? c.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : typeof i == "string" ? "Agenda" : i?.name || "Agenda";
@@ -16673,8 +16768,8 @@ class w extends HTMLElement {
   _nextEventModel() {
     const e = Array.isArray(this._events) ? this._events[0] : null;
     if (!e) {
-      const a = this._eventoPelaEntidade();
-      return a || {
+      const t = this._eventoPelaEntidade();
+      return t || {
         empty: !0,
         label: "Próximo evento",
         summary: "Nenhum compromisso hoje",
@@ -16691,8 +16786,8 @@ class w extends HTMLElement {
     };
   }
   _eventModels(e = 1) {
-    const a = Math.max(1, Math.min(3, Number(e) || 1)), t = Array.isArray(this._events) ? this._events.slice(0, a) : [];
-    return t.length ? t.map((i, r) => ({
+    const t = Math.max(1, Math.min(3, Number(e) || 1)), a = Array.isArray(this._events) ? this._events.slice(0, t) : [];
+    return a.length ? a.map((i, r) => ({
       empty: !1,
       label: r === 0 ? "Proximo evento" : i.calendarName || "Agenda",
       summary: i.summary,
@@ -16703,20 +16798,20 @@ class w extends HTMLElement {
   // NOVO (2026-07-25) — HOME V2 item 4: linhas de informação inteligente.
   // Lê a lista JÁ PRONTA do sensor (ordenada por severidade no backend).
   _insightModels(e = 2) {
-    const t = this._state(this._config.entities.insights)?.attributes?.items;
-    return !Array.isArray(t) || !t.length ? [] : t.slice(0, Math.max(0, e)).map((i) => ({
+    const a = this._state(this._config.entities.insights)?.attributes?.items;
+    return !Array.isArray(a) || !a.length ? [] : a.slice(0, Math.max(0, e)).map((i) => ({
       empty: !1,
       insight: !0,
       label: "Agora",
       summary: String(i?.text || "").trim(),
       time: String(i?.detail || "").trim(),
-      color: Rt[i?.tone] || Rt.amber
+      color: Ra[i?.tone] || Ra.amber
     })).filter((i) => i.summary);
   }
-  _renderEventLine(e, a = !1) {
-    const t = e.insight ? " is-insight" : "", i = e.empty ? " is-empty" : "", r = a ? " has-separator" : "", n = e.insight ? "Informacao da casa" : "Abrir agenda";
+  _renderEventLine(e, t = !1) {
+    const a = e.insight ? " is-insight" : "", i = e.empty ? " is-empty" : "", r = t ? " has-separator" : "", n = e.insight ? "Informacao da casa" : "Abrir agenda";
     return `
-      <button class="event-line${t}${i}${r}" type="button" aria-label="${w._escapeAttr(n)}" style="--event-color:${w._escapeAttr(e.color)}">
+      <button class="event-line${a}${i}${r}" type="button" aria-label="${w._escapeAttr(n)}" style="--event-color:${w._escapeAttr(e.color)}">
         <span>${w._escape(e.label)}</span>
         <strong>${w._escape(e.summary)}</strong>
         ${e.time ? `<small>${w._escape(e.time)}</small>` : ""}
@@ -16726,11 +16821,11 @@ class w extends HTMLElement {
   _eventTimeLabel(e) {
     if (!e?.start) return e?.calendarName || "Agenda";
     if (e.allDay) return e.calendarName || "Dia todo";
-    const a = /* @__PURE__ */ new Date(), t = e.start.toDateString() === a.toDateString(), i = e.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    return t ? `${i} · ${e.calendarName || "Agenda"}` : `${e.start.toLocaleDateString([], { day: "2-digit", month: "short" })} · ${i}`;
+    const t = /* @__PURE__ */ new Date(), a = e.start.toDateString() === t.toDateString(), i = e.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return a ? `${i} · ${e.calendarName || "Agenda"}` : `${e.start.toLocaleDateString([], { day: "2-digit", month: "short" })} · ${i}`;
   }
   _cameraState(e) {
-    const a = this._state(e.entity), t = a?.state || "", i = !a || hn.includes(String(t).toLowerCase()), r = a?.attributes?.entity_picture || "";
+    const t = this._state(e.entity), a = t?.state || "", i = !t || mn.includes(String(a).toLowerCase()), r = t?.attributes?.entity_picture || "";
     r && (this._lastCameraImages[e.entity] = r);
     const n = r || this._lastCameraImages[e.entity] || (e.entity ? `/api/camera_proxy/${e.entity}` : "");
     return this._cameraBaseUrls[e.entity] !== n && (this._cameraBaseUrls[e.entity] = n, delete this._loadedCameraUrls[e.entity]), {
@@ -16742,22 +16837,22 @@ class w extends HTMLElement {
     };
   }
   _cameraModel() {
-    const e = this._config.cameras || {}, a = Array.isArray(e.items) && e.items.length ? e.items : Nt, t = Math.max(1, Number(e.limit) || 4);
-    return a.slice(0, t).map((i) => this._cameraState(i));
+    const e = this._config.cameras || {}, t = Array.isArray(e.items) && e.items.length ? e.items : Na, a = Math.max(1, Number(e.limit) || 4);
+    return t.slice(0, a).map((i) => this._cameraState(i));
   }
   _updateCameraImages() {
     if (!this.shadowRoot) return;
     const e = Date.now();
-    this.shadowRoot.querySelectorAll("img[data-camera-src-base]").forEach((a) => {
-      const t = a.dataset.cameraSrcBase;
-      if (!t) return;
-      const i = w._withCacheBust(t, e);
-      if (a.dataset.loadedSrc === i || a.src === i) return;
+    this.shadowRoot.querySelectorAll("img[data-camera-src-base]").forEach((t) => {
+      const a = t.dataset.cameraSrcBase;
+      if (!a) return;
+      const i = w._withCacheBust(a, e);
+      if (t.dataset.loadedSrc === i || t.src === i) return;
       const r = new Image();
       r.onload = () => {
-        a.dataset.loadedSrc = i, a.src = i, a.classList.remove("is-hidden"), a.closest(".camera-thumb")?.classList.remove("is-image-error");
+        t.dataset.loadedSrc = i, t.src = i, t.classList.remove("is-hidden"), t.closest(".camera-thumb")?.classList.remove("is-image-error");
       }, r.onerror = () => {
-        a.classList.add("is-hidden"), a.closest(".camera-thumb")?.classList.add("is-image-error");
+        t.classList.add("is-hidden"), t.closest(".camera-thumb")?.classList.add("is-image-error");
       }, r.src = i;
     });
   }
@@ -16765,8 +16860,8 @@ class w extends HTMLElement {
     const e = this._state(this._config.entities.time)?.state;
     if (/^\d{1,2}:\d{2}/.test(e || ""))
       return e.slice(0, 5);
-    const a = /* @__PURE__ */ new Date();
-    return `${String(a.getHours()).padStart(2, "0")}:${String(a.getMinutes()).padStart(2, "0")}`;
+    const t = /* @__PURE__ */ new Date();
+    return `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`;
   }
   _dateLine() {
     const e = [
@@ -16777,38 +16872,38 @@ class w extends HTMLElement {
       "Quinta-feira",
       "Sexta-feira",
       "Sábado"
-    ], a = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"], t = /* @__PURE__ */ new Date();
-    return `${e[t.getDay()]}, ${t.getDate()} ${a[t.getMonth()]}`;
+    ], t = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"], a = /* @__PURE__ */ new Date();
+    return `${e[a.getDay()]}, ${a.getDate()} ${t[a.getMonth()]}`;
   }
   _greeting() {
     const e = (/* @__PURE__ */ new Date()).getHours();
     return `${e < 12 ? "Bom dia" : e < 18 ? "Boa tarde" : "Boa noite"}, ${this._config.name}`;
   }
-  _weatherIcon(e, a) {
-    const t = Lt[e] || Lt.cloudy;
-    return `/local/svg/weather/${a ? t.day : t.night}.svg`;
+  _weatherIcon(e, t) {
+    const a = La[e] || La.cloudy;
+    return `/local/svg/weather/${t ? a.day : a.night}.svg`;
   }
   _formatSunTime(e) {
     if (!e) return "--:--";
-    const a = new Date(e);
-    return Number.isNaN(a.getTime()) ? "--:--" : `${String(a.getHours()).padStart(2, "0")}:${String(a.getMinutes()).padStart(2, "0")}`;
+    const t = new Date(e);
+    return Number.isNaN(t.getTime()) ? "--:--" : `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}`;
   }
-  _roundedAttribute(e, a, t, i = "") {
-    const r = e?.attributes?.[a], n = Number.parseFloat(r);
-    return Number.isFinite(n) ? `${Math.round(n)}${i}` : t;
+  _roundedAttribute(e, t, a, i = "") {
+    const r = e?.attributes?.[t], n = Number.parseFloat(r);
+    return Number.isFinite(n) ? `${Math.round(n)}${i}` : a;
   }
   _weatherModel() {
-    const e = this._state(this._config.entities.weather), a = this._state(this._config.entities.sun), t = a?.state === "above_horizon", i = e?.state || "cloudy", r = this._roundedAttribute(e, "temperature", "--", "°C"), n = this._roundedAttribute(e, "apparent_temperature", "--°C", "°C"), s = this._roundedAttribute(e, "humidity", "--%", "%"), l = this._roundedAttribute(e, "wind_speed", "-- km/h", " km/h");
+    const e = this._state(this._config.entities.weather), t = this._state(this._config.entities.sun), a = t?.state === "above_horizon", i = e?.state || "cloudy", r = this._roundedAttribute(e, "temperature", "--", "°C"), n = this._roundedAttribute(e, "apparent_temperature", "--°C", "°C"), s = this._roundedAttribute(e, "humidity", "--%", "%"), l = this._roundedAttribute(e, "wind_speed", "-- km/h", " km/h");
     return {
       state: i,
       available: !this._isUnavailable(e),
-      icon: this._weatherIcon(i, t),
+      icon: this._weatherIcon(i, a),
       temperature: r,
       apparent: n,
       humidity: s,
       wind: l,
-      rising: this._formatSunTime(a?.attributes?.next_rising),
-      setting: this._formatSunTime(a?.attributes?.next_setting)
+      rising: this._formatSunTime(t?.attributes?.next_rising),
+      setting: this._formatSunTime(t?.attributes?.next_setting)
     };
   }
   _fireDomEvent(e) {
@@ -16980,7 +17075,7 @@ class w extends HTMLElement {
     });
   }
   _openAgendaPopup() {
-    const e = this._config.calendar || {}, a = Array.isArray(e.popup_calendars) && e.popup_calendars.length ? e.popup_calendars : It;
+    const e = this._config.calendar || {}, t = Array.isArray(e.popup_calendars) && e.popup_calendars.length ? e.popup_calendars : Ia;
     this._fireDomEvent({
       action: "fire-dom-event",
       browser_mod: {
@@ -16990,7 +17085,7 @@ class w extends HTMLElement {
           size: "wide",
           content: {
             type: "calendar",
-            entities: a
+            entities: t
           }
         }
       }
@@ -17005,9 +17100,9 @@ class w extends HTMLElement {
   }
   _selectCamera(e) {
     if (!e) return;
-    const a = this._config.cameras?.active_entity;
-    a && this._hass?.callService && this._hass.callService("input_select", "select_option", {
-      entity_id: a,
+    const t = this._config.cameras?.active_entity;
+    t && this._hass?.callService && this._hass.callService("input_select", "select_option", {
+      entity_id: t,
       option: e
     }), this._openMoreInfo(e);
   }
@@ -17028,11 +17123,11 @@ class w extends HTMLElement {
       "windy-variant": "Ventando"
     }[e] || String(e || "Clima").replace(/_/g, " ");
   }
-  _weatherMetric(e, a, t, i) {
+  _weatherMetric(e, t, a, i) {
     return `
       <span class="weather-metric">
-        <bruno-icon icon="${e}" style="color:${a}"></bruno-icon>
-        <span class="metric-label">${w._escape(t)}</span>
+        <bruno-icon icon="${e}" style="color:${t}"></bruno-icon>
+        <span class="metric-label">${w._escape(a)}</span>
         <span class="metric-value">${w._escape(i)}</span>
       </span>
     `;
@@ -17040,7 +17135,7 @@ class w extends HTMLElement {
   _renderDesktop() {
     if (!this._config) return;
     this.shadowRoot || this.attachShadow({ mode: "open" });
-    const e = this._weatherModel(), a = this._eventModels(this._config.calendar?.compact_events_to_show), t = this._config.cameras?.show !== !1 && this._config.cameras?.enabled !== !1, i = t ? this._cameraModel() : [], r = this._config.hero_layout === "v2", n = r ? this._nextEventModel() : null, s = r ? this._insightModels(2) : [], l = r && n && !n.empty ? [n] : [], c = r ? [...s, ...l] : a, p = s.length && l.length ? s.length : -1;
+    const e = this._weatherModel(), t = this._eventModels(this._config.calendar?.compact_events_to_show), a = this._config.cameras?.show !== !1 && this._config.cameras?.enabled !== !1, i = a ? this._cameraModel() : [], r = this._config.hero_layout === "v2", n = r ? this._nextEventModel() : null, s = r ? this._insightModels(2) : [], l = r && n && !n.empty ? [n] : [], c = r ? [...s, ...l] : t, p = s.length && l.length ? s.length : -1;
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -17850,14 +17945,14 @@ class w extends HTMLElement {
             ` : ""}
           </div>
 
-          <div class="hero-bottom${t ? " has-cameras" : ""}">
+          <div class="hero-bottom${a ? " has-cameras" : ""}">
             ${r ? "" : `
               <div class="event-stack">
                 ${c.map((d) => this._renderEventLine(d)).join("")}
               </div>
             `}
 
-            ${t ? `
+            ${a ? `
               <div class="camera-strip" aria-label="Mini cameras">
                 <span class="camera-strip-asset" aria-hidden="true"></span>
                 ${i.map((d) => w._miniCamera(d)).join("")}
@@ -17874,7 +17969,7 @@ class w extends HTMLElement {
       d.addEventListener("click", (h) => {
         h.preventDefault(), h.stopPropagation(), this._selectCamera(d.dataset.cameraId);
       });
-    }), t && this._updateCameraImages();
+    }), a && this._updateCameraImages();
   }
   _render() {
     if (!this._config) return;
@@ -17883,7 +17978,7 @@ class w extends HTMLElement {
       return;
     }
     this.shadowRoot || this.attachShadow({ mode: "open" });
-    const e = this._weatherModel(), a = w._cssUrl(this._config.background), t = w._cssUrl(this._config.fallback_background), i = this._config.variant === "mobile" ? " is-mobile" : "", r = this._config.variant === "mobile" ? "0" : "300px";
+    const e = this._weatherModel(), t = w._cssUrl(this._config.background), a = w._cssUrl(this._config.fallback_background), i = this._config.variant === "mobile" ? " is-mobile" : "", r = this._config.variant === "mobile" ? "0" : "300px";
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -17976,8 +18071,8 @@ class w extends HTMLElement {
             ),
             radial-gradient(680px 220px at 12% 4%, rgba(255,255,255,0.07), transparent 56%),
             radial-gradient(900px 320px at 74% 52%, rgba(255,255,255,0.03), transparent 66%),
-            url(${a}) left center / auto 100% no-repeat,
-            url(${t}) left center / auto 100% no-repeat;
+            url(${t}) left center / auto 100% no-repeat,
+            url(${a}) left center / auto 100% no-repeat;
           opacity: 1;
           filter: saturate(1.01) brightness(0.90);
           mask-image:
@@ -18279,8 +18374,8 @@ class w extends HTMLElement {
                 rgba(4,8,14,0.42) 90%,
                 rgba(4,8,14,0.76) 100%
               ),
-              url(${a}) left center / auto 100% no-repeat,
-              url(${t}) left center / auto 100% no-repeat;
+              url(${t}) left center / auto 100% no-repeat,
+              url(${a}) left center / auto 100% no-repeat;
           }
 
           .content {
@@ -18419,19 +18514,19 @@ class w extends HTMLElement {
   static _cssUrl(e) {
     return String(e || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\)/g, "\\)");
   }
-  static _withCacheBust(e, a) {
+  static _withCacheBust(e, t) {
     if (!e) return "";
-    const t = String(e).includes("?") ? "&" : "?";
-    return `${e}${t}v=${a || Date.now()}`;
+    const a = String(e).includes("?") ? "&" : "?";
+    return `${e}${a}v=${t || Date.now()}`;
   }
   static _miniCamera(e) {
-    const a = !!(e?.imageUrl || e?.image), t = e?.online ? " is-online" : "";
+    const t = !!(e?.imageUrl || e?.image), a = e?.online ? " is-online" : "";
     return `
-      <button class="camera-thumb${a ? "" : " is-image-error"}" type="button" data-camera-id="${w._escapeAttr(e?.entity || "")}" aria-label="${w._escapeAttr(e?.name || "Camera")}">
-        ${a ? `<img src="${w._escapeAttr(e.imageUrl || e.image)}" data-camera-src-base="${w._escapeAttr(e.image || e.imageUrl)}" data-camera-entity="${w._escapeAttr(e.entity || "")}" alt="">` : ""}
+      <button class="camera-thumb${t ? "" : " is-image-error"}" type="button" data-camera-id="${w._escapeAttr(e?.entity || "")}" aria-label="${w._escapeAttr(e?.name || "Camera")}">
+        ${t ? `<img src="${w._escapeAttr(e.imageUrl || e.image)}" data-camera-src-base="${w._escapeAttr(e.image || e.imageUrl)}" data-camera-entity="${w._escapeAttr(e.entity || "")}" alt="">` : ""}
         <span class="camera-placeholder" aria-hidden="true"><bruno-icon icon="mdi:video-outline"></bruno-icon></span>
         <span class="camera-label">
-          <span class="camera-dot${t}" aria-hidden="true"></span>
+          <span class="camera-dot${a}" aria-hidden="true"></span>
           <strong>${w._escape(e?.short_name || e?.name || "Camera")}</strong>
         </span>
       </button>
@@ -18444,51 +18539,51 @@ class w extends HTMLElement {
     return String(e ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 }
-customElements.get(Ca) || customElements.define(Ca, w);
+customElements.get(Ct) || customElements.define(Ct, w);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: Ca,
+  type: Ct,
   name: "Bruno Hero Card",
   preview: !1,
   description: "Atmospheric Bento Hero with blended background layer and preserved weather popup."
 });
-const Ai = "(max-width: 800px)", Ht = "bruno-hero-card", Dt = "bento-sidebar-liquid-card", bn = () => !!globalThis.matchMedia?.(Ai).matches;
+const Ai = "(max-width: 800px)", Ha = "bruno-hero-card", Da = "bento-sidebar-liquid-card", fn = () => !!globalThis.matchMedia?.(Ai).matches;
 function je(o) {
   o?.__brunoChatHeroTimer && (clearInterval(o.__brunoChatHeroTimer), o.__brunoChatHeroTimer = null);
 }
-function Pt(o) {
-  if (!o?.shadowRoot || o?._config?.hero_layout !== "v2" || !bn()) {
+function Pa(o) {
+  if (!o?.shadowRoot || o?._config?.hero_layout !== "v2" || !fn()) {
     je(o);
     return;
   }
-  const e = o.shadowRoot, a = e.querySelector(".hero-stage.is-v2"), t = e.querySelector(".headline .event-stack");
-  if (!(!a || !t)) {
-    t.classList.remove("bruno-chat-carousel"), t.style.display = "none", t.querySelector(".bruno-chat-event-dots")?.remove(), je(o), o.__brunoChatHeroIndex = 0;
+  const e = o.shadowRoot, t = e.querySelector(".hero-stage.is-v2"), a = e.querySelector(".headline .event-stack");
+  if (!(!t || !a)) {
+    a.classList.remove("bruno-chat-carousel"), a.style.display = "none", a.querySelector(".bruno-chat-event-dots")?.remove(), je(o), o.__brunoChatHeroIndex = 0;
     return;
   }
 }
-function gn(o) {
+function vn(o) {
   if (!o || o.prototype.__brunoChatHomePatch) return;
   const e = o.prototype;
   e.__brunoChatHomePatch = !0;
-  const a = e._renderDesktop;
+  const t = e._renderDesktop;
   e._renderDesktop = function(...n) {
-    const s = a.apply(this, n);
-    return Pt(this), s;
+    const s = t.apply(this, n);
+    return Pa(this), s;
   };
-  const t = e.connectedCallback;
+  const a = e.connectedCallback;
   e.connectedCallback = function(...n) {
-    const s = t?.apply(this, n);
+    const s = a?.apply(this, n);
     return !this.__brunoChatViewportQuery && globalThis.matchMedia && (this.__brunoChatViewportQuery = globalThis.matchMedia(Ai), this.__brunoChatViewportListener = () => {
       je(this), this._render?.();
-    }, this.__brunoChatViewportQuery.addEventListener?.("change", this.__brunoChatViewportListener)), Pt(this), s;
+    }, this.__brunoChatViewportQuery.addEventListener?.("change", this.__brunoChatViewportListener)), Pa(this), s;
   };
   const i = e.disconnectedCallback;
   e.disconnectedCallback = function(...n) {
     return je(this), this.__brunoChatViewportQuery && this.__brunoChatViewportListener && this.__brunoChatViewportQuery.removeEventListener?.("change", this.__brunoChatViewportListener), this.__brunoChatViewportQuery = null, this.__brunoChatViewportListener = null, i?.apply(this, n);
   };
 }
-function mn(o) {
+function _n(o) {
   if (!o || o.querySelector("style[data-bruno-chat-rail-patch]")) return;
   const e = document.createElement("style");
   e.dataset.brunoChatRailPatch = "1", e.textContent = `
@@ -18502,26 +18597,26 @@ function mn(o) {
     }
   `, o.appendChild(e);
 }
-function fn(o) {
+function xn(o) {
   if (!o || o.prototype.__brunoChatRailPatch) return;
   const e = o.prototype;
   e.__brunoChatRailPatch = !0;
-  const a = e._render;
+  const t = e._render;
   e._render = function(...i) {
-    const r = a.apply(this, i);
-    return mn(this.shadowRoot), r;
+    const r = t.apply(this, i);
+    return _n(this.shadowRoot), r;
   };
 }
 Promise.all([
-  customElements.whenDefined(Ht),
-  customElements.whenDefined(Dt)
+  customElements.whenDefined(Ha),
+  customElements.whenDefined(Da)
 ]).then(() => {
-  gn(customElements.get(Ht)), fn(customElements.get(Dt));
+  vn(customElements.get(Ha)), xn(customElements.get(Da));
 });
 function X(o) {
   return String(o ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
-const vn = [
+const yn = [
   "source",
   "source_name",
   "device_name",
@@ -18530,31 +18625,31 @@ const vn = [
   "media_player",
   "media_player_name"
 ];
-function Ta(o, e) {
-  const a = X(e);
-  if (!a) return !0;
-  const t = o ?? {};
-  return vn.some((i) => {
-    const r = X(t[i]);
-    return !!(r && (r === a || r.includes(a) || r.length >= 10 && a.includes(r)));
+function Tt(o, e) {
+  const t = X(e);
+  if (!t) return !0;
+  const a = o ?? {};
+  return yn.some((i) => {
+    const r = X(a[i]);
+    return !!(r && (r === t || r.includes(t) || r.length >= 10 && t.includes(r)));
   });
 }
 const qi = ["playing", "paused"];
-function _n(o, e, a) {
-  return !o || !qi.includes(String(o.state).toLowerCase()) ? !1 : Ta(o.attributes, e) ? !0 : Ei(o.attributes, a);
+function wn(o, e, t) {
+  return !o || !qi.includes(String(o.state).toLowerCase()) ? !1 : Tt(o.attributes, e) ? !0 : Ei(o.attributes, t);
 }
 function Ei(o, e) {
   if (!e || !qi.includes(String(e.state).toLowerCase())) return !1;
-  const a = e.attributes ?? {};
+  const t = e.attributes ?? {};
   if (X(
-    [a.app_name, a.source, a.media_content_type, a.media_channel].join(" ")
+    [t.app_name, t.source, t.media_content_type, t.media_channel].join(" ")
   ).includes("spotify")) return !0;
-  const i = o ?? {}, r = X(a.media_title), n = X(i.media_title);
+  const i = o ?? {}, r = X(t.media_title), n = X(i.media_title);
   if (r && n && r === n) return !0;
-  const s = X(a.media_artist), l = X(i.media_artist);
+  const s = X(t.media_artist), l = X(i.media_artist);
   return !!(r && n && r.includes(n) && s && l && s === l);
 }
-const Oi = "bruno-ui:curtain-hold:v1", xn = 1440 * 60 * 1e3;
+const Oi = "bruno-ui:curtain-hold:v1", kn = 1440 * 60 * 1e3;
 function Ci() {
   try {
     return globalThis.localStorage ?? void 0;
@@ -18562,7 +18657,7 @@ function Ci() {
     return;
   }
 }
-function Ga() {
+function Gt() {
   try {
     const o = Ci()?.getItem(Oi);
     if (!o) return {};
@@ -18578,58 +18673,58 @@ function Ti(o) {
   } catch {
   }
 }
-function yn(o) {
+function Sn(o) {
   if (!o) return;
-  const e = Ga()[o];
+  const e = Gt()[o];
   if (e && Number.isFinite(e.fechado)) {
-    if (Date.now() - (e.em ?? 0) > xn) {
+    if (Date.now() - (e.em ?? 0) > kn) {
       Ie(o);
       return;
     }
     return e;
   }
 }
-function js(o, e, a) {
+function Us(o, e, t) {
   if (!o || !Number.isFinite(e)) return;
-  const t = Ga();
-  t[o] = { fechado: Math.max(0, Math.min(100, Math.round(e))), fisicoBruto: a, em: Date.now() }, Ti(t);
+  const a = Gt();
+  a[o] = { fechado: Math.max(0, Math.min(100, Math.round(e))), fisicoBruto: t, em: Date.now() }, Ti(a);
 }
 function Ie(o) {
   if (!o) return;
-  const e = Ga();
+  const e = Gt();
   o in e && (delete e[o], Ti(e));
 }
-function wn(o, e, a) {
-  const t = yn(o);
-  if (!t) return;
-  if (a) {
+function An(o, e, t) {
+  const a = Sn(o);
+  if (!a) return;
+  if (t) {
     Ie(o);
     return;
   }
   const i = typeof e == "number" && Number.isFinite(e);
-  if (i && t.fisicoBruto !== null && e !== t.fisicoBruto) {
+  if (i && a.fisicoBruto !== null && e !== a.fisicoBruto) {
     Ie(o);
     return;
   }
-  if (i && t.fisicoBruto === null) {
+  if (i && a.fisicoBruto === null) {
     Ie(o);
     return;
   }
-  return t.fechado;
+  return a.fechado;
 }
-const $a = "bruno-top-badges-card", kn = [
+const $t = "bruno-top-badges-card", qn = [
   {
     id: "tv-sala",
     title: "TV Sala",
     entities: ["media_player.smart_tv_pro_2", "media_player.android_tv_192_168_3_17"]
   }
-], Sn = [
+], En = [
   { visual: 0, position: 0 },
   { visual: 25, position: 33 },
   { visual: 50, position: 47 },
   { visual: 75, position: 70 },
   { visual: 100, position: 100 }
-], An = {
+], On = {
   expanded: "input_select.hemma_expanded_row",
   person: "person.bruno_helasio",
   locks: ["lock.porta_sala", "lock.porta_servico"],
@@ -18697,12 +18792,12 @@ const $a = "bruno-top-badges-card", kn = [
       percent_control: "number.cortina_varanda_percent_control"
     }
   ]
-}, jt = ["playing", "paused", "on"], Vt = ["off", "unavailable", "unknown", ""], Bt = 10;
+}, ja = ["playing", "paused", "on"], Va = ["off", "unavailable", "unknown", ""], Ba = 10;
 class N extends HTMLElement {
   constructor() {
     super(), this._lightsSheetOpen = !1, this._onLightsSheetState = (e) => {
-      const a = !!e?.detail?.open;
-      a !== this._lightsSheetOpen && (this._lightsSheetOpen = a, this._render());
+      const t = !!e?.detail?.open;
+      t !== this._lightsSheetOpen && (this._lightsSheetOpen = t, this._render());
     };
   }
   connectedCallback() {
@@ -18717,7 +18812,7 @@ class N extends HTMLElement {
   setConfig(e) {
     this._config = {
       entities: {
-        ...An,
+        ...On,
         ...e?.entities || {}
       },
       ...e
@@ -18733,7 +18828,7 @@ class N extends HTMLElement {
     return e ? this._hass?.states?.[e] : void 0;
   }
   _isUnavailable(e) {
-    return !e || Vt.includes(String(e.state || "").toLowerCase());
+    return !e || Va.includes(String(e.state || "").toLowerCase());
   }
   _expanded() {
     const e = this._localExpanded && this._localExpanded !== "none" ? this._localExpanded : this._state(this._config.entities.expanded)?.state || "none";
@@ -18743,53 +18838,53 @@ class N extends HTMLElement {
     return this._state(e)?.attributes?.friendly_name || e;
   }
   _toPercent(e) {
-    const a = Number(e);
-    return Number.isFinite(a) ? Math.max(0, Math.min(100, Math.round(a))) : null;
+    const t = Number(e);
+    return Number.isFinite(t) ? Math.max(0, Math.min(100, Math.round(t))) : null;
   }
-  _interpolateCurtainPercent(e, a, t) {
-    const i = this._toPercent(e) ?? 0, r = Sn;
-    if (i <= r[0][a]) return r[0][t];
+  _interpolateCurtainPercent(e, t, a) {
+    const i = this._toPercent(e) ?? 0, r = En;
+    if (i <= r[0][t]) return r[0][a];
     for (let n = 1; n < r.length; n += 1) {
       const s = r[n - 1], l = r[n];
-      if (i <= l[a]) {
-        const c = l[a] - s[a];
-        if (c === 0) return l[t];
-        const p = (i - s[a]) / c;
-        return this._toPercent(s[t] + (l[t] - s[t]) * p) ?? l[t];
+      if (i <= l[t]) {
+        const c = l[t] - s[t];
+        if (c === 0) return l[a];
+        const p = (i - s[t]) / c;
+        return this._toPercent(s[a] + (l[a] - s[a]) * p) ?? l[a];
       }
     }
-    return r[r.length - 1][t];
+    return r[r.length - 1][a];
   }
   _curtainDisplayOpenPosition(e) {
     return this._interpolateCurtainPercent(e, "position", "visual");
   }
   _setExpanded(e) {
-    const a = this._config.entities.expanded;
-    if (!a || !this._hass) {
+    const t = this._config.entities.expanded;
+    if (!t || !this._hass) {
       this._localExpanded = this._localExpanded === e ? "none" : e, this._render();
       return;
     }
     const i = this._expanded() === e ? "none" : e;
-    if (!(this._state(a)?.attributes?.options || []).includes(i)) {
+    if (!(this._state(t)?.attributes?.options || []).includes(i)) {
       this._localExpanded = i, this._render();
       return;
     }
     this._localExpanded = "none", this._hass.callService("input_select", "select_option", {
-      entity_id: a,
+      entity_id: t,
       option: i
     });
   }
   _securityModel() {
-    const e = this._config.entities, a = e.locks || [], t = a.some((s) => this._state(s)?.state === "unlocked"), i = this._state(e.door)?.state === "on", r = this._state(e.motion)?.state === "on";
+    const e = this._config.entities, t = e.locks || [], a = t.some((s) => this._state(s)?.state === "unlocked"), i = this._state(e.door)?.state === "on", r = this._state(e.motion)?.state === "on";
     let n = "Locked";
-    return t && (n = "Unlocked"), i && (n = "Door Open"), r && (n = "Motion"), {
+    return a && (n = "Unlocked"), i && (n = "Door Open"), r && (n = "Motion"), {
       key: "security",
       title: "Security",
       sub: n,
       icon: "mdi:shield-lock",
       tone: "blue",
-      active: t || i || r,
-      chips: a.map((s) => {
+      active: a || i || r,
+      chips: t.map((s) => {
         const l = this._state(s)?.state || "unknown";
         return {
           icon: l === "locked" ? "mdi:lock" : "mdi:lock-open-variant",
@@ -18801,21 +18896,21 @@ class N extends HTMLElement {
       })
     };
   }
-  _expandLights(e, a = /* @__PURE__ */ new Set()) {
-    return e.flatMap((t) => {
-      if (!t || a.has(t)) return [];
-      a.add(t);
-      const i = this._state(t);
+  _expandLights(e, t = /* @__PURE__ */ new Set()) {
+    return e.flatMap((a) => {
+      if (!a || t.has(a)) return [];
+      t.add(a);
+      const i = this._state(a);
       if (!i) return [];
       const r = i.attributes?.entity_id;
-      return Array.isArray(r) && r.length ? this._expandLights(r, a) : t.startsWith("light.") ? [t] : [];
+      return Array.isArray(r) && r.length ? this._expandLights(r, t) : a.startsWith("light.") ? [a] : [];
     });
   }
   _lightsModel() {
-    const e = this._config.entities, a = this._state(e.lights_group)?.attributes?.entity_id, t = [.../* @__PURE__ */ new Set([
-      ...Array.isArray(a) ? a : [],
+    const e = this._config.entities, t = this._state(e.lights_group)?.attributes?.entity_id, a = [.../* @__PURE__ */ new Set([
+      ...Array.isArray(t) ? t : [],
       ...e.lights || []
-    ])], i = [...new Set(this._expandLights(t))], r = i.filter((s) => this._state(s)?.state === "on");
+    ])], i = [...new Set(this._expandLights(a))], r = i.filter((s) => this._state(s)?.state === "on");
     return {
       key: "lights",
       title: "Lights",
@@ -18851,30 +18946,30 @@ class N extends HTMLElement {
    *   4. Spotify sem endpoint reconhecivel continua sendo uma sessao.
    */
   _mediaSessions() {
-    const e = (this._config.entities.media || []).filter((i) => jt.includes(this._state(i)?.state || "")), a = new Set(e), t = [];
-    for (const i of kn) {
-      const r = i.entities.filter((n) => a.has(n));
-      r.length && (r.forEach((n) => a.delete(n)), t.push({ entityId: r[0], membros: r, title: i.title, fonte: "tv" }));
+    const e = (this._config.entities.media || []).filter((i) => ja.includes(this._state(i)?.state || "")), t = new Set(e), a = [];
+    for (const i of qn) {
+      const r = i.entities.filter((n) => t.has(n));
+      r.length && (r.forEach((n) => t.delete(n)), a.push({ entityId: r[0], membros: r, title: i.title, fonte: "tv" }));
     }
-    for (const i of Array.from(a)) {
+    for (const i of Array.from(t)) {
       if (!i.includes("spotify")) continue;
-      a.delete(i);
+      t.delete(i);
       const r = this._state(i), n = [i];
       let s = "";
-      for (const l of Array.from(a)) {
-        const c = this._state(l), p = Ei(r?.attributes, c), d = Ta(r?.attributes, this._entityName(l));
-        !p && !d || (a.delete(l), n.push(l), s = this._entityName(l));
+      for (const l of Array.from(t)) {
+        const c = this._state(l), p = Ei(r?.attributes, c), d = Tt(r?.attributes, this._entityName(l));
+        !p && !d || (t.delete(l), n.push(l), s = this._entityName(l));
       }
       if (!s)
         for (const l of this._config.entities.media || []) {
           if (l === i) continue;
           const c = this._entityName(l);
-          if (c && Ta(r?.attributes, c)) {
+          if (c && Tt(r?.attributes, c)) {
             s = c;
             break;
           }
         }
-      t.push({
+      a.push({
         entityId: i,
         membros: n,
         // endpoint como informacao principal; a integracao vira secundaria.
@@ -18883,9 +18978,9 @@ class N extends HTMLElement {
         fonte: "spotify"
       });
     }
-    for (const i of a)
-      t.push({ entityId: i, membros: [i], title: this._entityName(i), fonte: "outro" });
-    return t;
+    for (const i of t)
+      a.push({ entityId: i, membros: [i], title: this._entityName(i), fonte: "outro" });
+    return a;
   }
   _mediaModel() {
     const e = this._mediaSessions();
@@ -18901,19 +18996,19 @@ class N extends HTMLElement {
       active: e.length > 0,
       // O chip continua agindo sobre UMA entidade (a mesma de antes: a que
       // representa a sessao), entao play-pause-media nao muda de contrato.
-      chips: e.map((a) => ({
-        icon: a.fonte === "tv" ? "mdi:television-classic" : "mdi:music-note",
-        title: a.title,
+      chips: e.map((t) => ({
+        icon: t.fonte === "tv" ? "mdi:television-classic" : "mdi:music-note",
+        title: t.title,
         // ITEM 3: quando o endpoint fisico e conhecido, a linha secundaria
         // diz a integracao; sem endpoint, mantem o estado como antes.
-        sub: a.sub || (this._state(a.entityId)?.state || "on").replace("_", " "),
-        entityId: a.entityId,
+        sub: t.sub || (this._state(t.entityId)?.state || "on").replace("_", " "),
+        entityId: t.entityId,
         action: "play-pause-media"
       }))
     };
   }
   _climateModel() {
-    const e = (this._config.entities.climate || []).filter((a) => !Vt.includes(this._state(a)?.state || "unknown"));
+    const e = (this._config.entities.climate || []).filter((t) => !Va.includes(this._state(t)?.state || "unknown"));
     return {
       key: "climate",
       title: "Climate",
@@ -18921,20 +19016,20 @@ class N extends HTMLElement {
       icon: "mdi:fan",
       tone: "green",
       active: e.length > 0,
-      chips: e.map((a) => {
-        const t = this._state(a)?.attributes?.temperature;
+      chips: e.map((t) => {
+        const a = this._state(t)?.attributes?.temperature;
         return {
           icon: "mdi:air-conditioner",
-          title: this._entityName(a),
-          sub: t != null ? `${t}°` : (this._state(a)?.state || "on").replace("_", " "),
-          entityId: a,
+          title: this._entityName(t),
+          sub: a != null ? `${a}°` : (this._state(t)?.state || "on").replace("_", " "),
+          entityId: t,
           action: "toggle-climate"
         };
       })
     };
   }
   _curtainOpenPosition(e) {
-    const a = e.entity || e.cover, t = this._state(a), i = String(t?.state || "").toLowerCase(), r = this._toPercent(t?.attributes?.current_position);
+    const t = e.entity || e.cover, a = this._state(t), i = String(a?.state || "").toLowerCase(), r = this._toPercent(a?.attributes?.current_position);
     if (r != null)
       return i === "open" && r <= 1 ? 100 : i === "closed" && r >= 99 ? 0 : r;
     const n = this._state(e.percent_control || e.percentControl), s = this._isUnavailable(n) ? null : this._toPercent(n?.state);
@@ -18948,11 +19043,11 @@ class N extends HTMLElement {
       icon: "mdi:curtains",
       tone: "amber",
       active: !1,
-      chips: (this._config.entities.curtains || []).map((t) => typeof t == "string" ? { entity: t } : t).filter((t) => t?.entity || t?.cover).map((t) => {
-        const i = t.entity || t.cover, r = this._state(i), n = String(r?.state || "").toLowerCase(), s = !this._isUnavailable(r), l = s ? this._curtainOpenPosition(t) : null, c = l == null ? null : this._curtainDisplayOpenPosition(l), p = this._toPercent(r?.attributes?.current_position), d = s ? wn(i, p ?? void 0, n === "opening" || n === "closing") : void 0, h = d ?? (c == null ? null : 100 - c);
+      chips: (this._config.entities.curtains || []).map((a) => typeof a == "string" ? { entity: a } : a).filter((a) => a?.entity || a?.cover).map((a) => {
+        const i = a.entity || a.cover, r = this._state(i), n = String(r?.state || "").toLowerCase(), s = !this._isUnavailable(r), l = s ? this._curtainOpenPosition(a) : null, c = l == null ? null : this._curtainDisplayOpenPosition(l), p = this._toPercent(r?.attributes?.current_position), d = s ? An(i, p ?? void 0, n === "opening" || n === "closing") : void 0, h = d ?? (c == null ? null : 100 - c);
         return {
           icon: h != null && h >= 97 ? "mdi:curtains-closed" : "mdi:curtains",
-          title: t.title || this._entityName(i),
+          title: a.title || this._entityName(i),
           sub: h == null ? "indisponivel" : `${h}% fechada`,
           active: s && (n === "opening" || n === "closing"),
           entityId: i,
@@ -18966,8 +19061,8 @@ class N extends HTMLElement {
   // Nivel 0: anomalia/atencao; nivel 1: atividade; nivel 2: estado normal.
   // O indice original desempata, impedindo trocas arbitrarias a cada update.
   _mobilePriority(e) {
-    const a = `${e?.title || ""} ${e?.sub || ""}`.toLowerCase(), t = e?.key === "security" && e?.active, i = /unlocked|door open|error|offline|unavailable/.test(a);
-    if (t || i) return 0;
+    const t = `${e?.title || ""} ${e?.sub || ""}`.toLowerCase(), a = e?.key === "security" && e?.active, i = /unlocked|door open|error|offline|unavailable/.test(t);
+    if (a || i) return 0;
     const r = e?.key === "curtains" && (e.chips || []).some((n) => n.active || Number.isFinite(n.value) && n.value < 97);
     return e?.active || r ? 1 : 2;
   }
@@ -18984,7 +19079,7 @@ class N extends HTMLElement {
       // _energyModel -> retorno null filtrado abaixo).
       this._energyModel()
     ].filter(Boolean);
-    return globalThis.matchMedia?.("(max-width: 800px)")?.matches === !0 ? e.map((t, i) => ({ model: t, index: i, priority: this._mobilePriority(t) })).sort((t, i) => t.priority - i.priority || t.index - i.index).map((t) => t.model) : e;
+    return globalThis.matchMedia?.("(max-width: 800px)")?.matches === !0 ? e.map((a, i) => ({ model: a, index: i, priority: this._mobilePriority(a) })).sort((a, i) => a.priority - i.priority || a.index - i.index).map((a) => a.model) : e;
   }
   // NOVO (2026-07-25) — Badge de Energia.
   // TODA a matemática (kW + desvio %) vem do backend, em
@@ -18994,7 +19089,7 @@ class N extends HTMLElement {
     const e = this._state(this._config.entities.energy_status || "sensor.home_energy_status");
     if (!e || ["unknown", "unavailable"].includes(String(e.state).toLowerCase()))
       return null;
-    const a = e.attributes || {}, t = a.delta_pct, i = Number.parseInt(t, 10), r = Number.isFinite(i), n = [], s = (l, c, p) => {
+    const t = e.attributes || {}, a = t.delta_pct, i = Number.parseInt(a, 10), r = Number.isFinite(i), n = [], s = (l, c, p) => {
       const d = this._state(l);
       if (!d || this._isUnavailable(d)) return;
       const h = Number.parseFloat(d.state);
@@ -19008,7 +19103,7 @@ class N extends HTMLElement {
     return s("sensor.energia_total_casa_diaria", "Hoje", "mdi:calendar-today"), s("sensor.energia_total_casa_semanal", "Semana", "mdi:calendar-week"), s("sensor.energia_total_casa_mensal", "Mes", "mdi:calendar-month"), s("sensor.energia_luzes_diaria", "Luzes", "mdi:lightbulb"), s("sensor.energia_clima_diaria", "Clima", "mdi:air-conditioner"), {
       key: "energy",
       title: "Energy",
-      sub: a.badge_sub || `${e.state} kW`,
+      sub: t.badge_sub || `${e.state} kW`,
       icon: "mdi:flash",
       tone: "amber",
       // Aceso apenas quando o consumo está acima do esperado para o horário.
@@ -19016,10 +19111,10 @@ class N extends HTMLElement {
       chips: n
     };
   }
-  _visibleModels(e, a) {
-    if (!a || a === "none") return e;
-    const t = e.findIndex((i) => i.key === a);
-    return t < 0 ? e : e.slice(0, t + 1);
+  _visibleModels(e, t) {
+    if (!t || t === "none") return e;
+    const a = e.findIndex((i) => i.key === t);
+    return a < 0 ? e : e.slice(0, a + 1);
   }
   _openSecurityPopup() {
     const e = this._config.entities.locks || [];
@@ -19032,7 +19127,7 @@ class N extends HTMLElement {
           size: "wide",
           content: {
             type: "entities",
-            entities: e.map((a) => ({ entity: a, name: this._entityName(a) }))
+            entities: e.map((t) => ({ entity: t, name: this._entityName(t) }))
           }
         }
       }
@@ -19042,57 +19137,57 @@ class N extends HTMLElement {
     const e = (this._config.entities.locks || [])[0];
     !e || !this._hass || this._hass.callService("lock", "toggle", { entity_id: e }, { entity_id: e });
   }
-  _callService(e, a = {}) {
+  _callService(e, t = {}) {
     if (!this._hass || !e) return;
-    const [t, i] = String(e).split(".");
-    !t || !i || this._hass.callService(t, i, a);
+    const [a, i] = String(e).split(".");
+    !a || !i || this._hass.callService(a, i, t);
   }
-  _runChipAction(e, a, t) {
-    if (!(!e || !a)) {
+  _runChipAction(e, t, a) {
+    if (!(!e || !t)) {
       if (globalThis.BrunoLiquidGlass?.feedback?.("tap"), e === "toggle-light") {
-        this._callService("light.toggle", { entity_id: a });
+        this._callService("light.toggle", { entity_id: t });
         return;
       }
       if (e === "play-pause-media") {
-        const i = String(this._state(a)?.state || "").toLowerCase();
-        if (!jt.includes(i)) return;
-        this._callService("media_player.media_play_pause", { entity_id: a });
+        const i = String(this._state(t)?.state || "").toLowerCase();
+        if (!ja.includes(i)) return;
+        this._callService("media_player.media_play_pause", { entity_id: t });
         return;
       }
       if (e === "toggle-climate") {
-        const i = this._state(a), r = String(i?.state || "").toLowerCase();
+        const i = this._state(t), r = String(i?.state || "").toLowerCase();
         if (!i || ["unavailable", "unknown", "", "none"].includes(r)) return;
         const n = r === "off" ? "climate.turn_on" : "climate.turn_off";
-        this._callService(n, { entity_id: a });
+        this._callService(n, { entity_id: t });
         return;
       }
       if (e === "toggle-curtain") {
-        const i = String(this._state(a)?.state || "").toLowerCase(), r = Number(t), n = i === "closed" ? "cover.open_cover" : i === "open" ? "cover.close_cover" : Number.isFinite(r) && r >= 50 ? "cover.open_cover" : "cover.close_cover";
-        this._callService(n, { entity_id: a });
+        const i = String(this._state(t)?.state || "").toLowerCase(), r = Number(a), n = i === "closed" ? "cover.open_cover" : i === "open" ? "cover.close_cover" : Number.isFinite(r) && r >= 50 ? "cover.open_cover" : "cover.close_cover";
+        this._callService(n, { entity_id: t });
         return;
       }
       if (e === "lock") {
-        if (this._state(a)?.state !== "unlocked") return;
-        this._callService("lock.lock", { entity_id: a });
+        if (this._state(t)?.state !== "unlocked") return;
+        this._callService("lock.lock", { entity_id: t });
       }
     }
   }
-  _runAction(e, a) {
-    if (a === "hold" && e === "lights") {
-      const t = this._lightsModel().entityIds;
+  _runAction(e, t) {
+    if (t === "hold" && e === "lights") {
+      const a = this._lightsModel().entityIds;
       this._lightsSheetOpen = !0, this._render(), this.dispatchEvent(new CustomEvent("bruno-status-lights-open", {
-        detail: { monitoredLights: t },
+        detail: { monitoredLights: a },
         bubbles: !0,
         composed: !0
       }));
       return;
     }
-    if (!(a === "hold" && e !== "security")) {
-      if (e === "security" && a === "hold") {
+    if (!(t === "hold" && e !== "security")) {
+      if (e === "security" && t === "hold") {
         this._openSecurityPopup();
         return;
       }
-      if (e === "security" && a === "double") {
+      if (e === "security" && t === "double") {
         this._toggleMainLock();
         return;
       }
@@ -19108,13 +19203,13 @@ class N extends HTMLElement {
   }
   _wireActions() {
     this.shadowRoot.querySelectorAll("[data-badge-key]").forEach((e) => {
-      const a = e.dataset.badgeKey;
-      let t = null, i = null, r = !1, n = !1, s = !1, l = null, c = 0, p = 0;
+      const t = e.dataset.badgeKey;
+      let a = null, i = null, r = !1, n = !1, s = !1, l = null, c = 0, p = 0;
       const d = () => {
-        t && window.clearTimeout(t), t = null;
+        a && window.clearTimeout(a), a = null;
       }, h = () => {
         i && window.clearTimeout(i), i = null;
-      }, b = () => {
+      }, g = () => {
         d(), s = !1, n = !1, l = null, e.classList.remove("is-pressed");
       };
       e.addEventListener("pointerdown", (u) => {
@@ -19123,61 +19218,61 @@ class N extends HTMLElement {
             u.stopPropagation();
             return;
           }
-          u.stopPropagation(), s = !0, r = !1, n = !1, l = u.pointerId, c = u.clientX, p = u.clientY, e.classList.add("is-pressed"), t = window.setTimeout(() => {
-            t = null, !(!s || n) && (r = !0, this._runAction(a, "hold"));
+          u.stopPropagation(), s = !0, r = !1, n = !1, l = u.pointerId, c = u.clientX, p = u.clientY, e.classList.add("is-pressed"), a = window.setTimeout(() => {
+            a = null, !(!s || n) && (r = !0, this._runAction(t, "hold"));
           }, 560);
         }
       }), e.addEventListener("pointermove", (u) => {
         if (!s || u.pointerId !== l || n) return;
-        const g = Math.abs(u.clientX - c), m = Math.abs(u.clientY - p);
-        g <= Bt && m <= Bt || (n = !0, d(), e.classList.remove("is-pressed"));
+        const b = Math.abs(u.clientX - c), m = Math.abs(u.clientY - p);
+        b <= Ba && m <= Ba || (n = !0, d(), e.classList.remove("is-pressed"));
       }), e.addEventListener("pointerup", (u) => {
         if (u.pointerId !== l) {
           u.stopPropagation();
           return;
         }
         u.preventDefault(), u.stopPropagation();
-        const g = s, m = n;
-        if (b(), !(!g || r || m)) {
-          if (a === "security") {
+        const b = s, m = n;
+        if (g(), !(!b || r || m)) {
+          if (t === "security") {
             if (i) {
-              h(), this._runAction(a, "double");
+              h(), this._runAction(t, "double");
               return;
             }
             i = window.setTimeout(() => {
-              i = null, this._runAction(a, "tap");
+              i = null, this._runAction(t, "tap");
             }, 300);
             return;
           }
-          this._runAction(a, "tap");
+          this._runAction(t, "tap");
         }
       }), e.addEventListener("click", (u) => {
         u.preventDefault(), u.stopPropagation();
       }), e.addEventListener("dblclick", (u) => {
-        u.preventDefault(), u.stopPropagation(), b(), h(), this._runAction(a, "double");
+        u.preventDefault(), u.stopPropagation(), g(), h(), this._runAction(t, "double");
       }), e.addEventListener("pointerleave", () => {
-        b();
+        g();
       }), e.addEventListener("pointercancel", (u) => {
-        u.pointerId === l && b();
+        u.pointerId === l && g();
       }), e.addEventListener("contextmenu", (u) => {
-        a === "lights" && (u.preventDefault(), u.stopPropagation(), !r && (b(), r = !0, this._runAction(a, "hold")));
+        t === "lights" && (u.preventDefault(), u.stopPropagation(), !r && (g(), r = !0, this._runAction(t, "hold")));
       });
     });
   }
   _wireChipActions() {
     this.shadowRoot.querySelectorAll("button[data-chip-action][data-chip-entity]").forEach((e) => {
-      const a = () => e.classList.remove("is-pressed");
-      e.addEventListener("pointerdown", (t) => {
-        t.button != null && t.button !== 0 || (t.stopPropagation(), e.classList.add("is-pressed"));
-      }), e.addEventListener("pointerup", a), e.addEventListener("pointerleave", a), e.addEventListener("pointercancel", a), e.addEventListener("click", (t) => {
-        t.preventDefault(), t.stopPropagation(), a(), this._runChipAction(e.dataset.chipAction, e.dataset.chipEntity, e.dataset.chipValue);
+      const t = () => e.classList.remove("is-pressed");
+      e.addEventListener("pointerdown", (a) => {
+        a.button != null && a.button !== 0 || (a.stopPropagation(), e.classList.add("is-pressed"));
+      }), e.addEventListener("pointerup", t), e.addEventListener("pointerleave", t), e.addEventListener("pointercancel", t), e.addEventListener("click", (a) => {
+        a.preventDefault(), a.stopPropagation(), t(), this._runChipAction(e.dataset.chipAction, e.dataset.chipEntity, e.dataset.chipValue);
       });
     });
   }
   _render() {
     if (!this._config) return;
     this.shadowRoot || this.attachShadow({ mode: "open" });
-    const e = this._expanded(), a = this._models(), t = this._visibleModels(a, e), i = a.find((s) => s.key === e), n = this._state(this._config.entities.person)?.attributes?.entity_picture || "";
+    const e = this._expanded(), t = this._models(), a = this._visibleModels(t, e), i = t.find((s) => s.key === e), n = this._state(this._config.entities.person)?.attributes?.entity_picture || "";
     this.shadowRoot.innerHTML = `
       <style>
         :host {
@@ -19678,7 +19773,7 @@ class N extends HTMLElement {
 
       <div class="badges-card">
         <div class="left">
-          ${t.map((s) => this._badge(s, e)).join("")}
+          ${a.map((s) => this._badge(s, e)).join("")}
           ${this._expandedRail(i)}
         </div>
         <div class="avatars" aria-label="Moradores">
@@ -19689,10 +19784,10 @@ class N extends HTMLElement {
       </div>
     `, this._wireActions(), this._wireChipActions();
   }
-  _badge(e, a) {
-    const t = e.active ? " is-active" : "", i = a === e.key ? " is-expanded" : "";
+  _badge(e, t) {
+    const a = e.active ? " is-active" : "", i = t === e.key ? " is-expanded" : "";
     return `
-      <button class="badge tone-${e.tone}${t}${i}" type="button" data-badge-key="${e.key}" aria-label="${N._escapeAttr(e.title)}">
+      <button class="badge tone-${e.tone}${a}${i}" type="button" data-badge-key="${e.key}" aria-label="${N._escapeAttr(e.title)}">
         <span class="badge-icon" aria-hidden="true"><bruno-icon icon="${e.icon}"></bruno-icon></span>
         <span class="badge-text">
           <span class="badge-title">${N._escape(e.title)}</span>
@@ -19705,26 +19800,26 @@ class N extends HTMLElement {
     if (!e) return "";
     if (!e.chips?.length)
       return `<div class="rail tone-${e.tone}"><span class="chip empty-chip">Nada ativo</span></div>`;
-    const a = (t) => {
+    const t = (a) => {
       const i = `
-        <bruno-icon icon="${t.icon}"></bruno-icon>
+        <bruno-icon icon="${a.icon}"></bruno-icon>
         <span class="chip-text">
-          <span class="chip-title">${N._escape(t.title)}</span>
-          <span class="chip-sub">${N._escape(t.sub)}</span>
+          <span class="chip-title">${N._escape(a.title)}</span>
+          <span class="chip-sub">${N._escape(a.sub)}</span>
         </span>
       `;
-      if (!t.action || !t.entityId)
+      if (!a.action || !a.entityId)
         return `<span class="chip">${i}</span>`;
-      const r = t.value == null ? "" : ` data-chip-value="${N._escapeAttr(t.value)}"`, n = [t.title, t.sub].filter(Boolean).join(" - ");
+      const r = a.value == null ? "" : ` data-chip-value="${N._escapeAttr(a.value)}"`, n = [a.title, a.sub].filter(Boolean).join(" - ");
       return `
-        <button class="chip" type="button" data-chip-action="${N._escapeAttr(t.action)}" data-chip-entity="${N._escapeAttr(t.entityId)}"${r} aria-label="${N._escapeAttr(n)}">
+        <button class="chip" type="button" data-chip-action="${N._escapeAttr(a.action)}" data-chip-entity="${N._escapeAttr(a.entityId)}"${r} aria-label="${N._escapeAttr(n)}">
           ${i}
         </button>
       `;
     };
     return `
       <div class="rail tone-${e.tone}">
-        ${e.chips.map((t) => a(t)).join("")}
+        ${e.chips.map((a) => t(a)).join("")}
       </div>
     `;
   }
@@ -19735,15 +19830,15 @@ class N extends HTMLElement {
     return N._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get($a) || customElements.define($a, N);
+customElements.get($t) || customElements.define($t, N);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: $a,
+  type: $t,
   name: "Bruno Top Badges Card",
   preview: !1,
   description: "Isolated Bento top badges card with preserved status expansion semantics."
 });
-const Ma = "bruno-quick-actions-card", Ut = [
+const Mt = "bruno-quick-actions-card", Ua = [
   {
     key: "lights_off",
     icon: "mdi:lightbulb-off-outline",
@@ -19792,7 +19887,7 @@ const Ma = "bruno-quick-actions-card", Ut = [
       bruno_action: "refresh"
     }
   }
-], Ft = new Proxy({}, {
+], Fa = new Proxy({}, {
   get(o, e) {
     return globalThis.BrunoIcons?.render(String(e || "circle")) || globalThis.BrunoIcons?.render("circle") || "";
   }
@@ -19803,7 +19898,7 @@ class P extends HTMLElement {
   }
   setConfig(e) {
     this._config = {
-      items: Ut,
+      items: Ua,
       ...e || {}
     }, this._render();
   }
@@ -19814,24 +19909,24 @@ class P extends HTMLElement {
     return 1;
   }
   _items() {
-    return Array.isArray(this._config?.items) ? this._config.items : Ut;
+    return Array.isArray(this._config?.items) ? this._config.items : Ua;
   }
   _groupForItem(e) {
     return e?.group ? e.group : ["movies", "laptop", "sofa", "scene", "scenes"].includes(e?.key) ? "scenes" : "actions";
   }
   _groups() {
-    return this._items().reduce((e, a, t) => {
-      const i = this._groupForItem(a);
+    return this._items().reduce((e, t, a) => {
+      const i = this._groupForItem(t);
       let r = e[e.length - 1];
-      return (!r || r.key !== i) && (r = { key: i, items: [] }, e.push(r)), r.items.push({ item: a, index: t }), e;
+      return (!r || r.key !== i) && (r = { key: i, items: [] }, e.push(r)), r.items.push({ item: t, index: a }), e;
     }, []);
   }
   _runAction(e = {}) {
     if (!(!e || e.action === "none")) {
       if (e.action === "call-service") {
-        const [a, t] = String(e.service || "").split(".");
-        if (!a || !t || !this._hass) return;
-        this._hass.callService(a, t, e.data || e.service_data || {}, e.target || {});
+        const [t, a] = String(e.service || "").split(".");
+        if (!t || !a || !this._hass) return;
+        this._hass.callService(t, a, e.data || e.service_data || {}, e.target || {});
         return;
       }
       if (e.action === "fire-dom-event") {
@@ -19851,8 +19946,8 @@ class P extends HTMLElement {
   }
   _wireActions() {
     this.shadowRoot.querySelectorAll("[data-action-index]").forEach((e) => {
-      let a = 0;
-      const t = () => {
+      let t = 0;
+      const a = () => {
         if (e.getAttribute("aria-disabled") === "true") return;
         const r = this._items()[Number(e.dataset.actionIndex)];
         globalThis.BrunoLiquidGlass?.feedback?.("tap"), this._runAction(r?.tap_action || r?.action);
@@ -19862,15 +19957,15 @@ class P extends HTMLElement {
       e.addEventListener("pointerdown", (r) => {
         i(r), e.getAttribute("aria-disabled") !== "true" && (e.classList.add("is-pressed"), e.setPointerCapture?.(r.pointerId));
       }), e.addEventListener("pointerup", (r) => {
-        i(r), e.getAttribute("aria-disabled") !== "true" && (e.classList.remove("is-pressed"), e.releasePointerCapture?.(r.pointerId), a = Date.now(), t());
+        i(r), e.getAttribute("aria-disabled") !== "true" && (e.classList.remove("is-pressed"), e.releasePointerCapture?.(r.pointerId), t = Date.now(), a());
       }), e.addEventListener("pointercancel", () => {
         e.classList.remove("is-pressed");
       }), e.addEventListener("pointerleave", () => {
         e.classList.remove("is-pressed");
       }), e.addEventListener("click", (r) => {
-        i(r), !(Date.now() - a < 420) && (e.classList.add("is-pressed"), window.setTimeout(() => e.classList.remove("is-pressed"), 180), t());
+        i(r), !(Date.now() - t < 420) && (e.classList.add("is-pressed"), window.setTimeout(() => e.classList.remove("is-pressed"), 180), a());
       }), e.addEventListener("keydown", (r) => {
-        r.key !== "Enter" && r.key !== " " || (i(r), e.classList.add("is-pressed"), window.setTimeout(() => e.classList.remove("is-pressed"), 180), t());
+        r.key !== "Enter" && r.key !== " " || (i(r), e.classList.add("is-pressed"), window.setTimeout(() => e.classList.remove("is-pressed"), 180), a());
       });
     });
   }
@@ -20283,27 +20378,27 @@ class P extends HTMLElement {
 
       <div class="quick-card">
         <div class="quick-dock" aria-label="Acoes rapidas">
-          ${e.map((a, t) => `
-            ${t > 0 ? '<span class="quick-separator" aria-hidden="true"></span>' : ""}
-            <span class="quick-section-label">${P._escape(this._groupTitle(a.key))}</span>
-            <span class="quick-group group-${P._escapeAttr(a.key)}">
-              ${a.items.map(({ item: i, index: r }) => this._button(i, r)).join("")}
+          ${e.map((t, a) => `
+            ${a > 0 ? '<span class="quick-separator" aria-hidden="true"></span>' : ""}
+            <span class="quick-section-label">${P._escape(this._groupTitle(t.key))}</span>
+            <span class="quick-group group-${P._escapeAttr(t.key)}">
+              ${t.items.map(({ item: i, index: r }) => this._button(i, r)).join("")}
             </span>
           `).join("")}
         </div>
       </div>
     `, this._wireActions();
   }
-  _button(e, a) {
-    const t = !e?.tap_action || e.tap_action.action === "none";
+  _button(e, t) {
+    const a = !e?.tap_action || e.tap_action.action === "none";
     return `
       <button
         class="quick-button"
         type="button"
         title="${P._escapeAttr(e?.label || e?.key || "Acao")}"
         aria-label="${P._escapeAttr(e?.label || e?.key || "Acao")}"
-        ${t ? 'aria-disabled="true"' : ""}
-        data-action-index="${a}"
+        ${a ? 'aria-disabled="true"' : ""}
+        data-action-index="${t}"
       >
         ${P._icon(e)}
         <span class="quick-label">${P._escape(e?.label || e?.key || "Acao")}</span>
@@ -20324,19 +20419,19 @@ class P extends HTMLElement {
     return P._escape(e).replace(/'/g, "&#39;");
   }
   static _icon(e) {
-    const a = e?.icon_key || e?.key || String(e?.icon || "").replace(/^mdi:/, "");
-    return Ft[a] || Ft.circle;
+    const t = e?.icon_key || e?.key || String(e?.icon || "").replace(/^mdi:/, "");
+    return Fa[t] || Fa.circle;
   }
 }
-customElements.get(Ma) || customElements.define(Ma, P);
+customElements.get(Mt) || customElements.define(Mt, P);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: Ma,
+  type: Mt,
   name: "Bruno Quick Actions Card",
   preview: !1,
   description: "Isolated Bento quick actions card with preserved service and Wi-Fi popup behavior."
 });
-const Ra = "bruno-media-card", Gt = "bruno-ui:media-history:v3", $e = {
+const Rt = "bruno-media-card", Ga = "bruno-ui:media-history:v3", $e = {
   focus_sensor: "sensor.media_focus_visuals",
   focus_select: "input_select.media_focus_player",
   spotify_entity: "media_player.spotifyplus_bruno_helasio",
@@ -20361,7 +20456,7 @@ const Ra = "bruno-media-card", Gt = "bruno-ui:media-history:v3", $e = {
     { entity: "media_player.spotifyplus_bruno_helasio", name: "Spotify", icon: "mdi:spotify", section: "sala", path: "subview-sala" },
     { entity: "media_player.echo_pop_office", name: "Office", icon: "mdi:speaker", section: "office", path: "subview-office" }
   ]
-}, qn = ["playing", "paused"], F = "media_player.android_tv_192_168_3_17", En = "media_player.smart_tv_pro_2", On = /* @__PURE__ */ new Set(["on", "playing", "paused", "idle", "buffering"]);
+}, Cn = ["playing", "paused"], F = "media_player.android_tv_192_168_3_17", Tn = "media_player.smart_tv_pro_2", $n = /* @__PURE__ */ new Set(["on", "playing", "paused", "idle", "buffering"]);
 class k extends HTMLElement {
   static getStubConfig() {
     return {};
@@ -20377,13 +20472,13 @@ class k extends HTMLElement {
       slots: Array.isArray(e?.slots) ? e.slots : $e.slots,
       players: Array.isArray(e?.players) ? e.players : $e.players
     }, this._slideIndex = this._slideIndex || 0, this._mediaMenuOpen = this._mediaMenuOpen || !1, this._mediaHistory === void 0 && (this._mediaHistory = this._readMediaHistory()), this._lastArtworkByPlayer = this._lastArtworkByPlayer || {};
-    const a = this._mediaHistory?.[F];
-    !this._lastArtworkByPlayer[F] && a?.image && (this._lastArtworkByPlayer[F] = a.image), this._lastValidMedia = this._latestMediaSnapshot(), this._safeRender();
+    const t = this._mediaHistory?.[F];
+    !this._lastArtworkByPlayer[F] && t?.image && (this._lastArtworkByPlayer[F] = t.image), this._lastValidMedia = this._latestMediaSnapshot(), this._safeRender();
   }
   set hass(e) {
     this._hass = e;
-    const a = this._state(this._config?.focus_select)?.state;
-    this._localFocusEntity && a === this._localFocusEntity && (this._localFocusEntity = "", this._localFocusAt = 0), this._capturePlayerHistory(), this._safeRender();
+    const t = this._state(this._config?.focus_select)?.state;
+    this._localFocusEntity && t === this._localFocusEntity && (this._localFocusEntity = "", this._localFocusAt = 0), this._capturePlayerHistory(), this._safeRender();
   }
   getCardSize() {
     return 4;
@@ -20449,20 +20544,20 @@ class k extends HTMLElement {
     `;
   }
   _tvPowered() {
-    const e = String(this._state(En)?.state || "").toLowerCase();
-    return On.has(e);
+    const e = String(this._state(Tn)?.state || "").toLowerCase();
+    return $n.has(e);
   }
   _isActive(e) {
-    const a = String(this._state(e)?.state || "").toLowerCase();
-    return e === F ? this._tvPowered() : qn.includes(a);
+    const t = String(this._state(e)?.state || "").toLowerCase();
+    return e === F ? this._tvPowered() : Cn.includes(t);
   }
   _isStandbyImage(e) {
     return String(e || "").includes("standby_art");
   }
   _readMediaHistory() {
     try {
-      const e = globalThis.localStorage?.getItem(Gt), a = e ? JSON.parse(e) : null;
-      return a && typeof a == "object" ? a : {};
+      const e = globalThis.localStorage?.getItem(Ga), t = e ? JSON.parse(e) : null;
+      return t && typeof t == "object" ? t : {};
     } catch {
       return {};
     }
@@ -20470,105 +20565,105 @@ class k extends HTMLElement {
   _storeLastValidMedia(e) {
     if (!e?.entity || !e.image && !e.title) return;
     this._mediaHistory = this._mediaHistory || {};
-    const a = this._mediaHistory[e.entity], t = (i) => JSON.stringify({
+    const t = this._mediaHistory[e.entity], a = (i) => JSON.stringify({
       ...i || {},
       savedAt: 0
     });
-    if (t(a) !== t(e)) {
+    if (a(t) !== a(e)) {
       this._mediaHistory[e.entity] = e, this._lastValidMedia = this._latestMediaSnapshot();
       try {
-        globalThis.localStorage?.setItem(Gt, JSON.stringify(this._mediaHistory));
+        globalThis.localStorage?.setItem(Ga, JSON.stringify(this._mediaHistory));
       } catch {
       }
     }
   }
   _latestMediaSnapshot() {
-    return Object.values(this._mediaHistory || {}).filter((e) => e?.entity && (e.image || e.title)).sort((e, a) => Number(a.savedAt || 0) - Number(e.savedAt || 0))[0] || null;
+    return Object.values(this._mediaHistory || {}).filter((e) => e?.entity && (e.image || e.title)).sort((e, t) => Number(t.savedAt || 0) - Number(e.savedAt || 0))[0] || null;
   }
   _capturePlayerHistory() {
     !this._config || !this._hass || this._allPlayerIds().forEach((e) => {
-      const a = this._state(e), t = a?.attributes || {}, i = String(a?.state || "").toLowerCase(), r = this._playerConfig(e), n = this._cleanText(t.media_title), s = t.media_image_url || t.entity_picture || "", l = this._isStandbyImage(s) ? "" : s, c = this._cleanText(t.app_name), p = this._cleanText(t.source), d = String(t.media_content_type || c || "").toLowerCase(), h = this._mediaHistory?.[e];
-      if (h && l && l !== h.image && !["unknown", "unavailable"].includes(i) && this._storeLastValidMedia({ ...h, image: l, savedAt: h.savedAt || Date.now() }), !this._hasPlayback(i, n, l, c, p, e, r, d, t)) return;
-      const b = this._mediaServiceName(e, r, d, c, p), u = b === "Spotify" ? this._spotifyRoomTarget(t) : null, g = u ? { ...r, ...u } : r, m = this._mediaRoomName(g), f = this._cleanText(t.media_artist), x = this._cleanText(t.media_album_name), A = this._cleanText(t.media_series_title), $ = this._cleanText(t.media_channel), z = this._fallbackMediaTitle(b, m, e), M = this._firstText([n, z, this._playerName(e)]), H = this._firstText([f, x, A, $], [M]);
+      const t = this._state(e), a = t?.attributes || {}, i = String(t?.state || "").toLowerCase(), r = this._playerConfig(e), n = this._cleanText(a.media_title), s = a.media_image_url || a.entity_picture || "", l = this._isStandbyImage(s) ? "" : s, c = this._cleanText(a.app_name), p = this._cleanText(a.source), d = String(a.media_content_type || c || "").toLowerCase(), h = this._mediaHistory?.[e];
+      if (h && l && l !== h.image && !["unknown", "unavailable"].includes(i) && this._storeLastValidMedia({ ...h, image: l, savedAt: h.savedAt || Date.now() }), !this._hasPlayback(i, n, l, c, p, e, r, d, a)) return;
+      const g = this._mediaServiceName(e, r, d, c, p), u = g === "Spotify" ? this._spotifyRoomTarget(a) : null, b = u ? { ...r, ...u } : r, m = this._mediaRoomName(b), f = this._cleanText(a.media_artist), x = this._cleanText(a.media_album_name), A = this._cleanText(a.media_series_title), $ = this._cleanText(a.media_channel), z = this._fallbackMediaTitle(g, m, e), M = this._firstText([n, z, this._playerName(e)]), H = this._firstText([f, x, A, $], [M]);
       this._storeLastValidMedia({
         entity: e,
         image: l,
         title: M,
         artist: f && f !== "Pronto para tocar" ? f : "",
         secondary: H,
-        context: [b, m].filter(Boolean).join(" "),
-        serviceName: b,
+        context: [g, m].filter(Boolean).join(" "),
+        serviceName: g,
         serviceIcon: r.icon || this._playerIcon(e),
-        path: g.path || g.navigation_path || "",
-        section: g.section || "",
+        path: b.path || b.navigation_path || "",
+        section: b.section || "",
         savedAt: Date.now()
       });
     });
   }
-  _visualBelongsToFocus(e, a) {
-    const t = e?.attributes || {}, i = [
-      t.entity_id,
-      t.entity,
-      t.player,
-      t.media_player,
-      t.source_entity
+  _visualBelongsToFocus(e, t) {
+    const a = e?.attributes || {}, i = [
+      a.entity_id,
+      a.entity,
+      a.player,
+      a.media_player,
+      a.source_entity
     ].filter(Boolean);
-    return i.length ? i.includes(a) : !1;
+    return i.length ? i.includes(t) : !1;
   }
   _playerConfig(e) {
-    return this._config.players.find((a) => a.entity === e) || {};
+    return this._config.players.find((t) => t.entity === e) || {};
   }
   _focusEntityId() {
     if (this._localFocusEntity && this._state(this._localFocusEntity)) {
       if (Date.now() - (this._localFocusAt || 0) < 5e3) return this._localFocusEntity;
       this._localFocusEntity = "", this._localFocusAt = 0;
     }
-    const e = this._allPlayerIds().map((t) => ({
-      entity: t,
-      score: this._playbackPriority(t),
-      updatedAt: Date.parse(this._state(t)?.last_updated || "") || 0
-    })).filter((t) => t.score > 0).sort((t, i) => i.score - t.score || i.updatedAt - t.updatedAt)[0];
+    const e = this._allPlayerIds().map((a) => ({
+      entity: a,
+      score: this._playbackPriority(a),
+      updatedAt: Date.parse(this._state(a)?.last_updated || "") || 0
+    })).filter((a) => a.score > 0).sort((a, i) => i.score - a.score || i.updatedAt - a.updatedAt)[0];
     if (e?.entity) return e.entity;
-    const a = this._state(this._config.focus_select)?.state;
-    return a && this._state(a) ? a : this._config.players[0]?.entity;
+    const t = this._state(this._config.focus_select)?.state;
+    return t && this._state(t) ? t : this._config.players[0]?.entity;
   }
   _playbackPriority(e) {
-    const a = this._state(e), t = String(a?.state || "").toLowerCase(), i = this._playerConfig(e), r = a?.attributes || {}, n = String(r.media_content_type || r.app_name || "").toLowerCase(), s = r.media_image_url || r.entity_picture || "", l = this._isStandbyImage(s) ? "" : s;
-    return e === F ? this._tvPowered() ? t === "playing" ? 4 : t === "buffering" ? 3 : t === "paused" ? 2 : this._hasPlayback(t, this._cleanText(r.media_title), l, r.app_name, r.source, e, i, n, r) ? 3 : 1 : 0 : t === "playing" ? 4 : t === "paused" ? 2 : this._hasPlayback(t, this._cleanText(r.media_title), l, r.app_name, r.source, e, i, n, r) ? 3 : 0;
+    const t = this._state(e), a = String(t?.state || "").toLowerCase(), i = this._playerConfig(e), r = t?.attributes || {}, n = String(r.media_content_type || r.app_name || "").toLowerCase(), s = r.media_image_url || r.entity_picture || "", l = this._isStandbyImage(s) ? "" : s;
+    return e === F ? this._tvPowered() ? a === "playing" ? 4 : a === "buffering" ? 3 : a === "paused" ? 2 : this._hasPlayback(a, this._cleanText(r.media_title), l, r.app_name, r.source, e, i, n, r) ? 3 : 1 : 0 : a === "playing" ? 4 : a === "paused" ? 2 : this._hasPlayback(a, this._cleanText(r.media_title), l, r.app_name, r.source, e, i, n, r) ? 3 : 0;
   }
   _focusModel() {
-    const e = this._focusEntityId(), a = this._state(e), t = this._state(this._config.focus_sensor), i = this._visualBelongsToFocus(t, e), r = this._playerConfig(e), n = (i ? t?.state : "") || a?.state || "off", s = (i ? t?.attributes?.media_image_url || t?.attributes?.entity_picture : "") || a?.attributes?.media_image_url || a?.attributes?.entity_picture || "";
+    const e = this._focusEntityId(), t = this._state(e), a = this._state(this._config.focus_sensor), i = this._visualBelongsToFocus(a, e), r = this._playerConfig(e), n = (i ? a?.state : "") || t?.state || "off", s = (i ? a?.attributes?.media_image_url || a?.attributes?.entity_picture : "") || t?.attributes?.media_image_url || t?.attributes?.entity_picture || "";
     this._lastArtworkByPlayer = this._lastArtworkByPlayer || {}, s && !this._isStandbyImage(s) && (this._lastArtworkByPlayer[e] = s);
     const l = (["paused", "idle"].includes(n) || e === F && this._tvPowered()) && this._lastArtworkByPlayer[e];
     let c = s;
     l && (!s || this._isStandbyImage(s)) ? c = this._lastArtworkByPlayer[e] : this._isStandbyImage(s) && (c = "");
-    const p = this._cleanText((i ? t?.attributes?.media_title : "") || a?.attributes?.media_title), d = this._cleanText((i ? t?.attributes?.media_artist : "") || a?.attributes?.media_artist), h = this._cleanText((i ? t?.attributes?.media_album_name : "") || a?.attributes?.media_album_name), b = this._cleanText((i ? t?.attributes?.app_name : "") || a?.attributes?.app_name), u = this._cleanText((i ? t?.attributes?.source : "") || a?.attributes?.source), g = this._cleanText((i ? t?.attributes?.media_series_title : "") || a?.attributes?.media_series_title), m = this._cleanText((i ? t?.attributes?.media_channel : "") || a?.attributes?.media_channel), f = Number((i ? t?.attributes?.media_duration : void 0) ?? a?.attributes?.media_duration ?? 0);
-    let x = Number((i ? t?.attributes?.media_position : void 0) ?? a?.attributes?.media_position ?? 0);
-    const A = Number(a?.attributes?.volume_level ?? (i ? t?.attributes?.volume_level : void 0) ?? 0), $ = String(
-      (i ? t?.attributes?.media_content_type : "") || a?.attributes?.media_content_type || a?.attributes?.app_name || ""
-    ).toLowerCase(), z = ["video", "movie", "tvshow", "episode", "channel"].some((Pi) => $.includes(Pi)), M = Date.parse((i ? t?.attributes?.media_position_updated_at : "") || a?.attributes?.media_position_updated_at || "");
+    const p = this._cleanText((i ? a?.attributes?.media_title : "") || t?.attributes?.media_title), d = this._cleanText((i ? a?.attributes?.media_artist : "") || t?.attributes?.media_artist), h = this._cleanText((i ? a?.attributes?.media_album_name : "") || t?.attributes?.media_album_name), g = this._cleanText((i ? a?.attributes?.app_name : "") || t?.attributes?.app_name), u = this._cleanText((i ? a?.attributes?.source : "") || t?.attributes?.source), b = this._cleanText((i ? a?.attributes?.media_series_title : "") || t?.attributes?.media_series_title), m = this._cleanText((i ? a?.attributes?.media_channel : "") || t?.attributes?.media_channel), f = Number((i ? a?.attributes?.media_duration : void 0) ?? t?.attributes?.media_duration ?? 0);
+    let x = Number((i ? a?.attributes?.media_position : void 0) ?? t?.attributes?.media_position ?? 0);
+    const A = Number(t?.attributes?.volume_level ?? (i ? a?.attributes?.volume_level : void 0) ?? 0), $ = String(
+      (i ? a?.attributes?.media_content_type : "") || t?.attributes?.media_content_type || t?.attributes?.app_name || ""
+    ).toLowerCase(), z = ["video", "movie", "tvshow", "episode", "channel"].some((Pi) => $.includes(Pi)), M = Date.parse((i ? a?.attributes?.media_position_updated_at : "") || t?.attributes?.media_position_updated_at || "");
     n === "playing" && Number.isFinite(M) && Number.isFinite(x) && (x += Math.max(0, (Date.now() - M) / 1e3)), Number.isFinite(f) && f > 0 && (x = Math.min(x, f));
-    const H = this._mediaServiceName(e, r, $, b, u), we = {
-      ...a?.attributes || {},
-      ...i ? t?.attributes || {} : {}
-    }, ke = H === "Spotify" ? this._spotifyRoomTarget(we) : null, Se = ke ? { ...r, ...ke } : r, Ya = this._mediaRoomName(Se), q = this._hasPlayback(n, p, s, b, u, e, r, $, we), Ni = this._fallbackMediaTitle(H, Ya, e), Ke = q ? this._firstText([p, b, u, Ni, this._playerName(e)]) : "", Za = q ? this._firstText([d, h, g, m, b, u, this._stateLabel(n)], [Ke]) : "", Ka = q ? [H, Ya].filter(Boolean).join(" ") : "", Xe = r.icon || this._playerIcon(e), Qe = Se.path || Se.navigation_path || "", Je = Se.section || "";
+    const H = this._mediaServiceName(e, r, $, g, u), we = {
+      ...t?.attributes || {},
+      ...i ? a?.attributes || {} : {}
+    }, ke = H === "Spotify" ? this._spotifyRoomTarget(we) : null, Se = ke ? { ...r, ...ke } : r, Yt = this._mediaRoomName(Se), q = this._hasPlayback(n, p, s, g, u, e, r, $, we), Ni = this._fallbackMediaTitle(H, Yt, e), Ke = q ? this._firstText([p, g, u, Ni, this._playerName(e)]) : "", Zt = q ? this._firstText([d, h, b, m, g, u, this._stateLabel(n)], [Ke]) : "", Kt = q ? [H, Yt].filter(Boolean).join(" ") : "", Xe = r.icon || this._playerIcon(e), Qe = Se.path || Se.navigation_path || "", Je = Se.section || "";
     q && ["playing", "paused"].includes(String(n).toLowerCase()) && this._storeLastValidMedia({
       entity: e,
       image: c,
       title: Ke,
       artist: d && d !== "Pronto para tocar" ? d : "",
-      secondary: Za,
-      context: Ka,
+      secondary: Zt,
+      context: Kt,
       serviceName: H,
       serviceIcon: Xe,
       path: Qe,
       section: Je,
       savedAt: Date.now()
     });
-    const Ae = e === F && this._isActive(e), R = q ? null : Ae ? this._mediaHistory?.[e] || null : this._mediaHistory?.[e] || this._latestMediaSnapshot(), Xa = q ? c : c || R?.image || this._lastArtworkByPlayer?.[e] || "", zi = q ? Ke : R?.title || (Ae ? "TV ligada" : ""), Hi = q ? Za : R?.secondary || R?.artist || (Ae ? this._firstText([b, u, "Sala"]) : ""), Di = q ? Ka : R?.context || (Ae ? "TV Sala" : "");
+    const Ae = e === F && this._isActive(e), R = q ? null : Ae ? this._mediaHistory?.[e] || null : this._mediaHistory?.[e] || this._latestMediaSnapshot(), Xt = q ? c : c || R?.image || this._lastArtworkByPlayer?.[e] || "", zi = q ? Ke : R?.title || (Ae ? "TV ligada" : ""), Hi = q ? Zt : R?.secondary || R?.artist || (Ae ? this._firstText([g, u, "Sala"]) : ""), Di = q ? Kt : R?.context || (Ae ? "TV Sala" : "");
     return {
       entity: q ? e : R?.entity || e,
-      image: Xa,
+      image: Xt,
       title: zi,
       artist: q ? d && d !== "Pronto para tocar" ? d : "" : R?.artist || "",
       secondary: Hi,
@@ -20587,32 +20682,32 @@ class k extends HTMLElement {
       isActive: q,
       hasPlayback: q,
       hasLastMedia: !!(R && (R.image || R.title)),
-      isSoftArtwork: (n === "paused" || !q) && !!Xa
+      isSoftArtwork: (n === "paused" || !q) && !!Xt
     };
   }
-  _slotPlayerIds(e = "", a = 4) {
-    const t = [], i = (n) => {
-      !n || n === e || t.includes(n) || !this._state(n) || t.push(n);
+  _slotPlayerIds(e = "", t = 4) {
+    const a = [], i = (n) => {
+      !n || n === e || a.includes(n) || !this._state(n) || a.push(n);
     };
-    return Object.values(this._mediaHistory || {}).sort((n, s) => Number(s.savedAt || 0) - Number(n.savedAt || 0)).forEach((n) => i(n?.entity)), this._allPlayerIds().filter((n) => this._playbackPriority(n) > 0).forEach(i), t.length || (this._config.slots || []).forEach((n) => {
+    return Object.values(this._mediaHistory || {}).sort((n, s) => Number(s.savedAt || 0) - Number(n.savedAt || 0)).forEach((n) => i(n?.entity)), this._allPlayerIds().filter((n) => this._playbackPriority(n) > 0).forEach(i), a.length || (this._config.slots || []).forEach((n) => {
       const s = this._state(n)?.state;
       (this._mediaHistory?.[s] || this._playbackPriority(s) > 0) && i(s);
-    }), t.slice(0, a);
+    }), a.slice(0, t);
   }
   _allPlayerIds() {
-    const e = [], a = (i) => {
+    const e = [], t = (i) => {
       !i || e.includes(i) || e.push(i);
-    }, t = this._state(this._config.focus_select)?.attributes?.options;
-    return Array.isArray(t) && t.forEach(a), (this._config.players || []).forEach((i) => a(i.entity)), (this._config.slots || []).forEach((i) => a(this._state(i)?.state)), e;
+    }, a = this._state(this._config.focus_select)?.attributes?.options;
+    return Array.isArray(a) && a.forEach(t), (this._config.players || []).forEach((i) => t(i.entity)), (this._config.slots || []).forEach((i) => t(this._state(i)?.state)), e;
   }
-  _callService(e, a = {}, t = {}) {
+  _callService(e, t = {}, a = {}) {
     if (!this._hass || !e) return;
     const [i, r] = e.split(".");
-    !i || !r || this._hass.callService(i, r, a, t);
+    !i || !r || this._hass.callService(i, r, t, a);
   }
   _runScript(e) {
-    const a = this._config.scripts?.[e];
-    this._callService(a);
+    const t = this._config.scripts?.[e];
+    this._callService(t);
   }
   _selectPlayer(e) {
     e && (this._localFocusEntity = e, this._localFocusAt = Date.now(), this._callService("input_select.select_option", {
@@ -20621,8 +20716,8 @@ class k extends HTMLElement {
     }), this._setSlide(0));
   }
   _setSlide(e) {
-    const a = Math.max(0, Math.min(1, Number(e) || 0));
-    this._slideIndex !== a && (this._slideIndex = a, this._render());
+    const t = Math.max(0, Math.min(1, Number(e) || 0));
+    this._slideIndex !== t && (this._slideIndex = t, this._render());
   }
   _moreInfo(e) {
     e && this.dispatchEvent(new CustomEvent("hass-more-info", {
@@ -20636,13 +20731,13 @@ class k extends HTMLElement {
       this._moreInfo(this._config.focus_sensor);
       return;
     }
-    const a = this._resolveNavigationPath(e), t = e.startsWith("/") ? a : e;
+    const t = this._resolveNavigationPath(e), a = e.startsWith("/") ? t : e;
     globalThis.BrunoLiquidGlass?.routeTransition?.(), this.dispatchEvent(new CustomEvent("hass-navigate", {
-      detail: { path: t },
+      detail: { path: a },
       bubbles: !0,
       composed: !0
     })), globalThis.setTimeout(() => {
-      !a || globalThis.location?.pathname === a || (globalThis.history?.pushState?.(null, "", a), globalThis.dispatchEvent?.(new CustomEvent("location-changed", { detail: { replace: !1 } })));
+      !t || globalThis.location?.pathname === t || (globalThis.history?.pushState?.(null, "", t), globalThis.dispatchEvent?.(new CustomEvent("location-changed", { detail: { replace: !1 } })));
     }, 80);
   }
   _resolveNavigationPath(e) {
@@ -20655,13 +20750,13 @@ class k extends HTMLElement {
       composed: !0
     })), !0) : !1;
   }
-  _openMediaTarget(e, a) {
-    a && this._openShellSection(a) || e && this._navigate(e);
+  _openMediaTarget(e, t) {
+    t && this._openShellSection(t) || e && this._navigate(e);
   }
   _openPlayersPopup() {
-    const e = this._allPlayerIds().map((a) => ({
-      entity: a,
-      name: this._playerName(a)
+    const e = this._allPlayerIds().map((t) => ({
+      entity: t,
+      name: this._playerName(t)
     }));
     this.dispatchEvent(new CustomEvent("ll-custom", {
       detail: {
@@ -20697,23 +20792,23 @@ class k extends HTMLElement {
     }));
   }
   _playerName(e) {
-    const a = this._state(e);
-    return this._playerConfig(e).name || a?.attributes?.friendly_name || e;
+    const t = this._state(e);
+    return this._playerConfig(e).name || t?.attributes?.friendly_name || e;
   }
   _playerIcon(e) {
     return this._playerConfig(e).icon || "mdi:speaker-wireless";
   }
   _cleanText(e) {
-    const a = String(e ?? "").trim();
-    if (!a) return "";
-    const t = a.toLowerCase();
-    return ["unknown", "unavailable", "none", "null", "undefined"].includes(t) || ["sistema de áudio", "sistema de audio", "pronto para tocar"].includes(t) ? "" : a;
+    const t = String(e ?? "").trim();
+    if (!t) return "";
+    const a = t.toLowerCase();
+    return ["unknown", "unavailable", "none", "null", "undefined"].includes(a) || ["sistema de áudio", "sistema de audio", "pronto para tocar"].includes(a) ? "" : t;
   }
   _normalizeMediaDevice(e) {
     return String(e || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   }
   _spotifyRoomTarget(e = {}) {
-    const a = [
+    const t = [
       e.source,
       e.source_name,
       e.device_name,
@@ -20722,85 +20817,85 @@ class k extends HTMLElement {
       e.media_player,
       e.media_player_name
     ].map((i) => this._normalizeMediaDevice(i)).filter(Boolean);
-    return a.length && [
+    return t.length && [
       { section: "office", path: "subview-office", room: "office", aliases: ["echo pop office", "office"] },
       { section: "casal", path: "subview-quarto-casal", room: "q. casal", aliases: ["echo pop quarto casal", "quarto casal"] },
       { section: "marina", path: "subview-quarto-marina", room: "q. marina", aliases: ["echo pop marina", "quarto marina"] },
       { section: "sala", path: "subview-sala", room: "sala", aliases: ["echo show", "sala"] }
-    ].find((i) => a.some((r) => i.aliases.some((n) => r === n || r.includes(n) || r.length >= 8 && n.includes(r)))) || null;
+    ].find((i) => t.some((r) => i.aliases.some((n) => r === n || r.includes(n) || r.length >= 8 && n.includes(r)))) || null;
   }
-  _firstText(e, a = []) {
-    const t = a.map((i) => this._cleanText(i).toLowerCase()).filter(Boolean);
+  _firstText(e, t = []) {
+    const a = t.map((i) => this._cleanText(i).toLowerCase()).filter(Boolean);
     for (const i of e) {
       const r = this._cleanText(i);
-      if (r && !t.includes(r.toLowerCase()))
+      if (r && !a.includes(r.toLowerCase()))
         return r;
     }
     return "";
   }
-  _hasPlayback(e, a, t, i, r, n = "", s = {}, l = "", c = {}) {
-    const p = String(e || "").toLowerCase(), d = `${a || ""} ${i || ""} ${r || ""}`.toLowerCase();
+  _hasPlayback(e, t, a, i, r, n = "", s = {}, l = "", c = {}) {
+    const p = String(e || "").toLowerCase(), d = `${t || ""} ${i || ""} ${r || ""}`.toLowerCase();
     if (["google tv launcher", "android tv launcher", "launcher", "ambient mode", "backdrop", "home screen", "android settings"].some((m) => d.includes(m))) return !1;
     if (n === F) {
       if (!this._tvPowered()) return !1;
-      const m = !!(t && !this._isStandbyImage(t)), f = Number(c?.media_duration) > 0 || Number(c?.media_position) > 0, x = [a, i, r].map((A) => this._cleanText(A)).filter(Boolean).some((A) => !/^(?:tv|android tv|smart tv pro|hdmi\s*\d+)$/i.test(A));
+      const m = !!(a && !this._isStandbyImage(a)), f = Number(c?.media_duration) > 0 || Number(c?.media_position) > 0, x = [t, i, r].map((A) => this._cleanText(A)).filter(Boolean).some((A) => !/^(?:tv|android tv|smart tv pro|hdmi\s*\d+)$/i.test(A));
       return m || f || x ? ["playing", "paused", "buffering"].includes(p) ? !0 : this._isVideoPlayer(n, s, l, i, r) : !1;
     }
-    if (["playing", "paused"].includes(p)) return !!(this._cleanText(a) || t || this._cleanText(i));
+    if (["playing", "paused"].includes(p)) return !!(this._cleanText(t) || a || this._cleanText(i));
     if (p !== "on") return !1;
-    const b = !!this._cleanText(a), u = Number(c?.media_duration) > 0 || Number(c?.media_position) > 0, g = !!(t && !this._isStandbyImage(t));
-    return b && (g || u || ["video", "movie", "episode", "tvshow"].some((m) => String(l).includes(m))) && this._isVideoPlayer(n, s, l, i, r);
+    const g = !!this._cleanText(t), u = Number(c?.media_duration) > 0 || Number(c?.media_position) > 0, b = !!(a && !this._isStandbyImage(a));
+    return g && (b || u || ["video", "movie", "episode", "tvshow"].some((m) => String(l).includes(m))) && this._isVideoPlayer(n, s, l, i, r);
   }
-  _isVideoPlayer(e = "", a = {}, t = "", i = "", r = "") {
-    const n = `${e || ""} ${a.name || ""} ${a.icon || ""} ${t || ""} ${i || ""} ${r || ""}`.toLowerCase();
+  _isVideoPlayer(e = "", t = {}, a = "", i = "", r = "") {
+    const n = `${e || ""} ${t.name || ""} ${t.icon || ""} ${a || ""} ${i || ""} ${r || ""}`.toLowerCase();
     return ["tv", "television", "android_tv", "video", "movie", "episode", "netflix", "youtube", "prime"].some((s) => n.includes(s));
   }
-  _fallbackMediaTitle(e = "", a = "", t = "") {
-    const i = this._cleanText(e), r = this._cleanText(a);
-    return i.toLowerCase() === "tv" && r.toLowerCase() === "sala" ? "TV da sala" : i.toLowerCase() === "tv" && r ? `TV ${r}` : i && r ? `${i} ${r}` : this._playerName(t);
+  _fallbackMediaTitle(e = "", t = "", a = "") {
+    const i = this._cleanText(e), r = this._cleanText(t);
+    return i.toLowerCase() === "tv" && r.toLowerCase() === "sala" ? "TV da sala" : i.toLowerCase() === "tv" && r ? `TV ${r}` : i && r ? `${i} ${r}` : this._playerName(a);
   }
   _mediaRoomName(e = {}) {
-    const t = this._cleanText(e.room || e.area || e.path || e.navigation_path).toLowerCase();
-    return t.includes("sala") ? "sala" : t.includes("office") ? "office" : t.includes("cozinha") ? "cozinha" : t.includes("casal") ? "q. casal" : t.includes("marina") ? "q. marina" : t.includes("miguel") ? "q. miguel" : "";
+    const a = this._cleanText(e.room || e.area || e.path || e.navigation_path).toLowerCase();
+    return a.includes("sala") ? "sala" : a.includes("office") ? "office" : a.includes("cozinha") ? "cozinha" : a.includes("casal") ? "q. casal" : a.includes("marina") ? "q. marina" : a.includes("miguel") ? "q. miguel" : "";
   }
-  _mediaServiceName(e, a = {}, t = "", i = "", r = "") {
-    const n = `${e || ""} ${a.name || ""} ${a.icon || ""} ${t || ""} ${i || ""} ${r || ""}`.toLowerCase();
-    return n.includes("spotify") || n.includes("music") ? "Spotify" : n.includes("ps5") || n.includes("playstation") ? "PS5" : n.includes("tv") || n.includes("television") || n.includes("video") || n.includes("movie") || n.includes("episode") || n.includes("netflix") || n.includes("youtube") || n.includes("prime") ? "TV" : this._cleanText(a.name) || "Mídia";
+  _mediaServiceName(e, t = {}, a = "", i = "", r = "") {
+    const n = `${e || ""} ${t.name || ""} ${t.icon || ""} ${a || ""} ${i || ""} ${r || ""}`.toLowerCase();
+    return n.includes("spotify") || n.includes("music") ? "Spotify" : n.includes("ps5") || n.includes("playstation") ? "PS5" : n.includes("tv") || n.includes("television") || n.includes("video") || n.includes("movie") || n.includes("episode") || n.includes("netflix") || n.includes("youtube") || n.includes("prime") ? "TV" : this._cleanText(t.name) || "Mídia";
   }
   _stateLabel(e) {
-    const a = String(e || "").toLowerCase();
-    return a === "playing" ? "Reproduzindo" : a === "paused" ? "Pausado" : a === "on" ? "Ligada" : a === "idle" ? "Ociosa" : a === "off" ? "Desligada" : e ? e.replace("_", " ") : "";
+    const t = String(e || "").toLowerCase();
+    return t === "playing" ? "Reproduzindo" : t === "paused" ? "Pausado" : t === "on" ? "Ligada" : t === "idle" ? "Ociosa" : t === "off" ? "Desligada" : e ? e.replace("_", " ") : "";
   }
-  _playerModel(e, a) {
-    const t = this._state(e), i = String(t?.state || "off").toLowerCase(), r = t?.attributes || {}, n = this._playerConfig(e), s = r.media_image_url || r.entity_picture || "", l = this._isStandbyImage(s) ? "" : s, c = String(r.media_content_type || r.app_name || "").toLowerCase(), p = this._hasPlayback(i, r.media_title, l, r.app_name, r.source, e, n, c, r), d = this._mediaHistory?.[e], h = p ? this._cleanText(r.media_title) || this._playerName(e) : d?.title || this._playerName(e), b = p ? this._cleanText(r.media_artist) || this._stateLabel(i) : d?.secondary || d?.context || "Ultima reproducao";
+  _playerModel(e, t) {
+    const a = this._state(e), i = String(a?.state || "off").toLowerCase(), r = a?.attributes || {}, n = this._playerConfig(e), s = r.media_image_url || r.entity_picture || "", l = this._isStandbyImage(s) ? "" : s, c = String(r.media_content_type || r.app_name || "").toLowerCase(), p = this._hasPlayback(i, r.media_title, l, r.app_name, r.source, e, n, c, r), d = this._mediaHistory?.[e], h = p ? this._cleanText(r.media_title) || this._playerName(e) : d?.title || this._playerName(e), g = p ? this._cleanText(r.media_artist) || this._stateLabel(i) : d?.secondary || d?.context || "Ultima reproducao";
     return {
       entity: e,
       image: p ? l : d?.image || "",
       name: this._playerName(e),
       title: h,
-      subtitle: b,
+      subtitle: g,
       state: i,
       icon: this._playerIcon(e),
       active: p,
-      selected: e === a
+      selected: e === t
     };
   }
   _wireActions() {
     this.shadowRoot.querySelectorAll("[data-script-key]").forEach((u) => {
-      u.addEventListener("click", (g) => {
-        g.preventDefault(), g.stopPropagation(), this._runScript(u.dataset.scriptKey);
+      u.addEventListener("click", (b) => {
+        b.preventDefault(), b.stopPropagation(), this._runScript(u.dataset.scriptKey);
       });
     }), this.shadowRoot.querySelectorAll("[data-slide-index]").forEach((u) => {
-      u.addEventListener("click", (g) => {
-        g.preventDefault(), g.stopPropagation(), this._setSlide(u.dataset.slideIndex);
+      u.addEventListener("click", (b) => {
+        b.preventDefault(), b.stopPropagation(), this._setSlide(u.dataset.slideIndex);
       });
     }), this.shadowRoot.querySelectorAll("[data-player-id]").forEach((u) => {
-      let g = null, m = !1;
+      let b = null, m = !1;
       const f = () => {
-        g && window.clearTimeout(g), g = null;
+        b && window.clearTimeout(b), b = null;
       };
       u.addEventListener("pointerdown", (x) => {
-        x.button != null && x.button !== 0 || (x.preventDefault(), x.stopPropagation(), m = !1, u.classList.add("is-pressed"), u.setPointerCapture?.(x.pointerId), g = window.setTimeout(() => {
+        x.button != null && x.button !== 0 || (x.preventDefault(), x.stopPropagation(), m = !1, u.classList.add("is-pressed"), u.setPointerCapture?.(x.pointerId), b = window.setTimeout(() => {
           m = !0, u.classList.remove("is-pressed"), this._openPlayersPopup();
         }, 560));
       }), u.addEventListener("pointerup", (x) => {
@@ -20813,8 +20908,8 @@ class k extends HTMLElement {
         x.preventDefault(), this._openPlayersPopup();
       });
     }), this.shadowRoot.querySelectorAll("[data-navigate-path]").forEach((u) => {
-      u.addEventListener("click", (g) => {
-        g.preventDefault(), g.stopPropagation(), this._navigate(u.dataset.navigatePath);
+      u.addEventListener("click", (b) => {
+        b.preventDefault(), b.stopPropagation(), this._navigate(u.dataset.navigatePath);
       });
     }), this.shadowRoot.querySelector('[data-action="media-route-menu"]')?.addEventListener("click", (u) => {
       u.preventDefault(), u.stopPropagation(), this._mediaMenuOpen = !this._mediaMenuOpen, this._render();
@@ -20828,9 +20923,9 @@ class k extends HTMLElement {
     }), this.shadowRoot.querySelector(".wide-art img")?.addEventListener("error", (u) => {
       u.currentTarget.remove(), this.shadowRoot.querySelector(".wide-art")?.classList.remove("has-art");
     }, { once: !0 });
-    const e = this.shadowRoot.querySelector(".media-shell"), a = this.shadowRoot.querySelector(".focus-surface");
+    const e = this.shadowRoot.querySelector(".media-shell"), t = this.shadowRoot.querySelector(".focus-surface");
     if (!e) return;
-    const t = (u) => !!u?.closest?.("button");
+    const a = (u) => !!u?.closest?.("button");
     let i = 0, r = 0, n = null, s = !1, l = !1;
     const c = () => {
       n && window.clearTimeout(n), n = null;
@@ -20838,20 +20933,20 @@ class k extends HTMLElement {
       l = !1, c(), e.classList.remove("is-pressed");
     };
     e.addEventListener("pointerdown", (u) => {
-      u.button != null && u.button !== 0 || t(u.target) || (l = !0, s = !1, i = u.clientX, r = u.clientY, e.classList.add("is-pressed"), e.setPointerCapture?.(u.pointerId), this._config.variant !== "wide" && this._slideIndex === 0 && (n = window.setTimeout(() => {
+      u.button != null && u.button !== 0 || a(u.target) || (l = !0, s = !1, i = u.clientX, r = u.clientY, e.classList.add("is-pressed"), e.setPointerCapture?.(u.pointerId), this._config.variant !== "wide" && this._slideIndex === 0 && (n = window.setTimeout(() => {
         s = !0, this._moreInfo(this._config.focus_sensor);
       }, 620)));
     }), e.addEventListener("pointermove", (u) => {
       if (!l) return;
-      const g = u.clientX - i, m = u.clientY - r;
-      (Math.abs(g) > 12 || Math.abs(m) > 12) && c();
+      const b = u.clientX - i, m = u.clientY - r;
+      (Math.abs(b) > 12 || Math.abs(m) > 12) && c();
     }), e.addEventListener("pointerup", (u) => {
       if (!l) return;
       u.preventDefault(), e.releasePointerCapture?.(u.pointerId);
-      const g = u.clientX - i, m = u.clientY - r;
+      const b = u.clientX - i, m = u.clientY - r;
       if (p(), !s) {
-        if (Math.abs(g) > 42 && Math.abs(g) > Math.abs(m)) {
-          this._setSlide(this._slideIndex + (g < 0 ? 1 : -1));
+        if (Math.abs(b) > 42 && Math.abs(b) > Math.abs(m)) {
+          this._setSlide(this._slideIndex + (b < 0 ? 1 : -1));
           return;
         }
         this._config.variant !== "wide" && this._slideIndex === 0 && this._runScript("play_pause");
@@ -20859,35 +20954,35 @@ class k extends HTMLElement {
     }), e.addEventListener("pointercancel", p), e.addEventListener("pointerleave", () => {
       l && c(), e.classList.remove("is-pressed");
     });
-    let d = 0, h = 0, b = !1;
+    let d = 0, h = 0, g = !1;
     e.addEventListener("touchstart", (u) => {
-      if (t(u.target)) return;
-      const g = u.touches?.[0];
-      g && (d = g.clientX, h = g.clientY, b = !1);
+      if (a(u.target)) return;
+      const b = u.touches?.[0];
+      b && (d = b.clientX, h = b.clientY, g = !1);
     }, { passive: !0 }), e.addEventListener("touchmove", (u) => {
-      if (t(u.target)) return;
-      const g = u.touches?.[0];
-      if (!g) return;
-      const m = g.clientX - d, f = g.clientY - h;
-      Math.abs(m) > 10 && Math.abs(m) > Math.abs(f) && (b = !0, u.preventDefault());
+      if (a(u.target)) return;
+      const b = u.touches?.[0];
+      if (!b) return;
+      const m = b.clientX - d, f = b.clientY - h;
+      Math.abs(m) > 10 && Math.abs(m) > Math.abs(f) && (g = !0, u.preventDefault());
     }, { passive: !1 }), e.addEventListener("touchend", (u) => {
-      if (t(u.target)) return;
-      const g = u.changedTouches?.[0];
-      if (!g) return;
-      const m = g.clientX - d, f = g.clientY - h;
-      !b && (Math.abs(m) <= 34 || Math.abs(m) <= Math.abs(f)) || (u.preventDefault(), this._setSlide(this._slideIndex + (m < 0 ? 1 : -1)));
-    }, { passive: !1 }), a?.addEventListener("keydown", (u) => {
+      if (a(u.target)) return;
+      const b = u.changedTouches?.[0];
+      if (!b) return;
+      const m = b.clientX - d, f = b.clientY - h;
+      !g && (Math.abs(m) <= 34 || Math.abs(m) <= Math.abs(f)) || (u.preventDefault(), this._setSlide(this._slideIndex + (m < 0 ? 1 : -1)));
+    }, { passive: !1 }), t?.addEventListener("keydown", (u) => {
       u.key !== "Enter" && u.key !== " " || (u.preventDefault(), this._config.variant !== "wide" && this._runScript("play_pause"));
-    }), a?.addEventListener("contextmenu", (u) => {
+    }), t?.addEventListener("contextmenu", (u) => {
       u.preventDefault(), this._config.variant !== "wide" && this._moreInfo(this._config.focus_sensor);
     });
   }
   _render() {
     if (!this._config) return;
     this.shadowRoot || this.attachShadow({ mode: "open" });
-    const e = this._focusModel(), a = e.image ? `--focus-art: url('${k._escapeAttr(k._cssUrl(e.image))}');` : "", t = e.isSoftArtwork ? " is-soft-artwork" : "", i = e.image ? "" : " is-empty-artwork", r = e.state === "paused" ? " is-paused-media" : "", n = e.hasPlayback ? "" : " is-inactive-media", s = this._config.variant === "wide", l = this._slotPlayerIds(e.entity, s ? 2 : 4).map((f) => this._playerModel(f, e.entity)), c = l.length && this._slideIndex || 0;
+    const e = this._focusModel(), t = e.image ? `--focus-art: url('${k._escapeAttr(k._cssUrl(e.image))}');` : "", a = e.isSoftArtwork ? " is-soft-artwork" : "", i = e.image ? "" : " is-empty-artwork", r = e.state === "paused" ? " is-paused-media" : "", n = e.hasPlayback ? "" : " is-inactive-media", s = this._config.variant === "wide", l = this._slotPlayerIds(e.entity, s ? 2 : 4).map((f) => this._playerModel(f, e.entity)), c = l.length && this._slideIndex || 0;
     !l.length && this._slideIndex && (this._slideIndex = 0), this._temSegundaSessao = l.length > 0;
-    const p = s ? " is-wide" : "", d = s ? 'aria-label="Resumo de mídia"' : 'role="button" tabindex="0" aria-label="Reproduzir ou pausar midia"', h = e.hasPlayback && e.duration > 0 ? Math.max(0, Math.min(100, e.position / e.duration * 100)) : 0, b = e.image ? k._escapeAttr(e.image) : "", u = e.hasPlayback && !!(e.section || e.path), g = s && this._mediaMenuOpen ? `
+    const p = s ? " is-wide" : "", d = s ? 'aria-label="Resumo de mídia"' : 'role="button" tabindex="0" aria-label="Reproduzir ou pausar midia"', h = e.hasPlayback && e.duration > 0 ? Math.max(0, Math.min(100, e.position / e.duration * 100)) : 0, g = e.image ? k._escapeAttr(e.image) : "", u = e.hasPlayback && !!(e.section || e.path), b = s && this._mediaMenuOpen ? `
       <div class="mh-overflow-panel media-action-panel" role="menu" aria-label="Opções de mídia">
         <button
           class="media-action-option${u ? "" : " is-disabled"}"
@@ -20928,10 +21023,10 @@ class k extends HTMLElement {
             ` : ""}
           </div>
           <div
-            class="wide-art${b ? " has-art" : ""}"
+            class="wide-art${g ? " has-art" : ""}"
             aria-hidden="true"
           >
-            ${b ? `<img src="${b}" alt="">` : `<bruno-icon icon="${k._escapeAttr(e.serviceIcon || "mdi:music-note")}"></bruno-icon>`}
+            ${g ? `<img src="${g}" alt="">` : `<bruno-icon icon="${k._escapeAttr(e.serviceIcon || "mdi:music-note")}"></bruno-icon>`}
           </div>
           ${e.hasPlayback ? `
             <div class="wide-progress" style="--media-progress:${h.toFixed(2)}%;">
@@ -20944,7 +21039,7 @@ class k extends HTMLElement {
               <button class="choose-media" type="button" data-action="choose-media">Escolher mídia</button>
             </div>
           `}
-          ${g}
+          ${b}
         </div>
       ` : `
         <span class="play-glyph" aria-hidden="true"><bruno-icon icon="${e.isPlaying ? "mdi:pause" : "mdi:play"}"></bruno-icon></span>
@@ -21934,7 +22029,7 @@ class k extends HTMLElement {
           <div class="viewport">
             <div class="slides">
               <section class="slide focus-slide">
-                <div class="focus-surface${t}${i}${r}${n}" ${d} style="${a}">
+                <div class="focus-surface${a}${i}${r}${n}" ${d} style="${t}">
                   ${m}
                 </div>
               </section>
@@ -21957,17 +22052,17 @@ class k extends HTMLElement {
       </div>
     `, this._wireActions();
   }
-  _control(e, a, t, i = "") {
+  _control(e, t, a, i = "") {
     return `
-      <button class="control ${i}" type="button" data-script-key="${e}" aria-label="${k._escapeAttr(t)}">
-        <bruno-icon icon="${a}"></bruno-icon>
+      <button class="control ${i}" type="button" data-script-key="${e}" aria-label="${k._escapeAttr(a)}">
+        <bruno-icon icon="${t}"></bruno-icon>
       </button>
     `;
   }
   _playerButton(e) {
-    const a = e.selected ? " is-selected" : "", t = e.active ? " is-active" : "", i = e.image ? " has-art" : "", r = e.image ? ` style="--player-art: url('${k._escapeAttr(k._cssUrl(e.image))}');"` : "";
+    const t = e.selected ? " is-selected" : "", a = e.active ? " is-active" : "", i = e.image ? " has-art" : "", r = e.image ? ` style="--player-art: url('${k._escapeAttr(k._cssUrl(e.image))}');"` : "";
     return `
-      <button class="player-card${a}${t}${i}" type="button" data-player-id="${k._escapeAttr(e.entity)}"${r} aria-label="${k._escapeAttr(e.name)}">
+      <button class="player-card${t}${a}${i}" type="button" data-player-id="${k._escapeAttr(e.entity)}"${r} aria-label="${k._escapeAttr(e.name)}">
         <span class="player-icon" aria-hidden="true"><bruno-icon icon="${k._escapeAttr(e.icon)}"></bruno-icon></span>
         <span class="player-meta">
           <span class="player-name">${k._escape(e.name)}</span>
@@ -21986,15 +22081,15 @@ class k extends HTMLElement {
     return String(e || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/\)/g, "\\)").replace(/[\r\n]/g, "");
   }
 }
-customElements.get(Ra) || customElements.define(Ra, k);
+customElements.get(Rt) || customElements.define(Rt, k);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: Ra,
+  type: Rt,
   name: "Bruno Media Card",
   preview: !1,
   description: "Isolated Bento media card with preserved media focus, FIFO slots and square swipe behavior."
 });
-const Cn = ee`
+const Mn = ee`
   :host {
     /* Tipografia — piso, fluido, teto. Interpola em vez de saltar. */
     --t-xs: clamp(9px, 2.6cqi, 11px);
@@ -22049,7 +22144,7 @@ const Cn = ee`
     --motion-base: 220ms;
     --ease: cubic-bezier(0.2, 0, 0, 1);
   }
-`, Tn = [
+`, Rn = [
   {
     entity: "script.bruno_scene_apagar_todas_as_luzes",
     name: "Apagar todas as luzes",
@@ -22057,35 +22152,35 @@ const Cn = ee`
     comoCriar: "CRIADA em 2026-08-06 (Fase 5e.3), com autorizacao do usuario, em config/packages/bruno_scenes.yaml — mesmo padrao dos demais: script bruno_scene_*, nao entidade scene. O painel de Cenas lista scripts."
   }
 ];
-function $n(o) {
-  const e = [], a = [];
-  for (const t of Tn)
-    o?.states?.[t.entity] ? e.push(t) : a.push(t);
-  return { disponiveis: e, ausentes: a };
+function Ln(o) {
+  const e = [], t = [];
+  for (const a of Rn)
+    o?.states?.[a.entity] ? e.push(a) : t.push(a);
+  return { disponiveis: e, ausentes: t };
 }
-function Mn(o) {
+function In(o) {
   const e = $r();
   if (!o) return { total: e.length, ok: 0, issues: [] };
-  const a = [];
-  let t = 0;
+  const t = [];
+  let a = 0;
   for (const { entityId: i, roomId: r, field: n } of e) {
     const s = o.states[i];
-    s ? s.state === "unavailable" ? a.push({ entityId: i, roomId: r, field: n, problem: "unavailable" }) : t++ : a.push({ entityId: i, roomId: r, field: n, problem: "missing" });
+    s ? s.state === "unavailable" ? t.push({ entityId: i, roomId: r, field: n, problem: "unavailable" }) : a++ : t.push({ entityId: i, roomId: r, field: n, problem: "missing" });
   }
-  return { total: e.length, ok: t, issues: a };
+  return { total: e.length, ok: a, issues: t };
 }
-function Rn(o) {
-  return $n(o).ausentes.map((e) => ({
+function Nn(o) {
+  return Ln(o).ausentes.map((e) => ({
     tipo: "scene",
     entityId: e.entity,
     nome: e.name,
     comoResolver: e.comoCriar
   }));
 }
-function Ln() {
+function zn() {
   const o = window.devicePixelRatio || 1;
   return {
-    buildId: "20260830",
+    buildId: "20260831",
     viewportCss: `${window.innerWidth} x ${window.innerHeight}`,
     screenPhysical: `${Math.round(window.screen.width * o)} x ${Math.round(
       window.screen.height * o
@@ -22096,20 +22191,20 @@ function Ln() {
     userAgent: navigator.userAgent
   };
 }
-const In = 2;
-function Nn(o, e) {
+const Hn = 2;
+function Dn(o, e) {
   if (["unavailable", "unknown"].includes(e)) return "indisponivel";
-  const a = String(o.frontend_stream_type ?? "");
-  return a === "web_rtc" ? "web_rtc" : a === "hls" ? "hls" : "instantaneo";
+  const t = String(o.frontend_stream_type ?? "");
+  return t === "web_rtc" ? "web_rtc" : t === "hls" ? "hls" : "instantaneo";
 }
-async function zn(o) {
-  const e = $i(o), a = o?.callWS;
-  if (!a || !e.cameras.length) return e;
-  const t = await Promise.all(
+async function Pn(o) {
+  const e = $i(o), t = o?.callWS;
+  if (!t || !e.cameras.length) return e;
+  const a = await Promise.all(
     e.cameras.map(async (r) => {
       if (r.caminho === "indisponivel") return r;
       try {
-        const s = (await a({
+        const s = (await t({
           type: "camera/capabilities",
           entity_id: r.entityId
         }))?.frontend_stream_types ?? [];
@@ -22124,12 +22219,12 @@ async function zn(o) {
     instantaneo: 0,
     indisponivel: 0
   };
-  for (const r of t) i[r.caminho]++;
+  for (const r of a) i[r.caminho]++;
   return {
     streamCarregado: e.streamCarregado,
-    cameras: t,
+    cameras: a,
     resumo: i,
-    veredito: Mi(i, t.length, e.streamCarregado)
+    veredito: Mi(i, a.length, e.streamCarregado)
   };
 }
 function $i(o) {
@@ -22140,40 +22235,40 @@ function $i(o) {
     veredito: "Sem hass — nada a sondar."
   };
   if (!o) return e;
-  const a = [];
+  const t = [];
   for (const [r, n] of Object.entries(o.states)) {
     if (!r.startsWith("camera.") || !n) continue;
     const s = n.attributes ?? {}, l = Number(s.supported_features ?? 0);
-    a.push({
+    t.push({
       entityId: r,
       nome: String(s.friendly_name ?? r),
       estado: String(n.state),
-      caminho: Nn(s, String(n.state)),
-      suportaStream: (l & In) !== 0
+      caminho: Dn(s, String(n.state)),
+      suportaStream: (l & Hn) !== 0
     });
   }
-  a.sort((r, n) => r.entityId.localeCompare(n.entityId));
-  const t = {
+  t.sort((r, n) => r.entityId.localeCompare(n.entityId));
+  const a = {
     web_rtc: 0,
     hls: 0,
     instantaneo: 0,
     indisponivel: 0
   };
-  for (const r of a) t[r.caminho]++;
-  const i = a.some((r) => r.suportaStream);
+  for (const r of t) a[r.caminho]++;
+  const i = t.some((r) => r.suportaStream);
   return {
     streamCarregado: i,
-    cameras: a,
-    resumo: t,
-    veredito: Mi(t, a.length, i)
+    cameras: t,
+    resumo: a,
+    veredito: Mi(a, t.length, i)
   };
 }
-function Mi(o, e, a) {
-  return e === 0 ? "Nenhuma câmera encontrada." : o.web_rtc > 0 ? `${o.web_rtc} de ${e} com WebRTC — vale medir stream nessas.` : o.hls > 0 ? `${o.hls} de ${e} só com HLS. A transcodificação roda na VM: stream só se a medição provar que compensa, e uma câmera por vez.` : a ? "Câmeras com stream declarado, mas sem tipo publicado — sondar de novo com o painel aberto." : "Nenhuma câmera declara suporte a stream — o instantâneo é o único caminho.";
+function Mi(o, e, t) {
+  return e === 0 ? "Nenhuma câmera encontrada." : o.web_rtc > 0 ? `${o.web_rtc} de ${e} com WebRTC — vale medir stream nessas.` : o.hls > 0 ? `${o.hls} de ${e} só com HLS. A transcodificação roda na VM: stream só se a medição provar que compensa, e uma câmera por vez.` : t ? "Câmeras com stream declarado, mas sem tipo publicado — sondar de novo com o painel aberto." : "Nenhuma câmera declara suporte a stream — o instantâneo é o único caminho.";
 }
-class Hn extends j {
+class jn extends j {
   constructor() {
-    super(...arguments), this._env = Ln(), this._sondando = !1, this._mensagem = "";
+    super(...arguments), this._env = zn(), this._sondando = !1, this._mensagem = "";
   }
   static {
     this.properties = {
@@ -22191,7 +22286,7 @@ class Hn extends j {
   }
   static {
     this.styles = [
-      Cn,
+      Mn,
       ee`
       :host {
         display: block;
@@ -22302,10 +22397,10 @@ class Hn extends j {
     `
     ];
   }
-  _row(e, a, t = "") {
+  _row(e, t, a = "") {
     return v`<div class="row">
       <dt>${e}</dt>
-      <dd class=${t}>${a}</dd>
+      <dd class=${a}>${t}</dd>
     </div>`;
   }
   /**
@@ -22316,7 +22411,7 @@ class Hn extends j {
    * inteiro para a área de transferência.
    */
   _runtime() {
-    const e = Ne(), a = (l) => (l / 1048576).toFixed(1) + " MB", t = (l) => l.toFixed(1) + " ms", i = e.vazamentos, r = i.timers + i.listeners + i.assinaturas, n = e.desdeAMarca, s = n ? n.instancias + n.timers + n.listeners + n.assinaturas : 0;
+    const e = Ne(), t = (l) => (l / 1048576).toFixed(1) + " MB", a = (l) => l.toFixed(1) + " ms", i = e.vazamentos, r = i.timers + i.listeners + i.assinaturas, n = e.desdeAMarca, s = n ? n.instancias + n.timers + n.listeners + n.assinaturas : 0;
     return v`
       <div>
         <h2>Runtime</h2>
@@ -22326,17 +22421,17 @@ class Hn extends j {
           ${this._row("Timers vivos", String(e.timersVivos))}
           ${this._row(
       "Memória usada",
-      e.memoria.ultima ? a(e.memoria.ultima.usado) : "sem leitura",
+      e.memoria.ultima ? t(e.memoria.ultima.usado) : "sem leitura",
       e.memoria.ultima ? "" : "warn"
     )}
           ${this._row(
       "Piso da memória",
-      e.memoria.amostras ? `${a(e.memoria.piso)} · pico ${a(e.memoria.pico)} · ${e.memoria.degraus} degrau(s)` : "—",
+      e.memoria.amostras ? `${t(e.memoria.piso)} · pico ${t(e.memoria.pico)} · ${e.memoria.degraus} degrau(s)` : "—",
       e.memoria.degraus < 2 ? "warn" : ""
     )}
           ${this._row(
       "Crescimento do piso",
-      e.memoria.amostras > 1 ? a(e.memoria.crescimentoDoPiso) : "—",
+      e.memoria.amostras > 1 ? t(e.memoria.crescimentoDoPiso) : "—",
       e.memoria.crescimentoDoPiso > 10 * 1048576 ? "warn" : "ok"
     )}
           ${this._row(
@@ -22363,12 +22458,12 @@ class Hn extends j {
               ${e.componentes.map(
       (l) => v`<li>
                   <strong>${l.nome}</strong> — ${l.render.total} renders
-                  (média ${l.render.total ? t(l.render.duracaoTotal / l.render.total) : "0.0 ms"},
-                  pior ${t(l.render.pior)}) ·
+                  (média ${l.render.total ? a(l.render.duracaoTotal / l.render.total) : "0.0 ms"},
+                  pior ${a(l.render.pior)}) ·
                   vivos: ${l.vivos} ·
                   timers ${l.timers.criados - l.timers.encerrados} ·
                   listeners ${l.listeners.criados - l.listeners.encerrados}
-                  ${l.requisicoes.total ? v` · ${l.requisicoes.total} req (${l.requisicoes.falhas} falhas, pior ${t(l.requisicoes.pior)})` : _}
+                  ${l.requisicoes.total ? v` · ${l.requisicoes.total} req (${l.requisicoes.falhas} falhas, pior ${a(l.requisicoes.pior)})` : _}
                   ${l.motivos.length ? v`<br /><span class="motivos"
                         >acordado por:
                         ${l.motivos.map((c) => `${c.motivo} (${c.total})`).join(" · ")}</span
@@ -22399,8 +22494,8 @@ class Hn extends j {
     this._mensagem = `Marca posta: ${e.instancias} instâncias, ${e.timers} timers, ${e.listeners} listeners. Navegue e volte aqui.`, this.requestUpdate();
   }
   _cameras() {
-    !this._sondaProfunda && !this._sondando && this._hass && (this._sondando = !0, zn(this._hass).then((a) => {
-      this._sondaProfunda = a, this._sondando = !1, this.requestUpdate();
+    !this._sondaProfunda && !this._sondando && this._hass && (this._sondando = !0, Pn(this._hass).then((t) => {
+      this._sondaProfunda = t, this._sondando = !1, this.requestUpdate();
     }));
     const e = this._sondaProfunda ?? $i(this._hass);
     return e.cameras.length ? v`
@@ -22415,7 +22510,7 @@ class Hn extends j {
         </dl>
         <p class="empty">${e.veredito}</p>
         <ul>
-          ${e.cameras.map((a) => v`<li>${a.entityId} → ${a.caminho}${a.suportaStream ? " · stream" : ""}</li>`)}
+          ${e.cameras.map((t) => v`<li>${t.entityId} → ${t.caminho}${t.suportaStream ? " · stream" : ""}</li>`)}
         </ul>
       </div>
     ` : _;
@@ -22432,15 +22527,15 @@ class Hn extends j {
     try {
       await navigator.clipboard.writeText(e), this._mensagem = "Baseline copiada.";
     } catch {
-      const a = document.createElement("textarea");
-      a.value = e, a.style.position = "fixed", a.style.opacity = "0", this.shadowRoot?.appendChild(a), a.select();
-      const t = document.execCommand("copy");
-      a.remove(), this._mensagem = t ? "Baseline copiada." : "Não foi possível copiar — use brunoRuntime.texto().";
+      const t = document.createElement("textarea");
+      t.value = e, t.style.position = "fixed", t.style.opacity = "0", this.shadowRoot?.appendChild(t), t.select();
+      const a = document.execCommand("copy");
+      t.remove(), this._mensagem = a ? "Baseline copiada." : "Não foi possível copiar — use brunoRuntime.texto().";
     }
     this.requestUpdate();
   }
   render() {
-    const e = this._env, a = Mn(this._hass), t = a.issues.filter((n) => n.problem === "missing"), i = a.issues.filter((n) => n.problem === "unavailable"), r = Rn(this._hass);
+    const e = this._env, t = In(this._hass), a = t.issues.filter((n) => n.problem === "missing"), i = t.issues.filter((n) => n.problem === "unavailable"), r = Nn(this._hass);
     return v`
       <div class="card">
         <div>
@@ -22460,13 +22555,13 @@ class Hn extends j {
           ${this._row("Movimento reduzido", e.reducedMotion ? "ativo" : "não")}
           ${this._row(
       "Entidades configuradas",
-      `${a.ok} / ${a.total}`,
-      a.issues.length === 0 ? "ok" : "warn"
+      `${t.ok} / ${t.total}`,
+      t.issues.length === 0 ? "ok" : "warn"
     )}
           ${this._row(
       "Não existem no HA",
-      String(t.length),
-      t.length === 0 ? "ok" : "bad"
+      String(a.length),
+      a.length === 0 ? "ok" : "bad"
     )}
           ${this._row(
       "Indisponíveis agora",
@@ -22497,11 +22592,11 @@ class Hn extends j {
               </div>
             ` : _}
 
-        ${t.length > 0 ? v`
+        ${a.length > 0 ? v`
               <div>
                 <h2>Entidades inexistentes</h2>
                 <ul>
-                  ${t.map(
+                  ${a.map(
       (n) => v`<li class="bad">${n.roomId} · ${n.field} → ${n.entityId}</li>`
     )}
                 </ul>
@@ -22524,7 +22619,7 @@ class Hn extends j {
     `;
   }
 }
-customElements.get("bruno-diagnostics") || customElements.define("bruno-diagnostics", Hn);
+customElements.get("bruno-diagnostics") || customElements.define("bruno-diagnostics", jn);
 const Ve = window;
 Ve.customCards = Ve.customCards ?? [];
 Ve.customCards.some((o) => o.type === "bruno-diagnostics") || Ve.customCards.push({
@@ -22532,60 +22627,60 @@ Ve.customCards.some((o) => o.type === "bruno-diagnostics") || Ve.customCards.pus
   name: "Bruno · Diagnóstico",
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
-const Wt = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.COtclf9Q.js"),
+const Wa = {
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.HHRyAifU.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.DlFTO3Vm.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
   "custom:bruno-music-subview": () => import("./bruno-music-subview.XuZ319ir.js")
-}, Yt = /* @__PURE__ */ new Map();
-async function Dn(o) {
-  if (!o || !Wt[o]) return;
-  let e = Yt.get(o);
-  e || (e = Wt[o](), Yt.set(o, e)), await e;
+}, Ya = /* @__PURE__ */ new Map();
+async function Vn(o) {
+  if (!o || !Wa[o]) return;
+  let e = Ya.get(o);
+  e || (e = Wa[o](), Ya.set(o, e)), await e;
 }
-async function La(o) {
-  o && (await Dn(o.type), o.card && await La(o.card), Array.isArray(o.cards) && await Promise.all(o.cards.map(La)));
+async function Lt(o) {
+  o && (await Vn(o.type), o.card && await Lt(o.card), Array.isArray(o.cards) && await Promise.all(o.cards.map(Lt)));
 }
-globalThis.BrunoLazyModules = { ensureForConfig: La };
-const da = ne.find((o) => o.id === "lavabo");
-da && (da.entities.temperature = "sensor.office_temp_humid_temperature", da.entities.humidity = "sensor.office_temp_humid_humidity");
-function Pn(o) {
-  const e = o / 6e4, a = o / 36e5, t = o / 864e5;
-  return e < 1 ? "<1m" : e < 60 ? `${Math.trunc(e)}m` : a < 24 ? `${Math.trunc(a)}h` : `${Math.trunc(t)}d`;
+globalThis.BrunoLazyModules = { ensureForConfig: Lt };
+const dt = ne.find((o) => o.id === "lavabo");
+dt && (dt.entities.temperature = "sensor.office_temp_humid_temperature", dt.entities.humidity = "sensor.office_temp_humid_humidity");
+function Bn(o) {
+  const e = o / 6e4, t = o / 36e5, a = o / 864e5;
+  return e < 1 ? "<1m" : e < 60 ? `${Math.trunc(e)}m` : t < 24 ? `${Math.trunc(t)}h` : `${Math.trunc(a)}d`;
 }
-function jn(o) {
-  const { hass: e, groupEntityId: a, activeSensorId: t, fallbackLightIds: i = [] } = o, r = o.now ?? Date.now(), n = a ? e.states[a] : void 0, s = t ? e.states[t] : void 0;
+function Un(o) {
+  const { hass: e, groupEntityId: t, activeSensorId: a, fallbackLightIds: i = [] } = o, r = o.now ?? Date.now(), n = t ? e.states[t] : void 0, s = a ? e.states[a] : void 0;
   let l = null;
   const c = s?.attributes.lights_on_count;
   if (c != null && c !== "" && !Number.isNaN(Number(c)))
     l = Math.trunc(Number(c));
   else {
-    const b = s?.attributes.lights_on;
-    if (Array.isArray(b))
-      l = b.length;
-    else if (typeof b == "string" && b.startsWith("[")) {
-      const u = b.match(/'/g);
+    const g = s?.attributes.lights_on;
+    if (Array.isArray(g))
+      l = g.length;
+    else if (typeof g == "string" && g.startsWith("[")) {
+      const u = g.match(/'/g);
       u && (l = u.length / 2);
     }
   }
-  const p = Vn(n);
-  l === null && p.length > 0 && (l = p.filter((b) => e.states[b]?.state === "on").length), l === null && i.length > 0 && (l = i.filter((b) => e.states[b]?.state === "on").length), l === null && (l = n?.state === "on" ? 1 : 0);
+  const p = Fn(n);
+  l === null && p.length > 0 && (l = p.filter((g) => e.states[g]?.state === "on").length), l === null && i.length > 0 && (l = i.filter((g) => e.states[g]?.state === "on").length), l === null && (l = n?.state === "on" ? 1 : 0);
   let d = String(s?.attributes.lights_elapsed ?? "");
   if (!d) {
-    const b = p.length > 0 ? p : i;
+    const g = p.length > 0 ? p : i;
     let u = null;
-    for (const g of b) {
-      const m = e.states[g];
+    for (const b of g) {
+      const m = e.states[b];
       if (m?.state !== "on" || !m.last_changed) continue;
       const f = Date.parse(m.last_changed);
       !Number.isNaN(f) && (u === null || f < u) && (u = f);
     }
     if (u === null && n?.state === "on" && n.last_changed) {
-      const g = Date.parse(n.last_changed);
-      Number.isNaN(g) || (u = g);
+      const b = Date.parse(n.last_changed);
+      Number.isNaN(b) || (u = b);
     }
-    d = u === null ? "" : Pn(r - u);
+    d = u === null ? "" : Bn(r - u);
   }
   const h = l === 1 ? "1 light" : `${l} lights`;
   return {
@@ -22594,33 +22689,33 @@ function jn(o) {
     label: l > 0 ? `${h}${d ? ` / ${d}` : ""}` : ""
   };
 }
-function Vn(o) {
+function Fn(o) {
   const e = o?.attributes.entity_id;
-  return Array.isArray(e) ? e.filter((a) => typeof a == "string") : [];
+  return Array.isArray(e) ? e.filter((t) => typeof t == "string") : [];
 }
-function Bn(o) {
-  const { hass: e, semanticSensorId: a, motionRecentId: t, occupancyId: i } = o, r = a ? e.states[a] : void 0, n = String(r?.state ?? "").toLowerCase(), s = r?.attributes.display;
+function Gn(o) {
+  const { hass: e, semanticSensorId: t, motionRecentId: a, occupancyId: i } = o, r = t ? e.states[t] : void 0, n = String(r?.state ?? "").toLowerCase(), s = r?.attributes.display;
   if (s && !["none", "unknown", "unavailable", ""].includes(n))
     return String(s).trim();
-  const l = t ? e.states[t] : void 0;
+  const l = a ? e.states[a] : void 0;
   return l && l.state !== "on" ? "" : (i ? e.states[i] : void 0)?.state === "on" ? "Ocupado" : "";
 }
-function Zt(o, e, a = ["on", "home", "active", "yes"]) {
+function Za(o, e, t = ["on", "home", "active", "yes"]) {
   if (!e) return !1;
-  const t = o.states[e];
-  return t ? a.includes(String(t.state).toLowerCase()) : !1;
+  const a = o.states[e];
+  return a ? t.includes(String(a.state).toLowerCase()) : !1;
 }
-function Kt(o, e, a = "") {
-  const t = typeof e == "string" ? [e] : e ?? [];
-  for (const i of t) {
+function Ka(o, e, t = "") {
+  const a = typeof e == "string" ? [e] : e ?? [];
+  for (const i of a) {
     const r = o.states[i], n = String(r?.state ?? "").toLowerCase();
     if (!(!r || ["unknown", "unavailable", "none", ""].includes(n)))
-      return `${r.state}${a}`;
+      return `${r.state}${t}`;
   }
   return "--";
 }
-const pa = "bruno-room-tile", Un = 1200, Fn = 560, Xt = 10;
-function Qt() {
+const pt = "bruno-room-tile", Wn = 1200, Yn = 560, Xa = 10;
+function Qa() {
   return {
     pointerId: null,
     down: !1,
@@ -22631,17 +22726,17 @@ function Qt() {
     holdTimer: null
   };
 }
-function ua(o) {
+function ut(o) {
   globalThis.BrunoLiquidGlass?.feedback?.(o);
 }
-function Jt(o) {
+function Ja(o) {
   return o === !0 ? !0 : typeof o == "number" ? o > 0 : ["true", "on", "yes", "1"].includes(String(o ?? "").toLowerCase());
 }
-class Gn extends j {
+class Zn extends j {
   constructor() {
     super(...arguments), this._lastAction = 0, this._observador = new He(), this._motivo = "", this._gestures = {
-      room: Qt(),
-      nav: Qt()
+      room: Qa(),
+      nav: Qa()
     }, this._timers = /* @__PURE__ */ new Set(), this._onThemeChanged = () => {
       this._tileModeCache = void 0, this.requestUpdate();
     }, this._fecharPainel = () => {
@@ -22653,9 +22748,9 @@ class Gn extends j {
   }
   setConfig(e) {
     if (!e?.room) throw new Error("bruno-room-tile: informe `room`");
-    const a = ne.find((t) => t.id === e.room);
-    if (!a) throw new Error(`bruno-room-tile: cômodo desconhecido "${e.room}"`);
-    this._config = e, this._room = a, this._observador.observar(this._watched());
+    const t = ne.find((a) => a.id === e.room);
+    if (!t) throw new Error(`bruno-room-tile: cômodo desconhecido "${e.room}"`);
+    this._config = e, this._room = t, this._observador.observar(this._watched());
   }
   getCardSize() {
     return 3;
@@ -22667,11 +22762,11 @@ class Gn extends j {
    * caminho (troca de tema, por exemplo), ele não pode herdar a causa anterior.
    */
   update(e) {
-    const a = this._motivo;
+    const t = this._motivo;
     this._motivo = "", si(
-      pa,
+      pt,
       () => super.update(e),
-      a || (this.hasUpdated ? "interação" : "montagem")
+      t || (this.hasUpdated ? "interação" : "montagem")
     );
   }
   /**
@@ -22681,33 +22776,33 @@ class Gn extends j {
    */
   set hass(e) {
     this._hass = e;
-    const a = this._observador.mudancas(e);
-    a.length !== 0 && (this._motivo = fi(a), this.requestUpdate());
+    const t = this._observador.mudancas(e);
+    t.length !== 0 && (this._motivo = fi(t), this.requestUpdate());
   }
   _watched() {
-    const e = this._room, a = e?.entities;
-    if (!a) return [];
-    const t = (e?.statusDots ?? []).flatMap((r) => r.entities ?? []);
+    const e = this._room, t = e?.entities;
+    if (!t) return [];
+    const a = (e?.statusDots ?? []).flatMap((r) => r.entities ?? []);
     return [
       ...(e?.popup?.lights ?? []).map((r) => r.entity),
       e?.applianceLine?.entity,
-      a.lightGroup,
-      ...a.lights ?? [],
+      t.lightGroup,
+      ...t.lights ?? [],
       e?.toggleTarget,
       e?.activeSensor,
-      a.motionRecent,
-      a.occupancy,
-      a.semanticState,
-      a.temperature,
-      a.humidity,
-      ...t
+      t.motionRecent,
+      t.occupancy,
+      t.semanticState,
+      t.temperature,
+      t.humidity,
+      ...a
     ].filter((r) => typeof r == "string");
   }
   connectedCallback() {
-    super.connectedCallback(), oi(pa), this._tileModeCache = void 0, globalThis.addEventListener?.("bruno-theme-changed", this._onThemeChanged);
+    super.connectedCallback(), oi(pt), this._tileModeCache = void 0, globalThis.addEventListener?.("bruno-theme-changed", this._onThemeChanged);
   }
   disconnectedCallback() {
-    super.disconnectedCallback(), ni(pa), globalThis.removeEventListener?.("bruno-theme-changed", this._onThemeChanged);
+    super.disconnectedCallback(), ni(pt), globalThis.removeEventListener?.("bruno-theme-changed", this._onThemeChanged);
     for (const e of this._timers) window.clearTimeout(e);
     this._timers.clear();
     for (const e of ["room", "nav"]) this._resetGesture(e);
@@ -22739,18 +22834,18 @@ class Gn extends j {
    * durante a rolagem da faixa. Os atributos `class` destes dois elementos são
    * estáticos no template, então o Lit não os sobrescreve.
    */
-  _classe(e, a, t) {
+  _classe(e, t, a) {
     const i = this.shadowRoot?.querySelector(e);
-    i && i.classList.toggle(a, t);
+    i && i.classList.toggle(t, a);
   }
   _alvoSeletor(e) {
     return e === "room" ? ".room-action" : ".room-nav-zone";
   }
-  _later(e, a) {
-    const t = window.setTimeout(() => {
-      this._timers.delete(t), e();
-    }, a);
-    return this._timers.add(t), t;
+  _later(e, t) {
+    const a = window.setTimeout(() => {
+      this._timers.delete(a), e();
+    }, t);
+    return this._timers.add(a), a;
   }
   // ── Gestos ───────────────────────────────────────────────────────────────
   //
@@ -22764,34 +22859,34 @@ class Gn extends j {
   //   3. a zona de navegação vive DENTRO do botão do cômodo. É o
   //      `stopPropagation` dela que impede o toque no título de acender a luz.
   _resetGesture(e) {
+    const t = this._gestures[e];
+    t.holdTimer !== null && (window.clearTimeout(t.holdTimer), this._timers.delete(t.holdTimer), t.holdTimer = null), t.down = !1, t.moved = !1, t.pointerId = null, this._classe(this._alvoSeletor(e), "is-pressed", !1);
+  }
+  _onDown(e, t) {
+    if (t.button != null && t.button !== 0) return;
     const a = this._gestures[e];
-    a.holdTimer !== null && (window.clearTimeout(a.holdTimer), this._timers.delete(a.holdTimer), a.holdTimer = null), a.down = !1, a.moved = !1, a.pointerId = null, this._classe(this._alvoSeletor(e), "is-pressed", !1);
-  }
-  _onDown(e, a) {
-    if (a.button != null && a.button !== 0) return;
-    const t = this._gestures[e];
-    if (t.pointerId !== null) {
-      a.stopPropagation();
+    if (a.pointerId !== null) {
+      t.stopPropagation();
       return;
     }
-    a.stopPropagation(), t.down = !0, t.moved = !1, t.holdFired = !1, t.pointerId = a.pointerId, t.startX = a.clientX, t.startY = a.clientY, this._classe(this._alvoSeletor(e), "is-pressed", !0), t.holdTimer = this._later(() => {
-      t.holdTimer = null, !(!t.down || t.moved) && (t.holdFired = !0, this._classe(this._alvoSeletor(e), "is-hold-fired", !0), this._later(() => this._classe(this._alvoSeletor(e), "is-hold-fired", !1), 260), this._runAction("hold"));
-    }, Fn);
+    t.stopPropagation(), a.down = !0, a.moved = !1, a.holdFired = !1, a.pointerId = t.pointerId, a.startX = t.clientX, a.startY = t.clientY, this._classe(this._alvoSeletor(e), "is-pressed", !0), a.holdTimer = this._later(() => {
+      a.holdTimer = null, !(!a.down || a.moved) && (a.holdFired = !0, this._classe(this._alvoSeletor(e), "is-hold-fired", !0), this._later(() => this._classe(this._alvoSeletor(e), "is-hold-fired", !1), 260), this._runAction("hold"));
+    }, Yn);
   }
-  _onMove(e, a) {
-    const t = this._gestures[e];
-    if (!t.down || a.pointerId !== t.pointerId) return;
-    const i = Math.abs(a.clientX - t.startX), r = Math.abs(a.clientY - t.startY);
-    i <= Xt && r <= Xt || (t.moved = !0, t.holdTimer !== null && (window.clearTimeout(t.holdTimer), this._timers.delete(t.holdTimer), t.holdTimer = null), this._classe(this._alvoSeletor(e), "is-pressed", !1));
+  _onMove(e, t) {
+    const a = this._gestures[e];
+    if (!a.down || t.pointerId !== a.pointerId) return;
+    const i = Math.abs(t.clientX - a.startX), r = Math.abs(t.clientY - a.startY);
+    i <= Xa && r <= Xa || (a.moved = !0, a.holdTimer !== null && (window.clearTimeout(a.holdTimer), this._timers.delete(a.holdTimer), a.holdTimer = null), this._classe(this._alvoSeletor(e), "is-pressed", !1));
   }
-  _onUp(e, a) {
-    const t = this._gestures[e];
-    if (a.pointerId !== t.pointerId) {
-      a.stopPropagation();
+  _onUp(e, t) {
+    const a = this._gestures[e];
+    if (t.pointerId !== a.pointerId) {
+      t.stopPropagation();
       return;
     }
-    a.preventDefault(), a.stopPropagation();
-    const i = t.down, r = t.moved, n = t.holdFired;
+    t.preventDefault(), t.stopPropagation();
+    const i = a.down, r = a.moved, n = a.holdFired;
     if (this._resetGesture(e), !(!i || r || n)) {
       if (e === "room") {
         this._runAction("tap");
@@ -22800,33 +22895,33 @@ class Gn extends j {
       this._classe(".room-nav-zone", "is-navigating", !0), this._later(() => this._classe(".room-nav-zone", "is-navigating", !1), 420), this._later(() => this._openSubview(), 90);
     }
   }
-  _onCancel(e, a) {
-    a.pointerId === this._gestures[e].pointerId && this._resetGesture(e);
+  _onCancel(e, t) {
+    t.pointerId === this._gestures[e].pointerId && this._resetGesture(e);
   }
-  _onKey(e, a) {
-    if (!(a.key !== "Enter" && a.key !== " ")) {
-      if (a.preventDefault(), e === "room") {
+  _onKey(e, t) {
+    if (!(t.key !== "Enter" && t.key !== " ")) {
+      if (t.preventDefault(), e === "room") {
         this._runAction("tap");
         return;
       }
-      a.stopPropagation(), this._classe(".room-nav-zone", "is-navigating", !0), this._later(() => this._classe(".room-nav-zone", "is-navigating", !1), 420), this._later(() => this._openSubview(), 90);
+      t.stopPropagation(), this._classe(".room-nav-zone", "is-navigating", !0), this._later(() => this._classe(".room-nav-zone", "is-navigating", !1), 420), this._later(() => this._openSubview(), 90);
     }
   }
   /** Toque curto alterna a luz principal; pressão longa apaga o cômodo inteiro. */
   _runAction(e) {
-    const a = this._room, t = this._hass;
-    if (!a || !t) return;
-    if (ua(e), e === "hold") {
-      const n = a.entities.lightGroup;
+    const t = this._room, a = this._hass;
+    if (!t || !a) return;
+    if (ut(e), e === "hold") {
+      const n = t.entities.lightGroup;
       if (!n) return;
-      t.callService("light", "turn_off", { entity_id: n }, { entity_id: n });
+      a.callService("light", "turn_off", { entity_id: n }, { entity_id: n });
       return;
     }
     const i = Date.now();
-    if (i - this._lastAction < Un) return;
+    if (i - this._lastAction < Wn) return;
     this._lastAction = i;
-    const r = a.toggleTarget ?? a.entities.lightGroup ?? a.entities.lights?.[0];
-    r && t.callService("light", "toggle", { entity_id: r }, { entity_id: r });
+    const r = t.toggleTarget ?? t.entities.lightGroup ?? t.entities.lights?.[0];
+    r && a.callService("light", "toggle", { entity_id: r }, { entity_id: r });
   }
   /**
    * Destino do chevron: a subview do cômodo ou, onde não há, o painel próprio.
@@ -22836,7 +22931,7 @@ class Gn extends j {
   _openSubview() {
     const e = this._room;
     if (e) {
-      if (ua("tap"), e.section) {
+      if (ut("tap"), e.section) {
         this.dispatchEvent(
           new CustomEvent("ll-custom", {
             detail: { action: "fire-dom-event", bruno_section: e.section },
@@ -22871,58 +22966,58 @@ class Gn extends j {
   _posicionarPainel() {
     const e = this.shadowRoot?.querySelector(".room-popup-panel");
     if (!e) return;
-    const a = this.getBoundingClientRect();
-    if (!a.width && !a.height) return;
-    const t = 10, i = window.innerWidth || document.documentElement.clientWidth, r = window.innerHeight || document.documentElement.clientHeight, n = e.offsetWidth || 520, s = e.offsetHeight || 240;
-    let l = a.right - n;
-    l = Math.min(Math.max(l, t), Math.max(t, i - n - t));
-    let c = a.bottom + t;
-    c + s > r - t && (c = a.top - s - t), c = Math.min(Math.max(c, t), Math.max(t, r - s - t)), e.style.left = `${Math.round(l)}px`, e.style.top = `${Math.round(c)}px`;
+    const t = this.getBoundingClientRect();
+    if (!t.width && !t.height) return;
+    const a = 10, i = window.innerWidth || document.documentElement.clientWidth, r = window.innerHeight || document.documentElement.clientHeight, n = e.offsetWidth || 520, s = e.offsetHeight || 240;
+    let l = t.right - n;
+    l = Math.min(Math.max(l, a), Math.max(a, i - n - a));
+    let c = t.bottom + a;
+    c + s > r - a && (c = t.top - s - a), c = Math.min(Math.max(c, a), Math.max(a, r - s - a)), e.style.left = `${Math.round(l)}px`, e.style.top = `${Math.round(c)}px`;
   }
   _alternarLuzDoPainel(e) {
-    this._hass && (ua("tap"), this._hass.callService("light", "toggle", { entity_id: e }, { entity_id: e }));
+    this._hass && (ut("tap"), this._hass.callService("light", "toggle", { entity_id: e }, { entity_id: e }));
   }
   // ── Modelo ───────────────────────────────────────────────────────────────
   _dots() {
-    const e = this._hass, a = this._room;
-    if (!e || !a) return [];
-    const t = a.activeSensor ? e.states[a.activeSensor] : void 0, i = (r) => {
+    const e = this._hass, t = this._room;
+    if (!e || !t) return [];
+    const a = t.activeSensor ? e.states[t.activeSensor] : void 0, i = (r) => {
       const n = (r.states ?? []).map((p) => p.toLowerCase()), s = (r.entities ?? []).some((p) => {
         if (r.offDelayMs && p.startsWith("media_player."))
           return Cr(e, p, Date.now(), r.offDelayMs);
         const d = e.states[p];
         return !!d && n.includes(String(d?.state ?? "").toLowerCase());
-      }), l = r.activeAttr ? Jt(t?.attributes[r.activeAttr]) : !1, c = r.spotifyDevice ? _n(e.states[Tr], r.spotifyDevice) : !1;
+      }), l = r.activeAttr ? Ja(a?.attributes[r.activeAttr]) : !1, c = r.spotifyDevice ? wn(e.states[Tr], r.spotifyDevice) : !1;
       return s || l || c;
     };
-    return (a.statusDots ?? []).filter(i).map((r) => ({ icon: r.icon, label: r.label, tone: r.tone }));
+    return (t.statusDots ?? []).filter(i).map((r) => ({ icon: r.icon, label: r.label, tone: r.tone }));
   }
   _statusLines() {
-    const e = this._hass, a = this._room;
-    if (!e || !a) return [];
-    const t = jn({
+    const e = this._hass, t = this._room;
+    if (!e || !t) return [];
+    const a = Un({
       hass: e,
-      groupEntityId: a.entities.lightGroup,
-      activeSensorId: a.activeSensor,
-      fallbackLightIds: a.entities.lights
-    }), i = a.entities.semanticState ? Bn({
+      groupEntityId: t.entities.lightGroup,
+      activeSensorId: t.activeSensor,
+      fallbackLightIds: t.entities.lights
+    }), i = t.entities.semanticState ? Gn({
       hass: e,
-      semanticSensorId: a.entities.semanticState,
-      motionRecentId: a.entities.motionRecent,
-      occupancyId: a.entities.occupancy
+      semanticSensorId: t.entities.semanticState,
+      motionRecentId: t.entities.motionRecent,
+      occupancyId: t.entities.occupancy
     }) : "", r = [];
-    t.label ? r.push(t.label) : Zt(e, a.entities.lightGroup) && r.push("On");
+    a.label ? r.push(a.label) : Za(e, t.entities.lightGroup) && r.push("On");
     const n = this._applianceLine();
     return n && r.push(n), i && r.push(i), r;
   }
   /** Linha do eletrodoméstico, no formato "Lavando / 12m". */
   _applianceLine() {
-    const e = this._hass, a = this._room, t = a?.applianceLine;
-    if (!e || !a || !t) return "";
-    const i = a.activeSensor ? e.states[a.activeSensor] : void 0, r = (t.states ?? []).map((c) => c.toLowerCase()), n = t.entity ? e.states[t.entity] : void 0;
-    if (!(!!n && r.includes(String(n?.state ?? "").toLowerCase()) || (t.activeAttr ? Jt(i?.attributes[t.activeAttr]) : !1))) return "";
-    const l = t.elapsedAttr ? String(i?.attributes[t.elapsedAttr] ?? "") : "";
-    return l ? `${t.label} / ${l}` : t.label;
+    const e = this._hass, t = this._room, a = t?.applianceLine;
+    if (!e || !t || !a) return "";
+    const i = t.activeSensor ? e.states[t.activeSensor] : void 0, r = (a.states ?? []).map((c) => c.toLowerCase()), n = a.entity ? e.states[a.entity] : void 0;
+    if (!(!!n && r.includes(String(n?.state ?? "").toLowerCase()) || (a.activeAttr ? Ja(i?.attributes[a.activeAttr]) : !1))) return "";
+    const l = a.elapsedAttr ? String(i?.attributes[a.elapsedAttr] ?? "") : "";
+    return l ? `${a.label} / ${l}` : a.label;
   }
   static {
     this.styles = ee`
@@ -23921,22 +24016,22 @@ class Gn extends j {
   `;
   }
   render() {
-    const e = this._room, a = this._hass;
+    const e = this._room, t = this._hass;
     if (!e) return _;
-    const t = a ? Zt(a, e.entities.lightGroup ?? e.entities.lights?.[0]) : !1, i = a ? Kt(a, e.entities.temperature, "°") : "--", r = a ? Kt(a, e.entities.humidity, "%") : "--", n = !!(e.entities.temperature ?? e.entities.humidity), s = this._statusLines(), l = this._dots(), c = "20260821-v3-webp-2", p = e.assetOff ? `/local/bruno-ui/assets/${e.assetOff}?v=${c}` : "", d = e.assetOn ? `/local/bruno-ui/assets/${e.assetOn}?v=${c}` : "", h = [
+    const a = t ? Za(t, e.entities.lightGroup ?? e.entities.lights?.[0]) : !1, i = t ? Ka(t, e.entities.temperature, "°") : "--", r = t ? Ka(t, e.entities.humidity, "%") : "--", n = !!(e.entities.temperature ?? e.entities.humidity), s = this._statusLines(), l = this._dots(), c = "20260821-v3-webp-2", p = e.assetOff ? `/local/bruno-ui/assets/${e.assetOff}?v=${c}` : "", d = e.assetOn ? `/local/bruno-ui/assets/${e.assetOn}?v=${c}` : "", h = [
       "room-card",
-      t ? "is-room-on" : "",
+      a ? "is-room-on" : "",
       this._phoneJoshCard ? "is-josh-phone-card" : "",
       this._tileMode ? "is-tile" : "",
       this._tileMode && this._config?.divider_left ? "has-divider" : ""
-    ].filter(Boolean).join(" "), b = this._config?.name ?? e.name, u = !!(e.section ?? e.popup), g = e.popup, m = globalThis.BrunoThemeManager?.current?.() === "josh" ? "josh" : "default";
+    ].filter(Boolean).join(" "), g = this._config?.name ?? e.name, u = !!(e.section ?? e.popup), b = e.popup, m = globalThis.BrunoThemeManager?.current?.() === "josh" ? "josh" : "default";
     return v`
       <div class=${h}>
         ${this._tileMode && this._config?.divider_left ? v`<span class="tile-divider" aria-hidden="true"></span>` : _}
         <button
           class="room-action"
           type="button"
-          aria-label=${b}
+          aria-label=${g}
           @pointerdown=${(f) => this._onDown("room", f)}
           @pointermove=${(f) => this._onMove("room", f)}
           @pointerup=${(f) => this._onUp("room", f)}
@@ -23952,8 +24047,8 @@ class Gn extends j {
         >
           <div class="room-icon" aria-hidden="true">
             <span class="room-asset-wrap">
-              ${p ? v`<img class="room-asset room-asset-off" src=${p} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${t ? "low" : "high"} />` : _}
-              ${d ? v`<img class="room-asset room-asset-on" src=${d} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${t ? "high" : "low"} />` : _}
+              ${p ? v`<img class="room-asset room-asset-off" src=${p} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${a ? "low" : "high"} />` : _}
+              ${d ? v`<img class="room-asset room-asset-on" src=${d} alt="" width="512" height="512" loading="eager" decoding="async" fetchpriority=${a ? "high" : "low"} />` : _}
             </span>
           </div>
 
@@ -23961,7 +24056,7 @@ class Gn extends j {
             class="room-nav-zone"
             role=${u ? "button" : "presentation"}
             tabindex=${u ? 0 : -1}
-            aria-label=${u ? `Abrir ${b}` : b}
+            aria-label=${u ? `Abrir ${g}` : g}
             @pointerdown=${(f) => u && this._onDown("nav", f)}
             @pointermove=${(f) => u && this._onMove("nav", f)}
             @pointerup=${(f) => u && this._onUp("nav", f)}
@@ -23970,7 +24065,7 @@ class Gn extends j {
             @keydown=${(f) => u && this._onKey("nav", f)}
           >
             <span class="room-title-row">
-              <span class="title">${b}</span>
+              <span class="title">${g}</span>
               ${u ? v`<span class="room-chevron" aria-hidden="true">›</span>` : _}
             </span>
             <span class="status-lines">${s.map((f) => v`<span>${f}</span>`)}</span>
@@ -23990,10 +24085,10 @@ class Gn extends j {
             </div>
           </div>
         </button>
-        ${g ? v`<dialog
+        ${b ? v`<dialog
               class="room-popup"
               data-bruno-popup-theme=${m}
-              aria-label=${g.title}
+              aria-label=${b.title}
               @click=${(f) => {
       f.target === f.currentTarget && this._fecharPainel();
     }}
@@ -24001,11 +24096,11 @@ class Gn extends j {
               <section class="room-popup-panel" role="document" @click=${(f) => f.stopPropagation()}>
                 <header class="room-popup-header">
                   <span class="room-popup-icon" aria-hidden="true">
-                    <bruno-icon icon=${g.icon}></bruno-icon>
+                    <bruno-icon icon=${b.icon}></bruno-icon>
                   </span>
                   <div class="room-popup-title">
-                    <strong>${g.title}</strong>
-                    ${g.subtitle ? v`<span>${g.subtitle}</span>` : _}
+                    <strong>${b.title}</strong>
+                    ${b.subtitle ? v`<span>${b.subtitle}</span>` : _}
                   </div>
                   <button
                     class="room-popup-close"
@@ -24016,9 +24111,9 @@ class Gn extends j {
                     ×
                   </button>
                 </header>
-                ${g.banner || g.bannerOn ? v`<div class="room-popup-banner">
+                ${b.banner || b.bannerOn ? v`<div class="room-popup-banner">
                       <img
-                        src=${(t ? g.bannerOn ?? g.banner : g.banner ?? g.bannerOn) ?? ""}
+                        src=${(a ? b.bannerOn ?? b.banner : b.banner ?? b.bannerOn) ?? ""}
                         alt=""
                         loading="eager"
                         decoding="async"
@@ -24026,8 +24121,8 @@ class Gn extends j {
                       <div class="room-popup-banner-shade" aria-hidden="true"></div>
                     </div>` : _}
                 <div class="room-popup-lights">
-                  ${g.lights.map((f) => {
-      const x = a?.states[f.entity], A = String(x?.state ?? "").toLowerCase(), $ = A === "on", z = !x || ["unavailable", "unknown", "none", ""].includes(A), M = [
+                  ${b.lights.map((f) => {
+      const x = t?.states[f.entity], A = String(x?.state ?? "").toLowerCase(), $ = A === "on", z = !x || ["unavailable", "unknown", "none", ""].includes(A), M = [
         "room-popup-light",
         $ ? "is-on" : "",
         z ? "is-unavailable" : ""
@@ -24054,7 +24149,7 @@ class Gn extends j {
     `;
   }
 }
-customElements.get("bruno-room-tile") || customElements.define("bruno-room-tile", Gn);
+customElements.get("bruno-room-tile") || customElements.define("bruno-room-tile", Zn);
 const Be = window;
 Be.customCards = Be.customCards ?? [];
 Be.customCards.some((o) => o.type === "bruno-room-tile") || Be.customCards.push({
@@ -24067,17 +24162,17 @@ Be.customCards.some((o) => o.type === "bruno-room-tile") || Be.customCards.push(
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Wn = (o) => (e, a) => {
-  a !== void 0 ? a.addInitializer(() => {
+const Kn = (o) => (e, t) => {
+  t !== void 0 ? t.addInitializer(() => {
     customElements.define(o, e);
   }) : customElements.define(o, e);
 };
-var Yn = Object.getOwnPropertyDescriptor, Zn = (o, e, a, t) => {
-  for (var i = t > 1 ? void 0 : t ? Yn(e, a) : e, r = o.length - 1, n; r >= 0; r--)
+var Xn = Object.getOwnPropertyDescriptor, Qn = (o, e, t, a) => {
+  for (var i = a > 1 ? void 0 : a ? Xn(e, t) : e, r = o.length - 1, n; r >= 0; r--)
     (n = o[r]) && (i = n(i) || i);
   return i;
 };
-const Kn = 6e3, Xn = (o) => o === "sala" ? { type: "custom:bruno-sala-card" } : { type: "custom:bruno-room-tile", room: o, variant: "tile" };
+const Jn = 6e3, es = (o) => o === "sala" ? { type: "custom:bruno-sala-card" } : { type: "custom:bruno-room-tile", room: o, variant: "tile" };
 let Ue = class extends j {
   constructor() {
     super(...arguments), this._pagina = 0, this._rodando = !1, this._pagAgenda = 0, this._assinatura = "", this._montados = /* @__PURE__ */ new WeakSet(), this._slotObservado = !1, this._tentativasDeMedida = 0, this._ultimaMedida = "", this._medirQuandoAssentar = () => {
@@ -24091,15 +24186,15 @@ let Ue = class extends j {
         this.style.removeProperty("--altura-util");
         return;
       }
-      const a = o.getBoundingClientRect(), t = e.top - a.top - o.clientTop + o.scrollTop, i = o.clientHeight - parseFloat(getComputedStyle(o).paddingBottom || "0"), r = Math.max(0, Math.round(i - t));
+      const t = o.getBoundingClientRect(), a = e.top - t.top - o.clientTop + o.scrollTop, i = o.clientHeight - parseFloat(getComputedStyle(o).paddingBottom || "0"), r = Math.max(0, Math.round(i - a));
       r && this.style.setProperty("--altura-util", String(r) + "px");
     }, this._teclaAgenda = (o) => {
       o.key !== "Enter" && o.key !== " " || (o.preventDefault(), this._abrirAgenda());
     }, this._abrirAgenda = async () => {
       const o = this._config?.favorites?.agenda ?? {};
       if (!o.calendarEntity) return;
-      const e = this.renderRoot.querySelector("dialog.agenda-modal"), a = this.renderRoot.querySelector(".agenda-modal-corpo");
-      !e || !a || (e.showModal?.(), await this._montar(a, {
+      const e = this.renderRoot.querySelector("dialog.agenda-modal"), t = this.renderRoot.querySelector(".agenda-modal-corpo");
+      !e || !t || (e.showModal?.(), await this._montar(t, {
         type: "custom:bruno-agenda-card",
         calendars: [o.calendarEntity, ...o.extraCalendars ?? []],
         days_to_show: 7
@@ -24120,7 +24215,7 @@ let Ue = class extends j {
   connectedCallback() {
     super.connectedCallback(), this._relogio ??= setInterval(() => {
       document.visibilityState !== "hidden" && (this._pagAgenda += 1, this.requestUpdate());
-    }, Kn), this._observador ??= new ResizeObserver(() => this._medirAlturaUtil()), this._observarLayout(), this._medirQuandoAssentar();
+    }, Jn), this._observador ??= new ResizeObserver(() => this._medirAlturaUtil()), this._observarLayout(), this._medirQuandoAssentar();
   }
   /**
    * Mede a altura util: do topo deste componente ate o fim da area rolavel da
@@ -24171,10 +24266,10 @@ let Ue = class extends j {
   }
   set hass(o) {
     this._hass = o;
-    for (const a of this.renderRoot?.querySelectorAll(
+    for (const t of this.renderRoot?.querySelectorAll(
       "[data-card-host] > *"
     ) ?? [])
-      a.hass = o;
+      t.hass = o;
     this._medirAlturaUtil();
     const e = this._assinaturaDeEstado();
     e !== this._assinatura && (this._assinatura = e, this._rodando = this._temAtividadeDinamica(), this.requestUpdate());
@@ -24207,10 +24302,10 @@ let Ue = class extends j {
   _comodoAtivo(o) {
     const e = ne.find((i) => i.id === o);
     if (!e) return !1;
-    const a = e.entities;
-    if (this._ligado(a.lightGroup) || this._ligado(a.motionRecent)) return !0;
-    const t = this._estado(a.climate);
-    return t && !["off", "unavailable", "unknown", ""].includes(t) ? !0 : (a.mediaPlayers ?? []).some((i) => ["playing", "buffering"].includes(this._estado(i)));
+    const t = e.entities;
+    if (this._ligado(t.lightGroup) || this._ligado(t.motionRecent)) return !0;
+    const a = this._estado(t.climate);
+    return a && !["off", "unavailable", "unknown", ""].includes(a) ? !0 : (t.mediaPlayers ?? []).some((i) => ["playing", "buffering"].includes(this._estado(i)));
   }
   /** Quantos cômodos das páginas que NÃO estão à vista têm atividade. */
   _ativosForaDaPagina() {
@@ -24225,7 +24320,7 @@ let Ue = class extends j {
    * (dezenas por minuto) pediria um render do compositor inteiro.
    */
   _assinaturaDeEstado() {
-    const o = this._config?.running ?? {}, e = this._config?.favorites?.wifi ?? {}, a = this._config?.favorites?.agenda ?? {};
+    const o = this._config?.running ?? {}, e = this._config?.favorites?.wifi ?? {}, t = this._config?.favorites?.agenda ?? {};
     return [
       ...this._paginas().flatMap((i) => i.rooms).map((i) => this._comodoAtivo(i) ? "1" : "0"),
       this._estado(o.camera),
@@ -24234,9 +24329,9 @@ let Ue = class extends j {
       this._estado(e.ssidEntity),
       this._estado(e.downloadEntity),
       this._estado(e.uploadEntity),
-      this._estado(a.calendarEntity),
-      JSON.stringify(this._hass?.states[a.calendarEntity ?? ""]?.attributes?.message ?? ""),
-      this._estado(a.insightsEntity),
+      this._estado(t.calendarEntity),
+      JSON.stringify(this._hass?.states[t.calendarEntity ?? ""]?.attributes?.message ?? ""),
+      this._estado(t.insightsEntity),
       ...(this._config?.scenes ?? []).map((i) => this._estado(i.script))
     ].join("|");
   }
@@ -24251,32 +24346,32 @@ let Ue = class extends j {
     if (!this._montados.has(o)) {
       this._montados.add(o);
       try {
-        const a = await globalThis.loadCardHelpers?.();
-        if (!a) throw new Error("loadCardHelpers indisponível");
-        const t = a.createCardElement(e);
-        this._hass && (t.hass = this._hass), o.replaceChildren(t), this._remedir();
-      } catch (a) {
+        const t = await globalThis.loadCardHelpers?.();
+        if (!t) throw new Error("loadCardHelpers indisponível");
+        const a = t.createCardElement(e);
+        this._hass && (a.hass = this._hass), o.replaceChildren(a), this._remedir();
+      } catch (t) {
         this._montados.delete(o);
-        const t = document.createElement("div");
-        t.className = "falha", t.textContent = String(e.room ?? e.type ?? "card"), o.replaceChildren(t), console.warn("bruno-home-phone: card filho falhou", e, a);
+        const a = document.createElement("div");
+        a.className = "falha", a.textContent = String(e.room ?? e.type ?? "card"), o.replaceChildren(a), console.warn("bruno-home-phone: card filho falhou", e, t);
       }
     }
   }
   updated(o) {
     this._slotObservado || this._observarLayout(), this._medirAlturaUtil();
     for (const e of this.renderRoot.querySelectorAll("[data-card-host]")) {
-      const a = e.dataset.cardHost;
-      if (a)
+      const t = e.dataset.cardHost;
+      if (t)
         try {
-          this._montar(e, JSON.parse(a));
+          this._montar(e, JSON.parse(t));
         } catch {
         }
     }
   }
   // ── pager ────────────────────────────────────────────────────────────────
   _aoRolarPager(o) {
-    const e = o.currentTarget, a = e.clientWidth || 1, t = Math.round(e.scrollLeft / a);
-    t !== this._pagina && (this._pagina = t, this.requestUpdate());
+    const e = o.currentTarget, t = e.clientWidth || 1, a = Math.round(e.scrollLeft / t);
+    a !== this._pagina && (this._pagina = a, this.requestUpdate());
   }
   _irPara(o) {
     const e = this.renderRoot.querySelector(".pager");
@@ -24287,7 +24382,7 @@ let Ue = class extends j {
     return v`
       <div
         class="celula ${e ? "is-larga" : ""}"
-        data-card-host=${JSON.stringify(Xn(o))}
+        data-card-host=${JSON.stringify(es(o))}
       ></div>
     `;
   }
@@ -24299,7 +24394,7 @@ let Ue = class extends j {
       (e) => v`
             <div class="pagina">
               ${e.rooms.map(
-        (a, t) => this._celula(a, e.rooms.length === 3 && t === 0)
+        (t, a) => this._celula(t, e.rooms.length === 3 && a === 0)
       )}
             </div>
           `
@@ -24313,13 +24408,13 @@ let Ue = class extends j {
       <div class="indicadores">
         <div class="dots">
           ${o.map(
-      (a, t) => v`
+      (t, a) => v`
               <button
-                class="dot ${t === this._pagina ? "is-atual" : ""}"
+                class="dot ${a === this._pagina ? "is-atual" : ""}"
                 type="button"
-                aria-label=${`Página ${t + 1}`}
-                aria-current=${t === this._pagina ? "true" : "false"}
-                @click=${() => this._irPara(t)}
+                aria-label=${`Página ${a + 1}`}
+                aria-current=${a === this._pagina ? "true" : "false"}
+                @click=${() => this._irPara(a)}
               ></button>
             `
     )}
@@ -24343,17 +24438,17 @@ let Ue = class extends j {
     `;
   }
   _wifi() {
-    const o = this._config?.favorites?.wifi ?? {}, e = this._hass?.states[o.ssidEntity ?? ""]?.state ?? "", a = String(e).trim(), t = !a || ["unknown", "unavailable", "none", ""].includes(a.toLowerCase()), i = (l) => {
+    const o = this._config?.favorites?.wifi ?? {}, e = this._hass?.states[o.ssidEntity ?? ""]?.state ?? "", t = String(e).trim(), a = !t || ["unknown", "unavailable", "none", ""].includes(t.toLowerCase()), i = (l) => {
       const c = Number(this._hass?.states[l ?? ""]?.state);
       return Number.isFinite(c) ? c : 0;
-    }, r = i(o.downloadEntity), n = i(o.uploadEntity), s = t ? "Offline" : r >= 1 ? "Excelente" : "Parcial";
+    }, r = i(o.downloadEntity), n = i(o.uploadEntity), s = a ? "Offline" : r >= 1 ? "Excelente" : "Parcial";
     return v`
       <div class="fav-card wifi" title=${`Sinal ${s}`}>
         <div class="fav-topo">
           <bruno-icon class="fav-icone" icon="wifi"></bruno-icon>
           <strong>Wi-Fi</strong>
         </div>
-        <div class="wifi-rede">${t ? "Sem rede" : a}</div>
+        <div class="wifi-rede">${a ? "Sem rede" : t}</div>
         <div class="wifi-taxas">
           <span>↓ ${r.toFixed(1)}</span><span>↑ ${n.toFixed(1)}</span>
         </div>
@@ -24400,17 +24495,17 @@ let Ue = class extends j {
    * backend — a mesma fonte que o hero usa no tablet.
    */
   _agenda() {
-    const o = this._config?.favorites?.agenda ?? {}, a = (o.calendarEntity ? this._hass?.states[o.calendarEntity] : void 0)?.attributes ?? {}, t = String(a.message ?? "").trim(), i = String(a.start_time ?? "").trim();
+    const o = this._config?.favorites?.agenda ?? {}, t = (o.calendarEntity ? this._hass?.states[o.calendarEntity] : void 0)?.attributes ?? {}, a = String(t.message ?? "").trim(), i = String(t.start_time ?? "").trim();
     let r = "";
     if (i) {
       const h = new Date(i.replace(" ", "T"));
       Number.isNaN(h.getTime()) || (r = h.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }));
     }
     const n = this._hass?.states[o.insightsEntity ?? ""]?.attributes, s = [];
-    t && s.push({ tipo: "agenda", marca: r || "Hoje", texto: t });
+    a && s.push({ tipo: "agenda", marca: r || "Hoje", texto: a });
     for (const h of n?.items ?? []) {
-      const b = String(h?.text ?? "").trim();
-      b && s.push({ tipo: "insight", marca: "", texto: b });
+      const g = String(h?.text ?? "").trim();
+      g && s.push({ tipo: "insight", marca: "", texto: g });
     }
     s.length || s.push({ tipo: "agenda", marca: "Hoje", texto: "Sem compromissos" });
     const l = this._pagAgenda % s.length, c = s[l] ?? s[0], p = c?.tipo !== "insight", d = p && !!o.calendarEntity;
@@ -24430,7 +24525,7 @@ let Ue = class extends j {
           ></bruno-icon>
           <strong>${p ? "Agenda" : "Insights"}</strong>
           ${s.length > 1 ? v`<span class="agenda-dots">
-                ${s.map((h, b) => v`<i class=${b === l ? "is-atual" : ""}></i>`)}
+                ${s.map((h, g) => v`<i class=${g === l ? "is-atual" : ""}></i>`)}
               </span>` : _}
         </div>
         ${p ? v`<div class="agenda-marca">${c?.marca ?? ""}</div>` : _}
@@ -24972,30 +25067,30 @@ Ue.styles = ee`
       }
     }
   `;
-Ue = Zn([
-  Wn("bruno-home-phone")
+Ue = Qn([
+  Kn("bruno-home-phone")
 ], Ue);
 const ei = /* @__PURE__ */ new WeakSet();
-function Qn(o) {
+function ts(o) {
   const e = o.shadowRoot;
-  e && e.querySelectorAll("img.room-asset").forEach((a) => {
-    a.draggable = !1, a.setAttribute("draggable", "false"), a.style.setProperty("-webkit-touch-callout", "none"), a.style.setProperty("-webkit-user-drag", "none"), a.style.setProperty("-webkit-user-select", "none"), a.style.setProperty("user-select", "none");
+  e && e.querySelectorAll("img.room-asset").forEach((t) => {
+    t.draggable = !1, t.setAttribute("draggable", "false"), t.style.setProperty("-webkit-touch-callout", "none"), t.style.setProperty("-webkit-user-drag", "none"), t.style.setProperty("-webkit-user-select", "none"), t.style.setProperty("user-select", "none");
   });
 }
-function Jn() {
+function as() {
   customElements.whenDefined("bruno-room-tile").then(() => {
     const o = customElements.get("bruno-room-tile");
     if (!o) return;
     const e = o.prototype;
     if (ei.has(e)) return;
     ei.add(e);
-    const a = e.updated;
-    e.updated = function(...t) {
-      a?.apply(this, t), Qn(this);
+    const t = e.updated;
+    e.updated = function(...a) {
+      t?.apply(this, a), ts(this);
     };
   });
 }
-class es {
+class is {
   constructor() {
     this.definicoes = /* @__PURE__ */ new Map();
   }
@@ -25015,20 +25110,20 @@ class es {
     return this.definicoes.has(e);
   }
 }
-const V = new es();
-function as(o) {
+const V = new is();
+function rs(o) {
   const e = V.obter(o.type);
   if (e)
     return e.create(o);
 }
-function ai(o) {
+function ti(o) {
   return V.obter(o.type)?.entities(o) ?? [];
 }
-function ts(o) {
-  const e = [], a = /* @__PURE__ */ new Set();
-  for (const [t, i] of o.entries()) {
-    const r = i.id || `posição ${t}`;
-    i.id ? a.has(i.id) ? e.push(`id repetido — "${i.id}"`) : a.add(i.id) : e.push(`dispositivo em ${r}: falta "id"`), i.type ? V.conhece(i.type) || e.push(`dispositivo "${r}": tipo não registrado — "${i.type}"`) : e.push(`dispositivo "${r}": falta "type"`), i.name || e.push(`dispositivo "${r}": falta "name"`);
+function os(o) {
+  const e = [], t = /* @__PURE__ */ new Set();
+  for (const [a, i] of o.entries()) {
+    const r = i.id || `posição ${a}`;
+    i.id ? t.has(i.id) ? e.push(`id repetido — "${i.id}"`) : t.add(i.id) : e.push(`dispositivo em ${r}: falta "id"`), i.type ? V.conhece(i.type) || e.push(`dispositivo "${r}": tipo não registrado — "${i.type}"`) : e.push(`dispositivo "${r}": falta "type"`), i.name || e.push(`dispositivo "${r}": falta "name"`);
     const n = V.obter(i.type)?.validate?.(i);
     n && !n.ok && e.push(...n.erros);
   }
@@ -25037,21 +25132,21 @@ function ts(o) {
 function Ri(o, e) {
   if (typeof o == "string") return o || void 0;
   if (!Array.isArray(o)) return;
-  const a = o.filter((i) => typeof i == "string" && !!i);
-  return a.find((i) => {
+  const t = o.filter((i) => typeof i == "string" && !!i);
+  return t.find((i) => {
     const r = e?.states[i];
     return r && !["unavailable", "unknown", ""].includes(String(r.state).toLowerCase());
-  }) ?? a[0];
+  }) ?? t[0];
 }
-function is(o) {
+function ns(o) {
   const e = /* @__PURE__ */ new Map();
-  for (const a of o) {
-    const t = a.group ?? "Casa", i = e.get(t);
-    i ? i.push(a) : e.set(t, [a]);
+  for (const t of o) {
+    const a = t.group ?? "Casa", i = e.get(a);
+    i ? i.push(t) : e.set(a, [t]);
   }
-  return [...e.entries()].map(([a, t]) => ({ grupo: a, itens: t }));
+  return [...e.entries()].map(([t, a]) => ({ grupo: t, itens: a }));
 }
-const ti = [
+const ai = [
   {
     id: "sala-tv",
     type: "media-tv",
@@ -25074,7 +25169,7 @@ const ti = [
     entity: "climate.sl_ar_condicionado",
     version: 1
   }
-], rs = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], os = ["on", "playing", "paused", "idle", "buffering"];
+], ss = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], ls = ["on", "playing", "paused", "idle", "buffering"];
 class Fe extends j {
   static {
     this.properties = { _hass: { state: !0 } };
@@ -25091,8 +25186,8 @@ class Fe extends j {
   _estado(e) {
     return e && this._hass ? this._hass.states[e] : void 0;
   }
-  _servico(e, a, t) {
-    this._hass?.callService(e, a, t, t);
+  _servico(e, t, a) {
+    this._hass?.callService(e, t, a, a);
   }
   static {
     this.estilosComuns = ee`
@@ -25160,33 +25255,33 @@ class Fe extends j {
   `;
   }
 }
-class ns extends Fe {
+class cs extends Fe {
   static {
     this.styles = [Fe.estilosComuns];
   }
   render() {
-    const e = this._entityId, a = this._estado(e);
-    if (!a) return v`<p class="indisponivel">Entidade indisponível: ${e ?? "—"}</p>`;
-    const t = os.includes(String(a.state)), i = String(a.attributes.source ?? a.attributes.app_name ?? "") || "HDMI 1", r = a.attributes.volume_level != null ? Math.round(Number(a.attributes.volume_level) * 100) : null;
+    const e = this._entityId, t = this._estado(e);
+    if (!t) return v`<p class="indisponivel">Entidade indisponível: ${e ?? "—"}</p>`;
+    const a = ls.includes(String(t.state)), i = String(t.attributes.source ?? t.attributes.app_name ?? "") || "HDMI 1", r = t.attributes.volume_level != null ? Math.round(Number(t.attributes.volume_level) * 100) : null;
     return v`
       <div class="titulo">
         <strong>${this._instancia?.name ?? "TV"}</strong>
-        <small>${t ? `Ligada · ${i}` : "Desligada"}</small>
+        <small>${a ? `Ligada · ${i}` : "Desligada"}</small>
       </div>
 
       <div class="linha">
         <button
-          class=${t ? "is-on" : ""}
+          class=${a ? "is-on" : ""}
           @click=${() => this._servico("homeassistant", "toggle", { entity_id: e })}
         >
-          <bruno-icon icon="mdi:power"></bruno-icon>${t ? "Desligar" : "Ligar"}
+          <bruno-icon icon="mdi:power"></bruno-icon>${a ? "Desligar" : "Ligar"}
         </button>
-        <button ?disabled=${!t} @click=${() => this._servico("media_player", "media_play_pause", { entity_id: e })}>
+        <button ?disabled=${!a} @click=${() => this._servico("media_player", "media_play_pause", { entity_id: e })}>
           <bruno-icon icon="mdi:pause"></bruno-icon>Play / Pause
         </button>
       </div>
 
-      ${t ? v`<div class="linha">
+      ${a ? v`<div class="linha">
             <button @click=${() => this._servico("media_player", "volume_down", { entity_id: e })}>
               <bruno-icon icon="mdi:volume-minus"></bruno-icon>
             </button>
@@ -25194,7 +25289,7 @@ class ns extends Fe {
             <button @click=${() => this._servico("media_player", "volume_up", { entity_id: e })}>
               <bruno-icon icon="mdi:volume-plus"></bruno-icon>
             </button>
-            <button @click=${() => this._servico("media_player", "volume_mute", { entity_id: e, is_volume_muted: !a.attributes.is_volume_muted })}>
+            <button @click=${() => this._servico("media_player", "volume_mute", { entity_id: e, is_volume_muted: !t.attributes.is_volume_muted })}>
               <bruno-icon icon="mdi:volume-mute"></bruno-icon>
             </button>
           </div>` : _}
@@ -25212,38 +25307,38 @@ class ns extends Fe {
     );
   }
 }
-class ss extends Fe {
+class ds extends Fe {
   static {
     this.styles = [Fe.estilosComuns];
   }
   render() {
-    const e = this._entityId, a = this._estado(e);
-    if (!a) return v`<p class="indisponivel">Entidade indisponível: ${e ?? "—"}</p>`;
-    const t = rs.includes(String(a.state)), i = Number(a.attributes.temperature), r = Number(a.attributes.current_temperature), n = Number.isFinite(Number(a.attributes.min_temp)) ? Number(a.attributes.min_temp) : 16, s = Number.isFinite(Number(a.attributes.max_temp)) ? Number(a.attributes.max_temp) : 30, l = Number(a.attributes.target_temp_step) || 1, c = Array.isArray(a.attributes.hvac_modes) ? a.attributes.hvac_modes : [], p = (d) => this._servico("climate", "set_temperature", {
+    const e = this._entityId, t = this._estado(e);
+    if (!t) return v`<p class="indisponivel">Entidade indisponível: ${e ?? "—"}</p>`;
+    const a = ss.includes(String(t.state)), i = Number(t.attributes.temperature), r = Number(t.attributes.current_temperature), n = Number.isFinite(Number(t.attributes.min_temp)) ? Number(t.attributes.min_temp) : 16, s = Number.isFinite(Number(t.attributes.max_temp)) ? Number(t.attributes.max_temp) : 30, l = Number(t.attributes.target_temp_step) || 1, c = Array.isArray(t.attributes.hvac_modes) ? t.attributes.hvac_modes : [], p = (d) => this._servico("climate", "set_temperature", {
       entity_id: e,
       temperature: Math.max(n, Math.min(s, d))
     });
     return v`
       <div class="titulo">
         <strong>${this._instancia?.name ?? "Ar-condicionado"}</strong>
-        <small>${t ? `${this._rotulo(a.state)} · ambiente ${Number.isFinite(r) ? r : "—"}°` : "Desligado"}</small>
+        <small>${a ? `${this._rotulo(t.state)} · ambiente ${Number.isFinite(r) ? r : "—"}°` : "Desligado"}</small>
       </div>
 
       <div class="linha">
         <button
-          class=${t ? "is-on" : ""}
-          @click=${() => this._servico("climate", t ? "turn_off" : "turn_on", { entity_id: e })}
+          class=${a ? "is-on" : ""}
+          @click=${() => this._servico("climate", a ? "turn_off" : "turn_on", { entity_id: e })}
         >
-          <bruno-icon icon="mdi:power"></bruno-icon>${t ? "Desligar" : "Ligar"}
+          <bruno-icon icon="mdi:power"></bruno-icon>${a ? "Desligar" : "Ligar"}
         </button>
       </div>
 
       <div class="linha">
-        <button ?disabled=${!t} @click=${() => p((Number.isFinite(i) ? i : 22) - l)}>
+        <button ?disabled=${!a} @click=${() => p((Number.isFinite(i) ? i : 22) - l)}>
           <bruno-icon icon="mdi:minus"></bruno-icon>
         </button>
         <span class="valor">${Number.isFinite(i) ? `${i}°` : "—"}</span>
-        <button ?disabled=${!t} @click=${() => p((Number.isFinite(i) ? i : 22) + l)}>
+        <button ?disabled=${!a} @click=${() => p((Number.isFinite(i) ? i : 22) + l)}>
           <bruno-icon icon="mdi:plus"></bruno-icon>
         </button>
       </div>
@@ -25251,7 +25346,7 @@ class ss extends Fe {
       ${c.length ? v`<div class="linha">
             ${c.map(
       (d) => v`<button
-                class=${String(a.state) === d ? "is-on" : ""}
+                class=${String(t.state) === d ? "is-on" : ""}
                 @click=${() => this._servico("climate", "set_hvac_mode", { entity_id: e, hvac_mode: d })}
               >
                 ${this._rotulo(d)}
@@ -25272,12 +25367,12 @@ class ss extends Fe {
     }[String(e).toLowerCase()] ?? e;
   }
 }
-customElements.get("bruno-control-tv") || customElements.define("bruno-control-tv", ns);
-customElements.get("bruno-control-climate") || customElements.define("bruno-control-climate", ss);
+customElements.get("bruno-control-tv") || customElements.define("bruno-control-tv", cs);
+customElements.get("bruno-control-climate") || customElements.define("bruno-control-climate", ds);
 function Li(o) {
   return (e) => {
-    const a = document.createElement(o);
-    return a.instancia = e, a;
+    const t = document.createElement(o);
+    return t.instancia = e, t;
   };
 }
 V.conhece("media-tv") || V.registrar({
@@ -25302,11 +25397,11 @@ V.conhece("climate") || V.registrar({
     erros: o.entity ? [] : [`dispositivo "${o.id}": clima exige "entity"`]
   })
 });
-const ha = "bruno-devices-panel", ls = ["on", "playing", "paused", "idle", "buffering", "cool", "heat", "fan_only", "dry", "heat_cool", "auto"];
-class cs extends j {
+const ht = "bruno-devices-panel", ps = ["on", "playing", "paused", "idle", "buffering", "cool", "heat", "fan_only", "dry", "heat_cool", "auto"];
+class us extends j {
   constructor() {
     super(...arguments), this._selecionado = "", this._controles = /* @__PURE__ */ new Map(), this._observador = new He(
-      ti.flatMap((e) => ai(e))
+      ai.flatMap((e) => ti(e))
     ), this._motivo = "";
   }
   static {
@@ -25316,23 +25411,23 @@ class cs extends j {
   }
   set hass(e) {
     this._hass = e;
-    for (const t of this._controles.values()) t.hass = e;
-    const a = this._observador.mudancas(e);
-    a.length !== 0 && (this._motivo = fi(a), this.requestUpdate());
+    for (const a of this._controles.values()) a.hass = e;
+    const t = this._observador.mudancas(e);
+    t.length !== 0 && (this._motivo = fi(t), this.requestUpdate());
   }
   get _dispositivos() {
-    return ti;
+    return ai;
   }
   _instancia(e) {
-    return this._dispositivos.find((a) => a.id === e);
+    return this._dispositivos.find((t) => t.id === e);
   }
   /** O primeiro ativo abre por padrão; sem nenhum, o primeiro da lista. */
   get _idAberto() {
-    return this._selecionado && this._instancia(this._selecionado) ? this._selecionado : this._dispositivos.find((a) => this._estaAtivo(a))?.id ?? this._dispositivos[0]?.id ?? "";
+    return this._selecionado && this._instancia(this._selecionado) ? this._selecionado : this._dispositivos.find((t) => this._estaAtivo(t))?.id ?? this._dispositivos[0]?.id ?? "";
   }
   _estaAtivo(e) {
-    const a = Ri(e.entity, this._hass), t = a && this._hass ? this._hass.states[a] : void 0;
-    return !!t && ls.includes(String(t?.state ?? "").toLowerCase());
+    const t = Ri(e.entity, this._hass), a = t && this._hass ? this._hass.states[t] : void 0;
+    return !!a && ps.includes(String(a?.state ?? "").toLowerCase());
   }
   /**
    * O controle do dispositivo aberto.
@@ -25341,34 +25436,34 @@ class cs extends j {
    * derruba a lista: vira uma entrada inválida, com o motivo à vista.
    */
   _controleDe(e) {
-    const a = this._instancia(e);
-    if (!a) return _;
-    if (!V.conhece(a.type))
+    const t = this._instancia(e);
+    if (!t) return _;
+    if (!V.conhece(t.type))
       return v`<p class="aviso">
-        Tipo de dispositivo não registrado: <code>${a.type}</code>.
+        Tipo de dispositivo não registrado: <code>${t.type}</code>.
         Registre o controle em <code>components/devices/controls.ts</code>.
       </p>`;
-    let t = this._controles.get(e);
-    if (!t) {
-      const i = as(a);
+    let a = this._controles.get(e);
+    if (!a) {
+      const i = rs(t);
       if (!i) return _;
-      t = i, this._controles.set(e, t);
+      a = i, this._controles.set(e, a);
     }
-    return this._hass && (t.hass = this._hass), t;
+    return this._hass && (a.hass = this._hass), a;
   }
   connectedCallback() {
-    super.connectedCallback(), oi(ha);
+    super.connectedCallback(), oi(ht);
   }
   disconnectedCallback() {
-    super.disconnectedCallback(), ni(ha);
+    super.disconnectedCallback(), ni(ht);
   }
   /** Mede o custo de cada atualizacao (Fase 6.0.1). */
   update(e) {
-    const a = this._motivo;
-    this._motivo = "", si(ha, () => super.update(e), a || "outro");
+    const t = this._motivo;
+    this._motivo = "", si(ht, () => super.update(e), t || "outro");
   }
   render() {
-    const e = ts(this._dispositivos), a = this._idAberto;
+    const e = os(this._dispositivos), t = this._idAberto;
     return v`
       <div class="painel" role="dialog" aria-modal="true" aria-label="Dispositivos">
         <header class="cabecalho">
@@ -25386,17 +25481,17 @@ class cs extends j {
 
         ${e.ok ? _ : v`<p class="aviso">
               Configuração de dispositivos com problema:
-              ${e.erros.map((t) => v`<span>${t}</span>`)}
+              ${e.erros.map((a) => v`<span>${a}</span>`)}
             </p>`}
 
         <div class="corpo">
           <nav class="lista" aria-label="Lista de dispositivos">
-            ${is(this._dispositivos).map(
-      (t) => v`
+            ${ns(this._dispositivos).map(
+      (a) => v`
                 <div class="grupo">
-                  <h3>${t.grupo}</h3>
-                  ${t.itens.map((i) => {
-        const r = this._estaAtivo(i), n = i.id === a;
+                  <h3>${a.grupo}</h3>
+                  ${a.itens.map((i) => {
+        const r = this._estaAtivo(i), n = i.id === t;
         return v`<button
                       type="button"
                       class="item ${n ? "is-selected" : ""} ${r ? "is-active" : ""}"
@@ -25417,14 +25512,14 @@ class cs extends j {
     )}
           </nav>
 
-          <section class="controle">${this._controleDe(a)}</section>
+          <section class="controle">${this._controleDe(t)}</section>
         </div>
       </div>
     `;
   }
   /** Diagnóstico: quais entidades este painel observa. Usado na Fase 6.1. */
   entidadesObservadas() {
-    return [...new Set(this._dispositivos.flatMap((e) => ai(e)))];
+    return [...new Set(this._dispositivos.flatMap((e) => ti(e)))];
   }
   static {
     this.styles = ee`
@@ -25635,55 +25730,55 @@ class cs extends j {
   `;
   }
 }
-customElements.get("bruno-devices-panel") || customElements.define("bruno-devices-panel", cs);
-const Z = "ha-web-rtc-player", ds = 6e3, be = 48, ge = 27, ii = 500;
-let ba;
+customElements.get("bruno-devices-panel") || customElements.define("bruno-devices-panel", us);
+const Z = "ha-web-rtc-player", hs = 6e3, ge = 48, be = 27, ii = 500;
+let gt;
 const Me = /* @__PURE__ */ new WeakMap();
-function ps(o) {
+function gs(o) {
   return o.split(".")[1] ?? o;
 }
-function xe(o, e, a = 0, t = !0) {
-  ir(`marco: ${ps(o)} · player webrtc · ${e}`, a, t);
+function xe(o, e, t = 0, a = !0) {
+  ir(`marco: ${gs(o)} · player webrtc · ${e}`, t, a);
 }
-function us() {
+function bs() {
   return typeof customElements > "u" ? Promise.resolve(!1) : customElements.get(Z) ? Promise.resolve(!0) : new Promise((o) => {
     let e = !1;
-    const a = (i) => {
-      e || (e = !0, globalThis.clearTimeout(t), o(i));
-    }, t = globalThis.setTimeout(() => a(!!customElements.get(Z)), ds);
-    customElements.whenDefined(Z).then(() => a(!0));
+    const t = (i) => {
+      e || (e = !0, globalThis.clearTimeout(a), o(i));
+    }, a = globalThis.setTimeout(() => t(!!customElements.get(Z)), hs);
+    customElements.whenDefined(Z).then(() => t(!0));
   });
 }
-async function hs(o, e) {
+async function ms(o, e) {
   if (typeof customElements > "u") return !1;
   if (customElements.get(Z)) return !0;
-  const a = globalThis.loadCardHelpers;
-  if (typeof a != "function") return !1;
+  const t = globalThis.loadCardHelpers;
+  if (typeof t != "function") return !1;
   try {
-    const t = await a();
+    const a = await t();
     if (customElements.get(Z)) return !0;
-    const i = t.createCardElement?.({
+    const i = a.createCardElement?.({
       type: "picture-entity",
       entity: o,
       camera_view: "live",
       show_name: !1,
       show_state: !1
     });
-    return i && e && (i.hass = e), await us();
+    return i && e && (i.hass = e), await bs();
   } catch {
     return !1;
   }
 }
-async function bs(o, e) {
+async function fs(o, e) {
   if (typeof customElements < "u" && customElements.get(Z)) return !0;
-  const a = typeof performance < "u" ? performance.now() : Date.now();
-  xe(o, "ausente; carregando modulo", 0, !1), ba ??= hs(o, e).finally(() => {
-    ba = void 0;
+  const t = typeof performance < "u" ? performance.now() : Date.now();
+  xe(o, "ausente; carregando modulo", 0, !1), gt ??= ms(o, e).finally(() => {
+    gt = void 0;
   });
-  const t = await ba, i = typeof performance < "u" ? performance.now() : Date.now();
-  return xe(o, t ? "definido sob demanda" : "definicao indisponivel", i - a, t), t;
+  const a = await gt, i = typeof performance < "u" ? performance.now() : Date.now();
+  return xe(o, a ? "definido sob demanda" : "definicao indisponivel", i - t, a), a;
 }
-function gs() {
+function vs() {
   if (typeof customElements > "u" || !customElements.get(Z)) return;
   const o = document.createElement(Z);
   o.classList.add("camera-live-el"), o.setAttribute("muted", ""), o.setAttribute("playsinline", ""), o.setAttribute("autoplay", "");
@@ -25691,116 +25786,116 @@ function gs() {
     o.fitMode = "cover";
   } catch {
   }
-  return vs(o), o;
+  return ys(o), o;
 }
-function Ii(o, e, a) {
-  return e >= 80 && e - o >= 48 && e - a >= 48;
+function Ii(o, e, t) {
+  return e >= 80 && e - o >= 48 && e - t >= 48;
 }
-function ms(o, e, a) {
-  if (e !== be || a !== ge || o.length !== e * a * 4) return !1;
-  const t = 6, i = 3, r = e / t, n = a / i, s = Array.from({ length: i }, () => Array(t).fill(!1));
+function _s(o, e, t) {
+  if (e !== ge || t !== be || o.length !== e * t * 4) return !1;
+  const a = 6, i = 3, r = e / a, n = t / i, s = Array.from({ length: i }, () => Array(a).fill(!1));
   for (let l = 0; l < i; l++)
-    for (let c = 0; c < t; c++) {
+    for (let c = 0; c < a; c++) {
       const p = /* @__PURE__ */ new Map();
-      let d = 0, h = 0, b = 0;
+      let d = 0, h = 0, g = 0;
       for (let u = l * n; u < (l + 1) * n; u++)
-        for (let g = c * r; g < (c + 1) * r; g++) {
-          const m = (u * e + g) * 4;
+        for (let b = c * r; b < (c + 1) * r; b++) {
+          const m = (u * e + b) * 4;
           if ((o[m + 3] ?? 0) < 128) continue;
           const f = o[m] ?? 0, x = o[m + 1] ?? 0, A = o[m + 2] ?? 0;
           if (d++, !Ii(f, x, A)) continue;
           h++;
           const $ = f >> 4 | x >> 4 << 4 | A >> 4 << 8, z = (p.get($) ?? 0) + 1;
-          p.set($, z), b = Math.max(b, z);
+          p.set($, z), g = Math.max(g, z);
         }
-      s[l][c] = d >= 48 && h / d >= 0.82 && b / d >= 0.55;
+      s[l][c] = d >= 48 && h / d >= 0.82 && g / d >= 0.55;
     }
   for (let l = 0; l < i; l++)
-    for (let c = 0; c < t; c++)
+    for (let c = 0; c < a; c++)
       if (s[l][c] && (s[l][c + 1] || s[l + 1]?.[c]))
         return !0;
   return !1;
 }
-function fs(o, e = be, a = ge) {
-  const t = /* @__PURE__ */ new Map();
+function xs(o, e = ge, t = be) {
+  const a = /* @__PURE__ */ new Map();
   let i = 0;
   for (let d = 0; d + 3 < o.length; d += 4) {
     if ((o[d + 3] ?? 0) < 128) continue;
-    const h = o[d] ?? 0, b = o[d + 1] ?? 0, u = o[d + 2] ?? 0, g = h >> 4 | b >> 4 << 4 | u >> 4 << 8;
-    t.set(g, (t.get(g) ?? 0) + 1), i++;
+    const h = o[d] ?? 0, g = o[d + 1] ?? 0, u = o[d + 2] ?? 0, b = h >> 4 | g >> 4 << 4 | u >> 4 << 8;
+    a.set(b, (a.get(b) ?? 0) + 1), i++;
   }
   if (i < 32) return !1;
   let r = 0, n = 0;
-  for (const [d, h] of t)
+  for (const [d, h] of a)
     h <= r || (r = h, n = d);
   const s = (n & 15) * 16 + 8, l = (n >> 4 & 15) * 16 + 8, c = (n >> 8 & 15) * 16 + 8;
-  return r / i >= 0.45 && Ii(s, l, c) || ms(o, e, a);
+  return r / i >= 0.45 && Ii(s, l, c) || _s(o, e, t);
 }
-function vs(o) {
+function ys(o) {
   if (Me.has(o)) return;
   let e = 0;
-  const a = () => {
+  const t = () => {
     if (o.isConnected) {
       e = 0;
       const r = o.shadowRoot?.querySelector("video");
       if (r && r.readyState >= 2) {
-        const n = Wa(r), s = o.hasAttribute("data-bruno-quadro-verde");
+        const n = Wt(r), s = o.hasAttribute("data-bruno-quadro-verde");
         n && o.classList.contains("is-ready") ? (o.classList.remove("is-ready"), o.setAttribute("data-bruno-quadro-verde", ""), xe(o.entityid ?? "camera.desconhecida", "quadro verde eventual rejeitado", 0, !1)) : !n && s && (o.removeAttribute("data-bruno-quadro-verde"), o.classList.add("is-ready"), xe(o.entityid ?? "camera.desconhecida", "stream recuperado apos quadro verde"));
       }
     } else if (e += 1, e >= 20) {
       Me.delete(o);
       return;
     }
-    const i = globalThis.setTimeout(a, ii);
+    const i = globalThis.setTimeout(t, ii);
     Me.set(o, i);
-  }, t = globalThis.setTimeout(a, ii);
-  Me.set(o, t);
+  }, a = globalThis.setTimeout(t, ii);
+  Me.set(o, a);
 }
-function Wa(o) {
+function Wt(o) {
   if (typeof document > "u") return !1;
   try {
     const e = document.createElement("canvas");
-    e.width = be, e.height = ge;
-    const a = e.getContext("2d", { willReadFrequently: !0 });
-    return a ? (a.drawImage(o, 0, 0, be, ge), fs(
-      a.getImageData(0, 0, be, ge).data
+    e.width = ge, e.height = be;
+    const t = e.getContext("2d", { willReadFrequently: !0 });
+    return t ? (t.drawImage(o, 0, 0, ge, be), xs(
+      t.getImageData(0, 0, ge, be).data
     )) : !1;
   } catch {
     return !1;
   }
 }
-const _s = {
-  garantirPlayer: bs,
-  criarPlayer: gs,
+const ws = {
+  garantirPlayer: fs,
+  criarPlayer: vs,
   marcar: xe,
-  pareceQuadroVerde: Wa
-}, xs = {
+  pareceQuadroVerde: Wt
+}, ks = {
   principal: 6500,
   secundaria: 15e3
-}, ys = {
+}, Ss = {
   principal: 1500,
   secundaria: 3e3
-}, ws = 25e3, ks = 300, Ss = 6e4, As = 12e3, ri = { comImagem: 2, semImagem: 4 };
-function qs(o, e) {
+}, As = 25e3, qs = 300, Es = 6e4, Os = 12e3, ri = { comImagem: 2, semImagem: 4 };
+function Cs(o, e) {
   return o ? `${o}${o.includes("?") ? "&" : "?"}bruno_t=${e}` : "";
 }
-const Es = (o, e) => {
-  const a = new Image();
-  let t = !0;
+const Ts = (o, e) => {
+  const t = new Image();
+  let a = !0;
   const i = (r) => {
-    t && (t = !1, e(r));
+    a && (a = !1, e(r));
   };
-  return a.onload = () => i(Wa(a) ? "quadro-verde" : !0), a.onerror = () => i(!1), a.src = o, () => {
-    t = !1, a.onload = null, a.onerror = null, a.src = "";
+  return t.onload = () => i(Wt(t) ? "quadro-verde" : !0), t.onerror = () => i(!1), t.src = o, () => {
+    a = !1, t.onload = null, t.onerror = null, t.src = "";
   };
-}, Os = {
+}, $s = {
   agendar: (o, e) => globalThis.setTimeout(o, e),
   cancelar: (o) => globalThis.clearTimeout(o),
   agora: () => typeof performance < "u" ? performance.now() : Date.now()
 };
-class Cs {
+class Ms {
   constructor(e = {}) {
-    this.cameras = /* @__PURE__ */ new Map(), this.ligado = !1, this.carregador = e.carregador ?? Es, this.agenda = e.agenda ?? Os, this.aoCarregar = e.aoCarregar ?? (() => {
+    this.cameras = /* @__PURE__ */ new Map(), this.ligado = !1, this.carregador = e.carregador ?? Ts, this.agenda = e.agenda ?? $s, this.aoCarregar = e.aoCarregar ?? (() => {
     }), this.aoMedir = e.aoMedir ?? (() => {
     }), this.atrasoInicial = e.atrasoInicial ?? 0;
   }
@@ -25813,17 +25908,17 @@ class Cs {
    * remontar" do roteiro.
    */
   definirAlvos(e) {
-    const a = /* @__PURE__ */ new Set();
-    for (const t of e) {
-      if (!t.entityId || !t.base) continue;
-      a.add(t.entityId);
-      const i = this.cameras.get(t.entityId);
+    const t = /* @__PURE__ */ new Set();
+    for (const a of e) {
+      if (!a.entityId || !a.base) continue;
+      t.add(a.entityId);
+      const i = this.cameras.get(a.entityId);
       if (i) {
-        i.alvo = t;
+        i.alvo = a;
         continue;
       }
-      this.cameras.set(t.entityId, {
-        alvo: t,
+      this.cameras.set(a.entityId, {
+        alvo: a,
         emVoo: !1,
         inicio: 0,
         quadros: 0,
@@ -25831,17 +25926,17 @@ class Cs {
         falhasSeguidas: 0,
         ultimaDuracao: 0,
         pior: 0
-      }), this.ligado && this.agendarPrimeiro(t.entityId, a.size - 1);
+      }), this.ligado && this.agendarPrimeiro(a.entityId, t.size - 1);
     }
-    for (const [t, i] of [...this.cameras])
-      a.has(t) || (this.desmontar(i), this.cameras.delete(t));
+    for (const [a, i] of [...this.cameras])
+      t.has(a) || (this.desmontar(i), this.cameras.delete(a));
   }
   /** Liga o ciclo. Idempotente. As câmeras partem escalonadas. */
   iniciar() {
     if (this.ligado) return;
     this.ligado = !0;
     let e = 0;
-    for (const a of this.cameras.keys()) this.agendarPrimeiro(a, e++);
+    for (const t of this.cameras.keys()) this.agendarPrimeiro(t, e++);
   }
   /**
    * Para tudo: cancela os agendamentos E aborta o que está em voo.
@@ -25891,21 +25986,21 @@ class Cs {
    */
   buscarAgora(e) {
     if (!this.ligado) return;
-    const a = this.cameras.get(e);
-    !a || a.emVoo || (a.timer !== void 0 && (this.agenda.cancelar(a.timer), a.timer = void 0), this.buscar(a));
+    const t = this.cameras.get(e);
+    !t || t.emVoo || (t.timer !== void 0 && (this.agenda.cancelar(t.timer), t.timer = void 0), this.buscar(t));
   }
   /** Quantas requisições estão em voo agora. Zero é o esperado em repouso. */
   emVoo() {
     let e = 0;
-    for (const a of this.cameras.values()) a.emVoo && e++;
+    for (const t of this.cameras.values()) t.emVoo && e++;
     return e;
   }
   // ── interno ───────────────────────────────────────────────────────────────
-  agendarPrimeiro(e, a) {
-    const t = this.cameras.get(e);
-    !t || t.timer !== void 0 || t.emVoo || (t.timer = this.agenda.agendar(
-      () => this.buscar(t),
-      this.atrasoInicial + a * ks
+  agendarPrimeiro(e, t) {
+    const a = this.cameras.get(e);
+    !a || a.timer !== void 0 || a.emVoo || (a.timer = this.agenda.agendar(
+      () => this.buscar(a),
+      this.atrasoInicial + t * qs
     ));
   }
   desmontar(e) {
@@ -25914,28 +26009,28 @@ class Cs {
   buscar(e) {
     if (e.timer = void 0, !this.ligado || e.emVoo) return;
     e.emVoo = !0, e.inicio = this.agenda.agora();
-    const a = qs(e.alvo.base, Math.round(e.inicio) || 1);
-    e.prazo = this.agenda.agendar(() => this.encerrar(e, "prazo", a), ws), e.abortar = this.carregador(
-      a,
-      (t) => this.encerrar(
+    const t = Cs(e.alvo.base, Math.round(e.inicio) || 1);
+    e.prazo = this.agenda.agendar(() => this.encerrar(e, "prazo", t), As), e.abortar = this.carregador(
+      t,
+      (a) => this.encerrar(
         e,
-        t === "quadro-verde" ? "quadro-verde" : t ? "ok" : "erro",
-        a
+        a === "quadro-verde" ? "quadro-verde" : a ? "ok" : "erro",
+        t
       )
     );
   }
-  encerrar(e, a, t) {
+  encerrar(e, t, a) {
     if (!e.emVoo) return;
     e.emVoo = !1, e.prazo !== void 0 && (this.agenda.cancelar(e.prazo), e.prazo = void 0), e.abortar?.(), e.abortar = void 0;
     const i = this.agenda.agora() - e.inicio;
-    e.ultimaDuracao = i, i > e.pior && (e.pior = i), e.ultimoDesfecho = a;
-    const r = a === "ok" && e.quadros === 0;
-    a === "ok" ? (e.quadros++, e.falhasSeguidas = 0, r && (e.primeiroQuadro = i), this.aoCarregar({ entityId: e.alvo.entityId, url: t, duracao: i, primeiro: r })) : (e.falhas++, e.falhasSeguidas++), this.aoMedir(e.alvo.entityId, i, a, r), this.ligado && this.agendarProximo(e, i);
+    e.ultimaDuracao = i, i > e.pior && (e.pior = i), e.ultimoDesfecho = t;
+    const r = t === "ok" && e.quadros === 0;
+    t === "ok" ? (e.quadros++, e.falhasSeguidas = 0, r && (e.primeiroQuadro = i), this.aoCarregar({ entityId: e.alvo.entityId, url: a, duracao: i, primeiro: r })) : (e.falhas++, e.falhasSeguidas++), this.aoMedir(e.alvo.entityId, i, t, r), this.ligado && this.agendarProximo(e, i);
   }
-  agendarProximo(e, a) {
-    const t = e.alvo.prioridade;
-    let i = Math.max(ys[t], xs[t] - a);
-    const r = e.quadros === 0, n = r ? ri.semImagem : ri.comImagem, s = r ? As : Ss;
+  agendarProximo(e, t) {
+    const a = e.alvo.prioridade;
+    let i = Math.max(Ss[a], ks[a] - t);
+    const r = e.quadros === 0, n = r ? ri.semImagem : ri.comImagem, s = r ? Os : Es;
     if (e.falhasSeguidas >= n) {
       const l = 2 ** Math.min(e.falhasSeguidas - n + 1, 5);
       i = Math.min(s, i * l);
@@ -25944,41 +26039,44 @@ class Cs {
   }
 }
 nr();
-Jn();
-console.info("[bruno-dashboard] build 20260830");
-globalThis.BrunoCameraEngine = Cs;
-globalThis.BrunoCameraLive = _s;
+as();
+console.info("[bruno-dashboard] build 20260831");
+globalThis.BrunoCameraEngine = Ms;
+globalThis.BrunoCameraLive = ws;
 export {
   _ as A,
-  xs as C,
-  Cs as M,
+  Vs as B,
+  ks as C,
+  wn as D,
+  Ps as E,
+  Ms as M,
   He as O,
   ne as R,
   j as a,
-  $s as b,
-  Ps as c,
-  fi as d,
-  Ms as e,
-  si as f,
-  oi as g,
-  ni as h,
+  Ls as b,
+  zr as c,
+  Bs as d,
+  Is as e,
+  fi as f,
+  si as g,
+  oi as h,
   ee as i,
-  Ls as j,
-  bs as k,
-  gs as l,
+  ni as j,
+  zs as k,
+  fs as l,
   xe as m,
-  v as n,
-  Rs as o,
-  Wa as p,
-  wn as q,
+  vs as n,
+  Ns as o,
+  Wt as p,
+  Mn as q,
   ir as r,
-  Cn as s,
-  Ts as t,
-  Ie as u,
-  js as v,
-  Hs as w,
-  Ds as x,
-  _n as y,
-  zs as z
+  Nr as s,
+  v as t,
+  Hr as u,
+  An as v,
+  Rs as w,
+  Ie as x,
+  Us as y,
+  js as z
 };
-//# sourceMappingURL=main.DOvb_YDD.js.map
+//# sourceMappingURL=main.D2BcXk8C.js.map

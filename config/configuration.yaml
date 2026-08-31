@@ -199,7 +199,8 @@ frontend:
     # NOVO (2026-08-26 rev.2): side sheet 60% + controles 42px + rail mobile suavizada.
     # ANTERIOR (rollback sincronizacao tripla): - /local/dashboard/bruno-dashboard.B7LHAT4p.js
     # NOVO (2026-08-30): rebuild reproduzivel dos mesmos fontes validados.
-    - /local/dashboard/bruno-dashboard.Dq2NEBNk.js
+    # ANTERIOR (rollback folhas mobile unificadas 2026-08-31): - /local/dashboard/bruno-dashboard.Dq2NEBNk.js
+    - /local/dashboard/bruno-dashboard.qBASlcMq.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

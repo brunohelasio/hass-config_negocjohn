@@ -44,8 +44,20 @@ const bundle = readdirSync('config/www/dashboard')
       statSync(`config/www/dashboard/${b}`).mtimeMs - statSync(`config/www/dashboard/${a}`).mtimeMs,
   )[0];
 
+// A subview e publicada como chunk lazy. O Home Assistant a importa pelo
+// registro do bundle; o stub de helpers do banco cria o elemento diretamente,
+// portanto o banco precisa carregar esse chunk de forma explicita.
+const roomBundle = readdirSync('config/www/dashboard/chunks')
+  .filter((f) => /^bruno-room-subview\..*\.js$/.test(f))
+  .sort(
+    (a, b) =>
+      statSync(`config/www/dashboard/chunks/${b}`).mtimeMs -
+      statSync(`config/www/dashboard/chunks/${a}`).mtimeMs,
+  )[0];
+
 const scripts = [
   `/local/dashboard/${bundle}`,
+  `/local/dashboard/chunks/${roomBundle}`,
   '/local/bruno-ui/core/bruno-icons.js',
   '/local/bruno-ui/core/bruno-liquid-glass.js',
   '/local/bruno-ui/core/bruno-surface-material.js',
@@ -209,7 +221,10 @@ window.montarShell = async function montarShell(secao) {
     // adianta, porque o relogio da animacao nem comeca.
     const anular = document.createElement('style');
     anular.dataset.banco = 'sem-animacao';
-    anular.textContent = '*{animation:none !important;transition:none !important}';
+    // ANTERIOR (rollback teste de continuidade 2026-08-31): desativar tambem
+    // transition impedia o proprio banco de observar a saida continua.
+    // anular.textContent = '*{animation:none !important;transition:none !important}';
+    anular.textContent = '*{animation:none !important}';
     sub.shadowRoot && sub.shadowRoot.appendChild(anular);
   }
   await new Promise((ok) => setTimeout(ok, 120));
@@ -714,9 +729,12 @@ window.validarCortina = async function validarCortina() {
   };
 };
 
-// Confirma os tres caminhos de fechamento exigidos para a folha: toque fora,
-// chevron junto ao titulo e arrasto para baixo. Cada rodada parte da mesma
-// primeira linha.
+// ANTERIOR (rollback gesto mobile 2026-08-31): o banco confirmava toque fora,
+// chevron e estado final do arrasto. Ele nao amostrava o quadro da soltura e,
+// por isso, aprovava a folha mesmo quando ela saltava ao topo antes de descer.
+//
+// O contrato atual confirma: toque fora, alca unica, nenhum X/chevron visual,
+// continuidade no quadro de soltura, retorno curto e fechamento por arrasto.
 window.validarFechamentos = async function validarFechamentos() {
   const sub = _sub();
   if (!sub || !sub.shadowRoot) return { erro: 'sem subview' };
@@ -742,18 +760,68 @@ window.validarFechamentos = async function validarFechamentos() {
   await _esperar(340);
   const toqueFora = !sub.hasAttribute('data-folha');
 
-  const folhaChevron = await abrir();
-  const chaveChevron = sub.getAttribute('data-folha');
-  const chevron = folhaChevron && (chaveChevron === 'luzes'
-    ? folhaChevron.querySelector('.lights-dock-id')
-    : folhaChevron.querySelector('.folha-recolher'));
-  if (chevron) chevron.click();
+  const folhaCromo = await abrir();
+  await _esperar(300);
+  const alca = folhaCromo && folhaCromo.querySelector('.folha-alca-zona');
+  const chevrons = folhaCromo
+    ? [...folhaCromo.querySelectorAll('.lights-dock-chevron, .folha-recolher')]
+    : [];
+  const xs = folhaCromo ? [...folhaCromo.querySelectorAll('.folha-x')] : [];
+  const alcaVisivel = _visivel(alca);
+  const semChevron = chevrons.every((el) => !_visivel(el));
+  const semX = xs.every((el) => !_visivel(el));
+  const scrimCromo = raiz.querySelector('.folha-scrim');
+  if (scrimCromo) scrimCromo.click();
   await _esperar(340);
-  const botaoChevron = !sub.hasAttribute('data-folha');
+
+  const translateY = (el) => {
+    if (!el) return 0;
+    const transform = getComputedStyle(el).transform;
+    if (!transform || transform === 'none') return 0;
+    // ANTERIOR (rollback parser matrix3d 2026-08-31): o regex aplicado ao
+    // texto inteiro capturava o 3 do nome matrix3d como primeiro valor.
+    // const valores = transform.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+    const corpo = transform.slice(transform.indexOf('(') + 1, transform.lastIndexOf(')'));
+    const valores = corpo.match(/[-0-9.]+/g)?.map(Number) || [];
+    if (transform.startsWith('translate3d')) return valores[1] || 0;
+    if (transform.startsWith('translateY')) return valores[0] || 0;
+    return transform.startsWith('matrix3d') ? (valores[13] || 0) : (valores[5] || 0);
+  };
+
+  const folhaRetorno = await abrir();
+  await _esperar(300);
+  let retornoCurto = false;
+  if (folhaRetorno) {
+    folhaRetorno.scrollTop = 0;
+    const y = folhaRetorno.getBoundingClientRect().top + 12;
+    folhaRetorno.dispatchEvent(new PointerEvent('pointerdown', {
+      bubbles: true, composed: true, pointerId: 6, pointerType: 'touch', button: 0, clientY: y,
+    }));
+    globalThis.dispatchEvent(new PointerEvent('pointermove', {
+      bubbles: true, composed: true, pointerId: 6, pointerType: 'touch', buttons: 1, clientY: y + 34,
+    }));
+    // O intervalo reproduz um arrasto curto real; eventos sinteticos consecutivos
+    // seriam interpretados corretamente como flick pela regra de velocidade.
+    await _esperar(120);
+    globalThis.dispatchEvent(new PointerEvent('pointerup', {
+      bubbles: true, composed: true, pointerId: 6, pointerType: 'touch', button: 0, clientY: y + 34,
+    }));
+    await _esperar(230);
+    retornoCurto = sub.hasAttribute('data-folha') && Math.abs(translateY(folhaRetorno)) < 0.6;
+    const scrimRetorno = raiz.querySelector('.folha-scrim');
+    if (scrimRetorno) scrimRetorno.click();
+    await _esperar(340);
+  }
 
   const folhaArrasto = await abrir();
   let arrasto = false;
+  let continuidade = false;
+  let antesSoltarValor = null;
+  let depoisSoltarValor = null;
+  let transformInlineAntes = null;
+  let atributoArrastandoAntes = false;
   if (folhaArrasto) {
+    await _esperar(300);
     folhaArrasto.scrollTop = 0;
     const y = folhaArrasto.getBoundingClientRect().top + 12;
     folhaArrasto.dispatchEvent(new PointerEvent('pointerdown', {
@@ -762,17 +830,35 @@ window.validarFechamentos = async function validarFechamentos() {
     globalThis.dispatchEvent(new PointerEvent('pointermove', {
       bubbles: true, composed: true, pointerId: 7, pointerType: 'touch', buttons: 1, clientY: y + 122,
     }));
+    const antesSoltar = translateY(folhaArrasto);
+    antesSoltarValor = antesSoltar;
+    transformInlineAntes = folhaArrasto.style.transform || null;
+    atributoArrastandoAntes = folhaArrasto.hasAttribute('data-folha-arrastando');
     globalThis.dispatchEvent(new PointerEvent('pointerup', {
       bubbles: true, composed: true, pointerId: 7, pointerType: 'touch', button: 0, clientY: y + 122,
     }));
+    const depoisSoltar = translateY(folhaArrasto);
+    depoisSoltarValor = depoisSoltar;
+    continuidade = antesSoltar > 100 && depoisSoltar >= antesSoltar - 1;
     await _esperar(340);
     arrasto = !sub.hasAttribute('data-folha');
   }
   return {
     toqueFora,
-    botaoChevron,
+    alcaVisivel,
+    semChevron,
+    semX,
+    retornoCurto,
+    continuidade,
+    continuidadeMedida: {
+      antesSoltar: antesSoltarValor,
+      depoisSoltar: depoisSoltarValor,
+      transformInlineAntes,
+      atributoArrastandoAntes,
+    },
     arrasto,
-    todosCorretos: toqueFora && botaoChevron && arrasto,
+    todosCorretos: toqueFora && alcaVisivel && semChevron && semX
+      && retornoCurto && continuidade && arrasto,
   };
 };
 
@@ -1021,11 +1107,66 @@ async function _iniciarAutomaticamente() {
   const suite = String(params.get('suite') || '0').toLowerCase();
 
   try {
+    /* ANTERIOR (rollback harness lazy subview 2026-08-31): esperar shell e
+       subview juntas criava um impasse depois que a subview virou chunk lazy.
+       Ela so e importada quando a shell monta o card solicitado.
+    await Promise.all([
+      customElements.whenDefined('bruno-shell'),
+      customElements.whenDefined('bruno-room-subview'),
+    ]);
+    */
+    /* ANTERIOR (rollback import explicito do chunk 2026-08-31): com o chunk
+       ainda nao carregado, montar a shell criava um elemento sem setConfig.
+    await customElements.whenDefined('bruno-shell');
+    await window.montarShell(comodo);
+    await customElements.whenDefined('bruno-room-subview');
+    */
     await Promise.all([
       customElements.whenDefined('bruno-shell'),
       customElements.whenDefined('bruno-room-subview'),
     ]);
     await window.montarShell(comodo);
+    const statusPedido = String(params.get('status') || '').toLowerCase();
+    let statusResultado = null;
+    if (modo === 'phone' && statusPedido === 'lights') {
+      const shell = document.querySelector('bruno-shell');
+      const sheet = shell?.shadowRoot?.getElementById('statusLightsSheet');
+      sheet?.open?.([]);
+      await _esperar(340);
+      const painel = sheet?.shadowRoot?.querySelector('.panel');
+      const cabecalho = sheet?.shadowRoot?.querySelector('.header');
+      const alcaStatus = sheet?.shadowRoot?.querySelector('.handle');
+      const fecharStatus = sheet?.shadowRoot?.querySelector('.close-button');
+      const alcaStatusVisivel = _visivel(alcaStatus);
+      const recorteX = fecharStatus ? getComputedStyle(fecharStatus).clipPath : 'none';
+      const xStatusVisivel = _visivel(fecharStatus) && recorteX === 'none';
+      let continuidadeStatus = false;
+      if (painel && cabecalho) {
+        const y = cabecalho.getBoundingClientRect().top + 10;
+        cabecalho.dispatchEvent(new PointerEvent('pointerdown', {
+          bubbles: true, composed: true, pointerId: 18, pointerType: 'touch', button: 0,
+          clientX: 214, clientY: y,
+        }));
+        globalThis.dispatchEvent(new PointerEvent('pointermove', {
+          bubbles: true, composed: true, pointerId: 18, pointerType: 'touch', buttons: 1,
+          clientX: 214, clientY: y + 122,
+        }));
+        const antes = painel.style.transform;
+        globalThis.dispatchEvent(new PointerEvent('pointerup', {
+          bubbles: true, composed: true, pointerId: 18, pointerType: 'touch', button: 0,
+          clientX: 214, clientY: y + 122,
+        }));
+        continuidadeStatus = antes.includes('122') && painel.style.transform.includes('122');
+      }
+      await _esperar(340);
+      statusResultado = {
+        existe: Boolean(sheet),
+        alcaVisivel: alcaStatusVisivel,
+        semXVisivel: !xStatusVisivel,
+        continuidade: continuidadeStatus,
+        fechouPorArrasto: Boolean(sheet?.hidden),
+      };
+    }
     const folhaPedida = String(params.get('sheet') || '').toLowerCase();
     if (modo === 'phone' && ['luzes', 'midia', 'ac', 'eletro'].includes(folhaPedida)) {
       const sub = _sub();
@@ -1055,7 +1196,17 @@ async function _iniciarAutomaticamente() {
       }
     }
     let resultado;
-    if (folhaPedida) resultado = {
+    if (statusPedido === 'lights') resultado = {
+      viewport: [innerWidth, innerHeight],
+      statusPedido,
+      statusResultado,
+      aprovado: Boolean(
+        statusResultado?.existe && statusResultado?.alcaVisivel &&
+        statusResultado?.semXVisivel && statusResultado?.continuidade &&
+        statusResultado?.fechouPorArrasto
+      ),
+    };
+    else if (folhaPedida) resultado = {
       viewport: [innerWidth, innerHeight],
       folhaPedida,
       folhaAberta: _sub()?.getAttribute('data-folha') || null,

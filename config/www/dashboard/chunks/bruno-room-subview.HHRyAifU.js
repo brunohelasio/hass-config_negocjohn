@@ -1,5 +1,5 @@
-import { i as w, a as na, M as sa, C as la, r as O, e as v, b as C, O as G, p as ca, m as R, R as da, c as Y, d as pa, f as ma, g as ha, o as I, h as ua, j as N, k as ga, l as ba, s as xa, A as x, n as l, q as fa, t as va, u as wa, v as _a, w as ya, x as qa, y as ka, z as F } from "./main.DOvb_YDD.js";
-const za = {
+import { i as w, a as sa, M as la, C as ca, r as O, e as f, b as k, O as G, p as da, m as R, c as pa, s as ma, R as ha, d as Y, f as ua, g as ga, h as ba, o as I, j as xa, k as N, l as fa, n as va, q as wa, A as x, t as l, u as Q, v as _a, w as ya, x as qa, y as ka, z as za, B as Aa, D as Ca, E as F } from "./main.D2BcXk8C.js";
+const Sa = {
   sala: {
     title: "Sala",
     background: "/local/images/sala_estar.jpg?v=20260702-all-images-1",
@@ -725,44 +725,44 @@ const za = {
     }
   }
 };
-function Aa(g, a, e, o = {}) {
+function Ma(g, a, e, o = {}) {
   return g.callService(a, e, o);
 }
-const E = /* @__PURE__ */ new Set(), S = { timer: void 0, ouvindoVisibilidade: !1 }, Ca = 1e3;
-function J() {
+const E = /* @__PURE__ */ new Set(), S = { timer: void 0, ouvindoVisibilidade: !1 }, $a = 1e3;
+function K() {
   for (const g of [...E])
     try {
       g();
     } catch {
     }
 }
-function K() {
+function aa() {
   return typeof document < "u" && document.visibilityState === "hidden";
 }
-function aa() {
-  S.timer !== void 0 || E.size === 0 || K() || (S.timer = globalThis.setInterval(J, Ca));
-}
 function ea() {
+  S.timer !== void 0 || E.size === 0 || aa() || (S.timer = globalThis.setInterval(K, $a));
+}
+function oa() {
   S.timer !== void 0 && (globalThis.clearInterval(S.timer), S.timer = void 0);
 }
-function Sa() {
-  if (K()) {
-    ea();
+function Ea() {
+  if (aa()) {
+    oa();
     return;
   }
-  E.size > 0 && (J(), aa());
+  E.size > 0 && (K(), ea());
 }
-function Ma() {
-  S.ouvindoVisibilidade || typeof document > "u" || (document.addEventListener("visibilitychange", Sa), S.ouvindoVisibilidade = !0);
+function Oa() {
+  S.ouvindoVisibilidade || typeof document > "u" || (document.addEventListener("visibilitychange", Ea), S.ouvindoVisibilidade = !0);
 }
-function $a(g) {
-  E.add(g), Ma(), aa();
+function Ta(g) {
+  E.add(g), Oa(), ea();
   let a = !1;
   return () => {
-    a || (a = !0, E.delete(g), E.size === 0 && ea());
+    a || (a = !0, E.delete(g), E.size === 0 && oa());
   };
 }
-const Ea = [
+const Ra = [
   "camera.sl_camera_profile_1",
   "camera.vr_camera_profile_1",
   "camera.cz_camera_profile_1",
@@ -773,9 +773,9 @@ const Ea = [
   "camera.qma_camera_profile_1"
 ];
 function V(g) {
-  return !!g && Ea.includes(g);
+  return !!g && Ra.includes(g);
 }
-const Oa = w`
+const Ia = w`
 :host {
   --room-gap: 10px;
   --room-radius: var(--bruno-liquid-card-radius, 18px);
@@ -4793,7 +4793,7 @@ to {
 $ {
   globalThis.BrunoSurfaceMaterial?.subviewStyles?.() || '';
 }
-`, Ta = w`
+`, Na = w`
 :host([data-appliances]) .appliances-card {
   grid-area: appliances;
   min-width: 0;
@@ -4902,7 +4902,7 @@ $ {
 :host([data-appliances]) .appliance-tile.is-on .appliance-copy small {
   color: rgb(var(--bruno-liquid-warm-accent, 242,194,102));
 }
-`, Ra = w`
+`, Da = w`
 @media (max-width: 800px) {
 :host([data-tvhub]) .content-left, :host([data-tvhub]) .right-column, :host([data-tvhub]) .cams-media-row {
   display: contents;
@@ -5056,7 +5056,7 @@ $ {
   display: none;
 }
 }
-`, Ia = w`
+`, Fa = w`
 @media (max-width: 800px) {
 :host([data-ps5]) .camera-pip-feed {
   right: clamp(12.48px, 0.88cqi, 20.8px);
@@ -5074,7 +5074,7 @@ $ {
 w`
 
 `;
-const Na = w`
+const Va = w`
 :host([data-room='sala']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -5185,7 +5185,7 @@ const Na = w`
   overflow: visible;
 }
 }
-`, Da = w`
+`, La = w`
 :host([data-room='office']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -5310,7 +5310,7 @@ const Na = w`
   overflow: visible;
 }
 }
-`, Fa = w`
+`, Pa = w`
 :host([data-room='cozinha']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -5628,7 +5628,7 @@ const Na = w`
   display: none;
 }
 }
-`, Va = w`
+`, ja = w`
 :host([data-room='casal']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -5744,7 +5744,7 @@ const Na = w`
   overflow: visible;
 }
 }
-`, La = w`
+`, Ba = w`
 :host([data-room='marina']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -5857,7 +5857,7 @@ const Na = w`
   overflow: visible;
 }
 }
-`, Pa = w`
+`, Ua = w`
 :host([data-room='miguel']) .spotify-title.is-marquee span {
   max-width: none;
   min-width: 100%;
@@ -5973,14 +5973,14 @@ const Na = w`
   overflow: visible;
 }
 }
-`, ja = {
-  sala: Na,
-  office: Da,
-  cozinha: Fa,
-  casal: Va,
-  marina: La,
-  miguel: Pa
-}, Ba = w`
+`, Ha = {
+  sala: Va,
+  office: La,
+  cozinha: Pa,
+  casal: ja,
+  marina: Ba,
+  miguel: Ua
+}, Ga = w`
   @media (max-width: 800px) {
     /* ══ 1. A MOLDURA ═══════════════════════════════════════════════════════ */
 
@@ -6684,8 +6684,12 @@ const Na = w`
     }
 
     @keyframes fone-folha-sobe {
-      from { transform: translateY(100%); opacity: 0.82; }
-      to   { transform: translateY(0);    opacity: 1; }
+      /* ANTERIOR (rollback gesto mobile 2026-08-31): a folha tambem variava de
+         opacidade, o que fazia a superficie parecer apagar em vez de subir. */
+      /* from { transform: translateY(100%); opacity: 0.82; }
+         to   { transform: translateY(0);    opacity: 1; } */
+      from { transform: translate3d(0, 100%, 0); }
+      to   { transform: translate3d(0, 0, 0); }
     }
 
     /* ANTERIOR (rollback refinamento mobile): zerar o estado escondia a folha
@@ -6700,27 +6704,56 @@ const Na = w`
     }
 
     @keyframes fone-folha-desce {
-      from { transform: translateY(0); opacity: 1; }
-      to   { transform: translateY(100%); opacity: 0.82; }
+      /* ANTERIOR (rollback gesto mobile 2026-08-31):
+         from { transform: translateY(0); opacity: 1; }
+         to   { transform: translateY(100%); opacity: 0.82; } */
+      from { transform: translate3d(0, 0, 0); }
+      to   { transform: translate3d(0, 100%, 0); }
     }
 
-    /* A alça: dica visual de que a folha se fecha arrastando ou tocando fora. */
+    /* Durante drag/retorno a transicao inline e a unica autoridade. Durante a
+       saida iniciada pelo dedo, a folha continua do offset corrente em vez de
+       executar novamente o keyframe que parte de zero. */
+    :host([data-folha]) .room-subview [data-folha-arrastando],
+    :host([data-folha]) .room-subview [data-folha-retornando],
+    :host([data-folha][data-folha-saindo]) .room-subview [data-folha-arrasto-saindo] {
+      animation: none !important;
+      opacity: 1 !important;
+    }
+
+    /* ANTERIOR (rollback gesto mobile 2026-08-31): a alca era um ::after do
+       proprio card. Como cada modulo tem pseudos e cascata diferentes, ela nao
+       constituia uma peca visual unica entre as folhas. O bloco fica
+       preservado e neutralizado; a alca real vem logo abaixo. */
     :host([data-folha]) .room-subview .glass-card.lights-card::after,
     :host([data-folha]) .room-subview .glass-card.ac-card::after,
     :host([data-folha]) .room-subview .glass-card.media-hub-card::after,
     :host([data-folha]) .room-subview .glass-card.appliances-card::after {
-      content: '';
+      content: none;
+    }
+
+    :host([data-folha]) .room-subview .folha-alca-zona {
+      display: grid;
+      place-items: start center;
       position: absolute;
-      inset: 7px auto auto 50%;
+      top: 0;
+      left: 50%;
+      z-index: 4;
+      width: 76px;
+      height: 28px;
+      padding-top: 7px;
       transform: translateX(-50%);
-      /* Menor e mais discreta que a anterior (42x4 / 0.28): o item 11 pede que
-         a alca nao chame atencao. */
+      touch-action: none;
+      cursor: grab;
+      -webkit-tap-highlight-color: transparent;
+    }
+    :host([data-folha]) .room-subview .folha-alca-zona:active { cursor: grabbing; }
+    :host([data-folha]) .room-subview .folha-alca {
+      display: block;
       width: 34px;
       height: 3px;
-      padding: 0;
       border-radius: 2px;
       background: rgba(255, 255, 255, 0.20);
-      z-index: 2;
       pointer-events: none;
     }
 
@@ -6753,6 +6786,7 @@ const Na = w`
       height: auto;
       padding: 0 2px 12px;
       gap: 10px;
+      touch-action: none;
     }
     /* Filete abaixo do cabecalho — mesmo divisor da faixa, para o segundo nivel
        falar a mesma lingua do primeiro.
@@ -6931,7 +6965,8 @@ const Na = w`
       border-bottom: 0;
     }
     :host([data-folha='luzes']) .room-subview .lights-dock-chevron {
-      display: grid;
+      /* ANTERIOR (rollback gesto mobile 2026-08-31): display: grid. */
+      display: none !important;
       transform: none;
     }
 
@@ -7548,6 +7583,12 @@ const Na = w`
       outline-offset: 2px;
     }
 
+    /* O markup antigo fica preservado para rollback, mas o cromo mobile passa
+       a ter somente a alca superior como affordance de fechamento. */
+    :host([data-folha]) .room-subview .folha-recolher {
+      display: none !important;
+    }
+
     /* ANTERIOR (rollback pos-device): o X era um glifo MDI e depois um caractere
        em circulo. O markup fica preservado, mas sem ocupar layout; o chevron ao
        lado do titulo assumiu o fechamento. */
@@ -7626,6 +7667,7 @@ const Na = w`
        dentro do bloco de telefone e nao alcança larguras maiores. */
     .folha-x,
     .folha-recolher,
+    .folha-alca-zona,
     .folha-fechar {
       display: none !important;
     }
@@ -7752,17 +7794,17 @@ const Na = w`
     }
   }
 `, h = "bruno-room-subview";
-function Ua(g) {
+function Ya(g) {
   return g === !0 ? !0 : typeof g == "number" ? g > 0 : ["true", "on", "yes", "1"].includes(String(g ?? "").toLowerCase());
 }
-const Ha = ["playing", "paused", "on", "idle"], Ga = ["streaming", "recording", "idle", "on"], Ya = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Qa = ["cooling", "heating", "drying", "fan", "preheating"], Xa = ["off", "idle"], Za = [
+const Qa = ["playing", "paused", "on", "idle"], Xa = ["streaming", "recording", "idle", "on"], Za = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Wa = ["cooling", "heating", "drying", "fan", "preheating"], Ja = ["off", "idle"], Ka = [
   { visual: 0, position: 0 },
   { visual: 25, position: 33 },
   { visual: 50, position: 47 },
   { visual: 75, position: 70 },
   { visual: 100, position: 100 }
-], Q = 3e4, X = 1200, Wa = 350, L = 2, Ja = 700;
-function Ka(g) {
+], X = 3e4, Z = 1200, ae = 350, L = 2, ee = 700;
+function oe(g) {
   if (!g) return "∅";
   const a = g.attributes;
   return JSON.stringify([
@@ -7784,12 +7826,12 @@ function Ka(g) {
     a.spotify_device_name
   ]);
 }
-const ae = 4e3, ee = 3e4, oe = 700, ie = "/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260802-assets-resize-1", te = "/local/images/echo_pop.png?v=20260702-all-images-1", re = "/local/images/office_pc.png?v=20260702-all-images-1", Z = "bruno-ui:tv-hub-history:v1";
+const ie = 4e3, te = 3e4, re = 700, ne = "/local/bruno-ui/assets/tcl-qled-mini-led-75.png?v=20260802-assets-resize-1", se = "/local/images/echo_pop.png?v=20260702-all-images-1", le = "/local/images/office_pc.png?v=20260702-all-images-1", W = "bruno-ui:tv-hub-history:v1";
 function $(g, a = 0) {
   const e = Number(g);
   return Number.isFinite(e) ? e.toFixed(a).replace(/\.0+$/, "") : "--";
 }
-function W(g) {
+function J(g) {
   const a = Math.max(0, Math.floor(Number(g) || 0)), e = Math.floor(a / 3600), o = Math.floor(a % 3600 / 60), i = a % 60;
   return e > 0 ? `${e}:${String(o).padStart(2, "0")}:${String(i).padStart(2, "0")}` : `${o}:${String(i).padStart(2, "0")}`;
 }
@@ -7797,16 +7839,16 @@ function P(g) {
   const a = String(g ?? "").replace(/_/g, " ").trim();
   return a ? a.charAt(0).toUpperCase() + a.slice(1) : "—";
 }
-class j extends na {
+class j extends sa {
   constructor() {
-    super(...arguments), this._lightsOpen = !1, this._folha = null, this._folhaSaindo = !1, this._tokenAncoraFolha = 0, this._fonteMidia = "", this._fonteMidiaManual = !1, this._midiaAtivasAntes = [], this._tvUltimoVolume = null, this._tvUltimoPoster = "", this._tvUltimaFonte = "HDMI 1", this._tvUltimoTitulo = "", this._tvHistoricoCarregado = !1, this._menuMidiaAberto = !1, this._spotifyFerramentas = !1, this._painelClima = "", this._alvoAntesDoPedido = null, this._controlesCameraAbertos = !1, this._cameraAtiva = "", this._urlsCarregadas = {}, this._ultimaImagem = {}, this._motorCameras = new sa({
+    super(...arguments), this._lightsOpen = !1, this._folha = null, this._folhaSaindo = !1, this._tokenAncoraFolha = 0, this._fonteMidia = "", this._fonteMidiaManual = !1, this._midiaAtivasAntes = [], this._tvUltimoVolume = null, this._tvUltimoPoster = "", this._tvUltimaFonte = "HDMI 1", this._tvUltimoTitulo = "", this._tvHistoricoCarregado = !1, this._menuMidiaAberto = !1, this._spotifyFerramentas = !1, this._painelClima = "", this._alvoAntesDoPedido = null, this._controlesCameraAbertos = !1, this._cameraAtiva = "", this._urlsCarregadas = {}, this._ultimaImagem = {}, this._motorCameras = new la({
       // O primeiro quadro é do elemento de imagem, que nasce com `src` e baixa
       // sozinho. O motor entra só na primeira atualização — sem isto eram DUAS
       // requisições lentas por câmera na montagem, competindo entre si.
-      atrasoInicial: la.principal,
+      atrasoInicial: ca.principal,
       agenda: {
-        agendar: (a, e) => C(h, a, e),
-        cancelar: (a) => v(h, a),
+        agendar: (a, e) => k(h, a, e),
+        cancelar: (a) => f(h, a),
         agora: () => performance.now()
       },
       aoCarregar: (a) => this._quadroPronto(a.entityId, a.url),
@@ -7827,18 +7869,18 @@ class j extends na {
       if (!a || !e || !this.isConnected) return;
       const o = a.shadowRoot?.querySelector("video");
       if (!o || o.readyState < 2 || this._livePronto === e) return;
-      if (ca(o)) {
+      if (da(o)) {
         this._quadroVerdeRegistrado !== e && (this._quadroVerdeRegistrado = e, R(
           e,
           "quadro verde rejeitado",
           performance.now() - this._liveIniciadoEm,
           !1
-        )), v(h, this._timerQuadroVerde), this._timerQuadroVerde = C(h, () => {
+        )), f(h, this._timerQuadroVerde), this._timerQuadroVerde = k(h, () => {
           this._timerQuadroVerde = void 0, this._aoCarregarAoVivo();
         }, 700);
         return;
       }
-      this._livePronto = e, this._estadoAoVivo = "ao-vivo", v(h, this._timerQuadroVerde), this._timerQuadroVerde = void 0, a.classList.add("is-ready"), v(h, this._timerAoVivo), this._timerAoVivo = void 0;
+      this._livePronto = e, this._estadoAoVivo = "ao-vivo", f(h, this._timerQuadroVerde), this._timerQuadroVerde = void 0, a.classList.add("is-ready"), f(h, this._timerAoVivo), this._timerAoVivo = void 0;
       const i = e.split(".")[1] ?? e;
       O(
         `marco: ${i} · player ${this._modoPlayer} · primeiro quadro`,
@@ -7848,28 +7890,61 @@ class j extends na {
     }, this._aoInformarStreams = (a) => {
       a.detail?.hasVideo === !1 && this._falharAoVivo("sem video");
     }, this._aoFecharDialogo = (a) => {
-      a.detail?.dialog === "ha-more-info-dialog" && this._estadoAoVivo === "entregue-more-info" && (this._estadoAoVivo = "retomando", R(this._cameraAtiva, "more-info fechado; retomando"), v(h, this._timerRetomadaAoVivo), this._timerRetomadaAoVivo = C(h, () => {
+      a.detail?.dialog === "ha-more-info-dialog" && this._estadoAoVivo === "entregue-more-info" && (this._estadoAoVivo = "retomando", R(this._cameraAtiva, "more-info fechado; retomando"), f(h, this._timerRetomadaAoVivo), this._timerRetomadaAoVivo = k(h, () => {
         this._timerRetomadaAoVivo = void 0, !(!this.isConnected || this._estadoAoVivo !== "retomando") && (this._estadoAoVivo = "ocioso", this._fallbackAoVivo = "", this._sincronizarCameras());
-      }, oe));
+      }, re));
     }, this._montadoEm = 0, this._quadrosNaTela = /* @__PURE__ */ new Set(), this._socorros = /* @__PURE__ */ new Set(), this._materialInjetado = !1, this._luzesAssentadas = !1, this._aoMudarModoTelefone = (a) => {
       a.matches || this._limparFolhaImediatamente();
-    }, this._arrastoY = null, this._arrastoAlvo = null, this._iniciarArrasto = (a) => {
-      if (!this._folha || a.button !== 0) return;
-      const e = this._folhaEl();
-      !e || !a.composedPath().includes(e) || e.scrollTop > 0 || (this._arrastoY = a.clientY, this._arrastoAlvo = e, globalThis.addEventListener("pointermove", this._moverArrasto, { passive: !0 }), globalThis.addEventListener("pointerup", this._soltarArrasto), globalThis.addEventListener("pointercancel", this._cancelarArrasto));
+    }, this._arrasto = null, this._iniciarArrasto = (a) => {
+      if (!this._estaNoTelefone() || !this._folha || a.button !== 0 || this._folhaSaindo) return;
+      const e = this._folhaEl(), o = a.composedPath();
+      if (!e || !o.includes(e) || this._origemInterativa(o)) return;
+      const i = this._scrollerDoCaminho(o, e);
+      if (i && i.scrollTop > 0) return;
+      f(h, this._timerAssentarArrasto), this._timerAssentarArrasto = void 0, e.removeAttribute("data-folha-retornando"), e.removeAttribute("data-folha-arrasto-saindo"), e.style.transition = "none", e.style.willChange = "transform";
+      const t = a.timeStamp || performance.now();
+      this._arrasto = {
+        pointerId: a.pointerId,
+        inicioX: a.clientX,
+        inicioY: a.clientY,
+        alvo: e,
+        distancia: 0,
+        assumido: !1,
+        amostras: [{ y: a.clientY, time: t }]
+      }, globalThis.addEventListener("pointermove", this._moverArrasto, { passive: !1 }), globalThis.addEventListener("pointerup", this._soltarArrasto), globalThis.addEventListener("pointercancel", this._cancelarArrasto);
     }, this._moverArrasto = (a) => {
-      if (this._arrastoY == null || !this._arrastoAlvo) return;
-      const e = a.clientY - this._arrastoY;
-      if (e <= 0) {
-        this._arrastoAlvo.style.transform = "";
+      const e = this._arrasto;
+      if (!e || a.pointerId !== e.pointerId) return;
+      const o = a.clientX - e.inicioX, i = a.clientY - e.inicioY;
+      if (!e.assumido) {
+        if (Math.abs(o) > Math.abs(i) || i <= 4) return;
+        e.assumido = !0, e.alvo.setAttribute("data-folha-arrastando", "");
+      }
+      a.cancelable && a.preventDefault(), e.distancia = Math.max(0, i);
+      const t = a.timeStamp || performance.now();
+      e.amostras.push({ y: a.clientY, time: t }), e.amostras = e.amostras.filter((r) => t - r.time <= 160), e.alvo.style.transform = `translate3d(0, ${e.distancia.toFixed(1)}px, 0)`;
+    }, this._soltarArrasto = (a) => {
+      const e = this._arrasto;
+      if (!e || a.pointerId !== e.pointerId) return;
+      const o = a.timeStamp || performance.now();
+      e.amostras.push({ y: a.clientY, time: o });
+      const i = pa(e.amostras), t = Math.max(1, e.alvo.getBoundingClientRect().height), r = e.assumido && ma({
+        distance: e.distancia,
+        velocity: i,
+        height: t
+      }), n = {
+        alvo: e.alvo,
+        distancia: e.distancia,
+        velocidade: i
+      };
+      if (this._encerrarArrasto(!0), r) {
+        this._fecharFolha(n);
         return;
       }
-      this._arrastoAlvo.style.transform = `translateY(${(e * 0.72).toFixed(1)}px)`;
-    }, this._soltarArrasto = (a) => {
-      const e = this._arrastoY, o = this._arrastoAlvo;
-      this._encerrarArrasto(), !(e == null || !o) && a.clientY - e > 90 && this._fecharFolha();
+      this._retornarArrasto(n.alvo, n.distancia);
     }, this._cancelarArrasto = () => {
-      this._encerrarArrasto();
+      const a = this._arrasto?.alvo, e = this._arrasto?.distancia ?? 0;
+      this._encerrarArrasto(!0), a && this._retornarArrasto(a, e);
     }, this._artesQuebradas = /* @__PURE__ */ new Set(), this._artesCarregadas = /* @__PURE__ */ new Set(), this._aoFalharArte = (a) => {
       const o = a.currentTarget?.getAttribute("src") ?? "";
       !o || this._artesQuebradas.has(o) || (this._artesQuebradas.add(o), this._artesCarregadas.delete(o), this._tvUltimoPoster === o && (this._tvUltimoPoster = ""), this.requestUpdate());
@@ -7894,16 +7969,16 @@ class j extends na {
   }
   setConfig(a) {
     if (!a?.room) throw new Error("bruno-room-subview: informe `room`");
-    const e = da.find((n) => n.id === a.room);
+    const e = ha.find((n) => n.id === a.room);
     if (!e) throw new Error(`bruno-room-subview: cômodo desconhecido "${a.room}"`);
-    this._config = a, this._room = e, this._sub = za[a.room], this._config, this._hass;
+    this._config = a, this._room = e, this._sub = Sa[a.room], this._config, this._hass;
     const o = [
       ...Y(e),
       ...Y(this._sub)
     ], i = this._sub?.entities ?? {}, t = ["spotify", "tv", "speaker"].flatMap((n) => {
       const p = i[n];
       return Array.isArray(p) ? p : typeof p == "string" ? [p] : [];
-    }).filter((n) => !!n), r = Object.fromEntries(t.map((n) => [n, Ka]));
+    }).filter((n) => !!n), r = Object.fromEntries(t.map((n) => [n, oe]));
     this._observador = new G(o, { projecoes: r }), this._aplicarAtributos();
   }
   /**
@@ -7922,7 +7997,7 @@ class j extends na {
   set hass(a) {
     this._hass = a;
     const e = this._observador.mudancas(a);
-    e.length !== 0 && (this._motivo = pa(e), this.requestUpdate());
+    e.length !== 0 && (this._motivo = ua(e), this.requestUpdate());
   }
   getCardSize() {
     return 12;
@@ -7936,7 +8011,7 @@ class j extends na {
    */
   update(a) {
     const e = this._motivo;
-    this._motivo = "", ma(h, () => super.update(a), e || this._motivoPadrao());
+    this._motivo = "", ga(h, () => super.update(a), e || this._motivoPadrao());
   }
   _motivoPadrao() {
     return this.hasUpdated ? "interação" : "montagem";
@@ -7951,7 +8026,7 @@ class j extends na {
     super.updated(a), this._hass && (this._sincronizarCameras(), this._sincronizarLimiteFolhaTelefone(), this._sincronizarAlturaLuzesTelefone());
   }
   connectedCallback() {
-    super.connectedCallback(), ha(h), this._estadoAoVivo = "ocioso", this._fallbackAoVivo = "", this._montadoEm = performance.now(), this._quadrosNaTela.clear(), this._socorros.clear(), this._aplicarAtributos();
+    super.connectedCallback(), ba(h), this._estadoAoVivo = "ocioso", this._fallbackAoVivo = "", this._montadoEm = performance.now(), this._quadrosNaTela.clear(), this._socorros.clear(), this._aplicarAtributos();
     const a = globalThis;
     a.BrunoLiquidGlass?.apply?.(), a.BrunoSurfaceMaterial?.connect?.(this), this._injetarMaterial(), this._iniciarVigiaTelefone(), this._iniciarTimerCameras(), this._armarVigiaDeCameras(), this._iniciarTimerRelogio(), !this._ouvindoVisibilidade && typeof document < "u" && (I(h, document, "visibilitychange", this._aoMudarVisibilidade), this._ouvindoVisibilidade = !0), !this._ouvindoFechamentoDialogo && typeof window < "u" && (I(h, window, "dialog-closed", this._aoFecharDialogo), this._ouvindoFechamentoDialogo = !0), this._estaNoTelefone() || (this._lightsOpen = !0, this._luzesAssentadas = !0);
   }
@@ -7975,7 +8050,7 @@ class j extends na {
    * o último assinante sai.
    */
   _iniciarTimerRelogio() {
-    this._cancelarRelogio || (this._cancelarRelogio = $a(() => {
+    this._cancelarRelogio || (this._cancelarRelogio = Ta(() => {
       const a = this._hora();
       a !== this._ultimoMinuto && (this._ultimoMinuto = a, this._motivo = "relógio", this.requestUpdate());
     }));
@@ -7984,7 +8059,7 @@ class j extends na {
     this._cancelarRelogio?.(), this._cancelarRelogio = void 0;
   }
   disconnectedCallback() {
-    super.disconnectedCallback(), ua(h), globalThis.BrunoSurfaceMaterial?.disconnect?.(this), this._limparFolhaImediatamente(), this._pararVigiaTelefone(), this._encerrarArrasto(), this._pararTimerMovimentoCortina(), this._pararTimerCameras(), this._tokenDefinicaoPlayer++, this._estadoAoVivo = "ocioso", this._pararAoVivo(), v(h, this._timerRetomadaAoVivo), this._timerRetomadaAoVivo = void 0, this._timerLuzes && (v(h, this._timerLuzes), this._timerLuzes = void 0), this._pararTimerRelogio(), this._ouvindoVisibilidade && (N(h, document, "visibilitychange", this._aoMudarVisibilidade), this._ouvindoVisibilidade = !1), this._ouvindoFechamentoDialogo && (N(h, window, "dialog-closed", this._aoFecharDialogo), this._ouvindoFechamentoDialogo = !1);
+    super.disconnectedCallback(), xa(h), globalThis.BrunoSurfaceMaterial?.disconnect?.(this), this._limparFolhaImediatamente(), this._pararVigiaTelefone(), this._encerrarArrasto(), this._pararTimerMovimentoCortina(), this._pararTimerCameras(), this._tokenDefinicaoPlayer++, this._estadoAoVivo = "ocioso", this._pararAoVivo(), f(h, this._timerRetomadaAoVivo), this._timerRetomadaAoVivo = void 0, this._timerLuzes && (f(h, this._timerLuzes), this._timerLuzes = void 0), this._pararTimerRelogio(), this._ouvindoVisibilidade && (N(h, document, "visibilitychange", this._aoMudarVisibilidade), this._ouvindoVisibilidade = !1), this._ouvindoFechamentoDialogo && (N(h, window, "dialog-closed", this._aoFecharDialogo), this._ouvindoFechamentoDialogo = !1);
   }
   /**
    * ANTERIOR (rollback 6.2B) — o ciclo de intervalo fixo que o motor substituiu:
@@ -8066,7 +8141,7 @@ class j extends na {
       if (!t) {
         this._estadoAoVivo = "carregando-player";
         const r = ++this._tokenDefinicaoPlayer;
-        ga(e, this._hass).then((n) => {
+        fa(e, this._hass).then((n) => {
           !this.isConnected || r !== this._tokenDefinicaoPlayer || (this._estadoAoVivo = n ? "ocioso" : "fallback", this._fallbackAoVivo = n ? "" : e, this._sincronizarCameras());
         });
         return;
@@ -8103,7 +8178,7 @@ class j extends na {
    * renderizada, sem iniciar outro protocolo.
    */
   _criarPlayer() {
-    const a = ba();
+    const a = va();
     if (a) {
       a.classList.add("camera-live-el"), a.setAttribute("muted", ""), a.setAttribute("playsinline", ""), a.setAttribute("autoplay", "");
       try {
@@ -8128,9 +8203,9 @@ class j extends na {
     });
   }
   _armarPrazoAoVivo(a, e) {
-    v(h, this._timerAoVivo), this._timerAoVivo = C(h, () => {
+    f(h, this._timerAoVivo), this._timerAoVivo = k(h, () => {
       this._timerAoVivo = void 0, !(this._liveEl !== a || this._liveEntity !== e || this._livePronto === e) && this._falharAoVivo("prazo");
-    }, ee);
+    }, te);
   }
   _falharAoVivo(a) {
     const e = this._liveEntity;
@@ -8143,7 +8218,7 @@ class j extends na {
     ), this._estadoAoVivo = "fallback", this._fallbackAoVivo = e, this._pararAoVivo(), this._sincronizarCameras();
   }
   _pararAoVivo() {
-    v(h, this._timerAoVivo), this._timerAoVivo = void 0, v(h, this._timerQuadroVerde), this._timerQuadroVerde = void 0;
+    f(h, this._timerAoVivo), this._timerAoVivo = void 0, f(h, this._timerQuadroVerde), this._timerQuadroVerde = void 0;
     const a = this._liveEl;
     a && (N(h, a, "load", this._aoCarregarAoVivo), N(h, a, "streams", this._aoInformarStreams), a.remove()), this._liveEl = void 0, this._liveEntity = "", this._livePronto = "", this._quadroVerdeRegistrado = "", this._modoPlayer = "nenhum";
   }
@@ -8186,9 +8261,9 @@ class j extends na {
    */
   _armarVigiaDeCameras() {
     for (const a of this._camerasConfiguradas())
-      C(h, () => {
+      k(h, () => {
         !this.isConnected || this._quadrosNaTela.has(a.entity) || this._socorrerCamera(a.entity);
-      }, ae);
+      }, ie);
   }
   /** Põe na tela o quadro que o motor acabou de baixar. */
   _quadroPronto(a, e) {
@@ -8214,7 +8289,7 @@ class j extends na {
     if (!e || this._materialInjetado || !this.isConnected) return;
     const i = globalThis.BrunoSurfaceMaterial?.subviewStyles?.();
     if (!i) {
-      a < 20 && C(h, () => this._injetarMaterial(a + 1), 60);
+      a < 20 && k(h, () => this._injetarMaterial(a + 1), 60);
       return;
     }
     try {
@@ -8268,18 +8343,18 @@ class j extends na {
        * Verificado: geometria dos módulos idêntica antes e depois, em 1920x1200 e
        * 1280x720. Ver docs/24-performance-baseline.md.
        */
-      xa,
+      wa,
       w`
       :host {
         container-type: inline-size;
         container-name: subview;
       }
     `,
-      Oa,
-      Ra,
-      Ta,
       Ia,
-      ...Object.values(ja),
+      Da,
+      Na,
+      Fa,
+      ...Object.values(Ha),
       w`
       /*
        * Vídeo ao vivo (Fase 6.2B parte 2).
@@ -8638,7 +8713,7 @@ class j extends na {
       // ÚLTIMO de propósito: o layout de telefone sombreia os oito blocos
       // `@media (max-width: 800px)` que vieram dos arquivos originais. Ver o
       // cabeçalho de subview-phone.styles.ts.
-      Ba
+      Ga
     ];
   }
   /**
@@ -8798,21 +8873,18 @@ class j extends na {
    * navegador ainda está compondo. Só depois disso o corpo passa a rolar.
    */
   _alternarDock() {
-    this._lightsOpen = !this._lightsOpen, this._luzesAssentadas = !1, v(h, this._timerLuzes), this._timerLuzes = C(h, () => {
+    this._lightsOpen = !this._lightsOpen, this._luzesAssentadas = !1, f(h, this._timerLuzes), this._timerLuzes = k(h, () => {
       this._luzesAssentadas = this._lightsOpen, this._timerLuzes = void 0, this.requestUpdate();
     }, 240), this.requestUpdate();
   }
   /**
    * No tablet o titulo conserva o comportamento historico de expandir/recolher
    * o dock. Na folha do telefone ele passa a ser o controle de retorno pedido
-   * no ajuste pos-dispositivo: o chevron ao lado do titulo fecha a folha.
+   * no ajuste pos-dispositivo: a acao legada do titulo fica preservada para
+   * rollback, mas o telefone fecha a folha pela alca, pelo arrasto ou pelo scrim.
    */
   _acionarCabecalhoLuzes() {
-    if (this._estaNoTelefone() && this._folha === "luzes") {
-      this._fecharFolha();
-      return;
-    }
-    this._alternarDock();
+    this._estaNoTelefone() && this._folha === "luzes" || this._alternarDock();
   }
   /**
    * Troca a fonte do acordeao sem depender de uma atualizacao do HA.
@@ -8950,22 +9022,37 @@ class j extends na {
       return;
     }
     const e = this._capturarBaseFolha();
-    v(h, this._timerFecharFolha), this._timerFecharFolha = void 0, this._folhaSaindo = !1, this._folha = a, this._folha === "luzes" && (this._lightsOpen = !0, this._luzesAssentadas = !0), this._aplicarAtributos(), this._avisarFolha(), this.requestUpdate(), this._restaurarBaseFolha(e);
+    f(h, this._timerFecharFolha), this._timerFecharFolha = void 0, this._folhaSaindo = !1, this._folha = a, this._folha === "luzes" && (this._lightsOpen = !0, this._luzesAssentadas = !0), this._aplicarAtributos(), this._avisarFolha(), this.requestUpdate(), this._restaurarBaseFolha(e);
   }
-  _fecharFolha() {
+  _fecharFolha(a) {
     if (!this._folha || this._folhaSaindo) return;
-    const a = this._capturarBaseFolha();
-    if (this._encerrarArrasto(), this._folhaSaindo = !0, this._aplicarAtributos(), this.requestUpdate(), this._restaurarBaseFolha(a), typeof globalThis.matchMedia == "function" && globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const e = this._capturarBaseFolha();
+    if (this._encerrarArrasto(!!a), a) {
+      const t = Math.max(1, a.alvo.getBoundingClientRect().height), r = Q({
+        distance: a.distancia,
+        velocity: a.velocidade,
+        height: t
+      });
+      a.alvo.setAttribute("data-folha-arrasto-saindo", ""), a.alvo.style.transition = "none", a.alvo.style.transform = `translate3d(0, ${a.distancia.toFixed(1)}px, 0)`, a.alvo.offsetHeight, globalThis.requestAnimationFrame(() => {
+        a.alvo.isConnected && (a.alvo.style.transition = `transform ${r}ms cubic-bezier(0.22, 0.72, 0.24, 1)`, a.alvo.style.transform = `translate3d(0, ${(t + 2).toFixed(1)}px, 0)`);
+      });
+    }
+    if (this._folhaSaindo = !0, this._aplicarAtributos(), this.requestUpdate(), this._restaurarBaseFolha(e), typeof globalThis.matchMedia == "function" && globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       this._limparFolhaImediatamente();
       return;
     }
-    this._timerFecharFolha = C(h, () => {
+    const i = a ? Q({
+      distance: a.distancia,
+      velocity: a.velocidade,
+      height: Math.max(1, a.alvo.getBoundingClientRect().height)
+    }) : 280;
+    this._timerFecharFolha = k(h, () => {
       this._timerFecharFolha = void 0, this._limparFolhaImediatamente();
-    }, 280);
+    }, i);
   }
   _limparFolhaImediatamente(a = !0) {
-    const e = this._capturarBaseFolha(), o = !!this._folha;
-    v(h, this._timerFecharFolha), this._timerFecharFolha = void 0, this._folhaSaindo = !1, this._folha = null, this._encerrarArrasto(), this._aplicarAtributos(), o && a && this._avisarFolha(), this.requestUpdate(), this._restaurarBaseFolha(e);
+    const e = this._capturarBaseFolha(), o = !!this._folha, i = this._folhaEl();
+    f(h, this._timerFecharFolha), this._timerFecharFolha = void 0, f(h, this._timerAssentarArrasto), this._timerAssentarArrasto = void 0, this._folhaSaindo = !1, this._folha = null, this._aplicarAtributos(), this._encerrarArrasto(), i && this._limparEstiloArrasto(i), o && a && this._avisarFolha(), this.requestUpdate(), this._restaurarBaseFolha(e);
   }
   /**
    * O botão discreto de fechar, no cabeçalho de cada folha.
@@ -9007,6 +9094,14 @@ class j extends na {
       </button>
     `;
   }
+  /** Alca visual unica das quatro folhas de telefone. */
+  _alcaFolhaTelefone() {
+    return l`
+      <div class="folha-alca-zona" aria-hidden="true">
+        <span class="folha-alca"></span>
+      </div>
+    `;
+  }
   /** O elemento que ESTÁ servindo de folha agora, ou null. */
   _folhaEl() {
     const a = {
@@ -9017,8 +9112,37 @@ class j extends na {
     }, e = this._folha;
     return e ? this.renderRoot.querySelector(a[e]) : null;
   }
-  _encerrarArrasto() {
-    this._arrastoAlvo && (this._arrastoAlvo.style.transform = ""), this._arrastoY = null, this._arrastoAlvo = null, globalThis.removeEventListener("pointermove", this._moverArrasto), globalThis.removeEventListener("pointerup", this._soltarArrasto), globalThis.removeEventListener("pointercancel", this._cancelarArrasto);
+  _origemInterativa(a) {
+    return a.some((e) => e instanceof HTMLElement && !!e.closest(
+      'button, input, select, textarea, a, [role="button"], [contenteditable="true"]'
+    ));
+  }
+  _scrollerDoCaminho(a, e) {
+    for (const o of a) {
+      if (!(o instanceof HTMLElement) || o === e || !e.contains(o)) continue;
+      const i = globalThis.getComputedStyle?.(o);
+      if (!(!i || !/(auto|scroll)/.test(i.overflowY)) && o.scrollHeight > o.clientHeight + 1)
+        return o;
+    }
+    return null;
+  }
+  _retornarArrasto(a, e) {
+    if (!a.isConnected || e <= 0) {
+      this._limparEstiloArrasto(a);
+      return;
+    }
+    a.removeAttribute("data-folha-arrastando"), a.setAttribute("data-folha-retornando", ""), a.style.transition = "transform 180ms cubic-bezier(0.22, 0.72, 0.24, 1)", globalThis.requestAnimationFrame(() => {
+      a.isConnected && (a.style.transform = "translate3d(0, 0, 0)");
+    }), f(h, this._timerAssentarArrasto), this._timerAssentarArrasto = k(h, () => {
+      this._timerAssentarArrasto = void 0, this._limparEstiloArrasto(a);
+    }, 210);
+  }
+  _limparEstiloArrasto(a) {
+    a.style.removeProperty("transform"), a.style.removeProperty("transition"), a.style.removeProperty("will-change"), a.removeAttribute("data-folha-arrastando"), a.removeAttribute("data-folha-retornando"), a.removeAttribute("data-folha-arrasto-saindo");
+  }
+  _encerrarArrasto(a = !1) {
+    const e = this._arrasto?.alvo;
+    e && !a && this._limparEstiloArrasto(e), this._arrasto = null, globalThis.removeEventListener("pointermove", this._moverArrasto), globalThis.removeEventListener("pointerup", this._soltarArrasto), globalThis.removeEventListener("pointercancel", this._cancelarArrasto);
   }
   /**
    * Avisa a shell que há folha aberta.
@@ -9177,7 +9301,8 @@ class j extends na {
       this._luzesAssentadas ? "is-settled" : ""
     ].filter(Boolean).join(" ");
     return l`
-      <div class=${e}>
+      <div class=${e} @pointerdown=${this._iniciarArrasto}>
+        ${this._alcaFolhaTelefone()}
         <div class="lights-dock">
           <button
             type="button"
@@ -9328,7 +9453,9 @@ class j extends na {
   }
   render() {
     return this._room ? l`
-      <main class="room-subview" @pointerdown=${this._iniciarArrasto}>
+      <!-- ANTERIOR (rollback gesto mobile 2026-08-31): o pointerdown vivia no
+           main inteiro. Agora cada folha e dona do proprio gesto. -->
+      <main class="room-subview">
         ${this._renderTopBand()}
         ${this._temEletrodomesticos ? this._corpoCozinha() : this._corpoPadrao()}
       </main>
@@ -9460,7 +9587,7 @@ class j extends na {
       return Math.max(0, Math.min(100, Math.round(e)));
   }
   _interpolarCortina(a, e, o) {
-    const i = this._percentualCortinaValido(a) ?? 0, t = Za, r = t[0];
+    const i = this._percentualCortinaValido(a) ?? 0, t = Ka, r = t[0];
     if (i <= r[e]) return r[o];
     for (let n = 1; n < t.length; n += 1) {
       const p = t[n - 1], s = t[n];
@@ -9512,18 +9639,18 @@ class j extends na {
     const a = this._fechamentoCortinaRelatado(), e = this._movimentoCortina, o = this._entidadeCortina();
     if (!e || e.entityId !== o) {
       const b = String(this._estado(o)?.state ?? "").toLowerCase(), _ = b === "opening" || b === "closing";
-      return fa(o, this._posicaoCortina(), _) ?? a;
+      return _a(o, this._posicaoCortina(), _) ?? a;
     }
     const i = Date.now(), t = String(this._estado(o)?.state ?? "").toLowerCase(), r = t === "opening" || t === "closing", n = this._fechamentoCortinaFisico();
     if (e.retido) {
       const b = n != null && n !== e.fisicoNoStop;
-      return !r && b && i - e.retidoEm >= Ja ? (this._movimentoCortina = void 0, n) : e.fechado;
+      return !r && b && i - e.retidoEm >= ee ? (this._movimentoCortina = void 0, n) : e.fechado;
     }
     const p = i - e.iniciadoEm, s = n != null && Math.abs(n - e.alvoFechado) <= L;
     if (n != null && !s && Math.abs(n - e.ultimoRelatado) >= 1)
       return e.ultimoRelatado = n, e.inicioFechado = n, e.iniciadoEm = i, e.duracao = Math.max(
-        X,
-        Q * (Math.abs(e.alvoFechado - n) / 100)
+        Z,
+        X * (Math.abs(e.alvoFechado - n) / 100)
       ), n;
     const c = this._fechamentoMovimentoCortina(e, i) ?? a;
     if (p >= e.duracao && !r) {
@@ -9534,16 +9661,16 @@ class j extends na {
     return r ? e.alvoFechado > e.inicioFechado ? Math.min(c, Math.max(e.inicioFechado, e.alvoFechado - 1)) : Math.max(c, Math.min(e.inicioFechado, e.alvoFechado + 1)) : c;
   }
   _iniciarTimerMovimentoCortina() {
-    this._timerMovimentoCortina || !this.isConnected || (this._timerMovimentoCortina = va(h, () => {
+    this._timerMovimentoCortina || !this.isConnected || (this._timerMovimentoCortina = ya(h, () => {
       if (!this._movimentoCortina || this._movimentoCortina.retido) {
         this._pararTimerMovimentoCortina();
         return;
       }
       this._motivo = "cortina em movimento", this.requestUpdate();
-    }, Wa));
+    }, ae));
   }
   _pararTimerMovimentoCortina() {
-    v(h, this._timerMovimentoCortina), this._timerMovimentoCortina = void 0;
+    f(h, this._timerMovimentoCortina), this._timerMovimentoCortina = void 0;
   }
   _iniciarMovimentoCortina(a) {
     const e = this._entidadeCortina(), o = this._percentualCortinaValido(a);
@@ -9554,9 +9681,9 @@ class j extends na {
       inicioFechado: i,
       alvoFechado: o,
       iniciadoEm: Date.now(),
-      duracao: Math.max(X, Q * (t / 100)),
+      duracao: Math.max(Z, X * (t / 100)),
       ultimoRelatado: this._fechamentoCortinaRelatado()
-    }, wa(e), this._iniciarTimerMovimentoCortina(), this.requestUpdate();
+    }, qa(e), this._iniciarTimerMovimentoCortina(), this.requestUpdate();
   }
   _reterMovimentoCortina() {
     const a = this._entidadeCortina();
@@ -9568,7 +9695,7 @@ class j extends na {
       retidoEm: Date.now(),
       retido: !0,
       fisicoNoStop: this._fechamentoCortinaFisico()
-    }, _a(a, e, this._posicaoCortina() ?? null), this._pararTimerMovimentoCortina(), this.requestUpdate();
+    }, ka(a, e, this._posicaoCortina() ?? null), this._pararTimerMovimentoCortina(), this.requestUpdate();
   }
   _posicaoBrutaPorFechamento(a) {
     const e = 100 - (this._percentualCortinaValido(a) ?? 0);
@@ -9611,7 +9738,7 @@ class j extends na {
     return !a || ["unavailable", "unknown", ""].includes(String(a.state).toLowerCase());
   }
   _servico(a, e, o) {
-    this._hass && Aa(this._hass, a, e, o);
+    this._hass && Ma(this._hass, a, e, o);
   }
   /**
    * A lista de câmeras vem da configuração gerada — `entities.cameras` —, com
@@ -9632,7 +9759,7 @@ class j extends na {
    * guardado: numa reconexão a imagem antiga continua na tela em vez de sumir.
    */
   _cameraViva(a) {
-    const e = this._estado(a.entity), o = a.fallbackEntity ? this._estado(a.fallbackEntity) : void 0, i = this._indisponivel(e) && !!a.fallbackEntity && !this._indisponivel(o), t = i ? String(a.fallbackEntity) : a.entity, r = i ? o : e, n = this._indisponivel(r), p = !n && Ga.includes(String(r?.state ?? "")), s = String(r?.attributes.entity_picture ?? "");
+    const e = this._estado(a.entity), o = a.fallbackEntity ? this._estado(a.fallbackEntity) : void 0, i = this._indisponivel(e) && !!a.fallbackEntity && !this._indisponivel(o), t = i ? String(a.fallbackEntity) : a.entity, r = i ? o : e, n = this._indisponivel(r), p = !n && Xa.includes(String(r?.state ?? "")), s = String(r?.attributes.entity_picture ?? "");
     s && (this._ultimaImagem[t] = s);
     const d = s || this._ultimaImagem[t] || `/api/camera_proxy/${t}`;
     return {
@@ -9815,7 +9942,7 @@ class j extends na {
     if (!this._tvHistoricoCarregado) {
       this._tvHistoricoCarregado = !0;
       try {
-        const a = globalThis.localStorage?.getItem(Z);
+        const a = globalThis.localStorage?.getItem(W);
         if (!a) return;
         const e = JSON.parse(a), o = String(e.fonte ?? "").trim(), i = String(e.titulo ?? "").trim(), t = String(e.poster ?? "").trim(), r = Number(e.volume);
         o && (this._tvUltimaFonte = o), i && (this._tvUltimoTitulo = i), t && (this._tvUltimoPoster = t), Number.isFinite(r) && (this._tvUltimoVolume = r);
@@ -9826,14 +9953,14 @@ class j extends na {
   _salvarHistoricoTv() {
     if (!(!this._tvUltimoPoster && !this._tvUltimoTitulo))
       try {
-        globalThis.localStorage?.setItem(Z, JSON.stringify({ fonte: this._tvUltimaFonte, titulo: this._tvUltimoTitulo, poster: this._tvUltimoPoster, volume: this._tvUltimoVolume, savedAt: Date.now() }));
+        globalThis.localStorage?.setItem(W, JSON.stringify({ fonte: this._tvUltimaFonte, titulo: this._tvUltimoTitulo, poster: this._tvUltimoPoster, volume: this._tvUltimoVolume, savedAt: Date.now() }));
       } catch {
       }
   }
   _modeloTv() {
     this._carregarHistoricoTv();
-    const a = this._idDe("tv"), e = this._idDe("tvMedia") ?? a, o = this._estado(a), i = this._estado(e), t = o?.attributes ?? {}, r = i?.attributes ?? {}, n = ya(this._hass, a), p = qa(this._hass, e), s = String(o?.state ?? "off").toLowerCase(), d = String(i?.state ?? "").toLowerCase(), m = String(r.app_name ?? r.source ?? t.source ?? t.app_name ?? "").trim(), c = String(r.media_title ?? r.media_series_title ?? r.app_name ?? "").trim(), u = String(r.media_image_url || r.entity_picture || r.entity_picture_local || "").trim(), b = t.volume_level ?? r.volume_level, _ = b == null ? Number.NaN : Number(b), k = Number.isFinite(_) ? Math.round(_ * 100) : null;
-    return n && (m && (this._tvUltimaFonte = m), c && (this._tvUltimoTitulo = c), u && !this._artesQuebradas.has(u) && (this._tvUltimoPoster = u), k != null && (this._tvUltimoVolume = k), this._salvarHistoricoTv()), {
+    const a = this._idDe("tv"), e = this._idDe("tvMedia") ?? a, o = this._estado(a), i = this._estado(e), t = o?.attributes ?? {}, r = i?.attributes ?? {}, n = za(this._hass, a), p = Aa(this._hass, e), s = String(o?.state ?? "off").toLowerCase(), d = String(i?.state ?? "").toLowerCase(), m = String(r.app_name ?? r.source ?? t.source ?? t.app_name ?? "").trim(), c = String(r.media_title ?? r.media_series_title ?? r.app_name ?? "").trim(), u = String(r.media_image_url || r.entity_picture || r.entity_picture_local || "").trim(), b = t.volume_level ?? r.volume_level, _ = b == null ? Number.NaN : Number(b), z = Number.isFinite(_) ? Math.round(_ * 100) : null;
+    return n && (m && (this._tvUltimaFonte = m), c && (this._tvUltimoTitulo = c), u && !this._artesQuebradas.has(u) && (this._tvUltimoPoster = u), z != null && (this._tvUltimoVolume = z), this._salvarHistoricoTv()), {
       st: o,
       media: i,
       estado: p ? d : s,
@@ -9841,12 +9968,12 @@ class j extends na {
       reproduzindo: p,
       fonte: m || (n ? this._tvUltimaFonte : "HDMI 1") || "HDMI 1",
       titulo: c || (n ? this._tvUltimoTitulo : ""),
-      volume: k ?? (n ? this._tvUltimoVolume : null),
+      volume: z ?? (n ? this._tvUltimoVolume : null),
       poster: u || (n ? this._tvUltimoPoster : "")
     };
   }
   _modeloSpotify() {
-    const a = this._estado(this._idDe("spotify")), e = a?.attributes ?? {}, o = a?.state ?? "off", t = Ha.includes(o) && ka(
+    const a = this._estado(this._idDe("spotify")), e = a?.attributes ?? {}, o = a?.state ?? "off", t = Qa.includes(o) && Ca(
       a,
       this._sub?.spotifyDeviceName,
       this._estado(this._idDe("speaker"))
@@ -9862,8 +9989,8 @@ class j extends na {
       volume: e.volume_level != null ? Math.round(Number(e.volume_level) * 100) : null,
       dispositivo: this._sub?.spotifyDeviceName || String(e.source ?? "") || "SpotifyPlus",
       progresso: n > 0 ? Math.max(0, Math.min(100, c / n * 100)) : 0,
-      decorrido: W(c),
-      total: n > 0 ? W(n) : "--:--"
+      decorrido: J(c),
+      total: n > 0 ? J(n) : "--:--"
     };
   }
   _modeloPc() {
@@ -9989,7 +10116,7 @@ class j extends na {
     `;
   }
   _corpoTv() {
-    const a = this._modeloTv(), e = this._idDe("tv"), o = this._idDe("tvMedia") ?? e, i = this._sub?.tvStandbyImage ?? ie, r = (!(!a.titulo || /^TV (ligada|desligada)$/i.test(a.titulo) || a.titulo === a.fonte) && a.estado === "playing" ? a.titulo : "") || a.fonte;
+    const a = this._modeloTv(), e = this._idDe("tv"), o = this._idDe("tvMedia") ?? e, i = this._sub?.tvStandbyImage ?? ne, r = (!(!a.titulo || /^TV (ligada|desligada)$/i.test(a.titulo) || a.titulo === a.fonte) && a.estado === "playing" ? a.titulo : "") || a.fonte;
     if (!a.ativo)
       return l`
         <div class="mh-left">
@@ -10384,7 +10511,7 @@ class j extends na {
     );
   }
   _corpoPc() {
-    const a = this._modeloPc(), e = this._sub?.pcImage ?? re, o = a.ativo ? [a.sessao, a.janela].filter((t) => t && t !== "--")[0] || "Sessão ativa" : "Pronto para ligar", i = (t) => () => {
+    const a = this._modeloPc(), e = this._sub?.pcImage ?? le, o = a.ativo ? [a.sessao, a.janela].filter((t) => t && t !== "--")[0] || "Sessão ativa" : "Pronto para ligar", i = (t) => () => {
       const r = this._idDe(t);
       r && this._servico("button", "press", { entity_id: r });
     };
@@ -10427,7 +10554,7 @@ class j extends na {
     `;
   }
   _corpoSpotify() {
-    const a = this._modeloSpotify(), e = this._idDe("spotify"), o = this._sub?.spotifyStandbyImage ?? te;
+    const a = this._modeloSpotify(), e = this._idDe("spotify"), o = this._sub?.spotifyStandbyImage ?? se;
     if (!a.ativo)
       return l`
         <div class="mh-left">
@@ -10577,7 +10704,8 @@ class j extends na {
       this._menuMidiaAberto ? "is-menu-open" : ""
     ].filter(Boolean).join(" ");
     return l`
-      <div class=${m}>
+      <div class=${m} @pointerdown=${this._iniciarArrasto}>
+        ${this._alcaFolhaTelefone()}
         <div class="mh-head">
           <div class="mh-head-title">
             <span class="micro-icon ${a ? "" : "tone-amber"}">
@@ -10680,7 +10808,7 @@ class j extends na {
   _renderEletrodomesticos() {
     const a = this._sub?.entities?.appliances;
     return Array.isArray(a) ? a.filter((e) => !!e && typeof e == "object").map((e) => {
-      const o = String(e.key ?? "item").replace(/[^a-z0-9_-]/gi, "-").toLowerCase(), i = String(e.name ?? "Eletrodoméstico"), t = typeof e.image == "string" ? e.image : "", r = typeof e.entity == "string" ? e.entity : "", n = typeof e.stateEntity == "string" ? e.stateEntity : r, p = n && this._hass ? this._hass.states[n] : void 0, s = Array.isArray(e.activeStates) ? e.activeStates.map((k) => String(k).toLowerCase()) : ["on"], d = typeof e.activeAttr == "string" ? e.activeAttr : "", m = this._room?.activeSensor ? this._hass?.states[this._room.activeSensor] : void 0, c = s.includes(String(p?.state ?? "").toLowerCase()) || (d ? Ua(m?.attributes[d]) : !1), u = !!e.placeholder || !r, b = typeof e.moreInfoEntity == "string" ? e.moreInfoEntity : r, _ = ["appliance-tile", `is-${o}`, c ? "is-on" : "", u ? "is-muted" : ""].filter(Boolean).join(" ");
+      const o = String(e.key ?? "item").replace(/[^a-z0-9_-]/gi, "-").toLowerCase(), i = String(e.name ?? "Eletrodoméstico"), t = typeof e.image == "string" ? e.image : "", r = typeof e.entity == "string" ? e.entity : "", n = typeof e.stateEntity == "string" ? e.stateEntity : r, p = n && this._hass ? this._hass.states[n] : void 0, s = Array.isArray(e.activeStates) ? e.activeStates.map((z) => String(z).toLowerCase()) : ["on"], d = typeof e.activeAttr == "string" ? e.activeAttr : "", m = this._room?.activeSensor ? this._hass?.states[this._room.activeSensor] : void 0, c = s.includes(String(p?.state ?? "").toLowerCase()) || (d ? Ya(m?.attributes[d]) : !1), u = !!e.placeholder || !r, b = typeof e.moreInfoEntity == "string" ? e.moreInfoEntity : r, _ = ["appliance-tile", `is-${o}`, c ? "is-on" : "", u ? "is-muted" : ""].filter(Boolean).join(" ");
       return l`
           <article class=${_}>
             <button
@@ -10739,7 +10867,7 @@ class j extends na {
    * `idle` não está resfriando. Sem ela, vale o estado.
    */
   _modeloClimate() {
-    const a = this._estadoClimate(), e = a?.attributes ?? {}, o = String(e.hvac_action ?? "").toLowerCase(), i = this._indisponivel(a), t = i || a?.state === "off" ? !1 : Qa.includes(o) ? !0 : Xa.includes(o) ? !1 : Ya.includes(String(a?.state ?? "")), r = (n, p) => Number.isFinite(Number(n)) ? Number(n) : p;
+    const a = this._estadoClimate(), e = a?.attributes ?? {}, o = String(e.hvac_action ?? "").toLowerCase(), i = this._indisponivel(a), t = i || a?.state === "off" ? !1 : Wa.includes(o) ? !0 : Ja.includes(o) ? !1 : Za.includes(String(a?.state ?? "")), r = (n, p) => Number.isFinite(Number(n)) ? Number(n) : p;
     return {
       st: a,
       indisponivel: i,
@@ -10803,31 +10931,31 @@ class j extends na {
    * todos os containers externos mantêm exatamente a geometria aprovada.
    */
   _renderAnelClimate(a) {
-    const s = Number.isFinite(a.minima) ? a.minima : 12, d = Number.isFinite(a.maxima) ? a.maxima : 30, m = Number.isFinite(Number(a.alvo)) ? Math.max(s, Math.min(d, Number(a.alvo))) : s + (d - s) / 2, u = -180 + 180 * Math.max(0, Math.min(1, (m - s) / Math.max(1, d - s))), b = (f, y) => {
+    const s = Number.isFinite(a.minima) ? a.minima : 12, d = Number.isFinite(a.maxima) ? a.maxima : 30, m = Number.isFinite(Number(a.alvo)) ? Math.max(s, Math.min(d, Number(a.alvo))) : s + (d - s) / 2, u = -180 + 180 * Math.max(0, Math.min(1, (m - s) / Math.max(1, d - s))), b = (v, y) => {
       const q = y * Math.PI / 180;
-      return { x: 360 + f * Math.cos(q), y: 410 + f * Math.sin(q) };
-    }, _ = (f, y, q) => {
-      const z = b(f, y), A = b(f, q), T = Math.abs(q - y) <= 180 ? "0" : "1";
-      return `M ${z.x.toFixed(3)} ${z.y.toFixed(3)} A ${f} ${f} 0 ${T} 1 ${A.x.toFixed(3)} ${A.y.toFixed(3)}`;
-    }, k = Array.from({ length: 91 }, (f, y) => {
-      const q = -180 + 180 * (y / 90), z = y % 15 === 0, A = y % 5 === 0, T = b(334, q), H = b(
-        z ? 308 : A ? 314 : 321,
+      return { x: 360 + v * Math.cos(q), y: 410 + v * Math.sin(q) };
+    }, _ = (v, y, q) => {
+      const A = b(v, y), C = b(v, q), T = Math.abs(q - y) <= 180 ? "0" : "1";
+      return `M ${A.x.toFixed(3)} ${A.y.toFixed(3)} A ${v} ${v} 0 ${T} 1 ${C.x.toFixed(3)} ${C.y.toFixed(3)}`;
+    }, z = Array.from({ length: 91 }, (v, y) => {
+      const q = -180 + 180 * (y / 90), A = y % 15 === 0, C = y % 5 === 0, T = b(334, q), H = b(
+        A ? 308 : C ? 314 : 321,
         q
-      ), ra = z ? "icg-tick major" : A ? "icg-tick medium" : "icg-tick minor";
-      return F`<line x1=${T.x.toFixed(3)} y1=${T.y.toFixed(3)} x2=${H.x.toFixed(3)} y2=${H.y.toFixed(3)} class=${ra}></line>`;
-    }), oa = Array.from({ length: 73 }, (f, y) => {
-      const q = -180 + 180 * (y / 72), z = b(282, q), A = b(266, q);
-      return F`<line x1=${z.x.toFixed(3)} y1=${z.y.toFixed(3)} x2=${A.x.toFixed(3)} y2=${A.y.toFixed(3)} class="icg-inner-tick"></line>`;
-    }), ia = [
+      ), na = A ? "icg-tick major" : C ? "icg-tick medium" : "icg-tick minor";
+      return F`<line x1=${T.x.toFixed(3)} y1=${T.y.toFixed(3)} x2=${H.x.toFixed(3)} y2=${H.y.toFixed(3)} class=${na}></line>`;
+    }), ia = Array.from({ length: 73 }, (v, y) => {
+      const q = -180 + 180 * (y / 72), A = b(282, q), C = b(266, q);
+      return F`<line x1=${A.x.toFixed(3)} y1=${A.y.toFixed(3)} x2=${C.x.toFixed(3)} y2=${C.y.toFixed(3)} class="icg-inner-tick"></line>`;
+    }), ta = [
       { texto: `${$(s, 0)}°`, ang: -180, r: 352, cls: "edge" },
       { texto: "10", ang: -148, r: 358, cls: "" },
       { texto: "20", ang: -90, r: 352, cls: "top" },
       { texto: "25", ang: -32, r: 358, cls: "" },
       { texto: `${$(d, 0)}°`, ang: 0, r: 352, cls: "edge" }
-    ].map((f) => {
-      const y = b(f.r, f.ang);
-      return F`<text x=${y.x.toFixed(3)} y=${y.y.toFixed(3)} text-anchor="middle" dominant-baseline="middle" class=${`icg-label ${f.cls}`}>${f.texto}</text>`;
-    }), M = b(330, u), B = a.alvo == null ? "--" : $(a.alvo, 0), U = a.atual == null ? "--" : $(a.atual, 1), ta = (a.modo === "cool" ? "Resfriamento" : a.modo === "heat" ? "Aquecimento" : a.modo === "fan_only" ? "Ventilacao" : "Temperatura").toUpperCase();
+    ].map((v) => {
+      const y = b(v.r, v.ang);
+      return F`<text x=${y.x.toFixed(3)} y=${y.y.toFixed(3)} text-anchor="middle" dominant-baseline="middle" class=${`icg-label ${v.cls}`}>${v.texto}</text>`;
+    }), M = b(330, u), B = a.alvo == null ? "--" : $(a.alvo, 0), U = a.atual == null ? "--" : $(a.atual, 1), ra = (a.modo === "cool" ? "Resfriamento" : a.modo === "heat" ? "Aquecimento" : a.modo === "fan_only" ? "Ventilacao" : "Temperatura").toUpperCase();
     return l`
       <div class="icg-root">
         <div class="icg-shell">
@@ -10861,9 +10989,9 @@ class j extends na {
             <path d=${_(330, u, 0)} class="icg-track-muted"></path>
             <path d=${_(330, -180, u)} class="icg-active-glow"></path>
             <path d=${_(330, -180, u)} class="icg-active-arc"></path>
-            <g>${k}</g>
-            <g>${oa}</g>
-            ${ia}
+            <g>${z}</g>
+            <g>${ia}</g>
+            ${ta}
             <circle cx=${M.x.toFixed(3)} cy=${M.y.toFixed(3)} r="21" class="icg-marker-glow"></circle>
             <circle cx=${M.x.toFixed(3)} cy=${M.y.toFixed(3)} r="13" class="icg-marker-ring"></circle>
             <circle
@@ -10873,7 +11001,7 @@ class j extends na {
               class="icg-marker-highlight"
             ></circle>
             <text x=${360} y="260" text-anchor="middle" dominant-baseline="middle" class="icg-center-mode">
-              ${ta}
+              ${ra}
             </text>
             <text x=${360} y="328" text-anchor="middle" dominant-baseline="middle" class="icg-center-temp">
               ${B}°
@@ -10996,7 +11124,8 @@ class j extends na {
       </div>
     `;
     return l`
-      <div class="glass-card ac-card ac-card-lean">
+      <div class="glass-card ac-card ac-card-lean" @pointerdown=${this._iniciarArrasto}>
+        ${this._alcaFolhaTelefone()}
         <div class="ac-lean-head">
           <div class="mh-head-title ac-head-title">
             <span class="micro-icon tone-cyan"><bruno-icon icon="mdi:air-conditioner"></bruno-icon></span>
@@ -11084,7 +11213,11 @@ class j extends na {
       </div>
       <div class="right-column">${this._renderLightsDock()}</div>
       ${this._renderCameras()}
-      <div class="glass-card appliances-card kitchen-appliances-card">
+      <div
+        class="glass-card appliances-card kitchen-appliances-card"
+        @pointerdown=${this._iniciarArrasto}
+      >
+        ${this._alcaFolhaTelefone()}
         <div class="mh-head appliances-head">
           <div class="mh-head-title">
             <!-- O nome tem de ser um dos apelidos da tabela de Hugeicons.
@@ -11116,4 +11249,4 @@ D.customCards.some((g) => g.type === "bruno-room-subview") || D.customCards.push
 export {
   j as BrunoRoomSubview
 };
-//# sourceMappingURL=bruno-room-subview.COtclf9Q.js.map
+//# sourceMappingURL=bruno-room-subview.HHRyAifU.js.map

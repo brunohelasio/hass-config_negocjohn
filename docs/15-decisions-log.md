@@ -465,3 +465,57 @@ de data e pelos hashes derivados de main/room chunk.
 alcançáveis; `configuration.yaml` copiado por último e B7 preservado. Rollback:
 `tmp/rollback-20260830-three-way-sync/`; backup remoto:
 `tmp/everex-preflight-20260830-three-way-sync/`. Home Assistant sem reinício.
+
+---
+
+**Data:** 2026-09-01
+**Decisão:** retirar exclusivamente a tile visual do Corredor da Home tablet e
+redistribuir toda a faixa entre as sete room tiles principais.
+
+**Motivo:** aumentar presença, área tátil e legibilidade da série homogênea sem
+inserir controles compensatórios. A perda do tap direto do Corredor no tablet é
+aceita conscientemente; o acesso permanece no hold de `Lights` e na side sheet
+global de Iluminação.
+
+**Contrato:** `ROOMS`, `light.corredor_switch_1`, presença, automações e
+inventário permanecem. Mobile, subviews, gestos e componentes fora do modo
+tablet tile têm delta zero. A linha interna cresce 8/7, o Hero financia o delta
+e o fechamento vertical permanece exato.
+
+**Validação:** 19 arquivos/288 testes, TypeScript, ESLint, 250 YAMLs, 200 JS,
+Vite/91 módulos, compressão e grafo local aprovados. Harness 1280 x 720 com
+7/7 tiles, sem overflow; mobile 428 x 926 idêntico à baseline; hold de 620 ms
+em `Lights` preservado com o Corredor monitorado.
+
+**Operação:** bundle `bruno-dashboard.DhYtGiF6.js` publicado no Everex após
+autorização explícita, com 32/32 hashes idênticos e sete módulos alcançáveis.
+O anterior `bruno-dashboard.qBASlcMq.js` foi preservado. Rollback local em
+`tmp/rollback-20260901-tablet-room-tiles-7/`; backup Everex em
+`tmp/everex-preflight-20260901-tablet-room-tiles-7/`. Sem reinício do Home
+Assistant; aceite físico permanece pendente.
+---
+
+**Data:** 2026-09-01
+
+**Decisão:** usar a altura vertical efetivamente disponível para ampliar apenas
+os controles da side sheet global de Iluminação em tablets altos, preservando o
+modo compacto já saturado.
+
+**Motivo:** a validação física identificou uma sobra equivalente a pouco mais de
+três controles no tablet, enquanto os viewports baixos já estavam próximos do
+limite sem scroll.
+
+**Contrato:** `.light-control` usa
+`clamp(48px, calc(9.1dvh - 25px), 60px)` acima do modo compacto; até 820 px de
+altura permanece em `clamp(42px, 6dvh, 44px)`. Gaps, padding, largura,
+agrupamentos, filetes, gesto e mobile ficam intactos.
+
+**Validação:** nove viewports de tablet sem overflow vertical ou horizontal;
+mobile 390x844 preservado em 46 px. TypeScript, ESLint, 291 testes, YAML, JS,
+crases, build, manifesto, compressão e grafo aprovados.
+
+**Operação:** bundle `bruno-dashboard.DuoAOL_I.js` copiado para o Everex com
+28/28 hashes idênticos. Ativação pendente de reinício controlado do Home
+Assistant. Rollback local em
+`tmp/rollback-20260901-status-lights-tablet-height-rev4/`; backup Everex em
+`tmp/everex-preflight-20260901-status-lights-tablet-height-rev4/`.

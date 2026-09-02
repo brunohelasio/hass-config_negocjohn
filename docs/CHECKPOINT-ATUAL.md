@@ -1,6 +1,6 @@
 # CHECKPOINT ATUAL — LEITURA OBRIGATÓRIA
 
-Atualizado em **2026-08-31**. Este documento é a primeira fonte de continuidade operacional do projeto.
+Atualizado em **2026-09-01**. Este documento é a primeira fonte de continuidade operacional do projeto.
 
 > **REGRA ZERO PARA QUALQUER IA/CHAT NOVO:** antes de diagnosticar, propor branch, escrever código, orientar GitHub Desktop ou indicar arquivos para o Everex, leia este arquivo e depois `docs/LEIA-PRIMEIRO.md`. Não reconstrua o estado apenas pela lista de PRs nem apenas pela memória do chat.
 
@@ -341,3 +341,66 @@ Em caso de conflito, **este checkpoint + código da branch candidata + PR funcio
 - Home Assistant não reiniciado. A candidata permanece na branch
   `local/ajustes-gerais-20260823`, sem merge para `main`. Detalhes em
   `docs/41-mobile-bottom-sheets-20260831.md`.
+
+---
+
+## Atualização operacional — faixa tablet com 7 room tiles (2026-09-01)
+
+- Base operacional: branch `local/ajustes-gerais-20260823`, HEAD `84d8fa0a`;
+  os fontes-alvo são idênticos aos de `origin/main` em `5e67467a`.
+- O Corredor deixa somente a faixa visual do tablet. `ROOMS`, sensores,
+  automações, inventário e a side sheet de Iluminação permanecem intactos.
+- Ordem final: Sala, Office, Cozinha, Lavabo, Casal, Marina e Miguel.
+- A grade passa de 8 para 7 tracks. Altura interna, faixa e escala visual sobem
+  8/7; o Hero cede o mesmo delta e o viewport continua fechando exatamente.
+- Bundle local candidato: **`bruno-dashboard.DhYtGiF6.js`**; main chunk
+  `chunks/main.tKE0s7fq.js`; room chunk
+  `chunks/bruno-room-subview.WhJmFbja.js`.
+- Gates locais: TypeScript, ESLint, 19 arquivos/288 testes Vitest, 250 YAMLs,
+  200 JS, crases direcionadas, Vite/91 módulos, compressão e grafo de sete
+  módulos aprovados.
+- Harness tablet: 7/7 tiles, ordem correta e overflow horizontal falso; em
+  1280 x 720 cada tile mede 160 x 161,8286 px. Fechamento vertical exato.
+- Harness mobile 428 x 926: delta geométrico zero contra a baseline.
+- Hold real de 620 ms em `Lights` continua solicitando a sheet e inclui
+  `light.corredor_switch_1` nas entidades monitoradas.
+- Rollback local: `tmp/rollback-20260901-tablet-room-tiles-7/`.
+- Backup Everex: `tmp/everex-preflight-20260901-tablet-room-tiles-7/`.
+- Publicado no Everex após autorização explícita: 32/32 pares SHA-256 iguais e
+  sete módulos alcançáveis, sem ausências. Bundle ativo
+  `bruno-dashboard.DhYtGiF6.js`; anterior `bruno-dashboard.qBASlcMq.js`
+  preservado. Home Assistant não reiniciado; aceite físico no tablet continua
+  pendente. Detalhes em `docs/42-tablet-room-tiles-7-20260901.md`.
+
+---
+
+## Atualização operacional — altura dos controles da side sheet de Iluminação (2026-09-01)
+
+- Branch local: `local/ajustes-gerais-20260823`; HEAD de base `84d8fa0a`;
+  alterações permanecem sem commit.
+- Bundle candidato local/Everex: **`bruno-dashboard.DuoAOL_I.js`**; main chunk
+  `chunks/main.7kuhW78o.js`; room chunk
+  `chunks/bruno-room-subview.DewjAIuN.js`.
+- Somente a altura dos controles da side sheet no tablet foi recalculada. Em
+  tablets altos, os controles passam de 48 para 60 px; entre 821 e 926 px de
+  viewport crescem progressivamente de 49,70 a 59,27 px. O modo compacto de
+  720–820 px permanece em 43–44 px porque a coluna crítica já ocupa a altura
+  disponível.
+- Nenhum gap, padding, agrupamento, largura, filete, gesto, inventário ou regra
+  mobile foi alterado. Mobile permanece com controles de 46 px e scroll apenas
+  no corpo.
+- Harness aprovado em 1280x720, 1363x742, 1024x768, 1363x820, 1363x821,
+  1363x900, 1363x926, 1920x1045, 1920x1200 e mobile 390x844; zero overflow
+  horizontal em todos e zero overflow vertical no tablet.
+- Gates: TypeScript, ESLint, 19 arquivos/291 testes Vitest, 250 YAMLs, 200 JS,
+  detector de crases direcionado, Vite/91 módulos, manifesto, compressão e
+  grafo de sete módulos aprovados.
+- Everex: 28/28 hashes do dashboard e `configuration.yaml` idênticos ao local;
+  módulos novos também respondem por HTTP com hash correto. O processo do Home
+  Assistant ainda anuncia o bundle anterior `C5Tz4bF_`; reinício controlado é
+  necessário para ativar `DuoAOL_I`.
+- Rollback local:
+  `tmp/rollback-20260901-status-lights-tablet-height-rev4/`.
+- Backup Everex:
+  `tmp/everex-preflight-20260901-status-lights-tablet-height-rev4/`.
+- Não houve commit, push, PR ou merge para `main`.

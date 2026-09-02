@@ -31,8 +31,7 @@
 # Layout desktop/tablet:
 #   linha 1  top_badges (48px)
 #   linha 2  HERO (welcome, 4 col) | AREA DINAMICA (dynamic, 8 col)
-#   linha 3  0px — safety net Sagaland p/ areas usadas so no phone
-#   linha 4  BLOCO INFERIOR (moldura unica: 7 comodos + acoes rapidas)
+#   linha 3  BLOCO INFERIOR (moldura unica: 7 tiles; sem dock de acoes)
 #
 # PHONE (<=800px): layout IDENTICO ao da V1 (decisao do usuario) — mesmo
 # empilhamento, mesmos cards; `dynamic` e `bottom_block` como linhas 0px.
@@ -70,11 +69,17 @@ layout:
   #
   # Aritmetica com 3 linhas (content-slot tem padding 12px x2):
   #   48px (badges) + HERO + BLOCO INFERIOR + 2 gaps de 10px + 24px = 100vh
-  #   BLOCO INFERIOR = calc(23vh - 12px)   <- so os comodos; o dock de 54px saiu
-  #   => HERO = calc(77vh - 80px)
+  #
+  # REV.7 (2026-09-01): a linha interna das tiles cresceu exatamente 8/7.
+  # O bloco inferior absorve esse delta e o Hero cede a mesma altura; badges,
+  # gaps, padding externo, ancora da base e fechamento do viewport nao mudam.
+  #   BLOCO INFERIOR = calc(26.285714vh - 15.428571px)
+  #   => HERO = calc(73.714286vh - 76.571429px)
   #   (a mesma constante esta em v2/bento_dynamic.yaml -> available_height;
-  #    mudar aqui exige mudar la.)
-  grid-template-rows: 48px calc(77vh - 80px) calc(23vh - 12px)
+  #    ela descreve a area do Hero/dynamic e deve acompanhar esta revisao.)
+  # ANTERIOR (rollback 8 tiles):
+  #   grid-template-rows: 48px calc(77vh - 80px) calc(23vh - 12px)
+  grid-template-rows: 48px calc(73.714286vh - 76.571429px) calc(26.285714vh - 15.428571px)
   grid-template-areas: |
     "sidebar top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges top_badges"
     "sidebar welcome welcome welcome welcome dynamic dynamic dynamic dynamic dynamic dynamic dynamic dynamic"
@@ -177,7 +182,7 @@ cards:
   # Os dois arquivos seguem no disco, intactos.
   # - !include ../main-grid/v2/bento_energy_phone.yaml
   # - !include ../main-grid/v2/bento_media_phone.yaml
-  # Bloco inferior unificado (7 comodos + acoes rapidas na mesma moldura).
+  # Bloco inferior unificado (7 tiles de comodo; dock de acoes removido).
   # ANTERIOR (rev.3, blocos separados — arquivos preservados no disco):
   #   - !include ../main-grid/v2/bento_comodos_strip.yaml
   #   - !include ../main-grid/v2/bento_quick_actions_v2.yaml

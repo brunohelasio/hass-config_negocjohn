@@ -20,6 +20,7 @@ import {
 
 const TAG = 'bruno-status-lights-sheet';
 const EXIT_MS = 280;
+type SheetAxis = 'x' | 'y';
 
 const projectLight: ProjecaoDeEntidade = (entity: HassEntity | undefined) => {
   if (!entity) return 'absent';
@@ -36,7 +37,7 @@ export class BrunoStatusLightsSheet extends LitElement {
 
   private _hass?: Hass;
   private _monitoredLights: readonly string[] = [];
-  private _inventory: StatusLightsInventory = buildStatusLightsInventory(undefined);
+  private _inventory: StatusLightsInventory = buildStatusLightsInventory(undefined, [], true);
   private _observer = new ObservadorDeEntidades();
   private _closeTimer: number | undefined;
   private _auditFrame: number | undefined;
@@ -46,6 +47,7 @@ export class BrunoStatusLightsSheet extends LitElement {
   private _dragPanel: HTMLElement | undefined;
   private _dragDistance = 0;
   private _dragClaimed = false;
+  private _dragAxis: SheetAxis = 'y';
   private _dragSamples: MobileSheetSample[] = [];
   private _dragSettleTimer: number | undefined;
 
@@ -100,16 +102,11 @@ export class BrunoStatusLightsSheet extends LitElement {
     this._emitState(true);
     this.requestUpdate();
     void this.updateComplete.then(() => {
-      const mobile = globalThis.matchMedia?.('(max-width: 800px)').matches ?? false;
-      if (mobile) {
-        this.renderRoot.querySelector<HTMLElement>('.panel')?.focus({ preventScroll: true });
-      } else {
-        this.renderRoot.querySelector<HTMLButtonElement>('.close-button')?.focus({ preventScroll: true });
-      }
+      this.renderRoot.querySelector<HTMLElement>('.panel')?.focus({ preventScroll: true });
     });
   }
 
-  close(drag?: { panel: HTMLElement; distance: number; velocity: number }): void {
+  close(drag?: { panel: HTMLElement; distance: number; velocity: number; axis: SheetAxis }): void {
     if (!this.hasAttribute('data-open') || this.hasAttribute('data-closing')) return;
     // ANTERIOR (rollback gesto mobile 2026-08-31): _endDrag sempre limpava o
     // transform antes de data-closing iniciar a segunda animacao a partir de
@@ -121,20 +118,21 @@ export class BrunoStatusLightsSheet extends LitElement {
     }
     let duration = EXIT_MS;
     if (drag) {
-      const height = Math.max(1, drag.panel.getBoundingClientRect().height);
+      const rect = drag.panel.getBoundingClientRect();
+      const size = Math.max(1, drag.axis === 'y' ? rect.height : rect.width);
       duration = mobileSheetExitDuration({
         distance: drag.distance,
         velocity: drag.velocity,
-        height,
+        size,
       });
       drag.panel.setAttribute('data-mobile-drag-closing', '');
       drag.panel.style.transition = 'none';
-      drag.panel.style.transform = `translate3d(0, ${drag.distance.toFixed(1)}px, 0)`;
+      drag.panel.style.transform = this._dragTransform(drag.axis, drag.distance);
       void drag.panel.offsetHeight;
       requestAnimationFrame(() => {
         if (!drag.panel.isConnected) return;
         drag.panel.style.transition = `transform ${duration}ms cubic-bezier(0.22, 0.72, 0.24, 1)`;
-        drag.panel.style.transform = `translate3d(0, ${(height + 2).toFixed(1)}px, 0)`;
+        drag.panel.style.transform = this._dragTransform(drag.axis, size + 2);
       });
     }
     this.setAttribute('data-closing', '');
@@ -169,7 +167,7 @@ export class BrunoStatusLightsSheet extends LitElement {
   }
 
   private _rebuildInventory(): void {
-    this._inventory = buildStatusLightsInventory(this._hass, this._monitoredLights);
+    this._inventory = buildStatusLightsInventory(this._hass, this._monitoredLights, true);
     const ids = new Set<string>([
       ...this._inventory.entityIds,
       ...this._inventory.expandedGroups,
@@ -238,7 +236,10 @@ export class BrunoStatusLightsSheet extends LitElement {
 
   private _setAll(service: 'turn_on' | 'turn_off'): void {
     if (!this._hass || !this._inventory.entityIds.length) return;
-    const ids = [...this._inventory.entityIds];
+    const ids = this._inventory.rooms.flatMap((room) => room.lights)
+      .filter((light) => !light.isMissing)
+      .map((light) => light.entityId);
+    if (!ids.length) return;
     void this._hass.callService('light', service, { entity_id: ids }, { entity_id: ids });
   }
 
@@ -252,8 +253,9 @@ export class BrunoStatusLightsSheet extends LitElement {
     this._dragPanel = panel;
     this._dragDistance = 0;
     this._dragClaimed = false;
+    this._dragAxis = globalThis.matchMedia?.('(max-width: 800px)').matches ? 'y' : 'x';
     const time = event.timeStamp || performance.now();
-    this._dragSamples = [{ y: event.clientY, time }];
+    this._dragSamples = [{ position: this._dragAxis === 'y' ? event.clientY : event.clientX, time }];
     if (this._dragSettleTimer != null) window.clearTimeout(this._dragSettleTimer);
     this._dragSettleTimer = undefined;
     panel.removeAttribute('data-mobile-drag-returning');
@@ -267,64 +269,59 @@ export class BrunoStatusLightsSheet extends LitElement {
 
   private readonly _moveDrag = (event: PointerEvent): void => {
     if (event.pointerId !== this._dragPointer || !this._dragPanel) return;
-    const mobile = globalThis.matchMedia?.('(max-width: 800px)').matches ?? false;
-    const distance = mobile
-      ? Math.max(0, event.clientY - this._dragStartY)
-      : Math.max(0, event.clientX - this._dragStartX);
-    if (distance <= 0) return;
-    if (mobile && !this._dragClaimed && Math.abs(event.clientX - this._dragStartX) > distance) return;
-    event.preventDefault();
-    if (mobile) {
+    const dx = event.clientX - this._dragStartX;
+    const dy = event.clientY - this._dragStartY;
+    const primary = this._dragAxis === 'y' ? dy : dx;
+    const cross = this._dragAxis === 'y' ? dx : dy;
+    const distance = Math.max(0, primary);
+    if (!this._dragClaimed) {
+      if (distance <= 6 || Math.abs(cross) > distance) return;
       this._dragClaimed = true;
-      this._dragDistance = distance;
-      const time = event.timeStamp || performance.now();
-      this._dragSamples.push({ y: event.clientY, time });
-      this._dragSamples = this._dragSamples.filter((sample) => time - sample.time <= 160);
-      // ANTERIOR (rollback gesto mobile 2026-08-31): distance * 0.72.
       this._dragPanel.setAttribute('data-mobile-dragging', '');
-      this._dragPanel.style.transform = `translate3d(0, ${distance.toFixed(1)}px, 0)`;
-      return;
     }
-    const translated = (distance * 0.72).toFixed(1);
-    this._dragPanel.style.transform = `translateX(${translated}px)`;
+    if (event.cancelable) event.preventDefault();
+    this._dragDistance = distance;
+    const time = event.timeStamp || performance.now();
+    this._dragSamples.push({
+      position: this._dragAxis === 'y' ? event.clientY : event.clientX,
+      time,
+    });
+    this._dragSamples = this._dragSamples.filter((sample) => time - sample.time <= 160);
+    // ANTERIOR (rollback gesto tablet 2026-09-01): a side sheet usava
+    // distance * 0.72 e nao acompanhava a mao como uma superficie fisica.
+    this._dragPanel.style.transform = this._dragTransform(this._dragAxis, distance);
   };
 
   private readonly _releaseDrag = (event: PointerEvent): void => {
     if (event.pointerId !== this._dragPointer) return;
-    const mobile = globalThis.matchMedia?.('(max-width: 800px)').matches ?? false;
-    const distance = mobile
-      ? event.clientY - this._dragStartY
-      : event.clientX - this._dragStartX;
-    if (!mobile) {
-      this._endDrag();
-      if (distance > 110) this.close();
-      return;
-    }
     const panel = this._dragPanel;
     if (!panel) return;
+    const distance = this._dragAxis === 'y'
+      ? event.clientY - this._dragStartY
+      : event.clientX - this._dragStartX;
     const time = event.timeStamp || performance.now();
-    this._dragSamples.push({ y: event.clientY, time });
+    this._dragSamples.push({
+      position: this._dragAxis === 'y' ? event.clientY : event.clientX,
+      time,
+    });
     const velocity = mobileSheetVelocity(this._dragSamples);
     const releaseDistance = Math.max(0, this._dragDistance || distance);
+    const rect = panel.getBoundingClientRect();
+    const axis = this._dragAxis;
     const dismiss = this._dragClaimed && shouldDismissMobileSheet({
       distance: releaseDistance,
       velocity,
-      height: Math.max(1, panel.getBoundingClientRect().height),
+      size: Math.max(1, axis === 'y' ? rect.height : rect.width),
     });
     this._endDrag(true);
     if (dismiss) {
-      this.close({ panel, distance: releaseDistance, velocity });
+      this.close({ panel, distance: releaseDistance, velocity, axis });
       return;
     }
     this._returnMobileDrag(panel, releaseDistance);
   };
 
   private readonly _cancelDrag = (): void => {
-    const mobile = globalThis.matchMedia?.('(max-width: 800px)').matches ?? false;
-    if (!mobile) {
-      this._endDrag();
-      return;
-    }
     const panel = this._dragPanel;
     const distance = this._dragDistance;
     this._endDrag(true);
@@ -338,7 +335,9 @@ export class BrunoStatusLightsSheet extends LitElement {
     }
     panel.removeAttribute('data-mobile-dragging');
     panel.setAttribute('data-mobile-drag-returning', '');
-    panel.style.transition = 'transform 180ms cubic-bezier(0.22, 0.72, 0.24, 1)';
+    // ANTERIOR (rollback gesto tipo mola 2026-09-01): retorno em 180ms sem
+    // ultrapassagem perceptivel.
+    panel.style.transition = 'transform 220ms cubic-bezier(0.22, 1.15, 0.36, 1)';
     requestAnimationFrame(() => {
       if (panel.isConnected) panel.style.transform = 'translate3d(0, 0, 0)';
     });
@@ -346,7 +345,13 @@ export class BrunoStatusLightsSheet extends LitElement {
     this._dragSettleTimer = window.setTimeout(() => {
       this._dragSettleTimer = undefined;
       this._clearDragStyle(panel);
-    }, 210);
+    }, 250);
+  }
+
+  private _dragTransform(axis: SheetAxis, distance: number): string {
+    return axis === 'y'
+      ? `translate3d(0, ${distance.toFixed(1)}px, 0)`
+      : `translate3d(${distance.toFixed(1)}px, 0, 0)`;
   }
 
   private _clearDragStyle(panel: HTMLElement): void {
@@ -431,7 +436,9 @@ export class BrunoStatusLightsSheet extends LitElement {
     const total = this._inventory.total;
     const on = this._inventory.onCount;
     return html`
-      <div class="scrim" aria-hidden="true" @click=${() => this.close()}></div>
+      <!-- ANTERIOR (rollback gesto tipo mola 2026-09-01): o scrim chamava
+           close no click. O fechamento tactil agora exige arrasto completo. -->
+      <div class="scrim" aria-hidden="true"></div>
       <section
         class="panel"
         role="dialog"
@@ -440,6 +447,11 @@ export class BrunoStatusLightsSheet extends LitElement {
         tabindex="-1"
         @click=${(event: Event) => event.stopPropagation()}
       >
+        <div
+          class="side-handle-zone"
+          aria-hidden="true"
+          @pointerdown=${(event: PointerEvent) => this._startDrag(event)}
+        ><span></span></div>
         <header class="header" @pointerdown=${(event: PointerEvent) => this._startDrag(event)}>
           <div class="handle" aria-hidden="true"></div>
           <div class="identity">
@@ -457,7 +469,8 @@ export class BrunoStatusLightsSheet extends LitElement {
               <bruno-icon icon="mdi:lightbulb-off"></bruno-icon><span>Apagar todas</span>
             </button>
           </div>
-          <button class="close-button" type="button" aria-label="Fechar" @click=${() => this.close()}>
+          <!-- O controle assistivo permanece no DOM; o X visual foi retirado. -->
+          <button class="close-button" type="button" aria-label="Fechar painel" @click=${() => this.close()}>
             <span aria-hidden="true">×</span>
           </button>
         </header>
@@ -525,14 +538,39 @@ export class BrunoStatusLightsSheet extends LitElement {
       opacity: var(--bruno-josh-popup-sheen-opacity, 0.13);
       pointer-events: none;
     }
+    .side-handle-zone {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      z-index: 4;
+      width: 28px;
+      height: 76px;
+      display: grid;
+      place-items: center;
+      transform: translate(-50%, -50%);
+      touch-action: none;
+      cursor: grab;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .side-handle-zone:active { cursor: grabbing; }
+    .side-handle-zone span {
+      width: 3px;
+      height: 34px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.24);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+      pointer-events: none;
+    }
     .header {
       position: relative;
       display: grid;
-      grid-template-columns: minmax(180px, 1fr) auto 38px;
+      /* ANTERIOR (rollback alca lateral 2026-09-01):
+         minmax(180px, 1fr) auto 38px, reservando uma coluna para o X. */
+      grid-template-columns: minmax(180px, 1fr) auto;
       align-items: center;
       gap: 10px;
       min-height: 64px;
-      padding: 10px 14px;
+      padding: 10px 14px 10px 26px;
       border-bottom: 1px solid rgba(255,255,255,0.085);
       touch-action: none;
       cursor: grab;
@@ -591,7 +629,19 @@ export class BrunoStatusLightsSheet extends LitElement {
       background: rgba(255,255,255,0.055);
     }
     .close-button span { font-size: 25px; line-height: 1; transform: translateY(-1px); }
-    .body { flex: 1 1 auto; min-height: 0; padding: 8px 14px 12px; }
+    .close-button {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+    .body { flex: 1 1 auto; min-height: 0; padding: 8px 14px 12px 26px; }
     .rooms-grid { height: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .room-column { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
     .room { min-width: 0; padding-top: 7px; border-top: 1px solid rgba(255,255,255,0.085); }
@@ -605,7 +655,10 @@ export class BrunoStatusLightsSheet extends LitElement {
       min-width: 0;
       /* ANTERIOR (rollback microajuste tablet rev.2):
          min-height: clamp(38px, 3.9dvh, 46px). */
-      min-height: clamp(42px, 4.3dvh, 48px);
+      /* ANTERIOR (rollback altura tablet rev.3):
+         min-height: clamp(42px, 4.3dvh, 48px). A validacao fisica mostrou
+         sobra equivalente a mais de tres controles no tablet alto. */
+      min-height: clamp(48px, calc(9.1dvh - 25px), 60px);
       display: grid;
       grid-template-columns: 22px minmax(0, 1fr) 30px;
       align-items: center;
@@ -640,18 +693,37 @@ export class BrunoStatusLightsSheet extends LitElement {
     :host([data-closing]) .panel { animation: side-out 280ms cubic-bezier(0.42, 0, 0.78, 0.18) forwards; pointer-events: none; }
     @keyframes scrim-in { from { opacity: 0; } to { opacity: 1; } }
     @keyframes scrim-out { from { opacity: 1; } to { opacity: 0; } }
-    @keyframes side-in { from { transform: translateX(100%); opacity: 0.86; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes side-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0.86; } }
+    @keyframes side-in {
+      /* ANTERIOR (rollback gesto tipo mola 2026-09-01): a entrada variava a
+         opacidade de 0.86 para 1 e fazia a superficie parecer dispersar. */
+      from { transform: translate3d(100%, 0, 0); }
+      to { transform: translate3d(0, 0, 0); }
+    }
+    @keyframes side-out {
+      /* ANTERIOR (rollback gesto tipo mola 2026-09-01): a saida terminava com
+         opacity 0.86. A folha agora sai apenas por deslocamento. */
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(100%, 0, 0); }
+    }
+    :host([data-open]) .panel[data-mobile-dragging],
+    :host([data-open]) .panel[data-mobile-drag-returning],
+    :host([data-closing]) .panel[data-mobile-drag-closing] {
+      animation: none !important;
+      opacity: 1 !important;
+    }
     @media (min-width: 801px) and (max-height: 820px) {
       .header { min-height: 58px; padding-block: 7px; }
       .body { padding-top: 5px; padding-bottom: 8px; }
       .room-column { gap: 5px; }
       .room { padding-top: 4px; }
       .room-head { min-height: 20px; padding-bottom: 3px; }
-      .light-control { min-height: 42px; }
+      /* ANTERIOR (rollback altura tablet 2026-09-01): 42px fixos. A faixa
+         responsiva usa o vazio real sem ultrapassar 44px nos viewports baixos. */
+      .light-control { min-height: clamp(42px, 6dvh, 44px); }
     }
     @media (max-width: 800px) {
       .scrim { background: rgba(4, 7, 12, 0.34); -webkit-backdrop-filter: none; backdrop-filter: none; }
+      .side-handle-zone { display: none; }
       .panel {
         /* Mesmo contrato das folhas das subviews: a superfície segue até a
            borda inferior e passa por trás da rail transparente. O padding do

@@ -42,6 +42,20 @@ describe('status lights inventory', () => {
     expect(inventory.expandedGroups).toContain('light.grupo_sala_interno');
   });
 
+  it('mantem o Corredor visivel e indisponivel quando a entidade nao existe', () => {
+    const inventory = buildStatusLightsInventory(hass({}), [], true);
+    const corredor = inventory.rooms.find((room) => room.id === 'corredor');
+
+    expect(corredor?.lights).toEqual([{
+      entityId: 'light.corredor_switch_1',
+      name: 'COR - Luz principal',
+      isOn: false,
+      isUnavailable: true,
+      isMissing: true,
+    }]);
+    expect(inventory.total).toBe(1);
+  });
+
   it('preserva em Sem comodo uma luz monitorada que ROOMS nao associa', () => {
     const states: Hass['states'] = {
       'light.corredor_switch_1': entity('light.corredor_switch_1', 'off', { friendly_name: 'Corredor' }),
@@ -116,5 +130,32 @@ describe('status lights inventory', () => {
       0,
     );
     expect(Math.abs(weight(left) - weight(right))).toBeLessThanOrEqual(3);
+  });
+
+  it('fixa Sala a esquerda e Corredor no topo da coluna direita', () => {
+    const makeRoom = (id: string, count: number) => ({
+      id,
+      name: id,
+      lights: Array.from({ length: count }, (_, index) => ({
+        entityId: `light.${id}_${index}`,
+        name: `${id} ${index}`,
+        isOn: false,
+        isUnavailable: false,
+      })),
+    });
+    const [left, right] = balanceStatusLightsRooms([
+      makeRoom('sala', 7),
+      makeRoom('office', 3),
+      makeRoom('cozinha', 3),
+      makeRoom('lavabo', 3),
+      makeRoom('casal', 6),
+      makeRoom('marina', 6),
+      makeRoom('miguel', 8),
+      makeRoom('corredor', 1),
+    ]);
+
+    expect(left[0]?.id).toBe('sala');
+    expect(right[0]?.id).toBe('corredor');
+    expect(right.map((room) => room.id)).toEqual(['corredor', 'cozinha', 'marina', 'miguel']);
   });
 });

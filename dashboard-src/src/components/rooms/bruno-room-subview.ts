@@ -2061,7 +2061,7 @@ export class BrunoRoomSubview extends LitElement {
       const duracao = mobileSheetExitDuration({
         distance: arrasto.distancia,
         velocity: arrasto.velocidade,
-        height: altura,
+        size: altura,
       });
       arrasto.alvo.setAttribute('data-folha-arrasto-saindo', '');
       arrasto.alvo.style.transition = 'none';
@@ -2096,7 +2096,7 @@ export class BrunoRoomSubview extends LitElement {
       ? mobileSheetExitDuration({
           distance: arrasto.distancia,
           velocity: arrasto.velocidade,
-          height: Math.max(1, arrasto.alvo.getBoundingClientRect().height),
+          size: Math.max(1, arrasto.alvo.getBoundingClientRect().height),
         })
       : 280;
     this._timerFecharFolha = espera(SONDA, () => {
@@ -2253,7 +2253,7 @@ export class BrunoRoomSubview extends LitElement {
       alvo: folha,
       distancia: 0,
       assumido: false,
-      amostras: [{ y: evento.clientY, time: tempo }],
+      amostras: [{ position: evento.clientY, time: tempo }],
     };
     globalThis.addEventListener('pointermove', this._moverArrasto, { passive: false });
     globalThis.addEventListener('pointerup', this._soltarArrasto);
@@ -2273,7 +2273,7 @@ export class BrunoRoomSubview extends LitElement {
     if (evento.cancelable) evento.preventDefault();
     arrasto.distancia = Math.max(0, dy);
     const tempo = evento.timeStamp || performance.now();
-    arrasto.amostras.push({ y: evento.clientY, time: tempo });
+    arrasto.amostras.push({ position: evento.clientY, time: tempo });
     arrasto.amostras = arrasto.amostras.filter((amostra) => tempo - amostra.time <= 160);
     // ANTERIOR (rollback gesto mobile 2026-08-31): dy * 0.72. A folha agora
     // acompanha o dedo em 1:1, como uma superficie fisica.
@@ -2284,13 +2284,13 @@ export class BrunoRoomSubview extends LitElement {
     const arrasto = this._arrasto;
     if (!arrasto || evento.pointerId !== arrasto.pointerId) return;
     const tempo = evento.timeStamp || performance.now();
-    arrasto.amostras.push({ y: evento.clientY, time: tempo });
+    arrasto.amostras.push({ position: evento.clientY, time: tempo });
     const velocidade = mobileSheetVelocity(arrasto.amostras);
     const altura = Math.max(1, arrasto.alvo.getBoundingClientRect().height);
     const fechar = arrasto.assumido && shouldDismissMobileSheet({
       distance: arrasto.distancia,
       velocity: velocidade,
-      height: altura,
+      size: altura,
     });
     const estado = {
       alvo: arrasto.alvo,
@@ -2319,7 +2319,10 @@ export class BrunoRoomSubview extends LitElement {
     }
     alvo.removeAttribute('data-folha-arrastando');
     alvo.setAttribute('data-folha-retornando', '');
-    alvo.style.transition = 'transform 180ms cubic-bezier(0.22, 0.72, 0.24, 1)';
+    // ANTERIOR (rollback gesto tipo mola 2026-09-01): retorno em 180ms sem
+    // ultrapassagem perceptivel. A curva nova devolve a folha como superficie
+    // tensionada, sem alterar sua opacidade.
+    alvo.style.transition = 'transform 220ms cubic-bezier(0.22, 1.15, 0.36, 1)';
     globalThis.requestAnimationFrame(() => {
       if (alvo.isConnected) alvo.style.transform = 'translate3d(0, 0, 0)';
     });
@@ -2327,7 +2330,7 @@ export class BrunoRoomSubview extends LitElement {
     this._timerAssentarArrasto = espera(SONDA, () => {
       this._timerAssentarArrasto = undefined;
       this._limparEstiloArrasto(alvo);
-    }, 210);
+    }, 250);
   }
 
   private _limparEstiloArrasto(alvo: HTMLElement): void {
@@ -2488,10 +2491,11 @@ export class BrunoRoomSubview extends LitElement {
   private _renderResumoTelefone() {
     const linhas = this._linhasResumo();
     return html`
+      <!-- ANTERIOR (rollback gesto tipo mola 2026-09-01): o scrim chamava
+           _fecharFolha no click. O fechamento tactil agora exige arrasto. -->
       <div
         class="folha-scrim"
         aria-hidden="true"
-        @click=${() => this._fecharFolha()}
       ></div>
       <div class="resumo-telefone">
         ${linhas.map(

@@ -1210,8 +1210,11 @@ export class BrunoRoomTile extends LitElement {
       }
     }
 
-    /* Tablet somente: mantém os mesmos clamps e a mesma resposta ao container,
-       elevando em ~6% a escala-base que ficou pequena depois da fluidização. */
+    /* Tablet somente: mantém a resposta ao container. A revisão de sete tiles
+       amplia a largura em 8/7; os limites abaixo também sobem em 8/7 para que
+       telas baixas não fiquem presas nos mínimos antigos dos clamps. O valor
+       preferido em cqi não muda e, portanto, cresce automaticamente onde não
+       há clamp. Nada deste bloco alcança o phone. */
     @media (min-width: 801px) {
       .room-icon {
         max-width: clamp(100.87px, 59.12cqi, 168.12px);
@@ -1237,12 +1240,77 @@ export class BrunoRoomTile extends LitElement {
         width: clamp(11.58px, 6.78cqi, 19.29px);
         height: clamp(11.58px, 6.78cqi, 19.29px);
       }
+
+      .room-card.is-tile .room-action {
+        grid-template-columns: minmax(0, clamp(108.75px, 55.77cqi, 181.26px)) minmax(0, 1fr) clamp(35.66px, 18.29cqi, 59.43px);
+        column-gap: clamp(5.35px, 2.74cqi, 8.91px);
+        padding: clamp(12.48px, 6.4cqi, 20.8px) clamp(9.81px, 5.03cqi, 16.34px) clamp(11.59px, 5.94cqi, 19.31px) clamp(9.81px, 5.03cqi, 16.34px);
+      }
+      .room-card.is-tile .room-icon {
+        max-width: clamp(115.28px, 59.12cqi, 192.14px);
+        height: clamp(77.49px, 39.74cqi, 129.14px);
+        margin-top: 1.14px;
+      }
+      .room-card.is-tile .room-nav-zone {
+        min-height: clamp(49.92px, 25.6cqi, 83.2px);
+        padding: 2.29px clamp(7.13px, 3.66cqi, 11.89px) 2.29px 0;
+      }
+      .room-card.is-tile .room-title-row {
+        gap: clamp(3.57px, 1.83cqi, 5.94px);
+      }
+      .room-card.is-tile .title {
+        margin-bottom: 2.29px;
+        font-size: clamp(13.37px, 6.86cqi, 22.29px);
+      }
+      .room-card.is-tile .room-chevron {
+        font-size: clamp(20.5px, 10.51cqi, 34.17px);
+      }
+      .room-card.is-tile .status-lines {
+        gap: 1.14px;
+        font-size: clamp(9.81px, 5.03cqi, 16.34px);
+      }
+      .room-card.is-tile .status-lines span {
+        max-width: clamp(121.23px, 62.17cqi, 202.06px);
+      }
+      .room-card.is-tile .right-rail {
+        gap: clamp(6.24px, 3.2cqi, 10.4px);
+        transform: translate(5.71px, -3.43px);
+      }
+      .room-card.is-tile .metric {
+        min-width: clamp(32.09px, 16.46cqi, 53.49px);
+      }
+      .room-card.is-tile .metric-value {
+        font-size: clamp(12.29px, 6.3cqi, 20.47px);
+      }
+      .room-card.is-tile .metric-sub {
+        margin-top: clamp(3.57px, 1.83cqi, 5.94px);
+        font-size: clamp(10.39px, 5.33cqi, 17.33px);
+      }
+      .room-card.is-tile .status-stack {
+        gap: clamp(3.57px, 1.83cqi, 5.94px);
+      }
+      .room-card.is-tile .status-dot {
+        width: clamp(24.57px, 12.6cqi, 40.95px);
+        height: clamp(24.57px, 12.6cqi, 40.95px);
+      }
+      .room-card.is-tile .status-dot bruno-icon {
+        --mdc-icon-size: 16px;
+        width: clamp(13.23px, 6.78cqi, 22.05px);
+        height: clamp(13.23px, 6.78cqi, 22.05px);
+      }
     }
 
     @media (min-width: 801px) and (max-height: 760px) {
       .room-icon {
         max-width: clamp(89.29px, 52.33cqi, 148.82px);
         height: clamp(59.53px, 34.88cqi, 99.22px);
+      }
+      .room-card.is-tile .room-action {
+        padding: clamp(10.7px, 5.49cqi, 17.83px) clamp(9.81px, 5.03cqi, 16.34px) clamp(10.7px, 5.49cqi, 17.83px) clamp(9.81px, 5.03cqi, 16.34px);
+      }
+      .room-card.is-tile .room-icon {
+        max-width: clamp(102.05px, 52.33cqi, 170.08px);
+        height: clamp(68.03px, 34.88cqi, 113.39px);
       }
     }
 

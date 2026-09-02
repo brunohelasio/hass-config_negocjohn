@@ -6,6 +6,7 @@ export interface StatusLight {
   name: string;
   isOn: boolean;
   isUnavailable: boolean;
+  isMissing?: boolean;
 }
 
 export interface StatusLightsRoom {
@@ -38,6 +39,15 @@ const STATUS_LIGHTS_EXCLUDED_ENTITY_IDS = new Set([
   'light.quarto_casal_switch_3',
 ]);
 
+/**
+ * Circuito que precisa permanecer operavel pela sheet depois da retirada do
+ * tile do Corredor da Home. Se a integracao estiver ausente, o controle fica
+ * visivel e indisponivel em vez de o comodo desaparecer silenciosamente.
+ */
+const STATUS_LIGHTS_REQUIRED_ENTITY_NAMES = new Map([
+  ['light.corredor_switch_1', 'COR - Luz principal'],
+]);
+
 function memberIds(entity: HassEntity | undefined): readonly string[] {
   const raw = entity?.attributes?.['entity_id'];
   return Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : [];
@@ -52,9 +62,19 @@ function fallbackName(entityId: string): string {
     .join(' ');
 }
 
-function lightFrom(hass: Hass, entityId: string): StatusLight | undefined {
+function lightFrom(hass: Hass, entityId: string, allowMissing = false): StatusLight | undefined {
   const entity = hass.states[entityId];
-  if (!entity || !entityId.startsWith('light.')) return undefined;
+  if (!entityId.startsWith('light.')) return undefined;
+  if (!entity) {
+    if (!allowMissing) return undefined;
+    return {
+      entityId,
+      name: STATUS_LIGHTS_REQUIRED_ENTITY_NAMES.get(entityId) ?? fallbackName(entityId),
+      isOn: false,
+      isUnavailable: true,
+      isMissing: true,
+    };
+  }
   const friendlyName = entity.attributes?.['friendly_name'];
   const state = String(entity.state ?? '').toLowerCase();
   return {
@@ -86,11 +106,16 @@ function expandLight(
   return allowLeaf && entityId.startsWith('light.') ? [entityId] : [];
 }
 
-function uniqueExistingLights(hass: Hass, ids: Iterable<string>): string[] {
+function uniqueExistingLights(
+  hass: Hass,
+  ids: Iterable<string>,
+  requiredNames: ReadonlyMap<string, string> = new Map(),
+): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
   for (const id of ids) {
-    if (seen.has(id) || STATUS_LIGHTS_EXCLUDED_ENTITY_IDS.has(id) || !lightFrom(hass, id)) continue;
+    const required = requiredNames.has(id);
+    if (seen.has(id) || STATUS_LIGHTS_EXCLUDED_ENTITY_IDS.has(id) || !lightFrom(hass, id, required)) continue;
     seen.add(id);
     out.push(id);
   }
@@ -105,6 +130,7 @@ function uniqueExistingLights(hass: Hass, ids: Iterable<string>): string[] {
 export function buildStatusLightsInventory(
   hass: Hass | undefined,
   monitoredLights: Iterable<string> = [],
+  includeRequiredLights = false,
 ): StatusLightsInventory {
   if (!hass) {
     return { rooms: [], entityIds: [], expandedGroups: [], orphanEntityIds: [], onCount: 0, total: 0 };
@@ -113,20 +139,25 @@ export function buildStatusLightsInventory(
   const expandedGroups = new Set<string>();
   const assigned = new Set<string>();
   const rooms: StatusLightsRoom[] = [];
+  const requiredNames = includeRequiredLights ? STATUS_LIGHTS_REQUIRED_ENTITY_NAMES : new Map<string, string>();
 
   for (const room of ROOMS) {
     const ids: string[] = [];
     const group = room.entities.lightGroup;
     if (group) ids.push(...expandLight(hass, group, expandedGroups, new Set<string>(), false));
     for (const explicit of room.entities.lights ?? []) {
-      ids.push(...expandLight(hass, explicit, expandedGroups));
+      const expanded = expandLight(hass, explicit, expandedGroups);
+      ids.push(...expanded);
+      if (!expanded.length && requiredNames.has(explicit)) ids.push(explicit);
     }
-    const roomIds = uniqueExistingLights(hass, ids).filter((id) => {
+    const roomIds = uniqueExistingLights(hass, ids, requiredNames).filter((id) => {
       if (assigned.has(id)) return false;
       assigned.add(id);
       return true;
     });
-    const lights = roomIds.map((id) => lightFrom(hass, id)).filter((light): light is StatusLight => Boolean(light));
+    const lights = roomIds
+      .map((id) => lightFrom(hass, id, requiredNames.has(id)))
+      .filter((light): light is StatusLight => Boolean(light));
     if (lights.length) {
       rooms.push({
         id: room.id,
@@ -170,15 +201,33 @@ export function balanceStatusLightsRooms(
 ): readonly [readonly StatusLightsRoom[], readonly StatusLightsRoom[]] {
   const columns: [[number, StatusLightsRoom][], [number, StatusLightsRoom][]] = [[], []];
   const weights: [number, number] = [0, 0];
+  const pinnedTargets = new Map<string, 0 | 1>([
+    ['sala', 0],
+    ['corredor', 1],
+  ]);
+  const roomWeight = (room: StatusLightsRoom) => 1 + Math.ceil(room.lights.length / 2);
+  rooms.forEach((room, index) => {
+    const target = pinnedTargets.get(room.id);
+    if (target == null) return;
+    columns[target].push([index, room]);
+    weights[target] += roomWeight(room);
+  });
   const weighted = rooms
-    .map((room, index) => ({ room, index, weight: 1 + Math.ceil(room.lights.length / 2) }))
+    .map((room, index) => ({ room, index, weight: roomWeight(room) }))
+    .filter((item) => !pinnedTargets.has(item.room.id))
     .sort((a, b) => b.weight - a.weight || a.index - b.index);
   for (const item of weighted) {
     const target: 0 | 1 = weights[0] <= weights[1] ? 0 : 1;
     columns[target].push([item.index, item.room]);
     weights[target] += item.weight;
   }
-  return columns.map((column) => column.sort((a, b) => a[0] - b[0]).map((entry) => entry[1])) as [
+  return columns.map((column, columnIndex) => column
+    .sort((a, b) => {
+      if (columnIndex === 1 && a[1].id === 'corredor') return -1;
+      if (columnIndex === 1 && b[1].id === 'corredor') return 1;
+      return a[0] - b[0];
+    })
+    .map((entry) => entry[1])) as [
     StatusLightsRoom[],
     StatusLightsRoom[],
   ];

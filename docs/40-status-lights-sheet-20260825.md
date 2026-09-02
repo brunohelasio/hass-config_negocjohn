@@ -303,3 +303,23 @@ Gates repetidos após a integração: TypeScript, ESLint, 18 arquivos/282 testes
 Vitest, 250 YAMLs, 200 JS, detector de crases em seis fontes, Vite com 90
 módulos, compressão e grafo de sete módulos. O Home Assistant não foi
 reiniciado.
+## Altura dos controles no tablet — revisão 4 (2026-09-01)
+
+A validação física mostrou que o teto anterior de 48 px ainda deixava uma faixa
+vazia equivalente a pouco mais de três controles no tablet alto. O ajuste ficou
+restrito à propriedade `min-height` de `.light-control`: a curva vigente é
+`clamp(48px, calc(9.1dvh - 25px), 60px)`. O override compacto até 820 px foi
+preservado em `clamp(42px, 6dvh, 44px)`, pois nesses viewports a coluna crítica
+já fecha a altura disponível.
+
+Não mudaram gaps, paddings, cabeçalhos, agrupamentos, largura da side sheet,
+filetes, gestos, inventário nem o bottom sheet mobile. O harness confirmou zero
+scroll no tablet nos viewports 1280x720, 1363x742, 1024x768, 1363x820,
+1363x821, 1363x900, 1363x926, 1920x1045 e 1920x1200. Em 1920x1045, referência
+compatível com a sobra física relatada, os controles medem 60 px e a folga da
+coluna crítica cai para 100 px.
+
+Bundle candidato: `bruno-dashboard.DuoAOL_I.js`, com
+`chunks/main.7kuhW78o.js`. Local e Everex passaram em 28/28 hashes, mas o
+processo do Home Assistant ainda anuncia `C5Tz4bF_`; a troca do módulo ativo
+depende de reinício controlado do Home Assistant.

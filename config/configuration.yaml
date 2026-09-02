@@ -625,6 +625,9 @@ homeassistant:
     cozinha_presence: !include packages/cozinha_presence.yaml
     q_miguel_presence: !include packages/q_miguel_presence.yaml
     q_casal_presence: !include packages/q_casal_presence.yaml
+    # NOVO (2026-09-02): ocupacao global somente em shadow mode, sem cameras.
+    # ANTERIOR: sem camada global. Rollback: comentar apenas o include abaixo.
+    home_occupancy_core: !include packages/home_occupancy_core.yaml
     # NOVO (2026-07-24) — HOME V2: sensores de relevancia da area dinamica
     # (midia/camera/Roborock) + automacao que aponta a camera ativa para o
     # ultimo evento de movimento da ponte bruno_tuya_motion.

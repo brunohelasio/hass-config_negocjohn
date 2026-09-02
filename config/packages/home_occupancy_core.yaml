@@ -1,0 +1,246 @@
+# Item 2 / Parte A — ocupacao global em SHADOW MODE (2026-09-02).
+# Somente entidades de observacao. NAO existem actions, automations ou services.
+# Tuya/ONVIF, home_activity, frontend e packages de presenca ficam intactos.
+# Rollback: comentar somente este include em configuration.yaml e recarregar
+# Templates apos Check Configuration. Nunca usar estes estados para atuar
+# em dispositivos antes do aceite do shadow mode e de nova autorizacao.
+
+template:
+  - variables:
+      # HA 2026.8.3 resolve estas variaveis ao iniciar os listeners de CADA
+      # entidade (inclusive em reload), nao em cada atualizacao nem antes
+      # de um boot demorado. O instante NAO vem de entidade restaurada.
+      observer_loaded_at: "{{ as_timestamp(now()) }}"
+      startup_observation_seconds: 60
+      minimum_healthy_rooms: 5
+      primary_rooms:
+        - sala
+        - office
+        - cozinha
+        - corredor
+        - q_casal
+        - q_marina
+        - q_miguel
+      person_entity: person.bruno_helasio
+      office_activity_entities:
+        - binary_sensor.office_pc_active
+        - binary_sensor.office_working_active
+        - binary_sensor.office_meeting_active
+    sensor:
+      # Snapshot unico de fatos: as entidades derivadas leem a mesma avaliacao,
+      # sem inferir ausencia pela falta/indisponibilidade de um binary_sensor.
+      - name: Home Occupancy Observation
+        default_entity_id: sensor.home_occupancy_observation
+        unique_id: home_occupancy_observation
+        icon: mdi:clipboard-pulse-outline
+        state: shadow
+        attributes:
+          mode: shadow
+          camera_evidence: excluded_by_user
+          assessment: >-
+            {% set binary_values = ['on', 'off'] %}
+            {% set invalid = ['unknown', 'unavailable', 'none', ''] %}
+            {% set person = states(person_entity) %}
+            {% set person_known = person | lower not in invalid %}
+            {% set ns = namespace(strong=[], weak=[], usable=[], issues=[], health={}) %}
+            {% if person == 'home' %}
+              {% set ns.strong = ns.strong + [person_entity] %}
+            {% elif not person_known %}
+              {% set ns.issues = ns.issues + [person_entity] %}
+            {% endif %}
+            {% for room in primary_rooms %}
+              {% set health_id = 'sensor.' ~ room ~ '_presence_health' %}
+              {% set occupancy_id = 'binary_sensor.' ~ room ~ '_occupancy' %}
+              {% set motion_id = 'binary_sensor.' ~ room ~ '_motion_recent' %}
+              {% set health = states(health_id) %}
+              {% set occupancy = states(occupancy_id) %}
+              {% set motion = states(motion_id) %}
+              {# Corredor tambem converte fonte offline em off nos fatos.
+                 Checar a origem evita aguardar a cascata do supervisor. #}
+              {% set corridor_source = states('binary_sensor.pir_motion_sensor_corredor_movimento') if room == 'corredor' else 'off' %}
+              {% set source_valid = corridor_source in binary_values %}
+              {% set ns.health = dict(ns.health, **{room: health}) %}
+              {% if health == 'ok' and source_valid and occupancy in binary_values and motion in binary_values %}
+                {% set ns.usable = ns.usable + [room] %}
+              {% endif %}
+              {% if not source_valid %}
+                {% set ns.issues = ns.issues + ['binary_sensor.pir_motion_sensor_corredor_movimento'] %}
+              {% endif %}
+              {% if health != 'ok' %}{% set ns.issues = ns.issues + [health_id] %}{% endif %}
+              {% if occupancy not in binary_values %}{% set ns.issues = ns.issues + [occupancy_id] %}{% endif %}
+              {% if motion not in binary_values %}{% set ns.issues = ns.issues + [motion_id] %}{% endif %}
+              {# Evidencia positiva valida vence mesmo com perda de outras fontes. #}
+              {% if health == 'ok' and source_valid and occupancy == 'on' %}
+                {% set ns.strong = ns.strong + [occupancy_id] %}
+              {% endif %}
+              {% if health == 'ok' and source_valid and motion == 'on' %}
+                {% set ns.weak = ns.weak + [motion_id] %}
+              {% endif %}
+              {% if room == 'corredor' and health == 'ok' and corridor_source == 'on' %}
+                {% set ns.weak = ns.weak + ['binary_sensor.pir_motion_sensor_corredor_movimento'] %}
+              {% endif %}
+            {% endfor %}
+            {# Lavabo nao possui presence_health. Seus fatos sao suplementares;
+               nao inventamos um oitavo supervisor nem promovemos a occupied.
+               A fonte bruta e checada pois os templates antigos convertem
+               indisponibilidade em off. Essa falha deve vetar empty_confirmed. #}
+            {% set lavabo_source = states('binary_sensor.lv_sensor_presenca_movimento') %}
+            {% set lavabo_ids = ['binary_sensor.lavabo_occupancy', 'binary_sensor.lavabo_motion_recent'] %}
+            {% set lv = namespace(valid=lavabo_source in binary_values) %}
+            {% if not lv.valid %}
+              {% set ns.issues = ns.issues + ['binary_sensor.lv_sensor_presenca_movimento'] %}
+            {% endif %}
+            {% for entity_id in lavabo_ids %}
+              {% set value = states(entity_id) %}
+              {% if value not in binary_values %}
+                {% set lv.valid = false %}
+                {% set ns.issues = ns.issues + [entity_id] %}
+              {% endif %}
+              {% if lavabo_source in binary_values and value == 'on' %}
+                {% set ns.weak = ns.weak + [entity_id] %}
+              {% endif %}
+            {% endfor %}
+            {% if lavabo_source == 'on' %}
+              {% set ns.weak = ns.weak + ['binary_sensor.lv_sensor_presenca_movimento'] %}
+            {% endif %}
+            {# PC ligado nao prova atividade. Reutiliza fatos Office, mas exige
+               sessao desbloqueada e timestamp humano real entre 0 e 300 s.
+               A fonte e opcional: PC desligado/offline nao derruba a malha. #}
+            {% set last_activity = as_timestamp(states('sensor.desktop_melg9vv_office_pc_idle_time'), 0) %}
+            {% set activity_age = as_timestamp(now()) - last_activity %}
+            {% set office_live = is_state('sensor.desktop_melg9vv_office_pc_session_state', 'Unlocked')
+                and last_activity > 0 and 0 <= activity_age <= 300 %}
+            {% for entity_id in office_activity_entities %}
+              {% if office_live and is_state(entity_id, 'on')
+                  and (entity_id == 'binary_sensor.office_pc_active'
+                    or is_state('sensor.office_presence_health', 'ok')) %}
+                {% set ns.weak = ns.weak + [entity_id] %}
+              {% endif %}
+            {% endfor %}
+            {% if ns.usable | count < minimum_healthy_rooms %}
+              {% set coverage = 'insufficient' %}
+            {% elif ns.usable | count == primary_rooms | count and person_known and lv.valid %}
+              {% set coverage = 'healthy' %}
+            {% else %}
+              {% set coverage = 'degraded' %}
+            {% endif %}
+            {{ dict(schema=1, coverage=coverage, person_state=person,
+                person_known=person_known, person_away=person_known and person != 'home',
+                strong_sources=ns.strong, weak_sources=ns.weak,
+                usable_rooms=ns.usable, primary_room_count=primary_rooms | count,
+                minimum_healthy_rooms=minimum_healthy_rooms, room_health=ns.health,
+                invalid_sources=ns.issues, lavabo_source_valid=lv.valid,
+                office_activity_supervised=office_live) }}
+
+      - name: Home Occupancy Coverage
+        default_entity_id: sensor.home_occupancy_coverage
+        unique_id: home_occupancy_coverage
+        icon: mdi:shield-home-outline
+        state: >-
+          {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+          {{ a.coverage if a is mapping and a.get('schema') == 1 else 'insufficient' }}
+        attributes:
+          mode: shadow
+          invalid_sources: >-
+            {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+            {{ a.invalid_sources if a is mapping and a.get('schema') == 1 else ['sensor.home_occupancy_observation'] }}
+          usable_rooms: >-
+            {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+            {{ a.usable_rooms if a is mapping and a.get('schema') == 1 else [] }}
+          policy: "7/7 primary rooms + valid absence inputs = healthy; 5-6/7 = degraded; fewer than 5 = insufficient"
+
+      - name: Home Occupancy State
+        default_entity_id: sensor.home_occupancy_state
+        unique_id: home_occupancy_state
+        icon: mdi:home-search-outline
+        state: >-
+          {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+          {% set warm = as_timestamp(now()) - (observer_loaded_at | float(0)) >= startup_observation_seconds %}
+          {% if a is not mapping or a.get('schema') != 1 %}unknown
+          {% elif a.strong_sources | count > 0 %}occupied
+          {% elif a.weak_sources | count > 0 %}probably_occupied
+          {% elif not warm or a.coverage == 'insufficient' or not a.person_away %}unknown
+          {% elif a.coverage == 'healthy' and is_state('binary_sensor.home_empty_confirmed', 'on') %}empty_confirmed
+          {% else %}probably_empty
+          {% endif %}
+        attributes:
+          mode: shadow
+          physical_actions_enabled: false
+          camera_evidence: excluded_by_user
+          observer_loaded_at: "{{ as_datetime(observer_loaded_at).isoformat() }}"
+          startup_observation_seconds: "{{ startup_observation_seconds }}"
+          empty_confirmation_seconds: 900
+          reason: >-
+            {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+            {% set warm = as_timestamp(now()) - (observer_loaded_at | float(0)) >= startup_observation_seconds %}
+            {% if a is not mapping or a.get('schema') != 1 %}assessment_unavailable
+            {% elif person_entity in a.strong_sources %}tracked_person_home
+            {% elif a.strong_sources | count > 0 %}healthy_room_occupied
+            {% elif a.weak_sources | count > 0 %}recent_human_evidence
+            {% elif not warm %}startup_observation
+            {% elif a.coverage == 'insufficient' %}insufficient_coverage
+            {% elif not a.person_away %}person_location_unknown
+            {% elif a.coverage == 'healthy' and is_state('binary_sensor.home_empty_confirmed', 'on') %}healthy_absence_15_minutes
+            {% elif a.coverage == 'degraded' %}absence_candidate_degraded
+            {% else %}absence_quarantine
+            {% endif %}
+          coverage: "{{ states('sensor.home_occupancy_coverage') }}"
+          strong_sources: >-
+            {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+            {{ a.strong_sources if a is mapping and a.get('schema') == 1 else [] }}
+          weak_sources: >-
+            {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+            {{ a.weak_sources if a is mapping and a.get('schema') == 1 else [] }}
+
+    binary_sensor:
+      - name: Home Strong Occupancy Evidence
+        default_entity_id: binary_sensor.home_strong_occupancy_evidence
+        unique_id: home_strong_occupancy_evidence
+        state: >-
+          {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+          {{ a is mapping and a.get('schema') == 1 and a.strong_sources | count > 0 }}
+
+      - name: Home Weak Occupancy Evidence
+        default_entity_id: binary_sensor.home_weak_occupancy_evidence
+        unique_id: home_weak_occupancy_evidence
+        state: >-
+          {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+          {{ a is mapping and a.get('schema') == 1 and a.weak_sources | count > 0 }}
+
+      - name: Home Occupancy Ready
+        default_entity_id: binary_sensor.home_occupancy_ready
+        unique_id: home_occupancy_ready
+        state: >-
+          {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+          {{ as_timestamp(now()) - (observer_loaded_at | float(0)) >= startup_observation_seconds
+              and a is mapping and a.get('schema') == 1 and a.coverage != 'insufficient' }}
+
+      - name: Home Empty Candidate
+        default_entity_id: binary_sensor.home_empty_candidate
+        unique_id: home_empty_candidate
+        state: >-
+          {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+          {{ as_timestamp(now()) - (observer_loaded_at | float(0)) >= startup_observation_seconds
+              and a is mapping and a.get('schema') == 1 and a.person_away
+              and a.coverage != 'insufficient'
+              and a.strong_sources | count == 0 and a.weak_sources | count == 0 }}
+
+      - name: Home Empty Confirmed
+        default_entity_id: binary_sensor.home_empty_confirmed
+        unique_id: home_empty_confirmed
+        # IMPORTANTE: nao usar availability para esconder o boot. O state deve
+        # realmente renderizar false durante a nova janela, apagando qualquer
+        # ON restaurado e cancelando delays. So depois pode iniciar os 900 s.
+        # Usa o snapshot diretamente para nao esperar cascatas entre sensores.
+        state: >-
+          {% set a = state_attr('sensor.home_occupancy_observation', 'assessment') %}
+          {{ as_timestamp(now()) - (observer_loaded_at | float(0)) >= startup_observation_seconds
+              and a is mapping and a.get('schema') == 1 and a.person_away
+              and a.coverage == 'healthy'
+              and a.strong_sources | count == 0 and a.weak_sources | count == 0 }}
+        delay_on:
+          seconds: 900
+        attributes:
+          mode: shadow
+          physical_actions_enabled: false
+          confirmation_window_seconds: 900

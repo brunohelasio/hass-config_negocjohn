@@ -519,3 +519,27 @@ crases, build, manifesto, compressão e grafo aprovados.
 Assistant. Rollback local em
 `tmp/rollback-20260901-status-lights-tablet-height-rev4/`; backup Everex em
 `tmp/everex-preflight-20260901-status-lights-tablet-height-rev4/`.
+
+---
+
+**Data:** 2026-09-02
+
+**Decisão:** implementar somente a Parte A do Item 2, ocupação global em
+shadow mode, após autorização. A migração Tuya → ONVIF permanece adiada;
+nenhum sensor de câmera alimenta a camada e nenhum consumidor Tuya muda.
+
+**Contrato:** oito entidades declarativas, snapshot único de evidências,
+cinco estados, cobertura mínima 5/7, confirmação somente com 7/7 e fontes de
+ausência válidas, janela inicial de pelo menos 60 s e `delay_on` de 900 s.
+Lavabo sem health é complementar; Corredor/Lavabo verificam fonte bruta para
+não confundir indisponibilidade com `off`. Office exige atividade humana
+supervisionada. Não há serviço, automação física ou notificação.
+
+**Validação e operação:** 30 regressões locais e 251 YAMLs aprovados. Pacote
+e include publicados no Everex com 2/2 hashes iguais. Sessão HA disponível
+está sem login: Check Configuration, reload e validação de estados/reinício
+permanecem pendentes. Nenhum reload/restart realizado. Candidata
+`codex/home-occupancy-shadow-20260902` sobre main `e0882b4`; não promover main
+sem aceite. Bundle em disco `bruno-dashboard.DuoAOL_I.js` intacto. Documento
+de fundação só será atualizado após validação explícita, sem marcar Item 2
+concluído agora. Detalhes em `docs/43-home-occupancy-shadow-20260902.md`.

@@ -1,0 +1,44 @@
+grid_heading:
+  default:
+    - heading_title: null
+    - link: null
+  card:
+    type: heading
+    heading: '[[heading_title]]'
+    heading_style: title
+    tap_action:
+      action: none
+    grid_options:
+      columns: full
+    uix:
+      style: |
+        div.container div.content {
+          font-size: 1.4vw !important;
+          font-weight: 700 !important;
+          font-family: Raleway !important;
+          letter-spacing: 0.05em !important;
+          color: rgba(255, 255, 255, 0.7) !important;
+          padding: 0 0 1rem 0 !important;
+          width: 100%;
+          line-height: 100% !important;
+          justify-content: space-between;
+          flex: 1 1 auto;
+        }
+        /* secondmonitor */
+        @media screen and (max-width: 1440px) {
+          div.container div.content {
+            font-size: 2vw !important;
+            padding-bottom: 1.7vw !important;
+          }
+        }
+        /* phone */
+        @media screen and (max-width: 800px) {
+          div.container div.content {
+            padding-top: 1rem !important;
+            font-size: 4vw !important;
+          }
+        }
+        ha-icon-next {
+          --mdc-icon-size: 1em;
+          opacity: 0.5 !important;
+        }

@@ -15,7 +15,7 @@ media_player:
           media_player.bedroom_samsung_television
         {% endif %}
       {% else %}
-        media_player.bedroom_samsung_tv
+        None
       {% endif %}
     commands:
       turn_on:

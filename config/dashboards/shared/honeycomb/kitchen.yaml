@@ -40,10 +40,10 @@ honeycomb_menu:
     - icon: custom:smoke-detector
       show: true
       position: 3
-      entity: fan.hood_power
+      entity: switch.hood_power
       active: '[[[ return entity.state != "off" ]]]'
       tap_action:
         action: call-service
         service: homeassistant.toggle
         service_data:
-          entity_id: fan.hood_power
+          entity_id: switch.hood_power

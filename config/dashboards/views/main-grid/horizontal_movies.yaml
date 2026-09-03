@@ -3,17 +3,28 @@
 #                  HORIZONTAL                   #
 #                                               #
 #################################################
-
-- type: grid
-  title: Movies
+- type: custom:layout-card
+  layout_type: custom:grid-layout
+  layout:
+    margin: 0
+    padding: 0
+    grid-template-columns: 1fr
+    grid-template-rows: min-content 1fr
   view_layout:
     grid-area: movies
     show:
       mediaquery: '(min-width: 1441px)'
-  columns: 1
-  square: true
   cards:
-    - type: custom:added-movie-card
-      entity: sensor.tmdb_movies_yts_latest
-      show_item_count: 10
-      tmdb_api_key: !secret tmdb_api_key
+    - type: custom:streamline-card
+      template: grid_heading
+      variables:
+        - heading_title: 'Movies'
+        - link: https://debridmediamanager.com/
+    - type: grid
+      columns: 1
+      square: true
+      cards:
+        - type: custom:added-movie-card
+          entity: sensor.tmdb_movies_yts_latest
+          show_item_count: 10
+          tmdb_api_key: !secret tmdb_api_key

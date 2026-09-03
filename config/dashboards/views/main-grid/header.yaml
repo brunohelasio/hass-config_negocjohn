@@ -18,13 +18,13 @@
       mediaquery: '(min-height: 463px)'
   layout:
     margin: 0
-    place-items: center center
+    place-items: center self-start
     grid-template-columns: minmax(170px, 250px) minmax(200px, 1fr)
     grid-template-rows: auto
     grid-gap: 0
     mediaquery:
       '(min-width: 801px) and (max-width: 1440px)':
-        place-items: center center
+        place-items: center self-start
         grid-template-columns: 1fr
         grid-template-rows: 2fr 2fr
 
@@ -66,37 +66,52 @@
 
             ha-card {
               min-height: 100px;
-              --ha-font-size-3xl: 48px;
-              --ha-font-size-xl: 30px;
+              # --ha-font-size-3xl: 2vw;
+              # --ha-font-size-m: 1.4em;
             }
             ha-card wfc-animation-provider {
               overflow: visible;
               --sun-size: 100px;
             }
+
+            div.wfc-forecast-container,
+            ha-card wfc-weather-condition-icon-provider,
+            div.wfc-current-conditions div.wfc-name-state span.wfc-name {
+              display: none;
+            }
+            .wfc-current-conditions {
+              flex-direction: column-reverse !important;
+              align-items: flex-end !important;
+            }
+            .wfc-current-temperature {
+              font-size: 2vw !important;
+              font-weight: 500;
+              font-family: 'Raleway';
+              color: #97989c;
+            }
+            .wfc-current-state {
+              font-size: 1em !important;
+              color: #97989c;
+            }
+
             @media screen and (max-width: 800px) {
               ha-card wfc-animation-provider {
-                --moon-size: 60px;
+                --moon-size: 80px;
                 --sun-size: 60px;
               }
+              .wfc-current-state {
+                font-size: 0.8em !important;
+              }
+              .wfc-current-temperature {
+                font-size: 2.5em !important;
+              }
             }
+
             @media screen and (min-width: 1441px) {
               ha-card wfc-animation-provider {
                 --moon-size: 200px;
                 # --sun-size: 60px;
               }
-            }
-            div.wfc-forecast-container,
-            ha-card wfc-weather-condition-icon-provider,
-            div.wfc-name-state {
-              display: none;
-            }
-            .wfc-current-conditions {
-              justify-content: flex-end;
-            }
-            .wfc-current-temperature {
-              font-weight: 500;
-              font-family: 'Raleway';
-              color: #97989c;
             }
           wfc-animation-provider$: |
             div.sun {
@@ -108,6 +123,14 @@
             div.moon-body {
               top: calc(var(--moon-size) * 0.15);
               right: 45%;
+            }
+            @media screen and (max-width: 800px) {
+              div.sun{
+                right: 85%;
+              }
+              div.moon-body {
+                right: 75%;
+              }
             }
             div.star {
               display: none;

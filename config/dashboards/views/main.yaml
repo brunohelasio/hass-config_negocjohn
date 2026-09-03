@@ -15,7 +15,7 @@ layout:
     ". chips     chips      chips     chips    header     header     ."
     ". security  mainrooms  devices   other    floorplan  floorplan  ."
     ". cameras   climate    media     movies   floorplan  floorplan  ."
-    ". footer    footer     footer    footer   floorplan  floorplan  ."
+    ". footer    footer     footer    footer   .  .  ."
     ". .         .          .         .        .          .          ."
 
   mediaquery:
@@ -51,11 +51,12 @@ layout:
       margin: 0
       grid-gap: 1rem
       grid-template-columns: 0 1fr 1fr 0
-      grid-template-rows: min-content fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) 0.5rem min-content 1rem
+      grid-template-rows: min-content fit-content(100%) 0.5rem fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) fit-content(100%) 0.5rem min-content 1rem
       grid-template-areas: |
         ". header      header    ."
-        ". chips       chips     ."
         ". floorplan   floorplan ."
+        ". .           .         ."
+        ". chips       chips     ."
         ". home        security  ."
         ". media       cameras   ."
         ". mainrooms   devices   ."

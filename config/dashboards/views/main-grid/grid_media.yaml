@@ -41,7 +41,7 @@
           state: Kodi ATV
       card:
         type: custom:button-card
-        entity: media_player.kodi_atv
+        entity: ''
         name: ' '
         triggers_update: sensor.kodi_picture
         template:
@@ -107,15 +107,3 @@
     - *KODIATV
     - *PS5
     - *MASSAIRPLAY
-    - type: conditional
-      conditions:
-        - entity: select.conditional_media
-          state: Spotify
-      card:
-        type: custom:button-card
-        entity: media_player.spotifyplus_ngoc_nguyen
-        name: ' '
-        double_tap_action: !include ../../shared/popup/spotify_playlist.yaml
-        template:
-          - currently_playing
-          # - conditional_media

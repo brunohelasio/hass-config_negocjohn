@@ -30,5 +30,5 @@ frontend:
 # INCLUDES
 automation ui: !include automations.yaml
 script: !include scripts.yaml
-
+scene ui: !include scenes.yaml
 google_assistant: !include google_assistant.yaml

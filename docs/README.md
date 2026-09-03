@@ -10,7 +10,7 @@ Hey there! Welcome to my little corner of the tech world! 👨‍💻
 
 This is where I store all the cool configurations for my Home Assistant system. Well, it's a mix of awesome codes and setups I discovered from the Home Assistant community. Seriously, those folks are wizards! 🧙‍♂️ As a bit of an internet newbie turned tech enthusiast, I stumbled upon the magic of IT, and this repository is my way of sharing the joy and knowledge I've gained along the way. Dive in, explore, and let the tech magic begin! ✨
 
-I frequently refresh my configuration files. My current Home Assistant version is <b>2026.8.3</b>. If you find something you like, don't forget to give my repository a ⭐️!
+I frequently refresh my configuration files. My current Home Assistant version is <b>2026.9.0</b>. If you find something you like, don't forget to give my repository a ⭐️!
 
 ## Some of my projects for Home Assistant
 
@@ -47,15 +47,15 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
       </thead>
       <tbody>
           <tr>
-              <td>46,942 </td>
-              <td>35</td>
-              <td>297</td>
-              <td>79</td>
-              <td>64</td>
-              <td>38</td>
-              <td>2183</td>
-              <td>261</td>
-              <td>27</td>
+              <td>47,047 </td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
           </tr>
       </tbody>
   </table>
@@ -110,9 +110,7 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - [Generate Readme](https://github.com/custom-components/readme)
 - [Google Cloud Speech To Text](https://github.com/chatziko/ha-google-cloud-stt)
 - [Google Home Exposure Manager](https://github.com/NathanMagnus/GoogleHomeExposureManager)
-- [Googlegeocode Hass](https://github.com/gregoryduckworth/GoogleGeocode-HASS)
 - [Govee](https://github.com/LaggAt/hacs-govee)
-- [Greg](https://github.com/WHISTLER-Arc/Greg)
 - [HACS](https://github.com/hacs/integration)
 - [Hass Favicon](https://github.com/thomasloven/hass-favicon)
 - [Home Connect Local](https://github.com/chris-mc1/homeconnect_local_hass)
@@ -126,6 +124,7 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - [Plex Recently Added](https://github.com/custom-components/sensor.plex_recently_added)
 - [Remote Home Assistant](https://github.com/custom-components/remote_homeassistant)
 - [Rohlík.Cz Custom Integration](https://github.com/dvejsada/HA-RohlikCZ)
+- [Samsungtv Smart](https://github.com/ollo69/ha-samsungtv-smart)
 - [Samsungtv Tizen](https://github.com/jaruba/ha-samsungtv-tizen)
 - [Simpleicons](https://github.com/vigonotion/hass-simpleicons)
 - [Spook 👻 Your Homie](https://github.com/frenck/spook)
@@ -145,7 +144,6 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - [Air Quality Card](https://github.com/firstof9/ha-air-quality-card)
 - [Apexcharts Card](https://github.com/RomRider/apexcharts-card)
 - [Apple Tv Remote Control](https://github.com/madmicio/Apple-Tv-Card)
-- [Area Glance Card](https://github.com/Future-Surfer/ha-area-glance-card)
 - [Atomic Calendar Revive](https://github.com/totaldebug/atomic-calendar-revive)
 - [Auto Entities](https://github.com/Lint-Free-Technology/lovelace-auto-entities)
 - [Bar Card](https://github.com/spacerokk/bar-card)
@@ -173,6 +171,7 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - [Logbook Card](https://github.com/royto/logbook-card)
 - [Lovelace Touchpad Card](https://github.com/michalowskil/lovelace-touchpad-card)
 - [Lunar Phase Card](https://github.com/ngocjohn/lunar-phase-card)
+- [M3 Cards](https://github.com/j0sp0r/m3-cards)
 - [Mass Search Card](https://github.com/fastxl2024/mass-search-card)
 - [Maxi Media Player](https://github.com/punxaphil/maxi-media-player)
 - [Mediocre Hass Media Player Cards](https://github.com/antontanderup/mediocre-hass-media-player-cards)

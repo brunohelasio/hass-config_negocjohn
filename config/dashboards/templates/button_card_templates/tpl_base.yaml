@@ -1699,3 +1699,28 @@ func_vars:
           return null;
         }
       ]]]
+    compute_duration_time: >
+      [[[
+        return (c) => {
+          let s = (c/1e3),
+              m = (c/6e4),
+              h = (c/36e5),
+              d = (c/864e5);
+          return s < 60
+              ? parseInt(s) + 's'
+              : m < 60 ? parseInt(m) + 'm'
+              : h < 24 ? parseInt(h) + 'h'
+              : parseInt(d) + 'd';
+          }
+      ]]]
+    render_duration_circle: >
+      [[[
+        return (textContent, strokeColor, circleFillColor, textColor) => {
+          return `
+            <svg viewBox="0 0 50 50">
+              <circle cx="25" cy="25" r="20.5" stroke="${strokeColor ?? '#b2b2b2'}" stroke-width="2.5" fill="${circleFillColor ?? 'rgba(255,255,255,0.1)'}" />
+              <text x="50%" y="54%" fill="${textColor ?? '#8d8e90'}" font-size="14" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">${textContent}</text>
+            </svg>
+          `;
+        }
+      ]]]

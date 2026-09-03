@@ -44,27 +44,28 @@ header_clock:
         type: clock
         clock_size: large
         show_seconds: true
-        card_mod:
-          style: |
-            ha-card {
-              font-family: 'Raleway';
-              color: #97989c;
-            }
-
-            @media screen and (min-width: 800px) {
-              .time-wrapper.size-large .time-parts {
-                font-size: 5rem !important;
+        uix:
+          style:
+            .: |
+              ha-card {
+                font-family: 'Raleway';
+                color: #97989c;
               }
-            }
-            @media screen and (max-width: 1700px) {
-              .time-wrapper.size-large .time-parts {
-                font-size: 2vw !important;
+              @media screen and (max-width: 800px) {
+                div.time-wrapper {
+                  padding: 6px 8px !important;
+                }
               }
-            }
 
-            .time-part.second {
-              min-width: 30px !important;
-            }
+            'hui-clock-card-digital $': |
+              @media screen and (min-width: 1441px) {
+                div.clock-container div.time-parts  {
+                  font-size: 5em !important;
+                }
+              }
+              div.clock-container div.time-parts div.second {
+                width: 0 !important;
+              }
 
 # header_clock:
 #   template:

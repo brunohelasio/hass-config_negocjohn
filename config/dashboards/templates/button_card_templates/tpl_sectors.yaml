@@ -916,7 +916,7 @@ camera:
           stateStr = variables.camera_enabled ? 'online' : 'offline';
       return `${batteryState} - ${stateStr}`;
     ]]]
-  # update_timer: '500ms'
+  update_timer: '500ms'
   double_tap_action:
     action: fire-dom-event
     browser_mod:
@@ -978,28 +978,12 @@ camera:
     circle: >
       [[[
         if (entity.state === 'streaming' || entity.state === 'idle') {
-          let time = c => {
-              let s = (c/1e3),
-                  m = (c/6e4),
-                  h = (c/36e5),
-                  d = (c/864e5);
-              return s < 60
-                  ? parseInt(s) + 's'
-                  : m < 60 ? parseInt(m) + 'm'
-                  : h < 24 ? parseInt(h) + 'h'
-                  : parseInt(d) + 'd';
-          };
-            let last_changed = time(Date.now() - Date.parse(entity.last_changed)),
+            let last_changed = variables.compute_duration_time(Date.now() - Date.parse(entity.last_changed)),
               stroke = variables.state === 'streaming' || variables.state === 'on'  ? '#000000' : 'rgba(255,255,255,0.1)',
               fill = variables.is_bellow_horrizon && variables.state === 'idle' || variables.state === 'off' ? 'rgba(255,255,255,0.1)' : '#efefef95',
               text = variables.is_bellow_horrizon && variables.state === 'idle' || variables.state === 'off' ? '#8d8e90' : '#000000';
         if (entity) {
-          return `
-            <svg viewBox="0 0 50 50">
-              <circle cx="25" cy="25" r="20.5" stroke="${stroke}" stroke-width="2.5" fill="${fill}" />
-              <text x="50%" y="54%" fill="${text}" font-size="14" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">${last_changed}</text>
-            </svg>
-          `;
+          return variables.render_duration_circle(last_changed, stroke, fill, text);
           }
         }
       ]]]
@@ -1007,34 +991,20 @@ circle_state:
   template:
     - base
     - circle
+  update_timer: '500ms'
   triggers_update: sensor.time
   custom_fields:
     circle: >
       [[[
         if (entity) {
           if (entity.state === 'open' || entity.state === 'on') {
-            let time = c => {
-                let s = (c/1e3),
-                    m = (c/6e4),
-                    h = (c/36e5),
-                    d = (c/864e5);
-                return s < 60
-                    ? parseInt(s) + 's'
-                    : m < 60 ? parseInt(m) + 'm'
-                    : h < 24 ? parseInt(h) + 'h'
-                    : parseInt(d) + 'd';
-            };
             let last_changed = states[variables.retain] == null || states[variables.retain].state == 'unavailable'
-                  ? time(Date.now() - Date.parse(states[entity.entity_id].last_changed))
-                  : time(Date.now() - Date.parse(states[variables.retain].state)),
+                  ? variables.compute_duration_time(Date.now() - Date.parse(states[entity.entity_id].last_changed))
+                  : variables.compute_duration_time(Date.now() - Date.parse(states[variables.retain].state)),
                 stroke = variables.state === 'open' || variables.state === 'on' ? '#b2b2b2' : 'none',
                 fill = variables.state === 'closed' || variables.state === 'off' ? 'rgba(255,255,255,0.04)' : 'none';
-          return `
-            <svg viewBox="0 0 50 50">
-              <circle cx="25" cy="25" r="20.5" stroke="${stroke}" stroke-width="2.5" fill="${fill}" />
-              <text x="50%" y="54%" fill="#8d8e90" font-size="14" text-anchor="middle" alignment-baseline="middle" dominant-baseline="middle">${last_changed}</text>
-            </svg>
-          `;
+          return variables.render_duration_circle(last_changed, stroke, fill);
+
           }
         }
       ]]]

@@ -71,7 +71,7 @@ cards:
       - footer
 
   - type: custom:button-card
-    entity: binary_sensor.unifi_controller_alert
+    entity: sensor.neklanka_gateway_state
     name: >
       <ha-icon icon="mdi:router-wireless"></ha-icon> Network
     tap_action: !include ./popup/footer/footer_network.yaml
@@ -79,7 +79,7 @@ cards:
       notify: >
         [[[
           let entityState = entity?.state;
-            return entityState === 'on' ? 'alert' : null;
+            return entityState === 'disconnected' ? 'alert' : null;
         ]]]
       speedtest:
         download: sensor.neklanka_gateway_download

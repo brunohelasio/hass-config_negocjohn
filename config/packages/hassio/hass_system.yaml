@@ -8,7 +8,7 @@
 #
 #- from github.com/ngocjohn/hass-config
 #
-# RECORDER
+# RECORDER - https://www.home-assistant.io/integrations/recorder/
 recorder:
   db_url: !secret mariadb_url
   purge_keep_days: 30
@@ -41,6 +41,7 @@ recorder:
     entity_globs:
       - sensor.*_motor_speed
       - sensor.browser_*
+      - binary_sensor.browser_*
       - sensor.*_color
       - sensor.*_energy
       - sensor.*_power
@@ -85,6 +86,7 @@ recorder:
       - sensor.neklanka_gateway_*
       - sensor.rx_*
       - sensor.kids_room_*
+      - sensor.tmdb_*
   include:
     entities:
       - device_tracker.viet_ngoc_samsung
@@ -116,7 +118,13 @@ recorder:
       - light.office_led_light_strip
       - light.bedroom_ripple_mood_light
       - light.sony_tv_backlight
+
+# ACTIVITY LOGBOOK - https://www.home-assistant.io/integrations/logbook/
 logbook:
+  exclude:
+    entity_globs:
+      - sensor.browser_*
+      - binary_sensor.browser_*
 
 # LOGGER https://www.home-assistant.io/integrations/system_log/
 logger:

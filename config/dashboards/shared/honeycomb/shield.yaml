@@ -49,15 +49,15 @@ service_data:
           entity_id: entity
           source: YouTube
     #4
-    - icon: mdi:power
-      active: '[[[ return entity.state != "off" ]]]'
-      position: 4
-      audio: /local/sound/tv.m4a
-      tap_action:
-        action: call-service
-        service: script.turn_on
-        service_data:
-          entity_id: script.samsung_turn_on_off
+    # - icon: mdi:power
+    #   active: '[[[ return entity.state != "off" ]]]'
+    #   position: 4
+    #   audio: /local/sound/tv.m4a
+    #   tap_action:
+    #     action: call-service
+    #     service: script.turn_on
+    #     service_data:
+    #       entity_id: script.samsung_turn_on_off
     #5
     - icon: mdi:volume-minus
       active: true

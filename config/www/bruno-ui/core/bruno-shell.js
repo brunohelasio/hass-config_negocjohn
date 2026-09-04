@@ -2757,6 +2757,21 @@ class BrunoShell extends HTMLElement {
         :host {
           height: 100vh;
           height: 100dvh;
+          /* ANTERIOR (rollback safe area superior 2026-09-03): a shell
+             confiava que o container do Home Assistant ja retirava a barra
+             superior do iPhone. A altura era limitada, mas nao existiam
+             box-sizing nem padding-top neste bloco.
+
+             O HA 2026.9 publica o inset para paineis que desenham ate a borda.
+             Reservamos o maior valor entre o contrato do HA e o env nativo.
+             border-box desconta essa reserva dos mesmos 100dvh: o painel
+             inteiro desce, sem crescer nem empurrar o dock para fora. */
+          box-sizing: border-box;
+          --bruno-safe-top: max(
+            var(--safe-area-inset-top, 0px),
+            env(safe-area-inset-top, 0px)
+          );
+          padding-top: var(--bruno-safe-top);
           /* ANCORAGEM NA VIEWPORT (2026-08-24).
 
              Sem overscroll-behavior a rolagem do content-slot ENCADEIA para

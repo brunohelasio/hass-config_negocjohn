@@ -543,3 +543,30 @@ permanecem pendentes. Nenhum reload/restart realizado. Candidata
 sem aceite. Bundle em disco `bruno-dashboard.DuoAOL_I.js` intacto. Documento
 de fundação só será atualizado após validação explícita, sem marcar Item 2
 concluído agora. Detalhes em `docs/43-home-occupancy-shadow-20260902.md`.
+
+---
+
+**Data:** 2026-09-03
+
+**Decisão:** reservar explicitamente a safe area superior somente no modo phone
+da `bruno-shell`, sem restaurar o pacote de ocupação nem alterar o tablet.
+
+**Causa:** depois do reinício/HA 2026.9, o container passou a expor uma viewport
+edge-to-edge e revelou que a shell dependia implicitamente de o próprio HA
+retirar a barra de estado. O código tratava `safe-area-inset-bottom`, mas não o
+topo. A comparação dos bundles `C5Tz4bF_` e `DuoAOL_I` descartou como causa a
+mudança anterior de altura da sheet: seu delta era tablet-only e o mobile
+continuava sobrescrito em 46 px.
+
+**Contrato:** no breakpoint `<=800px`, usar o maior valor entre
+`--safe-area-inset-top` e `env(safe-area-inset-top)` como `padding-top`, com
+`box-sizing: border-box`. A altura externa continua em `100dvh`; tablet,
+ocupação, Tuya/ONVIF, gestos e layouts internos ficam intactos.
+
+**Validação:** TypeScript, ESLint, 20 arquivos/293 testes, 251 YAMLs, 200 JS,
+Vite/91 módulos e grafo local com sete módulos aprovados. Bundle candidato
+`bruno-dashboard.BHAJDN5A.js`; main chunk `chunks/main.uiioeD72.js`. Publicação
+no Everex concluída com configuração por último, 30/30 hashes idênticos e grafo
+remoto íntegro; não houve reinício. O merge em `main` continua bloqueado até o
+aceite físico no iPhone. Detalhes e rollback em
+`docs/44-mobile-safe-area-top-20260903.md`.

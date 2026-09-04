@@ -1,7 +1,8 @@
 # Item 2 — Parte A: ocupação global em shadow mode
 
-Data: 2026-09-02. **Implementada e publicada em disco; ativação e validação no
-Home Assistant pendentes de sessão autenticada. Não é aceite do Item 2.**
+Data: 2026-09-02. **Implementada, publicada e ativada pelo reinício feito pelo
+usuário em 2026-09-03. A validação inicial passou, mas ainda não é aceite do
+Item 2.**
 
 ## Escopo autorizado
 
@@ -117,7 +118,7 @@ que esconda esse reset, antes de começar o `delay_on`. A verificação por
 `now()` é periódica: na prática a janela inicial pode ficar entre cerca de
 60 e 120 segundos sem eventos adicionais, seguida dos 900 segundos.
 
-Na versão instalada, HA Core **2026.8.3**, existe restauração de estado em
+Na versão instalada durante o desenho, HA Core **2026.8.3**, existe restauração de estado em
 templates state-based. Por isso o teste físico deve verificar o comportamento
 depois da inicialização dos templates, e não confiar em um valor restaurado
 transitório durante o bootstrap. Nenhum consumidor é conectado nesta fase.
@@ -150,29 +151,25 @@ node scripts/validation/check-yaml.mjs
 Nesta máquina foram usados Python/Node empacotados do Codex; dependências
 PyYAML 6.0.3 e Jinja2 3.1.6 ficaram somente em `tmp`, fora do commit/runtime.
 
-## Bloqueio externo e ativação pendente
+## Ativação real e validação parcial — 2026-09-03
 
-A aba do Home Assistant disponível à ferramenta de navegador está na tela de
-login. Foi solicitado que o usuário autentique nessa aba sem enviar senha no
-chat. Não se leem credenciais, cookies ou perfis para contornar autenticação.
+O usuário reiniciou o Home Assistant. As oito entidades novas foram carregadas
+e apareceram no histórico do recorder. No snapshot conferido:
 
-Após autenticação:
+- `sensor.home_occupancy_state`: `occupied`;
+- motivo: `healthy_room_occupied`;
+- `sensor.home_occupancy_coverage`: `degraded`;
+- Corredor estava indisponível e Q. Miguel ainda inicializava.
 
-1. Revalidar os dois hashes e executar **Check Configuration** no HA.
-2. Se falhar, não recarregar: comentar o include e diagnosticar.
-3. Se passar, recarregar somente **Templates**. Essa operação recarrega o
-   domínio inteiro e faz a supervisão existente reconstruir sua saúde;
-   não existe reload seletivo somente deste package. Não reiniciar para
-   resolver frontend nesta rodada.
-4. Conferir as oito entidades, `assessment`, fontes/reason e logs de templates.
-5. Observar condições reais, a janela completa de ausência saudável e o
-   cancelamento. Fazer ensaio de reload; reinício completo só em janela
-   adequada e com autorização operacional, sem acionar dispositivos.
-6. Aguardar aceite do usuário antes de promover a candidata para main.
+Isso comprova carga do package e uma decisão positiva coerente sem acionar
+consumidores. Ainda falta observar a janela completa de ausência saudável, o
+cancelamento/reinício dos 900 s e as transições sob falha; portanto não existe
+aceite final nem autorização para iniciar a Parte B/ONVIF.
 
-O Check Configuration, reload, estados vivos, ensaio de reinício e aceite
-**não estão aprovados**. Os testes locais não os substituem. Parte B/ONVIF
-continua adiada; portanto o Item 2 completo não pode ser declarado concluído.
+O mesmo reinício tornou visível uma regressão da safe area superior do painel
+mobile. O package de ocupação não contém frontend e permaneceu intacto; a causa
+e a correção isolada estão em
+`docs/44-mobile-safe-area-top-20260903.md`.
 
 ## Rollback
 

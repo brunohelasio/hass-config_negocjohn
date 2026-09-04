@@ -206,7 +206,8 @@ frontend:
     # ANTERIOR (rollback altura dos controles da Iluminacao no tablet 2026-09-01): - /local/dashboard/bruno-dashboard.C5Tz4bF_.js
     # ANTERIOR (build intermediario da altura tablet, descartado por overflow na transicao): - /local/dashboard/bruno-dashboard.Be0aa_bY.js
     # ANTERIOR (build intermediario da curva responsiva): - /local/dashboard/bruno-dashboard.Ks9H128C.js
-    - /local/dashboard/bruno-dashboard.DuoAOL_I.js
+    # ANTERIOR (rollback safe area superior do iPhone 2026-09-03): - /local/dashboard/bruno-dashboard.DuoAOL_I.js
+    - /local/dashboard/bruno-dashboard.BHAJDN5A.js
     # ─────────────────────────────────────────────────────────────────────────
     # ANTERIOR (rollback): ?v=20260703-theme-config-1 / ?v=20260707-updates-panel-2
     # NOVO (2026-07-09): modo phone da shell (Opcao A mobile) — rail vira dock

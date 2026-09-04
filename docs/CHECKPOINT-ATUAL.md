@@ -1,6 +1,6 @@
 # CHECKPOINT ATUAL — LEITURA OBRIGATÓRIA
 
-Atualizado em **2026-09-02**. Este documento é a primeira fonte de continuidade operacional do projeto.
+Atualizado em **2026-09-03**. Este documento é a primeira fonte de continuidade operacional do projeto.
 
 > **REGRA ZERO PARA QUALQUER IA/CHAT NOVO:** antes de diagnosticar, propor branch, escrever código, orientar GitHub Desktop ou indicar arquivos para o Everex, leia este arquivo e depois `docs/LEIA-PRIMEIRO.md`. Não reconstrua o estado apenas pela lista de PRs nem apenas pela memória do chat.
 
@@ -39,6 +39,18 @@ Este requisito é obrigatório e foi reforçado pelo usuário em 2026-08-22 apó
 
 ## Cadeia vigente
 
+> **Correção mobile mais recente — 2026-09-03:** após o reinício que ativou a
+> ocupação e o runtime já publicado, o HA 2026.9 passou a entregar o painel até
+> a borda superior do iPhone e expôs uma lacuna preexistente: o modo phone da
+> `bruno-shell` tratava somente a safe area inferior. A correção fica restrita a
+> `@media (max-width: 800px)`, combina `--safe-area-inset-top`/`env(...)` e usa
+> `border-box` para descontar o inset dos mesmos `100dvh`. Bundle candidato
+> `bruno-dashboard.BHAJDN5A.js`; 20 arquivos/293 testes, TypeScript, ESLint,
+> 251 YAMLs, 200 JS, build e grafo local aprovados. Publicado no Everex com
+> 30/30 hashes idênticos e configuração por último; reinício/ativação e aceite
+> físico ainda devem ser registrados antes de promover `main`. Detalhes e
+> rollback em `docs/44-mobile-safe-area-top-20260903.md`.
+>
 > **Estado mais recente — 2026-09-02:** a sincronização autorizada anteriormente
 > levou `main` local/GitHub a `e0882b468e22fb3bbbaae61bbdcd922debe4fdc4`,
 > com bundle em disco `bruno-dashboard.DuoAOL_I.js`. As referências abaixo a
@@ -47,9 +59,13 @@ Este requisito é obrigatório e foi reforçado pelo usuário em 2026-08-22 apó
 > Nova candidata: `codex/home-occupancy-shadow-20260902`, somente Parte A do
 > Item 2. Pacote `home_occupancy_core.yaml` + include publicados no Everex,
 > 2/2 SHA-256 iguais ao checkout; 30 testes locais e 251 YAMLs aprovados.
-> **Check Configuration, ativação e validação real pendentes de login no HA.**
-> Não houve reload/restart. Tuya/ONVIF, presença por cômodo, frontend e ações
-> físicas permanecem intactos. Não promover main sem aceite. Detalhes,
+> O usuário reiniciou o HA: as oito entidades carregaram e a observação real
+> mostrou `occupied`/`healthy_room_occupied`, com cobertura `degraded` no
+> snapshot conferido. A janela de ausência/900 s e o aceite final permanecem
+> pendentes.
+> Na publicação original da ocupação não houve reload/restart; a ativação veio
+> depois, pelo reinício informado pelo usuário. Tuya/ONVIF, presença por cômodo
+> e ações físicas permanecem intactos. Não promover main sem aceite. Detalhes,
 > hashes, arquivos exatos, limites e rollback em
 > `docs/43-home-occupancy-shadow-20260902.md`.
 

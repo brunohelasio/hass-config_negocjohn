@@ -40,18 +40,18 @@ globalThis.addEventListener("load", () => {
   Y.windowLoad = me(), Ge();
 }, { once: !0 });
 Ge();
-function Ae() {
+function qe() {
   return { criados: 0, encerrados: 0 };
 }
 function Gi(o) {
   return {
     nome: o,
-    instancias: Ae(),
+    instancias: qe(),
     render: { total: 0, duracaoTotal: 0, ultima: 0, pior: 0 },
     motivos: /* @__PURE__ */ new Map(),
-    timers: Ae(),
-    listeners: Ae(),
-    assinaturas: Ae(),
+    timers: qe(),
+    listeners: qe(),
+    assinaturas: qe(),
     requisicoes: { total: 0, falhas: 0, duracaoTotal: 0, pior: 0 }
   };
 }
@@ -626,7 +626,7 @@ class _e {
       if (i.nodeType === 1) {
         if (i.hasAttributes()) for (const d of i.getAttributeNames()) if (d.endsWith(ui)) {
           const h = p[n++], g = i.getAttribute(d).split(G), u = /([.?@])?(.*)/.exec(h);
-          l.push({ type: 1, index: r, name: u[2], strings: g, ctor: u[1] === "." ? kr : u[1] === "?" ? Sr : u[1] === "@" ? qr : Ye }), i.removeAttribute(d);
+          l.push({ type: 1, index: r, name: u[2], strings: g, ctor: u[1] === "." ? kr : u[1] === "?" ? Sr : u[1] === "@" ? Ar : Ye }), i.removeAttribute(d);
         } else d.startsWith(G) && (l.push({ type: 6, index: r }), i.removeAttribute(d));
         if (gi.test(i.tagName)) {
           const d = i.textContent.split(G), h = d.length - 1;
@@ -672,7 +672,7 @@ class wr {
     for (; l !== void 0; ) {
       if (n === l.index) {
         let c;
-        l.type === 2 ? c = new ye(r, r.nextSibling, this, e) : l.type === 1 ? c = new l.ctor(r, l.name, l.strings, this, e) : l.type === 6 && (c = new Ar(r, this, e)), this._$AV.push(c), l = t[++s];
+        l.type === 2 ? c = new ye(r, r.nextSibling, this, e) : l.type === 1 ? c = new l.ctor(r, l.name, l.strings, this, e) : l.type === 6 && (c = new qr(r, this, e)), this._$AV.push(c), l = t[++s];
       }
       n !== l?.index && (r = Q.nextNode(), n++);
     }
@@ -783,7 +783,7 @@ class Sr extends Ye {
     this.element.toggleAttribute(this.name, !!e && e !== _);
   }
 }
-class qr extends Ye {
+class Ar extends Ye {
   constructor(e, a, t, i, r) {
     super(e, a, t, i, r), this.type = 5;
   }
@@ -796,7 +796,7 @@ class qr extends Ye {
     typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
   }
 }
-class Ar {
+class qr {
   constructor(e, a, t) {
     this.element = e, this.type = 6, this._$AN = void 0, this._$AM = a, this.options = t;
   }
@@ -5406,6 +5406,21 @@ class E extends HTMLElement {
         :host {
           height: 100vh;
           height: 100dvh;
+          /* ANTERIOR (rollback safe area superior 2026-09-03): a shell
+             confiava que o container do Home Assistant ja retirava a barra
+             superior do iPhone. A altura era limitada, mas nao existiam
+             box-sizing nem padding-top neste bloco.
+
+             O HA 2026.9 publica o inset para paineis que desenham ate a borda.
+             Reservamos o maior valor entre o contrato do HA e o env nativo.
+             border-box desconta essa reserva dos mesmos 100dvh: o painel
+             inteiro desce, sem crescer nem empurrar o dock para fora. */
+          box-sizing: border-box;
+          --bruno-safe-top: max(
+            var(--safe-area-inset-top, 0px),
+            env(safe-area-inset-top, 0px)
+          );
+          padding-top: var(--bruno-safe-top);
           /* ANCORAGEM NA VIEWPORT (2026-08-24).
 
              Sem overscroll-behavior a rolagem do content-slot ENCADEIA para
@@ -6841,11 +6856,11 @@ globalThis.BrunoIOSDark = {
   feedback: (...o) => ue?.feedback?.(...o) || !1,
   routeTransition: (...o) => ue?.routeTransition?.(...o)
 };
-const qo = "20260822-josh-liquid-on-reference-1", yt = "bruno-liquid-glass-tokens";
+const Ao = "20260822-josh-liquid-on-reference-1", yt = "bruno-liquid-glass-tokens";
 function te() {
   return globalThis.BrunoVisionOSOriginal || globalThis.BrunoVisionOS || null;
 }
-const Ao = {
+const qo = {
   // Microblur Josh controlado: uma unica amostragem por superficie principal.
   // Fills, scrims, bordas, filetes, sheen e edge-glow permanecem inalterados.
   "bruno-josh-microblur": "blur(2px)",
@@ -7157,9 +7172,9 @@ function Eo() {
     "bruno-josh-room-on-sheen-opacity": e["bruno-liquid-surface-on-sheen-opacity"] || "0.85"
   };
 }
-function qi() {
+function Ai() {
   const o = te();
-  return Object.assign({}, o?.tokens || {}, Ao, Eo());
+  return Object.assign({}, o?.tokens || {}, qo, Eo());
 }
 const Oo = `
 html.bruno-liquid-route-transition::after {
@@ -7188,14 +7203,14 @@ function Co(o = globalThis.document) {
     return console.error("[BrunoJosh] VisionOS base unavailable; Josh was not applied."), null;
   let a = o.getElementById(yt);
   return a || (a = o.createElement("style"), a.id = yt, o.head.appendChild(a)), a.textContent = `:root {
-${To(qi())}
+${To(Ai())}
 }
 ${Oo}`, a;
 }
 globalThis.BrunoJosh = {
-  version: qo,
+  version: Ao,
   get tokens() {
-    return qi();
+    return Ai();
   },
   get surfaces() {
     return te()?.surfaces || {};
@@ -7323,9 +7338,9 @@ function $o() {
       return n[c.current]?.label || n[s()]?.label || "VisionOS";
     },
     apply(m, f = {}) {
-      const x = l(m || U), q = n[x]?.api || n[s()]?.api;
-      if (!q?.apply) return null;
-      const $ = q.apply(f.styleOptions || void 0);
+      const x = l(m || U), A = n[x]?.api || n[s()]?.api;
+      if (!A?.apply) return null;
+      const $ = A.apply(f.styleOptions || void 0);
       return c.current = x, f.persist !== !1 && d(x), globalThis.BrunoLiquidGlass = g, globalThis.dispatchEvent?.(new CustomEvent("bruno-theme-changed", {
         detail: { key: x, label: n[x]?.label || x }
       })), $;
@@ -7342,7 +7357,7 @@ const Mo = "20260801-light-control-backdrop-root-1", Fa = "data-bruno-subview-su
 function Ro() {
   return globalThis.BrunoThemeManager?.current?.() || "";
 }
-function Ai(o) {
+function qi(o) {
   o?.setAttribute && o.setAttribute(
     Fa,
     Ro() === "josh" ? "josh" : "default"
@@ -7352,7 +7367,7 @@ function Lo(o) {
   if (!o) return;
   const e = De.get(o);
   e && globalThis.removeEventListener?.("bruno-theme-changed", e);
-  const a = () => Ai(o);
+  const a = () => qi(o);
   De.set(o, a), globalThis.addEventListener?.("bruno-theme-changed", a), a();
 }
 function Io(o) {
@@ -7718,7 +7733,7 @@ globalThis.BrunoSurfaceMaterial = {
   version: Mo,
   connect: Lo,
   disconnect: Io,
-  sync: Ai,
+  sync: qi,
   // ANTERIOR (rollback): subviewStyles: brunoSubviewMaterialStyles,
   subviewStyles: Vo,
   materialStyles: Bo
@@ -8613,7 +8628,7 @@ const xa = "bruno-sala-card", kt = {
   corridor: "light.corredor_switch_1",
   corridor_motion_recent: "binary_sensor.corredor_motion_recent",
   corridor_occupancy: "binary_sensor.corredor_occupancy"
-}, St = ["on", "playing", "paused", "idle", "buffering"], Yo = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Zo = ["cooling", "heating", "drying", "fan", "preheating"], Ko = ["off", "idle"], qt = ["playing", "on", "paused"], Xo = 1200, Qo = 2500, na = Object.freeze({
+}, St = ["on", "playing", "paused", "idle", "buffering"], Yo = ["cool", "heat", "fan_only", "dry", "heat_cool", "auto"], Zo = ["cooling", "heating", "drying", "fan", "preheating"], Ko = ["off", "idle"], At = ["playing", "on", "paused"], Xo = 1200, Qo = 2500, na = Object.freeze({
   corridor: Object.freeze({ on: 880, off: 720, fade: 300 }),
   tv: Object.freeze({ on: 1120, off: 1020, fade: 0 }),
   climate: Object.freeze({ on: 780, off: 720, fade: 300 })
@@ -8804,7 +8819,7 @@ class L extends HTMLElement {
   }
   _spotifyOnDevice(e) {
     const a = this._state(this._config.entities.spotify);
-    if (!qt.includes(a?.state || "")) return !1;
+    if (!At.includes(a?.state || "")) return !1;
     const t = a?.attributes || {}, i = this._normalizeMediaDevice(e);
     return i ? [
       t.source,
@@ -8820,7 +8835,7 @@ class L extends HTMLElement {
     }) : !1;
   }
   _model() {
-    const e = this._config.entities, a = this._state(e.room_group), t = this._state(e.tv), i = this._state(e.tv_media) || t, r = this._state(e.climate), n = this._state(e.corridor), s = a?.state === "on", l = String(t?.state || "").toLowerCase(), c = St.includes(l), p = this._climateIsActive(r), d = this._climateIsEnabled(r), h = qt.includes(this._state(e.speaker)?.state || "") || this._spotifyOnDevice("Echo Show"), g = n?.state === "on", u = this._lightsSummary(a), b = [], m = this._semanticLine();
+    const e = this._config.entities, a = this._state(e.room_group), t = this._state(e.tv), i = this._state(e.tv_media) || t, r = this._state(e.climate), n = this._state(e.corridor), s = a?.state === "on", l = String(t?.state || "").toLowerCase(), c = St.includes(l), p = this._climateIsActive(r), d = this._climateIsEnabled(r), h = At.includes(this._state(e.speaker)?.state || "") || this._spotifyOnDevice("Echo Show"), g = n?.state === "on", u = this._lightsSummary(a), b = [], m = this._semanticLine();
     return u.label && b.push(u.label), m && b.push(m), {
       roomOn: s,
       tvOn: c,
@@ -12436,7 +12451,7 @@ window.customCards.push({
   preview: !1,
   description: "Isolated Bento Sala card with preserved Home Assistant actions and premium liquid glass visuals."
 });
-const ya = "bruno-activity-column", At = {
+const ya = "bruno-activity-column", qt = {
   // Espelha a linha do hero em shell/section_home_v2.yaml. Se a régua do grid
   // mudar lá, mudar AQUI também (referência cruzada anotada nos dois arquivos).
   available_height: "calc(77vh - 154px)",
@@ -12484,9 +12499,9 @@ class Ze extends HTMLElement {
   }
   setConfig(e) {
     this._config = {
-      ...At,
+      ...qt,
       ...e || {},
-      slots: Array.isArray(e?.slots) && e.slots.length ? e.slots : At.slots
+      slots: Array.isArray(e?.slots) && e.slots.length ? e.slots : qt.slots
     }, this._cards = this._cards || /* @__PURE__ */ new Map(), this._wrappers = this._wrappers || /* @__PURE__ */ new Map(), this._activeSince = this._activeSince || /* @__PURE__ */ new Map(), this._visible = this._visible || /* @__PURE__ */ new Set(), this._enterTimers = this._enterTimers || /* @__PURE__ */ new Map(), this._exitTimers = this._exitTimers || /* @__PURE__ */ new Map(), this._renderShell(), this._ensureCards();
   }
   set hass(e) {
@@ -14796,7 +14811,7 @@ window.customCards.push({
   preview: !1,
   description: "Isolated Bento Roborock card with preserved vacuum actions and Bruno liquid glass visuals."
 });
-const qa = "bruno-home-camera-card", sa = {
+const Aa = "bruno-home-camera-card", sa = {
   name: "Monitoramento",
   active_entity: "input_select.bento_active_camera",
   refresh_interval: 6500,
@@ -15547,15 +15562,15 @@ class O extends HTMLElement {
     return O._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(qa) || customElements.define(qa, O);
+customElements.get(Aa) || customElements.define(Aa, O);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: qa,
+  type: Aa,
   name: "Bruno Home Camera Card",
   preview: !1,
   description: "Single camera card for the Bruno home bento grid."
 });
-const Aa = "bruno-energy-card", pn = {
+const qa = "bruno-energy-card", pn = {
   period: "input_select.periodo_energia_dashboard",
   total: "sensor.energia_total_casa_periodo_atual",
   daily: "sensor.potencia_total_casa",
@@ -15994,7 +16009,7 @@ class D extends HTMLElement {
     const a = [{ value: e.graphCurrent ?? 0, time: Date.now() - 1 }, { value: e.graphCurrent ?? 0, time: Date.now() }], t = e.points.length >= 2 ? e.points : a, i = 360, r = 100, n = 0, s = 10, l = 20, c = t.map((M) => M.value), p = Math.min(e.period.lowerBound, ...c), d = Math.max(1, ...c), h = Math.max(1, d - p), g = (M) => t.length <= 1 ? n : n + M / (t.length - 1) * (i - n * 2), u = (M) => s + (d - M) / h * (r - s - l), b = t.map((M, H) => {
       const we = g(H).toFixed(2), ke = u(M.value).toFixed(2);
       return `${H ? "L" : "M"} ${we} ${ke}`;
-    }).join(" "), m = g(0).toFixed(2), f = g(t.length - 1).toFixed(2), x = (r - l).toFixed(2), q = `${b} L ${f} ${x} L ${m} ${x} Z`, $ = e.graphCurrent == null ? "--" : `${Number(e.graphCurrent).toFixed(e.period.unit === "W" ? 0 : 2).replace(".00", "")} ${e.period.unit}`, z = this._comparison(e);
+    }).join(" "), m = g(0).toFixed(2), f = g(t.length - 1).toFixed(2), x = (r - l).toFixed(2), A = `${b} L ${f} ${x} L ${m} ${x} Z`, $ = e.graphCurrent == null ? "--" : `${Number(e.graphCurrent).toFixed(e.period.unit === "W" ? 0 : 2).replace(".00", "")} ${e.period.unit}`, z = this._comparison(e);
     return `
       <svg viewBox="0 0 ${i} ${r}" preserveAspectRatio="none" role="img" aria-label="${D._escapeAttr($)}">
         <defs>
@@ -16011,7 +16026,7 @@ class D extends HTMLElement {
             </feMerge>
           </filter>
         </defs>
-        <path d="${q}" fill="url(#bruno-energy-area)"></path>
+        <path d="${A}" fill="url(#bruno-energy-area)"></path>
         <path d="${b}" fill="none" stroke="#6FB8FF" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" filter="url(#bruno-energy-glow)"></path>
         <text x="18" y="94" class="axis-label">${D._escape($)}</text>
         <text x="342" y="94" text-anchor="end" class="comparison-label">${D._escape(z)}</text>
@@ -16025,10 +16040,10 @@ class D extends HTMLElement {
     return D._escape(e).replace(/'/g, "&#39;");
   }
 }
-customElements.get(Aa) || customElements.define(Aa, D);
+customElements.get(qa) || customElements.define(qa, D);
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: Aa,
+  type: qa,
   name: "Bruno Energy Card",
   preview: !1,
   description: "Isolated Bento energy card with period selector, Home Assistant history, and Bruno liquid glass visuals."
@@ -18760,7 +18775,7 @@ function Mi(o) {
   } catch {
   }
 }
-function qn(o) {
+function An(o) {
   if (!o) return;
   const e = Ga()[o];
   if (e && Number.isFinite(e.fechado)) {
@@ -18781,8 +18796,8 @@ function Ie(o) {
   const e = Ga();
   o in e && (delete e[o], Mi(e));
 }
-function An(o, e, a) {
-  const t = qn(o);
+function qn(o, e, a) {
+  const t = An(o);
   if (!t) return;
   if (a) {
     Ie(o);
@@ -19131,7 +19146,7 @@ class N extends HTMLElement {
       tone: "amber",
       active: !1,
       chips: (this._config.entities.curtains || []).map((t) => typeof t == "string" ? { entity: t } : t).filter((t) => t?.entity || t?.cover).map((t) => {
-        const i = t.entity || t.cover, r = this._state(i), n = String(r?.state || "").toLowerCase(), s = !this._isUnavailable(r), l = s ? this._curtainOpenPosition(t) : null, c = l == null ? null : this._curtainDisplayOpenPosition(l), p = this._toPercent(r?.attributes?.current_position), d = s ? An(i, p ?? void 0, n === "opening" || n === "closing") : void 0, h = d ?? (c == null ? null : 100 - c);
+        const i = t.entity || t.cover, r = this._state(i), n = String(r?.state || "").toLowerCase(), s = !this._isUnavailable(r), l = s ? this._curtainOpenPosition(t) : null, c = l == null ? null : this._curtainDisplayOpenPosition(l), p = this._toPercent(r?.attributes?.current_position), d = s ? qn(i, p ?? void 0, n === "opening" || n === "closing") : void 0, h = d ?? (c == null ? null : 100 - c);
         return {
           icon: h != null && h >= 97 ? "mdi:curtains-closed" : "mdi:curtains",
           title: t.title || this._entityName(i),
@@ -20671,7 +20686,7 @@ class k extends HTMLElement {
     !this._config || !this._hass || this._allPlayerIds().forEach((e) => {
       const a = this._state(e), t = a?.attributes || {}, i = String(a?.state || "").toLowerCase(), r = this._playerConfig(e), n = this._cleanText(t.media_title), s = t.media_image_url || t.entity_picture || "", l = this._isStandbyImage(s) ? "" : s, c = this._cleanText(t.app_name), p = this._cleanText(t.source), d = String(t.media_content_type || c || "").toLowerCase(), h = this._mediaHistory?.[e];
       if (h && l && l !== h.image && !["unknown", "unavailable"].includes(i) && this._storeLastValidMedia({ ...h, image: l, savedAt: h.savedAt || Date.now() }), !this._hasPlayback(i, n, l, c, p, e, r, d, t)) return;
-      const g = this._mediaServiceName(e, r, d, c, p), u = g === "Spotify" ? this._spotifyRoomTarget(t) : null, b = u ? { ...r, ...u } : r, m = this._mediaRoomName(b), f = this._cleanText(t.media_artist), x = this._cleanText(t.media_album_name), q = this._cleanText(t.media_series_title), $ = this._cleanText(t.media_channel), z = this._fallbackMediaTitle(g, m, e), M = this._firstText([n, z, this._playerName(e)]), H = this._firstText([f, x, q, $], [M]);
+      const g = this._mediaServiceName(e, r, d, c, p), u = g === "Spotify" ? this._spotifyRoomTarget(t) : null, b = u ? { ...r, ...u } : r, m = this._mediaRoomName(b), f = this._cleanText(t.media_artist), x = this._cleanText(t.media_album_name), A = this._cleanText(t.media_series_title), $ = this._cleanText(t.media_channel), z = this._fallbackMediaTitle(g, m, e), M = this._firstText([n, z, this._playerName(e)]), H = this._firstText([f, x, A, $], [M]);
       this._storeLastValidMedia({
         entity: e,
         image: l,
@@ -20726,15 +20741,15 @@ class k extends HTMLElement {
     l && (!s || this._isStandbyImage(s)) ? c = this._lastArtworkByPlayer[e] : this._isStandbyImage(s) && (c = "");
     const p = this._cleanText((i ? t?.attributes?.media_title : "") || a?.attributes?.media_title), d = this._cleanText((i ? t?.attributes?.media_artist : "") || a?.attributes?.media_artist), h = this._cleanText((i ? t?.attributes?.media_album_name : "") || a?.attributes?.media_album_name), g = this._cleanText((i ? t?.attributes?.app_name : "") || a?.attributes?.app_name), u = this._cleanText((i ? t?.attributes?.source : "") || a?.attributes?.source), b = this._cleanText((i ? t?.attributes?.media_series_title : "") || a?.attributes?.media_series_title), m = this._cleanText((i ? t?.attributes?.media_channel : "") || a?.attributes?.media_channel), f = Number((i ? t?.attributes?.media_duration : void 0) ?? a?.attributes?.media_duration ?? 0);
     let x = Number((i ? t?.attributes?.media_position : void 0) ?? a?.attributes?.media_position ?? 0);
-    const q = Number(a?.attributes?.volume_level ?? (i ? t?.attributes?.volume_level : void 0) ?? 0), $ = String(
+    const A = Number(a?.attributes?.volume_level ?? (i ? t?.attributes?.volume_level : void 0) ?? 0), $ = String(
       (i ? t?.attributes?.media_content_type : "") || a?.attributes?.media_content_type || a?.attributes?.app_name || ""
     ).toLowerCase(), z = ["video", "movie", "tvshow", "episode", "channel"].some((Vi) => $.includes(Vi)), M = Date.parse((i ? t?.attributes?.media_position_updated_at : "") || a?.attributes?.media_position_updated_at || "");
     n === "playing" && Number.isFinite(M) && Number.isFinite(x) && (x += Math.max(0, (Date.now() - M) / 1e3)), Number.isFinite(f) && f > 0 && (x = Math.min(x, f));
     const H = this._mediaServiceName(e, r, $, g, u), we = {
       ...a?.attributes || {},
       ...i ? t?.attributes || {} : {}
-    }, ke = H === "Spotify" ? this._spotifyRoomTarget(we) : null, Se = ke ? { ...r, ...ke } : r, Ya = this._mediaRoomName(Se), A = this._hasPlayback(n, p, s, g, u, e, r, $, we), Hi = this._fallbackMediaTitle(H, Ya, e), Ke = A ? this._firstText([p, g, u, Hi, this._playerName(e)]) : "", Za = A ? this._firstText([d, h, b, m, g, u, this._stateLabel(n)], [Ke]) : "", Ka = A ? [H, Ya].filter(Boolean).join(" ") : "", Xe = r.icon || this._playerIcon(e), Qe = Se.path || Se.navigation_path || "", Je = Se.section || "";
-    A && ["playing", "paused"].includes(String(n).toLowerCase()) && this._storeLastValidMedia({
+    }, ke = H === "Spotify" ? this._spotifyRoomTarget(we) : null, Se = ke ? { ...r, ...ke } : r, Ya = this._mediaRoomName(Se), q = this._hasPlayback(n, p, s, g, u, e, r, $, we), Hi = this._fallbackMediaTitle(H, Ya, e), Ke = q ? this._firstText([p, g, u, Hi, this._playerName(e)]) : "", Za = q ? this._firstText([d, h, b, m, g, u, this._stateLabel(n)], [Ke]) : "", Ka = q ? [H, Ya].filter(Boolean).join(" ") : "", Xe = r.icon || this._playerIcon(e), Qe = Se.path || Se.navigation_path || "", Je = Se.section || "";
+    q && ["playing", "paused"].includes(String(n).toLowerCase()) && this._storeLastValidMedia({
       entity: e,
       image: c,
       title: Ke,
@@ -20747,29 +20762,29 @@ class k extends HTMLElement {
       section: Je,
       savedAt: Date.now()
     });
-    const qe = e === F && this._isActive(e), R = A ? null : qe ? this._mediaHistory?.[e] || null : this._mediaHistory?.[e] || this._latestMediaSnapshot(), Xa = A ? c : c || R?.image || this._lastArtworkByPlayer?.[e] || "", Di = A ? Ke : R?.title || (qe ? "TV ligada" : ""), Pi = A ? Za : R?.secondary || R?.artist || (qe ? this._firstText([g, u, "Sala"]) : ""), ji = A ? Ka : R?.context || (qe ? "TV Sala" : "");
+    const Ae = e === F && this._isActive(e), R = q ? null : Ae ? this._mediaHistory?.[e] || null : this._mediaHistory?.[e] || this._latestMediaSnapshot(), Xa = q ? c : c || R?.image || this._lastArtworkByPlayer?.[e] || "", Di = q ? Ke : R?.title || (Ae ? "TV ligada" : ""), Pi = q ? Za : R?.secondary || R?.artist || (Ae ? this._firstText([g, u, "Sala"]) : ""), ji = q ? Ka : R?.context || (Ae ? "TV Sala" : "");
     return {
-      entity: A ? e : R?.entity || e,
+      entity: q ? e : R?.entity || e,
       image: Xa,
       title: Di,
-      artist: A ? d && d !== "Pronto para tocar" ? d : "" : R?.artist || "",
+      artist: q ? d && d !== "Pronto para tocar" ? d : "" : R?.artist || "",
       secondary: Pi,
       context: ji,
-      statusLabel: A ? n === "paused" ? "Pausado" : n === "on" ? this._stateLabel(n) : "Reproduzindo agora" : "Nenhuma mídia ativa",
+      statusLabel: q ? n === "paused" ? "Pausado" : n === "on" ? this._stateLabel(n) : "Reproduzindo agora" : "Nenhuma mídia ativa",
       state: n,
-      serviceName: A ? H : R?.serviceName || H,
-      serviceIcon: A ? Xe : R?.serviceIcon || Xe,
-      path: A ? Qe : R?.path || Qe,
-      section: A ? Je : R?.section || Je,
+      serviceName: q ? H : R?.serviceName || H,
+      serviceIcon: q ? Xe : R?.serviceIcon || Xe,
+      path: q ? Qe : R?.path || Qe,
+      section: q ? Je : R?.section || Je,
       duration: Number.isFinite(f) ? f : 0,
       position: Number.isFinite(x) ? Math.max(0, x) : 0,
-      volumePercent: Number.isFinite(q) ? Math.max(0, Math.min(100, Math.round(q * 100))) : 0,
+      volumePercent: Number.isFinite(A) ? Math.max(0, Math.min(100, Math.round(A * 100))) : 0,
       isVideo: z,
       isPlaying: n === "playing",
-      isActive: A,
-      hasPlayback: A,
+      isActive: q,
+      hasPlayback: q,
       hasLastMedia: !!(R && (R.image || R.title)),
-      isSoftArtwork: (n === "paused" || !A) && !!Xa
+      isSoftArtwork: (n === "paused" || !q) && !!Xa
     };
   }
   _slotPlayerIds(e = "", a = 4) {
@@ -20925,7 +20940,7 @@ class k extends HTMLElement {
     if (["google tv launcher", "android tv launcher", "launcher", "ambient mode", "backdrop", "home screen", "android settings"].some((m) => d.includes(m))) return !1;
     if (n === F) {
       if (!this._tvPowered()) return !1;
-      const m = !!(t && !this._isStandbyImage(t)), f = Number(c?.media_duration) > 0 || Number(c?.media_position) > 0, x = [a, i, r].map((q) => this._cleanText(q)).filter(Boolean).some((q) => !/^(?:tv|android tv|smart tv pro|hdmi\s*\d+)$/i.test(q));
+      const m = !!(t && !this._isStandbyImage(t)), f = Number(c?.media_duration) > 0 || Number(c?.media_position) > 0, x = [a, i, r].map((A) => this._cleanText(A)).filter(Boolean).some((A) => !/^(?:tv|android tv|smart tv pro|hdmi\s*\d+)$/i.test(A));
       return m || f || x ? ["playing", "paused", "buffering"].includes(p) ? !0 : this._isVideoPlayer(n, s, l, i, r) : !1;
     }
     if (["playing", "paused"].includes(p)) return !!(this._cleanText(a) || t || this._cleanText(i));
@@ -22267,7 +22282,7 @@ function zn(o) {
 function Hn() {
   const o = window.devicePixelRatio || 1;
   return {
-    buildId: "20260901",
+    buildId: "20260904",
     viewportCss: `${window.innerWidth} x ${window.innerHeight}`,
     screenPhysical: `${Math.round(window.screen.width * o)} x ${Math.round(
       window.screen.height * o
@@ -22715,7 +22730,7 @@ Ve.customCards.some((o) => o.type === "bruno-diagnostics") || Ve.customCards.pus
   description: "Build, viewport, capacidades e validação das entidades configuradas."
 });
 const Yt = {
-  "custom:bruno-room-subview": () => import("./bruno-room-subview.DewjAIuN.js"),
+  "custom:bruno-room-subview": () => import("./bruno-room-subview.CoAE9ixf.js"),
   "custom:bruno-cameras-security-subview": () => import("./bruno-cameras-security-subview.DlFTO3Vm.js"),
   "custom:bruno-roborock-subview": () => import("./bruno-roborock-subview.DTdmnZ9N.js"),
   "custom:bruno-planta-3d-subview": () => import("./bruno-planta-3d-subview.BuWQZlf2.js"),
@@ -24277,7 +24292,7 @@ class Kn extends j {
                     </div>` : _}
                 <div class="room-popup-lights">
                   ${b.lights.map((f) => {
-      const x = a?.states[f.entity], q = String(x?.state ?? "").toLowerCase(), $ = q === "on", z = !x || ["unavailable", "unknown", "none", ""].includes(q), M = [
+      const x = a?.states[f.entity], A = String(x?.state ?? "").toLowerCase(), $ = A === "on", z = !x || ["unavailable", "unknown", "none", ""].includes(A), M = [
         "room-popup-light",
         $ ? "is-on" : "",
         z ? "is-unavailable" : ""
@@ -25957,10 +25972,10 @@ function xs(o, e, a) {
         for (let b = c * r; b < (c + 1) * r; b++) {
           const m = (u * e + b) * 4;
           if ((o[m + 3] ?? 0) < 128) continue;
-          const f = o[m] ?? 0, x = o[m + 1] ?? 0, q = o[m + 2] ?? 0;
-          if (d++, !zi(f, x, q)) continue;
+          const f = o[m] ?? 0, x = o[m + 1] ?? 0, A = o[m + 2] ?? 0;
+          if (d++, !zi(f, x, A)) continue;
           h++;
-          const $ = f >> 4 | x >> 4 << 4 | q >> 4 << 8, z = (p.get($) ?? 0) + 1;
+          const $ = f >> 4 | x >> 4 << 4 | A >> 4 << 8, z = (p.get($) ?? 0) + 1;
           p.set($, z), g = Math.max(g, z);
         }
       s[l][c] = d >= 48 && h / d >= 0.82 && g / d >= 0.55;
@@ -26027,10 +26042,10 @@ const ks = {
 }, Ss = {
   principal: 6500,
   secundaria: 15e3
-}, qs = {
+}, As = {
   principal: 1500,
   secundaria: 3e3
-}, As = 25e3, Es = 300, Os = 6e4, Ts = 12e3, oi = { comImagem: 2, semImagem: 4 };
+}, qs = 25e3, Es = 300, Os = 6e4, Ts = 12e3, oi = { comImagem: 2, semImagem: 4 };
 function Cs(o, e) {
   return o ? `${o}${o.includes("?") ? "&" : "?"}bruno_t=${e}` : "";
 }
@@ -26165,7 +26180,7 @@ class Rs {
     if (e.timer = void 0, !this.ligado || e.emVoo) return;
     e.emVoo = !0, e.inicio = this.agenda.agora();
     const a = Cs(e.alvo.base, Math.round(e.inicio) || 1);
-    e.prazo = this.agenda.agendar(() => this.encerrar(e, "prazo", a), As), e.abortar = this.carregador(
+    e.prazo = this.agenda.agendar(() => this.encerrar(e, "prazo", a), qs), e.abortar = this.carregador(
       a,
       (t) => this.encerrar(
         e,
@@ -26184,7 +26199,7 @@ class Rs {
   }
   agendarProximo(e, a) {
     const t = e.alvo.prioridade;
-    let i = Math.max(qs[t], Ss[t] - a);
+    let i = Math.max(As[t], Ss[t] - a);
     const r = e.quadros === 0, n = r ? oi.semImagem : oi.comImagem, s = r ? Ts : Os;
     if (e.falhasSeguidas >= n) {
       const l = 2 ** Math.min(e.falhasSeguidas - n + 1, 5);
@@ -26195,7 +26210,7 @@ class Rs {
 }
 lr();
 is();
-console.info("[bruno-dashboard] build 20260901");
+console.info("[bruno-dashboard] build 20260904");
 globalThis.BrunoCameraEngine = Rs;
 globalThis.BrunoCameraLive = ks;
 export {
@@ -26228,10 +26243,10 @@ export {
   Hr as s,
   v as t,
   Pr as u,
-  An as v,
+  qn as v,
   Ls as w,
   Ie as x,
   Fs as y,
   Vs as z
 };
-//# sourceMappingURL=main.7kuhW78o.js.map
+//# sourceMappingURL=main.uiioeD72.js.map

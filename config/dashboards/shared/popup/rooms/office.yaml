@@ -79,7 +79,9 @@ action: fire-dom-event
 browser_mod:
   service: browser_mod.popup
   data:
-    title: Office
+    # Header nativo oculto para permitir "hero image" colada no topo total do popup.
+    # O titulo visual pode ficar no overlay da propria imagem.
+    title: ''
     tag: office_popup
     size: wide
     style: >
@@ -131,6 +133,17 @@ browser_mod:
             -webkit-backdrop-filter: blur(12px);
           }
         ha-dialog$: |
+          .mdc-dialog__title {
+            display: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 0 !important;
+          }
+          .mdc-dialog__header {
+            display: none !important;
+            min-height: 0 !important;
+            padding: 0 !important;
+          }
           .mdc-dialog__content {
             padding-top: 0 !important;
           }
@@ -148,7 +161,8 @@ browser_mod:
             action: none
           styles:
             card:
-              - margin: 0 -0.6em 0.4em -0.5em
+              # margem superior negativa para encostar o hero no topo da superficie do popup
+              - margin: -0.4em -0.6em 0.4em -0.5em
               - height: 138px
               - border-radius: 0
               - overflow: hidden

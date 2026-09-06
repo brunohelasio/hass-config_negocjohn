@@ -10,7 +10,7 @@ Hey there! Welcome to my little corner of the tech world! 👨‍💻
 
 This is where I store all the cool configurations for my Home Assistant system. Well, it's a mix of awesome codes and setups I discovered from the Home Assistant community. Seriously, those folks are wizards! 🧙‍♂️ As a bit of an internet newbie turned tech enthusiast, I stumbled upon the magic of IT, and this repository is my way of sharing the joy and knowledge I've gained along the way. Dive in, explore, and let the tech magic begin! ✨
 
-I frequently refresh my configuration files. My current Home Assistant version is <b>2026.9.0</b>. If you find something you like, don't forget to give my repository a ⭐️!
+I frequently refresh my configuration files. My current Home Assistant version is <b>2026.9.1</b>. If you find something you like, don't forget to give my repository a ⭐️!
 
 ## Some of my projects for Home Assistant
 
@@ -133,7 +133,6 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - [Weather.Com](https://github.com/jaydeethree/Home-Assistant-weatherdotcom)
 - [Webrtc Camera](https://github.com/AlexxIT/WebRTC)
 - [Xiaomi Cloud Map Extractor](https://github.com/PiotrMachowski/Home-Assistant-custom-components-Xiaomi-Cloud-Map-Extractor)
-- [Xiaomi Miot](https://github.com/al-one/hass-xiaomi-miot)
 - [Ytube Music Player](https://github.com/KoljaWindeler/ytube_music_player)
 </details>
 
@@ -148,7 +147,6 @@ https://github.com/ngocjohn/hass-config/assets/96962827/acc1a4db-b92e-4ab1-ac9d-
 - [Auto Entities](https://github.com/Lint-Free-Technology/lovelace-auto-entities)
 - [Bar Card](https://github.com/spacerokk/bar-card)
 - [Button Card](https://github.com/custom-cards/button-card)
-- [Canary](https://github.com/jcwillox/lovelace-canary)
 - [Clock Weather Card](https://github.com/pkissling/clock-weather-card)
 - [Crow Media Player](https://github.com/jamesmcginnis/crow-media-player-card)
 - [Custom Features For Home Assistant Cards](https://github.com/Nerwyn/custom-card-features)
